@@ -52,12 +52,13 @@ use OME::Tasks::ImageTasks;
 sub getCommands {
     return
       {
-       'admin'   => ['OME::Util::OMEAdmin'],
-       'import'  => ['OME::Util::Import'],
-       'export'  => ['OME::Util::Export'],
-       'execute' => ['OME::Util::ExecuteChain'],
-       'lint'    => ['OME::Util::Lint'],
-       'top'     => ['OME::Util::Top'],
+       'admin'      => ['OME::Util::OMEAdmin'],
+       'import'     => ['OME::Util::Import'],
+       'export'     => ['OME::Util::Export'],
+       'execute'    => ['OME::Util::ExecuteChain'],
+       'lint'       => ['OME::Util::Lint'],
+       'top'        => ['OME::Util::Top'],
+       'classifier' => ['OME::Util::Classifier' ],
       };
 }
 
