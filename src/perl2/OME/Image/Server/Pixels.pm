@@ -269,7 +269,8 @@ sub getROI {
 
 Sets the entire pixel array for this file.  The $bigEndian parameter
 specifies which endian-ness the given pixels are in.  If not
-specified, it defaults to network order (big-endian).
+specified, it defaults to network order (big-endian). $buf is a binary scalar.
+Instead of $buf, you can pass the filename if you use setPixelsFile.
 
 =cut
 
@@ -277,6 +278,12 @@ sub setPixels {
     my ($self,$buf,$destBigEndian) = @_;
     OME::Image::Server->
         setPixels($self->[PIXELS_ID],\$buf,$destBigEndian);
+}
+
+sub setPixelsFile {
+    my ($self,$filename,$destBigEndian) = @_;
+    OME::Image::Server->
+        setPixels($self->[PIXELS_ID],$filename,$destBigEndian);
 }
 
 =head2 setStack
