@@ -129,21 +129,18 @@ struct stat fStat;
 		return (NULL);
 	}
 
-	if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
-		freeFileRep (myFile);
-		OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)ID,strerror( errno ));
-		return (NULL);
+	if (myFile->fd_rep < 0) {
+		if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+			freeFileRep (myFile);
+			OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)ID,strerror( errno ));
+			return (NULL);
+		}
 	}
+	
+	GetFileInfo (myFile);
 
 	/* Wait for a read lock */
 	lockRepFile (myFile->fd_rep, 'r', offset, length);
-
-	if (fstat (myFile->fd_rep, &fStat) < 0) {
-		OMEIS_DoError ("Could not get size of FileID=%llu",(unsigned long long)myFile->ID);
-		freeFileRep (myFile);
-		return (NULL);			
-	}
-	myFile->size_rep = myFile->file_info.size = fStat.st_size;
 
     if (length == 0)
         length = myFile->size_rep;
@@ -512,9 +509,11 @@ FileAlias *aliases,*myAlias;
 			myInfo->ID       = myFile->ID;
 			
 			/* open the rep file to make sure its inflated */
-			if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
-				OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
-				return (0);
+			if (myFile->fd_rep < 0) {
+				if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+					OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+					return (0);
+				}
 			}
 
 			/* Get the size */
@@ -533,9 +532,11 @@ FileAlias *aliases,*myAlias;
 				return (0);
 
 			/* open the rep file to make sure its inflated */
-			if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
-				OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
-				return (0);
+			if (myFile->fd_rep < 0) {
+				if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+					OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+					return (0);
+				}
 			}
 			
 			/* Get the size */
