@@ -205,7 +205,7 @@ Scale.prototype.updateScaleDisplay = function() {
 
 
 
-Scale.setClassData = function(image) {
+Scale.setClassData = function(image, channelLabels) {
 	Scale.initialized = true;
 	Scale.displayChannels = new Array();
 	Scale.image = image;
@@ -215,15 +215,16 @@ Scale.setClassData = function(image) {
 	Scale.BW = new Array();
 	// set BW according to values from image.getCBW()
 	var imageCBW = image.getCBW();
-	Scale.channelLabels = new Array();
-	for(var i in image.Wavelengths) {
-		Scale.BW[image.Wavelengths[i]['WaveNum']] = new Array();
-		Scale.channelLabels[image.Wavelengths[i]['WaveNum']] = '[ ' + image.Wavelengths[i]['Label'] + ' ]';
-		// are values in image's CBW?
+	Scale.channelLabels = channelLabels;
+	Scale.popupListChannelLabels = new Array();
+	for(var channelIndex in channelLabels) {
+		Scale.BW[channelIndex] = new Array();
+		Scale.popupListChannelLabels[channelIndex] = '[ ' + channelLabels[channelIndex] + ' ]';
+		// copy values from image's CBW?
 		for(var j=0;j<4;j++) {
-			if(imageCBW[j*3] == image.Wavelengths[i]['WaveNum']) {
-				Scale.BW[ imageCBW[j*3] ]['B'] = imageCBW[j*3+1];
-				Scale.BW[ imageCBW[j*3] ]['W'] = imageCBW[j*3+2];
+			if(imageCBW[j*3] == channelIndex) {
+				Scale.BW[ channelIndex ]['B'] = imageCBW[j*3+1];
+				Scale.BW[ channelIndex ]['W'] = imageCBW[j*3+2];
 			}
 		}
 	}
@@ -288,7 +289,7 @@ Scale.prototype.buildToolBox = function( ) {
 		Scale.displayChannelBGs[this.displayChannelLabel] // background skin
 	);
 	this.logicalChannelPopupList = new popupList(
-		90, 0, Scale.channelLabels, 
+		90, 0, Scale.popupListChannelLabels, 
 		{ method: 'setLogicalChannel', obj: this },
 		0,
 		skinLibrary["transparentBox"],
@@ -397,7 +398,7 @@ Scale.prototype.buildDisplay = function() {
 	);
 	// stack label
 	this.backgroundLayer.appendChild( 
-		createTextSVG( 'min <-- STACK --> max', { 
+		createTextSVG( 'STACK', { 
 			'text-anchor': 'middle', 
 			x: (Scale.scaleWidth/2), 
 			y: -2, 
