@@ -49,7 +49,10 @@ import org.openmicroscopy.vis.chains.Controller;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import javax.swing.event.EventListenerList;
+import javax.swing.Timer;
 import java.awt.event.MouseEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /** 
  * An event handler for the PChainLibraryCanvas. Generally works like 
@@ -60,7 +63,9 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PChainLibraryEventHandler extends  PGenericZoomEventHandler {
+public class PChainLibraryEventHandler extends  PGenericZoomEventHandler 
+	implements ActionListener
+ {
 
 	private PChainLibraryCanvas canvas;
 	
@@ -71,6 +76,14 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler {
 	private EventListenerList chainListeners = new EventListenerList();
 	
 	private CChain selectedChain;
+	
+	
+	// needed for handling of double click. basically, two clicks
+	// within 300ms are a double click. by definition from this code.
+	private final Timer timer = new Timer(300, this);
+	
+	private PInputEvent cachedEvent;
+
 			
 	/**
 	 * A flag indicating that the previous event was a popup
@@ -82,12 +95,44 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler {
 		Controller controller) {
 		super(canvas);
 		this.canvas = canvas;
-		this.addChainSelectionEventListener(controller.getControlPanel());	
+		this.addChainSelectionEventListener(controller.getControlPanel());
+			
 	}
 	
+	/*
+	 * As this is the action listener for the timer, it will be called
+	 * when the timer has expired. If this is the case, the cachedEvent
+	 * is a single click, so process it as such, and stop the timer.
+	 */
+	public void actionPerformed(ActionEvent e) {
+		
+		if (cachedEvent != null) {
+			super.mouseClicked(cachedEvent);
+		}
+		cachedEvent = null;
+		timer.stop();
+	}
 	
+	/* When I get a mouse event, there are two possibilities:
+	 * 1) if the timer is not running, it's the start of a new set of clicks.
+	 *   restart the timer and store the event
+	 * 2) if the timer is running, this means that this is a second click,
+	 * 		as the first click started the timer. Stop the timer,
+	 *  	and treat the click like a double click
+	 */
 	public void mouseClicked(PInputEvent e) {
-		super.mouseClicked(e);
+		if (timer.isRunning()) {// it's a double click
+			timer.stop();
+			mouseDoubleClicked(e);
+			cachedEvent = null;
+		}
+		else {
+			timer.restart();
+			cachedEvent = e;
+		}
+	}
+	
+	private void mouseDoubleClicked(PInputEvent e) {
 		PNode n = e.getPickedNode();
 		if (n instanceof PChainBox) { 
 			PChainBox cb = (PChainBox) n;
