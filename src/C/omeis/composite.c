@@ -142,7 +142,7 @@ CompositeSpec theComposite;
 	 RedChannel = channel,blkLevel,whtLevel,gamma
 	 ...
 	 GrayChannel = channel,blkLevel,whtLevel,gamma
-	 note that gamma is not implemented as of 1/04 (== 0).
+	 note that gamma is not implemented as of 1/04 (== 1.0).
 	 LevelBasis is a separate parameter with the following values:
 	 geomean, mean, fixed.  fixed is the default if LevelBasis is not specified.
 	 The blkLevel and whtLevel values are either 
