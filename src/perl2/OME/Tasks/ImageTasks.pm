@@ -142,35 +142,69 @@ sub importFiles {
 	# Also, we're only doing image_wavelengths for now.
     #  image_id | wavenumber | ex_wavelength | em_wavelength | nd_filter | fluor
 
-	    my @WavelengthInfo = ({});
-	    my $wave;
-	    my $sth = $session->DBH()->prepare ("INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)");
-	    if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
-	        # Make sure its sorted on WaveNumber.
-        	@WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
-	    }
+        my @WavelengthInfo = ({});
+        my $wave;
+        my $sth = $session->DBH()->prepare ('INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)');
+        if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
+            # Make sure its sorted on WaveNumber.
+            @WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
+        }
 
-	    for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++) {
-	        $wave = $WavelengthInfo[$w];
-	        # Clear out the hash if WaveNumber doesn't match $w - something's screwed up.
-	        # We also do this if there was no WavelengthInfo to begin with.
-	        # FIXME:  If WaveNumber doesn't match $w at any point, there's probably a more serious problem that should result in a roll-back of this import.
-	        if ($wave->{'WavelengthInfo.WaveNumber'} ne $w) {
+        for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++) {
+            $wave = $WavelengthInfo[$w];
+            # Clear out the hash if WaveNumber doesn't match $w - something's screwed up.
+            # We also do this if there was no WavelengthInfo to begin with.
+            # FIXME:  If WaveNumber doesn't match $w at any point, there's probably a more serious problem that should result in a roll-back of this import.
+            if ($wave->{'WavelengthInfo.WaveNumber'} ne $w) {
                 $wave->{'WavelengthInfo.WaveNumber'} = $w;
                 $wave->{'WavelengthInfo.ExWave'} = undef;
                 $wave->{'WavelengthInfo.EmWave'} = undef;
                 $wave->{'WavelengthInfo.Fluor'} = undef;
                 $wave->{'WavelengthInfo.NDfilter'} = undef;
             }
-	        $sth->execute($imageID,
-	            $wave->{'WavelengthInfo.WaveNumber'},
-	            $wave->{'WavelengthInfo.ExWave'},
-	            $wave->{'WavelengthInfo.EmWave'},
-	            $wave->{'WavelengthInfo.Fluor'},
-	            $wave->{'WavelengthInfo.NDfilter'}
-	        );
-	    }
-        $session->DBH()->commit();
+            $sth->execute($imageID,
+                $wave->{'WavelengthInfo.WaveNumber'},
+                $wave->{'WavelengthInfo.ExWave'},
+                $wave->{'WavelengthInfo.EmWave'},
+                $wave->{'WavelengthInfo.Fluor'},
+                $wave->{'WavelengthInfo.NDfilter'}
+            );
+        }
+
+
+	# IGG 10/07/02:  Run an external program to get image statistics, and stuff them into the DB.
+    # The external program is called OME_Image_XYZ_stats, and hopefully lives in /OME/bin.
+    # The table we're filling up is xyz_image_info:
+    # image_id | wavenumber | timepoint | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
+    # The program output is tab-delimited columns like so:
+    # Wave    Time    Min     Max     Mean    GeoMean Sigma   Centroid_x      Centroid_y      Centroid_z
+    # The first line contains the column headings.
+    $session->DBH()->trace(2);
+    $sth = $session->DBH()->prepare (
+        'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+    my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
+        $href->{'Image.NumWaves'},$href->{'Image.NumTimes'},$image->Field("bitsPerPixel")/8)
+    );
+    my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
+    print "$cmd\n";
+    
+    open (STDOUT_PIPE,$cmd);
+    while (<STDOUT_PIPE>) {
+        print $_;
+        chomp;
+        my @columns = split (/\t/);
+        foreach (@columns) {
+            # trim leading and trailing white space and set to undef unless column looks like a C float
+            $_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
+        }
+        print @columns;
+        next unless defined $columns[0];
+
+        $sth->execute($imageID,@columns);
+    }
+
+        
+    $session->DBH()->commit();
 
     };
 
