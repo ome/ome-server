@@ -157,7 +157,7 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 		this.SVGimages[theZ][theT].setAttribute("height",this.Dims['Y']);
 
 		// prepare image URL string
-		
+	
 		// color or RGB?
 		var color;
 		var WBS = this.getConvertedWBS(theT);
@@ -202,8 +202,8 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 	for(i=0;i<4;i++) {
 		var wavenum = WBS[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
-		WBS[i*3+1] /= this.Stats[wavenum][theT]['geomean'];
-		WBS[i*3+1] = Math.round(WBS[i*3+1]*100000)/100000;
+		WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		WBS[i*3+1] = Math.round(WBS[i*3+1]);
 		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
 		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
@@ -403,8 +403,8 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 	for(var i=0;i<4;i++) {
 		var wavenum = this.WBS[i*3];
 		cWBS.push( wavenum );
-		B = this.Stats[wavenum][theT]["geomean"] * this.WBS[i*3+1];
-		B = Math.round( B);//*100000 ) / 100000;
+		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		B = Math.round( B );
 		cWBS.push( B );
 		S = 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] );
 		S = Math.round( S*100000 ) / 100000;
@@ -544,13 +544,13 @@ OMEimage.prototype.makeWBS = function() {
 	
 	L = this.Wavelengths.length;
 	waves.push( this.Wavelengths[0]["WaveNum"] ); // red
-	waves.push( this.Wavelengths[Math.round(L/2)]["WaveNum"] ); // green
+	waves.push( this.Wavelengths[Math.floor(L/2)]["WaveNum"] ); // green
 	waves.push( this.Wavelengths[L-1]["WaveNum"] ); // blue
 	waves.push( this.Wavelengths[0]["WaveNum"] ); // gray
 	
 	for(i=0;i<4;i++) {
 		WBS.push( waves[i] );
-		WBS.push( 1 );
+		WBS.push( 0 );
 		WBS.push( 4 );
 	}
 	
