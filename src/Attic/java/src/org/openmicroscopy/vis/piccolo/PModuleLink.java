@@ -79,7 +79,7 @@
  	
 	private void setEndPoint() {
 		Point2D point = getEndLinkTarget().getCenter();
-		setEndCoords((float) point.getX(),(float) point.getY());
+		setEndCoords((float) point.getX()-PConstants.ARROWHEAD_WIDTH,(float) point.getY());
 	}
 	
 	public void nodeChanged(PNodeEvent e) {
@@ -108,9 +108,9 @@
 		Point2D start = (Point2D) points.get(n-2);
 		Point2D end = (Point2D) points.get(n-1);
 		
-		double theta = getAngle((float) start.getX(),(float)start.getY(),
-			(float)end.getX(),(float)end.getY());
-		drawLinkEnd((float) end.getX(),(float)end.getY(),theta);
+	//	double theta = getAngle((float) start.getX(),(float)start.getY(),
+	//		(float)end.getX(),(float)end.getY());
+		drawLinkEnd((float) end.getX(),(float)end.getY());
 	}
 	
 	protected PModule getStart() {

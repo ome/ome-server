@@ -104,13 +104,20 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	protected void buildArrow() {
 		arrow = new PPath();
+		
 		arrow.moveTo(0,0);
-		float left = -12;
 		float top = -5;
+		float bottom = 5;
+		arrow.lineTo(-4,top);
+		arrow.lineTo(PConstants.ARROWHEAD_WIDTH,0);
+		arrow.lineTo(-4,bottom);
+		
+		/*float left = -PConstants.ARROWHEAD_WIDTH;
+		
 		arrow.lineTo(left,top);
 		arrow.lineTo(left-4,0);
-		float bottom = 5;
-		arrow.lineTo(left,bottom);
+		
+		arrow.lineTo(left,bottom);*/
 		arrow.closePath();
 		arrow.setPaint(DEFAULT_COLOR);
 		addChild(arrow);
@@ -149,7 +156,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		setPathToPolyline(pts);	
 	}
 
-	protected double getAngle(float xs,float ys,float xe,float ye) {
+	/*protected double getAngle(float xs,float ys,float xe,float ye) {
 		double angle = 0;
 		double arctan = 0;
 		
@@ -167,12 +174,12 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 				angle = 1.0;
 		}
 		return angle;
-	}
-	
-	protected void drawLinkEnd(float x,float y,double theta) {
+	} */
+ 	
+	protected void drawLinkEnd(float x,float y) {
 		//System.err.println("setting arrow to be at "+x+","+y+", theta="+theta);
 		Point2D pt = globalToLocal(new Point2D.Float(x,y));
-		arrow.setRotation(theta);
+		//arrow.setRotation(theta);
 		arrow.setOffset(pt.getX(),pt.getY());
 		invalidateFullBounds(); 
 		

@@ -120,13 +120,18 @@ public class PParamLink extends  PLink {
 	private void getEndPointCoords(PFormalParameter p) {
 		Point2D paramCirclePoint = p.getLinkCenter();
 		point.setLocation(paramCirclePoint);
-		//p.getLocator().locatePoint(point);
-		//p.localToGlobal(point);
+		if (p instanceof PFormalInput) {
+			// offset for arrowhead
+			Point2D offset = new 
+				Point2D.Double(point.getX()-PConstants.ARROWHEAD_WIDTH,
+								point.getY());
+			point.setLocation(offset);
+		}
 	}
 	
 	
 	protected void setLine() {
-		double theta;
+		//double theta;
 		Point2D first;
 		Point2D second;
 		super.setLine();
@@ -143,10 +148,10 @@ public class PParamLink extends  PLink {
 			first = (Point2D) points.get(n-2);
 			second = (Point2D) points.get(n-1);
 		}
-		theta = getAngle((float) first.getX(),(float)first.getY(),
-							(float)second.getX(),(float)second.getY());
+		//theta = getAngle((float) first.getX(),(float)first.getY(),
+		//					(float)second.getX(),(float)second.getY());
 		//System.err.println("ending link at "+second.getX()+","+second.getY());
-		drawLinkEnd((float) second.getX(),(float)second.getY(),theta);
+		drawLinkEnd((float) second.getX(),(float)second.getY());
 	}
 
 
