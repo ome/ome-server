@@ -95,12 +95,12 @@ sub new {
 	$task = $class->taskFactory()->newObject("OME::Task", {
 		name        => $name,
 		process_id  => $$,
-		session_id  => OME::Session->instance()->ID(),
+		session_id  => OME::Session->instance()->id(),
 		state       => 'IN PROGRESS',
 		message     => undef,
 		error       => undef,
-		n_steps     $nsteps,
-		last_step   => undef,
+		n_steps     => $nsteps,
+		last_step   => 0,
 		t_start     => 'now',
 		t_stop      => undef,
 		t_last      => undef
