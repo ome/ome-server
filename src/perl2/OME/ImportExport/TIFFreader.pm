@@ -579,6 +579,14 @@ sub readTiffTag {
     $tag_type = $tagflds[1];
     $tag_cnt = $tagflds[2];
     $tag_offset = $tagflds[3];
+    if (($tag_type == 3) && ($tag_cnt == 1)) {
+	$format = $endian eq "little" ? "vvVv" : "nnNn";
+	@tagflds = unpack ($format, $buf);
+	$tag_id = $tagflds[0];
+	$tag_type = $tagflds[1];
+	$tag_cnt = $tagflds[2];
+	$tag_offset = $tagflds[3];
+    }
 
 
     # This section handles TIFF variants. Detection of a variant depends upon
