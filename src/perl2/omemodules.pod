@@ -6,161 +6,310 @@ OME Modules - Table of Contents
 
 =head2 Database access
 
-    OME::DBConnection
-    OME::Factory
-    OME::DBObject
-    OME::Configuration
+=over
 
-    OME::Project
-    OME::Dataset
-    OME::Feature
-    OME::Image
+=item L<OME::DBConnection>
 
-    OME::LookupTable
-        OME::LookupTable::Entry
-    OME::DataTable
-        OME::DataTable::Column
-    OME::SemanticType
-        OME::SemanticType::Element
-        OME::SemanticType::Superclass
-    OME::Module
-        OME::Module::Category
-        OME::Module::FormalInput
-        OME::Module::FormalOutput
-    OME::ModuleExecution
-        OME::ModuleExecution::ActualInput
-    OME::AnalysisChain
-        OME::AnalysisChain::Node
-        OME::AnalysisChain::Link
-    OME::AnalysisChainExecution
-        OME::AnalysisChainExecution::NodeExecution
-    OME::AnalysisPath
-        OME::AnalysisPath::Map
+=item L<OME::Factory>
+
+=item L<OME::DBObject>
+
+=item L<OME::Configuration>
+
+=item L<OME::Project>
+
+=item L<OME::Dataset>
+
+=item L<OME::Feature>
+
+=item L<OME::Image>
+
+=item L<OME::LookupTable>
+
+=item L<OME::LookupTable::Entry>
+
+=item L<OME::DataTable>
+
+=item L<OME::DataTable::Column>
+
+=item L<OME::SemanticType>
+
+=item L<OME::SemanticType::Element>
+
+=item L<OME::SemanticType::Superclass>
+
+=item L<OME::Module>
+
+=item L<OME::Module::Category>
+
+=item L<OME::Module::FormalInput>
+
+=item L<OME::Module::FormalOutput>
+
+=item L<OME::ModuleExecution>
+
+=item L<OME::ModuleExecution::ActualInput>
+
+=item L<OME::AnalysisChain>
+
+=item L<OME::AnalysisChain::Node>
+
+=item L<OME::AnalysisChain::Link>
+
+=item L<OME::AnalysisChainExecution>
+
+=item L<OME::AnalysisChainExecution::NodeExecution>
+
+=item L<OME::AnalysisPath>
+
+=item L<OME::AnalysisPath::Map>
+
+=back
 
 =head2 Session management
 
-    OME::SessionManager
-    OME::Session
+=over
+
+=item L<OME::SessionManager>
+
+=item L<OME::Session>
+
+=back
 
 =head2 Analysis engine
 
-    OME::Analysis::CLIHandler
-    OME::Analysis::FindBounds
-    OME::Analysis::FindRatio
-    OME::Analysis::FindSpotsHandler
-    OME::Analysis::TrackSpotsHandler
-    OME::Analysis::Handler
-    OME::Analysis::NoopHandler
-    OME::Analysis::AnalysisEngine
+=over
+
+=item L<OME::Analysis::CLIHandler>
+
+=item L<OME::Analysis::FindBounds>
+
+=item L<OME::Analysis::FindRatio>
+
+=item L<OME::Analysis::FindSpotsHandler>
+
+=item L<OME::Analysis::TrackSpotsHandler>
+
+=item L<OME::Analysis::Handler>
+
+=item L<OME::Analysis::NoopHandler>
+
+=item L<OME::Analysis::AnalysisEngine>
+
+=back
 
 =head2 OME XML file format
 
-    OME::Tasks::OMEImport
-    OME::Tasks::OMEExport
-    OME::ImportExport::SemanticTypeImport
-    OME::ImportExport::SemanticTypeExport
-    OME::ImportExport::ModuleImport
-    OME::ImportExport::ChainImport
-    OME::ImportExport::HierarchyImport
-    OME::ImportExport::HierarchyExport
+=over
+
+=item L<OME::Tasks::OMEImport>
+
+=item L<OME::Tasks::OMEExport>
+
+=item L<OME::ImportExport::SemanticTypeImport>
+
+=item L<OME::ImportExport::SemanticTypeExport>
+
+=item L<OME::ImportExport::ModuleImport>
+
+=item L<OME::ImportExport::ChainImport>
+
+=item L<OME::ImportExport::HierarchyImport>
+
+=item L<OME::ImportExport::HierarchyExport>
+
+=back
 
 =head2 Proprietary image format importers
 
-    OME::ImportExport::Importer
-    OME::ImportExport::Import_reader
-    OME::ImportExport::FileUtils
-    OME::ImportExport::Params
-    OME::ImportExport::PixWrapper
-    OME::ImportExport::DVreader
-    OME::ImportExport::STKreader
-    OME::ImportExport::TIFFreader
+=over
+
+=item L<OME::ImportExport::Importer>
+
+=item L<OME::ImportExport::Import_reader>
+
+=item L<OME::ImportExport::FileUtils>
+
+=item L<OME::ImportExport::Params>
+
+=item L<OME::ImportExport::PixWrapper>
+
+=item L<OME::ImportExport::DVreader>
+
+=item L<OME::ImportExport::STKreader>
+
+=item L<OME::ImportExport::TIFFreader>
+
+=back
 
 =head2 Workflow layer
 
-    OME::Tasks::ImageTasks
+=over
+
+=item L<OME::Tasks::ImageTasks>
+
+=back
 
 =head2 OME Remote Framework
 
-    OME::Remote::Dispatcher
-    OME::Remote::Prototypes
-    OME::Remote::Utils
+=over
+
+=item L<OME::Remote::Dispatcher>
+
+=item L<OME::Remote::Prototypes>
+
+=item L<OME::Remote::Utils>
+
+=back
 
 =head2 Web-based user interface
 
-    OME::Web
-    OME::Web::DatasetMetadata
-    OME::Web::AddImageDataset
-    OME::Web::DatasetComponents
-    OME::Web::DatasetInProjects
-    OME::Web::DatasetMetadata
-    OME::Web::DatasetSearch
-    OME::Web::DatasetSwitch
-    OME::Web::DirTree
-    OME::Web::DirTreeImport
-    OME::Web::DirTreeImportSelect
-    OME::Web::DirTreeSelect
-    OME::Web::FindSpots
-    OME::Web::GetGraphics
-    OME::Web::GetInfo
-    OME::Web::Helper::HTMLFormat
-    OME::Web::Helper::JScriptFormat
-    OME::Web::Home
-    OME::Web::ImageSearch
-    OME::Web::InfoDataset
-    OME::Web::InfoProject
-    OME::Web::Login
-    OME::Web::Logout
-    OME::Web::MakeNewProject
-    OME::Web::ManageDataset
-    OME::Web::ManageImage
-    OME::Web::ManageProject
-    OME::Web::ProjectDataset
-    OME::Web::ProjectDatasetImage
-    OME::Web::ProjectMetadata
-    OME::Web::ProjectSearch
-    OME::Web::ProjectSwitch
-    OME::Web::SaveViewerSettings
-    OME::Web::Thumb
-    OME::Web::ThumbCurrentDataset
-    OME::Web::ThumbCurrentProject
-    OME::Web::ThumbWrite
-    OME::Web::TitleBar
-    OME::Web::Validation
-    OME::Web::Viewer
-    OME::Web::XMLFileExport 
+=over
+
+=item L<OME::Web>
+
+=item L<OME::Web::DatasetMetadata>
+
+=item L<OME::Web::AddImageDataset>
+
+=item L<OME::Web::DatasetComponents>
+
+=item L<OME::Web::DatasetInProjects>
+
+=item L<OME::Web::DatasetMetadata>
+
+=item L<OME::Web::DatasetSearch>
+
+=item L<OME::Web::DatasetSwitch>
+
+=item L<OME::Web::DirTree>
+
+=item L<OME::Web::DirTreeImport>
+
+=item L<OME::Web::DirTreeImportSelect>
+
+=item L<OME::Web::DirTreeSelect>
+
+=item L<OME::Web::FindSpots>
+
+=item L<OME::Web::GetGraphics>
+
+=item L<OME::Web::GetInfo>
+
+=item L<OME::Web::Helper::HTMLFormat>
+
+=item L<OME::Web::Helper::JScriptFormat>
+
+=item L<OME::Web::Home>
+
+=item L<OME::Web::ImageSearch>
+
+=item L<OME::Web::InfoDataset>
+
+=item L<OME::Web::InfoProject>
+
+=item L<OME::Web::Login>
+
+=item L<OME::Web::Logout>
+
+=item L<OME::Web::MakeNewProject>
+
+=item L<OME::Web::ManageDataset>
+
+=item L<OME::Web::ManageImage>
+
+=item L<OME::Web::ManageProject>
+
+=item L<OME::Web::ProjectDataset>
+
+=item L<OME::Web::ProjectDatasetImage>
+
+=item L<OME::Web::ProjectMetadata>
+
+=item L<OME::Web::ProjectSearch>
+
+=item L<OME::Web::ProjectSwitch>
+
+=item L<OME::Web::SaveViewerSettings>
+
+=item L<OME::Web::Thumb>
+
+=item L<OME::Web::ThumbCurrentDataset>
+
+=item L<OME::Web::ThumbCurrentProject>
+
+=item L<OME::Web::ThumbWrite>
+
+=item L<OME::Web::TitleBar>
+
+=item L<OME::Web::Validation>
+
+=item L<OME::Web::Viewer>
+
+=item L<OME::Web::XMLFileExport> 
+
+=back
 
 =begin comment
 
-    OME::Image::Pix
-    OME::Research::AnalyseText
-    OME::Research::SearchEngine
-    OME::Research::SetStatement
-    OME::SetDB
-    OME::ViewerPreferences
+=head2 Unsorted:
 
-unsorted:
-	OME::Factory::Iterator
-	OME::Image::LogicalChannel
-	OME::Image::ImageFilesXYZWT
-	OME::Image::DatasetMap
-	OME::ImportExport::InsertFiles
-	OME::ImportExport::ResolveFiles
-	OME::LSID
-	OME::Project::DatasetMap
-	OME::Remote
-	OME::Tasks::OMEXMLImportExport
-	OME::Tasks::AEFacade
-	OME::Tasks::ChainManager
-	OME::Tasks::DatasetManager
-	OME::Tasks::ImageManager
-	OME::Tasks::OMEXMLImportExport
-	OME::Tasks::ProjectManager
-	OME::Tasks::Thumbnails
+=over
 
+=item L<OME::Image::Pix>
+
+=item L<OME::Research::AnalyseText>
+
+=item L<OME::Research::SearchEngine>
+
+=item L<OME::Research::SetStatement>
+
+=item L<OME::SetDB>
+
+=item L<OME::ViewerPreferences>
+
+=item L<OME::Factory::Iterator>
+
+=item L<OME::Image::LogicalChannel>
+
+=item L<OME::Image::ImageFilesXYZWT>
+
+=item L<OME::Image::DatasetMap>
+
+=item L<OME::ImportExport::InsertFiles>
+
+=item L<OME::ImportExport::ResolveFiles>
+
+=item L<OME::LSID>
+
+=item L<OME::Project::DatasetMap>
+
+=item L<OME::Remote>
+
+=item L<OME::Tasks::OMEXMLImportExport>
+
+=item L<OME::Tasks::AEFacade>
+
+=item L<OME::Tasks::ChainManager>
+
+=item L<OME::Tasks::DatasetManager>
+
+=item L<OME::Tasks::ImageManager>
+
+=item L<OME::Tasks::OMEXMLImportExport>
+
+=item L<OME::Tasks::ProjectManager>
+
+=item L<OME::Tasks::Thumbnails>
+
+=back
 
 =end comment
 
 =head1 AUTHOR
 
-Douglas Creager (dcreager@alum.mit.edu)
+Douglas Creager (dcreager@alum.mit.edu), Josiah Johnston <siah@nih.gov>
 
+=head1 SEE ALSO
+
+L<OME API|omeapi>
