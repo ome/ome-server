@@ -121,6 +121,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	private PChainCanvas canvas;
 	
+	private boolean postPopup= false;
+	
 	
 	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
@@ -128,7 +130,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		this.canvas = canvas;
 		this.linkLayer = linkLayer;
 		PInputEventFilter filter =getEventFilter();
-		filter.setAcceptsKeyPressed(true);
+		filter.acceptEverything();
 		setEventFilter(filter);
 		canvas.getRoot().getDefaultInputManager().
 			setKeyboardFocus(this);
@@ -268,33 +270,50 @@ public class PChainEventHandler extends  PPanEventHandler {
 			return;
 		}
 		
+		if (postPopup == true) {
+			postPopup = false;
+			e.setHandled(true);
+			return;
+		}
 		
+		System.err.println("running a mouse clicked event");
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
-		PCamera camera = canvas.getCamera();
 		if (! (node instanceof PCamera))
 			return;
 		
 		if (e.isShiftDown()) {
 			PBounds b = canvas.getBufferedBounds();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+			canvas.getCamera().animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 			e.setHandled(true);
 		}
-		else { 
-			double scaleFactor  = PConstants.SCALE_FACTOR;
-			if (e.isControlDown() || ((mask & MouseEvent.BUTTON3_MASK)==1)) {	
+		else {
+			double scaleFactor = PConstants.SCALE_FACTOR; 
+			if (e.isControlDown() || ((mask & MouseEvent.BUTTON3_MASK)==1)) {
 				scaleFactor = 1/scaleFactor;
 			}
-			double curScale = camera.getScale();
-			curScale *= scaleFactor;
-			Point2D pos = e.getPosition();
-			camera.scaleViewAboutPoint(curScale,pos.getX(),pos.getY());
+			zoom(scaleFactor,e);
 			e.setHandled(true);
 		}  
+	} 
+	
+	private void zoom(double scale,PInputEvent e) {
+		PCamera camera=canvas.getCamera();
+		double curScale = camera.getScale();
+		curScale *= scale;
+		Point2D pos = e.getPosition();
+		camera.scaleViewAboutPoint(curScale,pos.getX(),pos.getY());
+		e.setHandled(true);
 	}
 
 	
 	public void mousePressed(PInputEvent e) {
+		
+		if (e.isPopupTrigger()) {
+			System.err.println("mouse pressed..");
+			evaluatePopup(e);
+			return;
+		}
 		PNode node = e.getPickedNode();
 		
 		//System.err.println("mouse pressed on "+node+", state "+linkState);
@@ -490,6 +509,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 			moduleLinksStartedAsInputs = false;
 		}
 		linkState = LINKING_MODULES; 
+	}
+	
+	public void mouseReleased(PInputEvent e) {
+		if (e.isPopupTrigger()) {
+			System.err.println("mouse released");
+			evaluatePopup(e);
+		}
+	}
+	
+	private void evaluatePopup(PInputEvent e) {
+		System.err.println("popup event"+e);
+		double scaleFactor = 1/PConstants.SCALE_FACTOR;
+		zoom(scaleFactor,e);
+		e.setHandled(true);
+		postPopup=true;
 	}
 	
 	private void startModuleLinks(Collection params) {
