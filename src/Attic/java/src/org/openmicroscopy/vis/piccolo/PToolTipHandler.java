@@ -45,6 +45,7 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.nodes.PText;
 import java.awt.geom.Point2D;
 import java.awt.Color;
+import java.awt.Font;
 
 /**
  * A handler for toolips. This borrows heavily from the tooltip example
@@ -57,12 +58,13 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	protected static Color	TIP_COLOR = Color.BLUE;
 	protected PCamera camera;
 	protected PText tooltipNode;
-	
+	protected Font font = new Font("Helvetica",Font.BOLD,14);
 	
 
 	PToolTipHandler(PCamera camera) {
 		this.camera = camera;
 		tooltipNode = new PText();
+		tooltipNode.setFont(font);
 		camera.addChild(tooltipNode);
 		tooltipNode.setPaint(TIP_COLOR);
 	}
