@@ -47,6 +47,7 @@ use Log::Agent;
 use OME::Install::Util;
 use OME::Install::Environment;
 use OME::Install::Terminal;
+use OME::Install::ApacheConfigTask; # for omeis_test call in method check_repository
 use base qw(OME::Install::InstallationTask);
 
 # Packages needed from OME for the bootstrap
@@ -489,7 +490,7 @@ PRINT
     }
 
     my $password;
-    ($password, $OME_EXPER->{Password}) = get_password ("Enter Password to configure OME user ".$OME_EXPER->{OMEName}.": ", 6);
+    ($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6);
 
     print "\n";  # Spacing
 
@@ -679,10 +680,12 @@ sub make_repository {
     my $hostname = hostname();
 
     # FIXME Make this a little more verbose, probably needs some explanation.
-    my $repository_def = $ENVIRONMENT->omeis_url();
-    $repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
-    my $repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
-    $ENVIRONMENT->omeis_url($repository_url);
+    my $repository_url = $ENVIRONMENT->omeis_url();
+    if ($ENVIRONMENT->apache_conf->{OMEIS} and not $repository_url) {
+	    my $repository_def = "http://$hostname/cgi-bin/omeis";
+    	$repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
+    	$ENVIRONMENT->omeis_url($repository_url);
+    }
     
     my $repository = $factory->
     newObject('OME::SemanticType::BootstrapRepository',
@@ -718,51 +721,8 @@ sub check_repository {
 		print $LOGFILE "   Matches ".$ENVIRONMENT->omeis_url()." from stored environment\n";
 	}
  	$ENVIRONMENT->omeis_url($repository_url);
- 	
-
-	print $LOGFILE "Getting an LWP user agent\n";
-	my $user_agent = LWP::UserAgent->new();
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not get a LWP user agent\n" and
-		croak "Could not get a LWP user agent"
-	unless $user_agent;
-
-
-	# Get a request
-	my $url = $repository_url;
-	print $LOGFILE "Generating request for $url\n";
-	my $request = HTTP::Request->new(GET => $url);
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "Could not generate a request for $url.\n" and
-		croak "Could not generate a request for $url\n".
-			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $request;
-
-	# Get a response
-	print $LOGFILE "Getting response from $url\n";
-	my $response = $user_agent->request($request);
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "OMEIS could not be reached.\n".
-			"Did not get a response from $url.\n" and
-		croak "OMEIS could not be reached.  Did not get a response from $url.\n".
-			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $response;
-
-	# Check the response for 'Method parameter missing'
-	print $LOGFILE "Parsing response from $url\n";
-	my $content = $response->content();
-	print BOLD, "[FAILURE]", RESET, ".\n" and
-		print $LOGFILE "OMEIS could not be reached.\n".
-			"Incorrect response from OMEIS at $url:\n$content\n" and
-		croak "OMEIS could not be reached.\n".
-			"Incorrect response from OMEIS at $url:\n$content\n".
-			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
-	unless $content =~ /Method parameter missing/m;
-
-	print BOLD, "[SUCCESS]", RESET, ".\n"
-		and print $LOGFILE "Repository is configured correctly\n";
-
-}
+ 	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url() );
+ }
 
 sub load_xml_core {
     my ($session, $logfile) = @_;
@@ -1040,9 +1000,8 @@ sub execute {
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
-        check_repository ($session);
         print_header "Finalizing Database";
-        make_repository( $session );
+        make_repository ($session);
         # Set the UID to whoever owns the install directory
         $EUID = (stat ('.'))[4];
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
