@@ -405,37 +405,31 @@ sub getImageDim{
 
 
 
-############################
-# Parameters:
-#	image = image object
-
-my @stackStatsModules = (
-                         'Fast Stack statistics',
-                         'Stack statistics (image server)',
-                        );
-sub __tryOneStatsModule ($$) {
-    my ($module_name,$pixels) = @_;
+sub getImageStatsMEX {
+    my ($self,$pixels) = @_;
 	my $session = OME::Session->instance();
 	my $factory=$session->Factory();
 
-  	my $stackStats = $factory->findObject( "OME::Module", 
-                                           name => $module_name )
-      or return undef;
-
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
-		module_id => $stackStats->id(),
-		name       => 'Pixels' )
-      or return undef;
-
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
-		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
-      or return undef;
-
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
-
-    return $stackStatsAnalysisID;
+	foreach my $module_name( 'Fast Stack statistics', 'Stack statistics (image server)' ) {
+		my $stackStats = $factory->findObject( "OME::Module", 
+											   name => $module_name )
+		  or next;
+	
+		my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
+			module_id => $stackStats->id(),
+			name       => 'Pixels' )
+		  or next;
+	
+		my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+			formal_input_id   => $pixelsFI->id(),
+			input_module_execution_id => $pixels->module_execution()->id() )
+		  or next;
+	
+		return $actualInput->module_execution();
+	}
+    return undef;
 }
+
 
 sub getImageStats{
 	my ($self,$image,$pixels)=@_ ;
@@ -445,35 +439,28 @@ sub getImageStats{
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
 
-    my $stackStatsAnalysisID;
-  MODULE:
-    foreach my $module_name (@stackStatsModules) {
-        $stackStatsAnalysisID = __tryOneStatsModule($module_name,$pixels);
-        last MODULE if defined $stackStatsAnalysisID;
-    }
-
-    die "Could not find stack statistics for these pixels!"
-      unless defined $stackStatsAnalysisID;
+    my $stackStatsAnalysis = $self->getImageStatsMEX( $pixels )
+		or die "Could not find stack statistics for these pixels!";
 
 	my @mins = $factory->findAttributes( "StackMinimum", {
 		image            => $image, 
-		module_execution => $stackStatsAnalysisID
+		module_execution => $stackStatsAnalysis
 	} );
 	my @maxes = $factory->findAttributes( "StackMaximum", {
 		image            => $image, 
-		module_execution => $stackStatsAnalysisID
+		module_execution => $stackStatsAnalysis
 	} );
 	my @means = $factory->findAttributes( "StackMean", {
 		image            => $image, 
-		module_execution => $stackStatsAnalysisID
+		module_execution => $stackStatsAnalysis
 	} );
 	my @gmeans = $factory->findAttributes( "StackGeometricMean", {
 		image            => $image, 
-		module_execution => $stackStatsAnalysisID
+		module_execution => $stackStatsAnalysis
 	} );
 	my @geosigmas = $factory->findAttributes( "StackGeometricSigma", {
 		image            => $image, 
-		module_execution => $stackStatsAnalysisID
+		module_execution => $stackStatsAnalysis
 	} );
 
 	my $sh; # stats hash
@@ -509,6 +496,9 @@ sub getImageWavelengths{
 		image  => $image,
 		Pixels => $pixels } )
 		or die "Cannot find PixelChannelComponent's for image (id=".$image->id()."), pixels (id=".$pixels->id().")\n";
+	@channelComponents = sort 
+		{ $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+		@channelComponents;
 	foreach my $cc (@channelComponents) {
 		my $ChannelNum = $cc->Index();
 		my $Label;
