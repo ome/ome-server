@@ -54,6 +54,7 @@ import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CNode;
 import org.openmicroscopy.vis.ome.CModule;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import org.openmicroscopy.vis.dnd.ModuleFlavor;
@@ -249,7 +250,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
 	public void save(String name,String desc) {	
 		ChainManager manager = connection.getChainManager();
-		Chain chain  = manager.createChain(name,desc);
+		CChain chain  =  (CChain)manager.createChain(name,desc);
 		
 		//populate chains
 		addNodes(manager,chain);
@@ -269,7 +270,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		libraryCanvas.scaleToSize();
 	}
 	
-	private void addNodes(ChainManager manager,Chain chain) {
+	private void addNodes(ChainManager manager,CChain chain) {
 		PNode node;
 		PModule mod;
 		CNode chainNode;
@@ -286,7 +287,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		}
 	}
 	
-	private void addLinks(ChainManager manager,Chain chain) {
+	private void addLinks(ChainManager manager,CChain chain) {
 		PNode node;
 		PParamLink link;
 		
