@@ -115,7 +115,7 @@ sub getPageBody {
 	my $q    = $self->CGI();
 	
 	if( $q->param( "Type" ) ) {
-		if( $q->param( "Format" ) eq 'txt' ) {
+		if( $q->param( "Format" ) and $q->param( "Format" ) eq 'txt' ) {
 			return ('TXT', 
 				$self->getTextTable( {
 				})
@@ -210,9 +210,10 @@ sub getTable {
 		$table_cells = 
 			$q->td( { -class => 'ome_td', -align => 'center'},
 				$q->checkbox( {
-					-name    => $options->{ select_name } or 'Selected_'.$formal_name, 
+					-name    => ($options->{ select_name } or 'Selected_'.$formal_name), 
 					-value   => $record->{_id}, 
-					-checked => ''} )
+					-checked => '',
+				} )
 			)
 			if( $options->{ select_column } );
 		$table_cells .= 
@@ -246,7 +247,7 @@ sub getTable {
 	# enable column sorting. make the column that records are currently sorted on inactive.
 	} else {
 		my $inactiveColumn;
-		if( $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
+		if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
 			($inactiveColumn = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
 		} else {
 			$inactiveColumn = 'id';
@@ -300,7 +301,7 @@ sub getTable {
 		);
 	$html .= 
 		'<nobr>'.$pagingText.'</nobr>'.
-		$q->hidden({-name => "PageNum_$formal_name", -default => $q->param( "PageNum_$formal_name" ) })
+		$q->hidden({-name => "PageNum_$formal_name", -default => ( $q->param( "PageNum_$formal_name" ) or undef ) })
 		if( $allowPaging );
 	$html .= 
 		$q->hidden({-name => 'action', -default => ''}).
@@ -837,7 +838,11 @@ sub __parseParams {
 	# paging
 	my $pagingText;
 	if( $searchParams{ __limit } ) {
-		my $currentPage = ( defined $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) + 1 : 1 );
+		my $currentPage = ( 
+			( defined $q->param( "PageNum_$formal_name" ) and $q->param( "PageNum_$formal_name" ) ne "" ) ? 
+			$q->param( "PageNum_$formal_name" ) + 1 :
+			1 
+		);
 		my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit });
 		if( $object_count and $numPages > 1) {
 			$pagingText .= $q->a( {
@@ -902,16 +907,17 @@ sub __get_CGI_search_params {
 	my ( $q, $type ) = @_;
 
 	# collect search params
-	my %searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/, $q->param( ) );
+	my %searchParams = map{ $_ => ( $q->param( $_ ) or undef ) } grep( m/^($type)_/, $q->param( ) );
 	foreach my $key (keys %searchParams) {
 		# get the key's Real name
 		(my $newkey = $key) =~ s/^($type)_//;
 		# copy the key into the real name unless the value is blank
 		$searchParams{ $newkey } = $searchParams{ $key }
-			unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
+			unless (not defined $searchParams{ $key } or $searchParams{ $key } eq '');
 		# delete the old key
 		delete $searchParams{ $key };
-		if ( $searchParams{ $newkey } =~ m/,/) {
+		# split the newkey into a list if it contains commas and was populated 2 lines above
+		if( exists $searchParams{ $newkey } and $searchParams{ $newkey } =~ m/,/) {
 			if( $newkey ne 'accessor' ) {
 				$searchParams{ $newkey } = [ 'in', [ split( m/,/, $searchParams{ $newkey } ) ] ];
 			} else {
