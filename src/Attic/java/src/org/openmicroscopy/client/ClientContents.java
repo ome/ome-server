@@ -44,12 +44,17 @@ package org.openmicroscopy.client;
 //import java.awt.*;
 import java.lang.Integer;
 import java.awt.geom.*;
+import java.awt.Container;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Toolkit;
 import java.awt.Canvas;
 import java.awt.MediaTracker;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -57,10 +62,22 @@ import java.awt.font.*;
 import java.awt.event.*;
 import java.awt.event.*;
 import java.awt.GridBagConstraints;
+import java.util.List;
+import java.util.Iterator;
 import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.filechooser.*;
+import javax.swing.LookAndFeel;
+import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.imageviewer.ui.*;
+import org.openmicroscopy.vis.ome.*;
+import org.openmicroscopy.vis.chains.*;
+import org.openmicroscopy.vis.piccolo.*;
 import org.openmicroscopy.*;
 
 
@@ -90,7 +107,8 @@ public class ClientContents extends JFrame {
     ChainViewer    chV;
     ImageController imC;
     ZoomImagePanel     pixPanel;
-    JScrollPane    holdsImage;
+    //JScrollPane    holdsImage;
+    JPanel         holdsImage = new JPanel();
     JPanel         workstationPanel;
     JSplitPane     Viewers;
     JSplitPane     mainContents;
@@ -100,6 +118,11 @@ public class ClientContents extends JFrame {
     ClientTabs     tabPanel;
     ClientViewPane viewPane;
     DataAccess     Accessor;
+    Cursor waitcur =
+	java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR);
+    Cursor defcur =
+	java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.DEFAULT_CURSOR);
+    private static String motifClassName = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
 
 
     /**
@@ -120,7 +143,17 @@ public class ClientContents extends JFrame {
 	groupName = new String(ourLogin.getGroup());
 	imC = ImageController.getInstance(Accessor.bindings);
 	pixPanel = new ZoomImagePanel();
-	holdsImage = new JScrollPane(pixPanel);
+	//holdsImage = new JScrollPane(pixPanel);
+	holdsImage = new JPanel();
+	holdsImage.setPreferredSize(new Dimension(200,200));
+	//holdsImage.add(pixPanel);
+
+	try {
+	    UIManager.setLookAndFeel(motifClassName);
+	} catch (Exception exc) {
+	    System.err.println("Error loading L&F: " + exc);
+	}
+
         statusBar = new ClientStatusBar(this);
         tabPanel  = new ClientTabs(this, Accessor);
         viewPane  = new ClientViewPane(this, Accessor);
@@ -139,9 +172,10 @@ public class ClientContents extends JFrame {
 
 	// Put up our favorite image on corner of window
 	java.awt.Image decalIcon  = null;
-	Class c = ClientContents.class;
+	//Class c = ClientContents.class;
+	ClassLoader cload = this.getClass().getClassLoader();
 	try {
-	    java.net.URL u = c.getResource("AnimalCellicon.gif");
+	    java.net.URL u = cload.getResource("org/openmicroscopy/client/AnimalCellicon.gif");
 	    decalIcon = Toolkit.getDefaultToolkit().getImage(u);
 	} catch(Exception e){
 	    System.err.println("Failed to load icon: "+e);
@@ -175,8 +209,8 @@ public class ClientContents extends JFrame {
         mainConstrain.fill = GridBagConstraints.HORIZONTAL;
 	mainConstrain.ipadx = 0;
 
-	// make a split pane that will hold the detail of a selected entity
-	// and its picture, if an image, or its chain diagram, if a chain.
+	// make an info/image split pane that will hold the details of an
+	// entity and picture, if an image, or chain diagram, if a chain.
 	Dimension pdim = new Dimension(100,100);
 	holdsImage.setPreferredSize(pdim);
 	Viewers = new JSplitPane(JSplitPane.VERTICAL_SPLIT, viewPane, holdsImage);
@@ -187,6 +221,8 @@ public class ClientContents extends JFrame {
 	// and the info/image pane on the right.
 	mainContents = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
 				      tabPanel, Viewers);
+	Rectangle r = tabPanel.getBounds(null);
+
 	mainContents.setOneTouchExpandable(true);
 	mainContents.setResizeWeight(0.2);
 
@@ -326,7 +362,7 @@ public class ClientContents extends JFrame {
      * @param project the project to be detailed
      */
     public void SummarizeProject(Project project) {
-	prV = new ProjectViewer(project);
+	prV = new ProjectViewer(project, Accessor);
 	SummarizeEntity(prV);
     }
 
@@ -401,7 +437,11 @@ public class ClientContents extends JFrame {
      */
     public void SummarizeImage(Image image) {
       imV = new ImageViewer(image);
+      pixPanel.setSize(holdsImage.getSize(null));
+      holdsImage.add(pixPanel);
+
       SummarizeEntity(imV);
+      imV.repaint();
       imC.doLoadImageObject(image);
     }
 
@@ -434,8 +474,32 @@ public class ClientContents extends JFrame {
      * @param chain the chain to be detailed
      */
     public void SummarizeChain(Chain chain) {
+	Rectangle hr = holdsImage.getBounds();
+	System.err.println("   holdsImage after creattion: "+hr);
 	chV = new ChainViewer(chain);
 	SummarizeEntity(chV);
+	holdsImage.setBackground(new Color(155, 175, 203));
+	ClientChainPanel chPanel = getChainPix(chain);
+
+	Rectangle r = holdsImage.getBounds(null);
+        Rectangle recV = Viewers.getBounds();
+	Point pntM = mainContents.getLocation();
+	Point globalPanelStart = new Point(recV.x, r.y+pntM.y);
+	System.err.println("holdsImage has bounds: "+r);
+
+	holdsImage.removeAll();
+	holdsImage.add((JPanel)chPanel);
+	holdsImage.validate();
+	Rectangle chb = chPanel.getBounds();
+	System.err.println("this panel's bounds:: "+chb);
+
+	PChainLibraryCanvas chCanvas = chPanel.setCanvas();
+	chCanvas.validate();
+	PCamera pCam = chCanvas.getCamera();
+	chV.repaint();
+
+	chPanel.dumpContents();
+
     }
 
     /**
@@ -454,7 +518,7 @@ public class ClientContents extends JFrame {
     protected void SummarizeEntity(ClientViewerPane enV) {
 	viewPane.removePane();
 	viewPane.addPane(enV);
-	enV.repaint();
+	viewPane.validate();
     }
 
     /**
@@ -479,7 +543,6 @@ public class ClientContents extends JFrame {
 	    System.err.println("mapping ds "+dID+" to project "+pID);
 	    OMEObject obj = f.newObject(className, p2dMap);
 	    if (obj != null) {
-		//obj.writeObject();
 		obj.storeObject();
 		Accessor.bindings.getSession().commitTransaction();
 	    }
@@ -501,7 +564,90 @@ public class ClientContents extends JFrame {
     public DataAccess getAccessor() {
 	return Accessor;
     }
+
+
+    /**
+     * Makes a schematic diagram of an analysis chain.
+     */
+    private ClientChainPanel getChainPix(Chain chain) {
+	Connection conn;
+	conn = new Connection(Accessor.bindings.getSession(),
+			      Accessor.bindings.getFactory());
+	Controller cn = new Controller(conn, chain);
+	ClientChainPanel ccp = new ClientChainPanel(cn, conn);
+        Rectangle recV = ccp.getBounds();
+        System.err.println("ClientChainPanel start:: x:"+recV.x+" y:"+recV.y);
+	return ccp;
+
+    }
+
+    public void paint(Graphics g) {
+	Graphics2D g2 = (Graphics2D)g;
+    }
+
+
+    /**
+     * Helper method to change to a wait cursor.
+     */
+    public void setWaitCursor() {
+	JFrame f = getOurFrame();
+	if (!f.equals(null)) {
+	    f.setCursor(waitcur);
+	}
+    }
+
+    /**
+     * Helper method to change to a default cursor.
+     */
+    public void setDefaultCursor() {
+	JFrame f = getOurFrame();
+	if (!f.equals(null)) {
+	    f.setCursor(defcur);
+	}
+    }
+
+
+    /**
+     * Reports runtime errors.
+     * @param action the action where the error occured
+     * @param msg the specific error message
+     * @return nothing
+     */
+
+    public void reportRuntime(String what, String msg) {
+	JFrame fe = new JFrame("Execution Error");
+	JOptionPane.showMessageDialog(fe, msg, what,
+					       JOptionPane.ERROR_MESSAGE);
+	return;
+
+    }
+
+    private JFrame getOurFrame() {
+	Component c = this;
+	while(c != null && !(c instanceof JFrame)){
+	    c = c.getParent();
+	}
+	return (JFrame)c;
+    }
+
 }
 
 
+
+
+
+class MyPix extends JPanel {
+
+    public MyPix() {
+	setPreferredSize(new Dimension(100,100));
+    }
+
+    public void paint(Graphics g) {
+	Graphics2D g2 = (Graphics2D)g;
+	Rectangle2D r = new Rectangle2D.Float(50, 50, 20, 20);
+	g2.setStroke(new BasicStroke(4));
+	g2.setPaint(Color.yellow);
+	g2.draw(r);
+    }
+}
 
