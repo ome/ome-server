@@ -29,10 +29,10 @@ import org.openmicroscopy.Session;
 public class XmlRpcCaller
     implements RemoteCaller
 {
-    protected XmlRpcClient  xmlrpc;
-    protected Vector        vparams = new Vector();
-    protected String        sessionReference = null;
-    protected Session       session = null;
+    private XmlRpcClient  xmlrpc;
+    private Vector        vparams = new Vector();
+    private String        sessionReference = null;
+    private Session       session = null;
 
     public XmlRpcCaller(URL url)
     {
@@ -47,7 +47,7 @@ public class XmlRpcCaller
 
     public void login(String username, String password)
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference == null)
             {
@@ -61,7 +61,7 @@ public class XmlRpcCaller
 
     public void logout()
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference != null)
             {
@@ -78,21 +78,24 @@ public class XmlRpcCaller
         return session;
     }
 
-    protected Object invoke(String method)
+    private Object invoke(String method)
     {
-        try
+        synchronized(this)
         {
-            Object retval = xmlrpc.execute(method,vparams);
-            vparams.clear();
-            return retval;
-        } catch (Exception e) {
-            throw new RemoteException(e.getMessage());
+            try
+            {
+                Object retval = xmlrpc.execute(method,vparams);
+                vparams.clear();
+                return retval;
+            } catch (Exception e) {
+                throw new RemoteException(e.getMessage());
+            }
         }
     }
 
     public Object invoke(String method, Object[] params)
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
@@ -120,7 +123,7 @@ public class XmlRpcCaller
 
     public Object dispatch(Object target, String method, Object[] params)
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
@@ -148,7 +151,7 @@ public class XmlRpcCaller
 
     public void freeObject(RemoteObject target)
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
@@ -161,7 +164,7 @@ public class XmlRpcCaller
 
     public void freeObject(String targetReference)
     {
-        synchronized(vparams)
+        synchronized(this)
         {
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");

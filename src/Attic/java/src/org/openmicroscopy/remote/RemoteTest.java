@@ -24,42 +24,39 @@ package org.openmicroscopy.remote;
 import org.openmicroscopy.*;
 
 import java.net.URL;
+import java.io.*;
 import java.util.*;
 
 public class RemoteTest
 {
     public static void main(String[] args)
     {
-        try
-        {
-            Class.forName("org.openmicroscopy.remote.RemoteSession");
-            Class.forName("org.openmicroscopy.remote.RemoteFactory");
-            Class.forName("org.openmicroscopy.remote.RemoteAttributeType");
-            Class.forName("org.openmicroscopy.remote.RemoteDataTable");
-        } catch (Exception e) {
-            System.err.println(e);
-            System.exit(0);
-        }
-
         String urlString =
             (args.length > 0)?
             args[0]:
             "http://localhost:8002/";
-        URL url = null;
+        RemoteBindings  bindings = null;
+
+        BufferedReader in =
+            new BufferedReader(new InputStreamReader(System.in));
+
         try
         {
-            url = new URL(urlString);
+            System.out.print("Username? ");
+            String username = in.readLine();
+        
+            System.out.print("Password? ");
+            String password = in.readLine();
+
+            bindings = new RemoteBindings();
+            bindings.loginXMLRPC(urlString,username,password);
         } catch (Exception e) {
             System.err.println(e);
             System.exit(1);
         }
 
-        XmlRpcCaller  xmlRpcCaller = new XmlRpcCaller(url);
-        xmlRpcCaller.login("dcreager"," ");
-        RemoteObject.setRemoteCaller(xmlRpcCaller);
-
-        Session  session = xmlRpcCaller.getSession();
-        Factory  factory = session.getFactory();
+        Session  session = bindings.getSession();
+        Factory  factory = bindings.getFactory();
 
         {
             List  typeList = factory.findObjects("OME::AttributeType",null);
@@ -80,6 +77,6 @@ public class RemoteTest
             }
         }
 
-        xmlRpcCaller.logout();
+        bindings.logoutXMLRPC();
     }
 }
