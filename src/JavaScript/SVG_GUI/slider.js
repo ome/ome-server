@@ -167,7 +167,7 @@ Slider.prototype.setMax = function(max) {
 *	setMinmax
 *
 *****/
-Slider.prototype.setMinmax = function(min, max) {
+Slider.prototype.setMinmax = function(min, max, call_callback) {
 	this.min = min;
 	this.max = max;
 	if (this.min < this.max) {
@@ -177,7 +177,8 @@ Slider.prototype.setMinmax = function(min, max) {
 		if (this.value < max) this.value = max;
 		if (this.value > min) this.value = min;
 	}
-	this.setValue(this.value, true);
+	if( call_callback !== false ) call_callback = true;
+	this.setValue(this.value, call_callback);
 };
 
 
@@ -193,7 +194,7 @@ Slider.prototype.setValue = function(value, call_callback) {
 	this.value = value;
 	this.nodes.thumb.setAttributeNS(null, "transform", "translate(" + position + ", 0)");
 
-	if (call_callback ) this.issueCallback(value)
+	if (call_callback ) this.issueCallback(value);
 };
 
 Slider.prototype.issueCallback = function(value) {
@@ -215,7 +216,7 @@ Slider.prototype.setPosition = function(position, call_callback) {
 
 	this.nodes.thumb.setAttributeNS(null, "transform", "translate(" + position + ", 0)");
 	this.value = value;
-	if (call_callback ) this.issueCallback(value)
+	if (call_callback ) this.issueCallback(value);
 };
 
 /*****
@@ -225,6 +226,18 @@ Slider.prototype.setPosition = function(position, call_callback) {
 *****/
 Slider.prototype.getValue = function() {
 	return this.value;
+};
+
+
+/*****
+*
+*	getPosition
+*
+*****/
+Slider.prototype.getPosition = function() {
+	var range = this.max - this.min;
+	var position = ( this.value - this.min ) / range * this.size;
+	return position;
 };
 
 
