@@ -45,7 +45,7 @@ OME::Web::Search
 
 =head1 DESCRIPTION
 
-Build a table with information about any DBObject or attribute.
+Allow searches and selects for any DBObject or attribute.
 
 =cut
 
@@ -113,27 +113,27 @@ sub new {
 
 sub getMenuText {
 	my $self = shift;
-	my $menuText = "Search";
+	my $menuText = "Other";
 	return $menuText unless ref($self);
 
 	my $type = $self->CGI()->param( 'Type' );
 	$type = $self->CGI()->param( 'Locked_Type' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-		return "$common_name Search";
+		return "$common_name";
     }
 	return $menuText;
 }
 
 sub getPageTitle {
-	return "OME Search";
+	return "Search for something";
 	my $self = shift;
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
 	$type = $q->param( 'Locked_Type' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-    	return "$common_name Search";
+    	return "Search for $common_name";
     }
 }
 
@@ -142,11 +142,11 @@ sub getPageBody {
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
 	$type = $q->param( 'Locked_Type' ) unless $type;
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 	my $html;
 
 	# Perform an action if the user just clicked one
-	if( exists $self->{ _action_registry }->{ $type } &&
+	if( $type &&
+	    exists $self->{ _action_registry }->{ $type } &&
 	    $q->param( 'action' ) &&
 	    exists $self->{ _action_registry }->{ $type }->{ $q->param( 'action' ) } ) {
 		
@@ -191,7 +191,7 @@ END_HTML
 	my $types_data = $self->{ _published_search_types };
 	foreach( @$types_data ) {
 		$_->{ selected } = 'selected'
-			if $_->{formal_name} eq $type;
+			if ($type && $_->{formal_name} eq $type );
 	}
 	# set up display modes
 	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
@@ -202,10 +202,6 @@ END_HTML
 	}
 	my %tmpl_data = ( 
 		types_loop => $types_data, 
-		( $q->param( 'Locked_Type' ) ? 
-			( Locked_Type => $common_name, formal_name => $formal_name ) :
-			()
-		),
 		modes_loop => $display_modes_data
 	);
 	
@@ -214,6 +210,14 @@ END_HTML
 	# If a type is selected, write in the search fields.
 	# Also search if search fields are ready.
 	if( $type ) {
+		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+		
+		# finish setting template data not specific to search results
+		if( $q->param( 'Locked_Type' ) ) {
+			$tmpl_data{ Locked_Type } = $common_name;
+			$tmpl_data{ formal_name } = $formal_name;
+		}
+
 		my $render = $self->Renderer();
 		# search_type is the type that the posted search parameters are
 		# meant for. It will be different than Type if the user just
@@ -224,7 +228,7 @@ END_HTML
 		my @cgi_search_names = $q->param( 'search_names' );
 
 		# clear stale search parameters
-		unless( $search_type eq $type || !$search_type ) {
+		unless( $search_type && $search_type eq $type || !$search_type ) {
 			$q->delete( $_ ) foreach( @cgi_search_names );
 		}
 		
