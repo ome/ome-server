@@ -12,6 +12,8 @@ pattern.
 
 An overview for new OME developers is in L<newdevelopers>
 
+Some material about the OME Web server is available at L<C<OME::Web>|OME::Web>
+
 =head2 Organization of the OME database
 
 Since the OME design relies heavily on extensible semantic types,
