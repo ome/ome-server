@@ -285,6 +285,7 @@ sub processDOM {
  		my $image = $object;
 		my $imageID = $image->id();
 		
+		# set display options to reference default pixels if needed.
 		( $display_options->Pixels($image->DefaultPixels()) and $display_options->storeObject() )
 			if (defined $display_options and not defined $display_options->Pixels());
 		# Import Features
