@@ -104,6 +104,7 @@ my $numDatasets = 0;
 my $datasetArray;
 my $key;
 my $TMCP;
+my $retVal;
 my $cgi = $OME->cgi;
 my ($refWave,$trackWave,$cutoff,$flag);
 my ($datasetID,$refWaveID,$trackWaveID,$tiff0,$tiff1);
@@ -190,7 +191,7 @@ my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a na
 		my $tiff0 = $datasetArray->[$trackWave]->{Path}.$datasetArray->[$trackWave]->{Name};
 
 	# Execute the TMCP program, capturing its output in $TMCP, and sending stderr to $tempFileNameErr
-		$TMCP = `$executable $tiff0 $tiff1 2> $tempFileNameErr`;
+		$TMCP = $retVal = `$executable -v 2 $tiff0 $tiff1 2> $tempFileNameErr`;
 	# Trim leading and trailing whitespace, set $TMCP to undef if not like a C float.
 		$TMCP =~ s/^\s+//;$TMCP =~ s/\s+$//;$TMCP = undef unless ($TMCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 		if (defined $TMCP and $TMCP) {
@@ -214,7 +215,7 @@ my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a na
 		}
 	# Report the error.  Getting a bogus TMCP is fatal!
 		else {
-			die "$programName returned '$TMCP' - was expecting a number.\n$programName ERROR:".`cat $tempFileNameErr`."\n";
+			die "$programName returned '$retVal' - was expecting a number.\n$programName ERROR:\n".`cat $tempFileNameErr`."\n";
 		}
 	}
 	

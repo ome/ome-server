@@ -1033,7 +1033,7 @@ sub StartAnalysis()
 	my $self = shift;
 	my $full_url;
 
-	if ($self->inWebServer()) {$full_url = $self->{cgi}->url();}
+	if ($self->inWebServer()) {$full_url = $self->{cgi}->url(-relative=>1);}
 	else {$full_url = $ENV{'PWD'}."/".$0;}
 
 	$self->{dbHandle}->do ("UPDATE ome_sessions SET analysis = ? WHERE SESSION_ID = ?",undef,

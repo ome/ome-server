@@ -33,6 +33,8 @@ Other Perl modules:</h4>
 
 <ul>
 <li>
+Storable</li>
+<li>
 Apache::Session::File</li>
 
 <li>
@@ -42,16 +44,21 @@ Image::Magick (PerlMagick)</li>
 Frontier::XMLRPC (patched version in src/perl/modules)</li>
 
 <li>
+DBI (problems with 1.20. RH 7.1 ships with 1.14 which is too old - use the one in src/perl/modules)</li>
+<li>
 DBD::Pg (problems with many versions - use the one in src/perl/modules)</li>
 </ul>
-
-<p><br>All of these modules have other dependencies that need to be satisfied.
+<p><br> The versions of perl modules can be determined from the command prompt.  For example the DBI version is:
+<pre>> perl -MDBI -e 'print "$DBI::VERSION\n";'</pre> DBI versions 1.15 to 1.19 are OK.  
+Determine DBD::Pg version by executing:
+<pre>> perl -MDBD::Pg -e 'print "$DBD::Pg::VERSION\n";'</pre> DBD::Pg version 0.95 is what you want.
+<p><br>Most of these modules have other dependencies that need to be satisfied.
 This can most easily be done by installing them using CPAN. It is important
 to configure CPAN to ASK before installing dependencies (not the default!),
 so that it doesn't do something untoward like trying to install a new version
 of perl (which it is very likely to do, and if it screws it up - which
 is virtually guaranteed - it will seriously damage most UNIX systems).
-<pre>perl -MCPAN -e shell</pre>
+<pre>> perl -MCPAN -e shell</pre>
 will first configure CPAN, then run it. It is usually fairly useless to
 do this from an account other than root.
 <br>&nbsp;
@@ -61,6 +68,13 @@ to take care of the dependencies, and then install those modules from the
 distro on top of them. If you start getting lots of questions about your
 system, your processor, or your perl installation, it is trying to install
 a new version of perl! Abort this process immediately by hitting ^C.
+<p>Generally, installing Perl packages from a .tar.gz archive is done like so (assuming MyPackage-1.0.tar.gz, for example):
+<pre>> tar -zxvf MyPackage-1.0.tar.gz
+> cd MyPackage-1.0
+> perl Makefile.PL
+> make
+> make test
+> make install</pre>
 <br>&nbsp;
 <h4>
 Other Libraries:</h4>
@@ -85,7 +99,7 @@ following libraries (not strictly required, but highly recommended):
 project - binary install or RPM is fine)
 <p>run the configure script with something like the following command:
 .
-<pre>/configure --with-perl --with-tcl --enable-odbc --with-java</pre>
+<pre>./configure --with-perl --with-tcl --enable-odbc --with-java</pre>
 You may also want to set the data directory using with the flag --datadir=DIRECTORY.
 Read the INSTALL document before doing anything. If you installed DBD::Pg
 before doing this, you must install it again (do a 'make clean' first!)

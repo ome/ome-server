@@ -101,6 +101,7 @@ my $numDatasets = 0;
 my $datasetArray;
 my $key;
 my $CCCP;
+my $retVal;
 my $cgi = $OME->cgi;
 my $binWave;
 my ($datasetID,$wave1ID,$wave2ID,$wave3ID,$tiff0,$tiff1,$tiff2);
@@ -166,7 +167,7 @@ my $tempFileNameErr = $OME->GetTempName ('CCCP','err') or die "Couldn't get a na
 		}
 	
 	# Execute the CCCP program, capturing its output in $CCCP, and sending stderr to $tempFileNameErr
-		$CCCP = `$executable $tiff0 $tiff1 $tiff2 2> $tempFileNameErr`;
+		$CCCP = $retVal = `$executable -v 2 $tiff0 $tiff1 $tiff2 2> $tempFileNameErr`;
 	# Trim leading and trailing whitespace, set $CCCP to undef if not like a C float.
 		$CCCP =~ s/^\s+//;$CCCP =~ s/\s+$//;$CCCP = undef unless ($CCCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 		if (defined $CCCP and $CCCP) {
@@ -194,7 +195,7 @@ print STDERR "CCCP: Calling RegisterAnalysis for DatasetID=$datasetID\n";
 		}
 	# Report the error.  Getting a bogus CCCP is fatal!
 		else {
-			die "$programName returned '$CCCP' - was expecting a number.\n$programName ERROR:".`cat $tempFileNameErr`."\n";
+			die "$programName returned '$retVal' - was expecting a number.\n$programName ERROR:\n".`cat $tempFileNameErr`."\n";
 		}
 	}
 	
