@@ -125,7 +125,7 @@ sub print_form {
 	my @projectDatasets = $project->datasets();
 	my $user    = $session->User()
 		or die ref ($self)."->print_form() say: There is no user defined for this session.";
-	my @groupDatasets = OME::Dataset->search( group_id => $user->group()->group_id() );
+	my @groupDatasets = $session->Factory()->findObjects("OME::Dataset", 'group_id' =>  $user->group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
 	my %datasetList;
 	foreach (@groupDatasets) {
 	print STDERR "\n".$project->doesDatasetBelong($_)." ".$_->ID();
@@ -138,7 +138,7 @@ sub print_form {
 	my $text = '';
 	my ($tableRows);
 	
-	$text .= "Project '".$project->name()."' contains these datasets.<br><br>";
+	$text .= "Project '".$project->name()."' contains ".(scalar @projectDatasets > 0 ? "these" : "no")." datasets.<br><br>";
 	
 	foreach (@projectDatasets) {
 		$tableRows .= 
@@ -167,7 +167,8 @@ sub print_form {
 					'<b>Remove</b>' ),
 				$cgi->td( { -align=>'CENTER' },
 					'<b>Make this the current dataset</b>' ) ),
-			$tableRows );
+			$tableRows )
+		if(scalar @projectDatasets > 0 );
 	
 	$text .= "<br>".
 		$cgi->popup_menu (
@@ -176,10 +177,10 @@ sub print_form {
 			-labels => \%datasetList
 		).$cgi->submit (
 			-name=>'addDataset',
-			-value=>'add Dataset to this project');
+			-value=>'add Dataset to this project')
+		if (scalar keys %datasetList) > 0;
 
 
-	$text .= '<p>Which datasets should the user be able to add? Currently it holds every dataset in the users group. I think it should limit it further to ones that aren\'t already in this project. Someone needs to do that. Should they go in a popup? the popup could get might big.</p>';
 	$text .= $cgi->endform;
 	$text .= '<br>What else would you like to do with these? Think about it. <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov,a_falconi_jobs@hotmail.com">email</a> the developers.';
 	
