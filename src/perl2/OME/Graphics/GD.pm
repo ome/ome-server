@@ -1,13 +1,13 @@
-package Graphics::GD;
+package OME::Graphics::GD;
 
 use strict;
+use OME::Graphics;
 use GD;
 #use GD::Polyline;
-use Graphics;
 
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
-@ISA = ("Graphics");
+@ISA = ("OME::Graphics");
 
 # new
 # ---
@@ -90,7 +90,13 @@ my $i;
 
 
 
-sub Write {
+sub imageType {
+return 'image/png';
+}
+
+sub getImage {
+my $self = shift;
+	return ($self->{image}->png);
 }
 
 

@@ -1,4 +1,4 @@
-package Graphics;
+package OME::Graphics;
 use strict;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';

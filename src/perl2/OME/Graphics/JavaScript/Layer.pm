@@ -1,4 +1,4 @@
-package Graphics::JavaScript::Layer;
+package OME::Graphics::JavaScript::Layer;
 use strict;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
@@ -7,13 +7,12 @@ $VERSION = '1.0';
 my $JStype = 'Layer';
 my $JSobject = <<ENDJSOBJECT;
 // The Layer object.
-function $JStype (CGI_URL,name,allZ,allT) {
+function $JStype (CGI_URL,name,optionsStr) {
 	this.parent = undefined;
 	this.CGI_URL = CGI_URL || "";
 	this.name = name;
-	this.allZ = allZ || true;  // N.B.  NOT Boolean objects.
-	this.allT = allT || false;
-	this.options = ['allZ','allT','name'];  // This is an array of object fields that will be put on the URL
+	this.options = ['name'];  // This is an array of object fields that will be put on the URL
+	this.optionsStr = optionsStr;
 
 	this.overlay = [[]];       // 2-D array [Z][T]
 	this.allZoverlay = [];   // 1-D array [T]
@@ -81,24 +80,24 @@ function $JStype (CGI_URL,name,allZ,allT) {
 		if (this.allZ && this.allT) {
 			if (!this.allZToverlay)
 				this.allZToverlay = this.LoadImage ();
-			this.DisplayImage (this.allZToverlay);
+			this.allZToverlay = this.DisplayImage (this.allZToverlay);
 		}
 		else if ( this.allZ && !this.allT ) {
-			if ( !this.allZoverlay[theT] )
+			if ( !this.allZoverlay[theT] ) 
 				this.allZoverlay[theT] = this.LoadImage ();
-			this.DisplayImage (this.allZoverlay[theT]);
+			this.allZoverlay[theT] = this.DisplayImage (this.allZoverlay[theT]);
 		}
 		else if ( !this.allZ && this.allT ) {
 			if (!this.allToverlay[theZ])
 				this.allToverlay[theZ] = this.LoadImage ();
-			this.DisplayImage (this.allToverlay[theZ]);
+			this.allToverlay[theZ] = this.DisplayImage (this.allToverlay[theZ]);
 		}
 		else if ( !this.allZ && !this.allT ) {
 			if (!this.overlay[theZ])
 				this.overlay[theZ] = [];
 			if (!this.overlay[theZ][theT])
 				this.overlay[theZ][theT] = this.LoadImage ();
-			this.DisplayImage (this.overlay[theZ][theT]);
+			this.overlay[theZ][theT] = this.DisplayImage (this.overlay[theZ][theT]);
 		}
 	}
 	
@@ -115,21 +114,24 @@ function $JStype (CGI_URL,name,allZ,allT) {
 	function LoadImage () {
 		var theZ = this.parent.theZ;
 		var theT = this.parent.theT;
+		var ImageID = this.parent.ImageID;
 		var CGI = this.CGI_URL;
 		var i;
 		var options = [];
 		for (i=0;i<this.options.length;i++) {
 			options.push (this.options[i]+'='+eval ('this.'+this.options[i]) );
 		}
-		var imageURL = CGI+'?theZ='+theZ+';theT='+theT+';'+options.join (';',options);
-		var myImage = new Image ();
-		myImage.src = imageURL;
+		var imageURL = CGI+'?ImageID='+ImageID+'&theZ='+theZ+'&theT='+theT+'&'+options.join ('&',options)+'&'+optionsStr;
+//		var myImage = new Image ();
+//		myImage.src = imageURL;
 //		alert (this.name+'->LoadImage(); src='+imageURL);
-		return myImage;
+		return imageURL;
 	}
 	
-	function DisplayImage (theImage) {
-		this.Image.src = theImage.src;
+	function DisplayImage (theImageURL) {
+		if (this.Image.src != theImageURL)
+			this.Image.src = theImageURL;
+		return this.Image.src;
 	}
 	
 	function SetVisible (checked) {
@@ -152,6 +154,10 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self = {};
 	my %params = @_;
+
+#	foreach (keys(%params)) {
+#		print STDERR $_.' => '.$params{$_}."\n" if defined $params{$_};
+#	}
 #	my $self = $class->SUPER::new(@_);
 	bless $self,$class;
 	
@@ -161,7 +167,7 @@ sub new {
 	$self->{Form} = '';
 	$self->{JStype} = $JStype;
 	$self->{ObjectRef} = '';
-	
+	$self->{OptionsString} = '';
 
 	if (exists $params{allZ} and defined $params{allZ}) {
 		$self->{allZ} = $params{allZ};
@@ -186,9 +192,32 @@ sub new {
 	} else {
 		$self->{LayerCGI} = $0;
 	}
+	
+	if (exists $params{Options} and defined $params{Options}) {
+		$self->ParseOptions ($params{Options});
+	}
 
 	return $self;
 }
+
+
+sub ParseOptions () {
+my $self = shift;
+my $optionsStr = shift;
+my @options = split ('&',$optionsStr);
+my ($option,$value);
+
+	$self->{OptionsString} = $optionsStr;
+	foreach (@options) {
+		($option,$value) = split ('=',$_);
+		# URL-unescape the value
+		# use this to escape: =~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+		$value =~ tr/+/ /;       # pluses become spaces
+		$value =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
+		$self->{$option} = $value;
+	}
+}
+
 
 #
 sub Window {
@@ -204,9 +233,10 @@ my $objName = $self->{name};
 my $LayerCGI = $self->{LayerCGI};
 my $allZ = $self->{allZ} ? 'true' : 'false';
 my $allT = $self->{allT} ? 'true' : 'false';
-
+my $JSoptions = $self->{OptionsString};
+#FIXME: Should probably deal with the OptionsString better - make it a JS hash or make fields.
 	return <<ENDJS;
-var $objName = new $JStype ("$LayerCGI","$objName",$allZ,$allT);
+var $objName = new $JStype ("$LayerCGI","$objName","$JSoptions");
 ENDJS
 }
 
@@ -266,7 +296,6 @@ my $objRef = $self->{ObjectRef};
 	
 	return <<ENDFORM;
 	<INPUT TYPE="checkbox" NAME="$name" CHECKED VALUE="$name" onclick = "$objRef.SetVisible(this.checked);"/>
-	$objName</INPUT>
 ENDFORM
 }
 

@@ -1,9 +1,9 @@
-package Graphics::GD::Vectors;
-use Graphics::GD;
+package OME::Graphics::GD::Vectors;
+use OME::Graphics::GD;
 use strict;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
-@ISA = ("Graphics::GD");
+@ISA = ("OME::Graphics::GD");
 
 # new
 # ---

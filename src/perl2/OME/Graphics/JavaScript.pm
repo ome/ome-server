@@ -1,24 +1,36 @@
-package Graphics::JavaScript;
+package OME::Graphics::JavaScript;
 use strict;
-use Graphics;
+use OME::Graphics;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
-@ISA = ("Graphics");
+@ISA = ("OME::Graphics");
 
 my $JStype = 'JSgraphics';
 my $JSobject = <<ENDJSOBJECT;
 // This is the JSgraphics object, which conatins an array of Layer objects.
 // The JSgraphics constructor
-function $JStype (theZ, theT) {
+function $JStype (ImageID, dims, theZ, theT) {
 	this.layers = new Array ();
 	this.theZ = theZ;
 	this.theT = theT;
+	this.imgDims = dims;
+	this.ImageID = ImageID;
 	this.AddLayer = AddLayer;
 	this.SwitchZT = SwitchZT;
 	this.SwitchZ = SwitchZ;
+	this.Zup = Zup;
+	this.Zdown = Zdown;
+	this.Tup = Tup;
+	this.Tdown = Tdown;
 	this.SwitchT = SwitchT;
 	this.SwitchAllZT = SwitchAllZT;
 	this.Redraw = Redraw;
+	
+	this.theZtextBox = document.forms[0].theZtextBox;
+	this.theTtextBox = document.forms[0].theTtextBox;
+	
+	this.theZtextBox.value = theZ;
+	this.theTtextBox.value = theT;
 
 	return this;
 
@@ -34,22 +46,48 @@ function $JStype (theZ, theT) {
 		this.SwitchZT (theZ,this.theT);
 	}
 
+	function Zup () {
+		this.SwitchZT (this.theZ+1,this.theT);
+	}
+
+	function Zdown () {
+		this.SwitchZT (this.theZ-1,this.theT);
+	}
+
 	function SwitchT (theT) {
 		this.SwitchZT (this.theZ,theT);
+	}
+
+	function Tup () {
+		this.SwitchZT (this.theZ,this.theT+1);
+	}
+
+	function Tdown () {
+		this.SwitchZT (this.theZ,this.theT-1);
 	}
 
 	// SwitchZT method:
 	// Calls all the layers' SetZ/SetT method, which changes the displayed Z and/or T.
 	function SwitchZT (theZ,theT) {
+		
+		if (theZ >= this.imgDims[2]) theZ = this.imgDims[2]-1;
+		if (theZ < 0) theZ = 0;
+		if (theT >= this.imgDims[4]) theT = this.imgDims[4]-1;
+		if (theT < 0) theT = 0;
+
+		this.theZtextBox.value = theZ;
+		this.theTtextBox.value = theT;
+
 		if (this.theZ == theZ && this.theT == theT)
 			return;
-		this.theZ = theZ || this.theZ;
-		this.theT = theT || this.theT;
-
+		
+		this.theZ = theZ;
+		this.theT = theT;
+		
 		var i;
 		var nLayers = this.layers.length;
 		for (i = 0; i < nLayers; i++) {
-				this.layers[i].Redraw ();
+				this.layers[i].RedrawImage ();
 		}
 	}
 
@@ -103,19 +141,32 @@ sub new {
 	$self->{JSlayers} = "";
 	$self->{Form} = "";
 	$self->{JStype} = $JStype;
+	$self->{JSref} = $JStype;
 	$self->{layers} = [];
 	
+	die "ImageID must be specified when making a new ".ref($self)." object\n"
+		unless exists $params{ImageID} and defined $params{ImageID} and $params{ImageID};
+
+	$self->{ImageID} = $params{ImageID};
+	$self->{Image} = $params{Image};
+	$self->{Session} = $params{Session};
 
 	if (exists $params{theZ} and defined $params{theZ}) {
 		$self->{theZ} = $params{theZ};
-	} else {
-		$self->{theZ} = 0;
 	}
 
 	if (exists $params{theT} and defined $params{theT}) {
 		$self->{theT} = $params{theT};
 	} else {
 		$self->{theT} = 0;
+	}
+	
+	if (defined $self->{Image}) {
+		my $image = $self->{Image};
+		$self->{Dims} = [
+				$image->Field("sizeX"),$image->Field("sizeY"),$image->Field("sizeZ"),
+				$image->Field("sizeW"),$image->Field("sizeT"),$image->Field("bitsPerPixel")/8
+			];
 	}
 
 	return $self;
@@ -128,7 +179,8 @@ my $self = shift;
 my $layer = shift;
 my $i;
 
-	
+	# Give the layer a link to ourselves.
+	$layer->{Parent} = $self;
 	push (@{ $self->{layers} },$layer);
 	
 	$self->{JSlayers} .= 'JSgraphics.AddLayer ('.$layer->{name}.");\n";
@@ -189,14 +241,26 @@ sub JSinstance {
 my $self = shift;
 my $params = shift;
 my $instance;
+	die ref($self)."->JSinstance: The Dims field is undefined - probably the Image object was not passed as a parameter to new\n"
+		unless exists $self->{Dims} and defined $self->{Dims};
+	my $JS_Dims = '['.join (',', @{$self->{Dims}}).']';
 
 	$instance = $self->HTMLlayersDIVs($params);
 	$instance .= qq `<script type="text/javascript" language="Javascript"><!--\n`;
-	$instance .= "var $JStype = new $JStype (".$self->{theZ}.','.$self->{theT}.");\n";
+	$instance .= "var $self->{JSref} = new $JStype ($self->{ImageID},$JS_Dims,$self->{theZ},$self->{theT});\n";
 	$instance .= $self->JSlayersInstances();
-	$instance .= $self->{JSlayers}."\n$JStype.Redraw();";
+	$instance .= "$self->{JSlayers}\n";
+	$instance .= "$self->{JSref}.Redraw();";
 	$instance .= qq `//--></script>\n`;
+#	print STDERR $instance;
+	return $instance;
 }
+
+sub JSref {
+	my $self = shift;
+	return $self->{JSref};
+}
+
 
 sub JSlayersInstances {
 my $self = shift;

@@ -1,19 +1,23 @@
-package Graphics::JavaScript::Layer::Centroids;
+package OME::Graphics::JavaScript::Layer::Centroids;
 use strict;
-use Graphics::JavaScript::Layer;
+use OME::Graphics::JavaScript::Layer;
 use vars qw($VERSION @ISA);
 $VERSION = '1.0';
-@ISA = ("Graphics::JavaScript::Layer");
+@ISA = ("OME::Graphics::JavaScript::Layer");
 
 my $JStype = 'Centroids';
 my $JSobject = <<ENDJSOBJECT
-function $JStype (CGI_URL,name,color,allZ,allT) {
+function $JStype (CGI_URL,name,color,allZ,allT,optionsStr) {
 	this.base = Layer;
-	this.base(CGI_URL,name,allZ,allT);
-	this.layerType = "$JStype";
+	this.base(CGI_URL,name,optionsStr);
 	this.color = color || "red";
+	this.allZ = allZ || true;  // N.B.  NOT Boolean objects.
+	this.allT = allT || false;
+	this.options.push ('allZ');
+	this.options.push ('allT');
 	this.options.push ('color');
-	this.options.push ('layerType');
+
+	this.optionsStr = optionsStr;
 	
 	this.SetColor = SetColor;
 	
@@ -46,12 +50,13 @@ sub new {
 	push (@{$self->{JSdefs}},$JSobject);
 	
 
-	if (exists $params{color} and defined $params{color}) {
-		$self->{color} = $params{color};
-	} else {
-		$self->{color} = "red";
+	if (not (exists $self->{color} and defined $self->{color})) {
+		if (exists $params{color} and defined $params{color}) {
+			$self->{color} = $params{color};
+		} else {
+			$self->{color} = "red";
+		}
 	}
-
 
 
 
@@ -68,9 +73,10 @@ my $LayerCGI = $self->{LayerCGI};
 my $allZ = $self->{allZ} ? 'true' : 'false';
 my $allT = $self->{allT} ? 'true' : 'false';
 my $color = $self->{color};
+my $JSoptions = $self->{OptionsString};
 
-	$self->{JavaScript} .= <<ENDJS
-var $objName = new $JStype ("$LayerCGI","$objName","$color",$allZ,$allT);
+	return <<ENDJS
+var $objName = new $JStype ("$LayerCGI","$objName","$color",$allZ,$allT,"$JSoptions");
 ENDJS
 ;
 }
@@ -80,10 +86,8 @@ ENDJS
 sub Form {
 my $self = shift;
 
-	return '<TR><TD>'.
-		$self->Form_visible.
-		"</TD></TR>\n<TR><TD></TD><TD>".
-		$self->Form_allZ.'</TD><TD>'.
+	return '<TR><TD>'.$self->Form_visible."</TD><TD>$self->{name}</TD></TR>\n".
+		"<TR><TD></TD><TD>".$self->Form_allZ.'</TD><TD>'.
 		$self->Form_allT.'</TD><TD>'.
 		$self->Form_color."</TD><TD></TR>\n";
 }
