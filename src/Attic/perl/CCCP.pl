@@ -167,7 +167,7 @@ my $tempFileNameErr = $OME->GetTempName ('CCCP','err') or die "Couldn't get a na
 		}
 	
 	# Execute the CCCP program, capturing its output in $CCCP, and sending stderr to $tempFileNameErr
-		$CCCP = $retVal = `$executable -v 2 $tiff0 $tiff1 $tiff2 2> $tempFileNameErr`;
+		$CCCP = $retVal = `$executable -v 2 '$tiff0' '$tiff1' '$tiff2' 2> '$tempFileNameErr'`;
 	# Trim leading and trailing whitespace, set $CCCP to undef if not like a C float.
 		$CCCP =~ s/^\s+//;$CCCP =~ s/\s+$//;$CCCP = undef unless ($CCCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 		if (defined $CCCP and $CCCP) {

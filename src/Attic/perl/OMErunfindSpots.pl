@@ -261,7 +261,7 @@ print STDERR "Process: ",$image->Name,"\n";
 		$fNameStderr = $OME->GetTempName ($programName.'-'.$datasetIDs[$k],"stderr")
 			or die "Couldn't open a temporary file.\n";
 	# Generate the command for executing the program, and execute it.
-		$cmd = $programPath." ".$datasetPath." ".join (" ",@parameters).
+		$cmd = $programPath." '".$datasetPath."' ".join (" ",@parameters).
 			" 2> $fNameStderr 1> $fNameStdout";
 		$programStatus = system ($cmd);
 		$shortStatus = sprintf "%hd",$programStatus;
