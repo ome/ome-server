@@ -78,11 +78,7 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		
 		image.addThumbnail(this);
 	}
-
-	
-	
-	
-	
+		
 	public PBounds getBufferedBounds() {
 			PBounds b = getGlobalFullBounds();
 			System.err.println("thumbnail global scale is "+getGlobalScale());
@@ -126,16 +122,10 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		}
 		image.highlightThumbnails(v);
 		
-		// ok. if I'm under a pdatasetimages node, setup the halo
-		PNode parent = getParent();
-		if (parent != null) {
-			parent = parent.getParent();
-			if (parent != null && (parent instanceof PDatasetImagesNode)) {
-				PDatasetImagesNode pin = (PDatasetImagesNode) parent;
-				pin.highlightThumbnail(this,v);
-			}
-		}
+		
 	}
+	
+
 	
 	private PPath makeHighlight() {
 		PBounds b = getBounds();
@@ -184,4 +174,42 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		return (PBufferedNode) parent;
 		
 	}
+	
+	public PDatasetImagesNode getDatasetImagesNode() {
+		PNode parent = getParent();
+		if (parent == null)
+			return null;
+	
+		parent = parent.getParent();
+		if (parent == null)
+			return null; // case a also
+
+		if (!(parent instanceof PDatasetImagesNode))
+			return null; // case a, yet again
+	
+		PDatasetImagesNode pin = (PDatasetImagesNode) parent;
+		return pin;
+	}
+	
+	// a thumbnail is zoomable if (a) it's not under a pdatasetimages node or 
+	// (b) the pdatasetimagesnode that is it's parent does not have a halo
+	public boolean isZoomable() {
+		PDatasetImagesNode pin = getDatasetImagesNode();
+		
+		if (pin == null)
+			return true;  // case a
+		return !pin.hasVisibleHalo(); // case b
+ 	}
+ 	
+	public void setZoomingHalo(boolean v) {
+		//	ok. if I'm under a pdatasetimages node, setup the halo
+		 PNode parent = getParent();
+		 if (parent != null) {
+			 parent = parent.getParent();
+			 if (parent != null && (parent instanceof PDatasetImagesNode)) {
+				 PDatasetImagesNode pin = (PDatasetImagesNode) parent;
+				 pin.highlightThumbnail(this,v);
+			 }
+		 }
+	} 	
 }
