@@ -253,8 +253,10 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	print STDERR ref ($self) . "->processDOM about to create an OME::Module object\n"
 		if $debug > 1;
 	my $program = $lsidManager->getObject( $moduleXML->getAttribute( 'ID' ) );
-	die ref($self)."->processDOM: Cannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module with the same id (".$moduleXML->getAttribute( 'ID' ).") already exists.\n"
-		if defined $program;
+	if (defined $program) {
+		print STDERR ref($self)."->processDOM: ". $moduleXML->getAttribute( 'ModuleName' ) ." already exists.\n";
+		next;
+	}
         my $categoryPath = $moduleXML->getAttribute('Category');
         my $categoryID;
         if (defined $categoryPath) {
