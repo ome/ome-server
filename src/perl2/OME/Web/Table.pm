@@ -230,7 +230,7 @@ sub getPageTitle {
 sub getPageBody {
     my $self = shift;
     my $q = $self->CGI();
-	my ($main_table, $header, $filter_table);
+	my ($main_table, $header);
 	
 	# Make a filterset to pass to getTable()
 	my $filterset;
@@ -250,12 +250,11 @@ sub getPageBody {
 				select_column => 0,
 		},
 	);
-#	$filter_table = $self->__genericTableFooter(@column_aliases);
 
 	
 	return (
 		'HTML',
-		$header . $main_table . $q->p() . $filter_table
+		$header . $main_table
 	);
 }
 
