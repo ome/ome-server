@@ -52,7 +52,7 @@ public interface ApplicationController {
      * @version 0.1
      * @since OME2.0
 	 */
-	public void completeLogin();
+	public void completeLogin(Connection connection);
 	
 	
 	/**
