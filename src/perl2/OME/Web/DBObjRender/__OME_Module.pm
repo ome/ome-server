@@ -65,23 +65,28 @@ returns a dropdown list of Module names valued by id.
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
 	my $factory = OME::Session->instance()->Factory();
 
 	# Modules list
 	my @modules = $factory->findObjects( "OME::Module" );
-	my %module_names = map{ $_->id() => $_->name() } @modules;
-	my $module_order = [ '', sort( { $module_names{$a} cmp $module_names{$b} } keys( %module_names ) ) ];
-	$module_names{''} = 'All';
+	my $module_order = [ '', sort( map( $_->name(), @modules ) ) ];
+	my $module_names;
+	$module_names->{''} = 'All';
 
-	my $q = new CGI;
+	my $q = $self->CGI();
 
-	return $q->popup_menu( 
-		-name	=> $from_formal_name."_".$accessor_to_type,
-		'-values' => $module_order,
-		-labels	 => \%module_names,
-		-default  => $default
+	return ( 
+		$q->popup_menu( 
+			-name	=> $accessor_to_type.'.name',
+			'-values' => $module_order,
+			-labels	 =>  $module_names,
+			-default  => $default,
+	#		-size => "4",
+	#		-multiple => 1
+		),
+		$accessor_to_type.'.name'
 	);
 
 }
