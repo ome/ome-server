@@ -108,7 +108,8 @@ button.prototype.setState = function(val) {
 			this.offAnimOn.beginElement();
 		}
 	}
-	this.callback(val);
+	if(this.callback)
+		this.callback(val);
 }
 
 /*****
@@ -171,6 +172,8 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 		this.offText = offText;
 	if(highlightText != null)
 		this.highlightText = highlightText;
+	else if( onText!=null || offText!=null )
+		this.highlightText = null;
 }
 
 
@@ -222,13 +225,15 @@ button.prototype.buildSVG = function() {
 	}
 
 	// create highlight
-	root.appendChild( this.textToSVG(this.highlightText) );
-	this.nodes.highlight = root.lastChild;
-	this.nodes.highlight.appendChild( this.textToSVG(this.onSwitchText) );
-	this.highlightAnimOn = this.nodes.highlight.lastChild;
-	this.nodes.highlight.appendChild( this.textToSVG(this.offSwitchText) );
-	this.highlightAnimOff = this.nodes.highlight.lastChild;
-	this.nodes.highlight.setAttribute("opacity",0);
+	if(this.highlightText) {
+		root.appendChild( this.textToSVG(this.highlightText) );
+		this.nodes.highlight = root.lastChild;
+		this.nodes.highlight.appendChild( this.textToSVG(this.onSwitchText) );
+		this.highlightAnimOn = this.nodes.highlight.lastChild;
+		this.nodes.highlight.appendChild( this.textToSVG(this.offSwitchText) );
+		this.highlightAnimOff = this.nodes.highlight.lastChild;
+		this.nodes.highlight.setAttribute("opacity",0);
+	}
 	
 }
 
@@ -240,9 +245,15 @@ button.prototype.buildSVG = function() {
 
 *****/
 button.prototype.addEventListeners = function() {
-	this.nodes.highlight.addEventListener("click", this, false);
-	this.nodes.highlight.addEventListener("mouseover", this, false);
-	this.nodes.highlight.addEventListener("mouseout", this, false);
+	if(this.highlightText) {
+		this.nodes.highlight.addEventListener("click", this, false );
+		this.nodes.highlight.addEventListener("mouseover", this, false);
+		this.nodes.highlight.addEventListener("mouseout", this, false);
+	}
+	else {
+		this.nodes.on.addEventListener("click", this, false);
+		this.nodes.off.addEventListener("click", this, false);
+	}
 }
 
 /************   Event handlers   ************/
