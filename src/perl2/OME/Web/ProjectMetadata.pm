@@ -28,7 +28,7 @@ use OME::Web;
 @ISA = ("OME::Web");
 
 sub getPageTitle {
-	return "Open Microscopy Environment - Make New Project";
+	return "Open Microscopy Environment - Project Metadata";
 }
 
 sub getPageBody {
@@ -43,23 +43,38 @@ sub getPageBody {
 		my $project = $session->project();
 		if (!defined $project) {
 			# we got problems
-			$body .= "No project is defined. What's up w/ that?";
+			$body .= "Problem: There is not a current project defined in session.<br>";
+# possible bug: the link in the line below is intended to reload the root window (OME::Home)
+# it will not do it in all conditions. When a better solution is found, implement the new
+# solution everywhere this current solution is used.
+			$body .= "Solution: Define a project. Clicking <a href=\"javascript: top.location.href = top.location.href\">here</a> should take you where you need to go.";
 		}
 		else {
-			# change stuff. validate permission?
+# FIXME: Better validation is needed
+			if(not ($session->User()->experimenter_id() eq $project->owner()->experimenter_id()) ) {
+				$body .= "You do not have permission to modify this.";
+				return ('HTML',$body);
+			}
+		
+			my $reloadTitleBar = ($project->name() eq $cgi->param('name') ? undef : 1);
+			# change stuff.
 			$project->name( $cgi->param('name') );
 			$project->description( $cgi->param('description') );
 
 			$project->writeObject();
+			$body .= "Save successful<br>";
+			# javascript to reload titlebar
+			$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+				if defined $reloadTitleBar;
 		}
 	}
 	# print info & form
-	$body .= $self->print();
+	$body .= $self->print_form();
 
     return ('HTML',$body);
 }
 
-sub print {
+sub print_form {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $project = $self->Session()->project();
