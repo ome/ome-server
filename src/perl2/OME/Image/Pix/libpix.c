@@ -9,11 +9,13 @@
 Pix *new      (char* path,
 	int dx, int dy, int dz, int dw, int dt, int bp)
 {
+	Pix *pPix;
 	if (!path || strlen(path) < 1) {
 		fprintf (stderr,"Pix->new:  File path not set.\n");
 		return (NULL);
 	}
-	Pix *pPix = (Pix *) malloc(sizeof (Pix));
+	pPix = (Pix *) malloc(sizeof (Pix));
+
 	strncpy (pPix->path,path,255);
 
 	pPix->dx = dx;
