@@ -958,7 +958,7 @@ function initialise() {
 	//Project
 	level1ID = theMenu.addChild(-1, "Folder", "Project", "", "Project commands");
 	level2ID = theMenu.addChild (level1ID, "Document", "Project Management", "/perl2/serve.pl?Page=OME::Web::ProjectManagement", "Edit the properties of the current active project");
-	level2ID = theMenu.addEntry(level2ID, "Document", "Project List", "/perl2/serve.pl?Page=OME::Web::Table&type=project", "List all the projects in the database");
+	level2ID = theMenu.addEntry(level2ID, "Document", "Project List", "/perl2/serve.pl?Page=OME::Web::ProjectTable", "List all the projects in the database");
 	level2ID = theMenu.addEntry(level2ID, "Document", "My Projects", "/perl2/serve.pl?Page=OME::Web::ManageProject", "List projects belonging to you.");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ProjectSearch", "Search through all projects");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Make new project", "/perl2/serve.pl?Page=OME::Web::MakeNewProject", "Make a new project");
@@ -967,7 +967,7 @@ function initialise() {
 	//Dataset
 	level1ID = theMenu.addChild(-1, "Folder", "Dataset", "", "Dataset commands");
 	level2ID = theMenu.addChild (level1ID, "Document", "Dataset Management", "/perl2/serve.pl?Page=OME::Web::DatasetManagement", "Edit properties of the current active dataset");
-	level2ID = theMenu.addEntry (level2ID, "Document", "Dataset List", "/perl2/serve.pl?Page=OME::Web::Table&type=dataset", "List all the datasets in the database");
+	level2ID = theMenu.addEntry (level2ID, "Document", "Dataset List", "/perl2/serve.pl?Page=OME::Web::DatasetTable", "List all the datasets in the database");
 	level2ID = theMenu.addEntry (level2ID, "Document", "My Datasets", "/perl2/serve.pl?Page=OME::Web::ManageDataset", "Change other user's read/write permissions");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::DatasetSearch", "Search through all datasets");
 	level2ID = theMenu.addEntry (level2ID, "Folder", "Make new Dataset", "", "Create a new dataset");
@@ -979,7 +979,7 @@ function initialise() {
 
 	//Image
 	level1ID = theMenu.addChild(-1, "Folder", "Image", "", "Image commands");
-	level2ID = theMenu.addChild(level1ID, "Document", "Image List", "/perl2/serve.pl?Page=OME::Web::Table&type=image", "List all the images in the database");
+	level2ID = theMenu.addChild(level1ID, "Document", "Image List", "/perl2/serve.pl?Page=OME::Web::ImageTable", "List all the images in the database");
 	level2ID = theMenu.addChild(level1ID, "Document", "My Images", "/perl2/serve.pl?Page=OME::Web::ManageImage", "Change other user's read/write permissions");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ImageSearch", "Search through all images");
 	level2ID = theMenu.addEntry (level2ID, "Document", "Add Images/Existing dataset", "/perl2/serve.pl?Page=OME::Web::AddImageDataset", "Add images in Existing dataset");
