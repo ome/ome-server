@@ -94,6 +94,7 @@ public class CChain extends RemoteChain  {
 		CDataset ds;
 		Vector v;
 		
+		
 		while (iter.hasNext()) {
 			exec = (ChainExecution) iter.next();
 			ds = (CDataset) exec.getDataset();
@@ -498,7 +499,7 @@ public class CChain extends RemoteChain  {
 	 *
 	 */
 	private void dumpLayers() {
-		System.err.println("Chain is "+getName());
+//		System.err.println("Chain is "+getName());
 		int count = layering.getLayerCount();
 		for (int i =0; i < count; i++) {
 			dumpLayer(i);
@@ -536,9 +537,10 @@ public class CChain extends RemoteChain  {
 		boolean noSelections = (datasets == null || datasets.size() ==0)
 			 && selected == null;
 
-		// if nothing is selected, I have an execution if i have any exeuctions
+		// if nothing is selected, I have no executions
 		if (noSelections == true)
-			return (datasetExecutions.size() > 0);
+			return false;
+			//return (datasetExecutions.size() > 0);
 	
 		
 		// two possibilites: 
@@ -549,14 +551,6 @@ public class CChain extends RemoteChain  {
 		Collection datasetsWithExecutions =  
 			new HashSet(datasetExecutions.keySet());
 		
-		// BEGIN DEBUG STUFF
-		System.err.println("chain is "+getName());
-		Iterator i = datasetsWithExecutions.iterator();
-		while(i.hasNext()) {
-			CDataset d = (CDataset) i.next();
-			System.err.println("dataset "+d.getName());
-		}
-		//END DEBUG STUFF
 		if (selected != null) {
 			return datasetsWithExecutions.contains(selected);
 		} else { // selected is null
