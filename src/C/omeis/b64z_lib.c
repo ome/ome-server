@@ -32,11 +32,11 @@
 	bzip2, but I can't remember what it is.
 
 
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
-//#define NO_VERBIAGE
+/* #define NO_VERBIAGE */
 
 #ifndef NO_VERBIAGE
 #include <stdio.h>
@@ -75,7 +75,7 @@ void b64z_mem_error (void) {
 /*
 *	END 'b64z_mem_error'
 *
-*****************************************************************************/
+******************************************************************************/
 
 
 /******************************************************************************
@@ -83,15 +83,16 @@ void b64z_mem_error (void) {
 *	decode base64 - specialized for base 64/zip decoder
 *		returns the length of the decoded buffer
 */
-// decodes base64 data from 'strm->next_in' to 'to' & updates strm variables
-// len is the length of base64 data that can fit in 'to' ( sizeof(to) / 3 * 4 )
+/* decodes base64 data from 'strm->next_in' to 'to' & updates strm variables
+/ len is the length of base64 data that can fit in 'to' ( sizeof(to) / 3 * 4 )
+*/
 unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned int len ) {
 	unsigned int extracted;
 	int t, l;
 
 	extracted = l = 0;
 	
-	// deal with buffered input of partial blocks
+	/* deal with buffered input of partial blocks */
 	if( strm->state->b64_buf[0] != 0 ) {
 		t = 4 - strlen( strm->state->b64_buf );
 		if( strm->avail_in >= t ) {
@@ -150,7 +151,7 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 /*
 *	END 'decode base64'
 *
-*****************************************************************************/
+******************************************************************************/
 
 
 /******************************************************************************
@@ -158,8 +159,9 @@ unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned in
 *	encode base64 - specialized for base 64/zip decoder
 *		returns the length of the encoded buffer
 */
-// encodes base64 data from 'from' to 'strm->next_out' & updates strm variables
-// len is the length of 'from'
+/* encodes base64 data from 'from' to 'strm->next_out' & updates strm variables
+/ len is the length of 'from'
+*/
 unsigned int _b64z_b64encode(  b64z_stream *strm, unsigned char* from, unsigned int *len, int action ) {
 	unsigned int extracted;
 
@@ -176,7 +178,7 @@ unsigned int _b64z_b64encode(  b64z_stream *strm, unsigned char* from, unsigned 
 /*
 *	END 'decode base64'
 *
-*****************************************************************************/
+******************************************************************************/
 
 
 /*****************************************************************************/
@@ -218,8 +220,8 @@ b64z_stream *b64z_new_stream( unsigned char* next_in, unsigned int avail_in, uns
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Stream initialization for DECODING
 *		currently return value is pretty meaningless. it will always be B64Z_OK
@@ -248,7 +250,7 @@ int b64z_decode_init( b64z_stream *strm ) {
 	strm->total_in  = 0;
 	strm->total_out = 0;
 
-	// initialize compression streams
+	/* initialize compression streams */
 	switch( strm->compression ) {
 	
 	/**************************************************************************
@@ -271,17 +273,17 @@ int b64z_decode_init( b64z_stream *strm ) {
 			exit(-1);
 		}
 
-		// initialize stream parameters
-		bzip_stream->next_in   = (char *) strm->next_in;  // *hopefully* this is a safe cast
+		/* initialize stream parameters */
+		bzip_stream->next_in   = (char *) strm->next_in;   /* *hopefully* this is a safe cast */
 		bzip_stream->avail_in  = strm->avail_in;
-		bzip_stream->next_out  = (char *) strm->next_out;  // *hopefully* this is a safe cast
+		bzip_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
 		bzip_stream->avail_out = strm->avail_out;
 
 		strm->state->bzip_stream = bzip_stream;
 		break;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -318,21 +320,22 @@ int b64z_decode_init( b64z_stream *strm ) {
 #endif
 				exit(-1);
 		}
-		zlib_stream->next_out  = (char *) strm->next_out;  // *hopefully* this is a safe cast
+		zlib_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
 		zlib_stream->avail_out = strm->avail_out;
 
 		strm->state->zlib_stream = zlib_stream;
 		break;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	  case none:
+	  default:
 		break;
-	}
+	} /* switch */
 
-	// initialize internal variables
+	/* initialize internal variables */
 	strm->state->b64_buf[0] = strm->state->b64_buf[4] = 0;
 	strm->state->buf_len    = 0;
 	if( strm->compression == none ) {
@@ -349,15 +352,15 @@ int b64z_decode_init( b64z_stream *strm ) {
 /*
 *	END 'Stream initialization for DECODING'
 *
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Decode a base64 compressed string.
 *		This function will return B64Z_STREAM_END if the stream has ended.
@@ -370,18 +373,18 @@ int b64z_decode_init( b64z_stream *strm ) {
 *
 */
 int b64z_decode( b64z_stream *strm ) {
-	// pL is process Length - length of data to process
+	/* pL is process Length - length of data to process */
 	unsigned int pL;
 	unsigned char *begin, *buf;
 	unsigned int size, len;
-	// rL is return Length
+	/* rL is return Length */
 	unsigned int rL;
-	// rC is return Code
+	/* rC is return Code */
 	int rC;
 	
 	bz_stream *bzstr;
 	z_stream *zstr;
-	if( strm->avail_in  == 0 && len == 0 ) return B64Z_STREAM_END;
+	if( strm->avail_in  == 0 && strm->state->buf_len == 0 ) return B64Z_STREAM_END;
 	if( strm->avail_out == 0 ) return B64Z_OK;
 
 	/**************************************************************************
@@ -398,7 +401,7 @@ int b64z_decode( b64z_stream *strm ) {
 		strm->total_out += rL;
 	}
 	/*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -412,9 +415,9 @@ int b64z_decode( b64z_stream *strm ) {
 		len   = strm->state->buf_len;
 		size  = strm->state->buf_size;
 		while( (strm->avail_in > 0 || len > 0) && strm->avail_out > 0 ) {
-		// while there exists data to decompress and there is room to decompress it
+		/* while there exists data to decompress and there is room to decompress it */
 
-			// decode base 64
+			/* decode base 64 */
 			if( begin + len < buf + size &&
 			    strm->avail_in > 0 ) {
 				pL = ( buf + size - begin - len );
@@ -422,7 +425,7 @@ int b64z_decode( b64z_stream *strm ) {
 				len += rL;
 			}
 
-			// decompress
+			/* decompress */
 			switch( strm->compression ) {
 			/******************************************************************
 			*
@@ -456,12 +459,12 @@ int b64z_decode( b64z_stream *strm ) {
 					fprintf( stderr, "Error! bzip2 decompression returned an error (%i)!\n", rC );
 #endif
 					exit(-1);
-					// for more error messages, see ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC23
+					/* for more error messages, see ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC23 */
 				}
 				break;
 			/*
 			*
-			*****************************************************************/
+			******************************************************************/
 		
 		
 			/******************************************************************
@@ -498,27 +501,28 @@ int b64z_decode( b64z_stream *strm ) {
 					fprintf( stderr, "Error! zlib decompression returned an error (%i)!\nmessage is:\n%s\nend of message\n", rC, zstr->msg );
 #endif
 					exit(-1);
-					// for more error messages, see http://www.gzip.org/zlib/manual.html#inflate
+					/* for more error messages, see http://www.gzip.org/zlib/manual.html#inflate */
 				}
 				break;
 			/*
 			*
-			*****************************************************************/
+			******************************************************************/
 
-
-				default:
+			  case none: /* this case will NEVER be hit. it may avoid a compiler warning though */
+			  	break;
+			  default:
 #ifndef NO_VERBIAGE
-					fprintf ( stderr, "Error! unable to discern the compression type!");
+				fprintf ( stderr, "Error! unable to discern the compression type!");
 #endif
-			} // switch 
-		} // while
+			} /* switch */
+		} /* while */
 		strm->state->buf_begin = begin;
 		strm->state->buf_len   = len;
-	} // else
+	} /* else */
 	/*
 	*	END 'Convert compressed data'
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 	if( strm->avail_in == 0 && strm->state->buf_len == 0 ) return B64Z_STREAM_END;
 	return B64Z_OK;
@@ -526,22 +530,22 @@ int b64z_decode( b64z_stream *strm ) {
 /*
 *	END 'Decode a base64 compressed string.'
 *
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Stream closure for DECODING
 *
 */
 int b64z_decode_end( b64z_stream* strm ) {
-	// close compression streams
+	/* close compression streams */
 	switch( strm->compression ) {
 	
 	/**************************************************************************
@@ -561,7 +565,7 @@ int b64z_decode_end( b64z_stream* strm ) {
 		return B64Z_OK;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -581,15 +585,16 @@ int b64z_decode_end( b64z_stream* strm ) {
 		return B64Z_OK;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	  case none:
+	  default:
 		break;
-	} // end "close compression streams"
+	} /* end "close compression streams" */
 	
 	
-	// cleanup internal variables
+	/* cleanup internal variables */
 	if( strm->state->buf ) free( strm->state->buf );
 	free( strm->state );
 	strm->state = NULL;
@@ -599,15 +604,15 @@ int b64z_decode_end( b64z_stream* strm ) {
 /*
 *	END 'Stream closure for DECODING'
 *
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Stream initialization for ENCODING
 *		currently return value is pretty useless. it will always be B64Z_OK
@@ -637,7 +642,7 @@ int b64z_encode_init( b64z_stream *strm ) {
 	strm->total_out = 0;
 	strm->state->compressStreamEnd = 0;
 
-	// initialize compression streams
+	/* initialize compression streams */
 	switch( strm->compression ) {
 	
 	/**************************************************************************
@@ -658,20 +663,20 @@ int b64z_encode_init( b64z_stream *strm ) {
 			fprintf( stderr, "Error! Could not initialize bzip2 decompression!\n" );
 #endif
 			exit(-1);
-			// for more error messages: ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC19
+			/* for more error messages: ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC19 */
 		}
 
-		// initialize stream parameters
-		bzip_stream->next_in   = (char *) strm->next_in;  // *hopefully* this is a safe cast
+		/* initialize stream parameters */
+		bzip_stream->next_in   = (char *) strm->next_in;   /* *hopefully* this is a safe cast */
 		bzip_stream->avail_in  = strm->avail_in;
-		bzip_stream->next_out  = (char *) strm->next_out;  // *hopefully* this is a safe cast
+		bzip_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
 		bzip_stream->avail_out = strm->avail_out;
 
 		strm->state->bzip_stream = bzip_stream;
 		break;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -705,25 +710,26 @@ int b64z_encode_init( b64z_stream *strm ) {
 				fprintf( stderr, "Error! zlib reported the following error (%i) on initialization:\n%s", rC, zlib_stream->msg );
 #endif
 				exit(-1);
-				// for more error messages: http://www.gzip.org/zlib/manual.html#deflateInit
+				/* for more error messages: http://www.gzip.org/zlib/manual.html#deflateInit */
 		}
-		zlib_stream->next_in  = (char *) strm->next_in;
+		zlib_stream->next_in  = (char *) strm->next_in;    /* *hopefully* this is a safe cast */
 		zlib_stream->avail_in = strm->avail_in;
-		zlib_stream->next_out  = (char *) strm->next_out;  // *hopefully* this is a safe cast
+		zlib_stream->next_out  = (char *) strm->next_out;  /* *hopefully* this is a safe cast */
 		zlib_stream->avail_out = strm->avail_out;
 
 		strm->state->zlib_stream = zlib_stream;
 		break;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	  case none:
+	  default:
 		break;
 	}
 
-	// initialize internal variables
+	/* initialize internal variables */
 	strm->state->buf_len    = 0;
 	if( strm->compression == none ) {
 		strm->state->buf = malloc( 3 );
@@ -740,15 +746,15 @@ int b64z_encode_init( b64z_stream *strm ) {
 /*
 *	END 'Stream initialization for ENCODING'
 *
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Encode a binary string.
 *		This function will return B64Z_STREAM_END if the stream has ended.
@@ -761,11 +767,11 @@ int b64z_encode_init( b64z_stream *strm ) {
 *
 */
 int b64z_encode( b64z_stream *strm, int action ) {
-	// pL is process Length - length of data to process
+	/* pL is process Length - length of data to process */
 	unsigned int pL;
 	unsigned char *begin, *buf;
 	unsigned int size, len;
-	// rC is return Code - it stores the return value of various functions
+	/* rC is return Code - it stores the return value of various functions */
 	int rC;
 	/* Unused variables
 	int compStreamEnd;
@@ -796,7 +802,7 @@ int b64z_encode( b64z_stream *strm, int action ) {
 			strm->state->compressStreamEnd = 0;
 	}
 	/*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -816,14 +822,15 @@ int b64z_encode( b64z_stream *strm, int action ) {
 		len   = strm->state->buf_len;
 		size  = strm->state->buf_size;
 		do {
-		// do while data exists to process and there is room to process the data
+		/* do while data exists to process and there is room to process the data */
 
 			if( ( strm->avail_in > 0  || action == B64Z_FINISH ) && 
 			    ( buf + size - begin - len) > 0 &&
 			    strm->state->compressStreamEnd != 1 ) {
-			// if (there is input or action is finishing) and there is room for output
-			// if action is finishing and there is no input, there might still be a need to flush buffers
-			// if the stream has finished then do not run
+			/* if (there is input or action is finishing) and there is room for output
+			/ if action is finishing and there is no input, there might still be a need to flush buffers
+			/ if the stream has finished then do not run
+			*/
 			
 			switch( strm->compression ) {
 			/******************************************************************
@@ -866,12 +873,12 @@ int b64z_encode( b64z_stream *strm, int action ) {
 					fprintf( stderr, "Error! bzip2 compression returned an error (%i)!\n", rC );
 #endif
 					exit(-1);
-					// for explanation of error messages, see ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC23
+					/* for explanation of error messages, see ftp://sources.redhat.com/pub/bzip2/docs/manual_3.html#SEC23 */
 				}
 				break;
 			/*
 			*
-			*****************************************************************/
+			******************************************************************/
 		
 		
 			/******************************************************************
@@ -911,23 +918,26 @@ int b64z_encode( b64z_stream *strm, int action ) {
 					fprintf( stderr, "Error! zlib decompression returned an error (%i)!\nmessage is:\n%s\nend of message\n", rC, zstr->msg );
 #endif
 					exit(-1);
-					// for explanation of error messages, see http://www.gzip.org/zlib/manual.html#deflate
+					/* for explanation of error messages, see http://www.gzip.org/zlib/manual.html#deflate */
 				}
 				break;
 			/*
 			*
-			*****************************************************************/
+			******************************************************************/
+		
+			  case none: /* this case will NEVER be hit, but it may avoid compiler warnings */
+				break;
 		
 #ifndef NO_VERBIAGE
 			  default:
 				fprintf (stderr, "Error! Unable to discern the compression type!");
 #endif
 
-			} // switch( compression )
-			} // if
+			} /* switch( compression ) */
+			} /* if */
 
-			// encode base 64
-			if(len > 3 || (len > 0 && action == B64Z_FINISH)) { // don't bother trying to encode if there is nothing to encode
+			/* encode base 64 */
+			if(len > 3 || (len > 0 && action == B64Z_FINISH)) { /* don't bother trying to encode if there is nothing to encode */
 				pL = len;
 				if( strm->state->compressStreamEnd == 1 && action == B64Z_FINISH ) 
 					rC = _b64z_b64encode( strm, begin, &pL, action );
@@ -938,19 +948,20 @@ int b64z_encode( b64z_stream *strm, int action ) {
 				if( len == 0 ) begin = buf;
 			}
 
-		} while( (strm->avail_in > 0 || (len > 3 || (len > 0 && action == B64Z_FINISH))) && strm->avail_out >= 4 ); // while
-		// 'len > 3' uses '3' because 3 is the smallest block possible to encode with base64 unless you are at the end of a stream
-		// 'strm->avail_out >= 4' uses '4' because 4 is the smallest base64 block
-		// if the output space available is less than that, we can't do anything.
+		} while( (strm->avail_in > 0 || (len > 3 || (len > 0 && action == B64Z_FINISH))) && strm->avail_out >= 4 );
+		/* 'len > 3' uses '3' because 3 is the smallest block possible to encode with base64 unless you are at the end of a stream
+		/ 'strm->avail_out >= 4' uses '4' because 4 is the smallest base64 block
+		/ if the output space available is less than that, we can't do anything.
+		*/
 		
 		strm->state->buf_begin = begin;
 		strm->state->buf_len   = len;
 		
-	} // else
+	} /* else */
 	/*
 	*	END 'Convert data...'
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 	if( strm->avail_in == 0 && strm->state->buf_len == 0 && strm->state->compressStreamEnd == 1) return B64Z_STREAM_END;
 	return B64Z_OK;
@@ -958,22 +969,22 @@ int b64z_encode( b64z_stream *strm, int action ) {
 /*
 *	END 'Encode a binary string.'
 *
-******************************************************************************
-******************************************************************************
-*****************************************************************************/
+*******************************************************************************
+*******************************************************************************
+******************************************************************************/
 
 
 
 
 /******************************************************************************
-******************************************************************************
-******************************************************************************
+*******************************************************************************
+*******************************************************************************
 *
 *	Stream closure for ENCODING
 *
 */
 int b64z_encode_end( b64z_stream* strm ) {
-	// close compression streams
+	/* close compression streams */
 	switch( strm->compression ) {
 	
 	/**************************************************************************
@@ -993,7 +1004,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 		return B64Z_OK;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	/**************************************************************************
@@ -1013,15 +1024,16 @@ int b64z_encode_end( b64z_stream* strm ) {
 		return B64Z_OK;
 	/*
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	  case none:
+	  default:
 		break;
-	} // end "close compression streams"
+	} /* end "close compression streams" */
 	
 	
-	// cleanup internal variables
+	/* cleanup internal variables */
 	if( strm->state->buf ) free( strm->state->buf );
 	free( strm->state );
 	strm->state = NULL;
@@ -1031,7 +1043,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 /*
 *	END 'Stream closure for ENCODING'
 *
-*****************************************************************************/
+******************************************************************************/
 
 
 /******************************************************************************
@@ -1050,7 +1062,7 @@ int test(int verbosity) {
 	unsigned int len, eL, d, dL;
 	const int bufSize = 512;
 
-	unsigned char *testString = "foobar";//"\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
+	unsigned char *testString = "\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
 	unsigned char *dec, *enc, *buf;
 	
 	enum { verbose, terse, quiet, silent } debug;
@@ -1065,6 +1077,9 @@ int test(int verbosity) {
 		debug = terse;
 		break;
 	  case 3:
+		debug = verbose;
+		break;
+	  default:
 		debug = verbose;
 		break;
 	}
@@ -1097,16 +1112,16 @@ int test(int verbosity) {
 #endif
 
 		strm = b64z_new_stream( NULL, 0, NULL, 0, comps[test] );
-		// b64z_new_stream receives (next_in, avail_in, next_out, and avail_out);
+		/* b64z_new_stream receives (next_in, avail_in, next_out, and avail_out); */
 		b64z_encode_init( strm );
 	
 		len = strlen( testString );
 		strm->next_in  = testString;
-		strm->avail_in = 0;           // init
+		strm->avail_in = 0;
 		eL = 0;
 		p = B64Z_RUN;
 		do {
-			// This block throws input into the stream in random sized chunks
+			/* This block throws input into the stream in random sized chunks */
 			r = rand() % 50;
 			if( len > r ) {
 				strm->avail_in += r;
@@ -1117,7 +1132,7 @@ int test(int verbosity) {
 				len = 0;
 				p = B64Z_FINISH;
 			}
-			// end block
+			/* end block */
 			
 			*buf = 0;
 			strm->next_out = buf;
@@ -1125,13 +1140,14 @@ int test(int verbosity) {
 			d = strm->avail_out;
 
 			rC = b64z_encode( strm, p );
-			// Remember, when using b64z_encode, you must request for the 
-			// stream to end.
-			// The stream WILL NOT END until you request it. Also, it may 
-			// require more than one call to flush the internal buffers. Also,
-			// bzip2 will barf if you supply more input after you request the
-			// stream to end. I haven't tested what the other compression 
-			// schemes do in that situation, but I would advise NOT TO DO IT.
+			/* Remember, when using b64z_encode, you must request for the 
+			/ stream to end.
+			/ The stream WILL NOT END until you request it. Also, it may 
+			/ require more than one call to flush the internal buffers. Also,
+			/ bzip2 will barf if you supply more input after you request the
+			/ stream to end. I haven't tested what the other compression 
+			/ schemes do in that situation, but I would advise NOT TO DO IT.
+			*/
 			
 			*( strm->next_out ) = 0;
 			d -= strm->avail_out;
@@ -1149,15 +1165,15 @@ int test(int verbosity) {
 		if( debug == verbose ) fprintf( stdout, "\tencoded : %s\n", enc );
 #endif
 	
-	// DECODE
+	/* DECODE */
 		b64z_decode_init( strm );
 
 		len = eL;
 		strm->next_in  = enc;
-		strm->avail_in = 0;           // init
+		strm->avail_in = 0;
 		dL = 0;
 		do {
-			// This block throws input into the stream in random sized chunks
+			/* This block throws input into the stream in random sized chunks */
 			r = rand() % 50 + 4;
 			if( len > r ) {
 				strm->avail_in += r;
@@ -1165,9 +1181,9 @@ int test(int verbosity) {
 			}
 			else {
 				strm->avail_in += len;
-				len ^= len;  // equiv to 'len = 0;'
+				len ^= len;  /* equiv to 'len = 0;' */
 			}
-			// end block
+			/* end block */
 			
 			*buf = 0;
 			strm->next_out = buf;
@@ -1180,9 +1196,10 @@ int test(int verbosity) {
 			memcpy( dec + dL, buf, d );
 			dL += d;
 		} while(len != 0 || rC != B64Z_STREAM_END);
-		// b64z_decode will return B64Z_STREAM_END any time the input buffer
-		// and internal buffers are empty. This behavior is very distinct from 
-		// the behavior of b64z_encode.
+		/* b64z_decode will return B64Z_STREAM_END any time the input buffer
+		/ and internal buffers are empty. This behavior is very distinct from 
+		/ the behavior of b64z_encode.
+		*/
 		
 		b64z_decode_end( strm );
 
@@ -1217,4 +1234,4 @@ int test(int verbosity) {
 /*
 * END 'test'
 *
-*****************************************************************************/
+******************************************************************************/
