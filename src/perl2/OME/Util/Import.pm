@@ -30,7 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Written by:    Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -170,26 +170,24 @@ sub import {
 	$task->step();
 	$task->setMessage('Starting import');
 
-
-
 	my $pid = OME::Fork->fork();
 
 	if (!defined $pid) {
 		die "Could not fork off process to perform the import";
 	} elsif ($pid) {
 		# Parent process
-		$SIG{INT}=sub {
+		$SIG{INT}= sub {
 			print "Caught SIGINT - killing child ($pid) and myself ($$)\n";
-			kill 9,$pid;
+			$task->kill("User killed import process");
 			CORE::exit;
 		};
 
 
 		my $lastStep = -1;
 		my $status = $task->state();
+		$task->setPID($pid);
 		while ($status eq 'IN PROGRESS') {
 			$task->refresh();
-		
 			my $step = $task->last_step();
 			my $message = $task->message();
 			defined $message or $message = "";
@@ -214,9 +212,6 @@ sub import {
 		
 		print "\n\nDone.\n";
 		
-		#foreach my $image (@$images) {
-		#	 print $image->id(),": ",$image->name(),"\n";
-		#}
 	} else {
 		# Child process
 
