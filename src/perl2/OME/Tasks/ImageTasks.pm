@@ -204,7 +204,7 @@ sub forkedImportFiles {
         foreach my $filename (@$filenames) {
             push @files, OME::Image::Server::File->upload($filename);
             $task->step();
-            $task->setMessage('Uploaded $filename');
+            $task->setMessage("Uploaded $filename");
         }
 
         $task->step();
