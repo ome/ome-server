@@ -53,25 +53,18 @@ use Log::Agent;
 use OME::Image;
 use OME::Dataset;
 
-use base qw(Class::Data::Inheritable);
-
-__PACKAGE__->mk_classdata('DefaultFormats');
-__PACKAGE__->DefaultFormats(['OME::ImportEngine::MetamorphHTDFormat']);
+# ---------------------
+# The formats now come from the CONFIGURATION table.
+#use base qw(Class::Data::Inheritable);
+#__PACKAGE__->mk_classdata('DefaultFormats');
+#__PACKAGE__->DefaultFormats(['OME::ImportEngine::MetamorphHTDFormat']);
+# ---------------------
 
 use fields qw(_flags);
 
 =head1 METHODS
 
 The following public methods are available.
-
-=head2 DefaultFormats
-
-	OME::ImportEngine::ImportEngine->DefaultFormats($formats);
-
-This is a class method which provides the import engine with a list of
-AbstractFormat subclasses that correspond to the known import formats.
-A better way of specifying these classes will be provided in the near
-future.
 
 =head2 new
 
@@ -89,8 +82,6 @@ AllowDuplicates missing or set to 0, the import engine will attempt to
 detect previously imported images, and skip them.
 
 =cut
-
-    my @import_formats;
 
 sub new {
     my $proto = shift;
@@ -110,12 +101,18 @@ sub __debug {
 }
 
 # Helper method which returns the format classes known to the system.
-# This format list is read from a package global that has
-# been previously filled in from the OME configuration table.
+# Retrieves the list of classes from the CONFIGURATION table in the DB.
 
 sub __getFormats {
-    return @import_formats;
-    #return shift->DefaultFormats();
+    my $self = shift;
+    my $session = $self->{_flags}->{session};
+    my $factory = $session->Factory();
+    my $config = $factory->loadObject("OME::Configuration", 1);
+
+    # And find the import formats we can handle
+    my @import_formats = split " ", $config->import_formats();
+
+    return \@import_formats;
 }
 
 =head2 importFiles
@@ -188,9 +185,6 @@ sub importFiles {
     my $importer_module = $config->import_module();
     my $importer_chain = $config->import_chain();
 
-    # And find the import formats we can handle
-    @import_formats = split " ", $config->import_formats();
-
     # Create a new module execution to represent what this importer is
     # about to do.
 
@@ -207,14 +201,14 @@ sub importFiles {
 
     # Find the formats that are known to the system.
 
-    my @formats = $self->__getFormats();
+    my $formats = $self->__getFormats();
     my %formats;
     my %groups;
 
     # Instantiate all of the format classes and retrieve the groups for
     # each.
 
-    foreach my $format_class (@formats) {
+    foreach my $format_class (@$formats) {
         logcroak "Malformed class name $format_class"
           unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $format_class";
@@ -236,7 +230,7 @@ sub importFiles {
     my @images;
 
   FORMAT:
-    foreach my $format_class (@formats) {
+    foreach my $format_class (@$formats) {
         my $format = $formats{$format_class};
         my $groups = $groups{$format_class};
       GROUP:
@@ -259,7 +253,7 @@ sub importFiles {
             }
 
             # This hasn't been imported yet, so slurp it in.
-            my $image = $format->importGroup($group, $sha1);
+            my $image = $format->importGroup($group);
 
             if (!defined $image) {
                 $session->rollbackTransaction();
