@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.BasicStroke;
 
 /** 
@@ -53,10 +54,13 @@ import java.awt.BasicStroke;
 
 public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 
-	public static final int HALO_RADIUS=1;
-	public static final int HALO_SIZE  = 9;
-	private static final BasicStroke stroke = new BasicStroke(6.0f);
-	public static final int BORDER=2;
+	// leave on pixel on either side of border
+	public static final int OFFSET=3;
+	public static final float BASE_STROKE_WIDTH=PConstants.DATASET_IMAGE_GAP-
+		OFFSET;
+	private static final BasicStroke stroke = 
+		new BasicStroke(BASE_STROKE_WIDTH);
+	
 
 
 	public PThumbnailSelectionHalo() {
@@ -90,6 +94,13 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 	}
 	
 
+	public void setPathTo(PBounds b) {
+		double scale = getGlobalScale();
+		double border =OFFSET*scale;
+		PBounds b2 = new PBounds(b.getX()-border,b.getY()-border,
+			b.getWidth()+2*border,b.getHeight()+2*border);
+		super.setPathTo(b2);
+	}
 	
 	public int compareTo(Object o) {
 		if (o instanceof PBufferedNode) {
@@ -102,5 +113,12 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 		}
 		else
 			return -1;
+	}
+	
+	public void paint(PPaintContext aPaintContext) {
+		float scale = (float) aPaintContext.getScale();
+		float strokeScale = BASE_STROKE_WIDTH/scale;
+		setStroke(new BasicStroke(strokeScale));
+		super.paint(aPaintContext);
 	}
 }
