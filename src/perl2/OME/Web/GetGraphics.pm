@@ -141,28 +141,44 @@ sub _getJSData {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $imageManager = OME::Tasks::ImageManager->new($session); 
-	my $ImageID = $cgi->url_param('ImageID');
+	my $imageID = $cgi->url_param('ImageID');
+	my $pixelsID = $cgi->url_param('PixelsID');
+	my $pixels;
 
-	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
-		or die "Could not retreive Image from ImageID=$ImageID\n";
-	my $pixels = $image->DefaultPixels();
+	my $image = $factory->loadObject("OME::Image",$imageID)
+		or die "Could not retreive Image from imageID=$imageID\n";
+	if( $pixelsID ) {
+		$pixels = $factory->loadAttribute( "Pixels", $pixelsID )
+			or die "Pixels (id = $pixelsID) not found";
+		die "Pixels (id = $pixelsID) does not belong to Image (id = $imageID)"
+			unless $pixels->image()->id() eq $image->id();
+	} else {
+		$pixels   = $image->DefaultPixels();
+		$pixelsID = $pixels->id();
+	}
+	$JSinfo->{ imageID } = $imageID;
+	$JSinfo->{ pixelsID } = $pixelsID;
 
+	#######################
 	# get Dimensions from image and make them readable
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path)=$imageManager->getImageDim($image);
-	my $dims = [ $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp];
+	my @dims = ( $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp);
+	$JSinfo->{ Dims } = '['.join (',', @dims).']';
 	
+	#######################
 	# get channelLabels from image and make them JavaScript readable
 	my @JSchannelLabels;
 	my $channelLabels= $imageManager->getImageWavelengths($image);
 	foreach my $channel (@$channelLabels){
 		push @JSchannelLabels, "${$channel}{WaveNum}:\"${$channel}{Label}\"";
 	}
+	$JSinfo->{ channelLabels } = '{'.join(',',@JSchannelLabels).'}';
 
 	#######################
 	# Get Stack Statistics, convert to string representation of JS 3d associative array
 	my $sh; # stats hash
-	$sh =$imageManager->getImageStats($image)
-		or die "Could not find Stack Statistics for image (id=$ImageID).\n";
+	$sh = $imageManager->getImageStats($image)
+		or die "Could not find Stack Statistics for image (id=$imageID).\n";
 	my @ar1; # array 1
 	for( my $c = 0;$c<scalar(@$sh);$c++) {
 		my @ar2; # array 2
@@ -172,14 +188,25 @@ sub _getJSData {
 		}
 		push @ar1, '['.join( ',', @ar2 ).']';
 	}
-	my $JSstats = '['.join( ',', @ar1 ).']';
+	$JSinfo->{ Stats } = '['.join( ',', @ar1 ).']';
+
+	#######################
+	# Compile Image Info
+	my @imgInfo = (
+		"name: '".$image->name()."'",
+		'id: '  .$image->id(),
+		"'primary pixels id': ".$image->DefaultPixels()->id(),
+		"owner: '".$image->experimenter()->FirstName().' '.$image->experimenter()->LastName()."'"
+	);
+	$JSinfo->{ ImageInfo } = '{'.join( ', ', @imgInfo ).'}';
+
+
+	#######################
+	# Pixel list
+	my @pixelList = $factory->findAttributes( "Pixels", image_id => $image->id() );
+	$JSinfo->{ PixelList } = '['.join( ', ', map( $_->id(), @pixelList ) ).']';
 		
 	###############
-	# compile info
-	$JSinfo->{ ImageID }			= $ImageID;
-	$JSinfo->{ Stats }				= $JSstats;
-	$JSinfo->{ channelLabels }		= '{'.join(',',@JSchannelLabels).'}';
-	$JSinfo->{ Dims }				= '['.join (',', @$dims).']';
 	# transition to the image server
 	if( $pixels->Repository()->IsLocal() ) {
 		$JSinfo->{ CGI_URL }        = '"/cgi-bin/OME_JPEG"';
@@ -190,6 +217,9 @@ sub _getJSData {
 		$JSinfo->{ CGI_optionStr } = '"&Method=Composite&PixelsID='.$pixels->PixelsID().'"';
 		$JSinfo->{ use_omeis }     = 'true';
 	}
+
+	###############
+	# additional URLs of CGIs
 	$JSinfo->{ SaveDisplayCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
 	$JSinfo->{ SavePrefsCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
 
@@ -224,26 +254,29 @@ sub BuildSVGviewer {
 	my $SVG;
 	
 	my $JSinfo = $self->_getJSData();
-	my $DatasetID		   = $cgi->url_param('DatasetID') || 'null';
-	my $ImageID			   = $JSinfo->{ ImageID };
-	my $Stats			   = $JSinfo->{ Stats };
+	my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
+	my $imageID            = $JSinfo->{ imageID };
+	my $pixelsID           = $JSinfo->{ pixelsID };
+	my $imageInfo          = $JSinfo->{ ImageInfo };
+	my $pixelList          = $JSinfo->{ PixelList };
+	my $Stats              = $JSinfo->{ Stats };
 	my $channelLabels      = $JSinfo->{ channelLabels };
-	my $Dims			   = $JSinfo->{ Dims };
-	my $CGI_URL			   = $JSinfo->{ CGI_URL };
-	my $CGI_optionStr	   = $JSinfo->{ CGI_optionStr };
+	my $Dims               = $JSinfo->{ Dims };
+	my $CGI_URL            = $JSinfo->{ CGI_URL };
+	my $CGI_optionStr      = $JSinfo->{ CGI_optionStr };
 	my $SaveDisplayCGI_URL = $JSinfo->{ SaveDisplayCGI_URL };
 	my $SavePrefsCGI_URL   = $JSinfo->{ SavePrefsCGI_URL };
-	my $theZ			   = $JSinfo->{ theZ };
-	my $theT			   = $JSinfo->{ theT };
-	my $isRGB			   = $JSinfo->{ isRGB };
-	my $CBW				   = $JSinfo->{ CBW };	# known to the svg viewer as WBW - when the svg viewer was developed, ChannelNumber was called Wavenumber. the svg hasn't been updated to reflect this change in nomenclature.
-	my $RGBon			   = $JSinfo->{ RGBon };
-	my $toolBoxScale	   = $JSinfo->{ toolBoxScale };
+	my $theZ               = $JSinfo->{ theZ };
+	my $theT               = $JSinfo->{ theT };
+	my $isRGB              = $JSinfo->{ isRGB };
+	my $CBW                = $JSinfo->{ CBW };
+	my $RGBon              = $JSinfo->{ RGBon };
+	my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 	my $use_omeis          = $JSinfo->{ use_omeis };
 
-	my $overlayData		   = $self->_getJSOverlay();
-	my $centroidData	   = $overlayData->{ centroids };
-	my $featureData		   = $overlayData->{ features };
+	my $overlayData        = $self->_getJSOverlay();
+	my $centroidData       = $overlayData->{ centroids };
+	my $featureData        = $overlayData->{ features };
 
 	$self->contentType("image/svg+xml");
 	$SVG = <<'ENDSVG';
@@ -285,6 +318,8 @@ sub BuildSVGviewer {
 	<!--			Backend classes			-->
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/OMEimage.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/ImageInfo.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
@@ -332,7 +367,7 @@ $SVG .= <<ENDSVG;
 			var supplimentaryWindows = new Array();
 			var windowControllers	 = new Array();
 
-			image = new OMEimage($ImageID,Stats,$Dims,$CGI_URL,$CGI_optionStr, 
+			image = new OMEimage($imageID,$pixelsID,Stats,$Dims,$CGI_URL,$CGI_optionStr, 
 			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, $use_omeis);
 			image.realize( svgDocument.getElementById("image") );
 			
@@ -348,6 +383,12 @@ $SVG .= <<ENDSVG;
 			setTimeout( "stats.toolBox.hide()", 200 );
 			supplimentaryWindows.push('Statistics');
 			windowControllers['Statistics'] = stats;
+
+			imgInfo = new ImageInfo( $imageInfo, $pixelList );
+			imgInfo.buildToolBox( toolboxLayer );
+			setTimeout( "imgInfo.toolBox.hide()", 200 );
+			supplimentaryWindows.push('Image Info');
+			windowControllers['Image Info'] = imgInfo;
 
 			Scale.setClassData( image, channelLabels );
 			redScale = new Scale('Red', toolboxLayer);
