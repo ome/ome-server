@@ -204,18 +204,31 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
  	
 	public void setZoomingHalo(boolean v,int level) {
 		//	ok. if I'm under a pdatasetimages node, setup the halo
-		 PNode parent = getParent();
-		 if (parent != null) {
-			 parent = parent.getParent();
-			 if (parent != null && (parent instanceof PDatasetImagesNode)) {
-				 PDatasetImagesNode pin = (PDatasetImagesNode) parent;
-				 pin.highlightThumbnail(this,v,level);
-			 }
-		 }
+		PDatasetImagesNode pin = getDatasetImagesNode();
+		if (pin != null)
+		 	pin.highlightThumbnail(this,v,level);
 	} 	
 	
 	public void setHighlightedWithHalo(boolean v,int level) {
 		setHighlighted(v);
 		setZoomingHalo(v,level);
+	}
+	
+	public int zoomInToHalo(int level) {
+		PDatasetImagesNode pin = getDatasetImagesNode();
+		if (pin != null)
+			return pin.zoomInToHalo(this,level);
+		else 
+			return level;
+			
+	}
+	
+	public int zoomOutOfHalo(int level) {
+		PDatasetImagesNode pin = getDatasetImagesNode();
+		if (pin != null)
+			return pin.zoomOutOfHalo(this,level);
+		else 
+			return level;
+		
 	}
 }
