@@ -53,7 +53,6 @@ sub getPageBody {
     my $self = shift;
 print STDERR "\nLogging out...\n\n";
     $self->Manager()->logout($self->Session());
-	$self->Session( undef );
 	$self->setSessionCookie();
 
 	# this will add a script to reload OME::Home 
