@@ -127,7 +127,6 @@ $doc->toFile($tmpFile, 1)
 `xsltproc $style_doc_path $tmpFile > $filename`;
 $CA_doc = $parser->parse_file( $filename )
 	or die "Could not parse file ('$tmpFile')\n";
-print STDERR $tmpFile;
 unlink $tmpFile 
 	or die "Could not unlink tmp file ('$tmpFile')\n";
 # end hack
