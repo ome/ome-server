@@ -125,7 +125,12 @@
 
     <jar destfile="${jar}/org.openmicroscopy.remote.jar"
 	 manifest="${src}/org/openmicroscopy/remote/remote.manifest">
-      <fileset dir="build" includes="org/openmicroscopy/remote/*.class"/>
+      <fileset dir="build" includes="org/openmicroscopy/remote/**/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org.openmicroscopy.managers.jar"
+	 manifest="${src}/org/openmicroscopy/managers/managers.manifest">
+      <fileset dir="build" includes="org/openmicroscopy/managers/*.class"/>
     </jar>
 
     <jar destfile="${jar}/org.openmicroscopy.simple.jar"
