@@ -810,7 +810,7 @@ $SVG .= <<ENDSVG;
 			);
 			controlToolBox.setLabel(90,12,"Primary Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
-//			controlToolBox.setScale(1.5);
+//			controlToolBox.setScale(1.5);	// enlarges the controlToolBox to 1.5 times normal size
 			
 			multiToolBox = new multipaneToolBox(
 				55, 265, 200, 100,
@@ -1037,10 +1037,19 @@ $SVG .= <<ENDSVG;
 			azap.appendNode(mouseTrap); 
 
 			// Set up display. These values should come from DB eventually.
-			setTimeout( "redPopupList.setSelection(0)", 0 );
-			setTimeout( "greenPopupList.setSelection(1)", 0 );
-			setTimeout( "bluePopupList.setSelection(1)", 0 );
-			setTimeout( "bwPopupList.setSelection(0)", 0 );
+			var WBS = image.getWBS();
+			setTimeout( "redPopupList.setSelectionByValue("+ 
+				redPopupList.getItemList()[ WBS[0] ]
+				+")", 0 );
+			setTimeout( "greenPopupList.setSelectionByValue("+ 
+				greenPopupList.getItemList()[ WBS[3] ]
+				+")", 0 );
+			setTimeout( "bluePopupList.setSelectionByValue("+ 
+				bluePopupList.getItemList()[ WBS[6] ]
+				+")", 0 );
+			setTimeout( "bwPopupList.setSelectionByValue("+ 
+				bwPopupList.getItemList()[ WBS[9] ]
+				+")", 0 );
 			var RGBon = image.getRGBon(); 
 			setTimeout( "multiToolBox.hide()", 0);
 			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
