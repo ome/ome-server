@@ -41,14 +41,7 @@ import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
 import org.openmicroscopy.vis.util.SwingWorker;
 import javax.swing.JOptionPane;
-import javax.swing.JWindow;
-import javax.swing.JLabel;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.Box;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.Rectangle;
+
 
 public class ConnectionWorker extends SwingWorker {
 	
@@ -66,8 +59,7 @@ public class ConnectionWorker extends SwingWorker {
 	private String userName;
 	private String passWord;
 	
-	private JWindow status;
-	private JLabel statusLabel;
+
 	
 	public ConnectionWorker(ApplicationController controller,Connection connection,
 			String URL,String userName,String passWord) {
@@ -76,34 +68,9 @@ public class ConnectionWorker extends SwingWorker {
 		this.URL = URL;
 		this.userName = userName;
 		this.passWord = passWord;  
-		buildStatusWindow();
 	}
 		
-	private void buildStatusWindow() {
-		status = new JWindow();
-		JPanel content = (JPanel) status.getContentPane();
-		content.setLayout(new BoxLayout(content,BoxLayout.X_AXIS));
-		content.add(Box.createRigidArea(new Dimension(5,0)));
-		
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-		content.add(panel);
-		
-		panel.add(Box.createRigidArea(new Dimension(0,5)));		
-		JLabel title = new JLabel("Loading...");
-		panel.add(title);
-		statusLabel = new JLabel("OME Database Contents               ");
-		panel.add(Box.createRigidArea(new Dimension(0,5)));
-		panel.add(statusLabel);
-		status.pack();
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-		Rectangle bounds = status.getBounds();
-		int x = (int) (screen.getWidth()-bounds.getWidth())/2;
-		int y = (int) (screen.getHeight()-bounds.getHeight())/2;
-		status.setBounds(x,y,(int)bounds.getWidth(),(int)bounds.getHeight());
-		status.setVisible(true);
-			
-	}
+	
 	
 	public Object construct() {
 		try {
@@ -118,15 +85,14 @@ public class ConnectionWorker extends SwingWorker {
 					session = remote.getSession();
 					factory = remote.getFactory();
 					if (session != null && factory != null) {
-						modules  = new Modules(this,factory);
-						chains = new Chains(this,factory);
-						setStatusLabel("Palette and Library");
+						modules  = new Modules(connection,factory);
+						chains = new Chains(connection,factory);
 					}
 				}
 						
 			} catch (Exception e) {
 				System.err.println(e);
-				status.setVisible(false);
+				
 				controller.cancelLogin();
 			}
 			return remote;
@@ -138,8 +104,8 @@ public class ConnectionWorker extends SwingWorker {
 			connection.setFactory(factory);
 			connection.setModules(modules);
 			connection.setChains(chains);
+
 			controller.completeLogin(connection);
-			status.setVisible(false);
 		}
 		else 
 			JOptionPane.showMessageDialog(controller.getMainFrame(),
@@ -147,7 +113,5 @@ public class ConnectionWorker extends SwingWorker {
 				"Login Difficulties",JOptionPane.ERROR_MESSAGE);
 	}
 	
-	public void setStatusLabel(String s) {
-		statusLabel.setText(s);
-	}
+	
 }
