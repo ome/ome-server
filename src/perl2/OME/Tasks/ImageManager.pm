@@ -274,18 +274,29 @@ sub load{
 	# retrieve the URL for the thumbnail of the default pixels of a given image
 	my $thumbnailURL = $imageManager->getThumbURL($image);
 	
-Will return undef if there is not a default pixels associated with
-the image.
+	# retrieve the URL for the thumbnail of the default pixels of a given image_id
+	my $thumbnailURL = $imageManager->getThumbURL($imageID);
 	
+Will return undef if there is not a default pixels associated with the
+image.
+
 =cut
 sub getThumbURL{
 	my $self=shift;
 	my $session=$self->__Session();
 	my $param = shift;
 	my $pixels;
-	if( $param->isa( "OME::Image" ) ) {
+	# image id
+	if( not ref( $param ) ) {
+		my $img = $session->Factory()->loadObject('OME::Image', $param )
+			or die "Could not load OME::Image, id=$param";
+		$pixels = $img->default_pixels()
+			or return undef;
+	# image
+	} elsif( $param->isa( "OME::Image" ) ) {
 		$pixels = $param->default_pixels()
 			or return undef;
+	# pixels (depricated)
 	} else {
 		$pixels = $param;
 	}
