@@ -535,23 +535,28 @@
 			<Element
 				Name= "SizeX"
 				DBLocation = "IMAGE_DIMENSIONS.SIZE_X"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the X axis."/>
 			<Element
 				Name= "SizeY"
 				DBLocation = "IMAGE_DIMENSIONS.SIZE_Y"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the Y axis."/>
 			<Element
 				Name= "SizeZ"
 				DBLocation = "IMAGE_DIMENSIONS.SIZE_Z"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the Z axis."/>
 			<Element
 				Name= "SizeC"
 				DBLocation = "IMAGE_DIMENSIONS.SIZE_C"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of channel components in all logical channels."/>
 			<Element
 				Name= "SizeT"
 				DBLocation = "IMAGE_DIMENSIONS.SIZE_T"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of time points"/>
 			<Element
 				Name= "BitsPerPixel"
 				DBLocation = "IMAGE_DIMENSIONS.BITS_PER_PIXEL"
@@ -961,23 +966,28 @@
 			<Element
 				Name= "SizeX"
 				DBLocation = "IMAGE_PIXELS.SIZE_X"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the X axis."/>
 			<Element
 				Name= "SizeY"
 				DBLocation = "IMAGE_PIXELS.SIZE_Y"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the Y axis."/>
 			<Element
 				Name= "SizeZ"
 				DBLocation = "IMAGE_PIXELS.SIZE_Z"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of pixels on the Z axis."/>
 			<Element
 				Name= "SizeC"
 				DBLocation = "IMAGE_PIXELS.SIZE_C"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of channel components in all logical channels."/>
 			<Element
 				Name= "SizeT"
 				DBLocation = "IMAGE_PIXELS.SIZE_T"
-				DataType = "integer"/>
+				DataType = "integer"
+				Description="Number of time points"/>
 			<Element
 				Name= "BitsPerPixel"
 				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
