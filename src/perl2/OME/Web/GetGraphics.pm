@@ -35,6 +35,70 @@ use OME::Graphics::GD::Vectors;
 use OME::Graphics::GD::Centroids;
 use Benchmark;
 
+=pod
+
+=head1 GetGraphics.pm
+
+=head1 Package information
+
+=over 4
+
+=item Description:
+
+Generates 2D viewer of an image using html with JavaScript controls
+
+=item Path
+
+src/perl2/OME/Web/
+
+=item Package name
+
+OME::Web::GetGraphics
+
+=item Dependencies
+
+ 
+Inherits from:
+	OME::Web
+Non-OME-Modules: (or something system defined)
+	CGI
+	GD
+	Benchmark
+OME-Modules
+	OME::Web
+	OME::DBObject
+	OME::Image
+	OME::Graphics::GD::Vectors
+	OME::Graphics::GD::Centroids
+	OME::Graphics::JavaScript
+	OME::Graphics::JavaScript::Layer::Vectors
+	OME::Graphics::JavaScript::Layer::Centroids
+	OME::Graphics::JavaScript::Layer::OMEimage
+
+=back
+
+=head1 Externally referenced functions
+
+C<new()>, C<createOMEPage()>, C<getPageTitle()>, C<contentType>
+
+=over 4
+
+X<new()>
+
+=item new()
+
+ 
+Description:
+	constructor
+Returns:
+	$self 
+		$self is a OME::Web::GetGraphics object
+Overrides function in OME::Web
+Uses functions:
+	OME::Web -> new
+
+=cut
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -45,7 +109,29 @@ sub new {
     return $self;
 }
 
+=pod
 
+X<createOMEPage()>
+
+=item createOMEPage()
+
+ 
+Description:
+	uses url_parameters to call appropriate content generation functions
+Returns:
+	contentType, content
+		contentType is a string. either "HTML" or "IMAGE"
+		content is either an HTML file or an image object from GD::image
+Overrides function in OME::Web
+Uses functions:
+	OME::Web -> CGI
+	CGI -> url_param
+	CGI -> url
+	DrawLayersControls
+	DrawGraphics
+	DrawMainWindow
+
+=cut
 
 sub createOMEPage {
 	my $self  = shift;
@@ -62,18 +148,80 @@ sub createOMEPage {
 }
 
 
+=pod
+
+X<getPageTitle()>
+
+=item getPageTitle()
+
+ 
+Description:
+	Displays page title
+Returns:
+	hard-coded string: "Open Microscopy Environment"
+Overrides function in OME::Web
+Uses No functions
+
+=cut
+
 sub getPageTitle {
     return "Open Microscopy Environment";
 }
 
+=pod
+
+X<contentType()>
+
+=item contentType()
+
+ 
+Description:
+	returns contentType
+Returns:
+	$self->contentType
+Overrides function in OME::Web
+Uses No functions
+
+=back
+
+=cut
 
 sub contentType {
 my $self = shift;
 	return $self->{contentType};
 }
 
+=pod
 
+=head1 Internally referenced functions
 
+C<DrawMainWindow()>, C<DrawGraphics()>, C<DrawLayersControls()>, C<getJSgraphics()>
+
+=over 4
+
+X<DrawMainWindow()>
+
+=item DrawMainWindow()
+
+ 
+Description:
+	Generates an HTML file housing the most commonly used controls
+Returns:
+	an HTML file
+Uses functions:
+	OME::Web -> CGI
+	getJSgraphics
+	CGI -> start_html
+	OME::Graphics::JavaScript -> JSobjectDefs
+	OME::Graphics::JavaScript -> JSinstance
+	CGI -> end_html
+Accesses external data:
+	OME::Graphics::JavaScript -> {JSref}
+Generated Javascript will reference:
+	OME::Web::GetGraphics via serve.pl, eventually calling
+		DrawLayersControls and DrawGraphics
+
+=cut
 
 sub DrawMainWindow {
 my $self = shift;
@@ -109,6 +257,35 @@ ENDJS
 	$HTML .= $cgi->end_html;
 	return ($HTML);
 }
+
+=pod
+
+X<DrawGraphics()>
+
+=item DrawGraphics()
+
+ 
+Description:
+	Generates an image object using classes inherited from OME::Graphics::GD
+Returns:
+	An image object of type GD::Image
+Uses functions:
+	OME::Web -> CGI
+	CGI -> url_param
+	OME::Graphics::GD::* -> new
+		this dynamically instantiates a new object of unknown type.
+		Type is specified in parameters and is not subject to prior checks.
+		It is supposed to be of type specified above.
+	OME::Graphics::GD::* ->	Draw
+	OME::Graphics::GD::* -> getImage
+	OME::Graphics::GD::* -> imageType
+	GD::Image -> colorResolve
+	GD::Image -> string
+Accesses external data:
+	OME::Graphics::JavaScript::Layer -> X11Colors
+	OME::Graphics::GD::* -> image
+
+=cut
 
 sub DrawGraphics {
 my $self = shift;
@@ -152,6 +329,23 @@ my @string;
 # getImage returns the actual image, i.e. {image}->png, etc.
 # Change type to a full module spec.
 
+=pod
+
+X<DrawLayersControls()>
+
+=item DrawLayersControls()
+
+ 
+Description:
+	Generates an html file housing the rest of the controls
+Returns:
+	An html file
+Uses functions:
+	OME::Web -> CGI
+	getJSgraphics
+	OME::Graphics::JavaScript -> Form
+
+=cut
 
 sub DrawLayersControls {
 my $self = shift;
@@ -162,7 +356,39 @@ my $JSgraphics = $self->getJSgraphics() ;
 	return $cgi->start_html(-title=>'Layers Popup').$JSgraphics->Form('opener').$cgi->end_html;
 }
 
+=pod
 
+X<getJSgraphics()>
+
+=item getJSgraphics()
+
+ 
+Description:
+	Generates a OME::Graphics::JavaScript object for internal use
+Returns:
+	an object of type OME::Graphics::JavaScript
+Uses functions:
+	OME::Web->CGI()		(via self)
+	CGI->url_param()
+	OME::Web->Factory()
+	OME::Factory->loadObject()	(via OME::Session, OME::Factory)
+	OME::Web->Session()
+	OME::Session->DBH()
+	DBI->prepare()
+		?->execute()
+		?->fetchrow_array()
+	OME::Graphics::JavaScript->new()
+	OME::Graphics::JavaScript::Layer::*->new()
+		Object type declared dynamically at runtime.
+	OME::Graphics::JavaScript->AddLayer()
+Generated Javascript will reference:
+	OME::Web::GetGraphics via serve.pl, eventually calling
+		DrawGraphics()
+	../cgi-bin/OME_JPEG
+
+=back
+
+=cut
 
 # This gets called when the Image window gets made in order to make the JS objects
 # This also gets called when the layer control popup opens because the same Perl objects
@@ -244,3 +470,27 @@ ENDSQL
     return $JSgraphics;
 
 }
+
+=pod
+
+=head1 Questions
+
+=over 4
+
+=item Q:
+
+Why isn't there a "getPageBody" function to override the one in OME::Web? Comments
+in OME::Web indicate all subclasses should override this function. While
+createOMEpage seems to fullfill this functional role, why wasn't this class
+constructed to follow the described standard?
+
+=item A:
+
+Because the described standard results in a page fitting a generic style. 
+GetGraphics is supposed to appear in a minimal popup window. OME::Web uses
+createOMEpage to make the generic page. Overriding createOMEpage prevents
+calls to getPageBody and returns a full html file.
+
+=back
+
+=cut
