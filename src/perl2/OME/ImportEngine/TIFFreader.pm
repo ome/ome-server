@@ -282,6 +282,16 @@ database transactions.
 
 =cut
 
+use constant PHOTOMETRIC =>
+  {
+# some constants from /lib/tiff/tiff.h 
+	MINISWHITE => 0,	# min value is white 
+	MINISBLACK => 1,	# min value is black
+	RGB        => 2,	# RGB color model
+	PALETTE    => 3,	# color map indexed
+	MASK       => 4,	# holdout mask
+  };
+  
 sub importGroup {
     my ($self, $grp, $callback) = @_;
 
@@ -306,71 +316,84 @@ sub importGroup {
     $xref->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
     $params->byte_size( bitsPerPixel2bytesPerPixel($xref->{'Data.BitsPerPixel'}));
     $self->{plane_size} = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'};
-
-    # This assumes that a group has multiple wavelengths, but only 1 T & 1 Z
+    
+	# This assumes that a group has multiple wavelengths, but only 1 T & 1 Z
     # TODO - generalize to handle multiple T & Z too
     $params->xml_hash->{'Image.SizeZ'} = 0;
     $params->xml_hash->{'Image.NumTimes'} = 0;
-    $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp);
-
+    
+	# for rgb tiffs, each single image gives three channels
+	my $chansImg;
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
+		$chansImg = 3;
+	} else {
+		$chansImg = 1;
+	}
+	
+    $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp)*$chansImg;
+    
     my $image = ($self->{super})->__newImage($ofn);
     $self->{image} = $image;
     
-    my $zs = ($xref->{'Image.SizeZ'} > 0) ? $xref->{'Image.SizeZ'} : 1;
+    my $zs = ($xref->{'Image.SizeZ'} > 0)    ? $xref->{'Image.SizeZ'}    : 1;
     my $cs = ($xref->{'Image.NumWaves'} > 0) ? $xref->{'Image.NumWaves'} : 1;
     my $ts = ($xref->{'Image.NumTimes'} > 0) ? $xref->{'Image.NumTimes'} : 1;
-    my ($pixels, $pix) = 
-	($self->{super})->__createRepositoryFile($image, 
-						 $xref->{'Image.SizeX'},
-						 $xref->{'Image.SizeY'},
-						 $zs,
-						 $cs,
-						 $ts,
-						 $xref->{'Data.BitsPerPixel'});
-    $self->{pix} = $pix;
-    $self->{pixels} = $pixels;
-
-    # for each channel (wavelength) read an input file and append to output
+    
+    my ($pixels, $pix) = ($self->{super})->__createRepositoryFile($image, 
+						 					$xref->{'Image.SizeX'},
+						 					$xref->{'Image.SizeY'},
+									  		$zs,
+						 					$cs,
+						 					$ts,
+						 					$xref->{'Data.BitsPerPixel'});
+	$self->{pix} = $pix;
+    $self->{pixels} = $pixels;				 					
+						 			
     my (@finfo, @channelInfo);
-    for (my $c = 0; $c < scalar(@$grp); $c++) {
-        $file = $grp->[$c];
-        $file->open('r');
-        $params->fref($file);
-        $tags =  readTiffIFD($file)
-          unless ($c == 0);     # 1st file's tags already read
-        $status = readWritePixels($self, $tags, $c, $callback);
-	if ($status ne "") {
-	    $file->close();
-	    last;
+    
+	# for each channel (wavelength) read an input file and append to output
+	for (my $c = 0; $c < scalar(@$grp); $c++) {
+		$file = $grp->[$c];
+		$file->open('r');
+		$params->fref($file);
+		$tags =  readTiffIFD($file)
+		  unless ($c == 0);     # 1st file's tags already read
+		$status = readWritePixels($self, $tags, $c, $callback);
+		
+		if ($status ne "") {
+			$file->close();
+			last;
+		}
+		
+		for (my $i=0; $i<$chansImg; $i++){
+			# Store summary info about each input file
+			$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+								  0, $xref->{'Image.SizeX'}-1,
+								  0, $xref->{'Image.SizeY'}-1,
+								  0, 0,
+								  $c+$i, $c+$i,
+								  0, 0,
+								  "TIFF");
+								  
+			# Store info about each input channel (wavelength)
+			push @channelInfo, {chnlNumber => $c+$i,
+								ExWave     => undef,
+								EmWave     => undef,
+								Fluor      => undef,
+								NDfilter   => undef};
+		}
 	}
-        # Store summary info about each input file
-        $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-                                  0, $xref->{'Image.SizeX'}-1,
-                                  0, $xref->{'Image.SizeY'}-1,
-                                  0, 0,
-                                  $c, $c,
-                                  0, 0,
-                                  "TIFF");
 
-        # Store info about each input channel (wavelength)
-        push @channelInfo, {chnlNumber => $c,
-                            ExWave     => undef,
-                            EmWave     => undef,
-                            Fluor      => undef,
-                            NDfilter   => undef};
-
-        $file->close();
-    }
-
+	$file->close();
     OME::Tasks::PixelsManager->finishPixels ($self->{pix},$self->{pixels});
 
     if ($status eq "") {
-	$self->__storeInputFileInfo($session, \@finfo);
-	$self->__storeChannelInfo($session, scalar(@$grp), @channelInfo);
-	return  $image;
+		$self->__storeInputFileInfo($session, \@finfo);
+		$self->__storeChannelInfo($session, scalar(@$grp)*$chansImg, @channelInfo);
+		return  $image;
     } else {
-	($self->{super})->__destroyRepositoryFile($pixels, $pix);
-	die $status;
+		($self->{super})->__destroyRepositoryFile($pixels, $pix);
+		die $status;
     }
 
 }
