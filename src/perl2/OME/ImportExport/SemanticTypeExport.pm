@@ -55,13 +55,13 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc debug _STDelement);
+	my @fieldsILike = qw(session _doc _STDelement);
 
 	my $self;
 
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
-	logdie "I need a session"
+	logdie $class."->new needs a session"
 	  unless exists $self->{session} &&
 			 UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -102,7 +102,6 @@ sub buildDOM {
 	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
 		unless ref($objects) eq 'ARRAY';
 
-	my $debug	= $self->{debug};
 	my $session = $self->{session};
 	my $factory = $session->Factory();
 	
