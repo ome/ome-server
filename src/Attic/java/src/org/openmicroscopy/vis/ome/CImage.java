@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.RemoteImage;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
+import org.openmicroscopy.vis.piccolo.PThumbnail;
 import java.awt.Image;
 
  
@@ -61,6 +62,7 @@ public class CImage extends RemoteImage {
 	}
 	
 	private Image imageData;
+	private PThumbnail thumbnail;
 	
 	public CImage() {
 		super();
@@ -75,11 +77,22 @@ public class CImage extends RemoteImage {
 		int id = getID();
 		System.err.println("getting image data for image "+id);
 		//imageData = connection.getThumbnail(id);
-		connection.getThumbnail(this);		
+		if (imageData == null) {
+			System.err.println("retrieving...");
+			connection.getThumbnail(this);
+		}
+		else 
+			System.err.println("cached...");		
 	}
 	
 	public void setImageData(Image i) {
 		imageData = i;
+		if (thumbnail != null) 
+			thumbnail.notifyImageComplete();
+	}
+	
+	public void setThumbnail(PThumbnail thumb) {
+		thumbnail = thumb;
 	}
 	
 	public Image getImageData() {
