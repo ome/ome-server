@@ -363,6 +363,7 @@ FILE *infile;
                      filename,(unsigned long long)ID,(unsigned long)nIO,(unsigned long)size);
             DeleteFile (myFile);
 			freeFileRep (myFile);
+			return (0);
 	        }
     }
 
