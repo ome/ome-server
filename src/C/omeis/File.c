@@ -56,7 +56,7 @@ void freeFileRep (FileRep *myFile)
 		return;
 
 	if (myFile->is_mmapped) {
-		munmap (myFile->file_buf, myFile->size_rep);
+		munmap (myFile->file_buf, myFile->size_buf);
 	}
 	
 	if (myFile->fd_info >=0 ) close (myFile->fd_info);
@@ -101,7 +101,7 @@ char *filesIDfile="Files/lastFileID";
 }
 
 
-FileRep *GetFileRep (OID ID)
+FileRep *GetFileRep (OID ID, size_t offset, size_t length)
 {
 FileRep *myFile;
 struct stat fStat;
@@ -119,7 +119,7 @@ struct stat fStat;
 	}
 
 	/* Wait for a read lock */
-	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);
+	lockRepFile (myFile->fd_rep, 'r', offset, length);
 
 	if (fstat (myFile->fd_rep, &fStat) < 0) {
 		fprintf (stderr,"Could not get size of FileID=%llu",myFile->ID);
@@ -128,8 +128,18 @@ struct stat fStat;
 	}
 	myFile->size_rep = fStat.st_size;
 
+    if (length == 0)
+        length = myFile->size_rep;
 
-	if ( (myFile->file_buf = (char *)mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
+    if (offset+length > myFile->size_rep) {
+        fprintf (stderr,"Trying to read past end of file\n");
+        freeFileRep (myFile);
+        return (NULL);
+    }
+
+    myFile->size_buf = length;
+
+	if ( (myFile->file_buf = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, myFile->fd_rep, offset)) == (char *) -1 ) {
 		fprintf (stderr,"Could not mmap FileID=%llu",myFile->ID);
 		freeFileRep (myFile);
 		return (NULL);			

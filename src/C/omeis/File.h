@@ -56,6 +56,7 @@ typedef struct {
 	int  fd_info;
 	size_t size_rep;
 	size_t size_info;
+    size_t size_buf;
 	char is_mmapped;
 	FileInfo file_info;
 	void *file_buf;
@@ -70,7 +71,7 @@ FileRep *
 newFileRep (OID ID);
 
 FileRep *
-GetFileRep (OID ID);
+GetFileRep (OID ID, size_t offset, size_t length);
 
 int
 DeleteFile (FileRep *myFile);

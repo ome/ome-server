@@ -935,7 +935,7 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 
 	myPlaneInfo.mean = sum_i / nPix;
 	myPlaneInfo.geomean = exp ( sum_log_i / nPix ) - logOffset;
-	
+
 	/* sigma using the amean */
 	myPlaneInfo.sigma = (float) sqrt (fabs ( 
 		(sum_i2 - (sum_i * sum_i) / nPix) /
@@ -1110,7 +1110,7 @@ char isBigEndian=1,bp;
 	}
 	bp = head->bp;
 
-	if ( !(myFile = GetFileRep (fileID)) ) {
+	if ( !(myFile = GetFileRep (fileID, file_offset, nPix*bp)) ) {
 		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Could not acess file ID=%llu",myPixels->ID,fileID);
 		return (0);
 	}
@@ -1122,7 +1122,7 @@ char isBigEndian=1,bp;
 		return (0);
 	}
 
-	myPixels->IO_buf = myFile->file_buf + file_offset;
+	myPixels->IO_buf = myFile->file_buf;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
 		sprintf (myPixels->error_str,"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",

@@ -382,7 +382,7 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			if ( !(theFile = GetFileRep (fileID)) ) {
+			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
 				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
 				return (-1);
 			}
@@ -410,7 +410,7 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			if ( !(theFile = GetFileRep (fileID)) ) {
+			if ( !(theFile = newFileRep (fileID)) ) {
 				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
 				return (-1);
 			}
@@ -445,17 +445,18 @@ char **cgivars=param;
             {
 				sscanf (theParam,"%llu",&scan_off);
 				offset = (size_t)scan_off;
+            } else {
+                HTTP_DoError (method,"Offset must be specified!");
+                return (-1);
             }
-
-			if ( !(theFile = GetFileRep (fileID)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
-				return (-1);
-			}
 
 			if ( (theParam = get_param (param,"Length")) )
 				sscanf (theParam,"%lu",&length);
-			else
-				length = theFile->size_rep;
+
+			if ( !(theFile = GetFileRep (fileID,offset,length)) ) {
+				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				return (-1);
+			}
 
 			HTTP_ResultType ("application/octet-stream");
 			fwrite (theFile->file_buf,length,1,stdout);
