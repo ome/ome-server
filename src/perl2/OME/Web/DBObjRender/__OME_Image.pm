@@ -79,6 +79,7 @@ sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
+	my $q       = $self->CGI();
 	my %record;
 
 	# thumbnail url
@@ -122,6 +123,24 @@ sub _renderData {
 				countObjects( '@ImageAnnotation', image => $obj );
 		}
 	}
+	# annotationSTs:
+	if( exists $field_requests->{ 'annotationSTs' } ) {
+		foreach my $request ( @{ $field_requests->{ 'annotationSTs' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my @imageSTs = $factory->findObjects( 'OME::SemanticType',
+				granularity => 'I'
+			);
+			$record{ $request_string } = $q->popup_menu(
+				-name     => 'annotateWithST',
+				'-values' => [ '', map( '@'.$_->name(), @imageSTs ) ],
+				-default  => '',
+				-labels   => { 
+					'' => '-- Select a Semantic Type --', 
+					map{ '@'.$_->name() => $_->name } @imageSTs 
+				}
+			);
+		}
+	}	
 	# original file
 	if( exists $field_requests->{ 'original_file' } ) {
 		foreach my $request ( @{ $field_requests->{ 'original_file' } } ) {
