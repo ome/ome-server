@@ -155,26 +155,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		PLinkTarget endTarget = getEndLinkTarget();
 		startTarget.setSelected(v);
 		endTarget.setSelected(v);
-		 /*if (v == true) {
-			PPath select1 =PPath.createEllipse(xstart-END_BULB_RADIUS,
-				ystart-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
-			addChild(select1);
-			PPath select2 = PPath.createEllipse(xend-HIGHLIGHT_RADIUS, 
-				yend-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
-			addChild(select2);
-			select1.setStrokePaint(DEFAULT_COLOR);
-			select2.setStrokePaint(DEFAULT_COLOR);
-			select1.setPaint(HIGHLIGHT_COLOR);
-			select2.setPaint(HIGHLIGHT_COLOR);
-			moveToFront();
-		}
-		else {
-			if (select1 != null)
-				removeChild(select1);
-			if (select2 != null)
-				removeChild(select2);
-			select1=select2=null;
-		} */
+		
 		repaint();
 	}
 	
