@@ -143,8 +143,10 @@ sub exportFile {
 }
 
 # this method commented out by Josiah, June 17, 2003
-# because: cannot currently apply stylesheet to loaded DOM w/o first writing it to file (no biggie)
-#	&& insertBinData (C prog using SAX parser) has to read info from file. we need to find other methods for dealing w/ this stuff or think heavily before publishing this method
+# because: cannot currently apply stylesheet to loaded DOM w/o first
+#	writing it to file (no biggie).
+# Hmm. The architecture has changed significantly since I originally wrote 
+# this. We may be able to have this functionality again. 2/3/5
 #sub exportXML {
 #	my ($self, %flags) = @_;
 #	return ($self->doc()->toString(1)); 
