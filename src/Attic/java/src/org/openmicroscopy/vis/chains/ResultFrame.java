@@ -39,7 +39,9 @@
 
 package org.openmicroscopy.vis.chains;
 
+import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.piccolo.PResultCanvas;
 import org.openmicroscopy.vis.piccolo.PChainLibraryCanvas;
 import edu.umd.cs.piccolo.PCanvas;
@@ -47,6 +49,7 @@ import javax.swing.BoxLayout;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+
 
 
 /** 
@@ -99,7 +102,7 @@ public class ResultFrame extends ChainFrameBase {
 	 * The canvas for this frame is an instance of {@link PChainCanvas}
 	 * @return a PChainCanvas
 	 */
-	public PCanvas createCanvas(Connection connection) {
+	public PCanvas createCanvas() {
 		return new PResultCanvas(connection);
 	}
 	
@@ -113,8 +116,17 @@ public class ResultFrame extends ChainFrameBase {
 	 */
 	protected void layoutFrame() {
 		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
-		toolbar = new ResultToolBar(controller.getCmdTable(),connection);
+		toolbar = new ResultToolBar(this,controller.getCmdTable(),connection);
 		contentPane.add(toolbar);	
 		contentPane.add(canvas);
 	}
+	
+	public void updateExecutionChoices(CChain chain) {
+		toolbar.updateExecutionChoices(chain);
+	}
+	
+	public void setExecution(CChainExecution exec) {
+		((PResultCanvas) canvas).setExecution(exec);
+	}
+
 }
