@@ -74,6 +74,6 @@ public class ChainFrame extends ChainFrameBase {
 	}
 	
 	public Rectangle getInitialBounds() {
-		return new Rectangle(710,10,700,700);
+		return new Rectangle(410,10,400,400);
 	}
 }

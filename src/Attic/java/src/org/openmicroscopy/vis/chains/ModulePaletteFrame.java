@@ -71,8 +71,8 @@ public class ModulePaletteFrame extends JFrame {
 	private MenuBar menuBar;
 	private ToolBar toolBar;
 	
-	public static int HEIGHT=600;
-	public static int WIDTH=600;
+	public static int HEIGHT=400;
+	public static int WIDTH=400;
 	
 	//private ChainFrameBase canvasFrame;
 	
