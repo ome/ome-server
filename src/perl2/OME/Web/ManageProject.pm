@@ -44,7 +44,6 @@ $VERSION = $OME::VERSION;
 use CGI;
 
 use OME::Tasks::ProjectManager;
-use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
 use OME::Web::ProjectTable;
 
@@ -62,16 +61,17 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $currentproject=$session->project();
 	my $projectManager=new OME::Tasks::ProjectManager();
-	my $datasetManager= new OME::Tasks::DatasetManager();
 	my $htmlFormat= new OME::Web::Helper::HTMLFormat;
 
-	my $body .= $cgi->p({class => 'ome_title'}, 'My projects');
-	my @names = $cgi->param();
-	my %revArgs = map { $cgi->param($_) => $_ } @names;
+	my $body = $cgi->p({class => 'ome_title'}, 'My projects');
 
+	# Projects that were selected
 	my @selected = $cgi->param('selected');
 
-	if (exists $revArgs{'Switch To'}){
+	# Action field propagation
+	my $action = $cgi->param('action');
+
+	if ($action eq 'Switch To') {
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 
@@ -83,40 +83,12 @@ sub getPageBody {
 		
 		$body .= $cgi->p({-class => 'ome_info'}, "Selected project $selected[0]."); 
 
-		# Data
-		$body .= $self->print_form($projectManager);
-		
 		# Top frame refresh
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	} elsif (exists $revArgs{Delete}){
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Deleted project(s) @selected"); 
-
-		# Action
-		foreach (@selected) { $projectManager->delete($_) };
-
-		# Data
-		if ($session->project()) {  # We didn't delete our only project right ? :)
-			$body .= $self->print_form($projectManager);
-		} else {
-			# Main frame refresh
-			$body .= "<script>top.location.href = top.location.href;</script>";
-		}
-
-		# Top frame refresh
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	} elsif ($cgi->param('execute')){
-	   $datasetManager->switch($cgi->param('newdataset'));
-
-	   my @datasets=$session->project()->datasets();
-	   my $formatdata=format_datasetList($htmlFormat,$session->dataset()->name(),\@datasets,$cgi);
-	   $body.=$htmlFormat->formatProject($session->project());
-	   $body.=$formatdata;
-	   $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		
-	} else {
-		$body .= $self->print_form($projectManager);
 	}
+	
+	$body .= $self->print_form($projectManager);
+
     return ('HTML',$body);
 }
 
@@ -129,7 +101,7 @@ sub print_form {
 	my $t_generator = new OME::Web::ProjectTable;
 
 	my $html = $t_generator->getTable( {
-			options_row => ["Switch To", "Delete"],
+			options_row => ["Switch To"],
 			select_column => 1,
 		},
 		$p_manager->getUserProjects()
@@ -137,8 +109,6 @@ sub print_form {
 
 	return $html;
 }
-
-
 
 sub format_datasetList{
 	my ($htmlFormat,$dataname,$ref,$cgi)=@_;

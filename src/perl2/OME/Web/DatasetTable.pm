@@ -143,7 +143,10 @@ sub getTable {
 	}
 
     # Get options row
-	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
+	my $options_table = $self->__getOptionsTable(
+		$options->{options_row},
+		(scalar(@column_headers) + 1)
+	);
 	
 	# Populate and return our table
 	my $table = $q->table( {
@@ -153,14 +156,14 @@ sub getTable {
 			-border => '0',
 			-width => '100%',
 		},
-		$q->startform(),
+		$q->startform({-name => 'datatable'}),
 		$q->th({-class => 'ome_td'}, [@column_headers]),  # Space for the checkbox field
 		$table_data,
-		$options_row || '',
+		$q->hidden({-name => 'action', -default => ''}),
 		$q->endform()
 	);
 
-	return $table;
+	return $table . $options_table;
 }
 
 

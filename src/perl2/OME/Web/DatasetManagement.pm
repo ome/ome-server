@@ -48,9 +48,6 @@ use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
 use OME::Web::ImageTable;
 
-
-use Data::Dumper;
-
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -72,10 +69,14 @@ sub getPageBody {
 
 	my $body .= $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
 
+	# Image objects that were selected
 	my @selected = $cgi->param('selected');
+
+	# The action that was "clicked"
+	my $action = $cgi->param('action') || '';
 	
 	# determine action
-	if( $cgi->param('save')) {
+	if($action eq 'save') {
 		my $datasetname = $cgi->param('name')
 			or return (
 				'HTML', 
@@ -103,7 +104,7 @@ sub getPageBody {
 			$body .= $cgi->p({-class => 'ome_info'},
 				"Added image ", $image->name(), " to the dataset.");
 		}
-	} elsif ($cgi->param('Remove')) {
+	} elsif ($action eq 'Remove') {
 		# Action
 		my $to_remove = {};
 		foreach (@selected) { $to_remove->{$_} = [$dataset->id()] }
@@ -144,11 +145,11 @@ sub print_form {
 
 	my $text = '';
 
-	$text .= $cgi->startform;
+	$text .= $cgi->startform();
 	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
 	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, 'Images');
+	$text .= $cgi->endform();
 	$text .= $self->makeImageListings($dataset);
-	$text .= $cgi->endform;
 	
 	return $text;
 }

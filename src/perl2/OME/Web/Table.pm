@@ -182,7 +182,7 @@ sub __getRelationTD {
 }
 
 
-sub __getOptionsTR {
+sub __getOptionsTable {
 	my ($self, $options, $span) = @_;
 	my $q = $self->CGI();
 
@@ -194,22 +194,34 @@ sub __getOptionsTR {
 	# Build our buttons
     my $option_buttons;
 
+	my $i = 0;
+
     foreach (@$options) {
-        $option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
+		# Only prepend a pipe ("|") after the first option
+		$option_buttons .= ' | ' if $i > 0;
+		$option_buttons .= $q->a( {
+				-href => "#",
+				-onClick => "document.forms['datatable'].action.value='$_'; document.forms['datatable'].submit(); return false",
+				-class => 'ome_widget'
+			}, $_
+		),
+		++$i;
     }
 
-	# Build our table row and return it
+	# Build our table and return it
 	if ($option_buttons) {
-    	return $q->Tr(
-			$q->td( {
-					-colspan => $span,
-					-align => 'center',
-					-class => 'ome_td',
-				},
-            	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
-            	$option_buttons,
-        	)
-    	);
+    	return $q->table( {-cellspacing => 0, -cellpadding => 3, -width => '100%'},
+			$q->Tr(
+				$q->td( {
+						-colspan => $span,
+						-align => 'right',
+						-bgcolor => '#EFEFEF',
+						-class => 'ome_menu_td',
+					},
+					$option_buttons,
+				)
+			)
+		);
 	}
 
 	return;

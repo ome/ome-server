@@ -115,9 +115,9 @@ sub getTable {
 		my $name = $image->name();
 		my $thumbnail = $q->img( {
 				-align => 'bottom',
-				-border => '0',
+				-border => 1,
 				-src => "/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$id",
-				-alt => 'N/A'
+				-alt => 'N/A',
 			}
 		);
 		my $experimenter = $factory->loadAttribute("Experimenter", $image->experimenter_id());
@@ -144,7 +144,7 @@ sub getTable {
 			$q->td({-align => 'center'}, [
 				$id,
 				$name,
-				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
+				$q->a({-href => "javascript:openPopUpImage($id);", -class => 'ome_imagelink'}, $thumbnail),
 				$owner,
 				$group,
 				$description,
@@ -155,7 +155,10 @@ sub getTable {
 	}
 
     # Get options row
-	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
+	my $options_table = $self->__getOptionsTable(
+		$options->{options_row},
+		(scalar(@column_headers) + 1)
+	);
 
 	# Populate and return our table
 	my $table = $q->table( {
@@ -165,14 +168,14 @@ sub getTable {
 			-border => '0',
 			-width => '100%',
 		},
-		$q->startform(),
+		$q->startform({-name => 'datatable'}),
 		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
 		$table_data,
-		$options_row || '',
+		$q->hidden({-name => 'action', -default => ''}),
 		$q->endform()
 	);
 
-	return $table;
+	return $table . $options_table;
 }
 
 

@@ -31,6 +31,7 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Josiah Johnston <siah@nih.gov>
+# New version:   Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
 
@@ -87,8 +88,11 @@ sub getPageBody {
 	# Dataset objects that were selected
 	my @selected = $cgi->param('selected');
 
+	# The action that was "clicked"
+	my $action = $cgi->param('action') || '';
+
 	# determine action
-	if($cgi->param('save')) {
+	if($action eq 'save') {
 		my $new_name = $cgi->param('name');
 		my $new_description = $cgi->param('description');
 
@@ -114,7 +118,7 @@ sub getPageBody {
 
 		# this will add a script to reload OME::Home if it's necessary
 		$body .= OME::Web::Validation->ReloadHomeScript();
-	} elsif ($cgi->param('Remove')) {
+	} elsif ($action eq 'Remove') {
 		# Action
 		$p_manager->removeDatasets( {
 				$project->id() => \@selected
@@ -128,7 +132,7 @@ sub getPageBody {
 		$body .= "<script>top.location.href = top.location.href;</script>"
 			if (scalar($project->datasets())==0);
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
-	} elsif ($cgi->param('Select')) {
+	} elsif ($action eq 'Switch To') {
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 
@@ -215,25 +219,34 @@ sub __printForm {
 		]
 	);
 
-	my $footer = $q->Tr( [
-		$q->td({-colspan => 2, -bgcolor => '#FFFFFF'},
-			$q->span( {
-					-align => 'left',
-					-class => 'ome_info',
-					-style => 'font-size: 10px;',
-				}, "Items marked with a * are required unless otherwise specified"
+	my $footer_table = $q->table( {
+			-width => '100%',
+			-cellspacing => 0,
+			-cellpadding => 3,
+		},
+		$q->Tr( {-bgcolor => '#E0E0E0'},
+			$q->td({-align => 'left'},
+				$q->span( {
+						-class => 'ome_info',
+						-style => 'font-size: 10px;',
+					}, "Items marked with a * are required unless otherwise specified"
+				),
+			),
+			$q->td({-align => 'right'},
+				$q->a( {
+						-href => '/perl2/serve.pl?Page=OME::Web::MakeNewProject',
+						-class => 'ome_widget',
+					}, "New Project" 
+				),
+				"|",
+				$q->a( {
+						-href => "#",
+						-onClick => "document.forms['metadata'].action.value='save'; document.forms['metadata'].submit(); return false",
+						-class => 'ome_widget'
+					}, "Save Changes"
+				),
 			),
 		),
-		$q->td({-colspan => 2, -align => 'right', -bgcolor => '#E0E0E0'},
-			$q->a( {
-					-href => "#",
-					-onClick => "document.forms['metadata'].save.value='1'; document.forms['metadata'].submit();",
-					-class => 'ome_widget'
-				},
-				"Save Changes"
-			)
-		)
-		]
 	);
 
 	my $border_table = $q->table( {
@@ -242,15 +255,15 @@ sub __printForm {
 			-cellspacing => 1,
 			-cellpadding => 3,
 		},
+		$q->startform({-name => 'metadata'}),
+		$q->hidden(-name => 'action', -default => ''),
 		$metadata,
-		$footer,
 	);	
 
-	return $q->startform({-name => 'metadata'}) .
-	       $q->hidden(-name => 'save', -default => 0) .
-	       $border_table .
-		   $self->__makeDatasetListings() .
-		   $q->endform;
+	return $border_table .
+	       $footer_table .
+	       $q->endform() .
+		   $self->__makeDatasetListings();
 }
 
 sub __makeDatasetListings {

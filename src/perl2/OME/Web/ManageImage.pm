@@ -45,8 +45,6 @@ use CGI;
 use OME::Tasks::ImageManager;
 use OME::Web::ImageTable;
 
-use Data::Dumper;
-
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -62,10 +60,16 @@ sub getPageBody {
 
 	my $body .= $cgi->p({-class => 'ome_title'}, 'My Images');
 
+	# Images selected
 	my @selected = $cgi->param('selected');
+
+	# Dataset relations selected
 	my @rel_selected = $cgi->param('rel_selected');
 
-	if ($cgi->param('Remove')) {
+	# Action "clicked"
+	my $action = $cgi->param('action');
+
+	if ($action eq 'Remove from Dataset') {
 		# Action
 		my $to_remove = {};
 
@@ -97,12 +101,6 @@ sub getPageBody {
 		while (my ($image_id, $dataset_ids) = each (%$to_remove)) {
 			$body .= $cgi->p({-class => 'ome_info'}, "Removed image $image_id from dataset(s) @$dataset_ids.");
 		}
-	} elsif ($cgi->param('Delete')) {
-		# Action
-		foreach (@selected) { $imageManager->delete($_) }
-		
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Deleted image(s) @selected.");
 	}  
 
 	$body .= $self->printImages($imageManager);
@@ -122,7 +120,7 @@ sub printImages {
 	
 	# Gen our images table
 	my $html = $t_generator->getTable( {
-			options_row => ["Delete", "Remove"],
+			options_row => ["Remove from Dataset"],
 			relations => 1,
 			select_column => 1,
 		},
