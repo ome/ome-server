@@ -32,7 +32,7 @@ use OME::Web::Helper::HTMLFormat;
 use base qw{ OME::Web };
 
 sub getPageTitle {
-	return "Open Microscopy Environment - Project Management";
+	return "Open Microscopy Environment - Dataset Management";
 }
 
 sub getPageBody {
