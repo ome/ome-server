@@ -58,7 +58,8 @@ use OME::Tasks::OMEImport;
 #********* GLOBALS AND DEFINES
 #*********
 
-# Global logfile filehandle
+# Global logfile filehandle and name
+my $LOGFILE_NAME = "CoreDatabaseTablesTask.log";
 my $LOGFILE;
 
 # Installation home
@@ -66,6 +67,9 @@ my $INSTALL_HOME;
 
 # Our basedirs and user which we grab from the environment
 my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
+
+# Our Apache user we'll grab from the environment
+my ($APACHE_USER);
 
 # Default import formats
 my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader";
@@ -253,7 +257,7 @@ sub load_schema {
     
 	print BOLD, "[FAILURE]", RESET, ".\n"
 	    and print $logfile "ERROR LOADING CLASS \"$instantiate_class\" -- OUTPUT: \"$@\"\n"
-	    and croak "Error loading class \"$instantiate_class\", see CoreDatabaseTablesTask.log for details."
+	    and croak "Error loading class \"$instantiate_class\", see $LOGFILE_NAME details."
         if $@;
 
 
@@ -340,7 +344,7 @@ sub init_configuration {
     $session->commitTransaction();
 
 
-    return 1;
+    return $configuration;
 }
 
 sub load_xml_core {
@@ -381,7 +385,7 @@ sub load_xml_core {
 
 	print BOLD, "[FAILURE]", RESET, ".\n"
 	    and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
-	    and croak "Error loading XML file \"$filename\", see CoreDatabaseTablesTask.log for details."
+	    and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
 	if $@;
 
 	print BOLD, "[SUCCESS]", RESET, ".\n"
@@ -421,10 +425,13 @@ sub commit_experimenter {
 
     print "  \\__ Creating repository object\n";
     my $repository = $factory->
+    # FIXME: Yes there's a trailing slash, yes it needs to be there and no
+    # I don't know why the importer doesn't detect its existance or abscence.
     newAttribute("Repository",undef,undef,
                {
-                Path => $OME_BASE_DIR."/repository"
+                Path => $OME_BASE_DIR."/repository/"
                });
+
 
     $session->commitTransaction();
 
@@ -463,7 +470,7 @@ sub load_analysis_core {
 
 	print BOLD, "[FAILURE]", RESET, ".\n"
 	    and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
-	    and croak "Error loading XML file \"$filename\", see CoreDatabaseTablesTask.log for details."
+	    and croak "Error loading XML file \"$filename\", see $LOGFILE_NAME details."
 	if $@;
 
 	print BOLD, "[SUCCESS]", RESET, ".\n"
@@ -475,25 +482,6 @@ sub load_analysis_core {
     return 1;
 }
 
-print "Finding image import module and chain.\n";
-
-=head1
-# There should be only one of each of these.  If there's more than
-# one, we don't care which.  (Maybe we should throw an error instead?)
-
-my $importModule = $factory->
-  findObject("OME::Module",name => 'Importer');
-$configuration->import_module($importModule);
-
-my $importChain = $factory->
-  findObject("OME::AnalysisChain",name => 'Image import analyses');
-$configuration->import_chain($importChain);
-
-$configuration->storeObject();
-$session->commitTransaction();
-
-}
-=cut
 
 #*********
 #********* START OF CODE
@@ -516,26 +504,37 @@ sub execute {
 	or croak "Unable to retrieve OME_USER!";
     $OME_UID = getpwnam ($OME_USER)
 	or croak "Unable to retrive OME_USER UID!";
+    $APACHE_USER = $environment->apache_user()
+	or croak "Unable to retrieve APACHER_USER!";
 
     # Set our installation home
     $INSTALL_HOME = $OME_TMP_DIR."/install";
     
-    print "(All verbose information logged in $INSTALL_HOME/CoreDatabaseTablesTask.log)\n\n";
+    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
     # Get our logfile and open it for reading
-    open ($LOGFILE, ">", "$INSTALL_HOME/CoreDatabaseTablesTask.log")
-	or croak "Unable to open logfile \"$INSTALL_HOME/CoreDatabaseTablesTask.log\", $!";
+    open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
+	or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\" $!";
 
     #*********
-    #********* Create our super-user and bootstrap the DB
+    #********* Create our super-users and bootstrap the DB
     #*********
 
     # Make sure our OME_USER is also a Postgres user
-    print "Creating PostgreSQL SUPERUSER ";
+    print "Creating OME PostgreSQL SUPERUSER ";
     $retval = create_superuser ($OME_USER, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to create PostgreSQL superuser, see CoreDatabaseTablesTask.log for details."
+        and croak "Unable to create PostgreSQL superuser, see $LOGFILE_NAME for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Also make sure the Apache Unix user is a Postgres user
+    print "Creating Apache PostgreSQL SUPERUSER ";
+    $retval = create_superuser ($APACHE_USER, $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to create PostgreSQL superuser, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -544,24 +543,52 @@ sub execute {
 
     # Create our database
     create_database ("DEBIAN") or croak "Unable to create database!";
-    load_schema ($LOGFILE) or croak "Unable to load the schema, see CoreDatabaseTablesTask.log for details.";
+    load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
     my ($username, $password) = create_experimenter () or croak "Unable to create an initial experimenter.";
     
     # Login to OME and get our session
     my $manager = OME::SessionManager->new();
     my $session = $manager->createSession($username,$password);
 
-    init_configuration ($session) or croak "Unable to initialize the configuration object.";
+    my $configuration = init_configuration ($session) or croak "Unable to initialize the configuration object.";
 
     #*********
     #********* Finalize the DB
     #*********
 
     print_header "Finalizing Database";
-    load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see CoreDatabaseTablesTask.log for details.";
+    load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
     commit_experimenter ($session) or croak "Unable to load commit experimenter.";
     load_analysis_core ($session, $LOGFILE)
-	or croak "Unable to load analysis core, see CoreDatabaseTablesTask.log for details.";
+	or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
+
+    print "Finding image import module and chain.\n";
+
+    # There should be only one of each of these.  If there's more than
+    # one, we don't care which.  (Maybe we should throw an error instead ?)
+
+    # XXX: Ported straight out of the old bootstrap, it carries the same 
+    # caveats here as it did there and I have no idea what those were. -Chris
+
+    my $factory = $session->Factory ();
+
+    # Grab our import module and assign it to the configuration object
+    my $importModule = $factory->
+	findObject("OME::Module",name => 'Importer');
+    $configuration->import_module($importModule);
+
+    # Grab our import chain and assign it to the configuration object
+    my $importChain = $factory->
+	findObject("OME::AnalysisChain",name => 'Image import analyses');
+    $configuration->import_chain($importChain);
+
+    $configuration->storeObject();
+    $session->commitTransaction();
+
+    
+    #*********
+    #********* Logout and cleanup
+    #*********
     
     $manager->logout($session);
 
