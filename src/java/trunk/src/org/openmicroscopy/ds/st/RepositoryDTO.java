@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -41,7 +41,6 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
-import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
@@ -87,11 +86,6 @@ public class RepositoryDTO
     public int countPixelses()
     { return countListElement("Pixelses"); }
 
-    public List getPixelsPlanes()
-    { return (List) getObjectElement("PixelsPlanes"); }
-    public int countPixelsPlanes()
-    { return countListElement("PixelsPlanes"); }
-
     public List getThumbnails()
     { return (List) getObjectElement("Thumbnails"); }
     public int countThumbnails()
@@ -103,7 +97,6 @@ public class RepositoryDTO
         parseListElement("OTFs",OTFDTO.class);
         parseListElement("OriginalFiles",OriginalFileDTO.class);
         parseListElement("Pixelses",PixelsDTO.class);
-        parseListElement("PixelsPlanes",PixelsPlaneDTO.class);
         parseListElement("Thumbnails",ThumbnailDTO.class);
     }
 

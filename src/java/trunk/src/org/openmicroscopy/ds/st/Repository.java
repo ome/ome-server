@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -41,7 +41,6 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
-import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
@@ -76,11 +75,6 @@ public interface Repository
     public List getPixelses();
     /** Criteria field name: <code>#Pixelses</code> or <code>Pixelses</code> */
     public int countPixelses();
-
-    /** Criteria field name: <code>PixelsPlanes</code> */
-    public List getPixelsPlanes();
-    /** Criteria field name: <code>#PixelsPlanes</code> or <code>PixelsPlanes</code> */
-    public int countPixelsPlanes();
 
     /** Criteria field name: <code>Thumbnails</code> */
     public List getThumbnails();

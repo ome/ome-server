@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,9 +38,11 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
+import org.openmicroscopy.ds.st.DatasetAnnotation;
 import org.openmicroscopy.ds.st.Experiment;
 import org.openmicroscopy.ds.st.ExperimenterGroup;
 import org.openmicroscopy.ds.st.Group;
+import org.openmicroscopy.ds.st.ImageAnnotation;
 import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,11 @@ public interface Experimenter
     public Group getGroup();
     public void setGroup(Group value);
 
+    /** Criteria field name: <code>DatasetAnnotations</code> */
+    public List getDatasetAnnotations();
+    /** Criteria field name: <code>#DatasetAnnotations</code> or <code>DatasetAnnotations</code> */
+    public int countDatasetAnnotations();
+
     /** Criteria field name: <code>Experiments</code> */
     public List getExperiments();
     /** Criteria field name: <code>#Experiments</code> or <code>Experiments</code> */
@@ -91,5 +98,10 @@ public interface Experimenter
     public List getGroupsByLeader();
     /** Criteria field name: <code>#GroupsByLeader</code> or <code>GroupsByLeader</code> */
     public int countGroupsByLeader();
+
+    /** Criteria field name: <code>ImageAnnotations</code> */
+    public List getImageAnnotations();
+    /** Criteria field name: <code>#ImageAnnotations</code> or <code>ImageAnnotations</code> */
+    public int countImageAnnotations();
 
 }

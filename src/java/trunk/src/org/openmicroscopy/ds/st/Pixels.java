@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:18 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,49 +48,41 @@ import java.util.Map;
 public interface Pixels
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>ImageServerID</code> */
-    public Long getImageServerID();
-    public void setImageServerID(Long value);
-
-    /** Criteria field name: <code>Path</code> */
-    public String getPath();
-    public void setPath(String value);
-
-    /** Criteria field name: <code>Repository</code> */
-    public Repository getRepository();
-    public void setRepository(Repository value);
-
-    /** Criteria field name: <code>FileSHA1</code> */
-    public String getFileSHA1();
-    public void setFileSHA1(String value);
-
-    /** Criteria field name: <code>PixelType</code> */
-    public String getPixelType();
-    public void setPixelType(String value);
-
-    /** Criteria field name: <code>BitsPerPixel</code> */
-    public Integer getBitsPerPixel();
-    public void setBitsPerPixel(Integer value);
-
-    /** Criteria field name: <code>SizeT</code> */
-    public Integer getSizeT();
-    public void setSizeT(Integer value);
-
-    /** Criteria field name: <code>SizeC</code> */
-    public Integer getSizeC();
-    public void setSizeC(Integer value);
-
-    /** Criteria field name: <code>SizeZ</code> */
-    public Integer getSizeZ();
-    public void setSizeZ(Integer value);
+    /** Criteria field name: <code>SizeX</code> */
+    public Integer getSizeX();
+    public void setSizeX(Integer value);
 
     /** Criteria field name: <code>SizeY</code> */
     public Integer getSizeY();
     public void setSizeY(Integer value);
 
-    /** Criteria field name: <code>SizeX</code> */
-    public Integer getSizeX();
-    public void setSizeX(Integer value);
+    /** Criteria field name: <code>SizeZ</code> */
+    public Integer getSizeZ();
+    public void setSizeZ(Integer value);
+
+    /** Criteria field name: <code>SizeC</code> */
+    public Integer getSizeC();
+    public void setSizeC(Integer value);
+
+    /** Criteria field name: <code>SizeT</code> */
+    public Integer getSizeT();
+    public void setSizeT(Integer value);
+
+    /** Criteria field name: <code>PixelType</code> */
+    public String getPixelType();
+    public void setPixelType(String value);
+
+    /** Criteria field name: <code>FileSHA1</code> */
+    public String getFileSHA1();
+    public void setFileSHA1(String value);
+
+    /** Criteria field name: <code>Repository</code> */
+    public Repository getRepository();
+    public void setRepository(Repository value);
+
+    /** Criteria field name: <code>ImageServerID</code> */
+    public Long getImageServerID();
+    public void setImageServerID(Long value);
 
     /** Criteria field name: <code>DisplayOptionses</code> */
     public List getDisplayOptionses();

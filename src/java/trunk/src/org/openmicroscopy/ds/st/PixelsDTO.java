@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:18 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,60 +55,50 @@ public class PixelsDTO
     public String getDTOTypeName() { return "@Pixels"; }
     public Class getDTOType() { return Pixels.class; }
 
-    public Long getImageServerID()
-    { return getLongElement("ImageServerID"); }
-    public void setImageServerID(Long value)
-    { setElement("ImageServerID",value); }
-
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
-
-    public String getFileSHA1()
-    { return getStringElement("FileSHA1"); }
-    public void setFileSHA1(String value)
-    { setElement("FileSHA1",value); }
-
-    public String getPixelType()
-    { return getStringElement("PixelType"); }
-    public void setPixelType(String value)
-    { setElement("PixelType",value); }
-
-    public Integer getBitsPerPixel()
-    { return getIntegerElement("BitsPerPixel"); }
-    public void setBitsPerPixel(Integer value)
-    { setElement("BitsPerPixel",value); }
-
-    public Integer getSizeT()
-    { return getIntegerElement("SizeT"); }
-    public void setSizeT(Integer value)
-    { setElement("SizeT",value); }
-
-    public Integer getSizeC()
-    { return getIntegerElement("SizeC"); }
-    public void setSizeC(Integer value)
-    { setElement("SizeC",value); }
-
-    public Integer getSizeZ()
-    { return getIntegerElement("SizeZ"); }
-    public void setSizeZ(Integer value)
-    { setElement("SizeZ",value); }
+    public Integer getSizeX()
+    { return getIntegerElement("SizeX"); }
+    public void setSizeX(Integer value)
+    { setElement("SizeX",value); }
 
     public Integer getSizeY()
     { return getIntegerElement("SizeY"); }
     public void setSizeY(Integer value)
     { setElement("SizeY",value); }
 
-    public Integer getSizeX()
-    { return getIntegerElement("SizeX"); }
-    public void setSizeX(Integer value)
-    { setElement("SizeX",value); }
+    public Integer getSizeZ()
+    { return getIntegerElement("SizeZ"); }
+    public void setSizeZ(Integer value)
+    { setElement("SizeZ",value); }
+
+    public Integer getSizeC()
+    { return getIntegerElement("SizeC"); }
+    public void setSizeC(Integer value)
+    { setElement("SizeC",value); }
+
+    public Integer getSizeT()
+    { return getIntegerElement("SizeT"); }
+    public void setSizeT(Integer value)
+    { setElement("SizeT",value); }
+
+    public String getPixelType()
+    { return getStringElement("PixelType"); }
+    public void setPixelType(String value)
+    { setElement("PixelType",value); }
+
+    public String getFileSHA1()
+    { return getStringElement("FileSHA1"); }
+    public void setFileSHA1(String value)
+    { setElement("FileSHA1",value); }
+
+    public Repository getRepository()
+    { return (Repository) getObjectElement("Repository"); }
+    public void setRepository(Repository value)
+    { setElement("Repository",value); }
+
+    public Long getImageServerID()
+    { return getLongElement("ImageServerID"); }
+    public void setImageServerID(Long value)
+    { setElement("ImageServerID",value); }
 
     public List getDisplayOptionses()
     { return (List) getObjectElement("DisplayOptionses"); }

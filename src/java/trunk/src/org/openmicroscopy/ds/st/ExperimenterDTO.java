@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,9 +38,11 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
+import org.openmicroscopy.ds.st.DatasetAnnotation;
 import org.openmicroscopy.ds.st.Experiment;
 import org.openmicroscopy.ds.st.ExperimenterGroup;
 import org.openmicroscopy.ds.st.Group;
+import org.openmicroscopy.ds.st.ImageAnnotation;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,11 @@ public class ExperimenterDTO
     public void setGroup(Group value)
     { setElement("Group",value); }
 
+    public List getDatasetAnnotations()
+    { return (List) getObjectElement("DatasetAnnotations"); }
+    public int countDatasetAnnotations()
+    { return countListElement("DatasetAnnotations"); }
+
     public List getExperiments()
     { return (List) getObjectElement("Experiments"); }
     public int countExperiments()
@@ -105,14 +112,21 @@ public class ExperimenterDTO
     public int countGroupsByLeader()
     { return countListElement("GroupsByLeader"); }
 
+    public List getImageAnnotations()
+    { return (List) getObjectElement("ImageAnnotations"); }
+    public int countImageAnnotations()
+    { return countListElement("ImageAnnotations"); }
+
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Group",GroupDTO.class);
+        parseListElement("DatasetAnnotations",DatasetAnnotationDTO.class);
         parseListElement("Experiments",ExperimentDTO.class);
         parseListElement("ExperimenterGroups",ExperimenterGroupDTO.class);
         parseListElement("GroupsByContact",GroupDTO.class);
         parseListElement("GroupsByLeader",GroupDTO.class);
+        parseListElement("ImageAnnotations",ImageAnnotationDTO.class);
     }
 
 }
