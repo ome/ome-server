@@ -15,12 +15,15 @@ sub new {
     my $self = $class->SUPER::new(@_);
 
     $self->{_fields} = {
-	id          => ['PROJECTS','PROJECT_ID',{sequence => 'PROJECT_SEQ'}],
+	id          => ['PROJECTS','PROJECT_ID',
+			{sequence => 'PROJECT_SEQ'}],
 	name        => ['PROJECTS','NAME'],
-	owner       => ['PROJECTS','OWNER_ID',{reference => 'OME::Experimenter'}],
+	owner       => ['PROJECTS','OWNER_ID',
+			{reference => 'OME::Experimenter'}],
 	description => ['PROJECTS','DESCRIPTION'],
-	datasets    => ['PROJECT_DATASET_MAP','DATASET_ID',{map       => 'PROJECT_ID',
-							    reference => 'OME::Dataset'}],
+	datasets    => ['PROJECT_DATASET_MAP','DATASET_ID',
+			{map       => 'PROJECT_ID',
+			 reference => 'OME::Dataset'}],
     };
 
     return $self;

@@ -180,6 +180,8 @@ sub writeObject {
 		$mapValues = $columnValues->[$i];
 		$matchField = $options->[$i]->{map};
 		$mapped = 1;
+	    } elsif (exists $options->[$i]->{link}) {
+		$matchField = $options->[$i]->{link};
 	    } else {
 		push @updates, "$name = ?";
 		push @values, @$columnValues[$i];
