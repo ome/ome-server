@@ -35,6 +35,7 @@ $VERSION = '1.0';
 use CGI;
 use OME::Web::Validation;
 use OME::Dataset;
+use OME::SetDB;
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -67,9 +68,6 @@ sub getPageBody {
 		if( not defined $dataset ) {
 			die "Could not load dataset ( ID = '".$revArgs{Remove}."' ). It has not been removed.<br>";
 		}else {
-			# OTHER SOLUTION SOON
-			#return ('HTML',"<b>You cannot remove the current dataset</b>") if $dataset->dataset_id()==$currentdataset->dataset_id();
-			
 			my $result=remove_dataset($revArgs{Remove},$project->project_id());
 			return ('HTML',"Cannot remove dataset.") if (!defined $result);
 			my @datasets=$project->datasets();	
