@@ -166,10 +166,11 @@ assumed to be the default Length of 10.
 sub getTable {
 	my $self = shift;
 	my $q       = $self->CGI();
-	my ( $objects, $object_count, $options, 
-	     $pagingText, $form_name, $title, $display_type,
-	     $common_name, $formal_name, $ST ) =
+	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @_ );
+	my $display_type = $self->{display_type};
+	my $form_name    = $self->{form_name};
+	my $pagingText   = $self->{pagingText};
 
 	# build table
 	my $html;
@@ -318,9 +319,7 @@ sub getTextTable {
 	my $q       = $self->CGI();
 	my @params = @_;
 	$params[0]->{ Length } = -1;
-	my ( $objects, $object_count, $options, 
-	     $pagingText, $form_name, $title, $display_type,
-	     $common_name, $formal_name, $ST ) =
+	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @params );
 	
 	$options->{delimiter} = "\t" unless $options->{delimiter};
@@ -380,11 +379,12 @@ a Length of 0 or less is considered to be 'no limit'. an undef Length is assumed
 sub getList {
 	my $self = shift;
 	my $q       = $self->CGI();
-	my ( $objects, $object_count, $options, 
-	     $pagingText, $form_name, $title, $display_type,
-	     $common_name, $formal_name, $ST ) =
+	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @_ );
-
+	my $display_type = $self->{display_type};
+	my $form_name    = $self->{form_name};
+	my $pagingText   = $self->{pagingText};
+	
 	# build table
 	my $html;
 	
@@ -569,7 +569,6 @@ sub __parseParams {
 		my $currentPage = ( defined $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) + 1 : 1 );
 		my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit });
 		if( $object_count and $numPages > 1) {
-			$pagingText  = sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= $q->a( {
 					-href => "#",
 					-onClick => "document.forms['$form_name'].action.value='PageBack_$formal_name'; document.forms['$form_name'].submit(); return false",
@@ -577,6 +576,7 @@ sub __parseParams {
 					'<'
 				)." "
 				if $currentPage > 1;
+			$pagingText  .= sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= "\n".$q->a( {
 					-href => "#",
 					-onClick => "document.forms['$form_name'].action.value='PageForward_$formal_name'; document.forms['$form_name'].submit(); return false",
@@ -596,9 +596,7 @@ sub __parseParams {
 	$self->{formal_name}  = $formal_name;
 	$self->{ST}           = $ST;
 	
-	return ( \@objects, $object_count, $options, 
-	         $pagingText, $form_name, $title, $display_type,
-	         $common_name, $formal_name, $ST )
+	return ( \@objects, $options, $title, $formal_name );
 }
 
 sub __getOptionsTD {
