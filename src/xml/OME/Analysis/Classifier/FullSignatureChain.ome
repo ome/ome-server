@@ -51,7 +51,13 @@
       <Node NodeID="Edge Statistics" ProgramName="Edge Statistics"/>
       <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
       <Node NodeID="Chebyshev Fourier Transform" ProgramName="Chebyshev Fourier Transform"/>
+      
+      <Node NodeID="Chebyshev Statistics" ProgramName="Chebyshev Statistics"/>
+      <Node NodeID="Chebyshev Statistics 1" ProgramName="Chebyshev Statistics"/>
+      
+      <Node NodeID="Chebyshev Transform"   ProgramName="Chebyshev Transform"/>
       <Node NodeID="Chebyshev Transform 1" ProgramName="Chebyshev Transform"/>
+
       <Node NodeID="Fourier Transform" ProgramName="Fourier Transform"/>
       <Node NodeID="FrequencySpace -&gt; PixelsPlaneSlice" ProgramName="FrequencySpace -&gt; PixelsPlaneSlice"/>
 
@@ -92,16 +98,14 @@
       <Node NodeID="Haralick Features (Angle 135) 10" ProgramName="Haralick Features (Angle 135)"/>
 
       <Node NodeID="Chebyshev Fourier Transform 1" ProgramName="Chebyshev Fourier Transform"/>
-      <Node NodeID="Chebyshev Transform 3" ProgramName="Chebyshev Transform"/>
       <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
       <Node NodeID="Wavelet Transform 1" ProgramName="Wavelet Transform"/>
       <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
       <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Chebyshev Transform 2" ProgramName="Chebyshev Transform"/>
       <Node NodeID="Wavelet Transform" ProgramName="Wavelet Transform"/>
       <Node NodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice"/>
       <Node NodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ProgramName="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice"/>
-      <Node NodeID="Chebyshev Transform" ProgramName="Chebyshev Transform"/>
+      
       <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
     </Nodes>
     <Links>
@@ -115,7 +119,7 @@
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Wavelet Transform" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Fourier Transform" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Transform" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Transform 1" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Chebyshev Statistics" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Otsu's Method" ToInputName="Pixels Slice"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Global Threshold" ToInputName="Pixels Slice"/>
       <Link FromNodeID="Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>
@@ -124,14 +128,19 @@
       <Link FromNodeID="Fourier Transform" FromOutputName="Frequency Space" ToNodeID="FrequencySpace -&gt; PixelsPlaneSlice" ToInputName="Frequency Space"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Fourier Transform 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Wavelet Transform 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 2" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Chebyshev Transform 3" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
+      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Statistics 1" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 1" ToInputName="Pixels Plane Slice"/>
+      
+      <Link FromNodeID="Chebyshev Transform 1" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
+      <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>
+      
+
       <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 2"/>
       <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 2"/>
-      <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>
+      
+      
       
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 2" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 2" ToInputName="Pixels Plane Slice"/>

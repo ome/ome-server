@@ -78,8 +78,8 @@
 			NodeID="ChebyshevTransform" 
 			ProgramName="Chebyshev Transform"/>
 		<Node
-			NodeID="ChebyshevTransform_signature" 
-			ProgramName="Chebyshev Transform"/>
+			NodeID="ChebyshevStatistics" 
+			ProgramName="Chebyshev Statistics"/>
 		<Node
 			NodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
 			ProgramName="ChebyshevCoefficientMatrix -> PixelsPlaneSlice"/>
@@ -240,12 +240,12 @@
 		<Link
 			FromNodeID="CreatePlaneSlices"
 			FromOutputName="Plane slices" 
-			ToNodeID="ChebyshevTransform_signature"
+			ToNodeID="ChebyshevStatistics"
 			ToInputName="Pixels Plane Slice"/>
 		<Link
 			FromNodeID="FrequencySpace->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="ChebyshevTransform_signature"
+			ToNodeID="ChebyshevStatistics"
 			ToInputName="Pixels Plane Slice"/>
 		</Links>
   </AnalysisChain>
