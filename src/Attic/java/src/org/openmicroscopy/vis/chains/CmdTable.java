@@ -100,11 +100,11 @@ public class CmdTable {
 			}
 		});
 		
-		actionMap.put("view results",new ActionListener() {
+		/*actionMap.put("view results",new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				controller.newViewResults();
 			}
-		});
+		});*/
 	}	
 	
 	/**
