@@ -44,7 +44,6 @@ $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -62,7 +61,6 @@ sub getPageBody{
   my $session=$self->Session(); 
   my $datasetManager=new OME::Tasks::DatasetManager($session);
   my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-  my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 
   my $usergpID=$cgi->url_param('UsergpID');
@@ -73,7 +71,6 @@ sub getPageBody{
   if (defined $usergpID){
     my @a=($usergpID);
    my  $datasets=$datasetManager->listMatching(undef,\@a);
-    $body .= $jscriptFormat->popUpDataset();    
     $body.="<h3>Description</h3>";
     foreach (@$datasets){
 	my $userID=$_->owner_id();
@@ -83,7 +80,7 @@ sub getPageBody{
     
   }
   $body.="<br><br>";
-  $body.=$jscriptFormat->closeButton();    
+  $body.=$cgi->button({-value => 'Close Window', -onClick => 'window.close()'});
   return('HTML',$body);
 
 }

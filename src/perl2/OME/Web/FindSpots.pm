@@ -42,7 +42,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Helper::HTMLFormat;
 use OME::Tasks::AEFacade;
 

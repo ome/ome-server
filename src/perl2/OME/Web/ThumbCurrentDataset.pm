@@ -42,7 +42,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Helper::HTMLFormat;
 
 use base qw(OME::Web);
@@ -60,7 +59,6 @@ sub getPageBody {
 	my 	$cgi = $self->CGI() ;
 	my	$session=$self->Session();
 	my 	$body="" ;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 	my $HTMLFormat=new OME::Web::Helper::HTMLFormat;
 
 	my @ref=$session->dataset()->images();
@@ -70,7 +68,6 @@ sub getPageBody {
 		my $text=$HTMLFormat->formatThumbnail($object);
 		push(@result,$text);
 	}
-	$body.= $jscriptFormat->popUpImage();  
 	$body.=$HTMLFormat->gallery(\@result);
 
 

@@ -48,7 +48,6 @@ use OME::Tasks::ImageTasks;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 use base qw{ OME::Web };
 
 
@@ -69,7 +68,6 @@ sub getPageBody {
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my @selections = ();
 	my $selection;
@@ -151,9 +149,10 @@ sub getPageBody {
 				#$project->writeObject();
 				#$session->dataset($dataset);
 				#$session->writeObject();
-				$body=$jscriptFormat->openInfoDatasetImport($session->dataset()->dataset_id());
-				$body .= "<script>top.location.href = top.location.href;</script>";
-				$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+				
+				$body .= '<script>openInfoDatasetImport(' . $session->dataset()->id() . ');</script>';
+				$body .= '<script>top.location.href = top.location.href;</script>';
+				$body .= '<script>top.title.location.href = top.title.location.href;</script>'
 					if defined $reloadTitleBar;	
 			}
 		}

@@ -44,7 +44,6 @@ $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Tasks::ImageManager;
 

@@ -45,7 +45,6 @@ use CGI;
 use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw{ OME::Web };
 
@@ -59,7 +58,6 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $manager=new OME::Tasks::ProjectManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my $user=$session->User();
 	my $body = "";
@@ -86,8 +84,6 @@ sub getPageBody {
 			$body .= "<script>top.location.href = top.location.href;</script>";
 		} else {
 			# print an input form
-			$body .= $jscriptFormat->openExistingProject();	
-
 			$body .= print_form($htmlFormat,$cgi,$user->Group()->id());
 		}
 

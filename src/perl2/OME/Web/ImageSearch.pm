@@ -45,7 +45,6 @@ use CGI;
 
 use OME::Research::SearchEngine;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -60,7 +59,6 @@ sub getPageBody {
 	my	$self = shift ;
 	my 	$cgi = $self->CGI() ;
 	my	$htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my 	$body="" ;
 
@@ -97,7 +95,6 @@ sub getPageBody {
 	
          }
          if (defined $ref){
-		$body .= $jscriptFormat->popUpImage();    
 		$body .=format_output($ref,$htmlFormat,$cgi);
          }else{
 		$body.="No Image found.";

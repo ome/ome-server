@@ -45,7 +45,6 @@ use CGI;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ImageManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use OME::Web::Validation;
 
@@ -62,7 +61,6 @@ sub getPageBody {
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
 	my $imageManager=new OME::Tasks::ImageManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 
 	my $body = "";
@@ -73,7 +71,6 @@ sub getPageBody {
 		$body .= OME::Web::Validation->ReloadHomeScript();
 		return ("HTML",$body);
      }
-     $body .= $jscriptFormat->openExistingDataset();	
 
      if ($cgi->param('create')){
          my $datasetName=cleaning($cgi->param('name'));

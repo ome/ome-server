@@ -51,7 +51,6 @@ use Data::Dumper;
 
 # OME Modules
 use OME;
-use OME::Web::Helper::JScriptFormat;
 use OME::Project;
 use OME::Image;
 use OME::Dataset;
@@ -102,19 +101,10 @@ sub __datasetTable {
 		my $group = $dataset->group() ? $dataset->group()->Name() : " - ";
 		my $relations;
 		
-		# Gen our relationship checkboxes
+		# Get our relationship checkboxes
 		if ($options->{relations}) {
 			my @project_relations = $dataset->projects();
-			foreach (@project_relations) {
-				$relations .= $q->checkbox(
-					-name => 'rel_selected',
-					-value => $dataset->id . "," . $_->id(),
-					-label => $_->name()
-				);
-				$relations .= $q->br();
-			}
-			# Yes, this is variable saving :)
-			$relations = $q->td({-align => 'left', -class => 'ome_td'}, $relations || '');
+			$relations = $self->__getRelationTD(@project_relations);
 		}
 		
 		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
@@ -134,25 +124,8 @@ sub __datasetTable {
 		}
 	}
 
-    # Options row
-    my ($option_buttons, $options_row);
-
-    foreach (@{$options->{options_row}}) {
-        $option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
-    }
-                                                                                                          
-	if ($option_buttons) {
-    	$options_row = $q->Tr(
-        	$q->td( {
-					-colspan => scalar(@column_headers) + 1,
-					-align => 'center',
-					-class => 'ome_td',
-				},
-            	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
-            	$option_buttons,
-        	)
-    	);
-	}
+    # Get options row
+	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
 	
 	# Populate and return our table
 	my $table = $q->table( {
@@ -201,7 +174,7 @@ sub __projectTable {
 			$q->td({-align => 'center'}, [
 				$checkbox,
 				$id,
-				$q->a({-href => 'javascript:window.open("/perl2/serve.pl?Page=OME::Web::GetInfo&ProjectID=1");'}, $name),
+				$q->a({-href => "javascript:openInfoProject($id);"}, $name),
 				$owner,
 				$group,
 				$description,
@@ -210,25 +183,8 @@ sub __projectTable {
 		);
 	}
 
-	# Options row
-	my ($option_buttons, $options_row);
-
-	foreach (@{$options->{options_row}}) {
-		$option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
-	}
-
-	if ($option_buttons) {
-		$options_row = $q->Tr(
-			$q->td( {
-					-colspan => scalar(@column_headers) + 1,
-					-align => 'center',
-					-class => 'ome_td',
-				},
-				$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
-				$option_buttons,
-			)
-		);
-	}
+    # Get options row
+	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
 
 	# Populate and return our table
 	my $table = $q->table( {
@@ -285,23 +241,18 @@ sub __imageTable {
 		my $description = $image->description() ? $image->description() : " - ";
 		my $relations;
 
-		# Gen our relationship checkboxes
+		# Get our relationship checkboxes
 		if ($options->{relations}) {
 			my @dataset_relations = $image->datasets();
-			foreach (@dataset_relations) {  # Yet more Dummy joy
-				unless($_->name() eq 'Dummy import dataset') {
-					$relations .= $q->checkbox(
-						-name => 'rel_selected',
-						-value => $image->id . "," . $_->id(),
-						-label => $_->name()
-					);
-				}
-				$relations .= $q->br();
-			}
-			# Yes, this is variable saving :)
-			$relations = $q->td({-align => 'left', -class => 'ome_td'}, $relations || '');
-		}
 
+			# Remove dummy import datasets
+			for (my $c = 0; $c < scalar(@dataset_relations); $c++) {
+				if ($dataset_relations[$c]->name() eq 'Dummy import dataset') {
+					splice (@dataset_relations, $c, 1);
+				}
+			}
+			$relations = $self->__getRelationTD(@dataset_relations);
+		}
 
 		$table_data .= $q->Tr({-class => 'ome_td'},
 			$q->td({-align => 'center'}, [
@@ -318,25 +269,8 @@ sub __imageTable {
 		);
 	}
 
-    # Options row
-    my ($option_buttons, $options_row);
-                                                                                                          
-    foreach (@{$options->{options_row}}) {
-        $option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
-    }
-                                                                                                          
-	if ($option_buttons) {
-    	$options_row = $q->Tr(
-			$q->td( {
-					-colspan => scalar(@column_headers) + 1,
-					-align => 'center',
-					-class => 'ome_td',
-				},
-            	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
-            	$option_buttons,
-        	)
-    	);
-	}
+    # Get options row
+	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
 
 	# Populate and return our table
 	my $table = $q->table( {
@@ -396,8 +330,9 @@ sub __MEXTable {
             )
         );
     }
-    # Options row
-                                                                                                          
+    # Get options row
+	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
+
     # Populate and return our table
     my $table = $q->table( {
             -class => 'ome_table',
@@ -406,8 +341,11 @@ sub __MEXTable {
             -border => '0',
             -width => '100%',
         },
-        $q->th({-class => 'ome_td'}, ["Select", @column_headers]),
-        $table_data
+		$q->startform(),
+        $q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
+        $table_data,
+		$options_row || '',
+		$q->endform()
     );
                                                                                                           
     return $table;
@@ -511,6 +449,59 @@ sub __filterObjects {
 	return @objects;
 }
 
+sub __getRelationTD {
+	my ($self, @objects) = @_;
+	my $q = $self->CGI();
+	my $relation_boxes;
+
+	# Gen relationship checkboxes
+	foreach my $object (@objects) {
+		$relation_boxes .= $q->checkbox(
+			-name => 'rel_selected',
+			-value => $object->id . "," . $object->id(),
+			-label => $object->name()
+		);
+		$relation_boxes .= $q->br();
+	}
+	
+	return $q->td({-align => 'left', -class => 'ome_td'}, $relation_boxes || 'None');
+}
+
+
+sub __getOptionsTR {
+	my ($self, $options, $span) = @_;
+	my $q = $self->CGI();
+
+	unless ($span) {
+		carp "WARNING: Span not specified in __getOptionsTR(), using default of 1.";
+		$span = 1;
+	}
+
+	# Build our buttons
+    my $option_buttons;
+
+    foreach (@$options) {
+        $option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
+    }
+                                                                                                          
+	# Build our table row and return it
+	if ($option_buttons) {
+    	return $q->Tr(
+			$q->td( {
+					-colspan => $span,
+					-align => 'center',
+					-class => 'ome_td',
+				},
+            	$q->hidden({-name => 'type', -value => $q->param('type') || 'projects'}), # Propagation
+            	$option_buttons,
+        	)
+    	);
+	}
+
+	return;
+}
+
+
 #*********
 #********* PUBLIC METHODS
 #*********
@@ -522,7 +513,6 @@ sub getPageTitle {
 sub getPageBody {
     my $self = shift;
     my $q = $self->CGI();
-	my $j_format = new OME::Web::Helper::JScriptFormat;
 	my ($main_table, $header, $filter_table);
 	
 	my $type = $q->param('type') || 'projects';  # Projects is the default display
@@ -586,9 +576,6 @@ sub getPageBody {
 
 	return (
 		'HTML',
-		$j_format->openInfoProject() .
-		$j_format->openInfoDataset() .
-		$j_format->popUpImage() .
 		$header . $main_table . $q->p() . $filter_table
 	);
 }

@@ -46,7 +46,6 @@ use CGI;
 use OME::Research::SearchEngine;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -64,7 +63,6 @@ sub getPageBody {
 	my 	$session=$self->Session();
 	my	$datasetManager=new OME::Tasks::DatasetManager($session);
 	my	$htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my 	$body="" ;
 	######################
@@ -97,7 +95,6 @@ sub getPageBody {
 	    $ref=$research->searchEngine($string);
          }
           if (defined $ref){
-		$body .= $jscriptFormat->openInfoDataset();	
 
             $body.=format_output($session,$ref,$datasetManager,$htmlFormat,$cgi);
           }else{

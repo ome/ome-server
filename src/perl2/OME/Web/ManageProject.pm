@@ -46,7 +46,6 @@ use CGI;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Table;
 
 
@@ -65,20 +64,14 @@ sub getPageBody {
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $datasetManager= new OME::Tasks::DatasetManager($session);
 	my $htmlFormat= new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
-	my $body = "";
+	my $body .= $cgi->p({class => 'ome_title'}, 'My projects');
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
 
 	my @selected = $cgi->param('selected');
 
-	$body .= $jscriptFormat->openInfoProject();
-
-	if (exists $revArgs{Select}){
-		# Data
-		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
-
+	if (exists $revArgs{'Switch To'}){
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 
@@ -97,7 +90,6 @@ sub getPageBody {
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	} elsif (exists $revArgs{Delete}){
 		# Data
-		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
 		$body .= $cgi->p({-class => 'ome_info'}, "Deleted project(s) @selected"); 
 
 		# Action
@@ -123,7 +115,6 @@ sub getPageBody {
 	   $body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		
 	} else {
-		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
 		$body .= $self->print_form();
 	}
     return ('HTML',$body);

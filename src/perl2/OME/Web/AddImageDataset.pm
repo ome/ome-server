@@ -45,7 +45,6 @@ use CGI;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ImageManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -64,13 +63,11 @@ sub getPageBody {
 	my 	$datasetManager=new OME::Tasks::DatasetManager($session);
 	my 	$imageManager=new OME::Tasks::ImageManager($session);
 	my	$htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 
 	my 	$body="" ;
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
-	$body .= $jscriptFormat->popUpImage();    
 	if ($cgi->param('Add')){
 	    $datasetManager->switch($cgi->param('AddDataset'));
 	    my ($a,$b)=format_selected_dataset($session->dataset(),$htmlFormat,$cgi);

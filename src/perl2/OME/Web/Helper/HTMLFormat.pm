@@ -1441,7 +1441,7 @@ JMarie Burel (jburel@dundee.ac.uk)
 
 =head1 SEE ALSO
 
-L<OME::Web::Helper::JScriptFormat|OME::Web::Helper::JScriptFormat>,
+L<OME::Web|OME::Web>,
 
 
 =cut

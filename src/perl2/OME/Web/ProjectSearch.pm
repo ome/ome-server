@@ -47,7 +47,6 @@ use OME::Research::SearchEngine;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -68,7 +67,6 @@ sub getPageBody {
 	my	$datasetManager=new OME::Tasks::DatasetManager($session);
 	my	$projectManager=new OME::Tasks::ProjectManager($session);
 	my 	$htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	################
 	# DB INFOS
@@ -98,7 +96,6 @@ sub getPageBody {
 	    $ref=$research->searchEngine($string);
          }
           if (defined $ref){
-		$body .= $jscriptFormat->openInfoProject();	
             $body .=format_output($htmlFormat,$ref,$userID,$cgi);
           }else{
 		$body.="No Project found.";

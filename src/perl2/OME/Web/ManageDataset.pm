@@ -45,7 +45,6 @@ use CGI;
 use Data::Dumper;
 
 use OME::Tasks::DatasetManager;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Table;
 
 use base qw{ OME::Web };
@@ -58,17 +57,13 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
-	my $body = "";
-	$body.= $jscriptFormat->popUpDataset();	
+	my $body .= $cgi->p({-class => 'ome_title'}, 'My Datasets');
 
 	my @selected = $cgi->param('selected');
 	my @rel_selected = $cgi->param('rel_selected');
-	
-	$body .= $cgi->p({-class => 'ome_title'}, 'My Datasets');
 
-	if ($cgi->param('Select')){
+	if ($cgi->param('Switch To')){
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 

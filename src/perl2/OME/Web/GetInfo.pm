@@ -45,7 +45,6 @@ use CGI;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw(OME::Web);
 
@@ -63,7 +62,6 @@ sub getPageBody{
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my $projectID=$cgi->url_param('ProjectID');
 	my $datasetID=$cgi->url_param('DatasetID');
@@ -83,9 +81,7 @@ sub getPageBody{
     $body.="<h4>Import succesful</h4>" if defined $bool;
     $body.=getdatasetinfo($dataset,$htmlFormat);
   }
-   $body.=$jscriptFormat->popUpDataset();
-   $body.=$jscriptFormat->popUpImage();
-   $body.=$jscriptFormat->closeButton();
+  $body.=$cgi->button({-value => 'Close Window', -onClick => 'window.close()'});
 
    return('HTML',$body);
 

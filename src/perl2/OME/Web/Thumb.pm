@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::ImageManager;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Helper::HTMLFormat;
 
 
@@ -63,7 +62,6 @@ sub getPageBody {
 	
 	my $userID=$session->User()->id();
 	my $imageManager=new OME::Tasks::ImageManager($session);
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 	my $HTMLFormat=new OME::Web::Helper::HTMLFormat;
 	my $ref=$imageManager->listImages($userID);
 	
@@ -73,7 +71,6 @@ sub getPageBody {
 		push(@result,$text);
 	}
 	
-	$body.= $jscriptFormat->popUpImage();
 	$body.=$HTMLFormat->gallery(\@result);
   
 	return ('HTML',$body);

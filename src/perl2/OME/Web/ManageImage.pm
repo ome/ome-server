@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::ImageManager;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Table;
 
 use Data::Dumper;
@@ -60,11 +59,8 @@ sub getPageBody {
 	my $session=$self->Session();
 	my $factory=$session->Factory();
 	my $imageManager=new OME::Tasks::ImageManager($session);
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
-	my $body = "";
-	$body .= $jscriptFormat->popUpImage();    
-	$body .= $cgi->p({-class => 'ome_title'}, 'My Images');
+	my $body .= $cgi->p({-class => 'ome_title'}, 'My Images');
 
 	my @selected = $cgi->param('selected');
 	my @rel_selected = $cgi->param('rel_selected');

@@ -153,6 +153,27 @@ sub popUpImage{
 
 
 
+################
+sub popupInfo {
+	my $script = <<ENDJS;
+<script language="JavaScript">
+<!--
+var page;
+function popupInfo(page) {
+window.open(
+page,
+'Info',
+"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+}
+-->
+</script>
+ENDJS
+
+	return $script;
+}
+
+
+
 ####################
 # PRIVATE METHODS
 ####################

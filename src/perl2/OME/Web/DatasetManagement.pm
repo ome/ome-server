@@ -46,7 +46,6 @@ use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 use OME::Web::Table;
 
 
@@ -70,11 +69,8 @@ sub getPageBody {
 	my $imageManager        = OME::Tasks::ImageManager->new($session);
 	$self->{datasetManager} = $datasetManager;
 	$self->{htmlFormat}     = OME::Web::Helper::HTMLFormat->new();
-	my $jscriptFormat       = OME::Web::Helper::JScriptFormat->new();
 
-	my $body;
-	$body .= $jscriptFormat->popUpImage();    	     
-	$body .= $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
+	my $body .= $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
 
 	my @selected = $cgi->param('selected');
 	

@@ -45,7 +45,6 @@ use CGI;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 
 use base qw{ OME::Web };
@@ -60,7 +59,6 @@ sub getPageBody {
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my $body = "";
       my @list=$session->project()->datasets();
@@ -94,7 +92,6 @@ sub getPageBody {
             my @listprojects=$session->dataset()->projects();
 	      $body.=$htmlFormat->formatDataset($session->dataset());
             if (scalar(@listprojects)>0){
-		   $body .= $jscriptFormat->openInfoProject();
 		   $body.=format_projectList(\@listprojects,$htmlFormat,$cgi);
             }else{
 	         $body.="<h3>The current dataset is contained in no project.</h3>" ;

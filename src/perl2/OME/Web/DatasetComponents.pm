@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Web::Helper::HTMLFormat;
-use OME::Web::Helper::JScriptFormat;
 
 use base qw{ OME::Web };
 
@@ -56,12 +55,8 @@ sub getPageBody {
 	my $session=$self->Session();
 	my $cgi=$self->CGI();
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
-	my $body = "";
-	$body .= $jscriptFormat->popUpImage();    	     
-	$body.=print_form($session,$htmlFormat);
-	return ('HTML',$body);
+	return ('HTML',print_form($session,$htmlFormat));
 }
 
 
