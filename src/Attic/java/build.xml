@@ -39,6 +39,9 @@
       <link href="http://ws.apache.org/xmlrpc/apidocs/" />
       <bottom><![CDATA[<i>Copyright &#169; 2002-2003 Open Microscopy Environment.  All Rights reserved.</i>]]></bottom>
     </javadoc>
+  </target>
+
+  <target name="privapidocs">
     <mkdir dir="${privapidocs}"/>
     <javadoc sourcepath="${src}" destdir="${privapidocs}"
              packagenames="org.openmicroscopy.*"
