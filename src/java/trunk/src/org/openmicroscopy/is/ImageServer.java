@@ -44,6 +44,7 @@ package org.openmicroscopy.is;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.awt.Image;
 
 /**
  * <p>Defines methods for interacting with an OME image server.  There
@@ -585,6 +586,35 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
+     * Returns a {@link PlaneStatistics} object containing basic pixel
+     * statistics for each plane in the specified pixels file.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     */
+    public abstract PlaneStatistics getPlaneStatistics(long pixelsID)
+        throws ImageServerException;
+
+    /**
+     * Returns a {@link StackStatistics} object containing basic pixel
+     * statistics for each stack in the specified pixels file.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     */
+    public abstract StackStatistics getStackStatistics(long pixelsID)
+        throws ImageServerException;
+
+    /**
+     * Returns a thumbnail for the specified image.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     */
+    public abstract Image getThumbnail(long pixelsID)
+        throws ImageServerException;
+
+    /**
      * <p>Transfers the specified file to the image server, returning
      * a file ID.  This ID can then be used in calls to the
      * <code>convert*</code> methods, allowing a new pixels file to be
@@ -897,25 +927,5 @@ public abstract class ImageServer
                                      int theZ, int theC, int theT,
                                      long fileID, long offset,
                                      boolean bigEndian)
-        throws ImageServerException;
-
-    /**
-     * Returns a {@link PlaneStatistics} object containing basic pixel
-     * statistics for each plane in the specified pixels file.
-     *
-     * @param pixelsID the pixels ID of a previously created pixels
-     * file
-     */
-    public abstract PlaneStatistics getPlaneStatistics(long pixelsID)
-        throws ImageServerException;
-
-    /**
-     * Returns a {@link StackStatistics} object containing basic pixel
-     * statistics for each stack in the specified pixels file.
-     *
-     * @param pixelsID the pixels ID of a previously created pixels
-     * file
-     */
-    public abstract StackStatistics getStackStatistics(long pixelsID)
         throws ImageServerException;
 }
