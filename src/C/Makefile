@@ -1,7 +1,7 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
-		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_JPEG \
+		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
 		cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
@@ -61,6 +61,9 @@ DumpTIFFheader : DumpTIFFheader.o
 DumpTIFFstats : DumpTIFFstats.o readTiffData.o
 	gcc $(DEFINES) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats -lm -ltiff
 
+OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
+	gcc $(DEFINES) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats -lm
+
 #DumpTIFF : DumpTIFF.o
 #	gcc $(DEFINES) DumpTIFF.o -o DumpTIFF -lm -ltiff
 
@@ -109,6 +112,7 @@ install:
 	install -c BinarizeGlobal /OME/bin/BinarizeGlobal/BinarizeGlobal
 	install -c DumpTIFFheader /OME/bin/DumpTIFFheader
 	install -c DumpTIFFstats /OME/bin/DumpTIFFstats
+	install -c OME_Image_XYZ_stats /OME/bin/OME_Image_XYZ_stats
 	install -c SoftWorxSlice /OME/bin/SoftWorxSlice
 	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
