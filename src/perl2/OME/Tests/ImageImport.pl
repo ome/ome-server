@@ -1,3 +1,4 @@
+#!/usr/bin/perl -w
 # OME/Tests/ImportTest.pl
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
@@ -74,7 +75,7 @@ my @projects;
 @projects = OME::Project->search(name => $projectName);
 if (scalar @projects > 0) {
     $project = $projects[0];    # it exists, retrieve it from the DB
-    $project_id = $project->project_id;
+    $project_id = $project->ID();
     $project = $session->Factory()->loadObject("OME::Project", $project_id);
     $status = 0
 	unless defined $project;
@@ -84,10 +85,10 @@ else {             # otherwise create it
     print STDERR "- Creating a new project...";
     print STDERR " using ";
     $age = "new";
-    $projectGroup = $projectUser->group();
+    $projectGroup = $projectUser->group()->ID();
     $data = {name => $projectName,
 		description => $projectDesc,
-	        owner_id => $projectUser,
+	        owner_id => $projectUser->ID(),
 	        group_id => $projectGroup};
     $project = $session->Factory()->newObject("OME::Project", $data);
     if (!defined $project) {
@@ -99,26 +100,29 @@ else {             # otherwise create it
     }
 }
 
-if ($status) {
-    $data = {experimenter_id => $projectUser,
-	     started => now,
-	     last_access => now,
-	     host => `hostname`,
-	     project_id => $project};
-    my $session_obj = $session->Factory()->newObject("OME::Session::Attributes", $data);
-    if (!defined $session_obj) {
-	$status = 0;
-	print "failed to create new session entry.\n";
-    }
-    else {
-	$session_obj->writeObject();
-	$session->commit;
-	print "- Importing files into $age project... ";
-	my $datasetName = shift;
-      OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
-	print "done.\n";
-    }
-}
+# Die if we don't have a project object at this juncture.
+die "Project undefined\n" unless defined $project;
 
-exit $status == 1 ? 0 : 1;
+# Now, get a dataset.
+# The dataset name on the command line either matches an existing unlocked dataset owned by the current user,
+# or is the name of a new dataset.
+# Either way, we must associate the dataset with the current project.
+
+my $datasetName = shift; # from @ARGV
+my $datasetIter = OME::Dataset->search(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false')
+	or die "Could not perform a simple search on the Dataset table!\n";
+my $dataset = $project->addDataset ($datasetIter->next());
+$dataset = $project->newDataset ($datasetName) unless defined $dataset;
+
+# die if we still don't have a dataset object.
+die "Dataset undefined\n" unless defined $dataset;
+
+$session->project($project);
+$session->dataset($dataset);
+$session->writeObject();
+	print "- Importing files into $age project '$projectName'... ";
+	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV);
+	print "done.\n";
+
+exit 0;
 
