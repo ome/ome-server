@@ -237,7 +237,6 @@ sub getTable {
 		( $self->{allow_search} ? $self->__search_row( $options ) : '' ),
 		$table_data,
 		$action_field || '',
-		$q->hidden({-name => 'action', -default => ''}),
 		$end_form || ''
 	);
 
