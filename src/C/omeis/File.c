@@ -308,5 +308,6 @@ FILE *infile;
 
 	FinishFile (myFile);
 	freeFileRep (myFile);
+	closeInputFile (infile,isLocalFile);
 	return (ID);
 }
