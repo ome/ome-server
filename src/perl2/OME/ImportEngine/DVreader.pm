@@ -105,7 +105,7 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		                                     # 1: 2 byte integer
 		                                     # 2: 4 byte float 
 		                                     # 3: 2 byte complex
-						     # 4: 4 byte complex
+                                             # 4: 4 byte complex
 		  5     => ['mxst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
 		  6     => ['myst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
 		  7     => ['mzst', 4, 'w'],         # starting pnt, in pixels,  along X axis of sub-image
@@ -126,9 +126,9 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  22    => ['mean', 4, 'f'],         # float - mean intensity of 1st wavelength image
 		  23    => ['nspg', 4, 'w'],         # space group numner - Xtallography
 		  24    => ['next', 4, 'w'],         # size, in bytes, of extended header
-		                                   # = (NumInts + NumFloats) * NumSections * 4
-		  25    => ['dvid', 2, 's'],       # DeltaVision ID (== -16224)
-		  26    => ['blank', 30, 'c'],     # blank section - 30 bytes
+		                                     # = (NumInts + NumFloats) * NumSections * 4
+		  25    => ['dvid', 2, 's'],         # DeltaVision ID (== -16224)
+		  26    => ['blank', 30, 'c'],       # blank section - 30 bytes
 		  27    => ['NumInts', 2, 's'],      # number of 4 bytes ints in extended header
 		  28    => ['NumFloats', 2, 's'],    # number of 4 bytes floats in extended header
 		  29    => ['sub', 2, 's'],          # number of sub-resolution data sets. S.B 1
@@ -140,8 +140,8 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  35    => ['min4', 4, 'f'],         # float - min intensity of 4th wavelength image
 		  36    => ['max4', 4, 'f'],         # float - max intensity of 4th wavelength image
 		  37    => ['type', 2, 's'],         # image type  0 - normal, 1 - tilt-series
-		                                       # 2- stereo tilt series, 3 - averaged images
-		                                       # 4 - average stereo pairs
+		                                     # 2- stereo tilt series, 3 - averaged images
+		                                     # 4 - average stereo pairs
 		  38    => ['lensnum', 2, 's'],      # Lens ID number
 		  39    => ['n1', 2, 's'],           # depends on image type
 		  40    => ['n2', 2, 's'],           # depends on image type
@@ -149,8 +149,8 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  42    => ['v2', 2, 's'],           # depends on image type
 		  43    => ['min5', 4, 'f'],         # float - min intensity of 5th wavelength image
 		  44    => ['max5', 4, 'f'],         # float - max intensity of 5th wavelength image
-		  45    => ['NumTimes',2, 's'],       # number of time points
-		  46    => ['ImgSeq', 2, 's'],        # 0 = ZTW 1 = WZT, 2 = ZWT
+		  45    => ['NumTimes',2, 's'],      # number of time points
+		  46    => ['ImgSeq', 2, 's'],       # 0 = ZTW 1 = WZT, 2 = ZWT
 		  47    => ['XTilt', 4, 'f'],        # float - X axis tilt (normally 0)
 		  48    => ['YTilt', 4, 'f'],        # float - Y axis tilt (normally 0)
 		  49    => ['ZTilt', 4, 'f'],        # float - Z axis tilt (normally 0)
@@ -174,25 +174,23 @@ our %tag_table =  (1     => ['NumCol', 4, 'w'],      # Image width
 		  67    => ['Title8', 80, 'c'],      # Title 8
 		  68    => ['Title9', 80, 'c'],      # Title 9
 		  69    => ['Title10', 80, 'c'],     # Title 10
-		  70    => ['end', 0, 0]           # flags end of hash
+		  70    => ['end', 0, 0]             # flags end of hash
 	      );
 
 our %xml_image_entries = (NumCol => 'SizeX',
                           NumRows => 'SizeY',     # SizeZ calculated separately
                           NumWaves =>'NumWaves',
                           NumTimes => 'NumTimes',
-			  lensnum  => 'LensID',
-                          mx       => 'PixelSizeX',
-                          my       => 'PixelSizeY',
-                          mz       => 'PixelSizeZ'
-			  );
+                          lensnum  => 'LensID',
+                          dx       => 'PixelSizeX',
+                          dy       => 'PixelSizeY',
+                          dz       => 'PixelSizeZ');
 
 my %xml_wavelength_entries = (wave1  => 'EmWave',
-			       wave2  => 'EmWave',
-			       wave3  => 'EmWave',
-			       wave4  => 'EmWave',
-			       wave5  => 'EmWave'
-			       );
+                              wave2  => 'EmWave',
+                              wave3  => 'EmWave',
+                              wave4  => 'EmWave',
+                              wave5  => 'EmWave');
 
 
 sub new {
@@ -594,29 +592,30 @@ sub readUIHdr {
             $len = $tag_table{$i}[1];
             $typ = $tag_table{$i}[2];
             $buf = $file->readData($len);
-	$fmt = get_fmt($typ, $endian);
-	$fmt =~ s/^(.)$/$1$len/;
-	$val = unpack($fmt, $buf);
-	$self->{$k} = $val;
-    }
+			$fmt = get_fmt($typ, $endian);
+			$fmt =~ s/^(.)$/$1$len/;
+			$val = unpack($fmt, $buf);
+			$self->{$k} = $val;
+			print STDERR "Packed '$val' into self->{'$k'} with '$fmt' format string.\n";
+    	}
     # Put relevant pieces of metadata into xml_elements for later DB storage
     foreach $k (keys %xml_image_entries) {
-	$xel = $xml_image_entries{$k};
-	$xml_hash->{"Image.".$xel} = $self->{$k};
+		$xel = $xml_image_entries{$k};
+		$xml_hash->{"Image.".$xel} = $self->{$k};
     }
 
     # Make one WavelengthInfo element per wavelength in image
     $i = 0;
     foreach $k (sort keys %xml_wavelength_entries) {
-	if ($i >= $self->{'NumWaves'}) {
-	    last;
-	}
-	my $whref = {};
-	$xel = $xml_wavelength_entries{$k};
-	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
-	$whref->{'WavelengthInfo.WaveNumber'} = $i;
-	push @$w_aref, $whref;
-	$i++;
+		if ($i >= $self->{'NumWaves'}) {
+		    last;
+		}
+		my $whref = {};
+		$xel = $xml_wavelength_entries{$k};
+		$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
+		$whref->{'WavelengthInfo.WaveNumber'} = $i;
+		push @$w_aref, $whref;
+		$i++;
     }
     $xml_hash->{'WavelengthInfo.'} = $w_aref;
 
@@ -730,14 +729,17 @@ sub get_fmt {
     my $fmt = "";
 
     if ($type eq 'c') {       # character type
-	$fmt = "A";
+		$fmt = "A";
     }
-    elsif (($type eq 'w') || ($type eq 'f')) {    # 'word'or 'float' type - 4 bytes
-	$fmt =  $endian eq "little" ? "V" : "N";
+    elsif (($type eq 'w')) {    # 'word' or type - 4 bytes
+		$fmt =  $endian eq "little" ? "V" : "N";
     }
     elsif ($type eq 's') {    # 'short' type - 2 bytes
-	$fmt = $endian eq "little" ? "v" : "n";
+		$fmt = $endian eq "little" ? "v" : "n";
     }
+	elsif ($type eq 'f') {    # 'float' type, floats have no endian-ness [Bug #290]
+		$fmt = "f";
+	}
 
     return $fmt;              # no error checking
 }
