@@ -147,7 +147,7 @@ sub GetPix {
     }
 }
 
-# This is an accessor/mutator for the default pixels associated with this image.
+# This is an accessor/mutator for the default pixels attribute associated with this image.
 sub DefaultPixels {
 	my $self = shift;
 	my $pixels_id = shift;
@@ -165,7 +165,8 @@ sub DefaultPixels {
 
 sub getFullPath {
     my $self = shift;
-    my $pixels = shift;
+    my $pixels = shift or
+    	die ref( $self )."->getFullPath() needs a Pixels attribute as a parameter. Received an undef instead.\n";
     
     my $repository = $pixels->Repository();
     my $path = $pixels->Path();
