@@ -62,12 +62,16 @@ sub getPageBody {
 	my	$session=$self->Session();
 	my 	$body="" ;
 	my 	@result=();
-	my $projectID=$session->project()->project_id();
+	my $projectID=$session->project()->id();
 	my $imageManager=new OME::Tasks::ImageManager($session);
 	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 	my $HTMLFormat=new OME::Web::Helper::HTMLFormat;
 
+
+
+
 	my $ref=$imageManager->listImages(undef,$projectID);
+
 	foreach my $object (@$ref){
 		my $text=$HTMLFormat->formatThumbnail($object);
 		push(@result,$text);

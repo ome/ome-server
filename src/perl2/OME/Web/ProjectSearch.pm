@@ -166,7 +166,7 @@ sub format_datasetList{
  	if (scalar(@$ref)>1){
 		# display a list
 
-		my %datasetList= map {$_->dataset_id() => $_->name()} @$ref;
+		my %datasetList= map {$_->id() => $_->name()} @$ref;
 		$html.="<p> If you want to switch, please choose a dataset in the list below.</p>";
 		$html.=$cgi->startform;
 		$html.=$htmlFormat->dropDownTable("newdataset",\%datasetList,"execute","Switch Dataset");			

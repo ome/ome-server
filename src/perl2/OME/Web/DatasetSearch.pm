@@ -78,6 +78,7 @@ sub getPageBody {
 	my    $ref;
       my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
+
       if (exists $revArgs{Select}){
 	   $datasetManager->switch($revArgs{Select});
 	   $body.=$htmlFormat->formatDataset($session->dataset());
@@ -132,7 +133,7 @@ sub format_output{
       my $text="";
 	my @a=($session->User()->Group()->id());
       my $array=$datasetManager->listMatching(undef,\@a);
-	my %h = map { $_->dataset_id() => $_->name() } @$array;
+	my %h = map { $_->id() => $_->name() } @$array;
 	$text.=$cgi->startform;
 	$text.=$htmlFormat->searchResults($ref,undef,"Dataset(s)","dataset",\%h);
       $text.=$cgi->endform;

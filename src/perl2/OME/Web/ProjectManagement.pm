@@ -100,7 +100,7 @@ sub getPageBody {
 		$body .= OME::Web::Validation->ReloadHomeScript();
 	} elsif( exists $revArgs{Remove} ) {
 		my %h=();
-		my @a=($session->project()->project_id());
+		my @a=($session->project()->id());
 		
 		$h{$revArgs{Remove}} = \@a;
 		$datasetManager->remove(\%h);		 
@@ -162,23 +162,25 @@ sub makeDatasetListings{
 	my $cgi     = $self->CGI();
 	my $text="";
 	my @control;
-    my @datasets=$session->project()->datasets();
+  my @datasets=$session->project()->datasets();
 	my $name=$session->project()->name();
 	my $datasetManager = $self->{datasetManager};
 	my @a=($session->User()->Group()->id());
-	my $refhash=$datasetManager->notBelongToProject(\@a);
+ 
 
-	foreach (keys %$refhash){
-	  push(@control,$_);
-	}
-
-	if (scalar(@datasets)>0){
+  if (scalar(@datasets)>0){
 		$text .= "The current Project <b>".$name."</b> contains these datasets.<br><br>";
 		$text.=$self->{htmlFormat}->datasetListInProject(\@datasets);
 	}else{
 		$text.="The current project <b>".$name."</b> doesn't contain a dataset. <br><br>";
 
 	}
+	my $refhash=$datasetManager->notBelongToProject(\@a);
+
+	foreach (keys %$refhash){
+	  push(@control,$_);
+	}
+
 	if (scalar(@control)>0){
 	
 	 $text.="<p>To add an existing dataset to the current project, choose from the list below.</p>";

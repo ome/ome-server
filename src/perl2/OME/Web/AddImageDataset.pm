@@ -97,10 +97,7 @@ sub getPageBody {
 		my @addImages=$cgi->param('ListImage');
 		return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
 		$datasetManager->addImages(\@addImages);
-		foreach (@addImages){
-			$body.=$_."<br>";
-
-		}		
+			
 		my ($a,$b)=format_selected_dataset($session->dataset(),$htmlFormat,$cgi);
 	   	$body.=$a;
 		if (defined $b){
@@ -193,7 +190,7 @@ sub format_list_images{
 	  return $html;
 	}
  	if (scalar(@$rep)>0){
-	   my %list=map {$_->image_id()=>$_} @$rep;
+	   my %list=map {$_->id()=>$_} @$rep;
 	   $text.=$cgi->startform;
    	   $text.=$htmlFormat->listImages(\%list,"addImage","Add Images");
 	   $text.=$cgi->endform;   

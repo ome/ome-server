@@ -89,7 +89,7 @@ sub getPageBody {
 	
 	if( exists $revArgs{Remove} ) {
 		my %h=();
-		my @a=($session->project()->project_id());
+		my @a=($session->project()->id());
 
 		$h{$revArgs{Remove}}=\@a;
 		$datasetManager->remove(\%h);		 

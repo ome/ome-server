@@ -860,7 +860,7 @@ sub imageInDataset{
 		my ($name,$id,$view);
 		if (defined $search){
 			$name=$k->{name};
-			$id=$k->{id};
+			$id=$k->{image_id};
 			my ($a,$b)=split(" ",$k->{inserted});
 			$name=$name."<br><b>In</b>:".$a;
 		}else{
@@ -1032,6 +1032,7 @@ sub projectList{
 #	name = Dataset(s)/Project(s)
 #	type = project/dataset
 #	refSelect =ref hash if dataset
+# $search = if defined other way to access data (because SetDb is used)
 # Return: html code table
 
 sub searchResults{
@@ -1049,16 +1050,17 @@ sub searchResults{
 	foreach (@$ref){
 		my ($select,$info);
 		if ($typ eq "project"){
-			$info=buttonPopUp($_->{id},"Info","openInfoProject");
-			if ($userID==$_->{owner}){
-			   $select=buttonInput("submit",$_->{id},"Select");
+      # necessary but SetDB is used in this case
+			 $info=buttonPopUp($_->{project_id},"Info","openInfoProject");
+			if ($userID==$_->{owner_id}){
+			   $select=buttonInput("submit",$_->{project_id},"Select");
 			}else{
 			   $select="not allowed";
 			}
 		}else{
-			$info=buttonPopUp($_->{id},"Info","openInfoDataset");
-			if (exists(${$refSelect}{$_->{id}})){
-			    $select=buttonInput("submit",$_->{id},"Select");
+			$info=buttonPopUp($_->{dataset_id},"Info","openInfoDataset");
+			if (exists(${$refSelect}{$_->{dataset_id}})){
+			    $select=buttonInput("submit",$_->{dataset_id},"Select");
 
 			}else{
 			    $select="not allowed";

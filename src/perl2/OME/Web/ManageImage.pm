@@ -175,7 +175,7 @@ sub format_image{
 	my $ownerID=$image->experimenter_id();
 	my $owner=$factory->loadAttribute("Experimenter",$ownerID);
 	$summary.=$htmlFormat->formatImage($image);
-	my $imID=$image->image_id();
+	my $imID=$image->id();
 
 
 	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imID." align=\"bottom\" border=0></a>";

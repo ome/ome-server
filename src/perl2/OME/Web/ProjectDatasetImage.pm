@@ -82,7 +82,7 @@ sub getPageBody {
 	   my $rep=$datasetManager->exist($datasetName);
          return ('HTML',$htmlFormat->existMessage("dataset")) unless (defined $rep);
 	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
-	   my $result=$datasetManager->create($datasetName,$cgi->param('description'),$userID,$usergpID,$project->project_id(),\@addImages); 
+	   my $result=$datasetManager->create($datasetName,$cgi->param('description'),$userID,$usergpID,$project->id(),\@addImages); 
 		
 
 
@@ -109,7 +109,7 @@ sub print_form {
 	my $text="";
 	my $images=$imageManager->listMatching();
  	if (scalar(@$images)>0){
-	   my %list=map { $_->image_id() => $_} @$images;
+	   my %list=map { $_->id() => $_} @$images;
          $text.=$cgi->startform;
   	   $text.=$htmlFormat->formCreate("dataset",$usergpID,\%list);
 	   $text.$cgi->endform;

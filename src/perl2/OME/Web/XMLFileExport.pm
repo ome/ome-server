@@ -99,7 +99,7 @@ sub print_form {
  	if (@images){
 		 $html .= $cgi->startform ;
 		 $html.="<b>*Name File:</b><input name=\"name\" type=\"text\" size=\"25\">";
-		 my %list=map {$_->image_id()=>$_} @images;
+		 my %list=map {$_->id()=>$_} @images;
 		 $html.=$htmlFormat->listImages(\%list,"export","Export");
 	
 

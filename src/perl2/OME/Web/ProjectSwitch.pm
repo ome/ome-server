@@ -103,7 +103,7 @@ sub print_form {
 
      	$text	.=$htmlFormat->formatProject($session->project()) if (defined $session->project());
 	if (scalar (@$ref) > 0){
-		my %projectList = map { $_->project_id() => $_->name()} @$ref;
+		my %projectList = map { $_->id() => $_->name()} @$ref;
 		$text .= $cgi->startform;
 		$text .=$htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project");			
 		$text .= $cgi->endform;
@@ -121,7 +121,7 @@ sub format_datasetList{
   if (scalar(@$ref)>1){
 	# display a list
 
-	my %datasetList= map {$_->dataset_id() => $_->name()} @$ref;
+	my %datasetList= map {$_->id() => $_->name()} @$ref;
 	$html.="<p> If you want to switch, please choose a dataset in the list below.</p>";
 	$html.=$cgi->startform;
 	$html.=$htmlFormat->dropDownTable("newdataset",\%datasetList,"execute","Switch Dataset");			

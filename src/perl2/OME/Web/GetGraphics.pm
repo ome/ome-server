@@ -164,8 +164,8 @@ sub DrawDatasetControl {
 	
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
-		push (@ImageIDs, $imageMap->image()->image_id());
-		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->name();#getFullPath( $imageMap->image()->DefaultPixels() );
+		push (@ImageIDs, $imageMap->image()->id());
+		$ImagePaths{ $imageMap->image()->id() } = $imageMap->image()->name();#getFullPath( $imageMap->image()->DefaultPixels() );
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
@@ -325,12 +325,12 @@ sub SVGgetDataJS {
 	#
 	#	Get Stack Statistics
 	#
-	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
+	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
 	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
 		module_id => $stackStats->id(),
 		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for Module 'Stack Statistics'.\n";
+		or die "Cannot find 'Pixels' formal input for Module 'Fast Stack Statistics'.\n";
 	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
 		formal_input_id   => $pixelsFI->id(),
 		input_module_execution_id => $pixels->module_execution()->id() )

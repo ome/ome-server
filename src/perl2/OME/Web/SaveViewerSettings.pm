@@ -110,16 +110,16 @@ sub SaveDisplaySettings {
 	###########################################################################
 	# get statistics for $pixels
 	#
-	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
+	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
 	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
 		module_id => $stackStats->id(),
 		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for module 'Stack Statistics'.\n";
+		or die "Cannot find 'Pixels' formal input for module 'Fast Stack Statistics'.\n";
 	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
 		formal_input_id   => $pixelsFI->id(),
 		input_module_execution_id => $pixels->module_execution()->id() )
-		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
+		or die "Fast Stack Statistics has not been run on the Pixels to be displayed.\n";
 	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
 	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackGeometricMean", $image ) );

@@ -62,7 +62,7 @@ sub getPageBody {
 	}
 	#
 
-	my $datasetID=$session->dataset()->dataset_id();
+	my $datasetID=$session->dataset()->id();
       my $redirect="OME::Web::GetGraphics&DatasetID=$datasetID";
       return ('REDIRECT',$self->pageURL($redirect));
 }
