@@ -113,6 +113,7 @@ public class ConnectionWorker extends SwingWorker {
 					Class.forName("org.openmicroscopy.vis.ome.CNode");
 					Class.forName("org.openmicroscopy.vis.ome.CModule");
 					Class.forName("org.openmicroscopy.vis.ome.CChain");
+					Class.forName("org.openmicroscopy.vis.ome.CLink");
 					remote.loginXMLRPC(URL,userName,passWord);
 					session = remote.getSession();
 					factory = remote.getFactory();
