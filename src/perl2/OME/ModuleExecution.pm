@@ -121,6 +121,10 @@ __PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',
                        {SQLType => 'varchar(128)'});
 __PACKAGE__->addColumn(input_tag => 'input_tag',
                        {SQLType => 'text'});
+__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
+                       {SQLType => 'integer', Indexed => 1,
+                        ForeignKey => 'experimenters'});
+__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
 __PACKAGE__->addColumn(timestamp => 'timestamp',
                        {
                         SQLType => 'timestamp',
