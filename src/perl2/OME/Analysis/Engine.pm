@@ -645,7 +645,7 @@ sub isNodeReady {
 
 =head2 executeChain
 
-	OME::Analysis::Engine->executeChain($chain,$dataset,$user_inputs,
+	my $chain_execution = OME::Analysis::Engine->executeChain($chain,$dataset,$user_inputs,
 	                                    [ReuseResults => 1]);
 
 The $user_inputs parameter must be a hash, with formal input ID's for
@@ -774,6 +774,7 @@ sub executeChain {
             $continue = $executor->modulesExecuting();
         }
     }
+    return $self->{chain_execution};
 }
 
 1;
