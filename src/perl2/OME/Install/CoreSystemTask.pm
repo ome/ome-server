@@ -122,6 +122,21 @@ our $OME_TMP_DIR    = \$core_dirs[2]->{path};
 #********* LOCAL SUBROUTINES
 #*********
 
+sub get_user {
+    my $username = shift;
+
+	# Grab our user from the password file if he/she is there
+	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+	while (<PW_FILE>) {
+	    chomp;
+	    if ((split ":")[0] =~ /$username/) {
+			return 1;
+		}
+    }
+
+	return 0;
+}
+
 sub get_apache_user {
     my $username = shift;  # A user specified default if we have one
 
@@ -306,8 +321,6 @@ Please move the unpacked OME distribution to your home directory and run the ins
 The OME base directory should be completely independent of the distribution's directory.
 CROAK
 
-    print "\nBuilding the core system\n";
-
     #********
     #******** Set up our Unix users/groups
     #********
@@ -345,16 +358,36 @@ CROAK
 	    };
     }
 
-    add_user_to_group ($APACHE_USER, $OME_GROUP)
-		or croak "Failure adding user \"$APACHE_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_apache;
-    add_user_to_group ($OME_USER, $OME_GROUP)
-		or croak "Failure adding user \"$OME_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_user;
-    add_user_to_group ($ADMIN_USER, $OME_GROUP)
-		or croak "Failure adding user \"$ADMIN_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_admin_user;
-    
+	my @user_maps = (
+		{ user => $OME_USER,    flag => \$need_to_add_user },
+		{ user => $ADMIN_USER,  flag => \$need_to_add_admin_user },
+		{ user => $APACHE_USER, flag => \$need_to_add_apache } );
+		
+	foreach my $map (@user_maps) {
+		my $user = $map->{'user'};
+		my $flag = $map->{'flag'};
+
+		if ($$flag) {
+			if (getpwnam($user) and not get_user($user)) {
+				print "\n";  # Spacing
+
+				my $error = <<ERROR;
+**** Warning: It appears that the user '$user' is either NIS, LDAP or equivilently backed. You will have to add this user to OME group '$OME_GROUP' in the /etc/group file manually. Please do so *before* continuing.
+ERROR
+				print wrap("", "", $error);
+
+				print "\n";  # Spacing
+
+				y_or_n("Are you ready to continue ?") or die;
+			} else {
+				add_user_to_group ($user, $OME_GROUP)
+					or croak "Failure adding user \"$user\" to group \"$OME_GROUP\""
+			}
+		} 
+	}
+
+    print "\nBuilding the core system\n";
+
     #********
     #******** Build our core directory structure
     #********
