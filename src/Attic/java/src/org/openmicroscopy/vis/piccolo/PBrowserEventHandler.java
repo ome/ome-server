@@ -88,7 +88,6 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			canvas.clearExecutionList();
 			if (n instanceof PThumbnail)  {
 				PThumbnail pt = (PThumbnail) n;
-				//System.err.println("enterd thumb. zoom is "+zoomLevel);
 				pt.setHighlightedWithHalo(true,zoomLevel);
 			}
 			else if (n instanceof PDataset) {
@@ -96,7 +95,6 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				dn.rollover();	
 			}
 			else if (!(n instanceof PThumbnailSelectionHalo))  {// entering anything else means setting selected datset is null
-				//System.err.println("entereing non-halo - zoom is "+zoomLevel);
 				SelectionState.getState().setRolloverDataset(null);
 				zoomLevel = 0;	 
 			}
@@ -106,10 +104,8 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
 	public void mouseExited(PInputEvent e) {
 		PNode n = e.getPickedNode();
-		//System.err.println("browser event exited.."+n);
 		if (n instanceof PThumbnail) {
 			PThumbnail pt = (PThumbnail) n;
-			//System.err.println("clearing halo...zoom is "+zoomLevel);
 			pt.setHighlightedWithHalo(false,zoomLevel);
 		}
 		else if (n instanceof PSelectableText) {
@@ -133,19 +129,16 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		postPopup = true;
 		PNode node = e.getPickedNode();
 		if (node instanceof PDataset) {
-			System.err.println("popup on dataset clearing zoom to  0");
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
 			zoomLevel = 0;
 		}
 		else if (node instanceof PThumbnail) {
-			System.err.println("popup on thumbnail...");
 			PThumbnail pt = (PThumbnail) node;
 			zoomLevel = pt.zoomOutOfHalo(zoomLevel);
 			
 		}
 		else {
-			System.err.println("default popup...");
 			super.handlePopup(e);
 		}
 	}
@@ -162,7 +155,6 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		if ((e.getModifiers() & MouseEvent.BUTTON1_MASK) 
 			== MouseEvent.BUTTON1_MASK) {
 			if (node instanceof PDataset) { 
-				//System.err.println("zooming in on dataset");
 				PDataset d = (PDataset) node;
 				selectionState.setSelectedDataset(d.getDataset());
 				zoomLevel = 0;
@@ -173,14 +165,11 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				//placeholder
 			}
 			else if (isBackgroundClick(node)) {
-				//System.err.println("clicking on layer or camera..");
 				selectionState.setSelectedDataset(null);
 				zoomLevel =0;
 			} else if (node instanceof PThumbnail) {
 				PThumbnail thumb = (PThumbnail)node;
-				System.err.println("zooming in to thumbnail");
 				zoomLevel = thumb.zoomInToHalo(zoomLevel);
-				//System.err.println("new zoom level is "+zoomLevel);
 			}
 			else 
 				super.mouseClicked(e);	
