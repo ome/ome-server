@@ -1,4 +1,6 @@
 # OME/Install/Environment.pm
+# The environment module for the OME installer and subsequent tasks. Used to 
+# keep state and perform various operations on the environment itself.
 
 #-------------------------------------------------------------------------------
 #
@@ -24,16 +26,6 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #-------------------------------------------------------------------------------
-
-
-
-
-#-------------------------------------------------------------------------------
-#
-# Written by:  
-#
-#-------------------------------------------------------------------------------
-
 
 package OME::Install::Environment;
 
