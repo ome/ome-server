@@ -21,8 +21,8 @@
 			<FormalInputColumn FormalInputColumnID = "wave2" Name = "WAVENUMBER" ColumnID = "Wavenumber.theW"/>
 		</FormalInput>
 		<FormalOutput Name = "XYPlaneCrossCorrelation" AttributeTypeName = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Name = "THE_Z" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Name = "TIMEPOINT" Description = "Timepoint describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Name = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Name = "theT" Description = "Timepoint describing the XY Plane"/>
 			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Name = "Cross Correlation" Description = "Cross Correlation Value"/>
 		</FormalOutput>
 	</Declaration>
@@ -44,8 +44,7 @@
 				</XYPlane>
 			</InputSubString>
 			<InputSubString>
-				<RawText> 
-				</RawText>
+				<RawText> </RawText>
 			</InputSubString>
 			<InputSubString>
 				<XYPlane Format = "TIFF">
