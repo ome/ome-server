@@ -386,7 +386,6 @@ sub getImageWavelengths{
 	my $factory=$session->Factory();
 
 	my @Wavelengths;
-
 	my $pixels = $image->DefaultPixels()
 		or die "Could not a primary set of Pixels for this image\n";
 	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
@@ -402,9 +401,8 @@ sub getImageWavelengths{
 		         $cc->LogicalChannel()->EmissionWavelength();
 
 		#@overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
-		#$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
-    		 $Label .= $cc->Index() if( not defined $Label || scalar( @overlap ) > 1);
-		my %h=();
+		$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq "" );
+    		my %h=();
 		$h{WaveNum}=$ChannelNum;
 		$h{Label}=$Label;
 		push (@Wavelengths,\%h);
