@@ -56,20 +56,26 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Tasks::ImageManager;
+use OME::Session;
 use OME::Tasks::ModuleExecutionManager;
 use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
 =head2 _renderData
 
-makes virtual fields thumb_url and original_file
+makes virtual fields 
+	thumb_url: an href to the thumbnail of the Image's default pixels
+	current_annotation: the text contents of the current Image annotation
+		according to OME::Tasks::ImageManager->getCurrentImageAnnotation()
+	original_file: HTML snippet containing one or more links to the image's
+		original files (if any exist)
 
 =cut
 
 sub _renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
-	
-	my $factory = $obj->Session()->Factory();
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
 	my %record;
 
 	# thumbnail url
@@ -77,6 +83,40 @@ sub _renderData {
 		foreach my $request ( @{ $field_requests->{ 'thumb_url' } } ) {
 			my $request_string = $request->{ 'request_string' };
 			$record{ $request_string } = OME::Tasks::ImageManager->getThumbURL( $obj );
+		}
+	}
+	# current_annotation:
+	if( exists $field_requests->{ 'current_annotation' } ) {
+		foreach my $request ( @{ $field_requests->{ 'current_annotation' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my $currentAnnotation = OME::Tasks::ImageManager->
+				getCurrentImageAnnotation( $obj );
+			$record{ $request_string } = $currentAnnotation->Content
+				if $currentAnnotation;
+		}
+	}
+	# current_annotation_author:
+	if( exists $field_requests->{ 'current_annotation_author' } ) {
+		foreach my $request ( @{ $field_requests->{ 'current_annotation_author' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			my $currentAnnotation = OME::Tasks::ImageManager->
+				getCurrentImageAnnotation( $obj );
+			$record{ $request_string } = $self->Renderer()->
+				render( $currentAnnotation->module_execution->experimenter(), 'ref' )
+				if( ( defined $currentAnnotation ) && 
+# a bug in the ACLs are not always letting the mex come through. so, hack-around
+				    ( defined $currentAnnotation->module_execution ) &&
+				    ( $currentAnnotation->module_execution->experimenter->id() ne 
+				      $session->User()->id() )
+				);
+		}
+	}
+	# annotation_count:
+	if( exists $field_requests->{ 'annotation_count' } ) {
+		foreach my $request ( @{ $field_requests->{ 'annotation_count' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $factory->
+				countObjects( '@ImageAnnotation', image => $obj );
 		}
 	}
 	# original file

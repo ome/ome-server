@@ -151,6 +151,138 @@ sub new{
 
 }
 
+=head2 deleteCurrentImageAnnotation
+
+	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	    deleteCurrentImageAnnotation( $image );
+
+This will look for the most recent ImageAnnotation created by 
+the current user that is marked Valid.
+Failing to that, it will look for the most recent ImageAnnotation
+created by anyone that is marked Valid.
+
+If no Valid ImageAnnotations are found, an undef will be returned.
+
+=cut
+
+sub deleteCurrentImageAnnotation {
+	my ($class, $image) = @_;
+	my $session = OME::Session->instance();
+	my $annotation = $class->getCurrentImageAnnotation( $image );
+	if( ( defined $annotation->module_execution() ) && 
+	    ( $annotation->module_execution()->experimenter->id eq
+	      $session->User->id ) ) {
+		$annotation->Valid( 0 );
+		$annotation->storeObject();
+	}
+}
+
+=head2 getCurrentImageAnnotation
+
+	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	    getCurrentImageAnnotation( $image );
+
+This will look for the most recent ImageAnnotation created by 
+the current user that is marked Valid.
+Failing to that, it will look for the most recent ImageAnnotation
+created by anyone that is marked Valid.
+
+If no Valid ImageAnnotations are found, an undef will be returned.
+
+=cut
+
+sub getCurrentImageAnnotation {
+	my ($class, $image) = @_;
+	my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+	# Load the image if they passed in an id
+	$image = $factory->
+		loadObject( 'OME::Image', $image )
+		or die "Could Not load image with id '$image'"
+		unless( ref( $image ) );
+	# param type check
+	die "image parameter is not an image object"
+		unless ref( $image ) eq 'OME::Image';
+	
+	# First look foe this User's annotations
+	my $imageAnnotation = $factory->
+		findObject( '@ImageAnnotation',
+			Valid                           => 1,
+			'module_execution.experimenter' => $session->User(),
+			__order                         => '!module_execution.timestamp'
+		);
+	# Then look for other people's
+	$imageAnnotation = $factory->
+		findObject( '@ImageAnnotation',
+			Valid                           => 1,
+			__order                         => '!module_execution.timestamp'
+		)
+		unless $imageAnnotation;
+
+
+	return $imageAnnotation;
+}
+
+=head2 writeImageAnnotation
+
+	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	    writeImageAnnotation( $image, $data_hash );
+
+This will write a new ImageAnnotation attribute. The data_hash should
+follow the format for factory NewObject calls. e.g.
+	{ Content => $content, ... }
+If the Content is identical to the current annotation, a new ImageAnnoation
+attribute will not be created, and the current annotation will be returned.
+
+If this user has a current annotation on this image, the other
+annotation will be marked invalid. If another user has a current annotation
+on this image, the other user's annotation will be left alone.
+
+Note, this method does NOT commit the db transaction.
+
+=cut
+
+sub writeImageAnnotation {
+	my ($class, $image, $data_hash) = @_;
+	my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+	# Load the image if they passed in an id
+	$image = $factory->
+		loadObject( 'OME::Image', $image )
+		or die "Could Not load image with id '$image'"
+		unless( ref( $image ) );
+	# param type check
+	die "image parameter is not an image object"
+		unless ref( $image ) eq 'OME::Image';
+	
+	my $lastImageAnnotation = $class->
+		getCurrentImageAnnotation( $image );
+	
+	# Don't allow a write unless the contents have changed.
+	if( ( defined $lastImageAnnotation ) &&
+		( $lastImageAnnotation->Content() eq $data_hash->{ Content } ) ) {
+		return $lastImageAnnotation;
+	}
+	
+	# Make a new one
+	$data_hash->{ Valid } = 1;
+	my ($mex, $newImageAnnotation) = OME::Tasks::AnnotationManager->
+	    annotateImage( 
+	    	$image, 'ImageAnnotation', $data_hash
+	    );
+
+	# Mark the last one as invalid if this user is overwriting their own annotation.
+	if( $lastImageAnnotation->module_execution->experimenter->id eq
+		$session->User->id ) {
+		$lastImageAnnotation->Valid( 0 );
+		$lastImageAnnotation->storeObject();
+	}
+	
+	return $newImageAnnotation;
+}
+
 ###############
 # Parameters:
 #	id =image_id to delete

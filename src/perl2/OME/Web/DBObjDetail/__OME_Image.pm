@@ -45,7 +45,7 @@ OME::Web::DBObjDetail::__OME_Image
 
 =head1 DESCRIPTION
 
-Allow description of Image to be changed.
+Allow description and annotation of the image to be changed.
 
 =cut
 
@@ -57,18 +57,32 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 use Log::Agent;
+use OME::Tasks::ImageManager;
 use base qw(OME::Web::DBObjDetail);
 
 sub _takeAction {
 	my $self = shift;
-	my $object = $self->_loadObject();
+	my $image = $self->_loadObject();
 	my $q = $self->CGI();
 
-	if( $q->param( 'action' ) eq 'SaveChanges' ) {
-		$object->description( $q->param( 'description' ) );
-		$object->storeObject();
+	if( $q->param( 'action' ) eq 'SaveDescription' ) {
+		$image->description( $q->param( 'description' ) );
+		$image->storeObject();
 		$self->Session()->commitTransaction();
 	}
+
+	if( $q->param( 'action' ) eq 'SaveAnnotation' ) {
+		OME::Tasks::ImageManager->writeImageAnnotation(
+			$image, { Content => $q->param( 'annotation' ) }
+		);
+		$self->Session()->commitTransaction();
+	}
+
+	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
+		OME::Tasks::ImageManager->deleteCurrentImageAnnotation( $image );
+		$self->Session()->commitTransaction();
+	}
+
 }
 
 =head1 Author
