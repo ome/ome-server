@@ -76,6 +76,7 @@ __PACKAGE__->addColumn(owner_id => 'owner',
                         Indexed => 1,
                         ForeignKey => 'experimenters',
                        });
+__PACKAGE__->addColumn(owner => 'owner','@Experimenter');
 __PACKAGE__->addColumn(name => 'name',
                        {
                         SQLType => 'varchar(64)',
@@ -153,19 +154,6 @@ Returns or iterates, depending on context, the data paths in the
 analysis chain.
 
 =cut
-
-sub owner {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Experimenter');
-        $self->owner_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->owner_id());
-    }
-}
 
 
 

@@ -76,11 +76,13 @@ __PACKAGE__->addColumn(owner_id => 'owner_id',
                         NotNull => 1,
                         ForeignKey => 'experimenters',
                        });
+__PACKAGE__->addColumn(owner => 'owner_id','@Experimenter');
 __PACKAGE__->addColumn(group_id => 'group_id',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'groups',
                        });
+__PACKAGE__->addColumn(group => 'group_id','@Group');
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
 __PACKAGE__->addColumn(locked => 'locked',
                        {
@@ -159,32 +161,6 @@ dataset.  (Being a many-to-many map, the link represents the mapping
 table.)
 
 =cut
-
-sub owner {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Experimenter');
-        $self->owner_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->owner_id());
-    }
-}
-
-sub group {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Group');
-        $self->group_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Group",
-                                                          $self->group_id());
-    }
-}
 
 # Added 18-03
 sub addImage{

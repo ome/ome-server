@@ -379,6 +379,11 @@ return it, instead of the stored integer.  The mutator version of
 these methods will accept either an integer primary key ID, or an
 instance of the foreign-key class (and no other class).
 
+The $fkey parameter can also be used to store attributes, if the $fkey
+parameter is of the form "@SemanticTypeName".  In this case, the
+inflation-deflation described above will be performed by the factory's
+C<loadAttribute> method, rather than the C<loadObject> method.
+
 If specified, the \%sql_options parameter (which must be a hash
 reference) specifies options which are used by the database delegate
 to create this column in the database.  It specifies, among other
@@ -440,6 +445,16 @@ table with two identically-named columns, which is a database error.
 
 =cut
 
+sub __isClassName ($) {
+    my $class_name = shift;
+    return $class_name =~ /^\w+(\:\:\w+)*$/;
+}
+
+sub __isSTReference ($) {
+    my $ref = shift;
+    return $ref =~ /^\@\w+$/;
+}
+
 sub addColumn {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -465,7 +480,8 @@ sub addColumn {
     # Verify that the foreign key class, if specified, is valid.
     if (defined $foreign_key_class) {
         die "Malformed class name $foreign_key_class"
-          unless $foreign_key_class =~ /^\w+(\:\:\w+)*$/;
+          unless __isClassName($foreign_key_class)
+              || __isSTReference($foreign_key_class);
     }
 
     #print "Adding $table.$column to $class\n";
@@ -483,24 +499,51 @@ sub addColumn {
         my $accessor;
 
         if (defined $foreign_key_class) {
-            $accessor = sub {
-                my $self = shift;
-                die "This instance did not load in $alias"
-                  unless exists $self->{__fields}->{$table}->{$column};
-                if (@_) {
-                    $self->{__changedFields}->{$table}->{$column}++;
-                    my $datum = shift;
-                    $datum = $datum->id() if ref($datum);
-                    return $self->{__fields}->{$table}->{$column} = $datum;
-                } else {
-                    my $datum = $self->{__fields}->{$table}->{$column};
-                    return $datum if ref($datum);
-                    # This should load the object from the cache if
-                    # it's already been retrieved from the DB.
-                    return $self->Session()->Factory()->
-                      loadObject($foreign_key_class,$datum);
-                }
-            };
+            if (__isClassName($foreign_key_class)) {
+                $accessor = sub {
+                    my $self = shift;
+                    die "This instance did not load in $alias"
+                      unless exists $self->{__fields}->{$table}->{$column};
+                    if (@_) {
+                        $self->{__changedFields}->{$table}->{$column}++;
+                        my $datum = shift;
+                        $datum = $datum->id() if ref($datum);
+                        return $self->{__fields}->{$table}->{$column} = $datum;
+                    } else {
+                        my $datum = $self->{__fields}->{$table}->{$column};
+                        return $datum if ref($datum);
+                        # This should load the object from the cache if
+                        # it's already been retrieved from the DB.
+                        return $self->Session()->Factory()->
+                          loadObject($foreign_key_class,$datum);
+                    }
+                };
+            } else {
+                # Remove the leading @
+                my $st_name = substr($foreign_key_class,1);
+
+                $accessor = sub {
+                    my $self = shift;
+                    die "This instance did not load in $alias"
+                      unless exists $self->{__fields}->{$table}->{$column};
+                    if (@_) {
+                        $self->{__changedFields}->{$table}->{$column}++;
+                        my $datum = shift;
+                        if (ref($datum)) {
+                            $datum->verifyType($st_name);
+                            $datum = $datum->id();
+                        }
+                        return $self->{__fields}->{$table}->{$column} = $datum;
+                    } else {
+                        my $datum = $self->{__fields}->{$table}->{$column};
+                        return $datum if ref($datum);
+                        # This should load the object from the cache if
+                        # it's already been retrieved from the DB.
+                        return $self->Session()->Factory()->
+                          loadAttribute($st_name,$datum);
+                    }
+                };
+            }
         } else {
             # It seems that sometimes the Postgres driver will return 1
             # or 0 for a boolean column, sometimes 't' or 'f'.  This is

@@ -112,11 +112,13 @@ __PACKAGE__->addColumn('owner_id' => 'owner_id',
                         NotNull => 1,
                         ForeignKey => 'experimenters',
                        });
+__PACKAGE__->addColumn('owner' => 'owner_id','@Experimenter');
 __PACKAGE__->addColumn('group_id' => 'group_id',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'groups',
                        });
+__PACKAGE__->addColumn('group' => 'group_id','@Group');
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
 __PACKAGE__->addColumn(view => 'view',{SQLType => 'varchar(64)'});
 
@@ -124,32 +126,6 @@ __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 __PACKAGE__->manyToMany('datasets',
                         'OME::Project::DatasetMap','project','dataset');
 
-
-sub owner {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Experimenter');
-        $self->owner_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->owner_id());
-    }
-}
-
-sub group {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Group');
-        $self->group_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Group",
-                                                          $self->group_id());
-    }
-}
 
 sub unlockedDatasets {
     carp "DEPRECATED! Please use the ProjectManager";

@@ -97,6 +97,7 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                         Indexed => 1,
                         ForeignKey => 'experimenters',
                        });
+__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
 __PACKAGE__->hasMany('node_executions',
                      'OME::AnalysisChainExecution::NodeExecution' =>
                      'analysis_chain_execution');
@@ -145,19 +146,6 @@ C<AnalysisChainExecution::NodeExecutions> associated with this chain
 execution.
 
 =cut
-
-sub experimenter {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Experimenter');
-        $self->experimenter_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->experimenter_id());
-    }
-}
 
 
 package OME::AnalysisChainExecution::NodeExecution;

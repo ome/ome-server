@@ -112,11 +112,13 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                         NotNull => 1,
                         ForeignKey => 'experimenters',
                        });
+__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
 __PACKAGE__->addColumn(group_id => 'group_id',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'groups',
                        });
+__PACKAGE__->addColumn(group => 'group_id','@Group');
 __PACKAGE__->addColumn(created => 'created',
                        {
                         SQLType => 'timestamp',
@@ -130,6 +132,7 @@ __PACKAGE__->addColumn(inserted => 'inserted',
 # pixels_id is part of a hack added by josiah <siah@nih.gov> on 6/9/03
 # it references the "primary" set of pixels. 
 __PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
+__PACKAGE__->addColumn(default_pixels => 'pixels_id','@Pixels');
 
 __PACKAGE__->hasMany('dataset_links','OME::Image::DatasetMap' => 'image');
 __PACKAGE__->manyToMany('datasets',
@@ -143,18 +146,7 @@ accessor/mutator for Experimenter attribute
 
 =cut
 
-sub experimenter {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('Experimenter');
-        $self->experimenter_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                          $self->experimenter_id());
-    }
-}
+# Now defined by addColumn, above
 
 =head2 group
 
@@ -162,20 +154,12 @@ accessor/mutator for Group attribute
 
 =cut
 
-sub group {
-    my $self = shift;
-    if (@_) {
-        my $attribute = shift;
-        $attribute->verifyType('group');
-        $self->group_id($attribute->id());
-        return undef;
-    } else {
-        return $self->Session()->Factory()->loadAttribute("Group",
-                                                          $self->group_id());
-    }
-}
+# Now defined by addColumn, above
 
 =head2 features
+
+Returns the root features of this image (i.e., those which do not have
+a parent feature).
 
 =cut
 
@@ -249,17 +233,23 @@ sub GetPix {
     }
 }
 
-=head2 DefaultPixels
+=head2 default_pixels
 
 # accessor
-$image->DefaultPixels();
+$image->default_pixels();
 
 # mutator
-$image->DefaultPixels( $pixels_ID );
+$image->default_pixels( $pixels_ID );
 
-This is an accessor/mutator for the default pixels attribute associated with this image.
-Default pixels should NEVER be used for any computational purpose because they are mutable.
-They are used by image viewers and other non computational purposes.
+This is an accessor/mutator for the default pixels attribute
+associated with this image.  Default pixels should NEVER be used for
+any computational purpose because they are mutable.  They are used by
+image viewers and other non computational purposes.
+
+The older version of this method (C<DefaultPixels>) still exists for
+legacy code.  New code should use the C<default_pixels> version, which
+takes advantage of underlying DBObject code for reading/writing
+attributes.
 
 =cut
 
