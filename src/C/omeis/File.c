@@ -193,30 +193,202 @@ int DeleteFile (FileRep *myFile) {
 
 
 int ExpungeFile (FileRep *myFile) {
+int i;
+int numBytes; 
 OID existOID;
 
-	/* Get the file's info */
+	/* Get the file's info and SHA1 database*/
 	GetFileInfo (myFile);
-
-	/* Open the DB file if necessary */
-	if (! myFile->DB)
+	GetFileAliases (myFile);
+	
+	if (! myFile->DB)	
+		/* if we can't get its SHA1 entry thats really bad */
 		if (! (myFile->DB = sha1DB_open (myFile->path_DB)) ) {
 			DeleteFile (myFile);
 			return (0);
 		}
 
-	/* Check if SHA1 exists */
-	if ( (existOID = sha1DB_get (myFile->DB, myFile->file_info.sha1)) ) {
-		sha1DB_del (myFile->DB, myFile->file_info.sha1);
-	}
+	OMEIS_DoError ("What about this ? OMEIS_DoError is working:");	
+	OMEIS_DoError ("If you can see this OMEIS_DoError is working: %s.", strerror (errno));
 	
+	/* check to see if the file hasAlias or isAlias */
+	if ( myFile->file_info.isAlias == 0 && myFile->file_info.nAliases == 0 ){ 
+	
+		/* CASE 1: file has no alias buddies */
+		
+		/* remove SHA1 entry if it exists */
+		if ( existOID = sha1DB_get (myFile->DB, myFile->file_info.sha1) ) {
+			sha1DB_del (myFile->DB, myFile->file_info.sha1);
+		}
+	} else if ( myFile->file_info.isAlias != 0 ) {
+		/* CASE 2: file has a representive file. This file is only a symbolic link */
+		
+		/* open the representive file based on OID */
+		FileRep *myRepFile = newFileRep(myFile->file_info.isAlias);
+		GetFileInfo (myRepFile);
+		GetFileAliases (myRepFile);
+							
+		/* remove references in the representive file to this alias file  */
+		for (i=0; i<myRepFile->file_info.nAliases; i++)
+			if (myRepFile->aliases[i].ID == myFile->file_info.ID) {
+				myRepFile->aliases[i].ID = myRepFile->aliases[myRepFile->file_info.nAliases-1].ID;
+				strncpy(myRepFile->aliases[i].name, myRepFile->aliases[myRepFile->file_info.nAliases-1].name, OMEIS_PATH_SIZE);
+				break;
+			}
+		(myRepFile->file_info.nAliases)--;
+		
+		/* chmod and reopen repfile's info with exclusive (destructive) write access */
+		chmod (myRepFile->path_info,0600);
+		if (myRepFile->fd_info >= 0) close (myRepFile->fd_info);
+		
+		if ( (myRepFile->fd_info = open (myRepFile->path_info, O_WRONLY|O_TRUNC, 0600)) < 0) {
+			OMEIS_DoError ("In ExpungeFile, Error opening O_WRONLY|O_TRUNC info file for modification for FileID=%llu: %s",
+						   	(unsigned long long)myRepFile->ID, strerror (errno) );
+			return (0);
+		}
+		
+		if ( write (myRepFile->fd_info,(void *)&(myRepFile->file_info), sizeof(FileInfo)) != sizeof(FileInfo) )
+			OMEIS_DoError ("In ExpungeFile, Error updating the alias list for FileID=%llu: %s",
+						   	(unsigned long long)myRepFile->ID, strerror (errno) );
+						   	
+		/* write the whole alias struct to the file */
+		numBytes = sizeof(*myRepFile->aliases)*myRepFile->file_info.nAliases;
+		if ( write (myRepFile->fd_info, (void *) myRepFile->aliases, numBytes ) != numBytes) {
+			OMEIS_DoError ("Error writing alias info for original FileID=%llu: %s",
+				(unsigned long long) myFile->ID, strerror (errno));
+			return (0);
+		}
+		
+		/* clean up file and permissions */
+		close (myRepFile->fd_info);
+		chmod (myRepFile->path_info,0400);
+		
+		freeFileRep (myRepFile);
+	} else if (myFile->file_info.nAliases > 0 ) {
+		/* CASE 3: this file serves as a representive to other files */
+		
+		/* elect the first hasAlias file as our representive file */
+		FileRep *myRepFile = newFileRep(myFile->aliases[0].ID);
+		
+		GetFileInfo (myRepFile);
+		GetFileAliases (myRepFile);
+		
+		/* update the hasAlias + nAliases fields and aliases struct of new representative */
+		myRepFile->file_info.isAlias = 0;
+		myRepFile->file_info.nAliases = myFile->file_info.nAliases - 1;
+		
+		if (myRepFile->aliases != NULL) free (myRepFile->aliases);
+		myRepFile->aliases = (FileAlias *) malloc (myRepFile->file_info.nAliases * sizeof(FileAlias));
+		
+		/* copy alias structure from old representative file to new representitive file */
+		for (i=1; i<myFile->file_info.nAliases; i++) {
+			myRepFile->aliases[i-1].ID = myFile->aliases[i].ID;
+			strncpy(myRepFile->aliases[i-1].name, myFile->aliases[i-1].name,  OMEIS_PATH_SIZE);
+		}
+		
+		/* chmod and reopen repfile's info with exclusive (destructive) write access */
+		chmod (myRepFile->path_info,0600);
+		if (myRepFile->fd_info >= 0) close (myRepFile->fd_info);
+		if ( (myRepFile->fd_info = open (myRepFile->path_info, O_WRONLY, 0600)) < 0) {
+			OMEIS_DoError ("In ExpungeFile, Error opening O_WRONLY info file for modification for FileID=%llu: %s",
+						   	(unsigned long long)myRepFile->ID, strerror (errno) );
+			return (0);
+		}
+		
+		if ( write (myRepFile->fd_info,(void *)&(myRepFile->file_info), sizeof(FileInfo)) != sizeof(FileInfo) )
+			OMEIS_DoError ("In ExpungeFile, Error updating the alias list for FileID=%llu: %s",
+						   	(unsigned long long)myRepFile->ID, strerror (errno) );
+				   	
+		/* write the alias struct to the file */
+		numBytes = sizeof(*myRepFile->aliases)*myRepFile->file_info.nAliases;
+		if ( write (myRepFile->fd_info, (void *) myRepFile->aliases, numBytes ) != numBytes) {
+			OMEIS_DoError ("Error writing alias info for original FileID=%llu: %s",
+				(unsigned long long) myFile->ID, strerror (errno));
+			return (0);
+		}
+		
+		/* replace the representive's sym-link file with the real file */
+		if (myFile->fd_rep    > 0) close (myFile->fd_rep);
+		if (myRepFile->fd_rep > 0) close (myRepFile->fd_rep);
+		chmod (myFile->path_rep,    0400);
+		chmod (myRepFile->path_rep, 0400);
+		lockRepFile (myFile->fd_rep,   'w',0LL,0LL);
+		lockRepFile (myRepFile->fd_rep,'w',0LL,0LL);
+		
+		unlink (myRepFile->path_rep); /* rm the sym link */
+		if (rename (myFile->path_rep,myRepFile->path_rep) == -1) {
+			OMEIS_DoError ("Error transfering fd_rep from FileID=%llu to FileID=%llu : %s.",
+				(unsigned long long)myFile->ID, (unsigned long long)myRepFile->ID, strerror (errno));
+			return (0);
+		}
+		chmod (myRepFile->path_rep, 0600);
+
+		/* inform all the aliases in the group what is their new representative */
+		for (i = 0; i < myRepFile->file_info.nAliases; i++) {
+			FileRep *aliasFile;
+			char relPath[OMEIS_PATH_SIZE];
+			
+			if (! (aliasFile = newFileRep (myRepFile->aliases[i].ID))) {
+				OMEIS_DoError ("Could not get a File object (out of memory?).");
+				return (0);
+			}
+			
+			GetFileInfo (aliasFile);
+			
+			/* whose your daddy? */
+			aliasFile->file_info.isAlias = myRepFile->ID;
+			
+			/* Close the info files if they're open */
+			if (aliasFile->fd_info >= 0) close (aliasFile->fd_info);
+			chmod (aliasFile->path_info,0600);	
+			if ( (aliasFile->fd_info = open (aliasFile->path_info, O_RDWR, 0600)) < 0) {
+				return (0);
+			}
+		
+			/* write the info structure back */
+			if ( write (aliasFile->fd_info,(void *)&(aliasFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
+				OMEIS_DoError ("Error updating info struct for original FileID=%llu: %s",
+					(unsigned long long)aliasFile->ID, strerror (errno));
+				return (0);
+			}
+			
+			/* Close file's info and chmod back to read-only */
+			chmod (myFile->path_info,0400);
+			close (myFile->fd_info);
+			
+			/* make the file's symbolic link point to the new alias representative */
+			if (aliasFile->fd_rep > 0) close (aliasFile->fd_rep);
+			chmod (aliasFile->path_rep,  0400);	
+			lockRepFile (aliasFile->fd_rep, 'w',0LL,0LL);
+			
+			unlink (aliasFile->path_rep); /* rm the sym link */
+			
+			/* make a symlink between the original and the alias */
+			if (symlink (get_rel_path(myRepFile->path_rep,aliasFile->path_rep,relPath), aliasFile->path_rep) == -1) {
+				OMEIS_DoError ("Error making symlink from %s to %s: %s.",
+				aliasFile->path_rep,relPath,strerror (errno));
+			}
+			
+			chmod (aliasFile->path_rep, 0600);
+		}
+		
+		/* inform the SHA1 database what is the new representative for the SA1 digest */
+		if ( existOID = sha1DB_get (myFile->DB, myFile->file_info.sha1) ) {
+			sha1DB_del (myFile->DB, myFile->file_info.sha1);
+			sha1DB_put (myFile->DB, myFile->file_info.sha1, myRepFile->ID);
+		}
+		
+		freeFileRep (myRepFile);
+	} else {
+		OMEIS_DoError (" ERROR: CASE 4 in DeleteFile. This is very bad and very unexpected: %s", strerror (errno));
+	}
 	sha1DB_close (myFile->DB);
 	myFile->DB = NULL;
 	
 	DeleteFile (myFile);
-	return (0);
+	return (1);
+	
 }
-
 
 /*
   NewFile makes a new repository File.
