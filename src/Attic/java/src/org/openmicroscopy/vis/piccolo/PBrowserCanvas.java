@@ -52,7 +52,8 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import java.util.Iterator;
 import java.util.TreeSet;
-
+import java.util.HashMap;
+import java.util.Collection;
 
 /** 
  * A {@link PCanvas} for viewing images in a dataset
@@ -90,7 +91,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private double x,y;
 	private double maxHeight = 0;
 	
-	private TreeSet datasets = new TreeSet();
+	private TreeSet datasets;
+	private HashMap datasetWidgets = new HashMap();
 		
 	public PBrowserCanvas(Connection c) {
 		super();
@@ -109,7 +111,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		 removeInputEventListener(getPanEventHandler());
 		 
 		//	install custom event handler
-		addInputEventListener(new PModuleZoomEventHandler(this)); 
+		addInputEventListener(new PBrowserEventHandler(this)); 
 			
 		
 			// setup tool tips.
@@ -123,13 +125,20 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	public void drawImages(CDataset d) {
 		
-		
 		if (d== null)
 			return;
 		PDataset node;	
 		System.err.println("drawing images for dataset "+d.getName());
-		System.err.println("creating new widget");
-		node = new PDataset(d,connection);
+		
+		Object o = datasetWidgets.get(d);
+		if (o != null) {
+			node = (PDataset) o;
+		}
+		else {
+			System.err.println("creating new widget");
+			node = new PDataset(d,connection);
+			datasetWidgets.put(d,node);
+		}
 		layer.addChild(node);
 		node.setOffset(x,y);
 		double height = node.getGlobalFullBounds().getHeight()+VGAP;
@@ -157,6 +166,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				i=0;
 			}
 		}
+		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
+				PConstants.ANIMATION_DELAY);
 	}
 	
 	public PBounds getBufferedBounds() {
@@ -168,14 +179,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		CDataset dataset = e.getDataset();
-		if (e.isSelected() == true) {
-			System.err.println("dataset "+dataset.getName()+" is selected");
-			datasets.add(dataset);
+		Collection selections = e.getDatasets();
+		if (e.getSelectedDataset() != null) {
+			datasets = new TreeSet();
+			datasets.add(e.getSelectedDataset());
 		}
 		else {
-			datasets.remove(dataset);
-			System.err.println("dataset "+dataset.getName()+" is not selected");
-		}
+			if (selections.size() > 0)
+				datasets = new TreeSet(selections);
+			else
+				datasets = new TreeSet(connection.getDatasetsForUser());
+		}	
+		displayDatasets();
 	}
  }
