@@ -433,7 +433,7 @@ use strict;
 use OME::DBConnection;
 use OME::Database::Delegate;
 use DBI;
-use Carp qw(cluck croak);
+use Carp qw(cluck croak confess);
 
 use UNIVERSAL::require;
 use Log::Agent;
@@ -451,7 +451,7 @@ sub new {
       connectToDatabase(OME::DBConnection->DataSource(),
                         OME::DBConnection->DBUser(),
                         OME::DBConnection->DBPassword());
-    die "Cannot create database handle"
+    confess "Cannot create database handle"
       unless defined $dbh;
 
     my $self = {__ourDBH           => $dbh,
@@ -501,7 +501,7 @@ sub newDBH {
 		  connectToDatabase(OME::DBConnection->DataSource(),
 							OME::DBConnection->DBUser(),
 							OME::DBConnection->DBPassword());
-		die "Cannot create database handle"
+		confess "Cannot create database handle"
 		  unless defined $dbh;
 		$self->{__allHandles}->{"$dbh"} = $dbh;
     }
@@ -542,7 +542,7 @@ sub __disconnectAll {
     $self->{__handlesAvailable} = {};
     
 	if (defined $self->{__ourDBH}) {
-    	$self->{__ourDBH}->disconnect() or die $self->{__ourDBH}->errstr;
+    	$self->{__ourDBH}->disconnect() or confess $self->{__ourDBH}->errstr;
 	}
 
     $self->{__ourDBH} = undef;
@@ -551,12 +551,16 @@ sub __disconnectAll {
 
 sub commitTransaction {
     my ($self) = @_;
-    $self->{__ourDBH}->commit() or die $self->{__ourDBH}->errstr;;
+	if (defined $self->{__ourDBH}) {
+		$self->{__ourDBH}->commit() or confess $self->{__ourDBH}->errstr;
+	}
 }
 
 sub rollbackTransaction {
     my ($self) = @_;
-    $self->{__ourDBH}->rollback() or die $self->{__ourDBH}->errstr;;
+	if (defined $self->{__ourDBH}) {
+		$self->{__ourDBH}->rollback() or confess $self->{__ourDBH}->errstr;
+	}
 }
 
 sub loadObject {
@@ -581,7 +585,7 @@ sub loadObject {
                                     $columns_wanted);
     };
 
-    die $@ if $@;
+    confess $@ if $@;
 
     return $object;
 
@@ -597,7 +601,7 @@ sub loadAttribute {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -609,7 +613,7 @@ sub loadAttribute {
                                      $columns_wanted);
     };
 
-    die $@ if $@;
+    confess $@ if $@;
 
     return $attribute;
 }
@@ -676,7 +680,7 @@ sub findObjects {
               while $_ = $class->__newInstance($sth,
                                                $ids_available,$columns_wanted);
         };
-        die $@ if $@;
+        confess $@ if $@;
         return @result;
     } else {
         # looking for a scalar
@@ -723,7 +727,7 @@ sub countObjects {
         $sth->execute(@$values);
         $result = $sth->fetch()->[0];
     };
-    die $@ if $@;
+    confess $@ if $@;
 
     return $result;
 }
@@ -817,7 +821,7 @@ sub newObject {
     eval {
         $object = $class->__createNewInstance($self->{__ourDBH},$data);
     };
-    die $@ if $@;
+    confess $@ if $@;
     return $@? undef: $object;
 }
 
@@ -850,7 +854,7 @@ sub findAttributes {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -877,7 +881,7 @@ sub findAttributesLike {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -904,7 +908,7 @@ sub countAttributesLike {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -931,7 +935,7 @@ sub countAttributes {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -955,7 +959,7 @@ sub newAttribute {
         $semantic_type:
         $self->findObject("OME::SemanticType",
                           name => $semantic_type);
-    die "Cannot find attribute type $semantic_type"
+    confess "Cannot find attribute type $semantic_type"
       unless defined $type;
 
     my $pkg = $type->requireAttributeTypePackage();
@@ -1038,7 +1042,7 @@ sub __close {
 sub first {
     my $self = shift;
 
-    die "Cannot retrieve objects from a closed iterator"
+    confess "Cannot retrieve objects from a closed iterator"
       unless $self->{__open};
 
     $self->__execute();
@@ -1048,7 +1052,7 @@ sub first {
 sub next {
     my $self = shift;
 
-    die "Cannot retrieve objects from a closed iterator"
+    confess "Cannot retrieve objects from a closed iterator"
       unless $self->{__open};
 
     $self->__execute() unless $self->{__executed};
@@ -1062,7 +1066,7 @@ sub next {
 sub finish {
     my $self = shift;
 
-    die "Cannot retrieve objects from a closed iterator"
+    confess "Cannot retrieve objects from a closed iterator"
       unless $self->{__open};
 
     if ($self->{__executed}) {
@@ -1076,7 +1080,7 @@ sub finish {
 sub close {
     my $self = shift;
 
-    die "Cannot retrieve objects from a closed iterator"
+    confess "Cannot retrieve objects from a closed iterator"
       unless $self->{__open};
 
     $self->finish();
