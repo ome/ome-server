@@ -711,13 +711,20 @@ sub check_repository {
 	print $LOGFILE "Could not find remote repository object\n" and
 		croak "Could not find remote repository object (looking for omeis URL)"
 	unless $repository;
+
 	my $repository_url = $repository->ImageServerURL();
+	print $LOGFILE "Repository ImageServerURL is undefined!\n" and
+		croak "Looking for omeis URL:  ImageServerURL is undefined in Repository object!"
+	unless $repository_url;
+
 	print $LOGFILE "Repository URL: $repository_url\n";
-	if (not $repository_url eq $ENVIRONMENT->omeis_url()) {
-		print $LOGFILE "   Doesn't match ".$ENVIRONMENT->omeis_url()." from stored environment\n";
+
+	if ($ENVIRONMENT->omeis_url()) {
+		print $LOGFILE "ENVIRONMENT->omeis_url(): ".$ENVIRONMENT->omeis_url()."\n";
 	} else {
-		print $LOGFILE "   Matches ".$ENVIRONMENT->omeis_url()." from stored environment\n";
+		print $LOGFILE "ENVIRONMENT->omeis_url(): *** UNDEFINED ***\n";
 	}
+
  	$ENVIRONMENT->omeis_url($repository_url);
  	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
  }
