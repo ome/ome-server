@@ -10,7 +10,6 @@
 		<annotation>
 			<documentation>Describes a file location.  Can optionally specify an Offset and a ReadLength, both in bytes.
 The SHA1 digest of the file is required.  If the file is compressed, the SHA1 digest is of the compressed file.
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -20,14 +19,15 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 				</annotation>
 			</attribute>
 			<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
-			<attribute name = "Compression">
+			<attribute name = "Compression" default = "none">
 				<annotation>
-					<documentation>Only necessary if file is compressed.</documentation>
+					<documentation>Specifies the compression scheme used to encode the data.</documentation>
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
 						<enumeration value = "zlib"/>
 						<enumeration value = "bzip2"/>
+						<enumeration value = "none"/>
 					</restriction>
 				</simpleType>
 			</attribute>
@@ -42,14 +42,15 @@ The SHA1 digest of the file is required.  If the file is compressed, the SHA1 di
 		<complexType>
 			<simpleContent>
 				<extension base = "base64Binary">
-					<attribute name = "Compression">
+					<attribute name = "Compression" default = "none">
 						<annotation>
-							<documentation>Only necessary if file is compressed.</documentation>
+							<documentation>Specifies the compression scheme used to encode the data. </documentation>
 						</annotation>
 						<simpleType>
 							<restriction base = "string">
 								<enumeration value = "zlib"/>
 								<enumeration value = "bzip2"/>
+								<enumeration value = "none"/>
 							</restriction>
 						</simpleType>
 					</attribute>
