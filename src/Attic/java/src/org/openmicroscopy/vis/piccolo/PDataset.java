@@ -95,7 +95,6 @@ public class PDataset extends PGenericBox {
 		double x=HGAP;
 		double y= VGAP;
 		
-		System.err.println("layout ..."+dataset.getLabel());
 		nameLabel = new PScalableDatasetLabel(dataset,width);
 		addChild(nameLabel);
 		nameLabel.setOffset(x,y);
@@ -123,7 +122,6 @@ public class PDataset extends PGenericBox {
 			y = arrangeImages(scaledWidth,scaledHeight);
 		}
 	
-		System.err.println("final height of dataset..."+y);
 		if (y > scaledHeight) 
 			scaledHeight = y;
 		
@@ -151,7 +149,6 @@ public class PDataset extends PGenericBox {
 				maxWidth = chainLabels.getGlobalFullBounds().getWidth();
 		}
 		nameLabel.resetWidth(maxWidth);		
-		System.err.println("height is "+height+", max width is "+maxWidth);
 		setExtent(maxWidth+PConstants.SMALL_BORDER,
 				height+PConstants.SMALL_BORDER);
 	}
@@ -188,7 +185,6 @@ public class PDataset extends PGenericBox {
 		chainLabels.layout(width);
 		PBounds b =chainLabels.getGlobalFullBounds();
 		maxWidth = b.getWidth();
-		System.err.println("max width of chain labels is "+width);
 		return b.getHeight();
 	}
 	
@@ -304,13 +300,7 @@ public class PDataset extends PGenericBox {
 		setHighlighted(v);
 		if (images !=null) 
 			images.setSelected(v);
-	}
-	
-	public void enableHalo() {
-		if (images != null)
-			images.enableHalo();
-	}
-	
+	}	
 	public void rollover() {
 		SelectionState.getState().setRolloverDataset(dataset);
 	}
