@@ -895,7 +895,7 @@ $SVG .= <<'ENDSVG';
 			
 			// correct val, crunch numbers
 			if(val <= scale.blackSlider.getValue())
-				val = scale.BlackSlider.getValue() + 0.00001;
+				val = scale.blackSlider.getValue() + 0.00001;
 			var cWhiteLevel = Math.round(val/scale.scaleWidth * range + min);
 			if(cWhiteLevel == geomean)
 				cWhiteLevel -= 0.00001;
