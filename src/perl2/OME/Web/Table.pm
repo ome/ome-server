@@ -441,6 +441,10 @@ sub __filterObjects {
 		$filter{$_->[0]} = $_->[1];
 	}
 
+	print STDERR "**** FILTERING OBJECTS ****\n";
+	print STDERR "**** NO FILTER ****\n" unless %filter;
+	print STDERR Dumper(%filter);
+
 	# Filter the dataset objects if needed
 	if ($options->{filters}) { 
 		# Get a cursor for our search with a forced lowercase field
@@ -550,15 +554,13 @@ sub getTable {
 		);
 	} elsif ($options->{type} =~ /project/) {
 		$table = $self->__projectTable( {
-				filter_field  => $options->{filter_field},
-				filter_string => $options->{filter_string},
+				filters => $options->{filters},
 				options_row   => $options->{options_row},
 			}
 		);
 	} elsif ($options->{type} =~ /images/) {
 		$table = $self->__imageTable( {
-				filter_field  => $options->{filter_field},
-				filter_string => $options->{filter_string},
+				filters => $options->{filters},
 				options_row   => $options->{options_row},
 			}
 		);
