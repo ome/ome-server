@@ -1,0 +1,23 @@
+<p class="ome_title">Create a:
+<select name="Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
+	<option value="">Select a Type</option>
+	<!-- TMPL_LOOP NAME=/custom/name-types_loop -->
+		<option value="<!-- TMPL_VAR NAME=formal_name -->" <!-- TMPL_VAR NAME=selected -->><!-- TMPL_VAR NAME=common_name --></option>
+	<!-- /TMPL_LOOP -->
+</select></p>
+<input type="hidden" name="action">
+
+<!-- TMPL_IF NAME=/type -->
+<table cellpadding="3" cellspacing="1" class="ome_table" width="100%">
+	<!-- TMPL_LOOP NAME=/field_loop/exclude-module_execution,target -->
+		<tr bgcolor="#FFFFFF"><td valign="top">
+			<!-- TMPL_VAR NAME=/name -->: <!-- TMPL_VAR NAME=/field_input -->
+		</td></tr>
+	<!-- /TMPL_LOOP -->
+</table>
+<table cellpadding="3" cellspacing="0" width="100%"><tr bgcolor="#E0E0E0">
+	<td align="right">
+		<button type="submit" id="create" value="create" name="create">Create <!-- TMPL_VAR NAME=/common_name --></button>
+	</td>
+</tr></table>
+<!-- /TMPL_IF -->
