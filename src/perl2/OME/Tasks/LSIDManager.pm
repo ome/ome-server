@@ -202,7 +202,7 @@ Note that as of this writing, this method is not implemented.
 
 # FIXME:  This could use a little implementation.
 sub getRemoteObject ($) {
-my ($self,$lsid) = @_;
+	carp ("OME::LSID::getRemoteObject() is not implemented.");
 	my $self = shift;
 	my $lsid = checkLSID (shift) || return undef;
 
