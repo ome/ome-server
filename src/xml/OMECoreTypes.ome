@@ -808,15 +808,31 @@
 				DataType = "reference"
 				RefersTo = "DisplayChannel"/>
 			<Element
+				Name= "RedChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.RED_ON"
+				DataType = "boolean"/>
+			<Element
 				Name= "GreenChannel"
 				DBLocation = "DISPLAY_OPTIONS.GREEN_CHANNEL"
 				DataType = "reference"
 				RefersTo = "DisplayChannel"/>
 			<Element
+				Name= "GreenChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.GREEN_ON"
+				DataType = "boolean"/>
+			<Element
 				Name= "BlueChannel"
 				DBLocation = "DISPLAY_OPTIONS.BLUE_CHANNEL"
 				DataType = "reference"
 				RefersTo = "DisplayChannel"/>
+			<Element
+				Name= "BlueChannelOn"
+				DBLocation = "DISPLAY_OPTIONS.BLUE_ON"
+				DataType = "boolean"/>
+			<Element
+				Name= "DisplayRGB"
+				DBLocation = "DISPLAY_OPTIONS.DISPLAY_RGB"
+				DataType = "boolean"/>
 			<Element
 				Name= "GreyChannel"
 				DBLocation = "DISPLAY_OPTIONS.GREY_CHANNEL"
