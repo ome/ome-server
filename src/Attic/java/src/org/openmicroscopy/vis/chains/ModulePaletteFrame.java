@@ -92,7 +92,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	public ModulePaletteFrame(Controller controller,Connection connection) {
 	
 		// next line needed if chain frame base
-		super(controller,connection,"OME Chains Palette");
+		super(controller,connection,"OME Module Palette");
 		setIconImage(controller.getIcon()); 
 		getCanvas().populate(connection,controller);
 		layoutFrame();
