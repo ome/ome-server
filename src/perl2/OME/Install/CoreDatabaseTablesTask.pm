@@ -133,8 +133,9 @@ sub create_superuser {
     my ($username, $logfile) = @_;
     my $pg_uid = getpwnam ("postgres") or croak "Unable to retrieve PostgreSQL user UID";
     my $createuser = "createuser";
-    my $output;
+    my @outputs;
     my $retval;
+    my $success;
 
     # Make sure we're not croaking on a silly logfile print
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
@@ -149,20 +150,23 @@ sub create_superuser {
     $createuser = whereis ("createuser") or croak "Unable to locate creatuser binary." unless $retval;
 
     # Create the user using the command line tools
-    $output = `su postgres -c "$createuser -d -a $username 2>&1"`;
+    @outputs = `su postgres -c "$createuser -d -a $username" 2>&1`;
 
     # Back to UID 0
 #    $EUID = 0;
 #    $UID = 0;
 
     # Log and return success
-    if (($output =~ /already exists/) or ($output =~ /^CREATE/)) {
-	print $logfile "CREATION OF USER $username SUCCESSFUL -- OUTPUT: \"$output\"\n";
+    foreach (@outputs) {
+        $success = 1 if $_ =~ /already exists/ or $_ =~ /^CREATE/;
+    }
+    if ($success) {
+	print $logfile "CREATION OF USER $username SUCCESSFUL -- OUTPUT: \n".join ("\n",@outputs)."\n";
 	return 1;
     }
 
     # Log and return failure
-    print $logfile "CREATION OF USER $username FAILED -- OUTPUT: \"$output\"\n";
+    print $logfile "CREATION OF USER $username FAILED -- OUTPUT: \n".join ("\n",@outputs)."\n";
     return 0;
 }
 
@@ -213,8 +217,8 @@ sub create_database {
     $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
     print "  \\__ Adding PL-PGSQL language\n";
-    my $CMD_OUT = `su postgres -c "$createlang plpgsql ome 2>&1"`;
-    die $CMD_OUT if $? != 0;
+    my @CMD_OUT = `su postgres -c "$createlang plpgsql ome" 2>&1`;
+    die join ("\n",@CMD_OUT) if $? != 0;
 
     # Fix our little object ID bug
     print "  \\__ Fixing OID/INTEGER compatability bug\n";
