@@ -67,4 +67,8 @@ public class PConstants {
 	
 	public static final double CATEGORY_LABEL_OFFSET_X=40;
 	public static final double CATEGORY_LABEL_OFFSET_Y=20;
+	
+	
+	// width of an arrowhead
+	public static final float ARROWHEAD_WIDTH=12;
 }
