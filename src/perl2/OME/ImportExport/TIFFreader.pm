@@ -223,7 +223,7 @@ sub readImage {
 
 sub formatImage {
     my $self = shift;     # Ourselves
-    my $parent = shift;   # Caller (must be parent) had to pass in its own '$self'
+    my $parent = $self->{parent};
     my $gparent = $parent->{parent};
     my $xml_hash = $parent->Image_reader::xml_hash;
     my ($fih, $foh);      # File handle of input, output files
@@ -251,6 +251,7 @@ sub formatImage {
     $foh = $parent->fouf;
     $endian = $parent->endian;
     $bps = $self->{'BitsPerSample'};
+    $parent->{'pixel_size'} = $bps;
     $bps /= 8;  # convert bits to bytes
     $row_size = $self->{ImageWidth} * $bps;               # bytes per row
     ($offsets_arr, $bytecounts_arr) = getStrips($self);
@@ -291,19 +292,7 @@ sub formatImage {
 		for ($buf_offset = 0; $strip_size >= $row_size; $strip_size -= $row_size) {
 		    $irow = substr($buf, $buf_offset, $row_size);
 		    @orow = unpack($ifmt, $irow);
-		    if ($bps == 1) {  # special thuggery for 8-bit input
-			$sz = scalar @orow;
-			for ($ndxo = $ndxi = 0; $ndxi < $sz; ) {
-			    $ch = $orow[$ndxi++];
-			    $orow2[$ndxo++] = $ch;
-			    $orow2[$ndxo++] = $ch;
-			}
-			$rowbuf = pack("C*", @orow2);
-			$xml_hash->{'Data.BitsPerPixel'} = 16;
-		    }
-		    else {
-			$rowbuf = pack($ofmt, @orow);
-		    }
+		    $rowbuf = pack($ofmt, @orow);
 		    push @xy, $rowbuf;
 		    #print $foh $rowbuf;
 		    $buf_offset += $row_size;
