@@ -128,10 +128,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private CChain selectedChain;
 	
-	/**
-	 * True if a Chain is currently selected
-	 */
-	private boolean chainSelected;
+	
 	
 	/** 
 	 * Listener for drag events
@@ -301,17 +298,16 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	
 	public void setSelectedChain(CChain chain) {
 		selectedChain = chain;
-		chainSelected = true;
 	}
 	
 	
 	public void clearChainSelected() {
 		//System.err.println("clear chain selection");
-		chainSelected = false;
+		selectedChain = null;
 	}
 	
 	public boolean isChainSelected() { 
-		return chainSelected;
+		return (selectedChain != null);
 	}
 	
 	/**
@@ -322,7 +318,8 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 * @see PPaletteCanvas
 	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
-		if (chainSelected == true) {
+		if (isChainSelected() &&  
+			selectedChain.hasExecutionsInCurrentDataset()) {
 			Integer id = new Integer(selectedChain.getID());
 			ChainSelection c = new ChainSelection(id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);

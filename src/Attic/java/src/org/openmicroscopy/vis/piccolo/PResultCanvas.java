@@ -46,9 +46,10 @@ import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import org.openmicroscopy.ChainExecution;
 import org.openmicroscopy.vis.chains.ResultFrame;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.CModule;
+import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.dnd.ChainFlavor;
 import java.awt.dnd.DropTargetListener;
@@ -81,6 +82,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 */
 	private Connection connection=null;
 	
+	
 	/**
 	 * The layer for the canvas 
 	 */
@@ -112,6 +114,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 * A pointer to the canvas with the chain library
 	 */
 	private PChainLibraryCanvas libraryCanvas;
+	
+	private CChainExecution exec;
 	
 	public PResultCanvas(Connection c) {
 		super();
@@ -157,8 +161,10 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
-		b.getHeight()+2*PConstants.BORDER); 
+		return new PBounds(b.getX()-2*PConstants.BORDER,
+			b.getY()-2*PConstants.BORDER,
+			b.getWidth()+4*PConstants.BORDER,
+			b.getHeight()+4*PConstants.BORDER); 
 	}
 	
 
@@ -189,7 +195,10 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				Point2D loc = e.getLocation();
 				CChain chain = connection.getChain(id); 
 				createDroppedChain(chain,loc);
-				addInputEventListener(handler);			
+				addInputEventListener(handler);
+				getCamera().animateViewToCenterBounds(getBufferedBounds(),
+					true,PConstants.ANIMATION_DELAY);
+				frame.updateExecutionChoices(chain);			
 			} 
 		}
 		catch(Exception exc ) {
@@ -213,28 +222,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	public void dropActionChanged(DropTargetDragEvent e) {
 	}
-	
-	/**
-	 * Create a dropped module
-	 * @param mod the module to create
-	 * @param location the poitn of drop.
-	 */
-	private void createDroppedModule(CModule mod,Point2D location) {
 		
-		// determine the corect point
-		getCamera().localToView(location);
-		
-		//create the layer
-		PModule mNode = new PModule(connection,mod,
-			(float) location.getX(), (float) location.getY());
-		mod.addModuleWidget(mNode);
-		
-		// add it to layer.
-		layer.addChild(mNode);
-		
-		// put the module info back into the connection
-	}
-	
 	/**
 	 * Create a dropped chain
 	 * @param chain
@@ -249,5 +237,10 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	public void setLibraryCanvas(PChainLibraryCanvas libraryCanvas) {
 		this.libraryCanvas = libraryCanvas;
+	}
+	
+	public void setExecution(CChainExecution exec) {
+		this.exec=exec;
+		System.err.println("setting execution to "+exec);
 	}
  }

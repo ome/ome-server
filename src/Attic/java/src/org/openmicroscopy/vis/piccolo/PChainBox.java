@@ -42,7 +42,9 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.ome.CChain;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.Color;
+import java.awt.BasicStroke;
 
 
 /** 
@@ -72,6 +74,9 @@ public class PChainBox extends PCategoryBox {
 	private int chainID=0;
 	
 	private CChain chain;
+	
+	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
+	private static final Color VIEWABLE_COLOR =Color.BLUE;	
 	
 	public PChainBox(CChain chain, float x, float y) {
 		super(x,y);
@@ -115,5 +120,17 @@ public class PChainBox extends PCategoryBox {
 		lock.lineTo(x,y+SIZE_LENGTH);
 		lock.lineTo(x,y);
 		addChild(lock);
+	}
+	
+	public void paint(PPaintContext aPaintContext)  {
+		if (chain.hasExecutionsInCurrentDataset() == true) {
+			setStroke(VIEWABLE_STROKE);
+			setStrokePaint(VIEWABLE_COLOR);
+		}
+		else {
+			setStroke(null);
+			setStrokePaint(null);
+		}
+		super.paint(aPaintContext);
 	}
 }
