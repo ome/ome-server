@@ -185,6 +185,7 @@ sub formatImage {
     my $offsets = $parent->{offsets};
     my $bytecounts = $parent->{bytecounts};
     my $xyzwt = $parent->{obuffer};
+    my (@xy_arr, @xyz, @xyzw);
     my $start_offset;
     my $end_offset;
     my $plane_size;
@@ -196,6 +197,9 @@ sub formatImage {
     my $u2;
     my $dtm = $uic2_ndxs{Cr_dt};
     my %planes;
+    my $maxZ = $xml_hash->{'Image.SizeZ'};
+    my $maxW = $xml_hash->{'Image.NumWaves'};
+    my $maxT = $xml_hash->{'Image.NumTimes'};
     my @args;
 
     $start_offset = $$offsets[0];  # begining of image data
@@ -208,10 +212,10 @@ sub formatImage {
     # this will leave them in XYZWT order
 
     $u2 = $self->{uic2};
-    $u2->{3}[2] = 1; # HARDWIRED VALUE - for testing only
-    $u2->{3}[7] = 444; # HARDWIRED VALUE - for testing only
-    $u2->{2}[2] = 1; # HARDWIRED VALUE - for testing only
-    $u2->{0}[2] = 1; # HARDWIRED VALUE - for testing only
+    #$u2->{3}[2] = 1; # HARDWIRED VALUE - for testing only
+    #$u2->{3}[7] = 444; # HARDWIRED VALUE - for testing only
+    #$u2->{2}[2] = 1; # HARDWIRED VALUE - for testing only
+    #$u2->{0}[2] = 1; # HARDWIRED VALUE - for testing only
 
     # sort planes in time order
     # hold the order in the hash %planes. The key is the ordinal (0 = 1st,
@@ -227,7 +231,22 @@ sub formatImage {
     # partition into clumps, and subsort the clumps
     # Will put image data, in XYZWT order, into 5D array for return to caller
     my @indeces = qw(Z_val W_ave Cr_dt);
-    $status = partition_and_sort($parent, $xyzwt, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+    #$status = partition_and_sort($parent, $xyzwt, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+    $status = partition_and_sort($parent, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
+    # now have list of all the XY planes. Arrange them in their 5D order
+    reverse @xy_arr;
+    my ($t, $w, $z);
+    for ($t = 0; $t < $maxT; $t++) {
+	for ($w = 0; $w < $maxW; $w++) {
+	    for ($z = 0; $z < $maxZ; $z++) {
+		push (@xyz, pop (@xy_arr));
+	    }
+	    push (@xyzw, \@xyz);
+	}
+	push (@$xyzwt, \@xyzw);
+    }
+
+
 
     #     Store the per plane metadata for return to caller
     # For each plane, in order, create XYinfo element & Wavelength element.
@@ -241,9 +260,6 @@ sub formatImage {
     my $xref    =  $xml_hash->{'XYinfo.'};   # ref to array built by TIFFreader
     my $wref    =  $xml_hash->{'WavelengthInfo.'}; # another array from TIFFreader
     my ($znum, $wnum, $tnum) = (1, 1, 1);
-    my $maxZ = $xml_hash->{'Image.SizeZ'};
-    my $maxW = $xml_hash->{'Image.NumWaves'};
-    my $maxT = $xml_hash->{'Image.NumTimes'};
 
     # Extract out & store the per plane data (XYinfo & WaveLength)
     foreach $ky (sort keys %planes) {
@@ -348,7 +364,8 @@ sub partition_and_sort {
 	if ((scalar @ndx_keys > 0) && ($st_slice != $end_slice)) {
 	    slice_sorter($u2, $planes, $st_slice, $end_slice, @ndx_keys);
 	    # now partition & sort this clump on next sort attribute in list
-	    partition_and_sort($parent, \@subarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
+	    #partition_and_sort($parent, \@subarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
+	    partition_and_sort($parent, $oarray, $st_offset, $st_slice, $end_slice, $plane_size, $num_rows, $u2, $planes, @ndx_keys);
 	    push @$oarray, \@subarray;
 	    #print "  ++ $depth: got back an array with ", scalar @subarray, " entries\n";
 	}
