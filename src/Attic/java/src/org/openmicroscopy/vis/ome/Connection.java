@@ -384,7 +384,13 @@ public class Connection {
 		return t;
 	}
 	
+	// passing "this" is a game i need to play to be able to
+	// get connection into the SwingWorker thread.
 	public void initDatasets(final Controller controller) {
+		initDatasets(controller,this);
+	}
+	public void initDatasets(final Controller controller,
+		final Connection connection) {
 		
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
@@ -393,7 +399,7 @@ public class Connection {
 				while (iter.hasNext()) {
 					CDataset d = (CDataset) iter.next();
 					controller.setStatusLabel("Dataset "+d.getName());
-					d.getImageCount();
+					d.loadImages(connection);
 				}
 				return null;
 			}
