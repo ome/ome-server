@@ -1,14 +1,14 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<xsl:transform xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
+<xsl:transform xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 	<xsl:template match = "OME:OME">
 		<xsl:element name = "OME" namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
-			<xsl:attribute name = "schemaLocation">
+			<xsl:attribute name = "xsi:schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
 			</xsl:attribute>
 			<!-- Copy DocumentGroup in the original document -->
 			
 			<!-- Need to copy STD and AML also -->
-			<xsl:copy-of select = "OME:DocumentGroup"/>
+			<xsl:apply-templates select = "OME:DocumentGroup"/>
 			<!-- Deal with the hierarchy -->
 			<xsl:apply-templates select = "OME:Project"/>
 			<xsl:apply-templates select = "OME:Dataset"/>
@@ -29,6 +29,27 @@
 			</xsl:element>
 		</xsl:element>
 	</xsl:template>
+
+	<!-- DocumentGroup -->
+	<xsl:template match = "OME:DocumentGroup">
+		<xsl:element name = "DocumentGroup">
+			<xsl:apply-templates select = "OME:Include"/>
+		</xsl:element>
+	</xsl:template>
+	<xsl:template match = "OME:DocumentGroup/OME:Include">
+		<xsl:element name = "Include">
+			<xsl:attribute name = "DocumentID">
+				<xsl:value-of select = "@DocumentID"/>
+			</xsl:attribute>
+			<xsl:attribute name = "href">
+				<xsl:value-of select = "@href"/>
+			</xsl:attribute>
+			<xsl:attribute name = "SHA1">
+				<xsl:value-of select = "@SHA1"/>
+			</xsl:attribute>
+		</xsl:element>
+	</xsl:template>
+
 	<!-- Project -->
 	<xsl:template match = "OME:Project">
 		<xsl:element name = "Project">
