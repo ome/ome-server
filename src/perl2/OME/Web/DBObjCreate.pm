@@ -51,7 +51,7 @@ use strict;
 use Carp;
 
 use OME;
-use OME::Tasks::ModuleExecutionManager;
+use OME::Tasks::AnnotationManager;
 
 our $VERSION = $OME::VERSION;
 use base qw(OME::Web);
@@ -288,23 +288,23 @@ sub _create {
 			if( $q->param( $_ ) );
 	}
 	
- 	my ($dependence, $target, $mex, $obj);
+ 	my $obj;
  	if( $ST ) {
+ 		my ($mex, $objs);
  		if( $ST->granularity() eq 'D' ) {
- 			$dependence = 'D';
- 			$target = $data_hash{ dataset };
+			($mex, $objs) = OME::Tasks::AnnotationManager->
+				annotateDataset( $data_hash{ dataset }, $ST, \%data_hash );
  		} elsif( $ST->granularity() eq 'I' ) {
- 			$dependence = 'I';
- 			$target = $data_hash{ image };
+			($mex, $objs) = OME::Tasks::AnnotationManager->
+				annotateImage( $data_hash{ image }, $ST, \%data_hash );
  		} elsif( $ST->granularity() eq 'G' ) {
- 			$dependence = 'G';
- 			$target = undef;
- 		}
- 		my $annotation_module = $factory->loadObject(
- 			'OME::Module', $session->Configuration()->annotation_module_id() );
- 		$mex = OME::Tasks::ModuleExecutionManager->createMEX(
- 			$annotation_module, $dependence,$target);
- 		$obj = $factory->newAttribute( $ST, $target, $mex, \%data_hash );
+			($mex, $objs) = OME::Tasks::AnnotationManager->
+				annotateGlobal( $ST, \%data_hash );
+ 		} elsif( $ST->granularity() eq 'F' ) {
+			($mex, $objs) = OME::Tasks::AnnotationManager->
+				annotateFeature( $data_hash{ feature }, $ST, \%data_hash );
+		}
+		$obj = $objs->[0];
  	} else {
 	 	$obj = $factory->newObject( $formal_name, \%data_hash );
 	}

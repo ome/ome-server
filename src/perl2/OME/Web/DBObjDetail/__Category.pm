@@ -56,7 +56,7 @@ implements _takeAction to allow Categorization of Images
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-use OME::Tasks::ModuleExecutionManager;
+use OME::Tasks::AnnotationManager;
 
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
@@ -70,21 +70,16 @@ sub _takeAction {
 	
 	my $image_ids = $q->param( 'images_to_categorize' );
 	if( $image_ids ) {
- 		my $annotation_module = $factory->loadObject(
- 			'OME::Module', $session->Configuration()->annotation_module_id() );
  		foreach my $image_id ( split( m',', $image_ids ) ) {
- 			my $mex = OME::Tasks::ModuleExecutionManager->createMEX(
- 				$annotation_module, 'I', $image_id);
- 			# substitute for maybeNewAttribute
  			next if $factory->findObject( '@Classification', {
 				Category => $obj,
 				image    => $image_id,
 				'module_execution.experimenter' => $session->User()
 			} );
-			$factory->newAttribute( 
-				'Classification', $image_id, $mex, 
-				{ Category => $obj }
-			) or die "Couldn't make Classification attribute for image (id=$image_id) and Category (id=".$obj->id().")";
+			my $image = $factory->loadObject( 'OME::Image', $image_id )
+				or die "Couldn't load image id=$image_id";
+			OME::Tasks::AnnotationManager->
+				annotateImage( $image, 'Classification', { Category => $obj } );
 		}
  		$session->commitTransaction();
 	}
