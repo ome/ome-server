@@ -21,7 +21,8 @@
 use OME::Session;
 use OME::SessionManager;
 use OME::Program;
-use OME::DataType;
+use OME::DataTable;
+use OME::AttributeType;
 use Term::ReadKey;
 
 print "\nOME Test Case - Create program\n";
@@ -60,34 +61,226 @@ my $factory = $session->Factory();
 $factory->Debug(0);
 
 
-print "Finding datatypes...\n";
+print "Finding data tables...\n";
 
-my $xyzImageInfo = OME::DataType->findByTable('XYZ_IMAGE_INFO');
+my $xyzImageInfo = $factory->findObject("OME::DataTable",table_name => 'XYZ_IMAGE_INFO');
 print "  ".$xyzImageInfo->table_name()." (".$xyzImageInfo->id().")\n";
 
-my $xyImageInfo = OME::DataType->findByTable('XY_IMAGE_INFO');
+my $xyImageInfo = $factory->findObject("OME::DataTable",table_name => 'XY_IMAGE_INFO');
 print "  ".$xyImageInfo->table_name()." (".$xyImageInfo->id().")\n";
 
-my $timepoint = OME::DataType->findByTable('TIMEPOINT');
+my $timepoint = $factory->findObject("OME::DataTable",table_name => 'TIMEPOINT');
 print "  ".$timepoint->table_name()." (".$timepoint->id().")\n";
 
-my $threshold = OME::DataType->findByTable('THRESHOLD');
+my $threshold = $factory->findObject("OME::DataTable",table_name => 'THRESHOLD');
 print "  ".$threshold->table_name()." (".$threshold->id().")\n";
 
-my $location = OME::DataType->findByTable('LOCATION');
+my $location = $factory->findObject("OME::DataTable",table_name => 'LOCATION');
 print "  ".$location->table_name()." (".$location->id().")\n";
 
-my $extent = OME::DataType->findByTable('EXTENT');
+my $extent = $factory->findObject("OME::DataTable",table_name => 'EXTENT');
 print "  ".$extent->table_name()." (".$extent->id().")\n";
 
-my $signal = OME::DataType->findByTable('SIGNAL');
+my $signal = $factory->findObject("OME::DataTable",table_name => 'SIGNAL');
 print "  ".$signal->table_name()." (".$signal->id().")\n";
 
-my $bounds = OME::DataType->findByTable('BOUNDS');
+my $bounds = $factory->findObject("OME::DataTable",table_name => 'BOUNDS');
 print "  ".$bounds->table_name()." (".$bounds->id().")\n";
 
-my $ratio = OME::DataType->findByTable('RATIO');
+my $ratio = $factory->findObject("OME::DataTable",table_name => 'RATIO');
 print "  ".$ratio->table_name()." (".$ratio->id().")\n";
+
+
+print "Create attribute types...\n";
+
+my ($atype,$acolumn);
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack mean',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzMean = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'MEAN',
+    data_column    => $xyzImageInfo->findColumnByName('MEAN'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack geomean',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzGeomean = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'GEOMEAN',
+    data_column    => $xyzImageInfo->findColumnByName('GEOMEAN'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack sigma',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzSigma = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'SIGMA',
+    data_column    => $xyzImageInfo->findColumnByName('SIGMA'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack minimum',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzMinimum = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'MAX',
+    data_column    => $xyzImageInfo->findColumnByName('MAX'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+
+my $atype = $factory->newObject("OME::AttributeType",{
+    name        => 'Stack centroid',
+    granularity => 'I',
+    description => ''
+    });
+print "  ".$atype->name()." (".$atype->id().")\n";
+my $xyzCentroid = $atype;
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'WAVENUMBER',
+    data_column    => $xyzImageInfo->findColumnByName('WAVENUMBER'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'TIMEPOINT',
+    data_column    => $xyzImageInfo->findColumnByName('TIMEPOINT'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'X',
+    data_column    => $xyzImageInfo->findColumnByName('CENTROID_X'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'Y',
+    data_column    => $xyzImageInfo->findColumnByName('CENTROID_Y'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+$acolumn = $factory->newObject("OME::AttributeType::Column",{
+    attribute_type => $atype,
+    name           => 'Z',
+    data_column    => $xyzImageInfo->findColumnByName('CENTROID_Z'),
+    description    => ''
+    });
+print "    ".$acolumn->name()." : ".$acolumn->data_column()->column_name()." (".$acolumn->id()." )\n";
+
+
+$acolumn->dbi_commit();
+
+exit;
+
 
 print "Creating programs...\n";
 

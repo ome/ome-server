@@ -84,11 +84,25 @@ sub loadObject {
 }
 
 sub loadAttribute {
-    my ($self, $attribute_table, $id) = @_;
+    my ($self, $attribute_type_name, $id) = @_;
 
-    my $datatype = OME::DataType->findByTable($attribute_table);
-    my $pkg = $datatype->requireAttributePackage();
-    return $self->loadObject($pkg,$id);
+    my $type = $self->findObject("OME::AttributeType",
+                                 name => $attribute_type_name);
+    die "Cannot find attribute type $attribute_type_name"
+        unless defined $type;
+    my $pkg = $type->requireAttributePackage();
+
+    return $pkg->load($id);
+}
+
+
+# findObject
+# ----------
+
+sub findObject {
+    my ($self, $class, @criteria) = @_;
+    my $objects = $self->findObjects($class,@criteria);
+    return $objects->next();
 }
 
 
@@ -96,12 +110,12 @@ sub loadAttribute {
 # -----------
 
 sub findObjects {
-    my ($self, $class, $key, $value) = @_;
+    my ($self, $class, @criteria) = @_;
 
-    return undef unless (defined $key) && (defined $value);
+    return undef unless (scalar(@criteria) > 0) && ((scalar(@criteria) % 2) == 0);
 
     eval "require $class";
-    return $class->search($key,$value);
+    return $class->search(@criteria);
 }
 
 
@@ -117,12 +131,15 @@ sub newObject {
 }
 
 sub newAttribute {
-    my ($self, $attribute_table, $data) = @_;
+    my ($self, $attribute_type_name, $target, $rows) = @_;
 
-    #print STDERR "@@@ $attribute_table\n";
-    my $datatype = OME::DataType->findByTable($attribute_table);
-    my $pkg = $datatype->requireAttributePackage();
-    return $self->newObject($pkg,$data);
+    my $type = $self->findObject("OME::AttributeType",
+                                 name => $attribute_type_name);
+    die "Cannot find attribute type $attribute_type_name"
+        unless defined $type;
+    my $pkg = $type->requireAttributePackage();
+
+    return $pkg->new($target, $rows);
 }
 
 1;

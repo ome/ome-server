@@ -25,12 +25,12 @@ our $VERSION = '1.0';
 
 use strict;
 use Ima::DBI;
+use Class::Data::Inheritable;
 use Class::Accessor;
 use OME::SessionManager;
 use OME::DBConnection;
 
 use base qw(Class::DBI Class::Accessor Class::Data::Inheritable);
-
 
 __PACKAGE__->mk_classdata('AccessorNames');
 __PACKAGE__->mk_classdata('Session');

@@ -1,4 +1,4 @@
-# OME/DataType.pm
+# OME/DataTable.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::DataType;
+package OME::DataTable;
 
 use strict;
 our $VERSION = '1.0';
@@ -26,21 +26,22 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->mk_classdata('_attributePackages');
-__PACKAGE__->_attributePackages({});
+__PACKAGE__->mk_classdata('_dataTablePackages');
+__PACKAGE__->_dataTablePackages({});
 
-__PACKAGE__->table('datatypes');
-__PACKAGE__->sequence('datatype_seq');
-__PACKAGE__->columns(Primary => qw(datatype_id));
-__PACKAGE__->columns(Essential => qw(table_name description attribute_type));
-__PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id),
-                     {sort => 'datatype_column_id'});
+__PACKAGE__->table('data_tables');
+__PACKAGE__->sequence('data_table_seq');
+__PACKAGE__->columns(Primary => qw(data_table_id));
+__PACKAGE__->columns(Essential => qw(granularity table_name description));
+__PACKAGE__->has_many('data_columns',
+                      'OME::DataTable::Column' => qw(data_table_id),
+                      {sort => 'data_column_id'});
 
-# These triggers should ensure that the appropriate OME::Attribute
-# subclass definition is evaluated when a data type is loaded from the
+# These triggers should ensure that the appropriate DBObject subclass
+# definition is evaluated when a data type is loaded from the
 # database.
-__PACKAGE__->add_trigger(after_create => \&requireAttributePackage);
-__PACKAGE__->add_trigger(select => \&requireAttributePackage);
+__PACKAGE__->add_trigger(after_create => \&requireDataTablePackage);
+__PACKAGE__->add_trigger(select => \&requireDataTablePackage);
 
 
 __PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
@@ -60,7 +61,7 @@ sub findByTable {
 sub findColumnByName {
     my ($self, $column_name) = @_;
     my $type_id = $self->id();
-    return OME::DataType::Column->findByTypeAndColumn($type_id,
+    return OME::DataTable::Column->findByTypeAndColumn($type_id,
 						      $column_name);
 }
 
@@ -76,35 +77,39 @@ sub findAttributesByTarget {
     return $sth;
 }
 
-sub getAttributePackage {
+sub getDataTablePackage {
     my $self = shift;
     my $table = $self->table_name();
-    return "OME::Attribute::$table";
+    $table =~ s/[^\w\d]/_/g;
+    return "OME::DataTable::__$table";
 }
 
-sub requireAttributePackage {
+sub requireDataTablePackage {
     my $self = shift;
-    my $pkg = $self->getAttributePackage();
-    return $pkg if exists $self->_attributePackages()->{$pkg};
-    #print STDERR "**** Loading attribute package $pkg\n";
+    my $pkg = $self->getDataTablePackage();
+    return $pkg if exists $self->_dataTablePackages()->{$pkg};
+    #print STDERR "**** Loading data table package $pkg\n";
 
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
 	our $VERSION = '1.0';
 
-	use OME::Attribute;
-	use base qw(OME::Attribute);
+	use OME::DBObject;
+	use base qw(OME::DBObject);
     };
 
     eval $def;
+
+    $pkg->mk_classdata('_data_table');
+    $pkg->_data_table($self);
 
     my $table = $self->table_name();
     $pkg->table($table);
     $pkg->sequence('attribute_seq');
     $pkg->columns(Primary => qw(attribute_id));
 
-    my $columns = $self->db_columns();
+    my $columns = $self->data_columns();
     my @column_defs = ('actual_output_id');
     while (my $column = $columns->next()) {
 	push @column_defs, lc($column->column_name());
@@ -112,7 +117,7 @@ sub requireAttributePackage {
 
     $pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
 
-    my $type = $self->attribute_type();
+    my $type = $self->granularity();
     my $accessors = {};
     if ($type eq 'D') {
 	$pkg->hasa('OME::Dataset' => qw(dataset_id));
@@ -136,14 +141,14 @@ sub requireAttributePackage {
     }
     use strict 'refs';
 
-    $self->_attributePackages()->{$pkg} = $self;
+    $self->_dataTablePackages()->{$pkg} = 1;
 
     return $pkg;
 }
 
 
 
-package OME::DataType::Column;
+package OME::DataTable::Column;
 
 use strict;
 our $VERSION = '1.0';
@@ -153,20 +158,20 @@ use base qw(OME::DBObject);
 
 
 __PACKAGE__->AccessorNames({
-    datatype_id => 'datatype'
+    data_table_id => 'data_tableb'
     });
 
-__PACKAGE__->table('datatype_columns');
-__PACKAGE__->sequence('datatype_column_seq');
-__PACKAGE__->columns(Primary => qw(datatype_column_id));
-__PACKAGE__->columns(Essential => qw(datatype_id column_name description reference_type));
-__PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
+__PACKAGE__->table('data_columns');
+__PACKAGE__->sequence('data_column_seq');
+__PACKAGE__->columns(Primary => qw(data_column_id));
+__PACKAGE__->columns(Essential => qw(data_table_id column_name description));
+__PACKAGE__->hasa('OME::DataTable' => qw(data_table_id));
 
-__PACKAGE__->make_filter('__type_column' => 'datatype_id = ? and column_name = ?');
+__PACKAGE__->make_filter('__type_column' => 'data_table_id = ? and column_name = ?');
 
 sub findByTypeAndColumn {
     my ($class, $type_id, $column_name) = @_;
-    my @columns = $class->__type_column(datatype_id => $type_id,
+    my @columns = $class->__type_column(data_table_id => $type_id,
 					column_name => $column_name);
     die "Multiple matching columns" if (scalar(@columns) > 1);
     return $columns[0]; 
