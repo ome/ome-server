@@ -1,10 +1,29 @@
 /*****
 
 	stats.js
-		external file dependencies: none
 		
-		Author: Josiah Johnston
-		email: siah@nih.gov
+Copyright (C) 2003 Open Microscopy Environment
+		Massachusetts Institute of Technology,
+		National Institutes of Health,
+		University of Dundee
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
+	Written by: Josiah Johnston <siah@nih.gov>
 	
 *****/
 
@@ -15,7 +34,8 @@ var svgns = "http://www.w3.org/2000/svg";
 	class variables
 	
 *****/
-Statistics.VERSION = 0.1;
+Statistics.VERSION = .2;
+Statistics.prototype.padding = 5;
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -26,102 +46,101 @@ Statistics.VERSION = 0.1;
 /*****
 
 	constructor
-		Stats = list of hashes containing stats for image xyz stacks
+		stats = list of hashes containing stats for image xyz stacks
 		waveLabels = list of wave labels indexed by wavenums
-		waveUpdate = function for wavelength popupList to call
 		
 	tested
 
 *****/
-function Statistics(Stats, waveLabels, waveUpdate) {
-	if(Stats == null)
-		return null;
-	this.init(Stats, waveLabels, waveUpdate)
+function Statistics(stats, waveLabels) {
+	if(!stats ) { return null; }
+	this.init(stats, waveLabels)
 }
+
+Statistics.prototype.buildToolBox = function( controlLayer ) {
+	this.buildDisplay();
+	var bbox = this.displayContent.getBBox();
+	var width = bbox.width + 2 * toolBox.prototype.padding;
+	var height = bbox.height + 2 * toolBox.prototype.padding;
+	this.toolBox = new toolBox(
+		255, 50, width, height
+	);
+	this.toolBox.closeOnMinimize( true );
+	this.toolBox.setLabel(10,12,"Statistics");
+	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
+	this.toolBox.realize( controlLayer );
+	this.displayPane = this.toolBox.getGUIbox();
+	this.displayPane.appendChild( this.displayContent );
+	
+}
+
 
 /*****
 	
-	buildSVG
+	buildDisplay
 	
 	returns:
 		SVG chunk describing Statistics pane
-	notes:
-		for use in conjuction with multipaneToolBox
-		
-	tested
 		
 *****/
-Statistics.prototype.buildSVG = function() {
-	// verify initialization
-	if(this.Stats == null) return null;
+Statistics.prototype.buildDisplay = function() {
+	if( !this.initialized) return null;
 
-// build SVG
-	this.root = svgDocument.createElementNS(svgns, "g");
+	this.displayContent = svgDocument.createElementNS(svgns, "g");
 
 	// set up GUI
 	this.wavePopupList = new popupList(
-		120, 12, this.waveLabels, this.waveUpdate, null,
+		70, 0, this.waveLabels, 
+		{ obj: this, method: 'updateStats'},
+		null,
 		skinLibrary["popupListAnchorLightslategray"],
 		skinLibrary["popupListBackgroundLightskyblue"],
 		skinLibrary["popupListHighlightAquamarine"]
 	);
-	this.wavePopupList.setLabel(-2, 12, "Wavelength: ");
+	this.wavePopupList.setLabel(-2, 12, "Channel: ");
 	this.wavePopupList.getLabel().setAttribute("text-anchor", "end");
+	this.wavePopupList.realize( this.displayContent );
 	
 	// build displays
-	this.labels = new Object;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="3em">theT: </text>'
+	this.labels = new Array();
+	this.fields = new Array();
+	this.displayContent.appendChild( this.wavePopupList.textToSVG(
+		'<text x="0" y="2em" dominant-baseline="hanging">theT: </text>'
 	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="3em" text-anchor="end"> </text>'
+	this.labels['theT'] = this.displayContent.lastChild;
+	this.displayContent.appendChild( this.wavePopupList.textToSVG(
+		'<text x="160" y="2em" text-anchor="end" dominant-baseline="hanging">.</text>'
 	));
-	this.labels.theT = this.root.lastChild;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="4em">min: </text>'
-	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="4em" text-anchor="end"> </text>'
-	));
-	this.labels.min = this.root.lastChild;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="5em">max: </text>'
-	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="5em" text-anchor="end"> </text>'
-	));
-	this.labels.max = this.root.lastChild;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="6em">mean: </text>'
-	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="6em" text-anchor="end"> </text>'
-	));
-	this.labels.mean = this.root.lastChild;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="7em">geomean: </text>'
-	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="7em" text-anchor="end"> </text>'
-	));
-	this.labels.geomean = this.root.lastChild;
-	//this.root.appendChild( this.wavePopupList.textToSVG(
-	//	'<text x="20" y="8em">sigma: </text>'
-	//));
-	//this.root.appendChild( this.wavePopupList.textToSVG(
-	//	'<text x="180" y="8em" text-anchor="end"> </text>'
-	//));
-	//this.labels.sigma = this.root.lastChild;
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="8em">geosigma: </text>'
-	));
-	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="180" y="8em" text-anchor="end"> </text>'
-	));
-	this.labels.geosigma = this.root.lastChild;
-	this.wavePopupList.realize( this.root );
+	this.fields['theT'] = this.displayContent.lastChild;
 
-	return this.root;
+	for( c in this.stats )
+		for( t in this.stats[c] ) break;
+	var lineCount = 3;
+	for( statType in this.stats[t][c] ) {
+		var newLabel = svgDocument.createElementNS( svgns, "text" );
+		newLabel.setAttribute( "dominant-baseline", 'hanging' );
+		newLabel.setAttribute( "y", lineCount + 'em' );
+		newLabel.appendChild( svgDocument.createTextNode( statType ) );
+		this.labels[ statType ] = newLabel;
+		
+		var newField = svgDocument.createElementNS( svgns, "text" );
+		newField.setAttribute( "x", 160 );
+		newField.setAttribute( "y", lineCount + 'em' );
+		newField.setAttribute( "text-anchor", 'end' );
+		newField.setAttribute( "dominant-baseline", 'hanging' );
+		newField.appendChild( svgDocument.createTextNode( '.' ) );
+		this.fields[ statType ] = newField;
+
+		this.displayContent.appendChild( newLabel );
+		this.displayContent.appendChild( newField );
+
+		lineCount++;
+	}
+
+	var translate = 'translate( '+ toolBox.prototype.padding + ', ' + toolBox.prototype.padding + ')';
+	this.displayContent.setAttribute( 'transform', translate );
+
+	return this.displayContent;
 }
 
 /*****
@@ -130,27 +149,22 @@ Statistics.prototype.buildSVG = function() {
 		t = theT
 	
 	purpose:
-		update stats based on info particular to W & T
-
-	tested
+		update stack stats
 	
 *****/
 
 Statistics.prototype.updateStats = function(t) {
 	// has buildSVG been called?
-	if(this.root == null) return null;
+	if(this.displayContent == null) return null;
 	// verify params
 	if(t == null) return;
 	
-	// update labels
-	var wavenum = this.wavePopupList.getSelection();
-	this.labels.theT.firstChild.data = t;
-	this.labels.min.firstChild.data = this.Stats[wavenum][t]['min'];
-	this.labels.max.firstChild.data = this.Stats[wavenum][t]['max'];
-	this.labels.mean.firstChild.data = this.Stats[wavenum][t]['mean'];
-	this.labels.geomean.firstChild.data = this.Stats[wavenum][t]['geomean'];
-	//this.labels.sigma.firstChild.data = this.Stats[wavenum][t]['sigma'];
-	this.labels.geosigma.firstChild.data = this.Stats[wavenum][t]['geosigma'];
+	// update fields
+	var c = this.wavePopupList.getSelection();
+	this.fields['theT'].firstChild.data = t;
+	for( statType in this.stats[c][t] ) {
+		this.fields[statType].firstChild.data = this.stats[c][t][statType];
+	}
 }
 
 /*****
@@ -180,14 +194,13 @@ Statistics.prototype.changeWavenumber = function(theW) {
 	init
 		Stats = list of hashes containing stats for image xyz stacks
 		waveLabels = list of wave labels indexed by wavenums
-		waveUpdate = function for wavelength popupList to call
 
 	tested
 
 *****/
 
-Statistics.prototype.init = function(Stats, waveLabels, waveUpdate) {
-	this.Stats = Stats;
+Statistics.prototype.init = function(stats, waveLabels) {
+	this.initialized = true;
+	this.stats = stats;
 	this.waveLabels = waveLabels;
-	this.waveUpdate = waveUpdate;
 }
