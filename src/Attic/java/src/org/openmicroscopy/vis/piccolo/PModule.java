@@ -56,6 +56,7 @@ import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.Point2D;
 import javax.swing.event.EventListenerList;
 import java.awt.BasicStroke;
 import java.awt.Font;
@@ -511,5 +512,16 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	public PLinkTarget getOutputLinkTarget() {
 		return outputLinkTarget;
+	}
+	
+	public boolean isOnInputSide(Point2D pos) {
+		boolean res = true;
+		globalToLocal(pos);
+		float posX = (float)pos.getX();
+		PBounds b = getFullBoundsReference();
+		float mid = (float) (b.getWidth()/2);
+		if (posX < mid)
+			res = false;
+		return res;
 	}
 }

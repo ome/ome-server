@@ -49,6 +49,9 @@ import edu.umd.cs.piccolo.PNode;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.awt.event.KeyEvent;
+import java.util.Vector;
+import java.util.Iterator;
+
 
 
 /** 
@@ -71,23 +74,30 @@ import java.awt.event.KeyEvent;
 
 public class PChainEventHandler extends  PPanEventHandler {
 	
-	private boolean dragging = false;
+	private static final int NOT_LINKING=1;
+	private static final int LINKING_PARAMS=2;
+	private static final int LINKING_MODULES=3;
+	private int linkState = NOT_LINKING;
 	
 	// Store the last module parameter that we were in.
 	private PFormalParameter lastParameterEntered;
 	private PModule lastModuleEntered;
 	private PLinkLayer linkLayer;
 	
-	private PParamLink link;
+	
 	private Point2D.Float linkStart = new Point2D.Float();
-	private static final int NOT_LINKING=1;
-	private static final int LINKING_PARAMS=2;
-	private static final int LINKING_MODULES=3;
-	private int linkState = NOT_LINKING;
 	
 	private PFormalParameter linkOrigin;
 	
+	// The link I just clicked on to select
 	private PParamLink selectedLink = null;
+	
+	// the link that I'm creating
+	private PParamLink link;
+	
+	// the list of links I'm creating
+	private Vector links = new Vector();
+	
 	private PModule selectedModule;
 
 	
@@ -202,9 +212,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	public void mouseMoved(PInputEvent e) {
+		Point2D pos = e.getPosition();
 		if (linkState == LINKING_PARAMS) {
-			Point2D pos = e.getPosition();
 			link.setEndCoords((float) pos.getX(),(float) pos.getY());
+		}
+		else if (linkState == LINKING_MODULES) {
+			Iterator iter = links.iterator();
+			PParamLink lnk;
+			while (iter.hasNext()) {
+				lnk = (PParamLink) iter.next();
+				lnk.setEndCoords((float) pos.getX(),(float) pos.getY());
+			}
 		}
 
 	}
@@ -227,14 +245,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 		if (node instanceof PFormalParameter && linkState != LINKING_PARAMS) {
 			// works if I say == NOT_LINKING
 	//		System.err.println("starting a new link");
-			if (linkState  == LINKING_MODULES) {
-				//do something appropriate here. 
-			}
 			if (lastParameterEntered == null)
 				mouseEntered(e);
 			PFormalParameter param = (PFormalParameter) node;
 			if (param.canBeLinkOrigin())
-				startLink(param);
+				startParamLink(param);
 			e.setHandled(true);
 		}
 		else if (node instanceof PParamLink) {
@@ -244,22 +259,25 @@ public class PChainEventHandler extends  PPanEventHandler {
 			linkState = NOT_LINKING;	
 		}
 		else if (node instanceof PModule) {
-			if (linkState == NOT_LINKING && e.getClickCount() ==2 ) {
-				//System.err.println("setting link state to LINKING_MODULES");
-				linkState = LINKING_MODULES;
-			}
 			selectedModule = (PModule) node;
 			selectedModule.addHandles();
+			if (linkState == LINKING_MODULES) {
+				//finishModuleLinks();
+			}
+			else if (linkState == NOT_LINKING && e.getClickCount() ==2 ) {
+				startModuleLinks(e);
+			}
 			//eventually, check link state. do one thing if not
 			//linking and another if linkingmodules
+			
 		}
 		else if (linkState == LINKING_PARAMS) {
 			//System.err.println("mouse pressed and not linking");
 			if (e.getClickCount() ==2) {
-				cancelLink();
+				cancelParamLink();
 			}
 			else if (lastParameterEntered != null)
-				finishLink();
+				finishParamLink();
 			/*else { assume all links have one end point and one start point
 				System.err.println("extending link");
 				Point2D pos = e.getPosition();
@@ -267,12 +285,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 			}*/
 			e.setHandled(true);
 		}
+		else if (linkState == LINKING_MODULES && e.getClickCount() ==2) {
+			//cancelModuleLinks();
+		}
 		else
 			linkState =  NOT_LINKING;
 		//	super.mousePressed(e);
 	}
 		
- 	private void startLink(PFormalParameter param) {
+ 	private void startParamLink(PFormalParameter param) {
 		//System.err.println("mouse pressing and starting link");
 		linkOrigin = param;
 		linkOrigin.decorateAsLinkStart(true);
@@ -284,37 +305,46 @@ public class PChainEventHandler extends  PPanEventHandler {
  	}
 		
 	// this link ends at lastParameterEntered
-	private void finishLink() {
+	private void finishParamLink() {
 		if (lastParameterEntered.isLinkable() == true) {
 			//System.err.println("finishing link");
 			link.setEndParam(lastParameterEntered);
 			link.setPickable(true);
 			linkLayer.completeLink(link);
-			cleanUpLink();
+			cleanUpParamLink();
 		}
 		else {
 			//////System.err.println("trying to finish link, but end point is not linkable");
-			cancelLink();
+			cancelParamLink();
 		}
 		linkState = NOT_LINKING;
 	}
 	
-	private void cancelLink() {
+	private void cancelParamLink() {
 		//System.err.println("canceling link");
 		link.removeFromParent();
 		linkState = NOT_LINKING;
 		link =null;
-		cleanUpLink();
+		cleanUpParamLink();
 	}
 	
-	private void cleanUpLink() {
+	private void cleanUpParamLink() {
 		linkOrigin.setParamsHighlighted(false);
 		linkOrigin.decorateAsLinkStart(false);
 		linkOrigin = null;
 		lastParameterEntered = null;
 	}
 	
-	
+	private void startModuleLinks(PInputEvent e) {
+
+		Point2D pos = e.getPosition();
+		boolean isInput = selectedModule.isOnInputSide(pos);
+		if (isInput == true)
+			System.err.println("building module links on input side");
+		else
+			System.err.println("building module links on output side");
+		linkState = LINKING_MODULES; 
+	}
 	
 	
 	public void keyPressed(PInputEvent e) {
