@@ -259,7 +259,7 @@ sub compile_sigs {
 			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
 		}
 	} else {
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, ReuseResults => 0);
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
 	}
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,

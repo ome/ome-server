@@ -79,7 +79,7 @@ sub getPageBody {
 		# execute chain
 		my $doNotReuseResults = $cgi->param( 'ReExecuteChain' );
 		my $analysis_chain_execution = OME::Analysis::Engine->
-          executeChain($chain,$session->dataset,{ }, ReuseResults => ( $doNotReuseResults ? 0 : 1 ))
+          executeChain($chain,$session->dataset,{ }, undef, ReuseResults => ( $doNotReuseResults ? 0 : 1 ))
 			or die "Could not execute analysis chain";
 			
 		# display results	
