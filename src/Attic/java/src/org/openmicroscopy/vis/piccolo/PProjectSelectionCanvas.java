@@ -122,7 +122,7 @@ public class PProjectSelectionCanvas extends PCanvas
 		ProjectLabel pl;
 
 		int width = getWidth();
-		//System.err.println("width is" +width);
+		System.err.println("width is" +width);
 		Rectangle bounds = getBounds();
 		setBounds(new Rectangle((int)bounds.getX(),
 				   (int)bounds.getY(),width,(int)bounds.getHeight()));
@@ -138,9 +138,9 @@ public class PProjectSelectionCanvas extends PCanvas
 			if (obj instanceof ProjectLabel) {
 				pl = (ProjectLabel) obj;
 				double labelWidth = pl.getScaledMaxWidth();
-				//System.err.println("adding label...");
+				System.err.println("adding label...");
 				if (x+labelWidth > width) {
-					//System.err.println("new row. width is "+rowWidth);
+					System.err.println("new row. width is "+rowWidth);
 					rows.add(row);
 					widths.add(new Integer((int)x));
 					rowWidth = 0;
@@ -148,17 +148,17 @@ public class PProjectSelectionCanvas extends PCanvas
 					row = new Vector();
 				}
 				row.add(pl);
-				//System.err.println("row added was "+pl.getProject().getName());
+				System.err.println("row added was "+pl.getProject().getName());
 				x += labelWidth;
 			}
 		}
 		rows.add(row);
-		widths.add(new Integer(rowWidth));
+		widths.add(new Integer((int)x));
 		double rowHeight  = 0;
 		double maxScale=0;
 		double spacing = 0;
 		Iterator iter2;
-		//System.err.println("---- laying things out...");
+		System.err.println("---- laying things out...");
 		for (int i = 0; i < rows.size(); i++) {
 			row = (Vector) rows.elementAt(i);
 			Integer rowW = (Integer) widths.elementAt(i);
@@ -166,25 +166,24 @@ public class PProjectSelectionCanvas extends PCanvas
 			iter = row.iterator();
 			//  calculate space between items.
 			// leftover is width - rowWidth
-			//System.err.println("row "+i+", width is "+rowWidth);
+			System.err.println("row "+i+", width is "+rowWidth);
 			int remainder = width-rowWidth;
-			//System.err.println("remainder..... "+remainder);
+			System.err.println("remainder..... "+remainder);
 			// divide that by n-1 
 			if (row.size() >1)
 				spacing = remainder/(row.size()+1);
 			else 
 				spacing = 0;
-			//System.err.println("spacing..."+spacing);
+			System.err.println("spacing..."+spacing);
 			x = 0;
 			rowHeight = 0;
 			while (iter.hasNext()) {
 				pl = (ProjectLabel) iter.next();
 				// place this
-				//System.err.println("placing "+pl.getProject().getName()+" at "+x);
-				//System.err.println("width of pl is "+pl.getScaledMaxWidth());
+				System.err.println("placing "+pl.getProject().getName()+" at "+x);
+				System.err.println("width of pl is "+pl.getScaledMaxWidth());
 				pl.setOffset(x,y);
 				b = pl.getGlobalFullBounds();
-				//x += b.getWidth()+spacing;
 				x += pl.getScaledMaxWidth()+spacing;
 				if (pl.getScaledMaxHeight() > rowHeight) 
 					rowHeight=(int) pl.getScaledMaxHeight();
@@ -381,13 +380,9 @@ class ProjectLabel extends PText  {
 	}
 	
 	public void setSelected() {
-		//System.err.println("setting something to be selected.");
 		setScale(SELECTED_SCALE);
 		setPaint(PConstants.PROJECT_SELECTED_COLOR);
-		// zoom layer.
-		//PLayer layer = (PLayer) getParent();
-		//layer.getCamera(0).animateViewToCenterBounds(getGlobalFullBounds(),true,
-		//	PConstants.ANIMATION_DELAY);
+		
 	}
 	
 	public void setRollover(boolean v) {
@@ -421,7 +416,6 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 		if (e.getPickedNode() instanceof ProjectLabel) {
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
 			CProject p = pl.getProject();
-			System.err.println("entered.."+p.getName());
 			if (p.hasDatasets())
 				SelectionState.getState().setRolloverProject(p);
 		}
@@ -430,7 +424,6 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	public void mouseExited(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
 			ProjectLabel p = (ProjectLabel) e.getPickedNode();
-			System.err.println("exited..."+p.getProject().getName());
 			SelectionState.getState().setRolloverProject(null);
 		}
 	}
