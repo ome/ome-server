@@ -227,6 +227,57 @@ sub addActualInput {
     return $actual_input;
 }
 
+=head2 coalateInputs
+
+	my $vmex_or_mex_list = OME::Tasks::ModuleExecutionManager->
+		coalateInputs( \@attributes );
+	
+If you want to execute a chain and some attributes to use as user
+inputs, you'll need to package them up before handing them off to the
+AE. This function will package them for you. It will do this by either
+creating a virtualMEX or making a list (array reference) of mexes that
+are the sources for those attributes. If it can't figure out what to do, it will die. 
+
+The use case for the second is when you have a bunch of image
+annotations (like classifications) that you wish to pass in as inputs.
+Each annotation was produced by a different MEX. The AE handles this
+situation when it comes up internally by packing all the MEXes into a
+list and creating an actual input entry for each member of the list.
+Happily, it accepts lists of mexes for user inputs.
+
+=cut
+
+sub coalateInputs {
+    my ($self,$attributes) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+	# simple test for returning a list of MEXes: will the list of attributes
+	# output by the source MEXes be identical to the attributes given as input?
+	# this could be optimized, I'm sure.
+	my %attributes_by_ST;
+	$attributes_by_ST{ $_->semantic_type()->id }{$_->id} = undef
+		foreach @$attributes;
+	my %source_mex_hash = map{ $_->module_execution()->id => $_->module_execution() }
+		@$attributes;
+	my @source_mexes = values %source_mex_hash;
+	my $mex_list_is_ok = 1;
+	foreach my $ST_id( keys %attributes_by_ST ) {
+		my $ST = $factory->loadObject( "OME::SemanticType", $ST_id );
+		my @loaded_attributes = $self->getAttributesForMEX( 
+			\@source_mexes, $ST );
+		# check for the same number of loaded attributes and verify that they all match
+		if( (scalar( @loaded_attributes ) eq scalar( keys %{ $attributes_by_ST{ $ST_id } } ) ) and
+			( not grep( (not exists $attributes_by_ST{ $ST_id }{ $_ } ), @loaded_attributes ) ) ) {
+			$mex_list_is_ok = 0;
+			last;
+		}
+	}
+	return \@source_mexes if $mex_list_is_ok;
+
+	return $self->createVirtualMEX( $attributes );
+}
+
+
 =head2 createVirtualMEX
 
 =cut
