@@ -238,11 +238,9 @@ public class SelectionState {
 	}
 	
 	public void setRolloverDataset(CDataset d) {
-		if (currentDataset == null) {
-			rolloverDataset =d;
-			fireSelectionEvent(
-				new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_DATASET));
-		}
+		rolloverDataset =d;
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_DATASET));		
 	}
 
 	public CDataset getRolloverDataset() {
