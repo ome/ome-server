@@ -81,7 +81,7 @@ public class PLinkLayer extends PLayer {
 	}
 	
 	// completeLink is used to set up the link between modules.
-	public void completeLink(PParamLink link) {
+	public PModuleLink completeLink(PParamLink link) {
 		PFormalOutput output = link.getOutput();
 		PFormalInput input = link.getInput();
 		PModule start = output.getPModule();
@@ -94,6 +94,7 @@ public class PLinkLayer extends PLayer {
 			lnk = new PModuleLink(this,start,end);
 			modules.addChild(lnk);
 		}
+		return lnk;
 	}
 	
 	protected void paint(PPaintContext aPaintContext) {
