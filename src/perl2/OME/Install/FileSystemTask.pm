@@ -100,8 +100,10 @@ sub fix_ownership {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-    #my $OMEUser = $environment->OMEUser;
-    my $OMEUSER = "ome";
+    print "MAC:", $environment->getMAC(), "\n";
+
+    my $OMEUSER = $environment->OMEUser;
+    #my $OMEUSER = "ome";
     my $OMEUID = getpwnam($OMEUSER);
 
     print_header ("Filesystem Setup");
