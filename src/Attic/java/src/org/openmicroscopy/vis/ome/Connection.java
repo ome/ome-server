@@ -149,6 +149,10 @@ public class Connection {
 		return modules;
 	}
 	
+	public Chains getChains() {
+		return chains;
+	}
+	
 	/**
 	 * Shortcut interface to allow users to get access to modules
 	 * without going through the Modules object. <p>
