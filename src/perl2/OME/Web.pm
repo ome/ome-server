@@ -83,11 +83,12 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
+use Carp;
 use OME::SessionManager;
 use Apache::Session::File;
 
 use base qw(Class::Data::Inheritable);
-__PACKAGE__->mk_classdata('__Session');
+
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
 # are defined here.	 Each webpage is defined by a subclass (ideally
@@ -179,13 +180,10 @@ sub CGI { my $self = shift; return $self->{CGI}; }
 sub DBH { my $self = shift; return $self->Session()->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
-sub User { my $self = shift; return $self->{user}; }
-# __Session accessor works fine from subclasses using $self.
-# __Session mutator doesn't alter OME::Web's data unless accessed via OME::Web
-# So we have this Session accessor/mutator method that can be used from anywhere to read
-# 	and write OME::Web's __Session data.
-sub Session { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__Session( shift ); } return $self->__Session(); }
-#sub contentType { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__contentType( shift ); } return $self->__contentType(); }
+sub User { my $self = shift; return $self->Session()->User(); }
+
+# Because we no longer need any sort of Session reference store this is just a macro now
+sub Session { OME::Session->instance() };
 
 # redirectURL
 # -----------
@@ -208,16 +206,16 @@ sub ensureLogin {
 	my $sessionKey = $self->getSessionKey();
 
 	if (defined $sessionKey) {
-#		$self->setSession($manager->createSession($sessionKey));
-		$self->Session($manager->createSession($sessionKey));
-		$self->setSessionCookie();
+		my $session = $manager->createSession($sessionKey);
+		if ($session) {
+			$self->setSessionCookie($self->Session()->SessionKey());
+		} else {
+			$self->setSessionCookie();
+		}
+		return defined $session;
 	}
 
-	if (defined $self->Session()) {
-		$self->{user} = $self->Session()->User();
-	}
-	
-	return defined $self->Session();
+	return;
 }
 
 
@@ -227,11 +225,9 @@ sub ensureLogin {
 
 sub setSessionCookie {
 my $self = shift;
+my $sessionKey = shift;
 my $cgi = $self->CGI();
-my %params = @_;
-my $sessionKey;
 
-	$sessionKey = $self->Session()->SessionKey() if defined $self->Session();
 	if (defined $sessionKey) {
 print STDERR "\nSetting cookie: $sessionKey\n";
 		$self->{_cookies}->{'SESSION_KEY'} =
@@ -274,13 +270,15 @@ sub getLogin {
 # -------
 sub serve {
 	my $self = shift;
+
+	# XXX This is our *only* form of access control to the session object
 	if ($self->{RequireLogin}) {
 		if (!$self->ensureLogin()) {
 			$self->getLogin();
 			return;
 		}
 	}
-	#
+
 	my ($result,$content) = $self->createOMEPage();
 	
 	my $cookies = [values %{$self->{_cookies}}];
