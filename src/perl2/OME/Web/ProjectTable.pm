@@ -119,7 +119,10 @@ sub getTable {
 			$q->td({-align => 'center'}, [
 				$id,
 				$q->a({-href => "/perl2/serve.pl?Page=OME::Web::ProjectManagement&ProjectID=$id"}, $name) . " " .
-				$q->a({-href => "javascript:openInfoProject($id);"}, '(Popup)'),
+				$q->a( {
+					-href => "javascript:openInfoProject($id);",
+					-class => 'ome_popup',
+				}, '(Popup)'),
 				$owner,
 				$group,
 				$description,

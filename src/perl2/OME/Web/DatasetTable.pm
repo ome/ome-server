@@ -132,7 +132,10 @@ sub getTable {
 					$id,
 					$status,
 					$q->a({-href => "/perl2/serve.pl?Page=OME::Web::DatasetManagement&DatasetID=$id"}, $name) . " " .
-					$q->a({-href => "javascript:openInfoDataset($id);"}, '(Popup)'),
+					$q->a( {
+						-href => "javascript:openInfoDataset($id);",
+						-class => 'ome_popup',
+					}, '(Popup)'),
 					$owner,
 					$group,
 					$description,
