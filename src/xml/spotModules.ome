@@ -21,118 +21,6 @@
   xmlns=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-
-  <SemanticType
-     Name= "Dimensions"
-     AppliesTo = "I"
-     Description = "Describes the physical size of each dimension of the pixels in an image in microns">
-    <Element
-       Name= "PixelSizeX"
-       DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_X"
-       DataType = "float"
-       Description="in microns"/>
-    <Element
-       Name= "PixelSizeY"
-       DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Y"
-       DataType = "float"
-       Description="in microns"/>
-    <Element
-       Name= "PixelSizeZ"
-       DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Z"
-       DataType = "float"
-       Description="in microns"/>
-    <Element
-       Name= "PixelSizeC"
-       DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_C"
-       DataType = "float"
-       Description="in nanometers"/>
-    <Element
-       Name= "PixelSizeT"
-       DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_T"
-       DataType = "float"
-       Description="in seconds"/>
-  </SemanticType>
-
-  <SemanticType
-     Name= "Pixels"
-     AppliesTo = "I"
-     Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
-    <Element
-       Name= "SizeX"
-       DBLocation = "IMAGE_PIXELS.SIZE_X"
-       DataType = "integer"
-       Description="Number of pixels on the X axis."/>
-    <Element
-       Name= "SizeY"
-       DBLocation = "IMAGE_PIXELS.SIZE_Y"
-       DataType = "integer"
-       Description="Number of pixels on the Y axis."/>
-    <Element
-       Name= "SizeZ"
-       DBLocation = "IMAGE_PIXELS.SIZE_Z"
-       DataType = "integer"
-       Description="Number of pixels on the Z axis."/>
-    <Element
-       Name= "SizeC"
-       DBLocation = "IMAGE_PIXELS.SIZE_C"
-       DataType = "integer"
-       Description="Number of channel components in all logical channels."/>
-    <Element
-       Name= "SizeT"
-       DBLocation = "IMAGE_PIXELS.SIZE_T"
-       DataType = "integer"
-       Description="Number of time points"/>
-    <Element
-       Name= "BitsPerPixel"
-       DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
-       DataType = "integer"/>
-    <Element
-       Name= "PixelType"
-       DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
-       DataType = "string"/>
-    <Element
-       Name= "FileSHA1"
-       DBLocation = "IMAGE_PIXELS.FILE_SHA1"
-       DataType = "string"/>
-    <Element
-       Name= "Repository"
-       DBLocation = "IMAGE_PIXELS.REPOSITORY"
-       DataType = "reference"
-       RefersTo = "Repository"/>
-    <Element
-       Name= "Path"
-       DBLocation = "IMAGE_PIXELS.PATH"
-       DataType = "string"/>
-  </SemanticType>
-
-
-  <!-- Semantic types from PlaneStatistics.ome -->
-  <SemanticType Name="StackMean" AppliesTo="I">
-    <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-    <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-    <Element Name="Mean" DBLocation="STACK_STATISTICS.MEAN" DataType="float"/>
-  </SemanticType>
-  <SemanticType Name="StackGeometricMean" AppliesTo="I">
-    <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-    <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-    <Element Name="GeometricMean" DBLocation="STACK_STATISTICS.GEOMEAN" DataType="float"/>
-  </SemanticType>
-  <SemanticType Name="StackSigma" AppliesTo="I">
-    <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-    <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-    <Element Name="Sigma" DBLocation="STACK_STATISTICS.SIGMA" DataType="float"/>
-  </SemanticType>
-  <SemanticType Name="StackMinimum" AppliesTo="I">
-    <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-    <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-    <Element Name="Minimum" DBLocation="STACK_STATISTICS.MINIMUM" DataType="integer"/>
-  </SemanticType>
-  <SemanticType Name="StackMaximum" AppliesTo="I">
-    <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
-    <Element Name="TheT" DBLocation="STACK_STATISTICS.THE_T" DataType="integer"/>
-    <Element Name="Maximum" DBLocation="STACK_STATISTICS.MAXIMUM" DataType="integer"/>
-  </SemanticType>
-
   <!-- New semantic types -->
   <SemanticType 
      Name="Timepoint" AppliesTo="F"
@@ -229,9 +117,6 @@
     <Element Name="MinimumSpotVolume"
              DBLocation="FIND_SPOTS_INPUTS.MIN_VOLUME"
              DataType="float"/>
-    <Element Name="IntensityWeight"
-             DBLocation="FIND_SPOTS_INPUTS.IWEIGHT"
-             DataType="float"/>
     <Element Name="ThresholdType"
              DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_TYPE"
              DataType="string"/>
@@ -250,10 +135,14 @@
    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
+  <Category FullName="Tracking"
+            Description="Modules for tracking objects in an image"/>
+
   <AnalysisModule 
      ModuleName="Find spots" 
      ModuleType="OME::Analysis::FindSpotsHandler"
      ProgramID="/OME/bin/findSpots/findSpotsOME"
+     Category="Tracking"
      NewFeatureName="SPOT">
 
     <Declaration>
@@ -283,6 +172,7 @@
      ModuleName="Track spots" 
      ModuleType="OME::Analysis::TrackSpotsHandler"
      ProgramID=""
+     Category="Tracking"
      FeatureIterator="SPOT"
      NewFeatureName="[Root:TRAJECTORY]">
 

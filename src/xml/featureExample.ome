@@ -48,6 +48,7 @@
     ModuleName="Find cells"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
+    Category="Testing"
     Description="Find cells"
     NewFeatureName="CELL">
 
@@ -63,6 +64,7 @@
     ModuleName="Find mito"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
+    Category="Testing"
     Description="Find mito"
     FeatureIterator="CELL"
     NewFeatureName="MITOCHONDRIA">
@@ -83,6 +85,7 @@
     ModuleName="Find golgi"
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
+    Category="Testing"
     Description="Find golgi"
     FeatureIterator="CELL"
     NewFeatureName="GOLGI">
@@ -103,6 +106,7 @@
     ModuleName="Find ratio"
     ModuleType="OME::Analysis::FindRatio"
     ProgramID=""
+    Category="Testing"
     Description="Find ratio"
     FeatureIterator="CELL">
 
