@@ -167,6 +167,28 @@ sub getTable {
 
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
+	
+	# column headers
+	my @columnHeaders;
+	if( $options->{ embedded_in_form } ) {
+		@columnHeaders = map( $labels{ $_ }, @fieldNames );
+	} else {
+		my $skipColumn;
+		if( $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
+			($skipColumn = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
+		} else {
+			$skipColumn = 'id';
+		}
+		@columnHeaders = map( ($_ ne $skipColumn ? 
+			$q->a( {
+				-href => "#",
+				-onClick => "document.forms['$form_name'].action.value='OrderBy_$formal_name".$_."'; document.forms['$form_name'].submit(); return false",
+				},
+				$labels{ $_ }
+			) : 
+			$labels{ $_ } )
+		, @fieldNames );
+	}
 		
 	$html = $q->startform( { -name => $form_name })
 		unless $options->{ embedded_in_form };
@@ -184,9 +206,7 @@ sub getTable {
 					) ) )
 				), 
 				# Column headers
-				$q->td( { -class => 'ome_td' },
-					[ map( $labels{ $_ }, @fieldNames ) ]
-				),
+				$q->td( { -class => 'ome_td' }, \@columnHeaders ),
 				# Search fields
 				( $allowSearch ? 
 					$q->td( { -class => 'ome_td' },
@@ -331,9 +351,15 @@ sub __parseParams {
 	# load type
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
+	# collect SortOn
+	my $orderBy = 'id';
+	if( $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
+		($orderBy = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
+	}
+
 	# get objects
 	if( $mode eq 'cgi' or $mode eq 'search' ) {
-		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $options->{ Length } );
+		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $options->{ Length }, __order => $orderBy );
 		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
 	} else {
 		$object_count = scalar( @objects );
