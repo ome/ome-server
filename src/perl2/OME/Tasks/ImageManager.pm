@@ -122,6 +122,8 @@ use OME::SetDB;
 use OME::DBObject;
 OME::DBObject->Caching(0);
 
+use OME::Tasks::PixelsManager;
+
 
 sub new{
 	my $class=shift;
