@@ -259,7 +259,7 @@ sub delete {
 
 sub has_a {
 	my ($class, $column, $a_class, %meths) = @_;
-    #print STDERR "has_a deprecated\n";
+    print STDERR "has_a deprecated\n";
     $class->hasa($a_class,$column);
 
 }
@@ -280,6 +280,7 @@ sub hasa {
 
     if ($f_class->isa("OME::DBObject")) {
         my $accessor_name = $class->accessor_name($f_col);
+        print STDERR "$class->hasa $accessor_name\n";
 
         # Get the accessor method created by Class::DBI.
         my $accessor;
@@ -295,12 +296,19 @@ sub hasa {
 
         my $new_accessor = sub {
             my $self = shift;
-            my $obj = $accessor->($self);
-            #print STDERR ref($self)," accessor for ",ref($obj),"\n";
-            my $session = $self->Session();
-            #print STDERR "  setting Session to $session\n";
-            $obj->Session($session) if defined $obj;
-            return $obj;
+
+            if (@_) {
+                # If we're calling this as a mutator, we don't need to
+                # change the behavior any.
+                return $accessor->($self,@_);
+            } else {
+                my $obj = $accessor->($self);
+                #print STDERR ref($self)," accessor for ",ref($obj),"\n";
+                my $session = $self->Session();
+                #print STDERR "  setting Session to $session\n";
+                $obj->Session($session) if defined $obj;
+                return $obj;
+            }
         };
 
         # Replace the old accessor with the new one.
@@ -385,6 +393,7 @@ sub ID {
 sub accessor_name {
     my ($class, $column) = @_;
     my $names = $class->AccessorNames();
+    #print STDERR "$class->accessor_name($column) = ",$names->{$column},"\n";
     return $names->{$column} if (exists $names->{$column});
     return $column;
 }
