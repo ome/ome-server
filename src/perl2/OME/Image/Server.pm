@@ -76,6 +76,9 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use OME::Session;
+
+use Carp;
 use English '-no_match_vars';
 use URI;
 use HTTP::Request::Common;
@@ -117,7 +120,27 @@ my $local_server = 0;
 my $server_path = DEFAULT_REMOTE_URL;
 my $user_agent;
 
+# Cached data for the readFile method
+use constant MINIMUM_READ_TO_USE_CACHE => 2048;
+use constant CACHE_SIZE => 4096;
+my $cache_filled = 0;
+my $cache_data;
+my $cache_fileID;
+my $cache_file_size;
+my $cache_start;
+my $cache_end;
+
 =head1 METHODS
+
+=head2 getServerPath
+
+	my $path = OME::Image::Server->getServerPath();
+
+Returns the path or URL of the currently active image server.
+
+=cut
+
+sub getServerPath { $server_path }
 
 =head2 useLocalServer
 
@@ -138,6 +161,7 @@ sub useLocalServer {
     die "$path is not a valid executable file"
       unless -x $path;
 
+    print STDERR "Local server\n";
     $local_server = 1;
     $server_path = $path;
 }
@@ -163,6 +187,7 @@ sub useRemoteServer {
 
     print STDERR ref($url)," $url\n";
 
+    print STDERR "Remote server\n";
     $local_server = 0;
     $server_path = $url;
 }
@@ -300,75 +325,128 @@ sub __callOMEIS {
         # server.)
 
         my $stdin_filename;
-        my $stdin_size;
+        my $stdin_param;
+        my $delete_file = 0;
 
-        if (exists $params{File}) {
-            $stdin_filename = $params{File};
-        }
-
-        if (exists $params{Pixels}) {
-            $stdin_filename = $params{Pixels};
+        foreach my $param ('File','Pixels') {
+            if (exists $params{$param}) {
+                if (ref($params{$param})) {
+                    $stdin_filename = OME::Session->instance()->
+                      getTemporaryFilename("omeis","stdin");
+                    $stdin_param = $param;
+                    open INFILE, "> $stdin_filename"
+                      or die "Could not write stdin to a temp file: $!";
+                    print INFILE ${$params{$param}};
+                    close INFILE;
+                    $delete_file = 1;
+                } else {
+                    $stdin_filename = $params{$param};
+                    $stdin_param = $param;
+                }
+                delete $params{$param};
+            }
         }
 
         if (defined $stdin_filename) {
             die "Cannot find file $stdin_filename"
               unless -r $stdin_filename;
-            $stdin_size = -s $stdin_filename;
-            $params{UploadSize} = $stdin_size;
+
+            $params{$stdin_param} = $stdin_filename;
+            $params{UploadSize} = -s $stdin_filename;
             $params{IsLocalFile} = 1;
         }
 
         my @params;
-        while (my ($k,$v) = each %params) {
-            push @params, "$k=$v";
+        foreach my $k (keys %params) {
+            push @params, "$k=$params{$k}";
         }
 
         if ($SHOW_CALLS) {
             print STDERR "Calling local OMEIS: $server_path\n";
-            print STDERR "  Params: ",join(' ',@params),"\n";
+            print STDERR "  Params: \n";
+            foreach my $k (keys %params) {
+                print STDERR "    '$k' = '",$params{$k},"'\n";
+            }
         }
 
         my $result = __safeBacktick($server_path,@params);
+
         if ($result =~ /Status: 500 (.*?)\015?\012/) {
             # There was a problem reported as an HTTP error
-            die $1;
+            Carp::confess $1;
         } else {
             # Remove the HTTP header from the result
             $result =~ s/^.*?\015?\012\015?\012//s;
         }
+
+        unlink $stdin_filename if $delete_file;
+
         return $result;
     } else {
         # The File and/or Pixels parameters should be transformed into
         # the appropriate filename reference for the POST request.
 
-        $params{File} = [$params{File}]
-          if (exists $params{File});
+        my $stdin_filename;
+        my $stdin_param;
+        my $delete_file = 0;
 
-        $params{Pixels} = [$params{Pixels}]
-          if (exists $params{Pixels});
+        foreach my $param ('File','Pixels') {
+            if (exists $params{$param}) {
+                if (ref($params{$param})) {
+                    $stdin_filename = OME::Session->instance()->
+                      getTemporaryFilename("omeis","stdin");
+                    $stdin_param = $param;
+                    open INFILE, "> $stdin_filename"
+                      or die "Could not write stdin to a temp file: $!";
+                    print INFILE ${$params{$param}};
+                    close INFILE;
+                    $delete_file = 1;
+                } else {
+                    $stdin_filename = $params{$param};
+                    $stdin_param = $param;
+                }
+                delete $params{$param};
+            }
+        }
 
         # This prevents the request object created below from loading
         # the entire file into memory.  Since the images could easily
         # run to 1GB in size, this is quite necessary.
         $HTTP::Request::Common::DYNAMIC_FILE_UPLOAD = 1;
 
+        # Bah!   The image server will bomb out unless the Files or
+        # Pixels parameter is last in the list.
+        my @params = %params;
+        if (defined $stdin_filename) {
+            die "Cannot find file $stdin_filename"
+              unless -r $stdin_filename;
+
+            push @params, $stdin_param, [$stdin_filename];
+        }
+
+
         my $request =
           POST($server_path,
                Content_Type => 'form-data',
-               Content      => \%params);
+               Content      => \@params);
 
         if ($SHOW_CALLS) {
             print STDERR "Calling remote OMEIS: $server_path\n";
-            print STDERR "  Params: ",join(' ',keys %params),"\n";
+            print STDERR "  Params: \n";
+            foreach my $k (keys %params) {
+                print STDERR "    '$k' = '",$params{$k},"'\n";
+            }
         }
 
         $proto->__createUserAgent() unless defined $user_agent;
         my $response = $user_agent->request($request);
 
+        unlink $stdin_filename if $delete_file;
+
         if ($response->is_success()) {
             return $response->content();
         } else {
-            die $response->message();
+            Carp::confess $response->message();
         }
     }
 }
@@ -413,6 +491,72 @@ sub newPixels {
     chomp($result);
     die "Error creating pixels" unless $result > 0;
     return $result;
+}
+
+=head2 getPixelsInfo
+
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,
+	    $bytesPerPixel,$isSigned,$isFloat) =
+	    OME::Image::Server->getPixelsInfo($pixelsID);
+
+Returns the properties of a previously uploaded pixels file.
+
+=cut
+
+use constant PIXELS_INFO_REGEXP =>
+  qr{Dims=(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\015?\012Finished=[01]\015?\012Signed=([01])\015?\012Float=([01])}s;
+
+sub getPixelsInfo {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+
+    my $result = $proto->__callOMEIS(Method   => 'PixelsInfo',
+                                     PixelsID => $pixelsID);
+    die "Error retrieving pixels info" unless defined $result;
+    die "Invalid pixels info format"
+      unless $result =~ PIXELS_INFO_REGEXP;
+    return ($1,$2,$3,$4,$5,$6,$7,$8);
+}
+
+=head2 getPixelSHA1
+
+	my $sha1 = OME::Image::Server->getPixelsSHA1($pixelsID);
+
+=cut
+
+sub getPixelsSHA1 {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+
+    my $result = $proto->__callOMEIS(Method   => 'PixelsSHA1',
+                                     PixelsID => $pixelsID);
+    die "Error retrieving pixels SHA-1" unless defined $result;
+    chomp $result;
+    return $result;
+}
+
+=head2 isPixelsFinished
+
+	my $finished = OME::Image::Server->isPixelsFinish($pixelsID);
+
+Returns whether the finishPixels method has been called on the
+specified pixels file.
+
+=cut
+
+use constant PIXELS_FINISHED_REGEXP =>
+  qr{Dims=\d+,\d+,\d+,\d+,\d+,\d+\015?\012Finished=([01])\015?\012Signed=[01]\015?\012Float=[01]}s;
+
+sub isPixelsFinished {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+
+    my $result = $proto->__callOMEIS(Method   => 'PixelsInfo',
+                                     PixelsID => $pixelsID);
+    die "Error retrieving pixels info" unless defined $result;
+    die "Invalid pixels info format"
+      unless $result =~ PIXELS_FINISHED_REGEXP;
+    return $1;
 }
 
 =head2 getPixels
@@ -563,7 +707,7 @@ sub getROI {
 
 =head2 setPixels
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    setPixels($pixelsID,$filename,$bigEndian);
 
 This method sends an entire array of pixels for the given pixels ID.
@@ -575,7 +719,7 @@ order (big-endian) is assumed.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -596,7 +740,7 @@ sub setPixels {
 
 =head2 setStack
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    setStack($pixelsID,$theC,$theT,$filename,$bigEndian);
 
 This method sends an array of pixels for a single stack of the given
@@ -609,7 +753,7 @@ parameter, network order (big-endian) is assumed.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -632,7 +776,7 @@ sub setStack {
 
 =head2 setPlane
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    setPlane($pixelsID,$theZ,$theC,$theT,$filename,$bigEndian);
 
 This method sends an array of pixels for a single plane of the given
@@ -645,7 +789,7 @@ $bigEndian parameter, network order (big-endian) is assumed.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -690,7 +834,7 @@ parameter, network order (big-endian) is assumed.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -757,9 +901,110 @@ sub getFileInfo {
     return ($1,$2);
 }
 
+=head2 getFileHA1
+
+	my $sha1 = OME::Image::Server->getFileSHA1($fileID);
+
+=cut
+
+sub getFileSHA1 {
+    my $proto = shift;
+    my ($fileID) = @_;
+
+    my $result = $proto->__callOMEIS(Method => 'FileSHA1',
+                                     FileID => $fileID);
+    die "Error retrieving file SHA-1" unless defined $result;
+    chomp $result;
+    return $result;
+}
+
+=head2 readFile
+
+	my $data = OME::Image::Server->readFile($fileID,$offset,$length);
+
+This method is used to read a portion of an uploaded file.  The method
+implements a limited form of caching, so that client code can read
+small, spatially related portions of the file without generating too
+many I/O calls to the image server.
+
+The caching is only used if the $length parameter is less than 2K.  If
+it is, the actual readFile call sent to the image server will read a
+full 4K block, centered around the region requested.  Subsequent calls
+which request data fully enclosed within the full 4K region will
+return that data without generating another image server call.  If the
+data requested by the subsequent call does not fall within the cached
+region, a new 4K block is read, and the existing one is thrown away.
+
+If the requested length is 2K or more, the caching mechanism will be
+completely bypassed.  Any previously cached data will not be modified.
+
+=cut
+
+sub readFile {
+    my $proto = shift;
+    my ($fileID,$offset,$length) = @_;
+
+    if ($length <= MINIMUM_READ_TO_USE_CACHE) {
+        # Check and see if we have a cache which contains the requested
+        # data.  If not, load in an appropriate cache.
+
+        unless ($cache_filled &&
+                ($cache_fileID == $fileID) &&
+                ($offset >= $cache_start) &&
+                ($offset+$length < $cache_end)) {
+            # This is a cache miss, or the cache has not been filled yet.
+
+            # Read the length of the file, unless we've already found the
+            # length of this file.
+            my $file_size;
+            if ($cache_filled && $cache_fileID == $fileID) {
+                $file_size = $cache_file_size;
+            } else {
+                (undef,$file_size) = $proto->getFileInfo($fileID);
+            }
+
+            # Calculate the bounds of a cache block, centered on the
+            # requested region.  Ensure that is does not go past the end of
+            # the file.
+            my $extra = CACHE_SIZE-$length;
+            my $real_offset = $offset-($extra/2);
+            $real_offset = 0 if $real_offset < 0;
+            my $real_end = $real_offset+CACHE_SIZE;
+            $real_end = $file_size if $real_end > $file_size;
+            my $real_size = $real_end-$real_offset;
+
+            my $data = $proto->__callOMEIS(Method => 'ReadFile',
+                                           FileID => $fileID,
+                                           Offset => $real_offset,
+                                           Length => $real_size);
+            die "Error reading file" unless defined $data;
+
+            $cache_filled = 1;
+            $cache_data = $data;
+            $cache_fileID = $fileID;
+            $cache_file_size = $file_size;
+            $cache_start = $real_offset;
+            $cache_end = $real_end;
+        }
+
+        # We have either just loaded in an appropriate cache, or the
+        # cache was already filled correctly.  Return the requested
+        # data.
+
+        return substr($cache_data,$offset-$cache_start,$length);
+    } else {
+        my $result = $proto->__callOMEIS(Method => 'ReadFile',
+                                         FileID => $fileID,
+                                         Offset => $offset,
+                                         Length => $length);
+        die "Error reading file" unless defined $result;
+        return $result;
+    }
+}
+
 =head2 convertStack
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    convertStack($pixelsID,$theC,$theT,
 	                 $filesID,$offset,$bigEndian);
 
@@ -781,7 +1026,7 @@ performed by the server.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -806,7 +1051,7 @@ sub convertStack {
 
 =head2 convertPlane
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    convertPlane($pixelsID,$theZ,$theC,$theT,
 	                 $fileID,$offset,$bigEndian);
 
@@ -828,7 +1073,7 @@ the server.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -854,7 +1099,7 @@ sub convertPlane {
 
 =head2 convertRows
 
-	my $bytesWritten = OME::Image::Server->
+	my $pixelsWritten = OME::Image::Server->
 	    convertRows($pixelsID,$theY,$numRows,$theZ,$theC,$theT,
 	                $fileID,$offset,$bigEndian);
 
@@ -877,7 +1122,7 @@ pixels file, byte swapping will be performed by the server.
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
-The number of bytes successfully written by the image server will be
+The number of pixels successfully written by the image server will be
 returned.  This value can be used as an additional error check by
 client code.
 
@@ -962,7 +1207,7 @@ sub getPlaneStatistics {
         my ($c,$t,$z,$min,$max,$mean,$geomean,$sigma,
             $centroidX,$centroidY,$i,$i2,$logI,$xi,$yi,$zi,$geosigma) =
               split(/\t/,$row);
-        $hash{$c}{$t}{$z} = {
+        $hash{$z}{$c}{$t} = {
                              Minimum   => $min,
                              Maximum   => $max,
                              Mean      => $mean,
