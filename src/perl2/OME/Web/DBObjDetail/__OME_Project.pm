@@ -59,7 +59,7 @@ our $VERSION = $OME::VERSION;
 
 use CGI;
 use Log::Agent;
-use OME::Web::DBObjTable;
+use OME::Tasks::ProjectManager;
 
 use base qw(OME::Web::DBObjDetail);
 
@@ -93,6 +93,11 @@ sub _takeAction {
 		$object->name( $q->param( 'name' ) );
 		$object->storeObject();
 		$self->Session()->commitTransaction();
+	}
+
+	my $dataset_ids = $q->param( 'datasets_to_add' );
+	if( $dataset_ids ) {
+		OME::Tasks::ProjectManager->addDatasets( [ split( m',', $dataset_ids ) ], $object->id() );
 	}
 }
 
