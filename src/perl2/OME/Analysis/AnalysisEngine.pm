@@ -447,6 +447,11 @@ sub findModuleHandler {
     # The hash of the user-specified input parameters.
     my $input_parameters;
 
+    # The hash of the analyses providing each set of user-specified
+    # inputs.
+    my %user_input_analyses;
+    my %node_inputs;
+
     # The dataset the chain is being executed against.
     my $dataset;
 
@@ -591,10 +596,7 @@ sub findModuleHandler {
     # and output links of the module.  Currently, all outputs are
     # added to the hashes, regardless of whether or not they are
     # linked to anything.  However, only those inputs which are
-    # connected are pushed into their hashes.  *** This is where I
-    # will add support for user parameters; the inputs without links
-    # will look for their values in the $input_attributes parameter,
-    # and push those values into the hash accordingly.
+    # connected are pushed into their hashes.
     sub __initializeNode {
         my $program = $curr_node->program();
         my $module_type = $program->module_type();
@@ -633,8 +635,6 @@ sub findModuleHandler {
     # to the "to node", and that the types of the "from output" and
     # "to input" match.
     sub __checkInputs {
-        my %node_inputs;
-
         __debug("    Sorting and checking links");
         foreach my $link ($analysis_view->links()) {
             my $from_node = $link->from_node();
@@ -674,23 +674,41 @@ sub findModuleHandler {
             $node_inputs{$to_node->id()}->{$to_input->id()} = $link;
         }
 
+        # Contains the number of distinct user inputs of each
+        # semantic type.
+        my %input_types;
+        my %input_analyses;
+        my $max_input_analyses = 0;
+
         __debug("    Checking nodes");
         foreach my $node (@nodes) {
             __debug("      ".$node->program()->program_name());
             my @inputs = $node->program()->inputs();
             foreach my $input (@inputs) {
                 # Okay if there's a link feeding this input
-                next if exists $node_inputs{$node->id()}->{$input->id()};
+                my $nodeID = $node->id();
+                my $inputID = $input->id();
+                next if exists $node_inputs{$nodeID}->{$inputID};
+
+                # Keep a count of the number of user inputs of this type
+                my $attribute_type = $input->attribute_type();
+                my $attribute_typeID = $attribute_type->id();
+                $input_types{$attribute_typeID}++;
+
+                # ...and keep track of the maximum of that count
+                my $this_max = $input_types{$attribute_typeID};
+                $input_analyses{$nodeID}->{$inputID} = $this_max;
+                $max_input_analyses = $this_max
+                  if $this_max > $max_input_analyses;
 
                 # See if the user provided inputs
                 my $user;
-                if (exists $input_parameters->{$node->id()}->{$input->id()}) {
-                    $user = $input_parameters->{$node->id()}->{$input->id()};
+                if (exists $input_parameters->{$nodeID}->{$inputID}) {
+                    $user = $input_parameters->{$nodeID}->{$inputID};
                     if (UNIVERSAL::isa($user,"OME::AttributeType::Superclass")) {
                         # If the user provided a single input, wrap it
                         # in an array ref
                         $user = [$user];
-                        $input_parameters->{$node->id()}->{$input->id()} = $user;
                     } elsif (ref($user) ne 'ARRAY') {
                         # Otherwise only accept the input if its an
                         # array ref
@@ -704,14 +722,61 @@ sub findModuleHandler {
                     # User did not provide input, so treat this input
                     # as receiving an empty array
                     $user = [];
-                    $input_parameters->{$node->id()}->{$input->id()} = $user;
                 }
+                $input_parameters->{$nodeID}->{$inputID} = $user;
 
                 # Check those inputs against the spec
                 die "Input is not optional"
                   if (!$input->optional()) && (scalar(@$user) == 0);
                 die "Input cannot accept a list"
                   if (!$input->list()) && (scalar(@$user) > 1);
+            }
+        }
+
+        __debug("    Creating user input analyses");
+        my @analyses;
+        $analyses[$_] = $factory->
+          newObject("OME::Analysis",
+                    {
+                     program_id => undef,
+                     dependence => 'D',
+                     dataset_id => $dataset->id(),
+                     timestamp  => 'now',
+                     status     => 'FINISHED',
+                    })
+          foreach 0..$max_input_analyses-1;
+
+        # Create a hash, recording which analysis we will associate each
+        # user input with.  We won't actually clone the user inputs
+        # until it's time to execute the module.  (This prevents extra
+        # user inputs from cluttering everything in case the chain
+        # doesn't execute completely.)
+
+        foreach my $nodeID (keys %input_analyses) {
+            foreach my $inputID (keys %{$input_analyses{$nodeID}}) {
+                my $index = $input_analyses{$nodeID}->{$inputID};
+                $user_input_analyses{$nodeID}->{$inputID} =
+                  $analyses[$index];
+            }
+        }
+    }
+
+    # Clones the user inputs for the current node.  The cloned
+    # attributes are associated with the analysis created by the
+    # __checkInputs method.
+
+    sub __cloneUserInputs {
+        foreach my $inputID (keys %{$user_input_analyses{$curr_nodeID}}) {
+            my $inputs = $input_parameters->{$curr_nodeID}->{$inputID};
+            my $analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
+
+            foreach my $attribute (@$inputs) {
+                my $type = $attribute->attribute_type();
+                my $target = $attribute->_getTarget();
+                my $hash = $attribute->getDataHash();
+
+                my $clone = $factory->
+                  newAttribute($type,$target,$analysis,$hash);
             }
         }
     }
@@ -969,22 +1034,25 @@ sub findModuleHandler {
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
             my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
-                $paramString .= ") ";
-                next;
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
-                my $pred_node = $input_link->from_node();
-
                 $sth = $self->sql_get_input_attributes($table_name);
-                $sth->execute(__getAnalysis($pred_node->id())->id());
+                $sth->execute($pred_analysisID);
 
                 $attributes{$_} = $_
                     foreach @{__fetchall($sth)};
@@ -1005,23 +1073,26 @@ sub findModuleHandler {
 
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
-            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth); 
+            my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
-                $paramString .= ") ";
-                next;
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
-                my $pred_node = $input_link->from_node();
-
                 $sth = $self->sql_get_input_attributes($table_name);
-                $sth->execute(__getAnalysis($pred_node->id())->id());
+                $sth->execute($pred_analysisID);
 
                 $attributes{$_} = $_
                     foreach @{__fetchall($sth)};
@@ -1043,28 +1114,29 @@ sub findModuleHandler {
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
             my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
-                $paramString .= ") ";
-                next;
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
             } else {
-                #__debug("** $input_link");
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
-                my $pred_node = $input_link->from_node();
-
                 if ($dependence{$curr_nodeID} eq 'D') {
                     $sth = $self->sql_get_input_attributes($table_name);
-                    $sth->execute(__getAnalysis($pred_node->id())->id());
+                    $sth->execute($pred_analysisID);
                 } else {
                     $sth = $self->sql_get_input_image_attributes($table_name);
-                    $sth->execute(__getAnalysis($pred_node->id())->id(),
+                    $sth->execute($pred_analysisID,
                                   $curr_imageID);
                 }
 
@@ -1088,12 +1160,17 @@ sub findModuleHandler {
             $sth = $self->sql_get_input_link();
             $sth->execute($curr_nodeID,$formal_inputID);
             my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+            my ($pred_node,$pred_analysis);
 
             if (!defined $input_link) {
-                $paramString .= ") ";
-                next;
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
 
@@ -1103,10 +1180,10 @@ sub findModuleHandler {
 
                 if ($dependence{$curr_nodeID} eq 'D') {
                     $sth = $self->sql_get_input_attributes($table_name);
-                    $sth->execute(__getAnalysis($pred_node->id())->id());
+                    $sth->execute($pred_analysisID);
                 } else {
                     $sth = $self->sql_get_input_feature_attributes($table_name);
-                    $sth->execute(__getAnalysis($pred_node->id())->id(),
+                    $sth->execute($pred_analysisID,
                                   $curr_imageID);
                 }
 
@@ -1149,12 +1226,18 @@ sub findModuleHandler {
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
             my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my ($pred_node,$pred_analysis);
+            my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
-            if (!defined $input_analysis) {
-                $past_paramString .= ") ";
-                next;
+            if (!defined $input_link) {
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
@@ -1184,12 +1267,18 @@ sub findModuleHandler {
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
             my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my ($pred_node,$pred_analysis);
+            my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
-            if (!defined $input_analysis) {
-                $past_paramString .= ") ";
-                next;
+            if (!defined $input_link) {
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
@@ -1219,12 +1308,18 @@ sub findModuleHandler {
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
             my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my ($pred_node,$pred_analysis);
+            my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
-            if (!defined $input_analysis) {
-                $past_paramString .= ") ";
-                next;
+            if (!defined $input_link) {
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->
               loadObject("OME::Program::FormalInput",
                          $formal_inputID);
@@ -1260,12 +1355,18 @@ sub findModuleHandler {
             $sth = $self->sql_get_analysis_from_input();
             $sth->execute($past_analysisID,$formal_inputID);
             my $input_analysis = __fetchobj("OME::Analysis",$sth);
+            my ($pred_node,$pred_analysis);
+            my $input_link = $node_inputs{$curr_nodeID}->{$formal_inputID};
 
-            if (!defined $input_analysis) {
-                $past_paramString .= ") ";
-                next;
+            if (!defined $input_link) {
+                $pred_analysis =
+                  $user_input_analyses{$curr_nodeID}->{$formal_inputID};
+            } else {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
             }
 
+            my $pred_analysisID = $pred_analysis->id();
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
 
@@ -1303,20 +1404,30 @@ sub findModuleHandler {
     }
 
     sub __createActualInputs {
-        my ($analysis) = @_;
+        my ($node) = @_;
+        my $nodeID = $node->id();
+        my $analysis = __getAnalysis($nodeID);
 
         my %actual_inputs;
 
         #__debug("**** actual inputs");
+        my $program = $analysis->program();
 
-        foreach my $input_link (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs) {
-            my $formal_input = $input_link->to_input();
+        foreach my $formal_input ($program->inputs()) {
+            my $inputID = $formal_input->id();
+            my $input_link = $node_inputs{$nodeID}->{$inputID};
 
             #__debug("****   ".$formal_input->name());
 
-            my $formal_output = $input_link->from_output();
-            my $pred_node = $input_link->from_node();
-            my $pred_analysis = __getAnalysis($pred_node->id());
+            my ($pred_node,$pred_analysis);
+
+            if (defined $input_link) {
+                $pred_node = $input_link->from_node();
+                $pred_analysis = __getAnalysis($pred_node->id());
+            } else {
+                $pred_analysis =
+                  $user_input_analyses{$nodeID}->{$inputID};
+            }
 
             #__debug("****   ".$pred_node->id());
 
@@ -1325,8 +1436,8 @@ sub findModuleHandler {
             my $actual_input = $factory->
               newObject("OME::Analysis::ActualInput",
                         {
-                         analysis          => $analysis,
-                         formal_input_id   => $formal_input->id(),
+                         analysis          => $analysis->id(),
+                         formal_input_id   => $inputID,
                          input_analysis_id => $pred_analysis->id()
                         });
 
@@ -1496,7 +1607,7 @@ sub findModuleHandler {
 
                     foreach my $attr_table (__getDataTables($formal_input)) {
                         $sth = $self->sql_get_input_feature_tags($attr_table);
-                        $sth->execute(__getAnalysis($pred_node->id())->id(),
+                        $sth->execute(__getAnalysis($pred_nodeID)->id(),
                                       $curr_imageID);
                         $tags{$_} = 1
                             foreach @{__fetchall($sth)};
@@ -1638,9 +1749,12 @@ sub findModuleHandler {
         # keyed by tag
         my %input_features;
 
-        foreach my $input_link (@curr_feature_inputs) {
-            my $formal_input = $input_link->to_input();
+        foreach my $formal_input (@curr_feature_inputs) {
+            #my $formal_input = $input_link->to_input();
             #my $attr_table = $formal_input->datatype()->table_name();
+
+            my $input_link = $node_inputs{$curr_nodeID}->{$formal_input->id()};
+            next unless defined $input_link;
 
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
@@ -1686,13 +1800,24 @@ sub findModuleHandler {
     }
 
     sub __findFeatureAttributes {
-        my ($input_link) = @_;
+        my ($formal_input) = @_;
 
         my $iterator = $curr_node->iterator_tag();
 
         # the curr_feature is the iterator feature
-        my $formal_input = $input_link->to_input();
+        #my $formal_input = $input_link->to_input();
         #my $attr_table = $formal_input->datatype()->table_name();
+
+        my $input_link = $node_inputs{$curr_nodeID}->{$formal_input->id()};
+
+        if (!defined $input_link) {
+            # If this input is user-specified, then we don't need to do
+            # anything fancy to find the inputs.
+            return __findInputAttributes($formal_input,
+                                         "         ",
+                                         "sql_get_input_feature_attributes",
+                                         $curr_imageID);
+        }
 
         my $formal_output = $input_link->from_output();
         my $pred_node = $input_link->from_node();
@@ -1751,7 +1876,7 @@ sub findModuleHandler {
         __debug("      Feature inputs");
         my %feature_hash;
         foreach my $input (@curr_feature_inputs) {
-            $feature_hash{$input->to_input()->name()} =
+            $feature_hash{$input->name()} =
                 __findInputAttributes($input,
                                       "         ",
                                       "sql_get_input_feature_attributes",
@@ -1772,11 +1897,10 @@ sub findModuleHandler {
         #__debug("          Feature inputs");
         my %feature_hash;
 
-        foreach my $input_link (@curr_feature_inputs) {
-            my $formal_input = $input_link->to_input();
+        foreach my $formal_input (@curr_feature_inputs) {
             #__debug("  Link ".$input_link." ".$formal_input->name());
             my $attr_type_name = $formal_input->attribute_type()->name();
-            my @attributes = @{__findFeatureAttributes($input_link)};
+            my @attributes = @{__findFeatureAttributes($formal_input)};
 
             # Turn the attribute ID's into attribute objects.
             $_ = $factory->loadAttribute($attr_type_name,$_)
@@ -1797,32 +1921,42 @@ sub findModuleHandler {
     }
 
     sub __findInputAttributes {
-        my ($input_link,$prefix,$sql_method,$extra_input,$no_load) = @_;
+        my ($formal_input,$prefix,$sql_method,$extra_input,$no_load) = @_;
 
-        my $formal_input = $input_link->to_input();
+        #my $formal_input = $input_link->to_input();
+        my $inputID = $formal_input->id();
+        my $input_link = $node_inputs{$curr_nodeID}->{$inputID};
         my $attr_type = $formal_input->attribute_type();
         my $attr_type_name = $attr_type->name();
 
-        my $formal_output = $input_link->from_output();
-        my $pred_node = $input_link->from_node();
+        my $pred_analysis;
+
+        if (defined $input_link) {
+            my $pred_node = $input_link->from_node();
+            $pred_analysis = __getAnalysis($pred_node->id());
+        } else {
+            $pred_analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
+        }
+
         my $sth;
+        my %attribute_ids;
 
         foreach my $attr_table (__getDataTables($formal_input)) {
             $sth = $self->$sql_method($attr_table);
-            $sth->execute(__getAnalysis($pred_node->id())->id(),
+            $sth->execute($pred_analysis->id(),
                           $extra_input);
+            $attribute_ids{$_} = $_
+              foreach @{__fetchall($sth)};
         }
 
+
+        my @attribute_ids = values %attribute_ids;
+        return \@attribute_ids if ($no_load);
 
         my %attribute_list;
-        if ($no_load) {
-            $attribute_list{$_->[0]} = $_->[0]
-              while ($_ = $sth->fetch());
-        } else {
-            $attribute_list{$_->[0]} = 
-              $factory->loadAttribute($attr_type,$_->[0])
-              while ($_ = $sth->fetch());
-        }
+        $attribute_list{$_} =
+          $factory->loadAttribute($attr_type,$_)
+          foreach @attribute_ids;
 
         my @attribute_list = values %attribute_list;
 
@@ -1852,7 +1986,7 @@ sub findModuleHandler {
 
         __debug("  Locking the dataset");
         $dataset->locked('true');
-        $dataset->commit();
+        $dataset->storeObject();
 
         # Build the data paths.  Since data paths are now associated
         # with analysis views, we only need to calculate them once.
@@ -1866,7 +2000,7 @@ sub findModuleHandler {
 
             __debug("  Locking the chain");
             $analysis_view->locked('true');
-            $analysis_view->commit();
+            $analysis_view->storeObject();
         } else {
             __debug("  Chain has already been locked");
 
@@ -1895,7 +2029,7 @@ sub findModuleHandler {
 
         my $sth;
 
-        $analysis_execution->dbi_commit();
+        $session->commitTransaction();
 
         while ($continue) {
             $continue = 0;
@@ -1931,25 +2065,25 @@ sub findModuleHandler {
 
                 my $debug = 1;
 
-                $sth = $self->sql_get_input_links_by_node();
+                $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'G');
                 @curr_global_inputs = 
-                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
 
-                $sth = $self->sql_get_input_links_by_node();
+                $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'D');
                 @curr_dataset_inputs = 
-                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
 
-                $sth = $self->sql_get_input_links_by_node();
+                $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'I');
                 @curr_image_inputs = 
-                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
 
-                $sth = $self->sql_get_input_links_by_node();
+                $sth = $self->sql_get_formal_inputs_by_node();
                 $sth->execute($curr_nodeID,'F');
                 @curr_feature_inputs = 
-                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+                  @{__fetchobjs("OME::Program::FormalInput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'G');
@@ -2002,7 +2136,7 @@ sub findModuleHandler {
                                        });
                     __assignAnalysis($new_analysis,0);
                     #__debug(" (".$new_analysis->id().")");
-                    __createActualInputs($new_analysis);
+                    __createActualInputs($curr_node);
                     #my $actual_outputs = __createActualOutputs($new_analysis);
                     $curr_module->startAnalysis($new_analysis);
                 }
@@ -2012,7 +2146,7 @@ sub findModuleHandler {
                 __debug("    Global inputs");
                 my %global_hash;
                 foreach my $input (@curr_global_inputs) {
-                    $global_hash{$input->to_input()->name()} =
+                    $global_hash{$input->name()} =
                         __findInputAttributes($input,
                                               "      ",
                                               "sql_get_input_attributes");
@@ -2029,7 +2163,7 @@ sub findModuleHandler {
                 __debug("    Dataset inputs");
                 my %dataset_hash;
                 foreach my $input (@curr_dataset_inputs) {
-                    $dataset_hash{$input->to_input()->name()} =
+                    $dataset_hash{$input->name()} =
                         __findInputAttributes($input,
                                               "      ",
                                               "sql_get_input_attributes");
@@ -2062,7 +2196,7 @@ sub findModuleHandler {
                                                });
                             __assignAnalysis($new_analysis,0);
                             #__debug(" (".$new_analysis->id().")");
-                            __createActualInputs($new_analysis);
+                            __createActualInputs($curr_node);
                             #my $actual_outputs = __createActualOutputs($new_analysis);
                             $curr_module->startAnalysis($new_analysis);
                         } else {
@@ -2076,7 +2210,7 @@ sub findModuleHandler {
                     __debug("    Image inputs");
                     my %image_hash;
                     foreach my $input (@curr_image_inputs) {
-                        $image_hash{$input->to_input()->name()} =
+                        $image_hash{$input->name()} =
                             __findInputAttributes($input,
                                                   "      ",
                                                   "sql_get_input_image_attributes",
@@ -2153,10 +2287,10 @@ sub findModuleHandler {
                 if (defined $new_analysis) {
                     __debug("    Marking database state");
                     $new_analysis->status('FINISHED');
-                    $new_analysis->commit();
+                    $new_analysis->storeObject();
                 }
 
-                $analysis_execution->dbi_commit();
+                $session->commitTransaction();
 
                 __debug("    Marking FSM state");
                 $node_states{$curr_nodeID} = FINISHED_STATE;
@@ -2164,7 +2298,7 @@ sub findModuleHandler {
             }                   # ANALYSIS_LOOP - foreach $curr_node
         }                       # while ($continue)
 
-        $last_node->dbi_commit();
+        $session->commitTransaction();
 
         $end_time = new Benchmark;
 
