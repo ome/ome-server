@@ -70,11 +70,8 @@ public class Chains {
 		System.setProperty("apple.laf.useScreenMenuBar","true");
 		
 		Controller controller = new Controller();
+		
 
-		ModulePaletteFrame mainFrame = new ModulePaletteFrame(controller);
-		mainFrame.setVisible(true);
-	//	PDebug.debugFullBounds= true;
-		controller.setMainFrame(mainFrame);
     }
     
    
