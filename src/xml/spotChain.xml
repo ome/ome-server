@@ -20,8 +20,6 @@
 
       <Link FromNodeID="Importer" FromOutputName="Pixels"
             ToNodeID="Find" ToInputName="Pixels"/>
-      <Link FromNodeID="Importer" FromOutputName="Dimensions"
-            ToNodeID="Find" ToInputName="Dimensions"/>
 
       <Link FromNodeID="Importer" FromOutputName="Dimensions"
             ToNodeID="Track" ToInputName="Dimensions"/>
