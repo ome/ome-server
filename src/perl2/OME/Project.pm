@@ -270,44 +270,4 @@ sub newDataset {
 	return $self->addDataset($dataset);
 }
 
-
-
-
-package OME::Project::DatasetMap;
-
-use strict;
-use OME;
-our $VERSION = $OME::VERSION;
-
-use OME::DBObject;
-#use OME::Dataset;
-use base qw(OME::DBObject);
-
-__PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('project_dataset_map');
-__PACKAGE__->addColumn('project_id','project_id');
-__PACKAGE__->addColumn('project','project_id','OME::Project',
-                      {
-                       SQLType => 'integer',
-                       NotNull => 1,
-                       ForeignKey => 'projects',
-                      });
-__PACKAGE__->addDeleteKey('project_id');
-__PACKAGE__->addColumn('dataset_id','dataset_id');
-__PACKAGE__->addColumn('dataset','dataset_id','OME::Dataset',
-                      {
-                       SQLType => 'integer',
-                       NotNull => 1,
-                       ForeignKey => 'datasets',
-                      });
-__PACKAGE__->addDeleteKey('dataset_id');
-
-
-# Our current caching implements breaks when there is not a single
-# primary key column for the table.  As this is the case for this
-# table, turn off caching (just for this class).
-
-__PACKAGE__->Caching(0);
-
-
 1;
