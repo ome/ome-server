@@ -233,9 +233,8 @@ sub serve {
 	my $cookies = [values %{$self->{_cookies}}];
 	my %headers;
 	$headers {'-cookie'} = $cookies if scalar @$cookies;
-	$headers{'-type'} => $self->contentType();
 
-	print $self->CGI()->header(%headers);
+	print $self->CGI()->header(-type => $self->contentType(),%headers);
 
 	if ($result eq 'HTML' && defined $content) {
 		print $content;
