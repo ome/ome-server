@@ -41,7 +41,10 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PImage;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.nodes.PPath;
 import java.util.Iterator;
+import java.util.ArrayList;
+import java.awt.Color;
 
 /**
  * 
@@ -58,19 +61,35 @@ import java.util.Iterator;
 public class PDatasetImagesNode extends PNode  {
 
 	private static final double SCALE_THRESHOLD=.75;
+	private static final int HALO_RADIUS=1;
 	
 	private PNode imagesNode = new PNode();
 	private PImage thumbnailNode = null;
 	private boolean selected = false;
 	
+	private PPath zoomHalo = new PPath();
+	
+	
+	private ArrayList rowSzs = new ArrayList();
+	
+	private int highlightRow;
+	private int highlightColumn;
+	
 	public PDatasetImagesNode() {
 		super();	
 		addChild(imagesNode);
+		addChild(zoomHalo);
+		zoomHalo.setVisible(false);
+		zoomHalo.setPickable(false);
 		setPickable(true);
 	}
 	
 	public void addImage(PThumbnail thumb) {
 		imagesNode.addChild(thumb);
+	}
+	
+	public void setRowCount(int row,int sz) {
+		rowSzs.add(row,new Integer(sz));
 	}
 	
 	public Iterator getImageIterator() {
@@ -84,14 +103,12 @@ public class PDatasetImagesNode extends PNode  {
 			imagesNode.getChildrenCount() > 200) {
 			thumbnailNode = new PImage(imagesNode.toImage((int)b.getWidth(),
 				(int) b.getHeight(),null),true);
-			System.err.println("thumbnail node is "+thumbnailNode);
 			addChild(thumbnailNode);
 		}
 	}
 	
 	public void setScale(double scale) {
 		super.setScale(scale);
-		System.err.println("setting scale of datasetimagenode to "+scale);
 	}
 	
 	public void paint(PPaintContext aPaintContext) {
@@ -120,5 +137,98 @@ public class PDatasetImagesNode extends PNode  {
 	
 	public void setSelected(boolean v) {
 		selected = v;
+	}
+	
+	public void highlightThumbnail(PThumbnail thumb,boolean v) {
+		if (v == false) {
+			zoomHalo.setVisible(false);
+			zoomHalo.setPickable(false);
+		}
+		else {
+			doHighlightThumbnail(thumb);
+		}
+	}
+	
+	private void doHighlightThumbnail(PThumbnail thumb) {
+		// get index
+		int index = imagesNode.indexOfChild(thumb);
+		System.err.println("******************");
+		System.err.println("highlighting thumbnail with halo..."+index);
+		
+		PBounds b = setHighlight(index);
+		System.err.println("highlight bounds are "+b);		
+		globalToLocal(b);
+		zoomHalo.setPathTo(b);
+		zoomHalo.setStrokePaint(Color.BLACK);
+		zoomHalo.setVisible(true);
+		zoomHalo.setPickable(true);
+	}
+	
+	private int getRowSize(int i) {
+		Integer v = (Integer) rowSzs.get(i);
+		return v.intValue();
+	}
+	
+	private PBounds setHighlight(int index) {
+		calculatePosition(index);
+		System.err.println("highlight is at "+highlightRow+","+highlightColumn);
+		PBounds b = new PBounds();
+		
+		//	build up bounds of zoomhalo
+		int lowRow = highlightRow-HALO_RADIUS;
+		int highRow = highlightRow+HALO_RADIUS;
+		
+		int lowCol = highlightColumn-HALO_RADIUS;
+		int highCol = highlightColumn+HALO_RADIUS;
+		
+		for (int i = lowRow; i<=highRow; i++) {
+			for (int j = lowCol; j <= highCol; j++) {
+				System.err.println("trying to add "+i+","+j);
+				addToHighlight(b,i,j);
+			}
+		}
+		
+		return b;
+		
+	}
+	
+	private void calculatePosition(int index) {
+		int curRowSize;
+		int curRow = 0;
+
+		
+		curRowSize =getRowSize(curRow);
+		while (index >= curRowSize && curRow < rowSzs.size()) {
+			index -= curRowSize;
+			curRow++;
+			curRowSize = getRowSize(curRow);
+		}
+		highlightRow = curRow;
+		highlightColumn = index; // whatever is left over is column
+	}
+	
+	private void addToHighlight(PBounds b,int row,int col) {
+		if (row <0 || row >= rowSzs.size())
+			return;
+		
+		int curRowSize = getRowSize(row);
+		if (col <0 || col >= curRowSize)
+			return;
+		System.err.println("adding "+row+","+col);
+		int index = getThumbIndex(row,col);
+		System.err.println("index is "+index);
+		PThumbnail thumb = (PThumbnail) imagesNode.getChild(index);
+		PBounds tBounds = thumb.getGlobalFullBounds();
+		System.err.println("boounds are "+tBounds);
+		b.add(tBounds);
+	}
+	
+	private int getThumbIndex(int row,int col) {
+		int index = 0;
+		for (int i = 0; i < row; i++) {
+			index +=getRowSize(i);
+		}
+		
+		return index+col;
 	}
 }
