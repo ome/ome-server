@@ -604,13 +604,22 @@ sub __storeChannelInfoRGB {
 				 NDFilter                  => $channelData[0]->{'NDfilter'},
 				 PhotometricInterpretation => 'RGB',
 			 });
-				 
-    foreach my $channel (@channelData){
+	
+	# Hash records the ColorDomain of the PixelChannelComponent based on index
+	# e.g. first channel of the 5D pixels refers to red, etc.
+	my %rgb_hash = (
+		0 => 'R',
+		1 => 'G',
+		2 => 'B',
+	);
+	
+	foreach my $channel (@channelData){
 		my $component = $factory->
 			newAttribute("PixelChannelComponent",$image,$module_execution,
 				 {
 					 Pixels         => $pixels->id(),
 					 Index          => $channel->{chnlNumber},
+					 ColorDomain    => $rgb_hash{$channel->{chnlNumber}},
 					 LogicalChannel => $logical->id(),
 				 });
 	}
