@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.CmdTable
+ * org.openmicroscopy.vis.chains.ChainToolbar
  *
  *------------------------------------------------------------------------------
  *
@@ -39,62 +39,52 @@
 
 
 
- 
+
 package org.openmicroscopy.vis.chains;
- 
-import java.util.Hashtable;
-import java.awt.event.*;
 
 /** 
- * <p>Mapping of functions to code via command strings.<p>
+ * <p>Toolbar for the hain canvas in the Chains application<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class CmdTable {
+import javax.swing.Box;
+import javax.swing.JToolBar;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import java.awt.Dimension;
+
+public class ChainToolBar extends JToolBar{
 	
-	protected Hashtable actionMap;
-	protected Controller controller;
+	protected JLabel nameLabel;
 	
-	public CmdTable(Controller c) {
-		this.controller = c;
-			
-		actionMap = new Hashtable();
-			
-		actionMap.put("login",new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				controller.doLogin();
-			}
-		}); 
-			
-		actionMap.put("logout",new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				controller.doLogout();
-			}
-		});
-					
-		actionMap.put("quit",new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				controller.quit();
-			}
-		});
-					
-		actionMap.put("new chain",new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				controller.newChain();
-			}
-		}); 
+	protected CmdTable cmd;
+	protected JButton saveChainButton;
+	
+	public ChainToolBar(CmdTable cmd) {
+		super();
+		this.cmd=cmd;
 		
-		actionMap.put("save chain",new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				controller.saveChain();
-			}
-		});
-	}	
-	
-	public ActionListener lookupActionListener(String key) {
-		return (ActionListener)actionMap.get(key);
+		add(Box.createRigidArea(new Dimension(5,0)));
+		
+		saveChainButton = new JButton("Save Chain");
+		saveChainButton.addActionListener(cmd.lookupActionListener("save chain"));
+		setSaveEnabled(false);
+		add(saveChainButton);
+		add(Box.createHorizontalGlue());
+		
+		nameLabel = new JLabel();
+		add(nameLabel);
+		
+		add(Box.createRigidArea(new Dimension(5,0)));
+		
 	}
+	
+	public void setSaveEnabled(boolean v) {
+		saveChainButton.setEnabled(v);
+	}
+	
+	
 }

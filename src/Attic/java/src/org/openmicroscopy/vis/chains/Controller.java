@@ -66,6 +66,8 @@ public class Controller implements ApplicationController {
 	ArrayList canvasFrames = new ArrayList();
 	private Connection connection = null;
 	private int chainCanvasCount = 0;
+	
+	private ChainFrame currentChainFrame;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -155,6 +157,18 @@ public class Controller implements ApplicationController {
 	
 	public void disposeChainCanvas(ChainFrame c) {
 		canvasFrames.remove(c);
+	}
+	
+	public void saveChain() {
+		System.err.println("saving chain...");
+		if (currentChainFrame != null) {
+			System.err.println("chain is "+currentChainFrame);
+			currentChainFrame.save();
+		}
+	}
+	
+	public void setCurrentChain(ChainFrame c) {
+		currentChainFrame = c;
 	}
 }
 
