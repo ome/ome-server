@@ -124,16 +124,19 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
+		 
 		
-		// remove handlers
-		removeInputEventListener(getZoomEventHandler());
-		
+		//	remove handlers
+		 removeInputEventListener(getZoomEventHandler());
+		 removeInputEventListener(getPanEventHandler());
+		 
+		//	install custom event handler
+		 addInputEventListener(new PResultEventHandler(this)); 
+			
 		// set up link layer
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
-		linkLayer.moveToFront();
-		
-		// event handler
+		linkLayer.setPickable(false);
 		
 		// data transfer support
 		dropTarget = new DropTarget(this,this);
