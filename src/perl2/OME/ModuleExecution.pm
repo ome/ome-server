@@ -131,6 +131,8 @@ __PACKAGE__->addColumn(attribute_db_time => 'attribute_db_time',
 __PACKAGE__->addColumn(attribute_create_time => 'attribute_create_time',
                        {SQLType => 'float'});
 __PACKAGE__->addColumn(status => 'status',{SQLType => 'varchar(16)'});
+__PACKAGE__->addColumn(error_message => 'error_message',
+                       {SQLType => 'text'});
 __PACKAGE__->hasMany('inputs','OME::ModuleExecution::ActualInput' =>
                      'module_execution');
 
