@@ -168,16 +168,15 @@ usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
+restore_env ($env_file);
 
 if ($update) {
-    restore_env ($env_file);
 
     my $environment = initialize OME::Install::Environment;
     $environment->flag ("UPDATE");
 }
 
 if ($lib_check) {
-    restore_env ($env_file);
 
     # Initialize our environment and set the LIB_CHECK flag
     my $environment = initialize OME::Install::Environment;
@@ -195,7 +194,6 @@ if ($lib_check) {
 }
 
 if ($perl_check) {
-    restore_env ($env_file);
 
     # Initialize our environment and set the PERL_CHECK flag
     my $environment = initialize OME::Install::Environment;
