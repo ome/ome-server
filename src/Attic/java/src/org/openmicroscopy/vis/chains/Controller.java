@@ -282,7 +282,7 @@ public class Controller  implements LoginResponder {
 	 * {@link ChainLibraryFrame}
 	 */
 	public void completeWindows() {
-		controlPanel  = new ControlPanel(getCmdTable(),connection);
+		controlPanel  = new ControlPanel(this,connection);
 		controlPanel.setLoggedIn(connection.getUserName());
 		controlPanel.setEnabled(true);
 		moduleFrame = new ModulePaletteFrame(this,connection);
