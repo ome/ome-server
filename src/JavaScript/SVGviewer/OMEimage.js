@@ -299,7 +299,6 @@ OMEimage.prototype.makeWBWnative = function(WBW,theT) {
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		// set black level
 		WBW[i*3+1] = (WBW[i*3+1] - this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
-		WBW[i*3+1] = Math.round(WBW[i*3+1]);
 		if(WBW[i*3+2] == 0) WBW[i*3+2] = 0.00001;
 		WBW[i*3+2] = (WBW[i*3+2] - this.Stats[wavenum][theT]['geomean']) / this.Stats[wavenum][theT]['sigma'];
 		WBW[i*3+2] = Math.round(WBW[i*3+2]*100000)/100000;
