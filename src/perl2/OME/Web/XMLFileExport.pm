@@ -30,7 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Jean-Marie Burel <j.burel@dundee.ac.uk>
+# Written by:    Ilya G. Goldberg <igg@nih.gov> (based on Jean-Marie Burel <j.burel@dundee.ac.uk>)
 #
 #-------------------------------------------------------------------------------
 
@@ -53,8 +53,9 @@ use base qw(OME::Web);
 
 
 sub getPageTitle {
-	return "Open Microscopy Environment - Export to an XML file" ;
+	return "Open Microscopy Environment - Export OME XML to browser" ;
 }
+
 
 sub getPageBody {
 	my	$self = shift ;
@@ -64,13 +65,11 @@ sub getPageBody {
 	my 	$htmlformat = new  OME::Web::Helper::HTMLFormat() ;
  
 	if ($cgi->param('export')){
-		my $fileName=cleaning($cgi->param('name'));
-		my $text="Please enter a name<br>";
-		return ('HTML',$text) unless $fileName;
+		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
+			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
+
 		my @images=$cgi->param('ListImage');
 		return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@images)>0;
-		
-		
 
 		my $imageManager= OME::Tasks::ImageManager->new($session);
 		my @list=();
@@ -78,9 +77,22 @@ sub getPageBody {
 			push(@list,$imageManager->load($_));
 		}
 		my $exporter= OME::Tasks::OMEXMLImportExport->new($session);
-		$exporter->exportToXMLFile(\@list,$fileName);
-	
-		$body.="Wait and see";
+		$exporter->exportToXMLFile(\@list,$filename);
+		
+		my $downloadFilename;
+		if (scalar @list > 1) {
+			$downloadFilename = $session->dataset()->name();
+		} else {
+			$downloadFilename = @list[0]->name();
+		}
+		$downloadFilename .= '.ome';
+
+		$self->contentType('application/ome+xml');
+		return ('FILE',{
+			filename => $filename,
+			temp => 1,
+			downloadFilename => $downloadFilename}) ;
+
 	}else{
 	 	$body .= print_form($session,$htmlformat,$cgi) ;
 	}
@@ -98,7 +110,6 @@ sub print_form {
 	
  	if (@images){
 		 $html .= $cgi->startform ;
-		 $html.="<b>*Name File:</b><input name=\"name\" type=\"text\" size=\"25\">";
 		 my %list=map {$_->id()=>$_} @images;
 		 $html.=$htmlFormat->listImages(\%list,"export","Export");
 	
