@@ -264,7 +264,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		
 		connection.commitTransaction();
 		
-		// create a chain info and add to chains
+		// for now, layout this chain. eventually, save layout in database
+		chain.layout(); 
 		
 		connection.addChain(chain);
 		
@@ -281,6 +282,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		// iterate over layer, adding a node for each PModule
 		Iterator iter = layer.getChildrenIterator();
 		while (iter.hasNext()) {
+			
 			node = (PNode) iter.next();
 			if (node instanceof PModule) {
 				mod = (PModule) node;
