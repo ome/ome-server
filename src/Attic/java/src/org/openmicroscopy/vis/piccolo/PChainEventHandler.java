@@ -244,13 +244,14 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseDragged(PInputEvent e) {
-		System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
+	//	System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
 		mouseMoved(e);
 		super.mouseDragged(e);
 	}
 	
 	public void mouseMoved(PInputEvent e) {
 		Point2D pos = e.getPosition();
+		//System.err.println("mouse move on canvas..."+pos.getX()+","+pos.getY());
 		if (linkState == LINKING_PARAMS) {
 			link.setEndCoords((float) pos.getX(),(float) pos.getY());
 		}
@@ -287,7 +288,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 		//	System.err.println("animating to center");
 			PBounds b = canvas.getBufferedBounds();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-			//animateToCenter(camera);
 			e.setHandled(true);
 		}
 		else { 

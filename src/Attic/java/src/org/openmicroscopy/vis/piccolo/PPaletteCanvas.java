@@ -154,7 +154,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		Iterator iter = modules.rootCategoryIterator();
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
-			System.err.println(" Arranging modules in category..."+cat.getName());
+			//System.err.pr(" Arranging modules in category..."+cat.getName());
 			displayModulesByCategory(layer,cat);			
 		}
 		// do uncategorized.
@@ -164,7 +164,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		displayCategoryName(box,"Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
-		System.err.println("arranging uncategorized modules");
+		//System.err.pr("arranging uncategorized modules");
 		maxModHeight = maxModWidth =0;
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
@@ -173,11 +173,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 		arrangeChildren(box);
 		
-		System.err.println("arranging children of top layer ");
+		//System.err.pr("arranging children of top layer ");
 		arrangeChildren(layer);
 		PBounds b = new PBounds();
 		b = layer.getUnionOfChildrenBounds(b);
-		System.err.println("layer bounds are "+b.getWidth()+","+b.getHeight());
+		//System.err.pr("layer bounds are "+b.getWidth()+","+b.getHeight());
 		layer.setBounds(b);
 		layer.repaint();
 		
