@@ -473,6 +473,8 @@ $SVG .= <<ENDSVG;
 			mouseTrap = svgDocument.getElementById("mouseTrap");
 			azap.appendNode(mouseTrap); 
 
+			image.registerTrigger( 'updatePic', xyPlaneControls, 'updatePlaneURL' );
+
 			var CBW = image.getCBW();
 			setTimeout( "xyPlaneControls.redPopupList.setSelectionByValue('"+ 
 				xyPlaneControls.redPopupList.getItemList()[ CBW[0] ]
@@ -493,7 +495,6 @@ $SVG .= <<ENDSVG;
 			setTimeout( "xyPlaneControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
 //	this next line loads every plane in the image
 //			setTimeout( "image.prefetchImages()", 0 );
-			xyPlaneControls.setImageURL(image.getImageURL());
 		}
 		
 
@@ -504,8 +505,7 @@ $SVG .= <<ENDSVG;
 			xyPlaneControls.zSlider.setValue(theZ);
 			xyPlaneControls.zSlider.setLabel(null, null, (theZ + 1) + "/" + image.getDimZ() );
 			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
-			var image_url = image.updatePic(theZ,theT);
-			xyPlaneControls.setImageURL(image_url);
+			image.updatePic(theZ,theT);
 		}
 
 		// newT has range of 0 to T-1
@@ -515,10 +515,9 @@ $SVG .= <<ENDSVG;
 			xyPlaneControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + image.getDimT() +")" );
 			
 			if( overlayManager) overlayManager.updateIndex( theZ, theT );
-			var image_url = image.updatePic(theZ,theT);
+			image.updatePic(theZ,theT);
 			Scale.updateScaleDisplay(theT);
 			stats.updateStats(theT);
-			xyPlaneControls.setImageURL(image_url);
 		}
 				
 	]]></script>
