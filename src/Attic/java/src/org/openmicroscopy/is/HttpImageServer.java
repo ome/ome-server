@@ -842,7 +842,6 @@ public class HttpImageServer
                 sumXI[theZ][theC][theT] = getDoubleToken(ltoken);
                 sumYI[theZ][theC][theT] = getDoubleToken(ltoken);
                 sumZI[theZ][theC][theT] = getDoubleToken(ltoken);
-                geosigma[theZ][theC][theT] = getDoubleToken(ltoken);
             }
 
             return new PlaneStatistics(minimum,
@@ -853,6 +852,84 @@ public class HttpImageServer
                                        geosigma,
                                        centroidX,
                                        centroidY,
+                                       sumI,
+                                       sumI2,
+                                       sumLogI,
+                                       sumXI,
+                                       sumYI,
+                                       sumZI);
+        } finally {
+            finishCall();
+        }
+    }
+
+    public StackStatistics getStackStatistics(long pixelsID)
+        throws ImageServerException
+    {
+        PixelsFileFormat pff = getPixelsInfo(pixelsID);
+        int sizeC = pff.getSizeC();
+        int sizeT = pff.getSizeT();
+
+        startCall();
+        try
+        {
+            post.addParameter("Method","GetStackStats");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            executeCall();
+
+            double[][]
+                minimum = new double[sizeC][sizeT],
+                maximum = new double[sizeC][sizeT],
+                mean = new double[sizeC][sizeT],
+                sigma = new double[sizeC][sizeT],
+                geomean = new double[sizeC][sizeT],
+                geosigma = new double[sizeC][sizeT],
+                centroidX = new double[sizeC][sizeT],
+                centroidY = new double[sizeC][sizeT],
+                centroidZ = new double[sizeC][sizeT],
+                sumI = new double[sizeC][sizeT],
+                sumI2 = new double[sizeC][sizeT],
+                sumLogI = new double[sizeC][sizeT],
+                sumXI = new double[sizeC][sizeT],
+                sumYI = new double[sizeC][sizeT],
+                sumZI = new double[sizeC][sizeT];
+
+            String result = post.getResponseBodyAsString();
+            StringTokenizer rtoken = new StringTokenizer(result,"\r\n");
+
+            while (rtoken.hasMoreTokens())
+            {
+                String line = rtoken.nextToken();
+                StringTokenizer ltoken = new StringTokenizer(line,"\t");
+
+                int theC = getIntToken(ltoken);
+                int theT = getIntToken(ltoken);
+                int theZ = getIntToken(ltoken);
+                minimum[theC][theT] = getDoubleToken(ltoken);
+                maximum[theC][theT] = getDoubleToken(ltoken);
+                mean[theC][theT] = getDoubleToken(ltoken);
+                geomean[theC][theT] = getDoubleToken(ltoken);
+                geosigma[theC][theT] = getDoubleToken(ltoken);
+                centroidX[theC][theT] = getDoubleToken(ltoken);
+                centroidY[theC][theT] = getDoubleToken(ltoken);
+                centroidZ[theC][theT] = getDoubleToken(ltoken);
+                sumI[theC][theT] = getDoubleToken(ltoken);
+                sumI2[theC][theT] = getDoubleToken(ltoken);
+                sumLogI[theC][theT] = getDoubleToken(ltoken);
+                sumXI[theC][theT] = getDoubleToken(ltoken);
+                sumYI[theC][theT] = getDoubleToken(ltoken);
+                sumZI[theC][theT] = getDoubleToken(ltoken);
+            }
+
+            return new StackStatistics(minimum,
+                                       maximum,
+                                       mean,
+                                       sigma,
+                                       geomean,
+                                       geosigma,
+                                       centroidX,
+                                       centroidY,
+                                       centroidZ,
                                        sumI,
                                        sumI2,
                                        sumLogI,
