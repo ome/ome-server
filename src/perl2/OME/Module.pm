@@ -83,7 +83,8 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('formal_inputs');
 __PACKAGE__->sequence('formal_input_seq');
 __PACKAGE__->columns(Primary => qw(formal_input_id));
-__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id));
+__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id
+                                     optional list));
 __PACKAGE__->columns(Other => qw(lookup_table_id description));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
@@ -121,7 +122,8 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('formal_outputs');
 __PACKAGE__->sequence('formal_output_seq');
 __PACKAGE__->columns(Primary => qw(formal_output_id));
-__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id feature_tag));
+__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id
+                                     feature_tag optional list));
 __PACKAGE__->columns(Other => qw(description));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
