@@ -81,7 +81,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	private static final float HGAP=30f;
 	private static final float TOP=20f;
 	private static final float LEFT=20f;
-	private static final int BORDER=20;
 	
 	
 	
@@ -255,31 +254,18 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	}
 
 	
-	public void scaleToSize(double width,double height) {
+	public void scaleToSize() {
 		
 		double scale;
-		
-		PBounds b = layer.getGlobalFullBounds();
-		
-		
-		double paletteHeight = b.getY()+b.getHeight();
-		System.err.println("pallete height is "+paletteHeight);
-		// I don't know why, but I need to pad the height somehow.
-		paletteHeight+= 6*BORDER;	
-		System.err.println("adjusted palette height is "+paletteHeight);
-		double vertScale = height/paletteHeight;
-		System.err.println("vert scale is "+vertScale);
-		
-		double paletteWidth = b.getX()+b.getWidth();
-		double horizScale = width/paletteWidth;
-		System.err.println("horiz scale is "+horizScale);
-		if (horizScale < vertScale)
-			scale = horizScale;
-		else 
-			scale = vertScale;
-		System.err.println("scaling to "+scale);
-		getCamera().scaleView(scale);
-		
+	
+		PBounds b = getBufferedBounds();
+		getCamera().animateViewToCenterBounds(b,true,0);	
+	}
+	
+	public PBounds getBufferedBounds() {
+		PBounds b = layer.getFullBounds();
+		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
+			b.getHeight()+2*PConstants.BORDER); 
 	}
 		
 			
@@ -316,6 +302,5 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		x = LEFT+HGAP;
 		y = TOP;
 		maxWidth=maxHeight=0;
-		getCamera().setViewScale(1.0);
 	}
 }
