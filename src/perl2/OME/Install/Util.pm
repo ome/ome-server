@@ -37,10 +37,10 @@ use strict;
 use warnings;
 use English;
 use Carp;
-use Cwd;
 use File::Copy;
 use File::Basename;
-use File::Spec;
+use Cwd;
+use File::Spec::Functions qw(rel2abs);
 
 require Exporter;
 
@@ -454,21 +454,20 @@ sub get_module_version {
 }
 
 sub download_package {
-    my ($module, $logfile) = @_;
-    my $module_url = $module->{repository_file};
+    my ($package, $logfile) = @_;
+    my $package_url = $package->{repository_file};
     my $downloader;
 
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     # Find a useable download app (curl|wget)
-    print $logfile "PATH: '$ENV{PATH}'\n";
-    $downloader = "wget -nv -N" if which ("wget");
-    $downloader = "curl -O" if which ("curl");
-    croak "Unable to find a valid downloader for module \"$module->{name}\"."
-	unless $downloader;
+    $downloader = 'wget -nv -N' if which ("wget");
+    $downloader = 'curl -O' if which ("curl") and not $downloader;
+    $downloader = whereis ("wget")
+	or croak "Unable to find a suitable downloader for \"$package->{name}\", please install either curl or wget."
+    unless $downloader;
 
-
-    my @output = `$downloader $module_url 2>&1`;
+    my @output = `$downloader $package_url 2>&1`;
     
     if ($? == 0) {
 	print $logfile "SUCCESS DOWNLOADING PACKAGE -- OUTPUT FROM DOWNLOADER \"$downloader\": \"@output\"\n\n";
@@ -483,30 +482,29 @@ sub download_package {
 
 sub unpack_archive {
     my ($archive_path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
-    my ($filename, $dir);
+    my ($filename, $wd);
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative archive path to an absolute one
+    $archive_path = rel2abs ($archive_path);
 
-    if ($archive_path =~ '/') {
-	($filename, $dir) = fileparse ("$archive_path");
-    } else {
-	$filename = $archive_path;
-	$dir = "./";
-    }
+    # Parse out our working directory and filename
+    ($filename, $wd) = fileparse ("$archive_path");
 
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
-    chdir ($dir) or croak "Unable to chdir into \"$dir\". $!";
+    chdir ($wd) or croak "Unable to chdir into \"$wd\". $!";
 
     my @output = `tar zxf $filename 2>&1`;
 
     if ($? == 0) {
-	print $logfile "SUCCESS EXTRACTING $dir","$filename\n\n";
+	print $logfile "SUCCESS EXTRACTING ",$wd,$filename,"\n\n";
 
 	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
     } 
 
-    print $logfile "FAILURE EXTRACTING $dir","$filename -- OUTPUT FROM TAR: \"@output\"\n\n";
+    print $logfile "FAILURE EXTRACTING ",$wd,$filename," -- OUTPUT FROM TAR: \"@output\"\n\n";
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
@@ -514,7 +512,10 @@ sub unpack_archive {
 
 sub configure_module {
     my ($path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
 
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
@@ -537,8 +538,11 @@ sub configure_module {
 
 sub configure_library {
     my ($path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
-
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
+    
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
@@ -560,8 +564,11 @@ sub configure_library {
 
 sub compile_module {
     my ($path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
-
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
+    
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
@@ -583,8 +590,11 @@ sub compile_module {
 
 sub test_module {
     my ($path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
-
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
+    
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
@@ -606,7 +616,10 @@ sub test_module {
 
 sub install_module {
     my ($path, $logfile) = @_;
-    my $iwd = getcwd;  # Initial working directory
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
 
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
@@ -681,6 +694,8 @@ sub which {
 
     return 0;
 }
+
+# END modified BSD Licensed code
 
 
 1;
