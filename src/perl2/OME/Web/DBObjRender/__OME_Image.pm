@@ -136,6 +136,7 @@ sub renderSingle {
 			my $ai = $ais[0];
 			my $original_file = OME::Tasks::ModuleExecutionManager->
 				getAttributesForMEX($ai->input_module_execution,$ai->formal_input()->semantic_type)->[0];
+#FIXME: should use OME::Web::DBObjRender->getRefToObject
 			my $originalFile_url = $original_file->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$original_file->FileID();
 			$record{ $field } = $q->a( { -href => $originalFile_url }, $original_file->Path() );
 		} else {
