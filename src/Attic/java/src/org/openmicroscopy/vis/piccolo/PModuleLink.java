@@ -85,6 +85,18 @@
  		setEndPoint();
  	}
  	
+ 	public PModuleLink(PLinkLayer layer,PLink link,PModule start,PModule end) {
+ 		this(layer,start,end);
+ 		// copy points 1 to n-2 (point 0 comes from start point,
+ 		// point n-1 comes from end point.
+ 		
+ 		int n = link.pointCount();
+ 		for (int i=1; i <n-2; i++) {
+ 			Point2D point = link.getPoint(i);
+ 			insertIntermediatePoint(i,(float) point.getX(),
+ 				(float) point.getY());
+ 		}
+ 	}
  	
  	public PLinkTarget getStartLinkTarget() {
  		return start.getOutputLinkTarget();
