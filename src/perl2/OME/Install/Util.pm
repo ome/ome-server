@@ -52,6 +52,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(add_user
 		 add_group
+		 add_user_to_group
 		 delete_tree
 		 copy_tree
 		 get_module_version
@@ -101,8 +102,37 @@ my %os_specific = (
 	add_group => sub {
 	    my $group = shift;
 
-	    return system ("/usr/sbin/groupadd $group") == 0 ? 1 : 0;
+	    # First add our group
+	    (system ("/usr/sbin/groupadd $group") == 0) or return 0;
 	},
+
+	add_user_to_group => sub {
+	    # In order to add a user to a group in Linux without modifying the /etc/group file by hand
+	    # we first need to search for the user in all groups and then allow usermod to work it's magic with
+	    # all the groups we want the user to be a member of.
+	    my ($user, $group) = @_;
+	    my @groups;
+
+	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
+
+	    # Search the group file for groups that the user is in
+	    while (<GR_FILE>) {
+		chomp;
+		my ($group_name, $member_string) = (split (/:/, $_))[0,3];  # ($groupname, $password, $gid, $members)
+		my @members = split (/,/, $member_string) if $member_string or undef;
+
+		if (@members) {
+		    foreach my $member (@members) {
+			push (@groups, $group_name) if $user eq $member;
+		    }
+		}
+	    }
+	    close (GR_FILE);
+
+	    push (@groups, $group);
+
+	    return system ("/usr/sbin/usermod -G " . join (",", @groups) . " $user") == 0 ? 1 : 0;
+	}
     },
 
     # Darwin (Mac OS X) specific stuff
@@ -154,8 +184,12 @@ my %os_specific = (
 		$gid = ++$gids[$#gids];  # Value of the last element plus one
 	    } else { return 0 }
 
-	    (system ("nicl / -create /groups/ome gid $gid") == 0) or return 0;
-	    (system ("nicl / -create /groups/ome passwd \'\*\'") == 0) or return 0;
+	    # First add the group
+	    (system ("nicl / -create /groups/$group gid $gid") == 0) or return 0;
+	    (system ("nicl / -create /groups/$group passwd \'\*\'") == 0) or return 0;
+
+	    # Second add each user to our group
+	    #(system ("nicl / -merge /groups/$group users ", join (" ", @users)) == 0) or return 0;
 
 	    return 1;
 	},
@@ -311,10 +345,19 @@ sub add_user {
 }
 
 sub add_group {
-    my ($group) = shift;
+    my $group = shift;
+
     my $add_group = $os_specific{$OSNAME}->{add_group};
 
     return &$add_group($group);
+}
+
+sub add_user_to_group {
+    my ($user, $group) = @_;
+
+    my $add_user_to_group = $os_specific{$OSNAME}->{add_user_to_group};
+
+    return &$add_user_to_group($user, $group);
 }
 
 sub get_mac {
