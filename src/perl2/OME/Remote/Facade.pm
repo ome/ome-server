@@ -37,6 +37,7 @@
 
 package OME::Remote::Facade;
 
+use Carp;
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -59,12 +60,13 @@ BEGIN {
                   OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ConfigFacade
-                  OME::Remote::Facades::AnnotationFacade
+x2                  OME::Remote::Facades::AnnotationFacade
                   OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::DatasetFacade
                   OME::Remote::Facades::ImportFacade
                   OME::Remote::Facades::ModuleExecutionFacade
                   OME::Remote::Facades::AnalysisFacade
+                  OME::Remote::Facades::HistoryFacade
                  );
     foreach my $facade (@FACADES) { $facade->require() }
 
@@ -101,7 +103,7 @@ sub decode_value {
   } elsif ($name eq 'struct') { 
     return {map {
       my %hash = map {o_qname($_) => $_} @{o_child($_) || []};
-                         # v----- scalar is required here, because 5.005 evaluates 'undef' in list context as empty array
+      #----- scalar is required here, because 5.005 evaluates 'undef' in list context as empty array
       (o_chars($hash{name}) => scalar(($self->decode_object($hash{value}))[1]));
     } @{$children || []}};
   } elsif ($name eq 'base64') {
@@ -193,7 +195,7 @@ sub closeSession {
 
 sub dispatch {
     my ($proto,$sessionKey,$method,@params) = @_;
-    print STDERR "$$ dispatch $sessionKey $method @params\n"
+    print STDERR "$$ dispatch $sessionKey $method @params ===\n"
       if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($sessionKey);
@@ -231,7 +233,8 @@ sub dispatch {
     die "Could not find a facade which implements $method"
       unless $executed;
 
-    # Otherwise, commit the session's transaction and return the result.
+    # Otherwise, commit the session's transaction and return the
+    # result.
 
     return @result;
 }
