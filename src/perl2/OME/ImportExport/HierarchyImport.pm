@@ -226,7 +226,16 @@ sub processDOM {
 		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
 		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
 		foreach $CA ( @CAs ) {
-			$self->importObject ($CA,'I',$objectID,$importAnalysis);
+			my $imgAttr = $self->importObject ($CA,'I',$objectID,$importAnalysis);
+# This is a hack to rename the pixels repository file to the standard naming convention
+# added by josiah Friday 13, June, 2003
+			if( $CA->tagName() eq 'Pixels' ) {
+				my $newPath = $imgAttr->id().'-'.$object->name().'.ori';
+				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
+				system( $cmd ) eq 0 or die "Could not rename a repository file!\ncommand was '$cmd'\n";
+				$imgAttr->Path( $newPath );					
+			}
+# end of hack
 		}
 
 		my $image = $object;
@@ -240,19 +249,19 @@ sub processDOM {
 	$self->commitObjects ();
 
 	# Run the engine on the dataset.
-#    my $view = $factory->
-#		findObject("OME::AnalysisView",name => 'Image import analyses');
-#	if (!defined $view) {
-#		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
-#		return;
-#	}
-#	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
-#	my $engine = OME::Tasks::AnalysisEngine->new();
-#	eval {
-#		$engine->executeAnalysisView($session,$view,{},$importDataset);
-#	};
-#	
-#	logcarp "$@" if $@;
+    my $view = $factory->
+		findObject("OME::AnalysisView",name => 'Image import analyses');
+	if (!defined $view) {
+		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+		return;
+	}
+	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
+	my $engine = OME::Tasks::AnalysisEngine->new();
+	eval {
+		$engine->executeAnalysisView($session,$view,{},$importDataset);
+	};
+	
+	logcarp "$@" if $@;
 	return $self->{_DBObjects};
 }
 
@@ -478,11 +487,13 @@ sub getObjectTypeInfo ($$) {
 			created         => $node->getAttribute( 'CreationDate' ),
 			inserted        => 'NOW',
 			experimenter_id => $node->getAttribute( 'Experimenter' ),
-			group_id        => $node->getAttribute( 'Group' )
+			group_id        => $node->getAttribute( 'Group' ),
+			pixels_id       => $node->getAttribute( 'DefaultPixels' )
 		};
 		$refCols = {
 			experimenter_id => $objectData->{experimenter_id},
-			group_id        => $objectData->{group_id}
+			group_id        => $objectData->{group_id},
+			pixels_id       => $objectData->{pixels_id}
 			};
 
 	} elsif ($objectType eq 'Feature') {
