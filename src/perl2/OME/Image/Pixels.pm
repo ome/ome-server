@@ -337,6 +337,142 @@ methods can be called.
 
 sub finishPixels { abstract }
 
+=head2 getTemporaryLocalPixels
+
+	my $filename = $self->getTemporaryLocalPixels($big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+pixels from wherever they might be.  This local file can be opened for
+reading.  When the file is no longer needed, it should be closed, and
+the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+my %TEMPORARY_FILES;
+
+sub getTemporaryLocalPixels {
+    my ($self,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    open my $pix, ">", $filename
+      or die "Could not open local pixels file";
+
+    my $buf = $self->getPixels($big_endian);
+    print $pix $buf;
+
+    close $pix;
+
+    $TEMPORARY_FILES{$filename} = undef;
+    return $filename;
+}
+
+=head2 getTemporaryLocalStack
+
+	my $filename = $self->getTemporaryLocalStack($c,$t,$big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+specified stack from wherever they might be.  This local file can be
+opened for reading.  When the file is no longer needed, it should be
+closed, and the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalStack {
+    my ($self,$c,$t,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    open my $pix, ">", $filename
+      or die "Could not open local pixels file";
+
+    my $buf = $self->getStack($c,$t,$big_endian);
+    print $pix $buf;
+
+    close $pix;
+
+    $TEMPORARY_FILES{$filename} = undef;
+    return $filename;
+}
+
+=head2 getTemporaryLocalPlane
+
+	my $filename = $self->getTemporaryLocalPlane($z,$c,$t,$big_endian);
+
+This method should be used for legacy code which must read the pixels
+from a local file.  Returns the filename of a local file, copying the
+specified plane from wherever they might be.  This local file can be
+opened for reading.  When the file is no longer needed, it should be
+closed, and the finishLocalPixels method should be called.
+
+The $big_endian parameter can be specified to the get the pixels file
+in a certian endianness.  If it is omitted, then the pixels will be
+returned in the endianness of the local machine.
+
+=cut
+
+sub getTemporaryLocalPlane {
+    my ($self,$z,$c,$t,$big_endian) = @_;
+    my $session = OME::Session->instance();
+    my $filename = $session->getTemporaryFilename("pixels","raw");
+    $big_endian = OME->BIG_ENDIAN() unless defined $big_endian;
+
+    open my $pix, ">", $filename
+      or die "Could not open local pixels file";
+
+    my $buf = $self->getPlane($z,$c,$t,$big_endian);
+    print $pix $buf;
+
+    close $pix;
+
+    $TEMPORARY_FILES{$filename} = undef;
+    return $filename;
+}
+
+=head2 finishLocalPixels
+
+	$self->finishLocalPixels($filename);
+
+Signifies that the temporary file returned by a previous call to
+getTemporaryLocalPixels, getTemporaryLocalStack, or
+getTemporaryLocalPlane is no longer needed.  If a temporary file was
+created to handle the request, it will be deleted.
+
+=cut
+
+sub finishLocalPixels {
+    my ($self,$filename) = @_;
+
+    if (-e $filename) {
+        eval { unlink $filename };
+        warn "Error removing temp file $filename: $@" if $@;
+    }
+
+    delete $TEMPORARY_FILES{$filename};
+}
+
+# Register a finalization routine to remove any temporary files which
+# were not deleted explicitly.  Make sure to whine very loudly.
+
+END {
+    foreach my $filename (keys %TEMPORARY_FILES) {
+        warn "Temporary file not removed via finishLocalPixels! $filename";
+        __PACKAGE__->finishLocalPixels($filename);
+    }
+}
+
 1;
 
 __END__
