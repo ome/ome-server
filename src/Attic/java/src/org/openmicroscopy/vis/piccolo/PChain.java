@@ -40,13 +40,16 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.CChain.Layering;
-import org.openmicroscopy.vis.ome.CLayoutNode;
+//import org.openmicroscopy.vis.ome.CLayoutNode;
 import org.openmicroscopy.vis.ome.CLink;
+import org.openmicroscopy.vis.ome.GraphLayoutNode;
+import org.openmicroscopy.vis.ome.DummyNode;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import java.util.List;
@@ -87,7 +90,7 @@ public class PChain {
 	 * Horizontal and verical gaps between layers and nodes (respectively)
 	 */
 	private static float HGAP=150f;
-	private static float VGAP=50f;
+	private static float VGAP=100f;
 	
 	/**
 	 * A vertical offset of curve components, chosen to improve aesthetics
@@ -112,6 +115,7 @@ public class PChain {
 	 */
 	private NodeLayers nodeLayers;
 	
+	private PBounds chainBounds= new PBounds();
 	/**
 	 * 
 	 * @param connection the database connection
@@ -156,8 +160,7 @@ public class PChain {
 		
 		for (int i=layers-1; i >=0; i--) {
 			Vector v = drawLayer(connection,layer,i);
-			// first element in nodelayers will be leftmost layer, etc.
-			nodeLayers.addLayer(v);
+			nodeLayers.addLayer(v,i);
 			float height = getLayerHeight(v);
 			if (height > chainHeight)
 				chainHeight=height;
@@ -181,8 +184,7 @@ public class PChain {
 			maxLayerSize = layerSize;
 		
 		for (int i =0; i < layerSize; i++) {
-			//System.err.println("..., node "+i);
-			CNode node = layering.getNode(layerNumber,i);
+			GraphLayoutNode node = layering.getNode(layerNumber,i);
 			//somehow draw it, and advance x as need be.
 			Object obj = drawNode(connection,node,layer);
 			v.add(obj);
@@ -203,14 +205,14 @@ public class PChain {
 	 * @param layer
 	 * @return
 	 */
-	private Object drawNode(Connection connection,CNode node,PNode layer) {
+	private Object drawNode(Connection connection,GraphLayoutNode node,PNode layer) {
 		
 		PModule mNode = null;
-		if (node instanceof CLayoutNode)  {
+		if (node instanceof DummyNode)  {
 			mNode = new PLayoutModule();
 		}
-		else {
-			CModule mod = (CModule) node.getModule();
+		else { // must be a real cnode
+			CModule mod = (CModule) ((CNode) node).getModule();
 
 			mNode = new PModule(connection,mod);
 			mod.addModuleWidget(mNode);
@@ -229,7 +231,7 @@ public class PChain {
 	 */
 	private void layoutNodes() {
 		int layerCount = layering.getLayerCount();
-		for (int i = 0; i < layerCount; i++) {
+		for (int i = layerCount-1; i >= 0; i--) {
 			Vector v=  nodeLayers.getLayer(i);
 			// set the x position for the current layer
 			float origX = x;
@@ -266,6 +268,7 @@ public class PChain {
 			
 			PModule mod = (PModule) iter.next();
 			mod.setOffset(x,y);
+			adjustVerticalExtents(mod.getGlobalFullBounds());
 			y+= (float) mod.getHeight()+VGAP;
 			if (mod.getBounds().getWidth() > layerWidth)
 				layerWidth = (float) mod.getBounds().getWidth();
@@ -341,6 +344,8 @@ public class PChain {
 			PModuleLink modLink = linkLayer.completeLink(newLinkNode);
 			if (from.getLayer() > (to.getLayer()+1))
 				adjustLink(link,from,to,newLinkNode,modLink);
+			adjustVerticalExtents(newLinkNode.getGlobalFullBounds());
+			adjustVerticalExtents(modLink.getGlobalFullBounds());
 		} 	
 	}
 	
@@ -359,6 +364,7 @@ public class PChain {
 		// remember, layer numbers go down as we get to leaves
 		// j is the index of where in the PLink the new point is added.
 		// the first new point goes at j=1, then j=2, etc
+	
 		for (int i = from.getLayer()-1, j = 1; i > to.getLayer();i--,j++) {
 			adjustLink(clink,from,to,link,modLink,i,j);
 		}
@@ -380,10 +386,11 @@ public class PChain {
 		
 		
 		//find appropriate node
-		CNode node = clink.getIntermediateNode(j);
+		//System.err.println("...adjusting link at position "+j);
+		GraphLayoutNode node = clink.getIntermediateNode(j);
 		PModule mod = node.getPModule();
 	
-		float xpos = nodeLayers.getXPosition(i);
+		float xpos = nodeLayers.getXPosition(i);//?
 		
 		// find y coordinate.
 		float ypos = (float) mod.getY()+CURVE_OFFSET;
@@ -393,7 +400,12 @@ public class PChain {
 	}
 	
 	public float getHeight() { 
-		return chainHeight;
+		//return chainHeight;
+		return (float) chainBounds.getHeight()+VGAP;
+	}
+	
+	public void adjustVerticalExtents(PBounds b) {
+		chainBounds.add(b);
 	}
 	
 	public float getWidth() {
@@ -408,29 +420,28 @@ public class PChain {
 	 * @since 	OME2.1
 	 */
 	class NodeLayers {
-		private Vector nodeLayers;
-		private Vector layerXPositions;
+		private Vector[] nodeLayers;
+		private float[] layerXPositions;
 		
 		public NodeLayers(int size) {
-			nodeLayers = new Vector(size);
-			layerXPositions = new Vector(size);
+			nodeLayers = new Vector[size];
+			layerXPositions = new float[size];
 		}
 		
-		public void addLayer(Vector v) {
-			nodeLayers.add(v);
+		public void addLayer(Vector v,int i) {
+			nodeLayers[i]=v;
 		}
 		
 		public Vector getLayer(int i) {
-			return (Vector) nodeLayers.elementAt(i);
+			return nodeLayers[i];
 		}
 		
 		public void setXPosition(int i,float mid) {
-			layerXPositions.add(i,new Float(mid));
+			layerXPositions[i]=mid;
 		}
 		
 		public float getXPosition(int i) {
-			Float val = (Float) layerXPositions.elementAt(i);
-			return val.floatValue();
+			return layerXPositions[i];
 		}
 	}
 }
