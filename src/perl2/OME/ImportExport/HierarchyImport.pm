@@ -227,6 +227,17 @@ sub processDOM {
 
 	foreach my $node ( @{ $root->getChildrenByTagName('Image') } ) {
 	
+		# if unspecified, set Image's Experimenter according to the rules:
+		#	if image does not have a well formed LSID, use the logged in user
+		#	else blow up
+		if( ( not defined $node->getAttribute( "Experimenter" ) ) ||
+			( $node->getAttribute( "Experimenter" ) eq '' ) ) {
+			my $image_lsid = $node->getAttribute( "ID" );
+			die "An experimenter must be specified for an image with a well formed LSID. This image's LSID ( $image_lsid ) is well formed. See http://lists.openmicroscopy.org.uk/pipermail/ome-devel/2004-July/000065.html for a justification of this rule."
+				if( $lsid->checkLSID( $image_lsid ) );
+			$node->setAttribute( "Experimenter", $lsid->getLSID( $session->User() ) );
+		}
+		
 		$object = $self->importObject ($node,undef,undef,undef);
 		$objectID = $object->id();
 
