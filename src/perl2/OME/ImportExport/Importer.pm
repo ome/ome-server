@@ -93,8 +93,13 @@ sub import_image {
     $switch ||= "";
 
     $self->{dataset} =$dsr;
+
+    my @tmp = reverse(@$image_group_ref);
+    my $oname = pop(@tmp);
+    $xml_elements{'Image.Name'} = name_only($oname);;
+    @$image_group_ref = reverse(@tmp);
     $image_file = $$image_group_ref[0];
-    $xml_elements{'Image.Name'} = name_only($image_file);
+
     $import_reader = new OME::ImportExport::Import_reader($self,
 							  $image_group_ref,
 							  \@image_buf,
@@ -254,8 +259,8 @@ sub groupnames {
     my $matched;
     my ($pattern, $subpattern, $subp);
     my $digits = '[1-9]';
-    my $fpat1 = '^(\w+_w)([1-9])(.tif+)$';
-    my $fpat2 = '^(\w+_w)([1-9])(\w+)(.tif+)$';
+    my $fpat1 = '^(\w+)(_w)([1-9])(.tif+)$';
+    my $fpat2 = '^(\w+)(_w)([1-9])(\w+)(.tif+)$';
     my %fmts;
     my $k;
     
@@ -277,14 +282,16 @@ sub groupnames {
             $pattern = $fmts{$k};
             if ($bn =~ m/$pattern/i) {    # found a file that matches a pattern
                 $matched = 1;
-                $subp = $4 ? "$3$4" : "$3";
-                $subpattern = "$1$digits$subp";
-                my @grp = ($fn);
-                while (1) {               #    now find all similarly named files
+                $subp = $5 ? "$4$5" : "$4";
+		my $outname = $5 ? "$1" : "$1$4";
+                $subpattern = "$1$2$digits$subp";
+                my @grp = ($outname, $fn);
+                while (1) {        #    now find all similarly named files
                     if ($fn = pop @$fns) {
                         $bn = basename($fn);
                         if ($bn =~ m/$subpattern/i) {
                             push @grp, $fn;
+			    $matched++;
                         }
                         else {
                             push @$fns, $fn;
@@ -295,11 +302,14 @@ sub groupnames {
                         last;
                     }
                 }
+		if ($matched == 1) {   # only a singleton after all
+		    splice (@grp, 0, 1, $bn);
+		}
                 push @$outfns, \@grp;
             }
         }
         if ($matched == 0) {    # filename didn't match any pattern, so stick it on it's own sublist
-            push @$outfns, [$fn];
+            push @$outfns, [$bn, $fn];
         }
     }
 
