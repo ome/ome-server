@@ -95,17 +95,18 @@ sub getPageBody {
 				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
 	   			return ('HTML',$txt) unless (defined $rep);
 				# must find better solution
-				$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
+				$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
 
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
-				$projectManager->add($cgi->param('addDataset'));
+				$dataset=$datasetManager->load($cgi->param('addDataset'));
+				
 								
 			}
 
 			my $errorMessage = '';
-			if ($session->dataset()) {
-			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $session->dataset(), \@paths);
+			if ($dataset) {
+			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
 				
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
@@ -150,7 +151,12 @@ sub print_form {
 
 	my $recentSelection=@$refSelection[0];
 	my $project = $session->project();
+	# only dataset related to current project
+	# maybe display list of datasets by a given user 
+	# security control i.e. if dataset used by others.
+
 	my @datasets = $project->unlockedDatasets() if defined $project;
+	
 	my %datasetHash  = map { $_->ID() => $_->name()} @datasets if @datasets > 0;;
 	my $text = '';
 	
