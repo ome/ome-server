@@ -72,9 +72,6 @@
 		<Node
 			NodeID="ChebyshevFourierTransform" 
 			ProgramName="Chebyshev Fourier Transform"/>
-		<Node
-			NodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
-			ProgramName="ChebyshevFourierCoefficientMatrix -> PixelsPlaneSlice"/>
 			
 		<!-- Chebyshev arc into Statistics and Signatures -->
 		<Node
@@ -215,16 +212,6 @@
 			FromNodeID="FrequencySpace->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
 			ToNodeID="ChebyshevFourierTransform"
-			ToInputName="Pixels Plane Slice"/>
-		<Link
-			FromNodeID="ChebyshevFourierTransform"
-			FromOutputName="Chebyshev Fourier Coefficient Matrix"
-			ToNodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
-			ToInputName="Chebyshev Fourier Coefficient Matrix"/>
-		<Link
-			FromNodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
-			FromOutputName="Pixels Plane Slice"
-			ToNodeID="HaralickFeatures"
 			ToInputName="Pixels Plane Slice"/>
 			
 		<!-- Chebyshev arc into Statistics -->

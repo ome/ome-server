@@ -51,14 +51,11 @@
       <Node NodeID="Edge Statistics" ProgramName="Edge Statistics"/>
       <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
       <Node NodeID="Chebyshev Fourier Transform" ProgramName="Chebyshev Fourier Transform"/>
-      <Node NodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" ProgramName="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice"/>
       <Node NodeID="Chebyshev Transform 1" ProgramName="Chebyshev Transform"/>
       <Node NodeID="Fourier Transform" ProgramName="Fourier Transform"/>
       <Node NodeID="FrequencySpace -&gt; PixelsPlaneSlice" ProgramName="FrequencySpace -&gt; PixelsPlaneSlice"/>
 
-      <Node NodeID="Haralick Features (Angle 0) 1" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Haralick Features (Angle 0) 2" ProgramName="Haralick Features (Angle 0)"/>
-      <Node NodeID="Haralick Features (Angle 0) 3" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Haralick Features (Angle 0) 4" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Haralick Features (Angle 0) 5" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Haralick Features (Angle 0) 6" ProgramName="Haralick Features (Angle 0)"/>
@@ -67,9 +64,7 @@
       <Node NodeID="Haralick Features (Angle 0) 9" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Haralick Features (Angle 0) 10" ProgramName="Haralick Features (Angle 0)"/>
 
-      <Node NodeID="Haralick Features (Angle 45) 1" ProgramName="Haralick Features (Angle 45)"/>
       <Node NodeID="Haralick Features (Angle 45) 2" ProgramName="Haralick Features (Angle 45)"/>
-      <Node NodeID="Haralick Features (Angle 45) 3" ProgramName="Haralick Features (Angle 45)"/>
       <Node NodeID="Haralick Features (Angle 45) 4" ProgramName="Haralick Features (Angle 45)"/>
       <Node NodeID="Haralick Features (Angle 45) 5" ProgramName="Haralick Features (Angle 45)"/>
       <Node NodeID="Haralick Features (Angle 45) 6" ProgramName="Haralick Features (Angle 45)"/>
@@ -78,9 +73,7 @@
       <Node NodeID="Haralick Features (Angle 45) 9" ProgramName="Haralick Features (Angle 45)"/>
       <Node NodeID="Haralick Features (Angle 45) 10" ProgramName="Haralick Features (Angle 45)"/>
 
-      <Node NodeID="Haralick Features (Angle 90) 1" ProgramName="Haralick Features (Angle 90)"/>
       <Node NodeID="Haralick Features (Angle 90) 2" ProgramName="Haralick Features (Angle 90)"/>
-      <Node NodeID="Haralick Features (Angle 90) 3" ProgramName="Haralick Features (Angle 90)"/>
       <Node NodeID="Haralick Features (Angle 90) 4" ProgramName="Haralick Features (Angle 90)"/>
       <Node NodeID="Haralick Features (Angle 90) 5" ProgramName="Haralick Features (Angle 90)"/>
       <Node NodeID="Haralick Features (Angle 90) 6" ProgramName="Haralick Features (Angle 90)"/>
@@ -89,9 +82,7 @@
       <Node NodeID="Haralick Features (Angle 90) 9" ProgramName="Haralick Features (Angle 90)"/>
       <Node NodeID="Haralick Features (Angle 90) 10" ProgramName="Haralick Features (Angle 90)"/>
 
-      <Node NodeID="Haralick Features (Angle 135) 1" ProgramName="Haralick Features (Angle 135)"/>
       <Node NodeID="Haralick Features (Angle 135) 2" ProgramName="Haralick Features (Angle 135)"/>
-      <Node NodeID="Haralick Features (Angle 135) 3" ProgramName="Haralick Features (Angle 135)"/>
       <Node NodeID="Haralick Features (Angle 135) 4" ProgramName="Haralick Features (Angle 135)"/>
       <Node NodeID="Haralick Features (Angle 135) 5" ProgramName="Haralick Features (Angle 135)"/>
       <Node NodeID="Haralick Features (Angle 135) 6" ProgramName="Haralick Features (Angle 135)"/>
@@ -101,7 +92,6 @@
       <Node NodeID="Haralick Features (Angle 135) 10" ProgramName="Haralick Features (Angle 135)"/>
 
       <Node NodeID="Chebyshev Fourier Transform 1" ProgramName="Chebyshev Fourier Transform"/>
-      <Node NodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" ProgramName="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice"/>
       <Node NodeID="Chebyshev Transform 3" ProgramName="Chebyshev Transform"/>
       <Node NodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ProgramName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"/>
       <Node NodeID="Wavelet Transform 1" ProgramName="Wavelet Transform"/>
@@ -131,34 +121,22 @@
       <Link FromNodeID="Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>
       <Link FromNodeID="Otsu's Method" FromOutputName="Threshold Level" ToNodeID="Global Threshold" ToInputName="Threshold Level"/>
       <Link FromNodeID="Gradient" FromOutputName="Gradient" ToNodeID="Edge Statistics" ToInputName="Gradient"/>
-      <Link FromNodeID="Chebyshev Fourier Transform" FromOutputName="Chebyshev Fourier Coefficient Matrix" ToNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Fourier Coefficient Matrix"/>
       <Link FromNodeID="Fourier Transform" FromOutputName="Frequency Space" ToNodeID="FrequencySpace -&gt; PixelsPlaneSlice" ToInputName="Frequency Space"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Fourier Transform 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Wavelet Transform 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 2" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="Chebyshev Fourier Transform 1" FromOutputName="Chebyshev Fourier Coefficient Matrix" ToNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Fourier Coefficient Matrix"/>
       <Link FromNodeID="Chebyshev Transform 3" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
       <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 2"/>
       <Link FromNodeID="Wavelet Transform 1" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 1" ToNodeID="WaveletCoefficientsLevel1 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 1"/>
       <Link FromNodeID="Wavelet Transform" FromOutputName="Wavelet Coefficients Level 2" ToNodeID="WaveletCoefficientsLevel2 -&gt; PixelsPlaneSlice 1" ToInputName="Wavelet Coefficients Level 2"/>
       <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>
-
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 1" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 1" ToInputName="Pixels Plane Slice"/>
-
+      
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 2" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 2" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 2" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 2" ToInputName="Pixels Plane Slice"/>
-
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 90) 3" ToInputName="Pixels Plane Slice"/>
-      <Link FromNodeID="ChebyshevFourierCoefficientMatrix -&gt; PixelsPlaneSlice 1" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 135) 3" ToInputName="Pixels Plane Slice"/>
       
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 0) 4" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Haralick Features (Angle 45) 4" ToInputName="Pixels Plane Slice"/>
