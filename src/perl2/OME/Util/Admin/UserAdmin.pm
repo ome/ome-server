@@ -372,9 +372,16 @@ sub listUsers {
           "-" x $name_len, "\n";
 
         foreach my $user (@users) {
+        	my $OMEName;
+        	if (defined $user->OMEName()) {
+        		$OMEName = $user->OMEName();
+        	} else {
+        		$OMEName = '';
+        	} 
+        	
             printf "%*.*s %-*.*s %-*.*s\n",
               $max_id_len, $max_id_len, $user->id(),
-              $username_len, $username_len, $user->OMEName(),
+              $username_len, $username_len, $OMEName,
               $name_len, $name_len,
                 ($user->FirstName() . " ". $user->LastName());
         }
