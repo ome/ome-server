@@ -1,6 +1,8 @@
-<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
+<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
+	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
-		<TableDefinition AttributeType = "I" TableName = "XY_IMAGE_INFO" 
+		<Table AttributeType = "I" TableName = "XY_IMAGE_INFO" 
 			Description = "General image XY slice attributes. Produced from XML.">
 			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer" Description = "Specifies Z spatial dimension"/>
 			<Column ColumnID = "theW" ColumnName = "THE_W" SQL_DataType = "integer" Description = "Specifies Wavelength"/>
@@ -10,7 +12,7 @@
 			<Column ColumnID = "Mean" ColumnName = "MEAN" SQL_DataType = "float" Description = "Arithmetic Mean"/>
 			<Column ColumnID = "Geomean" ColumnName = "GEOMEAN" SQL_DataType = "float" Description = "Geometric Mean"/>
 			<Column ColumnID = "Sigma" ColumnName = "SIGMA" SQL_DataType = "float" Description = "Standard Deviation"/>
-		</TableDefinition>
+		</Table>
 		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
 		<FormalOutput Name = "XYPlaneMin" Description = "Minimum pixel intensity in an XY plane">
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
