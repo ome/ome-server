@@ -1,6 +1,5 @@
-=head1 NAME
+=head1 Open Microscopy Environment API
 
-Open Microscopy Environment API
 
 =head1 Overview
 
@@ -10,6 +9,8 @@ consistent way.  It is written in Perl, but can be called from any
 language via the OME Remote Framework.  The Remote Framework also
 allows OME applications to be written in a client-server design
 pattern.
+
+An overview for new OME developers is in L<newdevelopers>
 
 =head2 Organization of the OME database
 
@@ -23,7 +24,7 @@ in the core tables not defined as semantic types (or, "database
 objects") is provided by the L<C<OME::DBObject>|OME::DBObject> class,
 whereas access to instances of semantic types (or, "attributes") is
 provide by the
-L<C<OME::AttributeType::Superclass>|OME::AttributeType>
+L<C<OME::SemanticType::Superclass>|OME::SemanticType>
 class.
 
 =head2 Session management and the factory
@@ -45,7 +46,7 @@ created them, they must not be shared among sessions.
 =head2 Workflow layer
 
 Although the L<C<OME::DBObject>|OME::DBObject> and
-L<C<OME::AttributeType::Superclass>|OME::AttributeType> classes
+L<C<OME::SemanticType::Superclass>|OME::SemanticType> classes
 provide mutator methods, these should not be used in most cases, since
 they provide direct access to the database.  Rather than using these
 objects to modify the underlying database tables, the workflow classes
@@ -120,11 +121,11 @@ C<DATA_COLUMNS> (L<C<OME::DataTable::Column>|OME::DataTable>)
 
 =item *
 
-C<ATTRIBUTE_TYPES> (L<C<OME::AttributeType>|OME::AttributeType>)
+C<ATTRIBUTE_TYPES> (L<C<OME::SemanticType>|OME::SemanticType>)
 
 =item *
 
-C<ATTRIBUTE_COLUMNS> (L<C<OME::AttributeType::Column>|OME::AttributeType>)
+C<ATTRIBUTE_COLUMNS> (L<C<OME::SemanticType::Column>|OME::SemanticType>)
 
 =item *
 
@@ -209,11 +210,11 @@ method.
 Attributes are handled differently than database objects, since they
 are user-defined.  Since an attribute is not well-defined without its
 semantic type definition, you must first load the appropriate row from
-the ATTRIBUTE_TYPES table (using the database object interfaces
+the SEMANTIC_TYPES table (using the database object interfaces
 described in the previous section).  You can then use this
-AttributeType object with the factory object to load attributes of
+SemanticType object with the factory object to load attributes of
 that type.  These routines dynamically generate a subclass of
-L<C<OME::AttributeType::Superclass>|OME::AttributeType> for the
+L<C<OME::SemanticType::Superclass>|OME::SemanticType> for the
 semantic type, and creates accessor/mutator methods for all of the
 semantic elements.  The methods have the exact same name as the
 semantic elements, including case.  If a semantic element is a
@@ -319,7 +320,7 @@ Douglas Creager (dcreager@alum.mit.edu)
 =head1 SEE ALSO
 
 L<OME::DBObject|OME::DBObject>,
-L<OME::AttributeType|OME::AttributeType>,
+L<OME::SemanticType|OME::SemanticType>,
 L<OME::Factory|OME::Factory>
 
 =cut
