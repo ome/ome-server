@@ -7,20 +7,18 @@ static char rcsid[] = "$Header$";
 
 int pic_npic = -1;
 
-void pic_init()
+void pic_init(void)
 {
     /* count the pic device types to set npic */
     for (pic_npic=0; pic_npic<PIC_LISTMAX && pic_list[pic_npic]; pic_npic++);
 }
 
-Pic *pic_open(file, mode)
-char *file, *mode;
+Pic *pic_open(char *file, char *mode)
 {
     return pic_open_dev(pic_file_dev(file), file, mode);
 }
 
-Pic *pic_open_dev(dev, name, mode)
-char *dev, *name, *mode;
+Pic *pic_open_dev(char *dev, char *name, char *mode)
 {
     int i;
     char *data;
@@ -74,8 +72,7 @@ Pic *pic_open_stream (char *dev, FILE *stream, char *name, char *mode)
     return p;
 }
 
-void pic_close(p)
-Pic *p;
+void pic_close(Pic *p)
 {
     (*p->procs->close)(p->data);
     free(p);
@@ -83,7 +80,7 @@ Pic *p;
 
 /* pic_catalog: print list of known (linked) device libraries */
 
-void pic_catalog()
+void pic_catalog(void)
 {
     int i;
 
@@ -94,8 +91,7 @@ void pic_catalog()
     printf("\n");
 }
 
-Pic *pic_load(name1, name2)
-char *name1, *name2;
+Pic *pic_load(char *name1, char *name2)
 {
     Pic *p, *q;
 
@@ -115,9 +111,7 @@ char *name1, *name2;
     return q;
 }
 
-void pic_save(p, name)
-Pic *p;
-char *name;
+void pic_save(Pic *p, char *name)
 {
     Pic *q;
 
@@ -130,8 +124,7 @@ char *name;
     pic_close(q);
 }
 
-void pic_copy(p, q)
-register Pic *p, *q;
+void pic_copy(register Pic *p, register Pic *q)
 {
     int nchan, dx, y;
     Window w;
@@ -169,17 +162,12 @@ register Pic *p, *q;
     if (nchan==1) free(buf); else free(buf4);
 }
 
-void pic_set_window(p, win)
-Pic *p;
-Window *win;
+void pic_set_window(Pic *p, Window *win)
 {
     pic_set_box(p, win->x0, win->y0, win->x1-win->x0+1, win->y1-win->y0+1);
 }
 
-void pic_write_block(p, x0, y0, nx, ny, buf)
-Pic *p;
-int x0, y0, nx, ny;
-Pixel1 *buf;
+void pic_write_block(Pic *p, int x0, int y0, int nx, int ny, Pixel1 *buf)
 {
     int y;
 
@@ -187,10 +175,7 @@ Pixel1 *buf;
 	pic_write_row(p, y0+y, x0, nx, buf);
 }
 
-void pic_write_block_rgba(p, x0, y0, nx, ny, buf)
-Pic *p;
-int x0, y0, nx, ny;
-Pixel1_rgba *buf;
+void pic_write_block_rgba(Pic *p, int x0, int y0, int nx, int ny, Pixel1_rgba *buf)
 {
     int y;
 
@@ -198,9 +183,7 @@ Pixel1_rgba *buf;
 	pic_write_row_rgba(p, y0+y, x0, nx, buf);
 }
 
-Window *pic_get_window(p, win)
-Pic *p;
-Window *win;
+Window *pic_get_window(Pic *p, Window *win)
 {
     int dx, dy;
 
@@ -211,10 +194,7 @@ Window *win;
     return win;
 }
 
-void pic_read_block(p, x0, y0, nx, ny, buf)
-Pic *p;
-int x0, y0, nx, ny;
-Pixel1 *buf;
+void pic_read_block(Pic *p, int x0, int y0, int nx, int ny, Pixel1 *buf)
 {
     int y;
 
@@ -222,10 +202,7 @@ Pixel1 *buf;
 	pic_read_row(p, y0+y, x0, nx, buf);
 }
 
-void pic_read_block_rgba(p, x0, y0, nx, ny, buf)
-Pic *p;
-int x0, y0, nx, ny;
-Pixel1_rgba *buf;
+void pic_read_block_rgba(Pic *p, int x0, int y0, int nx, int ny, Pixel1_rgba *buf)
 {
     int y;
 
