@@ -224,7 +224,7 @@ sub __updateDTO {
             die "Reference to a new object which has not been saved yet in $class_name $key $val"
               unless defined $object;
             $serialized->{$key} = $object;
-        } elsif ($val =~ /^REF:(\w+):(\d+)$/) {
+        } elsif ($val =~ /^REF:([\w@]+):(\d+)$/) {
             # If we find a reference to an existing object, then just
             # store that reference in the field.
 
@@ -281,7 +281,6 @@ sub updateDTO {
     my $data_class = $proto->getDataClass($object_type);
 
     my @result = __updateDTO($data_class,$serialized,{});
-    OME::Session->instance()->commitTransaction();
 
     return $result[1];
 }
@@ -296,8 +295,6 @@ sub updateDTOList {
 
         push @result, __updateDTO($data_class,$serialized,$id_hash);
     }
-
-    OME::Session->instance()->commitTransaction();
 
     return {@result};
 }
