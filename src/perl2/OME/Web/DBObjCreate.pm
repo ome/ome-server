@@ -183,7 +183,28 @@ sub getPageBody {
 	# create?
 	if( $q->param( 'create' ) ) {
 		return $self->_create( );
+	} else {
+		return $self->_getForm();
 	}
+}
+	
+=head2 _getForm
+
+Overridable
+
+=cut
+
+sub _getForm {
+	my $self = shift;
+	my $q = $self->CGI();
+	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
+	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $locked_type = ( $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+
+	my $specializedDetail;
+	return $specializedDetail->getPageBody( )
+		if( $specializedDetail = $self->__specialize( $type ) and
+		    ref( $self ) eq __PACKAGE__ );
 
   	# load a template
  	my $tmpl_path = $self->_findTemplate( $type, 'create' );
@@ -270,7 +291,12 @@ sub getPageBody {
 
 =head2 _create
 
-overrideable
+Accepts no parameters. Responsible for collecting data from $self->CGI
+and using it to create a new object. If successful, should return:
+	return( 'REDIRECT', $self->getObjDetailURL( $obj ) );
+
+
+Overrideable.
 
 =cut
 
@@ -326,6 +352,7 @@ END_HTML
 
  	return( 'REDIRECT', $self->getObjDetailURL( $obj ) );
 }
+
 
 # return form elements appropriate for accepting field input
 sub getFormInputsForFields {
