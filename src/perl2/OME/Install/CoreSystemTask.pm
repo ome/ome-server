@@ -361,7 +361,7 @@ sub execute {
     print "Copying IMAGE directories\n";
     	foreach my $directory (@image_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
+		copy_tree ("$directory", "$$OME_BASE_DIR");
     }
 
     print "Copying HTML directories\n";
@@ -372,7 +372,7 @@ sub execute {
 
     foreach my $directory (@html_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
+		copy_tree ("$directory", "$$OME_BASE_DIR");
     }
 
     chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
