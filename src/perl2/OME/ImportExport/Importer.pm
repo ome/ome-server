@@ -32,7 +32,7 @@
 # sort_and_group()
 # groupnames()
 # store_image_metadata()
-# store_image_attributes()
+# store_image_attributes()  -- depricated? look at function def for more info
 # store_image_pixels()
 # find_repository()
 # store_wavelength_info()
@@ -168,9 +168,11 @@ sub store_image {
 	$image = $self->{image};
 
 	# create and populate an image attributes object
-	$status = store_image_attributes($self, $href, $session);
-	last unless $status eq "";
-	$attributes = $self->{'attributes'};
+# look at function def below for more info
+# commented out by josiah 6/9/03
+#	$status = store_image_attributes($self, $href, $session);
+#	last unless $status eq "";
+#	$attributes = $self->{'attributes'};
 
 	$status = store_wavelength_info($self, $session, $href);
 	last unless $status eq "";
@@ -188,7 +190,7 @@ sub store_image {
 	$image->commit;
         $image->dbi_commit();
 	$self->{pixelsAttr}->writeObject();
-	$attributes->writeObject();
+#	$attributes->writeObject();
 	$session->DBH()->commit;
 
 	last;
@@ -378,12 +380,20 @@ sub store_image_metadata {
                    {
                     Repository => $repository->id(),
                     Path       => $qual_name,
+                    'SizeX' => $href->{'Image.SizeX'},
+                    'SizeY' => $href->{'Image.SizeY'},
+                    'SizeZ' => $href->{'Image.SizeZ'},
+                    'SizeC' => $href->{'Image.NumWaves'},
+                    'SizeT' => $href->{'Image.NumTimes'},
+                    'BitsPerPixel' => $href->{'Image.BitsPerPixel'}
                    });
+
+	$image->pixels_id( $pixels->id() ); # hack added by josiah 6/9/03
 
     $self->{image} = $image;
     $self->{pixelsAttr} = $pixels;
     my $imageID = $image->id();
-    $self->{realpath} = $image->getFullPath();
+    $self->{realpath} = $image->getFullPath( $pixels );
     # rename repository file with it's permanent name
     rename ($tempfn, , $self->{realpath}) or
 	$status = "failed to rename image file $self->temp_image_name() to $self->{realpath}";
@@ -395,18 +405,24 @@ sub store_image_metadata {
 }
 
 
+# this function appears to be depricated. its functionality has moved to store_image_metadata.
+# this is because the size of the pixel array is now stored in 'Pixels' instead of 'Dimensions'.
+# whoever wrote this should delete it when they get a chance.
+#	-josiah <siah@nih.gov> June 9, 2003
+
 # create and populate an image attributes object
 sub store_image_attributes {
     my ($self, $href, $session) = @_;
     my $status = "";
     my $image = $self->{image};
     my $recordData = {#'image_id' => $image->id,
-		   'SizeX' => $href->{'Image.SizeX'},
-		   'SizeY' => $href->{'Image.SizeY'},
-		   'SizeZ' => $href->{'Image.SizeZ'},
-		   'SizeC' => $href->{'Image.NumWaves'},
-		   'SizeT' => $href->{'Image.NumTimes'},
-		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}};
+#		   'SizeX' => $href->{'Image.SizeX'},
+#		   'SizeY' => $href->{'Image.SizeY'},
+#		   'SizeZ' => $href->{'Image.SizeZ'},
+#		   'SizeC' => $href->{'Image.NumWaves'},
+#		   'SizeT' => $href->{'Image.NumTimes'},
+#		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}
+	};
     my $attributes = $session->Factory()->
 	newAttribute("Dimensions",$image,$self->{analysis},$recordData);
 

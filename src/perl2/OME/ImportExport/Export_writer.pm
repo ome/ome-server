@@ -31,6 +31,8 @@
 # accessRepositoryFile()
 # getDBInfo()
 
+# WARNING! this package assumes Image contains only one Pixels attribute. It needs to be changed.
+# warning added by josiah <siah@nih.gov> 6/9/03
 
 package OME::ImportExport::Export_writer;
 our @ISA = ("OME::ImportExport::Exporter");
@@ -107,19 +109,19 @@ sub accessImage {
     my $status = "Failed to load image id $id";
 
     $image = $session->Factory()->loadObject("OME::Image", $id);
-    my $dimensions = $image->Dimensions();
+	my $pixels = $image->DefaultPixels();
     return $status
-	unless defined $image && defined $dimensions;
+	unless defined $image && defined $pixels;
 
     $status = "";
     $href->{Name}  = $image->name();
-    $href->{BitsPerSample}   = $dimensions->bits_per_pixel();
-    $href->{SizeX} = $dimensions->size_x();
-    $href->{SizeY} = $dimensions->size_y();
-    $href->{SizeZ} = $dimensions->size_z();
+    $href->{BitsPerSample}   = $pixels->BitsPerPixel;
+    $href->{SizeX} = $pixels->SizeX();
+    $href->{SizeY} = $pixels->SizeY();
+    $href->{SizeZ} = $pixels->SizeZ();
+    $href->{NumWaves} = $pixels->SizeC();
+    $href->{NumTimes} = $pixels->SizeT();
     $href->{DateTime} = $image->created();
-    $href->{NumWaves} = $dimensions->num_waves();
-    $href->{NumTimes} = $dimensions->num_times();
 
 
     return $status;
