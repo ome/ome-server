@@ -29,6 +29,16 @@ use OME::Factory;
 
 use OME::Remote::Prototypes;
 
+
+sub versionInfo {
+    my ($proto) = @_;
+
+    return {
+            Version => '1.0',
+            Host    => 'bob.com',
+           };
+}
+
 sub createSession {
     my ($proto, $username, $password) = @_;
 
@@ -36,27 +46,23 @@ sub createSession {
     die "Cannot create session"
       unless defined $session;
 
-    my $reference = OME::Remote::Utils::getObjectReference($session);
-    OME::Remote::Utils::saveObject($reference,$session);
+    my $reference = OME::Remote::Utils::getObjectReference(">>SESSIONS",$session);
+    OME::Remote::Utils::saveObject(">>SESSIONS",$reference,$session);
 
-    #my $sessionKey = $session->{ApacheSession}->{SessionKey};
-    #OME::Remote::Utils::saveSession($sessionKey,$session);
-    #return $sessionKey;
+    my $sessionKey = $session->{SessionKey};
+    OME::Remote::Utils::saveObject($sessionKey,$reference,$session,1);
 
-    #return OME::Remote::Utils::xmlEscape('R',$reference);
     return $reference;
 }
 
 
 sub closeSession {
-    #my ($proto, $sessionKey) = @_;
-    #my $session = OME::Remote::Utils::getSession($sessionKey);
-
     my ($proto, $sessionRef) = @_;
-    my $session = OME::Remote::Utils::getObject($sessionRef);
+    my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
+    my $sessionKey = $session->{SessionKey};
 
     OME::SessionManager->deleteApacheSession($session->{ApacheSession});
-    #OME::Remote::Utils::deleteSession($sessionKey);
+    OME::Remote::Utils::deleteSessionObjects($sessionKey);
 
     return 1;
 }
@@ -64,14 +70,15 @@ sub closeSession {
 
 sub dispatch {
     my ($proto,$sessionRef,$objectRef,$method,@params) = @_;
-    my $session = OME::Remote::Utils::getObject($sessionRef);
+    my $session = OME::Remote::Utils::getObject(">>SESSIONS",$sessionRef);
+    my $sessionKey = $session->{SessionKey};
 
     my ($objectProto,$objectClass);
 
     $objectRef = OME::Remote::Utils::xmlEscape('P',$objectRef);
     if ($objectRef =~ /\>\>OBJ\:/) {
         # This looks like an object reference
-        $objectProto = OME::Remote::Utils::getObject($objectRef);
+        $objectProto = OME::Remote::Utils::getObject($sessionKey,$objectRef);
         #print STDERR "    op $objectProto\n";
         $objectClass = ref($objectProto);
         #print STDERR "    oc $objectClass\n";
@@ -83,6 +90,8 @@ sub dispatch {
 
     $method = OME::Remote::Utils::xmlEscape('P',$method);
 
+    print "Calling ${objectProto}->${method}\n";
+
     # Lookup the method's prototype
     die "Cannot find method $method in class $objectClass"
       if (!exists $OME::Remote::Prototypes::prototypes{$objectClass}->{$method});
@@ -92,46 +101,20 @@ sub dispatch {
 
     my ($paramProto,$returnProto) = @$prototypes;
     die "Parameters do not match prototype"
-      unless OME::Remote::Utils::verifyParameterList('P',\@params,$paramProto);
+      unless OME::Remote::Utils::verifyParameterList('P',\@params,$paramProto,
+                                                    $sessionKey);
 
     my @result = $objectProto->$method(@params);
 
     die "Return value does not match prototype"
-      unless OME::Remote::Utils::verifyParameterList('R',\@result,$returnProto);
+      unless OME::Remote::Utils::verifyParameterList('R',\@result,$returnProto,
+                                                    $sessionKey);
 
+    print "  (",join(",",@result),")\n";
     return @result;
 }
 
 
-sub loadObject {
-    my ($proto, $sessionKey, $class, $id) = @_;
-    my $session = OME::Remote::Utils::getSession($sessionKey);
-    my $factory = $session->Factory();
-
-    my $object = $factory->loadObject($class,$id);
-    die "Cannot load object"
-      unless defined $object;
-
-    my $reference = OME::Remote::Utils::getObjectReference($object);
-    OME::Remote::Utils::saveObject($reference,$object);
-
-    return $reference;
-}
-
-sub newObject {
-    my ($proto, $sessionKey, $class, $data) = @_;
-    my $session = OME::Remote::Utils::getSession($sessionKey);
-    my $factory = $session->Factory();
-
-    my $object = $factory->newObject($class,$data);
-    die "Cannot create object"
-      unless defined $object;
-
-    my $reference = OME::Remote::Utils::getObjectReference($object);
-    OME::Remote::Utils::saveObject($reference,$object);
-
-    return $reference;
-}
 
 
 # These functions exist in another package so that they aren't
@@ -142,46 +125,26 @@ our $VERSION = '1.00';
 
 use strict;
 
-my %remoteSessions;
 my %remoteReferences;
 my %remoteObjects;
 
-sub saveSession {
-    my ($sessionKey,$session) = @_;
-    $remoteSessions{$sessionKey} = $session;
-}
-
-sub deleteSession {
-    my ($sessionKey) = @_;
-    delete $remoteSessions{$sessionKey};
-}
-
-sub getSession {
-    my ($sessionKey) = @_;
-
-    my $session = $remoteSessions{$sessionKey};
-    die "That session does not exist"
-      unless defined $session;
-
-    return $session;
-}
-
 sub saveObject {
-    my ($reference,$object) = @_;
-    print STDERR "Saving object ",ref($object)," $reference\n";
-    $remoteObjects{$reference} = $object;
+    my ($sessionKey,$reference,$object) = @_;
+    print "Saving object ",ref($object)," $sessionKey/$reference\n";
+    $remoteObjects{$sessionKey}->{$reference} = $object;
 }
 
 sub deleteObject {
-    my ($reference) = @_;
-    delete $remoteObjects{$reference};
+    my ($sessionKey,$reference) = @_;
+    print "Deleting object $reference\n";
+    delete $remoteObjects{$sessionKey}->{$reference};
 }
 
 sub getObject {
-    my ($reference) = @_;
+    my ($sessionKey,$reference) = @_;
 
     $reference = xmlEscape('P',$reference);
-    my $object = $remoteObjects{$reference};
+    my $object = $remoteObjects{$sessionKey}->{$reference};
     die "That object ($reference) does not exist"
       unless defined $object;
 
@@ -209,7 +172,7 @@ sub xmlEscape {
 }
 
 sub getObjectReference {
-    my ($object) = @_;
+    my ($sessionKey,$object) = @_;
     my $class = ref($object);
 
     # Maybe here I should check whether it's actually blessed.
@@ -221,12 +184,17 @@ sub getObjectReference {
 
     my $cryptRef;
 
-    if (exists $remoteReferences{$reference}) {
-        $cryptRef = $remoteReferences{$reference};
+    if (exists $remoteReferences{$sessionKey}->{$reference}) {
+        $cryptRef = $remoteReferences{$sessionKey}->{$reference};
     } else {
         my $salt = join('',('.','/',0..9,'A'..'Z','a'..'z')[rand 64,rand 64]);
         $cryptRef = ">>OBJ:".crypt($reference,$salt);
-        $remoteReferences{$reference} = $cryptRef;
+        $remoteReferences{$sessionKey}->{$reference} = $cryptRef;
+    }
+
+    if ($sessionKey eq ">>SESSIONS") {
+        my $realSessionKey = $object->{SessionKey};
+        $remoteReferences{$realSessionKey}->{$reference} = $cryptRef;
     }
 
     #print STDERR "  -> $cryptRef\n";
@@ -234,11 +202,23 @@ sub getObjectReference {
 }
 
 
+sub deleteSessionObjects {
+    my ($sessionKey) = @_;
+
+    foreach my $reference (keys %{$remoteReferences{$sessionKey}}) {
+        my $cryptRef = $remoteReferences{$sessionKey}->{$reference};
+        deleteObject($sessionKey,$cryptRef);
+    }
+
+    $remoteReferences{$sessionKey} = {};
+}
+
+
 sub verifyParameterType {
-    my ($kind,$param,$type) = @_;
+    my ($kind,$param,$type,$sessionKey) = @_;
     my $ref = ref($param);
 
-    print STDERR "    $kind - $param $ref $type \n";
+    #print STDERR "    $kind - $param $ref $type \n";
 
     if ($type eq '$') {
         # Function expects a single scalar
@@ -257,13 +237,13 @@ sub verifyParameterType {
     }
 
     if (ref($type) eq "ARRAY") {
-        return verifyParameterList($kind,$param,$type);
+        return verifyParameterList($kind,$param,$type,$sessionKey);
     }
 
     if ($kind eq 'P') {
         my $object;
         eval {
-            $object = getObject($kind,$param);
+            $object = getObject($sessionKey,$kind,$param);
         };
         return 0 if $@;
 
@@ -278,8 +258,8 @@ sub verifyParameterType {
     } else {
         if (UNIVERSAL::isa($param,$type)) {
             # Replace the object with its reference.
-            my $reference = getObjectReference($param);
-            saveObject($reference,$param);
+            my $reference = getObjectReference($sessionKey,$param);
+            saveObject($sessionKey,$reference,$param);
             $_[1] = $reference;
             return 1;
         } else {
@@ -291,7 +271,7 @@ sub verifyParameterType {
 
 
 sub verifyParameterList {
-    my ($kind,$params,$types) = @_;
+    my ($kind,$params,$types,$sessionKey) = @_;
 
     return 0 if ref($params) ne "ARRAY";
 
@@ -305,7 +285,8 @@ sub verifyParameterList {
           $currentType eq "*"? $lastType: $currentType;
 
         return 0 unless defined $typeToCheck;
-        return 0 unless verifyParameterType($kind,$param,$typeToCheck);
+        return 0 unless verifyParameterType($kind,$param,
+                                            $typeToCheck,$sessionKey);
 
         if ($currentType ne "*") {
             $lastType = $currentType;

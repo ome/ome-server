@@ -294,6 +294,7 @@ sub writeObject {
     my $self = shift;
     $self->commit();
     $self->dbi_commit();
+    return;
 }
 
 =head2 dissociateObject

@@ -23,14 +23,36 @@ our $VERSION = '1.00';
 
 use strict;
 
-our %prototypes = 
+our %prototypes =
   (
    'OME::Session' => {
+                      id      => [['$'],['$']],
                       Factory => [[],['OME::Factory']],
                      },
    'OME::Factory' => {
-                      loadObject => [['$','$'],['OME::DBObject']],
+                      newObject     => [['$','%'],['OME::DBObject']],
+                      newAttribute  => [['$','OME::DBObject','%'],
+                                        ['OME::AttributeType::Superclass']],
+                      loadObject    => [['$','$'],['OME::DBObject']],
+                      loadAttribute => [['$','$'],
+                                        ['OME::AttributeType::Superclass']],
                      },
+   'OME::Project' => {
+                      id          => [['$'],['$']],
+                      name        => [['$'],['$']],
+                      description => [['$'],['$']],
+                      owner       => [['OME::Experimenter'],['OME::Experimenter']],
+                      group       => [['OME::Group'],['OME::Group']],
+                      writeObject => [[],[]],
+                     },
+   'OME::Experimenter' => {
+                           id        => [['$'],['$']],
+                           ome_name  => [['$'],['$']],
+                           firstname => [['$'],['$']],
+                           lastname  => [['$'],['$']],
+                           email     => [['$'],['$']],
+                           data_dir  => [['$'],['$']],
+                          },
   );
 
 
