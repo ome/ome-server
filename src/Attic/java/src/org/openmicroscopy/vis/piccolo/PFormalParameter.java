@@ -79,7 +79,8 @@ public abstract class PFormalParameter extends PNode implements
 	public static final Color NORMAL_COLOR = Color.black;
 	public  static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
 	
-	
+	public static final int TYPE_NODE_VERTICAL_OFFSET=12;
+	public static final float TYPE_NODE_DEFAULT_SCALE=0.5f;
 	protected FormalParameter param;
 	protected Connection connection = null;
 	protected PModule node;
@@ -94,34 +95,31 @@ public abstract class PFormalParameter extends PNode implements
 	protected PParameterLocator locator;
 	protected boolean linkable;
 	
-	private PText textNode;
+	protected PText textNode;
+	
+	// a node for the semantic type.
+	protected PText typeNode;
 	
 	private boolean isLinkStart;
 	
-	public PFormalParameter() {
-		super();
-	}
-	
-	public PFormalParameter(FormalParameter param) {
-		super();
-		textNode = new PText(param.getParameterName());
-		addChild(textNode);
-		setChildrenPickable(false);
-		setBounds(textNode.getFullBounds());
-		//super(param.getParameterName());
-		this.param = param;
-	}
 	
 	public PFormalParameter(PModule node,FormalParameter param,
 			Connection connection) {
-		textNode = new PText(param.getParameterName());
-		addChild(textNode);
-		setChildrenPickable(false);
-		setBounds(textNode.getFullBounds());			
-		//super(param.getParameterName());
+		super();
+		
 		this.connection = connection;
 		this.param = param;
 		this.node = node;
+		
+		textNode = new PText(param.getParameterName());
+		addChild(textNode);
+		setChildrenPickable(false);
+		SemanticType type = param.getSemanticType();
+		if (type != null) {
+			typeNode = new PText(type.getName());
+			addChild(typeNode);
+			typeNode.setScale(TYPE_NODE_DEFAULT_SCALE);
+		}						
 		node.addNodeEventListener(this);
 	}
 	
@@ -147,10 +145,14 @@ public abstract class PFormalParameter extends PNode implements
 	 */
 	public void setLinkable(boolean v) {
 		linkable = v;
-		if (v == true)
+		if (v == true) {
+			typeNode.setPaint(HIGHLIGHT_COLOR);
 			textNode.setPaint(HIGHLIGHT_COLOR);
-		else
+		}
+		else {
+			typeNode.setPaint(NORMAL_COLOR);
 			textNode.setPaint(NORMAL_COLOR);
+		}
 		repaint();
 	}
 	
