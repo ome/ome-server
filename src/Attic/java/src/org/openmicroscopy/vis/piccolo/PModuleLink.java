@@ -79,8 +79,6 @@
  	
 	private void setEndPoint() {
 		Point2D point = getEndLinkTarget().getCenter();
-		//System.err.println("setting end point in module link..");
-		//System.err.println("point # ..."+pointCount);
 		setEndCoords((float) point.getX(),(float) point.getY());
 	}
 	
