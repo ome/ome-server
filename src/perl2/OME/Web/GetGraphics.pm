@@ -373,7 +373,7 @@ my $cgi       = $self->CGI();
 my $SVG;
 
 my $JSinfo = $self->SVGgetDataJS();
-
+print STDERR ref($self)."->BuildSVGviewer reporting jsinfo.\n\t".join( "\n\t", map( $_.' => '.$JSinfo->{$_}, keys %$JSinfo ))."\n\n";
 my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
 my $ImageID            = $JSinfo->{ ImageID };
 my $Stats              = $JSinfo->{ Stats };
@@ -588,7 +588,7 @@ $SVG .= <<ENDSVG;
 			panePopupList.realize( multiToolBox.getMenuBar() );
 			
 			
-			// voodoo to switch which component is rendered on top
+			// magic to switch which component is rendered on top
 			//  this makes the popupList be drawn on top 
 			multiToolBox.nodes.GUIboxContainer.setAttribute( "onmouseover", 'multiToolBox.drawGUITop()' );
 			multiToolBox.getMenuBar().setAttribute( "onmouseover", 'multiToolBox.drawMenuTop()' );
@@ -634,8 +634,10 @@ $SVG .= <<ENDSVG;
 			setTimeout( "imageControls.blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "imageControls.RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
 			setTimeout( "imageControls.loadButton.setState(false)", 0 );
-			imageControls.zSlider.setValue(theZ/(Z-1)*100,true);
-			imageControls.tSlider.setValue(theT/(T-1)*100,true);
+			zVal = ( Z == 1 ? 0 : theZ/(Z-1)*100 );
+			imageControls.zSlider.setValue(zVal,true);
+			tVal = ( T == 1 ? 0 : theT/(T-1)*100 );
+			imageControls.tSlider.setValue(tVal,true);
 
 		}
 		
