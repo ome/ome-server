@@ -57,10 +57,10 @@ public class PBufferedImage extends PImage implements PBufferedNode {
 
 	public PBufferedImage() {
 		super();
-		setAccelerated(false);
+		setAccelerated(true);
 	}
 	public PBufferedImage(Image image) {
-		super(image,false);
+		super(image,true);
 	}
 	
 	public PBounds getBufferedBounds() {
