@@ -1,4 +1,4 @@
-# OME/module_execution/TrackSpotsHandler.pm
+# OME/Analysis/TrackSpotsHandler.pm
 
 # Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
