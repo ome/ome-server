@@ -362,8 +362,8 @@ SQL statement used to retrieve the objects in question.  You can think
 of these criteria as similar to the data hash used to create objects:
 The keys should be column names (without the "_id" suffix for foreign
 keys), the values should be the search criteria values.  When calling
-the methods, these criteria should be passed in directly in the
-parameter list, not as a hash reference.  For instance:
+the methods, these criteria can be passed in directly in the parameter
+list, or as a hash reference.  For instance:
 
 	my @programs = $factory->
 	    findObjects("OME::Modules",
@@ -373,6 +373,42 @@ parameter list, not as a hash reference.  For instance:
 Also note that these methods are not intended to support arbitrarily
 complex SQL; that's what SQL is for.  As such, all of the criteria
 will be ANDed together in the WHERE clause.
+
+A couple of special syntaxes are supported for the value in a search
+clause:
+
+	id => ['>',3]
+
+tells the Factory to use a different SQL operator in this clause.
+This clause, for instance, would return all objects with a primary key
+ID greater than 3.
+
+	id => ['in',[1,2,3]]
+
+The C<in> operator is another special case -- SQL expects a list in
+this case, so the value for the query clause should be an array
+reference of values.  This clause would return objects with a primary
+key of 1, 2, or 3.
+
+Note that these shortcuts mean that the findObjectsLike method is
+technically superfluous -- the exact same functionality can be
+achieved with findObjects.  For instance,
+
+	$factory->findObjectsLike("OME::Module",
+	                          {
+	                           module_type => 'OME::%',
+	                           name        => '% (Matlab)'
+	                          });
+
+is exactly equivalent to
+
+	$factory->findObjects("OME::Module",
+	                      {
+	                       module_type => ['like','OME::%'],
+	                       name        => ['like','% (Matlab)']
+	                      });
+
+The *Like methods are provided as a convenience.
 
 =cut
 
