@@ -43,6 +43,27 @@ __PACKAGE__->set_db('Main',
 
 
 
+sub columns {
+    my ($class) = shift;
+
+    if ($ENV{OME_CLASS_DBI_DEBUG} eq '1' && $class eq 'OME::Program') {
+        print STDERR "*** ${class}->columns being called\n";
+        print STDERR "    Parameters: ".join(' ',@_)."\n";
+    }
+
+    $class->SUPER::columns(@_);
+}
+
+sub _set_columns {
+    my ($class) = shift;
+
+    if ($ENV{OME_CLASS_DBI_DEBUG} eq '1' && $class eq 'OME::Program') {
+        print STDERR "*** ${class}->_set_columns being called\n";
+        print STDERR "    Parameters: ".join(' ',@_)."\n";
+    }
+
+    $class->SUPER::_set_columns(@_);
+}
 
 
 # Accessors
