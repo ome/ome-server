@@ -300,6 +300,27 @@ sub removeNode {
     return;
 }
 
+=head2 getChain
+
+	my $chain = $manager->getChain($name);
+
+Returns a chain with the given name.
+
+=cut
+
+sub getChain {
+    my ($self,$name) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+
+    die "getChain needs a chain name!"
+      unless
+        defined $name
+        && !ref($name);
+
+    return $factory->findObject("OME::AnalysisChain",{ name  => $name });
+}
+
 =head2 getNode
 
 	my $node = $manager->getNode($chain,$name);
@@ -639,6 +660,61 @@ sub getUserInputs {
     }
 
     return \@inputs;
+}
+
+=head2 getRootNodes
+
+	my $nodes = $manager->getRootNodes($chain);
+
+Returns an array reference of the root nodes of an analysis chain.
+
+=cut
+
+sub getRootNodes {
+    my $self = shift;
+    my ($chain) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+    my @nodes = $factory->
+      findObjects("OME::AnalysisChain::Node",
+                  { analysis_chain => $chain });
+
+    # scalar((foo)) forces to foo to be evaluated in list context, then
+    # coerced into scalar context.  Net result -- number of input links
+    # for a node
+
+    my @roots;
+    foreach my $node (@nodes) {
+        my @links = $node->input_links();
+        push @roots, $node
+          if scalar(@links) == 0;
+    }
+
+    return \@roots;
+}
+
+=head2 getNodeSuccessors
+
+	my $nodes = $manager->getNodeSuccessors($node);
+
+Returns the list of nodes which are successors of the given node as an
+array reference.
+
+=cut
+
+sub getNodeSuccessors {
+    my $self = shift;
+    my ($node) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+    my @links = $factory->
+      findObjects("OME::AnalysisChain::Link",
+                  { from_node => $node });
+    my %to_nodes;
+    $to_nodes{$_->to_node()->id()} = $_->to_node()
+      foreach @links;
+    my @to_nodes = values %to_nodes;
+    return \@to_nodes;
 }
 
 1;
