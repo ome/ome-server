@@ -1,4 +1,4 @@
-# OME/Tasks/InsertFiles.pm
+# OME/ImportExport/InsertFiles.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -17,21 +17,21 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-package OME::Tasks::InsertFiles;
+package OME::ImportExport::InsertFiles;
 
 
 =pod
 
 =head1 NAME
 
-OME::Tasks::ResolveFiles - Package for extracting files from the ome file format
+OME::ImportExport::ResolveFiles - Package for extracting files from the ome file format
 
 =head1 SYNOPSIS
 
 
 =head1 DESCRIPTION
 
-OME::Tasks::ResolveFiles purpose is to resolve all files embedded in an ome 
+OME::ImportExport::ResolveFiles purpose is to resolve all files embedded in an ome 
 document and update xml tags accordingly. It returns a DOM representation of 
 the document.
 

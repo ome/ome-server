@@ -1,4 +1,4 @@
-# OME/Tasks/ChainImport.pm
+# OME/ImportExport/ChainImport.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Tasks::ChainImport;
+package OME::ImportExport::ChainImport;
 
 use strict;
 our $VERSION = 2.000_000;

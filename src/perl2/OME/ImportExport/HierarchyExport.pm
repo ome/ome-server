@@ -1,4 +1,4 @@
-# OME/Tasks/HierarchyExport.pm
+# OME/ImportExport/HierarchyExport.pm
 # This module is used for exporting a list of objects to an XML hierarchy governed by the OME-CA schema.
 
 # Copyright (C) 2003 Open Microscopy Environment
@@ -17,22 +17,22 @@
 #    You should have received a copy of the GNU Lesser General Public
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-package OME::Tasks::HierarchyExport;
+package OME::ImportExport::HierarchyExport;
 
 
 =head1 NAME
 
-OME::Tasks::HierarchyExport - Export a list of objects as an OME XML hierarchy
+OME::ImportExport::HierarchyExport - Export a list of objects as an OME XML hierarchy
 
 =head1 SYNOPSIS
 
 	# Make a new Hierarchy exporter and a new XML document
-	my $exporter = new OME::Tasks::HierarchyExport(session => $session);
+	my $exporter = new OME::ImportExport::HierarchyExport(session => $session);
 
 	# Or - make a new Hierarchy exporter for an existing XML document
-	my $exporter = new OME::Tasks::OMEExporter (session => $session);
+	my $exporter = new OME::Tasks::OMEExport (session => $session);
 	my $doc = $exporter->doc();
-	my $exportH = new OME::Tasks::HierarchyExport(session => $session, _doc => $doc);
+	my $exportH = new OME::ImportExport::HierarchyExport(session => $session, _doc => $doc);
 
 	# Build a DOM from a list of objects.
 	$exportH->buildDOM (@OMEobjects);
@@ -64,7 +64,7 @@ use OME::LSID;
 
 =head2 new
 
-	my $exporter = new OME::Tasks::HierarchyExport (session => $session, _doc => $XMLdoc);
+	my $exporter = new OME::ImportExport::HierarchyExport (session => $session, _doc => $XMLdoc);
 
 This makes a new hierarchy exporter.  The session parameter is required, and the _doc parameter is optional.
 The _doc parameter is an XML document object as returned by XML::LibXML::Document->new();.

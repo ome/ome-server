@@ -1,4 +1,4 @@
-# OME/Tasks/SemanticTypeImport.pm
+# OME/ImportExport/SemanticTypeImport.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Tasks::SemanticTypeImport;
+package OME::ImportExport::SemanticTypeImport;
 
 use strict;
 our $VERSION = '1.0';
@@ -431,7 +431,7 @@ sub processDOM {
 # Believe it or not, setting sql_type to $dataType fails in $factory->newObject for some (but not all) 'integer's with:
 #   Failure while doing 'MakeNewObj' with 'New OME::DataTable::Column'
 #   DBD::Pg::st execute failed: ERROR:  Attribute 'integer' not found at /Library/Perl/Ima/DBI.pm line 733.
-#   at /Library/Perl/OME/Tasks/SemanticTypeImport.pm line 428
+#   at /Library/Perl/OME/ImportExport/SemanticTypeImport.pm line 428
 # The only hope is to set it to a literal string.  Yes, the offending 'integer's are 'eq' and '==' to 'integer' string literals,
 # and $sqlDataType gets set properly, so there are no hidden gremlins in there.
 # If you know why and have a better fix, please have at it.

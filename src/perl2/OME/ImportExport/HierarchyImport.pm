@@ -1,4 +1,4 @@
-# OME/Tasks/HierarchyImport.pm
+# OME/ImportExport/HierarchyImport.pm
 # This module is used for importing a list of objects from XML governed by the OME-CA schema.
 
 # Copyright (C) 2003 Open Microscopy Environment
@@ -19,11 +19,11 @@
 #    You should have received a copy of the GNU Lesser General Public
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-package OME::Tasks::HierarchyImport;
+package OME::ImportExport::HierarchyImport;
 
 =head1 NAME
 
-OME::Tasks::HierarchyImport - Import a list of objects from an OME XML.
+OME::ImportExport::HierarchyImport - Import a list of objects from an OME XML.
 
 =head1 SYNOPSIS
 
@@ -33,7 +33,7 @@ OME::Tasks::HierarchyImport - Import a list of objects from an OME XML.
 
 	# Or, if you insist on doing it yourself:
     my $parser = new XML::LibXML ();
-    my $hierarchyImporter = new OME::Tasks::HierarchyImport->(session => $session);
+    my $hierarchyImporter = new OME::ImportExport::HierarchyImport->(session => $session);
     my $doc = $parser->parse_string($xml);
     my $objectList = $hierarchyImporter->processDOM($doc->getDocumentElement());
 
@@ -61,7 +61,7 @@ use OME::Tasks::AnalysisEngine;
 
 =head2 new
 
-	my $importer = new OME::Tasks::HierarchyImport (session => $session, _lsidResolver => $lsidRslvr);
+	my $importer = new OME::ImportExport::HierarchyImport (session => $session, _lsidResolver => $lsidRslvr);
 
 This makes a new hierarchy importer.  The session parameter is required, and the _lsidResolver parameter is optional.
 The _lsidResolver is an L<OME::LSID|OME::LSID> object used for resolving LSIDs to local DB IDs.  If one is not passed
@@ -99,6 +99,9 @@ sub new {
 		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
 	}
 
+	$self->{factory} = $self->{session}->Factory()
+		or die "Could not obtain a Factory object for this session.";
+
 	
 
 	bless($self,$class);
@@ -129,7 +132,7 @@ sub processDOM {
 	my $root    = shift;
 
 	my $session = $self->{session};
-	my $factory = $session->Factory();
+	my $factory = $self->{factory};
 	my $lsid = $self->{_lsidResolver};
 	
 	###########################################################################
@@ -298,9 +301,9 @@ sub module_execution () {
 	return $self->{_analysis} if exists $self->{_analysis} and defined $self->{_analysis};
 	my $session = $self->{session};
 
-    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
+    my $config =  $self->{factory}->loadObject("OME::Configuration", 1);
 
-    my $module_execution = $session->Factory()->
+    my $module_execution = $self->{factory}->
 		newObject("OME::ModuleExecution", {
 			dependence => 'I',
 			dataset_id => $self->dataset()->id(),
@@ -321,7 +324,7 @@ sub dataset () {
 	return $self->{_dataset} if exists $self->{_dataset} and defined $self->{_dataset};
 	my $session = $self->{session};
 
-    my $dataset = $session->Factory()->
+    my $dataset = $self->{factory}->
 		newObject("OME::Dataset", {
 			name => 'Dummy XML import dataset',
 			description => '',
@@ -376,7 +379,7 @@ sub importObject ($$$$) {
 	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
 
 	my $session	   = $self->{session};
-	my $factory	   = $session->Factory();
+	my $factory	   = $self->{factory};
 
 	# It is fatal for an object ID to be non-unique
 	logdie ref ($self) . "->importObject: Attempt to import an attribute with duplicate ID '$LSID'"
@@ -510,21 +513,23 @@ sub getObjectTypeInfo ($$) {
 		$refCols = {};
 
 	} else {
-		my $session	   = $self->{session};
-		my $factory	   = $session->Factory();
-		my $attrType = $factory->findObject("OME::SemanticType",name => $objectType)
+		my $factory	   = $self->{factory};
+		my $ST = $factory->findObject("OME::SemanticType",name => $objectType)
 			|| logdie ref ($self) . "->getObjectTypeInfo: Attempt to import an undefined attribute type: $objectType";
-		my @attrColumns = $attrType->semantic_elements();
+		my @attrColumns = $ST->semantic_elements();
 		my ($attrCol,$attrColName);
 		foreach $attrCol (@attrColumns) {
 			$attrColName = $attrCol->name();
 			$objectData->{$attrColName} = $node->getAttribute($attrColName);
-			if ($attrCol->data_column()->sql_type() eq 'reference') {
+			my $sql_type = $attrCol->data_column()->sql_type();
+			if ($sql_type eq 'reference') {
 				$refCols->{$attrColName} = $objectData->{$attrColName};
+			} elsif ($sql_type eq 'boolean') {
+				$objectData->{$attrColName} = $objectData->{$attrColName} eq 'true' ? '1' : '0';
 			}
 			logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
 		}
-		my $granularity =  $attrType->granularity();
+		my $granularity =  $ST->granularity();
 		if ($granularity eq 'D') {
 			$objectData->{dataset_id} = $parentID;
 		} elsif ($granularity eq 'I') {

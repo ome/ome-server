@@ -1,4 +1,4 @@
-# OME/Tasks/SemanticTypeImport.pm
+# OME/ImportExport/SemanticTypeImport.pm
 
 # Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Ilya Goldberg <igg@nih.gov>
@@ -18,7 +18,7 @@
 #	 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Tasks::SemanticTypeExport;
+package OME::ImportExport::SemanticTypeExport;
 
 use strict;
 our $VERSION = '1.0';
