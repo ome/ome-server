@@ -390,7 +390,8 @@ sub create{
 	}else{
 		$project=$session->project();
 	}
-	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$project->id());
+	
+	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$projectID);
 
 	if ($dataset){
 	   $dataset->storeObject();
@@ -484,14 +485,14 @@ sub newDataset{
 		group_id    => $groupID,
 	} );
 	my $map = $factory->findObject("OME::Project::DatasetMap",
-         'dataset_id' => $dataset->id(),
-		  'project_id' => $projectID
+		'dataset_id' => $dataset->id(),
+		'project_id' => $projectID
 	);
-	if (not defined $map) {
+	if (not defined $map and $projectID) {
 		$map=$factory->newObject("OME::Project::DatasetMap",{
 			project_id => $projectID,
-      dataset_id => $dataset->id()
-			} );
+			dataset_id => $dataset->id()
+		} );
 	}
 	return $dataset;
 	
