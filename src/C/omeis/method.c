@@ -60,6 +60,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "SetPlane") == 0) return M_SETPLANE;
 	if (strcmp(m_name, "GetPlane") == 0) return M_GETPLANE;
 	if (strcmp(m_name, "GetPlaneStats") == 0) return M_GETPLANESTATS;
+	if (strcmp(m_name, "GetStackStats") == 0) return M_GETSTACKSTATS;
 	
 	/* Stack comparisions */
 	if (strcmp(m_name, "Stack") == 0) return M_STACK;
@@ -84,6 +85,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "ConvertPlane") == 0) return M_CONVERTPLANE;
 	if (strcmp(m_name, "ConvertTIFF") == 0) return M_CONVERTTIFF;
 	if (strcmp(m_name, "ConvertRows") == 0) return M_CONVERTROWS;
+	if (strcmp(m_name, "Composite") == 0) return M_COMPOSITE;
 
 	fprintf(stderr, "Unknown method '%s'.\n", m_name);
 	return 0;  /* Unknown method */
