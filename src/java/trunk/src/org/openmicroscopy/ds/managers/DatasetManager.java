@@ -37,14 +37,12 @@
 package org.openmicroscopy.ds.managers;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
 import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.InstantiatingCaller;
-import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Image;

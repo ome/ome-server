@@ -41,7 +41,6 @@ import java.util.HashMap;
 
 import org.openmicroscopy.ds.DataServices;
 import org.openmicroscopy.ds.DataFactory;
-import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.RemoteServerErrorException;
 import org.openmicroscopy.ds.dto.Module;
