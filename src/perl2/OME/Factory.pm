@@ -26,10 +26,10 @@ use Ima::DBI;
 use Class::Accessor;
 use OME::SessionManager;
 
-use base qw(Ima::DBI Class::Accessor);
+use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
-use fields qw(Session Debug _cache);
-__PACKAGE__->mk_ro_accessors(qw(Session));
+use fields qw(Debug _cache);
+__PACKAGE__->mk_classdata('Session');
 __PACKAGE__->mk_accessors(qw(Debug));
 __PACKAGE__->set_db('Main',
                   OME::SessionManager->DataSource(),
@@ -45,10 +45,8 @@ __PACKAGE__->set_db('Main',
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    my $session = shift;
 
     my $self = $class->SUPER::new();
-    $self->{Session} = $session;
     $self->{_cache} = {};
     $self->{Debug} = 1;
 
@@ -60,6 +58,20 @@ sub new {
 # ---------
 
 sub DBH { my $self = shift; return $self->db_Main(); }
+
+# Make sure parameter is actually a OME::Session
+sub Session { 
+    my $self = shift;
+    my $session = shift;
+    if ($session) {
+        if ($session->isa("OME::Session")) {
+            $self->_Session_accessor($session)
+        } else {
+            die '\nOME::DBObject->Session called with something other than a OME::Session object.\n';
+        }
+    }
+    else { return $self->_Session_accessor(); }
+}
 
 
 # loadObject
