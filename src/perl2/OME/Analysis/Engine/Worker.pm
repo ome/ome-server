@@ -68,19 +68,26 @@ use base qw(OME::DBObject);
 
 =head1 FIELDS
 
-Note that using these fields as mutators will not make the values available to other
-processes until storeObject() is called.  Use the provided methods to do immediate
-updates.
-
 =head2 URL ()
 
-The Worker's URL - fully qualified.  This is what will be called to get the worker to execute a module.
+The Worker's URL - fully qualified.  This is what will be called to get the
+worker to execute a module.  Some kind of executable should be at the end of
+this URL.  In the present implementation this URL points at a Worker CGI script
+(OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl)
 
 =head2 status ()
 
 The Worker's status.  Can be 'IDLE', 'BUSY', 'OFF-LINE'.  Note that workers that are off-line
 cannot be placed on-line directly by a remote host.  These workers are ignored for executing
 tasks until something external places them back on-line.
+
+=head2 last_used ()
+
+The last time the worker was "used".  Note that this doesn't necessarily mean it
+was used successfully, it could have failed.  This field is set to 'now()' if
+the worker reported an error, or its set to 'now()' when the worker changes its
+own status from 'BUSY' to 'IDLE'.  This is used to run the workers in round-robin
+fasion by always sorting on this field.
 
 =head2 PID ()
 
@@ -125,7 +132,8 @@ Ilya Goldberg (igg@nih.gov)
 
 =head1 SEE ALSO
 
-L<OME::Tasks::NotificationManager|OME::Tasks::NotificationManager>
+L<OME::Analysis::Engine::Executor|OME::Analysis::Engine::Executor>,
+L<OME::DBObject|OME::DBObject>
 
 =cut
 
