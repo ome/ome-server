@@ -48,6 +48,7 @@ import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.ModuleCategory;
+import org.openmicroscopy.vis.chains.Controller;
 
 
 /** 
@@ -68,7 +69,7 @@ public class Modules {
 	
 	private ArrayList rootCategories = new ArrayList();
 		
-	public Modules(Connection connection,Factory factory) {
+	public Modules(Controller  controller,Factory factory) {
 		Module mod;
 		Integer id;
 		ModuleCategory cat;
@@ -82,7 +83,7 @@ public class Modules {
 			mod = (Module) iter.next();
 			populateModule(mod);
 			id = new Integer(mod.getID());
-			connection.setStatusLabel("Module.."+mod.getName());
+			controller.setStatusLabel("Module.."+mod.getName());
 			byId.put(id,mod);
 
 			cat = mod.getCategory();
@@ -95,7 +96,8 @@ public class Modules {
 		iter = cats.iterator();
 		while (iter.hasNext()) {
 			cat = (ModuleCategory) iter.next();
-			connection.setStatusLabel("Category... "+cat.getName());
+			//connection.setStatusLabel("Category... "+cat.getName());
+			controller.setStatusLabel("Module.."+cat.getName());
 			if (cat.getParentCategory() == null) {
 				rootCategories.add(cat);
 			}

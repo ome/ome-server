@@ -39,6 +39,7 @@
  
  package org.openmicroscopy.vis.ome;
  
+ import org.openmicroscopy.vis.chains.Controller;
  import java.util.TreeMap;
  import java.util.List;
  import java.util.Iterator;
@@ -55,11 +56,11 @@
 public class Chains {
 	
 	private TreeMap chains = new TreeMap();
-	private Connection connection;
+	private Controller controller;
 	
-	public Chains(Connection connection,Factory factory) {
+	public Chains(Controller controller,Factory factory) {
 		
-		this.connection = connection;
+		this.controller = controller;
 		CChain c;
 		Integer id;
 		
@@ -68,7 +69,7 @@ public class Chains {
 		
 		while (iter.hasNext()) {
 			c = (CChain) iter.next();
-			connection.setStatusLabel("Chain.."+c.getName());
+			controller.setStatusLabel("Chain.."+c.getName());
 			id = new Integer(c.getID());
 			chains.put(id,c);
 		}
@@ -80,7 +81,7 @@ public class Chains {
 		Iterator iter = chains.values().iterator();
 		while (iter.hasNext()) {
 			c = (CChain) iter.next();
-			//connection.setStatusLabel("Chain Layout.."+c.getName());
+			controller.setStatusLabel("Chain Layout.."+c.getName());
 			//System.err.println("Laying out chain ..."+c.getName());
 			c.layout();
 		}
