@@ -1,0 +1,45 @@
+<table><tr><td valign="top">
+	<a href="javascript: document.forms[0].submit();" class="ome_header_title">Search</a><br><br>
+<!-- TMPL_IF NAME=accessor_descriptor -->
+	<!-- TMPL_VAR NAME=accessor_descriptor -->
+<!-- TMPL_ELSE -->
+		Look for:<br>
+	<select name="Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
+		<option value="">Select a Type</option>
+	<!-- TMPL_LOOP NAME=types_loop -->
+		<option value="<!-- TMPL_VAR NAME=formal_name -->" <!-- TMPL_VAR NAME=selected -->><!-- TMPL_VAR NAME=common_name --></option>
+	<!-- /TMPL_LOOP -->
+	</select><hr>
+	<!-- TMPL_IF NAME=search_fields_loop -->
+			That match criteria:<br>
+		<!-- TMPL_LOOP NAME=search_fields_loop -->
+		<table width="100%"><tr><td align="left">
+			<!-- TMPL_VAR NAME=field_label -->
+		</td><td align="right">
+			<!-- TMPL_VAR NAME=sort_up --><img src="/images/up.gif" class="ome_sort_arrows"></a>
+	<!--
+			<!-- TMPL_VAR NAME=sort_down --><img src="/images/down.gif" class="ome_sort_arrows"></a>
+	-->
+		</td></tr></table>
+		<!-- TMPL_VAR NAME=form_field -->
+		<!-- /TMPL_LOOP -->
+	<!-- /TMPL_IF -->
+<!-- /TMPL_IF -->
+<hr>
+<nobr>Display Results as:</nobr><br>
+<!-- TMPL_LOOP NAME=modes_loop -->
+<nobr><input type="radio" name="Mode" value="<!-- TMPL_VAR NAME=mode -->" <!-- TMPL_VAR NAME=checked -->><!-- TMPL_VAR NAME=mode_title --></nobr><br>
+<!-- /TMPL_LOOP -->
+</td>
+<td valign="top" width="100%">
+<table>
+	<caption>Results:</caption>
+	<tr><td valign="top">
+<!-- TMPL_IF NAME=results -->
+	<!-- TMPL_VAR NAME=results -->
+<!-- TMPL_ELSE -->
+	<b>(none)</b>
+<!-- /TMPL_IF -->
+	</td></tr>
+</table>
+</td></tr></table>
