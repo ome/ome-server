@@ -43,19 +43,23 @@
  import org.openmicroscopy.remote.RemoteChain.Link;
  import org.openmicroscopy.remote.RemoteObjectCache;
  import org.openmicroscopy.remote.RemoteSession;
- import java.util.List;
+
+ import java.util.Collection;
  import java.util.Vector;
- import java.util.Iterator;
  import java.util.HashSet;
+ import java.util.Iterator;
+
  
  public class CNode extends Node {
 	
-	private Vector succs = null;
-	protected HashSet layoutLinks = new HashSet();
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain::Node",CNode.class);
 	}
 	private int layer = -1;
+	private double posInLayer = 0.0;
+	
+	protected Vector succLinks = new Vector();
+	protected Vector predLinks = new Vector();
 	
  	public CNode() {
  		super(); 
@@ -63,7 +67,7 @@
  	
  	public CNode(RemoteSession session,String reference) {
  		super(session,reference);
- 	
+ 		//buildLinkLists();
  	}
  	
 	public void setLayer(int layer) {
@@ -78,49 +82,102 @@
 		return (!(layer == -1));
 	} 
 	
+	public void setPosInLayer(double p) {
+		posInLayer = p;
+	}
+	
+	public double getPosInLayer() {
+		return posInLayer;
+	}
+	
+	// we can't call "buildsuccessors" in the constructor. Doesn't work.
+	// so, have a separate call
+	
+	public void buildLinkLists() {
+		buildSuccessors();
+		buildPredecessors();
+	}
 	private void buildSuccessors() {
 	
-		succs = new Vector();
-		List outputs = getOutputLinks();
+		Collection outputs = getOutputLinks();
 		Iterator iter = outputs.iterator();
 		
 		while (iter.hasNext()) {
 			Link link = (Link)iter.next();
 			CNode node = (CNode) link.getToNode();
-			succs.add(node);
 			//	add a layout link?
-			buildLayoutLink(link);
+			CLayoutLink layoutLink = new CLayoutLink(link);
+			succLinks.add(layoutLink);
 		}
 	}
 	
-	public List getSuccessors() {
-		if (succs == null)
-			buildSuccessors();
+	public Collection getSuccessors() {
+		HashSet succs = new HashSet();
+		Iterator iter = succLinks.iterator();
+		while (iter.hasNext()) {
+			CLayoutLink link = (CLayoutLink) iter.next();
+			CNode node = (CNode) link.getToNode();
+			succs.add(node);
+		}
 		return succs;
 	}
 	
-	public void removeLayoutLink(Link link) {
-		if (layoutLinks != null)
-			layoutLinks.remove(link);
+	private void buildPredecessors() {
+		Collection inputs = getInputLinks();
+		Iterator iter = inputs.iterator();
+		while (iter.hasNext()) {
+			Link link = (Link) iter.next();
+			CLayoutLink layoutLink = new CLayoutLink(link);
+			predLinks.add(layoutLink);
+		
+		}
 	}
 	
-	public void addLayoutLink(Link link) {
-		layoutLinks.add(link);
+	public  Collection getPredecessors() {
+		HashSet preds = new HashSet();
+		Iterator iter = predLinks.iterator();
+		while (iter.hasNext()) {
+			CLayoutLink link = (CLayoutLink) iter.next();
+			CNode node = (CNode) link.getToNode();
+			preds.add(node);
+		}
+		return preds;
 	}
 	
-	public Iterator layoutLinkIterator() {
-		return layoutLinks.iterator();
+	public void removeSuccLink(CLayoutLink link) {
+		if (succLinks != null) {
+			succLinks.remove(link);
+		}
 	}
 	
-	private void buildLayoutLink(Link link) {
-		CNode from = (CNode) link.getFromNode();
-		CNode to = (CNode) link.getToNode();
-		CLayoutLink layoutLink = new CLayoutLink(from,to);
-		layoutLinks.add(layoutLink);
+	public void addSuccLink(CLayoutLink link) {
+		succLinks.add(link);
 	}
 	
-	public void setLayoutLinks(Vector links) {
-		layoutLinks = new HashSet(links);
+	public Iterator succLinkIterator() {
+		return succLinks.iterator();
+	}
+	
+	
+	
+	public void setSuccLinks(Vector links) {
+		succLinks = links;
+	}
+	
+	
+	
+	public void removePredLink(CLayoutLink link) {
+		if (predLinks != null) {
+			predLinks.remove(link);
+		}
+	}
+	
+	public void addPredLink(CLayoutLink link) {
+		predLinks.add(link);
+	}
+	
+	public Iterator predLinkIterator() {
+		return predLinks.iterator();
 	}
  }
  
