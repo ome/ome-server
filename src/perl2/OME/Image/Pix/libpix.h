@@ -62,7 +62,9 @@ Pix *NewPix      (char* path, int dx, int dy, int dz, int dw, int dt, int bp);
 void FreePix  (Pix *pPix);
 
 char *GetPixels (Pix *pPix);
+char *GetRow (Pix *pPix, int theY, int theZ, int theW, int theT);
 char *GetPlane (Pix *pPix, int theZ, int theW, int theT);
+char *GetPlaneXZ (Pix *pPix, int theY, int theW, int theT);
 char *GetStack (Pix *pPix, int theW, int theT);
 char *GetROI (Pix *pPix,
 	int x0, int y0, int z0, int w0, int t0,

@@ -239,7 +239,86 @@ char *theBuf;
 	return (theBuf);
 }  
 
+int _GetRow (Pix *pPix, char * theBuf, int theY, int theZ, int theW, int theT)
+{
+size_t nPix;
+int dx = pPix->dx;
+int dy = pPix->dy;
+int dz = pPix->dz;
+int dw = pPix->dw;
+int dt = pPix->dt;
+int bp = pPix->bp;
+FILE *fp;
+size_t nIn;
 
+	if (theY >= dy || theY < 0 ||
+		theZ >= dz || theZ < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
+		fprintf (stderr,"Pix->_GetRow:  Row selection out of range.\n");
+		return (NULL);
+	}
+
+	nPix = dx;
+
+	fp = GetPixFile (pPix);
+	if (!fp) {
+		fprintf (stderr,"Pix->_GetRow:  Could not open '%s' for reading.\n",pPix->path);
+		return (1);
+	}
+
+	if (fseek (fp, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, SEEK_SET)) {
+		fprintf (stderr,"Pix->_GetRow:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
+			0,theY,theZ,theW,theT,pPix->path);
+		pixFinish (pPix);
+		return (1);
+	}
+	
+	nIn = fread (theBuf,bp,nPix,fp);
+	if (nIn < nPix) {
+		fprintf (stderr,"Pix->_GetRow:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
+			0,theY,theZ,theW,theT,pPix->path,(int)nPix,(int)nIn);
+		pixFinish (pPix);
+		return (1);
+	}
+
+	return (0);
+}  
+
+
+char *GetRow (Pix *pPix, int theY, int theZ, int theW, int theT)
+{
+size_t nPix;
+int dx = pPix->dx;
+int dy = pPix->dy;
+int dz = pPix->dz;
+int dw = pPix->dw;
+int dt = pPix->dt;
+int bp = pPix->bp;
+char *theBuf;
+
+	if (theY >= dy || theY < 0 ||
+		theZ >= dz || theZ < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
+		fprintf (stderr,"Pix->GetRow:  Row selection out of range.\n");
+		return (NULL);
+	}
+
+	nPix = dx;
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->GetRow:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+	
+	if( _GetRow( pPix, theBuf, theY, theZ, theW, theT ) ) {
+		free( theBuf );
+		return (NULL);
+	}
+
+	return (theBuf);
+}  
 
 char *GetPlane (Pix *pPix, int theZ, int theW, int theT)
 {
@@ -290,6 +369,44 @@ char *theBuf;
 		pixFinish (pPix);
 		free (theBuf);
 		return (NULL);
+	}
+
+	return (theBuf);
+}  
+
+
+char *GetPlaneXZ (Pix *pPix, int theY, int theW, int theT)
+{
+size_t nPix;
+int dx = pPix->dx;
+int dy = pPix->dy;
+int dz = pPix->dz;
+int dw = pPix->dw;
+int dt = pPix->dt;
+int bp = pPix->bp;
+int z;
+char *theBuf;
+
+	if (theY >= dy || theY < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
+		fprintf (stderr,"Pix->GetPlaneXZ:  Plane selection out of range.\n");
+		return (NULL);
+	}
+
+	nPix = dz * dx;
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->GetPlaneXZ:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+
+	for( z = 0; z < dz; z++ ) {
+		if( _GetRow( pPix, theBuf + z*dx*bp, theY, z, theW, theT ) ) {
+			fprintf (stderr,"Pix->GetPlaneXZ: Encountered error when accessing row (y,z,w,t: %d, %d, %d, %d)\n", theY, z, theW, theT );
+			free( theBuf );
+			return (NULL);
+		}
 	}
 
 	return (theBuf);
