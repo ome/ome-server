@@ -91,6 +91,8 @@ __PACKAGE__->hasMany('links',
                      'OME::AnalysisChain::Link' => 'analysis_chain');
 __PACKAGE__->hasMany('paths',
                      'OME::AnalysisPath' => 'analysis_chain');
+__PACKAGE__->hasMany('executions',
+                     'OME::AnalysisChainExecution' => 'analysis_chain');
 
 =head1 METHODS (C<AnalysisChain>)
 
