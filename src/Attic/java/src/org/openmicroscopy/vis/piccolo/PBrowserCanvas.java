@@ -153,7 +153,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			node = (PDataset) o;
 		}
 		else {
-			////System.err.println("creating new widget");
 			node = new PDataset(d,connection);
 			datasetWidgets.put(d,node);
 		}
@@ -178,8 +177,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private void arrangeDisplay(Collection datasets) {
 		layer.removeAllChildren();
-		if (datasets == null)
+		if (datasets == null) {
 			return;
+		}
 		
 		totalArea = 0;
 		Iterator iter = datasets.iterator();
