@@ -184,7 +184,7 @@ sub execute {
     my $environment = initialize OME::Install::Environment;
 
 	# A special Unix user to be added to the OME group if needed
-	my $SPECIAL_USER = "";
+	my $SPECIAL_USER;
     
     print_header ("Core System Setup");
 
@@ -219,7 +219,7 @@ sub execute {
 	$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 	# Get and/or update our "special" Unix user information
-	$SPECIAL_USER = confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER);
+	$SPECIAL_USER = confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER || "");
 
 	# Make sure the rest of the installation knows who the apache and ome users are
 	$environment->user($OME_USER);
@@ -275,13 +275,13 @@ sub execute {
 
     my $need_to_add_apache = 1;
     my $need_to_add_user = 1;
-	my $need_to_add_special_user = 1;
+	my $need_to_add_special_user = $SPECIAL_USER ? 1 : 0;
 
     if (@members) {
 	    foreach my $member (@members) {
-		    $need_to_add_apache = 1 if $member eq $APACHE_USER;
-		    $need_to_add_user = 1 if $member eq $OME_USER;
-			$need_to_add_special_user = 1 if $member eq $SPECIAL_USER;
+		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
+		    $need_to_add_user = 0 if $member eq $OME_USER;
+			$need_to_add_special_user = 0 if $member eq $SPECIAL_USER;
 	    };
     }
 
