@@ -101,7 +101,7 @@ public class Controller  implements LoginResponder {
 	
 	private ControlPanel controlPanel;
 	
-	private ResultFrame currentResultFrame;
+	
 	
 	private int initThreads = 0;
 	
@@ -369,15 +369,6 @@ public class Controller  implements LoginResponder {
 		}
 		canvasFrames.clear();
 		
-		iter = resultFrames.iterator();
-
-		ResultFrame resultFrame;
-		while (iter.hasNext()) {
-			resultFrame = (ResultFrame) iter.next();
-			resultFrame.dispose();
-		}
-		resultFrames.clear();
-
 	}
 	
 	/**
@@ -417,9 +408,6 @@ public class Controller  implements LoginResponder {
 		canvasFrames.remove(c);
 	}
 	
-	public void disposeResultFrame(ResultFrame f) {
-		resultFrames.remove(f);
-	}
 	
 
 	
@@ -433,9 +421,6 @@ public class Controller  implements LoginResponder {
 		currentChainFrame = c;
 	}
 	
-	public void setCurrentResults(ResultFrame r) {
-		currentResultFrame = r;
-	}
 	
 	public ControlPanel getControlPanel() {
 		return controlPanel;
