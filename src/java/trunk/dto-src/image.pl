@@ -38,18 +38,20 @@
                       ImportPackages =>
                       {
                        'org.openmicroscopy.ds.st' =>
-                       ['Experimenter','ExperimenterDTO'],
+                       ['Experimenter','ExperimenterDTO',
+                        'Pixels','PixelsDTO'],
                       },
 
                       Fields  =>
                       [
-                       ID          => ['int'],
-                       Name        => ['String'],
-                       Description => ['String'],
-                       Owner       => ['Experimenter'],
-                       Created     => ['String'],
-                       Inserted    => ['String'],
-                       Datasets    => ['List:Dataset'],
-                       Features    => ['List:Feature'],
+                       ID            => ['int'],
+                       Name          => ['String'],
+                       Description   => ['String'],
+                       Owner         => ['Experimenter'],
+                       Created       => ['String'],
+                       Inserted      => ['String'],
+                       DefaultPixels => ['Pixels','default_pixels'],
+                       Datasets      => ['List:Dataset'],
+                       Features      => ['List:Feature'],
                       ],
                      );
