@@ -273,7 +273,7 @@
 				<Element Index="7" OutputLocation="Magnitude Histogram.Bin6"/>
 				<Element Index="8" OutputLocation="Magnitude Histogram.Bin7"/>
 			</VectorDecoder>
-			<VectorDecoder ID="Direction Hist">
+			<VectorDecoder ID="Direction Histogram">
 				<Element Index="1" OutputLocation="Direction Histogram.Bin0"/>
 				<Element Index="2" OutputLocation="Direction Histogram.Bin1"/>
 				<Element Index="3" OutputLocation="Direction Histogram.Bin2"/>
