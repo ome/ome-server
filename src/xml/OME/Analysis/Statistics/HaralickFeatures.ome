@@ -38,31 +38,31 @@
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 	
 		<!-- FORMAL INPUT STs-->
-		<SemanticType Name="HaralickTextureDirection" AppliesTo="I">
+		<SemanticType Name="HaralickTextureDirection" AppliesTo="G">
 			<Description>
 			Each co-occurrence matrix is for a specific, fixed, direction and distance.
 			Use this ST to specify the direction.
 			</Description>
 			<Element
 				Name="Direction_Units" 
-				DBLocation="CO_OCCURRENCE_MATRIX.DIRECTION_UNITS"  
+				DBLocation="HARALICK_PARAMETERS.DIRECTION_UNITS"  
 				DataType="string">
 			<Description>Units can be either degrees or radians.</Description>	
 			</Element>	
 			<Element 
 				Name="Direction_Value" 
-				DBLocation="CO_OCCURRENCE_MATRIX.DIRECTION_VALUE"  
+				DBLocation="HARALICK_PARAMETERS.DIRECTION_VALUE"  
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="HaralickTextureDistance" AppliesTo="I">
+		<SemanticType Name="HaralickTextureDistance" AppliesTo="G">
 			<Description>
 			Each co-occurrence matrix is for a specific, fixed, direction and distance.
 			Use this ST to specify the distance.
 			</Description>
 			<Element 
 				Name="Distance" 
-				DBLocation="CO_OCCURRENCE_MATRIX.DISTANCE"  
+				DBLocation="HARALICK_PARAMETERS.DISTANCE"  
 				DataType="integer">
 			<Description>Units are number of pixels.</Description>	
 			</Element>
@@ -187,7 +187,7 @@
 		   ModuleName="Haralick Features"
 		   Category="Signature"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="HaralickFeatures"
+		   ProgramID="haralick_wrapper"
 		   ID="urn:lsid:openmicroscopy.org:Module:93">
 		  <Description>
 			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
@@ -230,17 +230,32 @@
 			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage"
-			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input Name="Pixels"/>
-			</Inputs>
-			<Outputs>
-			  <Output Name="RegularBlobNum"/>
-			  <!-- Fill it out later. -->
-			</Outputs>
+          <ExecutionInstructions 
+            ExecutionGranularity="I" 
+            xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" 
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+            xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels" ID="Input_Pixels"/></Input>
+			  <Input><Scalar InputLocation="Texture Distance.Distance" ID="_TextureDistance"/></Input>
+			  <Input><Scalar InputLocation="Texture Direction.Direction_Value" ID="_TextureDirection"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><Scalar OutputLocation="Angular Second Moment.ASM" ID="_ASM"/></Output>
+			  <Output><Scalar OutputLocation="Contrast.Contrast" ID="_Contrast"/></Output>
+			  <Output><Scalar OutputLocation="Correlation.Correlation" ID="_Correlation"/></Output>
+			  <Output><Scalar OutputLocation="Variance.Variance" ID="_Variance"/></Output>
+			  <Output><Scalar OutputLocation="Inverse Difference Moment.IDM" ID="_IDM"/></Output>
+			  <Output><Scalar OutputLocation="Sum Average.SumAvg" ID="_SA"/></Output>
+			  <Output><Scalar OutputLocation="Sum Variance.SumVar" ID="_SV"/></Output>
+			  <Output><Scalar OutputLocation="Sum Entropy.SumEntropy" ID="_SE"/></Output>
+			  <Output><Scalar OutputLocation="Entropy.Entropy" ID="_Entropy"/></Output>
+			  <Output><Scalar OutputLocation="Difference Entropy.DiffEntropy" ID="_DE"/></Output>
+			  <Output><Scalar OutputLocation="Difference Variance.DiffVar" ID="_DV"/></Output>
+			  <Output><Scalar OutputLocation="First Measure of Correlation.MeasCorr1" ID="_FMC"/></Output>
+			  <Output><Scalar OutputLocation="Second Measure of Correlation.MeasCorr2" ID="_SMC"/></Output>
+			  <Output><Scalar OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef" ID="_MCC"/></Output>
+			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
