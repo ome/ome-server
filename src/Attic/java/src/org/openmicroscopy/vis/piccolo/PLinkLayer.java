@@ -43,6 +43,7 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.Collection;
 
 /** 
  * A {@link PLayer} specifically designed to hold PLink objects - both PParamLinks and 
@@ -96,6 +97,10 @@ public class PLinkLayer extends PLayer {
 	 */
 	public Iterator linkIterator() {
 		return params.getChildrenIterator();
+	}
+	
+	public Collection links() {
+		return params.getChildrenReference();
 	}
 	
 	/**
