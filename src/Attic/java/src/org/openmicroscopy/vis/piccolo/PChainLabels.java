@@ -56,7 +56,7 @@ import java.util.Iterator;
 public class PChainLabels extends PNode {
 	
 	private static final double VGAP =5;
-	private static final double HGAP=40;
+	private static final double HGAP=10;
 	private double area = 0;
 	
 	public PChainLabels(Collection datasets) {
