@@ -153,7 +153,7 @@ sub createOriginalFileAttribute {
           newAttribute('OriginalFile',undef,$mex,
                        {
                         Repository => $repository,
-                        Path       => undef,
+                        Path       => $file->getFilename(),
                         FileID     => $file->getFileID(),
                         SHA1       => $file->getSHA1(),
                         Format     => $format,
