@@ -53,6 +53,8 @@ use constant HANDLE   => 0;
 use constant FILENAME => 1;
 use constant MODE     => 2;
 
+our $FILES_OPENED = 0;
+
 =head1 DESCRIPTION
 
 This class provides an implementation of the OME::File interface for
@@ -115,6 +117,8 @@ sub open {
     $self->[HANDLE] = $file;
     $self->[MODE]   = $mode;
 
+    $FILES_OPENED++;
+
     return $self;
 }
 
@@ -163,7 +167,8 @@ sub getSHA1 {
     my $sh;
     my $sha1;
 
-    CORE::open (STDOUT_PIPE,$cmd);
+    CORE::open (STDOUT_PIPE,$cmd)
+        or die "Could not pipe to openssl";
     chomp ($sh = <STDOUT_PIPE>);
     $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
     $sha1 = $1;
@@ -402,6 +407,8 @@ sub close {
     $fh->close() or die "Could not close: $|";
     $self->[HANDLE] = undef;
     $self->[MODE]   = undef;
+
+    --$FILES_OPENED;
 }
 
 1;
