@@ -195,6 +195,9 @@ sub serve {
     } elsif ($result eq 'IMAGE' && defined $content) {
 		print $self->CGI()->header($self->contentType());
 		print $content;
+    } elsif ($result eq 'SVG' && defined $content) {
+		print $self->CGI()->header($self->contentType());
+		print $content;
     } elsif ($result eq 'REDIRECT' && defined $content) {
 		$self->CGI()->redirect($content);
     } else {
