@@ -7,7 +7,7 @@ FINK_LIB = -L/sw/lib/
 #CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 -pedantic
 CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 $(XML2_CFLAGS)
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
-OBJS   = digest.o method.o extractBinDataIS.o ../base64.o ../b64z_lib.o
+OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.o ../b64z_lib.o
 ifndef OME_ROOT
 OME_ROOT=/OME
 endif
@@ -36,8 +36,8 @@ method.o: method.c method.h
 ../b64z_lib.o: ../b64z_lib.c ../b64z_lib.h
 	$(CC) $(CFLAGS) -c ../b64z_lib.c -o ../b64z_lib.o
 
-extractBinDataIS.o: extractBinDataIS.c
-	$(CC) $(CFLAGS) -c extractBinDataIS.c $(FINK_INCLUDE)
+xmlBinaryResolution.o: xmlBinaryResolution.c
+	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(FINK_INCLUDE)
 
 clean:
 	/bin/rm -f *.o *~ core omeis
