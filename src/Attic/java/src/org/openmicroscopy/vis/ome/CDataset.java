@@ -38,13 +38,16 @@
  */
  
 package org.openmicroscopy.vis.ome;
+import org.openmicroscopy.vis.piccolo.PDataset;
 import org.openmicroscopy.remote.RemoteDataset;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
+import org.openmicroscopy.vis.ome.CProject;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 import java.lang.Comparable;
+import java.util.HashSet;
 
 
  
@@ -61,6 +64,8 @@ public class CDataset extends RemoteDataset implements Comparable{
 	Vector images = new Vector();
 	int imageCount =-1;
 	
+	private PDataset node;
+	private HashSet projectHash;
 	static {
 		RemoteObjectCache.addClass("OME::Dataset",CDataset.class);
 	}
@@ -89,6 +94,10 @@ public class CDataset extends RemoteDataset implements Comparable{
 			image.loadImageData(connection);
 			images.add(image);		
 		}
+		
+		// load hash set of projects here also
+		Collection projects = getProjects();
+		projectHash = new HashSet(projects);
 	}
 	
 	public synchronized Collection getCachedImages(Connection connection) {
@@ -120,4 +129,26 @@ public class CDataset extends RemoteDataset implements Comparable{
 	public String getLabel() {
 		return new String(getID()+". "+getName());
 	}
+	
+	
+	public boolean hasProject(CProject p) {
+		return projectHash.contains(p);
+	}
+	
+	/**
+	 * @return
+	 */
+	public PDataset getNode() {
+		return node;
+	}
+
+	/**
+	 * @param dataset
+	 */
+	public void setNode(PDataset dataset) {
+		node = dataset;
+	}
+	
+	
+
 }
