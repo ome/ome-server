@@ -42,11 +42,12 @@
 
 package org.openmicroscopy.vis.chains;
 
-import org.openmicroscopy.vis.ome.CChainExecution;
+
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.ChainExecution;
 import javax.swing.Box;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
@@ -130,7 +131,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	
 	
 	public void actionPerformed(ActionEvent e) {
-		CChainExecution exec = (CChainExecution) execList.getSelectedItem();
+		ChainExecution exec = (ChainExecution) execList.getSelectedItem();
 		frame.setExecution(exec);
 	}
 	
@@ -143,7 +144,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
 		execList.setModel(model);
 		// set initial
-		CChainExecution exec = (CChainExecution) a[0];
+		ChainExecution exec = (ChainExecution) a[0];
 		chainName.setText(chain.getName());
 		frame.setExecution(exec);
 	}
@@ -160,8 +161,8 @@ class ExecutionsRenderer  extends JLabel implements ListCellRenderer {
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
-			if (value instanceof CChainExecution) {
-				CChainExecution  exec = (CChainExecution) value;
+			if (value instanceof ChainExecution) {
+				ChainExecution  exec = (ChainExecution) value;
 				//setText(Integer.toString(exec.getID()));
 				setText(exec.getID()+") "+exec.getTimestamp());
 			}
