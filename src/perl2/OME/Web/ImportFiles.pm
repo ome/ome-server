@@ -129,7 +129,6 @@ sub __detaintPaths {
 			next;
 		# Third checkpoint (path is not a child of homedir)
 		} elsif (not ($_ =~ /^$home_dir.*/)) {
-			print STDERR "*HERE*: '$_', '$home_dir'\n";
 			push (@bad_paths, $_);	
 			next;
 		}
@@ -257,6 +256,7 @@ sub __getDatasetForm {
 sub __getDirListHeader {
 	my ($self, $path_dir) = @_;
 	my $q = $self->CGI();
+	my $home_dir = $self->Session()->User()->DataDirectory();
 
 	my @dirs = File::Spec->splitdir($path_dir);
 
@@ -274,10 +274,24 @@ sub __getDirListHeader {
 		$previous_path = $running_path;
 	}
 
-	my $header = $q->p({-class => 'ome_title', -align => 'center'},
-		"Directory Listing ($path_text)");
+	# Home icon
+	my $icon_td = $q->td($q->a({-href => $self->pageURL(ref($self)) . "&Path=$home_dir"},
+		$q->img( {
+				border => '0',
+				src => '/images/home.png',
+				width => '24',
+				height => '24'
+			})
+	));
 
-	return $header;
+	# Header text
+	my $text_td .= $q->td($q->span({-class => 'ome_title', -align => 'center'},
+		"Directory Listing ($path_text)"));
+
+	my $header_table = $q->table({-border => '0', cellspacing => '0', cellpadding => '0'},
+		$q->Tr($icon_td, $text_td));
+
+	return $q->p($header_table);
 }
 
 sub __getQueueBody {
@@ -436,6 +450,25 @@ sub __getImportBody {
 	my $import_d;
 
 	my $body = $q->p({class => 'ome_title', align => 'center'}, 'Importing Images');
+
+	# If we're running using the FTP style de-taint our paths
+	if ($STYLE == FTP_STYLE) {
+		my ($good_paths, $bad_paths);
+
+		# De-taint the import queue
+		($good_paths, $bad_paths) = $self->__detaintPaths([@import_q], $home_dir);
+
+		# Report badness
+		if (@$bad_paths) {
+			foreach (@$bad_paths) {
+				$body .= $q->p({class => 'ome_error'},
+					"A path '$_' which was not a child of your home directory '$home_dir' or contained illegal characters has been removed from the 'Import Queue'."
+				);
+			}
+		}
+
+		@import_q = @$good_paths;
+	}
 
 	if (scalar(@import_q) < 1) {
 		$body .= $q->p({class => 'ome_error'},
