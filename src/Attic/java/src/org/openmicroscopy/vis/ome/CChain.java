@@ -85,6 +85,7 @@ public class CChain extends RemoteChain {
 		layerNodes();
 		makeProper();
 		reduceCrossings();
+		cleanupNodes();
 	}
 	
 	
@@ -102,6 +103,20 @@ public class CChain extends RemoteChain {
 			node.buildLinkLists();
 		}
 	}
+	
+	/**
+	 * Iterate over the nodes, cleaning up auxiliary structures that are needed
+	 * for layout
+	 *
+	 */
+	private void cleanupNodes() {
+			List nodes = getNodes();
+			Iterator iter = nodes.iterator();
+			while (iter.hasNext()) {
+				CNode node = (CNode) iter.next();
+				node.cleanupLinkLists();
+			}
+		}
 	
 	/** 
 	* some code for computing a layered graph layout of this chain.
@@ -432,6 +447,14 @@ public class CChain extends RemoteChain {
 	public Layering getLayering() {
 		return layering;
 	}
+	
+	/**
+	 * Set the layering to be null, so it can be gc'ed..
+	 *
+	 */
+	 public void clearLayering() {
+	 	layering = null;
+	 }
 	
 	
 	/**
