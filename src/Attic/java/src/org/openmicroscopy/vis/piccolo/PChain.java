@@ -41,7 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.vis.ome.ChainInfo;
-import org.openmicroscopy.vis.ome.NodeInfo;
+import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.Chain;
@@ -82,14 +82,15 @@ public class PChain {
 		Collection chainNodes = info.getNodes();
 		Iterator iter = chainNodes.iterator();	
 		while (iter.hasNext()) {
-			NodeInfo ni = (NodeInfo) iter.next();
-			drawNode(connection,ni.getNode(),layer,y);		
+			//NodeInfo ni = (NodeInfo) iter.next();
+			//drawNode(connection,ni.getNode(),layer,y);
+			CNode node = (CNode) iter.next();
+			drawNode(connection,node,layer,y);		
 		}
 
 		List links = chain.getLinks();
 		iter = links.iterator();
 		while (iter.hasNext()) {
-			System.err.println("in pchain, found a link");
 			Link link = (Link) iter.next();
 			drawLink(link,linkLayer);
 		}
@@ -101,7 +102,7 @@ public class PChain {
 		//placeNodesVertically();
 	}
 	
-	private void drawNode(Connection connection,Node node,PLayer layer,float y) {
+	private void drawNode(Connection connection,CNode node,PLayer layer,float y) {
 		Module mod = node.getModule();
 		ModuleInfo modInfo = connection.getModules().getModuleInfo(mod);
 		PModule mNode = new PModule(connection,modInfo,x,y);

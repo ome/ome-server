@@ -47,7 +47,6 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
-import org.openmicroscopy.Session;
 import org.openmicroscopy.Chain;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.managers.ChainManager;
@@ -55,6 +54,7 @@ import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.ChainInfo;
+import org.openmicroscopy.vis.ome.CNode;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
@@ -252,8 +252,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	}	
 	
 	public void save(String name,String desc) {	
-		Session session = connection.getSession();
-		ChainManager manager = session.getChainManager();
+		ChainManager manager = connection.getChainManager();
 		Chain chain  = manager.createChain(name,desc);
 		ChainInfo info = new ChainInfo(chain);
 		
@@ -264,9 +263,10 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		addLinks(manager,chain);
 		// commit chain
 		
-		session.commitTransaction();
+		connection.commitTransaction();
 		
 		// create a chain info and add to chains
+		
 		connection.addChain(info);
 		
 		// add this to the library
@@ -277,7 +277,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	private void addNodes(ChainManager manager,Chain chain,ChainInfo info) {
 		PNode node;
 		PModule mod;
-		Node chainNode;
+		CNode chainNode;
 				
 		// iterate over layer, adding a node for each PModule
 		Iterator iter = layer.getChildrenIterator();
@@ -285,7 +285,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 			node = (PNode) iter.next();
 			if (node instanceof PModule) {
 				mod = (PModule) node;
-				chainNode =  manager.addNode(chain,mod.getModule());
+				chainNode =  (CNode) manager.addNode(chain,mod.getModule());
 			 	mod.setNode(chainNode);
 			 	info.addNode(chainNode);
 			}
