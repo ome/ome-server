@@ -80,6 +80,7 @@ use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
 use OME::Factory;
+use OME::Session;
 use OME::Configuration;
 use Term::ReadKey;
 use POSIX;
@@ -140,7 +141,7 @@ sub createSession {
      # 14-05
     if (defined $session){
      $self->storeApacheSession($session);
-     $session->Session($session);
+    # $session->Session($session);
     }
     return $session;
 }
@@ -290,40 +291,43 @@ sub getOMESession {
     return undef unless defined $dbpass and defined $experimenterID;
     return undef if (crypt($password,$dbpass) ne $dbpass);
 
-    logdbg "debug", "getOMESession: looking for session, experimenter_id=$experimenterID";
-    my $session = $bootstrap_factory->
-      findObject('OME::Session',experimenter_id => $experimenterID);
-    logdbg "debug", "getOMESession: found ".(defined $session)." session(s)";
+    logdbg "debug", "getOMESession: looking for userState, experimenter_id=$experimenterID";
+    my $userState = $bootstrap_factory->
+      findObject('OME::UserState',experimenter_id => $experimenterID);
+    logdbg "debug", "getOMESession: found ".(defined $userState)." userState(s)";
 
 # FIXME:  This should probably be a remote host.
     my $host = `hostname`;
     chomp ($host);
 
-    if (!defined $session) {
-        $session = $bootstrap_factory->
-          newObject('OME::Session',
+    if (!defined $userState) {
+        $userState = $bootstrap_factory->
+          newObject('OME::UserState',
                     {
                      experimenter_id => $experimenterID,
                      started         => 'now',
                      last_access     => 'now',
                      host            => $host
                     });
-        logdbg "debug", "getOMESession: created new session";
+        logdbg "debug", "getOMESession: created new userState";
     } else {
-        $session->last_access('now');
-        $session->host($host);
+        $userState->last_access('now');
+        $userState->host($host);
     }
 
-    $session->{__session} = $session;
-    logdie ref($self)."->getOMESession:  Could not create session object"
-      unless defined $session;
+    logdie ref($self)."->getOMESession:  Could not create userState object"
+      unless defined $userState;
 
+    my $session = OME::Session->new();
+
+    $userState->{__session} = $session;
+    $session->{UserState} = $userState;
     $session->{Factory} = OME::Factory->new($session);
     $session->{Manager} = $self;
     $session->{Configuration} = OME::Configuration->new($session->{Factory});;
 
-    logdbg "debug", "getOMESession: updating session";
-    $session->storeObject();
+    logdbg "debug", "getOMESession: updating userState";
+    $userState->storeObject();
     $session->commitTransaction();
 
     logdbg "debug", "getOMESession: returning session";
