@@ -96,10 +96,11 @@ import java.util.Iterator;
 	// so, have a separate call
 	
 	public void buildLinkLists() {
-	//	System.err.println("building lists for "+getModule().getName());
+		//System.err.println("building lists for "+getModule().getName());
 		buildSuccessors();
-	//	System.err.println("# of succs iis "+succLinks.size());
+		//System.err.println("# of succs iis "+succLinks.size());
 		buildPredecessors();
+		//System.err.println("# of preds iis "+predLinks.size());
 	}
 	private void buildSuccessors() {
 	

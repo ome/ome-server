@@ -69,13 +69,13 @@ import java.util.List;
 	
 	
 	public void layout() {
-		//System.err.println("Laying out..."+getName());
+	//	System.err.println("Laying out..."+getName());
 		initNodes();
-		//System.err.println("nodes initialized");
+	//	System.err.println("nodes initialized");
 		layerNodes();
-		//System.err.println("nodes layered");
+	//	System.err.println("nodes layered");
 		makeProper();
-		//System.err.println("GRAPHS HAVE BEEN MADE PROPER");
+	//	System.err.println("GRAPHS HAVE BEEN MADE PROPER");
 		//dumpLayers();
 		reduceCrossings();
 		//System.err.println("CROSSINGS REDUCED");
@@ -112,7 +112,8 @@ import java.util.List;
 		boolean ok= true;
 		int nodeCount = nodes.size();
 
-		CNode node=null;
+		CNode node  = null;
+
 		CNode succ;
 		
 		do {
@@ -124,9 +125,9 @@ import java.util.List;
 				if (node.hasLayer())
 					continue;
 				
-	//			System.err.println("finding successors for "+
-	//				node.getModule().getName());	
-			//	System.err.println("...."+node);
+				//System.err.println("finding successors for "+
+				//		node.getModule().getName());	
+				//System.err.println("...."+node);
 				Collection succs = node.getSuccessors();	
 						
 					
