@@ -58,14 +58,28 @@ __PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
 
 sub experimenter {
     my $self = shift;
-    return $self->Session()->Factory()->loadAttribute("Experimenter",
-                                                      $self->experimenter_id());
+    if (@_) {
+        my $attribute = shift;
+        die "Owner must be an Experimenter"
+          unless $attribute->attribute_type()->name() eq "Experimenter";
+        return $self->owner_id($attribute->id());
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                          $self->experimenter_id());
+    }
 }
 
 sub group {
     my $self = shift;
-    return $self->Session()->Factory()->loadAttribute("Group",
-                                                      $self->group_id());
+    if (@_) {
+        my $attribute = shift;
+        die "Group must be a Group"
+          unless $attribute->attribute_type()->name() eq "Group";
+        return $self->group_id($attribute->id());
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Group",
+                                                          $self->group_id());
+    }
 }
 
 
