@@ -8,6 +8,7 @@
 Formal Inputs are optional because input requirements may be specified by guaranteed image attributes. For example, OME_Image_XYZ_stats requires a path to the OME repository file, and Dimensions.
 These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &lt;sizeT>, and &lt;sizeW>.
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -20,6 +21,7 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 	<xsd:element name = "FormalInput">
 		<xsd:annotation>
 			<xsd:documentation>Specifies an input requirement for a module. Image dimensions and image file locations (repository or other format) should not be specified with this. Image dimensions are intrisic to an image. They do not represent a special requirement. Image file locations and contents are specified by other elements. Specifically, RawImageFile, RawImageFilePath, XYPlaneFile, and XYPlaneFilePath.
+			
 			
 			</xsd:documentation>
 		</xsd:annotation>
@@ -43,6 +45,7 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 
 Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -56,8 +59,28 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 					<xsd:documentation>References a SemanticType
 
 Represented in DB as FORMAL_INPUT.ATTRIBUTE_ID
+					
 					</xsd:documentation>
 				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "Count" default = "+">
+				<xsd:annotation>
+					<xsd:documentation>Specifies how many counts of this formal input are expected. Meanings are specified below
+
+! = exactly one
+? = zero or one
++ = one or more
+* = zero or more
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "!"/>
+						<xsd:enumeration value = "?"/>
+						<xsd:enumeration value = "+"/>
+						<xsd:enumeration value = "*"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -89,6 +112,7 @@ This tag is supposed to specify which. Can be left blank if module does not make
 Tied to DB. FORMAL_OUTPUTS.FEATURE_TAG
 Processed before storage to DB
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -103,8 +127,28 @@ Processed before storage to DB
 					<xsd:documentation>References a SemanticType
 
 Represented in DB as FORMAL_OUTPUT.ATTRIBUTE_ID
+					
 					</xsd:documentation>
 				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "Count" default = "+">
+				<xsd:annotation>
+					<xsd:documentation>Specifies how many counts of this formal output will be produced. Meanings are specified below
+
+! = exactly one
+? = zero or one
++ = one or more
+* = zero or more
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "!"/>
+						<xsd:enumeration value = "?"/>
+						<xsd:enumeration value = "+"/>
+						<xsd:enumeration value = "*"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -112,6 +156,7 @@ Represented in DB as FORMAL_OUTPUT.ATTRIBUTE_ID
 		<xsd:annotation>
 			<xsd:documentation>Declares a table in the DB.
 Maps to table DATATYPES during module import.
+			
 			
 			</xsd:documentation>
 		</xsd:annotation>
@@ -124,6 +169,7 @@ Maps to table DATATYPES during module import.
 					<xsd:documentation>This specifies if this table is an attribute of Dataset, Image, or Feature.
 
 Tied to DB. DATA_TABLES.ATTRIBUTE_TYPE
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -230,6 +276,7 @@ Or pretend you have a powerful program that can do 10 unrelated tasks, each of w
 
 In any case, use AnalysisModule to define an interface and Program to store installation software for a program.
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -255,6 +302,7 @@ In any case, use AnalysisModule to define an interface and Program to store inst
 
 Tied to DB. Table PROGRAMS Column PROGRAM_NAME
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -268,6 +316,7 @@ Tied to DB. Table PROGRAMS Column PROGRAM_NAME
 					<xsd:documentation>Specifies what category this program belongs to.
 
 Tied to DB. Table PROGRAMS Column CATEGORY
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -297,6 +346,7 @@ If a module is a stream algorithm, it can function across the x, y, z, and time 
 
 Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -305,6 +355,7 @@ Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
 					<xsd:documentation>As more handlers, are added, this part of the schema needs to be changed
 
 Tied to DB. Table PROGRAMS Column MODULE_TYPE
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -320,6 +371,7 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 					<xsd:documentation>Used to reference a Program Element. It should corrospond to a ProgramID specified in a Program Element.
 Referential integrity is not enforced by this schema. That is, verification against the schema will not detect an error here if you make a typo.
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -332,6 +384,7 @@ An example of a module that iterates over a feature is Find Golgi. It examines o
 This module would get a FeatureIterator attribute of "CELL".
 
 Tied to DB. Table PROGRAMS Column DEFAULT_ITERATOR
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -347,6 +400,7 @@ Tied to DB. Table PROGRAMS Column DEFAULT_ITERATOR
 If the module does not make new features, do not specify a value for this attribute.
 
 Tied to DB. PROGRAMS.NEW_FEATURE_TAG
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -372,6 +426,7 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 					<xsd:documentation>Referenced by AnalysisModule elements. Accordingly, each FormalOutput needs to be unique. Schema verification does not check for this. Verification against the schema will not detect an error here if you make a typo.
 
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -380,6 +435,7 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 					<xsd:documentation>Program name.
 
 Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated by XML attribute AnalysisModule.Name.
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -469,6 +525,7 @@ Unclear how this would be used. DB location PROGRAMS.PROGRAM_NAME is populated b
 
 Specifies the packaging and/or compression format of the Installation file.
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -482,6 +539,7 @@ Specifies the packaging and/or compression format of the Installation file.
 
 Tied to database. DATA_COLUMNS.COLUMN_NAME
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -490,6 +548,7 @@ Tied to database. DATA_COLUMNS.COLUMN_NAME
 					<xsd:documentation>When it is necessary to generate a table and/or column in the Database, the importer needs to tell the database a datatype.
 Not all SQL datatypes are supported currently.
 
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -535,6 +594,7 @@ Every SemanticElement must be in the same table.
 
 Notes:
 Granularity is infered from granularity of table.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -591,6 +651,7 @@ Granularity is infered from granularity of table.
 
 This, along with TableName, uniquely identifies a db location for this element.
 Represented in DB as ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
