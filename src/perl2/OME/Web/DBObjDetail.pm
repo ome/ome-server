@@ -1,4 +1,4 @@
-# OME/Web/ObjectDetail.pm
+# OME/Web/DBObjDetail.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::ObjectDetail;
+package OME::Web::DBObjDetail;
 
 =pod
 
 =head1 NAME
 
-OME::Web::ObjectDetail - Show detailed information on an object
+OME::Web::DBObjDetail - Show detailed information on an object
 
 =head1 DESCRIPTION
 
@@ -59,8 +59,8 @@ use CGI;
 use Log::Agent;
 
 use OME;
-use OME::Web::RenderData;
-use OME::Web::NewTable;
+use OME::Web::DBObjRender;
+use OME::Web::DBObjTable;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -89,7 +89,7 @@ sub getPageTitle {
 	my $self = shift;
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
-    return "$common_name: ".OME::Web::RenderData->getObjectLabel($object);
+    return "$common_name: ".OME::Web::DBObjRender->getObjectLabel($object);
 }
 
 
@@ -101,7 +101,7 @@ sub getPageBody {
 	my $object = $self->_loadObject();
 	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
 	my $html = "\n".$q->startform( { -name => $self->{ form_name } } ).
-	           $self->_getObjectDetail( $object )."\n".
+	           $self->_getDBObjDetail( $object )."\n".
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''});
@@ -116,7 +116,7 @@ sub getPageBody {
 }
 
 
-sub _getObjectDetail {
+sub _getDBObjDetail {
 	my ($self, $object) = @_;
 	my $q = $self->CGI();
 
@@ -124,18 +124,18 @@ sub _getObjectDetail {
 
 	my $table_label = 
 		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id()},
+			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id()},
 				   $q->font( { class => 'ome_header_label' }, $common_name) ):
 			$q->font( { class => 'ome_header_label' }, $common_name)
 		).
 		$q->font( { class => 'ome_header_label' }, ": ").
-		$q->font( { class => 'ome_header_title' }, OME::Web::RenderData->getObjectLabel($object) );
+		$q->font( { class => 'ome_header_title' }, OME::Web::DBObjRender->getObjectLabel($object) );
 
 	my $html;
 
-	my @fieldNames = OME::Web::RenderData->getAllFieldNames( $object );
-	my %labels  = OME::Web::RenderData->getFieldLabels( $object, \@fieldNames );
-	my %record  = OME::Web::RenderData->renderSingle( $object, 'html', \@fieldNames );
+	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
+	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames );
+	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
 
 	
 	$html .= $q->table(
@@ -161,7 +161,7 @@ sub _getRelatedTables {
 
 	# print tables for has many relations
 	my $manyRefs = $object->getPublishedManyRefs(); 
-	my $tableMaker = OME::Web::NewTable->new( CGI => $q );
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	foreach my $accessor (keys %$manyRefs ) {
 		my $type = $manyRefs->{ $accessor };
 		my @objects = $object->$accessor();
