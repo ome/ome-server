@@ -231,10 +231,7 @@ sub requireAttributeTypePackage {
             my $reference_type_name = $data_column->reference_type();
             my $reference_type = $factory->
               findObject('OME::SemanticType',name => $reference_type_name);
-            my $reference_pkg =
-              (defined $reference_type)?
-                $reference_type->requireAttributeTypePackage():
-                $self->__formPackageName($reference_type_name);
+            my $reference_pkg = '@'.$reference_type_name;
 
             $pkg->addColumn($name,"${table_name}.${column_name}",
                             $reference_pkg,
@@ -243,9 +240,13 @@ sub requireAttributeTypePackage {
                             });
 
             # Make this method visible via the Remote Framework
+            my $remote_pkg =
+              (defined $reference_type)?
+                $reference_type->requireAttributeTypePackage():
+                $self->__formPackageName($reference_type_name);
             addPrototype($pkg,$name,
-                         [$reference_pkg],
-                         [$reference_pkg],
+                         [$remote_pkg],
+                         [$remote_pkg],
                          force => 1);
         } else {
             # FIXME: Maybe we should allow data columns to specify
