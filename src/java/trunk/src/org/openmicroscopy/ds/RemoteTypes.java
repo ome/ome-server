@@ -79,6 +79,9 @@ class RemoteTypes
         addClass(Feature.class,"Feature",
                  FeatureDTO.class);
 
+        addClass(UserState.class,"UserState",
+                 UserStateDTO.class);
+
         addClass(DataTable.class,"DataTable",
                  DataTableDTO.class);
         addClass(DataColumn.class,"DataColumn",
