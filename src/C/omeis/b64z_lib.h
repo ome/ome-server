@@ -1,9 +1,9 @@
 /******************************************************************************
-/*
-/*	b64z_lib.h
-/*	
-/*	Originally written: June 4, 2003
-/*	Standard licence blurb:
+
+	b64z_lib.h
+	
+	Originally written: June 4, 2003
+	Standard licence blurb:
 
  Copyright (C) 2003 Open Microscopy Environment, MIT
  Author:  Josiah Johnston <siah@nih.gov>
@@ -22,7 +22,7 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-/****
+****
 
 	Intent: This library provides a simple mechanism to convert between binary
 	and base64 format with the intermediate step of compression. It supports
@@ -38,9 +38,9 @@
 
 
 
-/******************************************************************************
-/******************************************************************************
-/*****************************************************************************/
+******************************************************************************
+******************************************************************************
+*****************************************************************************/
 
 #include "base64.h"
 

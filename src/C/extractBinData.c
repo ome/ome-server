@@ -1,9 +1,9 @@
 /******************************************************************************
-/*
-/*	extractBinData.c
-/*	
-/*	Originally written: May 16, 2003
-/*	Standard licence blurb:
+
+	extractBinData.c
+	
+	Originally written: May 16, 2003
+	Standard licence blurb:
 
  Copyright (C) 2003 Open Microscopy Environment, MIT
  Author:  Josiah Johnston <siah@nih.gov>
@@ -22,7 +22,7 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-/****
+****
 
 	Intent: The intent of this program is to extract the contents of <BinData>
 	from an xml document following the OME schema AND replace the 
@@ -58,8 +58,8 @@
 
 		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
 
-/*
-/*****************************************************************************/
+
+*****************************************************************************/
 
 
 #include <libxml/parser.h>
@@ -73,10 +73,10 @@
 #include "../perl2/OME/Image/Pix/libpix.h"
 
 /******************************************************************************
-/*
-/*	Data structures & Constants
-/*
-/*****************************************************************************/
+*
+*	Data structures & Constants
+*
+*****************************************************************************/
 #define BinDataLocal "BinData"
 #define PixelLocal "Pixels"
 #define CompressionAttr "Compression"
@@ -138,10 +138,10 @@ typedef struct {
 } ParserState;
 
 /******************************************************************************
-/*
-/*	Functions Declarations:
-/*
-/*****************************************************************************/
+*
+*	Functions Declarations:
+*
+*****************************************************************************/
 
 // SAX callbacks:
 static void extractBinDataStartDocument(ParserState *);
@@ -160,10 +160,10 @@ int increment_plane_indexes( int *, int *, int *, int, int, int);
 void mem_error( char*msg );
 
 /******************************************************************************
-/*
-/*	main & global data
-/*
-/*****************************************************************************/
+*
+*	main & global data
+*
+*****************************************************************************/
 char *dirPath;
 char *pixelDirPath;
 
@@ -189,10 +189,10 @@ int main(int ARGC, char **ARGV) {
 
 
 /******************************************************************************
-/*
-/*	Utility Functions:
-/*
-/*****************************************************************************/
+*
+*	Utility Functions:
+*
+*****************************************************************************/
 
 
 int parse_xml_file(const char *filename) {
@@ -265,10 +265,10 @@ void mem_error( char*msg ) {
 }
 
 /******************************************************************************
-/*
-/*	SAX callback functions
-/*
-/*****************************************************************************/
+*
+*	SAX callback functions
+*
+*****************************************************************************/
 
 static void extractBinDataStartDocument(ParserState *state) {
 
@@ -305,13 +305,13 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 
 
 	/**************************************************************************
-	/*
-	/* Getting the namespace for an element is tricky. I haven't figured out 
-	/* how to do it yet, so I'm using the local name (BinData) to identify the
-	/* element.
-	/* I think http://cvs.gnome.org/lxr/source/gnorpm/find/search.c might have
-	/* some code that will do it.
-	/* Find the local name of the element: strip the prefix if one exists.
+	*
+	* Getting the namespace for an element is tricky. I haven't figured out 
+	* how to do it yet, so I'm using the local name (BinData) to identify the
+	* element.
+	* I think http://cvs.gnome.org/lxr/source/gnorpm/find/search.c might have
+	* some code that will do it.
+	* Find the local name of the element: strip the prefix if one exists.
 	*/
 	localName = strchr( name, ':' );
 	if( localName != NULL ) {
@@ -324,14 +324,14 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		freeLocalName = 1;
 	}
 	/*
-	/*************************************************************************/
+	*************************************************************************/
 
 	
 
 	/**************************************************************************
-	/*
-	/* BinData
-	/* 	Change state, get compression scheme, open output file as necessary
+	*
+	* BinData
+	* 	Change state, get compression scheme, open output file as necessary
 	*/
 	if( strcmp( BinDataLocal, localName ) == 0 ) {
 
@@ -403,29 +403,29 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		}
 	}
 	/*
-	/*************************************************************************/
+	*************************************************************************/
 
 
 
 	/**************************************************************************
-	/*
-	/* Pixels:
-	/* 	The <BinData>s under Pixels are treated differently than other 
-	/* 	<BinData>s. If <BinData>s are used under <Pixels>, then the contents 
-	/* 	should be processed and coalated into the full pixel dump. We might as
-	/* 	well do this while it is already loaded in memory.
-	/*
-	/* 	The contents of each <BinData> section is buffered into a big chunk.
-	/* 	When the <BinData> closes, that chunk is converted from base 64,
-	/* 	uncompressed, and sent through libpix to be written to disk.
-	/*
-	/* 	After every <BinData> under <Pixels> is processed like that, they
-	/* 	are replaced with a single <External>. This <External> is 
-	/* 	distiguishable from other <External>s by having a null value for the 
-	/* 	SHA1 attribute. When one of these <External>s is encountered in later
-	/* 	processing, the DimensionOrder attribute should be ignored. It describe
-	/* 	how the <BinData>s were ordered, but the pixels were reordered to
-	/* 	standard repository format (XYZCT) when they were sent through libpix.
+	*
+	* Pixels:
+	* 	The <BinData>s under Pixels are treated differently than other 
+	* 	<BinData>s. If <BinData>s are used under <Pixels>, then the contents 
+	* 	should be processed and coalated into the full pixel dump. We might as
+	* 	well do this while it is already loaded in memory.
+	*
+	* 	The contents of each <BinData> section is buffered into a big chunk.
+	* 	When the <BinData> closes, that chunk is converted from base 64,
+	* 	uncompressed, and sent through libpix to be written to disk.
+	*	
+	* 	After every <BinData> under <Pixels> is processed like that, they
+	* 	are replaced with a single <External>. This <External> is 
+	* 	distiguishable from other <External>s by having a null value for the 
+	* 	SHA1 attribute. When one of these <External>s is encountered in later
+	* 	processing, the DimensionOrder attribute should be ignored. It describe
+	* 	how the <BinData>s were ordered, but the pixels were reordered to
+	* 	standard repository format (XYZCT) when they were sent through libpix.
 	*/
 	else if( strcmp( PixelLocal, localName ) == 0 ) {
 
@@ -441,10 +441,10 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		state->elementInfo      = elementInfo;
 		
 		/**********************************************************************
-		/*
-		/* Extract data from xml attributes.
-		/*
-		/*
+		*
+		* Extract data from xml attributes.
+		*
+		*
 		*/
 		// data extraction
 		state->pixelInfo = (PixelInfo *) malloc( sizeof( PixelInfo ) );
@@ -512,17 +512,17 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		}
 
 		/*
-		/* END "Extract data from xml attributes."
-		/*
-		/*********************************************************************/
+		* END "Extract data from xml attributes."
+		*
+		*********************************************************************/
 		
 		/**********************************************************************
-		/*
-		/* Initialization for <BinData> processing.
-		/* 	remember that we do not know if this <Pixels> contains <BinData>s
-		/* 	or <External>s. We will not use any of this if the <Pixels> 
-		/* 	contains <External>s.
-		/*
+		*
+		* Initialization for <BinData> processing.
+		* 	remember that we do not know if this <Pixels> contains <BinData>s
+		* 	or <External>s. We will not use any of this if the <Pixels> 
+		* 	contains <External>s.
+		*
 		*/
 		// initialize variables
 		state->pixelInfo->theZ = state->pixelInfo->theC = state->pixelInfo->theT = 0;
@@ -553,23 +553,23 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		state->pixelInfo->binDataBuf = (unsigned char *) malloc( state->pixelInfo->planeSize + 2);
 		if( !(state->pixelInfo->binDataBuf) ) mem_error("");
 		/*
-		/* END "Initialization for <BinData> processing."
-		/*
-		/*********************************************************************/
+		* END "Initialization for <BinData> processing."
+		*
+		*********************************************************************/
 
 		// print out <Pixels>
 		print_element( name, attrs );
 	}
 	/*
-	/*	END "Pixels"
-	/*
-	/*************************************************************************/
+	*	END "Pixels"
+	*
+	*************************************************************************/
 
 
 
 	/**************************************************************************
-	/*
-	/* This isn't a <BinData> or <Pixels>, pipe it through.
+	*
+	* This isn't a <BinData> or <Pixels>, pipe it through.
 	*/
 	else {
 		// Stack maintence. Necessary for closing tags properly.
@@ -606,10 +606,10 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	
 	
 	/**************************************************************************
-	/*
-	/* Process <BinData>
-	/* 	write <BinData> contents to file & replace <BinData> with an
-	/* 	<External> that points to the file
+	*
+	* Process <BinData>
+	* 	write <BinData> contents to file & replace <BinData> with an
+	* 	<External> that points to the file
 	*/
 	 case IN_BINDATA:
 		state->state = PARSER_START;
@@ -627,16 +627,16 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 		break;
 
 	/*
-	/* END 'Process <BinData>'
-	/*
-	/*************************************************************************/
+	* END 'Process <BinData>'
+	*
+	*************************************************************************/
 
 
 
 	/**************************************************************************
-	/*
-	/* Process <BinData> inside of <Pixels>
-	/*
+	*
+	* Process <BinData> inside of <Pixels>
+	*
 	*/
 	  case IN_BINDATA_UNDER_PIXELS:
 		state->state = IN_PIXELS;
@@ -736,9 +736,9 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 
 	 	break;
 	/*
-	/* END 'Process <BinData> inside of <Pixels>'
-	/*
-	/*************************************************************************/
+	* END 'Process <BinData> inside of <Pixels>'
+	*
+	*************************************************************************/
 
 
 	 case IN_PIXELS:
@@ -849,18 +849,18 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 }
 
 /******************************************************************************
-/*
-/*	Error routines (SAX callbacks):
-/*
-/*	These are supposed to pipe the error output from SAX through to stderr.
-/*	They don't work completely. The last argument in the function prototype is 
-/*	", ...". I don't know how to access the variables passed on it through to
-/*	the fprintf statement. 
-/*	http://www.daa.com.au/~james/articles/libxml-sax/libxml-sax.html#errors
-/*	has an example that uses glib logging functions, but I couldn't figure out
-/*	how to adapt that code.
-/*
-/*****************************************************************************/
+*
+*	Error routines (SAX callbacks):
+*
+*	These are supposed to pipe the error output from SAX through to stderr.
+*	They don't work completely. The last argument in the function prototype is 
+*	", ...". I don't know how to access the variables passed on it through to
+*	the fprintf statement. 
+*	http://www.daa.com.au/~james/articles/libxml-sax/libxml-sax.html#errors
+*	has an example that uses glib logging functions, but I couldn't figure out
+*	how to adapt that code.
+*
+*****************************************************************************/
 static void BinDataWarning( ParserState *state, const char *msg ) {
 	fprintf( stderr, "The SAX parser reports this warning message:\n%s", msg );
 }
