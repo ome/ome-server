@@ -34,6 +34,7 @@ void Argiter_Initialize (const argarray_t* paa, argiterator_t* iter, const char*
 const char* Argiter_NextString (argiterator_t* iter);
 long Argiter_NextInteger (argiterator_t* iter);
 float Argiter_NextFloat (argiterator_t* iter);
+const void* memmem (const void* str, size_t strSize, const void* match, size_t matchSize);
 
 #endif
 
