@@ -65,14 +65,14 @@ __PACKAGE__->_fieldNames( [
 	'id',
 	'module',
 	'timestamp',
-	'status',
 	'image',
 	'dataset',
-	'dependence',
-	'virtual_mex',
+	'status',
 ] ) ;
 __PACKAGE__->_allFieldNames( [
 	@{__PACKAGE__->_fieldNames() },
+	'dependence',
+	'virtual_mex',
 	'total_time',
 	'attribute_create_time',
 	'attribute_db_time',
@@ -83,11 +83,10 @@ __PACKAGE__->_allFieldNames( [
 	'input_tag',
 ] ) ;
 
-
 sub getObjectLabel {
 	my ($proto,$obj,$format) = @_;
 
-	return $obj->module()->name()."(".$obj->id().")"
+	return $obj->module()->name()."(".$obj->timestamp().")"
 		if( $obj->module() );
 	return $obj->id();
 }
