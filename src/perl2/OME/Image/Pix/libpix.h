@@ -67,6 +67,8 @@ void pixFinish (Pix *pPix);
 size_t Plane2TIFF (Pix *pPix, int theZ, int theW, int theT, char *path);
 size_t Plane2TIFF8 (Pix *pPix, int theZ, int theW, int theT, char *path, double scale, double offset);
 
+size_t TIFF2Plane (Pix *pPix, char *path, int theZ, int theW, int theT);
+
 int setConvertFile (Pix *pPix, char *inPath, int bp, int bigEndian);
 size_t convertRow (Pix *pPix, size_t offset, int theY, int theZ, int theW, int theT);
 size_t convertRows (Pix *pPix, size_t offset, int nRows, int theY, int theZ, int theW, int theT);

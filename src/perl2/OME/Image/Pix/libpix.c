@@ -21,7 +21,7 @@ Pix *NewPix      (char* path,
 	
 	if ( ! (bp == 1 || bp == 2 || bp == 4) )
 	{
-		fprintf (stderr,"Pix->NewPix:  Bytes per pixel must be 1,2, or 4.\n");
+		fprintf (stderr,"Pix->NewPix:  Bytes per pixel must be 1,2, or 4.  Got %d\n",bp);
 		return (NULL);
 	}
 
@@ -64,7 +64,7 @@ void FreePix  (Pix *pPix)
 FILE *GetPixFileUpdate (Pix *pPix)
 {
 FILE *fp;
-size_t imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp;
+size_t imgSize;
 
 	if (pPix->rep_file && pPix->rep_write)
 		return (pPix->rep_file);
@@ -85,6 +85,8 @@ size_t imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp
 * If the file isn't long enough to accept the entire image,
 * make a zero-filled file big enough for the whole thing.
 */
+	imgSize = pPix->dx * pPix->dy * pPix->dz * pPix->dw * pPix->dt * pPix->bp;
+
 	if ( fseek (fp,imgSize,SEEK_SET) ) {
 		fseek (fp,0,SEEK_SET);
 		while (imgSize) {
@@ -297,6 +299,116 @@ char *scaledBuf;
 	nPix = Buff2Tiff (theBuf, path, pPix->dx, pPix->dy, 8);
 	free (theBuf);
 	return (nPix);
+}
+
+
+
+size_t TIFF2Plane (Pix *pPix, char *path, int theZ, int theW, int theT)
+{
+TIFF* tiff;
+unsigned char *buf, *theBuf;
+size_t nPix = (pPix->dx)*(pPix->dy), nIO;
+int bp = pPix->bp, tiffBP;
+uint16 config;
+uint16 tiffBits;
+uint32 row, tiffHeight, tiffWidth;
+uint32 rowsperstrip = (uint32)-1;
+uint32 nrow;
+tstrip_t strip;
+tsize_t scanline;
+
+	tiff = TIFFOpen(path,"r");
+	if (!tiff ) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Could not open '%s' for reading\n",path);
+		return NULL;
+	}
+
+/*
+* We don't deal with tiled data.
+*/
+	if (TIFFIsTiled(tiff)) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Cannot deal with tiled TIFFs.\n");
+		TIFFClose (tiff);
+		return (NULL);
+	}
+
+/*
+* We don't deal with less than 8 bits/pixel.
+*/
+	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &tiffBits);
+	tiffBP = (int) (tiffBits / 8);
+	if (tiffBP != bp) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Tiff bytes per pixel (%d, bits=%u) does not match OME Image bytes per pixel (%d).\n",  tiffBP,tiffBits, bp);
+		TIFFClose (tiff);
+		return (NULL);
+	}
+
+
+
+/*
+* We don't deal with non-contiguous data - samples per pixel should be 1
+*/
+	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &config);
+	if (config != PLANARCONFIG_CONTIG) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Cannot deal with non-contiguous data: samples per pixel should be 1.\n");
+		TIFFClose (tiff);
+		return (NULL);
+	}
+
+/*
+* Tiff dimensions must match Image dimensions.
+*/
+	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &tiffHeight);
+	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &tiffWidth);
+	if (tiffHeight != pPix->dy || tiffWidth != pPix->dx) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Tiff file dimensions (%d x %d) don't match OME Image dimensions (%d x %d).\n",
+			tiffWidth,tiffHeight,pPix->dx,pPix->dy);
+		TIFFClose (tiff);
+		return (NULL);
+	}
+
+
+/*
+* Allocate a buffer the size of the plane
+*/
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->TIFF2Plane:  Could not allocate buffer.\n");
+		TIFFClose (tiff);
+		return (NULL);
+	}
+
+/*
+* Read the strips.
+*/
+	scanline = TIFFScanlineSize(tiff);
+	TIFFGetField(tiff, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
+	buf = theBuf;
+	for (row = 0; row < tiffHeight; row += rowsperstrip) {
+		nrow = (row+rowsperstrip > tiffHeight ?
+			tiffHeight-row : rowsperstrip);
+		strip = TIFFComputeStrip(tiff, row, 0);
+		if (TIFFReadEncodedStrip(tiff, strip, buf, nrow*scanline) < 0) {
+			fprintf (stderr,"Pix->TIFF2Plane:  Could not read strip starting at row %d.\n",row);
+			TIFFClose (tiff);
+			return (NULL);
+		}
+		buf += (nrow * scanline);
+	}
+	TIFFClose (tiff);
+
+	nIO = SetPlane (pPix, theBuf, theZ, theW, theT);
+	free (theBuf);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertPlane:  Could not write enough pixels to %s.\n",pPix->path);
+		return (NULL);
+	}
+
+
+/*
+* Return the number of pixels written.
+*/
+	return (nIO);
 }
 
 

@@ -189,6 +189,14 @@ Plane2TIFF8 (pPix,theZ,theW,theT,path,scale,offset)
 	double offset
 
 size_t
+TIFF2Plane (pPix,path,theZ,theW,theT)
+	OME::Image::Pix pPix
+	char *path
+	int theZ
+	int theW
+	int theT
+
+size_t
 SetStack (pPix,thePix,theW,theT)
 	OME::Image::Pix pPix
 	char *thePix
