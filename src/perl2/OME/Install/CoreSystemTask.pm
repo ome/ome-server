@@ -40,6 +40,7 @@ use Carp;
 use File::Copy;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
+use Cwd;
 
 use OME::Install::Terminal;
 use OME::Install::Environment;
@@ -68,7 +69,10 @@ my @core_dirs = (
 );
 
 # The HTML directories that need to be copied to the basedir
-my @html_core = ("JavaScript", "html", "images");
+my @html_core = ("JavaScript", "html");
+
+# The image directories that need to be copied to the basedir
+my @image_core = ("images");
 
 # Base and temp dir references
 my $OME_BASE_DIR = \$core_dirs[0]->{path};
@@ -254,17 +258,30 @@ sub execute {
     print "\n";  # Spacing
     
     #********
-    #******** Copy our HTML core directories from the source tree
+    #******** Copy our HTML/Image core directories from the source tree
     #********
 
-    print "Copying HTML directories\n";
     # There's no need to be UID 0 for these creations
     $EUID = $OME_UID;
+
+    print "Copying IMAGE directories\n";
+    foreach my $directory (@image_core) {
+	print "  \\_ $directory\n";
+	copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
+    }
+
+    print "Copying HTML directories\n";
+
+    # We need to be in src/ for these copies
+    my $iwd = getcwd;
+    chdir ("src") or croak "Unable to chdir into src/. $!";
 
     foreach my $directory (@html_core) {
 	print "  \\_ $directory\n";
 	copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
     }
+
+    chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
     
     # Back to UID 0 we go
     $EUID = 0;
