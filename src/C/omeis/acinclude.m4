@@ -189,7 +189,7 @@ AC_DEFUN([CHECK_BDB_COMPAT],
     done
 
 	dnl Okay, now look for a specific DB1 version of db.h
-	if test x_$found_bdb != x_foo
+	if test x_$found_bdb != x_yes
 	then
 		for dir in /usr/include/db1 \
 		           /usr/local/include/db1
