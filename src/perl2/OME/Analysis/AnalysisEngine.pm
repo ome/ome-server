@@ -441,7 +441,7 @@ sub findModuleHandler {
     # find existing ones.
     my $factory;
 
-    # The module_execution view being executed.
+    # The analysis chain being executed.
     my $analysis_chain;
 
     # The hash of the user-specified input parameters.
@@ -455,13 +455,13 @@ sub findModuleHandler {
     # The dataset the chain is being executed against.
     my $dataset;
 
-    # A list of nodes in the module_execution view.
+    # A list of nodes in the analysis chain.
     my @nodes;
 
     # A hash of nodes keyed by node ID.
     my %nodes;
 
-    # The instantiated module modules for each analyis node.
+    # The instantiated modules for each analyis node.
     my %node_modules;
 
     # The current state of each node.
@@ -483,7 +483,7 @@ sub findModuleHandler {
     my %dependence;
 
     # The ANALYSES for each node.
-    # $global_analysis($nodeID} = $module_execution
+    # $global_analysis{$nodeID} = $module_execution
     # $perdataset_analysis{$nodeID} = $module_execution
     # $perimage_analysis{$nodeID}->{$imageID} = $module_execution
     my (%global_analysis, %perdataset_analysis,%perimage_analysis);
@@ -726,11 +726,11 @@ sub findModuleHandler {
 
                 # Keep a count of the number of user inputs of this type
                 my $semantic_type = $input->semantic_type();
-                my $attribute_typeID = $semantic_type->id();
-                $input_types{$attribute_typeID}++;
+                my $semantic_typeID = $semantic_type->id();
+                $input_types{$semantic_typeID}++;
 
                 # ...and keep track of the maximum of that count
-                my $this_max = $input_types{$attribute_typeID};
+                my $this_max = $input_types{$semantic_typeID};
                 $input_analyses{$nodeID}->{$inputID} = $this_max;
                 $max_input_analyses = $this_max
                   if $this_max > $max_input_analyses;
@@ -919,7 +919,7 @@ sub findModuleHandler {
         }
     }
 
-    # Loads the data paths for an module_execution chain which has already had
+    # Loads the data paths for an analysis chain which has already had
     # them built.
     sub __loadDataPaths {
         __debug("  Loading data paths");
@@ -1027,8 +1027,8 @@ sub findModuleHandler {
         my $attr_type = $formal_input->semantic_type();
 
         my %data_tables;
-        foreach my $attr_column ($attr_type->semantic_elements()) {
-            my $data_column = $attr_column->data_column();
+        foreach my $sem_elem ($attr_type->semantic_elements()) {
+            my $data_column = $sem_elem->data_column();
             my $data_table = $data_column->data_table();
             my $table_name = $data_table->table_name();
             $data_tables{$table_name} = $data_table;
@@ -1478,7 +1478,7 @@ sub findModuleHandler {
               newObject("OME::ModuleExecution::ActualInput",
                         {
                          module_execution          => $module_execution->id(),
-                         formal_input_id   => $inputID,
+                         formal_input_id           => $inputID,
                          input_module_execution_id => $pred_analysis->id()
                         });
 
@@ -1493,8 +1493,8 @@ sub findModuleHandler {
               newObject("OME::AnalysisChainExecution::NodeExecution",
                         {
                          analysis_chain_execution => $analysis_chain_execution,
-                         analysis_chain_node => $curr_nodeID,
-                         module_execution           => $module_execution,
+                         analysis_chain_node      => $curr_nodeID,
+                         module_execution         => $module_execution,
                         });
         }
     }
@@ -2013,8 +2013,8 @@ sub findModuleHandler {
         return \@attribute_list;
     }
 
-    # The main body of the module_execution engine.  Its purpose is to execute
-    # a prebuilt module_execution chain against a dataset, reusing results if
+    # The main body of the analysis engine.  Its purpose is to execute
+    # a prebuilt analysis chain against a dataset, reusing results if
     # possible.
     sub executeAnalysisView {
         ($self, $session, $analysis_chain, $input_parameters, $dataset) = @_;
@@ -2037,7 +2037,7 @@ sub findModuleHandler {
         $dataset->storeObject();
 
         # Build the data paths.  Since data paths are now associated
-        # with module_execution views, we only need to calculate them once.
+        # with analysis chains, we only need to calculate them once.
         # Since the view is only locked when it is executed, we assume
         # that an unlocked view has not had paths calculated, whereas
         # a locked one has.
@@ -2055,7 +2055,7 @@ sub findModuleHandler {
             __loadDataPaths();
         }
 
-        __debug("  Creating analysis_chain_execution table entry");
+        __debug("  Creating ANALYSIS_CHAIN_EXECUTION table entry");
 
         $analysis_chain_execution = $factory->
           newObject("OME::AnalysisChainExecution",
@@ -2175,7 +2175,7 @@ sub findModuleHandler {
 
                 # Execute away.
                 if ($dependence{$curr_nodeID} ne 'I') {
-                    __debug("    Creating module_execution entry");
+                    __debug("    Creating MODULE_EXECUTION entry");
                     $new_analysis = 
                       __createAnalysis({
                                         module    => $curr_node->module(),
@@ -2237,10 +2237,10 @@ sub findModuleHandler {
                         if (__checkPastResults()) {
                             next IMAGE_LOOP;
                         } elsif (!defined $new_analysis) {
-                            __debug("    Creating module_execution entry");
+                            __debug("    Creating MODULE_EXECUTION entry");
                             $new_analysis =
                               __createAnalysis({
-                                                module    => $curr_node->module(),
+                                                module     => $curr_node->module(),
                                                 dependence => $dependence{$curr_nodeID},
                                                 dataset    => $dataset,
                                                 timestamp  => 'now',
