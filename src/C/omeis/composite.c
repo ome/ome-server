@@ -123,10 +123,11 @@ CompositeSpec theComposite;
 
 	memset(&theComposite, 0, sizeof(CompositeSpec));
 
+	/* the negative returned values are interpreted upstream to create informative error msgs */
 	if (! myPixels) return (-1);
-	if (theZ < 0 || theT < 0) return (-1);
-	if (theZ >= myPixels->head->dz ) return (-1);
-	if (theT >= myPixels->head->dt ) return (-1);
+	if (theZ < 0 || theT < 0) return (-2);
+	if (theZ >= myPixels->head->dz ) return (-3);
+	if (theT >= myPixels->head->dt ) return (-4);
 	theComposite.theZ = theZ;
 	theComposite.theT = theT;
 	

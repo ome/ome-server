@@ -850,18 +850,29 @@ char **cgivars=param;
 			break;
 			
 		case M_COMPOSITE:
-			if (theZ < 0 || theT < 0) {
-				HTTP_DoError (method,"Parameters theZ, and theT must be specified for the composite method." );
-				return (-1);
-			}
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 			
-			DoComposite (thePixels, theZ, theT, param);
-		break;
+			i = DoComposite (thePixels, theZ, theT, param);
+			
+			if (i == -1){
+				HTTP_DoError (method,"thePixels parameter passed to DoComposite in omeis.c is null." );
+				return (-1);
+			} else if (i == -2) {
+				HTTP_DoError (method,"Parameters theZ, and theT must be specified and nonnegative for the composite method." );
+				return (-1);
+			} else if (i == -3) {
+				HTTP_DoError (method,"Parameter theZ is too large." );
+				return (-1);
+			} else if (i == -4) {
+				HTTP_DoError (method,"Parameter theT is too large." );
+				return (-1);
+			}
+			
+			break;
 		
 		case M_GETTHUMB:
 			if ( (theParam = get_param (param,"Size")) ) {
@@ -894,7 +905,7 @@ char **cgivars=param;
 
 			fclose(file); 
 
-		break;
+			break;
 	} /* END case (method) */
 
 	/* ----------------------- */
