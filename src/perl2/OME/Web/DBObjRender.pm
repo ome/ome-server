@@ -596,6 +596,8 @@ $obj->$field if exists $request->{ inferred_relation };
 						if $SQLtype eq 'boolean';
 					$record{ $request_string } = $self->_trim( $record{ $request_string }, $request )
 						if( $SQLtype =~ m/^varchar|text/ ); 
+					$record{ $request_string } = $q->escapeHTML( $record{ $request_string } )
+						if exists $request->{ escape_html };
 				} elsif ($options->{text}) {
 					$record{ $request_string } = $obj->$field() ? $obj->$field()->id() : '<NULL>';
 				} else {
@@ -607,13 +609,14 @@ $obj->$field if exists $request->{ inferred_relation };
 		
 					# *many reference accessor
 					if( $type eq "has-many" || $type eq 'many-to-many' ) {
-						# ref_list if no field specified in command
+						# ref_list is the default mode for rendering object lists.
 						my $render_mode = ( $request->{ render } or 'ref_list' );
 						$record{ $request_string } = $self->renderArray( 
 							[$obj, $field], 
 							$render_mode, 
 							{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
-							  type => $obj->getAccessorReferenceType( $field )->getFormalName()
+							  type => $obj->getAccessorReferenceType( $field )->getFormalName(),
+							  %$request
 							}
 						);
 					}
