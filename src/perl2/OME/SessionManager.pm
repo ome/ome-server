@@ -356,7 +356,6 @@ sub logout {
     $self->deleteApacheSession ($session->{ApacheSession});
     delete $session->{ApacheSession};
     delete $session->{SessionKey};
-    $session->closeSession();
 }
 
 
@@ -425,8 +424,8 @@ sub getApacheSession {
 
     untie %tiedApacheSession;
     
-    logdbg "debug", "getApacheSession: username=".$apacheSession->{username} || "";
-    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey} || "";
+    logdbg "debug", "getApacheSession: username=" . ($apacheSession->{username} || "");
+    logdbg "debug", "getApacheSession: key=" . ($apacheSession->{SessionKey} || "");
     return $apacheSession;
 }
 
