@@ -63,7 +63,6 @@ sub new {
     my $session;
     my $repository;
     my $ky;
-    my $status = "";
 
     my $self = {};
 
@@ -73,29 +72,19 @@ sub new {
     $session = shift;
 
     $export_type = shift;
-    $status = "No export type given"
-	unless $export_type;
+    die "No export type given" unless $export_type;
 
     $image_list_ref = shift;         # reference list of export images
-    $status = "No image file to export"
-	unless $image_list_ref;
+    die "No image file to export" unless $image_list_ref;
 
     $repository = shift;
-    $status = "No repository found"
-	unless $repository;
+    die "No repository found" unless $repository;
 
-    return $status
-	unless $status eq "";
-    
-    $export_writer = new OME::ImportExport::Export_writer($session, $export_type, $image_list_ref, $repository, $self);
-    $status = "Couldn\'t make Export_writer instance";
-    if (defined $export_writer) {
-	$status = $export_writer->export;
-    }
-
-    if ($status ne "") {
-	carp $status;
-    }
+   
+    $export_writer = new OME::ImportExport::Export_writer($session, $export_type, $image_list_ref, $repository, $self)
+    	or die "Couldn\'t make Export_writer instance";
+	my $status = $export_writer->export;
+	die $status if ($status ne "");
 
 
 }
