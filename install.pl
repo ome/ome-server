@@ -34,7 +34,9 @@
 use warnings;
 use strict;
 use Getopt::Long;
-use lib qw(src/perl2);
+use FindBin;
+use File::Spec::Functions qw(catdir);
+use lib catdir ($FindBin::Bin,'src','perl2');
 use Carp;
 use English;
 use Text::Wrap;
@@ -96,8 +98,7 @@ sub usage {
     my $error = shift;
     my $usage = "";
 
-    $usage = "**** ERROR: $error\n\n" if $error; 
-    $usage .= <<USAGE;
+    $usage = <<USAGE;
 OME install script. Bootstraps the environment and database as well as 
 being able to run upgrades and sanity checks on a current installation.
 
@@ -118,7 +119,9 @@ Options:
   -h, --help        This message
 
 Report bugs to <ome-devel\@lists.openmicroscopy.org.uk>.
+
 USAGE
+    $usage .= "**** ERROR: $error\n\n" if $error; 
 
     print STDERR $usage;
     exit (1) if $error;
@@ -128,6 +131,9 @@ USAGE
 #*********
 #********* START OF CODE
 #*********
+
+# Set the cwd to wherever we ran the script from
+chdir ($FindBin::Bin);
 
 # Number of checks to run
 my $checks_to_run = 0;
@@ -151,6 +157,10 @@ GetOptions ("u|update" => \$update,         # update
 
 # Root check
 usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
+
+# The installer cannot be run from a directory owned by root
+usage ("The installer cannot be run from a directory owned by root") if (stat ('.'))[4] == 0;
+
 
 usage () if $usage;
 
