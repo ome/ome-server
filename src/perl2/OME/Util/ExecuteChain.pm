@@ -80,54 +80,86 @@ sub execute_help {
     $self->printHeader();
     print <<"USAGE";
 Usage:  
-    $script $command_name <analysis chain id> <dataset id> [<options>]
+    $script $command_name [<options>] [<flags>]
+
+This command uses the Analysis Engine to execute the analysis chain against
+a dataset.
+
 Options:
-    known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n
+  -a  Use this to specify the analysis chain. Either by name or ID.
+  
+  -d  Use this to specify the dataset. Either by name or ID.
+    
+  -r, --reuse
+    Do not reuse previous module execution results.
+  
+  -c, --caching
+    Enable DBObject caching
+
+  -h, --help  Print this help message.
 USAGE
     CORE::exit(1);
 }
 
 sub execute {
-my $self = shift;
+	my $self = shift;
+	
+	my ($chainStr, $datasetStr, $reuse, $caching, $help);
+	$reuse = 0;
+	$caching = 0;
+	
+	GetOptions ('a=s' => \$chainStr,
+				'd=s' => \$datasetStr,
+				'reuse|r!' => \$reuse,
+				'caching|c!' => \$caching,
+				'help|h' => \$help);
+    
+    execute_help() if $help;
+    OME::DBObject->Caching(1) if ($caching or $ENV{'OME_CACHE'});
 
-	print "\nOME Test Case - Execute Analysis Chain\n";
-	print "----------------------------\n";
-		
-	my $chainID = shift(@ARGV);
-	my $datasetID = shift(@ARGV);
-	
-    my $session = $self->getSession();
-	
-	
+    my $session = $self->getSession();	
 	my $factory = $session->Factory();
 	
-	
-	my $chain = $factory->loadObject("OME::AnalysisChain",$chainID);
-	my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
-	
-	my %flags;
-	
-	foreach my $flag_string (@ARGV) {
-		my ($flag,$value) = split(/=/,$flag_string,2);
-		if ($flag eq "Cached") {
-			OME::DBObject->Caching($value);
-		} else {
-			$flags{$flag} = $value;
-		}
+	# get a dataset
+	my $dataset;
+
+	if ($datasetStr =~ /^([0-9]+)$/) {
+		my $datasetID = $1;
+		$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
+		die "Dataset with ID $datasetStr doesn't exist!" unless $dataset;
+	} else {
+		my $datasetData = {
+							name   => $datasetStr,
+							owner  => $session->User(),
+						  };
+		$dataset = $factory->findObject( "OME::Dataset", $datasetData);
+		die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
+	}
+
+	# get a chain
+	my $chain;
+
+	if ($chainStr =~ /^([0-9]+)$/) {
+		my $chainID = $1;
+		$chain = $factory->loadObject ("OME::AnalysisChain", $chainID);
+		die "Analysis Chain with ID $chainStr doesn't exist!" unless $chain;
+	} else {
+		my $chainData = {
+							name   => $chainStr,
+							owner  => $session->User(),
+						};
+		$chain = $factory->findObject( "OME::AnalysisChain", $chainData);
+		die "Analysis Chain with name $chainStr doesn't exist!" unless $chain;
 	}
 	
-	OME::DBObject->Caching(1) if $ENV{'OME_CACHE'};
 	
 	# Retrieve user inputs
-	
 	my $cmanager = OME::Tasks::ChainManager->new($session);
-	
 	my $user_input_list = $cmanager->getUserInputs($chain);
 	
-	print "User inputs:\n";
+	print "User Inputs:\n" if (scalar @$user_input_list);
 	
 	my %user_inputs;
-	
 	foreach my $user_input (@$user_input_list) {
 		my ($node,$module,$formal_input,$semantic_type) = @$user_input;
 		print "\n",$module->name(),".",$formal_input->name(),":\n";
@@ -215,20 +247,68 @@ my $self = shift;
 		$user_inputs{$formal_input->id()} = $mex;
 	}
 	
-	OME::Analysis::Engine->executeChain($chain,$dataset,\%user_inputs,%flags);
+	print "Executing Analysis Chain\n";
+	my $task = OME::Tasks::NotificationManager->
+		new("Executing `".$chain->name()."`", -1);
+	$task->setMessage('Start Execution of Analysis Chain');
 	
-	#$session->BenchmarkTimer->report();
+	my $pid = OME::Fork->fork();
 	
-	my $cache = OME::DBObject->__cache();
-	my $numClasses = scalar(keys %$cache);
-	my $numObjects = 0;
+	if (!defined $pid) {
+		die "Could not fork off process to perform the analysis chain execution";
+	} elsif ($pid) {
+		# Execute the chain
+		my %flags;
+		$flags{ReuseResults} = 1-$reuse; # if $reuse is set to 1 means do not reuse
+		OME::Analysis::Engine->
+			executeChain($chain,$dataset,\%user_inputs,$task,%flags);
+	} else {
 	
-	foreach my $class (keys %$cache) {
-		my $classCache = $cache->{$class};
-		my $numClassObjects = scalar(keys %$classCache);
-		printf STDERR "%5d %s\n", $numClassObjects, $class;
-		$numObjects += $numClassObjects;
+		# Child process prints the task status
+		my $lastStep = -1;
+		my $status = $task->state();
+		while ($status eq 'IN PROGRESS') {
+			$task->refresh();
+			next if $task->n_steps == -1;
+			
+			my $step = $task->last_step();
+			my $message = $task->message();
+			defined $message or $message = "";
+			
+			if ($step != $lastStep ) {
+				print "	 $step/",$task->n_steps(),": [",
+				  $task->state(),"] ",
+				  $message,"\n";
+				$lastStep = $step;
+			}
+		
+			$status = $task->state();
+		
+			sleep 2;
+		}
+		
+		# print the final task Info
+		$task->refresh();
+		my $step = $task->last_step();
+		print "	 $step/",$task->n_steps(),": [",
+		  $task->state(),"] ",
+		  $task->message(),"\n";	
 	}
+		
+	# my $cache = OME::DBObject->__cache();
+	# my $numClasses = scalar(keys %$cache);
+	# my $numObjects = 0;
 	
-	printf STDERR "\n%5d TOTAL\n", $numObjects;
+	# foreach my $class (keys %$cache) {
+	#	 my $classCache = $cache->{$class};
+	#	 my $numClassObjects = scalar(keys %$classCache);
+	#	 printf STDERR "%5d %s\n", $numClassObjects, $class;
+	# 	 $numObjects += $numClassObjects;
+	# }
+	
+	# printf STDERR "\n%5d TOTAL\n", $numObjects;
+}
+
+sub END {
+	print "Exiting...\n";
 }
