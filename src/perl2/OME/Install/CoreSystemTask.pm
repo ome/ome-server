@@ -158,7 +158,7 @@ sub get_apache_user {
 sub get_postgres_user {
     my $username = shift;  # A user specified default if we have one
 
-    unless ($username) {
+    unless (getpwnam ($username)) {
 		$username = "";
 
 		# Grab our PostgreSQL user from the password file
@@ -170,8 +170,8 @@ sub get_postgres_user {
 				last;
 			}
 		}
+		close(PW_FILE);
 	}
-    close(PW_FILE);
 
     # It's possible we've got multiple instances of these users in the password
     # file so lets confirm things. By the same token, if that the user is of a
