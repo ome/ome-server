@@ -14,11 +14,12 @@
 
 <h3>
 OS Requirements:</h3>
-There is no requirement for any kind of Linux per se - only certain open-source
+There is no requirement for any kind of UNIX per se - only certain open-source
 libraries, perl modules, packages, and a unix-like file-system.
 <br>
-To my knowledge, there is no single Linux distribution that has all
-of these, but I may be wrong.<br>&nbsp;
+To my knowledge, there is no single UNIX distribution that has all
+of these, but I may be wrong.<br>
+OME is known to run on many Linux distros, and Mac OS X (which is my development platform) - as long as the following dependencies are met.
 <h3>
 Major package requirements:</h3>
 <ul>
@@ -48,34 +49,12 @@ DBI (problems with 1.20. RH 7.1 ships with 1.14 which is too old - use the one <
 <li>
 DBD::Pg (problems with many versions - use the one <a href="packages/perl/DBD-Pg-0.95.tar.gz">here</a>)</li>
 </ul>
-<p><br> The versions of perl modules can be determined from the command prompt.  For example the DBI version is:
-<pre>> perl -MDBI -e 'print "$DBI::VERSION\n";'</pre> DBI versions 1.15 to 1.19 are OK.  
-Determine DBD::Pg version by executing:
-<pre>> perl -MDBD::Pg -e 'print "$DBD::Pg::VERSION\n";'</pre> DBD::Pg version 0.95 is what you want.
-<p><br>Most of these modules have other dependencies that need to be satisfied.
-This can most easily be done by installing them using CPAN. It is important
-to configure CPAN to ASK before installing dependencies (not the default!),
-so that it doesn't do something untoward like trying to install a new version
-of perl (which it is very likely to do, and if it screws it up - which
-is virtually guaranteed - it will seriously damage most UNIX systems).
-<pre>> perl -MCPAN -e shell</pre>
-will first configure CPAN, then run it. It is usually fairly useless to
-do this from an account other than root.
-<br>&nbsp;
-<pre>CPAN>install Apache::Session::File</pre>
-...etc. You can install Frontier::XMLRPC and DBD::Pg using this mechanism
-to take care of the dependencies, and then install those modules from the
-distro on top of them.  If you start getting lots of questions about your
-system, your processor, or your perl installation, it is trying to install
-a new version of perl! Abort this process immediately by hitting ^C.
-<p>Generally, installing Perl packages from a .tar.gz archive is done like so (assuming MyPackage-1.0.tar.gz, for example):
-<pre>> tar -zxvf MyPackage-1.0.tar.gz
-> cd MyPackage-1.0
-> perl Makefile.PL
-> make
-> make test
-> make install</pre>
-<br>&nbsp;
+<p><br>All of the perl dependencies can be downloaded and installed with the following commands (as root):
+<pre>> cd OME/src/perl/
+> ./perlCheck.pl</pre>
+Note that you should execute this script from the directory into which you installed the OME perl scripts - the directory from which they will
+be served by Apache.  See the <a href="install.html">install</a> document.
+N.B.:  This will <B>not</B> install postgres, Apache or mod_perl
 <h4>
 Other Libraries:</h4>
 Usually need to re-install libtiff if you want LZW support.&nbsp; Get and
@@ -89,19 +68,16 @@ libraries, which are usually installed:
 <br>jpeg-6b
 <br>in the near future, also freetype-2.0.4 (this is latest version, can
 probably use an earlier one)
-<br>When installing ImageMagick, run configure the following way:
-<pre>> ./configure --enable-shared --enable-lzw --prefix=/usr
-> make
-> make install</pre>
-Installing on Mac OS X will require the patched ImageMagick available at: 
-<a href="http://ome1-sorger.mit.edu/ImageMagick-5.3.6.tar.gz">ImageMagick-5.3.6.tar.gz</a>.  
-It is not presently known if newer versions incorporated my patch.
+<br>
 Installing required libraries on Mac OS X is greatly simplified with the use of Christoph Pfisterer's <a href="http://fink.sourceforge.net/">fink</a>.
+<br>The perlCheck.pl script will install ImageMagick if it is missing, but it will <b>not</b> install these additional libraries.
 <h4>
 PostgreSQL:</h4>
 You can find out what version you have (if any) by typing:<pre>> psql -V</pre>
 It is best to compile PostgreSQL from its <a href="packages/source/postgresql-7.1.3.tar.gz">source</a> - I have had stability
-problems with the binary RPMs. To compile PostgreSQL, you will need the
+problems with the binary RPMs. This may no longer be true with 7.1.3 - try binaries first if you want, then compile from source if they are unstable.  
+PostgreSQL should be able to run for months with no problems.
+To compile PostgreSQL, you will need the
 following libraries (not strictly required, but highly recommended):
 <br><a href="http://cnswww.cns.cwru.edu/~chet/readline/rltop.html">readline</a>
 (from gnu.org - usually present on Linux distros, but not always)

@@ -18,7 +18,7 @@ Copy the contents of the src/perl directory to where your perl CGI scripts
 live.</li>
 
 <br>Make sure Apache-mod-perl is properly configured to execute perl scripts
-in this directory.  A sample perl handler section (within the Aliases section) might look like:<pre>
+in this directory (/OME/perl in this example).  A sample perl handler section (within the Aliases section) might look like:<pre>
   Alias /perl/  "/OME/perl/"
     &lt;Location /perl&gt;
         SetHandler  perl-script
@@ -33,10 +33,16 @@ in this directory.  A sample perl handler section (within the Aliases section) m
         Options +ExecCGI
     &lt;/Files&gt;
 </pre>
-<br>You can check that everything is OK by pointing a browser at the script perl/ShowEnvCGI.pl, and looking
+<br>You can check that everything is OK by pointing a browser at the script perl/ShowEnvCGI.pl 
+(i.e. http://my.ome.server/perl/ShowEnvCGI.pl), and looking
 at the GATEWAY_INTERFACE variable, which should be set to CGI-Perl/1.1.
 <br>N.B.:  In the Perl handler section of Apache config, PerlSendHeader must be set to Off, which is the default.  
 PERL_SEND_HEADER should not appear in the list of variables reported by http://my.ome.server/perl/ShowEnvCGI.pl
+<br>After Apache is set up and mod_perl is functioning properly, make sure you have all of the OME perl dependencies
+by running the perlCheck script as the root user from the installed perl directory (/OME/perl in this example):
+<pre>> cd /OME/perl
+> ./perlCheck.pl</pre>
+At this point, you should re-start Apache.  Sending HUP to Apache and its kin is not always sufficient.
 <li>
 Copy the contents to src/JavaScript somewhere where they will not be executed
 by a CGI handler.</li>
@@ -47,8 +53,6 @@ Usually my document-root looks something like:
 html
 	JavaScript
 	images
-perl
-	all the perl stuff.
 </pre>
 
 <li>
@@ -62,19 +66,13 @@ I've put things in a top level OME directory like so:</li>
 	java
 	bin
 	psql
+	perl
 </pre>
 <li>
-Go to the C directory, and do:<br><ul><pre>
+Go to the C directory, and do (as root):<br><ul><pre>
 >make all
 >make install
 </pre></ul></li>
-
-<li>
-I make a symbolic link between<pre>
-perl/OMEpl.pm, perl/OMEDataset.pm, perl/OMEDataset/, perl/OMEfeature.pm, perl/OMEwebLogin.pm</pre>and wherever packages
-are kept in your perl distribution, so that the perl interpreter picks
-them up.&nbsp;
-You should definitely make symbolic links rather than copying the files so that updates get properly picked up.
 
 <li>
 You need to create the directories /var/tmp/OME, /var/tmp/OME/lock, /var/tmp/OME/sessions</li>
@@ -106,7 +104,9 @@ psql>\q
 
 <li>
 The OME front page is OMEanalyze.pl.&nbsp; Point your browser there, and
-it will redirect you to a login page.
+it will redirect you to a login page (i.e. http://my.ome/server/perl/OMEanalyze.pl).
+<br>There is a handy redirect page in OME/src/html, which if put in your Apache server root will redirect the browser to OMEanalyze.pl.
+Users who acess the top-level of your server will then be re-directed to OME.
 
 <br>Passwords are currently not checked.&nbsp; There is a javascript RSA
 implementation that might do the trick.
