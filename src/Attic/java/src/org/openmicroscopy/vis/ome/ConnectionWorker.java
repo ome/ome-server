@@ -101,7 +101,7 @@ public class ConnectionWorker extends SwingWorker {
 						chains = new Chains(controller,connection);
 						connection.setModules(modules);
 						connection.setChains(chains);
-						controller.completeWindows(); 
+						
 					}
 				}
 						
@@ -137,6 +137,8 @@ public class ConnectionWorker extends SwingWorker {
 			JOptionPane.showMessageDialog(controller.getMainFrame(),
 					"The login was not completed successfully.\nYour username and/or password may be incorrect, or there may be network problems. \n\nPlease try again.",
 				"Login Difficulties",JOptionPane.ERROR_MESSAGE);
+		else
+			controller.completeWindows(); 
 	}
 	
 	
