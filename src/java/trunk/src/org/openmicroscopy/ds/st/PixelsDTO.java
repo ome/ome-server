@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Fri Feb 20 11:14:34 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -103,10 +103,10 @@ public class PixelsDTO
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public Integer getPixelsID()
-    { return getIntegerElement("PixelsID"); }
-    public void setPixelsID(Integer value)
-    { setElement("PixelsID",value); }
+    public Integer getImageServerID()
+    { return getIntegerElement("ImageServerID"); }
+    public void setImageServerID(Integer value)
+    { setElement("ImageServerID",value); }
 
     public List getChannelIndexes()
     { return (List) getObjectElement("ChannelIndexes"); }

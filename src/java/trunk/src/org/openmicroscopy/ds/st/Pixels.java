@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Fri Feb 20 11:14:34 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -89,23 +89,23 @@ public interface Pixels
     public String getPath();
     public void setPath(String value);
 
-    /** Criteria field name: <code>PixelsID</code> */
-    public Integer getPixelsID();
-    public void setPixelsID(Integer value);
+    /** Criteria field name: <code>ImageServerID</code> */
+    public Integer getImageServerID();
+    public void setImageServerID(Integer value);
 
     /** Criteria field name: <code>ChannelIndexes</code> */
     public List getChannelIndexes();
-    /** Criteria field name: <code>#ChannelIndexes</code> */
+    /** Criteria field name: <code>#ChannelIndexes</code> or <code>ChannelIndexes</code> */
     public int countChannelIndexes();
 
     /** Criteria field name: <code>DisplayOptionses</code> */
     public List getDisplayOptionses();
-    /** Criteria field name: <code>#DisplayOptionses</code> */
+    /** Criteria field name: <code>#DisplayOptionses</code> or <code>DisplayOptionses</code> */
     public int countDisplayOptionses();
 
     /** Criteria field name: <code>PixelChannelComponents</code> */
     public List getPixelChannelComponents();
-    /** Criteria field name: <code>#PixelChannelComponents</code> */
+    /** Criteria field name: <code>#PixelChannelComponents</code> or <code>PixelChannelComponents</code> */
     public int countPixelChannelComponents();
 
 }
