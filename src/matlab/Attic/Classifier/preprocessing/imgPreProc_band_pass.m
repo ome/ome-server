@@ -27,7 +27,7 @@ end
 angle = findOrientationAngle(smaller_img);
 
 % special Nikita sauce to pre-process images
-smaller_img = bandPassIMG(smaller_img);
+smaller_img = uint8(bandPassIMG(smaller_img));
 
 % orient image horizontally (uniform orientation critical to eigenface analysis)
 final_image = imrotate(smaller_img,angle,'bicubic');
