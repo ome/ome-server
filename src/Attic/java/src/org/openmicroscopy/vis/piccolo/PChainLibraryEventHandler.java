@@ -141,21 +141,29 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			PChainBox cb = (PChainBox) n.getParent();
 			selectedChain = cb.getChain(); 
 		}
-		if (selectedChain != null)
-			System.err.println("double click selected chain..."+selectedChain.getName());
 		selectionState.setSelectedChain(selectedChain);
+		e.setHandled(true);
 	} 
 	
 	private void doMouseClicked(PInputEvent e) {
 		PNode node  = e.getPickedNode();
-		if (!(node instanceof PDatasetLabelText)) {
-			super.mouseClicked(e);
-			return;
+		if (node instanceof PDatasetLabelText) {
+			// on a label.
+			PDatasetLabelText label = (PDatasetLabelText) node;
+			label.doSelection();
+
+			e.setHandled(true);
 		}
-		
-		// on a label.
-		PDatasetLabelText label = (PDatasetLabelText) node;
-		label.doSelection();
+		else {
+			super.mouseClicked(e);
+			if (node instanceof PChainBox) {
+				PChainBox cb = (PChainBox) node;
+				selectionState.setSelectedChain(cb.getChain());
+			}
+			else 
+				selectionState.setSelectedChain(null);
+			e.setHandled(true);
+		}
 	}
 	
 	/**
@@ -166,13 +174,11 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (e.isPopupTrigger()) {
-			System.err.println("popup on press");
 			handlePopup(e);
 		}
 		else if (node instanceof PChainBox) {
 			PChainBox box = (PChainBox) node;
-			//canvas.setSelectedChainID(box.getChainID());
-			canvas.setSelectedChain(box.getChain());
+			canvas.setDraggingChain(box.getChain());
 		}
 	}
 	
@@ -182,10 +188,11 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 */
 	public void mouseReleased(PInputEvent e) {
 		if (e.isPopupTrigger()) {
-			System.err.println("popup on release");
+	
 			handlePopup(e);
 		}
 		else
-			canvas.clearChainSelected();
+			canvas.clearDraggingChain();
+		
 	}
 }
