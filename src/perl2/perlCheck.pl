@@ -145,6 +145,9 @@ my @modules = ({
 	},{
 	Name => 'XML::LibXML',
 	repositoryFile => 'XML-LibXML-1.53.tar.gz',
+	},{
+	Name => 'XML::LibXSLT',
+	repositoryFile => 'XML-LibXSLT-1.53.tar.gz',
 	}
 );
 
