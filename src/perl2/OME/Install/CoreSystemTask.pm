@@ -149,7 +149,7 @@ sub get_postgres_user {
     unless ($username) {
 	$username = "";
 
-	# Grab our Apache user from the password file
+	# Grab our PostgreSQL user from the password file
 	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
 	while (<PW_FILE>) {
 	    chomp;
@@ -219,7 +219,8 @@ sub execute {
 	$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 	# Get and/or update our "special" Unix user information
-	$SPECIAL_USER = confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER || "");
+	$SPECIAL_USER =
+		confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER || "");
 
 	# Make sure the rest of the installation knows who the apache and ome users are
 	$environment->user($OME_USER);
@@ -300,32 +301,33 @@ sub execute {
     #********
 
     foreach my $directory (@core_dirs) {
-	# Create the core dirs
-	if (not -d $directory->{path}) { 
-	    print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
-	    mkdir $directory->{path} or croak "Unable to create directory \"$directory->{path}\": $!";
-	}
+		# Create this core directory
+		unless (-d $directory->{path}) { 
+			print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
+			mkdir $directory->{path} or croak "Unable to create directory \"$directory->{path}\": $!";
+		}
 
-	# Make sure the core dirs are owned by the $OMEUser
-	fix_ownership($OME_USER, $directory->{path}) or croak "Failure setting permissions on \"$directory->{path}\" $!";
+		# Make sure this core directory is owned by the $OMEUser
+		fix_ownership($OME_USER, $directory->{path})
+			or croak "Failure setting permissions on \"$directory->{path}\" $!";
 
-	# Set the "Set-GID" bit on the dir so that all files will inherit it's GID
-	chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\" $!";
+		# Set the "Set-GID" bit on the dir so that all files will inherit it's GID
+		chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\" $!";
 
-	# Create each core dir's children
-	foreach my $child (@{$directory->{children}}) {
-	    $child = $directory->{path}."/".$child;
-	    if (not -d $child) {
-		# There's no need to be UID 0 for these creations
-		$EUID = $OME_UID;
+		# Create each core dir's children
+		foreach my $child (@{$directory->{children}}) {
+	    	$child = $directory->{path} . "/" . $child;
+	    	unless (-d $child) {
+				# There's no need to be UID 0 for these creations
+				$EUID = $OME_UID;
 
-		print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
-		mkdir $child or croak "Unable to create directory \"$child\": $!";
+				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
+				mkdir $child or croak "Unable to create directory \"$child\": $!";
 
-		# Back to UID 0 we go
-		$EUID = 0;
-	    }
-	}
+				# Back to UID 0 we go
+				$EUID = 0;
+	    	}
+		}
     }
 
     print "\n";  # Spacing
@@ -340,8 +342,8 @@ sub execute {
     $EUID = $OME_UID;
 
     foreach my $file (@files) {
-	print "  \\_ $file\n";
-	copy ($file, $$OME_BASE_DIR."/xml/") or die ("Couldn't copy file ", $file, ". ", $!, ".\n");
+		print "  \\_ $file\n";
+		copy ($file, $$OME_BASE_DIR."/xml/") or croak ("Couldn't copy file ", $file, ". ", $!, ".\n");
     }
 
     # Back to UID 0 we go
@@ -357,9 +359,9 @@ sub execute {
     $EUID = $OME_UID;
 
     print "Copying IMAGE directories\n";
-    foreach my $directory (@image_core) {
-	print "  \\_ $directory\n";
-	copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
+    	foreach my $directory (@image_core) {
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
     }
 
     print "Copying HTML directories\n";
@@ -369,8 +371,8 @@ sub execute {
     chdir ("src") or croak "Unable to chdir into src/. $!";
 
     foreach my $directory (@html_core) {
-	print "  \\_ $directory\n";
-	copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR/$directory");
     }
 
     chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
