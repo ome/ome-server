@@ -123,8 +123,29 @@
 
 		<FormalOutput Name = "DiscretizationBand" SemanticTypeName = "SignatureVectorDiscretizationBand"  Count="+"/>
 	</Declaration>
-    <ExecutionInstructions ExecutionGranularity="D" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
-	<!-- I included this stub to indicate that the function will execute once per dataset. -->
+    <ExecutionInstructions
+      xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" 
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+      xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd"
+      ExecutionGranularity = "D"
+      ExecutePer           = "SignatureVectorLegend">
+    <!-- ExecutePer will merge all inputs on "SignatureVectorLegend"
+    references & execute the function once per merged input set. -->
+		<FunctionInputs>
+		  <Input><UnorderedVector Values = "SignatureVectorEntry.Value"/></Input>
+		</FunctionInputs>
+
+		<FunctionOutputs>
+		  <Output><Array DecodeWith = "Bands"/></Output>
+		</FunctionOutputs>
+		
+		<ArrayDecoder ID="Bands">
+			<StoreRowIndexAs  OutputLocation = "DiscretizationBand.DiscreteValue"/>
+			<Column Index="1" OutputLocation = "DiscretizationBand.LowerBound"/>
+			<Column Index="1" OutputLocation = "DiscretizationBand.UpperBound"/>
+			<AlsoStoreReferenceToInput Input          = "SignatureVectorLegend" 
+			                           OutputLocation = "DiscretizationBand.Legend"/>
+		</ArrayDecoder>
     </ExecutionInstructions>
 </AnalysisModule>
 
