@@ -46,8 +46,9 @@ import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.ChainExecution;
-import org.openmicroscopy.Project;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -65,11 +66,12 @@ import java.util.Iterator;
 public class SelectionState {
 	
 	private CDataset currentDataset = null;
+	private CDataset rolloverDataset = null;
 	private Collection 	activeDatasets = null;
 	private CChain	currentChain = null;
 	private ChainExecution currentExecution = null;
-	private Project currentProject = null;
-	private Project rolloverProject = null;
+	private CProject currentProject = null;
+	private CProject rolloverProject = null;
 	private Collection activeProjects = null;
 	
 	// listener lists
@@ -119,7 +121,6 @@ public class SelectionState {
 			currentProject = null;
 		}
 		else {
-			System.err.println("setting chain to .."+currentChain.getName());
 			// select datasets for this chain
 			activeDatasets = newChain.getDatasetsWithExecutions();
 
@@ -148,7 +149,7 @@ public class SelectionState {
 	// PROJECT
 	
 	
-	public synchronized void setSelectedProject(Project current) {
+	public synchronized void setSelectedProject(CProject current) {
 		
 		currentProject = current;
 		
@@ -175,30 +176,33 @@ public class SelectionState {
 		return activeProjects;
 	}
 	
-	public Project getSelectedProject() {
+	public CProject getSelectedProject() {
 		return currentProject;
 	}
 	
-	public boolean isActiveProject(Project p) {
+	public boolean isActiveProject(CProject p) {
 		if (activeProjects == null)
 			return false;
 		else return activeProjects.contains(p);
 	}
 	
-	public void setRolloverProject(Project p) {
-		rolloverProject =p;
-		System.err.println("rollover...."+SelectionEvent.SET_ROLLOVER_PROJECT);
-		fireSelectionEvent(
-			new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
+	public void setRolloverProject(CProject p) {
+		
+		// we don't change the rollover if there is a selected project
+		if (currentProject == null) {
+			rolloverProject =p;
+			fireSelectionEvent(
+				new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
+		}
 	}
 	
-	public Project getRolloverProject() {
+	public CProject getRolloverProject() {
 		return rolloverProject;
 	}
 	
 	// DATASETS
 	
-	public void setSelectedDataset(CDataset current) {
+	public void setSelectedDataset(CDataset current) {	
 		doSetSelectedDataset(current);
 		fireSelectionEvent(
 			new SelectionEvent(this,SelectionEvent.SET_PROJECT));
@@ -246,6 +250,18 @@ public class SelectionState {
 	public Collection getActiveDatasets() {
 		return activeDatasets;
 	}
+	
+	public void setRolloverDataset(CDataset d) {
+		if (currentDataset == null) {
+			rolloverDataset =d;
+			fireSelectionEvent(
+				new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_DATASET));
+		}
+	}
+
+	public CDataset getRolloverDataset() {
+		return rolloverDataset;
+	}
  	
  	// 	selections
 	
@@ -258,15 +274,16 @@ public class SelectionState {
 	}
 
  	private synchronized void fireSelectionEvent(SelectionEvent e) {
-		Iterator iter = selectionListeners.iterator();
-		while (iter.hasNext()) {
+ 		Iterator iter = selectionListeners.iterator();
+ 		while (iter.hasNext()) {
 			SelectionEventListener listener = (SelectionEventListener)
 				iter.next();
 			int mask = listener.getEventMask() & e.getMask();
 			// only send the event if it contains something that the
 			// listener is interested in (overlap != 0) 
-			if ((mask & e.getMask()) !=0 )
+			if ((mask & e.getMask()) !=0 ) {
 				listener.selectionChanged(e);
+			}
 		}
  	}
 }
