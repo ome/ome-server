@@ -56,7 +56,7 @@ sub new {
 
     @$self{@fieldsILike} = @params{@fieldsILike};
 
-    die "I need a session"
+    die $class."->new needs a session"
       unless exists $self->{session} &&
              UNIVERSAL::isa($self->{session},'OME::Session');
 
