@@ -342,14 +342,16 @@ sub getCurrentAnnotation {
 	my $datasetAnnotation = $factory->
 		findObject( '@DatasetAnnotation',
 			Valid                           => 1,
+			dataset                         => $dataset,
 			'module_execution.experimenter' => $session->User(),
 			__order                         => '!module_execution.timestamp'
 		);
 	# Then look for other people's
 	$datasetAnnotation = $factory->
 		findObject( '@DatasetAnnotation',
-			Valid   => 1,
-			__order => '!module_execution.timestamp'
+			Valid                           => 1,
+			dataset                         => $dataset,
+			__order                         => '!module_execution.timestamp'
 		)
 		unless $datasetAnnotation;
 
