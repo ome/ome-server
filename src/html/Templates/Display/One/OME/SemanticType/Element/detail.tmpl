@@ -1,0 +1,16 @@
+<font class="ome_header_title">Semantic Element: <TMPL_VAR NAME='name'></font>
+<nobr>is stored as a <i><TMPL_VAR NAME=data_type></i> in column <TMPL_VAR NAME=data_column>,</nobr>
+<nobr>has ID <TMPL_VAR Name='id'>,</nobr>
+<nobr>and is part of <TMPL_VAR NAME=semantic_type>.</nobr>
+<table style=" border: 1px #000000 solid;">
+	<tr><td align="left" valign="top">
+		<TMPL_IF NAME=description>
+			Description: <TMPL_VAR NAME=description>
+		<TMPL_ELSE>
+			This semantic element did not come with a description. 
+			The author of this semantic type may specify a description in XML
+			by including a &lt;Description&gt; tag inside the defining
+			&lt;Element&gt; tag.
+		</TMPL_IF>
+	</td></tr>
+</table>
