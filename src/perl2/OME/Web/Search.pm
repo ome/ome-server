@@ -133,9 +133,13 @@ sub getPageBody {
 	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
 	# Save the url-parameters if any were passed. The line above will strip them
 	# at the first submit.
-	my @url_params = grep( $_ ne 'Page', $q->url_param() );
-	foreach my $param ( @url_params ) {
-		$html .= $q->hidden( -name => $param, -default => $q->url_param( $param ) );
+	my @params_to_save = grep( $_ ne 'Page', $q->url_param() );
+	@params_to_save = $q->param( '__save_these_params' ) 
+		unless @params_to_save;
+	if( @params_to_save ) {
+		$html .= $q->hidden( -name => '__save_these_params', -values => \@params_to_save );
+		$html .= $q->hidden( -name => $_, -default => $q->param( $_ ) )
+			foreach ( @params_to_save );
 	}
 	my %tmpl_data;
 
