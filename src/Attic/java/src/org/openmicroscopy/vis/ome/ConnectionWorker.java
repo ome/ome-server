@@ -38,14 +38,14 @@
  */
 package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.*;
+import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.*;
 import org.openmicroscopy.vis.util.SwingWorker;
 import javax.swing.JOptionPane;
 
-
 public class ConnectionWorker extends SwingWorker {
 	
-	private ApplicationController controller;
+	private Controller controller;
 	private Connection connection;
 
 	private RemoteBindings remote=null;
@@ -61,7 +61,7 @@ public class ConnectionWorker extends SwingWorker {
 	
 
 	
-	public ConnectionWorker(ApplicationController controller,Connection connection,
+	public ConnectionWorker(Controller controller,Connection connection,
 			String URL,String userName,String passWord) {
 		this.controller = controller;
 		this.connection = connection;
@@ -84,30 +84,28 @@ public class ConnectionWorker extends SwingWorker {
 					remote.loginXMLRPC(URL,userName,passWord);
 					session = remote.getSession();
 					factory = remote.getFactory();
-					if (session != null && factory != null) {
-						modules  = new Modules(connection,factory);
-						chains = new Chains(connection,factory);
-						connection.setStatusLabel("Palette & Chain Library");
+					if (remote != null && session != null && factory != null) {
+						modules  = new Modules(controller,factory);
+						chains = new Chains(controller,factory);
+						connection.setSession(session);
+						connection.setFactory(factory);
+						connection.setModules(modules);
+						connection.setChains(chains);
+						controller.completeWindows(); 
 					}
 				}
 						
 			} catch (Exception e) {
-				System.err.println(e);
-				connection.closeStatusWindow();
+				e.printStackTrace();
 				controller.cancelLogin();
 			}
 			return remote;
 	}
 	
+	
 	public void finished() {
 		if (remote != null && session != null && factory != null) {
-			connection.setSession(session);
-			connection.setFactory(factory);
-			connection.setModules(modules);
-			connection.setChains(chains);
-
-			controller.completeLogin(connection);
-			connection.closeStatusWindow();
+			controller.closeStatusWindow();
 		}
 		else 
 			JOptionPane.showMessageDialog(controller.getMainFrame(),
