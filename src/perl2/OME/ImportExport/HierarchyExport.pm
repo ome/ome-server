@@ -139,6 +139,7 @@ sub buildDOM {
 	my ($target,$targetID);
 	
 	foreach $object (@$objects) {
+		next unless ($object);
 		$ref = ref ($object);
 		$id = $object->id();
 
@@ -421,6 +422,7 @@ my ($self, $image) = @_;
 	$element->setAttribute( 'Description' , $image->description() );
 	$element->setAttribute( 'Experimenter' , $lsid->getLSID ($image->experimenter()) );
 	$element->setAttribute( 'Group' , $lsid->getLSID ($image->group()) );
+	$element->setAttribute( 'DefaultPixels' , $lsid->getLSID ($image->DefaultPixels()) );
 # N.B.:  This element has optional multiple Dataset elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Dataset', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Image2doc:  Adding Image element.";
