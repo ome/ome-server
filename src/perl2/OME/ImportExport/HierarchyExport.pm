@@ -142,6 +142,8 @@ sub buildDOM {
 	my ($object,$ref,$id,$granularity);
 	my ($target,$targetID);
 	
+	my %savedUnresolvedRefs;
+	
 	while (scalar (@$objects) > 0) {
 		foreach $object (@$objects) {
 			next unless ($object);
@@ -214,9 +216,15 @@ sub buildDOM {
 			}
 		}
 
-		# Copy the unresolved objects
-		$objects = [grep( defined $_, values (%{$self->{_unresolvedRefs}}) )];
-		logdbg 'debug', ref ($self).' '.scalar (@$objects).' Unresolved Refs: '.join ("\n\t",keys (%{$self->{_unresolvedRefs}}));
+		# Only copy new unresolved objects
+		$objects = [];
+		while ( ($ref,$object) = each %{$self->{_unresolvedRefs}} ) {
+			if (defined $object and not exists $savedUnresolvedRefs{$ref}) {
+				push (@$objects,$object);
+				$savedUnresolvedRefs{$ref} = 1;
+			}
+		logdbg 'debug', ref ($self).' '.scalar (@$objects).' Unresolved Refs.';
+		}
 	}
 	# End first run through objects array.
 	
