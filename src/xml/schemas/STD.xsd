@@ -47,7 +47,9 @@
 			<attribute name = "DataType" use = "required">
 				<simpleType>
 					<restriction base = "string">
+						<enumeration value = "bigint"/>
 						<enumeration value = "integer"/>
+						<enumeration value = "smallint"/>
 						<enumeration value = "double"/>
 						<enumeration value = "float"/>
 						<enumeration value = "boolean"/>
