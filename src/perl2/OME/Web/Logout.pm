@@ -42,7 +42,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Validation;
 use base qw{ OME::Web };
 
 sub getPageTitle {
