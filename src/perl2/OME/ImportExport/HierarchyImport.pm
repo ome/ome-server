@@ -353,15 +353,13 @@ sub module_execution () {
 	return $self->{_module_execution} if exists $self->{_module_execution} and defined $self->{_module_execution};
 	my $session = $self->{session};
 
-    my $config =  $self->{factory}->loadObject("OME::Configuration", 1);
-
     my $module_execution = $self->{factory}->
 		newObject("OME::ModuleExecution", {
 			dependence => 'I',
 			dataset_id => $self->dataset()->id(),
 			timestamp  => 'now',
 			status     => 'FINISHED',
-			module_id => $config->import_module()->id(),
+			module_id => $session->Configuration()->import_module_id(),
 		});
 
     $self->{_module_execution} = $module_execution;

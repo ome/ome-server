@@ -52,6 +52,7 @@ use Class::Data::Inheritable;
 use Apache::Session::File;
 use OME::DBConnection;
 use OME::Factory;
+use OME::Configuration;
 use Term::ReadKey;
 use POSIX;
 
@@ -267,6 +268,7 @@ sub getOMESession {
 
     $session->{Factory} = OME::Factory->new($session);
     $session->{Manager} = $self;
+    $session->{Configuration} = OME::Configuration->new($session->{Factory});;
 
     logdbg "debug", "getOMESession: updating session";
     $session->storeObject();

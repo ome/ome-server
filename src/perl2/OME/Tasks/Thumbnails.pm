@@ -251,7 +251,7 @@ sub writeOMEimage{
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
 
 	my $factory=$self->{session}->Factory();
-	my $configuration = $factory->loadObject("OME::Configuration", 1);
+	my $configuration =$self->{session}->Configuration();
 	my $bin_dir=$configuration->bin_dir;
   	my $script=$bin_dir."/".$self->{OME_JPEG};
 	my $out="";

@@ -125,10 +125,9 @@ sub __getFormats {
     my $self = shift;
     my $session = $self->{_flags}->{session};
     my $factory = $session->Factory();
-    my $config = $factory->loadObject("OME::Configuration", 1);
 
     # And find the import formats we can handle
-    my @import_formats = split /\s/, $config->import_formats();
+    my @import_formats = split /\s/, $session->Configuration()->import_formats();
 
     return \@import_formats;
 }
@@ -199,7 +198,7 @@ sub importFiles {
 
     # Find the importer module and chain based on the CONFIGURATION table.
 
-    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
+    my $config = $session->Configuration();
     my $importer_module = $config->import_module();
     my $importer_chain = $config->import_chain();
 

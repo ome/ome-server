@@ -89,9 +89,6 @@ sub new {
     my $session = shift;
     $self->{session} = $session;
 
-    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
-    $self->{config} = $config;    # load OME's configuration parameters table
-
     sort_and_group($image_file_list_ref, \@fn_groups);
     $self->{fn_groups} = \@fn_groups;
 
@@ -353,7 +350,7 @@ sub store_image_metadata {
     $created = "now" unless $created;     # until we figure out date formatting issue
 
     $name = $href->{'Image.Name'};
-    $guid = $self->{config}->mac_address;
+    $guid = $session->Configuration()->mac_address();
     
     my $recordData = {'name' => $name,
 		      'image_guid' => $guid,
@@ -388,7 +385,7 @@ sub store_image_metadata {
                  dataset_id => $dataset->id(),
                  timestamp  => 'now',
                  status     => 'FINISHED',
-                 module_id => $self->{config}->import_module()->id(),
+                 module_id => $session->Configuration()->import_module_id(),
                 });
     $self->{module_execution} = $module_execution;
 
@@ -554,7 +551,7 @@ sub store_xyz_info {
     my ($self,$session,$href) = @_;
 
     my $factory = $session->Factory();
-    my $view = $self->{config}->import_chain();
+    my $view = $session->Configuration()->import_chain();
     # Right now this creates one new dataset for each image loaded in.
     # This is a horrible idea, and should be changed.
     my $image = $self->{'image'};

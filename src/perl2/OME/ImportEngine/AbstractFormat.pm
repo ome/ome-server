@@ -239,8 +239,7 @@ that are known before the import are recorded in the new image.
 sub newImage {
     my ($self, $session, $fn) = @_;
 
-    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
-    my $guid = $config->mac_address;
+    my $guid = $session->Configuration()->mac_address();
 
     my $experimenter_id = $session->User()->id();
     my $user_group = $session->User()->Group();

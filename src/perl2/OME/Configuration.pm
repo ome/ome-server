@@ -30,7 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Written by:    Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -41,36 +41,83 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::DBObject;
-use base qw(OME::DBObject);
+use base qw(Class::Accessor);
 
-__PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('configuration');
-__PACKAGE__->addPrimaryKey('configuration_id');
-__PACKAGE__->addColumn(mac_address => 'mac_address',{SQLType => 'varchar(20)'});
-__PACKAGE__->addColumn(db_instance => 'db_instance',{SQLType => 'char(6)'});
-__PACKAGE__->addColumn(lsid_authority => 'lsid_authority',
-                       {SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(tmp_dir => 'tmp_dir',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(xml_dir => 'xml_dir',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(bin_dir => 'bin_dir',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(ome_root => 'ome_root',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(import_formats => 'import_formats',
-                       {SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(import_module_id => 'import_module');
-__PACKAGE__->addColumn(import_module => 'import_module',
-                       'OME::Module',
-                       {
-                        SQLType => 'integer',
-                        ForeignKey => 'modules',
-                       });
-__PACKAGE__->addColumn(import_chain_id => 'import_chain');
-__PACKAGE__->addColumn(import_chain => 'import_chain',
-                       'OME::AnalysisChain',
-                       {
-                        SQLType => 'integer',
-                        ForeignKey => 'analysis_chains',
-                       });
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $factory = shift;
+	my $params = shift;
+	my $self = {};
+
+	die "new OME::Configuration called without required factory parameter."
+		unless $factory;
+	$self->{Factory} = $factory;
+
+	my @vars = $factory->findObjects('OME::Configuration::Variable',
+		configuration_id => 1);
+
+	foreach my $var (@vars) {
+		$self->{$var->name()} = $var->value();
+	}
+
+	# only pay attention to the params if we don't have any variables stored in the DB yet.
+	# The set of variables is write once.
+	if (not scalar @vars) {
+		my ($name,$value);
+		while (($name,$value) = each %$params) {
+			$self->{$name} = $value if $factory->newObject('OME::Configuration::Variable', {
+				configuration_id => 1,
+				name => $name,
+				value => $value
+			});
+		}
+	}
+
+	bless($self,$class);
+
+	# Make read-only accessors for the variables.
+	$self->mk_ro_accessors(keys %{$self});
+
+	return $self;
+}
+
+sub import_module {
+	my $self = shift;
+	$self->changeObjRef ('import_module_id','OME::Module',shift) if scalar @_;
+	return ( $self->Factory()->loadObject ('OME::Module',$self->import_module_id()) );
+}
+sub import_chain {
+	my $self = shift;
+	$self->changeObjRef ('import_chain_id','OME::AnalysisChain',shift) if scalar @_;
+	return ( $self->Factory()->loadObject ('OME::AnalysisChain',$self->import_chain_id()) );
+}
 
 
+sub changeObjRef {
+	my ($self,$IDvariable,$objectType,$object) = @_;
+	die "In OME::Configuration->changeObjRef, expected parameter of type '$objectType', but got '".
+		ref($object)."'\n" unless ref($object) eq $objectType;
+	my $factory = $self->Factory();
+	my $IDobject = $factory->findObject('OME::Configuration::Variable',
+		configuration_id => 1,name => $IDvariable);
+	if ($IDobject and $IDobject->value() ne $object->id()) {
+		$IDobject->value($object->id());
+		$IDobject->storeObject();
+		$self->{$IDvariable} = $IDobject->value();
+	} elsif (not $IDobject) {
+		$IDobject = $factory->newObject('OME::Configuration::Variable', {
+			configuration_id => 1,
+			name => $IDvariable,
+			value => $object->id()
+		});
+		if ($IDobject) {
+			$IDobject->storeObject();
+			$self->mk_ro_accessors ($IDvariable);
+			$self->{$IDvariable} = $IDobject->value();
+		}
+	}
+	return ( $object ) if $IDobject;
+	return ( undef );
+}
 1;

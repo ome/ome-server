@@ -89,8 +89,8 @@ sub new {
 			 UNIVERSAL::isa($self->{session},'OME::Session');
 
 	if (not defined $AUTHORITY or not defined $DB_INSTANCE) {
-    	my $config = $self->{session}->Factory()->loadObject("OME::Configuration", 1) or
-    		logdie $class.'->new():  Could not get OME::Configuration';
+    	my $config = $self->{session}->Configuration() or
+    		logdie $class.'->new():  Could not get Configuration';
     	$AUTHORITY = $config->lsid_authority();
     	$DB_INSTANCE = $config->db_instance();
     }

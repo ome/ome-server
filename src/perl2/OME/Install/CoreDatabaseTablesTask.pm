@@ -116,7 +116,8 @@ our @core_classes =
    ['OME::AnalysisChainExecution',
                               'OME::AnalysisChainExecution::NodeExecution'],
    # Make sure this next one is last
-   ['OME::Configuration',     'OME::Configuration'],
+   ['OME::Configuration::Variable',
+                              'OME::Configuration::Variable'],
   );
 
 #*********
@@ -324,10 +325,8 @@ sub init_configuration {
     # configuration variable take a look there (src/perl2/OME/Install/Util.pm).
     my $mac = get_mac ();
 
-    my $configuration = $factory->
-	newObject("OME::Configuration",
+    my $configuration = OME::Configuration->new ($factory,
             {
-             __id             => 1,
              mac_address      => $mac,
              db_instance      => $db_instance,
              lsid_authority   => $lsid_authority,

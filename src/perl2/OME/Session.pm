@@ -76,8 +76,8 @@ use POSIX;
 
 #use Benchmark::Timer;
 
-use fields qw(Factory Manager DBH ApacheSession SessionKey);
-__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey));
+use fields qw(Factory Manager DBH ApacheSession SessionKey Configuration);
+__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey Configuration));
 
 __PACKAGE__->newClass();
 __PACKAGE__->setDefaultTable('ome_sessions');
@@ -237,15 +237,6 @@ sub getScratchDir {
 		closedir (DH);
 		return ();
     }
-}
-
-
-# added by josiah, 2/6
-# centralized place to get configuration table.
-sub Configuration {
-	my $self = shift;
-	# we have exactly one entry in configuration so ID is always 1
-	return $self->Factory->loadObject("OME::Configuration", 1);
 }
 
 
