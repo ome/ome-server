@@ -193,6 +193,11 @@ sub processDOM {
 
     $historyImporter->processDOM($root);
 
+    # Detect and mark imported objects that already exist in the DB
+	$self->detectAndMarkDuplicateObjects($hierarchyImporter);
+    # Store unmarked objects.
+	$hierarchyImporter->storeObjects( );
+	
 	# Run the engine on the imported dataset.
 	if( $importDataset ) {
 		my $chain = $self->{session}->Factory->
@@ -214,5 +219,39 @@ sub processDOM {
 
 }
 
+sub detectAndMarkDuplicateObjects {
+	my ($self, $hierarchyImporter) = @_;
+	
+	my $factory	= $self->{session}->Factory();
+	my @dupObjs;
+	
+	logdbg "debug", ref ($self)."->detectDuplicateObjects: Looking for objects in the DB identical to imported objects with malformed LSIDs";
+
+	foreach my $entry ( values %{ $hierarchyImporter->{_malformedLSIDs} } ) {
+		my ( $object, $refs2Obj ) = ($entry->{object}, $entry->{refs} );
+		if( UNIVERSAL::isa($object,"OME::SemanticType::Superclass") ){
+			logdbg "debug", ref ($self)."->detectDuplicateObjects: examining $object";
+			my $criteria = $object->getDataHash();
+			$criteria->{ target_id } = $object->target_id
+				unless $object->semantic_type->granularity eq 'G';
+			$criteria->{ module_execution_id } = $object->module_execution_id
+				unless $object->module_execution_id eq $hierarchyImporter->module_execution();
+			logdbg "debug", ref ($self)."->detectDuplicateObjects: searching with criteria\n".join( "\n\t", map ( $_." => ".$criteria->{$_}, keys %$criteria ) );
+			my @matches = $factory->findAttributes( $object->semantic_type, $criteria);
+			@matches = grep( $_->id ne $object->id, @matches);
+			if( scalar @matches > 0 ) {  # duplicate object found
+				my $new_referent = $matches[0];
+				logdbg "debug", ref ($self)."->detectDuplicateObjects: found matching object ($new_referent, ".$new_referent->id.")";
+				# We found an existing attr that matches. Set fields that reference the xml obj to the existing db obj.
+				while( my ($obj, $field) = each %$refs2Obj ) {
+					$obj->$field( $new_referent );
+					$obj->storeObject();
+				}
+			}
+			push(@dupObjs, $object);
+		}
+	}
+	$hierarchyImporter->doNotStoreTheseObjects( @dupObjs );
+}
 
 1;
