@@ -103,6 +103,7 @@ our @core_classes =
    ['OME::Feature',                             'OME::Feature'],
    ['OME::UserState',                           'OME::UserState'],
    ['OME::ViewerPreferences',                   'OME::ViewerPreferences'],
+   ['OME::LSID',                                'OME::LSID'],
    ['OME::Module::Category',                    'OME::Module::Category'],
    ['OME::Module',                              'OME::Module'],
    ['OME::Module::FormalInput',                 'OME::Module::FormalInput'],
