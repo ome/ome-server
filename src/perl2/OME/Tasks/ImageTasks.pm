@@ -129,7 +129,7 @@ sub importFiles {
         $session->DBH()->commit();
     };
 
-    my $importer = OME::ImportExport::Importer->new($filenames,$project,$lambda);
+    my $importer = OME::ImportExport::Importer->new($filenames,$lambda);
 }
 
 
