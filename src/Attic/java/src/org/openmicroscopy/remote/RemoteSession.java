@@ -48,6 +48,8 @@ import org.openmicroscopy.Project;
 import org.openmicroscopy.Dataset;
 import org.openmicroscopy.Attribute;
 import org.openmicroscopy.managers.ChainManager;
+import org.openmicroscopy.managers.ProjectManager;
+import org.openmicroscopy.managers.DatasetManager;
 
 public class RemoteSession
     extends RemoteOMEObject
@@ -129,7 +131,44 @@ public class RemoteSession
             cachedChainManager = (ChainManager)
                 getObjectCache().getObject("OME::Tasks::ChainManager",
                                            (String) reference);
+            chainManagerLoaded = true;
         }
         return cachedChainManager;
+    }
+
+    protected boolean projectManagerLoaded = false;
+    protected ProjectManager cachedProjectManager = null;
+
+    public ProjectManager getProjectManager()
+    {
+        if (!projectManagerLoaded)
+        {
+            Object reference = caller.dispatch("OME::Tasks::ProjectManager",
+                                               "new");
+
+            cachedProjectManager = (ProjectManager)
+                getObjectCache().getObject("OME::Tasks::ProjectManager",
+                                           (String) reference);
+            projectManagerLoaded = true;
+        }
+        return cachedProjectManager;
+    }
+
+    protected boolean datasetManagerLoaded = false;
+    protected DatasetManager cachedDatasetManager = null;
+
+    public DatasetManager getDatasetManager()
+    {
+        if (!datasetManagerLoaded)
+        {
+            Object reference = caller.dispatch("OME::Tasks::DatasetManager",
+                                               "new");
+
+            cachedDatasetManager = (DatasetManager)
+                getObjectCache().getObject("OME::Tasks::DatasetManager",
+                                           (String) reference);
+            datasetManagerLoaded = true;
+        }
+        return cachedDatasetManager;
     }
 }

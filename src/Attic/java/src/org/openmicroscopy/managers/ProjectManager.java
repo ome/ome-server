@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Session
+ * org.openmicroscopy.managers.ProjectManager
  *
  *------------------------------------------------------------------------------
  *
@@ -37,32 +37,42 @@
  *------------------------------------------------------------------------------
  */
 
+package org.openmicroscopy.managers;
 
+import org.openmicroscopy.*;
+import java.util.List;
 
+/**
+ * Provides useful methods for creating and modifying projects.  These
+ * methods exist in a distinct class to ensure a clean separation
+ * between the data-access methods provided by the {@link Project}
+ * interface and the logic methods provided here.
+ *
+ * @author Douglas Creager
+ * @version 2.1
+ * @since OME2.1
+ */
 
-package org.openmicroscopy;
-
-import org.openmicroscopy.managers.ChainManager;
-import org.openmicroscopy.managers.ProjectManager;
-import org.openmicroscopy.managers.DatasetManager;
-
-public interface Session
-    extends OMEObject
+public interface ProjectManager
 {
-    public void commitTransaction();
-    public void rollbackTransaction();
+    /**
+     * Returns the {@link Session} that this <code>ChainManager</code>
+     * corresponds to.
+     * @return the {@link Session} that this <code>ChainManager</code>
+     * corresponds to.
+     */
+    public Session getSession();
 
-    public Factory getFactory();
+    /**
+     * Adds a {@link Dataset} to the given {@link Project}.
+     * @param project the project to add the dataset to
+     * @param dataset the dataset to add
+     */
+    public void addDataset(Project project, Dataset dataset);
 
-    public Attribute getUser();
-
-    public Project getProject();
-    public void setProject(Project project);
-
-    public Dataset getDataset();
-    public void setDataset(Dataset dataset);
-
-    public ChainManager getChainManager();
-    public ProjectManager getProjectManager();
-    public DatasetManager getDatasetManager();
+    /**
+     * Adds a {@link Dataset} to the session's current {@link Project}
+     * @param dataset the dataset to add
+     */
+    public void addDataset(Dataset dataset);
 }
