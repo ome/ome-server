@@ -253,6 +253,7 @@ sub writeOneHasManyType ($$$) {
     # Attempt to make the pluralization look somewhat correct
     $accessor_name =~ s/y$/ies/ or
     $accessor_name =~ s/s$/ses/ or
+    $accessor_name =~ s/x$/xes/ or
     $accessor_name =~ s/$/s/;
 
     if (scalar(@element_names) == 1) {
