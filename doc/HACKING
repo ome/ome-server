@@ -1,0 +1,114 @@
+LICENSE
+
+    OME is distributed with the GNU Lesser General Public License (LGPL). You
+    should be aware that any code submitted to the OME project will also fall
+    under this license. If you have issues relating to licensing, want to sub
+    license parts of the OME source code, or wish to discuss the licensing
+    scheme please contact the OME core developers (ome-devel@mit.edu).
+
+COPYRIGHT
+
+    The OME source code, specification, documentation and database schema are,
+    in their entirety Copyright (C) 2002 Open Microscopy Environment. As with
+    the OME license, any questions related to the copyright, copyright holders
+    or copyright scheme should be directed to the OME core developers
+    (ome-devel@mit.edu).
+
+DEVELOPER LOCATIONS
+
+    The OME core developers are split between three main locations: OME Boston
+    (MIT and Harvard; managed by Peter Sorger and Erik Brauner), OME Dundee
+    (University of Dundee; managed by Jason Swedlow) and OME Baltimore (NIH;
+    managed by Ilya Goldberg).
+
+RESOURCES
+
+    Most of the OME developer related documentation is either in the source tree
+    (/doc and pod in the source files) or located on the CVS webserver
+    (http://cvs.openmicroscopy.org.uk/). 
+
+CVS AND THE SOURCE TREE
+
+    A web based window into the source tree is located on the cvs webserver
+    (http://cvs.openmicroscopy.org.uk/cvsweb/). CVS access and administration is
+    performed by Chris Allan (callan@blackcat.ca), and all CVS modifications are
+    done over SSH using CVS' ext protocol. You would checkout the CVS source
+    using the following CVSROOT:
+    
+    CVS_RSH=ssh
+    CVSROOT=:ext:username@cvs.openmicroscopy.org.uk:/homes/cvs/ome
+    cvs co ome
+
+    Public/private key authentication using rsa or dsa SSH identities is
+    preferred, but only over SSHv2. More information about how to create ssh
+    keypairs can be found in the ssh-keygen documentation (man ssh-keygen).
+    Information on how ~/.ssh/authorized_keys files work with SSH public/private
+    keypairs can be found in the ssh documentation (man ssh). The OpenSSH
+    project (http://www.openssh.org/) is also a source of all of this
+    information provided you're unable to use the manpages.
+    
+    Any questions, suggestions or complaints about the CVS repository or the
+    CVS/Develolper webserver should be directed to Chris.
+
+SOURCE FILE STUBS
+
+    Located below are example Perl and C stubs for source file submissions to
+    the OME project.
+
+    ____
+    Perl
+
+    # OME/MyPackage/MyPackage.pm
+    # This module is used for packaging my packages.
+
+    # Copyright (C) 2002 Open Microscopy Environment
+    # Author:  My Dot Package <mpackage@pkg.org>
+    #
+    #    This library is free software; you can redistribute it and/or
+    #    modify it under the terms of the GNU Lesser General Public
+    #    License as published by the Free Software Foundation; either
+    #    version 2.1 of the License, or (at your option) any later version.
+    #
+    #    This library is distributed in the hope that it will be useful,
+    #    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    #    Lesser General Public License for more details.
+    #
+    #    You should have received a copy of the GNU Lesser General Public
+    #    License along with this library; if not, write to the Free Software
+    #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    package OME::MyPackage;
+    use strict;
+    use warnings;
+
+    _
+    C
+
+    /* Copyright (C) 2002 Open Microscopy Environment
+     * Author:  My Dot Package <mpackage@pkg.org>
+     * 
+     *     This library is free software; you can redistribute it and/or
+     *     modify it under the terms of the GNU Lesser General Public
+     *     License as published by the Free Software Foundation; either
+     *     version 2.1 of the License, or (at your option) any later version.
+     *
+     *     This library is distributed in the hope that it will be useful,
+     *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+     *     Lesser General Public License for more details.
+     *
+     *     You should have received a copy of the GNU Lesser General Public
+     *     License along with this library; if not, write to the Free Software
+     *     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+     */
+
+LINKS
+
+    The OME Project 	: http://www.openmicroscopy.org/
+    OME developers	: http://cvs.openmicroscopy.org.uk/
+    Web based CVS	: http://cvs.openmicroscopy.org.uk/cvsweb/
+
+MAILING LISTS
+
+    OME developers	: ome-devel@mit.edu
