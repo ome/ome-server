@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,20 +47,20 @@ public interface DisplayChannel
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>ChannelNumber</code> */
-    public int getChannelNumber();
-    public void setChannelNumber(int value);
+    public Integer getChannelNumber();
+    public void setChannelNumber(Integer value);
 
     /** Criteria field name: <code>BlackLevel</code> */
-    public double getBlackLevel();
-    public void setBlackLevel(double value);
+    public Double getBlackLevel();
+    public void setBlackLevel(Double value);
 
     /** Criteria field name: <code>WhiteLevel</code> */
-    public double getWhiteLevel();
-    public void setWhiteLevel(double value);
+    public Double getWhiteLevel();
+    public void setWhiteLevel(Double value);
 
     /** Criteria field name: <code>Gamma</code> */
-    public float getGamma();
-    public void setGamma(float value);
+    public Float getGamma();
+    public void setGamma(Float value);
 
     /** Criteria field name: <code>DisplayOptionsesByBlueChannel</code> */
     public List getDisplayOptionsesByBlueChannel();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,8 +55,8 @@ public interface OriginalFile
     public void setPath(String value);
 
     /** Criteria field name: <code>FileID</code> */
-    public int getFileID();
-    public void setFileID(int value);
+    public Integer getFileID();
+    public void setFileID(Integer value);
 
     /** Criteria field name: <code>SHA1</code> */
     public String getSHA1();

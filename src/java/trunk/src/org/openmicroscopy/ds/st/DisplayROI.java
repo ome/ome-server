@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,36 +47,36 @@ public interface DisplayROI
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>X0</code> */
-    public int getX0();
-    public void setX0(int value);
+    public Integer getX0();
+    public void setX0(Integer value);
 
     /** Criteria field name: <code>Y0</code> */
-    public int getY0();
-    public void setY0(int value);
+    public Integer getY0();
+    public void setY0(Integer value);
 
     /** Criteria field name: <code>Z0</code> */
-    public int getZ0();
-    public void setZ0(int value);
+    public Integer getZ0();
+    public void setZ0(Integer value);
 
     /** Criteria field name: <code>X1</code> */
-    public int getX1();
-    public void setX1(int value);
+    public Integer getX1();
+    public void setX1(Integer value);
 
     /** Criteria field name: <code>Y1</code> */
-    public int getY1();
-    public void setY1(int value);
+    public Integer getY1();
+    public void setY1(Integer value);
 
     /** Criteria field name: <code>Z1</code> */
-    public int getZ1();
-    public void setZ1(int value);
+    public Integer getZ1();
+    public void setZ1(Integer value);
 
     /** Criteria field name: <code>T0</code> */
-    public int getT0();
-    public void setT0(int value);
+    public Integer getT0();
+    public void setT0(Integer value);
 
     /** Criteria field name: <code>T1</code> */
-    public int getT1();
-    public void setT1(int value);
+    public Integer getT1();
+    public void setT1(Integer value);
 
     /** Criteria field name: <code>DisplayOptions</code> */
     public DisplayOptions getDisplayOptions();

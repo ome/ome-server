@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,12 +51,12 @@ public interface Trajectory
     public void setName(String value);
 
     /** Criteria field name: <code>TotalDistance</code> */
-    public float getTotalDistance();
-    public void setTotalDistance(float value);
+    public Float getTotalDistance();
+    public void setTotalDistance(Float value);
 
     /** Criteria field name: <code>AverageVelocity</code> */
-    public float getAverageVelocity();
-    public void setAverageVelocity(float value);
+    public Float getAverageVelocity();
+    public void setAverageVelocity(Float value);
 
     /** Criteria field name: <code>TrajectoryEntries</code> */
     public List getTrajectoryEntries();

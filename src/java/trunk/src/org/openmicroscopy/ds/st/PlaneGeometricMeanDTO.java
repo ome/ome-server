@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,25 +49,25 @@ public class PlaneGeometricMeanDTO
     public PlaneGeometricMeanDTO() { super(); }
     public PlaneGeometricMeanDTO(Map elements) { super(elements); }
 
-    public int getTheZ()
-    { return getIntElement("TheZ"); }
-    public void setTheZ(int value)
-    { setElement("TheZ",new Integer(value)); }
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
 
-    public int getTheC()
-    { return getIntElement("TheC"); }
-    public void setTheC(int value)
-    { setElement("TheC",new Integer(value)); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
-    public int getTheT()
-    { return getIntElement("TheT"); }
-    public void setTheT(int value)
-    { setElement("TheT",new Integer(value)); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
-    public float getGeometricMean()
+    public Float getGeometricMean()
     { return getFloatElement("GeometricMean"); }
-    public void setGeometricMean(float value)
-    { setElement("GeometricMean",new Float(value)); }
+    public void setGeometricMean(Float value)
+    { setElement("GeometricMean",value); }
 
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,10 +49,10 @@ public class DatasetTestSignatureDTO
     public DatasetTestSignatureDTO() { super(); }
     public DatasetTestSignatureDTO(Map elements) { super(elements); }
 
-    public float getValue()
+    public Float getValue()
     { return getFloatElement("Value"); }
-    public void setValue(float value)
-    { setElement("Value",new Float(value)); }
+    public void setValue(Float value)
+    { setElement("Value",value); }
 
 
 }

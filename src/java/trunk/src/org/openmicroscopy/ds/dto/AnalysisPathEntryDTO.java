@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -61,10 +61,10 @@ public class AnalysisPathEntryDTO
     public void setPath(AnalysisPath value)
     { setElement("path",value); }
 
-    public int getOrder()
-    { return getIntElement("path_order"); }
-    public void setOrder(int value)
-    { setElement("path_order",new Integer(value)); }
+    public Integer getOrder()
+    { return getIntegerElement("path_order"); }
+    public void setOrder(Integer value)
+    { setElement("path_order",value); }
 
     public AnalysisNode getNode()
     { return (AnalysisNode) getObjectElement("analysis_chain_node"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -71,20 +71,20 @@ public class DetectorDTO
     public void setType(String value)
     { setElement("Type",value); }
 
-    public float getGain()
+    public Float getGain()
     { return getFloatElement("Gain"); }
-    public void setGain(float value)
-    { setElement("Gain",new Float(value)); }
+    public void setGain(Float value)
+    { setElement("Gain",value); }
 
-    public float getVoltage()
+    public Float getVoltage()
     { return getFloatElement("Voltage"); }
-    public void setVoltage(float value)
-    { setElement("Voltage",new Float(value)); }
+    public void setVoltage(Float value)
+    { setElement("Voltage",value); }
 
-    public float getOffset()
+    public Float getOffset()
     { return getFloatElement("Offset"); }
-    public void setOffset(float value)
-    { setElement("Offset",new Float(value)); }
+    public void setOffset(Float value)
+    { setElement("Offset",value); }
 
     public Instrument getInstrument()
     { return (Instrument) getObjectElement("Instrument"); }

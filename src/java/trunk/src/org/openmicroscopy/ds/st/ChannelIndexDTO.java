@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,10 +50,10 @@ public class ChannelIndexDTO
     public ChannelIndexDTO() { super(); }
     public ChannelIndexDTO(Map elements) { super(elements); }
 
-    public int gettheC()
-    { return getIntElement("theC"); }
-    public void settheC(int value)
-    { setElement("theC",new Integer(value)); }
+    public Integer gettheC()
+    { return getIntegerElement("theC"); }
+    public void settheC(Integer value)
+    { setElement("theC",value); }
 
     public Pixels getPixels()
     { return (Pixels) getObjectElement("Pixels"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,28 +50,28 @@ public interface Pixels
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>SizeX</code> */
-    public int getSizeX();
-    public void setSizeX(int value);
+    public Integer getSizeX();
+    public void setSizeX(Integer value);
 
     /** Criteria field name: <code>SizeY</code> */
-    public int getSizeY();
-    public void setSizeY(int value);
+    public Integer getSizeY();
+    public void setSizeY(Integer value);
 
     /** Criteria field name: <code>SizeZ</code> */
-    public int getSizeZ();
-    public void setSizeZ(int value);
+    public Integer getSizeZ();
+    public void setSizeZ(Integer value);
 
     /** Criteria field name: <code>SizeC</code> */
-    public int getSizeC();
-    public void setSizeC(int value);
+    public Integer getSizeC();
+    public void setSizeC(Integer value);
 
     /** Criteria field name: <code>SizeT</code> */
-    public int getSizeT();
-    public void setSizeT(int value);
+    public Integer getSizeT();
+    public void setSizeT(Integer value);
 
     /** Criteria field name: <code>BitsPerPixel</code> */
-    public int getBitsPerPixel();
-    public void setBitsPerPixel(int value);
+    public Integer getBitsPerPixel();
+    public void setBitsPerPixel(Integer value);
 
     /** Criteria field name: <code>PixelType</code> */
     public String getPixelType();
@@ -90,8 +90,8 @@ public interface Pixels
     public void setPath(String value);
 
     /** Criteria field name: <code>PixelsID</code> */
-    public int getPixelsID();
-    public void setPixelsID(int value);
+    public Integer getPixelsID();
+    public void setPixelsID(Integer value);
 
     /** Criteria field name: <code>ChannelIndexes</code> */
     public List getChannelIndexes();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,36 +53,36 @@ public interface DisplayOptions
     public void setPixels(Pixels value);
 
     /** Criteria field name: <code>Zoom</code> */
-    public float getZoom();
-    public void setZoom(float value);
+    public Float getZoom();
+    public void setZoom(Float value);
 
     /** Criteria field name: <code>RedChannel</code> */
     public DisplayChannel getRedChannel();
     public void setRedChannel(DisplayChannel value);
 
     /** Criteria field name: <code>RedChannelOn</code> */
-    public boolean isRedChannelOn();
-    public void setRedChannelOn(boolean value);
+    public Boolean isRedChannelOn();
+    public void setRedChannelOn(Boolean value);
 
     /** Criteria field name: <code>GreenChannel</code> */
     public DisplayChannel getGreenChannel();
     public void setGreenChannel(DisplayChannel value);
 
     /** Criteria field name: <code>GreenChannelOn</code> */
-    public boolean isGreenChannelOn();
-    public void setGreenChannelOn(boolean value);
+    public Boolean isGreenChannelOn();
+    public void setGreenChannelOn(Boolean value);
 
     /** Criteria field name: <code>BlueChannel</code> */
     public DisplayChannel getBlueChannel();
     public void setBlueChannel(DisplayChannel value);
 
     /** Criteria field name: <code>BlueChannelOn</code> */
-    public boolean isBlueChannelOn();
-    public void setBlueChannelOn(boolean value);
+    public Boolean isBlueChannelOn();
+    public void setBlueChannelOn(Boolean value);
 
     /** Criteria field name: <code>DisplayRGB</code> */
-    public boolean isDisplayRGB();
-    public void setDisplayRGB(boolean value);
+    public Boolean isDisplayRGB();
+    public void setDisplayRGB(Boolean value);
 
     /** Criteria field name: <code>GreyChannel</code> */
     public DisplayChannel getGreyChannel();
@@ -93,20 +93,20 @@ public interface DisplayOptions
     public void setColorMap(String value);
 
     /** Criteria field name: <code>ZStart</code> */
-    public int getZStart();
-    public void setZStart(int value);
+    public Integer getZStart();
+    public void setZStart(Integer value);
 
     /** Criteria field name: <code>ZStop</code> */
-    public int getZStop();
-    public void setZStop(int value);
+    public Integer getZStop();
+    public void setZStop(Integer value);
 
     /** Criteria field name: <code>TStart</code> */
-    public int getTStart();
-    public void setTStart(int value);
+    public Integer getTStart();
+    public void setTStart(Integer value);
 
     /** Criteria field name: <code>TStop</code> */
-    public int getTStop();
-    public void setTStop(int value);
+    public Integer getTStop();
+    public void setTStop(Integer value);
 
     /** Criteria field name: <code>DisplayROIs</code> */
     public List getDisplayROIs();

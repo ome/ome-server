@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -63,8 +63,8 @@ public interface AnalysisChain
     public void setDescription(String value);
 
     /** Criteria field name: <code>locked</code> */
-    public boolean isLocked();
-    public void setLocked(boolean value);
+    public Boolean isLocked();
+    public void setLocked(Boolean value);
 
     /** Criteria field name: <code>nodes</code> */
     public List getNodes();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,23 +46,23 @@ public interface Dimensions
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>PixelSizeX</code> */
-    public float getPixelSizeX();
-    public void setPixelSizeX(float value);
+    public Float getPixelSizeX();
+    public void setPixelSizeX(Float value);
 
     /** Criteria field name: <code>PixelSizeY</code> */
-    public float getPixelSizeY();
-    public void setPixelSizeY(float value);
+    public Float getPixelSizeY();
+    public void setPixelSizeY(Float value);
 
     /** Criteria field name: <code>PixelSizeZ</code> */
-    public float getPixelSizeZ();
-    public void setPixelSizeZ(float value);
+    public Float getPixelSizeZ();
+    public void setPixelSizeZ(Float value);
 
     /** Criteria field name: <code>PixelSizeC</code> */
-    public float getPixelSizeC();
-    public void setPixelSizeC(float value);
+    public Float getPixelSizeC();
+    public void setPixelSizeC(Float value);
 
     /** Criteria field name: <code>PixelSizeT</code> */
-    public float getPixelSizeT();
-    public void setPixelSizeT(float value);
+    public Float getPixelSizeT();
+    public void setPixelSizeT(Float value);
 
 }

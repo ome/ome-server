@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,16 +64,16 @@ public interface Detector
     public void setType(String value);
 
     /** Criteria field name: <code>Gain</code> */
-    public float getGain();
-    public void setGain(float value);
+    public Float getGain();
+    public void setGain(Float value);
 
     /** Criteria field name: <code>Voltage</code> */
-    public float getVoltage();
-    public void setVoltage(float value);
+    public Float getVoltage();
+    public void setVoltage(Float value);
 
     /** Criteria field name: <code>Offset</code> */
-    public float getOffset();
-    public void setOffset(float value);
+    public Float getOffset();
+    public void setOffset(Float value);
 
     /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();

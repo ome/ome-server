@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,70 +49,70 @@ public class ExtentDTO
     public ExtentDTO() { super(); }
     public ExtentDTO(Map elements) { super(elements); }
 
-    public int getMinX()
-    { return getIntElement("MinX"); }
-    public void setMinX(int value)
-    { setElement("MinX",new Integer(value)); }
+    public Integer getMinX()
+    { return getIntegerElement("MinX"); }
+    public void setMinX(Integer value)
+    { setElement("MinX",value); }
 
-    public int getMinY()
-    { return getIntElement("MinY"); }
-    public void setMinY(int value)
-    { setElement("MinY",new Integer(value)); }
+    public Integer getMinY()
+    { return getIntegerElement("MinY"); }
+    public void setMinY(Integer value)
+    { setElement("MinY",value); }
 
-    public int getMinZ()
-    { return getIntElement("MinZ"); }
-    public void setMinZ(int value)
-    { setElement("MinZ",new Integer(value)); }
+    public Integer getMinZ()
+    { return getIntegerElement("MinZ"); }
+    public void setMinZ(Integer value)
+    { setElement("MinZ",value); }
 
-    public int getMaxX()
-    { return getIntElement("MaxX"); }
-    public void setMaxX(int value)
-    { setElement("MaxX",new Integer(value)); }
+    public Integer getMaxX()
+    { return getIntegerElement("MaxX"); }
+    public void setMaxX(Integer value)
+    { setElement("MaxX",value); }
 
-    public int getMaxY()
-    { return getIntElement("MaxY"); }
-    public void setMaxY(int value)
-    { setElement("MaxY",new Integer(value)); }
+    public Integer getMaxY()
+    { return getIntegerElement("MaxY"); }
+    public void setMaxY(Integer value)
+    { setElement("MaxY",value); }
 
-    public int getMaxZ()
-    { return getIntElement("MaxZ"); }
-    public void setMaxZ(int value)
-    { setElement("MaxZ",new Integer(value)); }
+    public Integer getMaxZ()
+    { return getIntegerElement("MaxZ"); }
+    public void setMaxZ(Integer value)
+    { setElement("MaxZ",value); }
 
-    public int getSigmaX()
-    { return getIntElement("SigmaX"); }
-    public void setSigmaX(int value)
-    { setElement("SigmaX",new Integer(value)); }
+    public Integer getSigmaX()
+    { return getIntegerElement("SigmaX"); }
+    public void setSigmaX(Integer value)
+    { setElement("SigmaX",value); }
 
-    public int getSigmaY()
-    { return getIntElement("SigmaY"); }
-    public void setSigmaY(int value)
-    { setElement("SigmaY",new Integer(value)); }
+    public Integer getSigmaY()
+    { return getIntegerElement("SigmaY"); }
+    public void setSigmaY(Integer value)
+    { setElement("SigmaY",value); }
 
-    public int getSigmaZ()
-    { return getIntElement("SigmaZ"); }
-    public void setSigmaZ(int value)
-    { setElement("SigmaZ",new Integer(value)); }
+    public Integer getSigmaZ()
+    { return getIntegerElement("SigmaZ"); }
+    public void setSigmaZ(Integer value)
+    { setElement("SigmaZ",value); }
 
-    public int getVolume()
-    { return getIntElement("Volume"); }
-    public void setVolume(int value)
-    { setElement("Volume",new Integer(value)); }
+    public Integer getVolume()
+    { return getIntegerElement("Volume"); }
+    public void setVolume(Integer value)
+    { setElement("Volume",value); }
 
-    public float getSurfaceArea()
+    public Float getSurfaceArea()
     { return getFloatElement("SurfaceArea"); }
-    public void setSurfaceArea(float value)
-    { setElement("SurfaceArea",new Float(value)); }
+    public void setSurfaceArea(Float value)
+    { setElement("SurfaceArea",value); }
 
-    public float getPerimeter()
+    public Float getPerimeter()
     { return getFloatElement("Perimeter"); }
-    public void setPerimeter(float value)
-    { setElement("Perimeter",new Float(value)); }
+    public void setPerimeter(Float value)
+    { setElement("Perimeter",value); }
 
-    public float getFormFactor()
+    public Float getFormFactor()
     { return getFloatElement("FormFactor"); }
-    public void setFormFactor(float value)
-    { setElement("FormFactor",new Float(value)); }
+    public void setFormFactor(Float value)
+    { setElement("FormFactor",value); }
 
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -60,10 +60,10 @@ public class OriginalFileDTO
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public int getFileID()
-    { return getIntElement("FileID"); }
-    public void setFileID(int value)
-    { setElement("FileID",new Integer(value)); }
+    public Integer getFileID()
+    { return getIntegerElement("FileID"); }
+    public void setFileID(Integer value)
+    { setElement("FileID",value); }
 
     public String getSHA1()
     { return getStringElement("SHA1"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,15 +64,15 @@ public class OTFDTO
     public void setFilter(Filter value)
     { setElement("Filter",value); }
 
-    public int getSizeX()
-    { return getIntElement("SizeX"); }
-    public void setSizeX(int value)
-    { setElement("SizeX",new Integer(value)); }
+    public Integer getSizeX()
+    { return getIntegerElement("SizeX"); }
+    public void setSizeX(Integer value)
+    { setElement("SizeX",value); }
 
-    public int getSizeY()
-    { return getIntElement("SizeY"); }
-    public void setSizeY(int value)
-    { setElement("SizeY",new Integer(value)); }
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
 
     public String getPixelType()
     { return getStringElement("PixelType"); }
@@ -89,10 +89,10 @@ public class OTFDTO
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public boolean isOpticalAxisAverage()
+    public Boolean isOpticalAxisAverage()
     { return getBooleanElement("OpticalAxisAverage"); }
-    public void setOpticalAxisAverage(boolean value)
-    { setElement("OpticalAxisAverage",new Boolean(value)); }
+    public void setOpticalAxisAverage(Boolean value)
+    { setElement("OpticalAxisAverage",value); }
 
     public Instrument getInstrument()
     { return (Instrument) getObjectElement("Instrument"); }

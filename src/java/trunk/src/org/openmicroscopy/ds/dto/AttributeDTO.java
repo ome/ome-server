@@ -181,7 +181,7 @@ public class AttributeDTO
      * @throws ClassCastException if the element does not contain a
      * <code>boolean</code> value
      */
-    public boolean getBooleanElement(String element)
+    public Boolean getBooleanElement(String element)
     { return super.getBooleanElement(element); }
 
     /**
@@ -192,8 +192,8 @@ public class AttributeDTO
      * @throws ClassCastException if the element does not contain an
      * <code>int</code> value
      */
-    public int getIntElement(String element)
-    { return super.getIntElement(element); }
+    public Integer getIntegerElement(String element)
+    { return super.getIntegerElement(element); }
 
     /**
      * Returns the value of one of the attribute's elements as a
@@ -203,7 +203,7 @@ public class AttributeDTO
      * @throws ClassCastException if the element does not contain a
      * <code>long</code> value
      */
-    public long getLongElement(String element)
+    public Long getLongElement(String element)
     { return super.getLongElement(element); }
 
     /**
@@ -214,7 +214,7 @@ public class AttributeDTO
      * @throws ClassCastException if the element does not contain a
      * <code>float</code> value
      */
-    public float getFloatElement(String element)
+    public Float getFloatElement(String element)
     { return super.getFloatElement(element); }
 
     /**
@@ -225,7 +225,7 @@ public class AttributeDTO
      * @throws ClassCastException if the element does not contain a
      * <code>double</code> value
      */
-    public double getDoubleElement(String element)
+    public Double getDoubleElement(String element)
     { return super.getDoubleElement(element); }
 
     /**
@@ -245,8 +245,8 @@ public class AttributeDTO
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setBooleanElement(String element, boolean value)
-    { setElement(element,new Boolean(value)); }
+    public void setBooleanElement(String element, Boolean value)
+    { setElement(element,value); }
 
     /**
      * Sets the value of one of the attribute's elements to an
@@ -254,8 +254,8 @@ public class AttributeDTO
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setIntElement(String element, int value)
-    { setElement(element,new Integer(value)); }
+    public void setIntegerElement(String element, Integer value)
+    { setElement(element,value); }
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -263,8 +263,8 @@ public class AttributeDTO
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setLongElement(String element, long value)
-    { setElement(element,new Long(value)); }
+    public void setLongElement(String element, Long value)
+    { setElement(element,value); }
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -272,8 +272,8 @@ public class AttributeDTO
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setFloatElement(String element, float value)
-    { setElement(element,new Float(value)); }
+    public void setFloatElement(String element, Float value)
+    { setElement(element,value); }
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -281,8 +281,8 @@ public class AttributeDTO
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setDoubleElement(String element, double value)
-    { setElement(element,new Double(value)); }
+    public void setDoubleElement(String element, Double value)
+    { setElement(element,value); }
 
     /**
      * Sets the value of one of the attribute's elements to a

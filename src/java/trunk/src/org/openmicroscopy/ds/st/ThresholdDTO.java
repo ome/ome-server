@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,10 +49,10 @@ public class ThresholdDTO
     public ThresholdDTO() { super(); }
     public ThresholdDTO(Map elements) { super(elements); }
 
-    public int getThreshold()
-    { return getIntElement("Threshold"); }
-    public void setThreshold(int value)
-    { setElement("Threshold",new Integer(value)); }
+    public Integer getThreshold()
+    { return getIntegerElement("Threshold"); }
+    public void setThreshold(Integer value)
+    { setElement("Threshold",value); }
 
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,25 +49,25 @@ public class PlaneSum_XiDTO
     public PlaneSum_XiDTO() { super(); }
     public PlaneSum_XiDTO(Map elements) { super(elements); }
 
-    public int getTheZ()
-    { return getIntElement("TheZ"); }
-    public void setTheZ(int value)
-    { setElement("TheZ",new Integer(value)); }
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
 
-    public int getTheC()
-    { return getIntElement("TheC"); }
-    public void setTheC(int value)
-    { setElement("TheC",new Integer(value)); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
-    public int getTheT()
-    { return getIntElement("TheT"); }
-    public void setTheT(int value)
-    { setElement("TheT",new Integer(value)); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
-    public float getSum_Xi()
+    public Float getSum_Xi()
     { return getFloatElement("Sum_Xi"); }
-    public void setSum_Xi(float value)
-    { setElement("Sum_Xi",new Float(value)); }
+    public void setSum_Xi(Float value)
+    { setElement("Sum_Xi",value); }
 
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,8 +53,8 @@ public interface AnalysisPathEntry
     public void setPath(AnalysisPath value);
 
     /** Criteria field name: <code>path_order</code> */
-    public int getOrder();
-    public void setOrder(int value);
+    public Integer getOrder();
+    public void setOrder(Integer value);
 
     /** Criteria field name: <code>analysis_chain_node</code> */
     public AnalysisNode getNode();

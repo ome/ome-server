@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,20 +49,20 @@ public class LocationDTO
     public LocationDTO() { super(); }
     public LocationDTO(Map elements) { super(elements); }
 
-    public float getTheX()
+    public Float getTheX()
     { return getFloatElement("TheX"); }
-    public void setTheX(float value)
-    { setElement("TheX",new Float(value)); }
+    public void setTheX(Float value)
+    { setElement("TheX",value); }
 
-    public float getTheY()
+    public Float getTheY()
     { return getFloatElement("TheY"); }
-    public void setTheY(float value)
-    { setElement("TheY",new Float(value)); }
+    public void setTheY(Float value)
+    { setElement("TheY",value); }
 
-    public float getTheZ()
+    public Float getTheZ()
     { return getFloatElement("TheZ"); }
-    public void setTheZ(float value)
-    { setElement("TheZ",new Float(value)); }
+    public void setTheZ(Float value)
+    { setElement("TheZ",value); }
 
 
 }

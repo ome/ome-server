@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,7 +46,7 @@ public interface Ratio
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Ratio</code> */
-    public float getRatio();
-    public void setRatio(float value);
+    public Float getRatio();
+    public void setRatio(Float value);
 
 }

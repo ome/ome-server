@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,15 +46,15 @@ public interface StackGeometricMean
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>TheC</code> */
-    public int getTheC();
-    public void setTheC(int value);
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
     /** Criteria field name: <code>TheT</code> */
-    public int getTheT();
-    public void setTheT(int value);
+    public Integer getTheT();
+    public void setTheT(Integer value);
 
     /** Criteria field name: <code>GeometricMean</code> */
-    public float getGeometricMean();
-    public void setGeometricMean(float value);
+    public Float getGeometricMean();
+    public void setGeometricMean(Float value);
 
 }

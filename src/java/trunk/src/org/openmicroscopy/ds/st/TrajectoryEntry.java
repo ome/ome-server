@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,27 +51,27 @@ public interface TrajectoryEntry
     public void setTrajectory(Trajectory value);
 
     /** Criteria field name: <code>Order</code> */
-    public int getOrder();
-    public void setOrder(int value);
+    public Integer getOrder();
+    public void setOrder(Integer value);
 
     /** Criteria field name: <code>DeltaX</code> */
-    public float getDeltaX();
-    public void setDeltaX(float value);
+    public Float getDeltaX();
+    public void setDeltaX(Float value);
 
     /** Criteria field name: <code>DeltaY</code> */
-    public float getDeltaY();
-    public void setDeltaY(float value);
+    public Float getDeltaY();
+    public void setDeltaY(Float value);
 
     /** Criteria field name: <code>DeltaZ</code> */
-    public float getDeltaZ();
-    public void setDeltaZ(float value);
+    public Float getDeltaZ();
+    public void setDeltaZ(Float value);
 
     /** Criteria field name: <code>Distance</code> */
-    public float getDistance();
-    public void setDistance(float value);
+    public Float getDistance();
+    public void setDistance(Float value);
 
     /** Criteria field name: <code>Velocity</code> */
-    public float getVelocity();
-    public void setVelocity(float value);
+    public Float getVelocity();
+    public void setVelocity(Float value);
 
 }

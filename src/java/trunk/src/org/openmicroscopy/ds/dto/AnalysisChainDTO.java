@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -73,10 +73,10 @@ public class AnalysisChainDTO
     public void setDescription(String value)
     { setElement("description",value); }
 
-    public boolean isLocked()
+    public Boolean isLocked()
     { return getBooleanElement("locked"); }
-    public void setLocked(boolean value)
-    { setElement("locked",new Boolean(value)); }
+    public void setLocked(Boolean value)
+    { setElement("locked",value); }
 
     public List getNodes()
     { return (List) getObjectElement("nodes"); }

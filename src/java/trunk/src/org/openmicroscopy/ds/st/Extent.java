@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,55 +46,55 @@ public interface Extent
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>MinX</code> */
-    public int getMinX();
-    public void setMinX(int value);
+    public Integer getMinX();
+    public void setMinX(Integer value);
 
     /** Criteria field name: <code>MinY</code> */
-    public int getMinY();
-    public void setMinY(int value);
+    public Integer getMinY();
+    public void setMinY(Integer value);
 
     /** Criteria field name: <code>MinZ</code> */
-    public int getMinZ();
-    public void setMinZ(int value);
+    public Integer getMinZ();
+    public void setMinZ(Integer value);
 
     /** Criteria field name: <code>MaxX</code> */
-    public int getMaxX();
-    public void setMaxX(int value);
+    public Integer getMaxX();
+    public void setMaxX(Integer value);
 
     /** Criteria field name: <code>MaxY</code> */
-    public int getMaxY();
-    public void setMaxY(int value);
+    public Integer getMaxY();
+    public void setMaxY(Integer value);
 
     /** Criteria field name: <code>MaxZ</code> */
-    public int getMaxZ();
-    public void setMaxZ(int value);
+    public Integer getMaxZ();
+    public void setMaxZ(Integer value);
 
     /** Criteria field name: <code>SigmaX</code> */
-    public int getSigmaX();
-    public void setSigmaX(int value);
+    public Integer getSigmaX();
+    public void setSigmaX(Integer value);
 
     /** Criteria field name: <code>SigmaY</code> */
-    public int getSigmaY();
-    public void setSigmaY(int value);
+    public Integer getSigmaY();
+    public void setSigmaY(Integer value);
 
     /** Criteria field name: <code>SigmaZ</code> */
-    public int getSigmaZ();
-    public void setSigmaZ(int value);
+    public Integer getSigmaZ();
+    public void setSigmaZ(Integer value);
 
     /** Criteria field name: <code>Volume</code> */
-    public int getVolume();
-    public void setVolume(int value);
+    public Integer getVolume();
+    public void setVolume(Integer value);
 
     /** Criteria field name: <code>SurfaceArea</code> */
-    public float getSurfaceArea();
-    public void setSurfaceArea(float value);
+    public Float getSurfaceArea();
+    public void setSurfaceArea(Float value);
 
     /** Criteria field name: <code>Perimeter</code> */
-    public float getPerimeter();
-    public void setPerimeter(float value);
+    public Float getPerimeter();
+    public void setPerimeter(Float value);
 
     /** Criteria field name: <code>FormFactor</code> */
-    public float getFormFactor();
-    public void setFormFactor(float value);
+    public Float getFormFactor();
+    public void setFormFactor(Float value);
 
 }

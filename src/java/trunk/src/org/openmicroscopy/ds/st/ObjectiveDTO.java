@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -67,15 +67,15 @@ public class ObjectiveDTO
     public void setSerialNumber(String value)
     { setElement("SerialNumber",value); }
 
-    public float getLensNA()
+    public Float getLensNA()
     { return getFloatElement("LensNA"); }
-    public void setLensNA(float value)
-    { setElement("LensNA",new Float(value)); }
+    public void setLensNA(Float value)
+    { setElement("LensNA",value); }
 
-    public float getMagnification()
+    public Float getMagnification()
     { return getFloatElement("Magnification"); }
-    public void setMagnification(float value)
-    { setElement("Magnification",new Float(value)); }
+    public void setMagnification(Float value)
+    { setElement("Magnification",value); }
 
     public Instrument getInstrument()
     { return (Instrument) getObjectElement("Instrument"); }

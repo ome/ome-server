@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,35 +49,35 @@ public class FindSpotsInputsDTO
     public FindSpotsInputsDTO() { super(); }
     public FindSpotsInputsDTO(Map elements) { super(elements); }
 
-    public int getTimeStart()
-    { return getIntElement("TimeStart"); }
-    public void setTimeStart(int value)
-    { setElement("TimeStart",new Integer(value)); }
+    public Integer getTimeStart()
+    { return getIntegerElement("TimeStart"); }
+    public void setTimeStart(Integer value)
+    { setElement("TimeStart",value); }
 
-    public int getTimeStop()
-    { return getIntElement("TimeStop"); }
-    public void setTimeStop(int value)
-    { setElement("TimeStop",new Integer(value)); }
+    public Integer getTimeStop()
+    { return getIntegerElement("TimeStop"); }
+    public void setTimeStop(Integer value)
+    { setElement("TimeStop",value); }
 
-    public int getChannel()
-    { return getIntElement("Channel"); }
-    public void setChannel(int value)
-    { setElement("Channel",new Integer(value)); }
+    public Integer getChannel()
+    { return getIntegerElement("Channel"); }
+    public void setChannel(Integer value)
+    { setElement("Channel",value); }
 
-    public float getMinimumSpotVolume()
+    public Float getMinimumSpotVolume()
     { return getFloatElement("MinimumSpotVolume"); }
-    public void setMinimumSpotVolume(float value)
-    { setElement("MinimumSpotVolume",new Float(value)); }
+    public void setMinimumSpotVolume(Float value)
+    { setElement("MinimumSpotVolume",value); }
 
     public String getThresholdType()
     { return getStringElement("ThresholdType"); }
     public void setThresholdType(String value)
     { setElement("ThresholdType",value); }
 
-    public float getThresholdValue()
+    public Float getThresholdValue()
     { return getFloatElement("ThresholdValue"); }
-    public void setThresholdValue(float value)
-    { setElement("ThresholdValue",new Float(value)); }
+    public void setThresholdValue(Float value)
+    { setElement("ThresholdValue",value); }
 
 
 }

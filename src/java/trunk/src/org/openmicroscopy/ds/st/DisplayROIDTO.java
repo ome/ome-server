@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,45 +50,45 @@ public class DisplayROIDTO
     public DisplayROIDTO() { super(); }
     public DisplayROIDTO(Map elements) { super(elements); }
 
-    public int getX0()
-    { return getIntElement("X0"); }
-    public void setX0(int value)
-    { setElement("X0",new Integer(value)); }
+    public Integer getX0()
+    { return getIntegerElement("X0"); }
+    public void setX0(Integer value)
+    { setElement("X0",value); }
 
-    public int getY0()
-    { return getIntElement("Y0"); }
-    public void setY0(int value)
-    { setElement("Y0",new Integer(value)); }
+    public Integer getY0()
+    { return getIntegerElement("Y0"); }
+    public void setY0(Integer value)
+    { setElement("Y0",value); }
 
-    public int getZ0()
-    { return getIntElement("Z0"); }
-    public void setZ0(int value)
-    { setElement("Z0",new Integer(value)); }
+    public Integer getZ0()
+    { return getIntegerElement("Z0"); }
+    public void setZ0(Integer value)
+    { setElement("Z0",value); }
 
-    public int getX1()
-    { return getIntElement("X1"); }
-    public void setX1(int value)
-    { setElement("X1",new Integer(value)); }
+    public Integer getX1()
+    { return getIntegerElement("X1"); }
+    public void setX1(Integer value)
+    { setElement("X1",value); }
 
-    public int getY1()
-    { return getIntElement("Y1"); }
-    public void setY1(int value)
-    { setElement("Y1",new Integer(value)); }
+    public Integer getY1()
+    { return getIntegerElement("Y1"); }
+    public void setY1(Integer value)
+    { setElement("Y1",value); }
 
-    public int getZ1()
-    { return getIntElement("Z1"); }
-    public void setZ1(int value)
-    { setElement("Z1",new Integer(value)); }
+    public Integer getZ1()
+    { return getIntegerElement("Z1"); }
+    public void setZ1(Integer value)
+    { setElement("Z1",value); }
 
-    public int getT0()
-    { return getIntElement("T0"); }
-    public void setT0(int value)
-    { setElement("T0",new Integer(value)); }
+    public Integer getT0()
+    { return getIntegerElement("T0"); }
+    public void setT0(Integer value)
+    { setElement("T0",value); }
 
-    public int getT1()
-    { return getIntElement("T1"); }
-    public void setT1(int value)
-    { setElement("T1",new Integer(value)); }
+    public Integer getT1()
+    { return getIntegerElement("T1"); }
+    public void setT1(Integer value)
+    { setElement("T1",value); }
 
     public DisplayOptions getDisplayOptions()
     { return (DisplayOptions) getObjectElement("DisplayOptions"); }

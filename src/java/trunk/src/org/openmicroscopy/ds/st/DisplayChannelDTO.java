@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,25 +50,25 @@ public class DisplayChannelDTO
     public DisplayChannelDTO() { super(); }
     public DisplayChannelDTO(Map elements) { super(elements); }
 
-    public int getChannelNumber()
-    { return getIntElement("ChannelNumber"); }
-    public void setChannelNumber(int value)
-    { setElement("ChannelNumber",new Integer(value)); }
+    public Integer getChannelNumber()
+    { return getIntegerElement("ChannelNumber"); }
+    public void setChannelNumber(Integer value)
+    { setElement("ChannelNumber",value); }
 
-    public double getBlackLevel()
+    public Double getBlackLevel()
     { return getDoubleElement("BlackLevel"); }
-    public void setBlackLevel(double value)
-    { setElement("BlackLevel",new Double(value)); }
+    public void setBlackLevel(Double value)
+    { setElement("BlackLevel",value); }
 
-    public double getWhiteLevel()
+    public Double getWhiteLevel()
     { return getDoubleElement("WhiteLevel"); }
-    public void setWhiteLevel(double value)
-    { setElement("WhiteLevel",new Double(value)); }
+    public void setWhiteLevel(Double value)
+    { setElement("WhiteLevel",value); }
 
-    public float getGamma()
+    public Float getGamma()
     { return getFloatElement("Gamma"); }
-    public void setGamma(float value)
-    { setElement("Gamma",new Float(value)); }
+    public void setGamma(Float value)
+    { setElement("Gamma",value); }
 
     public List getDisplayOptionsesByBlueChannel()
     { return (List) getObjectElement("DisplayOptionsesByBlueChannel"); }

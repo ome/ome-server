@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -60,30 +60,30 @@ public class LaserDTO
     public void setMedium(String value)
     { setElement("Medium",value); }
 
-    public int getWavelength()
-    { return getIntElement("Wavelength"); }
-    public void setWavelength(int value)
-    { setElement("Wavelength",new Integer(value)); }
+    public Integer getWavelength()
+    { return getIntegerElement("Wavelength"); }
+    public void setWavelength(Integer value)
+    { setElement("Wavelength",value); }
 
-    public boolean isFrequencyDoubled()
+    public Boolean isFrequencyDoubled()
     { return getBooleanElement("FrequencyDoubled"); }
-    public void setFrequencyDoubled(boolean value)
-    { setElement("FrequencyDoubled",new Boolean(value)); }
+    public void setFrequencyDoubled(Boolean value)
+    { setElement("FrequencyDoubled",value); }
 
-    public boolean isTunable()
+    public Boolean isTunable()
     { return getBooleanElement("Tunable"); }
-    public void setTunable(boolean value)
-    { setElement("Tunable",new Boolean(value)); }
+    public void setTunable(Boolean value)
+    { setElement("Tunable",value); }
 
     public String getPulse()
     { return getStringElement("Pulse"); }
     public void setPulse(String value)
     { setElement("Pulse",value); }
 
-    public float getPower()
+    public Float getPower()
     { return getFloatElement("Power"); }
-    public void setPower(float value)
-    { setElement("Power",new Float(value)); }
+    public void setPower(Float value)
+    { setElement("Power",value); }
 
     public LightSource getLightSource()
     { return (LightSource) getObjectElement("LightSource"); }

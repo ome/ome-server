@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,19 +46,19 @@ public interface PlaneGeometricSigma
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>TheZ</code> */
-    public int getTheZ();
-    public void setTheZ(int value);
+    public Integer getTheZ();
+    public void setTheZ(Integer value);
 
     /** Criteria field name: <code>TheC</code> */
-    public int getTheC();
-    public void setTheC(int value);
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
     /** Criteria field name: <code>TheT</code> */
-    public int getTheT();
-    public void setTheT(int value);
+    public Integer getTheT();
+    public void setTheT(Integer value);
 
     /** Criteria field name: <code>GeometricSigma</code> */
-    public float getGeometricSigma();
-    public void setGeometricSigma(float value);
+    public Float getGeometricSigma();
+    public void setGeometricSigma(Float value);
 
 }

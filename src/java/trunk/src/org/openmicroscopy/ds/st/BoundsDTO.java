@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,25 +49,25 @@ public class BoundsDTO
     public BoundsDTO() { super(); }
     public BoundsDTO(Map elements) { super(elements); }
 
-    public int getX()
-    { return getIntElement("X"); }
-    public void setX(int value)
-    { setElement("X",new Integer(value)); }
+    public Integer getX()
+    { return getIntegerElement("X"); }
+    public void setX(Integer value)
+    { setElement("X",value); }
 
-    public int getY()
-    { return getIntElement("Y"); }
-    public void setY(int value)
-    { setElement("Y",new Integer(value)); }
+    public Integer getY()
+    { return getIntegerElement("Y"); }
+    public void setY(Integer value)
+    { setElement("Y",value); }
 
-    public int getWidth()
-    { return getIntElement("Width"); }
-    public void setWidth(int value)
-    { setElement("Width",new Integer(value)); }
+    public Integer getWidth()
+    { return getIntegerElement("Width"); }
+    public void setWidth(Integer value)
+    { setElement("Width",value); }
 
-    public int getHeight()
-    { return getIntElement("Height"); }
-    public void setHeight(int value)
-    { setElement("Height",new Integer(value)); }
+    public Integer getHeight()
+    { return getIntegerElement("Height"); }
+    public void setHeight(Integer value)
+    { setElement("Height",value); }
 
 
 }

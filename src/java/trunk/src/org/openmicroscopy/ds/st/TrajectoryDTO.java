@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,15 +55,15 @@ public class TrajectoryDTO
     public void setName(String value)
     { setElement("Name",value); }
 
-    public float getTotalDistance()
+    public Float getTotalDistance()
     { return getFloatElement("TotalDistance"); }
-    public void setTotalDistance(float value)
-    { setElement("TotalDistance",new Float(value)); }
+    public void setTotalDistance(Float value)
+    { setElement("TotalDistance",value); }
 
-    public float getAverageVelocity()
+    public Float getAverageVelocity()
     { return getFloatElement("AverageVelocity"); }
-    public void setAverageVelocity(float value)
-    { setElement("AverageVelocity",new Float(value)); }
+    public void setAverageVelocity(Float value)
+    { setElement("AverageVelocity",value); }
 
     public List getTrajectoryEntries()
     { return (List) getObjectElement("TrajectoryEntries"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,12 +47,12 @@ public interface PixelsPlane
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>SizeX</code> */
-    public int getSizeX();
-    public void setSizeX(int value);
+    public Integer getSizeX();
+    public void setSizeX(Integer value);
 
     /** Criteria field name: <code>SizeY</code> */
-    public int getSizeY();
-    public void setSizeY(int value);
+    public Integer getSizeY();
+    public void setSizeY(Integer value);
 
     /** Criteria field name: <code>PixelType</code> */
     public String getPixelType();
@@ -63,8 +63,8 @@ public interface PixelsPlane
     public void setFileSHA1(String value);
 
     /** Criteria field name: <code>BitsPerPixel</code> */
-    public int getBitsPerPixel();
-    public void setBitsPerPixel(int value);
+    public Integer getBitsPerPixel();
+    public void setBitsPerPixel(Integer value);
 
     /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -59,12 +59,12 @@ public interface OTF
     public void setFilter(Filter value);
 
     /** Criteria field name: <code>SizeX</code> */
-    public int getSizeX();
-    public void setSizeX(int value);
+    public Integer getSizeX();
+    public void setSizeX(Integer value);
 
     /** Criteria field name: <code>SizeY</code> */
-    public int getSizeY();
-    public void setSizeY(int value);
+    public Integer getSizeY();
+    public void setSizeY(Integer value);
 
     /** Criteria field name: <code>PixelType</code> */
     public String getPixelType();
@@ -79,8 +79,8 @@ public interface OTF
     public void setPath(String value);
 
     /** Criteria field name: <code>OpticalAxisAverage</code> */
-    public boolean isOpticalAxisAverage();
-    public void setOpticalAxisAverage(boolean value);
+    public Boolean isOpticalAxisAverage();
+    public void setOpticalAxisAverage(Boolean value);
 
     /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();

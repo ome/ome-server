@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,35 +55,35 @@ public class TrajectoryEntryDTO
     public void setTrajectory(Trajectory value)
     { setElement("Trajectory",value); }
 
-    public int getOrder()
-    { return getIntElement("Order"); }
-    public void setOrder(int value)
-    { setElement("Order",new Integer(value)); }
+    public Integer getOrder()
+    { return getIntegerElement("Order"); }
+    public void setOrder(Integer value)
+    { setElement("Order",value); }
 
-    public float getDeltaX()
+    public Float getDeltaX()
     { return getFloatElement("DeltaX"); }
-    public void setDeltaX(float value)
-    { setElement("DeltaX",new Float(value)); }
+    public void setDeltaX(Float value)
+    { setElement("DeltaX",value); }
 
-    public float getDeltaY()
+    public Float getDeltaY()
     { return getFloatElement("DeltaY"); }
-    public void setDeltaY(float value)
-    { setElement("DeltaY",new Float(value)); }
+    public void setDeltaY(Float value)
+    { setElement("DeltaY",value); }
 
-    public float getDeltaZ()
+    public Float getDeltaZ()
     { return getFloatElement("DeltaZ"); }
-    public void setDeltaZ(float value)
-    { setElement("DeltaZ",new Float(value)); }
+    public void setDeltaZ(Float value)
+    { setElement("DeltaZ",value); }
 
-    public float getDistance()
+    public Float getDistance()
     { return getFloatElement("Distance"); }
-    public void setDistance(float value)
-    { setElement("Distance",new Float(value)); }
+    public void setDistance(Float value)
+    { setElement("Distance",value); }
 
-    public float getVelocity()
+    public Float getVelocity()
     { return getFloatElement("Velocity"); }
-    public void setVelocity(float value)
-    { setElement("Velocity",new Float(value)); }
+    public void setVelocity(Float value)
+    { setElement("Velocity",value); }
 
     public void setMap(Map elements)
     {

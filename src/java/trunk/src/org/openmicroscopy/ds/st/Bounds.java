@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,19 +46,19 @@ public interface Bounds
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>X</code> */
-    public int getX();
-    public void setX(int value);
+    public Integer getX();
+    public void setX(Integer value);
 
     /** Criteria field name: <code>Y</code> */
-    public int getY();
-    public void setY(int value);
+    public Integer getY();
+    public void setY(Integer value);
 
     /** Criteria field name: <code>Width</code> */
-    public int getWidth();
-    public void setWidth(int value);
+    public Integer getWidth();
+    public void setWidth(Integer value);
 
     /** Criteria field name: <code>Height</code> */
-    public int getHeight();
-    public void setHeight(int value);
+    public Integer getHeight();
+    public void setHeight(Integer value);
 
 }

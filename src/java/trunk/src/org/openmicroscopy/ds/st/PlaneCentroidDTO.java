@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,30 +49,30 @@ public class PlaneCentroidDTO
     public PlaneCentroidDTO() { super(); }
     public PlaneCentroidDTO(Map elements) { super(elements); }
 
-    public int getTheZ()
-    { return getIntElement("TheZ"); }
-    public void setTheZ(int value)
-    { setElement("TheZ",new Integer(value)); }
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
 
-    public int getTheC()
-    { return getIntElement("TheC"); }
-    public void setTheC(int value)
-    { setElement("TheC",new Integer(value)); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
-    public int getTheT()
-    { return getIntElement("TheT"); }
-    public void setTheT(int value)
-    { setElement("TheT",new Integer(value)); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
-    public float getX()
+    public Float getX()
     { return getFloatElement("X"); }
-    public void setX(float value)
-    { setElement("X",new Float(value)); }
+    public void setX(Float value)
+    { setElement("X",value); }
 
-    public float getY()
+    public Float getY()
     { return getFloatElement("Y"); }
-    public void setY(float value)
-    { setElement("Y",new Float(value)); }
+    public void setY(Float value)
+    { setElement("Y",value); }
 
 
 }

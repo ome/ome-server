@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -61,12 +61,12 @@ public interface Objective
     public void setSerialNumber(String value);
 
     /** Criteria field name: <code>LensNA</code> */
-    public float getLensNA();
-    public void setLensNA(float value);
+    public Float getLensNA();
+    public void setLensNA(Float value);
 
     /** Criteria field name: <code>Magnification</code> */
-    public float getMagnification();
-    public void setMagnification(float value);
+    public Float getMagnification();
+    public void setMagnification(Float value);
 
     /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,19 +46,19 @@ public interface ImagingEnvironment
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Temperature</code> */
-    public float getTemperature();
-    public void setTemperature(float value);
+    public Float getTemperature();
+    public void setTemperature(Float value);
 
     /** Criteria field name: <code>AirPressure</code> */
-    public float getAirPressure();
-    public void setAirPressure(float value);
+    public Float getAirPressure();
+    public void setAirPressure(Float value);
 
     /** Criteria field name: <code>Humidity</code> */
-    public float getHumidity();
-    public void setHumidity(float value);
+    public Float getHumidity();
+    public void setHumidity(Float value);
 
     /** Criteria field name: <code>CO2Percent</code> */
-    public float getCO2Percent();
-    public void setCO2Percent(float value);
+    public Float getCO2Percent();
+    public void setCO2Percent(Float value);
 
 }

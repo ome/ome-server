@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,8 +55,8 @@ public interface LogicalChannel
     public void setName(String value);
 
     /** Criteria field name: <code>SamplesPerPixel</code> */
-    public int getSamplesPerPixel();
-    public void setSamplesPerPixel(int value);
+    public Integer getSamplesPerPixel();
+    public void setSamplesPerPixel(Integer value);
 
     /** Criteria field name: <code>Filter</code> */
     public Filter getFilter();
@@ -67,12 +67,12 @@ public interface LogicalChannel
     public void setLightSource(LightSource value);
 
     /** Criteria field name: <code>LightAttenuation</code> */
-    public float getLightAttenuation();
-    public void setLightAttenuation(float value);
+    public Float getLightAttenuation();
+    public void setLightAttenuation(Float value);
 
     /** Criteria field name: <code>LightWavelength</code> */
-    public int getLightWavelength();
-    public void setLightWavelength(int value);
+    public Integer getLightWavelength();
+    public void setLightWavelength(Integer value);
 
     /** Criteria field name: <code>OTF</code> */
     public OTF getOTF();
@@ -83,20 +83,20 @@ public interface LogicalChannel
     public void setDetector(Detector value);
 
     /** Criteria field name: <code>DetectorOffset</code> */
-    public float getDetectorOffset();
-    public void setDetectorOffset(float value);
+    public Float getDetectorOffset();
+    public void setDetectorOffset(Float value);
 
     /** Criteria field name: <code>DetectorGain</code> */
-    public float getDetectorGain();
-    public void setDetectorGain(float value);
+    public Float getDetectorGain();
+    public void setDetectorGain(Float value);
 
     /** Criteria field name: <code>IlluminationType</code> */
     public String getIlluminationType();
     public void setIlluminationType(String value);
 
     /** Criteria field name: <code>PinholeSize</code> */
-    public int getPinholeSize();
-    public void setPinholeSize(int value);
+    public Integer getPinholeSize();
+    public void setPinholeSize(Integer value);
 
     /** Criteria field name: <code>PhotometricInterpretation</code> */
     public String getPhotometricInterpretation();
@@ -115,32 +115,32 @@ public interface LogicalChannel
     public void setAuxLightSource(LightSource value);
 
     /** Criteria field name: <code>AuxLightAttenuation</code> */
-    public float getAuxLightAttenuation();
-    public void setAuxLightAttenuation(float value);
+    public Float getAuxLightAttenuation();
+    public void setAuxLightAttenuation(Float value);
 
     /** Criteria field name: <code>AuxTechnique</code> */
     public String getAuxTechnique();
     public void setAuxTechnique(String value);
 
     /** Criteria field name: <code>AuxLightWavelength</code> */
-    public int getAuxLightWavelength();
-    public void setAuxLightWavelength(int value);
+    public Integer getAuxLightWavelength();
+    public void setAuxLightWavelength(Integer value);
 
     /** Criteria field name: <code>ExcitationWavelength</code> */
-    public int getExcitationWavelength();
-    public void setExcitationWavelength(int value);
+    public Integer getExcitationWavelength();
+    public void setExcitationWavelength(Integer value);
 
     /** Criteria field name: <code>EmissionWavelength</code> */
-    public int getEmissionWavelength();
-    public void setEmissionWavelength(int value);
+    public Integer getEmissionWavelength();
+    public void setEmissionWavelength(Integer value);
 
     /** Criteria field name: <code>Fluor</code> */
     public String getFluor();
     public void setFluor(String value);
 
     /** Criteria field name: <code>NDFilter</code> */
-    public float getNDFilter();
-    public void setNDFilter(float value);
+    public Float getNDFilter();
+    public void setNDFilter(Float value);
 
     /** Criteria field name: <code>PixelChannelComponents</code> */
     public List getPixelChannelComponents();

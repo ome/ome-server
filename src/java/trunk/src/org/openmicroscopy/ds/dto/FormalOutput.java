@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -61,12 +61,12 @@ public interface FormalOutput
     public void setDescription(String value);
 
     /** Criteria field name: <code>optional</code> */
-    public boolean isOptional();
-    public void setOptional(boolean value);
+    public Boolean isOptional();
+    public void setOptional(Boolean value);
 
     /** Criteria field name: <code>list</code> */
-    public boolean isList();
-    public void setList(boolean value);
+    public Boolean isList();
+    public void setList(Boolean value);
 
     /** Criteria field name: <code>semantic_type</code> */
     public SemanticType getSemanticType();

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,8 +53,8 @@ public interface ModuleExecution
     public void setModule(Module value);
 
     /** Criteria field name: <code>virtual_mex</code> */
-    public boolean isVirtual();
-    public void setVirtual(boolean value);
+    public Boolean isVirtual();
+    public void setVirtual(Boolean value);
 
     /** Criteria field name: <code>dependence</code> */
     public String getDependence();
@@ -85,8 +85,8 @@ public interface ModuleExecution
     public void setTimestamp(String value);
 
     /** Criteria field name: <code>total_time</code> */
-    public float getTotalTime();
-    public void setTotalTime(float value);
+    public Float getTotalTime();
+    public void setTotalTime(Float value);
 
     /** Criteria field name: <code>status</code> */
     public String getStatus();

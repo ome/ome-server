@@ -43,7 +43,10 @@
 package org.openmicroscopy.ds.dto;
 
 import org.openmicroscopy.ds.DataException;
+import org.openmicroscopy.ds.DataFactory;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -80,6 +83,20 @@ public abstract class MappedDTO
     protected Map elements;
 
     /**
+     * Indicates whether this object is tainted.  A tainted object is
+     * one that has had at least one of its fields modified since it
+     * was read from or saved to the database.
+     */
+    protected boolean tainted;
+
+    /**
+     * Indicates whether this object is new.  A new object is one that
+     * was created in Java client code and has not been saved to the
+     * database yet.
+     */
+    protected boolean newObject;
+
+    /**
      * Creates a new <code>MappedDTO</code> without an initialized
      * backing map.  Obviously, the new instance won't be useful until
      * it is provided with a backing map via the {@link #setMap}
@@ -101,15 +118,10 @@ public abstract class MappedDTO
         setMap(elements);
     }
 
-    /**
-     * Returns the name of the data type this object represents.
-     */
+    // Javadoc inherited from DataInterface
     public abstract String getDTOTypeName();
 
-    /**
-     * Returns the interface class of the data type this object
-     * represents.
-     */
+    // Javadoc inherited from DataInterface
     public abstract Class getDTOType();
 
     /**
@@ -157,7 +169,7 @@ public abstract class MappedDTO
         if (!o.elements.containsKey("id"))
             return false;
 
-        return elements.get("id").equals(o.elements.get("id"));
+        return getIntegerElement("id").equals(o.getIntegerElement("id"));
     }
 
     /**
@@ -176,14 +188,48 @@ public abstract class MappedDTO
     public Map getMap() { return elements; }
 
     /**
-     * Establishes a new backing map for this instance.  The previous
-     * backing map is discarded.  Subclasses should override this
-     * method to post-process the backing map, if necessary.  (For
-     * instance, if one of the elements in the map is a list of
+     * <p>Establishes a new backing map for this instance.  The
+     * previous backing map is discarded.  Subclasses should override
+     * this method to post-process the backing map, if necessary.
+     * (For instance, if one of the elements in the map is a list of
      * children objects, this method should be overridden to call
-     * {@link #parseListElement} to parse that list into Java objects.)
+     * {@link #parseListElement} to parse that list into Java
+     * objects.)</p>
+     *
+     * <p>This method is called implicitly during the creation of a
+     * DTO object by the {@link DataFactory} class, and should
+     * almost never be called directly.</p>
      */
     public void setMap(Map elements) { this.elements = elements; }
+
+    /**
+     * Returns whether this object is tainted.  A tainted object is
+     * one that has had at least one of its fields modified since it
+     * was read from or saved to the database.
+     */
+    public boolean isTainted() { return tainted; }
+
+    /**
+     * Sets the tainted flag for this DTO.  This method should be
+     * called by each and every mutator method in subclasses to mark
+     * the object as being tainted.  It should almost never be called
+     * directly.
+     */
+    public void setTainted(boolean tainted) { this.tainted = tainted; }
+
+    /**
+     * Returns whether this object is new.  A new object is one that
+     * was created in Java client code and has not been saved to the
+     * database yet.
+     */
+    public boolean isNew() { return newObject; }
+
+    /**
+     * Sets the new object flag for this DTO.  This method will be
+     * called automatically by the {@link DataFactory#createNew}
+     * method, and should never be called directly.
+     */
+    public void setNew(boolean newObject) { this.newObject = newObject; }
 
     /**
      * Helper method for parsing an element which is a child object.
@@ -207,11 +253,12 @@ public abstract class MappedDTO
         try
         {
             Map m = (Map) elements.get(element);
-            if (m == null)
-                return;
-            MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
-            dto.setMap(m);
-            elements.put(element,dto);
+            if (m != null)
+            {
+                MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
+                dto.setMap(m);
+                elements.put(element,dto);
+            }
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
@@ -244,15 +291,28 @@ public abstract class MappedDTO
             for (int i = 0; i < list.size(); i++)
             {
                 Map m = (Map) list.get(i);
-                MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
-                dto.setMap(m);
-                list.set(i,dto);
+
+                if (m != null)
+                {
+                    MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
+                    dto.setMap(m);
+                    list.set(i,dto);
+                }
             }
         } catch (InstantiationException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         } catch (IllegalAccessException e) {
             throw new DataException("Cannot create instance of "+dtoClazz);
         }
+    }
+
+    protected int getIntElement(String key)
+    {
+        Integer value = getIntegerElement(key);
+        if (value == null)
+            throw new DataException(key+" field is null");
+        else
+            return value.intValue();
     }
 
     /**
@@ -276,32 +336,28 @@ public abstract class MappedDTO
      * the backing map or if the value cannot be turned into an
      * <code>int</code>
      */
-    protected int getIntElement(String key)
+    protected Integer getIntegerElement(String key)
     {
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
 
-        if (o instanceof Integer)
-            return ((Integer) o).intValue();
-        else if (o instanceof Long)
-            return (int) ((Long) o).longValue();
-        else if (o instanceof Float)
-            return Math.round(((Float) o).floatValue());
-        else if (o instanceof Double)
-            return (int) Math.round(((Double) o).doubleValue());
+        if (o == null)
+            return null;
+        else if (o instanceof Integer)
+            return (Integer) o;
+        else if (o instanceof Number)
+            return new Integer(((Number) o).intValue());
         else if (o instanceof String) {
             try
             {
-                return Integer.parseInt((String) o);
+                return Integer.valueOf((String) o);
             } catch (NumberFormatException e) {
                 throw new DataException("Expected an int, got an ugly String");
             }
-        } else {
-            Class c = o == null ? null : o.getClass();
-            throw new DataException("Expected an int, got a "+c);
-        }
+        } else
+            throw new DataException("Expected an int, got a "+o.getClass());
     }
 
     /**
@@ -323,25 +379,23 @@ public abstract class MappedDTO
      * the backing map or if the value cannot be turned into a
      * <code>long</code>
      */
-    protected long getLongElement(String key)
+    protected Long getLongElement(String key)
     {
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
 
-        if (o instanceof Integer)
-            return ((Integer) o).intValue();
+        if (o == null)
+            return null;
         else if (o instanceof Long)
-            return ((Long) o).longValue();
-        else if (o instanceof Float)
-            return Math.round(((Float) o).floatValue());
-        else if (o instanceof Double)
-            return Math.round(((Double) o).doubleValue());
+            return (Long) o;
+        else if (o instanceof Number)
+            return new Long(((Number) o).longValue());
         else if (o instanceof String) {
             try
             {
-                return Long.parseLong((String) o);
+                return Long.valueOf((String) o);
             } catch (NumberFormatException e) {
                 throw new DataException("Expected a long, got an ugly String");
             }
@@ -367,25 +421,23 @@ public abstract class MappedDTO
      * the backing map or if the value cannot be turned into a
      * <code>float</code>
      */
-    protected float getFloatElement(String key)
+    protected Float getFloatElement(String key)
     {
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
 
-        if (o instanceof Integer)
-            return ((Integer) o).intValue();
-        else if (o instanceof Long)
-            return ((Long) o).longValue();
+        if (o == null)
+            return null;
         else if (o instanceof Float)
-            return ((Float) o).floatValue();
-        else if (o instanceof Double)
-            return (float) ((Double) o).doubleValue();
+            return (Float) o;
+        else if (o instanceof Number)
+            return new Float(((Number) o).floatValue());
         else if (o instanceof String) {
             try
             {
-                return Float.parseFloat((String) o);
+                return Float.valueOf((String) o);
             } catch (NumberFormatException e) {
                 throw new DataException("Expected a float, got an ugly String");
             }
@@ -411,25 +463,23 @@ public abstract class MappedDTO
      * the backing map or if the value cannot be turned into a
      * <code>double</code>
      */
-    protected double getDoubleElement(String key)
+    protected Double getDoubleElement(String key)
     {
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
 
-        if (o instanceof Integer)
-            return ((Integer) o).intValue();
-        else if (o instanceof Long)
-            return ((Long) o).longValue();
-        else if (o instanceof Float)
-            return ((Float) o).floatValue();
+        if (o == null)
+            return null;
         else if (o instanceof Double)
-            return ((Double) o).doubleValue();
+            return (Double) o;
+        else if (o instanceof Number)
+            return new Double(((Number) o).doubleValue());
         else if (o instanceof String) {
             try
             {
-                return Double.parseDouble((String) o);
+                return Double.valueOf((String) o);
             } catch (NumberFormatException e) {
                 throw new DataException("Expected a double, got an ugly String");
             }
@@ -460,27 +510,27 @@ public abstract class MappedDTO
      * the backing map or if the value cannot be turned into a
      * <code>boolean</code>
      */
-    protected boolean getBooleanElement(String key)
+    protected Boolean getBooleanElement(String key)
     {
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
         Object o = elements.get(key);
 
-        if (o instanceof Boolean)
-            return ((Boolean) o).booleanValue();
-        if (o instanceof Integer)
-            return ((Integer) o).intValue() != 0;
-        else if (o instanceof Long)
-            return ((Long) o).longValue() != 0;
+        if (o == null)
+            return null;
+        else if (o instanceof Boolean)
+            return (Boolean) o;
+        else if (o instanceof Number)
+            return new Boolean(((Number) o).intValue() != 0);
         else if (o instanceof String) {
             String s = (String) o;
-            return
+            return new Boolean(
                 s.equalsIgnoreCase("true") ||
                 s.equalsIgnoreCase("t") ||
                 s.equalsIgnoreCase("yes") ||
                 s.equalsIgnoreCase("y") ||
-                s.equalsIgnoreCase("1");
+                s.equalsIgnoreCase("1"));
         } else
             throw new DataException("Expected a boolean, got a "+o.getClass());
     }
@@ -530,6 +580,7 @@ public abstract class MappedDTO
     protected void setElement(String key, Object value)
     {
         elements.put(key,value);
+        tainted = true;
     }
 
     /**
@@ -553,7 +604,10 @@ public abstract class MappedDTO
             List list = (List) elements.get(key);
             return list.size();
         } else if (elements.containsKey("#"+key)) {
-            return getIntElement("#"+key);
+            Integer count = getIntegerElement("#"+key);
+            if (count == null)
+                throw new DataException("#"+key+" field is null");
+            return count.intValue();
         } else {
             throw new DataException("The "+key+" field was not loaded");
         }

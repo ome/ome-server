@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,30 +49,30 @@ public class DimensionsDTO
     public DimensionsDTO() { super(); }
     public DimensionsDTO(Map elements) { super(elements); }
 
-    public float getPixelSizeX()
+    public Float getPixelSizeX()
     { return getFloatElement("PixelSizeX"); }
-    public void setPixelSizeX(float value)
-    { setElement("PixelSizeX",new Float(value)); }
+    public void setPixelSizeX(Float value)
+    { setElement("PixelSizeX",value); }
 
-    public float getPixelSizeY()
+    public Float getPixelSizeY()
     { return getFloatElement("PixelSizeY"); }
-    public void setPixelSizeY(float value)
-    { setElement("PixelSizeY",new Float(value)); }
+    public void setPixelSizeY(Float value)
+    { setElement("PixelSizeY",value); }
 
-    public float getPixelSizeZ()
+    public Float getPixelSizeZ()
     { return getFloatElement("PixelSizeZ"); }
-    public void setPixelSizeZ(float value)
-    { setElement("PixelSizeZ",new Float(value)); }
+    public void setPixelSizeZ(Float value)
+    { setElement("PixelSizeZ",value); }
 
-    public float getPixelSizeC()
+    public Float getPixelSizeC()
     { return getFloatElement("PixelSizeC"); }
-    public void setPixelSizeC(float value)
-    { setElement("PixelSizeC",new Float(value)); }
+    public void setPixelSizeC(Float value)
+    { setElement("PixelSizeC",value); }
 
-    public float getPixelSizeT()
+    public Float getPixelSizeT()
     { return getFloatElement("PixelSizeT"); }
-    public void setPixelSizeT(float value)
-    { setElement("PixelSizeT",new Float(value)); }
+    public void setPixelSizeT(Float value)
+    { setElement("PixelSizeT",value); }
 
 
 }

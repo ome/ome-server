@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,15 +50,15 @@ public class PixelsPlaneDTO
     public PixelsPlaneDTO() { super(); }
     public PixelsPlaneDTO(Map elements) { super(elements); }
 
-    public int getSizeX()
-    { return getIntElement("SizeX"); }
-    public void setSizeX(int value)
-    { setElement("SizeX",new Integer(value)); }
+    public Integer getSizeX()
+    { return getIntegerElement("SizeX"); }
+    public void setSizeX(Integer value)
+    { setElement("SizeX",value); }
 
-    public int getSizeY()
-    { return getIntElement("SizeY"); }
-    public void setSizeY(int value)
-    { setElement("SizeY",new Integer(value)); }
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
 
     public String getPixelType()
     { return getStringElement("PixelType"); }
@@ -70,10 +70,10 @@ public class PixelsPlaneDTO
     public void setFileSHA1(String value)
     { setElement("FileSHA1",value); }
 
-    public int getBitsPerPixel()
-    { return getIntElement("BitsPerPixel"); }
-    public void setBitsPerPixel(int value)
-    { setElement("BitsPerPixel",new Integer(value)); }
+    public Integer getBitsPerPixel()
+    { return getIntegerElement("BitsPerPixel"); }
+    public void setBitsPerPixel(Integer value)
+    { setElement("BitsPerPixel",value); }
 
     public Repository getRepository()
     { return (Repository) getObjectElement("Repository"); }

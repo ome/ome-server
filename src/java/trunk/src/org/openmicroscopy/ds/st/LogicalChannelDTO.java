@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -59,10 +59,10 @@ public class LogicalChannelDTO
     public void setName(String value)
     { setElement("Name",value); }
 
-    public int getSamplesPerPixel()
-    { return getIntElement("SamplesPerPixel"); }
-    public void setSamplesPerPixel(int value)
-    { setElement("SamplesPerPixel",new Integer(value)); }
+    public Integer getSamplesPerPixel()
+    { return getIntegerElement("SamplesPerPixel"); }
+    public void setSamplesPerPixel(Integer value)
+    { setElement("SamplesPerPixel",value); }
 
     public Filter getFilter()
     { return (Filter) getObjectElement("Filter"); }
@@ -74,15 +74,15 @@ public class LogicalChannelDTO
     public void setLightSource(LightSource value)
     { setElement("LightSource",value); }
 
-    public float getLightAttenuation()
+    public Float getLightAttenuation()
     { return getFloatElement("LightAttenuation"); }
-    public void setLightAttenuation(float value)
-    { setElement("LightAttenuation",new Float(value)); }
+    public void setLightAttenuation(Float value)
+    { setElement("LightAttenuation",value); }
 
-    public int getLightWavelength()
-    { return getIntElement("LightWavelength"); }
-    public void setLightWavelength(int value)
-    { setElement("LightWavelength",new Integer(value)); }
+    public Integer getLightWavelength()
+    { return getIntegerElement("LightWavelength"); }
+    public void setLightWavelength(Integer value)
+    { setElement("LightWavelength",value); }
 
     public OTF getOTF()
     { return (OTF) getObjectElement("OTF"); }
@@ -94,25 +94,25 @@ public class LogicalChannelDTO
     public void setDetector(Detector value)
     { setElement("Detector",value); }
 
-    public float getDetectorOffset()
+    public Float getDetectorOffset()
     { return getFloatElement("DetectorOffset"); }
-    public void setDetectorOffset(float value)
-    { setElement("DetectorOffset",new Float(value)); }
+    public void setDetectorOffset(Float value)
+    { setElement("DetectorOffset",value); }
 
-    public float getDetectorGain()
+    public Float getDetectorGain()
     { return getFloatElement("DetectorGain"); }
-    public void setDetectorGain(float value)
-    { setElement("DetectorGain",new Float(value)); }
+    public void setDetectorGain(Float value)
+    { setElement("DetectorGain",value); }
 
     public String getIlluminationType()
     { return getStringElement("IlluminationType"); }
     public void setIlluminationType(String value)
     { setElement("IlluminationType",value); }
 
-    public int getPinholeSize()
-    { return getIntElement("PinholeSize"); }
-    public void setPinholeSize(int value)
-    { setElement("PinholeSize",new Integer(value)); }
+    public Integer getPinholeSize()
+    { return getIntegerElement("PinholeSize"); }
+    public void setPinholeSize(Integer value)
+    { setElement("PinholeSize",value); }
 
     public String getPhotometricInterpretation()
     { return getStringElement("PhotometricInterpretation"); }
@@ -134,40 +134,40 @@ public class LogicalChannelDTO
     public void setAuxLightSource(LightSource value)
     { setElement("AuxLightSource",value); }
 
-    public float getAuxLightAttenuation()
+    public Float getAuxLightAttenuation()
     { return getFloatElement("AuxLightAttenuation"); }
-    public void setAuxLightAttenuation(float value)
-    { setElement("AuxLightAttenuation",new Float(value)); }
+    public void setAuxLightAttenuation(Float value)
+    { setElement("AuxLightAttenuation",value); }
 
     public String getAuxTechnique()
     { return getStringElement("AuxTechnique"); }
     public void setAuxTechnique(String value)
     { setElement("AuxTechnique",value); }
 
-    public int getAuxLightWavelength()
-    { return getIntElement("AuxLightWavelength"); }
-    public void setAuxLightWavelength(int value)
-    { setElement("AuxLightWavelength",new Integer(value)); }
+    public Integer getAuxLightWavelength()
+    { return getIntegerElement("AuxLightWavelength"); }
+    public void setAuxLightWavelength(Integer value)
+    { setElement("AuxLightWavelength",value); }
 
-    public int getExcitationWavelength()
-    { return getIntElement("ExcitationWavelength"); }
-    public void setExcitationWavelength(int value)
-    { setElement("ExcitationWavelength",new Integer(value)); }
+    public Integer getExcitationWavelength()
+    { return getIntegerElement("ExcitationWavelength"); }
+    public void setExcitationWavelength(Integer value)
+    { setElement("ExcitationWavelength",value); }
 
-    public int getEmissionWavelength()
-    { return getIntElement("EmissionWavelength"); }
-    public void setEmissionWavelength(int value)
-    { setElement("EmissionWavelength",new Integer(value)); }
+    public Integer getEmissionWavelength()
+    { return getIntegerElement("EmissionWavelength"); }
+    public void setEmissionWavelength(Integer value)
+    { setElement("EmissionWavelength",value); }
 
     public String getFluor()
     { return getStringElement("Fluor"); }
     public void setFluor(String value)
     { setElement("Fluor",value); }
 
-    public float getNDFilter()
+    public Float getNDFilter()
     { return getFloatElement("NDFilter"); }
-    public void setNDFilter(float value)
-    { setElement("NDFilter",new Float(value)); }
+    public void setNDFilter(Float value)
+    { setElement("NDFilter",value); }
 
     public List getPixelChannelComponents()
     { return (List) getObjectElement("PixelChannelComponents"); }

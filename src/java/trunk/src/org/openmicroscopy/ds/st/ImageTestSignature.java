@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,7 +46,7 @@ public interface ImageTestSignature
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>Value</code> */
-    public float getValue();
-    public void setValue(float value);
+    public Float getValue();
+    public void setValue(Float value);
 
 }

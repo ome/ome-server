@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -71,15 +71,15 @@ public class FormalInputDTO
     public void setDescription(String value)
     { setElement("description",value); }
 
-    public boolean isOptional()
+    public Boolean isOptional()
     { return getBooleanElement("optional"); }
-    public void setOptional(boolean value)
-    { setElement("optional",new Boolean(value)); }
+    public void setOptional(Boolean value)
+    { setElement("optional",value); }
 
-    public boolean isList()
+    public Boolean isList()
     { return getBooleanElement("list"); }
-    public void setList(boolean value)
-    { setElement("list",new Boolean(value)); }
+    public void setList(Boolean value)
+    { setElement("list",value); }
 
     public SemanticType getSemanticType()
     { return (SemanticType) getObjectElement("semantic_type"); }
@@ -91,10 +91,10 @@ public class FormalInputDTO
     public void setLookupTable(LookupTable value)
     { setElement("lookup_table",value); }
 
-    public boolean isUserDefined()
+    public Boolean isUserDefined()
     { return getBooleanElement("user_defined"); }
-    public void setUserDefined(boolean value)
-    { setElement("user_defined",new Boolean(value)); }
+    public void setUserDefined(Boolean value)
+    { setElement("user_defined",value); }
 
     public List getActualInputs()
     { return (List) getObjectElement("actual_inputs"); }

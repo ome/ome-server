@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,25 +49,25 @@ public class PlaneSum_YiDTO
     public PlaneSum_YiDTO() { super(); }
     public PlaneSum_YiDTO(Map elements) { super(elements); }
 
-    public int getTheZ()
-    { return getIntElement("TheZ"); }
-    public void setTheZ(int value)
-    { setElement("TheZ",new Integer(value)); }
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
 
-    public int getTheC()
-    { return getIntElement("TheC"); }
-    public void setTheC(int value)
-    { setElement("TheC",new Integer(value)); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
-    public int getTheT()
-    { return getIntElement("TheT"); }
-    public void setTheT(int value)
-    { setElement("TheT",new Integer(value)); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
-    public float getSum_Yi()
+    public Float getSum_Yi()
     { return getFloatElement("Sum_Yi"); }
-    public void setSum_Yi(float value)
-    { setElement("Sum_Yi",new Float(value)); }
+    public void setSum_Yi(Float value)
+    { setElement("Sum_Yi",value); }
 
 
 }

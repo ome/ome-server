@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,25 +49,25 @@ public class ImagingEnvironmentDTO
     public ImagingEnvironmentDTO() { super(); }
     public ImagingEnvironmentDTO(Map elements) { super(elements); }
 
-    public float getTemperature()
+    public Float getTemperature()
     { return getFloatElement("Temperature"); }
-    public void setTemperature(float value)
-    { setElement("Temperature",new Float(value)); }
+    public void setTemperature(Float value)
+    { setElement("Temperature",value); }
 
-    public float getAirPressure()
+    public Float getAirPressure()
     { return getFloatElement("AirPressure"); }
-    public void setAirPressure(float value)
-    { setElement("AirPressure",new Float(value)); }
+    public void setAirPressure(Float value)
+    { setElement("AirPressure",value); }
 
-    public float getHumidity()
+    public Float getHumidity()
     { return getFloatElement("Humidity"); }
-    public void setHumidity(float value)
-    { setElement("Humidity",new Float(value)); }
+    public void setHumidity(Float value)
+    { setElement("Humidity",value); }
 
-    public float getCO2Percent()
+    public Float getCO2Percent()
     { return getFloatElement("CO2Percent"); }
-    public void setCO2Percent(float value)
-    { setElement("CO2Percent",new Float(value)); }
+    public void setCO2Percent(Float value)
+    { setElement("CO2Percent",value); }
 
 
 }

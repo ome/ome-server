@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:07 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,24 +55,24 @@ public interface Laser
     public void setMedium(String value);
 
     /** Criteria field name: <code>Wavelength</code> */
-    public int getWavelength();
-    public void setWavelength(int value);
+    public Integer getWavelength();
+    public void setWavelength(Integer value);
 
     /** Criteria field name: <code>FrequencyDoubled</code> */
-    public boolean isFrequencyDoubled();
-    public void setFrequencyDoubled(boolean value);
+    public Boolean isFrequencyDoubled();
+    public void setFrequencyDoubled(Boolean value);
 
     /** Criteria field name: <code>Tunable</code> */
-    public boolean isTunable();
-    public void setTunable(boolean value);
+    public Boolean isTunable();
+    public void setTunable(Boolean value);
 
     /** Criteria field name: <code>Pulse</code> */
     public String getPulse();
     public void setPulse(String value);
 
     /** Criteria field name: <code>Power</code> */
-    public float getPower();
-    public void setPower(float value);
+    public Float getPower();
+    public void setPower(Float value);
 
     /** Criteria field name: <code>LightSource</code> */
     public LightSource getLightSource();

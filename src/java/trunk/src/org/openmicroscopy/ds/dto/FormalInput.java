@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -61,12 +61,12 @@ public interface FormalInput
     public void setDescription(String value);
 
     /** Criteria field name: <code>optional</code> */
-    public boolean isOptional();
-    public void setOptional(boolean value);
+    public Boolean isOptional();
+    public void setOptional(Boolean value);
 
     /** Criteria field name: <code>list</code> */
-    public boolean isList();
-    public void setList(boolean value);
+    public Boolean isList();
+    public void setList(Boolean value);
 
     /** Criteria field name: <code>semantic_type</code> */
     public SemanticType getSemanticType();
@@ -77,8 +77,8 @@ public interface FormalInput
     public void setLookupTable(LookupTable value);
 
     /** Criteria field name: <code>user_defined</code> */
-    public boolean isUserDefined();
-    public void setUserDefined(boolean value);
+    public Boolean isUserDefined();
+    public void setUserDefined(Boolean value);
 
     /** Criteria field name: <code>actual_inputs</code> */
     public List getActualInputs();

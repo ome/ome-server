@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,15 +46,15 @@ public interface Location
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>TheX</code> */
-    public float getTheX();
-    public void setTheX(float value);
+    public Float getTheX();
+    public void setTheX(Float value);
 
     /** Criteria field name: <code>TheY</code> */
-    public float getTheY();
-    public void setTheY(float value);
+    public Float getTheY();
+    public void setTheY(Float value);
 
     /** Criteria field name: <code>TheZ</code> */
-    public float getTheZ();
-    public void setTheZ(float value);
+    public Float getTheZ();
+    public void setTheZ(Float value);
 
 }

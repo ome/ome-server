@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:30 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,8 +47,8 @@ public interface ChannelIndex
     extends DataInterface, Attribute
 {
     /** Criteria field name: <code>theC</code> */
-    public int gettheC();
-    public void settheC(int value);
+    public Integer gettheC();
+    public void settheC(Integer value);
 
     /** Criteria field name: <code>Pixels</code> */
     public Pixels getPixels();

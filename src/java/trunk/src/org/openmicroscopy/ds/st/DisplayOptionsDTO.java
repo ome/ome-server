@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -57,45 +57,45 @@ public class DisplayOptionsDTO
     public void setPixels(Pixels value)
     { setElement("Pixels",value); }
 
-    public float getZoom()
+    public Float getZoom()
     { return getFloatElement("Zoom"); }
-    public void setZoom(float value)
-    { setElement("Zoom",new Float(value)); }
+    public void setZoom(Float value)
+    { setElement("Zoom",value); }
 
     public DisplayChannel getRedChannel()
     { return (DisplayChannel) getObjectElement("RedChannel"); }
     public void setRedChannel(DisplayChannel value)
     { setElement("RedChannel",value); }
 
-    public boolean isRedChannelOn()
+    public Boolean isRedChannelOn()
     { return getBooleanElement("RedChannelOn"); }
-    public void setRedChannelOn(boolean value)
-    { setElement("RedChannelOn",new Boolean(value)); }
+    public void setRedChannelOn(Boolean value)
+    { setElement("RedChannelOn",value); }
 
     public DisplayChannel getGreenChannel()
     { return (DisplayChannel) getObjectElement("GreenChannel"); }
     public void setGreenChannel(DisplayChannel value)
     { setElement("GreenChannel",value); }
 
-    public boolean isGreenChannelOn()
+    public Boolean isGreenChannelOn()
     { return getBooleanElement("GreenChannelOn"); }
-    public void setGreenChannelOn(boolean value)
-    { setElement("GreenChannelOn",new Boolean(value)); }
+    public void setGreenChannelOn(Boolean value)
+    { setElement("GreenChannelOn",value); }
 
     public DisplayChannel getBlueChannel()
     { return (DisplayChannel) getObjectElement("BlueChannel"); }
     public void setBlueChannel(DisplayChannel value)
     { setElement("BlueChannel",value); }
 
-    public boolean isBlueChannelOn()
+    public Boolean isBlueChannelOn()
     { return getBooleanElement("BlueChannelOn"); }
-    public void setBlueChannelOn(boolean value)
-    { setElement("BlueChannelOn",new Boolean(value)); }
+    public void setBlueChannelOn(Boolean value)
+    { setElement("BlueChannelOn",value); }
 
-    public boolean isDisplayRGB()
+    public Boolean isDisplayRGB()
     { return getBooleanElement("DisplayRGB"); }
-    public void setDisplayRGB(boolean value)
-    { setElement("DisplayRGB",new Boolean(value)); }
+    public void setDisplayRGB(Boolean value)
+    { setElement("DisplayRGB",value); }
 
     public DisplayChannel getGreyChannel()
     { return (DisplayChannel) getObjectElement("GreyChannel"); }
@@ -107,25 +107,25 @@ public class DisplayOptionsDTO
     public void setColorMap(String value)
     { setElement("ColorMap",value); }
 
-    public int getZStart()
-    { return getIntElement("ZStart"); }
-    public void setZStart(int value)
-    { setElement("ZStart",new Integer(value)); }
+    public Integer getZStart()
+    { return getIntegerElement("ZStart"); }
+    public void setZStart(Integer value)
+    { setElement("ZStart",value); }
 
-    public int getZStop()
-    { return getIntElement("ZStop"); }
-    public void setZStop(int value)
-    { setElement("ZStop",new Integer(value)); }
+    public Integer getZStop()
+    { return getIntegerElement("ZStop"); }
+    public void setZStop(Integer value)
+    { setElement("ZStop",value); }
 
-    public int getTStart()
-    { return getIntElement("TStart"); }
-    public void setTStart(int value)
-    { setElement("TStart",new Integer(value)); }
+    public Integer getTStart()
+    { return getIntegerElement("TStart"); }
+    public void setTStart(Integer value)
+    { setElement("TStart",value); }
 
-    public int getTStop()
-    { return getIntElement("TStop"); }
-    public void setTStop(int value)
-    { setElement("TStop",new Integer(value)); }
+    public Integer getTStop()
+    { return getIntegerElement("TStop"); }
+    public void setTStop(Integer value)
+    { setElement("TStop",value); }
 
     public List getDisplayROIs()
     { return (List) getObjectElement("DisplayROIs"); }

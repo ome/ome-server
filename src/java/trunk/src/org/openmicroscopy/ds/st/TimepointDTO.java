@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,10 +49,10 @@ public class TimepointDTO
     public TimepointDTO() { super(); }
     public TimepointDTO(Map elements) { super(elements); }
 
-    public int getTheT()
-    { return getIntElement("TheT"); }
-    public void setTheT(int value)
-    { setElement("TheT",new Integer(value)); }
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
 
 
 }

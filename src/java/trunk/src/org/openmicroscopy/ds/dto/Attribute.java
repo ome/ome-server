@@ -144,7 +144,7 @@ public interface Attribute
      * @throws ClassCastException if the element does not contain a
      * <code>boolean</code> value
      */
-    public boolean getBooleanElement(String element);
+    public Boolean getBooleanElement(String element);
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -152,7 +152,7 @@ public interface Attribute
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setBooleanElement(String element, boolean value);
+    public void setBooleanElement(String element, Boolean value);
 
     /**
      * Returns the value of one of the attribute's elements as an
@@ -162,7 +162,7 @@ public interface Attribute
      * @throws ClassCastException if the element does not contain an
      * <code>int</code> value
      */
-    public int getIntElement(String element);
+    public Integer getIntegerElement(String element);
 
     /**
      * Sets the value of one of the attribute's elements to an
@@ -170,7 +170,7 @@ public interface Attribute
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setIntElement(String element, int value);
+    public void setIntegerElement(String element, Integer value);
 
     /**
      * Returns the value of one of the attribute's elements as a
@@ -180,7 +180,7 @@ public interface Attribute
      * @throws ClassCastException if the element does not contain a
      * <code>long</code> value
      */
-    public long getLongElement(String element);
+    public Long getLongElement(String element);
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -188,7 +188,7 @@ public interface Attribute
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setLongElement(String element, long value);
+    public void setLongElement(String element, Long value);
 
     /**
      * Returns the value of one of the attribute's elements as a
@@ -198,7 +198,7 @@ public interface Attribute
      * @throws ClassCastException if the element does not contain a
      * <code>float</code> value
      */
-    public float getFloatElement(String element);
+    public Float getFloatElement(String element);
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -206,7 +206,7 @@ public interface Attribute
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setFloatElement(String element, float value);
+    public void setFloatElement(String element, Float value);
 
     /**
      * Returns the value of one of the attribute's elements as a
@@ -216,7 +216,7 @@ public interface Attribute
      * @throws ClassCastException if the element does not contain a
      * <code>double</code> value
      */
-    public double getDoubleElement(String element);
+    public Double getDoubleElement(String element);
 
     /**
      * Sets the value of one of the attribute's elements to a
@@ -224,7 +224,7 @@ public interface Attribute
      * @param element the name of the element to set
      * @param value the element's new value
      */
-    public void setDoubleElement(String element, double value);
+    public void setDoubleElement(String element, Double value);
 
     /**
      * Returns the value of one of the attribute's elements as a

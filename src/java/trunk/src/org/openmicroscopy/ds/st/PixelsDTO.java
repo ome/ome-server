@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:35:08 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,35 +53,35 @@ public class PixelsDTO
     public PixelsDTO() { super(); }
     public PixelsDTO(Map elements) { super(elements); }
 
-    public int getSizeX()
-    { return getIntElement("SizeX"); }
-    public void setSizeX(int value)
-    { setElement("SizeX",new Integer(value)); }
+    public Integer getSizeX()
+    { return getIntegerElement("SizeX"); }
+    public void setSizeX(Integer value)
+    { setElement("SizeX",value); }
 
-    public int getSizeY()
-    { return getIntElement("SizeY"); }
-    public void setSizeY(int value)
-    { setElement("SizeY",new Integer(value)); }
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
 
-    public int getSizeZ()
-    { return getIntElement("SizeZ"); }
-    public void setSizeZ(int value)
-    { setElement("SizeZ",new Integer(value)); }
+    public Integer getSizeZ()
+    { return getIntegerElement("SizeZ"); }
+    public void setSizeZ(Integer value)
+    { setElement("SizeZ",value); }
 
-    public int getSizeC()
-    { return getIntElement("SizeC"); }
-    public void setSizeC(int value)
-    { setElement("SizeC",new Integer(value)); }
+    public Integer getSizeC()
+    { return getIntegerElement("SizeC"); }
+    public void setSizeC(Integer value)
+    { setElement("SizeC",value); }
 
-    public int getSizeT()
-    { return getIntElement("SizeT"); }
-    public void setSizeT(int value)
-    { setElement("SizeT",new Integer(value)); }
+    public Integer getSizeT()
+    { return getIntegerElement("SizeT"); }
+    public void setSizeT(Integer value)
+    { setElement("SizeT",value); }
 
-    public int getBitsPerPixel()
-    { return getIntElement("BitsPerPixel"); }
-    public void setBitsPerPixel(int value)
-    { setElement("BitsPerPixel",new Integer(value)); }
+    public Integer getBitsPerPixel()
+    { return getIntegerElement("BitsPerPixel"); }
+    public void setBitsPerPixel(Integer value)
+    { setElement("BitsPerPixel",value); }
 
     public String getPixelType()
     { return getStringElement("PixelType"); }
@@ -103,10 +103,10 @@ public class PixelsDTO
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public int getPixelsID()
-    { return getIntElement("PixelsID"); }
-    public void setPixelsID(int value)
-    { setElement("PixelsID",new Integer(value)); }
+    public Integer getPixelsID()
+    { return getIntegerElement("PixelsID"); }
+    public void setPixelsID(Integer value)
+    { setElement("PixelsID",value); }
 
     public List getChannelIndexes()
     { return (List) getObjectElement("ChannelIndexes"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Thu Feb 12 14:34:47 2004
+ * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -61,10 +61,10 @@ public class ModuleExecutionDTO
     public void setModule(Module value)
     { setElement("module",value); }
 
-    public boolean isVirtual()
+    public Boolean isVirtual()
     { return getBooleanElement("virtual_mex"); }
-    public void setVirtual(boolean value)
-    { setElement("virtual_mex",new Boolean(value)); }
+    public void setVirtual(Boolean value)
+    { setElement("virtual_mex",value); }
 
     public String getDependence()
     { return getStringElement("dependence"); }
@@ -101,10 +101,10 @@ public class ModuleExecutionDTO
     public void setTimestamp(String value)
     { setElement("timestamp",value); }
 
-    public float getTotalTime()
+    public Float getTotalTime()
     { return getFloatElement("total_time"); }
-    public void setTotalTime(float value)
-    { setElement("total_time",new Float(value)); }
+    public void setTotalTime(Float value)
+    { setElement("total_time",value); }
 
     public String getStatus()
     { return getStringElement("status"); }
