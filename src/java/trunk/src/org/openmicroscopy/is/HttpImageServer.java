@@ -1173,7 +1173,6 @@ public class HttpImageServer
 
                 int theC = getIntToken(ltoken);
                 int theT = getIntToken(ltoken);
-                int theZ = getIntToken(ltoken);
                 minimum[theC][theT] = getDoubleToken(ltoken);
                 maximum[theC][theT] = getDoubleToken(ltoken);
                 mean[theC][theT] = getDoubleToken(ltoken);
