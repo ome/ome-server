@@ -67,10 +67,35 @@ sub _takeAction {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $q = $self->CGI();
+	my $message = '';
+	
+	my @other_categories_in_this_group = 
+		$obj->CategoryGroup->CategoryList( id => [ '!=', $obj->id ] );
 	
 	my $image_ids = $q->param( 'images_to_categorize' );
 	if( $image_ids ) {
  		foreach my $image_id ( split( m',', $image_ids ) ) {
+ 			# Don't add this image if it belongs to another image in this Category Group
+ 			my @other_classifications = $factory->findObjects( '@Classification', {
+ 				image                           => $image_id,
+				'module_execution.experimenter' => $session->User(),
+# for some unknown reason, this next parameter consistently fails with
+# "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
+# so i'll ignore it and grep it out at the next step
+#				Valid                           => [ "is not", 0 ],
+				Category                        => [ 'in', [ @other_categories_in_this_group] ]
+			} );
+			@other_classifications = grep( (not defined $_->Valid || $_->Valid != 0 ), @other_classifications );
+			if( @other_classifications ) {
+	 			$message .= "<font color='red'>Cannot add image ".
+	 				$self->Renderer()->render( $other_classifications[0]->image(), 'ref' ).
+ 					" to this category because it belongs to another category. ".
+ 					$self->Renderer()->render( $other_classifications[0]->Category(), 'ref' ).
+ 					".</font><br>";
+ 				next;
+ 			}
+ 			
+ 			# skip if the image has already been classified with this classification
  			next if $factory->findObject( '@Classification', {
 				Category => $obj,
 				image    => $image_id,
@@ -83,6 +108,7 @@ sub _takeAction {
 		}
  		$session->commitTransaction();
 	}
+	return $message;
 }
 
 
