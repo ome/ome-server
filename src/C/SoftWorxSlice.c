@@ -150,6 +150,7 @@ void DumpRGB (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
 	long redWave,long redClip,long redThresh,float redScale,
 	long greenWave,long greenClip,long greenThresh,float greenScale,
 	long blueWave,long blueClip,long blueThresh,float blueScale);
+unsigned long GetPlaneOffset (DVhead *head,long Z, long W,long T);
 
 
 
@@ -548,9 +549,7 @@ void DumpGrey (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
 	long greyWave,long greyClip,long greyThresh,float greyScale) {
 
 unsigned long length=theDVhead->numRow*theDVhead->numCol;
-unsigned long numZ = theDVhead->numImages / (theDVhead->NumWaves*theDVhead->numtimes);
-unsigned long planeOffset = (timePoint * numZ * theDVhead->NumWaves) + (greyWave * numZ) + zSection;
-unsigned long offset=1024+theDVhead->next+(planeOffset*2*length);
+unsigned long offset=GetPlaneOffset (theDVhead,zSection,greyWave,timePoint);
 unsigned long i,numRead;
 pixel greyPixel;
 PixPtr greyPix=NULL,greyPixPtr=NULL;
@@ -686,13 +685,9 @@ void DumpRGB (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
 	long greenWave,long greenClip,long greenThresh,float greenScale,
 	long blueWave,long blueClip,long blueThresh,float blueScale) {
 unsigned long length=theDVhead->numRow*theDVhead->numCol;
-unsigned long numZ = theDVhead->numImages / (theDVhead->NumWaves*theDVhead->numtimes);
-unsigned long redPlaneOffset = (timePoint * numZ * theDVhead->NumWaves) + (redWave * numZ) + zSection;
-unsigned long redOffset=1024+theDVhead->next+(redPlaneOffset*2*length);
-unsigned long greenPlaneOffset = (timePoint * numZ * theDVhead->NumWaves) + (greenWave * numZ) + zSection;
-unsigned long greenOffset=1024+theDVhead->next+(greenPlaneOffset*2*length);
-unsigned long bluePlaneOffset = (timePoint * numZ * theDVhead->NumWaves) + (blueWave * numZ) + zSection;
-unsigned long blueOffset=1024+theDVhead->next+(bluePlaneOffset*2*length);
+unsigned long redOffset   = GetPlaneOffset (theDVhead,zSection,redWave,   timePoint);
+unsigned long greenOffset = GetPlaneOffset (theDVhead,zSection,greenWave, timePoint);
+unsigned long blueOffset  = GetPlaneOffset (theDVhead,zSection,blueWave,  timePoint);
 unsigned long i;
 pixel redPixel,greenPixel,bluePixel;
 PixPtr redPix=NULL,greenPix=NULL,bluePix=NULL,redPixPtr=NULL,greenPixPtr=NULL,bluePixPtr=NULL;
@@ -783,6 +778,28 @@ fprintf (stderr,"blueWave %d, blueClip %d, blueThresh %d, blueScale %f, blueOffs
 
 
 }
+
+
+unsigned long GetPlaneOffset (DVhead *head,long Z, long W,long T)
+{
+int theSection;
+int numZ;
+
+	numZ = head->numImages / (head->NumWaves * head->numtimes);
+/* Image sequence. 0=ZTW, 1=WZT, 2=ZWT */
+	if (head->imagesequence == 0)
+		theSection  = Z + (T * numZ) + (W * numZ * head->numtimes);
+	else if (head->imagesequence == 1)
+		theSection  = W + (Z * head->NumWaves) + (T * head->NumWaves * numZ);
+	else if (head->imagesequence == 2)
+		theSection  = Z + (W * numZ) + (T * numZ * head->NumWaves);
+	else return (NULL);
+		
+	return (1024 + head->next + theSection*2*(head->numRow*head->numCol));
+	
+}
+
+
 
 
 int main (int argc, char **argv)

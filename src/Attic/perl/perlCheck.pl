@@ -44,7 +44,7 @@ my @modules = ({
 	installModule => \&DBD_Pg_Install
 	},{
 	Name => 'Image::Magick',
-	repositoryFile => 'ImageMagick-5.3.6.tar.gz',
+	repositoryFile => 'ImageMagick-5.3.6-OSX.tar.gz',
 	installModule => \&ImageMagickInstall
 	}
 );
@@ -52,14 +52,25 @@ my @modules = ({
 #####################
 # Da 'main' program:
 
-# If we're running on darwin, make sure we have some additional libraries.
-if ($^O eq 'darwin') {
+# Make sure there is a modules directory, and cwd into it.
+if ( -e 'modules' and not -d 'modules' ) {
+	unlink ('modules') or die "Couldn't delete file 'modules': $!\n";
 }
+
+if (not -e 'modules') {
+	mkdir ('modules') or die "Couldn't make a directory 'modules': $!\n";
+}
+
+chdir ('modules') or die "Couldn't change working directory to modules: $!\n";
+
 
 # loop through the perl modules and install them.
 foreach (@modules) {
 	CheckModule ($_);
 }
+
+# chdir back to the OME perl directory
+chdir ('..') or die "Couldn't change working directory to '..': $!\n";
 
 # Make symlinks between the private perl module directory and OME modules:
 # Where to install private libs: $Config{installprivlib}
@@ -74,7 +85,7 @@ foreach (@OMEmodules) {
 
 
 
-
+######################
 #  Version checks:
 sub DBI_VersionOK {
 my $version = shift;
@@ -88,6 +99,8 @@ my $version = shift;
 	return (0);
 }
 
+
+############################
 # Special installation subs:
 sub DBD_Pg_Install {
 my $module = shift;
@@ -122,12 +135,27 @@ my $installTarBall = $module->{repositoryFile};
 my $installDir;
 	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
 my $error;
+my @configFlags = (
+	'--enable-shared',
+	'--without-magick-plus-plus',
+	'--enable-lzw',
+	'--prefix=/usr'
+	);
 
 	print "Installing $installTarBall\n";
-	die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
+	if (not -e $installDir) {
+		die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
+	}
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+	
+	if ($^O eq 'darwin') {
+		push (@configFlags,'--without-x');
+		}
 
-	die "Couldn't execute configure script\n" if system ('./configure --enable-shared --enable-lzw --prefix=/usr');
+	if (not -e 'Makefile' ) {
+		die "Couldn't execute configure script\n" if system ('./configure '.join (' ',@configFlags) );
+	}
+	
 	die "Compilation errors - script aborted.\n" if system ('make');
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
 	die "Install errors - script aborted.\n" if system ('make install');
@@ -136,7 +164,7 @@ my $error;
 }
 
 
-
+##################################################################
 # Should not have to modify below here when specifying new modules
 sub CheckModule {
 my $module = $_;

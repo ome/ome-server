@@ -137,6 +137,8 @@ int WriteDVHeader( DVhead *head, FILE *fp );
 DVstack *ReadDVstack(FILE *fp,DVhead *head,long time );
 void DumpDVStats (DVstack *theStack, int time, FILE *fp );
 void Calculate_Stack_Stats (DVstack *inStack,int theWave);
+void DumpDVStats_Geo (DVstack *theStack, int time, FILE *fp );
+void Calculate_Stack_Stats_Geo (DVstack *inStack,int theWave);
 
 void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
 void BSUtilsSwapHeader(char *cTheHeader);
@@ -148,18 +150,24 @@ void BSUtilsSwapHeader(char *cTheHeader);
 
 int main (int argc,char **argv)
 {
-int i,time,wave;
+int i,time,wave,doGeo=0,argcFiles=1;
 FILE *fp;
 DVhead theHead;
 DVstack *theStack;
 
 	if (argc < 2)
 	{
-		fprintf (stderr,"%s file [file ...]\n",argv[0]);
+		fprintf (stderr,"%s [-geo] file [file ...]\n",argv[0]);
 		exit (-1);
 	}
 	
-	for (i=1; i< argc; i++)
+	if (!strcmp (argv[1],"-geo")) {
+		doGeo = 1;
+		argcFiles++;
+	}
+	
+	
+	for (i=argcFiles; i< argc; i++)
 	{
 		fp = fopen (argv[i],"r");
 		if (!fp)
@@ -171,17 +179,28 @@ DVstack *theStack;
 				fprintf (stderr,"Could not read DeltaVision file.\n");
 				exit (-1);
 			}
-			fprintf (stdout,"%6s\t%12s\t%6s\t%6s\%6s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+
+			fprintf (stdout,"%6s\t%12s\t%6s\t%6s\t%6s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 				"Wave#","Wavelength","time","Min","Max","Mean","Geo Mean","Sigma","Centroid X","Centroid Y","Centroid Z");
+
 			for (time=0;time<theHead.numtimes;time++) {
 				theStack = ReadDVstack(fp,&theHead,time);
-				for (wave=0;wave<theHead.NumWaves;wave++)
-					Calculate_Stack_Stats (theStack,wave);
+				for (wave=0;wave<theHead.NumWaves;wave++) {
+					if (doGeo)
+						Calculate_Stack_Stats_Geo (theStack,wave);
+					else
+						Calculate_Stack_Stats (theStack,wave);
+				}
 				if (!theStack) {
 					fprintf (stderr,"Could not allocate sufficient memory for pixels.\n");
 					exit (-1);
 				}
-				DumpDVStats (theStack,time,stdout);
+
+				if (doGeo)
+					DumpDVStats_Geo (theStack,time,stdout);
+				else
+					DumpDVStats (theStack,time,stdout);
+
 				free (theStack);
 			}
 			fclose (fp);
@@ -206,6 +225,25 @@ int wave;
 			theStack->max_i[wave],
 			theStack->mean_i[wave],
 			"",
+			theStack->sigma_i[wave],
+			theStack->centroid_x[wave],
+			theStack->centroid_y[wave],
+			theStack->centroid_z[wave]);
+	}
+}
+
+
+
+void DumpDVStats_Geo (DVstack *theStack, int time, FILE *fp ) {
+int wave;
+
+	for (wave=0; wave < theStack->nwaves; wave++) {
+		fprintf (fp,"%6d\t%12d\t%6d\t%6d\t%6d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+			wave,theStack->wave[wave],time,
+			theStack->min_i[wave],
+			theStack->max_i[wave],
+			theStack->mean_i[wave],
+			theStack->geomean_i[wave],
 			theStack->sigma_i[wave],
 			theStack->centroid_x[wave],
 			theStack->centroid_y[wave],
@@ -395,7 +433,7 @@ DVstack *inStack;
 void Calculate_Stack_Stats (DVstack *inStack,int theWave)
 {
 PixPtr index,lastPix;
-float sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,numWavePix,theVal, sd, offset=100.0,min,max;
+float sum_i=0.0,sum_i2=0.0,numWavePix,theVal, sd,min,max;
 float sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 int x=0,y=0,z=0;
 int max_x,max_y;
@@ -463,6 +501,94 @@ int max_x,max_y;
 /*
 	inStack->geomean_i[theWave] = exp ( sum_log_i / numWavePix ) - offset;
 */
+
+	sd = sqrt ( (sum_i2	 - (sum_i * sum_i) / numWavePix)/  (numWavePix - 1.0) );
+	inStack->sigma_i[theWave] = (float) fabs (sd);
+
+	inStack->centroid_x[theWave] = sum_xi / sum_i;
+	inStack->centroid_y[theWave] = sum_yi / sum_i;
+	inStack->centroid_z[theWave] = sum_zi / sum_i;
+
+
+}
+
+/*#############################*/
+/*#                           #*/
+/*# Calculate_Stack_Stats_Geo #*/
+/*#                           #*/
+/*#############################*/
+/*
+* This function calculates some statistics for the image stack.
+* Statistics are calculated for one wavelegth at a time.
+* The statistics are stored in the stack structure, so nothing is returned.
+*/
+void Calculate_Stack_Stats_Geo (DVstack *inStack,int theWave)
+{
+PixPtr index,lastPix;
+float sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,numWavePix,theVal, sd, offset=100.0,min,max;
+float sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
+int x=0,y=0,z=0;
+int max_x,max_y;
+
+	max_x=inStack->max_x;
+	max_y=inStack->max_y;
+
+
+/*
+* Set a pointer to point to the first z of the wave we want.
+*/
+	index = inStack->stack + (inStack->wave_increment * theWave);
+
+/*
+* set a pixel to point to the end of this wave.
+*/
+	lastPix = index + inStack->wave_increment;
+
+/*
+* Set initial values for min and max
+*/
+	min = max = (float) *index;
+/*
+* crunch through pixels while we're in between the two pointers.
+*/
+	while (index < lastPix)
+	{
+		
+		theVal = (float) *index;
+		sum_xi += (theVal*x);
+		sum_yi += (theVal*y);
+		sum_zi += (theVal*z);
+
+		sum_i += theVal;
+		sum_i2 += (theVal*theVal);
+/*
+* offset is used so that we don't compute logs of values less than or equal to zero.
+*/
+		sum_log_i +=  log (theVal+offset);
+		if (theVal < min) min = theVal;
+		if (theVal > max) max = theVal;
+		index++;
+
+		x++;
+		if (x > max_x) {
+			x = 0;
+			y++;
+		}
+		
+		if (y > max_y) {
+			x = y = 0;
+			z++;
+		}
+	}
+
+/*
+* Calculate the actual statistics from the accumulators
+*/
+	numWavePix = (float) (inStack->wave_increment);
+	inStack->min_i[theWave] = min;
+	inStack->max_i[theWave] = max;
+	inStack->mean_i[theWave] = sum_i / numWavePix;
+	inStack->geomean_i[theWave] = exp ( sum_log_i / numWavePix ) - offset;
 
 	sd = sqrt ( (sum_i2	 - (sum_i * sum_i) / numWavePix)/  (numWavePix - 1.0) );
 	inStack->sigma_i[theWave] = (float) fabs (sd);
