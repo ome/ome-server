@@ -95,8 +95,12 @@ __PACKAGE__->mk_classdata('__primaryKeys');
 __PACKAGE__->mk_classdata('__deleteKeys');
 
 # A list of the has-many accessors which have been defined, stored as a
-# hash-set (accessor_name in keys, map_class in values)
+# hash-set { $accessor_name => [ $foreign_key_class, $foreign_key_alias ] }
 __PACKAGE__->mk_classdata('__hasManys');
+
+# A list of the many-to-many accessors that use a mapping class, stored as a
+# hash-set { $accessor_name => [ $returnedPackageName, $map_class, $map_alias, $map_linker_alias ] }
+__PACKAGE__->mk_classdata('__manyToMany');
 
 # The sequence used to get new primary key ID's
 __PACKAGE__->mk_classdata('__sequence');
@@ -242,6 +246,7 @@ sub newClass {
     $class->__primaryKeys({});
     $class->__deleteKeys({});
     $class->__hasManys({});
+    $class->__manyToMany({});
     $class->__sequence(undef);
 
     return;
@@ -715,8 +720,10 @@ sub getColumnType {
         return defined $class->__columns()->{$alias}->[2]?
           "has-one":
           "normal";
-    } elsif (exists $class->__hasManys()->{$alias}) {
+    } elsif (exists $class->__hasManys()->{$alias} ) {
         return "has-many";
+    } elsif ( exists $class->__manyToMany()->{$alias}) {
+        return "many-to-many";
     } else {
         return undef;
     }
@@ -809,7 +816,7 @@ sub hasMany {
 			};
 		}
 
-        $has_manys->{$alias} = $foreign_key_class;
+        $has_manys->{$alias} = [ $foreign_key_class, $foreign_key_alias ];
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
@@ -872,7 +879,7 @@ sub manyToMany {
         die "manyToMany called without a mapping class";
     }
 
-    my $has_manys = $class->__hasManys();
+    my $many_to_many = $class->__manyToMany();
 
     foreach my $alias (@$aliases) {
         die "Already an alias named $alias"
@@ -916,7 +923,12 @@ sub manyToMany {
 
 		eval "use $map_class";
 		die "error when loading package $map_class\n$@" if $@;
-        $has_manys->{$alias} = $map_class->getPackageReference( $map_linker_alias );
+        $many_to_many->{$alias} = [
+        	$map_class->getPackageReference( $map_linker_alias ),
+        	$map_class, 
+        	$map_alias, 
+        	$map_linker_alias
+        ];
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
@@ -933,11 +945,15 @@ hash are aliases used to access the references. The values are the
 packages referenced.
 
 =cut
+
 sub getReferences {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 	
-	my @aliases = ( keys %{ $class->__columns()}, keys %{ $class->__hasManys() } );
+	my @aliases = ( 
+		keys %{ $class->__columns()}, 
+		keys %{ $class->__hasManys() }, 
+		keys %{ $class->__manyToMany() } );
 	my %relations;
 	foreach (@aliases) {
 		my $returnedClass = $class->getPackageReference( $_ );
@@ -947,16 +963,17 @@ sub getReferences {
 	return \%relations;
 }
 
-=head2 getHasManyReferences
+=head2 getHasMany
 
-	__PACKAGE__->getHasManyReferences();
+	__PACKAGE__->getHasMany();
 
-Returns a hash of has-many references this packages contains. The keys to the
-hash are aliases used to access the references. The values are the
-packages referenced.
+Returns a hash of has-many references this packages contains. 
+
+The hash follows the format { accessor => package_referenced }
 
 =cut
-sub getHasManyReferences {
+
+sub getHasMany {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 	
@@ -970,6 +987,71 @@ sub getHasManyReferences {
 	return \%relations;
 }
 
+=head2 getManyToMany
+
+	__PACKAGE__->getManyToMany();
+
+Returns a hash of many-to-many accessors this packages contains.
+
+The hash follows the format { accessor => package_referenced }
+
+=cut
+
+sub getManyToMany {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+	
+	my @aliases = ( keys %{ $class->__manyToMany() } );
+	my %relations;
+	foreach (@aliases) {
+		my $returnedClass = $class->getPackageReference( $_ );
+		$relations{ $_ } = $returnedClass
+			if $returnedClass;
+	}
+	return \%relations;
+}
+
+=head2 getPublishedManyRefs
+
+	__PACKAGE__->getPublishedManyRefs();
+
+Returns a hash describing package accessors that return lists of object references. This is 
+the "published" list of accessors; accessors to mapping classes are excluded.
+
+The hash follows the format { accessor => package_referenced }
+
+=cut
+
+sub getPublishedManyRefs {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+		
+	my %publishedAccessors;
+
+	# Record Many to Many published accessors.
+	# 	Also, populate a hash of manyToMany accessors doubly keyed by
+	# mapping class and mapping alias. This will be used to eleminate
+	# accessors to mapping classes.
+	my $manyToMany = $class->__manyToMany();
+	my %mapClassAndAlias;
+	foreach my $accessor (keys %$manyToMany ) {
+		my ( $returnedPackageName, $map_class, $map_alias, $map_linker_alias ) =
+			@{ $manyToMany->{ $accessor } };
+		$mapClassAndAlias{ $map_class }{ $map_alias } = $accessor;
+		$publishedAccessors{ $accessor } = $returnedPackageName;
+	}
+	
+	# Filter and record Has Many accessors;
+	my $hasMany = $class->__hasManys();
+	foreach my $accessor (keys %$hasMany ) {
+		my ( $foreign_key_class, $foreign_key_alias ) =
+			@{ $hasMany->{ $accessor } };
+		$publishedAccessors{ $accessor } = $foreign_key_class
+			unless exists $mapClassAndAlias{ $foreign_key_class }{ $foreign_key_alias };
+	}
+	return \%publishedAccessors;
+}
+
 =head2 getPackageReference
 
 	__PACKAGE__->getPackageReference($alias);
@@ -978,6 +1060,7 @@ Returns the package name of the object that will be returned by the alias method
 If the alias returns a scalar, this method will return undef.
 
 =cut
+
 sub getPackageReference {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -987,9 +1070,11 @@ sub getPackageReference {
 
 	my $returnedClass;
 	my $accessorType = $class->getColumnType( $alias );
-	if( $accessorType =~ /^has-many$/ ) {
-		 $returnedClass = $class->__hasManys()->{$alias};
-	} elsif( $accessorType =~ /^(has-one|normal)$/ ) {
+	if( $accessorType eq 'has-many' ) {
+		 $returnedClass = $class->__hasManys()->{$alias}->[0];
+	} elsif( $accessorType eq 'many-to-many' ) {
+		 $returnedClass = $class->__manyToMany()->{$alias}->[0];
+	} elsif( $accessorType =~ m/^(has-one|normal)$/o ) {
 		$returnedClass = $class->getColumnDef( $alias )->[2];
 	} else {
 		die "$alias has unknown accessor type ('$accessorType') or is not known";
