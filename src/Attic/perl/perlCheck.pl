@@ -7,7 +7,7 @@ my $libDir = $Config{installprivlib};
 
 
 my $moduleRepository = 'http://ome1-sorger.mit.edu/packages/perl';
-my $DEFAULT_badTestsFatal = 1;
+my $DEFAULT_badTestsFatal = 0;
 
 $ENV{PATH} .= ':/usr/local/bin';
 
@@ -347,7 +347,18 @@ my $error;
 
 	die "Couldn't execute perl script 'Makefile.PL'.\n" if system ('perl Makefile.PL') != 0;
 	die "Compilation errors - script aborted.\n" if system ('make') != 0;
-	die "Test errors - script aborted.\n" if system ('make test') != 0 and $badTestsFatal;
+	my $testStatus = system ('make test');
+	die "Test errors - script aborted.\n" if $testStatus != 0 and $badTestsFatal;
+	if ($testStatus != 0 and not $badTestsFatal) {
+		print "\n**** Test Errors - attempt install anyway? [NO]";
+		my $yorn = <STDIN>;
+		chomp $yorn;
+		$yorn = uc ($yorn);
+		if (not ($yorn eq 'Y' or $yorn eq 'YES') ) {
+				die "\n Script aborted \n";
+		}
+	}
+	
 	die "Install errors - script aborted.\n" if system ('make install') != 0;
 	chdir '..';
 }
