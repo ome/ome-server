@@ -61,6 +61,8 @@ use OME::Session;
 use OME::Dataset;
 use OME::Image;
 use OME::Project;
+use OME::Tasks::DatasetManager;
+use OME::Analysis::Engine;
 use OME::ImportEngine::ImportEngine;
 
 sub new {
