@@ -39,9 +39,11 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PText;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
+import javax.swing.event.EventListenerList;
 import java.awt.Color;
 import java.util.ArrayList;
 
@@ -65,7 +67,8 @@ import java.util.ArrayList;
  */
 
 
-public abstract class ModuleParameter extends PText {
+public abstract class ModuleParameter extends PText implements 
+	NodeEventListener{
 	
 	protected static final Color NORMAL_COLOR = Color.black;
 	protected static final Color HIGHLIGHT_COLOR = Color.magenta;
@@ -94,10 +97,11 @@ public abstract class ModuleParameter extends PText {
 		this.param = param;
 	}
 	
-	public ModuleParameter(FormalParameter param,ChainCanvas canvas) {
+	public ModuleParameter(ModuleNode node,FormalParameter param,ChainCanvas canvas) {
 		super(param.getParameterName());
 		this.canvas = canvas;
 		this.param = param;
+		node.addNodeEventListener(this);
 	}
 	
 	public String getName() {
@@ -138,6 +142,7 @@ public abstract class ModuleParameter extends PText {
 		return locator;
 	}
 	
+	
 	/**
 	 * Get a list of parameters that have the same semantic type
 	 * as this one, but in the opposite position. If this is an input(output),
@@ -147,4 +152,39 @@ public abstract class ModuleParameter extends PText {
 	 * 	corresponding position.
 	 */
 	public abstract ArrayList getCorresponding();
+
+	/**
+	 * some event handling code
+	 */
+	public void nodeChanged(NodeEvent e) {
+		
+		// if I'm listening to a node, and it's a parent, pass 
+		// it along to whomever is listening to me.
+		PNode node = e.getNode();
+		if (isDescendentOf(node)) {
+			fireStateChanged();
+		}
+	}
+	
+	
+	private EventListenerList listenerList =
+		new EventListenerList();
+	
+	public void addNodeEventListener(NodeEventListener nel) {
+		listenerList.add(NodeEventListener.class,nel);
+	}
+
+	public void removeNodeEventListener(NodeEventListener nel) {
+		listenerList.remove(NodeEventListener.class,nel);
+	}
+		
+	public void fireStateChanged() {
+		Object[] listeners  = listenerList.getListenerList();
+		for (int i = listeners.length-2; i >=0; i -=2) {
+			if (listeners[i]==NodeEventListener.class) {
+				((NodeEventListener)listeners[i+1]).nodeChanged(
+					new NodeEvent(this));
+			}
+		}
+	}
 }

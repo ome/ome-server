@@ -49,11 +49,13 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.remote.RemoteModule;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import java.awt.geom.RoundRectangle2D;
+import javax.swing.event.EventListenerList;
 import java.awt.BasicStroke;
 import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Color;
 import java.util.List;
+import java.lang.Object;
 
 
 /** 
@@ -187,7 +189,7 @@ public class ModuleNode extends PPath {
 				// add them to label nodes, 
 				// and store max width
 				param = (FormalParameter) inputs.get(i);
-				inTexts[i]= new ModuleInput (param,canvas);
+				inTexts[i]= new ModuleInput(this,param,canvas);
 				labelNodes.addChild(inTexts[i]);
 				if (inTexts[i].getBounds().getWidth() > maxInputWidth)
 					maxInputWidth = (float) inTexts[i].getBounds().getWidth();
@@ -195,7 +197,7 @@ public class ModuleNode extends PPath {
 			if (i < outSize) {
 				// do the same for outputs.
 				param = (FormalParameter) outputs.get(i);
-				outTexts[i]= new ModuleOutput(param,canvas);
+				outTexts[i]= new ModuleOutput(this,param,canvas);
 				labelNodes.addChild(outTexts[i]);
 				if (outTexts[i].getBounds().getWidth() > maxOutputWidth)
 					maxOutputWidth = (float) outTexts[i].getBounds().getWidth();
@@ -251,4 +253,44 @@ public class ModuleNode extends PPath {
 			labelNodes.setVisible(true);
 		super.paint(aPaintContext);
 	} 
+	
+	
+	public RemoteModule getModule() {
+		return module;
+	}
+	
+	/***
+	 * Some code for managing listeners and events
+	 */
+	
+	private EventListenerList listenerList =
+		new EventListenerList();
+	
+	public void addNodeEventListener(NodeEventListener nel) {
+		listenerList.add(NodeEventListener.class,nel);
+	}
+
+	public void removeNodeEventListener(NodeEventListener nel) {
+		listenerList.remove(NodeEventListener.class,nel);
+	}
+		
+	public void fireStateChanged() {
+		Object[] listeners  = listenerList.getListenerList();
+		for (int i = listeners.length-2; i >=0; i -=2) {
+			if (listeners[i]==NodeEventListener.class) {
+				((NodeEventListener)listeners[i+1]).nodeChanged(
+					new NodeEvent(this));
+			}
+		}
+	}
+	
+	/**
+	 * translate - call super class and then update state changes.
+	 * 
+	 **/
+	
+	public void translate(double dx,double dy) {
+		super.translate(dx,dy);
+		fireStateChanged();
+	}
 }

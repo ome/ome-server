@@ -99,7 +99,8 @@
       <fileset dir="build" includes="org/openmicroscopy/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-alligator.jar">
+    <jar destfile="${jar}/org-openmicroscopy-alligator.jar"
+	 manifest="${src}/org/openmicroscopy/alligator/alligator.manifest">
       <fileset dir="build" includes="org/openmicroscopy/alligator/*.class"/>
     </jar>
 
@@ -129,7 +130,7 @@
 
     <jar destfile="${jar}/org-openmicroscopy-vis-chains.jar"
       manifest ="${src}/org/openmicroscopy/vis/chains/chains.manifest">
-      <fileset dir="build" includes="org/openmicroscopy/vis/chains/*.class"/>
+      <fileset dir="build" includes="org/openmicroscopy/vis/**/*.class"/>
     </jar>
 
   </target>

@@ -1,2 +1,5 @@
 Main-Class: org.openmicroscopy.vis.chains.Chains
-Class-Path: piccolox.jar
+Class-Path: piccolox.jar org-openmicroscopy-alligator.jar 
+ org-openmicroscopy-remote.jar  org-openmicroscopy.jar  
+ xmlrpc-1.2-b1.jar
+

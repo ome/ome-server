@@ -1,0 +1,3 @@
+Main-Class: org.openmicroscopy.alligator.Alligator
+Class-Path: org-openmicroscopy-remote.jar org-openmicroscopy.jar
+ org-openmicroscopy-analysis-ui.jar org-openmicroscopy-simple.jar

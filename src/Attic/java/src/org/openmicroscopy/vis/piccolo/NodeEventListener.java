@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleOutput
+ * org.openmicroscopy.vis.piccolo.NodeEventListener
  *
  *------------------------------------------------------------------------------
  *
@@ -29,6 +29,7 @@
 
 
 
+
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -36,41 +37,20 @@
  *------------------------------------------------------------------------------
  */
 
-package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-import org.openmicroscopy.SemanticType;
-import edu.umd.cs.piccolox.util.PBoundsLocator;
-import java.util.ArrayList;
+package org.openmicroscopy.vis.piccolo;
+import  java.util.EventListener;
+
 
 /** 
- * Nodes for displaying module outputs.<p>
+ * An interface for listeners to node events
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class ModuleOutput extends ModuleParameter {
-	
-	public ModuleOutput(ModuleNode node,FormalParameter param,ChainCanvas canvas) {
-		super(node,param,canvas);
-		if (param.getSemanticType() != null)
-			canvas.addOutput(param.getSemanticType(),this);
-		locator = PBoundsLocator.createEastLocator(this);
-	}
-	
-	/**
-	 * For outputs, the corresponding list is a list of ModuleInputs.
-	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of inputs with that semantic type.
-	 * 
-	 * @return a list of ModuleInputs with the same semantic type as param.  
-	 */
- 	public ArrayList getCorresponding() {
-		SemanticType type = param.getSemanticType();
-		if (type == null)
-			return null;
-		return canvas.getInputs(type);
- 	}
+public interface NodeEventListener extends EventListener {
+
+	public 	void nodeChanged(NodeEvent e);
 }
