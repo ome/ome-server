@@ -51,7 +51,7 @@ OME::ImportExport::ModuleImport - Import an Analysis Module XML specification.
 
 	use OME::ImportExport::ModuleImport;
 	use OME::SessionManager;
-	
+
 	my $manager       = OME::SessionManager->new();
 	my $session       = $manager->TTYlogin();
 	my $programImport = OME::ImportExport::ModuleImport->new( 
@@ -101,6 +101,7 @@ sub new {
 
 
 =pod
+
 =head2 importXMLFile
 
 Input Parameters:

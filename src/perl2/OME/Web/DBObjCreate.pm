@@ -37,16 +37,6 @@
 
 package OME::Web::DBObjCreate;
 
-=pod
-
-=head1 NAME
-
-OME::Web::DBObjCreate - Create new DBObjects
-
-=head1 DESCRIPTION
-
-=cut
-
 use strict;
 use Carp;
 
@@ -60,7 +50,7 @@ use base qw(OME::Web);
 
 =head1 NAME
 
-OME::Web::DBObjCreate - Show detailed information on an object
+OME::Web::DBObjCreate - Create new DBObjects
 
 =head1 DESCRIPTION
 
@@ -577,7 +567,7 @@ sub _parse_tmpl_fields {
 =head2 __specialize
 
 	my $specializedPackage = $self->__specialize( $type );
-	
+
 returns a specialized package (if one exists) for dealing with $type.
 returns undef if a specialized prototype does not exist or if it was
 called with with a specialized prototype.

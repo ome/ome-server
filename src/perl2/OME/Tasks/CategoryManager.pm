@@ -137,7 +137,7 @@ sub classifyImage {
 	return $attrs->[0];
 }
 
-=head2 classifyImage()
+=head2 declassifyImage()
 
 	OME::Tasks::CategoryManager->declassifyImage($image, $category);
 

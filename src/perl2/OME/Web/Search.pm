@@ -697,7 +697,7 @@ sub _findTemplate {
 =head2 _specialize
 
 	my $specializedClass = $self->_specialize($type);
-	
+
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
 

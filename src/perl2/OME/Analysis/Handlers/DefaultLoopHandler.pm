@@ -48,6 +48,8 @@ use base qw(OME::Analysis::Handler);
 use fields qw(_current_dataset _current_image _current_feature
               _last_new_feature);
 
+=head1 METHODS
+
 =head2 getCurrentDataset, getCurrentImage, and getCurrentFeature
 
 	my $dataset = $handler->getCurrentDataset();

@@ -63,14 +63,14 @@ the user during image import, and any attributes created as output by
 the execution of module_execution modules.
 
 Each attribute has a single semantic type, which is represented by an
-instance of L<AttributeType>.  Based on the semantic type's
+instance of C<AttributeType>.  Based on the semantic type's
 granularity, the attribute will be a property of (or, equivalently,
 has a target of) a dataset, image, or feature, or it will be a global
 attribute (and have a target of C<undef>.)
 
 Most attributes will be generated computationally as the result of an
 analysis module.  The module_execution (and by extension, module) which
-generated the attribute can be retrieved with the L<getAnalysis()>
+generated the attribute can be retrieved with the L</"module_execution">
 method.
 
 =head1 METHODS
@@ -273,7 +273,7 @@ sub getFormalName {
 
 	my @all_possible_has_many_accessors = 
 		__PACKAGE__->getInferredHasMany();
-	
+
 This is similar, but distinct from getHasMany. In addition to returning
 the has-many accessors that were declared at package creation, it
 discovers every possible has-many relationship to any SemanticType.

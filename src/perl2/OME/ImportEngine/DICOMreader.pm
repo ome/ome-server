@@ -41,7 +41,6 @@
 
 OME::ImportEngine::DICOMreader.pm  -  DICOM format image importer
 
-
 =head1 SYNOPSIS
 
     use OME::ImportEngine::DICOMreader

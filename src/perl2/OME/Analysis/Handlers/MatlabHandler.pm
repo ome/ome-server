@@ -912,7 +912,7 @@ sub MatlabScalar_to_Attr {
 
 	given a <Struct> output instruction, will convert a matlab output to an 
 	attribute. Uses 
-	
+
 	1/6/05 TJM: N.B we don't have a real use-case for this function of the 
 	MatlabHandler this function is missing checks that make sure (OME-XML) 
 	declared and actual(MATLAB) data-types are the same.
@@ -965,7 +965,7 @@ sub _functionOutputs { return shift->{ execution_instructions }->findnodes( "MLI
 =head2 _getTemplateData
 
 	my ($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
-	
+
 	given a template id, retrieves the ST & data for it.
 
 =cut
@@ -1034,7 +1034,7 @@ sub XML2ODBC_timestamp () {
 =head2 _inputVarName
 
 	my $matlab_variable_name = $self->_inputVarName( $xmlInputInstruction );
-	
+
 	returns a name unique to each instruction presented. Used to coordinate
 	activity across functions.
 
@@ -1057,7 +1057,7 @@ sub _inputVarName {
 =head2 _outputVarName
 
 	my $matlab_variable_name = $self->_outputVarName( $xmlInputInstruction );
-	
+
 	returns a name unique to each instruction presented. Used to coordinate
 	activity across functions.
 

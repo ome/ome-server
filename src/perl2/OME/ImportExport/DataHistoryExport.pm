@@ -53,7 +53,7 @@ OME::ImportExport::DataHistoryExport - Export module executions to describe how 
 
 	# Build a DOM from a list of objects.
 	$exportH->buildDOM (@OMEobjects);
-	
+
 	# Write an XML file, get the XML as a string, or get the XML document (XML::LibXML), 
 	$exportH->exportFile ();
 	my $xml = $exportH->exportXML ();

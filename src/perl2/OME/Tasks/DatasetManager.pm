@@ -46,12 +46,10 @@ OME::Tasks::DatasetManager - manage user's datasets
 
 	use OME::Tasks::DatasetManager;
 	my $datasetManager=new OME::Tasks::DatasetManager;
-	
 
 =head1 DESCRIPTION
 
 The OME::Tasks::DatasetManager provides a list of methods to manage user's dataset
-
 
 =head1 OBTAINING A DATASETMANAGER
 
@@ -68,7 +66,7 @@ The following methods are available to a "DatasetManager."
 =head2 addImages ($array_ref, $datasetID)
 
 	$datasetManager->addImages([1,2,5,9], $dataset->id());
-	
+
 	$datasetManager->addImages( [1,2,5,9] );
 
 Add images to the current dataset.
@@ -94,7 +92,7 @@ Check if a given dataset belongs to a given project. Returns successful (1) or u
 		'New Name',
 		$dataset->id(),
 	);
-	
+
 	$datasetManager->change(
 		'New description',
 		'New Name',
@@ -248,9 +246,8 @@ Creates and returns a new dataset.
 		[$group_a->id(), $group_b->id()],
 		$project->id()
 	);
-	
-	my $our_other_projects = $datasetManager->notBelongToProject();
 
+	my $our_other_projects = $datasetManager->notBelongToProject();
 
 Returns a hash reference to the datasets not used by the specified project.
 

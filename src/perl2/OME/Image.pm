@@ -47,7 +47,7 @@ OME::Image - an OME image
 
 	# Load an image
 	my $image = $factory->loadObject( OME::Image, $imageID );
-	
+
 =head1 DESCRIPTION
 
 To come.

@@ -43,7 +43,6 @@
 
 OME::ImportEngine::GELreader.pm  -  import Molecular Dynamics GEL format files
 
-
 =head1 SYNOPSIS
 
     use OME::ImportEngine::GELreader

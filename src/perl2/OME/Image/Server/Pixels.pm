@@ -62,6 +62,8 @@ use constant FLOAT     => 8;
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 The OME::Image::Pixels interface provides a generalized way of reading
@@ -345,7 +347,7 @@ sub setROI {
 
 	# set the Thumbnail image from a display options attribute.
 	$pixels->setThumb( $displayOptions );
-	
+
 	# set the Thumbnail image from data
 	$pixels->setThumb(
 		theT  => $theT,

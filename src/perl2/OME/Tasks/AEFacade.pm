@@ -40,13 +40,16 @@ OME::Tasks::AEFacade
 
 =head1 SYNOPSIS
 
-		
+=cut
+
 =head1 DESCRIPTION
+
+=cut
 
 =head1 METHODS 
 
-=head2 
 =cut
+
 
 
 

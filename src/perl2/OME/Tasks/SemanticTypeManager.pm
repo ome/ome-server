@@ -44,6 +44,8 @@ semantic types
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 =cut

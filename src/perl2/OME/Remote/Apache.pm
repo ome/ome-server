@@ -26,7 +26,7 @@ OME::Remote::Apache - mod_perl-based XML-RPC server with minimum configuration
 
 This class is based on Apache::XMLRPC:::Lite from the SOAP::Lite distribution.
 
-	Copyright (C) 2000-2001 Paul Kulchenko (paulclinger@yahoo.com)
+Copyright (C) 2000-2001 Paul Kulchenko (paulclinger@yahoo.com)
 
 =head1 SYNOPSIS
 
@@ -67,7 +67,7 @@ This functionality should give you lightweight option
 for hosting SOAP services and greatly simplify configuration aspects. This
 module inherites functionality from XMLRPC::Transport::HTTP::Apache component
 of XMLRPC::Lite module.
- 
+
 =head1 CONFIGURATION
 
 The module can be placed in <Location>, <Directory>, <Files>, <FilesMatch>

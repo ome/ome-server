@@ -50,7 +50,6 @@ OME::Tasks::ImageManager - utility methods to manage images
 
 	use OME::Tasks::ImageManager;
 	my $imageManager = OME::Tasks::ImageManager->new();
-	
 
 =head1 DESCRIPTION
 
@@ -312,14 +311,15 @@ sub load{
 
 	# retrieve the URL for the thumbnail of the default pixels of a given image
 	my $thumbnailURL = $imageManager->getThumbURL($image);
-	
+
 	# retrieve the URL for the thumbnail of the default pixels of a given image_id
 	my $thumbnailURL = $imageManager->getThumbURL($imageID);
-	
+
 Will return undef if there is not a default pixels associated with the
 image.
 
 =cut
+
 sub getThumbURL{
 	my $self=shift;
 	my $session=$self->__Session();

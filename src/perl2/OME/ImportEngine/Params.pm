@@ -41,15 +41,13 @@
 
 =head1 NAME
 
-  OME::ImportEngine::Params - helper routines for image & file parameters
-
+OME::ImportEngine::Params - helper routines for image & file parameters
 
 =head1 SYNOPSIS
 
     use OME::ImportEngine::Params
 
     $params = new Params(\%metadata);
-
 
 =head1 DESCRIPTION
 

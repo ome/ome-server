@@ -189,7 +189,7 @@ sub getGroups
 =head2 B<importGroup>
 
     my $image = $importer->importGroup(\@fileArray, \%localSliceCallback)
-    
+
 This method imports either individual or a group of Biorad images into an OME
 5D image.  The caller passes an array of sorted files by reference.  The method
 loops through the files in the array, extracting the necessary information from each

@@ -46,7 +46,7 @@ OME::Tasks::AttributeManager - Common tasks for attributes
 
 	use OME::Tasks::AttributeManager;
 	my $attrManager=new OME::Tasks::AttributeManager($session);
-	
+
 	# merge attributes that have been sorted by module execution
 	my @table_set_list = $attrManager->mergeMEXAttrs( [ 
 		{ attrs => /@attrs1,
@@ -69,7 +69,7 @@ OME::Tasks::AttributeManager - Common tasks for attributes
 
 		# ...do something
 	}
-	
+
 
 =head1 DESCRIPTION
 

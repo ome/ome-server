@@ -44,7 +44,6 @@
 
 OME::ImportEngine::STKreader.pm  -  STK format image importer
 
-
 =head1 SYNOPSIS
 
     use OME::ImportEngine::STKreader

@@ -42,6 +42,8 @@ OME::Analysis::Engine::Executor - interface for executing analysis modules
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 The analysis engine uses classes which implement the Executor

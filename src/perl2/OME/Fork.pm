@@ -59,7 +59,7 @@ OME::Fork - centralized handling for OME process forking and task deferal
 		my $stuff = shift;
 		# do something later with $stuff
 	}
-	
+
 	OME::Fork->doLater ( sub { task ($params) } );
 	# N.B.: will execute even if you call die();
 

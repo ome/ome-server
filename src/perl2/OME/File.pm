@@ -62,6 +62,8 @@ sub abstract { die __PACKAGE__." is an abstract class"; }
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 The OME::File interface provides a generalized way of reading files,
@@ -219,7 +221,7 @@ sub eof { abstract }
 =head2 eof
 
 		$file->eof();
-		
+
 Returns 1 if the file cursor is at end or past the end of the file. 
 Returns 0 otherwise.
 

@@ -43,7 +43,6 @@
 
 OME::ImportEngine::DVreader.pm  -  Softworx format image importer
 
-
 =head1 SYNOPSIS
 
     use OME::ImportEngine::DVreader

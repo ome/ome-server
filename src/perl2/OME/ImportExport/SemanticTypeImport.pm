@@ -97,12 +97,15 @@ sub printElement {
     }
 }
 
+=head1 METHODS
+
 =head2 processDOM( $root, %flags )
 
 Note: You must call commit on the DBH attached to this object's session after calling processDOM.
 Changes to tables and columns are made on that handle, but shouldn't be committed here.
 
 =cut
+
 sub processDOM {
     my ($self, $root, %flags) = @_;
     my $session = OME::Session->instance();

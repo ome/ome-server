@@ -77,6 +77,8 @@ our %PIXEL_INFO;
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 Provides methods to accomplish common Pixel tasks.
@@ -224,6 +226,7 @@ OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr) will need to
 called after the data has been written.
 
 =cut
+
 sub createPixels {
     my $proto = shift;
     my $repository = OME::Session->instance()->findRepository();
@@ -243,6 +246,7 @@ Finalizes the pixels data, sets the FileSHA1 of the pixels attribute,
 and sets the thumbnail.
 
 =cut
+
 sub finishPixels {
     my ($proto, $pixels_data, $pixels_attr) = @_;
 
@@ -257,6 +261,7 @@ sub finishPixels {
 	my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
 
 =cut
+
 sub loadPixels {
     my $proto = shift;
     my ($attr) = @_;
@@ -281,6 +286,7 @@ Usage:
 	OME::Tasks::PixelsManager->saveThumb( $pixels_attr, $displayOptions );
 
 =cut
+
 sub saveThumb {
     my ($proto, $pixels_attr, $display_options) = @_;
     my $image = $pixels_attr->image();
@@ -302,6 +308,7 @@ sub saveThumb {
 	my $thumbnailURL = OME::Tasks::PixelsManager->getThumbURL($pixelsID);
 
 =cut
+
 sub getThumbURL{
 	my $self    = shift;
 	my $session = OME::Session->instance();

@@ -123,7 +123,7 @@ OME::Image::Pix - A Perl interface to the OME libpix library
 
   # Convert a TIFF file to a plane of pixels
   my $nPixOut = $pix->TIFF2Plane ('testTIFF.tiff',$theZ,$theW,$theT);
-  
+
   # Set an arbitrary file for conversion to OME format - $bigEndian is 1 for big endian files, 0 otherwise
   # byte swapping will be accomplished automatically.  This function returns 1 if the file could be opened, 0 otherwise.
   $pix->setConvertFile ('path/to/somePixelFile',$bytesPerPixel,$bigEndian)

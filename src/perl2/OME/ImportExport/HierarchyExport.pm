@@ -55,7 +55,7 @@ OME::ImportExport::HierarchyExport - Export a list of objects as an OME XML hier
 
 	# Build a DOM from a list of objects.
 	$exportH->buildDOM (@OMEobjects);
-	
+
 	# Write an XML file, get the XML as a string, or get the XML document (XML::LibXML), 
 	$exportH->exportFile ();
 	my $xml = $exportH->exportXML ();

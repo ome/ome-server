@@ -52,14 +52,14 @@ OME::Matlab - Perl interface to Matlab
 	my $array = OME::Matlab::Array->newDoubleScalar(4);
 	my $engine = OME::Matlab::Engine->open();
 	my $outBuffer = " " x 512;
-	
+
 	$engine->setOutputBuffer($outBuffer, length($outBuffer));
 	$engine->putVariable('x', $array);
 	$engine->eval('y = x .* 8;');
-	
+
 	my $output = $engine->getVariable('y');
 	print "Matlab's Output:\n $outBuffer\n";
-	
+
 =head1 DESCRIPTION
 
 The OME::Matlab::* packages provide a Perl interface to an embedded

@@ -821,7 +821,7 @@ These methods should not be accessed from outside the class
 =head2 _getSpecializedRenderer
 
 	my $specializedRenderer = OME::Web::DBObjRender->_getSpecializedRenderer($type);
-	
+
 $type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
 
 returns a specialized prototype (if one exists) for rendering a

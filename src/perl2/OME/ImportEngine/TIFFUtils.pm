@@ -37,12 +37,11 @@
 
 =head1 NAME
 
- OME::ImportEngine::TIFFUtils - contains helper routines for TIFF tag access
-
+OME::ImportEngine::TIFFUtils - contains helper routines for TIFF tag access
 
 =head1 SYNOPSIS
 
-  use OME::ImportEngine::TIFFUtils 
+use OME::ImportEngine::TIFFUtils 
 
 =cut
 
@@ -197,7 +196,7 @@ This function can be called in three different ways:
 	%tag  = readTiffIFD($file);
 	%tag  = readTiffIFD($file,3);
 	@tags = readTiffIFD($file);
-	
+
 This function first examines the file at the passed file handle to
 determine if it is a TIFF file. If it isn't, the routine immediately 
 returns I<undef>.

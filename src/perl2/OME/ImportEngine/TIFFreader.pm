@@ -44,7 +44,6 @@
 
 OME::ImportEngine::TIFFreader.pm  -  single & group TIFF image importer
 
-
 =head1 SYNOPSIS
 
     use OME::ImportEngine::TIFFreader
@@ -310,7 +309,7 @@ it will return I<undef>, signalling the caller to rollback any associated
 database transactions.
 
 =cut
-  
+
 sub importGroup {
     my ($self, $group, $callback) = @_;
 

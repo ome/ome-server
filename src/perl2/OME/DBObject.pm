@@ -878,7 +878,7 @@ sub getColumnSQLType {
     }
 }
 
-=haed2 getPseudoColumnType
+=head2 getPseudoColumnType
 
 =cut
 
@@ -2673,7 +2673,7 @@ sub __writeToDatabase {
     return;
 }
 
-=head2 __writeToDatabase
+=head2 __deleteFromDatabase
 
 	$instance->__writeToDatabase($dbh);
 

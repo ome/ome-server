@@ -259,7 +259,7 @@ To get a file out of @groups, use my $file = $groups{$basename}[$z][$t][$c];
 
 Usage:
 my ($groups, $infoHash) = $self->__getRegexGroups(\%file_list);
-	
+
 };
 
 =cut

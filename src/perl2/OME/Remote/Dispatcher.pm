@@ -494,7 +494,7 @@ Douglas Creager (dcreager@alum.mit.edu)
 
 =head2 SEE ALSO
 
-L<OME::Remote||OME::Remote>,
+L<OME::Remote|OME::Remote>,
 L<OME::Remote::Prototypes|OME::Remote::Prototypes>
 
 =cut

@@ -231,7 +231,7 @@ sub addActualInput {
 
 	my $vmex_or_mex_list = OME::Tasks::ModuleExecutionManager->
 		coalateInputs( \@attributes );
-	
+
 If you want to execute a chain and some attributes to use as user
 inputs, you'll need to package them up before handing them off to the
 AE. This function will package them for you. It will do this by either

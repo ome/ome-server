@@ -96,6 +96,7 @@ sub addImagesToDataset ($$$) {
 	$factory->dbi_commit();
 }
 
+=head1 METHODS
 
 =head2 importFiles
 

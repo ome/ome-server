@@ -46,6 +46,8 @@ OME::ImportExport::ResolveFiles - Package for resolving files from the OME file 
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 This package does two things: resolves all files embedded or references in an

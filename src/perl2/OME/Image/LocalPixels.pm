@@ -65,6 +65,8 @@ use constant FILENAME   => 11;
 
 =head1 SYNOPSIS
 
+=cut
+
 =head1 DESCRIPTION
 
 The OME::Image::Pixels interface provides a generalized way of reading

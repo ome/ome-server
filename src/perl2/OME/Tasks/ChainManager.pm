@@ -119,7 +119,7 @@ sub createChain {
     return $chain;
 }
 
-=head2
+=head2 cloneChain
 
 	my $newChain = $manager->cloneChain($oldChain,[$owner]);
 

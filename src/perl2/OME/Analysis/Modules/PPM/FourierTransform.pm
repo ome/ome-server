@@ -50,7 +50,7 @@ Typecaster module for the Fourier Transform
 This module allows a FrequencySpace attribute to be used as a 
 PixelsPlaneSlice. The PixelsPlaneSlice points to the 
 FrequencySpace's magnitude plane.
-			
+
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);

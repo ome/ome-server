@@ -1602,7 +1602,7 @@ sub getPlaneStatistics {
 
 This method returns a hash containing histogram vector of pixel intensities 
 for the specified pixels file.  The hash is of the form:
-	
+
 	$statsHash->{$z}->{$c}->{$t} = ($LowBound, $UppBound, @histBins);
 
 where $z, $c, and $t are the coordinates of a plane. $LowBound and $UppBound 
@@ -1613,10 +1613,11 @@ If the specified pixel file isn't in read-only mode on the image
 server, an error will be thrown.
 
 =cut
+
 sub getPlaneHistogram{
     my $proto = shift;
     my ($pixelsID) = @_;
-	
+
 	# we need the result of GetPlaneStats for LowBound and UppBOund
 	my $statsHash = getPlaneStatistics(($proto,$pixelsID));
     my $result = $proto->__callOMEIS(Method   => 'GetPlaneHist',
@@ -1696,7 +1697,7 @@ sub getStackStatistics {
 
 This method returns a hash containing histogram vector of pixel intensities 
 for the specified pixels file.  The hash is of the form:
-	
+
 	$statsHash->{$c}->{$t} = ($LowBound, $UppBound, @histBins);
 
 where $c, and $t are the coordinates of a stack. $LowBound and $UppBound 
@@ -1707,6 +1708,7 @@ If the specified pixel file isn't in read-only mode on the image
 server, an error will be thrown.
 
 =cut
+
 sub getStackHistogram{
     my $proto = shift;
     my ($pixelsID) = @_;

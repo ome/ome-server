@@ -255,7 +255,7 @@ sub getCurrentPosition { shift->[CURSOR] }
 =head2 eof
 
 		$file->eof();
-		
+
 Returns 1 if the file cursor is at end or past the end of the file. 
 Returns 0 otherwise.
 

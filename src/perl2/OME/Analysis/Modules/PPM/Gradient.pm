@@ -50,7 +50,7 @@ Typecaster module for the Gradient
 This module allows a Gradient attribute to be used as a 
 PixelsPlaneSlice. The PixelsPlaneSlice points to the 
 Gradient's magnitude plane.
-			
+
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);

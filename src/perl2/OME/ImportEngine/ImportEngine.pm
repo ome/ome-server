@@ -512,7 +512,7 @@ sub getFileRef {
 }
 
 
-=heaed2 replaceFileRef
+=head2 replaceFileRef
 
     replaceFileRef($group, $file)
 

@@ -89,7 +89,7 @@ Note: The project ID is optional and if it is not defined the dataset is added t
 		"My new name",
 		$project->id(),
 	);
-	
+
 	$projectManager->change(
 		"My new description",
 		"My new name",
@@ -195,14 +195,14 @@ Note: By default this method uses the Session's experimenter as a filter. In add
 	} else {
 		...
 	}
-		
+
 
 Check if a given project name already exists in the database.
 
 Returns successful (1) or unsuccessful (0) in matching.
 
 =head2 listMatching ($userID,$array_ref)
-	
+
 	my $projects = $projectManager->listMatching();
 
 	foreach (@$projects) {

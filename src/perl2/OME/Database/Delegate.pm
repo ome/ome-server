@@ -234,7 +234,7 @@ method returns):
  * The above three keys will be deleted from the $flags hash reference.
  * Default values for these settings come from the
   OME::Install::Environment->initialize()->DB_conf() hash.
-    
+
 Regardless of the DBI or driver defaults, the following settings will be placed
 in $flags unless they are already present in the hash (over-rideable defaults).
 

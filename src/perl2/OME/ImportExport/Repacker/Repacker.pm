@@ -106,8 +106,4 @@ None by default.
 
  Author:  Brian S. Hughes  Open Microscopy Environment, MIT
 
-=head1 SEE ALSO
-
-L<perl>.
-
 =cut

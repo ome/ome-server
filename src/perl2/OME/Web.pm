@@ -48,11 +48,11 @@ OME::Web - The parent class of OME web pages
 
 	our $VERSION;
 	$VERSION = $OME::VERSION;
-	
+
 	sub getPageTitle {
 		return "Open Microscopy Environment";
 	}
-	
+
 	sub getPageBody {
 		$self->contentType('text/html');
 		$HTML = <<ENDHTML;
@@ -520,7 +520,7 @@ containing information to control the download process.  The hash may contain th
  filename         - a path to the file on the server to be downloaded.
  downloadFilename - The name of the file that should be used on the client (the browser).
  temp             - A flag that if true, will cause the downloaded file to be deleted on the server.
- 
+
  return ('FILE',{filename => $myFile, downloadFilename => 'foo.txt', temp => 1});
 
 A C<REDIRECT> status is used to get the browser to go to a different URL specified by the second scalar:

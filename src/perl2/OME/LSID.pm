@@ -42,7 +42,7 @@ OME::LSID;
 =head1 SYNOPSIS
 
 To come.	
-	
+
 =head1 DESCRIPTION
 
 To come.
