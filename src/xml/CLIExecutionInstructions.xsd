@@ -26,6 +26,7 @@
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -38,6 +39,7 @@
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -65,6 +67,7 @@ XML specification of the command line parameters is:
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -84,6 +87,7 @@ Not yet supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -95,6 +99,7 @@ Not yet supported.
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read STDOUT.
+			
 			
 			
 			
@@ -212,6 +217,7 @@ Currently, only native image pixels are supported.
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -228,6 +234,7 @@ RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
 
 Currently only TIFF is supported.
+					
 					
 					
 					
@@ -301,6 +308,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -310,6 +318,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			<xsd:documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
 
 Not yet supported.
+			
 			
 			
 			
@@ -331,6 +340,7 @@ Not yet supported.
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
+					
 					
 					
 					
@@ -359,6 +369,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -366,6 +377,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
 					
 					
 					
@@ -437,26 +449,9 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Iterates a dimension over its entire range. Produces outputs.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalOutputName" use = "required">
-				<xsd:annotation>
-					<xsd:documentation>References a formal output</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "64"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
-			<xsd:attribute name = "SemanticElementName" use = "required">
-				<xsd:annotation>
-					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "64"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
+			<xsd:sequence>
+				<xsd:element ref = "OutputTo" maxOccurs = "unbounded"/>
+			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "IterateRange">
@@ -467,27 +462,8 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:sequence>
 				<xsd:element ref = "Start"/>
 				<xsd:element ref = "End"/>
+				<xsd:element ref = "OutputTo" maxOccurs = "unbounded"/>
 			</xsd:sequence>
-			<xsd:attribute name = "FormalOutputName" use = "required">
-				<xsd:annotation>
-					<xsd:documentation>References a formal output</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "64"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
-			<xsd:attribute name = "SemanticElementName" use = "required">
-				<xsd:annotation>
-					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "64"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "End">
@@ -495,6 +471,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Specifies an end point of iteration.
 
 Not currently supported.
+			
 			
 			
 			
@@ -531,6 +508,7 @@ Not currently supported.
 			<xsd:documentation>Specifies a starting point of iteration. 
 
 Not currently supported.
+			
 			
 			
 			

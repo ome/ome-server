@@ -516,19 +516,15 @@ sub _execute {
 			#
 			foreach my $index (@planeIndexTypes) {
 				my $indexXML = $plane->getElementsByTagName( $index )->[0];
-				if( defined $indexXML->getAttribute('FormalOutputName') ) {
-				# then store the index
-					$outputs{
-						$indexXML->getAttribute( 'FormalOutputName' )
-					}->{
-						$indexXML->getAttribute( 'SemanticElementName' )
-					} =
-						${ $planeIndexes->{ $planeID }->{ $index } };
-					print STDERR "\tStored index $index, value ".$outputs{
-						$indexXML->getAttribute( 'FormalOutputName' )
-					}->{
-						$indexXML->getAttribute( 'SemanticElementName' )
-					}." to ".$indexXML->getAttribute( 'FormalOutputName' ).'.'.$indexXML->getAttribute( 'SemanticElementName' )."\n"
+				
+				foreach my $outputTo ($indexXML->getElementsByTagName( "OutputTo" ) ) {
+					my $semanticElementName = $outputTo->getAttribute( "SemanticElementName" );
+					my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
+					$outputs{ $formalOutputName }->{$semanticElementName} = 
+					${ $planeIndexes->{ $planeID }->{ $index } };
+					print STDERR "\tStored index $index, value ".
+						$outputs{ $formalOutputName }->{$semanticElementName}.
+						" to ".$formalOutputName.'.'.$semanticElementName."\n"
 						if $debug eq 2;
 				}
 			}
