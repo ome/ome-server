@@ -27,7 +27,7 @@ make ; sudo make install
 
 * Download and Install fink (http://fink.sourceforge.net/)
 * Use fink to install gd:
-apt-get install gd
+sudo apt-get install gd
 * Install PostgreSQL:
 Create a user on your system with the unix name 'postgres'.
 Download this:
