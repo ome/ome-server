@@ -109,6 +109,8 @@ sub processDOM {
 	
 	my $historyXML = $root->getElementsByTagNameNS($NAMESPACE,'DataHistory')->[0]; 
 	return undef unless defined $historyXML;
+	my %mexHash ;
+	# Import MEX and outputs
 	foreach my $mexXML ( @{ $historyXML->getElementsByTagNameNS($NAMESPACE,'ModuleExecution') } ){
 		logdbg "debug", ref($self)."->processDOM processing MEX ".$mexXML->getAttribute('ID');
 		my $executionHistory = $mexXML->getElementsByTagNameNS($NAMESPACE,'ExecutionHistory')->[0];
@@ -137,26 +139,6 @@ sub processDOM {
 		my $lsid = $LSIDresolver->setLSID( $mex, $mexXML->getAttribute( 'ID' ) );
 		push( @objects2store, $lsid ) if $lsid;
 		
-		# Actual Inputs
-		foreach my $inputXML ($mexXML->getElementsByTagNameNS($NAMESPACE,'Input') ) {
-			logdbg "debug", ref($self)."->processDOM processing input ".$inputXML->getAttribute('Name');
-			my $fi = $factory->findObject( "OME::Module::FormalInput", {
-				'module_id' => $mex->module_id,
-				'name'      => $inputXML->getAttribute( 'Name' )
-				}) or die ref($self)."->processDOM could not load Formal Input '".
-				$inputXML->getAttribute( 'Name' )."' of module '".$mex->module_id."'\n";
-			my $input_mex = $LSIDresolver->getObject( $inputXML->getAttribute( 'ModuleExecutionID' ))
-				or die "Could not load input module execution from lsid ".$inputXML->getAttribute( 'ModuleExecutionID' );
-			my $actual_input = $factory->
-				newObject("OME::ModuleExecution::ActualInput",
-				{
-					module_execution          => $mex->id(),
-					formal_input_id           => $fi->id(),
-					input_module_execution_id => $input_mex,
-				});
-			push( @objects2store, $actual_input );
-		}
-		
 		# set MEX on outputs.
 		foreach my $outputXML ($mexXML->getElementsByTagNameNS($NAMESPACE,'Output') ) {
 			logdbg "debug", ref($self)."->processDOM processing formal output ".$outputXML->getAttribute('Name')."";
@@ -178,6 +160,36 @@ sub processDOM {
 				push( @objects2store, $attr );
 			}
 		}
+		
+		$mexHash{ $mexXML->getAttribute( 'ID' ) } = $mex;
+		
+	}
+	
+	# Import Inputs after MEXs have been imported
+	foreach my $mexXML ( @{ $historyXML->getElementsByTagNameNS($NAMESPACE,'ModuleExecution') } ) {
+		my $mex = $mexHash{ $mexXML->getAttribute( 'ID' ) }
+			or die "a Hash element disappeared. This makes no sense.";
+		
+		# Actual Inputs
+		foreach my $inputXML ($mexXML->getElementsByTagNameNS($NAMESPACE,'Input') ) {
+			logdbg "debug", ref($self)."->processDOM processing input ".$inputXML->getAttribute('Name');
+			my $fi = $factory->findObject( "OME::Module::FormalInput", {
+				'module_id' => $mex->module_id,
+				'name'      => $inputXML->getAttribute( 'Name' )
+				}) or die ref($self)."->processDOM could not load Formal Input '".
+				$inputXML->getAttribute( 'Name' )."' of module '".$mex->module_id."'\n";
+			my $input_mex = $LSIDresolver->getObject( $inputXML->getAttribute( 'ModuleExecutionID' ))
+				or die "Could not load input module execution from lsid ".$inputXML->getAttribute( 'ModuleExecutionID' );
+			my $actual_input = $factory->
+				newObject("OME::ModuleExecution::ActualInput",
+				{
+					module_execution          => $mex->id(),
+					formal_input_id           => $fi->id(),
+					input_module_execution_id => $input_mex,
+				});
+			push( @objects2store, $actual_input );
+		}
+		
 		
 	}
 	$_->storeObject() foreach @objects2store;
