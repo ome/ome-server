@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Mon Apr  5 12:32:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,7 +64,7 @@ public interface DataColumn
     public String getSQLType();
     public void setSQLType(String value);
 
-    /** Criteria field name: <code>reference_type</code> */
+    /** Criteria field name: <code>reference_semantic_type</code> */
     public SemanticType getReferenceType();
     public void setReferenceType(SemanticType value);
 

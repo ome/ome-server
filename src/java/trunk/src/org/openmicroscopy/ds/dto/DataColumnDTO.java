@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Mon Apr  5 12:32:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -77,9 +77,9 @@ public class DataColumnDTO
     { setElement("sql_type",value); }
 
     public SemanticType getReferenceType()
-    { return (SemanticType) getObjectElement("reference_type"); }
+    { return (SemanticType) getObjectElement("reference_semantic_type"); }
     public void setReferenceType(SemanticType value)
-    { setElement("reference_type",value); }
+    { setElement("reference_semantic_type",value); }
 
     public List getColumns()
     { return (List) getObjectElement("columns"); }
@@ -90,7 +90,7 @@ public class DataColumnDTO
     {
         super.setMap(elements);
         parseChildElement("data_table",DataTableDTO.class);
-        parseChildElement("reference_type",SemanticTypeDTO.class);
+        parseChildElement("reference_semantic_type",SemanticTypeDTO.class);
         parseListElement("columns",DataColumnDTO.class);
     }
 

@@ -47,7 +47,8 @@
                        ColumnName    => ['String','column_name'],
                        Description   => ['String'],
                        SQLType       => ['String','sql_type'],
-                       ReferenceType => ['SemanticType','reference_type'],
+                       ReferenceType => ['SemanticType',
+                                         'reference_semantic_type'],
                        Columns       => ['List:DataColumn'],
                       ],
                      );
