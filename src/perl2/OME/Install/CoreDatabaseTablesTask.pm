@@ -1124,9 +1124,38 @@ sub execute {
 
     # Grab our import chain and assign it to the configuration object
     my $importChain = $factory->
-    findObject("OME::AnalysisChain",name => 'Image server stats');
+	  findObject("OME::AnalysisChain",name => 'Image server stats');
     $configuration->import_chain($importChain);
-
+    
+    # Check on our local workers
+    my $worker_conf = $ENVIRONMENT->worker_conf();
+    if ($worker_conf->{ExecutorDistributed}) {
+	    my $workers = $factory-> countObjects("OME::Analysis::Engine::Worker", 
+                   URL=>"http://localhost/perl2/NonblockingSlaveWorkerCGI.pl");
+		my $max_workers = $worker_conf->{MaxWorkers}; 
+		if ($workers < $max_workers) {
+			printf $LOGFILE "There are less localhost workers (%d) in table than the ".
+			                "MaxWorkers environment variable (%d). Adding workers to table. \n",
+			                $workers, $max_workers;
+			               
+			for (my $i = $workers; $i < $max_workers; $i++) {
+				($factory->newObject("OME::Analysis::Engine::Worker",
+									{
+									 status =>"IDLE",
+									 URL => "http://localhost/perl2/NonblockingSlaveWorkerCGI.pl"
+									}) and print $LOGFILE "Created another worker.\n")
+									   or  print $LOGFILE "Couldn't create worker.\n";
+			}
+		} elsif ($workers < $worker_conf->{MaxWorkers}) {
+			printf $LOGFILE "There are more localhost workers (%d) in table than the".
+			                "MaxWorkers environment variable (%d). Doing Nothing. \n", 
+			                $workers, $max_workers;
+		} else {
+			printf $LOGFILE "There are as many localhost workers (%d) in table as the".
+			                "MaxWorkers environment variable (%d)\n", $workers;
+		}
+	}
+	
     # Update the Database version
     update_configuration ($session) or croak "Unable to update the configuration object.";
 
