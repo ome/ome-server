@@ -149,7 +149,7 @@ sub importFiles {
 		$channels->{gray} = [ splice(@CBW, 9, 3), 1.0] 
 			unless $display_options->{isRGB};
 		OME::Image::Server->setThumb(
-			$image->default_pixels()->PixelsID(),
+			$image->default_pixels()->ImageServerID(),
 			$display_options->{theZ},
 			$display_options->{theT},
 			$channels
