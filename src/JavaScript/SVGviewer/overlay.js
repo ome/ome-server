@@ -1,10 +1,25 @@
 /*****
 
 	overlay.js
-		external file dependencies: widget.js, button.js, popupList.js
 		
-		Author: Josiah Johnston
-		email: siah@nih.gov
+		A superclass for all overlays.
+		
+	Copyright (C) 2002 Open Microscopy Environment
+	Author: Josiah Johnston <siah@nih.gov>
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 	
 *****/
 
@@ -15,7 +30,7 @@ var svgns = "http://www.w3.org/2000/svg";
 	class variables
 	
 *****/
-Overlay.VERSION = 0.1;
+Overlay.VERSION = 1;
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -26,111 +41,152 @@ Overlay.VERSION = 0.1;
 /*****
 
 	constructor
-		image = OMEimage
-		
-		make instance in viewer to be scale
-		
+				
 	tested
 
 *****/
-function Overlay() {
-	this.init(arguments)
+function Overlay( ) {
 }
 
 /*****
 	
-	buildSVG
+	makeControls
 	
 	returns:
-		SVG chunk describing Overlay pane
-	notes:
-		for use in conjuction with multipaneToolBox
+		The controls for this class, loaded into DOM with a <g> as the root.
 		
 	tested
 		
 *****/
-Overlay.prototype.buildSVG = function() {
-	// check for initialization
-	if(this.colors == null) return null;
+Overlay.prototype.makeControls = function() {
+}
 
-// phony info
-	this.layerNames = new Array();
-	this.layerNames.push("Vector");
-	this.layerNames.push("Outline");
-	this.layerNames.push("Centroid");
-	this.layerNames.push("Scale");
+/*****
 	
-	this.markedViews = new Array;
-	this.markedViews.push("Z 12 T 0");
-	this.markedViews.push("Z 5 T 15");
-
-// build SVG
-	this.root = svgDocument.createElementNS(svgns, "g");
-
-	// set up GUI
-	this.layerPopupList = new popupList(
-		40, 10, this.layerNames, this.updateLayer, null,
-		skinLibrary["popupListAnchorLightslategray"],
-		skinLibrary["popupListBackgroundLightskyblue"],
-		skinLibrary["popupListHighlightAquamarine"]
-	);
-	this.layerPopupList.setLabel(-2, 12, "Layer:");
-	this.layerPopupList.getLabel().setAttribute("text-anchor", "end");
-	this.colorPopupList = new popupList(
-		90, 35, this.colors, this.changeColor, null,
-		skinLibrary["popupListAnchorLightslategray"],
-		skinLibrary["popupListBackgroundLightskyblue"],
-		skinLibrary["popupListHighlightAquamarine"]
-	);
-	this.colorPopupList.setLabel(-2, 12, "Color:");
-	this.colorPopupList.getLabel().setAttribute("text-anchor", "end");
-	this.displayButton = new button(
-		30, 35, this.displayLayer,
-		'<g>' +
-		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
-		'	<text y="12" text-anchor="middle">Off</text>'+
-		'</g>',
-		'<g>' +
-		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
-		'	<text y="12" text-anchor="middle">On</text>'+
-		'</g>'
-	);
+	makeOverlay
 	
-	this.dynamicControls = svgDocument.createElementNS( svgns, "g" );
-	this.dynamicControls.setAttribute("transform", "translate(20,70)");
-	this.dynamicControls.padding = 5;
-	
-	this.allZButton = new button(
-		100, 0, this.allZ
-	);
-	this.allZButton.setLabel(-9, 9,"Show all Z");
-	this.allZButton.getLabel().setAttribute("text-anchor", "end");
-	this.allTButton = new button(
-		100, 20, this.allT
-	);
-	this.allTButton.setLabel(-9, 9,"Show all T");
-	this.allTButton.getLabel().setAttribute("text-anchor", "end");
+	returns:
+		The overlay for this instance.
+		The data it uses was acquired during initialization.
+		
+	tested
+		
+*****/
+Overlay.prototype.makeOverlay = function( ) {
+}
 
-
-	// place GUI elements in containers
-	this.root.appendChild( this.dynamicControls );
-
-	this.allZButton.realize( this.dynamicControls );
-	this.allTButton.realize( this.dynamicControls );
+/*****
 	
-	// draw some background
-	this.dynamicControls.appendChild( parseXML(
-		'<rect x="30" y="-5" width="80" height="39" fill="none" stroke="black" stroke-width="2" opacity="0.7"/>',
-		svgDocument
-	));
+	updateIndex
+	
+	switches overlays on and off based on changes to Z and T indexes
+		
+	untested
+		
+*****/
+Overlay.prototype.updateIndex = function( theZ, theT ) {
+	if( this.oldZ == null ) this.oldZ = theZ;
+	if( this.oldT == null ) this.oldT = theT;
+	
+	if( this.sliceByIndex[this.oldZ] != null ) {
+		if( this.sliceByIndex[this.oldZ][this.oldT] != null ) {
+			this.sliceByIndex[this.oldZ][this.oldT].setAttribute( "display", "none" );
+		}
+	}
+	if( this.sliceByIndex[theZ] != null ) {
+		if( this.sliceByIndex[theZ][theT] != null ) {
+			this.sliceByIndex[theZ][theT].setAttribute( "display", "inline" );
+		}
+	}
+	
+	if( this.allZ ) {
+		for( z in this.sliceByIndex ) {
+			if( this.sliceByIndex[z][this.oldT] ) {
+				this.sliceByIndex[z][this.oldT].setAttribute( "display", "none" );
+			}
+			if( this.sliceByIndex[z][theT] ) {
+				this.sliceByIndex[z][theT].setAttribute( "display", "inline" );
+			}
+		}
+	}
+	if( this.allT ) {
+		for( t in this.sliceByIndex[this.oldZ] ) {
+			if( this.sliceByIndex[this.oldZ][t] ) {
+				this.sliceByIndex[this.oldZ][t].setAttribute( "display", "none" );
+			}
+		}
+		for( t in this.sliceByIndex[theZ] ) {
+			if( this.sliceByIndex[theZ][t] ) {
+				this.sliceByIndex[theZ][t].setAttribute( "display", "inline" );
+			}
+		}
+	}
+	
+	this.oldZ = theZ;
+	this.oldT = theT;
+	
+}
 
-	this.colorPopupList.realize( this.root );
-	this.displayButton.realize( this.root );
-	this.layerPopupList.realize( this.root );
+/*****
 	
-	// build background
+	turnOnOff
 	
-	return this.root;
+	switches the display of this overlay on and off
+		
+*****/
+Overlay.prototype.turnOnOff = function( value ) {
+	this.overlayRoot.setAttribute( "display", (value ? "inline" : "none") );
+}
+
+/*****
+	
+	showAllZs
+		
+*****/
+Overlay.prototype.showAllZs = function( value ) {
+	this.allZ = value;
+	if( !value ) {
+		for( z in this.sliceByIndex ) {
+			if( this.sliceByIndex[z][this.oldT] && z != this.oldZ ) {
+				this.sliceByIndex[z][this.oldT].setAttribute( "display", "none" );
+			}	
+		}
+	}
+	this.updateIndex( this.oldZ, this.oldT );
+}
+
+/*****
+	
+	showAllTs
+		
+*****/
+Overlay.prototype.showAllTs = function( value ) {
+	this.allT = value;
+	if( !value ) {
+		for( t in this.sliceByIndex[this.oldZ] ) {
+			if( this.sliceByIndex[this.oldZ][t] && t != this.oldT ) {
+				this.sliceByIndex[this.oldZ][t].setAttribute( "display", "none" );
+			}	
+		}
+	}
+	this.updateIndex( this.oldZ, this.oldT );
+}
+
+/*****
+	
+	addLayerSlice
+	
+	adds a layer slice to the overlay
+		
+*****/
+Overlay.prototype.addLayerSlice = function( theZ, theT, layerSlice ) {
+	layerSlice.setAttribute( "display", "none" );
+	if( this.sliceByIndex[theZ] == null ) 
+		this.sliceByIndex[theZ] = new Array();
+	if( this.sliceByIndex[theZ][theT] == null ) 
+		this.sliceByIndex[theZ][theT] = new Array();
+	this.sliceByIndex[theZ][theT] = layerSlice;
+	this.overlayRoot.appendChild( layerSlice );
 }
 
 /********************************************************************************************/
@@ -147,15 +203,16 @@ Overlay.prototype.buildSVG = function() {
 
 *****/
 
-Overlay.prototype.init = function() {
-	this.updateLayer = null;
-	this.changeColor = null;
-	this.displayLayer = null;
+Overlay.prototype.init = function( ) {
 
-	this.allZ = null;
-	this.allT = null;
+	this.allZ = false;
+	this.allT = false;
 	
-	this.makeColors();
+	this.oldZ = null;
+	this.oldT = null;
+	this.overlayRoot = svgDocument.createElementNS( svgns, "g" );
+	this.sliceByIndex = new Array();
+	
 }
 
 /*****
