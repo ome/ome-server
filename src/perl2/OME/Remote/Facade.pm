@@ -36,6 +36,8 @@
 
 
 package OME::Remote::Facade;
+
+use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
@@ -122,6 +124,20 @@ package OME::Remote::Facade;
 
 our $SHOW_CALLS = 0;
 
+# The server version should be an array of three values:
+# [major, minor, patch]
+
+our $SERVER_VERSION = [2,2,1];
+
+sub serverVersion {
+    my ($proto) = @_;
+
+    print STDERR "$$ serverVersion\n"
+      if $SHOW_CALLS;
+
+    return $SERVER_VERSION;
+}
+
 sub createSession {
     my ($proto, $username, $password) = @_;
 
@@ -207,6 +223,7 @@ sub dispatch {
     $session->deleteInstance(1);
     OME::DBObject->clearAllCaches();
 
+    print STDERR $eval_error if $eval_error;
     die $eval_error if $eval_error;
 
     # If the method never got executed, throw an error.
