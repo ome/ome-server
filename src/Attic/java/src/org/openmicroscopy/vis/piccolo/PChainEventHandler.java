@@ -143,16 +143,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	protected void drag(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		System.err.println("PChainEventHandler.drag()");
-		// module nodes simply get translated.
-		System.err.println("in chain handler drag");
-		if (linkState == NOT_LINKING)
-			System.err.println("not linking");
-		else
-			System.err.println("some linking state..");
 		if (node instanceof PModule) {
 			if (linkState != LINKING_MODULES) {
-				System.err.println("translating a node");
 				PModule mod = (PModule) node;
 				Dimension2D delta = e.getDeltaRelativeTo(node);
 				mod.translate(delta.getWidth(),delta.getHeight());
@@ -160,7 +152,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 			}
 		}
 		else if (linkState == LINK_CHANGING_POINT) {
-			System.err.println("dragging  link interior..");
 			Dimension2D delta = e.getDeltaRelativeTo(node);
 			if (node instanceof PLinkSelectionTarget) {
 				PLinkSelectionTarget target = (PLinkSelectionTarget) node;
