@@ -472,8 +472,26 @@ sub execute {
     die "OME::Analysis::Handler->execute is abstract";
 }
 
+# handler subclasses should call this method.
 sub finishAnalysis {
     my ($self) = @_;
+    $self->__check_output_arity();
+}
+
+sub __check_output_arity {
+	my $self = shift;
+	my $module         = $self->getModule();
+	my @formal_outputs = $module->outputs();
+	my $mex            = $self->getModuleExecution();
+	my $factory        = $self->Factory();
+	
+	foreach my $output ( @formal_outputs ) {
+		my $count = $factory->countAttributes( $output->semantic_type, module_execution => $mex );
+		die "Module '".$module->name()."' (execution ".$mex->id.") did not produce any outputs for ".$output->name.", and that output is not declared optional."
+			if( $count eq 0 && not $output->optional() );
+		die "Module '".$module->name()."' (execution ".$mex->id.") produced more than one output for ".$output->name.", and that output is declared to have arity 1."
+			if( $count > 1 && not $output->list() );
+	}
 }
 
 =head2 validateAndProcessExecutionInstructions
