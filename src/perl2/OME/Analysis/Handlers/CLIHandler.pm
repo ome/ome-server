@@ -46,6 +46,7 @@ use Log::Agent;
 
 use OME::Analysis::Handlers::DefaultLoopHandler;
 use OME::Tasks::PixelsManager;
+use OME::Image::Server::File;
 use XML::LibXML;
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
@@ -588,13 +589,13 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				
 				foreach my $outputTo ($indexXML->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
 					@elements = split (/\./,$outputTo->getAttribute( "Location" ) );
-					my $formalOutputName = $elements[0];
+					my $foName = $elements[0];
 					my $semanticElementName = $elements[1];
-					$outputs{ $formalOutputName }->{$semanticElementName} = 
+					$outputs{ $foName }->{$semanticElementName} = 
 						${ $planeIndexes->{ $planeID }->{ $index } };
 					print STDERR "\tStored index $index, value ".
-						$outputs{ $formalOutputName }->{$semanticElementName}.
-						" to ".$formalOutputName.'.'.$semanticElementName."\n"
+						$outputs{ $foName }->{$semanticElementName}.
+						" to ".$foName.'.'.$semanticElementName."\n"
 						if $debug eq 2;
 				}
 			}
@@ -690,9 +691,9 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->getModule()->name()." are corrupted. Alert system admin!" 
 								if( $accessBy =~ m/\D/ );
 							@elements = split (/\./,$outputTo->getAttribute( "Location" ) );
-							my $formalOutputName = $elements[0];
+							my $foName = $elements[0];
 							my $formalOutputColumnName = $elements[1];
-							my $cmd                    = '$outputs{ $formalOutputName }->{$formalOutputColumnName} = $' . $accessBy . ';';
+							my $cmd                    = '$outputs{ $foName }->{$formalOutputColumnName} = $' . $accessBy . ';';
 							eval $cmd;	
 						}
 					}
@@ -753,62 +754,66 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		my @pixelOutputArray = $root->getElementsByTagNameNS( $CLIns, "PixelOutput" );
 		print STDERR "Processing Pixel outputs\n" if $debug and scalar (@pixelOutputArray) > 0;
 		foreach my $pixelOutput( @pixelOutputArray) {
-			my $formalOutputName = $pixelOutput->getAttribute( "FormalOutput" );
-			my $pixelST          = $pixelOutput->getAttribute( "type" );
+			my $foName = $pixelOutput->getAttribute( "FormalOutput" );
 
-			# reference bits. this is a hard coded dependency against the STDs for Pixels and PixelsPlane
-			my @pixelPlaneSEs = ( 'SizeX', 'SizeY', 'PixelType', 'BitsPerPixel', 'Repository' );
-			my @pixelSEs = ( @pixelPlaneSEs, 'SizeZ', 'SizeC', 'SizeT' );
+			# semantic element names
+			my %pixelSEs = map{ $_ => undef} ( 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel' );
 
-			# untested!
-			if( $pixelST eq 'Pixels' ) {
-				# resolve all the consistent semantic elements
-				foreach my $SEName (@pixelSEs) {
-					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
-						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
-					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation($se->getAttribute("Location"), \%inputs)
-						if( $se );
+			# collect data for semantic elements
+			foreach (keys %pixelSEs) {
+				# first look in execution instructions
+				if ( $pixelOutput->getElementsByTagNameNS( $CLIns, $_ ) ) {
+					my $se_xml = $pixelOutput->getElementsByTagNameNS( $CLIns, $_ )->[0];
+					# Location: copy data value from an input
+					if( $se_xml->getAttribute("Location") ) {
+						$pixelSEs{$_} = resolveLocation( $se_xml->getAttribute("Location"), \%inputs );
+					# Value: data value is hardcoded
+					} elsif( $se_xml->getAttribute("Value") ) {
+						$pixelSEs{$_} = $se_xml->getAttribute("Value");
+					} else {
+						die "Could not find Location or Value in ".$se_xml->toString();
+					}
+				# next look in outputs hash
+				} elsif( exists $outputs{$foName } and exists $outputs{$foName }->{$_} ) {
+					$pixelSEs{$_} = $outputs{$foName }->{$_};
+				} else {
+					die "Could not find Semantic element $_ for PixelsPlane output $foName.";
 				}
 			}
 
-
-			if( $pixelST eq 'PixelsPlane' ) {
-				# resolve all the consistent semantic elements
-				foreach my $SEName (@pixelPlaneSEs) {
-					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
-						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
-					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation($se->getAttribute("Location"), \%inputs)
-						if( $se );
-				}
+			# retreive the path of the data file
+			my $path; 
+			# first look for a temorary file request
+			if( $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' ) ) {
+				my $fileID = $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' )->[0]->getAttribute( 'FileID' );
+				$path = $tmpFileFullPathHash{ $fileID };
+				die "When processing output $foName, could not lookup Path from FileID $fileID"
+					unless $path;
+			# next look in outputs hash
+			} elsif( exists $outputs{ $foName } and exists $outputs{ $foName }->{'Path'} ) {
+				$path = $outputs{ $foName }->{'Path'};			
+			} else {
+				die "Could not find Semantic element Path for PixelPlane output $foName.";
 			}
-			
 
-#2do: Transition to omeis!
-			# fill out Path and SHA1 of attribute
-			
-			# To retain the naming convention of the repository files, the file specified
-			# by this path would be renamed to something like PixelPlane-[AttributeID].raw
-			# The problem is, this doesn't have an AttributeID yet. For the moment,
-			# I'm going to leave the name alone. I do not anticipate that this will cause
-			# any problems, but it does violate our naming convention.
-			my $path; $path = $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' )->[0]
-				if $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' );
-			$outputs{ $formalOutputName }->{'Path'} = $tmpFileRelativePathHash{ $path->getAttribute( 'FileID' ) }
-				if( $path );
-			
-			# the path may have been filled out by an output of the program.
-			# so attempt to retrieve from the data hash instead of the attribute above.
-			$path = $outputs{ $formalOutputName }->{'Path'};
-			die "A Path has not been filled out for this <PixelOutput>."
-				unless $path;
-			my $repository = $outputs{ $formalOutputName }->{'Repository'};
-			die "A Repository has not been filled out for this <PixelOutput>."
-				unless $repository;
-			my $sha1 = getSha1( $repository->Path() . $path );
-			$outputs{ $formalOutputName }->{'FileSHA1'} = $sha1;
+			# remove this output from the data hash so newAttributes() won't try to create it
+			# Pixel outputs get made differently
+			delete $outputs{ $foName } if exists $outputs{ $foName };
 
+			# get repository & activate it
+			OME::Tasks::PixelsManager->activateRepository( OME::Tasks::PixelsManager->findRepository() );
+			# upload file
+			my $file = OME::Image::Server::File->upload( $path );
+			# request new pixels from omeis
+			my ($pixels_data, $pixels_attr ) = OME::Tasks::PixelsManager->createPixels(
+				$image,
+				$self->getModuleExecution(),
+				\%pixelSEs
+			);
+			# issue convert call(s)
+			$pixels_data->convert($file,0,OME->BIG_ENDIAN());
+			# finish pixels
+			OME::Tasks::PixelsManager->finishPixels( $pixels_data, $pixels_attr );
 
 			#########################################################
 			#   
@@ -841,23 +846,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 
 }
 
-
-# usage is: 
-#	my $sha1 = getSha1( $path );
-sub getSha1 {
-    my $file = shift;
-    my $cmd = 'openssl sha1 '. $file .' |';
-    my $sh;
-    my $sha1;
-
-    open (STDOUT_PIPE,$cmd);
-    chomp ($sh = <STDOUT_PIPE>);
-    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-    $sha1 = $1;
-    close (STDOUT_PIPE);
-
-    return $sha1;
-}
 
 #####################################################################
 #   
@@ -930,6 +918,7 @@ sub resolveSubString {
 	#############################################################
 	#
 	# PixelsInput
+	# FIXME: add support for spewing pixel file contents
 	#
 	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'PixelsInput' ) ) {
 		my $pixelsInput = $subString->getElementsByTagNameNS( $CLIns, 'PixelsInput' )->[0];
@@ -937,13 +926,10 @@ sub resolveSubString {
 			or die "Location attribute not specified in PixelsInput element!\n";
 		my $substituteWith = $pixelsInput->getAttribute('SubstituteWith')
 			or die "SubstituteWith attribute not specified in PixelsInput element!\n";
-		my $pixels = resolveLocation( $location, $inputs );
+		my $pixels_attr = resolveLocation( $location, $inputs );
 		
-#		OME::Tasks::PixelsManager->activateRepository( $pixels->Repository() );
-#		return OME::Tasks::PixelsManager
-		return $pixels->image()->getFullPath( $pixels )
-			if $substituteWith eq 'path';
-		# FIXME: add support for barfing pixel file contents
+		my $pixels_obj = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
+		return $pixels_obj->getTemporaryLocalPixels();
 	#
 	#############################################################
 	#
@@ -989,17 +975,7 @@ sub resolveSubString {
 		my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
 		my $tmpFilePath;
 		my $tmpFileRelativePath;
-		if( $tmpFile->getAttribute( "Repository" ) ) {
-			my $repository  = resolveLocation($tmpFile->getAttribute( "Repository" ), $inputs);
-			die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
-				if( not defined $repository );
-			$tmpFileRelativePath = $session->getTemporaryFilename( 
-				progName   => 'CLIHandler',
-				extension  => 'ori' );
-			$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
-		} else {
-			$tmpFilePath = $session->getTemporaryFilename( 'CLIHandler','' );
-		}
+		$tmpFilePath = $session->getTemporaryFilename( 'CLIHandler','' );
 			
 		$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
 		$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
