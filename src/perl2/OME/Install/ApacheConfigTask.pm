@@ -777,7 +777,7 @@ BLURB
 
 		if (! y_or_n('Configure Apache server?','y') ) {
 			$APACHE->{DO_CONF}  = 0;
-			last;
+			redo;
 		}
 		$APACHE->{DO_CONF}  = 1;
 
