@@ -341,8 +341,16 @@ sub renderSingle {
 				);
 			} else {
 				$record{ $field } = $obj->$field;
-				$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format )
-					if( ref( $record{ $field } ) );
+				if( ref( $record{ $field } ) ) {
+					$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format );
+				} else {
+					my $type = $obj->getColumnSQLType( $field );
+					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
+					$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
+						if $type eq 'timestamp';
+					$record{ $field } = $booleanConvert{ $record{ $field } }
+						if $type eq 'boolean';
+				}
 			}
 		}
 	}
@@ -371,7 +379,7 @@ sub getObjectLabels {
 
 =head2 getObjectLabel
 
-	my $object_label = OME::Web::DBObjRender->getObjectLabel( $object  );
+	my $object_label = OME::Web::DBObjRender->getObjectLabel( $object );
 
 Gets a name for this object. Subclasses may override this method.
 If a 'name' or a 'Name' method exists for this object, it will be returned.
@@ -469,14 +477,33 @@ sub getRefToObject {
 			my ($package_name, $common_name, $formal_name, $ST) =
 				OME::Web->_loadTypeAndGetInfo( $obj );
 			my $id = $obj->id();
-			my $label = $proto->getObjectLabel( $obj, $format );
+			my $label = $proto->getObjectLabel( $obj );
 			return  $q->a( 
 				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
 				$label
 			);
 		}
-		return $proto->getObjectLabel( $obj, $format );
+		return $proto->getObjectLabel( $obj );
 	}
+}
+
+=head2 getObjSummary
+
+	my $obj_summary = OME::Web::DBObjRender->getObjSummary( $object );
+
+$object is an instance of a DBObject or an Attribute.
+
+returns a summary of the object formatted for html. 
+
+=cut
+
+sub getObjSummary {
+	my ($proto,$obj) = @_;
+	my $specializedRenderer;
+	return $specializedRenderer->getObjSummary( $obj )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+		    $proto eq __PACKAGE__);
+	return $proto->getRefToObject( $obj, 'html' );
 }
 
 =head2 getRelationAccessors
