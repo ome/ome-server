@@ -109,7 +109,7 @@ sub export {
 
     $exporter = "OME::ImportExport::".$writer;
     $export_writer = $exporter->new($self);
-    print "Exporting $self->{image_list_ref}\n";
+    print STDERR "Exporting $self->{image_list_ref}\n";
     $status = $export_writer->export($self->{image_list_ref});
 
     return $status;
