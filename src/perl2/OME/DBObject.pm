@@ -2363,7 +2363,7 @@ no warnings "uninitialized";
 							$arrayval = 'NaN'
 								if( $class->isRealType($sql_type) && 
 									$arrayval && 
-									$value =~ m'Infinity$'i );
+									$value =~ m'^(-)?Inf(inity)?$'i );
                             push @new_values, $arrayval;
                         }
                     }
@@ -2374,7 +2374,7 @@ no warnings "uninitialized";
 					$value = 'NaN'
 						if( $class->isRealType($sql_type) && 
 							$value && 
-							$value =~ m'Infinity$'i );
+							$value =~ m'^(-)?Inf(inity)?$'i );
                     push @new_values, $value;
                 }
                 $operation = defined $value? $criterion->[0]: "is";
@@ -2383,7 +2383,7 @@ no warnings "uninitialized";
 				$value = 'NaN'
 					if( $class->isRealType($sql_type) && 
 						$value && 
-						$value =~ m'Infinity$'i );
+						$value =~ m'^(-)?Inf(inity)?$'i );
                 $value = $value->id()
                   if UNIVERSAL::isa($value,"OME::DBObject");
                 push @new_values, $value;
@@ -2597,7 +2597,7 @@ sub __makeInsertSQLs {
 				$datum = 'false' if $datum eq '0';
 				$datum = 'true' if $datum eq '1';
 			} elsif( $class->isRealType( $sql_options->{SQLType} ) && 
-			         $datum =~ m'Infinity$'i ) {
+			         $datum =~ m'^(-)?Inf(inity)?$'i ) {
 				$datum = 'NaN';
 			}
 		}
