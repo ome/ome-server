@@ -244,7 +244,7 @@ sub _takeAction {
 	# Add images
 	my $image_ids = $q->param( 'images_to_add' );
 	if( $image_ids ) {
-		OME::Tasks::DatasetManager->addImages( [ split( m',', $image_ids ) ] );
+		$message .= $self->DatasetUtil()->addImages($image_ids);
 	}
 	
 	# Declassify image
@@ -259,13 +259,15 @@ sub _takeAction {
 			or die "Couldn't load CategoryGroup ID=$cg_id";
 		my $classification = OME::Tasks::CategoryManager->
 			getImageClassification( $image, $cg );
-		unless( ref( $classification ) eq 'ARRAY' ) {
+		if (not defined $classification ) {
+			$message .= "<font color='red'>Image ".$self->Renderer()->render( $image, 'ref' )." is already unclassified.</font><br>";
+		} elsif ( ref( $classification ) eq 'ARRAY' ) {
+			$message .= "<font color='red'>Image ".$self->Renderer()->render( $image, 'ref' )." has multiple (".
+			scalar( @$classification ).") classifications in this CategoryGroup. This page isn't capable of dealing with that.</font><br>";
+		} else {
 			OME::Tasks::CategoryManager->
 				declassifyImage( $image, $classification->Category() );
-			$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' )."<br>";
-		} else {
-			$message .= "Image ".$self->Renderer()->render( $image, 'ref' )." has ".
-			scalar( @$classification )." classifications in this CategoryGroup. This page isn't capable of dealing with that.<br>";
+			$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' ).".<br>";
 		}
 	}
 	
