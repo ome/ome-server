@@ -146,7 +146,6 @@ foreach my $module (@modules) {
 	my %table_xmlID_object;
 	{
 		foreach my $table ( $module->getElementsByTagName( "TableDefinition" ) ) {
-# move all this functionality to OME::DataType?
 			my @tables = $factory->findObjects( "OME::DataType", 'table_name' => $table->getAttribute( 'TableName' ) );
 			
 			my $newTable;
@@ -159,6 +158,14 @@ foreach my $module (@modules) {
 				$newTable = $factory->newObject( "OME::DataType", $data )
 					or die "Could not create OME::DataType\n";
 				push(@commitOnSuccessfulImport, $newTable);
+
+				#####################################
+				#
+				# Make the table in the database. 
+				# Should this functionality be moved to OME::Datatype 
+				# so making a new entry there will cause a new table
+				# to be created?
+				#
 # In the future, the following test will not be necessary because every table a module
 # can access will have a corrosponding entry in the Datatypes table. We have
 # just checked for an entry and found none. For now, this rule may not be universally true.
@@ -168,15 +175,26 @@ foreach my $module (@modules) {
 				$sth->{RaiseError} = 0;
 				my $tableExists = $sth->execute();
 				if( not defined $tableExists ) { 
-					my $sth = $dbh->prepare( "
+					my $statement = "
 						CREATE TABLE ".$table->getAttribute( 'TableName' )." (
-							ATTRIBUTE_ID	OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY
-						)")
+							ATTRIBUTE_ID	OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,";
+					if( $newTable->attribute_type() eq 'I' ) {
+						$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
+					} elsif ( $newTable->attribute_type() eq 'D' ) {
+						$statement .= "DATATSET_ID   OID NOT NULL REFERENCES DATASETS DEFERRABLE INITIALLY DEFERRED";
+					} elsif ( $newTable->attribute_type() eq 'F' ) {
+						$statement .= "FEATURE_ID    OID NOT NULL REFERENCES FEATURES DEFERRABLE INITIALLY DEFERRED";
+					}
+					$statement .= ")";
+					my $sth = $dbh->prepare( $statement )
 						or die "Table create statement failed when making table ".$table->getAttribute( 'TableName' )."\n";
-# are there any other mandatory columns? row based schema wants actual_output_id. 
 					$sth->execute()
 						or die "Unable to create table ".$table->getAttribute( 'TableName' )."\n";
 				}
+				#
+				#
+				#####################################
+
 			} else {
 				$newTable = $tables[0];
 			}
@@ -409,7 +427,8 @@ sub makeDataTypeColumn {
 	die "TableID entry not found for dbLocation.column_name= ".$dbLocation->getAttribute( 'ColumnName' ).", TableID= ".$dbLocation->getAttribute( 'TableID' )."\n"
 		unless exists $table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) };
 
-	# change this to a factory search after factory can take multi way searches
+# change this to a factory search after factory can take multi way searches
+# add column_sql to the search after it is represented int the database
 	require OME::DataType;
 	my @cols = OME::DataType::Column->search( 
 		datatype_id => $table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->id(),
@@ -424,10 +443,21 @@ sub makeDataTypeColumn {
 			description    => $dbLocation->getAttribute( 'Description' ),
 			reference_type => $dbLocation->getAttribute( 'ReferenceType' ),
 			#column_sql     => $dbLocation->getAttribute( 'Column_SQL' )
-			# column sql only exists in the schema. it needs to be added to other places or removed from the schema.
+# Do we need to store column_sql in the database?
+# What if two modules declare a column in the same table with the same name, but the
+# columns have different types? We need to check for that and die if it happens.
+# How can we check it if it isn't stored?
 		};
 		$DataTypeColumn = $factory->newObject( "OME::DataType::Column", $data )
 			or die "Could not make OME::DataType::Column object\n";
+
+		#####################################
+		#
+		# Make the column in the database. 
+		# Should this functionality be moved to OME::Datatype::Column 
+		# so making a new entry there will cause a new column
+		# to be created?
+		#
 # In the future, the following test will not be necessary because every column a module
 # can access will have a corrosponding entry in the Datatype_column table. We have
 # just looked for an entry and found none. For now, this rule may not be universally true.
@@ -444,6 +474,10 @@ sub makeDataTypeColumn {
 			$sth->execute()
 				or die "Unable to create column ".$DataTypeColumn->column_name()." in table ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name();
 		}
+		#
+		#
+		#####################################
+
 	} else {
 		$DataTypeColumn = $cols[0];
 	}
