@@ -25,6 +25,8 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.openmicroscopy.analysis.*;
 
@@ -32,10 +34,13 @@ public class ChainNodeWidget
   extends JPanel
 {
     protected Chain.Node  node;
-    protected JLabel     lblName, lblDescription, inputLabels[], outputLabels[];
-    protected JPanel     labelPanel;
+    protected JLabel      lblName, lblDescription, inputLabels[], outputLabels[];
+    protected JPanel      labelPanel;
+    protected Map         parameters, labels;
 
-    private class MouseListener extends MouseInputAdapter
+    protected PlaygroundController  controller;
+
+    private class DragMouseListener extends MouseInputAdapter
     {
 	int lastX = -1, lastY = -1;
 	boolean  good = false;
@@ -65,12 +70,76 @@ public class ChainNodeWidget
 	}
     }
 
-    public ChainNodeWidget(Chain.Node node)
+    private class LabelMouseListener extends MouseInputAdapter
+    {
+        private boolean  input = false;
+
+        public LabelMouseListener(boolean input)
+        {
+            this.input = input;
+        }
+
+        public void mouseEntered(MouseEvent e)
+        {
+            Component  c = e.getComponent();
+
+            Module.FormalParameter  param = 
+                (Module.FormalParameter) parameters.get(c);
+
+            if (param != null)
+                controller.displayParameter(param);
+        }
+
+        public void mouseExited(MouseEvent e)
+        {
+            controller.displayNothing();
+        }
+
+        public void mouseClicked(MouseEvent e)
+        {
+            Component c = e.getComponent();
+
+            Module.FormalParameter  param = 
+                (Module.FormalParameter) parameters.get(c);
+                    
+            if (param == null)
+                return;
+
+            if ((SwingUtilities.isLeftMouseButton(e)) &&
+                (!e.isControlDown()) &&
+                (!e.isAltDown()) &&
+                (!e.isShiftDown()) &&
+                (!e.isAltGraphDown()) &&
+                (!e.isMetaDown()))
+            {
+                if (e.getClickCount() == 1)
+                {
+                    controller.selectAttributeType(param,node,input);
+                    e.consume();
+                }
+            }
+        }
+    }
+
+    public ChainNodeWidget(Chain.Node node, PlaygroundController controller)
     {
 	super();
 
 	this.node = node;
+        this.controller = controller;
+        this.parameters = new HashMap();
+        this.labels = new HashMap();
 
+        controller.addNodeWidget(this);
+
+        initialize();
+    }
+
+    private Font   unhighlightedFont, highlightedFont;
+    private Color  unhighlightedColor, highlightedColor;
+
+    private void initialize()
+    {
 	//setSize(new Dimension(60,60));
 	setLayout(new BorderLayout());
 	setBorder(BorderFactory.createRaisedBevelBorder());
@@ -94,34 +163,118 @@ public class ChainNodeWidget
 	outputLabels = new JLabel[numOutputs];
 
 	Font font = lbl0.getFont();
-	font = font.deriveFont(Font.PLAIN);
+	unhighlightedFont = font.deriveFont(Font.PLAIN);
+        unhighlightedColor = Color.black;
+        highlightedFont = font.deriveFont(Font.BOLD);
+        highlightedColor = lbl0.getForeground();
+
+        LabelMouseListener  inputListener = new LabelMouseListener(true);
+        LabelMouseListener  outputListener = new LabelMouseListener(false);
 
 	for (int i = 0; i < max; i++)
 	{
-	    lbl0 = (i < numInputs)?
-		(inputLabels[i] = new JLabel(module.getInput(i).getParameterName(),SwingConstants.LEFT)):
-		new JLabel("");
-	    lbl0.setFont(font);
-	    lbl0.setForeground(Color.black);
+            Module.FormalParameter  param = null;
+
+            if (i < numInputs)
+            {
+                param = module.getInput(i);
+                lbl0 = (inputLabels[i] = new JLabel(param.getParameterName(),
+                                                    SwingConstants.LEFT));
+                parameters.put(lbl0,param);
+                labels.put(param,lbl0);
+                lbl0.addMouseListener(inputListener);
+            } else {
+                lbl0 = new JLabel("");
+            }
+
+            highlightLabel(param);
 	    //lbl0.setBorder(BorderFactory.createEmptyBorder(
 	    labelPanel.add(lbl0);
 
-	    lbl0 = (i < numOutputs)?
-		(outputLabels[i] = new JLabel(module.getOutput(i).getParameterName(),SwingConstants.RIGHT)):
-		new JLabel("");
-	    lbl0.setFont(font);
-	    lbl0.setForeground(Color.black);
+            if (i < numOutputs)
+            {
+                param = module.getOutput(i);
+                lbl0 = (outputLabels[i] = new JLabel(param.getParameterName(),
+                                                     SwingConstants.RIGHT));
+                parameters.put(lbl0,param);
+                labels.put(param,lbl0);
+                lbl0.addMouseListener(outputListener);
+            } else {
+                lbl0 = new JLabel("");
+            }
+
+            highlightLabel(param);
 	    labelPanel.add(lbl0);
 	}
 
 	add(labelPanel,BorderLayout.CENTER);
   
-	MouseListener ml = new MouseListener();
+	DragMouseListener ml = new DragMouseListener();
 	addMouseListener(ml);
 	addMouseMotionListener(ml);
     }
 
     public Chain.Node getChainNode() { return node; }
+
+    public void highlightLabel(JLabel lbl0)
+    {
+        if (lbl0 != null)
+        {
+	    lbl0.setFont(highlightedFont);
+	    lbl0.setForeground(highlightedColor);
+        }
+    }
+
+    public void unhighlightLabel(JLabel lbl0)
+    {
+        if (lbl0 != null)
+        {
+	    lbl0.setFont(unhighlightedFont);
+	    lbl0.setForeground(unhighlightedColor);
+        }
+    }
+
+    public void highlightLabel(Module.FormalParameter param)
+    {
+        highlightLabel((JLabel) labels.get(param));
+    }
+
+    public void unhighlightLabel(Module.FormalParameter param)
+    {
+        unhighlightLabel((JLabel) labels.get(param));
+    }
+
+    public void highlightInputsByType(AttributeType type)
+    {
+        for (int i = 0; i < inputLabels.length; i++)
+        {
+            Module.FormalParameter param =
+                (Module.FormalParameter) parameters.get(inputLabels[i]);
+
+            if ((param != null) && param.getAttributeType().equals(type))
+                highlightLabel(inputLabels[i]);
+        }
+    }
+
+    public void highlightOutputsByType(AttributeType type)
+    {
+        for (int i = 0; i < outputLabels.length; i++)
+        {
+            Module.FormalParameter param =
+                (Module.FormalParameter) parameters.get(outputLabels[i]);
+
+            if ((param != null) && param.getAttributeType().equals(type))
+                highlightLabel(outputLabels[i]);
+        }
+    }
+
+    public void unhighlightAllLabels()
+    {
+        for (int i = 0; i < inputLabels.length; i++)
+            unhighlightLabel(inputLabels[i]);
+        for (int i = 0; i < outputLabels.length; i++)
+            unhighlightLabel(outputLabels[i]);
+    }
 
     public Point getInputNubLocation(Module.FormalInput input)
     {

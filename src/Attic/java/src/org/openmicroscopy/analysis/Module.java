@@ -185,7 +185,7 @@ public class Module
     }
 
 
-    private class FormalParameter
+    public class FormalParameter
     {
         protected String         parameterName, parameterDescription;
         protected AttributeType  attributeType;

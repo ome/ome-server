@@ -40,7 +40,8 @@ public class Test
 	test.setVisible(true);
     }
 
-    PlaygroundPane  playgroundPane;
+    protected PlaygroundPane        playgroundPane;
+    protected PlaygroundController  controller;
    
     protected Test(String chain)
     {
@@ -59,28 +60,54 @@ public class Test
 		}
 	    });
 
+        JPanel p1;
+        controller = new PlaygroundController();
+
         if (chain.equalsIgnoreCase("IMAGE_IMPORT"))
         {
             playgroundPane = new PlaygroundPane(TestInstances.imageImportChain);
             playgroundPane.addNodeWidget(
-                new ChainNodeWidget(TestInstances.imageImport_stackStats),
+                new ChainNodeWidget(TestInstances.imageImport_stackStats,
+                                    controller),
                 50,150);
             playgroundPane.addNodeWidget(
-                new ChainNodeWidget(TestInstances.imageImport_planeStats),
+                new ChainNodeWidget(TestInstances.imageImport_planeStats,
+                                    controller),
                 50,350);
         } else if (chain.equalsIgnoreCase("FIND_SPOTS")) {
             playgroundPane = new PlaygroundPane(TestInstances.findSpotsChain);
             playgroundPane.addNodeWidget(
-                new ChainNodeWidget(TestInstances.findSpots_stackStats),
+                new ChainNodeWidget(TestInstances.findSpots_stackStats,
+                                    controller),
                 50,150);
             playgroundPane.addNodeWidget(
-                new ChainNodeWidget(TestInstances.findSpots_findSpots),
+                new ChainNodeWidget(TestInstances.findSpots_findSpots,
+                                    controller),
+                350,150);
+        } else if (chain.equalsIgnoreCase("TEST_SPOTS")) {
+            playgroundPane = new PlaygroundPane(TestInstances.testFindSpotsChain);
+            playgroundPane.addNodeWidget(
+                new ChainNodeWidget(TestInstances.testFindSpots_stackStats,
+                                    controller),
+                50,150);
+            playgroundPane.addNodeWidget(
+                new ChainNodeWidget(TestInstances.testFindSpots_findSpots,
+                                    controller),
                 350,150);
         }
 
-        cp.add(playgroundPane,BorderLayout.CENTER);
+        controller.setPlaygroundPane(playgroundPane);
 
-        JPanel p1;
+        p1 = new JPanel(new BorderLayout());
+        p1.setBorder(BorderFactory.createLoweredBevelBorder());
+        cp.add(p1,BorderLayout.CENTER);
+        p1.add(playgroundPane,BorderLayout.CENTER);
+
+        JLabel  lbl0;
+        lbl0 = new JLabel(" ",SwingConstants.CENTER);
+        p1.add(lbl0,BorderLayout.SOUTH);
+        controller.setStatusLabel(lbl0);
+
 	p1 = new JPanel(new BorderLayout());
 	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
         cp.add(p1,BorderLayout.WEST);

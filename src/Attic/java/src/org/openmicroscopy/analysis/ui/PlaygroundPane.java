@@ -61,6 +61,8 @@ public class PlaygroundPane
         widgetListener = new WidgetListener();
     }
 
+    public Chain getChain() { return chain; }
+
     private class WidgetListener
         implements ComponentListener
     {
@@ -91,7 +93,11 @@ public class PlaygroundPane
         instanceWidgets.put(node,cnWidget);
 	cnWidget.setLocation(new Point(x,y));
 	cnWidget.setSize(cnWidget.getPreferredSize());
+        cnWidget.unhighlightAllLabels();
     }
+
+    private static Stroke s1 = new BasicStroke(1.0f);
+    private static Stroke s2 = new BasicStroke(2.0f);
 
     public void paintChildren(Graphics g) 
     {
@@ -152,9 +158,12 @@ public class PlaygroundPane
             g2.draw(new Line2D.Double(xM,y2,x2,y2));
             */
 
-            g2.draw(new Line2D.Double(x1,y1,xS,y1));
+            g2.setStroke(s1);
             g2.draw(new Line2D.Double(xS,y1,xT,y2));
-            g2.draw(new Line2D.Double(xT,y2,x2-1,y2));
+
+            g2.setStroke(s2);
+            g2.draw(new Line2D.Double(x1,y1,xS,y1));
+            g2.draw(new Line2D.Double(xT+1,y2,x2-1,y2));
 
             g2.transform(AffineTransform.getTranslateInstance(toPoint.x,toPoint.y));
             g2.fill(ARROWHEAD);

@@ -371,4 +371,13 @@ public class TestInstances
     public static Chain.Link  findSpots_link5 =
     findSpotsChain.addLink(findSpots_stackStats, stackStats_sigma,
                            findSpots_findSpots,  findSpots_sigma);
+
+    // No-links find spots chain
+
+    public static Chain  testFindSpotsChain = 
+    new Chain("Douglas Creager","Image import chain",true);
+    public static Chain.Node  testFindSpots_stackStats =
+    testFindSpotsChain.addNode(stackStats,null,null);
+    public static Chain.Node  testFindSpots_findSpots =
+    testFindSpotsChain.addNode(findSpots,null,"SPOT");
 }
