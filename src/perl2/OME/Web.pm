@@ -151,7 +151,6 @@ sub new {
 # ---------
 
 sub CGI { my $self = shift; return $self->{CGI}; }
-sub DBH { my $self = shift; return $self->Session()->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->Session()->User(); }
