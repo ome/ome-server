@@ -526,9 +526,7 @@ sub store_xyz_info {
     my ($self,$session,$href) = @_;
 
     my $factory = $session->Factory();
-    my $view = $factory->
-      findObject("OME::AnalysisView",
-                 name => 'Image import analyses');
+    my $view = $self->{config}->import_chain();
     if (!defined $view) {
         carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
         return "";
