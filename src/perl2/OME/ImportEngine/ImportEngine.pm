@@ -317,13 +317,23 @@ sub importFiles {
                                 SHA1 => $sha1);
 
                 if (defined $old_file) {
+                    my $old_id = $old_file->{__fields}->{original_files}->{file_id};
+                    # delete file that's just been uploaded since its a copy
+                    my $fref = getFileRef($group);
+                    OME::Image::Server->deleteFile($fref->getFileID);
+
                     __debug("Image has already been imported.  ");
                     if ($self->{_flags}->{AllowDuplicates}) {
                         __debug("AllowDuplicates is on.\n");
+                        my $f = OME::Image::Server::File->new($old_id);
+                        $group = replaceFileRef($group, $f);
                     } else {
                         __debug("Skipping...\n");
                         next GROUP;
                     }
+                } else {
+                    # TODO: This should likely be a database corruption error
+                    # or could it be what happens if an old file gets archived?
                 }
             } else {
                 # TODO: Should this be an error if getSHA1 returns undef?
@@ -332,7 +342,6 @@ sub importFiles {
             # This hasn't been imported yet, so slurp it in.
             my $image;
             eval {
-                #$image = $format->importGroup($group, $self->{_flags}->{SliceCallback});
                 $image = $format->importGroup($group, \&localSliceCallback);
             };
 
@@ -444,6 +453,45 @@ sub setupRemoteSliceCallback {
 }
 
 
+=head2 getFileRef
+
+    getFileRef($group)
+
+Returns the reference to the file carried in $group. If $group is
+an array reference, then it will return the 1st array element, else
+returns $group itself (which is expected to be a simple scalar).
+=cut
+
+sub getFileRef {
+    my $group = shift;
+    if (ref($group) eq "ARRAY") {
+	return $$group[0];
+    } else {
+	return $group;
+    }
+}
+
+
+=heaed2 replaceFileRef
+
+    replaceFileRef($group, $file)
+
+Replaces the 1st file ref of $group with $file. If $group is an
+array reference, then the 1st array element will be replaced, and
+the updated array reference returned. Else, $file is returned.
+
+=cut
+
+sub replaceFileRef {
+    my $group = shift;
+    my $file = shift;
+    if (ref($group) eq "ARRAY") {
+	$$group[0] = $file;
+	return $group;
+    } else {
+	return $file;
+    }
+}
 
 
 =head1 IMPLEMENTATION OF C<importFiles>
