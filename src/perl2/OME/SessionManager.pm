@@ -51,6 +51,7 @@ use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
 use OME::DBConnection;
+use OME::Factory;
 use Term::ReadKey;
 use POSIX;
 
