@@ -284,7 +284,7 @@ sub serve {
 	my $headers = $self->headers();
 	$headers->{'-cookie'} = $cookies if scalar @$cookies;
 	$headers->{'-expires'} = '-1d';
-	$headers->{-type} = $self->contentType();
+	$headers->{'-type'} = $self->contentType();
 
 
 
@@ -325,33 +325,33 @@ sub headers {
 sub sendFile {
 	my $self = shift;
 	my $params = shift;
-	my $headers = $self->headers();
-	my $filename = $params->{filename};
 	my $downloadFilename;
 	
-	die "Call to OME::Web::sendFile() without specifying a filename!"
-		unless defined $filename;	
-	open (INFILE,$filename)
-		or die "OME::Web::sendFile() could not open $filename for reading: $!\n";
-		
+	die "Call to OME::Web::sendFile() without specifying a filename or content!"
+		unless exists $params->{filename} or exists $params->{content};	
 
 	$downloadFilename = $params->{downloadFilename}
 		if exists $params->{downloadFilename};
-	$downloadFilename = $filename
-		unless defined $downloadFilename;
-	
-	$headers->{'Content-Disposition'} = qq{attachment; filename="$downloadFilename"}; 
 
-	$headers->{-type} = $self->contentType();
-	print $self->CGI()->header(%{$headers});
+	my $headers = $self->headers();
+	$headers->{'Content-Disposition'} = qq{attachment; filename="$downloadFilename"}
+		if defined $downloadFilename;
+	$headers->{'-type'} = $self->contentType();
+	print $self->CGI()->header(%$headers);
 	
-	my $buffer;
-	while (read (INFILE,$buffer,32768)) {
-		print $buffer;
+	if (exists $params->{filename}) {
+		my $filename = $params->{filename};
+		open (INFILE,$filename)
+			or die "OME::Web::sendFile() could not open $filename for reading: $!\n";
+		my $buffer;
+		while (read (INFILE,$buffer,32768)) {
+			print $buffer;
+		}
+		close (INFILE);
+		unlink $filename if exists $params->{temp} and $params->{temp};
+	} else {
+		print $params->{content};
 	}
-	
-	close (INFILE);
-	unlink $filename if exists $params->{temp} and $params->{temp};
 	
 }
 
