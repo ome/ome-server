@@ -120,15 +120,27 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		mouseReleased(e);
 	}
 	
+	public void handlePopup(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		if (node instanceof PDataset) {
+			//zooming out, so...
+			SelectionState selectionState = SelectionState.getState();	
+			selectionState.setSelectedDataset(null);
+		}
+		else
+			super.handlePopup(e);
+	}
 	public void mouseClicked(PInputEvent e) {
 		//
+		if ((e.getModifiers() & allButtonMask) !=
+			allButtonMask)
+			return;
 		PNode node = e.getPickedNode();
 		SelectionState selectionState = SelectionState.getState();
 		
 		if (node instanceof PDataset) { 
 			System.err.println("zooming in on dataset");
 			PDataset d = (PDataset) node;
-			//((PBrowserCanvas) canvas).setSelectedDataset(d.getDataset());
 			selectionState.setSelectedDataset(d.getDataset());
 			e.setHandled(true);
 		}
@@ -137,7 +149,6 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			try {
 				PChainLabelText label = (PChainLabelText) node;
 				System.err.println("clicked on a chain label..."+label.getChain().getName());
-				//selectionState.setSelectedChain(label.getChain());
 				label.doSelection();
 			}
 			catch(Exception exc) {
