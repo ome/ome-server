@@ -50,6 +50,8 @@ my @knownDatasetTypes;
 
 use OMEDataset::ICCB_TIFF;
 push (@knownDatasetTypes,'ICCB_TIFF');
+use OMEDataset::TIFF;
+push (@knownDatasetTypes,'TIFF');
 use OMEDataset::SoftWorx;
 push (@knownDatasetTypes,'SoftWorx');
 # FIXME:  It seems like there should be a better way of importing all supported datasets and knowing
@@ -66,6 +68,7 @@ use Apache::Session::File;
 use DBI;
 use Sys::Hostname;
 use Fcntl;
+use File::Basename;
 
 # Class data:
 # The URLs will be constructed by prepending the OMEbaseURL to the specific pages.
@@ -109,6 +112,7 @@ my %SQLtypes_Postgres = (
 	);
 
 my $DATASETSDISPLAYLIMIT = 250;
+my $SQLLISTLIMIT = 1000;
 
 # new ()
 #	If this is a local call (no web browser or other user agent), get connection info from the user's ~/.OMErc
@@ -748,15 +752,25 @@ sub SetSelectedDatasets()
 
 # Delete the previously selected datasets
 	$self->{dbHandle}->do ("DELETE FROM ome_sessions_datasets WHERE session_id = $SID");
-
-# Only copy unique datasets that exist in the datasets table.
-	$self->{dbHandle}->do ("INSERT INTO ome_sessions_datasets (session_id,dataset_id) ".
-		"SELECT DISTINCT $SID,datasets.dataset_id WHERE datasets.dataset_id IN (".join (',',@$datasets).')');
 	$self->{SelectedDatasets} = undef;
-	foreach $datasetID (@$datasets)
-	{
-		push (@{$self->{SelectedDatasets}},$datasetID);
+
+	my $sliceStart = 0;
+	my $maxDSidx = scalar (@$datasets)-1;
+	my $sliceStop = $maxDSidx;
+	if ($sliceStop > $SQLLISTLIMIT) {$sliceStop = $SQLLISTLIMIT - 1;}
+	while ($sliceStop <= $maxDSidx) {
+		my @datasetSlice = @$datasets[$sliceStart .. $sliceStop];
+# Only copy unique datasets that exist in the datasets table.
+		$self->DBIhandle->do(
+			"INSERT INTO ome_sessions_datasets (session_id,dataset_id) ".
+			"SELECT DISTINCT $SID,datasets.dataset_id WHERE datasets.dataset_id IN (".join (',',@datasetSlice).')');
+		$sliceStart = $sliceStop + 1;
+		$sliceStop += $SQLLISTLIMIT;
+		$sliceStop = $maxDSidx if ($sliceStop > $maxDSidx);
+		$sliceStop = $maxDSidx + 1 if ($sliceStart > $maxDSidx);
+		push (@{$self->{SelectedDatasets}},@datasetSlice);
 	}
+
 #	$self->Commit();
 	$self->SetSessionProjectID();
 	$self->RefreshSessionInfo();
@@ -791,6 +805,7 @@ my $dbh = $self->DBIhandle();
 my $CGI = $self->cgi();
 my $viewDatasetsURL = $self->ViewDatasetsURL().'?ID=';
 my $datasetView = $dbh->selectrow_array("SELECT dataset_view FROM ome_sessions WHERE session_id=".$self->SID);
+my $dropTable;
 
 	die "Could not determine Dataset view from database\n" unless defined $datasetView and $datasetView;
 	$datasetView =~ s/FROM/, datasets.dataset_id AS link_id FROM/i;
@@ -804,7 +819,16 @@ my $datasetView = $dbh->selectrow_array("SELECT dataset_view FROM ome_sessions W
 		$datasetViewSQL .= ' ORDER BY datasets.name';
 		$datasetViewSQL .= ' LIMIT '.$limit if defined $limit;
 	} else {
-		$datasetViewSQL = $datasetView.' datasets.dataset_id in ('.join (',',@$datasetIDs).') ORDER BY datasets.name';
+		if (scalar (@$datasetIDs) < $SQLLISTLIMIT) {
+			$datasetViewSQL = $datasetView.' datasets.dataset_id in ('.join (',',@$datasetIDs).') ORDER BY datasets.name';
+		} else {
+			$self->DBIhandle->do ('CREATE TEMPORARY TABLE foobar (dataset_id OID)');
+			foreach (@{$params{DatasetIDs}}) {
+				$self->DBIhandle->do ("INSERT INTO foobar VALUES ($_)");
+			}
+			$datasetViewSQL = $datasetView.' datasets.dataset_id in (SELECT dataset_id FROM foobar) ORDER BY datasets.name';
+			$dropTable = 1;
+		}
 	}
 	
 print STDERR "OME:DatasetsTableHTML:Executing <$datasetViewSQL>\n";
@@ -822,14 +846,14 @@ print STDERR "OME:DatasetsTableHTML:Executing <$datasetViewSQL>\n";
 		if ( ($colName eq 'NAME') or ($colName eq 'DATASETNAME') or ($colName =~ m/DATASET.NAME/) ) {$linkColumn = $colNum;}
 		$colNum++;
 	}
-print STDERR "OME:DatasetsTableHTML:ID column: $idColumn.\n";
-
 
 	while ( @tuple = $sth->fetchrow_array() ) {
 		$tuple[$linkColumn] = $CGI->a({-href=>$viewDatasetsURL.$tuple[$idColumn],-target=>'ViewDatasetWindow'},$tuple[$linkColumn]);
 		pop (@tuple);
 		push (@datasetRows,$CGI->td(\@tuple));
 	}
+
+	$self->DBIhandle->do ('DROP TABLE foobar') if defined $dropTable;
 
 	my $CGItableParams = {-border=>1,-cellspacing=>1,-cellpadding=>1};
 	$CGItableParams = $params{CGItableParams} if exists $params{CGItableParams} and defined $params{CGItableParams} and $params{CGItableParams};
@@ -871,12 +895,12 @@ sub StartAnalysis()
 	$self->{dbHandle}->do ("UPDATE ome_sessions SET analysis = ? WHERE SESSION_ID = ?",undef,
 		$full_url, $self->{sessionID});
 	$self->{SelectedDatasets} = undef;
-	if (not defined $self->GetSelectedDatasetIDs()) {
-		$self->SelectDatasets;
-	}
-	
-	$self->GetSelectedDatasetIDs();
-	die "Attempt to start an analysis without selecting datasets." unless defined $self->{SelectedDatasets};
+#	if (not defined $self->GetSelectedDatasetIDs()) {
+#		$self->SelectDatasets;
+#	}
+#	
+#	$self->GetSelectedDatasetIDs();
+#	die "Attempt to start an analysis without selecting datasets." unless defined $self->{SelectedDatasets};
 
 	$self->Commit();
 
@@ -1901,20 +1925,22 @@ sub WriteOMEobject {
 	my $columns;
 	my $cmd;
 	my $sth;
+	my $ObjectID;
+	my $ObjectIDcolumn;
 
 # Make a tableName -> list-of-column-names hash for the attributes.
 	foreach $Fields (@{$Object->{_OME_FIELDS_}})
 	{
 		while ( ($ObjectFieldName,$fieldData) = each (%$Fields) )
 		{
-			$table = @$fieldData[0];
-			$column = @$fieldData[1];
+			$table = $fieldData->[0];
+			$column = $fieldData->[1];
 			$value = $Object->{$ObjectFieldName};
 		# Put single quotes around value if its a string
 			if (defined $value)
 			{
-				if (@$fieldData[2] eq 'STRING') { $value = "'$value'"; }
-				if (@$fieldData[2] eq 'TIMESTAMP') { $value = "'$value'" unless $value eq 'CURRENT_TIMESTAMP'; }
+				if ($fieldData->[2] eq 'STRING') { $value = "'$value'"; }
+				if ($fieldData->[2] eq 'TIMESTAMP') { $value = "'$value'" unless $value eq 'CURRENT_TIMESTAMP'; }
 			}
 			
 		# Set value to NULL if its not defined.
@@ -1922,10 +1948,12 @@ sub WriteOMEobject {
 
 			push (@{$tables{$table}},$column);
 			push (@{$values{$table}},$value);
-			if ($ObjectFieldName eq 'ID')
+			if ($ObjectFieldName eq 'ID' || $fieldData->[2] eq 'OID')
 			{
 				$IDname{$table} = $column;
 				$IDval{$table} = $value;
+				$ObjectID = $value unless defined $ObjectID;
+				$ObjectIDcolumn = $column unless defined $ObjectIDcolumn;
 			}
 		}
 	}
@@ -1935,6 +1963,12 @@ sub WriteOMEobject {
 # for such an ID.  If it exists, do an update.  If it doesn't do an insert.
 	while ( ($table,$columns) = each (%tables) )
 	{
+		if (not exists $IDname{$table} or not defined $IDname{$table} or not exists $IDval{$table} or not defined $IDval{$table}) {
+			$IDname{$table} = $ObjectIDcolumn;
+			$IDval{$table} = $ObjectID;
+			push (@{$tables{$table}},$ObjectIDcolumn);
+			push (@{$values{$table}},$ObjectID);
+		}
 		$cmd = "SELECT * FROM $table WHERE ".$IDname{$table}." = ".$IDval{$table};
 		$sth = $self->{dbHandle}->prepare ($cmd);
 		$sth->execute();
@@ -2032,9 +2066,18 @@ return \@knownDatasetTypes;
 
 
 sub GetDatasetID ($)  {
-	my $self = shift;
-	my $name = shift;
-	return ( $self->{dbHandle}->selectrow_array ("SELECT dataset_id FROM datasets WHERE name = $name") );
+my $self = shift;
+my $nameIN = shift;
+my $path;
+my $name;
+
+	# get the path components out of the name.
+		($name,$path,undef) = fileparse ($nameIN);
+	
+	# If we didn't get path bits in Path, get the absolute path from the Name.
+		$path = abs_path ($path)."/";
+
+	return ( $self->{dbHandle}->selectrow_array ("SELECT dataset_id FROM datasets WHERE name = '$name' AND path = '$path'") );
 }
 
 sub GetDatasetName ($) {
@@ -2111,13 +2154,25 @@ my $projectDatasets = $self->GetProjectDatasetIDs($projectID);
 			print STDERR $self->{errorMessage},"\n";
 			return undef;
 		} else { # No project with these datasets.
-		# Delete any rows in datasets_projects that already have this project ID and any of these datasetIDs
-			$self->DBIhandle->do(
-				"DELETE FROM datasets_projects WHERE project_id=$projectID ".
-				"AND datasets_projects.dataset_id IN (".join (',',@{$params{DatasetIDs}}).")");
-			$self->DBIhandle->do(
-				"INSERT INTO datasets_projects SELECT DISTINCT $projectID as project_id, dataset_id ".
-				"FROM datasets WHERE datasets.dataset_id IN (".join (',',@{$params{DatasetIDs}}).")");
+			my $sliceStart = 0;
+			my $maxDSidx = scalar (@{$params{DatasetIDs}})-1;
+			my $sliceStop = $maxDSidx;
+			if ($sliceStop > $SQLLISTLIMIT) {$sliceStop = $SQLLISTLIMIT - 1;}
+			while ($sliceStop <= $maxDSidx) {
+				my @datasetSlice = @{$params{DatasetIDs}}[$sliceStart .. $sliceStop];
+			# Delete any rows in datasets_projects that already have this project ID and any of these datasetIDs
+				$self->DBIhandle->do(
+					"DELETE FROM datasets_projects WHERE project_id=$projectID ".
+					"AND datasets_projects.dataset_id IN (".join (',',@datasetSlice).")");
+				$self->DBIhandle->do(
+					"INSERT INTO datasets_projects SELECT DISTINCT $projectID as project_id, dataset_id ".
+					"FROM datasets WHERE datasets.dataset_id IN (".join (',',@datasetSlice).")");
+				$sliceStart = $sliceStop + 1;
+				$sliceStop += $SQLLISTLIMIT;
+				$sliceStop = $maxDSidx if ($sliceStop > $maxDSidx);
+				$sliceStop = $maxDSidx + 1 if ($sliceStart > $maxDSidx);
+			}
+			
 		}
 	} else {
 		my $selectedDatasets = $self->GetSelectedDatasetIDs();
@@ -2213,28 +2268,44 @@ my $SID = $self->SID;
 
 # Returns the project ID (if any) associated with the current session.
 # Optionally, pass the parameter ProjectName to get its ID.
+# Optionally pass an array reference in DatasetIDs to get a project with those dataset IDs
+# FIXME:  A very long list of dataset IDs will produce a very long line of SQL.
+#    Possible work-around is to put the list in a temporary table.
 sub GetProjectID () {
 my $self = shift;
 my %params = @_;
+my $returnVal;
 
 	if (defined $params{ProjectName} and $params{ProjectName}) {
 		return $self->DBIhandle->selectrow_array (
 			"SELECT project_id FROM projects WHERE name = '".$params{ProjectName}."'");
 	} elsif (defined $params{DatasetIDs} and $params{DatasetIDs}->[0]) {
-		my $datasetsSQL = join(',',@{$params{DatasetIDs}});
-		print STDERR "Executing:\n".
-			'SELECT project_id from projects p WHERE NOT EXISTS '.
-				'(SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id '.
-				"EXCEPT SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL)) ".
-			"AND NOT EXISTS (SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL) ".
-				'EXCEPT SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id) ',"\n";
-		return $self->DBIhandle->selectrow_array (
-			'SELECT project_id from projects p WHERE NOT EXISTS '.
-				'(SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id '.
-				"EXCEPT SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL)) ".
-			"AND NOT EXISTS (SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL) ".
-				'EXCEPT SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id) '
-		);
+		if (scalar (@{$params{DatasetIDs}}) < $SQLLISTLIMIT) {
+			my $datasetsSQL = join(',',@{$params{DatasetIDs}});
+			return $self->DBIhandle->selectrow_array (
+				'SELECT project_id from projects p WHERE NOT EXISTS '.
+					'(SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id '.
+					"EXCEPT SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL)) ".
+				"AND NOT EXISTS (SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL) ".
+					'EXCEPT SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id) '
+			);
+		} else {
+#			$self->DBIhandle->do ('CREATE TEMPORARY TABLE foobar (dataset_id OID)');
+#			foreach (@{$params{DatasetIDs}}) {
+#				$self->DBIhandle->do ("INSERT INTO foobar VALUES ($_)");
+#			}
+#			my $datasetsSQL = 'SELECT dataset_id FROM foobar';
+#			$returnVal = $self->DBIhandle->selectrow_array (
+#				'SELECT project_id from projects p WHERE NOT EXISTS '.
+#					'(SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id '.
+#					"EXCEPT SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL)) ".
+#				"AND NOT EXISTS (SELECT datasets.dataset_id WHERE datasets.dataset_id IN ($datasetsSQL) ".
+#					'EXCEPT SELECT datasets_projects.dataset_id WHERE datasets_projects.project_id=p.project_id) '
+#			);
+#			$self->DBIhandle->do ('DROP TABLE foobar');
+#			return $returnVal;
+			return undef;
+		}
 	} else {
 		$self->SetSessionProjectID();
 		return $self->DBIhandle->selectrow_array (

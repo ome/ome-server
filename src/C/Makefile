@@ -1,5 +1,5 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
-TARGETS = OMEimportDVfile DumpDV SetDVwave findSpotsOME BinarizeGlobal SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxStats
+TARGETS = OMEimportDVfile DumpDV SetDVwave findSpotsOME BinarizeGlobal SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader DumpSoftWorxStats DumpTIFFheader DumpTIFFstats DumpTIFF
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
 MATH_LIBS = -lm
@@ -41,8 +41,20 @@ SoftWorxSlice : SoftWorxSlice.o BSUtils.o
 DumpSoftWorxHeader : DumpSoftWorxHeader.o BSUtils.o
 		gcc $(DEFINES) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader -lm
 
+DumpSoftWorxExHeader : DumpSoftWorxExHeader.o BSUtils.o
+		gcc $(DEFINES) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader -lm
+
 DumpSoftWorxStats : DumpSoftWorxStats.o BSUtils.o
 		gcc $(DEFINES) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats -lm
+
+DumpTIFFheader : DumpTIFFheader.o
+		gcc $(DEFINES) DumpTIFFheader.o -o DumpTIFFheader -ltiff
+
+DumpTIFFstats : DumpTIFFstats.o readTiffData.o
+		gcc $(DEFINES) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats -lm -ltiff
+
+DumpTIFF : DumpTIFF.o
+		gcc $(DEFINES) DumpTIFF.o -o DumpTIFF -lm -ltiff
 
 spawnSpots : $(OBJECTS) spawnSpots.o
 		gcc -o spawnSpots spawnSpots.o $(LIBS)
@@ -97,9 +109,9 @@ install:
 		ln -fs findSpotsOME ../bin/findSpots/findSpots
 		cp -f BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
 		cp -f spawnSpots ../bin/spawnSpots/
-		cp -f OMEimportDV /usr/sbin/
-		cp -f OMEimportDVfile /usr/bin/
-		cp -f DumpDV /usr/bin/DumpDV
-		cp -f SetDVwave /usr/bin/SetDVwave
+		cp -f OMEimportDV /usr/local/bin/
+		cp -f OMEimportDVfile /usr/local/bin/
+		cp -f DumpDV /usr/local/bin/DumpDV
+		cp -f SetDVwave /usr/local/bin/SetDVwave
 
 all: $(TARGETS)

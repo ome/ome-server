@@ -300,6 +300,7 @@ function VerifyForm (theForm,theDataset) {
 $datasetJS
 	document.dataset = dataset;
 
+	focus();
 	//-->
 </script>
 %;
@@ -507,7 +508,7 @@ my ($i,$j)=(0,0);
 	}
 
 	# sort numerically descending to make @wavelengthSorted go from red to blue.
-	@wavelengthSorted = sort {$a <=> $b} @wavelengths;
+	@wavelengthSorted = sort {$b <=> $a} @wavelengths;
 
 
 	my $datasetJS = qq /dataset = {width:$width,height:$height,numZ:$numZ,numT:$numT,numWaves:$numWaves,theZ:$theZ,theT:$theT};\n/;

@@ -42,6 +42,7 @@ my $OMEmanSpotsURL = $OMEbaseURL."manualSpots.pl";
 my $BinarizeGlobalURL = $OMEbaseURL."BinarizeGlobal.pl";
 my $OMECCCPURL = $OMEbaseURL."CCCP.pl";
 my $OMETMCPURL = $OMEbaseURL."TMCP.pl";
+my $ClickySpotsURL = $OMEbaseURL."LA_clickySpots_OME.pl";
 
 
 print $cgi->header;
@@ -63,6 +64,7 @@ print <<EOF
 <A href="$BinarizeGlobalURL" target="MainFrame">Global Thresholding</A><br>
 <A href="$OMECCCPURL" target="MainFrame">Run CCCP</A><br>
 <A href="$OMETMCPURL" target="MainFrame">Run TMCP</A><br>
+<A href="$ClickySpotsURL" target="MainFrame">Run ClickySpots</A><br>
 EOF
 ;
 

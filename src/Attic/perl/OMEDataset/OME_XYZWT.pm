@@ -18,15 +18,7 @@
 # 
 #
 #
-# Essentialy a hacked version of ICCB_TIF.pm for the support to Applied Precision, Inc.
-#
-# 1/29/01 -- fmyers@api.com 
-#            Created.
-#
-# 4/02/01 -- Removed all references to Pg, and made everything go via DBI
-#            igg
-# 8/09/01 -- Added more documentation and an actual implementation (igg@mit.edu).
-package OMEDataset::SoftWorx;
+package OMEDataset::OME_XYZWT;
 use OMEDataset;
 
 @ISA = qw(OMEDataset);
@@ -35,15 +27,11 @@ use strict;
 use vars qw($AUTOLOAD);
 
 my $myAttributesTable   = 'ATTRIBUTES_DATASET_XYZWT';
-my $myType              = 'SoftWorx';
+my $myType              = 'OME_XYZWT';
 
 #
 # The attributes for this dataset class are general to 5-D datasets composed of XYZ-Wave-Time type data.
-# FIXME:  This is an implementation for API's SoftWorx files.  It should really inherit from OMEDataset::XYZWT,
-# and only modify things specific for SoftWorx.
-# Since this is open-source, for now other 5-D implementations can do inheritance by cut-and-paste.
 # The OMEDataset parent class does not specify any dimensionality, and is meant to be a virtual class.
-# The object is written such that the attributes specific to API SoftWorx are clearly marked to make this migration easier in the future.
 # The other implemented dataset is ICCB_TIFF - used by the ICCB for cell-based visual screening.
 # In the ICCB_TIFF case, the one:one dataset:file mapping is maintained, even for cases where multiple wavelengths are stored in separate
 # TIFF files.  The different wavelengths are 'linked' through a 'raster_id' attribute.  The accessor methods for ICCB_TIFF attributes return
@@ -71,7 +59,7 @@ my $myType              = 'SoftWorx';
 #	Inserted        => ['DATASETS','INSERTED'],
 #	Type            => ['DATASETS','DATASET_TYPE'],
 #	AttributesTable => ['DATASETS','ATTRIBUTES_TABLE'],
-# Top-level SoftWorx (or XYZWT) attributes:
+# Top-level XYZWT attributes:
 #	SizeX         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_X'],
 #	SizeY         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_Y'],
 #	SizeZ         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_Z'],
@@ -80,7 +68,7 @@ my $myType              = 'SoftWorx';
 #	PixelSizeX    => ['ATTRIBUTES_DATASET_XYZWT','PIXEL_SIZE_X'], # These three are in microns.
 #	PixelSizeY    => ['ATTRIBUTES_DATASET_XYZWT','PIXEL_SIZE_Y'],
 #	PixelSizeZ    => ['ATTRIBUTES_DATASET_XYZWT','PIXEL_SIZE_Z'],
-#	WaveIncrement => ['ATTRIBUTES_DATASET_XYZWT','WAVE_INCREMENT'], # These are not used by SoftWorx, but would be in nm and seconds.
+#	WaveIncrement => ['ATTRIBUTES_DATASET_XYZWT','WAVE_INCREMENT'], # These would be in nm and seconds.
 #	TimeIncrement => ['ATTRIBUTES_DATASET_XYZWT','TIME_INCREMENT'],
 # XYZinfo: an array of hash references that contain info about every XYZ "stack" (one XYZ stack per wavelength per timepoint)
 #	XYZinfo       => [$NumWaves][$NumTimes] = {
@@ -105,10 +93,7 @@ my $myType              = 'SoftWorx';
 #				Max          => ['XY_Dataset_Info','max'],
 #				Mean         => ['XY_Dataset_Info','mean'],
 #				GeoMean      => ['XY_Dataset_Info','geomean'],
-#				Sigma        => ['XY_Dataset_Info','sigma'],
-#			# API SoftWorx-specific:
-#				Photosensor  => ['XY_SoftWorx_Info','photosensor_reading'],
-#				IntenScaling => ['XY_SoftWorx_Info','inten_scaling']
+#				Sigma        => ['XY_Dataset_Info','sigma']
 #			};
 # Wavelengths: an array of hash references that contains info about the wavelengths in the dataset (excitation, emission, neutral density).
 # The order of the Wavelengths array corresponds to the order of the wavelengths (wave numbers)
@@ -145,7 +130,7 @@ my $myType              = 'SoftWorx';
 # but I haven't done that yet because it didn't seem compelling enough.
 #
 my %Fields = (
-	ID            => ['ATTRIBUTES_DATASET_XYZWT','DATASET_ID',    'REFERENCE', 'DATASETS'],
+	ID            => ['ATTRIBUTES_DATASET_XYZWT','DATASET_ID',    'OID', 'DATASETS'],
 	SizeX         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_X',        'INTEGER'              ],
 	SizeY         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_Y',        'INTEGER'              ],
 	SizeZ         => ['ATTRIBUTES_DATASET_XYZWT','SIZE_Z',        'INTEGER'              ],
@@ -227,14 +212,21 @@ sub new
 
     my $class           = ref($proto) || $proto;
 
-    $params{AttributesTable} = $myAttributesTable;
-	$params{Type} = $myType;
+# These have to be provided by the sub-class!!!
+#    $params{AttributesTable} = $myAttributesTable;
+#	$params{Type} = $myType;
 	
 # The super-class takes care of initializing super-class fields by
 # reading from the DB, importing, whatever.
     my $self = $class->SUPER::new(%params);
-    
-    push(@{$self->{_OME_FIELDS_}}, \%Fields);
+
+# The sub-class can over-ride the fields hash, and pass it in as a parameter.
+    my $fieldsRef = \%Fields;
+    $fieldsRef = delete $params{Fields} if exists $params{Fields};
+
+# Add the fields->DB map to the object.
+    push(@{$self->{_OME_FIELDS_}}, $fieldsRef);
+	$self->{_MY_FIELDS_} = $fieldsRef;
 
 # Here we set our sub-class fields to undef unless the super-class already assigned them.
     while(($attribute, $value) = each(%Fields))
@@ -274,9 +266,24 @@ sub Initialize {
 	my $sth;
 	my $row;
 	my $tuples;
+	my $OMEfields = $self->{_MY_FIELDS_};
+	my %DBFieldMap;
+	my ($attribute,$value);
+	my $fname;
+	my $pname;
+	
+	$self->{_OME_DB_STATUS_} = 'DIRTY';
+
+# Reverse the Field->DB map in order to have a way to look up parameter names based on database column names.
+	while ( ($attribute,$value) = each (%$OMEfields) )
+	{
+		$DBFieldMap{$value->[1]} = $attribute;
+	}
+	
+	$pname = $DBFieldMap{DATASET_ID};
 
 
-	$sth = $dbh->prepare ("SELECT * FROM ".$self->{AttributesTable}." WHERE DATASET_ID=".$self->{ID});
+	$sth = $dbh->prepare ("SELECT * FROM ".$self->{AttributesTable}." WHERE DATASET_ID=".$self->{$pname});
 	$sth->execute();
 	$row = $sth->fetchrow_arrayref;
 
@@ -284,17 +291,6 @@ sub Initialize {
 	if (defined $row and $row)
 	{
 	my $i;
-	my $fname;
-	my $pname;
-	my %DBFieldMap;
-	my $OMEfields = \%Fields;
-	my ($attribute,$value);
-
-	# Reverse the Field->DB map in order to have a way to look up parameter names based on database column names.
-		while ( ($attribute,$value) = each (%$OMEfields) )
-		{
-			$DBFieldMap{@$value[1]} = $attribute;
-		}
 
 		for ($i=0; $i < $sth->{NUM_OF_FIELDS};$i++)
 		{
@@ -302,6 +298,7 @@ sub Initialize {
 			$pname = $DBFieldMap{$fname};
 			$self->{$pname} = $row->[$i];
 		}
+		$self->{_OME_DB_STATUS_} = 'CURRENT';
 	}
 
 
@@ -312,15 +309,17 @@ sub Initialize {
 
 }
 
-
+sub GetClassFieldsHash {
+	return (%Fields);
+}
 
 
 
 # Check if the file is the right type.  If not, return undef.
 # If the file type is good, then return 1.
-# The check is done by looking at the SoftWorx magic number, which is two bytes at offset 96.
-# This number also tells us if the file is reverse-endian from the system we're running on.
-# We don't do anything with endian-ness at this point, but we have to check both versions of this number.
+# Since this base 5D class is virtual, we always return undef.
+# a sub-class would actually implement this method.
+# This method could become non-virtual if we had our own OME_XYZWT file type.
 sub CheckFileType {
 my $params = shift;
 my $filename = $params->{Import};
@@ -330,23 +329,8 @@ my $DVMagicLittleEndian = 0xa0c0;
 my $DVMagic;
 
 
-	open (DATASET,$params->{Import}) or die "Can't open file '".$params->{Import}."': $!\n";
-	binmode (DATASET);
-
-	seek (DATASET, $DVMagicAddress, 0);
-	read (DATASET,$DVMagic,2);
-	close (DATASET);
-
-	$DVMagic = unpack ('S',$DVMagic);
-	return (undef) unless ($DVMagic eq $DVMagicBigEndian or $DVMagic eq $DVMagicLittleEndian);
-
-#
-# If we made it here, then we got a good magic number.
-# For now, the import mechanism uses an executable C program (OMEimportDV), which takes a path for an argument.
-#
-
-
-return 1;
+	
+return undef;
 }
 
 
@@ -361,108 +345,8 @@ return 1;
 # the parent should have filled in its fields.  We only need to worry about our own and possibly over-write some of
 # the parent's fields, but not in this case.
 sub Import {
-my $self = shift;
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-my $DumpSoftWorxHeader = $OME->binPath.'DumpSoftWorxHeader';
-my $DumpSoftWorxExtHeader = $OME->binPath.'DumpSoftWorxExHeader';
-my $DumpSoftWorxStats = $OME->binPath.'DumpSoftWorxStats';
-my ($XYZinfo,$XYinfo,$Wavelengths);
-my ($zSection,$waveNum,$timePoint);
-my $datasetPath = $self->{Path}.$self->{Name};
-print STDERR "SoftWorx.pm:  Importing $datasetPath\n";
-my $command;
-
-my ($attribute,$value);
-my @columns;
-
-	my $tempFileNameErr = $OME->GetTempName ('SoftWorxImport','err') or die "Couldn't get a name for a temporary file $!\n";
-
-# This will get the dimentions, etc of the dataset.
-# The output of this program is one attribute per line (attribute name \t attribute value).
-# Conveniently, the attribute names match the Object's field names so me don't need a map.
-	$command = "$DumpSoftWorxHeader $datasetPath 2> $tempFileNameErr |";
-	open (STDOUT_PIPE,$command);
-	while (<STDOUT_PIPE>) {
-		chomp;
-		($attribute,$value) = split ('\t',$_);
-	# trim leading and trailing whitespace on $attribute
-		$attribute =~ s/^\s+//;$attribute =~ s/\s+$//;
-	# Trim leading and trailing whitespace, set value to undef if not like a C float.
-		$value =~ s/^\s+//;$value =~ s/\s+$//;$value = undef unless ($value =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
-		$self->{$attribute} = $value;
-	}
-	close (STDOUT_PIPE);
-
-
-# This will dump the info in the extended header.
-# The output is one line per XY plane.
-	if (-x $DumpSoftWorxExtHeader) {
-		$command = "$DumpSoftWorxExtHeader $datasetPath 2>> $tempFileNameErr |";
-		open (STDOUT_PIPE,$command);
-		@columns = split ('\t', <STDOUT_PIPE>);
-		while (<STDOUT_PIPE>) {
-			chomp;
-			@columns = split ('\t', $_);
-		# Trim leading and trailing whitespace, set column value to undef if not like a C float.
-			foreach (@columns) {$_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);}
-			($zSection,$waveNum,$timePoint) = ($columns[0],$columns[1],$columns[2]);
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{Photosensor}  = $columns[3];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{DeltaTime}    = $columns[4];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{StageX}       = $columns[5];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{StageY}       = $columns[6];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{StageZ}       = $columns[7];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{Min}          = int ($columns[8]) if defined $columns[8];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{Max}          = int ($columns[9]) if defined $columns[9];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{Mean}         = $columns[10];
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{ExposureTime} = $columns[11];
-			$Wavelengths->[$waveNum]->{NDFilter}                       = $columns[12];
-			$Wavelengths->[$waveNum]->{ExWavelength}                   = int ($columns[13]) if defined $columns[13] and $columns[13] > 0;
-			$Wavelengths->[$waveNum]->{EmWavelength}                   = int ($columns[14]) if defined $columns[14] and $columns[14] > 0;
-			$XYinfo->[$waveNum][$timePoint][$zSection]->{IntenScaling} = $columns[15];
-			if ($zSection == 0) {
-				$XYZinfo->[$waveNum][$timePoint]->{DeltaTime} = $XYinfo->[$waveNum][$timePoint][$zSection]->{DeltaTime};
-			}
-		}
-		close (STDOUT_PIPE);
-
-	}
-
-
-
-
-# This will calculate statistics about XYZ stacks, and output one line per stack.
-# The file will actually be read at this point, and an error reported if its corrupt.
-	$command = "$DumpSoftWorxStats $datasetPath 2>> $tempFileNameErr |";
-	open (STDOUT_PIPE,$command);
-	@columns = split ('\t', <STDOUT_PIPE>);
-	while (<STDOUT_PIPE>) {
-		chomp;
-		@columns = split ('\t', $_);
-	# Trim leading and trailing whitespace, set column value to undef if not like a C float.
-		foreach (@columns) {$_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);}
-		($waveNum,$timePoint) = ($columns[ 0],$columns[ 2]);
-		if (not defined $Wavelengths->[$waveNum]->{EmWavelength} and defined $columns[ 1] and $columns[ 1]) {
-			$Wavelengths->[$waveNum]->{EmWavelength} = $columns[ 1];
-		}
-		$XYZinfo->[$waveNum][$timePoint]->{Min}       = int ($columns[ 3]) if defined $columns[3];
-		$XYZinfo->[$waveNum][$timePoint]->{Max}       = int ($columns[ 4]) if defined $columns[4];
-		$XYZinfo->[$waveNum][$timePoint]->{Mean}      = $columns[ 5];
-		$XYZinfo->[$waveNum][$timePoint]->{GeoMean}   = $columns[ 6];
-		$XYZinfo->[$waveNum][$timePoint]->{Sigma}     = $columns[ 7];
-		$XYZinfo->[$waveNum][$timePoint]->{CentroidX} = $columns[ 8];
-		$XYZinfo->[$waveNum][$timePoint]->{CentroidY} = $columns[ 9];
-		$XYZinfo->[$waveNum][$timePoint]->{CentroidZ} = $columns[10];
-	}
-	close (STDOUT_PIPE);
-
-
-
-	$self->XYinfo($XYinfo);
-	$self->XYZinfo($XYZinfo);
-	$self->Wavelengths($Wavelengths);
-
-	$self->{_OME_DB_STATUS_} = 'DIRTY';
+#
+# Implementation left to sub-classes
 }
 
 sub XYZinfo {
@@ -583,10 +467,6 @@ my %row;
 						Mean         => $XYinfo->[$waveNum][$timePoint][$zSection]->{Mean},
 						GeoMean      => $XYinfo->[$waveNum][$timePoint][$zSection]->{GeoMean},
 						Sigma        => $XYinfo->[$waveNum][$timePoint][$zSection]->{Sigma},
-					#
-					# This is the API SoftWorx-specific info.
-						Photosensor  => $XYinfo->[$waveNum][$timePoint][$zSection]->{Photosensor},
-						IntenScaling => $XYinfo->[$waveNum][$timePoint][$zSection]->{IntenScaling}
 					};
 				}		
 			}
@@ -611,17 +491,6 @@ my %row;
 				Mean         => $row{mean},
 				GeoMean      => $row{geomean},
 				Sigma        => $row{sigma}
-			};
-		}
-
-	#
-	# Here is the API SoftWorx-specific stuff:
-		$tuples = $dbh->selectall_hashref ('SELECT * FROM XY_SoftWorx_Info WHERE dataset_id='.$self->{ID});
-		foreach (@$tuples) {
-			%row = %$_;
-			$self->{XYinfo}->[$row{wavenumber}][$row{timepoint}][$row{zsection}] = {
-				Photosensor => $row{photosensor_reading},
-				IntenScaling => $row{inten_scaling}
 			};
 		}
 	}
@@ -781,26 +650,6 @@ my $sth = $dbh->prepare('INSERT INTO xy_dataset_info '.
 					$XYinfo->[$wave][$time][$zSection]->{Mean},
 					$XYinfo->[$wave][$time][$zSection]->{GeoMean},
 					$XYinfo->[$wave][$time][$zSection]->{Sigma}
-				);
-			}
-		}
-	}
-
-#
-# Insert the SoftWorx-specific stuff.
-	$dbh->do ('DELETE FROM XY_SoftWorx_Info WHERE dataset_id = '.$ID);
-
-	$sth = $dbh->prepare('INSERT INTO XY_SoftWorx_Info '.
-		'(dataset_id,wavenumber,timepoint,zsection,photosensor_reading,inten_scaling) '.
-		'VALUES (?,?,?,?,?,?)'
-	);
-
-	for ($wave=0;$wave<$numWaves;$wave++) {
-		for ($time=0;$time<$numTimes;$time++) {
-			for ($zSection=0;$zSection<$numZ;$zSection++) {
-				$sth->execute($ID,$wave,$time,$zSection,
-					$XYinfo->[$wave][$time][$zSection]->{Photosensor},
-					$XYinfo->[$wave][$time][$zSection]->{IntenScaling}
 				);
 			}
 		}

@@ -18,32 +18,29 @@
 # 
 #
 
-package OMEDataset::ICCB_TIFF;
+# This is support for generic single-plane TIFF datasets.
+# This is an implemented class - not a virtual class.
+# There is some compatibility with 5-D datasets - all OME_XYZWT methods are supported.
+# This should probably not serve as a base for implementing 5-D datasets constructed from TIFF files - a dubious pursuit anyway.
+# There is a similar class that supports multi-wavelength TIFFs (ICCB_TIFF).
+package OMEDataset::TIFF;
 use OMEDataset;
 @ISA = qw(OMEDataset);
 
 use strict;
 use vars qw($AUTOLOAD);
 
-my $myAttributesTable = 'ATTRIBUTES_ICCB_TIFF';
-my $myType = 'ICCB_TIFF';
+my $myAttributesTable = 'ATTRIBUTES_TIFF';
+my $myType = 'TIFF';
 
 my %Fields = (
-		ID         => [$myAttributesTable,'DATASET_ID',  'REFERENCE', 'DATASETS'            ],
-		SizeX      => [$myAttributesTable,'SIZE_X',      'INTEGER'                          ],
-		SizeY      => [$myAttributesTable,'SIZE_Y',      'INTEGER'                          ],
-		NumWaves   => [$myAttributesTable,'NUM_WAVES',   'INTEGER'                          ],
-		Min        => [$myAttributesTable,'MIN',         'INTEGER'                          ],
-		Max        => [$myAttributesTable,'MAX',         'INTEGER'                          ],
-		Mean       => [$myAttributesTable,'MEAN',        'FLOAT'                            ],
-		Sigma      => [$myAttributesTable,'SIGMA',       'FLOAT'                            ],
-		BaseName   => [$myAttributesTable,'BASE_NAME',   'STRING'                           ],
-		ChemPlate  => [$myAttributesTable,'CHEM_PLATE',  'STRING',    'REFERENCE','EXTERNAL'],
-		CompoundID => [$myAttributesTable,'COMPOUND_ID', 'REFERENCE', 'EXTERNAL'            ],
-		Wave       => [$myAttributesTable,'WAVE',        'INTEGER',   'DATASETS'            ],
-		Well       => [$myAttributesTable,'WELL',        'STRING',    'DATASETS'            ],
-		Sample     => [$myAttributesTable,'SAMPLE',      'INTEGER',   'DATASETS'            ],
-		RasterID   => [$myAttributesTable,'RASTER_ID',   'REFERENCE'                        ],
+		ID         => [$myAttributesTable,'DATASET_ID',  'REFERENCE', 'DATASETS'  ],
+		SizeX      => [$myAttributesTable,'SIZE_X',      'INTEGER'                ],
+		SizeY      => [$myAttributesTable,'SIZE_Y',      'INTEGER'                ],
+		Min        => [$myAttributesTable,'MIN',         'INTEGER'                ],
+		Max        => [$myAttributesTable,'MAX',         'INTEGER'                ],
+		Mean       => [$myAttributesTable,'MEAN',        'FLOAT'                  ],
+		Sigma      => [$myAttributesTable,'SIGMA',       'FLOAT'                  ],
 		);
 
 # Constructor new
@@ -98,6 +95,8 @@ sub new {
 	$params{AttributesTable} = $myAttributesTable;
 	$params{Type} = $myType;
 
+# Call the parent (superclass) constructor.
+# This will set the Name, Path, ID, etc.
 	my $self  = $class->SUPER::new(%params);
 
 
@@ -121,8 +120,7 @@ sub new {
 # OMEDataset sets DBcurrent if it found a dataset in the database with the same name, path and host.
 	if ($importing and not $self->DBcurrent) {
 		Import ($self);
-	# This function calls WriteDB
-		$self->FixWavelengths();
+		$self->WriteDB();
 	}
 
 	return $self;
@@ -165,11 +163,12 @@ sub initialize {
 			$self->{$pname} = $row->[$i];
 		}
 	}
-	
+
 # for compatibility with 5-D datasets:
 	$self->{SizeZ} = 1;
+	$self->{NumWaves} = 1;
 	$self->{NumTimes} = 1;
-
+	
 	$sth->finish();
 	undef $sth;
 	undef $dbh;
@@ -182,8 +181,6 @@ sub initialize {
 # return 1.
 # In this case all we're checking is the TIFF magic number.  This type checker can be used for all TIFFS.
 #
-# We should also check for the presence of certain elements in the filename since this object is an ICCB_TIFF, and these elements get
-# parsed into the appropriate fields in the ICCB_TIFF attributes table.
 sub CheckFileType {
 my $params = shift;
 my $filename = $params->{Import};
@@ -202,54 +199,6 @@ my $TIFFMagic;
 
 	$TIFFMagic = unpack ('S',$TIFFMagic);
 	return (undef) unless ($TIFFMagic eq $TIFFMagicBigEndian or $TIFFMagic eq $TIFFMagicLittleEndian);
-
-
-#
-# Below is what differentiates an ICCB_TIFF from a regular TIFF file.
-#
-use File::Basename;
-my ($name,$path,$suffix);
-my ($wave,$sample,$well);
-my ($frag,$fragRe);
-my ($base,$plate);
-
-	# Get the name, path and suffix from the filename.
-	($name,$path,$suffix) = fileparse($filename,".TIF",".tif");	
-
-	# The suffix (when converted to uppercase) must be equal to "TIF"
-	return undef unless (uc ($suffix) eq ".TIF");
-
-	# Build frag from the end to the begining.
-	# eventually it will contain all the stuff after the base name.
-	# Get the well,sample,and wave
-	# if we find matches, set the variable, and prepend the format to frag
-	if ($name =~ /_w([0-9]+)/){ $wave = $1; $frag = "_w".$wave.$frag; }
-	if ($name =~ /_s([0-9]+)/){ $sample = $1; $frag = "_s".$sample.$frag; }
-	if ($name =~ /_([A-P][0-2][0-9])/){ $well = $1; $frag = "_".$well.$frag;}
-
-	# The last check is that we have to have the well defined.  If not, its not an ICCB_TIFF.
-	return undef unless defined $well;
-
-	# If we made it this far, then we're going to make a dataset object.
-
-	# Make frag a regular expression and use it to find the plate number.
-	# Prepend the plate number to frag so we can find the basename.
-	# N.B.: If the base name ends in a digit, then we cannot determine the plate number!
-
-	$fragRe = qr/$frag/;
-	if ($name =~ /([0-9]+)${fragRe}/){ $plate = $1; $frag = $plate.$frag }
-
-	# The base name is everything before $frag.
-	$fragRe = qr/$frag/;
-	if ($name =~ /(.*)${fragRe}/){ $base = $1;}
-
-	# Set fields specific to our dataset - we're setting keys and values in the parameters hash, so that when the new
-	# method returns, everything will be copasetic.
-	$params->{Well}      = $well;
-	$params->{BaseName}  = $base;
-	$params->{Wave}      = $wave;
-	$params->{Sample}    = $sample;
-	$params->{ChemPlate} = $plate;
 
 
 return 1;
@@ -276,11 +225,9 @@ return 1;
 # The details will depend on how many dimensions, etc.  Obviously the stitching together of the multi-D TIFFs will
 # be highly dependent on their source.
 # Probably in most cases it would be best to start with something like this rather than trying to sub-class OME_XYZWT.
-# My only thoughts on this is that existing tables should be used for XYZinfo and Wavelengths - using the RasterID
-# rather than the dataset ID in the DATASET_ID column.  The RasterID should be assigned to one of the dataset IDs in the
+# My only thoughts on this is that existing tables should be used for XYZinfo and Wavelengths - using the RasterID (see ICCB_TIFF)
+# rather than the dataset ID in the DATASET_ID column.  The RasterID should probably be assigned to one of the dataset IDs in the
 # multi-TIFF raster.
-# The Wavelengths are partially implemented in this class - we can't read the filters out of the TIFF (in Import), but if
-# They are provided to the Wavelengths method, they'll be stashed in the dataset_wavelengths table in the DB.
 sub Import {
 my $self = shift;
 my $OME = $self->{OME};
@@ -315,6 +262,9 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
+foreach (  keys (%$self) ) {
+print STDERR "TIFF:Import, self: $_ => ".$self->{$_}."\n";
+}
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
@@ -343,67 +293,6 @@ my @columns;
 }
 
 
-
-sub Wavelengths {
-my $self = shift;
-my $Wavelengths = shift;
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-
-my $tuples;
-my %row;
-# This is a combined Get/Set method.  If no parameter is passed, then its a Get method.
-# If a parameter is passed, then it is a Set method.
-# if used as a Get method, we import data from the Dataset_Wavelengths table to build up the Wavelengths array.
-# In this case the dataset_id column refers to the RasterID.
-# We read the database the first time this method is called, and stash the results in the Wavelengths field
-# (which doesn't exist until this method is called).
-# subsequent calls return the array reference stored in the Wavelengths field.
-# The array is accessed as Wavelengths->[WaveNumber]->{ExWavelength}, etc.
-# It is a FATAL error if the array bounds returned from the database do not match $Dataset->NumWaves.
-# It is a FATAL error if a parameter is passed, but it is not an array reference,
-#   or if the bounds of the array do not match $Dataset->NumWaves.
-# In the Set method sense, the array in the array reference is copied to a new array reference,
-#   which is the value of the Wavelengths key in the object hash.  A reference to the copied array is returned.
-# The Set method does not write to the database, that is only done in the WriteDB method, which should call WriteDB_Wavelengths.
-# The attributes of this array are:
-# ExWavelength:  The excitation wavelength in nm.
-# EmWavelength:  The emission wavelength in nm.
-# NDFilter:      The neutral density filter, as a percentage from 0.0 to 1.0
-# N.B.:  This array is sorted by wave number, so that Wavelengths[0] is the first wave in the dataset, etc.
-	if (defined $Wavelengths) {
-		die "Parameter passed to $self->Wavelengths is not a reference to an array.\n"
-			unless ref($Wavelengths) eq 'ARRAY';
-		die "The bounds of the array reference passed to $self->Wavelengths do not match [$self->NumWaves].\n"
-			unless scalar (@$Wavelengths) eq $self->{NumWaves};
-
-		my ($waveNum,$numWaves) = (0,$self->{NumWaves});
-		for ($waveNum = 0; $waveNum < $numWaves; $waveNum++) {
-			$self->{Wavelengths}->[$waveNum] = {
-				ExWavelength => $Wavelengths->[$waveNum]->{ExWavelength},
-				EmWavelength => $Wavelengths->[$waveNum]->{EmWavelength},
-				NDFilter     => $Wavelengths->[$waveNum]->{NDFilter}
-			};			
-		}
-
-# Tell WriteDB to do the write.
-	$self->{_OME_DB_STATUS_} = 'DIRTY';
-	}
-
-	elsif (not exists $self->{Wavelengths}) {
-		$tuples = $dbh->selectall_hashref ('SELECT * FROM Dataset_Wavelengths WHERE dataset_id='.$self->{RasterID}.' ORDER BY wavenumber ASC');
-		foreach (@$tuples) {
-			%row = %$_;
-			$self->{Wavelengths}->[$row{wavenumber}] = {
-				ExWavelength => $row{ex_wavelength},
-				EmWavelength => $row{em_wavelength},
-				NDFilter     => $row{nd_filter}
-			};
-		}
-	}
-
-	return $self->{Wavelengths};
-}
 
 
 sub XYinfo {
@@ -548,151 +437,22 @@ my %row;
 }
 
 
-
-
-
-
-#
-# This is an over-ride of the superclass WriteDB method.
-# The superclass wethod relies on all attributes written to the DB to be expressed in the %Fields hash above
-# and the equivalent for all parent classes.  Here we have to write the arrays that aren't represented in the %Fields hash above.
-# If this method is inherited and over-ridden by a sub-class, make sure you don't inadvertantly leave this out!
-# In this case, we only write the Wavelengths array - if it has anything in it.  Multiple Zs are not defined for this class.
-sub WriteDB {
-my $self = shift;
-
-	
-# Call the superclass WriteDB
-	$self->SUPER::WriteDB ();
-
-# Write our specific attributes not included in the Fields hash
-	$self->WriteDB_Wavelengths;
-
+# Wavelengths are not defined for this dataset - return undef
+sub Wavelengths {
+	return undef;
 }
 
+
+# These are simply traps because we don't write this stuff to the DB.
+sub WriteDB_XYinfo {
+}
 
 sub WriteDB_XYZinfo {
 }
 
-
-sub WriteDB_XYinfo {
-}
-
-
-# We only write anything if the Wavelengths array actually has anything in it.
 sub WriteDB_Wavelengths {
-my $self = shift;
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-my ($wave);
-my $Wavelengths = $self->Wavelengths;
-return unless defined $Wavelengths;
-my ($numWaves) = (scalar (@$Wavelengths));
-my $ID = $self->RasterID;
-
-# Clean out any old info for this dataset.
-	$dbh->do ('DELETE FROM dataset_wavelengths WHERE dataset_id = '.$ID);
-
-my $sth = $dbh->prepare('INSERT INTO dataset_wavelengths '.
-		'(dataset_id,wavenumber,ex_wavelength,em_wavelength,nd_filter) '.
-		'VALUES (?,?,?,?,?)'
-	);
-
-	for ($wave=0;$wave<$numWaves;$wave++) {
-		$sth->execute($ID,$wave,
-			$Wavelengths->[$wave]->{ExWavelength},
-			$Wavelengths->[$wave]->{EmWavelength},
-			$Wavelengths->[$wave]->{NDFilter}
-		);
-	}
 }
 
-
-
-
-
-
-# GetWavelengthDatasets
-# This method will return an array of dataset objects which have the same
-# Well, BaseName, Sample and ChemPlate as the calling object, but different
-# wavelengths.  The array members are ordered by wave number.
-# N.B.:  There will be a COPY of the calling object in the array (not a reference to the calling object)
-sub GetWavelengthDatasets {
-my $self = shift;
-my $rasterID = $self->{RasterID};
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-my $datasetIDs = $dbh->selectcol_arrayref ("SELECT dataset_id FROM $myAttributesTable WHERE raster_id = $rasterID ORDER BY wave");
-
-	return $OME->GetDatasetObjects ($datasetIDs);
-
-}
-
-
-
-# FixWavelengths
-# makes sure all wavelengths of the dataset have the same raster_id.
-# This preserves the mapping of one file per dataset, but allows for multiple files/datasets
-# to be part of the same raster.
-# Wavelengths are part of the same raster.
-# Timepoints are part of the same raster.
-# Z-sections are in the same raster.
-# multiple samples of the same "coverslip" are not.
-sub FixWavelengths() {
-my $self = shift;
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-my $rasterID = $self->{RasterID};
-my $datasetID = $self->{ID};
-my @datasetIDs;
-
-	my $cmd = "SELECT dataset_id,raster_id FROM $myAttributesTable WHERE ".
-		"dataset_id = datasets.dataset_id and dataset_id != $datasetID AND datasets.path = '".$self->{Path}."' AND ".
-		"base_name = ? AND chem_plate = ? AND well = ? AND sample = ?";
-	my @values = ($self->{BaseName},$self->{ChemPlate},$self->{Well},$self->{Sample});
-	my $rows = $dbh->selectall_arrayref($cmd,undef,@values);
-	
-	foreach (@$rows) {
-		my ($col1,$col2) = @$_;
-		push (@datasetIDs,$col1);
-		if (defined $rasterID and $rasterID and defined $col2 and $col2) {
-			die "Raster_ID $col2, in dataset ID $col1 doesn't match raster_id $rasterID in other datasets having the same base_name, chem_plate, well, and sample!!!\n"
-				unless $col2 = $rasterID;
-		}
-		if (defined $col2 and $col2) {
-			$rasterID = $col2;
-		}
-	}
-
-	if (not defined $rasterID or not $rasterID) {
-		$rasterID = $self->{ID};
-	}
-	$self->{RasterID} = $rasterID;
-
-	my $numWaves = scalar (@datasetIDs) + 1;
-	$self->{NumWaves} = $numWaves;
-	$self->WriteDB();
-	foreach (@datasetIDs) {
-		$dbh->do ("UPDATE $myAttributesTable SET raster_id=$rasterID, num_waves=$numWaves WHERE dataset_id=$_");
-	}
-	
-
-}
-
-
-sub GetBinaryImagePath() {
-my $self = shift;
-my $OME = $self->{OME};
-my $dbh = $OME->DBIhandle();
-my $rasterID = $self->{RasterID};
-
-	my $cmd = "SELECT path,name FROM binary_image ".
-		"WHERE analysis_id = (SELECT MAX(analysis_id) FROM binary_image ".
-			"WHERE binary_image.dataset_id_in = $myAttributesTable.dataset_id AND $myAttributesTable.raster_id=$rasterID)";
-	my ($path,$name) = $dbh->selectrow_array($cmd);
-	return $path.$name;
-	
-}
 
 
 

@@ -121,6 +121,17 @@ my $projectNames = $OME->GetProjectNames;
 	print '</BLOCKQUOTE>';
 
 
+	my @pathElements = split ('/',$selection);
+	my $projName = $pathElements[$#pathElements];
+	my $defaultRadio = 'addNewProj';
+	my %projHash;
+	foreach (@$projectNames) {$projHash{$_} = 1};
+	$defaultRadio = 'addExistProj' if (exists $projHash{$projName});
+	my $newProjName = '';
+	$newProjName = $projName unless (exists $projHash{$projName});
+	my $existProjName;
+	$existProjName = $projName if (exists $projHash{$projName});
+
 	print $cgi->checkbox(-name=>'DoProject',
 					-checked=>'on',
 					-value=>'on',
@@ -128,7 +139,7 @@ my $projectNames = $OME->GetProjectNames;
 	print '<BLOCKQUOTE>';
 	my @projectRadios = $cgi->radio_group(-name=>'DoProjectType',
 				-values => ['addNewProj','addExistProj','replaceProj'],
-				-default=>'addNewProj',
+				-default=>$defaultRadio,
 				-labels => {
 					'addNewProj'   => 'New project named: ',
 					'addExistProj' => 'Add imported datasets to existing project ',
@@ -136,11 +147,9 @@ my $projectNames = $OME->GetProjectNames;
 				}
 			);
 
-	my @pathElements = split ('/',$selection);
-	my $projName = $pathElements[$#pathElements];
-	print $projectRadios[0].$cgi->textfield(-name=>'newProject', -size=>32,-default=>$projName).'<BR>';
-	print $projectRadios[1].$cgi->popup_menu(-name=>'addProject',-values=>$projectNames).'<BR>';
-	print $projectRadios[2].$cgi->popup_menu(-name=>'replaceProject',-values=>$projectNames).
+	print $projectRadios[0].$cgi->textfield(-name=>'newProject', -size=>32,-default=>$newProjName).'<BR>';
+	print $projectRadios[1].$cgi->popup_menu(-name=>'addProject',-values=>$projectNames,-default=>$existProjName).'<BR>';
+	print $projectRadios[2].$cgi->popup_menu(-name=>'replaceProject',-values=>$projectNames,-default=>$existProjName).
 		' with imported datasets.<BR>';
 
 	
@@ -229,6 +238,10 @@ sub ImportSelections {
 my $selections = shift;
 my %selectedFiles;
 my @datasetIDs;
+my $maxReport=50;
+my $reportEvery;
+my $reportNum;
+my $numSelections;
 
 # We're going to use the UNIX system's find instead of Perl's File::Find
 # I didn't like the consistency of how it reported paths.  Sometimes there were multiple
@@ -255,18 +268,30 @@ my @datasetIDs;
 					importStatWin.document.URL = "";
 				//-->
 			</script>
-			}
+			};
+
+		$reportEvery = 1;
+		$reportNum = 0;
+		$numSelections = scalar (@$selections);
+		$reportEvery = $numSelections / $maxReport;
+		$reportEvery = 1 unless $reportEvery > 1;
 	}
 	foreach (@$selections) {
 #		print STDERR "DirTreeSelect:  Importing $_\n";
 		my $dataset = $OME->ImportDataset (Name => $_);
 		if (defined $dataset) {
-			ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
 			push (@datasetIDs,$dataset->{ID});
+			if ($reportEvery eq 1) {
+				ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
+			} elsif (scalar (@datasetIDs) % $reportEvery eq 0) {
+				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
+				$OME->Commit();			
+			}
 		} else {
 			ReportDocStatus ($_.":  <B>Ignored</B> - type could not be determined.<BR>");
 		}
 	}
+	ReportDocStatus ("Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
 	
 	return \@datasetIDs;
 }

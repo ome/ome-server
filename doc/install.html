@@ -47,6 +47,11 @@ I've put things in a top level OME directory like so:</li>
 	bin
 	psql
 </pre>
+<li>
+Go to the C directory, and do:<br><ul><pre>
+>make all
+>make install
+</pre></ul></li>
 
 <li>
 On development servers I make a symbolic link between<pre>
@@ -92,11 +97,14 @@ implementation that might do the trick.
 or leave them disabled, whatever.
 <br>Wether or not passwords are checked is decided in ~postgres/pgsql/data/pg_hba.conf</li>
 <li>
-Once you log in, proceed to import datasets.&nbsp; Only API SoftWorx and
-ICCB_TIFF files are presently supported.</li>
+Once you log in, proceed to import datasets.&nbsp; Only API SoftWorx,
+ICCB_TIFF (Universal Imaging) and plain-vanilla single-plane TIFF files are presently supported.</li>
 
-<br>Shortly, we will have support for plain-vanilla TIFFs.&nbsp; Or someone
-could beat me to it...</ul>
+<br>SoftWorx support is in src/perl/OMEDataset/SoftWorx.pm, 
+TIFF in src/perl/OMEDataset/TIFF.pm and ICCB_TIFF in src/perl/OMEDataset/ICCB_TIFF.pm.  TIFF datasets are 
+single-plane per dataset type of file, while ICCB_TIFF supports multiple wavelengths.
+There is a virtual class to serve as an example for general 5-D datasets in src/perl/OMEDataset/OME_XYZWT.pm, 
+and a sample implementation of this class in src/perl/OMEDataset/OME_XYZWT/SoftWorx.pm.</ul>
 
 </body>
 </html>

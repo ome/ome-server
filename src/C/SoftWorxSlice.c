@@ -361,7 +361,13 @@ PixPtr thePixels;
 /*
 * This is the number of images before the time-point we want.
 */
-	num = (time * numZ * numWaves) + (w * numZ) + z;
+/* Image sequence. 0=ZTW, 1=WZT, 2=ZWT */
+	if (head->imagesequence == 0)
+		num  = z + (time * numZ) + (w * numZ * head->numtimes);
+	else if (head->imagesequence == 1)
+		num  = w + (z * numWaves) + (time * numWaves * numZ);
+	else if (head->imagesequence == 2)
+		num  = z + (w * numZ) + (time * numZ * numWaves);
 
 /* We set the file pointer to the begining of our timepoint */
 	fseek( fp, 1024+head->next+(num*Rows*Cols*2), SEEK_SET );
