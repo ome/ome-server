@@ -30,8 +30,14 @@ public class RemoteAttributeType
     extends RemoteOMEObject
     implements AttributeType
 {
-    static { RemoteObject.addClass("OME::AttributeType",
-                                   RemoteAttributeType.class); }
+    static
+    {
+        RemoteObject.addClass("OME::AttributeType",
+                              RemoteAttributeType.class);
+        RemoteObject.addClass("OME::AttributeType::Column",
+                              RemoteAttributeType.Column.class);
+    }
+
 
     public RemoteAttributeType() { super(); }
     public RemoteAttributeType(String reference) { super(reference); }
@@ -90,9 +96,6 @@ public class RemoteAttributeType
         extends RemoteOMEObject
         implements AttributeType.Column
     {
-        static { RemoteObject.addClass("OME::AttributeType::Column",
-                                       RemoteAttributeType.Column.class); }
-
         public Column() { super(); }
         public Column(String reference) { super(reference); }
 

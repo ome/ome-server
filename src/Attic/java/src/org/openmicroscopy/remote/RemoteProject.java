@@ -30,7 +30,13 @@ public class RemoteProject
     extends RemoteOMEObject
     implements Project
 {
-    static { RemoteObject.addClass("OME::Project",RemoteProject.class); }
+    static
+    {
+        RemoteObject.addClass("OME::Project",RemoteProject.class);
+        RemoteObject.addClass("OME::Project::DatasetMap",
+                              DatasetLink.class);
+    }
+        
 
     public RemoteProject() { super(); }
     public RemoteProject(String reference) { super(reference); }
@@ -85,9 +91,6 @@ public class RemoteProject
     static class DatasetLink
         extends RemoteOMEObject
     {
-        static { RemoteObject.addClass("OME::Project::DatasetMap",
-                                       DatasetLink.class); }
-        
         public DatasetLink() { super(); }
         public DatasetLink(String reference) { super(reference); }
 

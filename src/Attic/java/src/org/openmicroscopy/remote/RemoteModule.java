@@ -30,8 +30,14 @@ public class RemoteModule
     extends RemoteOMEObject
     implements Module
 {
-    static { RemoteObject.addClass("OME::Program",
-                                   RemoteModule.class); }
+    static
+    {
+        RemoteObject.addClass("OME::Program",RemoteModule.class);
+        RemoteObject.addClass("OME::Program::FormalInput",
+                              RemoteModule.FormalInput.class);
+        RemoteObject.addClass("OME::Program::FormalOutput",
+                              RemoteModule.FormalOutput.class);
+    }
 
     public RemoteModule() { super(); }
     public RemoteModule(String reference) { super(reference); }
@@ -152,9 +158,6 @@ public class RemoteModule
         extends FormalParameter
         implements Module.FormalInput
     {
-        static { RemoteObject.addClass("OME::Program::FormalInput",
-                                       RemoteModule.FormalInput.class); }
-
         public FormalInput() { super(); }
         public FormalInput(String reference) { super(reference); }
 
@@ -174,9 +177,6 @@ public class RemoteModule
         extends FormalParameter
         implements Module.FormalOutput
     {
-        static { RemoteObject.addClass("OME::Program::FormalOutput",
-                                       RemoteModule.FormalOutput.class); }
-
         public FormalOutput() { super(); }
         public FormalOutput(String reference) { super(reference); }
 

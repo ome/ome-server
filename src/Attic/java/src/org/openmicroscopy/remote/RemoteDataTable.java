@@ -30,7 +30,12 @@ public class RemoteDataTable
     extends RemoteOMEObject
     implements DataTable
 {
-    static { RemoteObject.addClass("OME::DataTable",RemoteDataTable.class); }
+    static
+    {
+        RemoteObject.addClass("OME::DataTable",RemoteDataTable.class);
+        RemoteObject.addClass("OME::DataTable::Column",
+                              RemoteDataTable.Column.class);
+    }
 
     public RemoteDataTable() { super(); }
     public RemoteDataTable(String reference) { super(reference); }
@@ -89,9 +94,6 @@ public class RemoteDataTable
         extends RemoteOMEObject
         implements DataTable.Column
     {
-        static { RemoteObject.addClass("OME::DataTable::Column",
-                                       RemoteDataTable.Column.class); }
-
         public Column() { super(); }
         public Column(String reference) { super(reference); }
 

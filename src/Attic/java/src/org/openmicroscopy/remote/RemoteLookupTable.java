@@ -30,7 +30,12 @@ public class RemoteLookupTable
     extends RemoteOMEObject
     implements LookupTable
 {
-    static { RemoteObject.addClass("OME::LookupTable",RemoteLookupTable.class); }
+    static
+    {
+        RemoteObject.addClass("OME::LookupTable",RemoteLookupTable.class);
+        RemoteObject.addClass("OME::LookupTable::Entry",
+                              RemoteLookupTable.Entry.class);
+    }
 
     public RemoteLookupTable() { super(); }
     public RemoteLookupTable(String reference) { super(reference); }
@@ -61,9 +66,6 @@ public class RemoteLookupTable
         extends RemoteOMEObject
         implements LookupTable.Entry
     {
-        static { RemoteObject.addClass("OME::LookupTable::Entry",
-                                       RemoteLookupTable.Entry.class); }
-
         public Entry() { super(); }
         public Entry(String reference) { super(reference); }
 

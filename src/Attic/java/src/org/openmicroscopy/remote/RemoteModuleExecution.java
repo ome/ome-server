@@ -30,8 +30,13 @@ public class RemoteAnalysis
     extends RemoteOMEObject
     implements Analysis
 {
-    static { RemoteObject.addClass("OME::Analysis",
-                                   RemoteAnalysis.class); }
+    static
+    {
+        RemoteObject.addClass("OME::Analysis",RemoteAnalysis.class);
+        RemoteObject.addClass("OME::Analysis::ActualInput",
+                              RemoteAnalysis.ActualInput.class);
+    }
+
 
     public RemoteAnalysis() { super(); }
     public RemoteAnalysis(String reference) { super(reference); }
@@ -95,9 +100,6 @@ public class RemoteAnalysis
         extends RemoteOMEObject
         implements Analysis.ActualInput
     {
-        static { RemoteObject.addClass("OME::Analysis::ActualInput",
-                                       RemoteAnalysis.ActualInput.class); }
-
         public ActualInput() { super(); }
         public ActualInput(String reference) { super(reference); }
 

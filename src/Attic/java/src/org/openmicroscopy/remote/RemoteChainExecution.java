@@ -30,8 +30,14 @@ public class RemoteChainExecution
     extends RemoteOMEObject
     implements ChainExecution
 {
-    static { RemoteObject.addClass("OME::ChainExecution",
-                                   RemoteChainExecution.class); }
+    static
+    {
+        RemoteObject.addClass("OME::ChainExecution",
+                              RemoteChainExecution.class);
+        RemoteObject.addClass("OME::AnalysisExecution::NodeExecution",
+                              RemoteChainExecution.Node.class);
+    }
+
 
     public RemoteChainExecution() { super(); }
     public RemoteChainExecution(String reference) { super(reference); }
@@ -71,9 +77,6 @@ public class RemoteChainExecution
         extends RemoteOMEObject
         implements ChainExecution.Node
     {
-        static { RemoteObject.addClass("OME::AnalysisExecution::NodeExecution",
-                                       RemoteChainExecution.Node.class); }
-
         public Node() { super(); }
         public Node(String reference) { super(reference); }
 

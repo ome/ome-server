@@ -30,8 +30,13 @@ public class RemoteChain
     extends RemoteOMEObject
     implements Chain
 {
-    static { RemoteObject.addClass("OME::AnalysisView",
-                                   RemoteChain.class); }
+    static
+    { 
+        RemoteObject.addClass("OME::AnalysisView",RemoteChain.class);
+        RemoteObject.addClass("OME::AnalysisView::Node",RemoteChain.Node.class);
+        RemoteObject.addClass("OME::AnalysisView::Link",RemoteChain.Link.class);
+    }
+
 
     public RemoteChain() { super(); }
     public RemoteChain(String reference) { super(reference); }
@@ -88,9 +93,6 @@ public class RemoteChain
         extends RemoteOMEObject
         implements Chain.Node
     {
-        static { RemoteObject.addClass("OME::AnalysisView::Node",
-                                       RemoteChain.Node.class); }
-
         public Node() { super(); }
         public Node(String reference) { super(reference); }
 
@@ -141,9 +143,6 @@ public class RemoteChain
         extends RemoteOMEObject
         implements Chain.Link
     {
-        static { RemoteObject.addClass("OME::AnalysisView::Link",
-                                       RemoteChain.Link.class); }
-
         public Link() { super(); }
         public Link(String reference) { super(reference); }
 

@@ -30,8 +30,12 @@ public class RemoteImage
     extends RemoteOMEObject
     implements Image
 {
-    static { RemoteObject.addClass("OME::Image",RemoteImage.class); }
-
+    static
+    {
+        RemoteObject.addClass("OME::Image",RemoteImage.class);
+        RemoteObject.addClass("OME::Image::DatasetMap",DatasetLink.class);
+    }
+        
     public RemoteImage() { super(); }
     public RemoteImage(String reference) { super(reference); }
 
@@ -117,9 +121,6 @@ public class RemoteImage
     static class DatasetLink
         extends RemoteOMEObject
     {
-        static { RemoteObject.addClass("OME::Image::DatasetMap",
-                                       DatasetLink.class); }
-        
         public DatasetLink() { super(); }
         public DatasetLink(String reference) { super(reference); }
 

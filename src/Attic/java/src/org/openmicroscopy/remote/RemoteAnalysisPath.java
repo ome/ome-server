@@ -30,8 +30,14 @@ public class RemoteAnalysisPath
     extends RemoteOMEObject
     implements AnalysisPath
 {
-    static { RemoteObject.addClass("OME::AnalysisPath",
-                                   RemoteAnalysisPath.class); }
+    static
+    {
+        RemoteObject.addClass("OME::AnalysisPath",
+                              RemoteAnalysisPath.class);
+        RemoteObject.addClass("OME::AnalysisPath::Map",
+                              RemoteAnalysisPath.Node.class);
+    }
+
 
     public RemoteAnalysisPath() { super(); }
     public RemoteAnalysisPath(String reference) { super(reference); }
@@ -61,9 +67,6 @@ public class RemoteAnalysisPath
         extends RemoteOMEObject
         implements AnalysisPath.Node
     {
-        static { RemoteObject.addClass("OME::AnalysisPath::Map",
-                                       RemoteAnalysisPath.Node.class); }
-
         public Node() { super(); }
         public Node(String reference) { super(reference); }
 
