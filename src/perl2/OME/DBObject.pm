@@ -486,7 +486,8 @@ accessor for retrieving a foreign-key ID in addition to one for
 retrieving a foreign-key object.)  In this case, exactly one of the
 logical columns should provide the \%sql_options parameter.  If none
 of them do, the database location will never be created, and the
-database operations will most likely generate "column missing" errors.
+data
+base operations will most likely generate "column missing" errors.
 If more than one does, the database delegate will try to create a
 table with two identically-named columns, which is a database error.
 
@@ -500,6 +501,22 @@ sub __isClassName ($) {
 sub __isSTReference ($) {
     my $ref = shift;
     return $ref =~ /^\@\w+$/;
+}
+
+sub __loadOMEType {
+    my ($proto, $ome_type) = @_;
+    if( __isClassName( $ome_type ) ) {
+		$ome_type->require()
+			or die "Error loading package $ome_type.";
+	} elsif( __isSTReference( $ome_type ) ) {
+		my $atype = $proto->Session()->Factory()->findObject("OME::SemanticType", name => substr( $ome_type,1 ) )
+			or confess "could not find Semantic Type $ome_type";
+		$ome_type = $atype->requireAttributeTypePackage();
+	} else {
+		confess "$ome_type is not a valid OME type";
+	}
+
+    return $ome_type;
 }
 
 sub addColumn {
@@ -1093,7 +1110,6 @@ sub getPublishedCols {
 			keys %$column_accessors
 		)
 	);
-
 	return @publishedCols;
 }
 
@@ -1591,8 +1607,7 @@ sub __addForeignJoin {
             my $local_column_name = $column->[1];
             my $fkey_class = $column->[2];
 
-			$fkey_class->require()
-				or die "Error loading package $fkey_class.";
+			$fkey_class = $proto->__loadOMEType( $fkey_class );
             my $target_columns = $fkey_class->__columns();
             my $target_column = $target_columns->{$target_alias};
             my $target_table_name = $target_column->[0];
