@@ -271,19 +271,19 @@ END_HTML
 		my @cgi_search_names = $q->param( 'search_names' );
 
 		# clear stale search parameters
+		# Reset fields if the search type was just switched.
 		unless( $search_type && $search_type eq $type || !$search_type ) {
 			$q->delete( $_ ) foreach( @cgi_search_names );
-		}
-		
-		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
-		
-		# Reset fields if the search type was just switched.
- 		unless( !$search_type || $type eq $search_type ) {
+
  			$q->param( '__order', '' );
  			$q->param( '__offset', '' );
  			$q->param( 'search_type', $type );
+ 			$q->param( 'accessor_id', '');
+ 			$q->param('/accessor_object_ref','');
  		}
  		
+		$tmpl_data{ criteria_controls } = $self->getSearchCriteria( $type );
+		 		
 		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
 		my $select = ( $q->param( 'select' ) or $q->url_param( 'select' ) );
@@ -567,7 +567,7 @@ sub search {
 	my ($objectToAccessFrom, $accessorMethod);
 
 	# count Objects
- 	if( $q->param( 'accessor_id' ) ) {
+ 	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne ''  ) {
 		my $typeToAccessFrom = $q->param( 'accessor_type' );
 		my $idToAccessFrom   = $q->param( 'accessor_id' );
 		$accessorMethod   = $q->param( 'accessor_method' );
@@ -587,7 +587,7 @@ sub search {
 	my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit } );
 	$searchParams{ __order } = $self->__sort_field();
 	# only use the offset parameter if we're ordering by the same thing as last time
-	if( $q->param( 'last_order_by') && 
+	if( defined $q->param( 'last_order_by') && 
 	    $q->param( 'last_order_by') eq $searchParams{ __order } &&
 	    $q->param( "__offset" ) ne '') {
 		$searchParams{ __offset } = $q->param( "__offset" );
