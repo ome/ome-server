@@ -5,11 +5,80 @@
 	xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
 	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
+
 	<xsl:template match = "*">
-		<xsl:copy-of select = "."/>
+		<xsl:copy-of select="."/>
 	</xsl:template>
+	
+	<!--
+		Pass through Custom attributes that we don't deal with explicitly in the stylesheet
+		This utility template copies the contents of a generic CA.
+	-->
+	<xsl:template match = "CA:CustomAttributes/*" mode = "pass-through-CAs">
+		<xsl:element name = "{name()}">
+			<xsl:for-each select = "@*">
+				<xsl:if test = "string-length() > 0">
+					<xsl:attribute name = "{name()}">
+						<xsl:value-of select = "."/>
+					</xsl:attribute>
+				</xsl:if>
+			</xsl:for-each>
+		</xsl:element>
+	</xsl:template>
+	
+	<!-- Global CAs -->
+	<xsl:template match = "CA:OME/CA:CustomAttributes" mode = "pass-through-CAs">
+		<xsl:element name = "CustomAttributes">
+			<xsl:apply-templates select = "*
+				[name() != 'Experiment']
+				[name() != 'Plate']
+				[name() != 'Screen']
+				[name() != 'Experimenter']
+				[name() != 'Group']
+				[name() != 'ExperimenterGroup']
+				[name() != 'Repository']
+				[name() != 'Instrument']"
+				mode = "pass-through-CAs"/>
+		</xsl:element>
+	</xsl:template>
+	
+	<!-- Dataset CAs -->
+	<xsl:template match = "CA:Dataset/CA:CustomAttributes" mode = "pass-through-CAs">
+		<xsl:element name = "CustomAttributes">
+			<xsl:apply-templates select = "*" mode = "pass-through-CAs"/>
+		</xsl:element>
+	</xsl:template>
+
+	<!-- Image CAs -->
+	<xsl:template match = "CA:Image/CA:CustomAttributes" mode = "pass-through-CAs">
+		<xsl:element name = "CustomAttributes">
+			<xsl:apply-templates select = "*
+				[name() != 'Dimensions']
+				[name() != 'PixelChannelComponent']
+				[name() != 'DisplayChannel']
+				[name() != 'DisplayROI']
+				[name() != 'ImageInstrument']
+				[name() != 'ImageExperiment']
+				[name() != 'ImagingEnvironment']
+				[name() != 'Thumbnail']
+				[name() != 'LogicalChannel']
+				[name() != 'DisplayOptions']
+				[name() != 'StageLabel']
+				[name() != 'ImagePlate']"
+				mode = "pass-through-CAs"/>
+		</xsl:element>
+	</xsl:template>
+	
+	<!-- Feature CAs -->
+	<xsl:template match = "CA:Feature/CA:CustomAttributes" mode = "pass-through-CAs">
+		<xsl:element name = "CustomAttributes">
+			<xsl:apply-templates select = "*"  mode = "pass-through-CAs"/>
+		</xsl:element>
+	</xsl:template>
+
 	<xsl:template match = "CA:OME">
 		<xsl:element name = "OME"
 			namespace = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
@@ -27,7 +96,9 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Group"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Instrument"/>
 			<xsl:apply-templates select = "CA:Image"/>
-			<xsl:apply-templates select = "CA:CustomAttributes"/>
+			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
+			<xsl:apply-templates select = "STD:*"/>
+			<xsl:apply-templates select = "AML:*"/>
 		</xsl:element>
 	</xsl:template>
 
@@ -118,7 +189,7 @@
 			<xsl:apply-templates select = "@Experimenter" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "@Group" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "CA:ProjectRef" mode = "MakeOMEref"/>
-			<xsl:copy-of select = "CA:CustomAttributes"/>
+			<xsl:copy-of select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Image">
@@ -174,9 +245,27 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:DisplayOptions"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:StageLabel"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImagePlate"/>
-			<xsl:apply-templates select = "CA:CustomAttributes"/>
+			<xsl:apply-templates select = "CA:Feature"/>
+			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 		</xsl:element>
 	</xsl:template>
+
+	<xsl:template match = "CA:Feature">
+		<xsl:element name = "Feature">
+			<xsl:attribute name = "ID">
+				<xsl:value-of select = "@ID"/>
+			</xsl:attribute>
+			<xsl:attribute name = "Tag">
+				<xsl:value-of select = "@Tag"/>
+			</xsl:attribute>
+			<xsl:attribute name = "Name">
+				<xsl:value-of select = "@Name"/>
+			</xsl:attribute>
+			<xsl:apply-templates select = "CA:Feature"/>
+			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
+		</xsl:element>
+	</xsl:template>
+
 	<xsl:template match = "CA:ImageExperiment">
 		<xsl:if test="string-length(@Experiment) > 0">
 			<xsl:element name = "ExperimentRef">
