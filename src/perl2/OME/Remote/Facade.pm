@@ -138,6 +138,22 @@ sub createSession {
 }
 
 
+sub authenticateSession {
+    my ($proto, $sessionKey) = @_;
+
+    print STDERR "$$ authenticateSession $sessionKey\n";
+
+    my $session = OME::SessionManager->createSession($sessionKey);
+    return 0
+      unless defined $session;
+
+    $session->deleteInstance(1);
+    OME::DBObject->clearAllCaches();
+
+    return 1;
+}
+
+
 sub closeSession {
     my ($proto, $sessionKey) = @_;
 
