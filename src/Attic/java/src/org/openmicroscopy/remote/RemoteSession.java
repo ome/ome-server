@@ -64,6 +64,7 @@ public class RemoteSession
     }
 
     protected RemoteObjectCache  objectCache;
+    protected boolean            active;
 
     public RemoteSession()
     {
@@ -76,6 +77,9 @@ public class RemoteSession
         super(null, reference);
         this.objectCache = new RemoteObjectCache(this);
     }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 
     public void commitTransaction()
     {
