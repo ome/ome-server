@@ -234,13 +234,7 @@ sub writeOneHasManyType ($$$) {
     my ($class_desc,$hasmany_type_name,$element_hash) = @_;
     my @element_names = sort keys %$element_hash;
 
-    my $accessor_name = $hasmany_type_name;
-
-    # Attempt to make the pluralization look somewhat correct
-    $accessor_name =~ s/y$/ies/ or
-    $accessor_name =~ s/s$/ses/ or
-    $accessor_name =~ s/x$/xes/ or
-    $accessor_name =~ s/$/s/;
+    my $accessor_name = $hasmany_type_name.'List';
 
     if (scalar(@element_names) == 1) {
         # If there's only one element in the has-many type which points
