@@ -118,7 +118,6 @@ Remove image from datasets
 
 use strict;
 use OME::SetDB;
-use OME::Tasks::Thumbnails;
 use OME::DBObject;
 OME::DBObject->Caching(0);
 
@@ -325,29 +324,6 @@ sub remove{
 	}
 	$db->Off();
 	return 1;
-}
-
-
-
-
-####################
-# Parameters: 
-#	ref = ref list of image_id
-sub createThumbnail{
-	my $self=shift;
-	my ($ref)=@_;
-	my $session=$self->__Session();
-	my $factory=$session->Factory();
-	my $generator= new OME::Tasks::Thumbnails($session);
-	my %listThumbnails=();
-	foreach my $id (@$ref){
-	   my $image=$factory->loadObject("OME::Image",$id);
-	   my $out=$generator->generateOMEimage($image);
-	   my $thumbnail=$generator->generateOMEthumbnail($out);
-	   $listThumbnails{$id}={'name'=>$image->name(), 'thumbnail'=>$thumbnail};
-	}
-	return \%listThumbnails;
-
 }
 
 
