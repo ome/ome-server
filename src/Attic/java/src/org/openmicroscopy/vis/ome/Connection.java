@@ -55,6 +55,8 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.util.SwingWorker;
 import org.openmicroscopy.SemanticType;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.ArrayList;
@@ -77,7 +79,7 @@ import java.awt.Image;
  * @since OME2.1
  */
 
-public class Connection {
+public class Connection implements DatasetSelectionEventListener {
 	
 	private RemoteBindings remote=null;
 	private Session session;
@@ -115,7 +117,7 @@ public class Connection {
  	
  	private ThumbnailAgent thumbnails;
  	
- 	private CDataset curDataset;
+ 	//private CDataset curDataset;
 	/***
 	 * Creates a {@link ConnectionWorker} that will build a new connection to 
 	 * the database via XMLRPC. If successful, the ConnectionWorker will return 
@@ -360,24 +362,35 @@ public class Connection {
 		return projects;
 	}
 	
-	public void setDataset(CDataset d) {
-		curDataset = d;
+	public List getDatasetsForUser() {
+		Attribute user = session.getUser();
 		HashMap crit = new HashMap();
-		crit.put("dataset",d);
-		chainExecutions = factory.findObjects("OME::AnalysisChainExecution",crit);
-		HashSet result = new HashSet();
-		Iterator iter = chainExecutions.iterator();
-		while (iter.hasNext()) {
-			CChainExecution ex = (CChainExecution) iter.next();
-			CChain chain = (CChain) ex.getChain();
-			result.add(chain);
-		}
-		chains.setExecutedChains(result);
+		crit.put("owner_id",user);
+		List projects = factory.findObjects("OME::Dataset",crit);
+		return projects;
 	}
 	
+	private void setDataset(CDataset d) {
+		if (d!= null) {
+			HashMap crit = new HashMap();
+			crit.put("dataset",d);
+			chainExecutions = factory.findObjects("OME::AnalysisChainExecution",crit);
+			HashSet result = new HashSet();
+			Iterator iter = chainExecutions.iterator();
+			while (iter.hasNext()) {
+				CChainExecution ex = (CChainExecution) iter.next();
+				CChain chain = (CChain) ex.getChain();
+				// don't set it to be executed unless it's true.
+				result.add(chain);
+			}
+			chains.setExecutedChains(result);
+		}
+		else
+			chains.clearExecutedChains();
+	}
 	
-	public CDataset getDataset() {
-		return curDataset;
+	public void clearDatasets() {
+		chains.clearExecutedChains();
 	}
 	
 	public List getDatasetExecutions(CChain chain) {
@@ -391,7 +404,10 @@ public class Connection {
 		return res;
 	}
 	
-
+	public void datasetSelectionChanged(DatasetSelectionEvent e) {
+		if (e.isSelected())
+			setDataset(e.getDataset());
+	}
 	
 	public void getThumbnail(CImage i) {
 		
@@ -399,16 +415,16 @@ public class Connection {
 		int id = i.getID();
 		try {
 			if (thumbnails != null) {
-				System.err.println("calling thumbnails.getThumbnail(id)");
+			//	System.err.println("calling thumbnails.getThumbnail(id)");
 				getThumbnail(i,id);
 			}
 		} catch(Exception e) {
 			System.err.println("exception in grabbing thumbnail "+id);
 			e.printStackTrace();
 		}
-		System.err.println(" returning from connection.getThumbnail..");
-		if (image == null) 
-			System.err.println("image is nulll...");
+	//	System.err.println(" returning from connection.getThumbnail..");
+		/*if (image == null) 
+			System.err.println("image is nulll..."); */
 	}
 	
 	public void getThumbnail(final CImage i,final int id) {
