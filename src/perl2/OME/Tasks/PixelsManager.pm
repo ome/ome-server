@@ -267,7 +267,7 @@ sub localCreatePixels {
     return ($pixels,$attr);
 }
 
-sub loadLoadPixels {
+sub localLoadPixels {
     my $proto = shift;
     my ($attr) = @_;
 
