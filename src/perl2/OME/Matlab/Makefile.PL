@@ -21,7 +21,7 @@ WriteMakefile(
     'NAME'		=> 'OME::Matlab',
     'VERSION_FROM'	=> 'Matlab.pm', # finds $VERSION
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
-    'LIBS'		=> ["-L/usr/local/lib -L/sw/lib -L$matlab_lib -lmx"], # e.g., '-lm'
+    'LIBS'		=> ["-L/usr/local/lib -L/sw/lib -L$matlab_lib -lmx -leng"], # e.g., '-lm'
     'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
     'INC'		=> "-I$matlab_include", # e.g., '-I/usr/include/other'
     'realclean'         => {FILES => '../blib'},
