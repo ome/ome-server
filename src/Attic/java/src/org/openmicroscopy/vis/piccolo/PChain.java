@@ -1,4 +1,4 @@
-/*
+ /*
  * org.openmicroscopy.vis.piccolo.PChain
  *
  *------------------------------------------------------------------------------
@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Iterator;
-//import java.util.Vector;
 
 public class PChain {
 
@@ -69,6 +68,7 @@ public class PChain {
 	private float xInit;
 	
 	
+	
 	public PChain(Connection connection,Chain chain, PLayer layer,
 			PLinkLayer linkLayer,float x,float y) {
 		
@@ -77,6 +77,7 @@ public class PChain {
 		this.x = x;
 		xInit = x;
 		
+		System.err.println("building chain for "+chain.getName());
 		Collection chainNodes = chain.getNodes();
 		Iterator iter = chainNodes.iterator();	
 		while (iter.hasNext()) {
@@ -94,7 +95,6 @@ public class PChain {
 		}
 		// a parallel structure that will eventually replace the simple loop 
 		//above
-		//layerNodes();
 		//addDummyNodes();
 		//reduceCrossings();
 		//placeNodesVertically();
@@ -153,68 +153,6 @@ public class PChain {
 		return x-xInit;
 	}
 	
-	/** 
-	 * some code for computing a layered graph layout of this chain.
-	 * Builds on chapter 9  of Graph Drawing (di Battista, et al.),
-	 * and on GNU code from the Matrix Algorithm Simulation tool
-	 * 
-	 * 	http://www.cs.hut.fi/Research/Matrix/	      	   	
-	 */
-	/*
-	private Vector layers = new Vector();
 	
-	public void layerNodes() {
-		Chain chain  = info.getChain();
-		List nodes = chain.getNodes();
-		int numAssigned = 0, currentLayer = 0;
-		boolean ok;
-		int nodeCount = nodes.size();
-		
-		do {
-				Vector layer = new Vector();
-				
-				Iterator iter = nodes.iterator();
-				while (iter.hasNext()) {
-					
-					Node node = (Node) iter.next();
-					
-					// how do I get the info for the node
-					if (node.hasLayer())
-						continue;
-								
-								
-						// reversed edges included here (no dummy nodes exist yet)
-						VisualLayeredGraphComponent succs[] = c.getPseudoSuccs();
-
-						for (int j = 0; j < succs.length; j++) {
-							// succ = succs[j];
-
-							if (!succ.hasLayer() || succ.getLayer() == currentLayer) {
-								// this is not ok.
-								ok = false;
-								break;
-							}
-						}
-                
-						if (ok == true) {
-							// no unassigned successors, so assign this node to
-							// the current layer
-							// Note.out(this, "layer "+currentLayer+" has node "+c);
-							layer.addElement(c);
-							c.setLayer(currentLayer);
-							numAssigned++;
-						}
-				}
-
-
-				if (layer.isEmpty()) {
-					System.err.println("Cycle removal failed?");
-				} else {
-					// Switch to next (upper) layer
-					currentLayer++;
-					layers.addElement(layer);
-				}
-		} while (numAssigned < nodeCount);
-	} */
 }
 
