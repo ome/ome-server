@@ -350,7 +350,7 @@ sub get_image_fmt {
     }
 
     $ofmt = $ifmt;
-    $ofmt =~ tr/nNvV/SISI/;      # convert either endian short/long to our endian short/long
+    $ofmt =~ tr/nNvV/SSSS/;      # convert either endian short/long to our endian short/long
 
     return ($ifmt, $ofmt);
 }
