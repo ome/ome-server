@@ -40,8 +40,10 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
+//import edu.umd.cs.piccolo.PRoot;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
@@ -131,6 +133,10 @@ public abstract class PFormalParameter extends PNode implements
 		return node;
 	}
 	
+	public ModuleInfo getModuleInfo() {
+		return getPModule().getModuleInfo();
+	}
+	
 	/**
 	 * A module parameter is said to be linkable if (1) it has the same
 	 * semantic type as a currently selected parameter, and (2) it's position 
@@ -208,9 +214,6 @@ public abstract class PFormalParameter extends PNode implements
 		}
 	}
 
-	public PModule getModuleNode() {
-		return node;
-	}
 	
 	public void setLinkedTo(PFormalParameter param,PLink link) {
 		linkedTo.add(param);

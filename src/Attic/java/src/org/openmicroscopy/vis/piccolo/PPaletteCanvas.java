@@ -153,8 +153,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 */	
 	private void displayModule(ModuleInfo modInfo) {
 		
-		RemoteModule module = modInfo.getModule();
-		PModule mNode = new PModule(connection,module,x,y);
+		PModule mNode = new PModule(connection,modInfo,x,y);
 		modInfo.addModuleWidget(mNode);
 		float h = (float) mNode.getBounds().getHeight();
 		y += h+GAP;

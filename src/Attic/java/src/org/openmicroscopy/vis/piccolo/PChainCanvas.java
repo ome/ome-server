@@ -151,8 +151,12 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	private void createDroppedModule(ModuleInfo info,Point2D location) {
 		// create the PModule
 		
-		RemoteModule module = info.getModule();
-		PModule mNode = new PModule(connection,module,
+		System.err.println("creating new dropped module at "+
+			location.getX()+","+ location.getY());
+		getCamera().localToView(location);
+		System.err.println("view coords are "+location.getX()+","+
+			location.getY());
+		PModule mNode = new PModule(connection,info,
 			(float) location.getX(), (float) location.getY());
 		info.addModuleWidget(mNode);
 		
@@ -160,6 +164,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		layer.addChild(mNode);
 		
 		// put the module info back into the connection
+		RemoteModule module = info.getModule();
 		connection.setModuleInfo(module.getID(),info);
 	}
 }

@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
@@ -289,7 +290,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		if (list == null)
 			return;
 		
-		PModule sourceModule = param.getModuleNode();
+		ModuleInfo source = param.getModuleInfo();
 		
 		PFormalParameter p;
 		Iterator iter = list.iterator();
@@ -301,7 +302,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			if (v == true) {// when making things linkable
 				// only make it linkable if we're not linked already
 				// and we're not in the same module.
-				if (!param.isLinkedTo(p) && sourceModule != p.getModuleNode())
+				if (!param.isLinkedTo(p) && source != p.getModuleInfo())
 					p.setLinkable(v);
 			}
 			else // always want to clear linkable

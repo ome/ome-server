@@ -43,9 +43,9 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
-import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.remote.RemoteModule;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
@@ -57,7 +57,7 @@ import java.awt.Paint;
 import java.awt.Color;
 import java.util.List;
 import java.lang.Object;
-
+import java.util.Iterator;
 
 /** 
  * A Piccolo widget for a module. This widget will consist of a 
@@ -92,7 +92,7 @@ public class PModule extends PPath {
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(1.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
 
-	private RemoteModule module;
+	private ModuleInfo info;
 	
 	// the Rectangle with the bounds of the enclosing border
 	private RoundRectangle2D rect;
@@ -106,10 +106,10 @@ public class PModule extends PPath {
 	private float nameWidth=0;
 	
 	// The node that will contain nodes for each of the formal parameters
-	private PNode labelNodes;
+	private PParameterNode labelNodes;
 	
-	PFormalInput ins[];
-	PFormalOutput outs[];
+	//	PFormalInput ins[];
+	//PFormalOutput outs[];
 	
 	
 	/**
@@ -120,12 +120,13 @@ public class PModule extends PPath {
 	 * @param x Initial x coordinate (global)
 	 * @param y Initial y coordinate
 	 */
-	public PModule(Connection connection,RemoteModule module,float x,float y) {
+	public PModule(Connection connection,ModuleInfo info,float x,float y) {
 		super();
-		this.module=module;
+		this.info = info;
+		RemoteModule module = info.getModule();
 		
 		// create the container node for the formal parameters
-		labelNodes = new PNode();
+		labelNodes = new PParameterNode();
 		addChild(labelNodes);
 		
 		// create the name and position it.
@@ -140,7 +141,7 @@ public class PModule extends PPath {
 		nameWidth = (float) name.getBounds().getWidth();
 		
 		// do the individual parameter labels.
-		addParameterLabels(connection);  
+		addParameterLabels(module,connection);  
 		
 		// set width of the whole bounding rectangle
 		width = NAME_LABEL_OFFSET*2+width;
@@ -169,7 +170,7 @@ public class PModule extends PPath {
 	 *
 	 * @param connection  the database connection object
 	 */
-	private void addParameterLabels(Connection connection) {
+	private void addParameterLabels(RemoteModule module,Connection connection) {
 		
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
@@ -182,8 +183,8 @@ public class PModule extends PPath {
 		int 	rows = inSize > outSize? inSize: outSize;
 		
 		FormalParameter param;
-		ins = new PFormalInput [inSize];
-		outs = new PFormalOutput [outSize];
+		PFormalInput ins[] = new PFormalInput [inSize];
+		PFormalOutput outs[] = new PFormalOutput [outSize];
 		
 		// get input nodes and find max input width
 		float maxInputWidth =0;
@@ -266,15 +267,23 @@ public class PModule extends PPath {
 	
 	
 	public RemoteModule getModule() {
-		return module;
+		return info.getModule();
+	}
+	
+	public ModuleInfo getModuleInfo() {
+		return info;
 	}
 	
 	public void remove() {
+		// iterate over children of labelNodes
+		Iterator iter = labelNodes.getChildrenIterator();
+		
+		PFormalParameter p;
+		while (iter.hasNext()) {
+			p = (PFormalParameter) iter.next();
+			p.removeLinks();
+		}
 		removeFromParent();
-		for (int i = 0; i < ins.length; i++)
-			ins[i].removeLinks();
-		for (int i = 0; i < outs.length; i++)
-			outs[i].removeLinks();
 	}
 	
 	
