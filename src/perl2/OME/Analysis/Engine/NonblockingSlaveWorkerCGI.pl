@@ -144,6 +144,7 @@ do_response (BAD_REQUEST,"Unable to load Worker ID $Worker_ID") unless $worker;
 
 # Set the worker status to 'BUSY'
 $worker->status('BUSY');
+$worker->PID($$);
 $worker->storeObject();
 
 # Register the module execution for later
@@ -153,6 +154,8 @@ OME::Fork->doLater ( sub {
 		$executor->executeModule ($mex,$Dependence,$target);
 	};
 	$worker->status('IDLE');
+	$worker->last_used('now()');
+	$worker->PID(undef);
 	$worker->storeObject();
 	OME::Tasks::NotificationManager->notify ($_) foreach (@$Notices);
 	unregister_worker ();
