@@ -185,7 +185,8 @@ print STDERR "\nSetting cookie: $sessionKey\n";
 			$cgi->cookie( -name	   => 'SESSION_KEY',
 						  -value   => $sessionKey,
 						  -path    => '/',
-						  -expires => '30m');
+						  -expires => '30m'
+						  );
 	} else {
 print STDERR "\nLogging out - resetting cookie\n";
 		$self->{_cookies}->{'SESSION_KEY'} =
@@ -221,30 +222,31 @@ sub getLogin {
 sub serve {
 	my $self = shift;
 	if ($self->{RequireLogin}) {
-	if (!$self->ensureLogin()) {
-		$self->getLogin();
-		return;
-	}
+		if (!$self->ensureLogin()) {
+			$self->getLogin();
+			return;
+		}
 	}
 	#
 	my ($result,$content) = $self->createOMEPage();
+	
+	my $cookies = [values %{$self->{_cookies}}];
+	my %headers;
+	$headers {'-cookie'} = $cookies if scalar @$cookies;
+	$headers{'-type'} => $self->contentType();
 
+	print $self->CGI()->header(%headers);
 
 	if ($result eq 'HTML' && defined $content) {
-		print $self->CGI()->header('text/html', -cookie => [values %{$self->{_cookies}}]);
 		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
-		print $self->CGI()->header($self->contentType(), -cookie => [values %{$self->{_cookies}}]);
 		print $content;
 	} elsif ($result eq 'SVG' && defined $content) {
-		print $self->CGI()->header($self->contentType(), -cookie => [values %{$self->{_cookies}}]);
 		print $content;
 	} elsif ($result eq 'REDIRECT' && defined $content) {
-		print $self->CGI()->header(-cookie => [values %{$self->{_cookies}}]);
 		$self->redirect($content);
 	} else {
 		my $class = ref($self);
-		print $self->CGI()->header(-type => 'text/html', -cookie => [values %{$self->{_cookies}}]);
 		print "You shouldn't be accessing the $class page.";
 		print "<br>Here's the error message:<br>$content" unless !(defined $content);
 	}
