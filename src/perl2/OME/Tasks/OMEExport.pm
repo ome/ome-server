@@ -124,11 +124,10 @@ $doc->toFile($tmpFile, 1)
 `xsltproc $style_doc_path $tmpFile > $filename`;
 $CA_doc = $parser->parse_file( $filename )
 	or die "Could not parse file ('$tmpFile')\n";
-unlink $tmpFile 
-	or die "Could not unlink tmp file ('$tmpFile')\n";
+$session->finishTemporaryFile( $tmpFile );
 # end hack
 
-	$insert->exportFile( "$filename", $CA_doc );
+	$insert->exportFile( $filename, $CA_doc );
 
 }
 
@@ -192,6 +191,7 @@ sub buildDOM {
 #	$chainExporter->buildDOM($objects,%flags);
 
 	# Export semantic type definitions only if ExportSTDs is set
+$flags{ExportHistory} = 0;
 	if ($flags{ExportHistory}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a Data History Exporter';
 		my $historyExporter = $self->historyExporter();
