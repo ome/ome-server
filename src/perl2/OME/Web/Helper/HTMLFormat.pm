@@ -362,11 +362,12 @@ sub formatThumbnail{
 	my ($object)=@_;
 	my $imageName=$object->name();
 	my $imageID=$object->id();
+	my $sid = $object->Session()->SessionKey();
 	my $rows="";
 	my $html="";
 	my ($name,$imageTag);
 	$name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$imageName."</a>";
-	$imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imageID." align=\"bottom\" border=0></a>";
+	$imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imageID&sid=$sid align=\"bottom\" border=0></a>";
 	my %h=(
 	1=>{ content=>$imageTag, attribute=>$self->{cellLeft}}
 	);
