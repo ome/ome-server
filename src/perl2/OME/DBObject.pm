@@ -2359,7 +2359,7 @@ sub __createNewInstance {
     # clobber a transaction which was started outside of this method.)
     foreach my $sql_entry (@$sqls) {
         my ($sql,$values) = @$sql_entry;
-        #print "$sql\n  (",join(',',@$values),")\n";;
+#        logdbg "debug", "$sql\n  (".join(',',@$values).")\n";;
         my $sth = $dbh->prepare($sql);
         $sth->execute(@$values) or return undef;
     }
