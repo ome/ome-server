@@ -24,7 +24,7 @@ Major package requirements:</h3>
 <ul>
 <li><a href="http://www.perl.com/">Perl</a> >= 5.6</li>
 <li><a href="http://www.apache.org/">Apache</a>+mod_perl >= 1.3.12</li>
-<li><a href="http://postgresql.bteg.net/">PostgreSQL</a> >= 7.1 with ODBC
+<li><a href="http://www3.us.postgresql.org/">PostgreSQL</a> >= 7.1 with ODBC
 support (JDBC, Tcl/Tk optional but recommended)</li>
 <li><a href="http://www.imagemagick.org/">ImageMagick+PerlMagick</a></li>
 </ul>
@@ -80,8 +80,8 @@ a new version of perl! Abort this process immediately by hitting ^C.
 Other Libraries:</h4>
 Usually need to re-install libtiff if you want LZW support.&nbsp; Get and
 install the following libraries:
-<br><a href="http://www.libtiff.org/tiff-v3.5.6-beta.tar.gz">tiff-v3.5.6-beta</a>
-<br><a href="http://www.libtiff.org/libtiff-lzw-compression-kit-1.2.tar.gz">libtiff-lzw-compression-kit</a>
+<br><a href="packages/source/tiff-v3.5.6-beta.tar.gz">tiff-v3.5.6-beta</a>
+<br><a href="packages/source/libtiff-lzw-compression-kit-1.2.tar.gz">libtiff-lzw-compression-kit</a>
 <h4>
 ImageMagick</h4>
 To be useful, ImageMagick (and PerlMagick) need the following additional
@@ -96,16 +96,17 @@ probably use an earlier one)
 Installing on Mac OS X will require the patched ImageMagick available at: 
 <a href="http://ome1-sorger.mit.edu/ImageMagick-5.3.6.tar.gz">ImageMagick-5.3.6.tar.gz</a>.  
 It is not presently known if newer versions incorporated my patch.
+Installing required libraries on Mac OS X is greatly simplified with the use of Christoph Pfisterer's <a href="http://fink.sourceforge.net/">fink</a>.
 <h4>
 PostgreSQL:</h4>
-You can find out what version you have (if any) by typing:<pre>> psql -V<pre>
-It is best to compile PostgreSQL from its source - I have had stability
+You can find out what version you have (if any) by typing:<pre>> psql -V</pre>
+It is best to compile PostgreSQL from its <a href="packages/source/postgresql-7.1.3.tar.gz">source</a> - I have had stability
 problems with the binary RPMs. To compile PostgreSQL, you will need the
 following libraries (not strictly required, but highly recommended):
 <br><a href="http://cnswww.cns.cwru.edu/~chet/readline/rltop.html">readline</a>
 (from gnu.org - usually present on Linux distros, but not always)
 <br><a href="http://jakarta.apache.org/ant/">ant</a> (from the jakarta
-project - binary install or RPM is fine)
+project - binary install or <a fref="packages/RedHat/ant-1.4-2.noarch.rpm">RPM</a> is fine)
 <p>run the configure script with something like the following command:
 .
 <pre>./configure --with-perl --with-tcl --enable-odbc --with-java</pre>
