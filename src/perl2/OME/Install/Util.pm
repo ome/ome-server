@@ -759,7 +759,7 @@ sub which {
         foreach my $dir (@path) {
             $dir = "." if !$dir;
             if (-x "$dir/$prog" && -f "$dir/$prog") {
-                return "$dir/$prog\n";
+                return "$dir/$prog";
             }
         }
     }
