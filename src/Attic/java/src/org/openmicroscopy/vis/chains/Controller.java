@@ -191,9 +191,11 @@ public class Controller implements ApplicationController {
 			connection = null;	
 	}
 	
-	public void completeLogin() {
+	public void completeLogin(Connection connection) {
+	//	this.connection = connection;
 		mainFrame.setLoggedIn(true,connection);
 		library = new ChainLibraryFrame(this,connection); 
+		connection.layoutChains();
 	}
 	
 	public void doLogout() {
