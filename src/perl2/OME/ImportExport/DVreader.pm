@@ -341,7 +341,8 @@ sub readUIHdr {
 	$xel = $xml_image_entries{$k};
 	$xml_hash->{"Image.".$xel} = $self->{$k};
     }
-    # assumes one wavelength key per plane, so can immediately push hash on stack
+
+    # Make one WavelengthInfo element per wavelength in image
     $i = 1;
     foreach $k (sort keys %xml_wavelength_entries) {
 	if ($i > $self->{'NumWaves'}) {
@@ -349,7 +350,8 @@ sub readUIHdr {
 	}
 	my $whref = {};
 	$xel = $xml_wavelength_entries{$k};
-	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};  # copy
+	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
+	$whref->{'WavelengthInfo.WaveNumber'} = $i;
 	#print "WavelengthInfo."."$xel = ". $whref->{'WavelengthInfo.'.$xel}."\n";
 	push @$w_aref, $whref;
 	$i++;
