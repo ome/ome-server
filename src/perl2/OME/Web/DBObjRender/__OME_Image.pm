@@ -73,10 +73,11 @@ __PACKAGE__->_fieldNames( [
 	'owner',
 	'group',
 	'created',
-	'original_file',
+	'module_executions'
 ] ) ;
 __PACKAGE__->_allFieldNames( [
 	@{__PACKAGE__->_fieldNames() },
+	'original_file',
 	'inserted',
 	'image_guid',
 ] ) ;
@@ -101,7 +102,7 @@ sub getRefToObject {
 			my $id   = $obj->id();
 			my $name = $obj->name();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed information about this image'>$name</a><br>".
+			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed info about this Image' class='ome_detail'>$name</a><br>".
 			          "<a href='javascript: openPopUpImage($id);' title='View this image'><img src='$thumbURL'></a>";
 			return $ref;
 		}
@@ -161,15 +162,17 @@ sub renderSingle {
 	
 	my $factory = $obj->Session()->Factory();
 	my $q       = new CGI;
-	my @filtered_field_names = grep( !m/^original_file$/, @$fieldnames);
+	my @filtered_field_names = grep( !m/^original_file|module_executions$/, @$fieldnames);
 	my $record  = $proto->SUPER::renderSingle($obj,$format,\@filtered_field_names);
 
 	# don't let description take up the whole screen
 	$record->{ description } =~ s/^(.{89}).*$/$1\.\.\./s
 		if exists $record->{ description };
 
-	# render original_file field
-	if( scalar( @filtered_field_names ) ne scalar( @$fieldnames ) ) {
+	# render special fields
+	my %field_name_lookup = map{ $_ => undef } @$fieldnames;
+	# original file
+	if( exists $field_name_lookup{ original_file } ) {
 		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 			'module.name' => 'Image import', 
 			image => $obj, 
@@ -193,6 +196,23 @@ sub renderSingle {
 			$record->{ 'original_file' } = $original_file->Path()
 				if( $format eq 'txt' );
 		}
+	}
+	# module executions
+	if( exists $field_name_lookup{ module_executions } ) {
+		my @mexs = $obj->module_executions();
+		my %mex_labels = map{ $_->id() => OME::Web::DBObjRender->getObjectLabel( $_ ) } @mexs;
+		my $mex_order = [ '', map( $_->id, sort( { $a->timestamp cmp $b->timestamp } @mexs )  )];
+		$mex_labels{''} = scalar( @mexs).' Module Executions';
+		my $url_stub = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::ModuleExecution&ID=';
+
+		$record->{ module_executions } = $q->popup_menu( 
+			-name	=> '',
+			'-values' => $mex_order,
+			-labels	 =>  \%mex_labels,
+			-onchange => "javascript: if( this.value != '' ) { document.location='$url_stub'+this.value; }"
+		) if( $format eq 'html' );
+		$record->{ module_executions } = join( ',', map( $mex_labels{ id }, splice( @$mex_order, 1 ) ) )
+			if( $format eq 'txt' );
 	}
 	
 	return %$record if wantarray;
