@@ -43,6 +43,8 @@ our $VERSION = $OME::VERSION;
 
 use Carp;
 use Config;
+use IO::File;
+use OME::ImportEngine::Params;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
 use OME::ImportExport::Repacker::Repacker;
@@ -58,6 +60,24 @@ use constant ALPHABET => [split(//,'ABCDEFGHIJKLMNOPQRSTUVWXYZ')];
 # Used to look for image files based on the HTD filename
 use constant SUFFIXES => ['.TIF','.tif','.TIf','.TiF',
                           '.tIF','.Tif','.tIf','.tiF'];
+
+
+sub new {
+
+    my $invoker = shift;
+    my $class = ref($invoker) || $invoker;   # called from class or instance
+
+    my $self = {};
+    my $session = shift;
+    my $module_execution = shift;
+
+    bless $self, $class;
+    $self->{super} = $self->SUPER::new($session, $module_execution);
+
+    my %paramHash;
+    $self->{params} = new OME::ImportEngine::Params(\%paramHash);
+    return $self;
+}
 
 
 # From "Mastering Regular Expressions"
@@ -103,7 +123,7 @@ sub getGroups {
         # We're only interested in .HTD files
         next FILENAME unless $filename =~ /\.[Hh][Tt][Dd]$/;
 
-        print STDERR "Found $filename\n";
+        #print STDERR "Found $filename\n";
 
         eval { $file->open('r') };
         if ($@) {
@@ -135,7 +155,7 @@ sub getGroups {
             } elsif ($line !~ /Version 1\.0$/) {
                 $line =~ /, ([^,]*)$/;
                 my $version = $1;
-                print "'$version'\n";
+                #print "'$version'\n";
                 carp "Unknown HTS version";
                 next FILENAME;
             }
@@ -245,7 +265,7 @@ sub getGroups {
         $filename =~ /^(.*)\.[Hh][Tt][Dd]$/;
         my $base_filename = $1;
 
-        print STDERR "Base $base_filename\n";
+        #print STDERR "Base $base_filename\n";
 
         # If the @wells_used array is empty, then there are no images to
         # import for this HTD file.  If sites are not enabled in this
@@ -309,7 +329,7 @@ sub getGroups {
 
                     if (!defined $real_file) {
                         $group_invalid = 1;
-                        print STDERR "Cannot find file for $tif_base_filename\n";
+                        #print STDERR "Cannot find file for $tif_base_filename\n";
                         last WAVELENGTHS;
                     }
 
@@ -334,7 +354,7 @@ sub getGroups {
     # Clean out the $filenames list.
     $self->__removeFiles($files,\@files_found);
 
-    print STDERR "\nFound ",scalar(@groups)," groups.\n";
+    #print STDERR "\nFound ",scalar(@groups)," groups.\n";
 
     return \@groups;
 }
@@ -359,7 +379,9 @@ sub getSHA1 {
 
 
 sub importGroup {
-    my ($self,$group) = @_;
+    my ($self,$group, $callback) = @_;
+
+    my $dieStatus = "";
 
     # This is useful for testing purposes.  Uncomment the next two
     # lines if you don't want to import all of the images in a plate.
@@ -378,7 +400,7 @@ sub importGroup {
       defined $site? " Site ".$site->[0]: "";
 
     my $image_name = $group->{description}." Well $address$site_name";
-    print STDERR "Name $image_name\n";
+    #print STDERR "Name $image_name\n";
 
     # Figure out the endian-ness of this machine.
     my $our_endian = OME->BIG_ENDIAN()? BIG_ENDIAN: LITTLE_ENDIAN;
@@ -411,7 +433,7 @@ sub importGroup {
         $self->__touchOriginalFile($file,"MetaMorph TIFF");
 
         $theC++;
-        print STDERR "  Wavelength $theC - $filename\n";
+        #print STDERR "  Wavelength $theC - $filename\n";
         my $wavelength = $group->{wavelengths}->[$theC];
 
         $file->open('r') or last FILENAME;
@@ -420,13 +442,14 @@ sub importGroup {
 
         my $ifd = readTiffIFD($file);
         if (!defined $ifd) {
-            print STDERR "Error reading IFD from $filename\n";
+            #print STDERR "Error reading IFD from $filename\n";
+	    $dieStatus = "Error reading IFD from $filename\n";
             $image_invalid = 1;
             $file->close();
             last FILENAME;
         }
 
-        print STDERR "Tags: ",join(' ',keys %$ifd),"\n";
+        #print STDERR "Tags: ",join(' ',keys %$ifd),"\n";
 
         # Retrieve the dimensions of this TIFF.
 
@@ -440,14 +463,16 @@ sub importGroup {
         # format).
 
         if ($samplesPerPix != 1) {
-            print STDERR "Not a monochrome image\n";
+            #print STDERR "Not a monochrome image\n";
+	    $dieStatus = "Not a monochrome image\n";
             $image_invalid = 1;
             $file->close;
             last FILENAME;
         }
 
         if (not ($thisBitsPerPixel == 8 || $thisBitsPerPixel == 16) ) {
-            print STDERR "Bits per bixel must be 8 or 16.  Got $thisBitsPerPixel.\n";
+            #print STDERR "Bits per bixel must be 8 or 16.  Got $thisBitsPerPixel.\n";
+	    $dieStatus = "Bits per bixel must be 8 or 16.  Got $thisBitsPerPixel.\n";
             $image_invalid = 1;
             $file->close;
             last FILENAME;
@@ -458,7 +483,8 @@ sub importGroup {
 
             if ($sizeX != $thisSizeX || $sizeY != $thisSizeY ||
                 $bitsPerPixel != $thisBitsPerPixel) {
-                print STDERR "Inconsistent sizes\n";
+                #print STDERR "Inconsistent sizes\n";
+		$dieStatus = "Inconsistent sizes\n";
                 $image_invalid = 1;
                 $file->close;
                 last FILENAME;
@@ -489,15 +515,17 @@ sub importGroup {
         # Verify that we can handle this format.
 
         if ($rows_per_strip <= 0) {
-            print STDERR "MetamorphHTDFormat does not support non-strip TIFFs\n";
+            #print STDERR "MetamorphHTDFormat does not support non-strip TIFFs\n";
+	    $dieStatus = "MetamorphHTDFormat does not support non-strip TIFFs\n";
             $image_invalid = 1;
             $file->close;
             last FILENAME;
         }
 
         if ($compression != 1) {
-            print STDERR "MetamorphHTDFormat only supports uncompressed TIFFs\n";
-            print STDERR "$compression\n";
+            #print STDERR "MetamorphHTDFormat only supports uncompressed TIFFs\n";
+	    $dieStatus = "MetamorphHTDFormat only supports uncompressed TIFFs\n";
+            #print STDERR "$compression\n";
             $image_invalid = 1;
             $file->close;
             last FILENAME;
@@ -505,6 +533,9 @@ sub importGroup {
         $file->close;
 
         $pix->convertPlaneFromTIFF($file,0,$theC,0);
+
+	doSliceCallback($callback);
+
     }
 
     $pix->finishPixels();
@@ -515,11 +546,16 @@ sub importGroup {
 
         # FIXME:  Add an image server method to delete an
         # unfinished Pixels.
-        print STDERR "Removing repository file... UNIMPLEMENTED!!!\n";
+        #print STDERR "Removing repository file... UNIMPLEMENTED!!!\n";
         # $pix->delete();
     }
 
-    return $image_invalid? undef: $image;
+    if ($image_invalid) {
+	die $dieStatus;
+    } else {
+	return $image;
+    }
+
 }
 
 
