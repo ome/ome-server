@@ -27,6 +27,11 @@ public interface Attribute
     public void writeObject();
     public Session getSession();
     public AttributeType getAttributeType();
+    public OMEObject getTarget();
+    public Dataset getDataset();
+    public Image getImage();
+    public Feature getFeature();
+    public Analysis getAnalysis();
 
     public void verifyAttributeType(AttributeType type);
     public void verifyAttributeType(String typeName);

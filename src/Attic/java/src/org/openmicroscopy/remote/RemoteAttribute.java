@@ -42,7 +42,37 @@ public class RemoteAttribute
 
     public AttributeType getAttributeType()
     { return (AttributeType)
-          getRemoteElement(RemoteAttributeType.class,"attribute_type"); }
+            getRemoteElement(RemoteAttributeType.class,"attribute_type"); }
+
+    public Analysis getAnalysis()
+    { return (Analysis)
+            getRemoteElement(RemoteAnalysis.class,"analysis"); }
+
+    public OMEObject getTarget()
+    {
+        AttributeType type = getAttributeType();
+        int granularity = type.getGranularity();
+        Class remoteClass = null;
+        if (granularity == Granularity.GLOBAL)
+            return null;
+        else if (granularity == Granularity.DATASET)
+            remoteClass = RemoteDataset.class;
+        else if (granularity == Granularity.IMAGE)
+            remoteClass = RemoteImage.class;
+        else if (granularity == Granularity.FEATURE)
+            remoteClass = RemoteFeature.class;
+        else
+            return null;
+        return (OMEObject)
+            getRemoteElement(remoteClass,"target");
+    }
+
+    public Dataset getDataset()
+    { return (Dataset) getTarget(); }
+    public Image getImage()
+    { return (Image) getTarget(); }
+    public Feature getFeature()
+    { return (Feature) getTarget(); }
 
     public void verifyAttributeType(AttributeType type)
     { verifyAttributeType(type.getName()); }
