@@ -34,16 +34,22 @@ endif
 # BSD / OS-X 64-bit portability and large file support (>4GB)
 DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 
+ifndef NO_TIFF_LZW
+DEFINES += -DUSE_TIFF_LZW
+endif
+
+CFLAGS += $(DEFINES)
+
 all: make_zoom omeis
 
 make_zoom:
-	$(MAKE) -C zoom install
+	$(MAKE) DEFINES='$(DEFINES)' -C zoom install
 
 omeis: omeis.o zoom/lib/libzoom.a zoom/lib/libpic.a $(OBJS)
 	$(CC) $(OBJS) $(LIBS) -o omeis omeis.o
 
 omeis.o: omeis.c omeis.h
-	$(CC) $(CFLAGS) $(IM_CFLAGS) $(XML2_CFLAGS) $(INCS) $(DEFINES) -c omeis.c
+	$(CC) $(CFLAGS) $(IM_CFLAGS) $(XML2_CFLAGS) $(INCS) -c omeis.c
 
 digest.o: digest.c digest.h
 	$(CC) $(CFLAGS) -c digest.c

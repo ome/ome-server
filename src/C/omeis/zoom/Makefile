@@ -1,8 +1,8 @@
 install:
 	-mkdir include lib bin
-	cd libsys; make install
-	cd libpic; make install
-	cd zoom; make install
+	cd libsys; make DEFINES='$(DEFINES)' install
+	cd libpic; make DEFINES='$(DEFINES)' install
+	cd zoom; make DEFINES='$(DEFINES)' install
 
 clean:
 	-rm -fr include lib bin

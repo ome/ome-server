@@ -4,7 +4,7 @@ DEST = ..
 L = $(DEST)/lib
 COPTS = -g $(FLOATOPT)
 IPATH = -I. -I$(DEST)/include
-CFLAGS = $(IPATH) $(COPTS)
+CFLAGS = $(IPATH) $(COPTS) $(DEFINES)
 
 SRC = window.c pic.c pic_all.c pic_file.c swap.c \
 	tiff.c jpeg.c png.c omeis.c\
