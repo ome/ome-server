@@ -179,7 +179,10 @@ if (lc($transport) eq "xmlrpc") {
 #$daemon->on_action(sub { print "A***(",join(',',@_),")\n"; });
 #$daemon->on_dispatch(sub { print "D***(",join(',',@_),")\n"; });
 
+OME::DBObject->Caching(1);
+
 if ($debug) {  # FIXME: See previous if ($debug)
     print "Connect to $style server at ", $daemon->url(), ".\n";
+    print "  DBObject caching ",OME::DBObject->Caching()? "on\n": "off\n";
 }
 $daemon->handle();
