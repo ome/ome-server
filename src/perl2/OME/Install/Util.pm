@@ -71,6 +71,7 @@ our @EXPORT = qw(
 		normalize_path
 		path_in_tree
 		which
+		euid
 		get_mac
 		);
 
@@ -611,15 +612,15 @@ sub check_permissions {
     my ($options, @items) = @_;
 	croak ("user/mode hashref required.") unless ref($options) eq 'HASH';	
 
-
 	# No point traversing any further unless we actually have something to do
 	return 1 if (scalar(@items) < 1);
 
 	# Save current euid, and set it to the specified user.
-	my $old_euid = $EUID;
-	$EUID = getpwnam($options->{'user'})
-		or croak "Unable to find user: \"", $options->{'user'}, "\"";
+	my $old_euid = euid ();
 
+	my $uid = getpwnam($options->{'user'});
+	euid($uid);
+	
 	my $ret_val = 1;
 	while (my $item = shift @items) {
 		# XXX We're not following symlinks.
@@ -649,7 +650,7 @@ sub check_permissions {
 		}
 	}
 	
-	$EUID = $old_euid;
+	euid($old_euid);
 	return $ret_val;
 }
 
@@ -928,6 +929,26 @@ sub normalize_path {
 	}
 	return catpath ($vol,catdir (@dirs));
 
+}
+
+# [Bug 241]:
+# Changing $EUID directly is dangerous.
+# The only safe way is to set EUID = 0, then change EUID since different operating 
+# systems behave differently if you try to change $EUID from non-zero to another non-zero.
+#
+# On OS X: The os leaves the EUID as it was before EUID command.
+# On Linux: The os leaves the EUID at 0 but does not change to the new EUID.
+sub euid {
+	my $newEUID = shift;
+	my $oldEUID = $EUID;
+
+	if (defined $newEUID ) {
+		$EUID = 0;
+		$EUID = $newEUID;
+		croak "Unable to set EUID=$newEUID\n" unless $EUID == $newEUID;
+	}
+	
+	return ($oldEUID);
 }
 
 # path_in_tree ($tree,$path)

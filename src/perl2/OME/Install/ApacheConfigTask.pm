@@ -361,9 +361,9 @@ sub need_omeis_update {
 	my $pixels_update=1;
 	my $files_update=1;
 
-	my $old_UID = $EUID;
+	my $old_UID = euid();
 	# Be the apache user.
-	$EUID = $APACHE_UID;
+	euid($APACHE_UID);
 
 	if ( open(VERS, "src/C/omeis/updateOMEIS -q |") ) {
  	   while (<VERS>) {
@@ -376,7 +376,7 @@ sub need_omeis_update {
 	}
 
 	# Go back to the old UID.
-	$EUID = $old_UID;
+	euid($old_UID);
 
 	return ($pixels_update or $files_update or $need_update);
 
@@ -407,14 +407,8 @@ my $sleep;
 		print $LOGFILE "Child PID=$pid\n";
 		return ($pid);
 	} elsif ($pid == 0) { # child
-		$EUID = $APACHE_UID;
-		print $LOGFILE "Can't drop privileges.  UID=$EUID\n" 
-			and die "Can't drop privileges.  UID=$EUID" 
-			unless $EUID == $APACHE_UID; 
-
-		exec ("(sleep $sleep ; $OME_BASE_DIR/bin/updateOMEIS -s)")
-			or print $LOGFILE "Can't drop privileges.  UID=$EUID\n"
-			and die "Can't drop privileges.  UID=$EUID\n";
+		euid($APACHE_UID);
+		exec ("(sleep $sleep ; $OME_BASE_DIR/bin/updateOMEIS -s)");
 		# NOTREACHED
 	} else {
 		print $LOGFILE "Can't fork\n"
@@ -896,16 +890,6 @@ BLURB
 
 	my $httpdConf = $apache_info->{conf} or croak "Could not find httpd.conf\n";
 	print $LOGFILE "httpd.conf is $httpdConf\n";
-	
-	if ($APACHE->{DEV_CONF}) {
-		if ( not  check_permissions ({user => $APACHE_USER, r => 1, x => 1}, cwd()."src/perl2") ) {
-			print STDERR "\nYou have chosen a developer configuration, yet Apache does not have access into the\n".
-						 "distribution directory (".cwd().").\n".
-						 "Please re-set your permissions to give Apache access and try the install again.\n".
-						 "Alternatively, you can choose to not use the developer configuration.";
-			die;
-		}
-	}
 
 
 	#********

@@ -43,6 +43,7 @@ use File::Basename;
 use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use Log::Agent;
+use Text::Wrap;
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -92,7 +93,6 @@ our $IMPORT_FORMATS = join (' ',qw/
     OME::ImportEngine::STKreader
     OME::ImportEngine::TIFFreader
     OME::ImportEngine::XMLreader
-    OME::ImportEngine::BioradReader
 /);
 
 # Database version
@@ -164,10 +164,6 @@ sub create_superuser {
     # Make sure we're not croaking on a silly logfile print
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
-    # Drop our UID to Postgres
-#    $EUID = $pg_uid;
-#    $UID = $pg_uid;
-
     # Make sure we can see the Postgres command
     $retval = which ("$createuser");
    
@@ -175,10 +171,6 @@ sub create_superuser {
 
     # Create the user using the command line tools
     @outputs = `su $POSTGRES_USER -c "$createuser -d -a $username" 2>&1`;
-
-    # Back to UID 0
-#    $EUID = 0;
-#    $UID = 0;
 
     # Log and return success
     foreach (@outputs) {
@@ -441,6 +433,16 @@ sub create_experimenter {
     # Confirm all flag
     my $confirm_all;
 
+	# Task blurb
+	my $blurb = <<BLURB;
+This user will be yourself or the person who will administer the OME environment after installation. It is internal to OME. You will use this username and password to use OME and add new OME users and groups. The default data directory option is the path on this machine which contains (or will contain) the proprietary image files (greyscale TIFF's for example) you wish to import into OME. An example default data directory would be "/home/joe/my_ome_images".
+BLURB
+
+	print wrap("", "", $blurb);
+	
+	print "\n";  # Spacing
+
+
     while (1) {
         if ($OME_EXPER or $confirm_all) {
             print "            First name: ", BOLD, $OME_EXPER->{FirstName}    , RESET, "\n";
@@ -451,7 +453,9 @@ sub create_experimenter {
     
             print "\n";  # Spacing
 
-            y_or_n ("Are these values correct ?") and last;
+			if (y_or_n ("Are these values correct ?")) {
+				last;
+			} 
         }
 
         $confirm_all = 0;
@@ -461,26 +465,25 @@ sub create_experimenter {
         $OME_EXPER->{OMEName}       = confirm_default ("              Username", $OME_EXPER->{OMEName});
         $OME_EXPER->{Email}         = confirm_default ("        E-mail address", $OME_EXPER->{Email});
         $OME_EXPER->{DataDirectory} = confirm_default ("Default data directory", $OME_EXPER->{DataDirectory});
-
+        
         print "\n";  # Spacing
 
         $confirm_all = 1;
     }
-    
+
     if (not -d $OME_EXPER->{DataDirectory}) {
         mkpath ($OME_EXPER->{DataDirectory}, 0, 0755)  # Internal croak
         	if y_or_n ('Directory "'.$OME_EXPER->{DataDirectory}.
             	'" does not exist. Do you want to create it ?', 'y');
+		
     }
     
     if (not check_permissions ({user => $APACHE_USER, r => 1, w => 1}, $OME_EXPER->{DataDirectory})) {
-    	print <<PRINT;
-The directory $OME_EXPER->{DataDirectory} cannot be accessed by the Apache user "$APACHE_USER".
-This directory and its contents should either be owned by the OME group "$OME_GROUP" or,
-This directory and its contents need to be world-readable.
-The recommended course of action is to change group ownership to "$OME_GROUP".
+    	print wrap("", "", <<PRINT);
+ 
+OME user "$OME_EXPER->{OMEName}" data directory "$OME_EXPER->{DataDirectory}" cannot be accessed by the Apache user "$APACHE_USER". This directory and its contents should either be owned by the OME group "$OME_GROUP" or be world-readable. The recommended course of action is to change group ownership to "$OME_GROUP".
 PRINT
-		if (y_or_n ("OK to change group ownership of $OME_EXPER->{DataDirectory} to \"$OME_GROUP\"", 'n')) {
+        if (y_or_n ("OK to change group ownership of $OME_EXPER->{DataDirectory} to \"$OME_GROUP\"", 'n')) {
         	fix_ownership ({group => $OME_GROUP, recurse => 0}, $OME_EXPER->{DataDirectory});
         	print <<PRINT;
 Directory ownership successfully fixed.
@@ -488,8 +491,9 @@ You will still need to make sure that the files in this directory are either own
 That the files are group-readable.
 PRINT
         }
-    }
-
+		
+	}
+	
     my $password;
     ($password, $OME_EXPER->{Password}) = get_password ("Set password for OME user ".$OME_EXPER->{OMEName}.": ", 6);
 
@@ -507,7 +511,7 @@ PRINT
     my $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
 
     $ENVIRONMENT->ome_exper($OME_EXPER);
-    
+
     return ($session);
 }
 
@@ -593,6 +597,17 @@ sub init_configuration {
     
     my $lsid_def = $ENVIRONMENT->lsid ();
     $lsid_def = hostname() unless $lsid_def; 
+
+	# Task blurb
+	my $blurb = <<BLURB;
+The installer will now finalize your OME environment by asking you for an LSID authority and to provide an initial user for you to use with the web interface and Java clients.
+
+The LSID authority is a type of universal identification for your OME environment and it should be defined as the FQDN (fully qualified domain name) of the install machine; "myome.openmicroscopy.org" for example. If you are unsure of what to enter here ask your network/systems administrator or use the default as that will be adequate for most people.
+BLURB
+
+	print wrap("", "", $blurb);
+	
+	print "\n";  # Spacing
 
     my $lsid_authority = confirm_default ("LSID Authority", $lsid_def);
 
@@ -681,9 +696,10 @@ sub make_repository {
     # FIXME Make this a little more verbose, probably needs some explanation.
     my $repository_def = $ENVIRONMENT->omeis_url();
     $repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
+
     my $repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
     $ENVIRONMENT->omeis_url($repository_url);
-    
+
     my $repository = $factory->
     newObject('OME::SemanticType::BootstrapRepository',
             {
@@ -726,7 +742,7 @@ sub check_repository {
 
  	$ENVIRONMENT->omeis_url($repository_url);
  	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
- }
+}
 
 sub load_xml_core {
     my ($session, $logfile) = @_;
@@ -940,7 +956,7 @@ sub execute {
     }
 
     # Drop our UID to the OME_USER
-    $EUID = $OME_UID;
+    euid($OME_UID);
 
     my ($configuration,$manager,$session);
 
@@ -991,7 +1007,7 @@ sub execute {
         check_repository ($session);
         print_header "Finalizing Database";
         # Set the UID to whoever owns the install directory
-        $EUID = (stat ('.'))[4];
+        euid((stat ('.'))[4]);
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
@@ -1008,7 +1024,7 @@ sub execute {
         make_repository ($session);
         check_repository ($session);
         # Set the UID to whoever owns the install directory
-        $EUID = (stat ('.'))[4];
+        euid((stat ('.'))[4]);
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         commit_experimenter ($session) or croak "Unable to load commit experimenter.";
         load_analysis_core ($session, $LOGFILE)
@@ -1016,7 +1032,7 @@ sub execute {
     }
 
     # Drop our UID to the OME_USER
-    $EUID = $OME_UID;
+    euid($OME_UID);
 
     #*********
     #********* Finalize the DB
@@ -1079,7 +1095,7 @@ sub execute {
     close ($LOGFILE);
     
     # Back to UID 0
-    $EUID = 0;
+    euid(0);
 
     return 1;
 }

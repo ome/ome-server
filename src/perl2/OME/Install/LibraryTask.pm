@@ -353,7 +353,7 @@ sub install {
     my $retval = 0;
     my @output;
 
-    $EUID = 0;
+    euid(0);
 
     #*********
     #********* Initial setup
