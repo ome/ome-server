@@ -105,9 +105,11 @@ foreach (@chexes) {
 	. $chain->name() ."\n";
 }
 
+@inputs = $mex->inputs();
+print "# of inputs is " . scalar(@inputs) . "\n";
 
 
-my @outputs = $mex->actual_outputs();
+my @outputs = $mex->consumed_outputs();
 print "# of outputs is " . scalar(@outputs) . "\n";
 
 foreach my $output (@outputs) {
