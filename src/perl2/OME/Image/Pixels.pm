@@ -305,11 +305,12 @@ sub convertPlane {
 
 =head2 convertPlaneFromTIFF
 
-	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t);
+	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t,$IFD);
 
 Fills in a plane in the pixels file from another file, which is
 assumed to be in the TIFF format.  The TIFF is assumed to contain
-exactly one plane of pixels.
+exactly one plane of pixels per IFD.  The default IFD is 0.
+
 
 =cut
 

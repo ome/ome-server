@@ -504,21 +504,21 @@ sub convertPlane {
 
 =head2 convertPlaneFromTIFF
 
-	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t);
+	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t,$IFD);
 
 Fills in a plane in the pixels file from another file, which is
 assumed to be in the TIFF format.  The TIFF is assumed to contain
-exactly one plane of pixels.
+exactly one plane of pixels per IFD.  The default IFD is 0.
 
 =cut
 
 sub convertPlaneFromTIFF {
-    my ($self,$tiffFile,$z,$c,$t) = @_;
+    my ($self,$tiffFile,$z,$c,$t,$IFD) = @_;
     die "Can only convert TIFF's which are on the image server"
       unless UNIVERSAL::isa($tiffFile,"OME::Image::Server::File");
     my $fileID = $tiffFile->getFileID();
     my $pixelsID = $self->[PIXELS_ID];
-    OME::Image::Server->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID);
+    OME::Image::Server->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID,$IFD);
 }
 
 =head2 convertRows
