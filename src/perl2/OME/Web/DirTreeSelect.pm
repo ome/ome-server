@@ -65,7 +65,6 @@ sub getPageBody {
 	if (scalar (@selections) > 0) {
 		if ($cgi->param('Import')) {
 			my ($datasetID,$dataset);
-			my $session = $self->Session();
 			my $project = $session->project();
 			my $radioSelect = $cgi->param('DoDatasetType');
 			my ($reloadTitleBar, $reloadPage);
@@ -82,7 +81,7 @@ sub getPageBody {
 				my $datasetname=$cgi->param('newDataset');
 				my $text="";
 				$text.="<b>Please enter a name for your dataset</b><br>";
-				$text.=$self->print_form($selections[0]);
+				$text.=print_form($session,$cgi,$selections[0]);
 				$text .= $cgi->h4 ('Selected Files and Folders:');
 				$text .= join ("<BR>",@selections);
 				return ('HTML',$text) unless $datasetname;
@@ -93,7 +92,7 @@ sub getPageBody {
 
 				my $txt="";
 				$txt.="<b>This name already exists. Please enter a new name for your dataset</b><br>";
-				$txt.=$self->print_form($selections[0]);
+				$txt.=print_form($session,$cgi,$selections[0]);
 				$txt .= $cgi->h4 ('Selected Files and Folders:');
 				$txt .= join ("<BR>",@selections);
 
@@ -160,12 +159,11 @@ sub getPageBody {
 sub print_form {
 	my ($session,$cgi,$recentSelection) = @_;
 
-	
+
 	my $project = $session->project();
 	my @datasets = $project->unlockedDatasets() if defined $project;
 	my %datasetHash  = map { $_->ID() => $_->name()} @datasets if @datasets > 0;;
 	my $text = '';
-
 	$text .= "\n".$cgi->startform;
 	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Import',-value=>'Import Selected Files/Folders')."\n</CENTER>\n";
 
