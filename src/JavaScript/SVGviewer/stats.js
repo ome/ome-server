@@ -46,9 +46,8 @@ var svgns = "http://www.w3.org/2000/svg";
 	tested
 
 *****/
-function Statistics(stats, waveLabels) {
-	if(!stats ) { return null; }
-	this.init(stats, waveLabels);
+function Statistics(stats, waveLabels, image) {
+	this.init(stats, waveLabels,image);
 }
 
 /*****
@@ -166,10 +165,11 @@ Statistics.prototype.updateChannelStats = function () {
 	this.updateStats( this.fields['theT'].firstChild.data );
 };
 
-Statistics.prototype.updateStats = function(t) {
+Statistics.prototype.updateStats = function() {
 	// update fields
+	var t = this.image.theT();
 	var c = this.logicalChannelPopupList.getSelection();
-	this.fields['theT'].firstChild.data = t;
+	this.fields['theT'].firstChild.data = t + 1;
 	for( var statType in this.stats[c][t] ) {
 		this.fields[statType].firstChild.data = this.stats[c][t][statType];
 	}
@@ -191,8 +191,10 @@ Statistics.prototype.updateStats = function(t) {
 
 *****/
 
-Statistics.prototype.init = function(stats, waveLabels) {
+Statistics.prototype.init = function(stats, waveLabels, image) {
 	this.initialized = true;
 	this.stats = stats;
 	this.waveLabels = waveLabels;
+	this.image = image;
+	this.image.registerListener( 'theT', this, 'updateStats' );
 };

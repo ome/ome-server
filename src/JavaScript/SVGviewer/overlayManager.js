@@ -48,8 +48,8 @@ OverlayManager.prototype.toolboxApperance = {
 		sketchSpace = container in which to draw overlays
 
 *****/
-function OverlayManager(sketchSpace) {
-	this.init(sketchSpace);
+function OverlayManager(image, sketchSpace) {
+	this.init(image, sketchSpace);
 }
 
 OverlayManager.prototype.buildToolBox = function( controlLayer ) {
@@ -59,7 +59,7 @@ OverlayManager.prototype.buildToolBox = function( controlLayer ) {
 	this.toolboxApperance[ 'height' ] = bbox.height + 2 * toolBox.prototype.padding;
 	this.toolBox = new toolBox( this.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
-	this.toolBox.setLabel(10,12,"Overlay Manager");
+	this.toolBox.setLabel(4,12,"Overlay Manager");
 	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
 	this.toolBox.realize( controlLayer );
 	this.displayPane = this.toolBox.getGUIbox();
@@ -87,31 +87,25 @@ OverlayManager.prototype.buildDisplay = function() {
 	this.layerPopupList.setLabel(-2, 12, "Layer:");
 	this.layerPopupList.getLabel().setAttribute("text-anchor", "end");
 
-	this.displayButton = new button(
-		160, 10, 
+	this.displayButton = new button( 
+		this.layerPopupList.x + this.layerPopupList.width + 6, 20, 
 		{ obj: this, method: 'turnLayerOnOff' },
-		'<g>' +
-		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
-		'	<text y="12" text-anchor="middle">Off</text>'+
-		'</g>',
-		'<g>' +
-		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
-		'	<text y="12" text-anchor="middle">On</text>'+
-		'</g>'
+		'<text fill="black" text-decoration="underline">On</text>',
+		'<text fill="black" text-decoration="underline">Off</text>'
 	);
 	
 	this.dynamicControls = svgDocument.createElementNS( svgns, "g" );
-	this.dynamicControls.setAttribute("transform", "translate(20,70)");
+	this.dynamicControls.setAttribute("transform", "translate(5,40)");
 	this.dynamicControls.padding = 5;
 	
 	this.allZButton = new button(
-		100, 0,
+		70, 0,
 		{ obj: this, method: 'showAllZs' }
 	);
 	this.allZButton.setLabel(-9, 9,"Show all Z");
 	this.allZButton.getLabel().setAttribute("text-anchor", "end");
 	this.allTButton = new button(
-		100, 20,
+		70, 20,
 		{ obj: this, method: 'showAllTs' }
 	);
 	this.allTButton.setLabel(-9, 9,"Show all T");
@@ -126,7 +120,7 @@ OverlayManager.prototype.buildDisplay = function() {
 	
 	// draw some background
 	this.dynamicControls.appendChild( parseXML(
-		'<rect x="30" y="-5" width="80" height="39" fill="none" stroke="black" stroke-width="2" opacity="0.7"/>',
+		'<rect y="-5" width="80" height="39" fill="none" stroke="black" stroke-width="2" opacity="0.7"/>',
 		svgDocument
 	));
 
@@ -174,9 +168,9 @@ OverlayManager.prototype.addLayer = function( name, overlay ) {
 }
 
 
-OverlayManager.prototype.updateIndex = function( theZ, theT ) {
+OverlayManager.prototype.updateIndex = function( ) {
 	for( overlay in this.overlayByName ) {
-		this.overlayByName[overlay].updateIndex( theZ, theT );
+		this.overlayByName[overlay].updateIndex( this.image.theZ(), this.image.theT() );
 	}
 }
 
@@ -184,7 +178,7 @@ OverlayManager.prototype.updateIndex = function( theZ, theT ) {
                                        Private Functions 
 ********************************************************************************************/
 
-OverlayManager.prototype.init = function( sketchSpace ) {
+OverlayManager.prototype.init = function( image, sketchSpace ) {
 	this.initialized = true;
 	this.sketchSpace = sketchSpace;
 
@@ -196,4 +190,8 @@ OverlayManager.prototype.init = function( sketchSpace ) {
 	this.onByName = new Array();
 	this.overlayByName = new Array();
 	
+	this.image = image;
+
+	this.image.registerListener( 'theZ', this, 'updateIndex' );
+	this.image.registerListener( 'theT', this, 'updateIndex' );
 };
