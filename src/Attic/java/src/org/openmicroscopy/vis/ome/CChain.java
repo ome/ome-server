@@ -108,6 +108,10 @@ public class CChain extends RemoteChain  {
 		}
 	}
 	
+	public Collection getExecutions(CDataset d) {
+		Vector v = (Vector) datasetExecutions.get(d);
+		return v;
+	}
 	public boolean hasAnyExecutions() {
 		if (chainExecutions == null) 
 			return false;
