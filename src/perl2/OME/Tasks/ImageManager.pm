@@ -153,7 +153,7 @@ sub new{
 
 =head2 deleteCurrentImageAnnotation
 
-	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	my $imageAnnotation = OME::Tasks::ImageManager->
 	    deleteCurrentImageAnnotation( $image );
 
 This will look for the most recent ImageAnnotation created by 
@@ -179,7 +179,7 @@ sub deleteCurrentImageAnnotation {
 
 =head2 getCurrentImageAnnotation
 
-	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	my $imageAnnotation = OME::Tasks::ImageManager->
 	    getCurrentImageAnnotation( $image );
 
 This will look for the most recent ImageAnnotation created by 
@@ -226,7 +226,7 @@ sub getCurrentImageAnnotation {
 
 =head2 writeImageAnnotation
 
-	my $imageAnnotation = OME::Tasks::ImageAnnotationManager->
+	my $imageAnnotation = OME::Tasks::ImageManager->
 	    writeImageAnnotation( $image, $data_hash );
 
 This will write a new ImageAnnotation attribute. The data_hash should
