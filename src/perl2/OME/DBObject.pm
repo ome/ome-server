@@ -64,6 +64,7 @@ B<I<(as-yet-unwritten)>> OME Database Introduction.
 =cut
 
 use Carp;
+use Log::Agent;
 use Class::Data::Inheritable;
 use UNIVERSAL::require;
 use OME::Database::Delegate;
@@ -555,8 +556,29 @@ sub addColumn {
     #print "Adding $table.$column to $class\n";
 
     foreach my $alias (@$aliases) {
-        die "Already a column named $alias"
-          if defined $class->getColumnType($alias);
+    	# check for alias already existing
+        if( defined $class->getColumnType($alias) ) {
+#logdbg "debug", "Warning, $alias is already defined for $class.";
+        	my $column_def = $class->__columns()->{$alias};
+        	my $old_SQL_opts = $column_def->[3];
+        	# if valid, return silently
+        	return if( 
+        		$column_def->[0] eq $table &&
+        	    $column_def->[1] eq $column &&
+        	    (
+        	    	( not defined $column_def->[2] && not defined $foreign_key_class ) ||
+					( $column_def->[2] eq $foreign_key_class )
+				) &&
+        	    scalar( keys( %$old_SQL_opts ) ) eq scalar( keys( %$sql_options ) ) &&
+				not grep( 
+					( not exists( $old_SQL_opts->{$_} ) ) || 
+					( $old_SQL_opts->{ $_ } ne $sql_options->{ $_ } ),
+					keys %$sql_options
+				)
+			);				
+        	# else DIE
+        	die "Already a column named $alias with a differing definition";
+        }
 
         # Create an entry in __columns
         $class->__columns()->{$alias} = [$table,$column,
