@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -78,17 +78,17 @@ public interface Module
 
     /** Criteria field name: <code>inputs</code> */
     public List getFormalInputs();
-    /** Criteria field name: <code>#inputs</code> */
+    /** Criteria field name: <code>#inputs</code> or <code>inputs</code> */
     public int countFormalInputs();
 
     /** Criteria field name: <code>outputs</code> */
     public List getFormalOutputs();
-    /** Criteria field name: <code>#outputs</code> */
+    /** Criteria field name: <code>#outputs</code> or <code>outputs</code> */
     public int countFormalOutputs();
 
     /** Criteria field name: <code>executions</code> */
     public List getExecutions();
-    /** Criteria field name: <code>#executions</code> */
+    /** Criteria field name: <code>#executions</code> or <code>executions</code> */
     public int countExecutions();
 
     /** Criteria field name: <code>execution_instructions</code> */

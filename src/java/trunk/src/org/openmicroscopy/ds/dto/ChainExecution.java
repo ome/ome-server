@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -68,7 +68,7 @@ public interface ChainExecution
 
     /** Criteria field name: <code>node_executions</code> */
     public List getNodeExecutions();
-    /** Criteria field name: <code>#node_executions</code> */
+    /** Criteria field name: <code>#node_executions</code> or <code>node_executions</code> */
     public int countNodeExecutions();
 
 }

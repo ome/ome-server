@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -68,17 +68,17 @@ public interface AnalysisChain
 
     /** Criteria field name: <code>nodes</code> */
     public List getNodes();
-    /** Criteria field name: <code>#nodes</code> */
+    /** Criteria field name: <code>#nodes</code> or <code>nodes</code> */
     public int countNodes();
 
     /** Criteria field name: <code>links</code> */
     public List getLinks();
-    /** Criteria field name: <code>#links</code> */
+    /** Criteria field name: <code>#links</code> or <code>links</code> */
     public int countLinks();
 
     /** Criteria field name: <code>paths</code> */
     public List getPaths();
-    /** Criteria field name: <code>#paths</code> */
+    /** Criteria field name: <code>#paths</code> or <code>paths</code> */
     public int countPaths();
 
 }

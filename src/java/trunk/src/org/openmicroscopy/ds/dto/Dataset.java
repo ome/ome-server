@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:24 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,12 +64,12 @@ public interface Dataset
 
     /** Criteria field name: <code>projects</code> */
     public List getProjects();
-    /** Criteria field name: <code>#projects</code> */
+    /** Criteria field name: <code>#projects</code> or <code>projects</code> */
     public int countProjects();
 
     /** Criteria field name: <code>images</code> */
     public List getImages();
-    /** Criteria field name: <code>#images</code> */
+    /** Criteria field name: <code>#images</code> or <code>images</code> */
     public int countImages();
 
 }
