@@ -81,7 +81,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	private int modCount;
 	private PLayer layer;
 	
-	private float x=HGAP;
 	private float y=VGAP;
 	
 	private PLinkLayer linkLayer;
@@ -140,7 +139,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
 	}
 	
-	private void drawChain(ChainInfo info) {
+	public  void drawChain(ChainInfo info) {
 		// draw the modules 
 		chainHeight = 0;
 		chainWidth = 0;
@@ -151,7 +150,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		name.setFont(nameFont);
 		name.setPickable(false);
 		layer.addChild(name);
-		name.setOffset(x,y);
+		name.setOffset(HGAP,y);
 		name.setScale(2);
 		float top=y;
 		chainHeight += name.getBounds().getHeight()+VGAP;
@@ -161,7 +160,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
  		y += p.getHeight()+VGAP;
  		decorateChain(chain.getID(),top,y,p.getWidth());
-		x= HGAP;
 		y += VGAP;
 	}
 	
