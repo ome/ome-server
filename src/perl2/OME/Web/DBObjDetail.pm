@@ -71,6 +71,23 @@ are Overridable.
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
+	
+	# try to get a specialized class unless this call is coming from a subclass
+	unless( $class ne __PACKAGE__ ) {
+		my %params = @_;
+		my $q    = $params{ CGI };
+		if( defined $q && ( my $formal_name = $q->param( 'Type' ) ) ) {
+			# construct specialized package name
+			my $specializedPackage = $formal_name;
+			($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
+			$specializedPackage = "OME::Web::DBObjDetail::__".$specializedPackage;
+	
+			# obtain package
+			eval( "use $specializedPackage" );
+			$class = $specializedPackage unless $@ || $specializedPackage eq __PACKAGE__;
+		}
+	}
+
 	my $self  = $class->SUPER::new(@_);
 
 	return $self;
@@ -91,11 +108,6 @@ sub getMenuText {
 	my $menuText = "DB Detail";
 	return $menuText unless ref($self);
 
-	my $specializedDetail;
-	return $specializedDetail->getMenuText( )
-		if( $specializedDetail = $self->__specialize( ) and
-		    ref( $self ) eq __PACKAGE__ );
-
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
 	return "$common_name Detail";
@@ -111,10 +123,6 @@ Overridable.
 
 sub getPageTitle {
 	my $self = shift;
-	my $specializedDetail;
-	return $specializedDetail->getPageTitle( )
-		if( $specializedDetail = $self->__specialize( ) and
-		    ref( $self ) eq __PACKAGE__ );
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
     return $common_name.': '.$self->Renderer()->getName($object);
@@ -142,11 +150,6 @@ Overridable
 
 sub getPageBody {
 	my $self = shift;
-
-	my $specializedDetail;
-	return $specializedDetail->getPageBody( )
-		if( $specializedDetail = $self->__specialize( ) and
-		    ref( $self ) eq __PACKAGE__ );
 
 	$self->_takeAction( );
 
@@ -205,39 +208,6 @@ sub _loadObject {
 		or die "Could not load DBObject $type, id=$id";
 	return $self->{__object};
 }
-
-=head2 __specialize
-
-	my $specializedPackage = $self->__specialize();
-	
-returns a specialized package (if one exists) for displaying a
-DBObject or Attribute in detail.
-returns undef if a specialized prototype does not exist or if it was
-called with with a specialized prototype.
-
-DO NOT Override
-
-=cut
-
-sub __specialize {
-	my $self = shift;
-	my $object = $self->_loadObject();
-	my ($package_name, $common_name, $formal_name, $ST) = 
-		$self->_loadTypeAndGetInfo( $object );
-
-	# construct specialized package name
-	my $specializedPackage = $formal_name;
-	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
-	$specializedPackage = "OME::Web::DBObjDetail::__".$specializedPackage;
-
-	# obtain package
-	eval( "use $specializedPackage" );
-	return $specializedPackage->new( CGI => $self->CGI(), form_name => $self->{ form_name } )
-		unless $@ or ref( $self ) eq $specializedPackage;
-
-	return undef;
-}
-
 
 =head1 Author
 
