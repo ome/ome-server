@@ -72,7 +72,7 @@ use OME;
 use base qw(Exporter);
 
 
-our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo);
+our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo doSliceCallback);
 
 use vars qw($VERSION);
 use OME;
@@ -281,6 +281,26 @@ sub __getNowTime {
     my $now = "\'".$now[1]."-".$now[2]."-".$now[4]." ".$now[3]." GMT\'";
 
     return $now;
+}
+
+
+
+
+=head2 doSliceCallback
+
+         doSliceCallback(\&callback)
+
+Routine to call a passed callback routine after successfully
+importing a slice. If there is an input argument, treat it as
+a function reference to the callback routine, and call it.
+
+=cut
+
+sub doSliceCallback {
+    my $sliceCallback = shift;
+    if ($sliceCallback) {
+	$sliceCallback->();
+    }
 }
 
 
