@@ -838,12 +838,11 @@ sub commit {
     $_->commit() foreach (values %$rows);
 }
 
-=head2 writeObject
+=head2 storeObject
 
-	$attribute->writeObject();
+	$attribute->storeObject();
 
-This instance methods writes any unsaved changes to the database, and
-then commits the database transaction.
+This instance methods writes any unsaved changes to the database.
 
 =cut
 
@@ -851,6 +850,12 @@ sub writeObject {
     my ($self) = @_;
     my $rows = $self->{_data_table_rows};
     $_->writeObject() foreach (values %$rows);
+}
+
+sub storeObject {
+    my ($self) = @_;
+    my $rows = $self->{_data_table_rows};
+    $_->storeObject() foreach (values %$rows);
 }
 
 
