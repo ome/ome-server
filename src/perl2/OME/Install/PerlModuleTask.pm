@@ -1,4 +1,4 @@
-# OME/Install/CoreSystemTask.pm
+# OME/Install/PerlModuleTask.pm
 # This task builds the required Perl modules for the OME system.
 
 #-------------------------------------------------------------------------------
@@ -36,7 +36,9 @@ use strict;
 use warnings;
 use Carp;
 use English;
+use Cwd;
 use Term::ANSIColor qw(:constants);
+use File::Basename;
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -46,6 +48,22 @@ use base qw(OME::Install::InstallationTask);
 #*********
 #********* GLOBALS AND DEFINES
 #*********
+
+# Default package repository
+my $REPOSITORY = "http://openmicroscopy.org/packages/perl/";
+
+# Global logfile filehandle
+my $LOGFILE;
+
+# Our basedirs and user which we grab from the environment
+my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER);
+
+# OME user information
+my ($OME_UID, $OME_GID);
+
+# Installation home
+my $INSTALL_HOME;
+
 
 my @modules = (
     {
@@ -60,8 +78,7 @@ my @modules = (
 	repository_file => 'MD5-2.02.tar.gz',
 	exception => sub {
 	    if ($PERL_VERSION ge v5.8.0) { return 1 };
-	}
-
+	} 
     },{
 	name => 'MIME::Base64',
 	repository_file => 'MIME-Base64-2.12.tar.gz'
@@ -198,9 +215,115 @@ sub check_module {
     return $retval ? 1 : 0;
 }
 
+sub download_module {
+    my $module = shift;;
+    my $module_url = $REPOSITORY.$module->{repository_file};
+    my $downloader;
+
+    # Find a useable download app (curl|wget)
+    if (system ("which wget 2>&1 >/dev/null") == 0) {
+	$downloader = "wget -N";
+    } elsif (system ("which curl 2>&1 >/dev/null") == 0) {
+	$downloader = "curl -O";
+    } else {
+	croak "Unable to find a valid downloader for module \"$module->{name}\".";
+    }
+
+    print "  \\_ Downloading $module->{repository_file} ";
+
+    my @output = `$downloader $module_url 2>&1`;
+    
+    if ($? == 0) {
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+	print $LOGFILE "SUCCESS DOWNLOADING MODULE \"$module->{name}\" -- OUTPUT FROM DOWNLOADER: \"@output\"\n\n";
+
+	return 1;
+    }
+    
+    print BOLD, "[FAILURE]", RESET, ".\n";
+    print $LOGFILE "ERRORS DOWNLOADING MODULE \"$module->{name}\" -- OUTPUT FROM DOWNLOADER: \"@output\"\n\n";
+
+    return 0;
+}
+
+sub unpack_module {
+    my $module = shift;
+
+    print "  \\_ Unpacking ";
+
+    my @output = `tar zxf $INSTALL_HOME/$module->{repository_file} 2>&1`;
+
+    if ($? == 0) {
+	print $LOGFILE "SUCCESS EXTRACTING $INSTALL_HOME/$module->{repository_file}\n\n";
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+
+	return 1;
+    } 
+
+    print BOLD, "[FAILURE]", RESET, ".\n";
+    print $LOGFILE "FAILURE EXTRACTING $INSTALL_HOME/$module->{repository_file} -- OUTPUT FROM TAR: \"@output\"\n\n";
+
+    return 0;
+}
+
 sub install_module {
     my $module = shift;
-    print "This is where we'd install.\n";
+    my $cwd = getcwd;
+    my @output;
+
+    $EUID = 0;
+
+    # Download
+    download_module ($module) or
+	croak "Unable to download module, see PerlModuleTask.log for details.";
+
+    # Unpack
+    unpack_module ($module) or
+	croak "Failure extracting module, see PerlModuleTask.log for details.";
+
+    # Install
+    my $wd = basename ($module->{repository_file}, ".tar.gz");
+    chdir ($wd) or croak "Unable to chdir into $wd, $!";
+
+    print "  \\_ Configuring ";
+    @output = `perl Makefile.PL 2>&1`;
+    if ($? == 0) {
+	print $LOGFILE "SUCCESS CONFIGURING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+    } else {
+	print BOLD, "[FAILURE]", RESET, ".\n";
+	print $LOGFILE "FAILURE CONFIGURING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	croak "Failure configuring module, see PerlModuleTask.log for details.";
+    }
+
+    print "  \\_ Compiling ";
+    @output = `make 2>&1`;
+    if ($? == 0) {
+	print $LOGFILE "SUCCESS COMPILING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+    } else {
+	print BOLD, "[FAILURE]", RESET, ".\n";
+	print $LOGFILE "FAILURE COMPILING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	croak "Failure compiling module, see PerlModuleTask.log for details.";
+    }
+
+    print "  \\_ Testing ";
+    @output = `make test 2>&1`;
+    if ($? == 0) {
+	print $LOGFILE "SUCCESS TESTING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+    } else {
+	print BOLD, "[FAILURE]", RESET, ".\n\n";
+	print $LOGFILE "FAILURE TESTING MODULE \"$module->{name}\" -- OUTPUT: \"@output\"\n\n";
+	croak "Failure testing module, see PerlModuleTask.log for details." unless 
+	    y_or_n ("There were failures testing this module, do you still want to continue");
+	print "\n";  # Spacing	    
+    }
+
+    # Return to our previous WD
+    chdir ($cwd);
+
+    print "This is where we'd install.\n\n";
 
     return;
 }
@@ -212,23 +335,40 @@ sub install_module {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-    my $OME_BASE_DIR = $environment->base_dir()
+
+    # Set our globals
+    $OME_BASE_DIR = $environment->base_dir()
 	or croak "Unable to retrieve OME_BASE_DIR!";
-    my $OME_TMP_DIR = $environment->tmp_dir()
+    $OME_TMP_DIR = $environment->tmp_dir()
 	or croak "Unable to retrieve OME_TMP_DIR!";
+    $OME_USER = $environment->user()
+	or croak "Unable to retrieve OME_USER!";
+    
+    # Store our CWD so we can get back to it later
+    my $cwd = getcwd;
+
+    # Retrieve some user info from the password database
+    $OME_UID = getpwnam($OME_USER) or croak "Failure retrieving user id for \"$OME_USER\", $!";
+
+    # Set our installation home
+    $INSTALL_HOME = $OME_TMP_DIR."/install";
+    
+    # chdir into our INSTALL_HOME	
+    chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
     
     print_header ("Perl Module Setup");
 
+    print "(All verbose information logged in $OME_TMP_DIR/install/PerlModuleTask.log)\n\n";
+
     # Get our logfile and open it for reading
-    open (LOGFILE, ">", $OME_TMP_DIR."/install/PerlModuleTask.log")
-	or croak "Unable to open logfile \"$OME_TMP_DIR/install/PerlModuleTask.log\", $!";
+    open ($LOGFILE, ">", "$INSTALL_HOME/PerlModuleTask.log")
+	or croak "Unable to open logfile \"$INSTALL_HOME/PerlModuleTask.log\", $!";
 
     #*********
     #********* Check each module (exceptions then version)
     #*********
 
-    print "Checking modules\n(Failure information in $OME_TMP_DIR/install/PerlModuleTask.log)\n";
-
+    print "Checking modules\n";
     foreach my $module (@modules) {
 	print "  \\_ $module->{name}";
 
@@ -244,7 +384,7 @@ sub execute {
 
 	if (not $module->{version}) {
 	    # Log the error returned by get_module_version()
-	    print LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
+	    print $LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
 
 	    print BOLD, " [NOT INSTALLED]", RESET;
 	    my $retval = y_or_n("\n\nWould you like to install $module->{name} from the repository ?");
@@ -274,6 +414,9 @@ sub execute {
 	    }
 	}
     }
+
+    # Return to our original working directory
+    chdir ($cwd) or croak "Unable to return to our original working directory \"$cwd\", $!";
 
     return;
 }
