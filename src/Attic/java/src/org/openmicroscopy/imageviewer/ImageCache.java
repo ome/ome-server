@@ -90,15 +90,18 @@ public class ImageCache
    */
   public static final int NOT_STORED = 0;
   
-  // change model: go with defaults, then maybe have runtime change
-  // defaults: use 85% available memory, LRU strategy
-  
+  // singleton constructor
   private ImageCache()
   {
     diskCache = new ImageDiskCache();
     memoryCache = new ImageMemoryCache(DEFAULT_MEMORY_STRATEGY);        
   }
   
+  /**
+   * Returns a reference to the single image cache in the application.
+   * 
+   * @return
+   */
   public static ImageCache getInstance()
   {
     if(cache == null)
@@ -108,6 +111,30 @@ public class ImageCache
     return cache;
   }
   
+  /**
+   * Returns the current status of the image slice with the specified attributes
+   * in the cache-- that is, whether or not it is in memory or on disk,
+   * or not stored at all.
+   * 
+   * Possible return values:
+   * <ul>
+   * <li><b>NOT_STORED</b>: The image is not in the cache.</li>
+   * <li><b>IN_MEMORY</b>: The image resides in memory.</li>
+   * <li><b>WRITING_TO_DISK</b>: The image is being flushed out of memory onto disk.</li>
+   * <li><b>WRITTEN_TO_DISK</b>: The image is stored on disk.
+   * 
+   * @param imageName The name of the image to find.
+   * @param pixelsID The ID of the pixels of that image to find.
+   * @param z The z-level of the image slice to find.
+   * @param t The t-index of the image slice to find.
+   * @param cRed The ID of the red channel of the target image slice.
+   * @param cGreen The ID of the green channel of the target image slice.
+   * @param cBlue The ID of the blue channel of the target image slice.
+   * @param rOn Whether or not the red filter is on.
+   * @param gOn Whether or not the green filter is on.
+   * @param bOn Whether or not the blue filter is on.
+   * @return See above return values.
+   */
   public int getImageStatus(String imageName, int pixelsID, int z, int t,
                             int cRed, int cGreen, int cBlue,
                             boolean rOn, boolean gOn, boolean bOn)
