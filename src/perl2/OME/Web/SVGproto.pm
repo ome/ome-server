@@ -541,7 +541,6 @@ $SVG .= <<ENDSVG;
 	// GUI components
 		var controlsToolBox, multiToolBox;
 		var zSlider, tSlider;
-		var blackSlider, whiteSlider;
 		var redPopupList, bluePopupList, greenPopupList, bwPopupList;
 		var scalePopupList, panePopupList;
 		var RGBpopupListBox, BWpopupListBox;
@@ -556,14 +555,14 @@ $SVG .= <<ENDSVG;
 		// Z and T are dims of z and t
 		var Z = $pDims->[2];
 		var T = $pDims->[4];
-		var scaleWidth = 180;
 		var Wavelengths = $Wavelengths;
 		var Stats = $Stats;
 		var fluors = new Array();
 		
 	// global variables
 		// theZ & theT are current values of z & t
-		var theZ, theT;
+// these should be set from DB
+		var theZ = Math.floor(Z/2), theT=0;
 
 
         function init(e) {
@@ -594,8 +593,7 @@ $SVG .= <<ENDSVG;
 				svgDocument.getElementById("menuBar").firstChild.data,
 				svgDocument.getElementById("hideControl").firstChild.data,
 				'<g>' +
-				'	<rect width="{\$width}" height="1000" fill="none" stroke="black"	stroke-width="2"/>'+
-				'	<rect width="{\$width}" height="1000" fill="ghostwhite" opacity="0.5"/>' +
+				'	<rect width="{\$width}" height="1000" fill="lightslategray" opacity="0.5"/>' +
 				'</g>'
 			);
 			
@@ -724,7 +722,7 @@ $SVG .= <<ENDSVG;
 			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
 			//	These panes to come from DB eventually
-			scale = new Scale(image, updateBlackLevel, updateWhiteLevel);
+			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			multiToolBox.addPaneText(
 				svgDocument.getElementById("info").firstChild.data, "Info" );
@@ -733,6 +731,7 @@ $SVG .= <<ENDSVG;
 			panePopupList = new popupList(
 				0, 0, multiToolBox.getPaneIndexes(), updatePane );
 			panePopupList.realize( multiToolBox.getMenuBar() );
+			scale.updateScale(theT);
 
 
             azap.appendNode(controls); 
@@ -748,86 +747,75 @@ $SVG .= <<ENDSVG;
 			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "RGB_BWbutton.setState(true)", 0 );
+			zSlider.setValue(theZ/Z*100,true);
+			tSlider.setValue(theT/T*100,true);
 
-			zSlider.setValue(50,true);	// 50% of z range
-			tSlider.setValue(0,true);	// 0% of t range
-
-//			image.setPreload(1);//*/
+//			image.setPreload(1);
 		}
 	
-/*	// Scale stuff	
-		function buildScalePane() {
-			var root = svgDocument.createElementNS(svgns, "g");
-		
-			blackSlider = new Slider( 
-				10, 60, scaleWidth, 0, 
-				updateBlackLevel,
-				'<rect width="'+scaleWidth+'" height="10" opacity="0"/>',
-				'<rect x="-2" width="4" height="10" fill="black"/>'
-			);
-			whiteSlider = new Slider( 
-				10, 70, scaleWidth, 0, 
-				updateWhiteLevel,
-				'<rect width="'+scaleWidth+'" height="10" opacity="0"/>',
-				'<rect x="-2" width="4" height="10" fill="white"/>'
-			);
-			scalePopupList = new popupList(
-				10, 90, fluors, null
-			);
-		
-			root.appendChild( whiteSlider.textToSVG(
-				'<g transform="translate(10,70)">' +
-				'	<line x2="'+ scaleWidth +'" stroke-width="2" stroke="blue"/>' +
-				'	<line id="geomeanTick" y1="-10" y2="10" stroke-width="2" stroke="blue"/>' +
-				'</g>'
-			));
-			
-			root.appendChild( whiteSlider.textToSVG(
-				'<text x="20" y="2em">Black level: </text>' ));
-			blackLabel = root.lastChild;
-			root.appendChild( whiteSlider.textToSVG(
-				'<text x="20" y="3em">White level: </text>' ));
-			whiteLabel = root.lastChild;
-			root.appendChild( whiteSlider.textToSVG(
-				'<text x="20" y="4em">Scale: </text>' ));
-			scaleLabel = root.lastChild;
-		
-			blackSlider.realize( root );
-			whiteSlider.realize( root );
-			scalePopupList.realize( root );
-			
-			return root;
-		}
-		// updateScale should be called when time or scale wavelength is changed
-		// tick marks and calculated length of scale bar are dependent on those things
-		function updateScale(t) {
-			if(blackSlider == null || whiteSlider == null) return null;
-			var wavenum = wavePopupList.getSelection();
-			var min = Stats[wavenum][theT]['min'];
-			var max = Stats[wavenum][theT]['max'];
-			var sigma = Stats[wavenum][theT]['sigma'];
-			var geomeanX = (Stats[wavenum][theT]['geomean'] - min) / (max - min) * scaleWidth;
-			svgDocument.getElementById("geomeanTick").setAttribute("transform", "translate("+geomeanX+",0)");
-			// set B&W sliderVals to correct positions
-		}*/
-
+	// Scale stuff
 		function updateBlackLevel(val) {
-		scale.blackLabel.firstChild.data = "Black level: " + val;
-			// make val in bounds
-			// set val to in bounds
-			// update black bar
-			// set scale.BS
-			// call scale.updateWBS
+			// has scale been initialized?
+			if(scale.image == null ) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val >= scale.whiteSlider.getValue())
+				val = scale.whiteSlider.getValue() - 0.00001;
+			var cBlackLevel = Math.round(val/scale.scaleWidth * range + min);
+			val = (cBlackLevel-min)/range * scale.scaleWidth;
+
+			// update display
+			scale.blackSlider.setValue(val);
+			scale.blackLabel.firstChild.data = "Black level: " + cBlackLevel;
+			scale.blackBar.setAttribute("width", Math.round(val) );
+
+			// update backend
+			var nBlackLevel = (cBlackLevel - geomean)/sigma;
+			scale.BS[wavenum]['B'] = nBlackLevel;
+			scale.updateWBS();
 		}
-	
 		function updateWhiteLevel(val) {
-		scale.whiteLabel.firstChild.data = "White level: " +val;
-			// make val in bounds
-			// set val to in bounds
-			// update white bar
-			// convert val to native WBS
-			// set scale.BS
-			// call scale.updateWBS
+			// has scale been initialized?
+			if(scale.image == null ) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val >= scale.whiteSlider.getValue())
+				val = scale.whiteSlider.getValue() - 0.00001;
+			var cWhiteLevel = Math.round(val/scale.scaleWidth * range + min);
+			if(cWhiteLevel == geomean)
+				cWhiteLevel -= 0.00001;
+			val = (cWhiteLevel-min)/range * scale.scaleWidth;
+
+			// update display
+			scale.whiteSlider.setValue(val);
+			scale.whiteLabel.firstChild.data = "White level: " + cWhiteLevel;
+			scale.whiteBar.setAttribute("width", scale.scaleWidth - Math.round(val) );
+			scale.whiteBar.setAttribute("x", Math.round(val) );
+
+			// update backend
+			var nScale = (cWhiteLevel - geomean)/sigma;
+			scale.BS[wavenum]['S'] = nScale;
+			scale.updateWBS();
+
+		}
+		function scaleWaveChange(val) {
+			scale.updateScale();
 		}
 
 ENDSVG
