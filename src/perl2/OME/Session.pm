@@ -188,6 +188,7 @@ my $__newInstance = sub {
     $self->{UserState} = $userState;
     $self->{Factory} = OME::Factory->new();
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
+    $self->{Repository} = undef; # we'll define that later in findRepository()
 
 	# carp "New instance.";
     return $self;
@@ -535,6 +536,70 @@ sub __finishAllTemporaryFiles {
         $proto->finishTemporaryFile($file);
     }
 }
+
+sub findRepository {
+    my $self = shift;
+	my $repository = $self->{Repository};
+	if ($repository) {
+		$self->activateRepository ($repository);
+		return $repository;
+	}
+
+	$repository = $self->findRemoteRepository();
+
+	$self->activateRepository ($repository);
+
+	$self->{Repository} = $repository;
+}
+
+sub findRemoteRepository {
+    my $self = shift;
+    my $factory = $self->Factory();
+    my $repository;
+    
+	eval {
+		$repository = $factory->findAttribute( "Repository", IsLocal => 'f' );
+	};
+	$repository = $factory->findObject( "OME::SemanticType::BootstrapRepository", IsLocal => 'f' )
+		unless $repository;
+	die 'Could not find a remote repository.  Not haing a repository is a "Bad Thing".' unless $repository;
+
+	return ($repository);
+}
+
+sub findLocalRepository {
+    my $self = shift;
+    my $factory = $self->Factory();
+    my $repository;
+    
+	eval {
+		$repository = $factory->findAttribute( "Repository", IsLocal => 't' );
+	};
+	$repository = $factory->findObject( "OME::SemanticType::BootstrapRepository", IsLocal => 't' )
+		unless $repository;
+	die 'Could not find a remote repository.  Not haing a repository is a "Bad Thing".' unless $repository;
+
+	return ($repository);
+}
+
+sub activateRepository {
+	my $self = shift;
+	my $repository = shift
+		or die "Trying to activate an undefined repository, I see.";
+	
+    my $url = $repository->ImageServerURL();
+    if ($url =~ m,^/,) {
+        # This looks vaguely like a local path
+        OME::Image::Server->useLocalServer($url);
+    } elsif ($url =~ m,^http://,) {
+        # This looks vaguely like an HTTP URL
+        OME::Image::Server->useRemoteServer($url);
+    } else {
+        # This looks weird
+        die "I don't think I support an image server URL of $url";
+    }
+}
+
 
 # added by IGG for benchmarking
 #sub BenchmarkTimer {
