@@ -142,30 +142,32 @@ sub getPageBody {
 	
 	# If a type is selected, write in the search fields.
 	# Also search if search fields are ready.
-	if( $type && $type ne '') {
+	if( $type ) {
 		my $render = $self->Renderer();
 		my $search_names;
 		
  		my $search_type = $q->param( 'search_type' );
 		my @cgi_search_names = $q->param( 'search_names' );
+		# clear stale params
+		unless( $search_type eq $type || !$search_type ) {
+			$q->delete( $_ ) foreach( @cgi_search_names );
+		}
+		
+		# accessor mode
 		if( grep( /^accessor$/, @cgi_search_names ) ) {
 			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = split( /,/, $q->param( 'accessor' ) );
 			my $objectTaAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
 				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
 			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->getRef( $objectTaAccessFrom, 'html' ).".";
+		
+		# search mode
 		} else {
 			my @fields = $render->getFields( $type, 'summary' );
 			my $form_fields;
 			($form_fields, $search_names) = $render->getSearchFields( $type, \@fields );
 			my %field_titles = $render->getFieldTitles( $type, \@fields );
-			# clear stale search fields
-			# (search_type stores the type that search fields were meant for.)
-# FIXME: this does not work
-# 	 		unless( !$search_type || $type eq $search_type ) {
-# 				$q->param( $_, '' )
-# 					foreach( values %$search_names);
-# 			}
+ 			$q->param( 'search_names', values %$search_names);
 			
 			# add search fields.
 			my $order = $self->_get_order( $search_names->{ $fields[0] }, $search_names );
@@ -177,9 +179,10 @@ sub getPageBody {
 					( $order && $order eq $search_names->{ $field } ?
 						" class = 'ome_active_sort_arrow'" : ''
 					).'>';
-				my $sort_down = "<a href='javascript: document.forms[0].elements[\"__order\"].value = \"!".
-					$search_names->{ $field }.
-					"\"; document.forms[0].submit();' title='Sort results by ".
+				my $sort_down = "<a href='javascript: ".
+						"document.forms[0].elements[\"__order\"].value = ".
+						"\"!".$search_names->{ $field }."\";".
+						"document.forms[0].submit();' title='Sort results by ".
 					$field_titles{ $field }." in increasing order'".
 					( $order && substr( $order, 1 ) eq $search_names->{ $field } ?
 						" class = 'ome_active_sort_arrow'" : ''
@@ -189,8 +192,7 @@ sub getPageBody {
 					field_label  => $field_titles{ $field },
 					form_field   => $form_fields->{ $field },
 					sort_up      => $sort_up, 
-# FIXME: factory doesn't support this (yet)
-#					sort_down    => $sort_down,
+					sort_down    => $sort_down,
 				} ) if $form_fields->{ $field };
 			}
 		}
@@ -206,14 +208,13 @@ sub getPageBody {
  		unless( !$search_type || $type eq $search_type ) {
  			$q->param( '__order', '' );
  			$q->param( '__offset', '' );
- 			$q->param( 'search_names', values %$search_names);
  			$q->param( 'search_type', $type );
  		}
 
 		# gotta have hidden fields
 		$html .= "\n".
 			# tell the form what search fields are on it and what type they are for.
-			$q->hidden( -name => 'search_names', -default => [values %$search_names] ).
+			$q->hidden( -name => 'search_names' ).
 			$q->hidden( -name => 'search_type', -default => $type ).
 			# these are needed for paging
 			$q->hidden( -name => '__order' ).
