@@ -47,8 +47,8 @@
  GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
  ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement&Popup=1';
  DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement&Popup=1';
- InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject&Popup=1';
- InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset&Popup=1';
+ InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ProjectTable&Popup=1';
+ InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::DatasetTable&Popup=1';
 RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
 
 /*
