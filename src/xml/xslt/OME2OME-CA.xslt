@@ -214,7 +214,9 @@
 				<xsl:value-of select = "@Index"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "@ColorDomain" mode = "OptionalAttribute"/>
-			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
+			<xsl:apply-templates select = ".." mode = "MakeRefs">
+				<xsl:with-param name = "Name">LogicalChannel</xsl:with-param>
+			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
 	<!-- ChannelInfo -->
