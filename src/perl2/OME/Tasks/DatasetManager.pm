@@ -270,7 +270,8 @@ sub change{
 	}
 	$dataset->name($name) if defined $name;
 	$dataset->description($description) if defined $description;
-	$dataset->writeObject();
+	$dataset->storeObject();
+	$session->commitTransaction();
 	return 1;
 
 
@@ -302,14 +303,13 @@ sub create{
 	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$project->id());
 
 	if ($dataset){
-	   $dataset->writeObject();
+	   $dataset->storeObject();
 	   if (defined $ref){
-	     	foreach(@$ref){
-     $self->addToDataset($dataset->id(),$_);
-           	}
+	     	foreach (@$ref) { $self->addToDataset($dataset->id(),$_) }
  	   }
 	   $session->dataset($dataset);
-	   $session->writeObject();
+	   $session->storeObject();
+	   $session->commitTransaction();
 	}
 	return $dataset;
 
@@ -394,11 +394,11 @@ sub delete{
         push (@new,$_) unless $_->id()==$currentDataset->id();
    	 }
        if (scalar(@new)==0){
-	   $session->dataset(undef);
-       }else{
-	   $session->dataset($new[0]);
+	       $session->dataset(undef);
+       } else {
+	       $session->dataset($new[0]);
        }
-       $session->writeObject();
+       $session->storeObject();
       }
 	$result=deleteDataset($dataset,$db);
 	$db->Off();
@@ -687,7 +687,7 @@ sub remove{
 	   }else{
 		 $session->dataset($datasets[0]);
 	   }
-	   $session->writeObject();
+	   $session->storeObject();
 	 }
 
 	}
@@ -728,7 +728,8 @@ sub switch{
 	my ($id)=@_;
 	my $dataset=$session->Factory()->loadObject("OME::Dataset",$id);
 	$session->dataset($dataset);
-	$session->writeObject();
+	$session->storeObject();
+	$session->commitTransaction();
 	return 1;
 
 }
