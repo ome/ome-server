@@ -60,18 +60,15 @@ use File::Spec;
 # $PIXEL_TYPES{$bytesPerPixel}{$isSigned}{$isFloat}
 our %PIXEL_TYPES;
 
-$PIXEL_TYPES{1}{1}{1} = 'signed byte float?';
-$PIXEL_TYPES{1}{0}{1} = 'unsigned byte float?';
 $PIXEL_TYPES{1}{1}{0} = 'int8';
 $PIXEL_TYPES{1}{0}{0} = 'uint8';
 
-$PIXEL_TYPES{2}{1}{1} = 'float';
-$PIXEL_TYPES{2}{0}{1} = 'unsigned float?';
 $PIXEL_TYPES{2}{1}{0} = 'int16';
 $PIXEL_TYPES{2}{0}{0} = 'uint16';
 
-$PIXEL_TYPES{4}{1}{1} = 'double';
-$PIXEL_TYPES{4}{0}{1} = 'unsigned double?';
+# "unsigned float" doesn't exist but we map that to float anyway
+$PIXEL_TYPES{4}{1}{1} = 'float';
+$PIXEL_TYPES{4}{0}{1} = 'float';
 $PIXEL_TYPES{4}{1}{0} = 'int32';
 $PIXEL_TYPES{4}{0}{0} = 'uint32';
 
