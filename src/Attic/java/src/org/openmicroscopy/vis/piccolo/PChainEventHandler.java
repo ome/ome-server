@@ -45,7 +45,6 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
-import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
@@ -77,9 +76,9 @@ public class PChainEventHandler extends  PPanEventHandler {
 	// Store the last module parameter that we were in.
 	private PFormalParameter lastParameterEntered;
 	private PModule lastModuleEntered;
-	private PLayer linkLayer;
+	private PLinkLayer linkLayer;
 	
-	private PLink link;
+	private PParamLink link;
 	private Point2D.Float linkStart = new Point2D.Float();
 	private static final int NOT_LINKING=1;
 	private static final int LINKING_PARAMS=2;
@@ -88,11 +87,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	private PFormalParameter linkOrigin;
 	
-	private PLink selectedLink = null;
+	private PParamLink selectedLink = null;
 	private PModule selectedModule;
 
 	
-	public PChainEventHandler(PChainCanvas canvas,PLayer linkLayer) {
+	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
 		setAutopan(false);
 		this.linkLayer = linkLayer;
@@ -111,19 +110,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 	protected void drag(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		System.err.println("PChainEventHandler.drag()");
+		//System.err.println("PChainEventHandler.drag()");
 		// module nodes simply get translated.
-		System.err.println("in chain handler drag");
+		//System.err.println("in chain handler drag");
 		if (node instanceof PModule) {
 			if (linkState != LINKING_MODULES) {
-				System.err.println("translating a node");
+				//System.err.println("translating a node");
 				PModule mn = (PModule) node;
 				Dimension2D delta = e.getDeltaRelativeTo(node);
 				node.translate(delta.getWidth(),delta.getHeight());
 				e.setHandled(true);
 			}
-			else 
-				System.err.println("drag during linking of modules");
 		}
 		else if (!(node instanceof PFormalParameter)){
 			super.drag(e);
@@ -145,8 +142,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		if (node instanceof PFormalParameter) {
 			lastParameterEntered = (PFormalParameter) node;
-			System.err.println("mouse entered last entered.."+
-				lastParameterEntered.getName());
+			//System.err.println("mouse entered last entered.."+
+			//	lastParameterEntered.getName());
 			if (linkState == NOT_LINKING) {
 				PModule mod = lastParameterEntered.getPModule();
 				mod.setParamsHighlighted(false);
@@ -177,7 +174,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		PNode node = e.getPickedNode();
 	
 		lastParameterEntered = null;
-		System.err.println("last parameter entered cleared");
+		//System.err.println("last parameter entered cleared");
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			if (linkState == NOT_LINKING) {	
@@ -199,7 +196,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseDragged(PInputEvent e) {
-		System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
+		//System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
 		mouseMoved(e);
 		super.mouseDragged(e);	
 	}
@@ -215,7 +212,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		System.err.println("mouse pressed on "+node);
+		//System.err.println("mouse pressed on "+node);
 		
 		// clear off what was selected.
 		if (selectedLink != null) {
@@ -240,15 +237,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 				startLink(param);
 			e.setHandled(true);
 		}
-		else if (node instanceof PLink) {
-			System.err.println("pressed on link");
-			selectedLink = (PLink) node;
+		else if (node instanceof PParamLink) {
+			//System.err.println("pressed on link");
+			selectedLink = (PParamLink) node;
 			selectedLink.setSelected(true);
 			linkState = NOT_LINKING;	
 		}
 		else if (node instanceof PModule) {
 			if (linkState == NOT_LINKING && e.getClickCount() ==2 ) {
-				System.err.println("setting link state to LINKING_MODULES");
+				//System.err.println("setting link state to LINKING_MODULES");
 				linkState = LINKING_MODULES;
 			}
 			selectedModule = (PModule) node;
@@ -257,7 +254,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			//linking and another if linkingmodules
 		}
 		else if (linkState == LINKING_PARAMS) {
-			System.err.println("mouse pressed and not linking");
+			//System.err.println("mouse pressed and not linking");
 			if (e.getClickCount() ==2) {
 				cancelLink();
 			}
@@ -276,10 +273,10 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 		
  	private void startLink(PFormalParameter param) {
-		System.err.println("mouse pressing and starting link");
+		//System.err.println("mouse pressing and starting link");
 		linkOrigin = param;
 		linkOrigin.decorateAsLinkStart(true);
-		link = new PLink();
+		link = new PParamLink();
 		linkLayer.addChild(link);
 		link.setStartParam(linkOrigin);
 		link.setPickable(false);
@@ -289,20 +286,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 	// this link ends at lastParameterEntered
 	private void finishLink() {
 		if (lastParameterEntered.isLinkable() == true) {
-			System.err.println("finishing link");
+			//System.err.println("finishing link");
 			link.setEndParam(lastParameterEntered);
 			link.setPickable(true);
+			linkLayer.completeLink(link);
 			cleanUpLink();
 		}
 		else {
-			System.err.println("trying to finish link, but end point is not linkable");
+			//////System.err.println("trying to finish link, but end point is not linkable");
 			cancelLink();
 		}
 		linkState = NOT_LINKING;
 	}
 	
 	private void cancelLink() {
-		System.err.println("canceling link");
+		//System.err.println("canceling link");
 		link.removeFromParent();
 		linkState = NOT_LINKING;
 		link =null;
@@ -320,7 +318,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void keyPressed(PInputEvent e) {
-		System.err.println("a key was pressed ");
+		//System.err.println("a key was pressed ");
 		if (e.getKeyCode() != KeyEvent.VK_DELETE)
 			return;
 			
