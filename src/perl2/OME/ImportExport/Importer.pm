@@ -332,6 +332,7 @@ sub store_image_metadata {
     my $created;
     my $name;
     my $path;
+    my $guid;
 
     #my $created = $href->{'Image.CreationDate'};
     $created = "now" unless $created;     # until we figure out date formatting issue
@@ -339,8 +340,11 @@ sub store_image_metadata {
     $name = $href->{'Image.Name'}.".ori";
     $path = $repository->Field("path");
     $self->{realpath} = $path.$name;
+    $guid = $self->{config}->mac_address;
+    
     my $recordData = {'name' => $name,
 		      'path' => $path,
+		      'image_guid' => $guid,
 		      'description' => $href->{'Image.Description'},
 		      'experimenter_id' => $session->User(),
 		      'group_id' => $session->User()->Field("group"),
@@ -385,7 +389,7 @@ sub store_image_attributes {
 }
 
 
-# now create and write the image pixel's file
+# now create and write the image's pixel file
 sub store_image_pixels {
     my ($self, $href, $aref) = @_;
     my $realpath = $self->{'realpath'};
