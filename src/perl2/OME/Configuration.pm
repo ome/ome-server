@@ -111,6 +111,15 @@ sub new {
 				value => $value
 			});
 		}
+ 	} else {
+            # Translate the import_chain and import_module parameters
+            # from integer ID's into objects.
+            $self->{import_module} = $factory->
+              loadObject('OME::Module',
+                         $self->{import_module_id});
+            $self->{import_chain} = $factory->
+              loadObject('OME::AnalysisChain',
+                         $self->{import_chain_id});
 	}
 
 	bless($self,$class);
