@@ -304,23 +304,20 @@ sub addImages{
 	my $dataset;
 	if (defined $datasetID){
 		$dataset=$factory->loadObject("OME::Dataset",$datasetID);
-	}else{
+	} else{
 		$dataset=$session->dataset();
 	}
-
-	if (scalar(@$ref)>0){
-	  foreach  (@$ref){
-		$self->addToDataset($dataset->id(),$_);
-	  }
-	  $session->dataset($dataset);
-	  $session->storeObject();
-      $session->commitTransaction();
-	  return 1;
-	}else{
-	  return undef;
-	}
 	
-
+	if (scalar(@$ref)>0){
+		$self->addToDataset($dataset->id(),$_)
+			foreach(@$ref);
+		$session->dataset($dataset);
+		$session->storeObject();
+		$session->commitTransaction();
+		return 1;
+	} else{
+		return undef;
+	}
 }
 
 
