@@ -137,7 +137,7 @@ toolBox.prototype.realize = function(svgParentNode) {
 toolBox.prototype.buildSVG = function() {
 	// set up movement of location
 	var translate = "translate(" + this.x + "," + this.y + ")";
-	var transform = translate;
+	var transform = translate + (this.scale ? " scale("+this.scale+")" : "");
 	var box = svgDocument.createElementNS(svgns, "g");
 	box.setAttribute("transform", transform);
 	this.nodes.root = box;
@@ -269,6 +269,22 @@ toolBox.prototype.setLabel = function(x, y, content) {
 	if(y!=null) this.nodes.label.setAttribute( "y", y );
 }
 
+/*****
+
+	setScale(scale)
+		scale: a scaling value greater than 0
+		
+		purpose:
+			alter the size of the toolbox
+			
+*****/
+toolBox.prototype.setScale = function(scale) {
+	if(scale < 0) return;
+	this.scale = scale;
+	if(this.nodes.root)
+		this.nodes.root.setAttribute("transform", "translate( "+this.x+","+this.y+") scale("+this.scale+")");
+}
+
 /****************   Visual functions   *******************/
 
 /*****
@@ -349,10 +365,11 @@ toolBox.prototype.unhide = function() {
 *
 *****/
 toolBox.prototype.move = function(e) {
-	this.x = e.clientX - this.localPoint.x;
-	this.y = e.clientY - this.localPoint.y;
-	var translate = "translate(" + this.x + "," + this.y + ")";
-	this.nodes.root.setAttributeNS(null, "transform", translate);
+	this.x = e.clientX - this.localPoint.x * (this.scale ? this.scale : 1);
+	this.y = e.clientY - this.localPoint.y * (this.scale ? this.scale : 1);
+	var transform = "translate(" + this.x + "," + this.y + ")";
+	transform += (this.scale ? " scale("+this.scale+")" : "");
+	this.nodes.root.setAttributeNS(null, "transform", transform);
 }
 
 /*****
