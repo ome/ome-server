@@ -48,6 +48,8 @@ import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+
+import org.openmicroscopy.Image;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.Attribute;
 import org.openmicroscopy.SemanticType;
@@ -109,21 +111,26 @@ public class PResultEventHandler extends  PPanEventHandler {
 			return;
 		}
 		PNode node = e.getPickedNode();
+		System.err.println("clicked on ..."+node);
 		int mask = e.getModifiers() & allButtonMask;
 		if (mask == MouseEvent.BUTTON1_MASK &&
 			e.getClickCount() == 1) {
 			if (node instanceof PBufferedNode) {
+				System.err.println("centering on "+node);
 				PBufferedNode cBox = (PBufferedNode) node;
 				PBounds b = cBox.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
 				// animate
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+				camera.animateViewToCenterBounds(b,true,
+						PConstants.ANIMATION_DELAY);
 				e.setHandled(true); 
 			}
 			else if (node instanceof PCamera && e.isShiftDown()) {
+				System.err.println("centering on camera");
 				PBounds b = canvas.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+				camera.animateViewToCenterBounds(b,true,
+					PConstants.ANIMATION_DELAY);
 				e.setHandled(true);
 			}
 			else
@@ -172,6 +179,13 @@ public class PResultEventHandler extends  PPanEventHandler {
 			att = (Attribute) iter.next();
 			SemanticType type = att.getSemanticType();
 			System.err.println(type.getName());
+			org.openmicroscopy.OMEObject foo = att.getTarget();
+			System.err.println("target id is "+foo.getID());
+			org.openmicroscopy.Feature feature = att.getFeature();
+			System.err.println("feature name is "+feature.getName());
+			
+			Image image = feature.getImage();
+			System.err.println("image id is "+image.getID()); 
 		}
 	}
 		
