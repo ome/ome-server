@@ -92,7 +92,7 @@ function openRelationships (o_type, r_type, oid) {
 
 function addImagesToDataset() {
 	window.open(
-		'/perl2/serve.pl?Page=OME::Web::Search&Popup=1&Type=OME::Image&allow_action=Add%20Images%20to%20this%20Dataset',
+		'/perl2/serve.pl?Page=OME::Web::Search&Popup=1&Locked_Type=OME::Image&allow_action=Add%20Images%20to%20this%20Dataset',
 		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
