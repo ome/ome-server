@@ -54,6 +54,7 @@ use OME::ImportExport::SemanticTypeExport;
 #use OME::Tasks::ChainExport;
 use OME::ImportExport::HierarchyExport;
 use OME::ImportExport::InsertFiles;
+use OME::ImportExport::DataHistoryExport;
 
 sub new {
 	my ($proto, %params) = @_;
@@ -65,7 +66,7 @@ sub new {
 
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
-	die "I need a session"
+	die $class."->new needs a session"
 	  unless exists $self->{session} &&
 			 UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -187,6 +188,16 @@ sub buildDOM {
 #			  _doc => $doc);
 
 #	$chainExporter->buildDOM($objects,%flags);
+
+	# Export semantic type definitions only if ExportSTDs is set
+	if ($flags{ExportHistory}) {
+		logdbg "debug", ref ($self).'->buildDOM:  Getting a Data History Exporter';
+		my $historyExporter = new OME::ImportExport::DataHistoryExport (session => $self->{session}, _doc => $doc);
+		logdbg "debug", ref ($self).'->buildDOM:  Exporting Data History to DOM';
+		$historyExporter->buildDOM($objects,%flags);
+	}
+	
+	
 
 
 }
