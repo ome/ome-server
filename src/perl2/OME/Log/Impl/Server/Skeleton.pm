@@ -1,6 +1,6 @@
 # OME/Log/Impl/Server/Skeleton.pm
 
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Andrea Falconi <a.falconi@dundee.ac.uk>
 #
 #    This library is free software; you can redistribute it and/or
