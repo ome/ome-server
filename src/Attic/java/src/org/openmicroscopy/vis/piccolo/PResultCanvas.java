@@ -101,7 +101,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 * 
 	 */
 	private PLayer nodeLayer = new PLayer();
-	private PLayer chainLayer = new PLayer();
+	private PChainLayer chainLayer = new PChainLayer();
 	
 	/**
 	 * The layer for the links. Links are stored in a different layer because 
