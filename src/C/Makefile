@@ -18,6 +18,10 @@ XML2_CFLAGS = `xml2-config --cflags`
 XML2_LIBS = `xml2-config --libs`
 CC = gcc
 
+ifndef OME_ROOT
+OME_ROOT=/OME
+endif
+
 all: $(TARGETS)
 
 zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
@@ -134,30 +138,30 @@ clean :
 	$(MAKE) -C omeis clean
 
 install:
-	install -d /OME
-	install -d /OME/bin
-	install -d /OME/bin/findSpots
-	install -c findSpotsOME /OME/bin/findSpots/findSpotsOME
-	install -c findSpotsOME /OME/bin/findSpots/findSpots
-	install -d /OME/bin/BinarizeGlobal
-	install -c BinarizeGlobal /OME/bin/BinarizeGlobal/BinarizeGlobal
-	install -c DumpTIFFheader /OME/bin/DumpTIFFheader
-	install -c DumpTIFFstats /OME/bin/DumpTIFFstats
-	install -c OME_Image_XYZ_stats /OME/bin/OME_Image_XYZ_stats
-	install -c OME_Image_XYZ_fastStats /OME/bin/OME_Image_XYZ_fastStats
-	install -c OME_Image_XY_stats /OME/bin/OME_Image_XY_stats
-	install -c OME_Image_XY_sums /OME/bin/OME_Image_XY_sums
-	install -c OME_JPEG /OME/bin/OME_JPEG
-	install -c SoftWorxSlice /OME/bin/SoftWorxSlice
-	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
-	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
-	install -c DumpSoftWorxStats /OME/bin/DumpSoftWorxStats
-	install -c extractBinData /OME/bin/extractBinData
-	install -c insertBinData /OME/bin/insertBinData
-	install -c maxIntensity /OME/bin/maxIntensity
+	install -d $(OME_ROOT)
+	install -d $(OME_ROOT)/bin
+	install -d $(OME_ROOT)/bin/findSpots
+	install -c findSpotsOME $(OME_ROOT)/bin/findSpots/findSpotsOME
+	install -c findSpotsOME $(OME_ROOT)/bin/findSpots/findSpots
+	install -d $(OME_ROOT)/bin/BinarizeGlobal
+	install -c BinarizeGlobal $(OME_ROOT)/bin/BinarizeGlobal/BinarizeGlobal
+	install -c DumpTIFFheader $(OME_ROOT)/bin/DumpTIFFheader
+	install -c DumpTIFFstats $(OME_ROOT)/bin/DumpTIFFstats
+	install -c OME_Image_XYZ_stats $(OME_ROOT)/bin/OME_Image_XYZ_stats
+	install -c OME_Image_XYZ_fastStats $(OME_ROOT)/bin/OME_Image_XYZ_fastStats
+	install -c OME_Image_XY_stats $(OME_ROOT)/bin/OME_Image_XY_stats
+	install -c OME_Image_XY_sums $(OME_ROOT)/bin/OME_Image_XY_sums
+	install -c OME_JPEG $(OME_ROOT)/bin/OME_JPEG
+	install -c SoftWorxSlice $(OME_ROOT)/bin/SoftWorxSlice
+	install -c DumpSoftWorxHeader $(OME_ROOT)/bin/DumpSoftWorxHeader
+	install -c DumpSoftWorxExHeader $(OME_ROOT)/bin/DumpSoftWorxExHeader
+	install -c DumpSoftWorxStats $(OME_ROOT)/bin/DumpSoftWorxStats
+	install -c extractBinData $(OME_ROOT)/bin/extractBinData
+	install -c insertBinData $(OME_ROOT)/bin/insertBinData
+	install -c maxIntensity $(OME_ROOT)/bin/maxIntensity
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
-	$(MAKE) -C cgrayce install
-	$(MAKE) -C omeis install
+	$(MAKE) OME_ROOT='$(OME_ROOT)' -C cgrayce install
+	$(MAKE) OME_ROOT='$(OME_ROOT)' -C omeis install
 
