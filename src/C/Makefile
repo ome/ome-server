@@ -3,7 +3,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		extractBinData insertBinData maxIntensity cgrayce2 omeis2
+		extractBinData insertBinData maxIntensity cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql
 FINK_INCLUDE = -I/sw/include/
 INCS    = -I/usr/local/include $(FINK_INCLUDE) $(DB_INCLUDES)
@@ -125,9 +125,6 @@ insertBinData: insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
-omeis2:
-	$(MAKE) -C omeis
-
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
@@ -146,7 +143,6 @@ clean :
 	rm -f $(TARGETS)
 	rm -f iolib/*.o
 	$(MAKE) -C cgrayce clean
-	$(MAKE) -C omeis clean
 
 install:
 	install -d $(OME_ROOT)
@@ -174,5 +170,3 @@ install:
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install
-	$(MAKE) -C omeis install
-
