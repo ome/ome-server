@@ -53,7 +53,7 @@ sub getPageBody {
                               $cgi->param('password'));
     if (defined $session) {
 print STDERR "\nin Login, session is defined\n\n";
-        $self->{session} = $session;
+        $self->Session( $session );
         $self->setSessionCookie();
         return ('REDIRECT',$self->pageURL('OME::Web::Home'));
     } else {
