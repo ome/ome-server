@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Mon Apr  5 11:42:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -60,9 +60,9 @@ public interface SemanticType
     public String getDescription();
     public void setDescription(String value);
 
-    /** Criteria field name: <code>elements</code> */
+    /** Criteria field name: <code>semantic_elements</code> */
     public List getElements();
-    /** Criteria field name: <code>#elements</code> or <code>elements</code> */
+    /** Criteria field name: <code>#semantic_elements</code> or <code>semantic_elements</code> */
     public int countElements();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Mon Apr  5 11:42:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -72,14 +72,14 @@ public class SemanticTypeDTO
     { setElement("description",value); }
 
     public List getElements()
-    { return (List) getObjectElement("elements"); }
+    { return (List) getObjectElement("semantic_elements"); }
     public int countElements()
-    { return countListElement("elements"); }
+    { return countListElement("semantic_elements"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("elements",SemanticElementDTO.class);
+        parseListElement("semantic_elements",SemanticElementDTO.class);
     }
 
 }

@@ -46,6 +46,7 @@
                        Name        => ['String'],
                        Granularity => ['String'],
                        Description => ['String'],
-                       Elements    => ['List:SemanticElement'],
+                       Elements    => ['List:SemanticElement',
+                                       'semantic_elements'],
                       ],
                      );
