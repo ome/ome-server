@@ -38,6 +38,7 @@
 #define repository_h
 
 #include <sys/types.h>
+#include <stdio.h>
 #include "digest.h"
 
 
