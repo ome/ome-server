@@ -13,7 +13,6 @@
 Contents
 
    * Introduction
-   * Relationship with SCM
    * Dependencies
    * Building and deploying OME
    * License
@@ -31,34 +30,12 @@ Introduction
     Environment (OME) software. 
 
     All the information that is necessary and strictly related to the 
-    build and deployment process is unfolded: the mechanism that we use 
-    to tag and document software builds, the relationship between SBDD
-    and builds, a description of the project repository and its 
-    organization, directions on how to retrieve the files needed for a 
-    given build as well as how to retrieve the latest developed source 
-    code, a list of constraints that your system must satisfy if you 
-    want to build and deploy OME, and, of course, detailed build and 
-    deployment instructions.
-
-
-
-
-Relationship with SCM
-
-    Software Configuration Management in the OME project makes use of 
-    CVS.
-    Every time the OME development reaches a state that is noteworthy 
-    to the developers and the system is successfully built and deployed, 
-    the CVS repository is tagged to freeze that point in time. Also, a 
-    Software Build and Deployment Document is written to detail necessary 
-    information for the build and deployment process. 
-
-    The information contained in the SBDD only refer to a specific 
-    version of the source code and related artifacts in the project 
-    repository. That version may not be the same as the latest version in 
-    the project repository. Please, read carefully Section I-1 of the SBDD 
-    in order to understand the relationship of this document with source 
-    code and related build artifacts.
+    build and deployment process is unfolded: a description of the 
+    project repository and its organization, directions on how to 
+    retrieve the files needed for a given build as well as how to 
+    retrieve the latest developed source code, a list of constraints 
+    that your system must satisfy if you want to build and deploy OME, 
+    and, of course, detailed build and deployment instructions.
 
 
 
