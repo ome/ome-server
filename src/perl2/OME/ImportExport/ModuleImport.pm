@@ -540,7 +540,6 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 	print STDERR ref ($self) . "->processDOM: committing changes to tables and columns\n"
 		if $debug > 2;
-	$session->DBH()->commit();    # new tables & columns written w/ this handle
 	print STDERR ref ($self) . "->processDOM: finished committing changes to tables and columns\n"
 		if $debug > 2;
 

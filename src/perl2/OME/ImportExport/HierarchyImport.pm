@@ -334,10 +334,8 @@ sub commitObjects () {
 	my $self = shift;
 	
 	logdbg "debug", ref ($self)."->commitObjects: committing ".scalar (@{ $self->{_DBObjects} })." objects.";
-    $_->writeObject() foreach @{ $self->{_DBObjects} };
+    $_->storeObject() foreach @{ $self->{_DBObjects} };
     $self->{_DBObjects} = [];
-
-    $self->{session}->DBH()->commit();
 }
 
 sub addObject ($) {

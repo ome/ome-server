@@ -175,7 +175,7 @@ sub processDOM {
               newObject("OME::AnalysisView::Link",$link);
         }
 
-        $chainObject->writeObject();
+        $chainObject->storeObject();
 
         push @chains, $chainObject;
     }

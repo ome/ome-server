@@ -67,6 +67,19 @@ sub importFile {
     my $session = $self->{session};
     my $parser  = $self->{_parser};
     
+    # If the file's been seen before, then ignore it.
+    my $sh;
+    my $sha1;
+
+    open (STDOUT_PIPE,"openssl sha1 $filename |");
+    chomp ($sh = <STDOUT_PIPE>);
+    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
+    $sha1 = $1;
+    close (STDOUT_PIPE);
+
+	my $xyzwt = $session->Factory->findObject("OME::Image::ImageFilesXYZWT",file_sha1 => $sha1);
+	return if defined $xyzwt;
+
     my $resolve = OME::Tasks::ResolveFiles->new( session => $session, parser => $parser )
     	or die "Could not instantiate OME::Tasks::ResolveFiles\n";
     my $doc = $resolve->importFile( $filename );
@@ -78,7 +91,16 @@ sub importFile {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	my $CA_doc = $stylesheet->transform($doc);
 
-    return $self->processDOM($CA_doc->getDocumentElement(),%flags);
+	$self->processDOM($CA_doc->getDocumentElement(),%flags);
+    
+	# Store the file hash.
+	$xyzwt = $session->Factory->newObject("OME::Image::ImageFilesXYZWT",{file_sha1 => $sha1});
+	$xyzwt->storeObject();
+
+    # Commit the transaction to the DB.
+    $self->{session}->commitTransaction();
+
+	return;
 }
 
 # importXML commented out by josiah 6/10/03

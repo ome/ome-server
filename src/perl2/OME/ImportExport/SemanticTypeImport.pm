@@ -689,10 +689,8 @@ sub processDOM {
     #
     ###############################################################################
 
-    $_->writeObject() foreach @commitOnSuccessfulImport;
+    $_->storeObject() foreach @commitOnSuccessfulImport;
     @commitOnSuccessfulImport = ();
-
-    $session->DBH()->commit();
 
     $self->{semanticTypes} = $semanticTypes;
     $self->{semanticColumns} = $semanticColumns;
