@@ -22,3 +22,5 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 .ome_table { border: 1px #000000 solid; background-color: #000000; }
 
 .ome_td { background-color: #EFEFEF; }
+
+.ome_action_td { background-color: #006699; }
