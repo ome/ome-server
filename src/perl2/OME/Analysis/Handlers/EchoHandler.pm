@@ -78,9 +78,9 @@ sub startDataset {
     } else {
         foreach my $input (@inputs) {
             my $vals = $self->getCurrentInputAttributes($input->name());
-            print "        ",$input->name()," - ",scalar(@$vals),"\n";
+            print STDERR "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
-                print "          ",join(',',map { $_->id() } @$vals),"\n";
+                print STDERR "          ",join(',',map { $_->id() } @$vals),"\n";
             }
         }
     }
@@ -98,9 +98,9 @@ sub startImage {
     } else {
         foreach my $input (@inputs) {
             my $vals = $self->getCurrentInputAttributes($input->name());
-            print "        ",$input->name()," - ",scalar(@$vals),"\n";
+            print STDERR "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
-                print "          ",join(',',map { $_->id() } @$vals),"\n";
+                print STDERR "          ",join(',',map { $_->id() } @$vals),"\n";
             }
         }
     }
