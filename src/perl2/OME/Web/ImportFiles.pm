@@ -527,7 +527,7 @@ sub __getImportBody {
 	my $images = OME::Tasks::ImageTasks::importFiles(@import_q);
 	my @image_ids;
 
-	if (scalar(@$images) <= 1) {
+	if (scalar(@$images) < 0) {
 		$body .= $q->p({class => 'ome_error'}, 'Import failed!');
 		return $body;  # Return with failure
 	} else {
