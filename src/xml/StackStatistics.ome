@@ -6,24 +6,24 @@
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
-    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
     http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
       http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
     <SemanticType Name="StackMean" AppliesTo="I">
       <Element Name="TheC" DBLocation="STACK_STATISTICS.THE_C" DataType="integer"/>
@@ -113,11 +113,11 @@
 
 <AML:AnalysisModuleLibrary
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
-      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule Category = "Statistics" ModuleName = "Stack statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
@@ -133,7 +133,7 @@
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText>Path=</RawText>

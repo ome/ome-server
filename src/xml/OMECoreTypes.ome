@@ -5,12 +5,12 @@
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
     http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
       http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 <!-- TODO: (DC-04/14/2003)

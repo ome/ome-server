@@ -2,7 +2,7 @@
 <AnalysisChains
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:noNamespaceSchemaLocation=
-   "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
 
   <AnalysisChain
      Name="Find and track spots" Locked="false">

@@ -1,28 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
+<?xml version = "1.0" encoding = "UTF-8"?>
 <OME
   xmlns=
     "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:AML=
-    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
   xmlns:STD=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
     http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
       http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-<STD:SemanticTypeDefinitions 
-  xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 
   <!-- DISPLAY_SETTINGS semantic types -->
@@ -56,6 +46,6 @@
       <Element Name="IsRGB" DBLocation="DISPLAY_SETTINGS.IS_RGB" DataType="boolean"/>
     </SemanticType>
 
-</STD:SemanticTypeDefinitions>
+</SemanticTypeDefinitions>
 
 </OME>

@@ -6,20 +6,20 @@
    xmlns:xsi=
    "http://www.w3.org/2001/XMLSchema-instance"
    xmlns:AML=
-   "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
    xmlns:STD=
-   "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
    xsi:schemaLocation = 
    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-    http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 <STD:SemanticTypeDefinitions 
   xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
 
   <SemanticType
@@ -219,11 +219,11 @@
 
 <AML:AnalysisModuleLibrary
    xmlns=
-   "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation = 
-   "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
-    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
   <AnalysisModule 
      Category="Tracking" ModuleName="Find spots" 
