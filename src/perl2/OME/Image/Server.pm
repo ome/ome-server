@@ -142,7 +142,7 @@ Returns the path or URL of the currently active image server.
 
 =cut
 
-sub getServerPath { $server_path }
+sub getServerPath { return ($server_path); }
 
 =head2 useLocalServer
 
@@ -576,6 +576,26 @@ sub importOMEfile {
                                      FileID   => $fileID);
     die "Error retrieving xml stream" unless defined $xmlString;
     return $xmlString;
+}
+
+=head2 isOMExml
+
+	if ( OME::Image::Server->isOMExml($fileID) ) {
+		print STDOUT "Got me an OME XML file!  w00t!\n";
+	}
+
+Checks if the FileID refers to an OME XML file.
+
+=cut
+
+
+sub isOMExml {
+    my $proto = shift;
+    my ($fileID) = @_;
+
+    my $result = $proto->__callOMEIS(Method   => 'IsOMExml',
+                                     FileID   => $fileID);
+	return ($result == 1);
 }
 
 
