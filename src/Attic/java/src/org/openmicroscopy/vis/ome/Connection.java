@@ -44,6 +44,8 @@ package org.openmicroscopy.vis.ome;
 
 import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
+import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
@@ -51,9 +53,11 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Iterator;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 
@@ -94,6 +98,9 @@ public class Connection {
 	private JLabel statusLabel;
 		
  	private final ConnectionWorker worker;
+ 	
+ 	// the list of chain executions for the currently selected dataset
+ 	private List chainExecutions;
 	/***
 	 * Creates a {@link ConnectionWorker} that will build a new connection to 
 	 * the database via XMLRPC. If successful, the ConnectionWorker will return 
@@ -307,5 +314,30 @@ public class Connection {
 		crit.put("owner_id",user);
 		List projects = factory.findObjects("OME::Project",crit);
 		return projects;
+	}
+	
+	public void getDatasetExecutionChains(Dataset d) {
+		HashMap crit = new HashMap();
+		crit.put("dataset",d);
+		chainExecutions = factory.findObjects("OME::AnalysisChainExecution",crit);
+		HashSet result = new HashSet();
+		Iterator iter = chainExecutions.iterator();
+		while (iter.hasNext()) {
+			CChainExecution ex = (CChainExecution) iter.next();
+			CChain chain = (CChain) ex.getChain();
+			result.add(chain);
+		}
+		chains.setExecutedChains(result);
+	}
+	
+	public List getDatasetExecutions(CChain chain) {
+		ArrayList res = new ArrayList();
+		Iterator iter = chainExecutions.iterator();
+		while (iter.hasNext()) {
+			CChainExecution exec = (CChainExecution) iter.next();
+			if (chain == exec.getChain())
+				res.add(exec);
+		}
+		return res;
 	}
 }
