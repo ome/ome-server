@@ -442,9 +442,12 @@ my @columns;
 	# Trim leading and trailing whitespace, set column value to undef if not like a C float.
 		foreach (@columns) {$_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);}
 		($waveNum,$timePoint) = ($columns[ 0],$columns[ 2]);
-		if (not defined $Wavelengths->[$waveNum]->{EmWavelength} and defined $columns[ 1] and $columns[ 1]) {
-			$Wavelengths->[$waveNum]->{EmWavelength} = $columns[ 1];
-		}
+# Unfortunately, due to a bug in SoftWorx, the extended header is unreliable.  Since the emission wavelength is a crucial
+# piece of information, we always get it from the regular header.  Even more unfortunately, sometimes this fails also.
+#		if (not defined $Wavelengths->[$waveNum]->{EmWavelength} and defined $columns[ 1] and $columns[ 1]) {
+#			$Wavelengths->[$waveNum]->{EmWavelength} = $columns[ 1];
+#		}
+		$Wavelengths->[$waveNum]->{EmWavelength} = $columns[ 1];
 		$XYZinfo->[$waveNum][$timePoint]->{Min}       = int ($columns[ 3]) if defined $columns[3];
 		$XYZinfo->[$waveNum][$timePoint]->{Max}       = int ($columns[ 4]) if defined $columns[4];
 		$XYZinfo->[$waveNum][$timePoint]->{Mean}      = $columns[ 5];
@@ -463,6 +466,7 @@ my @columns;
 	$self->Wavelengths($Wavelengths);
 
 	$self->{_OME_DB_STATUS_} = 'DIRTY';
+	unlink ($tempFileNameErr);
 }
 
 sub XYZinfo {

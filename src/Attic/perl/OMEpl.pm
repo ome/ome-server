@@ -1174,7 +1174,7 @@ sub SetSelectedDatasets()
 	my $datasets = shift;
 	my $datasetID;
 	my $SID = $self->{sessionID};
-
+	return unless defined $datasets and $datasets and scalar @$datasets > 0;
 # Delete the previously selected datasets
 	$self->{dbHandle}->do ("DELETE FROM ome_sessions_datasets WHERE session_id = $SID");
 	$self->{SelectedDatasets} = undef;
@@ -3066,7 +3066,7 @@ my $count=-1;
 my $base_name;
 local *FH;
 
-	until (defined(fileno(FH)) || $count++ > 100)
+	until (defined(fileno(FH)) || $count++ > 999)
 	{
 		$base_name = sprintf("%s/%s-%03d.%s", $tempDirectory, $progName,$count,$extension);
 		sysopen(FH, $base_name, O_WRONLY|O_EXCL|O_CREAT);

@@ -77,6 +77,7 @@ my $userSessions = $OME->GetUserSessions();
 	print $cgi->header;
 	print $cgi->start_html(-title=>'OME Status');
 	print $cgi->start_form();
+	print $cgi->submit (-name=>'Refresh',-value=>'Refresh');
 	print $cgi->table({-border=>1,-cellspacing=>1,-cellpadding=>1},
 			$cgi->Tr(\@tableRows));
 	print $cgi->end_form;
@@ -101,7 +102,7 @@ my $value;
 	}
 	if ($action eq 'Abort') {
 		kill ($signal{'USR2'},$PID);
-	} else {
+	} elsif (defined $action and $action and defined $PID and $PID) {
 		my $session = $OME->Session;
 		delete $session->{Analyses}->{$PID};
 		$OME->Session ($session);
