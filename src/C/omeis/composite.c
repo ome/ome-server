@@ -42,6 +42,8 @@
 #include "composite.h"
 #include "cgi.h"
 
+#define THUMBNAIL_SIZE 50
+
 int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 
 
@@ -53,6 +55,7 @@ levelBasisType levelBasis=FIXED_BASIS;
 char isRGB=0;
 channelSpecType *theChannel;
 int i;
+double sizeRatio;
 
 CompositeSpec theComposite;
 
@@ -154,6 +157,12 @@ CompositeSpec theComposite;
 	This isn't working, and the left-over code is in compositeIM.c
 	DoCompositeIM   (&theComposite, param);
 */
+	/* Force uniform thumbnail size */
+	if( setThumb ) {
+		sizeRatio = (double) myPixels->head->dx / myPixels->head->dy;
+		theComposite.sizeX = ( sizeRatio > 1 ? THUMBNAIL_SIZE : THUMBNAIL_SIZE * sizeRatio );
+		theComposite.sizeY = ( sizeRatio < 1 ? THUMBNAIL_SIZE : THUMBNAIL_SIZE / sizeRatio );
+	}
 	DoCompositeZoom (&theComposite, setThumb, param);
 	
 	return (0);
