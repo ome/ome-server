@@ -240,7 +240,10 @@ write_init(PicTiff *tiff)
   TIFFSetField(tiff->tiff, TIFFTAG_BITSPERSAMPLE, 8);
   TIFFSetField(tiff->tiff, TIFFTAG_ROWSPERSTRIP,
 	       TIFFDefaultStripSize(tiff->tiff, 0));
-  TIFFSetField(tiff->tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+#ifdef USE_TIFF_LZW
+  if (! TIFFSetField(tiff->tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW) )
+#endif
+    TIFFSetField(tiff->tiff, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
   TIFFSetField(tiff->tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
 
   tiff->row_stride = TIFFScanlineSize(tiff->tiff);
