@@ -308,11 +308,19 @@ sub placeInputs {
 }
 
 =head2 _putScalarToMatlab
-	Puts a scalar of a particular name, value, and class into the Matlab Engine 
-	workspace
-	
-	$array = $self->_putScalarToMatlab("matlab_var_name", 13, $mxDOUBLE_CLASS);
+
+	my $array = $self->_putScalarToMatlab( $matlab_var_name, $value, $matlab_class);
+
+Puts a scalar of a particular name, value, and class into the Matlab
+Engine workspace. $matlab_class is optional and will default to double
+if unspecified. If specified $matlab_class should be one of the constant
+class types defined in OME::Matlab. e.g. $mxDOUBLE_CLASS, $mxLOGICAL_CLASS, etc.
+
+returns an instance of OME::Matlab::Array that has had makePersistent
+called on it.
+
 =cut
+
 sub _putScalarToMatlab {
 	my ($self, $name, $value, $class) = @_;
 	my $array;
@@ -336,14 +344,22 @@ sub _putScalarToMatlab {
 }
 
 =head2 _getScalarFromMatlab
-	Gets a scalar of a particular name from the Matlab Engine workspace.
-	$class is an optional parameter that signals what is the 
-	desired output Matlab type.
-	
-	$array = $self->_getScalarFromMatlab("matlab_var_name", $mxDOUBLE_CLASS);
+
+	my $array = $self->_getScalarFromMatlab($matlab_var_name, $convert_to_matlab_class);
 	$array->value();
 	$array->class();
+
+Gets a scalar of a particular name from the Matlab Engine workspace.
+$convert_to_matlab_class is an optional parameter that signals what is
+the desired output Matlab type. If specified it should be one of the
+constant class types defined in OME::Matlab. e.g. $mxDOUBLE_CLASS,
+$mxLOGICAL_CLASS, etc.
+
+returns an instance of OME::Matlab::Array that has had makePersistent
+called on it.
+
 =cut
+
 sub _getScalarFromMatlab {
 	my ($self, $name, $class) = @_;
 	my $array;
