@@ -63,14 +63,14 @@ What it returns: 1 or undef
 sub isRedirectNecessary {
 	my $self = shift;
 	my $doNotSetFlag = shift;
-	my $session = OME::Web->Session()
-		or die ref ($self) . " cannot find session via OME::Web->Session()";
-	__PACKAGE__->ReloadHome( undef )
+	my $session = $self->Session()
+		or die ref ($self) . " cannot find session via self->Session()";
+	$self->ReloadHome( undef )
 		unless $doNotSetFlag;
 
 	# put all tests necessary for redirection here.
 	if( (not defined $session->project()) || (not defined $session->dataset()) ) {
-		__PACKAGE__->ReloadHome( 1 )
+		$self->ReloadHome( 1 )
 			unless $doNotSetFlag;
 		return 1;
 	}
@@ -88,9 +88,10 @@ What it returns: 1 or undef
 =cut
 
 sub ReloadHomeScript {
-	my $reloadHomeFlag = OME::Web::Validation->ReloadHome();
+	my $self = shift;
+	my $reloadHomeFlag = $self->ReloadHome();
 	return "<script>top.location.href = top.location.href;</script>"
-		if( defined $reloadHomeFlag || __PACKAGE__->isRedirectNecessary(1));
+		if( defined $reloadHomeFlag || $self->isRedirectNecessary(1));
 	return "";
 }
 
