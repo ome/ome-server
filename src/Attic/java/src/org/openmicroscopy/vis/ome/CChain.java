@@ -75,7 +75,7 @@ public class CChain extends RemoteChain  {
 	 */
 	private Layering layering  = new Layering();
 	
-	private boolean executedInSelectedDataset=false;
+	private boolean eligibleExecutions=false;
 
 	public CChain() {
 		super();
@@ -620,16 +620,30 @@ public class CChain extends RemoteChain  {
 		CChainExecution exec;
 		currentDatasetExecutions = new Vector();
 		
-		executedInSelectedDataset =false;
+		eligibleExecutions =false;
+		
+		// if nothing is selected, it's got an execution if it's 
+		// got any execution
+		boolean noSelections = (datasets.size() ==0 && selected == null);
+		if (noSelections == true && chainExecutions.size()>0) {
+			eligibleExecutions = true;
+			return true;
+		}
+		
+		
 		while (iter.hasNext()) {
 			exec = (CChainExecution) iter.next();
 			CDataset d = (CDataset)exec.getDataset();
 			if (datasets.contains(d)) {
-				if (selected == null) //return true for all things 
+				if (selected == null) {//return true for all things
+					// if i have one dataset in the list when nothing 
+					// is selected, that works.
+					eligibleExecutions = true; 
 					return true;
+				}
 				else if (selected == d) {
 					// otherwise, return true only for selected
-					executedInSelectedDataset=true;
+					eligibleExecutions=true;
 					currentDatasetExecutions.add(exec);
 					res = true;
 				}
@@ -647,8 +661,8 @@ public class CChain extends RemoteChain  {
 	/**
 	 * @return
 	 */
-	public boolean isExecutedInSelectedDataset() {
-		return executedInSelectedDataset;
+	public boolean hasEligibleExecutions() {
+		return eligibleExecutions;
 	}
 
 	public Collection getDatasetsWithExecutions() {
