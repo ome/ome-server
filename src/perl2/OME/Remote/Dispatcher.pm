@@ -153,6 +153,14 @@ BEGIN {
           unless /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $_";
     }
+
+    # Fix the XML-RPC server fault constants -- the XML-RPC spec says
+    # they must be integers.
+
+    $SOAP::Constants::FAULT_CLIENT = 101;
+    $SOAP::Constants::FAULT_SERVER = 102;
+    $SOAP::Constants::FAULT_VERSION_MISMATCH = 501;
+    $SOAP::Constants::FAULT_MUST_UNDERSTAND = 502;
 }
 
 our $SHOW_CALLS = 1;
