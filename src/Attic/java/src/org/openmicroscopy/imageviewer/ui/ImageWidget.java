@@ -48,5 +48,7 @@ public interface ImageWidget
 {
   public void displayImage(BufferedImage image);
   public void clearImage();
+  
+  public double getZoomLevel();
   public void setZoomLevel(double zoomLevel);
 }

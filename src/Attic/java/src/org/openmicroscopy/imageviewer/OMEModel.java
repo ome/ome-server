@@ -271,7 +271,6 @@ public class OMEModel
                                      boolean gOn, boolean bOn)
     throws OMEException
   {
-    System.err.println("getImageSlice called");
     if(converter == null)
     {
       System.err.println("null converter");

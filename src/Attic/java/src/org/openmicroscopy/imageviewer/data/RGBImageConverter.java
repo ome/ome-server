@@ -280,10 +280,7 @@ public class RGBImageConverter
       }
     }
     
-    System.err.println("setRGB data start");
     raster.setPixels(0,0,width,height,rgbPixels);
-    System.err.println("RGB image conversion ended");
-    
     return rgbImage;
   }
   

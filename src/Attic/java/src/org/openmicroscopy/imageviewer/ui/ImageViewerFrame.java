@@ -81,7 +81,7 @@ class ImageViewerPanel extends JPanel
     JPanel wholeImagePanel = new JPanel();
     wholeImagePanel.setLayout(new BorderLayout(2,2));
     ImagePanel imagePanel = new ImagePanel();
-    wholeImagePanel.add(new JScrollPane(imagePanel),BorderLayout.CENTER);
+    wholeImagePanel.add(imagePanel,BorderLayout.CENTER);
     
     ImageControlPanel controlPanel = new ImageControlPanel();
     wholeImagePanel.add(controlPanel,BorderLayout.SOUTH);
