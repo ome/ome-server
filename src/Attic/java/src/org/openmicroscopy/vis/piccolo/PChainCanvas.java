@@ -48,14 +48,16 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.Module;
+import org.openmicroscopy.vis.dnd.ModuleFlavor;
+import org.openmicroscopy.vis.dnd.ChainFlavor;
 import java.awt.dnd.DropTargetListener;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DnDConstants;
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
 import java.util.List;
@@ -121,24 +123,33 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	public void drop(DropTargetDropEvent e) {
 		try {
 			Transferable transferable =  e.getTransferable();
-			System.err.println("got a drop on canvas");
-			if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+			System.err.println("got a drop on canvavs "+transferable);
+			if (transferable.isDataFlavorSupported(ModuleFlavor.moduleFlavor)) { 
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
-				String s = (String)transferable.getTransferData(
-					DataFlavor.stringFlavor);
-				System.err.println("just dropped "+s+" onto chain canvas.");
+				String i = (String)transferable.getTransferData(
+						ModuleFlavor.moduleFlavor);
+				System.err.println("just dropped module "+i+" onto chain canvas.");
 				e.getDropTargetContext().dropComplete(true);
-				int id = Integer.parseInt(s);
+				int id = Integer.parseInt(i);
 				ModuleInfo mInfo = connection.getModuleInfo(id);
 				System.err.println("module is "+mInfo.getModule().getName());
 				Point2D loc = e.getLocation();
 				createDroppedModule(mInfo,loc);
 				addInputEventListener(handler);
 			}
-			else {
-				System.err.println("string flavor not supported");
-				clearDrop(e);
-			}
+			else if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor)) {
+				e.acceptDrop(DnDConstants.ACTION_MOVE);
+				Integer i = (Integer)transferable.
+					getTransferData(ChainFlavor.chainFlavor);
+				e.getDropTargetContext().dropComplete(true);
+				int id = i.intValue();
+				System.err.println("dropping chain id "+id);
+				Point2D loc = e.getLocation();
+				ChainInfo cInfo = connection.getChainInfo(id);
+				createDroppedChain(cInfo,loc);
+				addInputEventListener(handler);
+				
+			} 
 		}
 		catch(Exception exc ) {
 			System.err.println("drop failed");
@@ -181,6 +192,13 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		// put the module info back into the connection
 		Module module = info.getModule();
 		connection.setModuleInfo(module.getID(),info);
+	}
+	
+	public void createDroppedChain(ChainInfo info,Point2D location) {
+		getCamera().localToView(location);
+		float x = (float) location.getX();
+		float y = (float) location.getY();
+		PChain p = new PChain(connection,info,layer,linkLayer,x,y);
 	}
 	
 	public void logout() {
