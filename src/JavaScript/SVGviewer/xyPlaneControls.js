@@ -27,16 +27,16 @@
 
 *****/
 
-svgns = "http://www.w3.org/2000/svg";
+var svgns = "http://www.w3.org/2000/svg";
 
 XYPlaneControls.prototype.toolboxParams = {
 	x: 250,
 	y: 30, 
 	width: 200, 
 	height: 150,
-	menuBarText: skinLibrary["menuBar"],
-	hideControlText: skinLibrary["hideControl"],
-	GUIboxText: skinLibrary["GUIbox"],
+	menuBarText: skinLibrary["roundGreenMenuBar"],
+	hideControlText: skinLibrary["ovalSquishHideControl"],
+	GUIboxText: skinLibrary["greenGradientGUIbox"],
 	noclip: 'noclip'
 };
 
@@ -57,20 +57,21 @@ XYPlaneControls.prototype.init = function( actions, supplimentaryControls, chann
 	this.channelLabels = channelLabels;
 	this.image = image;
 
-	this.actions['OnOffR']     = { obj: this.image, method: 'setRedOn' };
-	this.actions['OnOffG']     = { obj: this.image, method: 'setGreenOn' };
-	this.actions['OnOffB']     = { obj: this.image, method: 'setBlueOn' };
-	this.actions['Save']       = { obj: this.image, method: 'saveState' };
-	this.actions['preload']    = { obj: this.image, method: 'prefetchImages' };
-	this.actions['switchRGB_BW']    = { obj: this.image, method: 'setDisplayRGB_BW' };
+	this.actions['OnOffR']       = { obj: this.image, method: 'setRedOn' };
+	this.actions['OnOffG']       = { obj: this.image, method: 'setGreenOn' };
+	this.actions['OnOffB']       = { obj: this.image, method: 'setBlueOn' };
+	this.actions['switchRGB_BW'] = { obj: this.image, method: 'setDisplayRGB_BW' };
+	this.actions['planeCommand'] = { obj: this, method: 'ExecPlaneCommand' };
+	this.planeCommands           = [ 'Save', 'Prefetch', 'View Plane' ];
+	this.planeActions            = [ 
+		{ obj: this.image, method: 'saveState' }, 
+		{ obj: this.image, method: 'prefetchImages' },
+		null
+	];
 };
-
 
 XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
 	var displayContent = this.buildDisplay();
-	var bbox = displayContent.getBBox();
-//	this.toolboxParams['width'] = bbox.width + 2 * toolBox.prototype.padding;
-//	this.toolboxParams['height'] = bbox.height + 2 * toolBox.prototype.padding;
 	this.toolBox = new toolBox( this.toolboxParams );
 	this.toolBox.setLabel(100,12,"XY Plane Controls");
 	this.toolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
@@ -258,38 +259,26 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	);
 
 	
-	// save button
-	this.saveButton = new button(
-		85, 120, 
-		this.actions['Save'],
-		'<text fill="black" text-anchor="end">Save</text>',
+	// popup list for plane commands
+	this.planeCommandPopupList = new popupList(
+		35, 125,
+		this.planeCommands,
+		this.actions['planeCommand'],
 		null,
-		'<text fill="white" text-anchor="end">Save</text>'
+		skinLibrary["transparentBox"],
+		null, 
+		skinLibrary["whiteTranslucentBox"],
+		[ 'text-anchor', 'end' ]
 	);
-	this.loadButton = new button(
-		85, 130, 
-		this.actions['preload'],
-		'<text fill="black" text-anchor="end">Prefetch</text>',
-		null,
-		'<text fill="white" text-anchor="end">Prefetch</text>'
-	);
-	this.openImgLink = Util.createElementSVG( 'a', {
-		target:          'plane_window'
-	});
-	this.openImgLink.setAttributeNS( xlinkns, 'href', '');
-	this.openImgButton = new button(
-		85, 140, 		
-		null,
-		'<text fill="black" text-anchor="end">View Image</text>',
-		null,
-		'<text fill="white" text-anchor="end">View Image</text>'
-	);
-	this.openImgButton.realize( this.openImgLink );
-	this.displayContent.appendChild( this.openImgLink );
-
-	// RGB to grayscale button
+	this.planeCommandPopupList.realize(this.displayContent);
+	this.openImgLink = this.planeCommandPopupList.makeCellIntoLink(
+		this.planeCommandPopupList.getIndexFromValue( 'View Plane' ), {
+		target:          'plane_window',
+	} );
+ 
+ 	// RGB to grayscale button
 	this.RGB_BWbutton = new button(
-		105, 115, 
+		110, 110, 
 		{ obj: this, method: 'switchRGB_BW' },
 		skinLibrary["RGB_BWButtonOn"],
 		skinLibrary["RGB_BWButtonOff"],
@@ -305,7 +294,7 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 		skinLibrary["transparentBox"],
 		null, 
 		skinLibrary["whiteTranslucentBox"],
-		[ 'text-anchor', 'end' ]
+		[ 'text-anchor', 'start' ]
 	);
 
 	// Z & T controls
@@ -317,15 +306,10 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	this.tAnimDownButton.realize(this.displayContent);
 	this.zAnimUpButton.realize(this.displayContent);
 	this.zAnimDownButton.realize(this.displayContent);
-
-	this.loadButton.realize(this.displayContent);
-
+	
 	// RGB & BW switcheroo
 	this.RGB_BWbutton.realize(this.displayContent);
 	
-	// Save button
-	this.saveButton.realize(this.displayContent);
-
 	// RGB channel controls
 	this.RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
 	this.RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
@@ -355,12 +339,15 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 };
 
 XYPlaneControls.prototype.exec_action = function ( action, value ) {
-	if( this.actions[action] ) {
-		if( Util.isFunction( this.actions[action]) ) { 
-			this.actions[action](value); 
-		} else { 
-			eval( "this.actions[action]['obj']."+this.actions[action]['method']+"(value)"); 
-		}
+	if( ! action ) {
+		return;
+	} else if( this.actions[action] ) {
+		action = this.actions[action];
+	}
+	if( Util.isFunction( action) ) { 
+		action(value); 
+	} else { 
+		eval( "action['obj']."+action['method']+"(value)"); 
 	}
 };
 
@@ -413,6 +400,11 @@ XYPlaneControls.prototype.tAnimDown = function() {
 			setTimeout("setTheT(" + i + ")", (theT-i)*100);
 		}
 	}
+};
+
+
+XYPlaneControls.prototype.ExecPlaneCommand = function( planeCommandName ) {
+	this.exec_action(this.planeActions[planeCommandName]);
 };
 
 
