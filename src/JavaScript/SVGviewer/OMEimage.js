@@ -160,11 +160,38 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 	
 		// color or RGB?
 		var color;
-		var WBS = this.getConvertedWBS(theT);
+		var cWBS = this.getConvertedWBS(theT);
+		// make sure Black level and Scale aren't out of range for this time point
+		// This has been tested. It don't crash.
+		for(i=0;i<4;i++) {
+			var wavenum = cWBS[i*3];
+			// is black level within bounds?
+			if(cWBS[i*3+1]<this.Stats[wavenum][theT]['min'])
+				cWBS[i*3+1] = Math.ceil( this.Stats[wavenum][theT]['min'] );
+			if(cWBS[i*3+1]>this.Stats[wavenum][theT]['max'])
+				cWBS[i*3+1] = Math.floor( this.Stats[wavenum][theT]['max'] );
+			// calculate whiteLevel
+			var whiteLevel = this.Stats[wavenum][theT]['geomean'] + this.WBS[i*3+2] * this.Stats[wavenum][theT]['sigma'];
+			var recalculate = false;
+			// is it within bounds?
+			if(whiteLevel<this.Stats[wavenum][theT]['min']) {
+				whiteLevel = this.Stats[wavenum][theT]['min'];
+				recalculate = true;
+			}
+			if(whiteLevel>this.Stats[wavenum][theT]['max']) {
+				whiteLevel = this.Stats[wavenum][theT]['max'];
+				recalculate = true;
+			}
+			if(recalculate) {
+				if(whiteLevel - this.Stats[wavenum][theT]['geomean'] == 0)
+					whiteLevel += 0.00001;
+				cWBS[i*3+2] = 255 / (whiteLevel - this.Stats[wavenum][theT]['geomean']);
+			}			
+		}
 		if( this.inColor == 1 )
-			color = "&RGB=" + WBS.slice(0,9).join();
+			color = "&RGB=" + cWBS.slice(0,9).join();
 		else
-			color = "&Gray=" + WBS.slice(9,12).join();
+			color = "&Gray=" + cWBS.slice(9,12).join();
 		
 		var d=new Array();
 		for(i in this.Dims) d.push(this.Dims[i]);
@@ -204,6 +231,7 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
 		WBS[i*3+1] = Math.round(WBS[i*3+1]);
+		if(WBS[i*3+2] == 0) WBS[i*3+2] = 0.00001;
 		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
 		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
@@ -223,7 +251,7 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 
 *****/
 OMEimage.prototype.setWBS = function(newWBS) {
-	// check newWBS for size and wavenum range
+	// check newWBS for size, wavenum range, B&S range
 	if(newWBS.length!=12) {
 		alert("In OMEimage.setWBS, newWBS is incorrect size. Should be 12. Is " + newWBS.length);
 		return 0;
@@ -238,6 +266,10 @@ OMEimage.prototype.setWBS = function(newWBS) {
 			alert("In OMEimage.setWBS, newWBS has a wavenum outside of range. wavenum refers to "+C[i]+" channel. Wavenum is "+newWBS[i*3]+". According to the dimensions of this image, the valid range is 0 to "+(this.Dims['W']-1)+".");
 			return 0;
 		}
+		// A native scale of 0 will cause a divide by 0 error. This corrects for that.
+		if(newWBS[i*3+2] == 0)
+			newWBS[i*3+2] = 0.00001;
+
 	}
 	
 	// check new WBS for change
@@ -406,6 +438,8 @@ OMEimage.prototype.getConvertedWBS = function(theT) {
 		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
 		B = Math.round( B );
 		cWBS.push( B );
+		if(this.WBS[i*3+2] == 0)
+			this.WBS[i*3+2] = 0.00001;
 		S = 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] );
 		S = Math.round( S*100000 ) / 100000;
 		cWBS.push( S );		
