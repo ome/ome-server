@@ -29,12 +29,10 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:	Ilya G. Goldberg <igg@nih.gov>   
+ * Written by:    Ilya G. Goldberg <igg@nih.gov>
  * 
  *------------------------------------------------------------------------------
  */
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -63,7 +61,11 @@ void usage(int argc, char **argv);
 
 void Get_Image_Stats (char *path, char *dims);
 void Zero_Accumulators (statsPtr theStats);
-void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ);
+/*void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ);*/
+/* remove theY */
+void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theZ);
+
+
 void Dump_Stats (statsPtr theStats, unsigned int theW, unsigned int theT);
 
 int main (int argc, char **argv)
@@ -124,7 +126,7 @@ void Get_Image_Stats (char *path, char *dims)
 {
 	FILE *imgFile;
 	unsigned int numX, numY, numZ, numW, numT, numB;
-	int theY, theZ, theW, theT;
+	int theZ, theW, theT;
 	int numInts;
 	
 	unsigned short *fileBuf;
@@ -139,13 +141,11 @@ void Get_Image_Stats (char *path, char *dims)
 	}
 
 	numSamples = numX*numY;
-
 	fileBuf = (unsigned short *)malloc (numB*numSamples);
 	if (!fileBuf) {
 		fprintf (stderr,"Could not allocate memory for file buffer\n");
 		exit (-1);
 	}
-
 	imgFile = fopen (path,"r");
 	if (!imgFile) {
 		fprintf (stderr,"File %s could not be opened for reading - B.\n",path);
@@ -157,9 +157,8 @@ void Get_Image_Stats (char *path, char *dims)
 			Zero_Accumulators (&theStats);
 			for (theZ=0; theZ < numZ; theZ++) {
 /*				fseek (imgFile, ( ((theT*numW) + theW)*numZ + theZ)*numX*numY*numB, SEEK_SET);*/
-				theY = 0;
 				fread( fileBuf, numB, numSamples, imgFile);
-				Load_Accumulators (&theStats, fileBuf, numB, numSamples, numX, theY, theZ);
+				Load_Accumulators (&theStats, fileBuf, numB, numSamples, numX, theZ);
 				
 			}
 			Dump_Stats (&theStats, theW, theT);
@@ -193,7 +192,7 @@ void Zero_Accumulators (statsPtr theStats)
 }
 
 
-void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ)
+void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theZ)
 {
 unsigned char *charPtr = (unsigned char *)fileBuf, *charPtrLast = (unsigned char *)fileBuf + numSamples;
 unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrLast = (unsigned short *)fileBuf + numSamples;
@@ -201,7 +200,7 @@ unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrLast = (unsigned 
 float theVal, logOffset=1.0,min=theStats->min,max=theStats->max;
 float sum_i=theStats->sum_i,sum_i2=theStats->sum_i2,sum_log_i=theStats->sum_log_i;
 float sum_xi=theStats->sum_xi,sum_yi=theStats->sum_yi,sum_zi=theStats->sum_zi;
-int x=0,y=theY,z=theZ;
+int x=0,y=0,z=theZ;
 
 	if (numB == 1) {
 		while (charPtr < charPtrLast) {

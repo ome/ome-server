@@ -32,7 +32,10 @@
  * Written by:	Ilya G. Goldberg <igg@nih.gov>   
  * 
  *------------------------------------------------------------------------------
- */
+*/
+
+
+
 
 
 #include <stdio.h>
@@ -42,7 +45,7 @@
 
 typedef struct stats {
 	unsigned int min,max;
-	float mean,geomean,sigma;
+	float mean,geomean,sigma,geosigma;
 	float centroid_x,centroid_y,centroid_z;
 	float sum_i, sum_i2,sum_log_i;
 	float sum_xi,sum_yi,sum_zi;
@@ -95,7 +98,7 @@ int main (int argc, char **argv)
 	if (isCGI)
 		fprintf (stdout,"Content-type: text/plain\n\n");
 
-	fprintf (stdout,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\n");
+	fprintf (stdout,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\tGeoSigma\n");
 	/* This dumps stuff directly on stdout */
 	Get_Image_Stats (dims);
 
@@ -197,6 +200,8 @@ void Zero_Accumulators (statsPtr theStats)
 	theStats->sum_yi     =     0.0;
 	theStats->sum_zi     =     0.0;
 	theStats->numSamples =     0.0;
+	theStats->geosigma   =     0.0;
+
 }
 
 
@@ -218,20 +223,25 @@ void Load_Accumulators (statsPtr theStats, statsPtr sums, unsigned long numSampl
 
 void Dump_Stats (statsPtr theStats, unsigned int theW, unsigned int theT)
 {
-float sd,logOffset = 1.0;
+float sgd,sd,logOffset = 1.0;
 
 	theStats->mean = theStats->sum_i / theStats->numSamples;
 	theStats->geomean = exp ( theStats->sum_log_i / theStats->numSamples ) - logOffset;
+	/* sigma using the amean (classical) */
 
 	sd = fabs ( (theStats->sum_i2	 - (theStats->sum_i * theStats->sum_i) / theStats->numSamples) /  (theStats->numSamples - 1.0) );
 	theStats->sigma = (float) sqrt (sd);
+	
+	/* geosigma: distance between point and geometric mean*/
+	 sgd= fabs((theStats->sum_i2-2*theStats->geomean * theStats->sum_i + theStats->geomean * theStats->geomean) /(theStats->numSamples - 1.0)); 
+	 theStats->geosigma = (float) sqrt (sgd);
 
 	theStats->centroid_x = theStats->sum_xi / theStats->sum_i;
 	theStats->centroid_y = theStats->sum_yi / theStats->sum_i;
 	theStats->centroid_z = theStats->sum_zi / theStats->sum_i;
-	fprintf (stdout,"%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
+	fprintf (stdout,"%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
 		theW,theT,theStats->min,theStats->max,theStats->mean,theStats->geomean,theStats->sigma,
-		theStats->centroid_x,theStats->centroid_y,theStats->centroid_z
+		theStats->centroid_x,theStats->centroid_y,theStats->centroid_z,theStats->geosigma
 	);
 
 }
@@ -244,7 +254,7 @@ void usage(int argc, char **argv)
 	fprintf (stderr,
 		"%s Dims=X,Y,Z,W,T,BytesPerPix\nSum_i,Sum_i2,Sum_log(i),Sum_Xi,Sum_Yi,Sum_Zi (one set per plane on stdin)\n",argv[0]);
 	fprintf (stderr,"The column headings will be first line on standard out:\n");
-	fprintf (stderr,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\n");
+	fprintf (stderr,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\tGeoSigma\n");
 }
 
 

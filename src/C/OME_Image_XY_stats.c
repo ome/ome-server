@@ -29,12 +29,10 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:	Ilya G. Goldberg <igg@nih.gov>   
+ * Written by:    Ilya G. Goldberg <igg@nih.gov>
  * 
  *------------------------------------------------------------------------------
  */
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,7 +40,7 @@
 
 typedef struct stats {
 	unsigned int min,max;
-	float mean,geomean,sigma;
+	float mean,geomean,sigma,geosigma;
 	float centroid_x,centroid_y;
 	float sum_i, sum_i2,sum_log_i;
 	float sum_xi,sum_yi;
@@ -63,7 +61,11 @@ void usage(int argc, char **argv);
 
 void Get_Image_Stats (char *path, char *dims);
 void Zero_Accumulators (statsPtr theStats);
-void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ);
+
+/*void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ); */
+void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theZ);
+
+
 void Dump_Stats (statsPtr theStats, unsigned int theW, unsigned int theT,
 		 unsigned int theZ);
 
@@ -105,7 +107,7 @@ int main (int argc, char **argv)
 	if (isCGI)
 		fprintf (stdout,"Content-type: text/plain\n\n");
 
-	fprintf (stdout,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\n");
+	fprintf (stdout,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\tGeoSigma\n");
 	/* This dumps stuff directly on stdout */
 	Get_Image_Stats (path, dims);
 
@@ -125,7 +127,6 @@ void Get_Image_Stats (char *path, char *dims)
 {
 	FILE *imgFile;
 	unsigned int numX, numY, numZ, numW, numT, numB;
-	int rowsPerChunk=10;
 	int theY, theZ, theW, theT;
 	int numInts;
 	
@@ -140,10 +141,9 @@ void Get_Image_Stats (char *path, char *dims)
 		exit (-1);
 	}
 
-	rowsPerChunk = numY;
-	numSamples = numX*rowsPerChunk;
+	numSamples = numX*numY;
 
-	fileBuf = (unsigned short *)malloc (numX*numB*rowsPerChunk);
+	fileBuf = (unsigned short *)malloc (numX*numB*numY);
 	if (!fileBuf) {
 		fprintf (stderr,"Could not allocate memory for file buffer\n");
 		exit (-1);
@@ -159,20 +159,9 @@ void Get_Image_Stats (char *path, char *dims)
 		for (theW = 0; theW < numW; theW++) {
 			for (theZ=0; theZ < numZ; theZ++) {
 /*				fseek (imgFile, ( ((theT*numW) + theW)*numZ + theZ)*numX*numY*numB, SEEK_SET);*/
-			        Zero_Accumulators (&theStats);
-				rowsPerChunk = numY;
-				numSamples = numX*rowsPerChunk;
-				theY = 0;
-				while (theY < numY) {
-					if (theY + rowsPerChunk > numY) {
-						rowsPerChunk = numY - theY;
-						numSamples = numX*rowsPerChunk;
-					}
-					fread( fileBuf, numB, numSamples, imgFile);
-					Load_Accumulators (&theStats, fileBuf, numB, numSamples, numX, theY, theZ);
-
-					theY += rowsPerChunk;
-				}
+			      Zero_Accumulators (&theStats);
+				fread( fileBuf, numB, numSamples, imgFile);
+				Load_Accumulators (&theStats, fileBuf, numB, numSamples, numX, theZ);
 				Dump_Stats (&theStats, theW, theT, theZ);
 				fflush (stdout);
 			}
@@ -199,10 +188,12 @@ void Zero_Accumulators (statsPtr theStats)
 	theStats->sum_xi     =     0.0;
 	theStats->sum_yi     =     0.0;
 	theStats->numSamples =     0.0;
+	theStats->geosigma      =     0.0;
+
 }
 
 
-void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theY, unsigned int theZ)
+void Load_Accumulators (statsPtr theStats, unsigned short *fileBuf, unsigned int numB, unsigned long numSamples, unsigned int numX, unsigned int theZ)
 {
 unsigned char *charPtr = (unsigned char *)fileBuf, *charPtrLast = (unsigned char *)fileBuf + numSamples;
 unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrLast = (unsigned short *)fileBuf + numSamples;
@@ -210,7 +201,7 @@ unsigned short *shortPtr = (unsigned short *)fileBuf, *shortPtrLast = (unsigned 
 float theVal, logOffset=1.0,min=theStats->min,max=theStats->max;
 float sum_i=theStats->sum_i,sum_i2=theStats->sum_i2,sum_log_i=theStats->sum_log_i;
 float sum_xi=theStats->sum_xi,sum_yi=theStats->sum_yi;
-int x=0,y=theY;
+int x=0,y=0;
 
 	if (numB == 1) {
 		while (charPtr < charPtrLast) {
@@ -271,23 +262,27 @@ int x=0,y=theY;
 void Dump_Stats (statsPtr theStats, unsigned int theW, unsigned int theT,
 		 unsigned int theZ)
 {
-float sd,logOffset = 1.0;
+float sgd,sd,logOffset = 1.0;
 
 	theStats->mean = theStats->sum_i / theStats->numSamples;
 	theStats->geomean = exp ( theStats->sum_log_i / theStats->numSamples ) - logOffset;
 
+	/* sigma using the amean */
 	sd = fabs ( (theStats->sum_i2	 - (theStats->sum_i * theStats->sum_i) / theStats->numSamples) /  (theStats->numSamples - 1.0) );
 	theStats->sigma = (float) sqrt (sd);
 
+	/* geosigma: distance between point and geometric mean*/
+	 sgd= fabs((theStats->sum_i2-2*theStats->geomean * theStats->sum_i + theStats->geomean * theStats->geomean) /(theStats->numSamples - 1.0)); 
+	 theStats->geosigma = (float) sqrt (sgd);
+
 	theStats->centroid_x = theStats->sum_xi / theStats->sum_i;
 	theStats->centroid_y = theStats->sum_yi / theStats->sum_i;
-	fprintf (stdout,"%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\n",
+	fprintf (stdout,"%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\n",
                  theW,theT,theZ,theStats->min,theStats->max,theStats->mean,theStats->geomean,theStats->sigma,
-                 theStats->centroid_x, theStats->centroid_y
+                 theStats->centroid_x, theStats->centroid_y, theStats->geosigma 
 	);
 
 }
-
 
 
 void usage(int argc, char **argv)
@@ -296,7 +291,7 @@ void usage(int argc, char **argv)
 	fprintf (stderr,
 		"%s Path=/path/to/file Dims=X,Y,Z,W,T,BytesPerPix\n",argv[0]);
 	fprintf (stderr,"The column headings will be first line on standard out:\n");
-	fprintf (stderr,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\n");
+	fprintf (stderr,"Wave\tTime\tZ\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_X\tCentroid_Y\tGeoSigma\n");
 }
 
 
