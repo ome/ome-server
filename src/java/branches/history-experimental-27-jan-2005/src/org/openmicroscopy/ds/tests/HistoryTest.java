@@ -65,7 +65,7 @@ public class HistoryTest {
 	private static final String PASS = "foobar";
 	
 	private static final int MEX_ID=4211;
-	private static final int CHEX_ID=31;
+	private static final int CHEX_ID=36;
 	
 	private DataServices services;
 	private HistoryManager historyManager;
@@ -151,10 +151,16 @@ public class HistoryTest {
 		SemanticType st = fin.getSemanticType();
 		System.err.println("semantic type..."+st.getID()+","+st.getName());
 		FormalOutput fout = inp.getFormalOutput();
-		System.err.println("formal output.."+fout.getID()+","+fout.getName());
-		st = fout.getSemanticType();
-		if (st != null)
-			System.err.println("semantic type..."+st.getID()+","+st.getName());
+		if (fout != null) {
+			System.err.println("formal output.."+fout.getID()+","+fout.getName());
+			st = fout.getSemanticType();
+			if (st != null)
+				System.err.println("semantic type..."+st.getID()+","+st.getName());
+			else 
+				System.err.println("untyped..");
+		}
+		else 
+			System.err.println("no formal output available");
 		
 	}
 	
