@@ -42,10 +42,26 @@
 #	Login and ValidateSession call Connect.  Connect returns a $sessionKey or dies.
 #	Connect can also be called via xmlrpc.
 # Get rid of the requirement for CPAN::Alias.
+
 package OMEpl;
 use strict;
 use vars qw($VERSION);
 $VERSION = '1.10';
+
+=pod
+
+=head1 OMEpl.pm - The OME Perl API.
+
+Version 1.10, (c) Ilya G. Goldberg (igg@mit.edu)
+
+=head1 Abstract
+
+This documentation covers the perl OME API.  The purpose of the API is to provide an interface to the OME database
+by performing mapping between the database relational model and a more object-oriented model useful for programming.
+The documentation is split into several parts:
+L<"Initialization">, L<"Session Management">, L<"Browser Navigation">, L<"Datasets and Dataset Selections">, L<"Analyses">, and L<"Miscelaneus Methods">.
+
+=cut
 
 use OMEfeature;
 use OMEDataset;
@@ -221,46 +237,58 @@ my ($pack,$file,$line,$sub);
 };
 
 
+=pod
 
-# new ()
-#	If this is a local call (no web browser or other user agent), get connection info from the user's ~/.OMErc
-#	If we have an interactive browser, then get the sessionID from a cookie, or re-direct to the login page.
-#	This is the prefered style of calling the new() method.
-# new ( sessionKey => a session key string)
-#	The sessionKey will be checked for validity - an invalid sessionKey is fatal.
-#	This style is used to re-connect to a saved session.  Use this when reconnecting without cookies (i.e. xmlrpc).
-# new ( user => username, password => password)
-#	These parameters will be ignored if we can get a sessionKey cookie from the browser (or have a sessionKey parameter).
-#	Otherwise, they will be used to make a connection to the default datasource in the $DefaultDataSource package global.
-#	We call die if this fails.
-# new ( user => username, password => password, dataSource => a DBI data source)
-#	These parameters will be ignored if we can get a sessionKey cookie from the browser (or have a sessionKey parameter).
-#	Otherwise, they will be used to make a connection to the specified DBI datasource.
-#	We call die if this fails.
-#
-# Two ways to make a connection - these get called by the new() method.
-# $self->VerifySession ();
-# This methods sets the DB handle (and user and password, etc) based on Apache::Session and sessionKey.
-# If the sessionKey is invalid, we die.
-# This method should be called whenever we are going to access the database.
-#
-# $self->Login ();
-# See if we know enough to make a connection without a sessionKey.
-# If we don't know enough, but have a browser, then we redirect to a login page.
-# If we don't know enough, but are a user process, try to login with the info in the user's ~/.OMErc
-# Note that if we are a user process, we ignore the user parameter, and set $self->{user} to $ENV{USER}.
-# If all of that fails, then we die.
-# This method also sets the sessionKey, the dbHandle and whatever else goes into Apache::Session if successfull.
-# N.B.:  All these verification methods authenticate against the database, and thus are successfull only if they are
-# able to get a dbHandle.
-#
-# $self->Connect ();
-# This gets called at the end of Login and VerifySession.  It tries to make a database connection using appropriate fields
-# in the object.  If this is not sucessfull, it dies.
-# After making a database connection, it gets a sessionKey.
-# If the sessionKey field is set, but can't be retreived from Apache::Session, then it calls die().
-# If the sessionKey field is undef, then it generates a new Apache::Session.  It stores the parameters needed to connect to the database
-# in the Apache::Session, and returns the sessionKey.
+=head2 Initialization
+
+Methods used in the construction of the OME object.  Normally, it is sufficient to do something like:
+
+ my $OME = new OMEpl;
+
+B<Method List:>
+
+C<new()>, C<VerifySession()>, C<Connect()>, C<Login()>
+
+=over 4
+
+X<new()>
+
+=item new()
+
+If this is a local call (no web browser or other user agent), get connection info from the user's ~/.OMErc.
+If we have an interactive browser, then get the sessionID from a cookie, or re-direct to the login page.
+This is the prefered style of calling the new() method.
+
+B<Examples:>
+
+=over 4
+
+=item new OMEpl ( sessionKey => 'a session key string')
+
+The sessionKey will be checked for validity - an invalid L<sessionKey> is fatal.
+This style is used to re-connect to a saved session.  Use this when reconnecting without cookies (i.e. xmlrpc).
+
+=item new OMEpl ( user => 'username', password => 'password')
+
+These parameters will be ignored if we can get a L<sessionKey> cookie from the browser (or have a L<sessionKey> parameter).
+Otherwise, they will be used to make a connection to the default datasource in the $DefaultDataSource package global.
+We call die if this fails.
+
+=item new OMEpl ( user => 'username', password => 'password', dataSource => 'a DBI data source')
+
+These parameters will be ignored if we can get a L<sessionKey> cookie from the browser (or have a L<sessionKey> parameter).
+Otherwise, they will be used to make a connection to the specified DBI datasource.
+We call die if this fails.
+
+=back
+
+Internally, there are two ways to make a connection:  C<VerifySession()> and C<Login()> - these get called by the C<new()> method.
+If a L<sessionKey> is passed as a parameter to new() or the new() method can get a L<sessionKey> from a browser cookie (OMEsessionKey),
+then C<VerifySession()> is called.  Otherwise, new() calls C<Login()>.  The call to C<VerifySession()> is encased in an eval statement,
+so that if the cookie is expired or invalid (which is normally fatal in C<VerifySession()>), new() calls C<Login()>.
+
+
+=cut
 
 sub new
 {
@@ -340,11 +368,13 @@ sub initialize ()
 
 	# Calling VerifySession with an invalid or undefined session is fatal.  We don't want to give up yet if we're in a browser.
 		if (defined $self->{sessionKey} and $self->{sessionKey}) {
+			print STDERR "initialize:  Verifying sessionKey...";
 			eval {$self->VerifySession ();};
 			undef $self->{sessionKey} if $@;
 #			$self->{errorMessage} = $@;
-			print STDERR "initialize:  Session verified with sessionKey.\n" if defined $self->{sessionKey};
+			print STDERR "Session verified with sessionKey.\n" if defined $self->{sessionKey};
 		} elsif (defined $self->{user}) {
+			print STDERR "initialize:  Verifying using user/pass...";
 			eval {$self->Connect ();};
 			undef $self->{user} if $@;
 			print STDERR "initialize:  Session verified with user/pass.\n" if defined $self->{sessionKey};
@@ -394,6 +424,16 @@ sub initialize ()
 
 }
 
+=pod
+
+=item VerifySession()
+
+This methods sets the DB handle (and user and password, etc) based on Apache::Session and L<sessionKey>.
+This method gets called by C<new()> if it gets a L<sessionKey> from the browser, parameter, URL, etc.
+This method calls C<Connect()> at the end and returns the L<sessionKey>.
+If the L<sessionKey> is invalid, we die.  C<Connect()> will also die if the connection could not be made.
+
+=cut
 
 
 
@@ -432,12 +472,26 @@ print STDERR "VerifySession:  Retreiving sessionKey=",$sessionKey," from Apache:
 	
 }
 
+=pod
 
+=item Connect()
 
+The idea here is that we connect based on what is in the OME object, or what can be determined from the web server, or from
+the environment.  This non-interactive method gets called at the end of C<Login()> and at the end of C<VerifySession()>,
+which in-turn get called by C<new()>.
+These methods are supposed to provide whatever Connect() needs to connect to the database (i.e. username and password).
+If Connect() cannot connect to a database, it calls die().  After making a database connection, it gets a L<sessionKey>.
+If the L<sessionKey> field is already set in the object, but can't be retreived from Apache::Session, then it calls die().
+If the L<sessionKey> field is undef, then it generates a new Apache::Session.
+It stores the parameters needed to connect to the database
+in the Apache::Session.  After this, it calls C<SetSID()> to update/set the OME user's session, and returns the L<sessionKey>.
 
-# The idea here is that we connect based on what is in the OME object, or what can be determined from the web server, or from
-# the environment.  This is non-interactive.
-# Some decision has to be made to decide where a certificate should be checked - in Connect or Login.
+Some decision has to be made to decide where a certificate (i.e. X509) should be checked - in Connect() or Login().  
+Probably here because Login() is potentially interactive, whereas Connect() is not.
+There should normally be no reason to call this function, as it gets called by C<new()> via C<VerifySession()> or C<Login()>.
+
+=cut
+
 sub Connect {
 	my $self = shift;
 	my $session;
@@ -458,6 +512,8 @@ sub Connect {
 			{ RaiseError => 1, AutoCommit => 1, InactiveDestroy => 1})
                    || die "Could not connect to the database: ".$DBI::errstr;
 	}
+	print STDERR "... Connected to ".$self->{dataSource}." as user ".$self->{user}."\n";
+
 	$self->{dbHandle} = $dbHandle;
 	if ($self->gotBrowser()) { $self->{remoteAddr} = $self->{cgi}->remote_host(); }
 	elsif ($self->inWebServer() and not $self->gotBrowser()) { $self->{remoteAddr} = $ENV{REMOTE_ADDR}; }
@@ -485,13 +541,110 @@ print STDERR "Connect:  SessionKey = ".$self->{sessionKey}.".  Calling SetSID\n"
 	
 }
 
-# Gets a new session if there is no parameter and $self->sessionKey is undef.
-# Gets a new session if there is a prameter hash reference, but the _session_id key doesn't exist or is undef.
-# Gets an existing session if not making a new session - _session_id key in the parameter hash ref overrides $self->sessionKey.
-# Calls die if tries to fetch an existing session but it doesn't exist.
-# Copies keys and values in the passed hash ref (if any) to the tied session hash.
-# unties the session
-# returns a reference to the untied hash.
+=pod
+
+=item Login()
+
+This method is used to collect user information from the user - either interactively in a browser or from (~/.OMErc).
+This method gets called by C<new()> when it can't get its hands on a L<sessionKey>.
+
+This method should be over-ridden depending on the interface you're setting up.
+i.e.  If you want to prompt the user for login information, over-ride this method.
+See F<OMEwebLogin.pm> and F<OMELogin.pl> for an exaple.
+The Login method should return sessionKey by calling Connect at the end.
+The default behavior is to re-direct the browser to a login page if there is a browser.
+If there is no browser or ~/.OMErc, then this method calls die.
+
+=cut
+
+
+
+
+sub Login ()
+{
+	my $self = shift;
+	my $cgi = $self->{cgi};
+	my $line;
+
+		if ($self->gotBrowser())
+		{
+		# Where do we set the referer to?
+		# If the referer was specified as a parameter, then we go there.
+		# If the referer was specified in a cookie, then we ignore it, and return to where we are now.
+			$self->SetReferer() unless defined $self->{referer} and $self->{referer} and $self->{referer} ne $cgi->cookie ('OMEreferer');
+			$self->Redirect(-location=>$self->{OMEloginURL}, -target=>'_top');
+		}
+		elsif (not $self->inWebServer ()) # Read connection parameters out of the user's OMErc file (~/.OMErc).
+		{
+			my $OMErc = glob ("~/.OMErc");
+			open (INPUT,"<  $OMErc") or die "Could not open $OMErc for reading: $!\n";
+			while (	defined ($line = <INPUT>) ) {
+				chomp $line;
+				if ($line =~ /^OMEdb Connect:.*/) {
+						if ($line =~ /dbname=(\S+)/)    { $self->{dataSource} = $DefaultDBI.'dbname='.$1; }
+						if ($line =~ /user=(\S+)/)      { $self->{user} = $1;}
+						if ($line =~ /password=(\S+)/)  { $self->{password} = $1;}
+						if ($line =~ /datasource=(\S+)/){ $self->{dataSource} = $1;}
+				}
+			}
+			$self->{dataSource} = $DefaultDataSource unless defined $self->{dataSource};
+			$self->{user} = $ENV{USER} unless defined $self->{user};
+		} else {
+			die "Login () does not have any way to authenticate the user.\n";
+		}
+# Its fatal if this is defined and bogus.
+	$self->{sessionKey} = undef;
+	return $self->Connect();
+}
+
+
+#sub DESTROY {
+#print "Destroying the OME object\n";
+#	my $self = shift;
+#
+#	$self->Commit();
+#}
+
+
+
+=pod
+
+=back
+
+=head2 Session Management
+
+Methods used to manage user sessions, persistent variables, etc.
+
+B<Method List:>
+
+C<Session()>, C<Commit()>, C<Rollback()>, C<Finish()>, C<SetSID()>, C<RefreshSessionInfo()>
+
+=over 4
+
+=item Session()
+
+Manages a persistent hash referenced by $self->L<sessionKey> by using Apache::Session.
+Gets a new session from Apache::Session if there is no parameter and $self->L<sessionKey> is undef.
+Gets a new session from Apache::Session if there is a prameter hash reference, but the _session_id key doesn't exist or is undef.
+Gets an existing session if not making a new session - _session_id key in the parameter hash ref overrides $self->L<sessionKey>.
+Calls die if tries to fetch an existing session but it doesn't exist.
+Copies keys and values in the passed hash ref (if any) to the tied session hash, 
+unties the session, and 
+returns a reference to the untied hash.
+
+B<Examples>:
+
+ my $session = $OME->Session();
+ $session->{myPersistentVariable} = $someScalar;
+ $OME->Session ($session);
+ 
+some time later...
+
+ my $session = $OME->Session();
+ my $recoveredScalar = $session->{myPersistentVariable};
+
+=cut
+
 sub Session {
 my $self = shift;
 my $param = shift;
@@ -576,55 +729,14 @@ my $user = $self->{user};
 }
 
 
-#
-# This method is used to collect user information from the user - either interactively in a browser or from (~/.OMErc).
-# Hopefully, with certificate-based authentication, we could just call Connect, and bypass this method.
-# This method should be over-ridden depending on the interface you're setting up.
-# i.e.  If you want to prompt the user for login information, over-ride this method.
-# Better yet, modify it right here so that everyone can enjoy!
-# The Login method should return sessionKey by calling Connect at the end.
-sub Login ()
-{
-	my $self = shift;
-	my $cgi = $self->{cgi};
-	my $line;
+=pod
 
-		if ($self->gotBrowser())
-		{
-		# Where do we set the referer to?
-		# If the referer was specified as a parameter, then we go there.
-		# If the referer was specified in a cookie, then we ignore it, and return to where we are now.
-			$self->SetReferer() unless defined $self->{referer} and $self->{referer} and $self->{referer} ne $cgi->cookie ('OMEreferer');
-			$self->Redirect(-location=>$self->{OMEloginURL}, -target=>'_top');
-		}
-		elsif (not $self->inWebServer ()) # Read connection parameters out of the user's OMErc file (~/.OMErc).
-		{
-			my $OMErc = glob ("~/.OMErc");
-			open (INPUT,"<  $OMErc") or die "Could not open $OMErc for reading: $!\n";
-			while (	defined ($line = <INPUT>) ) {
-				chomp $line;
-				if ($line =~ /^OMEdb Connect:.*/) {
-						if ($line =~ /dbname=(\S+)/)    { $self->{dataSource} = $DefaultDBI.'dbname='.$1; }
-						if ($line =~ /user=(\S+)/)      { $self->{user} = $1;}
-						if ($line =~ /password=(\S+)/)  { $self->{password} = $1;}
-						if ($line =~ /datasource=(\S+)/){ $self->{dataSource} = $1;}
-				}
-			}
-			$self->{dataSource} = $DefaultDataSource unless defined $self->{dataSource};
-			$self->{user} = $ENV{USER} unless defined $self->{user};
-		}
-# Its fatal if this is defined and bogus.
-	$self->{sessionKey} = undef;
-	return $self->Connect();
-}
+=item Commit()
 
+Call this method to commit the current transaction to the database - before calling C<Finish()>.
+Do not call this method unless you can guarantee that you will not leave the database in an invalid state.
 
-#sub DESTROY {
-#print "Destroying the OME object\n";
-#	my $self = shift;
-#
-#	$self->Commit();
-#}
+=cut
 
 sub Commit ()
 {
@@ -633,6 +745,14 @@ my $self = shift;
 	$self->{dbHandle}->commit if (defined $self->{dbHandle});
 }
 
+=pod
+
+=item Rollback()
+
+Call this method to revert the database to a state prior to calling C<new()>, C<Commit()> or C<Finish()>.
+
+=cut
+
 sub Rollback ()
 {
 my $self = shift;
@@ -640,6 +760,14 @@ my $self = shift;
 }
 
 
+=pod
+
+=item Finish()
+
+This method B<must> be called when you are finished using the OME object.
+Failure to do so will leave you database handles untidy, and your work will not be commited to the database.
+
+=cut
 
 sub Finish ()
 {
@@ -673,9 +801,16 @@ sub END {
 	print STDERR "DESTRUCTOR:  Disconnected\n";
 }
 
-# SetSID  writes the session key into the database, and maintains persistance for the user's session (sessionID).
-# If there is a session for the user in the database, we update the session_key and the last_access columns.
-# If there is no user found, we do an INSERT.
+=pod
+
+=item SetSID()
+
+B<Internal use>.  Writes the session key into the database, and maintains persistance for the user's session (sessionID).
+If there is a session for the user in the database, we update the session_key and the last_access columns.
+If there is no user found, we do an INSERT.
+
+=cut
+
 sub SetSID ()
 {
 	my $self = shift;
@@ -706,6 +841,48 @@ sub SetSID ()
 	return $sessionID;
 }
 
+=pod
+
+=item RefreshSessionInfo()
+
+This method directs the session information frame to be refreshed.  Call this after calling C<SetSelectedDatasets()> for instance.
+
+=cut
+
+sub RefreshSessionInfo {
+my $self = shift;
+
+	return unless $self->gotBrowser;
+	print $self->CGIheader (-type=>'text/html');
+	print qq {
+		<script language="JavaScript">
+			<!--
+				top.SessionFrame.location.reload();
+			//-->
+		</script>
+		}	
+}
+
+
+
+
+
+
+=pod
+
+=back
+
+=head2 Browser Navigation
+
+Methods to redirect the browser to various places.  These have no effect if there is no browser, but some of these do not return.
+
+B<Method List:>
+
+C<Redirect()>, C<ReturnHome()>, C<SetReferer()>, C<Return_to_referer()>, C<SelectDatasets()>, C<RefreshSessionInfo()>
+
+=over 4
+
+=cut
 
 sub Redirect_old()
 {
@@ -720,6 +897,18 @@ my %params = @_;
 
 }
 
+=pod
+
+=item Redirect()
+
+Use this method to send the browser to another page.  Call C<Return_to_referer()> to get back to the page that called Redirect().
+This method does not return.
+
+ $OME->Redirect (-location=>'http://foo.bar.com');
+ $OME->Redirect (-location=>'AnotherScript.pl');
+
+=cut
+ 
 sub Redirect {
 my $self = shift;
 return unless $self->gotBrowser;
@@ -739,6 +928,14 @@ my $URL = $params{-location};
 	
 }
 
+=pod
+
+=item ReturnHome()
+
+Use this method if you're done, and don't want to draw another page.
+This will send the browser to the URL specified by L<OMEhomePageURL>.
+
+=cut
 
 sub ReturnHome()
 {
@@ -746,6 +943,15 @@ my $self = shift;
 
 	self->Redirect(-location=>$self->{OMEhomePageURL});
 }
+
+=pod
+
+=item SetReferer()
+
+This will set the page that C<Return_to_referer()> will return to next time it is called.
+Since this accepts no parameters, it can only be used for returning to the current script.
+
+=cut
 
 sub SetReferer ()
 {
@@ -774,6 +980,13 @@ my $self = shift;
 	$self->Redirect(-location=>$self->{OMEhomePageURL});
 }
 
+=pod
+
+=item Return_to_referer()
+
+Call this method to go back to the referencing page.
+
+=cut
 
 sub Return_to_referer {
 my $self = shift;
@@ -794,31 +1007,33 @@ my $self = shift;
 
 
 
-# This method returns a unique object identifier.  The required parameter is a string containing the name of the
-# identifier.  In the database, this name is a sequence (PostgreSQL - probably a non-SQL92 extension).  The effect
-# is that the number returned is guaranteed unique for the parameter specified.
-# This method will die if a sequence is not specified.
-# This method will die if the specified sequence does not exist in the database.  It should probably not be the
-# responsibility of this method to create the sequence if it doesn't exist.  That should be done elsewhere.
-sub GetOID {
-	my $self = shift;
-	my $sequence = shift;
-	my $sth;
-	
-	die "OME: Attempt to get a unique object identifier for an unspecified object type\n" unless defined $sequence;
-	$sth = $self->{dbHandle}->prepare("SELECT nextval (?)");
-	$sth->execute( $sequence );
-	return ($sth->fetchrow_array);	
-			
-}
+=pod
 
-#
-# This gets the selected datasets from the database.
-# If there aren't any, it calls SelectDatasets
-# If SelectDatasets doesn't select any datasets, we die.
-# It is a fatal error in OME to try to run an analysis without any selected datasets.
-# Maybe that will change in the future, maybe not.
-# This method returns a reference to an array of 'dataset_id's.
+=back
+
+=head2 Datasets and Dataset Selections
+
+Methods to select datasets, return user selections, import datasets, etc.
+B<Method List:>
+
+C<GetSelectedDatasetIDs()>, C<GetSelectedDatasetObjects()>, C<GetDatasetObjects()>,
+C<SelectDatasets()>, C<SetSelectedDatasets>, C<DatasetsTableHTML()>
+
+=over 4
+
+=cut
+
+
+
+
+=pod
+
+=item GetSelectedDatasetIDs()
+
+This method returns a reference to an array of dataset IDs selected by the user.
+
+=cut
+
 sub GetSelectedDatasetIDs()
 {
 	my $self = shift;
@@ -851,6 +1066,15 @@ my $self = shift;
 
 	return $self->GetSelectedDatasetIDs();
 }
+
+
+=pod
+
+=item GetSelectedDatasetObjects()
+
+Returns an array of dataset objects selected by the user.
+
+=cut
 
 sub GetSelectedDatasetObjects () {
 my $self = shift;
@@ -895,8 +1119,15 @@ sub GetSelectedDatasetsWavelengths () {
 	return \@wavelengths;
 }
 
-# This method will return an array of Dataset objects, with all known fields filled in.
-# The required parameter is a reference to an array of dataset IDs.
+=pod
+
+=item GetDatasetObjects()
+
+This method will return an array of Dataset objects, with all known fields filled in.
+The required parameter is a reference to an array of dataset IDs.
+
+=cut
+
 sub GetDatasetObjects {
 my $self = shift;
 my $selectedDatasetIDs = shift;
@@ -913,14 +1144,15 @@ my $datasetID;
 	
 }
 
-#
-# This method gets called from GetSelectedDatasets if there aren't any datasets selected in the database.
-# This method should insert DATASET_IDs into the OME_SESSIONS_DATASETS table for the sessionID.
-# For now, this method does a CGI redirect if we're in a browser.
-# GetSelectedDatasets will re-query the database after calling this method.  If there are still no
-# selected datasets, then GetSelectedDatasets will die.
-# The return status isn't checked.  The proof is in the pudding (database).
-# The simplest thing to do is to over-ride this method, and just call SetSelectedDatasets.
+
+=pod
+
+=item SelectDatasets()
+
+This method does a redirect to the dataset selection form if we're in a browser.
+
+=cut
+
 sub SelectDatasets()
 {
 	my $self = shift;
@@ -932,9 +1164,15 @@ sub SelectDatasets()
 }
 
 
-#
-# Given a reference to a list of dataset IDs, this method will set the selection in the database.
-# This method is not called from within the OMEpl package - it is solely an end-user method.
+=pod
+
+=item SetSelectedDatasets()
+
+Given a reference to a list of dataset IDs, this method will set the user's selection in the database.
+This method is not called from within the OMEpl package - it is solely an end-user method.
+
+=cut
+
 sub SetSelectedDatasets()
 {
 	my $self = shift;
@@ -970,21 +1208,49 @@ sub SetSelectedDatasets()
 	return $self->{SelectedDatasets};
 }
 
+=pod
 
-# DatasetsTableHTML
-# returns an HTML table (as a string) of the session's selected datasets with the user's chosen info.
-# Optional parameters:
-# DatasetIDs => [...]  A reference to an array of dataset IDs to diplay in the table.  Default is the current session's selection.
-# Limit => If this parameter exists, but is 0 or undef, then display all datasets.
-#          If this parameter is a non-zero integer, limit the display to that many datasets.
-#          Default is $OME->DatasetsDisplayLimit;
-#          This does not apply if the DatasetIDs parameter is set.
-# CGItableParams => {} A reference to a hash containing parameters that will be passed directly to Perl's CGI->table method.
-#          Default is {-border=>1,-cellspacing=>1,-cellpadding=>1}.
-# SupressLinks  If this parameter exists and is defined and true, will supress links to OMEDatasetView in the table.
-#          Default is to make entries in the 'name' column (not case-sensitive) links to OMEDatasetView
-#          targeted to a new window to display an image of the dataset.  If there is no name column, the first column will be used for the links.
-# N.B.:  This returns the HTML table ONLY - not a full HTML page.
+=item DatasetsTableHTML()
+
+Returns an HTML table (as a string) of the session's selected datasets with the user's chosen info.
+The columns displayed in this table are defined in the table.column OME_SESSIONS.DATASET_VIEW.
+
+B<Parameters:>
+
+=over 4
+
+=item DatasetIDs => [1,2,3,4]
+
+Will make a table of the selected dataset IDs only.  The default is the user-selected datasets.
+
+=item Limit => 123
+
+If this parameter exists, but is 0 or undef, then display all datasets.
+If this parameter is a non-zero integer, limit the display to that many datasets.
+If the parameter does not exist, the limit is $OME->DatasetsDisplayLimit;
+This does not apply if the DatasetIDs parameter is set.
+
+=item CGItableParams => {}
+
+A reference to a hash containing parameters that will be passed directly to Perl's CGI->table method.
+Default is {-border=>1,-cellspacing=>1,-cellpadding=>1}.
+
+=item SupressLinks
+
+If this parameter exists and is defined and true, will supress links to OMEDatasetView in the table.
+Default is to make entries in the 'name' column (not case-sensitive) links to OMEDatasetView
+targeted to a new window to display an image of the dataset.  If there is no name column, the first column will be used for the links.
+
+=back
+
+B<Example:>
+
+ $OME->DatasetsTableHTML ();
+ $OME->DatasetsTableHTML ( DatasetIDs=>[1,2,3,4,5], CGItableParams => {-border=>0} );
+ 
+N.B.:  This returns the HTML table ONLY - not a full HTML page.
+
+=cut
 
 sub DatasetsTableHTML {
 my $self = shift;
@@ -1060,21 +1326,27 @@ my $self = shift;
 	return $DATASETSDISPLAYLIMIT;
 }
 
+=pod
 
-sub RefreshSessionInfo {
-my $self = shift;
+=back
 
-	return unless $self->gotBrowser;
-	print $self->CGIheader (-type=>'text/html');
-	print qq {
-		<script language="JavaScript">
-			<!--
-				top.SessionFrame.location.reload();
-			//-->
-		</script>
-		}	
-}
+=head2 Analyses
 
+These are methods to initiate an analysis, read and write results, etc.
+
+B<Method List:>
+
+C<StartAnalysis()>, C<RegisterAnalysis()>, C<WriteFeatures()>
+
+=over 4
+
+=item StartAnalysis()
+
+Call this method whenever you are about to analyze some datasets.
+Basically, this does some initialization things, starts a transaction, and sets up a way to keep track of your analysis while
+its crunching away on datasets.
+
+=cut
 
 sub StartAnalysis()
 {
@@ -1127,11 +1399,32 @@ sub StartAnalysis()
 
 }
 
-#
-# This method is called to register an analysis with OME.  Required parameters are the
-# programName or programID, the datasetID, and the parameter values required by the particular
-# program.  The parameter names for the program are not case-sensitive b/c SQL is not case-sensitive.
-# This method will return an AnalysisID.
+
+=pod
+
+=item RegisterAnalysis()
+
+This method is called to register an analysis with OME.  It must be called once per analyzed dataset.
+Required parameters are the
+programName or programID, the datasetID, and the parameter values required by the particular
+program.
+This method will put an entry in the ANALYSES table in the DB, and return with an AnalysisID. 
+This AnalysisID must be used in order to write features to the database.
+
+B<Examples:>
+
+ $OME->RegisterAnalysis (programName => 'MyProgram', datasetID => 123,
+ 	PROGRAM_PARAM1 => 'something',
+ 	PROGRAM_PARAM2 => 'something else',
+ 	PROGRAM3 => 123 );
+
+This will register a program run for the specified program and dataset, and set the run parameters
+(PROGRAM_PARAM1, PROGRAM_PARAM2, and PROGRAM3) to 'something', 'something else' and 123.
+These three parameters are specified in the program's input table, whose
+name is stored in the table.column PROGRAMS.INPUT_TABLE.
+
+=cut
+
 sub RegisterAnalysis()
 {
 	my $self = shift;
@@ -1752,6 +2045,39 @@ my $self = shift;
 			$self->{dbHandle}->do ("DELETE FROM expired_files WHERE fullpath='$file'");
 		}
 	}
+}
+
+
+
+=pod
+
+=back
+
+=head2 Miscellaneous Methods
+
+=over 4
+
+=item GetOID()
+
+This method returns a unique object identifier.  The required parameter is a string containing the name of the
+identifier.  In the database, this name is a SEQUENCE (PostgreSQL - probably a non-SQL92 extension).  The effect
+is that the number returned is guaranteed unique for the sequence specified.
+This method will die if a sequence is not specified.
+This method will die if the specified sequence does not exist in the database.  It should probably not be the
+responsibility of this method to create the sequence if it doesn't exist.  That should be done elsewhere.
+
+=cut
+
+sub GetOID {
+	my $self = shift;
+	my $sequence = shift;
+	my $sth;
+	
+	die "OME: Attempt to get a unique object identifier for an unspecified object type\n" unless defined $sequence;
+	$sth = $self->{dbHandle}->prepare("SELECT nextval (?)");
+	$sth->execute( $sequence );
+	return ($sth->fetchrow_array);	
+			
 }
 
 
@@ -2676,7 +3002,7 @@ sub binPath {
 
 sub inWebServer {
 	my $self = shift;
-	return defined $ENV{SERVER_SOFTWARE};
+	return defined $ENV{SERVER_SIGNATURE};
 }
 
 sub gotBrowser {
@@ -2686,7 +3012,8 @@ sub gotBrowser {
 		$ENV{HTTP_USER_AGENT} =~/Mozilla/ or
 		$ENV{HTTP_USER_AGENT} =~/MSIE/ or
 		$ENV{HTTP_USER_AGENT} =~/iCab/ or
-		$ENV{HTTP_USER_AGENT} =~/Lynx/
+		$ENV{HTTP_USER_AGENT} =~/Lynx/ or
+		$ENV{HTTP_USER_AGENT} =~/Opera/
 		) )
 }
 
@@ -2873,3 +3200,10 @@ sub ViewDatasetsURL {
 }
 
 1;
+
+=pod
+
+=back
+
+=cut
+
