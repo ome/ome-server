@@ -386,7 +386,9 @@ sub importObject ($$$$) {
 
 	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
-	#	logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+		print STDERR ref ($self)."->importObject: Object ID '$LSID' exists in DB - ignored\n"
+			if $OME::MESSAGES{LSID_COLLISION};
+		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
 		return $theObject;
 	} 
 

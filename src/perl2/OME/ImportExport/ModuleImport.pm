@@ -220,6 +220,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	logdbg "debug", ref ($self) . "->processDOM creating OME::Module ".$moduleXML->getAttribute( 'ModuleName' );
 	my $program = $lsidManager->getObject( $moduleXML->getAttribute( 'ID' ) );
 	if (defined $program) {
+		print STDERR ref ($self).": Module ID '".$moduleXML->getAttribute( 'ID' ).
+			"' exists in DB - ignored\n" if $OME::MESSAGES{LSID_COLLISION};
 		logdbg "debug", ref($self)."->processDOM: ". $moduleXML->getAttribute( 'ModuleName' ) ." already exists in the DB. Skipping...";
 		next;
 	}

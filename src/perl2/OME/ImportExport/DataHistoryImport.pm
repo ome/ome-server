@@ -114,7 +114,11 @@ sub processDOM {
 		
 		# MEX
 		my $mex = $LSIDresolver->getLocalObject( $mexXML->getAttribute( 'ID' ));
-		next if ($mex);
+		if ($mex) {
+			print STDERR ref ($self).": MEX '".$mexXML->getAttribute( 'ID' )."'exists in DB - ignored\n"
+				if $OME::MESSAGES{LSID_COLLISION};
+			next;
+		}
 		my $dataset_lsid = $mexXML->getAttribute( 'DatasetID' );
 		my $dataset = $objectLookup->{ $dataset_lsid } || $LSIDresolver->getObject( $dataset_lsid )
 			or die "couldn't resolve dataset lsid $dataset_lsid\n";
