@@ -1,4 +1,4 @@
-# OME/module_execution/CLIHandler.pm
+# OME/Analysis/CLIHandler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -45,7 +45,7 @@ sub new {
 sub precalculateDataset {
     my ($self) = @_;
 
-	my $module                  = $self->{_program};
+	my $module                  = $self->{_module};
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -63,7 +63,7 @@ sub precalculateDataset {
 sub precalculateImage {
     my ($self) = @_;
 
-	my $module                  = $self->{_program};
+	my $module                  = $self->{_module};
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -81,7 +81,7 @@ sub precalculateImage {
 sub calculateFeature {
     my ($self) = @_;
 
-	my $module                  = $self->{_program};
+	my $module                  = $self->{_module};
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -100,7 +100,7 @@ sub calculateFeature {
 sub postcalculateImage {
     my ($self) = @_;
 
-	my $module                  = $self->{_program};
+	my $module                  = $self->{_module};
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -118,7 +118,7 @@ sub postcalculateImage {
 sub postcalculateDataset {
     my ($self) = @_;
 
-	my $module                  = $self->{_program};
+	my $module                  = $self->{_module};
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -140,7 +140,7 @@ sub _execute {
 
     my $image  = $self->getCurrentImage();
 
-	my $module               = $self->{_program};
+	my $module               = $self->{_module};
 	my %outputs;
 	my $executionInstructions = $module->execution_instructions();
 	my $debug                 = 0;
@@ -466,7 +466,7 @@ print STDERR "Execution string is:\n$executeString\n";# if $debug;
 	#
 		my $_STDOUT = new IO::File;
 		open $_STDOUT, "$executeString |" or
-			die "Cannot open module_execution module";
+			die "Cannot execute program using '$executeString'";
 		my $outputStream='';
 		while( <$_STDOUT> ) {
 			$outputStream .= $_;
@@ -590,7 +590,7 @@ print STDERR "Execution string is:\n$executeString\n";# if $debug;
 						# XML schema dictates AccessBy attribute must be an integer.
 						# ...but I'm paranoid, so I'm going to check anyway
 						my $accessBy               = $output->getAttribute( "AccessBy" );
-						die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_program}->name()." are corrupted. Alert system admin!" 
+						die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_module}->name()." are corrupted. Alert system admin!" 
 							if( $accessBy =~ m/\D/ );
 						my $formalOutputColumnName = $outputTo->getAttribute( "SemanticElementName" );
 						my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
