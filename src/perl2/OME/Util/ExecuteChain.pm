@@ -86,17 +86,19 @@ This command uses the Analysis Engine to execute the analysis chain against
 a dataset.
 
 Options:
-  -a  Use this to specify the analysis chain. Either by name or ID.
+  -a  Analysis chain name or ID.
   
-  -d  Use this to specify the dataset. Either by name or ID.
+  -d  Dataset name or ID.
     
-  -r, --reuse
-    Do not reuse previous module execution results.
+  -f, --force
+    Force re-execution of chain (i.e. do not reuse previous module execution 
+    results).
   
   -c, --caching
-    Enable DBObject caching
+    Enable DBObject caching.
 
-  -h, --help  Print this help message.
+  -h, --help
+    Print this help message.
 USAGE
     CORE::exit(1);
 }
@@ -110,7 +112,7 @@ sub execute {
 	
 	GetOptions ('a=s' => \$chainStr,
 				'd=s' => \$datasetStr,
-				'reuse|r!' => \$reuse,
+				'force|f!' => \$reuse,
 				'caching|c!' => \$caching,
 				'help|h' => \$help);
     
@@ -252,7 +254,7 @@ sub execute {
 		$user_inputs{$formal_input->id()} = $mex;
 	}
 	
-	print "Executing Analysis Chain\n";
+	print "Executing Analysis Chain `".$chain->name()."`\n";
 	my $task = OME::Tasks::NotificationManager->
 		new("Executing `".$chain->name()."`", -1);
 	$task->setMessage('Start Execution of Analysis Chain');
