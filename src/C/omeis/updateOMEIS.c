@@ -110,8 +110,20 @@ char pix_vers_str[256], file_vers_str[256];
 		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open version file %s",pix_vers_path);
 		exit (-1);
 	}
-	read ( pix_vers_fd, (void *)pix_vers_str, sizeof(pix_vers_str) );
-	sscanf (pix_vers_str,"%d",&pix_vers);
+	lockRepFile (pix_vers_fd, 'w', (size_t)0, (size_t)0);
+	
+	/*
+	  If we got a 0 for the lastID, then its a brand-new repository.
+	  We write the current version into it.
+	*/
+	if (thePixID == 0) {
+		sprintf (pix_vers_str,"%d\n",OME_IS_PIXL_VER);
+		write ( pix_vers_fd,(void *)pix_vers_str,strlen(pix_vers_str) );
+		pix_vers = OME_IS_PIXL_VER;
+	} else {
+		read ( pix_vers_fd, (void *)pix_vers_str, sizeof(pix_vers_str) );
+		sscanf (pix_vers_str,"%d",&pix_vers);
+	}
 	close (pix_vers_fd);
 
 	/*
@@ -130,8 +142,20 @@ char pix_vers_str[256], file_vers_str[256];
 		if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open version file %s",file_vers_path);
 		exit (-1);
 	}
-	read ( file_vers_fd, (void *)file_vers_str, sizeof(file_vers_str) );
-	sscanf (file_vers_str,"%d",&file_vers);
+	lockRepFile (file_vers_fd, 'w', (size_t)0, (size_t)0);
+	
+	/*
+	  If we got a 0 for the lastID, then its a brand-new repository.
+	  We write the current version into it.
+	*/
+	if (theFileID == 0) {
+		sprintf (file_vers_str,"%d\n",OME_IS_FILE_VER);
+		write ( file_vers_fd,(void *)file_vers_str,strlen(file_vers_str) );
+		file_vers = OME_IS_FILE_VER;
+	} else {
+		read ( file_vers_fd, (void *)file_vers_str, sizeof(file_vers_str) );
+		sscanf (file_vers_str,"%d",&file_vers);
+	}
 	close (file_vers_fd);
 
 	
@@ -170,6 +194,8 @@ char pix_vers_str[256], file_vers_str[256];
 			if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open version file %s for writing",pix_vers_path);
 			exit (-1);
 		}
+		lockRepFile (pix_vers_fd, 'w', (size_t)0, (size_t)0);
+
 		sprintf (pix_vers_str,"%d\n",OME_IS_PIXL_VER);
 		write ( pix_vers_fd,(void *)pix_vers_str,strlen(pix_vers_str) );
 		close (pix_vers_fd);
@@ -196,6 +222,8 @@ char pix_vers_str[256], file_vers_str[256];
 			if (!beSilent) OMEIS_ReportError ("UpdateOMEIS",NULL,(OID)0,"Could not open version file %s for writing",file_vers_path);
 			exit (-1);
 		}
+		lockRepFile (file_vers_fd, 'w', (size_t)0, (size_t)0);
+
 		sprintf (file_vers_str,"%d\n",OME_IS_FILE_VER);
 		write ( file_vers_fd,(void *)file_vers_str,strlen(file_vers_str) );
 		close (file_vers_fd);
