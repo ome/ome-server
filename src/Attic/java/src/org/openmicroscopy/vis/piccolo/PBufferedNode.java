@@ -39,13 +39,9 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import edu.umd.cs.piccolo.util.PBounds;
 
 /** 
- * A type of node that can give us a "buffered bounds" - a bound with a buffer 
- * around it in all directions. This is useful for zooming: if we use a 
- * buffered bounds, we can center the object in a canvas while still leaving 
- * some space between the edges of the node and the edges of the canvas. 
+ * A Buffered canvas that can be  placed somewhere explicitly 
  * 
  * @author Harry Hochheiser
  * @version 2.1
@@ -53,9 +49,8 @@ import edu.umd.cs.piccolo.util.PBounds;
  */
 
 
-public interface PBufferedNode  {
-
-	public PBounds getBufferedBounds();	
+public interface PBufferedNode extends PBufferedObject {
+	
 	
 	public void setOffset(double x,double y);
 	
