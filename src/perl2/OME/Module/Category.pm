@@ -41,7 +41,7 @@ __PACKAGE__->has_many('children','OME::Module::Category' =>
                       qw(parent_category_id),
                       {sort => 'name'});
 __PACKAGE__->has_many('modules','OME::Module' =>
-                      qw(category_id),
+                      qw(category),
                       {sort => 'name'});
 
 

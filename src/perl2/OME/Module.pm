@@ -30,7 +30,7 @@ __PACKAGE__->table('modules');
 __PACKAGE__->sequence('module_seq');
 __PACKAGE__->columns(Primary => qw(module_id));
 __PACKAGE__->columns(Essential => qw(name description category));
-__PACKAGE__->columns(Definition => qw(module_type location
+__PACKAGE__->columns(Definition => qw(module_type location category
                                       default_iterator new_feature_tag
                                       execution_instructions ));
 __PACKAGE__->hasa('OME::Module::Category' => qw(category));
