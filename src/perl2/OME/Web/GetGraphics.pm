@@ -122,6 +122,12 @@ imageType()
 
 new()
 
+=item L<OME::Image.Dimensions()|OME::Image/"Dimensions()">
+
+=item L<OME::Image.XYZ_info|OME::Image/"XYZ_info">
+
+=item L<OME::Image.wavelengths|OME::Image/"wavelengths">
+
 =item L<OME::Session.DBH()|OME::Session/"DBH()">
 
 =item L<OME::Web.CGI()|OME::Web/"CGI()">
@@ -242,10 +248,12 @@ sub createOMEPage {
 		return ('HTML',$self->DrawLayersControls());
 	} elsif ( $cgi->url_param('name') ) {
 		return ('IMAGE',$self->DrawGraphics());
-	} elsif ( $cgi->url_param('SVG') ) {
-		return('SVG', '<SVG/>');
-	} else {
+	} elsif ( $cgi->url_param('HTML') ) {
 		return ('HTML',$self->DrawMainWindow());
+	} elsif ( $cgi->url_param('BuildSVGviewer') ) {
+		return('SVG', $self->BuildSVGviewer());
+	} else {
+		return('HTML', $self->DrawMainWindowSVG());
 	}
 }
 
@@ -394,6 +402,780 @@ ENDJS
 	$HTML .= $cgi->end_html;
 	return ($HTML);
 }
+=pod
+
+=head2 DrawMainWindowSVG()
+
+=over 4
+
+=item Description
+
+Generates an HTML file housing the svg viewer
+
+=item Returns
+
+an HTML file
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item CGI->url_param()
+
+=back
+
+=back
+
+=cut
+
+sub DrawMainWindowSVG {
+my $self = shift;
+my $cgi   = $self->CGI();
+my $ImageID = $cgi->url_param("ImageID")  || die "\nImage id not supplied to GetGraphics.pm ";
+my $HTML='';
+
+	$self->{contentType} = 'text/html';
+#	$HTML = $cgi->start_html(-title=>'OME SVG 2D Viewer');
+# Add controls to change the displayed image. e.g. switch to previous or next image in a set.
+# Embedding in frames instead of object allows Mozilla > v1 to run it. Keep if no problems w/ it.
+	$HTML .= <<ENDHTML;
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<title>OME SVG 2D Viewer</title>
+	<frameset rows="*">
+		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">
+	</frameset>
+</html>
+ENDHTML
+#	$HTML .= qq '\n<embed width="100%" height="100%" src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">\n';
+#	$HTML .= $cgi->end_html;
+
+	return ($HTML);
+}
+
+=pod
+
+=head2 BuildSVGviewer()
+
+=over 4
+
+=item Description
+
+Generates SVG viewer
+
+=item Returns
+
+an SVG file
+
+=item Uses functions
+
+=over 4
+
+=item SVGgetDataJS()
+
+=back
+
+=back
+
+=cut
+
+# Build the SVG viewer.
+sub BuildSVGviewer {
+	# A server link needs to be made to src/JavaScript/ for the SVG JavaScript references to function
+my $self = shift;
+my $SVG;
+
+my $JSinfo = $self->SVGgetDataJS();
+
+my $ImageID       = $JSinfo->{ ImageID };
+my $Stats         = $JSinfo->{ Stats };
+my $Wavelengths   = $JSinfo->{ Wavelengths };
+my $Dims          = $JSinfo->{ Dims };
+my $CGI_URL       = $JSinfo->{ CGI_URL };
+my $CGI_optionStr = $JSinfo->{ CGI_optionStr };
+my $theZ          = $JSinfo->{ theZ };
+my $theT          = $JSinfo->{ theT };
+
+
+
+	$self->{contentType} = "image/svg+xml";
+	$SVG = <<'ENDSVG';
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+	"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd" [
+	<!ATTLIST svg
+		xmlns:a3 CDATA #IMPLIED
+		a3:scriptImplementation CDATA #IMPLIED>
+	<!ATTLIST script
+		a3:scriptImplementation CDATA #IMPLIED>
+]>
+<svg xml:space="preserve" onload="init(evt)"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	xmlns:a3="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	a3:scriptImplementation="Adobe">
+	<!--            GUI classes             -->
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/widget.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/toolBox.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/multipaneToolBox.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/multipaneToolBox.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/slider.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/popupList.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/button.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/skinLibrary.js" />
+	<!--            Backend classes         -->
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/OMEimage.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/scale.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/overlay.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/stats.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
+ENDSVG
+
+# dynamic initialization of JS objects goes here:
+$SVG .= <<ENDSVG;
+	// GUI components
+		var controlsToolBox, multiToolBox;
+		var zSlider, tSlider;
+		var redPopupList, bluePopupList, greenPopupList, bwPopupList;
+		var scalePopupList, panePopupList;
+		var RGBpopupListBox, BWpopupListBox;
+		var redButton, blueButton, greenButton, RGB_BWbutton;
+		var infoButton;
+		var azap = new AntiZoomAndPan();
+
+	// backend components
+		var image;
+		var scale;
+		var stats;
+		var overlay;
+		
+	// constants & references
+		var Wavelengths = $Wavelengths;
+		var Stats       = $Stats;
+		var Dims        = $Dims;
+		// Z and T are dims of z and t
+		var Z           = Dims[2];
+		var T           = Dims[4];
+		var fluors      = new Array();
+		
+	// global variables
+		// theZ & theT are current values of z & t
+		var theZ = $theZ;
+		var theT = $theT;
+
+		function init(e) {
+			if ( window.svgDocument == null )
+				svgDocument = e.ownerDocument;
+		// initialize back end
+			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
+			image.realize( svgDocument.getElementById("image") );
+// need to add query for RGBon for image.setRGBon			
+
+			// setup fluors used in this image
+			for(i in Wavelengths)
+				fluors[Wavelengths[i]['WaveNum']] = Wavelengths[i]['Label'];
+		// initialize frontend
+			controlToolBox = new toolBox(
+				50, 30, 200, 150,
+				skinLibrary["menuBar"],
+				skinLibrary["hideControl"],
+				skinLibrary["GUIbox"]
+			);
+			controlToolBox.setLabel(90,12,"Primary Controls")
+			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+			
+			multiToolBox = new multipaneToolBox(
+				55, 265, 200, 100,
+				skinLibrary["menuBar17"],
+				skinLibrary["XhideControl"],
+				skinLibrary["tallGUIbox"]
+			);
+			
+			zSlider = new Slider(
+				30, 120, 100, -90,
+				updateTheZ,
+				skinLibrary["zSliderBody"],
+				skinLibrary["zSliderThumb"]
+			);
+			zSlider.setLabel(0,-102,"");
+			zSlider.getLabel().setAttribute( "fill", "white" );
+			zSlider.getLabel().setAttribute( "text-anchor", "middle" );
+
+			tSlider = new Slider(
+				60, 30, 100, 0,
+				updateTheT
+			);
+			tSlider.setLabel(60,-13,"");
+			tSlider.getLabel().setAttribute( "fill", "white" );
+
+			// wavelength to channel popupLists
+			redPopupList = new popupList(
+				-50, 0, fluors, updateRedWavelength, 1,
+				skinLibrary["redAnchorText"],
+				skinLibrary["redItemBackgroundText"],
+				skinLibrary["redItemHighlightText"]
+			);
+
+			greenPopupList = new popupList(
+				0, 0, fluors, updateGreenWavelength, 0,
+				skinLibrary["greenAnchorText"],
+				skinLibrary["greenItemBackgroundText"],
+				skinLibrary["greenItemHighlightText"]
+			);
+
+			bluePopupList = new popupList(
+				50, 0, fluors, updateBlueWavelength, 0,
+				skinLibrary["blueAnchorText"],
+				skinLibrary["blueItemBackgroundText"],
+				skinLibrary["blueItemHighlightText"]
+			);
+			
+			bwPopupList = new popupList(
+				0, 0, fluors, updateBWWavelength
+			);
+			
+			// set up channel on/off buttons
+			redButton = new button( 
+				Math.round(redPopupList.x + redPopupList.width/2), -13, turnRedOnOff,
+				skinLibrary["redButtonOn"],
+				skinLibrary["redButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
+			);
+			greenButton = new button( 
+				Math.round(greenPopupList.x + greenPopupList.width/2), -13, turnGreenOnOff,
+				skinLibrary["greenButtonOn"],
+				skinLibrary["greenButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
+			);
+			blueButton = new button(
+				Math.round(bluePopupList.x + bluePopupList.width/2), -13, turnBlueOnOff,
+				skinLibrary["blueButtonOn"],
+				skinLibrary["blueButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
+			);
+			
+			// set up RGB to grayscale button
+			RGB_BWbutton = new button(
+				110, 115, switchRGB_BW,
+				skinLibrary["RGB_BWButtonOn"],
+				skinLibrary["RGB_BWButtonOff"],
+				skinLibrary["blankButtonRadius13Highlight"]
+			);
+			
+			statsButton = new button(
+				190, 120, showStats,
+				'<text fill="black" text-anchor="end">Stats</text>',
+				null,
+				'<text fill="white" text-anchor="end">Stats</text>'
+			);
+			scaleButton = new button(
+				190, 130, showScale,
+				'<text fill="black" text-anchor="end">Scale</text>',
+				null,
+				'<text fill="white" text-anchor="end">Scale</text>'
+			);
+			overlayButton = new button(
+				190, 140, showOverlay,
+				'<text fill="black" text-anchor="end">Overlay</text>',
+				null,
+				'<text fill="white" text-anchor="end">Overlay</text>'
+			);
+				
+		
+			// z & t increment buttons
+			tUpButton = new button(
+				182, 25, tUp,
+				skinLibrary["triangleRightWhite"]
+			);
+			tDownButton = new button(
+				178, 25, tDown,
+				skinLibrary["triangleLeftWhite"]
+			);
+			zUpButton = new button(
+				15, 106, zUp,
+				skinLibrary["triangleUpWhite"]
+			);
+			zDownButton = new button(
+				15, 110, zDown,
+				skinLibrary["triangleDownWhite"]
+			);
+				
+			// z & t animation buttons
+			tAnimUpButton = new button(
+				182, 35, tAnimUp,
+				skinLibrary["triangleRightRed"],
+				null,
+				skinLibrary["triangleRightWhite"]
+			);
+			tAnimDownButton = new button(
+				178, 35, tAnimDown,
+				skinLibrary["triangleLeftRed"],
+				null,
+				skinLibrary["triangleLeftWhite"]
+			);
+			zAnimUpButton = new button(
+				15, 86, zAnimUp,
+				skinLibrary["triangleUpRed"],
+				null,
+				skinLibrary["triangleUpWhite"]
+			);
+			zAnimDownButton = new button(
+				15, 90, zAnimDown,
+				skinLibrary["triangleDownRed"],
+				null,
+				skinLibrary["triangleDownWhite"]
+			);
+			
+			loadButton = new button(
+				5, 5, loadAllImages,
+				skinLibrary["hiddenButton"],
+				null,
+				skinLibrary["hiddenButtonHighlight"]
+			);
+			
+		// realize the GUI elements in the appropriate containers
+            var controls  = svgDocument.getElementById("controls");
+            controlToolBox.realize(controls);
+            
+            // Z & T controls
+			zSlider.realize(controlToolBox.getGUIbox());
+			tSlider.realize(controlToolBox.getGUIbox());
+			tUpButton.realize(controlToolBox.getGUIbox());
+			tDownButton.realize(controlToolBox.getGUIbox());
+			zUpButton.realize(controlToolBox.getGUIbox());
+			zDownButton.realize(controlToolBox.getGUIbox());
+			tAnimUpButton.realize(controlToolBox.getGUIbox());
+			tAnimDownButton.realize(controlToolBox.getGUIbox());
+			zAnimUpButton.realize(controlToolBox.getGUIbox());
+			zAnimDownButton.realize(controlToolBox.getGUIbox());
+
+			loadButton.realize(controlToolBox.getGUIbox());
+
+			// RGB & BW switcheroo
+			RGB_BWbutton.realize(controlToolBox.getGUIbox());
+
+			// RGB channel controls
+			RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
+			RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
+			controlToolBox.getGUIbox().appendChild( RGBpopupListBox );
+			redButton.realize( RGBpopupListBox );
+			greenButton.realize( RGBpopupListBox );
+			blueButton.realize( RGBpopupListBox );
+			redPopupList.realize( RGBpopupListBox );
+			greenPopupList.realize( RGBpopupListBox );
+			bluePopupList.realize( RGBpopupListBox );
+
+			// Grayscale controls
+			BWpopupListBox = svgDocument.createElementNS( svgns, "g" );
+			BWpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
+			BWpopupListBox.setAttribute( "display", "none" );
+			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
+			bwPopupList.realize( BWpopupListBox );
+			
+			statsButton.realize( controlToolBox.getGUIbox() );
+			scaleButton.realize( controlToolBox.getGUIbox() );
+			overlayButton.realize( controlToolBox.getGUIbox() );
+			
+			// toolbox to house all other interfaces
+			multiToolBox.realize(controls);
+			
+			// set up panes
+// These panes to come from DB eventually?
+			stats = new Statistics( Stats, fluors, updateStatsWave );
+			multiToolBox.addPane( stats.buildSVG(), "Stats" );
+			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
+			scale.updateScale(theT);
+			multiToolBox.addPane( scale.buildSVG(), "Scale");
+			overlay = new Overlay();
+			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
+			// finish setup & make controller
+			multiToolBox.closeOnMinimize(true);
+			panePopupList = new popupList(
+				0, 0, multiToolBox.getPaneIndexes(), updatePane, 0,
+				skinLibrary["popupListAnchorUpperLeftRoundedLightslategray"],
+				skinLibrary["popupListBackgroundLightskyblue"],
+				skinLibrary["popupListHighlightAquamarine"]
+			);
+			panePopupList.realize( multiToolBox.getMenuBar() );
+			
+			// voodoo to switch which component is rendered on top
+			//  this makes the popupList be drawn on top 
+			multiToolBox.nodes.GUIboxContainer.setAttribute( "onmouseover", 'multiToolBox.drawGUITop()' );
+			multiToolBox.getMenuBar().setAttribute( "onmouseover", 'multiToolBox.drawMenuTop()' );
+
+
+            azap.appendNode(controls); 
+            
+			// Set up display. These values should come from DB eventually.
+			setTimeout( "redPopupList.setSelection(0)", 0 );
+			setTimeout( "greenPopupList.setSelection(1)", 0 );
+			setTimeout( "bluePopupList.setSelection(1)", 0 );
+			setTimeout( "bwPopupList.setSelection(0)", 0 );
+			var RGBon = image.getRGBon(); 
+			setTimeout( "multiToolBox.hide()", 0);
+			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "RGB_BWbutton.setState(true)", 0 );
+			setTimeout( "loadButton.setState(false)", 0 );
+			zSlider.setValue(theZ/Z*100,true);
+			tSlider.setValue(theT/T*100,true);
+		}
+		
+ENDSVG
+
+# more static stuff
+$SVG .= <<'ENDSVG';
+        
+		
+	// these functions connect GUI with backend
+		function loadAllImages(val) {
+			image.setPreload(val);
+		}
+	
+		function updateTheZ(data) {
+			data=Math.round(data/100*(Z-1));
+			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
+			zSlider.setValue(sliderVal);
+			zSlider.setLabel(null, null, data + "/" + (Z-1) );
+			theZ=data;
+			
+			image.updatePic(theZ,theT);
+		}
+		function zUp() {
+			var data = (theZ< Z-1 ? theZ + 1 : theZ)
+			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
+			updateTheZ(sliderVal);
+		
+		}
+		function zDown() {
+			var data = (theZ> 0 ? theZ - 1 : theZ)
+			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
+			updateTheZ(sliderVal);
+		}
+		function zAnimUp() {
+			if(Z > 1) {
+				for(i=theZ;i<Z;i++)
+					setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (i-theZ)*100);
+			}
+		}
+		function zAnimDown() {
+			if(Z > 1) {
+				for(i=theZ;i>=0;i--)
+					setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (theZ-i)*100);
+			}
+		}
+
+		function updateTheT(data) {
+			if(data<0) data=0;
+			theT=Math.round(data/100*(T-1));
+			var sliderVal = ( T==1 ? 0 : Math.round(theT/(T-1)*100) );
+			tSlider.setValue(sliderVal);
+			tSlider.setLabel(null, null, "time (" + theT + "/" + (T-1) +")" );
+			
+			image.updatePic(theZ,theT);
+			scale.updateScale(theT);
+			stats.updateStats(theT);
+		}
+		function tUp() {
+			var data = (theT< T-1 ? theT+1 : theT)
+			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
+			updateTheT(sliderVal);
+		}
+		function tDown() {
+			var data = (theT> 0 ? theT -1 : theT)
+			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
+			updateTheT(sliderVal);
+		}
+		function tAnimUp() {
+			if(T>1) {
+				for(i=theT;i<T;i++)
+					setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (i-theT)*100);
+			}
+		}
+		function tAnimDown() {
+			if(T>1) {
+				for(i=theT;i>=0;i--)
+					setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (theT-i)*100);
+			}
+		}
+
+		// popupLists controlling channels
+		function updateRedWavelength(item) {
+			scale.updateWBS('R', item);
+		}
+		function updateGreenWavelength(item) {
+			scale.updateWBS('G', item);
+		}
+		function updateBlueWavelength(item) {
+			scale.updateWBS('B', item);
+		}
+		function updateBWWavelength(item) {
+			scale.updateWBS('Gray', item);
+		}
+
+		function updatePane(item) {
+			var itemList = panePopupList.getItemList();
+			multiToolBox.changePane( itemList[item] );
+		}
+		
+		// buttons controlling channels
+		function turnRedOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[0] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function turnGreenOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[1] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function turnBlueOnOff(val) {
+			RGBon = image.getRGBon();
+			RGBon[2] = (val ? 1 : 0);
+			image.setRGBon(RGBon);
+		}
+		function switchRGB_BW(val) {
+			//	decide which way to flip
+			if(val) {	// val == true means mode = RGB
+				BWpopupListBox.setAttribute( "display", "none" );
+				RGBpopupListBox.setAttribute( "display", "inline" );
+			}
+			else {	// mode = BW
+				BWpopupListBox.setAttribute( "display", "inline" );
+				RGBpopupListBox.setAttribute( "display", "none" );
+			}
+			image.setDisplayRGB_BW(val);
+		}
+		
+		function showOverlay() {
+			panePopupList.setSelectionByValue("Overlay");
+		}
+
+		// Stats stuff
+		function showStats() {
+			panePopupList.setSelectionByValue("Stats");
+		}
+		function updateStatsWave(wavenum) {
+			stats.updateStats(theT);
+		}
+
+		// Scale stuff
+		function updateBlackLevel(val) {
+			// has scale been initialized?
+			if(scale.image == null ) return;
+			if(Math.round(val) == scale.blackBar.getAttribute("width")) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val >= scale.whiteSlider.getValue())
+				val = scale.whiteSlider.getValue() - 0.00001;
+			var cBlackLevel = Math.round(val/scale.scaleWidth * range + min);
+			val = (cBlackLevel-min)/range * scale.scaleWidth;
+
+			// update backend
+			var nBlackLevel = (cBlackLevel - geomean)/sigma;
+			nBlackLevel = Math.round(nBlackLevel * 10) / 10;
+			scale.BS[wavenum]['B'] = nBlackLevel;
+			scale.updateWBS();
+
+			// update display
+			scale.blackSlider.setValue(val);
+			scale.blackLabel.firstChild.data = "geomean + SD * " + nBlackLevel;
+			scale.blackBar.setAttribute("width", Math.round(val) );
+		}
+		function updateWhiteLevel(val) {
+			// has scale been initialized?
+			if(scale.image == null ) return;
+			if(Math.round(val) == scale.whiteBar.getAttribute("x")) return;
+
+			// set up constants
+			var wavenum = scale.wavePopupList.getSelection();
+			var min = scale.Stats[wavenum][theT]['min'];
+			var max = scale.Stats[wavenum][theT]['max'];
+			var range = max-min;
+			var geomean = scale.Stats[wavenum][theT]['geomean'];
+			var sigma = scale.Stats[wavenum][theT]['sigma'];
+			
+			// correct val, crunch numbers
+			if(val <= scale.blackSlider.getValue())
+				val = scale.blackSlider.getValue() + 0.00001;
+			var cWhiteLevel = Math.round(val/scale.scaleWidth * range + min);
+			if(cWhiteLevel == geomean)
+				cWhiteLevel -= 0.00001;
+			val = (cWhiteLevel-min)/range * scale.scaleWidth;
+
+			// update backend
+			var nScale = (cWhiteLevel - geomean)/sigma;
+			nScale = Math.round(nScale*10)/10;
+			scale.BS[wavenum]['S'] = nScale;
+			scale.updateWBS();
+
+			// update display
+			scale.whiteSlider.setValue(val);
+			scale.whiteLabel.firstChild.data = "geomean + SD * " + nScale;
+			scale.whiteBar.setAttribute("width", scale.scaleWidth - Math.round(val) );
+			scale.whiteBar.setAttribute("x", Math.round(val) );
+		}
+		function scaleWaveChange(val) {
+			scale.updateScale(theT);
+		}
+		function showScale() {
+			panePopupList.setSelectionByValue("Scale");
+		}
+		
+    ]]></script>
+	<g id="image">
+	</g>
+	<g id="overlays">
+	</g>
+	<g id="controls">
+	</g>
+</svg>
+ENDSVG
+;
+
+	return $SVG;
+}
+
+=pod
+
+=head2 SVGgetDataJS()
+
+=over 4
+
+=item Description
+
+Gathers data for BuildSVGviewer() & formats it for use in JavaScript.
+
+=item Returns
+
+A hash of data, JavaScript formatted.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item CGI->url_param()
+
+=item L<OME::Web/"Factory()">
+
+=item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
+
+=item L<OME::Image/"Dimensions()">
+
+=item L<OME::Image/"wavelengths">
+
+=item L<OME::Image/"XYZ_info">
+
+=back
+
+=back
+
+=cut
+
+sub SVGgetDataJS {
+	my $self = shift;
+	my $cgi   = $self->CGI();
+	my $JSinfo = {};
+
+    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
+    $self->{ImageID} = $ImageID;
+
+	$JSinfo->{ ImagedID } = $ImageID;
+	$self->{ImageID} = $JSinfo->{ImageID};
+
+	my $image;
+
+	$image = $self->Factory()->loadObject("OME::Image",$ImageID);
+	die "Could not retreive Image from ImageID=$ImageID\n"
+		unless defined $image;
+
+	# get Dimensions from image and make them readable
+	my $dims = [ $image->Dimensions()->size_x(),
+	             $image->Dimensions()->size_y(),
+	             $image->Dimensions()->size_z(),
+	             $image->Dimensions()->num_waves(),
+	             $image->Dimensions()->num_times(),
+	             $image->Dimensions()->bits_per_pixel()/8
+	            ];
+	
+	# get wavelengths from image and make them JavaScript readable
+	my @w = $image->wavelengths;
+	my @wavelengths;
+	
+# get this from DB eventually
+	my $FluorWavelength = {
+		FITC   => 528,
+		TR     => 617,
+		GFP    => 528,
+		DAPI   => 457
+	};
+	foreach (@w) {
+		push @wavelengths, [$_->wavenumber(), $_->em_wavelength(), $_->fluor()];
+	}
+	# construct em_wavelength from fluor if possible, otherwise make sure it's filled in w/ something
+	foreach (@wavelengths) {
+		$_->[1] = $FluorWavelength->{$_->[2]} unless defined $_->[1] and $_->[1];
+		$_->[1] = $_->[0]+1 unless defined $_->[1] and $_->[1];
+	}
+	my $wav = [sort {$b->[1] <=> $a->[1]} @wavelengths];
+	my @JSwavelengths;
+	foreach (@$wav) {
+		push @JSwavelengths, '{WaveNum:'.$_->[0].',Label:"'.(exists $_->[2] and defined $_->[2] ? $_->[2] : $_->[1]).'"}';
+	}
+
+	# get stats from image & make them JavaScript readable
+	my @s = $image->XYZ_info;
+	my ($stats, @JS_Stats_Waves, $JSstats);
+	foreach (@s) {
+		$stats->[$_->wavenumber()][$_->timepoint()] = 
+			"{ min:".$_->min().", max:".$_->max().", mean:".$_->mean().", geomean:".$_->geomean().",sigma:".$_->sigma()."}";
+	}
+	for (my $i=0;$i<scalar (@$stats);$i++) {
+		push (@JS_Stats_Waves,'['.join (',',@{$stats->[$i]}).']');
+	}
+	$JSstats = '['.join (',',@JS_Stats_Waves).']';
+	
+	$JSinfo->{ ImageID }       = $ImageID;
+	$JSinfo->{ Stats }         = $JSstats;
+	$JSinfo->{ Wavelengths }   = '['.join(',',@JSwavelengths).']';
+	$JSinfo->{ pDims }         = $dims;
+	$JSinfo->{ Dims }          = '['.join (',', @$dims).']';
+	$JSinfo->{ CGI_URL }       = '/cgi-bin/OME_JPEG';
+	$JSinfo->{ CGI_optionStr } = '&Path='.$image->getFullPath();
+	$JSinfo->{ theZ }          = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
+	$JSinfo->{ theT }          = $cgi->url_param('theT') || 0;
+
+	return $JSinfo;
+}
+
+
 
 =pod
 
@@ -552,14 +1334,7 @@ an object of type L<OME::Graphics::JavaScript>
 
 =item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
 
-=item L<OME::Web/"Session()">
-
-=item L<OME::Session/"DBH()">
-
-=item DBI->prepare()
-
-	$sth->execute()
-	$sth->fetchrow_array()
+=item L<OME::Image/"Dimensions()">
 
 =item L<OME::Graphics::JavaScript/"new()">
 
@@ -633,16 +1408,12 @@ sub getJSgraphics {
     die "Could not retreive Image from ImageID=$ImageID\n"
     	unless defined $image;
     print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
-#    my $attributes = $image->ImageAttributes();
+    my $dimensions = $image->Dimensions();
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	my $SQL = <<ENDSQL;
-	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
-ENDSQL
+	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+        $dimensions->num_waves(),$dimensions->num_times(),
+        $dimensions->bits_per_pixel());
 
-	my $DBH = $self->Session()->DBH();
-	my $sth = $DBH->prepare ($SQL);
-	$sth->execute($ImageID);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
 	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
