@@ -146,13 +146,13 @@ sub print_form {
 	$text .= $htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project")
 		if( scalar keys %projectList > 0 );
 	$text .= "<center><h2>Datasets</h2></center>";
-	$text .= $self->formatList();
+	$text .= $self->makeDatasetListings();
 	$text .= $cgi->endform;
 	
 	return $text;
 }
 
-sub formatList{
+sub makeDatasetListings{
 	my $self = shift;
 
 	my $session = $self->Session();
