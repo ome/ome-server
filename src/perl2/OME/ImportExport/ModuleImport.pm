@@ -38,6 +38,7 @@
 package OME::ImportExport::ModuleImport;
 
 use XML::LibXML;
+use OME::Tasks::LSIDManager;
 use strict;
 
 =head1 NAME
@@ -225,6 +226,7 @@ sub processDOM {
 	my $debug   = $self->{debug};
 	my $session = $self->{session};
 	my $factory = $session->Factory();
+	my $lsidManager = OME::Tasks::LSIDManager->new( session => $session );
 
 	my @commitOnSuccessfulImport;
 	my @newPrograms;
@@ -250,10 +252,9 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	#
 	print STDERR ref ($self) . "->processDOM about to create an OME::Module object\n"
 		if $debug > 1;
-	my @programs = $factory->findObjects( "OME::Module", 
-		'name', $moduleXML->getAttribute( 'ModuleName' ) );
-	die "\nCannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
-		unless scalar (@programs) eq 0;
+	my $program = $lsidManager->getObject( $moduleXML->getAttribute( 'ID' ) );
+	die "\nCannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module with the same id already exists.\n"
+		if defined $program;
         my $categoryPath = $moduleXML->getAttribute('Category');
         my $categoryID;
         if (defined $categoryPath) {
@@ -280,6 +281,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	my $newProgram = $factory->newObject("OME::Module",$data)
 		or die "Could not create OME::Module object\n";
 	push(@commitOnSuccessfulImport, $newProgram);
+	$lsidManager->setLSID( $newProgram, $moduleXML->getAttribute( 'ID' ) )
+		or print STDERR "Couldn't set LSID for module ".$moduleXML->getAttribute( 'ID' )."\n";
 	print STDERR ref ($self) . "->processDOM created an OME::Module object\n"
 		if $debug > 1;
 	#
