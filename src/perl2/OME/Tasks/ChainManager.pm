@@ -60,8 +60,6 @@ use OME::Session;
 use OME::Module;
 use OME::AnalysisChain;
 
-use fields qw(session);
-
 =head1 METHODS
 
 NOTE: Several of these methods create new database objects.  None of
@@ -69,10 +67,11 @@ them commit any transactions.
 
 =head2 new
 
-	my $manager = OME::Tasks::ChainManager->new($session);
+	my $manager = OME::Tasks::ChainManager->new();
 
-Creates a new chain manager for the given session.  The $session
-parameter is required.
+Creates a new chain manager for the current session.  Previously, this
+method required a session parameter.  It is still allowed, but is
+ignored.
 
 =cut
 
