@@ -94,7 +94,9 @@
 	// so, have a separate call
 	
 	public void buildLinkLists() {
+		System.err.println("building lists for "+getModule().getName());
 		buildSuccessors();
+		System.err.println("# of succs iis "+succLinks.size());
 		buildPredecessors();
 	}
 	private void buildSuccessors() {
@@ -112,6 +114,7 @@
 	}
 	
 	public Collection getSuccessors() {
+		
 		HashSet succs = new HashSet();
 		Iterator iter = succLinks.iterator();
 		while (iter.hasNext()) {
