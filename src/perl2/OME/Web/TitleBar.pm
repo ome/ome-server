@@ -57,9 +57,8 @@ sub getPageBody {
 	my $self = shift;
 	my $body = "";
 	my $session = $self->Session();
-	my $experimenter = $self->User()
+	my $experimenter = $session->User()
 		or die "User not defined for this session";
-
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
 	$body.=$htmlFormat->titleBar($experimenter,$session->project(),$session->dataset());
 	return ('HTML',$body);
