@@ -4,6 +4,11 @@ use OME::SessionManager;
 use XML::LibXML;
 use Log::Agent;
 
+# This is a 2x speed-up.
+use OME::DBObject;
+	OME::DBObject->Caching(1);
+
+
 if( ! $ARGV[0] ) {
 	print "Usage is:\n\t perl ExportSession.pl [--file outputFile] [--exportSTDs] [ [All] | [ [User] [Group] [Project] [Dataset] [Images] [Features]] ]\n";
 	exit -1;
@@ -23,6 +28,7 @@ my $file;
 my @objects;
 my $factory = $session->Factory();
 my $ExportSTDs;
+
 
 for (my $i=0; $i < @ARGV; $i++) {
 	if ($ARGV[$i] eq '--file') {
@@ -61,6 +67,7 @@ for (my $i=0; $i < @ARGV; $i++) {
 			foreach (@features) {
 				logdbg "debug", 'Adding Bounds feature '.$_->id();
 				push (@objects, $factory->findAttributes('Bounds',$_->id()));
+				push (@objects, $factory->findAttributes('Ratio',$_->id()));
 			}
 		}
 	}
