@@ -64,7 +64,7 @@ returns a dropdown list of Module names valued by id.
 
 =cut
 
-sub getRefSearchField {
+sub _getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
 	my $factory = OME::Session->instance()->Factory();
@@ -76,7 +76,8 @@ sub getRefSearchField {
 	$module_names->{''} = 'All';
 
 	my $q = $self->CGI();
-
+	$q->param( $accessor_to_type.'.name', $default ) 
+		unless defined $q->param( $accessor_to_type.'.name' );
 	return ( 
 		$q->popup_menu( 
 			-name	=> $accessor_to_type.'.name',

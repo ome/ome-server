@@ -107,13 +107,13 @@ sub _renderData {
 	return ();
 }
 
-=head2 getName
+=head2 _getName
 
 returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp 
 
 =cut
 
-sub getName {
+sub _getName {
 	my ($proto, $obj, $options) = @_;
 
 	$options->{max_text_length} = 33

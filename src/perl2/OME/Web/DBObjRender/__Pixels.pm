@@ -120,7 +120,7 @@ No search field to Pixels
 
 =cut
 
-sub getRefSearchField {
+sub _getRefSearchField {
 	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	return ();
