@@ -8,12 +8,13 @@
 <body bgcolor="#ffffff" text="#000000">
 <b><big><big><center><a href="http://www.openmicroscopy.org/">OME</a> Documentation Center</center></big></big></b>
 <hr size="2" width="100%">
-<b><big><big><a href="http://www.openmicroscopy.org/APIdocs/OME.html">API Documentation</a></big></big></b>
+<b><big><big><a href="http://www.openmicroscopy.org/APIdocs/omeapi.html">API Documentation</a></big></big></b>
 <hr size="2" width="100%">
 <b><big><big>OME Database Schema RC1 - Release Candidate 1</big></big></b>
 <hr size="2" width="100%">
 <blockquote><b>SQL DDL:</b>
   <blockquote>
+  	<a href="http://www.openmicroscopy.org/DBschemas/000-OMECore.sql">000-DataTypes.sql.sql</a><br>
   	<a href="http://www.openmicroscopy.org/DBschemas/000-OMECore.sql">000-OMECore.sql</a><br>
   	<a href="http://www.openmicroscopy.org/DBschemas/010-Analysis.sql">010-Analysis.sql</a><br>
   </blockquote>
@@ -21,11 +22,13 @@
 <blockquote><b>Documentation and Reference:</b>
   <blockquote>
   	<a href="http://www.openmicroscopy.org/DBschemas/OME-DB.html">HTML Schema Docs</a>
+    <br>Note that the majority of the tables in this schema are loaded from XML (e.g. <a href="http://openmicroscopy.org/XMLschemas/STD/RC2/OMECoreTypes.ome">
+        OMECoreTypes.ome</a>) and not from the DDL above.
   </blockquote>
 </blockquote>
 
 <hr size="2" width="100%">
-<b><big><big>XML Image Schema RC5 - Release Candidate 6</big></big></b>
+<b><big><big>XML Image Schema RC6 - Release Candidate 6</big></big></b>
 <hr size="2" width="100%">
 <blockquote><b>XML Schema Definition (XSD) and Target Namespace:</b>
   <blockquote>
@@ -52,27 +55,25 @@
 <hr size="2" width="100%">
 <blockquote><b>XML Schema Definition (XSD) and Target Namespace:</b>
   <blockquote>
-    Binary File (RC1): <a href="http://openmicroscopy.com/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
-      http://openmicroscopy.com/XMLschemas/BinaryFile/RC1/BinaryFile.xsd</a><br>
-    Semantic Type Definitions (RC1):  <a href="http://openmicroscopy.com/XMLschemas/STD/RC1/STD.xsd">
-      http://openmicroscopy.com/XMLschemas/STD/RC1/STD.xsd</a><br>
+    Binary File (RC1): <a href="http://openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
+      http://openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd</a><br>
+    Semantic Type Definitions (RC2):  <a href="http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd</a><br>
   </blockquote>
 </blockquote>
   <blockquote><b>Example XML documents:</b>
     <blockquote>
       Note, some browsers will not display as plain text. These schemas may be validated at <a href="http://www.w3.org/2001/03/webdata/xsv">http://www.w3.org/2001/03/webdata/xsv</a>.<br>
-      Semantic Type Definitions (RC1): <a href="http://openmicroscopy.com/XMLschemas/STD/RC1/STD.xml">
-        http://openmicroscopy.com/XMLschemas/STD/RC1/STD.xml</a><br>
-      Broken Semantic Type Definitions (illustrates broken referential integrity being noticed by validator): <a href="http://openmicroscopy.com/XMLschemas/STD/RC1/STDBroken.xml">
-        http://openmicroscopy.com/XMLschemas/STD/RC1/STDBroken.xml</a><br>
+      Semantic Type Definitions (RC2): <a href="http://openmicroscopy.org/XMLschemas/STD/RC2/OMECoreTypes.ome">
+        OMECoreTypes.ome</a><br>
     </blockquote>
   </blockquote>
 <blockquote><b>Documentation and Reference:</b>
   <blockquote>
-    Binary File (RC1): <a href="http://openmicroscopy.com/XMLschemas/BinaryFile/RC1/BinaryFile_xsd/">
-      http://openmicroscopy.com/XMLschemas/BinaryFile/RC1/BinaryFile_xsd/</a><br>
-    Semantic Type Definitions (RC1):  <a href="http://openmicroscopy.com/XMLschemas/STD/RC1/STD_xsd/">
-      http://openmicroscopy.com/XMLschemas/STD/RC1/STD_xsd/</a><br>
+    Binary File (RC1): <a href="http://openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile_xsd/">
+      http://openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile_xsd/</a><br>
+    Semantic Type Definitions (RC2):  <a href="http://openmicroscopy.org/XMLschemas/STD/RC2/STD_xsd/">
+      http://openmicroscopy.org/XMLschemas/STD/RC2/STD_xsd/</a><br>
   </blockquote>
 </blockquote>
 <hr size="2" width="100%">
@@ -89,9 +90,7 @@
     <blockquote>
       Note, some browsers will not display as plain text. These schemas may be validated at <a href="http://www.w3.org/2001/03/webdata/xsv">http://www.w3.org/2001/03/webdata/xsv</a>.<br>
       Cross Correlation (demonstrates use of planes, uses both schemas):  <a href="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/ome_cccp.xml">
-        http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/ome_cccp.xml</a>
-      Broken Cross Correlation (illustrates broken referential integrity being noticed by validator):  <a href="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/ome_cccpBroken.xml">
-        http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/ome_cccpBroken.xml</a>
+        ome_cccp.xml</a>
     </blockquote>
   </blockquote>
   <blockquote><b>Documentation and Reference:</b>
