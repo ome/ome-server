@@ -60,6 +60,7 @@ use Log::Agent;
 
 use OME;
 use OME::Web::RenderData;
+use OME::Web::NewTable;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -86,41 +87,49 @@ sub getHeaderBuilder { return undef }  # No header
 
 sub getPageTitle {
 	my $self = shift;
-	my $q    = $self->CGI();
-	my $id   = $q->param( 'ID' );
-	my $type = $q->param( 'Type' )
-		or die "Type not specified";
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-    return "$common_name ($id)";
+	my $object = $self->_loadObject();
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
+    return "$common_name: ".OME::Web::RenderData->getObjectLabel($object);
 }
+
 
 sub getPageBody {
 	my $self = shift;
-	my $q    = $self->CGI();
-	my $factory = $self->Session()->Factory();
+	my $q = $self->CGI();
+
+	print STDERR "cgi params are\n\t".join( "\n\t", map( $_." => ".$q->param( $_ ), $q->param() ) )."\n";
+	my $object = $self->_loadObject();
+	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
+	my $html = "\n".$q->startform( { -name => $self->{ form_name } } ).
+	           $self->_getObjectDetail( $object )."\n".
+	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
+	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
+	           $q->hidden({-name => 'action', -default => ''});
+
+	$html .= $self->_getRelatedTables( $object )
+		unless $q->param( 'NoTables' );
+	$html .= $q->endform();
 	
-	my $type = $q->param( 'Type' )
-		or die "Type not specified";
-	my $id   = $q->param( 'ID' )
-		or die "ID not specified";
+	print STDERR "cgi params are\n\t".join( "\n\t", map( $_." => ".$q->param( $_ ), $q->param() ) )."\n";
+	
+	return ('HTML', $html);
+}
 
-	my $object;
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-	my $typeAttr;
-	if( $ST ) {
-		$object = $factory->loadAttribute( $ST, $id )
-			or die "Could not load Attribute $common_name, id=$id";
-	} else {
-		$object = $factory->loadObject( $type, $id )
-			or die "Could not load DBObject $type, id=$id";
-	}
 
-	my $table_name = $common_name."_TABLE";
-	my $table_label = ( $ST ?
-		$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
-		       $common_name ) :
-		$common_name
-	);
+sub _getObjectDetail {
+	my ($self, $object) = @_;
+	my $q = $self->CGI();
+
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
+
+	my $table_label = 
+		( $ST ?
+			$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id()},
+				   $q->font( { class => 'ome_header_label' }, $common_name) ):
+			$q->font( { class => 'ome_header_label' }, $common_name)
+		).
+		$q->font( { class => 'ome_header_label' }, ": ").
+		$q->font( { class => 'ome_header_title' }, OME::Web::RenderData->getObjectLabel($object) );
 
 	my $html;
 
@@ -139,10 +148,61 @@ sub getPageBody {
 			@fieldNames
 		)
 	);
+	
+	return $html;
+}
 
-#	my $hasMany = $package_name->getHasManyReferences();
-#print STDERR "$package_name has many:\n\t".join(', ', keys %$hasMany)."\n";
-	return ('HTML', $html);
+
+sub _getRelatedTables {
+	my ($self, $object) = @_;
+	my $q = $self->CGI();
+	
+	my $html;
+
+	# print tables for has many relations
+	my $manyRefs = $object->getPublishedManyRefs(); 
+	my $tableMaker = OME::Web::NewTable->new( CGI => $q );
+	foreach my $accessor (keys %$manyRefs ) {
+		my $type = $manyRefs->{ $accessor };
+		my @objects = $object->$accessor();
+		(my $table_name = $accessor ) =~ s/_/ /g;
+		$table_name = uc( $table_name );
+		$html .= $q->p( $tableMaker->getTable( 
+			{
+				title            => $table_name, 
+				table_width      => '100%',
+				embedded_in_form => $self->{ form_name },
+				table_length     => 5
+			}, 
+			$type, 
+			\@objects
+		) );
+	}
+
+	return $html;
+}
+
+sub _loadObject {
+	my $self = shift;
+	return $self->{__object} if $self->{__object};
+	
+	my $q    = $self->CGI();
+	my $factory = $self->Session()->Factory();
+	
+	my $type = $q->param( 'Type' )
+		or die "Type not specified";
+	my $id   = $q->param( 'ID' )
+		or die "ID not specified";
+
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+	if( $ST ) {
+		$self->{__object} = $factory->loadAttribute( $ST, $id )
+			or die "Could not load Attribute $common_name, id=$id";
+	} else {
+		$self->{__object} = $factory->loadObject( $type, $id )
+			or die "Could not load DBObject $type, id=$id";
+	}
+	return $self->{__object};
 }
 
 
