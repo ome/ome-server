@@ -1,4 +1,4 @@
-# OME/AnalysisChainExecution.pm
+# OME/AnalysisChainExecution/NodeExecution.pm
 
 ##-------------------------------------------------------------------------------
 #
@@ -35,11 +35,10 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::AnalysisChainExecution;
-
 =head1 NAME
 
-OME::AnalysisChainExecution - execution of an module_execution chain
+OME::AnalysisChainExecution::NodeExecution - execution of one node in an
+analysis chain
 
 =head1 DESCRIPTION
 
@@ -54,6 +53,8 @@ execution are reused.
 
 =cut
 
+package OME::AnalysisChainExecution::NodeExecution;
+
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -62,88 +63,66 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('analysis_chain_executions');
-__PACKAGE__->setSequence('analysis_chain_execution_seq');
-__PACKAGE__->addPrimaryKey('analysis_chain_execution_id');
-__PACKAGE__->addColumn(analysis_chain_id => 'analysis_chain_id');
-__PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
-                       'OME::AnalysisChain',
+__PACKAGE__->setDefaultTable('analysis_node_executions');
+__PACKAGE__->setSequence('analysis_node_execution_seq');
+__PACKAGE__->addPrimaryKey('analysis_node_execution_id');
+__PACKAGE__->addColumn(analysis_chain_execution_id =>
+                       'analysis_chain_execution_id');
+__PACKAGE__->addColumn(analysis_chain_execution => 'analysis_chain_execution_id',
+                       'OME::AnalysisChainExecution',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chain_executions',
+                       });
+__PACKAGE__->addColumn(analysis_chain_node_id => 'analysis_chain_node_id');
+__PACKAGE__->addColumn(analysis_chain_node => 'analysis_chain_node_id',
+                       'OME::AnalysisChain::Node',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'analysis_chain_nodes',
+                       });
+__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
+__PACKAGE__->addColumn(module_execution => 'module_execution_id',
+                       'OME::ModuleExecution',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
                         Indexed => 1,
-                        ForeignKey => 'analysis_chains',
+                        ForeignKey => 'module_executions',
                        });
-__PACKAGE__->addColumn(dataset_id => 'dataset_id');
-__PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
-                       {
-                        SQLType => 'integer',
-                        NotNull => 1,
-                        Indexed => 1,
-                        ForeignKey => 'datasets',
-                       });
-__PACKAGE__->addColumn('timestamp' => 'timestamp',
-                       {
-                        SQLType => 'timestamp',
-                        Default => 'now',
-                       });
-__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
-                       {
-                        SQLType => 'integer',
-                        NotNull => 1,
-                        Indexed => 1,
-                        ForeignKey => 'experimenters',
-                       });
-__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
-__PACKAGE__->hasMany('node_executions',
-                     'OME::AnalysisChainExecution::NodeExecution' =>
-                     'analysis_chain_execution');
 
-=head1 METHODS (C<AnalysisChainExecution>)
+=head1 METHODS (C<AnalysisChainExecution::NodeExecution>)
 
-The following methods are available to C<AnalysisChainExecution> in
-addition to those defined by L<OME::DBObject>.
+The following methods are available to
+C<AnalysisChainExecution::NodeExecution> in addition to those defined by
+L<OME::DBObject>.
 
-=head2 analysis_chain
+=head2 analysis_chain_execution
 
-	my $analysis_chain = $execution->analysis_chain();
-	$execution->analysis_chain($analysis_chain);
+	my $analysis_chain_execution = $node_execution->analysis_chain_execution();
+	$node_execution->analysis_chain_execution($analysis_chain_execution);
 
-Returns or sets the analysis chain which was executed.
+Returns or sets the chain execution that this node execution belongs
+to.
 
-=head2 dataset
+=head2 analysis_chain_node
 
-	my $dataset = $execution->dataset();
-	$execution->dataset($dataset);
+	my $analysis_chain_node = $node_execution->analysis_chain_node();
+	$node_execution->analysis_chain_node($analysis_chain_node);
 
-Returns or sets the dataset that the chain was executed against.
+Returns or sets the analysis chain node that was executed.
 
-=head2 experimenter
+=head2 module_execution
 
-	my $experimenter = $execution->experimenter();
-	$execution->experimenter($experimenter);
+	my $module_execution = $node_execution->module_execution();
+	$node_execution->module_execution($module_execution);
 
-Returns or sets the experimenter who performed the execution of the
-chain.
-
-=head2 timestamp
-
-	my $timestamp = $execution->timestamp();
-	$execution->timestamp($timestamp);
-
-Returns or sets when the execution occurred.
-
-=head2 node_executions
-
-	my @nodes = $execution->node_executions();
-	my $node_iterator = $execution->node_executions();
-
-Returns or iterates, depending on context, a list of all of the
-C<AnalysisChainExecution::NodeExecutions> associated with this chain
+Returns or sets the module execution that satisfied this node
 execution.
 
 =cut
-
 
 
 1;
