@@ -62,6 +62,8 @@ my $INSTALL_HOME;
 # Our basedirs and user which we grab from the environment
 my ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 
+# Default import formats
+my $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -226,20 +228,15 @@ sub load_schema {
     my $retval;
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
-    my $bootstrap_factory = OME::Factory->new();
-    my $dbh = $bootstrap_factory->obtainDBH();
+    my $factory = OME::Factory->new();
+    my $dbh = $factory->obtainDBH();
 
     print "Loading the database schema\n";
 
     foreach my $class (@core_classes) {
 	my ($require_class, $instantiate_class) = @$class;
-	my $message;
 
-	# Gen our message for each class
-	$message .= "  \\__ ";
-	$message .= $require_class || "";
-	$message .= " $instantiate_class";
-	print "$message\n";
+	print "  \\__ ", $require_class || "", " $instantiate_class ";
 	
 	$require_class->require() if defined $require_class;
 
@@ -258,7 +255,46 @@ sub load_schema {
 	    and print $logfile "SUCCESS LOADING CLASS \"$instantiate_class\"\n";
     }
 
-    $bootstrap_factory->commitTransaction();
+    $factory->commitTransaction();
+
+    return 1;
+}
+
+sub create_experimenter {
+    print_header "Initial user creation";
+    
+    my $factory = OME::Factory->new();
+    my $dbh = $factory->obtainDBH();
+
+    my $first_name = question ("First name: ");
+    my $last_name = question ("Last name: ");
+    my $username = confirm_default ("Username: ", substr ($first_name, 0, 1).$last_name);  
+    my $e_mail = question ("E-mail address: ");
+    my $data_dir = question ("Default data directory: ");
+    
+    if (not -d $data_dir) {
+	my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
+
+	if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
+	    mkdir ($data_dir, 0755) or croak "Unable to create directory \"$data_dir\". $!";
+	}
+    }
+
+    my ($password, $hashed_password) = get_password ("Password: ", 6);
+
+    my $experimenter = $factory->
+	newObject('OME::SemanticType::BootstrapExperimenter',
+            {
+             OMEName       => $first_name." ".$last_name,
+             FirstName     => $first_name,
+             LastName      => $last_name,
+             Email         => $e_mail,
+             Password      => $hashed_password,
+             DataDirectory => $data_dir,
+            });
+
+    $factory->commitTransaction();
+    $factory->releaseDBH($dbh);
 
     return 1;
 }
@@ -313,8 +349,8 @@ sub execute {
 
     # Create our database
     create_database ("DEBIAN") or croak "Unable to create database!";
-    load_schema ($LOGFILE) or croak "Unable to load the schema, see CoreDatabaseTablesTask.log for detauls.";
-    
+    load_schema ($LOGFILE) or croak "Unable to load the schema, see CoreDatabaseTablesTask.log for details.";
+    create_experimenter () or croak "Unable to create an initial experimenter.";
 
     # Back to UID 0
     $EUID = 0;
