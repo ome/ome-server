@@ -253,13 +253,13 @@ sub processDOM {
           semanticTypes   => $semanticTypes,
           semanticColumns => $semanticColumns);
 
-    my $importedObjects = $hierarchyImporter->processDOM($root);
+    my $hierarchyObjects = $hierarchyImporter->processDOM($root);
 
     # Parse the data History
     my $historyImporter = OME::ImportExport::DataHistoryImport->
       new(session         => $self->{session},
           _parser         => $self->{_parser},
-          objects         => $importedObjects);
+          objects         => $hierarchyObjects);
 
     $historyImporter->processDOM($root);
 
@@ -272,7 +272,13 @@ sub processDOM {
 	# this far
     $self->{session}->commitTransaction();
     
-    return ($importedObjects);
+    my @importedObjects = (
+    	( $hierarchyObjects ? values %$hierarchyObjects : () ),
+    	( $moduleList       ? @$moduleList       : () ),
+    	( $chainList        ? @$chainList        : () ),
+    	( $semanticTypeList ? @$semanticTypeList : () ),
+    );
+    return \@importedObjects;
 
 }
 

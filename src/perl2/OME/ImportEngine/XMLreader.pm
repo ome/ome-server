@@ -86,9 +86,9 @@ sub importGroup {
 		NoDuplicates           => 0,
 		IgnoreAlterTableErrors => 1)
 	or return (undef);
-	logdbg "debug", ref ($self)."->importGroup: XML objects: ".scalar values %$objects;
+	logdbg "debug", ref ($self)."->importGroup: XML objects: ".scalar @$objects;
 
-	foreach $object (values %$objects) {
+	foreach $object (@$objects) {
 		if (UNIVERSAL::isa($object,'OME::Image')) {
 			foreach my $pixels ($object->pixels() ) {
 				OME::Tasks::PixelsManager->saveThumb( $pixels );
@@ -103,7 +103,7 @@ sub importGroup {
 	
 	doSliceCallback($callback);
 	
-	return (\@images);
+	return \@images;
 }
 
 sub getSHA1 {
