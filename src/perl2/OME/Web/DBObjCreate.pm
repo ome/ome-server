@@ -476,7 +476,7 @@ sub getStuffToPopulateHasOneRef {
 	# Display a different message if something is already selected, 
 	if( $obj ) {
 		return
-			$q->hidden( -name => $accessor_to_type ).
+			$q->hidden( -name => $accessor_to_type, -default => $obj->id ).
 			$self->Renderer()->render( $obj, 'ref' ).
 			"( ".
 			$q->a( { 
