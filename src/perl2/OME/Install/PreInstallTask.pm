@@ -60,7 +60,7 @@ my @modules = (
 );
 
 # Log filehandle for the task (right now we're using /dev/null)
-my $LOGFILE = "";
+my $LOGFILE;
 
 #*********
 #********* LOCAL SUBROUTINES
