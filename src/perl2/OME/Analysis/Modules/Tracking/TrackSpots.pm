@@ -51,9 +51,16 @@ sub precalculateImage {
     my ($self) = @_;
 
     my $dims = $self->getImageInputs("Dimensions")->[0];
-    $self->{_pixelX} = $dims->PixelSizeX() || 1;
-    $self->{_pixelY} = $dims->PixelSizeY() || 1;
-    $self->{_pixelZ} = $dims->PixelSizeZ() || 1;
+    if (defined $dims) {
+        $self->{_pixelX} = $dims->PixelSizeX() || 1;
+        $self->{_pixelY} = $dims->PixelSizeY() || 1;
+        $self->{_pixelZ} = $dims->PixelSizeZ() || 1;
+    } else {
+        $self->{_pixelX} = 1;
+        $self->{_pixelY} = 1;
+        $self->{_pixelZ} = 1;
+    }
+
     $self->{_spotCount} = 0;
 }
 
@@ -83,7 +90,7 @@ sub postcalculateImage {
 
     my @timepoints = sort {$a <=> $b} keys %{$self->{_timepointSpots}};
     my $dims = $self->getImageInputs("Dimensions")->[0];
-    my $timeSize = $dims->PixelSizeT() || 1;
+    my $timeSize = (defined $dims)? $dims->PixelSizeT() || 1: 1;
 
     my %trajectories;
 
