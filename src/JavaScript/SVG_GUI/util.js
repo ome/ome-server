@@ -32,6 +32,7 @@
 var Util = new Object();
 
 Util.svgns = "http://www.w3.org/2000/svg";
+Util.xlinkns  = "http://www.w3.org/1999/xlink";
 
 Util.createElementSVG = function( name, attr_list ) {
 	var new_element = svgDocument.createElementNS(Util.svgns, name);
@@ -47,10 +48,33 @@ Util.createTextSVG = function( text_data, attr_list ) {
 	return text_element;
 };
 
+Util.createTextLinkSVG = function( dat ) { 
+	var link_node = Util.createElementSVG( 'a', dat[ 'attrs' ] );
+	link_node.setAttributeNS( Util.xlinkns, 'href',  dat[ 'href' ] );
+	var text_node = Util.createTextSVG(  dat[ 'text' ],  dat[ 'text_attrs' ] ); 
+	link_node.appendChild( text_node );
+	return link_node;
+};
+
 Util.isArray = function(Array_IN) {
 	return(typeof(Array_IN) == 'object' && Array_IN.constructor == Array);
 };
 
 Util.isFunction = function(Function_IN) {
 	return(typeof(Function_IN) == 'function' );
+};
+
+Util.err = function( msg ) {
+	var tmpImg;
+	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg.setAttribute("width",0);
+	tmpImg.setAttribute("height",0);
+	// The purpose of unique is to bypass any browser image caching. really, it should be a timestamp
+	var date = new Date();
+	var unique   = date.getSeconds() + '' + date.getUTCMilliseconds();
+	var imageURL = "/perl2/SVGcatchMsg.pl?msg=" + msg + "&unique=" + unique;
+	tmpImg.setAttributeNS(xlinkns, "href",imageURL);
+	var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
+	toolboxLayer.appendChild(tmpImg);
+	toolboxLayer.removeChild(tmpImg);
 };
