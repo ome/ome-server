@@ -83,7 +83,7 @@
 #define BinNS "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 #define SIZEOF_FILE_OUT_BUF 1048576
 const char *pixelTypes[] = { "bit", "int8", "int16", "int32", "Uint8", "Uint16", "Uint32", "float", "double", "complex", "double-complex", NULL };
-const int bitsPerPixel[] = {  1,      8,     16,      32,      8,       16,       32,       32,      64,       64,        128            , NULL };
+const int bitsPerPixel[] = {  1,      8,     16,      32,      8,       16,       32,       32,      64,       64,        128            , 0 };
 
 // This is a stack to store information about an element. It keeps track of
 // whether an element has content or is empty AND
@@ -228,7 +228,7 @@ int parse_xml_file(const char *filename) {
 	};
 
 	if (xmlSAXUserParseFile(&extractBinDataSAXParser, &my_state, filename) < 0) {
-		return NULL;
+		return -1;
 	} else
 		return my_state.nOutputFiles;
 }
