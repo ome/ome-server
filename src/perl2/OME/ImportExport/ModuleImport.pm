@@ -167,8 +167,6 @@ foreach my $module (@modules) {
 				$sth->{RaiseError} = 0;
 				my $tableExists = $sth->execute();
 				if( not defined $tableExists ) { 
-					# rollback to escape error caused by selecting a non-existent table
-					$dbhQ->rollback();
 					my $sth = $dbh->prepare( "
 						CREATE TABLE ".$table->getAttribute( 'TableName' )." (
 							ATTRIBUTE_ID	OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY
@@ -434,8 +432,6 @@ sub makeDataTypeColumn {
 		$sth->{RaiseError} = 0;
 		my $err = $sth->execute();
 		if( not defined $err ) { 
-			# rollback to escape error caused by selecting a non-existent column
-			$dbhQ->rollback();
 			my $sth = $dbh->prepare( 
 				"ALTER TABLE ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name().
 				"	ADD ".$DataTypeColumn->column_name()." ".$dataTypeConversion{$dbLocation->getAttribute( 'SQL_DataType' )}
