@@ -1135,7 +1135,7 @@ char isBigEndian=1,bp;
 		return (0);
 	}
 
-	myPixels->IO_buf = myFile->file_buf;
+	myPixels->IO_buf = myFile->file_buf+file_offset;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
 		sprintf (myPixels->error_str,"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",

@@ -460,7 +460,7 @@ char **cgivars=param;
 			}
 
 			HTTP_ResultType ("application/octet-stream");
-			fwrite (theFile->file_buf,length,1,stdout);
+			fwrite (theFile->file_buf+offset,length,1,stdout);
 			freeFileRep (theFile);
 
 			break;

@@ -137,7 +137,7 @@ struct stat fStat;
         return (NULL);
     }
 
-    myFile->size_buf = length;
+    myFile->size_buf = myFile->size_rep;
 
 	if ( (myFile->file_buf = (char *)mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
 		fprintf (stderr,"Could not mmap FileID=%llu",myFile->ID);
