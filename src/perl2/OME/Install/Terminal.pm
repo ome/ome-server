@@ -55,7 +55,7 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm confirm_path print_header question confirm_default);
+our @EXPORT = qw(confirm confirm_path print_header question confirm_default y_or_n);
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -114,7 +114,6 @@ sub confirm_default {
 
 }
 
-
 sub question {
     my $text = shift;
 
@@ -129,4 +128,16 @@ sub question {
 
 	if (lc($y_or_n) eq "y") { return $input };
     }
+}
+
+sub y_or_n {
+    my $text = shift;
+
+    print "$text ", BOLD, "[y/n]", RESET, ": ";
+    my $y_or_n = ReadLine 0;
+    chomp $y_or_n;
+
+    if (lc($y_or_n) eq "y") { return 1 };
+
+    return 0;
 }
