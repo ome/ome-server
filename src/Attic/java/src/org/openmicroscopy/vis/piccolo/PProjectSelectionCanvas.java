@@ -56,7 +56,6 @@ import java.awt.Paint;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.HashSet;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -232,20 +231,14 @@ public class PProjectSelectionCanvas extends PCanvas
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
-				//System.err.println("project rollover dataset. checking"+obj);
-				//if (rolled != null)
-				//	System.err.println(" rolled over dataset .."+rolled.getName());
 				pLabel = (ProjectLabel) obj;
-				//System.err.println("plabel is" +pLabel);
 				CProject p = pLabel.getProject();
 				if (rolled != null && rolled.hasProject(p)) 
 					pLabel.setRollover(true);
 				else if (p.sharesDatasetsWith(state.getSelectedProject()))
 					pLabel.setActive();
-				else if (state.getSelectedProject() == null) 
+				else  
 					pLabel.setNormal();
-				else 
-					pLabel.setUnselected();
 			}
 		}
 		layoutLabels();
@@ -264,15 +257,12 @@ public class PProjectSelectionCanvas extends PCanvas
 				CProject p = pLabel.getProject();
 				if (pLabel.getProject() == proj)
 					pLabel.setRollover(true);
-				else if (p.sharesDatasetsWith(state.getSelectedProject()))
-					pLabel.setActive();
-				else if (state.getSelectedDataset() != null &&
+				else if (p.sharesDatasetsWith(state.getSelectedProject()) ||
 					p.hasDataset(state.getSelectedDataset()))
 					pLabel.setActive();
-				else if (state.getSelectedProject() == null)
+				else
 					pLabel.setNormal();
-				else 
-					pLabel.setUnselected();
+
 			}
 		}
 		layoutLabels();
@@ -292,22 +282,14 @@ public class PProjectSelectionCanvas extends PCanvas
 				proj = pLabel.getProject();
 				if (proj== selected)
 					pLabel.setSelected();
-				else if (state.getSelectedDataset() != null 
-					&& state.getSelectedDataset().hasProject(proj))
+				else if (proj.hasDataset(state.getSelectedDataset()))
 					pLabel.setActive();
 				else if (selected == null)
 					pLabel.setNormal();
-				else {// if was a selected and i'm not selected
-					// then, i want to see if they share any datasets.
-					// if they do, set Active. else set unselected
-					HashSet selDatasets = selected.getDatasetSet();
-					HashSet projDatasets = proj.getDatasetSet();
-					selDatasets.retainAll(projDatasets);
-					if (selDatasets.size() > 0)
-						pLabel.setActive();
-					else
-						pLabel.setUnselected();
-				}
+				else if (selected.sharesDatasetsWith(proj))
+					pLabel.setActive();
+				else
+					pLabel.setNormal();
 			}
 		}
 		layoutLabels();
@@ -317,12 +299,9 @@ public class PProjectSelectionCanvas extends PCanvas
 
 class ProjectLabel extends PText  {
 	
-	public static final double NORMAL_SCALE=1;
-	public static final double ACTIVE_SCALE=1;	
+	public static final double NORMAL_SCALE=1;	
     public static final double ROLLOVER_SCALE=1.25;
 	public static final double SELECTED_SCALE=1.5;
-	public static final double SCALE_MULTIPLIER=2;
-	public static final double UNSELECTED_SCALE=1;
 	public CProject project;
 	
 	private double previousScale =NORMAL_SCALE;
@@ -355,14 +334,6 @@ class ProjectLabel extends PText  {
 		return project;
 	}
 	
-	public void setUnselected() {
-		if (project == SelectionState.getState().getSelectedProject())
-			return;
-		//System.err.println("setting... "+project.getName()+" to be unselected");
-		setScale(UNSELECTED_SCALE);
-		setPaint(PConstants.DEFAULT_COLOR);	
-	}
-	
 	
 	public void setNormal() {
 		if (project == SelectionState.getState().getSelectedProject())
@@ -374,7 +345,7 @@ class ProjectLabel extends PText  {
 	public void setActive() {
 		if (project == SelectionState.getState().getSelectedProject())
 					return;
-		setScale(ACTIVE_SCALE);
+		setScale(NORMAL_SCALE);
 		setPaint(PConstants.PROJECT_ACTIVE_COLOR);
 	}
 	
