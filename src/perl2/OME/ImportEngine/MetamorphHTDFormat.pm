@@ -516,6 +516,22 @@ sub importGroup {
 
         $pix->convertPlaneFromTIFF($file,0,$theC,0);
 
+        my $image_mex = OME::Tasks::ImportManager->
+          getImageImportMEX($image);
+        my $logical = $factory->
+          newAttribute('LogicalChannel',$image,$image_mex,
+                       {
+                        Fluor => $wavelength->[1],
+                        PhotometricInterpretation => 'monochrome',
+                       });
+        my $physical = $factory->
+          newAttribute('PixelChannelComponent',$image,$image_mex,
+                       {
+                        Pixels         => $pixels,
+                        Index          => $theC,
+                        LogicalChannel => $logical,
+                       });
+
 	doSliceCallback($callback);
 
     }
