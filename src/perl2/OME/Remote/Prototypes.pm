@@ -274,11 +274,12 @@ our %prototypes;
 our $debug = 0;
 
 # If this is set to 1, then addPrototype will verify that each Perl
-# method exists.  (This will fail in the case of publishing an
-# ancestor's method, e.g., OME::DBObject->id, and in the case of a
-# class being defined in another class's file, e.g.,
-# OME::AttributeType::Superclass, defined in OME/AttributeType.pm)
+# method exists, and that any types mentioned in the prototypes exist.
 our $test = 0;
+
+# Just to shut up some of the tests that aren't actually wrong
+require OME::AttributeType;
+require OME::Factory;
 
 addPrototype("OME::DBObject","id",['$'],['$']);
 addPrototype("OME::DBObject","writeObject",[],[]);
@@ -287,6 +288,8 @@ addPrototype("OME::DBObject","Session",[],['OME::Session']);
 addPrototype("OME::AttributeType::Superclass","id",['$'],['$']);
 addPrototype("OME::AttributeType::Superclass","writeObject",[],[]);
 addPrototype("OME::AttributeType::Superclass","Session",[],['OME::Session']);
+addPrototype("OME::AttributeType::Superclass","attribute_type",
+             [],["OME::AttributeType"]);
 
 addPrototype("OME::Session","User",[],['OME::AttributeType::Superclass']);
 addPrototype("OME::Session","Factory",[],['OME::Factory']);
@@ -310,8 +313,10 @@ addPrototype("OME::Factory::Iterator","next",[],['OME::DBObject']);
 
 addPrototype("OME::Project","name",['$'],['$']);
 addPrototype("OME::Project","description",['$'],['$']);
-addPrototype("OME::Project","owner_id",['$'],['$']);
-#addPrototype("OME::Project","group_id",['$'],['$']);
+addPrototype("OME::Project","owner",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+#addPrototype("OME::Project","group",
+#             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::Project","dataset_links",[],['OME::Project::DatasetMap','*']);
 addPrototype("OME::Project","dataset_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_dataset_links");
@@ -324,8 +329,10 @@ addPrototype("OME::Project::DatasetMap","dataset",
 addPrototype("OME::Dataset","name",['$'],['$']);
 addPrototype("OME::Dataset","description",['$'],['$']);
 addPrototype("OME::Dataset","locked",['$'],['$']);
-addPrototype("OME::Dataset","owner_id",['$'],['$']);
-#addPrototype("OME::Dataset","group_id",['$'],['$']);
+addPrototype("OME::Dataset","owner",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+#addPrototype("OME::Dataset","group",
+#             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::Dataset","project_links",[],['OME::Project::DatasetMap','*']);
 addPrototype("OME::Dataset","project_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_project_links");
@@ -338,8 +345,10 @@ addPrototype("OME::Image","description",['$'],['$']);
 addPrototype("OME::Image","image_guid",['$'],['$']);
 addPrototype("OME::Image","created",['$'],['$']);
 addPrototype("OME::Image","inserted",['$'],['$']);
-addPrototype("OME::Image","experimenter_id",['$'],['$']);
-addPrototype("OME::Image","group_id",['$'],['$']);
+addPrototype("OME::Image","experimenter",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
+addPrototype("OME::Image","group",
+             ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::Image","dataset_links",[],['OME::Image::DatasetMap','*']);
 addPrototype("OME::Image","dataset_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_dataset_links");
@@ -360,6 +369,17 @@ addPrototype("OME::Feature","children",[],['OME::Feature','*']);
 addPrototype("OME::Feature","children",[],['OME::Factory::Iterator'],
              publishedName => "iterate_children");
 
+addPrototype("OME::LookupTable","name",['$'],['$']);
+addPrototype("OME::LookupTable","description",['$'],['$']);
+addPrototype("OME::LookupTable","entries",[],['OME::LookupTable::Entry','*']);
+addPrototype("OME::LookupTable","entries",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_entries");
+
+addPrototype("OME::LookupTable::Entry","value",['$'],['$']);
+addPrototype("OME::LookupTable::Entry","label",['$'],['$']);
+addPrototype("OME::LookupTable::Entry","lookup_table",
+             ['OME::LookupTable'],['OME::LookupTable']);
+
 addPrototype("OME::DataTable","granularity",['$'],['$']);
 addPrototype("OME::DataTable","table_name",['$'],['$']);
 addPrototype("OME::DataTable","description",['$'],['$']);
@@ -370,7 +390,8 @@ addPrototype("OME::DataTable","data_columns",[],['OME::Factory::Iterator'],
 addPrototype("OME::DataTable::Column","column_name",['$'],['$']);
 addPrototype("OME::DataTable::Column","description",['$'],['$']);
 addPrototype("OME::DataTable::Column","sql_type",['$'],['$']);
-addPrototype("OME::DataTable::Column","reference_type",['$'],['$']);
+addPrototype("OME::DataTable::Column","reference_type",
+             ['OME::AttributeType'],['OME::AttributeType']);
 addPrototype("OME::DataTable::Column","data_table",
              ['OME::DataTable'],['OME::DataTable']);
 
@@ -446,6 +467,82 @@ addPrototype("OME::Analysis::ActualInput","input_analysis",
 addPrototype("OME::Analysis::ActualInput","formal_input",
              ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
 
+addPrototype("OME::AnalysisView","owner",['$'],['$']);
+addPrototype("OME::AnalysisView","name",['$'],['$']);
+addPrototype("OME::AnalysisView","locked",['$'],['$']);
+addPrototype("OME::AnalysisView","nodes",[],['OME::AnalysisView::Node','*']);
+addPrototype("OME::AnalysisView","nodes",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_nodes");
+addPrototype("OME::AnalysisView","links",[],['OME::AnalysisView::Link','*']);
+addPrototype("OME::AnalysisView","links",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_links");
+addPrototype("OME::AnalysisView","paths",[],['OME::AnalysisPath','*']);
+addPrototype("OME::AnalysisView","paths",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_paths");
+
+addPrototype("OME::AnalysisView::Node","analysis_view",
+             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisView::Node","program",
+             ['OME::Program'],['OME::Program']);
+addPrototype("OME::AnalysisView::Node","iterator_tag",['$'],['$']);
+addPrototype("OME::AnalysisView::Node","new_feature_tag",['$'],['$']);
+addPrototype("OME::AnalysisView::Node","input_links",
+             [],['OME::AnalysisView::Link','*']);
+addPrototype("OME::AnalysisView::Node","input_links",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_input_links");
+addPrototype("OME::AnalysisView::Node","output_links",
+             [],['OME::AnalysisView::Link','*']);
+addPrototype("OME::AnalysisView::Node","output_links",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_output_links");
+
+addPrototype("OME::AnalysisView::Link","analysis_view",
+             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisView::Link","from_node",
+             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
+addPrototype("OME::AnalysisView::Link","from_output",
+             ['OME::Program::FormalOutput'],['OME::Program::FormalOutput']);
+addPrototype("OME::AnalysisView::Link","to_node",
+             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
+addPrototype("OME::AnalysisView::Link","to_input",
+             ['OME::Program::FormalInput'],['OME::Program::FormalInput']);
+
+addPrototype("OME::AnalysisPath","path_length",['$'],['$']);
+addPrototype("OME::AnalysisPath","analysis_view",
+             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisPath","path_nodes",
+             [],['OME::AnalysisPath::Map','*']);
+addPrototype("OME::AnalysisPath","path_nodes",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_path_nodes");
+
+addPrototype("OME::AnalysisPath::Map","path_order",['$'],['$']);
+addPrototype("OME::AnalysisPath::Map","path",
+             ['OME::AnalysisPath'],['OME::AnalysisPath']);
+addPrototype("OME::AnalysisPath::Map","analysis_view_node",
+             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
+
+addPrototype("OME::AnalysisExecution","timestamp",['$'],['$']);
+addPrototype("OME::AnalysisExecution","analysis_view",
+             ['OME::AnalysisView'],['OME::AnalysisView']);
+addPrototype("OME::AnalysisExecution","dataset",
+             ['OME::Dataset'],['OME::Dataset']);
+addPrototype("OME::AnalysisExecution","experimenter_id",['$'],['$']);
+addPrototype("OME::AnalysisExecution","node_executions",
+             [],['OME::AnalysisExecution::NodeExecution','*']);
+addPrototype("OME::AnalysisExecution","node_executions",
+             [],['OME::Factory::Iterator'],
+             publishedName => "iterate_node_executions");
+
+addPrototype("OME::AnalysisExecution::NodeExecution","analysis_execution",
+             ['OME::AnalysisExecution'],['OME::AnalysisExecution']);
+addPrototype("OME::AnalysisExecution::NodeExecution","analysis_view_node",
+             ['OME::AnalysisView::Node'],['OME::AnalysisView::Node']);
+addPrototype("OME::AnalysisExecution::NodeExecution","analysis",
+             ['OME::Analysis'],['OME::Analysis']);
+
+
 sub addPrototype {
     my ($class,$method,$inputPrototype,$outputPrototype,%options) = @_;
 
@@ -465,12 +562,8 @@ sub addPrototype {
           unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $class";
 
-        eval {
-            no strict 'refs';
-            my $fullname = "$class\::$method";
-            carp "Method ${class}->${method} does not exist"
-              unless defined &$fullname;
-        };
+        carp "Method ${class}->${method} does not exist"
+          unless UNIVERSAL::can($class,$method);
     }
 
     my $publishedName =
@@ -491,7 +584,18 @@ sub addPrototype {
         next if $_ eq '@';
         next if $_ eq '%';
         next if $_ eq '*';
-        next if /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+        if (/^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/) {
+            if ($test) {
+                eval "require $_";
+                eval {
+                    no strict 'refs';
+                    my $fullname = "$_\::VERSION";
+                    carp "Class $_ does not exist"
+                      unless defined $$fullname;
+                };
+            }
+            next;
+        }
         die "Illegal prototype entry: $_";
     }
 
