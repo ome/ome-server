@@ -118,6 +118,9 @@ public class AnnotationManager
      */
     public ModuleExecution annotateAttributes(List attributes)
     {
+        if (attributes == null)
+            throw new IllegalArgumentException("Attributes list is null");
+
         String granularity = null;
         Dataset dataset = null;
         Image image = null;
