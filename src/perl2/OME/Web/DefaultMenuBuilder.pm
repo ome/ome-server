@@ -69,15 +69,15 @@ my @MENU = (
 		text => undef,
 	},
 	{
+		web_class => 'OME::Web::MakeNewDataset',
+		type => 'link',
+		text => undef,
+	},
+	{
 		web_class => 'OME::Web::ImportFiles',
 		type => 'link',
 		text => undef,
 	},
-	#{
-	#	web_class => 'N/A',
-	#	type => 'link',
-	#	text => 'New Dataset',
-	#},
 	# ** BROWSE **
 	{
 		web_class => undef,

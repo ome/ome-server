@@ -197,7 +197,9 @@ sub getTable {
 
 			# Remove dummy import datasets
 			for (my $c = 0; $c < scalar(@dataset_relations); $c++) {
-				if ($dataset_relations[$c]->name() eq 'Dummy import dataset') {
+				if ($dataset_relations[$c]->name() eq 'Dummy import dataset' or
+				    $dataset_relations[$c]->name() eq 'ImportSet'
+				) {
 					splice (@dataset_relations, $c, 1);
 				}
 			}

@@ -187,7 +187,7 @@ sub getTable {
 			$relations = $self->__getRelationTD($dataset, @project_relations);
 		}
 		
-		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
+		unless ($name eq 'Dummy import dataset' or $name eq 'ImportSet') {
 			$table_data .= $q->Tr({-class => 'ome_td'},
 				$checkbox || '',
 				$q->td({-align => 'center'}, [
