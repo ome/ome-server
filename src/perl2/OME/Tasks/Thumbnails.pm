@@ -126,7 +126,8 @@ sub generateOMEimage{
   $CBW=${$displayOptions}{CBW};
   $RGBon=${$displayOptions}{RGBon};
 	#}
-	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
+	$self->initialize($theT, $path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,
+                    $bpp,$isRGB,$CBW,$RGBon);
 	my $jpg_image=$self->writeOMEimage($theZ,$theT);
 	return $jpg_image;
 }
@@ -166,7 +167,7 @@ sub generateOMEimages{
 		$RGBon=${$displayOptions}{RGBon};
 	}
 
-	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
+	$self->initialize(0, $path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
 	for (my $theZ=0;$theZ<$sizeZ;$theZ++){
 		for(my $theT=0;$theT<$self->{T};$theT++){
 			#generate image
@@ -266,7 +267,7 @@ sub writeOMEimage{
 
 sub initialize{
 	my $self=shift;
-	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon)=@_;
+	my ($curT, $path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon)=@_;
 	$self->{path}=$path;
 	$self->{wavelengths}=$wavelengths;
 	$self->{stats}=$stats;
@@ -278,7 +279,7 @@ sub initialize{
 	$self->{dim}=\@dim;
 	if (defined $CBW){
   		$self->{CBW}=$CBW;
-      my $ref=$self->initCBW();
+      my $ref=$self->initCBW($curT);
 		  $self->{CBW}=$ref;
   }
 }
@@ -289,7 +290,7 @@ sub initialize{
 
 sub initCBW{
 	my $self=shift;
-	my ($theT)=@_;
+	my ($theT) = @_;
 	my @cCBW=();
 	my $ref=$self->{CBW};
 	my @CBW=@$ref;
@@ -299,9 +300,9 @@ sub initCBW{
 		return undef;
 	}
 	for (my $i=0;$i<4;$i++){
-		my $wavenum=$CBW[$i*3];
+    my ($geomean,$geosigma, $wavenum) = undef;
+		$wavenum=$CBW[$i*3];
     push(@cCBW,$wavenum);
-		my ($geomean,$geosigma);
     $geomean=${$refstats}[$wavenum][$theT]{geomean};
     $geosigma=${$refstats}[$wavenum][$theT]{geosigma};
     if ($geosigma==0){
