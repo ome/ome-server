@@ -9,8 +9,8 @@ purge_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c digest.c repository.c
 				purge.c File.h Pixels.h OMEIS_Error.h auth.h cgi.h digest.h repository.h \
 				omeis.h sha1DB.h update.c
 updateOMEIS_SOURCES = File.c Pixels.c OMEIS_Error.c auth.c cgi.c digest.c repository.c sha1DB.c \
-				 update.c File.h Pixels.h OMEIS_Error.h auth.h cgi.h digest.h repository.h \
-				 omeis.h sha1DB.h updateOMEIS.c
+				 update.c update.h File.h Pixels.h OMEIS_Error.h auth.h cgi.h digest.h \
+				 repository.h omeis.h sha1DB.h updateOMEIS.c
 AM_CPPFLAGS = -DOMEIS_ROOT=\"$(OMEIS_ROOT)\" -Izoom/include @LIBXML2_CFLAGS@
 SUBDIRS = zoom
 LDADD = @LIBXML2_LIBS@ zoom/lib/libzoom.a zoom/lib/libpic.a
