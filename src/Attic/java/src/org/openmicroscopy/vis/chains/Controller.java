@@ -330,7 +330,6 @@ public class Controller  implements LoginResponder {
 
 	public synchronized void finishInitThread() {
 		initThreads--;
-		//System.err.println("setting # of active threads to "+initThreads);
 		if (initThreads == 0) {
 			closeStatusWindow();
 			if (moduleFrame != null)
@@ -401,14 +400,14 @@ public class Controller  implements LoginResponder {
 		
 	}
 	
-	public void newViewResults() {
+	/*public void newViewResults() {
 		if (library != null) {
 			ResultFrame res = 
 				new ResultFrame(this,connection,resultFrames.size(),
 								library.getCanvas());
 			resultFrames.add(res);
 		}
-	}
+	}*/
 	
 	/**
 	 * Remove a specific chain canvas/frame
