@@ -1,0 +1,46 @@
+Some notes on update scripts.
+The installer will execute the scripts in the directory having the same
+name as the current DB version.  I.e., if the version in the code is 2.8,
+and the current version of the DB is 2.5, then the installer will execute
+scripts in the 2.5/pre directory in lexical order.
+
+Since executing the 2.5 scripts will not upgrade the DB to 2.8, the last script
+in the 2.5/pre directory should modify the variable $version to whatever that set
+of update scripts updates the DB to.  In other words, the last script in 2.5/pre
+should set the $version to '2.6'.  This will cause the installer to execute scripts
+in 2.6/pre and so on.
+N.B.:  It is required to set the version in each set of upgrade scripts.
+The $version variable is set to undef at the beginning of each set of script
+executions.
+
+The transaction is commited at the end of each version upgrade by the installer to
+prevent scripts from being re-executed in case the upgrade was interrupted.
+Be very very careful if you commit transactions within your upgrade scripts.  Make
+sure that if your upgrade script is interrupted, it will not try to re-do the things
+it did before being interrupted when executed again.
+
+Valid script extensions are .sql and .eval.  The .sql scripts contain only SQL statements,
+while the .eval scripts are evaluated by the perl interpreter.
+
+The following variables are available to all eval scripts:
+my $version; # This will be undef at the beginning of your script!
+my $session = OME::Session->bootstrapInstance();
+my $factory = $session->Factory();
+my $dbh = $factory->obtainDBH();
+my $delegate = OME::Database::Delegate->getDefaultDelegate();
+The following global variables are also available:
+our $INSTALL_HOME;
+# Our basedirs and user which we grab from the environment
+our ($OME_BASE_DIR, $OME_TMP_DIR,  $OME_USER, $OME_UID);
+# Our Apache user & Postgres admin we'll grab from the environment
+our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
+# Default import formats
+our $IMPORT_FORMATS;
+# Database version
+our $DB_VERSION;
+
+    
+The update scripts are executed before any DBObjects or STs are loaded into the DB.
+If your script relies on certain objects being loaded, your script is responsible for
+loading them itself.  Obviously, the DBObjects and STs that will be loaded are the ones
+in the current code-base, not necessarily the one present when you wrote your script.

@@ -1,10 +1,10 @@
-    my ($mac,$db_instance,$lsid_authority,$tmp_dir,$xml_dir,$bin_dir,$repository_dir,$ome_root) = $dbh->selectrow_array(q{
-    	SELECT mac_address,db_instance,lsid_authority,tmp_dir,xml_dir,bin_dir,repository_dir,ome_root
+    my ($mac,$db_instance,$lsid_authority,$tmp_dir,$xml_dir,$bin_dir,$ome_root) = $dbh->selectrow_array(q{
+    	SELECT mac_address,db_instance,lsid_authority,tmp_dir,xml_dir,bin_dir,ome_root
     	FROM configuration_old});
     croak "mac[$mac],db_instance[$db_instance],lsid_authority[$lsid_authority],".
-    	"tmp_dir[$tmp_dir],xml_dir[$xml_dir],bin_dir[$bin_dir],repository_dir[$repository_dir],ome_root[$ome_root]\n".
+    	"tmp_dir[$tmp_dir],xml_dir[$xml_dir],bin_dir[$bin_dir],ome_root[$ome_root]\n".
     	"Must all have values" unless
-    	($mac&&$db_instance&&$lsid_authority&&$tmp_dir&&$xml_dir&&$bin_dir&&$repository_dir&&$ome_root);
+    	($mac&&$db_instance&&$lsid_authority&&$tmp_dir&&$xml_dir&&$bin_dir&&$ome_root);
 # This class would not have been loaded yet.
 	OME::Configuration::Variable->require();
 # This shouldn't do anything if its already in the DB.
@@ -14,7 +14,6 @@
             {
              mac_address      => $mac,
              db_instance      => $db_instance,
-             db_version       => '123',
              db_version       => $DB_VERSION,
              lsid_authority   => $lsid_authority,
              tmp_dir          => $tmp_dir,
