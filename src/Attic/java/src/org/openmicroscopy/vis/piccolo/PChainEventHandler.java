@@ -47,7 +47,6 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolox.handles.PBoundsHandle;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.awt.event.KeyEvent;
@@ -212,7 +211,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedLink = null;
 		}
 		if (selectedModule != null) {
-			PBoundsHandle.removeBoundsHandlesFrom(selectedModule);
+			selectedModule.removeHandles();
 			selectedModule = null;
 		}
 		
@@ -231,7 +230,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		else if (node instanceof PModule) {
 			selectedModule = (PModule) node;
-			PBoundsHandle.addBoundsHandlesTo(selectedModule);
+			selectedModule.addHandles();
 		}
 		else if (linkState != NOT_LINKING) {
 			if (e.getClickCount() ==2)
