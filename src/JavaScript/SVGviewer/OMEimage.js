@@ -99,9 +99,7 @@ OMEimage.prototype.realize = function(SVGparentNode) {
 *****/
 OMEimage.prototype.saveState = function() {
 	var tmpImg;
-	tmpImg = svgDocument.createElementNS(svgns,"image");
-	tmpImg.setAttribute("width",0);
-	tmpImg.setAttribute("height",0);
+
 	// The purpose of unique is to bypass any browser image caching.
 	var date = new Date();
 	var unique   = date.getSeconds() + '' + date.getUTCMilliseconds();
@@ -109,13 +107,20 @@ OMEimage.prototype.saveState = function() {
 		'&theZ=' + this.theZ() + '&theT=' + this.theT() + "&RGBon=" + this.RGBon.join() +
 		'&CBW=' + this.getCBW().join() + "&isRGB=" + ( this.colorDisplay() ? 1 : 0 ) + "&Unique=" + unique + 
 		'&PixelsID=' + this.pixelsID;
-	tmpImg.setAttributeNS(xlinkns, "href",imageURL);
 
-	this.SVGimageContainer.appendChild(tmpImg);
-	this.SVGimageContainer.removeChild(tmpImg);
+	tmpImg = svgDocument.getElementById("FakeImageForGET");
+	if( tmpImg == undefined ) {
+		tmpImg = svgDocument.createElementNS(svgns,"image");
+		tmpImg.setAttribute("id","FakeImageForGET");
+		tmpImg.setAttribute("width",1);
+		tmpImg.setAttribute("height",1);
+		tmpImg.setAttribute("display","none");
+		tmpImg.setAttributeNS(xlinkns, "href",imageURL);
+		this.SVGimageContainer.appendChild(tmpImg);
+	} else {
+		tmpImg.setAttributeNS(xlinkns, "href",imageURL);
+	}
 	
-	this.saveStateThumb();
-
 	return 1;
 };
 
@@ -138,22 +143,6 @@ OMEimage.prototype.getCBW = function() {
 	);
 	return CBW;
 }
-
-/*****
-	saveStateThumb()
-		calls a CGI to save current view settings to the thumbnail
-*****/
-OMEimage.prototype.saveStateThumb = function() {
-	var tmpImg;
-	tmpImg = svgDocument.createElementNS(svgns,"image");
-	tmpImg.setAttribute("width",0);
-	tmpImg.setAttribute("height",0);
-	var imageURL = this.getCompositeURL( theZ, theT ) + '&SetThumb=1';
-	tmpImg.setAttributeNS(xlinkns, "href",imageURL);
-
-	this.SVGimageContainer.appendChild(tmpImg);
-	this.SVGimageContainer.removeChild(tmpImg);
-};
 
 
 /*****
