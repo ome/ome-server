@@ -181,9 +181,8 @@ our $VERSION = $OME::VERSION;
 sub new{
 	my $class=shift;
 	my $self={};
-	$self->{session}=shift;
-	bless($self,$class);
-   	return $self;
+	
+	return bless($self,$class);
 }
 
 ###############################
@@ -193,20 +192,23 @@ sub new{
 
 sub add{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($datasetID,$projectID)=@_;
 	my $project;
+
 	if (defined $projectID){
 	    $project=$session->Factory()->loadObject("OME::Project",$projectID);
 	}else{
 	    $project=$session->project();
 	}
+
 	my $dataset=$self->addToProject($datasetID,$project->id());
 	$session->dataset($dataset);
-	$project->writeObject();
-	$session->writeObject();
-	return $dataset;
 
+	$session->storeObject();
+	$session->commitTransaction();
+
+	return $dataset;
 }
 
 
@@ -218,7 +220,8 @@ sub add{
 sub addToProject{
 	my $self=shift;
 	my ($datasetID,$projectID)=@_;
-	my $factory=$self->{session}->Factory();
+	my $session=$self->Session();
+	my $factory=$session->Factory();
 	my $dataset	=$factory->loadObject("OME::Dataset",$datasetID);
 	my $map = $factory->findObject("OME::Project::DatasetMap",
 		  'dataset_id' => $datasetID,
@@ -229,6 +232,8 @@ sub addToProject{
 			project_id => $projectID,
 			dataset_id => $datasetID
 			} );
+		$map->storeObject();
+		$session->commitTransaction();
 	}
 	return $dataset;
 }
@@ -242,7 +247,7 @@ sub addToProject{
 
 sub change{
  	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($description,$name,$projectID)=@_;
 	my $project;
 	if (defined $projectID){
@@ -252,7 +257,8 @@ sub change{
 	}
 	$project->name($name) if defined $name;
 	$project->description($description) if defined $description;
-	$project->writeObject();
+	$project->storeObject();
+	$project->commitTransaction();
 	return 1;
 
 
@@ -264,16 +270,17 @@ sub change{
 
 sub create{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($ref)=@_;
 	my $existingDataset=$session->dataset();
 	my $project = $session->Factory()->newObject("OME::Project", $ref);
-	$project->writeObject();
+	$project->storeObject();
 	$session->project($project);
 	if (defined $existingDataset){
 		 $session->dataset(undef);
 	}
-	$session->writeObject();
+	$session->storeObject();
+	$session->commitTransaction();
 	
 
 
@@ -287,7 +294,7 @@ sub create{
 
 sub delete{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($id)=@_;
 	my $result=undef;
 	my $rep=undef;
@@ -297,31 +304,36 @@ sub delete{
 	 
 	#my @datasets=$deleteProject->datasets();
 	my @datasets=();
-     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$deleteProject->id() );
+     	my @dMaps=$session->Factory()->findObjects(
+			"OME::Project::DatasetMap",
+			'project_id'=>$deleteProject->id()
+		);
      	foreach my $d (@dMaps){
-      	push(@datasets,$d->dataset());
-    	}
+      		push(@datasets,$d->dataset());
+    	} 
 
+	my $db=new OME::SetDB(
+		OME::DBConnection->DataSource(),
+		OME::DBConnection->DBUser(),
+		OME::DBConnection->DBPassword()
+	);
 
-
-
-
-
-
-	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  	
 	if (scalar(@datasets)>0){
 	  $result=deleteProjectDatasetMap($deleteProject,\@datasets,$db);
 	  return $result unless (defined $result);
 	}
+
 	if ($deleteProject->id()==$currentProject->id()){
 	  if (scalar(@projects)==1){
 	     $session->dataset(undef) if scalar(@datasets)>0;
 	     $session->project(undef);
-	     $session->writeObject();
+	     $session->storeObject();
+		 $session->commitTransaction();
 	  }else{
-		reorganizeSession($session,$deleteProject,\@projects);
+		$self->reorganizeSession($deleteProject,\@projects);
  	  }
 	}
+
 	$rep=deleteProject($deleteProject,$db);
 	$db->Off();
 	return $rep;
@@ -335,7 +347,7 @@ sub delete{
 
 sub exist{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($name)=@_;
 	my @list=$session->Factory()->findObjects("OME::Project",'name'=>$name);
 	return scalar(@list)==0?1:undef;
@@ -351,7 +363,7 @@ sub exist{
 
 sub listMatching{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($userID,$ref)=@_;
 	my @projects=();
 	if (defined $userID){
@@ -378,7 +390,7 @@ sub listMatching{
 
 sub load{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($projectID)=@_;
 	my $project=$session->Factory()->loadObject("OME::Project",$projectID);
 	return $project;
@@ -391,7 +403,7 @@ sub load{
 
 sub switch{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($id,$bool)=@_;
 	my $project=$session->Factory()->loadObject("OME::Project",$id);
 	$session->project($project);
@@ -411,10 +423,11 @@ sub switch{
 	   $session->dataset($datasets[0]);
 	  }
 	}
+
 	$session->storeObject();
 	$session->commitTransaction();
-	return 1;
 
+	return 1;
 }
 
 
@@ -451,7 +464,8 @@ sub deleteProjectDatasetMap{
 
 
 sub reorganizeSession{
-	my ($session,$deleteProject,$ref)=@_;
+	my ($self,$deleteProject,$ref)=@_;
+	my $session = $self->Session(); 
 	my @new=();
 	foreach (@$ref){
         push(@new,$_) unless $_->id()==$deleteProject->id();
@@ -475,6 +489,8 @@ sub reorganizeSession{
 	return 1;
 }
 
+# Macro to return the Session instance
+sub Session { return OME::Session->instance() }
 
 sub do_request{
  	my ($table,$condition,$db)=@_;
@@ -491,6 +507,7 @@ JMarie Burel (jburel@dundee.ac.uk)
 
 =head1 SEE ALSO
 
+L<OME::Project|OME::Project>,
 L<OME::DBObject|OME::DBObject>,
 L<OME::Factory|OME::Factory>,
 L<OME::SetDB|OME::SetDB>,
