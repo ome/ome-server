@@ -206,4 +206,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}	
 		displayDatasets();
 	}
+	
+	public void displayAllDatasets() {
+		datasets= new TreeSet(connection.getDatasetsForUser());
+		displayDatasets();
+	}
  }
