@@ -259,7 +259,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	public void mouseClicked(PInputEvent e) {
 		
-		System.err.println("trying to zoom on mouse click");
+		
 		// we only scale if we're not drawing a link.
 		if (linkState != NOT_LINKING) {
 			if (linkState == LINKING_CANCELLATION)
@@ -267,7 +267,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			e.setHandled(true);
 			return;
 		}
-		System.err.println("zooming on mouse click");
+		
 		
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
@@ -276,7 +276,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 			return;
 		
 		if (e.isShiftDown()) {
-		//	System.err.println("animating to center");
 			PBounds b = canvas.getBufferedBounds();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 			e.setHandled(true);
@@ -284,11 +283,9 @@ public class PChainEventHandler extends  PPanEventHandler {
 		else { 
 			double scaleFactor  = PConstants.SCALE_FACTOR;	
 			if (mask != MouseEvent.BUTTON1_MASK) {
-		//		System.err.println("zooming in");
 			}
 			else {
 				scaleFactor = 1/scaleFactor;
-		//		System.err.println("zooming out ");
 			}
 			double curScale = camera.getScale();
 			curScale *= scaleFactor;
@@ -302,11 +299,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		System.err.println("mouse pressed on "+node+", state "+linkState);
+		//System.err.println("mouse pressed on "+node+", state "+linkState);
 		
 		// clear off what was selected.
 		if (selectedLink != null && linkState != LINK_CHANGING_POINT) {
-			System.err.println("setting selected link to not be selected, in mousePressed");
+		//	System.err.println("setting selected link to not be selected, in mousePressed");
 			selectedLink.setSelected(false);
 			selectedLink = null;
 		}
