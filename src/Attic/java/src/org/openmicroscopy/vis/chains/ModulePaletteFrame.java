@@ -55,6 +55,7 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeSelectionModel;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+import javax.swing.tree.TreePath;
 
 
 
@@ -81,8 +82,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	private JSplitPane splitPane;
 	
 	private JTree tree; 
-	
-	
+
 	
 	public ModulePaletteFrame(Controller controller,Connection connection) {
 	
@@ -145,6 +145,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		tree = new JTree(getCanvas().getModuleTreeNode());
 		tree.setRootVisible(false);
 		tree.setEditable(false);
+		tree.setExpandsSelectedPaths(true);
 		tree.getSelectionModel().
 			setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		tree.addTreeSelectionListener(this);
@@ -174,13 +175,13 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	 * A Listener for the {@JTree} of module names and categories
 	 */
 	public void valueChanged(TreeSelectionEvent e) {
+		
 		ModuleTreeNode node = 
 			(ModuleTreeNode) tree.getLastSelectedPathComponent();
 		if (node == null) 
 			return;
 		if (node.isLeaf()) { // it's a module
-			System.err.println("selected. module ."+node.toString()+","+node.getID());
-			getCanvas().highlightModule(node.getID());
+			getCanvas().highlightModule((CModule)node.getObject());
 		}
 		else 
 			getCanvas().unhighlightModules();
@@ -188,9 +189,25 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	
 	public void clearTreeSelection() {
 		int rowCount = tree.getRowCount();
+		tree.clearSelection();
 	}
 	
 	public void setTreeSelection(CModule mod) {
+		System.err.println("setting tree selection..."+mod.getID());
+		int rowCount = tree.getRowCount();
+		for (int i =0; i < rowCount; i++) {
+			TreePath path = tree.getPathForRow(i);
+			Object obj = path.getLastPathComponent();
+			if (obj instanceof ModuleTreeNode) {
+				ModuleTreeNode modNode = (ModuleTreeNode) obj;
+				//if (modNode.isLeaf() && modNode.getID() == mod.getID())  {
+				if (modNode.getObject() == mod) {
+					tree.setSelectionPath(path);
+					return;
+				}
+			}
+		}
+		tree.clearSelection();
 	}
 	
 }
