@@ -83,10 +83,8 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			 	p = (PModule) node;
 			canvas.setSelected(p);
 			selected = true;
-			System.err.println("pressed a mouse and selected a module");
 		}
 		else {
-			System.err.println("pressed mouse and cleared module selected");
 			selected = false;
 			canvas.setSelected(null);
 			super.mousePressed(e);
@@ -121,7 +119,6 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseReleased(PInputEvent e) {
-		System.err.println("released mouse and cleared module selected");
 		selected = false;
 		canvas.setSelected(null);
 		super.mouseReleased(e);
@@ -129,9 +126,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	public void mouseDragged(PInputEvent e) {
 		//	don't pan if we've got something selected.
-		 System.err.println("mouse dragged..in palette handler.");
 		 if (selected == false) {
-			 System.err.println("no selection..");
 			 super.mouseDragged(e);
 		 }
 		 e.setHandled(true);
@@ -139,7 +134,6 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		System.err.println(" palette canvas. entering... "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(true);
@@ -164,7 +158,6 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 
-		System.err.println(" palette canvas. exiting... "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(false);
