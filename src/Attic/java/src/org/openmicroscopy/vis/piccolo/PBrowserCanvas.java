@@ -128,14 +128,14 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		if (d== null)
 			return;
 		PDataset node;	
-		System.err.println("drawing images for dataset "+d.getName());
+		////System.err.println("drawing images for dataset "+d.getName());
 		
 		Object o = datasetWidgets.get(d);
 		if (o != null) {
 			node = (PDataset) o;
 		}
 		else {
-			System.err.println("creating new widget");
+			//System.err.println("creating new widget");
 			node = new PDataset(d,connection);
 			datasetWidgets.put(d,node);
 		}
@@ -159,6 +159,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		int i = 0;
 		while (iter.hasNext()) {
 			CDataset d = (CDataset) iter.next();
+			////System.err.println("browser displaying dataset "+d.getName());
 			drawImages(d);
 			if (i++ >= rowSz) {
 				x=HGAP;
@@ -166,6 +167,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				i=0;
 			}
 		}
+		////System.err.println("animating browser to center");
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
 				PConstants.ANIMATION_DELAY);
 	}
@@ -185,7 +187,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			datasets.add(e.getSelectedDataset());
 		}
 		else {
-			if (selections.size() > 0)
+			if (selections != null && selections.size() > 0)
 				datasets = new TreeSet(selections);
 			else
 				datasets = new TreeSet(connection.getDatasetsForUser());
