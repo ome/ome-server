@@ -664,6 +664,9 @@ BLURB
     # configuration variable take a look at src/perl2/OME/Install/Util.pm.
     my $mac = get_mac ();
 
+	# MATLAB specific settings
+	my $MATLAB = $ENVIRONMENT->matlab_conf();
+	
     my $configuration = OME::Configuration->new ($factory,
             {
              mac_address      => $mac,
@@ -676,6 +679,8 @@ BLURB
              import_formats   => $IMPORT_FORMATS,
              ome_root         => $OME_BASE_DIR,
              template_dir     => $OME_BASE_DIR."/html/Templates",
+             matlab_src_dir   => $MATLAB->{MATLAB_SRC},
+             matlab_user      => $MATLAB->{MATLAB_USER},
             });
 
     $ENVIRONMENT->lsid ($lsid_authority);
@@ -708,7 +713,7 @@ sub update_configuration {
     my $var;
 
     # Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
-    # was ignored due to a pre-existing ocnfiguration
+    # was ignored due to a pre-existing configuration
     $var = $factory->findObject('OME::Configuration::Variable',
             configuration_id => 1, name => 'db_version') or croak 
             "Could not retreive the configuration variable db_version";

@@ -50,16 +50,17 @@ Boo.
 =cut
 
 use strict;
+use Carp;
+
 use OME;
+use XML::LibXML;
 our $VERSION = $OME::VERSION;
 
+use OME::Matlab;
 use OME::Tasks::PixelsManager;
 use OME::Analysis::Handlers::DefaultLoopHandler;
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
-
-use OME::Matlab;
-use XML::LibXML;
 
 # For testing purposes -- make an instance that does not call it's
 # superclass constructor.  Beware: this instance will not be a valid
@@ -196,12 +197,13 @@ sub __openEngine {
 
     if (!$self->{__engineOpen}) {
         my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
-        die "Cannot open a connection to Matlab!"
-          unless $engine;
+        die "Cannot open a connection to Matlab!" unless $engine;
         $self->{__engine} = $engine;
         $self->{__engineOpen} = 1;
-
-        $engine->eval(q[addpath(genpath('/Users/tmacur1/Desktop/OME-Hacking/OME/src/matlab'));]);
+		my $session = OME::Session->instance();
+		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
+		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+        $engine->eval("addpath(genpath('$matlab_src_dir'));");
     }
 }
 
