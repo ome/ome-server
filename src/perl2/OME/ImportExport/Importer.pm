@@ -402,7 +402,7 @@ sub store_image_metadata {
     # rename repository file with it's permanent name
     rename ($tempfn, , $self->{realpath}) or
 		$status = "failed to rename image file $self->temp_image_name() to $self->{realpath}";
-	my $mode = 0111; chmod( $mode, $self->{realpath} ); 
+	my $mode = 0444; chmod( $mode, $self->{realpath} ); 
 		#allows repository file to be read by other users.
 		#without this, you will have difficulties working on same images through different interfaces
 	my $sha1 = getSha1($self->{realpath});
