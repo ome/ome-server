@@ -39,12 +39,11 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PImage;
+import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.nodes.PPath;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.awt.Color;
 
 /**
  * 
@@ -61,13 +60,12 @@ import java.awt.Color;
 public class PDatasetImagesNode extends PNode  {
 
 	private static final double SCALE_THRESHOLD=.75;
-	private static final int HALO_RADIUS=1;
-	
+		
 	private PNode imagesNode = new PNode();
 	private PImage thumbnailNode = null;
 	private boolean selected = false;
 	
-	private PPath zoomHalo = new PPath();
+	private PThumbnailSelectionHalo zoomHalo = new PThumbnailSelectionHalo();
 	
 	
 	private ArrayList rowSzs = new ArrayList();
@@ -75,12 +73,15 @@ public class PDatasetImagesNode extends PNode  {
 	private int highlightRow;
 	private int highlightColumn;
 	
+	private boolean canShowHalo = true;
+	
+	private PThumbnail currentHighlight;
+	
 	public PDatasetImagesNode() {
 		super();	
 		addChild(imagesNode);
 		addChild(zoomHalo);
-		zoomHalo.setVisible(false);
-		zoomHalo.setPickable(false);
+		zoomHalo.moveToFront();
 		setPickable(true);
 	}
 	
@@ -104,6 +105,7 @@ public class PDatasetImagesNode extends PNode  {
 			thumbnailNode = new PImage(imagesNode.toImage((int)b.getWidth(),
 				(int) b.getHeight(),null),true);
 			addChild(thumbnailNode);
+			moveToBack(thumbnailNode);
 		}
 	}
 	
@@ -140,28 +142,24 @@ public class PDatasetImagesNode extends PNode  {
 	}
 	
 	public void highlightThumbnail(PThumbnail thumb,boolean v) {
-		if (v == false) {
-			zoomHalo.setVisible(false);
-			zoomHalo.setPickable(false);
+		if (v == false || imagesNode.getChildrenCount() <= 
+			PThumbnailSelectionHalo.HALO_SIZE || canShowHalo == false) {
+			zoomHalo.hide();
+			currentHighlight = null;
 		}
-		else {
+		else  if (thumb != currentHighlight) {
 			doHighlightThumbnail(thumb);
+			currentHighlight = thumb;
 		}
 	}
 	
 	private void doHighlightThumbnail(PThumbnail thumb) {
 		// get index
 		int index = imagesNode.indexOfChild(thumb);
-		System.err.println("******************");
-		System.err.println("highlighting thumbnail with halo..."+index);
 		
 		PBounds b = setHighlight(index);
-		System.err.println("highlight bounds are "+b);		
 		globalToLocal(b);
 		zoomHalo.setPathTo(b);
-		zoomHalo.setStrokePaint(Color.BLACK);
-		zoomHalo.setVisible(true);
-		zoomHalo.setPickable(true);
 	}
 	
 	private int getRowSize(int i) {
@@ -171,24 +169,24 @@ public class PDatasetImagesNode extends PNode  {
 	
 	private PBounds setHighlight(int index) {
 		calculatePosition(index);
-		System.err.println("highlight is at "+highlightRow+","+highlightColumn);
 		PBounds b = new PBounds();
 		
 		//	build up bounds of zoomhalo
-		int lowRow = highlightRow-HALO_RADIUS;
-		int highRow = highlightRow+HALO_RADIUS;
+		int lowRow = highlightRow-PThumbnailSelectionHalo.HALO_RADIUS;
+		int highRow = highlightRow+PThumbnailSelectionHalo.HALO_RADIUS;
 		
-		int lowCol = highlightColumn-HALO_RADIUS;
-		int highCol = highlightColumn+HALO_RADIUS;
+		int lowCol = highlightColumn-PThumbnailSelectionHalo.HALO_RADIUS;
+		int highCol = highlightColumn+PThumbnailSelectionHalo.HALO_RADIUS;
 		
 		for (int i = lowRow; i<=highRow; i++) {
 			for (int j = lowCol; j <= highCol; j++) {
-				System.err.println("trying to add "+i+","+j);
 				addToHighlight(b,i,j);
 			}
 		}
 		
-		return b;
+		PBounds b2 = new PBounds(b.getX()-PThumbnailSelectionHalo.BORDER,b.getY()-PThumbnailSelectionHalo.BORDER,
+			b.getWidth()+2*PThumbnailSelectionHalo.BORDER,b.getHeight()+2*PThumbnailSelectionHalo.BORDER);
+		return b2;
 		
 	}
 	
@@ -214,12 +212,9 @@ public class PDatasetImagesNode extends PNode  {
 		int curRowSize = getRowSize(row);
 		if (col <0 || col >= curRowSize)
 			return;
-		System.err.println("adding "+row+","+col);
 		int index = getThumbIndex(row,col);
-		System.err.println("index is "+index);
 		PThumbnail thumb = (PThumbnail) imagesNode.getChild(index);
 		PBounds tBounds = thumb.getGlobalFullBounds();
-		System.err.println("boounds are "+tBounds);
 		b.add(tBounds);
 	}
 	
@@ -230,5 +225,22 @@ public class PDatasetImagesNode extends PNode  {
 		}
 		
 		return index+col;
+	}
+	
+	public boolean hasVisibleHalo() {
+		return zoomHalo.getVisible();
+	}
+	
+	public void zoomToHalo(PCamera camera) {
+		if (!hasVisibleHalo())
+			return;
+		camera.animateViewToCenterBounds(zoomHalo.getGlobalFullBounds(),true,
+			PConstants.ANIMATION_DELAY);
+		zoomHalo.hide();
+		canShowHalo = false;
+	}
+	
+	public void enableHalo() {
+		canShowHalo = true;
 	}
 }
