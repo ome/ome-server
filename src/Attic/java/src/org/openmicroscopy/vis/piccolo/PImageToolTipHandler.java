@@ -79,8 +79,9 @@ public class PImageToolTipHandler extends PToolTipHandler {
 		if (scale < PToolTipHandler.SCALE_THRESHOLD) {
 			p = t.getFullTooltip();
 		}
-		else 
+		else {
 			p = t.getTextToolTip();
+		}
 		return p;
 	}
 }
