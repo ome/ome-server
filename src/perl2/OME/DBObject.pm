@@ -148,7 +148,7 @@ sub writeObject {
     my $idFieldName = $fields->{id}->[1];
 
     foreach my $fieldName (keys %$fields) {
-	if ($fieldName ne 'id') {
+	#if ($fieldName ne 'id') {
 	    my $fieldDef = $fields->{$fieldName};
 	    my ($tableName, $columnName, $options) = @$fieldDef;
 
@@ -156,7 +156,7 @@ sub writeObject {
 	    push @{$tables{$tableName}->[1]}, $values->{$fieldName};
 	    push @{$tables{$tableName}->[2]}, '?';
 	    push @{$tables{$tableName}->[3]}, $options;
-	}
+	#}
     }
 
     my ($dbh,$sth,$sql,$rs);
@@ -282,7 +282,9 @@ sub readObject {
 	$dbh = $self->DBH();
 	$sth = $dbh->prepare($sql);
 	if ($sth->execute()) {
+            my $foundOneRow = 0;
 	    while ($rs = $sth->fetchrow_arrayref()) {
+                $foundOneRow = 1;
 		foreach my $i (0..$#$columnNames) {
 		    my $name = $fieldNames->[$i];
 		    my $value = $rs->[$i];
@@ -294,6 +296,7 @@ sub readObject {
 		    }
 		}
 	    }
+            return 0 unless $foundOneRow;
 	} else {
 	    return 0;
 	}

@@ -50,7 +50,7 @@ sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub User {
     my $self = shift;
     if (!defined $self->{user}) {
-	$self->{user} = $self->{factory}->loadObject($self->{userID});
+	$self->{user} = $self->{factory}->loadObject("OME::Experimenter",$self->{userID});
     }
     return $self->{user};
 }
