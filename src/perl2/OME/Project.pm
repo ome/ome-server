@@ -77,6 +77,45 @@ my $datasetID = shift;
 	return $self->addDataset($dataset);
 }
 
+# stub for future development
+sub deleteDataset {
+
+}
+
+# stub for future development
+sub deleteDatasetID {
+
+}
+
+# stub for future development
+sub removeDataset {
+
+}
+
+# stub for future development
+sub removeDatasetID {
+
+}
+
+# returns 1 if this project contains the dataset, else returns undef
+sub doesDatasetBelong {
+	my $self = shift;
+	my $dataset = shift;
+	
+	return undef unless defined $dataset;
+	my @datasets = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+	return 1 if scalar @datasets > 0;
+	return undef;
+}
+
+# extension of doesDatasetBelong
+sub doesDatasetBelongID {
+	my $self = shift;
+	my $datasetID = shift;
+	my $dataset = $self->Session()->Factory()->loadObject("OME::Dataset",$datasetID);
+	return $self->doesDatasetBelong($dataset);
+}
+
 sub newDataset {
 my $self = shift;
 my $datasetName = shift;
