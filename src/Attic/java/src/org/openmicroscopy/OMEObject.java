@@ -90,7 +90,7 @@ public interface OMEObject
      * database, and an explicit call to {@link
      * Session#commitTransaction} to commit the transaction.
      */
-    public void writeObject();
+   // public void writeObject();
 
     /**
      * Returns the OME session that generated this object.

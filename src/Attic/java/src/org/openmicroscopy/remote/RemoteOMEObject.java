@@ -70,8 +70,9 @@ public class RemoteOMEObject
     public void storeObject() 
     { caller.dispatch(this,"storeObject"); }
 
-    public void writeObject() 
-    { caller.dispatch(this,"writeObject"); }
+ //  public void writeObject() 
+   // { caller.dispatch(this,"writeObject"); } 
+    
 
     public void populate() { populate(true); }
 
