@@ -27,6 +27,54 @@ AC_PROG_RANLIB
 dnl Set our default prefix to /OME
 AC_PREFIX_DEFAULT(/OME)
 
+dnl Define our OMEIS_ROOT / OME_ROOT as per configure settings or defaults
+AC_ARG_WITH(omeis-root,
+			AC_HELP_STRING([--with-omeis-root],
+						   [root directory path of OMEIS files after installation [defaults to PREFIX/OMEIS]]),
+[
+	if test "$withval" != no ; then
+		AC_MSG_NOTICE(using OMEIS root... $withval)
+		OMEIS_ROOT=$withval
+	fi
+], [
+	if test "$prefix" = "NONE"; then
+		prefix="$ac_default_prefix";
+	fi
+		AC_MSG_NOTICE(using OMEIS root... $prefix/OMEIS)
+		OMEIS_ROOT=$prefix/OMEIS;
+])
+
+dnl Allow variable JPEG qualities
+AC_ARG_WITH(jpeg-quality,
+			AC_HELP_STRING([--with-jpeg-quality],
+						   [specifies the quality used when OMEIS is making JPEG's [default to 80]]),
+[
+	if test "$withval" != no ; then
+		AC_MSG_NOTICE(using OMEIS JPEG quality... $withval)
+		AC_DEFINE(OMEIS_JPEG_QUALITY, [$withval], [Defines the quality used when OMEIS makes JPEGs])
+	fi
+], [
+ 	AC_MSG_NOTICE(using OMEIS JPEG quality [default]... 80)
+	AC_DEFINE(OMEIS_JPEG_QUALITY, [80])
+])
+
+dnl Allow disabling of TIFF LZW compression
+AC_MSG_CHECKING(if TIFF LZW compression wanted)
+AC_ARG_ENABLE(tiff-lzw,
+			AC_HELP_STRING([--disable-tiff-lzw],
+						   [removes TIFF LZW compression from OMEIS]),
+[
+ 	AC_MSG_RESULT(no)
+], [
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(USE_TIFF_LZW, [1], [Define 1 when we want OMEIS to use LZW compression with TIFFs])
+])
+
+
+
+# Put the OMEIS_ROOT in all our makefiles
+AC_SUBST(OMEIS_ROOT)
+
 dnl Do it early just in case any weird checks require it...
 dnl ----------------------------------------------------------
 dnl Ripped gloriously from GAIM (http://gaim.sourceforge.net/)
