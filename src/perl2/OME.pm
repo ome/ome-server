@@ -40,17 +40,25 @@ our $VERSION = 2.001_000;
 
 use Config;
 use Log::Agent;
-our $THREADS_AVAILABLE = 0;
+our $THREADS_AVAILABLE;
 our $BIG_ENDIAN;
 
-BEGIN {
-    $THREADS_AVAILABLE = $Config{useithreads} && $ENV{OME_USE_THREADS};
-    $BIG_ENDIAN =
-      ($Config{byteorder} == 1234) ||
-      ($Config{byteorder} == 12345678);
+sub THREADS_AVAILABLE {
+    $THREADS_AVAILABLE = $Config{useithreads} && $ENV{OME_USE_THREADS}
+      unless defined $THREADS_AVAILABLE;
+
+    return $THREADS_AVAILABLE;
 }
 
-if ($ENV{OME_DEBUG} > 0) {	
+sub BIG_ENDIAN {
+    $BIG_ENDIAN =
+      ($Config{byteorder} != 1234) &&
+      ($Config{byteorder} != 12345678)
+        unless defined $BIG_ENDIAN;
+    return $BIG_ENDIAN;
+}
+
+if (defined $ENV{OME_DEBUG} && $ENV{OME_DEBUG} > 0) {	
 	logconfig(
 		-prefix      => "$0",
 		-level    => 'debug'
