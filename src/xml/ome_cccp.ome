@@ -18,10 +18,14 @@
 			<InputSubString>
 				<XYPlane XYPlaneID = "Plane1" Format = "TIFF">
 					<theZ>
-						<AutoIterate SemanticElementName = "theZ" FormalOutputName = "XYPlaneCrossCorrelation"/>
+						<AutoIterate>
+							<OutputTo SemanticElementName = "theZ" FormalOutputName = "XYPlaneCrossCorrelation"/>
+						</AutoIterate>
 					</theZ>
 					<theT>
-						<AutoIterate SemanticElementName = "theT" FormalOutputName = "XYPlaneCrossCorrelation"/>
+						<AutoIterate>
+							<OutputTo SemanticElementName = "theT" FormalOutputName = "XYPlaneCrossCorrelation"/>
+						</AutoIterate>
 					</theT>
 					<theW>
 						<UseValue SemanticElementName = "theW" FormalInputName = "Wavenumber 1"/>
