@@ -163,7 +163,7 @@ public class AnnotationManager
                 if (dataset == null)
                 {
                     dataset = thisDataset;
-                    params.add(dataset);
+                    params.add(new Integer(dataset.getID()));
                 } else if (!dataset.equals(thisDataset)) {
                     throw new IllegalArgumentException("Targets don't match!");
                 }
@@ -172,7 +172,7 @@ public class AnnotationManager
                 if (image == null)
                 {
                     image = thisImage;
-                    params.add(image);
+                    params.add(new Integer(image.getID()));
                 } else if (!image.equals(thisImage)) {
                     throw new IllegalArgumentException("Targets don't match!");
                 }
@@ -181,7 +181,7 @@ public class AnnotationManager
                 if (feature == null)
                 {
                     feature = thisFeature;
-                    params.add(feature);
+                    params.add(new Integer(feature.getID()));
                 } else if (!feature.equals(thisFeature)) {
                     throw new IllegalArgumentException("Targets don't match!");
                 }
