@@ -59,46 +59,25 @@ use OME::Tasks::ImageManager;
 use base qw(OME::Web::RenderData);
 
 # Class data
-my %_fieldLabels = (
+__PACKAGE__->_fieldLabels( {
 	'id'             => "ID",
 	'default_pixels' => "Default Pixels", 
 	'image_guid'     => "GUID"
-);
-my @_fieldNames = ('id', 'default_pixels', 'name', 'description', 'owner', 'group', 'created');
-my @_allFieldNames = (@_fieldNames, 'inserted', 'image_guid');
-
-
-=head2 getFieldNames
-
-Overrides default behavior, uses class data to return labels
-
-=cut
-
-sub getFieldNames { return @_fieldNames if wantarray; return \@_fieldNames; }
-
-=head2 getAllFieldNames
-
-Overrides default behavior, uses class data to return labels
-
-=cut
-
-sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
-
-=head2 getFieldLabels
-
-Overrides default behavior, uses class data to return labels
-
-=cut
-
-sub getFieldLabels {
-	my ($proto,$type,$fieldNames) = @_;
-	$fieldNames = $proto->getFieldNames() unless $fieldNames;
-	my %fieldLabels = $proto->SUPER::getFieldLabels( $type, $fieldNames, 1 );
-	( exists $_fieldLabels{$_} and $fieldLabels{ $_ } = $_fieldLabels{$_} )
-		foreach( @$fieldNames );
-	return %fieldLabels if wantarray;
-	return \%fieldLabels;
-}
+});
+__PACKAGE__->_fieldNames( [
+	'id',
+	'default_pixels',
+	'name',
+	'description',
+	'owner',
+	'group',
+	'created'
+] ) ;
+__PACKAGE__->_allFieldNames( [
+	@{__PACKAGE__->_fieldNames() },
+	'inserted',
+	'image_guid',
+] ) ;
 
 =head2 getRefToObject
 

@@ -58,46 +58,30 @@ use OME::Session;
 use OME::Tasks::PixelsManager;
 use base qw(OME::Web::RenderData);
 
-# Class data
-my %_fieldLabels = (
+# Class data - override default behavior
+__PACKAGE__->_fieldLabels( {
 	'id'               => "ID",
 	'module_execution' => "MEX"
-);
-my @_fieldNames = ('id', 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel', 'image', 'module_execution');
-my @_allFieldNames = (@_fieldNames, 'FileSHA1', 'ImageServerID', 'Repository' );
+});
+__PACKAGE__->_fieldNames( [
+	'id',
+	'SizeX',
+	'SizeY',
+	'SizeZ',
+	'SizeC',
+	'SizeT',
+	'PixelType',
+	'BitsPerPixel',
+	'image',
+	'module_execution'
+] ) ;
+__PACKAGE__->_allFieldNames( [
+	@{__PACKAGE__->_fieldNames() },
+	'FileSHA1',
+	'ImageServerID',
+	'Repository'
+] ) ;
 
-
-=head2 getFieldNames
-
-reorders field Names
-
-=cut
-
-sub getFieldNames { return @_fieldNames if wantarray; return \@_fieldNames; }
-
-=head2 getAllFieldNames
-
-reorders field Names
-
-=cut
-
-sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
-
-=head2 getFieldLabels
-
-Overrides some field labels (MEX & ID)
-
-=cut
-
-sub getFieldLabels {
-	my ($proto,$type,$fieldNames) = @_;
-	$fieldNames = $proto->getFieldNames() unless $fieldNames;
-	my %fieldLabels = $proto->SUPER::getFieldLabels( $type, $fieldNames, 1 );
-	( exists $_fieldLabels{$_} and $fieldLabels{ $_ } = $_fieldLabels{$_} )
-		foreach( @$fieldNames );
-	return %fieldLabels if wantarray;
-	return \%fieldLabels;
-}
 
 =head2 getRefToObject
 

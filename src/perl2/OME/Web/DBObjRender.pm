@@ -47,6 +47,12 @@ $VERSION = $OME::VERSION;
 use CGI;
 use Log::Agent;
 
+use base qw(Class::Data::Inheritable);
+
+__PACKAGE__->mk_classdata('_fieldLabels');
+__PACKAGE__->mk_classdata('_fieldNames');
+__PACKAGE__->mk_classdata('_allFieldNames');
+
 =pod
 
 =head1 NAME
@@ -129,9 +135,12 @@ sub getFieldNames {
 	$type = $proto->_getProto( $type );
 	
 	# We don't need no *_id aliases or target
-	my @fieldNames = ('id', sort( grep( (!/_id$/ and !/^target$/), $type->getColumns()) ) );
-	return @fieldNames if wantarray;
-	return \@fieldNames;
+	my $fieldNames = ( 
+		$proto->_fieldNames() or
+		['id', sort( grep( (!/_id$/ and !/^target$/), $type->getColumns()) ) ] 
+	);
+	return @$fieldNames if wantarray;
+	return $fieldNames;
 }
 
 =head2 getAllFieldNames
@@ -155,7 +164,13 @@ sub getAllFieldNames {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
 		    not $doNotSpecialize);
 
-	return $proto->getFieldNames($type, $doNotSpecialize);
+	my $fieldNames = (
+		$proto->_allFieldNames() or
+		$proto->getFieldNames($type, $doNotSpecialize)
+	);
+	
+	return @$fieldNames if wantarray;
+	return $fieldNames;
 }
 
 =head2 getFieldTypes
@@ -212,10 +227,11 @@ sub getFieldLabels {
 	$type = $proto->_getProto( $type );
 	# make labels by prettifying the aliases
 	my %labels;
+	my $pkg_labels = $proto->_fieldLabels();
 	foreach( @$fieldNames ) {
 		my ($alias,$label) = ($_,$_);
 		$label =~ s/_/ /g;
-		$labels{$alias} = ucfirst($label);
+		$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
 	};
 	return %labels if wantarray;
 	return \%labels;
