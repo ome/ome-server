@@ -44,6 +44,7 @@ if (scalar(@ARGV) eq 0) {
 	chomp($matlab_path);
 } elsif (scalar(@ARGV) eq 1) {
 	$matlab_path = shift(@ARGV);
+	chomp($matlab_path);
 } else {
 	die "Incorrect usage \n";
 }
@@ -62,8 +63,8 @@ my @matlabLib  = ("$matlab_path/bin/$os", "$matlab_path/sys/$os");
 
 # check whether the required matlab library files could be found
 foreach (@libFiles){	
-	if (not -e "$matlab_path$/bin/$os/lib$_.$suffix"){
-				print STDERR   "WARNING: Required MATLAB library lib$_.$suffix was not found in $matlab_path/bin/$os \n";
+	if (not -e "$matlab_path/bin/$os/lib$_.$suffix"){
+		print STDERR "WARNING: Required MATLAB library lib$_.$suffix was not found in $matlab_path/bin/$os \n";
 	}
 }
 		
