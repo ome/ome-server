@@ -151,6 +151,8 @@ sub importFiles {
 	$dataset->storeObject();
     $session->commitTransaction();
 
+    $importer->finish();
+
 	return $status;
 
 
