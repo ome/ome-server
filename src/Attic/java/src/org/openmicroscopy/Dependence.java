@@ -28,7 +28,7 @@ package org.openmicroscopy;
  * @author Douglas Creager
  * @version 2.0
  * @since OME2.0
- * @see Analysis
+ * @see ModuleExecution
  */
 
 public interface Dependence

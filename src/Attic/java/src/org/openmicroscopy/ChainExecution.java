@@ -50,7 +50,7 @@ public interface ChainExecution
         public Chain.Node getChainNode();
         public void setChainNode(Chain.Node node);
 
-        public Analysis getAnalysis();
-        public void setAnalysis(Analysis analysis);
+        public ModuleExecution getModuleExecution();
+        public void setModuleExecution(ModuleExecution analysis);
     }
 }

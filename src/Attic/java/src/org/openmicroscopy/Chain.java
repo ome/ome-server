@@ -42,7 +42,7 @@ import java.util.Iterator;
  * {@link ChainExecution} and {@link ChainExecution.Node} interfaces.
  * Any of the nodes which actually get executed (as opposed to reusing
  * the results of an existing computation) generate new instances of
- * the {@link Analysis} interface.</p>
+ * the {@link ModuleExecution} interface.</p>
  *
  * @author Douglas Creager
  * @version 2.0
