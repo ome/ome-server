@@ -1829,6 +1829,11 @@ any ?-placeholders which appear in the SQL statement.
 =cut
 
 sub __makeSelectSQL {
+# This is turned off only for this function due to the
+# crazy (and wrong):
+# Use of uninitialized value in string eq at OME/DBObject.pm line 1989.
+# See below (though no longer line 1989)
+no warnings "uninitialized";
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
@@ -1986,7 +1991,10 @@ sub __makeSelectSQL {
               $columns->{$column_alias}->[3]->{SQLType}:
               "";
 
-            if ($location and $location eq 'id') {
+			# It appears to be impossible to silence an incorrect warning about
+			# Use of uninitialized value in string eq in the following line:
+			# Hence, "unintialized" warnings are turned off for this moethod.
+            if ($location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } elsif ($sql_type eq 'boolean') {
