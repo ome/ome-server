@@ -86,7 +86,7 @@ sub GetPix {
 }
 
 # Accessor/Mutator
-# has not been subjected to thorough testing.
+# Mutator behavior has not been subjected to thorough testing.
 sub Dimensions {
     my $self = shift;
     
