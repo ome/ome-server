@@ -42,22 +42,13 @@
 		<Nodes>
 			<Node NodeID = "Files" ProgramName = "Original files"/>
 			<Node NodeID = "Import" ProgramName = "Image import"/>
-			<Node NodeID = "PlaneSums" ProgramName = "Plane statistics and sums"/>
-			<Node NodeID = "StackStats" ProgramName = "Fast Stack statistics"/>
+			<Node NodeID = "PlaneStats" ProgramName = "Plane statistics (image server)"/>
+			<Node NodeID = "StackStats" ProgramName = "Stack statistics (image server)"/>
 		</Nodes>
 		<Links>
-          <Link FromNodeID="Files" FromOutputName="Files" ToNodeID="Import" ToInputName="Files"/>
-			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="PlaneSums" ToInputName="Pixels"/>
+			<Link FromNodeID="Files" FromOutputName="Files" ToNodeID="Import" ToInputName="Files"/>
+			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="PlaneStats" ToInputName="Pixels"/>
 			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="StackStats" ToInputName="Pixels"/>
-
-			<Link FromNodeID="PlaneSums" FromOutputName="Minima" ToNodeID="StackStats" ToInputName="PlaneMinimum"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Maxima" ToNodeID="StackStats" ToInputName="PlaneMaximum"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum i" ToNodeID="StackStats" ToInputName="PlaneSum_i"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum i^2" ToNodeID="StackStats" ToInputName="PlaneSum_i2"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum log(i)" ToNodeID="StackStats" ToInputName="PlaneSum_log_i"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum Xi" ToNodeID="StackStats" ToInputName="PlaneSum_Xi"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum Yi" ToNodeID="StackStats" ToInputName="PlaneSum_Yi"/>
-			<Link FromNodeID="PlaneSums" FromOutputName="Sum Zi" ToNodeID="StackStats" ToInputName="PlaneSum_Zi"/>
 		</Links>
 	</AnalysisChain>
 </AnalysisChains>
