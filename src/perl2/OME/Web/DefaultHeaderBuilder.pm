@@ -144,7 +144,8 @@ sub getPageHeader {
 		$q->Tr(
 			$q->td($logo_link),
 			$q->td( {-align => 'left', -valign => 'top' },
-				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment')
+				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment').
+				' v'.$VERSION
 			),
 			$q->td({align => 'right', -valign => 'top' },
 				$q->span( {
