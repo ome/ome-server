@@ -34,7 +34,7 @@ sub getPageTitle {
 sub getPageBody {
     my $self = shift;
 print STDERR "\nLogging out...\n\n";
-	$self->setSession( undef );
+	$self->Session( undef );
 	$self->setSessionCookie();
 
     return ('REDIRECT',$self->pageURL('OME::Web::Login'));

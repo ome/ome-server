@@ -51,7 +51,7 @@ sub getPageBody {
     my $session = $self->Manager()->createSession($cgi->param('username'),
                               $cgi->param('password'));
     if (defined $session) {
-    	$self->setSession($session);
+    	$self->Session($session);
         $self->setSessionCookie();
         return ('REDIRECT',$self->pageURL('OME::Web::Home'));
     } else {
