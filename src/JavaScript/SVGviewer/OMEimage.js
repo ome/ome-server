@@ -441,7 +441,7 @@ OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
 			colorStr += '&BlueChannel=' + this.CBW.slice(6,9).join(',') + ',1.0';
 		}
 	} else {
-		colorStr = "&GrayChannel=" + CBS.slice(9,12).join(',') + ',1.0';
+		colorStr = "&GrayChannel=" + this.CBW.slice(9,12).join(',') + ',1.0';
 	}
 	
 	var imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
