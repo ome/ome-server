@@ -80,7 +80,8 @@ public class Chains {
 		Iterator iter = chains.values().iterator();
 		while (iter.hasNext()) {
 			c = (CChain) iter.next();
-			connection.setStatusLabel("Chain Layout.."+c.getName());
+			//connection.setStatusLabel("Chain Layout.."+c.getName());
+			//System.err.println("Laying out chain ..."+c.getName());
 			c.layout();
 		}
 	}
