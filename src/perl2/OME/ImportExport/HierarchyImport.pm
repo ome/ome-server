@@ -323,6 +323,24 @@ sub processDOM {
 }
 
 
+=head2 createdMEXduringImport
+
+	if( $hierarchyImport->createdMEXduringImport ($MEX_id) ) {
+		# do something
+	}
+
+returns undef if the MEX_id given was not created during the import procedure of $hierarchyImport
+returns 1 if the MEX_id given was created ...
+
+=cut
+
+sub createdMEXduringImport () {
+my ($self, $MEX) = @_;
+my $MEX_ID = ref ($MEX) ? $MEX->id() : $MEX;
+	return undef unless exists $self->{_mexes_used};
+	return (exists $self->{_mexes_used}->{ $MEX_ID } ? 1 : undef);
+}
+
 sub importFeatures ($$$) {
 my ($self, $imageID, $parentFeature, $node) = @_;
 
@@ -399,6 +417,10 @@ sub importObject ($$$$) {
 	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
+# FIXME: Prevent multiple imports of objects w/ ill formed LSIDs
+# check for validly formed LSID, if it is validly formed look for it
+# locally. if it ain't, do a search on it's data and try to pull up a
+# local object. if neither of those work, go ahead and import
 	logdie ref ($self) . "->importObject: Attempt to import an attribute without an ID.\n".$node->toString()
 		unless $LSID;
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
@@ -414,15 +436,8 @@ sub importObject ($$$$) {
           getImageImportMEX($parentDBID);
     }
 	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
-
-# (siah): This doesn't make sense. I think the code has changed around it and it no longer
-#         fits. IGG?
-# FIXME (IGG):  Only allow previously seen objects to be resolved if there is
-# no module_execution associated with the object.
-# This is because we have no way of merging attributes from different module executions.
-#	$theObject = undef if $module_execution;
-# Images get re-imported even though they have no module_execution.
-#	$theObject = undef if $node->nodeName() eq 'Image';
+	$self->{_mexes_used}->{ $module_execution->id() } = undef
+		if $module_execution;
 
 	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
@@ -546,8 +561,7 @@ sub getObjectTypeInfo ($$) {
 			description => $node->getAttribute( 'Description' ),
 			owner_id    => $node->getAttribute( 'Experimenter' ),
 			group_id    => $node->getAttribute( 'Group' ),
-# locked may need to be cast into boolean
-			locked      => lc ($node->getAttribute( 'Locked' )) eq 'true' ? '1':'0'
+			locked      => lc ($node->getAttribute( 'Locked' )) eq 'true' ? 't':'f'
 		};
 		$refCols = {
 			owner_id => $objectData->{owner_id},
