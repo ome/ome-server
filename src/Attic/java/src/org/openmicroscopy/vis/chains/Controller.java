@@ -43,8 +43,7 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.ApplicationController;
-import org.openmicroscopy.util.LoginDialog;
+import org.openmicroscopy.util.LoginResponder;
 import javax.swing.JFrame;
 import javax.swing.JWindow;
 import javax.swing.BoxLayout;
@@ -60,6 +59,7 @@ import java.awt.Toolkit;
 import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import javax.swing.Box;
 
 
 /** 
@@ -70,7 +70,7 @@ import java.awt.Rectangle;
  * @since OME2.0
  */
 
-public class Controller implements ApplicationController {
+public class Controller  implements LoginResponder {
 	
 	private static final String 
 		ICON_PATH="org/openmicroscopy/vis/chains/resources/chain-logo.jpg";
@@ -83,7 +83,7 @@ public class Controller implements ApplicationController {
 	
 	private Font copyFont = new Font("Sans-Serif",Font.BOLD,9);
 	private CmdTable cmd;
-	private ModulePaletteFrame mainFrame;
+	private ModulePaletteFrame moduleFrame;
 	private ChainLibraryFrame library;
 	
 	private Image icon;
@@ -93,6 +93,11 @@ public class Controller implements ApplicationController {
 	private int chainCanvasCount = 0;
 	
 	private ChainFrame currentChainFrame;
+	
+	private JWindow status;
+	private JLabel statusLabel;
+	
+	private ChainLogin loginDialog;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -106,6 +111,7 @@ public class Controller implements ApplicationController {
 			icon = null;
 		}
 		doSplash();
+		doLogin();
 	}
 	
 	public Image getIcon() {
@@ -132,7 +138,7 @@ public class Controller implements ApplicationController {
 			content.add(label);
 		}
 		
-		JLabel info  = new JLabel(Chains.INFO);
+		JLabel info  = new JLabel(org.openmicroscopy.vis.chains.Chains.INFO);
 		info.setFont(copyFont);
 		JLabel copy = new JLabel(COPY_STRING);
 		copy.setFont(copyFont);
@@ -158,14 +164,26 @@ public class Controller implements ApplicationController {
 		splash.setVisible(false);
 	}
 
-
+	public void setStatusLabel(String s) {
+		if (statusLabel != null)
+			statusLabel.setText(s);
+	}
+	
+	public void closeStatusWindow() {
+		if (status != null) {
+			status.setVisible(false);
+			status.dispose();
+		}
+		status = null;
+		statusLabel =null;
+	}
 	
 	public void setMainFrame(ModulePaletteFrame mf) {
-		this.mainFrame = mf;
+		this.moduleFrame = mf;
 	}
 	
 	public JFrame getMainFrame() {
-		return mainFrame;
+		return moduleFrame;
 	}
 	
 	public ChainLibraryFrame getLibrary() {
@@ -180,38 +198,67 @@ public class Controller implements ApplicationController {
 	 */
 	public void doLogin() {
 		
-		LoginDialog  loginDialog = new LoginDialog(mainFrame);
+		loginDialog = new ChainLogin(this);
 		loginDialog.show();
-		if (loginDialog.isOk()) 
-			connection =  new Connection(this,loginDialog.getURL(),
-				loginDialog.getUserName(),loginDialog.getPassword());
-	}
-
-	public void cancelLogin() {
-			connection = null;	
 	}
 	
-	public void completeLogin(Connection connection) {
-		System.err.println("login completed..");
+	public void loginOK() {
+		connection =  new Connection(this,loginDialog.getURL(),
+			loginDialog.getUserName(),loginDialog.getPassword());
+		loginDialog.hide();
+		buildStatusWindow();
+	}
+	
+	public void loginCancel() {
+		quit();
+	}
+
+	private void buildStatusWindow() {
+		status = new JWindow();
+		JPanel content = (JPanel) status.getContentPane();
+		content.setLayout(new BoxLayout(content,BoxLayout.X_AXIS));
+		content.add(Box.createRigidArea(new Dimension(5,0)));
 		
-		this.connection = connection;
-		mainFrame.setLoggedIn(true,connection);
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
+		content.add(panel);
+		
+		panel.add(Box.createRigidArea(new Dimension(0,5)));		
+		JLabel title = new JLabel("Loading...");
+		panel.add(title);
+		statusLabel = new JLabel("OME Database Contents               ");
+		panel.add(Box.createRigidArea(new Dimension(0,5)));
+		panel.add(statusLabel);
+		status.pack();
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		Rectangle bounds = status.getBounds();
+		int x = (int) (screen.getWidth()-bounds.getWidth())/2;
+		int y = (int) (screen.getHeight()-bounds.getHeight())/2;
+		status.setBounds(x,y,(int)bounds.getWidth(),(int)bounds.getHeight());
+		status.setVisible(true);	
+	}
+	
+	public void cancelLogin() {
+			connection = null;
+			closeStatusWindow();
+			doLogin();	
+	}
+	
+	public void completeWindows() {
+		moduleFrame = new ModulePaletteFrame(this,connection);
 		connection.layoutChains();
-		//System.err.println("doing library frame..");
-		
-		library = new ChainLibraryFrame(this,connection); 
-		connection.closeStatusWindow();
+		library = new ChainLibraryFrame(this,connection);
 	}
 	
 	public void doLogout() {
-//		System.err.println("logout...");
-		updateDatabase();
-		mainFrame.setLoggedIn(false,connection);
+
+		moduleFrame.dispose();
 		removeCanvasFrames();
 		// remove library
 		if (library !=null)
 			library.dispose();
 		chainCanvasCount = 0;
+		doLogin();
 	}
 	
 	private void removeCanvasFrames() {
@@ -229,13 +276,6 @@ public class Controller implements ApplicationController {
 		System.exit(0);
 	}
 	
-	/**
-	 * A placeholder (for now) that might eventually be used to make sure that 
-	 * the database is updated before the program exits.
-	 *
-	 */
-	public void updateDatabase() {
-	}
 		
 		
 	public void newChain() {
