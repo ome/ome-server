@@ -36,19 +36,20 @@ OME::Tasks::HierarchyExport - Export a list of objects as an OME XML hierarchy
 
 	# Build a DOM from a list of objects.
 	$exportH->buildDOM (@OMEobjects);
-	$exportH->buildDOM (@SomeMoreOMEobjects);
 	
 	# Write an XML file, get the XML as a string, or get the XML document (XML::LibXML), 
 	$exportH->exportFile ();
-	my $xml = $exportH->exportString ();
+	my $xml = $exportH->exportXML ();
 	my $doc = $exportH->doc();
 
 =head1 DESCRIPTION
 
 This class is responsible for exporting the hierarchy of OME elements as described in the OME-CA Schema.
 This is a simplified version of the regular OME schema which contains the Project, Dataset, Image, Feature hierarchy
-and CustomAttributes elements within the main OME element (global attributes), and the Dataset, Project and Image elements.
-The elements to be exported are specified as a list of objects that are passed to C<buildDom()>
+and CustomAttributes elements within the main OME element (global attributes), and the Dataset, Image and Feature elements.
+The elements to be exported are specified as a list of objects that are passed to C<buildDom()>.
+Since some objects in the XML document are nested within others (e.g.  Features within Image), parent objects not in the list
+are sutomatically created as needed to make a properly structured XML document with an <OME> root element.
 
 =cut
 
@@ -63,11 +64,12 @@ use OME::LSID;
 
 =head2 new
 
-	new OME::Tasks::HierarchyExport (session => $session, _doc => $XMLdoc);
+	my $exporter = new OME::Tasks::HierarchyExport (session => $session, _doc => $XMLdoc);
 
 This makes a new hierarchy exporter.  The session parameter is required, and the _doc parameter is optional.
 The _doc parameter is an XML document object as returned by XML::LibXML::Document->new();.
 It can also be any of the document objects returned by the OME Exporters' doc() method (i.e. L<OME::Tasks::OMEExport|OME::Tasks::OMEExport>).
+If the _doc parameter is not given, a new DOM will be created - the other methods in this class operate on this cumulative DOM.
 
 =cut
 
@@ -75,7 +77,7 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc _lsidResolver _DatasetElement _ImageElement);
+	my @fieldsILike = qw(session _doc _lsidResolver);
 
 	my $self;
 
@@ -95,10 +97,225 @@ sub new {
 		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
 	}
 
+	$self->{_GlobalCAs} = {};
+	$self->{_Projects} = {};
+	$self->{_Datasets} = {};
+	$self->{_Images} = {};
+	$self->{_Features} = {};
+
 	return bless $self, $class;
 }
 
 
+
+
+=head2 buildDOM
+
+	$exporter->buildDOM ($objects);
+
+This will build a DOM out of a list of OME objects.  The required parameter is a reference to a list of OME objects.
+Since objects are nested in XML, this will create any container objects necessary to make a document with an <OME> root element.
+The document generated with this call obeys the OME-CA Schema.  This method is E<not> re-entrant.  If you can call it repeatedly to build up
+the DOM, any pre-existing children of root will be unbound.  They will stay in the DOM but be in limbo without parents or children.
+
+=cut
+
+sub buildDOM {
+	my ($self, $objects, %flags) = @_;
+	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
+		unless ref($objects) eq 'ARRAY';
+
+	my $session = $self->{session};
+
+	my $GlobalCAs = $self->{_GlobalCAs};
+	my $Projects = $self->{_Projects};
+	my $Datasets = $self->{_Datasets};
+	my $Images = $self->{_Images};
+	my $Features = $self->{_Features};
+
+	# sort the objects by building trees out of hashes that mimick the XML structure.
+	# N.B.:  Without caching, and when the objects aren't sorted by depth, this code isn't very efficient in terms of memory or speed.
+	my ($object,$ref,$id,$granularity);
+	my ($target,$targetID);
+	
+	foreach $object (@$objects) {
+		$ref = ref ($object);
+		$id = $object->id();
+
+		# Process the various kinds of attributes.
+		# While we're at it, build the CA's parents.
+		if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
+			$granularity = $object->attribute_type()->granularity();
+			if ($granularity eq 'G')  {
+				if ( not exists $GlobalCAs->{$id} ) {
+					$GlobalCAs->{$id}->{node} = $self->Attribute2doc ($object);
+					$GlobalCAs->{$id}->{object} = $object;
+				}
+			} elsif ($granularity eq 'D')  {
+				$target = $object->dataset();
+				$targetID = $target->id();
+				if (not exists $Datasets->{$targetID}) {
+					$Datasets->{$targetID}->{node} = $self->Dataset2doc($target);
+					$Datasets->{$targetID}->{object} = $target;
+				}
+				if (not exists $Datasets->{$targetID}->{CAs}) {
+					$Datasets->{$targetID}->{CAs}->{node} = $self->newCAnode ($Datasets->{$targetID}->{node});
+				}
+				if (not exists $Datasets->{$targetID}->{CAs}->{$id}) {
+					my $newNode = $self->Attribute2doc ($object,$Datasets->{$targetID}->{CAs}->{node});
+					$Datasets->{$targetID}->{CAs}->{$id}->{node} = $newNode;
+					$Datasets->{$targetID}->{CAs}->{$id}->{object} = $object;
+				}
+
+			} elsif ($granularity eq 'I')  {
+				$target = $object->image();
+				$targetID = $target->id();
+				if (not exists $Images->{$targetID}) {
+					$Images->{$targetID}->{node} = $self->Image2doc($target);
+					$Images->{$targetID}->{object} = $target;
+				}
+				if (not exists $Images->{$targetID}->{CAs}) {
+					$Images->{$targetID}->{CAs}->{node} = $self->newCAnode ($Images->{$targetID}->{node});
+				}
+				if (not exists $Images->{$targetID}->{CAs}->{$id}) {
+					my $newNode = $self->Attribute2doc ($object,$Images->{$targetID}->{CAs}->{node});
+					$Images->{$targetID}->{CAs}->{$id}->{node} = $newNode;
+					$Images->{$targetID}->{CAs}->{$id}->{object} = $object;
+				}
+
+			} elsif ($granularity eq 'F')  {
+				my ($feature, $featureID);
+				$feature = $object->feature();
+				$featureID = $feature->id();
+				if (not exists $Features->{$featureID}) {
+					$target = $feature;
+					$targetID = $featureID;
+					$Features->{$targetID}->{node} = $self->Feature2doc($target);
+					$Features->{$targetID}->{object} = $target;
+
+					# Features can contain other features, so we have to back all the way out of this CA's parent
+					# until the feature's parent is undefined, building parent features all the way.
+					my $parent = $target->parent_feature();
+					my $parentID;
+					while ($parent) {
+						$parentID = $parent->id();
+						$targetID = $target->id();
+						if (not exists $Features->{$parentID}) {
+							logdbg "debug", ref ($self)."->buildDOM:  Making new Parent feature $parentID.";
+							$Features->{$parentID}->{node} = $self->Feature2doc($parent);
+							$Features->{$parentID}->{object} = $parent;
+						}
+						logdbg "debug", ref ($self)."->buildDOM:  Adding Parent feature $parentID.";
+						$Features->{$parentID}->{node}->appendChild ($Features->{$targetID}->{node});
+						$target = $parent;
+						$parent = $parent->parent_feature();
+					}
+					
+					# The ultimate parent of a feature is an Image, so we have to make that too.
+					my $image = $feature->image();
+					my $imageID = $image->id();
+					$targetID = $target->id();
+					if (not exists $Images->{$imageID}) {
+						$Images->{$imageID}->{node} = $self->Image2doc ($image);
+						$Images->{$imageID}->{object} = $image;
+					}
+					# Add the top-most feature to the image.
+					$Images->{$imageID}->{features}->{$targetID} = $Features->{$targetID};
+				}
+				if (not exists $Features->{$featureID}->{CAs}) {
+					$Features->{$featureID}->{CAs}->{node} = $self->newCAnode ($Features->{$featureID}->{node});
+				}
+				if (not exists $Features->{$featureID}->{CAs}->{$id}) {
+					my $newNode = $self->Attribute2doc ($object,$Features->{$featureID}->{CAs}->{node});
+					$Features->{$featureID}->{CAs}->{$id}->{node} = $newNode;
+					$Features->{$featureID}->{CAs}->{$id}->{object} = $object;
+				}
+			}
+
+		# Process the hierarchy objects
+		} elsif ($ref eq 'OME::Project' and not exists $Projects->{$id}) {
+			$Projects->{$id}->{node} = $self->Project2doc ($object);
+			$Projects->{$id}->{object} = $object;
+		} elsif ($ref eq 'OME::Dataset' and not exists $Datasets->{$id}) {
+			$Datasets->{$id}->{node} = $self->Dataset2doc ($object);
+			$Datasets->{$id}->{object} = $object;
+		} elsif ($ref eq 'OME::Image' and not exists $Images->{$id}) {
+			$Images->{$id}->{node} = $self->Image2doc ($object);
+			$Images->{$id}->{object} = $object;
+		} elsif ($ref eq 'OME::Feature' and not exists $Features->{$id}) {
+			$Features->{$id}->{node} = $self->Feature2doc ($object);
+			$Features->{$id}->{object} = $object;
+		}
+	}
+	# End first run through objects array.
+	
+	# In the second pass, we'll go through the hierarchy, adding it to the OME element.
+	my $doc = $self->doc();
+	my $root = $doc->documentElement();
+	
+	# Unbind every last child of the root node.
+	# These will still be attached to the document, but without parents or children.
+	while ($root->lastChild()) {
+		logdbg "debug", ref ($self)."->buildDOM:  removing last child.";
+		$root->lastChild()->unbindNode();
+	}
+	
+	
+	my $element;
+
+	foreach (values %$Projects) {
+		$root->appendChild ($_->{node});
+	}
+	
+	foreach my $dataset (values %$Datasets) {
+		$root->appendChild ($dataset->{node});
+		my @datasetProjects = $dataset->{object}->projects();
+
+		# Only add the projects in the $objects list.
+		foreach (@datasetProjects) {
+			$self->addRefNode ($_, 'Project', $dataset->{node})
+				if exists $Projects->{$_->id()};
+		}
+	}
+
+	foreach my $image (values %$Images) {
+		$root->appendChild ($image->{node});
+		my @imageDatasets = $image->{object}->datasets();
+
+		# Only add the datasets in the $objects list.
+		foreach (@imageDatasets) {
+			$self->addRefNode ($_, 'Dataset', $image->{node})
+				if exists $Datasets->{$_->id()};
+		}
+
+		# Add the features
+		foreach my $feature (values %{ $image->{features} }) {
+			$image->{node}->appendChild ($feature->{node});
+		}
+
+	}
+	
+	my @CAs = values (%$GlobalCAs);
+	if (@CAs > 0) {
+		my $CAnode = $self->newCAnode ($root);
+		foreach ( @CAs ) {
+			$CAnode->appendChild ($_->{node});
+		}
+	}
+
+
+
+} 
+
+
+
+=head2 exportFile
+
+	$exporter->exportFile (filename => $fileName);
+
+This will write a new gzip-compressed XML file containing the DOM presently in $exporter.  Call C<buildDOM()> to build a DOM out of OME objects.
+
+=cut
 
 sub exportFile {
 	my ($self, $filename, %flags) = @_;
@@ -110,186 +327,36 @@ sub exportFile {
 		unless $doc->toFile($filename, 1); 
 }
 
+
+
+=head2 exportXML
+
+	my $XMLstring = $exporter->exportXML ();
+
+This will return a formatted XML string containing the DOM presently in $exporter.  Call C<buildDOM()> to build a DOM out of OME objects.
+
+=cut
+
 sub exportXML {
 	my ($self, %flags) = @_;
 	return ($self->doc()->toString(1)); 
 }
+
+
+=head2 doc
+
+	my $document = $exporter->doc ();
+
+This will return the DOM presently in $exporter.  Call C<buildDOM()> to build a DOM out of OME objects.
+
+=cut
+
 
 sub doc {
 	my $self = shift;
 	return ($self->{_doc});
 }
 
-
-
-sub buildDOM {
-	my ($self, $objects, %flags) = @_;
-	logdie ref ($self)."->buildDOM:	 Need a reference to an array of objects."
-		unless ref($objects) eq 'ARRAY';
-
-	my $session = $self->{session};
-	my %references;
-
-	# sort the objects by building trees out of hashes that mimick the XML structure.
-	my ($object,$ref,$id,$granularity);
-	my (%GlobalCAs,%DatasetCAs,%ImageCAs,%FeatureCAs,%Projects,%Datasets,%Images,%Features);
-	my ($target,$targetID);
-	foreach $object (@$objects) {
-		$ref = ref ($object);
-		$id = $object->id();
-
-		# Process the various kinds of attributes.
-		# While we're at it, build the CA's parents.
-		if (UNIVERSAL::isa($object,"OME::AttributeType::Superclass") ) {
-			$granularity = $object->attribute_type()->granularity();
-			if ($granularity eq 'G')  {
-				if ( not exists $GlobalCAs{$id} ) {
-					$GlobalCAs{$id}->{node} = $self->Attribute2doc ($object);
-					$GlobalCAs{$id}->{object} = $object;
-				}
-			} elsif ($granularity eq 'D')  {
-				$target = $object->dataset();
-				$targetID = $target->id();
-				if (not exists $Datasets{$targetID}) {
-					$Datasets{$targetID}->{node} = $self->Dataset2doc($target);
-					$Datasets{$targetID}->{object} = $target;
-				}
-				if (not exists $Datasets{$targetID}->{CAs}) {
-					$Datasets{$targetID}->{CAs}->{node} = $self->newCAnode ($Datasets{$targetID}->{node});
-				}
-				if (not exists $Datasets{$targetID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Datasets{$targetID}->{CAs}->{node});
-					$Datasets{$targetID}->{CAs}->{$id}->{node} = $newNode;
-					$Datasets{$targetID}->{CAs}->{$id}->{object} = $object;
-				}
-
-			} elsif ($granularity eq 'I')  {
-				$target = $object->image();
-				$targetID = $target->id();
-				if (not exists $Images{$targetID}) {
-					$Images{$targetID}->{node} = $self->Image2doc($target);
-					$Images{$targetID}->{object} = $target;
-				}
-				if (not exists $Images{$targetID}->{CAs}) {
-					$Images{$targetID}->{CAs}->{node} = $self->newCAnode ($Images{$targetID}->{node});
-				}
-				if (not exists $Images{$targetID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Images{$targetID}->{CAs}->{node});
-					$Images{$targetID}->{CAs}->{$id}->{node} = $newNode;
-					$Images{$targetID}->{CAs}->{$id}->{object} = $object;
-				}
-
-			} elsif ($granularity eq 'F')  {
-				my $feature;
-				$target = $feature = $object->feature();
-				$targetID = $target->id();
-				if (not exists $Features{$targetID}) {
-					$Features{$targetID}->{node} = $self->Feature2doc($target);
-					$Features{$targetID}->{object} = $target;
-				}
-				if (not exists $Features{$targetID}->{CAs}) {
-					$Features{$targetID}->{CAs}->{node} = $self->newCAnode ($Features{$targetID}->{node});
-				}
-				if (not exists $Features{$targetID}->{CAs}->{$id}) {
-					my $newNode = $self->Attribute2doc ($object,$Features{$targetID}->{CAs}->{node});
-					$Features{$targetID}->{CAs}->{$id}->{node} = $newNode;
-					$Features{$targetID}->{CAs}->{$id}->{object} = $object;
-				}
-
-				# Features can contain other features, so we have to back all the way out of this CA's parent
-				# until the feature's parent is undefined, building parent features all the way.
-				my $parent = $target->parent_feature();
-				my $parentID;
-				while ($parent) {
-					$parentID = $parent->id();
-					$targetID = $target->id();
-					if (not exists $Features{$parentID}) {
-						logdbg "debug", ref ($self)."->buildDOM:  Making new Parent feature $parentID.";
-						$Features{$parentID}->{node} = $self->Feature2doc($parent);
-						$Features{$parentID}->{object} = $parent;
-					}
-					logdbg "debug", ref ($self)."->buildDOM:  Adding Parent feature $parentID.";
-					$Features{$parentID}->{node}->appendChild ($Features{$targetID}->{node});
-					$target = $parent;
-					$parent = $parent->parent_feature();
-				}
-				
-				# The ultimate parent of a feature is an Image, so we have to make that too.
-				my $image = $feature->image();
-				my $imageID = $image->id();
-				$targetID = $target->id();
-				if (not exists $Images{$imageID}) {
-					$Images{$imageID}->{node} = $self->Image2doc ($image);
-					$Images{$imageID}->{object} = $image;
-				}
-				# Add the top-most feature to the image.
-				$Images{$imageID}->{features}->{$targetID} = $Features{$targetID};
-				
-			}
-
-		# Process the hierarchy objects
-		} elsif ($ref eq 'OME::Project' and not exists $Projects{$id}) {
-			$Projects{$id}->{node} = $self->Project2doc ($object);
-			$Projects{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Dataset' and not exists $Datasets{$id}) {
-			$Datasets{$id}->{node} = $self->Dataset2doc ($object);
-			$Datasets{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Image' and not exists $Images{$id}) {
-			$Images{$id}->{node} = $self->Image2doc ($object);
-			$Images{$id}->{object} = $object;
-		} elsif ($ref eq 'OME::Feature' and not exists $Features{$id}) {
-			$Features{$id}->{node} = $self->Feature2doc ($object);
-			$Features{$id}->{object} = $object;
-		}
-	}
-	# End first run through objects array.
-	
-	# In the second pass, we'll go through the hierarchy, adding it to the OME element.
-	my $doc = $self->doc();
-	my $root = $doc->documentElement();
-	my $element;
-	foreach (values %Projects) {
-		$root->appendChild ($_->{node});
-	}
-	
-	foreach my $dataset (values %Datasets) {
-		$root->appendChild ($dataset->{node});
-		my @projects = $dataset->{object}->projects();
-
-		# Only add the projects in the $objects list.
-		foreach (@projects) {
-			$self->addRefNode ($_, 'Project', $dataset->{node})
-				if exists $Projects{$_->id()};
-		}
-	}
-
-	foreach my $image (values %Images) {
-		$root->appendChild ($image->{node});
-		my @datasets = $image->{object}->datasets();
-
-		# Only add the datasets in the $objects list.
-		foreach (@datasets) {
-			$self->addRefNode ($_, 'Dataset', $image->{node})
-				if exists $Datasets{$_->id()};
-		}
-
-		# Add the features
-		foreach my $feature (values %{ $image->{features} }) {
-			$image->{node}->appendChild ($feature->{node});
-		}
-
-	}
-	
-	my @CAs = values (%GlobalCAs);
-	if (@CAs > 0) {
-		my $CAnode = $self->newCAnode ($root);
-		foreach ( @CAs ) {
-			$CAnode->appendChild ($_->{node});
-		}
-	}
-
-
-} 
 
 # Project2doc
 # Parameters: Project object
@@ -307,6 +374,7 @@ my ($self, $project) = @_;
 	$element->setAttribute( 'Experimenter' , $lsid->getLSID ($project->owner()) );
 	$element->setAttribute( 'Group' , $lsid->getLSID ($project->group()) );
 	logdbg "debug", ref ($self)."->Project2doc:  Adding Project element.";
+	
 	return $element;
 	
 }
@@ -335,6 +403,7 @@ my ($self, $dataset) = @_;
 # N.B.:  This element has optional multiple Project elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Project', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Dataset2doc:  Adding Dataset element.";
+	
 	return $element;
 }
 
