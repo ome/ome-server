@@ -22,6 +22,7 @@
 use OMEpl;
 use strict;
 
+
 my $OME = new OMEpl;
 my $cgi = $OME->cgi;
 my $path = $cgi->url_param('Path');
@@ -50,7 +51,7 @@ my $blue = $cgi->url_param('Blue');
 			" ORDER BY attributes_iccb_tiff.wave";
 		my $rows =  $OME->DBIhandle->selectall_arrayref ($select);
 		my $cmd;
-print STDERR 'Scalar rows: '.scalar(@$rows)."\n";
+
 		if (scalar @$rows eq 3) {
 			$red = 0 unless defined $red;
 			$green = 1 unless defined $green;
@@ -60,13 +61,25 @@ print STDERR 'Scalar rows: '.scalar(@$rows)."\n";
 			$green = 1 unless defined $green;
 			$blue = 1 unless defined $blue;
 		}
-		$cmd = q/combine -compose ReplaceBlue "|convert -normalize '/.
+		/* This assumes that RGB will always be associated with      */
+		/* channels 3,2,1, resp. Needs to read the color/channel     */
+		/* assignment from the metadata, once it gets recorded there */
+		if (scalar @$rows eq 3) {
+		    $cmd = q/combine -compose ReplaceBlue "|convert -normalize '/.
 			$rows->[$blue]->[0].$rows->[$blue]->[1].
 			q/' TIFF:-" -compose ReplaceGreen "|convert -normalize '/.
 			$rows->[$green]->[0].$rows->[$green]->[1].
 			q/' TIFF:-" -compose ReplaceRed "|convert -normalize '/.
 			$rows->[$red]->[0].$rows->[$red]->[1].
 			q/' TIFF:-" JPEG:-/;
+		} elsif (scalar @$rows eq 2) {
+		    $cmd = q/combine -compose ReplaceBlue "|convert -normalize '/.
+			$rows->[$blue]->[0].$rows->[$blue]->[1].
+			q/' TIFF:-" -compose ReplaceRed "|convert -normalize '/.
+			$rows->[$red]->[0].$rows->[$red]->[1].
+			q/' TIFF:-" JPEG:-/;
+		}
+
 #		$cmd = q/combine -compose CopyBlue "|convert -normalize '/.
 #			$rows->[$blue]->[0].$rows->[$blue]->[1].
 #			q/' TIFF:-" -compose CopyGreen "|convert -normalize '/.
