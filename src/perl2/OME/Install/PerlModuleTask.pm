@@ -52,6 +52,9 @@ use base qw(OME::Install::InstallationTask);
 # Default package repository
 my $REPOSITORY = "http://openmicroscopy.org/packages/perl/";
 
+# Default ranlib command
+my $RANLIB= "ranlib";
+
 # Global logfile filehandle
 my $LOGFILE;
 
@@ -69,7 +72,7 @@ my @modules = (
     {
 	name => 'DBI',
 	repository_file => 'http://openmicroscopy.org/packages/perl/DBI-1.30.tar.gz',
-	valid_versions => ['eq 1.30', 'eq 1.32', 'eq 1.35']
+	valid_versions => ['== 1.30', '== 1.32', '== 1.35']
     },{
 	name => 'Digest::MD5',
 	repository_file => 'http://openmicroscopy.org/packages/perl/Digest-MD5-2.13.tar.gz'
@@ -97,18 +100,38 @@ my @modules = (
     },{
 	name => 'DBD::Pg',
 	repository_file => 'http://openmicroscopy.org/packages/perl/DBD-Pg-1.21.tar.gz',
-	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.21', 'eq 1.22']
-	#installModule => \&DBD_Pg_Install
+	valid_versions => ['== 0.95', '== 1.01', '== 1.20', '== 1.21', '== 1.22'],
+	pre_install => sub {
+	    which ("pg_config") or croak "Unable to execute pg_config, is PostgreSQL installed ?";
+
+	    my $version = `pg_config --version`;
+	    croak "PostgreSQL version must be >= 7.1" unless $version ge '7.1';
+
+	    $ENV{POSTGRES_INCLUDE} = `pg_config --includedir` or croak "Unable to retrieve PostgreSQL include dir.";
+	    chomp $ENV{POSTGRES_INCLUDE};
+	    $ENV{POSTGRES_LIB} = `pg_config --libdir` or croak "Unable to retrieve PostgreSQL library dir.";
+	    chomp $ENV{POSTGRES_LIB};
+	    $ENV{POSTGRES_LIB} .= " -lssl";
+
+	    if ($OSNAME eq 'darwin') {
+		print "*** Running $RANLIB on $ENV{POSTGRES_LIB}/libpq.a\n";
+		(system ("$RANLIB $ENV{POSTGRES_LIB}/libpq.a") == 0)
+		    or croak "Couldn't run $RANLIB on $ENV{POSTGRES_LIB}/libpq.a";
+	    }
+	}
     },{
 	name => 'Sort::Array',
 	repository_file => 'http://openmicroscopy.org/packages/perl/Sort-Array-0.26.tar.gz',
     },{
 	name => 'Test::Harness',
 	repository_file => 'http://openmicroscopy.org/packages/perl/Test-Harness-2.26.tar.gz',
-	valid_versions => ['gt 2.03']
+	valid_versions => ['> 2.03']
     },{
 	name => 'Test::Simple',
 	repository_file => 'http://openmicroscopy.org/packages/perl/Test-Simple-0.47.tar.gz'
+    },{
+	name => 'IPC::Run',
+	repository_file => 'http://openmicroscopy.org/packages/perl/IPC-Run-0.75.tar.gz'
     },{
 	name => 'Term::ReadKey',
 	repository_file => 'http://openmicroscopy.org/packages/perl/TermReadKey-2.21.tar.gz'
@@ -160,7 +183,7 @@ my @modules = (
     },{
 	name => 'Class::DBI',
 	repository_file => 'http://openmicroscopy.org/packages/perl/Class-DBI-0.90.tar.gz',
-	valid_versions => ['eq 0.90']
+	valid_versions => ['== 0.90']
     },{
 	name => 'GD',
 	repository_file => 'http://openmicroscopy.org/packages/perl/GD-1.33.tar.gz'
@@ -207,9 +230,9 @@ sub check_module {
     return 1 unless exists $module->{valid_versions};
 
     foreach my $valid_version (@{$module->{valid_versions}}) {
-	my $eval = 'if ('.$module->{version}." $valid_version".') { $retval = 1 }';
+	my $eval = 'if ($module->{version} '.$valid_version.') { $retval = 1 }';
 
-	eval ($eval);
+	eval $eval;
     }
 
     return $retval ? 1 : 0;
@@ -226,6 +249,13 @@ sub install {
     #*********
     #********* Initial setup
     #*********
+
+    # Pre-install
+    if (exists $module->{pre_install}) {
+	print "  \\_ Pre-install ";
+	&{$module->{pre_install}};
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+    }
 
     # Download
     print "  \\_ Downloading $module->{repository_file} ";
@@ -279,7 +309,13 @@ sub install {
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Install
-    print "This is where we'd install.\n\n";
+    print "  \\_ Installing ";
+    $retval = install_module ($wd, $LOGFILE);
+
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to install module, see PerlModuleTask.log for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
 
     return;
 }
@@ -312,9 +348,9 @@ sub execute {
     # chdir into our INSTALL_HOME	
     chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
     
-    print_header ("Perl Module Setup");
+    print_header ("Perl Module Dependency Setup");
 
-    print "(All verbose information logged in $OME_TMP_DIR/install/PerlModuleTask.log)\n\n";
+    print "(All verbose information logged in $INSTALL_HOME/install/PerlModuleTask.log)\n\n";
 
     # Get our logfile and open it for reading
     open ($LOGFILE, ">", "$INSTALL_HOME/PerlModuleTask.log")
@@ -327,6 +363,8 @@ sub execute {
     print "Checking modules\n";
     foreach my $module (@modules) {
 	print "  \\_ $module->{name}";
+
+	&{$module->{pre_install}} if exists $module->{pre_install};
 
 	if (exists $module->{exception} and &{$module->{exception}}) {
 	    print BOLD, " [OK]", RESET, ".\n";
@@ -371,14 +409,54 @@ sub execute {
 	}
     }
 
-    # Return to our original working directory
+    print "\n";  # Spacing
+
+    #*********
+    #********* Return to our original working directory and then install OME's perl modules
+    #*********
+
     chdir ($cwd) or croak "Unable to return to our original working directory \"$cwd\", $!";
 
-    return;
+    print_header ("Core Perl Module Setup");
+    
+    print "(All verbose information logged in $OME_TMP_DIR/install/PerlModuleTask.log)\n\n";
+
+    my $retval = 0;
+
+    print "Installing modules\n";
+
+    # Configure
+    print "  \\_ Configuring ";
+    $retval = configure_module ("src/perl2/", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to configure module, see PerlModuleTask.log for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Compile
+    print "  \\_ Compiling ";
+    $retval = compile_module ("src/perl2/", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to compile module, see PerlModuleTask.log for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Install
+    print "  \\_ Installing ";
+    $retval = install_module ("src/perl2", $LOGFILE);
+
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to install module, see PerlModuleTask.log for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    return 1;
 }
 
 sub rollback {
     print "Rollback!\n";
 
-    return;
+    return 1;
 }
