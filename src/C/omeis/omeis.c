@@ -589,8 +589,12 @@ char **cgivars=param;
 				return (-1);
 			}
 	
-			xmlInsertBinaryData( file_path );
-
+			xmlInsertBinaryData( file_path, iam_BigEndian );
+			/* This is supposed to parse from STDIN. It works when input
+			is piped in and omeis is ran as a command line program. It
+			reports 'Empty Document' when input is posted on a form and
+			omeis is ran as a cgi.
+			xmlInsertBinaryData( "-", iam_BigEndian );*/
 
 			if ( !(theFile = GetFileRep (ID,0,0)) ) {
 				HTTP_DoError (method,"Could not open FileID=%llu!",
