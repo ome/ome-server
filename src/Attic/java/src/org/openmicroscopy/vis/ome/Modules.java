@@ -45,21 +45,24 @@ public class Modules extends ArrayList {
 	
 	public Modules(Factory factory) {
 	
+		super();
 		// Get all of the modules that are avialable.
-		super(factory.findObjects("OME::Module",null));
+		List mods = factory.findObjects("OME::Module",null);
 		
 		// populate each of them.
-		Iterator iter = this.iterator();
+		Iterator iter = mods.iterator();
 		while (iter.hasNext()) {
 			RemoteModule mod = (RemoteModule) iter.next();
 			populateModule(mod);
+			add(new ModuleInfo(mod));
 		}
 	}
 	
 	public void dump() {
-		Iterator iter = this.iterator();
+		Iterator iter = iterator();
 		while (iter.hasNext()) {
-			RemoteModule mod = (RemoteModule) iter.next();
+			ModuleInfo modinf = (ModuleInfo) iter.next();
+			RemoteModule mod = modinf.getModule();
 			dumpModule(mod);
 		}
 	}
@@ -157,9 +160,9 @@ public class Modules extends ArrayList {
 	 * @param i 
 	 * @return the ith module, or null.
 	 */
-	public RemoteModule getModule(int i) {
+	public ModuleInfo getModuleInfo(int i) {
 		try {
-			return (RemoteModule) get(i);
+			return (ModuleInfo) get(i);
 		} catch (IndexOutOfBoundsException e) {
 			return null;
 		}

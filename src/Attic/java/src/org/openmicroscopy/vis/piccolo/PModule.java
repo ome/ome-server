@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.Connection;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
@@ -113,7 +114,7 @@ public class PModule extends PPath {
 	 * @param x Initial x coordinate (global)
 	 * @param y Initial y coordinate
 	 */
-	public PModule(PChainCanvas canvas,RemoteModule module,float x,float y) {
+	public PModule(Connection connection,RemoteModule module,float x,float y) {
 		super();
 		this.module=module;
 		
@@ -133,7 +134,7 @@ public class PModule extends PPath {
 		width = (float) name.getBounds().getWidth();
 		
 		// do the individual parameter labels.
-		addParameterLabels(canvas);  
+		addParameterLabels(connection);  
 		
 		// set width of the whole bounding rectangle
 		width = NAME_LABEL_OFFSET*2+width;
@@ -160,9 +161,9 @@ public class PModule extends PPath {
 	 * of the bounding rectangle that will be needed to hold all of the 
 	 * parameters<p>
 	 *
-	 * @param canvas
+	 * @param connection  the database connection object
 	 */
-	private void addParameterLabels(PChainCanvas canvas) {
+	private void addParameterLabels(Connection connection) {
 		
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
@@ -189,7 +190,7 @@ public class PModule extends PPath {
 				// add them to label nodes, 
 				// and store max width
 				param = (FormalParameter) inputs.get(i);
-				inTexts[i]= new PFormalInput(this,param,canvas);
+				inTexts[i]= new PFormalInput(this,param,connection);
 				labelNodes.addChild(inTexts[i]);
 				if (inTexts[i].getFullBoundsReference().getWidth() > maxInputWidth)
 					maxInputWidth = (float) inTexts[i].getFullBoundsReference().getWidth();
@@ -197,7 +198,7 @@ public class PModule extends PPath {
 			if (i < outSize) {
 				// do the same for outputs.
 				param = (FormalParameter) outputs.get(i);
-				outTexts[i]= new PFormalOutput(this,param,canvas);
+				outTexts[i]= new PFormalOutput(this,param,connection);
 				labelNodes.addChild(outTexts[i]);
 				if (outTexts[i].getFullBoundsReference().getWidth() > maxOutputWidth)
 					maxOutputWidth = (float) outTexts[i].getFullBoundsReference().getWidth();

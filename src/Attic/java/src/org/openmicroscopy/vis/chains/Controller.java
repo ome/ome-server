@@ -57,7 +57,7 @@ import org.openmicroscopy.util.LoginDialog;
 public class Controller implements ApplicationController {
 	
 	private CmdTable cmd;
-	private MainFrame mainFrame;
+	private CanvasFrame mainFrame;
 	private Connection connection = null;
 
 	public Controller() {
@@ -68,7 +68,7 @@ public class Controller implements ApplicationController {
 			return cmd;	
 	}
 	
-	public void setMainFrame(MainFrame mf) {
+	public void setMainFrame(CanvasFrame mf) {
 		this.mainFrame = mf;
 	}
 	

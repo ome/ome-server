@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.PFormalInput
+ * org.openmicroscopy.vis.chains.ome.ModuleInfo
  *
  *------------------------------------------------------------------------------
  *
@@ -29,6 +29,7 @@
 
 
 
+
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -36,52 +37,36 @@
  *------------------------------------------------------------------------------
  */
 
-package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-import org.openmicroscopy.SemanticType;
-import org.openmicroscopy.vis.ome.Connection;
-import javax.swing.SwingConstants;
+
+ 
+package org.openmicroscopy.vis.ome;
+
+import org.openmicroscopy.vis.piccolo.PModule;
+import org.openmicroscopy.remote.RemoteModule;
 import java.util.ArrayList;
 
-/**
- * Nodes for displaying module inputs<p>
- * 
- * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
- */
 
+public class ModuleInfo {
 
-public class PFormalInput extends PFormalParameter {
+	private RemoteModule module;
+	private ArrayList pModules = null;
 	
-	
-	public PFormalInput(PModule node,FormalParameter param, 
-		Connection connection) {
-		super(node,param,connection);
-		
-		// if I have a semantic type, add it to the lists of inputs with
-		// this semantic type.
-		
-		if (param.getSemanticType()!=null)
-			connection.addInput(param.getSemanticType(),this);
-		
-		// create locator
-		locator = new PParameterLocator(this,SwingConstants.WEST);
+	public ModuleInfo(RemoteModule module) {
+		this.module = module;
 	}
 	
-	/**
-	 * For inputs, the corresponding list is a list of ModuleOutputs.
-	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of outputs with that semantic type.
-	 * 
-	 * @return a list of ModuleOutputs with the same semantic type as param.  
-	 */
-	public ArrayList getCorresponding() {
-		SemanticType type = param.getSemanticType();
-		if (type == null) 
-			return null;
-		
-		return connection.getOutputs(type);
+	public RemoteModule getModule() {
+		return module;
+	}
+	
+	public void addModuleWidget(PModule pMod) {
+		if (pModules == null)
+			pModules = new ArrayList();
+		pModules.add(pMod);
+	}
+	
+	public ArrayList getModuleWidgets() {
+		return pModules;
 	}
 }

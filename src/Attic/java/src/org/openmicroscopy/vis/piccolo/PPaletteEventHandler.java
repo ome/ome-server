@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.PFormalInput
+ * org.openmicroscopy.vis.piccolo.PPaletteEventHandler
  *
  *------------------------------------------------------------------------------
  *
@@ -29,6 +29,7 @@
 
 
 
+
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -36,52 +37,45 @@
  *------------------------------------------------------------------------------
  */
 
+
+
+
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-import org.openmicroscopy.SemanticType;
-import org.openmicroscopy.vis.ome.Connection;
-import javax.swing.SwingConstants;
-import java.util.ArrayList;
+import edu.umd.cs.piccolo.event.PPanEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.PNode;
 
-/**
- * Nodes for displaying module inputs<p>
+/** 
+ * An event handler for the PPaletteCanvas. Generally works like 
+ * a pan event handler, but can tell the canvas which item we're on.
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-
-public class PFormalInput extends PFormalParameter {
+public class PPaletteEventHandler extends  PPanEventHandler {
 	
+	private PPaletteCanvas canvas;
 	
-	public PFormalInput(PModule node,FormalParameter param, 
-		Connection connection) {
-		super(node,param,connection);
-		
-		// if I have a semantic type, add it to the lists of inputs with
-		// this semantic type.
-		
-		if (param.getSemanticType()!=null)
-			connection.addInput(param.getSemanticType(),this);
-		
-		// create locator
-		locator = new PParameterLocator(this,SwingConstants.WEST);
+	public PPaletteEventHandler(PPaletteCanvas canvas) {
+		super();
+		this.canvas = canvas;		
 	}
 	
-	/**
-	 * For inputs, the corresponding list is a list of ModuleOutputs.
-	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of outputs with that semantic type.
-	 * 
-	 * @return a list of ModuleOutputs with the same semantic type as param.  
-	 */
-	public ArrayList getCorresponding() {
-		SemanticType type = param.getSemanticType();
-		if (type == null) 
-			return null;
-		
-		return connection.getOutputs(type);
+	public void mouseEntered(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		if (node instanceof PModule) {
+			PModule p = (PModule) node;
+			canvas.setSelected(p.getModule());
+			// do something
+		}
+		else
+			canvas.setSelected(null);
 	}
-}
+	
+	public void mouseExited(PInputEvent e) {
+		canvas.setSelected(null);
+	}
+ }

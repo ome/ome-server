@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.PFormalInput
+ * org.openmicroscopy.vis.chains.ModulePaletteFrame
  *
  *------------------------------------------------------------------------------
  *
@@ -29,6 +29,7 @@
 
 
 
+
 /*------------------------------------------------------------------------------
  *
  * Written by:    Harry Hochheiser <hsh@nih.gov>
@@ -36,52 +37,43 @@
  *------------------------------------------------------------------------------
  */
 
-package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-import org.openmicroscopy.SemanticType;
+
+
+package org.openmicroscopy.vis.chains;
+
+import org.openmicroscopy.vis.piccolo.PPaletteCanvas;
 import org.openmicroscopy.vis.ome.Connection;
-import javax.swing.SwingConstants;
-import java.util.ArrayList;
+import javax.swing.JFrame;
+import java.awt.Rectangle;
 
-/**
- * Nodes for displaying module inputs<p>
+/** 
+ * <p>Main operational chain for the Chain-building application holds
+ * toolbar and the chain canvas.<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
+public class ModulePaletteFrame extends JFrame {
 
-public class PFormalInput extends PFormalParameter {
+	public PPaletteCanvas canvas = null;
 	
-	
-	public PFormalInput(PModule node,FormalParameter param, 
-		Connection connection) {
-		super(node,param,connection);
+	public ModulePaletteFrame(Connection connection) {
+		super("OME Module Palette");
 		
-		// if I have a semantic type, add it to the lists of inputs with
-		// this semantic type.
+		canvas = new PPaletteCanvas(connection);
 		
-		if (param.getSemanticType()!=null)
-			connection.addInput(param.getSemanticType(),this);
-		
-		// create locator
-		locator = new PParameterLocator(this,SwingConstants.WEST);
+		getContentPane().add(canvas);
+		int w = canvas.getPaletteWidth();
+		System.err.println("width is "+w);
+		int h = canvas.getPaletteHeight();
+		System.err.println("heightis "+h);
+		setBounds(new Rectangle(710,10,canvas.getPaletteWidth(),
+				canvas.getPaletteHeight()));
+		show();	
 	}
 	
-	/**
-	 * For inputs, the corresponding list is a list of ModuleOutputs.
-	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of outputs with that semantic type.
-	 * 
-	 * @return a list of ModuleOutputs with the same semantic type as param.  
-	 */
-	public ArrayList getCorresponding() {
-		SemanticType type = param.getSemanticType();
-		if (type == null) 
-			return null;
-		
-		return connection.getOutputs(type);
-	}
 }
+	

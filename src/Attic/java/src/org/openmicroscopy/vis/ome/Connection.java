@@ -45,6 +45,13 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
 import org.openmicroscopy.vis.util.SwingWorker;
+import org.openmicroscopy.vis.piccolo.PFormalParameter;
+import org.openmicroscopy.vis.piccolo.PFormalInput;
+import org.openmicroscopy.vis.piccolo.PFormalOutput;
+import org.openmicroscopy.SemanticType;
+import java.util.Hashtable;
+import java.util.ArrayList;
+
 
 /** 
  * <p>A wrapper class to handle discussion with the OME Database.<p>
@@ -62,7 +69,19 @@ public class Connection {
 	
 	Modules modules;
 
-	
+	//inputs and outputs are hashes that match semantic types 
+ 	// to PModuleInputs and PModuleOutputs of the same type. 
+	 // Given a semantic type as input(output), looking at the output(input)
+	 // map entry for the given type will give a list of labels of 
+	 // outputs(inputs) it can link to.
+	 //
+	 // This is a bit clunky. If OME java types were more easily subclassed, 
+	 // it might make more sense to have these lists in subclasses of 
+	 // RemoteSemanticType. Oh well.
+    
+ 	private Hashtable inputs = new Hashtable();
+ 	private Hashtable outputs = new Hashtable();
+ 	
 	/***
 	 * Creates a new connection to the database via XMLRPC. If successful, gets 
 	 * session and factory objects that are used to access data in the database.
@@ -77,6 +96,7 @@ public class Connection {
 	 */
 	public Connection(final ApplicationController controller,
 		final String URL,final String userName,final String passWord) {
+		
 		
 		// wrap it up in a Swing thread to allow UI to proceed 
 		// uninterrupted.
@@ -120,11 +140,75 @@ public class Connection {
 	 * @param i
 	 * @return
 	 */
-	public RemoteModule getModule(int i) {
-		return modules.getModule(i);
+	public ModuleInfo getModuleInfo(int i) {
+		return modules.getModuleInfo(i);
 	}
 	
 	public int moduleCount() {
 		return modules.size();
+	}
+	
+	/**
+	 * The inputs and outputs lists are hashes of lists, keyed by
+	 * SemanticType. The entries in those lists are PFormalParameter 
+	 * instances - either ModuleInputs or ModuleOutputs.
+	 *  
+	 * @param type
+	 * @param in
+	 */
+	public void addInput(SemanticType type,PFormalInput in) {
+		addToHash(type,in,inputs);	
+	}
+	
+	public void addOutput(SemanticType type,PFormalOutput out) {
+		addToHash(type,out,outputs);
+	}
+	
+	private void addToHash(SemanticType type,PFormalParameter param,
+					Hashtable hash) {
+		ArrayList list;
+		// hash things based on the string rep. of the type id.
+		// can't do 
+		//Integer id = new Integer(type.getID());
+		// as the key, as each call for a given integer value 
+		// will give a different object.
+		String idstring = Integer.toString(type.getID());
+		
+		// get the list, create a new list if there's no entry
+		// for the key.
+		Object map = hash.get(idstring);
+		if (map == null) 
+			list = new ArrayList();
+		else 
+			list = (ArrayList) map;
+			
+		// add the parameter to the list and put it back in the hash.
+		list.add(param);
+		hash.put(idstring,list);	
+	}
+	
+	/** 
+	 * Returns the lists of inputs for the given semantic type
+	 * @param type
+	 * @return list of inputs with this type
+	 */
+	public ArrayList getInputs(SemanticType type) {
+		return getHashedList(type,inputs);
+	}
+	
+	/** 
+	 * Returns the lists of outputs for the given semantic type
+	 * @param type
+	 * @return list of outputs with this type
+	 */
+	public ArrayList getOutputs(SemanticType type) {
+		return getHashedList(type,outputs);
+	}
+	
+	private ArrayList getHashedList(SemanticType type,Hashtable hash) {
+		//Integer id = new Integer(type.getID());
+		String idstring = Integer.toString(type.getID());
+		Object obj = hash.get(idstring);
+		return (ArrayList) obj;
 	}
 }

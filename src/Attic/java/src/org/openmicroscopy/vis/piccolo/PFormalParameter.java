@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
@@ -77,7 +78,7 @@ public abstract class PFormalParameter extends PNode implements
 	
 	
 	protected FormalParameter param;
-	protected PChainCanvas canvas=null;
+	protected Connection connection = null;
 	protected PModule node;
 	private  Vector linkedTo = new Vector(); 
 	
@@ -108,13 +109,13 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	public PFormalParameter(PModule node,FormalParameter param,
-			PChainCanvas canvas) {
+			Connection connection) {
 		textNode = new PText(param.getParameterName());
 		addChild(textNode);
 		setChildrenPickable(false);
 		setBounds(textNode.getFullBounds());			
 		//super(param.getParameterName());
-		this.canvas = canvas;
+		this.connection = connection;
 		this.param = param;
 		this.node = node;
 		node.addNodeEventListener(this);
@@ -150,9 +151,6 @@ public abstract class PFormalParameter extends PNode implements
 		return param.getSemanticType();
 	}
 	
-	public PChainCanvas getCanvas() {
-		return canvas;
-	}
 	
 	public PParameterLocator getLocator() {
 		return locator;

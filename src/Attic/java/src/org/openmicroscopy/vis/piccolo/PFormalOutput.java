@@ -39,6 +39,7 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.vis.ome.Connection; 
 import org.openmicroscopy.SemanticType;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
@@ -53,10 +54,11 @@ import java.util.ArrayList;
 
 public class PFormalOutput extends PFormalParameter {
 	
-	public PFormalOutput(PModule node,FormalParameter param,PChainCanvas canvas) {
-		super(node,param,canvas);
+	public PFormalOutput(PModule node,FormalParameter param,
+		Connection connection) {
+		super(node,param,connection);
 		if (param.getSemanticType() != null)
-			canvas.addOutput(param.getSemanticType(),this);
+			connection.addOutput(param.getSemanticType(),this);
 		locator = new PParameterLocator(this,SwingConstants.EAST);
 	}
 	
@@ -71,6 +73,6 @@ public class PFormalOutput extends PFormalParameter {
 		SemanticType type = param.getSemanticType();
 		if (type == null)
 			return null;
-		return canvas.getInputs(type);
+		return connection.getInputs(type);
  	}
 }
