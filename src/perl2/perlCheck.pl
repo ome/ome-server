@@ -150,7 +150,7 @@ my @modules = ({
 	repositoryFile => 'GD-1.33.tar.gz',
 	},{
 	Name => 'Image::Magick',
-	repositoryFile => 'ImageMagick-5.3.6-OSX.tar.gz',
+	repositoryFile => 'ImageMagick-5.5.6.tar.gz',
 	installModule => \&ImageMagickInstall
 	},{
 	Name => 'XML::NamespaceSupport',
@@ -343,18 +343,30 @@ my @configFlags = (
 	'--enable-lzw',
 	'--prefix=/usr'
 	);
+my %oldENV;
 
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
 	
 	if ($^O eq 'darwin') {
 		push (@configFlags,'--without-x');
+		$oldENV{LDFLAGS}  = $ENV{LDFLAGS}  if exists $ENV{LDFLAGS};
+		$oldENV{CFLAGS}   = $ENV{CFLAGS}   if exists $ENV{CFLAGS};   
+		$oldENV{CPPFLAGS} = $ENV{CPPFLAGS} if exists $ENV{CPPFLAGS}; 
+		$ENV{LDFLAGS} = '-L/usr/local/lib -L/sw/lib';
+		$ENV{CFLAGS} = '-I/usr/local/include -I/sw/include';
+		$ENV{CPPFLAGS} = '-I/usr/local/include -I/sw/include';
 		}
 
 	if (not -e 'Makefile' ) {
 		print "\nRunning configure script...\n";
 		die "Couldn't execute configure script\n" if system ('./configure '.join (' ',@configFlags) ) != 0;
 	}
-	
+
+	if ($^O eq 'darwin') {
+		$ENV{LDFLAGS}  = $oldENV{LDFLAGS}  if exists $oldENV{LDFLAGS};
+		$ENV{CFLAGS}   = $oldENV{CFLAGS}   if exists $oldENV{CFLAGS};
+		$ENV{CPPFLAGS} = $oldENV{CPPFLAGS} if exists $oldENV{CPPFLAGS};
+	}	
 	print "\nRunning make...\n";
 	die "Compilation errors - script aborted.\n" if system ('make') != 0;
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
