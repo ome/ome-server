@@ -51,6 +51,7 @@
 				Name= "Institution"
 				DBLocation = "EXPERIMENTERS.INSTITUTION"
 				DataType = "string"/>
+			<!-- These are private
 			<Element
 				Name= "OMEName"
 				DBLocation = "EXPERIMENTERS.OME_NAME"
@@ -59,6 +60,7 @@
 				Name= "Password"
 				DBLocation = "EXPERIMENTERS.PASSWORD"
 				DataType = "string"/>
+			-->
 			<Element
 				Name= "DataDirectory"
 				DBLocation = "EXPERIMENTERS.DATA_DIR"
