@@ -267,27 +267,28 @@ sub restore {
 	open (FILEIN, "< OMEmaint");
 	<FILEIN> =~ m/version=(.*$)/;
 	close (FILEIN);
-	if( $1 ne $dbAdmin_version){
+	if ($1 ne $dbAdmin_version){
 		croak "$restore_file.tar.bz2 is not compatible with this version of $0"; 
 	}
 	close (FILEIN);
 	unlink "OMEmaint";
 	
 	# OMEIS
-	print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
-	my $semaphore = 1;
-	if (not $quick and -d './$omeis_base_dir') {
+	my $semaphore;
+	if (not $quick and -d "./$omeis_base_dir") {
 	    if (-d $omeis_base_dir) {
 	     	if (y_or_n ("Restoring OMEIS from archive will delete all current files in ".
 	   		  		"$omeis_base_dir. Continue ?")) {
+				$semaphore = 1;
 	   		  	rmtree($omeis_base_dir);
 	   		} else {
 	   			$semaphore = 0;
-	   			rmdir ("./$omeis_base_dir");
+	   			rmtree("./$omeis_base_dir");
 			}	     	
 	    }
 	    
-	    if ($semaphore eq 1){
+	    if ($semaphore eq 1) {
+			print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
 			move  ("./$omeis_base_dir", "$omeis_base_dir");
 	    }
 	}
@@ -299,11 +300,42 @@ sub restore {
 	chdir("/");
     euid (scalar(getpwnam $environment->user() ));
     my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
-    
+    my @outputs;
+    my ($success, $dropdb, $dropdb_path);
+    $dropdb = 0;
+    $dropdb_path = $prog_path{'dropdb'};
+
 	if ($db_version) {
 		if (y_or_n ("Database ome was found and it will be overwritten. Continue ?")) {
-			system($prog_path{'dropdb'}." ome");
-		}	
+			$dropdb = 1;
+		}
+
+		while ($dropdb == 1) {
+			@outputs = `$dropdb_path ome 2>&1`;
+			$success = 1;
+
+			foreach (@outputs) {
+				$success = 0 if $_ =~ /ERROR/
+			}
+			
+			if ($success == 0) {
+				if (y_or_n ("Database could not be dropped. Try again ?")) {
+					$dropdb = 1;
+				} else {
+					$dropdb = 0;
+				}
+			} else {
+				# success == 1
+				last;
+			}
+		}
+		
+		if ($dropdb == 0) {
+			# user doesn't want to overwrite database, so we cleanup and exit
+			euid(0);
+			unlink("$iwd/omeDB_backup");
+			return;
+		}
 	}
 	
 	# need to move omeDB_backup up to /tmp since postgress might not have
