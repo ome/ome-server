@@ -79,4 +79,20 @@ Util.err = function( msg ) {
 	var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
 	toolboxLayer.appendChild(tmpImg);
 	toolboxLayer.removeChild(tmpImg);
+
+	// scrolling error messages if there's a text element w/ id "_util_text_err"
+	if( !this.err_text ) {
+		this.err_text = svgDocument.getElementById("_util_text_err");
+		this.err_lines = new Array();
+	}
+	if( this.err_text ) {
+		if( this.err_lines.length == 5 ) {
+			var old_line = this.err_lines.shift();
+			this.err_text.removeChild( old_line );
+		}
+		var newLine = this.createElementSVG( "tspan", { 'x': 0, 'dy': '1em' } );
+		newLine.appendChild( svgDocument.createTextNode( msg ) );
+		this.err_lines.push( newLine );
+		this.err_text.appendChild( newLine );
+	}
 };
