@@ -660,6 +660,53 @@ addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_node",
 addPrototype("OME::AnalysisExecution::NodeExecution","module_execution",
              ['OME::ModuleExecution'],['OME::ModuleExecution']);
 
+addPrototype("OME::Tasks::ChainManager","new",
+             ['OME::Session'],['OME::Tasks::ChainManager']);
+addPrototype("OME::Tasks::ChainManager","createChain",
+             ['$','$','OME::SemanticType::Superclass'],
+             ['OME::AnalysisChain']);
+addPrototype("OME::Tasks::ChainManager","cloneChain",
+             ['OME::AnalysisChain','OME::SemanticType::Superclass'],
+             ['OME::AnalysisChain']);
+addPrototype("OME::Tasks::ChainManager","findModule",['$'],['OME::Module']);
+addPrototype("OME::Tasks::ChainManager","addNode",
+             ['OME::AnalysisChain','OME::Module','$','$'],
+             ['OME::AnalysisChain::Node']);
+addPrototype("OME::Tasks::ChainManager","removeNode",
+             ['OME::AnalysisChain','OME::AnalysisChain::Node'],[]);
+addPrototype("OME::Tasks::ChainManager","getNode",
+             ['OME::AnalysisChain','$'],
+             ['OME::AnalysisChain::Node']);
+addPrototype("OME::Tasks::ChainManager","getFormalInput",
+             ['OME::AnalysisChain','OME::AnalysisChain::Node','$'],
+             ['OME::Module::FormalInput']);
+addPrototype("OME::Tasks::ChainManager","addLink",
+             ['OME::AnalysisChain',
+              'OME::AnalysisChain::Node','OME::Module::FormalOutput',
+              'OME::AnalysisChain::Node','OME::Module::FormalInput'],
+             ['OME::AnalysisChain::Link']);
+addPrototype("OME::Tasks::ChainManager","addLink",
+             ['OME::AnalysisChain',
+              'OME::AnalysisChain::Node','$',
+              'OME::AnalysisChain::Node','$'],
+             ['OME::AnalysisChain::Link'],
+             publishedName => 'addLinkByName');
+addPrototype("OME::Tasks::ChainManager","removeLink",
+             ['OME::AnalysisChain',
+              'OME::AnalysisChain::Node','OME::Module::FormalOutput',
+              'OME::AnalysisChain::Node','OME::Module::FormalInput'],
+             [],
+             publishedName => 'removeLinkByParameter');
+addPrototype("OME::Tasks::ChainManager","removeLink",
+             ['OME::AnalysisChain',
+              'OME::AnalysisChain::Node','$',
+              'OME::AnalysisChain::Node','$'],
+             [],
+             publishedName => 'removeLinkByName');
+addPrototype("OME::Tasks::ChainManager","removeLink",
+             ['OME::AnalysisChain','OME::AnalysisChain::Link'],[]);
+addPrototype("OME::Tasks::ChainManager","getUserInputs",
+             ['OME::AnalysisChain'],['@']);
 
 sub addPrototype {
     my ($class,$method,$inputPrototype,$outputPrototype,%options) = @_;
