@@ -1,8 +1,14 @@
 /*****
-*
-*   popupList.js
-*     external files dependencies: widget.js
-*
+
+popupList.js
+	external files dependencies: widget.js
+
+Known bugs:
+	#1. Calling setSelection shortly after popupList is realized will not update
+the popupList's animations. I believe this is due to viewer implementation.
+	Setting setState to be called after a delay of 0 is an easy way of
+bypassing this bug. i.e. setTimeout( "popup1.setSelection(3)", 0 );
+
 *****/
 
 svgns = "http://www.w3.org/2000/svg";
@@ -23,7 +29,7 @@ popupList.superclass = Widget.prototype;
 *
 *****/
 
-popupList.VERSION = 0.1;
+popupList.VERSION = 1;
 popupList.prototype.anchorText = 
 '<rect width="{$width}" height="{$height}" fill="lightskyblue"/>';
 popupList.prototype.itemBackgroundText = 
@@ -71,6 +77,76 @@ function popupList(x, y, itemList, callback, selection, anchorText,
 			itemBackgroundText, itemHighlightText);
 }
 
+
+/*****
+*
+*	setSelection(i)
+*
+*****/
+popupList.prototype.setSelection = function(i) {
+	if(i<0)
+		i=0;
+	if(i>=this.size)
+		i=this.size -1;
+	if(i!=Math.round(i))
+		i = Math.round(i);
+
+	this.selection = i;
+	this.update();
+	if( this.callback ) 
+		this.callback( this.selection );
+}
+
+/*****
+*
+*	getItemList()
+*
+*****/
+popupList.prototype.getItemList = function() {
+	// return a COPY
+	if(this.itemList)
+		return this.itemList.join().split(',');
+}
+
+/*****
+*
+*   update
+*
+*****/
+popupList.prototype.update = function() {
+	if(!this.nodes.listBox)
+		return;
+
+	// move listBox to position
+	var y = -1 * (this.height * this.selection);
+	var transform = "translate( 0, " + y + " )";
+	this.nodes.listBox.setAttributeNS(null, "transform", transform);
+	
+	if( this.active ) {
+		// turn all boxes on
+		this.anchorOff.beginElement();
+		for(i=0;i<this.size;i++) {
+			this.itemBoxOn[i].beginElement();
+			this.itemBackgroundOn[i].beginElement();
+		}
+	}
+	else {
+		this.anchorOn.beginElement();
+		// turn everything off except selected text 
+		for(i=0;i<this.size;i++) {
+			if( i == this.selection ) {
+				this.itemBoxOn[i].beginElement();
+				this.itemBackgroundOff[i].beginElement();
+				this.itemHighlightOff[i].beginElement();
+			}
+			else {
+				this.itemBoxOff[i].beginElementAt( this.itemBoxAnimSpeed );
+				this.itemBackgroundOff[i].beginElement();
+			}
+		}
+	}
+}
+
 /*****
 *
 *   init
@@ -87,6 +163,7 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	this.callback = callback;
 	this.active = false;
 	this.padding = 3;
+	this.itemList = itemList;
 	
 	// make list of elements, find width & height
 	this.itemText = new Array();
@@ -236,41 +313,6 @@ popupList.prototype.buildSVG = function() {
 
 /*****
 *
-*   update
-*
-*****/
-popupList.prototype.update = function() {
-	// move listBox to position
-	var y = -1 * (this.height * this.selection);
-	var transform = "translate( 0, " + y + " )";
-	this.nodes.listBox.setAttributeNS(null, "transform", transform);
-	
-	if( this.active ) {
-		// turn all boxes on
-		this.anchorOff.beginElement();
-		for(i=0;i<this.size;i++) {
-			this.itemBoxOn[i].beginElement();
-			this.itemBackgroundOn[i].beginElement();
-		}
-	}
-	else {
-		this.anchorOn.beginElement();
-		// turn everything off except selected text 
-		for(i=0;i<this.size;i++) {
-			if( i == this.selection ) {
-				this.itemBackgroundOff[i].beginElement();
-				this.itemHighlightOff[i].beginElement();
-			}
-			else {
-				this.itemBoxOff[i].beginElementAt( this.itemBoxAnimSpeed );
-				this.itemBackgroundOff[i].beginElement();
-			}
-		}
-	}
-}
-
-/*****
-*
 *   addEventListeners
 *
 *****/
@@ -301,14 +343,10 @@ popupList.prototype.click = function(e) {
 		return;
 	}
 
-	// change selection, close the list, issue callback
+	// set selection
 	if(this.active) {
-		this.selection = i;
 		this.active=false;
-		this.update();
-		if( this.callback ) 
-			this.callback( this.selection );
-		return;
+		this.setSelection(i);
 	}
 }
 
