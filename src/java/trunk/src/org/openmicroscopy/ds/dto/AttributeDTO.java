@@ -91,7 +91,7 @@ public class AttributeDTO
     {
         try
         {
-            return getSemanticType().getName();
+            return "@"+getSemanticType().getName();
         } catch (DataException e) {
             return "Unknown";
         }
@@ -302,7 +302,23 @@ public class AttributeDTO
      * {@link Attribute} value
      */
     public Attribute getAttributeElement(String element)
-    { return (AttributeDTO) getObjectElement(element); }
+    {
+        Object value = getObjectElement(element);
+        if (value == null)
+        {
+            return null;
+        } else if (value instanceof Attribute) {
+            return (Attribute) value;
+        } else if (value instanceof Map) {
+            Map map = (Map) value;
+            AttributeDTO attr = new AttributeDTO(map);
+            setElement(element,attr);
+            return attr;
+        } else {
+            throw new DataException("Invalid type for attribute element "+
+                                    value.getClass());
+        }
+    }
 
     /**
      * Sets the value of one of the attribute's elements to a
