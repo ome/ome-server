@@ -849,8 +849,10 @@ sub newAttribute {
 
     my $pkg = $type->requireAttributeTypePackage();
 
-    $data->{target} = $target if defined $target;
-    $data->{module_execution} = $module_execution;
+    $data->{target} = $target
+      if defined $target;
+    $data->{module_execution} = $module_execution
+      if defined $module_execution;
 
     return $self->newObject($pkg,$data);
 }
