@@ -115,7 +115,7 @@ use constant DEFAULT_REMOTE_URL =>
 # Class defaults to a remote installation found at DEFAULT_REMOTE_URL
 
 my $local_server = 0;
-my $server_path = DEFAULT_REMOTE_URL;
+my $server_path = undef;
 my $user_agent;
 
 # Cached data for the readFile method
@@ -321,6 +321,8 @@ sub __callOMEIS {
     delete $params{__file};
 
     my $session = OME::Session->instance();
+    
+    $session->findRepository() unless defined $server_path;
 
 	$params{SessionKey} = $session->SessionKey()
 		unless exists $params{SessionKey};
