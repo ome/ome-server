@@ -75,6 +75,10 @@ for each each string are as follows:
 
 Any scalar value
 
+=item '$$'
+
+Any binary scalar value
+
 =item '@'
 
 An array (treated in Perl as an array reference).  Can be abritrarily
@@ -376,6 +380,15 @@ addPrototype("OME::Image","dataset_links",[],['OME::Factory::Iterator'],
 addPrototype("OME::Image","all_features",[],['OME::Feature','*']);
 addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
              publishedName => "iterate_all_features");
+addPrototype("OME::Image","GetPix",
+             ['OME::AttributeType::Superclass','OME::AttributeType::Superclass'],
+             ['OME::Image::Pix']);
+
+addPrototype("OME::Image::Pix","GetPixels",[],['$$']);
+addPrototype("OME::Image::Pix","GetPlane",['$','$','$'],['$$']);
+addPrototype("OME::Image::Pix","GetStack",['$','$'],['$$']);
+addPrototype("OME::Image::Pix","GetROI",
+             ['$','$','$','$','$','$','$','$','$','$'],['$$']);
 
 addPrototype("OME::Image::DatasetMap","image",
              ['OME::Image'],['OME::Image']);
@@ -606,6 +619,7 @@ sub addPrototype {
 
     foreach (@$inputPrototype,@$outputPrototype) {
         next if $_ eq '$';
+        next if $_ eq '$$';
         next if $_ eq '@';
         next if $_ eq '%';
         next if $_ eq '*';
@@ -691,6 +705,7 @@ sub findPrototype {
 # the prototype.
 #   PRIVATE METHOD
 #   Inputs:
+#     $which      - the prototype to use ('input' or 'output')
 #     $param      - the parameter value (should be an lvalue)
 #     $type       - the type to check it against
 #     $subroutine - a subroutine (code reference) used to perform
@@ -703,12 +718,23 @@ sub findPrototype {
 #     to what is returned by $subroutine.
 
 sub __verifyOneValue {
-    my ($param,$type,$subroutine,@subInputs) = @_;
+    my ($which,$param,$type,$subroutine,@subInputs) = @_;
     my $ref = ref($param);
 
     if ($type eq '$') {
         # Function expects a single scalar
         return !$ref;
+    }
+
+    if ($type eq '$$') {
+        if ($which eq 'output') {
+            return 0 if $ref;
+            print STDERR "  Got some binary... ",length($param),"\n";
+            $_[1] = SOAP::Data->type(base64 => $param);
+            return 1;
+        } else {
+            return !$ref;
+        }
     }
 
     if ($type eq '@') {
@@ -738,7 +764,7 @@ sub __verifyOneValue {
         #print STDERR "  vone $good\n";
 
         # Replace the object in the parameter list, if necessary.
-        $_[0] = $replacement if defined $replacement && $good;
+        $_[1] = $replacement if defined $replacement && $good;
 
         return $good;
     }
@@ -775,7 +801,7 @@ sub __verifyPrototype {
           $currentType eq "*"? $lastType: $currentType;
 
         return 0 unless defined $typeToCheck;
-        return 0 unless __verifyOneValue($param,$typeToCheck,
+        return 0 unless __verifyOneValue($which,$param,$typeToCheck,
                                          $subroutine,@subParams);
 
         if ($currentType ne "*") {
