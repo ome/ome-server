@@ -1,0 +1,11 @@
+	my $ome_root = $factory->findObject( "OME::Configuration::Variable", {
+		configuration_id => 1,
+		name => 'ome_root'
+	})->value();
+	$factory->newObject( "OME::Configuration::Variable", {
+		configuration_id => 1,
+		name => 'template_dir',
+		value => $ome_root.'/html/Templates'
+	});
+
+	1;

@@ -88,7 +88,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.7";
+our $DB_VERSION = "2.8";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -503,7 +503,8 @@ sub init_configuration {
              xml_dir          => $OME_BASE_DIR."/xml",
              bin_dir          => $OME_BASE_DIR."/bin",
              import_formats   => $IMPORT_FORMATS,
-             ome_root         => $OME_BASE_DIR
+             ome_root         => $OME_BASE_DIR,
+             template_dir     => $OME_BASE_DIR."/html/Templates",
             });
 
 	$ENVIRONMENT->lsid ($lsid_authority);
