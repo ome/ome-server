@@ -199,7 +199,7 @@ sub __openEngine {
         $self->{__engine} = $engine;
         $self->{__engineOpen} = 1;
 
-        $engine->eval(q[addpath('/OME/matlab');]);
+        $engine->eval(q[addpath('/Users/tmacur1/Desktop/OME-Hacking/OME/src/matlab');]);
     }
 }
 
@@ -345,7 +345,7 @@ sub __execute {
     my $old_guess = OME::SemanticType->GuessRows();
     OME::SemanticType->GuessRows(1);
 
-    my $location = $self->{_location};
+    my $location = $self->getModule()->location();
 
     my $inputs = $self->{__matlabInputs};
     # ome_loadPixelsPlane will crash if its input has an arity greater than 1.
@@ -377,9 +377,12 @@ print STDERR "processing __matlab input $_\n";
 
     my $command = "${output_cmd}${location}${input_cmd};";
     print STDERR "***** $command\n";
+    my $outBuffer = " " x 512;
+    $self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));
     $self->{__engine}->eval($command);
-
-    # Parse the outputs
+	print STDERR "Matlab's Output:\n $outBuffer\n";
+	
+	# Parse the outputs
     foreach my $output (@$outputs) {
     	next if $output eq 'junk';
         my $formal_output = $self->getFormalOutput($output);
@@ -474,18 +477,19 @@ sub placeInputs {
     my $factory = OME::Session->instance()->Factory();
 
     my @inputs = $factory->
-      findObjects('OME::Module::FormatInputs',
+      findObjects('OME::Module::FormalInput',
                   {
                    module => $self->getModule(),
                    'semantic_type.granularity' => $granularity,
                   });
 
     foreach my $formal_input (@inputs) {
-        my $semantic_type = $formal_input->semantic_type();
+        my $semantic_type  = $formal_input->semantic_type();
+        my $attribute_list = $self->getCurrentInputAttributes($formal_input);
         $self->
           placeAttributes($formal_input->name(),
                           $semantic_type,
-                          $self->getCurrentInputAttributes($formal_input));
+                          $attribute_list);
     }
 }
 
