@@ -366,7 +366,7 @@ sub importGroup {
 	$self->__storeChannelInfo($session, scalar(@$grp), @channelInfo);
 	return  $image;
     } else {
-	return undef;
+	die $status;
     }
 
 }
