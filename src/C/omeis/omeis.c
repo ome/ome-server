@@ -42,27 +42,29 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/param.h>
 #include <math.h>
 #include <float.h>
 #include "omeis.h"
 #include "digest.h"
+#include "method.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
 #endif
 
 /*
-  This function will get a new unique ID by examining the contents of the passed-in counter file.
-  The number in the counterfile will be incremented, and written back to the file.  The incremented number is returned.
-  A return of 0 means an error has occured, and can be checked with errno.
-  A return of 0 with a 0 errno means the counter has wrapped around.
+  This function will get a new unique ID by examining the contents of the
+  passed-in counter file.  The number in the counterfile will be incremented,
+  and written back to the file.  The incremented number is returned.  A return
+  of 0 means an error has occured, and can be checked with errno.  A return of
+  0 with a 0 errno means the counter has wrapped around.
 */
 OID nextID (char *idFile)
 {
 	struct flock fl;
 	int fd;
 	OID pixID = 0;
-
 	fl.l_start = 0;
 	fl.l_len = 0;
 	fl.l_pid = 0;
@@ -116,25 +118,30 @@ OID nextID (char *idFile)
 
 
 /*
-  char *getRepPath (OID theID, char *path, char makePath) {
-  Get repository path from an ID.  Optionally create the path (but not the file).
+  char *getRepPath (OID theID, char *path, char makePath)
+  Get repository path from an ID.
+  Optionally create the path (but not the file).
   
-  We need to assign a unique file to theID.  We would like not to store all the files in the same directory,
-  and we want the directory structure not to become unbalanced (uneven distribution of files in directories).
-  We also don't want to make 6 directory levels if we only have a few thousand files.  We want the tree to grow
-  normally as well.  The path also has to be unique, and we must account for many processes trying to do the same
-  thing at the same time.
-  The strategery here is to break theID into 3-character chuncks, and make the chunks directories in a path.
-  The last chunk has the full ID, and is the filename.
-  unsigned 64 bit integers max out at 1.844674 x 10^19, so 20 characters, 6 directory levels.
-  Things might not work out well here if OID is not an unsigned long long or is larger than 64 bits.
+  We need to assign a unique file to theID.  We would like not to store all the
+  files in the same directory, and we want the directory structure not to
+  become unbalanced (uneven distribution of files in directories).  We also
+  don't want to make 6 directory levels if we only have a few thousand files.
+  We want the tree to grow normally as well.  The path also has to be unique,
+  and we must account for many processes trying to do the same thing at the
+  same time.  The strategery here is to break theID into 3-character chuncks,
+  and make the chunks directories in a path.  The last chunk has the full ID,
+  and is the filename.  unsigned 64 bit integers max out at 1.844674 x 10^19,
+  so 20 characters, 6 directory levels.  Things might not work out well here if
+  OID is not an unsigned long long or is larger than 64 bits.
   
-  Function returns a pointer to path or NULL on error (path may be partially OK).
-  The makePath parameter (0 or 1) is used to determine if the path is created at the same time.
-  N.B.: The path is not cleared, it is appended to what's already in the buffer, allowing for independent root filesystems.
+  Function returns a pointer to path or NULL on error (path may be partially
+  OK).  The makePath parameter (0 or 1) is used to determine if the path is
+  created at the same time.
+  
+  N.B.: The path is not cleared, it is appended to what's already in the
+  buffer, allowing for independent root filesystems.
 */
 char *getRepPath (OID theID, char *path, char makePath) {
-
 	char pixIDstr[21], chunk[12];
 	int chunks[6], nChunks=0, i;
 	OID remainder = theID;
@@ -183,17 +190,21 @@ struct flock fl;
 
 
 /*
-  int newRepFile (OID theID, char *path, off_t size, char *suffix) {
-  Make a new repository file of the specified size.  The path parameter is a buffer that will contain the new repository path.
-  This function calls getRepPath to get the filepath, making directories then creates a file of the specified size.
-  This function returns the file descriptor of the file opened for writing.
-  The path buffer will contain the path, including the suffix (if not NULL).
-  The file created will be of the specified size, and the entire file will be write-locked.
-  If there were errors along the way, this function returns <0.  Check errno for the source of the error.
-  N.B.: The path is not cleared, it is appended to what's already in the buffer, allowing for independent root filesystems.
+  int newRepFile (OID theID, char *path, off_t size, char *suffix)
+  
+  Make a new repository file of the specified size.  The path parameter is a
+  buffer that will contain the new repository path.  This function calls
+  getRepPath to get the filepath, making directories then creates a file of the
+  specified size.  This function returns the file descriptor of the file opened
+  for writing.  The path buffer will contain the path, including the suffix (if
+  not NULL).  The file created will be of the specified size, and the entire
+  file will be write-locked.  If there were errors along the way, this function
+  returns <0.  Check errno for the source of the error.
+  
+  N.B.: The path is not cleared, it is appended to what's already in the
+  buffer, allowing for independent root filesystems.
 */
 int newRepFile (OID theID, char *path, off_t size, char *suffix) {
-
 	int fd;
 	unsigned char zero=0;
 
@@ -251,7 +262,6 @@ int bigEndian(void)
   PixelRep keeps track of everything having to do with pixel i/o to the repository.
 */
 void freePixelsRep (PixelsRep *myPixels) {
-
 	if (!myPixels->is_mmapped) {
 		if (myPixels->planeInfos) free (myPixels->planeInfos);
 		if (myPixels->stackInfos) free (myPixels->stackInfos);
@@ -269,14 +279,12 @@ void freePixelsRep (PixelsRep *myPixels) {
 
 
 /*
-  The constructor doesn't do very much other than allocate and initialize memory.
-  If an ID is passed in, it will set the paths to the dependent files, but not open anything.
+  The constructor doesn't do very much other than allocate and initialize
+  memory.  If an ID is passed in, it will set the paths to the dependent files,
+  but not open anything.
 */
-PixelsRep *newPixelsRep (OID ID)
-{
-PixelsRep *myPixels;
-char *root="Pixels/";
-char *pixIDfile="Pixels/lastPix";
+PixelsRep *newPixelsRep (OID ID) { PixelsRep *myPixels; char *root="Pixels/";
+	char *pixIDfile="Pixels/lastPix";
 
 	if (! (myPixels =  (PixelsRep *)malloc (sizeof (PixelsRep)))  )
 		return (NULL);
@@ -484,7 +492,8 @@ int result;
 
 /*
 * This call opens an existing Pixels file for reading or writing.
-* rorw can be 'r' or 'w'.  bigEndian indicates wether I/O will be from/to a bigEndian source.
+* rorw can be 'r' or 'w'.
+* bigEndian indicates wether I/O will be from/to a bigEndian source.
 * The file's header information must already be set - done by NewPixels
 * The function returns a pointer to the Pixels struct.
 * The file's header is read-locked by openPixelsFile().
@@ -813,9 +822,11 @@ off_t file_off,stack_offset;
 
 
 /*
-  This is the plane statistics calculator.  It does not check if the statistics are OK before doing
-  it's job, so calling this will allways result in a new statistics calculation.
+  This is the plane statistics calculator.  It does not check if the statistics
+  are OK before doing it's job, so calling this will allways result in a new
+  statistics calculation.
 */
+
 int DoPlaneStats (PixelsRep *myPixels, unsigned long z, unsigned long c, unsigned long t) {
 planeInfo myPlaneInfo;
 pixHeader *head;
@@ -982,8 +993,9 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 
 
 /*
-  This is the stack statistics calculator.  It checks if the stack statisticks are OK, and if not checks if each plane
-  statistics is OK, calling DoPlaneStats if it isn't.
+  This is the stack statistics calculator.  It checks if the stack statisticks
+  are OK, and if not checks if each plane statistics is OK, calling
+  DoPlaneStats if it isn't.
 */
 int DoStackStats (PixelsRep *myPixels, unsigned long c, unsigned long t) {
 stackInfo myStackInfo;
@@ -1163,7 +1175,7 @@ void closeInputFile(FILE *infile, unsigned char isLocalFile) {
   returns file OID.
 */
 OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
-char path[256];
+char path[MAXPATHLEN];
 char *filesIDfile="Files/lastFileID";
 OID ID;
 int fd;
@@ -1232,11 +1244,11 @@ FILE *infile;
 size_t ConvertFile (PixelsRep *myPixels, OID fileID, off_t file_offset, off_t pix_offset, size_t nPix) {
 pixHeader *head;
 int fd;
-char file_path[256],bp, *sh_mmap;
+char file_path[MAXPATHLEN],bp, *sh_mmap;
 unsigned long nIO;
 convertFileRec convFileRec;
 FILE *convFileInfo;
-char convFileInfoPth[256];
+char convFileInfoPth[MAXPATHLEN];
 char isBigEndian=1;
 
 	strcpy (file_path,"Files/");
@@ -1314,19 +1326,22 @@ void HTTP_ResultType (char *mimeType) {
 	fprintf (stdout,"Content-Type: %s\r\n\r\n",mimeType);
 }
 
-int dispatch (char **param) {
-char *method;
-PixelsRep *thePixels;
-pixHeader *head;
-size_t nPix=0, nIO=0;
-char *theParam,rorw='r',bigEndian=1;
-OID ID=0;
-int theZ=-1,theC=-1,theT=-1;
-off_t offset=0;
-char error_str[256];
-unsigned char isLocalFile;
-unsigned char file_md[OME_DIGEST_LENGTH];
-int fd, retval;
+int
+dispatch (char **param)
+{
+	PixelsRep *thePixels;
+	pixHeader *head;
+	size_t nPix=0, nIO=0;
+	char *theParam,rorw='r',bigEndian=1;
+	OID ID=0;
+	int theZ=-1,theC=-1,theT=-1;
+	off_t offset=0;
+	char error_str[256];
+	unsigned char isLocalFile;
+	unsigned char file_md[OME_DIGEST_LENGTH];
+	int fd, retval;
+
+	error_str[0]=0;
 
 /*
 char **cgivars=param;
@@ -1334,21 +1349,30 @@ char **cgivars=param;
 		fprintf (stderr,"[%s]",*cgivars);cgivars++;fprintf (stderr," = [%s]\n",*cgivars);cgivars++;
 	}
 */
-	error_str[0]=0;
+
+	/* XXX: char * method should be able to disappear at some point */
+	char * method;
+	unsigned int m_val;
 
 	if (! (method = get_param (param,"Method")) ) {
 		HTTP_DoError (method,"Method parameter missing");
 		return (-1);
 	}
 	
+	m_val = get_method_by_name(method);
+	/* END (method operations) */
+
+	/* ID requirements */
 	if ( (theParam = get_param (param,"PixelsID")) )
 		sscanf (theParam,"%llu",&ID);
-	else if (strcmp (method,"NewPixels") &&
-		strcmp (method,"FileInfo") &&
-		strcmp (method,"FileSHA1") &&
-		strcmp (method,"ReadFile") &&
-		strcmp (method,"GetLocalPath") &&
-		strcmp (method,"UploadFile")) {
+	else if (m_val == M_NEWPIXELS    ||
+			 m_val == M_PIXELSINFO   ||
+			 m_val == M_PIXELSSHA1   ||
+			 m_val == M_SETPIXELS    ||
+			 m_val == M_GETPIXELS    ||
+			 m_val == M_PIXELS       ||
+			 m_val == M_READFILE     ||
+			 m_val == M_GETLOCALPATH ||) {
 			HTTP_DoError (method,"pixelsID Parameter missing");
 			return (-1);
 	}
@@ -1645,7 +1669,7 @@ char **cgivars=param;
 
 	else if (! strcmp (method,"GetLocalPath") ) {
 		OID fileID=0;
-		char file_path[256];
+		char file_path[MAXPATHLEN];
 
 		if ( (theParam = get_param (param,"FileID")) )
 			sscanf (theParam,"%llu",&fileID);
@@ -1673,8 +1697,8 @@ char **cgivars=param;
 
 	else if (! strcmp (method,"FileInfo") ) {
 		OID fileID;
-		char file_path[256];
-		char file_name[256];
+		char file_path[MAXPATHLEN];
+		char file_name[MAXNAMELEN];
 		FILE *fInfo;
 		struct stat fStat;
 
@@ -1713,8 +1737,8 @@ char **cgivars=param;
 
 	else if (! strcmp (method,"FileSHA1") ) {
 		OID fileID;
-		char file_path[256];
-		char file_name[256];
+		char file_path[MAXPATHLEN];
+		char file_name[MAXNAMELEN];
 		FILE *fInfo;
 		struct stat fStat;
 
@@ -1772,7 +1796,7 @@ char **cgivars=param;
 	else if (! strcmp (method,"ReadFile") ) {
 		unsigned long offset=0,length=0;
 		OID fileID;
-		char file_path[256];
+		char file_path[MAXPATHLEN];
 		int fd;
 		char *sh_mmap;
 
@@ -1996,7 +2020,7 @@ char **getcgivars(void)
 	char *eqpos;
 	char url_encoded=1;
 
-	request_method = (char *)getenv("REQUEST_METHOD");
+	request_method = getenv("REQUEST_METHOD");
 	if (!request_method) return (0);
 	
 	if( !strcmp(request_method, "GET") || !strcmp(request_method, "HEAD") ){
@@ -2203,5 +2227,3 @@ char **getCLIvars(int argc, char **argv)
 	
 	return cgivars ;
 }
-
-
