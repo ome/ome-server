@@ -404,6 +404,9 @@ sub xmlEscape {
 
 sub getObjectReference {
     my ($sessionKey,$object) = @_;
+
+    return NULL_REFERENCE unless defined $object;
+
     my $class = ref($object);
 
     # Maybe here I should check whether it's actually blessed.
