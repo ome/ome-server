@@ -64,8 +64,12 @@ OME::Web::DBObjRender - Render DBObjects for display
 =head1 DESCRIPTION
 
 DBObjRender will render DBObjects (and attributes) for display in HTML,
-TXT, (and potentially) SVG. It's default rendering can be overridden by
+TXT, (and perhaps someday) SVG. It's default rendering can be overridden by
 writing subclasses.
+
+Important!! Subclasses should not be accessed directly. All Rendering
+should go through DBObjRendering. Specialization is completely
+transparent.
 
 Subclasses follow the naming convention implemented in _getSpecializedRenderer.
 Subclasses are expected to override one or more of the functions
@@ -440,14 +444,26 @@ sub getRefToObject {
 
 =head2 getRelationAccessors
 
-	my %object_relation_accessors = OME::Web::DBObjRender->getRelationAccessors( $object );
+	my $relationsAccessors = OME::Web::DBObjRender->getRelationAccessors( $object );
 
 $object is an instance of a DBObject or an Attribute.
 
 get an object's has many relations. This may include relations not
 defined with DBObject methods.
 
-%object_relation_accessors is formated { accessor => return_type }
+$relationsAccessors is an iterator. It has methods
+	next first name return_type getList
+
+it can be used like so:
+
+	my $relationsAccessors = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	if( $relationsAccessors->first() ) { do {
+		my $type = $relationsAccessors->return_type();
+		my $objects = $relationsAccessors->getList();
+		my $relation_name = $relationsAccessors->name();
+		# do stuff
+	} while( $relationsAccessors->next() ); }
+
 
 =cut
 
