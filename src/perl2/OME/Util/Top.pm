@@ -57,10 +57,10 @@ use Time::Local;
 
 # I really hate those "method clash" warnings, especially since these
 # methods are now deprecated.
-no strict 'refs';
-undef &Class::DBI::min;
-undef &Class::DBI::max;
-use strict 'refs';
+#no strict 'refs';
+#undef &Class::DBI::min;
+#undef &Class::DBI::max;
+#use strict 'refs';
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
@@ -89,7 +89,7 @@ USAGE
 sub handleCommand {
 	my ($self,$help,$supercommands) = @_;
 	if ($help) {
-		top_help();
+		top_help($self, $supercommands);
 	} else {
 		top();
 	}
