@@ -133,8 +133,12 @@ my $self = shift;
 		print "\n",$module->name(),".",$formal_input->name(),":\n";
 	
 		my $new = '';
-		while ($new ne 'N' && $new ne 'E') {
-			print "  New or existing? [N]/E  ";
+		while ($new ne 'N' && $new ne 'E' && $new ne 'S') {
+			unless ( $formal_input->optional() ){		
+				print "  New or existing? [N]/E  ";
+			} else {
+				print "This input is optional.  New, existing, or skip? [N]/E/S  ";
+			}			
 			$new = <STDIN>;
 			chomp($new);
 			$new = uc($new) || 'N';
@@ -168,13 +172,9 @@ my $self = shift;
 				push @data_hashes, $semantic_type, $data_hash;
 			}
 	
-            if (scalar(@data_hashes) > 0) {
-                $mex = OME::Tasks::AnnotationManager->
-                  annotateGlobal(@data_hashes);
-            } else {
-                $mex = undef;
-            }
-		} else {
+			$mex = OME::Tasks::AnnotationManager->
+			  annotateGlobal(@data_hashes);
+		} elsif( $new eq 'E' ) {
 			my @attributes;
 	
 			print "  Type in a list of attribute ID's, separated by spaces.\n";
@@ -206,12 +206,8 @@ my $self = shift;
 				}
 			}
 	
-            if (scalar(@attributes) > 0) {
-                $mex = OME::Tasks::ModuleExecutionManager->
-                  createVirtualMEX(\@attributes);
-            } else {
-                $mex = undef;
-            }
+			$mex = OME::Tasks::ModuleExecutionManager->
+			  createVirtualMEX(\@attributes);
 		}
 	
 		$user_inputs{$formal_input->id()} = $mex;
