@@ -295,7 +295,7 @@ sub execute {
     #********
     my $apacheBak = $apache_info->{conf_bak};
 	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
-	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf" if $apache_info->{mod_perl_off};
+	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf.  " if $apache_info->{mod_perl_off};
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
 		if (not -w $httpdConf) {
 			print "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
@@ -328,7 +328,8 @@ sub execute {
     #******** Copy index.html?
     #********
     my $docRoot = $apache_info->{DocumentRoot};
-	if ( y_or_n ("Copy OME's index.html to DocumentRoot directory \"$docRoot\" ?") ) {
+    print STDERR  "Copy OME's index.html to DocumentRoot directory ";
+	if ( y_or_n ("($docRoot) ?") ) {
 	    my ($fromIndex,$toIndex) = (getcwd.'/src/html/index.html',$docRoot.'/index.html');
 		copy ($fromIndex,$toIndex) or croak "Could not copy \"$fromIndex\" to \"$toIndex\":\n$!\n";
 	}
