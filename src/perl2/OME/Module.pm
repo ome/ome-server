@@ -34,6 +34,20 @@
 #
 #-------------------------------------------------------------------------------
 
+=head1 NAME
+
+OME::Module - a reuseable computational block for analysis
+
+=head1 SYNOPSIS
+
+	 later
+
+=head1 DESCRIPTION
+
+later
+
+=cut
+
 
 package OME::Module;
 
@@ -94,6 +108,13 @@ __PACKAGE__->hasMany('inputs','OME::Module::FormalInput' => 'module');
 __PACKAGE__->hasMany('outputs','OME::Module::FormalOutput' => 'module');
 __PACKAGE__->hasMany('analyses','OME::ModuleExecution' => 'module');
 
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
 
 
 

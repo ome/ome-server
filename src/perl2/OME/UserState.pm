@@ -110,10 +110,6 @@ __PACKAGE__->addColumn(started => 'started',
                        });
 
 
-1;
-
-__END__
-
 =head1 AUTHOR
 
 Douglas Creager <dcreager@alum.mit.edu>,
