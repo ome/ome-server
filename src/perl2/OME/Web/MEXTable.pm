@@ -66,7 +66,7 @@ use base qw(OME::Web::Table);
 sub __getColumnAliases {
 	my $self = shift;
 
-	my $columns = OME::Image->__columns;
+	my $columns = OME::ModuleExecution->__columns;
 	return ("id", keys(%$columns));
 }
 
@@ -78,7 +78,7 @@ sub __genericTableHeader { shift->SUPER::__genericTableHeader("MEXes"); }
 #*********
 
 sub getTable {
-	my ($self, $options, @images) = @_;
+	my ($self, $options) = @_;
 
 
     # Method variables
@@ -91,7 +91,7 @@ sub getTable {
 		}
 	);
 
-    my @column_headers = qw(ID Timestamp Status Module Dataset Dependence);
+    my @column_headers = qw(ID Timestamp Status Module Target);
 
 	# If we're showing select checkboxes
 	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
@@ -111,8 +111,16 @@ sub getTable {
 		my $module = $factory->loadObject("OME::Module", $mex->module_id());
 		my $module_name = $module ? $module->name() : " - ";
 		my $timestamp = $mex->timestamp();
-		my $dataset = $factory->loadObject("OME::Dataset", $mex->dataset_id());
-		my $dataset_name = $dataset ? $dataset->name() : " - ";
+		my ($target, $target_name);
+		if( $mex->dependence() eq 'I' ) {
+			$target = $factory->loadObject("OME::Image", $mex->image_id());
+			$target_name = "<b>I</b> ".$target->name();
+		} elsif( $mex->dependence() eq 'D' ) {
+			$target = $factory->loadObject("OME::Dataset", $mex->dataset_id());
+			$target_name = "<b>D</b> ".$target->name();
+		}
+		$target_name = " - "
+			unless $target_name;
 
         $table_data .= $q->Tr({-class => 'ome_td'},
 				$checkbox || '',
@@ -121,8 +129,7 @@ sub getTable {
 				$timestamp,
 				$q->a({-href => "/perl2/serve.pl?Page=OME::Web::ViewMEXresults&MEX_ID=$id"}, $status),
 				$module_name,
-				$dataset_name,
-				"",
+				$target_name,
                 ]
             )
         );
@@ -148,8 +155,25 @@ sub getTable {
 		$q->endform()
     );
 
-    return $table . $options_table;
+    return $table . $options_table . $self->__instructions();
 }
 
+sub __instructions{
+	my $self = shift;
+	my $q = $self->CGI();
+
+	return $q->table( {-cellspacing => 0, -cellpadding => 3, -width => '100%'},
+		$q->Tr(
+			$q->td( {
+					-align => 'right',
+					-bgcolor => '#EFEFEF',
+					-class => 'ome_menu_td',
+				},
+				"Click the Status to view results."
+			)
+		)
+	);
+
+}
 
 1;
