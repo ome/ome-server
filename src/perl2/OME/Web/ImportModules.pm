@@ -121,7 +121,7 @@ sub __getImportBody {
 	# Import dataset
 	my $import_q;
 
-	my $body = $q->p({class => 'ome_title', align => 'center'}, 'Importing Modules');
+	my $body = $q->p({class => 'ome_title', align => 'center'}, 'Importing Analysis Chains and Modules');
 
 	# If we're running using the FTP style de-taint our paths
 	if ($STYLE == FTP_STYLE) {
@@ -138,9 +138,18 @@ sub __getImportBody {
 				);
 			}
 		}
-
-		# FixME add filters that allow only *.ome and *.xml files to be uploaded
-		@import_q = @$good_paths;
+		
+		# filters that allow only files *.ome and *.xml to be added to the upload queue
+		my @good_ome_filenames;
+		foreach (@$good_paths) {
+			if (($_ =~ m/\.ome$/) || ($_ =~ m/\.xml$/)) {
+				push (@good_ome_filenames, $_);
+			}else {
+				$body .= $q->p({class => 'ome_error'},
+					"The file '$_' does not end with .ome or .xml. It has been removed from the 'Import Queue'.");
+			}
+		}
+		@import_q = @good_ome_filenames;
 	}
 
 	if (scalar(@import_q) < 1) {
