@@ -98,4 +98,8 @@ public class Chains {
 	public CChain getChain(int i) {
 		return (CChain) chains.get(new Integer(i));
 	}
+	
+	public int size() {
+		return chains.size();
+	}
 }
