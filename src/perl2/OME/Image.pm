@@ -47,7 +47,6 @@ __PACKAGE__->columns(Others => qw(created inserted description
 
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
-__PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
 __PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
 
 sub experimenter {
@@ -260,36 +259,6 @@ __PACKAGE__->columns(Essential => qw(image_id
 				     nd_filter fluor));
 
 
-
-
-# DEPRECATED!
-# Please use the StackMean, StackGeomean, StackMinimum, StackMaximum,
-# StackSigma, and StackCentroid attributes instead.
-
-package OME::Image::XYZInfo;
-
-use strict;
-our $VERSION = '1.0';
-
-use OME::DBObject;
-use base qw(OME::DBObject);
-
-__PACKAGE__->AccessorNames({
-    attribute_id => 'attribute',
-    image_id     => 'image',
-    the_c        => 'theW',
-    the_t        => 'theT'
-    });
-
-__PACKAGE__->table('stack_statistics');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id the_c the_t 
-				     minimum maximum mean geomean sigma 
-				     centroid_x centroid_y centroid_z));
-
-sub min { shift->minimum(@_); }
-sub max { shift->maximum(@_); }
 
 
 package OME::Image::ImageFilesXYZWT;
