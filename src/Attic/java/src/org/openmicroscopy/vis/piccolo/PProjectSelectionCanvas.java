@@ -69,12 +69,13 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 public class PProjectSelectionCanvas extends PCanvas 
-	implements PBufferedObject, SelectionEventListener{
+	implements SelectionEventListener{
 	
 	private static final int HEIGHT=50;
 	private static final int MAXHEIGHT=150;
 	private static final int MAXWIDTH=1000;
 	private static final double HGAP=3;
+	private static final double VGAP=20;
 	
 	
 	private PLayer layer;
@@ -123,7 +124,6 @@ public class PProjectSelectionCanvas extends PCanvas
 				PBounds b = pl.getGlobalFullBounds();
 				double mywidth = b.getWidth();
 				
-				
 				if (x+mywidth+HGAP > width-2*HGAP) {
 					y +=rowHeight+HGAP;
 					x =0;
@@ -133,32 +133,20 @@ public class PProjectSelectionCanvas extends PCanvas
 					rowHeight= b.getHeight();
 				pl.setOffset(x,y);
 				x += mywidth+HGAP;
-				//x += columnWidth+HGAP;
+				//x += columnWidt h+HGAP;
 			}	
 		}
 		PBounds layerBounds = layer.getGlobalFullBounds();
-		setMinimumSize(new Dimension(0,(int)(layerBounds.getHeight()+HGAP)));
-		//scaleToFit(0);
+		setMinimumSize(new Dimension(0,(int)(layerBounds.getHeight()+VGAP)));
 	}
 	
-	public PBounds getBufferedBounds() {
-		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX()-HGAP,b.getY()-HGAP,
-			b.getWidth()+2*HGAP,b.getHeight()+2*HGAP);
-	}
 	
-	private void scaleToFit(int delay) {
-		PBounds b = getBufferedBounds();
-		getCamera().animateViewToCenterBounds(b,true,delay);
-	}
 	
 	public void selectionChanged(SelectionEvent e) {
 		SelectionState state = e.getSelectionState();
 		
 	 	if ((e.getMask() & SelectionEvent.SET_SELECTED_PROJECT) ==
 	 		SelectionEvent.SET_SELECTED_PROJECT) {
-	 	//	if (state.getSelectedProject() == null) 
-				//scaleToFit(PConstants.ANIMATION_DELAY); 
 				setSelectedProject();
 	 	}
 		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_DATASET)
