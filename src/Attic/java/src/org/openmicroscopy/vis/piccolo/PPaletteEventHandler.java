@@ -153,7 +153,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			PModule pmod = (PModule) node;
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
-			System.err.println("saving last module entered: "+pmod.getModule().getName());
+			//System.err.println("saving last module entered: "+pmod.getModule().getName());
 			lastEntered = pmod;
 		}
 		else {
@@ -168,16 +168,13 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 
-		System.err.println("exiting"+node);
+		//System.err.println("exiting"+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(false);
 			PModule pmod = param.getPModule();
 			pmod.setAllHighlights(false);
 			e.setHandled(true);			
-		}
-		else if (node instanceof PParameterNode) {
-			System.err.println("exited parameter node");
 		}
 		else if (node instanceof PModule) {
 			PModule pmod = (PModule) node;

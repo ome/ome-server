@@ -127,7 +127,6 @@ public class Controller implements ApplicationController {
 		ClassLoader cload = this.getClass().getClassLoader();
 		URL url = cload.getResource(SPLASH_IMAGE);
 		if (url != null) {
-			System.err.println("got image");
 			ImageIcon icon = new ImageIcon(url);
 			label  = new JLabel(icon);
 			content.add(label);
@@ -180,7 +179,6 @@ public class Controller implements ApplicationController {
 	 *
 	 */
 	public void doLogin() {
-		System.err.println("login...");
 		
 		LoginDialog  loginDialog = new LoginDialog(mainFrame);
 		loginDialog.show();
@@ -199,7 +197,7 @@ public class Controller implements ApplicationController {
 	}
 	
 	public void doLogout() {
-		System.err.println("logout...");
+//		System.err.println("logout...");
 		updateDatabase();
 		mainFrame.setLoggedIn(false,connection);
 		removeCanvasFrames();
@@ -233,7 +231,7 @@ public class Controller implements ApplicationController {
 		
 		
 	public void newChain() {
-		System.err.println("new chain");
+//		System.err.println("new chain");
 		ChainFrame canvasFrame = 
 			new ChainFrame(this,connection,chainCanvasCount++,
 				library.getCanvas());
@@ -245,9 +243,9 @@ public class Controller implements ApplicationController {
 	}
 	
 	public void saveChain() {
-		System.err.println("saving chain...");
+//		System.err.println("saving chain...");
 		if (currentChainFrame != null) {
-			System.err.println("chain is "+currentChainFrame);
+//			System.err.println("chain is "+currentChainFrame);
 			currentChainFrame.save();
 		}
 	}

@@ -112,7 +112,7 @@ public class ChainFrame extends ChainFrameBase {
 	}
 	
 	public void completeSave(String name,String desc) {
-		System.err.println("finishing save.. "+name+","+desc);		
+		//System.err.println("finishing save.. "+name+","+desc);		
 		PChainCanvas chainCanvas = (PChainCanvas) canvas;
 		chainCanvas.save(name,desc);
 	}

@@ -48,7 +48,6 @@ import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
-//import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.Chains;
 import org.openmicroscopy.Chain;
 import org.openmicroscopy.vis.dnd.ChainSelection;
@@ -183,7 +182,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	
 	public void setSelectedChainID(int id) {
 		selectedChainID=id;
-		System.err.println("selected chain "+id);
+		//System.err.println("selected chain "+id);
 		chainSelected = true;
 	}
 	
@@ -192,7 +191,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	}
 	
 	public void clearChainSelected() {
-		System.err.println("clear chain selection");
+		//System.err.println("clear chain selection");
 		chainSelected = false;
 	}
 	
@@ -204,7 +203,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		if (chainSelected == true) {
 			Integer id = new Integer(selectedChainID);
 			ChainSelection c = new ChainSelection(id);
-			System.err.println("dragging.chain.. chain selection."+id);
+			//System.err.println("dragging.chain.. chain selection."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
 		}
 	}

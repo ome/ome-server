@@ -259,7 +259,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 			return;
 		
 		if (e.isShiftDown()) {
-			System.err.println("animating to center");
+		//	System.err.println("animating to center");
 			PBounds b = canvas.getBufferedBounds();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 			//animateToCenter(camera);
@@ -268,11 +268,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 		else { 
 			double scaleFactor  = PConstants.SCALE_FACTOR;	
 			if (mask != MouseEvent.BUTTON1_MASK) {
-				System.err.println("zooming in");
+		//		System.err.println("zooming in");
 			}
 			else {
 				scaleFactor = 1/scaleFactor;
-				System.err.println("zooming out ");
+		//		System.err.println("zooming out ");
 			}
 			double curScale = camera.getScale();
 			curScale *= scaleFactor;
@@ -300,14 +300,14 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		if (node instanceof PFormalParameter && linkState == LINKING_MODULES 
 				&& e.getClickCount() == 2) {
-			System.err.println("finishing links because I clicked on a formal param");
+		//	System.err.println("finishing links because I clicked on a formal param");
 			PFormalParameter p = (PFormalParameter) node;
 			PModule mod = p.getPModule();
 			finishModuleLinks(mod);
 		}		
 		else if (node instanceof PFormalParameter 
 				&& linkState == NOT_LINKING) {
-			System.err.println("starting a new param link");
+		//	System.err.println("starting a new param link");
 			if (lastParameterEntered == null)
 				mouseEntered(e);
 			PFormalParameter param = (PFormalParameter) node;
@@ -317,14 +317,14 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		
 		else if (node instanceof PLink) { 
-			System.err.println("pressed on a link ");
+		//	System.err.println("pressed on a link ");
 			
 			selectedLink = (PLink) node;
 			selectedLink.setSelected(true);
 			linkState = NOT_LINKING;	
 		}
 		else if (node instanceof PModule) {
-			System.err.println("clicked on  a module");
+		//	System.err.println("clicked on  a module");
 			selectedModule = (PModule) node;
 			selectedModule.addHandles();
 			if (e.getClickCount() ==2) {
@@ -335,13 +335,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 			} 
 		}
 		else if (linkState == LINKING_MODULES) {
-			System.err.println("linking modules. pressed.");
+		//	System.err.println("linking modules. pressed.");
 		 	if (e.getClickCount() ==2)
 				cancelModuleLinks();
 		
 		}
 		else if (linkState == LINKING_PARAMS) {
-			System.err.println("mouse pressed in linking params");
+		//	System.err.println("mouse pressed in linking params");
 			if (e.getClickCount() ==2) {
 				cancelParamLink();
 			}
@@ -408,12 +408,12 @@ public class PChainEventHandler extends  PPanEventHandler {
 		Collection inputs = selectedModule.getInputParameters();
 		Collection outputs = selectedModule.getOutputParameters();
 		if (isInput == true  || outputs.size() == 0) {
-			System.err.println("building module links on input side");
+		//	System.err.println("building module links on input side");
 			startModuleLinks(inputs);
 			moduleLinksStartedAsInputs = true;
 		}
 		else { 
-			System.err.println("building module links on output side");
+		//	System.err.println("building module links on output side");
 			startModuleLinks(outputs); 
 			moduleLinksStartedAsInputs = false;
 		}
@@ -488,7 +488,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void cancelModuleLinks() {
-		System.err.println("cancelling module links...");
+		//System.err.println("cancelling module links...");
 		Iterator iter = links.iterator();
 		while (iter.hasNext()) {
 			PParamLink link = (PParamLink) iter.next();
