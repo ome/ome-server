@@ -122,7 +122,7 @@ sub decode_value {
 
 package OME::Remote::Facade;
 
-our $SHOW_CALLS = 0;
+our $SHOW_CALLS = 1;
 
 # The server version should be an array of three values:
 # [major, minor, patch]
@@ -148,7 +148,7 @@ sub createSession {
     die "INVALID LOGIN"
       unless defined $session;
 
-    my $result = $session->{SessionKey};
+    my $result = $session->SessionKey();
     $session->deleteInstance(1);
     OME::DBObject->clearAllCaches();
 
