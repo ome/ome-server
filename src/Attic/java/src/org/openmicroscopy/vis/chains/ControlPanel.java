@@ -44,15 +44,15 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
 import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent;
 import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
+import org.openmicroscopy.Project;
+import org.openmicroscopy.ChainExecution;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.JFrame;
@@ -116,7 +116,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	// In practice, it makes the coding a bit easier.
 	// This does present a risk of inconsistency, but it seems to work ok.
 	
-	private CProject curProject;
+	private Project curProject;
 	private CDataset curDataset=null;
 		
 	private HashSet activeDatasets = new HashSet();
@@ -279,7 +279,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private void getProjects(Connection connection) {
 		
 		List p  = connection.getProjectsForUser();
-		curProject =(CProject) p.get(0);
+		curProject =(Project) p.get(0);
 		projects = new Vector(p);
 	}
 	
@@ -313,7 +313,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		activeDatasets = new HashSet();
 		activeProjects = new HashSet();
 		
-		curProject = (CProject) item;
+		curProject = (Project) item;
 
 			
 		if (curProject != null) {
@@ -395,7 +395,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		int index =datasetList.locationToIndex(e.getPoint());
 		if (index == datasetList.getSelectedIndex()) {
 			//deselect dataset 
-			CProject tmp = curProject;
+			Project tmp = curProject;
 			reentrant = true;
 			datasetList.clearSelection();
 			curDataset = null;
@@ -470,7 +470,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	}
 	
 	public void executionSelectionChanged(ExecutionSelectionEvent e) {
-		CChainExecution exec = e.getSelectedExecution();
+		ChainExecution exec = e.getSelectedExecution();
 		System.err.println("control panel has new selected execution...");
 		System.err.println("exec. is "+exec.getID());
 		System.err.println("dataset is "+exec.getDataset().getName());
@@ -495,7 +495,7 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
-			CProject p = (CProject) value;
+			Project p = (Project) value;
 			
 			setFont(plainFont);
 			if (state != null) {
