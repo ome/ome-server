@@ -281,7 +281,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	}
 	
 	private void getDatasets(Connection connection) {
-		List d = connection.getDatasetsForUser();
+		Collection d = connection.getDatasetsForUser();
 		datasets = new Vector(d);
 	}
 	
