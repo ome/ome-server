@@ -815,11 +815,11 @@
 			<Element
 				Name= "BlackLevel"
 				DBLocation = "DISPLAY_CHANNELS.BLACK_LEVEL"
-				DataType = "integer"/>
+				DataType = "double"/>
 			<Element
 				Name= "WhiteLevel"
 				DBLocation = "DISPLAY_CHANNELS.WHITE_LEVEL"
-				DataType = "integer"/>
+				DataType = "double"/>
 			<Element
 				Name= "Gamma"
 				DBLocation = "DISPLAY_CHANNELS.GAMMA"
