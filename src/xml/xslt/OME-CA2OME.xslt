@@ -4,7 +4,7 @@
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
-	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
 	<xsl:template match = "CA:OME">
 		<xsl:element name = "OME">

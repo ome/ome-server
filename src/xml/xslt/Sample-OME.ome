@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
   <DocumentGroup>
     <Include DocumentID="123.456.70.123.123" href="File2.ome" SHA1="01234567890ABCDEF0123456789ABCDEF0123456"/>
   </DocumentGroup>
