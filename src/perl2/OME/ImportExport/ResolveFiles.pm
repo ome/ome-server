@@ -24,16 +24,15 @@ package OME::ImportExport::ResolveFiles;
 
 =head1 NAME
 
-OME::ImportExport::ResolveFiles - Package for extracting files from the ome file format
+OME::ImportExport::ResolveFiles - Package for resolving files from the OME file format
 
 =head1 SYNOPSIS
 
-
 =head1 DESCRIPTION
 
-OME::ImportExport::ResolveFiles purpose is to resolve all files embedded in an ome 
-document and update xml tags accordingly. It returns a DOM representation of 
-the document.
+This package does two things: resolves all files embedded or references in an
+OME xml document and parses the file. It returns a DOM representation of the
+document.
 
 =cut
 
