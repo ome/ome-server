@@ -69,6 +69,7 @@ $VERSION = $OME::VERSION;
 use Exporter;
 use base qw(Exporter);
 
+our @EXPORT = qw( seek_it skip read_it seek_and_read );
 our @EXPORT_OK = qw( seek_it skip read_it seek_and_read );
 
 =head2 B<seek_it>
@@ -121,7 +122,7 @@ sub skip {
     my $status = "";
 
     $status = "File seek error" 
-	unless seek($fh, $offset, 1);
+	unless seek($fh, $skip_len, 1);
     return $status;
 
 }
