@@ -774,7 +774,7 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 		<SemanticType Name="ChannelIndex" AppliesTo="I">
 			<Description>Specifies a single channel in a Pixels attribute.</Description>
 			<Element
-				Name="theC"
+				Name="TheC"
 				DBLocation="CHANNEL_INDEX.THE_C"
 				DataType="integer"/>
 			<Element 
@@ -782,6 +782,64 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				DBLocation="CHANNEL_INDEX.PIXELS"
 				DataType="reference"
 				RefersTo = "Pixels"/>
+		</SemanticType>
+
+
+		<SemanticType Name="TimeIndex" AppliesTo="I">
+		  <Description>
+            Specifies a single timepoint in a Pixels attribute.
+          </Description>
+		  <Element
+			 Name="TheT"
+			 DBLocation="TIME_INDEX.THE_T"
+			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="TIME_INDEX.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
+		</SemanticType>
+
+		<SemanticType Name="StackIndex" AppliesTo="I">
+		  <Description>
+            Specifies a single XYZ stack in a Pixels attribute.
+          </Description>
+		  <Element
+			 Name="TheC"
+			 DBLocation="STACK_INDEX.THE_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="TheT"
+			 DBLocation="STACK_INDEX.THE_T"
+			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="STACK_INDEX.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
+		</SemanticType>
+
+		<SemanticType Name="PlaneIndex" AppliesTo="I">
+		  <Description>
+            Specifies a single XY plane in a Pixels attribute.
+          </Description>
+		  <Element
+			 Name="TheZ"
+			 DBLocation="PLANE_INDEX.THE_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="TheC"
+			 DBLocation="PLANE_INDEX.THE_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="TheT"
+			 DBLocation="PLANE_INDEX.THE_T"
+			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="PLANE_INDEX.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
 		</SemanticType>
 		
 		<SemanticType
