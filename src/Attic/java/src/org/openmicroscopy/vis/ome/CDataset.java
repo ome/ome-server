@@ -59,7 +59,7 @@ import java.lang.Comparable;
 public class CDataset extends RemoteDataset implements Comparable{
 	
 	Vector images = new Vector();
-	
+	int imageCount =-1;
 	
 	static {
 		RemoteObjectCache.addClass("OME::Dataset",CDataset.class);
@@ -106,5 +106,10 @@ public class CDataset extends RemoteDataset implements Comparable{
 		else
 			return -1;
 	}
-	
+
+	public int getImageCount() {
+		if (imageCount == -1) // hasn't been calculated
+			imageCount = getImages().size();
+		return imageCount;
+	}	
 }
