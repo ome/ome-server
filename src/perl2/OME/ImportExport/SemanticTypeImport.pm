@@ -244,6 +244,10 @@ sub processDOM {
     # $referenceTo_DBObject = $tables{$tableName}->{columns}->{$cName}->{reference}->{DBObject};
     # $referenceTo_STname = $tables{$tableName}->{columns}->{$cName}->{reference}->{STname};
     # @cDescriptions = $tables{$tableName}->{columns}->{$cName}->{description}; # array of SE descriptions
+		my $tDescriptions = $ST_XML->getElementsByLocalName('Description');
+		my $tDescription = [$tDescriptions->[0]->childNodes()]->[0]->data()
+			if $tDescriptions and $tDescriptions->[0]->childNodes()->size() ne 0;
+
         foreach my $SE_XML (@SEs_XML) {
             my $DBLocation = $SE_XML->getAttribute('DBLocation');
             my $dataType = $SE_XML->getAttribute('DataType');
@@ -253,6 +257,9 @@ sub processDOM {
                 $tables->{$tName}->{description} = [];
                 $tables->{$tName}->{name} = $tName;
                 $tables->{$tName}->{order} = scalar (keys %{$tables}) + 1;
+                $tables->{$tName}->{granularity} = $ST_XML->getAttribute('AppliesTo');
+                push (@{$tables->{$tName}->{description}},$tDescription)
+                  if defined $tDescription and length ($tDescription) > 0;
             }
             
             # Put the required column in the table hash.
@@ -280,12 +287,6 @@ sub processDOM {
             push (@{$tables->{$tName}->{columns}->{$cName}->{description}},$cDescription)
                 if defined $cDescription and length ($cDescription) > 0;
         }
-        $tables->{$tName}->{granularity} = $ST_XML->getAttribute('AppliesTo');
-		my $tDescriptions = $ST_XML->getElementsByLocalName('Description');
-		my $tDescription = [$tDescriptions->[0]->childNodes()]->[0]->data()
-			if $tDescriptions and $tDescriptions->[0]->childNodes()->size() ne 0;
-        push (@{$tables->{$tName}->{description}},$tDescription)
-           if defined $tDescription and length ($tDescription) > 0;
     }
 
     # END:  First pass on semantic types: Checking conflicts and gathering required tables.
