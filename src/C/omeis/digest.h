@@ -34,10 +34,9 @@
  *------------------------------------------------------------------------------
  */
 
-#include <openssl/evp.h>
 
 #define OME_DIGEST "SHA1"
-#define OME_DIGEST_LENGTH SHA_DIGEST_LENGTH
+#define OME_DIGEST_LENGTH 20
 #define MD_BUFSIZE 16384
 
 int
