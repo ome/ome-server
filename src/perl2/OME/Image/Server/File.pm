@@ -109,8 +109,13 @@ sub upload {
         die "Cannot upload a non-local file";
     }
 
+	die "Can't upload directory $filename" if -d $filename;
+	die "Can't upload $filename: no such file" unless -e $filename;
+	die "Can't upload $filename: not a regular file" unless -f $filename;
+	die "Can't upload $filename: not readable" unless -r $filename;
+
     my $fileID = OME::Image::Server->uploadFile($filename);
-    die "Could not upload file" unless defined $fileID;
+    die "Could not upload file $filename" unless defined $fileID;
     return $proto->new($fileID);
 }
 
