@@ -90,8 +90,10 @@ public class RemoteBindings
 
                 remoteCaller = xmlRpcCaller;
                 session = xmlRpcCaller.getSession();
-                factory = session.getFactory();
-                loggedIn = true;
+		if (session != null) {
+		    factory = session.getFactory();
+		    loggedIn = true;
+		}
             } else {
                 throw new RemoteException("Already logged in!");
             }
