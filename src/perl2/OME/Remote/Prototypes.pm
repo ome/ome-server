@@ -641,24 +641,24 @@ addPrototype("OME::AnalysisPath::Map","path",
 addPrototype("OME::AnalysisPath::Map","analysis_chain_node",
              ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
 
-addPrototype("OME::AnalysisExecution","timestamp",['$'],['$']);
-addPrototype("OME::AnalysisExecution","analysis_chain",
+addPrototype("OME::AnalysisChainExecution","timestamp",['$'],['$']);
+addPrototype("OME::AnalysisChainExecution","analysis_chain",
              ['OME::AnalysisChain'],['OME::AnalysisChain']);
-addPrototype("OME::AnalysisExecution","dataset",
+addPrototype("OME::AnalysisChainExecution","dataset",
              ['OME::Dataset'],['OME::Dataset']);
-addPrototype("OME::AnalysisExecution","experimenter",
+addPrototype("OME::AnalysisChainExecution","experimenter",
              ['OME::SemanticType::Superclass'],['OME::SemanticType::Superclass']);
-addPrototype("OME::AnalysisExecution","node_executions",
-             [],['OME::AnalysisExecution::NodeExecution','*']);
-addPrototype("OME::AnalysisExecution","node_executions",
+addPrototype("OME::AnalysisChainExecution","node_executions",
+             [],['OME::AnalysisChainExecution::NodeExecution','*']);
+addPrototype("OME::AnalysisChainExecution","node_executions",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_node_executions");
 
-addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_execution",
-             ['OME::AnalysisExecution'],['OME::AnalysisExecution']);
-addPrototype("OME::AnalysisExecution::NodeExecution","analysis_chain_node",
+addPrototype("OME::AnalysisChainExecution::NodeExecution","analysis_chain_execution",
+             ['OME::AnalysisChainExecution'],['OME::AnalysisChainExecution']);
+addPrototype("OME::AnalysisChainExecution::NodeExecution","analysis_chain_node",
              ['OME::AnalysisChain::Node'],['OME::AnalysisChain::Node']);
-addPrototype("OME::AnalysisExecution::NodeExecution","module_execution",
+addPrototype("OME::AnalysisChainExecution::NodeExecution","module_execution",
              ['OME::ModuleExecution'],['OME::ModuleExecution']);
 
 addPrototype("OME::Tasks::ProjectManager","new",
