@@ -42,6 +42,7 @@
  import java.util.HashMap;
  import java.util.List;
  import java.util.Iterator;
+ import java.util.Collection;
  import org.openmicroscopy.Chain;
  import org.openmicroscopy.Chain.Node;
  import org.openmicroscopy.Factory;
@@ -91,5 +92,10 @@ public class Chains {
 				cInfo.addRoot(n);
 			}
 		}
+	}
+	
+	public Iterator iterator() {
+		Collection values = chains.values();
+		return values.iterator();
 	}
 }
