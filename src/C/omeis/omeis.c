@@ -50,6 +50,7 @@
 #include "cgi.h"
 #include "method.h"
 #include "composite.h"
+#include "xmlBinaryResolution.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
