@@ -71,7 +71,7 @@ sub GetRecords{
   $selectedcols	= '*' unless (defined $selectedcols);  
   
   if ($cond) {
-     return 0 unless ($table);
+     return undef unless ($table);
      if ($join_table) {
         $Req = "SELECT $selectedcols  FROM $table,$join_table WHERE $cond ".
 		(($trierpar)?"ORDER BY $trierpar":"");
@@ -81,9 +81,9 @@ sub GetRecords{
      }
 
   }else{
-    return 0 unless ($table);
-    return 0 unless ($key);
-    return 0 unless ($value);
+    return undef unless ($table);
+    return undef unless ($key);
+    return undef unless ($value);
     $Req = "SELECT $selectedcols  FROM $table WHERE $key = $value ".(($trierpar)?"ORDER BY $trierpar":"");
   }
   $sth=$dbd->prepare($Req);
@@ -100,5 +100,35 @@ sub GetRecords{
 
 }
 
+
+#-----------------
+#
+sub DeleteRecord{
+
+
+  my $self      = shift;
+  my $dbd       = $self->{obj}; 
+
+  my ($table,$cond)=@_;	
+  my $sth	= undef;	
+  my $req	=undef;
+  my $Err = undef;
+
+  return undef unless ($table);
+
+  if ($cond) {
+     $req = "DELETE FROM $table WHERE $cond";
+  }
+  $sth = $dbd->prepare($req);     
+
+
+  $sth->execute or $Err = $sth->errstr;
+
+  $dbd->disconnect;   
+
+  return $Err?undef:1;
+
+
+}
 
 1;

@@ -17,7 +17,8 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
+# Ilya's add
+# JM 14-03
 package OME::SessionManager;
 our $VERSION = '1.00';
 
@@ -156,14 +157,38 @@ print STDERR "createWithKey: SessionKey()=".$session->SessionKey()."\n";
 sub getOMESession {
     my $self = shift;
     my ($username,$password) = @_;
+    my @row		= ();
+    my $rows	= 0;
+    my @tab		= ();
+    my $Err			= undef; 
 
     return undef unless $username and $password;
 
     my $sth = $self->sql_find_user();
-    return undef unless $sth->execute($username);
+    # Added JM 13-03-03
+    $sth->execute($username) or $Err=$sth->errstr; 
+ 
+    #while ( @row = $sth->fetchrow_array ) {
+     while ( @row = $sth->fetch ) { # IMA/DBI call
+       push (@tab, @row); 
+       $rows++;	       
+    }
 
-    my $results = $sth->fetch();
-    my ($experimenterID,$dbpass) = @$results;
+    if ($Err){
+	 $self->disconnect;
+	 return undef;
+	 
+    }
+    my ($experimenterID,$dbpass) = @tab;
+
+
+
+
+
+    #return undef unless $sth->execute($username);
+
+    #my $results = $sth->fetch();
+   # my ($experimenterID,$dbpass) = @$results;
     
     return undef unless defined $dbpass and defined $experimenterID;
     return undef if (crypt($password,$dbpass) ne $dbpass);
