@@ -1,0 +1,176 @@
+Open Microscopy Environment - Install Notes
+-------------------------------------------
+
+________
+Preamble
+
+The following install document applies to the Open Microscopy Environment 2.2
+series. If you find errors or possible ommisions in this document please report
+them via e-mail to:
+
+	ome-devel@lists.openmicroscopy.org.uk
+
+While reading this entire document in full is obviously preferred, skimming it
+for pertinant information and then skipping to the last section will probably
+suite most systems administrators.
+
+__________________
+Core prerequisites
+
+A deployment of OME requires some initial basics:
+
+ * Perl interpreter (version 5.6.0 or later; 5.8.0 or later is recommended)
+ * C compiler
+ * PostgreSQL (version 7.1 or later; 7.3 or later is recommended)
+ * Apache (any 1.x or 2.x release)
+
+The web interface also requires:
+
+ * mod_perl
+
+The Java client infrastructure also requires:
+
+ * Java Virtual Machine (version 1.4 or later)
+
+___________
+C Libraries
+
+In addition to the above core requirements, the following C libraries are
+required for operation:
+
+ * openssl (version 0.9.5 or later)
+ * libpng
+ * libtiff (version 3.5.7 or later)
+ * gd
+ * libdb (Berkeley DB1 or later with DB1 compatability)
+ * libxml2 (version 2.4.20 or later)
+ * libxslt (version 1.0 or later)
+ * bzlib
+ * zlib
+
+The OME installer *will not* attempt to install any of these libraries. It
+will, however, check their versions. OMEIS configuration checks these libraries
+in more detail and will report extra information.
+
+You can perform the same checks on libraries that the installer does prior to
+or after installation by executing the following from the root of the OME
+distribution:
+
+	perl install.pl -l
+
+____________
+Perl Modules
+
+Possibly the longest and most difficult part of an OME installation is making
+sure you have the required Perl module dependencies. Firstly here is a
+exhaustive list of them:
+
+ * DBI
+ * Digest::MD5 (included in Perl 5.8.0 and later)
+ * MD5 (included in Perl 5.8.0 and later [wrapper for Digest::MD5])
+ * MIME::Base64 (included in Perl 5.8.0 and later)
+ * Storable (included in Perl 5.8.0 and later)
+ * Apache::Session
+ * Log::Agent
+ * DBD::Pg
+ * Test::Harness
+ * Test::Simple (included in Perl 5.8.0 and later)
+ * Term::ReadKey
+ * IPC::Run
+ * Class::Accessor
+ * File::Temp (included in Perl 5.8.0 and later)
+ * Exporter::Lite
+ * UNIVERSAL::exports
+ * GD
+ * URI
+ * HTML::Tagset
+ * HTML::Parser
+ * LWP
+ * Class::Data::Inheritable
+ * XML::NamespaceSupport
+ * XML::Sax
+ * XML::LibXML::Common
+ * XML::LibXML
+ * XML::LibXSLT
+
+DBD::Pg has been known to be a serious problem child in terms of spurious core
+dumps and general inconsistencies. Here are a list of the versions we know to
+work (if you know of another, let us know):
+
+ * 0.95
+ * 1.01
+ * 1.20
+ * 1.22
+
+Versions we know explicitly *do not* work and/or do not work on all our test platforms:
+
+ * 1.21
+
+All the previous libraries can be installed using the OME installer if you
+don't want to do it yourself or prefer not to use CPAN. In addition, prior to
+the OME core Perl modules being installed all the version checks are performed.
+More information on the CPAN module (included with Perl) can be found here:
+
+	http://search.cpan.org/~jhi/perl-5.8.0/lib/CPAN.pm
+
+Once the CPAN module has your configuration details a Perl module can be
+installed by executing the following:
+
+	perl -MCPAN -e 'install <full_module_name>'
+
+ex.
+
+	perl -MCPAN -e 'install XML::NamespaceSupport'
+
+You can perform the same checks on Perl modules that the installer does prior
+to or after installation by executing the following from the root of the OME
+distribution:
+
+	perl install.pl -c
+
+__________________
+Before You Install
+
+Much, if not almost all of the your interaction during OME deployment will be
+with the OME installer, a Perl script in the root of your OME distribution
+which executes a series of modules (src/perl2/OME/Install). You can find out
+about the extended options of the installer by running the following:
+
+	perl install.pl --help
+
+Before you actually run an install, it is recommended that you decide on the
+following:
+
+ * A UNIX username to use for OME administration and ownership (default "ome")
+ * A UNIX group to use for OME administration and ownership (default "ome")
+ * Where on your filesystem you are going to install OME (default /OME)
+ * Where on your filesystem the OMEIS repository is going to reside
+   (default /OME/OMEIS)
+ * Where on your filesystem OME temporary data will be stored
+   (default /var/tmp/OME)
+ * An initial OME username/password
+
+In addition, it is also recommended that you investigate and find out the
+following (you may be asked to confirm or provide the answer to these questions
+during installation): 
+
+ * What is the UNIX username Apache runs under ?
+ * What is the UNIX username PostgreSQL runs under ?
+ * Where are the PostgreSQL binaries located ?
+
+__________________________
+Performing An Installation
+
+The install and deployment of OME is started by executing the following *as the
+UNIX root user* in the root of your distribution:
+
+	perl install.pl
+
+-or as required-
+
+	sudo perl install.pl
+
+This will walk you through the entire OME installation and deployment. Once
+finished, the installer will store the configuration you provided in OME's base
+directory (default: "/OME/conf/environment.store") where it can be used for
+further upgrades or library/Perl module checks.
