@@ -1545,7 +1545,7 @@ sub getPlaneStatistics {
 
     my @rows = split(/\015?\012/,$result);
     foreach my $row (@rows) {
-        my ($c,$t,$z,$min,$max,$mean,$geomean,$sigma,$geosigma,
+        my ($c,$t,$z,$min,$max,$mean,$sigma,$geomean,$geosigma,
             $centroidX,$centroidY,$i,$i2,$logI,$xi,$yi,$zi) =
               split(/\t/,$row);
         $hash{$z}{$c}{$t} = {
@@ -1638,7 +1638,7 @@ sub getStackStatistics {
 
     my @rows = split(/\015?\012/,$result);
     foreach my $row (@rows) {
-        my ($c,$t,$min,$max,$mean,$geomean,$sigma,$geosigma,
+        my ($c,$t,$min,$max,$mean,$sigma,$geomean,$geosigma,
             $centroidX,$centroidY,$centroidZ,$i,$i2,$logI,$xi,$yi,$zi) =
               split(/\t/,$row);
         $hash{$c}{$t} = {
@@ -1722,3 +1722,5 @@ Douglas Creager <dcreager@alum.mit.edu>
 L<OME>, http://www.openmicroscopy.org/
 
 =cut
+
+
