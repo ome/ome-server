@@ -311,12 +311,13 @@ called with with a specialized prototype.
 sub _getSpecializedRenderer {
 	my ($proto,$specialization) = @_;
 	
-	# get prototype from instance
+	# get DBObject prototype or ST name from instance
 	$specialization = $proto->_getProto( $specialization );
+	my $type = $proto->_getType( $specialization );
 	
 	# construct specialized package name
-	$specialization =~ s/::/_/g;
-	my $specializedPackage = "OME::Web::RenderData::__".$specialization;
+	($type =~ s/::/_/g or $type =~ s/@//);
+	my $specializedPackage = "OME::Web::RenderData::__".$type;
 
 	# obtain package
 	eval( "use $specializedPackage" );
@@ -383,8 +384,8 @@ sub _getType {
 	
 	# Attribute DBObject -> @AttrName
 	return $type if $type =~ s/^OME::SemanticType::__(.*)$/\@$1/;
-	
-	# DBObject is
+
+	# it's a DBObject proto
 	return $type;
 }
 
