@@ -1,19 +1,45 @@
 <table>
 	<caption>
-		Category Group: <font class="ome_header_title"><TMPL_VAR NAME='Name'></font> 
+		<font class="ome_header_title">Category Group: <TMPL_VAR NAME='Name'></font> 
 	</caption>
 	<tr>
 		<td valign="top">
 			<table style=" border: 1px #000000 solid;">
-				<tr><td align="left" valign="top">
-					Description: <TMPL_VAR NAME=Description>
-				</td></tr>
+				<tr>
+					<td align="left" valign="top">
+						<nobr>
+							Id: <TMPL_VAR Name='id'>,
+						</nobr>
+						<nobr>
+							Created by: <TMPL_VAR NAME=module_execution>
+						</nobr>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Name: <TMPL_VAR NAME='Name'> <nobr>
+<!-- [Bug 479] http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=479 -->						
+						<!-- Name <INPUT TYPE="text" NAME="name" VALUE="<TMPL_VAR NAME=Name>" SIZE=40> <nobr> -->
+					</td>
+					<td align=right>
+						<table cellpadding="3" class="ome_table">
+							<tr>
+								<td style="background-color: #D1D7DC">
+								<a href="serve.pl?Page=OME::Web::DBObjCreate&Type=@Category&CategoryGroup=<TMPL_VAR NAME='id'>" class="ome_widget">Add New Category</a>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						Description [ <a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save</a> ]<br>
+						<textarea name="description" rows="5" cols="60"><TMPL_VAR NAME='Description'></textarea>
+					</td>
+				</tr>
 			</table>
-				ID: <TMPL_VAR Name='id'><br>
-				Created by: <TMPL_VAR NAME=module_execution><br>
 		</td>
 	</tr>
 </table>
 <font class="ome_relation_title">Categories in this group:</font>
-<a href="serve.pl?Page=OME::Web::DBObjCreate&Type=@Category&CategoryGroup=<TMPL_VAR NAME='id'>">Add a category...</a><br>
 <TMPL_VAR NAME=CategoryList/inferred_relation/render-tiled_list>

@@ -70,6 +70,14 @@ sub _takeAction {
 	my $q = $self->CGI();
 	my $message = '';
 	
+	if( $q->param( 'action' ) eq 'SaveChanges' ) {
+# [Bug 479] http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=479
+	  # $obj->Name( $q->param( 'name' ) );
+		$obj->Description( $q->param( 'description' ) );
+		$obj->storeObject();
+		$self->Session()->commitTransaction();
+	}
+	
 	# allow image declassification
 	my $image_id_to_declassify = $q->param( 'declassifyImage' );
 	if( $image_id_to_declassify ) {

@@ -1,4 +1,4 @@
-# OME/Web/DBObjDetail/__OME_Image.pm
+# OME/Web/DBObjDetail/__Category.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -30,22 +30,23 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Josiah Johnston <siah@nih.gov>
+# Written by:    Tom Macura <tmacura@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::DBObjDetail::__OME_Image;
+package OME::Web::DBObjDetail::__CategoryGroup;
 
 =pod
 
 =head1 NAME
 
-OME::Web::DBObjDetail::__OME_Image
+OME::Web::DBObjDetail::__CategoryGroup
 
 =head1 DESCRIPTION
 
-Allow description and annotation of the image to be changed.
+implements _takeAction to allow CategoryGroup name and description to be
+modified
 
 =cut
 
@@ -56,45 +57,30 @@ Allow description and annotation of the image to be changed.
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
+use OME::Tasks::AnnotationManager;
+use OME::Tasks::CategoryManager;
+
 use Log::Agent;
-use OME::Tasks::ImageManager;
 use base qw(OME::Web::DBObjDetail);
 
 sub _takeAction {
 	my $self = shift;
-	my $image = $self->_loadObject();
+	my $obj = $self->_loadObject();
 	my $q = $self->CGI();
 	
-	#[Bug 479] http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=479
-	#if( $q->param( 'action' ) eq 'SaveName' ) {
-	#	$image->name( $q->param( 'name' ) );
-	#	$image->storeObject();
-	#	$self->Session()->commitTransaction();
-	#}
+	if( $q->param( 'action' ) eq 'SaveChanges' ) {
+# [Bug 479] http://bugs.openmicroscopy.org.uk/show_bug.cgi?id=479
+	  # $obj->Name( $q->param( 'name' ) );
+		$obj->Description( $q->param( 'description' ) );
+		$obj->storeObject();
+		$self->Session()->commitTransaction();
+	}
 	
-	if( $q->param( 'action' ) eq 'SaveDescription' ) {
-		$image->description( $q->param( 'description' ) );
-		$image->storeObject();
-		$self->Session()->commitTransaction();
-	}
-
-	if( $q->param( 'action' ) eq 'SaveAnnotation' ) {
-		OME::Tasks::ImageManager->writeAnnotation(
-			$image, { Content => $q->param( 'annotation' ) }
-		);
-		$self->Session()->commitTransaction();
-	}
-
-	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
-		OME::Tasks::ImageManager->deleteCurrentAnnotation( $image );
-		$self->Session()->commitTransaction();
-	}
-
 }
 
 =head1 Author
 
-Josiah Johnston <siah@nih.gov>
+Tom Macura <tmacura@nih.gov>
 
 =cut
 
