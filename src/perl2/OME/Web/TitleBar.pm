@@ -36,8 +36,14 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $body = "";
-	my $firstName = $self->User()->firstname();
-	my $lastName  = $self->User()->lastname();
+	my $firstName   = $self->User()->firstname();
+	my $lastName    = $self->User()->lastname();
+	my $datasetID   = $self->Session()->Dataset();
+	my $projectID   = $self->Session()->Project();
+# these Names are stubs.
+	my $projectName = "xxx"; # = function($projectID)
+	my $datasetName = "xxx"; # = function($datasetID)
+# maybe add smart sizing of viewer Popupwindow by looking up dimensions of image?
 
 	my ($left, $right);
 	$left = $cgi->td(
@@ -49,9 +55,9 @@ sub getPageBody {
 		               alt    => "Cell in mitosis" }));
 	$right = $cgi->td(
 		"Welcome $firstName $lastName<br>",
-		"You are working on project: xxx<br>",
-		"You are working on dataset: xxx<br>",
-		'Click <a href="javascript:openPopup()">here</a> to see images in this dataset' );
+		"You are working on project: $projectName<br>",
+		"You are working on dataset: $datasetName<br>",
+		'Click <a href="javascript:openPopup()">here</a> to view images in this dataset' );
 	$body = $cgi->table(
 		{ cellspacing => 0, cellpadding => 2, border => 0, width=> '100%' },
 		$cgi->Tr( 
@@ -62,7 +68,12 @@ sub getPageBody {
 <script language="JavaScript">
 <!--
 function openPopup() {
-	alert("This is not implemented yet");
+	DatasetViewer = window.open(
+		"/perl2/serve.pl?Page=OME::Web::GetGraphics&DatasetID=$datasetID",
+		"DatasetViewer",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+// smart sizing would go right above here: width=$width,height=$height
+	DatasetViewer.focus();
 }
 -->
 </script>
