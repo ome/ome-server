@@ -125,7 +125,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	}
 	
 	public void updateExecutionChoices(CChain chain) {
-		List execs = connection.getDatasetExecutions(chain);
+		List execs = chain.getCurrentDatasetExecutions();
 		Object[] a = new Object[0];
 		a = execs.toArray(a);
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
