@@ -97,6 +97,15 @@ use HTML::Template;
 
 use base qw(OME::Web);
 
+my $VALIDATION_INCS = <<END;
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.config.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.core.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.numbers.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.special.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.lang-enUS.js"></script>
+<script type="text/javascript" src="/JavaScript/fValidate_5_01b/fValidate.validators.js"></script>
+END
+
 # set up class constants
 sub new {
 	my $proto = shift;
@@ -131,7 +140,7 @@ See Also renderData()
 sub getName {
 	my ($self, $obj, $options) = @_;
 	
-	$options->{ 'request' } = '/name';
+	$options->{ 'request_string' } = '/name';
 	my %record = $self->renderData( $obj, { '/name' => [$options] } );
 	return $record{ '/name' };
 }
@@ -247,6 +256,111 @@ sub _populate_object_in_template {
 	}
 
 	return %tmpl_data;
+}
+
+
+sub renderType {
+	my ($self, $type, $mode, $options) = @_;
+	my ($tmpl, %tmpl_data);
+
+	my $q = $self->CGI();
+
+  	# load a template
+ 	my $tmpl_path = $self->_findTemplate( $type, $mode );
+ 	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
+ 		unless $tmpl_path;
+ 	die "Could not find a specialized or generic template to match Type $type with mode $mode"
+ 		unless -e $tmpl_path;
+ 	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+
+ 	# get data for the template
+	my $requests = $self->_parse_tmpl_fields( [ $tmpl->query( ) ] );
+	if( $type ) {
+		my ($package_name, $common_name, $formal_name, $ST) =
+			$self->_loadTypeAndGetInfo( $type );
+		if( exists $requests->{ '/common_name' } ) {
+			$tmpl_data{ '/common_name' } = $common_name;
+		} 
+		if( exists $requests->{ '/formal_name' } ) {
+			$tmpl_data{ '/formal_name' } = $formal_name;
+		}
+		if( exists $requests->{ '/type' } ) {
+			$tmpl_data{ '/type' } = $formal_name;
+		}
+		# Iterate over the fields in the type
+		if( exists $requests->{ '/field_loop' } ) {
+		foreach my $request ( @{ $requests->{ '/field_loop' } } ) {
+			my $inner_requests = $self->_parse_tmpl_fields( [ $tmpl->query( loop => $request->{ request_string } ) ] );
+			my %excluded_fields;
+			%excluded_fields = map{ $_ => undef } split( /,/, $request->{ exclude } )
+				if exists $request->{ exclude };
+			my @fields = grep( ( not exists $excluded_fields{ $_ }) , $package_name->getPublishedCols() );
+			foreach my $field ( @fields ) {
+				my %inner_data;
+				my $SQL_type = $package_name->getColumnSQLType( $field );
+				my $ref_to = $package_name->getAccessorReferenceType( $field );
+				my %validate;
+				if( exists $inner_requests->{ '/name' } ) {
+					$inner_data{ '/name' } = $field;
+				}
+				if( exists $inner_requests->{ '/sql_type' } ) {
+					$inner_data{ '/sql_type' } = $SQL_type;
+				}
+				# Make an input field for this field. Name will be the field name.
+				# type validation will occur using fValidate JS
+				# if requested w/ $options->{validate}
+				if( exists $inner_requests->{ '/field_input' } ) {
+					if( $ref_to ) {
+						# FIXME: should be a link to a search page to allow selection of exactly 1 of ref_to
+						$inner_data{ '/field_input' } = "ref to $ref_to";
+					} elsif( $SQL_type eq 'text' ) {
+						$inner_data{ '/field_input' } = $q->textfield(
+							-name => $field,
+							-size => 25,
+							%validate );
+					} elsif( $SQL_type eq 'timestamp' ) {
+						# FIXME: figure out what format timestamp should be and validate using a regex
+						# $validate{ -alt } = 'custom|regex'
+						$inner_data{ '/field_input' } = $q->textfield(
+							-name => $field,
+							-size => 25,
+							%validate );
+					} elsif( $SQL_type =~ m/^integer|bigint|smallint$/ ) {
+						$validate{ -alt } = 'number|1|bok' # optional integer
+							if $options->{validate};
+						$inner_data{ '/field_input' } = $q->textfield(
+							-name => $field,
+							-size => 25,
+							%validate );
+					} elsif( $SQL_type =~ m/^double precision|real$/ ) {
+						$validate{ -alt } = 'number|0|bok' # optional floating point 
+							if $options->{validate};
+						$inner_data{ '/field_input' } = $q->textfield(
+							-name => $field,
+							-size => 25,
+							%validate );
+					} elsif( $SQL_type eq 'boolean' ) {
+						$inner_data{ '/field_input' } = $q->checkbox(
+							-name => $field,
+							-value => 1,
+							%validate );
+					}
+				}
+				push( @{ $tmpl_data{ $request->{ request_string } } }, \%inner_data );
+			}	
+		} }
+	}
+	if( $requests->{ '/custom' } ) {
+		foreach my $request ( @{ $requests->{ '/custom' } } ) {
+			$tmpl_data{ $request->{ request_string } } = $options->{ $request->{ 'name' } }
+				if exists $options->{ $request->{ 'name' } };
+		}
+	}
+	
+ 
+ 	# populate template
+ 	$tmpl->param( %tmpl_data );
+ 	return ($options->{validate} ? $VALIDATION_INCS : '' ).$tmpl->output();
 }
 
 =head2 renderArray
@@ -470,40 +584,7 @@ sub renderData {
 	my ($self, $obj, $field_requests, $options) = @_;
 	my ( %record, $specializedRenderer );
 	$options = {} unless $options; # makes things easier
-	
-	# format, max text length, and making a field a reference to object
-	# details are going to start coming in as part of the field request
-	# syntax will be: "field/option-value/option-value..."
-	# magic fields will be distinguished from object fields by being prefixed my '/' i.e. "/magic_field"
-	
-	# parse field requests into fields & options. store in hash formatted like so:
-	#	$parsed_field_requests{ $field_named_foo } = \@requests_for_field_named_foo
-	#	\@requests_for_field_named_foo is a bunch of hashes formated like so:
-	#	$request{ $option_name } = $option_value;
-	# also, the orgininal request is stored in:  $request{ 'request' }
-	if( ref( $field_requests ) eq 'ARRAY' ) {
-		my %parsed_field_requests;
-		foreach my $request ( @$field_requests ) {
-			my $field;
-			my %parsed_request;
-			my @items = split( m'/', $request );
-			# the first item will be blank for magic fields because magic fields
-			# are prefixed with the delimeter
-			if( $items[0] eq '' ) {
-				shift( @items );
-				$field = '/'.shift( @items );
-			} else {
-				$field = shift( @items );
-			}
-			foreach my $option ( @items ) {
-				my ($name,$val) = split( m/-/, $option );
-				$parsed_request{ $name } = $val;
-			}
-			$parsed_request{ 'request' } = $request;
-			push( @{ $parsed_field_requests{ $field } }, \%parsed_request );
-		}
-		$field_requests = \%parsed_field_requests;
-	}
+	$field_requests = $self->_parse_tmpl_fields( $field_requests );
 
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
@@ -524,7 +605,7 @@ sub renderData {
 		$self->_loadTypeAndGetInfo( $obj );
 	foreach my $field ( keys %$field_requests ) {
 		foreach my $request ( @{ $field_requests->{ $field } } ) {
-			my $request_string = $request->{ 'request' };
+			my $request_string = $request->{ 'request_string' };
 			
 			# don't override specialized renderings
 			next if exists $record{ $request_string };
@@ -638,11 +719,13 @@ sub getFields {
 	
 	# alternately: filter fields by specialized templates
 	# try to find a template specific to this type & mode
-	my $tmpl_path = $self->_findTemplate( $type, $mode );
-	if( $tmpl_path ) {
-		my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
-		# only keep columns that exist in the template
-		@cols = grep( $tmpl->query( name => $_ ), @cols );
+	if( $mode ) {
+		my $tmpl_path = $self->_findTemplate( $type, $mode );
+		if( $tmpl_path ) {
+			my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+			# only keep columns that exist in the template
+			@cols = grep( $tmpl->query( name => $_ ), @cols );
+		}
 	}
 	
 	# We don't need no target
@@ -743,6 +826,45 @@ sub getRelations {
 	}
 	
 	return \@relations;
+}
+
+
+# field syntax is: "field/option-value/option-value..."
+# magic fields are distinguished from object fields the prefix '/' (i.e. "/magic_field")
+
+# parse field requests into fields & options. store in hash formatted like so:
+#	$parsed_field_requests{ $field_named_foo } = \@requests_for_field_named_foo
+#	\@requests_for_field_named_foo is a bunch of hashes formated like so:
+#	$request{ $option_name } = $option_value;
+# also, the orgininal request is stored in:  $request{ 'request_string' }
+sub _parse_tmpl_fields {
+	my ( $self, $field_requests ) = @_;
+
+	if( ref( $field_requests ) eq 'ARRAY' ) {
+		my %parsed_field_requests;
+		foreach my $request ( @$field_requests ) {
+			my $field;
+			my %parsed_request;
+			my @items = split( m'/', $request );
+			# the first item will be blank for magic fields because magic fields
+			# are prefixed with the delimeter
+			if( $items[0] eq '' ) {
+				shift( @items );
+				$field = '/'.shift( @items );
+			} else {
+				$field = shift( @items );
+			}
+			foreach my $option ( @items ) {
+				my ($name,$val) = split( m/-/, $option );
+				$parsed_request{ $name } = $val;
+			}
+			$parsed_request{ 'request_string' } = $request;
+			push( @{ $parsed_field_requests{ $field } }, \%parsed_request );
+		}
+		$field_requests = \%parsed_field_requests;
+	}
+	
+	return $field_requests;
 }
 
 =head2 getSearchFields
@@ -914,6 +1036,7 @@ and $mode - OR - undef if no matching template can be found
 
 sub _findTemplate {
 	my ( $self, $obj, $mode ) = @_;
+	return undef unless $obj;
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
@@ -1023,7 +1146,7 @@ Also see:
 	$field_requests{ $field_named_foo } = \@requests_for_field_named_foo
 \@requests_for_field_named_foo is a bunch of hashes formated like so:
 	$request{ $option_name } = $option_value;
-additionally, the orgininal request is stored in:  $request{ 'request' }
+additionally, the orgininal request is stored in:  $request{ 'request_string' }
 the record returned needs to be keyed by the original request.
 
 Subclasses need only populate fields they are overriding.
