@@ -124,14 +124,15 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
-		setAutopan(false);
+		
 		this.canvas = canvas;
 		this.linkLayer = linkLayer;
 		PInputEventFilter filter =getEventFilter();
 		filter.setAcceptsKeyPressed(true);
 		setEventFilter(filter);
 		canvas.getRoot().getDefaultInputManager().
-			setKeyboardFocus(this);		
+			setKeyboardFocus(this);
+		setAutopan(false);		
 	}
 	
 	/**
@@ -281,7 +282,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		else { 
 			double scaleFactor  = PConstants.SCALE_FACTOR;
-			if (e.isControlDown()) {	
+			if (e.isControlDown() || ((mask & MouseEvent.BUTTON3_MASK)==1)) {	
 				scaleFactor = 1/scaleFactor;
 			}
 			double curScale = camera.getScale();
