@@ -115,7 +115,7 @@ sub getPageHeader {
 			$q->span({class => 'ome_quiet'}, 'Most recent dataset: ') .
 			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
 			' ' .  # Spacing
- 			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
+ 			$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $obj->id() .');'}, '(Popup)');
 	} else {
 		$dataset_links = 
 			$q->span({class => 'ome_quiet'}, 'No recent dataset. ') .
