@@ -175,9 +175,9 @@ sub getPageBody {
 	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 	my $locked_type = ( $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 
-	my $specializedDetail;
-	return $specializedDetail->getPageBody( )
-		if( $specializedDetail = $self->__specialize( $type ) and
+	my $specializedDBObjCreate;
+	return $specializedDBObjCreate->getPageBody( )
+		if( $specializedDBObjCreate = $self->__specialize( $type ) and
 		    ref( $self ) eq __PACKAGE__ );
 
 	# create?
