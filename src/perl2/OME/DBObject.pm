@@ -299,6 +299,8 @@ sub addColumn {
                 } else {
                     my $datum = $self->{__fields}->{$table}->{$column};
                     return $datum if ref($datum);
+                    # This should load the object from the cache if
+                    # it's already been retrieved from the DB.
                     return $self->{__session}->Factory()->
                       loadObject($foreign_key_class,$datum);
                 }
@@ -375,6 +377,44 @@ sub hasMany {
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
     }
+}
+
+sub populate {
+    my ($self) = @_;
+
+    my $columns = $self->__columns();
+    my @aliases = keys %$columns;
+
+    my %result;
+    $result{$_} = $self->$_() foreach @aliases;
+
+    my $id = $self->id();
+    $result{id} = $id if defined $id;
+
+    return \%result;
+}
+
+sub __getCachedObject {
+    my ($proto,$id) = @_;
+    my $class = ref($proto) || $proto;
+
+    #print STDERR "### Looking in cache $class $id\n";
+    my $cache = $class->__cache()->{$class};
+    return $cache->{$id};
+}
+
+sub __storeCachedObject {
+    my ($self) = @_;
+    my $class = ref($self);
+
+    my $id = $self->id();
+
+    if (defined $id) {
+        $class->__cache()->{$class}->{$id} = $self;
+        #print STDERR "### Storing in cache $class $id\n";
+    }
+
+    return;
 }
 
 sub __addJoins {
@@ -626,7 +666,9 @@ sub __createNewInstance {
     # FIXME: How do we want to handle atomicity?  Currently, if any of
     # the INSERT statements fail, an undef object is returned, but
     # none of the statements which succeeded are rolled back.  (This
-    # would require a hierarchical transaction system.)
+    # would require a hierarchical transaction system; we cannot start
+    # our own sub-transaction to handle this case, since it might
+    # clobber a transaction which was started outside of this method.)
     foreach my $sql_entry (@$sqls) {
         my ($sql,$values) = @$sql_entry;
         #print "$sql\n  (",join(',',@$values),")\n";;
@@ -689,22 +731,26 @@ sub __newInstance {
     my ($session,$sth,$id_available,$columns_wanted) = @_;
     my $sth_vals;
 
+    # We need to advance the statement cursor even if the object is
+    # already in the object cache.
     return undef unless $sth_vals = $sth->fetch();
-
-    if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
-        $columns_wanted = [keys %{$class->__columns()}];
-    }
-
-    # Try to preallocate the field hash as closely as possible.
-    my %fields;
-    #keys %fields = scalar(@$sth_vals);
 
     my $i = 0;
 
     my $id;
     if ($id_available) {
         $id = $sth_vals->[$i++];
+        # Try to load this object from the cache, if we can.
+        my $cached_object = $class->__getCachedObject($id);
+        return $cached_object if defined $cached_object;
     }
+
+    if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
+        $columns_wanted = [keys %{$class->__columns()}];
+    }
+
+    # Create a hash to store the fields that we're loading in.
+    my %fields;
 
     my $self = {
                 __session => $session,
@@ -726,7 +772,11 @@ sub __newInstance {
         $fields{$table}->{$column} = $sth_vals->[$i++];
     }
 
-    return bless $self, $class;
+    bless $self, $class;
+
+    $self->__storeCachedObject();
+
+    return $self;
 }
 
 sub __newByID {
@@ -734,6 +784,10 @@ sub __newByID {
     my $class = ref($proto) || $proto;
 
     my ($session,$dbh,$id,$columns_wanted) = @_;
+
+    # Try to load the object from the cache first.
+    my $cached_object = $class->__getCachedObject($id);
+    return $cached_object if defined $cached_object;
 
     $columns_wanted = [keys %{$class->__columns()}]
       unless defined $columns_wanted && scalar(@$columns_wanted) > 0;
