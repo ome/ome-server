@@ -520,10 +520,15 @@ sub make_repository {
 	my $session = shift;
 	my $factory = $session->Factory();
 	print "  \\__ Creating repository object\n";
+
+	print "\n";  # Spacing
+
+	# FIXME Make this a little more verbose, probably needs some explanation.
+	my $repository_url = confirm_default ("What is the URL to the OMEIS CGI ?", 'http://10.1.1.1/cgi-bin/omeis');
     my $repository = $factory->
 	newObject('OME::SemanticType::BootstrapRepository',
 	        {
-	         ImageServerURL => 'http://localhost/cgi-bin/omeis',
+	         ImageServerURL => $repository_url,
 	         IsLocal        => 0,
 	        });
 	$repository->storeObject;
