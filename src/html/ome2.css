@@ -5,7 +5,7 @@ body {
 }
 
 /* General font families for common tags */
-font,th,td,p { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 12px; }
+font,th,td,p,input,textarea { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 12px; }
 
 /* General formatting for common tags */
 hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
@@ -20,3 +20,5 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 .ome_footer { font-size: 10px; color: #444444; }
 
 .ome_table { border: 1px #000000 solid; background-color: #000000; }
+
+.ome_td { background-color: #EFEFEF; }
