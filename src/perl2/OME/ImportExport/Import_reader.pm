@@ -38,14 +38,7 @@
 # DESTROY()
 # check_type()
 # readFile()
-# endian()
-# host_endian()
-# obuffer()
-# xml_hash()
-# image_type()
-# fref()
 # fouf()
-# offset()
 # flip_float()
 
 # ---- Private routines ------
@@ -55,17 +48,19 @@
 
 
 package OME::ImportExport::Import_reader;
+our @ISA = ("OME::ImportExport::Importer");
 use Class::Struct;
 use strict;
+use OME::ImportExport::Params;
 use OME::ImportExport::TIFFreader;
 use OME::ImportExport::DVreader;
+use OME::ImportExport::PixWrapper;
 use Carp;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use Config;
 
-# $self holds at least these useful fields:
-#struct Image_reader => {
+# $self holds a params hash,which holds at least these useful fields:
 #        image_file  - input image file
 #        image_group - input image file group
 #	 host_endian - endain-ness of host machine
@@ -93,6 +88,8 @@ sub new {
     my $self = {};
     bless $self, $class;
 
+    $self->{'parent'} = shift;
+
     my $image_group = shift;
     my $image_file = $$image_group[0];
     croak "No image file to import"
@@ -100,17 +97,13 @@ sub new {
     my $image_buf = shift;           # reference to buffer to fill w/ image
     my $xml_elements = shift;        # reference to hash for XML elements & their values
 
-    my $our_endian;
+    my $params = new OME::ImportExport::Params($xml_elements);
+    $self->{params} = $params;
 
-    # Find out what byte order this machine has
-    my $byteorder = $Config{byteorder};
-    $our_endian = (($byteorder == 1234) || ($byteorder == 12345678)) ? "little" : "big";
-    $self->host_endian($our_endian);
-    $self->image_file($image_file);      # save 1st file for those readers that
-    $self->image_group($image_group);   #    don't do groups
-    $self->offset(0);
-    $self->obuffer($image_buf);
-    $self->xml_hash($xml_elements);
+
+    $self->{params}->image_file($image_file);   # save 1st file for rdrs that
+    $self->{params}->image_group($image_group);   #   don't do groups
+    $self->{params}->obuffer($image_buf);
 
     return $self;
 }
@@ -118,8 +111,8 @@ sub new {
 
 sub DESTROY {
     my $self = shift;
-    if (defined $self->fref) {
-	close $self->fref;
+    if (defined $self->{params}->fref) {
+	close $self->{params}->fref;
     }
 }
 
@@ -139,19 +132,19 @@ sub check_type {
     croak "Image::check_type must be called on an actual image"
 	unless ref($self);
 
-    my $fn = $self->image_file();
+    my $fn = $self->{params}->image_file();
     open IMG, $fn
 	or die "Can't open $fn - $@\n";
     binmode(IMG);
     my $fh = *IMG;
-    $self->fref($fh);
+    $self->{params}->fref($fh);
 
     # Run against every type checker until
     # find a match or no more types to try
     foreach $typ (keys %checkers) {
 	$subref = $checkers{$typ};
 	@check_result = &$subref(\*IMG);
-	seek($self->fref, 0, 0);   
+	seek($self->{params}->fref, 0, 0);   
 	if ($check_result[0] ne "") {
 	    $endian = $check_result[0];
 	    $offset = $check_result[1];
@@ -166,10 +159,10 @@ sub check_type {
 
     print STDERR "Image is $type format\n";
     
-    $self->offset($offset);
-    $self->image_type($type);
-    $self->endian($endian);
-    $xml_ref = $self->xml_hash();
+    $self->{params}->offset($offset);
+    $self->{params}->image_type($type);
+    $self->{params}->endian($endian);
+    $xml_ref = $self->{params}->xml_hash();
     $$xml_ref{'Image.ImageType'} = $type;
     $$xml_ref{'Image_files_xyzwt.Endian'} = $endian;
 }
@@ -183,81 +176,42 @@ sub readFile {
     my $readerref;
     my $type_handler;
     my $status;
+    my $tempfn = "";
 
     my $self = shift;
-    $readerref = $readers{$self->image_type};
-    $type_handler = $readerref->new($self);
+    $readerref = $readers{$self->{params}->image_type};
+    $type_handler = $readerref->new($self->{params});
     {
-	$status = $type_handler->readImage;
+	$status = $type_handler->readImage; # read image's metadata
 	last unless $status eq "";
-	#my $wrapper = new OME::ImportExport::Wrapper($type_handler);
+	my $xml_ref = $self->{params}->xml_hash();
+	my $session = $self->{'parent'}->{session};
+	my $rep = $self->{'parent'}->findRepository($session, $xml_ref);
+	my $path = $rep->Path();
 
-	$status = $type_handler->formatImage;
-	if ($status eq "") {
-	    my $xml_ref = $self->xml_hash();
-	    $xml_ref->{'Image.BitsPerPixel'} = $self->{'pixel_size'};
+	my $pixWrapper = new OME::ImportExport::PixWrapper($xml_ref, $path);
+	if (ref($pixWrapper) ne "OME::ImportExport::PixWrapper") {
+	    $status = "Importer failed to make a pixel wrapper";
+	} else {
+	    $status = $type_handler->formatImage($pixWrapper);
+	    if ($status eq "") {
+		$xml_ref->{'Image.BitsPerPixel'} = $self->{params}->pixel_size;
+		$tempfn = $pixWrapper->{tempfn};
+		$pixWrapper->Finish("OK");
+	    } else {
+		$pixWrapper->Finish("");
+	    }
 	}
     }
 
-    return $status;
+    return ($status, $tempfn);
 }
 
 
-
-
-# Store/retrieve endian value
-sub endian {
-    my $self = shift;
-    $self->{endian} = shift if @_;
-    return $self->{endian};
-}
-
-
-# Store/retrieve our host's endian-ness
-sub host_endian {
-    my $self = shift;
-    $self->{host_endian} = shift if @_;
-    return $self->{host_endian};
-}
-
-
-# Store/retrieve output buffer
-sub obuffer {
-    my $self = shift;
-    $self->{obuffer} = shift if @_;
-    return $self->{obuffer};
-}
-
-
-# Store/retrieve xml_elements reference
-sub xml_hash {
-    my $self = shift;
-    $self->{xml_hash} = shift if @_;
-    return $self->{xml_hash};
-}
-
-
-# Store/retrieve image type
+# Retrieve image type from params
 sub image_type {
     my $self = shift;
-    $self->{image_type} = shift if @_;
-    return $self->{image_type};
-}
-
-
-# Store/retrieve pixel size
-sub pixel_size {
-    my $self = shift;
-    $self->{pixel_size} = shift if @_;
-    return $self->{pixel_size};
-}
-
-
-# Store/retrieve input file reference
-sub fref {
-    my $self = shift;
-    $self->{fref} = shift if @_;
-    return $self->{fref};
+    return $self->{params}->image_type;
 }
 
 
@@ -266,30 +220,6 @@ sub fouf {
     my $self = shift;
     $self->{fouf} = shift if @_;
     return $self->{fouf};
-}
-
-
-# Store/retrieve input file offset
-sub offset {
-    my $self = shift;
-    $self->{offset} = shift if @_;
-    return $self->{offset};
-}
-
-
-# Store/retrieve input file group ref
-sub image_group {
-    my $self = shift;
-    $self->{image_group} = shift if @_;
-    return $self->{image_group};
-}
-
-
-# Store/retrieve input file name 
-sub image_file {
-    my $self = shift;
-    $self->{image_file} = shift if @_;
-    return $self->{image_file};
 }
 
 

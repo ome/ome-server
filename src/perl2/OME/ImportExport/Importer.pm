@@ -82,7 +82,7 @@ sub import_image {
     my $image_file;
     my $import_reader;
     my ($is_dupl, $first_sha1);
-    my $status;
+    my ($status, $tempfn);
     my $read_status;
     my @image_buf;
     my %xml_elements;
@@ -95,7 +95,8 @@ sub import_image {
     $self->{dataset} =$dsr;
     $image_file = $$image_group_ref[0];
     $xml_elements{'Image.Name'} = name_only($image_file);
-    $import_reader = new OME::ImportExport::Import_reader($image_group_ref,
+    $import_reader = new OME::ImportExport::Import_reader($self,
+							  $image_group_ref,
 							  \@image_buf,
 							  \%xml_elements);
     $import_reader->check_type;
@@ -111,12 +112,12 @@ sub import_image {
 	carp "File $image_file has an unknown type";
     }
     else {
-	$read_status = $import_reader->readFile;
+	($read_status, $tempfn) = $import_reader->readFile;
 	if ($read_status ne "") {
 	    carp $read_status;
 	}
 	else {
-	    $status = store_image($self, \%xml_elements, \@image_buf, $image_group_ref, $first_sha1);
+	    $status = store_image($self, \%xml_elements, \@image_buf, $image_group_ref, $first_sha1, $tempfn);
 	    if ($status eq "") {
 		$self->{did_import} = 1;
 		print STDERR "did import\n";
@@ -137,6 +138,7 @@ sub store_image {
     my $aref = shift;             # reference to pixel array
     my $image_group_ref = shift;  # ref to group of imported files
     my $first_sha1 = shift;       # sha1 digest of 1st file in group
+    my $tempfn = shift;
     my $session = $self->{session};
     my $status = "";
     my $image;
@@ -155,7 +157,8 @@ sub store_image {
 	}
 
 	# create and populate an image object
-	$status = store_image_metadata($self, $href, $session, $repository);
+	$status = store_image_metadata($self, $href, $session,
+				       $repository, $tempfn);
 	last unless $status eq "";
 	$image = $self->{image};
 
@@ -163,10 +166,6 @@ sub store_image {
 	$status = store_image_attributes($self, $href, $session);
 	last unless $status eq "";
 	$attributes = $self->{'attributes'};
-
-	# now create and write the image pixel's file
-	$status = store_image_pixels($self, $href, $aref);
-	last unless $status eq "";
 
 	$status = store_wavelength_info($self, $session, $href);
 	last unless $status eq "";
@@ -186,8 +185,6 @@ sub store_image {
 	$self->{pixelsAttr}->writeObject();
 	$attributes->writeObject();
 	$session->DBH()->commit;
-
-	#$ds->Field("images", $image);
 
 	last;
     }
@@ -311,7 +308,7 @@ sub groupnames {
 
 # Create and populate an image object
 sub store_image_metadata {
-    my ($self, $href, $session, $repository) = @_;
+    my ($self, $href, $session, $repository, $tempfn) = @_;
     my $status = "";
     my $image;
     my $created;
@@ -322,27 +319,16 @@ sub store_image_metadata {
     #my $created = $href->{'Image.CreationDate'};
     $created = "now" unless $created;     # until we figure out date formatting issue
 
-    #$name = $href->{'Image.Name'}.".ori";
-    #$path = $repository->Field("path");
-    #$self->{realpath} = $path.$name;
-
     $name = $href->{'Image.Name'};
-    # DC - This is just a dummy filename; since the real one depends
-    # on the image ID, we can't create it until the image row is in
-    # the database.
-    $path = "dummy.ori";
     $guid = $self->{config}->mac_address;
     
     my $recordData = {'name' => $name,
-		      #'path' => $path,
 		      'image_guid' => $guid,
 		      'description' => $href->{'Image.Description'},
 		      'experimenter_id' => $session->User()->id(),
 		      'group_id' => $session->User()->Group()->id(),
-		      #'lens_id'  => $href->{'Image.LensID'},
 		      'created' => $created,
 		      'inserted' => "now",
-		      #'repository_id' => $repository
               };
 
     $image = $session->Factory->newObject("OME::Image", $recordData);
@@ -352,21 +338,26 @@ sub store_image_metadata {
     }
 
     # Now, create the real filename.
-    $path = $image->id()."-".$name.".ori";
-    #$image->path($path);
-    #$image->writeObject();
+
+    my $qual_name = $image->id()."-".$name.".ori";
 
     my $pixels = $session->Factory()->
       newAttribute("Pixels",$image,
                    {
                     Repository => $repository->id(),
-                    Path       => $path,
+                    Path       => $qual_name,
                    });
 
     $self->{image} = $image;
     $self->{pixelsAttr} = $pixels;
     my $imageID = $image->id();
     $self->{realpath} = $image->getFullPath();
+    # rename repository file with it's permanent name
+    rename ($tempfn, , $self->{realpath}) or
+	$status = "failed to rename image file $self->temp_image_name() to $self->{realpath}";
+    my $sha1 = getSha1($self->{realpath});
+
+    $self->{pixelsAttr}->FileSHA1($sha1);
 
     return $status;
 }
@@ -385,8 +376,7 @@ sub store_image_attributes {
 		   'SizeT' => $href->{'Image.NumTimes'},
 		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}};
     my $attributes = $session->Factory()->
-      newAttribute("Dimensions",$image,$recordData);
-    #my $attributes = $session->Factory()->newObject("OME::Image::Dimensions", $recordData);
+	newAttribute("Dimensions",$image,$recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
@@ -397,55 +387,13 @@ sub store_image_attributes {
 }
 
 
-# now create and write the image's pixel file
-sub store_image_pixels {
-    my ($self, $href, $aref) = @_;
-    my $realpath = $self->{'realpath'};
-    my $status = "";
-    my $handle = IO::File->new();
-    my $image;
-    my $sha1;
-
-    print STDERR "output to $realpath\n";
-    my $image_out = ">".$realpath;
-    open $handle, $image_out;
-    if (!defined $handle) {
-	$status = "Error creating repository file";
-	return $status;
-    }
-    
-    # Assume array ref is 4-dimensional, 5th (ie, X) dimension
-    # being a packed string of 16-bit integers.
-    for (my $t = 0; $t < $href->{'Image.NumTimes'}; $t++)
-    {
-	for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++)
-	{
-	    for (my $z = 0; $z < $href->{'Image.SizeZ'}; $z++)
-	    {
-		for (my $y = 0; $y < $href->{'Image.SizeY'}; $y++)
-		{
-		    print $handle $aref->[$t][$w][$z][$y];
-		}
-	    }
-	}
-    }
-    close $handle;
-
-    $sha1 = getSha1($realpath);
-
-    $image = $self->{'image'};
-    $self->{pixelsAttr}->FileSHA1($sha1);
-
-    return $status;
-}
 
 
-
-# findRepository(session,pixel array)
+# findRepository(session)
 # -----------------------------------
 # This function should determine, based on (currently) the size of the
 # pixel array, which repository an image should be stored in.  For now
-# we assume that there is only one repository, with an ID of 1.
+# we assume that there is only one repository.
 # (Which, if the bootstrap script worked properly, will be the case.)
 
 my $onlyRepository;
@@ -453,11 +401,12 @@ my $onlyRepository;
 sub findRepository {
     return $onlyRepository if defined $onlyRepository;
 
-    my ($session, $aref) = @_;
-    my @repositories = $session->Factory()->findAttributes("Repository");
+    shift;
+    my $session = shift;
+    my @repositories = $session->Factory->findAttributes("Repository");
     $onlyRepository = $repositories[0];
     return $onlyRepository if defined $onlyRepository;
-    die "Cannot find repository #1.";
+    die "Cannot find repository.";
 }
 
 
@@ -477,7 +426,7 @@ sub store_wavelength_info {
     # (code per IGG 10/6/02)
     my @WavelengthInfo = ({});
     my $wave;
-    #my $sth = $session->DBH()->prepare ('INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)');
+
     if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
 	# Make sure its sorted on WaveNumber.
 	@WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
@@ -495,13 +444,6 @@ sub store_wavelength_info {
 	    $wave->{'WavelengthInfo.Fluor'} = undef;
 	    $wave->{'WavelengthInfo.NDfilter'} = undef;
 	}
-	#$sth->execute($imageID,
-	#	      $wave->{'WavelengthInfo.WaveNumber'},
-	#	      $wave->{'WavelengthInfo.ExWave'},
-	#	      $wave->{'WavelengthInfo.EmWave'},
-	#	      $wave->{'WavelengthInfo.Fluor'},
-	#	      $wave->{'WavelengthInfo.NDfilter'}
-	#	      );
     my $logical = $session->Factory()->
       newAttribute("LogicalChannel",$image,
                    {
@@ -684,6 +626,15 @@ sub getSha1 {
 
     return $sha1;
 }
+
+
+sub temp_image_name {
+    my $self = shift;
+    $self->{tempfn} = shift if @_;
+    return $self->{tempfn};
+}
+
+    
 
 
 # Check if input file has already been processed 
