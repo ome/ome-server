@@ -58,12 +58,25 @@
 		<SemanticType
 			Name = "Repository"
 			AppliesTo = "G">
-			<Description>A repository is a portion of the server-side file system devoted to OME.  It is used primarily to store the pixels of OME images.</Description>
 
-			<Element
-				Name = "Path"
-				DBLocation = "REPOSITORIES.PATH"
-				DataType = "string"/>
+			<Description>
+              A repository is a portion of the server-side file system
+              devoted to OME.  It is used primarily to store the
+              pixels of OME images.
+            </Description>
+
+            <Element
+               Name="IsLocal"
+               DBLocation="REPOSITORIES.IS_LOCAL"
+               DataType="boolean"/>
+            <Element
+               Name="Path"
+               DBLocation="REPOSITORIES.PATH"
+               DataType="string"/>
+            <Element
+               Name="ImageServerURL"
+               DBLocation="REPOSITORIES.IMAGE_SERVER_URL"
+               DataType="string"/>
 
 		</SemanticType>
 
@@ -99,6 +112,13 @@
               server from a client before import, then the original
               file will be stored in a Repository, and this element
               will be that file's relative path into the Repository.
+            </Description>
+          </Element>
+          <Element
+             Name="FileID"
+             DBLocation="ORIGINAL_FILES.FILE_ID"
+             DataType="integer">
+            <Description>
             </Description>
           </Element>
           <Element
@@ -1105,6 +1125,10 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				Name= "Path"
 				DBLocation = "IMAGE_PIXELS.PATH"
 				DataType = "string"/>
+            <Element
+               Name="PixelsID"
+               DBLocation="IMAGE_PIXELS.PIXELS_ID"
+               DataType="integer"/>
 		</SemanticType>
 
 	</SemanticTypeDefinitions>
