@@ -79,6 +79,13 @@ sub getTemporaryFilename {
     }
 }
 
+# added by josiah, 2/6
+# centralized place to get configuration table.
+sub Configuration {
+	my $self = shift;
+	# we have exactly one entry in configuration so ID is always 1
+	return $self->Factory->loadObject("OME::Configuration", 1);
+}
 
 1;
 
