@@ -545,4 +545,23 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	public void setLinkLayer(PLinkLayer linkLayer) {
 		this.linkLayer = linkLayer;
 	}
+	
+	public int pointCount() {
+		return points.size();
+	}
+	
+	public Point2D getPoint(int i) {
+		if (i < points.size()) {
+			return (Point2D) points.get(i);
+		}
+		else return null;
+	}
+	
+	public void dumpPoints() {
+		int n = points.size();
+		for (int i = 0; i <n; i++) {
+			Point2D pt = getPoint(i);
+			System.err.println(i+")"+ pt.getX()+","+pt.getY());
+		}
+	}
 }
