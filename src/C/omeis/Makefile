@@ -78,7 +78,7 @@ Pixels.o: Pixels.c Pixels.h
 File.o: File.c File.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c File.c
 
-xmlBinaryResolution.o: xmlBinaryResolution.c
+xmlBinaryResolution.o: xmlBinaryResolution.c xmlBinaryResolution.h Pixels.h digest.h ../base64.h ../b64z_lib.h
 	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(INCS) $(XML2_CFLAGS)
 
 zoom/lib/libzoom.a: make_zoom
