@@ -92,7 +92,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private PFormalParameter linkOrigin;
 	
 	// The link I just clicked on to select
-	private PParamLink selectedLink = null;
+	private PLink selectedLink = null;
+	
 	
 	// the link that I'm creating
 	private PParamLink link;
@@ -264,9 +265,10 @@ public class PChainEventHandler extends  PPanEventHandler {
 			e.setHandled(true);
 		}
 		
-		else if (node instanceof PParamLink) { 
-			System.err.println("pressed on param link");
-			selectedLink = (PParamLink) node;
+		else if (node instanceof PLink) { 
+			System.err.println("pressed on a link ");
+			
+			selectedLink = (PLink) node;
 			selectedLink.setSelected(true);
 			linkState = NOT_LINKING;	
 		}
