@@ -188,6 +188,28 @@ AC_DEFUN([CHECK_BDB_COMPAT],
         fi
     done
 
+	dnl Okay, now look for a specific DB1 version of db.h
+	if test x_$found_bdb != x_foo
+	then
+		for dir in /usr/include/db1 \
+		           /usr/local/include/db1
+		do
+			bdbdir="$dir"
+			if test -f "$dir/db.h"
+			then
+				dnl Okay... we found one
+				found_bdb="yes"
+				CFLAGS="$CFLAGS -I$bdbdir"
+				LDFLAGS="$LDFLAGS -ldb"
+				dnl Make our config.h define "BDB_NATIVE" to get the db.h
+				dnl include.
+				AC_DEFINE([BDB_NATIVE], [1], [Define to 1 when we have a native (BSD) version of BDB])
+				AC_MSG_RESULT($dir/db.h)
+				break;
+			fi
+		done
+	fi
+
 	if test x_$found_bdb != x_yes
 	then
 		dnl Okay, we didn't find a compat version, check db.h
@@ -201,7 +223,7 @@ AC_DEFUN([CHECK_BDB_COMPAT],
             	found_bdb="yes"
 				CFLAGS="$CFLAGS -I$bdbdir"
 				dnl Make our config.h define "DBD_NATIVE"
-				AC_DEFINE([BDB_NATIVE], [1], [Define to 1 when we have a native (BSD) version of BDB])
+				AC_DEFINE([BDB_NATIVE])
 				AC_MSG_RESULT($dir/db.h)
             	break;
         	fi
