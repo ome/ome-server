@@ -35,7 +35,7 @@
 #-------------------------------------------------------------------------------
 =head1 NAME
 
-L<C<OME::Configuration>|OME::Configuration> - an OME image
+OME::Configuration - OME Configuration variables
 
 =head1 SYNOPSIS
 
