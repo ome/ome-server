@@ -42,6 +42,20 @@ __PACKAGE__->add_trigger(after_create => \&requireAttributePackage);
 __PACKAGE__->add_trigger(select => \&requireAttributePackage);
 
 
+sub findByTable {
+    my ($class, $table_name) = @_;
+    my @datatypes = $class->search('table_name',$table_name);
+    die "Multiple matching datatypes" if (scalar(@datatypes) > 1);
+    return $datatypes[0];
+}
+
+sub findColumnByName {
+    my ($self, $column_name) = @_;
+    my $type_id = $self->id();
+    return OME::DataType::Column->findByTypeAndColumn($type_id,
+						      $column_name);
+}
+
 sub getAttributePackage {
     my $self = shift;
     my $table = $self->table_name();
@@ -52,6 +66,7 @@ sub requireAttributePackage {
     my $self = shift;
     my $pkg = $self->getAttributePackage();
     return if exists $self->_attributePackages()->{$pkg};
+    #print STDERR "**** Loading attribute package $pkg\n";
 
     my $def = "package $pkg;\n";
     $def .= q{
@@ -112,8 +127,19 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('datatype_columns');
 __PACKAGE__->sequence('datatype_column_seq');
 __PACKAGE__->columns(Primary => qw(datatype_column_id));
-__PACKAGE__->columns(Essential => qw(column_name reference_type));
+__PACKAGE__->columns(Essential => qw(datatype_id column_name reference_type));
 __PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
+
+__PACKAGE__->make_filter('__type_column' => 'datatype_id = ? and column_name = ?');
+
+sub findByTypeAndColumn {
+    my ($class, $type_id, $column_name) = @_;
+    my @columns = $class->__type_column(datatype_id => $type_id,
+					column_name => $column_name);
+    die "Multiple matching columns" if (scalar(@columns) > 1);
+    return $columns[0]; 
+}
+
     
 
 1;

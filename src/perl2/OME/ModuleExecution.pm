@@ -35,6 +35,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('analyses');
 __PACKAGE__->sequence('analysis_seq');
 __PACKAGE__->columns(Primary => qw(analysis_id));
+__PACKAGE__->columns(Essential => qw(program_id experimenter_id dataset_id));
 __PACKAGE__->columns(Timing => qw(run_start_time run_end_time));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));

@@ -36,6 +36,28 @@ __PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
 __PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
 
 
+sub findByName {
+    my ($class,$name) = @_;
+    my @programs = $class->search(program_name => $name);
+    die "Multiple matching programs" if (scalar(@programs) > 1);
+    return $programs[0];
+}
+
+sub findInputByName {
+    my ($self, $name) = @_;
+    my $program_id = $self->id();
+    return OME::Program::FormalInput->findByProgramAndName($program_id,
+							   $name);
+}
+
+sub findOutputByName {
+    my ($self, $name) = @_;
+    my $program_id = $self->id();
+    return OME::Program::FormalOutput->findByProgramAndName($program_id,
+							    $name);
+}
+
+
 # performAnalysis(parameters,dataset)
 # -----------------------------------
 # Creates a new Analysis (an instance of this Program being run), and
@@ -89,6 +111,15 @@ __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
 __PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
                      
+__PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
+
+sub findByProgramAndName {
+    my ($class, $program_id, $name) = @_;
+    my @inputs = $class->__program_name(program_id => $program_id,
+					name       => $name);
+    die "Multiple matching inputs" if (scalar(@inputs) > 1);
+    return $inputs[0]; 
+}
 
 
 package OME::Program::FormalOutput;
@@ -110,6 +141,15 @@ __PACKAGE__->columns(Essential => qw(program_id name column_type));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
                      
+__PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
+
+sub findByProgramAndName {
+    my ($class, $program_id, $name) = @_;
+    my @outputs = $class->__program_name(program_id => $program_id,
+					 name       => $name);
+    die "Multiple matching outputs" if (scalar(@outputs) > 1);
+    return $outputs[0]; 
+}
 
 
 1;

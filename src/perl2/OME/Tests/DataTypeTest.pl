@@ -1,0 +1,63 @@
+# OME/Tests/DataTypeTest.pl
+
+# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Author:  Douglas Creager <dcreager@alum.mit.edu>
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+use OME::SessionManager;
+use OME::Session;
+use Term::ReadKey;
+
+print "\nOME Test Case - Datatypes\n";
+print "----------------------------\n";
+
+print "Please login to OME:\n";
+
+print "Username? ";
+ReadMode(1);
+my $username = ReadLine(0);
+chomp($username);
+
+print "Password? ";
+ReadMode(2);
+my $password = ReadLine(0);
+chomp($password);
+print "\n";
+ReadMode(1);
+
+my $manager = OME::SessionManager->new();
+my $session = $manager->createSession($username,$password);
+
+if (!defined $session) {
+    print "That username/password does not seem to be valid.\nBye.\n\n";
+    exit -1;
+}
+
+print "Great, you're in.\n\n";
+
+my $factory = $session->Factory();
+
+my $datatype = $factory->loadObject("OME::DataType",1);
+
+print $datatype->table_name(), "\n";
+print $datatype->getAttributePackage(), "\n";
+
+my $attribute = $factory->loadObject($datatype->getAttributePackage(),1);
+print $attribute->id(), "\n";
+print $attribute->size_x(), "\n";
+
+exit 0;

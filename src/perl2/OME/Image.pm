@@ -52,7 +52,7 @@ __PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
-
+__PACKAGE__->has_many('features','OME::Feature' => qw(image_id));
 	
 
 sub _init {
@@ -92,10 +92,10 @@ sub Dimensions {
 
 sub getFullPath {
     my $self = shift;
+    my $repository = $self->repository();
     my $path = $self->path();
-    my $name = $self->name();
 
-    return ($path . $name);
+    return $repository->path() . $path;
 }
 
 sub openFile {

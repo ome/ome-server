@@ -63,49 +63,127 @@ sub executeAnalysisView {
     my %input_links;
     my %output_links;
     my %analyses;
+
+    print STDERR "Setup\n";
     
     # initialize all of the nodes
     foreach my $node (@nodes) {
+	my $nodeID = $node->id();
 	my $program = $node->program();
 	my $module_type = $program->module_type();
 	my $location = $program->location();
 
-	my $module = findModuleHandler($module_type)->new($location);
-	$node_programs{$node} = $module;
+	print STDERR "  ".$program->program_name()."\n";
 
+	print STDERR "    Loading module $location via handler $module_type\n";
+	my $handler = findModuleHandler($module_type);
+	eval "require $handler";
+	my $module = $handler->new($location,$factory);
+	$node_programs{$nodeID} = $module;
+
+	print STDERR "    Sorting input links by granularity\n";
+
+	$input_links{$nodeID}->{D} = [];
+	$input_links{$nodeID}->{I} = [];
+	$input_links{$nodeID}->{F} = [];
+
+	# this pushes only linked inputs
 	my @inputs = $node->input_links();
 	foreach my $input (@inputs) {
 	    my $attribute_type = $input->to_input()->
 		column_type()->
 		datatype()->
 		attribute_type();
-	    push @{$input_links{$node}->{$attribute_type}}, $input;
+	    push @{$input_links{$nodeID}->{$attribute_type}}, $input;
+	    print "      $attribute_type ".$input->to_input()->name()."\n";
 	}
 
-	my @outputs = $node->output_links();
+	# where this pushes them all
+	#my @inputs = $program->inputs();
+	#foreach my $input (@inputs) {
+	#    my $attribute_type = $input->
+	#	column_type()->
+	#	datatype()->
+	#	attribute_type();
+	#    push @{$input_links{$nodeID}->{$attribute_type}}, $input;
+	#}
+
+	print STDERR "    Sorting outputs by granularity\n";
+
+	# ditto above
+	#my @outputs = $node->output_links();
+	#foreach my $output (@outputs) {
+	#    my $attribute_type = $output->from_output()->
+	#	column_type()->
+	#	datatype()->
+	#	attribute_type();
+	#    push @{$output_links{$nodeID}->{$attribute_type}}, $output;
+	#}
+
+	my @outputs = $program->outputs();
 	foreach my $output (@outputs) {
-	    my $attribute_type = $output->from_output()->
+	    my $attribute_type = $output->
 		column_type()->
 		datatype()->
 		attribute_type();
-	    push @{$output_links{$node}->{$attribute_type}}, $output;
+	    push @{$output_links{$nodeID}->{$attribute_type}}, $output;
+	    print "      $attribute_type ".$output->name()."\n";
 	}
 
-	$node_states{$node} = INPUT_STATE;
+	$node_states{$nodeID} = INPUT_STATE;
+
+	print STDERR "    Creating ANALYSIS table entry\n";
 
 	my $analysis_data = {
 	    program      => $program,
 	    dataset      => $dataset,
-	    experimenter => $session->User(),
-	    timestamp    => 'now',
-	    status       => 'STARTED'
+	    experimenter => $session->User()
+	    #timestamp    => 'now',
+	    #status       => 'STARTED'
 	};
 	my $analysis = $factory->newObject("OME::Analysis",$analysis_data);
-	$analyses{$node} = $analysis;
+	$analyses{$nodeID} = $analysis;
     }
 
     my $continue = 1;
     my $round = 0;
+
+    # Define some helper procedures
+    my $create_actual_input = sub {
+	my ($node,$input,$attribute) = @_;
+	my $nodeID = $node->id();
+	
+	my $formal_input = $input->to_input();
+
+	my $actual_input_data = {
+	    analysis     => $analyses{$nodeID},
+	    formal_input => $formal_input,
+	    attribute_id => $attribute->id()
+	    };
+	my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
+					       $actual_input_data);
+    };
+    
+    my $create_actual_output = sub {
+	my ($node,$output,$attributes) = @_;
+	my $nodeID = $node->id();
+	
+	my $formal_output = $output;#->from_output();
+	#print STDERR "      @@@@ ".$formal_output->name()."\n";
+	my $attribute = $attributes->{$formal_output->name()};
+	#print STDERR "      @@@@ ".$attribute."\n";
+	
+	my $actual_output_data = {
+	    analysis      => $analyses{$nodeID},
+	    formal_output => $formal_output,
+	    attribute_id  => $attribute->id()
+	    };
+	my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",
+						$actual_output_data);
+	#print STDERR "        Actual output created ".$actual_output->id()."\n";
+    };
+
+    my $last_node;
 
     while ($continue) {
 	$continue = 0;
@@ -115,55 +193,41 @@ sub executeAnalysisView {
 	# Look for input_nodes that are ready to run (i.e., whose
 	# predecessor nodes have been completed).
 	foreach my $node (@nodes) {
-	    next if $node_states{$node} > INPUT_STATE;
+	    my $nodeID = $node->id();
+
+	    next if $node_states{$nodeID} > INPUT_STATE;
 
 	    my $ready = 1;
 
 	    # If any of the predecessors has not finished, then this
 	    # node is not ready to run.
-	    my $inputs = $input_links{$node};
-	    foreach my $input (@$inputs) {
-		my $pred_node = $input->from_node();
-		$ready = 0, last if ($node_states{$pred_node} < FINISHED_STATE);
+	  TEST_PRED:
+	    foreach my $granularity ('D','I','F') {
+		my $inputs = $input_links{$nodeID}->{$granularity};
+		foreach my $input (@$inputs) {
+		    my $pred_node = $input->from_node();
+		    if ($node_states{$pred_node->id()} < FINISHED_STATE)
+		    {
+			$ready = 0;
+			last TEST_PRED;
+		    }
+		}
+	    }
+	    
+	    unless ($ready) {
+		print STDERR "  Skipping ".$node->program()->program_name()."\n";
+		next;
 	    }
 
-	    next unless $ready;
+	    print STDERR "  Executing ".$node->program()->program_name()."\n";
+	    $last_node = $node;
 
 	    # Execute away.
-	    my $module = $node_programs{$node};
-	    my $inputs = $input_links{$node};
-	    my $outputs = $output_links{$node};
+	    my $module = $node_programs{$nodeID};
+	    my $inputs = $input_links{$nodeID};
+	    my $outputs = $output_links{$nodeID};
 
-	    # Define some helper procedures
-	    my $create_actual_input = sub {
-		my ($input,$attribute) = @_;
-
-		my $formal_input = $input->to_input();
-
-		my $actual_input_data = {
-		    analysis     => $analyses{$node},
-		    formal_input => $formal_input,
-		    attribute    => $attribute
-		};
-		my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
-						       $actual_input_data);
-	    };
-
-	    my $create_actual_output = sub {
-		my ($output,$attributes) = @_;
-
-		my $formal_output = $output->from_output();
-		my $attribute = $attributes->{$formal_output};
-
-		my $actual_output_data = {
-		    analysis      => $analyses{$node},
-		    formal_output => $formal_output,
-		    attribute     => $attribute
-		    };
-		my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",
-							$actual_output_data);
-	    };
-
+	    print STDERR "    startDataset\n";
 	    $module->startDataset($dataset);
 
 	    # Collect and present the dataset inputs
@@ -172,17 +236,24 @@ sub executeAnalysisView {
 	    foreach my $input (@$dataset_inputs) {
 		my $formal_input = $input->to_input();
 		my $formal_output = $input->from_output();
-		my $attribute = $dataset_outputs{$node}->{$formal_output};
-		&$create_actual_input($input,$attribute);
+		my $pred_node = $input->from_node();
+		my $attribute = $dataset_outputs{$pred_node->id()}->{$formal_output->id()};
+		print STDERR "      Actual input ".$formal_input->name()."\n";
+		&$create_actual_input($node,$input,$attribute);
 
-		$dataset_hash{$formal_input} = $attribute;
+		$dataset_hash{$formal_input->name()} = $attribute;
 	    }
 	    $module->datasetInputs(\%dataset_hash);
 
-	    my $images = $dataset->images();
-	    while (my $image = $images->next()) {
-		# Collect and present the image inputs
+	    print STDERR "    Precalculate dataset\n";
+	    $module->precalculateDataset();
 
+	    my $image_maps = $dataset->image_links();
+	    while (my $image_map = $image_maps->next()) {
+		# Collect and present the image inputs
+		my $image = $image_map->image();
+
+		print STDERR "    startImage ".$image->name()."\n";
 		$module->startImage($image);
 
 		my $image_inputs = $inputs->{I};
@@ -191,18 +262,24 @@ sub executeAnalysisView {
 		foreach my $input (@$image_inputs) {
 		    my $formal_input = $input->to_input();
 		    my $formal_output = $input->from_output();
-		    my $attribute = $image_outputs{$node}->{$formal_output}->{$image};
-		    &$create_actual_input($input,$attribute);
+		    my $pred_node = $input->from_node();
+		    my $attribute = $image_outputs{$pred_node->id()}->{$formal_output->id()}->{$image->id()};
+		    print STDERR "      Actual input ".$formal_input->name()."\n";
+		    &$create_actual_input($node,$input,$attribute);
 		    
-		    $image_hash{$formal_input} = $attribute;
+		    $image_hash{$formal_input->name()} = $attribute;
 		}
 
 		$module->imageInputs(\%image_hash);
+
+		print STDERR "    Precalculate image\n";
+		$module->precalculateImage();
 
 		my $features = $image->features();
 		while (my $feature = $features->next()) {
 		    # Collect and present the feature inputs.
 
+		    print STDERR "    startFeature ".$feature->id()."\n";
 		    $module->startFeature($feature);
 
 		    my $feature_inputs = $inputs->{F};
@@ -211,71 +288,87 @@ sub executeAnalysisView {
 		    foreach my $input (@$feature_inputs) {
 			my $formal_input = $input->to_input();
 			my $formal_output = $input->from_output();
-			my $attribute = $feature_outputs{$node}->{$formal_output}->
-			    {$feature};
-			&$create_actual_input($input,$attribute);
+			my $pred_node = $input->from_node();
+			my $attribute = $feature_outputs{$pred_node->id()}->{$formal_output->id()}->{$feature->id()};
+			print STDERR "      Actual input ".$formal_input->name()."\n";
+			&$create_actual_input($node,$input,$attribute);
 
-			$feature_hash{$formal_input} = $attribute;
+			$feature_hash{$formal_input->name()} = $attribute;
 		    }
 
 		    $module->featureInputs(\%feature_hash);
 
+		    print STDERR "    Calculate feature\n";
+		    $module->calculateFeature();
 
 		    # Collect and process the feature outputs
 
 		    my $feature_attributes = $module->collectFeatureOutputs();
 		    my $feature_outputs = $outputs->{F};
 
+		    print STDERR "    Feature outputs\n";
 		    foreach my $output (@$feature_outputs) {
-			&$create_actual_output($output,$feature_attributes);
-			my $formal_output = $output->from_output();
-			$feature_outputs{$node}->{$formal_output}->{$feature} = $feature_attributes->{$formal_output};
+			&$create_actual_output($node,$output,$feature_attributes);
+			my $formal_output = $output;#->from_output();
+			print STDERR "      Actual output ".$formal_output->name()."\n";
+			$feature_outputs{$nodeID}->{$formal_output->id()}->{$feature->id()} = $feature_attributes->{$formal_output->name()};
 		    }
 
 		    $module->finishFeature($feature);
 		} # foreach $feature
 
 		# Collect and process the image outputs
+		print STDERR "    Postcalculate image\n";
+		$module->postcalculateImage();
 
 		my $image_attributes = $module->collectImageOutputs();
-		my $image_outputs = $outputs->{F};
+		my $image_outputs = $outputs->{I};
 		
+		print STDERR "    Image outputs\n";
 		foreach my $output (@$image_outputs) {
-		    &$create_actual_output($output,$image_attributes);
-		    my $formal_output = $output->from_output();
-		    $image_outputs{$node}->{$formal_output}->{$image} = $image_attributes->{$formal_output};
+		    &$create_actual_output($node,$output,$image_attributes);
+		    my $formal_output = $output;#->from_output();
+		    print STDERR "      Actual output ".$formal_output->name()."\n";
+		    $image_outputs{$nodeID}->{$formal_output->id()}->{$image->id()} = $image_attributes->{$formal_output->name()};
 		}
 
 		$module->finishImage($image);
 	    } # foreach $image
 
 	    # Collect and process the dataset outputs
+	    print STDERR "    Postcalculate dataset\n";
+	    $module->postcalculateDataset();
 
 	    my $dataset_attributes = $module->collectDatasetOutputs();
-	    my $dataset_outputs = $outputs->{F};
+	    my $dataset_outputs = $outputs->{D};
 	    
+	    print STDERR "    Dataset outputs\n";
 	    foreach my $output (@$dataset_outputs) {
-		&$create_actual_output($output,$dataset_attributes);
+		&$create_actual_output($node,$output,$dataset_attributes);
 		my $formal_output = $output->from_output();
-		$dataset_outputs{$node}->{$formal_output} = $dataset_attributes->{$formal_output};
+		print STDERR "      Actual output ".$formal_output->name()."\n";
+		$dataset_outputs{$nodeID}->{$formal_output->id()} = $dataset_attributes->{$formal_output->name()};
 	    }
 	    
 	    $module->finishDataset($dataset);
 
 	    # Mark this node as finished, and flag that we need
 	    # another fixed point iteration.
-
-	    $node_states{$node} = FINISHED_STATE;
+	    
+	    print STDERR "    Marking state\n";
+	    $node_states{$nodeID} = FINISHED_STATE;
 	    $continue = 1;
 	} # foreach $node
     } # while ($continue)
+
+    $last_node->dbi_commit();
 }
 
 __END__
 
 =head1 NAME
 
-  OME::Tasks::AnalysisEngine - OME anaylsis subsystem
+  OME::Tasks::AnalysisEngine - OME analysis subsystem
 
 =head1 SYNOPSIS
 

@@ -26,9 +26,23 @@
 #
 
 package OME::Feature;
+
 use strict;
-use vars qw($VERSION);
-$VERSION = '1.00';
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use OME::Image;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    image_id => 'image'
+    });
+
+__PACKAGE__->table('features');
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(image_id));
+__PACKAGE__->hasa('OME::Image' => qw(image_id));
 
 
 

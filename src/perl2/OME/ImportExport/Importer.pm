@@ -337,9 +337,11 @@ sub store_image_metadata {
     #my $created = $href->{'Image.CreationDate'};
     $created = "now" unless $created;     # until we figure out date formatting issue
 
-    $name = $href->{'Image.Name'}.".ori";
-    $path = $repository->Field("path");
-    $self->{realpath} = $path.$name;
+    #$name = $href->{'Image.Name'}.".ori";
+    #$path = $repository->Field("path");
+    $name = $href->{'Image.Name'};
+    $path = $name . ".ori";
+    #$self->{realpath} = $path.$name;
     $guid = $self->{config}->mac_address;
     
     my $recordData = {'name' => $name,
@@ -361,6 +363,7 @@ sub store_image_metadata {
 
     $self->{image} = $image;
     my $imageID = $image->id();
+    $self->{realpath} = $image->getFullPath();
 
     return $status;
 }
