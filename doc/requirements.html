@@ -82,12 +82,20 @@ Usually need to re-install libtiff if you want LZW support.&nbsp; Get and
 install the following libraries:
 <br><a href="http://www.libtiff.org/tiff-v3.5.6-beta.tar.gz">tiff-v3.5.6-beta</a>
 <br><a href="http://www.libtiff.org/libtiff-lzw-compression-kit-1.2.tar.gz">libtiff-lzw-compression-kit</a>
-<p>To be useful, ImageMagick (and PerlMagick) need the following additional
+<h4>
+ImageMagick</h4>
+To be useful, ImageMagick (and PerlMagick) need the following additional
 libraries, which are usually installed:
 <br>jpeg-6b
 <br>in the near future, also freetype-2.0.4 (this is latest version, can
 probably use an earlier one)
-<br>&nbsp;
+<br>When installing ImageMagick, run configure the following way:
+<pre>> ./configure --enable-shared --enable-lzw --prefix=/usr
+> make
+> make install</pre>
+Installing on Mac OS X will require the patched ImageMagick available at: 
+<a href="http://ome1-sorger.mit.edu/ImageMagick-5.3.6.tar.gz">ImageMagick-5.3.6.tar.gz</a>.  
+It is not presently known if newer versions incorporated my patch.
 <h4>
 PostgreSQL:</h4>
 It is best to compile PostgreSQL from its source - I have had stability
