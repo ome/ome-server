@@ -40,13 +40,13 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.chains.ControlPanel;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
 import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
-
 import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.Font;
@@ -74,7 +74,9 @@ public class PChainBox extends PGenericBox implements
 	 */
 	public static final int SIZE_LENGTH=50;
 	
+	public static final double MAX_NAME_SCALE=6;
 	/**
+	 * 
 	 * The ID of the chain being stored
 	 */
 	private int chainID=0;
@@ -85,13 +87,21 @@ public class PChainBox extends PGenericBox implements
 	private static final Color EXECUTED_COLOR = new Color(204,204,255,200);
 	
 	private static final Font LOCKED_FONT = new Font(null,Font.BOLD,18);
+	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,18);
 	
 	private static final float VGAP=10;
 	private static final float HGAP=20;
 	
+	private PText name;
 	
-	public PChainBox(ControlPanel controlPanel,CChain chain, float x, float y) {
-		super(x,y);
+	private float height;
+	private float width;
+	float x =0;
+	float y = 0;
+	
+	public PChainBox(Connection connection,ControlPanel controlPanel,
+		CChain chain) {
+		super();
 		this.chain = chain;
 		chainID = chain.getID();
 		SelectionState selectionState = controlPanel.getSelectionState();
@@ -99,6 +109,33 @@ public class PChainBox extends PGenericBox implements
 		
 		boolean selected = chain.hasExecutionsInSelectedDatasets(selectionState);
 		setSelected(selected);
+		
+		PLinkLayer linkLayer = new PLinkLayer();
+		linkLayer.setPickable(false);
+		addChild(linkLayer);
+		linkLayer.moveToFront();
+		// add name
+		name = new PText(chain.getName());
+		name.setFont(NAME_FONT);
+		name.setPickable(false);
+		name.setScale(MAX_NAME_SCALE);
+		addChild(name);
+		name.setOffset(HGAP,VGAP*3);
+		y = (float) (name.getGlobalFullBounds().getHeight()+VGAP*3); // one VGAP below + 3 above
+		
+		// add ower name
+		PText owner = new PText(connection.getOwnerName(chain));
+		owner.setFont(NAME_FONT);
+		owner.setPickable(false);
+	
+		
+		addChild(owner);
+		owner.setOffset(x+HGAP,y+VGAP);
+		y += owner.getHeight()+VGAP;
+		// add chain itself
+		PChain p = new PChain(connection,chain,this,linkLayer,HGAP*2,y);
+		y += p.getHeight()+VGAP;
+		setExtent(p.getWidth()+HGAP*2,y);
 	}
 	
 	/**
@@ -155,5 +192,5 @@ public class PChainBox extends PGenericBox implements
 			setPaint(PGenericBox.CATEGORY_COLOR);
 		repaint();
 	}
-	 
+
 }
