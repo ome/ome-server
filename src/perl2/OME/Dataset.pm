@@ -92,8 +92,8 @@ Returns or sets the group that this dataset belongs to.
 
 =head2 project_links
 
-	my @project_links = $table->project_links();
-	my $project_link_iterator = $table->project_links();
+	my @project_links = $dataset->project_links();
+	my $project_link_iterator = $dataset->project_links();
 
 Returns or iterates, depending on context, the project links for this
 dataset.  (Being a many-to-many map, the link represents the mapping
@@ -101,8 +101,8 @@ table.)
 
 =head2 image_links
 
-	my @image_links = $table->image_links();
-	my $image_link_iterator = $table->image_links();
+	my @image_links = $dataset->image_links();
+	my $image_link_iterator = $dataset->image_links();
 
 Returns or iterates, depending on context, the image links for this
 dataset.  (Being a many-to-many map, the link represents the mapping

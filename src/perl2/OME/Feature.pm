@@ -27,6 +27,21 @@
 
 package OME::Feature;
 
+=head1 NAME
+
+OME::Feature - subsets of an image
+
+=head1 DESCRIPTION
+
+The C<Feature> class represents OME features, which are subdivisions
+of an image.  The features of an image form a tree, with the image
+itself at the root.  (Features right below the image in the tree will
+have C<undef> for their parent feature link.)  Features also have a
+tag, which allow similar kinds of features (cells, nuclei, etc.) to be
+grouped for analysis.
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -50,6 +65,57 @@ __PACKAGE__->has_many('children','OME::Feature' => qw(parent_feature_id),
 
 __PACKAGE__->make_filter('__image_roots' => 'image_id = ? and parent_feature_id is null order by tag, feature_id');
 
+=head1 METHODS (C<Feature>)
 
+The following methods are available to C<Feature> in addition to those
+defined by L<OME::DBObject>.
+
+=head2 name
+
+	my $name = $feature->name();
+	$feature->name($name);
+
+Returns or sets the name of this feature.
+
+=head2 tag
+
+	my $tag = $feature->tag();
+	$feature->tag($tag);
+
+Returns or sets the tag of this feature.
+
+=head2 image
+
+	my $image = $feature->image();
+	$feature->image($image);
+
+Returns or sets the image that this feature belongs to.
+
+=head2 parent_feature
+
+	my $parent_feature = $feature->parent_feature();
+	$feature->parent_feature($parent_feature);
+
+Returns or sets the parent feature of this feature.
+
+=head2 children
+
+	my @children = $feature->children();
+	my $children_iterator = $feature->children();
+
+Returns or iterates, depending on context, the child features of this
+feature.
+
+=cut
 
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
+
