@@ -251,7 +251,7 @@ sub formatImage {
 	    $start_offset = pop(@$offsets);
 	    $strip_size = pop(@$bytecounts);
 	    ($ifmt, $ofmt) = $self->SUPER::get_image_fmt($bps, $row_size, $endian);
-	    $status = FileUtils::seek_and_read($fih, \$buf, $start_offset, $strip_size);
+	    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$buf, $start_offset, $strip_size);
 	    last
 		unless $status eq "";
 
@@ -313,7 +313,7 @@ sub readTiffIFD {
     $xml_hash->{'Image.NumTimes'} = 1;
 
     while ($offset > 0) {    # read every Tiff IFD 
-	$status = FileUtils::seek_and_read($fih, \$buf, $offset, 2);
+	$status = OME::ImportExport::FileUtils::seek_and_read($fih, \$buf, $offset, 2);
 	last
 	    unless $status eq "";
 
@@ -335,7 +335,7 @@ sub readTiffIFD {
 	}
 
 	# read in the offset to next IFD. Offset to 0 mean end of IFDs.
-	$status = FileUtils::read_it($fih, \$buf, 4);
+	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 4);
 	last
 	    unless $status eq "";
 	$offset = unpack $endian eq "little" ? "V" : "N",  $buf;
@@ -457,7 +457,7 @@ sub readTiffTag {
     my ($value, $val1, $val2, $quot);
     my %Type = (1=>'Byte', 2=>'ASCII', 3=>'Short', 4=>'Long', 5=>'Rational');
 
-    $status = FileUtils::read_it($fih, \$buf, 12);
+    $status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 12);
     return $status
 	unless $status eq "";
 
@@ -501,7 +501,7 @@ sub readTiffTag {
 	my $cur_offset = tell $fih;
 	$variant_handler = $self->{$variant_name};
 	$status = $variant_handler->readTag($tag_name, $tag_type, $tag_cnt, $tag_offset);
-        FileUtils::seek_it($fih, $cur_offset);
+        OME::ImportExport::FileUtils::seek_it($fih, $cur_offset);
 
 	#print "Variant tag reading status: $status\n";
 	return $status;;
@@ -514,7 +514,7 @@ sub readTiffTag {
 	# remember where we are
 	$cur_loc = tell($fih);
 	# & go read the values
-	$status = FileUtils::seek_it($fih, $tag_offset);
+	$status = OME::ImportExport::FileUtils::seek_it($fih, $tag_offset);
 	return $status
 	    unless $status eq "";
 
@@ -538,7 +538,7 @@ sub readTiffTag {
 	    @vallist = ();
 	}
 	while($tag_cnt) {
-	    $status = FileUtils::read_it($fih, \$buf, $cnt);
+	    $status = OME::ImportExport::FileUtils::read_it($fih, \$buf, $cnt);
 	    return $status
 		unless $status eq "";
 
@@ -560,7 +560,7 @@ sub readTiffTag {
 	    }
 	    $tag_cnt--;
 	}
-	$status = FileUtils::seek_it($fih, $cur_loc);
+	$status = OME::ImportExport::FileUtils::seek_it($fih, $cur_loc);
     }	
     if (defined $Tagnames{$tag_name}) {
 	$fld_name = $Tagnames{$tag_name};

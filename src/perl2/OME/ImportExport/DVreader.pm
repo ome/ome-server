@@ -314,7 +314,7 @@ sub readUIHdr {
     for ($i = 1; ($k = $tag_table{$i}[0]) ne 'end'; $i++) {
 	$len = $tag_table{$i}[1];
 	$typ = $tag_table{$i}[2];
-	$status = FileUtils::read_it($fh, \$buf, $len);
+	$status = OME::ImportExport::FileUtils::read_it($fh, \$buf, $len);
 	last
 	    unless $status eq "";
 	$fmt = get_fmt($typ, $endian);

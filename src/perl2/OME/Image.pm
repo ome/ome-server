@@ -51,10 +51,6 @@ sub GetPixels {
     my $rpath = $repository->Field("path");
     my $path = $self->Field("path");
 
-    my $fullpath = $rpath . $path;
-    my $handle = new IO::File;
-    open $handle, $fullpath or return undef;
-
     my $sX = $self->Field("sizeX");
     my $sY = $self->Field("sizeY");
     my $sZ = $self->Field("sizeZ");
@@ -98,6 +94,11 @@ sub GetPixels {
 
     my $result = "";
     my $scanline;
+
+    my $fullpath = $rpath . $path;
+    my $handle = new IO::File;
+    open $handle, $fullpath or return undef;
+
     for (my $t = $t1; $t <= $t2; $t++) {
 	for (my $w = $w1; $w <= $w2; $w++) {
 	    for (my $z = $z1; $z <= $z2; $z++) {
@@ -114,6 +115,8 @@ sub GetPixels {
 	}
 	$offset += $oT;
     }
+
+    close $handle;
 
     return $result;
 }
