@@ -363,19 +363,30 @@ sub _getManyRelations {
 	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	if( $iter->first() ) { do {
-		my $type = $iter->return_type();
-		my $objects = $iter->getList();
-		my $table_name = $iter->name();
-		push( @relations, $q->p( $tableMaker->getList( 
-			{
-				title            => $table_name, 
-				embedded_in_form => $self->{ form_name },
-				Length           => 5,
-				width            => '100%'
-			}, 
-			$type, 
-			$objects
-		) ) );
+		if( $iter->getDBObjType_ID_and_Accessor() ) {
+			my ( $from_type, $from_id, $from_accessor) = $iter->getDBObjType_ID_and_Accessor();
+			push( @relations, $q->p( $tableMaker->getList( 
+				{
+					title            => $iter->name(), 
+					embedded_in_form => $self->{ form_name },
+					Length           => 5,
+					width            => '100%'
+				}, 
+				$iter->return_type(), 
+				{ accessor => [ $from_type, $from_id, $from_accessor ] }
+			) ) );
+		} else {
+			push( @relations, $q->p( $tableMaker->getList( 
+				{
+					title            => $iter->name(), 
+					embedded_in_form => $self->{ form_name },
+					Length           => 5,
+					width            => '100%'
+				}, 
+				$iter->return_type(), 
+				$iter->getList()
+			) ) );
+		}
 	} while( $iter->next() ); }
 	
 	return @relations;
