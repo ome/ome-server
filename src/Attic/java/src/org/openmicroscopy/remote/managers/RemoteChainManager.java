@@ -406,17 +406,40 @@ public class RemoteChainManager
      */
     public List getFreeInputs(Chain chain)
     {
+        // make the remote method call
         Object o = caller.dispatch(this,"getUserInputs",chain);
         List remoteList = (List) o;
         Iterator it = remoteList.iterator();
+
+        // The return value of the remote call is not what we want to
+        // return -- we must turn the array of arrays into a List of
+        // FreeInputs.
+
         List outputList = new ArrayList();
+        RemoteObjectCache cache = getRemoteSession().getObjectCache();
         while (it.hasNext())
         {
+            // the remote method returns an array of arrays
             List item = (List) it.next();
-            FreeInput input = new FreeInput((Chain.Node) item.get(0),
-                                            (Module) item.get(1),
-                                            (Module.FormalInput) item.get(2),
-                                            (SemanticType) item.get(3));
+
+            // turn the references in the inner arrays into the
+            // appropriate objects via the session's cache
+            Chain.Node node = (Chain.Node)
+                cache.getObject("OME::AnalysisChain::Node",
+                                (String) item.get(0));
+            Module module = (Module)
+                cache.getObject("OME::Module",
+                                (String) item.get(1));
+            Module.FormalInput formalInput = (Module.FormalInput)
+                cache.getObject("OME::Module::FormalInput",
+                                (String) item.get(2));
+            SemanticType type = (SemanticType)
+                cache.getObject("OME::SemanticType",
+                                (String) item.get(3));
+
+            // create a Java FreeInput object and throw it into out
+            // return list
+            FreeInput input = new FreeInput(node,module,formalInput,type);
             outputList.add(input);
         }
         return outputList;
@@ -435,6 +458,7 @@ public class RemoteChainManager
      * @since OME2.1
      */
     public class FreeInput
+        implements ChainManager.FreeInput
     {
         protected Chain.Node          node;
         protected Module              module;
