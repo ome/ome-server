@@ -262,7 +262,7 @@ public class RemoteObject
     protected List getRemoteListElement(Class clazz,
                                         String element)
     {
-        // lists should not be cached
+        // lists should not be cached - why not?
         //Object o = getCachedElement(element);
         Object o = caller.dispatch(this,element);
         if (o instanceof List)

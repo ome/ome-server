@@ -24,9 +24,6 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
 import org.openmicroscopy.vis.util.SwingWorker;
-import org.openmicroscopy.vis.chains.Controller;
-
-
 
 /** 
  * <p>A wrapper class to handle discussion with the OME Database.<p>
@@ -41,6 +38,8 @@ public class Connection {
 	RemoteBindings remote=null;
 	Session session;
 	Factory factory;
+	
+	ModuleList modules;
 
 	
 	/***
@@ -55,7 +54,8 @@ public class Connection {
 	 * @param userName
 	 * @param passWord
 	 */
-	public Connection(final Controller controller,final String URL,final String userName,final String passWord) {
+	public Connection(final ApplicationController controller,
+		final String URL,final String userName,final String passWord) {
 		
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
@@ -71,7 +71,10 @@ public class Connection {
 			public void finished() {
 				session = remote.getSession();
 				factory = remote.getFactory();
+				modules  = new ModuleList(factory);
 				controller.completeLogin();
+				// dummy
+				modules.dump();
 				
 			}
 		};

@@ -22,6 +22,7 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.ApplicationController;
 import org.openmicroscopy.alligator.LoginDialog;
 
 /** 
@@ -32,7 +33,7 @@ import org.openmicroscopy.alligator.LoginDialog;
  * @since OME2.0
  */
 
-public class Controller {
+public class Controller implements ApplicationController {
 	
 	private CmdTable cmd;
 	private MainFrame mainFrame;
