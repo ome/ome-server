@@ -25,6 +25,7 @@ our $VERSION = '1.0';
 
 use OME::DBObject;
 use OME::Image;
+use OME::Project;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
@@ -38,7 +39,7 @@ __PACKAGE__->sequence('dataset_seq');
 __PACKAGE__->columns(Primary => qw(dataset_id));
 __PACKAGE__->columns(Essential => qw(name description locked));
 __PACKAGE__->has_many('image_links','OME::Image::DatasetMap' => qw(dataset_id));
-__PACKAGE__->hasa('OME::Project' => qw(project_id));
+__PACKAGE__->has_many('project_links','OME::Project::DatasetMap' => qw(dataset_id));
 __PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
 __PACKAGE__->hasa('OME::Group' => qw(group_id));
 

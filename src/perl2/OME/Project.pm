@@ -35,9 +35,29 @@ __PACKAGE__->table('projects');
 __PACKAGE__->sequence('project_seq');
 __PACKAGE__->columns(Primary => qw(project_id));
 __PACKAGE__->columns(Essential => qw(name description));
-#__PACKAGE__->has_many('datasets','OME::Dataset' => qw(project_id));
+__PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_id));
 __PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
 __PACKAGE__->hasa('OME::Group' => qw(group_id));
+
+
+package OME::Project::DatasetMap;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use OME::Dataset;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    project_id   => 'project',
+    dataset_id => 'dataset'
+    });
+
+__PACKAGE__->table('project_dataset_map');
+__PACKAGE__->columns(Essential => qw(project_id dataset_id));
+__PACKAGE__->hasa('OME::Project' => qw(project_id));
+__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 
 
 1;

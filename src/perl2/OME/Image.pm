@@ -232,6 +232,7 @@ use strict;
 our $VERSION = '1.0';
 
 use OME::DBObject;
+use OME::Dataset;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
