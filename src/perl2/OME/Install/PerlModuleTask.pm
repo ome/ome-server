@@ -252,6 +252,34 @@ my @modules = (
 	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
 	#installModule => \&ImageMagickInstall
     },{
+	name => 'LWP',
+	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
+	configure_module => sub {
+	    # Since libwww has an interactive configure script we need to
+	    # implement a custom configure_module () subroutine that allows
+	    # for an interactive install
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+		my @output = `perl Makefile.PL -n 2>&1`;
+	
+		if ($? == 0) {
+		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
+		}
+	
+		print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	
+		return 0;
+	}
+    },{
 	name => 'URI',
 	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
     },{
