@@ -509,6 +509,7 @@ sub getTextTable {
 	my $q       = $self->CGI();
 	my @params = @_;
 	$params[0]->{ Length } = -1;
+	$params[0]->{ Format } = 'txt';
 	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @params );
 	
@@ -795,7 +796,7 @@ sub __parseParams {
 	# make form name, title, display type
 	my $form_name   = ( $options->{ embedded_in_form } or $common_name."_TABLE" );
 	my $title       = ( $options->{ title } or $common_name ).
-		( $ST ?
+		( $ST && $options->{ Format } && $options->{ Format } ne 'txt' ?
 			' '.$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },'?') 
 			: ''			
 		);
