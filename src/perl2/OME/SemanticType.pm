@@ -603,13 +603,13 @@ sub newAttributesInOneRow {
             # data.
 
             if (!defined $new_data) {
-                confess "Attribute values clash"
+                confess "Attribute values clash. Data for Semantic element $semantic_element_name of Semantic Type ".$semantic_type->name()." is undefined."
                   if defined $data{$table_name}->{$column_name};
             } else {
                 if (exists $data{$table_name}->{$column_name}) {
                     my $old_data = $data{$table_name}->{$column_name};
                     #__debug("      ?= $old_data");
-                    confess "Attribute values clash"
+                    confess "Attribute values clash. old data is $old_data, new data is $new_data. New data is in Semantic element $semantic_element_name of Semantic Type ".$semantic_type->name()."."
                       if ($new_data ne $old_data);
                 }
             }
