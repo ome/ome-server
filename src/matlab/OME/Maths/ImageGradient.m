@@ -31,10 +31,7 @@
 % each pixel as a magnitude and angle. The magnitude is the channel 0 of the 
 % resulting pixels set. The angle is channel 1.
 %
-function [outPixels] = Gradient(inPixels, theC)
-
-% select the Channel from the XYZCT pixels
-inPixels = double(inPixels(:,:,:,theC,:));
+function [outPixels] = Gradient(inPixels)
 
 % Calculation of the gradient from two orthogonal directions
 N = [1 1 1 ; 0 0 0 ; -1 -1 -1];
@@ -46,4 +43,4 @@ iprocW = filter2(W, inPixels);
 outPixels(:,:,:,1,:) = sqrt(iprocN.^2 + iprocW.^2);
 outPixels(:,:,:,2,:) = atan2(iprocN, iprocW);
 
-outPixels = double(outPixels);
+outPixels = single(outPixels);
