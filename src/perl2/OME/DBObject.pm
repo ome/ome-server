@@ -977,9 +977,10 @@ C<OME::Project::DatasetMap> instances, though, the C<dataset> accessor
 (fourth parameter) is called on each, and the results of those
 accessor calls are returned.
 
-As with all other list-retrieval accessors, if the many-to-many
-accessor is called in scalar context, an iterator is returned instead
-of a list.
+As with all other list-retrieval accessors, if the many-to-many accessor
+is called in scalar context, an iterator is returned instead of a list.
+Also, the accessor will accept search parameters in factory syntax. i.e.
+	$dataset->images( name => [ 'like', 'foo%' ], ... );
 
 Note that manyToMany columns cannot be present in data hashes, either
 for creation or searching.
@@ -1018,6 +1019,22 @@ sub manyToMany {
             my $self = shift;
             my %params = @_;
             my $factory = $self->getFactory();
+            # Allow search parameters to be passed through and return
+            # the expected result. ex. The parameters in 
+            # $dataset->images( name => [ 'like', 'foo%' ] ) would become
+            # $dataset->images( 'image.name' => [ 'like', 'foo%' ] ) so
+            # the search parameters won't be misinterpreted as intended
+            # for the mapping table.
+            foreach my $key ( keys %params ) {
+            	next if $key eq '__offset' or $key eq '__limit';
+            	if( $key eq '__order' ) {
+	            	$params{ __order } =~ s/^(\!)?($map_linker_alias\.)?(\w+)$/$1$map_linker_alias\.$3/;
+	            } else {
+	            	(my $normalized_key = $key) =~ s/^($map_linker_alias\.)?(\w+)$/$map_linker_alias\.$2/;
+					$params{ $normalized_key } = $params{ $key };
+					delete $params{ $key };
+	            }
+			}
 
             if (wantarray) {
                 my @links = $factory->
@@ -1046,6 +1063,17 @@ sub manyToMany {
         my $counter = sub {
             my $self = shift;
             my %params = @_;
+            # Fix up search parameters. See above note in the accessor method
+            foreach my $key ( keys %params ) {
+            	next if $key eq '__offset' or $key eq '__limit';
+            	if( $key eq '__order' ) {
+	            	$params{ __order } =~ s/^(\!)?($map_linker_alias\.)?(\w+)$/$1$map_linker_alias\.$3/;
+	            } else {
+	            	(my $normalized_key = $key) =~ s/^($map_linker_alias\.)?(\w+)$/$map_linker_alias\.$2/;
+					$params{ $normalized_key } = $params{ $key };
+					delete $params{ $key };
+	            }
+			}
             my $factory = $self->getFactory();
             return $factory->countObjects($map_class,
                                           $map_alias => $self->{__id},
