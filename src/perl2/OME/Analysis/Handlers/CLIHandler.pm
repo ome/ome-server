@@ -521,14 +521,14 @@ sub _execute {
 					$outputs{
 						$indexXML->getAttribute( 'FormalOutputName' )
 					}->{
-						$indexXML->getAttribute( 'FormalOutputColumnName' )
+						$indexXML->getAttribute( 'SemanticElementName' )
 					} =
 						${ $planeIndexes->{ $planeID }->{ $index } };
 					print STDERR "\tStored index $index, value ".$outputs{
 						$indexXML->getAttribute( 'FormalOutputName' )
 					}->{
-						$indexXML->getAttribute( 'FormalOutputColumnName' )
-					}." to ".$indexXML->getAttribute( 'FormalOutputName' ).'.'.$indexXML->getAttribute( 'FormalOutputColumnName' )."\n"
+						$indexXML->getAttribute( 'SemanticElementName' )
+					}." to ".$indexXML->getAttribute( 'FormalOutputName' ).'.'.$indexXML->getAttribute( 'SemanticElementName' )."\n"
 						if $debug eq 2;
 				}
 			}
@@ -615,7 +615,7 @@ sub _execute {
 						my $accessBy               = $output->getAttribute( "AccessBy" );
 						die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_program}->name()." are corrupted. Alert system admin!" 
 							if( $accessBy =~ m/\D/ );
-						my $formalOutputColumnName = $outputTo->getAttribute( "FormalOutputColumnName" );
+						my $formalOutputColumnName = $outputTo->getAttribute( "SemanticElementName" );
 						my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
 						my $cmd                    = '$outputs{ $formalOutputName }->{$formalOutputColumnName} = $' . $accessBy . ';';
 						eval $cmd;
