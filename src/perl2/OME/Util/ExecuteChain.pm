@@ -248,7 +248,7 @@ sub execute {
 			}
 	
 			$mex = OME::Tasks::ModuleExecutionManager->
-			  createVirtualMEX(\@attributes);
+			  coalateInputs(\@attributes);
 		}
 	
 		$user_inputs{$formal_input->id()} = $mex;
