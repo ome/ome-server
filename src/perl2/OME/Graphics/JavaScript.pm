@@ -126,6 +126,7 @@ function $JStype (ImageID, dims, theZ, theT) {
 }
 ENDJSOBJECT
 
+# First draft of POD written by Josiah Johnston. siah@nih.gov
 =pod
 
 =head1 JavaScript.pm
@@ -137,7 +138,7 @@ L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function c
 =head2 Description
 
 Creates javascript classes and html snippets. Right now it is specific to 
-OME::Web::GetGraphics, but that could change in the future.
+L<OME::Web::GetGraphics>, but that could change in the future.
 
 =head2 Path
 
@@ -151,6 +152,7 @@ OME::Graphics::JavaScript
 
 B<Inherits from>
 	OME::Graphics
+
 B<makes use of OME Modules>
 	OME::Graphics::JavaScript::Layer
 
@@ -160,7 +162,7 @@ B<makes use of OME Modules>
 
 =head1 Functions
 
-L<"Externaly referenced">, L<"Internally referenced">
+L<"Externaly referenced">, L<"Intended to be internally referenced">
 
 =head2 Externally referenced
 
@@ -171,19 +173,31 @@ X<new()>
 
 =item new()
 
- 
-Description
-	constructor
-Parameters
-	required
-		ImageID, Session, Dims
-	optional
-		theZ, theT
-Returns
-	$self
-Overrides function in OME::Graphics
-Uses functions
-	OME::Graphics->new()
+=over 4
+
+=item Description
+
+constructor
+
+=item Parameters
+
+B<required>
+	ImageID, Session, Dims
+
+B<optional>
+	theZ, theT
+
+=item Returns
+
+I<$self>
+
+=item Overrides function in OME::Graphics
+
+=item Uses functions
+
+L<OME::Graphics/"new()">
+
+=back
 
 =cut
 
@@ -233,19 +247,31 @@ X<AddLayer()>
 
 =item AddLayer()
 
- 
-Description
-	pushes a Layer object onto the layers array
-Parameters
-	$layer
-		layer should be a reference to an object of type OME::Graphics::JavaScript::Layer::*
-Returns
-	$layer
-Uses NO functions
-Accesses external data:
-	OME::Graphics::JavaScript::Layer::*->
-		{Parent}
-		{name}
+=over 4
+
+=item Description
+
+pushes a Layer object onto the layers array
+
+=item Parameters
+
+I<$layer>
+
+layer should be a reference to an object of type OME::Graphics::JavaScript::Layer::*
+
+=item Returns
+
+I<$layer>
+
+=item Uses NO functions
+
+=item Accesses external data:
+
+OME::Graphics::JavaScript::Layer::*->{Parent}
+
+OME::Graphics::JavaScript::Layer::*->{name}
+
+=back
 
 =cut
 
@@ -264,6 +290,38 @@ my $i;
 	return $layer;
 }
 
+=pod
+
+X<JavaScript()>
+
+=item JavaScript()
+
+=over 4
+
+=item Description
+
+Generates necessary javascript classes, div layers, and javascript commands to instantiate
+the javascript objects. It does not appear to currently be in use anywhere.
+
+=item Parameters
+
+none
+
+=item Returns
+
+Text containing Javascript classes embeded in html tags, div tags associated with the known
+layers, and Javascript commands to instantiate the layers.
+
+=item Uses functions
+
+JSobjectDefs()
+
+JSinstance()
+
+=back
+
+=cut
+
 sub JavaScript {
 my $self = shift;
 my $JS;
@@ -272,6 +330,38 @@ my $JS;
 
 	return $JS;
 }
+
+=pod
+
+X<JSobjectDefs()>
+
+=item JSobjectDefs()
+
+=over 4
+
+=item Description
+
+Generates javascript objects embedded in html tags. Will NOT generate multiple objects of same type.
+The following objects are generated: JSGraphics, necessary objects for each layer.
+
+=item Parameters
+
+none
+
+=item Returns
+
+Text containing Javascript classes embedded in html tags.
+
+=item Uses NO functions
+
+=item Accesses external data
+
+OME::Graphics::JavaScript::Layer::*->{JSdefs}
+	these are the layer's javascript object definitions
+
+=back
+
+=cut
 
 sub JSobjectDefs {
 my $self = shift;
@@ -290,6 +380,37 @@ my $JSdefs = $JSobject;
 	}
 	return $JSdefs;
 }
+
+=pod
+
+X<Form()>
+
+=item Form()
+
+=over 4
+
+=item Description
+
+Generates an html form housing controls to manipulate the layers.
+
+=item Parameters
+
+I<$window>
+	$window is passed to L<OME::Graphics::JavaScript::Layer/"Window()">. look there for more info.
+
+=item Returns
+
+An html form.
+
+=item Uses functions
+
+L<OME::Graphics::JavaScript::Layer/"Window()">
+
+OME::Graphics::JavaScript::Layer::*->Form()
+
+=back
+
+=cut
 
 sub Form {
 my $self = shift;
@@ -312,6 +433,36 @@ ENDFORM
 	return $form;
 }
 
+=pod
+
+X<JSinstance()>
+
+=item JSinstance()
+
+=over 4
+
+=item Description
+
+Generates DIV tags associated with the layers, and Javascript commands to instantiate the layer
+objects.
+
+=item Parameters
+
+A text string to pass to L<"HTMLlayersDIVs()">.
+
+=item Returns
+
+An HTML snippet containing DIV tags and javascript commands.
+
+=item Uses functions
+
+L<"HTMLlayersDIVs()">
+
+L<"JSlayersInstances()">
+
+=back
+
+=cut
 
 # Here we need to write the DIV tags, then instantiate the JS objects.
 sub JSinstance {
@@ -333,11 +484,69 @@ my $instance;
 	return $instance;
 }
 
+=pod
+
+X<JSref()>
+
+=item JSref()
+
+=over 4
+
+=item Description
+
+Returns variable I<self-E<gt>{JSref}>. This variable currently is "JSgraphics", the javascript
+object specified in OME::Graphics::JavaScript (this package).
+
+=item Parameters
+
+none
+
+=item Returns
+
+A string consisting of the name of the javascript object specified specifically in this package.
+
+=item Uses NO functions
+
+=back
+
+=cut
+
 sub JSref {
 	my $self = shift;
 	return $self->{JSref};
 }
 
+=pod
+
+=head2 Intended to be internally referenced
+
+L<"JSlayersInstances">, L<"HTMLlayersDIVs">, L<"DrawLayers">
+
+X<JSlayersInstances()>
+
+=item JSlayersInstances()
+
+=over 4
+
+=item Description
+
+Collects javascript commands to instantiate the layer objects.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A text string consisting of a series of Javascript commands.
+
+=item Uses functions
+
+OME::Graphics::JavaScript::Layer::*->JSinstance()
+
+=back
+
+=cut
 
 sub JSlayersInstances {
 my $self = shift;
@@ -350,6 +559,34 @@ my $JS;
 	return $JS;
 }
 
+=pod
+
+X<HTMLlayersDIVs()>
+
+=item HTMLlayersDIVs()
+
+=over 4
+
+=item Description
+
+Collects DIV tags from the all the layers.
+
+=item Parameters
+
+A text string to pass to L<OME::Graphics::JavaScript::Layer/"HTMLdiv()">
+
+=item Returns
+
+HTML tags for the layers.
+
+=item Uses functions
+
+L<OME::Graphics::JavaScript::Layer/"HTMLdiv()">
+
+=back
+
+=cut
+
 sub HTMLlayersDIVs {
 my $self = shift;
 my $params = shift;
@@ -360,6 +597,32 @@ my $HTML;
 	$HTML .= "\n";
 	return $HTML;
 }
+
+=pod
+
+X<DrawLayers()>
+
+=item DrawLayers()
+
+=over 4
+
+=item Description
+
+Returns javascript commands to call functions in the javascript object specified in this package 
+(currently its name is JSGraphics) with the intent of adding all the layers and redrawing. 
+This function is not in use at this time. It appears to be depricated.
+
+=item Parameters
+
+none
+
+=item Returns
+
+Javascript commands to issue function calls to javascript object I<$JStype> (e.g. JSGraphics).
+
+=back
+
+=cut
 
 sub DrawLayers {
 my $self = shift;
