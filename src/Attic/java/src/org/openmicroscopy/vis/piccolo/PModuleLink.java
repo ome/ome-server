@@ -40,8 +40,7 @@
  package org.openmicroscopy.vis.piccolo;
  import edu.umd.cs.piccolo.PNode;
  import java.awt.geom.Point2D;
- import edu.umd.cs.piccolo.util.PBounds; 
- 
+
  
 /** 
  * A Piccolo node for links between between {@link PModule} objects. These 
@@ -108,12 +107,15 @@
  	
  	private void setStartPoint() {
  		Point2D point = getStartLinkTarget().getCenter();
- 		PBounds b = start.getGlobalFullBounds();
+ 		globalToLocal(point);
+ 		
  		setStartCoords((float) point.getX(),(float) point.getY()); 	
  	}
  	
 	private void setEndPoint() {
 		Point2D point = getEndLinkTarget().getCenter();
+		globalToLocal(point);
+		
 		setEndCoords((float) point.getX()-PConstants.LINK_BULB_RADIUS,
 			(float) point.getY());
 	}
@@ -136,6 +138,7 @@
 		else if (node == end)
 			setEndPoint();
 	}
+	
 	
 	
 	/**

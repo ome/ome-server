@@ -118,12 +118,14 @@ public class PParamLink extends  PLink {
 
 	private void setStartPoint() {
 		Point2D point = getEndPointCoords(start);
+		globalToLocal(point);
 		if (point != null)
 			setStartCoords((float)point.getX(),(float) point.getY());
 	}
 	
 	private void setEndPoint() {
 		Point2D point = getEndPointCoords(end);
+		globalToLocal(point);
 		if (point != null)
 			setEndCoords((float) point.getX(),(float) point.getY());
 	}
