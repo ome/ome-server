@@ -74,6 +74,7 @@ sub execute {
     # could not have this be a virtual MEX.
 
     $mex->virtual_mex(1);
+    $mex->storeObject();
 
     # Find all of the formal inputs for this module.  Each one should
     # have a semantic type which is a PPM subclass.
