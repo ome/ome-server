@@ -504,8 +504,8 @@ sub store_wavelength_info {
     my $logical = $session->Factory()->
       newAttribute("LogicalChannel",$image,$self->{module_execution},
                    {
-                    ExWave   => $wave->{'WavelengthInfo.ExWave'},
-                    EmWave   => $wave->{'WavelengthInfo.ExWave'},
+                    ExcitationWavelength   => $wave->{'WavelengthInfo.ExWave'},
+                    EmissionWavelength   => $wave->{'WavelengthInfo.ExWave'},
                     Fluor    => $wave->{'WavelengthInfo.ExWave'},
                     NDFilter => $wave->{'WavelengthInfo.ExWave'},
                     PhotometricInterpretation => 'monochrome',
@@ -563,7 +563,7 @@ sub store_xyz_info {
 sub store_image_files_xyzwt {
     my ($self, $session, $href, $image_group_ref, $first_sha1) = @_;
     my $image = $self->{'image'};
-    my $imageID = $image->image_id();
+    my $imageID = $image->id();
     print STDERR "new image id = $imageID\n";
     my $status = "";
     my $xyzwt;
@@ -619,8 +619,8 @@ sub map_image_to_dataset {
     my $ds = $self->{dataset};
     my $session = $self->{session};
     my $status = '';
-    my $data = {'image_id'   => $image->{image_id},
-		'dataset_id' => $ds->{dataset_id}};
+    my $data = {'image_id'   => $image->id(),
+		'dataset_id' => $ds->id()};
     
     my $i2dMap = $session->Factory->newObject("OME::Image::DatasetMap", $data);
     if (!defined $i2dMap) {
@@ -699,7 +699,7 @@ sub is_duplicate {
 				    file_sha1 => $sha1);
     if (defined $view) {
 	my $id = $view->{image_id};
-	$view = $factory->findObject("OME::Image", image_id => $id);
+	$view = $factory->loadObject("OME::Image",$id);
 	return ($view->{name}, $id, $sha1);
     } else {
 	return ("", 0, $sha1);

@@ -79,7 +79,8 @@ else {             # otherwise create it
 	print " failed to create new project $projectName.\n";
     }
     else {
-	$project->writeObject();
+	$project->storeObject();
+    $session->commitTransaction();
     }
 }
 
@@ -109,7 +110,8 @@ die "Dataset undefined\n" unless defined $dataset;
 
 $session->project($project);
 $session->dataset($dataset);
-$session->writeObject();
+$session->storeObject();
+$session->commitTransaction();
 	print "- Importing files into $age project '$projectName'... ";
 my $t0 = new Benchmark;
 	OME::Tasks::ImageTasks::importFiles($session, $dataset, \@ARGV, $switch);

@@ -433,12 +433,13 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 						
 						# make hash entry for each instance of this formal input
 						foreach my $input ( @{$inputs{ $FI }} ) {
-							my $d = $input->getDataHash();
+                            # This doesn't get used, and takes time to build
+							#my $d = $input->getDataHash();
 							my @keys = ();
 							foreach my $se ( @indexLookup ) {
 								# FIXME: implement dereferencing
 								#$se =~ s/\./\(\)->/g;
-								my $val = $input->_getField( $se );
+								my $val = $input->$se();
 								
 								die "Could not find SE '$se' belonging to ST '".$input->semantic_type()->name()."'. The <InputRecord> this stuff was pulled from is\n".$inputRecordXML->toString()."\n"
 									unless defined $val;
@@ -461,7 +462,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							my $se = $inputXML->getAttribute('SemanticElementName');
 							# FIXME: implement dereferencing
 							#$se =~ s/\./\(\)->/g;
-							my $r = $recordHash{ $index }->{ $FI }->_getField( $se );
+							my $r = $recordHash{ $index }->{ $FI }->$se();
 							die "_getField( $se ) returned undef. This was most likely caused by a misspelling of the semantic element '$se' in '".$inputXML->toString()."'.\n"
 								unless defined $r;
 							push( @recordEntries, $r );

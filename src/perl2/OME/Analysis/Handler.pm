@@ -389,6 +389,22 @@ not, an error is raised and no attributes are created.
 sub newAttributes {
     my ($self,@attribute_info) = @_;
 
+    #print STDERR "newAttributes!\n";
+    #foreach my $info (@attribute_info) {
+    #    if (!ref($info)) {
+    #        print STDERR "$info ";
+    #    } elsif (ref($info) eq 'HASH') {
+    #        print STDERR "{";
+    #        foreach my $key (keys %$info) {
+    #            print STDERR "$key => ",$info->{$key},", ";
+    #        }
+    #        print STDERR "} ";
+    #    } elsif (ref($info) eq 'OME::SemanticType') {
+    #        print STDERR $info->name()," ";
+    #    }
+    #}
+    #print STDERR "\n";
+
     # These hashes are keyed by table name.
     my %data_tables;
     my %data;
@@ -654,16 +670,16 @@ sub __saveAttributes {
 
         #print STDERR "--- $formal_output_name $granularity\n";
 
-        my $target = $attribute->_getTarget();
+        my $target_id = $attribute->target_id();
 
         if ($granularity eq 'G') {
             $self->{_global_outputs}->{$foName}++;
         } elsif ($granularity eq 'D') {
-            $self->{_dataset_outputs}->{$foName}->{$target->id()}++;
+            $self->{_dataset_outputs}->{$foName}->{$target_id}++;
         } elsif ($granularity eq 'I') {
-            $self->{_image_outputs}->{$foName}->{$target->id()}++;
+            $self->{_image_outputs}->{$foName}->{$target_id}++;
         } elsif ($granularity eq 'F') {
-            $self->{_feature_outputs}->{$foName}->{$target->id()}++;
+            $self->{_feature_outputs}->{$foName}->{$target_id}++;
         }
     }
 }

@@ -154,9 +154,9 @@ sub processDOM {
         my $chainObject = $factory->
           newObject("OME::AnalysisChain",
                     {
-                     owner  => $session->User()->id(),
-                     name   => $chain->getAttribute('Name'),
-                     locked => $chain->getAttribute('Locked') || 'f',
+                     owner_id => $session->User()->id(),
+                     name     => $chain->getAttribute('Name'),
+                     locked   => $chain->getAttribute('Locked') || 'f',
                     });
 
         foreach my $nodeID (keys %nodes) {

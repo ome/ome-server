@@ -811,7 +811,7 @@ sub findModuleHandler {
 
             foreach my $attribute (@$inputs) {
                 my $type = $attribute->semantic_type();
-                my $target = $attribute->_getTarget();
+                my $target = $attribute->target();
                 my $hash = $attribute->getDataHash();
 
                 my $clone = $factory->

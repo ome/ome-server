@@ -168,7 +168,7 @@ sub processDOM {
 
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
-    $self->{session}->DBH()->commit();
+    $self->{session}->commitTransaction();
 
 }
 

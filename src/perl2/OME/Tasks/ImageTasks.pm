@@ -122,7 +122,7 @@ sub importFiles {
 	foreach $image_group_ref (@$fn_groups) {
 		$importer->import_image($dataset, $image_group_ref, $switch);
 		if ($importer->{did_import}) {
-			$session->DBH()->commit();
+			$session->commitTransaction();
 		}
 		else {
 			$status = "Failed to import at least one image";
@@ -131,8 +131,8 @@ sub importFiles {
 
 	# could test here - if either any or all imports failed,
 	# don't write dataset record to db.
-	$dataset->writeObject();
-
+	$dataset->storeObject();
+    $session->commitTransaction();
 
 	return $status;
 

@@ -49,7 +49,6 @@ my $session = $manager->TTYlogin();
 
 
 my $factory = $session->Factory();
-$factory->Debug(0);
 
 
 my $chain = $factory->loadObject("OME::AnalysisChain",$chainID);
@@ -113,6 +112,8 @@ foreach my $user_input (@$user_input_list) {
 }
 
 $engine->executeAnalysisView($session,$chain,\%user_inputs,$dataset);
+
+#$session->BenchmarkTimer->report();
 
 my $cache = OME::DBObject->__cache();
 my $numClasses = scalar(keys %$cache);

@@ -27,6 +27,7 @@ use Carp;
 use Log::Agent;
 use XML::LibXML;
 
+use OME::Database::Delegate;
 
 sub new {
     my ($proto, %params) = @_;
@@ -92,6 +93,7 @@ sub processDOM {
     my $debug   = $self->{debug};
     my $session = $self->{session};
     my $factory = $session->Factory();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
     my $ignoreAlterTableErrors = $flags{IgnoreAlterTableErrors};
 
@@ -284,6 +286,7 @@ sub processDOM {
     #
     # Create the necessary tables
     #
+
     foreach $table  ( sort { $a->{order} <=> $b->{order} } values %$tables ) {
         $tName = $table->{name};
         logdbg "debug", ref ($self) . 
@@ -309,78 +312,8 @@ sub processDOM {
             logdbg "debug", ref ($self) . 
               "->processDOM: successfully created OME::DataTable DBObject\n";
 
-            ###################################################################
-            #
-            # Make the table in the database. 
-            # Should this functionality be moved to OME::Datatype 
-            # so making a new entry there will cause a new table
-            # to be created?
-            #
-            my $statement = "
-                CREATE TABLE $tName (
-                ATTRIBUTE_ID  OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
-                module_execution_id   OID REFERENCES MODULE_EXECUTIONS
-                              DEFERRABLE INITIALLY DEFERRED";
-
-            if ( $newTable->granularity() eq 'I' ) {
-                $statement .= ",
-                IMAGE_ID      OID NOT NULL REFERENCES IMAGES
-                              DEFERRABLE INITIALLY DEFERRED";
-            } elsif ( $newTable->granularity() eq 'D' ) {
-                $statement .= ",
-                DATASET_ID    OID NOT NULL REFERENCES DATASETS
-                              DEFERRABLE INITIALLY DEFERRED";
-            } elsif ( $newTable->granularity() eq 'F' ) {
-                $statement .= ",
-                FEATURE_ID    OID NOT NULL REFERENCES FEATURES
-                              DEFERRABLE INITIALLY DEFERRED";
-            }
-            $statement .= ")";
-
-            logdbg "debug", ref ($self) . 
-              "->processDOM: about to create table in DB using statement\n".
-              $statement."\n";
-
-            my $dbh = $session->DBH();
-            my $sth;
-            eval { $sth = $dbh->prepare( $statement ) };
-
-            if ($@) {
-                if ($ignoreAlterTableErrors) {
-                    $dbh->commit();
-                    logdbg "debug", "\n  *** Ignoring error $@\n\n";
-                } else {
-                    logdie "Could not prepare Table create statement when making table ".
-                      $newTable->table_name()."\nStatement was\n$statement";
-                }
-            }
-
-            eval { $sth->execute() };
-
-            if ($@) {
-                if ($ignoreAlterTableErrors) {
-                    $dbh->commit();
-                    logdbg "debug", "\n  *** Ignoring error $@\n\n";
-                } else {
-                    logdie "Unable to create table ".$newTable->table_name().". Error message was:\n$@\n";
-                }
-            }
-
-            if (length ($newTable->description()) > 0 ) {
-                $statement = "COMMENT ON TABLE $tName IS ?";
-                $sth = $dbh->prepare($statement)
-                  or logdie "Could not prepare comment for table $tName";
-                $sth->execute($newTable->description())
-                  or logdie "Could not add comment to table $tName";
-    
-                logdbg "debug", ref ($self) .
-                  "->processDOM: successfully created table\n";
-            }
-            #
-            #
-            ###################################################################
-
             push(@commitOnSuccessfulImport, $newTable);
+
         } else {
             logdbg "debug", ref ($self) .
               "->processDOM: found table. using existing table.\n";
@@ -390,7 +323,6 @@ sub processDOM {
         # END 'Process a Table'
         #
         ########################################################################
-
 
         ########################################################################
         #
@@ -415,7 +347,7 @@ sub processDOM {
 
             my $cols = $factory->
               findObject("OME::DataTable::Column",
-                          data_table_id => $newTable->id(),
+                          data_table => $newTable->id(),
                           column_name   => $cName
                          );
 
@@ -433,11 +365,11 @@ sub processDOM {
                   "->processDOM: could not find matching column. creating it";
 
                 my $data     = {
-                                'data_table_id'  => $newTable->id(),
+                                'data_table'  => $newTable->id(),
                                 'column_name'    => $cName,
                                 'description'    => $column->{description}->[0],
-                                'sql_type'       => 'foo',
-#                                'sql_type'       => $dataType,
+#                                'sql_type'       => 'foo',
+                                'sql_type'       => $dataType,
 #                                'sql_type'       => $sqlDataType,  # NOT!
 # FIXME - IGG:
 # Believe it or not, setting sql_type to $dataType fails in $factory->newObject for some (but not all) 'integer's with:
@@ -463,72 +395,16 @@ sub processDOM {
 #
 # This is the continuation of the sql_type fiasco.  $newColumn->sql_type($dataType) won't let you commit the object with the offending 'integer'.
 # Only the string literal will do.
-                if ($dataType eq 'integer') {
-                    $newColumn->sql_type('integer');
-                } else {
-                    $newColumn->sql_type($dataType);
-                }
+                #if ($dataType eq 'integer') {
+                #    $newColumn->sql_type('integer');
+                #} else {
+                #    $newColumn->sql_type($dataType);
+                #}
                 logdbg "debug", ref ($self) . 
                   "->processDOM: created OME::DataTable::Column DBObject\n";
 
-                ################################################################
-                #
-                # Create the column in the database. 
-                # Should this functionality be moved to OME::DataTable::Column 
-                # so making a new entry there will cause a new column
-                # to be created?
-                #
-                my $statement =
-                  "ALTER TABLE ".$newTable->table_name().
-                    " ADD COLUMN ".$newColumn->column_name()." ".$sqlDataType;
-                my $dbh = $session->DBH();
-                my $sth;
-                eval { $sth = $dbh->prepare( $statement ) };
-
-                if ($@) {
-                    if ($ignoreAlterTableErrors) {
-                        $dbh->commit();
-                        logdbg "debug", "\n  *** Ignoring error $@\n\n";
-                    } else {
-                        logdie "Could not prepare statment when adding column ".
-                          $newColumn->column_name()." to table ".
-                          $newTable->table_name()."\nStatement:\n$statement";
-                    }
-                }
-
-                logdbg "debug", ref ($self) .
-                  "->processDOM: about to create column in DB using statement".
-                  "\n$statement\n";
-
-                eval { $sth->execute() };
-                if ($@) {
-                    if ($ignoreAlterTableErrors) {
-                        $dbh->commit();
-                        logdbg "debug", "\n  *** Ignoring error $@\n\n";
-                    } else {
-                        logdie "Unable to create column ".$newColumn->column_name().
-                          " in table ".$newTable->table_name();
-                    }
-                }
-                
-                if (length ($newColumn->description()) > 0 ) {
-					$statement = 'COMMENT ON COLUMN '.$newTable->table_name().'.'.$newColumn->column_name().' IS ?';
-					$sth = $dbh->prepare($statement)
-					  or logdie "Could not prepare comment for table $tName";
-					$sth->execute($newColumn->description())
-					  or logdie "Could not add comment to table $tName";
-		
-					logdbg "debug", ref ($self) .
-					  "->processDOM: successfully created table\n";
-           	 	}
-
-
-                logdbg "debug", ref ($self) . "->processDOM: created column in db\n";
-                #
-                #
-                ################################################################
-
                 push(@commitOnSuccessfulImport, $newColumn);
+
             } else {
                 logdie "Found matching column with different sql data type."
                   unless $cols->sql_type() eq $column->{datatype};
@@ -547,13 +423,20 @@ sub processDOM {
         # END 'Process columns in this table'
         #
         ########################################################################
+
+
         logdbg "debug", ref ($self) . 
           "->processDOM: finished processing columns in that table\n";
 
-
         # Force this data table to regenerate its Perl package.  (So
         # that the new columns become visible)
-        $newTable->requireDataTablePackage(1);
+        my $pkg = $newTable->requireDataTablePackage(1);
+
+        # Add the table to the database
+        my $dbh = $factory->obtainDBH();
+        $delegate->addClassToDatabase($dbh,$pkg);
+        $factory->releaseDBH($dbh);
+
     }
 
     logdbg "debug", ref ($self) . 

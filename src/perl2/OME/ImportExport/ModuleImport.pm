@@ -612,7 +612,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
 		print STDERR ref ($self) . "->processDOM: about to commit DBObject: $DBObjectInstance\n"
 			if $debug > 2;
-		$DBObjectInstance->writeObject;
+		$DBObjectInstance->storeObject();
 		print STDERR ref ($self) . "->processDOM: successfully commited DBObject: $DBObjectInstance\n"
 			if $debug > 2;
 	}                             # commits all DBObjects
@@ -626,6 +626,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 	print STDERR ref ($self) . "->processDOM commit successful\n"
 		if $debug > 0;
+    $session->commitTransaction();
 	#
 	###########################################################################
 	
