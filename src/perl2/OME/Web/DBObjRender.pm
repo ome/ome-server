@@ -665,7 +665,7 @@ into the method.
 	my $relationsIterator = OME::Web::DBObjRender->getRelationAccessors( $object ); 
 	if( $relationsIterator->first() ) { do {
 		if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
-			my ( $from_type, $from_id, $from_accessor) = $relationsIterator->getDBObjType_ID_and_Accessor();
+			my ( $from_type, $from_id, $from_accessor) = @{ $relationsIterator->getDBObjType_ID_and_Accessor() };
 			# do something
 		} else {
 			my $type = $relationsIterator->return_type();
@@ -707,7 +707,7 @@ identical length.
 @return_type contains the formal name of the list of DBObjects or Attributes
 that will be returned by the method
 
-@names contains the name of each relationship
+@names contains the name of each relationship. It should not include spaces.
 
 @titles contains the title of each relationship
 
@@ -811,6 +811,39 @@ sub return_type {
 	return $self->{__return_type}->[ $self->{__count} ];
 }
 
+=head2 getRenderParams
+
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
+
+	my $rendering = $tableMaker->getList( $iter->getRenderParams() );
+	#	or
+	my $rendering = $tableMaker->getTable( $iter->getRenderParams() );
+	#	or
+	my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
+	$options->{ Length } = 7;
+	...
+	
+returns a 3 member array that feeds directly into OME::Web::DBObjTable methods.
+
+if the current relation is a method call on a DBObject that requires no
+parameters, $renderInstrs will be the type's formal name, id, and
+accessor. otherwise, $renderInstrs will be a list of objects.
+
+=cut
+
+sub getRenderParams {
+	my $self = shift;
+	my $params = $self->getDBObjType_ID_and_Accessor();
+	return (
+		{ title => $self->title() },
+		$self->return_type(),
+		( $params ? 
+			{ accessor => $params } :
+			$self->getList()
+		)
+	)
+}
+
 =head2 getList
 
 	$relationsIterator->getList()
@@ -838,7 +871,7 @@ sub getList {
 
 	if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
 		my ( $from_type, $from_id, $from_accessor) =
-			$relationsIterator->getDBObjType_ID_and_Accessor();
+			@{ $relationsIterator->getDBObjType_ID_and_Accessor() };
 		# do something
 	}
 
@@ -857,7 +890,7 @@ sub getDBObjType_ID_and_Accessor {
 		$self->{__params }->[ $self->{__count} ] :
 		[]
 	);
-	return ( $object->getFormalName(), $object->id(), $method )
+	return [ $object->getFormalName(), $object->id(), $method ]
 		if( $object->isa( "OME::DBObject" ) and scalar( @$params ) eq 0 );
 	return undef;
 }
