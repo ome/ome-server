@@ -57,7 +57,7 @@ public class XmlRpcCaller
     private XmlRpcClient  xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionReference = null;
-    private Session       session = null;
+    private RemoteSession session = null;
 
     private File  traceFilename;
     private PrintWriter  traceFile;
@@ -108,6 +108,8 @@ public class XmlRpcCaller
                 sessionReference = invoke("createSession").toString();
                 if (!sessionReference.equals("")) {
                     session = new RemoteSession(sessionReference);
+                    session.setActive(true);
+                    session.setRemoteCaller(this);
                 }
             }
         }
@@ -122,6 +124,7 @@ public class XmlRpcCaller
                 vparams.addElement(sessionReference);
                 invoke("closeSession");
                 sessionReference = null;
+                session.setActive(false);
                 session = null;
 
                 if (TRACE_CALLS)
@@ -230,10 +233,14 @@ public class XmlRpcCaller
 
     public void freeObject(RemoteObject target)
     {
+        // The garbage collector might call freeObject after this
+        // Caller's session has been logged out.  In this case, we
+        // should not throw an exception, but should return silently.
+
         synchronized(this)
         {
             if (sessionReference == null)
-                throw new IllegalArgumentException("Have not logged in");
+                return;
 
             addParameter(sessionReference);
             addParameter(target.toString());
@@ -243,10 +250,14 @@ public class XmlRpcCaller
 
     public void freeObject(String targetReference)
     {
+        // The garbage collector might call freeObject after this
+        // Caller's session has been logged out.  In this case, we
+        // should not throw an exception, but should return silently.
+
         synchronized(this)
         {
             if (sessionReference == null)
-                throw new IllegalArgumentException("Have not logged in");
+                return;
 
             addParameter(sessionReference);
             addParameter(targetReference);
