@@ -181,7 +181,7 @@ Scale.prototype.updateWBS = function( channel, wavenum) {
 	channelMap['Gray'] = 9;
 	var WBS = this.image.getWBS();
 	var changed = false;
-	
+
 	if(channel != null && wavenum != null)
 		if(channelMap[channel] != null) {
 			WBS[channelMap[channel]] = wavenum;
@@ -199,8 +199,14 @@ Scale.prototype.updateWBS = function( channel, wavenum) {
 			WBS[i*3+2] = this.BS[wavenum]['S'];
 		}
 	}
-	if(changed)
+	if(changed) {
 		this.image.setWBS(WBS);
+	// If we are in B/W mode, then update this.wavePopupList to match
+		if( channel == 'Gray' ) {
+			v = this.wavePopupList.getItemList();
+			this.wavePopupList.setSelectionByValue( v[wavenum], true);
+		}
+	}
 }
 
 /********************************************************************************************/
