@@ -216,41 +216,6 @@
 		</xsl:if>
 	</xsl:template>
 
-	<!-- General template for making ISO 8601-compliant date-time 
-		Its actualy not very general.  It fixes the missing 'T' between date and time, and
-		adds the missing minutes to the timezone.
-		2003-07-29 20:29:45.915282-04
-		becomes
-		2003-07-29T20:29:45.915282-04:00
-		If the format is something other than ISO or the pseudo-ISO above, the results are probably indeterminate.
-	-->
-	<xsl:template match = "@*" mode = "ISO-8601-DateTime">
-		<xsl:param name = "Name" select = "name()"/>
-		<xsl:param name = "DateTime" select = "."/>
-		<!-- Get the date and time bits with T in between -->
-		<xsl:variable name = "DateTimeISO1">
-			<xsl:value-of select = "concat (substring ($DateTime,1,10),'T',substring ($DateTime,12,8) )"/>
-		</xsl:variable>
-		<!-- If there is a timezone, add the minutes -->
-		<xsl:variable name = "DateTimeTrailing">
-			<xsl:value-of select = "substring ($DateTime,20)"/>
-		</xsl:variable>
-
-		<xsl:element name = "{$Name}">
-			<xsl:choose>
-				<xsl:when test = "string-length($DateTimeTrailing) > 0 and not (string-length (substring-after ($DateTimeTrailing,':')) > 0)">
-					<xsl:value-of select = "concat ($DateTimeISO1,$DateTimeTrailing,':00')"/>
-				</xsl:when>
-				<xsl:when test = "string-length($DateTimeTrailing) > 0">
-					<xsl:value-of select = "concat ($DateTimeISO1,$DateTimeTrailing)"/>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:value-of select = "$DateTimeISO1"/>
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:element>
-	</xsl:template>
-
 	<!-- Specific sections of the OME Schema -->
 	<xsl:template match = "CA:Project">
 		<xsl:element name = "Project">
@@ -298,7 +263,7 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeX" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeY" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeZ" mode = "Attribute2OptionalAttribute"/>
-			<xsl:apply-templates select = "@CreationDate" mode = "ISO-8601-DateTime"/>
+			<xsl:apply-templates select = "@CreationDate" mode = "Attribute2OptionalElement"/>
 			<xsl:apply-templates select = "@Experimenter" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "@Description" mode = "Attribute2OptionalElement"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImageExperiment [string-length(@Experiment) > 0]"/>
