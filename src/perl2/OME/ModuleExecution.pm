@@ -153,6 +153,21 @@ __PACKAGE__->addACL ({
         	froms   => ['experimenters acl'],
         	wheres  => ["acl.attribute_id = experimenter_id"],
         	});
+
+
+__PACKAGE__->addPseudoColumn('predecessors','has-many',
+			     'OME::ModuleExecution');
+
+__PACKAGE__->addPseudoColumn('successors','has-many',
+			     'OME::ModuleExecution');
+
+__PACKAGE__->addPseudoColumn('chain_executions','has-many',
+			     'OME::AnalysisChainExecution');
+
+__PACKAGE__->addPseudoColumn('actual_outputs','has-many',
+			     'OME::ModuleExecution::ActualInput');
+
+
 =head1 METHODS (C<module_execution>)
 
 The following methods are available to C<module_execution> in addition to
@@ -226,12 +241,123 @@ error string generated.
 	my $input_iterator = $module_execution->inputs();
 
 Returns or iterates, depending on context, a list of all of the
-L<OME::ModuleExecution::ActualInputs> associated with this module_execution.
+L<OME::ModuleExecution::ActualInputs> associated with this
+    module_execution.
+
+=head2 predecessors
+    
+       my @predecessors = $module_execution->predecessors();
+
+Returns the set  of all of the module executions that are immediate
+predecessors to this module execution in the data history.  
+
+=head2 predecessors
+    
+       my @successors = $module_execution->successors();
+
+Returns the set  of all of the module executions that are immediate
+successors to this module execution in the data history.  
+
+=head2 chain_executions
+    
+       my @chexes = $module_execution->chain_executions();
+
+
+The list of chain executions that this module execution is associated
+with. Note that this call will not produce any results for  mexes
+corresponding to universal executions.
+
+=head2 actual_outputs
+
+    my @actual_outputs  = $module_execution->actual_outputs()
+
+The list of "forward links" for this module execution  - instances of
+OME::ModuleExecution::ActualInput with $module_execution as the
+input_module_execution. 
 
 =cut
 
 
+sub predecessors {
+    my $self = shift;
+    my $mex = $self->ID();
+
+    my $factory = $self->Session()->Factory();
+    
+    my @inputs = $self->inputs();
+
+    my @preds;
+    my %h;
+    @preds = map { $_->input_module_execution()} @inputs;
+
+    my @outputarray =  grep( ( ($h{$_->ID()}++ == 0) || 0 ), @preds); 
+    return @outputarray;
+}
+
+sub successors { 
+    my $self = shift;
+    my $mex = $self->ID();
+
+    my $factory = $self->Session()->Factory();
+    
+
+    # find actual inputs where input_module_execution_id is mex->id
+    my @outputs = $factory->findObjects('OME::ModuleExecution::ActualInput',
+				       { input_module_execution_id =>
+					     $mex});
+
+    my @succs = map {$_->module_execution()} @outputs;
+    my %h;
+    my @uniqs = grep ( (($h{$_->ID()}++ == 0) || 0), @succs);
+    return @uniqs;
+}
+
+sub chain_executions {
+    my $self = shift;
+    my $mex = $self->ID();
+
+    my $factory = $self->Session()->Factory();
+    
+    # find node executions corresponding to this mex.
+    my @nexes = 
+	$factory->findObjects('OME::AnalysisChainExecution::NodeExecution',
+		       { module_execution_id => $mex});
+
+    # find chain executions that correspond
+    my @chexes = map {$_->analysis_chain_execution()} @nexes;
+    # find those things in the list that aren't null. some nexes
+    # will have no chexes.
+    @chexes = grep (($_), @chexes); 
+
+    # if we've found nothing, give up.
+    if (scalar(@chexes) == 0) {
+	return @chexes;
+    }
+    my %h;
+    my @uniqs;
+    @uniqs = grep ( (($h{$_->ID()}++ == 0) || 0), @chexes);
+    return @uniqs;
+}
+
+
+sub actual_outputs {
+    
+    my $self = shift;
+    my $mex = $self->ID();
+
+    my $factory = $self->Session()->Factory();
+    
+    # find node executions corresponding to this mex.
+    my @outputs = $factory->findObjects('OME::ModuleExecution::ActualInput',
+				       { input_module_execution_id =>
+					     $mex});
+    return @outputs;
+}
+
+
+
 1;
+
 
 __END__
 
