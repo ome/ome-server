@@ -371,7 +371,7 @@ use Log::Agent;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
-use fields qw(Debug _cache);
+use fields qw(Debug _cache _session);
 __PACKAGE__->mk_accessors(qw(Debug));
 __PACKAGE__->set_db('Main',
                   OME::DBConnection->DataSource(),
@@ -388,8 +388,11 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
+    my ($session) = @_;
+
     my $self = $class->SUPER::new();
     $self->{_cache} = {};
+    $self->{_session} = $session;
     $self->{Debug} = 1;
 
     return $self;
@@ -400,7 +403,7 @@ sub new {
 # ---------
 
 sub DBH { my $self = shift; return $self->db_Main(); }
-
+sub Session { my $self = shift; return $self->{_session}; }
 
 # loadObject
 # ----------
@@ -422,6 +425,7 @@ sub loadObject {
       unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
     my $object = $class->retrieve($id) or return undef;
+    $object->Session($self->Session());
 
     #$self->{_cache}->{$class}->{$id} = $object;
     return $object;
@@ -467,13 +471,28 @@ sub findObject {
 sub findObjects {
     my ($self, $class, @criteria) = @_;
 
+    # If the caller is not looking for a value, don't do anything.
+    return undef unless defined wantarray;
+
+    # Return undef if the criteria are not well-formed.
     return undef unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
 
+    my $session = $self->Session();
+
     eval "require $class";
-    if (scalar(@criteria) == 0) {
-        return $class->retrieve_all();
+    if (wantarray) {
+        # looking for a list
+        my @result = (scalar(@criteria) == 0)?
+          $class->retrieve_all():
+          $class->search(@criteria);
+        $_->Session($session) foreach @result;
+        return @result;
     } else {
-        return $class->search(@criteria);
+        # looking for a scalar
+        my $iterator = (scalar(@criteria) == 0)?
+          $class->retrieve_all():
+          $class->search(@criteria);
+        return OME::Factory::Iterator->new($iterator,$session);
     }
 }
 
@@ -503,10 +522,25 @@ sub findObjectLike {
 sub findObjectsLike {
     my ($self, $class, @criteria) = @_;
 
+    # If the caller is not looking for a value, don't do anything.
+    return undef unless defined wantarray;
+
+    # Return undef if the criteria are not well-formed.
     return undef unless (scalar(@criteria) > 0) && ((scalar(@criteria) % 2) == 0);
 
+    my $session = $self->Session();
+
     eval "require $class";
-    return $class->search_like(@criteria);
+    if (wantarray) {
+        # looking for a list
+        my @result = $class->search_like(@criteria);
+        $_->Session($session) foreach @result;
+        return @result;
+    } else {
+        # looking for a scalar
+        my $iterator = $class->search_like(@criteria);
+        return OME::Factory::Iterator->new($iterator,$session);
+    }
 }
 
 
@@ -520,6 +554,7 @@ sub newObject {
       unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
     my $object = $class->create($data);
+    $object->Session($self->Session());
     return $object;
 }
 
@@ -530,6 +565,7 @@ sub maybeNewObject {
       unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
     my $object = $class->find_or_create($data);
+    $object->Session($self->Session());
     return $object;
 }
 
@@ -544,6 +580,8 @@ sub newAttribute {
     die "Cannot find attribute type $attribute_type"
         unless defined $type;
 
+    #print STDERR "$attribute_type -> Session = ",$type->Session(),"\n";
+
     my $granularity = $type->granularity();
     if ($granularity eq 'D') {
         $data_hash->{dataset_id} = $target;
@@ -553,7 +591,9 @@ sub newAttribute {
         $data_hash->{feature_id} = $target;
     }
 
-    my $result = OME::AttributeType->newAttributes(undef,$type => $data_hash);
+    my $result = OME::AttributeType->newAttributes($self->Session(),
+                                                   undef,
+                                                   $type => $data_hash);
 
 
     # We're only creating one attribute, so it doesn't need to be
@@ -586,5 +626,48 @@ L<OME::DBObject|OME::DBObject>,
 L<OME::AttributeType|OME::AttributeType>
 
 =cut
+
+
+package OME::Factory::Iterator;
+
+use Class::DBI::Iterator;
+
+use fields qw(_iterator _session);
+
+# The OME::Factory::Iterator class is a replacement for Class::DBI's
+# iterator.  It's constructor takes in a Class::DBI::Iterator and an
+# OME::Session.  The first and next methods delegate to the
+# Class::DBI::Iterator, must make sure that any object returned has
+# its Session set properly.
+
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($iterator,$session) = @_;
+    my $self = {
+                _iterator => $iterator,
+                _session  => $session,
+               };
+
+    return bless $self, $class;
+}
+
+sub __fix {
+    my ($self,$object) = @_;
+    $object->Session($self->{_session})
+      if defined $object;
+    return $object;
+}
+
+sub first {
+    my ($self) = @_;
+    return $self->__fix($self->{_iterator}->first());
+}
+
+sub next {
+    my ($self) = @_;
+    return $self->__fix($self->{_iterator}->next());
+}
 
 1;

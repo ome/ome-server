@@ -408,7 +408,8 @@ sub newAttributes {
         push @new_attribute_info, $attribute_type, $data_hash;
     }
 
-    my $attributes = OME::AttributeType->newAttributes($self->{_analysis},
+    my $attributes = OME::AttributeType->newAttributes($self->Session(),
+                                                       $self->{_analysis},
                                                        @new_attribute_info);
 
     foreach my $attribute (@$attributes) {

@@ -48,6 +48,19 @@ __PACKAGE__->has_a(project_id => 'OME::Project');
 __PACKAGE__->has_a(analysis_id => 'OME::Analysis');
 
 
+sub closeSession {
+    my ($self) = @_;
+
+    # When we log out, break any circular links between the Session
+    # and other objects, to allow them all to get garbage-collected.
+    $self->{Factory} = undef;
+    $self->{Manager} = undef;
+}
+
+DESTROY {
+    print STDERR "OME::Session->DESTROY\n";
+}
+
 
 # Accessors
 # ---------

@@ -87,7 +87,7 @@ sub requireAttributeTypePackage {
     my $pkg = $self->getAttributeTypePackage();
     return $pkg 
       if (!$force) && (exists $self->_attributeTypePackages()->{$pkg});
-    logdbg "debug", "Loading data table package $pkg";
+    logdbg "debug", "Loading attribute type package $pkg";
 
     logcroak "Malformed class name $pkg"
       unless $pkg =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
@@ -151,13 +151,13 @@ sub dataTables {
 sub loadAttribute {
     my ($self,$id) = @_;
     my $pkg = $self->requireAttributeTypePackage();
-    return $pkg->load($id);
+    return $pkg->load($self->Session(),$id);
 }
 
 sub newAttribute {
     my ($self,$target,$id,$rows) = @_;
     my $pkg = $self->requireAttributeTypePackage();
-    return $pkg->new($target,$id,$rows);
+    return $pkg->new($self->Session(),$target,$id,$rows);
 }
 
 sub findAttributes {
@@ -199,7 +199,7 @@ sub __debug {
 
 
 sub newAttributes {
-    my ($self,$analysis,@attribute_info) = @_;
+    my ($self,$session,$analysis,@attribute_info) = @_;
 
     # These hashes are keyed by table name.
     my %data_tables;
@@ -223,8 +223,9 @@ sub newAttributes {
        'F' => 'feature_id'
       );
 
-    my ($attribute_type, $data_hash, $factory);
+    my ($attribute_type, $data_hash);
     my ($i, $length);
+    my $factory = $session->Factory();
 
     $length = scalar(@attribute_info);
 
@@ -232,8 +233,8 @@ sub newAttributes {
         $attribute_type = $attribute_info[$i];
         $data_hash = $attribute_info[$i+1];
 
-        $factory = $attribute_type->Session()->Factory()
-          if !defined $factory;
+        #$factory = $attribute_type->Session()->Factory()
+        #  if !defined $factory;
         my @attribute_columns = $attribute_type->attribute_columns();
         my $granularity = $attribute_type->granularity();
         my $granularityColumn = $granularityColumns{$granularity};
@@ -375,7 +376,8 @@ sub newAttributes {
         # a logical view into the database, it does not create any new
         # entries in the database itself.)
 
-        my $attribute = $attribute_type->newAttribute($target,$id,$rows);
+        my $attribute = $attribute_type->newAttribute($target,
+                                                      $id,$rows);
 
         push @attributes, $attribute;
     }
@@ -418,14 +420,14 @@ use base qw(Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('_attribute_type');
 
-use fields qw(_data_table_rows _target _id);
+use fields qw(_data_table_rows _target _id _session);
 
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($target,$id,$rows) = @_;
+    my ($session,$target,$id,$rows) = @_;
 
     die "Cannot create attribute without data rows"
       if !scalar(%$rows);
@@ -434,17 +436,19 @@ sub new {
     $self->{_data_table_rows} = $rows;
     $self->{_target} = $target;
     $self->{_id} = $id;
+    $self->{_session} = $session;
 
     bless $self, $class;
     return $self;
 }
 
 sub load {
-    my ($proto,$id) = @_;
+    my ($proto,$session,$id) = @_;
     my $class = ref($proto) || $proto;
 
     my $rows = {};
     my $target;
+    my $factory = $session->Factory();
 
     my $attribute_type = $class->_attribute_type();
     my $granularity = $attribute_type->granularity();
@@ -456,7 +460,7 @@ sub load {
         my $data_tableID = $data_table->id();
         next if exists $rows->{$data_tableID};
 
-        my $data_row = $data_table_pkg->retrieve($id);
+        my $data_row = $factory->loadObject($data_table_pkg,$id);
         $rows->{$data_tableID} = $data_row;
 
         if (!defined $target) {
@@ -470,11 +474,12 @@ sub load {
         }
     }
 
-    return $class->new($target,$id,$rows);
+    return $class->new($session,$target,$id,$rows);
 }
 
 sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
+sub Session { return shift->{_session}; }
 
 sub _getTarget {
     my ($self) = @_;
@@ -483,13 +488,15 @@ sub _getTarget {
 
 sub _getField {
     my ($self, $field_name) = @_;
+    my $factory = $self->Session()->Factory();
     my $rows = $self->{_data_table_rows};
     my $attribute_type = $self->_attribute_type();
 
-    my $attribute_columns = OME::AttributeType::Column->
-        search(attribute_type_id => $attribute_type->id(),
-               name              => $field_name);
-    my $attribute_column = $attribute_columns->next() or return undef;
+    my $attribute_column = $factory->
+      findObject("OME::AttributeType::Column",
+                 attribute_type_id => $attribute_type->id(),
+                 name              => $field_name);
+    return undef unless defined $attribute_column;
 
     my $data_column = $attribute_column->data_column();
     my $column_name = lc($data_column->column_name());
@@ -499,7 +506,7 @@ sub _getField {
     my $value = $data_row->$column_name();
     if ($data_column->sql_type() eq 'reference') {
         my $reference_type = $data_column->reference_type();
-        $value = OME::Factory->loadAttribute($reference_type,$value);
+        $value = $factory->loadAttribute($reference_type,$value);
     }
 
     return $value;
@@ -507,13 +514,15 @@ sub _getField {
 
 sub _setField {
     my ($self, $field_name, $value) = @_;
+    my $factory = $self->Session()->Factory();
     my $rows = $self->{_data_table_rows};
     my $attribute_type = $self->_attribute_type();
 
-    my $attribute_columns = OME::AttributeType::Column->
-        search(attribute_type_id => $attribute_type->id(),
-               name              => $field_name);
-    my $attribute_column = $attribute_columns->next() or return undef;
+    my $attribute_column = $factory->
+      findObject("OME::AttributeType::Column",
+                 attribute_type_id => $attribute_type->id(),
+                 name              => $field_name);
+    return undef unless defined $attribute_column;
 
     my $data_column = $attribute_column->data_column();
     my $column_name = lc($data_column->column_name());

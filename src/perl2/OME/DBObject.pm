@@ -77,6 +77,7 @@ use strict;
 our $VERSION = '1.0';
 
 use Log::Agent;
+use Carp;
 use Ima::DBI;
 use Class::Data::Inheritable;
 use Class::Accessor;
@@ -84,9 +85,10 @@ use OME::SessionManager;
 use OME::DBConnection;
 
 use base qw(Class::DBI Class::Accessor Class::Data::Inheritable);
+use fields qw(_session);
 
 __PACKAGE__->mk_classdata('AccessorNames');
-__PACKAGE__->mk_classdata('Session');
+__PACKAGE__->mk_classdata('DefaultSession');
 __PACKAGE__->mk_classdata('Caching');
 __PACKAGE__->mk_classdata('__cache');
 __PACKAGE__->AccessorNames({});
@@ -251,8 +253,129 @@ sub delete {
 }
 
 
+# With v0.90 of Class::DBI, has_a does not inflate object lazily.
+# This is very bad, and so we translate all calls to has_a into
+# equivalent hasa calls.
+
+sub has_a {
+	my ($class, $column, $a_class, %meths) = @_;
+    #print STDERR "has_a deprecated\n";
+    $class->hasa($a_class,$column);
+
+}
+
+
+# We modify the has_a and has_many functions so that objects which are
+# inflated by Class::DBI (bypassing the factory) have their session
+# link set properly.
+
+sub hasa {
+	my ($class, $f_class, $f_col) = @_;
+
+    # Allow Class::DBI to do its thing.
+    $class->SUPER::hasa($f_class,$f_col);
+
+    # If this relationship points to an OME::DBObject, its Session
+    # will need to be set up.
+
+    if ($f_class->isa("OME::DBObject")) {
+        my $accessor_name = $class->accessor_name($f_col);
+
+        # Get the accessor method created by Class::DBI.
+        my $accessor;
+        {
+            local $SIG{__WARN__} = sub {};
+            no strict 'refs';
+            $accessor = \&{"$class\::$accessor_name"};
+        }
+
+        # Create a new accessor method, which loads the object via
+        # Class::DBI's accessor, and then sets the new object's
+        # Session to be the same as this object's Session.
+
+        my $new_accessor = sub {
+            my $self = shift;
+            my $obj = $accessor->($self);
+            #print STDERR ref($self)," accessor for ",ref($obj),"\n";
+            my $session = $self->Session();
+            #print STDERR "  setting Session to $session\n";
+            $obj->Session($session) if defined $obj;
+            return $obj;
+        };
+
+        # Replace the old accessor with the new one.
+        {
+            local $SIG{__WARN__} = sub {};
+            no strict 'refs';
+            *{"$class\::$accessor_name"} = $new_accessor;
+        }
+    }
+}
+
+sub has_many {
+	my ($class, $accessor_name, $f_class, $f_key, $args) = @_;
+
+    # Allow Class::DBI to do its thing.
+    $class->SUPER::has_many($accessor_name,$f_class,$f_key,$args);
+
+    # If this relationship points to an OME::DBObject, its Session
+    # will need to be set up.
+
+    if ($f_class->isa("OME::DBObject")) {
+        # Get the accessor method created by Class::DBI.
+        my $accessor;
+        {
+            local $SIG{__WARN__} = sub {};
+            no strict 'refs';
+            $accessor = \&{"$class\::$accessor_name"};
+        }
+
+        # Create a new accessor method, which loads the object(s) via
+        # Class::DBI's accessor, and then sets the new objects'
+        # Session to be the same as this object's Session.
+
+        my $new_accessor = sub {
+            return undef unless defined wantarray;
+            my $self = shift;
+            my $session = $self->Session();
+            if (wantarray) {
+                my @results = $self->$accessor();
+                $_->Session($session) foreach @results;
+                return @results;
+            } else {
+                my $iterator = $self->$accessor();
+                return OME::Factory::Iterator->new($iterator,$session);
+            }
+        };
+
+        # Replace the old accessor with the new one.
+        {
+            local $SIG{__WARN__} = sub {};
+            no strict 'refs';
+            *{"$class\::$accessor_name"} = $new_accessor;
+        }
+    }
+}
+
 # Accessors
 # ---------
+
+sub Session {
+    my $self = shift;
+    if (@_) {
+        #print STDERR ref($self), "->Session() mutator\n" ;
+        return $self->{_session} = shift;
+    } else {
+        #carp ref($self).".Session() is undefined!"
+        #  unless defined $self->{_session};
+        if (defined $self->{_session}) {
+            return $self->{_session};
+        } else {
+            carp "We've got an object not created with the factory!";
+            return $self->DefaultSession();
+        }
+    }
+}
 
 sub ID {
     my $self = shift;

@@ -249,8 +249,8 @@ sub getOMESession {
     $session->last_access('now');
     $session->host($host);
     
-    OME::DBObject->Session($session);
-    $session->{Factory} = OME::Factory->new();
+    OME::DBObject->DefaultSession($session);
+    $session->{Factory} = OME::Factory->new($session);
     $session->{Manager} = $self;
 
     logdbg "debug", "getOMESession: updating session";
@@ -271,6 +271,7 @@ sub logout {
     logdbg "debug", ref($self)."->logout: logging out";
     $self->deleteApacheSession ($session->{ApacheSession});
     delete $session->{ApacheSession};
+    $session->closeSession();
 }
 
 

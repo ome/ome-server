@@ -35,7 +35,7 @@ use OME::Feature;
 use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
 __PACKAGE__->AccessorNames({
-    instrument_id   => 'instrument',
+#    instrument_id   => 'instrument',
 #    experimenter_id => 'experimenter',
 #    repository_id   => 'repository',
 #    group_id        => 'group'
@@ -73,17 +73,43 @@ sub _init {
     return $self;
 }
 
+# Old prototype:
+# my $pix = $image->GetPix();
+# New prototype:
+# my $pix = OME::Image->GetPix($pixelAttribute,$dimensionsAttribute);
+#
+# (Both work) The new prototype allows you to create a Pix object from
+# any pixel and dimensions attribute.  The old prototype assumes that
+# there is only one of each associated with $image, and creates a Pix
+# object from that.
+
 sub GetPix {
     my $self = shift;
-    return ($self->{thePix}) if defined $self->{thePix};
-    my $dimensions = $self->Dimensions();
-    $self->{thePix} = new OME::Image::Pix (
-        $self->getFullPath(),
-        $dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
-        $dimensions->num_waves(),$dimensions->num_times(),
-        $dimensions->bits_per_pixel()/8
-    ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
-    return ($self->{thePix});
+
+    if (@_) {
+        my ($pixelAttr, $dimensionsAttr) = @_;
+        my $repositoryAttr = $pixelAttr->Repository();
+        my $pix = OME::Image::Pix->
+          new($repositoryAttr->Path().$pixelAttr->Path(),
+              $dimensionsAttr->SizeX(),
+              $dimensionsAttr->SizeY(),
+              $dimensionsAttr->SizeZ(),
+              $dimensionsAttr->SizeC(),
+              $dimensionsAttr->SizeT(),
+              $dimensionsAttr->BitsPerPixel()/8)
+            || die ref($self)."->GetPix  Could not instantiate OME::Image::Pix object";
+        return $pix;
+    } else {
+        return ($self->{thePix}) if defined $self->{thePix};
+        my $dimensions = $self->Dimensions();
+        $self->{thePix} = new OME::Image::Pix (
+            $self->getFullPath(),
+            $dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+            $dimensions->num_waves(),$dimensions->num_times(),
+            $dimensions->bits_per_pixel()/8
+        ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
+        return ($self->{thePix});
+    }
 }
 
 # Accessor/Mutator
@@ -105,6 +131,7 @@ sub Dimensions {
 
 	# nab mutator parameters if they exist
     my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
+    Carp::cluck "image->dimensions";
     my $factory = $self->Session()->Factory();
 
    	# look for dimensions
@@ -197,6 +224,9 @@ sub GetPixelArray {
 }
 
 
+# DEPRECATED!
+# Please use the Dimensions attribute instead.
+
 package OME::Image::Dimensions;
 
 use strict;
@@ -226,6 +256,10 @@ sub wave_increment { shift->pixel_size_c(@_); }
 sub time_increment { shift->pixel_size_t(@_); }
 
 
+# DEPRECATED!
+# Please use the LogicalChannel and ChannelComponents attributes
+# instead.
+
 package OME::Image::Wavelengths;
 
 use strict;
@@ -239,13 +273,45 @@ __PACKAGE__->AccessorNames({
     image_id     => 'image'
 });
 
-__PACKAGE__->table('image_wavelengths');
+__PACKAGE__->table('channel_components');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id wavenumber 
-				     ex_wavelength em_wavelength 
+__PACKAGE__->columns(Essential => qw(image_id 
+				     number logical_channel));
+__PACKAGE__->hasa('OME::Image::LogicalChannel' => qw(logical_channel));
+
+sub wavenumber { shift->number(); }
+sub ex_wavelength { shift->logical_channel()->ex_wave(@_); }
+sub em_wavelength { shift->logical_channel()->em_wave(@_); }
+sub nd_filter { shift->logical_channel()->nd_filter(@_); }
+sub fluor { shift->logical_channel()->fluor(@_); }
+
+package OME::Image::LogicalChannel;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    attribute_id => 'attribute',
+    image_id     => 'image'
+});
+
+__PACKAGE__->table('logical_channels');
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(image_id 
+				     ex_wave em_wave 
 				     nd_filter fluor));
 
+
+
+
+# DEPRECATED!
+# Please use the StackMean, StackGeomean, StackMinimum, StackMaximum,
+# StackSigma, and StackCentroid attributes instead.
 
 package OME::Image::XYZInfo;
 
@@ -258,16 +324,19 @@ use base qw(OME::DBObject);
 __PACKAGE__->AccessorNames({
     attribute_id => 'attribute',
     image_id     => 'image',
-    the_w        => 'theW',
+    the_c        => 'theW',
     the_t        => 'theT'
     });
 
-__PACKAGE__->table('xyz_image_info');
+__PACKAGE__->table('stack_statistics');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id the_w the_t 
-				     min max mean geomean sigma 
+__PACKAGE__->columns(Essential => qw(image_id the_c the_t 
+				     minimum maximum mean geomean sigma 
 				     centroid_x centroid_y centroid_z));
+
+sub min { shift->minimum(@_); }
+sub max { shift->maximum(@_); }
 
 
 package OME::Image::ImageFilesXYZWT;

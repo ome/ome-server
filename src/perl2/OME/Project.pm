@@ -55,16 +55,22 @@ my $self = shift;
 my $dataset = shift;
 
 	return undef unless defined $dataset;
-	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
-	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
-	if (not defined $pdMap) {
-		$pdMap = OME::Project::DatasetMap->create ( {
-			project_id => $self->ID(),
-			dataset_id => $dataset->ID()
-		} )
-			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
+# 	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+# 	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+# 	if (not defined $pdMap) {
+# 		$pdMap = OME::Project::DatasetMap->create ( {
+# 			project_id => $self->ID(),
+# 			dataset_id => $dataset->ID()
+# 		} )
+# 			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
 
-	}
+# 	}
+    my $data = {
+                project_id => $self->id(),
+                dataset_id => $dataset->id(),
+               };
+    $self->Session()->Factory()->
+      maybeNewObject("OME::Project::DatasetMap",$data);
 
 	return $dataset;
 }
