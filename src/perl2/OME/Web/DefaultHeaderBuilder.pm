@@ -128,7 +128,7 @@ sub getPageHeader {
 		$q->a({href => $HOME_LOCATION},
 			$q->img( {
 					alt => 'Cell in mitosis',
-					src => '/images/logo_small.gif',
+					src => '/images/logo_smaller.gif',
 					border => '0'
 				}
 			)
@@ -142,10 +142,11 @@ sub getPageHeader {
 			cellspacing => '0',
 		},
 		$q->Tr(
-			$q->td($logo_link) .
-			$q->td({align => 'right'},
-				$q->span({class => 'ome_menu_title'}, 'Open Microscopy Environment'),
-				$q->br(),
+			$q->td($logo_link),
+			$q->td( {-align => 'left', -valign => 'top' },
+				$q->span({class => 'ome_menu_title' }, 'Open Microscopy Environment')
+			),
+			$q->td({align => 'right', -valign => 'top' },
 				$q->span( {
 						class => 'ome_quiet',
 						style => 'font-weight: bold;'
