@@ -47,7 +47,7 @@ package org.openmicroscopy.ds;
  * <ol>
  *
  * <li>Errors establishing or maintaining a physical connection to the
- * remote server. ({@link RemoteConnectionException}</li>
+ * remote server. ({@link RemoteConnectionException})</li>
  *
  * <li>Errors authenticating the user with the remote server.  This
  * can happen when logging in due to an invalid username or password,
