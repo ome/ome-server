@@ -79,8 +79,8 @@ function openExistingProject (group_id) {
 
 function openInfoDataset (dataset_id) {
 	window.open(GetInfoPage + '&DatasetID=' + dataset_id,
-	'Project Info',
-	'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'info',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
 
@@ -88,8 +88,8 @@ function openInfoDataset (dataset_id) {
 
 function openInfoProject (project_id) {
 	window.open(GetInfoPage + '&ProjectID=' + project_id,
-	'Project Info',
-	'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'info',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
 
@@ -97,8 +97,8 @@ function openInfoProject (project_id) {
 
 function openInfoDatasetImport (dataset_id) {
 	window.open(GetInfoPage + '&DatasetID=' + dataset_id,
-	'Dataset Info',
-	'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'info',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
 	
@@ -106,8 +106,8 @@ function openInfoDatasetImport (dataset_id) {
 
 function openPopUpDataset (dataset_id) {
 	window.open(GetGraphicsPage + '&DatasetID=' + dataset_id,
-	'Dataset Viewer',
-	'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'viewer',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
 
@@ -116,7 +116,6 @@ function openPopUpDataset (dataset_id) {
 
 function openPopUpImage (image_id) {
 	window.open(GetGraphicsPage + '&ImageID=' + image_id,
-	'Image Viewer',
-	'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
-	);
+		'viewer',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
 }
