@@ -479,7 +479,7 @@ my $factory = $self->{session}->Factory();
 	my $element = $DOM->createElement('Image');
 	$element->setAttribute( 'ID' , $imageID );
 	$element->setAttribute( 'Name' , $image->name() );
-	$element->setAttribute( 'CreationDate' , $image->created() );
+	$element->setAttribute( 'CreationDate' , ODBC2XML_timestamp ($image->created()) );
 	$element->setAttribute( 'Description' , $image->description() );
 	$element->setAttribute( 'Experimenter' , $experimenterID );
 	$element->setAttribute( 'Group' , $groupID );
@@ -601,6 +601,8 @@ my ($self, $object, $parent) = @_;
 			}
 		} elsif ($type eq 'boolean') {
 			$element->setAttribute( $SEName, $object->$SEName() ? 'true' : 'false');
+		} elsif ($type eq 'timestamp') {
+			$element->setAttribute( $SEName, ODBC2XML_timestamp($object->$SEName()));
 		} else {
 			$element->setAttribute( $SEName, $object->$SEName() );
 		}
@@ -633,6 +635,22 @@ my ($self, $object, $name, $parent) = @_;
 
 sub lsidResolver() {
 	return shift->{_lsidResolver}
+}
+
+sub ODBC2XML_timestamp () {
+	my $value = shift;
+	my ($date,$time,$timezone);
+	$date = $1 if $value =~ /^(\d\d\d\d-\d\d-\d\d)/;
+	if ($value =~ /(\d\d:\d\d:\d\d(\.\d+)?)(([+-]\d\d?(:\d\d)?)|Z)?$/) {
+		$time = $1;
+		$timezone = $3;
+	}
+	if ($timezone =~ /[+-]\d\d?$/) {
+		$timezone .= ':00';
+	}
+	
+	return $date.'T'.$time.$timezone if $date and $time;
+	return "";
 }
 
 =pod
