@@ -161,7 +161,7 @@ sub useLocalServer {
     die "$path is not a valid executable file"
       unless -x $path;
 
-    print STDERR "Local server\n";
+    print STDERR "Using Local image server\n";
     $local_server = 1;
     $server_path = $path;
 }
@@ -914,6 +914,40 @@ sub getFileSHA1 {
     my $result = $proto->__callOMEIS(Method => 'FileSHA1',
                                      FileID => $fileID);
     die "Error retrieving file SHA-1" unless defined $result;
+    chomp $result;
+    return $result;
+}
+
+=head2 get_IS_PixelsPath
+
+	my $path = OME::Image::Server->get_IS_PixelsPath($pixelsID);
+
+=cut
+
+sub get_IS_PixelsPath {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+
+    my $result = $proto->__callOMEIS(Method => 'GetLocalPath',
+                                     PixelsID => $pixelsID);
+    die "Error retrieving pixel's local path on the image server" unless defined $result;
+    chomp $result;
+    return $result;
+}
+
+=head2 get_IS_FilePath
+
+	my $path = OME::Image::Server->get_IS_FilePath($fileID);
+
+=cut
+
+sub get_IS_FilePath {
+    my $proto = shift;
+    my ($fileID) = @_;
+
+    my $result = $proto->__callOMEIS(Method => 'GetLocalPath',
+                                     FileID => $fileID);
+    die "Error retrieving file's local path on the image server" unless defined $result;
     chomp $result;
     return $result;
 }
