@@ -155,7 +155,7 @@ sub add{
 	}else{
 	    $project=$session->project();
 	}
-	my $dataset=$self->addToProject($datasetID,$project->project_id());
+	my $dataset=$self->addToProject($datasetID,$project->id());
 	$session->dataset($dataset);
 	$project->writeObject();
 	$session->writeObject();
@@ -251,7 +251,7 @@ sub delete{
 	 
 	#my @datasets=$deleteProject->datasets();
 	my @datasets=();
-     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$deleteProject->project_id() );
+     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$deleteProject->id() );
      	foreach my $d (@dMaps){
       	push(@datasets,$d->dataset());
     	}
@@ -267,7 +267,7 @@ sub delete{
 	  $result=deleteProjectDatasetMap($deleteProject,\@datasets,$db);
 	  return $result unless (defined $result);
 	}
-	if ($deleteProject->project_id()==$currentProject->project_id()){
+	if ($deleteProject->id()==$currentProject->id()){
 	  if (scalar(@projects)==1){
 	     $session->dataset(undef) if scalar(@datasets)>0;
 	     $session->project(undef);
@@ -351,7 +351,7 @@ sub switch{
 	$session->project($project);
 	if (not defined $bool){
 	    my @datasets=();
-     	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->project_id() );
+     	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->id() );
      	    foreach my $d (@dMaps){
       		 push(@datasets,$d->dataset());
     	    }
@@ -381,7 +381,7 @@ sub deleteProject{
 	my ($deleteProject,$db)=@_;
 	my $tableProject="projects";	
  	my ($condition,$result);
- 	$condition="project_id=".$deleteProject->project_id();
+ 	$condition="project_id=".$deleteProject->id();
  	$result=do_request($tableProject,$condition,$db);
  	return (defined $result)?1:undef;
 }
@@ -393,7 +393,7 @@ sub deleteProjectDatasetMap{
   	my $result;
   	foreach (@$ref){
    	 my ($condition);
-    	 $condition="project_id=".$deleteProject->project_id()." AND dataset_id=".$_->dataset_id();
+    	 $condition="project_id=".$deleteProject->id()." AND dataset_id=".$_->id();
     	 $result=do_request($tableProjectMap,$condition,$db);
     	 return undef if (!defined $result);
 	
@@ -407,11 +407,11 @@ sub reorganizeSession{
 	my ($session,$deleteProject,$ref)=@_;
 	my @new=();
 	foreach (@$ref){
-        push(@new,$_) unless $_->project_id()==$deleteProject->project_id();
+        push(@new,$_) unless $_->id()==$deleteProject->id();
 	}
 	my $newproject=$new[0];
 	my @newdataset=();
-     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$newproject->project_id() );
+     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$newproject->id() );
      	foreach my $d (@dMaps){
       	push(@newdataset,$d->dataset());
     	}

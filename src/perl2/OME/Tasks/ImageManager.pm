@@ -200,18 +200,19 @@ sub listImages{
 	if (defined $userID){
 		@projects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $userID);
 	}elsif (defined $projectID){
-		@projects=$session->Factory()->findObjects("OME::Project",'project_id'=> $projectID);
+		#@projects=$session->Factory()->findObjects("OME::Project",'project_id'=> $projectID);
+    @projects=$session->Factory()->findObjects("OME::Project",'id'=> $projectID);
 	}
 	foreach my $p (@projects){
 		my @datasets=();#$p->datasets();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$p->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$p->id() );
      		foreach my $d (@dMaps){
       		 push(@datasets,$d->dataset());
     		}
 
 		foreach my $d (@datasets){
 			my @images=();
-     			my @iMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$d->dataset_id() );
+     			my @iMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$d->id() );
      			foreach my $i (@iMaps){
       		 push(@images,$i->image());
     			}
@@ -309,7 +310,7 @@ sub checkDuplicate{
   	my $object;
   	my @a=();
   	foreach $object (@$ref){
-	  my $id=$object->image_id();
+	  my $id=$object->id();
     	 push(@a,$object) unless $seen{$id}++;
    	}
   	return \@a;
@@ -372,10 +373,10 @@ sub notUsed{
  	my %in_b=();
  	my @only_a=();
  	foreach (@$refb){
-   	   $in_b{$_->project_id()}=1;
+   	   $in_b{$_->id()}=1;
  	}
  	foreach (@$refa){
-   	 push(@only_a,$_) unless exists $in_b{$_->project_id()};
+   	 push(@only_a,$_) unless exists $in_b{$_->id()};
  	}
  	return scalar(@only_a)==0?undef:\@only_a;
 
@@ -387,10 +388,10 @@ sub notUsedImages{
 	my %in_b=();
 	my @only_a=();
 	foreach (@$refb){
-   	 $in_b{$_->image_id()}=1;
+   	 $in_b{$_->id()}=1;
  	}
  	foreach (@$refa){
-  	 push(@only_a,$_) unless exists $in_b{$_->image_id()};
+  	 push(@only_a,$_) unless exists $in_b{$_->id()};
  	}
  	return scalar(@only_a)==0?undef:\@only_a;
 
@@ -413,21 +414,21 @@ sub usedDatasetImage{
 	if (defined $result){
 	  foreach (@$result){
 	    my @datasets=();#$_->datasets();
-	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+	    my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->id() );
      	    foreach my $d (@dMaps){
       	push(@datasets,$d->dataset());
     	    }
 	    foreach my $obj (@datasets){
-		$gpDatasets{$obj->dataset_id()}=$obj unless (exists $gpDatasets{$obj->dataset_id()});
+		$gpDatasets{$obj->id()}=$obj unless (exists $gpDatasets{$obj->id()});
 		my @images=();
-		my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$obj->dataset_id() );
+		my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$obj->id() );
      	    	foreach my $d (@dMaps){
       	   push(@images,$d->image());
     	      }
 
 		#my @images=$obj->images();
 		foreach my $i (@images){
-		  $gpImages{$i->image_id()}=$i->name() unless (exists $gpImages{$i->image_id()});
+		  $gpImages{$i->id()}=$i->name() unless (exists $gpImages{$i->id()});
 		}
 	    }
 	  } 
@@ -435,7 +436,7 @@ sub usedDatasetImage{
 	
 	foreach (@$projects){
      		my @datasets=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->id() );
      		foreach my $d (@dMaps){
       		 push(@datasets,$d->dataset());
     		}
@@ -444,32 +445,32 @@ sub usedDatasetImage{
 	 	  foreach my $dataset (@datasets){
 		    my %datasetInfo=();
        	    my %remove=();
-		    $datasetInfo{$dataset->dataset_id()}=$dataset;
-	 	    if (exists $gpDatasets{$dataset->dataset_id()} || $dataset->locked()){
-         		$remove{$dataset->dataset_id()}=undef ;
+		    $datasetInfo{$dataset->id()}=$dataset;
+	 	    if (exists $gpDatasets{$dataset->id()} || $dataset->locked()){
+         		$remove{$dataset->id()}=undef ;
 	 	   }else{
-	   		$remove{$dataset->dataset_id()}=1 ;
+	   		$remove{$dataset->id()}=1 ;
        	   }
 
-               my @list=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->dataset_id() );
+               my @list=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->id() );
                my @images=();
    		   foreach my $l (@list){
 		     push(@images,$l->image());
     		   }
 		   foreach my $i (@images){
-			if (exists($userImages{$i->image_id()})){
-	  		  my $list=$userImages{$i->image_id()}->{list};
+			if (exists($userImages{$i->id()})){
+	  		  my $list=$userImages{$i->id()}->{list};
             	  my %fusion=();
 			  %fusion=(%$list,%datasetInfo);
-			  $userImages{$i->image_id()}->{list}=\%fusion; 
-			  my $rem=$userImages{$i->image_id()}->{remove};
+			  $userImages{$i->id()}->{list}=\%fusion;
+			  my $rem=$userImages{$i->id()}->{remove};
             	  my %mix=();
 			  %mix=(%$rem,%remove);
-			  $userImages{$i->image_id()}->{remove}=\%mix; 
+			  $userImages{$i->id()}->{remove}=\%mix;
 			}else{
-			  $userImages{$i->image_id()}->{list}=\%datasetInfo;
-			  $userImages{$i->image_id()}->{remove}=\%remove;
-			  $userImages{$i->image_id()}->{image}=$i;
+			  $userImages{$i->id()}->{list}=\%datasetInfo;
+			  $userImages{$i->id()}->{remove}=\%remove;
+			  $userImages{$i->id()}->{image}=$i;
 			}
 
 		 }

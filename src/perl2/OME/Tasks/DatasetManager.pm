@@ -299,13 +299,13 @@ sub create{
 		$project=$session->project();
 	}
 	#my $dataset=$session->project()->newDataset($name,$description);
-	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$project->project_id());
+	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$project->id());
 
 	if ($dataset){
 	   $dataset->writeObject();
 	   if (defined $ref){
 	     	foreach(@$ref){
-		 $self->addToDataset($dataset->dataset_id(),$_);
+     $self->addToDataset($dataset->id(),$_);
            	}
  	   }
 	   $session->dataset($dataset);
@@ -335,13 +335,13 @@ sub newDataset{
 		group_id    => $groupID,
 	} );
 	my $map = $factory->findObject("OME::Project::DatasetMap",
-		  'dataset_id' => $dataset->dataset_id(),
+         'dataset_id' => $dataset->id(),
 		  'project_id' => $projectID
 	);
 	if (not defined $map) {
 		$map=$factory->newObject("OME::Project::DatasetMap",{
 			project_id => $projectID,
-			dataset_id => $dataset->dataset_id()
+      dataset_id => $dataset->id()
 			} );
 	}
 	return $dataset;
@@ -378,10 +378,11 @@ sub delete{
 	$rep=deleteInMap(\@tables,$dataset,$db);
 	return undef unless (defined $rep);
 	
-	if ($dataset->dataset_id()==$currentDataset->dataset_id()){
+
+  if ($dataset->id()==$currentDataset->id()){
   	 my $project=$session->project();
 	 my @datasets=();
-     	 my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->project_id() );
+     	 my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->id() );
      	 foreach my $d (@dMaps){
       	push(@datasets,$d->dataset());
     	 }
@@ -389,7 +390,8 @@ sub delete{
    	 #my @datasets=$project->datasets();
    	 my @new=();
   	 foreach (@datasets){
-     		push (@new,$_) unless $_->dataset_id()==$currentDataset->dataset_id();
+
+        push (@new,$_) unless $_->id()==$currentDataset->id();
    	 }
        if (scalar(@new)==0){
 	   $session->dataset(undef);
@@ -446,8 +448,10 @@ sub imageNotIn{
 
 	}
 	my @datasetsImages=();
-     	my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->dataset_id() );
-     	foreach my $d (@dMaps){
+
+         my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->id() );
+
+      	foreach my $d (@dMaps){
       	push(@datasetsImages,$d->image());
     	}
 
@@ -474,7 +478,7 @@ sub listMatching{
 		my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$userID);
 	   	foreach my $p (@projects){
 		  my @data=();
-     		  my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$p->project_id() );
+     		  my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$p->id() );
      		  foreach my $d (@dMaps){
       		 push(@data,$d->dataset());
     		 }
@@ -578,7 +582,7 @@ sub notBelongToProject{
 
 	}
 	my @projectDatasets=();
-     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->project_id() );
+     	my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->id() );
      	foreach my $d (@dMaps){
       	push(@projectDatasets,$d->dataset());
     	}
@@ -598,35 +602,28 @@ sub notBelongToProject{
 	# remove empty datasets 
 	my @notEmptyDatasets=();
 
-  	foreach (@groupDatasets){
-		my @images=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$_->dataset_id() );
-     		foreach my $d (@dMaps){
+  	foreach my $gd (@groupDatasets){
+		    my @images=();
+        my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$gd->id() );
+        foreach my $d (@dMaps){
       		push(@images,$d->image());
-    		}
-
-
-
-
- 		#my @images=$_->images();
+		    }
+	      #my @images=$_->images();
 	     	if (scalar(@images)>0){
-	   		push(@notEmptyDatasets,$_);
-	  	}
+	   	   	push(@notEmptyDatasets,$gd);
+	  	  }
   	}
+   
+   
+   
 	foreach my $d (@notEmptyDatasets) {
 		#24-06
 		#$listGeneral{$_->ID()}=$_->name();
-		$listGeneral{$d->dataset_id()}=$d->name();
-		if (not $self->belong_or_not($d->dataset_id,$project->project_id())) {	
-			$datasetList{$d->dataset_id()} = $d->name();
+     $listGeneral{$d->id()}=$d->name();
+
+    if (not $self->belong_or_not($d->id(),$project->id())) {
+			$datasetList{$d->id()} = $d->name();
 		}
-
-		#if (not $self->belong_or_not($_->ID,$project->project_id())) {	
-		#	$datasetList{$_->ID()} = $_->name();
-		#}
-
-
-		
 	}
 	return (scalar(@projectDatasets)==0)?\%listGeneral:\%datasetList;
 
@@ -675,9 +672,9 @@ sub remove{
 	  	$result=removeDataset($id,$delProjectID,$db);
 		return undef unless (defined $result);
 	  }
-	  if ($dataset->dataset_id()==$currentDataset->dataset_id()){
+	  if ($dataset->id()==$currentDataset->id()){
 		my @datasets=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$project->id() );
      		foreach my $d (@dMaps){
       		push(@datasets,$d->dataset());
     		}
@@ -750,7 +747,7 @@ sub checkDuplicate{
   	my $object;
   	my @a=();
   	foreach $object (@$ref){
-	 my $id=$object->dataset_id();
+	 my $id=$object->id();
     	 push(@a,$object) unless $seen{$id}++;
    	}
   	return \@a;
@@ -762,7 +759,7 @@ sub deleteDataset{
    	my ($deletedataset,$db)=@_;
    	my $tableDataset="datasets";
    	my ($condition,$result);
-   	$condition="dataset_id=".$deletedataset->dataset_id();
+   	$condition="dataset_id=".$deletedataset->id();
    	$result=do_request($tableDataset,$condition,$db);
    	return (defined $result)?1:undef;
 
@@ -774,7 +771,7 @@ sub deleteInMap{
 	my $result;
 	foreach my $nameTable (@$table){	
 	  my ($condition);
-        $condition="dataset_id=".$dataset->dataset_id();
+        $condition="dataset_id=".$dataset->id();
         $result=do_request($nameTable,$condition,$db);
         return undef unless (defined $result);
   	} 
@@ -803,10 +800,10 @@ sub notUsed{
  	my %in_b=();
  	my @only_a=();
  	foreach (@$refb){
-   	  $in_b{$_->project_id()}=1;
+   	  $in_b{$_->id()}=1;
  	}
  	foreach (@$refa){
-   	  push(@only_a,$_) unless exists $in_b{$_->project_id()};
+   	  push(@only_a,$_) unless exists $in_b{$_->id()};
 
  	}
  	return scalar(@only_a)==0?undef:\@only_a;
@@ -819,10 +816,10 @@ sub notUsedImages{
   	my %in_b=();
   	my @only_a=();
   	foreach (@$refb){
-        $in_b{$_->image_id()}=1;
+        $in_b{$_->id()}=1;
   	}
   	foreach (@$refa){
-    	  push(@only_a,$_) unless exists $in_b{$_->image_id()};
+    	  push(@only_a,$_) unless exists $in_b{$_->id()};
   	}
   	return scalar(@only_a)==0?undef:\@only_a;
 
@@ -844,13 +841,13 @@ sub shareDatasets{
       my %userDataset=();
 	my %share;
 	my %own;
-	%userDataset= map {$_->dataset_id() =>$_} @myDatasets;
+	%userDataset= map {$_->id() =>$_} @myDatasets;
       %own=%userDataset;
 
 	if (defined $result){
 	  foreach (@$result){				# not my projects
 		my @datasets=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->id() );
      		foreach my $d (@dMaps){
       		push(@datasets,$d->dataset());
     		}
@@ -859,9 +856,9 @@ sub shareDatasets{
 	   #my @datasets=$_->datasets();
 	
 	   foreach my $d (@datasets){
-      	if (exists $userDataset{$d->dataset_id()}){
-			 $share{$d->dataset_id()}=$d;
-			 delete($own{$d->dataset_id()});	
+      	if (exists $userDataset{$d->id()}){
+			 $share{$d->id()}=$d;
+			 delete($own{$d->id()});
        	}
          }
    	  }
@@ -894,7 +891,7 @@ sub usedDatasets{
 	if (defined $result){
 	  foreach (@$result){
 		my @datasets=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->id() );
      		foreach my $d (@dMaps){
       		push(@datasets,$d->dataset());
     		}
@@ -902,31 +899,31 @@ sub usedDatasets{
 
 		#my @datasets=$_->datasets();
 	    foreach my $obj (@datasets){
-	 	$share{$obj->dataset_id()}=$obj unless (exists $share{$obj->dataset_id()});
+	 	$share{$obj->id()}=$obj unless (exists $share{$obj->id()});
      	    }
         }
 	}
 	my $count=0;
 	foreach (@$projects){
         my %info=();
-	  $info{$_->project_id()}=$_;
+	  $info{$_->id()}=$_;
 		my @datasets=();
-     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->project_id() );
+     		my @dMaps=$session->Factory()->findObjects("OME::Project::DatasetMap",'project_id'=>$_->id() );
      		foreach my $d (@dMaps){
       		push(@datasets,$d->dataset());
     		}
 
 	  #my @datasets=$_->datasets();
         foreach my $dataset (@datasets){
-          if (exists($used{$dataset->dataset_id()})){
-	      my $href= $used{$dataset->dataset_id()}->{project};
+          if (exists($used{$dataset->id()})){
+	      my $href= $used{$dataset->id()}->{project};
             my %fusion=();
 	      %fusion=(%$href,%info);
-	      $used{$dataset->dataset_id()}->{project}=\%fusion;
+	      $used{$dataset->id()}->{project}=\%fusion;
 	    }else{
 		$count++;
-	      $used{$dataset->dataset_id()}->{project}=\%info;
-	      $used{$dataset->dataset_id()}->{object}=$dataset ;
+	      $used{$dataset->id()}->{project}=\%info;
+	      $used{$dataset->id()}->{object}=$dataset ;
 	   }
        }
   	}
