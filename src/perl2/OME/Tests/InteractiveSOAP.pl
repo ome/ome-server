@@ -42,6 +42,7 @@ use SOAP::Lite
       my($soap, $res) = @_; 
       die ref $res ? $res->faultstring : $soap->transport->status;
   };
+use XMLRPC::Lite;
 print "Please login to OME:\n";
 
 print "Username? ";
@@ -59,9 +60,8 @@ ReadMode(1);
 
 
 my $host = $ARGV[0] || 'http://localhost:8002/';
-use SOAP::Lite;
 
-my $soap = SOAP::Lite
+my $soap = XMLRPC::Lite
   -> uri   ('OME/Remote/Dispatcher')
   -> proxy ($host);
 
@@ -72,7 +72,7 @@ my $session = $soap
   -> call (createSession => $username, $password)
   -> result;
 
-print "OME::Remote::Dispatcher::createSession\nGot '$session'...\n\n";
+print "OME::Remote::Facade::createSession\nGot '$session'...\n\n";
 
 sub __getInput {
     print shift," ";
@@ -82,23 +82,34 @@ sub __getInput {
 }
 
 while (1) {
-    my $object = __getInput("Object?");
-    last if uc($object) eq '\Q';
     my $method = __getInput("Method?");
+    last if uc($method) eq '\Q';
     my @params;
     my $cont2 = 1;
     my $paramCount = 1;
+    my @paramStack;
+    my $currentParam = \@params;
     while (1) {
         my $param = __getInput("Param $paramCount?");
         $paramCount++;
         last if $param eq "";
-        $param = undef if uc($param) eq "UNDEF";
-        push @params, $param;
+
+        if ($param eq '[') {
+            push @paramStack, $currentParam;
+            $currentParam = [];
+        } elsif ($param eq ']') {
+            my $closed = $currentParam;
+            $currentParam = pop @paramStack;
+            push @$currentParam, $closed;
+        } else {
+            $param = undef if uc($param) eq "UNDEF";
+            push @$currentParam, $param;
+        }
     }
 
     eval {
         my @result = $soap->
-          call('dispatch',$session,$object,$method,@params)->
+          call('dispatch',$session,$method,@params)->
           paramsall();
 
         map { $_ = '<undef>' unless defined $_; } @result;
