@@ -93,7 +93,7 @@ sub getHTMLArray {
 	my ($value, $rb, $extra) = ($v[$i], $rg[$i], $ex[$i]);
 	if (defined $extra) {
 	    my $q = $extra->getHTML();
-	    print STDERR "  -- $q\n";
+	    #print STDERR "  -- $q\n";
 	    $rb .= $q;
 	}
 	push @html, $rb;
