@@ -32,8 +32,6 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Ilya Goldberg <igg@nih.gov>
-# Based on OME/Tasks/Analysis/Engine/UnthreadedPerlExecutor.pm
-#                   by Douglas Creager <dcreager@alum.mit.edu>
 #
 #-------------------------------------------------------------------------------
 
@@ -78,12 +76,15 @@ our $VERSION = $OME::VERSION;
 
 use Carp;
 use CGI qw(:standard);
-use Fcntl qw (:flock); # import LOCK_* and OPEN constants
-use Fcntl;             # import OPEN constants
+use Fcntl qw (:flock O_RDWR O_CREAT); # import LOCK_* and OPEN constants
 use OME::Install::Environment;
 use OME::SessionManager;
+use OME::Analysis::Engine::UnthreadedPerlExecutor;
+
 
 use constant ENV_FILE        => '/etc/ome-install.store';
+use constant PID_FILE        => 'WorkerPIDs';
+our $PID_FILE_PATH; # set to $environment->tmp_dir().'/'.PID_FILE
 
 use constant STATUS_OK       => 200;
 use constant BAD_REQUEST     => 400;
@@ -96,18 +97,22 @@ use constant SERVER_BUSY     => 503;
 # Start of Code
 ################
 
-# Determine if we can run.
+
+# Get the installation environment
 OME::Install::Environment::restore_from (ENV_FILE);
 my $environment = initialize OME::Install::Environment;
 my $worker_conf = $environment->worker_conf();
 do_response (NOT_IMPLEMENTED,"Workers not configured") unless $worker_conf;
 
-do_response (SERVER_BUSY,"Too many workers running") unless
-	register_worker($environment->tmp_dir()."/WorkerPIDs",$worker_conf->{MaxWorkers});
+# Set the path to the pid file
+$PID_FILE_PATH = $environment->tmp_dir().'/'.PID_FILE;
 
-my $CGI = new CGI;
+# Determine if there are any available workers
+do_response (SERVER_BUSY,"Too many workers running") unless
+	register_worker($worker_conf->{MaxWorkers});
 
 # Parse parameters
+our $CGI = new CGI;
 my ($DataSource,$SessionKey,$DBUser,$DBPassword,$MEX_ID,$Dependence,$Target_ID) = get_params ($CGI);
 
 # Try to get a remote session
@@ -131,10 +136,17 @@ do_response (BAD_REQUEST,"Unable to load Target ID $Target_ID")
 
 # Off to the races
 eval {
-	executeModule ($mex,$Dependence,$target);
+	my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
+	$executor->executeModule ($mex,$Dependence,$target);
 };
 
+# report error
 do_response (SERVER_ERROR,$@) if $@;
+
+# Commit transaction 
+$session->commitTransaction();
+
+# Respond OK and exit
 do_response (STATUS_OK,'OK');
 
 
@@ -143,26 +155,35 @@ do_response (STATUS_OK,'OK');
 ################
 
 
-sub do_responce {
+# Note that this always results in an exit
+sub do_response {
 my ($code,$message) = @_;
 # If the message spans multiple lines, put the first line in the header, and the rest as text/plain
 	my @lines = split (/\n/,$message);
+	
 	my $line1 = shift @lines;
-	print "HTTP/1.1 $code $line1\n";
-	print "Content-Type: text/plain\n\n";
-	print join ("\n",@lines);
+	print "HTTP/1.1 $code $line1\015\012".
+		"Content-Type: text/plain\015\012\015\012";
+	print "$line1\n",join ("\n",@lines),"\n";
+	unregister_worker ();
+	exit;
 }
 
 
 sub register_worker {
-	my($pidfile,$max_pids) = @_;
+	my($max_pids) = @_;
 
-	sysopen(PID_FILE, $pidfile, O_RDWR | O_CREAT) or do_response (SERVER_ERROR,"Couldn't open $pidfile: $!");
+	sysopen(PID_FH, $PID_FILE_PATH, O_RDWR | O_CREAT)
+		or die "Couldn't open $PID_FILE_PATH: $!";
 
 	# Wait here until we can get a lock.
-	flock(PID_FILE,LOCK_EX) or
-		do_response (SERVER_ERROR, "Couldn't acquire lock on $pidfile: $!");
-	my @pids = <PID_FILE>;
+	flock(PID_FH,LOCK_EX)
+		or die "Couldn't acquire lock on $PID_FILE_PATH: $!";
+
+	# Get the PIDS
+	my @pids = <PID_FH>;
+
+	# Ping each PID to see if its alive, and push the live ones on @live_pids
 	my @live_pids;
 	foreach my $pid (@pids) {
 		chomp $pid;
@@ -170,25 +191,42 @@ sub register_worker {
 			push (@live_pids, $pid) if kill (0, $pid) > 0;
 		}
 	}
-	seek (PID_FILE,0,0);
-	push (@live_pids,$$) if scalar @live_pids < $max_pids;
-	print PID_FILE join ("\n",@live_pids);
-	flock(LOCK,LOCK_UN);
-	close (LOCK);
-	return 1 if scalar @live_pids <= $max_pids;
-	return 0;
+
+	# If there are less than the maximum live pids, push ourselves on
+	my $worker_registered;
+	if (scalar @live_pids < $max_pids ) {
+		push (@live_pids,$$);
+		$worker_registered = 1;
+	}
+
+	# Rewind and put the live PIDs back in the file
+	seek (PID_FH,0,0);
+	print PID_FH join ("\n",@live_pids);
+	print PID_FH "\n";
+
+	# Truncate the file, unlock and close
+	truncate (PID_FH,tell (PID_FH));
+	flock(PID_FH,LOCK_UN);
+	close (PID_FH);
+
+	return ($worker_registered);
 }
 
 
 sub unregister_worker {
-	my($pidfile) = @_;
-
-	sysopen(PID_FILE, $pidfile, O_RDWR | O_CREAT) or do_response (SERVER_ERROR,"Couldn't open $pidfile: $!");
+	sysopen(PID_FH, $PID_FILE_PATH, O_RDWR | O_CREAT) or
+		die "Couldn't open $PID_FILE_PATH: $!";
 
 	# Wait here until we can get a lock.
-	flock(PID_FILE,LOCK_EX) or
-		do_response (SERVER_ERROR, "Couldn't acquire lock on $pidfile: $!");
-	my @pids = <PID_FILE>;
+	flock(PID_FH,LOCK_EX) or
+		die "Couldn't acquire lock on $PID_FILE_PATH: $!";
+
+	# Get the PIDS
+	my @pids = <PID_FH>;
+
+	# Ping each PID to see if its alive,
+	# and push the live ones on @live_pids
+	# Except this one.
 	my @live_pids;
 	foreach my $pid (@pids) {
 		chomp $pid;
@@ -196,10 +234,17 @@ sub unregister_worker {
 			push (@live_pids, $pid) if kill (0, $pid) > 0;
 		}
 	}
-	seek (PID_FILE,0,0);
-	print PID_FILE join ("\n",@live_pids);
-	flock(LOCK,LOCK_UN);
-	close (LOCK);
+
+	# Rewind and put the live PIDs back in the file
+	seek (PID_FH,0,0);
+	print PID_FH join ("\n",@live_pids);
+	print PID_FH "\n";
+
+	# Truncate the file, unlock and close
+	truncate (PID_FH,tell (PID_FH));
+	flock(PID_FH,LOCK_UN);
+	close (PID_FH);
+
 	return 1;
 }
 
@@ -243,49 +288,10 @@ sub get_params {
 	return ($DataSource,$SessionKey,$DBUser,$DBPassword,$MEX,$Dependence,$Target);
 }
 
-
-sub executeModule {
-    my ($mex,$dependence,$target) = @_;
-    my $session = OME::Session->instance();
-    my $module = $mex->module();
-
-    my $handler_class = $module->module_type();
-    my $location = $module->location();
-
-    croak "Malformed class name $handler_class"
-      unless $handler_class =~ /^\w+(\:\:\w+)*$/;
-    $handler_class->require();
-    my $handler = $handler_class->new($mex);
-
-    eval {
-        $handler->startAnalysis();
-        $handler->execute($dependence,$target);
-        $handler->finishAnalysis();
-    };
-
-    if ($@) {
-        $mex->status('ERROR');
-        $mex->error_message($@);
-        print STDERR "      Error during execution: $@\n";
-    } else {
-        $mex->status('FINISHED');
-    }
-
-    $mex->storeObject();
-}
-
-
-sub modulesExecuting { return 0; }
-sub waitForAnyModules {}
-sub waitForAllModules {}
-
 1;
-
-__END__
 
 =head1 AUTHOR
 
 Ilya Goldberg <igg@nih.gov>
-Douglas Creager <dcreager@alum.mit.edu>
 
 =cut
