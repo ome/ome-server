@@ -46,6 +46,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.ModuleCategory;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.vis.ome.Connection;
@@ -105,6 +106,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private int modCount = 0;
 	
+	
 	public PPaletteCanvas() {
 		super();
 		removeInputEventListener(getPanEventHandler());
@@ -119,6 +121,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		dragSource = new DragSource();
 				dragSource.createDefaultDragGestureRecognizer(this,
 					DnDConstants.ACTION_MOVE,this);
+
+		final PCamera camera = getCamera();
+	       
+		camera.addInputEventListener(new PPaletteToolTipHandler(camera));
+		
 		
 	}
 	
@@ -187,7 +194,6 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		//	do something to box up this row.
 		float bottom =y;		
 		decorateCategory(top,bottom,categoryWidth);
-		System.err.println("bottom y is "+y);
 
 		categoryWidth = 0;
 	}
@@ -210,8 +216,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			nameText.setFont(NAME_FONT);
 			nameText.setPickable(false);
 			categoryLayer.addChild(nameText);
+			nameText.setScale(2);
 			nameText.moveToFront();
-			System.err.println("translating name label to "+nameX+","+y);
+			//System.err.println("translating name label to "+nameX+","+y);
 			nameText.setOffset(nameX,y);
 			y += nameText.getFullBoundsReference().getHeight();
 			y+=VGAP;
