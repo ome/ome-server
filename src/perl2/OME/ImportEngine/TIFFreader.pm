@@ -392,9 +392,8 @@ sub importGroup {
 		die $status;
     }
 	
-	$self->__storeInputFileInfo(\@finfo);
+	$self->__storeInputFileInfo($session,\@finfo);
 	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}){
-	print STDERR "\n\n\n SaACCKY\n\n\n";
 		$self->__storeChannelInfoRGB($session, scalar(@$grp)*$chansImg, @channelInfo);
 	} else {
 		$self->__storeChannelInfo($session, scalar(@$grp)*$chansImg, @channelInfo);
