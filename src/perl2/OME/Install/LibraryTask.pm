@@ -441,7 +441,7 @@ sub execute {
 			$bad_libraries = 1;
 		}
 
-		if (! check_library($library)) {
+		if (check_library($library)) {
 			print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
 			next;
 		} else {
