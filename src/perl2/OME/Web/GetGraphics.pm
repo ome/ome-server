@@ -42,6 +42,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
+use OME::Tasks::ImageManager;
 use base qw{ OME::Web };
 
 use Benchmark;
@@ -164,8 +165,8 @@ sub DrawDatasetControl {
 	
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
-		push (@ImageIDs, $imageMap->image()->id());
-		$ImagePaths{ $imageMap->image()->id() } = $imageMap->image()->name();#getFullPath( $imageMap->image()->DefaultPixels() );
+		push (@ImageIDs, $imageMap->image()->image_id());
+		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->name();#getFullPath( $imageMap->image()->DefaultPixels() );
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
@@ -284,8 +285,8 @@ sub SVGgetDataJS {
 	my $JSinfo  = {};
 	my $session = $self->Session();
 	my $factory = $session->Factory();
-
-    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
+	my $imageManager =OME::Tasks::ImageManager->new($session); 
+     	my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
 
 	$JSinfo->{ ImagedID } = $ImageID;
 
@@ -293,79 +294,23 @@ sub SVGgetDataJS {
 		or die "Could not retreive Image from ImageID=$ImageID\n";
 
 	# get Dimensions from image and make them readable
-	my $pixels = $image->DefaultPixels()
-		or die "Could not a primary set of Pixels for this image\n";
-	my $dims = [ $pixels->SizeX,
-	             $pixels->SizeY,
-	             $pixels->SizeZ,
-	             $pixels->SizeC,
-	             $pixels->SizeT,
-	             $pixels->BitsPerPixel/8
-	            ];
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path)=$imageManager->getImageDim($image);
+	my $dims = [ $sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp];
 	
 	# get wavelengths from image and make them JavaScript readable
-	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
-		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
-	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
-	die "Image has no channel components for default Pixels!" if( scalar( @channelComponents ) eq 0 );
 	my @JSwavelengths;
-	foreach my $cc (@channelComponents) {
-		my $ChannelNum = $cc->Index();
-		my $Label = undef;
-		$Label = $cc->LogicalChannel()->Name()  || 
-		         $cc->LogicalChannel()->Fluor() || 
-		         $cc->LogicalChannel()->EmissionWavelength();
-		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
-		$Label .= $cc->Index()
-			if( scalar( @overlap ) > 1 || not defined $Label );
-		push @JSwavelengths, "{WaveNum:$ChannelNum,Label:\"$Label\"}";
+	my $Wavelengths= $imageManager->getImageWavelengths($image);
+	foreach my $w (@$Wavelengths){
+		push @JSwavelengths, "{WaveNum:${$w}{WaveNum},Label:\"${$w}{Label}\"}";
+
 	}
+
 	
-	###########################################################################
-	#
-	#	Get Stack Statistics
-	#
-	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
-		or die "Stack statistics must be installed for this viewer to work!\n";
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
-		module_id => $stackStats->id(),
-		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for Module 'Fast Stack Statistics'.\n";
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
-		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
-		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
-
-	# FIXME: update this method call when method accepts search parameters
-	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMinimum", $image ) );
-	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMaximum", $image ) );
-	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackMean", $image ) );
-	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackSigma", $image ) );
-	my @geosigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
-		$factory->findAttributes( "StackGeometricSigma", $image ) );
+	#######################
+	# Get Stack Statistics
+	
 	my $sh; # stats hash
-	foreach( @mins ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
-	foreach( @maxes ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
-	foreach( @means ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
-	foreach( @gmeans ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
-	foreach( @sigma ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
-	foreach( @geosigma ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma(); }
-
-
-
+	$sh =$imageManager->getImageStats($image);
 	die "Could not find Stack Statistics for image (id=$ImageID).\n"
 		unless defined $sh;
 	my @ar1; # array 1
@@ -378,13 +323,9 @@ sub SVGgetDataJS {
 		push @ar1, '['.join( ',', @ar2 ).']';
 	}
 	my $JSstats = '['.join( ',', @ar1 ).']';
-	#
-	#	END 'Get Stack Statistics'
-	#
-	###########################################################################
-
+	
+	###############
 	# get display settings
-	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
 	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
 	
 	# compile info
@@ -393,7 +334,7 @@ sub SVGgetDataJS {
 	$JSinfo->{ Wavelengths }        = '['.join(',',@JSwavelengths).']';
 	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
 	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
-	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
+	$JSinfo->{ CGI_optionStr }      = '&Path='.$path;
 	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
 	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || sprintf "%d",$dims->[2] / 2;
 	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
@@ -403,31 +344,21 @@ sub SVGgetDataJS {
 	$JSinfo->{ toolBoxScale }       = 1;
 
 	#	Set Defaults
+
+
+	my $displayOptions=$imageManager->getDisplayOptions($image);
 	if( defined $displayOptions ) {
-		$JSinfo->{ theZ }      = sprintf( "%d", ( $displayOptions->ZStart() + $displayOptions->ZStop() ) / 2 )
+		$JSinfo->{ theZ }      = sprintf( "%d", ${$displayOptions}{theZ} )
 			if( not defined $cgi->url_param('theZ') );
-		$JSinfo->{ theT }      = sprintf( "%d", ( $displayOptions->TStart() + $displayOptions->TStop() ) / 2 )
+		$JSinfo->{ theT }      = sprintf( "%d", ${$displayOptions}{theT})
 			if( not defined $cgi->url_param('theT') );
-		$JSinfo->{ isRGB }     = $displayOptions->DisplayRGB();
+		$JSinfo->{ isRGB }     = ${$displayOptions}{isRGB};
 		
-		my @CBW; # CBW means Channel-BlackLevel-WhiteLevel
-		@CBW = (
-			$displayOptions->RedChannel()->ChannelNumber(),
-			$displayOptions->RedChannel()->BlackLevel(),
-			$displayOptions->RedChannel()->WhiteLevel(),
-			$displayOptions->GreenChannel()->ChannelNumber(),
-			$displayOptions->GreenChannel()->BlackLevel(),
-			$displayOptions->GreenChannel()->WhiteLevel(),
-			$displayOptions->BlueChannel()->ChannelNumber(),
-			$displayOptions->BlueChannel()->BlackLevel(),
-			$displayOptions->BlueChannel()->WhiteLevel(),
-			$displayOptions->GreyChannel()->ChannelNumber(),
-			$displayOptions->GreyChannel()->BlackLevel(),
-			$displayOptions->GreyChannel()->WhiteLevel(),
-		) if $displayOptions;
-		$JSinfo->{ CBW } = '[' . join( ',', @CBW ) . ']'
-			if( @CBW );
-		$JSinfo->{ RGBon } = '[' . $displayOptions->RedChannelOn() . ',' . $displayOptions->GreenChannelOn() . ',' . $displayOptions->BlueChannelOn() . ']';
+		my $CBW=${$displayOptions}{CBW};  	# CBW means Channel-BlackLevel-WhiteLevel
+		$JSinfo->{ CBW } = '[' . join( ',', @$CBW ) . ']' if( $CBW );
+		my $refRBGon=${$displayOptions}{RGBon};  
+		my $rgbon=join(",",@$refRBGon);
+		$JSinfo->{ RGBon } = '[' . $rgbon. ']';
 	}
 
 	if( defined $viewerPreferences ) {
