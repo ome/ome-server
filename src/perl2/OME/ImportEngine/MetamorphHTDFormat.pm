@@ -46,6 +46,7 @@ use Config;
 use IO::File;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
+use OME::ImportExport::Repacker::Repacker;
 
 use OME::Tasks::PixelsManager;
 

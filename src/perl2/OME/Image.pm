@@ -83,6 +83,7 @@ use base qw(OME::DBObject);
 
 use IO::File;
 
+use OME::Image::Pix;
 use OME::Feature;
 use OME::Image::Server;
 

@@ -37,13 +37,16 @@ package OME::Image::Server::Pixels;
 
 =head1 NAME
 
-OME::Image::Server::Pixels - interface for reading/writing pixels to OMEIS
+OME::Image::Server::Pixels - interface for reading files
+
 =cut
 
 use strict;
 use Log::Agent;
 use OME;
 our $VERSION = $OME::VERSION;
+
+use base qw(OME::Image::Pixels);
 
 use OME::Image::Server;
 

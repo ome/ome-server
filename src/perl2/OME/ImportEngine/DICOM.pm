@@ -21,6 +21,7 @@ package OME::ImportEngine::DICOM;
 use strict;
 use Carp;
 
+use OME::File;
 use OME::ImportEngine::DICOMconstants;	# Standard header definitions.
 
 # Class variables.
@@ -133,6 +134,7 @@ package OME::ImportEngine::DICOM_element;
 use strict;
 use Carp;
 
+use OME::File;
 use OME::ImportEngine::DICOMconstants;
 
 my %VR;			            # Value Representations (DICOM Std PS 3.5 Sect 6.2)

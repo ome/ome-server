@@ -37,13 +37,15 @@ package OME::Image::Server::File;
 
 =head1 NAME
 
-OME::Image::Server::File - interface for reading writing files stored in OMEIS
+OME::File - interface for reading files
 
 =cut
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
+
+use base qw(OME::File);
 
 use Carp;
 use OME::Image::Server;
@@ -53,21 +55,6 @@ use constant FILE_ID  => 0;
 use constant FILENAME => 1;
 use constant LENGTH   => 2;
 use constant CURSOR   => 3;
-
-##### from file.pm maybe we don't need this. Let's check
-use File::Basename;
-
-my %READ_MODES = map {$_,undef}
-  ('','<','+<','+>','+>>','r','r+','w+','a+');
-use constant READ_MODES => \%READ_MODES;
-
-my %WRITE_MODES = map {$_,undef}
-  ('+<','>','+>','>>','+>>','r+','w','w+','a','a+');
-use constant WRITE_MODES => \%WRITE_MODES;
-
-use overload
-  '""' => "getFilename";
-#######
 
 =head1 DESCRIPTION
 
@@ -103,17 +90,23 @@ sub new {
 
 =head2 upload
 
-	my $file = OME::Image::Server::File->upload($local_filename);
+	my $file = OME::Image::Server::File->upload($localFile);
 
 =cut
 
 sub upload {
     my $proto = shift;
-    my ($filename) = @_;
-    
-    # Paranoid check to guard against depreciated usage of function
-    if (ref($filename)) {
-        die "Reference was unexpected.";
+    my ($localFile) = @_;
+
+    return $localFile if UNIVERSAL::isa($localFile,__PACKAGE__);
+
+    my $filename;
+    if (!ref($localFile)) {
+        $filename = $localFile;
+    } elsif (UNIVERSAL::isa($localFile,'OME::LocalFile')) {
+        $filename = $localFile->getFilename();
+    } else {
+        die "Cannot upload a non-local file";
     }
 
 	die "Can't upload directory $filename" if -d $filename;
@@ -134,9 +127,6 @@ If asked to open the file for reading, this method does nothing.
 (Image server files are always open.)  If asked to open the file for
 writing, this method throws an error.  (Image server files are
 read-only.)
-
-The mode parameter can be either a Perl mode string (">", "+<", etc.) or an 
-ANSI C fopen mode string ("w", "r+", etc.).
 
 =cut
 
@@ -255,11 +245,12 @@ sub getLength {
 	my $pos = $file->getCurrentPosition();
 
 Returns the position of the file cursor.  This corresponds to a
-standard C<tell> call.
+standard C<tell> call.  This method should die if an error occurs or
+if this operation is not supported.
 
 =cut
 
-sub getCurrentPosition { return shift->[CURSOR] }
+sub getCurrentPosition { shift->[CURSOR] }
 
 =head2 eof
 
@@ -380,34 +371,6 @@ sub readData {
     }
 }
 
-=head2 readLine
-
-	my $line = $file->readLine();
-
-Reads data from the file from the current position (as set by the
-C<setCurrentPosition> method) up to the first occurrence of the C<$/>
-variable.  If C<$/> is set to "", C<\n> will be used as the line
-terminator.
-
-=cut
-
-sub readLine {
-    my ($self) = @_;
-
-    my $line;
-    my $eol = $/ || "\n";
-    my $eolre = qr($eol$);
-
-  CHARACTER:
-    until (defined $line && $line =~ $eol) {
-        my ($char,$read) = $self->readData(1);
-        last CHARACTER unless $read;
-        $line .= $char;
-    }
-
-    return $line;
-}
-
 =head2 writeData
 
 	$file->writeData($data);
@@ -432,7 +395,7 @@ sub writeData { die "Operation not supported" }
 	$file->flush();
 
 Flushes any pending outputs to the file.  This corresponds to a
-standard C<flush> call.
+standard C<flush> call.  This method should die if any errors occur.
 
 =cut
 
@@ -442,7 +405,9 @@ sub flush { return }
 
 	$file->close();
 
-Flushing any pending outputs and closes the file.
+Flushing any pending outputs and closes the file.  After this method
+call, calling any other OME::File method should result in an error.
+
 =cut
 
 sub close { return }
