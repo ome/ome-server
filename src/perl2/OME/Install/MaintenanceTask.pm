@@ -321,6 +321,7 @@ BLURB
 		}
 		
 		if (! y_or_n('Configure Maintenance tasks?','y') ) {
+			$confirm_all = 1;
 			$MAINT_CONF->{do_it} = 0;
 			redo;
 		}

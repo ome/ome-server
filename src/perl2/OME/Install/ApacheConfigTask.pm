@@ -770,6 +770,7 @@ BLURB
 		$confirm_all = 0;
 
 		if (! y_or_n('Configure Apache server?','y') ) {
+			$confirm_all = 1;
 			$APACHE->{DO_CONF}  = 0;
 			redo;
 		}
