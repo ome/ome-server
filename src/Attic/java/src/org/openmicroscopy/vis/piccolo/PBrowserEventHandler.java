@@ -41,6 +41,7 @@
 
 
 package org.openmicroscopy.vis.piccolo;
+import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import java.awt.event.MouseEvent;
@@ -64,6 +65,8 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	 */
 	private static boolean postPopup = false;
 	
+	private PBrowserCanvas canvas;
+	
 	public PBrowserEventHandler(PBrowserCanvas canvas) {
 		super(canvas);
 		this.canvas = canvas;	
@@ -74,11 +77,23 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		PNode n = e.getPickedNode();
 	//	System.err.println("node is "+n);
 		if (n instanceof PThumbnail) {
+			canvas.clearExecutionList();
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(true);
 			e.setHandled(true);
+		} 
+		else if (n instanceof PSelectableText) {
+			((PSelectableText) n).setHighlighted(true);
+			if (n instanceof PChainLabelText) {
+				PChainLabelText clt = (PChainLabelText) n;
+				canvas.showExecutionList(clt);
+			}
+			e.setHandled(true);
+		} 
+		else {
+			canvas.clearExecutionList();
+			super.mouseEntered(e);
 		}
-		super.mouseEntered(e);
 	}
 	
 	public void mouseExited(PInputEvent e) {
@@ -88,7 +103,10 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			pt.setHighlighted(false);
 			e.setHandled(true);
 		}
-		super.mouseExited(e);
+		else if (n instanceof PSelectableText) {
+			((PSelectableText)n).setHighlighted(false);
+			e.setHandled(true);
+		}
 	}	
 	
 	public void mouseReleased(PInputEvent e) {
@@ -103,11 +121,35 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	}
 	
 	public void mouseClicked(PInputEvent e) {
-		super.mouseClicked(e);
-		if (e.getPickedNode() instanceof PDataset) { 
+		//
+		PNode node = e.getPickedNode();
+		SelectionState selectionState = SelectionState.getState();
+		
+		if (node instanceof PDataset) { 
 			System.err.println("zooming in on dataset");
-			PDataset d = (PDataset) e.getPickedNode();
-			((PBrowserCanvas) canvas).setSelectedDataset(d.getDataset());
+			PDataset d = (PDataset) node;
+			//((PBrowserCanvas) canvas).setSelectedDataset(d.getDataset());
+			selectionState.setSelectedDataset(d.getDataset());
+			e.setHandled(true);
 		}
+		else if (node instanceof PChainLabelText) {
+			
+			try {
+				PChainLabelText label = (PChainLabelText) node;
+				System.err.println("clicked on a chain label..."+label.getChain().getName());
+				//selectionState.setSelectedChain(label.getChain());
+				label.doSelection();
+			}
+			catch(Exception exc) {
+				
+			}
+			e.setHandled(true);
+		}
+		else if (node instanceof PExecutionText) {
+			System.err.println("clicked on execution text!");
+			e.setHandled(true);
+		}
+		else 
+			super.mouseClicked(e);
 	}
 }
