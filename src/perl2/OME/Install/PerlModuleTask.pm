@@ -296,6 +296,7 @@ my @modules = (
 	}
     },{
 	name => 'LWP',
+	valid_versions => ['ne 5.80'],
 	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
 	configure_module => sub {
 	    # Since libwww has an interactive configure script we need to
