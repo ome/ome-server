@@ -44,6 +44,7 @@ use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use Log::Agent;
 use Text::Wrap;
+use File::Glob ':glob';
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -245,8 +246,22 @@ sub update_database {
     y_or_n ("Are you sure you want to proceed ?",'n') or croak "Database update aborted by user";
 
 
+	# Since we may be installing from a directory that does not have permissions
+	# for a user that can acess the DB (i.e. the OME user), we have to copy the
+	# update files to the temporary directory and go from there.
+	# This of course, we have to do as root and then switch back.
+	my $old_euid = euid (0);
+    print "Copying update directories to $OME_TMP_DIR/update\n";
+	copy_tree ("update", "$OME_TMP_DIR");
+	fix_ownership( {
+			owner => $OME_USER,
+			group => $OME_GROUP,
+		}, "$OME_TMP_DIR/update/");
+	euid ($old_euid);
+
+
     while (defined $version and $version ne $DB_VERSION) {
-        my @files = glob ("update/$version/pre/*");
+        my @files = bsd_glob ("$OME_TMP_DIR/update/$version/pre/*");
         unless (scalar(@files) > 0) {
             print "  \\_ ", BOLD, "ERROR", RESET,
               " Cannot find upgrade scripts for database version $version.\n";
