@@ -117,7 +117,7 @@ sub new {
 This will read the XML sub-tree under the $root element, creating objects in the DB.  A reference to the list
 of objects in the sub-tree will be returned.
 The objects will be written to the DB at the end of the import, and the Session's database handle committed.
-All images will be imported into a dummy dataset and the standard module_execution chain will be executed on them.
+All images will be imported into a dummy dataset and the standard analysis chain will be executed on them.
 
 =cut
 
@@ -261,11 +261,11 @@ sub processDOM {
 		findObject("OME::AnalysisChain",name => 'Image import analyses');
 	
 	if (!defined $view or !defined $importAnalysis) {
-		logcarp "The image import module_execution chain is not defined.  Skipping predefined analyses...";
+		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
 		return $self->{_DBObjects};
 	}
-	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
-	my $engine = OME::Analysis::AnalysisEngine->new();
+	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
+	my $engine = OME::Tasks::AnalysisEngine->new();
 	eval {
 		$engine->executeAnalysisView($session,$view,{},$importDataset);
 	};
@@ -298,7 +298,7 @@ my ($self, $imageID, $parentFeature, $importAnalysis, $node) = @_;
 sub module_execution () {
 	my $self = shift;
 
-	return $self->{_analysis} if exists $self->{_analysis} and defined $self->{_analysis};
+	return $self->{_module_execution} if exists $self->{_module_execution} and defined $self->{_module_execution};
 	my $session = $self->{session};
 
     my $config =  $self->{factory}->loadObject("OME::Configuration", 1);
@@ -312,7 +312,7 @@ sub module_execution () {
 			module_id => $config->import_module()->id(),
 		});
 
-    $self->{_analysis} = $module_execution;
+    $self->{_module_execution} = $module_execution;
     $self->addObject ($module_execution);
     return ($module_execution);
 }
