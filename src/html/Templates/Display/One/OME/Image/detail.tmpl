@@ -4,7 +4,7 @@
 	</caption>
 	<tr>
 		<td valign="top">
-			<table width="50">
+			<table width="50" style=" border: 1px #000000 solid;">
 				<tr>
 					<td width="50" valign="top">
 						<a title="View this image" href="javascript: openPopUpImage(<!-- TMPL_VAR NAME=_id -->;);"> <img src="<!-- TMPL_VAR NAME=thumb_url -->;"> </a> 
@@ -18,13 +18,13 @@
 						</nobr>
 						<nobr>
 							Group: <!-- TMPL_VAR NAME=group -->,
-						</nobr>
+						</nobr><br>
 						<nobr>
 							Created: <!-- TMPL_VAR NAME=created -->,
-						</nobr>
+						</nobr><br>
 						<nobr>
-							Inserted: <!-- TMPL_VAR NAME=inserted -->,
-						</nobr>
+							Imported: <!-- TMPL_VAR NAME=inserted -->,
+						</nobr><br>
 						<nobr>
 							Original File: <!-- TMPL_VAR NAME=original_file -->
 						</nobr>
@@ -50,15 +50,24 @@
 			</table>
 		</td>
 		<td align="right" valign="top">
-			<font class="ome_relation_title">Datasets:</font>
-				<!-- TMPL_VAR NAME=datasets!ref_list --><br>
 			<font class="ome_relation_title">Module Executions:</font>
 				<!-- TMPL_VAR NAME=module_executions!ref_list -->
 		</td>
 	</tr>
 </table>
-<br>
-<font class="ome_relation_title">Pixel Sets:</font>
-	<!-- TMPL_VAR NAME=pixels!tiled_ref_list -->
-<font class="ome_relation_title">Features:</font>
-	<!-- TMPL_VAR NAME=all_features!tiled_list -->
+<table width="100%">
+	<tr>
+		<td align="left" valign="top" width="33%">
+			<font class="ome_relation_title">Datasets:</font>
+				<!-- TMPL_VAR NAME=datasets!ref_list --><br>
+		</td>
+		<td align="center" valign="top" width="33%">
+			<font class="ome_relation_title">Pixel Sets:</font>
+				<!-- TMPL_VAR NAME=pixels!ref_list -->
+		</td>
+		<td align="right" valign="top" width="33%">
+			<font class="ome_relation_title">Features:</font>
+				<!-- TMPL_VAR NAME=all_features!ref_list -->
+		</td>
+	</tr>
+</table>
