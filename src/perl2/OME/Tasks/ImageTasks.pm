@@ -28,6 +28,9 @@ use IO::File;
 
 # removeWeirdCharacter(hash)
 # --------------------------
+# By weird, I mean the null character currently.  Ensures that the
+# input from an image file won't trash the Postgres DBI driver (which
+# a null character in the input string will do).
 
 sub removeWeirdCharacters {
     my $hash = shift;
@@ -49,6 +52,9 @@ sub removeWeirdCharacters {
 
 # importFiles(session,project,filenames)
 # --------------------------------------
+# Imports the selected files into OME.  The session is used to
+# interact with the database, and all of the images are assigned to
+# the given project.
 
 sub importFiles {
     my ($session,$project,$filenames) = @_;
@@ -77,8 +83,9 @@ sub importFiles {
         $image->Field("name",$name);
         $image->Field("description",$href->{'Image.Description'});
         $image->Field("experimenter",$session->User());
-        my $created = $href->{'Image.CreationDate'};
-        $created = "now" unless $created;
+        #my $created = $href->{'Image.CreationDate'};
+        #$created = "now" unless $created;
+        my $created = "now";   # until we figure out the date formatting issue
         $image->Field("created",$created);
         $image->Field("inserted","now");
         $image->Field("repository",$repository);
@@ -128,7 +135,10 @@ sub importFiles {
 
 # findRepository(session,pixel array)
 # -----------------------------------
-# For now we assume that there is only one repository, with an ID of 1.
+# This function should determine, based on (currently) the size of the
+# pixel array, which repository an image should be stored in.  For now
+# we assume that there is only one repository, with an ID of 1.
+# (Which, if the bootstrap script worked properly, will be the case.)
 
 my $onlyRepository;
 
