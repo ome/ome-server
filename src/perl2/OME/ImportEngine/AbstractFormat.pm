@@ -404,25 +404,44 @@ sub __createRepositoryFile {
     my $factory = $session->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-	my $pixelType = OME::Tasks::PixelsManager->getPixelType(
-		$bitsPerPixel/8,$isSigned,$isFloat);
+    my $pixelType = 
+      OME::Tasks::PixelsManager->getPixelType($bitsPerPixel/8,
+					      $isSigned,$isFloat);
 
+    my %image_hash = (SizeX => $sizeX,
+		      SizeY => $sizeY,
+		      SizeZ => $sizeZ,
+		      SizeC => $sizeC,
+		      SizeT => $sizeT,
+		      PixelType => $pixelType);
     my ($pixels,$attr) = OME::Tasks::PixelsManager->
-      createPixels($image,$module_execution, {
-        SizeX        => $sizeX,
-        SizeY        => $sizeY,
-        SizeZ        => $sizeZ,
-        SizeC        => $sizeC,
-        SizeT        => $sizeT,
-        BitsPerPixel => $bitsPerPixel,
-        PixelType    => $pixelType
-      } );
+	createPixels($image,$module_execution, \%image_hash);
 
     $image->pixels_id( $attr->id() ); # Josiah's viewer hack
     $image->storeObject();
 
     return ($attr,$pixels);
 }
+
+
+
+=head2  __destroyRepositoryFile
+
+        __destroyRepositoryFile($pixels, $pix)
+
+Destroy the repository file referenced by $pixels/$pix. This would normally
+be called if an import fails after __createRepositoryFile() has been
+successfully called.
+
+=cut
+
+sub __destroyRepositoryFile {
+    my ($self, $pixels, $pix) = @_;
+
+#    ** TODO**  Implement this
+}
+
+
 
 =head1 AUTHOR
 
