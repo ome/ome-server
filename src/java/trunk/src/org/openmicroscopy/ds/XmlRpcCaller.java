@@ -75,7 +75,7 @@ import org.apache.xmlrpc.XmlRpcClientLite;
  * applications, care must be taken not to screw things up.</p>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
@@ -113,7 +113,7 @@ public class XmlRpcCaller
             XmlRpc.setKeepAlive(false);
         } catch (Exception e) {
             System.err.println(e);
-            throw new RemoteException("Error logging in to data server");
+            throw new RemoteConnectionException("Error logging in to data server");
         }
     }
 
@@ -242,6 +242,8 @@ public class XmlRpcCaller
 
                 Object retval = xmlrpc.execute(method,vparams);
                 return retval;
+            } catch (IOException e) {
+                throw new RemoteConnectionException(e.getMessage());
             } catch (Exception e) {
                 if (TRACE_CALLS)
                 {
@@ -249,7 +251,14 @@ public class XmlRpcCaller
                                       "): "+e.getMessage());
                     e.printStackTrace(traceFile);
                 }
-                throw new RemoteException(e.getMessage());
+
+                System.err.println(e.getClass());
+                String msg = e.getMessage();
+                if (msg.startsWith("STALE SESSION") ||
+                    msg.startsWith("INVALID LOGIN"))
+                    throw new RemoteAuthenticationException(msg);
+                else
+                    throw new RemoteServerErrorException(msg);
             } finally {
                 vparams.clear();
             }
@@ -286,7 +295,7 @@ public class XmlRpcCaller
                 sessionKey = invoke("createSession").toString();
 
                 if (sessionKey == null || sessionKey.equals(""))
-                    throw new RemoteException("Could not log in");
+                    throw new RemoteAuthenticationException("Could not log in");
             }
         }
     }

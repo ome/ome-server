@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.RemoteException
+ * org.openmicroscopy.ds.RemoteServerErrorException
  *
  *------------------------------------------------------------------------------
  *
@@ -39,49 +39,27 @@
 package org.openmicroscopy.ds;
 
 /**
- * <p>Signifies any problem in the remote communication with the OME
- * data server.  There are three classes on remote exception, each
- * represented by a distinct subclass of
- * <code>RemoteException</code>:</p>
- *
- * <ol>
- *
- * <li>Errors establishing or maintaining a physical connection to the
- * remote server. ({@link RemoteConnectionException}</li>
- *
- * <li>Errors authenticating the user with the remote server.  This
- * can happen when logging in due to an invalid username or password,
- * or during later method calls due to an expired session.  ({@link
- * RemoteAuthenticationException})</li>
- *
- * <li>Runtime errors in the server-side code executed by the data
- * server. ({@link RemoteServerErrorException})</li>
- *
- * </ol>
- *
- * <p>Code using the remote framework can check for all of these
- * exception at once by catching the <code>RemoteException</code>
- * class, or it can check for each class of error separately by
- * catching the subclasses.</p>
+ * Signifies a runtime error in the server-side code executed by the
+ * data server.
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
-public class RemoteException
-    extends RuntimeException
+public class RemoteServerErrorException
+    extends RemoteException
 {
     /**
-     * Constructs a <code>RemoteException</code> with no detail
-     * message.
+     * Constructs a <code>RemoteServerErrorException</code> with no
+     * detail message.
      */
-    public RemoteException() { super(); }
+    public RemoteServerErrorException() { super(); }
 
     /**
-     * Constructs a <code>RemoteException</code> with the specified
-     * detail message.
+     * Constructs a <code>RemoteServerErrorException</code> with the
+     * specified detail message.
      * @param msg the detail message
      */
-    public RemoteException(String msg) { super(msg); }
+    public RemoteServerErrorException(String msg) { super(msg); }
 }
