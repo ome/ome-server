@@ -237,10 +237,10 @@
 			  <Input><Scalar InputLocation="Texture Direction.Direction_Value"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><Vector DecodeWith="Haralick Output Vector"/></Output>
+			  <Output><Vector DecodeWith="Haralick_Output_Vector"/></Output>
 			</FunctionOutputs>
 			
-			<VectorDecoder ID="Haralick Output Vector">
+			<VectorDecoder ID="Haralick_Output_Vector">
 				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
 				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
 				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
