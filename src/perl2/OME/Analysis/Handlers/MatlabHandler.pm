@@ -294,6 +294,8 @@ print "**** Done special action for SE Pixels\n";
 														
 	    	my $pixelsWritten = $pixels_data->setPixelsFile($filename,1);
 			my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
+			OME::Tasks::PixelsManager->saveThumb($pixels_attr);
+			
 			$session->finishTemporaryFile($filename);
 print STDERR "pixels written = $pixelsWritten\n";		
 print "**** Done special action for SE Pixels\n";
@@ -342,47 +344,47 @@ sub placeAttributes {
    	
    		print "**** START special action for SE Pixels\n";
    		 
-   		my $attribute = @$attribute_list[0];
-   		# translate the attirbute_list into known pixel attributes§
-   		my ($omeisID, $pixelType, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT) =
- 	  		($attribute->ImageServerID(), $attribute->PixelType(), $attribute->SizeX(), 
-   			 $attribute->SizeY(), $attribute->SizeZ(), $attribute->SizeC(), $attribute->SizeT());
-   		
-   		# TODO switch based on pixelTypes
-   		my $class;
-   		if ($pixelType eq 'uint8') {
-   			$class = $mxUINT8_CLASS;
-   		} elsif ($pixelType eq 'uint16') {
-   			$class = $mxUINT16_CLASS;
-   		} elsif ($pixelType eq 'uint32') {
-   			$class = $mxUINT32_CLASS;
-   		}
-   			
-   		$struct = OME::Matlab::Array->newNumericArray($class, $mxREAL,
-   						$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT);
-  		$struct->makePersistent();
-  		die "Could not create struct" unless $struct;
-      
-   		#  prepare for the incoming pixels
-   		my $filename = $session->getTemporaryFilename("pixels","raw");
-   		
-   		
-   		open my $pix, ">", $filename or die "Could not open local pixels file";
-      		
-		#Todo macs are big endian and intells are little endian.
-   		my $buf = OME::Image::Server->getPixels($omeisID);
-   		print $pix $buf;
-   		close $pix;
-   		
-   		my $matlab_name = "ome_${variable_name}";
-   		$self->{__engine}->eval("global $matlab_name");
-   		$self->{__engine}->putVariable($matlab_name,$struct);
-   		
-   		# magic one-liner. One liner means no variables are left in matlab's workplace
-   		# this one-liner fills an array based on OMEIS's output which went to a temp file
-   		$self->{__engine}->eval("[$matlab_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_name),'$pixelType');");
-   		$session->finishTemporaryFile($filename);
-   		
+   		foreach my $attribute (@$attribute_list) {
+			# translate the attirbute_list into known pixel attributes§
+			my ($omeisID, $pixelType, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT) =
+				($attribute->ImageServerID(), $attribute->PixelType(), $attribute->SizeX(), 
+				 $attribute->SizeY(), $attribute->SizeZ(), $attribute->SizeC(), $attribute->SizeT());
+			
+			# TODO switch based on pixelTypes
+			my $class;
+			if ($pixelType eq 'uint8') {
+				$class = $mxUINT8_CLASS;
+			} elsif ($pixelType eq 'uint16') {
+				$class = $mxUINT16_CLASS;
+			} elsif ($pixelType eq 'uint32') {
+				$class = $mxUINT32_CLASS;
+			}
+				
+			$struct = OME::Matlab::Array->newNumericArray($class, $mxREAL,
+							$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT);
+			$struct->makePersistent();
+			die "Could not create struct" unless $struct;
+		  
+			#  prepare for the incoming pixels
+			my $filename = $session->getTemporaryFilename("pixels","raw");
+			
+			
+			open my $pix, ">", $filename or die "Could not open local pixels file";
+				
+			#Todo macs are big endian and intells are little endian.
+			my $buf = OME::Image::Server->getPixels($omeisID);
+			print $pix $buf;
+			close $pix;
+			
+			my $matlab_name = "ome_${variable_name}";
+			$self->{__engine}->eval("global $matlab_name");
+			$self->{__engine}->putVariable($matlab_name,$struct);
+			
+			# magic one-liner. One liner means no variables are left in matlab's workplace
+			# this one-liner fills an array based on OMEIS's output which went to a temp file
+			$self->{__engine}->eval("[$matlab_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_name),'$pixelType');");
+			$session->finishTemporaryFile($filename);
+		}   		
    		print "**** DONE special action for SE Pixels\n";
    		
    	} else {
