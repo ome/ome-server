@@ -112,13 +112,6 @@ __PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
 ORDER BY attr.attribute_id
 SQL;
 
-sub findByTable {
-    my ($class, $table_name) = @_;
-    my @datatypes = $class->search('table_name',$table_name);
-    die "Multiple matching datatypes" if (scalar(@datatypes) > 1);
-    return $datatypes[0];
-}
-
 sub findColumnByName {
     my ($self, $column_name) = @_;
     my $type_id = $self->id();
