@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
-# Params.pm
-# Copyright (C) 2003 Open Microscopy Environment, MIT
+# OME/ImportExport/Params.pm
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Brian S. Hughes
 #
 #    This library is free software; you can redistribute it and/or
@@ -18,9 +18,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-# This class handles the common parameters passed between the top
-# import/export layer and the various format specific importers and exporters.
-#
+
 # It handles at least these parameters:
 #   endian        the endian-ness of the input file
 #   host_endian   the endian-ness of the host system

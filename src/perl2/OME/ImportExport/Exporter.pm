@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 #
-# Exporter.pm
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# OME/ImportExport/Exporter.pm
+#
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Brian S. Hughes
 #
 #    This library is free software; you can redistribute it and/or

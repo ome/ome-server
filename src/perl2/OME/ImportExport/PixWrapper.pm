@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 #
-# PixWrapper.pm
-# Copyright (C) 2003 Open Microscopy Environment, MIT
+# OME/ImportExport/PixWrapper.pm
+#
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Brian S. Hughes
 #
 #    This library is free software; you can redistribute it and/or

@@ -1,6 +1,6 @@
 /* OME/Image/Pix/pixlib/Pix.xs 
  *
- * Copyright (C) 2002 Open Microscopy Environment
+ * Copyright (C) 2003 Open Microscopy Environment
  * Author:  Ilya G. Goldberg <igg@nih.gov> 
  * 
  *     This library is free software; you can redistribute it and/or
