@@ -31,8 +31,8 @@ OME::ImportExport::InsertFiles - Package for extracting files from the ome file 
 
 =head1 DESCRIPTION
 
-This package does two things: embeds files into an OME xml document and writes
-the document out to file.
+This package does two things: embeds files (i.e. Pixel dump from repository file)
+into an OME xml document and writes the document out to file.
 
 =cut
 
@@ -50,7 +50,6 @@ sub new {
 	# parameters
 	my $proto  = shift;
 	my %params = @_;
-	
 	# resources
 	my $class          = ref($proto) || $proto;
 	$params{debug}     = 0 unless exists $params{debug};
@@ -98,7 +97,7 @@ sub exportFile {
 	my $self        = shift;
 	my $file        = shift;
 	my $doc         = shift;
-	my $compression = shift;
+	my $compression = shift || 'zlib'; # default compression is zlib
 	my $BigEndian   = shift || 'true';
 
 	# resources
@@ -110,7 +109,7 @@ sub exportFile {
 	my $LSIDresolver  = OME::LSID->new( session => $session );
 	
 
-	my $executeInsertBinData = undef;
+	my $executeInsertBinData = undef; # a flag to stuff the Pixels in the XML file
 	my $root   = $doc->getDocumentElement();
 	
 	#######################################################################
@@ -119,9 +118,15 @@ sub exportFile {
 	# 	yank <Pixels> out of <CAs> and put in <Image>
 	#
 	foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
-		my $caXML = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
-		if ($caXML) {
-		$caXML = $caXML->[0];
+
+		# getElementsByTagNameNS returns the CustomAttributes under Image and Feature
+		# the OME schema dictates that CustomAttributes be the last tag under Image.
+		# The last element of the returned list will be either Image's CA or
+		# the CA of the the last feature in Image.
+		my $imageAndFeatureCAs = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
+		my $caXML = pop( @$imageAndFeatureCAs );
+		
+		if (defined $caXML && $caXML->parentNode()->tagName() eq 'Image' ) {
 		foreach my $pixelsXML( $caXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
 
 			# set up new <Bin:External>
