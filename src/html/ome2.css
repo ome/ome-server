@@ -18,8 +18,6 @@ a:visited { text-decoration: none; color: #0000FF}
 a:hover { text-decoration: underline; color: #006699}
 
 /* Some generic style definitions */
-.ome_text_over_thumbnail { background-color: white; }
-
 .ome_title { font-size: 14px; font-weight: bold; }
 
 .ome_info { color: blue; } 
@@ -32,7 +30,7 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_table { border: 1px #000000 solid; background-color: #000000; }
 
-.ome_td { background-color: #EFEFEF; }
+.ome_td { background-color: #EFEFEF; padding: 3px; }
 
 .ome_action_td { background-color: #006699; }
 
