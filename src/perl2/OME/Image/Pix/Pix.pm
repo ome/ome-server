@@ -119,7 +119,7 @@ Usually, access to Pix is handled through OME::Image:
 
 
   my $image = #However you got your OME::Image
-  my $plane = $image->Pix->GetPlane ($theZ, $theT, $theW);
+  my $plane = $image->GetPix->GetPlane ($theZ, $theT, $theW);
 
 There is nothing special to do with the memory allocated in OME::Image::Pix.  All memory is safely passed to Perl and
 is managed by Perl's garbage collection.  In other words, move along, nothing to see here, don't mind the man behind the curtain.

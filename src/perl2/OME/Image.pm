@@ -67,22 +67,22 @@ sub _init {
 
     $self->{_fileOpen} = 0;
     $self->{_fileHandle} = undef;
-    $self->{Pix} = undef;
+    $self->{thePix} = undef;
     $self->{_dimensions} = undef;
     return $self;
 }
 
-sub Pix {
+sub GetPix {
     my $self = shift;
-    return ($self->{Pix}) if defined $self->{Pix};
+    return ($self->{thePix}) if defined $self->{thePix};
     my $dimensions = $self->Dimensions();
-    $self->{Pix} = new OME::Image::Pix (
+    $self->{thePix} = new OME::Image::Pix (
         $self->getFullPath(),
         $dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
         $dimensions->num_waves(),$dimensions->num_times(),
         $dimensions->bits_per_pixel()/8
-    ) || die ref($self)."->Pix:  Could not instantiate OME::Image::Pix object\n";
-    return ($self->{Pix});
+    ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
+    return ($self->{thePix});
 }
 
 # Accessor/Mutator
@@ -164,7 +164,7 @@ sub closeFile {
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
  
-    return $self->Pix->GetROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
+    return $self->GetPix->GetROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
         || die ref($self)."->GetPixels:  Could not read pixels\n";
 }
 
