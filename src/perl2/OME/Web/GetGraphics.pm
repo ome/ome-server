@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 # Copyright (C) 2002 Open Microscopy Environment
-# Author:  Ilya G. Goldberg <igg@nih.gov>
+# Authors:
+#	Ilya G. Goldberg <igg@nih.gov>
+#	Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -34,156 +36,6 @@ use OME::Graphics::GD::Vectors;
 use OME::Graphics::GD::Centroids;
 use Benchmark;
 
-# initial draft of pod added by Josiah Johnston, siah@nih.gov
-=pod
-
-=head1 GetGraphics.pm
-
-=head1 Package information
-
-L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, 
-L<"Function calls to OME Modules">, L<"Data references to OME Modules">
-L<"ome database tables accessed">
-
-=head2 Description
-
-Generates 2D viewer of an image using html with JavaScript controls
-
-=head2 Path
-
-src/perl2/OME/Web/
-
-=head2 Package name
-
-OME::Web::GetGraphics
-
-=head2 Dependencies
-
-=over 4
-
-=item Inherits from
-
-OME::Web
-
-=item Non-OME Modules
-
-	CGI
-	GD
-	Benchmark
-
-=item OME Modules
-
-=over 4
-
-=item L<OME::Web|OME::Web>
-
-=item L<OME::DBObject|OME::DBObject>
-
-=item L<OME::Image|OME::Image>
-
-=item L<OME::Graphics::GD::Vectors|OME::Graphics::GD::Vectors>
-
-=item L<OME::Graphics::GD::Centroids|OME::Graphics::GD::Centroids>
-
-=item L<OME::Graphics::JavaScript|OME::Graphics::JavaScript>
-
-=item L<OME::Graphics::JavaScript::Layer::Vectors|OME::Graphics::JavaScript::Layer::Vectors>
-
-=item L<OME::Graphics::JavaScript::Layer::Centroids|OME::Graphics::JavaScript::Layer::Centroids>
-
-=item L<OME::Graphics::JavaScript::Layer::OMEimage|OME::Graphics::JavaScript::Layer::OMEimage>
-
-=back
-
-=back
-
-=head2 Function calls to OME Modules
-
-=over 4
-
-=item L<OME::Factory.loadObject()|OME::Factory/"loadObject()">
-
-=item OME::Graphics::GD::*
-
- 
-new()
-Draw()
-getImage()
-imageType()
-
-=item L<OME::Graphics::JavaScript.AddLayer()|OME::Graphics::JavaScript/"AddLayer()">
-
-=item L<OME::Graphics::JavaScript.Form()|OME::Graphics::JavaScript/"Form()">
-
-=item L<OME::Graphics::JavaScript.new()|OME::Graphics::JavaScript/"new()">
-
-=item OME::Graphics::JavaScript::Layer::*
-
-new()
-
-=item L<OME::Image.Dimensions()|OME::Image/"Dimensions()">
-
-=item L<OME::Image.XYZ_info|OME::Image/"XYZ_info">
-
-=item L<OME::Image.wavelengths|OME::Image/"wavelengths">
-
-=item L<OME::Session.DBH()|OME::Session/"DBH()">
-
-=item L<OME::Web.CGI()|OME::Web/"CGI()">
-
-=item L<OME::Web.Factory()|OME::Web/"Factory()">
-
-=item L<OME::Web.new()|OME::Web/"new()">
-
-=item L<OME::Web.Session()|OME::Web/"Session()">
-
-=head2 Data references to OME Modules 
-
-=over 4
-
-=item L<OME::Graphics::JavaScript::Layer.X11Colors|OME::Graphics::JavaScript::Layer>
-
-=item OME::Graphics::GD::*
-
-image
-
-=back
-
-=head2 OME database tables accessed
-
-attributes_image_xyzwt
-
-=head1 Externally referenced functions
-
-=over 4
-
-=item
-
-=head2 new()
-
-=over 4
-
-=item Description
-
-constructor
-
-=item Returns
-
-I<$self>
-	$self is a OME::Web::GetGraphics object
-
-=item Overrides function
-
-L<OME::Web/"new()">
-
-=item Uses functions
-
-L<OME::Web.new()|OME::Web/"new()">
-
-=back
-
-=cut
-
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -193,50 +45,6 @@ sub new {
 
     return $self;
 }
-
-=pod
-
-=head2 createOMEPage()
-
-=over 4
-
-=item Description
-
-uses url_parameters to call appropriate content generation functions
-
-=item Returns
-
-contentType, content
-
-	contentType is a string. either "HTML" or "IMAGE"
-	content is either an HTML file or an image object from GD::image
-	HTML files are either a main window or layer controls
-
-=item Overrides function
-
-L<OME::Web/"createOMEPage()">
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=item CGI->url()
-
-=item L<"DrawLayersControls()">
-
-=item L<"DrawGraphics()">
-
-=item L<"DrawMainWindow()">
-
-=back
-
-=back
-
-=cut
 
 sub createOMEPage {
 	my $self  = shift;
@@ -278,115 +86,14 @@ sub createOMEPage {
 }
 
 
-=pod
-
-=head2 getPageTitle()
-
-=over 4
-
-=item Description
-
-Displays page title
-
-=item Returns
-
-hard-coded string: "Open Microscopy Environment"
-
-=item Overrides function
-
-L<OME::Web/"getPageTitle()">
-
-=item Uses No functions
-
-=back
-
-=cut
-
 sub getPageTitle {
     return "Open Microscopy Environment";
 }
-
-=pod
-
-=head2 contentType()
-
-=over 4
-
-=item Description
-
-returns contentType
-
-=item Returns
-
-I<$self->{contentType}>
-
-=item Overrides function
-
-L<OME::Web/"contentType()">
-
-=item Uses No functions
-
-=back
-
-=back
-
-=cut
 
 sub contentType {
 my $self = shift;
 	return $self->{contentType};
 }
-
-=pod
-
-=head1 Internally referenced functions
-
-=over 4
-
-=item
-
-=head2 DrawMainWindow()
-
-=over 4
-
-=item Description
-
-Generates an HTML file housing the most commonly used controls
-
-=item Returns
-
-an HTML file
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item getJSgraphics()
-
-=item CGI->start_html()
-
-=item CGI->end_html()
-
-=item L<OME::Graphics::JavaScript/"JSobjectDefs()">
-
-=item L<OME::Graphics::JavaScript/"JSinstance()">
-
-=back
-
-=item Accesses external data
-
-L<OME::Graphics::JavaScript/"{JSref}">
-
-=item Generated Javascript will reference
-
-OME::Web::GetGraphics via serve.pl, eventually calling 
-L<"DrawLayersControls()"> and L<"DrawGraphics()">
-
-=back
-
-=cut
 
 sub DrawMainWindow {
 my $self = shift;
@@ -422,33 +129,6 @@ ENDJS
 	$HTML .= $cgi->end_html;
 	return ($HTML);
 }
-=pod
-
-=head2 DrawMainWindowSVG()
-
-=over 4
-
-=item Description
-
-Generates an HTML file housing the svg viewer
-
-=item Returns
-
-an HTML file
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=back
-
-=back
-
-=cut
 
 sub DrawMainWindowSVGimage {
 my $self      = shift;
@@ -481,33 +161,6 @@ ENDHTML
 	return ($HTML);
 }
 
-=pod
-
-=head2 DrawMainWindowSVGdataset()
-
-=over 4
-
-=item Description
-
-Generates an HTML file housing dataset controls & the svg viewer
-
-=item Returns
-
-an HTML file
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=back
-
-=back
-
-=cut
 
 sub DrawMainWindowSVGdataset {
 my $self = shift;
@@ -530,33 +183,7 @@ ENDHTML
 	return ($HTML);
 }
 
-=pod
 
-=head2 DrawDatasetControl()
-
-=over 4
-
-=item Description
-
-Generates an HTML file housing dataset controls
-
-=item Returns
-
-an HTML file
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=back
-
-=back
-
-=cut
 
 sub DrawDatasetControl {
 	my $self = shift;
@@ -673,31 +300,7 @@ ENDHTML
 
 }
 
-=pod
 
-=head2 BuildSVGviewer()
-
-=over 4
-
-=item Description
-
-Generates SVG viewer
-
-=item Returns
-
-an SVG file
-
-=item Uses functions
-
-=over 4
-
-=item SVGgetDataJS()
-
-=back
-
-=back
-
-=cut
 
 # Build the SVG viewer.
 sub BuildSVGviewer {
@@ -1079,18 +682,18 @@ $SVG .= <<ENDSVG;
 
 			// Set up display. These values come from DB eventually.
 			var WBS = image.getWBS();
-			setTimeout( "redPopupList.setSelectionByValue("+ 
+			setTimeout( "redPopupList.setSelectionByValue('"+ 
 				redPopupList.getItemList()[ WBS[0] ]
-				+")", 0 );
-			setTimeout( "greenPopupList.setSelectionByValue("+ 
+				+"')", 0 );
+			setTimeout( "greenPopupList.setSelectionByValue('"+ 
 				greenPopupList.getItemList()[ WBS[3] ]
-				+")", 0 );
-			setTimeout( "bluePopupList.setSelectionByValue("+ 
+				+"')", 0 );
+			setTimeout( "bluePopupList.setSelectionByValue('"+ 
 				bluePopupList.getItemList()[ WBS[6] ]
-				+")", 0 );
-			setTimeout( "bwPopupList.setSelectionByValue("+ 
+				+"')", 0 );
+			setTimeout( "bwPopupList.setSelectionByValue('"+ 
 				bwPopupList.getItemList()[ WBS[9] ]
-				+")", 0 );
+				+"')", 0 );
 			var RGBon = image.getRGBon(); 
 			setTimeout( "resizeToolBox(50 * ("+toolBoxScale+" - 1 ) )", 0);
 			setTimeout( "multiToolBox.hide()", 0);
@@ -1102,6 +705,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "loadButton.setState(false)", 0 );
 			zSlider.setValue(theZ/Z*100,true);
 			tSlider.setValue(theT/T*100,true);
+
 		}
 		
 ENDSVG
@@ -1368,43 +972,6 @@ ENDSVG
 	return $SVG;
 }
 
-=pod
-
-=head2 SVGgetDataJS()
-
-=over 4
-
-=item Description
-
-Gathers data for BuildSVGviewer() & formats it for use in JavaScript.
-
-=item Returns
-
-A hash of data, JavaScript formatted.
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=item L<OME::Web/"Factory()">
-
-=item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
-
-=item L<OME::Image/"Dimensions()">
-
-=item L<OME::Image/"wavelengths">
-
-=item L<OME::Image/"XYZ_info">
-
-=back
-
-=back
-
-=cut
 
 sub SVGgetDataJS {
 	my $self    = shift;
@@ -1440,67 +1007,78 @@ sub SVGgetDataJS {
 	my @JSwavelengths;
 	foreach my $cc (@channelComponents) {
 		my $ChannelNum = $cc->Index();
-		my $Label;
+		my $Label = undef;
 		$Label = $cc->LogicalChannel()->Name()  || 
 		         $cc->LogicalChannel()->Fluor() || 
 		         $cc->LogicalChannel()->EmissionWavelength();
 		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
 		$Label .= $cc->Index()
-			if( scalar( @overlap ) > 1 || $Label eq undef );
+			if( scalar( @overlap ) > 1 || not defined $Label );
 		push @JSwavelengths, "{WaveNum:$ChannelNum,Label:\"$Label\"}";
 	}
-
-
-=pod
-	my @mins   = $factory->findAttributes( "StackMinimum", $image );
-	my @maxes  = $factory->findAttributes( "StackMaximum", $image );
-	my @means  = $factory->findAttributes( "StackMean", $image );
-	my @gmeans = $factory->findAttributes( "StackGeometricMean", $image );
-	my @sig    = $factory->findAttributes( "StackSigma", $image );
 	
-	my $stats;
+	###########################################################################
+	#
+	#	Get Stack Statistics
+	#
+	my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
+		or die "Stack statistics must be installed for this viewer to work!\n";
+	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput", 
+		program_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Program 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::Analysis::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_analysis_id => $pixels->analysis()->id() )
+		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->analysis()->id();
+
+	# 2do: update this method call when method accepts search parameters
+	my @mins   = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMinimum", $image ) );
+	my @maxes  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMaximum", $image ) );
+	my @means  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackMean", $image ) );
+	my @gmeans = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackGeometricMean", $image ) );
+	my @sigma  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackSigma", $image ) );
+	
+	my $sh; # stats hash
 	foreach( @mins ) {
-		$stats->{ $_->theC() }->{ $_->theT() }->{min} = $_->Minimum();
-	}
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
 	foreach( @maxes ) {
-		$stats->{ $_->theC() }->{ $_->theT() }->{max} = $_->Maximum();
-	}
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
 	foreach( @means ) {
-		$stats->{ $_->theC() }->{ $_->theT() }->{mean} = $_->Mean();
-	}
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
 	foreach( @gmeans ) {
-		$stats->{ $_->theC() }->{ $_->theT() }->{geomean} = $_->GeometricMean();
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
+	foreach( @sigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	my @ar1; # array 1
+	for( my $i = 0;$i<scalar(@$sh);$i++) {
+		my @ar2; # array 2
+		for( my $j = 0; $j<scalar(@{$sh->[$i]}); $j++) {
+			my $str = '{ '.join( ',', map( $_.': '.$sh->[$i][$j]->{$_}, keys %{ $sh->[$i][$j] } ) ).' }';
+			push @ar2, $str;
+		}
+		push @ar1, '['.join( ',', @ar2 ).']';
 	}
-	foreach( @sig ) {
-		$stats->{ $_->theC() }->{ $_->theT() }->{sigma} = $_->Sigma();
-	}
-=cut
-	
-	# get stats from image & make them JavaScript readable
-	my @s = $image->XYZ_info;
-	die ref ($self) . "->SVGgetDataJS: No stack statistics found for image! (id=".$image->id().")"
-		if( scalar(@s) == 0 );
-	my ($stats, @JS_Stats_Waves, $JSstats);
-	foreach (@s) {
-		$stats->[$_->theW()][$_->theT()] = 
-			"{ min:".$_->min().", max:".$_->max().", mean:".$_->mean().", geomean:".$_->geomean().",sigma:".$_->sigma()."}";
-	}
-	for (my $i=0;$i<scalar (@$stats);$i++) {
-		push (@JS_Stats_Waves,'['.join (',',@{$stats->[$i]}).']');
-	}
-	$JSstats = '['.join (',',@JS_Stats_Waves).']';
-#print STDERR "jsstats = '$JSstats'\n\n\n";
-#print STDERR "wavelen = '".'['.join(',',@JSwavelengths).']'."'\n\n\n";
-#print STDERR "dims = '".'['.join (',', @$dims).']'."'\n\n\n";
-	
+	my $JSstats = '['.join( ',', @ar1 ).']';
+	#
+	#	END 'Get Stack Statistics'
+	#
+	###########################################################################
+
 	# get display settings
 	my $displaySettings   = $factory->findObject( 'OME::DisplaySettings', image_id => $image->id() );
 	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
 	
+	# compile info
 	$JSinfo->{ ImageID }            = $ImageID;
 	$JSinfo->{ Stats }              = $JSstats;
 	$JSinfo->{ Wavelengths }        = '['.join(',',@JSwavelengths).']';
-	$JSinfo->{ pDims }              = $dims;
 	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
 	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
 	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
@@ -1511,6 +1089,8 @@ sub SVGgetDataJS {
 	$JSinfo->{ WBS }                = 'null';
 	$JSinfo->{ RGBon }              = 'null';
 	$JSinfo->{ toolBoxScale }       = 1;
+
+	#	Set Defaults
 	if( defined $displaySettings ) {
 		$JSinfo->{ theZ }      = $displaySettings->theZ()
 			if( not defined $cgi->url_param('theZ') );
@@ -1528,56 +1108,6 @@ sub SVGgetDataJS {
 }
 
 
-
-=pod
-
-=head2 DrawGraphics()
-
-=over 4
-
-=item Description
-
-Generates an overlay image for the layers. It uses classes inherited from OME::Graphics::GD
-
-=item Returns
-
-An image object of type GD::Image
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item CGI->url_param()
-
-=item OME::Graphics::GD::*->new()
-
-this dynamically instantiates a new object of unknown type.
-Type is specified in parameters and is not subject to prior checks.
-It is supposed to be a subclass of L<OME::Graphics::GD>.
-
-=item OME::Graphics::GD::*->Draw()
-
-=item OME::Graphics::GD::*->getImage()
-
-=item OME::Graphics::GD::*->imageType()
-
-=item L<OME::Graphics::JavaScript::Layer/"X11Colors()">
-
-=item GD::Image->colorResolve()
-
-=item GD::Image->string()
-
-=back
-
-=item Accesses external data
-
-OME::Graphics::GD::* -> image
-
-=back
-
-=cut
 
 sub DrawGraphics {
 my $self = shift;
@@ -1621,35 +1151,7 @@ my @string;
 # getImage returns the actual image, i.e. {image}->png, etc.
 # Change type to a full module spec.
 
-=pod
 
-=head2 DrawLayersControls()
-
-=over 4
-
-=item Description
-
-Generates an html file housing the rest of the controls
-
-=item Returns
-
-An html file
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">
-
-=item L<"getJSgraphics()">
-
-=item L<OME::Graphics::JavaScript/"Form()">
-
-=back
-
-=back
-
-=cut
 
 sub DrawLayersControls {
 my $self = shift;
@@ -1660,66 +1162,7 @@ my $JSgraphics = $self->getJSgraphics() ;
 	return $cgi->start_html(-title=>'Layers Popup').$JSgraphics->Form('opener').$cgi->end_html;
 }
 
-=pod
 
-=head2 getJSgraphics()
-
-=over 4
-
-=item Description
-
-Generates a OME::Graphics::JavaScript object for internal use
-
-=item Returns
-
-an object of type L<OME::Graphics::JavaScript>
-
-=item Uses functions
-
-=over 4
-
-=item L<OME::Web/"CGI()">	(via self)
-
-=item CGI->url_param()
-
-=item L<OME::Web/"Factory()">
-
-=item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
-
-=item L<OME::Image/"Dimensions()">
-
-=item L<OME::Graphics::JavaScript/"new()">
-
-=item L<OME::Graphics::JavaScript/"AddLayer()">
-
-=item OME::Graphics::JavaScript::Layer::*->new()
-
-Object type declared dynamically at runtime.
-
-=back
-
-=item Accesses ome database tables
-
-attributes_image_xyzwt
-
-=item Generated Javascript will reference
-
-OME::Web::GetGraphics via serve.pl, eventually calling
-	L<"DrawGraphics()">
-
-../cgi-bin/OME_JPEG
-
-=back
-
-=back
-
-=cut
-
-# This gets called when the Image window gets made in order to make the JS objects
-# This also gets called when the layer control popup opens because the same Perl objects
-# make the JS objects and make the form controls for them.
-# The popup call has a DrawLayersControls URL parameter.
-# FIXME?  Maybe we should have the JS objects make their own form elements on the client without bothering the server?
 sub getJSgraphics {
     my $self = shift;
     my $cgi   = $self->CGI();
@@ -1764,14 +1207,6 @@ sub getJSgraphics {
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
 	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
             $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel());
-# commented out by josiah 6/9/03. it uses depricated methods. the html viewer doesn't work at the moment & i didn't want to delete this before i debugged it
-#    my $dimensions = $image->Dimensions();
-#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->{size_x},$dimensions->{size_y},$dimensions->{size_z},
-#        $dimensions->{num_waves},$dimensions->{num_times},
-#        $dimensions->{bits_per_pixel});
-#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
-#        $dimensions->num_waves(),$dimensions->num_times(),
-#        $dimensions->bits_per_pixel());
 
 	$bpp /= 8;
 
@@ -1799,26 +1234,3 @@ sub getJSgraphics {
 
 }
 
-=pod
-
-=head1 Questions
-
-=over 4
-
-=item Q:
-
-Why isn't there a "getPageBody" function to override the one in OME::Web? Comments
-in OME::Web indicate all subclasses should override this function. While
-createOMEpage seems to fullfill this functional role, why wasn't this class
-constructed to follow the described standard?
-
-=item A:
-
-Because the described standard results in a page fitting a generic style. 
-GetGraphics is supposed to appear in a minimal popup window. OME::Web uses
-createOMEpage to make the generic page. Overriding createOMEpage prevents
-calls to getPageBody and returns a full html file.
-
-=back
-
-=cut
