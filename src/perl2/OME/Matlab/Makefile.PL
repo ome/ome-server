@@ -29,10 +29,11 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Written by:    Tom Macura <tmacura@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
+use Config;
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -49,28 +50,36 @@ if (scalar(@ARGV) eq 0) {
 	die "Incorrect usage \n";
 }
 
-my $os = "mac"; # or "glx86";
 my $suffix;
-if ($os eq "mac") {
+if ($Config{'osname'} eq "darwin") {
+	$os     = "mac";
 	$suffix = "dylib";
-} else {
+} elsif ($Config{'osname'} eq "linux") {
+	$os     = "glx86";
 	$suffix = "so";
 }
 
-my @libFiles = ("eng", "mat", "mx", "ut");
+my @libFiles = ("eng", "mat", "mx", "ut", "dl");
 my @matlabInc  = ("$matlab_path/extern/include"); 
-my @matlabLib  = ("$matlab_path/bin/$os", "$matlab_path/sys/$os");
+my @matlabLib  = ("$matlab_path/bin/$os", "$matlab_path/sys/os/$os");
 
-# check whether the required matlab library files could be found
-foreach (@libFiles){	
-	if (not -e "$matlab_path/bin/$os/lib$_.$suffix"){
-		print STDERR "WARNING: Required MATLAB library lib$_.$suffix was not found in $matlab_path/bin/$os \n";
-	}
-}
-		
 my $matlabIncStr = join (" -I", "", @matlabInc);
 my $matlabLibStr = join (" -L", "", @matlabLib);
 my $matlabLibFlags = join (" -l", "", @libFiles);
+
+# verify that all the required matlab library files could be found in one of the library
+# directories
+foreach my $lib (@libFiles) {
+	my $flag = 0;
+	foreach my $path (@matlabLib) {
+		if (-e "$path/lib$lib.$suffix") {
+			$flag =1;
+		}	
+	}
+	if ($flag eq 0) {
+		print STDERR "WARNING: Required MATLAB library lib$lib.$suffix was not found in $matlabLibStr\n";
+	}
+}
 
 print STDERR "Using Matlab located in $matlab_path\n";
 print STDERR "  Include: $matlabIncStr\n";
