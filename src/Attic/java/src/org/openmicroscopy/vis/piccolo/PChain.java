@@ -44,12 +44,12 @@ import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.ome.CLayoutNode;
 import org.openmicroscopy.Chain.Link;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import java.util.HashMap;
-import java.util.Collection;
 import java.util.List;
 import java.util.Iterator;
 
@@ -59,14 +59,20 @@ public class PChain {
 	private CChain chain;
 	private HashMap nodes = new HashMap(); 
 	private float chainHeight = 0;
-	
+	private float layerWidth =0;
 	
 
 	private static float HGAP=10f;
+	private static float VGAP=20f;
 	
 	private float x=HGAP;
+	private float y = 0;
+	private float top=0;
 	private float xInit;
 	
+	
+	private static float DUMMY_HEIGHT = 20f;
+	private static float DUMMY_WIDTH = 20f;
 	
 	
 	public PChain(Connection connection,CChain chain, PLayer layer,
@@ -75,43 +81,87 @@ public class PChain {
 		
 		this.chain = chain;
 		this.x = x;
+		this.y =y;
 		xInit = x;
 		
-		//System.err.println("building chain for "+chain.getName());
-		Collection chainNodes = chain.getNodes();
+		top =y;
+		System.err.println("building chain for "+chain.getName());
+		/*Collection chainNodes = chain.getNodes();
 		Iterator iter = chainNodes.iterator();	
 		while (iter.hasNext()) {
 			//NodeInfo ni = (NodeInfo) iter.next();
 			//drawNode(connection,ni.getNode(),layer,y);
 			CNode node = (CNode) iter.next();
 			drawNode(connection,node,layer,y);		
+		} */
+		
+		drawNodes(connection,layer);
+		drawLinks(linkLayer);
+		
+	}
+	
+	public void drawNodes(Connection connection,PLayer layer) {
+		int layers = chain.getLayerCount();
+		
+		System.err.println("drawing layers.."+layers);
+		for (int i=layers-1; i >=0; i--) {
+			System.err.println("drawing layer "+i);
+			drawLayer(connection,layer,i);
 		}
-
+	}
+	
+	public void drawLayer(Connection connection,PLayer layer,int layerNumber) {
+		
+		layerWidth = 0;
+		int layerSize = chain.getLayerSize(layerNumber);
+		y = top;
+		
+		for (int i =0; i < layerSize; i++) {
+			System.err.println("..., node "+i);
+			CNode node = chain.getLayerNode(layerNumber,i);
+			//somehow draw it, and advance x as need be.
+			drawNode(connection,node,layer);
+		}
+		x+=layerWidth+HGAP;
+		float height = y-top;
+		if (height > chainHeight) 
+			chainHeight = height;
+		
+	}
+	
+	public void drawLinks(PLinkLayer linkLayer) {
 		List links = chain.getLinks();
-		iter = links.iterator();
+		Iterator iter = links.iterator();
 		while (iter.hasNext()) {
 			Link link = (Link) iter.next();
 			drawLink(link,linkLayer);
 		}
-		// a parallel structure that will eventually replace the simple loop 
-		//above
-		//addDummyNodes();
-		//reduceCrossings();
-		//placeNodesVertically();
 	}
 	
-	private void drawNode(Connection connection,CNode node,PLayer layer,float y) {
+	
+	private void drawNode(Connection connection,CNode node,PLayer layer) {
+		
+		if (node instanceof CLayoutNode)  {
+			drawLayoutNode();
+		}
+		System.err.println("drawing node "+node);
 		CModule mod = (CModule) node.getModule();
 
 		PModule mNode = new PModule(connection,mod,x,y);
 		mod.addModuleWidget(mNode);
 		float w = (float) mNode.getBounds().getWidth();
-		x += w+HGAP;
+		if (w > layerWidth)
+			layerWidth = w;
 		layer.addChild(mNode);
 		float nodeHeight = (float) mNode.getBounds().getHeight();
-		if (nodeHeight > chainHeight)
-			chainHeight = nodeHeight;
+		y+= nodeHeight+VGAP;
 		nodes.put(node,mNode);
+	}
+	
+	private void drawLayoutNode() {
+		if (layerWidth < DUMMY_WIDTH)
+			layerWidth = DUMMY_WIDTH;
+		y+=DUMMY_HEIGHT+VGAP;
 	}
 	
 	private void drawLink(Link link,PLinkLayer linkLayer) {
