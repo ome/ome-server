@@ -29,18 +29,7 @@ Copyright (C) 2003 Open Microscopy Environment
 
 var svgns = "http://www.w3.org/2000/svg";
 
-/*****
-
-	class variables
-	
-*****/
-Statistics.VERSION = .2;
-Statistics.toolboxApperance = {
-	x: 260,
-	y: 150,
-	width: 165,
-	height: 55
-};
+/*global toolBox, skinLibrary, svgDocument, popupList */
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -59,8 +48,22 @@ Statistics.toolboxApperance = {
 *****/
 function Statistics(stats, waveLabels) {
 	if(!stats ) { return null; }
-	this.init(stats, waveLabels)
+	this.init(stats, waveLabels);
 }
+
+/*****
+
+	class variables
+	
+*****/
+Statistics.VERSION = 0.2;
+Statistics.toolboxApperance = {
+	x: 260,
+	y: 150,
+	width: 165,
+	height: 55
+};
+
 
 Statistics.prototype.buildToolBox = function( controlLayer ) {
 	this.buildDisplay();
@@ -76,7 +79,7 @@ Statistics.prototype.buildToolBox = function( controlLayer ) {
 	this.displayPane = this.toolBox.getGUIbox();
 	this.displayPane.appendChild( this.displayContent );
 	
-}
+};
 
 
 /*****
@@ -88,7 +91,7 @@ Statistics.prototype.buildToolBox = function( controlLayer ) {
 		
 *****/
 Statistics.prototype.buildDisplay = function() {
-	if( !this.initialized) return null;
+	if( !this.initialized) { return null; }
 
 	this.displayContent = svgDocument.createElementNS(svgns, "g");
 
@@ -117,10 +120,13 @@ Statistics.prototype.buildDisplay = function() {
 	));
 	this.fields['theT'] = this.displayContent.lastChild;
 
-	for( c in this.stats )
-		for( t in this.stats[c] ) break;
+	for( var c in this.stats ) {
+		for( var t in this.stats[c] ) {
+			break;
+		}
+	}
 	var lineCount = 3;
-	for( statType in this.stats[t][c] ) {
+	for( var statType in this.stats[c][t] ) {
 		var newLabel = svgDocument.createElementNS( svgns, "text" );
 		newLabel.setAttribute( "dominant-baseline", 'hanging' );
 		newLabel.setAttribute( "y", lineCount + 'em' );
@@ -145,7 +151,7 @@ Statistics.prototype.buildDisplay = function() {
 	this.displayContent.setAttribute( 'transform', translate );
 
 	return this.displayContent;
-}
+};
 
 /*****
 
@@ -158,34 +164,13 @@ Statistics.prototype.buildDisplay = function() {
 *****/
 
 Statistics.prototype.updateStats = function(t) {
-	// has buildSVG been called?
-	if(this.displayContent == null) return null;
-	// verify params
-	if(t == null) return;
-	
 	// update fields
 	var c = this.logicalChannelPopupList.getSelection();
 	this.fields['theT'].firstChild.data = t;
-	for( statType in this.stats[c][t] ) {
+	for( var statType in this.stats[c][t] ) {
 		this.fields[statType].firstChild.data = this.stats[c][t][statType];
 	}
-}
-
-/*****
-	
-	changeWavenumber
-		theW = wavenumber
-	
-	purpose:
-		change selected wavelength
-	
-	untested
-	
-*****/
-Statistics.prototype.changeWavenumber = function(theW) {
-	v = this.logicalChannelPopupList.getItemList();
-	this.logicalChannelPopupList.setSelectionByValue( v[theW], true);
-}
+};
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -207,4 +192,4 @@ Statistics.prototype.init = function(stats, waveLabels) {
 	this.initialized = true;
 	this.stats = stats;
 	this.waveLabels = waveLabels;
-}
+};
