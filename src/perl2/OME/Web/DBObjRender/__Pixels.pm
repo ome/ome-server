@@ -107,8 +107,8 @@ sub _getRef {
 			my $source_module; $source_module = $obj->module_execution()->module()->name()
 				if $obj->module_execution() and $obj->module_execution()->module();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute' class='ome_detail'>Pixels info</a>".
-			          "<a href='javascript: openPopUpPixels($id); return false' title='View this image'><img src='$thumbURL'></a><br>";
+			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute' class='ome_detail'>Pixels info</a><br>".
+			          "<a href='javascript: openPopUpPixels($id); return false' title='View this image'><img src='$thumbURL'></a>";
 			return $ref;
 		}
 	}
