@@ -22,20 +22,20 @@ package OME::AnalysisPath;
 
 =head1 NAME
 
-OME::AnalysisPath - a data path within an module_execution chain
+OME::AnalysisPath - a data path within an analysis chain
 
 OME::AnalysisPath::Map - the individual entries in a data path
 
 =head1 DESCRIPTION
 
 The C<AnalysisPath> class represents a single, linear data path
-through an module_execution chain.  Each chain has one I<data path> for each
+through an analysis chain.  Each chain has one I<data path> for each
 linear path from a root node to a leaf node.  (A root node contains no
-inputs; a leaf node contains no outputs.  Since module_execution chains are
+inputs; a leaf node contains no outputs.  Since analysis chains are
 acyclic, there must be at least one of each in any chain.)
 
 The C<AnalysisPath::Map> class represents each element in a data path.
-It corresponds to one of the nodes in the module_execution chain.
+It corresponds to one of the nodes in the analysis chain.
 
 =cut
 
@@ -74,7 +74,7 @@ number of items returned by C<path_nodes>.
 	my $analysis_chain = $execution->analysis_chain();
 	$execution->analysis_chain($analysis_chain);
 
-Returns or sets the module_execution chain that this data path belongs to.
+Returns or sets the analysis chain that this data path belongs to.
 
 =head2 path_nodes
 
@@ -123,7 +123,7 @@ Returns or sets the data path that this entry belongs to.
 	my $analysis_chain_node = $execution->analysis_chain_node();
 	$execution->analysis_chain_node($analysis_chain_node);
 
-Returns ot sets the module_execution chain node that this entry corresponds
+Returns ot sets the analysis chain node that this entry corresponds
 to.
 
 =head2 path_order
