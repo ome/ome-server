@@ -395,9 +395,9 @@ sub __createNewAttribute {
     my %granularityColumns =
       (
        'G' => undef,
-       'D' => 'dataset_id',
-       'I' => 'image_id',
-       'F' => 'feature_id'
+       'D' => 'target',
+       'I' => 'target',
+       'F' => 'target'
       );
 
     my %granularityClasses = 
@@ -419,8 +419,8 @@ sub __createNewAttribute {
 
     my %criteria;
 
-    $criteria{module_execution_id} =
-      $module_execution->id()
+    $criteria{module_execution} =
+      $module_execution
       if defined $module_execution;
     $criteria{$target_column} = $target_id
       if defined $target_column;
@@ -429,10 +429,12 @@ sub __createNewAttribute {
     foreach my $element (@elements) {
         my $data_column_id = $element->data_column_id();
 
-        my @overlaps = $factory->
-          findObjects("OME::SemanticType::Element",
-                      data_column_id => $data_column_id);
-        my $overlap = scalar(@overlaps) > 1;
+        my $overlap = $factory->
+          objectExists("OME::SemanticType::Element",
+                       {
+                        data_column_id => $data_column_id,
+                        semantic_type  => ['<>',$semantic_type],
+                       });
 
         $criteria{$element->name()} =
           $overlap? $data_hash->{$element->name()}: undef;
@@ -522,9 +524,9 @@ sub newAttributesInOneRow {
     my %granularityColumns =
       (
        'G' => undef,
-       'D' => 'dataset_id',
-       'I' => 'image_id',
-       'F' => 'feature_id'
+       'D' => 'target',
+       'I' => 'target',
+       'F' => 'target'
       );
 
     my ($semantic_type, $data_hash);
