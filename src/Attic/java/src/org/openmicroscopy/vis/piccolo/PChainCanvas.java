@@ -43,14 +43,21 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+import org.openmicroscopy.Session;
+import org.openmicroscopy.Chain;
+import org.openmicroscopy.Chain.Node;
+import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.Module;
+import org.openmicroscopy.Module.FormalInput;
+import org.openmicroscopy.Module.FormalOutput;
 import org.openmicroscopy.vis.dnd.ModuleFlavor;
 import org.openmicroscopy.vis.dnd.ChainFlavor;
 import java.awt.dnd.DropTargetListener;
@@ -87,6 +94,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	private DropTarget dropTarget = null;
 	
 	private ChainFrame frame;
+	
+	private PChainLibraryCanvas libraryCanvas;
 	
 	public PChainCanvas(Connection c) {
 		super();
@@ -223,9 +232,6 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		}
 	}
 	
-	public void save() {
-		System.err.println("saving PChainCanvas...");
-	}
 	
 	private void setSaveEnabled(boolean v) {
 		if (frame != null)
@@ -246,5 +252,76 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	}	
 	
 	public void save(String name,String desc) {	
+		Session session = connection.getSession();
+		ChainManager manager = session.getChainManager();
+		Chain chain  = manager.createChain(name,desc);
+		ChainInfo info = new ChainInfo(chain);
+		
+		//populate chains
+		addNodes(manager,chain,info);
+		
+		// links
+		addLinks(manager,chain);
+		// commit chain
+		
+		session.commitTransaction();
+		
+		// create a chain info and add to chains
+		connection.addChain(info);
+		
+		// add this to the library
+		libraryCanvas.drawChain(info);
+		libraryCanvas.scaleToSize();
 	}
-}
+	
+	private void addNodes(ChainManager manager,Chain chain,ChainInfo info) {
+		PNode node;
+		PModule mod;
+		Node chainNode;
+				
+		// iterate over layer, adding a node for each PModule
+		Iterator iter = layer.getChildrenIterator();
+		while (iter.hasNext()) {
+			node = (PNode) iter.next();
+			if (node instanceof PModule) {
+				mod = (PModule) node;
+				chainNode =  manager.addNode(chain,mod.getModule());
+			 	mod.setNode(chainNode);
+			 	info.addNode(chainNode);
+			}
+		}
+	}
+	
+	private void addLinks(ChainManager manager,Chain chain) {
+		PNode node;
+		PParamLink link;
+		
+		System.err.println("adding links");
+		Iterator iter = linkLayer.linkIterator();
+		while (iter.hasNext()) {
+			node = (PNode) iter.next();
+			if (node instanceof PParamLink) {
+				link = (PParamLink) node; // add it somehow.
+				// get from output
+				PFormalOutput output = link.getOutput();
+				FormalOutput fromOutput = (FormalOutput) output.getParameter();
+				
+				// to input
+				PFormalInput input = link.getInput();
+				FormalInput toInput = (FormalInput) input.getParameter();
+				
+				// from node
+				Node fromNode = output.getPModule().getNode();
+				//to node
+				Node toNode = input.getPModule().getNode();
+				// add it.
+				System.err.println("adding link...");
+				manager.addLink(chain,fromNode,fromOutput,toNode,toInput);
+			}
+		}
+	}
+	
+	public void setLibraryCanvas(PChainLibraryCanvas libraryCanvas) {
+		this.libraryCanvas = libraryCanvas;
+	}
+ }
