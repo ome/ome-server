@@ -173,6 +173,17 @@ public class AttributeDTO
 
     /**
      * Returns the value of one of the attribute's elements as an
+     * <code>short</code>.
+     * @param element the name of the element to retrieve
+     * @return the <code>short</code> value of <code>element</code>
+     * @throws ClassCastException if the element does not contain an
+     * <code>short</code> value
+     */
+    public Short getShortElement(String element)
+    { return super.getShortElement(element); }
+
+    /**
+     * Returns the value of one of the attribute's elements as an
      * <code>int</code>.
      * @param element the name of the element to retrieve
      * @return the <code>int</code> value of <code>element</code>
@@ -233,6 +244,15 @@ public class AttributeDTO
      * @param value the element's new value
      */
     public void setBooleanElement(String element, Boolean value)
+    { setElement(element,value); }
+
+    /**
+     * Sets the value of one of the attribute's elements to an
+     * <code>short</code> value.
+     * @param element the name of the element to set
+     * @param value the element's new value
+     */
+    public void setShortElement(String element, Short value)
     { setElement(element,value); }
 
     /**

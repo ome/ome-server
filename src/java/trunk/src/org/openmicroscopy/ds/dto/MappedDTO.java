@@ -331,6 +331,42 @@ public abstract class MappedDTO
     }
 
     /**
+     * Returns an <code>short</code> value from the backing map.  It
+     * is an error if the specified key does not exist (i.e., it was
+     * not populated by the XML-RPC call which created this DTO
+     * object).  If the value in the backing map is an {@link Short},
+     * the <code>short</code> is returned directly.  If the value is a
+     * {@link Long}, the <code>long</code> value is cast into an
+     * <code>short</code> and returned.  If the value is a {@link
+     * Float} or {@link Double}, is it rounded via the {@link
+     * Math#round} method, and cast into an <code>short</code>.  If
+     * the value is a {@link String} which can be parsed into an
+     * <code>short</code>, the parsed value is returned.  In all other
+     * cases, an error occurs.
+     *
+     * @param key the element of the backing map to retrieve
+     * @return an <code>short</code> value representing the specified
+     * element in the backing map
+     * @throws DataException if the specified key does not exist in
+     * the backing map or if the value cannot be turned into an
+     * <code>short</code>
+     */
+    protected Short getShortElement(String key)
+    {
+        if (!elements.containsKey(key))
+            throw new DataException("The "+key+" field was not loaded");
+
+        Object o = elements.get(key);
+
+        try
+        {
+            return PrimitiveConverters.convertToShort(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
+    }
+
+    /**
      * Returns an <code>int</code> value from the backing map.  It is
      * an error if the specified key does not exist (i.e., it was not
      * populated by the XML-RPC call which created this DTO object).
@@ -358,21 +394,12 @@ public abstract class MappedDTO
 
         Object o = elements.get(key);
 
-        if (o == null)
-            return null;
-        else if (o instanceof Integer)
-            return (Integer) o;
-        else if (o instanceof Number)
-            return new Integer(((Number) o).intValue());
-        else if (o instanceof String) {
-            try
-            {
-                return Integer.valueOf((String) o);
-            } catch (NumberFormatException e) {
-                throw new DataException("Expected an int, got an ugly String");
-            }
-        } else
-            throw new DataException("Expected an int, got a "+o.getClass());
+        try
+        {
+            return PrimitiveConverters.convertToInteger(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
     }
 
     /**
@@ -401,21 +428,12 @@ public abstract class MappedDTO
 
         Object o = elements.get(key);
 
-        if (o == null)
-            return null;
-        else if (o instanceof Long)
-            return (Long) o;
-        else if (o instanceof Number)
-            return new Long(((Number) o).longValue());
-        else if (o instanceof String) {
-            try
-            {
-                return Long.valueOf((String) o);
-            } catch (NumberFormatException e) {
-                throw new DataException("Expected a long, got an ugly String");
-            }
-        } else
-            throw new DataException("Expected a long, got a "+o.getClass());
+        try
+        {
+            return PrimitiveConverters.convertToLong(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
     }
 
     /**
@@ -443,21 +461,12 @@ public abstract class MappedDTO
 
         Object o = elements.get(key);
 
-        if (o == null)
-            return null;
-        else if (o instanceof Float)
-            return (Float) o;
-        else if (o instanceof Number)
-            return new Float(((Number) o).floatValue());
-        else if (o instanceof String) {
-            try
-            {
-                return Float.valueOf((String) o);
-            } catch (NumberFormatException e) {
-                throw new DataException("Expected a float, got an ugly String");
-            }
-        } else
-            throw new DataException("Expected a float, got a "+o.getClass());
+        try
+        {
+            return PrimitiveConverters.convertToFloat(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
     }
 
     /**
@@ -485,21 +494,12 @@ public abstract class MappedDTO
 
         Object o = elements.get(key);
 
-        if (o == null)
-            return null;
-        else if (o instanceof Double)
-            return (Double) o;
-        else if (o instanceof Number)
-            return new Double(((Number) o).doubleValue());
-        else if (o instanceof String) {
-            try
-            {
-                return Double.valueOf((String) o);
-            } catch (NumberFormatException e) {
-                throw new DataException("Expected a double, got an ugly String");
-            }
-        } else
-            throw new DataException("Expected a double, got a "+o.getClass());
+        try
+        {
+            return PrimitiveConverters.convertToDouble(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
     }
 
     /**
@@ -532,22 +532,12 @@ public abstract class MappedDTO
 
         Object o = elements.get(key);
 
-        if (o == null)
-            return null;
-        else if (o instanceof Boolean)
-            return (Boolean) o;
-        else if (o instanceof Number)
-            return new Boolean(((Number) o).intValue() != 0);
-        else if (o instanceof String) {
-            String s = (String) o;
-            return new Boolean(
-                s.equalsIgnoreCase("true") ||
-                s.equalsIgnoreCase("t") ||
-                s.equalsIgnoreCase("yes") ||
-                s.equalsIgnoreCase("y") ||
-                s.equalsIgnoreCase("1"));
-        } else
-            throw new DataException("Expected a boolean, got a "+o.getClass());
+        try
+        {
+            return PrimitiveConverters.convertToBoolean(o);
+        } catch (NumberFormatException e) {
+            throw new DataException(e.getMessage());
+        }
     }
 
     /**
