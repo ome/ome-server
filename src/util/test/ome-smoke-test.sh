@@ -47,6 +47,7 @@ TEST_DB='ome-test'
 TEMP_DIR=`perl -MStorable -e 'print Storable::retrieve("/etc/ome-install.store")->{temp_dir}'`
 LOG_FILE=$TEMP_DIR/smoke-test.log
 DB_BACKUP=$TEMP_DIR/smoke-test-db-backup.tar.bz2
+HOST=`hostname`
 #
 # update from CVS
 #
