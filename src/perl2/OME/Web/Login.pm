@@ -42,7 +42,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Helper::HTMLFormat;
 
 use base qw{ OME::Web };
 
@@ -62,28 +61,26 @@ sub getPageTitle {
 
 sub getPageBody {
     my $self = shift;
-    my $cgi = $self->CGI();
-    my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-    my $body = "";
+    my $q = $self->CGI();
 
-    if ($cgi->param('execute')) {
-       # results submitted, try to log in
+	if ($q->param('execute')) {
+		# results submitted, try to log in
+		my $session = $self->Manager()->createSession(
+			$q->param('username'),
+			$q->param('password'),
+		);
+		$q->delete_all();
 
-       my $session = $self->Manager()->createSession($cgi->param('username'),
-                              $cgi->param('password'));
-      if (defined $session) {
-       	$self->Session($session);
+		if (defined $session) {
+			# login successful, redirect
+			$self->Session($session);
             $self->setSessionCookie();
             return ('REDIRECT',$self->pageURL('OME::Web::Home'));
-       } else {
-	    
-          $body .=format_form($htmlFormat,$cgi,1);
-      }
-    } else {
-          $body .=format_form($htmlFormat,$cgi);
-    }
-
-    return ('HTML',$body);
+		} else {
+			# login failed, report it
+			return ('HTML', $self->loginForm($q->h3("The username and/or password you entered don't match an experimenter in the system.  Please try again.")));
+		}
+    } else { return ('HTML', $self->loginForm()) }
 }
 
 
@@ -92,14 +89,35 @@ sub getPageBody {
 # PRIVATE METHODS
 #----------------
 
-sub format_form{
- my ($htmlFormat,$cgi,$invalid)=@_;
- my $text="";
- $text .= $cgi->startform;
- $text .=$htmlFormat->formLogin($invalid);
- $text .=$cgi->endform;
- return $text;
-}
+sub loginForm {
+	my $self = shift;
+	my $error = shift || undef;
+	my $q = $self->CGI();
 
+	my $html = $q->h3("Login") .
+	           ($error or "Please enter your username and password") .
+			   $q->startform .
+			   $q->p .
+			   $q->table(
+				   {
+					   -border => 0,
+				   },
+				   $q->Tr([
+					   $q->td([
+						   $q->b("Username:"),
+						   $q->textfield(-name => 'username', -default => '', -size => 25)
+						   ]),
+					   $q->td([
+						   $q->b("Password:"),
+						   $q->password_field(-name => 'password', -default => '', -size => 25)
+						   ])
+					   ])
+			   ) .
+			   $q->br .
+			   $q->submit(-name => 'execute', -value => 'Login') .
+			   $q->endform;
+
+	return $html;
+}
 
 1;
