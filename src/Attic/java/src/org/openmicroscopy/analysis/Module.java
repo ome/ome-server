@@ -23,13 +23,25 @@ package org.openmicroscopy.analysis;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.Iterator;
 
 public class Module
+    implements Comparable
 {
     protected List    inputs, outputs;
     protected String  name, description, location, moduleType;
     protected String  category, defaultIterator, newFeatureTag;
+
+    protected static SortedMap  categories = new TreeMap();
+
+    public static SortedMap getCategories()
+    { return categories; }
+    public static SortedSet getCategory(String category)
+    { return (SortedSet) categories.get(category); }
 
     public Module()
     {
@@ -54,6 +66,14 @@ public class Module
         this.newFeatureTag = newFeatureTag;
 	this.inputs = new ArrayList();
 	this.outputs = new ArrayList();
+
+        SortedSet categoryList = (SortedSet) categories.get(category);
+        if (categoryList == null)
+        {
+            categoryList = new TreeSet();
+            categories.put(category,categoryList);
+        }
+        categoryList.add(this);
     }
 
     public String getName() 
@@ -79,7 +99,23 @@ public class Module
     public String getCategory() 
     { return category; }
     public void setCategory(String category) 
-    { this.category = category; }
+    { 
+        if (this.category != null)
+        {
+            SortedSet  categoryList = (SortedSet) categories.get(this.category);
+            if (categoryList != null)
+                categoryList.remove(this);
+        }
+
+        this.category = category; 
+        SortedSet  categoryList = (SortedSet) categories.get(category);
+        if (categoryList == null)
+        {
+            categoryList = new TreeSet();
+            categories.put(category,categoryList);
+        }
+        categoryList.add(this);
+    }
 
     public String getDefaultIterator() 
     { return defaultIterator; }
@@ -133,6 +169,19 @@ public class Module
                                               attributeType,
                                               featureTag));
         return output;
+    }
+
+
+    public String toString()
+    {
+        return getName();
+    }
+
+    public int compareTo(Object o)
+    {
+        Module m = (Module) o;
+
+        return this.name.compareTo(m.name);
     }
 
 

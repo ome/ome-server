@@ -62,8 +62,6 @@ public class Test
         if (chain.equalsIgnoreCase("IMAGE_IMPORT"))
         {
             playgroundPane = new PlaygroundPane(TestInstances.imageImportChain);
-            cp.add(playgroundPane,BorderLayout.CENTER);
-
             playgroundPane.addNodeWidget(
                 new ChainNodeWidget(TestInstances.imageImport_stackStats),
                 50,150);
@@ -72,8 +70,6 @@ public class Test
                 50,350);
         } else if (chain.equalsIgnoreCase("FIND_SPOTS")) {
             playgroundPane = new PlaygroundPane(TestInstances.findSpotsChain);
-            cp.add(playgroundPane,BorderLayout.CENTER);
-
             playgroundPane.addNodeWidget(
                 new ChainNodeWidget(TestInstances.findSpots_stackStats),
                 50,150);
@@ -81,5 +77,16 @@ public class Test
                 new ChainNodeWidget(TestInstances.findSpots_findSpots),
                 350,150);
         }
+
+        cp.add(playgroundPane,BorderLayout.CENTER);
+
+        JPanel p1;
+	p1 = new JPanel(new BorderLayout());
+	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
+        cp.add(p1,BorderLayout.WEST);
+
+        JTree tree = new JTree(new ModuleTreeModel());
+        tree.setBorder(BorderFactory.createLoweredBevelBorder());
+        p1.add(tree,BorderLayout.CENTER);
     }
 }
