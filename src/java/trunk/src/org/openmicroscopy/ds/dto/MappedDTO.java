@@ -255,9 +255,15 @@ public abstract class MappedDTO
 
         try
         {
-            Map m = (Map) elements.get(element);
-            if (m != null)
+            Object o = elements.get(element);
+            if (o != null)
             {
+                if (dtoClazz.isInstance(o))
+                    return;
+                else if (!(o instanceof Map))
+                    throw new DataException("Illegal type for element "+element);
+
+                Map m = (Map) o;
                 MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                 dto.setMap(m);
                 elements.put(element,dto);
@@ -293,10 +299,16 @@ public abstract class MappedDTO
             List list = (List) elements.get(element);
             for (int i = 0; i < list.size(); i++)
             {
-                Map m = (Map) list.get(i);
-
-                if (m != null)
+                Object o = list.get(i);
+                if (o != null)
                 {
+                    if (dtoClazz.isInstance(o))
+                        return;
+                    else if (!(o instanceof Map))
+                        throw new DataException("Illegal type for element "+
+                                                element);
+
+                    Map m = (Map) o;
                     MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
                     dto.setMap(m);
                     list.set(i,dto);
