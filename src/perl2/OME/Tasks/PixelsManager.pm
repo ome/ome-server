@@ -243,7 +243,7 @@ sub localCreatePixels {
 
     my $pixels = OME::Image::LocalPixels->
       new($pathname,$xx,$yy,$zz,$cc,$tt,
-          $bbp,$signed,$float,$OME::BIG_ENDIAN);
+          $bbp,$signed,$float,OME->BIG_ENDIAN());
     my $attr = $factory->
       newAttribute('Pixels',$image,$mex,
                    {
