@@ -118,5 +118,10 @@ public class ModulePaletteFrame extends ChainFrameBase {
 		
 		contentPane.add(canvas);
 	}
+	
+	public void setNewChainEnabled(boolean v) {
+		if (toolBar != null)
+			toolBar.setNewChainEnabled(v);
+	}
 }
 	

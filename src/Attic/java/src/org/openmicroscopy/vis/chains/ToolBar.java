@@ -91,7 +91,13 @@ public class ToolBar extends JToolBar{
 	 */
 	public void setLoggedIn(String s) {
 		statusLabel.setText(s);
-		newChainButton.setEnabled(true);
 	}
 	
+	/**
+	 * Set the state of the New chain button
+	 * @param v true if button should be enabled. else false.
+	 */
+	public void setNewChainEnabled(boolean v) {
+		newChainButton.setEnabled(v);
+	}
 }

@@ -281,6 +281,7 @@ public class Controller  implements LoginResponder {
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		connection.layoutChains();
 		library = new ChainLibraryFrame(this,connection);
+		moduleFrame.setNewChainEnabled(true);
 	}
 
 	/**
@@ -325,10 +326,13 @@ public class Controller  implements LoginResponder {
 		
 		
 	public void newChain() {
-		ChainFrame canvasFrame = 
-			new ChainFrame(this,connection,chainCanvasCount++,
-				library.getCanvas());
-		canvasFrames.add(canvasFrame);
+		if (library != null) {
+			ChainFrame canvasFrame = 
+				new ChainFrame(this,connection,chainCanvasCount++,
+					library.getCanvas());
+			canvasFrames.add(canvasFrame);
+		}
+		
 	}
 	
 	/**
