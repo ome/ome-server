@@ -45,7 +45,7 @@ supports is defined as a separate subclass of AbstractFormat.
 use strict;
 our $VERSION = 2.000_000;
 
-use fields qw(_module_execution);
+use fields qw(_session _module_execution);
 
 =head1 CONTRACT
 
@@ -55,7 +55,7 @@ by the import engine to import images.
 =head2 new
 
 	my $format = OME::ImportEngine::AbstractFormat->
-	    new($module_execution);
+	    new($session,$module_execution);
 
 Creates a new instance of this format import class.  The module
 execution parameter specifies an instance of the Importer analysis
@@ -71,10 +71,11 @@ call $self->SUPER::new($module_execution) in their own constructors.
 =cut
 
 sub new {
-    my ($proto,$module_execution) = shift;
+    my ($proto,$session,$module_execution) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
+    $self->{_session} = $session;
     $self->{_module_execution} = $module_execution;
 
     bless $self, $class;
@@ -157,7 +158,8 @@ This method is responsible for creating a new OME::Image instance to
 represent the image, for creating a new repository file (and
 corresponding Pixels attribute) to store the imported pixels, and for
 creating attributes to represent any other metadata in the external
-image files.
+image files.  Further, this method should create instances of
+OME::Image::ImageFilesXYZWT for each file in the group.
 
 Helper methods will be provided to aid in this as soon as I figure out
 what they should be.
@@ -194,14 +196,25 @@ overridden C<new> method calls its superclass C<new> method.
 
 sub ModuleExecution { return shift->{_module_execution}; }
 
+=head2 Session
+
+	my $session = $self->Session();
+
+Returns the ession that was given as a parameter to the C<new> method.
+Note that this will only return a correct value if the overridden
+C<new> method calls its superclass C<new> method.
+
+=cut
+
+sub Session { return shift->{_session}; }
+
 =head2 __getFileSHA1
 
 	my $sha1 = $self->__getFileSHA1($filename);
 
 Calculates the SHA-1 digest of the contents of the given file.  If the
 file could not be read, or any other error occurred during the
-calculation of the digest, this method returns C<undef>.  (I think.
-Brian, is this right?)
+calculation of the digest, this method returns C<undef>.
 
 =cut
 
@@ -252,6 +265,71 @@ sub __removeFilenames {
     return;
 }
 
+=head2 __createRepositoryFile
+
+	my ($pixels_attribute,$pix_object) = $self->
+	    __createRepositoryFile($image,$sizeX,$sizeY,$sizeZ,
+	                           $sizeC,$sizeT,$bitsPerPixel);
+
+Creates a new repository file for the given image, creates a Pixels
+attribute to refer to it ($pixels_attribute), and creates an instance
+of OME::Image::Pix to access the pixel data ($pix_object).  The
+dimensions of the image must be specified before the repository file
+is created.
+
+The Pixels attribute will not be very useful to most import code,
+except that any newly created attributes which require a reference to
+a Pixels will point to it.  The import code will use the
+OME::Image::Pix instance much more, as it provides the low-level
+access to the repository file.  For reasons of efficiency, most import
+code should use the SetPlane method of OME::Image::Pix to store the
+pixels in the repository.  (Using SetStack or SetPixels would use too
+much memory in the case of large images; using SetROI would take more
+time than the other Set* methods.)
+
+=cut
+
+sub __createRepositoryFile {
+    my ($self,$image,$sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bitsPerPixel) = @_;
+
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my $module_execution = $self->ModuleExecution();
+    my @repository = $factory->findAttributes("Repository");
+    my $repository = $repository[0];
+
+    # Create the Pixels attribute.  Note that the Path element depends
+    # on the primary key ID assigned to the attribute, so we must set
+    # it to a dummy value first.
+
+    my $pixels = $factory->
+      newAttribute("Pixels",$image,$module_execution,
+                   {
+                    Repository   => $repository->id(),
+                    SizeX        => $sizeX,
+                    SizeY        => $sizeY,
+                    SizeZ        => $sizeZ,
+                    SizeC        => $sizeC,
+                    SizeT        => $sizeT,
+                    BitsPerPixel => $bitsPerPixel,
+                    Path         => 'x',
+                   });
+
+    # Now that the attribute has an ID, calculate the actual Path
+    # element and store it.
+
+    my $path = $pixels->id()."-".$image->name().".ori";
+    $path =~ s/[^A-Za-z0-9-_.]/_/g;
+    $pixels->Path($path);
+    $pixels->storeObject();
+
+    # Create an OME::Image::Pix instance to correspond to this new
+    # Pixels attribute.
+
+    my $pix = $image->GetPix($pixels);
+
+    return ($pixels,$pix);
+}
 
 =head1 AUTHOR
 
