@@ -77,16 +77,21 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
 	
-	$self->{ _default_table_length } = 10;
+	$self->{ _default_Length } = 10;
 	
 	return $self;
 }
 
 {
 
-my $menuText = "DB Browse";
+my $menuText = "DB Browser";
 sub getMenuText {
-	return $menuText;
+	my $self = shift;
+	return $menuText unless ref($self);
+	my $type = $self->CGI()->param( 'Type' )
+		or die "Type not specified";
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+	return "$common_name Browser";
 }
 }
 #sub getMenuBuilder { return undef }  # No menu
@@ -107,128 +112,41 @@ sub getPageBody {
 	return ('HTML', 
 		$self->getTable( {
 			actions     => ['Search'],
-			table_width => '100%',
+			width => '100%',
 		})
 	);
 }
 
 =head2 getTable
 
-# make a table
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+
 	# make a table from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
-	my $table      = $tableMaker->getTable( \%table_options );
+	my $table      = $tableMaker->getTable( \%options );
+
 	# or use search options to make a table (not tested, but might work ;)
-	my $table      = $tableMaker->getTable( \%table_options, $type, \%search_options );
+	my $table      = $tableMaker->getTable( \%options, $type, \%search_options );
+
 	# or use a list of objects to make a table
-	my $table      = $tableMaker->getTable( \%table_options, $type, \@obj_array );
+	my $table      = $tableMaker->getTable( \%options, $type, \@obj_array );
 
 =cut
 
 sub getTable {
-	my ($self, $table_options, $type, $param3 ) = @_;
+	my $self = shift;
 	my $q       = $self->CGI();
-	my $factory = $self->Session()->Factory();
-	my $mode;
-	if( not defined $type ){
-		$mode = 'cgi';
-	} elsif( ref($param3) eq 'ARRAY' ){
-		$mode = 'objects';
-	} elsif( ref($param3) eq 'HASH' ){
-		$mode = 'search';
-	}
-	die "function called in unknown mode" 
-		unless defined $mode;
-	my (%searchParams, @objects, $object_count);
-
-	# retrieve mode specific parameters
-	if( $mode eq 'search' ) {
-		%searchParams = %$param3;
-	} elsif( $mode eq 'objects' ) {
-		@objects = @$param3;
-		$table_options->{ noSearch } = 1;
-	} elsif( $mode eq 'cgi' ) {
-		$type = $q->param( 'Type' )
-			or die "url parameter Type not specified";
-
-		# collect search params
-		%searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/o, $q->param( ) );
-		foreach my $key (keys %searchParams) {
-			# get the key's Real name
-			(my $newkey = $key) =~ s/^($type)_//;
-			# copy the key into the real name unless the value is blank
-			$searchParams{ $newkey } = $searchParams{ $key }
-				unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
-			# delete the old key
-			delete $searchParams{ $key };
-		}
-	}
-
-	# prepare offset & limit
-	$table_options->{ table_length } = $self->{ _default_table_length }
-		unless $table_options->{ table_length };
-	$searchParams{ __offset } = ( $q->param( "PageNum_$type" ) ? $q->param( "PageNum_$type" ) : 0 );
-	$searchParams{ __offset } += 1
-		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageForward_$type" );
-	$searchParams{ __offset } -= 1
-		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageBack_$type" );
-	$q->param( -name => "PageNum_$type", -value => $searchParams{ __offset } );
-	$searchParams{ __offset } *= $table_options->{ table_length };
-
-	# load type
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-
-	# get objects
-	if( $mode eq 'cgi' or $mode eq 'search' ) {
-		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $table_options->{ table_length } );
-		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
-	} else {
-		$object_count = scalar( @objects );
-		@objects = splice( @objects, $searchParams{ __offset }, $table_options->{ table_length } );
-	}
+	my ( $objects, $object_count, $options, 
+	     $pagingText, $form_name, $title, $display_type,
+	     $common_name, $formal_name, $ST ) =
+		$self->__parseParams( @_ );
 
 	# build table
 	my $html;
-
-	# make form name, table label, table type
-	my $form_name   = ( $table_options->{ embedded_in_form } or $common_name."_TABLE" );
-	my $title       = ( $table_options->{ title } or $common_name );
-	my $table_type  =
-		"This is a ".
-		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name ) :
-			$common_name
-		).
-		" table.";
-
-	# paging
-	my $pagingText;
-	my $currentPage = $q->param( "PageNum_$type" ) + 1;
-	my $numPages = POSIX::ceil( $object_count / $table_options->{ table_length });
-	if( $object_count and $numPages > 1) {
-		$pagingText  = sprintf( "Table %u of %u ", $currentPage, $numPages);
-		$pagingText .= $q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='PageBack_$type'; document.forms['$form_name'].submit(); return false",
-				}, 
-				'<'
-			)." "
-			if $currentPage > 1;
-		$pagingText .= "\n".$q->a( {
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='PageForward_$type'; document.forms['$form_name'].submit(); return false",
-				}, 
-				'>'
-			)
-			if $currentPage < $numPages;
-	}
-
-	#
+	
 	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
 	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames );
 	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
-	my @records    = OME::Web::DBObjRender->render( \@objects, 'html', \@fieldNames );
+	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
 	
 	# table data
 	my @table_data;
@@ -243,25 +161,24 @@ sub getTable {
 	# allow searches ?
 	my $allowSearch;
 	$allowSearch = 1
-		if( $mode ne 'objects' and
-		    defined $table_options->{ actions } and 
-		    scalar( grep( m/Search/o, @{ $table_options->{ actions } }) ) > 0
+		if( defined $options->{ actions } and 
+		    scalar( grep( m/Search/o, @{ $options->{ actions } }) ) > 0
 		);
 
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
 		
 	$html = $q->startform( { -name => $form_name })
-		unless $table_options->{ embedded_in_form };
+		unless $options->{ embedded_in_form };
 	$html .=
-		$q->table( { -class => 'ome_table', width => $table_options->{table_width} },
+		$q->table( { -class => 'ome_table', width => $options->{width} },
 			# Table title
 			$q->caption( $title ),
 			$q->Tr( [
 				# table descriptor
 				$q->td( { -class => 'ome_td', -colspan => scalar( @fieldNames ), -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						$table_type, 
+						$display_type, 
 						( $allowPaging ? $pagingText : ()), 
 						( $allowSearch ? $self->__getActionButton( 'Search', $form_name ) : () )
 					) ) )
@@ -284,15 +201,181 @@ sub getTable {
 		);
 	$html .= 
 		$pagingText.
-		$q->hidden({-name => "PageNum_$type", -default => $q->param( "PageNum_$type" ) })
+		$q->hidden({-name => "PageNum_$formal_name", -default => $q->param( "PageNum_$formal_name" ) })
 		if( $allowPaging );
 	$html .= 
 		$q->hidden({-name => 'action', -default => ''}).
 		$q->hidden({-name => 'Type', -default => $q->param( "Type" ) }).
 		$q->endform()
-		unless $table_options->{ embedded_in_form };
+		unless $options->{ embedded_in_form };
 
 	return $html;
+}
+
+=head2 getList
+
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
+
+	# make a list from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
+	my $list      = $tableMaker->getList( \%options );
+
+	# or use search options to make a list (not tested, but might work ;)
+	my $list      = $tableMaker->getList( \%options, $type, \%search_options );
+
+	# or use a list of objects to make a list
+	my $list      = $tableMaker->getList( \%options, $type, \@obj_array );
+
+=cut
+
+sub getList {
+	my $self = shift;
+	my $q       = $self->CGI();
+	my ( $objects, $object_count, $options, 
+	     $pagingText, $form_name, $title, $display_type,
+	     $common_name, $formal_name, $ST ) =
+		$self->__parseParams( @_ );
+
+	# build table
+	my $html;
+	
+	my @object_refs = OME::Web::DBObjRender->getRefsToObject( $objects, 'html'  );
+	
+	# allow paging ?
+	my $allowPaging = ( $pagingText ? 1 : 0 );
+		
+	$html = $q->startform( { -name => $form_name })
+		unless $options->{ embedded_in_form };
+	$html .=
+		$q->table( { -class => 'ome_table', width => $options->{width} },
+			# Table title
+			$q->caption( $title ),
+			$q->Tr( [
+				# table descriptor
+				$q->td( { -class => 'ome_td', -align => 'right' }, 
+					$q->span( { -class => 'ome_widget' }, join( " | ", (
+						$display_type, 
+						( $allowPaging ? $pagingText : ()), 
+					) ) )
+				), 
+				# Table data
+				map( 
+					$q->td( { -class => 'ome_td', -align => 'right' }, $_ ),
+					@object_refs
+				),
+			]
+			)
+		);
+	$html .= 
+		$pagingText.
+		$q->hidden({-name => "PageNum_$formal_name", -default => $q->param( "PageNum_$formal_name" ) })
+		if( $allowPaging );
+	$html .= 
+		$q->hidden({-name => 'action', -default => ''}).
+		$q->hidden({-name => 'Type', -default => $q->param( "Type" ) }).
+		$q->endform()
+		unless $options->{ embedded_in_form };
+
+	return $html;
+}
+
+sub __parseParams {
+	my ($self, $options, $type, $param3 ) = @_;
+	my $q       = $self->CGI();
+	my $factory = $self->Session()->Factory();
+	my $mode;
+	if( not defined $type ){
+		$mode = 'cgi';
+	} elsif( ref($param3) eq 'ARRAY' ){
+		$mode = 'objects';
+	} elsif( ref($param3) eq 'HASH' ){
+		$mode = 'search';
+	}
+	die "function called in unknown mode" 
+		unless defined $mode;
+	my (%searchParams, @objects, $object_count);
+
+	# retrieve mode specific parameters
+	if( $mode eq 'search' ) {
+		%searchParams = %$param3;
+	} elsif( $mode eq 'objects' ) {
+		@objects = @$param3;
+		$options->{ noSearch } = 1;
+	} elsif( $mode eq 'cgi' ) {
+		$type = $q->param( 'Type' )
+			or die "url parameter Type not specified";
+
+		# collect search params
+		%searchParams = map{ $_ => $q->param( $_ ) } grep( m/^($type)_/o, $q->param( ) );
+		foreach my $key (keys %searchParams) {
+			# get the key's Real name
+			(my $newkey = $key) =~ s/^($type)_//;
+			# copy the key into the real name unless the value is blank
+			$searchParams{ $newkey } = $searchParams{ $key }
+				unless not defined $searchParams{ $key } or $searchParams{ $key } eq '';
+			# delete the old key
+			delete $searchParams{ $key };
+		}
+	}
+
+	# PAGING: prepare offset & limit
+	$options->{ Length } = $self->{ _default_Length }
+		unless $options->{ Length };
+	$searchParams{ __offset } = ( $q->param( "PageNum_$type" ) ? $q->param( "PageNum_$type" ) : 0 );
+	$searchParams{ __offset } += 1
+		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageForward_$type" );
+	$searchParams{ __offset } -= 1
+		if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageBack_$type" );
+	$q->param( -name => "PageNum_$type", -value => $searchParams{ __offset } );
+	$searchParams{ __offset } *= $options->{ Length };
+
+	# load type
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+
+	# get objects
+	if( $mode eq 'cgi' or $mode eq 'search' ) {
+		@objects = $factory->findObjectsLike( $formal_name, %searchParams, __limit => $options->{ Length } );
+		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
+	} else {
+		$object_count = scalar( @objects );
+		@objects = splice( @objects, $searchParams{ __offset }, $options->{ Length } );
+	}
+	
+	# make form name, title, display type
+	my $form_name   = ( $options->{ embedded_in_form } or $common_name."_TABLE" );
+	my $title       = ( $options->{ title } or $common_name );
+	my $display_type  =
+		"Displaying ".
+		( $ST ?
+			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
+				   $common_name ) :
+			$common_name
+		);
+	
+	# paging
+	my $pagingText;
+	my $currentPage = $q->param( "PageNum_$formal_name" ) + 1;
+	my $numPages = POSIX::ceil( $object_count / $options->{ Length });
+	if( $object_count and $numPages > 1) {
+		$pagingText  = sprintf( "%u of %u ", $currentPage, $numPages);
+		$pagingText .= $q->a( {
+				-href => "#",
+				-onClick => "document.forms['$form_name'].action.value='PageBack_$formal_name'; document.forms['$form_name'].submit(); return false",
+				}, 
+				'<'
+			)." "
+			if $currentPage > 1;
+		$pagingText .= "\n".$q->a( {
+				-href => "#",
+				-onClick => "document.forms['$form_name'].action.value='PageForward_$formal_name'; document.forms['$form_name'].submit(); return false",
+				}, 
+				'>'
+			)
+			if $currentPage < $numPages;
+	}
+	
+	return ( \@objects, $object_count, $options, 
+	         $pagingText, $form_name, $title, $display_type,
+	         $common_name, $formal_name, $ST )
 }
 
 sub __getOptionsTD {
