@@ -167,6 +167,7 @@ use base qw(OME::DBObject);
 __PACKAGE__->newClass();
 __PACKAGE__->setDefaultTable('analysis_node_executions');
 __PACKAGE__->setSequence('analysis_node_execution_seq');
+__PACKAGE__->addPrimaryKey('analysis_node_execution_id');
 __PACKAGE__->addColumn(analysis_chain_execution_id =>
                        'analysis_chain_execution_id');
 __PACKAGE__->addColumn(analysis_chain_execution => 'analysis_chain_execution_id',
