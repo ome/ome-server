@@ -504,6 +504,7 @@ addPrototype("OME::Analysis::ActualInput","formal_input",
 addPrototype("OME::AnalysisView","owner",
              ['OME::AttributeType::Superclass'],['OME::AttributeType::Superclass']);
 addPrototype("OME::AnalysisView","name",['$'],['$']);
+addPrototype("OME::AnalysisView","description",['$'],['$']);
 addPrototype("OME::AnalysisView","locked",['$'],['$']);
 addPrototype("OME::AnalysisView","nodes",[],['OME::AnalysisView::Node','*']);
 addPrototype("OME::AnalysisView","nodes",[],['OME::Factory::Iterator'],

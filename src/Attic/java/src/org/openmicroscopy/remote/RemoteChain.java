@@ -51,6 +51,11 @@ public class RemoteChain
     public void setName(String name)
     { setStringElement("name",name); }
 
+    public String getDescription()
+    { return getStringElement("description"); }
+    public void setDescription(String description)
+    { setStringElement("description",description); }
+
     public boolean getLocked()
     { return getBooleanElement("locked"); }
     public void setLocked(boolean locked)

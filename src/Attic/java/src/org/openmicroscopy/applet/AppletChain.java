@@ -33,6 +33,7 @@ public class AppletChain
 
         id = ap.getIntParameter(param+"/ID",true,-1);
         setName(ap.getStringParameter(param+"/Name",false));
+        setDescription(ap.getStringParameter(param+"/Description",true));
         //setOwner(ap.getStringParameter(param+"/Owner",true));
         setLocked(ap.getBooleanParameter(param+"/Locked",false));
 

@@ -33,6 +33,9 @@ public interface Chain
     public String getName();
     public void setName(String name);
 
+    public String getDescription();
+    public void setDescription(String name);
+
     public boolean getLocked();
     public void setLocked(boolean locked);
 

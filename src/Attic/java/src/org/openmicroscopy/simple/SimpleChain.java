@@ -32,7 +32,7 @@ public class SimpleChain
     implements Chain
 {
     //protected String   owner;
-    protected String   name;
+    protected String   name,description;
     protected boolean  locked;
     protected List     nodes, links;
 
@@ -62,6 +62,11 @@ public class SimpleChain
     { return name; }
     public void setName(String name)
     { this.name = name; }
+
+    public String getDescription() 
+    { return description; }
+    public void setDescription(String description)
+    { this.description = description; }
 
     public boolean getLocked() 
     { return locked; }
