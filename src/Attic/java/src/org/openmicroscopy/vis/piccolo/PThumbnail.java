@@ -85,10 +85,11 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 	
 	public PBounds getBufferedBounds() {
 			PBounds b = getGlobalFullBounds();
-			return new PBounds(b.getX()-PConstants.SMALL_BORDER,
-				b.getY()-PConstants.SMALL_BORDER,
-				b.getWidth()+2*PConstants.SMALL_BORDER,
-				b.getHeight()+2*PConstants.SMALL_BORDER);
+			System.err.println("thumbnail global scale is "+getGlobalScale());
+			return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
+				b.getY()-PConstants.SMALL_BORDER*getGlobalScale(),
+				b.getWidth()+2*PConstants.SMALL_BORDER*getGlobalScale(),
+				b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
 	}
 	
 
@@ -131,6 +132,7 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		PPath path = new PPath(b);
 		path.setStroke(PConstants.BORDER_STROKE);
 		path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
+		path.setPickable(false);
 		return path;
 	}
 	
@@ -159,5 +161,17 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		PText text  = new PText(image.getName());
 		text.setFont(PConstants.TOOLTIP_FONT);
 		return text;
+	}
+	
+	// pthumbnails will generally be held in PDatasetImageNodes, which
+	// has a child node aboove the thumbnail and is then contained in a dataset. will fail gracefully otherwise
+	
+	public PBufferedNode getBufferedParentNode() {
+		
+		PNode parent=this.getParent();
+		while (parent != null  && !(parent instanceof PBufferedNode))
+			parent = parent.getParent();
+		return (PBufferedNode) parent;
+		
 	}
 }
