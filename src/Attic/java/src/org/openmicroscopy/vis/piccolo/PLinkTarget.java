@@ -54,6 +54,7 @@ import java.awt.geom.Point2D;
 public class PLinkTarget extends PPath {
 	
 	public static final Color CIRC_COLOR = new Color(0,225,0);
+	public static final Color CIRC_SELECTED_COLOR = Color.WHITE;
  	public static final float CIRC_SIZE=10;
  	public static final float CIRC_HALF_SIZE=CIRC_SIZE/2;
  	public static final float  CIRC_BUFFER=3;
@@ -65,12 +66,19 @@ public class PLinkTarget extends PPath {
  	}	
  	
  	public Point2D getCenter() {
-		PBounds b = getFullBoundsReference();
+		PBounds b = getGlobalFullBounds();
 		float x = (float) (b.getX()+b.getWidth()/2);
 		float y = (float) (b.getY()+b.getHeight()/2);
 		Point2D.Float result = new Point2D.Float(x,y);
-		localToGlobal(result);
 		return result;
+ 	}
+ 	
+ 	public void setSelected(boolean v) {
+ 		if (v == true) 
+ 			setPaint(CIRC_SELECTED_COLOR);
+ 		else
+ 			setPaint(CIRC_COLOR);
+ 		repaint();
  	}
 }
 
