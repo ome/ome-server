@@ -526,8 +526,6 @@ sub findModuleHandler {
     # Timing benchmarks
     my $start_time;
     my $end_time;
-    my $t0 = new Benchmark;
-    my $t1 = new Benchmark;
 
     # A debug routine
     sub __debug {
@@ -733,7 +731,7 @@ sub findModuleHandler {
             }
         }
 
-        __debug("    Creating user input analyses");
+        __debug("    Creating $max_input_analyses user input analyses");
         my @analyses;
         $analyses[$_] = $factory->
           newObject("OME::Analysis",
@@ -746,6 +744,8 @@ sub findModuleHandler {
                     })
           foreach 0..$max_input_analyses-1;
 
+        print join("\n",@analyses),"\n";
+
         # Create a hash, recording which analysis we will associate each
         # user input with.  We won't actually clone the user inputs
         # until it's time to execute the module.  (This prevents extra
@@ -755,8 +755,9 @@ sub findModuleHandler {
         foreach my $nodeID (keys %input_analyses) {
             foreach my $inputID (keys %{$input_analyses{$nodeID}}) {
                 my $index = $input_analyses{$nodeID}->{$inputID};
+                __debug("      ${nodeID}.${inputID} = $index");
                 $user_input_analyses{$nodeID}->{$inputID} =
-                  $analyses[$index];
+                  $analyses[$index-1];
             }
         }
     }
@@ -766,9 +767,11 @@ sub findModuleHandler {
     # __checkInputs method.
 
     sub __cloneUserInputs {
+        print "      CLONE $curr_nodeID\n";
         foreach my $inputID (keys %{$user_input_analyses{$curr_nodeID}}) {
             my $inputs = $input_parameters->{$curr_nodeID}->{$inputID};
             my $analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
+            print "         $inputID - ",$analysis->id(),"\n";
 
             foreach my $attribute (@$inputs) {
                 my $type = $attribute->attribute_type();
@@ -777,6 +780,8 @@ sub findModuleHandler {
 
                 my $clone = $factory->
                   newAttribute($type,$target,$analysis,$hash);
+                $session->commitTransaction();
+                print "          $clone\n";
             }
         }
     }
@@ -1024,11 +1029,12 @@ sub findModuleHandler {
         }
 
         $paramString .= "g ";
-        $sth = $self->sql_get_formal_inputs_by_node();
-        $sth->execute($curr_nodeID,'G');
-        my $formal_inputIDs = __fetchall($sth);
+        #$sth = $self->sql_get_formal_inputs_by_node();
+        #$sth->execute($curr_nodeID,'G');
+        #my $formal_inputIDs = __fetchall($sth);
 
-        foreach my $formal_inputID (@$formal_inputIDs) {
+        foreach my $formal_input (@curr_global_inputs) {
+            my $formal_inputID = $formal_input->id();
             $paramString .= $formal_inputID."(";
 
             $sth = $self->sql_get_input_link();
@@ -1045,12 +1051,11 @@ sub findModuleHandler {
             }
 
             my $pred_analysisID = $pred_analysis->id();
-            my $formal_input = $factory->
-              loadObject("OME::Program::FormalInput",
-                         $formal_inputID);
+            print "   $pred_analysisID\n";
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
+                print "   $table_name\n";
                 $sth = $self->sql_get_input_attributes($table_name);
                 $sth->execute($pred_analysisID);
 
@@ -1059,14 +1064,14 @@ sub findModuleHandler {
             }
 
             $paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $paramString .= ") ";
         }
 
         $paramString .= "d ";
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'D');
-        $formal_inputIDs = __fetchall($sth);
+        my $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
@@ -1099,7 +1104,7 @@ sub findModuleHandler {
             }
 
             $paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $paramString .= ") ";
         }
 
@@ -1145,7 +1150,7 @@ sub findModuleHandler {
             }
 
             $paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $paramString .= ") ";
         }
 
@@ -1192,7 +1197,7 @@ sub findModuleHandler {
             }
 
             $paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $paramString .= ") ";
         }
 
@@ -1252,7 +1257,7 @@ sub findModuleHandler {
             }
 
             $past_paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1293,7 +1298,7 @@ sub findModuleHandler {
             }
 
             $past_paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1340,7 +1345,7 @@ sub findModuleHandler {
             }
 
             $past_paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1386,7 +1391,7 @@ sub findModuleHandler {
             }
 
             $past_paramString .= "$_ "
-                foreach sort keys %attributes;
+                foreach sort {$a <=> $b} keys %attributes;
             $past_paramString .= ") ";
         }
 
@@ -1936,6 +1941,7 @@ sub findModuleHandler {
             $pred_analysis = __getAnalysis($pred_node->id());
         } else {
             $pred_analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
+            print "        ${curr_nodeID}.${inputID} = $pred_analysis\n";
         }
 
         my $sth;
@@ -1943,8 +1949,12 @@ sub findModuleHandler {
 
         foreach my $attr_table (__getDataTables($formal_input)) {
             $sth = $self->$sql_method($attr_table);
-            $sth->execute($pred_analysis->id(),
-                          $extra_input);
+            if (defined $extra_input) {
+                $sth->execute($pred_analysis->id(),
+                              $extra_input);
+            } else {
+                $sth->execute($pred_analysis->id());
+            }
             $attribute_ids{$_} = $_
               foreach @{__fetchall($sth)};
         }
@@ -2123,6 +2133,8 @@ sub findModuleHandler {
                 __debug("  Executing ".$curr_node->program()->
                   program_name()." (".$dependence{$curr_nodeID}.")");
 
+                __cloneUserInputs();
+
                 # Execute away.
                 if ($dependence{$curr_nodeID} ne 'I') {
                     __debug("    Creating ANALYSIS entry");
@@ -2151,6 +2163,7 @@ sub findModuleHandler {
                                               "      ",
                                               "sql_get_input_attributes");
                 }
+                $curr_module->globalInputs(\%global_hash);
 
                 __debug("    Precalculate global");
                 $curr_module->precalculateGlobal();
@@ -2168,6 +2181,7 @@ sub findModuleHandler {
                                               "      ",
                                               "sql_get_input_attributes");
                 }
+                $curr_module->datasetInputs(\%dataset_hash);
 
                 __debug("    Precalculate dataset");
                 $curr_module->precalculateDataset();
