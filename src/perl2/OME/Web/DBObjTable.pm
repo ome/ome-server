@@ -56,16 +56,9 @@ Build a table with information about any DBObject or attribute.
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-use CGI;
 use Log::Agent;
 use Carp;
-use OME::Web::DBObjRender;
 
-#*********
-#********* GLOBALS AND DEFINES
-#*********
-
-$VERSION = $OME::VERSION;
 use base qw(OME::Web);
 
 #*********
@@ -196,12 +189,12 @@ sub getTable {
 	# build table
 	my $html;
 	
-	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+	my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
-	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
-	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
-	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
+	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
+	my %searches   = $self->Renderer()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
+	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, '_id'], 'html', 'summary' );
 
 	# table data
 	my @table_data;
@@ -518,11 +511,11 @@ sub getTextTable {
 	
 	$options->{delimiter} = "\t" unless $options->{delimiter};
 	
-	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+	my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
-	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
-	my @records    = OME::Web::DBObjRender->render( $objects, 'txt', \@fieldNames );
+	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
+	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, 'txt', 'detail' );
 
 	# column headers
 	my @columnHeaders = map( $labels{ $_ }, @fieldNames );
@@ -583,47 +576,7 @@ sub getList {
 	$options->{ URLtoMoreInfo } = $self->pageURL( "OME::Web::DBObjTable", $self->{__params} )
 		unless exists $options->{ URLtoMoreInfo };
 	
-	
-	# build table
-	my $html;
-	my @object_summaries = map( OME::Web::DBObjRender->getObjSummary( $_ ), @$objects );
-	# allow paging ?
-	my $allowPaging = ( $pagingText ? 1 : 0 );
-	
-	
-	$html = $q->startform( { -name => $form_name })
-		unless $options->{ embedded_in_form };
-	$html .=
-		$q->table( { -class => 'ome_table', width => $options->{width} },
-			# Table title
-			$q->caption( $title ),
-			$q->Tr( [
-				# table descriptor
-				$q->td( { -class => 'ome_td', -align => 'right' }, 
-					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						( $allowPaging ? '<nobr>'.$pagingText.'</nobr>' : ()),
-						$q->a( { href => $options->{ URLtoMoreInfo } }, "More details" )
-					) ) )
-				), 
-				# Table data
-				map( 
-					$q->td( { -class => 'ome_td', -align => 'left' }, $_ ),
-					@object_summaries
-				),
-			]
-			)
-		);
-	$html .= 
-		$pagingText.
-		$q->hidden({-name => "PageNum_$formal_name", -default => $q->param( "PageNum_$formal_name" ) })
-		if( $allowPaging );
-	$html .= 
-		$q->hidden({-name => 'action', -default => ''}).
-		$q->hidden({-name => 'Type', -default => $q->param( "Type" ) }).
-		$q->endform()
-		unless $options->{ embedded_in_form };
-
-	return $html;
+	return $self->Renderer()->renderArray( $objects, 'list', { more_info_url => $options->{ URLtoMoreInfo } } );
 }
 
 # { joining_group_id => {
@@ -695,11 +648,11 @@ sub __getJoinedGroups {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 
 		# collect records & such for objects
-		my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+		my @fieldNames = $self->Renderer()->getFields( $formal_name, 'summary' );
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
-		my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
-		my @records    = OME::Web::DBObjRender->render( $objects, $options->{Format}, \@fieldNames );
+		my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
+		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, $options->{Format}, 'detail' );
 
 		# Determine what known indexes this record contains.
 		my @index_fields = sort( grep( exists( $standard_index_fields{$_} ), @fieldNames ) );
@@ -707,7 +660,7 @@ sub __getJoinedGroups {
 			if( scalar( grep( $_ eq 'image', @index_fields ) ) > 0 );
 		
 		# merge_records will be used for merging the other records
-		my @merge_records = OME::Web::DBObjRender->render( $objects, 'txt', \@index_fields );
+		my @merge_records = $self->Renderer()->renderData( $objects, \@index_fields, 'txt', 'detail' );
 
 		# identifies which joining group these records belong to
 		my $j_group_id = join( '.',  @index_fields);
