@@ -394,7 +394,7 @@ sub store_image_pixels {
     my ($self, $href, $aref) = @_;
     my $realpath = $self->{'realpath'};
     my $status = "";
-    my $handle = new IO::File;
+    my $handle = IO::File->new();
     my $image;
     my ($cmd, $sh, $sha1);
 

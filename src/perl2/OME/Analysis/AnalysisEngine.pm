@@ -114,14 +114,14 @@ sub executeAnalysisView {
 
 	# Look for input_nodes that are ready to run (i.e., whose
 	# predecessor nodes have been completed).
-	foreach my $node (@node) {
+	foreach my $node (@nodes) {
 	    next if $node_states{$node} > INPUT_STATE;
 
 	    my $ready = 1;
 
 	    # If any of the predecessors has not finished, then this
 	    # node is not ready to run.
-	    my $inputs = $inputs_links{$node};
+	    my $inputs = $input_links{$node};
 	    foreach my $input (@$inputs) {
 		my $pred_node = $input->from_node();
 		$ready = 0, last if ($node_states{$pred_node} < FINISHED_STATE);
@@ -170,6 +170,7 @@ sub executeAnalysisView {
 	    my $dataset_inputs = $inputs->{D};
 	    my %dataset_hash;
 	    foreach my $input (@$dataset_inputs) {
+		my $formal_input = $input->to_input();
 		my $formal_output = $input->from_output();
 		my $attribute = $dataset_outputs{$node}->{$formal_output};
 		&$create_actual_input($input,$attribute);
@@ -187,7 +188,8 @@ sub executeAnalysisView {
 		my $image_inputs = $inputs->{I};
 		my %image_hash;
 
-		foreach my $input (@$image_inputs} {
+		foreach my $input (@$image_inputs) {
+		    my $formal_input = $input->to_input();
 		    my $formal_output = $input->from_output();
 		    my $attribute = $image_outputs{$node}->{$formal_output}->{$image};
 		    &$create_actual_input($input,$attribute);
@@ -206,7 +208,8 @@ sub executeAnalysisView {
 		    my $feature_inputs = $inputs->{F};
 		    my %feature_hash;
 
-		    foreach my $input (@$feature_inputs} {
+		    foreach my $input (@$feature_inputs) {
+			my $formal_input = $input->to_input();
 			my $formal_output = $input->from_output();
 			my $attribute = $feature_outputs{$node}->{$formal_output}->
 			    {$feature};
@@ -226,7 +229,7 @@ sub executeAnalysisView {
 		    foreach my $output (@$feature_outputs) {
 			&$create_actual_output($output,$feature_attributes);
 			my $formal_output = $output->from_output();
-			$feature_outputs{$node}->{$formal_output}->{$feature} = $attribute;
+			$feature_outputs{$node}->{$formal_output}->{$feature} = $feature_attributes->{$formal_output};
 		    }
 
 		    $module->finishFeature($feature);
@@ -240,7 +243,7 @@ sub executeAnalysisView {
 		foreach my $output (@$image_outputs) {
 		    &$create_actual_output($output,$image_attributes);
 		    my $formal_output = $output->from_output();
-		    $image_outputs{$node}->{$formal_output}->{$image} = $attribute;
+		    $image_outputs{$node}->{$formal_output}->{$image} = $image_attributes->{$formal_output};
 		}
 
 		$module->finishImage($image);
@@ -254,7 +257,7 @@ sub executeAnalysisView {
 	    foreach my $output (@$dataset_outputs) {
 		&$create_actual_output($output,$dataset_attributes);
 		my $formal_output = $output->from_output();
-		$dataset_outputs{$node}->{$formal_output} = $attribute;
+		$dataset_outputs{$node}->{$formal_output} = $dataset_attributes->{$formal_output};
 	    }
 	    
 	    $module->finishDataset($dataset);
