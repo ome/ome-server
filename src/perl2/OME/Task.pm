@@ -272,12 +272,31 @@ sub setError {
 	return $error;
 }
 
+=head2 died()
+
+Specify that the task has died.  The optional parameter is stored in the error message.
+
+=cut
+
+sub died {
+	my $self = shift;
+	my $error;
+	
+	$self->t_stop('now');
+	$self->state ('DIED');
+
+	if (@_) {
+		$error = shift;
+		$self->error($error);
+	}
+	$self->storeObject();
+}
+
 
 
 =head2 setnSteps()
 
-Set the error message for the task.  Unlike the C<error()> field, this will immediately
-write the object to the DB, making the error message available to other processes.
+Set (or re-set) the number of steps in the task.
 
 =cut
 
