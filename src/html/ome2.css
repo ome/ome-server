@@ -18,6 +18,10 @@ a:visited { text-decoration: none; color: #0000FF}
 a:hover { text-decoration: underline; color: #006699}
 
 /* Some generic style definitions */
+.ome_header_label { font-size: 12px; }
+
+.ome_header_title { font-size: 16px; }
+
 .ome_title { font-size: 14px; font-weight: bold; }
 
 .ome_info { color: blue; } 
