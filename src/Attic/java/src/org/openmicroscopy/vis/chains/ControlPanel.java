@@ -44,27 +44,35 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.chains.Controller;
-import org.openmicroscopy.Project;
-import org.openmicroscopy.Dataset;
+import org.openmicroscopy.vis.ome.CProject;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import java.util.List;
+import java.util.Vector;
 import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JComboBox;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingConstants;
 import javax.swing.ListCellRenderer;
 import javax.swing.JList;
-import java.awt.GridLayout;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import javax.swing.JToolBar;
+import javax.swing.BoxLayout;
+import javax.swing.ListSelectionModel;
+import javax.swing.JScrollPane;
+import javax.swing.Box;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.EventListenerList;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseEvent;
 import java.awt.Component;
+import java.awt.Font;
+import java.util.Iterator;
+import java.util.HashSet;
 
 /** 
  * A Control panel for the chain builder visualization
@@ -72,7 +80,8 @@ import java.awt.Component;
  * @version 2.1
  * @since OME2.1
  */
-public class ControlPanel extends JFrame implements ActionListener {
+public class ControlPanel extends JFrame implements ListSelectionListener, 
+	MouseListener {
 	
 	protected JLabel statusLabel;
 	protected JPanel panel;
@@ -81,96 +90,163 @@ public class ControlPanel extends JFrame implements ActionListener {
 	
 	protected JButton viewResultsButton;
 	
-	protected JComboBox projList;
-	protected JComboBox datasetList;
+	protected final JList projList;
+	protected final JList datasetList;
 	
 	
-	protected Project curProject;
+	protected CProject curProject;
 	protected CDataset curDataset;
 	
+	private Controller controller;
 	private Connection connection;
 	
-	private Controller controller;
+	private PBrowserCanvas browser;
+	
+	private Vector projects;
+	private Vector datasets;
+	
+	boolean reentrant = false;
+	
+	private EventListenerList datasetListeners  =
+		new EventListenerList();
+		
+	private HashSet selectedDatasets = new HashSet();
+	private HashSet deselectedDatasets;
+	private HashSet newSelectedDatasets;
+		
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
 	 */
 	public ControlPanel(Controller controller,Connection connection) {
 		super("OME Chains: Menu Bar");
-		this.connection=connection;
 		this.controller = controller;
-		
+		this.connection = connection;
 		Container content = getContentPane();
-		content.setLayout(new BorderLayout());
+		content.setLayout(new BoxLayout(content,BoxLayout.Y_AXIS));
+		
+		JToolBar toolBar = buildToolBar();
+		
+		content.add(toolBar);
 		
 		JPanel topPanel = new JPanel();
 		
-		topPanel.setLayout(new GridLayout(0,2,10,10));
+		topPanel.setLayout(new BoxLayout(topPanel,BoxLayout.X_AXIS));
+	
 		
-		JLabel userLabel = new JLabel("OME User:");
-		topPanel.add(userLabel);
-		
-		statusLabel = new JLabel();
-		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		statusLabel.setMinimumSize(new Dimension(150,30));
-		statusLabel.setPreferredSize(new Dimension(150,30));
-		topPanel.add(statusLabel);
 		
 		// projects
+		JPanel projectPanel = new JPanel();
+		
+		projectPanel.setLayout(new BoxLayout(projectPanel,BoxLayout.Y_AXIS));
 		JLabel projectLabel = new JLabel("Projects");
-		topPanel.add(projectLabel); 
-		Object[] projects = getProjects();
-		projList = new JComboBox(projects);
-		projList.setRenderer(new ProjectRenderer());
-		projList.addActionListener(this);
-		projList.setMaximumSize(projList.getMinimumSize());
-		projList.setEditable(false);
-		topPanel.add(projList);
+		projectLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		projectPanel.add(projectLabel);
+		
+		projectPanel.add(Box.createRigidArea(new Dimension(0,3)));
+		
+ 		getProjects(connection);
+		projList = new JList(projects);
+		projList.setAlignmentX(Component.LEFT_ALIGNMENT);
+		projList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		projList.setVisibleRowCount(-1);
+		projList.setLayoutOrientation(JList.VERTICAL);
+		
+		projList.setCellRenderer(new ProjectRenderer());
+		projList.addListSelectionListener(this);
+		JScrollPane projScroller = new JScrollPane(projList);
+		projScroller.setMinimumSize(new Dimension(100,200));
+		projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
+		projectPanel.add(projScroller);
+
+		
+		topPanel.add(projectPanel);
+		topPanel.add(Box.createRigidArea(new Dimension(5,0)));
 		
 		//dataset
+		getDatasets(connection);
+		JPanel datasetPanel = new JPanel();
+		datasetPanel.setLayout(new BoxLayout(datasetPanel,BoxLayout.Y_AXIS));
 		JLabel datasetLabel = new JLabel("Datasets");
-		topPanel.add(datasetLabel);
-		datasetList = new JComboBox();
-		datasetList.setRenderer(new DatasetRenderer());
-		datasetList.setEditable(false);
-		datasetList.setMaximumSize(datasetList.getMinimumSize());
-		topPanel.add(datasetList);
-		datasetList.addActionListener(this);
-		updateProjectChoice(curProject);
+		datasetLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		datasetPanel.add(datasetLabel);
+		datasetPanel.add(Box.createRigidArea(new Dimension(0,3)));
+		datasetList = new JList(datasets);
+		datasetList.setAlignmentX(Component.LEFT_ALIGNMENT);
+		datasetList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		datasetList.setVisibleRowCount(-1);
+		datasetList.setLayoutOrientation(JList.VERTICAL);
+		datasetList.addListSelectionListener(this);
+		datasetList.addMouseListener(this);
+		datasetList.setCellRenderer(new DatasetRenderer());
+		JScrollPane datasetScroll = new JScrollPane(datasetList);
+		datasetScroll.setMinimumSize(new Dimension(100,200));
+		datasetScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+		datasetPanel.add(datasetScroll);
+		//datasetList.addListSelectionListener(this);
 		
 		
-		// control butons
-		newChainButton = new JButton("New Chain");
-		newChainButton.addActionListener(
-			controller.getCmdTable().lookupActionListener("new chain"));
-		newChainButton.setEnabled(false);
-		topPanel.add(newChainButton);
+		topPanel.add(datasetPanel);
+			
+		topPanel.add(Box.createRigidArea(new Dimension(5,0)));
 		
-		
-		
-		viewResultsButton = new JButton("View Results");
-		viewResultsButton.
-			addActionListener(
-				controller.getCmdTable().lookupActionListener("view results"));
-		viewResultsButton.setEnabled(false);
-		topPanel.add(viewResultsButton);
-		
-		content.add(topPanel,BorderLayout.NORTH);
-		//Logout
-		
-		JPanel logoutPanel = new JPanel();
-		logoutPanel.setLayout(new FlowLayout(FlowLayout.RIGHT,0,5));
-		JButton logout = new JButton("Logout");
-		logoutPanel.add(logout);
-		logout.addActionListener(controller.getCmdTable().lookupActionListener("logout"));
-		content.add(logoutPanel,BorderLayout.SOUTH);
-		
+		JPanel imagePanel = new JPanel();
+		imagePanel.setLayout(new BoxLayout(imagePanel,BoxLayout.Y_AXIS));
+		JLabel browserLabel = new JLabel("Representative Thumbnails...");
+		browserLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		imagePanel.add(browserLabel);
+		imagePanel.add(Box.createRigidArea(new Dimension(0,3)));
+		browser = new PBrowserCanvas(connection);
+		browser.setPreferredSize(new Dimension(400,400));
+		imagePanel.add(browser);
+		topPanel.add(imagePanel);
+		content.add(topPanel);
 		pack();
 		show();
 	
 		setResizable(false);
-		
+		addDatasetSelectionEventListener(browser);
+		addDatasetSelectionEventListener(connection);
 	}
+	
+	private JToolBar buildToolBar() {
+		JToolBar tool = new JToolBar();
+		tool.setFloatable(false);
+		tool.setLayout(new BoxLayout(tool,BoxLayout.X_AXIS));
+		
+		//	control butons
+		newChainButton = new JButton("New Chain");
+		newChainButton.addActionListener(
+		 controller.getCmdTable().lookupActionListener("new chain"));
+		newChainButton.setEnabled(false);
+		tool.add(newChainButton);
+		
+		tool.add(Box.createRigidArea(new Dimension(10,0)));		
+		viewResultsButton = new JButton("View Results");
+		viewResultsButton.addActionListener(
+			 controller.getCmdTable().lookupActionListener("view results"));
+		viewResultsButton.setEnabled(false);
+		tool.add(viewResultsButton);
+		tool.add(Box.createRigidArea(new Dimension(10,0)));
+		//Logout
+		
+		JButton logout = new JButton("Logout");
+		tool.add(logout);
+		logout.addActionListener(
+			controller.getCmdTable().lookupActionListener("logout"));
+		
+		tool.add(Box.createRigidArea(new Dimension(30,0)));	
+		statusLabel = new JLabel();
+		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+		statusLabel.setMinimumSize(new Dimension(150,30));
+		statusLabel.setPreferredSize(new Dimension(150,30));
+		tool.add(statusLabel);
+	
+		
+		return tool;
+	}
+	
+	
 	
 	/**
 	 * set the status to be logged in
@@ -188,51 +264,244 @@ public class ControlPanel extends JFrame implements ActionListener {
 		viewResultsButton.setEnabled(v);
 	}
 	
-	public Object[] getProjects() {
-		Object[] a = new Object[0];
+	public void getProjects(Connection connection) {
 		
-		List projects  = connection.getProjectsForUser();
-		a = projects.toArray(a);
-		curProject = (Project) a[0];
-		return a;
+		List p  = connection.getProjectsForUser();
+		curProject =(CProject) p.get(0);
+		projects = new Vector(p);
 	}
 	
-	public void actionPerformed(ActionEvent e) {
-		
-		Object obj = e.getSource();
-		if (!(obj instanceof JComboBox)) 
-			return;
-		JComboBox cb = (JComboBox) obj;
-		Object item = cb.getSelectedItem();
-		if (cb == projList)
-			updateProjectChoice(item);
-		else if (cb == datasetList) 
-			updateDatasetChoice(item);
+	public void getDatasets(Connection connection) {
+		List d = connection.getDatasetsForUser();
+		//curDataset = (CDataset) d.get(0);
+		datasets = new Vector(d);
 	}
+	
+	
+	
+	public void valueChanged(ListSelectionEvent e) {
+		
+		if (reentrant == true) 
+			return;
+		Object obj = e.getSource();
+		if (!(obj instanceof JList)) 
+			return;
+		JList list = (JList) obj;
+		
+		Object item = list.getSelectedValue();
+		
+		if (list == projList)
+			updateProjectChoice(item);
+		else if (list == datasetList) 
+			updateDatasetChoice(item);
+		
+	} 
 		
 	public void  updateProjectChoice(Object item) {
-		curProject = (Project) item;
-		List datasets = curProject.getDatasets();
-		Object[] a = new Object[0];
-		a = datasets.toArray(a);
-		Object dataset = a[0];
-		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
-		datasetList.setModel(model);
-		if (dataset != null)
-			updateDatasetChoice(dataset);
+		deselectedDatasets = new HashSet();
+		newSelectedDatasets = new HashSet();
+		setCurProjectDatasetsActive(false);
+		
+		curProject = (CProject) item;
+		if (curDataset ==null)
+			clearProjectActiveFlags();
+		
+		setCurProjectDatasetsActive(true);
+			
+		int pos = projects.indexOf(curProject);
+		
+		reentrant =true;
+		projList.setSelectedIndex(pos);
+		if (curDataset!= null && !curDataset.isInCurrentProject()) {
+			datasetList.clearSelection();
+			clearProjectActiveFlags();
+			clearCurDataset();
+		}
+		reentrant =false;
+		datasetList.repaint();
+		projList.repaint();
+		browser.displayDatasets();
+		connection.clearDatasets();
+		fireEvents();
+		selectedDatasets.addAll(newSelectedDatasets);
 	}
 	
 	public void updateDatasetChoice(Object item) {
-		curDataset = (CDataset) item;
-		System.err.println("loading images for data set"+curDataset.getID());
-		curDataset.loadImages(connection);
-		System.err.println("getting execution list");
-		// update the list of executions
-		connection.setDataset(curDataset);	
+		deselectedDatasets = new HashSet();
+		newSelectedDatasets = new HashSet();
+		int pos = -1;
+	
+		if (curDataset != null)
+			curDataset.setProjectsActive(false);
+			
+		clearCurDataset();
+		
+		if (item != null)
+			setCurDataset((CDataset) item);
+		
+		if (curDataset != null) {
+			curDataset.setProjectsActive(true);
+			pos = datasets.indexOf(curDataset);
+			System.err.println("selecting dataset "+curDataset.getName());
+		}
+		
+		reentrant =true;
+		datasetList.setSelectedIndex(pos);
+		if (curProject != null && curProject.isInCurrentDataset()==false) {
+			projList.clearSelection();
+			System.err.println("setting current project to nulll..");
+			curProject = null;
+			clearDatasetActiveFlags();
+		}
+		reentrant =false;
+		
+		//	update the list of executions
+		//connection.setDataset(curDataset);	
+		
+		datasetList.repaint();
+		projList.repaint();
+		connection.clearDatasets();
+		fireEvents();
+		selectedDatasets.addAll(newSelectedDatasets);
+		browser.displayDatasets();
 	}
+	
+	private void clearDatasetActiveFlags() {
+		Iterator iter = datasets.iterator();
+		CDataset d;
+		while (iter.hasNext()) {
+			d = (CDataset) iter.next();
+			d.setInCurrentProject(false);
+		}
+	}
+	
+	private void clearProjectActiveFlags() {
+		Iterator iter = projects.iterator();
+		CProject p;
+		while (iter.hasNext()) {
+			p = (CProject) iter.next();
+			p.setInCurrentDataset(false);
+		}
+	}
+	
+	private void setCurProjectDatasetsActive(boolean b) {
+		if (curProject == null) 
+			return;
+		List d = curProject.getDatasets();
+		Iterator i = d.iterator();
+		while (i.hasNext()) {
+			CDataset ds = (CDataset) i.next();
+			ds.setInCurrentProject(b);
+			addToSelectedDatasets(ds,b);
+		}
+	}
+	
+	private void addToSelectedDatasets(CDataset ds,boolean b) {
+		if (ds == null) return;
+		
+		if (b ==true) {// add to new selection
+			if (selectedDatasets.contains(ds))
+				return; // don't need to add it if we already have it in the list
+			if (deselectedDatasets.contains(ds))
+				deselectedDatasets.remove(ds);
+			newSelectedDatasets.add(ds);
+		}
+		else {// it's begin deselected
+			if (selectedDatasets.contains(ds))
+				selectedDatasets.remove(ds);
+			if (newSelectedDatasets.contains(ds))
+				newSelectedDatasets.remove(ds);
+			deselectedDatasets.add(ds);
+		}		
+	}
+		
+	// mouse listener so we can handle double-click to deselect from list. 
+	// this isn't terribly efficient, as the current dataset will get deselected 
+	// and reselected, but anything else is too complicated. 
+	public void mouseClicked(MouseEvent e) {
+		if (e.getClickCount() == 2) {
+			int index =datasetList.locationToIndex(e.getPoint());
+			if (index == datasetList.getSelectedIndex()) {
+				//deselect dataset 
+				CProject tmp = curProject;
+				reentrant = true;
+				datasetList.clearSelection();
+				reentrant = false;
+				updateProjectChoice(tmp);
+			}
+		}
+	}
+	public void mouseEntered(MouseEvent e) {
+	}
+	
+	public void mouseExited(MouseEvent e) {
+	}
+	
+	public void mousePressed(MouseEvent e) {
+	}
+	
+	public void mouseReleased(MouseEvent e) {
+	}
+	
+	public void addDatasetSelectionEventListener(DatasetSelectionEventListener
+		listener) {
+			datasetListeners.add(DatasetSelectionEventListener.class,
+				listener);
+	}
+	
+	public void removeDatasetSelectionEventListener(DatasetSelectionEventListener
+		listener) {
+			datasetListeners.remove(DatasetSelectionEventListener.class,
+				listener);
+	}
+	
+	public void fireDatasetSelectionEvent(DatasetSelectionEvent e) {
+		Object[] listeners=datasetListeners.getListenerList();
+		for (int i = listeners.length-2; i >=0; i-=2) {
+			if (listeners[i] == DatasetSelectionEventListener.class) {
+				((DatasetSelectionEventListener) listeners[i+1]).
+					datasetSelectionChanged(e);
+			}
+		}
+	}
+	
+	private void clearCurDataset() {
+
+		if (curDataset!=null) { 
+			addToSelectedDatasets(curDataset,false);
+		}
+		curDataset=null;
+	}
+	
+	private void setCurDataset(CDataset c) {
+		if (curProject != null)
+			setCurProjectDatasetsActive(false);
+		curDataset=c;
+		if (curDataset != null) {
+			addToSelectedDatasets(curDataset,true);
+		}	
+	}
+	
+	private void fireEvents() {
+		fireEvents(deselectedDatasets,false);
+		fireEvents(newSelectedDatasets,true);
+	}
+	
+	private void fireEvents(HashSet set,boolean b) {
+		Iterator iter = set.iterator();
+		while (iter.hasNext()) {
+			CDataset d = (CDataset) iter.next();
+			DatasetSelectionEvent e  = new DatasetSelectionEvent(d,b);
+			fireDatasetSelectionEvent(e);
+		}			
+	}
+	
 }
 
 class ProjectRenderer  extends JLabel implements ListCellRenderer {
+	
+	private Font plainFont = new Font(null,Font.PLAIN,10);
+	private Font activeFont = new Font(null,Font.BOLD,12);
 	
 	public ProjectRenderer() {
 		setOpaque(true);
@@ -243,11 +512,16 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
-			Project p = (Project) value;
+			CProject p = (CProject) value;
 			
+			if (p.isInCurrentDataset())
+				setFont(activeFont);
+			else
+				setFont(plainFont);
 			if (isSelected) {
 				setBackground(list.getSelectionBackground());
 				setForeground(list.getSelectionForeground());
+				setFont(activeFont);
 			} else {
 				setBackground(list.getBackground());
 				setForeground(list.getForeground());
@@ -259,6 +533,9 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 
 class DatasetRenderer  extends JLabel implements ListCellRenderer {
 	
+	private Font plainFont = new Font(null,Font.PLAIN,10);
+	private Font activeFont = new Font(null,Font.BOLD,12);
+	
 	public DatasetRenderer() {
 		setOpaque(true);
 		setHorizontalAlignment(SwingConstants.LEFT);
@@ -268,20 +545,25 @@ class DatasetRenderer  extends JLabel implements ListCellRenderer {
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
-			if (value instanceof Dataset) {
-				Dataset d = (Dataset) value;
+			setFont(plainFont);
+			if (value instanceof CDataset) {
+				CDataset d = (CDataset) value;
 				setText(d.getName());
+				if (d.isInCurrentProject()) {
+					setFont(activeFont);
+				}
 			}
 			else 
 				setText("None");
 			if (isSelected) {
 				setBackground(list.getSelectionBackground());
 				setForeground(list.getSelectionForeground());
+				setFont(activeFont);
 			} else {
 				setBackground(list.getBackground());
 				setForeground(list.getForeground());
 			}
-			 
+						 
 			return this;
 	}
 }
