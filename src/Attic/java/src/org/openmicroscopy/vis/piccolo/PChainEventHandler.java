@@ -504,7 +504,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 			linkState = NOT_LINKING;
 		}
 	}
-	
+
+
 	/**
 	 * If the mouse event is on a module, set it to be selected and add
 	 * handles.
