@@ -67,11 +67,12 @@ public class SelectionState {
 	
 	private CDataset currentDataset = null;
 	private CDataset rolloverDataset = null;
-	private Collection 	activeDatasets = null;
+//	private Collection 	activeDatasets = null;
 	private CChain	currentChain = null;
 	private ChainExecution currentExecution = null;
 	private CProject currentProject = null;
 	private CProject rolloverProject = null;
+	private CChain rolloverChain = null;
 	
 	// listener lists
 	private ArrayList selectionListeners = new ArrayList();
@@ -106,41 +107,27 @@ public class SelectionState {
 	
 	public void setSelectedChain(CChain newChain) {
 		
-		if (currentChain == newChain) {
-			currentDataset = null; // was "return"
-		}
 			
 		currentChain = newChain;
-		// if we clear chain, clear everything.
-		
-		if (currentChain == null) {
-			activeDatasets =null;
-			currentDataset = null;
-			currentProject = null;
-		}
-		else {
-			// select datasets for this chain
-			activeDatasets = newChain.getDatasetsWithExecutions();
-
-			// current dataset null if not contained.
-			if (currentDataset!= null) {
-				if (!activeDatasets.contains(currentDataset))
-					currentDataset = null;
-			}
-			
-		    // update projects.
-			if (currentDataset == null)  { // no project if no dataset
-				currentProject = null;
-			} 
-		}
-
 		fireSelectionEvent(
-			new SelectionEvent(this,SelectionEvent.SET_CHAIN));	
+			new SelectionEvent(this,SelectionEvent.SET_SELECTED_CHAIN));	
 	}
 	
 	public CChain getSelectedChain() {
 		return currentChain;
 	}
+	
+	public void setRolloverChain(CChain c) {
+		
+		rolloverChain =c;
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_CHAIN));
+	}
+	
+	public CChain getRolloverChain() {
+		return rolloverChain;
+	}
+	
 	
 	// PROJECT
 	
@@ -148,14 +135,12 @@ public class SelectionState {
 	public synchronized void setSelectedProject(CProject current) {
 		
 		currentProject = current;
+		currentChain = null;
 		
-		if (currentProject == null)
-			// no datasets active if no project is selected.
-			activeDatasets=null; // however, we don't have to clear 
-											//selected dataset & chain.
-		else {
+		
+		if (currentProject != null) {
 			// set active projects
-			activeDatasets = currentProject.getDatasets(); 
+			Collection activeDatasets = currentProject.getDatasets(); 
 			if (!activeDatasets.contains(currentDataset)) {
 				//only one project is active if the active datasets 
 				// don't contain the current dataset.
@@ -175,12 +160,10 @@ public class SelectionState {
 
 	public void setRolloverProject(CProject p) {
 		
-		// we don't change the rollover if there is a selected project
-		//if (currentProject != null) {
-			rolloverProject =p;
-			fireSelectionEvent(
-				new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
-		//}
+		rolloverProject =p;
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
+	
 	}
 	
 	public CProject getRolloverProject() {
@@ -201,39 +184,57 @@ public class SelectionState {
 		if (currentDataset == null) {
 	    	currentChain = null;
 		}
-		else  {
-			if (!currentDataset.hasProject(currentProject))
-				currentProject = null;
+		else if (!currentDataset.hasProject(currentProject)) {
+			currentProject = null;
 		}
-	     
-    	if (currentProject!=null) {
-    		if (currentDataset != null && 
-    				!currentProject.hasDataset(currentDataset)) {
-    			currentProject =null;
-    		}
-    		else {
-    			activeDatasets = currentProject.getDatasets();
-    		}
-    	} 	else {
-    		activeDatasets =null;
-    	
-    	}
-	   	
 	}
 	
-	public void setSelected(CChain chain,CDataset dataset) {
+	/*public void setSelected(CChain chain,CDataset dataset) {
 		doSetSelectedDataset(dataset);
 		currentChain = chain;
 		fireSelectionEvent(
 			new SelectionEvent(this,SelectionEvent.SET_CHAIN));
-	}
+	}*/
 
 	public CDataset getSelectedDataset() {
 		return currentDataset;
 	}
-
+	
 	public Collection getActiveDatasets() {
-		return activeDatasets;
+		if (currentDataset != null) {
+			// if there's a current dataset, return it.
+			ArrayList res = new ArrayList();
+			res.add(currentDataset);
+			return res; 
+		}
+		else if (currentProject != null) {
+			// else it's the project's dataset if project is not null
+			return currentProject.getDatasetSet();
+		}
+		else 
+			return null;
+			
+	}
+	
+	public Collection getExecutedDatasets() {
+		Collection res = getActiveDatasets();
+		Collection executed = null;
+		if (currentChain != null)
+			executed  = currentChain.getDatasetsWithExecutions();
+	  // if res is null (none active), & nothing executed, return null
+	  // so all will be shown
+	     if (res == null && executed != null && executed.size() == 0)
+			return null;
+		// else if active is null ( no project or dataset) show only those 
+		// that match executed
+		else if (res == null)
+			return executed;
+		// if none executed, return all active
+		else if (executed == null  || executed.size() == 0)
+			return res;
+		// both executed and active are non-null. return the intersection
+		res.retainAll(executed);
+		return res;
 	}
 	
 	public void setRolloverDataset(CDataset d) {
@@ -266,7 +267,7 @@ public class SelectionState {
 			int mask = listener.getEventMask() & e.getMask();
 			// only send the event if it contains something that the
 			// listener is interested in (overlap != 0) 
-			if ((mask & e.getMask()) !=0 ) {
+			if (mask !=0 ) {
 				listener.selectionChanged(e);
 			}
 		}
