@@ -27,8 +27,6 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-  #  owner_id => 'owner',
- #   group_id => 'group'
     });
 
 __PACKAGE__->table('projects');
@@ -36,8 +34,6 @@ __PACKAGE__->sequence('project_seq');
 __PACKAGE__->columns(Primary => qw(project_id));
 __PACKAGE__->columns(Essential => qw(name description owner_id group_id));
 __PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_id));
-#__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
-#__PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 sub owner {
     my $self = shift;
