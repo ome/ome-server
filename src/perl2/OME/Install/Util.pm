@@ -50,22 +50,25 @@ require Exporter;
 
 # Exporter details
 our @ISA = qw(Exporter);
-our @EXPORT = qw(add_user
-		 add_group
-		 add_user_to_group
-		 delete_tree
-		 copy_tree
-		 get_module_version
-		 download_package
-		 unpack_archive
-		 configure_module
-		 configure_library
-		 compile_module
-		 test_module
-		 install_module
-		 which
-		 get_mac
-		 );
+our @EXPORT = qw(
+		add_user
+		add_group
+		add_user_to_group
+		delete_tree
+		copy_tree
+		fix_ownership
+		fix_permissions
+		get_module_version
+		download_package
+		unpack_archive
+		configure_module
+		configure_library
+		compile_module
+		test_module
+		install_module
+		which
+		get_mac
+		);
 
 # Distribution detection
 #        if (-e "/etc/debian_version") {
@@ -423,9 +426,7 @@ sub get_mac {
 sub copy_tree {
     my ($from, $to, $filter, $user) = @_;
     my ($uid, $gid);
-    if (defined $user) {
-		($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\"";
-	}
+
     $from = File::Spec->rel2abs($from);  # does clean up as well
     $to = File::Spec::->catdir(File::Spec->rel2abs($to), basename($from));
 
@@ -444,14 +445,8 @@ sub copy_tree {
 			carp "copy_tree() not copying or following symlink $item";
 		} elsif (-f $item) {
 			copy($item, $to) or croak "Couldn't copy file $item: $!";
-			if (defined $user) {
-				chown ($uid, $gid, $to) or croak "Unable to change owner of $to, $!";
-			}
         } elsif ( -d $item ) {
 			copy_tree($item, $to, $filter, $user);
-			if (defined $user) {
-				chown ($uid, $gid, $to) or croak "Unable to change owner of $to, $!";
-			}
 		} else {
 			carp "copy_tree() not copying device or other filetype $item";
 		}
@@ -522,6 +517,59 @@ sub delete_tree {
     return  $total_entries==$deleted ? 1 : 0 ;
 }
 
+# Fixes the ownership (owner, group) of a given set of filesystem items
+# fix_ownership({owner => 'foo', group => 'bar'}, @items);
+#
+# RETURNS
+#	1 on success, dies on failure.
+sub fix_ownership {
+    my ($o_and_g, @items) = @_;
+	
+	croak ("Owner/group hashref required.") unless ref($o_and_g) eq 'HASH';	
+
+	# No point traversing any further unless we actually have something to do
+	return 1 if (scalar(@items) < 1);
+
+    my $uid = getpwnam($o_and_g->{'owner'})
+		or croak "Unable to find user: \"", $o_and_g->{'owner'}, "\"";
+    my $gid = getgrnam($o_and_g->{'group'})
+		or croak "Unable to find group: \"", $o_and_g->{'group'}, "\"";
+
+	while (my $item = shift @items) {
+		# Just do a full chown, no harm in doing both if we only need one or
+		# not at all.
+		# XXX We're not following symlinks.
+		fix_ownership($o_and_g, glob ("$item/*")) if (-d $item);
+		
+		chown ($uid, $gid, $item) or croak "Unable to change owner of $item, $!";
+	}
+
+	return 1;
+}
+
+# Fixes the permissions (mode) of a given set of filesystem items
+# fix_permissions($mode, @items);
+#
+# RETURNS
+#	1 on success, dies on failure.
+sub fix_permissions {
+    my ($mode, @items) = @_;
+
+	# No point traversing any further unless we actually have something to do
+	return 1 if (scalar(@items) < 1);
+
+	while (my $item = shift @items) {
+		# Just do a full chown, no harm in doing both if we only need one or
+		# not at all.
+		# XXX We're not following symlinks.
+		fix_permissions($mode, glob ("$item/*")) if (-d $item);
+		
+		chmod ($mode, $item)
+			or croak "Unable to change permissions ($mode) of $item, $!";
+	}
+
+	return 1;
+}
 
 # Gets a Perl module's $VERSION
 #

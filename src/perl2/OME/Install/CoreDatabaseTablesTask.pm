@@ -41,6 +41,7 @@ use Sys::Hostname;
 use MIME::Base64;
 use Term::ANSIColor qw(:constants);
 use File::Basename;
+use File::Path;
 use File::Spec::Functions qw(rel2abs);
 use Log::Agent;
 
@@ -424,7 +425,7 @@ sub create_experimenter {
 		my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
 
 		if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
-			mkdir ($data_dir, 0755) or croak "Unable to create directory \"$data_dir\". $!";
+			mkpath ($data_dir, 0, 0755);  # Internal croak
 		}
     }
 

@@ -38,6 +38,7 @@ use warnings;
 use English;
 use Carp;
 use File::Copy;
+use File::Path;
 use File::Basename;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
@@ -70,28 +71,36 @@ our $ADMIN_USER = '';
 
 # Default core directory locations
 our @core_dirs = (
+	# Base directories
     {
-	name => "base",
-	path => "/OME",
-	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository", "OMEIS", "OMEIS/Files", "OMEIS/Pixels"],
-	children_owner_override => { 
-		'OMEIS' => [\$APACHE_USER, \$OME_GROUP],
-		'OMEIS/Files' => [\$APACHE_USER, \$OME_GROUP],
-		'OMEIS/Pixels' =>  [\$APACHE_USER, \$OME_GROUP],
-		},
-	children_permissions_override => { 
-		'OMEIS' => 0700,
-		'OMEIS/Files' => 0700,
-		'OMEIS/Pixels' =>  0700,
-		},	
-    },
-    {
-	name => "temp_base",
-	path => "/var/tmp/OME",
-	description => "Base temporary directory",
-	children => ["lock", "sessions", "install"]
-    }
+		name => "base",
+		path => "/OME",
+		description => "Base OME directory",
+		children => ["xml", "bin", "perl2", "cgi"],
+		owner => \$OME_USER,
+		group => \$OME_GROUP,
+		mode => 02755, # Set the "Set-GID" bit on the dir
+	},
+	# OMEIS directories
+	{
+		name => "omeis_base",
+		path => "/OME/OMEIS",
+		description => "Base OMEIS directory",
+		children => ["Files", "Pixels"],
+		owner => \$APACHE_USER,
+		group => \$OME_GROUP,
+		mode => 02700,
+	},
+	# Temporary directories
+	{
+		name => "temp_base",
+		path => "/var/tmp/OME",
+		description => "Base temporary directory",
+		children => ["lock", "sessions", "install"],
+		owner => \$OME_USER,
+		group => \$OME_GROUP,
+		mode => 02755, # Set the "Set-GID" bit on the dir
+	}
 );
 
 # The HTML directories that need to be copied to the basedir
@@ -105,27 +114,11 @@ our @config_core = ("conf");
 
 # Base and temp dir references
 our $OME_BASE_DIR = \$core_dirs[0]->{path};
-our $OME_TMP_DIR = \$core_dirs[1]->{path};
+our $OME_TMP_DIR = \$core_dirs[2]->{path};
 
 #*********
 #********* LOCAL SUBROUTINES
 #*********
-
-sub fix_ownership {
-    my ($user, $dir, $group) = @_;
-
-    # Get directory info
-    my ($dir_uid, $dir_gid) = (stat($dir))[4,5] or croak "Unable to find directory: \"$dir\"";
-    my ($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\"";
-    $gid = (getgrnam($group))[2] if $group;
-
-    # If we've got a wrong UID or GID do a full chown, no harm in doing both if we only need one
-    if (($dir_uid != $uid) or ($dir_gid != $gid)) {
-		chown ($uid, $gid, $dir) or croak "Unable to change owner of $dir, $!";
-    }
-    
-    return 1;
-}
 
 sub get_apache_user {
     my $username = shift;  # A user specified default if we have one
@@ -247,7 +240,6 @@ sub execute {
 		   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
 		}
 
-    
 		# Confirm and/or update our group information
 		$OME_GROUP = confirm_default("The group which OME should be run under", $OME_GROUP);
 
@@ -290,21 +282,162 @@ sub execute {
 
 		print "\n";  # Spacing
     }
+
     # Make sure the rest of the installation knows where the core directories are
     $environment->base_dir($$OME_BASE_DIR);
     $environment->tmp_dir($$OME_TMP_DIR);
     $ENV{OME_ROOT} = $$OME_BASE_DIR;
-    
 
     print "\nBuilding the core system\n";
 
+    #********
+    #******** Set up our Unix users/groups
+    #********
+
+    # Group creation if needed
+    if (not $OME_GID = getgrnam($OME_GROUP)) {
+		print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
+		add_group ($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
+		$OME_GID = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
+    }
+
+    # User creation if needed
+    if (not $OME_UID = getpwnam($OME_USER)) {
+		print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
+		add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
+		$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
+    }
+
+    if (not getpwnam($POSTGRES_USER)) {
+		croak "Failure retrieving UID for \"$POSTGRES_USER\"";
+    }
+
+    # Add the apache and OME user to the OME group if needed
+    my @members = split (/\s/, (getgrgid($OME_GID))[3]);  # Split group members on whitespace
+
+    my $need_to_add_apache = 1;
+    my $need_to_add_user = 1;
+	my $need_to_add_admin_user = $ADMIN_USER ? 1 : 0;
+
+    if (@members) {
+	    foreach my $member (@members) {
+		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
+		    $need_to_add_user = 0 if $member eq $OME_USER;
+			$need_to_add_admin_user = 0 if $member eq $ADMIN_USER;
+	    };
+    }
+
+    add_user_to_group ($APACHE_USER, $OME_GROUP)
+		or croak "Failure adding user \"$APACHE_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_apache;
+    add_user_to_group ($OME_USER, $OME_GROUP)
+		or croak "Failure adding user \"$OME_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_user;
+    add_user_to_group ($ADMIN_USER, $OME_GROUP)
+		or croak "Failure adding user \"$ADMIN_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_admin_user;
+    
+    #********
+    #******** Build our core directory structure
+    #********
+
+    foreach my $directory (@core_dirs) {
+		my $mode = $directory->{mode} || 02755;
+
+		# Create this core directory
+		unless (-d $directory->{path}) { 
+			print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
+			mkpath($directory->{path}, 0, $mode);  # Internal croak
+		}
+
+		# Create each core dir's children
+		foreach my $child (@{$directory->{children}}) {
+	    	$child = $directory->{path} . "/" . $child;
+			
+	    	unless (-d $child) {
+				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
+				mkpath($child, 0, $mode);  # Internal croak
+	    	}
+		}
+
+		# Fix ownership and permissions (they're recursive)
+		fix_ownership( {
+				owner => ${$directory->{owner}},
+				group => ${$directory->{group}},
+			}, $directory->{path});
+		fix_permissions($mode, $directory->{path});
+    }
+
+    print "\n";  # Spacing
+    
+    #********
+    #******** Populate stylesheets
+    #********
+
+    print "Copying stylesheets\n";
+    my @files = glob ("src/xml/xslt/*.xslt");
+
+    foreach my $file (@files) {
+		print "  \\_ $file\n";
+		copy ($file, $$OME_BASE_DIR."/xml/") or croak ("Couldn't copy file ", $file, ". ", $!, ".\n");
+		fix_ownership( {
+				owner => $OME_USER,
+				group => $OME_GROUP,
+			}, "$$OME_BASE_DIR/xml/");
+    }
+    
+    print "\n";  # Spacing
+    
+    #********
+    #******** Copy our HTML/Image core directories from the source tree
+    #********
+
+    print "Copying IMAGE directories\n";
+    	foreach my $directory (@image_core) {
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR");
+		fix_ownership( {
+				owner => $OME_USER,
+				group => $OME_GROUP,
+			}, "$$OME_BASE_DIR/$directory");
+    }
+    
+	print "Copying CONFIG directories\n";
+    	foreach my $directory (@config_core) {
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR");
+		fix_ownership( {
+				owner => $OME_USER,
+				group => $OME_GROUP,
+			}, "$$OME_BASE_DIR/$directory");
+    }
+
+    print "Copying HTML directories\n";
+
+    # We need to be in src/ for these copies
+    my $iwd = getcwd;
+    chdir ("src") or croak "Unable to chdir into src/. $!";
+
+    foreach my $directory (@html_core) {
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR");
+		fix_ownership( {
+				owner => $OME_USER,
+				group => $OME_GROUP,
+			}, "$$OME_BASE_DIR/$directory");
+    }
+
+    chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
+
+    print "\n";  # Spacing
+
+    #********
+    #******** Build our core binaries in src/C
+    #********
+
     print_header ("Core Binary Setup");
     
-    my $INSTALL_HOME = $$OME_TMP_DIR;
-#
-# This is a hack to make sure that the directory where we're putting our log actually exists.
-# Don't like the hack?  Fix it.
-	`mkdir -p $INSTALL_HOME`;
+    my $INSTALL_HOME = "$$OME_TMP_DIR/install";
     my $LOGFILE_NAME = "BinaryBuilds.log";
     my $LOGFILE;
 
@@ -379,139 +512,6 @@ sub execute {
     
     print "\n";  # Spacing
 
-    #********
-    #******** Set up our Unix users/groups
-    #********
-
-    # Group creation if needed
-    if (not $OME_GID = getgrnam($OME_GROUP)) {
-		print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
-		add_group ($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
-		$OME_GID = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
-    }
-
-    # User creation if needed
-    if (not $OME_UID = getpwnam($OME_USER)) {
-		print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
-		add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
-		$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
-    }
-
-    if(not getpwnam($POSTGRES_USER)) {
-	croak "Failure retrieving UID for \"$POSTGRES_USER\"";
-    }
-
-    # Add the apache and OME user to the OME group if needed
-    my @members = split (/\s/, (getgrgid($OME_GID))[3]);  # Split group members on whitespace
-
-    my $need_to_add_apache = 1;
-    my $need_to_add_user = 1;
-	my $need_to_add_admin_user = $ADMIN_USER ? 1 : 0;
-
-    if (@members) {
-	    foreach my $member (@members) {
-		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
-		    $need_to_add_user = 0 if $member eq $OME_USER;
-			$need_to_add_admin_user = 0 if $member eq $ADMIN_USER;
-	    };
-    }
-
-    add_user_to_group ($APACHE_USER, $OME_GROUP)
-		or croak "Failure adding user \"$APACHE_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_apache;
-    add_user_to_group ($OME_USER, $OME_GROUP)
-		or croak "Failure adding user \"$OME_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_user;
-    add_user_to_group ($ADMIN_USER, $OME_GROUP)
-		or croak "Failure adding user \"$ADMIN_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_admin_user;
-    
-    #********
-    #******** Build our core directory structure
-    #********
-
-    foreach my $directory (@core_dirs) {
-		# Create this core directory
-		unless (-d $directory->{path}) { 
-			print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
-			mkdir $directory->{path} or croak "Unable to create directory \"$directory->{path}\": $!";
-		}
-
-		# Make sure this core directory is owned by the $OMEUser
-		fix_ownership($OME_USER, $directory->{path})
-			or croak "Failure setting permissions on \"$directory->{path}\" $!";
-
-		# Set the "Set-GID" bit on the dir so that all files will inherit it's GID
-		chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\" $!";
-
-		# Create each core dir's children
-		foreach my $child (@{$directory->{children}}) {
-	    	my ($owner, $group) = map( $$_, @{ $directory->{children_owner_override}->{$child} } )
-	    		if exists $directory->{children_owner_override}->{$child};
-	    	( $owner = $OME_USER and $group = $OME_GROUP )
-	    		unless $owner;
-	    	my $child_permissions; $child_permissions = $directory->{children_permissions_override}->{$child};
-	    	$child = $directory->{path} . "/" . $child;
-	    	unless (-d $child) {
-				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
-				mkdir $child or croak "Unable to create directory \"$child\": $!";
-	    	}
-			fix_ownership($owner, $child, $group)
-				or croak "Failure setting permissions on \"$child\" $!";
-			( chmod($child_permissions, $child ) or 
-			  croak "Failure setting permissions $child_permissions on \"$child\" $!" )
-				if $child_permissions;
-		}
-    }
-
-    print "\n";  # Spacing
-    
-    #********
-    #******** Populate stylesheets
-    #********
-
-    print "Copying stylesheets\n";
-    my @files = glob ("src/xml/xslt/*.xslt");
-
-    foreach my $file (@files) {
-		print "  \\_ $file\n";
-		copy ($file, $$OME_BASE_DIR."/xml/") or croak ("Couldn't copy file ", $file, ". ", $!, ".\n");
-		fix_ownership($OME_USER, $$OME_BASE_DIR."/xml/".basename($file))
-			or croak 'Failure setting permissions on "'.$$OME_BASE_DIR."/xml/".$file."\" $!";
-    }
-    
-    print "\n";  # Spacing
-    
-    #********
-    #******** Copy our HTML/Image core directories from the source tree
-    #********
-
-    print "Copying IMAGE directories\n";
-    	foreach my $directory (@image_core) {
-		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
-    }
-    
-	print "Copying CONFIG directories\n";
-    	foreach my $directory (@config_core) {
-		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
-    }
-
-    print "Copying HTML directories\n";
-
-    # We need to be in src/ for these copies
-    my $iwd = getcwd;
-    chdir ("src") or croak "Unable to chdir into src/. $!";
-
-    foreach my $directory (@html_core) {
-		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
-    }
-
-    chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
-
-    print "\n";  # Spacing
 
     return;
 }

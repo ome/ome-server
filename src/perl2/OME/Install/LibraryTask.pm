@@ -55,6 +55,9 @@ my $REPOSITORY = "http://openmicroscopy.org/packages/source";
 # Default ranlib command
 my $RANLIB= "ranlib";
 
+# Default compiler
+my $CC = "gcc";
+
 # Global logfile filehandle and name
 my $LOGFILE_NAME = "LibraryTask.log";
 my $LOGFILE;
@@ -456,7 +459,6 @@ sub execute {
 	    	# We need to compile some source in order to get our library version
 	    	my $binary = "$INSTALL_HOME/$library->{name}_check";
 	    	my $source_file = $binary.".c";
-	    	my $CC = "gcc";
 
 	    	open (my $CHECK_C, ">", $source_file)
 				or croak "Unable to create version check source file for \"$library->{name}\" $!";
@@ -511,14 +513,9 @@ sub execute {
 		exit(1) unless $y_or_n;
 	}
 
-	#*********
-    #********* Return to our initial working directory and then install OME's C binaries
-    #*********
+	chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
-    chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
-
-
-   	 return 1;
+	return 1;
 }
 
 sub rollback {
