@@ -58,11 +58,6 @@ our $VERSION = $OME::VERSION;
 use OME::Session;
 use base qw(OME::Web::DBObjRender);
 
-# Class data - override default behavior
-__PACKAGE__->_fieldLabels( {
-});
-
-
 =head2 getRefSearchField
 
 returns a dropdown list of Group names valued by id.
