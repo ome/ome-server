@@ -85,9 +85,9 @@ XYPlaneControls.prototype.setWindowControllers = function( windowControllers ) {
 	this.windowControllers = windowControllers;
 };
 
-XYPlaneControls.prototype.setImageURL = function ( imageURL ) {
+XYPlaneControls.prototype.updatePlaneURL = function ( ) {
 	if( this.openImgLink ) {
-		this.openImgLink.setAttributeNS( xlinkns, 'href', imageURL);
+		this.openImgLink.setAttributeNS( xlinkns, 'href', this.image.getImageURL() );
 	}
 };
 
