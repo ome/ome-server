@@ -318,7 +318,7 @@ Mapping m;
 		}
 	}
 	
-	if ( (fileName = get_param (param,"Save")) && getenv("REQUEST_METHOD") && !setThumb) {
+	if ( param != NULL && (fileName = get_param (param,"Save")) && getenv("REQUEST_METHOD") && !setThumb) {
 		fprintf (stdout,"Content-Disposition: attachment; filename=\"%s.%s\"\r\n",fileName,myComposite->format);
 		HTTP_ResultType ("application/octet-stream");
 	} else if (!setThumb){
