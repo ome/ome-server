@@ -40,11 +40,12 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
-//import edu.umd.cs.piccolo.PRoot;
+import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+//import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
 import java.awt.Color;
@@ -274,7 +275,7 @@ public abstract class PFormalParameter extends PNode implements
 		if (list == null)
 			return;
 		
-		System.err.println("got the corresponding inputs for a parameter..");
+		//System.err.println("got the corresponding inputs for a parameter..");
 	 	ModuleInfo source = getModuleInfo();
 		
 		PFormalParameter p;
@@ -293,5 +294,15 @@ public abstract class PFormalParameter extends PNode implements
 			else // always want to clear linkable
 				p.setLinkable(v);		
 		}
+	}
+	
+	public void updateBounds() {
+		PBounds b = textNode.getFullBounds();
+		if (typeNode !=null) {
+			PBounds typeBounds = typeNode.getFullBounds();
+			b.add(typeBounds);
+		}
+		setBounds(new PBounds(b.getX(),b.getY(),b.getWidth(),
+			b.getHeight()+PModule.PARAMETER_SPACING)); 
 	}
 }
