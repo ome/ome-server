@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.vis.ome.Connection; 
 import org.openmicroscopy.SemanticType;
+import edu.umd.cs.piccolo.util.PBounds;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
@@ -60,6 +61,31 @@ public class PFormalOutput extends PFormalParameter {
 		if (param.getSemanticType() != null)
 			connection.addOutput(param.getSemanticType(),this);
 		locator = new PParameterLocator(this,SwingConstants.EAST);
+		setBounds(textNode.getFullBounds());
+	}
+	
+	protected void layoutChildren() {
+		if (typeNode != null) {
+			//set type node offset. 
+			PBounds typeBounds = typeNode.getFullBounds();
+			//typeNode.localToParent(typeBounds);
+			PBounds textBounds = textNode.getFullBounds();
+			//textNode.localToParent(textBounds);
+			
+			if (textBounds.getWidth() > typeBounds.getWidth()) {
+				double right = textBounds.getX()+textBounds.getWidth();
+				int left = (int) (right - typeBounds.getWidth());
+				typeNode.setOffset(left,TYPE_NODE_VERTICAL_OFFSET);
+				textNode.setOffset(0,0);
+			}
+			else { // type is wider
+				double right = typeBounds.getX()+typeBounds.getWidth();
+				int left  = (int) (right- textBounds.getWidth());
+				textNode.setOffset(left,0);
+				typeNode.setOffset(0,TYPE_NODE_VERTICAL_OFFSET);
+			}
+		}		
+		setBounds(textNode.getFullBounds());
 	}
 	
 	/**

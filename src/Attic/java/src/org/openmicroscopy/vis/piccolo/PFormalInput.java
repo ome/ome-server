@@ -55,6 +55,7 @@ import java.util.ArrayList;
 
 public class PFormalInput extends PFormalParameter {
 	
+	public static final int TYPE_NODE_HORIZ_OFFSET = 0;
 	
 	public PFormalInput(PModule node,FormalParameter param, 
 		Connection connection) {
@@ -65,9 +66,13 @@ public class PFormalInput extends PFormalParameter {
 		
 		if (param.getSemanticType()!=null)
 			connection.addInput(param.getSemanticType(),this);
-		
+	
+		if (typeNode != null)
+			typeNode.setOffset(TYPE_NODE_HORIZ_OFFSET,
+				PFormalParameter.TYPE_NODE_VERTICAL_OFFSET);	
 		// create locator
 		locator = new PParameterLocator(this,SwingConstants.WEST);
+		setBounds(textNode.getFullBounds());
 	}
 	
 	/**
