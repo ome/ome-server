@@ -113,6 +113,11 @@ import java.util.HashMap;
 public class RemoteObjectCache
 {
     /**
+     * The object reference which represents a null value.
+     */
+    public static final String  NULL_REFERENCE = ">>OBJ:NULL";
+
+    /**
      * The session that this cache belongs to.
      */
     protected RemoteSession  session;
@@ -179,6 +184,9 @@ public class RemoteObjectCache
 
         if ((reference != null) && (!reference.equals("")))
         {
+            if (reference.equals(NULL_REFERENCE))
+                return null;
+
             RemoteObject  newObj;
             WeakReference objRef;
 
