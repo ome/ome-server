@@ -49,8 +49,8 @@ use vars qw($VERSION);
 $VERSION = $OME::VERSION;
 
 use constant BIORAD_HEADER_LENGTH => 76;
-use constant BIORAD_BIG_TEMPLATE =>    "n3x4Nnx2a32x4nx8nx8";
-use constant BIORAD_LITTLE_TEMPLATE => "v3x4Vvx2a32x4vx8vx8";
+use constant BIORAD_BIG_TEMPLATE =>    "n3x4Nnx2Z32x4nx8nx8";
+use constant BIORAD_LITTLE_TEMPLATE => "v3x4Vvx2Z32x4vx8vx8";
 use constant BIORADID => 12345;
 use constant NOTES_LENGTH => 96;
 use constant NOTE_TYPE_VARIABLE => 20;
