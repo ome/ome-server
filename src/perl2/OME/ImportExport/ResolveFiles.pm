@@ -117,11 +117,14 @@ sub importFile() {
 		#
 		my $executionPath   = $configuration->bin_dir() . '/extractBinData';
 		$tmpDir             = $session->getScratchDir('ResolveFiles');
-		my @repositories    = $factory->findAttributes( "Repository" );
-		my $repository      = $repositories[0];
-		# a path to scratch space on the same file system as the repository
-		my $pixelDir        = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
-		my @newdirs = ( $pixelDir, $tmpDir );
+		my ($pixelDir, $repository);
+		# eval because if this is running in bootstrap, there is no Repository
+		# attributes or even a Repository ST
+		eval {
+			my @repositories    = $factory->findAttributes( "Repository" );
+			$repository         = $repositories[0];
+			$pixelDir           = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
+		} or $pixelDir = $tmpDir;
 		
 		my $fh;
 		open( $fh, "$executionPath $pixelDir $tmpDir $inputFile |" );
@@ -182,57 +185,61 @@ sub importFile() {
 		# Process the Pixels:
 		# rewrite <Pixels> to ST format
 		#
-		foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
-			my $ca = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
-			foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
-				my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
-				my $href = $externalXML->getAttribute( "href" );
-				my $sha1 = getSha1( $href );
-				system( "mv $href ". $repository->Path().$sha1 ) eq 0
-					or die "Could not move pixel file to repository.\n";
-
-				$href = $sha1;
-				$pixelsXML->setAttribute( "Path", $href );
-				$pixelsXML->setAttribute( "FileSHA1", $sha1 );
-
-				$pixelsXML->setAttribute( "SizeX", $imageXML->getAttribute( "SizeX" ) )
-					unless $pixelsXML->getAttribute( "SizeX" );
-				$pixelsXML->setAttribute( "SizeY", $imageXML->getAttribute( "SizeY" ) )
-					unless $pixelsXML->getAttribute( "SizeY" );
-				$pixelsXML->setAttribute( "SizeZ", $imageXML->getAttribute( "SizeZ" ) )
-					unless $pixelsXML->getAttribute( "SizeZ" );
-				$pixelsXML->setAttribute( "SizeC", $imageXML->getAttribute( "NumChannels" ) )
-					unless $pixelsXML->getAttribute( "SizeC" );
-				$pixelsXML->setAttribute( "SizeT", $imageXML->getAttribute( "NumTimes" ) )
-					unless $pixelsXML->getAttribute( "SizeT" );
-
-				die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
-					unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
-				my $pixelSize = $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
-				$pixelsXML->setAttribute( "BitsPerPixel", $pixelSize );
-				
-				$pixelsXML->setAttribute( "Repository", $LSIDresolver->getLSID( $repository ) );
-
-				$pixelsXML->removeAttribute( "DimensionOrder" );
-				$pixelsXML->removeAttribute( "BigEndian" );
-				$pixelsXML->removeAttribute( "NumChannels" );
-				$pixelsXML->removeAttribute( "NumTimes" );
-
-				$pixelsXML->removeChild( $externalXML );
-				if( ! $ca ) {
-					$ca = $doc->createElementNS( $OMENS, "CustomAttributes" )	
-						or die "Could not make <CustomAttributes>!";
-					$imageXML->appendChild( $ca );
+		# if there is no $repository, then there can be no image importing.
+		# the only valid case that has no $repository is during bootstrap
+		if( $repository ) {
+			foreach my $imageXML( $root->getElementsByTagNameNS( $OMENS, "Image" ) ) {
+				my $ca = $imageXML->getElementsByTagNameNS( $OMENS, "CustomAttributes" );
+				foreach my $pixelsXML( $imageXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
+					my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
+					my $href = $externalXML->getAttribute( "href" );
+					my $sha1 = getSha1( $href );
+					system( "mv $href ". $repository->Path().$sha1 ) eq 0
+						or die "Could not move pixel file to repository.\n";
+	
+					$href = $sha1;
+					$pixelsXML->setAttribute( "Path", $href );
+					$pixelsXML->setAttribute( "FileSHA1", $sha1 );
+	
+					$pixelsXML->setAttribute( "SizeX", $imageXML->getAttribute( "SizeX" ) )
+						unless $pixelsXML->getAttribute( "SizeX" );
+					$pixelsXML->setAttribute( "SizeY", $imageXML->getAttribute( "SizeY" ) )
+						unless $pixelsXML->getAttribute( "SizeY" );
+					$pixelsXML->setAttribute( "SizeZ", $imageXML->getAttribute( "SizeZ" ) )
+						unless $pixelsXML->getAttribute( "SizeZ" );
+					$pixelsXML->setAttribute( "SizeC", $imageXML->getAttribute( "NumChannels" ) )
+						unless $pixelsXML->getAttribute( "SizeC" );
+					$pixelsXML->setAttribute( "SizeT", $imageXML->getAttribute( "NumTimes" ) )
+						unless $pixelsXML->getAttribute( "SizeT" );
+	
+					die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
+						unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
+					my $pixelSize = $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
+					$pixelsXML->setAttribute( "BitsPerPixel", $pixelSize );
+					
+					$pixelsXML->setAttribute( "Repository", $LSIDresolver->getLSID( $repository ) );
+	
+					$pixelsXML->removeAttribute( "DimensionOrder" );
+					$pixelsXML->removeAttribute( "BigEndian" );
+					$pixelsXML->removeAttribute( "NumChannels" );
+					$pixelsXML->removeAttribute( "NumTimes" );
+	
+					$pixelsXML->removeChild( $externalXML );
+					if( ! $ca ) {
+						$ca = $doc->createElementNS( $OMENS, "CustomAttributes" )	
+							or die "Could not make <CustomAttributes>!";
+						$imageXML->appendChild( $ca );
+					}
+					
+					#strip out comments inside of <Pixels>
+					foreach( $pixelsXML->childNodes() ) {
+						$pixelsXML->removeChild( $_ );
+					}
+					
+					$imageXML->removeChild( $pixelsXML );
+					$ca->appendChild( $pixelsXML );
+					
 				}
-				
-				#strip out comments inside of <Pixels>
-				foreach( $pixelsXML->childNodes() ) {
-					$pixelsXML->removeChild( $_ );
-				}
-				
-				$imageXML->removeChild( $pixelsXML );
-				$ca->appendChild( $pixelsXML );
-				
 			}
 		}
 		#
@@ -241,9 +248,10 @@ sub importFile() {
 		#######################################################################
 		
 	# cleanup
-	foreach (@newdirs) {
-		die "Couldn't remove directory $_: $!\n" unless rmdir ($_);
+	if($pixelDir ne $tmpDir) {
+		die "Couldn't remove directory $_: $!\n" unless rmdir ($pixelDir);
 	}
+	die "Couldn't remove directory $_: $!\n" unless rmdir ($tmpDir);
 
 	return $doc;
 }
