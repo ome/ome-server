@@ -168,8 +168,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
-		b.getHeight()+2*PConstants.BORDER); 
+		return new PBounds(b.getX(),b.getY(),b.getWidth()+4*PConstants.BORDER,
+		b.getHeight()+4*PConstants.BORDER); 
 	}
 	
 
