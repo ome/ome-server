@@ -49,7 +49,8 @@ OME::ImportExport::ModuleImport - Import an Analysis Module XML specification.
 	use OME::ImportExport::ModuleImport;
 	use OME::SessionManager;
 	
-	my $session       = OME::SessionManager->TTYlogin();
+	my $manager       = OME::SessionManager->new();
+	my $session       = $manager->TTYlogin();
 	my $programImport = OME::ImportExport::ModuleImport->new( 
 		session => $session,
 		debug   => 0
