@@ -55,12 +55,12 @@ import java.util.HashMap;
  */
 
 public class Criteria
+    extends FieldsSpecification
 {
     private Map  criteria = new HashMap();
     private List  orderBy = new ArrayList();
     private int  limit = -1;
     private int  offset = -1;
-    private Map  fieldsWanted = new HashMap();
 
     /**
      * Creates a new <code>Criteria</code> object.
@@ -74,7 +74,6 @@ public class Criteria
     List getOrderBy() { return orderBy; }
     int getLimit() { return limit; }
     int getOffset() { return offset; }
-    Map getFieldsWanted() { return fieldsWanted; }
 
     /**
      * Adds a <code>WHERE</code> clause to this criteria; only objects
@@ -126,80 +125,6 @@ public class Criteria
     public void setOffset(int offset)
     {
         this.offset = offset;
-    }
-
-    /**
-     * Adds a field which will be accessible in the returned objects.
-     */
-    public void addWantedField(String field)
-    {
-        addWantedField(".",field);
-    }
-
-    /**
-     * Adds an array of fields which will be accessible in the
-     * returned objects.
-     */
-    public void addWantedFields(String[] fields)
-    {
-        addWantedFields(".",fields);
-    }
-
-    /**
-     * Adds a {@link List} of fields which will be accessible in the
-     * returned objects.
-     */
-    public void addWantedFields(List fields)
-    {
-        addWantedFields(".",fields);
-    }
-
-    /**
-     * Adds a field which will be accessible in an object in the
-     * specified has-many field.
-     */
-    public void addWantedField(String hasMany, String field)
-    {
-        List list = (List) fieldsWanted.get(hasMany);
-        if (list == null)
-        {
-            list = new ArrayList();
-            fieldsWanted.put(hasMany,list);
-        }
-
-        list.add(field);
-    }
-
-    /**
-     * Adds an array of fields which will be accessible in an object
-     * in the specified has-many field.
-     */
-    public void addWantedFields(String hasMany, String[] fields)
-    {
-        List list = (List) fieldsWanted.get(hasMany);
-        if (list == null)
-        {
-            list = new ArrayList(Arrays.asList(fields));
-            fieldsWanted.put(hasMany,list);
-        } else {
-            list.addAll(Arrays.asList(fields));
-        }
-    }
-
-    /**
-     * Adds a {@link List} of fields which will be accessible in an
-     * object in the specified has-many field.
-     */
-    public void addWantedFields(String hasMany, List fields)
-    {
-        List list = (List) fieldsWanted.get(hasMany);
-        if (list == null)
-        {
-            list = new ArrayList(fields);
-            fieldsWanted.put(hasMany,list);
-        } else {
-            list.addAll(fields);
-        }
     }
 
 }
