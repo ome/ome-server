@@ -78,7 +78,7 @@ public class CChain extends RemoteChain  {
 	 *
 	 */
 	private boolean executedInCurrentDataset = false;
-	
+
 	public CChain() {
 		super();
 	}
@@ -210,16 +210,19 @@ public class CChain extends RemoteChain  {
 	 * @param i the layer to make proper
 	 */
 	private void makeProperLayer(int i) {
-		CNode node;
-		//	System.err.println("working on layer "+i);
+		GraphLayoutNode node;
+		//System.err.println("working on layer "+i);
 		try {
 			Iterator iter = layering.layerIterator(i);
 			while (iter.hasNext()) {
-				node = (CNode) iter.next();
+				node = (GraphLayoutNode) iter.next();
 				makeProperNode(node,i);		
 			}
 		}
-		catch (Exception e) { }
+		catch (Exception e) { 
+			System.err.println("exception in makeProperLayer..");
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -230,16 +233,15 @@ public class CChain extends RemoteChain  {
 	 * @param i the layer for that node
 	 * 
 	 */
-	private void makeProperNode(CNode node,int i) {
+	private void makeProperNode(GraphLayoutNode node,int i) {
 		HashSet newLinks = new HashSet();
 		Iterator iter = node.succLinkIterator();
 		CLayoutLink link;
 		
-		/* if (!(node instanceof CLayoutNode))
-			System.err.println("making node proper: "+node.getModule().getName());
-		else	
-			System.err.println("making dummy node proper"); */
+		//System.err.println("making node proper: "+node.getName());
+		//System.err.println("doing links..."); 
 		while (iter.hasNext()) {
+			//System.err.println("LINK: ");
 			link = (CLayoutLink) iter.next();
 			makeProperLink(node,link,i,newLinks);
 		}
@@ -259,24 +261,21 @@ public class CChain extends RemoteChain  {
 	 * @param i the layer of the original node
 	 * @param newLinks the new successors of that node.
 	 */
-	private void makeProperLink(CNode node,CLayoutLink link,int i,
+	private void makeProperLink(GraphLayoutNode node,CLayoutLink link,int i,
 		HashSet newLinks) {
 		// we know node is at i.
 		
-		CNode to = (CNode) link.getToNode();
-		/*if (!(to instanceof CLayoutNode))
-			System.err.println("..link to "+to.getModule().getName());
-		else 
-			System.err.println("... link to dummy node"); */
+		GraphLayoutNode to = (GraphLayoutNode) link.getToNode();
+		//System.err.println("..link to "+to.getName());
 		int toLayer = to.getLayer();
 		if (toLayer == (i-1)) {
 			// layer is correct
 			newLinks.add(link);
 		}
 		else {
-			// create new node.
-			CLayoutNode dummy = new CLayoutNode();
-			
+			// create new dummy node
+			DummyNode dummy = new DummyNode();
+			//System.err.println("node is "+dummy);
 			CLink semanticLink = link.getSemanticLink();
 			// make this node point to "to"
 			CLayoutLink dummyOutLink = new CLayoutLink(semanticLink,dummy,to);
@@ -299,6 +298,8 @@ public class CChain extends RemoteChain  {
 			to.addPredLink(dummyOutLink);
 			
 			// add dummy to next layer.
+			//System.err.println("adding a dummy node at layer"+(i-1));
+			//System.err.println("node is "+dummy);
 			layering.addToLayer(i-1,dummy);
 			
 			// adjust the semantic link to put dummy in between "from" and "to".
@@ -358,12 +359,12 @@ public class CChain extends RemoteChain  {
 			// Iterator iter = layer.iterator(); 11/10/03 hsh
 		//	System.err.println("crossing reduction - layer "+layerNumber);
 			Iterator iter = layering.layerIterator(layerNumber);
-			CNode node;
+			GraphLayoutNode node;
 			Collection adjs;
 			double baryCenter=0.0;
 		
 			while (iter.hasNext()) {
-				node = (CNode) iter.next();
+				node = (GraphLayoutNode) iter.next();
 				if (pred == true)
 					adjs = node.getPredecessors();
 				else	
@@ -394,7 +395,7 @@ public class CChain extends RemoteChain  {
 		int total =0;
 		Iterator iter = adjs.iterator();
 		while (iter.hasNext()) {
-			CNode c = (CNode) iter.next();
+			GraphLayoutNode c = (GraphLayoutNode) iter.next();
 			total += c.getPosInLayer(); 
 		}
 		center = total/deg;
@@ -411,9 +412,9 @@ public class CChain extends RemoteChain  {
 			int n = layering.getLayerSize(layerNumber);
 		
 			for (int i = 1; i < n; i++) {
-				CNode node = layering.getNode(layerNumber,i);
+				GraphLayoutNode node = layering.getNode(layerNumber,i);
 				for (int j = i-1; j >=0; j--) {
-					CNode prev = layering.getNode(layerNumber,j);
+					GraphLayoutNode prev = layering.getNode(layerNumber,j);
 					
 					if (prev.getPosInLayer() >= node.getPosInLayer()) {
 						layering.setNode(layerNumber,j+1,prev);
@@ -439,7 +440,7 @@ public class CChain extends RemoteChain  {
 		try {
 			//System.err.println("assigning position from layer "+layerNumber);
 			while (iter.hasNext()) {
-				CNode node = (CNode) iter.next();
+				GraphLayoutNode node = (GraphLayoutNode) iter.next();
 				node.setPosInLayer(pos);
 				pos +=1.0;
 			}
@@ -474,23 +475,28 @@ public class CChain extends RemoteChain  {
 		System.err.println("Chain is "+getName());
 		int count = layering.getLayerCount();
 		for (int i =0; i < count; i++) {
-			System.err.println("Layer "+i);
-			Iterator iter = layering.layerIterator(i);
-			while (iter.hasNext()) {
-				CNode node = (CNode) iter.next();
-				if (node instanceof CLayoutNode)
-					System.err.println("....Node:  dummy");
-				else {
-					CModule mod = (CModule) node.getModule();
-					if (mod != null)
-						System.err.println("....Node: "+mod.getName());
-					else
-						System.err.println("non dummy w/out a module");
-				}
-				System.err.println("... position in layer is "+
-					node.getPosInLayer());
-			} 
+			dumpLayer(i);
 		}
+	}
+	
+	private void dumpLayer(int i) {
+		System.err.println("Layer "+i);
+		Iterator iter = layering.layerIterator(i);
+		while (iter.hasNext()) {
+			GraphLayoutNode node = (GraphLayoutNode) iter.next();
+			if (node instanceof DummyNode)
+				System.err.println("....Node:  dummy");
+			else {
+				CNode n = (CNode) node;
+				CModule mod = (CModule) n.getModule();
+				if (mod != null)
+					System.err.println("....Node: "+mod.getName());
+				else
+					System.err.println("non dummy w/out a module");
+			}
+			System.err.println("... position in layer is "+
+				node.getPosInLayer());
+		} 
 	}
  
 
@@ -529,7 +535,7 @@ public class CChain extends RemoteChain  {
 		 * @param layerNumber the layer to which the node will be added.
 		 * @param node the node to add
 		 */
-		public void addToLayer(int layerNumber,CNode node) {
+		public void addToLayer(int layerNumber,GraphLayoutNode node) {
 			if (layerNumber > layers.size()-1) { // if we haven't created this layer yet
 				for (int i = layers.size(); i <= layerNumber; i++) {
 					Vector  v = new Vector();
@@ -586,9 +592,9 @@ public class CChain extends RemoteChain  {
 		 * @param n a node index
 		 * @return the {@link n}th node from layer {@link layerNumber}
 		 */
-		public CNode getNode(int layerNumber,int n) {
+		public GraphLayoutNode getNode(int layerNumber,int n) {
 			Vector v = getLayer(layerNumber);
-			CNode node = (CNode) v.elementAt(n);
+			GraphLayoutNode node = (GraphLayoutNode) v.elementAt(n);
 			return node;
 		}
 	
@@ -598,7 +604,7 @@ public class CChain extends RemoteChain  {
 		 * @param n position in the layer
 		 * @param node node to place in thhe given layer
 		 */
-		public void setNode(int layerNumber,int n,CNode node) {
+		public void setNode(int layerNumber,int n,GraphLayoutNode node) {
 			Vector v = getLayer(layerNumber);
 			v.setElementAt(node,n);
 		}
