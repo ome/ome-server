@@ -39,7 +39,8 @@
  */
  
 package org.openmicroscopy.vis.dnd;
- 
+
+
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -58,11 +59,13 @@ import java.io.IOException;
  	
 	
 	private String data;
-						   
+		
+					   
 	 public ModuleSelection(int d) {
-			 this.data = Integer.toString(d);
+		 this.data = Integer.toString(d);
 	 }
-
+	 
+	
 	public DataFlavor[] getTransferDataFlavors() {
 		DataFlavor [] res =  new DataFlavor[1];
 		res[0] = ModuleFlavor.moduleFlavor;

@@ -58,10 +58,13 @@ import java.io.IOException;
  	
 	
 	private Integer data;
+	
 						   
 	 public ChainSelection(Integer data) {
-			 this.data = data;
+		 this.data = data;
 	 }
+	 
+	 
 
 	public DataFlavor[] getTransferDataFlavors() {
 		DataFlavor[] res  = new DataFlavor[1];
