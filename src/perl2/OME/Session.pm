@@ -75,58 +75,42 @@ our $VERSION = $OME::VERSION;
 
 use strict;
 
-use Carp;
-use OME::DBObject;
-use base qw(OME::DBObject Class::Accessor);
+use Carp; 
+use OME::UserState;
+use base qw(Class::Accessor);
 use POSIX;
-
-__PACKAGE__->Caching(0);
 
 #use Benchmark::Timer;
 
-use fields qw(Factory Manager DBH ApacheSession SessionKey Configuration);
-__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey Configuration));
+#use fields qw(Factory Manager DBH UserState ApacheSession SessionKey Configuration);
+__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH UserState ApacheSession SessionKey Configuration));
 
-__PACKAGE__->newClass();
-__PACKAGE__->setDefaultTable('ome_sessions');
-__PACKAGE__->setSequence('session_seq');
-__PACKAGE__->addPrimaryKey('session_id');
-__PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
-                       {
-                        SQLType => 'integer',
-                        ForeignKey => 'experimenters',
-                        NotNull => 1
-                       });
-__PACKAGE__->addColumn(host => 'host',{SQLType => 'varchar(256)'});
-__PACKAGE__->addColumn(project_id => 'project_id');
-__PACKAGE__->addColumn(project => 'project_id','OME::Project',
-                       {
-                        SQLType => 'integer',
-                        ForeignKey => 'projects',
-                       });
-__PACKAGE__->addColumn(dataset_id => 'dataset_id');
-__PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
-                       {
-                        SQLType => 'integer',
-                        ForeignKey => 'datasets',
-                       });
-__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
-__PACKAGE__->addColumn(module_execution => 'module_execution_id',
-                       {SQLType => 'integer'});
-__PACKAGE__->addColumn(image_view => 'image_view',{SQLType => 'text'});
-__PACKAGE__->addColumn(feature_view => 'feature_view',{SQLType => 'text'});
-__PACKAGE__->addColumn(last_access => 'last_access',
-                       {
-                        SQLType => 'timestamp',
-                        Default => 'now',
-                       });
-__PACKAGE__->addColumn(started => 'started',
-                       {
-                        SQLType => 'timestamp',
-                        Default => 'now',
-                       });
+# transparant interface to UserState
+sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
+sub host { return shift->{UserState}->host(@_); }
+sub project_id { return shift->{UserState}->project_id(@_); }
+sub project { return shift->{UserState}->project(@_); }
+sub dataset_id { return shift->{UserState}->dataset_id(@_); }
+sub dataset { return shift->{UserState}->dataset(@_); }
+sub module_execution_id { return shift->{UserState}->module_execution_id(@_); }
+sub module_execution { return shift->{UserState}->module_execution(@_); }
+sub image_view { return shift->{UserState}->image_view(@_); }
+sub feature_view { return shift->{UserState}->feature_view(@_); }
+sub last_access { return shift->{UserState}->last_access(@_); }
+sub started { return shift->{UserState}->started(@_); }
+sub storeObject { return shift->{UserState}->storeObject(@_); }
+sub writeObject { return shift->{UserState}->writeObject(@_); }
 
 
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $self = $class->SUPER::new();
+    
+    return $self;
+
+}
 
 =head1 METHODS
 
@@ -177,7 +161,7 @@ sub closeSession {
     # When we log out, break any circular links between the Session
     # and other objects, to allow them all to get garbage-collected.
 	$self->{Factory}->closeFactory();
-	$self->{__session} = undef;
+	$self->{UserState}->{__session} = undef;
     $self->{Manager} = undef;
 }
 
