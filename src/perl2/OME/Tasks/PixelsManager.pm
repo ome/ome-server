@@ -231,6 +231,7 @@ sub createPixels {
       $proto->localCreatePixels($repository,@_):
       $proto->serverCreatePixels($repository,@_);
 }
+sub createParentalPixels { return shift->createPixels( @_, 1 ); }
 
 =head2 finishPixels
 
@@ -505,8 +506,12 @@ sub serverCreatePixels {
 
 	$data_hash->{ Repository }    = $repository;
 	$data_hash->{ ImageServerID } = $pixels->getPixelsID();
-    my $attr = $factory->
-      newAttribute('Pixels',$image,$mex,$data_hash,$isParentalOutput);
+	my @factory_params = ( 'Pixels',$image,$mex,$data_hash);
+    my $attr = ( 
+    	$isParentalOutput ?
+    	$factory->newParentAttribute( @factory_params ) :
+    	$factory->newAttribute( @factory_params )
+    );
     return ($pixels,$attr);
 }
 
