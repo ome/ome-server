@@ -4,7 +4,7 @@ acessible by the command line.
 
 ome-smoke-test.sh
   Example:
-    sudo ./ome-smoke-test.sh igg ~igg/OME/OME ~igg/OME/OME-WEBSITE/TestImages 3\
+    sudo ./ome-smoke-test.sh igg ~igg/OME/OME ~igg/OME/OME-WEBSITE/TestImages 11\
     "--to=igg@helix.nih.gov" "/Users/igg/OME/OME/src/util/misc/SMTPclient.pl \
     --stdin --from=igg@nih.gov --host=helix.nih.gov --subject="
 

@@ -96,7 +96,7 @@ echo "Import log for $HOST on `date`" > $LOG_FILE
 echo "command line and options:" >> $LOG_FILE
 echo "$0 $*" >> $LOG_FILE
 echo "------------------------------------------------------------" >> $LOG_FILE
-su - $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*.tif*"  >> $LOG_FILE 2>&1
+su - $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
 #
 # Get images
 #
