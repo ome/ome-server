@@ -155,7 +155,11 @@ struct stat fStat;
 	return (myFile);
 }
 
-
+/*
+  This deletes the file and its ".info" companion, but it does not delete the file's
+  digest from the SHA1 => ID database.
+  Call ExpungeFile to delete all records of the file.
+*/
 int DeleteFile (FileRep *myFile) {
 	if (myFile->is_mmapped) munmap (myFile->file_buf, myFile->size_rep);
 	if (myFile->fd_info >=0 ) close (myFile->fd_info);
@@ -173,6 +177,32 @@ int DeleteFile (FileRep *myFile) {
 	myFile->fd_rep = -1;
 	myFile->is_mmapped = 0;
 	myFile->file_buf = NULL;
+	return (0);
+}
+
+
+int ExpungeFile (FileRep *myFile) {
+OID existOID;
+
+	/* Get the file's info */
+	GetFileInfo (myFile);
+
+	/* Open the DB file if necessary */
+	if (! myFile->DB)
+		if (! (myFile->DB = sha1DB_open (myFile->path_DB)) ) {
+			DeleteFile (myFile);
+			return (0);
+		}
+
+	/* Check if SHA1 exists */
+	if ( (existOID = sha1DB_get (myFile->DB, myFile->file_info.sha1)) ) {
+		sha1DB_del (myFile->DB, myFile->file_info.sha1);
+	}
+	
+	sha1DB_close (myFile->DB);
+	myFile->DB = NULL;
+	
+	DeleteFile (myFile);
 	return (0);
 }
 

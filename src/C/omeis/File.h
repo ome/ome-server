@@ -81,6 +81,9 @@ GetFileRep (OID ID, size_t offset, size_t length);
 int
 DeleteFile (FileRep *myFile);
 
+int
+ExpungeFile (FileRep *myFile);
+
 FileRep *
 NewFile (char *filename, size_t size);
 
