@@ -42,6 +42,8 @@
 
 package org.openmicroscopy.alligator;
 
+import org.openmicroscopy.remote.XmlRpcCaller;
+
 public class Alligator
 {
     public static void main(String[] args)
@@ -54,6 +56,8 @@ public class Alligator
         System.setProperty("com.apple.mrj.application.live-resize","true");
         System.setProperty("com.apple.mrj.application.growbox.intrudes","true");
         System.setProperty("apple.laf.useScreenMenuBar","true");
+
+        XmlRpcCaller.TRACE_CALLS = true;
 
         Controller controller = new Controller();
 
