@@ -388,9 +388,8 @@ sub restore {
 		}
 		
 		if ($dropdb == 0) {
-			# user doesn't want to overwrite database, so we cleanup and exit
-			unlink("$iwd/omeDB_backup") or die "Couldn't remove temporary $iwd/omeDB_backup";
-			return;
+			# user doesn't want to overwrite database, so we exit
+			exit();
 		}
 	}
 	
