@@ -138,7 +138,7 @@ to the database and saved to disk.
 The original signature chain must already be imported into the database. 
 
 Options:
-  -a  the name of the signature chain to stitch
+  -a  the id or name of the signature chain to stitch
 
   -x  path of xml source directory
   
@@ -322,7 +322,12 @@ sub stitch_chain {
 	my ($self,$commands) = @_;
 	my ($xml_src, $outdir, $compression, $chain_name );
 	
-	GetOptions('x=s' => \$xml_src, 'o=s' => \$outdir, 'c=s' => \$chain_name, 'compress' => \$compression );
+	GetOptions(
+		'x=s' => \$xml_src, 
+		'o=s' => \$outdir, 
+		'a=s' => \$chain_name, 
+		'compress' => \$compression 
+	);
 	$compression = ( $compression ? 7 : 0 );
 	die "one or more options not specified"
 		unless $xml_src and $outdir and $chain_name;
@@ -333,8 +338,15 @@ sub stitch_chain {
 	# find modules that produce signatures
 	# simple implementation of leaf nodes for now
 	logdbg "debug", "Finding Signature Modules in chain $chain_name";
-	my $chain = $factory->findObject( "OME::AnalysisChain", name => $chain_name )
-		or die "cannot find chain named $chain_name";
+	my $chain;
+	$chain = $factory->loadObject( "OME::AnalysisChain", $chain_name )
+		if( $chain_name =~ m/^\d+$/ );
+	unless ($chain) {
+		my @chains = $factory->findObjects( "OME::AnalysisChain", name => $chain_name );
+		die @chains." chains found with that name ($chain_name). Expected exactly 1."
+			unless( scalar( @chains ) eq 1 );
+		$chain = $chains[ 0 ];
+	}
 	my @signature_nodes = OME::Tasks::ChainManager->findLeaves( $chain );
 	logdbg "debug", "Found chain nodes. Format of output is 'module_name(node_id)'\n\t".
 		join( ', ', map( $_->module->name."(".$_->id.")", @signature_nodes ) );
