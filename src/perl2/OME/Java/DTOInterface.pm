@@ -407,6 +407,9 @@ JAVA
     my $extend_string = join(', ',@superinterfaces);
     print $int_fh "    extends $extend_string\n{\n";
 
+    my $dtn_prefix = $class->{DataTypePrefix};
+    $dtn_prefix = "" unless defined $dtn_prefix;
+
     if (!defined $class->{Superclass}) {
         print $dto_fh <<"JAVA";
 import org.openmicroscopy.ds.dto.MappedDTO;
@@ -420,7 +423,7 @@ public class ${dto_class}
     public ${dto_class}() { super(); }
     public ${dto_class}(Map elements) { super(elements); }
 
-    public String getDTOTypeName() { return "${int_class}"; }
+    public String getDTOTypeName() { return "${dtn_prefix}${int_class}"; }
     public Class getDTOType() { return ${int_class}.class; }
 
 JAVA
@@ -439,6 +442,9 @@ public class ${dto_class}
 {
     public ${dto_class}() { super(); }
     public ${dto_class}(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "${dtn_prefix}${int_class}"; }
+    public Class getDTOType() { return ${int_class}.class; }
 
 JAVA
     }

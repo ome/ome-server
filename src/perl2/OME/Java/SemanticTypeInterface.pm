@@ -288,6 +288,7 @@ sub writeOneSemanticType ($) {
     my %class_desc;
     $class_desc{Package} = 'org.openmicroscopy.ds.st';
     $class_desc{Class} = $type_classname;
+    $class_desc{DataTypePrefix} = '@';
 
     # Look for reference elements, and if there are any, add them to the
     # list of ST's to import.
