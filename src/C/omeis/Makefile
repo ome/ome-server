@@ -15,8 +15,8 @@ IM_LIBS = -Lzoom/lib/ -lzoom -lpic -ltiff -ljpeg -lpng
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
-CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wundef -std=c99
-LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_LIB) $(IM_LIBS)
+CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wundef
+LIBS   = -lm -lssl -lcrypto -lz -lbz2 -ldb $(XML2_LIBS) $(FINK_LIB) $(IM_LIBS)
 INCS   = $(FINK_INCLUDE) 
 OBJS   = digest.o method.o composite.o cgi.o repository.o Pixels.o File.o sha1DB.o \
 		xmlBinaryResolution.o ../base64.o ../b64z_lib.o
