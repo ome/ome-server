@@ -704,6 +704,52 @@ sub getROI {
     return $result;
 }
 
+=head2 setThumb
+
+	OME::Image::Server->
+	    setThumb($pixelsID,$theT,$theZ,$channels,$levelBasis);
+
+This method sets the thumbnail of a pixel set. The composite format will
+be set to 'jpeg', and the composite will be written to the same path as
+the Pixels file with a '.thumb' extension. The GetThumb method will
+retrieve this file. The following parameters are required.
+
+	channels: A hash reference. Keys are one or more of red, green, blue,
+gray. Values are arrays with 4 values representing channel index, black
+level, white level and gamma. For example { Red => [0, 300, 2563, 1.0]
+}. The levels and gamma are floating point numbers, the channel index is
+an integer.
+	levelBasis: An optional levelBasis parameter can be used to set the
+levels based on statistics (mean or geomean) rather than absolute pixel
+intensities. For example, LevelBasis=mean allows you to specify the
+channel levels based on mean +/- standard deviations, e.g.
+{ Red => [0, 1.5, 4.5, 1.0] } will set the black level to the mean+1.5*sigma
+and white level to mean+4.5*sigma. The statistics used are stack
+statistics (different for every channel and every timepoint).
+
+=cut
+
+sub setThumb {
+    my $proto = shift;
+    my ($pixelsID,$theT,$theZ,$channels,$levelBasis) = @_;
+    my %params = (Method       => 'Composite',
+                  SetThumb     => 1,
+                  PixelsID     => $pixelsID,
+                  theZ         => $theZ,
+                  theT         => $theT,
+                 );
+    $params{RedChannel}   = join(',', @{ $channels->{red} })
+    	if exists $channels->{red} and defined $channels->{red};
+    $params{BlueChannel}  = join(',', @{ $channels->{blue} })
+    	if exists $channels->{blue} and defined $channels->{blue};
+    $params{GreenChannel} = join(',', @{ $channels->{green} })
+    	if exists $channels->{green} and defined $channels->{green};
+    $params{GrayChannel}  = join(',', @{ $channels->{gray} })
+    	if exists $channels->{gray} and defined $channels->{gray};
+    $params{LevelBasis}   = $levelBasis if defined $levelBasis;
+    $proto->__callOMEIS(%params);
+}
+
 =head2 setPixels
 
 	my $pixelsWritten = OME::Image::Server->
