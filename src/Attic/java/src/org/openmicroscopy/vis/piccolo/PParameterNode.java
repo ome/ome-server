@@ -55,8 +55,11 @@ import edu.umd.cs.piccolo.PNode;
  */
 
 public class PParameterNode extends PNode {
+	
+
 
 	public PParameterNode() {
+		super();
 	}
 	
 	public void addChild(PFormalParameter p) {
