@@ -298,8 +298,10 @@ public abstract class MappedDTO
             } catch (NumberFormatException e) {
                 throw new DataException("Expected an int, got an ugly String");
             }
-        } else
-            throw new DataException("Expected an int, got a "+o.getClass());
+        } else {
+            Class c = o == null ? null : o.getClass();
+            throw new DataException("Expected an int, got a "+c);
+        }
     }
 
     /**
@@ -502,7 +504,8 @@ public abstract class MappedDTO
         if (!elements.containsKey(key))
             throw new DataException("The "+key+" field was not loaded");
 
-        return elements.get(key).toString();
+        Object o = elements.get(key);
+        return o == null ? null : o.toString();
     }
 
     /**
