@@ -90,24 +90,30 @@ sub requireAttributePackage {
 	push @column_defs, lc($column->column_name());
     }
 
-    $pkg->columns(Essential => @column_defs);
-    
     my $type = $self->attribute_type();
     my $accessors = {};
     if ($type eq 'D') {
 	$pkg->hasa('OME::Dataset' => qw(dataset_id));
-	$accessors->{dataset_id} = 'dataset';
     } elsif ($type eq 'I') {
 	$pkg->hasa('OME::Image' => qw(image_id));
-	$accessors->{image_id} = 'image';
     } elsif ($type eq 'F') {
 	my $features_type = OME::DataType->findByTable('FEATURES');
 	my $features_pkg = $features_type->requireAttributePackage();
 	$pkg->hasa($features_pkg => qw(feature_id));
-	$accessors->{feature_id} = 'feature';
     }
 
-    $pkg->AccessorNames($accessors);
+    $pkg->columns(Essential => @column_defs);    
+
+    # Make accessors for dataset, image, and feature.
+    no strict 'refs';
+    if ($type eq 'D') {
+        *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
+    } elsif ($type eq 'I') {
+        *{$pkg."::image"}   = \&{$pkg."::image_id"};
+    } elsif ($type eq 'F') {
+        *{$pkg."::feature"} = \&{$pkg."::feature_id"};
+    }
+    use strict 'refs';
 
     $self->_attributePackages()->{$pkg} = $self;
 

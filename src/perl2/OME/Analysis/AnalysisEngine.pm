@@ -33,6 +33,8 @@ use OME::AnalysisView;
 use OME::AnalysisPath;
 use OME::AnalysisExecution;
 
+use Benchmark qw(timediff timesum timestr);
+
 
 # For now assume the module type is the Perl class of the
 # module handler.
@@ -125,6 +127,14 @@ sub findModuleHandler {
 
     # The data paths to which each node belongs.
     my %data_paths;
+
+    # Timing benchmarks
+    my $start_time;
+    my $end_time;
+    my $t0 = new Benchmark;
+    my $t1 = new Benchmark;
+    my $inputs_time = timediff($t1,$t0);
+    my $outputs_time = timediff($t1,$t0);
 
     # This routine prepares the all of the internal variables for each
     # node in the chain.  It loads in the appropriate module handler,
@@ -323,21 +333,30 @@ sub findModuleHandler {
     sub __createActualInputs {
         my ($input,$attribute_list) = @_;
         
+        my $t0 = new Benchmark;
+        
         my $formal_input = $input->to_input();
         #print STDERR "      Actual input ".$formal_input->name()."...";
         
         my $count = 0;
+        my $actual_input_data = {
+            analysis     => __getAnalysis($curr_nodeID),
+            formal_input => $formal_input,
+            attribute_id => undef
+            };
         foreach my $attribute (@$attribute_list) {
-            my $actual_input_data = {
-                analysis     => __getAnalysis($curr_nodeID),
-                formal_input => $formal_input,
-                attribute_id => $attribute->id()
-                };
+            $actual_input_data->{actual_input_id} = undef;
+            $actual_input_data->{attribute_id} = $attribute->id();
             my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
                                                    $actual_input_data);
             $count++;
         }
         
+        my $t1 = new Benchmark;
+        my $td = timediff($t1,$t0);
+        
+        $inputs_time = timesum($inputs_time,$td);
+
         my $s = ($count == 1)? "": "s";
         #print STDERR $count." item$s\n";
     }
@@ -346,23 +365,32 @@ sub findModuleHandler {
     # output and a list of attributes.
     sub __createActualOutputs {
         my ($output,$attribute_list) = @_;
+
+        my $t0 = new Benchmark;
         
         my $formal_output = $output;#->from_output();
         #print STDERR "      Actual output ".$formal_output->name()."...";
         
-        my $count = 0;
+        #my $count = 0;
+        my $actual_output_data = {
+            analysis      => __getAnalysis($curr_nodeID),
+            formal_output => $formal_output,
+            attribute_id  => undef
+            };
         foreach my $attribute (@$attribute_list) {
-            my $actual_output_data = {
-                analysis      => __getAnalysis($curr_nodeID),
-                formal_output => $formal_output,
-                attribute_id  => $attribute->id()
-                };
+            $actual_output_data->{actual_output_id} = undef;
+            $actual_output_data->{attribute_id} = $attribute->id();
             my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",
                                                     $actual_output_data);
-            $count++;
+            #$count++;
         }
 
-        my $s = ($count == 1)? "": "s";
+        my $t1 = new Benchmark;
+        my $td = timediff($t1,$t0);
+
+        $outputs_time = timesum($outputs_time,$td);
+
+        #my $s = ($count == 1)? "": "s";
         #print STDERR $count." item$s\n";
     }
 
@@ -612,7 +640,7 @@ sub findModuleHandler {
             my $attribute_list = $actuals{$formal_output->id()};
             
             foreach my $attribute (@$attribute_list) {
-                my $image = $attribute->image_id();
+                my $image = $attribute->image();
                 push @{$image_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}}, $attribute;
             }
         }
@@ -687,6 +715,8 @@ sub findModuleHandler {
     sub executeAnalysisView {
         ($session, $analysis_view,$input_parameters, $dataset) = @_;
         $factory = $session->Factory();
+
+        $start_time = new Benchmark;
 
         # all nodes
         @nodes = $analysis_view->nodes();
@@ -917,12 +947,27 @@ sub findModuleHandler {
                     print STDERR "    Image outputs\n";
                     foreach my $output (@curr_image_outputs) {
                         my $formal_output = $output;#->from_output();
+                        print STDERR "      Actual output ".$formal_output->name()."\n";
+                        my ($t0,$t1,$td);
+                        $t0 = new Benchmark;
                         my $attribute_list = $image_attributes->{$formal_output->name()};
+                        $t1 = new Benchmark;
+                        $td = timediff($t1,$t0);
+                        print STDERR "        Retrieve attribute list ".timestr($td)."\n";
                         if (ref($attribute_list) ne 'ARRAY') {
                             $attribute_list = [$attribute_list];
                         }
+                        $t0 = new Benchmark;
+                        $td = timediff($t0,$t1);
+                        print STDERR "        Coerce attribute list   ".timestr($td)."\n";
                         __createActualOutputs($output,$attribute_list);
+                        $t1 = new Benchmark;
+                        $td = timediff($t1,$t0);
+                        print STDERR "        Create actuals          ".timestr($td)."\n";
                         $image_outputs{$curr_nodeID}->{$formal_output->id()}->{$curr_imageID} = $attribute_list;
+                        $t0 = new Benchmark;
+                        $td = timediff($t0,$t1);
+                        print STDERR "        Store outputs           ".timestr($td)."\n";
                     }
 
                     $curr_module->finishImage($curr_image);
@@ -957,8 +1002,17 @@ sub findModuleHandler {
         }                        # while ($continue)
 
         $last_node->dbi_commit();
-    }
 
+        $end_time = new Benchmark;
+        
+        my $total_time = timediff($end_time,$start_time);
+        
+        print STDERR "\nTiming:\n";
+        print STDERR "  Total:          ".timestr($total_time)."\n";
+        print STDERR "  ACTUAL_INPUTS:  ".timestr($inputs_time)."\n";
+        print STDERR "  ACTUAL_OUTPUTS: ".timestr($outputs_time)."\n";
+        
+    }
 }
 
 1;
