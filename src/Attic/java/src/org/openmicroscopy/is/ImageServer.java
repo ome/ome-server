@@ -71,7 +71,11 @@ public abstract class ImageServer
 {
     public static ImageServer getDefaultImageServer()
     {
-        return getHTTPImageServer("http://localhost/cgi-bin/omeis");
+        String uri = System.
+            getProperty("org.openmicroscopy.is.url",
+                        "http://localhost/cgi-bin/omeis");
+
+        return getHTTPImageServer(uri);
     }
 
     public static ImageServer getHTTPImageServer(String location)
