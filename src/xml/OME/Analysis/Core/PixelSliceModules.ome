@@ -36,7 +36,6 @@
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
   <AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
-	<!-- Converter Modules always have Formal Outputs of PixelsSlice STs -->
     <AnalysisModule
        ModuleName="Pixels Converter"
        Category="PixelsSlice Converters"
@@ -152,89 +151,6 @@
       </Declaration>
     </AnalysisModule>
     
-    <!-- Adapter Modules always have Formal Inputs of PixelsSlice STs -->
-    <AnalysisModule
-       ModuleName="PixelsChannelSlice Adapter"
-       Category="PixelsSlice Adapters"
-       ModuleType="OME::Analysis::Modules::Indices::Pixels"
-	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2015">
-
-      <Description>
-       This module creates separate PixelsChannelSlices for each channel of the input 
-       PixelsSlice. Use this module to cast PixelsSlices in preparation for modules that
-       require the PixelsChannelSlices ST.
-      </Description>
-
-      <Declaration>
-        <FormalInput
-           Name="Pixels Slices"
-           SemanticTypeName="PixelsSlice"
-           Count="+"/>
-        <FormalOutput
-           Name="PixelsChannelSlices"
-           SemanticTypeName="PixelsChannelSlice"
-           Count="+"/>
-      </Declaration>
-    </AnalysisModule>
-    
-    <AnalysisModule
-       ModuleName="PixelsTimeSlice Adapter"
-       Category="PixelsSlice Adapters"
-       ModuleType="OME::Analysis::Modules::Indices::Pixels"
-	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2016">
-
-      <Declaration>
-        <FormalInput
-           Name="Pixels Slices"
-           SemanticTypeName="PixelsSlice"
-           Count="+"/>
-        <FormalOutput
-           Name="PixelsTimeSlices"
-           SemanticTypeName="PixelsTimeSlice"
-           Count="+"/>
-      </Declaration>
-    </AnalysisModule>
-    
-    <AnalysisModule
-       ModuleName="PixelsStackSlice Adapter"
-       Category="PixelsSlice Adapters"
-       ModuleType="OME::Analysis::Modules::Indices::Pixels"
-	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2017">
-
-      <Declaration>
-        <FormalInput
-           Name="Pixels Slices"
-           SemanticTypeName="PixelsSlice"
-           Count="+"/>
-        <FormalOutput
-           Name="PixelsStackSlices"
-           SemanticTypeName="PixelsStackSlice"
-           Count="+"/>
-      </Declaration>
-    </AnalysisModule>
-    
-    <AnalysisModule
-       ModuleName="PixelsPlaneSlice Adapter"
-       Category="PixelsSlice Adapters"
-       ModuleType="OME::Analysis::Modules::Indices::Pixels"
-	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2018">
-
-      <Declaration>
-        <FormalInput
-           Name="Pixels Slices"
-           SemanticTypeName="PixelsSlice"
-           Count="+"/>
-        <FormalOutput
-           Name="PixelsPlaneSlices"
-           SemanticTypeName="PixelsPlaneSlice"
-           Count="+"/>
-      </Declaration>
-    </AnalysisModule>
-    
     <!-- Slice Modules Input and Output PixelsSlices ST -->
     <AnalysisModule
        ModuleName="Slice on Channels"
@@ -261,8 +177,12 @@
            SemanticTypeName="PixelsChannelIndex"
            Count="*"/>
         <FormalOutput
-           Name="Channel Slices"
+           Name="Pixel Slices"
            SemanticTypeName="PixelsSlice"
+           Count="*">
+        <FormalOutput
+           Name="Channel Slices"
+           SemanticTypeName="PixelsChannelSlice"
            Count="*">
         </FormalOutput>
       </Declaration>
@@ -287,6 +207,10 @@
            Name="Timepoint Indices"
            SemanticTypeName="PixelsTimeIndex"
            Count="*"/>
+        <FormalOutput
+           Name="Pixel Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
         <FormalOutput
            Name="Timepoint Slices"
            SemanticTypeName="PixelsSlice"
@@ -315,6 +239,10 @@
            SemanticTypeName="PixelsStackIndex"
            Count="*"/>
         <FormalOutput
+           Name="Pixel Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
+        <FormalOutput
            Name="Stack Slices"
            SemanticTypeName="PixelsSlice"
            Count="*">
@@ -341,6 +269,10 @@
            Name="Plane Indices"
            SemanticTypeName="PixelsPlaneIndex"
            Count="*"/>
+        <FormalOutput
+           Name="Pixel Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
         <FormalOutput
            Name="Plane Slices"
            SemanticTypeName="PixelsSlice"
