@@ -83,13 +83,18 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private static final int LINKING_PARAMS=2;
 	private static final int LINKING_MODULES=3;
 	private static final int LINKING_CANCELLATION=4;
+	private static final int LINK_CHANGING_POINT=5;
 	
 	private static final double SCALE_FACTOR=1.2;
+	
+	private static final int SPACING=6;
 	private int linkState = NOT_LINKING;
 	
 	// Store the last module parameter that we were in.
 	private PFormalParameter lastParameterEntered;
 	private PModule lastModuleEntered;
+	
+	private PLinkSelectionTarget selectionTarget;
 	private PLinkLayer linkLayer;
 	
 	
@@ -148,17 +153,27 @@ public class PChainEventHandler extends  PPanEventHandler {
 		if (node instanceof PModule) {
 			if (linkState != LINKING_MODULES) {
 				System.err.println("translating a node");
-				PModule mn = (PModule) node;
+				PModule mod = (PModule) node;
 				Dimension2D delta = e.getDeltaRelativeTo(node);
-				node.translate(delta.getWidth(),delta.getHeight());
+				mod.translate(delta.getWidth(),delta.getHeight());
 				e.setHandled(true);
 			}
+		}
+		else if (linkState == LINK_CHANGING_POINT) {
+			System.err.println("dragging  link interior..");
+			Dimension2D delta = e.getDeltaRelativeTo(node);
+			if (node instanceof PLinkSelectionTarget) {
+				PLinkSelectionTarget target = (PLinkSelectionTarget) node;
+				target.translate(delta.getWidth(),delta.getHeight());
+			}
+			e.setHandled(true);
 		}
 		else if (!(node instanceof PFormalParameter) 
 			&& linkState == NOT_LINKING){
 			super.drag(e);
 			e.setHandled(true);
 		}
+		
 	}
 	
 	/**
@@ -296,10 +311,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
-		//System.err.println("mouse pressed on "+node);
+		System.err.println("mouse pressed on "+node+", state "+linkState);
 		
 		// clear off what was selected.
-		if (selectedLink != null) {
+		if (selectedLink != null && linkState != LINK_CHANGING_POINT) {
+			System.err.println("setting selected link to not be selected, in mousePressed");
 			selectedLink.setSelected(false);
 			selectedLink = null;
 		}
@@ -307,10 +323,16 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule.removeHandles();
 			selectedModule = null;
 		}
+		if (selectionTarget != null) {
+			selectionTarget.getLink().setSelected(false);
+			selectionTarget = null;
+		}
 		
 		//first do things based on types of nodes
 		// then do based on state
-		if (node instanceof PLink)
+		if (node instanceof PLinkSelectionTarget)
+			mousePressedSelectionTarget(node);
+		else if (node instanceof PLink)
 			mousePressedLink(node);
 		else if (node instanceof PModule)
 			mousePressedModule(node);
@@ -319,39 +341,20 @@ public class PChainEventHandler extends  PPanEventHandler {
 			mousePressedLinkingParams(node,e);
 		else if (linkState == LINKING_MODULES)
 			mousePressedLinkingModules(node,e);
-		else if (linkState == NOT_LINKING) {
+		else if (linkState == NOT_LINKING) 
 			mousePressedNotLinking(node,e);		
-		}
-		else 
-			linkState = NOT_LINKING;
-		/*else if (node instanceof PFormalParameter 
-				&& linkState == NOT_LINKING) {
-		//	System.err.println("starting a new param link");
-			if (lastParameterEntered == null)
-				mouseEntered(e);
-			PFormalParameter param = (PFormalParameter) node;
-			if (param.canBeLinkOrigin())
-				startParamLink(param);
-			e.setHandled(true);
-		}
-		
-		
-		else if (node instanceof PModule) {
-			if (e.getClickCount() ==2) {
-				if (linkState == NOT_LINKING)
-					startModuleLinks(e);
-			} 
-		}
-
+		else if (linkState == LINK_CHANGING_POINT)
+			mousePressedChangingPoint(node,e);
 		else
-			linkState =  NOT_LINKING;
-		//	super.mousePressed(e); */
+			linkState = NOT_LINKING;
 	}
 	
 	private void mousePressedLink(PNode node) {
-		selectedLink = (PLink) node;
-		selectedLink.setSelected(true);
-		linkState = NOT_LINKING;
+		if (linkState != LINK_CHANGING_POINT) {
+			selectedLink = (PLink) node;
+			selectedLink.setSelected(true);
+			linkState = NOT_LINKING;
+		}
 	}
 	
 	private void mousePressedModule(PNode node) {
@@ -359,11 +362,22 @@ public class PChainEventHandler extends  PPanEventHandler {
 		selectedModule.addHandles();
 	}
 	
+	private void mousePressedSelectionTarget(PNode node) {
+		System.err.println("pressing on selection target..");
+		selectionTarget = (PLinkSelectionTarget) node;
+		selectionTarget.getLink().setSelected(true);
+		linkState = LINK_CHANGING_POINT;
+	}
+	
 	private void mousePressedLinkingParams(PNode node,PInputEvent e) {
 		if (e.getClickCount() ==2) {
 			System.err.println("double clicking to cancel link");
 			cancelParamLink();
 			linkState = LINKING_CANCELLATION;
+		}
+		else if (lastParameterEntered == null) { // we're on canvas.
+			Point2D pos = e.getPosition();
+			link.setIntermediatePoint((float) pos.getX(),(float) pos.getY());
 		}
 		else if (lastParameterEntered != null)
 			finishParamLink();
@@ -385,6 +399,19 @@ public class PChainEventHandler extends  PPanEventHandler {
 			else
 				cancelModuleLinks();
 		}
+		else if (node instanceof PCamera){ // single click on camera 
+			//when linking modules..
+			Iterator iter = links.iterator();
+			Point2D pos = e.getPosition();
+			PParamLink lnk;
+			int size = links.size();
+			float y = ((float) pos.getY()) - size/2*SPACING;
+			while (iter.hasNext()) {
+				lnk = (PParamLink) iter.next();
+				lnk.setIntermediatePoint((float) pos.getX(),y);
+				y += SPACING;
+			}
+		}
 		e.setHandled(true);
 	}
 	
@@ -398,6 +425,24 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		else if (node instanceof PModule && e.getClickCount() ==2)
 			startModuleLinks(e);
+		else if (node instanceof PLinkSelectionTarget) {
+			System.err.println("pressiing on target..");
+			selectionTarget  = (PLinkSelectionTarget) node;
+			linkState = LINK_CHANGING_POINT;
+		}
+		e.setHandled(true);
+	}
+	
+	private void mousePressedChangingPoint(PNode node,PInputEvent e) {
+		if (node instanceof PCamera)  {
+			System.err.println("clearing link selection target...");
+			linkState = NOT_LINKING;
+			if (selectionTarget != null) {
+				PLink link = selectionTarget.getLink();
+				if (link != null)
+					link.setSelected(false);
+			}
+		} 
 		e.setHandled(true);
 	}
 	
