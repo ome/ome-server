@@ -178,6 +178,7 @@ sub __printForm {
 		   $q->endform();
 }
 
+# Clean superfluous spaces
 sub cleaning {
 	my ($string)=@_;
 
