@@ -72,6 +72,7 @@ use File::Basename;
 use OME::Analysis::Engine;
 use OME::Image;
 use OME::Dataset;
+use OME::Tasks::ImportManager;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
@@ -88,6 +89,8 @@ sub new {
 	unless $image_file_list_ref;
     my $session = shift;
     $self->{session} = $session;
+
+    OME::Tasks::ImportManager->startImport();
 
     sort_and_group($image_file_list_ref, \@fn_groups);
     $self->{fn_groups} = \@fn_groups;
@@ -153,6 +156,30 @@ sub import_image {
     $import_reader->DESTROY;
 }
 
+sub finish {
+    my $self = shift;
+    my $session = OME::Session->instance();
+    my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+    $mex->status('FINISHED');
+    $mex->storeObject();
+    $session->commitTransaction();
+
+    OME::Tasks::ImportManager->finishImport();
+
+    my $chain = $session->Configuration()->import_chain();
+
+    if (!defined $chain) {
+        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+        return "";
+    }
+
+    eval {
+        OME::Analysis::Engine->
+            executeChain($chain,$self->{dummy_dataset},{});
+    };
+    return $@? $@ : "";
+}
+
 
 # Store image's metadata in the OME db, and the image data in the repository
 sub store_image {
@@ -195,10 +222,10 @@ sub store_image {
 	$status = store_wavelength_info($self, $session, $href);
 	last unless $status eq "";
 
-	$status = store_xyz_info($self, $session, $href);
+	$status = store_image_files_xyzwt($self, $session, $href, $image_group_ref, $first_sha1);
 	last unless $status eq "";
 
-	$status = store_image_files_xyzwt($self, $session, $href, $image_group_ref, $first_sha1);
+	$status = store_xyz_info($self, $session, $href);
 	last unless $status eq "";
 
 	$status = map_image_to_dataset($self);
@@ -206,10 +233,11 @@ sub store_image {
 
 	# everything went OK -  commit all the DB inserts
 	$image->storeObject();
-	$session->commitTransaction($image);
 	($self->{pixelsAttr})->storeObject();
-	$session->commitTransaction($self->{pixelsAttr});
-	$session->commitTransaction($self);
+    my $mex = OME::Tasks::ImportManager->getImageImportMEX($image);
+    $mex->status('FINISHED');
+    $mex->storeObject();
+	$session->commitTransaction();
 
 	last;
     }
@@ -367,26 +395,25 @@ sub store_image_metadata {
 	return $status;
     }
 
-    my $dataset = $session->Factory()->
-        newObject("OME::Dataset",
-                  {
-                   name => 'Dummy import dataset',
-                   description => '',
-                   locked => 'true',
-                   owner_id => $session->User()->id(),
-                   group_id => undef
-                  });
-    $self->{dummy_dataset} = $dataset;
+    my $dataset;
 
-    my $module_execution = $session->Factory()->
-      newObject("OME::ModuleExecution",
-                {
-                 dependence => 'I',
-                 dataset_id => $dataset->id(),
-                 timestamp  => 'now',
-                 status     => 'FINISHED',
-                 module_id => $session->Configuration()->import_module_id(),
-                });
+    if (defined $self->{dummy_dataset}) {
+        $dataset = $self->{dummy_dataset};
+    } else {
+        $dataset = $session->Factory()->
+          newObject("OME::Dataset",
+                    {
+                     name => 'Dummy import dataset',
+                     description => '',
+                     locked => 'true',
+                     owner_id => $session->User()->id(),
+                     group_id => undef
+                    });
+        $self->{dummy_dataset} = $dataset;
+    }
+
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
     $self->{module_execution} = $module_execution;
 
     # Now, create the real filename.
@@ -449,8 +476,10 @@ sub store_image_attributes {
 #		   'SizeT' => $href->{'Image.NumTimes'},
 #		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}
 	};
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
     my $attributes = $session->Factory()->
-	newAttribute("Dimensions",$image,$self->{module_execution},$recordData);
+	newAttribute("Dimensions",$image,$module_execution,$recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
@@ -518,8 +547,10 @@ sub store_wavelength_info {
 	    $wave->{'WavelengthInfo.Fluor'} = undef;
 	    $wave->{'WavelengthInfo.NDfilter'} = undef;
 	}
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
     my $logical = $session->Factory()->
-      newAttribute("LogicalChannel",$image,$self->{module_execution},
+      newAttribute("LogicalChannel",$image,$module_execution,
                    {
                     ExcitationWavelength   => $wave->{'WavelengthInfo.ExWave'},
      			  EmissionWavelength   => $wave->{'WavelengthInfo.EmWave'},
@@ -529,7 +560,7 @@ sub store_wavelength_info {
                    });
 
     my $component = $session->Factory()->
-      newAttribute("PixelChannelComponent",$image,$self->{module_execution},
+      newAttribute("PixelChannelComponent",$image,$module_execution,
                    {
                     Pixels         => $self->{pixelsAttr}->id(),
                     Index          => $wave->{'WavelengthInfo.WaveNumber'},
@@ -551,9 +582,6 @@ sub store_xyz_info {
     my ($self,$session,$href) = @_;
 
     my $factory = $session->Factory();
-    my $view = $session->Configuration()->import_chain();
-    # Right now this creates one new dataset for each image loaded in.
-    # This is a horrible idea, and should be changed.
     my $image = $self->{'image'};
     my $image_map = $factory->
         newObject("OME::Image::DatasetMap",
@@ -562,16 +590,7 @@ sub store_xyz_info {
                    dataset => $self->{dummy_dataset}
                   });
 
-    if (!defined $view) {
-        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
-        return "";
-    }
-
-    eval {
-        OME::Analysis::Engine->
-            executeChain($view,$self->{dummy_dataset},{});
-    };
-    return $@? $@ : "";
+    return "";
 }
 
 
@@ -598,33 +617,19 @@ sub store_image_files_xyzwt {
 	
 	$endian = $href->{'Image_files_xyzwt.Endian'};
 	$endian = ($endian eq "big") ? 't' : 'f' ;
-	my $data = {'image_id' => $imageID,
-			  'file_sha1' => $sha1,
-			  'bigendian' => $endian,
-			  'path' => $file,
-			  'host' => "",
-			  'url' => "",
-			  'x_start' => 0,
-			  'x_stop' => 0,
-			  'y_start' => 0,
-			  'y_stop' => 0,
-			  'z_start' => 0,
-			  'z_stop' => 0,
-			  'w_start' => 0,
-			  'w_stop' => 0,
-			  't_start' => 0,
-			  't_stop' => 0};
+    my $data = {
+                Path => $file,
+                SHA1 => $sha1,
+                Format => 'Proprietary file',
+               };
+    my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
-	$xyzwt = $session->Factory->newObject("OME::Image::ImageFilesXYZWT", $data);
+	$xyzwt = $session->Factory->
+      newAttribute('OriginalFile',undef,$mex,$data);
 	if (!defined $xyzwt) {
 	    $status = "Can\'t create new image_files_xyzwt";
 	}
-	else {
-	    #$xyzwt->path($file);
-	    #$xyzwt->commit();
-	    $xyzwt->storeObject();
 	}
-    }
     $self->{'xyzwt'} = $xyzwt;
     return $status;
 }    
@@ -666,11 +671,11 @@ sub name_only {
 # input file if it's already been imported.
 sub check_for_duplicates {
     my ($self, $switch, $image_file) = @_;
-    my ($dupl_name, $image_id, $sha1) = is_duplicate($self, $image_file);
+    my ($duplicate,$sha1) = is_duplicate($self, $image_file);
     # the stealth switch '--dupl' allows duplicate input files
     if ($switch !~ /^--dupl/) {
-	if ($dupl_name) {
-	    return "\nThe source image $image_file is already in OME named $dupl_name, image_id = $image_id\n";
+	if ($duplicate) {
+	    return "\nThe source image $image_file is already in OME\n";
 	}
     }
     return ("", $sha1);
@@ -712,15 +717,9 @@ sub is_duplicate {
     my $sha1 = getSha1($infile);
     my $session = $self->{session};
     my $factory = $session->Factory();
-    my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
-				    file_sha1 => $sha1);
-    if (defined $view) {
-	my $id = $view->{image_id};
-	$view = $factory->loadObject("OME::Image",$id);
-	return ($view->{name}, $id, $sha1);
-    } else {
-	return ("", 0, $sha1);
-    }
+    my $view = $factory->findAttribute("OriginalFile",
+				    SHA1 => $sha1);
+    return (defined $view,$sha1);
 }
 
 
