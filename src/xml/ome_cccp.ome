@@ -1,28 +1,29 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<AnalysisModule Category = "Image comparison" ModuleName = "Cross Correlation" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
-	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification." 
+<AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
+<AnalysisModule Category = "Image comparison" ModuleName = "Cross Correlation" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
+	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification.">
 	<Declaration>
-		<Table AttributeType = "I" TableName = "XY_CROSS_CORRELATION" Description = "Cross correlation values for a plane">
+		<Table Granularity = "I" TableName = "XY_CROSS_CORRELATION" Description = "Cross correlation values for a plane">
 			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer"/>
 			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer"/>
 			<Column ColumnID = "CC" ColumnName = "CROSS_CORRELATION" SQL_DataType = "float" Description = "Cross Correlation"/>
 		</Table>
-		<Table AttributeType = "I" TableName = "WAVENUMBER" Description = "Wavenumbers">
+		<Table Granularity = "I" TableName = "WAVENUMBER" Description = "Wavenumbers">
 			<Column ColumnID = "Wavenumber.theW" ColumnName = "THE_W" SQL_DataType = "integer"/>
 		</Table>
-		<FormalInput Name = "Wavenumber1" Description = "" UserDefined = "true">
-			<FormalInputColumn FormalInputColumnID = "wave1" ColumnID = "Wavenumber.theW"/>
+		<FormalInput Name = "Wavenumber 1" AttributeTypeName = "Wavenumber" Description = "" UserDefined = "true">
+			<FormalInputColumn FormalInputColumnID = "wave1" Name = "WAVENUMBER" ColumnID = "Wavenumber.theW"/>
 		</FormalInput>
-		<FormalInput Name = "Wavenumber2" Description = "" UserDefined = "true">
-			<FormalInputColumn FormalInputColumnID = "wave2" ColumnID = "Wavenumber.theW"/>
+		<FormalInput Name = "Wavenumber 2" AttributeTypeName = "Wavenumber" Description = "" UserDefined = "true">
+			<FormalInputColumn FormalInputColumnID = "wave2" Name = "WAVENUMBER" ColumnID = "Wavenumber.theW"/>
 		</FormalInput>
-		<FormalOutput Name = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Description = "Cross Correlation Value"/>
+		<FormalOutput Name = "XYPlaneCrossCorrelation" AttributeTypeName = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Name = "THE_Z" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Name = "TIMEPOINT" Description = "Timepoint describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Name = "Cross Correlation" Description = "Cross Correlation Value"/>
 		</FormalOutput>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
@@ -30,7 +31,7 @@
 		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
-				<XYPlane XYPlaneID = "1" Format = "TIFF">
+				<XYPlane XYPlaneID = "PrimaryPlane" Format = "TIFF">
 					<theZ>
 						<AutoIterate FormalOutputColumnID = "theZ"/>
 					</theZ>
@@ -47,12 +48,12 @@
 				</RawText>
 			</InputSubString>
 			<InputSubString>
-				<XYPlane XYPlaneID = "2" Format = "TIFF">
+				<XYPlane Format = "TIFF">
 					<theZ>
-						<Match XYPlaneID = "1"/>
+						<Match XYPlaneID = "PrimaryPlane"/>
 					</theZ>
 					<theT>
-						<Match XYPlaneID = "1"/>
+						<Match XYPlaneID = "PrimaryPlane"/>
 					</theT>
 					<theW>
 						<UseValue FormalInputColumnID = "wave2"/>
@@ -70,3 +71,4 @@
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+</AnalysisModuleLibrary>
