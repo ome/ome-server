@@ -16,6 +16,7 @@ use Cwd qw(cwd abs_path);
 			AUTHOR       => 'Ilya Goldberg, Doug Creager, Brian Hughes, Josiah Johnston (igg@nih,gov, dcreager@alum.mit.edu, bshughes@mit.edu, siah@nih.gov)',
 			ABSTRACT     => 'The Open Microscopy Environment',
 			DIR          => ['OME/Image/Pix','OME/ImportExport/Repacker/'],
+            EXE_FILES    => ['OME/Java/omejava'],
 			MAN1PODS     => {},
 			MAN3PODS     => {},
 			INST_BIN     => File::Spec->catdir($pwd,'blib','bin'),
