@@ -6,14 +6,14 @@
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
-    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
     http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
       http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
-      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
