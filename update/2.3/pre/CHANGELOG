@@ -1,0 +1,8 @@
+Changes from DB version 2.3 to 2.4
+==================================
+
+Pixels semantic type:
+  - renamed PixelsID element to ImageServerID
+
+Repository semantic type:
+  - removed not null constraint on the repositories table

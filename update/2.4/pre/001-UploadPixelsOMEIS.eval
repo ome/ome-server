@@ -1,0 +1,113 @@
+use OME::Image::Server;
+use OME::LocalFile;
+
+print "     \\_ Looking for remote repository... ";
+my $repository = $factory->findAttribute("Repository", IsLocal => 0);
+if (not $repository) {
+	$repository = make_repository ($session);
+}
+
+OME::Image::Server->useRemoteServer ($repository->ImageServerURL());
+
+print "\n     \\_ Looking for local Pixelses... ";
+
+my @pixelses = $factory->findAttributes("Pixels", ImageServerID => undef);
+my $pixels;
+my $pixelsID;
+
+print "\n";
+
+if (scalar @pixelses) {
+	undef @pixelses unless
+		y_or_n ('Upload '.scalar (@pixelses).
+			' local Pixels to the image server at '.
+			$repository->ImageServerURL().' ?');
+}
+
+foreach $pixels (@pixelses) {
+	if (not $pixels->ImageServerID()) {
+		print "Porting Pixels ID = ".$pixels->ID();
+		$pixelsID = postPixels($pixels);
+		if (not $pixelsID) {
+			print " *** ", BOLD, "FAILED !!!", RESET, " *** \n";
+		} else {
+			print " OMEIS ID = $pixelsID\n";
+			$pixels->ImageServerID ($pixelsID);
+			$pixels->storeObject();
+			$factory->commitTransaction();
+		}
+	}
+}
+print "     \\_ Looking for local Original Files... ";
+
+my @files = $factory->findAttributes("OriginalFile", FileID => undef);
+my $file;
+my $fileID;
+
+print "\n";
+
+if (scalar @files) {
+	undef @files unless
+		y_or_n ('Upload '.scalar (@files).' local Original Files to the image server ?');
+}
+
+foreach $file (@files) {
+	if (not $file->FileID()) {
+		print "Porting File name = ".$file->Path." ID = ".$file->ID();
+		$fileID = postFile($file);
+		if (not $fileID) {
+			print " *** ", BOLD, "FAILED !!!", RESET, " *** $!\n";
+		} else {
+			print " OMEIS ID = $fileID\n";
+			$file->FileID ($fileID);
+			$file->Repository ($repository);
+			$file->Path (undef);
+			$file->storeObject();
+			$factory->commitTransaction();
+		}
+	}
+}
+
+1;
+
+
+sub postPixels {
+	my $pixels = shift;
+	my $fileID = OME::Image::Server->uploadFile( $pixels->image->getFullPath( $pixels ) );
+	my $pixelsID = OME::Image::Server->newPixels( 
+		$pixels->SizeX(),
+		$pixels->SizeY(),
+		$pixels->SizeZ(),
+		$pixels->SizeC(),
+		$pixels->SizeT(),
+		$pixels->BitsPerPixel() / 8,
+		0, 0 );
+	my $stackSize = $pixels->SizeX() * $pixels->SizeY() * $pixels->SizeZ() * $pixels->BitsPerPixel() / 8;
+	for( my $t = 0; $t < $pixels->SizeT(); $t++ ) {
+		for( my $c = 0; $c < $pixels->SizeC(); $c++ ) {
+			my $offset = ( $t * $pixels->SizeC() + $c ) * $stackSize;
+			OME::Image::Server->convertStack( $pixelsID, $c, $t, $fileID, $offset );
+		}
+	}
+	OME::Image::Server->finishPixels( $pixelsID );
+	OME::Image::Server->deleteFile ($fileID);
+	return $pixelsID;
+}
+
+sub postFile {
+	my $fileIn = shift;
+	my $path = $fileIn->Path();
+	return undef unless -r $path;
+	my $localFile = OME::LocalFile->new($path);
+	my $fileSHA1 = $localFile->getSHA1();
+	my $fileEx = $factory->findAttribute("OriginalFile",
+		Repository => $repository,
+		SHA1 => $fileSHA1
+	);
+	if ($fileEx) {
+		print BOLD, " Exists", RESET;
+		return $fileEx->FileID();
+	} else {
+		return OME::Image::Server->uploadFile( $path );
+	}
+}

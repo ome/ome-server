@@ -1,0 +1,8 @@
+Changes from DB version 2.4 to 2.5
+==================================
+
+Pixels semantic type:
+  - Uploading local repository Pixels to image server
+
+Repository semantic type:
+  - Setting the local repository (if any) to omeis
