@@ -1,0 +1,95 @@
+<project name="OME-JAVA" default="compile" basedir=".">
+  <property name="src" value="src"/>
+  <property name="build" value="build"/>
+  <property name="lib"  value="lib"/>
+  <property name="docs" value="docs"/>
+  <property name="apidocs" value="docs/api"/>
+  <property name="privapidocs" value="docs/privapi"/>
+  <property name="jar" value="jar"/>
+  <property name="deprecation" value="yes"/>
+
+  <target name="init">
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+
+  </target>
+
+  <target name="compile" depends="init">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}"
+	       destdir="${build}"
+           deprecation="${deprecation}">
+      <classpath>
+        <fileset dir="${lib}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="apidocs">
+    <mkdir dir="${apidocs}"/>
+    <javadoc sourcepath="${src}" destdir="${apidocs}"
+             packagenames="org.openmicroscopy.*"
+             windowtitle="OME v2.0 Java API"
+             use="true"
+             author="true"
+             version="true"
+             Footer="">
+      <link href="http://java.sun.com/j2se/1.3/docs/api/" />
+      <link href="http://ws.apache.org/xmlrpc/apidocs/" />
+      <bottom><![CDATA[<i>Copyright &#169; 2002-2004 Open Microscopy Environment.  All Rights reserved.</i>]]></bottom>
+    </javadoc>
+  </target>
+
+  <target name="privapidocs">
+    <mkdir dir="${privapidocs}"/>
+    <javadoc sourcepath="${src}" destdir="${privapidocs}"
+             packagenames="org.openmicroscopy.*"
+             windowtitle="OME v2.0 Java Private API"
+             use="true"
+             author="true"
+             version="true"
+             Private="true"
+             Footer="">
+      <link href="http://java.sun.com/j2se/1.3/docs/api/" />
+      <link href="http://ws.apache.org/xmlrpc/apidocs/" />
+      <bottom><![CDATA[<i>Copyright &#169; 2002-2004 Open Microscopy Environment.  All Rights reserved.</i>]]></bottom>
+    </javadoc>
+  </target>
+
+  <target name="dist" depends="compile,apidocs">
+    <delete file="${distzip}" quiet="true"/>
+    <zip zipfile="${distzip}">
+      <fileset dir="." includes="${build}/**/*"/>
+      <fileset dir="." includes="${src}/**/*"/>
+      <fileset dir="." includes="${jnisrc}/**/*"/>
+      <fileset dir="." includes="${docs}/**/*"/>
+      <fileset dir="." includes="build.xml"/>
+    </zip>
+    <copy file="${distzip}" tofile="${DSTAMP}-${distzip}"/>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${jar}"/>
+
+    <copy todir="${jar}">
+      <fileset dir="${lib}"/>
+    </copy>
+			
+    <jar destfile="${jar}/ome-java.jar">
+      <fileset dir="build" includes="org/openmicroscopy/**/*.class"/>
+    </jar>
+
+  </target>
+
+  <target name="clean">
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${apidocs}"/>
+    <delete dir="${privapidocs}"/>
+    <delete file="${distzip}" quiet="true"/>
+  </target>
+
+</project>
