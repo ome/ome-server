@@ -49,6 +49,7 @@ sub getPageBody {
 
 	my $body = "";
 	my $project =$session->project();
+	my $userID=$session->User()->id();
 	my $usergpID=$session->User()->Group()->id();
 	if( not defined $project ) {
 		$body .= OME::Web::Validation->ReloadHomeScript();
@@ -63,7 +64,11 @@ sub getPageBody {
 	   my $rep=$datasetManager->exist($datasetName);
          return ('HTML',$htmlFormat->existMessage("dataset")) unless (defined $rep);
 	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
-	   my $result=$datasetManager->create($cgi->param('name'), $cgi->param('description'),\@addImages); 
+	   my $result=$datasetManager->create($datasetName,$cgi->param('description'),$userID,$usergpID,$project->project_id(),\@addImages); 
+		
+
+
+	  # my $result=$datasetManager->create($cgi->param('name'), $cgi->param('description'),\@addImages); 
 	 if (defined $result){
          $body .= "<script>top.location.href = top.location.href;</script>";
          $body .= "<script>top.title.location.href = top.title.location.href;</script>";

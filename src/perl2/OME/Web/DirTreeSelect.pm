@@ -44,6 +44,9 @@ sub getPageBody {
 	my $rootName = "Home";
 	my $cgi = $self->CGI();
 	my $session=$self->Session();
+	my $userID=$session->User()->id();
+	my $usergpID=$session->User()->Group()->id();
+
 	my $rootDir=$self->User()->DataDirectory();
 
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
@@ -95,7 +98,10 @@ sub getPageBody {
 				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
 	   			return ('HTML',$txt) unless (defined $rep);
 				# must find better solution
-				$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
+$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'),$userID,$usergpID,$project->project_id());
+
+
+				#$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
 
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
