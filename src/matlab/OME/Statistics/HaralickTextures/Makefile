@@ -2,8 +2,8 @@
 
 MEX       = mex
 MEX_FILE  = mb_texture
-INC       = CVIPtexture.h
-LIB       = CVIPtexture.c
+INC       = CVIPtexture.h mapkit.h mapkit_generic.h
+LIB       = CVIPtexture.c mapkit.c mapkit_generic.c
 MEX_EXT   = c # or cpp
 MEX_FLAGS = -O -inline
 

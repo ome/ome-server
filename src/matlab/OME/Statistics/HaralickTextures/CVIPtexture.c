@@ -43,46 +43,38 @@
 **		 assumptions (the Haralick paper is not always explicit).
 **
 ** Sep 1 04  - T. Macura : Modified for inclusion in OME by removing all 
-**       dependencies on pgm/ppm
+**       dependencies on pgm/ppm. Refactored co-occurence matrix calculations
+**       to be more modular to facilitate future support of angles other than
+**       0, 45, 90 and 135. Limits on co-occurence matrix direction and 
+**       quantisation level of image removed. 
+**
+**       Previously when quantisation level was limited to 255, a statically
+**       allocated array served as pixel_intensity -> CoOcMat array index
+**       lut. lut was sequentially searched. Now lut is hash table provided by
+**       mapkit.c. It can dynamically grow from initialize size of 1024. This is
+**       expected to improve performance drastically for larger images and images
+**       with higher quantisations.
 */
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "CVIPtexture.h"
+#include "mapkit.h"
 
 #define RADIX 2.0
 #define EPSILON 0.000000001
-#define BL  "Angle                 "
-#define F1  "Angular Second Moment "
-#define F2  "Contrast              "
-#define F3  "Correlation           "
-#define F4  "Variance              "
-#define F5  "Inverse Diff Moment   "
-#define F6  "Sum Average           "
-#define F7  "Sum Variance          "
-#define F8  "Sum Entropy           "
-#define F9  "Entropy               "
-#define F10 "Difference Variance   "
-#define F11 "Difference Entropy    "
-#define F12 "Meas of Correlation-1 "
-#define F13 "Meas of Correlation-2 "
-#define F14 "Max Correlation Coeff "
 
 #define SIGN(x,y) ((y)<0 ? -fabs(x) : fabs(x))
 #define SWAP(a,b) {y=(a);(a)=(b);(b)=y;}
 
-#define PGM_MAXMAXVAL 255
-
-void results (),  mkbalanced (), reduction (), simplesrt ();
-int hessenberg ();
 float f1_asm (float **P, int Ng);
 float f2_contrast (float **P, int Ng);
 float f3_corr (float **P, int Ng);
 float f4_var (float **P, int Ng);
 float f5_idm (float **P, int Ng);
 float f6_savg (float **P, int Ng);
-float f7_svar (float **P, int Ng, float S) ;
+float f7_svar (float **P, int Ng, float S);
 float f8_sentropy (float **P, int Ng);
 float f9_entropy (float **P, int Ng);
 float f10_dvar (float **P, int Ng);
@@ -91,307 +83,250 @@ float f12_icorr (float **P, int Ng);
 float f13_icorr (float **P, int Ng);
 float f14_maxcorr (float **P, int Ng);
 
+/* support functions to compute f14_maxcorr */
+void mkbalanced (), reduction (), simplesrt ();
+int hessenberg ();
+
 float *allocate_vector (int nl, int nh);
 float **allocate_matrix (int nrl, int nrh, int ncl, int nch);
 
-TEXTURE * Extract_Texture_Features(int distance, 
-				   register unsigned char **grays, 
-				   int rows, 
-				   int cols, 
-				   TEXTURE_FEATURE_MAP *feature_usage)  
+float** CoOcMat_Angle_0   (int distance, unsigned char **grays,
+						   int rows, int cols, map_ii* tone);
+float** CoOcMat_Angle_45  (int distance, unsigned char **grays,
+						   int rows, int cols, map_ii* tone);
+float** CoOcMat_Angle_90  (int distance, unsigned char **grays,
+						   int rows, int cols, map_ii* tone);
+float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+						   int rows, int cols, map_ii* tone);
+#define MAPKIT_DEBUG;
+
+TEXTURE * Extract_Texture_Features(int distance, int angle, 
+		 		register unsigned char **grays, int rows, int cols, int max_val)  
 {
-	int tone[PGM_MAXMAXVAL+1], R0, R45, R90, R135, angle, d = 1, x, y;
-	int row, col, i;
-	int itone, jtone, tones;
-	float **P_matrix0, **P_matrix45, **P_matrix90, **P_matrix135;
-	float ASM[4], contrast[4], corr[4], var[4], idm[4], savg[4];
-	float sentropy[4], svar[4], entropy[4], dvar[4], dentropy[4];
-	float icorr[4], maxcorr[4];
-	float *Tp;
-
+	map_ii tone; /* hash DataStructure from mapkit.c/h key=int value=int */
+	map_ii_element* tone_array;
+	int row, col;
+	float **P_matrix;
 	TEXTURE *Texture;
-
+	int i;
+	mapkit_size_t tones = 1024;
 	Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
 	if(!Texture) {
 		printf("\nERROR in TEXTURE structure allocate\n");
 		exit(1);
 	}
-
-	d = distance; 
-
+	
 	/* Determine the number of different gray scales (not maxval) */
-	for (row = PGM_MAXMAXVAL; row >= 0; --row)
-		tone[row] = -1;
+	map_ii_init_hint(&tone, tones);
+
+	/* -1 is returned if the key is missing from hash */
+	tone.defaultvalue = -1;
+	tone.alwaysdefault = 1;
+	tones = tone.used;
+	
+	/* set pixel intensity as keys of hash */
 	for (row = rows - 1; row >= 0; --row)
 		for (col = 0; col < cols; ++col)
-			tone[grays[row][col]] = grays[row][col];
-  
-	for (row = PGM_MAXMAXVAL, tones = 0; row >= 0; --row)
-		if (tone[row] != -1)
-			  tones++;
-
-	/* Collapse array, taking out all zero values */
-	for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; row++)
-		if (tone[row] != -1)
-		  tone[itone++] = tone[row];
-	/* Now array contains only the gray levels present (in ascending order) */
-
-	/* Allocate memory for gray-tone spatial dependence matrix */
-	P_matrix0 = allocate_matrix (0, tones, 0, tones);
-	P_matrix45 = allocate_matrix (0, tones, 0, tones);
-	P_matrix90 = allocate_matrix (0, tones, 0, tones);
-	P_matrix135 = allocate_matrix (0, tones, 0, tones);
+			map_ii_set(&tone, grays[row][col], 1);
 	
-	for (row = 0; row < tones; ++row)
-		for (col = 0; col < tones; ++col) {
-		  P_matrix0[row][col] = P_matrix45[row][col] = 0;
-		  P_matrix90[row][col] = P_matrix135[row][col] = 0;
+	/* set key values to pixel intensity order */
+	map_ii_getall_sorted (&tone, &tone_array, &tones);
+	for (i = 0; i < tones; i++)
+		tone_array[i].value = i;
+	map_ii_setall (&tone, tone_array, tones);
+	
+	/* compute gray-tone spatial dependence matrix */
+	if (angle == 0)
+		P_matrix = CoOcMat_Angle_0   (distance, grays, rows, cols, &tone);
+	else if (angle == 45)	
+		P_matrix = CoOcMat_Angle_45  (distance, grays, rows, cols, &tone);
+	else if (angle == 90)	
+		P_matrix = CoOcMat_Angle_90  (distance, grays, rows, cols, &tone);
+	else if (angle == 135)
+		P_matrix = CoOcMat_Angle_135 (distance, grays, rows, cols, &tone);
+	else {
+		fprintf (stderr, "Cannot created co-occurence matrix for angle %d. Unsupported angle.\n", angle); 
+		return NULL;
+	}
+	
+	/* compute the statistics for the spatial dependence matrix */
+  	Texture->ASM           = f1_asm       (P_matrix, tone.used);
+  	Texture->contrast      = f2_contrast  (P_matrix, tone.used);
+ 	Texture->correlation   = f3_corr      (P_matrix, tone.used);
+  	Texture->variance      = f4_var       (P_matrix, tone.used);
+  	Texture->IDM           = f5_idm       (P_matrix, tone.used);
+  	Texture->sum_avg       = f6_savg      (P_matrix, tone.used);
+  	Texture->sum_entropy   = f8_sentropy  (P_matrix, tone.used);
+	Texture->sum_var       = f7_svar      (P_matrix, tone.used, Texture->sum_entropy);
+  	Texture->entropy       = f9_entropy   (P_matrix, tone.used);
+  	Texture->diff_var      = f10_dvar     (P_matrix, tone.used);
+  	Texture->diff_entropy  = f11_dentropy (P_matrix, tone.used);
+  	Texture->meas_corr1    = f12_icorr    (P_matrix, tone.used);
+  	Texture->meas_corr2    = f13_icorr    (P_matrix, tone.used);
+    Texture->max_corr_coef = f14_maxcorr  (P_matrix, tone.used);
+
+	return (Texture);
+} 
+
+/* Compute gray-tone spatial dependence matrix */
+float** CoOcMat_Angle_0 (int distance, unsigned char **grays,
+						 int rows, int cols, map_ii* tone)
+{
+	int d = distance;
+	int x, y;
+	int row, col, itone, jtone;
+	int count=0; /* normalizing factor */
+	int tones = tone->used;
+	
+	float** matrix = allocate_matrix (0, tones, 0, tones);
+	
+	/* zero out matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] = 0;
+			
+	for (row = 0; row < rows; ++row)
+		for (col = 0; col < cols; ++col) {
+			/* only non-zero values count*/
+			if (grays[row][col] == 0)
+				continue;
+				
+			/* find x tone */
+			if (col + d < cols && grays[row][col + d]) {
+				x = map_ii_value(tone, grays[row][col]);
+				y = map_ii_value(tone, grays[row][col + d]);
+				matrix[x][y]++;
+				matrix[y][x]++;
+				count += 2 ;
+			}
 		}
+		
+	/* normalize matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] /= count;
+			
+	return matrix;
+}
 
-	R0 = 0;
-	R45 = 0;
-	R90 = 0;
-	R135 = 0;
-   
-   
-	/* Find gray-tone spatial dependence matrix */
-	/* fprintf (stderr, "(Computing spatial dependence matrix..."); */
- 
-  for (row = 0; row < rows; ++row)
-    for (col = 0; col < cols; ++col)
-      if (grays[row][col])  /* if value anything other than zero */
-      for (x = 0, angle = 0; angle <= 135; angle += 45)
-      {
-	while (tone[x] != grays[row][col])
-	  x++;
-	/* M. Boland if (angle == 0 && col + d < cols)  */
-	/* M. Boland - include neighbor only if != 0 */
-	if (angle == 0 && col + d < cols && grays[row][col + d]) 
-	{
-	  y = 0;
-	  while (tone[y] != grays[row][col + d])
-	    y++;
-  	  P_matrix0[x][y]++;
- 	  P_matrix0[y][x]++;
-  	  /* R0++;  M. Boland 25 Nov 98 */
-	  R0+=2 ;
-	}
-	/* M. Boland if (angle == 90 && row + d < rows) */
-	/* M. Boland - include neighbor only if != 0 */
-	else if (angle == 90 && row + d < rows && grays[row + d][col])
-	{
-	  y = 0;
-	  while (tone[y] != grays[row + d][col])
-	    y++;
-	    P_matrix90[x][y]++;
-	    P_matrix90[y][x]++;
-   	    /* R90++;  M. Boland 25 Nov 98 */
-	    R90+=2 ;
-	}
-	/* M. Boland if (angle == 45 && row + d < rows && col - d >= 0) */
-	/* M. Boland - include neighbor only if != 0 */
-	else if (angle == 45 && row + d < rows && col - d >= 0 
-		 && grays[row + d][col - d])
-	{
-	  y = 0;
-	  while (tone[y] != grays[row + d][col - d])
-	    y++;
-  	  P_matrix45[x][y]++;
-	  P_matrix45[y][x]++;
-	  /* R45++;  M. Boland 25 Nov 98 */
-	  R45+=2 ;
-	}
-	/* M. Boland if (angle == 135 && row + d < rows && col + d < cols) */
-	else if (angle == 135 && row + d < rows && col + d < cols 
-		 && grays[row + d][col + d])
-	{
-	  y = 0;
-	  while (tone[y] != grays[row + d][col + d])
-	    y++;
-	  P_matrix135[x][y]++;
-	  P_matrix135[y][x]++;
-	  /* R135++;  M. Boland 25 Nov 98 */
-	  R135+=2 ;
-	}
+float** CoOcMat_Angle_90 (int distance, unsigned char **grays,
+						 int rows, int cols, map_ii*tone)
+{
+	int d = distance;
+	int x, y;
+	int row, col, itone, jtone;
+	int count=0; /* normalizing factor */
+	int tones = tone->used;
+	
+	float** matrix = allocate_matrix (0, tones, 0, tones);
+	
+	/* zero out matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] = 0;
+			
+	for (row = 0; row < rows; ++row)
+		for (col = 0; col < cols; ++col) {
+			/* only non-zero values count*/
+			if (grays[row][col] == 0)
+				continue;
+				
+			/* find x tone */
+			if (row + d < rows && grays[row + d][col]) {
+				x = map_ii_value (tone, grays[row][col]);
+				y = map_ii_value (tone, grays[row + d][col]);
+				matrix[x][y]++;
+				matrix[y][x]++;
+				count += 2 ;
+			}
+		}
+		
+	/* normalize matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] /= count;
 
-     }	
-  /* Gray-tone spatial dependence matrices are complete */
+	return matrix;
+}
 
-  /* Find normalizing constants */
-/* R0 = 2 * rows * (cols - 1);
-  R45 = 2 * (rows - 1) * (cols - 1);
-  R90 = 2 * (rows - 1) * cols;
-  R135 = R45;
-*/
+float** CoOcMat_Angle_45 (int distance, unsigned char **grays,
+						 int rows, int cols, map_ii* tone)
+{
+	int d = distance;
+	int x, y;
+	int row, col, itone, jtone;
+	int count=0; /* normalizing factor */
+	int tones = tone->used;
+	
+	float** matrix = allocate_matrix (0, tones, 0, tones);
+	
+	/* zero out matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] = 0;
+			
+	for (row = 0; row < rows; ++row)
+		for (col = 0; col < cols; ++col) {
+			/* only non-zero values count*/
+			if (grays[row][col] == 0)
+				continue;
+				
+			/* find x tone */
+			if (row + d < rows && col - d >= 0 && grays[row + d][col - d]) {
+				x = map_ii_value (tone, grays[row][col]);
+				y = map_ii_value (tone, grays[row + d][col - d]);
+				matrix[x][y]++;
+				matrix[y][x]++;
+				count += 2 ;
+			}
+		}
+		
+	/* normalize matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] /= count;
+			
+	return matrix;
+}
 
-  /* Normalize gray-tone spatial dependence matrix */
-  for (itone = 0; itone < tones; ++itone)
-    for (jtone = 0; jtone < tones; ++jtone)
-    {
-      P_matrix0[itone][jtone] /= R0;
-      P_matrix45[itone][jtone] /= R45;
-      P_matrix90[itone][jtone] /= R90;
-      P_matrix135[itone][jtone] /= R135;
-    }
-
-  if (feature_usage->ASM)
-	{
-  	ASM[0] = f1_asm (P_matrix0, tones);
-  	ASM[1] = f1_asm (P_matrix45, tones);
-  	ASM[2] = f1_asm (P_matrix90, tones);
-  	ASM[3] = f1_asm (P_matrix135, tones);
-	}
-  Tp = &Texture->ASM[0];
-  results (Tp, F1, ASM);
-
-  if (feature_usage->contrast)
-	{
-  	contrast[0] = f2_contrast (P_matrix0, tones);
-  	contrast[1] = f2_contrast (P_matrix45, tones);
-  	contrast[2] = f2_contrast (P_matrix90, tones);
-  	contrast[3] = f2_contrast (P_matrix135, tones);
-	}
-  Tp = &Texture->contrast[0];
-  results (Tp, F2, contrast);
-
-  if (feature_usage->correlation)
-	{
- 	corr[0] = f3_corr (P_matrix0, tones);
- 	corr[1] = f3_corr (P_matrix45, tones);
-  	corr[2] = f3_corr (P_matrix90, tones);
-  	corr[3] = f3_corr (P_matrix135, tones);
-	}
-  Tp = &Texture->correlation[0];
-  results (Tp, F3, corr);
-
-  if (feature_usage->variance)
-	{
-  	var[0] = f4_var (P_matrix0, tones);
-  	var[1] = f4_var (P_matrix45, tones);
-  	var[2] = f4_var (P_matrix90, tones);
-  	var[3] = f4_var (P_matrix135, tones);
-	}
-  Tp = &Texture->variance[0];
-  results (Tp, F4, var); 
-
-  if (feature_usage->IDM)
-	{
-  	idm[0] = f5_idm (P_matrix0, tones);
-  	idm[1] = f5_idm (P_matrix45, tones);
-  	idm[2] = f5_idm (P_matrix90, tones);
-  	idm[3] = f5_idm (P_matrix135, tones);
-	}
-  Tp = &Texture->IDM[0];
-  results (Tp, F5, idm); 
-
-  if (feature_usage->sum_avg)
-	{
-  	savg[0] = f6_savg (P_matrix0, tones);
-  	savg[1] = f6_savg (P_matrix45, tones);
-  	savg[2] = f6_savg (P_matrix90, tones);
-  	savg[3] = f6_savg (P_matrix135, tones);
-	}
-  Tp = &Texture->sum_avg[0];
-  results (Tp, F6, savg); 
-
-  if (feature_usage->sum_var)
-	{
-	sentropy[0] = f8_sentropy (P_matrix0, tones);
-  	sentropy[1] = f8_sentropy (P_matrix45, tones);
-  	sentropy[2] = f8_sentropy (P_matrix90, tones);
-  	sentropy[3] = f8_sentropy (P_matrix135, tones);
-	}
-  if (feature_usage->sum_entropy)
-	{  
-	svar[0] = f7_svar (P_matrix0, tones, sentropy[0]);
-  	svar[1] = f7_svar (P_matrix45, tones, sentropy[1]);
-  	svar[2] = f7_svar (P_matrix90, tones, sentropy[2]);
-  	svar[3] = f7_svar (P_matrix135, tones, sentropy[3]);
-	}
-  Tp = &Texture->sum_var[0];
-  results (Tp, F7, svar); 
-  Tp = &Texture->sum_entropy[0];
-  results (Tp, F8, sentropy); 
-
-  if (feature_usage->entropy)
-	{
-  	entropy[0] = f9_entropy (P_matrix0, tones);
-  	entropy[1] = f9_entropy (P_matrix45, tones);
-  	entropy[2] = f9_entropy (P_matrix90, tones);
-  	entropy[3] = f9_entropy (P_matrix135, tones);
-	}
-  Tp = &Texture->entropy[0];
-  results (Tp, F9, entropy); 
-
-  if (feature_usage->diff_var)
-	{  
-	dvar[0] = f10_dvar (P_matrix0, tones);
- 	dvar[1] = f10_dvar (P_matrix45, tones);
-  	dvar[2] = f10_dvar (P_matrix90, tones);
-  	dvar[3] = f10_dvar (P_matrix135, tones);
-	}
-  Tp = &Texture->diff_var[0];
-  results (Tp, F10, dvar);
-
-  if (feature_usage->diff_entropy)
-	{  
-	dentropy[0] = f11_dentropy (P_matrix0, tones);
-  	dentropy[1] = f11_dentropy (P_matrix45, tones);
-  	dentropy[2] = f11_dentropy (P_matrix90, tones);
-  	dentropy[3] = f11_dentropy (P_matrix135, tones);
-	}
-  Tp = &Texture->diff_entropy[0];
-  results (Tp, F11, dentropy);
-
-   if (feature_usage->meas_corr1)
-	{ 
-	icorr[0] = f12_icorr (P_matrix0, tones);
-  	icorr[1] = f12_icorr (P_matrix45, tones);
-  	icorr[2] = f12_icorr (P_matrix90, tones);
-  	icorr[3] = f12_icorr (P_matrix135, tones);
-	}
-  Tp = &Texture->meas_corr1[0];
-  results (Tp, F12, icorr);
-
-  if (feature_usage->meas_corr2)
-	{  
-	icorr[0] = f13_icorr (P_matrix0, tones);
-  	icorr[1] = f13_icorr (P_matrix45, tones);
-  	icorr[2] = f13_icorr (P_matrix90, tones);
-  	icorr[3] = f13_icorr (P_matrix135, tones);
-	}
-  Tp = &Texture->meas_corr2[0];
-  results (Tp, F13, icorr);
-
-  if (feature_usage->max_corr_coef)
-	{  
-	maxcorr[0] = f14_maxcorr (P_matrix0, tones);
-	maxcorr[1] = f14_maxcorr (P_matrix45, tones);
-	maxcorr[2] = f14_maxcorr (P_matrix90, tones);
-        maxcorr[3] = f14_maxcorr (P_matrix135, tones);
-	}
-  /* M. Boland - 24 Nov 98 */
-  else {
-    maxcorr[0] = 0 ;
-    maxcorr[1] = 0 ;
-    maxcorr[2] = 0 ;
-    maxcorr[3] = 0 ;
-  }
-
-  Tp = &Texture->max_corr_coef[0];
-  results (Tp, F14, maxcorr);
-
-  for (i=0; i<=tones; i++) free(P_matrix0[i]);
-  for (i=0; i<=tones; i++) free(P_matrix45[i]);
-  for (i=0; i<=tones; i++) free(P_matrix90[i]);
-  for (i=0; i<=tones; i++) free(P_matrix135[i]);
-
-  free(P_matrix0);
-  free(P_matrix45);
-  free(P_matrix90);
-  free(P_matrix135);
-
-  return (Texture);
+float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+						 int rows, int cols, map_ii* tone)
+{
+	int d = distance;
+	int x, y;
+	int row, col, itone, jtone;
+	int count=0; /* normalizing factor */
+	int tones = tone->used;
+	
+	float** matrix = allocate_matrix (0, tones, 0, tones);
+	
+	/* zero out matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] = 0;
+			
+	for (row = 0; row < rows; ++row)
+		for (col = 0; col < cols; ++col) {
+			/* only non-zero values count*/
+			if (grays[row][col] == 0)
+				continue;
+				
+			/* find x tone */
+			if (row + d < rows && col + d < cols && grays[row + d][col + d]) {
+				x = map_ii_value(tone, grays[row][col]);
+				y = map_ii_value(tone, grays[row + d][col + d]);
+				matrix[x][y]++;
+				matrix[y][x]++;
+				count += 2 ;
+			}
+		}
+		
+	/* normalize matrix */
+	for (itone = 0; itone < tones; ++itone)
+		for (jtone = 0; jtone < tones; ++jtone)
+			matrix[itone][jtone] /= count;
+			
+	return matrix;
 }
 
 /*
@@ -524,15 +459,12 @@ float f5_idm (float **P, int Ng) {
 	return idm;
 }
 
-/* GLOBAL VARIABLE used by f6_savg, f7_sumvar */
-float Pxpy[2 * PGM_MAXMAXVAL];
-
 /* Sum Average */
 float f6_savg (float **P, int Ng) {
 	int i, j;
-	extern float Pxpy[2 * PGM_MAXMAXVAL];
 	float savg = 0;
-	
+	float *Pxpy = allocate_vector (0, 2*Ng);
+
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
 	
@@ -547,15 +479,16 @@ float f6_savg (float **P, int Ng) {
 	for (i = 0; i <= (2 * Ng - 2); ++i)
 		savg += i * Pxpy[i];
 	
+	free (Pxpy);
 	return savg;
 }
 
 /* Sum Variance */
 float f7_svar (float **P, int Ng, float S) {
 	int i, j;
-	extern float Pxpy[2 * PGM_MAXMAXVAL];
 	float var = 0;
-	
+	float *Pxpy = allocate_vector (0, 2*Ng);
+
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
 	
@@ -570,15 +503,16 @@ float f7_svar (float **P, int Ng, float S) {
 	for (i = 0; i <= (2 * Ng - 2); ++i)
 		var += (i - S) * (i - S) * Pxpy[i];
 	
+	free (Pxpy);
 	return var;
 }
 
 /* Sum Entropy */
 float f8_sentropy (float **P, int Ng) {
 	int i, j;
-	extern float Pxpy[2 * PGM_MAXMAXVAL];
 	float sentropy = 0;
-	
+	float *Pxpy = allocate_vector (0, 2*Ng);
+
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
 	
@@ -590,6 +524,7 @@ float f8_sentropy (float **P, int Ng) {
 		/*  M. Boland  sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
 		sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
 
+	free (Pxpy);
 	return sentropy;
 }
 
@@ -609,9 +544,9 @@ float f9_entropy (float **P, int Ng) {
 /* Difference Variance */
 float f10_dvar (float **P, int Ng) {
 	int i, j;
-	extern float Pxpy[2 * PGM_MAXMAXVAL];
 	float sum = 0, sum_sqr = 0, var = 0;
-	
+	float *Pxpy = allocate_vector (0, 2*Ng);
+
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
 	
@@ -632,15 +567,16 @@ float f10_dvar (float **P, int Ng) {
 	
 	var = sum_sqr - sum*sum ;
 	
+	free (Pxpy);
 	return var;
 }
 
 /* Difference Entropy */
 float f11_dentropy (float **P, int Ng) {
 	int i, j;
-	extern float Pxpy[2 * PGM_MAXMAXVAL];
 	float sum = 0;
-	
+	float *Pxpy = allocate_vector (0, 2*Ng);
+
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
 	
@@ -652,6 +588,7 @@ float f11_dentropy (float **P, int Ng) {
 		/*    sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
 		sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
 		
+	free (Pxpy);
 	return -sum;
 }
 
