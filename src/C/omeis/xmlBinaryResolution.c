@@ -49,7 +49,7 @@
 		
 
 	Libraries: This program uses libxml2's SAX library. SAX is a stream based
-	xml parser, so memory usage DOES NOT inflate when file size inflates. 
+	xml parser, so memory usage does not inflate when file size inflates. 
 	It also uses zlib and bzip2 compression libraries.
 
 ******************************************************************************/
