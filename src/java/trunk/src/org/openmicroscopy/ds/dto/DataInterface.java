@@ -39,9 +39,10 @@
 package org.openmicroscopy.ds.dto;
 
 /**
- * Superinterface of all OME DTO interfaces.  This interface doesn't
- * define any methods, but can be used to represent variables and
- * parameters which can be any DTO object.
+ * Superinterface of all OME DTO interfaces.  This interface defines
+ * methods for deterimining the data type of the object, and can be
+ * used to represent variables and parameters which can be any DTO
+ * object.
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
@@ -50,4 +51,15 @@ package org.openmicroscopy.ds.dto;
 
 public interface DataInterface
 {
+
+    /**
+     * Returns the name of the data type this object represents.
+     */
+    public String getDTOTypeName();
+
+    /**
+     * Returns the interface class of the data type this object
+     * represents.
+     */
+    public Class getDTOType();
 }
