@@ -14,11 +14,11 @@ void usage(int argc, char **argv);
 void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type);
 void make_Gray_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type);
 void scale_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
+void scale_Gray_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
 
 int main (int argc, char **argv)
 {
 	int i;
-	char *query;
 	char *path;
 	char *dims;
 	char *theZ,*theT;
@@ -104,7 +104,7 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 {
 	FILE *imgFileR, *imgFileG, *imgFileB;
 	int numX, numY, numZ, numW, numT, numB;
-	int row, rowsPerChunk=16;
+	int row, rowsPerChunk=10;
 	int theZ, theT;
 	int rWav, rBlck;
 	int gWav, gBlck;
@@ -121,7 +121,6 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 	struct jpeg_compress_struct cinfo, *cinfoPtr;
 	struct jpeg_error_mgr jerr;
 	JSAMPROW row_pointer[rowsPerChunk];	/* pointer to JSAMPLE row[s] */
-	int row_stride;		/* physical row width in image buffer */
 
 	numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numW,&numT,&numB);
 	if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numW < 1 || numT < 1 || numB < 1) {
@@ -206,7 +205,11 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 		scale_buf (imageBuf+1, fileBufG, numB, numSamples, gBlck, gScale);
 		fread( fileBufB, numB, numSamples, imgFileB );
 		scale_buf (imageBuf+2, fileBufB, numB, numSamples, bBlck, bScale);
-
+/*
+		for (i=0;i<10;i++) {
+			fprintf (stderr,"%5d%5d%5d : %5d%5d%5d\n",fileBufR[i],fileBufG[i],fileBufB[i],imageBuf[(i*3)],imageBuf[(i*3)+1],imageBuf[(i*3)+2]);
+		}
+*/
 /*		fwrite (imageBuf,1,numSamples*3, stdout); */
 		
 	/* jpeg_write_scanlines expects an array of pointers to scanlines. */
@@ -237,7 +240,145 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 
 void make_Gray_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type)
 {
+	FILE *imgFile;
+	int numX, numY, numZ, numW, numT, numB;
+	int row, rowsPerChunk=10;
+	int theZ, theT;
+	int wave, blck;
+	float scale;
+	int numInts;
+	
+	unsigned short *fileBuf;
+	int i;
+	unsigned long numSamples;
+
+	JSAMPLE * imageBuf;
+	int quality=80;
+	struct jpeg_compress_struct cinfo, *cinfoPtr;
+	struct jpeg_error_mgr jerr;
+	JSAMPROW row_pointer[rowsPerChunk];	/* pointer to JSAMPLE row[s] */
+
+	numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numW,&numT,&numB);
+	if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numW < 1 || numT < 1 || numB < 1) {
+		fprintf (stderr,"All 6 dimension sizes must be > 0: #dims=%d, Dims=%s\n",numInts,dims);
+		exit (-1);
+	}
+	
+	numInts  = sscanf (theZ_s,"%d",&theZ);
+	numInts += sscanf (theT_s,"%d",&theT);
+	if (numInts < 2 || theZ > (numZ-1) || theT > (numT-1)) {
+		fprintf (stderr,"theZ and theT must be within the dimension sizes (theZ,theT) = (%d,%d)\n",theZ,theT);
+		exit (-1);
+	}
+	
+	numInts  = sscanf (type,"%d,%d,%f",&wave, &blck, &scale);
+	if (numInts < 3) {
+		fprintf (stderr,"The RGB parameter must supply 9 numbers, not %d: %s\n",numInts,type);
+		exit (-1);
+	}
+
+	imageBuf = (JSAMPLE *)malloc (numX*rowsPerChunk);
+	if (!imageBuf) {
+		fprintf (stderr,"Could not allocate memory for image buffer\n");
+		exit (-1);
+	}
+	for (i=0; i< rowsPerChunk;i++)
+		row_pointer[i] = &imageBuf[i*numX];
+
+	fileBuf = (unsigned short *)malloc (numX*numB*rowsPerChunk);
+	if (!fileBuf) {
+		fprintf (stderr,"Could not allocate memory for file buffer\n");
+		exit (-1);
+	}
+
+	imgFile = fopen (path,"r");
+	if (!imgFile) {
+		fprintf (stderr,"File %s could not be opened for reading - B.\n",path);
+		exit (-1);
+	}
+	fseek (imgFile, ( ((theT*numW) + wave)*numZ + theZ)*numX*numY*numB, SEEK_SET);
+
+	/* Step 1: allocate and initialize error and JPEG compression object */
+	cinfoPtr = &cinfo;
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_create_compress(cinfoPtr);
+	
+	/* Step 2: specify data destination (eg, a file) */
+	jpeg_stdio_dest(cinfoPtr, stdout);
+	
+	/* Step 3: set parameters for compression */
+	cinfo.image_width = numX; 	/* image width and height, in pixels */
+	cinfo.image_height = numY;
+	cinfo.input_components = 1;		/* # of color components per pixel */
+	cinfo.in_color_space = JCS_GRAYSCALE; 	/* colorspace of input image */
+
+	/* Now use the library's routine to set default compression parameters. */
+	jpeg_set_defaults(cinfoPtr);
+
+	/* Now you can set any non-default parameters you wish to. */
+	jpeg_set_quality(cinfoPtr, quality, TRUE);
+	
+	
+	/* Step 4: Start compressor TRUE ensures that we will write a complete interchange-JPEG file. */
+	jpeg_start_compress(cinfoPtr, TRUE);
+		
+	numSamples = numX*rowsPerChunk;
+	row = 0;
+	while (row < numY) {
+		if (row + rowsPerChunk > numY) {
+			rowsPerChunk = numY - row;
+			numSamples = numX*rowsPerChunk;
+		}
+		fread( fileBuf, numB, numSamples, imgFile );
+		scale_Gray_buf (imageBuf,   fileBuf, numB, numSamples, blck, scale);
+		
+	/* jpeg_write_scanlines expects an array of pointers to scanlines. */
+		(void) jpeg_write_scanlines(cinfoPtr, row_pointer, rowsPerChunk);
+
+		row += rowsPerChunk;
+	}
+	
+	/* Step 6: Finish compression */
+	jpeg_finish_compress(cinfoPtr);
+
+	/* After finish_compress, we can flush the output file, and close the input file. */
+	fflush(stdout);
+	fclose (imgFile);
+
+	/* Step 7: release JPEG compression object */
+	jpeg_destroy_compress(cinfoPtr);
+	
+	free (fileBuf);
+	
+	/* And we're done! */
 }
+
+
+void scale_Gray_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale)
+{
+unsigned char *charPtr = (unsigned char *)fileBuf;
+unsigned short *shortPtr = (unsigned short *)fileBuf;
+int thePix,i;
+
+	if (numB == 1) {
+		for (i=0;i<numSamples;i++) {
+			thePix = *charPtr++ - blck;
+			if (thePix < 0) thePix = 0;
+			thePix *= scale;
+			if (thePix > 255) thePix=255;
+			*imageBuf++ = thePix;
+		}
+	} else if (numB == 2) {
+		for (i=0;i<numSamples;i++) {
+			thePix = *shortPtr++ - blck;
+			if (thePix < 0) thePix = 0;
+			thePix *= scale;
+			if (thePix > 255) thePix=255;
+			*imageBuf++ = thePix;
+		}
+	}
+}
+
 
 
 void scale_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale)
@@ -248,17 +389,21 @@ int thePix,i;
 
 	if (numB == 1) {
 		for (i=0;i<numSamples;i++) {
-			thePix = *charPtr < blck ? 0 : *charPtr - blck;
-			*imageBuf = thePix * scale > 255 ? 255 : thePix * scale;
+			thePix = *charPtr++ - blck;
+			if (thePix < 0) thePix = 0;
+			thePix *= scale;
+			if (thePix > 255) thePix=255;
+			*imageBuf = thePix;
 			imageBuf += 3;
-			charPtr++;
 		}
 	} else if (numB == 2) {
 		for (i=0;i<numSamples;i++) {
-			thePix = *shortPtr < blck ? 0 : *shortPtr - blck;
-			*imageBuf = thePix * scale > 255 ? 255 : thePix * scale;
+			thePix = *shortPtr++ - blck;
+			if (thePix < 0) thePix = 0;
+			thePix *= scale;
+			if (thePix > 255) thePix=255;
+			*imageBuf = thePix;
 			imageBuf += 3;
-			shortPtr++;
 		}
 	}
 }
@@ -399,7 +544,7 @@ char **getcgivars(void)
 	
 	for(i=0; i<paircount; i++){
 		
-		if( eqpos = strchr(pairlist[i],'=') ){
+		if( (eqpos = strchr(pairlist[i],'=')) ){
 			*eqpos = '\0';
 			unescape_url(cgivars[i*2+1] = strdup(eqpos+1));
 		}else{
@@ -431,13 +576,7 @@ char **getcgivars(void)
 char **getCLIvars(int argc, char **argv)
 {
 	register int i;
-	char *request_method;
-	int content_length;
-	char *cgiinput;
 	char **cgivars;
-	char **pairlist;
-	int paircount;
-	char *nvpair;
 	char *eqpos;
 
 	
@@ -449,7 +588,7 @@ char **getCLIvars(int argc, char **argv)
 	
 	for(i=0; i<argc; i++){
 		
-		if( eqpos = strchr(argv[i],'=') ){
+		if( (eqpos = strchr(argv[i],'=')) ){
 			*eqpos = '\0';
 			cgivars[i*2+1] = strdup(eqpos+1);
 		}else{

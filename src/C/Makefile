@@ -77,7 +77,7 @@ SetDVwave: SetDVwave.o  BSUtils.o
 	gcc  -o SetDVwave SetDVwave.o  BSUtils.o
 
 OME_JPEG: OME_JPEG.c
-	gcc -o OME_JPEG -O2 OME_JPEG.c -ljpeg
+	gcc -o OME_JPEG -O3 OME_JPEG.c -ljpeg
 
 $(OME_LIB): $(OBJECTS)
 	ar cr $@ $(OBJECTS)

@@ -1,0 +1,198 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+	<title>PictureTorture</title>
+	<meta name="generator" content="BBEdit 6.5.3">
+	<script type="text/javascript" language="Javascript">
+<!--
+function Do_Form()
+{
+	var myImage = document.images["theImg"];
+	var myForm = document.forms[0];
+	var maxIter = myForm.Iterations.value || 100;
+	var URLconst = myForm.URL.value+"?Path="+myForm.Path.value+"&Dims="+myForm.Dims.value;
+	var Rwav = myForm.RedWave.value || 0;
+	var Rblk0 = myForm.RedBlckLvl0.value || 300;
+	var Rblk1 = myForm.RedBlckLvl1.value || 400;
+	var Rscl0 = myForm.RedScale0.value || 0.0625;
+	var Rscl1 = myForm.RedScale1.value || 0.0625;
+	var Gwav = myForm.GrnWave.value || 1;
+	var Gblk0 = myForm.GrnBlckLvl0.value || 300;
+	var Gblk1 = myForm.GrnBlckLvl1.value || 400;
+	var Gscl0 = myForm.GrnScale0.value || 0.0625;
+	var Gscl1 = myForm.GrnScale1.value || 0.0625;
+	var Bwav = myForm.BluWave.value || 1;
+	var Bblk0 = myForm.BluBlckLvl0.value || 300;
+	var Bblk1 = myForm.BluBlckLvl1.value || 400;
+	var Bscl0 = myForm.BluScale0.value || 0.0625;
+	var Bscl1 = myForm.BluScale1.value || 0.0625;
+	var theZ0 = myForm.theZ0.value || 0;
+	var theZ1 = myForm.theZ1.value || 0;
+	var theT0 = myForm.theT0.value || 0;
+	var theT1 = myForm.theT1.value || 0;
+	myImage.iter=0;
+	myImage.maxIter = maxIter;
+	myImage.URLs = [];
+	myImage.running = true;
+	myImage.theURL = myForm.theURL;
+
+	var i,myIter=0,i0,i1;
+	var URLarray = [];
+	var URLfrag = "";
+	while (myIter < maxIter) {
+		URLfrag = URLconst+"&theZ="+theZ0+"&theT="+theT0+"&RGB=";
+		URLarray = [Rwav,Rblk0,Rscl0,Gwav,Gblk0,Gscl0,Bwav,Bblk0,Bscl0];
+		for (i=Rblk0; i<Rblk1 && myIter < maxIter;i++) {
+			URLarray[1] = i;
+			myImage.URLs.push (URLfrag+URLarray.join(","));
+			myIter++;
+		}
+		for (i=Gblk0; i<Gblk1 && myIter < maxIter;i++) {
+			URLarray[4] = i;
+			myImage.URLs.push (URLfrag+URLarray.join(","));
+			myIter++;
+		}
+		for (i=Bblk0; i<Bblk1 && myIter < maxIter;i++) {
+			URLarray[7] = i;
+			myImage.URLs.push (URLfrag+URLarray.join(","));
+			myIter++;
+		}
+		URLfrag = URLconst+"&RGB="+URLarray.join(",")+"&theT="+theT0+"&theZ=";
+		for (i=theZ0; i<theZ1 && myIter < maxIter;i++) {
+			myImage.URLs.push (URLfrag+i);
+			myIter++;
+		}
+		URLfrag = URLconst+"&RGB="+URLarray.join(",")+"&theZ="+theZ1+"&theT=";
+		for (i=theT0; i<theT1 && myIter < maxIter;i++) {
+			myImage.URLs.push (URLfrag+i);
+			myIter++;
+		}
+		if (myIter == 0) {
+			alert ("You must provide a range for at least one value!");
+			return;
+		}
+	}
+	myImage.tStart = new Date().getTime();
+	Load_Next (myImage);
+}
+
+function Load_Next(image)
+{
+	if (image.running) {
+		if (image.iter >= image.maxIter) {
+			Stop_Loading();
+			return true;
+		} else {
+			image.theURL.value = image.URLs[image.iter];
+			image.src = image.URLs[image.iter];
+			image.iter++;
+		}
+	}
+}
+
+function Stop_Loading ()
+{
+	var tStop = new Date().getTime();
+	var theImage = document.images["theImg"];
+	theImage.running=false;
+	document.forms[0].FPS.value=theImage.iter / ( (tStop - theImage.tStart) / 1000)
+	
+}
+function Do_noting()
+{
+}
+//-->
+</script>
+</head>
+<body>
+<form method="post" onsubmit="Do_Form()" action="javascript:Do_noting()">
+<input type="text" name="theURL" size="200" readonly align="top">
+<table cellpadding="2" cellspacing="2" border="1" width="25%" align = "left">
+  <tbody>
+    <tr>
+      <td valign="top" align="right">Option</td>
+      <td valign="top" align="center">Start</td>
+      <td valign="top" align="center">End</td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">URL</td>
+      <td valign="top" colspan="2"><input type="text" name="URL" size="40" value="http://localhost/cgi-bin/OME_JPEG"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Path</td>
+      <td valign="top" colspan="2"><input type="text" name="Path" size="40" value="yan-good2_A01.gray"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Dims</td>
+      <td valign="top" colspan="2"><input type="text" name="Dims" size="20" value="640,512,1,3,1,2"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">the Z</td>
+      <td valign="top"><input type="text" name="theZ0" size="5" value="0"></td>
+      <td valign="top"><input type="text" name="theZ1" size="5" value="0"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">the T</td>
+      <td valign="top"><input type="text" name="theT0" size="5" value="0"></td>
+      <td valign="top"><input type="text" name="theT1" size="5" value="0"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Wave: R</td>
+      <td valign="top" colspan="2"><input type="text" name="RedWave" size="5" value="0"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Black : R</td>
+      <td valign="top"><input type="text" name="RedBlckLvl0" size="5" value = "300"></td>
+      <td valign="top"><input type="text" name="RedBlckLvl1" size="5" value = "400"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Scale: R</td>
+      <td valign="top"><input type="text" name="RedScale0" size="5" value = "0.1"></td>
+      <td valign="top"><input type="text" name="RedScale1" size="5" value = "0.1"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Wave: G</td>
+      <td valign="top" colspan="2"><input type="text" name="GrnWave" size="5" value="1"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Black : G</td>
+      <td valign="top"><input type="text" name="GrnBlckLvl0" size="5" value = "300"></td>
+      <td valign="top"><input type="text" name="GrnBlckLvl1" size="5" value = "400"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Scale: G</td>
+      <td valign="top"><input type="text" name="GrnScale0" size="5" value = "0.1"></td>
+      <td valign="top"><input type="text" name="GrnScale1" size="5" value = "0.1"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Wave: B</td>
+      <td valign="top" colspan="2"><input type="text" name="BluWave" size="5" value="2"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Black : B</td>
+      <td valign="top"><input type="text" name="BluBlckLvl0" size="5" value = "300"></td>
+      <td valign="top"><input type="text" name="BluBlckLvl1" size="5" value = "400"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Scale: B</td>
+      <td valign="top"><input type="text" name="BluScale0" size="5" value = "0.1"></td>
+      <td valign="top"><input type="text" name="BluScale1" size="5" value = "0.1"></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">Iterations</td>
+      <td valign="top"><input type="text" name="Iterations" size="5" value="2"></td>
+      <td valign="top"><button type="button" name="Run" onclick="Do_Form()">Run</button>
+      	<button type="button" name="Stop" onclick="Stop_Loading()">Stop</button></td>
+    </tr>
+    <tr>
+      <td valign="top" align="right">FPS</td>
+      <td valign="top"  colspan="2"><input type="text" name="FPS" size="5" disabled></td>
+    </tr>
+  </tbody>
+</table>
+</form>
+<img name="theImg" src="/images/AnimalCell.aa.jpg.png" alt="foo" align="right" onload="Load_Next(this)">
+</body>
+</html>
