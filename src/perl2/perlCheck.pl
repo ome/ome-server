@@ -277,7 +277,7 @@ my $version = shift;
 	return (1) if $version == 1.01;
 	return (1) if $version == 1.20;
 	return (1) if $version == 1.21;
-	return (1) if $version == 1.22;
+#	return (1) if $version == 1.22; # Stability problems with new DBObject.  No longer OK.
 	return (0);
 }
 
