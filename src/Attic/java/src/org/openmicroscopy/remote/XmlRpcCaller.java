@@ -142,7 +142,9 @@ public class XmlRpcCaller
             {
                 for (int i = 0; i < params.length; i++)
                 {
-                    if (params[i] instanceof RemoteObject)
+                    if (params[i] == null)
+                        vparams.addElement(">>OBJ:NULL");
+                    else if (params[i] instanceof RemoteObject)
                         vparams.addElement(params[i].toString());
                     else if (params[i] instanceof List)
                         vparams.addElement(new Vector((List) params[i]));
