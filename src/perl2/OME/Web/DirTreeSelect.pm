@@ -113,7 +113,7 @@ sub getPageBody {
 				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
 
 
-	   			return ('HTML',$txt) unless (not defined $rep);
+	   			return ('HTML',$txt) unless (defined $rep);
 				# must find better solution
 				$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'),$userID,$usergpID,$project->project_id());
 
