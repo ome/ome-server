@@ -353,8 +353,6 @@ returned in the endianness of the local machine.
 
 =cut
 
-my %TEMPORARY_FILES;
-
 sub getTemporaryLocalPixels {
     my ($self,$big_endian) = @_;
     my $session = OME::Session->instance();
@@ -369,7 +367,6 @@ sub getTemporaryLocalPixels {
 
     close $pix;
 
-    $TEMPORARY_FILES{$filename} = undef;
     return $filename;
 }
 
@@ -403,7 +400,6 @@ sub getTemporaryLocalStack {
 
     close $pix;
 
-    $TEMPORARY_FILES{$filename} = undef;
     return $filename;
 }
 
@@ -437,7 +433,6 @@ sub getTemporaryLocalPlane {
 
     close $pix;
 
-    $TEMPORARY_FILES{$filename} = undef;
     return $filename;
 }
 
@@ -455,22 +450,7 @@ created to handle the request, it will be deleted.
 sub finishLocalPixels {
     my ($self,$filename) = @_;
 
-    if (-e $filename) {
-        eval { unlink $filename };
-        warn "Error removing temp file $filename: $@" if $@;
-    }
-
-    delete $TEMPORARY_FILES{$filename};
-}
-
-# Register a finalization routine to remove any temporary files which
-# were not deleted explicitly.  Make sure to whine very loudly.
-
-END {
-    foreach my $filename (keys %TEMPORARY_FILES) {
-        warn "Temporary file not removed via finishLocalPixels! $filename";
-        __PACKAGE__->finishLocalPixels($filename);
-    }
+    OME::Session->instance()->finishTemporaryFile($filename);
 }
 
 1;
