@@ -52,13 +52,13 @@ public class PixelTypes
     // Signed? (0=false, 1=true)
     private static final String[][][] PIXEL_TYPES = 
     { { { "uint8", "int8" },
-        { "unsigned byte float?", "signed byte float?" } },
+        { "invalid", "invalid" } },
 
       { { "uint16", "int16" },
-        { "unsigned float?", "float" } },
+        { "invalid", "invalid" } },
 
       { { "uint32", "int32" },
-        { "unsigned double?", "double" } } };
+        { "invalid", "float" } } };
 
     public static String getPixelType(int bytesPerPixel,
                                       boolean isSigned,
@@ -73,8 +73,9 @@ public class PixelTypes
         else if (bytesPerPixel == 4)
             bbpIndex = 2;
         else
-            return "unknown";
+            return "invalid";
 
+        /*TEMP*/System.out.println("CTR: Pixel type is " + PIXEL_TYPES[bbpIndex][isFloat?1:0][isSigned?1:0]);
         return PIXEL_TYPES[bbpIndex][isFloat? 1: 0][isSigned? 1: 0];
     }
 
