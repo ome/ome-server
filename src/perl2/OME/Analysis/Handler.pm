@@ -496,6 +496,7 @@ sub __check_output_arity {
 	}
 }
 
+
 =head2 validateAndProcessExecutionInstructions
 	
 	# get $handler_class
@@ -517,6 +518,39 @@ Return undef if no changes were made to the execution instructions.
 sub validateAndProcessExecutionInstructions {
     my ($self, $module, $executionInstructionsXML) = @_;
     return undef;
+}
+
+
+=head2 __check_output_location
+
+	my ( $formal_output, $semantic_element ) = 
+		$self->__check_output_location( $module, $output_location);
+
+Utility function for validateAndProcessExecutionInstructions
+Verfiy that an output location actually exists. Will confess (die with a
+stacktrace), if an output location is invalid for a module (i.e.
+references something that doesn't exist).
+
+=cut
+
+sub __check_output_location {
+	my ($self, $module, $output_location) = @_;
+	my $factory = $self->Factory();
+	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
+		or confess "output_location '$output_location' could not be parsed.";
+	my $formal_output = $factory->
+		findObject( "OME::Module::FormalOutput",
+			module => $module,
+			name   => $formal_output_name
+		)
+		or confess "Error in output_location '$output_location'; Could not find formal output '$formal_output_name'";
+	confess "Error in output_location '$output_location'; Semantic element ('$SEforScalar') is not defined in the semantic type ".$formal_output->semantic_type->name
+		unless my $semantic_element = $factory->
+			findObject( 'OME::SemanticType::Element', 
+				semantic_type => $formal_output->semantic_type, 
+				name          => $SEforScalar 
+			);	
+	return( $formal_output, $semantic_element );
 }
 
 =head1 AUTHOR
