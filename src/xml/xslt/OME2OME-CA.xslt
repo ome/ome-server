@@ -23,7 +23,6 @@
 			<xsl:apply-templates select = "OME:Project"/>
 			<xsl:apply-templates select = "OME:Dataset"/>
 			<xsl:apply-templates select = "OME:Image"/>
-			<xsl:apply-templates select = "OME:CustomAttributes"/>
 
 			<xsl:element name = "CustomAttributes">
 				<xsl:apply-templates select = "OME:Experimenter"/>
@@ -32,6 +31,7 @@
 				<xsl:apply-templates select = "OME:Instrument"/>
 				<xsl:apply-templates select = "OME:Plate"/>
 				<xsl:apply-templates select = "OME:Screen"/>
+				<xsl:apply-templates select = "OME:CustomAttributes/*"/>
 			</xsl:element>
 			
 			<xsl:apply-templates select = "STD:*"/>
