@@ -69,7 +69,7 @@ our $INSTALL_HOME;
 our ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
 
 # Our Apache user & Postgres admin we'll grab from the environment
-our ($APACHE_USER, $POSTGRES_USER);
+our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
 
 # Default import formats
 our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
@@ -215,6 +215,10 @@ sub get_db_version {
 
 sub update_database {
 my $version = shift;
+my $factory = OME::Factory->new();
+my $dbh = $factory->obtainDBH();
+my $delegate = OME::Database::Delegate->getDefaultDelegate();
+
     my @files = glob ("update/$version/pre/*");
     foreach my $file (@files) {
         if ($file =~ /\.sql$/) {
@@ -223,6 +227,8 @@ my $version = shift;
             scalar (eval `cat $file`) or croak "eval of file $file did not return true";
         }
     }
+    $factory->commitTransaction();
+    $factory->closeFactory();
     return (1);
 }
 
@@ -334,33 +340,39 @@ sub load_schema {
 
 sub create_experimenter {
     my $manager = shift;
-    my $first_name = "";
-    my $last_name = "";
-    my $username;
-    my $e_mail;
-    my $data_dir = "";
+    my ($first_name,$last_name);
+
+    my ($username, $password, $personal_info, $data_dir) = (getpwuid($ADMIN_UID))[0,1,6,7];
+    if ($personal_info) {
+		my $full_name = (split (',',$personal_info,2))[0];
+		($first_name,$last_name) = split (' ',$full_name,2);
+    } else {
+		($first_name,$last_name) = ('','');
+    }
+	my $e_mail = $username.'@'.hostname();
 
     print_header "Initial user creation";
     
 
     while (1) {
-	$first_name = confirm_default ("First name", $first_name);
-	$last_name = confirm_default ("Last name", $last_name);
-	$username = confirm_default ("Username", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
-	$e_mail = confirm_default ("E-mail address", ($e_mail or $username.'@'.hostname ()));
-	$data_dir = confirm_default ("Default data directory", $data_dir);
-
-	print "\n";  # Spacing
-
-	print "First name: $first_name\n";
-	print "Last name: $last_name\n";
-	print "Username: $username\n";
-	print "E-mail address: $e_mail\n";
-	print "Default data directory: $data_dir\n";
+	print "            First name: ", BOLD, $first_name, RESET, "\n";
+	print "             Last name: ", BOLD, $last_name , RESET, "\n";
+	print "              Username: ", BOLD, $username  , RESET, "\n";
+	print "        E-mail address: ", BOLD, $e_mail    , RESET, "\n";
+	print "Default data directory: ", BOLD, $data_dir  , RESET, "\n";
 	
 	print "\n";  # Spacing
 
-	y_or_n ("Are these values correct ?") and last or next;
+	y_or_n ("Are these values correct ?") and last;
+
+	$first_name = confirm_default ("            First name: ", $first_name);
+	$last_name  = confirm_default ("             Last name: ", $last_name);
+	$username   = confirm_default ("              Username: ", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
+	$e_mail     = confirm_default ("        E-mail address: ", ($e_mail or $username.'@'.hostname ()));
+	$data_dir   = confirm_default ("Default data directory: ", $data_dir);
+
+	print "\n";  # Spacing
+
     }
     
     if (not -d $data_dir) {
@@ -371,7 +383,9 @@ sub create_experimenter {
 	}
     }
 
-    my ($password, $hashed_password) = get_password ("Password: ", 6);
+
+	my $hashed_password;
+    ($password, $hashed_password) = get_password ("Password: ", 6);
 
     print "\n";  # Spacing
 
@@ -399,7 +413,7 @@ sub create_experimenter {
 }
 
 sub init_configuration {
-    my $factory = OME::Factory->new();
+my $factory = OME::Factory->new();
 
     print_header "Initializing configuration";
 
@@ -431,8 +445,30 @@ sub init_configuration {
             });
 
     $factory->commitTransaction();
-#    $session->commitTransaction();
     $factory->closeFactory();
+    return 1;
+}
+
+
+sub update_configuration {
+my $session = shift;
+my $factory = $session->Factory();
+my $var;
+	# Make sure that the DB_VERSION and IMPORT_FORMATS is correct in case the data hash
+	# was ignored due to a pre-existing ocnfiguration
+	$var = $factory->findObject('OME::Configuration::Variable',
+			configuration_id => 1, name => 'db_version') or croak 
+			"Could not retreive the configuration variable db_version";
+	$var->value ($DB_VERSION);
+	$var->storeObject();
+	
+	$var = $factory->findObject('OME::Configuration::Variable',
+			configuration_id => 1, name => 'import_formats') or croak 
+			"Could not retreive the configuration variable import_formats";
+	$var->value ($IMPORT_FORMATS);
+	$var->storeObject();
+
+    $factory->commitTransaction();
     return 1;
 }
 
@@ -606,6 +642,8 @@ if ($ENV{OME_DEBUG} > 0) {
 	or croak "Unable to retrieve APACHE_USER!";
     $POSTGRES_USER = $environment->postgres_user()
 	or croak "Unable to retrieve POSTGRES_USER!";
+    $ADMIN_USER = $environment->admin_user();
+    $ADMIN_UID = getpwnam ($ADMIN_USER);
 
     # Set our installation home
     $INSTALL_HOME = $OME_TMP_DIR."/install";
@@ -652,6 +690,7 @@ if ($ENV{OME_DEBUG} > 0) {
 
     if (defined $db_db_version) {
         print "Found existing database version $db_db_version.";
+	    $environment->flag ("UPDATE");
         if ($db_db_version ne $DB_VERSION) {
             print "  Updating to $DB_VERSION.\n";
             $retval = update_database($db_db_version);
@@ -665,6 +704,7 @@ if ($ENV{OME_DEBUG} > 0) {
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         $session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
+        update_configuration ($session) or croak "Unable to initialize the configuration object.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
