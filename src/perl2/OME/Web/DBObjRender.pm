@@ -265,6 +265,8 @@ sub render {
 	# _relations = iterate over the object's relations
 	if( $tmpl->query( name => '_relations' ) ) {
 		my ($relations, $names) = $self->getRelations( $obj, $mode );
+		my @tmpl_fields = $tmpl->query( loop => '_relations' );
+		my @a = grep( m/^!/, @tmpl_fields); my $relation_render_mode = $a[0];
 		my @relations_data;
 		foreach my $relation( @$relations ) {
 			my $name = shift @$names;
@@ -280,7 +282,7 @@ sub render {
 			};
 			push( @relations_data, { 
 				name => $name, 
-				'!tiled_list' => $self->renderArray( \@$objects, 'tiled_list', $_options ) 
+				$relation_render_mode => $self->renderArray( \@$objects, substr( $relation_render_mode, 1 ), $_options ) 
 			} );
 		}
 		$tmpl_data{ _relations } = \@relations_data;
