@@ -52,6 +52,7 @@ import java.awt.geom.Rectangle2D;
 
 public class PParameterLocator extends PLocator {
 
+	private static final int OFFSET=7;
 	private PFormalParameter param;
 	private int side;
 	
@@ -69,10 +70,10 @@ public class PParameterLocator extends PLocator {
 	public double locateX() {
 		Rectangle2D aBounds = param.getBoundsReference();
 		if (side == SwingConstants.EAST) {
-			return aBounds.getX()+aBounds.getWidth()+PLink.END_BULB_RADIUS;
+			return aBounds.getX()+aBounds.getWidth()+OFFSET;
 		}
 		else { // must be WEST
-			return aBounds.getX()-PLink.END_BULB;
+			return aBounds.getX()-OFFSET;
 		}
 	}
 }
