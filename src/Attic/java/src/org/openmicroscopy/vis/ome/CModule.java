@@ -100,4 +100,21 @@ public class CModule extends RemoteModule {
 	public void removeModuleWidget(PModule mod) {
 		pModules.remove(mod);
 	}
+	
+	/**
+	 * Set modules to be highlighted
+	 * @param v true if highlighted, else false
+	 */
+	public void setModulesHighlighted(boolean v) {
+		PModule m;
+		ArrayList widgets = getModuleWidgets();
+		
+		
+		for  (int i = 0; i < widgets.size(); i++) {
+			m = (PModule) widgets.get(i);
+			m.setHighlighted(v);
+			m.setParamsHighlighted(v);
+		}
+	}
+
 }
