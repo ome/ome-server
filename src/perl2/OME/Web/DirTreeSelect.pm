@@ -30,7 +30,8 @@ use OME::Dataset;
 use OME::Tasks::ImageTasks;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
-
+use OME::Web::Helper::HTMLFormat;
+use OME::Web::Helper::JScriptFormat;
 use base qw{ OME::Web };
 
 
@@ -47,6 +48,9 @@ sub getPageBody {
 
 	my $datasetManager=new OME::Tasks::DatasetManager($session);
 	my $projectManager=new OME::Tasks::ProjectManager($session);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
+
 	my @selections = ();
 	my $selection;
 	my @paths;
@@ -76,31 +80,23 @@ sub getPageBody {
 			# in the project. In this case, 'addNewDataset' is implicitly chosen
 			if (not defined $radioSelect or $radioSelect eq 'addNewDataset') {
 				$reloadTitleBar = 1;
-
 				# No name
 				my $datasetname=$cgi->param('newDataset');
 				my $text="";
-				$text.="<b>Please enter a name for your dataset</b><br>";
-				$text.=print_form($session,$cgi,$selections[0]);
-				$text .= $cgi->h4 ('Selected Files and Folders:');
-				$text .= join ("<BR>",@selections);
+				$text=$htmlFormat->noNameMessage("dataset");
+				$text.=print_form($session,$cgi,$htmlFormat,\@selections);
 				return ('HTML',$text) unless $datasetname;
          			
         			#name already exists
-				
 				my $rep=$datasetManager->exist($datasetname);
 
 				my $txt="";
-				$txt.="<b>This name already exists. Please enter a new name for your dataset</b><br>";
-				$txt.=print_form($session,$cgi,$selections[0]);
-				$txt .= $cgi->h4 ('Selected Files and Folders:');
-				$txt .= join ("<BR>",@selections);
-
+				$txt=$htmlFormat->existMessage("dataset");
+				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
 	   			return ('HTML',$txt) unless (defined $rep);
-				$txt="";
-				#$datasetManager->createWithoutImage($cgi->param('newDataset'),$cgi->param('description'));
-				
+				# must find better solution
 				$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
+
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
 				$projectManager->add($cgi->param('addDataset'));
@@ -109,18 +105,18 @@ sub getPageBody {
 
 			my $errorMessage = '';
 			if ($session->dataset()) {
-			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $session->dataset(), \@paths);
+			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $session->dataset(), \@paths);
+				
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
 			}
 			# Import messed up. Display error message & let them try again.
 			if ($errorMessage) { 
 				#Delete $dataset 
-				# +link.
-				$body .= $cgi->h3($errorMessage);
-				$body .= print_form($session,$cgi,$selections[0]);
-				$body .= $cgi->h4 ('Selected Files and Folders:');
-				$body .= join ("<BR>",@selections);
+				# +link. MUST BE DONE BEFORE (New class) domain logic 
+				$datasetManager->delete($session->dataset()->dataset_id());
+				$body .= "<b>".$errorMessage."</b><br>";
+				$body .= print_form($session,$cgi,$htmlFormat,\@selections);
 			} else {
 				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
@@ -128,28 +124,20 @@ sub getPageBody {
 				#$project->writeObject();
 				#$session->dataset($dataset);
 				#$session->writeObject();
-
-				
-				# javascript to reload titlebar
-				#$body .= "<script>top.location.href = top.location.href;</script>";
-				#if defined $reloadPage;
-				$body.=format_text($session->dataset()->dataset_id());
+				$body=$jscriptFormat->openInfoDatasetImport($session->dataset()->dataset_id());
 				$body .= "<script>top.location.href = top.location.href;</script>";
 				$body .= "<script>top.title.location.href = top.title.location.href;</script>"
-					if defined $reloadTitleBar;
-				#$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov">email</a> the developers w/ your comments.`;
+					if defined $reloadTitleBar;	
 			}
 		}
 		# If we have a selection, but import button wasn't clicked, print the form:
 		else {
-			$body .= print_form($session,$cgi,$selections[0]);
-			$body .= $cgi->h4 ('Selected Files and Folders:');
-			$body .= join ("<BR>",@selections);
+			$body .= print_form($session,$cgi,$htmlFormat,\@selections);
 		}
 	
 	# If we got no selection, just print a handy hint.
 	} else {
-		$body .=  $cgi->h4 ('Select Files and Folders in the menu tree on the left.');
+		$body .=  "<h4>Select Files and Folders in the menu tree on the left.</h4>";
 	}
 
 	return ('HTML', $body);
@@ -158,16 +146,14 @@ sub getPageBody {
 
 
 sub print_form {
-	my ($session,$cgi,$recentSelection) = @_;
+	my ($session,$cgi,$htmlFormat,$refSelection) = @_;
 
-
+	my $recentSelection=@$refSelection[0];
 	my $project = $session->project();
 	my @datasets = $project->unlockedDatasets() if defined $project;
 	my %datasetHash  = map { $_->ID() => $_->name()} @datasets if @datasets > 0;;
 	my $text = '';
-	$text .= "\n".$cgi->startform;
-	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Import',-value=>'Import Selected Files/Folders')."\n</CENTER>\n";
-
+	
 	# this sets default datasetName to the last directory path
 	my @pathElements = split ('/',$recentSelection);
 	my $datasetName = $pathElements[$#pathElements-1];
@@ -176,67 +162,27 @@ sub print_form {
 		$defaultDatasetID = $key if $value eq $datasetName;
 	}
 	
-	my $defaultRadio = 'addNewDataset';
-	$defaultRadio = 'addExistDataset' if $defaultDatasetID;
+	my $defaultRadio =1;
+	$defaultRadio = 2 if $defaultDatasetID;
 	my $newDatasetName = '';
 	$newDatasetName = $datasetName unless $defaultDatasetID;
 	$defaultDatasetID = $session->dataset()->ID() unless not defined $session->dataset() or $defaultDatasetID;
 	
-	$text .= "<BLOCKQUOTE>\n";
-	my @datasetRadios = $cgi->radio_group(-name=>'DoDatasetType',
-				-values => ['addNewDataset','addExistDataset'],
-				-default=>$defaultRadio,
-				-labels => {
-					'addNewDataset'   => 'New dataset named: ',
-					'addExistDataset' => 'Add imported images to existing dataset ',
-				}
-			);
+	my %h=(
+	1 =>{name =>'addNewDataset', text=> 'New dataset named: '},
+	2 =>{name => 'addExistDataset', text => 'Add imported images to existing dataset '},
+	);
+	my $dropDowntable= $htmlFormat->dropDownTable("addDataset",\%datasetHash);
+	my $radioButton= $htmlFormat->radioButton(\%h,$defaultRadio,"DoDatasetType");
 
-	$text .= 
-		$cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'RIGHT' },
-					'<NOBR>'.(@datasets > 0 ? $datasetRadios[0] : 'New dataset named: ').'</NOBR>' ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textfield(-name=>'newDataset', -size=>32,-default=>$newDatasetName)) ),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'RIGHT' },
-					'Description:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3) ) ) );
-	
-	$text .= '	'.$datasetRadios[1]."\n	".$cgi->popup_menu(-name=>'addDataset',-values=>\%datasetHash,-default=>$defaultDatasetID)."<BR>\n"
-		if @datasets > 0;
+	$text .= $cgi->startform;
+	$text.=$htmlFormat->formImport($newDatasetName,$dropDowntable,$radioButton,"Import","Import Selected Files/Folders");
+	$text .= $cgi->endform;
 
-	$text .= "</BLOCKQUOTE>\n";
-
-	$text .= $cgi->endform."\n";
+	$text .= "<h4>Selected Files and Folders:</h4>";
+	$text .= join ("<BR>",@$refSelection);
 	return $text;
 }
-
-
-sub format_text{
-  my ($txt)=@_;
-  my $text="";
- $text.=<<ENDJS;
-<script language="JavaScript">
-<!--
-var text=\"$txt\";
-//var OMEfile='/perl2/serve.pl?Page=OME::Web::ImportResult&DatasetID='+text;
-var OMEfile='/perl2/serve.pl?Page=OME::Web::GetInfo&DatasetID='+text+'&Bool=1';
-
-var newWindow = window.open(OMEfile,"new","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-
--->
-</script>
-ENDJS
-
-return $text;
-
-}
-
-
-
 
 
 
