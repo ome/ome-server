@@ -329,12 +329,14 @@ public class Controller  implements LoginResponder {
 	public synchronized void finishInitThread() {
 		initThreads--;
 		if (initThreads == 0) {
-			closeStatusWindow();
+			
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
+			setStatusLabel("Dataset Browser layout..");
 			controlPanel.completeInitialization();
 			controlPanel.setLoggedIn(connection.getUserName());
 			controlPanel.setEnabled(true);
+			closeStatusWindow();
 		}
 	}
 	/**
