@@ -424,8 +424,7 @@ addPrototype("OME::DataTable","data_columns",[],['OME::Factory::Iterator'],
 addPrototype("OME::DataTable::Column","column_name",['$'],['$']);
 addPrototype("OME::DataTable::Column","description",['$'],['$']);
 addPrototype("OME::DataTable::Column","sql_type",['$'],['$']);
-addPrototype("OME::DataTable::Column","reference_type",
-             ['OME::SemanticType'],['OME::SemanticType']);
+addPrototype("OME::DataTable::Column","reference_type",['$'],['$']);
 addPrototype("OME::DataTable::Column","data_table",
              ['OME::DataTable'],['OME::DataTable']);
 
