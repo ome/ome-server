@@ -247,12 +247,18 @@ sub getGroups {
 
 This method imports individual STK format files into OME
 5D images. The caller passes a set of input files by
-reference. This method opens each file in turn, extracting
+reference. This method opens each file in turn, extracts
 its metadata and pixels, and creates a coresponding OME image.
 
 Besides the metadata it extracts from standard TIFF tag values, this
 method also extracts metadata from the custom STK tags called UIC1,
-UIC2, UIC3, and UIC4. 
+UIC2, UIC3, and UIC4.
+
+The arrangement of the planes in the STK file may not be in the canonical
+OME order (XYZCT). Before writing the image out to the OME repository,
+this method executes a routine (parition_and_sort) that recursively 
+sorts the planes of the STK file on each dimension, ordering the output in
+ XYZCT order.
 
 If all goes well, this method returns a pointer to a freshly created 
 OME::Image. In that case, the caller should commit any outstanding
