@@ -929,7 +929,7 @@ sub manyToMany {
 	__PACKAGE__->getReferences();
 
 Returns a hash of references this packages contains. The keys to the
-hash are aliases used to access the referenve. The values are the
+hash are aliases used to access the references. The values are the
 packages referenced.
 
 =cut
@@ -938,6 +938,29 @@ sub getReferences {
     my $class = ref($proto) || $proto;
 	
 	my @aliases = ( keys %{ $class->__columns()}, keys %{ $class->__hasManys() } );
+	my %relations;
+	foreach (@aliases) {
+		my $returnedClass = $class->getPackageReference( $_ );
+		$relations{ $_ } = $returnedClass
+			if $returnedClass;
+	}
+	return \%relations;
+}
+
+=head2 getHasManyReferences
+
+	__PACKAGE__->getHasManyReferences();
+
+Returns a hash of has-many references this packages contains. The keys to the
+hash are aliases used to access the references. The values are the
+packages referenced.
+
+=cut
+sub getHasManyReferences {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+	
+	my @aliases = ( keys %{ $class->__hasManys() } );
 	my %relations;
 	foreach (@aliases) {
 		my $returnedClass = $class->getPackageReference( $_ );
