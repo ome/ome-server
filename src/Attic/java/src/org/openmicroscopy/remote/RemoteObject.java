@@ -93,7 +93,7 @@ public class RemoteObject
         }
     }
 
-    private Object getCachedElement(String element)
+    protected Object getCachedElement(String element)
     {
         if (elementCache.containsKey(element))
         {
