@@ -118,6 +118,17 @@ public class RemoteImage
         return i;
     }
 
+    public ImagePixels getPixels(Attribute pixels, Attribute dimensions)
+    {
+        Object o = caller.dispatch("OME::Image","GetPix",
+                                   new Object[] { pixels, dimensions });
+        if (o == null) return null;
+        RemoteImagePixels pix = (RemoteImagePixels)
+            instantiate(RemoteImagePixels.class,(String) o);
+        pix.setDimensions(dimensions);
+        return pix;
+    }
+
     static class DatasetLink
         extends RemoteOMEObject
     {

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Image
+ * org.openmicroscopy.ImagePixels
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -21,38 +21,12 @@
 
 package org.openmicroscopy;
 
-import java.util.List;
-import java.util.Iterator;
-
-public interface Image
-    extends OMEObject
+public interface ImagePixels
 {
-    public String getName();
-    public void setName(String name);
-
-    public String getDescription();
-    public void setDescription(String description);
-
-    public String getImageGUID();
-    public void setImageGUID(String imageGUID);
-
-    public String getCreated();
-    public void setCreated(String created);
-
-    public String getInserted();
-    public void setInserted(String inserted);
-
-    public Attribute getExperimenter();
-    public void setExperimenter(Attribute experimenter);
-
-    public Attribute getGroup();
-    public void setGroup(Attribute group);
-
-    public List getDatasets();
-    public Iterator iterateDatasets();
-
-    public List getAllFeatures();
-    public Iterator iterateAllFeatures();
-
-    public ImagePixels getPixels(Attribute pixels, Attribute dimensions);
+    public Attribute getDimensions();
+    public byte[] getPixels();
+    public byte[] getPlane(int z, int c, int t);
+    public byte[] getStack(int c, int t);
+    public byte[] getROI(int x0, int y0, int z0, int c0, int t0,
+                         int x1, int y1, int z1, int c1, int t1);
 }
