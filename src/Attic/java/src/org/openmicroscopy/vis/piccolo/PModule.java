@@ -707,4 +707,15 @@ public class PModule extends PPath implements PBufferedNode {
 		else
 			return -1;
 	}
+	
+	public PBufferedNode getEnclosingBufferedNode() {
+		
+		PNode p = getParent();
+		while (p != null) {
+			if (p instanceof PBufferedNode)
+				return (PBufferedNode) p;
+			p = p.getParent();
+		}
+		return null;
+	}
 }
