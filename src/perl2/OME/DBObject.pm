@@ -1986,7 +1986,7 @@ sub __makeSelectSQL {
               $columns->{$column_alias}->[3]->{SQLType}:
               "";
 
-            if ($location eq 'id') {
+            if ($location and $location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
             } elsif ($sql_type eq 'boolean') {
