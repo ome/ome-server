@@ -74,13 +74,9 @@ __PACKAGE__->_allFieldNames( [
 	'dependence',
 	'virtual_mex',
 	'total_time',
-	'attribute_create_time',
-	'attribute_db_time',
-	'attribute_sort_time',
 	'error_message',
 	'iterator_tag',
 	'new_feature_tag',
-	'input_tag',
 ] ) ;
 
 sub getObjectLabel {
