@@ -57,6 +57,7 @@ import org.openmicroscopy.vis.dnd.ModuleSelection;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.chains.ModuleTreeNode;
 import org.openmicroscopy.vis.chains.ModulePaletteFrame;
+import org.openmicroscopy.vis.util.SwingWorker;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -96,8 +97,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	private static final float HGAP=30f;
 	private static final float TOP=20f;
 	private static final float LEFT=20f;
-	private float VGAP=10f;
-	private float NAME_INSET=20;
+	private static final float VGAP=10f;
+	private static final float NAME_INSET=20;
+	private static final String UNCAT_NAME="Uncategorized";
 	
 	/**
 	 * Support for data transfer - dragging modules onto a {@link PChainCanvas}
@@ -184,42 +186,56 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
   	 * @param controller The application controller
   	 *  
  	 */
-	public void setConfig(Connection connection,Controller controller) {
+	public void populate(Connection connection,final Controller controller) {
 		
 		this.connection = connection;
 		modules = connection.getModules();
 		
 		treeNode = new ModuleTreeNode();
 		
-		// do it by categories
-		Iterator iter = modules.rootCategoryIterator();
-		while (iter.hasNext()) {
-			ModuleCategory cat = (ModuleCategory) iter.next();
-			controller.setStatusLabel("Arranging Modules.."+cat.getName());
+		layer.setVisible(false);
+		final SwingWorker worker = new SwingWorker() {
 			
-			displayModulesByCategory(layer,cat,treeNode);			
-		}
+			public Object construct() {
+				Iterator iter = modules.rootCategoryIterator();
+					while (iter.hasNext()) {
+					ModuleCategory cat = (ModuleCategory) iter.next();
+					controller.setStatusLabel("Arranging Modules.."+cat.getName());
 		
-		// do uncategorized.
-		PCategoryBox  box = decorateCategory(layer);
-		displayCategoryName(box,"Uncategorized");
-		controller.setStatusLabel("Arranging Modules.. Uncategorized");
-		iter = modules.uncategorizedModuleIterator();
-		
-		ModuleTreeNode uncatNode = new ModuleTreeNode("Uncategorized");
-		treeNode.add(uncatNode);
-		
-		while (iter.hasNext()) {
-			CModule mod = (CModule) iter.next();
-			displayModule(box,mod,uncatNode);
-		} 
-		
-		// arrange the uncategorized modules
-		arrangeChildren(box);
-		
-		// arrange all of the categories
-		arrangeChildren(layer);
-		
+					displayModulesByCategory(layer,cat,treeNode);			
+				}
+	
+				// do uncategorized.
+				PCategoryBox  box = decorateCategory(layer,UNCAT_NAME);
+				displayCategoryName(box,UNCAT_NAME);
+				controller.setStatusLabel("Arranging Modules.. Uncategorized");
+				iter = modules.uncategorizedModuleIterator();
+	
+				ModuleTreeNode uncatNode = new ModuleTreeNode("Uncategorized");
+				treeNode.add(uncatNode);
+	
+				while (iter.hasNext()) {
+					CModule mod = (CModule) iter.next();
+					displayModule(box,mod,uncatNode);
+				} 
+	
+				// arrange the uncategorized modules
+				arrangeChildren(box);
+	
+				// arrange all of the categories
+				arrangeChildren(layer);		
+				return null;		
+			}
+			
+			public void finished() {
+				layer.setVisible(true);
+				getCamera().animateViewToCenterBounds(layer.getGlobalFullBounds(),
+					true,PConstants.ANIMATION_DELAY);
+				System.err.println("finishing module palette");
+				controller.finishInitThread();
+			}
+		};
+		worker.start();
 	}
 	
 	/*
@@ -239,7 +255,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		Iterator iter  = mods.iterator();
 
 		//decorate the category with a box.		
-		PCategoryBox box = decorateCategory(parent);
+		PCategoryBox box = decorateCategory(parent,cat.getName());
 		displayCategoryName(box,cat.getName());
 		ModuleTreeNode catNode = new ModuleTreeNode(cat); // was .getName(),cat.getID());
 		treeParent.add(catNode);
@@ -267,9 +283,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	 * @param parent the parent {@link PNode} that will hold this category box
 	 * @return a new box that will go around the items in a category
 	 */
-	private PCategoryBox decorateCategory(PNode parent) {
+	private PCategoryBox decorateCategory(PNode parent,String name) {
 		
-		PCategoryBox box = new PCategoryBox();
+		PCategoryBox box = new PCategoryBox(name);
 		//System.err.println("creating category box "+box);
 		//categoryLayer.addChild(box);
 		parent.addChild(box);
@@ -346,6 +362,25 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			}
 		}
 		
+	}
+	
+	public void highlightCategory(String name) {
+		Collection result = layer.getAllNodes();
+		Iterator iter = result.iterator();
+		while (iter.hasNext()) {
+			PNode node = (PNode) iter.next();
+			if (node instanceof PCategoryBox) {
+				PCategoryBox cb = (PCategoryBox)node;
+				if (cb.getName().compareTo(name) ==0) {
+						//	zoom in to it. 
+					PBufferedNode cBox = (PBufferedNode) node;				
+					PBounds b = cBox.getBufferedBounds();
+					PCamera camera = getCamera();
+					camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY); 
+					return;
+				}
+			} 
+		}
 	}
 	
 	public void unhighlightModules() {
