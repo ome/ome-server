@@ -333,31 +333,6 @@ sub setnSteps {
 	return $nSteps;
 }
 
-
-=head2 DESTROY()
-
-If the task object gets to the DESTROY method without being finished,
-the died() method is called with the $! and $@ messages
-
-=cut
-
-sub DESTROY {
-	my $self = shift;
-	my @errors;
-	push (@errors, "Task terminated in an unfinished state.");
-	push (@errors, "System error: $!") if $!;
-	push (@errors, "Uncaught exception: $@") if $@;
-	push (@errors, "Unknown error") unless scalar (@errors) > 1;
-	
-	$self->died (join ("\n",@errors))
-		unless ($self->state() eq 'FINISHED'
-		or $self->state() eq 'DIED');
-	
-	
-}
-
-
-
 =head1 AUTHOR
 
 Ilya Goldberg (igg@nih.gov)
