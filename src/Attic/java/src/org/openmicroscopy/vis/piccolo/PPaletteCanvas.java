@@ -152,8 +152,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		Iterator iter = modules.rootCategoryIterator();
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
-			connection.setStatusLabel("Arranging Modules.."+cat.getName());
-			//System.err.pr(" Arranging modules in category..."+cat.getName());
+			//connection.setStatusLabel("Arranging Modules.."+cat.getName());
+			//System.err.println(" Arranging modules in category..."+cat.getName());
 			displayModulesByCategory(layer,cat);			
 		}
 		// do uncategorized.
@@ -164,7 +164,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		connection.setStatusLabel("Arranging Modules.. Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
-		//System.err.pr("arranging uncategorized modules");
+		//System.err.println("arranging uncategorized modules");
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
