@@ -108,26 +108,6 @@ my @MENU = (
 		url_param => { Type => 'OME::ModuleExecution' },
 		text => 'Module Executions',
 	},
-#	{
-#		web_class => 'OME::Web::ImageTable',
-#		type => 'link',
-#		text => undef,
-#	},
-#	{
-#		web_class => 'OME::Web::ProjectTable',
-#		type => 'link',
-#		text => undef,
-#	},
-#	{
-#		web_class => 'OME::Web::DatasetTable',
-#		type => 'link',
-#		text => undef,
-#	},
-#	{
-#		web_class => 'OME::Web::MEXTable',
-#		type => 'link',
-#		text => undef,
-#	},
 	# ** XML **
 	{
 		web_class => undef,
