@@ -85,6 +85,11 @@ __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
                         Indexed => 1,
                         ForeignKey => 'datasets',
                        });
+__PACKAGE__->addColumn('timestamp' => 'timestamp',
+                       {
+                        SQLType => 'timestamp',
+                        Default => 'now',
+                       });
 __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                        {
                         SQLType => 'integer',
