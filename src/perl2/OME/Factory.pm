@@ -803,6 +803,33 @@ sub findAttributes {
     return $self->findObjects($pkg,@criteria);
 }
 
+sub findAttributesLike {
+    my ($self,$semantic_type,@criteria) = @_;
+
+    return undef unless defined $semantic_type;
+
+    if (scalar(@criteria) == 1 && (ref($criteria[0]) ne 'HASH')) {
+        # Old prototype - only a target is passed in
+        if (defined $criteria[0]) {
+            @criteria = ( target => $criteria[0] );
+        } else {
+            @criteria = ();
+        }
+    }
+
+    my $type =
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
+      unless defined $type;
+
+    my $pkg = $type->requireAttributeTypePackage();
+
+    return $self->findObjectsLike($pkg,@criteria);
+}
+
 sub countAttributes {
     my ($self,$semantic_type,@criteria) = @_;
 
