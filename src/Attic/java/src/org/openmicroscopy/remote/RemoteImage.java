@@ -139,6 +139,16 @@ public class RemoteImage
         return i;
     }
 
+    public Attribute getDefaultPixels() {
+	Object o = caller.dispatch("OME::Image","DefaultPixels");
+	if (o == null) 
+	    return null;
+	Attribute att = (RemoteAttribute)
+	    instantiate (RemoteAttribute.class,(String) o);
+	return att;
+    }
+
+
     public ImagePixels getPixels(Attribute pixels)
     {
         Attribute repository = pixels.getAttributeElement("Repository");

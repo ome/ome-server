@@ -399,6 +399,7 @@ addPrototype("OME::Image","dataset_links",[],['OME::Factory::Iterator'],
 addPrototype("OME::Image","all_features",[],['OME::Feature','*']);
 addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
              publishedName => "iterate_all_features");
+addPrototype("OME::Image","DefaultPixels",['$'],['$']);
 addPrototype("OME::Image","GetPix",
              ['OME::SemanticType::Superclass','OME::SemanticType::Superclass'],
              ['OME::Image::Pix']);
