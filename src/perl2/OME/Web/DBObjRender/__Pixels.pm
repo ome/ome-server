@@ -71,13 +71,13 @@ __PACKAGE__->_fieldNames( [
 	'SizeZ',
 	'SizeC',
 	'SizeT',
-	'PixelType',
-	'BitsPerPixel',
 	'image',
 	'module_execution'
 ] ) ;
 __PACKAGE__->_allFieldNames( [
 	@{__PACKAGE__->_fieldNames() },
+	'PixelType',
+	'BitsPerPixel',
 	'FileSHA1',
 	'ImageServerID',
 	'Repository'
@@ -86,8 +86,8 @@ __PACKAGE__->_allFieldNames( [
 
 =head2 getRefToObject
 
-html format returns a thumbnail linking to the image viewer and an id
-linking to the Pixels attribute.
+html format returns a thumbnail linking to the image viewer and a link
+to the Pixels attribute.
 
 =cut
 
@@ -102,10 +102,9 @@ sub getRefToObject {
 			my ($package_name, $common_name, $formal_name, $ST) =
 				OME::Web->_loadTypeAndGetInfo( $obj );
 			my $id   = $obj->id();
-			my $image_id = $obj->image()->id();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			my $ref = "<a href='serve.pl?Page=OME::Web::GetGraphics&ImageID=$image_id'><img src='$thumbURL'></a>";
-			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>P($id)</a>";
+			my $ref = "<a href='#' onClick='openPopUpPixels($id); return false'><img src='$thumbURL'></a><br>".
+			          "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id'>Pixels $id</a>";
 			return $ref;
 		}
 	}
