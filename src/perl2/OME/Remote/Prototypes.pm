@@ -40,7 +40,13 @@ our %prototypes =
    'OME::DBObject' => {
                        id          => [['$'],['$']],
                        writeObject => [[],[]],
+                       Session     => [[],['OME::Session']],
                       },
+   'OME::AttributeType::Superclass' => {
+                                        id          => [[],['$']],
+                                        writeObject => [[],[]],
+                                        Session     => [[],['OME::Session']],
+                                       },
    'OME::Project' => {
                       #id          => [['$'],['$']],
                       name        => [['$'],['$']],

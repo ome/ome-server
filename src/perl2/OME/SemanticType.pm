@@ -54,6 +54,7 @@ use Carp;
 use Log::Agent;
 use OME::DBObject;
 use OME::DataTable;
+use OME::Remote::Prototypes;
 use base qw(OME::DBObject);
 
 __PACKAGE__->mk_classdata('_attributeTypePackages');
@@ -92,6 +93,7 @@ sub requireAttributeTypePackage {
     logcroak "Malformed class name $pkg"
       unless $pkg =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
 
+    # Create the base definition of the semantic instance class.
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
@@ -109,10 +111,24 @@ sub requireAttributeTypePackage {
     no strict 'refs';
     while (my $attribute_column = $attribute_columns->next()) {
         my $name = $attribute_column->name();
+
+        # Add an accessor/mutator to the semantic instance class.
         *{$pkg."::".$name} = sub {
             my ($self) = shift;
             return @_? $self->_setField($name,@_): $self->_getField($name);
         };
+
+        # Make this method visible via the Remote Framework
+        my $data_column = $attribute_column->data_column();
+        my $sql_type = $data_column->sql_type();
+        if ($sql_type eq 'reference') {
+            $OME::Remote::Prototypes::prototypes{$pkg}->{$name} =
+              [['OME::AttributeType::Superclass'],
+               ['OME::AttributeType::Superclass']];
+        } else {
+            $OME::Remote::Prototypes::prototypes{$pkg}->{$name} =
+              [['$'],['$']];
+        }
     }
 
     # Make accessors for actual output, dataset, image, and feature.
@@ -121,10 +137,16 @@ sub requireAttributeTypePackage {
     no strict 'refs';
     if ($type eq 'D') {
         *{$pkg."::dataset"} = \&{$pkg."::_getTarget"};
+        $OME::Remote::Prototypes::prototypes{$pkg}->{dataset} =
+          [[],['OME::Dataset']];
     } elsif ($type eq 'I') {
         *{$pkg."::image"}   = \&{$pkg."::_getTarget"};
+        $OME::Remote::Prototypes::prototypes{$pkg}->{image} =
+          [[],['OME::Image']];
     } elsif ($type eq 'F') {
         *{$pkg."::feature"} = \&{$pkg."::_getTarget"};
+        $OME::Remote::Prototypes::prototypes{$pkg}->{feature} =
+          [[],['OME::Feature']];
     } elsif ($type eq 'G') {
         # No global column
     }
