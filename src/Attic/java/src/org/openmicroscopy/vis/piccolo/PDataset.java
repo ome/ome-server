@@ -79,6 +79,7 @@ public class PDataset extends PGenericBox {
 	private PDatasetImagesNode images=null;
 	Iterator iter;
 	double maxWidth = 0;
+	private double maxThumbWidth = 0;
 	
 	public PDataset(CDataset dataset,Connection connection) {
 		super();
@@ -155,6 +156,7 @@ public class PDataset extends PGenericBox {
 		double totalArea = 0;
 		PThumbnail thumb;
 		PBounds b;
+		int rowCount = 0;
 		if (imageCollection.size() > 0) { 
 			// if there are images 
 			images = new PDatasetImagesNode();
@@ -167,6 +169,8 @@ public class PDataset extends PGenericBox {
 				images.addImage(thumb);
 				b = thumb.getGlobalFullBounds();
 				totalArea += b.getWidth()*b.getHeight();
+				if (b.getWidth() > maxThumbWidth)
+					maxThumbWidth = b.getWidth();
 			}
 			images.setOffset(x,y);
 		}
@@ -189,6 +193,8 @@ public class PDataset extends PGenericBox {
 		double maxHeight = 0;
 		PThumbnail thumb;
 		PBounds b;
+		int row = 0;
+		int rowSz = 0;
 		Iterator iter = images.getImageIterator();
 		while (iter.hasNext()) {
 			thumb = (PThumbnail) iter.next();
@@ -200,17 +206,23 @@ public class PDataset extends PGenericBox {
 			else {
 				y += maxHeight+VGAP;
 				x = 0;
-				thumb.setOffset(x,y);
-						
+				if (rowSz > 0) {
+					images.setRowCount(row,rowSz);
+					row++;
+					rowSz=0;
+				}
 				maxHeight = 0;
 			}
+			rowSz++;
+			thumb.setOffset(x,y);
 			if (b.getHeight() > maxHeight) 
 				maxHeight = (float)b.getHeight();
-			x+= thumbWidth;
+			x+= maxThumbWidth;
 			if (x > maxWidth) 
 				maxWidth =  x;
 			x+= HGAP;
 		}	
+		images.setRowCount(row,rowSz);
 		images.completeImages(scaledWidth,scaledHeight);
 		y+= maxHeight;
 		return y;
