@@ -131,6 +131,12 @@ public class PModule extends PPath implements PBufferedNode {
 	private Node node=null;
 	
 	private CModule module;
+	
+	public PModule(Connection connection,CModule module,float x,float y) {
+		this(connection,module);
+		setOffset(x,y);
+	}
+	 
 	/**
 	 * The main constructor 
 	 * @param canvas The canvas that this module will be displayed on. 
@@ -139,7 +145,7 @@ public class PModule extends PPath implements PBufferedNode {
 	 * @param x Initial x coordinate (global)
 	 * @param y Initial y coordinate
 	 */
-	public PModule(Connection connection,CModule module,float x,float y) {
+	public PModule(Connection connection,CModule module) {
 		super();
 	
 		this.module = module;
@@ -207,9 +213,6 @@ public class PModule extends PPath implements PBufferedNode {
 			 zwidth,zheight));
 		addChild(zoomName);
 		zoomName.setVisible(false);
-		 
-		 
-		setOffset(x,y);
 		
 		
 	}
@@ -451,7 +454,7 @@ public class PModule extends PPath implements PBufferedNode {
 	}	
 
 	public PBounds getBufferedBounds() {
-		PBounds b = getFullBoundsReference();
+		PBounds b = getGlobalFullBounds();
 		return new PBounds(b.getX()-PConstants.BORDER,
 			b.getY()-PConstants.BORDER,
 			b.getWidth()+2*PConstants.BORDER,
