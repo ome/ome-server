@@ -65,6 +65,14 @@
 
 </tr></table>
 
+<TMPL_IF NAME="popup_overlay">
+<a title="View results as graphic overlay"
+	href='javascript: openPopUpOverlay(<TMPL_VAR NAME="popup_overlay">);'
+	class="ome_header_title">
+	View graphic overlay
+</a>
+</TMPL_IF>
+
 <TMPL_IF NAME="grouped_outputs">
 <h1>Merged Outputs</h1>
 <TMPL_LOOP NAME="grouped_outputs">
