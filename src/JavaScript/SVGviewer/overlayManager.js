@@ -21,6 +21,8 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 	
+	Written by: Josiah Johnston <siah@nih.gov>
+	
 *****/
 
 var svgns = "http://www.w3.org/2000/svg";
@@ -30,50 +32,52 @@ var svgns = "http://www.w3.org/2000/svg";
 	class variables
 	
 *****/
-OverlayManager.VERSION = 0.1;
+OverlayManager.VERSION = 0.2;
 
-/********************************************************************************************/
-/********************************************************************************************/
-/*************************** Functions open to the world ************************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                       Public Functions 
+********************************************************************************************/
 
 /*****
 
 	constructor
 		sketchSpace = container in which to draw overlays
-		turnLayerOnOff = function to issue callbacks to when the On/Off button is clicked
-		switchOverlay = function to issue callbacks to when another overlay is selected
-		
-	tested
 
 *****/
-function OverlayManager(sketchSpace, turnLayerOnOff, switchOverlay, showAllZs, showAllTs) {
-	this.init(sketchSpace, turnLayerOnOff, switchOverlay, showAllZs, showAllTs);
+function OverlayManager(sketchSpace) {
+	this.init(sketchSpace);
 }
 
-/*****
+OverlayManager.prototype.buildToolBox = function( controlLayer ) {
+	var displayContent = this.buildDisplay();
+	var bbox = displayContent.getBBox();
+	var width = bbox.width + 2 * toolBox.prototype.padding;
+	var height = bbox.height + 2 * toolBox.prototype.padding;
+	this.toolBox = new toolBox(
+		255, 250, width, height
+	);
+	this.toolBox.closeOnMinimize( true );
+	this.toolBox.setLabel(10,12,"Overlay Manager");
+	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
+	this.toolBox.realize( controlLayer );
+	this.displayPane = this.toolBox.getGUIbox();
+	this.displayPane.appendChild( displayContent );
 	
-	makeControls
-	
-	returns:
-		The controls for this class, loaded into DOM with a <g> as the root.
-		
-	tested
-		
-*****/
-OverlayManager.prototype.makeControls = function() {
-	// check for initialization
-	if(this.layerNames == null) return null;
+}
 
-// build SVG
-	this.root = svgDocument.createElementNS(svgns, "g");
+
+OverlayManager.prototype.buildDisplay = function() {
+	if(!this.initialized) return null;
+
+	this.displayContent = svgDocument.createElementNS(svgns, "g");
 
 	var currentLayer = this.layerNames[0];
 
 	// set up GUI
 	this.layerPopupList = new popupList(
-		40, 10, this.layerNames, this.switchOverlay, null,
+		40, 10, this.layerNames, 
+		{ obj: this, method: 'switchOverlay' },
+		null,
 		skinLibrary["popupListAnchorLightslategray"],
 		skinLibrary["popupListBackgroundLightskyblue"],
 		skinLibrary["popupListHighlightAquamarine"]
@@ -82,14 +86,15 @@ OverlayManager.prototype.makeControls = function() {
 	this.layerPopupList.getLabel().setAttribute("text-anchor", "end");
 
 	this.displayButton = new button(
-		160, 10, this.turnLayerOnOff,
-		'<g>' +
-		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
-		'	<text y="12" text-anchor="middle">On</text>'+
-		'</g>',
+		160, 10, 
+		{ obj: this, method: 'turnLayerOnOff' },
 		'<g>' +
 		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
 		'	<text y="12" text-anchor="middle">Off</text>'+
+		'</g>',
+		'<g>' +
+		'	<rect x="-12" y="-1" width="24" height="18" fill="lightslategray"/>' +
+		'	<text y="12" text-anchor="middle">On</text>'+
 		'</g>'
 	);
 	
@@ -98,19 +103,21 @@ OverlayManager.prototype.makeControls = function() {
 	this.dynamicControls.padding = 5;
 	
 	this.allZButton = new button(
-		100, 0, this.showAllZs
+		100, 0,
+		{ obj: this, method: 'showAllZs' }
 	);
 	this.allZButton.setLabel(-9, 9,"Show all Z");
 	this.allZButton.getLabel().setAttribute("text-anchor", "end");
 	this.allTButton = new button(
-		100, 20, this.showAllTs
+		100, 20,
+		{ obj: this, method: 'showAllTs' }
 	);
 	this.allTButton.setLabel(-9, 9,"Show all T");
 	this.allTButton.getLabel().setAttribute("text-anchor", "end");
 
 
 	// place GUI elements in containers
-	this.root.appendChild( this.dynamicControls );
+	this.displayContent.appendChild( this.dynamicControls );
 
 	this.allZButton.realize( this.dynamicControls );
 	this.allTButton.realize( this.dynamicControls );
@@ -121,26 +128,26 @@ OverlayManager.prototype.makeControls = function() {
 		svgDocument
 	));
 
-//	this.colorPopupList.realize( this.root );
-	this.displayButton.realize( this.root );
-	this.layerPopupList.realize( this.root );
+//	this.colorPopupList.realize( this.displayContent );
+	this.displayButton.realize( this.displayContent );
+	this.layerPopupList.realize( this.displayContent );
 	
 	// build background
 	
-	return this.root;
+	return this.displayContent;
 }
 
-OverlayManager.prototype._showAllZs = function( value ) {
+OverlayManager.prototype.showAllZs = function( value ) {
 	name = this.layerPopupList.getSelectionName();
 	this.overlayByName[name].showAllZs( value );
 }
 
-OverlayManager.prototype._showAllTs = function( value ) {
+OverlayManager.prototype.showAllTs = function( value ) {
 	name = this.layerPopupList.getSelectionName();
 	this.overlayByName[name].showAllTs( value );
 }
 
-OverlayManager.prototype._switchOverlay = function( item ) {
+OverlayManager.prototype.switchOverlay = function( item ) {
 	items = this.layerPopupList.getItemList();
 	name = items[item];
 
@@ -150,10 +157,11 @@ OverlayManager.prototype._switchOverlay = function( item ) {
 }
 
 // This function turns the layer on or off
-OverlayManager.prototype._turnLayerOnOff = function( value ) {
+OverlayManager.prototype.turnLayerOnOff = function( value ) {
 	name = this.layerPopupList.getSelectionName();
 	this.onByName[name] = value;
 	this.overlayByName[name].turnOnOff(value);
+	this.displayButton.setState( value, 1 );
 }
 
 // This is supposed to add a layer. the contents of the layer are an array of svg in string format.
@@ -170,27 +178,13 @@ OverlayManager.prototype.updateIndex = function( theZ, theT ) {
 	}
 }
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                       Private Functions 
+********************************************************************************************/
 
-/*****
-
-	init
-		
-	tested
-
-*****/
-
-OverlayManager.prototype.init = function( sketchSpace, turnLayerOnOff, switchOverlay, showAllZs, showAllTs ) {
-
+OverlayManager.prototype.init = function( sketchSpace ) {
+	this.initialized = true;
 	this.sketchSpace = sketchSpace;
-	this.turnLayerOnOff = turnLayerOnOff;
-	this.switchOverlay = switchOverlay;
-	this.showAllZs = showAllZs;
-	this.showAllTs = showAllTs;
 
 	this.updateLayer = null;
 	this.changeColor = null;
@@ -200,4 +194,4 @@ OverlayManager.prototype.init = function( sketchSpace, turnLayerOnOff, switchOve
 	this.onByName = new Array();
 	this.overlayByName = new Array();
 	
-}
+};
