@@ -136,19 +136,19 @@ typedef struct {
 ******************************************************************************/
 
 /* SAX callbacks: */
-static void extractBinDataStartDocument(ParserState *);
-static void extractBinDataEndDocument( ParserState * );
-static void extractBinDataCharacters(ParserState *, const xmlChar *, int );
-static void extractBinDataStartElement(ParserState *, const xmlChar *, const xmlChar **);
-static void extractBinDataEndElement(ParserState *, const xmlChar *);
-static void BinDataWarning( ParserState *, const char * );
-static void BinDataError( ParserState *, const char * );
-static void BinDataFatalError( ParserState *, const char * );
+static void extractBinDataStartDocument(ParserState *state);
+static void extractBinDataEndDocument( ParserState *state );
+static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs);
+static void extractBinDataEndElement(ParserState *state, const xmlChar *name);
+static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int len);
+static void BinDataWarning( ParserState *state, const char *msg );
+static void BinDataError( ParserState *state, const char *msg );
+static void BinDataFatalError( ParserState *state, const char *msg );
 
 /* Utility functions: */
-int parse_xml_file(const char *);
-void print_element(const xmlChar *, const xmlChar **);
-int increment_plane_indexes( int *, int *, int *, int, int, int);
+int parse_xml_file(const char *filename);
+void print_element(const xmlChar *name, const xmlChar **attrs);
+int increment_plane_indexes( int* a, int* b, int* c, int aMax, int bMax, int cMax );
 void mem_error( char*msg );
 
 /******************************************************************************
