@@ -28,15 +28,51 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  Douglas Creager <dcreager@alum.mit.edu>
+# Written by:  Tom Macura <tmacura@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
   <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		
+		<SemanticType Name="PixelsSlice" AppliesTo="I">
+		  <Description>
+            Specifies a slice of a Pixels attribute.
+          </Description>
+		  <Element
+			 Name="StartZ"
+			 DBLocation="PIXELS_SLICE.START_Z"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndZ"
+			 DBLocation="PIXELS_SLICE.END_Z"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartC"
+			 DBLocation="PIXELS_SLICE.START_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndC"
+			 DBLocation="PIXELS_SLICE.END_C"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartT"
+			 DBLocation="PIXELS_SLICE.START_T"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndT"
+			 DBLocation="PIXELS_SLICE.END_T"
+			 DataType="integer"/>
+		  <Element 
+			 Name="Pixels"
+			 DBLocation="PIXELS_SLICE.PIXELS"
+			 DataType="reference"
+			 RefersTo = "Pixels"/>
+		</SemanticType>
+
 		<SemanticType Name="PixelsChannelSlice" AppliesTo="I">
 			<Description>
-			 Specifies a single channel slice of a Pixels attribute.
+			 Specifies a single channel in a Pixels attribute.
 			</Description>
 			<Element
 				Name="TheC"
@@ -46,7 +82,7 @@
 				Name="Pixels"
 				DBLocation="CHANNEL_SLICE.PIXELS"
 				DataType="reference"
-				RefersTo = "Pixels"/>
+				RefersTo="Pixels"/>
 		</SemanticType>
 		
 		<SemanticType Name="PixelsTimeSlice" AppliesTo="I">
