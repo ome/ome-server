@@ -128,8 +128,6 @@ have created the session and the module_execution.
 =cut
 
 
-
-
 sub new {
 
     my $invoker = shift;
@@ -181,23 +179,17 @@ sub getGroups {
     # Sort them by channels, z's, then timepoints
     my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
 
-    foreach my $name ( keys (%$groups) )
-    {
+    foreach my $name ( keys (%$groups) ) {
     	next unless defined($name);
     	my @groupList;
     	my $maxZ = $infoHash->{ $name }->{ maxZ };
 		my $maxT = $infoHash->{ $name }->{ maxT };
 		my $maxC = $infoHash->{ $name }->{ maxC };
 
-		for (my $t = 0; $t <= $maxT; $t++)
-    	{
-    		for (my $z = 0; $z <= $maxZ; $z++)
-    		{
-    			for (my $c = 0; $c <= $maxC; $c++)
-    			{
+		for (my $t = 0; $t <= $maxT; $t++) {
+    		for (my $z = 0; $z <= $maxZ; $z++) {
+    			for (my $c = 0; $c <= $maxC; $c++) {
     				my $file = $groups->{ $name }[$z][$t][$c];
-#     				my $status = ( defined($file) ) ? "File is $file\n" : "No file at $pattern $z $t $c\n";
-#     				print $status;
     				next unless ( defined($file) );
     				
     				# skip this image unless it's a tiff
@@ -216,9 +208,9 @@ sub getGroups {
     	push (@groupList, $name);
     	push (@outlist, \@groupList) if ( scalar(@groupList) > 0 );
     }
+    
     # Now look at the rest of the files in the list to see if you have any other tiffs.
-    foreach my $file ( values %$fref )
-    {
+    foreach my $file ( values %$fref ) {
     	my @groupList;
     	
     	# skip this image unless it's a tiff
@@ -283,16 +275,6 @@ it will return I<undef>, signalling the caller to rollback any associated
 database transactions.
 
 =cut
-
-use constant PHOTOMETRIC =>
-  {
-# some constants from /lib/tiff/tiff.h 
-	MINISWHITE => 0,	# min value is white 
-	MINISBLACK => 1,	# min value is black
-	RGB        => 2,	# RGB color model
-	PALETTE    => 3,	# color map indexed
-	MASK       => 4,	# holdout mask
-  };
   
 sub importGroup {
     my ($self, $groupList, $callback) = @_;
@@ -300,7 +282,6 @@ sub importGroup {
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
     my $params  = $self->{params};
-    my $status = "";
     
     my $file = $$groupList[0];
 	$file->open('r');
@@ -349,66 +330,58 @@ sub importGroup {
 	my @channelInfo;
 	
 	# Do a check for RGB.  If it's RGB, each file has 3 channels.
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB})
-	{
-		foreach my $file (@$groupList)
-		{
-			for (my $c = 0; $c < 3; $c++)
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}) {
+		foreach my $file (@$groupList) {
+			eval
 			{
-				eval
-				{
-					$pix->convertPlaneFromTIFF($file, 0, $c, 0);
-				};
-				die "RGB convertPlaneFromTIFF failed: $@\n" if $@;
-				doSliceCallback($callback);
+				$pix->convertPlaneFromTIFF($file, 0, 0, 0);
+			};
+			die "RGB convertPlaneFromTIFF failed: $@\n" if $@;
+			doSliceCallback($callback);
+			for (my $i = 0; $i < 3; $i++) {
+				push @channelInfo, {chnlNumber => $i,
+					ExWave     => undef,
+					EmWave     => undef,
+					Fluor      => undef,
+					NDfilter   => undef};
 			}
 		}
 	}
 
 	# This isn't RGB, so import it normally.  The files are processed in this way because
 	# of the sorting done in the getGroups method.
-	else
-	{
-		for (my $t = 0; $t < $maxT; $t++)
-		{
-			for (my $z = 0; $z < $maxZ; $z++)
-    		{
-    			for (my $c = 0; $c < $maxC; $c++)
-    			{
+	else {
+		for (my $t = 0; $t < $maxT; $t++) {
+			for (my $z = 0; $z < $maxZ; $z++) {
+    			for (my $c = 0; $c < $maxC; $c++) {
     				eval
     				{
 						my $file = shift( @$groupList );
-						$pix->convertPlaneFromTIFF($file, $z, $c, $t);
+						$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
 					};
+					
+					push @channelInfo, {chnlNumber => $c,
+						ExWave     => undef,
+						EmWave     => undef,
+						Fluor      => undef,
+						NDfilter   => undef};
+							
 					die "convertPlaneFromTIFF failed: $@\n" if $@;
 					doSliceCallback($callback);
 				}
 			}
 		}
 	}
-	$status = OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
-
-	if ($status ne "") {
-		($self->{super})->__destroyRepositoryFile($pixels, $pix);
-		die $status;
-	}
+	OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
 	
 	$self->__storeInputFileInfo($session,\@finfo);
 	
-	# Store info about each input channel (wavelength)
-	# 				push @channelInfo, {chnlNumber => $c+$i,
-	# 						ExWave     => undef,
-	# 						EmWave     => undef,
-	# 						Fluor      => undef,
-	# 						NDfilter   => undef};
-# 	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB})
-# 	{
-# 		$self->__storeChannelInfoRGB($session, scalar(@$groupList)*3, @channelInfo);
-# 	}
-# 	else
-# 	{
-# 		$self->__storeChannelInfo($session, scalar(@$groupList), @channelInfo);
-# 	}
+	#Store info about each input channel (wavelength)
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
+		$self->__storeChannelInfoRGB($session, scalar(@$groupList)*3, @channelInfo);
+	} else {
+		$self->__storeChannelInfo($session, scalar(@$groupList), @channelInfo);
+	}
 	
 	return $image;
 }

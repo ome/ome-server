@@ -59,7 +59,7 @@ our $VERSION = $OME::VERSION;
 use Exporter;
 use base qw(Exporter);
 
-our @EXPORT = qw(readTiffIFD verifyTiff getStrips TAGS LITTLE_ENDIAN BIG_ENDIAN);
+our @EXPORT = qw(readTiffIFD verifyTiff getStrips TAGS PHOTOMETRIC LITTLE_ENDIAN BIG_ENDIAN);
 
 use constant LITTLE_ENDIAN => 0;
 use constant BIG_ENDIAN    => 1;
@@ -81,7 +81,8 @@ use constant TAG_FORMATS => [['_','_'],['c','c'],['_','_'],_x,_X,_XX];
 =head2 constant TAGS
 
 This set of constants associates meaningful names to standard TIFF
-tag values.
+tag values. from /lib/tiff/tiff.h 
+
 
 =cut
 
@@ -166,7 +167,16 @@ use constant TAGS =>
    'YCbCrPositioning' => 531,
    'Copyright' => 33432,
   };
-
+  
+use constant PHOTOMETRIC =>
+  {
+	MINISWHITE => 0,	# min value is white 
+	MINISBLACK => 1,	# min value is black
+	RGB        => 2,	# RGB color model
+	PALETTE    => 3,	# color map indexed
+	MASK       => 4,	# holdout mask
+  };
+  
 use constant MAX_TIFF_TAG => 33342;
 
 my $tagHash = TAGS;
