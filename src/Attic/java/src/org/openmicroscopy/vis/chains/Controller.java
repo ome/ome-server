@@ -90,14 +90,18 @@ public class Controller  implements LoginResponder {
 	
 	ArrayList canvasFrames = new ArrayList();
 	private Connection connection = null;
-	private int chainCanvasCount = 0;
-	
 	private ChainFrame currentChainFrame;
+	
+	ArrayList resultFrames = new ArrayList();
 	
 	private JWindow status;
 	private JLabel statusLabel;
 	
 	private ChainLogin loginDialog;
+	
+	private ToolBar toolBar;
+	
+	private ResultFrame currentResultFrame;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -278,10 +282,12 @@ public class Controller  implements LoginResponder {
 	 * {@link ChainLibraryFrame}
 	 */
 	public void completeWindows() {
+		toolBar  = new ToolBar(getCmdTable());
+		toolBar.setLoggedIn(connection.getUserName());
+		toolBar.setEnabled(true);
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		connection.layoutChains();
 		library = new ChainLibraryFrame(this,connection);
-		moduleFrame.setNewChainEnabled(true);
 	}
 
 	/**
@@ -292,11 +298,11 @@ public class Controller  implements LoginResponder {
 	public void doLogout() {
 
 		moduleFrame.dispose();
-		removeCanvasFrames();
+		toolBar.dispose();
+		removeFrames();
 		// remove library
 		if (library !=null)
 			library.dispose();
-		chainCanvasCount = 0;
 		doLogin();
 	}
 	
@@ -304,7 +310,7 @@ public class Controller  implements LoginResponder {
 	 * Remove all active {@link ChainFrame} instances 
 	 *
 	 */
-	private void removeCanvasFrames() {
+	private void removeFrames() {
 		Iterator iter = canvasFrames.iterator();
 
 		ChainFrame canvasFrame;
@@ -312,7 +318,17 @@ public class Controller  implements LoginResponder {
 			canvasFrame = (ChainFrame) iter.next();
 			canvasFrame.dispose();
 		}
-		canvasFrames = new ArrayList();
+		canvasFrames.clear();
+		
+		iter = resultFrames.iterator();
+
+		//ResultFrame resultFrame;
+		while (iter.hasNext()) {
+			//resultFrame = (ResultFrame) iter.next();
+			//resultFrame.dispose();
+		}
+		resultFrames.clear();
+
 	}
 	
 	/**
@@ -328,11 +344,20 @@ public class Controller  implements LoginResponder {
 	public void newChain() {
 		if (library != null) {
 			ChainFrame canvasFrame = 
-				new ChainFrame(this,connection,chainCanvasCount++,
+				new ChainFrame(this,connection,canvasFrames.size(),
 					library.getCanvas());
 			canvasFrames.add(canvasFrame);
 		}
 		
+	}
+	
+	public void newViewResults() {
+		if (library != null) {
+			ResultFrame res = 
+				new ResultFrame(this,connection,resultFrames.size(),
+								library.getCanvas());
+			resultFrames.add(res);
+		}
 	}
 	
 	/**
@@ -343,6 +368,10 @@ public class Controller  implements LoginResponder {
 		canvasFrames.remove(c);
 	}
 	
+	public void disposeResultFrame(ResultFrame f) {
+		resultFrames.remove(f);
+	}
+	
 	public void saveChain() {
 		if (currentChainFrame != null) {
 			currentChainFrame.save();
@@ -351,6 +380,10 @@ public class Controller  implements LoginResponder {
 	
 	public void setCurrentChain(ChainFrame c) {
 		currentChainFrame = c;
+	}
+	
+	public void setCurrentResults(ResultFrame r) {
+		currentResultFrame = r;
 	}
 }
 
