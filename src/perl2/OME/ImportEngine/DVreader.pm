@@ -210,7 +210,7 @@ from the input list and added to the output list.
 
 This method examines each file's contents, first looking for the 
 presence of a special DV identity value at a fixed location in the
-begining of the file. If this identity value is present, this method
+beginning of the file. If this identity value is present, this method
 decides that the file has the DV format.
 
 =cut
@@ -259,14 +259,20 @@ sub getGroups {
     my $image = $importer->importGroup(\@filenames)
 
 This method imports individual DV format files into OME
-5D images. The caller passes a set of input files by
-reference. This method opens each file in turn, extracting
-its metadata and pixels, and creates a coresponding OME image.
+5D images. The caller passes a set of individual input files by
+reference. This method opens each file in turn, extracts
+its metadata and pixels, and creates a corresponding OME image.
 
 DV format files carry their metadata in a header and a series of
 extended headers. This method extracts the metadata values from
 these structures, and records the values of the fields of interest
 to OME into the OME database.
+
+The arrangement of the planes in the DV file may not be in the canonical
+OME order (XYZCT). This method makes sure to read each plane in its OME
+order instead of reading sequential DV-order planes, jumping around the
+input file if necessary. When the reads are done, the planes are arranged in memory in OME order. This method then just writes the planes out sequentially.
+
 
 If all goes well, this method returns a pointer to a freshly created 
 OME::Image. In that case, the caller should commit any outstanding
