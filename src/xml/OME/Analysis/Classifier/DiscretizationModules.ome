@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+	
+	<!-- STs SignatureVectorEntry & SignatureVectorLegend are defined in
+		OME/src/xml/OME/Analysis/Classifier/SignatureStitcher.ome -->
+
+	<SemanticType Name="SignatureVectorDiscretizedEntry" AppliesTo="I">
+	  <Description>A single image signature that has been discretized.
+	  </Description>
+      <Element Name="Value"  DBLocation="DISCRETE_SIGNATURE.VALUE" DataType="integer"/>
+      <Element Name="Legend"  DBLocation="DISCRETE_SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
+    </SemanticType>
+    
+	<SemanticType Name="SignatureVectorDiscretizationBand" AppliesTo="D">
+	  <Description>Describes how to discretize a position in a signature
+	  vector. It is intended to assign a discrete value to continous
+	  image signatures (e.g. instances of SignatureVectorEntry).
+	  </Description>
+      <Element Name="Legend"  DBLocation="DISCRETIZATION_BAND.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend">
+      	<Description>A reference to the vector position.</Description>
+      </Element>
+      <Element Name="DiscreteValue"  DBLocation="DISCRETIZATION_BAND.DISCRETE_VALUE" DataType="integer">
+      	<Description>The discrete value assigned to continous values that fall in this band.</Description>
+      </Element>
+      <Element Name="LowerBound"  DBLocation="DISCRETIZATION_BAND.LOWER_BOUND" DataType="float">
+      	<Description>The lower boundary of this band. An undefined
+      	value is presumed to mean there is no lower bound.</Description>
+      </Element>
+      <Element Name="UpperBound"  DBLocation="DISCRETIZATION_BAND.UPPER_BOUND" DataType="float">
+      	<Description>The upper boundary of this band. An undefined
+      	value is presumed to mean there is no upper bound.</Description>
+      </Element>
+    </SemanticType>
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Make Discretization Bands" 
+    Category="Classifier"
+	ModuleType = "OME::Analysis::Handlers::MatlabHandler"
+	ProgramID = "some_matlab_function" 
+    ID="urn:lsid:openmicroscopy.org:Module:7201">
+	<Description>
+	A development stub. The name (and description) of this module should
+	change to reflect what discretization algorithm is actually used.
+
+	Creates discretization bands from looking at
+	the distribution of individual signatures across images in a dataset. 
+
+	In reality, the code will execute once per signature vector position
+	per dataset. This is approximated by giving the module dataset
+	execution granularity.
+	
+	For automated image classification, this module should be included
+	only in the training chain, and not in the classification chain.
+	</Description>
+	<Declaration>
+		<FormalInput Name="SignatureVectorEntry" SemanticTypeName="SignatureVectorEntry" Count="+"/>
+		<FormalInput Name="SignatureVectorLegend" SemanticTypeName="SignatureVectorLegend" Count="+"/>
+
+		<FormalOutput Name = "DiscretizationBand" SemanticTypeName = "SignatureVectorDiscretizationBand"  Count="+"/>
+	</Declaration>
+    <ExecutionInstructions ExecutionGranularity="D" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+	<!-- I included this stub to indicate that the function will execute once per dataset. -->
+    </ExecutionInstructions>
+</AnalysisModule>
+
+<AnalysisModule ModuleName = "Apply Discretization Bands" 
+    Category="Classifier"
+	ModuleType = "OME::Analysis::Modules::Classification::ApplyDiscretizationBands"
+	ProgramID = "" 
+    ID="urn:lsid:openmicroscopy.org:Module:7202">
+	<Description>
+Discretizes an image signature by applying precalculated bands.
+Executes once per image per entire signature vector.
+	
+In the context of training, this module takes 
+	DiscretizationBands from "Make Discretization Bands" and 
+	SignatureVectorLegend and SignatureVectorEntry from "SignatureStitcher",
+and feeds directly into the Trainer.
+
+In the context of classification, this module takes 
+	DiscretizationBands from "Make Discretization Bands" ran against the training image set,
+	SignatureVectorLegend from "SignatureStitcher" ran against the training image set, and 
+	SignatureVectorEntry from "StitchSignaturesByPattern" ran against the image set to be classified,
+and feeds directly into the Classifier. 
+	</Description>
+	<Declaration>
+		<FormalInput Name="SignatureVectorEntry" SemanticTypeName="SignatureVectorEntry" Count="+"/>
+		<FormalInput Name="SignatureVectorLegend" SemanticTypeName="SignatureVectorLegend" Count="+">
+          <Description>A complete vector definition.</Description>
+		</FormalInput>
+		<FormalInput Name="DiscretizationBands" SemanticTypeName="SignatureVectorDiscretizationBand" Count="+">
+          <Description>All the discretization bands for the vector definition.</Description>
+		</FormalInput>
+
+		<FormalOutput Name = "SignatureVectorDiscretizedEntry" SemanticTypeName = "SignatureVectorDiscretizedEntry"  Count="+"/>
+	</Declaration>
+</AnalysisModule>
+
+
+</AML:AnalysisModuleLibrary>
+</OME>
