@@ -199,7 +199,7 @@ sub getTable {
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
 	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
-	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
+	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
 	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
 
 	# table data
@@ -870,13 +870,14 @@ sub __parseParams {
 		}
 	}
 	
-	$self->{mode}         = $mode;
-	$self->{pagingText}   = $pagingText;
-	$self->{form_name}    = $form_name;
-	$self->{title}        = $title;
-	$self->{common_name}  = $common_name;
-	$self->{formal_name}  = $formal_name;
-	$self->{ST}           = $ST;
+	$self->{mode}          = $mode;
+	$self->{pagingText}    = $pagingText;
+	$self->{form_name}     = $form_name;
+	$self->{title}         = $title;
+	$self->{common_name}   = $common_name;
+	$self->{formal_name}   = $formal_name;
+	$self->{ST}            = $ST;
+	$self->{search_params} = \%searchParams;
 	
 	return ( \@objects, $options, $title, $formal_name );
 }
