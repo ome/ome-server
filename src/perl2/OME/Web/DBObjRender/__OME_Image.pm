@@ -165,6 +165,8 @@ sub _renderData {
 				if( $format eq 'html' );
 			$record{ 'original_file' } = $path
 				if( $format eq 'txt' );
+		} else {
+			$record{ 'original_file' } = undef;
 		}
 	}
 	
