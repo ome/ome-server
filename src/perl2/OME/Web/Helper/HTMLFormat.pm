@@ -387,7 +387,7 @@ sub formChange{
 	$owner=$user->FirstName()." ".$user->LastName()." <a href='mailto:".$user->Email()."'>".$user->Email()."</a>";
 	$group=$user->Group()->Name();
 	
-
+	my ($components, $componentCount );
 	if ($typ eq "dataset"){
 		$id=$object->dataset_id();
 		if ($object->locked()){
@@ -395,8 +395,12 @@ sub formChange{
 		}else{
  		  $lock="unlocked";
 		}
+		$components = "images";
+		$componentCount = scalar $object->images();
 	}else{
 		$id=$object->project_id();
+		$components = "datasets";
+		$componentCount = scalar $object->datasets();
 	}
 	$text .=buttonInput("text","name",$name,32);
 	$textarea .=buttonArea("description",3,32,$description);
@@ -412,7 +416,8 @@ sub formChange{
 	my %c=(
 	"Owner"	=>$owner,
 	"Group"	=>$group,
-	"ID"    =>$id
+	"ID"    =>$id,
+	"Number of $components in $typ" =>$componentCount
 	);
 	$c{"Locked/Unlocked"}=$lock if (defined $lock);
 	$rows.=addRow(\%a);
