@@ -831,6 +831,11 @@
 			AppliesTo = "I">
 			<Description>Parameters for viewers to optimally display an image</Description>
 			<Element
+				Name= "Pixels"
+				DBLocation = "DISPLAY_OPTIONS.Pixels"
+				DataType = "reference"
+				RefersTo = "Pixels"/>
+			<Element
 				Name= "Zoom"
 				DBLocation = "DISPLAY_OPTIONS.ZOOM"
 				DataType = "float"/>
