@@ -48,15 +48,24 @@ var xlinkns  = "http://www.w3.org/1999/xlink";
 				bpp is bits per pixel
 			CGI_URL is the url to call to generate a 2d image
 			CGI_optionStr will be added to the options passed to the CGI
-			CBW contains Pixel Channel, Black Level, and White level for each RGB-grey display channel.
-			RGBon is a boolean array, indicating which RGB channels are enabled.
-			isRGB is a boolean value, indication if display is set to RGB or Greyscale
+			SaveDisplayCGI_URL is a url that will accept display
+				parameters and save them to the db
+			CBW contains Pixel Channel, Black Level, and White level for
+				each RGB-grey display channel.
+			RGBon is a boolean array, indicating which RGB channels are
+				enabled.
+			isRGB is a boolean value, indication if display is set to
+				RGB or Greyscale
+			imageServerID is the Image Server's Pixels ID of the pixels
+				being displayed
 
 *****/
 function OMEimage( imageID, pixelsID, Stats, Dims, CGI_URL, CGI_optionStr, 
-                   SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis ) {
+                   SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis,
+                   imageServerID ) {
 	this.init( imageID, pixelsID, Stats, Dims, CGI_URL, CGI_optionStr, 
-	           SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis );
+	           SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis,
+	           imageServerID );
 }
 
 /*****
@@ -77,9 +86,7 @@ OMEimage.prototype.saveState = function() {
 	tmpImg = svgDocument.createElementNS(svgns,"image");
 	tmpImg.setAttribute("width",0);
 	tmpImg.setAttribute("height",0);
-	var d = new Array();
-	for(i in this.Dims) d.push(this.Dims[i]);
-	// The purpose of unique is to bypass any browser image caching
+	// The purpose of unique is to bypass any browser image caching. really, it should be a timestamp
 	var unique   = Math.random();
 	var imageURL = this.SaveDisplayCGI_URL + '&ImageID=' + this.imageID + 
 		'&theZ=' + theZ + '&theT=' + theT + "&RGBon=" + this.RGBon.join() +
@@ -91,7 +98,44 @@ OMEimage.prototype.saveState = function() {
 	this.SVGimageContainer.removeChild(tmpImg);
 
 	return 1;
-}
+};
+
+
+/*****
+	saveStateThumb()
+		calls a CGI to save current view settings to the thumbnail
+*****/
+OMEimage.prototype.saveStateThumb = function() {
+	if( ! this.use_omeis ) return;
+	// color or RGB?
+	var colorStr = '';
+	if( this.inColor == 1 ) {
+		if( this.isRedOn() ) { 
+			colorStr += '&RedChannel=' + this.CBW.slice(0,3).join(',') + ',	1.0';
+		}
+		if( this.isGreenOn() ) {
+			colorStr += '&GreenChannel=' + this.CBW.slice(3,6).join(',') + ',1.0';
+		}
+		if( this.isBlueOn() ) {
+			colorStr += '&BlueChannel=' + this.CBW.slice(6,9).join(',') + ',1.0';
+		}
+	} else {
+		colorStr = "&GrayChannel=" + CBS.slice(9,12).join(',') + ',1.0';
+	}
+	var tmpImg;
+	tmpImg = svgDocument.createElementNS(svgns,"image");
+	tmpImg.setAttribute("width",0);
+	tmpImg.setAttribute("height",0);
+	// The purpose of unique is to bypass any browser image caching. really, it should be a timestamp
+	var unique   = Math.random();
+	var imageURL = this.CGI_URL + '?PixelsID=' + this.imageServerID + 
+		'&theZ=' + theZ + '&theT=' + theT + colorStr + "&Unique=" + unique +
+		'&Method=Composite&SetThumb=1';
+	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
+
+	this.SVGimageContainer.appendChild(tmpImg);
+	this.SVGimageContainer.removeChild(tmpImg);
+};
 
 
 /*****
@@ -296,11 +340,12 @@ OMEimage.prototype.getDimT = function() {
 ********************************************************************************************/
 
 OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, CGI_optionStr,
-	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB, use_omeis ) {
+	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB, use_omeis,imageServerID ) {
 	this.initialized        = true;
 	// set variables
 	this.imageID            = imageID;
 	this.pixelsID           = pixelsID;
+	this.imageServerID      = imageServerID;
 	this.Stats              = Stats;
 	this.CGI_URL            = CGI_URL;
 	this.CGI_optionStr      = CGI_optionStr;
@@ -316,6 +361,7 @@ OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, CG
 	this.inColor = default_isRGB;
 	this.RGBon = default_RGBon;
 	
+	this.use_omeis = use_omeis;
 	if( use_omeis ) {
 		this.loadPlane = this.loadPlaneOMEIS;
 	} else {
@@ -336,7 +382,7 @@ OMEimage.prototype.init = function( imageID, pixelsID, Stats, Dims,  CGI_URL, CG
 		}
 	}
 
-}
+};
 
 
 /*****
@@ -362,7 +408,7 @@ OMEimage.prototype.loadPlaneNoOMEIS = function(theZ, theT, invisible) {
 	else
 		colorStr = "&Gray=" + CBS.slice(9,12).join(',');
 	
-	// Dims is an associative array. join won't work on it.
+	// switch from Dims associative array to typical array so join() will work
 	var d=new Array();
 	for(i in this.Dims) d.push(this.Dims[i]);
 	
@@ -386,22 +432,25 @@ OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
 	var colorStr = '';
 	if( this.inColor == 1 ) {
 		if( this.isRedOn() ) { 
-			colorStr += '&RedChannel=' + this.CBW.slice(0,3).join(',') + ',0';
+			colorStr += '&RedChannel=' + this.CBW.slice(0,3).join(',') + ',1.0';
 		}
 		if( this.isGreenOn() ) {
-			colorStr += '&GreenChannel=' + this.CBW.slice(3,6).join(',') + ',0';
+			colorStr += '&GreenChannel=' + this.CBW.slice(3,6).join(',') + ',1.0';
 		}
 		if( this.isBlueOn() ) {
-			colorStr += '&BlueChannel=' + this.CBW.slice(6,9).join(',') + ',0';
+			colorStr += '&BlueChannel=' + this.CBW.slice(6,9).join(',') + ',1.0';
 		}
 	} else {
-		colorStr = "&GrayChannel=" + CBS.slice(9,12).join(',') + ',0';
+		colorStr = "&GrayChannel=" + CBS.slice(9,12).join(',') + ',1.0';
 	}
 	
 	var imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
-		theT + colorStr + this.CGI_optionStr + '&Format=JPEG';
+		theT + colorStr + this.CGI_optionStr + '&Format=JPEG' +
+		'&PixelsID='+this.imageServerID+'&Method=Composite';
+	//imageURL used to load high quality image. that means TIFF format
 	this.imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
-		theT + colorStr + this.CGI_optionStr + '&Format=TIFF';
+		theT + colorStr + this.CGI_optionStr + '&Format=TIFF' +
+		'&PixelsID='+this.imageServerID+'&Method=Composite';
 
 	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
 		width: this.Dims['X'],
