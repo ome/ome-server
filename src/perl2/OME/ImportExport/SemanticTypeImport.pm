@@ -249,7 +249,7 @@ sub processDOM {
                 $tables->{$tName}->{columns}->{$cName}->{order} = scalar (keys %{$tables->{$tName}->{columns}}) + 1;
                 $tables->{$tName}->{columns}->{$cName}->{description} = [];
                 $tables->{$tName}->{columns}->{$cName}->{name} = $cName;
-            } elsif ($tables->{$tName}->{columns}->{$cName}->{datatype} != $dataType) {
+            } elsif ($tables->{$tName}->{columns}->{$cName}->{datatype} ne $dataType) {
                 logdie ref ($self) .
                   "->processDOM: internally conflicting column datatypes for $DBLocation\n!Declared as ".
                   $dataType.', Previously declared as '.$tables->{$tName}->{columns}->{$cName}->{datatype};
