@@ -90,7 +90,6 @@ our @core_dirs = (
 		children => ["Files", "Pixels"],
 		owner => \$APACHE_USER,
 		group => \$OME_GROUP,
-		recurse => 0,
 		mode => 02700,
 	},
 	# Temporary directories
@@ -361,33 +360,64 @@ CROAK
     #********
 
     foreach my $directory (@core_dirs) {
+    	my $path = $directory->{path};
 		my $mode = $directory->{mode} || 02755;
+		my ($owner,$group) = (
+			${$directory->{owner}},
+			${$directory->{group}},
+		);
+		my @stat = stat ($path);
+
+		print "  \\_ Checking directory ", BOLD, "\"$path\"", RESET, ".\n";
+
 
 		# Create this core directory
-		unless (-d $directory->{path}) { 
-			print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
-			mkpath($directory->{path}, 0, $mode);  # Internal croak
+		unless (-d $path) { 
+			print "  \\_   Creating directory\n";
+			mkpath($path, 0, $mode);  # Internal croak
+		}
+
+		# Fix ownership non-recursively
+		unless ($stat[4] == getpwnam ($owner) and $stat[5] == getgrnam ($group)) {
+			print "  \\_   Setting ownership to ", BOLD, $owner,':',$group,RESET,".\n";
+			fix_ownership(
+				{owner => $owner, group => $group, recurse => 0}, $path);
+		}
+
+		# Fix permissions non-recursively
+		unless ( ($stat[2] & 07777) == $mode) {
+			print "  \\_   Setting permissions to ", BOLD, sprintf ("0%04o",$mode),RESET,".\n";
+			fix_permissions( {mode => $mode, recurse => 0}, $path);
 		}
 
 		# Create each core dir's children
 		foreach my $child (@{$directory->{children}}) {
-	    	$child = $directory->{path} . "/" . $child;
-			
+	    	$child = $path . "/" . $child;
+			print "  \\_   Checking child ", BOLD, "\"$child\"", RESET, ".\n";
+	    	@stat = stat ($child);
+			# Recursion for children is on by default, but can be over-ridden
+			# in the parent.
+	    	my $recurse = exists $directory->{recurse} ? $directory->{recurse} : 1 ;
 	    	unless (-d $child) {
-				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
+				print "  \\_     Creating directory\n";
 				mkpath($child, 0, $mode);  # Internal croak
+			}
+			
+			# Fix ownership
+			unless ($stat[4] == getpwnam ($owner) and $stat[5] == getgrnam ($group) ) {
+				print "  \\_     Setting ownership to ", BOLD, $owner,':',$group,RESET,
+					$recurse ? ' (recursively)' : ' (non-recursively)', ".\n";
+				fix_ownership(
+					{owner => $owner, group => $group, recurse => $recurse}, $child);
+			}
+	
+			# Fix permissions
+			unless (($stat[2] & 07777) == $mode) {
+				print "  \\_     Setting permissions to ", BOLD, sprintf ("0%04o",$mode),RESET,
+					$recurse ? ' (recursively)' : ' (non-recursively)', ".\n";
+				fix_permissions( {mode => $mode, recurse => $recurse}, $child);
 	    	}
 		}
-
-		# Fix ownership and permissions (they're recursive)
-		fix_ownership( {
-				owner => ${$directory->{owner}},
-				group => ${$directory->{group}},
-			}, $directory->{path});
-		fix_permissions( {
-				mode => $mode,
-				recurse => $directory->{recurse} || 1,
-			}, $directory->{path});
     }
 
     print "\n";  # Spacing
