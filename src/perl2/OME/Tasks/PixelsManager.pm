@@ -199,6 +199,7 @@ Usage
 sub getPixelTypeInfo {
 	my ($proto,$pixelType) = @_;
 	$proto->__populatePixelInfo() unless( %PIXEL_INFO );
+	$pixelType = lc( $pixelType );
 	die "'$pixelType' is not a recognized Pixel type"
 		unless exists $PIXEL_INFO{$pixelType};
 	return @{ $PIXEL_INFO{$pixelType} };
