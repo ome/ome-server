@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+# OME/Web/Thumbwrite.pm
+# This module builds and returns a JPEG for a given OME::Image
 
 #-------------------------------------------------------------------------------
 #
@@ -38,11 +39,17 @@
 package OME::Web::ThumbWrite;
 use strict;
 use vars qw($VERSION);
-use OME;
-$VERSION = $OME::VERSION;
 use CGI;
-use base qw(OME::Web);
+use Carp;
+
+# OME Includes
 use OME::Tasks::Thumbnails;
+use OME::SessionManager;
+use OME;
+
+# OME Defines
+$VERSION = $OME::VERSION;
+use base qw(OME::Web);
 
 
 sub new {
@@ -52,15 +59,14 @@ sub new {
     return $self;
 }
 
-
-
-
 sub serve {
 	my $self = shift;
 	my $cgi=$self->CGI();
 	my $id= $cgi->url_param('ImageID');
+	my $sid=$cgi->url_param('sid');
+	my $s_manager=new OME::SessionManager; 
 
-	my $session=$self->Session();
+	my $session=$s_manager->createSession($sid);
 	my $factory=$session->Factory();
 	my $generator= new OME::Tasks::Thumbnails($session);
 	my $image=$factory->loadObject("OME::Image",$id);
@@ -82,10 +88,5 @@ sub serve {
 
 
 }
-
-
-
-
-
 
 1;
