@@ -51,12 +51,18 @@ use OME::Install::Util;
 # Installation home for the pre-install
 my $INSTALL_HOME = "/tmp";
 
+# Default package repository
+my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
+
 # Modules that need to be pre-installed
 my @modules = (
     {
 	name => 'Term::ReadKey',
-	repository_file => 'http://openmicroscopy.org/packages/perl/TermReadKey-2.21.tar.gz'
-    }
+	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
+ 	},{
+	name => 'Storable',
+	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
+   	}
 );
 
 # Log filehandle for the task (right now we're using /dev/null)
@@ -105,19 +111,19 @@ sub install {
 
     # Configure
     configure_module ($dir, $LOGFILE)
-	or croak "Unable to configure \"$module.";
+	or croak "Unable to configure \"$module->{name}\".";
 
     # Make
     compile_module ($dir, $LOGFILE)
-	or croak "Unable to compile \"$module.";
+	or croak "Unable to compile \"$module->{name}\".";
     
     # Test
     test_module ($dir, $LOGFILE)
-	or croak "Unable to test \"$module.";
+	or croak "Unable to test \"$module->{name}\".";
     
     # Install
     install_module ($dir, $LOGFILE)
-	or croak "Unable to install \"$module.";
+	or croak "Unable to install \"$module->{name}\".";
 
     chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
@@ -132,17 +138,24 @@ sub install {
 sub execute {
     print_header ("Pre-Installation");
     
+	croak "Unable to locate a suitable compiler." unless which("cc");
+	croak "Unable to locate a suitable make binary." unless which("make");
+
     open ($LOGFILE, ">", "/dev/null");
 
     print "Installing Term::ReadKey if needed. ";
     my $retval = install ($modules[0]);
+    
+    print BOLD, "[INSTALLED]", RESET, ".\n" if $retval;
+
+	print "Installing Storable if needed. ";
+    $retval = install ($modules[1]);
 
     print BOLD, "[INSTALLED]", RESET, ".\n" if $retval;
 
     print "\n";  # Spacing
 
    close ($LOGFILE);
-
 }
 
 sub rollback {
