@@ -85,25 +85,49 @@ my @MENU = (
 		text => 'Browse',
 	},
 	{
-		web_class => 'OME::Web::ProjectTable',
+		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::Project' },
+		text => 'Project',
 	},
 	{
-		web_class => 'OME::Web::DatasetTable',
+		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::Dataset' },
+		text => 'Dataset',
 	},
 	{
-		web_class => 'OME::Web::ImageTable',
+		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::Image' },
+		text => 'Image',
 	},
 	{
-		web_class => 'OME::Web::MEXTable',
+		web_class => 'OME::Web::DBObjTable',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::ModuleExecution' },
+		text => 'Module Executions',
 	},
+#	{
+#		web_class => 'OME::Web::ImageTable',
+#		type => 'link',
+#		text => undef,
+#	},
+#	{
+#		web_class => 'OME::Web::ProjectTable',
+#		type => 'link',
+#		text => undef,
+#	},
+#	{
+#		web_class => 'OME::Web::DatasetTable',
+#		type => 'link',
+#		text => undef,
+#	},
+#	{
+#		web_class => 'OME::Web::MEXTable',
+#		type => 'link',
+#		text => undef,
+#	},
 	# ** XML **
 	{
 		web_class => undef,
@@ -159,17 +183,36 @@ my @MENU = (
 #********* PRIVATE METHODS
 #*********
 
-# Accessor
+# Accessors
 sub __getWebClass { return shift->{'__web_class'} }
-
-# Accessor
+sub __getWebInstance { return shift->{'__web_instance'} }
 sub __getMenuLinkage { return shift->{'__class_header_linkage'} }
-
-# Accessor
 sub __CGI { return shift->{'__CGI_pm'} }
 
 # Session Macro (Pseudo-private)
 sub Session { OME::Session->instance() }
+
+sub __getMenuEntryOfCurrentClass { 
+	my $self = shift;
+	my $web_instance = $self->__getWebInstance();
+	my $web_class    = $self->__getWebClass();
+	my $q = $web_instance->CGI();
+	
+	my @menu_entries = grep( $_->{web_class} eq $web_class, @MENU );
+	return $menu_entries[0] if scalar( @menu_entries ) eq 1;
+	
+	foreach my $entry ( @menu_entries ) {
+		next unless $entry->{url_param};
+		my $url_params_Match = 1;
+		foreach my $url_param( %{ $entry->{url_param} } ) {
+			$url_params_Match = 0
+				unless $q->url_param( $url_param ) eq $entry->{url_param}->{$url_param};
+		}
+		return $entry if $url_params_Match;
+	}
+	
+	return undef;
+}
 
 sub __preProcessMenu {
 	my ($self, @menu) = @_;
@@ -196,6 +239,8 @@ sub __processElement {
 
 	my $element_data;
 	my $current_web_class = $self->__getWebClass();
+	my $current_web_instance = $self->__getWebInstance();
+	my $current_menu_entry    = $self->__getMenuEntryOfCurrentClass();
 
 	my $css_class = 'ome_main_menu_heading';
 	my $web_class = $menu_element->{'web_class'};
@@ -210,7 +255,7 @@ sub __processElement {
 	# LINK
 	} elsif ($menu_element->{'type'} eq 'link') {
 		# Pick CSS class
-		if ($current_web_class eq $web_class) {
+		if ($current_menu_entry eq $menu_element) {
 			$css_class = 'ome_main_menu_link_active';
 		} else {
 			$css_class = 'ome_main_menu_link';
@@ -218,14 +263,18 @@ sub __processElement {
 
 		# Get link text
 		my $text;
-
 		$web_class->require();
-		if ($web_class->can('getMenuText')) {
-			$text = $web_class->getMenuText();
+
+		if( $menu_element->{'text'} ) {
+			$text = $menu_element->{'text'};
+		} else {
+			if ($web_class->can('getMenuText')) {
+				$text = $web_class->getMenuText();
+			}
 		}
 
 		# Get HREF
-		my $href = $web_class->pageURL($web_class);
+		my $href = $web_class->pageURL($web_class, $menu_element->{ url_param } );
 
 		# Build TR
 		$element_data .= $q->Tr($q->td(
@@ -244,17 +293,16 @@ sub __processElement {
 #*********
 
 sub new {
-	my ($proto, $web_class) = @_;
+	my ($proto, $web_instance) = @_;
 	my $class = ref($proto) || $proto;
 
 	# Need this for highlighting
 	croak "Unable to decern the identity of the web class."
-		unless defined $web_class;
-
-	$web_class = ref($web_class) || $web_class;
+		unless defined $web_instance;
 		
 	my $self = {
-		__web_class => $web_class,
+		__web_class => ref( $web_instance ), 
+		__web_instance => $web_instance,
 		__CGI_pm => new CGI,
 	};
 
@@ -286,18 +334,21 @@ sub getPageLocationMenu {
 	my $q = $self->__CGI();
 
 	my $linkage = $self->__getMenuLinkage();
+	my $web_instance = $self->__getWebInstance();
 	my $web_class = $self->__getWebClass();
+	my $current_entry = $self->__getMenuEntryOfCurrentClass();
 	my $class_header = $linkage->{$web_class};
 
 	# Make sure the class is loaded
-	$web_class->require();
 	my $menu_text;
-	if ($web_class->can('getMenuText')) {
-		$menu_text = $web_class->getMenuText();
+	if( $current_entry->{ text } ) {
+		$menu_text = $current_entry->{ text };
+	} elsif ($web_instance->can('getMenuText')) {
+		$menu_text = $web_instance->getMenuText();
 	}
 
 	# OME::Web::Home specific
-	if ($web_class eq 'OME::Web::Home') {
+	if ( UNIVERSAL::isa( $web_instance, 'OME::Web::Home') ) {
 		return $q->span({class => 'ome_quiet'},
 			"Home");
 	}
