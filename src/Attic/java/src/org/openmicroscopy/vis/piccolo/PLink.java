@@ -123,7 +123,6 @@ public class PLink extends  PPath implements PNodeEventListener {
 		p.getLocator().locatePoint(point);
 		p.localToGlobal(point);
 	}
-
 	
 	public void setStartCoords(float x,float y) {
 		xstart = x;
@@ -197,6 +196,20 @@ public class PLink extends  PPath implements PNodeEventListener {
 			//setPaint(DEFAULT_COLOR);
 		}
 		repaint();
+	}
+	
+	public PFormalInput getInput() {
+		if (start instanceof PFormalInput)
+			return (PFormalInput) start;
+		else
+			return (PFormalInput) end;
+	}
+	
+	public PFormalOutput getOutput() {
+		if (start instanceof PFormalOutput)
+				return (PFormalOutput) start;
+			else
+				return (PFormalOutput) end;
 	}
 	
 }
