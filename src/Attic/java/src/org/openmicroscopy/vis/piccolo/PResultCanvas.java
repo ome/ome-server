@@ -63,6 +63,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Vector;
 
 /** 
  * A {@link PCanvas} for viewing chain results
@@ -192,15 +193,32 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	private void drawImages() {
 		double x = 0;
 		double y = 0;
+		System.err.println("drawing iamges...");
 		CDataset curDataset = connection.getDataset();
 		List images = curDataset.getCachedImages();
 		Iterator iter = images.iterator();	
+		float maxHeight = 0;
+		Vector nodes = new Vector();
+		
+		//draw them
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
+			System.err.println("drawing image "+image.getID());
 			PThumbnail thumb = new PThumbnail(image);
 			imageLayer.addChild(thumb);
+			float height  = (float) thumb.getGlobalFullBounds().getHeight();
+			if (height > maxHeight) 
+				maxHeight = height;
+			nodes.add(thumb);
+		}
+		
+		// space them
+		maxHeight += VGAP;
+		iter = nodes.iterator();
+		while (iter.hasNext()) {
+			PThumbnail thumb = (PThumbnail) iter.next();
 			thumb.setOffset(x,y);
-			y +=thumb.getHeight()+VGAP;
+			y+= maxHeight;
 		}
 	}
 		
