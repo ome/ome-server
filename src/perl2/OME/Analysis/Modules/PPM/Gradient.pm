@@ -41,6 +41,16 @@ our $VERSION = 1.000;
 
 OME::Analysis::Modules::PPM::Gradient
 
+=head1 SYNOPSIS
+
+Typecaster module for the Gradient
+
+=head1 OVERVIEW
+
+This module allows a Gradient attribute to be used as a 
+PixelsPlaneSlice. The PixelsPlaneSlice points to the 
+Gradient's magnitude plane.
+			
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);

@@ -31,7 +31,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Analysis::Modules::PPM::Gradient;
+package OME::Analysis::Modules::PPM::FourierTransform;
 
 use strict;
 use OME 2.002_000;
@@ -39,8 +39,18 @@ our $VERSION = 1.000;
 
 =head1 NAME
 
-OME::Analysis::Modules::PPM::Gradient
+OME::Analysis::Modules::PPM::FourierTransform
 
+=head1 SYNOPSIS
+
+Typecaster module for the Fourier Transform
+
+=head1 OVERVIEW
+
+This module allows a FrequencySpace attribute to be used as a 
+PixelsPlaneSlice. The PixelsPlaneSlice points to the 
+FrequencySpace's magnitude plane.
+			
 =cut
 
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
