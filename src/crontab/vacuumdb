@@ -1,7 +1,7 @@
 #!/bin/bash
 mkdir -p ~postgres/logs
 TIME=`date`
-echo '$TIME - vacuumdb started.' >> ~postgres/logs/vacuumdb.log
+echo "$TIME - vacuumdb started." >> ~postgres/logs/vacuumdb.log
 vacuumdb --analyze ome >> ~postgres/logs/vacuumdb.log
 TIME=`date`
-echo '$TIME - vacuumdb finished.' >> ~postgres/logs/vacuumdb.log
+echo "$TIME - vacuumdb finished." >> ~postgres/logs/vacuumdb.log
