@@ -52,7 +52,8 @@ import java.awt.geom.Rectangle2D;
 
 public class PParameterLocator extends PLocator {
 
-	private static final int OFFSET=7;
+	public static final int OFFSET=7;
+	
 	private PFormalParameter param;
 	private int side;
 	
