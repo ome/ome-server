@@ -670,6 +670,22 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
+     * Returns a thumbnail for the specified image of the requested
+     * size.  This thumbnail must have been previously set by the
+     * {@link #setThumbnail} method.  The thumbnail will be no larger
+     * than the specified dimensions; its aspect ratio will match that
+     * of the XY plane of the pixels file.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param sizeX the width of the desired thumbnail
+     * @param sizeY the height of the desired thumbnail
+     */
+    public abstract BufferedImage getThumbnail(long pixelsID,
+                                               int sizeX, int sizeY)
+        throws ImageServerException;
+
+    /**
      * <p>Transfers the specified file to the image server, returning
      * a file ID.  This ID can then be used in calls to the
      * <code>convert*</code> methods, allowing a new pixels file to be

@@ -841,6 +841,25 @@ public class PixelsFactory
     }
 
     /**
+     * Returns a thumbnail for the specified image of the requested
+     * size.  This thumbnail must have been previously set by the
+     * {@link #setThumbnail} method.  The thumbnail will be no larger
+     * than the specified dimensions; its aspect ratio will match that
+     * of the XY plane of the pixels file.
+     *
+     * @param pixels a {@link Pixels} attribute
+     * @param sizeX the width of the desired thumbnail
+     * @param sizeY the height of the desired thumbnail
+     */
+    public BufferedImage getThumbnail(Pixels pixels, int sizeX, int sizeY)
+        throws ImageServerException
+    {
+        ImageServer is = activatePixels(pixels);
+        return is.getThumbnail(pixels.getImageServerID().longValue(),
+                               sizeX,sizeY);
+    }
+
+    /**
      */
     public Repository findRepository(long fileSize)
         throws ImageServerException

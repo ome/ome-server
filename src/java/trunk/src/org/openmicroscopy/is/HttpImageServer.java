@@ -802,6 +802,32 @@ public class HttpImageServer
         }
     }
 
+    public BufferedImage getThumbnail(long pixelsID,
+                                      int sizeX, int sizeY)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","GetThumb");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            String size = Integer.toString(sizeX)+","+Integer.toString(sizeY);
+            post.addParameter("Size",size);
+            executeCall(post);
+
+            byte[]  imageBuf = post.getResponseBody();
+            ByteArrayInputStream  is = new ByteArrayInputStream(imageBuf);
+            try
+            {
+                return ImageIO.read(is);
+            } catch (IOException e) {
+                throw new ImageServerException("Cannot read byte array stream?");
+            }
+        } finally {
+            finishCall(post);
+        }
+    }
+
     public long uploadFile(File file)
         throws ImageServerException, FileNotFoundException
     {
