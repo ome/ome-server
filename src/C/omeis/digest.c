@@ -49,10 +49,8 @@ get_md_from_file (char * filename, unsigned char * md_value)
 	int fd;
 
 	/* Sanity check (FATAL) */
-	if (filename == NULL || md_value == NULL) {
-		fprintf(stderr, "FATAL: NULL filename to get_md_from_file().\n");
-		return(-255);
-	}
+	assert(filename != NULL);
+	assert(md_value != NULL);
 
 	if ((fd = (open(filename, O_RDONLY))) == -1) {
 		perror(filename);
@@ -68,8 +66,41 @@ get_md_from_file (char * filename, unsigned char * md_value)
 
 	close(fd);
 	return(1);
-
 }
+
+int
+get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value)
+{
+	EVP_MD_CTX mdctx;  /* Message digest context */
+	const EVP_MD *md;  /* Message digest */
+	unsigned int md_len;
+
+	/* Sanity check (FATAL) */
+	assert(buf != NULL);
+	assert(buf_len > 0);
+
+	OpenSSL_add_all_digests();
+
+	md = EVP_get_digestbyname(OME_DIGEST);
+	
+	if (!md) {
+		fprintf(stderr, "Failure during digest lookup for: '%s'\n", OME_DIGEST);
+		return(-1);  /* Failure in namelookup */
+	}
+	
+	EVP_DigestInit(&mdctx, md);
+	
+	if (EVP_DigestUpdate(&mdctx, buf, buf_len) == 0) {
+		fprintf(stderr, "Failure during digest update.");
+		return(-1);
+	}
+
+	EVP_DigestFinal(&mdctx, md_value, &md_len);
+
+	return (1);  /* Success */
+}
+
+
 
 int
 get_md_from_fd (int fd, unsigned char * md_value)

@@ -46,5 +46,8 @@ get_md_from_file (char * filename, unsigned char * md_value);
 int
 get_md_from_fd (int fd, unsigned char * md_value);
 
+int
+get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value);
+
 void 
 print_md (unsigned char *md_value);
