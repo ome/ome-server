@@ -51,6 +51,9 @@ CVS AND THE SOURCE TREE
     Any questions, suggestions or complaints about the CVS repository or the
     CVS/Develolper webserver should be directed to Chris.
 
+	Information on how to checkout the source anonymously is available on the
+	front page of the CVS website (http://cvs.openmicroscopy.org.uk).
+
 SOURCE FILE STUBS
 
     Located below are example Perl and C stubs for source file submissions to
@@ -144,10 +147,12 @@ SOURCE FILE STUBS
 
 LINKS
 
-    The OME Project 	: http://www.openmicroscopy.org/
+    The OME Project	: http://www.openmicroscopy.org/
     OME developers	: http://cvs.openmicroscopy.org.uk/
     Web based CVS	: http://cvs.openmicroscopy.org.uk/cvsweb/
+	Documentation	: http://docs.openmicroscopy.org.uk
+	Bug Tracker		: http://bugs.openmicroscopy.org.uk
 
 MAILING LISTS
 
-    OME developers	: ome-devel@mit.edu
+    OME developers	: ome-devel@lists.openmicroscopy.org.uk
