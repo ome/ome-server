@@ -207,7 +207,6 @@ public class TestImport
             pf.setThumbnail(pix,CompositingSettings.
                             createDefaultPGISettings(SIZE_Z,SIZE_C,SIZE_T));
 
-
             // This next piece of metadata is necessary for all
             // images; otherwise, the standard OME viewers will not be
             // able to display the image.  The PixelChannelComponent
@@ -256,6 +255,13 @@ public class TestImport
 
             System.out.println("Committing changes...");
             df.updateMarked();
+
+            // Now that we have saved the image and pixels to the DB,
+            // set the image's default pixel entry to this new pixels
+            // file.
+
+            image.setDefaultPixels(pix);
+            df.update(image);
 
             // Once all of the images (and the dataset) are committed,
             // we can add the images to the dataset.
