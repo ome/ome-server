@@ -41,11 +41,11 @@ package OME::Web::DBObjDetail::__OME_Image;
 
 =head1 NAME
 
-OME::Web::DBObjDetail::__OME_Image - Show detailed information on an Image
+OME::Web::DBObjDetail::__OME_Image
 
 =head1 DESCRIPTION
 
-Displays detailed information about an Image
+Allow description of Image to be changed.
 
 =cut
 
@@ -56,31 +56,8 @@ Displays detailed information about an Image
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-
-use CGI;
 use Log::Agent;
-
-use OME::Web::DBObjRender;
-use OME::Web::DBObjTable;
-
-#*********
-#********* GLOBALS AND DEFINES
-#*********
-
-$VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjDetail);
-
-#*********
-#********* PUBLIC METHODS
-#*********
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-
-	return $self;
-}
 
 sub _takeAction {
 	my $self = shift;
@@ -92,33 +69,6 @@ sub _takeAction {
 		$object->storeObject();
 		$self->Session()->commitTransaction();
 	}
-}
-
-
-sub TableHeader {
-	my ($self, $object) = @_;
-	my $q = $self->CGI();
-	return $q->a( {
-		-href => "#",
-		-onClick => "document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false",
-		}, 
-		'Save Changes'
-	);
-}
-
-sub _overrideRecord {
-	my ($self, $record) = @_;
-	my $object = $self->_loadObject();
-	my $q = $self->CGI();
-	
-	$record->{'description'} = $q->textarea( {
-			-name => 'description',
-			-value => $object->description(),
-			-rows => 5,
-			-columns => 30,
-		}
-	);
-	return $record;
 }
 
 =head1 Author
