@@ -39,7 +39,7 @@ package OME::Remote::DTO::GenericAssembler;
 use OME;
 our $VERSION = $OME::VERSION;
 
-our $SHOW_ASSEMBLY = 1;
+our $SHOW_ASSEMBLY = 0;
 
 use OME::Remote::DTO;
 use UNIVERSAL::require;
