@@ -20,6 +20,19 @@
 
 package OME::Dataset;
 
+=head1 NAME
+
+OME::Dataset - a collection of images
+
+=head1 DESCRIPTION
+
+The C<Dataset> class represents OME datasets, which are a collection
+of images.  Datasets and images form a many-to-many map, as do
+datasets and projects.  A user's session usually has a single dataset
+selected as the "active dataset".
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -27,21 +40,75 @@ use OME::Image;
 use OME::Project;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorNames({
-    project_id => 'project',
- #   owner_id   => 'owner',		
- #   group_id   => 'group',
-    image_id => 'image',		
-    });
-
 __PACKAGE__->table('datasets');
 __PACKAGE__->sequence('dataset_seq');
 __PACKAGE__->columns(Primary => qw(dataset_id));
 __PACKAGE__->columns(Essential => qw(name description locked owner_id group_id));
 __PACKAGE__->has_many('image_links','OME::Image::DatasetMap' => qw(dataset_id));
 __PACKAGE__->has_many('project_links','OME::Project::DatasetMap' => qw(dataset_id));
-#__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
-#__PACKAGE__->hasa('OME::Group' => qw(group_id));
+
+=head1 METHODS (C<Dataset>)
+
+The following methods are available to C<Dataset> in addition to those
+defined by L<OME::DBObject>.
+
+=head2 name
+
+	my $name = $dataset->name();
+	$dataset->name($name);
+
+Returns or sets the name of this dataset.
+
+=head2 description
+
+	my $description = $dataset->description();
+	$dataset->description($description);
+
+Returns or sets the description of this dataset.
+
+=head2 locked
+
+	my $locked = $dataset->locked();
+	$dataset->locked($locked);
+
+Returns or sets whether this dataset is locked.  A dataset must be
+locked once it is analyzed; nothing is allowed to add or remove images
+from a locked dataset.  (It's other properties, such and name and
+description, however, can still be modified.)
+
+=head2 owner
+
+	my $owner = $dataset->owner();
+	$dataset->owner($owner);
+
+Returns or sets the owner of this dataset.
+
+=head2 group
+
+	my $group = $dataset->group();
+	$dataset->group($group);
+
+Returns or sets the group that this dataset belongs to.
+
+=head2 project_links
+
+	my @project_links = $table->project_links();
+	my $project_link_iterator = $table->project_links();
+
+Returns or iterates, depending on context, the project links for this
+dataset.  (Being a many-to-many map, the link represents the mapping
+table.)
+
+=head2 image_links
+
+	my @image_links = $table->image_links();
+	my $image_link_iterator = $table->image_links();
+
+Returns or iterates, depending on context, the image links for this
+dataset.  (Being a many-to-many map, the link represents the mapping
+table.)
+
+=cut
 
 sub owner {
     my $self = shift;
@@ -129,4 +196,13 @@ sub addImageID{
 
 }
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
 
