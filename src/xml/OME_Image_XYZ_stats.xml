@@ -2,7 +2,7 @@
 <AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
-<AnalysisModule Category = "Statistics" ModuleName = "XYZ Stack statistics - XML" 
+<AnalysisModule Category = "Statistics" ModuleName = "Stack statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>
@@ -93,13 +93,13 @@
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<sizeT/>
+				<sizeW/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<sizeW/>
+				<sizeT/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
