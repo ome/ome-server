@@ -1,3 +1,4 @@
+die "Don't use this yet - STs revert to Dataset after loading schema - looking into it";
 
 my $rename_tables = {
 	CATEGORY => 'CATEGORIES',
