@@ -123,7 +123,8 @@ public class CModule extends RemoteModule implements Serializable{
 		for  (int i = 0; i < widgets.size(); i++) {
 			m = (PModule) widgets.get(i);
 			m.setHighlighted(v);
-			m.setParamsHighlighted(v);
+			if (v == false)
+				m.setParamsHighlighted(v);
 		}
 		if (palette != null) {
 			if (v == true)
