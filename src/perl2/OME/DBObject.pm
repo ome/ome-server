@@ -95,7 +95,7 @@ __PACKAGE__->mk_classdata('__primaryKeys');
 __PACKAGE__->mk_classdata('__deleteKeys');
 
 # A list of the has-many accessors which have been defined, stored as a
-# hash-set (contents in keys, "undef" in values)
+# hash-set (accessor_name in keys, map_class in values)
 __PACKAGE__->mk_classdata('__hasManys');
 
 # The sequence used to get new primary key ID's
@@ -744,10 +744,11 @@ sub hasMany {
     # later code simpler.
     $aliases = [$aliases] if !ref $aliases;
 
-    # Verify that the foreign key class is specified and valid.
+    # Verify that the foreign key class, if specified, is valid.
     if (defined $foreign_key_class) {
         die "Malformed class name $foreign_key_class"
-          unless $foreign_key_class =~ /^\w+(\:\:\w+)*$/;
+          unless __isClassName($foreign_key_class)
+              || __isSTReference($foreign_key_class);
     } else {
         die "hasMany called without a foreign key class";
     }
@@ -761,21 +762,40 @@ sub hasMany {
           if defined $class->getColumnType($alias);
 
         # Create an accessor/mutator
-        my $accessor = sub {
-            my $self = shift;
-            my $factory = $self->Session()->Factory();
-            return $factory->findObjects($foreign_key_class,
-                                         $foreign_key_alias => $self->{__id});
-        };
+        my ($accessor, $counter);
+        
+        if (__isClassName($foreign_key_class)) {
+			$accessor = sub {
+				my $self = shift;
+				my $factory = $self->Session()->Factory();
+				return $factory->findObjects($foreign_key_class,
+											 $foreign_key_alias => $self->{__id});
+			};
+			$counter = sub {
+				my $self = shift;
+				my $factory = $self->Session()->Factory();
+				return $factory->countObjects($foreign_key_class,
+											  $foreign_key_alias => $self->{__id});
+			};
+        } else {
+			# Remove the leading @
+			my $st_name = substr($foreign_key_class,1);
 
-        my $counter = sub {
-            my $self = shift;
-            my $factory = $self->Session()->Factory();
-            return $factory->countObjects($foreign_key_class,
-                                          $foreign_key_alias => $self->{__id});
-        };
+			$accessor = sub {
+				my $self = shift;
+				my $factory = $self->Session()->Factory();
+				return $factory->findAttributes($st_name,
+											 $foreign_key_alias => $self->{__id});
+			};
+			$counter = sub {
+				my $self = shift;
+				my $factory = $self->Session()->Factory();
+				return $factory->countAttributes($st_name,
+											  $foreign_key_alias => $self->{__id});
+			};
+		}
 
-        $has_manys->{$alias} = undef;
+        $has_manys->{$alias} = $foreign_key_class;
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
@@ -880,12 +900,70 @@ sub manyToMany {
                                           $map_alias => $self->{__id});
         };
 
-        $has_manys->{$alias} = undef;
+		eval "use $map_class";
+		die "error when loading package $map_class\n$@" if $@;
+        $has_manys->{$alias} = $map_class->getPackageReference( $map_linker_alias );
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
         *{"$class\::count_$alias"} = $counter;
     }
+}
+
+=head2 getReferences
+
+	__PACKAGE__->getReferences();
+
+Returns a hash of references this packages contains. The keys to the
+hash are aliases used to access the referenve. The values are the
+packages referenced.
+
+=cut
+sub getReferences {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+	
+	my @aliases = ( keys %{ $class->__columns()}, keys %{ $class->__hasManys() } );
+	my %relations;
+	foreach (@aliases) {
+		my $returnedClass = $class->getPackageReference( $_ );
+		$relations{ $_ } = $returnedClass
+			if $returnedClass;
+	}
+	return \%relations;
+}
+
+=head2 getPackageReference
+
+	__PACKAGE__->getPackageReference($alias);
+
+Returns the package name of the object that will be returned by the alias method.
+If the alias returns a scalar, this method will return undef.
+
+=cut
+sub getPackageReference {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+	my $alias = shift;
+	my $returnedClass;
+	my $accessorType = $class->getColumnType( $alias );
+	if( $accessorType =~ /^has-many$/ ) {
+		 $returnedClass = $class->__hasManys()->{$alias};
+	} elsif( $accessorType =~ /^(has-one|normal)$/ ) {
+		$returnedClass = $class->getColumn( $alias )->[2];
+	} else {
+		die "$alias has unknown accessor type ('$accessorType') or is not known";
+	}
+	# if it's an attribute, return the package name
+	if( $returnedClass =~ /^@/ ) {
+		my $st_name = substr($returnedClass,1);
+		my $factory = $class->Session()->Factory();
+		my $ST = $factory->findObject("OME::SemanticType",name => $st_name);
+		$returnedClass = $ST->getAttributeTypePackage($st_name);
+	}
+
+	return $returnedClass;
 }
 
 =head1 METHODS - Standard instance methods
