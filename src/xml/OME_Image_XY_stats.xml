@@ -2,7 +2,7 @@
 <AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
-<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
+<AnalysisModule Category = "Statistics" ModuleName = "Plane statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
@@ -95,13 +95,13 @@
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<sizeT/>
+				<sizeW/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<sizeW/>
+				<sizeT/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
@@ -123,6 +123,8 @@
 					<OutputTo FormalOutputColumnID = "XYPlaneMean.theW"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theW"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_X.theW"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_Y.theW"/>
 				</Output>
 				<Output AccessBy = "2">
 					<OutputTo FormalOutputColumnID = "XYPlaneMin.theT"/>
@@ -130,6 +132,8 @@
 					<OutputTo FormalOutputColumnID = "XYPlaneMean.theT"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theT"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_X.theT"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_Y.theT"/>
 				</Output>
 				<Output AccessBy = "3">
 					<OutputTo FormalOutputColumnID = "XYPlaneMin.theZ"/>
@@ -137,6 +141,8 @@
 					<OutputTo FormalOutputColumnID = "XYPlaneMean.theZ"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneGeoMean.theZ"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneSigma.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_X.theZ"/>
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_Y.theZ"/>
 				</Output>
 				<Output AccessBy = "4">
 					<OutputTo FormalOutputColumnID = "XYPlaneMin.Min"/>
@@ -164,4 +170,16 @@
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+<Program ProgramID = "Program - OME_Image_XY_stats">
+	<InstallationScript>
+		<BinaryFile FileName = "installScript.pl">
+			<BinData></BinData>
+		</BinaryFile>
+	</InstallationScript>
+	<InstallationFile>
+		<BinaryFile FileName = "OME_Image_XY_stats.c.tar">
+			<BinData></BinData>
+		</BinaryFile>
+	</InstallationFile>		
+</Program>
 </AnalysisModuleLibrary>
