@@ -61,14 +61,13 @@ import org.openmicroscopy.vis.ome.Connection;
 
 public abstract class ChainFrameBase extends JFrame {
 	
-	private final Controller controller;
-	private Container contentPane;
+	protected final Controller controller;
+	protected final Connection connection;
+	protected Container contentPane;
 	protected PCanvas canvas;
 	
 	private MenuBar menuBar;
 	private ToolBar toolBar;
-	
-	private ModulePaletteFrame paletteFrame;
 	
 	public ChainFrameBase(Controller controller,Connection connection,
 		String title){
@@ -76,11 +75,13 @@ public abstract class ChainFrameBase extends JFrame {
 		setResizable(true);
 		
 		this.controller = controller;
+		this.connection =  connection;
 		
 		contentPane = getContentPane();
 		// create a chain canvas and add it to this frame.
 		canvas = createCanvas(connection);
-		contentPane.add(canvas);
+		layoutFrame();
+		//contentPane.add(canvas);
 		
 		setBounds(getInitialBounds());
 		show();		
@@ -94,4 +95,6 @@ public abstract class ChainFrameBase extends JFrame {
 	public abstract PCanvas createCanvas(Connection connection);
 	
 	public abstract Rectangle getInitialBounds();
+	
+	protected abstract void layoutFrame();
 }
