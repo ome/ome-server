@@ -245,6 +245,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	public void mouseClicked(PInputEvent e) {
+		
+		// we only scale if we're not drawing a link.
+		if (linkState != NOT_LINKING) {
+			e.setHandled(true);
+			return;
+		}
+		
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		PCamera camera = canvas.getCamera();
@@ -260,7 +267,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		else { 
 			double scaleFactor  = PConstants.SCALE_FACTOR;	
-			if (mask == MouseEvent.BUTTON1_MASK) {
+			if (mask != MouseEvent.BUTTON1_MASK) {
 				System.err.println("zooming in");
 			}
 			else {
