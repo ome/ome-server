@@ -71,6 +71,14 @@ __PACKAGE__->addColumn(view => 'view',{SQLType => 'varchar(64)'});
 __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 
 
+# Added by IGG to restore the datasets() method.
+sub datasets {
+	my $self = shift;
+	return $self->Session()->Factory()->findObjects("OME::Project::DatasetMap",
+				 project_id => $self->ID()
+				);
+}
+
 sub unlockedDatasets {
 	my $self = shift;
 	return grep {not $_->locked()} $self->datasets();
