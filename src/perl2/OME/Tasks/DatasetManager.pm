@@ -53,127 +53,182 @@ OME::Tasks::DatasetManager - manage user's datasets
 The OME::Tasks::DatasetManager provides a list of methods to manage user's dataset
 
 
-=head 1 OBTAINING A DATASETMANAGER
+=head1 OBTAINING A DATASETMANAGER
 
-To retrieve an OME::Tasks::DatasetManager to use for managing the dataset, the
-user must log in to OME.  This is done via the
-L<OME::SessionManager|OME::SessionManager> class.  Logging in via
-OME::SessionManager yields an L<OME::Session|OME::Session> object.
+To retrieve an OME::Tasks::DatasetManager to use for managing the dataset, the user must log in to OME.  This is done via the L<OME::SessionManager|OME::SessionManager> class.  Logging in via OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->createSession($username,$password);
-	my $datasetManager = new OME::Tasks::DatasetManager($session);
-
-
+	my $datasetManager = new OME::Tasks::DatasetManager;
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
-=head2 addImages ($ref)
+The following methods are available to a "DatasetManager."
 
-Add images to a dataset.
+=head2 addImages ($array_ref, $datasetID)
 
-=head2 addToDataset($datasetID,$imageID)
-extension of existing method OME::Dataset 
+	$datasetManager->addImages([1,2,5,9], $dataset->id());
+	
+	$datasetManager->addImages( [1,2,5,9] );
 
+Add images to the current dataset.
 
-=head2 belong_or_not($datasetID,$projectID)
+Note: The method performs its work on the active dataset ($session->dataset()) if the dataset ID is not specified.
 
-Check if a given dataset belongs to a given project
-(extension of OME::Project::DoesDatasetBelong)
+=head2 belong_or_not ($datasetID,$projectID)
+
+	if ($d_manager->belong_or_not($project->id(), $dataset->id())) {
+		...
+	} else {
+		...
+	}
+
+Check if a given dataset belongs to a given project. Returns successful (1) or unsuccessful (undef) based on the link's existance.
+
+(extension of OME::Project->DoesDatasetBelong())
 
 =head2 change ($description,$name,$datasetID)
 
-datasetId (optional) if not defined dataset=current dataset
-Modify name/description of a dataset.
+	$datasetManager->change(
+		'New description',
+		'New Name',
+		$dataset->id(),
+	);
+	
+	$datasetManager->change(
+		'New description',
+		'New Name',
+	);
 
-=head2 create ($name,$description,$ownerID,$groupID,$projectID,$ref)
+Change a given dataset's metadata.
 
-projectID (optional) if not defined add to current project
-ref (optional) if defined list of image_id 
-Create a new dataset with/without images.
+Note: The method performs its work on the active dataset ($session->dataset()) if the dataset ID is not specified.
 
+=head2 create ($name,$description,$ownerID,$groupID,$projectID,$array_ref)
+
+	my $dataset_a = $datasetManager->create(
+		'Great images!',
+		'These are really nice images!',
+		$session->User->id(),
+		$session->User->group()->id(),
+		$my_project->id(),
+		[1,4,7,9],
+	);
+
+	my $dataset_b = $datasetManager->create(
+		'Great images again!',
+		'These are some more really nice images!',
+		$session->User->id(),
+		$session->User->group()->id(),
+		undef,
+		[2,5,7,9],
+	);
+
+Create a new dataset with the given parameters and return the dataset object.
+
+Note: The method adds the dataset to the active project ($session->project()) if the project ID is not specified. You can create an imageless dataset using an empty arrayref.
 
 =head2 delete ($id)
 
-Delete a dataset, update OME session if the dataset is the current dataset.
-If the user doesn't have other dataset: current dataset sets to undef
-otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
+	$datasetManager->delete($dataset->id());
+
+Delete a dataset and update OME session if the dataset is the current dataset. If the user doesn't have another dataset, set the current dataset to undefined, otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
 
 =head2 exist ($name)
 
-Check if the dataset's name already exists (in DB).
-Return: 1 or undef
+	if ($datasetManager->exist('My unique name')) {
+		...
+	} else {
+		...
+	}
 
-=head2 imageNotIn($ref,$datasetID)
-ref (optional) ref array: list of group_id
-datasetID (optional): dataset=current dataset if not defined
+Returns successful (1) or unsuccessful (undef) based on the dataset name being in the DB.
 
-Check images in dataset
+=head2 imageNotIn ($array_ref,$datasetID)
 
+	my @available_images = $datasetManager->imageNotIn ($datset->id());
 
-=head2 listMatching ($userID,$ref)
-if userID defined: check dataset owned by a given user
-$ref optional: ref array list of group_id
+Return the images which are not in a given dataset. An optional group ID prefilter is available for those who want to restrict the search to images which are not in the current dataset and are owned by a group to which the user belongs.
+
+	my @available_images = $datasetManager->imageNotIn( [
+			$group_a->id(),
+			$group_b->id(),
+			$session->User()->group(),
+		],
+		$special_dataset->id(),
+	);
+
+Note: If the dataset is not specified the current ($session->dataset()) dataset is used in the search.
+
+=head2 listMatching ($userID,$array_ref)
+
+	my $my_images = $datasetManager->listMatching($user->id());
+
+	my $our_images = $datasetManager->listMatching(
+		$session->User()->id(),
+		[ $group_a->id(), $group_b->id() ],
+	);
+
+Returns an array reference to the images owned by a given user and/or owned by a set of given groups.
 
 =head2 load ($datasetID)
 
-Load a dataset object 
-Return: dataset object
+	my $dataset = $datasetManager->load(1);
+
+Return a dataset object via its ID.
 
 =head2 lockUnlock ($id,$bool)
 
-Lock/Unlock a dataset
+	use constant LOCK => 't';
+	use constant UNLOCK => 'f';
 
-=head2 manage ($ref)
-ref (optional) ref array list of group_id
+	$projectManager->lockUnlock($dataset->id(), LOCK);
+	$projectManager->lockUnlock($dataset->id(), UNLOCK);
+
+Lock/Unlock a dataset.
+
+=head2 newDataset ($name,$description,$ownerID,$groupID,$projectID)
+
+	my $new_dataset = $datasetManager->newDataset(
+		'My new dataset.',
+		'This is my new dataset.',
+		$session->User->id(),
+		$session->User()->group()->id(),
+		$session->project()->id(),
+	);
+
+Creates and returns a new dataset.
+
+=head2 notBelongToProject ($array_ref,$projectID)
+
+	my $our_other_projects = $datasetManager->notBelongToProject(
+		[$group_a->id(), $group_b->id()],
+		$project->id()
+	);
+	
+	my $our_other_projects = $datasetManager->notBelongToProject();
 
 
-Check dataset used in others project (in a research group)
-and the one used by a given user
-
-Return:	ref hash share,use
-		count:number of keys in use
-		share: dataset used in others projects
-		use: info on dataset + project used by a given user.
-
-
-=head2 newDataset
-extension of OME::Project::newDataset
-
-
-
-=head2 notBelongToProject ($ref,$projectID)
-projectID (optional) if not defined project=current project
-ref (optional) ref array list of group_id
-
-Check dataset belonging to research groups if specified.
-If project has no dataset, return ref hash of all datasets in Research group
-if project has dataset(s), return ref hash of datasets not already used 
- 
-Return: ref hash
+Returns a hash reference to the datasets not used by the specified project.
 
 =head2 remove ($ref)
 
-remove datasets from project
-parameters: ref hash: key=dataset_id; value=ref array of associated projects.
+	$datasetManager->remove( {
+		$dataset_a->id() => [$project_y->id(), $project_z->id()],
+		$dataset_b->id() => [$project_x->id()],
+	);
+
+Remove dataset(s) from project(s).
 
 =head2 share ($ref)
-ref (optional) ref array list of group_id
 
-
-Check datasets owned by the current user
-if they are used by others.
-Return : ref hash (share,use)
-		count:number of keys in share
-		count: nb keys in use
-		share: datasets owned by the current user but used by other
-		use: datasets user owns ONLY used by user.
-
-
+Undocumented.
 
 =head2 switch ($id)
 
-Switch dataset 
+	$datasetManager->switch($new_dataset->id());
+
+Switch the current active dataset.
 
 =cut
 
@@ -189,11 +244,8 @@ our $VERSION = $OME::VERSION;
 sub new{
 	my $class=shift;
 	my $self={};
-	$self->{session}=shift;
-	bless($self,$class);
-   	return $self;
 
-
+	return bless($self,$class);
 }
 
 #################
@@ -203,7 +255,7 @@ sub new{
 
 sub addImages{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($ref,$datasetID)=@_;
 	my $factory=$session->Factory();
 	my $dataset;
@@ -219,7 +271,7 @@ sub addImages{
 	  }
 	  $session->dataset($dataset);
 	  $session->storeObject();
-          $session->commitTransaction();
+      $session->commitTransaction();
 	  return 1;
 	}else{
 	  return undef;
@@ -237,7 +289,8 @@ sub addImages{
 sub addToDataset{
 	my $self=shift;
 	my ($datasetID,$imageID)=@_;
- 	my $factory=$self->{session}->Factory();
+	my $session=$self->Session();
+ 	my $factory=$session->Factory();
   	my $map = $factory->findObject("OME::Image::DatasetMap",
 		 'dataset_id' => $datasetID,
 		 'image_id' => $imageID
@@ -248,9 +301,9 @@ sub addToDataset{
 			'image_id' => $imageID
 
 			} );
+		$map->storeObject();
+		$session->commitTransaction();
 	}
-
-
 }
 #################
 # Parameters
@@ -260,9 +313,11 @@ sub addToDataset{
 
 sub change{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($description,$name,$datasetID)=@_;
 	my $dataset;
+	my @groupImages;
+
 	if (defined $datasetID){
 		$dataset=$session->Factory()->loadObject("OME::Dataset",$datasetID);
 	}else{
@@ -288,7 +343,7 @@ sub change{
 
 sub create{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($name,$description,$ownerID,$groupID,$projectID,$ref)=@_;
 	if (defined $ref){
 	 return undef if (scalar(@$ref)==0);
@@ -326,7 +381,7 @@ sub create{
 sub newDataset{
 	my $self=shift;
 	my ($name,$description,$ownerID,$groupID,$projectID)=@_;
-	my $factory = $self->{session}->Factory();
+	my $factory = $self->Session()->Factory();
       my $dataset=$factory->newObject("OME::Dataset",{
 		name        => $name,
 		description => $description,
@@ -354,7 +409,7 @@ sub newDataset{
 
 sub delete{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($id)=@_;
 	my $currentDataset=$session->dataset();
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
@@ -414,7 +469,7 @@ sub delete{
 
 sub exist{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($name)=@_;
 	my @list=$session->Factory()->findObjects("OME::Dataset",'name'=>$name);
 	return scalar(@list)==0?1:undef;
@@ -430,14 +485,14 @@ sub exist{
 
 sub imageNotIn{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($ref,$datasetID)=@_;
 	my @groupImages=();
 	if (defined $ref){
 	  foreach (@$ref){
 		push(@groupImages,$session->Factory()->findObjects("OME::Image",'group_id' => $_));
 	  }
-      }else{
+    }else{
 		@groupImages=$session->Factory()->findObjects("OME::Image");
 	}
 	my $dataset;
@@ -449,11 +504,11 @@ sub imageNotIn{
 	}
 	my @datasetsImages=();
 
-         my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->id() );
+    my @dMaps=$session->Factory()->findObjects("OME::Image::DatasetMap",'dataset_id'=>$dataset->id() );
 
-      	foreach my $d (@dMaps){
-      	push(@datasetsImages,$d->image());
-    	}
+    foreach my $d (@dMaps){
+    	push(@datasetsImages,$d->image());
+   	}
 
 	#my @datasetsImages=$dataset->images();
 	my $rep=notUsedImages(\@groupImages,\@datasetsImages);	
@@ -469,7 +524,7 @@ sub imageNotIn{
 
 sub listMatching{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($userID,$ref)=@_;
 	my @list=();
 	my $refGene;
@@ -518,7 +573,7 @@ sub listMatching{
 
 sub load{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($datasetID)=@_;
 	my $dataset=$session->Factory()->loadObject("OME::Dataset",$datasetID);
 	return $dataset;
@@ -532,7 +587,7 @@ sub load{
 
 sub lockUnlock{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($id,$bool)=@_;
 	my ($table,$condition,$result);
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword()); 
@@ -546,24 +601,6 @@ sub lockUnlock{
 
 }
 
-###############
-# Parameters: 
-#	ref=ref array  list group_id (optional)
-# Return:	ref hash share,use
-#		count:number of keys in use
-#		share: dataset used in others projects
-#		use: info on dataset + project used by a given user.
-
-sub manage{
-	my $self=shift;
-	my $session=$self->{session};
-	my ($ref)=@_;
-	my ($result,$projects)=notMyProject($session,$ref);
-	my ($share,$use,$count)=usedDatasets($session,$result,$projects);
-	return ($share,$use,$count);  
-}
-
-
 #################
 # Parameters: 
 #	$ref=ref array  list group_id (optional)
@@ -573,7 +610,7 @@ sub manage{
 sub notBelongToProject{
 	my $self=shift;
 	my ($ref,$projectID)=@_;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my $project;
 	if (defined $projectID){
 		$project=$session->Factory()->loadObject("OME::Project",$projectID);
@@ -638,7 +675,7 @@ sub notBelongToProject{
 sub belong_or_not{
 	my $self=shift;
 	my ($datasetID,$projectID)=@_;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my $factory=$session->Factory();
 	return undef unless defined $datasetID and defined $projectID;
 	my @datasets =$factory->findObjects("OME::Project::DatasetMap",
@@ -658,7 +695,7 @@ sub belong_or_not{
 #	ref= ref hash 
 sub remove{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($ref)=@_;
 	my $result=undef;
 	my $project=$session->project();
@@ -708,7 +745,7 @@ sub remove{
 
 sub share{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($ref)=@_;
 	my ($result)=notMyProject($session,$ref);
 	my ($share,$own,$count,$countown)=shareDatasets($session,$result);
@@ -724,7 +761,7 @@ sub share{
 
 sub switch{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->Session();
 	my ($id)=@_;
 	my $dataset=$session->Factory()->loadObject("OME::Dataset",$id);
 	$session->dataset($dataset);
@@ -955,6 +992,9 @@ sub doUpdate{
  	return $result;
 }
 
+# Session macro
+
+sub Session { OME::Session->instance() }
 
 
 =head1 AUTHOR
