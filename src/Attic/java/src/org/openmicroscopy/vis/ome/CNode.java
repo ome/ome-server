@@ -39,13 +39,13 @@
  
  package org.openmicroscopy.vis.ome;
  
- import org.openmicroscopy.remote.RemoteChain.Node;
- import org.openmicroscopy.remote.RemoteChain.Link;
- import org.openmicroscopy.remote.RemoteObjectCache;
- import org.openmicroscopy.remote.RemoteSession;
- import java.util.Collection;
- import java.util.HashSet;
- import java.util.Iterator;
+import org.openmicroscopy.remote.RemoteChain.Node;
+import org.openmicroscopy.remote.RemoteObjectCache;
+import org.openmicroscopy.remote.RemoteSession;
+import org.openmicroscopy.vis.piccolo.PModule;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 
  
  public class CNode extends Node {
@@ -60,6 +60,8 @@
 	protected HashSet predLinks = new HashSet();
 	protected HashSet succs  = new HashSet();
 	protected HashSet preds = new HashSet();
+	
+	private PModule displayModule;
 	
  	public CNode() {
  		super(); 
@@ -104,7 +106,7 @@
 		Collection outputs = getOutputLinks();
 		Iterator iter = outputs.iterator();
 		while (iter.hasNext()) {
-			Link link = (Link)iter.next();
+			CLink link = (CLink)iter.next();
 			CNode node = (CNode) link.getToNode();
 			if (!succs.contains(node)) {
 				//	add a layout link?
@@ -124,7 +126,7 @@
 		Collection inputs = getInputLinks();
 		Iterator iter = inputs.iterator();
 		while (iter.hasNext()) {
-			Link link = (Link) iter.next();
+			CLink link = (CLink) iter.next();
 			CNode node = (CNode) link.getFromNode();
 			if (!preds.contains(node)) {
 				preds.add(node);
@@ -183,6 +185,14 @@
 	
 	public Iterator predLinkIterator() {
 		return predLinks.iterator();
+	}
+	
+	public void setPModule(PModule mod) {
+		displayModule = mod;
+	}
+	
+	public PModule getPModule() {
+		return displayModule;
 	}
  }
  
