@@ -1433,31 +1433,49 @@ sub SVGgetDataJS {
 	            ];
 	
 	# get wavelengths from image and make them JavaScript readable
-	my @w = $image->wavelengths
-		or die "Could not retrieve image->wavelengths";
-	my @wavelengths;
-	
-# get this from DB eventually
-	my $FluorWavelength = {
-		FITC   => 528,
-		TR     => 617,
-		GFP    => 528,
-		DAPI   => 457
-	};
-	foreach (@w) {
-		push @wavelengths, [$_->wavenumber(), $_->em_wavelength(), $_->fluor()];
-	}
-	# construct em_wavelength from fluor if possible, otherwise make sure it's filled in w/ something
-	foreach (@wavelengths) {
-		$_->[1] = $FluorWavelength->{$_->[2]} unless defined $_->[1] and $_->[1];
-		$_->[1] = $_->[0]+1 unless defined $_->[1] and $_->[1];
-	}
-	my $wav = [sort {$b->[1] <=> $a->[1]} @wavelengths];
+	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
+		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
+	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
+	die "Image has no channel components for default Pixels!" if( scalar( @channelComponents ) eq 0 );
 	my @JSwavelengths;
-	foreach (@$wav) {
-		push @JSwavelengths, '{WaveNum:'.$_->[0].',Label:"'.(exists $_->[2] and defined $_->[2] ? $_->[2] : $_->[1]).'"}';
+	foreach my $cc (@channelComponents) {
+		my $ChannelNum = $cc->Index();
+		my $Label;
+		$Label = $cc->LogicalChannel()->Name()  || 
+		         $cc->LogicalChannel()->Fluor() || 
+		         $cc->LogicalChannel()->EmissionWavelength();
+		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
+		$Label .= $cc->Index()
+			if( scalar( @overlap ) > 1 || $Label eq undef );
+		push @JSwavelengths, "{WaveNum:$ChannelNum,Label:\"$Label\"}";
 	}
 
+
+=pod
+	my @mins   = $factory->findAttributes( "StackMinimum", $image );
+	my @maxes  = $factory->findAttributes( "StackMaximum", $image );
+	my @means  = $factory->findAttributes( "StackMean", $image );
+	my @gmeans = $factory->findAttributes( "StackGeometricMean", $image );
+	my @sig    = $factory->findAttributes( "StackSigma", $image );
+	
+	my $stats;
+	foreach( @mins ) {
+		$stats->{ $_->theC() }->{ $_->theT() }->{min} = $_->Minimum();
+	}
+	foreach( @maxes ) {
+		$stats->{ $_->theC() }->{ $_->theT() }->{max} = $_->Maximum();
+	}
+	foreach( @means ) {
+		$stats->{ $_->theC() }->{ $_->theT() }->{mean} = $_->Mean();
+	}
+	foreach( @gmeans ) {
+		$stats->{ $_->theC() }->{ $_->theT() }->{geomean} = $_->GeometricMean();
+	}
+	foreach( @sig ) {
+		$stats->{ $_->theC() }->{ $_->theT() }->{sigma} = $_->Sigma();
+	}
+=cut
+	
 	# get stats from image & make them JavaScript readable
 	my @s = $image->XYZ_info;
 	die ref ($self) . "->SVGgetDataJS: No stack statistics found for image! (id=".$image->id().")"
@@ -1471,6 +1489,9 @@ sub SVGgetDataJS {
 		push (@JS_Stats_Waves,'['.join (',',@{$stats->[$i]}).']');
 	}
 	$JSstats = '['.join (',',@JS_Stats_Waves).']';
+#print STDERR "jsstats = '$JSstats'\n\n\n";
+#print STDERR "wavelen = '".'['.join(',',@JSwavelengths).']'."'\n\n\n";
+#print STDERR "dims = '".'['.join (',', @$dims).']'."'\n\n\n";
 	
 	# get display settings
 	my $displaySettings   = $factory->findObject( 'OME::DisplaySettings', image_id => $image->id() );
