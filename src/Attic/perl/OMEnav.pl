@@ -28,6 +28,7 @@ my $OMEbaseURL = $OME->BaseURL();
 
 my $OMEloginURL = $OMEbaseURL."OMElogin.pl";
 my $OMElogoutURL = $OMEbaseURL."OMElogout.pl";
+my $OMEstatusURL = $OMEbaseURL."OMEstatus.pl";
 my $OMEimportDatasetsURL = $OMEbaseURL."../JavaScript/DirTree/index.htm";
 my $OMEselectDatasetsURL = $OMEbaseURL."OMEselectDatasets.pl";
 my $OMEmanageProjectsURL = $OMEbaseURL."OMEmanageProjects.pl";
@@ -49,6 +50,7 @@ print $cgi->header;
 print $cgi->start_html(-title=>'OME Navigation');
 print <<EOF
 <A href="$OMElogoutURL" target=_top>Logout</A><br>
+<A href="$OMEstatusURL" target="Status">Status</A><br>
 <A href="$OMEimportDatasetsURL" target="MainFrame">Import datasets</A><br>
 <A href="$OMEselectDatasetsURL" target="MainFrame">Select datasets</A><br>
 <A href="$OMEmanageProjectsURL" target="MainFrame">Manage projects</A><br>

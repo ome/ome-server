@@ -58,11 +58,8 @@ push (@knownDatasetTypes,'SoftWorx');
 # what they are without hard-coding them here.
 
 use CGI qw (:html3);
-use CGI::Carp qw(fatalsToBrowser);
-#if (inWebServer())
-#{
-#	eval "use CGI::Carp qw(fatalsToBrowser);";
-#}
+#use CGI::Carp qw(fatalsToBrowser);
+#set_message (\&handle_errors);
 
 use Apache::Session::File;
 use DBI;
@@ -115,10 +112,109 @@ my $DATASETSDISPLAYLIMIT = 250;
 my $SQLLISTLIMIT = 1000;
 
 
-
+my $errorClass;
 $SIG{'USR2'} = sub { 
-#	die "Analysis aborted";
-	exit (1);
+my $self = $errorClass;
+
+	if (defined $self) {
+		my $session = $self->Session;
+		my $analysis;
+		if (not exists $session->{Analyses}->{$$} or not defined $session->{Analyses}->{$$}) {
+			my %analysisInfo;
+			$analysisInfo{ProgramPID} = $$;
+			$analysisInfo{ProgramName} = $0;
+			$analysisInfo{Status} = undef;
+			$analysisInfo{Error} = undef;
+			$session->{Analyses}->{$$} = {%analysisInfo};
+		}
+		$analysis = $session->{Analyses}->{$$};
+		if (not ($analysis->{Status} eq 'Finished')) {
+			$analysis->{Status} = 'Aborted';	
+			$analysis->{Error} = 'Analysis aborted by user.';
+			$self->Session ($session);
+		} else {
+			return;
+		}
+	}
+	die "Analysis aborted by user.";
+};
+
+# Trap the die call.
+$main::SIG{__DIE__} = sub {
+my ($message) = @_;
+my $htmlMessage;
+my $self = $errorClass;
+my $mod_perl = exists $ENV{MOD_PERL};
+my $browser = exists $ENV{HTTP_USER_AGENT};
+my $i = 0;
+my $isEval = 0;
+my ($pack,$file,$line,$sub);
+
+# This here is to see if we're in an eval.
+# an eval in the main package or in Apache::Registry doesn't count - meaning we process it here.
+	do  {
+		($pack,$file,$line,$sub) = caller $i;
+		if ($sub eq '(eval)') {
+			$isEval = 1;
+			$isEval = 0 if $pack eq 'main';
+			$isEval = 0 if $pack eq 'Apache::Registry';
+		}
+		$i++;
+	} while ($pack and not $isEval);
+
+	CORE::die($message) if $isEval;
+	($pack,$file,$line,$sub) = caller 0;
+	if (defined $self) {
+		my $session = $self->Session;
+		my $analysis;
+		if (not exists $session->{Analyses}->{$$} or not defined $session->{Analyses}->{$$}) {
+			my %analysisInfo;
+			$analysisInfo{ProgramPID} = $$;
+			$analysisInfo{ProgramName} = $0;
+			$analysisInfo{Status} = undef;
+			$analysisInfo{Error} = undef;
+			$session->{Analyses}->{$$} = {%analysisInfo};
+		}
+		$analysis = $session->{Analyses}->{$$};
+		if (not defined $analysis->{Status} or not $analysis->{Status} or not $analysis->{Status} eq 'Finished' or not $analysis->{Status} eq 'Aborted' ) {
+			$analysis->{Status} = 'Error';	
+			$analysis->{Error} = $message;
+			$self->Session ($session);
+		} elsif ($analysis->{Status} eq 'Finished') {
+			return;
+		}
+	} else {
+		$message .= "\nCould not store session status - OME object is undefined.\n";
+	}
+
+	my $location = "at $file line $line"; 
+	$message .= " $location." unless $message=~/$location/;
+
+	$htmlMessage = $message;
+    $htmlMessage=~s/&/&amp;/g;
+    $htmlMessage=~s/>/&gt;/g;
+    $htmlMessage=~s/</&lt;/g;
+    $htmlMessage=~s/\"/&quot;/g;
+	$htmlMessage = '<h2>Error:</h2><pre>'.$htmlMessage.'</pre>';
+	print STDOUT "Content-type: text/html\n\n" 
+		if not $mod_perl and $browser;
+	if ($mod_perl && (my $r = Apache->request)) {
+	# If bytes have already been sent, then
+	# we print the message out directly.
+	# Otherwise we make a custom error
+	# handler to produce the doc for us.
+		if ($r->bytes_sent) {
+			$r->print($htmlMessage);
+		} else {
+			$r->status(500);
+			$r->custom_response(500,$htmlMessage);
+		}
+	} elsif ($browser) {
+		print STDOUT $htmlMessage;
+	} else {
+		print STDERR $message;
+	}
+	CORE::die($message);
 };
 
 
@@ -186,6 +282,7 @@ sub new
 
 	bless ($self, $class);
 	$self->initialize(@_);
+	$errorClass = $self;
 	return $self;
 }
 
@@ -199,14 +296,14 @@ sub initialize ()
 	print STDERR "initialize:  Begin.\n";
 
 	if (%params) {
-		$self->{user} = $params{user};
-		$self->{password} = $params{password};
-		$self->{dataSource} = $params{dataSource};
-		$self->{sessionKey} = $params{sessionKey};
-		$self->{referer} = $params{referer};
-	print STDERR "initialize:  Parameter user=".$params{user}."\n";
-	print STDERR "initialize:  Parameter dataSource=".$params{dataSource}."\n";
-	print STDERR "initialize:  Parameter sessionKey=".$params{sessionKey}."\n";
+		$self->{user} = $params{user} if exists $params{user};
+		$self->{password} = $params{password} if exists $params{password};
+		$self->{dataSource} = $params{dataSource} if exists $params{dataSource};
+		$self->{sessionKey} = $params{sessionKey} if exists $params{sessionKey};
+		$self->{referer} = $params{referer} if exists $params{referer};
+#	print STDERR "initialize:  Parameter user=".$params{user}."\n";
+#	print STDERR "initialize:  Parameter dataSource=".$params{dataSource}."\n";
+#	print STDERR "initialize:  Parameter sessionKey=".$params{sessionKey}."\n";
 	}
 	
 	if ($self->inWebServer())
@@ -231,7 +328,7 @@ sub initialize ()
 		$self->{OMEhomePageURL} = $OMEbaseURL.$OMEhomePage;
 		$self->{ViewDatasetsURL} = $OMEbaseURL.$ViewDatasetsPage;
 
-		$self->{sessionKey} = $cgi->cookie ('OMEsessionKey');
+		$self->{sessionKey} = $cgi->cookie ('OMEsessionKey') unless defined $self->{sessionKey};
 		$self->{sessionKey} = $cgi->url_param ('Session') unless defined $self->{sessionKey};
 	print STDERR "initialize:  Retreived OMEsessionKey cookie=",$self->{sessionKey},"\n";
 		$self->{referer} = $cgi->cookie ('OMEreferer') unless defined $self->{referer};
@@ -243,7 +340,7 @@ sub initialize ()
 			eval {$self->VerifySession ();};
 			undef $self->{sessionKey} if $@;
 #			$self->{errorMessage} = $@;
-			print STDERR "initialize:  Session verified.\n";
+			print STDERR "initialize:  Session verified.\n" if defined $self->{sessionKey};
 		}
 
 	# If the above didn't work, or we didn't have a sessionKey in the first place, try logging in.
@@ -420,7 +517,7 @@ use File::Find;
 
 
 sub DeleteOMEsession {
-my $sessionKey = shift;
+my $sessionKey = $_;
 my %session;
 
 return unless defined $sessionKey;
@@ -428,13 +525,39 @@ my $created = (stat($sessionKey))[8];
 return unless defined $created;
 my $age = time - $created;
 return unless $age > $sessionLifetime;
-print STDERR "trying to delete session '$sessionKey'\n";
+#print STDERR "trying to delete session '$sessionKey'\n";
 		eval {tie %session, 'Apache::Session::File', $sessionKey, {
 				Directory => $tempDirectory.'sessions',
 				LockDirectory   => $tempDirectory.'lock'
 			};
 			tied(%session)->delete unless ($@);
 		};
+}
+
+sub GetUserSessions {
+my $self = shift;
+use File::Find;
+my @userSessions;
+my $user = $self->{user};
+
+	my $isUserSessionFunc = sub {
+		my $sessionKey = $_;
+		my %session;
+		return unless defined $sessionKey;
+		my $created = (stat($sessionKey))[8];
+		return unless defined $created;
+		eval {tie %session, 'Apache::Session::File', $sessionKey, {
+				Directory => $tempDirectory.'sessions',
+				LockDirectory   => $tempDirectory.'lock'
+			};
+			return if $@;
+			push (@userSessions,$sessionKey) if $session{user} eq $user;
+		};
+	};
+
+    find($isUserSessionFunc, $tempDirectory.'sessions');
+    return \@userSessions;
+
 }
 
 
@@ -504,6 +627,16 @@ sub Finish ()
 {
 	my $self = shift;
 	$self->Commit();
+
+# Update session info
+	my $session = $self->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{Status} = 'Finished' if defined $analysis->{Status} and $analysis->{Status} eq 'Executing' ;
+	$analysis->{TimeFinished} = time;
+	$self->Session($session);
+
+
+
 	$self->{dbHandle}->disconnect if (defined $self->{dbHandle});
 	undef $self->{dbHandle};
 #	if (defined $self->Session and not $self->gotBrowser()) {
@@ -517,6 +650,8 @@ sub END {
 	print STDERR "DESTRUCTOR:  DESTROY, Disconnecting\n";
 	$self->{dbHandle}->disconnect if (defined $self->{dbHandle});
 	$self->{dbHandle} = undef;
+	print STDERR "DESTRUCTOR:  Deleting session\n";
+	DeleteOMEsession($self->{sessionKey});
 	print STDERR "DESTRUCTOR:  Disconnected\n";
 }
 
@@ -528,7 +663,7 @@ sub SetSID ()
 	my $self = shift;
 	my $sessionID;
 	my $dbh = $self->{dbHandle};
-
+	
 	print STDERR "SetSID:  \n";
 	$sessionID = $dbh->selectrow_array ("SELECT session_id FROM ome_sessions WHERE ome_name=? ORDER BY last_access desc limit 1",undef,$self->{user});
 	if ($sessionID) {	
@@ -914,14 +1049,23 @@ sub StartAnalysis()
 	$self->Commit();
 	
 	my $session = $self->Session;
-	$session->{ProgramPID} = $$;
-	$session->{ProgramStarted} = time;
-	$session->{ProgramName} = $0;
-	$session->{Status} = 'Executing';
-	$session->{Message} = '';
-	$session->{Error} = '';
-	$session->{NumSelectedDatasets} = $self->NumSelectedDatasets();
-	print STDERR "Number of selected datasets: ".$self->NumSelectedDatasets()."\n";
+	my %analysis;
+	$analysis{ProgramPID} = $$;
+	$analysis{ProgramStarted} = time;
+	$analysis{ProgramName} = $0;
+	$analysis{ProgramID} = undef;
+	$analysis{Status} = 'Executing';
+	$analysis{Message} = '';
+	$analysis{Error} = '';
+	$analysis{NumSelectedDatasets} = $self->NumSelectedDatasets();
+	$analysis{NumDatasetsCompleted} = 0;
+	$analysis{CurrentAnalysisID} = undef;
+	$analysis{CurrentDatasetID} = undef;	
+	$analysis{LastCompletedDatasetID} = undef;
+	$analysis{LastCompletedDatasetTime} = undef;
+	$analysis{AverageTimePerDataset} = undef;
+	$analysis{TimeFinished} = undef;
+	$session->{Analyses}->{$$} = {%analysis};
 	$self->Session ($session);
 
 #	my %Analysis_Data = (
@@ -1008,6 +1152,16 @@ sub RegisterAnalysis()
 
 # Return the analysisID
 	$self->{CurrentAnalysisID} = $analysisID;
+
+# Update session info
+	my $session = $self->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{CurrentAnalysisID} = $analysisID;
+	$analysis->{CurrentDatasetID} = $datasetID;
+	$analysis->{ProgramID} = $programID;
+	$self->Session($session);
+	
+
 	return $analysisID;
 }
 
@@ -1316,6 +1470,19 @@ sub FinishAnalysis {
 	$self->{dbHandle}->do ("UPDATE analyses SET status='ACTIVE' WHERE analysis_id=".$self->{CurrentAnalysisID});
 #	$self->Commit();
 #	$self->SetDatasetView();
+
+# Update session info
+	my $session = $self->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{CurrentAnalysisID} = undef;
+	$analysis->{LastCompletedDatasetID} = $analysis->{CurrentDatasetID};
+	$analysis->{LastCompletedDatasetTime} = time;
+	$analysis->{NumDatasetsCompleted}++;
+	$analysis->{AverageTimePerDataset} = ($analysis->{LastCompletedDatasetTime} - $analysis->{ProgramStarted}) / $analysis->{NumDatasetsCompleted};
+
+	$analysis->{CurrentDatasetID} = undef;
+	$self->Session($session);
+
 	$self->{CurrentAnalysisID} = undef;
 }
 
@@ -2472,7 +2639,7 @@ sub inWebServer {
 
 sub gotBrowser {
 	my $self = shift;
-	return (defined $ENV{HTTP_USER_AGENT} and (
+	return (exists $ENV{HTTP_USER_AGENT} and defined $ENV{HTTP_USER_AGENT} and (
 		$ENV{HTTP_USER_AGENT} =~/Mosaic/ or
 		$ENV{HTTP_USER_AGENT} =~/Mozilla/ or
 		$ENV{HTTP_USER_AGENT} =~/MSIE/ or
@@ -2483,7 +2650,7 @@ sub gotBrowser {
 
 sub inShell {
 	my $self = shift;
-	return defined $ENV{SHELL};
+	return exists $ENV{SHELL} and defined $ENV{SHELL};
 }
 
 sub hasConsole {
@@ -2613,10 +2780,11 @@ sub RefererCookie {
 sub NumSelectedDatasets {
 	my $self = shift;
 	if (exists $self->{SelectedDatasets} and defined $self->{SelectedDatasets} and scalar @{$self->{SelectedDatasets}} > 0) {
-		return scalar @{$self->{SelectedDatasets}};
+		$self->{NumSelectedDatasets} = scalar @{$self->{SelectedDatasets}};
 	} else {
-		return ($self->{dbHandle}->selectrow_array ('SELECT count(*) FROM ome_sessions_datasets WHERE SESSION_ID='.$self->{sessionID}));
+		$self->{NumSelectedDatasets} = $self->{dbHandle}->selectrow_array ('SELECT count(*) FROM ome_sessions_datasets WHERE SESSION_ID='.$self->{sessionID});
 	}
+	return ($self->{NumSelectedDatasets});
 
 }
 

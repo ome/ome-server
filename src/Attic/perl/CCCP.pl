@@ -25,7 +25,6 @@ use strict;
 use vars qw ($OME $programName $executable);
 $OME = new OMEpl;
 
-$OME->StartAnalysis();
 
 $programName = "CCCP";
 $executable = $OME->binPath().'ome_cccp';
@@ -85,7 +84,8 @@ my ($row,@tableRows);
 
 
 sub Do_Analysis {
-	
+$OME->StartAnalysis();
+
 my $images = $OME->GetSelectedDatasetObjects();
 my $image;
 my $analysisID;
@@ -97,6 +97,7 @@ my %attributes = (
 	'spearman_masked'    => ['CCCP','SPEARMAN_MASKED']
 	);
 my %datasets;
+my $numDatasets = 0;
 my $datasetArray;
 my $key;
 my $CCCP;
@@ -135,8 +136,18 @@ my $tempFileNameErr = $OME->GetTempName ('CCCP','err') or die "Couldn't get a na
 		$key = $image->{RasterID};
 		if (not exists $datasets{$key}) {
 			$datasets{$key} = $image->GetWavelengthDatasets();
+			$numDatasets++;
 		}
 	}
+
+#
+# The number of datasets selected doesn't reflect the number of analyses we're going to perform,
+# so update the session info so that the right number is displayed in the status.
+# Update session info
+	my $session = $OME->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{NumSelectedDatasets} = $numDatasets;
+	$OME->Session($session);
 
 #
 # Run through our hash of RasterIDs
