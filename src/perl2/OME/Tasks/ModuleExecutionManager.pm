@@ -292,7 +292,7 @@ sub createVirtualMEX {
                          });
     }
 
-    $mex->virtual_mex('t');
+    $mex->virtual_mex(1);
     $mex->status('FINISHED');
     $mex->storeObject();
 

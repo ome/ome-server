@@ -129,7 +129,7 @@ sub createOriginalFileAttribute {
         my $repository = $factory->
           findAttribute('Repository',
                         {
-                         IsLocal        => 'f',
+                         IsLocal        => 0,
                          ImageServerURL => $server_path,
                         });
         die "Cannot find a repository entry for the active image server"
@@ -212,7 +212,7 @@ sub findLocalRepository {
     my $repository = $factory->
       findAttribute('Repository',
                     {
-                     IsLocal => 't',
+                     IsLocal => 1,
                     });
     die "Are there really no repositories in the system?  Why not?"
       unless defined $repository;

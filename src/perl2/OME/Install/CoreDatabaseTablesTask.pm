@@ -600,7 +600,7 @@ sub commit_experimenter {
     # I don't know why the importer doesn't detect its existance or abscence.
                {
                 Path => $OME_BASE_DIR."/repository/",
-                IsLocal => 't'
+                IsLocal => 1
                });
 
 	$repository->storeObject;
