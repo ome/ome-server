@@ -46,8 +46,8 @@ sub new {
 sub Off {
 
    my $self      = shift;    	
-   
-   ${$self->{obj}}->disconnect;
+   my $val=$self->{obj};
+   $val->disconnect;
 
 }
 
@@ -95,7 +95,8 @@ sub GetRecords{
       $rows++;	       
   }
  
-  $dbd->disconnect;
+  #$dbd->disconnect;
+  $sth->finish;
   return ($rows>0)?$tabref:undef;
 
 }
@@ -124,11 +125,55 @@ sub DeleteRecord{
 
   $sth->execute or $Err = $sth->errstr;
 
-  $dbd->disconnect;   
-
+  #$dbd->disconnect;   
+  $sth->finish;
   return $Err?undef:1;
+  #return $Err?$Err:1;
 
 
 }
+
+#------------------------
+# $row:ref % key=column_name value=update_value
+
+sub UpdateRecord{
+
+  my $self      = shift;
+  my $dbd       = $self->{obj}; 
+
+  my ($table,$row,$condition,$key,$value)=@_;
+
+  my $sth	= undef;	
+  my $req	= undef;
+  my $vals	= undef;  
+  my @final=();
+
+  my $Err	= undef;
+
+  return 0 unless ($table);
+  return 0 unless ($row);
+ 
+	
+  foreach (keys %$row) {	
+     my $val= "$_ = ${$row}{$_}";
+     push(@final,$val);
+  }
+  $vals =join(',',@final);	
+  if ($condition) {
+     $req = "UPDATE $table SET $vals WHERE $condition";
+  }else {
+     $req = "UPDATE $table SET $vals WHERE $key = $value";
+  }
+  $sth = $dbd->prepare($req);     
+
+  $sth->execute or $Err = $sth->errstr;
+ 
+  $sth->finish;   
+
+  return $Err?0:1;
+
+
+}
+
 
 1;
