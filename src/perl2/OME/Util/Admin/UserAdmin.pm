@@ -298,10 +298,10 @@ sub listUsers {
         }
     } else {
         my $max_id_len = 3;
+        
+        # set the ID field length to the width of the longest ID
         foreach my $user (@users) {
-            my $id = $user->id();
-            $max_id_len = $id
-              if (length($id) > $max_id_len);
+            $max_id_len = length($user->id()) if (length($user->id()) > $max_id_len);
         }
 
         my $username_len = 8;

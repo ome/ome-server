@@ -321,10 +321,10 @@ sub listGroup {
         }
     } else {
         my $max_id_len = 3;
+        
+        # set the ID field length to the width of the longest ID
         foreach my $group (@groups) {
-            my $id = $group->id();
-            $max_id_len = $id
-              if (length($id) > $max_id_len);
+   			$max_id_len = length($group->id()) if (length($group->id()) > $max_id_len);
         }
 
         my $name_len = 15;
