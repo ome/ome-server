@@ -62,8 +62,6 @@ import java.awt.Toolkit;
 public class MenuBar extends JMenuBar {
 	
 	public static int COMMAND_MASK=Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-
-	private JMenuItem loginItem;
 	private JMenuItem logoutItem;
 	
 	public MenuBar(CmdTable cmd) {
@@ -75,8 +73,6 @@ public class MenuBar extends JMenuBar {
 	protected JMenu createFileMenu(CmdTable cmd) {
 		
 		JMenu menu = new JMenu("File");
-		loginItem = createMenuItem("Login..",KeyEvent.VK_L,0,cmd.lookupActionListener("login"));
-		menu.add(loginItem);
 		
 		logoutItem = createMenuItem("Logout..",KeyEvent.VK_L,InputEvent.SHIFT_MASK,
 			cmd.lookupActionListener("logout"));
@@ -102,7 +98,6 @@ public class MenuBar extends JMenuBar {
 	public void setLoginsDisabled(boolean v) {
 		// v is true if login should be disabled and logout enabled,
 		// false if login should be enabled and logout disabled.
-		loginItem.setEnabled(!v);
 		logoutItem.setEnabled(v);
 	}
 }
