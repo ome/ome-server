@@ -93,6 +93,7 @@ public class ModulePaletteFrame extends JFrame {
 		getContentPane().add(canvas);
 		setBounds(new Rectangle(10,10,WIDTH,HEIGHT));	
 		canvas.setBounds(10,10,WIDTH,HEIGHT);
+		setIconImage(controller.getIcon()); 
 		show();	
 	}
 	

@@ -85,7 +85,8 @@ public abstract class ChainFrameBase extends JFrame {
 		
 		setBounds(getInitialBounds());
 		show();		
-		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);	
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		setIconImage(controller.getIcon());	
 	}
 
 	public Controller getController() {
