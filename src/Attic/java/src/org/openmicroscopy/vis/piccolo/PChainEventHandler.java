@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.SemanticType;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
@@ -51,6 +52,7 @@ import java.awt.geom.Point2D;
 import java.awt.event.KeyEvent;
 import java.util.Vector;
 import java.util.Iterator;
+import java.util.Collection;
 
 
 
@@ -99,7 +101,9 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private Vector links = new Vector();
 	
 	private PModule selectedModule;
-
+	private Collection activeModuleLinkParams;
+	
+	private boolean moduleLinksStartedAsInputs = false;
 	
 	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
@@ -242,9 +246,16 @@ public class PChainEventHandler extends  PPanEventHandler {
 			selectedModule = null;
 		}
 		
-		if (node instanceof PFormalParameter && linkState != LINKING_PARAMS) {
-			// works if I say == NOT_LINKING
-	//		System.err.println("starting a new link");
+		if (node instanceof PFormalParameter && linkState == LINKING_MODULES 
+				&& e.getClickCount() == 2) {
+			System.err.println("finishing links because I clicked on a formal param");
+			PFormalParameter p = (PFormalParameter) node;
+			PModule mod = p.getPModule();
+			finishModuleLinks(mod);
+		}		
+		else if (node instanceof PFormalParameter 
+				&& linkState == NOT_LINKING) {
+			System.err.println("starting a new param link");
 			if (lastParameterEntered == null)
 				mouseEntered(e);
 			PFormalParameter param = (PFormalParameter) node;
@@ -252,27 +263,32 @@ public class PChainEventHandler extends  PPanEventHandler {
 				startParamLink(param);
 			e.setHandled(true);
 		}
-		else if (node instanceof PParamLink) {
-			//System.err.println("pressed on link");
+		
+		else if (node instanceof PParamLink) { 
+			System.err.println("pressed on param link");
 			selectedLink = (PParamLink) node;
 			selectedLink.setSelected(true);
 			linkState = NOT_LINKING;	
 		}
 		else if (node instanceof PModule) {
+			System.err.println("clicked on  a module");
 			selectedModule = (PModule) node;
 			selectedModule.addHandles();
-			if (linkState == LINKING_MODULES) {
-				//finishModuleLinks();
-			}
-			else if (linkState == NOT_LINKING && e.getClickCount() ==2 ) {
-				startModuleLinks(e);
-			}
-			//eventually, check link state. do one thing if not
-			//linking and another if linkingmodules
-			
+			if (e.getClickCount() ==2) {
+				if (linkState == NOT_LINKING)
+					startModuleLinks(e);
+				else if (linkState == LINKING_MODULES)
+					finishModuleLinks((PModule) node);
+			} 
+		}
+		else if (linkState == LINKING_MODULES) {
+			System.err.println("linking modules. pressed.");
+		 	if (e.getClickCount() ==2)
+				cancelModuleLinks();
+		
 		}
 		else if (linkState == LINKING_PARAMS) {
-			//System.err.println("mouse pressed and not linking");
+			System.err.println("mouse pressed in linking params");
 			if (e.getClickCount() ==2) {
 				cancelParamLink();
 			}
@@ -284,9 +300,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 				link.addIntermediate((float) pos.getX(),(float) pos.getY());
 			}*/
 			e.setHandled(true);
-		}
-		else if (linkState == LINKING_MODULES && e.getClickCount() ==2) {
-			//cancelModuleLinks();
 		}
 		else
 			linkState =  NOT_LINKING;
@@ -339,13 +352,108 @@ public class PChainEventHandler extends  PPanEventHandler {
 
 		Point2D pos = e.getPosition();
 		boolean isInput = selectedModule.isOnInputSide(pos);
-		if (isInput == true)
+		Collection inputs = selectedModule.getInputParameters();
+		Collection outputs = selectedModule.getOutputParameters();
+		if (isInput == true  || outputs.size() == 0) {
 			System.err.println("building module links on input side");
-		else
+			startModuleLinks(inputs);
+			moduleLinksStartedAsInputs = true;
+		}
+		else { 
 			System.err.println("building module links on output side");
+			startModuleLinks(outputs); 
+			moduleLinksStartedAsInputs = false;
+		}
 		linkState = LINKING_MODULES; 
 	}
 	
+	private void startModuleLinks(Collection params) {
+		activeModuleLinkParams = params;
+	
+		Iterator iter = params.iterator();
+		while (iter.hasNext()) {
+			PFormalParameter param = (PFormalParameter) iter.next();
+			param.decorateAsLinkStart(true);
+			PParamLink link = new PParamLink();
+			linkLayer.addChild(link);
+			link.setStartParam(param);
+			link.setPickable(false);
+			links.add(link);
+		}
+	}
+	
+	public void finishModuleLinks(PModule mod) {
+		Collection c;
+		
+		// if I started as inputs, get outputs of this node.
+		if (moduleLinksStartedAsInputs == true)
+		 	c = mod.getOutputParameters();
+		else 
+		 	c = mod.getInputParameters();
+		finishModuleLinks(c);
+		links = new Vector();
+		linkState = NOT_LINKING;
+	}
+	
+	public void finishModuleLinks(Collection targets) {
+		// ok, for each thing in the initial params, finish 
+		//this link against targets
+		Iterator iter = links.iterator();
+		while (iter.hasNext()) {
+			PParamLink lnk = (PParamLink) iter.next();
+			finishAModuleLink(lnk,targets);
+		}
+	}	
+	
+	public void finishAModuleLink(PParamLink link,Collection targets) {
+		PFormalParameter start = link.getStartParam();
+		SemanticType startType = start.getSemanticType();
+		
+		Iterator iter = targets.iterator();
+		PFormalParameter p;
+		while (iter.hasNext()) {
+			p = (PFormalParameter) iter.next();
+			SemanticType type = p.getSemanticType();
+			if (startType == type) {
+				// finish it 
+				link.setEndParam(p);
+				link.setPickable(true);
+				linkLayer.completeLink(link);
+				start.setParamsHighlighted(false);
+				start.decorateAsLinkStart(false);
+				return;
+			}
+		}
+		// no matches. remove it.
+		start.setParamsHighlighted(false);
+		start.decorateAsLinkStart(false);
+		link.removeFromParent();
+	}
+	
+	
+	
+	
+	
+	public void cancelModuleLinks() {
+		System.err.println("cancelling module links...");
+		Iterator iter = links.iterator();
+		while (iter.hasNext()) {
+			PParamLink link = (PParamLink) iter.next();
+			link.removeFromParent();
+		}
+		linkState = NOT_LINKING;
+		cleanUpModuleLink();
+	}
+	
+	public void cleanUpModuleLink() {
+		Iterator iter = activeModuleLinkParams.iterator();
+		while (iter.hasNext()) {
+			PFormalParameter origin = (PFormalParameter) iter.next();
+			origin.setParamsHighlighted(false);
+			origin.decorateAsLinkStart(false);
+		}
+		links = new Vector();
+	}
 	
 	public void keyPressed(PInputEvent e) {
 		//System.err.println("a key was pressed ");
