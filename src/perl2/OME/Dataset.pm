@@ -98,6 +98,7 @@ __PACKAGE__->manyToMany('images',
 __PACKAGE__->hasMany('project_links','OME::Project::DatasetMap','dataset');
 __PACKAGE__->manyToMany('projects',
                         'OME::Project::DatasetMap','dataset','project');
+__PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'dataset');
 
 =head1 METHODS (C<Dataset>)
 
