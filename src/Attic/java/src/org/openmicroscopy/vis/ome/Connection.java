@@ -44,14 +44,13 @@ package org.openmicroscopy.vis.ome;
 
 import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
-import org.openmicroscopy.vis.util.SwingWorker;
 import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
 import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
-import javax.swing.JOptionPane;
+
 
 
 
@@ -65,12 +64,12 @@ import javax.swing.JOptionPane;
 
 public class Connection {
 	
-	RemoteBindings remote=null;
-	Session session;
-	Factory factory;
+	private RemoteBindings remote=null;
+	private Session session;
+	private Factory factory;
 	
-	Modules modules;
-	Chains chains;
+	private Modules modules;
+	private Chains chains;
 
 	//inputs and outputs are hashes that match semantic types 
  	// to PModuleInputs and PModuleOutputs of the same type. 
@@ -84,6 +83,7 @@ public class Connection {
     
  	private Hashtable inputs = new Hashtable();
  	private Hashtable outputs = new Hashtable();
+ 	
  	
 	/***
 	 * Creates a new connection to the database via XMLRPC. If successful, gets 
@@ -100,43 +100,26 @@ public class Connection {
 	public Connection(final ApplicationController controller,
 		final String URL,final String userName,final String passWord) {
 		
+		final ConnectionWorker worker = 
+			new ConnectionWorker(controller,this,URL,userName,passWord);
 		
-		// wrap it up in a Swing thread to allow UI to proceed 
-		// uninterrupted.
-		final SwingWorker worker = new SwingWorker() {
-			public Object construct() {
-				try {
-				//	XmlRpcCaller.TRACE_CALLS=true;
-					remote = new RemoteBindings();
-					remote.loginXMLRPC(URL,userName,passWord);
-				} catch (Exception e) {
-					//System.err.println(e);
-					controller.cancelLogin();
-				}
-				return remote;
-			}
-			public void finished() {
-				if (remote != null) {
-					session = remote.getSession();
-					factory = remote.getFactory();
-					if (session != null && factory != null) {
-						// this reads in all of the modules in the database
-						// similar additional calls might end up here.
-						System.err.println("factory is "+factory);
-						modules  = new Modules(factory);
-						chains = new Chains(factory);
-						controller.completeLogin();
-						// for debugging only
-						//modules.dump();
-					}
-				else 
-					JOptionPane.showMessageDialog(controller.getMainFrame(),
-						"The login was not completed successfully.\nYour username and/or password may be incorrect, or there may be network problems. \n\nPlease try again.",
-						"Login Difficulties",JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		};
 		worker.start();
+	}
+	
+	public void setSession(Session session) {
+		this.session = session;
+	}
+	
+	public void setFactory(Factory factory) {
+		this.factory = factory;
+	}
+	
+	public void setModules(Modules modules) {
+		this.modules = modules;
+	}
+	
+	public void setChains(Chains chains) {
+		this.chains = chains;
 	}
 	
 	public String getUserName() {		
