@@ -44,6 +44,8 @@ consists of the Project, Dataset, Image, and Feature elements as specified in th
 hierarchy has an optional CustomAttributes element which may containn one or more CustomAttributes (instances of
 a Semantic Type).
 
+Currently, it also executes the Import Analysis Chain against the imported images and/or datasets.
+
 =cut
 
 
@@ -90,7 +92,7 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
-		_nullAnalysisSTs=> {
+		_nullAnalysisSTs=> {'Thumbnail' => undef, 'DisplayChannel'=> undef, 'DisplayOptions'=> undef, 'DisplayROI'=> undef, 
 			},
 			
 	};
