@@ -1,4 +1,4 @@
-# OME/Intall/Environment.pm
+# OME/Install/Environment.pm
 
 # Copyright (C) 2003 Open Microscopy Environment
 # Author:
@@ -25,6 +25,7 @@ use vars qw($VERSION);
 $VERSION = 2.000_000;
 
 use File::Copy;
+use File::Spec;
 
 
 
@@ -39,10 +40,10 @@ my $WINDOWS = 6;
 # ... and so on
 
 # The ID of the platform we're running on (set in getInstance).
-my platform = 0;
+my $platform = 0;
 
 # The singleton instance.
-my soleInstance = undef;
+my $soleInstance = undef;
 
 
 # This array contains platform-specific info and routine implementations.
@@ -107,7 +108,7 @@ my @os_specific = ();
 @os_specific[$SUN] = { getMAC =>
     sub {
         my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
-        $macAddr =~ s/.*ether: ([^ \t]+)$/$1/  # the colon separated string after 'ether'
+        $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
         chomp($macAddr);
         return $macAddr;
     }
@@ -117,7 +118,7 @@ my @os_specific = ();
 @os_specific[$FREE_BSD] = { family => "FreeBSD", name => "UNKNOWN" };
 @os_specific[$FREE_BSD] = { getMAC =>
     sub {
-        my $macAddr = $macAddr = `dmefg`;
+        my $macAddr = `dmefg`;
         chomp($macAddr);
         return $macAddr;
     }
@@ -152,7 +153,7 @@ my $new = sub {
 #
 sub getInstance {
     my $class = shift;
-    if( !soleInstance ) { # first time we're called
+    if( !$soleInstance ) { # first time we're called
         $platform = $UNKNOWN;
         my $os_name = `uname -s`;   # assumes POSIX compliant uname cmnd
         if ($os_name =~ /Linux/) {
@@ -165,7 +166,7 @@ sub getInstance {
             $platform = $SUN;
         } elsif ($os_name =~ /FreeBSD/) {
             $platform = $FREE_BSD;
-        } else ($os_name =~ /MS-DOS/) {    # good luck running on NT
+        } elsif ($os_name =~ /MS-DOS/) {    # good luck running on NT
             $platform = $WINDOWS;
         }
         @os_specific[$platform]->{name} = $os_name;
@@ -174,7 +175,7 @@ sub getInstance {
         #           ... and the others?
         if (-e "/etc/debian_version") {
             @os_specific[$platform]->{distribution} = "DEBIAN";
-        } else (-e "/etc/redhat-release") {
+        } elsif (-e "/etc/redhat-release") {
             @os_specific[$platform]->{distribution} = "REDHAT";
         }
         # Create the singleton
@@ -218,21 +219,74 @@ sub getMAC {
 #
 sub copyTree {
     my $self = shift;
-    my ($from, $to, $filter) = @_;
-    my $event;
-    my @dir_contents = glob("$from/*");  # grab all files and dirs
+    my ($from,$to,$filter) = @_;
+    $from = File::Spec->rel2abs($from);  # does clean up as well
+    $to = File::Spec->rel2abs($to);
+    my $paths = $self->scanDir($from,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
+    my @entries = keys(%$paths);  # just names, no path
+    # the above grabs all files and dirs except . and ..
+    # portability issue: what are the equivalents of . and .. on OS other than
+    # Unix and Win?
     if( ref($filter) eq "CODE" ) {  # filter out unwanted files and dirs
-        @dir_contents = grep {local $_=$_; &$filter} @dir_contents;
+        @entries = grep {local $_=$_; &$filter} @entries;
     }
-    foreach my $item (@dir_contents) {  # if @dir_contents is empty, we return
-        if( -f $item ) {
-            copy($item,$to) || die("Couldn't copy file $item. $!.\n");
-        } elsif ( -d $item ) {
-            $item =~ s/(.*\/)?(.*)/$+/s;  # strip path out
-            mkdir("$to/$item") ||
-                die("Couldn't make directory $to/$item. $!.\n");
-            copyTree("$from/$item","$to/$item",$filter);
+    my $x;
+    foreach my $item (@entries) {  # if @entries is empty, we return
+        $x = $paths->{$item};  # abs path of current entry
+        if( -f $x ) {
+            copy($x, $to) or die("Couldn't copy file $x. $!.\n");
+        } elsif ( -d $x ) {
+            $x = File::Spec->catdir($to,$item);  # portable path
+            mkdir($x) or die("Couldn't make directory $x. $!.\n");
+            copyTree(File::Spec->catdir($from,$item),
+                File::Spec->catdir($to,$item),$filter);
         }
     }
 }
+
+# Returns a hash ref whose keys are the names of the entries in the specified
+# directory and whose values are their absolute paths.
+#
+# $env->scanDir($dir [, $filter]);
+#
+# $dir      Directory to scan. It must be a valid path either absolute or
+#           relative to the working directory.
+# $filter   Optional coderef to filter out the contents of the $dir directory.
+#           If specified, it is evaluated for each element of $dir (locally
+#           setting $_ to each element) in order to select the elements for
+#           which the expression evaluated to true.
+# DIES      If $dir can't be opened for reading.
+#
+# Example:
+#
+#   $env->scanDir("../C", sub{ ! /^\.{1,2}$/ });
+#
+# The above will return the contents of the C directory (contained in the parent
+# directory of the working directory) with the exception of the . and ..
+# entries. Notice that the hash values are absolute paths, even if $dir is
+# relative.
+#
+sub scanDir {
+    my $self = shift;
+    my ($dir,$filter) = @_;
+    my %contents = ();
+    my $item;
+    if( ref($filter) ne "CODE" ) {  # not passed or not valid
+        $filter = sub{1};  # no filter
+    }
+    $dir = File::Spec->rel2abs($dir);  # does clean up as well
+    opendir(DIR,$dir) or die "Couldn't open directory $dir. $!";
+    while( $item = readdir(DIR) ) {
+        local $_ = $item;
+        if( &$filter ) {
+            $contents{$_} = File::Spec->catfile($dir,$_);  # portable path
+        }
+    }
+    closedir(DIR);
+    return \%contents;
+}
+
+
+
+1;
 
