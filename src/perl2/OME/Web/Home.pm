@@ -33,12 +33,10 @@ sub getPageTitle {
 }
 
 sub createOMEPage {
-	my $self    = shift;
-	my $HTML;
+	my $self = shift;
 	my $cgi  = $self->CGI();
 	my $home = '/html/noOp.html';
-	die ref ($self) . "->createOMEPage() self->Session() not defined!"
-		if not defined $self->Session();
+	my $HTML;
 
 	$self->{contentType} = 'text/html';
 	$HTML = <<ENDHTML;
