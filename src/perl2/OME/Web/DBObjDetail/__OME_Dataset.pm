@@ -202,21 +202,37 @@ sub _takeAction {
 	$self->Session()->storeObject();
 	$self->Session()->commitTransaction();
 	
-	# allow editing of dataset name & description
-	if( $q->param( 'action' ) && $q->param( 'action' ) eq 'SaveChanges' ) {
-		$dataset->description( $q->param( 'description' ) );
-		$dataset->name( $q->param( 'name' ) );
-		$dataset->storeObject();
-		$self->Session()->commitTransaction();
+	# Edits
+	if( $q->param( 'action' ) && $q->param( 'action' ) eq 'Save' ) {
+		# Edit name or description
+		if( $q->param( 'description' ) || $q->param( 'name' ) ) {
+			$dataset->description( $q->param( 'description' ) );
+			$dataset->name( $q->param( 'name' ) );
+			$dataset->storeObject();
+			$self->Session()->commitTransaction();
+		}
+		# Edit annotation
+		if( $q->param( 'annotation' ) ) {
+			OME::Tasks::DatasetManager->writeAnnotation( 
+				$dataset, { Content => $q->param( 'annotation' ) }
+			);
+			$self->Session()->commitTransaction();
+		}
 	}
 	
-	# allow adding images to a dataset
+	# Delete Annotation
+	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
+		OME::Tasks::DatasetManager->deleteCurrentAnnotation( $dataset );
+		$self->Session()->commitTransaction();
+	}
+
+	# Add images
 	my $image_ids = $q->param( 'images_to_add' );
 	if( $image_ids ) {
 		OME::Tasks::DatasetManager->addImages( [ split( m',', $image_ids ) ] );
 	}
 	
-	# allow image declassification
+	# Declassify image
 	my $image_id_to_declassify = $q->param( 'declassifyImage' );
 	if( $image_id_to_declassify && $image_id_to_declassify ne '' ) {
 		my $image = $factory->loadObject( 'OME::Image', $image_id_to_declassify )

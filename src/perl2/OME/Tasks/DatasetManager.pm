@@ -289,6 +289,133 @@ sub new{
 	return bless($self,$class);
 }
 
+=head2 deleteCurrentAnnotation
+
+	OME::Tasks::DatasetManager->deleteCurrentAnnotation( $dataset );
+
+This tries to get an annotation from getCurrentAnnotation()
+If it gets one that belongs to the current user, it will mark it invalid.
+
+=cut
+
+sub deleteCurrentAnnotation {
+	my ($class, $dataset) = @_;
+	my $session = OME::Session->instance();
+	my $annotation = $class->getCurrentAnnotation( $dataset );
+	if( ( defined $annotation->module_execution() ) && 
+	    ( $annotation->module_execution()->experimenter->id eq
+	      $session->User->id ) ) {
+		$annotation->Valid( 0 );
+		$annotation->storeObject();
+	}
+}
+
+=head2 getCurrentAnnotation
+
+	my $datasetAnnotation = OME::Tasks::DatasetManager->
+	    getCurrentAnnotation( $dataset );
+
+This will look for the most recent DatasetAnnotation created by 
+the current user that is marked Valid.
+Failing to that, it will look for the most recent DatasetAnnotation
+created by anyone that is marked Valid.
+
+If no Valid DatasetAnnotation are found, an undef will be returned.
+
+=cut
+
+sub getCurrentAnnotation {
+	my ($class, $dataset) = @_;
+	my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+	# Load the dataset if they passed in an id
+	$dataset = $factory->
+		loadObject( 'OME::Dataset', $dataset )
+		or die "Could not load dataset with id '$dataset'"
+		unless( ref( $dataset ) );
+	# param type check
+	die "dataset parameter is not an dataset object"
+		unless ref( $dataset ) eq 'OME::Dataset';
+	
+	# First look foe this User's annotations
+	my $datasetAnnotation = $factory->
+		findObject( '@DatasetAnnotation',
+			Valid                           => 1,
+			'module_execution.experimenter' => $session->User(),
+			__order                         => '!module_execution.timestamp'
+		);
+	# Then look for other people's
+	$datasetAnnotation = $factory->
+		findObject( '@DatasetAnnotation',
+			Valid   => 1,
+			__order => '!module_execution.timestamp'
+		)
+		unless $datasetAnnotation;
+
+
+	return $datasetAnnotation;
+}
+
+=head2 writeAnnotation
+
+	my $datasetAnnotation = OME::Tasks::DatasetManager->
+	    writeAnnotation( $dataset, $data_hash );
+
+This will write a new DatasetAnnotation attribute. The data_hash should
+follow the format for factory NewObject calls. e.g.
+	{ Content => $content, ... }
+If the Content is identical to the current annotation, a new DatasetAnnotation
+attribute will not be created, and the current annotation will be returned.
+
+If this user has a current annotation on this dataset, the other
+annotation will be marked invalid. If another user has a current annotation
+on this dataset, the other user's annotation will be left alone.
+
+Note, this method does NOT commit the db transaction.
+
+=cut
+
+sub writeAnnotation {
+	my ($class, $dataset, $data_hash) = @_;
+	my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+	# Load the dataset if they passed in an id
+	$dataset = $factory->
+		loadObject( 'OME::Dataset', $dataset )
+		or die "Could Not load dataset with id '$dataset'"
+		unless( ref( $dataset ) );
+	# param type check
+	die "dataset parameter is not an dataset object"
+		unless ref( $dataset ) eq 'OME::Dataset';
+	
+	my $lastDatasetAnnotation = $class->
+		getCurrentAnnotation( $dataset );
+	
+	# Don't allow a write unless the contents have changed.
+	if( ( defined $lastDatasetAnnotation ) &&
+		( $lastDatasetAnnotation->Content() eq $data_hash->{ Content } ) ) {
+		return $lastDatasetAnnotation;
+	}
+	
+	# Make a new one
+	$data_hash->{ Valid } = 1;
+	my ($mex, $newDatasetAnnotation) = OME::Tasks::AnnotationManager->
+	    annotateDataset( 
+	    	$dataset, 'DatasetAnnotation', $data_hash
+	    );
+
+	# Mark the last one as invalid if this user is overwriting their own annotation.
+	if( $lastDatasetAnnotation && $lastDatasetAnnotation->module_execution->experimenter->id eq
+		$session->User->id ) {
+		$lastDatasetAnnotation->Valid( 0 );
+		$lastDatasetAnnotation->storeObject();
+	}
+	
+	return $newDatasetAnnotation;
+}
+
 #################
 # Parameters:
 #	ref= ref array of image_id to add

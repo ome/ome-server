@@ -1,11 +1,11 @@
 <input type="hidden" name="images_to_add">
 <table width="100%">
 	<caption>
-		<font class="ome_header_title">Dataset: <TMPL_VAR NAME='name'></font> 
+		<font class="ome_header_title">Dataset: <TMPL_VAR NAME='name'></font>
 	</caption>
 	<tr>
 		<td valign="top">
-			<table>
+			<table style=" border: 1px #000000 solid;">
 				<tr>
 					<td align="left">
 						<nobr>
@@ -18,7 +18,7 @@
 							Group: <TMPL_VAR NAME=group>,
 						</nobr>
 						<nobr>
-							Locked: <TMPL_VAR NAME=locked>,
+							Locked: <TMPL_VAR NAME=locked>
 						</nobr>
 					</td>
 				</tr>
@@ -26,24 +26,41 @@
 					<td>
 						Name: <INPUT TYPE="text" NAME="name" VALUE="<TMPL_VAR NAME=name>" SIZE=40>
 					</td>
-				</tr>
-				<tr>
-					<td>
-						Description:<br>
-						<textarea name="description" rows="5" cols="50"><TMPL_VAR NAME='description'></textarea>
+					<td align=right>
+ <table cellpadding="3" class="ome_table">
+	<tr>
+		<td style="background-color: #D1D7DC">
+<a href="javascript:selectMany('OME::Image', 'images_to_add');" class="ome_widget">Add Images</a>
+		</td>
+	</tr>
+</table>
 					</td>
 				</tr>
 				<tr>
-					<td align='right'>
-						 <table cellpadding="3" class="ome_table">
-							<tr>
-								<td style="background-color: #D1D7DC">
-<a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a>
-|
-<a href="javascript:selectMany('OME::Image', 'images_to_add');" class="ome_widget">Add Images</a>
-								</td>
-							</tr>
-						</table>
+					<td colspan='2'>
+						Description [ <a href="javascript:document.forms[0].action.value='Save'; document.forms[0].submit();" class="ome_widget">Save</a> ]<br>
+						<textarea name="description" rows="5" cols="60"><TMPL_VAR NAME='description'></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						<TMPL_UNLESS NAME=current_annotation_author>
+							Your
+						</TMPL_UNLESS>
+						Current Annotation
+<!-- current_annotation_author will only be supplied if the user didn't make this annotation -->
+						<TMPL_IF NAME=current_annotation_author>
+							written by <TMPL_VAR NAME=current_annotation_author>
+						</TMPL_IF>
+						[ 
+						 <a href="javascript:document.forms[0].action.value='Save'; document.forms[0].submit();" class="ome_widget">Save</a> |
+						 <!-- Don't draw the delete button unless the user owns this annotation -->
+						 <TMPL_UNLESS NAME=current_annotation_author>
+							 <a href="javascript: document.forms[0].action.value='DeleteAnnotation'; document.forms[0].submit();" class="ome_widget">Mark Invalid</a> |
+						 </TMPL_UNLESS>
+						 <a href="serve.pl?Page=OME::Web::Search&Type=@DatasetAnnotation&Dataset=<TMPL_VAR Name='id'>" class="ome_widget">View all <TMPL_VAR NAME=annotation_count> Annotations</a>
+						]<br>
+						<textarea name="annotation" rows="5" cols="60"><TMPL_VAR NAME='current_annotation'></textarea>
 					</td>
 				</tr>
 			</table>
