@@ -105,7 +105,7 @@ public abstract class PFormalParameter extends PNode implements
 	protected PText typeNode;
 	
 	private boolean isLinkStart;
-	protected PLinkTarget circle;
+	protected PLinkTarget target;
 	
 	protected PNode labelNode;
 	
@@ -146,8 +146,8 @@ public abstract class PFormalParameter extends PNode implements
 		//float x = (float) point.getX()-CIRC_HALF_SIZE;
 		//float x = (float) b.getX()-CIRC_SIZE-7;
 		//float y = (float) b.getY()+CIRC_BUFFER;
-		circle = new PLinkTarget();
-		addChild(circle);
+		target = new PLinkTarget();
+		addChild(target);
 		setCirclePosition();
 	}
 	
@@ -159,7 +159,7 @@ public abstract class PFormalParameter extends PNode implements
 		//float x = (float) point.getX()-CIRC_HALF_SIZE;
 		float x = getLinkTargetX();
 		float y = (float) b.getY()+PLinkTarget.LINK_TARGET_BUFFER;
-		circle.setOffset(x,y);
+		target.setOffset(x,y);
 	}
 	
 	
@@ -271,7 +271,7 @@ public abstract class PFormalParameter extends PNode implements
 	
 	public void clearLinkedTo(PFormalParameter param) {
 		linkedTo.remove(param);
-		circle.setSelected(false);
+		target.setSelected(false);
 	}
 	
 	public boolean isLinkedTo(PFormalParameter param) {
@@ -342,7 +342,7 @@ public abstract class PFormalParameter extends PNode implements
 	
 	public void updateBounds() {
 		PBounds b = labelNode.getFullBounds();
-		b.add(circle.getFullBounds());
+		b.add(target.getFullBounds());
  		setBounds(new PBounds(b.getX(),b.getY(),b.getWidth(),
 			b.getHeight()+PModule.PARAMETER_SPACING)); 
 	}
@@ -357,7 +357,7 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	public Point2D getLinkCenter() {
-		PBounds b = circle.getFullBoundsReference();
+		PBounds b = target.getFullBoundsReference();
 		float x = (float) (b.getX()+b.getWidth()/2);
 		float y = (float) (b.getY()+b.getHeight()/2);
 		Point2D.Float result = new Point2D.Float(x,y);
@@ -366,7 +366,7 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	public PLinkTarget getLinkTarget() {
-		return circle;
+		return target;
 	}
 	
 	public int compareTo(Object o) {
