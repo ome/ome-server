@@ -149,8 +149,8 @@ public class Connection {
 	}
 	
 	public void closeStatusWindow() {
-		//status.setVisible(false);
-		//status.dispose();
+		status.setVisible(false);
+		status.dispose();
 	}
 	
 	public void setSession(Session session) {
