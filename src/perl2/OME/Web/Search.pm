@@ -74,9 +74,9 @@ sub new {
 	$self->{ _default_limit } = 27;
 	
 	$self->{ _types } = [
-		{ formal_name => 'OME::Image', common_name => 'Images' },
-		{ formal_name => 'OME::Dataset', common_name => 'Datasets' },
 		{ formal_name => 'OME::Project', common_name => 'Projects' },
+		{ formal_name => 'OME::Dataset', common_name => 'Datasets' },
+		{ formal_name => 'OME::Image', common_name => 'Images' },
 		{ formal_name => 'OME::ModuleExecution', common_name => 'Module Executions' },
 		{ formal_name => 'OME::Module', common_name => 'Modules' },
 		{ formal_name => 'OME::AnalysisChain', common_name => 'Analysis Chains' },
