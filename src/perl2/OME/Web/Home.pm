@@ -186,13 +186,13 @@ sub __getQuickViewDatasetData {
 	my ($self, $p) = @_;
 	my $q = $self->CGI();
 
-	# Count of datasets in the "most recent" project
-	my $p_dcount = $p->count_datasets();
-
 	# Build datasets in project header/content
 	my ($d_header, $d_content);
 
 	if ($p) {
+		# Count of datasets in the "most recent" project
+		my $p_dcount = $p->count_datasets();
+	
 		# Header
 		$d_header .= $q->a( {
 				href => $self->getSearchAccessorURL( $p, 'datasets' ),
