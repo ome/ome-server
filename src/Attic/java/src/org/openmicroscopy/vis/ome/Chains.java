@@ -85,15 +85,7 @@ public class Chains {
 	 *
 	 */
 	public void layout() {
-		/*CChain c;
-		
-		Iterator iter = chains.values().iterator();
-		while (iter.hasNext()) {
-			c = (CChain) iter.next();
-			controller.setStatusLabel("Chain Layout.."+c.getName());
-			//System.err.println("Laying out chain ..."+c.getName());
-			c.layout();
-		} */
+
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
 				Iterator iter = chains.values().iterator();
