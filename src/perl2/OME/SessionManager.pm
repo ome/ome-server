@@ -174,8 +174,9 @@ sub createWithKey {
     logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
     my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
 	
-    my $session = $self->getOMESession ($username,$password);
+    my $session = $self->getOMESession ($username,$password,'check for stale key');
     return undef unless $session;
+
     $session->{ApacheSession} = $apacheSession;
     $session->{SessionKey} = $apacheSession->{SessionKey};
     logdbg "debug", "createWithKey: {SessionKey}=".$session->{SessionKey};
@@ -191,7 +192,7 @@ sub createWithKey {
 
 sub getOMESession {
     my $self = shift;
-    my ($username,$password) = @_;
+    my ($username,$password,$staleCheck) = @_;
     my @row		= ();
     my $rows	= 0;
     my @tab		= ();
@@ -252,6 +253,44 @@ sub getOMESession {
     }
     logdie ref($self)."->getOMESession:  Could not create session object"
       unless defined $session;
+
+
+	###########################
+	# code block to check for stale key
+	#
+	if( defined $staleCheck ) {
+		my $maxMin = 30;
+		my $timeStamp = $session->last_access();
+	
+		# c is for current
+		my ($csec,$cmin,$chour,$cday,$cmonth,$cyear) = localtime(time);
+		$cmonth++; # cmonth is in range of 0-11
+		$cyear+=1900; # cyear is years since 1900
+
+		my $diffMinutes;
+
+		if( $timeStamp =~ m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)-\d+$/ ) {
+			my ($year, $month, $day, $hr, $min, $sec) = ($1, $2, $3, $4, $5, $6);
+			if( $year != $cyear or $month != $cmonth or $day != $cday ) {
+				$diffMinutes = $maxMin + 1; # if the date doesn't match up, the session is over limit
+			} else {
+				$min += $hr*60;
+				$cmin += $chour*60;
+				$diffMinutes = $cmin - $min;
+			}
+		} else {
+			die "Could not parse session->last_access time stamp '$timeStamp' with".
+				"regex ".'m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)-\d+$/'."\n";
+		}
+
+		if ($diffMinutes > $maxMin) {
+			print STDERR "It has been $diffMinutes minutes since the last transaction. Session key has expired.\n";
+			return undef;
+		}
+	}
+	# end stale key codeblock
+	############################
+
 
     $session->last_access('now');
     $session->host($host);
