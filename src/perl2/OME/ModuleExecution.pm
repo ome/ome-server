@@ -94,7 +94,7 @@ sub attribute {
     } else {
 	my $attribute = $self->{_attribute};
 	if (!defined $attribute) {
-	  $attribute = $self->Factory()->loadObject($attributePackage,
+	  $attribute = $self->Session()->Factory()->loadObject($attributePackage,
 						    $self->attribute_id());
 	  $self->{_attribute} = $attribute;
 	}
