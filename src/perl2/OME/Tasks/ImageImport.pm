@@ -88,9 +88,6 @@ sub importImages {
 						  AllowDuplicates => 1));
     my $image_ref = $importer->importFiles(\@files);
 
-    # Associate the images with the user specified dataset
-    my $dataset = $session->dataset();
-
     my $dsMgr = new OME::Tasks::DatasetManager;
     $dsMgr->addImages($image_ref);
 
