@@ -46,6 +46,10 @@
 #include <float.h>
 #include "omeis.h"
 
+#ifndef OMEIS_ROOT
+#define OMEIS_ROOT "."
+#endif
+
 /*
   This function will get a new unique ID by examining the contents of the passed-in counter file.
   The number in the counterfile will be incremented, and written back to the file.  The incremented number is returned.
@@ -1854,10 +1858,14 @@ void usage (int argc,char **argv) {
 
 int main (int argc,char **argv) {
 short isCGI=0;
-char **in_params ;
-const char *myWD = "/OME/OMEIS";
+char **in_params;
 
-	chdir (myWD);
+	if (chdir (OMEIS_ROOT)) {
+		char error[256];
+		sprintf (error,"Could not change working directory to %s",OMEIS_ROOT);
+		perror (error);
+		exit (-1);
+	}
 	in_params = getCLIvars(argc,argv) ;
 	if( !in_params ) {
 		in_params = getcgivars() ;
