@@ -54,6 +54,7 @@ use OME::ImportExport::ChainImport;
 use OME::ImportExport::HierarchyImport;
 use OME::ImportExport::DataHistoryImport;
 use OME::ImportExport::ResolveFiles;
+use OME::Image::Server::File;
 
 sub new {
     my ($proto, %params) = @_;
@@ -87,27 +88,34 @@ sub importFile {
     my ($self, $filename, %flags) = @_;
     my $session = $self->{session};
     my $parser  = $self->{_parser};
-    
-    # If the file's been seen before, then ignore it.
-    my $sh;
-    my $sha1;
+	my $factory       = $session->Factory();
 
-    open (STDOUT_PIPE,"openssl sha1 $filename |");
-    chomp ($sh = <STDOUT_PIPE>);
-    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
-    $sha1 = $1;
-    close (STDOUT_PIPE);
+	my $repository;
+	eval {
+		$repository = $factory->findAttribute( "Repository", IsLocal => 'f' );
+	};
+	$repository = $factory->findObject( "OME::SemanticType::BootstrapRepository", IsLocal => 'f' )
+		unless $repository;
+	die "Could not find a remote image server to load"
+		unless $repository;
 
-    my $xyzwt;
+    OME::Tasks::PixelsManager->activateRepository($repository);
+
+	my $file = OME::Image::Server::File->upload($filename);	
+
+	# FIXME: image server should autodetect duplicate file and take action --or--
+	#  this code should delete this just uploaded file if it has duplicate SHA1
+	my $sha1 = $file->getSHA1();
+    my $originalFile;
     eval {
-        $xyzwt = $session->Factory->
-          findAttribute("OriginalFile",SHA1 => $sha1);
+        $originalFile = $session->Factory->
+          findAttribute("originalFile",SHA1 => $sha1);
     };
-	return if defined $xyzwt;
+	return if defined $originalFile;
 
-    my $resolve = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
+    my $resolver = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
     	or die "Could not instantiate OME::ImportExport::ResolveFiles\n";
-    my $doc = $resolve->importFile( $filename );
+    my $doc = $resolver->importFile( $file->getFileID(), $repository );
  	
  	# Apply Stylesheet
  	my $xslt = XML::LibXSLT->new();
@@ -123,9 +131,13 @@ sub importFile {
 	# Store the file hash.
     my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     if (defined $mex) {
-        $xyzwt = $session->Factory->
+        $originalFile = $session->Factory->
           newAttribute("OriginalFile",undef,$mex,
-                       {SHA1 => $sha1, Path => $filename, Format => 'OME XML'});
+                       {SHA1 => $file->getSHA1(), 
+                        Path => $file->getFilename(), 
+                        FileID => $file->getFileID(), 
+                        Format => 'OME XML',
+                        Repository => $repository });
         $mex->status('FINISHED');
         $mex->storeObject();
     }
