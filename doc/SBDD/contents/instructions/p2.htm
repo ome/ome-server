@@ -115,14 +115,14 @@
               <li>JavaScript</li>
               <li>images</li>
               <li>cgi</li>
-              <li>perl</li>
+              <li>perl2</li>
             </ul>
             <p>After that, copy everything from:</p>
             <ul>
               <li><i>&lt;CVS_LOCAL&gt;/OME/src/html</i> to <i>&lt;OME_DEPLOY&gt;/html</i></li>
               <li><i>&lt;CVS_LOCAL&gt;/OME/src/JavaScript</i> to <i>&lt;OME_DEPLOY&gt;/JavaScript</i></li>
               <li><i>&lt;CVS_LOCAL&gt;/OME/images</i> to <i>&lt;OME_DEPLOY&gt;/images</i></li>
-              <li><i>&lt;CVS_LOCAL&gt;/OME/src/perl2</i> to <i>&lt;OME_DEPLOY&gt;/perl</i></li>
+              <li><i>&lt;CVS_LOCAL&gt;/OME/src/perl2</i> to <i>&lt;OME_DEPLOY&gt;/perl2</i></li>
             </ul>
             <p>Obviously, you have to replace <i>&lt;CVS_LOCAL&gt;</i> and <i>&lt;OME_DEPLOY&gt;</i> 
               with the actual directories. Now, copy the <i>OME_JPEG</i> executable 
@@ -132,7 +132,7 @@
             <p><code>cp -r /OME/src/html /OME/html<br>
               cp -r /OME/src/JavaScript /OME/JavaScript<br>
               cp -r /OME/images /OME/images<br>
-              cp -r /OME/src/perl2 /OME/perl<br>
+              cp -r /OME/src/perl2 /OME/perl2<br>
               mkdir /OME/cgi<br>
               cp /OME/src/C/OME_JPEG /OME/cgi/OME_JPEG</code></p>
 			  Notice that CVS_LOCAL contains some <i>CVS</i> subdirectories. These 
@@ -163,14 +163,14 @@
               privileges on the OME_DEPLOY directory (OME_DEPLOY is <i>/OME</i>):</p>
             <p><code>chmod 0770 /OME</code></p>
             <p>Then, grant read/scan privileges on the <i>html</i>, <i>JavaScript</i>, 
-              <i>images</i>, <i>perl</i> and <i>cgi</i> directories (OME_DEPLOY 
+              <i>images</i>, <i>perl2</i> and <i>cgi</i> directories (OME_DEPLOY 
               is <i>/OME</i>):</p>
-            <p><code><nobr>chmod 0550 /OME/html /OME/JavaScript /OME/images /OME/perl 
+            <p><code><nobr>chmod 0550 /OME/html /OME/JavaScript /OME/images /OME/perl2 
               /OME/cgi</nobr></code></p>
             <p>Now, set read privileges for all the files in <i>html</i>, <i>JavaScript</i>, 
-              <i>images</i>, and <i>perl</i> (OME_DEPLOY is <i>/OME</i>):</p>
+              <i>images</i>, and <i>perl2</i> (OME_DEPLOY is <i>/OME</i>):</p>
             <p><code>chmod -R 0440 /OME/html/* /OME/JavaScript/* /OME/images/* 
-              /OME/perl/*</code></p>
+              /OME/perl2/*</code></p>
             <p>Finally, set read/execute privileges for all the files in <i>cgi</i> 
               (OME_DEPLOY is /OME):</p>
             <p><code>chmod -R 0550 /OME/cgi/*</code></p>
@@ -193,7 +193,7 @@
         <TR> 
           <TD class="szNorm" width="82%"> 
             <p>You will need to configure Apache to run with mod_perl and serve 
-              things out of <i>&lt;OME_DEPLOY&gt;/perl</i>. Also, you will need 
+              things out of <i>&lt;OME_DEPLOY&gt;/perl2</i>. Also, you will need 
               to configure Apache in order to serve static content, which is located 
               in the <i>images</i>, <i>html</i> and <i>JavaScript</i> directories 
               under OME_DEPLOY. <br>
@@ -204,10 +204,10 @@
               Alias /JavaScript/ /OME/JavaScript/<br>
               Alias /images/ /OME/images/<br>
               ScriptAlias /cgi/ /OME/cgi/<br>
-              PerlSetEnv PERL5LIB /OME/perl/<br>
+              PerlSetEnv PERL5LIB /OME/perl2/<br>
               PerlFreshRestart On<br>
               &lt;IfModule mod_perl.c&gt;<br>
-              &nbsp;&nbsp;&nbsp;&nbsp;Alias /perl/ /OME/perl/<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;Alias /perl2/ /OME/perl2/<br>
               &nbsp;&nbsp;&nbsp;&nbsp;&lt;Location /perl&gt;<br>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SetHandler perl-script<br>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PerlHandler Apache::Registry<br>
@@ -309,7 +309,7 @@
         <TR> 
           <TD class="szNorm" width="82%"> 
             <p>Now, you only have to point your favourite Web browser to:</p>
-            <p><code>http://your.ome.site/perl/serve.pl?Page=OME::Web::Home</code></p>
+            <p><code>http://your.ome.site/perl2/serve.pl?Page=OME::Web::Home</code></p>
             <p>(the actual host name and path before <code>serve.pl</code> depend 
               on how you configured Apache) </p>
             <p>Enjoy !</p>
