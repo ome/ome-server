@@ -582,6 +582,9 @@ Operates on scalar matlab outputs. Uses <Scalar> in conjuction with <Templates>
 sub MatlabScalar_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	
 	# gather formal output & SE
 	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
@@ -812,7 +815,7 @@ sub __openEngine {
 		my $session = OME::Session->instance();
 		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
 		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
-		print STDERR "matlab src dir is $matlab_src_dir\n";
+		logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 		$engine->eval("addpath(genpath('$matlab_src_dir'));");
 	}
 }
