@@ -287,7 +287,11 @@ my @libraries = ( {
 			#include "stdio.h"
 	    	#include "expat.h"
 	    	int main () {
+	    	#ifdef XML_MAJOR_VERSION
 				printf ("%d.%d", XML_MAJOR_VERSION,XML_MINOR_VERSION);
+			#else
+				printf ("%s", "N/A");
+			#endif
 				return (0);
 	    	}
 		),
