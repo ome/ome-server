@@ -55,39 +55,39 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::Session;
 use base qw(OME::Web::DBObjRender);
 
-=head2 getObjectLabel
+=head2 getName
 
 FirstName LastName
 
 =cut
 
-sub getObjectLabel {
-	my ($proto,$obj,$format) = @_;
+sub getName {
+	my ($self, $obj, $options) = @_;
 
-	return $obj->FirstName." ".$obj->LastName;
+	my $name = $obj->FirstName." ".$obj->LastName;
+	$name = $self->_trim( $name, $options );
+	return $name;
 }
 
-=head2 renderSingle
+=head2 _renderData
 
 make email address a link in html format
 
 =cut
 
-sub renderSingle {
-	my ($proto,$obj,$format,$fieldnames) = @_;
-	my $q       = new CGI;
-	my $record  = $proto->SUPER::renderSingle($obj,$format,$fieldnames);
+sub _renderData {
+	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
 
-	if( grep( m/^Email$/, @$fieldnames) and $format eq 'html' ) {
-		my $emailURL = 'mailto:'.$obj->Email();
-		$record->{ 'Email' } = $q->a( { -href => $emailURL }, $obj->Email() );
-	}
+	return () unless( grep( /Email/, @$field_names ) and $format eq 'html' );
+
+	my %record;	
+	my $email = $self->_trim( $obj->Email(), $options );
+	my $emailURL = 'mailto:'.$obj->Email();
+	$record{ 'Email' } = "<a href='$emailURL'>$email</a>";
 	
-	return %$record if wantarray;
-	return $record;
+	return %record;
 }
 
 
@@ -98,11 +98,11 @@ returns a dropdown list of Experimenter names valued by id.
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
-	my $factory = OME::Session->instance()->Factory();
+	my $factory = $self->Session()->Factory();
 	
-	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
+	my (undef, undef, $from_formal_name) = $self->_loadTypeAndGetInfo( $from_type );
 
 	# Owner list
 	my @experimenters = $factory->findAttributes( "Experimenter" );
