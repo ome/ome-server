@@ -46,6 +46,8 @@ import java.lang.Math;
 import java.awt.BasicStroke;
 import java.awt.geom.Point2D;
 import java.awt.Color;
+//import java.awt.geom.CubicCurve2D;
+
 
 
 /** 
@@ -86,9 +88,13 @@ public class PLink extends  PPath implements PNodeEventListener {
 	float xstart,ystart;
 	float xend,yend;
 	
-//	private GeneralPath arrow;
 
 	private PPath arrow;
+	
+	// nodes used for selection indicators
+	private PPath select1;
+	private PPath select2;
+
 		
 	public PLink() {		
 		super();
@@ -153,8 +159,10 @@ public class PLink extends  PPath implements PNodeEventListener {
 	}
 		
 	private void getEndPointCoords(PFormalParameter p) {
-		p.getLocator().locatePoint(point);
-		p.localToGlobal(point);
+		Point2D paramCirclePoint = p.getCircleCenter();
+		point.setLocation(paramCirclePoint);
+		//p.getLocator().locatePoint(point);
+		//p.localToGlobal(point);
 	}
 	
 	public void setStartCoords(float x,float y) {
@@ -173,7 +181,11 @@ public class PLink extends  PPath implements PNodeEventListener {
 		double theta;
 		reset();
 		moveTo(xstart,ystart);
-		lineTo(xend,yend);	
+		lineTo(xend,yend);
+//		CubicCurve2D.Float curve  = 
+//			new CubicCurve2D.Float(xstart,ystart,xstart+20,ystart-20,xend-20,yend+20,xend,yend);
+//		setPathTo(curve);
+			
 		if ( start instanceof PFormalInput) {
 			theta = getAngle(xend,yend,xstart,ystart);
 			drawLinkEnd(xstart,ystart,theta);
@@ -184,7 +196,7 @@ public class PLink extends  PPath implements PNodeEventListener {
 		}
 	}
 
-	public double getAngle(float xs,float ys,float xe,float ye) {
+	private double getAngle(float xs,float ys,float xe,float ye) {
 		double arctan = (double) (ye-ys)/(xe-xs);
 		double angle = Math.atan(arctan);
 		if (xe < xs)
@@ -217,27 +229,29 @@ public class PLink extends  PPath implements PNodeEventListener {
 		start.clearLinkedTo(end);
 		end.clearLinkedTo(start);
 	}
-	
+
 	public void setSelected(boolean v) {
 		if (v == true) {
-			PPath path1 =PPath.createEllipse(xstart-END_BULB_RADIUS,
+			PPath select1 =PPath.createEllipse(xstart-END_BULB_RADIUS,
 				ystart-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
-			addChild(path1);
-			PPath path2 = PPath.createEllipse(xend-HIGHLIGHT_RADIUS, 
+			addChild(select1);
+			PPath select2 = PPath.createEllipse(xend-HIGHLIGHT_RADIUS, 
 				yend-HIGHLIGHT_RADIUS,HIGHLIGHT_SIZE,HIGHLIGHT_SIZE);
-			addChild(path2);
-			path1.setStrokePaint(DEFAULT_COLOR);
-			path2.setStrokePaint(DEFAULT_COLOR);
-			path1.setPaint(HIGHLIGHT_COLOR);
-			path2.setPaint(HIGHLIGHT_COLOR);
+			addChild(select2);
+			select1.setStrokePaint(DEFAULT_COLOR);
+			select2.setStrokePaint(DEFAULT_COLOR);
+			select1.setPaint(HIGHLIGHT_COLOR);
+			select2.setPaint(HIGHLIGHT_COLOR);
 			//setStrokePaint(HIGHLIGHT_COLOR);
 			//setPaint(HIGHLIGHT_COLOR);
 			moveToFront();
 		}
 		else {
-			removeAllChildren();
-			//setStrokePaint(DEFAULT_COLOR);
-			//setPaint(DEFAULT_COLOR);
+			if (select1 != null)
+				removeChild(select1);
+			if (select2 != null)
+				removeChild(select2);
+			select1=select2=null;
 		}
 		repaint();
 	}
