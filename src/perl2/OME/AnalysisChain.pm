@@ -95,9 +95,9 @@ __PACKAGE__->hasMany('links',
 __PACKAGE__->hasMany('paths',
                      'OME::AnalysisPath' => 'analysis_chain');
 
-=head1 METHODS (C<AnalysisView>)
+=head1 METHODS (C<AnalysisChain>)
 
-The following methods are available to C<AnalysisView> in addition to
+The following methods are available to C<AnalysisChain> in addition to
 those defined by L<OME::DBObject>.
 
 =head2 owner
@@ -105,35 +105,35 @@ those defined by L<OME::DBObject>.
 	my $owner = $chain->owner();
 	$chain->owner($owner);
 
-Returns or sets the owner of this module_execution chain.
+Returns or sets the owner of this analysis chain.
 
 =head2 name
 
 	my $name = $chain->name();
 	$chain->name($name);
 
-Returns or sets the name of this module_execution chain.
+Returns or sets the name of this analysis chain.
 
 =head2 locked
 
 	my $locked = $chain->locked();
 	$chain->locked($locked);
 
-Returns or sets whether this module_execution chain is locked.
+Returns or sets whether this analysis chain is locked.
 
 =head2 description
 
 	my $description = $chain->description();
 	$chain->description($description);
 
-Returns or sets the description of this module_execution chain.
+Returns or sets the description of this analysis chain.
 
 =head2 nodes
 
 	my @nodes = $chain->nodes();
 	my $node_iterator = $chain->nodes();
 
-Returns or iterates, depending on context, the nodes in the module_execution
+Returns or iterates, depending on context, the nodes in the analysis
 chain.
 
 =head2 links
@@ -141,7 +141,7 @@ chain.
 	my @links = $chain->links();
 	my $link_iterator = $chain->links();
 
-Returns or iterates, depending on context, the links in the module_execution
+Returns or iterates, depending on context, the links in the analysis
 chain.
 
 =head2 paths
