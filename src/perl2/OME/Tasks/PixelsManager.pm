@@ -323,10 +323,10 @@ sub saveThumb {
 
 =cut
 sub getThumbURL{
-	my $self=shift;
-	my $session=$self->__Session();
-	my $pixels = shift;
-	my $rep = $pixels->Repository();
+	my $self    = shift;
+	my $session = OME::Session->instance();
+	my $pixels  = shift;
+	my $rep     = $pixels->Repository();
 	return undef if($rep->IsLocal());
 	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
 }
