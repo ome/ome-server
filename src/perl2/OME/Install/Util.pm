@@ -65,7 +65,6 @@ our @EXPORT = qw(
 		configure_library
 		compile_module
 		test_module
-		test_module_as_user
 		install_module
 		normalize_path
 		path_in_tree
@@ -534,17 +533,27 @@ sub fix_ownership {
 	# No point traversing any further unless we actually have something to do
 	return 1 if (scalar(@items) < 1);
 
-    my $uid = getpwnam($o_and_g->{'owner'})
-		or croak "Unable to find user: \"", $o_and_g->{'owner'}, "\"";
-    my $gid = getgrnam($o_and_g->{'group'})
-		or croak "Unable to find group: \"", $o_and_g->{'group'}, "\"";
+    my $uid;
+    if (exists $o_and_g->{'owner'}) {
+    	$uid = getpwnam($o_and_g->{'owner'})
+			or croak "Unable to find user: \"", $o_and_g->{'owner'}, "\"";
+	}
+	
+    my $gid;
+    if (exists $o_and_g->{'group'}) {
+    	$gid = getgrnam($o_and_g->{'group'})
+			or croak "Unable to find group: \"", $o_and_g->{'group'}, "\"";
+	}
 
+	my @stat;
 	while (my $item = shift @items) {
 		# Just do a full chown, no harm in doing both if we only need one or
 		# not at all.
 		# XXX We're not following symlinks.
 		fix_ownership($o_and_g, glob ("$item/*")) if (-d $item);
 		
+		$uid = (stat ($item))[4] unless defined $uid;
+		$gid = (stat ($item))[5] unless defined $gid;
 		chown ($uid, $gid, $item) or croak "Unable to change owner of $item, $!";
 	}
 
@@ -558,6 +567,7 @@ sub fix_ownership {
 #	1 on success, dies on failure.
 sub fix_permissions {
     my ($options, @items) = @_;
+	croak ("recurse/mode hashref required.") unless ref($options) eq 'HASH';	
 
 	# No point traversing any further unless we actually have something to do
 	return 1 if (scalar(@items) < 1);
@@ -579,6 +589,65 @@ sub fix_permissions {
 
 	return 1;
 }
+
+# Checks the specified acess modes (r,w,x) of a given set of filesystem items
+# for the specified user.
+# check_permissions($options, @items);
+#  options->{user} - username
+#  options->{recurse} - recursive or not
+#  Will check the following modes if the corresponding hash keys exist
+#  options->{r}
+#  options->{w}
+#  options->{x}
+#
+# RETURNS
+#	1 on success, 0 on failure.
+sub check_permissions {
+    my ($options, @items) = @_;
+	croak ("user/mode hashref required.") unless ref($options) eq 'HASH';	
+
+
+	# No point traversing any further unless we actually have something to do
+	return 1 if (scalar(@items) < 1);
+
+	# Save current euid, and set it to the specified user.
+	my $old_euid = $EUID;
+	$EUID = getpwnam($options->{'user'})
+		or croak "Unable to find user: \"", $options->{'user'}, "\"";
+
+	my $ret_val = 1;
+	while (my $item = shift @items) {
+		# XXX We're not following symlinks.
+		if (-d $item and $options->{'recurse'}) {
+			check_permissions($options, glob ("$item/*"));
+		}
+		
+		if (exists $options->{r}) {
+			if (not -r $item) {
+				$ret_val = 0;
+				last;
+			}
+		}
+		
+		if (exists $options->{w}) {
+			if (not -w $item) {
+				$ret_val = 0;
+				last;
+			}
+		}
+		
+		if (exists $options->{x}) {
+			if (not -x $item) {
+				$ret_val = 0;
+				last;
+			}
+		}
+	}
+	
+	$EUID = $old_euid;
+	return $ret_val;
+}
+
 
 # Gets a Perl module's $VERSION
 #
@@ -779,32 +848,6 @@ sub test_module {
     return 0;
 }
 
-sub test_module_as_user {
-    my ($path, $logfile, @user_name) = @_;
-    my $iwd = getcwd ();  # Initial working directory
-    
-    # Expand our relative path to an absolute one
-    $path = rel2abs ($path);
-    
-    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
-
-    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-
-    my @output = `sudo -u @user_name make test 2>&1`;
-
-    if ($? == 0) {
-	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
-    }
-
-    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-
-    return 0;
-}
-
 sub install_module {
     my ($path, $logfile) = @_;
     my $iwd = getcwd ();  # Initial working directory
@@ -843,8 +886,8 @@ sub normalize_path {
 	my @dirs = splitdir($dir);
 	my $i;
 	for ($i=0; $i < scalar (@dirs); $i++) {
-		if ($i+1 < scalar (@dirs) and $dirs[$i+1] eq '..') {
-			splice (@dirs,$i,2) if $dirs[$i+1] eq '..';
+		if ($i+1 < scalar (@dirs) and $dirs[$i+1] eq updir()) {
+			splice (@dirs,$i,2);
 			$i-=2;
 			if ($i < -1) {
 				$dirs[0] = rootdir();

@@ -156,11 +156,28 @@ GetOptions ("u|update" => \$update,         # update
 		);
 
 # Root check
-usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
+usage (<<ERROR) unless $EUID == 0;
+The installer must be run as the root user:
+> sudo perl install.pl
+    *** Enter your password when asked ***
+Or, if you can't run sudo:
+> su
+    *** Enter the root user's password when asked
+# perl install.pl
+ERROR
 
 # The installer cannot be run from a directory owned by root
-usage ("The installer cannot be run from a directory owned by root") if (stat ('.'))[4] == 0;
-
+usage (<<ERROR) if (stat ('.'))[4] == 0;
+The installer cannot be run from a directory owned by root.
+Please download and unpack the OME distribution as a regular user,
+in a regular user's home directory.  Then run the installer as root:
+> sudo perl install.pl
+    *** Enter your password when asked ***
+Or, if you can't run sudo:
+> su
+    *** Enter the root user's password when asked
+# perl install.pl
+ERROR
 
 usage () if $usage;
 
