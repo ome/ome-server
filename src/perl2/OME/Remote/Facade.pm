@@ -57,6 +57,7 @@ BEGIN {
                   OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ConfigFacade
+                  OME::Remote::Facades::AnnotationFacade
                   OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::DatasetFacade
                   OME::Remote::Facades::ImportFacade
