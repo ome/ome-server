@@ -3,7 +3,8 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		cgrayce2 extractBinData
+		cgrayce2
+# extractBinData
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
 MATH_LIBS = -lm
@@ -96,8 +97,8 @@ $(OME_LIB): $(OBJECTS)
 cgrayce2:
 	$(MAKE) -C cgrayce
 
-extractBinData: extractBinData.c
-	gcc `xml2-config --libs --cflags` extractBinData.c -o extractBinData
+#extractBinData: extractBinData.c
+#	gcc `xml2-config --libs --cflags` extractBinData.c -o extractBinData
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
@@ -128,7 +129,7 @@ install:
 	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
 	install -c DumpSoftWorxStats /OME/bin/DumpSoftWorxStats
-	install -c extractBinData /OME/bin/extractBinData
+#	install -c extractBinData /OME/bin/extractBinData
 	install -d /usr/local/bin
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
