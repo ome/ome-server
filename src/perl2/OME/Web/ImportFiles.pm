@@ -233,15 +233,11 @@ sub __getQueueBody {
 	if ($action eq 'add') {
 		@importq = $self->OME::Web::ImportFiles::__processQueue(\@importq, \@add_selected, undef);
 
-		foreach (@add_selected) {
-			$body .= $q->p({-class => 'ome_info'}, "Added: '$_' to the import queue.\n");
-		}
+		$body .= $q->p({-class => 'ome_info'}, "Added ".scalar( @add_selected )." files to the import queue.\n") if( @add_selected );
 	} elsif ($action eq 'remove') {
 		@importq = $self->OME::Web::ImportFiles::__processQueue(\@importq, undef, \@q_selected);
 
-		foreach (@q_selected) {
-			$body .= $q->p({-class => 'ome_info'}, "Removed: '$_' from the import queue.\n");
-		}
+		$body .= $q->p({-class => 'ome_info'}, "Removed ".scalar( @q_selected )." files from the import queue.\n") if( @q_selected );
 	}
 
 	# If we're running using the FTP style de-taint our paths
