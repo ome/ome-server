@@ -47,7 +47,7 @@
 %% For future use on 32bit machines the threshold must rather be under 2Gb, so it'll need some refinement.
 
 function [coeff_packed] = ChebyshevFourierTransform(Im,N)
-Im = im2double(Im);
+Im = double(Im);
 N=5;
 recYes=0; packingOrder = 40;
 
@@ -77,9 +77,9 @@ end %% for coord_ind
 clear c;
 coeff = C'*img(kk); 
 
-    % filter out some of coeff in 'Chebyshev-Fourier space'
+% filter out some of coeff in 'Chebyshev-Fourier space'
 %coeff_packed = coeff;    
-coeff_packed = hist(abs(coeff(:)),packingOrder)'; 
+coeff_packed = hist(abs(coeff(:)),packingOrder); 
 
 if ~recYes,X=[];Y=[];rec=[];tts=[];return;
 else,
