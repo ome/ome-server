@@ -63,7 +63,6 @@ sub getPageBody {
     } else {
       $body .= $cgi->h3("Login");
       $body .= $cgi->p("Please enter your username and password.");
-      $body .= $cgi->p("eldritch test Jean-marie.");
       $body .=format_form($cgi);
     }
 
