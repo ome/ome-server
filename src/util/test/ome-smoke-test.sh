@@ -116,7 +116,9 @@ echo "Import log for $HOST on `date`" > $LOG_FILE
 echo "command line and options:" >> $LOG_FILE
 echo "$0 $*" >> $LOG_FILE
 echo "------------------------------------------------------------" >> $LOG_FILE
+T_START=`date +%s`
 su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
+T_STOP=`date +%s`
 #
 # Get images
 #
@@ -151,10 +153,11 @@ mv /etc/ome-install.store-bak /etc/ome-install.store
 su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1
 ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1
 /usr/sbin/apachectl graceful  > /dev/null 2>&1
-echo "`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images" >> $LOG_FILE
+declare -i DELTA_T=$T_STOP-$T_START
+BLURB="`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images in $DELTA_T seconds"
+echo $BLURB >> $LOG_FILE
 if test "$MAIL_TO" ;
-	then echo "`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images" | \
-		$MAIL_PROGRAM"`date` OME Smoke Test Successful" $MAIL_TO ;
+	then echo $BLURB | $MAIL_PROGRAM"`date` OME Smoke Test Successful" $MAIL_TO ;
 fi;
 PATH=$OLD_PATH
 export PATH
