@@ -68,7 +68,7 @@
 			 DataType="integer"/>
 		</SemanticType>
 
-		<SemanticType Name="PixelsPlaneSlice" AppliesTo="I">
+		<SemanticType Name="PixelsPlaneIndex" AppliesTo="I">
 		  <Description>
 			 Index points to a single XY plane of a Pixels attribute.
           </Description>

@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Douglas Creager <dcreager@alum.mit.edu> and
+#              Tomasz  Macura  <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+	<!-- Converter Modules always have Formal Outputs of PixelsSlice STs -->
+    <AnalysisModule
+       ModuleName="Pixels Converter"
+       Category="PixelsSlice Converters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2010">
+
+      <Description>
+       This module converts a Pixels ST into a PixelsSlice ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Pixels"
+           SemanticTypeName="Pixels"
+           Count="+"/>
+        <FormalOutput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="PixelsChannelSlice Converter"
+       Category="PixelsSlice Converters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2011">
+
+      <Description>
+       This module converts a PixelsChannelSlice ST into a PixelsSlice ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="PixelsChannelSlices"
+           SemanticTypeName="PixelsChannelSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <AnalysisModule
+       ModuleName="PixelsTimeSlice Converter"
+       Category="PixelsSlice Converters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2012">
+
+      <Description>
+       This module converts a PixelsTimeSlice ST into a PixelsSlice ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="PixelsTimeSlices"
+           SemanticTypeName="PixelsTimeSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+	<AnalysisModule
+       ModuleName="PixelsStackSlice Converter"
+       Category="PixelsSlice Converters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2013">
+
+      <Description>
+       This module converts a PixelsStackSlice ST into a PixelsSlice ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="PixelsStackSlices"
+           SemanticTypeName="PixelsStackSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+	<AnalysisModule
+       ModuleName="PixelsPlaneSlice Converter"
+       Category="PixelsSlice Converters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2014">
+
+      <Description>
+       This module converts a PixelsPlaneSlice ST into a PixelsSlice ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="PixelsPlaneSlices"
+           SemanticTypeName="PixelsPlaneSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <!-- Adapter Modules always have Formal Inputs of PixelsSlice STs -->
+    <AnalysisModule
+       ModuleName="PixelsChannelSlice Adapter"
+       Category="PixelsSlice Adapters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2015">
+
+      <Description>
+       This module creates separate PixelsChannelSlices for each channel of the input 
+       PixelsSlice. Use this module to cast PixelsSlices in preparation for modules that
+       require the PixelsChannelSlices ST.
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="PixelsChannelSlices"
+           SemanticTypeName="PixelsChannelSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <AnalysisModule
+       ModuleName="PixelsTimeSlice Adapter"
+       Category="PixelsSlice Adapters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2016">
+
+      <Declaration>
+        <FormalInput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="PixelsTimeSlices"
+           SemanticTypeName="PixelsTimeSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <AnalysisModule
+       ModuleName="PixelsStackSlice Adapter"
+       Category="PixelsSlice Adapters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2017">
+
+      <Declaration>
+        <FormalInput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="PixelsStackSlices"
+           SemanticTypeName="PixelsStackSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <AnalysisModule
+       ModuleName="PixelsPlaneSlice Adapter"
+       Category="PixelsSlice Adapters"
+       ModuleType="OME::Analysis::Modules::Indices::Pixels"
+	   ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2018">
+
+      <Declaration>
+        <FormalInput
+           Name="Pixels Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalOutput
+           Name="PixelsPlaneSlices"
+           SemanticTypeName="PixelsPlaneSlice"
+           Count="+"/>
+      </Declaration>
+    </AnalysisModule>
+    
+    <!-- Slice Modules Input and Output PixelsSlices ST -->
+    <AnalysisModule
+       ModuleName="Slice on Channels"
+       Category="PixelsSlice Slicers"
+       ModuleType="OME::Analysis::Modules::Indices::Channels"
+       ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2019">
+
+      <Description>
+       This module creates separate PixelsSlices for each channel of the input PixelsSlice.
+       The optional Channel Index can be used to limit the outputed PixelSlices. If a
+       particular Channel Index does not correspond to a bona fide channel of a particular 
+       input PixelsSlice, no output PixelsSlice is generated. N.B: If the Channel Index is
+       incorrectly set, this module can have no outputs. 
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalInput
+           Name="Channel Indices"
+           SemanticTypeName="PixelsChannelIndex"
+           Count="*"/>
+        <FormalOutput
+           Name="Channel Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
+        </FormalOutput>
+      </Declaration>
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="Slice on Timepoints"
+       Category="PixelsSlice Slicers"
+       ModuleType="OME::Analysis::Modules::Indices::Timepoints"
+       ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2020">
+
+      <Description>
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalInput
+           Name="Timepoint Indices"
+           SemanticTypeName="PixelsTimeIndex"
+           Count="*"/>
+        <FormalOutput
+           Name="Timepoint Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
+        </FormalOutput>
+      </Declaration>
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="Slice on Stacks"
+       Category="PixelsSlice Slicers"
+       ModuleType="OME::Analysis::Modules::Indices::Stacks"
+       ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2021">
+
+      <Description>
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalInput
+           Name="Stack Indices"
+           SemanticTypeName="PixelsStackIndex"
+           Count="*"/>
+        <FormalOutput
+           Name="Stack Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
+        </FormalOutput>
+      </Declaration>
+    </AnalysisModule>
+
+    <AnalysisModule
+       ModuleName="Slice on Planes"
+       Category="PixelsSlice Slicers"
+       ModuleType="OME::Analysis::Modules::Indices::Planes"
+       ProgramID=""
+       ID="urn:lsid:openmicroscopy.org:Module:2022">
+
+      <Description>
+      </Description>
+
+      <Declaration>
+        <FormalInput
+           Name="Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="+"/>
+        <FormalInput
+           Name="Plane Indices"
+           SemanticTypeName="PixelsPlaneIndex"
+           Count="*"/>
+        <FormalOutput
+           Name="Plane Slices"
+           SemanticTypeName="PixelsSlice"
+           Count="*">
+        </FormalOutput>
+      </Declaration>
+    </AnalysisModule>
+  </AML:AnalysisModuleLibrary>
+</OME>
