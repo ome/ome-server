@@ -433,16 +433,16 @@ addPrototype("OME::SemanticType","granularity",['$'],['$']);
 addPrototype("OME::SemanticType","name",['$'],['$']);
 addPrototype("OME::SemanticType","description",['$'],['$']);
 addPrototype("OME::SemanticType","semantic_elements",
-             [],['OME::SemanticType::Column','*']);
+             [],['OME::SemanticType::Element','*']);
 addPrototype("OME::SemanticType","semantic_elements",
              [],['OME::Factory::Iterator'],
              publishedName => "iterate_attribute_columns");
 
-addPrototype("OME::SemanticType::Column","name",['$'],['$']);
-addPrototype("OME::SemanticType::Column","description",['$'],['$']);
-addPrototype("OME::SemanticType::Column","semantic_type",
+addPrototype("OME::SemanticType::Element","name",['$'],['$']);
+addPrototype("OME::SemanticType::Element","description",['$'],['$']);
+addPrototype("OME::SemanticType::Element","semantic_type",
              ['OME::SemanticType'],['OME::SemanticType']);
-addPrototype("OME::SemanticType::Column","data_column",
+addPrototype("OME::SemanticType::Element","data_column",
              ['OME::DataTable::Column'],['OME::DataTable::Column']);
 
 addPrototype("OME::Module","name",['$'],['$']);
