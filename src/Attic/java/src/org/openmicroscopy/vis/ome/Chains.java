@@ -83,14 +83,10 @@ public class Chains {
 		List nodes = c.getNodes();
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
-			Node n = (Node) iter.next();
-			System.err.println("node for .."+n.getModule().getName());
-			List links = n.getInputLinks();
-			if (links.size() == 0) {
-				// no inputs, it mus be a root.
-				System.err.println("Chain root..");
-				cInfo.addRoot(n);
-			}
+			Object obj = iter.next();
+			System.err.println("trying to get a node from a chain.."+obj.getClass().getName());
+			Node n = (Node) obj;
+			cInfo.addNode(n);
 		}
 	}
 	
