@@ -498,8 +498,8 @@
 			<xsl:attribute name = "OMEName">
 				<xsl:value-of select = "OME:OMEName"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
 		</xsl:element>
+		<xsl:apply-templates select = "OME:GroupRef" mode = "MakeMapRefs"/>
 	</xsl:template>
 	<!-- Group -->
 	<xsl:template match = "OME:Group">
@@ -833,8 +833,8 @@
 			<xsl:attribute name = "ExternalReference">
 				<xsl:value-of select = "@ExternRef"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:ScreenRef" mode = "MakeRefs"/>
 		</xsl:element>
+		<xsl:apply-templates select = "OME:ScreenRef" mode = "MakeMapRefs"/>
 	</xsl:template>
 	<!--
 
@@ -891,7 +891,7 @@
 		By default, $Name is composed of the element name minus its last three letters
 		(i.e. ExperimenterRef element will set $Name to 'Experimenter'.
 		By default, $ReferenceTo is composed of the $Name  with 'ID' tacked on to the end.
-	-->
+		-->
 		<xsl:param name = "Name" select = "substring(name(),1,string-length(name())-3)"/>
 		<xsl:param name = "ReferenceTo" select = "concat($Name,'ID')"/>
 		<xsl:param name = "ID" select = "@*[name() = $ReferenceTo]"/>
@@ -907,6 +907,54 @@
 					<xsl:value-of select = "@DocumentID"/>
 				</xsl:attribute>
 			</xsl:if>
+		</xsl:element>
+	</xsl:template>
+	<!--
+		A utility template to make reference maps for many-to-many relationships.
+		Given a Reference element (i.e. GroupRef), will construct a map element with two 'Ref' elements - 
+		one to the parent, and one to the passed-in element.
+	-->
+	<xsl:template match = "*" mode = "MakeMapRefs">
+		<!--
+		Defaults:
+			$ParentName is the name of the parent element
+			$ReferenceName is the name of the element minus the last three letters.
+			$Ref1 is $ParentName.
+			$Ref2 is $ReferenceName.
+			$MapName is composed of the $ParentName concatenated with $ReferenceName.
+				(i.e. GroupRef in an Experimenter element will set $MapName to 'ExperimenterGroup'.
+			$ID1 is the value of the parent element's $Ref1+'ID' attribute
+			$ID2 is the value of the element's $Ref2+'ID' attribute
+		-->
+		<xsl:param name = "ParentName" select = "name(..)"/>
+		<xsl:param name = "ReferenceName" select = "substring(name(),1,string-length(name())-3)"/>
+		<xsl:param name = "Ref1" select = "$ParentName"/>
+		<xsl:param name = "Ref2" select = "$ReferenceName"/>
+		<xsl:param name = "MapName" select = "concat($ParentName,$ReferenceName)"/>
+		<xsl:param name = "ID1" select = "../@*[name() = concat($Ref1,'ID')]"/>
+		<xsl:param name = "ID2" select = "@*[name() = concat($Ref2,'ID')]"/>
+		<xsl:element name = "{$MapName}">
+			<xsl:element name = "Ref">
+				<xsl:attribute name = "Name">
+					<xsl:value-of select = "$Ref1"/>
+				</xsl:attribute>
+				<xsl:attribute name = "ID">
+					<xsl:value-of select = "$ID1"/>
+				</xsl:attribute>
+			</xsl:element>
+			<xsl:element name = "Ref">
+				<xsl:attribute name = "Name">
+					<xsl:value-of select = "$Ref2"/>
+				</xsl:attribute>
+				<xsl:attribute name = "ID">
+					<xsl:value-of select = "$ID2"/>
+				</xsl:attribute>
+				<xsl:if test = "@DocumentID">
+					<xsl:attribute name = "DocID">
+						<xsl:value-of select = "@DocumentID"/>
+					</xsl:attribute>
+				</xsl:if>
+			</xsl:element>
 		</xsl:element>
 	</xsl:template>
 	<!-- Convert PixelTypes to BitsPerPixel -->

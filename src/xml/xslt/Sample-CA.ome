@@ -28,7 +28,7 @@
       </ImageInstrument>
       <ImagingEnvironment Temperature=".1" AirPressure=".1" Humidity=".2" CO2Percent=".3"/>
       <Thumbnail href="http://ome.nia.gov/GetThumbnail?GUID=01234567890ABCDEF0123456789ABCDEF0123456" MIMEtype="image/jpeg"/>
-      <LogicalChannel ID="id41902" Name="Channel 1" SamplesPerPixel="" LightAttenuation="" LightWavelength="" DetectorOffset="" IlluminationType="" PinholeSize="" PhotometricInterpretation="" Mode="" ContrastMethod="" AuxLightAttenuation="" AuxTechnique="" AuxLightWavelength="" ExcitationWavelength="490" EmissionWavelength="528" Fluor="GFP" NDFilter="0.0">
+      <LogicalChannel ID="id42328" Name="Channel 1" SamplesPerPixel="" LightAttenuation="" LightWavelength="" DetectorOffset="" IlluminationType="" PinholeSize="" PhotometricInterpretation="" Mode="" ContrastMethod="" AuxLightAttenuation="" AuxTechnique="" AuxLightWavelength="" ExcitationWavelength="490" EmissionWavelength="528" Fluor="GFP" NDFilter="0.0">
         <Ref Name="LightSource" ID="123.456.742.123.123" DocID="123.456.70.123.123"/>
         <Ref Name="AuxLightSource" ID="123.456.742.123.789" DocID="123.456.70.123.123"/>
         <Ref Name="OTF" ID="123.456.745.123.123"/>
@@ -36,18 +36,18 @@
         <Ref Name="Filter" ID="123.456.743.123.123"/>
       </LogicalChannel>
       <ChannelComponent Index="1" ColorDomain="">
-        <Ref Name="LogicalChannel" ID="id41902"/>
+        <Ref Name="LogicalChannel" ID="id42328"/>
       </ChannelComponent>
-      <DisplayOptions ID="id41961" Zoom="1.0" ColorMap="" ZStart="5" ZStop="10" TStart="1" TStop="3">
-        <Ref Name="RedChannel" ID="id41969"/>
-        <Ref Name="GreenChannel" ID="id41983"/>
-        <Ref Name="BlueChannel" ID="id41997"/>
+      <DisplayOptions ID="id42387" Zoom="1.0" ColorMap="" ZStart="5" ZStop="10" TStart="1" TStop="3">
+        <Ref Name="RedChannel" ID="id42395"/>
+        <Ref Name="GreenChannel" ID="id42409"/>
+        <Ref Name="BlueChannel" ID="id42423"/>
       </DisplayOptions>
-      <DisplayChannel ID="id41969" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
-      <DisplayChannel ID="id41983" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
-      <DisplayChannel ID="id41997" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
+      <DisplayChannel ID="id42395" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
+      <DisplayChannel ID="id42409" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
+      <DisplayChannel ID="id42423" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
       <DisplayROI X0="0" Y0="0" Z0="0" X1="512" Y1="512" Z1="0" T0="0" T1="0">
-        <Ref Name="DisplayOptions" ID="id41961"/>
+        <Ref Name="DisplayOptions" ID="id42387"/>
       </DisplayROI>
       <StageLabel Name="Zulu" X="123" Y="456" Z="789"/>
       <ImagePlate Well="A03" Sample="1">
@@ -56,12 +56,18 @@
     </CustomAttributes>
   </Image>
   <CustomAttributes>
-    <Experimenter ID="123.456.71.123.123" FirstName="Nicola" LastName="Sacco" Email="Nicola.Sacco@justice.net" Institution="" OMEName="nico">
+    <Experimenter ID="123.456.71.123.123" FirstName="Nicola" LastName="Sacco" Email="Nicola.Sacco@justice.net" Institution="" OMEName="nico"/>
+    <ExperimenterGroup>
+      <Ref Name="Experimenter" ID="123.456.71.123.123"/>
       <Ref Name="Group" ID="123.456.73.123.123"/>
-    </Experimenter>
+    </ExperimenterGroup>
+    <ExperimenterGroup>
+      <Ref Name="Experimenter" ID="123.456.71.123.123"/>
+      <Ref Name="Group" ID="123.456.73.123.456" DocID="123.456.70.123.123"/>
+    </ExperimenterGroup>
     <Group ID="123.456.73.123.123" Name="IICBU">
       <Ref Name="Leader" ID="123.456.71.123.123" DocID="123.456.70.123.123"/>
-      <Ref Name="Contact" ID="123.456.71.123.123"/>
+      <Ref Name="Contact" ID="123.456.71.123.456"/>
     </Group>
     <Experiment ID="123.456.72.123.123" Type="Time-lapse" Description="This was an experiment.">
       <Ref Name="Experimenter" ID="123.456.71.123.123"/>
@@ -97,9 +103,15 @@
       <Ref Name="Objective" ID="123.456.741.123.123" DocID="123.456.70.123.123"/>
       <Ref Name="Filter" ID="123.456.743.123.123"/>
     </OpticalTransferFunction>
-    <Plate ID="123.456.75.123.123" Name="SRP001" ExternalReference="PID.SRP001">
+    <Plate ID="123.456.75.123.123" Name="SRP001" ExternalReference="PID.SRP001"/>
+    <PlateScreen>
+      <Ref Name="Plate" ID="123.456.75.123.123"/>
       <Ref Name="Screen" ID="123.456.76.123.123"/>
-    </Plate>
+    </PlateScreen>
+    <PlateScreen>
+      <Ref Name="Plate" ID="123.456.75.123.123"/>
+      <Ref Name="Screen" ID="123.456.76.123.456" DocID="123.456.70.123.123"/>
+    </PlateScreen>
     <Screen ID="123.456.76.123.123" Name="Stress Response Pathway Controls" Description="" ExternalReference="SID.SRPC001"/>
   </CustomAttributes>
 </OME>

@@ -178,6 +178,7 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Plate">
+		<xsl:variable name = "PlateID" select = "@ID"/>
 		<xsl:element name = "Plate">
 			<xsl:attribute name = "PlateID">
 				<xsl:value-of select = "@ID"/>
@@ -190,7 +191,7 @@
 					<xsl:value-of select = "@ExternalReference"/>
 				</xsl:attribute>
 			</xsl:if>
-			<xsl:apply-templates select = "CA:Ref" mode = "MakeOMEref"/>
+			<xsl:apply-templates select = "../CA:PlateScreen/CA:Ref [@Name='Screen'] [../CA:Ref/@ID=$PlateID]" mode = "MakeOMEref"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Screen">
@@ -210,6 +211,7 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Experimenter">
+		<xsl:variable name = "ExperimenterID" select = "@ID"/>
 		<xsl:element name = "Experimenter">
 			<xsl:attribute name = "ExperimenterID">
 				<xsl:value-of select = "@ID"/>
@@ -229,7 +231,7 @@
 			<xsl:element name = "OMEName">
 				<xsl:value-of select = "@OMEName"/>
 			</xsl:element>
-			<xsl:apply-templates select = "CA:Ref" mode = "MakeOMEref"/>
+			<xsl:apply-templates select = "../CA:ExperimenterGroup/CA:Ref [@Name='Group'] [../CA:Ref/@ID=$ExperimenterID]" mode = "MakeOMEref"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Group">
@@ -661,8 +663,6 @@
 			<xsl:attribute name = "Sample">
 				<xsl:value-of select = "@Sample"/>
 			</xsl:attribute>
-		</xsl:element>
-		<xsl:element name = "PlateRef">
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "*" mode = "print">
