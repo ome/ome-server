@@ -50,6 +50,8 @@ our $VERSION = 2.000_000;
 
 use Class::Data::Inheritable;
 use Log::Agent;
+use OME::Image;
+use OME::Dataset;
 
 use base qw(Class::Data::Inheritable);
 
@@ -88,6 +90,8 @@ detect previously imported images, and skip them.
 
 =cut
 
+    my @import_formats;
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -95,6 +99,7 @@ sub new {
     my $self = {};
     my %flags = @_;
     $self->{_flags} = \%flags;
+
 
     bless $self, $class;
     return $self;
@@ -105,13 +110,12 @@ sub __debug {
 }
 
 # Helper method which returns the format classes known to the system.
-# Currently this is just specified by a class variable which must be
-# modified in the code to add a new format.  FIXME:  This will change
-# to a more robust system in the near future.  This would be the only
-# method that would have to change to support this.
+# This format list is read from a package global that has
+# been previously filled in from the OME configuration table.
 
 sub __getFormats {
-    return shift->DefaultFormats();
+    return @import_formats;
+    #return shift->DefaultFormats();
 }
 
 =head2 importFiles
@@ -119,7 +123,7 @@ sub __getFormats {
 	my $images = $importer->importFiles($filenames);
 
 Imports a list of image files.  Note that there is no implicit mapping
-between filenames and images; in several image formats, and image is
+between filenames and images; in several image formats, an image is
 split across several files.  The import classes for those formats will
 correctly group the filenames by image, and import the grouped files
 accordingly.
@@ -184,6 +188,9 @@ sub importFiles {
     my $importer_module = $config->import_module();
     my $importer_chain = $config->import_chain();
 
+    # And find the import formats we can handle
+    @import_formats = split " ", $config->import_formats();
+
     # Create a new module execution to represent what this importer is
     # about to do.
 
@@ -199,16 +206,15 @@ sub importFiles {
     $session->commitTransaction();
 
     # Find the formats that are known to the system.
-    # FIXME:  This will change to a more robust system in the near future.
 
-    my $formats = $self->__getFormats();
+    my @formats = $self->__getFormats();
     my %formats;
     my %groups;
 
     # Instantiate all of the format classes and retrieve the groups for
     # each.
 
-    foreach my $format_class (@$formats) {
+    foreach my $format_class (@formats) {
         logcroak "Malformed class name $format_class"
           unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $format_class";
@@ -216,6 +222,8 @@ sub importFiles {
         my $format = $format_class->new($session,$module_execution);
         $formats{$format_class} = $format;
 
+	last
+	    unless (scalar(@$filenames) > 0);
         $groups{$format_class} = $format->getGroups($filenames);
     }
 
@@ -228,7 +236,7 @@ sub importFiles {
     my @images;
 
   FORMAT:
-    foreach my $format_class (@$formats) {
+    foreach my $format_class (@formats) {
         my $format = $formats{$format_class};
         my $groups = $groups{$format_class};
       GROUP:
@@ -251,7 +259,7 @@ sub importFiles {
             }
 
             # This hasn't been imported yet, so slurp it in.
-            my $image = $format->importGroup($group);
+            my $image = $format->importGroup($group, $sha1);
 
             if (!defined $image) {
                 $session->rollbackTransaction();
