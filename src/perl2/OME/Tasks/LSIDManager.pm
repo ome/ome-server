@@ -1,7 +1,7 @@
 # OME/Tasks/LSID.pm
 # This module is used for exporting a list of objects to an XML hierarchy governed by the OME-CA schema.
 
-# Copyright (C) 2002 Open Microscopy Environment
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Ilya G. Goldberg <igg@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or

@@ -2,7 +2,7 @@
 # This module is the superclass of any Perl object stored in the
 # database.
 
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
