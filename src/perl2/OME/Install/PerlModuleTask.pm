@@ -120,9 +120,6 @@ my @modules = (
 	name => 'MIME::Base64',
 	repository_file => "$REPOSITORY/MIME-Base64-2.12.tar.gz"
     },{
-	name => 'Storable',
-	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
-    },{
 	name => 'Apache::Session',
 	repository_file => "$REPOSITORY/Apache-Session-1.54.tar.gz"
     },{
@@ -136,7 +133,7 @@ my @modules = (
 	repository_file => "$REPOSITORY/DBD-Pg-1.21.tar.gz",
 	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.21', 'ne 1.22'],
 	pre_install => sub {
-	    which ("pg_config") or croak "Unable to execute pg_config, is PostgreSQL installed ?";
+	    which ("pg_config") or croak "Unable to execute pg_config, are PostgreSQL and its development packages installed ?";
 
 	    my $version = `pg_config --version`;
 	    croak "PostgreSQL version must be >= 7.1" unless $version ge '7.1';
@@ -233,7 +230,7 @@ my @modules = (
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	    system ("perl Makefile.pl 2>&1");
+	    system ("perl Makefile.PL 2>&1");
 
 	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
 
@@ -260,7 +257,7 @@ my @modules = (
 	    return $version ? $version : undef;
 	},
 	configure_module => sub {
-	    # Since GD has an interactive configure script we need to
+	    # Since XML::Sax has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
 	    # for an interactive install
 
@@ -271,7 +268,7 @@ my @modules = (
 
 	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	    system ("perl Makefile.pl 2>&1");
+	    system ("perl Makefile.PL 2>&1");
 
 	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
 
