@@ -695,19 +695,15 @@ sub execute {
 				
 				$MATLAB->{USER}  = confirm_default ("The user which MATLAB should be run under", $MATLAB->{USER});
 				
-				# how to guess the Matlab directory. Option 1: whereis matlab, Option 2: 
-				# ls -1 / (looking for Applications). ls -1 /Applications (looking for MATLAB**)
-				# we can also look in /usr/local/matlab* and /usr/local/bin/matlab* 
 				if (! $MATLAB->{MATLAB_INST}) {
-					$MATLAB->{MATLAB_INST} = '/Applications/MATLAB6p5/';
+					$MATLAB->{MATLAB_INST} = which ('matlab');
+					$MATLAB->{MATLAB_INST} =~ s|/bin/matlab$||;
 				}
 				$MATLAB->{MATLAB_INST} = confirm_path ("Path to MATLAB installation", $MATLAB->{MATLAB_INST});
 				
 				if (y_or_n ("Configure MATLAB Perl API for developers?")){
 					$MATLAB->{AS_DEV} = 1;
-					my $src_dir;
-					chomp($src_dir=`pwd`);
-					$MATLAB->{MATLAB_SRC} = $src_dir."/src/matlab";
+					$MATLAB->{MATLAB_SRC} = getcwd ()."/src/matlab";
 				} else {
 					$MATLAB->{AS_DEV} = 0;
 					$MATLAB->{MATLAB_SRC} = "$OME_BASE_DIR/matlab";
@@ -758,8 +754,9 @@ sub execute {
 				unless $retval;
 			print BOLD, "[SUCCESS]", RESET, ".\n";
 		}
+		$environment->matlab_conf($MATLAB);
 	}
-
+	
     return 1;
 }
 
