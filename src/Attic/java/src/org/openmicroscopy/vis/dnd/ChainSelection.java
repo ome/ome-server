@@ -46,14 +46,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 
 /**
- * 
- * to do chain selection and module drag/drop,we need to create special-purpose
+ * To do chain selection and module drag/drop,we need to create special-purpose
  * selection and flavor classes. They look almost identical, but we need 
  * separate classes to distinguish between the two cases.
- * 
- * @author hsh
  *
- */
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */ 
  public class ChainSelection implements Transferable {
  	
 	

@@ -39,8 +39,21 @@ package org.openmicroscopy.vis.dnd;
  
 import java.awt.datatransfer.DataFlavor;
 
- 
- public class ChainFlavor extends DataFlavor{
+/**
+ * A DataTransfer Flavor for {@link Chain} objects. This one encodes the 
+ * module id as a string, rather than as an Integer. It's a bit of a hack,
+ * but it seems necessary if we're going to allow drag/drop of both chains and
+ * modules based on a single id - they must have separate class names in the 
+ * {@link DataFlavor}, and using {@link Integer} and {@link String} 
+ * is easier than serializing either {@link Chain} or {@link Module} 
+ * (any class used in a Flavor must support serialization...).
+ * 
+ *
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */ 
+public class ChainFlavor extends DataFlavor{
  	
 	public ChainFlavor() {
 		super(java.lang.Integer.class, "Unicode Integer");
