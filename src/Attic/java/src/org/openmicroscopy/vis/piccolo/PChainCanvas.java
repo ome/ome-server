@@ -76,7 +76,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
 	private float x,y;
 	
-	private PLayer linkLayer;
+	private PLinkLayer linkLayer;
 	private PChainEventHandler handler;
 	private DropTarget dropTarget = null;
 	
@@ -86,7 +86,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		layer = getLayer();
 	
 		removeInputEventListener(getPanEventHandler());
-		linkLayer = new PLayer();
+		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		linkLayer.moveToFront();
 		handler = new PChainEventHandler(this,linkLayer);
