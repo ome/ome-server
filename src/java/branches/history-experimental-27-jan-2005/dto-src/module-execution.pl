@@ -58,5 +58,9 @@
                        Status        => ['String'],
                        ErrorMessage  => ['String','error_message'],
                        Inputs        => ['List:ActualInput'],
+                       Predecessors  => ['List:ModuleExecution'],
+		    Successors     => ['List:ModuleExecution'],
+                       ChainExecutions=> ['List:ChainExecution','chain_executions'],
+                       ActualOutputs      => ['List:ActualInput','actual_outputs']
                       ],
                      );
