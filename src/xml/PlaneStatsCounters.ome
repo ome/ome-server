@@ -227,10 +227,7 @@
 					<RawText>Path=</RawText>
 				</InputSubString>
 				<InputSubString>
-					<Input Location = "Pixels.Repository.Path"/>
-				</InputSubString>
-				<InputSubString>
-					<Input Location = "Pixels.Path"/>
+					<PixelsInput Location = "Pixels" SubstituteWith = "path"/>
 				</InputSubString>
 			</Parameter>
 			<Parameter>

@@ -38,7 +38,7 @@
 
 
 <AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
-	<AnalysisChain Name = "Area Statistics" Locked = "false">
+	<AnalysisChain Name = "Signature Chains" Locked = "false">
 		<Nodes>
 	        <Node NodeID = "Files" ProgramName = "Original files"/>
 	        <Node NodeID = "Import" ProgramName = "Image import"/>
@@ -52,6 +52,17 @@
 			<Link FromNodeID="Import" FromOutputName="Other metadata" ToNodeID="maxIntensity" ToInputName="ChannelIndex"/>
 			<Link FromNodeID="maxIntensity" FromOutputName="PixelsPlane" ToNodeID="AreaStats" ToInputName="PixelsPlane"/>
 			<Link FromNodeID="maxIntensity" FromOutputName="PixelsPlane" ToNodeID="Zernike" ToInputName="PixelsPlane"/>
+		</Links>
+	</AnalysisChain>
+	<AnalysisChain Name = "Hull Statistics" Locked = "false">
+		<Nodes>
+			<Node NodeID = "Import" ProgramName = "Importer"/>
+			<Node NodeID = "maxIntensity" ProgramName = "Maximum Intensity Projection"/>
+			<Node NodeID = "HullStat" ProgramName = "Hull Statistics"/>
+		</Nodes>
+		<Links>
+			<Link FromNodeID="Import" FromOutputName="Other metadata" ToNodeID="maxIntensity" ToInputName="ChannelIndex"/>
+			<Link FromNodeID="maxIntensity" FromOutputName="PixelsPlane" ToNodeID="HullStat" ToInputName="PixelsPlane"/>
 		</Links>
 	</AnalysisChain>
 </AnalysisChains>
