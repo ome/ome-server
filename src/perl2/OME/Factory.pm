@@ -60,12 +60,8 @@ OME::Factory - database access class
 =head1 DESCRIPTION
 
 The OME::Factory class provides a single interface through which the
-rest of OME interacts with the database.  Most of the OME::Factory
-methods delegate to Class::DBI, which OME uses to implement object
-persistence.  However, I<no code other than OME::Factory should make
-calls to Class::DBI methods>!  If you know which Class::DBI method you
-want to call, please see the L<Class::DBI EQUIVALENTS|/"Class::DBI
-EQUIVALENTS"> section for the OME::Factory method to use instead.
+rest of OME interacts with the database.  The objects returned by this factory
+are (in most cases) instances of some descendant of L<OME::DBObject|OME::DBObject>.
 
 All of the methods which can take in DBObjects as parameters will work
 properly whether passed in an actual DBObject or an integer database
@@ -113,25 +109,49 @@ below:
 	my $session = $manager->createSession($username,$password);
 	my $factory = $session->Factory();
 
+
+=head1 Database Handles and Transactions
+
+Factory maintains its own database handle (DBH) to ensure that all DBObjects it generates
+are from the same transaction.  Factory also allows the caller to get their own separate
+DBH to issue SQL queries on (newDBH method).  These DBHs are cached by Factory and must be
+returned to it when the caller is finished with the DBH (releaseDBH method).  A transaction
+is initiated in this DBH, and the caller is responsible for committing the transaction themselves.
+The transaction for this DBH is separate from the transaction the Factory itself is in.
+In other words, DB writes made via the Factory or the DBObjects it produces will not be visible in this
+transaction until the commitTransaction method is called on Factory or its associated Session.
+The transaction will be terminated (rolled back) when releaseDBH is called.  The Factory's own
+transaction can be committed or rolled back by calling commitTransaction or rollbackTransaction.
+This is normally done by calling these methods on L<OME::Session|OME::Session>.
+
+
 =head1 METHODS
 
-=head2 DBH
+=head2 obtainDBH
 
-	my $dbh = $factory->DBH();
+	my $dbh = $factory->obtainDBH();
 
 This method returns the DBI database handle associated with this
-OME::Factory.  You can use it to run arbitrary SQL commands.  Note
-that this is not the preferred method for executing arbitrary SQL.
-The OME code uses the Ima::DBI module, which provides a much more
-centralized and consistent way to incorporate SQL into Perl.
+OME::Factory.  You can use it to run arbitrary SQL commands within the Factory's own transaction.
+To get a new DBH (and a separate transaction), call newDBH().
 
-=over
+=head2 newDBH
 
-B<TODO>: Add a real description of the Ima::DBI idiom for arbitrary
-SQL.  For now, just look at how it's done in
-OME::Analysis::AnalysisEngine.
+	my $dbh = $factory->newDBH();
 
-=back
+This method returns a new DBI database handle I<not> associated with this
+OME::Factory.  You can use it to run arbitrary SQL commands outside of Factory's transaction.
+The Factory maintains a cache of DBHs that it made.  This call must be balanced with a releaseDBH call.
+
+=head2 releaseDBH
+
+	$factory->releaseDBH($dbh);
+
+This method releases the DBH and puts it baqck in Factory's DBH cache.  Before putting it
+back in the cache, a $dbh->rollback() call will be made to ensure that there are no DBHs
+with hanging transaction in the cache.  If the handle was used to modify the DB, it is
+the caller's responsibility to call $dbh->commit().
+
 
 =head2 newObject
 
