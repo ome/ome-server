@@ -85,8 +85,8 @@ public class ThumbnailAgent {
   		try {
 	  		URL     webUI = new URL("http://"+host+
 						"/perl2/serve.pl?Page=OME::Web::Login");
-	
-			URLConnection   conn = webUI.openConnection();  //set up connection
+	  		
+	 		URLConnection   conn = webUI.openConnection();  //set up connection
 	
 			conn.setDoOutput(true);  //allow to send data
 	    
@@ -108,6 +108,7 @@ public class ThumbnailAgent {
   		} catch (Exception e) {
   			webConnection = false;
   			System.err.println("failed to get web connection");
+  			e.printStackTrace();
   		}
 		// create cache if it doesn't exist.
 		String dir = System.getProperty("user.dir");
@@ -119,8 +120,9 @@ public class ThumbnailAgent {
 	}
   
 	public BufferedImage getThumbnail(int id) throws Exception {
-		URL     thumbURL = new URL("http://"+host+
-					"/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID="+id);
+		//URL     thumbURL = new URL("http://"+host+
+		//			"/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID="+id);
+		URL thumbURL = new URL("http://"+host+"/cgi-bin/omeis?Method=GetThumb&PixelsID="+id);
 		// get file name
 		String imageFileName = new String("thumb-"+id+".jpg");
 		File imageFile = new File(cacheDirFile,imageFileName);
@@ -156,6 +158,8 @@ public class ThumbnailAgent {
 				ImageIO.write(bufImage,"jpg",imageFile);
 			}
 			catch (Exception e) {
+				System.err.println("exception while trying to get image"+id);
+				e.printStackTrace();
 				bufImage = null;
 			}
 		}
