@@ -38,13 +38,13 @@ sub new {
 
     @$self{@fieldsILike} = @params{@fieldsILike};
 
-    die "I need a session"
+    logdie "I need a session"
       unless exists $self->{session} &&
              UNIVERSAL::isa($self->{session},'OME::Session');
 
     if (!defined $self->{_parser}) {
         my $parser = XML::LibXML->new();
-        die "Cannot create XML parser"
+        logdie "Cannot create XML parser"
           unless defined $parser;
 
         $parser->validation(exists $params{ValidateXML}?
@@ -59,14 +59,14 @@ sub new {
 sub importFile {
     my ($self, $filename, %flags) = @_;
     my $doc = $self->{_parser}->parse_file($filename)
-      or die "Cannot parse file $filename";
+      or logdie "Cannot parse file $filename";
     return $self->processDOM($doc->getDocumentElement(),%flags);
 }
 
 sub importXML {
     my ($self, $xml, %flags) = @_;
     my $doc = $self->{_parser}->parse_string($xml)
-      or die "Cannot parse XML string";
+      or logdie "Cannot parse XML string";
     return $self->processDOM($doc->getDocumentElement(),%flags);
 }
 
@@ -91,6 +91,17 @@ sub processDOM {
 
     my @commitOnSuccessfulImport;
 
+    my %dataTypeConversion = (
+                              # XMLType  => SQL_Type
+                              integer  => 'integer',
+                              double   => 'double precision',
+                              float    => 'real',
+                              boolean  => 'boolean',
+                              string   => 'text',
+                              dateTime => 'timestamp',
+                              reference => 'oid'
+                             );
+
     ###############################################################################
     #
     # Make new tables, columns, and Attribute types
@@ -106,65 +117,175 @@ sub processDOM {
     my $SemanticDefinitionsXML = $root;
     #  getElementsByLocalName("SemanticTypeDefinitions" )->[0];
     #printElement($SemanticDefinitionsXML);
+    my ($tName,$cName);
+    my ($tables,$table);
 
-    my $dataDefinitionsXML = $SemanticDefinitionsXML->
-      getElementsByLocalName('DataDefinitions')->[0];
-    #printElement($dataDefinitionsXML);
-
-    print STDERR ref ($self) . 
-      "->processDOM: about to process SemanticTypeDefinitions\n"
-      if $debug > 0;
+    logdbg "debug", ref ($self) . 
+      "->processDOM: about to process SemanticTypeDefinitions\n";
 
     ###########################################################################
     #
     # Process Record and Column elements. Make new tables and columns as needed.
     #
-    # dataColumns is a hash
-    #   keyed by {FieldID}
+    # dataColumns is a hash used to store the DataColumn where a Semantic Element lives.
+    # It gets populated when we are making tables/columns after the first pass through the STs
+    # and gets used when we make the STs in the DB on the second pass.
+    # The hash is:
+    #   keyed by {$tName.'.'.$cName} (i.e. DBLocation of the Semantic Element)
     #   valued by DBobject DataColumn
     my %dataColumns;
 
-    print STDERR ref ($self) .
-      "->processDOM: about to process tables and columns\n"
-      if $debug > 1;
+    logdbg "debug", ref ($self) .
+      "->processDOM: about to process tables and columns\n";
 
-    my @tables = $dataDefinitionsXML->getElementsByLocalName( "Record" );
+    my @STDs = $root->getElementsByLocalName( 'SemanticType' );
 
-    foreach my $tableXML (@tables) {
-        my $tName = $tableXML->getAttribute('Name');
-        my $tDescription = $tableXML->getAttribute('Description');
-        my $tGranularity = $tableXML->getAttribute('AppliesTo');
+    foreach my $ST_XML (@STDs) {
+    ###########################################################################
+    #
+    # Check if the attribute type exists, and if so that it doesn't conflict.
+    #
+        my $stName = $ST_XML->getAttribute('Name');
+        my $stDescription = $ST_XML->getAttribute('Description');
+        my @SEs_XML = $ST_XML->getElementsByLocalName ('Element');
 
-        #######################################################################
+        # look for existing AttributeType
+        logdbg "debug", ref($self).
+          "->processDOM is looking for an OME::AttributeType ".
+          "object called:\n\t$stName";
+        my $existingAttrType = $factory->
+          findObject("OME::AttributeType",
+                     name => $stName);
+
+        my $newAttrType;
+        ###########################################################################
         #
-        # Process a Record
+        # if AttributeType exists, make sure the new one doesn't conflict.
+        # All attribute elements must be identical to avoid conflict:
+        # 		Name, DBLocation, DataType, RefersTo
+        # If it does conflict, its a fatal error.
         #
-        print STDERR ref ($self) . 
-          "->processDOM: looking for table ".$tName."\n"
-          if $debug > 1;
-        my @tables = $factory->findObjects( "OME::DataTable", 'table_name' => $tName );
+        if (defined $existingAttrType ) {
+            logdbg "debug", ref ($self) . 
+              "->processDOM: found a OME::AttributeType object with matching ".
+              "name ($stName). inspecting it to see if it completely matches.";
+
+            my @attrColumns = $existingAttrType->attribute_columns();
+
+            logdie ref ($self) . ": While processing Semantic Type $stName, ".
+              " existing $stName has ".scalar(@attrColumns).
+              " columns, new declaration has ".scalar(@SEs_XML)." columns."
+              unless (scalar(@attrColumns) eq scalar(@SEs_XML));
+
+            foreach my $SemanticElementXML (@SEs_XML) {
+                my $seName = $SemanticElementXML->getAttribute('Name');
+                my $seDBloc = $SemanticElementXML->getAttribute('DBLocation');
+                my $seDataType = $SemanticElementXML->getAttribute('DataType');
+                my $seReferenceTo = $SemanticElementXML->getAttribute('RefersTo');
+                my $attrCol;
+                foreach (@attrColumns) {
+                    if ($_->name() eq $seName) {
+                        $attrCol = $_;
+                        last;
+                    };
+                }
+                logdie ref ($self) . ": While processing existing Semantic Type $stName, ".
+                    "existing declaration has no Semantic Element $seName."
+                    unless defined $attrCol and $attrCol->name() eq $seName;
+                
+                my $attrDBloc = $attrCol->data_column()->data_table()->table_name().'.'.$attrCol->data_column()->column_name();
+                logdie ref ($self) . ": While processing Semantic Type $stName, ".
+                    "existing semantic element $seName is stored in $attrDBloc instead of $seDBloc."
+                    unless defined $attrDBloc and $attrDBloc eq $seDBloc;
+
+                my $attrDataType = $attrCol->data_column()->sql_type();
+                logdie ref ($self) . ": While processing Semantic Type $stName, ".
+                    "existing semantic element $seName has data type $attrDataType instead of $seDataType."
+                    unless defined $attrDataType and $attrDataType eq $seDataType;
+
+                my $attrReferenceTo = $attrCol->data_column()->reference_type();
+                logdie ref ($self) . ": While processing Semantic Type $stName, ".
+                    "existing semantic element $seName refers to $attrReferenceTo instead of $seReferenceTo."
+                    if defined $attrReferenceTo and not ($attrReferenceTo eq $seReferenceTo);
+            }
+            logdbg "debug", ref ($self) . 
+              "->processDOM: Complete match between revious and current definition of $stName.";
+        }
+    # END:  Check for conflict with existing Semantic Type.
+    ###########################################################################
+   
+    ###########################################################################
+    # Build the table hash:
+    # $granularity = $tables{$tableName}->{granularity};
+    # @tDescriptions = $tables{$tableName}->{description};    # array of ST descriptions
+    # $datatype = $tables{$tableName}->{columns}->{$cName}->{datatype};
+    # $tableName = $tables{$tableName}->{columns}->{$cName}->{referenceTo};
+    # @cDescriptions = $tables{$tableName}->{columns}->{$cName}->{description}; # array of SE descriptions
+        foreach my $SE_XML (@SEs_XML) {
+            my $DBLocation = $SE_XML->getAttribute('DBLocation');
+            my $dataType = $SE_XML->getAttribute('DataType');
+            ($tName,$cName) = split (/\./,$DBLocation);
+            if (not exists $tables->{$tName}){
+                $tables->{$tName}->{columns} = {};
+                $tables->{$tName}->{description} = [];
+                $tables->{$tName}->{name} = $tName;
+                $tables->{$tName}->{order} = scalar (keys %{$tables}) + 1;
+            }
+            if (not exists ($tables->{$tName}->{columns}->{$cName})) {
+                $tables->{$tName}->{columns}->{$cName}->{datatype} = $dataType;
+                if ($dataType eq 'reference') {
+                    $tables->{$tName}->{columns}->{$cName}->{referenceTo} = $SE_XML->getAttribute('RefersTo');
+                }
+                $tables->{$tName}->{columns}->{$cName}->{order} = scalar (keys %{$tables->{$tName}->{columns}}) + 1;
+                $tables->{$tName}->{columns}->{$cName}->{description} = [];
+                $tables->{$tName}->{columns}->{$cName}->{name} = $cName;
+            } elsif ($tables->{$tName}->{columns}->{$cName}->{datatype} != $dataType) {
+                logdie ref ($self) .
+                  "->processDOM: internally conflicting column datatypes for $DBLocation\n!Declared as ".
+                  $dataType.', Previously declared as '.$tables->{$tName}->{columns}->{$cName}->{datatype};
+            }
+            my $cDescription  = $SE_XML->getAttribute('Description');
+            push (@{$tables->{$tName}->{columns}->{$cName}->{description}},$cDescription)
+                if defined $cDescription and length ($cDescription) > 0;
+        }
+        $tables->{$tName}->{granularity} = $ST_XML->getAttribute('AppliesTo');
+        my $tDescription = $ST_XML->getAttribute('Description');
+        push (@{$tables->{$tName}->{description}},$tDescription)
+           if defined $tDescription and length ($tDescription) > 0;
+    }
+
+    # END:  First pass on semantic types: Checking conflicts and gathering required tables.
+    ###########################################################################
+    
+    
+    #######################################################################
+    #
+    # Create the necessary tables
+    #
+    foreach $table  ( sort { $a->{order} <=> $b->{order} } values %$tables ) {
+        $tName = $table->{name};
+        logdbg "debug", ref ($self) . 
+          "->processDOM: looking for table ".$tName."\n";
+        my @DT_tables = $factory->findObjects( "OME::DataTable", 'table_name' => $tName );
 
         my $newTable;
-        if ( scalar(@tables) == 0 ) { # the table doesn't exist. create it.
-            print STDERR ref ($self) . 
-              "->processDOM: table not found. creating it.\n"
-              if $debug > 1;
+        if ( scalar(@DT_tables) == 0 ) { # the table doesn't exist. create it.
+            logdbg "debug", ref ($self) . 
+              "->processDOM: table not found. creating it.\n";
             my $data = {
                         table_name  => $tName,
-                        description => $tDescription,
-                        granularity => $tGranularity,
+                        description => join("  ",@{$table->{description}}),
+                        granularity => $table->{granularity},
                        };
-            print STDERR ref ($self) . 
+            logdbg "debug", ref ($self) . 
               "->processDOM: OME::DataTable DBObject parameters are\n\t".
-              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-              if $debug > 1;
+              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
 
             $newTable = $factory->newObject( "OME::DataTable", $data )
-              or die ref($self)." could not create OME::DataTable. name=$tName";
+              or logdie ref($self)." could not create OME::DataTable. name=$tName";
 
-            print STDERR ref ($self) . 
-              "->processDOM: successfully created OME::DataTable DBObject\n"
-              if $debug > 1;
+            logdbg "debug", ref ($self) . 
+              "->processDOM: successfully created OME::DataTable DBObject\n";
 
             ###################################################################
             #
@@ -194,10 +315,9 @@ sub processDOM {
             }
             $statement .= ")";
 
-            print STDERR ref ($self) . 
+            logdbg "debug", ref ($self) . 
               "->processDOM: about to create table in DB using statement\n".
-              $statement."\n"
-              if $debug > 1;
+              $statement."\n";
 
             my $dbh = $session->DBH();
             my $sth;
@@ -206,10 +326,9 @@ sub processDOM {
             if ($@) {
                 if ($ignoreAlterTableErrors) {
                     $dbh->commit();
-                    print STDERR "\n  *** Ignoring error $@\n\n"
-                      if $debug > 1;
+                    logdbg "debug", "\n  *** Ignoring error $@\n\n";
                 } else {
-                    die "Could not prepare Table create statement when making table ".
+                    logdie "Could not prepare Table create statement when making table ".
                       $newTable->table_name()."\nStatement was\n$statement";
                 }
             }
@@ -219,32 +338,33 @@ sub processDOM {
             if ($@) {
                 if ($ignoreAlterTableErrors) {
                     $dbh->commit();
-                    print STDERR "\n  *** Ignoring error $@\n\n"
-                      if $debug > 1;
+                    logdbg "debug", "\n  *** Ignoring error $@\n\n";
                 } else {
-                    die "Unable to create table ".$newTable->table_name()."\n";
+                    logdie "Unable to create table ".$newTable->table_name()."\n";
                 }
             }
 
-            $statement = "COMMENT ON TABLE $tName IS ?";
-            $sth = $dbh->prepare($statement)
-              or die "Could not prepare comment for table $tName";
-            $sth->execute($tDescription)
-              or die "Could not add comment to table $tName";
-
-            print STDERR ref ($self) .
-              "->processDOM: successfully created table\n"
-              if $debug > 1;
+            if (length ($newTable->description()) > 0 ) {
+                $statement = "COMMENT ON TABLE $tName IS ?";
+                $sth = $dbh->prepare($statement)
+                  or logdie "Could not prepare comment for table $tName";
+                $sth->execute($newTable->description())
+                  or logdie "Could not add comment to table $tName";
+    
+                logdbg "debug", ref ($self) .
+                  "->processDOM: successfully created table\n";
+            }
             #
             #
             ###################################################################
 
             push(@commitOnSuccessfulImport, $newTable);
         } else {
-            print STDERR ref ($self) .
-              "->processDOM: found table. using existing table.\n"
-              if $debug > 1;
-            $newTable = $tables[0];
+            logdbg "debug", ref ($self) .
+              "->processDOM: found table. using existing table.\n";
+            $newTable = $DT_tables[0];
+            $newTable->description ($newTable->description().join("  ",@{$table->{description}}));
+            push(@commitOnSuccessfulImport, $newTable);
         }
         #
         # END 'Process a Table'
@@ -256,34 +376,22 @@ sub processDOM {
         #
         # Process columns in this table
         #
-        print STDERR ref ($self) . "->processDOM: processing columns\n"
-          if $debug > 1;
+        logdbg "debug", ref ($self) . "->processDOM: processing columns";
 
-        my @columns = $tableXML->getElementsByLocalName( "Field" );
-        foreach my $columnXML (@columns) {
-            my $cName = $columnXML->getAttribute('Name');
-            my $cFieldID = $columnXML->getAttribute('FieldID');
-            my $cDescription = $columnXML->getAttribute('Description');
-            my $cDataType = $columnXML->getAttribute('DataType');
-            my $cReferenceType = $columnXML->getAttribute('ReferenceType');
+        my $column;
+        foreach $column ( sort { $a->{order} <=> $b->{order} } values %{$tables->{$tName}->{columns}} ) {
+            my $cName = $column->{name};
 
-            my %dataTypeConversion = (
-                                      # XMLType  => SQL_Type
-                                      integer  => 'integer',
-                                      double   => 'double precision',
-                                      float    => 'real',
-                                      boolean  => 'boolean',
-                                      string   => 'text',
-                                      dateTime => 'timestamp',
-                                      reference => 'oid'
-                                     );
+            my $dataType = $column->{datatype};
+            my $sqlDataType = $dataTypeConversion{$dataType};
+            
+            logdie ref ($self) .
+              "->processDOM: Could not find a matching SQL type for datatype '$dataType'."
+              unless defined $sqlDataType and length ($sqlDataType) > 0;
 
-            my $sqlDataType = $dataTypeConversion{$cDataType};
-
-            print STDERR ref ($self) .
+            logdbg "debug", ref ($self) .
               "->processDOM: searching OME::DataTable::Column with\n\t".
-              "data_table_id=".$newTable->id()."\n\tcolumn_name=$cName\n"
-              if $debug > 1;
+              "data_table_id=".$newTable->id()."\n\tcolumn_name=$cName";
 
             my $cols = $factory->
               findObject("OME::DataTable::Column",
@@ -295,30 +403,47 @@ sub processDOM {
             my $newColumn;
 
             if (!defined $cols) {
-                print STDERR ref ($self) . 
-                  "->processDOM: could not find matching column. creating it\n"
-                    if $debug > 1;
+                logdbg "debug", ref ($self) . 
+                  "->processDOM: could not find matching column. creating it";
 
                 my $data     = {
-                                data_table_id  => $newTable,
-                                column_name    => $cName,
-                                description    => $cDescription,
-                                sql_type       => $cDataType,
-                                reference_type => $cReferenceType,
+                                'data_table_id'  => $newTable->id(),
+                                'column_name'    => $cName,
+                                'description'    => join ('  ',@{$column->{description}}),
+                                'sql_type'       => 'foo',
+#                                'sql_type'       => $dataType,
+#                                'sql_type'       => $sqlDataType,  # NOT!
+# FIXME - IGG:
+# Believe it or not, setting sql_type to $dataType fails in $factory->newObject for some (but not all) 'integer's with:
+#   Failure while doing 'MakeNewObj' with 'New OME::DataTable::Column'
+#   DBD::Pg::st execute failed: ERROR:  Attribute 'integer' not found at /Library/Perl/Ima/DBI.pm line 733.
+#   at /Library/Perl/OME/Tasks/SemanticTypeImport.pm line 428
+# The only hope is to set it to a literal string.  Yes, the offending 'integer's are 'eq' and '==' to 'integer' string literals,
+# and $sqlDataType gets set properly, so there are no hidden gremlins in there.
+# If you know why and have a better fix, please have at it.
+# The best idea I can come up with is maybe some inconsistent implementation of unicode.
+#
+# The usage of sql_type indicates that this is in fact the XML datatype, not a SQL type (which is good IMHO),
+# specifically with regard to 'reference'.  sql_type should really be renamed to datatype, though.
+                                'reference_type' => $column->{referenceTo}
                                };
 
-                print STDERR ref ($self) .
+                logdbg "debug", ref ($self) .
                   "->processDOM: OME::DataTable::Column DBObject parameters are\n".
-                  "\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-                  if $debug > 1;
+                  "\t".join( "\n\t", map { $_."=>'".$data->{$_}."'" } keys %$data );
 
-                $newColumn = $factory->
-                  newObject( "OME::DataTable::Column", $data )
-                    or die "Could not create OME::DataType::Column object\n";
-
-                print STDERR ref ($self) . 
-                  "->processDOM: created OME::DataTable::Column DBObject\n"
-                    if $debug > 1;
+                $newColumn = $factory->newObject( 'OME::DataTable::Column', $data )
+                    or logdie "Could not create OME::DataType::Column object";
+#
+# This is the continuation of the sql_type fiasco.  $newColumn->sql_type($dataType) won't let you commit the object with the offending 'integer'.
+# Only the string literal will do.
+                if ($dataType eq 'integer') {
+                    $newColumn->sql_type('integer');
+                } else {
+                    $newColumn->sql_type($dataType);
+                }
+                logdbg "debug", ref ($self) . 
+                  "->processDOM: created OME::DataTable::Column DBObject\n";
 
                 ################################################################
                 #
@@ -329,7 +454,7 @@ sub processDOM {
                 #
                 my $statement =
                   "ALTER TABLE ".$newTable->table_name().
-                    "   ADD ".$newColumn->column_name()." ".$sqlDataType;
+                    " ADD COLUMN ".$newColumn->column_name()." ".$sqlDataType;
                 my $dbh = $session->DBH();
                 my $sth;
                 eval { $sth = $dbh->prepare( $statement ) };
@@ -337,59 +462,57 @@ sub processDOM {
                 if ($@) {
                     if ($ignoreAlterTableErrors) {
                         $dbh->commit();
-                        print STDERR "\n  *** Ignoring error $@\n\n"
-                          if $debug > 1;
+                        logdbg "debug", "\n  *** Ignoring error $@\n\n";
                     } else {
-                        die "Could not prepare statment when adding column ".
+                        logdie "Could not prepare statment when adding column ".
                           $newColumn->column_name()." to table ".
                           $newTable->table_name()."\nStatement:\n$statement";
                     }
                 }
 
-                print STDERR ref ($self) .
+                logdbg "debug", ref ($self) .
                   "->processDOM: about to create column in DB using statement".
-                  "\n$statement\n"
-                  if $debug > 1;
+                  "\n$statement\n";
 
                 eval { $sth->execute() };
                 if ($@) {
                     if ($ignoreAlterTableErrors) {
                         $dbh->commit();
-                        print STDERR "\n  *** Ignoring error $@\n\n"
-                          if $debug > 1;
+                        logdbg "debug", "\n  *** Ignoring error $@\n\n";
                     } else {
-                        die "Unable to create column ".$newColumn->column_name().
+                        logdie "Unable to create column ".$newColumn->column_name().
                           " in table ".$newTable->table_name();
                     }
                 }
 
-                print STDERR ref ($self) . "->processDOM: created column in db\n"
-                  if $debug > 1;
+                logdbg "debug", ref ($self) . "->processDOM: created column in db\n";
                 #
                 #
                 ################################################################
 
                 push(@commitOnSuccessfulImport, $newColumn);
             } else {
-                die "Found matching column with different sql data type."
-                  unless $cols->sql_type() eq $cDataType;
+                logdie "Found matching column with different sql data type."
+                  unless $cols->sql_type() eq $column->{datatype};
 
-                print STDERR ref ($self) . 
-                  "->processDOM: found column. using existing column.\n"
-                  if $debug > 1;
+                logdbg "debug", ref ($self) . 
+                  "->processDOM: found column. using existing column.\n";
                 $newColumn = $cols;
+                $newColumn->description ($newColumn->description().join ('  ',@{$column->{description}}));
+                push(@commitOnSuccessfulImport, $newColumn);
             }
+            
+            $dataColumns{$tName.'.'.$cName} = $newColumn;
 
-            $dataColumns{$cFieldID} = $newColumn;
+
         }
 
         #
         # END 'Process columns in this table'
         #
         ########################################################################
-        print STDERR ref ($self) . 
-          "->processDOM: finished processing columns in that table\n"
-          if $debug > 1;
+        logdbg "debug", ref ($self) . 
+          "->processDOM: finished processing columns in that table\n";
 
 
         # Force this data table to regenerate its Perl package.  (So
@@ -397,11 +520,10 @@ sub processDOM {
         $newTable->requireDataTablePackage(1);
     }
 
-    print STDERR ref ($self) . 
-      "->processDOM: finished processing tables\n"
-      if $debug > 1;
+    logdbg "debug", ref ($self) . 
+      "->processDOM: finished processing tables\n";
     #
-    # END 'Process Table and Column elements. Make new tables and columns as needed.'
+    # END make necessary tables
     #
     ###########################################################################
 
@@ -409,21 +531,19 @@ sub processDOM {
     #
     # Make AttributeTypes
     #
-    print STDERR ref ($self) .
-      "->processDOM: making new AttributeTypes from SemanticTypes\n"
-      if $debug > 1;
+    logdbg "debug", ref ($self) .
+      "->processDOM: making new AttributeTypes from SemanticTypes\n";
 
-    my @types =  $SemanticDefinitionsXML->getElementsByLocalName( "SemanticType" );
-
-    foreach my $semanticTypeXML (@types) {
-        my $stName = $semanticTypeXML->getAttribute('SemanticTypeName');
-        my $stDescription = $semanticTypeXML->getAttribute('Description');
+    foreach my $ST_XML (@STDs) {
+        my $stName = $ST_XML->getAttribute('Name');
+        my $stGranularity = $ST_XML->getAttribute('AppliesTo');
+        my $stDescription = $ST_XML->getAttribute('Description');
 
         # look for existing AttributeType
-        print STDERR ref($self).
+        # If the AttributeType exists, we already know it doesn't conflict from the first pass.
+        logdbg "debug", ref($self).
           "->processDOM is looking for an OME::AttributeType ".
-          "object\n\t[name=$stName]\n"
-          if $debug > 1;
+          "object\n\t[name=$stName]\n";
         my $existingAttrType = $factory->
           findObject("OME::AttributeType",
                      name => $stName);
@@ -434,84 +554,50 @@ sub processDOM {
         # if AttributeType doesn't exist, create it
         #
         if ( not defined $existingAttrType ) {
-            print STDERR ref ($self) .
-              "->processDOM: couldn't find it. creating it.\n"
-              if $debug > 1;
+            logdbg "debug", ref ($self) .
+              "->processDOM: couldn't find it. creating it.\n";
 
             my $data = {
                         name        => $stName,
-                        granularity => 'F',
+                        granularity => $stGranularity,
                         description => $stDescription,
                        };
 
-            # Granularity is set properly below. DB set up won't let
-            # us use NULL for it and we don't have enough info to know
-            # what it is yet.
-
-            print STDERR ref ($self) . 
-              "->processDOM: about to make a new OME::AttributeType. ".
-              "(granularity will be reset below) parameters are\n\t".
-              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-              if $debug > 1;
+            logdbg "debug", ref ($self) . 
+              "->processDOM: about to make a new OME::AttributeType for $stName.\n\t".
+              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data );
 
             $newAttrType = $factory->newObject("OME::AttributeType",$data)
-              or die ref ($self) . 
+              or logdie ref ($self) . 
               " could not create new object of type OME::AttributeType with".
               "parameters:\n\t".
                 join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
 
-            print STDERR ref ($self) . 
-              "->processDOM: made a new OME::AttributeType object\n"
-              if $debug > 1;
+            logdbg "debug", ref ($self) . 
+              "->processDOM: made a new OME::AttributeType object\n";
 
 
             #######################################################################
             #
             # make OME::AttributeType::Column objects
             #
-            my $granularity;
-            my $tableName;
+            logdbg "debug", ref ($self) .
+              "->processDOM: about to make AttributeColumns from SemanticElements for $stName";
 
-            print STDERR ref ($self) .
-              "->processDOM: about to make AttributeColumns from SemanticElements".
-              "in this SemanticType\n"
-              if $debug > 1;
-
-            foreach my $SemanticElementXML ($semanticTypeXML->getElementsByLocalName( "SemanticElement") ) {
+            foreach my $SemanticElementXML ($ST_XML->getElementsByLocalName( "Element") ) {
                 my $seName = $SemanticElementXML->getAttribute('Name');
-                my $seFieldID = $SemanticElementXML->getAttribute('FieldID');
-                my $seDescription = $SemanticElementXML->
-                  getAttribute('Description');
+                my $seDBloc = $SemanticElementXML->getAttribute('DBLocation');
+                my $seDescription = $SemanticElementXML->getAttribute('Description');
 
-                print STDERR ref ($self) .
-                  "->processDOM: processing attribute column,\n\tname=$seName\n"
-                  if $debug > 1;
+                logdbg "debug", ref ($self) .
+                  "->processDOM: processing attribute column,\n\tname=$seName\n";
 
                 #check ColumnID
-                die ref ($self) . 
+                logdie ref ($self) . 
                   " could not find entry for column '$seName'\n"
-                  unless exists $dataColumns{$seFieldID};
+                  unless exists $dataColumns{$seDBloc};
 
-                my $dataColumn = $dataColumns{$seFieldID};
-
-                #check granularity
-                my $attrColumnGranularity =
-                  $dataColumn->data_table()->granularity();
-
-                $granularity = $attrColumnGranularity
-                  if (not defined $granularity);
-
-                die ref ($self) . " SemanticType (name=$stName)".
-                  " has elements with different granularities. Died on element ".
-                  "($stName.$seName) ".
-                  " with granularity '$attrColumnGranularity'"
-                  unless $granularity eq $attrColumnGranularity;
-
-                #check table
-#                 $tableName = $SemanticElementXML->getAttribute('TableName')
-#                   if (not defined $tableName);
-#                 die ref ($self) . " SemanticType (name=".$semanticTypeXML->getAttribute('SemanticTypeName').") has elements in multiple tables. Died on column (SemanticTypeName=".$SemanticElementXML->getAttribute('SemanticTypeName').", SemanticTypeName=".$SemanticElementXML->getAttribute('SemanticTypeName').") in table '".$SemanticElementXML->getAttribute('TableName')."'"
-#                   unless $tableName eq $SemanticElementXML->getAttribute('TableName');
+                my $dataColumn = $dataColumns{$seDBloc};
 
                 #Create object
 
@@ -523,120 +609,44 @@ sub processDOM {
                               data_column    => $dataColumn,
                               description    => $seDescription,
                              })
-                  or die ref ($self) . 
+                  or logdie ref ($self) . 
                     " could not create new OME::AttributeType::Column object, ".
                     "name = $seName";
 
                 $semanticColumns->{$stName}->{ $seName } =
                   $newAttrColumn;
-                print STDERR ref ($self) . 
+                logdbg "debug", ref ($self) . 
                   "->processDOM added entry to semanticColumns.\n\t".
-                    "$stName.$seName => $newAttrColumn\n"
-                  if $debug > 1;
+                    "$stName.$seName => $newAttrColumn\n";
 
                 push(@commitOnSuccessfulImport, $newAttrColumn);
 
-                print STDERR ref ($self) . 
-                  "->processDOM finished processing attribute column $seName\n"
-                  if $debug > 1;
+                logdbg "debug", ref ($self) . 
+                  "->processDOM finished processing attribute column $seName\n";
             }
-            print STDERR ref ($self) . 
+            logdbg "debug", ref ($self) . 
               "->processDOM: finished making AttributeColumns ".
-              "from SemanticElements\n"
-              if $debug > 1;
+              "from SemanticElements\n";
             #
             #
             #######################################################################
 
-            $newAttrType->granularity( $granularity );
-            print STDERR ref ($self) . 
-              "->processDOM: determined granularity. Setting ".
-              "granularity to '$granularity'. \n"
-              if $debug > 1;
             push(@commitOnSuccessfulImport, $newAttrType);
         }
         #
         # END "if AttributeType doesn't exist, create it"
         #
         ###########################################################################
-        
-        
-        ###########################################################################
-        #
-        # AttributeType exists, verify that the attribute columns are identical
-        #       also, populate formalInputColumn_xmlID_dbObject hash
-        #
-        else { 
-            print STDERR ref ($self) . 
-              "->processDOM: found a OME::AttributeType object with matching ".
-              "name. inspecting it to see if it completely matches.\n"
-              if $debug > 1;
-
-            my @attrColumns = $existingAttrType->attribute_columns();
-            my @xmlColumns = $semanticTypeXML->
-              getElementsByLocalName('SemanticElement');
-
-            die ref ($self) . " While processing Semantic Type (name=$stName), ".
-              "found existing AttributeType with same name and a different number".
-              " of columns. Existing AttributeType has ".scalar(@attrColumns).
-              " columns, new AttributeType of same name has ".
-                scalar(@xmlColumns)." columns."
-              unless (scalar(@attrColumns) eq scalar(@xmlColumns));
-
-            foreach my $SemanticElementXML (@xmlColumns) {
-                my $seName = $SemanticElementXML->getAttribute('Name');
-                my $seFieldID = $SemanticElementXML->getAttribute('FieldID');
-                my $seDescription = $SemanticElementXML->
-                  getAttribute('Description');
-
-                #check ColumnID
-
-                die ref ($self) .
-                  " While processing Semantic Type (name=$stName), could not ".
-                  "find matching data column for SemanticTypeName '$seName'\n"
-                  unless exists $dataColumns{$seFieldID};
-
-                my $dataColumn = $dataColumns{$seFieldID};
-
-                #find existing AttributeType::Column object
-                #corrosponding to SemanticElementXML
-
-                map {
-                    $semanticColumns->{$existingAttrType->name()}->{$seName} = $_
-                      if $dataColumn->id() eq $_->data_column()->id();
-                } @attrColumns;
-
-                print STDERR ref ($self) . 
-                  "->processDOM: added entry to semanticColumns.\n\t".
-                    $newAttrType->name().".$seName=>".
-                    $semanticColumns->{$newAttrType->name()}->{ $seName }."\n"
-                  if $debug > 1;
-
-                die ref ($self) . 
-                  " While processing Semantic Type (name=".
-                  $existingAttrType->name()."), found existing AttributeType with ".
-                  "the same name. Could not find matching column in existing ".
-                  "AttributeType for new AttributeColumn (Name=$seName)"
-                  unless exists $semanticColumns->{$existingAttrType->name()}->
-                    { $seName };
-            }
-
+        else {
             $newAttrType = $existingAttrType;
-            print STDERR ref ($self) . 
-              "->processDOM: determined the Attribute types match. ".
-              "using existing attribute type.\n"
-              if $debug > 1;
+            logdbg "debug", ref ($self) . 
+              "->processDOM: using existing attribute type.\n";
         }
-        #
-        # END "AttributeType exists, verify that the attribute columns are identical"
-        #
-        ###########################################################################
 
         $semanticTypes->{ $newAttrType->name() } = $newAttrType;
-        print STDERR ref ($self) . 
+        logdbg "debug", ref ($self) . 
           "->processDOM: finished processing semanticType ".
-            $newAttrType->name()."\n"
-          if $debug > 1;
+            $newAttrType->name()."\n";
 
 
         # Force this attribute type to regenerate its Perl
@@ -648,8 +658,7 @@ sub processDOM {
     #
     ###########################################################################
 
-    print STDERR ref ($self) . "->processDOM: finished processing SemanticTypeDefinitions\n"
-      if $debug > 1;
+    logdbg "debug", ref ($self) . "->processDOM: finished processing SemanticTypeDefinitions\n";
 
     #
     # END 'Make new tables, columns, and Semantic types'
