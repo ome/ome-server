@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,19 +47,31 @@ import java.util.Map;
 public interface Group
     extends Attribute
 {
+    /** Criteria field name: <code>Name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>Leader</code> */
     public Experimenter getLeader();
     public void setLeader(Experimenter value);
 
+    /** Criteria field name: <code>Contact</code> */
     public Experimenter getContact();
     public void setContact(Experimenter value);
 
+    /** Criteria field name: <code>Experimenters</code> */
     public List getExperimenters();
+    /** Criteria field name: <code>#Experimenters</code> */
+    public int countExperimenters();
 
+    /** Criteria field name: <code>ExperimenterGroups</code> */
     public List getExperimenterGroups();
+    /** Criteria field name: <code>#ExperimenterGroups</code> */
+    public int countExperimenterGroups();
 
+    /** Criteria field name: <code>ImageGroups</code> */
     public List getImageGroups();
+    /** Criteria field name: <code>#ImageGroups</code> */
+    public int countImageGroups();
 
 }

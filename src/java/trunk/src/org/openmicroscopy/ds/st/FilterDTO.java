@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -63,23 +63,35 @@ public class FilterDTO
 
     public List getDichroics()
     { return (List) getObjectElement("Dichroics"); }
+    public int countDichroics()
+    { return countListElement("Dichroics"); }
 
     public List getEmissionFilters()
     { return (List) getObjectElement("EmissionFilters"); }
+    public int countEmissionFilters()
+    { return countListElement("EmissionFilters"); }
 
     public List getExcitationFilters()
     { return (List) getObjectElement("ExcitationFilters"); }
+    public int countExcitationFilters()
+    { return countListElement("ExcitationFilters"); }
 
     public List getFilterSets()
     { return (List) getObjectElement("FilterSets"); }
+    public int countFilterSets()
+    { return countListElement("FilterSets"); }
 
     public List getLogicalChannels()
     { return (List) getObjectElement("LogicalChannels"); }
+    public int countLogicalChannels()
+    { return countListElement("LogicalChannels"); }
 
     public List getOTFs()
     { return (List) getObjectElement("OTFs"); }
+    public int countOTFs()
+    { return countListElement("OTFs"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);

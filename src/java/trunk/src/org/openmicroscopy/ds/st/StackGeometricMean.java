@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,12 +44,15 @@ import java.util.Map;
 public interface StackGeometricMean
     extends Attribute
 {
+    /** Criteria field name: <code>TheC</code> */
     public int getTheC();
     public void setTheC(int value);
 
+    /** Criteria field name: <code>TheT</code> */
     public int getTheT();
     public void setTheT(int value);
 
+    /** Criteria field name: <code>GeometricMean</code> */
     public float getGeometricMean();
     public void setGeometricMean(float value);
 

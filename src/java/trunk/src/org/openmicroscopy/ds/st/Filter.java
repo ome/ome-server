@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,19 +51,38 @@ import java.util.Map;
 public interface Filter
     extends Attribute
 {
+    /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
+    /** Criteria field name: <code>Dichroics</code> */
     public List getDichroics();
+    /** Criteria field name: <code>#Dichroics</code> */
+    public int countDichroics();
 
+    /** Criteria field name: <code>EmissionFilters</code> */
     public List getEmissionFilters();
+    /** Criteria field name: <code>#EmissionFilters</code> */
+    public int countEmissionFilters();
 
+    /** Criteria field name: <code>ExcitationFilters</code> */
     public List getExcitationFilters();
+    /** Criteria field name: <code>#ExcitationFilters</code> */
+    public int countExcitationFilters();
 
+    /** Criteria field name: <code>FilterSets</code> */
     public List getFilterSets();
+    /** Criteria field name: <code>#FilterSets</code> */
+    public int countFilterSets();
 
+    /** Criteria field name: <code>LogicalChannels</code> */
     public List getLogicalChannels();
+    /** Criteria field name: <code>#LogicalChannels</code> */
+    public int countLogicalChannels();
 
+    /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
+    /** Criteria field name: <code>#OTFs</code> */
+    public int countOTFs();
 
 }

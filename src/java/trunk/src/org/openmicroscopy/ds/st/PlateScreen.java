@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,9 +46,11 @@ import java.util.Map;
 public interface PlateScreen
     extends Attribute
 {
+    /** Criteria field name: <code>Plate</code> */
     public Plate getPlate();
     public void setPlate(Plate value);
 
+    /** Criteria field name: <code>Screen</code> */
     public Screen getScreen();
     public void setScreen(Screen value);
 

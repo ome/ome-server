@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -68,7 +68,7 @@ public class ActualInputDTO
     public void setInputMEX(ModuleExecution value)
     { setElement("input_module_execution",value); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("module_execution",ModuleExecutionDTO.class);

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,15 +42,19 @@ import java.util.Map;
 
 public interface ActualInput
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>module_execution</code> */
     public ModuleExecution getModuleExecution();
     public void setModuleExecution(ModuleExecution value);
 
+    /** Criteria field name: <code>formal_input</code> */
     public FormalInput getFormalInput();
     public void setFormalInput(FormalInput value);
 
+    /** Criteria field name: <code>input_module_execution</code> */
     public ModuleExecution getInputMEX();
     public void setInputMEX(ModuleExecution value);
 

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,6 +44,7 @@ import java.util.Map;
 public interface ImageTestSignature
     extends Attribute
 {
+    /** Criteria field name: <code>Value</code> */
     public float getValue();
     public void setValue(float value);
 

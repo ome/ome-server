@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -84,17 +84,25 @@ public class ExperimenterDTO
 
     public List getExperiments()
     { return (List) getObjectElement("Experiments"); }
+    public int countExperiments()
+    { return countListElement("Experiments"); }
 
     public List getExperimenterGroups()
     { return (List) getObjectElement("ExperimenterGroups"); }
+    public int countExperimenterGroups()
+    { return countListElement("ExperimenterGroups"); }
 
     public List getGroupsByContact()
     { return (List) getObjectElement("GroupsByContact"); }
+    public int countGroupsByContact()
+    { return countListElement("GroupsByContact"); }
 
     public List getGroupsByLeader()
     { return (List) getObjectElement("GroupsByLeader"); }
+    public int countGroupsByLeader()
+    { return countListElement("GroupsByLeader"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Group",GroupDTO.class);

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -76,23 +76,35 @@ public class LightSourceDTO
 
     public List getArcs()
     { return (List) getObjectElement("Arcs"); }
+    public int countArcs()
+    { return countListElement("Arcs"); }
 
     public List getFilaments()
     { return (List) getObjectElement("Filaments"); }
+    public int countFilaments()
+    { return countListElement("Filaments"); }
 
     public List getLasersByLightSource()
     { return (List) getObjectElement("LasersByLightSource"); }
+    public int countLasersByLightSource()
+    { return countListElement("LasersByLightSource"); }
 
     public List getLasersByPump()
     { return (List) getObjectElement("LasersByPump"); }
+    public int countLasersByPump()
+    { return countListElement("LasersByPump"); }
 
     public List getLogicalChannelsByAuxLightSource()
     { return (List) getObjectElement("LogicalChannelsByAuxLightSource"); }
+    public int countLogicalChannelsByAuxLightSource()
+    { return countListElement("LogicalChannelsByAuxLightSource"); }
 
     public List getLogicalChannelsByLightSource()
     { return (List) getObjectElement("LogicalChannelsByLightSource"); }
+    public int countLogicalChannelsByLightSource()
+    { return countListElement("LogicalChannelsByLightSource"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);

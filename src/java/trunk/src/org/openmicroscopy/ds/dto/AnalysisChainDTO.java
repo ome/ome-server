@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -77,14 +77,20 @@ public class AnalysisChainDTO
 
     public List getNodes()
     { return (List) getObjectElement("nodes"); }
+    public int countNodes()
+    { return countListElement("nodes"); }
 
     public List getLinks()
     { return (List) getObjectElement("links"); }
+    public int countLinks()
+    { return countListElement("links"); }
 
     public List getPaths()
     { return (List) getObjectElement("paths"); }
+    public int countPaths()
+    { return countListElement("paths"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("owner",ExperimenterDTO.class);

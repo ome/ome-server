@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,26 +47,38 @@ import java.util.Map;
 public interface Objective
     extends Attribute
 {
+    /** Criteria field name: <code>Manufacturer</code> */
     public String getManufacturer();
     public void setManufacturer(String value);
 
+    /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
+    /** Criteria field name: <code>SerialNumber</code> */
     public String getSerialNumber();
     public void setSerialNumber(String value);
 
+    /** Criteria field name: <code>LensNA</code> */
     public float getLensNA();
     public void setLensNA(float value);
 
+    /** Criteria field name: <code>Magnification</code> */
     public float getMagnification();
     public void setMagnification(float value);
 
+    /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
+    /** Criteria field name: <code>ImageInstruments</code> */
     public List getImageInstruments();
+    /** Criteria field name: <code>#ImageInstruments</code> */
+    public int countImageInstruments();
 
+    /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
+    /** Criteria field name: <code>#OTFs</code> */
+    public int countOTFs();
 
 }

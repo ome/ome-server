@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,33 +42,45 @@ import java.util.Map;
 
 public interface FormalInput
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>module</code> */
     public Module getModule();
     public void setModule(Module value);
 
+    /** Criteria field name: <code>name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>description</code> */
     public String getDescription();
     public void setDescription(String value);
 
+    /** Criteria field name: <code>optional</code> */
     public boolean isOptional();
     public void setOptional(boolean value);
 
+    /** Criteria field name: <code>list</code> */
     public boolean isList();
     public void setList(boolean value);
 
+    /** Criteria field name: <code>semantic_type</code> */
     public SemanticType getSemanticType();
     public void setSemanticType(SemanticType value);
 
+    /** Criteria field name: <code>lookup_table</code> */
     public LookupTable getLookupTable();
     public void setLookupTable(LookupTable value);
 
+    /** Criteria field name: <code>user_defined</code> */
     public boolean isUserDefined();
     public void setUserDefined(boolean value);
 
+    /** Criteria field name: <code>actual_inputs</code> */
     public List getActualInputs();
+    /** Criteria field name: <code>#actual_inputs</code> */
+    public int countActualInputs();
 
 }

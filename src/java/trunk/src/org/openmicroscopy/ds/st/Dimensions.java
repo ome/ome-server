@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,18 +44,23 @@ import java.util.Map;
 public interface Dimensions
     extends Attribute
 {
+    /** Criteria field name: <code>PixelSizeX</code> */
     public float getPixelSizeX();
     public void setPixelSizeX(float value);
 
+    /** Criteria field name: <code>PixelSizeY</code> */
     public float getPixelSizeY();
     public void setPixelSizeY(float value);
 
+    /** Criteria field name: <code>PixelSizeZ</code> */
     public float getPixelSizeZ();
     public void setPixelSizeZ(float value);
 
+    /** Criteria field name: <code>PixelSizeC</code> */
     public float getPixelSizeC();
     public void setPixelSizeC(float value);
 
+    /** Criteria field name: <code>PixelSizeT</code> */
     public float getPixelSizeT();
     public void setPixelSizeT(float value);
 

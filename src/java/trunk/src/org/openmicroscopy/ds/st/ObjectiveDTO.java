@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -84,11 +84,15 @@ public class ObjectiveDTO
 
     public List getImageInstruments()
     { return (List) getObjectElement("ImageInstruments"); }
+    public int countImageInstruments()
+    { return countListElement("ImageInstruments"); }
 
     public List getOTFs()
     { return (List) getObjectElement("OTFs"); }
+    public int countOTFs()
+    { return countListElement("OTFs"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);

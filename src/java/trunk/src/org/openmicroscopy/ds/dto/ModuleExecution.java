@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,45 +42,61 @@ import java.util.Map;
 
 public interface ModuleExecution
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>module</code> */
     public Module getModule();
     public void setModule(Module value);
 
+    /** Criteria field name: <code>virtual_mex</code> */
     public boolean isVirtual();
     public void setVirtual(boolean value);
 
+    /** Criteria field name: <code>dependence</code> */
     public String getDependence();
     public void setDependence(String value);
 
+    /** Criteria field name: <code>dataset</code> */
     public Dataset getDataset();
     public void setDataset(Dataset value);
 
+    /** Criteria field name: <code>image</code> */
     public Image getImage();
     public void setImage(Image value);
 
+    /** Criteria field name: <code>iterator_tag</code> */
     public String getIteratorTag();
     public void setIteratorTag(String value);
 
+    /** Criteria field name: <code>new_feature_tag</code> */
     public String getNewFeatureTag();
     public void setNewFeatureTag(String value);
 
+    /** Criteria field name: <code>input_tag</code> */
     public String getInputTag();
     public void setInputTag(String value);
 
+    /** Criteria field name: <code>timestamp</code> */
     public String getTimestamp();
     public void setTimestamp(String value);
 
+    /** Criteria field name: <code>total_time</code> */
     public float getTotalTime();
     public void setTotalTime(float value);
 
+    /** Criteria field name: <code>status</code> */
     public String getStatus();
     public void setStatus(String value);
 
+    /** Criteria field name: <code>error_message</code> */
     public String getErrorMessage();
     public void setErrorMessage(String value);
 
+    /** Criteria field name: <code>inputs</code> */
     public List getInputs();
+    /** Criteria field name: <code>#inputs</code> */
+    public int countInputs();
 
 }

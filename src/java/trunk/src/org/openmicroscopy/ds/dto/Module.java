@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,36 +42,54 @@ import java.util.Map;
 
 public interface Module
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>description</code> */
     public String getDescription();
     public void setDescription(String value);
 
+    /** Criteria field name: <code>module_type</code> */
     public String getModuleType();
     public void setModuleType(String value);
 
+    /** Criteria field name: <code>location</code> */
     public String getLocation();
     public void setLocation(String value);
 
+    /** Criteria field name: <code>category</code> */
     public ModuleCategory getCategory();
     public void setCategory(ModuleCategory value);
 
+    /** Criteria field name: <code>default_iterator</code> */
     public String getDefaultIterator();
     public void setDefaultIterator(String value);
 
+    /** Criteria field name: <code>new_feature_tag</code> */
     public String getNewFeatureTag();
     public void setNewFeatureTag(String value);
 
+    /** Criteria field name: <code>inputs</code> */
     public List getFormalInputs();
+    /** Criteria field name: <code>#inputs</code> */
+    public int countFormalInputs();
 
+    /** Criteria field name: <code>outputs</code> */
     public List getFormalOutputs();
+    /** Criteria field name: <code>#outputs</code> */
+    public int countFormalOutputs();
 
+    /** Criteria field name: <code>executions</code> */
     public List getExecutions();
+    /** Criteria field name: <code>#executions</code> */
+    public int countExecutions();
 
+    /** Criteria field name: <code>execution_instructions</code> */
     public String getExecutionInstructions();
     public void setExecutionInstructions(String value);
 

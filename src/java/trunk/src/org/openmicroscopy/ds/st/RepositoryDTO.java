@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -41,6 +41,7 @@ import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.st.OTF;
 import org.openmicroscopy.ds.st.OriginalFile;
 import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.PixelsPlane;
 import org.openmicroscopy.ds.st.Thumbnail;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
@@ -70,22 +71,36 @@ public class RepositoryDTO
 
     public List getOTFs()
     { return (List) getObjectElement("OTFs"); }
+    public int countOTFs()
+    { return countListElement("OTFs"); }
 
     public List getOriginalFiles()
     { return (List) getObjectElement("OriginalFiles"); }
+    public int countOriginalFiles()
+    { return countListElement("OriginalFiles"); }
 
     public List getPixelses()
     { return (List) getObjectElement("Pixelses"); }
+    public int countPixelses()
+    { return countListElement("Pixelses"); }
+
+    public List getPixelsPlanes()
+    { return (List) getObjectElement("PixelsPlanes"); }
+    public int countPixelsPlanes()
+    { return countListElement("PixelsPlanes"); }
 
     public List getThumbnails()
     { return (List) getObjectElement("Thumbnails"); }
+    public int countThumbnails()
+    { return countListElement("Thumbnails"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseListElement("OTFs",OTFDTO.class);
         parseListElement("OriginalFiles",OriginalFileDTO.class);
         parseListElement("Pixelses",PixelsDTO.class);
+        parseListElement("PixelsPlanes",PixelsPlaneDTO.class);
         parseListElement("Thumbnails",ThumbnailDTO.class);
     }
 

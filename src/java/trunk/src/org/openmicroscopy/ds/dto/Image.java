@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -39,31 +39,49 @@ package org.openmicroscopy.ds.dto;
 
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.ExperimenterDTO;
+import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.PixelsDTO;
 import java.util.List;
 import java.util.Map;
 
 public interface Image
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>description</code> */
     public String getDescription();
     public void setDescription(String value);
 
+    /** Criteria field name: <code>owner</code> */
     public Experimenter getOwner();
     public void setOwner(Experimenter value);
 
+    /** Criteria field name: <code>created</code> */
     public String getCreated();
     public void setCreated(String value);
 
+    /** Criteria field name: <code>inserted</code> */
     public String getInserted();
     public void setInserted(String value);
 
-    public List getDatasets();
+    /** Criteria field name: <code>default_pixels</code> */
+    public Pixels getDefaultPixels();
+    public void setDefaultPixels(Pixels value);
 
+    /** Criteria field name: <code>datasets</code> */
+    public List getDatasets();
+    /** Criteria field name: <code>#datasets</code> */
+    public int countDatasets();
+
+    /** Criteria field name: <code>features</code> */
     public List getFeatures();
+    /** Criteria field name: <code>#features</code> */
+    public int countFeatures();
 
 }

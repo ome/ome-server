@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,30 +45,39 @@ import java.util.Map;
 public interface DisplayROI
     extends Attribute
 {
+    /** Criteria field name: <code>X0</code> */
     public int getX0();
     public void setX0(int value);
 
+    /** Criteria field name: <code>Y0</code> */
     public int getY0();
     public void setY0(int value);
 
+    /** Criteria field name: <code>Z0</code> */
     public int getZ0();
     public void setZ0(int value);
 
+    /** Criteria field name: <code>X1</code> */
     public int getX1();
     public void setX1(int value);
 
+    /** Criteria field name: <code>Y1</code> */
     public int getY1();
     public void setY1(int value);
 
+    /** Criteria field name: <code>Z1</code> */
     public int getZ1();
     public void setZ1(int value);
 
+    /** Criteria field name: <code>T0</code> */
     public int getT0();
     public void setT0(int value);
 
+    /** Criteria field name: <code>T1</code> */
     public int getT1();
     public void setT1(int value);
 
+    /** Criteria field name: <code>DisplayOptions</code> */
     public DisplayOptions getDisplayOptions();
     public void setDisplayOptions(DisplayOptions value);
 

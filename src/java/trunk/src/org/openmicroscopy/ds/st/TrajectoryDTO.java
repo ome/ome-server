@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -67,8 +67,10 @@ public class TrajectoryDTO
 
     public List getTrajectoryEntries()
     { return (List) getObjectElement("TrajectoryEntries"); }
+    public int countTrajectoryEntries()
+    { return countListElement("TrajectoryEntries"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseListElement("TrajectoryEntries",TrajectoryEntryDTO.class);

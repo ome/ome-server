@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,30 +45,39 @@ import java.util.Map;
 public interface Laser
     extends Attribute
 {
+    /** Criteria field name: <code>Type</code> */
     public String getType();
     public void setType(String value);
 
+    /** Criteria field name: <code>Medium</code> */
     public String getMedium();
     public void setMedium(String value);
 
+    /** Criteria field name: <code>Wavelength</code> */
     public int getWavelength();
     public void setWavelength(int value);
 
+    /** Criteria field name: <code>FrequencyDoubled</code> */
     public boolean isFrequencyDoubled();
     public void setFrequencyDoubled(boolean value);
 
+    /** Criteria field name: <code>Tunable</code> */
     public boolean isTunable();
     public void setTunable(boolean value);
 
+    /** Criteria field name: <code>Pulse</code> */
     public String getPulse();
     public void setPulse(String value);
 
+    /** Criteria field name: <code>Power</code> */
     public float getPower();
     public void setPower(float value);
 
+    /** Criteria field name: <code>LightSource</code> */
     public LightSource getLightSource();
     public void setLightSource(LightSource value);
 
+    /** Criteria field name: <code>Pump</code> */
     public LightSource getPump();
     public void setPump(LightSource value);
 

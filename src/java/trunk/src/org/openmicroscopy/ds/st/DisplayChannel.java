@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,24 +45,40 @@ import java.util.Map;
 public interface DisplayChannel
     extends Attribute
 {
+    /** Criteria field name: <code>ChannelNumber</code> */
     public int getChannelNumber();
     public void setChannelNumber(int value);
 
+    /** Criteria field name: <code>BlackLevel</code> */
     public double getBlackLevel();
     public void setBlackLevel(double value);
 
+    /** Criteria field name: <code>WhiteLevel</code> */
     public double getWhiteLevel();
     public void setWhiteLevel(double value);
 
+    /** Criteria field name: <code>Gamma</code> */
     public float getGamma();
     public void setGamma(float value);
 
+    /** Criteria field name: <code>DisplayOptionsesByBlueChannel</code> */
     public List getDisplayOptionsesByBlueChannel();
+    /** Criteria field name: <code>#DisplayOptionsesByBlueChannel</code> */
+    public int countDisplayOptionsesByBlueChannel();
 
+    /** Criteria field name: <code>DisplayOptionsesByGreenChannel</code> */
     public List getDisplayOptionsesByGreenChannel();
+    /** Criteria field name: <code>#DisplayOptionsesByGreenChannel</code> */
+    public int countDisplayOptionsesByGreenChannel();
 
+    /** Criteria field name: <code>DisplayOptionsesByGreyChannel</code> */
     public List getDisplayOptionsesByGreyChannel();
+    /** Criteria field name: <code>#DisplayOptionsesByGreyChannel</code> */
+    public int countDisplayOptionsesByGreyChannel();
 
+    /** Criteria field name: <code>DisplayOptionsesByRedChannel</code> */
     public List getDisplayOptionsesByRedChannel();
+    /** Criteria field name: <code>#DisplayOptionsesByRedChannel</code> */
+    public int countDisplayOptionsesByRedChannel();
 
 }

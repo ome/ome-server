@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,6 +38,7 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
+import org.openmicroscopy.ds.st.ChannelIndex;
 import org.openmicroscopy.ds.st.DisplayOptions;
 import org.openmicroscopy.ds.st.PixelChannelComponent;
 import org.openmicroscopy.ds.st.Repository;
@@ -47,41 +48,63 @@ import java.util.Map;
 public interface Pixels
     extends Attribute
 {
+    /** Criteria field name: <code>SizeX</code> */
     public int getSizeX();
     public void setSizeX(int value);
 
+    /** Criteria field name: <code>SizeY</code> */
     public int getSizeY();
     public void setSizeY(int value);
 
+    /** Criteria field name: <code>SizeZ</code> */
     public int getSizeZ();
     public void setSizeZ(int value);
 
+    /** Criteria field name: <code>SizeC</code> */
     public int getSizeC();
     public void setSizeC(int value);
 
+    /** Criteria field name: <code>SizeT</code> */
     public int getSizeT();
     public void setSizeT(int value);
 
+    /** Criteria field name: <code>BitsPerPixel</code> */
     public int getBitsPerPixel();
     public void setBitsPerPixel(int value);
 
+    /** Criteria field name: <code>PixelType</code> */
     public String getPixelType();
     public void setPixelType(String value);
 
+    /** Criteria field name: <code>FileSHA1</code> */
     public String getFileSHA1();
     public void setFileSHA1(String value);
 
+    /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();
     public void setRepository(Repository value);
 
+    /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 
+    /** Criteria field name: <code>PixelsID</code> */
     public int getPixelsID();
     public void setPixelsID(int value);
 
-    public List getDisplayOptionses();
+    /** Criteria field name: <code>ChannelIndexes</code> */
+    public List getChannelIndexes();
+    /** Criteria field name: <code>#ChannelIndexes</code> */
+    public int countChannelIndexes();
 
+    /** Criteria field name: <code>DisplayOptionses</code> */
+    public List getDisplayOptionses();
+    /** Criteria field name: <code>#DisplayOptionses</code> */
+    public int countDisplayOptionses();
+
+    /** Criteria field name: <code>PixelChannelComponents</code> */
     public List getPixelChannelComponents();
+    /** Criteria field name: <code>#PixelChannelComponents</code> */
+    public int countPixelChannelComponents();
 
 }

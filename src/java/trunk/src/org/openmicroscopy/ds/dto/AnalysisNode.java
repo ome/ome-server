@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,23 +42,34 @@ import java.util.Map;
 
 public interface AnalysisNode
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>analysis_chain</code> */
     public AnalysisChain getChain();
     public void setChain(AnalysisChain value);
 
+    /** Criteria field name: <code>module</code> */
     public Module getModule();
     public void setModule(Module value);
 
+    /** Criteria field name: <code>iterator_tag</code> */
     public String getIteratorTag();
     public void setIteratorTag(String value);
 
+    /** Criteria field name: <code>new_feature_tag</code> */
     public String getNewFeatureTag();
     public void setNewFeatureTag(String value);
 
+    /** Criteria field name: <code>input_links</code> */
     public List getInputLinks();
+    /** Criteria field name: <code>#input_links</code> */
+    public int countInputLinks();
 
+    /** Criteria field name: <code>output_links</code> */
     public List getOutputLinks();
+    /** Criteria field name: <code>#output_links</code> */
+    public int countOutputLinks();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,21 +44,29 @@ import java.util.Map;
 
 public interface ChainExecution
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>analysis_chain</code> */
     public AnalysisChain getChain();
     public void setChain(AnalysisChain value);
 
+    /** Criteria field name: <code>dataset</code> */
     public Dataset getDataset();
     public void setDataset(Dataset value);
 
+    /** Criteria field name: <code>timestamp</code> */
     public String getTimestamp();
     public void setTimestamp(String value);
 
+    /** Criteria field name: <code>experimenter</code> */
     public Experimenter getExperimenter();
     public void setExperimenter(Experimenter value);
 
+    /** Criteria field name: <code>node_executions</code> */
     public List getNodeExecutions();
+    /** Criteria field name: <code>#node_executions</code> */
+    public int countNodeExecutions();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -77,23 +77,35 @@ public class InstrumentDTO
 
     public List getDetectors()
     { return (List) getObjectElement("Detectors"); }
+    public int countDetectors()
+    { return countListElement("Detectors"); }
 
     public List getFilters()
     { return (List) getObjectElement("Filters"); }
+    public int countFilters()
+    { return countListElement("Filters"); }
 
     public List getImageInstruments()
     { return (List) getObjectElement("ImageInstruments"); }
+    public int countImageInstruments()
+    { return countListElement("ImageInstruments"); }
 
     public List getLightSources()
     { return (List) getObjectElement("LightSources"); }
+    public int countLightSources()
+    { return countListElement("LightSources"); }
 
     public List getOTFs()
     { return (List) getObjectElement("OTFs"); }
+    public int countOTFs()
+    { return countListElement("OTFs"); }
 
     public List getObjectives()
     { return (List) getObjectElement("Objectives"); }
+    public int countObjectives()
+    { return countListElement("Objectives"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseListElement("Detectors",DetectorDTO.class);

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,24 +45,31 @@ import java.util.Map;
 public interface TrajectoryEntry
     extends Attribute
 {
+    /** Criteria field name: <code>Trajectory</code> */
     public Trajectory getTrajectory();
     public void setTrajectory(Trajectory value);
 
+    /** Criteria field name: <code>Order</code> */
     public int getOrder();
     public void setOrder(int value);
 
+    /** Criteria field name: <code>DeltaX</code> */
     public float getDeltaX();
     public void setDeltaX(float value);
 
+    /** Criteria field name: <code>DeltaY</code> */
     public float getDeltaY();
     public void setDeltaY(float value);
 
+    /** Criteria field name: <code>DeltaZ</code> */
     public float getDeltaZ();
     public void setDeltaZ(float value);
 
+    /** Criteria field name: <code>Distance</code> */
     public float getDistance();
     public void setDistance(float value);
 
+    /** Criteria field name: <code>Velocity</code> */
     public float getVelocity();
     public void setVelocity(float value);
 

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,28 +49,50 @@ import java.util.Map;
 public interface LightSource
     extends Attribute
 {
+    /** Criteria field name: <code>Manufacturer</code> */
     public String getManufacturer();
     public void setManufacturer(String value);
 
+    /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
+    /** Criteria field name: <code>SerialNumber</code> */
     public String getSerialNumber();
     public void setSerialNumber(String value);
 
+    /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
+    /** Criteria field name: <code>Arcs</code> */
     public List getArcs();
+    /** Criteria field name: <code>#Arcs</code> */
+    public int countArcs();
 
+    /** Criteria field name: <code>Filaments</code> */
     public List getFilaments();
+    /** Criteria field name: <code>#Filaments</code> */
+    public int countFilaments();
 
+    /** Criteria field name: <code>LasersByLightSource</code> */
     public List getLasersByLightSource();
+    /** Criteria field name: <code>#LasersByLightSource</code> */
+    public int countLasersByLightSource();
 
+    /** Criteria field name: <code>LasersByPump</code> */
     public List getLasersByPump();
+    /** Criteria field name: <code>#LasersByPump</code> */
+    public int countLasersByPump();
 
+    /** Criteria field name: <code>LogicalChannelsByAuxLightSource</code> */
     public List getLogicalChannelsByAuxLightSource();
+    /** Criteria field name: <code>#LogicalChannelsByAuxLightSource</code> */
+    public int countLogicalChannelsByAuxLightSource();
 
+    /** Criteria field name: <code>LogicalChannelsByLightSource</code> */
     public List getLogicalChannelsByLightSource();
+    /** Criteria field name: <code>#LogicalChannelsByLightSource</code> */
+    public int countLogicalChannelsByLightSource();
 
 }

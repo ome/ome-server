@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,15 +44,19 @@ import java.util.Map;
 public interface PlaneMinimum
     extends Attribute
 {
+    /** Criteria field name: <code>TheZ</code> */
     public int getTheZ();
     public void setTheZ(int value);
 
+    /** Criteria field name: <code>TheC</code> */
     public int getTheC();
     public void setTheC(int value);
 
+    /** Criteria field name: <code>TheT</code> */
     public int getTheT();
     public void setTheT(int value);
 
+    /** Criteria field name: <code>Minimum</code> */
     public int getMinimum();
     public void setMinimum(int value);
 

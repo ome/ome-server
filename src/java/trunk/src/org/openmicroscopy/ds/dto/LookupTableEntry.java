@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,18 +42,23 @@ import java.util.Map;
 
 public interface LookupTableEntry
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>lookup_table</code> */
     public LookupTable getLookupTable();
     public void setLookupTable(LookupTable value);
 
+    /** Criteria field name: <code>name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>value</code> */
     public String getValue();
     public void setValue(String value);
 
+    /** Criteria field name: <code>label</code> */
     public String getLabel();
     public void setLabel(String value);
 

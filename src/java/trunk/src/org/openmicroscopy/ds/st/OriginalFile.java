@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,18 +45,23 @@ import java.util.Map;
 public interface OriginalFile
     extends Attribute
 {
+    /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();
     public void setRepository(Repository value);
 
+    /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 
+    /** Criteria field name: <code>FileID</code> */
     public int getFileID();
     public void setFileID(int value);
 
+    /** Criteria field name: <code>SHA1</code> */
     public String getSHA1();
     public void setSHA1(String value);
 
+    /** Criteria field name: <code>Format</code> */
     public String getFormat();
     public void setFormat(String value);
 

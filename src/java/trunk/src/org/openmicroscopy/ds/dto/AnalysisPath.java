@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,15 +42,21 @@ import java.util.Map;
 
 public interface AnalysisPath
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>analysis_chain</code> */
     public AnalysisChain getChain();
     public void setChain(AnalysisChain value);
 
+    /** Criteria field name: <code>path_length</code> */
     public int getLength();
     public void setLength(int value);
 
+    /** Criteria field name: <code>path_nodes</code> */
     public List getEntries();
+    /** Criteria field name: <code>#path_nodes</code> */
+    public int countEntries();
 
 }

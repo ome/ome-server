@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,21 +44,27 @@ import java.util.Map;
 public interface FindSpotsInputs
     extends Attribute
 {
+    /** Criteria field name: <code>TimeStart</code> */
     public int getTimeStart();
     public void setTimeStart(int value);
 
+    /** Criteria field name: <code>TimeStop</code> */
     public int getTimeStop();
     public void setTimeStop(int value);
 
+    /** Criteria field name: <code>Channel</code> */
     public int getChannel();
     public void setChannel(int value);
 
+    /** Criteria field name: <code>MinimumSpotVolume</code> */
     public float getMinimumSpotVolume();
     public void setMinimumSpotVolume(float value);
 
+    /** Criteria field name: <code>ThresholdType</code> */
     public String getThresholdType();
     public void setThresholdType(String value);
 
+    /** Criteria field name: <code>ThresholdValue</code> */
     public float getThresholdValue();
     public void setThresholdValue(float value);
 

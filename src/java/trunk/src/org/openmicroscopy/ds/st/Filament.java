@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,12 +45,15 @@ import java.util.Map;
 public interface Filament
     extends Attribute
 {
+    /** Criteria field name: <code>Type</code> */
     public String getType();
     public void setType(String value);
 
+    /** Criteria field name: <code>Power</code> */
     public float getPower();
     public void setPower(float value);
 
+    /** Criteria field name: <code>LightSource</code> */
     public LightSource getLightSource();
     public void setLightSource(LightSource value);
 

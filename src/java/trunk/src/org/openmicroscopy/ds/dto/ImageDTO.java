@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -39,6 +39,8 @@ package org.openmicroscopy.ds.dto;
 
 import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.st.ExperimenterDTO;
+import org.openmicroscopy.ds.st.Pixels;
+import org.openmicroscopy.ds.st.PixelsDTO;
 import org.openmicroscopy.ds.dto.MappedDTO;
 import java.util.List;
 import java.util.Map;
@@ -80,16 +82,26 @@ public class ImageDTO
     public void setInserted(String value)
     { setElement("inserted",value); }
 
+    public Pixels getDefaultPixels()
+    { return (Pixels) getObjectElement("default_pixels"); }
+    public void setDefaultPixels(Pixels value)
+    { setElement("default_pixels",value); }
+
     public List getDatasets()
     { return (List) getObjectElement("datasets"); }
+    public int countDatasets()
+    { return countListElement("datasets"); }
 
     public List getFeatures()
     { return (List) getObjectElement("features"); }
+    public int countFeatures()
+    { return countListElement("features"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("owner",ExperimenterDTO.class);
+        parseChildElement("default_pixels",PixelsDTO.class);
         parseListElement("datasets",DatasetDTO.class);
         parseListElement("features",FeatureDTO.class);
     }

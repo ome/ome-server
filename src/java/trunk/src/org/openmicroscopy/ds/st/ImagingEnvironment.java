@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,15 +44,19 @@ import java.util.Map;
 public interface ImagingEnvironment
     extends Attribute
 {
+    /** Criteria field name: <code>Temperature</code> */
     public float getTemperature();
     public void setTemperature(float value);
 
+    /** Criteria field name: <code>AirPressure</code> */
     public float getAirPressure();
     public void setAirPressure(float value);
 
+    /** Criteria field name: <code>Humidity</code> */
     public float getHumidity();
     public void setHumidity(float value);
 
+    /** Criteria field name: <code>CO2Percent</code> */
     public float getCO2Percent();
     public void setCO2Percent(float value);
 

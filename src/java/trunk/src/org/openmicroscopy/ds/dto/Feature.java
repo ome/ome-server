@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,21 +42,29 @@ import java.util.Map;
 
 public interface Feature
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>image</code> */
     public Image getImage();
     public void setImage(Image value);
 
+    /** Criteria field name: <code>parent_feature</code> */
     public Feature getParentFeature();
     public void setParentFeature(Feature value);
 
+    /** Criteria field name: <code>tag</code> */
     public String getTag();
     public void setTag(String value);
 
+    /** Criteria field name: <code>name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>children</code> */
     public List getChildren();
+    /** Criteria field name: <code>#children</code> */
+    public int countChildren();
 
 }

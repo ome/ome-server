@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -72,17 +72,25 @@ public class DisplayChannelDTO
 
     public List getDisplayOptionsesByBlueChannel()
     { return (List) getObjectElement("DisplayOptionsesByBlueChannel"); }
+    public int countDisplayOptionsesByBlueChannel()
+    { return countListElement("DisplayOptionsesByBlueChannel"); }
 
     public List getDisplayOptionsesByGreenChannel()
     { return (List) getObjectElement("DisplayOptionsesByGreenChannel"); }
+    public int countDisplayOptionsesByGreenChannel()
+    { return countListElement("DisplayOptionsesByGreenChannel"); }
 
     public List getDisplayOptionsesByGreyChannel()
     { return (List) getObjectElement("DisplayOptionsesByGreyChannel"); }
+    public int countDisplayOptionsesByGreyChannel()
+    { return countListElement("DisplayOptionsesByGreyChannel"); }
 
     public List getDisplayOptionsesByRedChannel()
     { return (List) getObjectElement("DisplayOptionsesByRedChannel"); }
+    public int countDisplayOptionsesByRedChannel()
+    { return countListElement("DisplayOptionsesByRedChannel"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseListElement("DisplayOptionsesByBlueChannel",DisplayOptionsDTO.class);

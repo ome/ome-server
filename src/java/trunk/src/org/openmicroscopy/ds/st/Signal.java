@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,33 +44,43 @@ import java.util.Map;
 public interface Signal
     extends Attribute
 {
+    /** Criteria field name: <code>TheC</code> */
     public int getTheC();
     public void setTheC(int value);
 
+    /** Criteria field name: <code>CentroidX</code> */
     public float getCentroidX();
     public void setCentroidX(float value);
 
+    /** Criteria field name: <code>CentroidY</code> */
     public float getCentroidY();
     public void setCentroidY(float value);
 
+    /** Criteria field name: <code>CentroidZ</code> */
     public float getCentroidZ();
     public void setCentroidZ(float value);
 
+    /** Criteria field name: <code>Integral</code> */
     public float getIntegral();
     public void setIntegral(float value);
 
+    /** Criteria field name: <code>Mean</code> */
     public float getMean();
     public void setMean(float value);
 
+    /** Criteria field name: <code>GeometricMean</code> */
     public float getGeometricMean();
     public void setGeometricMean(float value);
 
+    /** Criteria field name: <code>Sigma</code> */
     public float getSigma();
     public void setSigma(float value);
 
+    /** Criteria field name: <code>GeometricSigma</code> */
     public float getGeometricSigma();
     public void setGeometricSigma(float value);
 
+    /** Criteria field name: <code>Background</code> */
     public float getBackground();
     public void setBackground(float value);
 

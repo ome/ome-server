@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -69,11 +69,15 @@ public class PlateDTO
 
     public List getImagePlates()
     { return (List) getObjectElement("ImagePlates"); }
+    public int countImagePlates()
+    { return countListElement("ImagePlates"); }
 
     public List getPlateScreens()
     { return (List) getObjectElement("PlateScreens"); }
+    public int countPlateScreens()
+    { return countListElement("PlateScreens"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Screen",ScreenDTO.class);

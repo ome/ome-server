@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -69,14 +69,20 @@ public class GroupDTO
 
     public List getExperimenters()
     { return (List) getObjectElement("Experimenters"); }
+    public int countExperimenters()
+    { return countListElement("Experimenters"); }
 
     public List getExperimenterGroups()
     { return (List) getObjectElement("ExperimenterGroups"); }
+    public int countExperimenterGroups()
+    { return countListElement("ExperimenterGroups"); }
 
     public List getImageGroups()
     { return (List) getObjectElement("ImageGroups"); }
+    public int countImageGroups()
+    { return countListElement("ImageGroups"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Leader",ExperimenterDTO.class);

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,12 +45,15 @@ import java.util.Map;
 public interface Thumbnail
     extends Attribute
 {
+    /** Criteria field name: <code>MimeType</code> */
     public String getMimeType();
     public void setMimeType(String value);
 
+    /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();
     public void setRepository(Repository value);
 
+    /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,51 +47,69 @@ import java.util.Map;
 public interface DisplayOptions
     extends Attribute
 {
+    /** Criteria field name: <code>Pixels</code> */
     public Pixels getPixels();
     public void setPixels(Pixels value);
 
+    /** Criteria field name: <code>Zoom</code> */
     public float getZoom();
     public void setZoom(float value);
 
+    /** Criteria field name: <code>RedChannel</code> */
     public DisplayChannel getRedChannel();
     public void setRedChannel(DisplayChannel value);
 
+    /** Criteria field name: <code>RedChannelOn</code> */
     public boolean isRedChannelOn();
     public void setRedChannelOn(boolean value);
 
+    /** Criteria field name: <code>GreenChannel</code> */
     public DisplayChannel getGreenChannel();
     public void setGreenChannel(DisplayChannel value);
 
+    /** Criteria field name: <code>GreenChannelOn</code> */
     public boolean isGreenChannelOn();
     public void setGreenChannelOn(boolean value);
 
+    /** Criteria field name: <code>BlueChannel</code> */
     public DisplayChannel getBlueChannel();
     public void setBlueChannel(DisplayChannel value);
 
+    /** Criteria field name: <code>BlueChannelOn</code> */
     public boolean isBlueChannelOn();
     public void setBlueChannelOn(boolean value);
 
+    /** Criteria field name: <code>DisplayRGB</code> */
     public boolean isDisplayRGB();
     public void setDisplayRGB(boolean value);
 
+    /** Criteria field name: <code>GreyChannel</code> */
     public DisplayChannel getGreyChannel();
     public void setGreyChannel(DisplayChannel value);
 
+    /** Criteria field name: <code>ColorMap</code> */
     public String getColorMap();
     public void setColorMap(String value);
 
+    /** Criteria field name: <code>ZStart</code> */
     public int getZStart();
     public void setZStart(int value);
 
+    /** Criteria field name: <code>ZStop</code> */
     public int getZStop();
     public void setZStop(int value);
 
+    /** Criteria field name: <code>TStart</code> */
     public int getTStart();
     public void setTStart(int value);
 
+    /** Criteria field name: <code>TStop</code> */
     public int getTStop();
     public void setTStop(int value);
 
+    /** Criteria field name: <code>DisplayROIs</code> */
     public List getDisplayROIs();
+    /** Criteria field name: <code>#DisplayROIs</code> */
+    public int countDisplayROIs();
 
 }

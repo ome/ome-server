@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,42 +44,55 @@ import java.util.Map;
 public interface Extent
     extends Attribute
 {
+    /** Criteria field name: <code>MinX</code> */
     public int getMinX();
     public void setMinX(int value);
 
+    /** Criteria field name: <code>MinY</code> */
     public int getMinY();
     public void setMinY(int value);
 
+    /** Criteria field name: <code>MinZ</code> */
     public int getMinZ();
     public void setMinZ(int value);
 
+    /** Criteria field name: <code>MaxX</code> */
     public int getMaxX();
     public void setMaxX(int value);
 
+    /** Criteria field name: <code>MaxY</code> */
     public int getMaxY();
     public void setMaxY(int value);
 
+    /** Criteria field name: <code>MaxZ</code> */
     public int getMaxZ();
     public void setMaxZ(int value);
 
+    /** Criteria field name: <code>SigmaX</code> */
     public int getSigmaX();
     public void setSigmaX(int value);
 
+    /** Criteria field name: <code>SigmaY</code> */
     public int getSigmaY();
     public void setSigmaY(int value);
 
+    /** Criteria field name: <code>SigmaZ</code> */
     public int getSigmaZ();
     public void setSigmaZ(int value);
 
+    /** Criteria field name: <code>Volume</code> */
     public int getVolume();
     public void setVolume(int value);
 
+    /** Criteria field name: <code>SurfaceArea</code> */
     public float getSurfaceArea();
     public void setSurfaceArea(float value);
 
+    /** Criteria field name: <code>Perimeter</code> */
     public float getPerimeter();
     public void setPerimeter(float value);
 
+    /** Criteria field name: <code>FormFactor</code> */
     public float getFormFactor();
     public void setFormFactor(float value);
 

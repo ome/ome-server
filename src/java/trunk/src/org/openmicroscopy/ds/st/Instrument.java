@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,28 +50,50 @@ import java.util.Map;
 public interface Instrument
     extends Attribute
 {
+    /** Criteria field name: <code>Manufacturer</code> */
     public String getManufacturer();
     public void setManufacturer(String value);
 
+    /** Criteria field name: <code>Model</code> */
     public String getModel();
     public void setModel(String value);
 
+    /** Criteria field name: <code>SerialNumber</code> */
     public String getSerialNumber();
     public void setSerialNumber(String value);
 
+    /** Criteria field name: <code>Type</code> */
     public String getType();
     public void setType(String value);
 
+    /** Criteria field name: <code>Detectors</code> */
     public List getDetectors();
+    /** Criteria field name: <code>#Detectors</code> */
+    public int countDetectors();
 
+    /** Criteria field name: <code>Filters</code> */
     public List getFilters();
+    /** Criteria field name: <code>#Filters</code> */
+    public int countFilters();
 
+    /** Criteria field name: <code>ImageInstruments</code> */
     public List getImageInstruments();
+    /** Criteria field name: <code>#ImageInstruments</code> */
+    public int countImageInstruments();
 
+    /** Criteria field name: <code>LightSources</code> */
     public List getLightSources();
+    /** Criteria field name: <code>#LightSources</code> */
+    public int countLightSources();
 
+    /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
+    /** Criteria field name: <code>#OTFs</code> */
+    public int countOTFs();
 
+    /** Criteria field name: <code>Objectives</code> */
     public List getObjectives();
+    /** Criteria field name: <code>#Objectives</code> */
+    public int countObjectives();
 
 }

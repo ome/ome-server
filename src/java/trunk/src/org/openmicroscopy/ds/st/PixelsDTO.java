@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,6 +38,7 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
+import org.openmicroscopy.ds.st.ChannelIndex;
 import org.openmicroscopy.ds.st.DisplayOptions;
 import org.openmicroscopy.ds.st.PixelChannelComponent;
 import org.openmicroscopy.ds.st.Repository;
@@ -107,16 +108,26 @@ public class PixelsDTO
     public void setPixelsID(int value)
     { setElement("PixelsID",new Integer(value)); }
 
+    public List getChannelIndexes()
+    { return (List) getObjectElement("ChannelIndexes"); }
+    public int countChannelIndexes()
+    { return countListElement("ChannelIndexes"); }
+
     public List getDisplayOptionses()
     { return (List) getObjectElement("DisplayOptionses"); }
+    public int countDisplayOptionses()
+    { return countListElement("DisplayOptionses"); }
 
     public List getPixelChannelComponents()
     { return (List) getObjectElement("PixelChannelComponents"); }
+    public int countPixelChannelComponents()
+    { return countListElement("PixelChannelComponents"); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Repository",RepositoryDTO.class);
+        parseListElement("ChannelIndexes",ChannelIndexDTO.class);
         parseListElement("DisplayOptionses",DisplayOptionsDTO.class);
         parseListElement("PixelChannelComponents",PixelChannelComponentDTO.class);
     }

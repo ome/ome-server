@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -90,19 +90,25 @@ public class ModuleDTO
 
     public List getFormalInputs()
     { return (List) getObjectElement("inputs"); }
+    public int countFormalInputs()
+    { return countListElement("inputs"); }
 
     public List getFormalOutputs()
     { return (List) getObjectElement("outputs"); }
+    public int countFormalOutputs()
+    { return countListElement("outputs"); }
 
     public List getExecutions()
     { return (List) getObjectElement("executions"); }
+    public int countExecutions()
+    { return countListElement("executions"); }
 
     public String getExecutionInstructions()
     { return getStringElement("execution_instructions"); }
     public void setExecutionInstructions(String value)
     { setElement("execution_instructions",value); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("category",ModuleCategoryDTO.class);

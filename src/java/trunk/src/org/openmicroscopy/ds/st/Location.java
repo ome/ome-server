@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:08:00 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -44,12 +44,15 @@ import java.util.Map;
 public interface Location
     extends Attribute
 {
+    /** Criteria field name: <code>TheX</code> */
     public float getTheX();
     public void setTheX(float value);
 
+    /** Criteria field name: <code>TheY</code> */
     public float getTheY();
     public void setTheY(float value);
 
+    /** Criteria field name: <code>TheZ</code> */
     public float getTheZ();
     public void setTheZ(float value);
 

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,33 +49,45 @@ import java.util.Map;
 public interface OTF
     extends Attribute
 {
+    /** Criteria field name: <code>Objective</code> */
     public Objective getObjective();
     public void setObjective(Objective value);
 
+    /** Criteria field name: <code>Filter</code> */
     public Filter getFilter();
     public void setFilter(Filter value);
 
+    /** Criteria field name: <code>SizeX</code> */
     public int getSizeX();
     public void setSizeX(int value);
 
+    /** Criteria field name: <code>SizeY</code> */
     public int getSizeY();
     public void setSizeY(int value);
 
+    /** Criteria field name: <code>PixelType</code> */
     public String getPixelType();
     public void setPixelType(String value);
 
+    /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();
     public void setRepository(Repository value);
 
+    /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 
+    /** Criteria field name: <code>OpticalAxisAverage</code> */
     public boolean isOpticalAxisAverage();
     public void setOpticalAxisAverage(boolean value);
 
+    /** Criteria field name: <code>Instrument</code> */
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
+    /** Criteria field name: <code>LogicalChannels</code> */
     public List getLogicalChannels();
+    /** Criteria field name: <code>#LogicalChannels</code> */
+    public int countLogicalChannels();
 
 }

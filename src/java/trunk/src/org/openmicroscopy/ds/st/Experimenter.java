@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:53 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,30 +47,48 @@ import java.util.Map;
 public interface Experimenter
     extends Attribute
 {
+    /** Criteria field name: <code>FirstName</code> */
     public String getFirstName();
     public void setFirstName(String value);
 
+    /** Criteria field name: <code>LastName</code> */
     public String getLastName();
     public void setLastName(String value);
 
+    /** Criteria field name: <code>Email</code> */
     public String getEmail();
     public void setEmail(String value);
 
+    /** Criteria field name: <code>Institution</code> */
     public String getInstitution();
     public void setInstitution(String value);
 
+    /** Criteria field name: <code>DataDirectory</code> */
     public String getDataDirectory();
     public void setDataDirectory(String value);
 
+    /** Criteria field name: <code>Group</code> */
     public Group getGroup();
     public void setGroup(Group value);
 
+    /** Criteria field name: <code>Experiments</code> */
     public List getExperiments();
+    /** Criteria field name: <code>#Experiments</code> */
+    public int countExperiments();
 
+    /** Criteria field name: <code>ExperimenterGroups</code> */
     public List getExperimenterGroups();
+    /** Criteria field name: <code>#ExperimenterGroups</code> */
+    public int countExperimenterGroups();
 
+    /** Criteria field name: <code>GroupsByContact</code> */
     public List getGroupsByContact();
+    /** Criteria field name: <code>#GroupsByContact</code> */
+    public int countGroupsByContact();
 
+    /** Criteria field name: <code>GroupsByLeader</code> */
     public List getGroupsByLeader();
+    /** Criteria field name: <code>#GroupsByLeader</code> */
+    public int countGroupsByLeader();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 19:12:24 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:06:46 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -42,18 +42,25 @@ import java.util.Map;
 
 public interface DataTable
 {
+    /** Criteria field name: <code>id</code> */
     public int getID();
     public void setID(int value);
 
+    /** Criteria field name: <code>table_name</code> */
     public String getTableName();
     public void setTableName(String value);
 
+    /** Criteria field name: <code>description</code> */
     public String getDescription();
     public void setDescription(String value);
 
+    /** Criteria field name: <code>granularity</code> */
     public String getGranularity();
     public void setGranularity(String value);
 
+    /** Criteria field name: <code>columns</code> */
     public List getColumns();
+    /** Criteria field name: <code>#columns</code> */
+    public int countColumns();
 
 }

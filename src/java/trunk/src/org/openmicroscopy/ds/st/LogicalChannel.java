@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb  4 17:49:54 2004
+ * Created by dcreager via omejava on Wed Feb 11 16:07:59 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,75 +49,101 @@ import java.util.Map;
 public interface LogicalChannel
     extends Attribute
 {
+    /** Criteria field name: <code>Name</code> */
     public String getName();
     public void setName(String value);
 
+    /** Criteria field name: <code>SamplesPerPixel</code> */
     public int getSamplesPerPixel();
     public void setSamplesPerPixel(int value);
 
+    /** Criteria field name: <code>Filter</code> */
     public Filter getFilter();
     public void setFilter(Filter value);
 
+    /** Criteria field name: <code>LightSource</code> */
     public LightSource getLightSource();
     public void setLightSource(LightSource value);
 
+    /** Criteria field name: <code>LightAttenuation</code> */
     public float getLightAttenuation();
     public void setLightAttenuation(float value);
 
+    /** Criteria field name: <code>LightWavelength</code> */
     public int getLightWavelength();
     public void setLightWavelength(int value);
 
+    /** Criteria field name: <code>OTF</code> */
     public OTF getOTF();
     public void setOTF(OTF value);
 
+    /** Criteria field name: <code>Detector</code> */
     public Detector getDetector();
     public void setDetector(Detector value);
 
+    /** Criteria field name: <code>DetectorOffset</code> */
     public float getDetectorOffset();
     public void setDetectorOffset(float value);
 
+    /** Criteria field name: <code>DetectorGain</code> */
     public float getDetectorGain();
     public void setDetectorGain(float value);
 
+    /** Criteria field name: <code>IlluminationType</code> */
     public String getIlluminationType();
     public void setIlluminationType(String value);
 
+    /** Criteria field name: <code>PinholeSize</code> */
     public int getPinholeSize();
     public void setPinholeSize(int value);
 
+    /** Criteria field name: <code>PhotometricInterpretation</code> */
     public String getPhotometricInterpretation();
     public void setPhotometricInterpretation(String value);
 
+    /** Criteria field name: <code>Mode</code> */
     public String getMode();
     public void setMode(String value);
 
+    /** Criteria field name: <code>ContrastMethod</code> */
     public String getContrastMethod();
     public void setContrastMethod(String value);
 
+    /** Criteria field name: <code>AuxLightSource</code> */
     public LightSource getAuxLightSource();
     public void setAuxLightSource(LightSource value);
 
+    /** Criteria field name: <code>AuxLightAttenuation</code> */
     public float getAuxLightAttenuation();
     public void setAuxLightAttenuation(float value);
 
+    /** Criteria field name: <code>AuxTechnique</code> */
     public String getAuxTechnique();
     public void setAuxTechnique(String value);
 
+    /** Criteria field name: <code>AuxLightWavelength</code> */
     public int getAuxLightWavelength();
     public void setAuxLightWavelength(int value);
 
+    /** Criteria field name: <code>ExcitationWavelength</code> */
     public int getExcitationWavelength();
     public void setExcitationWavelength(int value);
 
+    /** Criteria field name: <code>EmissionWavelength</code> */
     public int getEmissionWavelength();
     public void setEmissionWavelength(int value);
 
+    /** Criteria field name: <code>Fluor</code> */
     public String getFluor();
     public void setFluor(String value);
 
+    /** Criteria field name: <code>NDFilter</code> */
     public float getNDFilter();
     public void setNDFilter(float value);
 
+    /** Criteria field name: <code>PixelChannelComponents</code> */
     public List getPixelChannelComponents();
+    /** Criteria field name: <code>#PixelChannelComponents</code> */
+    public int countPixelChannelComponents();
 
 }
