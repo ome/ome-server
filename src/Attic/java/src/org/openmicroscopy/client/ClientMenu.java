@@ -47,9 +47,14 @@ import java.awt.geom.*;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.*;
+import java.lang.Runtime;
+import java.lang.Runtime.*;
+import java.util.Iterator;
+import java.util.Vector;
 import javax.swing.*;
 import javax.swing.border.*;
 import org.openmicroscopy.*;
+import org.openmicroscopy.managers.*;
 
 
 /**
@@ -70,6 +75,8 @@ public class ClientMenu extends JFrame {
     int currProjectID = 0;
 
     DataAccess  Accessor;
+    Session     session;
+
 
     JMenuBar menuBar = new JMenuBar();
 
@@ -98,7 +105,7 @@ public class ClientMenu extends JFrame {
     private JMenuItem jMenuImagesSelect    = new JMenuItem("Select");
     private JMenuItem jMenuImagesImport    = new JMenuItem("Import");
     private JMenuItem jMenuImagesAnnotate  = new JMenuItem("Annotate");
-    private JMenuItem jMenuImagesView      = new JMenuItem("View");
+    private JMenuItem jMenuImagesView      = new JMenuItem("Viewer");
     private JMenuItem jMenuImagesExport    = new JMenuItem("Export");
     private JMenuItem jMenuImagesRemove    = new JMenuItem("Remove");
 
@@ -135,6 +142,7 @@ public class ClientMenu extends JFrame {
 	ourLogin = login;
 	statusBar = status;
 	Accessor = ourLogin.getAccessor();
+	session  = Accessor.bindings.getSession();
 
         this.setSize(new Dimension(161, 17));
 
@@ -180,8 +188,9 @@ public class ClientMenu extends JFrame {
 
 	// ************* Dataset menu *****************
 
-	jMenuDataset.add(jMenuDatasetSelect);
 	jMenuDataset.setMnemonic(KeyEvent.VK_D);
+	jMenuDataset.add(jMenuDatasetSelect);
+	jMenuDatasetSelect.setMnemonic(KeyEvent.VK_S);
 	jMenuDatasetSelect.addActionListener(new java.awt.event.ActionListener() {
 		  public void actionPerformed(ActionEvent e) {
 		      jMenuDatasetSelect_actionPerformed(e);
@@ -197,6 +206,7 @@ public class ClientMenu extends JFrame {
 	      });
 
 	jMenuDataset.add(jMenuDatasetCreate);
+	jMenuDatasetCreate.setMnemonic(KeyEvent.VK_C);
 	jMenuDatasetCreate.addActionListener(new java.awt.event.ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		    jMenuDatasetCreate_actionPerformed(e);
@@ -204,6 +214,7 @@ public class ClientMenu extends JFrame {
 	    });
 
 	jMenuDataset.add(jMenuDatasetRemove);
+	jMenuDatasetRemove.setMnemonic(KeyEvent.VK_R);
 	jMenuDatasetRemove.addActionListener(new java.awt.event.ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		    jMenuDatasetRemove_actionPerformed(e);
@@ -214,8 +225,9 @@ public class ClientMenu extends JFrame {
 
 	// ************* Images menu *****************
 
-	jMenuImages.add(jMenuImagesSelect);
 	jMenuImages.setMnemonic(KeyEvent.VK_I);
+	jMenuImages.add(jMenuImagesSelect);
+	jMenuImagesSelect.setMnemonic(KeyEvent.VK_S);
 
 	  jMenuImagesSelect.addActionListener(new java.awt.event.ActionListener() {
 		  public void actionPerformed(ActionEvent e) {
@@ -232,23 +244,45 @@ public class ClientMenu extends JFrame {
 	      });
 
 	jMenuImages.add(jMenuImagesImport);
-	/*
-	  jMenuImagesImport.addActionListener(new java.awt.event.ActionListener() {
-	  public void actionPerformed(ActionEvent e) {
-	  //jMenuImageImport_actionPerformed(e);
-	  }
+	jMenuImagesImport.setMnemonic(KeyEvent.VK_I);
+	jMenuImagesImport.addActionListener(new java.awt.event.ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    jMenuImageImport_actionPerformed(e);
+		}
 	  });
-	*/
+
+
 	jMenuImages.add(jMenuImagesExport);
+	jMenuImagesExport.setMnemonic(KeyEvent.VK_E);
+	jMenuImagesExport.addActionListener(new java.awt.event.ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    jMenuImageExport_actionPerformed(e);
+		}
+	  });
+
 	jMenuImages.add(jMenuImagesView);
+	jMenuImagesView.setMnemonic(KeyEvent.VK_V);
+	jMenuImagesView.addActionListener(new java.awt.event.ActionListener() {
+		  public void actionPerformed(ActionEvent e) {
+		      jMenuImageView_actionPerformed(e);
+		  }
+	      });
+
+	jMenuImages.add(jMenuImagesRemove);
+	jMenuImagesRemove.setMnemonic(KeyEvent.VK_R);
+	jMenuImagesRemove.addActionListener(new java.awt.event.ActionListener() {
+		  public void actionPerformed(ActionEvent e) {
+		      jMenuImageRemove_actionPerformed(e);
+		  }
+	      });
 
 
 
 	// ************* Analysis menu *****************
 
-	jMenuAnalyze.add(jMenuAnalysesSelect);
 	jMenuAnalyze.setMnemonic(KeyEvent.VK_A);
-
+	jMenuAnalyze.add(jMenuAnalysesSelect);
+	jMenuAnalysesSelect.setMnemonic(KeyEvent.VK_S);
 	jMenuAnalysesSelect.addActionListener(new java.awt.event.ActionListener() {
 		public void actionPerformed(ActionEvent e) {
 		    jMenuAnalysisSelect_actionPerformed(e);
@@ -264,7 +298,20 @@ public class ClientMenu extends JFrame {
 	      });
 
 	jMenuAnalyze.add(jMenuAnalysesCreate);
+	jMenuAnalysesCreate.setMnemonic(KeyEvent.VK_C);
+	jMenuAnalysesCreate.addActionListener(new java.awt.event.ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    jMenuAnalysesCreate_actionPerformed(e);
+		}
+	      });
+
 	jMenuAnalyze.add(jMenuAnalysesRun);
+	jMenuAnalysesRun.setMnemonic(KeyEvent.VK_R);
+	jMenuAnalysesRun.addActionListener(new java.awt.event.ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    jMenuAnalysesRun_actionPerformed(e);
+		}
+	      });
 
 
 
@@ -296,7 +343,8 @@ public class ClientMenu extends JFrame {
     }
 
     /**
-     * returns the created menu bar
+     * Get the application's menu bar
+     * @returns the created menu bar
     */
     public JMenuBar getOMEMenuBar() {
 	return (JMenuBar)menuBar;
@@ -314,8 +362,8 @@ public class ClientMenu extends JFrame {
 	if (state.equals("Start")) {
 	    setDisabled(new JMenuItem [] {jMenuProjectAnnotate, jMenuDatasetSelect,
 					  jMenuDatasetAnnotate, jMenuDatasetCreate, jMenuDatasetRemove,
-					  jMenuImagesSelect, jMenuImagesAnnotate,
-					  jMenuImagesImport,
+					  jMenuImagesSelect, jMenuImagesAnnotate, 
+					  jMenuImagesImport, jMenuImagesRemove,
 					  jMenuAnalysesSelect, jMenuAnalysesAnnotate,
 					  jMenuAnalysesRun});
 
@@ -332,7 +380,8 @@ public class ClientMenu extends JFrame {
 					   jMenuAnalysesAnnotate,
 					   jMenuAnalysesRun,
 	                                   jMenuImagesSelect,
-	                                   jMenuImagesImport});
+	                                   jMenuImagesImport,
+	                                   jMenuImagesRemove});
 	}
 	else if (state.equals("gotDataset")) {
 	    setEnabled(new JMenuItem [] {jMenuDatasetAnnotate,
@@ -343,7 +392,8 @@ public class ClientMenu extends JFrame {
 					   jMenuAnalysesRun,
 					   // If dataset is still unlocked
 	                                   jMenuImagesSelect,
-	                                   jMenuImagesImport});
+	                                   jMenuImagesImport,
+	                                   jMenuImagesRemove});
 	}
 
     }
@@ -408,7 +458,6 @@ public class ClientMenu extends JFrame {
 	    ourClient.getTabPanel().updateDataset(p);
 	    int id = p.getID();
 	    currProjectID = id;
-	    System.err.println("project id = " + id);
 	    setEnabling("gotProject");
 	}
     }
@@ -424,7 +473,7 @@ public class ClientMenu extends JFrame {
 	if (newDesc != null) {
 	    ourClient.prV.currPr.setDescription(newDesc);
 	    storeChange((OMEObject)ourClient.prV.currPr);
-	    //ourClient.SummarizeDataset(ourClient.dsV.currDS);
+	    ourClient.SummarizeProject(ourClient.prV.currPr);
 	}
 
   }
@@ -443,8 +492,13 @@ public class ClientMenu extends JFrame {
 	if (d != null) {
 	    ourClient.SetDataset(d);
 	    ourClient.SummarizeDataset(d);
+	    ourClient.getTabPanel().updateImages(d);
+	    ourClient.getTabPanel().updateChains(d);
 	    setEnabling("gotDataset");
-	    ourClient.addDatasetToProject();
+	    //ourClient.addDatasetToProject();
+	    ProjectManager pm = session.getProjectManager();
+	    Project p = Accessor.getActiveProject();
+	    pm.addDataset(p, d);
 	    ourClient.getTabPanel().updateDataset(Accessor.getActiveProject());
 	}
     }
@@ -456,25 +510,24 @@ public class ClientMenu extends JFrame {
      * Should not be directly called; only the run time knows when to call it
      */
     public void jMenuDatasetSelect_actionPerformed(ActionEvent e) {
-	Cursor cur = java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR);
-	if (cur ==null) {
-	    System.err.println("  got null for Wait cursor");
-	} else {
-	    System.err.println("  got the Wait cursor: "+cur);
-	}
-	setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.WAIT_CURSOR));
         ClientSelect Selector = new ClientSelect("Datasets", ourClient);
+
+
 	setCursor(null);
 
 	Dataset d = (Dataset)Selector.getSelection();
         if (d != null) {
+	  ourClient.setWaitCursor();
           ourClient.SetDataset(d);
 	  ourClient.SummarizeDataset(d);
-	  //ourClient.addDatasetToProject();
 	  ourClient.getTabPanel().updateDataset(Accessor.getActiveProject());
 	  ourClient.getTabPanel().updateImages(d);
 	  ourClient.getTabPanel().updateChains(d);
           setEnabling("gotDataset");
+	  ProjectManager pm = session.getProjectManager(); 
+	  Project p = Accessor.getActiveProject();
+	  pm.addDataset(p, d);
+	  ourClient.setDefaultCursor();
 	}
     }
 
@@ -503,6 +556,7 @@ public class ClientMenu extends JFrame {
 	Dataset d = (Dataset)Selector.getSelection();
         if (d != null) {
 	    System.err.println(" Remove dataset "+d);
+	    notEnufGlue(new String("Remove dataset"));
 	}
     }
 
@@ -514,13 +568,20 @@ public class ClientMenu extends JFrame {
     public void jMenuImageSelect_actionPerformed(ActionEvent e) {
 	System.err.println("select an image");
         ClientSelect Selector = new ClientSelect("Images", ourClient);
-	org.openmicroscopy.Image im;
-	im = (org.openmicroscopy.Image)Selector.getSelection();
-	if (im != null) {
-	    ourClient.SetImage(im);
-	    ourClient.SummarizeImage(im);
+	org.openmicroscopy.Image img;
+	img = (org.openmicroscopy.Image)Selector.getSelection();
+	if (img != null) {
+	    System.err.println("got selected image: "+img);
+	    ourClient.setWaitCursor();
+	    ourClient.SetImage(img);
+	    ourClient.SummarizeImage(img);
 	    ourClient.getTabPanel().updateImages(Accessor.getActiveDataset());
 	    setEnabling("gotImage");
+	    DatasetManager dm = session.getDatasetManager(); 
+	    Dataset ds = session.getDataset();
+	    ds.addImage(img);
+	    //dm.addImage(img);
+	    ourClient.setDefaultCursor();
 	}
     }
 
@@ -540,6 +601,62 @@ public class ClientMenu extends JFrame {
 	}
       }
   }
+    /**
+     * Action handle for: Image / Import action
+     * Should not be directly called; only the run time knows when to call it
+     */
+    public void jMenuImageImport_actionPerformed(ActionEvent e) {
+	Vector importSources = getImportSources();
+	if (!importSources.isEmpty()) {
+	    String status = doImporting(importSources);
+	    if (status != null) {    // error message if not null
+		ourClient.reportRuntime("Import error", status);
+	    } else {
+		ourClient.SummarizeDataset(ourClient.dsV.currDS);
+		ourClient.getTabPanel().updateImages(ourClient.dsV.currDS);
+	    }
+	}
+    }
+
+    /**
+     * Action handle for: Image / Export action
+     * Should not be directly called; only the run time knows when to call it
+     */
+    public void jMenuImageExport_actionPerformed(ActionEvent e) {
+	notEnufGlue(new String("ImageExport"));
+    }
+
+
+
+    /**
+     * Action handler for: Image | View action
+     * Should not be directly called; only the run time knows when to call it
+     */
+  public void jMenuImageView_actionPerformed(ActionEvent e) {
+      try {
+	  Process p = Runtime.getRuntime().exec("java -jar org.openmicroscopy.imageviewer.jar");
+	  System.err.println(p.getErrorStream());
+	  System.err.println("Process exited with: "+p.waitFor());
+      } catch (Exception re) {
+	  ourClient.reportRuntime("Running imageviewer",re.getMessage());
+      }
+  }
+
+
+
+    /**
+     * Action handler for: Image | Remove action
+     * Should not be directly called; only the run time knows when to call it
+     */
+  public void jMenuImageRemove_actionPerformed(ActionEvent e) {
+        ClientSelect Selector = new ClientSelect("Images", ourClient);
+	org.openmicroscopy.Image i = (org.openmicroscopy.Image)Selector.getSelection();
+        if (i != null) {
+	    System.err.println(" Remove image "+i);
+	    notEnufGlue(new String("Remove Image"));
+	}
+
+      }
 
 
     /**
@@ -552,10 +669,12 @@ public class ClientMenu extends JFrame {
 	//String ch = Selector.getSelection();
 	Chain ch = (Chain)Selector.getSelection();
 	if (ch != null) {
+	    ourClient.setWaitCursor();
 	    ourClient.SetChain(ch);
 	    ourClient.SummarizeChain(ch);
 	    ourClient.getTabPanel().updateChains(Accessor.getActiveDataset());
 	    setEnabling("gotChain");
+	    ourClient.setDefaultCursor();
 	}
 
     }
@@ -577,6 +696,33 @@ public class ClientMenu extends JFrame {
       }
   }
 
+
+    /**
+     * Action handler for: Analysis | Create action
+     * Should not be directly called; only the run time knows when to call it
+     */
+  public void jMenuAnalysesCreate_actionPerformed(ActionEvent e) {
+      try {
+	  Process p = Runtime.getRuntime().exec("java -jar org.openmicroscopy.vis.chains.jar");
+	  System.err.println(p.getErrorStream());
+	  int code = p.waitFor();
+	  if (code != 0){
+	      ourClient.reportRuntime("Creating analysis","process exit code"+code);
+	  }
+	  System.err.println("Process exited with: "+p.waitFor());
+      } catch (Exception er) {
+	  ourClient.reportRuntime("Running analysis",er.getMessage());
+      }
+  }
+
+
+    /**
+     * Action handler for: Analysis | Run action
+     * Should not be directly called; only the run time knows when to call it
+     */
+  public void jMenuAnalysesRun_actionPerformed(ActionEvent e) {
+      notEnufGlue(new String("Run analysis"));
+  }
 
 
     /**
@@ -634,14 +780,57 @@ public class ClientMenu extends JFrame {
 
 
     /**
+     * Method to control the import of the requested files.
+     * @param filevector  vector of filenames to import
+     * @returns status string containing any error messages
+     */
+    private String doImporting(Vector inFiles) {
+	String infile = "";
+	Iterator fileIt = inFiles.iterator();
+	while (fileIt.hasNext()) {
+	    infile = fileIt.next().toString();
+	    System.err.println("Importing file "+infile);
+	    
+	}
+	Dataset ds = Accessor.getActiveDataset();
+	// TODO - detect no active dataset or DS locked
+	ds.importImages(infile);
+	return "import finished";
+    }
+
+
+    /**
+     * Method to get user's choices of files to import
+     * @returns vector of file names
+     */
+    private Vector getImportSources() {
+	ClientFileChooser fc = new ClientFileChooser();
+	Vector files = fc.getFiles("Import Files");
+
+	return files;
+    }
+
+    /**
      * Method to write updated object back to the remote database.
      * @param OMEobject to write back
      */
 
-    public void storeChange(OMEObject o) {
+    private void storeChange(OMEObject o) {
 	o.storeObject();
-	Accessor.bindings.getSession().commitTransaction();
+	session.commitTransaction();
 
+    }
+
+    /*
+     * Development placeholder function that tells the user
+     * that this invoked menu item doesn't yet work all the
+     * way through to the remote side.
+     */
+
+    private void notEnufGlue(String what) {
+	String msg = new String("No action taken. Glue layer missing");
+	ourClient.reportRuntime(what, msg);
+	return;
     }
 
 }
