@@ -40,7 +40,37 @@ sub new {
 	bitsPerPixel => ['ATTRIBUTES_IMAGE_XYZWT','BITS_PER_PIXEL']
     };
 
+    $self->{fileOpen} = 0;
+    $self->{fileHandle} = undef;
+
     return $self;
+}
+
+
+sub openFile {
+    my $self = shift;
+
+    return if ($self->{fileOpen});
+
+    my $repository = $self->Field("repository");
+    my $rpath = $repository->Field("path");
+    my $path = $self->Field("path");
+
+    my $fullpath = $rpath . $path;
+    my $handle = new IO::File;
+    open $handle, $fullpath or die "Cannot open image file!";
+
+    $self->{fileOpen} = 1;
+    $self->{fileHandle} = $handle;
+}
+
+sub closeFile {
+    my $self = shift;
+
+    return unless ($self->{fileOpen});
+    close $self->{fileHandle};
+    $self->{fileOpen} = 0;
+    $self->{fileHandle} = undef;
 }
 
 
@@ -48,9 +78,6 @@ sub new {
 
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
-    my $repository = $self->Field("repository");
-    my $rpath = $repository->Field("path");
-    my $path = $self->Field("path");
 
     my $sX = $self->Field("sizeX");
     my $sY = $self->Field("sizeY");
@@ -82,7 +109,15 @@ sub GetPixels {
 	    ($w2 >= $sW) ||
 	    ($t1 < 0) ||
 	    ($t2 >= $sT));
-	    
+
+    my $closeFileLater = 0;
+
+    if (!$self->{fileOpen}) {
+        $self->openFile();
+        $closeFileLater = 1;
+    }
+
+    my $handle = $self->{fileHandle};
 
     my $oX = 2;
     my $oY = $oX*$sX;
@@ -95,10 +130,6 @@ sub GetPixels {
 
     my $result = "";
     my $scanline;
-
-    my $fullpath = $rpath . $path;
-    my $handle = new IO::File;
-    open $handle, $fullpath or return undef;
 
     for (my $t = $t1; $t <= $t2; $t++) {
 	for (my $w = $w1; $w <= $w2; $w++) {
@@ -117,7 +148,9 @@ sub GetPixels {
 	$offset += $oT;
     }
 
-    close $handle;
+    if ($closeFileLater) {
+        $self->closeFile();
+    }
 
     return $result;
 }

@@ -18,7 +18,8 @@ sub new {
 
     my $self = {
 	session => $session,
-	cache   => {}
+	cache   => {},
+        debug   => 1
 	};
 
     bless $self, $class;
@@ -30,6 +31,7 @@ sub new {
 
 sub Session { my $self = shift; return $self->{session}; }
 sub DBH { my $self = shift; return $self->{session}->DBH(); }
+sub Debug { my $self = shift; return $self->{debug} = shift if @_; return $self->{debug}; }
 
 
 # loadObject
@@ -42,10 +44,10 @@ sub loadObject {
 
     my $classCache = $self->{cache}->{$class};
     if (exists $classCache->{$id}) {
-	print STDERR "loading cache $class $id\n";
+	print STDERR "loading cache $class $id\n" if $self->{debug};
 	return $classCache->{$id};
     } else {
-	print STDERR "loading  new  $class $id\n";
+	print STDERR "loading  new  $class $id\n" if $self->{debug};
     }
 
     eval "require $class";

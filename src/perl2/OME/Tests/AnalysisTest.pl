@@ -20,6 +20,7 @@
 
 use OME::Session;
 use OME::SessionManager;
+use OME::Program::CalculateImageStatistics;
 use Term::ReadKey;
 
 print "\nOME Test Case - Analysis Import\n";
@@ -48,6 +49,7 @@ ReadMode(1);
 
 my $manager = OME::SessionManager->new();
 my $session = $manager->createSession($username,$password);
+$session->Factory()->Debug(0);
 
 if (!defined $session) {
     print "That username/password does not seem to be valid.\nBye.\n\n";
@@ -56,7 +58,15 @@ if (!defined $session) {
 
 print "Great, you're in.\n\n";
 
-print "
+print "Loading image $imageID...\n";
+
+my $image = $session->Factory()->loadObject("OME::Image",$imageID);
+
+my $analysis = OME::Program::CalculateImageStatistics->new();
+
+$analysis->startAnalysis();
+$analysis->analyzeOneImage($image,{});
+$analysis->finishAnalysis();
 
 exit 0;
 
