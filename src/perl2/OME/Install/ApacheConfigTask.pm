@@ -422,7 +422,7 @@ sub execute {
 			}
 			$httpd_vers = 'httpd2';
 		} else {
-			if (y_or_n("Use OME Apache-2.x configuration for developers?")) {
+			if (y_or_n("Use OME Apache-1.x configuration for developers?")) {
 				$APACHE->{DEV_CONF} = 1;
 			} else {
 				$APACHE->{DEV_CONF} = 0;
