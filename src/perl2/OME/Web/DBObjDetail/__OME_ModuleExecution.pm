@@ -133,26 +133,60 @@ sub getPageBody {
 	# Actual Outputs Tables
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	$html .= $q->h1( 'Outputs' );
-	my @table_data;
-	foreach my $fo ( @formal_outputs ) {
-		next unless $fo->semantic_type;
-		my $attributes = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX($mex,$fo->semantic_type);
-		push @table_data, {
-			title   => $fo->name(),
-			type    => $self->_STformalName( $fo->semantic_type() ),
-			objects => $attributes
-		};
+	
+	# figure out which formal_outputs should be joined based on being in the same database table 
+	my $fo_table_name;
+	my %clumped_list;
+	my @list;
+	foreach my $fo (@formal_outputs){
+		$fo_table_name = $fo->semantic_type()->semantic_elements()->next()->data_column()->data_table()->table_name();
+		push( @{ $clumped_list{$fo_table_name} },$fo);
 	}
-	my @tables = $tableMaker->getJoinTable( 
-		{
-			excludeFields    => { module_execution => undef },
-			embedded_in_form => $self->{ form_name },
-		},
-		\@table_data
-	);
-	$html .= join( '<br>', @tables );
-
+	
+	
+	# Making the Typed Output Tables
+	foreach my $clump (sort keys %clumped_list){
+		my @tables;
+		
+		#if we are displaying only a single formal output we don't need a join
+		if (scalar(@{$clumped_list{$clump}}) == 1 ) {
+			my $fo = $clumped_list{$clump}->[0];
+			my $attributes = OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type);
+			@tables = $tableMaker->getTable( 
+				{
+					excludeFields    => { module_execution => undef },
+					embedded_in_form => $self->{ form_name },
+					title            => $fo->name(),
+				},
+				$self->_STformalName( $fo->semantic_type() ),
+				$attributes
+			);
+		
+		# display a merged table only on the formal outputs stored in the same database table
+		} else {
+			my @table_data;
+			foreach my $fo ( @{$clumped_list{$clump}} ) {
+				next unless $fo->semantic_type;
+				my $attributes = OME::Tasks::ModuleExecutionManager->
+					getAttributesForMEX($mex,$fo->semantic_type);
+				push @table_data, {
+					title   => $fo->name(),
+					type    => $self->_STformalName( $fo->semantic_type() ),
+					objects => $attributes
+				};
+			}
+			@tables = $tableMaker->getJoinTable( 
+				{
+					excludeFields    => { module_execution => undef },
+					embedded_in_form => $self->{ form_name },
+				},
+				\@table_data
+			);
+		}
+		
+		$html .= join( '<br>', @tables );
+	}
+	
 	# Untyped Outputs Tables
 	$html .= $q->h1( 'Untyped Outputs' );
 	foreach my $sto ( @untyped_outputs ) {
