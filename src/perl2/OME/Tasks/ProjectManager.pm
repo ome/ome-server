@@ -23,10 +23,88 @@ package OME::Tasks::ProjectManager;
 
 
 
+our $VERSION = '1.0';
+
+
+=head 1 NAME
+
+OME::Tasks::ProjectManager - manage user's projects
+
+=head 1 SYNOPSIS
+
+	use OME::Tasks::ProjectManager;
+	my $projectManager=new OME::Tasks::ProjectManager($session);
+	
+
+=head 1 DESCRIPTION
+
+The OME::Tasks::ProjectManager provides a list of methods to manage user's projects
+
+
+=head 1 OBTAINING A PROJECTMANAGER
+
+To retrieve an OME::Tasks::ProjectManager to use for managing the project, the
+user must log in to OME.  This is done via the
+L<OME::SessionManager|OME::SessionManager> class.  Logging in via
+OME::SessionManager yields an L<OME::Session|OME::Session> object.
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	my $projectManager = new OME::Tasks::ProjectManager($session);
+
+
+
+=head1 METHODS (ALPHABETICAL ORDER)
+
+=head2 add
+
+Add an existing dataset to a project.
+
+=head2 change
+
+Modify name/description of a project.
+
+=head2 create
+
+Create a new project and update the OME session i.e. current dataset sets to undef.
+
+=head2 delete
+
+Delete a project, update OME session if the project is the current project.
+If the user doesn't have other project: current project and current dataset set to undef
+otherwise set the first (arbitrary in the project list) project (+ dataset) to the current project.
+
+=head2 exist
+
+Check if the project's name already exists (in DB).
+Return: 1 or undef
+
+=head2 list
+
+List projects owned by a given user
+Return: ref array of project objects owned by a given user.
+
+=head2 listGroup
+
+List projects in a given Research group
+Return : ref array of project objects in a given research group.
+
+=head2 load
+
+Load a project object 
+Return: project object
+
+=head2 switch
+Switch project 
+
+
+=cut
+
+
 use strict;
 use OME::SetDB;
 
-our $VERSION = '1.0';
+
 
 sub new{
 	my $class=shift;
@@ -39,6 +117,8 @@ sub new{
 }
 
 ###############################
+# Parameters:
+# 	id = dataset_id to add
 
 sub add{
 	my $self=shift;
@@ -52,7 +132,12 @@ sub add{
 	return 1;
 
 }
+
+
 ###############################
+# Paramaters:
+#	description = project's description 
+#	name		= project's name
 
 sub change{
  	my $self=shift;
@@ -66,7 +151,11 @@ sub change{
 
 
 }
+
 #####################
+# Parameters:
+#	ref = project's informations
+
 sub create{
 	my $self=shift;
 	my $session=$self->{session};
@@ -74,17 +163,22 @@ sub create{
 	my $existingDataset=$session->dataset();
 	my $project = $session->Factory()->newObject("OME::Project", $ref);
 	$project->writeObject();
+
 	$session->project($project);
-	
+
 	if (defined $existingDataset){
 		 $session->dissociateObject('dataset');
 	}
 	$session->writeObject();
+
 	return 1;
 
 }
 
 ######################
+# Parameters:
+#	id = project_id to delete
+
 sub delete{
 	my $self=shift;
 	my $session=$self->{session};
@@ -116,6 +210,10 @@ sub delete{
 }
 
 ################
+# Parameters:
+#	name = project's name
+# Return: 1 or undef
+
 sub exist{
 	my $self=shift;
 	my $session=$self->{session};
@@ -125,6 +223,9 @@ sub exist{
 }
 
 ###############
+# Parameters: no
+# Return: ref array of project objects owned by a given user.
+
 sub list{
 	my $self=shift;
 	my $session=$self->{session};
@@ -134,6 +235,10 @@ sub list{
 }
 
 ##############
+# Parameters:
+# 	usergpID = user's group_id
+# Return : ref array of project objects in a given research group.
+
 sub listGroup{
 	my $self=shift;
 	my $session=$self->{session};
@@ -145,6 +250,10 @@ sub listGroup{
 }
 
 ############
+# Parameters:
+#	projectID =project_id to load
+# Return: project object
+
 sub load{
 	my $self=shift;
 	my $session=$self->{session};
@@ -152,7 +261,12 @@ sub load{
 	my $project=$session->Factory()->loadObject("OME::Project",$projectID);
 	return $project;
 }
+
 ###############
+# Parameters:
+#	id = project_id
+#	bool (optional) = check associated dataset
+
 sub switch{
 	my $self=shift;
 	my $session=$self->{session};
@@ -180,32 +294,27 @@ sub switch{
 # METHODS DON'T USE delete function of Class::DBI
 
 sub deleteProject{
- my ($deleteProject,$db)=@_;
- my $tableProject="projects";	
- my ($condition,$result);
- $condition="project_id=".$deleteProject->project_id();
- $result=do_request($tableProject,$condition,$db);
- return (defined $result)?1:undef;
-
-
+	my ($deleteProject,$db)=@_;
+	my $tableProject="projects";	
+ 	my ($condition,$result);
+ 	$condition="project_id=".$deleteProject->project_id();
+ 	$result=do_request($tableProject,$condition,$db);
+ 	return (defined $result)?1:undef;
 }
 
 
 sub deleteProjectDatasetMap{
-  my ($deleteProject,$ref,$db)=@_;
-  my $tableProjectMap="project_dataset_map";
-  my $result;
-  foreach (@$ref){
-    my ($condition);
-    $condition="project_id=".$deleteProject->project_id()." AND dataset_id=".$_->dataset_id();
-    $result=do_request($tableProjectMap,$condition,$db);
-    return undef if (!defined $result);
+  	my ($deleteProject,$ref,$db)=@_;
+  	my $tableProjectMap="project_dataset_map";
+  	my $result;
+  	foreach (@$ref){
+   	 my ($condition);
+    	 $condition="project_id=".$deleteProject->project_id()." AND dataset_id=".$_->dataset_id();
+    	 $result=do_request($tableProjectMap,$condition,$db);
+    	 return undef if (!defined $result);
 	
-  }
-  return (defined $result)?1:undef;
-
-
-
+      }
+  	return (defined $result)?1:undef;
 }
 
 
@@ -230,16 +339,25 @@ sub reorganizeSession{
 
 
 sub do_request{
- my ($table,$condition,$db)=@_;
- my $result;
- if (defined $db){
-      $result=$db->DeleteRecord($table,$condition);
- }
- return $result;
-
-
+ 	my ($table,$condition,$db)=@_;
+ 	my $result;
+ 	if (defined $db){
+      	$result=$db->DeleteRecord($table,$condition);
+	 }
+ 	return $result;
 }
 
+=head1 AUTHOR
+
+JMarie Burel (jburel@dundee.ac.uk)
+
+=head1 SEE ALSO
+
+L<OME::DBObject|OME::DBObject>,
+L<OME::Factory|OME::Factory>,
+L<OME::SetDB|OME::SetDB>,
+
+=cut
 
 1;
 

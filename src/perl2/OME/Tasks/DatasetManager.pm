@@ -20,6 +20,137 @@
 
 package OME::Tasks::DatasetManager;
 
+
+=head 1 NAME
+
+OME::Tasks::DatasetManager - manage user's datasets
+
+=head 1 SYNOPSIS
+
+	use OME::Tasks::DatasetManager;
+	my $projectManager=new OME::Tasks::DatasetManager($session);
+	
+
+=head 1 DESCRIPTION
+
+The OME::Tasks::DatasetManager provides a list of methods to manage user's dataset
+
+
+=head 1 OBTAINING A DATASETMANAGER
+
+To retrieve an OME::Tasks::DatasetManager to use for managing the dataset, the
+user must log in to OME.  This is done via the
+L<OME::SessionManager|OME::SessionManager> class.  Logging in via
+OME::SessionManager yields an L<OME::Session|OME::Session> object.
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	my $datasetManager = new OME::Tasks::DatasetManager($session);
+
+
+
+=head1 METHODS (ALPHABETICAL ORDER)
+
+=head2 addImages
+
+Add images to a dataset.
+
+=head2 change
+
+Modify name/description of a dataset.
+
+=head2 create
+
+Create a new dataset with/without images.
+
+
+=head2 delete
+
+Delete a dataset, update OME session if the dataset is the current dataset.
+If the user doesn't have other dataset: current dataset sets to undef
+otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
+
+=head2 exist
+
+Check if the dataset's name already exists (in DB).
+Return: 1 or undef
+
+=head2 imageNotIn
+
+Check images not used in the current dataset
+
+=head2 listAll
+
+Given a user, Check datasets used in user's projects 
+
+Return ref hash of datasets used in projects of a given user
+
+Return: ref array of project objects owned by a given user.
+
+=head2 listGroup
+
+List datasets used in a given Research group
+Return : ref array of  dataset objects in a given research group.
+
+=head2 load
+
+Load a dataset object 
+Return: dataset object
+
+=head2 lockUnlock
+
+Lock/Unlock a dataset
+
+=head2 manage
+
+Check dataset used in others project (in a research group)
+and the one used by a given user
+
+Return:	ref hash share,use
+		count:number of keys in use
+		share: dataset used in others projects
+		use: info on dataset + project used by a given user.
+
+=head2 notBelongToProject
+
+Check dataset belonging to a research group.
+If current project has no dataset, return ref hash of all datasets in Research group
+if current project has dataset(s), return ref hash of datasets not already used 
+ 
+Return: ref hash
+
+=head2 remove
+
+remove datasets from project
+parameters: ref hash: key=dataset_id; value=ref array of associated projects.
+
+=head2 share
+
+Check datasets owned by the current user
+if they are used by others.
+Return : ref hash (share,use)
+		count:number of keys in share
+		count: nb keys in use
+		share: datasets owned by the current user but used by other
+		use: datasets user owns ONLY used by user.
+
+
+
+=head2 switch
+
+Switch dataset 
+
+
+
+=cut
+
+
+
+
+
+
+
+
 use strict;
 use OME::SetDB;
 
@@ -36,6 +167,8 @@ sub new{
 }
 
 #################
+# Parameters:
+#	ref= ref array of image_id to add
 
 sub addImages{
 	my $self=shift;
@@ -57,6 +190,9 @@ sub addImages{
 }
 
 #################
+# Parameters
+#	description = dataset's description 
+#	name		= dataset's name
 
 sub change{
 	my $self=shift;
@@ -72,19 +208,27 @@ sub change{
 }
 
 #################
+# Parameters:
+#	name = dataset's name
+#	description = dataset's description
+#	ref = ref array of image_id to add (optional)
 
 sub create{
 	my $self=shift;
 	my $session=$self->{session};
 	my ($name,$description,$ref)=@_;
-	return undef if (scalar(@$ref)==0);
+	if (defined $ref){
+	 return undef if (scalar(@$ref)==0);
+	}
 	my $project=$session->project();
 	my $dataset = $project->newDataset($name,$description);
 	if ($dataset){
 	   $dataset->writeObject();
-	   foreach(@$ref){
-           $dataset->addImageID($_);
-	   }
+	   if (defined $ref){
+	     	foreach(@$ref){
+           	 $dataset->addImageID($_);
+	    	}
+ 	   }
 	   $session->dataset($dataset);
 	   $session->writeObject();
 	}
@@ -92,24 +236,34 @@ sub create{
 
 }
 
-####################
-sub createWithoutImage{
-	my $self=shift;
-	my $session=$self->{session};
-	my ($name,$description)=@_;
-	my $project=$session->project();
-	my $dataset = $project->newDataset($name,$description);
-	if ($dataset){
-	   $dataset->writeObject();
-	   $session->dataset($dataset);
-	   $session->writeObject();
-	   return 1;
-	}else{
-		return undef;
-	}
-
-}
 #################
+# Parameters:
+#	name = dataset's name
+#	description = dataset's description
+
+
+#sub createWithoutImage{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my ($name,$description)=@_;
+#	my $project=$session->project();
+#	my $dataset = $project->newDataset($name,$description);
+#	if ($dataset){
+#	   $dataset->writeObject();
+#	   $session->dataset($dataset);
+#	   $session->writeObject();
+#	   return 1;
+#	}else{
+#		return undef;
+#	}
+
+#}
+
+
+#################
+# Parameters:
+#	id = image_id 
+
 sub delete{
 	my $self=shift;
 	my $session=$self->{session};
@@ -150,6 +304,9 @@ sub delete{
 
 
 #################
+# Parameters:
+#	name = project's name
+# Return: 1 or undef
 
 sub exist{
 	my $self=shift;
@@ -162,6 +319,8 @@ sub exist{
 }
 
 ################
+# Parameters: no
+# Return: ref array of images not used in the current dataset
 
 sub imageNotIn{
 	my $self=shift;
@@ -173,6 +332,9 @@ sub imageNotIn{
 }
 
 ################
+# Parameters: no
+# Return: ref hash of datasets used in projects of a given user
+
 sub listAll{
 	my $self=shift;
 	my $session=$self->{session};
@@ -191,6 +353,10 @@ sub listAll{
 }
 
 ##############
+# Parameters:
+#	userID= user id
+# Return: ref array of dataset objects (datasets used in a Research group)
+
 sub listGroup{
 	my $self=shift;
 	my $session=$self->{session};
@@ -202,6 +368,10 @@ sub listGroup{
 
 
 #################
+# Parameters:
+#	datasetID = dataset_id to load
+# Return: dataset object
+
 sub load{
 	my $self=shift;
 	my $session=$self->{session};
@@ -212,6 +382,10 @@ sub load{
 }
 
 #################
+# Paramaters:
+#	id=dataset_id
+#	bool= booleen to lock/unlock dataset
+
 sub lockUnlock{
 	my $self=shift;
 	my $session=$self->{session};
@@ -227,7 +401,14 @@ sub lockUnlock{
 
 
 }
+
 ###############
+# Parameters: no
+# Return:	ref hash share,use
+#		count:number of keys in use
+#		share: dataset used in others projects
+#		use: info on dataset + project used by a given user.
+
 sub manage{
 	my $self=shift;
 	my $session=$self->{session};
@@ -238,6 +419,8 @@ sub manage{
 
 
 #################
+# Parameters: no
+# Return: ref hash
 
 sub notBelongToProject{
 	my $self=shift;
@@ -266,6 +449,8 @@ sub notBelongToProject{
 }
 
 ########################
+# Parameters:
+#	ref= ref hash 
 sub remove{
 	my $self=shift;
 	my $session=$self->{session};
@@ -300,6 +485,12 @@ sub remove{
 
 
 ################################
+# Parameters: no
+# Return : ref hash (share,use)
+#		count:number of keys in share
+#		count: nb keys in use
+#		share: datasets owned by a given user but used by other
+#		use: datasets user owns ONLY used by user.
 
 sub share{
 	my $self=shift;
@@ -312,6 +503,9 @@ sub share{
 
 
 ################################
+# Parameters:
+#	id= dataset_id
+
 
 sub switch{
 	my $self=shift;
@@ -333,12 +527,12 @@ sub switch{
 ##########################
 
 sub deleteDataset{
-   my ($deletedataset,$db)=@_;
-   my $tableDataset="datasets";
-   my ($condition,$result);
-   $condition="dataset_id=".$deletedataset->dataset_id();
-   $result=do_request($tableDataset,$condition,$db);
-   return (defined $result)?1:undef;
+   	my ($deletedataset,$db)=@_;
+   	my $tableDataset="datasets";
+   	my ($condition,$result);
+   	$condition="dataset_id=".$deletedataset->dataset_id();
+   	$result=do_request($tableDataset,$condition,$db);
+   	return (defined $result)?1:undef;
 
 }
 
@@ -396,12 +590,12 @@ sub notUsedImages{
 }
 
 sub removeDataset{
-  my ($datasetID,$projectID,$db)=@_;
-  my ($condition,$result,$table);
-  $table="project_dataset_map";
-  $condition="dataset_id=".$datasetID." AND project_id=".$projectID;
-  $result=do_request($table,$condition,$db);
-  return (defined $result)?1:undef;
+  	my ($datasetID,$projectID,$db)=@_;
+ 	 my ($condition,$result,$table);
+  	$table="project_dataset_map";
+  	$condition="dataset_id=".$datasetID." AND project_id=".$projectID;
+  	$result=do_request($table,$condition,$db);
+  	return (defined $result)?1:undef;
 
 }
 
@@ -479,30 +673,44 @@ sub usedDatasets{
 
 }
 
-##########################
+#############
+# DB work
+
 sub do_request{
- my ($table,$condition,$db)=@_;
- my $result;
+ 	my ($table,$condition,$db)=@_;
+ 	my $result;
  
- if (defined $db){
+ 	if (defined $db){
        $result=$db->DeleteRecord($table,$condition);
  
- }
- return $result;
+ 	}
+ 	return $result;
 
 }
 
 sub doUpdate{
-  my ($table,$ref,$condition,$db)=@_;
-  my $result=undef;
-  if (defined $db){
+  	my ($table,$ref,$condition,$db)=@_;
+  	my $result=undef;
+  	if (defined $db){
        $result=$db->UpdateRecord($table,$ref,$condition);
  
-  }
- return $result;
+  	}
+ 	return $result;
 }
 
 
+
+=head1 AUTHOR
+
+JMarie Burel (jburel@dundee.ac.uk)
+
+=head1 SEE ALSO
+
+L<OME::DBObject|OME::DBObject>,
+L<OME::Factory|OME::Factory>,
+L<OME::SetDB|OME::SetDB>,
+
+=cut
 
 1;
 

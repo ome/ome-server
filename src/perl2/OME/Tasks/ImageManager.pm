@@ -20,9 +20,82 @@
 
 package OME::Tasks::ImageManager;
 
+our $VERSION = '1.0';
+
+=head 1 NAME
+
+OME::Tasks::ImageManager - manage images used by a user
+
+=head 1 SYNOPSIS
+
+	use OME::Tasks::ImageManager;
+	my $imageManager=new OME::Tasks::ImageManager($session);
+	
+
+=head 1 DESCRIPTION
+
+The OME::Tasks::ImageManager provides a list of methods to manage images used by a user
+
+
+=head 1 OBTAINING AN IMAGEMANAGER
+
+To retrieve an OME::Tasks::ImageManager to use for managing images, the
+user must log in to OME.  This is done via the
+L<OME::SessionManager|OME::SessionManager> class.  Logging in via
+OME::SessionManager yields an L<OME::Session|OME::Session> object.
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	my $imageManager = new OME::Tasks::ImageManager($session);
+
+
+=head1 METHODS (ALPHABETICAL ORDER)
+
+=head2 delete
+
+Delete Image from database
+
+=head1 listGroup
+
+Check images associated to a given Research group
+Return: ref array with image objects
+
+=head2 listNotUsed
+
+Compare images in the current dataset and ones available in the Research group
+return list of images not used.
+Return: ref array with image object
+
+=head2 load
+
+Load image object
+Return: image object
+
+=head2 manage
+Informations to manage images
+Return: ref hash (GroupImagesInfo,UserImagesInfo)
+
+GroupImagesInfo:
+Check images used in others projects i.e. not user's project
+key:image_id => value: image_name 
+
+UserImagesInfo:
+hash of hashes:
+key: image_id
+->{list}=>  ref hash datasetInfo (i.e. key:dataset_id value: dataset object
+->{remove}=> ref hash dataset_id value booleen 
+->{image} => image object;
+
+
+=head2 remove
+Remove image from datasets
+
+=cut
+
+
+
 use strict;
 use OME::SetDB;
-our $VERSION = '1.0';
 
 sub new{
 	my $class=shift;
@@ -35,6 +108,8 @@ sub new{
 }
 
 ###############
+# Parameters:
+#	id =image_id to delete
 
 sub delete{
 	my $self=shift;
@@ -49,6 +124,9 @@ sub delete{
 }
 
 ###############
+# Parameters: 
+#	usergp = group_id (future) ?
+# Return: ref array with image objects
 
 sub listGroup{
 	my $self=shift;
@@ -60,7 +138,11 @@ sub listGroup{
 
 }
 
+
 ###############
+# Parameters: no
+# Return: ref array with image object
+
 sub listNotUsed{
 	my $self=shift;
 	my $session=$self->{session};
@@ -74,6 +156,10 @@ sub listNotUsed{
 
 #############
 
+# Parameters: 
+#	imageid = image_id 
+# Return:  image object
+
 sub load{
 	my $self=shift;
 	my $session=$self->{session};
@@ -83,7 +169,11 @@ sub load{
 
 
 }
+
+
 ###############
+# Parameters: no
+# Return: ref hash (group images info,user images info)
 
 sub manage{
 	my $self=shift;
@@ -96,7 +186,8 @@ sub manage{
 }
 
 ################
-
+# Parameters:
+#	ref = ref hash key:imageid value:ref array with dataset_id 
 sub remove{
 	my $self=shift;
 	my $session=$self->{session};
@@ -151,17 +242,16 @@ sub notMyProject{
 }
 
 sub notUsed{
- my ($refa,$refb)=@_;
- my %in_b=();
- my @only_a=();
- foreach (@$refb){
-   $in_b{$_->project_id()}=1;
- }
- foreach (@$refa){
-   push(@only_a,$_) unless exists $in_b{$_->project_id()};
-
- }
- return scalar(@only_a)==0?undef:\@only_a;
+ 	my ($refa,$refb)=@_;
+ 	my %in_b=();
+ 	my @only_a=();
+ 	foreach (@$refb){
+   	 $in_b{$_->project_id()}=1;
+ 	}
+ 	foreach (@$refa){
+   	 push(@only_a,$_) unless exists $in_b{$_->project_id()};
+ 	}
+ 	return scalar(@only_a)==0?undef:\@only_a;
 
 }
 
@@ -247,6 +337,20 @@ sub do_delete{
  	}
 	 return $result;
 }
+
+
+=head1 AUTHOR
+
+JMarie Burel (jburel@dundee.ac.uk)
+
+=head1 SEE ALSO
+
+L<OME::DBObject|OME::DBObject>,
+L<OME::Factory|OME::Factory>,
+L<OME::SetDB|OME::SetDB>,
+
+=cut
+
 
 1;
 
