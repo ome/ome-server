@@ -603,13 +603,13 @@ sub newAttributesInOneRow {
             # data.
 
             if (!defined $new_data) {
-                croak "Attribute values clash"
+                confess "Attribute values clash"
                   if defined $data{$table_name}->{$column_name};
             } else {
                 if (exists $data{$table_name}->{$column_name}) {
                     my $old_data = $data{$table_name}->{$column_name};
                     #__debug("      ?= $old_data");
-                    croak "Attribute values clash"
+                    confess "Attribute values clash"
                       if ($new_data ne $old_data);
                 }
             }
