@@ -106,6 +106,6 @@ public class CoordinateLayoutMethod implements LayoutMethod
     }
   }
   
-  
-
+  // TODO: save/load methods?  or have separate class take care of that?
+  // store as semantic type?
 }
