@@ -89,6 +89,9 @@ my @modules = ({
 	Name => 'Test::Simple',
 	repositoryFile => 'Test-Simple-0.47.tar.gz',
 	},{
+	Name => 'IPC::Run',
+	repositoryFile => 'IPC-Run-0.75.tar.gz',
+	},{
 	Name => 'DBD::Pg',
 	repositoryFile => 'DBD-Pg-1.21.tar.gz',
 	checkVersion => \&DBD_Pg_VersionOK,
