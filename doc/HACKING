@@ -61,7 +61,7 @@ SOURCE FILE STUBS
     # OME/MyPackage/MyPackage.pm
     # This module is used for packaging my packages.
 
-    # Copyright (C) 2002 Open Microscopy Environment
+    # Copyright (C) 2003 Open Microscopy Environment
     # Author:  My Dot Package <mpackage@pkg.org>
     #
     #    This library is free software; you can redistribute it and/or
@@ -85,7 +85,7 @@ SOURCE FILE STUBS
     _
     C
 
-    /* Copyright (C) 2002 Open Microscopy Environment
+    /* Copyright (C) 2003 Open Microscopy Environment
      * Author:  My Dot Package <mpackage@pkg.org>
      * 
      *     This library is free software; you can redistribute it and/or
