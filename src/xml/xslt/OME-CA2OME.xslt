@@ -288,6 +288,9 @@
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
+			<xsl:attribute name = "DefaultPixels">
+				<xsl:value-of select = "@DefaultPixels"/>
+			</xsl:attribute>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeX" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeY" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeZ" mode = "Attribute2OptionalAttribute"/>
