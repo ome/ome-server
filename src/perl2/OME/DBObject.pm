@@ -306,19 +306,45 @@ sub addColumn {
                 }
             };
         } else {
-            $accessor = sub {
-                my $self = shift;
-                die "This instance did not load in $alias"
-                  unless exists $self->{__fields}->{$table}->{$column};
-                if (@_) {
-                    $self->{__changedFields}->{$table}->{$column}++;
-                    my $datum = shift;
-                    $datum = $datum->id() if ref($datum);
-                    return $self->{__fields}->{$table}->{$column} = $datum;
-                } else {
-                    return $self->{__fields}->{$table}->{$column};
-                }
-            };
+            # It seems that sometimes the Postgres driver will return 1
+            # or 0 for a boolean column, sometimes 't' or 'f'.  This is
+            # unacceptable, so we define the accessor method to always
+            # return 1 or 0.
+
+            if ($sql_options->{SQLType} eq 'boolean') {
+                $accessor = sub {
+                    my $self = shift;
+                    die "This instance did not load in $alias"
+                      unless exists $self->{__fields}->{$table}->{$column};
+                    my $value;
+                    if (@_) {
+                        $self->{__changedFields}->{$table}->{$column}++;
+                        my $datum = shift;
+                        $datum = $datum->id() if ref($datum);
+                        $value = $self->{__fields}->{$table}->{$column} = $datum;
+                    } else {
+                        $value = $self->{__fields}->{$table}->{$column};
+                    }
+
+                    return 1 if ($value eq 't');
+                    return 0 if ($value eq 'f');
+                    return $value;
+                };
+            } else {
+                $accessor = sub {
+                    my $self = shift;
+                    die "This instance did not load in $alias"
+                      unless exists $self->{__fields}->{$table}->{$column};
+                    if (@_) {
+                        $self->{__changedFields}->{$table}->{$column}++;
+                        my $datum = shift;
+                        $datum = $datum->id() if ref($datum);
+                        return $self->{__fields}->{$table}->{$column} = $datum;
+                    } else {
+                        return $self->{__fields}->{$table}->{$column};
+                    }
+                };
+            }
         }
 
         no strict 'refs';
