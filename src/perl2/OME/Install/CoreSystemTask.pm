@@ -54,7 +54,7 @@ use base qw(OME::Install::InstallationTask);
 #*********
 
 # Default core directory locations
-my @core_dirs = (
+our @core_dirs = (
     {
 	name => "base",
 	path => "/OME",
@@ -70,26 +70,29 @@ my @core_dirs = (
 );
 
 # The HTML directories that need to be copied to the basedir
-my @html_core = ("JavaScript", "html");
+our @html_core = ("JavaScript", "html");
 
 # The image directories that need to be copied to the basedir
-my @image_core = ("images");
+our @image_core = ("images");
 
 # Base and temp dir references
-my $OME_BASE_DIR = \$core_dirs[0]->{path};
-my $OME_TMP_DIR = \$core_dirs[1]->{path};
+our $OME_BASE_DIR = \$core_dirs[0]->{path};
+our $OME_TMP_DIR = \$core_dirs[1]->{path};
 
 # Global OME default user, group, UID and GID
-my $OME_USER = "ome"; 
-my $OME_GROUP = "ome";
-my $OME_UID;
-my $OME_GID;
+our $OME_USER = "ome"; 
+our $OME_GROUP = "ome";
+our $OME_UID;
+our $OME_GID;
 
 # Global Apache user
-my $APACHE_USER;
+our $APACHE_USER;
 
 # Postgres admin
-my $POSTGRES_USER = "postgres";
+our $POSTGRES_USER = "postgres";
+
+# A Unix user that will be the ome admin (belongs to the ome group, but is not the ome user)
+our $ADMIN_USER = '';
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -182,9 +185,6 @@ sub get_postgres_user {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-
-	# A special Unix user to be added to the OME group if needed
-	my $SPECIAL_USER;
     
     print_header ("Core System Setup");
 
@@ -196,7 +196,33 @@ sub execute {
     print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
     umask (0002);
 
+	$$OME_BASE_DIR = $environment->base_dir()      if $environment->base_dir() ;
+	$$OME_TMP_DIR  = $environment->tmp_dir()       if $environment->tmp_dir() ;
+	$OME_USER      = $environment->user()          if $environment->user() ;
+	$APACHE_USER   = $environment->apache_user()   if $environment->apache_user() ;
+	$POSTGRES_USER = $environment->postgres_user() if $environment->postgres_user() ;
+	$ADMIN_USER    = $environment->admin_user()    if $environment->admin_user() ;
+
     while (1) {
+
+	print "\n";  # Spacing
+
+	# Ask user to confirm his/her entries
+	foreach my $directory (@core_dirs) {
+	    printf '%25s: %s%s%s%s', $directory->{description}, BOLD, $directory->{path}, RESET, "\n";
+	}
+	
+	print "            OME groupname: ", BOLD, $OME_GROUP     , RESET, "\n";
+	print "       OME Unix  username: ", BOLD, $OME_USER      , RESET, "\n";
+	print "    Apache Unix  username: ", BOLD, $APACHE_USER   , RESET, "\n";
+	print " Postgres admin  username: ", BOLD, $POSTGRES_USER , RESET, "\n";
+	print "   Special Unix  username: ", BOLD, $ADMIN_USER    , RESET, "\n";
+
+	print "\n";  # Spacing
+
+	y_or_n ("Are these values correct ?") and last;
+
+	print "\n";  # Spacing
 	# Confirm and/or update all our installation dirs
 	foreach my $directory (@core_dirs) {
 	   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
@@ -219,30 +245,14 @@ sub execute {
 	$POSTGRES_USER = get_postgres_user($POSTGRES_USER);
 
 	# Get and/or update our "special" Unix user information
-	$SPECIAL_USER =
-		confirm_default ("Unix user which should be a member of the OME group (optional)", $SPECIAL_USER || "");
+	$ADMIN_USER =
+		confirm_default ("Unix user to include in the OME group (optional, i.e. your real username)", $ADMIN_USER || "");
 
 	# Make sure the rest of the installation knows who the apache and ome users are
 	$environment->user($OME_USER);
 	$environment->apache_user($APACHE_USER);
 	$environment->postgres_user($POSTGRES_USER);
-
-	print "\n";  # Spacing
-
-	# Ask user to confirm his/her entries
-	foreach my $directory (@core_dirs) {
-	    print "$directory->{description}: $directory->{path}\n";
-	}
-	
-	print "OME groupname: $OME_GROUP\n";
-	print "OME Unix username: $OME_USER\n";
-	print "Apache Unix username: $APACHE_USER\n";
-	print "Postgres admin username: $POSTGRES_USER\n";
-	print "Special Unix username: $SPECIAL_USER\n";
-
-	print "\n";  # Spacing
-
-	y_or_n ("Are these values correct ?") and last or next;
+	$environment->admin_user($ADMIN_USER);
 
 	print "\n";  # Spacing
     }
@@ -276,13 +286,13 @@ sub execute {
 
     my $need_to_add_apache = 1;
     my $need_to_add_user = 1;
-	my $need_to_add_special_user = $SPECIAL_USER ? 1 : 0;
+	my $need_to_add_admin_user = $ADMIN_USER ? 1 : 0;
 
     if (@members) {
 	    foreach my $member (@members) {
 		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
 		    $need_to_add_user = 0 if $member eq $OME_USER;
-			$need_to_add_special_user = 0 if $member eq $SPECIAL_USER;
+			$need_to_add_admin_user = 0 if $member eq $ADMIN_USER;
 	    };
     }
 
@@ -292,9 +302,9 @@ sub execute {
     add_user_to_group ($OME_USER, $OME_GROUP)
 		or croak "Failure adding user \"$OME_USER\" to group \"$OME_GROUP\""
 		if $need_to_add_user;
-    add_user_to_group ($SPECIAL_USER, $OME_GROUP)
-		or croak "Failure adding user \"$SPECIAL_USER\" to group \"$OME_GROUP\""
-		if $need_to_add_special_user;
+    add_user_to_group ($ADMIN_USER, $OME_GROUP)
+		or croak "Failure adding user \"$ADMIN_USER\" to group \"$OME_GROUP\""
+		if $need_to_add_admin_user;
     
     #********
     #******** Build our core directory structure
