@@ -836,20 +836,28 @@ sub _loadTypeAndGetInfo {
 
 =head2 getObjDetailURL
 
-	my $url_to_obj_detail = $self->getObjDetailURL( $obj );
+	my $url_to_obj_detail = $self->getObjDetailURL( $obj, %url_params );
 
 $obj should be a DBObject instance. Attributes are fine.
+%url_params is optional. If specified, it should contain a list of URL
+parameters such as ( Popup => 1 ).
 
 returns a url to a detailed view of the object
 
 =cut
 
 sub getObjDetailURL {
-	my ($self, $obj) = @_;
+	my ($self, $obj, %url_params) = @_;
 	my $formal_name = $obj->getFormalName();
+
 	return $self->pageURL( 'OME::Web::DBObjDetail', { 
 		Type => $formal_name,
-		ID   => $obj->id()
+		ID   => $obj->id(),
+		( (ref( $self ) )&& ( exists $self->{_popup} ) && ( $self->{_popup} ) ?
+			( Popup => 1 ) :
+			()
+		),
+		%url_params
 	} );
 }
 
