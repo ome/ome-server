@@ -413,7 +413,6 @@ The *Like methods are provided as a convenience.
 =cut
 
 use strict;
-use OME::SessionManager;
 use OME::DBConnection;
 use OME::Database::Delegate;
 use DBI;
