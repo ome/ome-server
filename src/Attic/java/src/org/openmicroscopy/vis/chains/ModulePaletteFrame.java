@@ -216,11 +216,14 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	}
 	
 	public void clearTreeSelection() {
-		int rowCount = tree.getRowCount();
-		tree.clearSelection();
+		if (tree != null)
+			tree.clearSelection();
 	}
 	
 	public void setTreeSelection(CModule mod) {
+		
+		if (tree == null) 
+			return;
 		int rowCount = tree.getRowCount();
 		for (int i =0; i < rowCount; i++) {
 			TreePath path = tree.getPathForRow(i);
