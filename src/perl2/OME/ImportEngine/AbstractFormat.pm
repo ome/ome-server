@@ -315,7 +315,7 @@ No path components and no extension will be returned.
 
 sub __nameOnly {
     shift;
-    my $basenm = basename(@_[0]);
+    my $basenm = basename($_[0]);
     # remove filetype extension from filename (assumes '.' delimiter)
     $basenm =~ s/\..+?$//;
     return $basenm;
