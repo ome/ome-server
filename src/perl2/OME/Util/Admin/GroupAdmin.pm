@@ -247,6 +247,7 @@ sub listGroup {
     my $contact_input = "";
     my $tabbed = 0;
     my $result;
+    my ($leader, $contact);
 
     $result = GetOptions('help|h' => \$help,
                          'name|n=s' => \$name,
@@ -275,7 +276,6 @@ sub listGroup {
       if $name ne '';
 
     if ($leader_input ne '') {
-        my $leader;
         if ($leader =~ /^[0-9]+$/) {
             $leader = $leader_input;
         } else {
@@ -292,7 +292,6 @@ sub listGroup {
     }
 
     if ($contact_input ne '') {
-        my $contact;
         if ($contact =~ /^[0-9]+$/) {
             $contact = $contact_input;
         } else {
@@ -342,18 +341,32 @@ sub listGroup {
           "-" x $name_len, " ",
           "-" x $user_len, " ",
           "-" x $user_len, "\n";
-
+	
+		my ($GID, $GroupName, $leaderFirstName, $leaderLastName,
+		    $contactFirstName, $contactLastName);
+		
         foreach my $group (@groups) {
-            my $leader = $group->Leader();
-            my $contact = $group->Contact();
+            $leader = $group->Leader();
+            $contact = $group->Contact();
 
-            printf "%-*.*s %-*.*s %-*.*s %-*.*s\n",
-              $max_id_len, $max_id_len, $group->id(),
-              $name_len, $name_len, $group->Name(),
-              $user_len, $user_len,
-                ($leader->FirstName() . " ". $leader->LastName()),
-              $user_len, $user_len,
-                ($contact->FirstName() . " ". $contact->LastName());
+			$GID = $group->id();
+			$GID = '' unless defined $GID;
+			$GroupName = $group->Name();
+			$GroupName = '' unless defined $GroupName;
+			$leaderFirstName = $leader->FirstName();
+			$leaderFirstName = '' unless defined $leaderFirstName;
+			$leaderLastName = $leader->LastName();
+			$leaderLastName = '' unless defined $leaderLastName;
+			$contactFirstName = $contact->FirstName();
+			$contactFirstName = '' unless defined $contactFirstName;
+			$contactLastName = $contact->LastName();
+			$contactLastName = '' unless defined $contactLastName;
+			
+			printf "%-*.*s %-*.*s %-*.*s %-*.*s\n",
+              $max_id_len, $max_id_len, $GID,
+              $name_len, $name_len, $GroupName,
+              $user_len, $user_len, $leaderFirstName." ".$leaderLastName,
+              $user_len, $user_len, $contactFirstName." ".$contact->LastName;
         }
     }
 }

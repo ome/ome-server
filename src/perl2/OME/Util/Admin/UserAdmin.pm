@@ -325,22 +325,34 @@ sub listUsers {
           "-" x $name_len, " ",
           "-" x $email_len, " ",
           "-" x $directory_len, "\n";
+        
+        my ($OMEName, $ID, $GID, $FirstName, $LastName, $Email, $DataDirectory);
+        
 
         foreach my $user (@users) {
-        	my $OMEName;
-        	if (defined $user->OMEName()) {
-        		$OMEName = $user->OMEName();
-        	} else {
-        		$OMEName = '';
-        	} 
         	
-            printf "%-*.*s %-*.*s %-*.*s %-*.*s %-*.*s %-*.*s\n",
-              $max_id_len, $max_id_len, $user->id(),
-          	  $group_len, $group_len, $user->Group()->{__id},
-              $username_len, $username_len, $OMEName,
-              $name_len, $name_len, ($user->FirstName() . " ". $user->LastName()),
-              $email_len, $email_len, $user->Email(),
-          	  $directory_len, $directory_len, $user->DataDirectory();
+        	$OMEName = $user->OMEName();
+        	$OMEName = '' unless defined $OMEName;
+			$ID = $user->id();
+        	$ID = '' unless defined $ID;
+			$GID = $user->Group()->{__id};
+        	$GID = '' unless defined $OMEName;
+        	$FirstName = $user->FirstName();
+        	$FirstName = '' unless defined $FirstName;
+        	$LastName = $user->LastName();
+        	$LastName = '' unless defined $LastName;
+        	$Email = $user->Email();
+        	$Email = '' unless defined $Email;
+	       	$DataDirectory = $user->DataDirectory();
+        	$DataDirectory = '' unless defined $DataDirectory;
+        	
+        	printf "%-*.*s %-*.*s %-*.*s %-*.*s %-*.*s %-*.*s\n",
+              $max_id_len, $max_id_len, $ID,
+          	  $group_len, $group_len, $GID,
+          	  $username_len, $username_len, $OMEName,
+              $name_len, $name_len, ($FirstName. " ". $LastName),
+              $email_len, $email_len, $Email,
+          	  $directory_len, $directory_len, $DataDirectory;
         }
     }
 }
