@@ -41,7 +41,7 @@ if (defined $sessionKey and $sessionKey) {
 print STDERR "OMElogout:  attempting to delete sessionKey $sessionKey.\n";
 	eval {
 		tie %session, 'Apache::Session::File', $sessionKey, {
-			Directory => '/tmp/OMEsessions'
+			Directory => '/var/tmp/OME/sessions'
 		};
 		tied(%session)->delete;
 	}
