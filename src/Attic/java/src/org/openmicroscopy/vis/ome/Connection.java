@@ -48,18 +48,12 @@ import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
 import org.openmicroscopy.vis.piccolo.PFormalOutput;
+import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.Box;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.Rectangle;
-
 
 
 
@@ -109,50 +103,16 @@ public class Connection {
 	 * @param userName
 	 * @param passWord
 	 */
-	public Connection(final ApplicationController controller,
+	public Connection(final Controller controller,
 		final String URL,final String userName,final String passWord) {
 	
-		buildStatusWindow();	
+		//buildStatusWindow();	
 		worker = 
 			new ConnectionWorker(controller,this,URL,userName,passWord);
 		
 		worker.start();
 	}
-	
-	private void buildStatusWindow() {
-		status = new JWindow();
-		JPanel content = (JPanel) status.getContentPane();
-		content.setLayout(new BoxLayout(content,BoxLayout.X_AXIS));
-		content.add(Box.createRigidArea(new Dimension(5,0)));
 		
-		JPanel panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-		content.add(panel);
-		
-		panel.add(Box.createRigidArea(new Dimension(0,5)));		
-		JLabel title = new JLabel("Loading...");
-		panel.add(title);
-		statusLabel = new JLabel("OME Database Contents               ");
-		panel.add(Box.createRigidArea(new Dimension(0,5)));
-		panel.add(statusLabel);
-		status.pack();
-		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-		Rectangle bounds = status.getBounds();
-		int x = (int) (screen.getWidth()-bounds.getWidth())/2;
-		int y = (int) (screen.getHeight()-bounds.getHeight())/2;
-		status.setBounds(x,y,(int)bounds.getWidth(),(int)bounds.getHeight());
-		status.setVisible(true);	
-	}
-	
-	public void setStatusLabel(String s) {
-			statusLabel.setText(s);
-	}
-	
-	public void closeStatusWindow() {
-		status.setVisible(false);
-		status.dispose();
-	}
-	
 	public void setSession(Session session) {
 		this.session = session;
 	}
