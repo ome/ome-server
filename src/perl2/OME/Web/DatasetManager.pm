@@ -308,7 +308,7 @@ sub format_dataset {
   $summary .= "<NOBR><B>ID:</B> ".$dataset->dataset_id()."</NOBR><BR>" ;
   $summary .= "<B>Description:</B> ".$dataset->description()."<BR>" ;
   if (defined $lock){
-    $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?$lock:$unlock)."</NOBR><br>";
+    $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?$unlock:$lock)."</NOBR><br>";
   }else{
     $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?'YES':'NO')."</NOBR><br>";
   }
