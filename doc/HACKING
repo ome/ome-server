@@ -54,8 +54,9 @@ CVS AND THE SOURCE TREE
 SOURCE FILE STUBS
 
     Located below are example Perl and C stubs for source file submissions to
-    the OME project. Notice that you may not specify an author clause in the
-    copyright or license statement.
+    the OME project. Notice that you may not specify an author clause within
+    the copyright or license statement. However, you may use a separated
+    "Written by" statement, as in the following templates.
 
     ____
     Perl
@@ -63,10 +64,14 @@ SOURCE FILE STUBS
     # OME/MyPackage/MyPackage.pm
     # This module is used for packaging my packages.
 
+    #-------------------------------------------------------------------------------
+    #
     # Copyright (C) 2003 Open Microscopy Environment
     #       Massachusetts Institue of Technology,
     #       National Institutes of Health,
     #       University of Dundee
+    #
+    #
     #
     #    This library is free software; you can redistribute it and/or
     #    modify it under the terms of the GNU Lesser General Public
@@ -81,33 +86,61 @@ SOURCE FILE STUBS
     #    You should have received a copy of the GNU Lesser General Public
     #    License along with this library; if not, write to the Free Software
     #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    #
+    #-------------------------------------------------------------------------------
+    
+    
+    
+    
+    #-------------------------------------------------------------------------------
+    # Written by:   Your Self <your@email>
+    #-------------------------------------------------------------------------------
 
     package OME::MyPackage;
     use strict;
     use warnings;
 
+
+
     _
     C
 
-    /* Copyright (C) 2003 Open Microscopy Environment
+    /*------------------------------------------------------------------------------
+     *
+     *  Copyright (C) 2003 Open Microscopy Environment
      *      Massachusetts Institue of Technology,
      *      National Institutes of Health,
      *      University of Dundee
-     * 
-     *     This library is free software; you can redistribute it and/or
-     *     modify it under the terms of the GNU Lesser General Public
-     *     License as published by the Free Software Foundation; either
-     *     version 2.1 of the License, or (at your option) any later version.
      *
-     *     This library is distributed in the hope that it will be useful,
-     *     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-     *     Lesser General Public License for more details.
      *
-     *     You should have received a copy of the GNU Lesser General Public
-     *     License along with this library; if not, write to the Free Software
-     *     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+     *
+     *    This library is free software; you can redistribute it and/or
+     *    modify it under the terms of the GNU Lesser General Public
+     *    License as published by the Free Software Foundation; either
+     *    version 2.1 of the License, or (at your option) any later version.
+     *
+     *    This library is distributed in the hope that it will be useful,
+     *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+     *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+     *    Lesser General Public License for more details.
+     *
+     *    You should have received a copy of the GNU Lesser General Public
+     *    License along with this library; if not, write to the Free Software
+     *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+     *
+     *------------------------------------------------------------------------------
      */
+     
+     
+     
+     
+    /*------------------------------------------------------------------------------
+     * Written by:    Your Self <your@email>
+     *------------------------------------------------------------------------------
+     */
+
+
+
 
 LINKS
 

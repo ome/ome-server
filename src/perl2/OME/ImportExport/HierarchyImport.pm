@@ -1,10 +1,14 @@
 # OME/ImportExport/HierarchyImport.pm
 # This module is used for importing a list of objects from XML governed by the OME-CA schema.
 
+#-------------------------------------------------------------------------------
+#
 # Copyright (C) 2003 Open Microscopy Environment
-# Authors:
-#    Josiah Johnston <siah@nih.gov>
-#    Ilya G. Goldberg <igg@nih.gov>
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -19,6 +23,21 @@
 #    You should have received a copy of the GNU Lesser General Public
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------
+#
+# Written by:  
+#    Josiah Johnston <siah@nih.gov>
+#    Ilya G. Goldberg <igg@nih.gov>
+#
+#-------------------------------------------------------------------------------
+
+
 package OME::ImportExport::HierarchyImport;
 
 =head1 NAME

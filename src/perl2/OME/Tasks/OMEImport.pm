@@ -1,7 +1,13 @@
 # OME/Tasks/OMEImport.pm
 
+#-------------------------------------------------------------------------------
+#
 # Copyright (C) 2003 Open Microscopy Environment
-# Author:  Douglas Creager <dcreager@alum.mit.edu>
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -16,6 +22,17 @@
 #    You should have received a copy of the GNU Lesser General Public
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------
+#
+# Written by:    Douglas Creager <dcreager@alum.mit.edu>
+#
+#-------------------------------------------------------------------------------
 
 
 package OME::Tasks::OMEImport;
