@@ -5,9 +5,7 @@
 char b64string[] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-long base64_encode (to, from, len)
-	char *to, *from;
-	unsigned int len;
+long base64_encode (char *to, char *from, unsigned int len)
 {
 	char *fromp = from;
 	char *top = to;
@@ -59,9 +57,7 @@ long base64_encode (to, from, len)
 
 
 // returns the amount of output decoded. this will be ((int) (len / 4) ) * 3
-long base64_decode (to, from, len)
-	char *to, *from;
-	unsigned int len;
+long base64_decode (char *to, char *from, unsigned int len)
 {
 	char *fromp = from;
 	char *top = to;
