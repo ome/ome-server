@@ -78,9 +78,9 @@ sub importFiles {
         $image->Field("description",$href->{'Image.Description'});
         $image->Field("experimenter",$session->User());
         my $created = $href->{'Image.CreationDate'};
-        $created = "2002-09-25" unless $created;
+        $created = "now" unless $created;
         $image->Field("created",$created);
-        $image->Field("inserted","2002-09-05");
+        $image->Field("inserted","now");
         $image->Field("repository",$repository);
         $image->Field("sizeX",$href->{'Image.SizeX'});
         $image->Field("sizeY",$href->{'Image.SizeY'});
