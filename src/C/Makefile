@@ -1,12 +1,15 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
-TARGETS = OMEimportDVfile DumpDV SetDVwave findSpotsOME BinarizeGlobal SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader DumpSoftWorxStats DumpTIFFheader DumpTIFFstats
+TARGETS = OMEimportDVfile DumpDV SetDVwave findSpotsOME BinarizeGlobal \
+		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
+		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats \
+		cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
 MATH_LIBS = -lm
 LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -fstrict-prototypes -Wall -O2
-
+MAKEFILES = cgrayce
 OME_LIB = libOME.so
 
 CFLAGS = $(DEFINES) $(DB_INCLUDES) $(COMPILER_FLAGS)
@@ -71,6 +74,9 @@ SetDVwave: SetDVwave.o  BSUtils.o
 $(OME_LIB): $(OBJECTS)
 	ld -shared -warn-once -o $@ $(OBJECTS) 
 
+cgrayce2:
+	$(MAKE) -C cgrayce
+
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
 trackSpotsOMEwrpr.o : OMEdb.h
@@ -97,6 +103,7 @@ clean :
 	rm -f OMEimportDVfile /usr/bin/OMEimportDVfile
 	rm -f /usr/bin/DumpDV
 	rm -f /usr/bin/SetDVwave
+	$(MAKE) -C cgrayce clean
 
 install:
 	install -d ../bin
@@ -119,5 +126,6 @@ install:
 	cp -f OMEimportDVfile /usr/local/bin/
 	cp -f DumpDV /usr/local/bin/DumpDV
 	cp -f SetDVwave /usr/local/bin/SetDVwave
+	$(MAKE) -C cgrayce install
 
 all: $(TARGETS)

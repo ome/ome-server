@@ -22,8 +22,9 @@ use DBI;
 my $binDir = '/OME/dev';
 my $dataSource =   "dbi:Pg:dbname=ome";
 my $dbHandle = DBI->connect($dataSource, undef, undef,
-		{ RaiseError => 1, AutoCommit => 0, InactiveDestroy => 1})
+		{ RaiseError => 1, AutoCommit => 1, InactiveDestroy => 1, PrintError => 1})
                    || die "Could not connect to the database: ".$DBI::errstr;
+#	$dbHandle->trace(3);
 my @oldColumnNames = (
 	'dataset_id',
 	'size_x',
@@ -37,7 +38,7 @@ my @oldColumnNames = (
 	'raster_id'
 );
 
-	$dbHandle->do ('select * into temporary table old_table from attributes_iccb_tiff');
+#	$dbHandle->do ('select * into temporary table old_table from attributes_iccb_tiff');
 	$dbHandle->do ('drop table attributes_iccb_tiff');
 	$dbHandle->do (q /
 CREATE TABLE ATTRIBUTES_ICCB_TIFF (
@@ -61,12 +62,12 @@ RASTER_ID       OID
 	$dbHandle->do (q /CREATE INDEX ICCB_TIFF_RASTER_idx ON ATTRIBUTES_ICCB_TIFF (RASTER_ID)/);
 	$dbHandle->do (q /CREATE INDEX ICCB_TIFF_ID_idx ON ATTRIBUTES_ICCB_TIFF (DATASET_ID)/);
 
-	$dbHandle->do ('INSERT INTO attributes_iccb_tiff ('.join(',',@oldColumnNames).') SELECT '.
-		join(',',@oldColumnNames).' FROM old_table');
+#	$dbHandle->do ('INSERT INTO attributes_iccb_tiff ('.join(',',@oldColumnNames).') SELECT '.
+#		join(',',@oldColumnNames).' FROM old_table');
 
 # Get the dataset_id, raster_id, name and path for each ICCB_TIFF dataset
-	my $tuples = $dbHandle->selectall_hashref('SELECT d.dataset_id, d.name, d.path, t.raster_id '.
-		'FROM datasets d, ATTRIBUTES_ICCB_TIFF t where d.dataset_id=t.dataset_id');
+	my $tuples = $dbHandle->selectall_hashref('SELECT d.dataset_id, d.name, d.path '.
+		"FROM datasets d where d.dataset_type='ICCB_TIFF'");
 	my $rowRef;
 	my %rasterIDs;
 	my %newColumns;
@@ -74,18 +75,73 @@ RASTER_ID       OID
 	my $command;
 	my $datasetID;
 	my @columns;
+use File::Basename;
+my ($name,$path,$suffix);
+my ($wave,$sample,$well);
+my ($frag,$fragRe);
+my ($base,$plate);
+my $raster_key;
+my %newColumnsHash;
 	foreach (@$tuples) {
 		$rowRef = $_;
 		$datasetID = $rowRef->{dataset_id};
-	print STDERR "Dataset ID: $datasetID\n";
-		if (exists $rasterIDs{$rowRef->{raster_id}}) {
-			$rasterIDs{$rowRef->{raster_id}}->[1]++;
-		} else {
-			$rasterIDs{$rowRef->{raster_id}} = [$datasetID,1];
-		}
+	print STDERR "Analyzing Dataset ID: $datasetID\n";
 		$fullPath = $rowRef->{path}.$rowRef->{name};
+
+
+
+		# Get the name, path and suffix from the filename.
+		($name,$path,$suffix) = fileparse($fullPath,".TIF",".tif");	
+
+		# The suffix (when converted to uppercase) must be equal to "TIF"
+		next unless (uc ($suffix) eq ".TIF");
+
+		# Build frag from the end to the begining.
+		# eventually it will contain all the stuff after the base name.
+		# Get the well,sample,and wave
+		# if we find matches, set the variable, and prepend the format to frag
+		if ($name =~ /_w([0-9]+)/){ $wave = $1; $frag = "_w".$wave.$frag; }
+		if ($name =~ /_s([0-9]+)/){ $sample = $1; $frag = "_s".$sample.$frag; }
+		if ($name =~ /_([A-P][0-2][0-9])/){ $well = $1; $frag = "_".$well.$frag;}
+
+		# The last check is that we have to have the well defined.  If not, its not an ICCB_TIFF.
+		next unless defined $well;
+
+		# If we made it this far, then we're going to make a dataset object.
+
+		# Make frag a regular expression and use it to find the plate number.
+		# Prepend the plate number to frag so we can find the basename.
+		# N.B.: If the base name ends in a digit, then we cannot determine the plate number!
+
+		$fragRe = qr/$frag/;
+		if ($name =~ /([0-9]+)${fragRe}/){ $plate = $1; $frag = $plate.$frag }
+
+		# The base name is everything before $frag.
+		$fragRe = qr/$frag/;
+		if ($name =~ /(.*)${fragRe}/){ $base = $1;}
+
+		# Set fields specific to our dataset - we're setting keys and values in the parameters hash, so that when the new
+		# method returns, everything will be copasetic.
 		
-		$command = "$binDir/DumpTIFFheader $fullPath |";
+		$newColumnsHash{well}       = $well;
+		$newColumnsHash{base_name}  = $base;
+		$newColumnsHash{wave}       = $wave;
+		$newColumnsHash{sample}     = $sample;
+		$newColumnsHash{chem_plate} = $plate;
+		$raster_key = $path.$base.$plate.$well.$sample;
+		$newColumnsHash{rasterID} = $raster_key;
+#print STDERR "Full Path: $fullPath, Raster Key: $raster_key\n";
+
+
+		if (exists $rasterIDs{$raster_key}) {
+			$rasterIDs{$raster_key}->[1]++;
+		} else {
+			$rasterIDs{$raster_key} = [$datasetID,1];
+		}
+
+
+		
+		$command = "$binDir/DumpTIFFheader $fullPath 2>/dev/null |";
 		open (STDOUT_PIPE,$command) or die $!;
 		while (<STDOUT_PIPE>) {
 			chomp;
@@ -95,16 +151,17 @@ RASTER_ID       OID
 		# Trim leading and trailing whitespace, set value to undef if not like a C float.
 			$value =~ s/^\s+//;$value =~ s/\s+$//;$value = undef unless ($value =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 			if ($attribute eq 'SizeX') {
-				$newColumns{$datasetID}->{size_x} = $value;
+				$newColumnsHash{size_x} = $value;
 			} elsif ($attribute eq 'SizeY') {
-				$newColumns{$datasetID}->{size_y} = $value;
+				$newColumnsHash{size_y} = $value;
 			}
 		}
 		close (STDOUT_PIPE);
+		next unless exists $newColumnsHash{size_x} and $newColumnsHash{size_x} and
+			exists $newColumnsHash{size_y} and $newColumnsHash{size_y};
 
 
-
-		$command = "$binDir/DumpTIFFstats $fullPath |";
+		$command = "$binDir/DumpTIFFstats $fullPath 2>/dev/null |";
 		open (STDOUT_PIPE,$command) or die $!;
 		@columns = split ('\t', <STDOUT_PIPE>);
 		while (<STDOUT_PIPE>) {
@@ -113,36 +170,44 @@ RASTER_ID       OID
 		# Trim leading and trailing whitespace, set column value to undef if not like a C float.
 			foreach (@columns) {$_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);}
 		# Set the XYinfo.
-			$newColumns{$datasetID}->{min} = $columns[0];
-			$newColumns{$datasetID}->{max} = $columns[1];
-			$newColumns{$datasetID}->{mean} = $columns[2];
-			$newColumns{$datasetID}->{sigma} = $columns[3];
+			$newColumnsHash{min} = $columns[0];
+			$newColumnsHash{max} = $columns[1];
+			$newColumnsHash{mean} = $columns[2];
+			$newColumnsHash{sigma} = $columns[3];
 		}
 		close (STDOUT_PIPE);
-		$newColumns{$datasetID}->{ID} = $datasetID;
-		$newColumns{$datasetID}->{rasterID} = $rowRef->{raster_id};
+		$newColumnsHash{ID} = $datasetID;
+		$newColumns{$datasetID} = {%newColumnsHash};
 	}
 
 # Write the stuff to the DB.
-my ($keys,$values);
-	while ( ($datasetID,$rowRef) = each %newColumns) {
-while ( ($keys,$values) = each %$rowRef ) {
-	print STDERR "$keys  =>  $values\n";
-}
-	print STDERR "Dataset ID: $datasetID\n";
+	my @keys = ('dataset_id','size_x','size_y','num_waves','raster_id','min','max','mean','sigma',
+		'well','base_name','wave','sample','chem_plate');
 
-		$command = 'UPDATE ATTRIBUTES_ICCB_TIFF SET '.
-			'size_x = '.$newColumns{$datasetID}->{size_x}.
-			', size_y = '.$newColumns{$datasetID}->{size_y}.
-			', num_waves = '.$rasterIDs{$newColumns{$datasetID}->{rasterID}}->[1].
-			', raster_id = '.$rasterIDs{$newColumns{$datasetID}->{rasterID}}->[0].
-			', min = '.$newColumns{$datasetID}->{min}.
-			', max = '.$newColumns{$datasetID}->{max}.
-			', mean = '.$newColumns{$datasetID}->{mean}.
-			', sigma = '.$newColumns{$datasetID}->{sigma}.
-			" WHERE dataset_id=$datasetID";
-		print STDERR $command,"\n";
-		$dbHandle->do ($command);
+	$command = 'INSERT INTO ATTRIBUTES_ICCB_TIFF ('.join (',',@keys).
+		') VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+print STDERR $command."\n";
+print STDERR join ("\t",@keys)."\n";
+	my $sth = $dbHandle->prepare ($command);
+	my @values;
+	my $hashRef;
+	while ( ($datasetID,$rowRef) = each %newColumns) {
+		$hashRef = $newColumns{$datasetID};
+		@values = ($datasetID,$hashRef->{size_x},$hashRef->{size_y},
+			$rasterIDs{$hashRef->{rasterID}}->[1],
+			$rasterIDs{$hashRef->{rasterID}}->[0],
+			$hashRef->{min},
+			$hashRef->{max},
+			$hashRef->{mean},
+			$hashRef->{sigma},
+			$hashRef->{well},
+			$hashRef->{base_name},
+			$hashRef->{wave},
+			$hashRef->{sample},
+			$hashRef->{chem_plate}
+			);
+print STDERR join ("\t",@values)."\n";
+		$sth->execute (@values);
 	}
 	
 	

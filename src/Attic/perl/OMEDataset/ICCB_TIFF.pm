@@ -120,7 +120,7 @@ sub new {
 # Check DBcurrent to make sure we're importing a brand-new dataset.
 # OMEDataset sets DBcurrent if it found a dataset in the database with the same name, path and host.
 	if ($importing and not $self->DBcurrent) {
-		Import ($self);
+		return undef unless (Import ($self));
 	# This function calls WriteDB
 		$self->FixWavelengths();
 	}
@@ -315,6 +315,9 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
+	return undef unless exists $self->{size_x} and $self->{size_x} and
+		exists $self->{size_y} and $self->{size_y};
+
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
@@ -340,6 +343,7 @@ my @columns;
 	close (STDOUT_PIPE);
 	
 	$self->{_OME_DB_STATUS_} = 'DIRTY';
+	return $self;
 }
 
 
@@ -619,12 +623,16 @@ my $sth = $dbh->prepare('INSERT INTO dataset_wavelengths '.
 # N.B.:  There will be a COPY of the calling object in the array (not a reference to the calling object)
 sub GetWavelengthDatasets {
 my $self = shift;
+# Return the array if we already read it.
+return $self->{WavelengthDatasets} if exists $self->{WavelengthDatasets} and defined $self->{WavelengthDatasets}
+	and defined $self->{WavelengthDatasets}->[0];
 my $rasterID = $self->{RasterID};
 my $OME = $self->{OME};
 my $dbh = $OME->DBIhandle();
 my $datasetIDs = $dbh->selectcol_arrayref ("SELECT dataset_id FROM $myAttributesTable WHERE raster_id = $rasterID ORDER BY wave");
 
-	return $OME->GetDatasetObjects ($datasetIDs);
+	$self->{WavelengthDatasets} = $OME->GetDatasetObjects ($datasetIDs);
+	return $self->{WavelengthDatasets};
 
 }
 

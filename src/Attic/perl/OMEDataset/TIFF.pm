@@ -119,7 +119,7 @@ sub new {
 # Check DBcurrent to make sure we're importing a brand-new dataset.
 # OMEDataset sets DBcurrent if it found a dataset in the database with the same name, path and host.
 	if ($importing and not $self->DBcurrent) {
-		Import ($self);
+		return undef unless (Import ($self));
 		$self->WriteDB();
 	}
 
@@ -262,9 +262,8 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
-foreach (  keys (%$self) ) {
-print STDERR "TIFF:Import, self: $_ => ".$self->{$_}."\n";
-}
+	return undef unless exists $self->{size_x} and $self->{size_x} and
+		exists $self->{size_y} and $self->{size_y};
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
@@ -290,6 +289,7 @@ print STDERR "TIFF:Import, self: $_ => ".$self->{$_}."\n";
 	close (STDOUT_PIPE);
 	
 	$self->{_OME_DB_STATUS_} = 'DIRTY';
+	return $self;
 }
 
 

@@ -1,0 +1,37 @@
+---------------------------------------------------------------------------
+
+   ome-1.4
+
+   Copyright (c) 2001 Christopher J. Grayce
+
+   Permission to use, copy, modify, distribute and sell this software
+   including C source code and header files for any purpose is hereby 
+   granted provided the above copyright notice and this permission 
+   notice appear in all copies of the software.
+
+   THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+   EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+   WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+
+---------------------------------------------------------------------------
+
+   ++ Notes as of 9/01/01 ++
+
+   1. To build everything:
+
+      tar -xzvf ome-1.4.tar.gz
+      cd ome-1.4
+      make clean
+      make
+     
+   2. Programs:
+
+      ome_info     - prints information about an image file.
+      ome_make     - creates TIFF test image files.
+      ome_copy     - copies image files, possibly altering them.
+      ome_hist     - makes graylevel histograms.
+      ome_obj      - finds foreground objects.
+  
+      ome_cccp     - CCCP correlation. 
+      ome_tmcp     - TMCP correlation.
+    
