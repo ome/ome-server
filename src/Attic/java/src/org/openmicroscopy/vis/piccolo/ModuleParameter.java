@@ -40,7 +40,6 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolox.util.PBoundsLocator;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
@@ -84,7 +83,7 @@ public abstract class ModuleParameter extends PText implements
 	// the left and outputs on the right. Thus, for inputs, the locator
 	// will be on the west, and outputs will have the locator on the east.
 	
-	protected PBoundsLocator locator;
+	protected ParameterLocator locator;
 	protected boolean linkable;
 	
 	public ModuleParameter() {
@@ -143,7 +142,7 @@ public abstract class ModuleParameter extends PText implements
 		return canvas;
 	}
 	
-	public PBoundsLocator getLocator() {
+	public ParameterLocator getLocator() {
 		return locator;
 	}
 	

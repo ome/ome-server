@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleOutput
+ * org.openmicroscopy.vis.piccolo.ParameterLocator
  *
  *------------------------------------------------------------------------------
  *
@@ -37,40 +37,43 @@
  */
 
 package org.openmicroscopy.vis.piccolo;
-
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
-import org.openmicroscopy.SemanticType;
+import edu.umd.cs.piccolox.util.PLocator;
 import javax.swing.SwingConstants;
-import java.util.ArrayList;
+import java.awt.geom.Rectangle2D;
 
-/** 
- * Nodes for displaying module outputs.<p>
+/**
+ * Locating of linkage points on module parameters<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class ModuleOutput extends ModuleParameter {
+
+public class ParameterLocator extends PLocator {
+
+	private ModuleParameter param;
+	private int side;
 	
-	public ModuleOutput(ModuleNode node,FormalParameter param,ChainCanvas canvas) {
-		super(node,param,canvas);
-		if (param.getSemanticType() != null)
-			canvas.addOutput(param.getSemanticType(),this);
-		locator = new ParameterLocator(this,SwingConstants.EAST);
+	public ParameterLocator(ModuleParameter param,int side) {
+		super();
+		this.param = param;
+		this.side = side;	
 	}
 	
-	/**
-	 * For outputs, the corresponding list is a list of ModuleInputs.
-	 * Find the semantic type of the parameter associated with this widget,
-	 * and then ask the canvas for the list of inputs with that semantic type.
-	 * 
-	 * @return a list of ModuleInputs with the same semantic type as param.  
-	 */
- 	public ArrayList getCorresponding() {
-		SemanticType type = param.getSemanticType();
-		if (type == null)
-			return null;
-		return canvas.getInputs(type);
- 	}
+	public double locateY() {
+		Rectangle2D aBounds = param.getBoundsReference();
+		return aBounds.getY()+aBounds.getHeight()/2;	
+	}
+	
+	public double locateX() {
+		Rectangle2D aBounds = param.getBoundsReference();
+		if (side == SwingConstants.EAST) {
+			return aBounds.getX()+aBounds.getWidth()+Link.END_BULB_RADIUS;
+		}
+		else { // must be WEST
+			return aBounds.getX()-Link.END_BULB;
+		}
+	}
 }
+	
