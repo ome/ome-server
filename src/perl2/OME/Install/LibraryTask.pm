@@ -207,12 +207,12 @@ my @libraries = ( {
 			my ($library,$logfile) = @_;
 			my @inc_paths = (
 				'/usr/include/db_185.h'           , '<db_185.h>',
-				'/usr/local/include/db_185.h'     , '<db_185.h>',
 				'/usr/include/db4/db_185.h'       , '<db4/db_185.h>',
-				'/usr/local/include/db4/db_185.h' , '<db4/db_185.h>',
 				'/usr/include/db3/db_185.h'       , '<db3/db_185.h>',
-				'/usr/local/include/db3/db_185.h' , '<db3/db_185.h>',
 				'/usr/include/db2/db_185.h'       , '<db2/db_185.h>',
+				'/usr/local/include/db_185.h'     , '<db_185.h>',
+				'/usr/local/include/db4/db_185.h' , '<db4/db_185.h>',
+				'/usr/local/include/db3/db_185.h' , '<db3/db_185.h>',
 				'/usr/local/include/db2/db_185.h' , '<db2/db_185.h>',
 				'/usr/include/db.h'               , '<db.h>',
 				'/usr/local/include/db.h'         , '<db.h>',
