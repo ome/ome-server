@@ -439,6 +439,10 @@ my $SemanticDefinitionsXML = $root->getElementsByTagName( "SemanticTypeDefinitio
 			print STDERR ref ($self) . "->processDOM: determined granularity. Setting granularity to '$granularity'. \n"
 				if $debug > 1;
 			push(@commitOnSuccessfulImport, $newAttrType);
+                        # DC -> 3/24/2003
+                        # The attribute types aren't getting committed
+                        # unless there's a module declared.
+                        $newAttrType->commit();
 		}
 		#
 		# END "if AttributeType doesn't exist, create it"
