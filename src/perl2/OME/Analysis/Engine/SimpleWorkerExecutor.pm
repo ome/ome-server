@@ -60,6 +60,7 @@ use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
 
 use constant SERVER_BUSY     => 503;
+use constant DATA_SOURCE     => 'dbi:Pg:dbname=ome;host=localhost';
 
 
 sub new {
@@ -90,7 +91,7 @@ sub new {
 	$self->{UA} = LWP::UserAgent->new ();
 
 	# Get our DataSource + SessionKey
-	$self->{DataSource}	  = 'dbi:Pg:dbname=ome;host=localhost';
+	$self->{DataSource}	  = DATA_SOURCE;
 	$self->{SessionKey}	  = OME::Session->instance()->SessionKey();
 
 	logdbg "debug", "SimpleWorkerExecutor->new: Registering listeners";
