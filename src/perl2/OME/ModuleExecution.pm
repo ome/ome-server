@@ -189,7 +189,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('actual_inputs');
 __PACKAGE__->sequence('actual_input_seq');
 __PACKAGE__->columns(Primary => qw(actual_input_id));
-__PACKAGE__->columns(Essential => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(attribute_id analysis_id formal_input_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 __PACKAGE__->hasa('OME::Program::FormalInput' => qw(formal_input_id));
 
@@ -244,7 +244,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('actual_outputs');
 __PACKAGE__->sequence('actual_output_seq');
 __PACKAGE__->columns(Primary => qw(actual_output_id));
-__PACKAGE__->columns(Essential => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(attribute_id analysis_id formal_output_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 __PACKAGE__->hasa('OME::Program::FormalOutput' => qw(formal_output_id));
 
