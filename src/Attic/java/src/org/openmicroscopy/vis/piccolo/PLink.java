@@ -42,9 +42,9 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.PNode;
+import java.lang.Math;
 import java.awt.BasicStroke;
 import java.awt.geom.Point2D;
-import java.awt.geom.Ellipse2D;
 import java.awt.Color;
 
 
@@ -85,21 +85,44 @@ public class PLink extends  PPath implements PNodeEventListener {
 	// xs and ys for line
 	float xstart,ystart;
 	float xend,yend;
+	
+//	private GeneralPath arrow;
+
+	private PPath arrow;
 		
 	public PLink() {		
 		super();
 		setStroke(LINK_STROKE);
 		setPaint(DEFAULT_COLOR);
+		buildArrow();
 	}
 	public PLink(PFormalInput in,PFormalOutput out) {
 		this.start = in;
 		this.end = out;
+		buildArrow();
 		start.addNodeEventListener(this);
 		end.addNodeEventListener(this);
 		start.setLinkedTo(end,this);
 		end.setLinkedTo(start,this);
 		setStartPoint();
 		setEndPoint();
+		setStroke(LINK_STROKE);
+		setPaint(DEFAULT_COLOR);
+		
+	}
+	
+	private void buildArrow() {
+		arrow = new PPath();
+		arrow.moveTo(0,0);
+		float left = -12;
+		float top = -5;
+		arrow.lineTo(left,top);
+		arrow.lineTo(left+4,0);
+		float bottom = 5;
+		arrow.lineTo(left,bottom);
+		arrow.closePath();
+		arrow.setPaint(DEFAULT_COLOR);
+		addChild(arrow);
 	}
 	
 	public void setStartParam(PFormalParameter start) {
@@ -147,22 +170,33 @@ public class PLink extends  PPath implements PNodeEventListener {
 	}
 	
 	private void setLine() {
+		double theta;
 		reset();
 		moveTo(xstart,ystart);
 		lineTo(xend,yend);	
 		if ( start instanceof PFormalInput) {
-			drawLinkEnd(xstart,ystart);
+			theta = getAngle(xend,yend,xstart,ystart);
+			drawLinkEnd(xstart,ystart,theta);
 		}
 		else {
-			drawLinkEnd(xend,yend);
+			theta = getAngle(xstart,ystart,xend,yend);
+			drawLinkEnd(xend,yend,theta);
 		}
 	}
 
+	public double getAngle(float xs,float ys,float xe,float ye) {
+		double arctan = (double) (ye-ys)/(xe-xs);
+		double angle = Math.atan(arctan);
+		if (xe < xs)
+			angle += Math.PI;
+		return angle;
+	}
 	
-	private void drawLinkEnd(float x,float y) {
-		Ellipse2D.Float bulb = new Ellipse2D.Float(x-END_BULB_RADIUS,
-			y-END_BULB_RADIUS,END_BULB,END_BULB);
-		append(bulb,false);
+	private void drawLinkEnd(float x,float y,double theta) {
+	
+		//arrow.setOffset(0,0);
+		arrow.setRotation(theta);
+		arrow.setOffset(x,y); 
 	}
 	
 	
