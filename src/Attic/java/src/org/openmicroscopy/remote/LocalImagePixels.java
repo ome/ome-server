@@ -62,28 +62,28 @@ public class LocalImagePixels
     }
 
     private String    relativePath;
-    private Attribute dimensions, repository;
+    private Attribute pixels, repository;
     private int       sizeX, sizeY, sizeZ, sizeC, sizeT;
 
     public LocalImagePixels()
     {
     }
 
-    public LocalImagePixels(Attribute pixels, Attribute dimensions)
+    public LocalImagePixels(Attribute pixels)
     {
         this.repository = pixels.getAttributeElement("Repository");
         this.relativePath = pixels.getStringElement("Path");
-        this.dimensions = dimensions;
-        this.sizeX = dimensions.getIntElement("SizeX");
-        this.sizeY = dimensions.getIntElement("SizeY");
-        this.sizeZ = dimensions.getIntElement("SizeZ");
-        this.sizeC = dimensions.getIntElement("SizeC");
-        this.sizeT = dimensions.getIntElement("SizeT");
+        this.pixels = pixels;
+        this.sizeX = pixels.getIntElement("SizeX");
+        this.sizeY = pixels.getIntElement("SizeY");
+        this.sizeZ = pixels.getIntElement("SizeZ");
+        this.sizeC = pixels.getIntElement("SizeC");
+        this.sizeT = pixels.getIntElement("SizeT");
     }
 
-    public Attribute getDimensions() { return dimensions; }
-    public void setDimensions(Attribute dimensions)
-    { this.dimensions = dimensions; }
+    public Attribute getPixelsAttribute() { return pixels; }
+    public void setPixelsAttribute(Attribute pixels)
+    { this.pixels = pixels; }
 
     private RandomAccessFile  file;
 

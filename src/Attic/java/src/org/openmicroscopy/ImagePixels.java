@@ -25,7 +25,8 @@ import java.io.IOException;
 
 public interface ImagePixels
 {
-    public Attribute getDimensions();
+    public Attribute getPixelsAttribute();
+
     public byte[] getPixels()
         throws IOException;
     public byte[] getPlane(int z, int c, int t)

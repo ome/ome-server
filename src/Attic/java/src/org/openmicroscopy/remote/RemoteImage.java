@@ -118,20 +118,20 @@ public class RemoteImage
         return i;
     }
 
-    public ImagePixels getPixels(Attribute pixels, Attribute dimensions)
+    public ImagePixels getPixels(Attribute pixels)
     {
         Attribute repository = pixels.getAttributeElement("Repository");
         if (LocalImagePixels.isRepositoryLocal(repository))
         {
-            LocalImagePixels pix = new LocalImagePixels(pixels,dimensions);
+            LocalImagePixels pix = new LocalImagePixels(pixels);
             return pix;
         } else {
             Object o = caller.dispatch("OME::Image","GetPix",
-                                       new Object[] { pixels, dimensions });
+                                       new Object[] { pixels });
             if (o == null) return null;
             RemoteImagePixels pix = (RemoteImagePixels)
                 instantiate(RemoteImagePixels.class,(String) o);
-            pix.setDimensions(dimensions);
+            pix.setPixelsAttribute(pixels);
             return pix;
         }
     }

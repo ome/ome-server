@@ -54,5 +54,5 @@ public interface Image
     public List getAllFeatures();
     public Iterator iterateAllFeatures();
 
-    public ImagePixels getPixels(Attribute pixels, Attribute dimensions);
+    public ImagePixels getPixels(Attribute pixels);
 }

@@ -30,10 +30,10 @@ public class RemoteImagePixels
     public RemoteImagePixels() { super(); }
     public RemoteImagePixels(String reference) { super(reference); }
 
-    private Attribute dimensions;
+    private Attribute pixels;
 
-    public Attribute getDimensions() { return dimensions; }
-    public void setDimensions(Attribute dimensions) { this.dimensions = dimensions; }
+    public Attribute getPixelsAttribute() { return pixels; }
+    public void setPixelsAttribute(Attribute pixels) { this.pixels = pixels; }
 
     public byte[] getPixels()
     {
@@ -106,28 +106,28 @@ public class RemoteImagePixels
     public int getPixelsBufferSize()
     {
         return
-            dimensions.getIntElement("SizeX")*
-            dimensions.getIntElement("SizeY")*
-            dimensions.getIntElement("SizeZ")*
-            dimensions.getIntElement("SizeC")*
-            dimensions.getIntElement("SizeT")*
+            pixels.getIntElement("SizeX")*
+            pixels.getIntElement("SizeY")*
+            pixels.getIntElement("SizeZ")*
+            pixels.getIntElement("SizeC")*
+            pixels.getIntElement("SizeT")*
             BYTES_PER_PIXEL;
     }
 
     public int getPlaneBufferSize(int z, int c, int t)
     {
         return
-            dimensions.getIntElement("SizeX")*
-            dimensions.getIntElement("SizeY")*
+            pixels.getIntElement("SizeX")*
+            pixels.getIntElement("SizeY")*
             BYTES_PER_PIXEL;
     }
 
     public int getStackBufferSize(int c, int t)
     {
         return
-            dimensions.getIntElement("SizeX")*
-            dimensions.getIntElement("SizeY")*
-            dimensions.getIntElement("SizeZ")*
+            pixels.getIntElement("SizeX")*
+            pixels.getIntElement("SizeY")*
+            pixels.getIntElement("SizeZ")*
             BYTES_PER_PIXEL;
     }
 
