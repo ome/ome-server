@@ -96,24 +96,21 @@
 				RefersTo = "Experimenter"/>
 		</SemanticType>
 
-		<!-- This is a reversion to the old one group per experimenter
-			until we get the rest of the code to deal with multiple groups per experimenter.
 		<SemanticType
 			Name= "ExperimenterGroup"
 			AppliesTo = "G"
 			Description = "Defines the relationship between Experimenters and Groups.">
 			<Element
 				Name= "Experimenter"
-				DBLocation = "EXPERIMENTER_GROUP_MAP.EXPERIMENTER"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.EXPERIMENTER_ID"
 				DataType = "reference"
 				RefersTo = "Experimenter"/>
 			<Element
 				Name= "Group"
-				DBLocation = "EXPERIMENTER_GROUP_MAP.GROUP"
+				DBLocation = "EXPERIMENTER_GROUP_MAP.GROUP_ID"
 				DataType = "reference"
 				RefersTo = "Group"/>
 		</SemanticType>
-		-->
 
 		<SemanticType
 			Name= "Plate"
