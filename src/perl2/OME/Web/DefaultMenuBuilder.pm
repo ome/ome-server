@@ -65,18 +65,25 @@ my @MENU = (
 		text => 'Create',
 	},
 	{
-		web_class => 'OME::Web::MakeNewProject',
+		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::Project' },
+		text => 'Project',
 	},
 	{
-		web_class => 'OME::Web::MakeNewDataset',
+		web_class => 'OME::Web::DBObjCreate',
 		type => 'link',
-		text => undef,
+		url_param => { Type => 'OME::Dataset' },
+		text => 'Dataset',
+	},
+	{
+		web_class => 'OME::Web::DBObjCreate',
+		type => 'link',
+		text => 'Other',
 	},
 	# ** Search **
 	{
-		web_class => 'OME::Web::Search',
+		web_class => undef,
 		type => 'heading',
 		text => 'Search',
 	},
@@ -109,6 +116,11 @@ my @MENU = (
 		type => 'link',
 		url_param => { Type => 'OME::AnalysisChainExecution' },
 		text => 'Chain Executions',
+	},
+	{
+		web_class => 'OME::Web::Search',
+		type => 'link',
+		text => 'Other',
 	},
 	# ** Images **
 	{
