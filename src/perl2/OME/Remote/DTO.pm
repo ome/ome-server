@@ -91,6 +91,8 @@ This is the inverse of C<__updateHash>.
 sub __makeHash ($$$) {
     my ($object,$class,$columns) = @_;
 
+    return undef unless defined $object;
+
     if (defined $class) {
         die "makeDTO expects a $class object"
           unless UNIVERSAL::isa($object,$class);
@@ -98,11 +100,24 @@ sub __makeHash ($$$) {
 
     my $dto = {};
     foreach my $column (@$columns) {
+        my ($dto_name,$object_name);
+
         if (ref($column) eq 'ARRAY') {
-            my ($dto_name,$object_name) = @$column;
-            $dto->{$dto_name} = $object->$object_name();
+            ($dto_name,$object_name) = @$column;
         } else {
-            $dto->{$column} = $object->$column();
+            $dto_name = $column;
+            $object_name = $column;
+        }
+
+        my $type = $object->getColumnType($object_name);
+        die "Unknown column $type"
+          unless defined $type;
+
+        if ($type eq 'has-many') {
+            my @results = $object->$object_name();
+            $dto->{$dto_name} = \@results;
+        } else {
+            $dto->{$dto_name} = $object->$object_name();
         }
     }
 
