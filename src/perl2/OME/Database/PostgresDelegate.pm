@@ -45,6 +45,8 @@ use DBI;
 use OME::Database::Delegate;
 use base qw(OME::Database::Delegate);
 
+use OME::DBConnection;
+
 use UNIVERSAL::require;
 use IO::Select;
 
@@ -80,43 +82,55 @@ use constant FIND_DATABASE_SQL => <<SQL;
 SQL
 
 sub createDatabase {
-    my ($self,$platform) = @_;
+	my ($self,$superuser,$password) = @_;
 
-    print "Creating PostgreSQL database...\n";
+	my $dsn = $self->getDSN();
+	$dsn =~ s/dbname=([^\s;:]+)/dbname=template1/;
+	my $dbName = $1;
+	die "The name of the ome database was not specified!" unless $dbName;
 
-    my $dbh;
+	print "Creating PostgreSQL database $dbName...";
 
-    $dbh = DBI->connect("dbi:Pg:dbname=template1")
-      or die $dbh->errstr();
+	my $dbh = $self->connectToDatabase( {
+		DataSource => $dsn,
+		DBUser	   => $superuser,
+		DBPassword => $password,
+		AutoCommit => 1,
+		InactiveDestroy => 1,
+	} ) or die "Could not connect to the database";
+	
+	my $find_database = $dbh->prepare(FIND_DATABASE_SQL);
+	my ($db_oid) = $dbh->selectrow_array($find_database,{},$dbName);
 
-    my $find_database = $dbh->prepare(FIND_DATABASE_SQL);
-    my ($db_oid) = $dbh->selectrow_array($find_database,{},'ome');
+	# This will be NULL if the database does not exist
+	if (defined $db_oid) {
+		$dbh->disconnect();
+		return 1;
+	}
 
-    # This will be NULL if the database does not exist
-    if (defined $db_oid) {
-        $dbh->disconnect();
-        return 1;
-    }
+	$dbh->do(qq{CREATE DATABASE "$dbName"}) or die $dbh->errstr();
+	print "\t\033[1m[Done.]\033[0m\n";
+	$dbh->disconnect();
 
-    $dbh->do('CREATE DATABASE ome')
-      or die $dbh->errstr();
-    $dbh->disconnect();
+	print "Fixing OID/INTEGER compatability bug...";
+	$dbh = $self->connectToDatabase({AutoCommit => 1}) or die $dbh->errstr();
 
-    print "\t\033[1m[Done.]\033[0m\n";
+	my $sth = $dbh->prepare("SELECT oid FROM pg_language WHERE lanname = 'plpgsql'");
+	($db_oid) = $dbh->selectrow_array($sth);
+	unless ($db_oid) {
+		$sth = $dbh->prepare("SELECT oid FROM pg_proc
+			WHERE proname = 'plpgsql_call_handler'
+			AND prorettype = 0 AND pronargs = 0"
+		);
+		my ($func_oid) = $dbh->selectrow_array($sth);
+		$dbh->do (q[CREATE FUNCTION "plpgsql_call_handler" ()
+			RETURNS OPAQUE AS '$libdir/plpgsql' LANGUAGE C]
+		) unless $func_oid;
+		$dbh->do (q[CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler"])
+			or die $dbh->errstr();
+	}
 
-    # Debian does this by default using Debconf, everything else needs it.
-    # Atleast as far as I know. (Chris)
-    if ($platform ne "DEBIAN") {
-        print "Adding PL-PGSQL language...\n";
-        my $CMD_OUT = `createlang plpgsql ome 2>&1`;
-        die $CMD_OUT if $? != 0;
-        print "\t\033[1m[Done.]\033[0m\n";
-    }
-
-    print "Fixing OID/INTEGER compatability bug...\n";
-    $dbh = DBI->connect("dbi:Pg:dbname=ome")
-      or die $dbh->errstr();
-    my $sql = <<SQL;
+	my $sql = <<SQL;
 CREATE FUNCTION OID(INT8) RETURNS OID AS '
 declare
   i8 alias for \$1;
@@ -125,11 +139,80 @@ begin
 end;'
 LANGUAGE 'plpgsql';
 SQL
-    $dbh->do($sql) or die ($dbh->errstr);
-    $dbh->disconnect();
-    print "\t\033[1m[Done.]\033[0m\n";
+	$dbh->do ($sql) or die ($dbh->errstr);
+	$dbh->disconnect();
+	print "\t\033[1m[Done.]\033[0m\n";
 
+	return 1;
+}
+
+
+use constant FIND_USER_SQL => <<SQL;
+  SELECT usename,usecreatedb,usesuper
+    FROM pg_shadow
+   WHERE usename = ?
+SQL
+
+
+# Create a postgres superuser SQL: CREATE USER foo CREATEUSER CREATEDB
+sub createUser {
+    my ($self,$username,$isSuperuser,$superuser,$password) = @_;
+    my $retval;
+    my $success;
+
+    my $dsn = $self->getDSN();
+    $dsn =~ s/dbname=([^\s;:]+)/dbname=template1/;
+    my $dbName = $1;
+    die "The name of the ome database was not specified!" unless $dbName;
+
+    my $dbh = $self->connectToDatabase( {
+        DataSource => $dsn,
+        DBUser     => $superuser,
+        DBPassword => $password,
+        AutoCommit => 1,
+		InactiveDestroy => 1,
+        RaiseError => 0,
+        PrintError => 0
+    } ) or return 0;
+
+    my $find_user = $dbh->prepare(FIND_USER_SQL);
+    my ($db_name,$db_create,$db_super) = $dbh->selectrow_array($find_user,{},$username);
+    
+    if ($db_name) {
+            unless ( ($db_create and $db_super and $isSuperuser) or
+                (not $db_create and not $db_super and not $isSuperuser)
+            ) {
+                $dbh->disconnect();
+                die "Modifying user priviledges is not supported - sorry.";
+            }
+    } else {
+        my $sql = "CREATE USER $username";
+        $sql .= ' CREATEUSER CREATEDB' if ($isSuperuser);
+        $dbh->do($sql);
+    }
+    ($db_name,$db_create,$db_super) = $dbh->selectrow_array($find_user,{},$username);
+    $dbh->disconnect();
+    return 1 if $db_name eq $username;
     return 0;
+}
+
+
+sub getDSN {
+    my ($self,$dbConf) = @_;
+    $dbConf = OME::Install::Environment->initialize()->DB_conf()
+        unless $dbConf and exists $dbConf->{Name} and $dbConf->{Name};
+    die "Could not get DB configuration enevironment\n".
+        "Maybe the installation environment did not load?" unless $dbConf;
+# the dbConf consists of the following
+#    User     =>
+#    Password =>
+#    Host     =>
+#    Port     =>
+#    Name     =>
+
+    my $host_str = $dbConf->{Host} ? ';host='.$dbConf->{Host} : '';
+    my $port_str = $dbConf->{Port} ? ';port='.$dbConf->{Port} : '';
+    return 'dbi:Pg:dbname='.$dbConf->{Name}.$host_str.$port_str;
 }
 
 # The SQL statement to retrieve a sequence value from the DB.

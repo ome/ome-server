@@ -31,6 +31,11 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
+# Modifications by:
+#  Ilya Goldberg <igg@nih.gov>
+#    * Added support for listeners and notifiers for IPC
+#    * Added functionality to specify DB connection parameters
+#      in the installation environment (OME::Install::Environment)
 #
 #-------------------------------------------------------------------------------
 
@@ -43,6 +48,9 @@ our $VERSION = $OME::VERSION;
 
 use DBI;
 use UNIVERSAL::require;
+use Carp;
+
+use OME::Install::Environment;
 
 =head1 NAME
 
@@ -51,9 +59,7 @@ OME::Database::Delegate - database-platform-specific routines
 =head1 SYNOPSIS
 
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
-	my $dbh = $delegate->connectToDatabase($datasource,
-	                                       $username,
-	                                       $password);
+	my $dbh = $delegate->connectToDatabase();
 	my $id = $delegate->getNextSequenceValue($dbh,$sequence);
 	$delegate->addClassToDatabase($dbh,$className);
 
@@ -70,31 +76,45 @@ This has not been tested as of yet.
 
 =head1 OBTAINING A DELEGATE
 
-The current way to obtain an implementation of OME::Database::Delegate
-assumes that the Postgres delegate is the only one in the system.  Of
-course, this will have to change once we have more implementations.
-Unfortunately, we can't retrieve this configuration parameter from the
-database, since the delegate is responsible for connecting to the
-database.
+The default delegate is set in the installation environment
+(OME::Install::Environment).  This class returns a hash with the DB_conf()
+method.  The hash consists of the following keys:
+
+ Delegate - The delegate class (e.g. OME::Database::PostgresDelegate)
+ User     - The username to use to connect to the database
+ Password - The password for the specified user
+           The password will be stored as plain text in /etc/ome-install.store
+           Using the password option is not recommended at this time.
+           User and Password are passed on to DBI->connect, even if undef
+ Host     - The hostname the database is runing on
+           Calling the getDSN() method will properly specify the host
+           in the connection string used by DBI.  The hostname specification
+           will be left out if Host is undef.
+ Port     - The port number to use for the connection
+           The getDSN() method will add the port to DBI's connection string
+           if its not undef, and leave it out of the string if undef.
+ Name     - The dabase name.  This is also encoded in the DBI connection string
+               Unlike Host, Port, User and Password, the DB Name cannot be undef.
 
 =head2 getDefaultDelegate
 
 	my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
 Determines the name of the appropriate implementation of
-Database::Delegate.  For now, this is hard-coded to
-"OME::Database::PostgresDelegate".  In the future, it will come from a
-configuration setting.  The getInstance() method of this class is
-called, and its result returned.
+OME::Database::Delegate.  The default delegate is set by
+OME::Install::Environment->initialize()->DB_conf()->{Delegate}
+The getInstance() method of this class is called, and its result returned, which
+will be the appropriate subclass of OME::Database::Delegate
 
 =cut
 
 sub getDefaultDelegate {
-    # I didn't want to put this at the top of the file as a
-    # full-fledged "use" statement, since we really shouldn't need to
-    # have Database::Delegate require Database::PostgresDelegate.
-    OME::Database::PostgresDelegate->require();
-    return OME::Database::PostgresDelegate->getInstance();
+    # Get the database configuration
+    my $dbConf = OME::Install::Environment->initialize()->DB_conf();
+    croak "Could not get DB configuration enevironment\n".
+        "Maybe the installation environment did not load?" unless $dbConf;
+    $dbConf->{Delegate}->require();
+    return $dbConf->{Delegate}->getInstance();
 }
 
 =head1 INTERFACE METHODS
@@ -138,14 +158,16 @@ sub getInstance {
 
 =head2 createDatabase
 
-	my $already_exists = $delegate->createDatabase($platform);
+	my $already_exists = $delegate->createDatabase ($superuser,$password);
 
 Creates the OME database.  This does not create any tables or other
 database objects; it just ensures that the appropriate database
-exists.  If the database already exists, this method should return a
-true value.  If the database did not exists, and was created
-successfully, it should return false.  If the database could not be
-created successfully, it should die with an appropriate error message.
+exists.  If the database could not be created successfully, it should die with 
+an appropriate error message.  Successful creation (or if the DB already exists)
+should return a true value.
+
+The superuser and password parameters can be used to make a bootstrap connection
+using a user and password other than the ones in OME::Install::Environment.
 
 =cut
 
@@ -153,11 +175,32 @@ sub createDatabase {
     die "OME::Database::Delegate->createDatabase is abstract";
 }
 
+=head2 createUser
+
+	$delegate->createUser ($username,$isSuperuser,$superuser,$password);
+
+Creates a user in the OME database.  The $username parameter is required.
+The $isSuperuser boolean is set true if $username should be created with superuser
+privileges.
+
+Just like createDatabase(), the optional $superuser,$password parameters are
+used to override the User and Password settings in the
+OME::Install::Environment->initialize()->DB_conf() hash.
+The password parameter is the superuser's password - not the user we are creating.
+
+This method returns false (0) on failure and true (1) on success.  The return
+value should be checked, because that is the only indication of failure.
+This method does not die in user creation fails.
+
+=cut
+
+sub createUser {
+    die "OME::Database::Delegate->createUser is abstract";
+}
+
 =head2 connectToDatabase
 
-	my $dbh = $delegate->connectToDatabase($datasource,
-	                                       $username,
-	                                       $password);
+	my $dbh = $delegate->connectToDatabase ($flags);
 
 Connects to the database with the given connection information.  In
 most cases, the default implementation of this method, which just
@@ -165,19 +208,82 @@ calls DBI->connect, is sufficient.  If a database server requires
 extra setup of the database handle, this method can be overridden to
 provide it.
 
+The $flags is a hash reference that will be passed on to DBI->connect.
+In addition to the stnadard options provided by DBI, the following
+additional keys are supported (they will be deleted from the hash before this
+method returns):
+
+ DataSource - The connection string to pass to DBI
+ DBUser     - A DB user to connect as
+ DBPassword - The password for the DB user
+ * The above three keys will be deleted from the $flags hash reference.
+ * Default values for these settings come from the
+  OME::Install::Environment->initialize()->DB_conf() hash.
+    
+Regardless of the DBI or driver defaults, the following settings will be placed
+in $flags unless they are already present in the hash (over-rideable defaults).
+
+ AutoCommit      => 0
+ RaiseError      => 1
+ InactiveDestroy => 1
+
 =cut
 
 sub connectToDatabase {
-    my ($self,$datasource,$username,$password,$flags) = @_;
+    my ($self,$flags) = @_;
+    my $dbConf = OME::Install::Environment->initialize()->DB_conf();
+    croak "Could not get DB configuration enevironment\n".
+        "Maybe the installation environment did not load?" unless $dbConf;
     $flags->{AutoCommit}      = 0 unless exists $flags->{AutoCommit};
     $flags->{RaiseError}      = 1 unless exists $flags->{RaiseError};
     $flags->{InactiveDestroy} = 1 unless exists $flags->{InactiveDestroy};
 
-    my $dbh = DBI->connect($datasource,
-                           $username,
-                           $password,
-                           $flags);
+
+    my ($datasource,$user,$password);
+    $datasource = $flags->{DataSource} ?
+        $flags->{DataSource} : $self->getDSN ($dbConf);
+    $user = $flags->{DBUser} ?
+        $flags->{DBUser} : $dbConf->{User};
+    $password = $flags->{DBPassword} ?
+        $flags->{DBPassword} : $dbConf->{Pass};
+
+    delete $flags->{DataSource};
+    delete $flags->{DBUser};
+    delete $flags->{DBPassword};
+
+    my $dbh = DBI->connect($datasource,$user,$password,$flags);
     return $dbh;
+}
+
+=head2 getDSN
+
+    my $dbh = DBI->connect($self->getDSN ($dbConf));
+
+Get a DBI connection string (Data Source Name or DSN) in a DB-specific way.
+The DSN for a local postgres connection looks like this: 'dbi:Pg:dbname=ome'.
+The DSN format is DB-specific, though the components of it aren't.
+Therefore getting the actual DSN must be implemented in each delegate by
+translating the DB configuration hash, which consists of the
+following keys:
+
+ Host     =>
+ Port     =>
+ Name     =>
+
+These keys are also provided, though in most cases they are passed seperately
+to DBI->connect();
+
+ User     =>
+ Password =>
+
+The $dbConf parameter is optional.  If its missing, it should be retreived from
+the installation environment by using:
+  OME::Install::Environment->initialize()->DB_conf()
+
+=cut
+
+sub getDSN {
+    die "OME::Database::Delegate->getDSN is abstract";
 }
 
 # after these methods are implemented and used, the boolean hack in

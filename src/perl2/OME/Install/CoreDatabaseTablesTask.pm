@@ -107,6 +107,17 @@ our $DB_VERSION = "2.12";
 # Default analysis executor
 our $DEFAULT_EXECUTOR = 'OME::Analysis::Engine::UnthreadedPerlExecutor';
 
+# Default DB configuration
+our $DEFAULT_DB_CONF = {
+	Delegate => 'OME::Database::PostgresDelegate',
+	User     => undef,
+	Password => undef,
+	Host     => undef,
+	Port     => undef,
+	Name     => 'ome'
+};
+
+
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
 # Each class to instantiate is listed as a pair: the package that
@@ -163,54 +174,15 @@ our @core_classes =
 #********* LOCAL SUBROUTINES
 #*********
 
-# Create a postgres superuser SQL: CREATE USER foo CREATEUSER
-sub create_superuser {
-    my ($username, $logfile) = @_;
-    my $pg_uid = getpwnam ($POSTGRES_USER) or croak "Unable to retrieve PostgreSQL user UID";
-    my $createuser = "createuser";
-    my @outputs;
-    my $retval;
-    my $success;
-
-    # Make sure we're not croaking on a silly logfile print
-    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
-
-    # Make sure we can see the Postgres command
-    $retval = which ("$createuser");
-   
-    $createuser = whereis ("createuser") or croak "Unable to locate creatuser binary." unless $retval;
-
-    # Create the user using the command line tools
-    @outputs = `su $POSTGRES_USER -c "$createuser -d -a $username" 2>&1`;
-
-    # Log and return success
-    foreach (@outputs) {
-        $success = 1 if $_ =~ /already exists/ or $_ =~ /^CREATE/;
-    }
-    if ($success) {
-    print $logfile "CREATION OF USER $username SUCCESSFUL -- OUTPUT: \n".join ("\n",@outputs)."\n";
-    return 1;
-    }
-
-    # Log and return failure
-    print $logfile "CREATION OF USER $username FAILED -- OUTPUT: \n".join ("\n",@outputs)."\n";
-    return 0;
-}
-
-
-
 sub get_db_version {
     my $dbh;
     my $sql;
     my $retval;
 
     print "Checking database\n";
-
-    $dbh = DBI->connect("dbi:Pg:dbname=ome")
-        or return undef;
-
-    # Shush!
-    $dbh->{PrintError} = '0';
+	
+    $dbh = OME::Database::Delegate->getDefaultDelegate()->connectToDatabase({RaiseError => 0,PrintError => 0})
+    	or return undef;
 
     # Check for DB existance
     my $db_version = $dbh->selectrow_array(q{SELECT value FROM configuration WHERE name = 'db_version'});
@@ -327,91 +299,6 @@ sub update_database {
 #       0 if the DB exists
 #       0 on failure
 
-sub create_database {
-    my $dbh;
-    my $sql;
-    my $retval;
-    my $createlang = "createlang";
-
-    print "Creating database\n";
-
-    $dbh = DBI->connect("dbi:Pg:dbname=template1")
-      or croak "Error: $dbh->errstr()";
-
-    # Find database SQL
-
-    # Check for DB existance
-    my $find_database = $dbh->prepare(q{
-    SELECT oid FROM pg_database WHERE lower(datname) = lower(?)
-    }) or croak $dbh->errstr;
-
-    my ($db_oid) = $dbh->selectrow_array($find_database,{},'ome');
-
-    # This will be NULL if the database does not exist
-    if (defined $db_oid) {
-    print "  \\__ Exists\n";
-    } else {
-    # Create an empty DB
-    print "  \\__ Initialization\n";
-    $dbh->do(q{
-    CREATE DATABASE ome
-    }) or croak $dbh->errstr();
-	}
-    $dbh->disconnect();
-
-	# Make this process euid root, and execute these things as the postgres user.
-	# It is often not enough to set euid - the actual UID has to be something
-	# postgres recognizes, so we need to su.
-	# To make sure we can do 'su' (permissions for this directory, etc), we need to be root.
-	# To make sure that postgres has a sane environment, we need to su -.
-	my $old_euid = euid (0);
-    print "  \\__ Adding PL-PGSQL language\n";
-
-    # Set the PGSQL lang
-	# First off, see if the postgres user knows where createlang is.
-    my @CMD_OUT = `su - $POSTGRES_USER -c "which $createlang" 2>&1`;
-    foreach (@CMD_OUT) {
-    	chomp;
-    	$retval = which ($_);
-    	last if $retval;
-    }
-
-	if (not $retval) {
-	    $retval = which ($createlang);
-	    if (not $retval) {
-			$createlang = whereis ($createlang) or croak "Unable to locate $createlang binary.";
-		}
-	}
-
-	$createlang = $retval;
-
-    @CMD_OUT = `su - $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
-    if ($? != 0) {
-    	die "Errors: \n",join ('',@CMD_OUT),"\n" unless join ('',@CMD_OUT) =~ /already installed/;
-    }
-    
-    # Go back to what we were (should be OME_USER) so that we can connect
-    # from this process.
-	euid ($old_euid);
-
-    # Fix our little object ID bug
-    print "  \\__ Fixing OID/INTEGER compatability bug\n";
-    $dbh = DBI->connect("dbi:Pg:dbname=ome")
-      or croak $dbh->errstr();
-    $dbh->do(q{
-    CREATE FUNCTION OID(INT8) RETURNS OID AS '
-    declare
-        i8 alias for $1;
-    begin
-        return int4(i8);
-    end;'
-    LANGUAGE 'plpgsql';
-    }) or croak $dbh->errstr;
-    
-    $dbh->disconnect();
-
-    return 1;
-}
 
 sub load_schema {
     my $logfile = shift;
@@ -500,7 +387,7 @@ BLURB
     
             print "\n";  # Spacing
 
-			if (y_or_n ("Are these values correct ?")) {
+			if (y_or_n ("Are these values correct ?",'y')) {
 				last;
 			} 
         }
@@ -954,7 +841,7 @@ sub execute {
     print_header "Database Bootstrap";
 
     # Our OME::Install::Environment
-   $ENVIRONMENT = initialize OME::Install::Environment;
+    $ENVIRONMENT = initialize OME::Install::Environment;
 
     # Populate globals
     $OME_BASE_DIR = $ENVIRONMENT->base_dir()
@@ -988,13 +875,83 @@ sub execute {
     or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\" $!";
 
     #*********
+    #********* Set up the DB connection
+    #*********
+	print "Finding DB configuration in installation environment ";
+    my $dbConf = $ENVIRONMENT->DB_conf();
+    if ($dbConf) {
+	    print BOLD, "[FOUND EXISTING]", RESET, ".\n";
+    } else {
+		$dbConf = $DEFAULT_DB_CONF;
+	    print BOLD, "[USING DEFAULT]", RESET, ".\n";
+    }
+
+    my $confirm_all;
+
+	print <<BLURB;
+Database connection information
+N.B.:  The database host must already be installed and running.
+It must already be configured for accepting the connection
+specified here, or a superuser connection from user "$POSTGRES_USER".
+BLURB
+    while (1) {
+        if ($dbConf or $confirm_all) {
+            print "   Database Delegate Class: ", BOLD, $dbConf->{Delegate}, RESET, "\n";
+            print "             Database Name: ", BOLD, $dbConf->{Name}, RESET, "\n";
+            print "                      Host: ", BOLD, $dbConf->{Host} ? $dbConf->{Host} : 'undefined (local)', RESET, "\n";
+            print "                      Port: ", BOLD, $dbConf->{Port} ? $dbConf->{Port} : 'undefined (default)', RESET, "\n";
+            print "Username for DB connection: ", BOLD, $dbConf->{User} ? $dbConf->{User} : 'undefined (process owner)', RESET, "\n";
+#            print "                  Password: ", BOLD, $dbConf->{Password} ? $dbConf->{Password}:'undefined (not set)', RESET, "\n";
+    
+            print "\n";  # Spacing
+            
+			if (y_or_n ("Are these values correct ?","y")) {
+				last;
+			} 
+        }
+
+        $confirm_all = 0;
+        print "Enter '\\' to set to ",BOLD,'undefined',RESET,"\n";
+		$dbConf->{Delegate} = confirm_default ("   Database Delegate Class: ", $dbConf->{Delegate});
+		$dbConf->{Name}     = confirm_default ("             Database Name: ", $dbConf->{Name});
+		$dbConf->{Host}     = confirm_default ("                      Host: ", $dbConf->{Host});
+		$dbConf->{Host} = undef if $dbConf->{Host} and $dbConf->{Host} eq '\\';
+		$dbConf->{Port}     = confirm_default ("                      Port: ", $dbConf->{Port});
+		$dbConf->{Port} = undef if $dbConf->{Port} and $dbConf->{Port} eq '\\';
+		$dbConf->{User}     = confirm_default ("Username for DB connection: ", $dbConf->{User});
+		$dbConf->{User} = undef if $dbConf->{User} and $dbConf->{User} eq '\\';
+#		$dbConf->{Password} = confirm_default ("                  Password: ", $dbConf->{Password});
+		$dbConf->{Password} = undef if $dbConf->{Password} and $dbConf->{Password} eq '\\';
+        
+        print "\n";  # Spacing
+
+        $confirm_all = 1;
+    }
+
+
+
+	$ENVIRONMENT->DB_conf($dbConf);
+
+    #*********
     #********* Create our super-users and bootstrap the DB
     #*********
+	my $db_delegate = OME::Database::Delegate->getDefaultDelegate();
+
+    # Drop our UID to the OME_USER
+    euid($OME_UID);
 
     # Make sure our OME_USER is also a Postgres user
     print "Creating OME PostgreSQL SUPERUSER ($OME_USER)";
-    $retval = create_superuser ($OME_USER, $LOGFILE);
-    
+    $retval = $db_delegate->createUser ($OME_USER,1);
+    while (not $retval) {
+		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+		last if $retval;
+
+		my $old_euid = euid (scalar getpwnam ($POSTGRES_USER));
+		$retval = $db_delegate->createUser ($OME_USER,1,$POSTGRES_USER);
+		euid ($old_euid);
+		last;
+    }
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to create PostgreSQL superuser '$OME_USER', see $LOGFILE_NAME for details."
         unless $retval;
@@ -1002,7 +959,7 @@ sub execute {
 
     # Also make sure the Apache Unix user is a Postgres user
     print "Creating Apache PostgreSQL SUPERUSER ($APACHE_USER)";
-    $retval = create_superuser ($APACHE_USER, $LOGFILE);
+    $retval = $db_delegate->createUser ($APACHE_USER,1);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to create PostgreSQL superuser '$APACHE_USER', see $LOGFILE_NAME for details."
@@ -1012,16 +969,13 @@ sub execute {
     # Also make sure the admin user is a Postgres user
     if ($ADMIN_USER) {
         print "Creating Admin PostgreSQL SUPERUSER ($ADMIN_USER)";
-        $retval = create_superuser ($ADMIN_USER, $LOGFILE);
+	    $retval = $db_delegate->createUser ($ADMIN_USER,1);
         
         print BOLD, "[FAILURE]", RESET, ".\n"
             and croak "Unable to create PostgreSQL superuser '$ADMIN_USER', see $LOGFILE_NAME for details."
             unless $retval;
         print BOLD, "[SUCCESS]", RESET, ".\n";
     }
-
-    # Drop our UID to the OME_USER
-    euid($OME_UID);
 
     my ($configuration,$manager,$session);
 
@@ -1080,7 +1034,7 @@ sub execute {
         $session->commitTransaction();
     } elsif (not defined $db_db_version) {
         # Create our database
-        create_database ("DEBIAN") or croak "Unable to create database!";
+        $db_delegate->createDatabase () or croak "Unable to create database!";
         load_schema ($LOGFILE) or croak "Unable to load the schema, see $LOGFILE_NAME for details.";
         init_configuration () or croak "Unable to initialize the configuration object.";
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
