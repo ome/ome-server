@@ -44,6 +44,7 @@ import org.openmicroscopy.remote.RemoteObjectCache;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Vector;
+import java.lang.Comparable;
 
 
  
@@ -55,8 +56,11 @@ import java.util.Vector;
  * @version 2.1
  * @since OME2.1
  */
-public class CDataset extends RemoteDataset {
+public class CDataset extends RemoteDataset implements Comparable{
 	
+	Vector images = new Vector();
+	
+	private boolean inCurrentProject = false;
 	
 	static {
 		RemoteObjectCache.addClass("OME::Dataset",CDataset.class);
@@ -70,25 +74,54 @@ public class CDataset extends RemoteDataset {
 		super(session,reference);
 	}
 	
-	Vector images = new Vector();
+	
 	
 	public void loadImages(Connection connection) {
-		System.err.println("Dataset "+getID()+", loading images");
+		//System.err.println("Dataset "+getID()+", loading images");
 		if (images.size() > 0)  {
-			System.err.println("images already loaded...");
+			//System.err.println("images already loaded...");
 			return;
 		}
 		List i = getImages();
 		Iterator iter = i.iterator();
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
-			System.err.println("loading image "+image.getID());
+			//System.err.println("loading image "+image.getID());
 			image.loadImageData(connection);
 			images.add(image);		
 		}
 	}
 	
-	public List getCachedImages() {
+	public List getCachedImages(Connection connection) {
+		if (images.size() == 0)
+			loadImages(connection);
 		return images;
 	}
+
+	public boolean isInCurrentProject() {
+		return inCurrentProject;
+	}
+
+	public void setInCurrentProject(boolean b) {
+		inCurrentProject = b;
+	}
+	
+	public void setProjectsActive(boolean b) {
+		List p = getProjects();
+		Iterator i = p.iterator();
+		while (i.hasNext()) {
+			CProject ps = (CProject) i.next();
+			ps.setInCurrentDataset(b);
+		}
+	}
+	
+	public int compareTo(Object o) {
+		if (o instanceof CDataset) {
+			CDataset d2 = (CDataset) o;
+			return getID()-d2.getID();
+		}
+		else
+			return -1;
+	}
+	
 }
