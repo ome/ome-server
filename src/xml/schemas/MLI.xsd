@@ -89,6 +89,25 @@ In the future, can be used to establish references.
 								</documentation>
 							</annotation>
 						</attribute>
+						<attribute name = "ConvertToDatatype">
+							<annotation>
+								<documentation>The Pixels array will be converted to the datatype specified.</documentation>
+							</annotation>
+							<simpleType>
+								<restriction base = "string">
+									<enumeration value = "uint8"/>
+									<enumeration value = "uint16"/>
+									<enumeration value = "uint32"/>
+									<enumeration value = "uint64"/>
+									<enumeration value = "int8"/>
+									<enumeration value = "int16"/>
+									<enumeration value = "int32"/>
+									<enumeration value = "int64"/>
+									<enumeration value = "single"/>
+									<enumeration value = "double"/>
+								</restriction>
+							</simpleType>
+						</attribute>
 					</complexType>
 				</element>
 				<element name = "Scalar">
@@ -125,6 +144,21 @@ In the future, can be used to establish references.
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
 								</documentation>
 							</annotation>
+						</attribute>
+						<attribute name = "ConvertToDatatype">
+							<annotation>
+								<documentation>Useful when a function outputs a Pixels type that is unsupported by OME. The permitted list is the matlab types supported by OME.
+Note to perl developers: This list should stay syncronized with the Matlab Class to OME Type mapping hash $self->{ _matlab_class_to_pixel_type } that is defined in OME::Analysis::Handlers::MatlabHandler->new()
+								</documentation>
+							</annotation>
+							<simpleType>
+								<restriction base = "string">
+									<enumeration value = "uint8"/>
+									<enumeration value = "uint16"/>
+									<enumeration value = "uint32"/>
+									<enumeration value = "single"/>
+								</restriction>
+							</simpleType>
 						</attribute>
 					</complexType>
 				</element>
