@@ -30,10 +30,8 @@ The order of the inputs is not important.
 The inputs are Path, Dims, XYZmean, XYZgeoMean, XYZsigma, SpotWave, and Threshold.
 Usage:
 >findSpots Path=/some/path/to/image.orf Dims=[640,480,30,3,60,2]  <threshold> <min. vol.> <optional arguments> <output options>
-<dataset> a path to a file that can be either TIFF or DeltaVision.
+<dataset> a path to a file in OME repository format.
 <spot wavelegth> is the wavelegth from which to pick out "spots"
-	This parameter will be ignored if the file is a TIFF file.  Use '0' for TIFF files.
-	If this parameter ends in nm, that wavelength (in nm) will be read from the DV file.
 	If this parameter is a bare integer (not ending in nm), then that wavelength number will be used from the DV file.
 		Wave number are numbered from 0.
 <threshold>	 all contiguous pixels that are above threshold will be considered to comprise a
@@ -116,8 +114,8 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
-#include <tiffio.h>
-#include "readTIFF.h"
+#include "iolib/failio.h"
+#include "iolib/argarray.h"
 
 /*
 * The following line is commented out because it is not
@@ -159,11 +157,7 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 #define DATABASE_HEADING 3
 #define DATABASE_VALUES 4
 
-#define MAXDIST 1e10
 #define OUTARGS 5
-
-#define TIFF_MAGIC 3232
-#define DV_MAGIC -16224
 
 #define PI 3.14159265358979323846264338327
 #define SQUARE_ROOT_OF_2 1.4142135623731
@@ -178,7 +172,6 @@ Data Structures:  The main data structure is the list of spots.	 In this incarna
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-typedef struct dv_head DVhead;
 typedef struct spotStructure SpotStruct;
 typedef SpotStruct *SpotPtr;
 typedef short pixel;
@@ -190,65 +183,7 @@ typedef IndexStackStruct *IndexStack;
 typedef struct CoordListStructure CoordListStruct;
 typedef CoordListStruct *CoordList;
 typedef short coordinate;
-
-
-
-
-
-
-
-
-
-
-/*########################################################################################################*/
-/*##########################                                                    ##########################*/
-/*##########################               DEFINITION OF FUNCTIONS              ##########################*/
-/*##########################                                                    ##########################*/
-/*########################################################################################################*/
-
-DVhead *ReadDVHeader( DVhead *head, FILE *fp );
-void SetTIFFptr (DVhead *head, TIFF *tiff);
-TIFF *GetTIFFptr (DVhead *head);
-DVstack *ReadDVstack(FILE *fp,DVhead *head,long time );
-void Calculate_Stack_Stats (DVstack *theStackG,int theWave);
-void Push_Stack (PixPtr index, IndexStack theStack);
-PixPtr Pop_Stack (IndexStack theStack);
-void Eat_Spot_Rec (PixPtr index);
-void Eat_Spot(PixPtr index);
-void Index_To_Coords (PixPtr index,short *X,short *Y,short *Z);
-void Update_Spot(PixPtr index);
-PixPtr Get_Index_From_Coords (SpotPtr theSpot, short X,short Y,short Z);
-void Get_Perimiter (SpotPtr theSpot);
-void SwapListElements (CoordList previousElement1, CoordList previousElement2);
-void Get_Surface_Area (SpotPtr theSpot);
-double Get_Surface_Area_CC (char *c, int n);
-PixPtr Update_Index (PixPtr index, char direction);
-void Set_Border_Pixel (short X, short Y, short Z);
-SpotPtr New_Spot (SpotPtr spotList,DVstack *theStackG, int itsWave, short itsTime);
-void Zero_Spot (SpotPtr theSpotG,DVstack *theStackG, int itsWave, short itsTime);
-void Update_Spot_Stats (SpotPtr theSpotG);
-void Output_Spot (SpotPtr theSpotG, int argc, char**argv,int outArgs, char saywhat);
-int Get_Wavelngth_Index (DVstack *theStackG, int waveLngth);
-void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs);
-void Write_Polygon_File (FILE *polyOut,char doVectors,SpotPtr theSpotListHead,int tStart,int tStop);
-double Get_Spot_Dist_Centroid (SpotPtr fromSpot,SpotPtr toSpot);
-double Get_Distance_Score (SpotPtr fromSpot,SpotPtr toSpot,float intnsWght);
-void Calculate_Spot_Vector (SpotPtr theSpot);
-void Compose_inArgs (char *inArgs, int argc, char**argv);
-
-pixel Set_Threshold (char *arg, DVstack *theStack);
-double *Get_Prob_Hist (DVstack *theStack, unsigned short *histSizePtr);
-pixel Get_Thresh_Moment (DVstack *theStack);
-pixel Get_Thresh_Otsu (DVstack *theStack);
-pixel Get_Thresh_ME (DVstack *theStack);
-pixel Get_Thresh_Kittler (DVstack *theStack);
-
-void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
-void BSUtilsSwapHeader(char *cTheHeader);
-
-
-
-
+typedef struct dv_point Point5D;
 
 
 
@@ -259,46 +194,14 @@ void BSUtilsSwapHeader(char *cTheHeader);
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-/*#########################*/
-/*#        DVhead         #*/
-/*#########################*/
-/*
-* this is the structure of the first 1024 bytes of the DeltaVision file.
-* 
-*/
-struct dv_head {
-	long   numCol,numRow,numImages;			   /* nsec +AD0- nz-nw+ACo-nt */
-	long   mode;
-	long   nxst, nyst, nzst;
-	long   mx, my, mz;
-	float xlen, ylen, zlen;
-	float alpha, beta, gamma;
-	long   mapc, mapr, maps;
-	float min1, max1, amean;
-	long   ispg, next;
-	short nDVID,nblank;			 /* nblank preserves byte boundary */
-	char  ibyte[28];
-	short nint,nreal;
-	short nres,nzfact;
-	float min2,max2,min3,max3,min4,max4;
-	short filetype, lens, n1, n2, v1, v2;
-	float min5,max5;
-	short numtimes;
-	short imagesequence;
-	float tiltx, tilty, tiltz;
-	short NumWaves, iwav1, iwav2, iwav3, iwav4, iwav5;
-	float zorig, xorig, yorig;
-	long   nlab;
-	char  label[800];  /* FIXME:  This is used as a nasty way to stash a *TIFF ! */
+
+struct dv_point {
+	coordinate x;
+	coordinate y;
+	coordinate z;
+	coordinate w;
+	coordinate t;
 };
-
-
-
-
-
-
-
-
 
 
 
@@ -341,8 +244,8 @@ struct dv_stack {
 * will point to the next pixel down.  Likewise for z_increment and wave_increment
 */
 	unsigned long y_increment,z_increment,wave_increment;
-	DVhead *head;
-	DVstack *next;
+
+	DVstack* next;
 };
 
 
@@ -467,11 +370,6 @@ struct spotStructure {
 	float vecX,vecY,vecZ;
 
 /*
-* The trajectory ID
-*/
-	long trajID;
-
-/*
 * This is the integral - sum of intensisties of the pixels that make up the spot.
 * There is a value for each wavelegth.	Same for the rest of the intensity stats.
 */
@@ -540,6 +438,53 @@ struct spotStructure {
 
 
 
+/*########################################################################################################*/
+/*##########################                                                    ##########################*/
+/*##########################               DEFINITION OF FUNCTIONS              ##########################*/
+/*##########################                                                    ##########################*/
+/*########################################################################################################*/
+
+void InitializeDVstack (DVstack* inStack, Point5D dims);
+void ReadDVstack (DVstack* inStack, FILE *fp, Point5D dims, long time);
+void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t nWaves);
+void Calculate_Stack_Stats (DVstack *theStackG,int theWave);
+void Push_Stack (PixPtr index, IndexStack theStack);
+PixPtr Pop_Stack (IndexStack theStack);
+void Eat_Spot_Rec (PixPtr index);
+void Eat_Spot(PixPtr index);
+void Index_To_Coords (DVstack* inStack, PixPtr index,short *X,short *Y,short *Z);
+void Update_Spot (DVstack* inStack, PixPtr index);
+PixPtr Get_Index_From_Coords (SpotPtr theSpot, short X,short Y,short Z);
+void Get_Perimiter (SpotPtr theSpot);
+void SwapListElements (CoordList previousElement1, CoordList previousElement2);
+void Get_Surface_Area (SpotPtr theSpot);
+double Get_Surface_Area_CC (char *c, int n);
+PixPtr Update_Index (PixPtr index, char direction);
+void Set_Border_Pixel (short X, short Y, short Z);
+SpotPtr New_Spot (SpotPtr spotList,DVstack *theStackG, int itsWave, short itsTime);
+void Zero_Spot (SpotPtr theSpotG,DVstack *theStackG, int itsWave, short itsTime);
+void Update_Spot_Stats (SpotPtr theSpotG);
+void Output_Spot (SpotPtr theSpotG, int argc, char**argv,int outArgs, char saywhat);
+void Write_Output (SpotPtr theSpotListHead,int argc, char**argv,int outArgs);
+void Compose_inArgs (char *inArgs, int argc, char**argv);
+
+pixel Set_Threshold (const char *arg, DVstack *theStack);
+double *Get_Prob_Hist (DVstack *theStack, unsigned short *histSizePtr);
+pixel Get_Thresh_Moment (DVstack *theStack);
+pixel Get_Thresh_Otsu (DVstack *theStack);
+pixel Get_Thresh_ME (DVstack *theStack);
+pixel Get_Thresh_Kittler (DVstack *theStack);
+
+void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
+void BSUtilsSwapHeader(char *cTheHeader);
+
+
+
+
+
+
+
+
 /*#########################*/
 /*#                       #*/
 /*#   GLOBAL VARIABLES    #*/
@@ -573,135 +518,6 @@ short DV_REV_ENDIAN_MAGIC;
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-/*#########################*/
-/*#                       #*/
-/*#     ReadDVHeader      #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This just fills the header structure with what's in the file.
-* Note that this is not endian-neutral.  Attempting to read a file
-* generated on a machine with a different endian-ness than the one
-* this is running on will result in a scrambled header, and probably a core dump.
-* If the read is successfull, we return a pointer to the header structure, and NULL otherwise.
-*/
-DVhead *ReadDVHeader( DVhead *head, FILE *fp )
-{
-
-/* Read the header as a big-fat-chunk. */
-	fread( head, 1024, 1, fp );
-
-/* See if the DV file has a good DV magic number */
-	if (head->nDVID != DV_MAGIC)
-	{
-		DV_REV_ENDIAN_MAGIC = head->nDVID;
-		BSUtilsSwapHeader ( (char *)head);
-		if (head->nDVID != DV_MAGIC)
-			return (NULL);
-		else
-		{
-			head->nDVID = DV_REV_ENDIAN_MAGIC;
-		}
-			
-	}
-	else
-		return (head);
-
-	return (head);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*#    ReadTIFFHeader     #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This just fills the header structure with what's in the file.
-*/
-TIFF *ReadTIFFHeader( DVhead *head, char *file, FILE **fp )
-{
-TIFF *tiff;
-uint32 width,height;
-uint16 bits;
-
-	tiff = TIFFOpen(file,"r");
-	if (!tiff ) return NULL;
-	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bits);
-	if (bits != 16)
-	{
-		fprintf (stderr,"Reading of non-16-bit TIFF files is not presently supported.\n");
-		exit (-1);
-	}
-
-	head->numImages=1;
-	head->xlen=1;
-	head->ylen=1;
-	head->zlen=1;
-	head->min1 = 0;
-	head->max1 = 0;
-	head->amean = 0;
-	head->nDVID = TIFF_MAGIC;
-	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
-	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
-	head->numCol = width;
-	head->numRow = height;
-	head->numtimes=1;
-	head->NumWaves=1;
-	head->iwav1=999;
-	SetTIFFptr (head,tiff);
-	return (tiff);
-}
-
-
-
-void SetTIFFptr (DVhead *head, TIFF *tiff)
-{
-TIFF **tiffHndl;
-/* FIXME:  This is kind of nasty, but not too bad especially once isolated */
-/* What I've done is stuff the *TIFF into the first howevermany bytes of the label field. */
-/* Its actually safe because the label field is only valid for DV files, and we're dealing with a TIFF file. */
-/* Also, the label field has 800 bytes, which is more than plently to stash a pointer */
-/* Also the pointer assignment is done with casts which should be architecture safe - i.e. we're not */
-/* relying on a long to be big enough to contain a pointer.  All we're relying on is that 800 char are long enough. */
-
-/* First cast the label field as a pointer to a TIFF pointer (instead of a char pointer) */
-	tiffHndl = (TIFF **) (head->label);
-
-/* Dereference the TIFF pointer pointer and stash the TIFF pointer there */
-/* This should over-write however many chars are needed to stash the pointer */
-	*tiffHndl = tiff;
-}
-
-
-TIFF *GetTIFFptr (DVhead *head)
-{
-TIFF *tiff;
-
-/* We've over-written a pointers worth of chars in the label array to store a TIFF pointer */
-/* The way we make a TIFF pointer out of that is we casi the label array as a TIFF pointer pointer and dereference it */
-	tiff = *( (TIFF **) (head->label));
-	return (tiff);
-}
-
-
-
-
-
-
-
-
-
 
 /*#########################*/
 /*#                       #*/
@@ -709,177 +525,50 @@ TIFF *tiff;
 /*#                       #*/
 /*#########################*/
 /*
-* This reads the whole DV file into memory, and returns a pointer to the stack
-* structure.  This routine expects an open file pointer for the DV file, a 
-* pointer to a valid and filled-in head structure, and the time-point.  Note that
-* the first time point is time=0.
+ * The following routines read one timepoint into the provided DVstack.
 */
 
-
-DVstack *ReadDVstack(FILE *fp,DVhead *head,long time )
+void ReadDVstack (DVstack* inStack, FILE* fp, Point5D dims, long time)
 {
-unsigned long Rows,Cols,numZ,num,numWaves,numRead;
-DVstack *inStack;
-int i;
-
-	Rows = head->numRow;
-	Cols = head->numCol;
-	numWaves = head->NumWaves;
-	numZ = head->numImages / (numWaves * head->numtimes);
-
-
-/*
-* Allocate memory for the structure
-*/
-	inStack = (DVstack *) malloc (sizeof (DVstack));
-	if (inStack == NULL)
-		{
-		fprintf (stderr,"Could not allocate sufficient memmory for image structure.\n");
-		return (NULL);
-		}
-
-/*
-* Allocate memory for the pixels.
-* To be good citizens, its good to deallocate what was successfully
-* allocated before aborting due to an error.
-*/
-	inStack->stack = (PixPtr) malloc(Cols*Rows*numZ*numWaves*sizeof(pixel));
-	if (inStack->stack == NULL)
-		{
-		free (inStack);
-		fprintf (stderr,"Could not allocate sufficient memmory for image.\n");
-		return (NULL);
-		}
-
-
-/*
-* Here we set some usefull variables in the stack structure.
-*/
-	inStack->nwaves = numWaves;
-	inStack->min_x = inStack->min_y = inStack->min_z = 0;
-	inStack->max_x = Cols-1;
-	inStack->max_y = Rows-1;
-	inStack->max_z = numZ-1;
-	inStack->y_increment = Cols;
-	inStack->z_increment = Cols * Rows;
-	inStack->wave_increment = Cols * Rows * numZ;
-	inStack->head = head;
-
-/*
-* within the program, a wave is always refered to by its index.
-* The index is the order in which it appears in the DV file.
-* The wavelegths and their maxima and minima are stored as discrete
-* variables in the head, so we must convert them into arrays.
-*/
-	for (i=0;i<MAXWAVES;i++)
-		inStack->wave[i] = inStack->max_i[i] = inStack->min_i[i] = inStack->mean_i[i] =
-			inStack->geomean_i[i] = inStack->sigma_i[i] = 0;
-
-	if (inStack->nwaves > 0)
-		{
-		inStack->wave[0] = head->iwav1;
-		inStack->max_i[0] =	 head->max1;
-		inStack->min_i[0] =	 head->min1;
-		inStack->mean_i[0] = 0;
-		}
-
-	if (inStack->nwaves > 1)
-		{
-		inStack->wave[1] = head->iwav2;
-		inStack->max_i[1] =	 head->max2;
-		inStack->min_i[1] =	 head->min2;
-		inStack->mean_i[1] = 0;
-		}
-		
-	if (inStack->nwaves > 2)
-		{
-		inStack->wave[2] = head->iwav3;
-		inStack->max_i[2] =	 head->max3;
-		inStack->min_i[2] =	 head->min3;
-		inStack->mean_i[2] = 0;
-		}
-		
-	if (inStack->nwaves > 3)
-		{
-		inStack->wave[3] = head->iwav4;
-		inStack->max_i[3] =	 head->max4;
-		inStack->min_i[3] =	 head->min4;
-		inStack->mean_i[3] = 0;
-		}
-		
-	if (inStack->nwaves > 4)
-		{
-		inStack->wave[4] = head->iwav5;
-		inStack->max_i[4] =	 head->max5;
-		inStack->min_i[4] =	 head->min5;
-		inStack->mean_i[4] = 0;
-		}
-
-/*
-* Read the raster out of the DV file.
-*/
-	if (head->nDVID != TIFF_MAGIC)
-	{
-	/*
-	* This is the number of images before the time-point we want.
-	*/
-		num = time * numZ * numWaves;
-
-	/* We set the file pointer to the begining of our timepoint */
-		fseek( fp, 1024+head->next+num*Rows*Cols*2, SEEK_SET );
-
-	/* and we suck the file into our structure */
-		numRead = fread( inStack->stack, sizeof(pixel), Cols*Rows*numZ*numWaves, fp );
-
-	/*
-	* If we didn't read enough pixels, then something went wrong.  Deallocate memory and return NULL.
-	*/
-		if (numRead != Cols*Rows*numWaves*numZ)
-			{
-			free (inStack->stack);
-			free (inStack);
-			fprintf (stderr,"Number of pixels in file does not match number in header.\n");
-			return (NULL);
-			}
-
-	/* Swap bytes if needed. */
-	if (head->nDVID == DV_REV_ENDIAN_MAGIC)
-		BSUtilsSwap2Byte ( (char *) (inStack->stack), Cols*Rows*numZ*numWaves);
-
-	}
-
-/*
-* Read the raster out of a TIFF file.
-*/
-	else
-	{
-	int errNum;
-	TIFF *tiff;
-
-		tiff = GetTIFFptr (head);
-		errNum = ReadTIFFData (tiff,(unsigned char *)inStack->stack);
-		if (errNum)
-		{
-		char errMsg[256];
-
-			free (inStack->stack);
-			free (inStack);
-			fprintf (stderr,"Problem reading TIFF file.\n%s\n",GetReadTIFFError (errNum,errMsg) );
-			return (NULL);
-		}
-	}
-
-	return (inStack);
+	size_t timepointSize = inStack->wave_increment * dims.w * sizeof(pixel);
+	Seek (fp, time * timepointSize);
+	Read (fp, inStack->stack, timepointSize);
 }
 
+void InitializeDVstack (DVstack* inStack, Point5D dims)
+{
+	memset (inStack, 0, sizeof(DVstack));
+	inStack->nwaves = dims.w;
+	inStack->max_x = dims.x - 1;
+	inStack->max_y = dims.y - 1;
+	inStack->max_z = dims.z - 1;
+	inStack->y_increment = dims.x;
+	inStack->z_increment = dims.x * dims.y;
+	inStack->wave_increment = dims.x * dims.y * dims.z;
+	if (!inStack->stack)
+		inStack->stack = (PixPtr) Allocate (inStack->wave_increment * dims.w * sizeof(pixel), "for image data");
+}
 
-
-
-
-
-
-
-
+void ReadWaveStats (DVstack* inStack, argiterator_t* iter, size_t timepoint)
+{
+	size_t i;
+	size_t readTimepoint = 0;
+	size_t readWave = 0;
+	for (i = 0; i < inStack->nwaves; ++ i) {
+		const char* argPtr = Argiter_NextString (iter);
+		if (!argPtr) {
+			fprintf (stderr, "Error: missing statistics for wave %d\n", i);
+			exit(-1);
+		}
+		sscanf (argPtr, "%d,%hd,%d,%hd,%hd,%f,%f,%f", &readWave, &inStack->wave[i], &readTimepoint,
+				&inStack->min_i[i], &inStack->max_i[i], &inStack->mean_i[i],
+				&inStack->geomean_i[i], &inStack->sigma_i[i]);
+		if (readTimepoint != timepoint || readWave != i) {
+			fprintf (stderr, "Error: wave %d stats are missing in list for timepoint %d\n", i, timepoint);
+			exit(-1);
+		}
+	}
+}
 
 /*#########################*/
 /*#                       #*/
@@ -1141,12 +830,12 @@ static IndexStack theStack;
 
 
 	
-	Index_To_Coords (index,&(theSpotG->seedX),&(theSpotG->seedY),&(theSpotG->seedZ) );
+	Index_To_Coords (theStackG, index,&(theSpotG->seedX),&(theSpotG->seedY),&(theSpotG->seedZ) );
 /*
 * We update the spot's statistics based on the properties of this pixel (position, intensity, etc).
 * This is the seed pixel.
 */
-	Update_Spot (index);
+	Update_Spot (theStackG, index);
 
 /*
 * We set this pixel to SPOT_PIXEL so that we don't count it again.
@@ -1196,7 +885,7 @@ static IndexStack theStack;
 		/*
 		* If we found a valid pixel, then basically do the same thing we did before.
 		*/
-			Update_Spot (index);
+			Update_Spot (theStackG, index);
 			*index = SPOT_PIXEL;
 			Push_Stack (Update_Index(index,X_PLUS),theStack);
 			Push_Stack (Update_Index(index,X_MINUS),theStack);
@@ -1266,7 +955,7 @@ extern pixel thresholdG;
 * At this point index is pointing at a spot pixel, so we call Update_Spot
 * to update the spot statistics with this pixel.
 */
-	Update_Spot (index);
+	Update_Spot (theStackG, index);
 
 /*
 * To prevent re-considering this pixel, we set it to threshold.
@@ -1290,7 +979,7 @@ extern pixel thresholdG;
 
 
 
-void Index_To_Coords (PixPtr index,short *Xp,short *Yp,short *Zp)
+void Index_To_Coords (DVstack* inStack, PixPtr index,short *Xp,short *Yp,short *Zp)
 {
 unsigned long index2;
 short X,Y,Z;
@@ -1299,34 +988,34 @@ short X,Y,Z;
 * First,  subtract the stack pointer from index,  thus getting
 * a "true" index.
 */
-	index2 = index - theStackG->stack;
+	index2 = index - inStack->stack;
 
 /*
 * Second,	subtract the wave increment to get an index into the stack.
 */
-	index2 -= (theSpotG->itsWave * theStackG->wave_increment);
+	index2 -= (theSpotG->itsWave * inStack->wave_increment);
 
 /*
 * The z coordinate is the wave index divided by the size of a z-section.
 * The integer division is a truncation.
 */
-	Z = index2 / (theStackG->z_increment);
+	Z = index2 / (inStack->z_increment);
 
 /*
 * Then we subtract the z coordinate * section size to get an index into the section.
 */
-	index2 -= (Z * (theStackG->z_increment));
+	index2 -= (Z * (inStack->z_increment));
 
 /*
 * The y coordinate is the index divided by the width.
 */
-	Y = index2 / (theStackG->y_increment);
+	Y = index2 / (inStack->y_increment);
 
 /*
 * Lastly,	if we subtract the y coordinate * width from the index,	 we will be left
 * with the x coordinate.
 */
-	index2 -= (Y * (theStackG->y_increment));
+	index2 -= (Y * (inStack->y_increment));
 	X = index2;
 
 	*Xp = X;
@@ -1356,12 +1045,8 @@ short X,Y,Z;
 * This functions assumes index points to a valid spot pixel, and updates the 
 * spot accumulators in the global spot structure.
 */
-void Update_Spot(PixPtr index)
+void Update_Spot (DVstack* inStack, PixPtr index)
 {
-/*
-extern SpotPtr theSpotG;
-extern DVstack *theStackG;
-*/
 int i;
 float floatIndex;
 
@@ -1369,7 +1054,7 @@ float floatIndex;
 /*
 * We need to back-calculate the coordinates from the index.
 */
-	Index_To_Coords (index,&(theSpotG->cur_x),&(theSpotG->cur_y),&(theSpotG->cur_z));
+	Index_To_Coords (theStackG,index,&(theSpotG->cur_x),&(theSpotG->cur_y),&(theSpotG->cur_z));
 /*
 * Set spoot coordinate maxima and minima according to the
 * current coordinates.
@@ -2019,7 +1704,7 @@ int swap;
 
 void Get_Surface_Area (SpotPtr theSpot)
 {
-double surfaceArea;
+double surfaceArea = 0;
 /*
 * FIXME:  Total hack of computing surface area by using the number of perimiter pixels.  Makes
 * no account of anisotropic space.  The formula is correct, though. Hmm, I wonder since the volume is in the
@@ -2127,19 +1812,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 		/* If there are more arguments to come, spit out a tab character. */
 			fprintf (stdout,"\t");
 		} /* -ID */
-	
-
-/* -tID :	 Output trajectory ID */
-		if (!strcmp ( argv[theArg],"-tID"))
-		{
-			if (saywhat == HEADING)
-				fprintf (stdout,"traj.ID");
-			else
-				fprintf (stdout,"%7ld",outSpot->trajID);
-
-		/* If there are more arguments to come, spit out a tab character. */
-			fprintf (stdout,"\t");
-		} /* -tID */
 	
 
 /* -dID :	 dataset ID  - filename*/
@@ -2258,7 +1930,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2299,7 +1970,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2329,7 +1999,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2359,7 +2028,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2391,7 +2059,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2421,7 +2088,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			theWave = atoi(argv[theArg+1]);
 			if (theWave != 0)
 			{
-				theWave = Get_Wavelngth_Index (itsStack,theWave);
 				if (theWave < outSpot->nwaves)
 				{
 					if (saywhat == HEADING)
@@ -2444,42 +2110,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 			fprintf (stdout,"\t");
 			theArg++;
 		} /* -gs */
-
-
-
-/* -tv :  Display the spot's trajectory vector - vector to this spot in next timepoint.	 */
-		else if (!strcmp ( argv[theArg],"-tv"))
-		{
-			if (saywhat == HEADING)
-				fprintf (stdout,"  dX  \t  dY  \t  dZ  ");
-			else
-				{
-				if (outSpot->nextTimePoint != NULL)
-					fprintf (stdout,"%6.2f\t%6.2f\t%6.2f",
-						outSpot->vecX,outSpot->vecY,outSpot->vecZ);
-				else
-					fprintf (stdout,"------\t------\t------");
-				}
-			fprintf (stdout,"\t");
-		} /* -tv */
-	
-	
-/* -td :  Display the distance the spot traveled to the next timepoint (in um). 	 */
-		else if (!strcmp ( argv[theArg],"-td"))
-		{
-			if (saywhat == HEADING)
-				fprintf (stdout," dist. ");
-			else
-			{
-				if (outSpot->nextTimePoint != NULL)
-					fprintf (stdout,"%7.3f",
-						Get_Spot_Dist_Centroid (outSpot,outSpot->nextTimePoint) );
-				else
-					fprintf (stdout,"-------");
-			fprintf (stdout,"\t");
-			}
-		} /* -td */
-
     	else if (!strcmp ( argv[theArg],"-tm") && doDB)
     	    {
 			if (saywhat == HEADING)
@@ -2514,159 +2144,6 @@ static char inArgs[255]="-",aIDcontrolString[32]="-",dIDcontrolString[32]="-";
 	} /* while theArg < argc */
 
 }
-
-
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*#  Get_Wavelngth_Index  #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This routine gets used by the output routine to easily get the
-* wave index from a wavelegth.	If the specified wavelegth does not
-* exist in the DVstack, then an out-of-bounds index is returned (MAXWAVES+1).
-*/
-int Get_Wavelngth_Index (DVstack *inStack, int waveLngth)
-{
-int theWaveIndx,i;
-
-	if (inStack->head->nDVID != TIFF_MAGIC)
-	{
-		theWaveIndx = MAXWAVES+1;
-		for (i=0; i < MAXWAVES; i++)
-			if (inStack->wave[i] == waveLngth) theWaveIndx = i;
-	}
-	else
-		theWaveIndx = 0;
-
-	return (theWaveIndx);
-}
-
-
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*# Get_Spot_Dist_Centroid#*/
-/*#                       #*/
-/*#########################*/
-/*
-* Get the distance between the centroids of the two spots.  The centroids are from the
-* wavelegth used to find the spot.
-*/
-double Get_Spot_Dist_Centroid (SpotPtr fromSpot,SpotPtr toSpot)
-{
-float dX,dY,dZ;
-short theWave;
-
-	if (toSpot == NULL || fromSpot == NULL)
-		return (-1.0);
-	theWave = toSpot->itsWave;
-	dX = toSpot->centroid_x[theWave] - fromSpot->centroid_x[theWave];
-	dY = toSpot->centroid_y[theWave] - fromSpot->centroid_y[theWave];
-	dZ = toSpot->centroid_z[theWave] - fromSpot->centroid_z[theWave];
-
-	dX *= theStackG->head->xlen;
-	dY *= theStackG->head->ylen;
-	dZ *= theStackG->head->zlen;
-
-	dX *= dX;
-	dY *= dY;
-	dZ *= dZ;
-
-	return (sqrt (dX+dY+dZ) );
-}
-
-
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*#  Get_Distance_Score   #*/
-/*#                       #*/
-/*#########################*/
-/*
-* This routine considers factors other than distance to calculate a "distance" score between two
-* spots.  Besides distance, currently it uses the integral as an additional "distance" parameter
-* which is weighed by intnsWght.  What is returned is essentially a residual (R value) across all these
-* parameters.
-*/
-double Get_Distance_Score (SpotPtr fromSpot,SpotPtr toSpot,float intnsWght)
-{
-double dX,dY,dZ,dI;
-short theWave;
-
-	theWave = toSpot->itsWave;
-	dX = toSpot->centroid_x[theWave] - fromSpot->centroid_x[theWave];
-	dY = toSpot->centroid_y[theWave] - fromSpot->centroid_y[theWave];
-	dZ = toSpot->centroid_z[theWave] - fromSpot->centroid_z[theWave];
-	dX *= theStackG->head->xlen;
-	dY *= theStackG->head->ylen;
-	dZ *= theStackG->head->zlen;
-	dX *= dX;
-	dY *= dY;
-	dZ *= dZ;
-
-	dI = abs(toSpot->mean_i[theWave] - fromSpot->mean_i[theWave]);
-	dI *= intnsWght;
-
-/*
-	dV = toSpot->volume - fromSpot->volume;
-	dV *= dV;
-*/
-	
-
-	return (sqrt (dX+dY+dZ)+dI );
-}
-
-
-
-
-
-
-
-
-
-/*#########################*/
-/*#                       #*/
-/*# Calculate_Spot_Vector #*/
-/*#                       #*/
-/*#########################*/
-void Calculate_Spot_Vector (SpotPtr theSpot)
-{
-short theWave;
-/*
-* just calculate the vector to the spot in the next timepoint
-*/
-	theWave = theSpot->itsWave;
-	theSpot->vecX = theSpot->nextTimePoint->centroid_x[theWave] - theSpot->centroid_x[theWave];
-	theSpot->vecY = theSpot->nextTimePoint->centroid_y[theWave] - theSpot->centroid_y[theWave];
-	theSpot->vecZ = theSpot->nextTimePoint->centroid_z[theWave] - theSpot->centroid_z[theWave];
-}
-
-
-
-
 
 
 
@@ -2801,119 +2278,14 @@ the output we want.
 	
 }
 
-
-
-
-
-
-
-
-
-
-void Write_Polygon_File (FILE *polyOut,char doVectors,SpotPtr theSpotListHead,int tStart,int tStop)
-{
-SpotPtr theSpot,theSpotNextTime;
-int time;
-
-	fprintf(polyOut,"#POLYGON_FILE\n");
-
-
-/*
-* We travel down the list of spots in the first timepoint.  For each spot encountered there,
-* we travel down the list of ->nextTimePoint, which points to the same spot in the next
-* timepoint.  Before we move down the next timepoint, we output the vector to the next
-* timepoint.
-* The first three columns are the coordinates of the spot in the first time-point.
-* Subsequent sets of three columns are the vectors to the spot in the next timepoint.
-*/
-	theSpot = theSpotListHead;
-	while (theSpot->next != theSpotListHead)
-		{
-		fprintf (stdout,"%7.2f\t%7.2f\t%7.2f\t",
-			theSpot->centroid_x[theSpot->itsWave],
-			theSpot->centroid_y[theSpot->itsWave],
-			theSpot->centroid_z[theSpot->itsWave]);
-		theSpotNextTime = theSpot;
-		while (theSpotNextTime->nextTimePoint != NULL)
-			{
-		/*
-		* Each polygon is a line that is a 2 dimmentional projection of the three
-		* dimmentional vector to the spot in the next time-point.  That's a fancy way
-		* of saying that we don't output the Z coordinate.  The polygon has four points,
-		* two of which are the spot's centroid and two of which are the centroid plus
-		* the vector to the next spot.
-		* DV incorrectly has its coordinate base at (1,1,1) instead of (0,0,0), so we add
-		* the vector (1,1,1) to the coordinates we send to DV.
-		*/
-			if (doVectors)
-				{
-				fprintf (polyOut,"section %d %d %d\n",theSpotNextTime->itsWave,0,theSpotNextTime->itsTimePoint);
-				fprintf (polyOut,"polygon 0 1 4\n");
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+theSpotNextTime->vecX+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+theSpotNextTime->vecY+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+theSpotNextTime->vecX+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+theSpotNextTime->vecY+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+1));
-				}
-			else for (time=tStart;time < tStop;time++)
-				{
-				fprintf (polyOut,"section %d %d %d\n",theSpotNextTime->itsWave,0,time);
-				fprintf (polyOut,"polygon 0 1 4\n");
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+theSpotNextTime->vecX+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+theSpotNextTime->vecY+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+theSpotNextTime->vecX+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+theSpotNextTime->vecY+1));
-				fprintf (polyOut,"point %d %d\n",
-					(int) (theSpotNextTime->centroid_x[theSpotNextTime->itsWave]+1),
-					(int) (theSpotNextTime->centroid_y[theSpotNextTime->itsWave]+1));
-				}
-			theSpotNextTime = theSpotNextTime->nextTimePoint;
-			}
-		theSpot = theSpot->next;
-		}
-	fprintf (polyOut,"end\n");
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pixel Set_Threshold (char *arg, DVstack *theStack)
+pixel Set_Threshold (const char *arg, DVstack *theStack)
 {
 float nSigmas;
 int theThreshold;
 int spotWave;
-char argUC[128],*argUCptr,*argPtr;
+char argUC[128];
+char* argUCptr;
+const char* argPtr;
 
 
 	argUCptr = argUC;
@@ -3051,10 +2423,8 @@ pixel thresh=0;
 			break;
 	}
 
-	
 	free (probHist);
 	return (thresh);
-
 }
 
 
@@ -3116,9 +2486,9 @@ pixel Get_Thresh_ME (DVstack *theStack)
 unsigned short histSize;
 double *probHist,*probHistPtr,prob;
 double Hn=0.0, Ps=0.0, Hs=0.0;
-double psi, psiMax=0.0;
+double psi = 0, psiMax=0.0;
 unsigned long i,j;
-pixel thresh;
+pixel thresh = 0;
 
 	probHist = Get_Prob_Hist (theStack, &histSize);
 
@@ -3255,22 +2625,25 @@ pixel thresh;
 /*##########################                                                    ##########################*/
 /*########################################################################################################*/
 
-int main( int argc, char **argv )
+int main (int argc, char **argv)
 {
-DVhead head;
-DVstack *theOldStack,*theStackListHead;
-FILE *fp= NULL,*polyOut=NULL;
-char *file = NULL;
-char evaluate=0,doVectors=0;
+DVstack* theOldStack = NULL,*theStackListHead = NULL;
+FILE *fp= NULL;
 long i;
-int spotWaveLngth,spotWave,minSpotVol,time;
+int spotWave,minSpotVol,time;
 PixPtr index,maxIndex;
-SpotPtr theSpotList=NULL,theSpotListHead=NULL,theSpotNextTime=NULL,theSpot=NULL;
-float theDist,minDist,intnsWght=0.0;
+SpotPtr theSpotList=NULL,theSpotListHead=NULL;
 int tStart=0,tStop=0;
-long trajID = 0;
-char firstTimepoint = 1;
-TIFF *tiff;
+Point5D dims = { 0, 0, 0, 0, 0};
+const char* argval = NULL;
+const char* threshold = NULL;
+argarray_t args;
+argiterator_t argiter = 0;
+const char* c_rgRequiredArgs[64] = {
+	"Dims"  , "dimensions of the input file",
+	"WaveStats","per-wave per-timepoint statists",
+	"",""
+};
 
 /*
 * The following line is commented out because it is not
@@ -3282,18 +2655,20 @@ argc = ccommand(&argv);
 #endif
 
 /*
+ * Initialize argument parser. Read args from stdin and add the args from CLI
+*/
+	Argarray_Initialize (&args);
+	Argarray_ImportDashCLI (&args, argc, argv);
+
+/*
 * Write the command line arguments to stdout - mainly so that
 * the command line ends up in a log file.  If the user issued -nl, then supress
 * this output also.
 */
-	for (i=0;i<argc && strcmp (argv[i],"-db");i++);
-
-    if (i == argc)
-        {
-    	for (i=0;i<argc;i++)
-    		fprintf (stdout,"%s ",argv[i]);
-    	fprintf (stdout,"\n");
-    	}
+#ifdef DEBUG
+	if (!Argarray_NameExists (&args, "db"))
+		Argarray_DumpArgs (&args);
+#endif
 
 /*
 * Check to see that we got an appropriate number of arguments.  If not, print out a helpfull
@@ -3301,153 +2676,107 @@ argc = ccommand(&argv);
 */
 	if (argc < OUTARGS)
 	{
-		fprintf (stderr,"Usage:\n%s <%s> <%s> <%s> <%s> <%s> <%s>\n",
-				argv[0],"DV filename","spot wavelegth","threshold","min. spot vol.",
-				"optional arguments","output arguments");
+		fprintf (stderr,"Usage:\n");
+		fprintf (stderr,"\t%s <DV filename> <waveindex> <threshold> <min spot vol> [<optional arguments> <output arguments>]\n", Argarray_GetString(&args,"AppName"));
 		fprintf (stderr,"Note that the brackets (<>) are used to delineate options in this usage message.\n");
 		fprintf (stderr,"Do not use brackets when actually putting in arguments.\n");
-		fprintf (stderr,"<thresholds>:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
-			"number:  If a number is entered for this field, then it will be used as the threshold.",
-			"mean:	The mean pixel value at the specified wavelegth will be used as the threshold.",
-			"mean<n>s:	The mean pixel value plus <n> standard deviations will be used as threshold.",
-			"gmean:	 The geometric mean of the specified wavelegth will be used as threshold.",
-			"gmean<n>s:	 The geometric mean plus <n> standard deviations will be used for threshold.");
-		fprintf (stderr,"<optional arguments>:\n\t%s\n\t%s\n\t%s\n\t%s",
-			"-time<n1>-<n2> begin and end timepoints.  Default=all. -time4- will do t4 to the end, etc.",
-			"-polyVec <filename> output tracking vectors to DV 2-D polygon file.",
-			"-polyTra <filename> output trajectories to DV 2-D polygon file.",
-			"-iwght <fraction> weight of spot's average intensity for finding spots in t+1 (def. = 0.0).");
-		fprintf (stderr,"<Output arguments>:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
-			"-db Format output for database import - tab-delimited text.",
-			"    Database format is one line per spot.  Any summary information specified (-tm, -tt, etc) will be",
-			"    displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,",
-			"    Spots in a trajectory will have the same ID, but different timepoints.  For now, only spots in trajectories starting",
-			"    with t0 are displayed."
-			"-nl Supress column headings.  Usefull if database does not recognize column headings (i.e. FileMaker)",
-			"-ID Display the spot's ID# - a 'serial number' unique to each spot in this dataset.",
-			"-tID Display the trajectory ID# - a 'serial number' unique to to each trajectory in this dataset.",
-			"-dID Dataset ID - Usefull if combining many datasets in a database.  The ID is the filename, and will",
-			"     be the same for all spots in this dataset.",
-			"-aID Argument ID.  Display input arguments - text containing the required arguments for this run - everything except",
-			"     the filename, polyVec, polyTra and <output arguments>.  The arguments are separated by a space, not a tab.",
-			"-c <wavelegth>: Display centroids (center of mass).",
-			"-i <wavelegth>:  Display integral - sum of pixel values",
-			"-m <wavelegth> Display mean pixel value.",
-			"-g <wavelegth> Display the geometric mean pixel value.",
-			"-ms <wavelegth> Same as -m, but number of std. deviations over the wavelegth's mean.",
-			"-gs <wavelegth> Same as -g, but number of std. deviations over the wavelegth's geometric mean.",
-			"-mc Display the average coordinate values of the spot (center of volume).",
-			"-v Display the spot's volume",
-			"-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)",
-			"-per Display the spot's perimiter",
-			"-sa Display the spot's surface area",
-			"### Time series data ###",
-			"-tm Display mean pixel value of the entire timepoint for the spot's wavelegth - once/timepoint",
-			"-tSD Display the standard deviation of the entire timepoint for the spot's wavelegth - once/timepoint",
-			"-tt Display the timepoint number (once/timepoint).",
-			"-th Display the threshold used for the timepoint (once/timepoint).",
-			"-tv Display the spot's trajectory vector - vector to this spot in next timepoint (pixel coordinates).",
-			"-td Display the distance the spot traveled to the next timepoint (in um). ");
-			
-		fprintf (stderr,"Output:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
-			"The output is a table of vectors.  There is one row (line) for each timepoint.  The requested output is",
-			"placed in columns with one set of columns for each feature (or 'spot').  For example, if tracking",
-			"vectors only are requested (-tv), then there will be three columns (dX,dY,dZ) per spot.",
-			"If there are additional outputs besides the trajectory vectors, then there will be more than three",
-			"columns per spot.  The option -tm, -tSD -tt -th may be specified any number of times in any order",
-			"(or not at all).  They will be displayed once per timepoint (once per line of output) before the other outputs.",
-			"N.B.:  The number of sets of columns in the output is the number of spots found in the first timepoint.",
-			"If spots appear at later timepoints, they will not be in the output.  Likewise if spots disapear after",
-			"the first timepoint, at the time of disapearance two trajectories will converge on one spot, and the",
-			"trajectory of the disapeared spot will be identical to the spot it 'colided' with.");
-		fprintf (stderr,"Example:\n\t%s\n",
-			"trackSpots lookatemgo.r3d_d3d 528 gmean4.5s 10 -polyTra polyFoo -iwght 0.05 -time5- -tt -tm -tSD");
+		fprintf (stderr,"On stdin the following arguments must be given:\n");
+		fprintf (stderr,"\tDims=<width>,<height>,<z-depth>,<nwaves>,<ntimepoints>\n");
+		fprintf (stderr,"\tWaveStats=\n");
+		fprintf (stderr,"\t<waveindex>,<wavelength>,<timepoint>,<min_intensity>,<max_i>,<mean_i>,<geometric_mean_i>,<sigma>\n");
+		fprintf (stderr,"\t... [one entry per wave per timepoint] ...\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"<thresholds>:\n");
+		fprintf (stderr,"\tnumber:  If a number is entered for this field, then it will be used as the threshold.\n");
+		fprintf (stderr,"\tmean:	The mean pixel value at the specified waveindex will be used as the threshold.\n");
+		fprintf (stderr,"\tmean<n>s:	The mean pixel value plus <n> standard deviations will be used as threshold.\n");
+		fprintf (stderr,"\tgmean:	 The geometric mean of the specified waveindex will be used as threshold.\n");
+		fprintf (stderr,"\tgmean<n>s:	 The geometric mean plus <n> standard deviations will be used for threshold.\n");
+		fprintf (stderr,"\tmoment:  The moment preservation method.\n");
+		fprintf (stderr,"\totsu:  The Otsu's determinant threshold.\n");
+		fprintf (stderr,"\tme:  The maximum entropy method.\n");
+		fprintf (stderr,"\tkittler:  The Kittler method of minimum error.\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"<optional arguments>:\n");
+		fprintf (stderr,"\t-time <n1>-<n2> begin and end timepoints.  Default is all timepoints. -time 4- will do t4 to the end, etc.\n");
+		fprintf (stderr,"\t-polyVec <filename> output tracking vectors to DV 2-D polygon file.\n");
+		fprintf (stderr,"\t-polyTra <filename> output trajectories to DV 2-D polygon file.\n");
+		fprintf (stderr,"\t-iwght <fraction> weight of spot's average intensity for finding spots in t+1 (def. = 0.0).\n");
+		fprintf (stderr,"\t<Output arguments>:\n");
+		fprintf (stderr,"\t-db Format output for database import - tab-delimited text.\n");
+		fprintf (stderr,"\t    Database format is one line per spot.  Any summary information specified (-tm, -tt, etc) will be\n");
+		fprintf (stderr,"\t    displayed once for each spot - not once per timepoint. Column order will be as specified in <Output arguments>,\n");
+		fprintf (stderr,"\t    Spots in a trajectory will have the same ID, but different timepoints.  For now, only spots in trajectories starting\n");
+		fprintf (stderr,"\t    with t0 are displayed\n");
+		fprintf (stderr,"\t-nl Supress column headings.  Usefull if database does not recognize column headings (i.e. FileMaker)\n");
+		fprintf (stderr,"\t-ID Display the spot's ID# - a 'serial number' unique to each spot in this dataset.\n");
+		fprintf (stderr,"\t-tID Display the trajectory ID# - a 'serial number' unique to to each trajectory in this dataset.\n");
+		fprintf (stderr,"\t-dID Dataset ID - Usefull if combining many datasets in a database.  The ID is the filename, and will\n");
+		fprintf (stderr,"\t     be the same for all spots in this dataset.\n");
+		fprintf (stderr,"\t-aID Argument ID.  Display input arguments - text containing the required arguments for this run - everything except\n");
+		fprintf (stderr,"\t     the filename, polyVec, polyTra and <output arguments>.  The arguments are separated by a space, not a tab.\n");
+		fprintf (stderr,"\t-c <waveindex>: Display centroids (center of mass).\n");
+		fprintf (stderr,"\t-i <waveindex>:  Display integral - sum of pixel values\n");
+		fprintf (stderr,"\t-m <waveindex> Display mean pixel value.\n");
+		fprintf (stderr,"\t-g <waveindex> Display the geometric mean pixel value.\n");
+		fprintf (stderr,"\t-ms <waveindex> Same as -m, but number of std. deviations over the waveindex's mean.\n");
+		fprintf (stderr,"\t-gs <waveindex> Same as -g, but number of std. deviations over the waveindex's geometric mean.\n");
+		fprintf (stderr,"\t-mc Display the average coordinate values of the spot (center of volume).\n");
+		fprintf (stderr,"\t-v Display the spot's volume\n");
+		fprintf (stderr,"\t-ff Display the spot's form-factor (1 for sphere in 3D or circle in 2D, <1 if deviates)\n");
+		fprintf (stderr,"\t-per Display the spot's perimiter\n");
+		fprintf (stderr,"\t-sa Display the spot's surface area\n");
+		fprintf (stderr,"\t### Time series data ###\n");
+		fprintf (stderr,"\t-tm Display mean pixel value of the entire timepoint for the spot's waveindex - once/timepoint\n");
+		fprintf (stderr,"\t-tSD Display the standard deviation of the entire timepoint for the spot's waveindex - once/timepoint\n");
+		fprintf (stderr,"\t-tt Display the timepoint number (once/timepoint).\n");
+		fprintf (stderr,"\t-th Display the threshold used for the timepoint (once/timepoint).\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"Output:\n");
+		fprintf (stderr,"\tThe output is a table of vectors.  There is one row (line) for each timepoint.  The requested output is\n");
+		fprintf (stderr,"\tplaced in columns with one set of columns for each feature (or 'spot').\n");
+		fprintf (stderr,"\tThe option -tm, -tSD -tt -th may be specified any number of times in any order\n");
+		fprintf (stderr,"\t(or not at all).  They will be displayed once per timepoint (once per line of output) before the other outputs.\n");
+		fprintf (stderr,"\tN.B.:  The number of sets of columns in the output is the number of spots found in the first timepoint.\n");
+		fprintf (stderr,"\tIf spots appear at later timepoints, they will not be in the output.\n");
+		fprintf (stderr,"\n");	
+		fprintf (stderr,"Example:\n");
+		fprintf (stderr,"\tfindSpotsOME lookatemgo.r3d_d3d 528 gmean4.5s 10 -polyTra polyFoo -iwght 0.05 -time5- -tt -tm -tSD\n");
+		fprintf (stderr,"\n");	
 
 		exit (-1);
 	}
 
-/*
-* Get the spot wavelegth and the minimum spot volume.
-*/
-	
-	sscanf (argv[2],"%d",&spotWaveLngth);
+	/* Get the stdin arguments */
+	fprintf (stderr,"Please enter Dims and WaveStats (or ^D to abort):\n");
+	Argarray_ImportPOSTFromStdin (&args);
+	if (!Argarray_VerifyRequiredArgs (&args, &c_rgRequiredArgs[0]))
+		exit (-1);
 
-	sscanf (argv[4],"%d",&minSpotVol);
+	/*
+	 * Get the image dimensions
+	 */
+	sscanf (Argarray_GetString(&args,"Dims"), "%hd,%hd,%hd,%hd,%hd", &dims.x, &dims.y, &dims.z, &dims.w, &dims.t);
 
-/*
-* Read the "-poly" option.
-*/
-	for (i=5;i<argc;i++)
-		{
-		if (!strncmp (argv[i],"-poly",5))
-			{
-			polyOut = fopen (argv[i+1],"w+");
-			if (polyOut == NULL)
-				{
-				fprintf (stderr,"Could not open file '%s' for writing polygons.\n",argv[i+1]);
-				exit (-1);
-				}
-			evaluate = 1;
-			if (!strcmp (argv[i],"-polyVec"))
-				doVectors = 1;
-			}
-		}
+	/*
+	* Open the DV file, with error checking.
+	*/
 
-/*
-* Read the intensity weight option
-*/
-	for (i=5;i<argc;i++)
-		{
-		if (!strcmp (argv[i],"-iwght"))
-			sscanf (argv[i+1],"%f",&intnsWght);
-		}
+	/*
+	* Get the spot wavelegth and the minimum spot volume.
+	*/
+	Argiter_Initialize (&args, &argiter, "AppName");
+	fp = OpenFile (Argiter_NextString (&argiter), "r");
+	spotWave = Argiter_NextInteger (&argiter);
+	threshold = Argiter_NextString (&argiter);
+	minSpotVol = Argiter_NextInteger (&argiter);
 
-
-/*
-* Read the timespan option
-*/
-	for (i=5;i<argc;i++)
-		{
-		if (!strncmp (argv[i],"-time",5))
-			sscanf (argv[i]+5,"%d-%d",&tStart,&tStop);
-		}
-
-
-/*
-* Get the DV input file.
-*/
-	file = argv[1];
-	if (file == NULL)
-	{
-		fprintf(stderr, "You must specify a file.\n" );
-		exit(-1);
-	}
-
-/*
-* Open the DV file, with error checking.
-*/
-	fp = fopen( file, "r" );
-	if (fp == NULL)
-	{
-		fprintf(stderr,"File '%s' could not be opened.\n",file );
-		exit(-1);
-	}
-
-/*
-* OK, if we're here we got the parameters and an open DV file, so now we read the header.
-* If the header-reader returned NULL, then we try to read it as TIFF.
-*/
-
-	if (! ReadDVHeader( &head, fp ) )
-		{
-		fclose (fp);
-		tiff = ReadTIFFHeader (&head, file, &fp);
-		if (! tiff)
-			{
-			fprintf (stderr,"'%s' doesn't seem to be a DeltaVision or a TIFF file\n",file);
-			exit (-1);
-			}
-		}
+	/*
+	* Read the timespan option
+	*/
+	argval = Argarray_GetString (&args, "time");
+	if (argval)
+		sscanf (argval, "%d-%d", &tStart, &tStop);
 
 /*
 * Set the timepoint range to use.
@@ -3461,8 +2790,8 @@ argc = ccommand(&argv);
 	tStop--;
 	if (tStart < 0)
 		tStart = 0;
-	if ( !(tStop > tStart) )
-		tStop = head.numtimes;
+	if (tStop < tStart)
+		tStop = dims.t;
 /*
 * We are going to output the thresholds - one per timepoint - on a single line.
 	fprintf (stdout,"Timepoint:\t");
@@ -3471,47 +2800,43 @@ argc = ccommand(&argv);
 	fprintf (stdout,"\nThreshold:\t");
 */
 
-
-
-
-
 /*
 * ################   MAIN  LOOOP   ################ *
 */
+
+	/*
+	* Get the wave statistics
+	*/
+	Argiter_Initialize (&args, &argiter, "WaveStats");
+	/* skip stats for unused timepoints */
+	/* FIXME: remove the ugly empty stack hack when the stack list is gone */
+	theStackG = (DVstack*) malloc (sizeof(DVstack));
+	InitializeDVstack (theStackG, dims);
+	for (time = 0; time < tStart; ++ time)
+		ReadWaveStats (theStackG, &argiter, time);
+	free (theStackG);
 	theStackG = NULL;
-	theStackListHead = NULL;
-	for (time=tStart;time < tStop;time++)
-		{
-/*
-* If this is not the first stack we ever read, then free the stack for the previous timepoint.
-*/
-		if (theStackG != NULL)
-			{
-			free (theStackG->stack);
-			theStackG->stack = NULL;
-			}
-		
+
+	for (time = tStart; time < tStop; time++) {
 /*
 * Read in the stack of images.
 */
-		theStackG = ReadDVstack(fp,&head,time);
-		if (theStackG == NULL)
-			{
-			fprintf(stderr,"Problem reading file or allocating memmory - EXIT\n");
-			exit (-1);
-			}
+		theStackG = (DVstack*) malloc (sizeof(DVstack));
+		InitializeDVstack (theStackG, dims);
+		ReadDVstack (theStackG, fp, dims, time);
+		ReadWaveStats (theStackG, &argiter, time);
 
-#ifdef DEBUG
-fprintf (stderr,"read DV stack\n");
-fflush (stderr);
-#endif
+		/* put the stack in the stack list */
 		if (theStackListHead == NULL)
 			theStackListHead = theStackG;
 		else
 			theOldStack->next = theStackG;
 		theOldStack = theStackG;
 		theStackG->next = NULL;
-
+#ifdef DEBUG
+fprintf (stderr,"read DV stack\n");
+fflush (stderr);
+#endif
 	/*
 	 * Write out the waves we found in the DV file
 		fprintf (stdout,"Wave:	   ");
@@ -3528,18 +2853,12 @@ fflush (stderr);
 		fflush (stderr);
 #endif
 	/*
-	* Get the wave index of the spot wavelegth.
-	*/
-		spotWave = Get_Wavelngth_Index (theStackG, spotWaveLngth);
-	
-	/*
 	* Get_Wave_Index returns an index that's out of bounds ( > waves in stack)
 	* if it could not find an appropriate index.
 	*/
 		if (spotWave >= theStackG->nwaves)
 		{
-			fprintf (stderr,"Could not find wavelength %d nm in file %s\n",
-					spotWaveLngth,file);
+			fprintf (stderr,"Could not find wavelength %d in file %s\n", spotWave, argv[1]);
 			exit (-1);
 		}
 	
@@ -3559,7 +2878,7 @@ fflush (stderr);
 	/*
 	* figure out what to set the threshold to.
 	*/
-		thresholdG = Set_Threshold (argv[3],theStackG);
+		thresholdG = Set_Threshold (threshold,theStackG);
 		theStackG->threshold = thresholdG;
 
 #ifdef DEBUG
@@ -3694,88 +3013,15 @@ fflush (stderr);
 	fprintf (stdout,"\n");
 */
 
-
-
-
 /*
-* Now that we have the list of lists, we need to go through each spot in each timepoint and find
-* the nearest neighbor in the subsequent timepoint.
-* Note that a nearest neighbor is not necessarily one that is nearest in distance.  In can be
-* one that is nearest in any combination of spot attributes.  Presently, a weighed intensity is used with
-* distance a "nearest neighbor" criterion.  Intensity refers to the average intensity of the spot rather
-* than total integral.  The weight is not presently scaled, and intensities can vary a great deal more than
-* distances, so use it carefully.
-*/
-	theSpotList = theSpotListHead;
-	
-/*
-* Going down the list of time-point-lists.  Since there is no place-holder timepoint list,
-* if we only go until nextTimePointList is NULL, then we won't try to determine a vector
-* for the last timepoint list.  That would be a no-no because we will step into the vortex
-* that is located at the end of time itself.
-* Note that we don't actually set vecX,vecY,vecZ to anything in the spots in this last timepoint list.
-* The pointers are all properly NULL terminated, but the vector components contain 0 (from Zero_Spot) - 
-* even though officially they are undefined.  Point being, it is up to whoever does anything with these
-* vectors to make sure they don't belong to a spot in the last timepoint.
-*/
-	while (theSpotList->nextTimePointList != NULL)
-		{
-		theSpot = theSpotList;
-	
-	/*
-	* Go down the list of spots for this timepoint.
-	*/
-		while (theSpot->next != theSpotList)
-			{
-			if (firstTimepoint)
-			    {
-			    theSpot->trajID = trajID;
-			    trajID++;
-                }
-			theSpotNextTime = theSpotList->nextTimePointList;
-			minDist = MAXDIST;
-			
-		/*
-		* Go down the list of spots in the next timepoint to find this spot's nearest neighbor.
-		*/
-			while (theSpotNextTime->next != theSpotList->nextTimePointList)
-				{
-				theDist = Get_Distance_Score (theSpot,theSpotNextTime,intnsWght);
-				if (theDist < minDist)
-					{
-					minDist = theDist;
-					theSpot->nextTimePoint = theSpotNextTime;
-					}
-				theSpotNextTime = theSpotNextTime->next;
-				} /* find nearest neighbor */
-
-			if (theSpot->nextTimePoint != NULL) {
-				theSpot->nextTimePoint->trajID = theSpot->trajID;
-				Calculate_Spot_Vector (theSpot);
-				}
-			theSpot = theSpot->next;
-			} /* This timepoint's list of spots */
-
-		theSpotList = theSpotList->nextTimePointList;
-		firstTimepoint = 0;
-		}/* The list of time-point-lists */
-
-/*
-* Finally, we output the vectors.
 * Output of spot info is handled by Write_Output
-* If we are evaluating, i.e. outputing polygons for viewing in DV, output the header for
-* the polygon file.
 */
-	Write_Output (theSpotListHead,argc,argv,OUTARGS);
-	if (evaluate)
-		{
-		Write_Polygon_File (polyOut,doVectors,theSpotListHead,tStart,tStop);
-		fclose (polyOut);
-		}
-
+	Write_Output (theSpotListHead, argc, argv, OUTARGS);
 	
+	Argarray_Destroy (&args);
 /*
 * Exit gracefully.
 */	
 	return (0);
 }
+

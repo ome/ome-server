@@ -1,14 +1,14 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
-		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
+		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG makemesh \
 		cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
 MATH_LIBS = -lm
 LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
-COMPILER_FLAGS = -Wall -O2
+COMPILER_FLAGS = -Wall -g
 MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
@@ -37,8 +37,11 @@ trackSpotsDB :  BSUtils.o trackSpotsDB.o
 findSpotsDB : findSpotsDB.o
 	gcc $(DEFINES) findSpotsDB.o -o findSpotsDB -lm 
 
-findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o
-	gcc $(DEFINES) findSpotsOME.o readTiffData.o BSUtils.o -o findSpotsOME -lm -ltiff
+findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
+	gcc $(DEFINES) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME -lm -ltiff
+
+makemesh: makemesh.o iolib/argarray.o iolib/failio.o iolib/repository.o
+	gcc $(DEFINES) $+ -o $@
 
 BinarizeGlobal : BinarizeGlobal.o readTiffData.o BSUtils.o
 	gcc $(DEFINES) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal -lm -ltiff

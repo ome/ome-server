@@ -60,6 +60,7 @@ all: $(LIB) helpers ome_cccp ome_tmcp
 
 $(LIB): $(OBJS) $(HEADERS)
 	ar cr $@ $(OBJS)
+	ranlib $@
 
 helpers: $(LIB) $(HELPERS)
 
