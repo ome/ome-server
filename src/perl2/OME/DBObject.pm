@@ -253,6 +253,34 @@ sub delete {
 }
 
 
+# Class::DBI's search routines do not correctly translate '= null' into
+# 'is null'.  This routine fixes that behavior.
+
+sub _do_search {
+    my ($proto, $search_type, @args) = @_;
+    my $class = ref $proto || $proto;
+    @args = %{$args[0]} if ref $args[0] eq "HASH"; 
+    my (@cols, @vals);
+    while (my ($col, $val) = splice @args, 0, 2) {
+        $col = $class->_normalized($col) or next;
+        $class->_check_columns($col);
+        push @cols, $col;
+        push @vals, $val;
+    }
+
+    my $i = 0;
+    my @col_sql = map {
+        defined $vals[$i++]?
+          " $_ $search_type ? ":
+          " $_ is ? ";
+    } @cols;
+
+    my $sql = join " AND ", @col_sql;
+    return $class->retrieve_from_sql($sql => @vals);
+}
+
+
+
 # With v0.90 of Class::DBI, has_a does not inflate object lazily.
 # This is very bad, and so we translate all calls to has_a into
 # equivalent hasa calls.
