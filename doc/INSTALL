@@ -150,6 +150,9 @@ following:
    (default /var/tmp/OME)
  * An initial OME username/password
 
+*NOTE* Unlike with previous deployments of OME, the installer will conveniently
+do *all* of these operations for you.
+
 In addition, it is also recommended that you investigate and find out the
 following (you may be asked to confirm or provide the answer to these questions
 during installation): 

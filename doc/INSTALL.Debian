@@ -10,7 +10,8 @@ Preamble
 This addendum is based on package names from Debian Unstable (Sid), if you're
 running Debian Stable most if not all of the package names will be the same.
 You may need to search for some using apt-cache. Some packages will change
-names over time and we will attempt to keep this list as update as possible.
+names over time and we will attempt to keep this list as up to date as
+possible.
 
 Binaries:
 
@@ -34,7 +35,8 @@ Core Package Install
 To install all the OME prerequisites execute the following as root:
 
 apt-get install perl perl-doc apache apache-doc gcc postgresql \
-postgresql-client postgresql-dev postgresql-doc 
+postgresql-client postgresql-dev postgresql-doc libapache-mod-perl \
+libapache-mod-perl-doc
 
 _________________
 C Library Install

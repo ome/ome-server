@@ -6,7 +6,7 @@ Preamble
 
 This addendum is based on the FreeBSD 4.x ports tree. You may need to search
 for some using "make search". Some packages will change names over time and we
-will attempt to keep this list as update as possible.
+will attempt to keep this list as up to date as possible.
 
 	cd /usr/ports && make search name=libxml2
 
@@ -31,6 +31,7 @@ Install the following from the ports tree:
 /usr/ports/databases/postgresql7
 /usr/ports/databases/postgresql-client
 /usr/ports/databases/postgresql-docs
+/usr/ports/www/mod_perl
 
 _________________
 C Library Install
