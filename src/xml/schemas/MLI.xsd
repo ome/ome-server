@@ -83,7 +83,7 @@ Translates a module input of Semantic Type Pixels (or any psuedo subclass of Pix
 								<documentation>References a FormalInput by name</documentation>
 							</annotation>
 						</attribute>
-						<attribute name = "ID" type = "ID">
+						<attribute name = "ID" type = "string">
 							<annotation>
 								<documentation>An input ID. 
 In the future, can be used to establish references.
@@ -147,7 +147,7 @@ In the future, can be used to establish references.
 								<documentation>References a FormalOutput by name</documentation>
 							</annotation>
 						</attribute>
-						<attribute name = "ID" type = "ID">
+						<attribute name = "ID" type = "string">
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
@@ -198,7 +198,7 @@ Note to perl developers: This list should stay syncronized with the Matlab Class
 								<documentation>References a FormalOutput by name</documentation>
 							</annotation>
 						</attribute>
-						<attribute name = "ID" type = "ID">
+						<attribute name = "ID" type = "string">
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
@@ -255,7 +255,7 @@ The contents of this element should follow CustomAttribute syntax and convention
 								<documentation>References a Template this value will be inserted into.</documentation>
 							</annotation>
 						</attribute>
-						<attribute name = "ID" type = "ID">
+						<attribute name = "ID" type = "string">
 							<annotation>
 								<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
@@ -265,7 +265,7 @@ In the future, can be used to stitch together data from different function outpu
 					</complexType>
 				</element>
 			</sequence>
-			<attribute name = "ID" use = "required" type = "ID">
+			<attribute name = "ID" use = "required" type = "string">
 				<annotation>
 					<documentation>An output ID. 
 In the future, can be used to stitch together data from different function outputs into a single module output, or establish references.
