@@ -1,4 +1,4 @@
-# OME/Tasks/LSID.pm
+# OME/Tasks/LSIDManager.pm
 # This module is used for exporting a list of objects to an XML hierarchy governed by the OME-CA schema.
 
 #-------------------------------------------------------------------------------
@@ -36,17 +36,17 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::LSID;
+package OME::Tasks::LSIDManager;
 
 
 =head1 NAME
 
-OME::LSID - Generate LSIDs for OME objects
+OME::Tasks::LSIDManager - Generate LSIDs for OME objects
 
 =head1 SYNOPSIS
 
 	# Get a new or existing LSID for the given object
-	my $resolver = new OME::LSID (session => $session);
+	my $resolver = new OME::Tasks::LSIDManager (session => $session);
 	my $LSID = $resolver->getLSID ($object);
 	my $object = $resolver->getObject ($LSID);
 	my $object = $resolver->getLocalObject ($LSID);
@@ -60,6 +60,7 @@ This class is used to convert objects to LSIDs and LSIDs into objects. LSIDs are
 use strict;
 use Carp;
 use Log::Agent;
+use OME::LSID;
 
 our $AUTHORITY;
 our $DB_INSTANCE;
@@ -68,7 +69,7 @@ our $DB_INSTANCE;
 
 =head2 new
 
-	my $resolver = new OME::LSID (session => $session);
+	my $resolver = new OME::Tasks::LSIDManager (session => $session);
 
 This makes a new LSID resolver.  The session parameter is required.
 
@@ -84,7 +85,7 @@ sub new {
 
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
-	logdie "I need a session"
+	logdie $class."->new needs a session"
 	  unless exists $self->{session} &&
 			 UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -121,13 +122,50 @@ my ($self,$object) = @_;
 			$type = 'Image';
 		} elsif ($ref eq 'OME::Feature') {
 			$type = 'Feature';
+		} elsif ($ref eq 'OME::Module') {
+			$type = 'Module';
+		} elsif ($ref eq 'OME::ModuleExecution') {
+			$type = 'ModuleExecution';
 		}
+	
 	return undef unless defined $type;
 	
-	return "urn:lsid:$AUTHORITY:$type:".$object->id().":$DB_INSTANCE";
+	my @lsid_list = $self->{session}->Factory()->findObjects ( "OME::LSID", {
+		object_id => $object->id(),
+		namespace => $type });
+	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
+	
+	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id().":$DB_INSTANCE";
+	
+	$self->setLSID( $object, $LSIDstring );
+	
+	return $LSIDstring;
 }
 
 
+
+=head2 setLSID
+
+	$resolver->setLSID ($object, $LSID);
+
+This sets the LSID for the given object.
+
+=cut
+
+sub setLSID ($$) {
+my ($self,$object,$LSIDstring) = @_;
+
+	return undef unless $self->checkLSID( $LSIDstring );
+
+	my (undef, undef, undef, $type, undef, undef ) = split( /:/, $LSIDstring );
+	my $lsid = $self->{session}->Factory()->newObject( "OME::LSID", { 
+		lsid      => $LSIDstring,
+		object_id => $object->id(),
+		namespace => $type } );
+#	$lsid->storeObject();
+	
+	return $lsid;
+}
 
 
 =head2 getObject
@@ -172,8 +210,13 @@ sub getLocalObject () {
 	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
 	
 # FIXME:  This should return a locally stored object even if its got a different authority.
-	return undef unless defined $authority and $authority eq $AUTHORITY;
-	return undef unless defined $dbInstance and $dbInstance eq $DB_INSTANCE;
+	my $lsid_map = $self->{session}->Factory()->findObject('OME::LSID', lsid => $lsid );
+	unless ($lsid_map) {
+		return undef unless defined $authority and $authority eq $AUTHORITY;
+		return undef unless defined $dbInstance and $dbInstance eq $DB_INSTANCE;
+	} else {
+		$localID = $lsid_map->object_id();
+	}
 
 	if ($namespace eq 'Project') {
 		return $self->{session}->Factory()->loadObject('OME::Project', $localID);
@@ -183,9 +226,30 @@ sub getLocalObject () {
 		return $self->{session}->Factory()->loadObject('OME::Image', $localID);
 	} elsif ($namespace eq 'Feature') {
 		return $self->{session}->Factory()->loadObject('OME::Feature', $localID);
+	} elsif ($namespace eq 'Module') {
+		return $self->{session}->Factory()->loadObject('OME::Module', $localID);
+	} elsif ($namespace eq 'ModuleExecution') {
+		return $self->{session}->Factory()->loadObject('OME::ModuleExecution', $localID);
 	} else {
 		return $self->{session}->Factory()->loadAttribute($namespace, $localID);
 	}
+}
+
+
+=head2 getLocalID
+	my $object = $resolver->getLocalID ($LSID);
+
+This returns the id of a localy stored OME object with the given $LSID, or undef if there is no object matching that LSID in the DB.
+
+=cut
+
+sub getLocalID () {
+	my $self = shift;
+	my $lsid = $self->checkLSID (shift) || return undef;
+
+	my $lsid_map = $self->{session}->Factory()->findObject('OME::LSID', lsid => $lsid );
+	return undef unless $lsid_map;
+	return $lsid_map->object_id();
 }
 
 
@@ -202,7 +266,7 @@ Note that as of this writing, this method is not implemented.
 
 # FIXME:  This could use a little implementation.
 sub getRemoteObject ($) {
-	carp ("OME::LSID::getRemoteObject() is not implemented.");
+	carp ("OME::Tasks::LSIDManager::getRemoteObject() is not implemented.");
 	my $self = shift;
 	my $lsid = checkLSID (shift) || return undef;
 
