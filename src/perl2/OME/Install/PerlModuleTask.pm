@@ -252,6 +252,9 @@ my @modules = (
 	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
 	#installModule => \&ImageMagickInstall
     },{
+	name => 'URI',
+	repository_file => "$REPOSITORY/URI-1.23.tar.gz"
+    },{
 	name => 'XML::NamespaceSupport',
 	repository_file => "$REPOSITORY/XML-NamespaceSupport-1.08.tar.gz"
     },{
