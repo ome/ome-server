@@ -1397,8 +1397,8 @@ dispatch (char **param)
 	char *theParam,rorw='r',bigEndian=1;
 	OID ID=0;
 	int theZ=-1,theC=-1,theT=-1;
-	off_t offset;
-    unsigned long scannedOffset;
+	off_t offset=0;
+    unsigned long scannedOffset=0;
 	char error_str[256];
 	unsigned char isLocalFile;
 	unsigned char file_md[OME_DIGEST_LENGTH];
@@ -1806,6 +1806,10 @@ char **cgivars=param;
 
 			break;
 		case M_CONVERT:
+		case M_CONVERTSTACK:
+		case M_CONVERTPLANE:
+		case M_CONVERTTIFF:
+		case M_CONVERTROWS:
 			file_off = 0;
 
 			if ( (theParam = get_param (param,"FileID")) )
@@ -1827,7 +1831,7 @@ char **cgivars=param;
 			nPix = head->dx*head->dy*head->dz*head->dc*head->dt;
 			offset = 0;
 
-			if (strstr (method,"Stack")) {
+			if (m_val == M_CONVERTSTACK) {
 				if (theC < 0 || theT < 0) {
 					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
@@ -1835,7 +1839,7 @@ char **cgivars=param;
 				}
 				nPix = head->dx*head->dy*head->dz;
 				offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
-			} else if (strstr (method,"Plane") || strstr (method,"TIFF")) {
+			} else if (m_val == M_CONVERTPLANE || m_val == M_CONVERTTIFF) {
 				if (theZ < 0 || theC < 0 || theT < 0) {
 					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
@@ -1843,7 +1847,7 @@ char **cgivars=param;
 				}
 				nPix = head->dx*head->dy;
 				offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
-			} else if (strstr (method,"Rows")) {
+			} else if (m_val == M_CONVERTROWS) {
 				long theY = -1, nRows=1;
 
 				if ( (theParam = get_param (param,"theY")) )
