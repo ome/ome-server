@@ -163,7 +163,7 @@ BEGIN {
     $SOAP::Constants::FAULT_MUST_UNDERSTAND = 502;
 }
 
-our $SHOW_CALLS = 1;
+our $SHOW_CALLS = 0; # was 1
 our $SHOW_RESULTS = 0;
 our $SHOW_CACHING = 0;
 
