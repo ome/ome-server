@@ -40,6 +40,11 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.piccolo.PChainCanvas;
+import edu.umd.cs.piccolo.PCanvas;
+import java.awt.Rectangle;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 
 
 /** 
@@ -55,5 +60,20 @@ public class ChainFrame extends ChainFrameBase {
 	
 	public ChainFrame(Controller controller,Connection connection,int i) {
 		super(controller,connection,new String("OME Chains: "+i));
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {
+				ChainFrame c = (ChainFrame) e.getWindow();
+				Controller control = c.getController();
+				control.disposeChainCanvas(c);
+			}
+		});
+	}
+	
+	public PCanvas createCanvas(Connection connection) {
+		return new PChainCanvas(connection);
+	}
+	
+	public Rectangle getInitialBounds() {
+		return new Rectangle(710,10,700,700);
 	}
 }
