@@ -87,10 +87,6 @@ Subclasses must follow the naming convention implemented in _getSpecializedRende
 All methods work with Object Prototypes, SemanticTypes, attributes, and dbobject instances.
 If using with a Semantic Type, prefix the ST name with '@' (i.e. '@Pixels').
 
-All methods are sensitive to array context. That is, they will return an
-array or hash if called in an array context, and will otherwise return
-references to arrays and hashes.
-
 =head1 Synopsis
 
 	use OME::Web::DBObjRender;
@@ -103,8 +99,9 @@ references to arrays and hashes.
 
 	my $object_name = OME::Web::DBObjRender->getName( $object, $options );
 
-Gets a name for this object. Subclasses may override this method.
-If a 'name' or a 'Name' method exists for this object, it will be returned.
+Gets a name for this object. Subclasses may override this by implementing a _getName method.
+
+If a 'name' or a 'Name' field exists for this object, that will be returned.
 Otherwise, 'id' will be returned.
 By default, the name returned will be a maximum of 23 characters long. This is enforced by
 truncation and concatenation of '...'. This length may be overridden by specifying a
@@ -624,35 +621,6 @@ sub getFields {
 		$self->_loadTypeAndGetInfo( $type );
 	# We don't need no target
 	return ( 'id', sort( grep( $_ ne 'target', $package_name->getPublishedCols()) ) );
-}
-
-=head2 getFieldTypes
-
-	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes($type, \@field_names);
-
-$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance
-of either.
-$field_names is used to populate the returned hash.
-
-returns a hash { field_name => field_type }
-field_type is the reference type the field will return. it is equivalent to ref(
-$instance_of_type->$field_name )
-
-=cut
-
-sub getFieldTypes {
-	my ($self,$type,$field_names,$doNotSpecialize) = @_;
-
-	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	return $specializedRenderer->_getFieldTypes( $type,$field_names )
-		if( $specializedRenderer and $specializedRenderer->can('_getFieldTypes') );
-
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
-	my %fieldTypes = map{ $_ => $package_name->getAccessorReferenceType($_) } @$field_names;
-
-	return %fieldTypes if wantarray;
-	return \%fieldTypes;
 }
 
 
