@@ -221,6 +221,7 @@ button.prototype.buildSVG = function() {
 			this.offAnimOn = this.nodes.off.lastChild;
 			this.nodes.off.appendChild( this.textToSVG(this.fadeOutText) );
 			this.offAnimOff = this.nodes.off.lastChild;
+			this.nodes.off.setAttribute("opacity", 0);
 		}
 	}
 
