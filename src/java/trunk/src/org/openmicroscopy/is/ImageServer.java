@@ -249,11 +249,11 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method returns the entire pixel file for the given
-     * pixel ID.  Be very careful, these can easily be friggin-huge in
-     * size.  You probably don't ever want to call this method, unless
-     * you've made the appropriate checks on the dimensions of the
-     * pixels to ensure that it won't be too large.</p>
+     * <p>Returns the entire pixel file for the given pixel ID.  Be
+     * very careful, these can easily be friggin-huge in size.  You
+     * probably don't ever want to call this method, unless you've
+     * made the appropriate checks on the dimensions of the pixels to
+     * ensure that it won't be too large.</p>
      *
      * <p>You must also specify whether you want to receive a
      * big-endian or little-endian pixel array.  The image server will
@@ -273,13 +273,13 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method returns a pixel array of the specified stack.
-     * The stack is specified by its C and T coordinates, which have
-     * 0-based indices.  While this method is less likely to be a
-     * memory hog as the {@link #getPixels} method, it is still
-     * possible for large images with few timepoints to cause
-     * problems.  As usual when dealing with large images, care must
-     * be taken to use your computational resources appropriately.</p>
+     * <p>Returns a pixel array of the specified stack.  The stack is
+     * specified by its C and T coordinates, which have 0-based
+     * indices.  While this method is less likely to be a memory hog
+     * as the {@link #getPixels} method, it is still possible for
+     * large images with few timepoints to cause problems.  As usual
+     * when dealing with large images, care must be taken to use your
+     * computational resources appropriately.</p>
      *
      * <p>You must also specify whether you want to receive a
      * big-endian or little-endian pixel array.  The image server will
@@ -302,11 +302,11 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method returns a pixel array of the specified plane.
-     * The plane is specified by its Z, C and T coordinates, which
-     * have 0-based indices.  While this method is the least likely to
-     * be a memory hog, care must still be taken to use your
-     * computational resources appropriately.</p>
+     * <p>Returns a pixel array of the specified plane.  The plane is
+     * specified by its Z, C and T coordinates, which have 0-based
+     * indices.  While this method is the least likely to be a memory
+     * hog, care must still be taken to use your computational
+     * resources appropriately.</p>
      *
      * <p>You must also specify whether you want to receive a
      * big-endian or little-endian pixel array.  The image server will
@@ -330,13 +330,13 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method returns a pixel array of an arbitrary
-     * hyper-rectangular region of an image.  The region is specified
-     * by two coordinate vectors, which have 0-based indices.  The
-     * region boundaries must be well formed, and are inclusive.
-     * (Each coordinate must be within the range of valid values for
-     * that dimension, and each "0" coordinate must be less than or
-     * equal to the respective "1" coordinate.)</p>
+     * <p>Returns a pixel array of an arbitrary hyper-rectangular
+     * region of an image.  The region is specified by two coordinate
+     * vectors, which have 0-based indices.  The region boundaries
+     * must be well formed, and are inclusive.  (Each coordinate must
+     * be within the range of valid values for that dimension, and
+     * each "0" coordinate must be less than or equal to the
+     * respective "1" coordinate.)</p>
      *
      * <p>You must also specify whether you want to receive a
      * big-endian or little-endian pixel array.  The image server will
@@ -358,10 +358,10 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method sends an entire array of pixels for the given
-     * pixels ID.  The pixels are specified by a byte array, which
-     * should be a raw pixel dump.  The endian-ness of the pixels
-     * should be specified.</p>
+     * <p>Sends an entire array of pixels for the given pixels ID.
+     * The pixels are specified by a byte array, which should be a raw
+     * pixel dump.  The endian-ness of the pixels should be
+     * specified.</p>
      *
      * <p>It is up to the caller to ensure that the byte array is of
      * the correct size.</p>
@@ -381,10 +381,10 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method sends an entire array of pixels for the given
-     * pixels ID.  The pixels are specified by a local file, which
-     * should be a raw pixel dump.  The endian-ness of the pixels
-     * should be specified.</p>
+     * <p>Sends an entire array of pixels for the given pixels ID.
+     * The pixels are specified by a local file, which should be a raw
+     * pixel dump.  The endian-ness of the pixels should be
+     * specified.</p>
      *
      * <p>It is up to the caller to ensure that the file is of the
      * correct size.</p>
@@ -406,10 +406,9 @@ public abstract class ImageServer
         throws ImageServerException, FileNotFoundException;
 
     /**
-     * <p>This method sends a stack of pixels for the given pixels ID.
-     * The pixels are specified by a byte array, which should be a raw
-     * pixel dump.  The endian-ness of the pixels should be
-     * specified.</p>
+     * <p>Sends a stack of pixels for the given pixels ID.  The pixels
+     * are specified by a byte array, which should be a raw pixel
+     * dump.  The endian-ness of the pixels should be specified.</p>
      *
      * <p>It is up to the caller to ensure that the byte array is of
      * the correct size.</p>
@@ -432,10 +431,9 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method sends a stack of pixels for the given pixels ID.
-     * The pixels are specified by a local file, which should be a raw
-     * pixel dump.  The endian-ness of the pixels should be
-     * specified.</p>
+     * <p>Sends a stack of pixels for the given pixels ID.  The pixels
+     * are specified by a local file, which should be a raw pixel
+     * dump.  The endian-ness of the pixels should be specified.</p>
      *
      * <p>It is up to the caller to ensure that the file is of the
      * correct size.</p>
@@ -460,10 +458,9 @@ public abstract class ImageServer
         throws ImageServerException, FileNotFoundException;
 
     /**
-     * <p>This method sends a plane of pixels for the given pixels ID.
-     * The pixels are specified by a byte array, which should be a raw
-     * pixel dump.  The endian-ness of the pixels should be
-     * specified.</p>
+     * <p>Sends a plane of pixels for the given pixels ID.  The pixels
+     * are specified by a byte array, which should be a raw pixel
+     * dump.  The endian-ness of the pixels should be specified.</p>
      *
      * <p>It is up to the caller to ensure that the byte array is of
      * the correct size.</p>
@@ -487,10 +484,9 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method sends a plane of pixels for the given pixels ID.
-     * The pixels are specified by a local file, which should be a raw
-     * pixel dump.  The endian-ness of the pixels should be
-     * specified.</p>
+     * <p>Sends a plane of pixels for the given pixels ID.  The pixels
+     * are specified by a local file, which should be a raw pixel
+     * dump.  The endian-ness of the pixels should be specified.</p>
      *
      * <p>It is up to the caller to ensure that the file is of the
      * correct size.</p>
@@ -516,10 +512,10 @@ public abstract class ImageServer
         throws ImageServerException, FileNotFoundException;
 
     /**
-     * <p>This method sends an arbitrary region of pixels for the
-     * given pixels ID.  The pixels are specified by a byte array,
-     * which should be a raw pixel dump.  The endian-ness of the
-     * pixels should be specified.</p>
+     * <p>Sends an arbitrary region of pixels for the given pixels ID.
+     * The pixels are specified by a byte array, which should be a raw
+     * pixel dump.  The endian-ness of the pixels should be
+     * specified.</p>
      *
      * <p>It is up to the caller to ensure that the byte array is of
      * the correct size.</p>
@@ -541,10 +537,10 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * <p>This method sends an arbitrary region of pixels for the
-     * given pixels ID.  The pixels are specified by a local file,
-     * which should be a raw pixel dump.  The endian-ness of the
-     * pixels should be specified.</p>
+     * <p>Sends an arbitrary region of pixels for the given pixels ID.
+     * The pixels are specified by a local file, which should be a raw
+     * pixel dump.  The endian-ness of the pixels should be
+     * specified.</p>
      *
      * <p>It is up to the caller to ensure that the file is of the
      * correct size.</p>
@@ -568,8 +564,8 @@ public abstract class ImageServer
         throws ImageServerException, FileNotFoundException;
 
     /**
-     * <p>This method ends the writable phase of the life of a pixels
-     * file in the image server.</p>
+     * <p>Ends the writable phase of the life of a pixels file in the
+     * image server.</p>
      *
      * <p>Pixels files in the image server can only be written to
      * immediately after they are created.  Once the pixels file is
