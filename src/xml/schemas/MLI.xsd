@@ -31,6 +31,7 @@
 				<element ref = "MLI:FunctionInputs"/>
 				<element ref = "MLI:FunctionOutputs"/>
 				<element ref = "MLI:Templates" minOccurs = "0"/>
+				<element ref = "MLI:VectorDecoder" minOccurs = "0" maxOccurs = "unbounded"/>
 			</sequence>
 			<attribute name = "ExecutionGranularity" use = "required">
 				<annotation>
