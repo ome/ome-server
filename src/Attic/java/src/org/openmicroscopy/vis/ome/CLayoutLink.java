@@ -46,7 +46,7 @@ import org.openmicroscopy.Chain.Node;
 	* be created to aid in drawing. 
 	*/
 
- public class CLayoutLink extends Link {
+ public class CLayoutLink  {
 	
 	private CNode toNode;
 	private CNode fromNode;
@@ -58,6 +58,11 @@ import org.openmicroscopy.Chain.Node;
 	public CLayoutLink(CNode fromNode,CNode toNode) {
 		this.fromNode = fromNode;
 		this.toNode = toNode;
+	}
+	
+	public CLayoutLink(Link link) {
+		this.fromNode = (CNode) link.getFromNode();
+		this.toNode = (CNode) link.getToNode();
 	}
  	
 	public Node getToNode() {
