@@ -87,7 +87,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 	private float x=HGAP;
 	private float y=VGAP;
 	
-	private PLayer linkLayer;
+	private PLinkLayer linkLayer;
 	
 	private float chainHeight= 0;
 	private float chainWidth = 0;
@@ -101,7 +101,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 		super();
 		this.connection  = c;
 		layer = getLayer();
-		linkLayer = new PLayer();
+		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		linkLayer.moveToFront();
 		populate();		
@@ -155,9 +155,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 		List links = chain.getLinks();
 		iter = links.iterator();
 		while (iter.hasNext()) {
-			Object obj = iter.next();
-			System.err.println("trying to cast to link.."+obj.getClass().getName());
-			Link link = (Link) obj;
+			Link link = (Link) iter.next();
 			drawLink(link);
 		}
 		
@@ -188,26 +186,27 @@ public class PChainLibraryCanvas extends PCanvas  {
 		if (fromPMod == null || toPMod ==null) 
 			return;
 			
-		System.err.println("getting both ends of link");
+	//	System.err.println("getting both ends of link");
 		
 		FormalInput input = link.getToInput();
 		FormalOutput output = link.getFromOutput();
-		System.err.println("from module "+fromPMod.getModuleInfo().getModule().getName());
+	/*	System.err.println("from module "+fromPMod.getModuleInfo().getModule().getName());
 		System.err.println("to module " +toPMod.getModuleInfo().getModule().getName());
 		
 		System.err.println("input id is "+input.getID());
-		System.err.println("output id is "+output.getID());
+		System.err.println("output id is "+output.getID()); */
 		
 		PFormalInput inputPNode = toPMod.getFormalInputNode(input);
 		PFormalOutput outputPNode = fromPMod.getFormalOutputNode(output);
 		
 		
 		if (inputPNode != null && outputPNode != null) {
-			PLink newLinkNode = new PLink(inputPNode,outputPNode);
+			PParamLink newLinkNode = new PParamLink(inputPNode,outputPNode);
 			linkLayer.addChild(newLinkNode);
+			linkLayer.completeLink(newLinkNode);
 		}
-		else
-			System.err.println("failed to find input or output node for link"); 
+		/* else
+			System.err.println("failed to find input or output node for link"); */ 
 	}
 	
 	public void scaleToSize() {
