@@ -43,21 +43,15 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.Project;
-import org.openmicroscopy.Dataset;
+
 import javax.swing.Box;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.SwingConstants;
-import javax.swing.DefaultComboBoxModel;
 import java.awt.Dimension;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+
 
 /** 
  * Toolbar for a {@link ChainFrame}. This toolbar contains a "save" button
@@ -72,14 +66,11 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	
 	protected CmdTable cmd;
 	
-	protected JComboBox projList;
-	protected JComboBox datasetList;
-	protected JComboBox execList;
 	
 	protected JLabel chainName;
 	
-	protected Project curProject;
-	protected Dataset curDataset;
+	protected JComboBox execList;
+	
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
@@ -93,43 +84,19 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 		
 		add(Box.createRigidArea(dim));
 	
-		JLabel projectLabel = new JLabel("Projects");
-		add(projectLabel);
 		
 		add(Box.createRigidArea(dim));
 		String[] data = {"NONE"};
 		
-		Object[] projects = getProjects();
-	
-		projList = new JComboBox(projects);
-		projList.setRenderer(new ProjectRenderer());
-		projList.
-			addActionListener(this);
-		projList.setMaximumSize(projList.getMinimumSize());
-		projList.setEditable(false);
-		add(projList);
 		add(Box.createRigidArea(dim));
 		
-		JLabel datasetLabel = new JLabel("Datasets");
-		add(datasetLabel);
-		add(Box.createRigidArea(dim));
-		datasetList = new JComboBox();
-		datasetList.setRenderer(new DatasetRenderer());
-		datasetList.setEditable(false);
-		datasetList.setMaximumSize(datasetList.getMinimumSize());
-		updateProjectChoice(curProject);
-		add(datasetList);
-		datasetList.addActionListener(this);
-		
-		
-		add(Box.createRigidArea(dim));
-		add(Box.createHorizontalGlue());
 		JLabel chains = new JLabel("Chain: ");
 		add(chains);
 
 		chainName = new JLabel("None");
 		
 		add(chainName);
+		add(Box.createHorizontalGlue());
 		add(Box.createRigidArea(dim));
 		JLabel exes = new JLabel("Executions");
 		add(exes);
@@ -143,42 +110,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	}
 	
 	
-	
-	public Object[] getProjects() {
-		Object[] a = new Object[0];
-		
-		List projects  = connection.getProjectsForUser();
-		a = projects.toArray(a);
-		curProject = (Project) a[0];
-		return a;
-	}
-	
 	public void actionPerformed(ActionEvent e) {
-		
-		Object obj = e.getSource();
-		if (!(obj instanceof JComboBox)) 
-			return;
-		JComboBox cb = (JComboBox) obj;
-		Object item = cb.getSelectedItem();
-		if (cb == projList)
-			updateProjectChoice(item);
-		else if (cb == datasetList) 
-			updateDatasetChoice(item);
-		else if (cb == execList) 
-			updateExecutionChoice(item);
-		
-	}
-	
-	public void  updateProjectChoice(Object item) {
-		curProject = (Project) item;
-		List datasets = curProject.getDatasets();
-		Object[] a = new Object[0];
-		a = datasets.toArray(a);
-		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
-		datasetList.setModel(model);
-	}
-	
-	public void updateDatasetChoice(Object item) {
 	}
 	
 	public void updateExecutionChoice(Object item) {
@@ -188,56 +120,3 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 
 
 
-class ProjectRenderer  extends JLabel implements ListCellRenderer {
-	
-	public ProjectRenderer() {
-		setOpaque(true);
-		setHorizontalAlignment(SwingConstants.LEFT);
-		setVerticalAlignment(SwingConstants.CENTER);
-	}
-	
-	public Component getListCellRendererComponent(JList list,
-			Object value,int index,boolean isSelected,
-				boolean cellHasFocus) {
-			Project p = (Project) value;
-			
-			if (isSelected) {
-				setBackground(list.getSelectionBackground());
-				setForeground(list.getSelectionForeground());
-			} else {
-				setBackground(list.getBackground());
-				setForeground(list.getForeground());
-			}
-			setText(p.getName()); 
-			return this;
-	}
-}
-
-class DatasetRenderer  extends JLabel implements ListCellRenderer {
-	
-	public DatasetRenderer() {
-		setOpaque(true);
-		setHorizontalAlignment(SwingConstants.LEFT);
-		setVerticalAlignment(SwingConstants.CENTER);
-	}
-	
-	public Component getListCellRendererComponent(JList list,
-			Object value,int index,boolean isSelected,
-				boolean cellHasFocus) {
-			if (value instanceof Dataset) {
-				Dataset d = (Dataset) value;
-				setText(d.getName());
-			}
-			else 
-				setText("None");
-			if (isSelected) {
-				setBackground(list.getSelectionBackground());
-				setForeground(list.getSelectionForeground());
-			} else {
-				setBackground(list.getBackground());
-				setForeground(list.getForeground());
-			}
-			 
-			return this;
-	}
-}
