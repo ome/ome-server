@@ -267,6 +267,14 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		float x = (float) location.getX();
 		float y = (float) location.getY();
 		PChain p = new PChain(connection,chain,layer,linkLayer,x,y);
+		PBounds b = layer.getFullBounds();
+		b.add(linkLayer.getFullBounds());
+		PBounds newb = new PBounds(b.getX()-PConstants.BORDER,
+			b.getY()-PConstants.BORDER,
+			b.getWidth()+2*PConstants.BORDER,
+			b.getHeight()+2*PConstants.BORDER);
+		getCamera().animateViewToCenterBounds(newb,true,
+			PConstants.ANIMATION_DELAY);
 		setSaveEnabled(true);
 	}
 	
