@@ -40,8 +40,7 @@ package OME::Tasks::Thumbnails;
 use POSIX;
 use GD;
 use strict;
-use OME;
-our $VERSION = $OME::VERSION;
+our $VERSION = '1.0';
 
 =head1 NAME
 
@@ -103,25 +102,52 @@ sub generateOMEimage{
 	my $session=$self->{session};
 	my $factory=$session->Factory();
 	my ($theZ,$theT);
-	my $WBS=undef;
+	my $CBW=undef;
   	my $RGBon=undef;
   	my $isRGB=undef;
 	# retrieve image data
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);
 	my $stats=getImageStats($factory,$image);				# ref array
 	my $wavelengths=getImageWavelengths($factory,$image);		# ref array
-  if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
-  ||not defined $numW || not defined $numT || not defined $bpp || not defined $path){
-   return undef;
+  	if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
+ 	   ||not defined $numW || not defined $numT || not defined $bpp || not defined $path){
+   		return undef;
 
-  }
-   if (scalar(@$wavelengths) != $numW ||  scalar(@$stats) != $numW){
-    return undef;
-   }
+  	}
+   	if (scalar(@$wavelengths) != $numW ||  scalar(@$stats) != $numW){
+    		return undef;
+   	}
 	$theZ = $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0 );
 	$theT = $T_param || 0;
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
+	
 	$isRGB=1;
-   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
+
+	if (defined $displayOptions){
+		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2 unless defined $Z_param;
+		$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2 unless defined $T_param;
+		$isRGB= $displayOptions->DisplayRGB();
+		my @cbw=();
+		@cbw=(
+			$displayOptions->RedChannel()->ChannelNumber(),
+			$displayOptions->RedChannel()->BlackLevel(),
+			$displayOptions->RedChannel()->WhiteLevel(),
+			$displayOptions->GreenChannel()->ChannelNumber(),
+			$displayOptions->GreenChannel()->BlackLevel(),
+			$displayOptions->GreenChannel()->WhiteLevel(),
+			$displayOptions->BlueChannel()->ChannelNumber(),
+			$displayOptions->BlueChannel()->BlackLevel(),
+			$displayOptions->BlueChannel()->WhiteLevel(),
+			$displayOptions->GreyChannel()->ChannelNumber(),
+			$displayOptions->GreyChannel()->BlackLevel(),
+			$displayOptions->GreyChannel()->WhiteLevel(),
+			);
+		$CBW=\@cbw;
+		my @rgbon=();
+		push (@rgbon,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
+		$RGBon=\@rgbon;
+	}
+   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$CBW,$RGBon);
 
     	my $jpg_image=$self->writeOMEimage($theZ,$theT);
 	return $jpg_image;
@@ -141,7 +167,7 @@ sub generateOMEmovie{
 	my $out;
 	my $session=$self->{session};
 	my $factory=$session->Factory();
-	my $WBS=undef;
+	my $CBW=undef;
 	my $RGBon=undef;
   	my $isRGB=undef;
 
@@ -165,7 +191,7 @@ sub generateOMEmovie{
         
 	$Z= $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0) ;
 	$isRGB=1;
-   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
+   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$CBW,$RGBon);
 
 	for (my $theZ=0;$theZ<$Z;$theZ++){
 		for(my $theT=0;$theT<$self->{T};$theT++){
@@ -206,7 +232,7 @@ sub writeOMEimage{
 	my $z="theZ=".$theZ;
 	my $t="theT=".$theT;
 	my $path="Path=".$self->{path};
-  	my $color=$self->getConvertedWBS($theT);
+  	my $color=$self->getConvertedCBW($theT);
 	if (not defined $color){
 		return undef;
 	}
@@ -234,7 +260,7 @@ sub writeOMEimage{
 
 sub initialize{
 	my $self=shift;
-	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$RGBon,$WBS)=@_;
+	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$RGBon,$CBW)=@_;
 	$self->{path}=$path;
 	$self->{wavelengths}=$wavelengths;
 	$self->{stats}=$stats;
@@ -247,11 +273,11 @@ sub initialize{
 	my @dim=();
 	push(@dim,$self->{X},$self->{Y},$self->{Z},$self->{W},$self->{T},$self->{bpp});
 	$self->{dim}=\@dim;
-	if (defined $WBS){
-  		$self->{WBS}=$WBS;		#ref array	in DB check if the case
+	if (defined $CBW){
+  		$self->{CBW}=$CBW;		#ref array	in DB check if the case
 	}else{
-		my $ref=$self->makeWBS();	#default
-		$self->{WBS}=$ref;
+		my $ref=$self->makeCBW();	#default
+		$self->{CBW}=$ref;
      	}
 
 	if (defined $isRGB){
@@ -286,12 +312,12 @@ sub initialize{
 
 
 ####
-# WBS
-# Make WBS default parameters
-sub makeWBS{
+# CBW
+# Make CBW default parameters
+sub makeCBW{
 	my $self=shift;
 	my @waves=();
-	my @WBS=();
+	my @CBW=();
 	my @wavelengths=@{$self->{wavelengths}};
 	my $l=scalar(@wavelengths);
 	# red
@@ -311,9 +337,9 @@ sub makeWBS{
 	push(@waves,$tempo);
 
 	for(my $i=0;$i<4;$i++){
-		push(@WBS,$waves[$i],0,4);
+		push(@CBW,$waves[$i],0,4);
 	}
-	return \@WBS;		
+	return \@CBW;		
 }
 
 
@@ -321,8 +347,8 @@ sub makeWBS{
 
 
 ############
-# 	converts WBS from native format to hard numbers
-#	This and makeWBSnative(WBS,theT) are the two functions that do conversion between
+# 	converts CBW from native format to hard numbers
+#	This and makeCBWnative(CBW,theT) are the two functions that do conversion between
 #			native format and hard numbers.
 #		Currently it uses these functions.
 #		c indicates converted, n indicates native
@@ -330,14 +356,14 @@ sub makeWBS{
 #			cS = 255 / ( geosigma * nS )
 #		White level in OME_JPEG is geomean + geosigma*nS
 #		returns undef if unsuccessful
-#		returns converted WBS if successful
+#		returns converted CBW if successful
 
-sub getConvertedWBS{
+sub getConvertedCBW{
 	my $self=shift;
 	my ($theT)=@_;
-	my @cWBS=();
-	my $ref=$self->{WBS};
-	my @WBS=@$ref;
+	my @cCBW=();
+	my $ref=$self->{CBW};
+	my @CBW=@$ref;
 	my $refstats=$self->{stats};
 	my $refdim=$self->{dim};
 	if (scalar(@$refstats)==0|| scalar(@$refdim)==0){
@@ -348,25 +374,25 @@ sub getConvertedWBS{
 	}
 
 	for (my $i=0;$i<4;$i++){
-		my $wavenum=$WBS[$i*3];
-  		push(@cWBS,$wavenum);
+		my $wavenum=$CBW[$i*3];
+  		push(@cCBW,$wavenum);
 		my ($geomean,$geosigma);	
 
         	$geomean=${$refstats}[$wavenum][$theT]{geomean};
 	  	$geosigma=${$refstats}[$wavenum][$theT]{geosigma};
-	  	my $value=$WBS[$i*3+1]+$geomean+$geosigma;
+	  	my $value=$CBW[$i*3+1]+$geomean+$geosigma;
 	  	$value=int($value);
-    	  	push(@cWBS,$value);
-	  	if ($WBS[$i*3+2]==0){
-		 $WBS[$i*3+2]=0.0001;
+    	  	push(@cCBW,$value);
+	  	if ($CBW[$i*3+2]==0){
+		 $CBW[$i*3+2]=0.0001;
 	  	}
 	  	if ($geosigma==0){return undef};		# must be changed
 	  	my $B;
-   	  	$B=255/($geosigma*$WBS[$i*3+2]);
+   	  	$B=255/($geosigma*$CBW[$i*3+2]);
 	  	$B=int($B*10000)/10000;
-	  	push(@cWBS,$B);
+	  	push(@cCBW,$B);
      }
-	return \@cWBS;
+	return \@cCBW;
 }
 
 ######################
@@ -431,14 +457,14 @@ sub getImageWavelengths{
 	foreach my $cc (@channelComponents) {
 		my $ChannelNum = $cc->Index();
 		my $Label;
-    my @overlap=();
+    		my @overlap=();
 		$Label = $cc->LogicalChannel()->Name()  || 
 		         $cc->LogicalChannel()->Fluor() || 
 		         $cc->LogicalChannel()->EmissionWavelength();
 
 		#@overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
 		#$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
-     $Label .= $cc->Index() if( not defined $Label || scalar( @overlap ) > 1);
+    		 $Label .= $cc->Index() if( not defined $Label || scalar( @overlap ) > 1);
 		my %h=();
 		$h{WaveNum}=$ChannelNum;
 		$h{Label}=$Label;
@@ -465,15 +491,7 @@ sub getImageDim{
 	$sizeZ = $pixels->SizeZ;	
 	$numW  = $pixels->SizeC;
 	$numT  = $pixels->SizeT,
-  	$bpp   = $pixels->BitsPerPixel;
-
-	#$sizeX = $dimensions->size_x();
-	#$sizeY = $dimensions->size_y();
-	#$sizeZ = $dimensions->size_z();	
-	#$numW  = $dimensions->num_waves();
-	#$numT  = $dimensions->num_times(),
-  	#$bpp   = $dimensions->bits_per_pixel();
-	
+  	$bpp   = $pixels->BitsPerPixel;	
 	$bpp /= 8;
 	return ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path);
 }
