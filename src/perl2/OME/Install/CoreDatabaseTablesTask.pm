@@ -345,12 +345,22 @@ sub create_database {
    
     $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
+	# Make this process euid root, and execute these things as the postgres user.
+	# It is often not enough to set euid - the actual UID has to be something
+	# postgres recognizes, so we need to su.
+	# To make sure we can do 'su' (permissions for this directory, etc), we need to be root.
+	# To make sure that postgres has a sane environment, we need to su -.
+	my $old_euid = euid (0);
     print "  \\__ Adding PL-PGSQL language\n";
-    my $iEUID = euid(scalar(getpwnam $POSTGRES_USER));
-    my @CMD_OUT = `$createlang plpgsql ome 2>&1`; # returns 0 if no error
-    die join ("\n",@CMD_OUT) if $CHILD_ERROR != 0;
-	euid($iEUID);
-	
+    my @CMD_OUT = `su - $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
+    if ($? != 0) {
+    	die "Errors: \n",join ('',@CMD_OUT),"\n" unless join ('',@CMD_OUT) =~ /already installed/;
+    }
+    
+    # Go back to what we were (should be OME_USER) so that we can connect
+    # from this process.
+	euid ($old_euid);
+
     # Fix our little object ID bug
     print "  \\__ Fixing OID/INTEGER compatability bug\n";
     $dbh = DBI->connect("dbi:Pg:dbname=ome")
