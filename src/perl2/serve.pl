@@ -71,6 +71,7 @@ my $CGI = CGI->new();
 my $pageClass = $CGI->url_param("Page");
 
 if ($pageClass) {
+	logdbg "debug", "Serving package - $pageClass.";
 	my $page;
 	eval "use $pageClass";
 	if ($@) {
