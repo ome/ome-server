@@ -288,14 +288,20 @@ sub createWithKey {
 	# Collect the users and groups visible to this user
 	# groups that the experimenter belongs to
 	# members of the groups this experimenter leads
-	my $expID = $userState->experimenter_id();
-	my ($users,$groups);
+	my $ACL;
 	eval {
-		$users = $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$expID,$expID,$expID);
-		$groups = $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$expID,$expID,$expID);
+		my $configuration = $bootstrap_factory->Configuration();
+		my $superuser = $configuration->super_user();
+		my $exp_id = $userState->experimenter_id();
+		if ($superuser and $superuser != $exp_id) {
+			$ACL = {
+				users  => $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$exp_id,$exp_id,$exp_id),
+				groups => $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$exp_id,$exp_id,$exp_id),
+			}
+		}
 	};
 		
-	my $session = OME::Session->instance($userState, $bootstrap_factory,$users,$groups);
+	my $session = OME::Session->instance($userState, $bootstrap_factory, $ACL);
 	
 	logdbg "debug", "createWithKey: updating userState";
 	$userState->storeObject();
@@ -381,13 +387,20 @@ sub createWithPassword {
 	# Collect the users and groups visible to this user
 	# groups that the experimenter belongs to
 	# members of the groups this experimenter leads
-	my ($users,$groups);
+	my $ACL;
 	eval {
-		$users = $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$experimenterID,$experimenterID,$experimenterID);
-		$groups = $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$experimenterID,$experimenterID,$experimenterID);
+		my $configuration = OME::Configuration->new( $bootstrap_factory );
+		my $superuser = $configuration->super_user();
+		my $exp_id = $userState->experimenter_id();
+		if ($superuser and $superuser != $exp_id) {
+			$ACL = {
+				users  => $dbh->selectcol_arrayref(GET_VISIBLE_USERS_SQL,{},$exp_id,$exp_id,$exp_id),
+				groups => $dbh->selectcol_arrayref(GET_VISIBLE_GROUPS_SQL,{},$exp_id,$exp_id,$exp_id),
+			}
+		}
 	};
 		
-	my $session = OME::Session->instance($userState, $bootstrap_factory,$users,$groups);
+	my $session = OME::Session->instance($userState, $bootstrap_factory, $ACL);
 	
 	logdbg "debug", "getOMESession: updating userState";
 	$userState->storeObject();
