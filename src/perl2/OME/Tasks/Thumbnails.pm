@@ -309,8 +309,8 @@ sub makeWBS{
 #		Currently it uses these functions.
 #		c indicates converted, n indicates native
 #			cB = geomean * nB
-#			cS = 255 / ( sigma * nS )
-#		White level in OME_JPEG is geomean + sigma*nS
+#			cS = 255 / ( geosigma * nS )
+#		White level in OME_JPEG is geomean + geosigma*nS
 #		returns undef if unsuccessful
 #		returns converted WBS if successful
 
@@ -332,19 +332,19 @@ sub getConvertedWBS{
 	for (my $i=0;$i<4;$i++){
 		my $wavenum=$WBS[$i*3];
   		push(@cWBS,$wavenum);
-		my ($geomean,$sigma);	
+		my ($geomean,$geosigma);	
 
         	$geomean=${$refstats}[$wavenum][$theT]{geomean};
-	  	$sigma=${$refstats}[$wavenum][$theT]{sigma};
-	  	my $value=$WBS[$i*3+1]+$geomean+$sigma;
+	  	$geosigma=${$refstats}[$wavenum][$theT]{geosigma};
+	  	my $value=$WBS[$i*3+1]+$geomean+$geosigma;
 	  	$value=int($value);
     	  	push(@cWBS,$value);
 	  	if ($WBS[$i*3+2]==0){
 		 $WBS[$i*3+2]=0.0001;
 	  	}
-	  	if ($sigma==0){return undef};		# must be changed
+	  	if ($geosigma==0){return undef};		# must be changed
 	  	my $B;
-   	  	$B=255/($sigma*$WBS[$i*3+2]);
+   	  	$B=255/($geosigma*$WBS[$i*3+2]);
 	  	$B=int($B*10000)/10000;
 	  	push(@cWBS,$B);
      }
@@ -377,9 +377,9 @@ sub getImageStats{
 		$factory->findAttributes( "StackMean", $image ) );
 	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackSigma", $image ) );
-
+	my @geosigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackGeometricSigma", $image ) );
+	
 	my $sh; # stats hash
 	foreach( @mins ) {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
@@ -389,8 +389,8 @@ sub getImageStats{
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
 	foreach( @gmeans ) {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
-	foreach( @sigma ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	foreach( @geosigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma(); }
 
  
  
