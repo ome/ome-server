@@ -384,7 +384,7 @@ sub execute {
 
     print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
-    # Get our logfile and open it for reading
+    # Get our logfile and open it for writing
     open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
 		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
 		
@@ -478,48 +478,6 @@ sub execute {
 
     chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
-    # Unless we're just doing the LIB_CHECK sanity check
-    unless ($environment->get_flag ("LIB_CHECK")) {
-		print_header ("Core Binary Setup");
-    
-		print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
-
-		my $retval = 0;
-
-		print "Installing core binaries\n";
-
-		# XXX: Unneeded at the moment
-		# Configure
-		# print "  \\_ Configuring ";
-		# $retval = configure_module ("src/C/", $LOGFILE);
-		# 
-		#print BOLD, "[FAILURE]", RESET, ".\n"
-		#    and croak "Unable to configure module, see $LOGFILE_NAME for details."
-		#    unless $retval;
-		#print BOLD, "[SUCCESS]", RESET, ".\n";
-
-		# Compile
-		print "  \\_ Compiling ";
-		$retval = compile_module ("src/C/", $LOGFILE);
-    
-		print BOLD, "[FAILURE]", RESET, ".\n"
-		    and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
-		    unless $retval;
-		print BOLD, "[SUCCESS]", RESET, ".\n";
-
-		# Install
-		print "  \\_ Installing ";
-		$retval = install_module ("src/C/", $LOGFILE);
-
-		print BOLD, "[FAILURE]", RESET, ".\n"
-		    and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
-		    unless $retval;
-		print BOLD, "[SUCCESS]", RESET, ".\n";
-
-		chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
-
-		print "\n";  # Spacing
-	}
 
    	 return 1;
 }
