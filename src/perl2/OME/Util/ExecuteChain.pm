@@ -73,17 +73,16 @@ sub execute_help {
     $self->printHeader();
     print <<"USAGE";
 Usage:  
-	    $script $command_name <analysis chain id> <dataset id> [<options>]
+    $script $command_name <analysis chain id> <dataset id> [<options>]
 Options:
-
-known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n
+    known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n
 USAGE
     CORE::exit(1);
 }
 
 sub handleCommand {
 	my ($self,$help,$supercommands) = @_;
-	if ($help) {
+	if ($help or @ARGV < 2) {
 		$self->execute_help($supercommands);
 	} else {
 		$self->execute();
@@ -95,15 +94,7 @@ my $self = shift;
 
 	print "\nOME Test Case - Execute Analysis Chain\n";
 	print "----------------------------\n";
-	
-	if (scalar(@ARGV) < 2) {
-		print "Usage: ome execute <analysis chain id> <dataset id> <flags>\n";
-		print "known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n";
-	# flags are listed in AnalysisEngine, so I say known flags cuz the flags there might change independently of this usage note.
-	
-		exit -1;
-	}
-	
+		
 	my $chainID = shift(@ARGV);
 	my $datasetID = shift(@ARGV);
 	
