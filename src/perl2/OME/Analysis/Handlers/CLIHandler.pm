@@ -161,7 +161,7 @@ sub _execute {
 
 	my $module                = $self->{_module};
 	my %outputs;
-	my %tmpFileHash;
+	my (%tmpFileFullPathHash, %tmpFileRelativePathHash);
 	my $executionInstructions = $module->execution_instructions();
 	my $debug                 = 2;
 	my $session               = $self->Session();
@@ -650,21 +650,25 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
 				my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
 				my $tmpFilePath;
+				my $tmpFileRelativePath;
 				if( $tmpFile->getAttribute( "Repository" ) ) {
 					my $repository  = resolveLocation( $tmpFile->getAttribute( "Repository" ) );
 #					my $repository  = $inputs{ $tmpFile->getAttribute( "Repository" ) }->[0];
 					die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
 						if( not defined $repository );
-					$tmpFilePath = $session->getTemporaryFilenameRepository( 
+					$tmpFileRelativePath = $session->getTemporaryFilenameRepository( 
 						repository => $repository,
 						progName   => 'CLIHandler',
 						extension  => 'ori' );
+					$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
 				} else {
 					$tmpFilePath = $session->getTemporaryFilename( 
 						'CLIHandler','' );
 				}
 				
-				$tmpFileHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
+				$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
+				$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
+				return $tmpFilePath;
 			#
 			#
 			#############################################################
@@ -906,17 +910,19 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			# any problems, but it does violate our naming convention.
 			my $path; $path = $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' )->[0]
 				if $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' );
-			$outputs{ $formalOutputName }->{'Path'} = $tmpFileHash{ $path->getAttribute( 'FileID' ) }
+			$outputs{ $formalOutputName }->{'Path'} = $tmpFileRelativePathHash{ $path->getAttribute( 'FileID' ) }
 				if( $path );
 			
 			# the path may have been filled out by an output of the program.
 			# so attempt to retrieve from the data hash instead of the attribute above.
-			if( $outputs{ $formalOutputName }->{'Path'} ) {
-				my $sha1 = getSha1( $outputs{ $formalOutputName }->{'Path'} );
-				$outputs{ $formalOutputName }->{'FileSHA1'} = $sha1;
-			} else {
-				die "A Path has not been filled out for this <PixelOutput>.";
-			}
+			$path = $outputs{ $formalOutputName }->{'Path'};
+			die "A Path has not been filled out for this <PixelOutput>."
+				unless $path;
+			my $repository = $outputs{ $formalOutputName }->{'Repository'};
+			die "A Repository has not been filled out for this <PixelOutput>."
+				unless $repository;
+			my $sha1 = getSha1( $repository->Path() . $path );
+			$outputs{ $formalOutputName }->{'FileSHA1'} = $sha1;
 
 
 			#########################################################
