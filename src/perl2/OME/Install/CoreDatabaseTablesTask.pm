@@ -533,7 +533,6 @@ my $session = shift;
 	$OME_EXPER->{Email}         = $experimenter->Email();
 	$OME_EXPER->{DataDirectory} = $experimenter->DataDirectory();
 	$OME_EXPER->{Password}      = $experimenter->Password();
-	$OME_EXPER->{id}            = $experimenter->id();
 
     $ENVIRONMENT->ome_exper($OME_EXPER);
 
