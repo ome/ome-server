@@ -163,7 +163,7 @@ sub useLocalServer {
     die "$path is not a valid executable file"
       unless -x $path;
 
-    print STDERR "Using Local image server\n";
+    #print STDERR "Using Local image server\n";
     $local_server = 1;
     $server_path = $path;
 }
@@ -187,7 +187,7 @@ sub useRemoteServer {
     die "Could not create a URI for the remote image server"
       unless defined($url) && UNIVERSAL::isa($url,"URI");
 
-    print STDERR "Using Remote server\n";
+    #print STDERR "Using Remote server\n";
     $local_server = 0;
     $server_path = $url;
 }
