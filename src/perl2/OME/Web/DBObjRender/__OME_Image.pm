@@ -41,7 +41,7 @@ package OME::Web::RenderData::__OME_Image;
 
 =head1 NAME
 
-OME::Web::RenderData::__OME_Image - Render DBObjects for display
+OME::Web::RenderData::__OME_Image - Specialized rendering for OME::Image
 
 =head1 DESCRIPTION
 
