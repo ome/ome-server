@@ -225,7 +225,7 @@ sub create{
 	$project->writeObject();
 	$session->project($project);
 	if (defined $existingDataset){
-		 $session->dissociateObject('dataset');
+		 $session->dataset(undef);
 	}
 	$session->writeObject();
 	
@@ -269,8 +269,8 @@ sub delete{
 	}
 	if ($deleteProject->project_id()==$currentProject->project_id()){
 	  if (scalar(@projects)==1){
-	     $session->dissociateObject('dataset') if scalar(@datasets)>0;
-	     $session->dissociateObject('project');
+	     $session->dataset(undef) if scalar(@datasets)>0;
+	     $session->project(undef);
 	     $session->writeObject();
 	  }else{
 		reorganizeSession($session,$deleteProject,\@projects);
@@ -360,7 +360,7 @@ sub switch{
 
 	  #my @datasets=$project->datasets();
 	  if (scalar(@datasets)==0){
-	   $session->dissociateObject('dataset'); 		
+	   $session->dataset(undef); 		
 	  }else{
 	   $session->dataset($datasets[0]);
 	  }
@@ -420,7 +420,7 @@ sub reorganizeSession{
 	#my @newdataset=$newproject->datasets();
 	$session->project($newproject);
 	if (scalar(@newdataset)==0){
-		$session->dissociateObject('dataset');	
+		$session->dataset(undef);	
 	}else{
 		$session->dataset($newdataset[0]);
 	}

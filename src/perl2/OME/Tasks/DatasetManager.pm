@@ -392,7 +392,7 @@ sub delete{
      		push (@new,$_) unless $_->dataset_id()==$currentDataset->dataset_id();
    	 }
        if (scalar(@new)==0){
-	   $session->dissociateObject('dataset');
+	   $session->dataset(undef);
        }else{
 	   $session->dataset($new[0]);
        }
@@ -686,7 +686,7 @@ sub remove{
 
 	  # my @datasets=$project->datasets();		#current project
 	   if (scalar(@datasets)==0){
-		 $session->dissociateObject('dataset');
+		 $session->dataset(undef);
 	   }else{
 		 $session->dataset($datasets[0]);
 	   }
