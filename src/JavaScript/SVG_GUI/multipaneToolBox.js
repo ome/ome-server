@@ -1,7 +1,7 @@
 /*****
 *    
 *   multipaneToolBox.js
-*     external files dependecies: widget.js, toolBox.js
+*     external file dependencies: widget.js, toolBox.js
 *     Known bugs:
 *       bug #1:
 *          Attempting to unhide the GUIbox while it is hiding causes
@@ -65,18 +65,23 @@ function multipaneToolBox(x,y,width,height,menuBarText,hideControlText,GUIboxTex
 	updateLabel(val)
 		will automatically update the label if turned on
 		val == true ? turn on : turn off
+		Don't call this before calling realize.
 	
 	tested
 	
 *****/
 multipaneToolBox.prototype.updateLabel = function(val) {
-	if(val) {
-		this.UPDATE_LABEL = true;
-		this.setLabel(0, "1em", " ");
-		this.getLabel().setAttribute("text-anchor", "end");
+	// has realization occured?
+	if(this.getMenuBar()) {
+		if(val) {
+			this.UPDATE_LABEL = true;
+			var Labelx = this.width - 2*this.getMenuBar().getBBox().height;
+			this.setLabel(Labelx , "1em", "");
+			this.getLabel().setAttribute("text-anchor", "end");
+		}
+		else
+			this.UPDATE_LABEL = false;
 	}
-	else
-		this.UPDATE_LABEL = false;
 }
 
 /*****
@@ -114,7 +119,7 @@ multipaneToolBox.prototype.addPane = function(newPane, name) {
 		newPanes is an array of SVG nodes
 		returns array of indexes to panes
 		
-	untested
+	tested
 	
 *****/
 multipaneToolBox.prototype.addPanes = function(newPanes) {
@@ -163,7 +168,7 @@ multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
 		returns pane if successful
 		returns null if unsuccessful
 		
-		untested
+	tested
 	
 *****/
 multipaneToolBox.prototype.changePane = function(paneIndex) {
@@ -197,7 +202,7 @@ multipaneToolBox.prototype.changePane = function(paneIndex) {
 	getPaneIndexes()
 		returns a complete list of pane indexes
 		
-	untested
+	tested
 	
 *****/
 multipaneToolBox.prototype.getPaneIndexes = function() {
@@ -205,6 +210,19 @@ multipaneToolBox.prototype.getPaneIndexes = function() {
 	for(var i in this.panes)
 		paneIndexes.push(i);
 	return paneIndexes;
+}
+
+/*****
+
+	getPane(index)
+		returns the pane pointed to by index if index is valid
+	
+	comprehensively tested
+	
+*****/
+multipaneToolBox.prototype.getPane = function(index) {
+	if(this.panes != null)
+		return this.panes[index];
 }
 
 /********************************************************************************************/
