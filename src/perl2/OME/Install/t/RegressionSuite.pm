@@ -30,7 +30,10 @@ sub new {
     my $self = $class->SUPER::empty_new('OME-Install Regression Test Suite');
     # Build your suite here with add_test or override include_tests
     $self->add_test('OME::Install::t::Environment_scanDir_Test');
+    $self->add_test('OME::Install::t::Environment_copyTree_Test1');
     $self->add_test('OME::Install::t::Environment_copyTree_Test2');
+    $self->add_test('OME::Install::t::Environment_copyTree_Test3');
+    $self->add_test('OME::Install::t::Environment_deleteTree_Test');
     return $self;
 }
 
