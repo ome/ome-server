@@ -47,14 +47,6 @@ sub getPageBody {
 	my $imageManager=new OME::Tasks::ImageManager($session);
 	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 	my $HTMLFormat=new OME::Web::Helper::HTMLFormat;
-
-	my $factory=$session->Factory();
-	my $generator= new OME::Tasks::Thumbnails($session);
-	my $image=$factory->loadObject("OME::Image",1);
-	my $out=$generator->generateOMEimage($image);
-	my $thumbnail=$generator->generateOMEthumbnail($out);
-
-
 	my $ref=$imageManager->listImages($userID);
 	
 	my @result=();
