@@ -29,19 +29,30 @@ skinLibrary = new Array();
 
 skinLibrary['TEST'] = true;
 
-skinLibrary["menuBar"] =
+skinLibrary["roundGreenMenuBar"] =
 '<g>' +
 '	<g opacity="0.8">' +
 '		<rect width="{$width}" height="15" fill="lawngreen" rx="10" ry="5"/>' +
 '		<rect y="5" width="{$width}" height="10" fill="lawngreen"/>' +
 '	</g>' +
 '</g>';
-skinLibrary["hideControl"] =
+skinLibrary["ovalSquishHideControl"] =
 '<g>' +
 '	<ellipse rx="5" ry="5" fill="ghostwhite" stroke="forestgreen" stroke-width="1">' +
 '		<animate attributeName="ry" from="5" to="2" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '		<animate attributeName="ry" from="2" to="5" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '	</ellipse>' +
+'</g>';
+skinLibrary["greenGradientGUIbox"] =
+'<g style="font-size:10;">' +
+'	<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">' +
+'		<stop offset="5%" stop-color="green" />' +
+'		<stop offset="95%" stop-color="palegreen" />' +
+'	</linearGradient>' +
+'	<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.7"/>' +
+'	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="1" opacity="1"/>' +
+'	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
+'	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '</g>';
 skinLibrary["redGUIboxBG"] =
 '<g>' +
@@ -100,30 +111,11 @@ skinLibrary["greyMenubar"] =
 '	</g>' +
 '</g>';
 
-skinLibrary["GUIbox"] =
-'<g style="font-size:10;">' +
-'	<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">' +
-'		<stop offset="5%" stop-color="green" />' +
-'		<stop offset="95%" stop-color="palegreen" />' +
-'	</linearGradient>' +
-'	<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.7"/>' +
-'	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="1" opacity="1"/>' +
-'	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'</g>';
 skinLibrary["menuBar17"] =
 '<g>' +
 '	<g opacity="0.8">' +
 '		<rect width="{$width}" height="17" fill="lightsteelblue" rx="10" ry="5"/>' +
 '		<rect y="5" width="{$width}" height="12" fill="lightsteelblue"/>' +
-'	</g>' +
-'</g>';
-skinLibrary["XhideControl"] =
-'<g>' +
-'	<circle r="5" fill="ghostwhite" stroke="forestgreen" stroke-width="1"/>' +
-'	<g transform="rotate(45)">' +
-'		<line x1="-5" x2="5" stroke="forestgreen" stroke-width="2"/>' +
-'		<line y1="-5" y2="5" stroke="forestgreen" stroke-width="2"/>' +
 '	</g>' +
 '</g>';
 skinLibrary["tallGUIbox"] =
