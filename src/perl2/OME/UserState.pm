@@ -31,6 +31,7 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
+#                Josiah Johnston <siah@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
@@ -39,34 +40,16 @@ package OME::UserState;
 
 =head1 NAME
 
-OME::Session - a user's login session with OME
+OME::UserState - a user's state with OME
 
 =head1 SYNOPSIS
 
-	use OME::SessionManager;
-	use OME::Session;
-
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->createSession($username,$password);
-
-	my $factory = $session->Factory();
-	my $config = $session->Configuration();
-
-	# Create and edit several DBObject's via the factory
-	$session->commitTransaction();
-
-	# Create and edit several DBObject's via the factory, but make
-	# a mistake halfway through
-	$session->rollbackTransaction();
+	access to this class is mediated through L<OME::Session|OME::Session>.
+	This class should never be used directly.
 
 =head1 DESCRIPTION
 
-All interaction with OME is done in the context of a session object.
-This object is created by L<C<OME::SessionManager>|OME::SessionManager>
-depending on the method by which OME is used - Web browser (L<C<OME::Web>|OME::Web>), L<C<OME::Remote>|OME::Remote> client or command-line tool.
-The session object maintains the user's state regardless of the client used for access.
-A user's session never expires.  A session key (a string token) is exchanged between the client and the server
-to refer to a session object.  This token is short lived, and must be periodically refreshed.
+This object maintains the user's state regardless of the client used for access.
 
 =cut
 
@@ -127,42 +110,6 @@ __PACKAGE__->addColumn(started => 'started',
                        });
 
 
-
-=head1 METHODS
-
-The following methods are available in addition to those defined by
-L<OME::DBObject>.
-
-=head2 Factory
-
-Returns the session's L<C<OME::Factory>|OME::Factory> object.
-
-=head2 Manager
-
-Returns the session's L<C<OME::SessionManager>|OME::SessionManager> object.
-
-=head2 Configuration
-
-Returns the session's L<C<OME::Configuration>|OME::Configuration> object.
-
-=head2 SessionKey
-
-Returns the session's SessionKey - a string token that can be used to recover
-the session object (using L<C<OME::SessionManager>|OME::SessionManager>) for a short period of time.
-
-=head2 User
-
-Returns the session's Experimenter attribute.
-
-=head2 dataset
-
-Returns the session's L<C<OME::Dataset>|OME::Dataset> object.
-
-=head2 project
-
-Returns the session's L<C<OME::Project>|OME::Project> object.
-
-
 1;
 
 __END__
@@ -170,6 +117,7 @@ __END__
 =head1 AUTHOR
 
 Douglas Creager <dcreager@alum.mit.edu>,
+Josiah Johnston <siah@nih.gov>
 Open Microscopy Environment, MIT
 
 =cut
