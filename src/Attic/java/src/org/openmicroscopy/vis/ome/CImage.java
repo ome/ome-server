@@ -78,25 +78,17 @@ public class CImage extends RemoteImage {
 	}
 	
 	
-	public synchronized void loadImageData(Connection connection) {
+	public void loadImageData(Connection connection) {
 		if (imageData == null && loading  == false) {
 			connection.getThumbnail(this);
 			loading = true;
 		}
 	}
 	
-	public void setImageData(BufferedImage i) {
+	public synchronized void setImageData(BufferedImage i) {
 		//System.err.println("getting image data for image "+getID());
 		imageData = i;
-		if (thumbnails.size() >0 && imageData != null) { 
-			PThumbnail thumbnail;
-			Iterator iter = thumbnails.iterator();
-			while (iter.hasNext()) {
-				thumbnail = (PThumbnail) iter.next();
-				thumbnail.notifyImageComplete();
-			}
-		}
-		
+		notifyAll();		
 	}
 	
 	public void addThumbnail(PThumbnail thumb) {
@@ -105,17 +97,25 @@ public class CImage extends RemoteImage {
 		// without this, we have a race condition - what if setImageData()
 		// completes before some PThumbnail gets itself on the notification 
 		// list?
-		if (imageData != null)
-			thumb.notifyImageComplete();
+		//if (imageData != null)
+		//	thumb.notifyImageComplete();
 		//else
 		thumbnails.add(thumb);
 	}
 	
-	public BufferedImage getImageData() {
+	public synchronized BufferedImage getImageData() {
 		/*System.err.println("getting image data from CImage"+getID());
 		if (imageData == null) {
 			System.err.println("it's null..");
 		}*/
+		while (imageData == null) {
+			try {
+				wait();
+			}
+			catch(InterruptedException e) {
+				System.err.println("interrupted exception...");
+			}
+		}
 		return imageData;
 	}
 	
