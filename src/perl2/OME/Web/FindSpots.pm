@@ -122,14 +122,18 @@ sub getPageBody {
         }
 	
 	}else{
-		my @ref=$session->dataset()->images();
+		if (my $d = $session->dataset) {
+			my @ref=$d->images();
 	
-		$body.= "<b>Selected dataset: </b>".$session->dataset()->name()."<br>";
-		if (scalar(@ref)==0){
-			$body.="The selected dataset contains no images";
-			return ('HTML',$body);
+			$body.= "<b>Selected dataset: </b>".$d->name()."<br>";
+			if (scalar(@ref)==0){
+				$body.="The selected dataset contains no images";
+				return ('HTML',$body);
+			}
+			$body.=$self->print_form($cgi); 
+		} else {
+			$body.= $cgi->p({class => 'ome_error'}, "You currently have no datasets.");
 		}
-		$body.=$self->print_form($cgi); 
 	}
 	return ('HTML',$body);
 	
