@@ -53,6 +53,7 @@ sub precalculateImage {
     my $sizeZ = $dimensions->size_z();
     my $sizeW = $dimensions->num_waves();
     my $sizeT = $dimensions->num_times();
+    my $bbp   = $dimensions->bits_per_pixel();
 
     my $pix = $image->Pix()->GetPixels();
     #my $pixels = $image->GetPixelArray(0,$sizeX-1,
