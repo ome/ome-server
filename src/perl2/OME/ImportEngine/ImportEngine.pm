@@ -110,7 +110,7 @@ sub __getFormats {
     my $config = $factory->loadObject("OME::Configuration", 1);
 
     # And find the import formats we can handle
-    my @import_formats = split " ", $config->import_formats();
+    my @import_formats = split /\s/, $config->import_formats();
 
     return \@import_formats;
 }
