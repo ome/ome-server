@@ -84,6 +84,7 @@ my %_namespace_object_codes = (
 	Feature => "OME::Feature",
  	Module  => "OME::Module",
 	ModuleExecution => "OME::ModuleExecution",
+    SemanticType => "OME::SemanticType",
 );
 
 __PACKAGE__->newClass();
@@ -111,8 +112,15 @@ __PACKAGE__->addColumn(object_id => 'object_id',
 __PACKAGE__->Caching(0);
 
 sub parseLSID {
-	my ($self) = @_;
-	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$self->lsid());
+	my $proto = shift;
+
+    # This method can be called as either of the following:
+    # $lsid_object->parseLSID()
+    # OME::LSID->parseLSID($lsid_string)
+    my $lsid = ref($proto)? $proto->lsid(): shift;
+
+	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) =
+      split (/:/,$lsid);
 	return { 
 		authority   => $authority,
 		namespace   => $namespace,
