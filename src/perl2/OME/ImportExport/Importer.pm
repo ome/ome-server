@@ -527,11 +527,6 @@ sub store_xyz_info {
 
     my $factory = $session->Factory();
     my $view = $self->{config}->import_chain();
-    if (!defined $view) {
-        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
-        return "";
-    }
-
     # Right now this creates one new dataset for each image loaded in.
     # This is a horrible idea, and should be changed.
     my $image = $self->{'image'};
@@ -541,6 +536,11 @@ sub store_xyz_info {
                    image => $image,
                    dataset => $self->{dummy_dataset}
                   });
+
+    if (!defined $view) {
+        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+        return "";
+    }
 
     my $engine = OME::Tasks::AnalysisEngine->new();
     eval {
