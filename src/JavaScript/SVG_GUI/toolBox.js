@@ -447,7 +447,8 @@ toolBox.prototype.addEventListeners = function() {
 	// this keeps expanding menus from one from being rendered behind the other
 	this.nodes.menuBar.addEventListener("mouseover", this, false);
 	this.nodes.GUIbox.addEventListener("mouseover", this, false);
-//	this.nodes.GUIbox.addEventListener("DOMFocusIn", this, false);
+	// magic to make this toolbar rendered on top of it's siblings when it gets a DOM focus
+	this.nodes.root.addEventListener("DOMFocusIn", this, false);
 };
 
 
@@ -482,7 +483,8 @@ toolBox.prototype.click = function(e) {
 	this.toggle();
 };
 toolBox.prototype.DOMFocusIn = function(e) {
-//	Util.err( 'FocusIn: { target: ' + e.target + ', currentTarget: ' + e.currentTarget + ' }');
+	this.nodes.parent.removeChild( this.nodes.root );
+	this.nodes.parent.appendChild( this.nodes.root );
 };
 
 /***************** Functions not part of the class ******************/
