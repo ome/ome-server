@@ -82,6 +82,7 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                        });
 __PACKAGE__->addColumn(['experimenter','User'] => 'experimenter_id',
                        '@Experimenter');
+__PACKAGE__->addColumn(session_key => 'session_key',{SQLType => 'varchar(40)'});
 __PACKAGE__->addColumn(host => 'host',{SQLType => 'varchar(256)'});
 __PACKAGE__->addColumn(project_id => 'project_id');
 __PACKAGE__->addColumn(project => 'project_id','OME::Project',

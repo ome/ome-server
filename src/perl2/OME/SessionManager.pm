@@ -78,12 +78,11 @@ use Carp;
 use Log::Agent;
 use Class::Accessor;
 use Class::Data::Inheritable;
-use Apache::Session::File;
+use Digest::MD5;
 use OME::Factory;
 use OME::Session;
 use OME::Configuration;
 use Term::ReadKey;
-use POSIX;
 
 use base qw(Class::Accessor Class::Data::Inheritable);
 
@@ -93,12 +92,16 @@ use constant FIND_USER_SQL => <<"SQL";
        where ome_name = ?
 SQL
 
-# The lifetime of server-side session keys in seconds
-our $APACHE_SESSION_LIFETIME = 30;  # 30 minutes
+use constant INVALIDATE_OLD_SESSION_KEYS_SQL => <<"SQL";
+	UPDATE OME_SESSIONS
+	SET SESSION_KEY = NULL
+	WHERE abstime(now()) - abstime(LAST_ACCESS)
+			> ?
+SQL
 
-# FIXME:  This hard-coded path should come from Configuration->tmp_dir()
-# Or some other cleverness other than hard-coding it here
-our $TEMP_ROOT = '/var/tmp/OME';
+# The lifetime of server-side session keys in seconds
+our $SESSION_KEY_LIFETIME = 30;  # 30 minutes
+our $SESSION_KEY_LENGTH = 32;
 
 =head1 METHODS
 
@@ -141,10 +144,6 @@ sub createSession {
         $session = $self->createWithPassword($username,$password);
     } elsif (defined $key) {
         $session = $self->createWithKey($key);
-    }
-     
-    if (defined $session){
-		$self->storeApacheSession($session);
     }
 
     return $session or undef;
@@ -203,7 +202,7 @@ sub TTYlogin {
         if (defined $session) {
             my $created = open LOGINFILE, "> $loginFile";
             if ($created) {
-                print LOGINFILE $session->{SessionKey}, "\n";
+                print LOGINFILE $session->SessionKey(), "\n";
                 close LOGINFILE;
             }
 
@@ -217,124 +216,137 @@ sub TTYlogin {
 }
 
 
-# createWithPassword
-# ------------------
-
-sub createWithPassword {
-    my $self = shift;
-    my ($username, $password) = @_;
-    logdbg "debug", "createWithPassword: username=".$username;
-    my $session = $self->getOMESession ($username, $password);
-    return undef unless $session;
-    $session->{ApacheSession} = $self->newApacheSession ($username, $password);
-    $session->{SessionKey} = $session->{ApacheSession}->{SessionKey};
-    logdbg "debug", "createWithPassword: {SessionKey}=".$session->{SessionKey};
-    logdbg "debug", "createWithPassword: SessionKey()=".$session->SessionKey();
-    logdbg "debug", "createWithPassword: session{username}=".$session->{ApacheSession}->{username};
-    return $session;
-}
-
-
 # createWithKey
 # ------------------
+# Creates and returns an OME::Session given a SessionKey
+# Invalidates any stale keys
+# updates last_access + host
+# returns OME::Session upon success
+# returns undef of invalid or stale key.
 
 sub createWithKey {
-    my $self = shift;
-    my $key = shift;
+	my $self = shift;
+	my $sessionKey = shift;
 
-    my $apacheSession = $self->getApacheSession($key) or return undef;
-    logdbg "debug", "createWithKey: username=".$apacheSession->{username};
-    logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
-    my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
 	
-    my $session = $self->getOMESession ($username,$password);
-    return undef unless $session;
+	my $bootstrap_factory = OME::Factory->new();
+	my $dbh = $bootstrap_factory->obtainDBH();
+	eval {
+		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
+	};
 
-    $session->{ApacheSession} = $apacheSession;
-    $session->{SessionKey} = $apacheSession->{SessionKey};
-    logdbg "debug", "createWithKey: {SessionKey}=".$session->{SessionKey};
-    logdbg "debug", "createWithKey: SessionKey()=".$session->SessionKey();
-    return $session;
+	$sessionKey = $self->validateSessionKey($sessionKey) or return undef;
+	
+	my $userState = $bootstrap_factory->
+		findObject('OME::UserState', session_key => $sessionKey);
+	logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
+	
+	return undef unless defined $userState;
+
+
+	my $host;
+	if (exists $ENV{'REMOTE_HOST'} ) {
+		$host = $ENV{'REMOTE_HOST'};
+	} else {
+		$host = $ENV{'HOST'};
+	}
+	
+	$userState->last_access('now');
+	$userState->host($host);
+	
+	my $session = OME::Session->instance($userState, $bootstrap_factory);
+	
+	logdbg "debug", "createWithKey: updating userState";
+	$userState->storeObject();
+	$session->commitTransaction();
+	
+	logdbg "debug", "createWithKey: returning session";
+	return $session;
 }
 
 
 #
-# getOMESession
+# createWithPassword
 # ----------------
+# Creates and returns an OME::Session given a username/password
+# Invalidates any stale keys
+# updates last_access + host
+# returns OME::Session upon success
+# returns undef of invalid or stale key.
 
-sub getOMESession {
-    my $self = shift;
-    my ($username,$password) = @_;
-    my @row		= ();
-    my $rows	= 0;
-    my @tab		= ();
-    my $Err			= undef; 
+sub createWithPassword {
+	my $self = shift;
+	my ($username,$password) = @_;
+	my @row		= ();
+	my $rows	= 0;
+	my @tab		= ();
+	my $Err			= undef; 
+	
+	return undef unless $username and $password;
+	
+	my $bootstrap_factory = OME::Factory->new();
+	
+	my $dbh = $bootstrap_factory->obtainDBH();
+	eval {
+		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
+	};
 
-    return undef unless $username and $password;
-
-    my $bootstrap_factory = OME::Factory->new();
-
-    my $dbh = $bootstrap_factory->obtainDBH();
-    my ($experimenterID,$dbpass);
-    eval {
-        ($experimenterID,$dbpass) =
-          $dbh->selectrow_array(FIND_USER_SQL,{},$username);
-    };
+	my ($experimenterID,$dbpass);
+	eval {
+		($experimenterID,$dbpass) =
+			$dbh->selectrow_array(FIND_USER_SQL,{},$username);
+	};
 # We're not supposed to release the Factory's DBH.  Only ones we get from Factory->newDBH
 #   $bootstrap_factory->releaseDBH($dbh);
 
-    return undef if $@;
-
-
-
-    #return undef unless $sth->execute($username);
-
-    #my $results = $sth->fetch();
-   # my ($experimenterID,$dbpass) = @$results;
+	return undef if $@;
     
-    return undef unless defined $dbpass and defined $experimenterID;
-    return undef if (crypt($password,$dbpass) ne $dbpass);
-
-
-    my $host;
-   	if (exists $ENV{'REMOTE_HOST'} ) {
-   		$host = $ENV{'REMOTE_HOST'};
+	return undef unless defined $dbpass and defined $experimenterID;
+	return undef if (crypt($password,$dbpass) ne $dbpass);
+	
+	
+	my $host;
+	if (exists $ENV{'REMOTE_HOST'} ) {
+		$host = $ENV{'REMOTE_HOST'};
 	} else {
 		$host = $ENV{'HOST'};
 	}
 
-    logdbg "debug", "getOMESession: looking for userState, experimenter_id=$experimenterID";
-    my $userState = $bootstrap_factory->
-      findObject('OME::UserState',experimenter_id => $experimenterID);
-    logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
 
-    if (!defined $userState) {
-        $userState = $bootstrap_factory->
-          newObject('OME::UserState',
-                    {
-                     experimenter_id => $experimenterID,
-                     started         => 'now',
-                     last_access     => 'now',
-                     host            => $host
-                    });
-        logdbg "debug", "getOMESession: created new userState";
-        $bootstrap_factory->commitTransaction();
-    } else {
-        $userState->last_access('now');
-        $userState->host($host);
-    }
+	logdbg "debug", "getOMESession: looking for userState, experimenter_id=$experimenterID";
+	my $userState = $bootstrap_factory->
+		findObject('OME::UserState',experimenter_id => $experimenterID);
+	logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
+	
+	if (!defined $userState) {
+		my $sessionKey = $self->generateSessionKey();
+		$userState = $bootstrap_factory->
+			newObject('OME::UserState', {
+				experimenter_id => $experimenterID,
+				session_key     => $sessionKey,
+				started         => 'now',
+				last_access     => 'now',
+				host            => $host
+			});
+		logdbg "debug", "getOMESession: created new userState";
+		$bootstrap_factory->commitTransaction();
+	} else {
+		$userState->last_access('now');
+		$userState->host($host);
+		$userState->session_key($self->generateSessionKey()) unless $userState->session_key();
+	}
 
-    logdie ref($self)."->getOMESession:  Could not create userState object"
-      unless defined $userState;
+	logdie ref($self)."->getOMESession:  Could not create userState object"
+		unless defined $userState;
 
-    my $session = OME::Session->instance($userState, $bootstrap_factory);
+	my $session = OME::Session->instance($userState, $bootstrap_factory);
     
-    logdbg "debug", "getOMESession: updating userState";
-    $userState->storeObject();
-    $session->commitTransaction();
-
-    logdbg "debug", "getOMESession: returning session";
-    return $session;
+	logdbg "debug", "getOMESession: updating userState";
+	$userState->storeObject();
+	$session->commitTransaction();
+	
+	logdbg "debug", "getOMESession: returning session";
+	return $session;
 }
 
 
@@ -351,156 +363,57 @@ Unregisters the $session from this $manager.
 =cut
 
 sub logout {
-    my $self = shift;
-    my $session = shift;
-    return undef unless defined $session;
-    logdbg "debug", ref($self)."->logout: logging out";
-    $self->deleteApacheSession ($session->{ApacheSession});
-    delete $session->{ApacheSession};
-    delete $session->{SessionKey};
+	my $self = shift;
+	my $session = shift;
+	return undef unless defined $session;
+	logdbg "debug", ref($self)."->logout: logging out";
+
+	my $userState = $session->getUserState();
+	$userState->last_access('now');
+	$userState->session_key(undef);
+	$userState->storeObject();
+	$session->commitTransaction();
+
 }
 
 
 #
-# newApacheSession
-# ----------------
-
-sub newApacheSession {
-    my $self = shift;
-    my ($userName,$password) = @_;
-    my $apacheSession = $self->getApacheSession();
-
-
-    $apacheSession->{username} = $userName;
-    $apacheSession->{password} = $password;
-    logdbg "debug", "newApacheSession: username=".$apacheSession->{username};
-    logdbg "debug", "newApacheSession: key=".$apacheSession->{SessionKey};
-
-    return $apacheSession;
-}
-
-
-#
-# getApacheSession
-# ----------------
-
-sub getApacheSession {
-    my $self = shift;
-    my $sessionKey = shift;
-    logdbg "debug", "getApacheSession: sessionKey=".
-        (defined $sessionKey ? $sessionKey : 'undefined');
-    my %tiedApacheSession;
-    my $apacheSession;
-    my ($key,$value);
-    my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
-	unless (-d $TEMP_ROOT)
-		{ mkdir($TEMP_ROOT) or croak "Couldn't make directory $TEMP_ROOT: $!" }
-	unless (-d $lock_dir)
-		{ mkdir($lock_dir) or croak "Couldn't make directory $lock_dir: $!" }
-	unless (-d $sess_dir)
-		{ mkdir($sess_dir) or croak "Couldn't make directory $sess_dir: $!" }
-
-
-    eval {
-        tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => $sess_dir,
-            LockDirectory => $lock_dir,
-        };
-    };
-    return undef if $@;
-
-    #
-    # Check for a stale session key.  If its stale, delete it and return undef.
-    if (defined $sessionKey) {
-    	my $sessionAge = sprintf ( "%d",(POSIX::difftime(time(),$tiedApacheSession{timestamp}) / 60) );
-		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is $sessionAge minutes old";
-		if ($sessionAge > $APACHE_SESSION_LIFETIME) {
-			logdbg "debug", "Deleting session";
-			tied (%tiedApacheSession)->delete();
-			print STDERR "Session is $sessionAge minutes long - expired.\n";
-			return undef;
-		}
-	}
-    
-    $tiedApacheSession{timestamp} = time();
-
-    while ( ($key,$value) = each %tiedApacheSession ) {
-        if ($key eq '_session_id') {
-            $apacheSession->{SessionKey} = $value;
-        } else {
-            $apacheSession->{$key} = $value;
-        }
-    }
-
-    untie %tiedApacheSession;
-    
-    logdbg "debug", "getApacheSession: username=" . ($apacheSession->{username} || "");
-    logdbg "debug", "getApacheSession: key=" . ($apacheSession->{SessionKey} || "");
-    return $apacheSession;
-}
-
-
-
-#
-# deleteApacheSession
+# generateSessionKey
 # --------------------
 
-sub deleteApacheSession {
-my $self = shift;
-my $apacheSession = shift;
-my $sessionKey = $apacheSession->{SessionKey};
-my %tiedApacheSession;
-logdbg "debug", ref($self)."->deleteApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
-my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
+sub generateSessionKey {
+	my $self = shift;
+	
+	# Stolen from:
+	# Apache::Session::Generate::MD5;
+	# Copyright(c) 2000, 2001 Jeffrey William Baker (jwbaker@acm.org)
+	# Distribute under the Artistic License
 
-    eval {
-        tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => $sess_dir,
-            LockDirectory => $lock_dir
-        };
-    };
-    return undef if $@;
+	return substr(
+		Digest::MD5::md5_hex(
+			Digest::MD5::md5_hex(time(). {}. rand(). $$)),
+		0, $SESSION_KEY_LENGTH
+	);
     
-    tied(%tiedApacheSession)->delete();
 
 }
+
+
 
 #
-# storeApacheSession
-# ------------------
+# validateSessionKey
+# --------------------
 
-sub storeApacheSession {
-my $self = shift;
-my $session = shift;
-return undef unless defined $session;
-my $apacheSessionRef = $session->{ApacheSession};
-my $sessionKey = $apacheSessionRef->{SessionKey};
-my %tiedApacheSession;
-logdbg "debug", "storeApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
-my ($key,$value);
-my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
-
-	unless (-d $TEMP_ROOT)
-		{ mkdir($TEMP_ROOT) or croak "Couldn't make directory $TEMP_ROOT: $!" }
-	unless (-d $lock_dir)
-		{ mkdir($lock_dir) or croak "Couldn't make directory $lock_dir: $!" }
-	unless (-d $sess_dir)
-		{ mkdir($sess_dir) or croak "Couldn't make directory $sess_dir: $!" }
-
-    eval {
-        tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => $sess_dir,
-            LockDirectory => $lock_dir
-        };
-    };
-    return undef if $@;
-    while ( ($key,$value) = each %$apacheSessionRef ) {
-        $tiedApacheSession{$key} = $value unless $key eq '_session_id';
-    }
-    untie %tiedApacheSession;
-
-    return $apacheSessionRef;
+sub validateSessionKey {
+	my $self = shift;
+	my $sessionKey = shift;
+	
+	return undef unless $sessionKey;
+	return undef unless length ($sessionKey) == $SESSION_KEY_LENGTH;
+	return undef unless $sessionKey =~ /^[a-fA-F0-9]+$/;
+	return $sessionKey;
 }
+
 
 
 # Accessors

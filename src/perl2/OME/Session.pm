@@ -144,14 +144,13 @@ use Carp;
 use OME::UserState;
 use OME::DBObject;
 use base qw(Class::Accessor);
-use POSIX;
 use File::Path;
 use File::Spec;
 use Log::Agent;
 
 #use Benchmark::Timer;
 
-__PACKAGE__->mk_ro_accessors(qw(Factory UserState ApacheSession SessionKey Configuration));
+__PACKAGE__->mk_ro_accessors(qw(Factory UserState ApacheSession Configuration));
 
 our $__soleInstance = undef;
 
@@ -160,6 +159,8 @@ sub getUserState { return shift->{UserState}; }
 sub id { return shift->{UserState}->id(); }
 sub ID { return shift->{UserState}->ID(); }
 sub session_id { return shift->{UserState}->ID(); }
+sub session_key { return defined $_[0]->{UserState} ? shift->{UserState}->session_key() : undef ; }
+sub SessionKey { return defined $_[0]->{UserState} ? shift->{UserState}->session_key() : undef ; }
 sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
 sub experimenter { return shift->{UserState}->experimenter(@_); }
 sub User { return shift->{UserState}->User(@_); }
