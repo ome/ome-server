@@ -187,6 +187,9 @@ sub __salvageSession {
 	$self->{UserState} = shift;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
 
+	# This ensures a fresh transaction.
+	$self->rollbackTransaction();
+
 	OME::DBObject->clearAllCaches();
 
 	#carp "Returning salvaged session.";
