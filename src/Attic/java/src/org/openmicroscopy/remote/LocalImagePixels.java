@@ -84,7 +84,7 @@ public class LocalImagePixels
 
     private String    relativePath;
     private Attribute pixels, repository;
-    private int       sizeX, sizeY, sizeZ, sizeC, sizeT;
+    private int       sizeX, sizeY, sizeZ, sizeC, sizeT, bbp;
 
     public LocalImagePixels()
     {
@@ -100,6 +100,7 @@ public class LocalImagePixels
         this.sizeZ = pixels.getIntElement("SizeZ");
         this.sizeC = pixels.getIntElement("SizeC");
         this.sizeT = pixels.getIntElement("SizeT");
+        this.bbp   = pixels.getIntElement("BitsPerPixel");
     }
 
     public Attribute getPixelsAttribute() { return pixels; }
@@ -116,8 +117,6 @@ public class LocalImagePixels
         file = new RandomAccessFile(fullPath,"r");
     }
 
-    private static final int BYTES_PER_PIXEL = 2;
-
     public int getPixelsBufferSize()
     {
         return
@@ -126,7 +125,7 @@ public class LocalImagePixels
             sizeZ*
             sizeC*
             sizeT*
-            BYTES_PER_PIXEL;
+            (bbp/8);
     }
 
     public int getPlaneBufferSize(int z, int c, int t)
@@ -134,7 +133,7 @@ public class LocalImagePixels
         return
             sizeX*
             sizeY*
-            BYTES_PER_PIXEL;
+            (bbp/8);
     }
 
     public int getStackBufferSize(int c, int t)
@@ -143,7 +142,7 @@ public class LocalImagePixels
             sizeX*
             sizeY*
             sizeZ*
-            BYTES_PER_PIXEL;
+            (bbp/8);
     }
 
     public int getROIBufferSize(int x0, int y0, int z0, int c0, int t0,
@@ -155,7 +154,7 @@ public class LocalImagePixels
             (z1-z0)*
             (c1-c0)*
             (t1-t0)*
-            BYTES_PER_PIXEL;
+            (bbp/8);
     }
 
     public byte[] getPixels()
@@ -223,7 +222,7 @@ public class LocalImagePixels
             throw new IllegalArgumentException("Plane selection out of range");
 
         if (file == null) openFile();
-        long pos = (((t*sizeC)+c)*sizeZ+z)*sizeY*sizeX*BYTES_PER_PIXEL;
+        long pos = (((t*sizeC)+c)*sizeZ+z)*sizeY*sizeX*(bbp/8);
         file.seek(pos);
         file.readFully(buf,0,size);
     }
@@ -241,7 +240,7 @@ public class LocalImagePixels
             throw new IllegalArgumentException("Stack selection out of range");
 
         if (file == null) openFile();
-        long pos = ((t*sizeC)+c)*sizeZ*sizeY*sizeX*BYTES_PER_PIXEL;
+        long pos = ((t*sizeC)+c)*sizeZ*sizeY*sizeX*(bbp/8);
         file.seek(pos);
         file.readFully(buf,0,size);
     }
@@ -277,10 +276,10 @@ public class LocalImagePixels
                 {
                     for (int y = y0; y < y1; y++)
                     {
-                        long pos = (((((t*sizeC)+c)*sizeZ+z)*sizeY+y)*sizeX+x)*BYTES_PER_PIXEL;
+                        long pos = (((((t*sizeC)+c)*sizeZ+z)*sizeY+y)*sizeX+x)*(bbp/8);
                         file.seek(pos);
-                        file.readFully(buf,offset,deltaX*BYTES_PER_PIXEL);
-                        offset += deltaX*BYTES_PER_PIXEL;
+                        file.readFully(buf,offset,deltaX*(bbp/8));
+                        offset += deltaX*(bbp/8);
                     }
                 }
             }

@@ -128,8 +128,6 @@ public class RemoteImagePixels
             throw new RemoteException("GetROI: expect byte[], got "+o.getClass());
     }
 
-    private static final int BYTES_PER_PIXEL = 2;
-
     public int getPixelsBufferSize()
     {
         return
@@ -138,7 +136,7 @@ public class RemoteImagePixels
             pixels.getIntElement("SizeZ")*
             pixels.getIntElement("SizeC")*
             pixels.getIntElement("SizeT")*
-            BYTES_PER_PIXEL;
+            (pixels.getIntElement("BitsPerPixel")/8);
     }
 
     public int getPlaneBufferSize(int z, int c, int t)
@@ -146,7 +144,7 @@ public class RemoteImagePixels
         return
             pixels.getIntElement("SizeX")*
             pixels.getIntElement("SizeY")*
-            BYTES_PER_PIXEL;
+            (pixels.getIntElement("BitsPerPixel")/8);
     }
 
     public int getStackBufferSize(int c, int t)
@@ -155,7 +153,7 @@ public class RemoteImagePixels
             pixels.getIntElement("SizeX")*
             pixels.getIntElement("SizeY")*
             pixels.getIntElement("SizeZ")*
-            BYTES_PER_PIXEL;
+            (pixels.getIntElement("BitsPerPixel")/8);
     }
 
     public int getROIBufferSize(int x0, int y0, int z0, int c0, int t0,
@@ -167,7 +165,7 @@ public class RemoteImagePixels
             (z1-z0)*
             (c1-c0)*
             (t1-t0)*
-            BYTES_PER_PIXEL;
+            (pixels.getIntElement("BitsPerPixel")/8);
     }
 
     public void getPixels(byte[] buf)
