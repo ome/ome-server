@@ -187,13 +187,14 @@ sub findAttributes {
 
     my @data_tables = $self->dataTables();
     my @criteria;
+    my $targetID = ref($target)? $target->id(): $target;
 
     if ($granularity eq 'D') {
-        @criteria = (dataset_id => $target);
+        @criteria = (dataset_id => $targetID);
     } elsif ($granularity eq 'I') {
-        @criteria = (image_id => $target);
+        @criteria = (image_id => $targetID);
     } elsif ($granularity eq 'F') {
-        @criteria = (feature_id => $target);
+        @criteria = (feature_id => $targetID);
     }
 
     my %ids;
@@ -439,7 +440,7 @@ use base qw(Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('_attribute_type');
 
-use fields qw(_data_table_rows _target _id _session);
+use fields qw(_data_table_rows _target _analysis _id _session);
 
 
 sub new {
@@ -457,6 +458,13 @@ sub new {
     $self->{_id} = $id;
     $self->{_session} = $session;
 
+    my $analysis;
+    foreach my $row (values %$rows) {
+        $analysis = $row->analysis();
+        last if defined $analysis;
+    }
+    $self->{_analysis} = $analysis;
+
     bless $self, $class;
     return $self;
 }
@@ -466,7 +474,7 @@ sub load {
     my $class = ref($proto) || $proto;
 
     my $rows = {};
-    my $target;
+    my ($target,$analysis);
     my $factory = $session->Factory();
 
     my $attribute_type = $class->_attribute_type();
@@ -491,6 +499,10 @@ sub load {
                 $target = $data_row->feature();
             }
         }
+
+        if (!defined $analysis) {
+            $analysis = $data_row->analysis();
+        }
     }
 
     return $class->new($session,$target,$id,$rows);
@@ -500,6 +512,7 @@ sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
 sub attribute_type { return shift->_attribute_type(); }
+sub analysis { return shift->{_analysis}; }
 
 sub _getTarget {
     my ($self) = @_;
