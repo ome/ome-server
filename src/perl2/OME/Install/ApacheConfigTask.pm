@@ -297,11 +297,11 @@ sub getApacheInfo {
 
 	# Open the root apache conf file
 	open(FILE, "< $httpdConf")
-		or croak "Couldn't open '$httpdConf' for reading: $!\n";
+		or croak "Couldn't open root config '$httpdConf' for reading: $!\n";
 
 	# Search for includes that aren't the ome conf
 	while (<FILE>) {
-		if ($_ =~ /\s*Include\s(.*)/ and $1 ne $omeConf) {
+		if ($_ =~ /^\s*Include\s(.*)/ and $1 ne $omeConf) {
 			push (@include_paths, $1)
 		}
 	}
@@ -322,11 +322,13 @@ sub getApacheInfo {
 		}
 
 		foreach my $file (glob($path)) {
-			open (FILE, '<', $file) 
-				or croak "Couldn't open '$file' for reading: $!\n";
-		
-			&$search_func(*FILE);
-			close (FILE);
+			if (open (FILE, '<', $file)) {
+				&$search_func(*FILE);
+				close (FILE);
+			} else {
+				# Just a warning
+				carp "**** Warning: Couldn't open include '$file' for reading: $!";
+			}
 		}
 	}
 
