@@ -78,7 +78,7 @@ sub getPageBody {
          $body.=delete_image_process($imageManager,$revArgs{Delete});	  
 	}  
 	$body .= $jscriptFormat->popUpImage();    
-	$body.=print_list($session,$imageManager,$htmlFormat,$cgi);  
+	$body.=$self->print_list($session,$imageManager,$htmlFormat,$cgi);  
       return ('HTML',$body);
 }
 
@@ -128,7 +128,7 @@ sub remove_image{
 
 sub print_list{
 
-	my ($session,$imageManager,$htmlFormat,$cgi)=@_;;
+	my ($self,$session,$imageManager,$htmlFormat,$cgi)=@_;;
 	my $text="";
 	my ($gpImages,$userImages)=$imageManager->manage();
 	my $count=0;
@@ -145,7 +145,7 @@ sub print_list{
       	if (exists ${$gpImages}{$_}){
 	   		$booldel=undef;
 		}
-		my $formatimage=format_image($session->Factory(),${$userImages}{$_}->{image},$session->User()->id(),$htmlFormat,$booldel);
+		my $formatimage=$self->format_image($session->Factory(),${$userImages}{$_}->{image},$session->User()->id(),$htmlFormat,$booldel);
   	 	${$userImages}{$_}->{text}=$formatimage;
 
   	}
@@ -170,15 +170,16 @@ sub format_output{
 
 
 sub format_image{
-	my ($factory,$image,$userID,$htmlFormat,$bool)=@_;
+	my ($self,$factory,$image,$userID,$htmlFormat,$bool)=@_;
 	my $summary="";
 	my $ownerID=$image->experimenter_id();
 	my $owner=$factory->loadAttribute("Experimenter",$ownerID);
 	$summary.=$htmlFormat->formatImage($image);
 	my $imID=$image->id();
+	my $sid = $self->Session()->SessionKey();
 
 
-	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imID." align=\"bottom\" border=0></a>";
+	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imID&sid=$sid align=\"bottom\" border=0></a>";
 	$summary.=$thumbnail;
 	$summary.=$htmlFormat->buttonControl($image,$userID,$owner,$bool,"image");
 	return $summary;
