@@ -41,19 +41,36 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.RemoteChain.Link;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
+import java.util.Vector;
  
  public class CLink extends Link {
+	
 	
      static {
      	RemoteObjectCache.addClass("OME::AnalysisChain::Link",CLink.class);
      }
-
+	private Vector nodes = new Vector();
+	
 	public CLink() {
 		super();
+		init();
 	}
 	
 	public CLink(RemoteSession session,String reference) {
 		super(session,reference);
+		init();
+	}
+	private void init() {
+		nodes.add(getFromNode());
+		nodes.add(getToNode());
 	}
 	
+	public void addIntermediate(CNode prior,CNode newNode) {
+		int index = nodes.indexOf(prior);	
+		nodes.insertElementAt(newNode,index+1);
+	}
+	
+	public CNode getIntermediateNode(int i) {
+		return (CNode) nodes.elementAt(i);
+	}
  }
