@@ -105,3 +105,6 @@ t/Session.t
 t/SessionManager.t
 t/Tasks-AnalysisEngine.t
 t/Tasks-ImageTasks.t
+t/tinyTest-BE.raw
+t/tinyTest-LE.raw
+t/tinyTest.d3d.dv
