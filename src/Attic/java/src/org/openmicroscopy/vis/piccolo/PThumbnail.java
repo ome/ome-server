@@ -127,10 +127,10 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	
 	public PBounds getBufferedBounds() {
 			PBounds b = getGlobalFullBounds();
-			return new PBounds(b.getX()-PConstants.BORDER,
-				b.getY()-PConstants.BORDER,
-				b.getWidth()+2*PConstants.BORDER,
-				b.getHeight()+2*PConstants.BORDER);
+			return new PBounds(b.getX()-PConstants.SMALL_BORDER,
+				b.getY()-PConstants.SMALL_BORDER,
+				b.getWidth()+2*PConstants.SMALL_BORDER,
+				b.getHeight()+2*PConstants.SMALL_BORDER);
 	}
 	
 	// note that this only gets called when the imageData was initially null,
