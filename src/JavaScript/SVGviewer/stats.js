@@ -98,7 +98,7 @@ Statistics.prototype.buildDisplay = function() {
 	// set up GUI
 	this.logicalChannelPopupList = new popupList(
 		70, 0, this.waveLabels, 
-		{ obj: this, method: 'updateStats'},
+		{ obj: this, method: 'updateChannelStats'},
 		null,
 		skinLibrary["popupListAnchorLightslategray"],
 		skinLibrary["popupListBackgroundLightskyblue"],
@@ -162,6 +162,9 @@ Statistics.prototype.buildDisplay = function() {
 		update stack stats
 	
 *****/
+Statistics.prototype.updateChannelStats = function () {
+	this.updateStats( this.fields['theT'].firstChild.data );
+};
 
 Statistics.prototype.updateStats = function(t) {
 	// update fields
