@@ -7,22 +7,23 @@ April, 2004.
 OS X 10.3 is a much more complete and modern system than 10.2.  Although OME will work on 10.2, 10.3 is reccomended.  The installation instructions are essentially the same.
 
 * Install the Developer tools that came with 10.3
-* Install libxml2.  Download this:
-http://openmicroscopy.org/packages/source/libxml2-2.5.10.tar.gz
-Then, at the terminal:
-tar -zxvf libxml2-2.5.10.tar.gz
-cd libxml2-2.5.10
+* Fix the broken mod_perl that came with the system:
+curl -O http://perl.apache.org/dist/mod_perl-1.0-current.tar.gz
+tar -zxvf mod_perl-1.0-current.tar.gz ; cd mod_perl-1.29
+perl Makefile.PL USE_APXS=1 WITH_APXS=/usr/sbin/apxs EVERYTHING=1 NO_HTTPD=1
+sudo make ; sudo make install
+
+* Install libxml2:
+curl -O http://openmicroscopy.org/packages/source/libxml2-2.5.10.tar.gz
+tar -zxvf libxml2-2.5.10.tar.gz ; cd libxml2-2.5.10
 ./configure
-make
-sudo make install
+make ; sudo make install
 
 * Install libxslt.  Download this:
-http://openmicroscopy.org/packages/source/libxslt-1.0.32.tar.gz
-tar -zxvf libxslt-1.0.32.tar.gz
-cd libxslt-1.0.32.tar.gz
+curl -O http://openmicroscopy.org/packages/source/libxslt-1.0.32.tar.gz
+tar -zxvf libxslt-1.0.32.tar.gz ; cd libxslt-1.0.32.tar.gz
 ./configure
-make
-sudo make install
+make ; sudo make install
 
 * Download and Install fink (http://fink.sourceforge.net/)
 * Use fink to install gd:
