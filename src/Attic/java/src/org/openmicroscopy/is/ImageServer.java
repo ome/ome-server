@@ -43,6 +43,7 @@
 package org.openmicroscopy.is;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * <p>Defines methods for interacting with an OME image server.  There
@@ -161,7 +162,7 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error connecting
      * to the image server or creating the pixels file
      */
-    public long newPixels(PixelsFileFormat format)
+    public long newPixels(final PixelsFileFormat format)
         throws ImageServerException
     {
         return newPixels(format.getSizeX(),
@@ -195,6 +196,18 @@ public abstract class ImageServer
      * the image server or if the pixels ID does not exist
      */
     public abstract String getPixelsSHA1(long pixelsID)
+        throws ImageServerException;
+
+    /**
+     * Returns the location of the specified pixels file in the image
+     * server's filesystem.
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @return the image-server-local path to the pixels file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the pixels ID does not exist
+     */
+    public abstract String getPixelsServerPath(long pixelsID)
         throws ImageServerException;
 
     /**
@@ -359,11 +372,13 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * writeable
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
      */
     public abstract void setPixels(long pixelsID,
                                    File file,
                                    boolean bigEndian)
-        throws ImageServerException;
+        throws ImageServerException, FileNotFoundException;
 
     /**
      * <p>This method sends a stack of pixels for the given pixels ID.
@@ -410,12 +425,14 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * writeable
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
      */
     public abstract void setStack(long pixelsID,
                                   int theC, int theT,
                                   File file,
                                   boolean bigEndian)
-        throws ImageServerException;
+        throws ImageServerException, FileNotFoundException;
 
     /**
      * <p>This method sends a plane of pixels for the given pixels ID.
@@ -464,12 +481,14 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * writeable
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
      */
     public abstract void setPlane(long pixelsID,
                                   int theZ, int theC, int theT,
                                   File file,
                                   boolean bigEndian)
-        throws ImageServerException;
+        throws ImageServerException, FileNotFoundException;
 
     /**
      * <p>This method sends an arbitrary region of pixels for the
@@ -513,13 +532,15 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * writeable
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
      */
     public abstract void setROI(long pixelsID,
                                 int x0,int y0,int z0,int c0,int t0,
                                 int x1,int y1,int z1,int c1,int t1,
                                 File file,
                                 boolean bigEndian)
-        throws ImageServerException;
+        throws ImageServerException, FileNotFoundException;
 
     /**
      * <p>This method ends the writable phase of the life of a pixels
@@ -532,6 +553,7 @@ public abstract class ImageServer
      * (<code>set*</code>, <code>convert*</code>) become unavailable
      * for the pixels file, and the reading methods
      * (<code>get*</code>) become available.</p>
+     *
      * @param pixelsID the pixels ID of a previously created pixels
      * file
      * @throws ImageServerException if there was an error contacting
@@ -539,6 +561,320 @@ public abstract class ImageServer
      * writeable
      */
     public abstract void finishPixels(long pixelsID)
+        throws ImageServerException;
+
+    /**
+     * <p>Transfers the specified file to the image server, returning
+     * a file ID.  This ID can then be used in calls to the
+     * <code>convert*</code> methods, allowing a new pixels file to be
+     * created from the contents of the original file.</p>
+     *
+     * @param file the file to upload
+     * @return the ID of the uploaded file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or uploading the file
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
+     */
+    public abstract long uploadFile(File file)
+        throws ImageServerException, FileNotFoundException;
+
+    /**
+     * Returns the original filename and length of a previously
+     * uploaded file.
+     *
+     * @param fileID the ID of the previously uploaded file
+     * @return a {@link FileInfo} object describing the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or retrieving the file
+     */
+    public abstract FileInfo getFileInfo(long fileID)
+        throws ImageServerException;
+
+    /**
+     * Returns the SHA-1 digest of a previously uploaded file.
+     * @param fileID the ID of the previously uploaded file
+     * @return the SHA-1 digest of the pixels file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public abstract String getFileSHA1(long FileID)
+        throws ImageServerException;
+
+    /**
+     * Returns the location of the specified file in the image
+     * server's filesystem.
+     * @param fileID the ID of the previously uploaded file
+     * @return the image-server-local path to the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public abstract String getFileServerPath(long fileID)
+        throws ImageServerException;
+
+    /**
+     * Reads a portion of an uploaded file, without using any caching.
+     * This is usually not the method you should use to read from an
+     * image server file; the {@link readFile} method implements a
+     * limited form of caching and can be much more efficient.
+     *
+     * @see readFile
+     * @param fileID the ID of the previously uploaded file
+     * @param offset the offset into the file to start reading from
+     * @param length the number of bytes to read from the file
+     * @return the data read from the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public abstract byte[] readFileWithoutCaching(long fileID,
+                                                  long offset,
+                                                  int  length)
+        throws ImageServerException;
+
+    /**
+     * The largest file read request that will still cause the {@link
+     * readData} method to use the cache.
+     * @see readData
+     */
+    public static int MAXIMUM_READ_TO_USE_CACHE = 2048;
+
+    /**
+     * The size of the cache used by the {@link readData} method.
+     * @see readData
+     */
+    public static int CACHE_SIZE = 4096;
+
+    protected boolean  cacheFilled = false;
+    protected byte[]   cache;
+    protected long     cachedFileID;
+    protected FileInfo cachedFileInfo;
+    protected long     cacheStart;
+    protected int      cacheLength;
+
+    /**
+     * <p>Reads a portion of an uploaded file.  The method implements
+     * a limited form of caching, so that client code can read small,
+     * spatially related portions of the file without generating too
+     * many I/O calls to the image server.</p>
+     *
+     * <p>The caching is only used if the <code>length</code>
+     * parameter is less than the value of the {@link
+     * MAXIMUM_READ_TO_USE_CACHE} field.  If it is, the actual
+     * <code>ReadFile</code> call sent to the image server will read a
+     * full block of {@link CACHE_SIZE} bytes, centered around the
+     * region requested.  Subsequent calls which request data fully
+     * enclosed within the full region will return that data without
+     * generating another image server call.  If the data requested by
+     * the subsequent call does not fall within the cached region, a
+     * new block is read, and the existing one is thrown away.  Note
+     * that this means that interleaving reads from two separate files
+     * will eliminate the benefit of the cache.</p>
+     *
+     * <p>If the requested length is 2K or more, the caching mechanism
+     * will be completely bypassed.  Any previously cached data will
+     * not be modified.</p>
+     *
+     * <p><b>This method is not thread-safe</b>; it is up to the
+     * caller to perform any necessary synchronization.  If multiple
+     * threads try to call this method simultaneously, Bad Things
+     * could happen.</p>
+     *
+     * @param fileID the ID of the previously uploaded file
+     * @param offset the offset into the file to start reading from
+     * @param length the number of bytes to read from the file
+     * @return the data read from the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or if the file ID does not exist
+     */
+    public byte[] readFile(final long fileID, 
+                           final long offset, final int length)
+        throws ImageServerException
+    {
+        if (length <= MAXIMUM_READ_TO_USE_CACHE)
+        {
+            if (!cacheFilled ||
+                cachedFileID != fileID ||
+                offset < cacheStart ||
+                offset+length >= cacheStart+cacheLength)
+            {
+                // This is a cache miss, or the cache has not been
+                // filled yet.
+
+                // If the current cache is also from this file,
+                // there's no need to re-read its length.
+                if (!cacheFilled || cachedFileID != fileID)
+                {
+                    cachedFileInfo = getFileInfo(fileID);
+                }
+
+                // Calculate the bounds of an appropriate cache block,
+                // centered on the requested region.  Ensure that it
+                // does not go past the end of the file.
+                long fileSize = cachedFileInfo.getLength();
+                int extra = CACHE_SIZE-length;
+                long realOffset = offset - (extra/2);
+                if (realOffset < 0) realOffset = 0;
+                long realEnd = realOffset + CACHE_SIZE;
+                if (realEnd > fileSize) realEnd = fileSize;
+                // This should not overflow, since it should have a
+                // maxmimum value of CACHE_SIZE, which is an int.
+                int realSize = (int) (realEnd-realOffset);
+
+                cacheFilled = true;
+                cache = readFileWithoutCaching(fileID,realOffset,realSize);
+                cachedFileID = fileID;
+                cacheStart = realOffset;
+                cacheLength = realSize;
+            }
+
+            // We have either just loaded in an appropriate cache, or
+            // the cache was already filled correctly.  Return the
+            // requested data.
+
+            final byte[] result = new byte[length];
+            for (int i = 0, j = (int) (offset-cacheStart); 
+                 i < length; 
+                 i++, j++)
+                result[i] = cache[j];
+
+            return result;
+        } else {
+            return readFileWithoutCaching(fileID,offset,length);
+        }
+    }
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link uploadFile} method.  The pixels file should have been
+     * previously created via the {@link newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a single XYZ stack of pixels.  The pixels
+     * in the original file should be in XYZ order, and should match
+     * the storage type declared for the new pixels file.  The stack
+     * is specified by its C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file should be
+     * specified; if this differs from the endian-ness of the new
+     * pixels file, byte swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param theC the C index of the desired stack
+     * @param theT the T index of the desired stack
+     * @param fileID the ID of the previously uploaded file
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public abstract long convertStack(long pixelsID,
+                                      int theC, int theT,
+                                      long fileID, long offset,
+                                      boolean bigEndian)
+        throws ImageServerException;
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link uploadFile} method.  The pixels file should have been
+     * previously created via the {@link newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a single XY plane of pixels.  The pixels
+     * in the original file should be in XY order, and should match
+     * the storage type declared for the new pixels file.  The plane
+     * is specified by its Z, C and T coordinates, which have 0-based
+     * indices.  The endian-ness of the uploaded file should be
+     * specified; if this differs from the endian-ness of the new
+     * pixels file, byte swapping will be performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param theZ the Z index of the desired plane
+     * @param theC the C index of the desired plane
+     * @param theT the T index of the desired plane
+     * @param fileID the ID of the previously uploaded file
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public abstract long convertPlane(long pixelsID,
+                                      int theZ, int theC, int theT,
+                                      long fileID, long offset,
+                                      boolean bigEndian)
+        throws ImageServerException;
+
+    /**
+     * <p>Copies pixels from an original file into a new pixels file.
+     * The original file should have been previously uploaded via the
+     * {@link uploadFile} method.  The pixels file should have been
+     * previously created via the {@link newPixels} method.  The
+     * server will start reading the pixels from the specified offset,
+     * which should be expressed as bytes from the beginning of the
+     * file.</p>
+     *
+     * <p>This method copies a subset of rows of a single plane of
+     * pixels.  The pixels in the original file should be in XY order,
+     * and should match the storage type declared for the new pixels
+     * file.  The rows are specified by their Z, C and T coordinates,
+     * and by an initial Y coordinate and number of rows to copy.  All
+     * of the coordinates have 0-based indices.  The endian-ness of
+     * the uploaded file should be specified; if this differs from the
+     * endian-ness of the new pixels file, byte swapping will be
+     * performed by the server.</p>
+     *
+     * <p>If the specified pixel file isn't in write-only mode on the
+     * image server, an error will be thrown.</p>
+     *
+     * <p>The number of pixels successfully written by the image
+     * server will be returned.  This value can be used as an
+     * additional error check by client code.</p>
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param theY the first row of the desired region
+     * @param numRows the number of rows in the desired region
+     * @param theZ the Z index of the desired region
+     * @param theC the C index of the desired region
+     * @param theT the T index of the desired region
+     * @param fileID the ID of the previously uploaded file
+     * @param offset the offset into the file to start reading from
+     * @param bigEndian the endianness of the pixels in the uploaded
+     * file
+     */
+    public abstract long convertRows(long pixelsID,
+                                     int theY, int numRows,
+                                     int theZ, int theC, int theT,
+                                     long fileID, long offset,
+                                     boolean bigEndian)
+        throws ImageServerException;
+
+    /**
+     * Returns a {@link PlaneStatistics} object containing basic pixel
+     * statistics for each plane in the specified pixels file.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     */
+    public abstract PlaneStatistics getPlaneStatistics(long pixelsID)
         throws ImageServerException;
 
 }

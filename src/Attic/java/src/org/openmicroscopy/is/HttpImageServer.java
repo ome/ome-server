@@ -128,6 +128,18 @@ public class HttpImageServer
                                            realValue);
     }
 
+    protected void checkToken(StringTokenizer token, String correctValue,
+                              String newDelim)
+        throws ImageServerException
+    {
+        String realValue = token.nextToken(newDelim);
+        if (realValue == null || !realValue.equals(correctValue))
+            throw new ImageServerException("Invalid response: expected "+
+                                           correctValue+
+                                           ", got "+
+                                           realValue);
+    }
+
     protected int getIntToken(StringTokenizer token)
         throws ImageServerException
     {
@@ -136,6 +148,35 @@ public class HttpImageServer
         {
             int intValue = Integer.parseInt(value);
             return intValue;
+        } catch (NumberFormatException e) {
+            throw new ImageServerException("Invalid response: expected number, got "+
+                                           value);
+        }
+    }
+
+    protected long getLongToken(StringTokenizer token)
+        throws ImageServerException
+    {
+        String value = token.nextToken();
+        try
+        {
+            long longValue = Long.parseLong(value);
+            return longValue;
+        } catch (NumberFormatException e) {
+            throw new ImageServerException("Invalid response: expected number, got "+
+                                           value);
+        }
+    }
+
+    protected double getDoubleToken(StringTokenizer token)
+        throws ImageServerException
+    {
+        String value = token.nextToken();
+        if (value.equalsIgnoreCase("nan")) return Double.NaN;
+        try
+        {
+            double doubleValue = Double.parseDouble(value);
+            return doubleValue;
         } catch (NumberFormatException e) {
             throw new ImageServerException("Invalid response: expected number, got "+
                                            value);
@@ -169,8 +210,7 @@ public class HttpImageServer
             post.addParameter("IsFloat",isFloat? "1": "0");
             executeCall();
 
-            return Long.parseLong(post.getResponseBodyAsString().
-                                  trim());
+            return Long.parseLong(post.getResponseBodyAsString().trim());
         } catch (NumberFormatException e) {
             throw new ImageServerException("Illegal response: Invalid pixels ID");
         } finally {
@@ -222,6 +262,22 @@ public class HttpImageServer
         try
         {
             post.addParameter("Method","PixelsSHA1");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            executeCall();
+
+            return post.getResponseBodyAsString().trim();
+        } finally {
+            finishCall();
+        }
+    }
+
+    public String getPixelsServerPath(long pixelsID)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","GetLocalPath");
             post.addParameter("PixelsID",Long.toString(pixelsID));
             executeCall();
 
@@ -372,7 +428,7 @@ public class HttpImageServer
     }
 
     public void setPixels(long pixelsID, File file, boolean bigEndian)
-        throws ImageServerException
+        throws ImageServerException, FileNotFoundException
     {
         startCall();
         try
@@ -384,8 +440,6 @@ public class HttpImageServer
             executeCall();
 
             return;
-        } catch (FileNotFoundException e) {
-            throw new ImageServerException("Could not open file "+file);
         } finally {
             finishCall();
         }        
@@ -418,7 +472,7 @@ public class HttpImageServer
     public void setStack(long pixelsID,
                          int theC, int theT,
                          File file, boolean bigEndian)
-        throws ImageServerException
+        throws ImageServerException, FileNotFoundException
     {
         startCall();
         try
@@ -432,8 +486,6 @@ public class HttpImageServer
             executeCall();
 
             return;
-        } catch (FileNotFoundException e) {
-            throw new ImageServerException("Could not open file "+file);
         } finally {
             finishCall();
         }        
@@ -467,7 +519,7 @@ public class HttpImageServer
     public void setPlane(long pixelsID,
                          int theZ, int theC, int theT,
                          File file, boolean bigEndian)
-        throws ImageServerException
+        throws ImageServerException, FileNotFoundException
     {
         startCall();
         try
@@ -482,8 +534,6 @@ public class HttpImageServer
             executeCall();
 
             return;
-        } catch (FileNotFoundException e) {
-            throw new ImageServerException("Could not open file "+file);
         } finally {
             finishCall();
         }        
@@ -521,7 +571,7 @@ public class HttpImageServer
                        int x0,int y0,int z0,int c0,int t0,
                        int x1,int y1,int z1,int c1,int t1,
                        File file, boolean bigEndian)
-        throws ImageServerException
+        throws ImageServerException, FileNotFoundException
     {
         String roi =
             x0+","+y0+","+z0+","+c0+","+t0+","+
@@ -538,8 +588,6 @@ public class HttpImageServer
             executeCall();
 
             return;
-        } catch (FileNotFoundException e) {
-            throw new ImageServerException("Could not open file "+file);
         } finally {
             finishCall();
         }        
@@ -560,4 +608,260 @@ public class HttpImageServer
             finishCall();
         }        
     }
+
+    public long uploadFile(File file)
+        throws ImageServerException, FileNotFoundException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","UploadFile");
+            post.addParameter("File",file);
+            executeCall();
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } catch (NumberFormatException e) {
+            throw new ImageServerException("Illegal response: Invalid file ID");
+        } finally {
+            finishCall();
+        }        
+    }
+
+    public FileInfo getFileInfo(long fileID)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","FileInfo");
+            post.addParameter("FileID",Long.toString(fileID));
+            executeCall();
+ 
+            String result = post.getResponseBodyAsString();
+            StringTokenizer token = new StringTokenizer(result,
+                                                        "\r\n=,");
+
+            checkToken(token,"Name");
+
+            // Just for the filename token, ignore "=" and "," as
+            // delimeters.  Also, there will be a leading "=" that we
+            // need to remove.
+            String name = token.nextToken("\r\n").substring(1);
+
+            // Set the delimeters back
+            checkToken(token,"Length","\r\n=,");
+            long length = getLongToken(token);
+
+            return new FileInfo(name,length);
+       } finally {
+            finishCall();
+        }
+    }
+
+    public String getFileSHA1(long fileID)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","FileSHA1");
+            post.addParameter("FileID",Long.toString(fileID));
+            executeCall();
+
+            return post.getResponseBodyAsString().trim();
+        } finally {
+            finishCall();
+        }
+    }
+
+    public String getFileServerPath(long fileID)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","GetLocalPath");
+            post.addParameter("FileID",Long.toString(fileID));
+            executeCall();
+
+            return post.getResponseBodyAsString().trim();
+        } finally {
+            finishCall();
+        }
+    }
+
+    public byte[] readFileWithoutCaching(final long fileID,
+                                         final long offset,
+                                         final int  length)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","ReadFile");
+            post.addParameter("FileID",Long.toString(fileID));
+            post.addParameter("Offset",Long.toString(offset));
+            post.addParameter("Length",Integer.toString(length));
+            executeCall();
+
+            return post.getResponseBody();
+        } finally {
+            finishCall();
+        }
+    }
+
+    public long convertStack(final long pixelsID,
+                             final int theC, final int theT,
+                             final long fileID, final long offset,
+                             final boolean bigEndian)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","ConvertStack");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("FileID",Long.toString(fileID));
+            post.addParameter("Offset",Long.toString(offset));
+            post.addParameter("BigEndian",bigEndian? "1": "0");
+            executeCall();
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } finally {
+            finishCall();
+        }
+    }
+
+    public long convertPlane(final long pixelsID,
+                             final int theZ, final int theC, final int theT,
+                             final long fileID, final long offset,
+                             final boolean bigEndian)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","ConvertPlane");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theZ",Integer.toString(theZ));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("FileID",Long.toString(fileID));
+            post.addParameter("Offset",Long.toString(offset));
+            post.addParameter("BigEndian",bigEndian? "1": "0");
+            executeCall();
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } finally {
+            finishCall();
+        }
+    }
+
+    public long convertRows(final long pixelsID,
+                            final int theY, final int numRows,
+                            final int theZ, final int theC, final int theT,
+                            final long fileID, final long offset,
+                            final boolean bigEndian)
+        throws ImageServerException
+    {
+        startCall();
+        try
+        {
+            post.addParameter("Method","ConvertRows");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theY",Integer.toString(theY));
+            post.addParameter("nRows",Integer.toString(numRows));
+            post.addParameter("theZ",Integer.toString(theZ));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("FileID",Long.toString(fileID));
+            post.addParameter("Offset",Long.toString(offset));
+            post.addParameter("BigEndian",bigEndian? "1": "0");
+            executeCall();
+
+            return Long.parseLong(post.getResponseBodyAsString().trim());
+        } finally {
+            finishCall();
+        }
+    }
+
+    public PlaneStatistics getPlaneStatistics(long pixelsID)
+        throws ImageServerException
+    {
+        PixelsFileFormat pff = getPixelsInfo(pixelsID);
+        int sizeZ = pff.getSizeZ();
+        int sizeC = pff.getSizeC();
+        int sizeT = pff.getSizeT();
+
+        startCall();
+        try
+        {
+            post.addParameter("Method","GetPlaneStats");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            executeCall();
+
+            double[][][]
+                minimum = new double[sizeZ][sizeC][sizeT],
+                maximum = new double[sizeZ][sizeC][sizeT],
+                mean = new double[sizeZ][sizeC][sizeT],
+                sigma = new double[sizeZ][sizeC][sizeT],
+                geomean = new double[sizeZ][sizeC][sizeT],
+                geosigma = new double[sizeZ][sizeC][sizeT],
+                centroidX = new double[sizeZ][sizeC][sizeT],
+                centroidY = new double[sizeZ][sizeC][sizeT],
+                sumI = new double[sizeZ][sizeC][sizeT],
+                sumI2 = new double[sizeZ][sizeC][sizeT],
+                sumLogI = new double[sizeZ][sizeC][sizeT],
+                sumXI = new double[sizeZ][sizeC][sizeT],
+                sumYI = new double[sizeZ][sizeC][sizeT],
+                sumZI = new double[sizeZ][sizeC][sizeT];
+
+            String result = post.getResponseBodyAsString();
+            StringTokenizer rtoken = new StringTokenizer(result,"\r\n");
+
+            while (rtoken.hasMoreTokens())
+            {
+                String line = rtoken.nextToken();
+                StringTokenizer ltoken = new StringTokenizer(line,"\t");
+
+                int theC = getIntToken(ltoken);
+                int theT = getIntToken(ltoken);
+                int theZ = getIntToken(ltoken);
+                minimum[theZ][theC][theT] = getDoubleToken(ltoken);
+                maximum[theZ][theC][theT] = getDoubleToken(ltoken);
+                mean[theZ][theC][theT] = getDoubleToken(ltoken);
+                geomean[theZ][theC][theT] = getDoubleToken(ltoken);
+                geosigma[theZ][theC][theT] = getDoubleToken(ltoken);
+                centroidX[theZ][theC][theT] = getDoubleToken(ltoken);
+                centroidY[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumI[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumI2[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumLogI[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumXI[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumYI[theZ][theC][theT] = getDoubleToken(ltoken);
+                sumZI[theZ][theC][theT] = getDoubleToken(ltoken);
+                geosigma[theZ][theC][theT] = getDoubleToken(ltoken);
+            }
+
+            return new PlaneStatistics(minimum,
+                                       maximum,
+                                       mean,
+                                       sigma,
+                                       geomean,
+                                       geosigma,
+                                       centroidX,
+                                       centroidY,
+                                       sumI,
+                                       sumI2,
+                                       sumLogI,
+                                       sumXI,
+                                       sumYI,
+                                       sumZI);
+        } finally {
+            finishCall();
+        }
+    }
+
 }
