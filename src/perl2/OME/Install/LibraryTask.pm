@@ -55,7 +55,8 @@ my $REPOSITORY = "http://openmicroscopy.org/packages/source";
 # Default ranlib command
 my $RANLIB= "ranlib";
 
-# Global logfile filehandle
+# Global logfile filehandle and name
+my $LOGFILE_NAME = "LibraryTask.log";
 my $LOGFILE;
 
 # Our basedirs and user which we grab from the environment
@@ -95,7 +96,6 @@ my @libraries = (
 	},
 	valid_versions => ['ge 2.5.7'],
 	repository_file => "$REPOSITORY/libxml2-2.5.7.tar.gz",
-	#installModule => \&LibXMLInstall,
     },{
 	name => 'libxslt',
 	get_library_version => sub {
@@ -110,7 +110,6 @@ my @libraries = (
 	},
 	repository_file => "$REPOSITORY/libxslt-1.0.30.tar.gz",
 	valid_versions => ['ge "1.0.30"'],
-	#installModule => \&LibXSLTInstall,
     },{
 	name => 'bzlib',
 	get_library_version =>
@@ -181,7 +180,6 @@ my @libraries = (
 	},
 	valid_versions => ['ge "3.5.7"'],
 	repository_file => "$REPOSITORY/tiff-v3.5.7-OSX-LZW.tar.gz",
-	#installModule => \&tiffInstall,
     }
 );
 
@@ -230,7 +228,7 @@ sub install {
     $retval = download_package ($library, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to download package, see LibraryTask.log for details."
+        and croak "Unable to download package, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -239,7 +237,7 @@ sub install {
     $retval = unpack_archive ($filename, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to unpack package, see LibraryTask.log for details."
+        and croak "Unable to unpack package, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -255,7 +253,7 @@ sub install {
     $retval = configure_library ($wd, $LOGFILE) unless exists $library->{configure_library};
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to configure library, see LibraryTask.log for details."
+        and croak "Unable to configure library, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -264,7 +262,7 @@ sub install {
     $retval = compile_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile library, see LibraryTask.log for details."
+        and croak "Unable to compile library, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -273,7 +271,7 @@ sub install {
     $retval = install_module ($wd, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to install library, see LibraryTask.log for details."
+        and croak "Unable to install library, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -310,11 +308,11 @@ sub execute {
     
     print_header ("C Library Dependency Setup");
 
-    print "(All verbose information logged in $INSTALL_HOME/LibraryTask.log)\n\n";
+    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
     # Get our logfile and open it for reading
-    open ($LOGFILE, ">", "$INSTALL_HOME/LibraryTask.log")
-	or croak "Unable to open logfile \"$INSTALL_HOME/LibraryTask.log\". $!";
+    open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
+	or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
 
     #*********
     #********* Check each module (exceptions then version)
@@ -323,6 +321,7 @@ sub execute {
     print "Checking libraries\n";
     foreach my $library (@libraries) {
 	print "  \\_ $library->{name}";
+
 	my @error;
 
 	# Pre-install
@@ -389,6 +388,49 @@ sub execute {
 	    }
 	}
     }
+    
+    #*********
+    #********* Return to our initial working directory and then install OME's C binaries
+    #*********
+
+    chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
+
+    print_header ("Core Binary Setup");
+    
+    print "(All verbose information logged in $OME_TMP_DIR/$LOGFILE_NAME)\n\n";
+
+    my $retval = 0;
+
+    print "Installing core binaries\n";
+
+    # XXX: Unneeded at the moment
+    # Configure
+    # print "  \\_ Configuring ";
+    # $retval = configure_module ("src/C/", $LOGFILE);
+    # 
+    #print BOLD, "[FAILURE]", RESET, ".\n"
+    #    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+    #    unless $retval;
+    #print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Compile
+    print "  \\_ Compiling ";
+    $retval = compile_module ("src/C/", $LOGFILE);
+    
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Install
+    print "  \\_ Installing ";
+    $retval = install_module ("src/C/", $LOGFILE);
+
+    print BOLD, "[FAILURE]", RESET, ".\n"
+        and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+        unless $retval;
+    print BOLD, "[SUCCESS]", RESET, ".\n";
+
 
     print "\n";  # Spacing
 
@@ -396,7 +438,8 @@ sub execute {
 }
 
 sub rollback {
-    print "Rollback!\n";
+    croak "Rollback!\n";
 
+    # Just a stub for now
     return 1;
 }
