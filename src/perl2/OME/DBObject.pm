@@ -513,7 +513,7 @@ sub __loadOMEType {
 		$ome_type->require()
 			or die "Error loading package $ome_type.";
 	} elsif( __isSTReference( $ome_type ) ) {
-		my $atype = $proto->Session()->Factory()->findObject("OME::SemanticType", name => substr( $ome_type,1 ) )
+		my $atype = $proto->getFactory()->findObject("OME::SemanticType", name => substr( $ome_type,1 ) )
 			or confess "could not find Semantic Type $ome_type";
 		$ome_type = $atype->requireAttributeTypePackage();
 	} else {
@@ -582,7 +582,7 @@ sub addColumn {
                         return $datum if ref($datum);
                         # This should load the object from the cache if
                         # it's already been retrieved from the DB.
-                        return $self->Session()->Factory()->
+                        return $self->getFactory()->
                           loadObject($foreign_key_class,$datum);
                     }
                 };
@@ -607,7 +607,7 @@ sub addColumn {
                         return $datum if ref($datum);
                         # This should load the object from the cache if
                         # it's already been retrieved from the DB.
-                        return $self->Session()->Factory()->
+                        return $self->getFactory()->
                           loadAttribute($st_name,$datum);
                     }
                 };
@@ -906,7 +906,7 @@ sub hasMany {
 		my $accessor = sub {
 			my $self = shift;
 			my %params = @_;
-			my $factory = $self->Session()->Factory();
+			my $factory = $self->getFactory();
 			return $factory->findObjects($foreign_key_class,
 										 $foreign_key_alias => $self->{__id},
 										 %params);
@@ -914,7 +914,7 @@ sub hasMany {
 		my $counter = sub {
 			my $self = shift;
 			my %params = @_;
-			my $factory = $self->Session()->Factory();
+			my $factory = $self->getFactory();
 			return $factory->countObjects($foreign_key_class,
 										  $foreign_key_alias => $self->{__id},
 										  %params);
@@ -995,7 +995,7 @@ sub manyToMany {
 
             my $self = shift;
             my %params = @_;
-            my $factory = $self->Session()->Factory();
+            my $factory = $self->getFactory();
 
             if (wantarray) {
                 my @links = $factory->
@@ -1024,7 +1024,7 @@ sub manyToMany {
         my $counter = sub {
             my $self = shift;
             my %params = @_;
-            my $factory = $self->Session()->Factory();
+            my $factory = $self->getFactory();
             return $factory->countObjects($map_class,
                                           $map_alias => $self->{__id},
                                           %params);
@@ -1238,7 +1238,7 @@ sub getAccessorReferenceType {
 	# if it's an attribute, return the package name
     if (defined $returnedClass && $returnedClass =~ /^@/) {
 		my $st_name = substr($returnedClass,1);
-		my $factory = $class->Session()->Factory();
+		my $factory = $class->getFactory();
 		my $ST = $factory->findObject("OME::SemanticType",name => $st_name);
 		$returnedClass = $ST->getAttributeTypePackage($st_name);
 	}
@@ -1261,7 +1261,8 @@ defined.
 
 =cut
 
-sub Session { return OME::Session->instance() }
+sub Session { return OME::Session->instance(); }
+sub getFactory { return OME::Session->instance()->Factory(); }
 sub id { return shift->{__id}; }
 sub ID { return shift->{__id}; }
 
@@ -1287,9 +1288,9 @@ sub storeObject {
     my $self = shift;
 
     if (%{$self->{__changedFields}}) {
-        my $session = $self->Session();
-        my $factory = $session->Factory();
-		$factory or confess ("Failure to retrieve factory.");
+        my $factory = $self->getFactory();
+		confess ("Failure to retrieve factory.")
+			unless $factory;
         my $dbh = $factory->obtainDBH();
         eval {
             $self->__writeToDatabase($dbh);
@@ -1320,8 +1321,7 @@ uncommitted changes will not make it into the database.
 sub deleteObject {
     my $self = shift;
 
-    my $session = $self->Session();
-    my $factory = $session->Factory();
+    my $factory = $self->getFactory();
     $factory or confess ("Failure to retrieve factory.");
     my $dbh = $factory->obtainDBH();
     eval {
@@ -1412,7 +1412,7 @@ method in addition to a "refresh" method.)
 sub refresh {
     my ($self) = @_;
     my $id = $self->{__id};
-    my $factory = $self->Session()->Factory();
+    my $factory = $self->getFactory();
 
     my $columns_wanted = [keys %{$self->__columns()}];
 
@@ -1518,7 +1518,7 @@ sub __activateSTColumn ($) {
     my $st_name = substr($def->[2],1);
 
     OME::SemanticType->require();
-    my $factory = OME::Session->instance()->Factory();
+    my $factory = $class->getFactory();
     my $st = $factory->findObject('OME::SemanticType',name => $st_name);
 
     die "Semantic type $st_name not found"
