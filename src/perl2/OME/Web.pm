@@ -33,6 +33,7 @@
 # Written by:    Douglas Creager <dcreager@alum.mit.edu>
 #
 #-------------------------------------------------------------------------------
+
 =head1 NAME
 
 OME::Web - The parent class of OME web pages
@@ -113,8 +114,8 @@ __PACKAGE__->mk_classdata('__Session');
 # IGG 9/18/03:
 # contentType no longer defined as a method in this package
 # to make it easier to modify in subclasses.
-__PACKAGE__->mk_classdata('__contentType');
-__PACKAGE__->__contentType('text/html');
+__PACKAGE__->mk_classdata('contentType');
+__PACKAGE__->contentType('text/html');
 
 my $loginPage = 'OME::Web::Login';
 
@@ -197,7 +198,7 @@ sub User { my $self = shift; return $self->{user}; }
 # So we have this Session accessor/mutator method that can be used from anywhere to read
 # 	and write OME::Web's __Session data.
 sub Session { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__Session( shift ); } return $self->__Session(); }
-sub contentType { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__contentType( shift ); } return $self->__contentType(); }
+#sub contentType { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__contentType( shift ); } return $self->__contentType(); }
 
 # redirectURL
 # -----------
@@ -487,7 +488,6 @@ The script can generate the same effect by calling
   die ('Something really bad happened');
 
 =cut
-
 
 # getPageBody()
 # -------------
