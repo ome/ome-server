@@ -373,13 +373,10 @@ sub store_image_metadata {
 
     # Now, create the real filename.
 
-    my $qual_name = $image->id()."-".$name.".ori";
-
     my $pixels = $session->Factory()->
       newAttribute("Pixels",$image,$module_execution,
                    {
                     Repository => $repository->id(),
-                    Path       => $qual_name,
                     'SizeX' => $href->{'Image.SizeX'},
                     'SizeY' => $href->{'Image.SizeY'},
                     'SizeZ' => $href->{'Image.SizeZ'},
@@ -388,6 +385,13 @@ sub store_image_metadata {
                     'BitsPerPixel' => $href->{'Image.BitsPerPixel'},
                     'PixelType'    => ( $href->{'Image.BitsPerPixel'} eq 8 ? 'int8' : 'int16' )
                    });
+
+    # Modified DC, 07/01/2003
+    # Filename is now based on pixel attribute ID, not image ID
+    # (to allow for more than one Pixels per image)
+    my $qual_name = $pixels->id()."-".$name.".ori";
+    $pixels->Path($qual_name);
+    $pixels->storeObject();
 
 	$image->pixels_id( $pixels->id() ); # hack added by josiah 6/9/03
 
