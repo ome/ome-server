@@ -208,22 +208,6 @@ my %JAVA_TYPES = (
                   integer => 'int',
                  );
 
-my %MDTO_ACCESSORS = (
-                      boolean => 'getBooleanElement',
-                      string  => 'getStringElement',
-                      float   => 'getFloatElement',
-                      double  => 'getDoubleElement',
-                      integer => 'getIntElement',
-                     );
-
-my %MDTO_VALUES = (
-                   boolean => 'new Boolean(value)',
-                   string  => 'value',
-                   float   => 'new Float(value)',
-                   double  => 'new Double(value)',
-                   integer => 'new Integer(value)',
-                  );
-
 sub writeOneSemanticElement ($$) {
     my ($class_desc,$element) = @_;
 
