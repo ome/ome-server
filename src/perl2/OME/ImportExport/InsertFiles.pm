@@ -24,7 +24,9 @@ package OME::ImportExport::InsertFiles;
 
 =head1 NAME
 
-OME::ImportExport::InsertFiles - Package for extracting files from the ome file format
+OME::ImportExport::InsertFiles - Package for inserting files (i.e. Pixel data) 
+into the ome file format. It is the last thing run in the export process if
+data insertion is to occur.
 
 =head1 SYNOPSIS
 
