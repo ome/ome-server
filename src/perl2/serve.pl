@@ -82,7 +82,7 @@ if ($pageClass) {
 	};
 
 	eval {
-		if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
+		if (not $pageClass->isa("OME::Web")) {
 			carp "Package $pageClass does not inherit from OME::Web.";
 			print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
 			      "Package $pageClass does not inherit from OME::Web.";
