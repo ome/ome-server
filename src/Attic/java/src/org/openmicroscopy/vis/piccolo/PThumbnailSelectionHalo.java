@@ -80,10 +80,6 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 		setPickable(v);
 	}
 	
-	public void setPathTo(PBounds b) {
-		super.setPathTo(b);
-		show();
-	}
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = getGlobalFullBounds();
