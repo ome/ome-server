@@ -36,13 +36,18 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $body = "";
-	my $firstName   = $self->User()->firstname();
-	my $lastName    = $self->User()->lastname();
-	my $datasetID   = $self->Session()->Dataset();
-	my $projectID   = $self->Session()->Project();
+	my $session = $self->Session();
+	my $experimenter = $self->User();
+	my $firstName   = $experimenter->firstname();
+	my $lastName    = $experimenter->lastname();
+	my $dataset   = $session->dataset();
+	my $project   = $session->project();
+	my $datasetID;
+	$datasetID = $dataset->ID() if defined $dataset;
 # these Names are stubs.
-	my $projectName = "xxx"; # = function($projectID)
-	my $datasetName = "xxx"; # = function($datasetID)
+	my ($projectName,$datasetName) = ('*** UNDEFINED ***','*** UNDEFINED ***');
+	$projectName = $project->name() if defined $project;
+	$datasetName = $dataset->name() if defined $dataset;
 # maybe add smart sizing of viewer Popupwindow by looking up dimensions of image?
 
 	my ($left, $right);
@@ -53,11 +58,14 @@ sub getPageBody {
 		               height => "77",
 		               border => "0",
 		               alt    => "Cell in mitosis" }));
+		my $viewerLink;
+		$viewerLink = 'Click <a href="javascript:openPopup()">here</a> to view images in this dataset'
+			if defined $dataset;
 	$right = $cgi->td(
 		"Welcome $firstName $lastName<br>",
 		"You are working on project: $projectName<br>",
 		"You are working on dataset: $datasetName<br>",
-		'Click <a href="javascript:openPopup()">here</a> to view images in this dataset' );
+		$viewerLink);
 	$body = $cgi->table(
 		{ cellspacing => 0, cellpadding => 2, border => 0, width=> '100%' },
 		$cgi->Tr( 

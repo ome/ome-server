@@ -34,7 +34,8 @@ sub getPageTitle {
 sub getPageBody {
     my $self = shift;
 
-	$self->setApacheSession();
+	$self->{session} = undef;
+	$self->setSessionCookie();
 
     return ('REDIRECT',$self->pageURL('OME::Web::Login'));
 }

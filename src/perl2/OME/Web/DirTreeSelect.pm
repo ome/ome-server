@@ -29,6 +29,8 @@ use OME::Web;
 use OME::DBObject;
 @ISA = ("OME::Web");
 
+use OME::Tasks::ImageTasks;
+
 sub getPageTitle {
 	return "Select Images (created by OME::Web::DirTreeSelect)";
 }
@@ -48,7 +50,7 @@ sub getPageBody {
 		$selection = $cgi->unescape($selection);
 		if ( not ($selection eq 'action' or $selection eq 'keywords' or $selection eq 'Page' or not $selection)) {
 			push (@selections,$selection);
-			push (@paths,qq/'$rootDir.$selection'/);
+			push (@paths,$rootDir.$selection);
 		}
 	}
 	
@@ -56,9 +58,28 @@ sub getPageBody {
 
 	if (scalar (@selections) > 0) {
 		if ($cgi->param('Import')) {
+			my ($datasetID,$dataset);
+			my $session = $self->Session();
+			my $project = $session->project();
+			my $radioSelect = $cgi->param('DoDatasetType');
+			if ($radioSelect eq 'addNewDataset') {
+				$dataset = $project->newDataset($cgi->param('newDataset'));
+				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
+			} elsif ($radioSelect eq 'addExistDataset') {
+				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
+				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
+			}
 # magic line to import:
-# OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
-
+			if ($dataset) {
+print STDERR "Importing images: @paths\n\tinto Dataset '".$dataset->name()."'.\n";
+				$dataset->writeObject();
+			    my $status = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
+				die $status if $status;
+				$dataset->writeObject();
+				$project->writeObject();
+				$session->dataset($dataset);
+				$session->writeObject();
+			}
 			my $datasetIDs;# = ImportSelections(\@paths);
 		# We want to commit the imported projects no matter what errors we get while doing the extra stuff that follows.
 #			$OME->Commit();
@@ -95,24 +116,28 @@ my $cgi = $self->CGI();
 
 # Stub: this needs to be an array of dataset names for the user to
 #       "Add imported images to existing dataset"
-my $datasetNames;
+my $project = $self->Session()->project();
+my @datasets = $project->unlockedDatasets() if defined $project;
+my %datasetHash  = map { $_->ID() => $_->name()} @datasets if @datasets > 0;;
 my $text = '';
 
 	$text .= "\n".$cgi->startform;
 	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Import',-value=>'Import Selected Files/Folders')."\n</CENTER>\n";
 
-	# this sets default datasetName
+	# this sets default datasetName to the last directory path
 	my @pathElements = split ('/',$recentSelection);
-	my $datasetName = $pathElements[$#pathElements];
+	my $datasetName = $pathElements[$#pathElements-1];
+	my ($key, $value,$defaultDatasetID);
+	while (($key, $value) = each %datasetHash) {
+		$defaultDatasetID = $key if $value eq $datasetName;
+	}
+	
 	my $defaultRadio = 'addNewDataset';
-	my %datasetHash;
-	foreach (@$datasetNames) {$datasetHash{$_} = 1};
-	$defaultRadio = 'addExistDataset' if (exists $datasetHash{$datasetName});
+	$defaultRadio = 'addExistDataset' if $defaultDatasetID;
 	my $newDatasetName = '';
-	$newDatasetName = $datasetName unless (exists $datasetHash{$datasetName});
-	my $existDatasetName;
-	$existDatasetName = $datasetName if (exists $datasetHash{$datasetName});
-
+	$newDatasetName = $datasetName unless $defaultDatasetID;
+	$defaultDatasetID = $self->Session()->dataset()->ID() unless $defaultDatasetID;
+	
 	$text .= "<BLOCKQUOTE>\n";
 	my @datasetRadios = $cgi->radio_group(-name=>'DoDatasetType',
 				-values => ['addNewDataset','addExistDataset'],
@@ -124,7 +149,7 @@ my $text = '';
 			);
 
 	$text .= '	'.$datasetRadios[0]."\n	".$cgi->textfield(-name=>'newDataset', -size=>32,-default=>$newDatasetName)."<BR>\n";
-	$text .= '	'.$datasetRadios[1]."\n	".$cgi->popup_menu(-name=>'addDataset',-values=>$datasetNames,-default=>$existDatasetName)."<BR>\n";
+	$text .= '	'.$datasetRadios[1]."\n	".$cgi->popup_menu(-name=>'addDataset',-values=>\%datasetHash,-default=>$defaultDatasetID)."<BR>\n";
 
 	$text .= "</BLOCKQUOTE>\n";
 

@@ -47,53 +47,52 @@ sub getPageBody {
     my $body = "";
 
     if ($cgi->param('execute')) {
-	# results submitted, try to log in
+    # results submitted, try to log in
 
-	my $session = $self->Manager()->createSession($cgi->param('username'),
-						      $cgi->param('password'));
-	if (defined $session) {
+    my $session = $self->Manager()->createSession($cgi->param('username'),
+                              $cgi->param('password'));
+    if (defined $session) {
 print STDERR "\nin Login, session is defined\n\n";
-		$self->setApacheSession( username => $cgi->param('username'),
-		                         password => $cgi->param('password') );
-		
-	    return ('REDIRECT',$self->pageURL('OME::Web::Home'));
- 	} else {
-	    $body .= $cgi->h3("Invalid login");
-	    $body .= $cgi->p("The username and password you entered doesn't match an experimenter in the system.  Please try again.");
-	    $body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
-	    $body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
-	    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-			      $cgi->td($cgi->b("Username"),
-				       $cgi->textfield(-name => 'username',
-						       -size => 25)));
-	    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-			      $cgi->td($cgi->b("Password"),
-				   $cgi->password_field(-name => 'password',
-							-size => 25)));
-	    $body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
-			      $cgi->td({-colspan => 2},
-				       $cgi->submit({-name  => 'execute',
-						     -value => 'OK'})));
-	    $body .= $cgi->end_table;
-	}
+        $self->{session} = $session;
+        $self->setSessionCookie();
+        return ('REDIRECT',$self->pageURL('OME::Web::Home'));
     } else {
-	$body .= $cgi->h3("Login");
-	$body .= $cgi->p("Please enter your username and password.");
-	$body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
-	$body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
-	$body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-			  $cgi->td($cgi->b("Username"),
-				   $cgi->textfield(-name => 'username',
-						   -size => 25)));
-	$body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-			  $cgi->td($cgi->b("Password"),
-				   $cgi->password_field(-name => 'password',
-							-size => 25)));
-	$body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
-			  $cgi->td({-colspan => 2},
-				   $cgi->submit({-name  => 'execute',
-						 -value => 'OK'})));
-	$body .= $cgi->end_table;
+        $body .= $cgi->h3("Invalid login");
+        $body .= $cgi->p("The username and password you entered doesn't match an experimenter in the system.  Please try again.");
+        $body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
+        $body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
+        $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+                  $cgi->td($cgi->b("Username"),
+                       $cgi->textfield(-name => 'username',
+                               -size => 25)));
+        $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+                  $cgi->td($cgi->b("Password"),
+                   $cgi->password_field(-name => 'password',
+                            -size => 25)));
+        $body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
+                  $cgi->td({-colspan => 2},
+                       $cgi->submit({-name  => 'execute',
+                             -value => 'OK'})));
+        $body .= $cgi->end_table;
+    }
+    } else {
+    $body .= $cgi->h3("Login");
+    $body .= $cgi->p("Please enter your username and password.");
+    $body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
+    $body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
+    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+              $cgi->td($cgi->b("Username"),
+                   $cgi->textfield(-name => 'username',
+                           -size => 25)));
+    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+              $cgi->td($cgi->b("Password"),
+                   $cgi->password_field(-name => 'password',
+                            -size => 25)));
+    $body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
+              $cgi->td({-colspan => 2},
+                   $cgi->submit({-name  => 'execute',
+                         -value => 'OK'})));
+    $body .= $cgi->end_table;
     }
 
     return ('HTML',$body);
