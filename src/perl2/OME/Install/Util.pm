@@ -37,8 +37,9 @@ use strict;
 use warnings;
 use English;
 use Carp;
+use Cwd;
 use File::Copy;
-use Term::ANSIColor qw(:constants);
+use File::Basename;
 
 require Exporter;
 
@@ -48,7 +49,18 @@ require Exporter;
 
 # Exporter details
 our @ISA = qw(Exporter);
-our @EXPORT = qw(add_user add_group delete_tree copy_tree get_module_version);
+our @EXPORT = qw(add_user
+		 add_group
+		 delete_tree
+		 copy_tree
+		 get_module_version
+		 download_module
+		 unpack_archive
+		 configure_module
+		 compile_module
+		 test_module
+		 which
+		 );
 
 # Distribution detection
 #        if (-e "/etc/debian_version") {
@@ -427,10 +439,188 @@ sub get_module_version {
 
     eval($eval);
 
-    # Populate the errors back to the caller
-    #$! = $@ if $@;
-
     return $version ? $version : undef;
 }
 
+sub download_module {
+    my ($module, $logfile) = @_;
+    my $module_url = $module->{repository_file};
+    my $downloader;
+
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+    # Find a useable download app (curl|wget)
+    $downloader = "wget -nv -N" if which ("wget");
+    $downloader = "curl -O" if which ("curl");
+    croak "Unable to find a valid downloader for module \"$module->{name}\"."
+	unless $downloader;
+
+
+    my @output = `$downloader $module_url 2>&1`;
+    
+    if ($? == 0) {
+	print $logfile "SUCCESS DOWNLOADING MODULE -- OUTPUT FROM DOWNLOADER \"$downloader\": \"@output\"\n\n";
+
+	return 1;
+    }
+    
+    print $logfile "ERRORS DOWNLOADING MODULE -- OUTPUT FROM DOWNLOADER \"$downloader\": \"@output\"\n\n";
+
+    return 0;
+}
+
+sub unpack_archive {
+    my ($archive_path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+    my ($filename, $dir);
+
+    if ($archive_path =~ '/') {
+	($filename, $dir) = fileparse ("$archive_path");
+    } else {
+	$filename = $archive_path;
+	$dir = "./";
+    }
+
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+    chdir ($dir) or croak "Unable to chdir into \"$dir\". $!";
+
+    #system ("pwd");
+    #print "Execution: tar zxf $filename 2>&1\n";
+    #system ("ls -al");
+
+    my @output = `tar zxf $filename 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS EXTRACTING $dir","$filename\n\n";
+
+	chdir ($iwd);
+	return 1;
+    } 
+
+    print $logfile "FAILURE EXTRACTING $dir","$filename -- OUTPUT FROM TAR: \"@output\"\n\n";
+
+    chdir ($iwd);
+
+    return 0;
+}
+
+sub configure_module {
+    my ($path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `perl Makefile.PL 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd);
+	return 1;
+    }
+
+    print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd);
+
+    return 0;
+}
+
+sub compile_module {
+    my ($path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `make 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd);
+	return 1;
+    }
+    
+    print $logfile "FAILURE COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd);
+
+    return 0;
+}
+
+sub test_module {
+    my ($path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `make test 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd);
+	return 1;
+    }
+
+    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd);
+
+    return 0;
+}
+
+
+# Ported from FreeBSD's /usr/bin/which
+#
+# Copyright (c) 1995 Wolfram Schneider <wosch@FreeBSD.org>. Berlin.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+
+# Implements the standard "which" functionality, searching the path for a
+# certain binary.
+#
+# RETURNS	The absolute path to the binary or 0 if nothing is found
+#
+
+sub which {
+    my $prog = shift;
+
+    my @path = split(/:/, $ENV{'PATH'});
+    if ($ENV{'PATH'} =~ /:$/) {
+        $#path = $#path + 1;
+        $path[$#path] = "";
+    }
+
+    if ("$prog" =~ '/' && -x "$prog" && -f "$prog") {
+        return $prog;
+    } else {
+        foreach my $dir (@path) {
+            $dir = "." if !$dir;
+            if (-x "$dir/$prog" && -f "$dir/$prog") {
+                return "$dir/$prog\n";
+            }
+        }
+    }
+
+    return 0;
+}
 1;
