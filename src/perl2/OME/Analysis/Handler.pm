@@ -74,9 +74,6 @@ use Benchmark qw(timediff timesum timestr);
 use fields qw(_location _session _node _output_types _untyped_output
               _module _formal_inputs _formal_outputs _module_execution
               _inputs_by_granularity
-              _current_dataset _current_image _current_feature
-              _global_inputs _dataset_inputs _image_inputs _feature_inputs
-              _global_outputs _dataset_outputs _image_outputs _feature_outputs
               _global_outputs_allowed
               _last_new_feature);
 
@@ -95,7 +92,7 @@ not work without the variables assigned by this method.
 =cut
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
@@ -103,6 +100,7 @@ sub new {
     $self->{_session} = $session;
     $self->{_module} = $module;
     $self->{_node} = $node;
+    $self->{_chain_execution} = $chain_execution;
 
     # Hash the formal inputs by name and by granularity, so they can
     # be accessed quickly.  At the same time, determine whether or not
@@ -182,35 +180,6 @@ sub Session {
 sub Factory {
     my ($self) = @_;
     return $self->{_session}->Factory();
-}
-
-=head2 getCurrentDataset, getCurrentImage, and getCurrentFeature
-
-	my $dataset = $handler->getCurrentDataset();
-	my $image = $handler->getCurrentImage();
-	my $feature = $handler->getCurrentFeature();
-
-These methods can be used by Handler subclasses during the execution
-of the analysis module.  They return the dataset, image, and feature
-that is currently being analyzed by the module.  As the module
-progresses through the methods defined by the Module interface, the
-values these methods return are automatically updated.
-
-=cut
-
-sub getCurrentDataset {
-    my ($self) = @_;
-    return $self->{_current_dataset};
-}
-
-sub getCurrentImage {
-    my ($self) = @_;
-    return $self->{_current_image};
-}
-
-sub getCurrentFeature {
-    my ($self) = @_;
-    return $self->{_current_feature};
 }
 
 =head2 getFormalInput and getFormalOutput
@@ -533,7 +502,6 @@ sub newAttributes {
                                                        $self->{_module_execution},
                                                        @new_attribute_info);
 
-    $self->__saveAttributes($attributes);
     return $attributes;
 }
 
@@ -654,176 +622,9 @@ sub newAttributesWithTargets {
                                                        $self->{_module_execution},
                                                        @new_attribute_info);
 
-    $self->__saveAttributes($attributes);
     return $attributes;
 }
 
-# A helper method used to save any attributes created by the analysis module.
-
-sub __saveAttributes {
-    my ($self,$attributes) = @_;
-    my $formal_outputs = $self->{_output_types};
-
-    foreach my $attribute (@$attributes) {
-        my $semantic_type = $attribute->_attribute_type();
-        my $formal_output = $formal_outputs->{$semantic_type->id()};
-        if (!defined $formal_output) {
-            # There is no typed formal output for this attribute type,
-            # so we must use the untyped formal output.  If there is no
-            # untyped formal output, this is an error.  This error
-            # should have been caught by now, so this is would be a
-            # double-secret-bad error.
-            $formal_output = $self->{_untyped_output};
-            die "Can't find formal output in __saveAttributes"
-              unless defined $formal_output;
-        }
-        my $foID = $formal_output->id();
-        my $foName = $formal_output->name();
-        my $granularity = $semantic_type->granularity();
-
-        # Save this new attribute as an actual output of the
-        # appropriate formal output.  The
-        # collect[Dataset/Image/Feature]Outputs method will return
-        # these lists, so subclasses using this method will
-        # automatically fulfill that part of the contract.
-
-        #print STDERR "--- $formal_output_name $granularity\n";
-
-        my $target_id = $attribute->target_id();
-
-        if ($granularity eq 'G') {
-            $self->{_global_outputs}->{$foName}++;
-        } elsif ($granularity eq 'D') {
-            $self->{_dataset_outputs}->{$foName}->{$target_id}++;
-        } elsif ($granularity eq 'I') {
-            $self->{_image_outputs}->{$foName}->{$target_id}++;
-        } elsif ($granularity eq 'F') {
-            $self->{_feature_outputs}->{$foName}->{$target_id}++;
-        }
-    }
-}
-
-
-# Checks a hash of inputs to make sure that they match the cardinality
-# constraints specified by the appropriate formal input.
-
-sub __checkInputParameters {
-    my ($self, $params, $granularity) = @_;
-
-    foreach my $param (@{$self->{_inputs_by_granularity}->{$granularity}}) {
-        my $formal_input_name = $param->name();
-        my $semantic_type = $param->semantic_type();
-
-        my $optional = $param->optional();
-        my $list = $param->list();
-
-        # Don't bother checking if there are no constraints.
-        next if ($optional && $list);
-
-        my $values = $params->{$formal_input_name};
-        my $cardinality = (defined $values)? scalar(@$values): 0;
-
-        die "$formal_input_name is not optional"
-          if (($cardinality == 0) && (!$optional));
-
-        die "$formal_input_name cannot be a list"
-          if (($cardinality > 1) && (!$list));
-    }
-}
-
-# Checks a hash of outputs to make sure that they match the cardinality
-# constraints specified by the appropriate formal output.  Note that the
-# output attributes are not actually saved, just a count of them.
-
-sub __checkOutputParameters {
-    my ($self, $params, $granularity) = @_;
-
-    foreach my $param (@{$self->{_outputs_by_granularity}->{$granularity}}) {
-        my $formal_output_name = $param->name();
-        my $semantic_type = $param->semantic_type();
-
-        # We don't check untyped outputs.  They can be anything.
-        next if
-          (!defined $semantic_type);
-
-        my $optional = $param->optional();
-        my $list = $param->list();
-
-        # Don't bother checking if there are no constraints.
-        next if ($optional && $list);
-
-        my $values = $params->{$formal_output_name};
-
-        if ($granularity eq 'G') {
-            # For global outputs, the $params input is a hash a la:
-            # $params->{$formal_output_name} => $cardinality
-
-            my $cardinality = $values || 0;
-
-            #print STDERR "      $formal_output_name ($cardinality)\n";
-
-            die "$formal_output_name is not optional"
-              if (($cardinality == 0) && (!$optional));
-
-            die "$formal_output_name cannot be a list"
-              if (($cardinality > 1) && (!$list));
-        } else {
-            # For all other outputs, the $params input is a hash a la:
-            # $params->{$formal_output_name}->{$target_id} => $cardinality
-
-            foreach my $target_id (keys %$values) {
-                my $cardinality = $values->{$target_id} || 0;
-
-                #print STDERR "      $formal_output_name $granularity$target_id ($cardinality)\n";
-
-                die "$formal_output_name is not optional"
-                  if (($cardinality == 0) && (!$optional));
-
-                die "$formal_output_name cannot be a list"
-                  if (($cardinality > 1) && (!$list));
-            }
-        }
-
-    }
-}
-
-=head2 Module interface methods
-
-	$handler->startAnalysis($module_execution);
-	$handler->globalInputs($global_input_hash);
-	$handler->precalculateGlobal();
-	$handler->startDataset($dataset);
-	$handler->datasetInputs($dataset_input_hash);
-	$handler->precalculateDataset();
-	$handler->startImage($image);
-	$handler->imageInputs($image_input_hash);
-	$handler->precalculateImage();
-	$handler->startFeature($feature);
-	$handler->featureInputs($feature_input_hash);
-	$handler->calculateFeature();
-	my $feature_output_hash = $handler->collectFeatureOutputs();
-	$handler->finishFeature();
-	$handler->postcalculateImage();
-	my $image_output_hash = $handler->collectImageOutputs();
-	$handler->finishImage();
-	$handler->postcalculateDataset();
-	my $dataset_output_hash = $handler->collectDatasetOutputs();
-	$handler->finishDataset();
-	$handler->postcalculateGlobal();
-	my $global_output_hash = $handler->collectGlobalOutputs();
-	$handler->finishAnalysis();
-
-These are the methods defined by the Module interface.  Handler
-subclasses should override the precalculateGlobal,
-precalculateDataset, precalculateImage, calculateFeature,
-postcalculateImage, postcalculateDataset, and postcalculateGlobal
-methods to delegate to the module in question.  The other methods
-maintain the internal state of the Handler superclass, and should not
-be overridden.  Subclasses can use the accessors and methods described
-above to access the current state of the module and to create outputs
-as it progresses through these interface methods.
-
-=cut
 
 sub startAnalysis {
     my ($self,$module_execution) = @_;
@@ -831,153 +632,22 @@ sub startAnalysis {
     OME::SemanticType->__resetTiming();
 }
 
-sub globalInputs {
-    my ($self,$inputHash) = @_;
-    $self->__checkInputParameters($inputHash,'G');
-    $self->{_global_inputs} = $inputHash;
-}
-
-sub precalculateGlobal {
-    my ($self) = @_;
-}
-
-sub startDataset {
-    my ($self,$dataset) = @_;
-    $self->{_current_dataset} = $dataset;
-}
-
-
-sub datasetInputs {
-    my ($self,$inputHash) = @_;
-    $self->__checkInputParameters($inputHash,'D');
-    $self->{_dataset_inputs} = $inputHash;
-}
-
-
-sub precalculateDataset {
-    my ($self) = @_;
-}
-
-
-sub startImage {
-    my ($self,$image) = @_;
-    $self->{_current_image} = $image;
-}
-
-
-sub imageInputs {
-    my ($self,$inputHash) = @_;
-    $self->__checkInputParameters($inputHash,'I');
-    $self->{_image_inputs} = $inputHash;
-}
-
-sub precalculateImage {
-    my ($self) = @_;
-}
-
-
-sub startFeature {
-    my ($self,$feature) = @_;
-    $self->{_current_feature} = $feature;
-}
-
-
-sub featureInputs {
-    my ($self,$inputHash) = @_;
-    $self->__checkInputParameters($inputHash,'F');
-    $self->{_feature_inputs} = $inputHash;
-}
-
-
-sub calculateFeature {
-    my ($self) = @_;
-}
-
-
-sub collectFeatureOutputs {
-    my ($self) = @_;
-    my $hash = $self->{_feature_outputs};
-    $self->__checkOutputParameters($hash,'F');
-    return 1;
-}
-
-
-sub finishFeature {
-    my ($self) = @_;
-    $self->{_current_feature} = undef;
-    $self->{_feature_inputs} = undef;
-}
-
-
-sub postcalculateImage {
-    my ($self) = @_;
-}
-
-
-sub collectImageOutputs {
-    my ($self) = @_;
-    my $hash = $self->{_image_outputs};
-    $self->__checkOutputParameters($hash,'I');
-    return 1;
-}
-
-
-sub finishImage {
-    my ($self) = @_;
-    $self->{_current_image} = undef;
-    $self->{_image_inputs} = undef;
-    $self->{_feature_outputs} = undef;
-}
-
-
-sub postcalculateDataset {
-    my ($self) = @_;
-}
-
-
-sub collectDatasetOutputs {
-    my ($self) = @_;
-    my $hash = $self->{_dataset_outputs};
-    $self->__checkOutputParameters($hash,'D');
-    return 1;
-}
-
-
-sub finishDataset {
-    my ($self) = @_;
-    $self->{_current_dataset} = undef;
-    $self->{_dataset_inputs} = undef;
-    $self->{_image_outputs} = undef;
-
-    #print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
-    #    if exists $self->{_timing};
-}
-
-
-sub postcalculateGlobal {
-    my ($self) = @_;
-}
-
-sub collectGlobalOutputs {
-    my ($self) = @_;
-    my $hash = $self->{_global_outputs};
-    $self->__checkOutputParameters($hash,'G');
-    return 1;
+sub execute {
+    my ($self,$dependence,$target,$inputs) = @_;
+    die "OME::Analysis::Handler->execute is abstract";
 }
 
 sub finishAnalysis {
     my ($self) = @_;
-    $self->{_dataset_outputs} = undef;
-    $self->{_global_outputs} = undef;
 
     my $module_execution = $self->{_module_execution};
     return unless defined $module_execution;
+    $module_execution->status('FINISHED');
     $module_execution->attribute_sort_time(OME::SemanticType->__getSeconds('_sortTime'));
     $module_execution->attribute_db_time(OME::SemanticType->__getSeconds('_dbTime'));
     $module_execution->attribute_create_time(OME::SemanticType->__getSeconds('_createTime'));
     $module_execution->storeObject();
 }
-
 
 =head1 AUTHOR
 
