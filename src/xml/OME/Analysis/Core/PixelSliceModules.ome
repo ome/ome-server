@@ -158,7 +158,7 @@
         </FormalInput>
         <FormalInput
            Name="Timepoint indices"
-           SemanticTypeName="PixelsTimepointIndex"
+           SemanticTypeName="PixelsTimeIndex"
            Count="*">
           <Description>
             [Optional] If specified, it limits which timepoints in the
