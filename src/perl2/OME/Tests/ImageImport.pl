@@ -36,14 +36,11 @@
 #-------------------------------------------------------------------------------
 
 
-use OME::Image;
-use OME::Dataset;
-use OME::Project;
 use OME::Session;
 use OME::SessionManager;
 use OME::Tasks::ImageTasks;
-use OME::Project;
 use OME::Tasks::DatasetManager;
+use Log::Agent;
 
 use Benchmark qw(timediff timestr);
 
