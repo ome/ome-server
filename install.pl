@@ -103,12 +103,13 @@ if ($fast) { $skipPasswordCheck 	= 1;
 if ($help) { usage() }
 
 # PreInstall
-eval ("OME::Install::PreInstallTask::execute");
+OME::Install::PreInstallTask::execute();
 
 # Run our tasks
 foreach my $task (@tasks) {
-    eval ("require $task");
-    $task .= "::execute";
+    eval "use $task";
+    print "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+    $task .= "::execute()";
     eval ($task);
 }
 
