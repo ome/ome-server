@@ -172,7 +172,6 @@ $name=window.open(
 OMEfile,
 "$name",
 "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-return false;
 }
 -->
 </script>
