@@ -38,7 +38,6 @@ use Carp;
 use English;
 use Cwd;
 use Sys::Hostname;
-use MIME::Base64;
 use Term::ANSIColor qw(:constants);
 use File::Basename;
 use File::Path;
@@ -484,10 +483,9 @@ sub init_configuration {
 
     # The DB instance uniquely identifies this specific DB instance on this machine
     # Can only make one per second - sorry.
-    # There are two punctuation characters in base64: '/' and '+' (no '=' here b/c of trunctation)
-    # substitute '/' with something safer - '_'.
-    my $db_instance = substr (encode_base64(pack ('N',time()),''),0,6);
-    $db_instance =~ s/\//_/g;
+    # This is the integer returned by time() converted to a base32 string.
+
+    my $db_instance = to_base ([0..9,'a'..'z','A'..'Z'],time());
 
     # The MAC address local to the system (the first one)
     # This is portable since it's using OME::Install::Util, if you're having trouble with this
@@ -511,6 +509,23 @@ sub init_configuration {
     $factory->commitTransaction();
     $factory->closeFactory();
     return 1;
+}
+
+
+# Shamelessly stolen from Math::BaseCalc by Ken Williams, ken@forum.swarthmore.edu
+sub to_base {
+	my ($digits,$num) = @_;
+	return '-'.to_base(-1*$num) if $num<0; # Handle negative numbers
+	
+	my $dignum = @{$digits};
+	
+	my $result = '';
+	while ($num>0) {
+		substr($result,0,0) = $digits->[ $num % $dignum ];
+		$num = int ($num/$dignum);
+		#$num = (($num - ($num % $dignum))/$dignum);  # An alternative to the above
+	}
+	return length $result ? $result : $digits->[0];
 }
 
 
