@@ -143,6 +143,7 @@ public class ClientTabs extends JTabbedPane {
 			  System.err.println("  resolves to dataset: "+d);
 			  ourClient.SummarizeDataset(d);
 			  ourClient.getTabPanel().updateDataset(accessor.getActiveProject());
+			  ourClient.getTabPanel().updateChains(d);
 			}
 		    }
 		}
@@ -227,7 +228,6 @@ public class ClientTabs extends JTabbedPane {
 	Iterator dsI = dsList.iterator();
 	//Iterator dsI = project.iterateDatasets();
 	Vector names = new Vector();
-	System.err.println("  ---updateDataset for "+project.getName());
 	while (dsI.hasNext()) {
 	    ds = (Dataset)dsI.next();
 	    //System.err.println("   dataset: " + ds.getName());
@@ -248,7 +248,6 @@ public class ClientTabs extends JTabbedPane {
 	java.util.List imList = dataset.getImages();
 	Iterator imI = imList.iterator();
 	Vector names = new Vector();
-	System.err.println("  ---updateImage for "+dataset.getName());
 	while (imI.hasNext()) {
 	    im = (org.openmicroscopy.Image)imI.next();
 	    System.err.println("   image: " + im.getName());
@@ -270,11 +269,7 @@ public class ClientTabs extends JTabbedPane {
 	//java.util.List chList = dataset.getChains();
 	Iterator chI = chV.iterator();
 	Vector names = new Vector();
-	System.err.println("  ---updateChain for "+dataset.getName());
 	while (chI.hasNext()) {
-	    //ch = (org.openmicroscopy.Chain)chI.next();
-	    //System.err.println("   chain: " + ch.getName());
-	    //names.add(ch.getName());
 	    names.add(chI.next());
 	}
 	chainSelect.setListData(names);
