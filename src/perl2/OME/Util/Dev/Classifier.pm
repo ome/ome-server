@@ -209,6 +209,7 @@ sub compile_sigs {
 	my $dataset = $factory->loadObject( "OME::Dataset", $dataset_id )
 		or die "Cannot find a dataset with id = $dataset_id";
 	my @images = $dataset->images;
+	@images = sort {$a->id <=> $b->id} @images;
 	
 	# collect image classifications.
 	logdbg "debug", "collecting image classifications.";
@@ -269,8 +270,8 @@ sub compile_sigs {
 	
 	# load the signature outputs for each image
 	my $row = 0;
-	foreach my $image ( sort {$a->id <=> $b->id} @images ) {
-		my @signature_entries = $factory->findAttributes( "SignatureVectorEntry", 
+	foreach my $image ( @images ) {
+		my $signature_entry_iterator = $factory->findAttributes( "SignatureVectorEntry", 
 			module_execution => $stitcher_mex,
 			image            => $image
 		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
@@ -284,11 +285,11 @@ sub compile_sigs {
 			}
 		);
 		# set the image's signature vector
-		foreach my $sig_entry( @signature_entries ) {
+		while (my $sig_entry = $signature_entry_iterator->next()) {
 			$signature_array->set( 
 				$row, 
-				($sig_entry->Legend->VectorPosition + 1),
-				$sig_entry->Value
+				($sig_entry->Legend->VectorPosition() + 1),
+				$sig_entry->Value()
 			);
 		}
 	}
@@ -300,8 +301,8 @@ sub compile_sigs {
 	$output_file_name .= '.mat' unless $output_file_name =~ m/\.mat$/;
 	$engine->eval("global signature_vector");
 	$engine->putVariable('signature_vector',$signature_array);
-	$engine->eval( "save $output_file_name signature_vector" );
-	print "Saved signature vector to file $output_file_name.";
+	$engine->eval( "save $output_file_name signature_vector;" );
+	print "Saved signature vector to file $output_file_name.\n";
 	$engine->close();
 	$engine = undef;
 }	
