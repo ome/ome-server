@@ -156,6 +156,11 @@ index1 = '/perl2/serve.pl?Page=OME::Web::Home';
 index2 = '/perl2/serve.pl?Page=OME::Web::Home&Float=true';
 index3 = '/html/noOp.html';
 
+// Break out of any frames.
+if (top.location != location) {
+	top.location.href = document.location.href ;
+}
+
 function updatePage(page) {
 	if(page == null) 
 		page = '/html/noOp.html';
