@@ -65,7 +65,7 @@ import java.util.Vector;
  * @version 2.1
  * @since OME2.1
  */
-public class PChain extends PNode implements PBufferedNode {
+public class PChain extends PNode implements PBufferedObject {
 
 	/**
 	 * The Chain to be rendered
@@ -145,20 +145,7 @@ public class PChain extends PNode implements PBufferedNode {
 		linkLayer.moveToFront();
 		
 	}
-	
-	public int compareTo(Object o) {
-		if (o instanceof PBufferedNode) {
-			PBufferedNode node = (PBufferedNode) o;
-			double myArea = getHeight()*getWidth();
-			PBounds bounds = node.getBufferedBounds();
-			double nodeArea = bounds.getHeight()*bounds.getWidth();
-			int res =(int) (myArea-nodeArea);
-			return res;
-		}
-		else
-			return -1;
-	}
-	
+		
 	public PBounds getBufferedBounds() {
 		PBounds b = getGlobalFullBounds();
 		return new PBounds(b.getX()-PConstants.BORDER,
