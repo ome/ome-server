@@ -75,16 +75,20 @@ sub _takeAction {
 	my $image_ids = $q->param( 'images_to_categorize' );
 	if( $image_ids ) {
  		foreach my $image_id ( split( m',', $image_ids ) ) {
- 			# Don't add this image if it belongs to another image in this Category Group
- 			my @other_classifications = $factory->findObjects( '@Classification', {
- 				image                           => $image_id,
-				'module_execution.experimenter' => $session->User(),
+ 			# Don't add this image if it belongs to another image in this Category Group.
+ 			# Don't bother searching if there are no other categories in this group.
+ 			my @other_classifications = ( scalar ( @other_categories_in_this_group ) > 0 ?
+				$factory->findObjects( '@Classification', {
+					image                           => $image_id,
+					'module_execution.experimenter' => $session->User(),
 # for some unknown reason, this next parameter consistently fails with
 # "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
 # so i'll ignore it and grep it out at the next step
-#				Valid                           => [ "is not", 0 ],
-				Category                        => [ 'in', [ @other_categories_in_this_group] ]
-			} );
+#					Valid                           => [ "is not", 0 ],
+					Category => [ 'in', [ @other_categories_in_this_group] ]
+				} ) :
+				()
+			);
 			@other_classifications = grep( (not defined $_->Valid || $_->Valid != 0 ), @other_classifications );
 			if( @other_classifications ) {
 	 			$message .= "<font color='red'>Cannot add image ".
@@ -95,15 +99,20 @@ sub _takeAction {
  				next;
  			}
  			
+			my $image = $factory->loadObject( 'OME::Image', $image_id )
+				or die "Couldn't load image id=$image_id";
  			# skip if the image has already been classified with this classification
- 			next if $factory->findObject( '@Classification', {
+ 			if( $factory->findObject( '@Classification', {
 				Category => $obj,
 				image    => $image_id,
 				'module_execution.experimenter' => $session->User()
-			} );
-			my $image = $factory->loadObject( 'OME::Image', $image_id )
-				or die "Couldn't load image id=$image_id";
-			OME::Tasks::AnnotationManager->
+			} ) ) {
+	 			$message .= "<font color='red'>Cannot add image ".
+	 				$self->Renderer()->render( $image, 'ref' ).
+ 					" to this category because it already belongs to this category.</font><br>";
+ 				next;
+			}
+			my ( $mex, $attrs ) = OME::Tasks::AnnotationManager->
 				annotateImage( $image, 'Classification', { Category => $obj } );
 		}
  		$session->commitTransaction();
