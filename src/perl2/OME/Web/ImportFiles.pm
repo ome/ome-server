@@ -41,6 +41,7 @@ package OME::Web::ImportFiles;
 #*********
 #********* INCLUDES
 #*********
+
 use strict;
 use warnings;
 use vars qw($VERSION);
@@ -91,7 +92,7 @@ sub __resolveQueue {
 
 	for (my $i = 0; $i <= scalar(@$queue); ++$i) {
 		if (-d $queue->[$i]) {
-			# Splice of the directory
+			# Splice off the directory
 			my $dir = splice(@$queue, $i, 1);
 
 			# Push its contents
@@ -105,7 +106,6 @@ sub __resolveQueue {
 	# No changes
 	return 0;
 }
-
 
 # De-taint sub for FTP style
 sub __detaintPaths {
@@ -174,7 +174,6 @@ sub __getDatasetForm {
 		value => 'existing',
 		checked => 'checked',
 	};
-
 
 	if ($new_or_existing eq 'existing') {
 		delete($new_button_data->{checked});
@@ -255,7 +254,6 @@ sub __getDatasetForm {
 			),
 		),
 	);
-
 
 	my $border_table = $q->table( {
 			-class => 'ome_table',
@@ -399,7 +397,6 @@ sub __getQueueBody {
 
 	$body .= $q->startform({name => 'datatable'});
 
-
 	# Import queue *hidden*
 	$body .= $q->hidden({name => 'import_queue', default => \@importq});
 
@@ -418,7 +415,11 @@ sub __getQueueBody {
 			parent_pagelink => $self->pageURL(ref($self)),
 			parent_form => '1',
 			traverse => '1',
-			options_row => ["Add to Queue"],
+			options_row => [
+				'Add to Queue',
+				['Select All', 'javascript:selectAllCheckboxes(\'add_selected\');'],
+				['Reset', 'javascript:deselectAllCheckboxes(\'add_selected\');'],
+			],
 		}, $path_dir);
 	my $dir_list_header = $self->__getDirListHeader($path_dir);
 
@@ -428,7 +429,11 @@ sub __getQueueBody {
 			select_name => 'q_selected',
 			parent_pagelink => $self->pageURL(ref($self)),
 			parent_form => '1',
-			options_row => ["Remove from Queue"],
+			options_row => [
+				'Remove from Queue',
+				['Select All', 'javascript:selectAllCheckboxes(\'q_selected\');'],
+				['Reset', 'javascript:deselectAllCheckboxes(\'q_selected\');'],
+			],
 		}, @importq);
 	my $importq_header = $q->p({-class => 'ome_title', -align => 'center'}, 'Import Queue');
 
@@ -565,11 +570,9 @@ sub __getImportBody {
 	return $body;
 }
 
-
 #*********
 #********* PUBLIC METHODS
 #*********
-
 
 # Override's OME::Web
 sub getPageTitle {
