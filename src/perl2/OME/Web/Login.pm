@@ -102,7 +102,7 @@ sub __loginForm {
 	if ($error) {
 		$table_data .= $q->Tr($q->td($q->p({-class => 'ome_error', -align => 'center'}, $error))); 
 	} else {
-		$table_data .= $q->Tr($q->td($q->p("Please enter your username and password")));
+		$table_data .= $q->Tr($q->td($q->p("Please enter your username and password to log in.")));
 	}
 
 	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
@@ -118,14 +118,23 @@ sub __loginForm {
 						       $q->b("Password:"),
 						       $q->password_field(-name => 'password', -default => '', -size => 25)
 						       ]),
+						   $q->td($q->br()),  # Spacing
 					       $q->td({-align => 'center', -colspan => 2}, [
-						       $q->submit(-name => 'execute', -value => 'Login')
+						       $q->submit(-name => 'execute', -value => 'Log in')
 						       ])
 					       ])
 				   ) .
 				   $q->endform;
 
-	return $header_table . $login_table;
+	my $generic_footer =
+		$q->hr() .
+		$q->p({-align => 'center', -class => 'ome_footer'},
+			  'Powered by OME technology &copy 2003 ',
+			  $q->a({-href => 'http://www.openmicroscopy.org/', -class => 'ome_footer', -target => '_ome'},
+				  'Open Microscopy Environment')
+		  );
+
+	return $header_table . $login_table . $generic_footer;
 }
 
 1;
