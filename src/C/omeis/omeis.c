@@ -45,6 +45,7 @@
 #include <sys/param.h>
 #include <math.h>
 #include <float.h>
+
 #include "omeis.h"
 #include "digest.h"
 #include "method.h"
@@ -54,6 +55,17 @@
 #define OMEIS_ROOT "."
 #endif
 
+/* ------------------- */
+/* Internal Prototypes */
+/* ------------------- */
+
+static char *get_param (char **cgivars, char *param);
+static int inList(char **cgivars, char *str);
+static char x2c(char *what);
+static void unescape_url(char *url);
+static char **getcgivars(void);
+static char **getCLIvars(int argc, char **argv);
+
 /*
   This function will get a new unique ID by examining the contents of the
   passed-in counter file.  The number in the counterfile will be incremented,
@@ -61,6 +73,7 @@
   of 0 means an error has occured, and can be checked with errno.  A return of
   0 with a 0 errno means the counter has wrapped around.
 */
+static
 OID nextID (char *idFile)
 {
 	struct flock fl;
@@ -90,7 +103,7 @@ OID nextID (char *idFile)
 
 	pixID++;
 
-	if (lseek(fd, 0, SEEK_SET) != 0) {
+	if (lseek(fd, 0LL, SEEK_SET) != 0) {
 		fl.l_type = F_UNLCK;  /* set to unlock same region */
 		fcntl(fd, F_SETLK, &fl);
 		close(fd);
@@ -142,18 +155,19 @@ OID nextID (char *idFile)
   N.B.: The path is not cleared, it is appended to what's already in the
   buffer, allowing for independent root filesystems.
 */
+static
 char *getRepPath (OID theID, char *path, char makePath) {
 	char pixIDstr[21], chunk[12];
 	int chunks[6], nChunks=0, i;
-	OID remainder = theID;
+	OID remaining = theID;  /* remainder() is a -lm built-in */
 
-	while (remainder > 999) {
-		chunks[nChunks] = remainder % 1000;
-		remainder = (remainder - chunks[nChunks++]) / 1000;
+	while (remaining > 999) {
+		chunks[nChunks] = remaining % 1000;
+		remaining = (remaining - chunks[nChunks++]) / 1000;
 	}
 
-	if (remainder > 0) {
-		chunks[nChunks++] = remainder;
+	if (remaining > 0) {
+		chunks[nChunks++] = remaining;
 	}
 
 	for (i=nChunks-1;i>0;i--) {
@@ -174,6 +188,7 @@ char *getRepPath (OID theID, char *path, char makePath) {
 }
 
 
+static
 int lockRepFile (int fd, char lock, off_t from, off_t length) {
 struct flock fl;
 
@@ -205,6 +220,7 @@ struct flock fl;
   N.B.: The path is not cleared, it is appended to what's already in the
   buffer, allowing for independent root filesystems.
 */
+static
 int newRepFile (OID theID, char *path, off_t size, char *suffix) {
 	int fd;
 	unsigned char zero=0;
@@ -222,7 +238,7 @@ int newRepFile (OID theID, char *path, off_t size, char *suffix) {
 		return (-2);
 	}
 	
-	lockRepFile (fd,'w',0,0);
+	lockRepFile (fd,'w',0LL,0LL);
 	
 	if (lseek(fd, size-1, SEEK_SET) < 0) {
 		close (fd);
@@ -234,7 +250,7 @@ int newRepFile (OID theID, char *path, off_t size, char *suffix) {
 		return (-4);
 	}
 	
-	if (lseek(fd, 0, SEEK_SET) < 0) {
+	if (lseek(fd, 0LL, SEEK_SET) < 0) {
 		close (fd);
 		return (-5);
 	}
@@ -262,6 +278,7 @@ int bigEndian(void)
 /*
   PixelRep keeps track of everything having to do with pixel i/o to the repository.
 */
+static
 void freePixelsRep (PixelsRep *myPixels) {
 	if (!myPixels->is_mmapped) {
 		if (myPixels->planeInfos) free (myPixels->planeInfos);
@@ -284,6 +301,7 @@ void freePixelsRep (PixelsRep *myPixels) {
   memory.  If an ID is passed in, it will set the paths to the dependent files,
   but not open anything.
 */
+static
 PixelsRep *newPixelsRep (OID ID)
 {
 PixelsRep *myPixels;
@@ -321,6 +339,7 @@ char *pixIDfile="Pixels/lastPix";
   This opens the repository file used by PixelsRep for reading or writing.
   rorw may be set to 'w' (write), 'r' (read), 'i' (info), or 'n' (new file).
 */
+static
 int openPixelsFile (PixelsRep *myPixels, char rorw) {
 char *mmap_info=NULL,*mmap_rep=NULL;
 pixHeader *head;
@@ -337,13 +356,13 @@ struct stat fStat;
 			fstat (myPixels->fd_info , &fStat );
 			myPixels->size_info = fStat.st_size;
 		}
-		if ((mmap_info = (char *) mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0)) == (char *) -1)
+		if ((mmap_info = (char *) mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0LL)) == (char *) -1)
 			return (-3);
 		if (!myPixels->size_rep) {
 			fstat (myPixels->fd_rep , &fStat );
 			myPixels->size_rep = fStat.st_size;
 		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0)) == (char *) -1)
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0LL)) == (char *) -1)
 			return (-4);
 	}
 
@@ -358,14 +377,14 @@ struct stat fStat;
 			fstat (myPixels->fd_info , &fStat );
 			myPixels->size_info = fStat.st_size;
 		}
-		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0)) == (char *) -1 )
+		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0LL)) == (char *) -1 )
 			return (-7);
 		if (!myPixels->size_rep) {
 			if (fstat (myPixels->fd_rep , &fStat) != 0)
 				return (-8);
 			myPixels->size_rep = fStat.st_size;
 		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0)) == (char *) -1 )
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0LL)) == (char *) -1 )
 			return (-9);
 	}
 
@@ -378,7 +397,7 @@ struct stat fStat;
 		head->vers  = OME_IS_PIXL_VER;
 	} else {
 		/* wait until we can get a read lock on the header */
-		lockRepFile (myPixels->fd_rep,'r',0,sizeof (pixHeader));
+		lockRepFile (myPixels->fd_rep,'r',0LL,sizeof (pixHeader));
 	}
 
 	if (head->mySig != OME_IS_PIXL_SIG ||
@@ -435,7 +454,7 @@ off_t size;
 int result;
 
 
-	if (! (myPixels = newPixelsRep (0)) ) {
+	if (! (myPixels = newPixelsRep (0LL)) ) {
 		perror ("BAH!");
 		return (NULL);
 	}
@@ -490,7 +509,7 @@ int result;
 	head->isFloat  = (isFloat  ? 1 : 0);
 
 	/* release the lock created by newRepFile */
-	lockRepFile (myPixels->fd_rep,'u',0,0);
+	lockRepFile (myPixels->fd_rep,'u',0LL,0LL);
 	return (myPixels);
 }
 
@@ -503,6 +522,7 @@ int result;
 * The file's header is read-locked by openPixelsFile().
 * If anything goes wrong, the function returns NULL.
 */
+static
 PixelsRep *GetPixels (OID ID, char rorw, char isBigEndian)
 {
 PixelsRep *myPixels;
@@ -534,9 +554,15 @@ int result;
 	return (myPixels);
 }
 
-
-int CheckCoords (PixelsRep *myPixels, unsigned long theX, unsigned long theY, unsigned long theZ, unsigned long theC, unsigned long theT) {
-pixHeader *head;
+static int
+CheckCoords (PixelsRep * myPixels,
+		     unsigned long theX,
+			 unsigned long theY,
+			 unsigned long theZ,
+			 unsigned long theC,
+			 unsigned long theT)
+{
+	pixHeader *head;
 
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
@@ -552,6 +578,7 @@ pixHeader *head;
 	return (1);
 }
 
+static
 off_t GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT) {
 pixHeader *head;
 
@@ -560,9 +587,6 @@ pixHeader *head;
 	if (! CheckCoords (myPixels,theX,theY,theZ,theC,theT)) return (-1);
 	return ((((((theT*head->dc) + theC)*head->dz + theZ)*head->dy + theY)*head->dx + theX)*head->bp);
 }
-
-
-
 
 void byteSwap (unsigned char *theBuf, size_t length, char bp)
 {
@@ -637,8 +661,10 @@ unsigned char *maxBuf = theBuf+(length*bp);
 
 
 /* This reads the pixels at offset and writes nPix pixels to IO_stream or IO_mem */
+static
 size_t DoPixelIO (PixelsRep *myPixels, off_t offset, size_t nPix, char rorw) {
-size_t nIO=0, nBytes;
+size_t nIO=0;
+size_t nBytes;
 char *pixels,*pix_P;
 pixHeader *head;
 unsigned char bp;
@@ -648,11 +674,11 @@ unsigned char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
 
-	if (offset < 0) return (-1);
-	if (!myPixels) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
-	if (! (pixels = myPixels->pixels) ) return (-1);
-	if (! (bp = head->bp) ) return (-1);
+	if (offset < 0) return (0);
+	if (!myPixels) return (0);
+	if (! (head = myPixels->head) ) return (0);
+	if (! (pixels = myPixels->pixels) ) return (0);
+	if (! (bp = head->bp) ) return (0);
 	
 	nBytes = nPix*bp;
 	file_off = offset;
@@ -660,7 +686,7 @@ unsigned long written=0;
 	chunk_size = 4096 / bp;
 	pix_P = pixels + offset;
 
-	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (-1);
+	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (0);
 
 	if (myPixels->IO_stream) {
 		if (rorw == 'w') {
@@ -768,6 +794,7 @@ size_t nPix, nIO=0;
 }
 
 
+static
 size_t DoROI (PixelsRep *myPixels,
 	int x0, int y0, int z0, int w0, int t0,
 	int x1, int y1, int z1, int w1, int t1, char rorw
@@ -780,12 +807,12 @@ size_t sizeX, nIO_t=0, nIO=0;
 char *pix;
 off_t off0, off1;
 
-	if (!myPixels) return (-1);
-	if (! (pix = (char *)myPixels->pixels) ) return (-1);
+	if (!myPixels) return (0);
+	if (! (pix = (char *)myPixels->pixels) ) return (0);
 	if (! (head = myPixels->head) ) return (-1);
-	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (-1);
-	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (-1);
-	if (off0 >= off1) return (-1);
+	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (0);
+	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (0);
+	if (off0 >= off1) return (0);
 	dx = head->dx;
 	dy = head->dy;
 	dz = head->dz;
@@ -816,6 +843,7 @@ off_t off0, off1;
   N.B. (FIXME):  There is no locking taking place in the header!
 */
 
+static
 int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, unsigned long z, unsigned long c, unsigned long t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
@@ -842,6 +870,7 @@ off_t file_off,plane_offset;
 	return (1);
 }
 
+static
 int DoStackInfoIO (PixelsRep *myPixels, stackInfo *theInfo, unsigned long c, unsigned long t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (stackInfo);
@@ -872,6 +901,7 @@ off_t file_off,stack_offset;
   statistics calculation.
 */
 
+static
 int DoPlaneStats (PixelsRep *myPixels, unsigned long z, unsigned long c, unsigned long t) {
 planeInfo myPlaneInfo;
 pixHeader *head;
@@ -1042,6 +1072,7 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
   are OK, and if not checks if each plane statistics is OK, calling
   DoPlaneStats if it isn't.
 */
+static
 int DoStackStats (PixelsRep *myPixels, unsigned long c, unsigned long t) {
 stackInfo myStackInfo;
 pixHeader *head;
@@ -1115,6 +1146,7 @@ register float logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=
   it calculate the statistics regardless of the value of stats_OK.
 */
 
+static
 int FinishStats (PixelsRep *myPixels, char force) {
 unsigned long z, dz, c, dc, t, dt;
 pixHeader *head;
@@ -1145,15 +1177,12 @@ planeInfo *planeInfoP;
 	return (1);
 }
 
-
-
-
 int FinishPixels (PixelsRep *myPixels, char force) {
 
 	if (!myPixels) return (-1);
 
 	/* wait until we can get a write lock on the whole file */
-	lockRepFile (myPixels->fd_rep,'w',0,0);
+	lockRepFile (myPixels->fd_rep,'w',0LL,0LL);
 	
 	/* Make sure all the stats are up to date */
 	if (!FinishStats (myPixels,force)) return (-3);
@@ -1181,6 +1210,7 @@ int FinishPixels (PixelsRep *myPixels, char force) {
  * running on the same machine.
  */
 
+static
 FILE *openInputFile(char *filename, unsigned char isLocalFile) {
     FILE *infile;
 
@@ -1196,12 +1226,14 @@ FILE *openInputFile(char *filename, unsigned char isLocalFile) {
     return infile;
 }
 
+static
 void closeInputFile(FILE *infile, unsigned char isLocalFile) {
     if (isLocalFile) {
         fclose(infile);
     }
 }
 
+static
 int NewFile (OID *ID, char *filename, off_t size) {
 char path[MAXPATHLEN];
 char *filesIDfile="Files/lastFileID";
@@ -1238,6 +1270,7 @@ int fd;
 
 }
 
+static
 int DeleteFile (OID fileID) {
 char path[MAXPATHLEN];
 	strcpy (path,"Files/");
@@ -1252,8 +1285,9 @@ char path[MAXPATHLEN];
 	return (0);
 }
 
+static
 void FinishFile (int fd) {
-	lockRepFile (fd,'u',0,0);
+	lockRepFile (fd,'u',0LL,0LL);
 	close (fd);
 }
 
@@ -1266,6 +1300,7 @@ void FinishFile (int fd) {
   Reads stdin, writing to the file.
   returns file OID.
 */
+static
 OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
 OID ID;
 int fd;
@@ -1273,13 +1308,13 @@ size_t nIO;
 char *sh_mmap;
 FILE *infile;
 
-	if (  (fd = NewFile( &ID, filename, size )) == -1 ) return -1;
+	if (  (fd = NewFile( &ID, filename, size )) == -1 ) return 0;
 
-	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) == (char *) -1 ) {
+	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0LL)) == (char *) -1 ) {
 		close (fd);
 		DeleteFile (ID);
 		fprintf (stderr,"Couldn't mmap uploaded file %s (ID=%llu)\n",filename,ID);
-		return (-1);
+		return (0);
 	}
 
     infile = openInputFile(filename,isLocalFile);
@@ -1289,7 +1324,7 @@ FILE *infile;
         if (nIO != size) {
             fprintf (stderr,"Could finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
                      filename,ID,(unsigned long)nIO,(unsigned long)size);
-            ID = -1;
+            ID = 0;
         }
 
         closeInputFile(infile,isLocalFile);
@@ -1301,8 +1336,7 @@ FILE *infile;
 	return (ID);
 }
 
-
-
+static
 size_t ConvertFile (PixelsRep *myPixels, OID fileID, off_t file_offset, off_t pix_offset, size_t nPix) {
 pixHeader *head;
 int fd;
@@ -1315,22 +1349,22 @@ char isBigEndian=1;
 
 	strcpy (file_path,"Files/");
 
-	if (!fileID || !myPixels) return (-1);
+	if (!fileID || !myPixels) return (0);
 	
 	if (! getRepPath (fileID,file_path,0)) {
-		return (-1);
+		return (0);
 	}
 
-	if (! (head = myPixels->head) ) return (-1);
+	if (! (head = myPixels->head) ) return (0);
 	bp = head->bp;
 
 
 	if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
-		return (-1);
+		return (0);
 	}
 	if ( (sh_mmap = (char *)mmap (NULL, nPix*bp, PROT_READ, MAP_SHARED, fd, file_offset)) == (char *) 0 ) {
 		close (fd);
-		return (-1);
+		return (0);
 	}
 
 
@@ -1367,11 +1401,12 @@ char isBigEndian=1;
   Collects all the files that were used to generate the Pixels (if any)
   makes a tar/gz or zip archive of them in a file with the same filepath as the pixels, with a .tgz extension.
 */
+static
 int GetArchive (PixelsRep myPixels, char *format) {
 	return (0);
 }
 
-
+static
 void HTTP_DoError (char *method,char *errMsg) {
 /*
 403 Forbidden Authorization failure
@@ -1383,18 +1418,20 @@ void HTTP_DoError (char *method,char *errMsg) {
 	fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
 }
 
+static
 void HTTP_ResultType (char *mimeType) {
 
 	fprintf (stdout,"Content-Type: %s\r\n\r\n",mimeType);
 }
 
+static
 int
 dispatch (char **param)
 {
 	PixelsRep *thePixels;
 	pixHeader *head;
 	size_t nPix=0, nIO=0;
-	char *theParam,rorw='r',bigEndian=1;
+	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0;
 	int theZ=-1,theC=-1,theT=-1;
 	off_t offset=0;
@@ -1468,7 +1505,7 @@ char **cgivars=param;
 		sscanf (theParam,"%d",&theT);
 
 	if ( (theParam = get_param (param,"BigEndian")) ) {
-		if (!strcmp (theParam,"0") || !strcmp (theParam,"False") || !strcmp (theParam,"false") ) bigEndian=0;
+		if (!strcmp (theParam,"0") || !strcmp (theParam,"False") || !strcmp (theParam,"false") ) iam_BigEndian=0;
 	}
 
 	/* ---------------------- */
@@ -1561,7 +1598,7 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"Force")) )
 				sscanf (theParam,"%d",&force);
 
-			if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
+			if (! (thePixels = GetPixels (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1584,7 +1621,7 @@ char **cgivars=param;
 		case M_GETPLANESTATS:
 			if (!ID) return (-1);
 		
-			if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
+			if (! (thePixels = GetPixels (ID,'r',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1626,7 +1663,7 @@ char **cgivars=param;
 				HTTP_DoError (method,"UploadSize must be specified!");
 				return (-1);
 			}
-			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) <= 0) {
+			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) == 0) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1643,7 +1680,7 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&fileID);
 
 			if (ID) {
-				if (! (thePixels = GetPixels (ID,'i',bigEndian)) ) {
+				if (! (thePixels = GetPixels (ID,'i',iam_BigEndian)) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
@@ -1729,7 +1766,7 @@ char **cgivars=param;
 			HTTP_ResultType ("text/plain");
 
 			/* Get the SHA1 message digest */
-			if (get_md_from_file(file_path, file_md) < 0) {
+			if (get_md_from_file(file_name, file_md) < 0) {
 				fprintf(stderr, "Unable to retrieve SHA1.");
 				return(-1);
 			}
@@ -1819,7 +1856,7 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"Offset")) )
 				sscanf (theParam,"%lu",&file_off);
 		
-			if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
+			if (! (thePixels = GetPixels (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1878,10 +1915,10 @@ char **cgivars=param;
 
 	/* ----------------------- */
 	/* COMPLEX METHOD DISPATCH */
-	if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
-		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
-		! strcmp (method,"SetStack") || !strcmp (method,"GetStack")) {
-        char *filename = NULL;
+	if (m_val == M_SETPIXELS || m_val == M_GETPIXELS ||
+		m_val == M_SETPLANE  || m_val == M_GETPLANE  ||
+		m_val == M_SETSTACK  || m_val == M_GETSTACK) {
+		char *filename = NULL;
 		if (!ID) return (-1);
 
 
@@ -1892,7 +1929,7 @@ char **cgivars=param;
             }
 		} else rorw = 'r';
 
-		if (! (thePixels = GetPixels (ID,rorw,bigEndian)) ) {
+		if (! (thePixels = GetPixels (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
@@ -1942,9 +1979,9 @@ char **cgivars=param;
 		freePixelsRep (thePixels);
 	}
 
-	else if (! strcmp (method,"SetROI") || !strcmp (method,"GetROI") ) {
+	else if (m_val == M_SETROI || m_val == M_GETROI) {
 		char *ROI;
-		int numInts,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
+		int x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
         char *filename=NULL;
 
 		if (!ID) return (-1);
@@ -1965,7 +2002,7 @@ char **cgivars=param;
 			return (-1);
 		}
 
-		if (! (thePixels = GetPixels (ID,rorw,bigEndian)) ) {
+		if (! (thePixels = GetPixels (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
@@ -1991,6 +2028,7 @@ char **cgivars=param;
 	return (1);
 }
 
+static
 void usage (int argc,char **argv) {
 	fprintf (stderr,"Bad usage.  Missing parameters.\n");
 }
@@ -2026,6 +2064,7 @@ char **in_params;
  Most of this was cribbed from a web page, whose URL is now lost.
 **********************************/
 
+static
 int inList(char **cgivars, char *str)
 {
 	register int k = 0;
@@ -2042,6 +2081,7 @@ int inList(char **cgivars, char *str)
 	return( returnVal );
 }
 
+static
 char *get_param (char **cgivars, char *param)
 {
 	register int k = 0;
@@ -2059,6 +2099,7 @@ char *get_param (char **cgivars, char *param)
 }
 
 /** Convert a two-char hex string into the char it represents **/
+static
 char x2c(char *what)
 {
    register char digit;
@@ -2071,6 +2112,7 @@ char x2c(char *what)
 
 
 /** Reduce any %xx escape sequences to the characters they represent **/
+static
 void unescape_url(char *url)
 {
 	register int i,j;
@@ -2089,11 +2131,12 @@ void unescape_url(char *url)
 
 /** Read the CGI input and place all name/val pairs into list.		  **/
 /** Returns list containing name1, value1, name2, value2, ... , NULL  **/
+static
 char **getcgivars(void)
 {
 	register int i;
 	char *request_method;
-	int content_length;
+	size_t content_length;
 	char cgiinput[4096];
 	char **cgivars;
 	char **pairlist;
@@ -2280,6 +2323,7 @@ char **getcgivars(void)
 
 /** Read the CLI input and place all name/val pairs into list.		  **/
 /** Returns list containing name1, value1, name2, value2, ... , NULL  **/
+static
 char **getCLIvars(int argc, char **argv)
 {
 	register int i;
