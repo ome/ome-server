@@ -49,6 +49,7 @@ use base qw(OME::File);
 
 use Carp;
 use OME::Image::Server;
+use Log::Agent;
 
 use constant FILE_ID  => 0;
 use constant FILENAME => 1;
