@@ -456,19 +456,7 @@ $object is an instance of a DBObject or an Attribute.
 get an object's has many relations. This may include relations not
 defined with DBObject methods.
 
-$relationsAccessors is an iterator. It has methods
-	next first name return_type getList
-
-it can be used like so:
-
-	my $relationsAccessors = OME::Web::DBObjRender->getRelationAccessors( $object ); 
-	if( $relationsAccessors->first() ) { do {
-		my $type = $relationsAccessors->return_type();
-		my $objects = $relationsAccessors->getList();
-		my $relation_name = $relationsAccessors->name();
-		# do stuff
-	} while( $relationsAccessors->next() ); }
-
+$relationsAccessors is an iterator. see OME::Web::DBObjRender::RelationIterator.
 
 =cut
 
@@ -479,7 +467,7 @@ sub getRelationAccessors {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
 		    $proto eq __PACKAGE__);
 
-	my $iterator = OME::Web::DBObjRender::Iterator->new( 
+	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
 		$proto->__gather_PublishedManyRefs( $obj ) );
 
 	return $iterator;
@@ -615,13 +603,79 @@ sub _getSpecializedRenderer {
 	return undef;
 }
 
-=head1 Author
+package OME::Web::DBObjRender::RelationIterator;
 
-Josiah Johnston <siah@nih.gov>
+=head1 NAME
+
+OME::Web::DBObjRender::RelationIterator - Allows iteration over an object's relations
+
+=head1 DESCRIPTION
+
+Used by OME::Web::DBObjRender->getRelationAccessors() to store relation
+accessor info. Honestly, it seems a big complication. I added it to deal
+with collecting attributes from OME::Tasks::ModuleExecutionManager for
+the OME::Web::DBObjRender::__OME_ModuleExecution_ActualInput and
+OME::Web::DBObjRender::__OME_ModuleExecution_SemanticTypeOutput
+subclasses. Those have sense been effectively hidden, but all this
+infrastructure built for them works fine.
+
+It allows relations to an object to be defined in terms of an arbitrary
+object, method to be called on the object, and parameter list to pass
+into the method.
+
+=head1 SYNOPSIS
+
+	my $relationsIterator = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	if( $relationsIterator->first() ) { do {
+		if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
+			my ( $from_type, $from_id, $from_accessor) = $relationsIterator->getDBObjType_ID_and_Accessor();
+			# do something
+		} else {
+			my $type = $relationsIterator->return_type();
+			my $objects = $relationsIterator->getList();
+			my $relation_name = $relationsIterator->name();
+			# do something
+		}
+	} while( $relationsIterator->next() ); }
+
+
+=head1 METHODS
+
+=head2 new
+
+	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
+		\@objects,
+		\@methods,
+		\@params,
+		\@return_type,
+		\@names,
+		\@call_as_scalar );
+
+	# this works too.
+	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
+		$proto->__gather_PublishedManyRefs( $obj ) );
+
+all these arrays need to be synced w/ each other (i.e. the first element
+of the object array will be used with the first element method of the
+method array, params array, ...). obviously, each array needs to have
+identical length.
+
+@objects contains references to objects methods will be called on.
+
+@methods contains method names to call on objects.
+
+@params is an array of arrays. It's fine to have its elements to undef.
+
+@return_type contains the formal name of the list of DBObjects or Attributes
+that will be returned by the method
+
+@names contains the name of each relationship
+
+@call_as_scalar elements should be set to 1 for those methods that
+return an array reference and set to 0 for methods that return an array.
+It determines if the method should be called in array context.
 
 =cut
-
-package OME::Web::DBObjRender::Iterator;
 
 sub new {
 	my $proto = shift;
@@ -644,6 +698,15 @@ sub new {
 	return $self;
 }
 
+=head2 next
+
+	$relationsIterator->next()
+
+increments the iterator to the next relation. returns undef at the last
+relation
+
+=cut
+
 sub next {
 	my $self = shift;
 	return undef
@@ -651,6 +714,14 @@ sub next {
 	$self->{__count}++;
 	return $self;
 }
+
+=head2 first
+
+	$relationsIterator->first()
+
+sets the iterator to the first relation
+
+=cut
 
 sub first {
 	my $self = shift;
@@ -660,15 +731,39 @@ sub first {
 	return $self;
 }
 
+=head2 name
+
+	$relationsIterator->name()
+
+returns the name of the current relation
+
+=cut
+
 sub name {
 	my $self = shift;
 	return $self->{__names}->[ $self->{__count} ];
 }
 
+=head2 return_type
+
+	$relationsIterator->return_type()
+
+returns the formal name of the OME type the current relation will return
+
+=cut
+
 sub return_type {
 	my $self = shift;
 	return $self->{__return_type}->[ $self->{__count} ];
 }
+
+=head2 getList
+
+	$relationsIterator->getList()
+
+returns a list of objects for the current relation
+
+=cut
 
 sub getList {
 	my $self = shift;
@@ -684,5 +779,39 @@ sub getList {
 	}
 	return \@list;
 }
+
+=head2 getDBObjType_ID_and_Accessor
+
+	if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
+		my ( $from_type, $from_id, $from_accessor) =
+			$relationsIterator->getDBObjType_ID_and_Accessor();
+		# do something
+	}
+
+if the current relation is a method call on a DBObject that requires no
+parameters, this method will return the type's formal name, id, and
+accessor. otherwise, returns undef.
+
+=cut
+
+sub getDBObjType_ID_and_Accessor {
+	my $self = shift;
+	my $object = ${ $self->{__objects}->[ $self->{__count} ] };
+	my $method = $self->{__methods}->[ $self->{__count} ];
+	my $params = (
+		( $self->{__params } and $self->{__params }->[ $self->{__count} ] ) ?
+		$self->{__params }->[ $self->{__count} ] :
+		[]
+	);
+	return ( $object->getFormalName(), $object->id(), $method )
+		if( $object->isa( "OME::DBObject" ) and scalar( @$params ) eq 0 );
+	return undef;
+}
+
+=head1 Author
+
+Josiah Johnston <siah@nih.gov>
+
+=cut
 
 1;
