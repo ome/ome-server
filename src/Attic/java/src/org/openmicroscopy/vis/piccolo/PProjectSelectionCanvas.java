@@ -78,7 +78,7 @@ public class PProjectSelectionCanvas extends PCanvas
 	private static final int MAXWIDTH=1000;
 	private static final double HGAP=20;  
 	private static final double VGAP=10;
-	private static final double VSEP=3;
+	private static final double VSEP=5;
 	
 	
 	private PLayer layer;
@@ -121,7 +121,7 @@ public class PProjectSelectionCanvas extends PCanvas
 		ProjectLabel pl;
 
 		int width = getWidth();
-		System.err.println("width is" +width);
+		//System.err.println("width is" +width);
 		Rectangle bounds = getBounds();
 		Iterator iter = layer.getChildrenIterator();
 		Vector rows = new Vector();
@@ -135,16 +135,16 @@ public class PProjectSelectionCanvas extends PCanvas
 			if (obj instanceof ProjectLabel) {
 				pl = (ProjectLabel) obj;
 				double labelWidth = pl.getScaledMaxWidth();
-				System.err.println("adding label...");
+				//System.err.println("adding label...");
 				if (x+labelWidth > width) {
-					System.err.println("new row. width is "+x);
+					//System.err.println("new row. width is "+x);
 					rows.add(row);
 					widths.add(new Double(x));
 					x =0;
 					row = new Vector();
 				}
 				row.add(pl);
-				System.err.println("row added was "+pl.getProject().getName());
+				//System.err.println("row added was "+pl.getProject().getName());
 				x += labelWidth;
 			}
 		}
@@ -153,7 +153,7 @@ public class PProjectSelectionCanvas extends PCanvas
 		double rowHeight  = 0;
 		double spacing = 0;
 		Iterator iter2;
-		System.err.println("---- laying things out...");
+		//System.err.println("---- laying things out...");
 		for (int i = 0; i < rows.size(); i++) {
 			row = (Vector) rows.elementAt(i);
 			Double rowW = (Double) widths.elementAt(i);
@@ -161,22 +161,22 @@ public class PProjectSelectionCanvas extends PCanvas
 			iter = row.iterator();
 			//  calculate space between items.
 			// leftover is width - rowWidth
-			System.err.println("row "+i+", width is "+rowWidth);
+			//System.err.println("row "+i+", width is "+rowWidth);
 			double remainder = width-rowWidth;
-			System.err.println("remainder..... "+remainder);
+			//System.err.println("remainder..... "+remainder);
 			// divide that by n-1 
 			if (row.size() >1)
 				spacing = remainder/(row.size()+1);
 			else 
 				spacing = 0;
-			System.err.println("spacing..."+spacing);
+			//System.err.println("spacing..."+spacing);
 			x = 0;
 			rowHeight = 0;
 			while (iter.hasNext()) {
 				pl = (ProjectLabel) iter.next();
 				// place this
-				System.err.println("placing "+pl.getProject().getName()+" at "+x);
-				System.err.println("width of pl is "+pl.getScaledMaxWidth());
+				//System.err.println("placing "+pl.getProject().getName()+" at "+x);
+				//System.err.println("width of pl is "+pl.getScaledMaxWidth());
 				pl.setOffset(x,y);
 				b = pl.getGlobalFullBounds();
 				x += pl.getScaledMaxWidth()+spacing;
@@ -200,19 +200,15 @@ public class PProjectSelectionCanvas extends PCanvas
 	
 	public void selectionChanged(SelectionEvent e) {
 		SelectionState state = e.getSelectionState();
-	 	if ((e.getMask() & SelectionEvent.SET_SELECTED_PROJECT) ==
-	 		SelectionEvent.SET_SELECTED_PROJECT) {
-				setSelectedProject();
+	 	if (e.isEventOfType(SelectionEvent.SET_SELECTED_PROJECT)) {
+	 			setSelectedProject();
 	 	}
-		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_DATASET)
-				== SelectionEvent.SET_ROLLOVER_DATASET) {
+		else if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_DATASET)) {
 			CDataset rolled = state.getRolloverDataset();
 
 			setRollover(rolled);
 		}
-		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_PROJECT)
-					==  SelectionEvent.SET_ROLLOVER_PROJECT) {
-			// set rollover sets things to be active if they are active projects
+		else if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_PROJECT)) {
 			setRollover(state.getRolloverProject());
 		}
 	}
@@ -425,9 +421,19 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 			//System.errprintln("mouse clicked in project selection. seting project");
 			//System.errprintln("event handled is "+e.isHandled());
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			CProject project = pl.getProject();
 			//System.err.println("clicking on ..."+pl.getProject().getName());
-			if (pl.getProject().hasDatasets())
-				SelectionState.getState().setSelectedProject(pl.getProject());
+			SelectionState state = SelectionState.getState();
+			
+			CProject selected = state.getSelectedProject();
+			if (selected == project) { 
+				// if i've just clicked on what was selected,
+				// clear dataset selection
+				state.setSelectedDataset(null);
+				
+			}
+			else if (pl.getProject().hasDatasets())
+				state.setSelectedProject(project);
 		}
 	}
 	
