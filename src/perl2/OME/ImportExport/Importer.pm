@@ -39,6 +39,7 @@
 # store_wavelength_info()
 # store_xyz_info()
 # store_image_files_xyzwt()
+# map_image_to_dataset()
 # removeWeirdCharacters()
 
 package OME::ImportExport::Importer;
@@ -177,13 +178,15 @@ sub store_image {
 	$status = store_image_files_xyzwt($self, $session, $href, $image_group_ref);
 	last unless $status eq "";
 
+	$status = map_image_to_dataset($self);
+	last unless $status eq "";
+
 	# everything went OK - commit all the DB inserts
 	$image->commit;
         $image->dbi_commit();
 	$attributes->dbi_commit();
 	$session->DBH()->commit;
 
-	#my $ds = $self->{dataset};
 	#$ds->Field("images", $image);
 
 	last;
@@ -590,6 +593,28 @@ sub store_image_files_xyzwt {
     $self->{'xyzwt'} = $xyzwt;
     return $status;
 }    
+
+
+sub map_image_to_dataset {
+    my $self = shift;
+    my $image = $self->{image};
+    my $ds = $self->{dataset};
+    my $session = $self->{session};
+    my $status;
+    my $data = {'image_id'   => $image->{image_id},
+		'dataset_id' => $ds->{dataset_id}};
+    
+    my $i2dMap = $session->Factory->newObject("OME::Image::DatasetMap", $data);
+    if (!defined $i2dMap) {
+	$status = "Can\'t create new image <-> dataset map";
+    }
+    else {
+	$i2dMap->commit();
+    }
+    $self->{'i2dMap'} = $i2dMap;
+    return $status;
+}
+
 
 
 
