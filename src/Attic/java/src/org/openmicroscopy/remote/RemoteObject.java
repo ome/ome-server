@@ -425,10 +425,13 @@ public class RemoteObject
         Object o = getCachedElement(element);
         if (o instanceof String)
         {
-            RemoteObject object =
+        	RemoteSession s = getRemoteSession();
+        	
+        	RemoteObject object =
                 getRemoteSession().getObjectCache().
                 getObject(perlClass,(String) o);
-            elementCache.put(element,object);
+            if (object != null)
+            	elementCache.put(element,object);
             return object;
         } else if (o instanceof RemoteObject) {
             return (RemoteObject) o;

@@ -109,6 +109,7 @@ public class RemoteBindings
             Class.forName("org.openmicroscopy.remote.RemoteFactory");
             Class.forName("org.openmicroscopy.remote.RemoteFeature");
             Class.forName("org.openmicroscopy.remote.RemoteImage");
+            Class.forName("org.openmicroscopy.remote.RemoteImagePixels");
             Class.forName("org.openmicroscopy.remote.RemoteIterator");
             Class.forName("org.openmicroscopy.remote.RemoteLookupTable");
             Class.forName("org.openmicroscopy.remote.RemoteModule");
