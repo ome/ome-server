@@ -22,12 +22,11 @@
 package OME::Web::DirTree;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
 use OME::DBObject;
-@ISA = ("OME::Web");
+use base qw{ OME::Web };
 
 sub new {
 	my $proto = shift;
@@ -43,7 +42,8 @@ sub new {
 }
 
 sub getPageTitle {
-	return "Hidden Dir Tree page. Made by OME::Web::DirTree";
+	my $self = shift;
+	return "Hidden Dir Tree page. Made by ".(ref $self);
 }
 
 sub getPageBody {
