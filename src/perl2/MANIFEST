@@ -52,7 +52,6 @@ OME/Program/CalculateImageStatistics.pm
 OME/Program/Definition.pm
 OME/Project.pm
 OME/Repository.pm
-OME/Session.old.pm
 OME/Session.pm
 OME/SessionManager.pm
 OME/Tasks/AnalysisEngine.pm
