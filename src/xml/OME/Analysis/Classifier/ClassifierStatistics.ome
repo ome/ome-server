@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacur1@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		
+		<SemanticType Name="StandardModuleName" AppliesTo="D">
+			<Description>
+			This ST corresponds to the name of a module that has FO of ST 
+			"Classifications".
+			
+			The classifications attributes outputed by the module with this name
+			are accepted, prima facie, to be correct for the purposes of
+			computing classifier statistics.
+			</Description>
+			<Element
+				Name="Name"
+				DBLocation="CLASSIFIER_STATISTICS.STANDARD_MODULE_NAME"
+				DataType="string"/>		  
+		</SemanticType>
+		
+		<SemanticType Name="AlternativeModuleName" AppliesTo="D">
+			<Description>
+			This ST corresponds to the name of a module that has FO of ST 
+			"Classifications".
+			
+			The classifications attributes outputed by the module with this name
+			are compared against the "gold standard" classifications of the
+			"Standard Module" for the purposes of computing classifier statistics.
+			</Description>
+			<Element
+				Name="Name"
+				DBLocation="CLASSIFIER_STATISTICS.ALTERNATIVE_MODULE_NAME"
+				DataType="string"/>		  
+		</SemanticType>
+		
+		<SemanticType Name="ConfusionMatrixEntries" AppliesTo="D">
+			<Description>
+			The confusion matrix stores the statistics of classifier's
+			predictions and mispredictions on a particular dataset.
+			
+			The rows of the matrix represent the actual classes (i.e from the
+			"Standard" Module) whereas the columns indicate the predicted 
+			class values (i.e. from the "Alternative" module). 
+			
+			The value at entry (j, k) is  the number of predictions made for 
+			class j when k is the predicted class.
+			</Description>
+			<Element
+				Name="Accuracy"
+				DBLocation="CLASSIFIER_CONFUSION_MATRIX_ENTRIES.ACCURACY"
+				DataType="float">
+				<Description>
+				Stores the ratio: # of correct predictions divided
+				by the total # of predictions. This value must be between
+				0 and 1.
+				</Description>
+			</Element>
+			<Element
+				Name="NumPredictions"
+				DBLocation="CLASSIFIER_CONFUSION_MATRIX_ENTRIES.NUM_PREDICTIONS"
+				DataType="integer">
+				<Description>
+				Stores the number of predictions for the given class.
+				</Description>
+			</Element>
+			<Element
+				Name="StandardCategory"
+				DBLocation="CLASSIFIER_CONFUSION_MATRIX_ENTRIES.STANDARD_CATEGORY"
+				DataType="reference"
+				RefersTo="Category">
+				<Description>
+				Refers to the actual category. Row of the matrix.
+				</Description>
+			</Element>
+			<Element
+				Name="AlternativeCategory"
+				DBLocation="CLASSIFIER_CONFUSION_MATRIX_ENTRIES.ALTERNATIVE_CATEGORY"
+				DataType="reference"
+				RefersTo="Category">
+				<Description>
+				Refers to the predicted category. Column of the matrix.
+				</Description>
+			</Element>
+			
+		</SemanticType>
+	</SemanticTypeDefinitions>
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+			ModuleName="Classifier Statistics"
+			Category="Classifier"
+			ModuleType="OME::Analysis::Modules::Classification::ML_BayesNet_Trainer"
+			ProgramID=""
+			ID="urn:lsid:openmicroscopy.org:Module:7205">
+			<Description>
+			This module computes the statistics of the correct predictions and mispredictions
+			of the classifier. 
+			</Description>
+			<Declaration>
+				<FormalInput  Name="Standard Module Name"    SemanticTypeName="StandardModuleName"     Count="!"/>		  
+				<FormalInput  Name="Alternative Module Name" SemanticTypeName="AlternativeModuleName"  Count="!"/>
+				
+				<FormalOutput Name="ConfusionMatrixEntries"  SemanticTypeName="ConfusionMatrixEntries" Count="+"/>
+			</Declaration>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>
