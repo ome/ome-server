@@ -51,8 +51,9 @@
  	
  
  	
- 	public PModuleLink(PModule start,PModule end) {
+ 	public PModuleLink(PLinkLayer layer,PModule start,PModule end) {
  		super();
+ 		setLinkLayer(layer);
  		this.start= start;
  		this.end = end;
  		
@@ -108,5 +109,13 @@
 	
 	protected PModule getEnd() { 
 		return end;
+	}
+	
+	public void remove() {
+		super.remove();
+		getStartLinkTarget().setSelected(false);
+		getEndLinkTarget().setSelected(false);
+		if (linkLayer!= null)
+			linkLayer.removeParamLinks(this);
 	}
  }
