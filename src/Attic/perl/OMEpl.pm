@@ -333,9 +333,9 @@ sub initialize ()
 
 		$self->{sessionKey} = $cgi->cookie ('OMEsessionKey') unless defined $self->{sessionKey};
 		$self->{sessionKey} = $cgi->url_param ('Session') unless defined $self->{sessionKey};
-	print STDERR "initialize:  Retreived OMEsessionKey cookie=",$self->{sessionKey},"\n";
+	print STDERR "initialize:  Retreived OMEsessionKey cookie=",$self->{sessionKey},"\n" if defined $self->{sessionKey};
 		$self->{referer} = $cgi->cookie ('OMEreferer') unless defined $self->{referer};
-	print STDERR "initialize:  Retreived OMEreferer cookie=",$self->{referer},"\n";
+	print STDERR "initialize:  Retreived OMEreferer cookie=",$self->{referer},"\n" if defined $self->{referer};
 
 
 	# Calling VerifySession with an invalid or undefined session is fatal.  We don't want to give up yet if we're in a browser.
@@ -352,6 +352,7 @@ sub initialize ()
 
 	# If the above didn't work, or we didn't have a sessionKey in the first place, try logging in.
 		if (not defined $self->{sessionKey}) {
+			print STDERR "initialize:  No session info found - redirecting to login page.\n";
 			$self->Login ();
 		}
 	}
@@ -445,15 +446,16 @@ sub Connect {
 
 # FIXME:  Need to add authentication from an https call, or with a certificate, etc.
 # If the sessionKey field is defined, but invalid, we die.
-# Eventually, we'll need to sotre everything we need to connect to the database.
+# Eventually, we'll need to store everything we need to connect to the database.
 # Storing the DB handle itself doesn't seem to work.  Maybe there's a way to 'cache' it.
 # This gets called at the end of VerifySession.  We should call VerifySession in each method that
 # acesses the database.  Therefore, we should really speed this up by caching what we can.
 	$self->{dataSource} = $DefaultDataSource unless defined $self->{dataSource};
 	die "User undefined when trying to connect !" unless defined $self->{user} and $self->{user};
 	if (not defined $dbHandle or not $dbHandle->ping()) {
-	$dbHandle = DBI->connect($self->{dataSource}, $self->{user}, $self->{password},
-		{ RaiseError => 1, AutoCommit => 1, InactiveDestroy => 1})
+		print STDERR "Connecting to ".$self->{dataSource}." as user ".$self->{user}."...\n";
+		$dbHandle = DBI->connect($self->{dataSource}, $self->{user}, $self->{password},
+			{ RaiseError => 1, AutoCommit => 1, InactiveDestroy => 1})
                    || die "Could not connect to the database: ".$DBI::errstr;
 	}
 	$self->{dbHandle} = $dbHandle;
