@@ -30,7 +30,7 @@ use XML::LibXSLT;
 
 use OME::ImportExport::SemanticTypeImport;
 use OME::Tasks::ProgramImport;
-use OME::Tasks::ChainImport;
+use OME::ImportExport::ChainImport;
 use OME::ImportExport::HierarchyImport;
 use OME::ImportExport::ResolveFiles;
 
@@ -148,7 +148,7 @@ sub processDOM {
 
     # Parse the chains
 
-    my $chainImporter = OME::Tasks::ChainImport->
+    my $chainImporter = OME::ImportExport::ChainImport->
       new(session => $self->{session},
           _parser => $self->{_parser});
 
