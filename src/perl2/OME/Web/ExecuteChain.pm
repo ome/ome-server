@@ -77,8 +77,9 @@ sub getPageBody {
 			unless $session->dataset();
 		
 		# execute chain
+		my $doNotReuseResults = $cgi->param( 'ReExecuteChain' );
 		my $analysis_chain_execution = OME::Analysis::Engine->
-          executeChain($chain,$session->dataset,{})
+          executeChain($chain,$session->dataset,{ }, ReuseResults => ( $doNotReuseResults ? 0 : 1 ))
 			or die "Could not execute analysis chain";
 			
 		# display results	
@@ -119,7 +120,8 @@ sub printForm {
 		-labels => $labels,
 		-values => [keys %$labels],
 	);
-	$text .= $cgi->submit(
+	$text .= '<br>'.$cgi->checkbox( -name => 'ReExecuteChain', -value => 1, -label => 'Re-Execute Chain' );
+	$text .= '<br>'.$cgi->submit(
 		-name  => 'executeChain',
 		-value => 'Execute Chain'
 	);
