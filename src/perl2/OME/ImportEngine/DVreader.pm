@@ -755,6 +755,7 @@ sub getEndian {
     my $buf;
     my $endian = "";
 
+    $file->setCurrentPosition(0);
     $buf = $file->readData(DV_HEADER_LENGTH);
     
     if (GetDVID(DV_LITTLE_TEMPLATE, $buf) == DVID) {
