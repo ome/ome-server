@@ -179,25 +179,22 @@ sub importFiles {
     # The program output is tab-delimited columns like so:
     # Wave    Time    Min     Max     Mean    GeoMean Sigma   Centroid_x      Centroid_y      Centroid_z
     # The first line contains the column headings.
-    $session->DBH()->trace(2);
+
     $sth = $session->DBH()->prepare (
         'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
         $href->{'Image.NumWaves'},$href->{'Image.NumTimes'},$image->Field("bitsPerPixel")/8)
     );
     my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
-    print "$cmd\n";
     
     open (STDOUT_PIPE,$cmd);
     while (<STDOUT_PIPE>) {
-        print $_;
         chomp;
         my @columns = split (/\t/);
         foreach (@columns) {
             # trim leading and trailing white space and set to undef unless column looks like a C float
             $_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
         }
-        print @columns;
         next unless defined $columns[0];
 
         $sth->execute($imageID,@columns);
