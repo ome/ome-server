@@ -157,13 +157,13 @@ sub display_MEX{
 
 	 	$html .= "<a name='Input_".$FI->name()."'>"; 
 	 	$html .= "<a href='top'>Top</a><br>"; 
-		$html .= "<b>Formal Input: </b>".$FI->name()."<br>";
-		$html .= "<b>Semantic Type: </b>".$ST->name()."<br>";
-		$html .= "<b>Source Module Name (MEX_ID): </b>";
+		$html .= "Formal Input: <b>".$FI->name()."</b><br>";
+		$html .= "Semantic Type: <b>".$ST->name()."</b><br>";
+		$html .= "Source Module Name (MEX_ID): <b>";
 		$html .= "<a href='/perl2/serve.pl?Page=".ref($self)."&MEX_ID=".$input->input_module_execution()->id()."'>";
 		$html .= $input->input_module_execution()->module()->name()
 			if $input->input_module_execution()->module();
-		$html .= " (".$input->input_module_execution()->id().")</a>";
+		$html .= " (".$input->input_module_execution()->id().")</a></b>";
 # add link to as yet unwritten ViewST page
 # add link 'click to download as tab delimited table'
 		
@@ -197,8 +197,8 @@ sub display_MEX{
 
 	 	$html .= "<a name='Output_".$FO->name()."'>"; 
 	 	$html .= "<a href='top'>Top</a><br>"; 
-		$html .= "<b>Formal Output: </b>".$FO->name()."<br>";
-		$html .= "<b>Semantic Type: </b>".$ST->name()."<br>";
+		$html .= "Formal Output: <b>".$FO->name()."</b><br>";
+		$html .= "Semantic Type: <b>".$ST->name()."</b><br>";
 # add link to as yet unwritten ViewST page
 # add link 'click to download as tab delimited table'
 
