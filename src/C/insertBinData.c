@@ -272,7 +272,7 @@ static void extractBinDataEndDocument( ParserState *state ) {
 
 static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
 	char *localName, *compression, *href;
-	int i, freeLocalName, externalFlag, rC, p, indexesRC;
+	int i, externalFlag, rC, p, indexesRC;
 	long int offset, readLength;
 	StructElementInfo* elementInfo;
 	b64z_stream *strm;
@@ -303,15 +303,10 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	* Find the local name of the element: strip the prefix if one exists.
 	*/
 	localName = strchr( name, ':' );
-	if( localName != NULL ) {
+	if( localName != NULL )
 		localName++;
-		freeLocalName = 0;
-	} else {
-		localName = malloc( strlen(name) + 1);
-		if( !(localName) ) mem_error("");
-		strcpy( localName, name );
-		freeLocalName = 1;
-	}
+	else
+		localName = (char *) name;
 	/*
 	**************************************************************************/
 
@@ -688,9 +683,9 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 				state->pixelInfo->Y = atoi( attrs[i+1] );
 			} else if( strcmp( attrs[i], "SizeZ" ) == 0 ) {
 				state->pixelInfo->Z = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "NumChannels" ) == 0 ) {
+			} else if( strcmp( attrs[i], "SizeC" ) == 0 ) {
 				state->pixelInfo->C = atoi( attrs[i+1] );
-			} else if( strcmp( attrs[i], "NumTimes" ) == 0 ) {
+			} else if( strcmp( attrs[i], "SizeT" ) == 0 ) {
 				state->pixelInfo->T = atoi( attrs[i+1] );
 			} else if( strcmp( attrs[i], "DimensionOrder" ) == 0 ) {
 				state->pixelInfo->dimOrder = (char *) malloc( strlen(attrs[i+1]) + 1 );
@@ -769,9 +764,6 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	}
 	/*
 	**************************************************************************/
-
-	if( freeLocalName == 1 ) 
-		free( localName );
 
 } /* END extractBinDataStartElement */
 
