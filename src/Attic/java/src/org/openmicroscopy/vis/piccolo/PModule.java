@@ -43,7 +43,6 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
@@ -52,8 +51,9 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
 
-import org.openmicroscopy.Module;
+import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.Chain.Node;
+import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
@@ -104,8 +104,7 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(3.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
- 
-	private ModuleInfo info;
+
 	
 	// the Rectangle with the bounds of the enclosing border
 	private RoundRectangle2D rect;
@@ -131,6 +130,7 @@ public class PModule extends PPath implements PBufferedNode {
 	// the chain node to which this module belongs
 	private Node node=null;
 	
+	private CModule module;
 	/**
 	 * The main constructor 
 	 * @param canvas The canvas that this module will be displayed on. 
@@ -139,10 +139,10 @@ public class PModule extends PPath implements PBufferedNode {
 	 * @param x Initial x coordinate (global)
 	 * @param y Initial y coordinate
 	 */
-	public PModule(Connection connection,ModuleInfo info,float x,float y) {
+	public PModule(Connection connection,CModule module,float x,float y) {
 		super();
-		this.info = info;
-		Module module = info.getModule();
+	
+		this.module = module;
 		
 		// create the container node for the formal parameters
 		labelNodes = new PParameterNode();
@@ -227,7 +227,7 @@ public class PModule extends PPath implements PBufferedNode {
 	 *
 	 * @param connection  the database connection object
 	 */
-	private void addParameterLabels(Module module,Connection connection) {
+	private void addParameterLabels(CModule module,Connection connection) {
 		
 //		System.err.println("building a PModule for "+module.getName());
 		List inputs = module.getInputs();
@@ -368,12 +368,10 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	
 	public Module getModule() {
-		return info.getModule();
+		return module;
 	}
 	
-	public ModuleInfo getModuleInfo() {
-		return info;
-	}
+	
 	
 	public void remove() {
 		// iterate over children of labelNodes
@@ -384,7 +382,7 @@ public class PModule extends PPath implements PBufferedNode {
 			p = (PFormalParameter) iter.next();
 			p.removeLinks();
 		}
-		info.removeModuleWidget(this);
+		module.removeModuleWidget(this);
 		removeFromParent();
 	}
 	
@@ -432,8 +430,8 @@ public class PModule extends PPath implements PBufferedNode {
 		
 		PModule m;
 		
-		ModuleInfo info =  getModuleInfo();
-		ArrayList widgets = info.getModuleWidgets();
+		
+		ArrayList widgets = module.getModuleWidgets();
 		
 		
 		for  (int i = 0; i < widgets.size(); i++) {

@@ -43,8 +43,9 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalParameter;
+
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
 import java.awt.Color;
@@ -174,8 +175,8 @@ public abstract class PFormalParameter extends PNode implements
 		return node;
 	}
 	
-	public ModuleInfo getModuleInfo() {
-		return getPModule().getModuleInfo();
+	public Module getModule() {
+		return getPModule().getModule();
 	}
 	
 	/**
@@ -320,7 +321,7 @@ public abstract class PFormalParameter extends PNode implements
 			return;
 		
 		//System.err.println("got the corresponding inputs for a parameter..");
-	 	ModuleInfo source = getModuleInfo();
+	 	Module source = getModule();
 		
 		PFormalParameter p;
 		Iterator iter = list.iterator();
@@ -332,7 +333,7 @@ public abstract class PFormalParameter extends PNode implements
 			if (v == true) {// when making things linkable
 				// only make it linkable if we're not linked already
 				// and we're not in the same module.
-				if (!isLinkedTo(p) && source != p.getModuleInfo())
+				if (!isLinkedTo(p) && source != p.getModule())
 						p.setLinkable(v);
 			}
 			else // always want to clear linkable
