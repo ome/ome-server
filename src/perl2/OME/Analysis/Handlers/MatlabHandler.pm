@@ -112,7 +112,8 @@ sub __parseInstructions {
     my $references_needed =
       $root->getElementsByLocalName('ReferencesNeeded')->[0];
     my @references =
-      $references_needed->getElementsByLocalName('Reference');
+      $references_needed->getElementsByLocalName('Reference')
+      if $references_needed;
     my %references;
     foreach my $reference (@references) {
         $references{$reference->getAttribute('Name')} = 1;
