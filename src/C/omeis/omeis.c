@@ -333,6 +333,7 @@ char *pixIDfile="Pixels/lastPix";
 		}
 		strcpy (myPixels->path_info,myPixels->path_rep);
 		strcat (myPixels->path_info,".info");
+		myPixels->ID = ID;
 	}
 
 	return (myPixels);
@@ -1428,62 +1429,226 @@ void closeInputFile(FILE *infile, unsigned char isLocalFile) {
     }
 }
 
-static
-int NewFile (OID *ID, char *filename, off_t size) {
-char path[MAXPATHLEN];
-char *filesIDfile="Files/lastFileID";
-int fd;
 
-	strcpy (path,"Files/");
-	*ID = nextID(filesIDfile);
-	if (*ID <= 0 && errno) {
-		perror ("Couldn't get next File ID");
-		return (-1);
-	} else if (*ID <= 0){
-		fprintf (stderr,"Happy New Year !!!\n");
-		return (-1);
+static void freeFileRep (FileRep *myFile)
+{
+	if (!myFile)
+		return;
+
+	if (myFile->is_mmapped) {
+		munmap (myFile->file_buf, myFile->size_rep);
 	}
-
-	fd = newRepFile (*ID, path, size, NULL);
-	if (fd < 0) {
-		char error[256];
-		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",*ID,path);
-		perror (error);
-		return (-1);
-	}
-
-	if (filename && strlen (filename)) {
-		FILE *fInfo;
-		strcat (path,".name");
-		if ( (fInfo = fopen (path,"w")) ) {
-			fwrite (filename,1,strlen(filename),fInfo);
-			fclose (fInfo);
-		}
-	}
-
-	return (fd);
-
+	
+	if (myFile->fd_info >=0 ) close (myFile->fd_info);
+	if (myFile->fd_rep >=0 ) close (myFile->fd_rep);
+	free (myFile);
 }
 
+
 static
-int DeleteFile (OID fileID) {
-char path[MAXPATHLEN];
-	strcpy (path,"Files/");
-	if (!fileID) return (-1);
+FileRep *newFileRep (OID ID)
+{
+FileRep *myFile;
+char *root="Files/";
+char *filesIDfile="Files/lastFileID";
+
+	if (! (myFile =  (FileRep *)malloc (sizeof (FileRep)))  )
+		return (NULL);
+	myFile = memset(myFile, 0, sizeof(FileRep));
 	
-	if (! getRepPath (fileID,path,0)) {
-		return (-2);
+	strcpy (myFile->path_rep,root);
+	strcpy (myFile->path_info,root);
+	strcpy (myFile->path_ID,filesIDfile);
+
+
+	/* file descriptors reset to -1 */
+	myFile->fd_rep = -1;
+	myFile->fd_info = -1;
+
+	/* If we got an ID, set the paths */
+	if (ID) {
+		if (! getRepPath (ID,myFile->path_rep,0)) {
+			fprintf (stderr,"Could not get path to files file.\n");
+			freeFileRep (myFile);
+			return (NULL);
+		}
+		myFile->ID = ID;
+		strcpy (myFile->path_info,myFile->path_rep);
+		strcat (myFile->path_info,".info");
 	}
-	unlink (path);
-	strcat (path,".name");
-	unlink (path);
+	
+	return (myFile);
+}
+
+
+static FileRep *GetFileRep (OID ID)
+{
+FileRep *myFile;
+struct stat fStat;
+
+	if (!ID) return (NULL);
+
+	if (! (myFile = newFileRep (ID))) {
+		fprintf (stderr,"Could not get a File object.\n");
+		return (NULL);
+	}
+
+	if ( (myFile->fd_rep = open (myFile->path_rep, O_RDONLY, 0600)) < 0) {
+		freeFileRep (myFile);
+		return (NULL);
+	}
+
+	/* Wait for a read lock */
+	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);
+
+	if (fstat (myFile->fd_rep, &fStat) < 0) {
+		fprintf (stderr,"Could not get size of FileID=%llu",myFile->ID);
+		freeFileRep (myFile);
+		return (NULL);			
+	}
+	myFile->size_rep = fStat.st_size;
+
+
+	if ( (myFile->file_buf = (char *)mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
+		fprintf (stderr,"Could not mmap FileID=%llu",myFile->ID);
+		freeFileRep (myFile);
+		return (NULL);			
+	}
+	myFile->is_mmapped = 1;
+
+	return (myFile);
+}
+
+
+
+static
+int DeleteFile (FileRep *myFile) {
+	if (myFile->fd_info >=0 ) close (myFile->fd_info);
+	if (myFile->fd_rep >=0 ) close (myFile->fd_rep);
+	if (myFile->path_rep)
+		unlink (myFile->path_rep);
+	if (myFile->path_info)
+		unlink (myFile->path_info);
+	myFile->fd_info = -1;
+	myFile->fd_rep = -1;
 	return (0);
 }
 
+
+/*
+  NewFile makes a new repository File.
+  The parameters are the filename and size
+  A pointer to a new FileRep structure is returned
+  The file is opened for writing, write-locked and mmapped.
+*/
 static
-void FinishFile (int fd) {
-	lockRepFile (fd,'u',0LL,0LL);
-	close (fd);
+FileRep *NewFile (char *filename, off_t size)
+{
+FileRep *myFile;
+char error[256];
+
+	if ( size > UINT_MAX || size == 0) return NULL;  /* Bad mojo for mmap */
+
+	if (! (myFile = newFileRep (0LL)) ) {
+		perror ("BAH!");
+		return (NULL);
+	}
+	myFile->ID = nextID(myFile->path_ID);
+	if (myFile->ID <= 0 && errno) {
+		perror ("Couldn't get next File ID");
+		freeFileRep (myFile);
+		return (NULL);
+	} else if (myFile->ID <= 0){
+		fprintf (stderr,"Happy New Year !!!\n");
+		freeFileRep (myFile);
+		return (NULL);
+	}
+
+	myFile->size_info = sizeof (FileInfo);
+	myFile->fd_info = newRepFile (myFile->ID, myFile->path_info, myFile->size_info, "info");
+	if (myFile->fd_info < 0) {
+		sprintf (error,"Couldn't open repository info file for FileID %llu (%s).",myFile->ID,myFile->path_info);
+		perror (error);
+		freeFileRep (myFile);
+		return (NULL);
+	}
+	
+	myFile->size_rep = size;
+
+	myFile->fd_rep = newRepFile (myFile->ID, myFile->path_rep, size, NULL);
+	if (myFile->fd_rep < 0) {
+		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",myFile->ID,myFile->path_rep);
+		perror (error);
+		DeleteFile (myFile);
+		freeFileRep (myFile);
+		return (NULL);
+	}
+
+	if ( (myFile->file_buf = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
+		DeleteFile (myFile);
+		fprintf (stderr,"Couldn't mmap File %s (ID=%llu)\n",myFile->path_rep,myFile->ID);
+		freeFileRep (myFile);
+		return (NULL);
+	}
+	
+	strncpy (myFile->file_info.name,filename,255);
+
+	return (myFile);
+}
+
+int GetFileInfo (FileRep *myFile) {
+
+	if ( (myFile->fd_info = open (myFile->path_info, O_RDONLY, 0600)) < 0) {
+		return (-1);
+	}
+
+	if ( read (myFile->fd_info,(void *)&(myFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
+		return (-2);
+	}
+
+	close (myFile->fd_info);
+	myFile->fd_info = -1;
+
+	return (1);
+}
+
+/*
+  Call this only to balance a call to NewFile()
+*/
+static
+int FinishFile (FileRep *myFile) {
+
+	if ( (myFile->fd_info = open (myFile->path_info, O_RDWR, 0600)) < 0) {
+		DeleteFile (myFile);
+		return (-1);
+	}
+
+	/* Get SHA1 */
+	if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, myFile->file_info.sha1) < 0 ) {
+		DeleteFile (myFile);
+		return (-2);
+	}
+
+	if ( write (myFile->fd_info,(void *)&(myFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
+		DeleteFile (myFile);
+		return (-3);
+	}
+
+	close (myFile->fd_info);
+	myFile->fd_info = -1;
+
+	if (myFile->is_mmapped)
+		if (msync (myFile->file_buf , myFile->size_rep , MS_SYNC) != 0) {
+			DeleteFile (myFile);
+			return (-4);
+		}
+
+	lockRepFile (myFile->fd_rep,'u',0LL,0LL);
+
+	close (myFile->fd_rep);
+	myFile->fd_rep = -1;
+	
+	return (0);
 }
 
 
@@ -1498,78 +1663,51 @@ void FinishFile (int fd) {
 static
 OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
 OID ID;
-int fd;
+FileRep *myFile;
 size_t nIO;
-char *sh_mmap;
 FILE *infile;
 
-	if (  (fd = NewFile( &ID, filename, size )) == -1 ) return 0;
-	if ( size > UINT_MAX ) return 0;  /* Bad mojo for mmap */
-
-	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0LL)) == (char *) -1 ) {
-		close (fd);
-		DeleteFile (ID);
-		fprintf (stderr,"Couldn't mmap uploaded file %s (ID=%llu)\n",filename,ID);
-		return (0);
-	}
+	if (  !(myFile = NewFile(filename, size )) ) return 0;
 
     infile = openInputFile(filename,isLocalFile);
 
     if (infile) {
-        nIO = fread (sh_mmap,1,size,infile);
+        nIO = fread (myFile->file_buf,1,size,infile);
         if (nIO != size) {
             fprintf (stderr,"Could finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
                      filename,ID,(unsigned long)nIO,(unsigned long)size);
-            ID = 0;
-        }
-
-        closeInputFile(infile,isLocalFile);
+            DeleteFile (myFile);
+			freeFileRep (myFile);
+	        }
     }
 
-	/* release the lock created by newRepFile */
-	munmap (sh_mmap, size);
-	FinishFile (fd);
+	FinishFile (myFile);
+	ID = myFile->ID;
+	freeFileRep (myFile);
 	return (ID);
 }
 
 static
 size_t ConvertFile (PixelsRep *myPixels, OID fileID, off_t file_offset, off_t pix_offset, size_t nPix) {
 pixHeader *head;
-int fd;
-char file_path[MAXPATHLEN],bp, *sh_mmap;
+FileRep *myFile;
 unsigned long nIO;
 convertFileRec convFileRec;
 FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
 char isBigEndian=1;
 
-	strcpy (file_path,"Files/");
-
 	if (!fileID || !myPixels) return (0);
-	
-	if (! getRepPath (fileID,file_path,0)) {
-		return (0);
-	}
-
 	if (! (head = myPixels->head) ) return (0);
-	bp = head->bp;
 
-
-	if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
-		return (0);
-	}
-	if ( (sh_mmap = (char *)mmap (NULL, nPix*bp, PROT_READ, MAP_SHARED, fd, file_offset)) == (char *) 0 ) {
-		close (fd);
+	if ( !(myFile = GetFileRep (fileID)) ) {
 		return (0);
 	}
 
-
-
-	myPixels->IO_buf = sh_mmap;
+	myPixels->IO_buf = myFile->file_buf + file_offset;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
-		munmap (sh_mmap, nPix*bp);
-		close (fd);
+		freeFileRep (myFile);
 		return (nIO);
 	}
 
@@ -1586,14 +1724,14 @@ char isBigEndian=1;
 		fclose (convFileInfo);
 	}
 
-	munmap (sh_mmap, nPix*bp);
-	close (fd);
+	freeFileRep (myFile);
 	return (nIO);
 }
 
 static
 size_t ConvertTIFF (PixelsRep *myPixels, OID fileID, ome_coord theZ, ome_coord theC, ome_coord theT) {
 pixHeader *head;
+FileRep *myFile;
 char file_path[MAXPATHLEN],bp;
 unsigned long nIO, nOut;
 off_t pix_offset;
@@ -1613,7 +1751,8 @@ tsize_t stripSize;
 
 	if (!fileID || !myPixels) return (0);
 	
-	if (! getRepPath (fileID,file_path,0)) {
+	if (! (myFile = newFileRep (fileID))) {
+		fprintf (stderr,"Could not get a File object.\n");
 		return (0);
 	}
 
@@ -1624,7 +1763,7 @@ tsize_t stripSize;
 
 	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
 	
-    if (! (tiff = TIFFOpen(file_path, "r")) ) {
+    if (! (tiff = TIFFOpen(myFile->path_rep, "r")) ) {
 		fprintf (stderr,"ConvertTIFF:  Couldn't open TIFF file.\n");
     	return (0);
     }
@@ -1670,6 +1809,8 @@ tsize_t stripSize;
 	}
 	_TIFFfree(buf);
 	TIFFClose(tiff);
+	
+	freeFileRep (myFile);
 
 	sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
 	if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
@@ -1718,6 +1859,7 @@ int
 dispatch (char **param)
 {
 	PixelsRep *thePixels;
+	FileRep *theFile;
 	pixHeader *head;
 	size_t nPix=0, nIO=0;
 	char *theParam,rorw='r',iam_BigEndian=1;
@@ -1799,8 +1941,8 @@ char **cgivars=param;
 	if ( (theParam = get_param (param,"theY")) )
 		sscanf (theParam,"%d",&theZ);
 
-	if ( (theParam = get_param (param,"BigEndian")) ) {
-		if (!strcmp (theParam,"0") || !strcmp (theParam,"False") || !strcmp (theParam,"false") ) iam_BigEndian=0;
+	if ( (theParam = get_lc_param (param,"BigEndian")) ) {
+		if (!strcmp (theParam,"0") || !strcmp (theParam,"false") ) iam_BigEndian=0;
 	}
 
 	/* ---------------------- */
@@ -2032,30 +2174,26 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			strcpy (file_path,"Files/");
-			if (! getRepPath (fileID,file_path,0)) {
-				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+			if ( !(theFile = GetFileRep (fileID)) ) {
+				sprintf (error_str,"Could not open FileID=%llu!",fileID);
 				HTTP_DoError (method,error_str);
 				return (-1);
 			}
-		
-			if (stat (file_path, &fStat) < 0) {
-				sprintf (error_str,"Could not get information for FileID=%llu",fileID);
+			
+			if (GetFileInfo (theFile) < 0) {
+				freeFileRep (theFile);
+				sprintf (error_str,"Could not get info for FileID=%llu!",fileID);
 				HTTP_DoError (method,error_str);
-				return (-1);			
+				return (-1);
 			}
-		
-			strcat (file_path,".name");
-			strcpy (file_name,"");
-			if ( (fInfo = fopen (file_path,"r")) ) {
-				nIO = fread (file_name,1,255,fInfo);
-				fclose (fInfo);
-				if (nIO) file_name[nIO]=0;
-			}
-
 
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"Name=%s\nLength=%lu\n",file_name,(unsigned long)fStat.st_size);
+			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info.name,(unsigned long)theFile->size_rep);
+
+			/* Print our lovely and useful SHA1. */
+			print_md(theFile->file_info.sha1);  /* Convenience provided by digest.c */
+			printf("\n");
+			freeFileRep (theFile);
 
 			break;
 		case M_FILESHA1:
@@ -2066,38 +2204,26 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			strcpy (file_path,"Files/");
-			if (! getRepPath (fileID,file_path,0)) {
-				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+			if ( !(theFile = GetFileRep (fileID)) ) {
+				sprintf (error_str,"Could not open FileID=%llu!",fileID);
 				HTTP_DoError (method,error_str);
 				return (-1);
 			}
 			
-			if (stat (file_path, &fStat) < 0) {
-				sprintf (error_str,"Could not get information for FileID=%llu",fileID);
+			if (GetFileInfo (theFile) < 0) {
+				freeFileRep (theFile);
+				sprintf (error_str,"Could not get info for FileID=%llu!",fileID);
 				HTTP_DoError (method,error_str);
-				return (-1);			
+				return (-1);
 			}
-		
-			strcat (file_path,".name");
-			strcpy (file_name,"");
-			if ( (fInfo = fopen (file_path,"r")) ) {
-				nIO = fread (file_name,1,255,fInfo);
-				fclose (fInfo);
-				if (nIO) file_name[nIO]=0;
-			}
-		
+
+
 			HTTP_ResultType ("text/plain");
 
-			/* Get the SHA1 message digest */
-			if (get_md_from_file(file_name, file_md) < 0) {
-				fprintf(stderr, "Unable to retrieve SHA1.");
-				return(-1);
-			}
-
 			/* Print our lovely and useful SHA1. */
-			print_md(file_md);  /* Convenience provided by digest.c */
+			print_md(theFile->file_info.sha1);  /* Convenience provided by digest.c */
 			printf("\n");
+			freeFileRep (theFile);
 
 			break;
 		case M_READFILE:

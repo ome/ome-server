@@ -121,6 +121,25 @@ typedef struct
 } PixelsRep;
 
 typedef struct {
+	char sha1[OME_DIGEST_LENGTH];
+	char name[256];
+} FileInfo;
+
+typedef struct {
+	OID ID;
+	char path_ID[256];
+	char path_rep[256];
+	char path_info[256];
+	int  fd_rep;
+	int  fd_info;
+	size_t size_rep;
+	size_t size_info;
+	char is_mmapped;
+	FileInfo file_info;
+	void *file_buf;
+} FileRep;
+
+typedef struct {
 	ome_coord theZ, theC, theT;
 } tiffConvertSpec;
 
