@@ -150,6 +150,7 @@ our @core_classes =
    'OME::AnalysisChainExecution',
    'OME::AnalysisChainExecution::NodeExecution',
    'OME::Task',
+   'OME::Analysis::Engine::Worker',
    # Make sure this next one is last
    'OME::Configuration::Variable',
   );
