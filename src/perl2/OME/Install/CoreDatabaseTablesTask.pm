@@ -1008,6 +1008,7 @@ sub execute {
         check_repository ($session);
         print_header "Finalizing Database";
         # Set the UID to whoever owns the install directory
+        euid(0);
         euid((stat ('.'))[4]);
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         load_analysis_core ($session, $LOGFILE)
@@ -1025,6 +1026,7 @@ sub execute {
         make_repository ($session);
         check_repository ($session);
         # Set the UID to whoever owns the install directory
+        euid(0);
         euid((stat ('.'))[4]);
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         commit_experimenter ($session) or croak "Unable to load commit experimenter.";

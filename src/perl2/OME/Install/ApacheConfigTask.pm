@@ -361,11 +361,10 @@ sub need_omeis_update {
 	my $pixels_update=1;
 	my $files_update=1;
 
-	my $old_UID = euid();
-	# Be the apache user.
-	euid($APACHE_UID);
+	# Be the apache user for this.
+	my $old_UID = euid($APACHE_UID);
 
-	if ( open(VERS, "src/C/omeis/updateOMEIS -q |") ) {
+	if ( open(VERS, "$OME_BASE_DIR/bin/updateOMEIS -q |") ) {
  	   while (<VERS>) {
  	       $pixels_update = 0 if /^Pixels/;
  	       $files_update  = 0 if /^Files/;
@@ -890,17 +889,17 @@ BLURB
 
 	my $httpdConf = $apache_info->{conf} or croak "Could not find httpd.conf\n";
 	print $LOGFILE "httpd.conf is $httpdConf\n";
-
        
 	if ($APACHE->{DEV_CONF}) {
-		if ( not  check_permissions ({user => $APACHE_USER, r => 1, x => 1}, cwd()."src/perl2") ) {
+		if ( not  check_permissions ({user => $APACHE_USER, r => 1, x => 1}, cwd()."/src/perl2") ) {
 			print STDERR "\nYou have chosen a developer configuration, yet Apache does not have access into the\n".
-					"distribution directory (".cwd().").\n".
-		 			"Please re-set your permissions to give Apache access and try the install again.\n".
-  					"Alternatively, you can choose to not use the developer configuration.";
+						 "distribution directory (".cwd().").\n".
+						 "Please re-set your permissions to give Apache access and try the install again.\n".
+						 "Alternatively, you can choose to not use the developer configuration.";
 			die;
 		}
 	}
+        
 
 	#********
 	#******** Attempt to fix httpd.conf

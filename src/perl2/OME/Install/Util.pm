@@ -39,6 +39,7 @@ use English;
 use Carp;
 use File::Copy;
 use File::Basename;
+use File::Glob ':glob';
 use Cwd;
 use File::Spec::Functions qw(rel2abs rootdir updir canonpath splitpath splitdir catdir catpath);
 
@@ -53,6 +54,7 @@ our @ISA = qw(Exporter);
 our @EXPORT = qw(
 		add_user
 		add_group
+		get_user_gids
 		add_user_to_group
 		delete_tree
 		copy_tree
@@ -111,6 +113,27 @@ my %os_specific = (
 	    my $group = shift;
 
 	    (system ("/usr/sbin/groupadd $group") == 0) or return 0;
+	},
+	
+	get_user_gids => sub {
+	    my ($user, $group) = @_;
+	    my @groups;
+
+	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
+
+	    # Search the group file for groups that the user is in
+	    while (<GR_FILE>) {
+		chomp;
+		my ($group_name, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
+		my @members = split (/,/, $member_string) if $member_string or undef;
+
+		if (@members) {
+		    foreach my $member (@members) {
+			push (@groups, $group_name) if $user eq $member;
+		    }
+		}
+	    }
+	    close (GR_FILE);
 	},
 
 	# XXX: In order to add a user to a group in Linux without modifying the /etc/group file by hand
@@ -195,6 +218,29 @@ my %os_specific = (
 
 	    return 1;
 	},
+	
+	get_user_gids => sub {
+	    my ($user, $group) = @_;
+	    my @groups;
+
+		my $gid;
+	    my @gids = `nireport / /users name gid`;
+	    foreach (@gids) {
+	    	my ($name,$gid) = split (/\s+/,$_);
+	    	push (@groups,$gid) if $name eq $user;
+	    }
+
+	    @gids = `nireport / /groups gid users`;
+	    foreach (@gids) {
+	    	my ($gid,$user_names) = split (/\s+/,$_);
+	    	my @users = split (/,/,$user_names) if $user_names =~ /,/;
+	    	foreach (@users) {
+	    		push (@groups,$gid) if $_ eq $user;
+	    	}
+	    }
+	    return @groups;
+
+	},
 
 	# XXX: This is about the only thing that's easier in OS X, and *much* easier it is, a single command.
 	#      In addition, it's semi-intelligent, the -merge NetInfo flag won't add a user to a group if he/she
@@ -236,6 +282,16 @@ my %os_specific = (
 
 	    return undef;
 	},
+	
+	get_user_gids => sub {
+	    my ($user, $group) = @_;
+	    carp "Unsupported get_user_gids() platform - sorry";
+	},
+
+	add_user_to_group => sub {
+	    my ($user, $group) = @_;
+	    carp "Unsupported add_user_to_group() platform, please add \"$user\" to the group \"$group\"manually";
+	}
     },
     
     # Solaris specific stuff
@@ -262,6 +318,16 @@ my %os_specific = (
 
 	    return system ("/usr/sbin/groupadd $group") == 0 ? 1 : 0;
 	},
+	
+	get_user_gids => sub {
+	    my ($user, $group) = @_;
+	    carp "Unsupported get_user_gids() platform - sorry";
+	},
+
+	add_user_to_group => sub {
+	    my ($user, $group) = @_;
+	    carp "Unsupported add_user_to_group() platform, please add \"$user\" to the group \"$group\"manually";
+	}
     },
 
     # FreeBSD specific stuff
@@ -289,6 +355,27 @@ my %os_specific = (
 	    my $group = shift;
 
 	    return system ("/usr/sbin/pw groupadd $group") == 0 ? 1 : 0;
+	},
+	
+	get_user_gids => sub {
+	    my ($user, $group) = @_;
+	    my @groups;
+
+	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
+
+	    # Search the group file for groups that the user is in
+	    while (<GR_FILE>) {
+		chomp;
+		my ($group_name, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
+		my @members = split (/,/, $member_string) if $member_string or undef;
+
+		if (@members) {
+		    foreach my $member (@members) {
+			push (@groups, $group_name) if $user eq $member;
+		    }
+		}
+	    }
+	    close (GR_FILE);
 	},
 
 	# XXX: See the linux implementation of add_user_to_group () for more details.
@@ -388,6 +475,14 @@ sub add_group {
     my $add_group = $os_specific{$OSNAME}->{add_group};
 
     return &$add_group($group);
+}
+
+sub get_user_gids {
+    my $user = shift;
+
+    my $get_user_gids = $os_specific{$OSNAME}->{get_user_gids};
+
+    return &$get_user_gids($user);
 }
 
 sub add_user_to_group {
@@ -530,40 +625,46 @@ sub delete_tree {
 #	1 on success, dies on failure.
 sub fix_ownership {
     my ($o_and_g, @items) = @_;
-	
-	croak ("Owner/group hashref required.") unless ref($o_and_g) eq 'HASH';	
+    
+    croak ("Owner/group hashref required.") unless ref($o_and_g) eq 'HASH'; 
 
-	# No point traversing any further unless we actually have something to do
-	return 1 if (scalar(@items) < 1);
+    # No point traversing any further unless we actually have something to do
+    return 1 if (scalar(@items) < 1);
+
+
+    # Save current euid, and set it to 0.
+	my $old_euid = euid (0);
 
     my $uid;
     if (exists $o_and_g->{'owner'}) {
-    	$uid = getpwnam($o_and_g->{'owner'})
-			or croak "Unable to find user: \"", $o_and_g->{'owner'}, "\"";
-	}
-	
+        $uid = getpwnam($o_and_g->{'owner'})
+            or croak "Unable to find user: \"", $o_and_g->{'owner'}, "\"";
+    }
+    
     my $gid;
     if (exists $o_and_g->{'group'}) {
-    	$gid = getgrnam($o_and_g->{'group'})
-			or croak "Unable to find group: \"", $o_and_g->{'group'}, "\"";
-	}
+        $gid = getgrnam($o_and_g->{'group'})
+            or croak "Unable to find group: \"", $o_and_g->{'group'}, "\"";
+    }
 
-	my @stat;
-	while (my $item = shift @items) {
-		# Just do a full chown, no harm in doing both if we only need one or
-		# not at all.
-		# XXX We're not following symlinks.
-		if (-d $item){
-			fix_ownership($o_and_g, glob ("$item/*"))
-				unless exists $o_and_g->{'recurse'} and $o_and_g->{'recurse'} eq 0;
-		}
-		
-		$uid = (stat ($item))[4] unless defined $uid;
-		$gid = (stat ($item))[5] unless defined $gid;
-		chown ($uid, $gid, $item) or croak "Unable to change owner of $item, $!";
-	}
+    my @stat;
+    while (my $item = shift @items) {
+        # Just do a full chown, no harm in doing both if we only need one or
+        # not at all.
+        # XXX We're not following symlinks.
+        if (-d $item){
+            fix_ownership($o_and_g, bsd_glob ("$item/*"))
+                unless exists $o_and_g->{'recurse'} and $o_and_g->{'recurse'} eq 0;
+        }
+        
+        $uid = (stat ($item))[4] unless defined $uid;
+        $gid = (stat ($item))[5] unless defined $gid;
+        chown ($uid, $gid, $item) or croak "Unable to change owner of $item, $!";
+    }
+    
+    euid ($old_euid);
 
-	return 1;
+    return 1;
 }
 
 # Fixes the permissions (mode) of a given set of filesystem items
@@ -586,7 +687,7 @@ sub fix_permissions {
 			fix_permissions( {
 					mode => $options->{'mode'},
 					recurse => 1,
-				}, glob ("$item/*"));
+				}, bsd_glob ("$item/*"));
 		}
 		
 		chmod ($options->{'mode'}, $item)
@@ -615,42 +716,57 @@ sub check_permissions {
 	# No point traversing any further unless we actually have something to do
 	return 1 if (scalar(@items) < 1);
 
-	# Save current euid, and set it to the specified user.
-	my $old_euid = euid ();
-
-	my $uid = getpwnam($options->{'user'});
-	euid($uid);
-	
 	my $ret_val = 1;
+	my $user = $options->{user};
+	my $user_uid = getpwnam($user);
+	my @gids = get_user_gids($user);
+
 	while (my $item = shift @items) {
 		# XXX We're not following symlinks.
 		if (-d $item and $options->{'recurse'}) {
-			check_permissions($options, glob ("$item/*"));
+			return 0 unless check_permissions($options, bsd_glob ("$item/*"));
 		}
 		
+		my ($mode,$uid,$gid) = (stat ($item))[2,4,5];
+		return 0 unless $mode;
+		$mode = $mode & 07777;
+		my $in_gids;
+		foreach (@gids) {$in_gids = 1 if $_ == $gid;}
+
 		if (exists $options->{r}) {
-			if (not -r $item) {
-				$ret_val = 0;
-				last;
+			if ( not (
+				( ($mode & (1 << 2)) ) ||                        # Others can read
+				( ($mode & (1 << 8)) && ($uid == $user_uid) ) || # Owner can read and matches
+				( ($mode & (1 << 5)) && $in_gids )               # Group can read and gid is one of user's gids
+				) ) {
+					$ret_val = 0;
+					last;
 			}
 		}
 		
 		if (exists $options->{w}) {
-			if (not -w $item) {
-				$ret_val = 0;
-				last;
+			if ( not (
+				( ($mode & (1 << 1)) ) ||                        # Others can write
+				( ($mode & (1 << 7)) && ($uid == $user_uid) ) || # Owner can write and matches
+				( ($mode & (1 << 4)) && $in_gids )               # Group can write and gid is one of user's gids
+				) ) {
+					$ret_val = 0;
+					last;
 			}
 		}
 		
 		if (exists $options->{x}) {
-			if (not -x $item) {
-				$ret_val = 0;
-				last;
+			if ( not (
+				( ($mode & (1 << 0)) ) ||                        # Others can execute
+				( ($mode & (1 << 6)) && ($uid == $user_uid) ) || # Owner can execute and matches
+				( ($mode & (1 << 3)) && $in_gids )               # Group can execute and gid is one of user's gids
+				) ) {
+					$ret_val = 0;
+					last;
 			}
 		}
 	}
-	
-	euid($old_euid);
+
 	return $ret_val;
 }
 
