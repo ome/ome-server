@@ -76,6 +76,10 @@ public class PLinkLayer extends PLayer {
 		link.setLinkLayer(this);
 	}
 	
+	public Iterator linkIterator() {
+		return params.getChildrenIterator();
+	}
+	
 	// completeLink is used to set up the link between modules.
 	public void completeLink(PParamLink link) {
 		PFormalOutput output = link.getOutput();
