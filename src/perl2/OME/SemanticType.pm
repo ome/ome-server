@@ -692,9 +692,40 @@ the granularity of the attribute's semantic type will be defined.
 
 =cut
 
+# The methods described above are created by the
+# requireAttributeTypePackage method.  They are aliases for _getTarget,
+# defined below.
+
 sub _getTarget {
     my ($self) = @_;
     return $self->{_target};
+}
+
+=head2 getDataHash
+
+	my $data_hash = $attribute->getDataHash();
+
+Returns a reference to a hash of all of the semantic elements of the
+attribute and their values.  This hash will not include entries for
+the analysis, target, semantic type, or primary key ID.
+
+=cut
+
+sub getDataHash {
+    my ($self) = @_;
+
+    my %return_hash;
+
+    my $attribute_type = $self->_attribute_type();
+    my @columns = $attribute_type->attribute_type_columns();
+
+    foreach my $column (@columns) {
+        my $column_name = $column->name();
+        my $value = $self->_getField($column_name);
+        $return_hash{$column_name} = $value;
+    }
+
+    return \%return_hash;
 }
 
 sub _getField {
