@@ -95,6 +95,9 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		Point2D pos = e.getPosition();
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
+		System.err.println("clicked on palette..");
+		System.err.println("# of clicks was "+e.getClickCount());
+		System.err.println("node was "+node);
 		if (mask == MouseEvent.BUTTON1_MASK &&
 			e.getClickCount() == 2) {
 			if (node instanceof PBufferedNode) {
@@ -113,7 +116,8 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true); 
 			}
-			else if (node instanceof PCamera) {
+			else if (node instanceof PCamera || node == canvas.getLayer()) {
+				System.err.println("zooming to camera");
 				PBounds b = canvas.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
