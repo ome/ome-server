@@ -74,19 +74,6 @@ sub new {
 	# _default_limit sets the number of results per page
 	$self->{ _default_limit } = 27;
 	
-	# _published_search_types gets translated to the 'Look for:' drop-down list
-	$self->{ _published_search_types } = [
-		'OME::Project', 
-		'OME::Dataset', 
-		'OME::Image', 
-		'OME::ModuleExecution', 
-		'OME::Module', 
-		'OME::AnalysisChain', 
-		'OME::AnalysisChainExecution',
-		'@Category',
-		'@CategoryGroup'
-	];
-
 	# _display_modes lists formats the results can be displayed in. 
 	#	mode maps to a template name. 
 	#	mode_title is presented to the user.
@@ -96,6 +83,20 @@ sub new {
 	];
 		
 	return $self;
+}
+
+# These routines allow filtering of search types.
+sub __get_search_types {
+	return (
+		'OME::Project', 
+		'OME::Dataset', 
+		'OME::Image', 
+		'OME::ModuleExecution', 
+		'OME::Module', 
+		'OME::AnalysisChain', 
+		'OME::AnalysisChainExecution',
+		'OME::SemanticType'
+	);
 }
 
 sub getMenuText {
@@ -129,6 +130,7 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;	
+	my $factory = $self->Session()->Factory();
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' ) || $q->param( 'Locked_Type' );
 	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
@@ -176,20 +178,68 @@ END_HTML
 		return( 'HTML', $html );
 	}
 
-	# if the type isn't in the list of searchable types, add it. 
+	# Drop down list of search types
+	my @search_types = $self->__get_search_types();	
+	# if the type requested isn't in the list of searchable types, add it. 
 	# This stores the type, which is required for paging to work.
-	unshift( @{ $self->{ _published_search_types } }, $type )
-		unless not defined $type || grep( $_ eq $type, @{ $self->{ _published_search_types } } );
-	# load Types to search on
-	foreach my $formal_name ( @{ $self->{ _published_search_types } } ) {
+	unshift( @search_types, $type )
+		unless(
+			( not defined $type ) || 
+			( $type =~ m/^@/ ) ||
+			( grep( $_ eq $type, @search_types ) )
+		);
+	my %search_type_labels;
+	foreach my $formal_name ( @search_types ) {
 		my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
-		my $type_data;
-		$type_data->{ formal_name } = $formal_name;
-		$type_data->{ common_name } = $common_name;
-		$type_data->{ selected } = 'selected'
-			if( $type && $formal_name eq $type );
-		push( @{ $tmpl_data{ types_loop } }, $type_data );
+		$search_type_labels{ $formal_name } = $common_name;
 	}
+	my @globalSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'G',
+		__order     => 'name'
+	);
+	my @datasetSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'D',
+		__order     => 'name'
+	);
+	my @imageSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'I',
+		__order     => 'name'
+	);
+	my @featureSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'F',
+		__order     => 'name'
+	);
+	
+	$tmpl_data{ search_types } = $q->popup_menu(
+		-name     => 'Type',
+		'-values' => [ 
+			'', 
+			@search_types, 
+			'G', 
+			map( '@'.$_->name(), @globalSTs),
+			'D',
+			map( '@'.$_->name(), @datasetSTs),
+			'I',
+			map( '@'.$_->name(), @imageSTs),
+			'F',
+			map( '@'.$_->name(), @featureSTs),
+		],
+		-default  => ( $type ? $type : '' ),
+		-override => 1,
+		-labels   => { 
+			''  => '-- Select a Search Type --', 
+			%search_type_labels,
+			'G' => '-- Global Semantic Types --', 
+			(map{ '@'.$_->name() => $_->name() } @globalSTs ),
+			'D' => '-- Dataset Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @datasetSTs ),
+			'I' => '-- Image Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @imageSTs ),
+			'F' => '-- Feature Semantic Types --',
+			(map{ '@'.$_->name() => $_->name() } @featureSTs ),
+		},
+		-onchange => "if(this.value != '' && this.value != 'G' && this.value != 'D' && this.value != 'I' && this.value != 'F' ) { document.forms[0].submit(); } return false;"
+	);
 
 	# set up display modes
 	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
