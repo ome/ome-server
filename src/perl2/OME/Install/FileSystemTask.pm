@@ -26,7 +26,9 @@ package OME::Install::FileSystemTask;
 
 use strict;
 use warnings;
+use English;
 use Carp;
+use File::Copy;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 
@@ -53,7 +55,7 @@ my @core_dirs = (
 );
 
 # Populate children (Base OME directory)
-my @children = ("xml", "bin", "html", "JavaScript", "images", "perl2", "cgi", "repository");
+my @children = ("xml", "bin", "perl2", "cgi", "repository");
 foreach my $child (@children) {
     push (@{$core_dirs[0]{children}}, $child); 
 }
@@ -64,12 +66,32 @@ foreach my $child (@children) {
     push (@{$core_dirs[1]{children}}, $child); 
 }
 
+# The HTML directories that need to be copied to the basedir
+my @html_core = ("JavaScript", "html", "images");
+
+# Base and temp dir references
+my $BASEDIR = \$core_dirs[0]->{path};
+my $TMPDIR = \$core_dirs[1]->{path};
 
 #*********
 #********* LOCAL SUBROUTINES
 #*********
 
 # NIL
+
+sub fix_ownership {
+    my ($user, $dir) = @_;
+
+    # Get directory info
+    my ($dir_uid, $dir_gid) = (stat("$dir"))[4,5] or croak "Unable to find directory: \"$dir\".";
+    my ($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\".";
+
+    # If we've got a wrong UID or GID do a full chown it no harm in doing both if we only need one
+    if (($dir_uid != $uid) or ($dir_gid != $gid)) {
+	chown ($uid, $gid, $dir) or carp "Unable to change owner of $dir, $!";
+	return $! ? undef : 1;
+    }
+}
 
 #*********
 #********* START OF CODE
@@ -78,17 +100,24 @@ foreach my $child (@children) {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+    #my $OMEUser = $environment->OMEUser;
+    my $OMEUSER = "ome";
+    my $OMEUID = getpwnam($OMEUSER);
 
     print_header ("Filesystem Setup");
 
-    # We need to drop our umask so that everyone can create files.
-    print "Dropping umask to ", BOLD, "\"0000\"", RESET, ".\n";
-    umask (0000);
+    # Set a proper umask
+    print "Dropping umask to ", BOLD, "\"0007\"", RESET, ".\n";
+    umask (0002);
 
     # Confirm and/or update all our installation dirs
     foreach my $directory (@core_dirs) {
-	$directory->{path} = confirm_default ($directory->{description}, $directory->{path});
+	$directory->{path} = confirm_path ($directory->{description}, $directory->{path});
     }
+
+    #********
+    #******** Build our core directory structure
+    #********
 
     foreach my $directory (@core_dirs) {
 	# Create the core dirs
@@ -96,15 +125,64 @@ sub execute {
 	    print "Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
 	    mkdir $directory->{path} or croak "Unable to create directory \"$directory->{path}\": $!";
 	}
+
+	# Make sure the core dirs are owned by the $OMEUser
+	fix_ownership($OMEUSER, $directory->{path}) or croak "Failure setting permissions on \"$directory->{path}\".";
+
+	# Set the "Set-GID" bit on the dir so that all files will inherit it's GID
+	chmod(02775, $directory->{path}) or croak "Failure setting GID on \"$directory->{path}\".";
+
 	# Create each core dir's children
 	foreach my $child (@{$directory->{children}}) {
 	    $child = $directory->{path}."/".$child;
-	    if (not -e $child) { 
+	    if (not -e $child) {
+		# There's no need to be UID 0 for these creations
+		$EUID = $OMEUID;
+
 		print "Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
 		mkdir $child or croak "Unable to create directory \"$child\": $!";
+
+		# Back to UID 0 we go
+		$EUID = 0;
 	    }
 	}
     }
+
+    print "\n";  # Spacing
+    
+    #********
+    #******** Populate stylesheets
+    #********
+
+    print "Copying stylesheets\n";
+    my @files = glob ("src/xml/xslt/*.xslt");
+    # There's no need to be UID 0 for these creations
+    $EUID = $OMEUID;
+
+    foreach my $file (@files) {
+	print "  \\_ $file\n";
+	copy ($file, $$BASEDIR."/xml/") or die ("Couldn't copy file ", $file, ". ", $!, ".\n");
+    }
+
+    # Back to UID 0 we go
+    $EUID = 0;
+
+    
+    #********
+    #******** Copy our HTML core directories from the source tree
+    #********
+
+    print "Copying HTML directories\n";
+    # There's no need to be UID 0 for these creations
+    $EUID = $OMEUID;
+
+    foreach my $directory (@html_core) {
+	print "  \\_ $directory\n";
+	$environment->copyTree ("$directory", "$$BASEDIR/$directory");
+    }
+    
+    # Back to UID 0 we go
+    $EUID = 0;
 }
 
 sub rollback {
