@@ -87,12 +87,13 @@ public class ConnectionWorker extends SwingWorker {
 					if (session != null && factory != null) {
 						modules  = new Modules(connection,factory);
 						chains = new Chains(connection,factory);
+						connection.setStatusLabel("Palette & Chain Library");
 					}
 				}
 						
 			} catch (Exception e) {
 				System.err.println(e);
-				
+				connection.closeStatusWindow();
 				controller.cancelLogin();
 			}
 			return remote;
@@ -106,6 +107,7 @@ public class ConnectionWorker extends SwingWorker {
 			connection.setChains(chains);
 
 			controller.completeLogin(connection);
+			connection.closeStatusWindow();
 		}
 		else 
 			JOptionPane.showMessageDialog(controller.getMainFrame(),
