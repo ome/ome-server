@@ -78,20 +78,30 @@ my $VALIDATION_INCS = <<END;
 <script type="text/javascript" src="/JavaScript/fValidate/fValidate.validators.js"></script>
 END
 
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
+=head2 _get_published_create_types
+
+Returns a list of object types (by their formal names) that is used to
+populate a dropdown list of types the user is allowed to create.
+
+Currently it returns Project, Dataset, and all the Global STs,
+excluding Experimenter.
+
+=cut
+
+sub _get_published_create_types {
+	my $self = shift;
 	# _published_create_types gets translated to the 'Create a:' drop-down list
-	$self->{ _published_create_types } = [
+	my $factory = $self->Session->Factory();
+	my @globalSTs = $factory->findObjects( 'OME::SemanticType', 
+		granularity => 'G',
+		__order     => 'name',
+		'name'      => [ '!=', 'Experimenter' ],
+	);
+	return (
 		'OME::Project',
 		'OME::Dataset',
-		'@CategoryGroup',
-		'@Category',
-	];
-	
-	return $self;
+		map( '@'.$_->name(), @globalSTs )
+	);
 }
 
 =head2 getMenuText
@@ -108,8 +118,7 @@ sub getMenuText {
 	my $menuText = "Other";
 	return $menuText unless ref($self);
 	my $q = $self->CGI();
-	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
-	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $type = $self->_getType();
 
 	my $specializedDetail;
 	return $specializedDetail->getMenuText( )
@@ -137,8 +146,7 @@ sub getPageTitle {
 	my $pageTitle = "Create Something";
 	return $pageTitle unless ref($self);
 	my $q = $self->CGI();
-	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
-	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $type = $self->_getType();
 
 	my $specializedDetail;
 	return $specializedDetail->getPageTitle( )
@@ -161,8 +169,7 @@ Overridable
 sub getPageBody {
 	my $self = shift;
 	my $q = $self->CGI();
-	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
-	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $type = $self->_getType();
 	my $locked_type = ( $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 
 	my $specializedDBObjCreate;
@@ -185,10 +192,10 @@ Overridable
 =cut
 
 sub _getForm {
-	my $self = shift;
-	my $q = $self->CGI();
-	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
-	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $self    = shift;
+	my $q       = $self->CGI();
+	my $factory = $self->Session->Factory();
+	my $type = $self->_getType();
 	my $locked_type = ( $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
 
 	my $specializedDetail;
@@ -207,9 +214,10 @@ sub _getForm {
 	my %tmpl_data = $self->getFormInputsForFields( $type, $requests );
 
 	# /field_loop = Iterate over the fields in the type
+	my ($package_name, $common_name, $formal_name, $ST);
+	($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $type ) if $type;
 	if( exists $requests->{ '/field_loop' } && $type ) {
-		my ($package_name, $common_name, $formal_name, $ST) =
-			$self->_loadTypeAndGetInfo( $type );
 		foreach my $request ( @{ $requests->{ '/field_loop' } } ) {
 			my $request_string = $request->{ 'request_string' };
 			my $inner_requests = $self->_parse_tmpl_fields( [ $tmpl->query( loop => $request_string ) ] );
@@ -230,10 +238,24 @@ sub _getForm {
 			# package up stuff for the template
 			foreach my $field( @fields ) {
 				my %field_entry;
-				# Add name iff requested
-				$field_entry{ '/name' } = $field 
-					if( $tmpl->query( name => [ $request_string, '/name' ] ) );
-				# Add sql_type iff requested
+				# /name:
+				if( $tmpl->query( name => [ $request_string, '/name' ] ) ) {
+					if( $ST ) {
+						my $se = $factory->findObject( 'OME::SemanticType::Element',
+							semantic_type => $ST,
+							name          => $field
+						);
+						$field_entry{ '/name' } = $q->a( {
+							-href   => 'javascript: SEdocPopup( '.$se->id.');',
+							-title  => "$field Documentation" },
+							$field
+						) if $se;
+					}
+					unless( exists $field_entry{ '/name' } ) {
+						$field_entry{ '/name' } = $field;
+					} 
+				}
+				# /sql_type:
 				if( $tmpl->query( name => [ $request_string, '/sql_type' ] ) ) {
 					my $SQL_data_type = $package_name->getColumnSQLType( $field );
 					$field_entry{ '/sql_type' } = $SQL_data_type;
@@ -253,7 +275,7 @@ sub _getForm {
 		if( not $locked_type ) {
 			foreach my $request ( @{ $requests->{ '/types_loop' } } ) {
 				my $request_string = $request->{ 'request_string' };
-				foreach my $formal_name ( @{ $self->{ _published_create_types } } ) {
+				foreach my $formal_name ( $self->_get_published_create_types() ) {
 					my ($package_name, $common_name, undef, $ST) = $self->_loadTypeAndGetInfo( $formal_name );
 					my $type_data;
 					$type_data->{ formal_name } = $formal_name;
@@ -264,9 +286,24 @@ sub _getForm {
 				}
 			}
 		} else {
-			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $locked_type );
-			$tmpl_data{ '/locked_type' } = $common_name;
+			$tmpl_data{ '/locked_type' } = ( $ST ?
+				$q->a( {
+					-href   => 'javascript: STdocPopup( "'.$ST->name.'");',
+					-title  => "$common_name Documentation" },
+					$common_name
+				) :
+				$common_name
+			);
 		}
+	}
+	# /documentation_of_type: a link to documentation of the type
+	if( exists $requests->{ '/documentation_of_type' } ) {
+		$tmpl_data{ '/documentation_of_type' } = $q->a( {
+			-href   => 'javascript: STdocPopup( \''.$ST->name.'\');',
+			-title  => "$common_name Documentation",
+			-class  => 'ome_quiet' },
+			"Read Documentation on $common_name"
+		) if $ST;
 	}
 
 	# coalate html output
@@ -293,8 +330,7 @@ Overrideable.
 sub _create {
 	my ( $self ) = @_;
 	my $q = $self->CGI();
-	my $type = ( $q->param( 'Type' ) || $q->url_param( 'Type' ) ||
-	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	my $type = $self->_getType();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
@@ -326,7 +362,7 @@ sub _create {
 	}
  	$session->commitTransaction();
  	
-
+	# Return new object id to a form element of the referring page
 	if( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) ) {
 		my $return_to = ( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) );
 		my $id = $obj->id;
@@ -340,6 +376,20 @@ END_HTML
 		return( 'HTML', $html );
 	}
 
+	# OR
+	# refresh the referring page by submitting its form
+	if( $q->param( 'refresh_when_done' ) || $q->url_param( 'refresh_when_done' ) ) {
+		my $html = <<END_HTML;
+<script language="Javascript" type="text/javascript">
+	window.opener.document.forms[0].submit();
+	window.close();
+</script>
+END_HTML
+		return( 'HTML', $html );
+	}
+
+	# OR
+	# default: redirect to the object detail
  	return( 'REDIRECT', $self->getObjDetailURL( $obj ) );
 }
 
@@ -422,9 +472,14 @@ sub getFormInputsForFields {
 
 			# data types
 			elsif( $SQL_data_type eq 'text' ) {
-				$record{ $request_string } = $q->textfield(
-					-name => $field,
-					-size => 25,
+#				$record{ $request_string } = $q->textfield(
+#					-name => $field,
+#					-size => 25,
+#					%validate );
+				$record{ $request_string } = $q->textarea(
+					-name    => $field,
+					-rows    => 5,
+					-columns => 50,
 					%validate );
 			} elsif( $SQL_data_type eq 'timestamp' ) {
 				# FIXME: figure out what format timestamp should be and validate using a regex
@@ -432,21 +487,21 @@ sub getFormInputsForFields {
 				$record{ $request_string } = $q->textfield(
 					-name => $field,
 					-size => 25,
-					%validate );
+					%validate ).' Time Stamp';
 			} elsif( $SQL_data_type =~ m/^integer|bigint|smallint$/ ) {
 				$validate{ -alt } = 'number|1|bok' # optional integer
 					if $options->{validate};
 				$record{ $request_string } = $q->textfield(
 					-name => $field,
-					-size => 25,
-					%validate );
+					-size => 9,
+					%validate ).' Integer (no decimal point)';
 			} elsif( $SQL_data_type =~ m/^double precision|real$/ ) {
 				$validate{ -alt } = 'number|0|bok' # optional floating point 
 					if $options->{validate};
 				$record{ $request_string } = $q->textfield(
 					-name => $field,
-					-size => 25,
-					%validate );
+					-size => 9,
+					%validate ).' Numeric (decimal allowed)';
 			} elsif( $SQL_data_type eq 'boolean' ) {
 				$record{ $request_string } = $q->checkbox(
 					-name => $field,
@@ -618,6 +673,14 @@ sub _findTemplate {
 	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
 	return undef;
+}
+
+sub _getType {
+	my $self = shift;
+	my $q    = $self->CGI();
+	my $type = ( $q->param( '_Type' ) || $q->url_param( 'Type' ) ||
+	             $q->param( 'Locked_Type' ) || $q->url_param( 'Locked_Type' ) );
+	return $type;
 }
 
 =head1 Author
