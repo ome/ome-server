@@ -59,6 +59,7 @@ import org.openmicroscopy.vis.chains.ModuleTreeNode;
 import org.openmicroscopy.vis.chains.ModulePaletteFrame;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collection;
 import java.awt.Font;
 import java.awt.geom.Point2D;
 import java.util.Vector;
@@ -313,6 +314,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 		ModuleTreeNode modNode = new ModuleTreeNode(mod); // was .getName(),mod.getID());
 		catNode.add(modNode);
+		mod.setFrame(frame);
 	}	
 
 	public ModuleTreeNode getModuleTreeNode() {
@@ -324,23 +326,31 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * @param id the module id
 	 */
 	public void highlightModule(CModule module) {
-		handler.highlightModules(module); // was modules.getModule(id);modules.getModule(module));	
+		handler.highlightModules(module); 	
+		
+		Collection result = layer.getAllNodes();
+		Iterator iter = result.iterator();
+		while (iter.hasNext()) {
+			PNode node = (PNode) iter.next();
+			if (node instanceof PModule) {
+				PModule mod = (PModule) node;
+				if (mod.getModule() == module) {
+					//	zoom in to it. 
+					PBufferedNode cBox = (PBufferedNode) node;				
+					PBounds b = cBox.getBufferedBounds();
+					PCamera camera = getCamera();
+					camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY); 
+					return;
+				}
+			}
+		}
+		
 	}
 	
 	public void unhighlightModules() {
 		handler.unhighlightModules();
 	}
 	
-	/**
-	 *  set and clear the selection in the frame's tree
-	 */
-	public void clearTreeSelection() {
-		frame.clearTreeSelection();
-	}
-	
-	public void setTreeSelection(CModule mod) {
-		frame.setTreeSelection(mod);
-	}
 
 	/*
 	 * arrangeChildren() does a pseudo-treemap layout, attempting
