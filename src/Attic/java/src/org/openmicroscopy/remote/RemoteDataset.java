@@ -148,7 +148,8 @@ public class RemoteDataset
     }
 
     public void addImage(Image im) {
-	return(setRemoteElement("addImage", im));
+	setRemoteElement("addImage", im);
+	return;
     }
 
 
