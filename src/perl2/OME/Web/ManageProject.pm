@@ -69,7 +69,7 @@ sub getPageBody {
 	my @selected = $cgi->param('selected');
 
 	# Action field propagation
-	my $action = $cgi->param('action');
+	my $action = $cgi->param('action') || '';
 
 	if ($action eq 'Switch To') {
 		# Warning
