@@ -52,7 +52,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Iterator;
-import java.awt.Graphics2D;
+//import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
 
@@ -271,11 +271,14 @@ public abstract class PFormalParameter extends PNode implements
 	
 	public void setLinkedTo(PFormalParameter param,PParamLink link) {
 		linkedTo.add(param);
+		target.setLinked(true);
 		links.add(link);
 	}
 	
 	public void clearLinkedTo(PFormalParameter param) {
 		linkedTo.remove(param);
+		if (linkedTo.isEmpty())
+			target.setLinked(false);
 		target.setSelected(false);
 	}
 	
@@ -290,11 +293,11 @@ public abstract class PFormalParameter extends PNode implements
  	
  	public void paint(PPaintContext aPaintContext) {
  		super.paint(aPaintContext);
- 		if (isLinkStart) {
+ 		/*if (isLinkStart) {
  			Graphics2D g = aPaintContext.getGraphics();
 			g.setPaint(PConstants.HIGHLIGHT_COLOR);
 			g.draw(textNode.getBounds());
- 		}
+ 		}*/
  	}
  	
  	public void removeLinks() {
