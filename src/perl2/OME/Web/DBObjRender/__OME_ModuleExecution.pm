@@ -162,6 +162,9 @@ returns "[ref to MEX] ran against [ref to target]"
 sub _getRef {
 	my ($self, $obj, $format, $options) = @_;
 
+	return $obj->id()
+		if( $format eq 'txt' );
+
 	my $q = $self->CGI();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $obj );

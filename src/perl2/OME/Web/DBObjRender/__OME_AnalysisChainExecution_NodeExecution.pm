@@ -78,9 +78,9 @@ returns ref of MEX
 =cut
 
 sub _getRef {
-	my ($self, $obj, $options) = @_;
+	my ($self, $obj, $format, $options) = @_;
 
-	return $self->getRef( $obj->module_execution(), 'html' );
+	return $self->getRef( $obj->module_execution(), $format, $options );
 }
 
 
