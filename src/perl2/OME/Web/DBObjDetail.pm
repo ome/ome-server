@@ -62,9 +62,8 @@ should go through DBObjDetail. Specialization is completely
 transparent.
 
 Subclasses follow the naming convention implemented in __specialize.
-Subclasses may override one or more of the functions
-getMenuText, getPageTitle, getPageBody, _takeAction, getFooter,
-_getDBObjDetail, _tableDescriptor, _overrideRecord, _getManyRelations
+Subclasses may override one or more of the functions that indicate they
+are Overridable.
 
 =head1 METHODS
 
@@ -122,14 +121,14 @@ sub getPageTitle {
 		    ref( $self ) eq __PACKAGE__ );
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
-    return "$common_name: ".OME::Web::DBObjRender->getObjectLabel($object);
+    return OME::Web::DBObjRender->getObjectTitle($object, 'txt');
 }
 
 =head2 getPageBody
 
 calls _takeAction()
-prints results of _getDBObjDetail(), _getManyRelations_getManyRelations(
-$object ), and getFooter(). All this stuff gets embedded in a form.
+prints results of getObjDetail(), _getManyRelations( $object ), and
+getFooter(). All this stuff gets embedded in a form.
 
 If the formatting is acceptable, consider overriding the methods
 getPageBody uses instead of getPageBody. It could save you some work and
@@ -164,23 +163,41 @@ sub getPageBody {
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''});
+	my $objDetail = $self->getObjDetail( $object );
+	my %relations = $self->_getManyRelations( $object );
+	$html .= $self->doLayout($objDetail, \%relations);
+	$html .= $self->getFooter();
+	$html .= $q->endform();
+	return ('HTML', $html);
+}
 
-	my @relations = $self->_getManyRelations( $object );
-	my (@col1, @col2, @col3, @col4);
+=head2 doLayout
+
+	$html .= $self->doLayout($objDetail, \@relations);
+
+Lays out the display. Overridable.
+
+=cut
+
+sub doLayout {
+	my ($self,$objDetail, $relations) = @_;
+	my $q = $self->CGI();
 	
-	push( @col3, splice( @relations, 0, 2 ) );
-	push( @col4, splice( @relations, 0, 2 ) );
+	my (@col1, @col2, @col3, @col4);
+	my @relation_list = ( $relations ? map( $relations->{$_}, sort( keys %$relations ) ): () );
+	push( @col3, splice( @relation_list, 0, 2 ) );
+	push( @col4, splice( @relation_list, 0, 2 ) );
 
-	my $r = POSIX::ceil( scalar( @relations) / 4 );
-	push( @col1, splice( @relations, 0, $r ) );
-	push( @col2, splice( @relations, 0, $r ) );
-	push( @col3, splice( @relations, 0, $r ) );
-	push( @col4, splice( @relations, 0, $r ) );
+	my $r = POSIX::ceil( scalar( @relation_list) / 4 );
+	push( @col1, splice( @relation_list, 0, $r ) );
+	push( @col2, splice( @relation_list, 0, $r ) );
+	push( @col3, splice( @relation_list, 0, $r ) );
+	push( @col4, splice( @relation_list, 0, $r ) );
 
-	$html .= $q->table( {-width => '100%', -cellpadding => 10 },
+	my $html = $q->table( {-width => '100%', -cellpadding => 10 },
 		$q->Tr(
 			$q->td(  { -colspan => '2', -width => '50%', -valign => 'top', -align => 'center'}, 
-				$self->_getDBObjDetail( $object )
+				$objDetail
 			),
 			$q->td(  { -rowspan => '2', -width => '25%', -valign => 'top', -align => 'right' }, [
 				join( '', @col3 ),
@@ -192,12 +209,8 @@ sub getPageBody {
 			join( '', @col2 ),
 		] ) )
 	);
-
-	$html .= $self->getFooter();
-
-	$html .= $q->endform();
-
-	return ('HTML', $html);
+	
+	return $html;
 }
 
 =head2 _takeAction
@@ -227,7 +240,7 @@ sub getFooter {
 # virtual method
 }
 
-=head2 _getDBObjDetail
+=head2 getDBObjDetail
 
 Called by getPageBody. uses OME::Web::DBObjRender services to construct
 a detailed object description. Returns a table.
@@ -240,34 +253,34 @@ Overridable
 
 =cut
 
-sub _getDBObjDetail {
+sub getObjDetail {
 	my ($self, $object) = @_;
 
 	my $specializedDetail;
-	return $specializedDetail->_getDBObjDetail( )
+	return $specializedDetail->getObjDetail( )
 		if( $specializedDetail = $self->__specialize( ) and
 		    ref( $self ) eq __PACKAGE__ );
 
 	my $q = $self->CGI();
 
 	my $table_label = $q->font( { -class => 'ome_header_title' },
-		OME::Web::DBObjRender->getObjectLabel($object) );
+		OME::Web::DBObjRender->getObjectTitle($object, 'html') );
 
 	my $obj_table;
 
 	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
 	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames, 'html' );
 	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
+	my $header  = $self->TableHeader($object);
+	my $footer  = $self->TableFooter($object);
 
 	%record = %{ $self->_overrideRecord( \%record ) };
 
 	$obj_table .= $q->table( { -class => 'ome_table' },
 		$q->caption( $table_label ),
-		$q->Tr(
-			# table descriptor
-			$q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, 
-				$self->_tableDescriptor( $object )
-			), 
+		( $header ? 
+			$q->Tr( $q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, $header ) ) :
+			()
 		),
 		map(
 			$q->Tr( 
@@ -275,43 +288,41 @@ sub _getDBObjDetail {
 				$q->td( { -class => 'ome_td', -align => 'right', -valign => 'top' }, $record{ $_ } ) 
 			),
 			@fieldNames
+		),
+		( $footer ? 
+			$q->Tr( $q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, $footer ) ) :
+			()
 		)
 	);
 	
 	return $obj_table;
 }
 
-=head2 _tableDescriptor
+=head2 TableHeader
 
-Called by _getDBObjDetail. Indicates the type of object being displayed.
-If the object is a SemanticType, includes a link to the definition of
-the Semantic Type
-
-Overridable
+Virtual Method. Returns a chunk of html used as a table header
 
 =cut
 
-sub _tableDescriptor {
-	my ($self, $object) = @_;
-	my $q = $self->CGI();
+sub TableHeader {
+	return undef;
+}
 
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
+=head2 TableFooter
 
-	my $display_type = "Displaying ".
-		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name ) :
-			$common_name
-		);
+Virtual Method. Returns a chunk of html used as a table header
 
-	return $q->span( { -class => 'ome_widget' }, $display_type )
+=cut
+
+sub TableFooter {
+	return undef;
 }
 
 =head2 _overrideRecord
 
 	%record = %{ $self->_overrideRecord( \%record ) };
 
-virtual method used by _getDBObjDetail to allow easy overriding of
+virtual method used by getObjDetail to allow easy overriding of
 select portion of records. This should *NOT* be used instead of of
 DBObjRender methods.
 
@@ -335,7 +346,7 @@ sub _overrideRecord {
 
 =head2 _getManyRelations
 
-	my @relations = $self->_getManyRelations( $object );
+	my %relations = $self->_getManyRelations( $object );
 
 returns an array of html entities, each describing a has-many or
 many-to-many relationship the given object has.
@@ -357,7 +368,7 @@ sub _getManyRelations {
 
 	my $q = $self->CGI();
 	
-	my @relations;
+	my %relations;
 
 	# print tables for has many relations
 	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
@@ -365,31 +376,35 @@ sub _getManyRelations {
 	if( $iter->first() ) { do {
 		if( $iter->getDBObjType_ID_and_Accessor() ) {
 			my ( $from_type, $from_id, $from_accessor) = $iter->getDBObjType_ID_and_Accessor();
-			push( @relations, $q->p( $tableMaker->getList( 
-				{
-					title            => $iter->name(), 
-					embedded_in_form => $self->{ form_name },
-					Length           => 5,
-					width            => '100%'
-				}, 
-				$iter->return_type(), 
-				{ accessor => [ $from_type, $from_id, $from_accessor ] }
-			) ) );
+			$relations{ $iter->name() } = $q->p( 
+				$tableMaker->getList( 
+					{
+						title            => $iter->title(), 
+						embedded_in_form => $self->{ form_name },
+						Length           => 5,
+						width            => '100%'
+					}, 
+					$iter->return_type(), 
+					{ accessor => [ $from_type, $from_id, $from_accessor ] }
+				)
+			);
 		} else {
-			push( @relations, $q->p( $tableMaker->getList( 
-				{
-					title            => $iter->name(), 
-					embedded_in_form => $self->{ form_name },
-					Length           => 5,
-					width            => '100%'
-				}, 
-				$iter->return_type(), 
-				$iter->getList()
-			) ) );
+			$relations{ $iter->name() } = $q->p( 
+				$tableMaker->getList( 
+					{
+						title            => $iter->title(), 
+						embedded_in_form => $self->{ form_name },
+						Length           => 5,
+						width            => '100%'
+					}, 
+					$iter->return_type(), 
+					$iter->getList()
+				)
+			);
 		}
 	} while( $iter->next() ); }
 	
-	return @relations;
+	return %relations;
 }
 
 =head2 _loadObject
