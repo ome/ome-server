@@ -177,7 +177,7 @@ sub processDOM {
         $semanticTypes->{ $stName } = undef;
 		my $stDescriptions = $ST_XML->getElementsByLocalName('Description');
 		my $stDescription = [$stDescriptions->[0]->childNodes()]->[0]->data()
-			if $stDescriptions;
+			if $stDescriptions and $stDescriptions->[0]->childNodes()->size() ne 0;
         my @SEs_XML = $ST_XML->getElementsByLocalName ('Element');
 
         # look for existing AttributeType
@@ -291,7 +291,7 @@ sub processDOM {
         $tables->{$tName}->{granularity} = $ST_XML->getAttribute('AppliesTo');
 		my $tDescriptions = $ST_XML->getElementsByLocalName('Description');
 		my $tDescription = [$tDescriptions->[0]->childNodes()]->[0]->data()
-			if $tDescriptions;
+			if $tDescriptions and $tDescriptions->[0]->childNodes()->size() ne 0;
         push (@{$tables->{$tName}->{description}},$tDescription)
            if defined $tDescription and length ($tDescription) > 0;
     }
@@ -476,7 +476,7 @@ sub processDOM {
         my $stGranularity = $ST_XML->getAttribute('AppliesTo');
 		my $stDescriptions = $ST_XML->getElementsByLocalName('Description');
 		my $stDescription = [$stDescriptions->[0]->childNodes()]->[0]->data()
-			if $stDescriptions;
+			if $stDescriptions and $stDescriptions->[0]->childNodes()->size() ne 0;
 
         # look for existing AttributeType
         # If the AttributeType exists, we already know it doesn't conflict from the first pass.
