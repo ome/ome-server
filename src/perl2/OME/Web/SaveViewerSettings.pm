@@ -63,8 +63,11 @@ sub getPageBody {
 		my $theZ      = $cgi->param('theZ');
 		my $theT      = $cgi->param('theT');
 		my $imageID   = $cgi->param('ImageID');
+		my $pixelsID   = $cgi->param('PixelsID');
+		my $pixels;
+		$pixels = $factory->loadAttribute( "Pixels", $pixelsID ) if( $pixelsID);
 
-		$self->SaveDisplaySettings( $imageID, \@WBS, \@RGBon, $theT, $theZ, $isRGB );
+		$self->SaveDisplaySettings( $imageID, \@WBS, \@RGBon, $theT, $theZ, $isRGB, $pixels );
 	} elsif ($cgi->param('toolBoxScale') ) {
 		my $toolBoxScale = $cgi->param('toolBoxScale');
 
@@ -96,7 +99,7 @@ sub SavePreferences {
 }
 
 sub SaveDisplaySettings {
-	my ($self, $imageID, $WBS, $RGBon, $theT, $theZ, $isRGB) = @_;
+	my ($self, $imageID, $WBS, $RGBon, $theT, $theZ, $isRGB, $pixels) = @_;
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 
@@ -104,8 +107,8 @@ sub SaveDisplaySettings {
 		or die "Could not retreive Image from ImageID=$imageID\n";
 
 	# get Dimensions from image and make them readable
-	my $pixels = $image->DefaultPixels()
-		or die "Could not a primary set of Pixels for this image\n";
+	$pixels = $image->DefaultPixels()
+		unless $pixels;
 
 	###########################################################################
 	# get statistics for $pixels
@@ -164,6 +167,7 @@ sub SaveDisplaySettings {
 		$displayOptions->ZStart($theZ);
 		$displayOptions->ZStop($theZ);
 		$displayOptions->DisplayRGB( $isRGB );
+		$displayOptions->Pixels( $pixels );
 	} else {
 		my $data = {
 			ChannelNumber => $WBS->[0],
@@ -205,7 +209,8 @@ sub SaveDisplaySettings {
 			TStop          => $theT,
 			ZStart         => $theZ,
 			ZStop          => $theZ,
-			DisplayRGB     => $isRGB
+			DisplayRGB     => $isRGB,
+			Pixels         => $pixels
 		};
 		$displayOptions = $factory->newAttribute( 'DisplayOptions', $image, undef, $data )
 			or die "Could not create new DisplayOptions attribute\n";			
