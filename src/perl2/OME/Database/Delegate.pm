@@ -316,6 +316,22 @@ sub getRemoteDSN {
     die "OME::Database::Delegate->getRemoteDSN is abstract";
 }
 
+=head2 dropColumn
+
+    $delegate->dropColumn ($dbh,$table,$column);
+
+Drop the specified column from the specified table.  Some databases implement
+ALTER TABLE DROP COLUMN while others don't.  If the DB doesn't support this
+call in SQL, then an alternative would be to remove all constraints, defaults
+and triggers for that column, rename it (to dropped_column for instance) and
+set all of its values to NULL.
+
+=cut
+
+sub dropColumn {
+    die "OME::Database::Delegate->dropColumn is abstract";
+}
+
 # after these methods are implemented and used, the boolean hack in
 # DBObject->addcolumn should be taken out
 

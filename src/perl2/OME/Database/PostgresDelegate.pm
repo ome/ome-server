@@ -206,6 +206,7 @@ sub createUser {
 }
 
 
+
 sub getDSN {
     my ($self,$dbConf) = @_;
     $dbConf = OME::Install::Environment->initialize()->DB_conf()
@@ -234,6 +235,84 @@ sub getRemoteDSN {
 	return ($dsn);
 }
 
+use constant GET_VERSION_SQL => <<SQL;
+  SELECT version();
+SQL
+
+# $sth->execute($table_name)
+use constant FIND_RELATION_SQL => <<SQL;
+  SELECT oid, relkind
+    FROM pg_class
+   WHERE lower(relname) = lower(?)
+SQL
+
+# $dbh->selectcol_arrayref($sth,$table_oid)
+use constant FIND_TABLE_INDEX_NAMES_SQL => <<SQL;
+  SELECT pg_get_indexdef(indexrelid)
+    FROM pg_index
+   WHERE indrelid = ?
+SQL
+
+sub dropColumn {
+	my ($self,$dbh,$table,$column) = @_;
+	die "dropColumn: Wrong number of parameters"
+		unless $dbh and $table and $column;
+	$table = lc ($table);
+	$column = lc ($column);
+	# Get the table oid		
+	my ($reloid)  = $dbh->selectrow_array(FIND_RELATION_SQL,{},$table);
+	# remove triggers
+	my ($trigger)  = $dbh->selectrow_array(
+		"SELECT tgname FROM pg_trigger WHERE tgrelid=$reloid and tgargs like '%$column%'"
+	) or die $dbh->errstr();
+	$dbh->do("DROP TRIGGER \"$trigger\" ON $table") if $trigger;
+
+	my $sth = $dbh->prepare('SELECT version()');
+	my ($db_version) = $dbh->selectrow_array($sth);
+	
+	$db_version = $1 if $db_version =~ /PostgreSQL\s+([\d.]+)/;
+	if ($db_version ge '7.3') {
+		$dbh->do("ALTER TABLE $table DROP COLUMN $column") or die $dbh->errstr();
+	} else {
+		my $sth = $dbh->prepare ("SELECT * from $table LIMIT 1");
+		$sth->execute();
+		my %cols;
+		$cols{$_} = 1 foreach (@{$sth->{NAME_lc}});
+		my $new_col_name = 'dropped_column';
+		if (exists $cols{$new_col_name}) {
+			my $i=1;
+			$i++ while exists $cols{$new_col_name.'_'.$i};
+			$new_col_name = $new_col_name.'_'.$i;
+		}
+		# remove not null constraint
+		$dbh->do(<<SQL)  or die $dbh->errstr();
+			UPDATE pg_attribute SET attnotnull = FALSE WHERE attname = '$column'
+			AND attrelid = ( SELECT oid FROM pg_class WHERE relname = '$table' )
+SQL
+		# remove default
+		$dbh->do("ALTER TABLE $table ALTER COLUMN $column DROP DEFAULT")
+			or die $dbh->errstr();
+		# remove indexes
+		my $indexes = $dbh->selectcol_arrayref (FIND_TABLE_INDEX_NAMES_SQL,{},$reloid);
+		foreach my $index (@$indexes) {
+			if ($index =~ /INDEX\s+(\S+)\s+ON\s+(\S+)[^(]+\(([^)]+)/i) {
+				my ($idx_name,$idx_table,$idx_col) = ($1,$2,$3);
+				if ( lc($idx_table) eq lc($table) and lc($idx_col) eq lc ($column) ) {
+					$dbh->do("DROP INDEX $idx_name")
+						or die $dbh->errstr();
+				}
+			}
+		}
+		# set the column to NULL
+		$dbh->do("UPDATE $table SET $column=null") or die $dbh->errstr();
+		# rename the column
+		$dbh->do("ALTER TABLE $table RENAME COLUMN $column TO $new_col_name")
+			or die $dbh->errstr();
+	}
+	
+}
+
+
 # The SQL statement to retrieve a sequence value from the DB.
 
 use constant SEQUENCE_SQL => <<SQL;
@@ -255,13 +334,6 @@ sub getNextSequenceValue {
 
 
 # add
-
-# $sth->execute($table_name)
-use constant FIND_RELATION_SQL => <<SQL;
-  SELECT oid, relkind
-    FROM pg_class
-   WHERE lower(relname) = lower(?)
-SQL
 
 # $sth->execute($table_oid,$column_number)
 use constant FIND_COLUMN_BY_NUMBER_SQL => <<SQL;
@@ -285,13 +357,6 @@ use constant FIND_PRIMARY_KEY_SQL => <<SQL;
     FROM pg_index
    WHERE indrelid = ?
      AND indisprimary
-SQL
-
-# $dbh->selectcol_arrayref($sth,$table_oid)
-use constant FIND_TABLE_INDEX_NAMES_SQL => <<SQL;
-  SELECT pg_get_indexdef(indexrelid)
-    FROM pg_index
-   WHERE indrelid = ?
 SQL
 
 sub __collectSQLOptions ($$) {
