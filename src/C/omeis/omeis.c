@@ -48,6 +48,7 @@
 #include "omeis.h"
 #include "digest.h"
 #include "method.h"
+#include "xmlBinaryResolution.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
@@ -283,8 +284,11 @@ void freePixelsRep (PixelsRep *myPixels) {
   memory.  If an ID is passed in, it will set the paths to the dependent files,
   but not open anything.
 */
-PixelsRep *newPixelsRep (OID ID) { PixelsRep *myPixels; char *root="Pixels/";
-	char *pixIDfile="Pixels/lastPix";
+PixelsRep *newPixelsRep (OID ID)
+{
+PixelsRep *myPixels;
+char *root="Pixels/";
+char *pixIDfile="Pixels/lastPix";
 
 	if (! (myPixels =  (PixelsRep *)malloc (sizeof (PixelsRep)))  )
 		return (NULL);
@@ -599,6 +603,29 @@ unsigned char *maxBuf = theBuf+(length*bp);
 				tmp = theBuf [3]; theBuf [3] = theBuf [4]; theBuf [4] = tmp;
 				theBuf += 8;
 			}
+		case 16:
+		/*
+		* 0 -> 15
+		* 1 -> 14
+		* 2 -> 13
+		* 3 -> 12
+		* 4 -> 11
+		* 5 -> 10
+		* 6 -> 9
+		* 7 -> 8
+		* ...
+		*/
+			while (theBuf < maxBuf) {
+				tmp = theBuf [0]; theBuf [0] = theBuf [15]; theBuf [15] = tmp;
+				tmp = theBuf [1]; theBuf [1] = theBuf [14]; theBuf [14] = tmp;
+				tmp = theBuf [2]; theBuf [2] = theBuf [13]; theBuf [13] = tmp;
+				tmp = theBuf [3]; theBuf [3] = theBuf [12]; theBuf [12] = tmp;
+				tmp = theBuf [4]; theBuf [4] = theBuf [11]; theBuf [11] = tmp;
+				tmp = theBuf [5]; theBuf [5] = theBuf [10]; theBuf [10] = tmp;
+				tmp = theBuf [6]; theBuf [6] = theBuf [ 9]; theBuf [ 9] = tmp;
+				tmp = theBuf [7]; theBuf [7] = theBuf [ 8]; theBuf [ 8] = tmp;
+				theBuf += 16;
+			}
 		break;
 		default:
 		break;
@@ -721,6 +748,24 @@ unsigned long written=0;
 	return (nIO);
 }
 
+
+
+/* This is a high level interface to set a pixel plane from a memory buffer. */
+size_t setPixelPlane (PixelsRep *thePixels, void *buf , int theZ, int theC, int theT ) {
+off_t offset=0;
+size_t nPix, nIO=0;
+
+	nPix = thePixels->head->dx * thePixels->head->dy;
+	offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
+	thePixels->IO_stream = NULL;
+	thePixels->IO_buf = buf;
+	thePixels->IO_buf_off = 0;
+	thePixels->doSwap = 0;
+
+	nIO = DoPixelIO(thePixels, offset, nPix, 'w');
+	return( nIO );
+
+}
 
 
 size_t DoROI (PixelsRep *myPixels,
@@ -1103,12 +1148,9 @@ planeInfo *planeInfoP;
 
 
 
-int FinishPixels (OID ID, char force) {
-PixelsRep *myPixels;
+int FinishPixels (PixelsRep *myPixels, char force) {
 
-	if (! (myPixels = GetPixels (ID, 'w', bigEndian())) ) {
-		return (-1);
-	}
+	if (!myPixels) return (-1);
 
 	/* wait until we can get a write lock on the whole file */
 	lockRepFile (myPixels->fd_rep,'w',0,0);
@@ -1120,17 +1162,10 @@ PixelsRep *myPixels;
 	myPixels->head->isFinished = 1;
 
 	if (myPixels->is_mmapped) {
-		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) {
-			freePixelsRep (myPixels);
-			return (-4);
-		}
-		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) {
-			freePixelsRep (myPixels);
-			return (-5);
-		}
+		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (-4);
+
+		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-5);
 	}
-	
-	freePixelsRep (myPixels);
 	
 	return (0);
 }
@@ -1167,68 +1202,30 @@ void closeInputFile(FILE *infile, unsigned char isLocalFile) {
     }
 }
 
-/*
-  UploadFile (char *filename, off_t size)
-  Makes new rep file in 'Files' of the specified size.
-  copies filename parameter to OID.info
-  Reads stdin, writing to the file.
-  returns file OID.
-*/
-OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
+int NewFile (OID *ID, char *filename, off_t size) {
 char path[MAXPATHLEN];
 char *filesIDfile="Files/lastFileID";
-OID ID;
 int fd;
-size_t nIO;
-char *sh_mmap;
-FILE *infile;
 
 	strcpy (path,"Files/");
-	ID = nextID(filesIDfile);
-	if (ID <= 0 && errno) {
+	*ID = nextID(filesIDfile);
+	if (*ID <= 0 && errno) {
 		perror ("Couldn't get next File ID");
 		return (-1);
-	} else if (ID <= 0){
+	} else if (*ID <= 0){
 		fprintf (stderr,"Happy New Year !!!\n");
 		return (-1);
 	}
 
-
-	fd = newRepFile (ID, path, size, NULL);
+	fd = newRepFile (*ID, path, size, NULL);
 	if (fd < 0) {
 		char error[256];
-		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",ID,path);
+		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",*ID,path);
 		perror (error);
 		return (-1);
 	}
 
-	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) == (char *) -1 ) {
-		close (fd);
-		unlink (path);
-		fprintf (stderr,"Couldn't mmap uploaded file %s (Path=%s, ID=%llu)\n",filename,path,ID);
-		return (-1);
-	}
-
-    infile = openInputFile(filename,isLocalFile);
-
-    if (infile) {
-        nIO = fread (sh_mmap,1,size,infile);
-        if (nIO != size) {
-            fprintf (stderr,"Could finish writing uploaded file %s (Path=%s, ID=%llu).  Wrote %lu, expected %lu\n",
-                     filename,path,ID,(unsigned long)nIO,(unsigned long)size);
-            ID = -1;
-        }
-
-        closeInputFile(infile,isLocalFile);
-    }
-
-	/* release the lock created by newRepFile */
-    msync(sh_mmap, size, MS_SYNC);
-	lockRepFile (fd,'u',0,0);
-	munmap (sh_mmap, size);
-	close (fd);
-	if (!ID) unlink (path);
-	else if (filename) {
+	if (filename && strlen (filename)) {
 		FILE *fInfo;
 		strcat (path,".name");
 		if ( (fInfo = fopen (path,"w")) ) {
@@ -1237,6 +1234,70 @@ FILE *infile;
 		}
 	}
 
+	return (fd);
+
+}
+
+int DeleteFile (OID fileID) {
+char path[MAXPATHLEN];
+	strcpy (path,"Files/");
+	if (!fileID) return (-1);
+	
+	if (! getRepPath (fileID,path,0)) {
+		return (-2);
+	}
+	unlink (path);
+	strcat (path,".name");
+	unlink (path);
+	return (0);
+}
+
+void FinishFile (int fd) {
+	lockRepFile (fd,'u',0,0);
+	close (fd);
+}
+
+
+
+/*
+  UploadFile (char *filename, off_t size)
+  Makes new rep file in 'Files' of the specified size.
+  copies filename parameter to OID.info
+  Reads stdin, writing to the file.
+  returns file OID.
+*/
+OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
+OID ID;
+int fd;
+size_t nIO;
+char *sh_mmap;
+FILE *infile;
+
+	if (  (fd = NewFile( &ID, filename, size )) == -1 ) return -1;
+
+	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) == (char *) -1 ) {
+		close (fd);
+		DeleteFile (ID);
+		fprintf (stderr,"Couldn't mmap uploaded file %s (ID=%llu)\n",filename,ID);
+		return (-1);
+	}
+
+    infile = openInputFile(filename,isLocalFile);
+
+    if (infile) {
+        nIO = fread (sh_mmap,1,size,infile);
+        if (nIO != size) {
+            fprintf (stderr,"Could finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
+                     filename,ID,(unsigned long)nIO,(unsigned long)size);
+            ID = -1;
+        }
+
+        closeInputFile(infile,isLocalFile);
+    }
+
+	/* release the lock created by newRepFile */
+	munmap (sh_mmap, size);
+	FinishFile (fd);
 	return (ID);
 }
 
@@ -1383,13 +1444,13 @@ char **cgivars=param;
 	/* ID requirements */
 	if ( (theParam = get_param (param,"PixelsID")) )
 		sscanf (theParam,"%llu",&ID);
-	else if (m_val != M_NEWPIXELS    &&
-			 m_val != M_FILEINFO     &&
-			 m_val != M_FILESHA1     &&
-			 m_val != M_READFILE     &&
-			 m_val != M_UPLOADFILE   &&
-			 m_val != M_GETLOCALPATH) {
-			HTTP_DoError (method,"pixelsID Parameter missing");
+	else if (m_val == M_NEWPIXELS    ||
+			 m_val == M_PIXELSINFO   ||
+			 m_val == M_PIXELSSHA1   ||
+			 m_val == M_SETPIXELS    ||
+			 m_val == M_GETPIXELS    ||
+			 m_val == M_PIXELS) {
+			HTTP_DoError (method,"PixelsID Parameter missing");
 			return (-1);
 	}
 
@@ -1501,7 +1562,16 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"Force")) )
 				sscanf (theParam,"%d",&force);
 
-			if ( (result = FinishPixels (ID,force)) < 0) {
+			if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+	
+			result = FinishPixels (thePixels,force);
+			freePixelsRep (thePixels);
+		
+			if ( result < 0) {
 				if (errno) sprintf (error_str,"Result=%d, Message=%s",result,strerror( errno ) );
 				else sprintf (error_str,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
 				HTTP_DoError (method, error_str);
@@ -1660,7 +1730,7 @@ char **cgivars=param;
 			HTTP_ResultType ("text/plain");
 
 			/* Get the SHA1 message digest */
-			if (get_md_from_file(file_name, file_md) < 0) {
+			if (get_md_from_file(file_path, file_md) < 0) {
 				fprintf(stderr, "Unable to retrieve SHA1.");
 				return(-1);
 			}
@@ -1713,6 +1783,26 @@ char **cgivars=param;
 			fwrite (sh_mmap,length,1,stdout);
 			munmap (sh_mmap, length);
 			close (fd);
+
+			break;
+		case M_IMPORTOMEFILE:
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+	
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+	
+			
+			HTTP_ResultType ("text/xml");
+			parse_xml_file( file_path );
 
 			break;
 		case M_CONVERT:
