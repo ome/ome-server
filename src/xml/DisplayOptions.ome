@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Douglas Creager <dcreager@alum.mit.edu>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+  <SemanticTypeDefinitions
+     xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+     xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+    
+	<SemanticType
+	   Name="ImageDisplayOptions"
+	   AppliesTo="I">
+
+	  <Description>
+        Lots o' math from J-M and Andrea, coming soon.
+      </Description>
+
+      <Element
+         Name="Experimenter"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.EXPERIMENTER"
+         DataType="reference"
+         RefersTo="Experimenter"/>
+      <Element
+         Name="TheZ"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.THE_Z"
+         DataType="int"/>
+      <Element
+         Name="TheT"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.THE_T"
+         DataType="int"/>
+      <Element
+         Name="OutputStart"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.OUTPUT_START"
+         DataType="int"/>
+      <Element
+         Name="OutputEnd"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.OUTPUT_END"
+         DataType="int"/>
+      <Element
+         Name="BitResolution"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.BIT_RESOLUTION"
+         DataType="int"/>
+      <Element
+         Name="Transformation"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.TRANSFORMATION"
+         DataType="string"/>
+      <Element
+         Name="Coefficient"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.COEFFICIENT"
+         DataType="float"/>
+      <Element
+         Name="ReverseIntensity"
+         DBLocation="IMAGE_DISPLAY_OPTIONS.REVERSE_INTENSITY"
+         DataType="boolean"/>
+
+    </SemanticType>
+
+	<SemanticType
+	   Name="ChannelDisplayOptions"
+	   AppliesTo="I">
+
+      <Element
+         Name="ImageDisplayOptions"
+         DBLocation="CHANNEL_DISPLAY.IMAGE_DISPLAY_OPTIONS"
+         DataType="reference"
+         RefersTo="ImageDisplayOptions"/>
+      <Element
+         Name="Channel"
+         DBLocation="CHANNEL_DISPLAY.CHANNEL"
+         DataType="int"/>
+      <Element
+         Name="InputStart"
+         DBLocation="CHANNEL_DISPLAY.INPUT_START"
+         DataType="float"/>
+      <Element
+         Name="InputEnd"
+         DBLocation="CHANNEL_DISPLAY.INPUT_END"
+         DataType="float"/>
+      <Element
+         Name="ColorR"
+         DBLocation="CHANNEL_DISPLAY.COLOR_R"
+         DataType="int"/>
+      <Element
+         Name="ColorG"
+         DBLocation="CHANNEL_DISPLAY.COLOR_G"
+         DataType="int"/>
+      <Element
+         Name="ColorB"
+         DBLocation="CHANNEL_DISPLAY.COLOR_B"
+         DataType="int"/>
+      <Element
+         Name="ColorA"
+         DBLocation="CHANNEL_DISPLAY.COLOR_A"
+         DataType="int"/>
+      <Element
+         Name="Active"
+         DBLocation="CHANNEL_DISPLAY.ACTIVE"
+         DataType="boolean"/>
+
+    </SemanticType>
+
+	<SemanticType
+	   Name="DatasetDisplayOptions"
+	   AppliesTo="D">
+
+	  <Description>
+        Lots o' math from J-M and Andrea, coming soon.
+      </Description>
+
+      <Element
+         Name="Experimenter"
+         DBLocation="DATASET_DISPLAY_OPTIONS.EXPERIMENTER"
+         DataType="reference"
+         RefersTo="Experimenter"/>
+      <Element
+         Name="ConfidenceInterval"
+         DBLocation="DATASET_DISPLAY_OPTIONS.CONFIDENCE_INTERVAL"
+         DataType="float"/>
+      <Element
+         Name="OutputStart"
+         DBLocation="DATASET_DISPLAY_OPTIONS.OUTPUT_START"
+         DataType="int"/>
+      <Element
+         Name="OutputEnd"
+         DBLocation="DATASET_DISPLAY_OPTIONS.OUTPUT_END"
+         DataType="int"/>
+      <Element
+         Name="BitResolution"
+         DBLocation="DATASET_DISPLAY_OPTIONS.BIT_RESOLUTION"
+         DataType="int"/>
+      <Element
+         Name="Transformation"
+         DBLocation="DATASET_DISPLAY_OPTIONS.TRANSFORMATION"
+         DataType="string"/>
+      <Element
+         Name="Coefficient"
+         DBLocation="DATASET_DISPLAY_OPTIONS.COEFFICIENT"
+         DataType="float"/>
+      <Element
+         Name="ReverseIntensity"
+         DBLocation="DATASET_DISPLAY_OPTIONS.REVERSE_INTENSITY"
+         DataType="boolean"/>
+
+    </SemanticType>
+
+	<SemanticType
+	   Name="GlobalDisplayOptions"
+	   AppliesTo="D">
+
+	  <Description>
+        Lots o' math from J-M and Andrea, coming soon.
+      </Description>
+
+      <Element
+         Name="Experimenter"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.EXPERIMENTER"
+         DataType="reference"
+         RefersTo="Experimenter"/>
+      <Element
+         Name="ConfidenceInterval"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.CONFIDENCE_INTERVAL"
+         DataType="float"/>
+      <Element
+         Name="OutputStart"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.OUTPUT_START"
+         DataType="int"/>
+      <Element
+         Name="OutputEnd"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.OUTPUT_END"
+         DataType="int"/>
+      <Element
+         Name="BitResolution"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.BIT_RESOLUTION"
+         DataType="int"/>
+      <Element
+         Name="Transformation"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.TRANSFORMATION"
+         DataType="string"/>
+      <Element
+         Name="Coefficient"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.COEFFICIENT"
+         DataType="float"/>
+      <Element
+         Name="ReverseIntensity"
+         DBLocation="GLOBAL_DISPLAY_OPTIONS.REVERSE_INTENSITY"
+         DataType="boolean"/>
+
+    </SemanticType>
+
+  </SemanticTypeDefinitions>
+
+</OME>
