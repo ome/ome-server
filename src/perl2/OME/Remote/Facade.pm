@@ -54,6 +54,7 @@ OME::Remote::Facade - implementation of the Remote Framework interface
 
 BEGIN {
     @FACADES = qw(OME::Remote::Facades::GenericFacade
+                  OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::ImportFacade);
     foreach my $facade (@FACADES) { $facade->require() }
