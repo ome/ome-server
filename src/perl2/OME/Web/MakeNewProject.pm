@@ -62,7 +62,7 @@ sub getPageBody {
 		$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
 
 		# this will add a script to reload OME::Home. User will be automatically directed to define a dataset.
-#		$body .= OME::Web::Validation->ReloadHomeScript();
+		$body .= OME::Web::Validation->ReloadHomeScript();
 		# javascript to reload titlebar
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
 	} else {
