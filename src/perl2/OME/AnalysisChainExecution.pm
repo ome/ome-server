@@ -73,7 +73,6 @@ __PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
                        'OME::AnalysisChain',
                        {
                         SQLType => 'integer',
-                        NotNull => 1,
                         Indexed => 1,
                         ForeignKey => 'analysis_chains',
                        });
