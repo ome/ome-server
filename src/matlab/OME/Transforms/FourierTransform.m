@@ -36,14 +36,15 @@
 %
 function [outPixels] = FourierTransform(inPixels)
 
+% its only a plane
+inPixels = inPixels(:,:);
+
 % fftshift shifts the zero-frequency component of the Fourier transform to center
 % of spectrum
 inPixels = fftshift(fft2(inPixels));
 
-outPixels(:,:,:,1,:) = abs(inPixels);
-outPixels(:,:,:,2,:) = angle(inPixels);
-
-outPixels = single(outPixels);
+outPixels(:,:,1) = abs(inPixels);
+outPixels(:,:,2) = angle(inPixels);
 
 % Use the following Matlab code to visualize the Fourier Space frequency
 % imshow( mat2gray(log(1+angle(inPixels))) )
