@@ -26,6 +26,7 @@ function $JStype (CGI_URL,name,optionsStr) {
 	this.Dirty = Dirty;
 	this.DisplayImage = DisplayImage;
 
+	// specific to html
 	if (document.getElementById)
 		this.Style = document.getElementById(name).style;
 	else if (document.layers)
@@ -33,17 +34,17 @@ function $JStype (CGI_URL,name,optionsStr) {
 	else if (document.all)
 		this.Style = document.all[name].style;
 	else
-		this.style = undefined;
+		this.Style = undefined;
 
 	this.ImageName = this.name+'-Image';
+	// specific to html
 	if (document.images)
 		this.Image = document.images[this.ImageName];
 
 	return this;
 
-
 	function SetAllZT (allZ,allT) {
-	var redraw = false;
+		var redraw = false;
 	
 //		alert (this.name+'->SetAllZT('+allZ+','+allT+')');
 		if (this.allZ != allZ || this.allT != allT)
@@ -128,12 +129,14 @@ function $JStype (CGI_URL,name,optionsStr) {
 		return imageURL;
 	}
 	
+	// specific to html
 	function DisplayImage (theImageURL) {
 		if (this.Image.src != theImageURL)
 			this.Image.src = theImageURL;
 		return this.Image.src;
 	}
 	
+	// specific to html
 	function SetVisible (checked) {
 //		alert (this.name+'->SetVisible('+checked+')');
 		this.Style.visibility = checked ? 'visible' : 'hidden';
@@ -143,6 +146,8 @@ function $JStype (CGI_URL,name,optionsStr) {
 ENDJSOBJECT
 
 # initial draft of pod added by Josiah Johnston, siah@nih.gov
+
+#need to add info on what javascript object does. and a better overview would be nice.
 =pod
 
 =head1 Layer.pm
@@ -154,11 +159,11 @@ L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function c
 =head2 Description
 
 Tools for constructing and manipulating a javascript object, Layer, which serves to control
-a layer in the html viewer. Currently it is used in conjuction with 
+a layer in the 2d viewer.
 
 =head2 Path
 
-src/perl2/OME/Graphics/JavaScript/Layer.pm
+F<src/perl2/OME/Graphics/JavaScript/Layer.pm>
 
 =head2 Package name
 
@@ -178,17 +183,13 @@ none
 
 =head1 Externally referenced functions
 
-C<new()>, C<Window()>, C<JSinstance()>, C<HTMLdiv()>, C<X11Colors()>
-
-X<new()>
-
 =head2 new()
 
 =over 4
 
 =item Description
 
-constructor
+constructor new()
 
 =item Parameters
 
@@ -206,7 +207,7 @@ I<$self>
 
 =item Uses functions
 
-L<ParseOptions()>
+L<"ParseOptions()">
 
 =back
 
@@ -302,8 +303,6 @@ $self->{ObjectRef} = $window ? $window.'.'.$self->{name} : $self->{name};
 }
 
 =pod
-
-X<JSinstance()>
 
 =head2 JSinstance()
 

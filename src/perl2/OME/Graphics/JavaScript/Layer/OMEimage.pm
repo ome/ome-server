@@ -35,12 +35,6 @@ function $JStype (CGI_URL,name,Dims,Path,isRGB,WBS,RGBon,optionsStr,Wavelengths,
 	this.RGBon = RGBon;
 	this.options.push ('RGBon');
 	
-	for(i in Wavelengths)
-		for(j in Wavelengths[i])
-			alert("Wavelengths["+i+"]["+j+"] = "+Wavelengths[i][j]);
-	for(i in Stats)
-		for(j in Stats[i])
-			alert("Stats["+i+"]["+j+"] = "+Stats[i][j]);
 	
 // Stats does not seem to be used. WBS needs to be updated with change to t and 
 // wavelengths. It needs info from Stats to do this.
@@ -48,7 +42,6 @@ function $JStype (CGI_URL,name,Dims,Path,isRGB,WBS,RGBon,optionsStr,Wavelengths,
 	this.setParam = setParam;
 	this.setType  = setType;
 	this.setRGBon = setRGBon;
-	
 	return this;
 	
 	function setParam (theParam, theValue) {
