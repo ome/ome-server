@@ -128,6 +128,15 @@ use OME::Factory;
 
 use OME::Remote::Prototypes ();  # don't import anything
 
+BEGIN {
+    # Load in all of the classes that have prototypes defined.
+    foreach (keys %OME::Remote::Prototypes::prototypes) {
+        die "Malformed class name $_"
+          unless /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+        eval "require $_";
+    }
+}
+
 our $SHOW_CALLS = 1;
 our $SHOW_RESULTS = 0;
 our $SHOW_CACHING = 0;
