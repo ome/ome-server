@@ -65,8 +65,11 @@ use OME::Matlab;
 use OME::Tasks::PixelsManager;
 use OME::Analysis::Handler;
 use OME::Session;
+use OME::ModuleExecution;
+
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
+use Time::HiRes qw(gettimeofday tv_interval);
 
 my $supported_NS = 'http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd';
 
@@ -138,9 +141,17 @@ sub startImage {
 	my ($self,$image) = @_;
 	$self->SUPER::startImage($image);
 
+	my $mex = $self->getModuleExecution();
+
+	my $start_time = [gettimeofday()];
 	$self->placeInputs();
+	$mex->attribute_db_time(tv_interval($start_time));
+	
 	$self->__execute() if $self->__checkExecutionGranularity( ) eq 'I';
+	
+	$start_time = [gettimeofday()];
 	$self->getOutputs();
+	$mex->attribute_create_time(tv_interval($start_time));
 }
 
 sub finishAnalysis {
@@ -153,6 +164,7 @@ sub finishAnalysis {
 sub __execute {
 	my ($self) = @_;
 	
+	my $mex = $self->getModuleExecution();
 	my $location = $self->getModule()->location();
 	
 	my $input_cmd = "(".join(',', 
@@ -170,10 +182,20 @@ sub __execute {
 
 	my $command = "${output_cmd}${location}${input_cmd};";
 	logdbg "debug", "***** Command to Matlab: $command\n";
-	my $outBuffer = " " x 512;
+	my $outBuffer      = " " x 2048;
+	my $blankOutBuffer = " " x 2048;
 	$self->{__engine}->setOutputBuffer($outBuffer, length($outBuffer));
+	my $start_time = [gettimeofday()];
+	
 	$self->{__engine}->eval($command);
-	logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";
+	
+	$mex->total_time(tv_interval($start_time));
+	if ($outBuffer ne $blankOutBuffer) {
+		# $mex->error_message("$OutBuffer");
+		logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";
+	} else {
+		logdbg "debug", "***** Output from Matlab:\n";
+	}
 }
 
 =head1 Input processing
