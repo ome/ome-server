@@ -39,6 +39,22 @@
 		  <Description>
             Specifies a slice of a Pixels attribute.
           </Description>
+          <Element
+			 Name="StartX"
+			 DBLocation="PIXELS_SLICE.START_X"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndX"
+			 DBLocation="PIXELS_SLICE.END_X"
+			 DataType="integer"/>
+		  <Element
+			 Name="StartY"
+			 DBLocation="PIXELS_SLICE.START_Y"
+			 DataType="integer"/>
+		  <Element
+			 Name="EndY"
+			 DBLocation="PIXELS_SLICE.END_Y"
+			 DataType="integer"/>
 		  <Element
 			 Name="StartZ"
 			 DBLocation="PIXELS_SLICE.START_Z"
@@ -66,78 +82,6 @@
 		  <Element 
 			 Name="Pixels"
 			 DBLocation="PIXELS_SLICE.PIXELS"
-			 DataType="reference"
-			 RefersTo = "Pixels"/>
-		</SemanticType>
-
-		<SemanticType Name="PixelsChannelSlice" AppliesTo="I">
-			<Description>
-			 Specifies a single channel in a Pixels attribute.
-			</Description>
-			<Element
-				Name="TheC"
-				DBLocation="CHANNEL_SLICE.THE_C"
-				DataType="integer"/>
-			<Element 
-				Name="Pixels"
-				DBLocation="CHANNEL_SLICE.PIXELS"
-				DataType="reference"
-				RefersTo="Pixels"/>
-		</SemanticType>
-		
-		<SemanticType Name="PixelsTimeSlice" AppliesTo="I">
-		  <Description>
-            Specifies a single timepoint in a Pixels attribute.
-          </Description>
-		  <Element
-			 Name="TheT"
-			 DBLocation="TIME_SLICE.THE_T"
-			 DataType="integer"/>
-		  <Element 
-			 Name="Pixels"
-			 DBLocation="TIME_SLICE.PIXELS"
-			 DataType="reference"
-			 RefersTo = "Pixels"/>
-		</SemanticType>
-
-		<SemanticType Name="PixelsStackSlice" AppliesTo="I">
-		  <Description>
-            Specifies a single XYZ stack in a Pixels attribute.
-          </Description>
-		  <Element
-			 Name="TheC"
-			 DBLocation="STACK_SLICE.THE_C"
-			 DataType="integer"/>
-		  <Element
-			 Name="TheT"
-			 DBLocation="STACK_SLICE.THE_T"
-			 DataType="integer"/>
-		  <Element 
-			 Name="Pixels"
-			 DBLocation="STACK_SLICE.PIXELS"
-			 DataType="reference"
-			 RefersTo = "Pixels"/>
-		</SemanticType>
-
-		<SemanticType Name="PixelsPlaneSlice" AppliesTo="I">
-		  <Description>
-            Specifies a single XY plane in a Pixels attribute.
-          </Description>
-		  <Element
-			 Name="TheZ"
-			 DBLocation="PLANE_SLICE.THE_Z"
-			 DataType="integer"/>
-		  <Element
-			 Name="TheC"
-			 DBLocation="PLANE_SLICE.THE_C"
-			 DataType="integer"/>
-		  <Element
-			 Name="TheT"
-			 DBLocation="PLANE_SLICE.THE_T"
-			 DataType="integer"/>
-		  <Element 
-			 Name="Pixels"
-			 DBLocation="PLANE_SLICE.PIXELS"
 			 DataType="reference"
 			 RefersTo = "Pixels"/>
 		</SemanticType>
