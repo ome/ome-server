@@ -68,7 +68,17 @@ The following methods are available to a "ProjectManager."
 
 	$projectManager->add($dataset->id());
 
-Adds the "Dataset" by reference of its ID to the "Project" by reference of its ID. It also makes the dataset active by means of the "Session."
+Adds the "Dataset" by reference of its ID to the "Project" by reference of its ID.
+
+Note: The project ID is optional and if it is not defined the dataset is added to the current, active project ($session->Project());
+
+=head2 addDatasets ($array_ref,$projectID)
+
+	$projectManager->addDatasets([1,2,3], $project->id());
+
+	$projectManager->addDatasets([1,2,3]);
+
+Adds the "Datasets" provided by the array reference by reference of their ID to the "Project" by reference of its ID.
 
 Note: The project ID is optional and if it is not defined the dataset is added to the current, active project ($session->Project());
 
@@ -229,12 +239,32 @@ sub add{
 	}
 
 	my $dataset=$self->addToProject($datasetID,$project->id());
-	$session->dataset($dataset);
-
-	$session->storeObject();
+	$dataset->storeObject();
 	$session->commitTransaction();
 
 	return $dataset;
+}
+
+###############################
+# Parameters:
+# 	datasetID = dataset_id to add
+#	projectID = if not defined, add to current project
+
+sub addDatasets {
+	my $self=shift;
+	my $session=$self->Session();
+	my ($datasetIDs,$projectID)=@_;
+	my $project;
+
+	unless (defined $projectID){
+	    $project=$session->project();
+	}
+
+	foreach (@$datasetIDs) {
+		my $dataset=$self->addToProject($_,$projectID);
+		$dataset->storeObject();
+		$session->commitTransaction();
+	}
 }
 
 
