@@ -47,7 +47,8 @@ sub precalculateImage {
     my ($self) = @_;
 
     my $image = $self->getCurrentImage();
-    my $path = $image->getFullPath();
+    my $pixels = $self->getImageInputs("Pixels")->[0];
+    my $path = $image->getFullPath( $pixels );
     my $location = $self->{_location};
     my $options = $self->{_options};
     my $cmdLine = "$location $path $options";
@@ -74,12 +75,8 @@ sub precalculateImage {
     $self->{_currentImage} = $image;
     $self->{_cmdLine} = $cmdLine;
 
-    #my $dims = $image->Dimensions();
-    #my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
-    #",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times();
-    my $dims = $self->getImageInputs("Dimensions")->[0];
-    my $dimString = "Dims=".$dims->SizeX().",".$dims->SizeY().
-	",".$dims->SizeZ().",".$dims->SizeC().",".$dims->SizeT();
+    my $dimString = "Dims=".$pixels->SizeX().",".$pixels->SizeY().
+	",".$pixels->SizeZ().",".$pixels->SizeC().",".$pixels->SizeT();
 
     print $input "$dimString\nWaveStats=\n";
 
