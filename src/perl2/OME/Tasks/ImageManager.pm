@@ -576,7 +576,7 @@ sub deleteInMap{
 	my ($session,$id,$db)=@_;
 	my @tables=();
 	#existing
-	@tables=qw(image_dataset_map image_files_xyzwt ome_sessions_images);	#last one just in case!
+	@tables=qw(image_dataset_map ome_sessions_images);	#last one just in case!
 	# dynamic
       my @tablesDynamic=$session->Factory()->findObjects("OME::DataTable",'granularity'=>'I');
   	my @dynamic=();
