@@ -143,13 +143,18 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	this.tDownButton = new button(
 		350, 10,
 		tDown,
-		skinLibrary["triangleLeftWhite"]
+		skinLibrary["triangleLeftWhite"],
+		undefined,
+		skinLibrary["triangleLeftRed"]
 	);
 	this.tDownButton.realize(this.displayContent);
 	this.tUpButton = new button(
 		354, 10,
 		tUp,
-		skinLibrary["triangleRightWhite"]
+		skinLibrary["triangleRightWhite"],
+		undefined,
+		skinLibrary["triangleRightRed"]
+
 	);
 	this.tUpButton.realize(this.displayContent);
 	this.tAnimDownButton = new button(
