@@ -47,7 +47,8 @@ my @tasks = (
     "OME::Install::CoreSystemTask",
     "OME::Install::LibraryTask",
     "OME::Install::PerlModuleTask",
-    "OME::Install::CoreDatabaseTablesTask"
+    "OME::Install::CoreDatabaseTablesTask",
+    "OME::Install::ApacheConfigTask"
 );
 
 # Main task queues
