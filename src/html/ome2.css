@@ -110,6 +110,17 @@ input.ome_widget:hover {
 	color: #006699;
 }
 
+.ome_sort_arrows
+{
+	border-width: 0px;
+}
+
+.ome_active_sort_arrow
+{
+	background-color: orange;
+	border-width: 0px;
+}
+
 /* IMAGE LINKS */
 a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
 
