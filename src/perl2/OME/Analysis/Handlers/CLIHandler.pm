@@ -23,7 +23,7 @@ package OME::Analysis::CLIHandler;
 use strict;
 our $VERSION = 2.000_000;
 
-use IO::File;
+use IPC::Open2;
 
 use OME::Analysis::Handler;
 use XML::LibXML;
@@ -164,7 +164,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	#####################################################################
 	#
-	# What needs to be done to generalize plane interating from just XY to YZ, XZ, etc.
+	# What needs to be done to generalize plane interating from just XY to YZ & XZ
 	#
 	#	change contents of planeIndexTypes
 	#	change method of plane generation
@@ -175,7 +175,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	#####################################################################
 	#
-	# set up Plane Indexes
+	# set up Plane Generation
 	#
 	# Notes:
 	# 	the import process normalized planeID's - it gives every plane a unique ID and updates all references
@@ -187,7 +187,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	my $planeIndexes;
 	my @planes = $root->getElementsByTagName( "XYPlane" );
 	if(scalar(@planes) > 0 ) {
-		my $imagePix = $image->GetPix()
+		my $imagePix = $image->GetPix($Pixels)
 			or die "Could not load image->Pix, image_ID = ".$image->id();
 	}
 	# planeIndexTypes is hard coded now because we only deal w/ XY planes. 
@@ -379,42 +379,154 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#
 		print STDERR "Constructing Command Line String\n" if $debug eq 2;
 		foreach my $subString(@cmdElements) {
+			$cmdLineString .= resolveSubString( $subString );
+		}
+		my $executeString = $module->location() . $cmdLineString;
+		print STDERR "Execution string is:\n$executeString\n" if $debug;
+		#
+		#
+		#################################################################
+			
+		#####################################################################
+		#   
+		# Actually execute
+		#
+			open2(*OUT, *IN, $executeString);
+			
+			#################################################################
+			#
+			# Write to STDIN of program
+			#
+			print STDERR "Writing to Program's STDIN.\n" if $debug eq 2;
+ 			my @stdinXML = $root->getElementsByLocalName( "STDIN" ); 
+			if( @stdinXML ) {
+				my @inputRecordsXML = $stdinXML[0]->getElementsByLocalName( "InputRecord" );
+				foreach my $inputRecordXML( @inputRecordsXML ) {
+					#construct input record
+					my $delimitedRecordXML = [$inputRecordXML->getElementsByLocalName("DelimitedRecord")]->[0];
+					my @inputsXML = $delimitedRecordXML->getElementsByLocalName( "Input" );
+					my @indexesXML = $inputRecordXML->getElementsByLocalName( "Index" );
+
+					my %recordHash;
+					my %knownFormalInputs;
+					
+					# process each formal input in the record block, & join them on indexes
+					foreach my $inputXML( @inputsXML ) {
+						my @indexLookup;
+						my $FI = $inputXML->getAttribute('FormalInputName');
+						
+						# have we seen this formal input before?
+						next if exists $knownFormalInputs{$FI};
+						$knownFormalInputs{$FI} = undef;
+						
+						foreach my $indexXML (@indexesXML ) {
+							my @matchingInput = grep( 
+								$_->getAttribute('FormalInputName') eq $FI,
+								$indexXML->getElementsByLocalName("Input"));
+							push( @indexLookup, $matchingInput[0]->getAttribute( 'SemanticElementName' ) );
+						}
+						
+						# make hash entry for each instance of this formal input
+						foreach my $input ( @{$inputs{ $FI }} ) {
+							my $d = $input->getDataHash();
+							my @keys = ();
+							foreach my $se ( @indexLookup ) {
+								# FIXME: implement dereferencing
+								#$se =~ s/\./\(\)->/g;
+								my $val = $input->_getField( $se );
+								
+								die "Could not find SE '$se' belonging to ST '".$input->semantic_type()->name()."'. The <InputRecord> this stuff was pulled from is\n".$inputRecordXML->toString()."\n"
+									unless defined $val;
+								push( @keys, $val );
+							}
+							my $key = join( '.', @keys );
+							die "Duplicate entry for '$FI' found for index key '$key'\n"
+								if exists $recordHash{$key}->{$FI};
+							$recordHash{$key}->{$FI} = $input;
+						}
+
+					}
+
+					#sort & print input record block
+					my @recordBlock;
+					foreach my $index( sort keys %recordHash ) {
+						my @recordEntries;
+						foreach my $inputXML( @inputsXML ) {
+							my $FI = $inputXML->getAttribute('FormalInputName');
+							my $se = $inputXML->getAttribute('SemanticElementName');
+							# FIXME: implement dereferencing
+							#$se =~ s/\./\(\)->/g;
+							my $r = $recordHash{ $index }->{ $FI }->_getField( $se );
+							die "_getField( $se ) returned undef. This was most likely caused by a misspelling of the semantic element '$se' in '".$inputXML->toString()."'.\n"
+								unless defined $r;
+							push( @recordEntries, $r );
+						}
+						my $record = join( $delimitedRecordXML->getAttribute( 'FieldDelimiter' ), @recordEntries );
+						push( @recordBlock, $record );
+					}
+					my $recordDelimiter = $delimitedRecordXML->getAttribute( 'RecordDelimiter' ) || "\n";
+					print IN join( $recordDelimiter, @recordBlock );
+					print STDERR "Record block is:\n".join( $recordDelimiter, @recordBlock ) if $debug > 2;
+				}
+			}
+			close(IN);
+			#
+			#
+			#################################################################
+
+			# collect output
+			my $outputStream='';
+			while( <OUT> ) {
+				$outputStream .= $_;
+			}
+			close(OUT);
+		#
+		#####################################################################
+			
 	
+	
+	
+		#####################################################################
+		#   
+		# resolveSubString
+		#	a helper function
+		#
+		sub resolveSubString {
+			my $subString = shift;
+			
 			#############################################################
 			#
 			# plain text - no processing required
 			#		
 			if( $subString->getElementsByTagName( 'RawText' ) ) {
-				print STDERR "\tProcessing sub node of type RawText\n" if $debug eq 2;
-				$cmdLineString .= $subString->getElementsByTagName( 'RawText' )->[0]->getFirstChild->getData;
+				return $subString->getElementsByTagName( 'RawText' )->[0]->getFirstChild->getData;
 			#
 			#############################################################
 			#
 			# Input request
 			#
 			} elsif ($subString->getElementsByTagName( 'Input' ) ) {
-				print STDERR "\tProcessing sub node of type Input\n" if $debug eq 2;
 				my $se = $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('SemanticElementName');
 				$se =~ s/\./\(\)->/g;
 				my $str = '$inputs{'.
 						$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName').
 					'}->[0]->'.$se.'()';
 				my $val;
+				# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
 				eval('$val ='. $str)
-					or die "Could not find semantic element '$se' in input '".$subString->getElementsByTagName( 'Input' )->[0]->getAttribute('FormalInputName')."'\n";
+					or die "Could not resolve input call '$str'\n";
 				
 				$val /= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy')
 					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('DivideBy');
 				$val *= $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy')
 					if defined $subString->getElementsByTagName( 'Input' )->[0]->getAttribute('MultiplyBy');
-				$cmdLineString .= $val;
+				return $val;
 			#
 			#############################################################
 			#
 			# Generate a plane - currently only TIFFs are supported
 			#		
 			} elsif ($subString->getElementsByTagName( 'XYPlane' ) ) {
-				print STDERR "\tProcessing sub node of type XYPlane\n" if $debug eq 2;
 				my $planeXML = $subString->getElementsByTagName( 'XYPlane' )->[0];
 				my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
 				my $planePath = $session->getTemporaryFilename('ome_cccp','TIFF')
@@ -424,10 +536,8 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					' theW = '.${ $planeIndexes->{ $planeID }->{theW} }.
 					' theT = '.${ $planeIndexes->{ $planeID }->{theT} }.
 					' Path = '.$planePath;
-				print STDERR "\tPlane info is:\n$planeInfo" if $debug eq 2;
 				my $pixelsWritten;
 				if( $planeXML->getAttribute( 'BPP' ) eq 8 ) {
-					print STDERR " BPP = 8" if $debug eq 2;
 					$pixelsWritten = $imagePix->Plane2TIFF8( 
 						${ $planeIndexes->{ $planeID }->{theZ} },
 						${ $planeIndexes->{ $planeID }->{theW} },
@@ -443,38 +553,21 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 						${ $planeIndexes->{ $planeID }->{theT} },
 						$planePath );
 				}
-				print STDERR "\n\n" if $debug eq 2;
 				my $nPix = $dims{'x'}*$dims{'y'};
 				die "Wrong number of pixels written to file. $pixelsWritten of $nPix pixels written"
 					unless ( $pixelsWritten == $nPix);
-				$cmdLineString .= $planePath;
+				return $planePath;
 			#
 			#
 			#############################################################
 			}
 		}
-		my $executeString = $module->location() . $cmdLineString;
-print STDERR "Execution string is:\n$executeString\n";# if $debug;
-		print STDERR "Execution string is:\n$executeString\n" if $debug;
 		#
-		#
-		#################################################################
-		
-	#####################################################################
-	#   
-	# Actually execute
-	#
-		my $_STDOUT = new IO::File;
-		open $_STDOUT, "$executeString |" or
-			die "Cannot execute program using '$executeString'";
-		my $outputStream='';
-		while( <$_STDOUT> ) {
-			$outputStream .= $_;
-		}
-		close ( $_STDOUT );
-	#
-	#####################################################################
-		
+		#####################################################################
+			
+
+
+
 	
 		#################################################################
 		#
