@@ -49,12 +49,10 @@
 #include "base64.h"
 #include "string.h"
 
-/* Needs to be a multiple of 12 (3 && 4)
- * In general the system is IO bound, causing a larger buffer
- * not to affect performance. */
-#define SIZEOF_BUF 20736
+#define SIZEOF_BUF 1032 /* needs to be multiple of 3 && 4 */
 #define BLOCK_SIZE_100K 9
 
+/*	enum { none, bzip2, zlib }*/
 
 /*****************************************************************************/
 /**************                                                ***************/
@@ -996,7 +994,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 	*
 	*/
 	  case bzip2:
-		if( BZ2_bzCompressEnd( strm->state->bzip_stream ) != BZ_OK ) {
+		if( BZ2_bzDecompressEnd( strm->state->bzip_stream ) != BZ_OK ) {
 #ifndef NO_VERBIAGE
 			fprintf( stderr, "Error! bzip2 returned an error message when calling BZ2_bzDecompressEnd\n" );
 #endif
@@ -1016,7 +1014,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 	*
 	*/
 	  case zlib:
-		if( deflateEnd( strm->state->zlib_stream ) != Z_OK ) {
+		if( inflateEnd( strm->state->zlib_stream ) != Z_OK ) {
 #ifndef NO_VERBIAGE
 			fprintf( stderr, "Error! zlib gave an error message when calling inflateEnd\nmessage is:\n%s\nend of message\n", strm->state->zlib_stream->msg );
 #endif
@@ -1067,7 +1065,9 @@ int test(int verbosity) {
 
 	unsigned char *testString = "\"The state can't give you free speech, and the state can't take it away. You're born with it, like your eyes, like your ears. Freedom is something you assume, then you wait for someone to try to take it away. The degree to which you resist is the degree to which you are free...\"\n---Utah Phillips";
 	unsigned char *dec, *enc, *buf;
-	
+	compression_type comps[] = { none, bzip2, zlib };
+	char *comp_labels[] = {"none", "bzip2", "zlib" };
+
 	enum { verbose, terse, quiet, silent } debug;
 	switch( verbosity ) {
 	  case 0:
@@ -1094,9 +1094,7 @@ int test(int verbosity) {
 	} while( bS < 4 );
 	buf = (unsigned char * ) malloc( bS + 1 );
 
-	
-	compression_type comps[] = { none, bzip2, zlib };
-	char *comp_labels[] = {"none", "bzip2", "zlib" };
+
 
 	for(test=0;test<3;test++) {
 		enc = (unsigned char *) malloc( bufSize );
