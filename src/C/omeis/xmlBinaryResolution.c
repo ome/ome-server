@@ -63,6 +63,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
+
 #include "xmlBinaryResolution.h"
 #include "../base64.h"
 #include "../b64z_lib.h"
@@ -488,9 +489,6 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		/**********************************************************************
 		*
 		* Initialization for <BinData> processing.
-		* 	remember that we do not know if this <Pixels> contains <BinData>s
-		* 	or <External>s. We will not use any of this if the <Pixels> 
-		* 	contains <External>s.
 		*
 		*/
 		/* initialize variables */
@@ -597,8 +595,6 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		/* print BinFile's FileID */
 		if( strcmp( BinFileLocal, localName ) == 0 ) {
 			fprintf( stdout, "ID = \"%llu\" ", state->BinFileInfo.FileID );
-		} else if( strcmp( PixelLocal, localName ) == 0 ) {
-			fprintf( stdout, "ImageServerID = \"%llu\" ", state->pixelInfo->pixWriter->ID );
 		}
 	}
 	/*
@@ -620,7 +616,7 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 	*/
 	StructElementInfo *elementInfo;
 	size_t nPix;
-	int result;
+	OID ImageServerID;
 
 	switch( state->state ) {
 	
@@ -757,17 +753,26 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 	 case IN_PIXELS:
 		state->state = PARSER_START;
 
-		/* close pixelsRep object & clean it up */
-		if ( (result = FinishPixels( state->pixelInfo->pixWriter, 0 )) == 0 ) {
-			fprintf(stderr, "Error calling FinishPixels: result = %d\n",result);
-			if (errno) fprintf (stderr,"%s\n",strerror( errno ) );
+		/* get SHA1, print SHA1 attribute  */
+		if (get_md_from_fd (state->pixelInfo->pixWriter->fd_rep, state->pixelInfo->pixWriter->head->sha1) < 0) {
+			fprintf(stderr, "Unable to retrieve SHA1.");
 			assert(0);
 		}
-
 		fprintf( stdout,  " FileSHA1 = \"" );
 		print_md( state->pixelInfo->pixWriter->head->sha1 );
 		fprintf( stdout,  "\"" );
 		
+		/* close pixelsRep object; get ImageServerID from FinishPixels */
+		if ( (ImageServerID = FinishPixels( state->pixelInfo->pixWriter, 0 )) == 0 ) {
+			if (errno)
+				fprintf (stderr,"%s\n",strerror( errno ) );
+			else
+				fprintf(stderr, "Access control error - check error log for details.\n");
+			assert(0);
+		}
+
+		/* set ImageServerID */
+		fprintf( stdout, " ImageServerID = \"%llu\" ", ImageServerID );
 
 	 	/* cleanup */
 	 	freePixelsRep (state->pixelInfo->pixWriter);
