@@ -5,15 +5,19 @@
 	xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
 	<xsl:template match = "*">
 		<xsl:copy-of select = "."/>
 	</xsl:template>
 	<xsl:template match = "CA:OME">
-		<xsl:element name = "OME" namespace="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
+		<xsl:element name = "OME"
+			namespace = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+			xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
 			<xsl:attribute name = "xsi:schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
 			</xsl:attribute>
+
 			<xsl:apply-templates select = "CA:Project"/>
 			<xsl:apply-templates select = "CA:Dataset"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Experiment"/>
@@ -23,6 +27,7 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Group"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Instrument"/>
 			<xsl:apply-templates select = "CA:Image"/>
+			<xsl:apply-templates select = "CA:CustomAttributes"/>
 		</xsl:element>
 	</xsl:template>
 
@@ -169,6 +174,7 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:DisplayOptions"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:StageLabel"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImagePlate"/>
+			<xsl:apply-templates select = "CA:CustomAttributes"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:ImageExperiment">
