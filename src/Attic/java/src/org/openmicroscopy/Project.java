@@ -59,4 +59,11 @@ public interface Project
 
     public List getDatasets();
     public Iterator iterateDatasets();
+
+    /**
+     * Inserts dataset into project
+     * @param dataset The dataset insert
+     * @return dataset the inserted dataset or null
+     */
+    public void addDataset(Dataset ds);
 }
