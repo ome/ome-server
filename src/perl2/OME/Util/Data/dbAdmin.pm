@@ -339,7 +339,7 @@ sub restore {
 	
 	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." ome'");
-	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." -d ome /tmp/omeDB_backup'");
+	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." -d ome --use-set-session-authorization /tmp/omeDB_backup'");
 }
 
 sub restore_help {
