@@ -79,13 +79,45 @@ sub Pix {
     return ($self->{Pix});
 }
 
+# Accessor/Mutator
+# has not been subjected to thorough testing.
 sub Dimensions {
     my $self = shift;
+    
+    # It doesn't make sense to change images if they have been set. It's a one time only transaction.
+    # if $self->{_dimensions} is set, we've gone through this before and either mutated or loaded the dims
     return ($self->{_dimensions}) if defined $self->{_dimensions};
+
+	# nab mutator parameters if they exist
+    my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
     
+   	# look for dimensions
     my @dimensions = OME::Image::Dimensions->search (image_id => $self->id());
+
+    # if they gave us some parameters to mutate with, let's mutate!
+    if( defined $BitsPerPixel ) {
+    	# the lack of $self->{_dimensions} merely indicates this function
+    	# has not been called previously on this object. The image could 
+    	# have dimensions tucked away in the DB.
+    	die ref ($self) . "->Dimensions() does not allow mutator behavior once dimensions have been set!\n"
+    		if ( scalar(@dimensions) > 0 );
+    	my $recordData = { image_id       => $self->id(),
+    	                   size_x         => $x,
+    	                   size_y         => $y,
+    	                   size_z         => $z,
+    	                   num_waves      => $w,
+    	                   num_times      => $t,
+    	                   bits_per_pixel => $BitsPerPixel };
+    	my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
+    		or die ref ($self) . "->Dimensions() could not create a new object of type OME::Image::Dimensions. Parameters used were: ". values (%$recordData) . "\n";
+    	$dims->writeObject();
+    	# I don't think it's appropriate to commit here. If I am wrong, add a line to commit
+    	$self->{_dimensions} = $dims;
+    	return $self->{_dimensions};
+    }
     
-    die "Image has multiple dimension entries" if (scalar(@dimensions) > 1);
+    die ref ($self) . "->Dimensions(): Image has multiple dimension entries\n"
+    	if (scalar(@dimensions) > 1);
     $self->{_dimensions} = $dimensions[0];
     return $self->{_dimensions};
 }
