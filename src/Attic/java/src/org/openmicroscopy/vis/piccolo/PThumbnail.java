@@ -67,8 +67,6 @@ public class PThumbnail extends PNode implements PBufferedNode,
 	
 	private CImage image;	
 	private PImage imageNode=null;
-	private BufferedImage imageData;
-	private PText label=null;
 	
 	private PPath highlightRect;
 	
@@ -76,16 +74,10 @@ public class PThumbnail extends PNode implements PBufferedNode,
 	public PThumbnail(CImage image) {
 		super();
 		this.image=image;
-		imageData = image.getImageData();
-		if (imageData != null) {
-			imageNode = new PBufferedImage(imageData);
-			addChild(imageNode);
-		}
-		else {
-			label = new PText(image.getName());
-			label.setFont(PConstants.THUMBNAIL_NAME_FONT);
-			addChild(label);
-		}
+		BufferedImage imageData = image.getImageData();
+		imageNode = new PBufferedImage(imageData);
+		addChild(imageNode);
+		
 		image.addThumbnail(this);
 	}
 	/**
@@ -128,15 +120,7 @@ public class PThumbnail extends PNode implements PBufferedNode,
 				b.getHeight()+2*PConstants.SMALL_BORDER);
 	}
 	
-	// note that this only gets called when the imageData was initially null,
-	// so we know that we don't have to check if label is null, etc.
-	public void notifyImageComplete() {
-//		System.err.println("image "+image.getID()+", is complete");
-		removeAllChildren();
-		imageData = image.getImageData();
-		imageNode = new PBufferedImage(imageData);
-		addChild(imageNode); 
-	}
+
 	
 	public int compareTo(Object o) {
 		if (o instanceof PBufferedNode) {
