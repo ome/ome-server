@@ -70,20 +70,29 @@
 #define F14 "Max Correlation Coeff "
 
 #define SIGN(x,y) ((y)<0 ? -fabs(x) : fabs(x))
-#define DOT fprintf(stderr,".")
 #define SWAP(a,b) {y=(a);(a)=(b);(b)=y;}
 
 #define PGM_MAXMAXVAL 255
 
-
 void results (),  mkbalanced (), reduction (), simplesrt ();
 int hessenberg ();
-float f1_asm (), f2_contrast (), f3_corr (), f4_var (), f5_idm (),
- f6_savg (), f7_svar (), f8_sentropy (), f9_entropy (), f10_dvar (),
- f11_dentropy (), f12_icorr (), f13_icorr (), f14_maxcorr (), 
-  *pgm_vector (), **pgm_matrix ();
+float f1_asm (float **P, int Ng);
+float f2_contrast (float **P, int Ng);
+float f3_corr (float **P, int Ng);
+float f4_var (float **P, int Ng);
+float f5_idm (float **P, int Ng);
+float f6_savg (float **P, int Ng);
+float f7_svar (float **P, int Ng, float S) ;
+float f8_sentropy (float **P, int Ng);
+float f9_entropy (float **P, int Ng);
+float f10_dvar (float **P, int Ng);
+float f11_dentropy (float **P, int Ng);
+float f12_icorr (float **P, int Ng);
+float f13_icorr (float **P, int Ng);
+float f14_maxcorr (float **P, int Ng);
 
-
+float *allocate_vector (int nl, int nh);
+float **allocate_matrix (int nrl, int nrh, int ncl, int nch);
 
 TEXTURE * Extract_Texture_Features(int distance, 
 				   register unsigned char **grays, 
@@ -91,64 +100,62 @@ TEXTURE * Extract_Texture_Features(int distance,
 				   int cols, 
 				   TEXTURE_FEATURE_MAP *feature_usage)  
 {
-  int tone[PGM_MAXMAXVAL+1], R0, R45, R90, R135, angle, d = 1, x, y;
-  int row, col, i;
-  int itone, jtone, tones;
-  float **P_matrix0, **P_matrix45, **P_matrix90, **P_matrix135;
-  float ASM[4], contrast[4], corr[4], var[4], idm[4], savg[4];
-  float sentropy[4], svar[4], entropy[4], dvar[4], dentropy[4];
-  float icorr[4], maxcorr[4];
-  float *Tp;
+	int tone[PGM_MAXMAXVAL+1], R0, R45, R90, R135, angle, d = 1, x, y;
+	int row, col, i;
+	int itone, jtone, tones;
+	float **P_matrix0, **P_matrix45, **P_matrix90, **P_matrix135;
+	float ASM[4], contrast[4], corr[4], var[4], idm[4], savg[4];
+	float sentropy[4], svar[4], entropy[4], dvar[4], dentropy[4];
+	float icorr[4], maxcorr[4];
+	float *Tp;
 
-  TEXTURE *Texture;
+	TEXTURE *Texture;
 
-    Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
-    if(!Texture) {
-        printf("\nERROR in TEXTURE structure allocate\n");
-        exit(1);
-    }
+	Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
+	if(!Texture) {
+		printf("\nERROR in TEXTURE structure allocate\n");
+		exit(1);
+	}
 
-  d = distance; 
+	d = distance; 
 
-   /* Determine the number of different gray scales (not maxval) */
-  for (row = PGM_MAXMAXVAL; row >= 0; --row)
-    tone[row] = -1;
-  for (row = rows - 1; row >= 0; --row)
-    for (col = 0; col < cols; ++col)
-      {
-   /*   if (grays[row][col])   If gray value equal 0 don't include */		
-        tone[grays[row][col]] = grays[row][col];
-      }	
+	/* Determine the number of different gray scales (not maxval) */
+	for (row = PGM_MAXMAXVAL; row >= 0; --row)
+		tone[row] = -1;
+	for (row = rows - 1; row >= 0; --row)
+		for (col = 0; col < cols; ++col)
+			tone[grays[row][col]] = grays[row][col];
   
- for (row = PGM_MAXMAXVAL, tones = 0; row >= 0; --row)
-    if (tone[row] != -1)
-      tones++;
- /* fprintf (stderr, "(Image has %d graylevels.)\n", tones); */
+	for (row = PGM_MAXMAXVAL, tones = 0; row >= 0; --row)
+		if (tone[row] != -1)
+			  tones++;
 
-  /* Collapse array, taking out all zero values */
-  for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; row++)
-    if (tone[row] != -1)
-      tone[itone++] = tone[row];
-  /* Now array contains only the gray levels present (in ascending order) */
+	/* Collapse array, taking out all zero values */
+	for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; row++)
+		if (tone[row] != -1)
+		  tone[itone++] = tone[row];
+	/* Now array contains only the gray levels present (in ascending order) */
 
-  /* Allocate memory for gray-tone spatial dependence matrix */
-  P_matrix0 = pgm_matrix (0, tones, 0, tones);
-  P_matrix45 = pgm_matrix (0, tones, 0, tones);
-  P_matrix90 = pgm_matrix (0, tones, 0, tones);
-  P_matrix135 = pgm_matrix (0, tones, 0, tones);
-  for (row = 0; row < tones; ++row)
-    for (col = 0; col < tones; ++col)
-    {
-      P_matrix0[row][col] = P_matrix45[row][col] = 0;
-      P_matrix90[row][col] = P_matrix135[row][col] = 0;
-    }
+	/* Allocate memory for gray-tone spatial dependence matrix */
+	P_matrix0 = allocate_matrix (0, tones, 0, tones);
+	P_matrix45 = allocate_matrix (0, tones, 0, tones);
+	P_matrix90 = allocate_matrix (0, tones, 0, tones);
+	P_matrix135 = allocate_matrix (0, tones, 0, tones);
+	
+	for (row = 0; row < tones; ++row)
+		for (col = 0; col < tones; ++col) {
+		  P_matrix0[row][col] = P_matrix45[row][col] = 0;
+		  P_matrix90[row][col] = P_matrix135[row][col] = 0;
+		}
 
-   R0 = 0;
-   R45 = 0;
-   R90 = 0;
-   R135 = 0;	
-  /* Find gray-tone spatial dependence matrix */
- /* fprintf (stderr, "(Computing spatial dependence matrix..."); */
+	R0 = 0;
+	R45 = 0;
+	R90 = 0;
+	R135 = 0;
+   
+   
+	/* Find gray-tone spatial dependence matrix */
+	/* fprintf (stderr, "(Computing spatial dependence matrix..."); */
  
   for (row = 0; row < rows; ++row)
     for (col = 0; col < cols; ++col)
@@ -387,518 +394,445 @@ TEXTURE * Extract_Texture_Features(int distance,
   return (Texture);
 }
 
-float f1_asm (P, Ng)
-  float **P;
-  int Ng;
+/*
+	T. Macura:
 
-/* Angular Second Moment */
-{
-  int i, j;
-  float sum = 0;
+	The matrix P is the normalized gray-tone spatial 
+	dependence matrix (i.e of probabilities). Ng is the number
+	of gray-levels.
+*/
 
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      sum += P[i][j] * P[i][j];
-
-  return sum;
-
-  /*
-   * The angular second-moment feature (ASM) f1 is a measure of homogeneity
-   * of the image. In a homogeneous image, there are very few dominant
-   * gray-tone transitions. Hence the P matrix for such an image will have
-   * fewer entries of large magnitude.
-   */
+/* Angular Second Moment
+*
+* The angular second-moment feature (ASM) f1 is a measure of homogeneity
+* of the image. In a homogeneous image, there are very few dominant
+* gray-tone transitions. Hence the P matrix for such an image will have
+* fewer entries of large magnitude.
+*/
+float f1_asm (float **P, int Ng) {
+	int i, j;
+	float sum = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			sum += P[i][j] * P[i][j];
+	
+	return sum;
 }
 
-
-float f2_contrast (P, Ng)
-  float **P;
-  int Ng;
-
-/* Contrast */
-{
-  int i, j, n;
-  float sum = 0, bigsum = 0;
-
-  for (n = 0; n < Ng; ++n)
-  {
-    for (i = 0; i < Ng; ++i)
-      for (j = 0; j < Ng; ++j)
-	if ((i - j) == n || (j - i) == n)
-	  sum += P[i][j];
-    bigsum += n * n * sum;
-
-    sum = 0;
-  }
-  return bigsum;
-
-  /*
-   * The contrast feature is a difference moment of the P matrix and is a
-   * measure of the contrast or the amount of local variations present in an
-   * image.
-   */
+/* Contrast
+*
+* The contrast feature is a difference moment of the P matrix and is a
+* measure of the contrast or the amount of local variations present in an
+* image.
+*/
+float f2_contrast (float **P, int Ng) {
+	int i, j, n;
+	float sum = 0, bigsum = 0;
+	
+	for (n = 0; n < Ng; ++n) {
+		for (i = 0; i < Ng; ++i)
+			for (j = 0; j < Ng; ++j) {
+				if ((i - j) == n || (j - i) == n)
+					sum += P[i][j];
+				}
+		bigsum += n * n * sum;	
+		sum = 0;
+	}
+	
+	return bigsum;
 }
 
-float f3_corr (P, Ng)
-  float **P;
-  int Ng;
-
-/* Correlation */
-{
-  int i, j;
-  float sum_sqrx = 0, sum_sqry = 0, tmp, *px;
-  float meanx =0 , meany = 0 , stddevx, stddevy;
-
-  px = pgm_vector (0, Ng);
-  for (i = 0; i < Ng; ++i)
-    px[i] = 0;
-
-  /*
-   * px[i] is the (i-1)th entry in the marginal probability matrix obtained
-   * by summing the rows of p[i][j]
-   */
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      px[i] += P[i][j];
-
-
-  /* Now calculate the means and standard deviations of px and py */
-  /*- fix supplied by J. Michael Christensen, 21 Jun 1991 */
-  /*- further modified by James Darrell McCauley, 16 Aug 1991 
-   *     after realizing that meanx=meany and stddevx=stddevy
-   */
-  for (i = 0; i < Ng; ++i)
-  {
-    meanx += px[i]*i;
-    sum_sqrx += px[i]*i*i;
-  }
-  /* M. Boland meanx = meanx/(sqrt(Ng)); */
-  meany = meanx;
-  sum_sqry = sum_sqrx;
-  stddevx = sqrt (sum_sqrx - (meanx * meanx));
-  stddevy = stddevx;
-
-  /* Finally, the correlation ... */
-  for (tmp = 0, i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      tmp += i*j*P[i][j];
-
- free(px); 
- return (tmp - meanx * meany) / (stddevx * stddevy);
-  /*
-   * This correlation feature is a measure of gray-tone linear-dependencies
-   * in the image.
-   */
+/* Correlation
+*
+* This correlation feature is a measure of gray-tone linear-dependencies
+* in the image.
+*/
+float f3_corr (float **P, int Ng) {
+	int i, j;
+	float sum_sqrx = 0, sum_sqry = 0, tmp, *px;
+	float meanx =0 , meany = 0 , stddevx, stddevy;
+	
+	px = allocate_vector (0, Ng);
+	for (i = 0; i < Ng; ++i)
+		px[i] = 0;
+	
+	/*
+	* px[i] is the (i-1)th entry in the marginal probability matrix obtained
+	* by summing the rows of p[i][j]
+	*/
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			px[i] += P[i][j];
+	
+	
+	/* Now calculate the means and standard deviations of px and py */
+	/*- fix supplied by J. Michael Christensen, 21 Jun 1991 */
+	/*- further modified by James Darrell McCauley, 16 Aug 1991 
+	*     after realizing that meanx=meany and stddevx=stddevy
+	*/
+	for (i = 0; i < Ng; ++i) {
+		meanx += px[i]*i;
+		sum_sqrx += px[i]*i*i;
+	}
+	
+	/* M. Boland meanx = meanx/(sqrt(Ng)); */
+	meany = meanx;
+	sum_sqry = sum_sqrx;
+	stddevx = sqrt (sum_sqrx - (meanx * meanx));
+	stddevy = stddevx;
+	
+	/* Finally, the correlation ... */
+	for (tmp = 0, i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			  tmp += i*j*P[i][j];
+	
+	free(px); 
+	return (tmp - meanx * meany) / (stddevx * stddevy);
 }
-
-
-float f4_var (P, Ng)
-  float **P;
-  int Ng;
 
 /* Sum of Squares: Variance */
-{
-  int i, j;
-  float mean = 0, var = 0;
-
-  /*- Corrected by James Darrell McCauley, 16 Aug 1991
-   *  calculates the mean intensity level instead of the mean of
-   *  cooccurrence matrix elements 
-   */
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      mean += i * P[i][j];
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      /*  M. Boland - var += (i + 1 - mean) * (i + 1 - mean) * P[i][j]; */
-      var += (i - mean) * (i - mean) * P[i][j];
-
-  return var;
+float f4_var (float **P, int Ng) {
+	int i, j;
+	float mean = 0, var = 0;
+	
+	/*- Corrected by James Darrell McCauley, 16 Aug 1991
+	*  calculates the mean intensity level instead of the mean of
+	*  cooccurrence matrix elements 
+	*/
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			mean += i * P[i][j];
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+		  /*  M. Boland - var += (i + 1 - mean) * (i + 1 - mean) * P[i][j]; */
+		  var += (i - mean) * (i - mean) * P[i][j];
+	
+	return var;
 }
-
-float f5_idm (P, Ng)
-  float **P;
-  int Ng;
 
 /* Inverse Difference Moment */
-{
-  int i, j;
-  float idm = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      idm += P[i][j] / (1 + (i - j) * (i - j));
-
-  return idm;
+float f5_idm (float **P, int Ng) {
+	int i, j;
+	float idm = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			idm += P[i][j] / (1 + (i - j) * (i - j));
+	
+	return idm;
 }
 
+/* GLOBAL VARIABLE used by f6_savg, f7_sumvar */
 float Pxpy[2 * PGM_MAXMAXVAL];
 
-float f6_savg (P, Ng)
-  float **P;
-  int Ng;
-
 /* Sum Average */
-{
-  int i, j;
-  extern float Pxpy[2 * PGM_MAXMAXVAL];
-  float savg = 0;
-
-  for (i = 0; i <= 2 * Ng; ++i)
-    Pxpy[i] = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      /* M. Boland Pxpy[i + j + 2] += P[i][j]; */
-      /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
-      Pxpy[i + j] += P[i][j];
-  /* M. Boland for (i = 2; i <= 2 * Ng; ++i) */
-  /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
-  for (i = 0; i <= (2 * Ng - 2); ++i)
-    savg += i * Pxpy[i];
-
-  return savg;
+float f6_savg (float **P, int Ng) {
+	int i, j;
+	extern float Pxpy[2 * PGM_MAXMAXVAL];
+	float savg = 0;
+	
+	for (i = 0; i <= 2 * Ng; ++i)
+		Pxpy[i] = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+		  /* M. Boland Pxpy[i + j + 2] += P[i][j]; */
+		  /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
+		  Pxpy[i + j] += P[i][j];
+		  
+	/* M. Boland for (i = 2; i <= 2 * Ng; ++i) */
+	/* Indexing from 2 instead of 0 is inconsistent with rest of code*/
+	for (i = 0; i <= (2 * Ng - 2); ++i)
+		savg += i * Pxpy[i];
+	
+	return savg;
 }
-
-
-float f7_svar (P, Ng, S)
-  float **P, S;
-  int Ng;
 
 /* Sum Variance */
-{
-  int i, j;
-  extern float Pxpy[2 * PGM_MAXMAXVAL];
-  float var = 0;
-
-  for (i = 0; i <= 2 * Ng; ++i)
-    Pxpy[i] = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      /* M. Boland Pxpy[i + j + 2] += P[i][j]; */
-      /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
-      Pxpy[i + j] += P[i][j];
-
-  /*  M. Boland for (i = 2; i <= 2 * Ng; ++i) */
-  /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
-  for (i = 0; i <= (2 * Ng - 2); ++i)
-    var += (i - S) * (i - S) * Pxpy[i];
-
-  return var;
+float f7_svar (float **P, int Ng, float S) {
+	int i, j;
+	extern float Pxpy[2 * PGM_MAXMAXVAL];
+	float var = 0;
+	
+	for (i = 0; i <= 2 * Ng; ++i)
+		Pxpy[i] = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+		  /* M. Boland Pxpy[i + j + 2] += P[i][j]; */
+		  /* Indexing from 2 instead of 0 is inconsistent with rest of code*/
+		  Pxpy[i + j] += P[i][j];
+	
+	/*  M. Boland for (i = 2; i <= 2 * Ng; ++i) */
+	/* Indexing from 2 instead of 0 is inconsistent with rest of code*/
+	for (i = 0; i <= (2 * Ng - 2); ++i)
+		var += (i - S) * (i - S) * Pxpy[i];
+	
+	return var;
 }
-
-float f8_sentropy (P, Ng)
-  float **P;
-  int Ng;
 
 /* Sum Entropy */
-{
-  int i, j;
-  extern float Pxpy[2 * PGM_MAXMAXVAL];
-  float sentropy = 0;
+float f8_sentropy (float **P, int Ng) {
+	int i, j;
+	extern float Pxpy[2 * PGM_MAXMAXVAL];
+	float sentropy = 0;
+	
+	for (i = 0; i <= 2 * Ng; ++i)
+		Pxpy[i] = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+		  Pxpy[i + j + 2] += P[i][j];
+	
+	for (i = 2; i <= 2 * Ng; ++i)
+		/*  M. Boland  sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
+		sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
 
-  for (i = 0; i <= 2 * Ng; ++i)
-    Pxpy[i] = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      Pxpy[i + j + 2] += P[i][j];
-
-  for (i = 2; i <= 2 * Ng; ++i)
-    /*  M. Boland  sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
-    sentropy -= Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
-
-  return sentropy;
+	return sentropy;
 }
-
-
-float f9_entropy (P, Ng)
-  float **P;
-  int Ng;
 
 /* Entropy */
-{
-  int i, j;
-  float entropy = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      /*      entropy += P[i][j] * log10 (P[i][j] + EPSILON); */
-      entropy += P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0) ;
-
-  return -entropy; 
+float f9_entropy (float **P, int Ng) {
+	int i, j;
+	float entropy = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			/*      entropy += P[i][j] * log10 (P[i][j] + EPSILON); */
+			entropy += P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0) ;
+	
+	return -entropy; 
 }
-
-
-float f10_dvar (P, Ng)
-  float **P;
-  int Ng;
 
 /* Difference Variance */
-{
-  int i, j;
-  extern float Pxpy[2 * PGM_MAXMAXVAL];
-  float sum = 0, sum_sqr = 0, var = 0;
-
-  for (i = 0; i <= 2 * Ng; ++i)
-    Pxpy[i] = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      Pxpy[abs (i - j)] += P[i][j];
-
-  /* Now calculate the variance of Pxpy (Px-y) */
-  for (i = 0; i < Ng; ++i)
-  {
-    sum += i * Pxpy[i] ;
-    sum_sqr += i * i * Pxpy[i] ;
-    /* M. Boland sum += Pxpy[i];
-    sum_sqr += Pxpy[i] * Pxpy[i];*/
-  }
-  /*tmp = Ng * Ng ;  M. Boland - wrong anyway, should be Ng */
-  /*var = ((tmp * sum_sqr) - (sum * sum)) / (tmp * tmp); */
-  
-  var = sum_sqr - sum*sum ;
-
-  return var;
+float f10_dvar (float **P, int Ng) {
+	int i, j;
+	extern float Pxpy[2 * PGM_MAXMAXVAL];
+	float sum = 0, sum_sqr = 0, var = 0;
+	
+	for (i = 0; i <= 2 * Ng; ++i)
+		Pxpy[i] = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			Pxpy[abs (i - j)] += P[i][j];
+	
+	/* Now calculate the variance of Pxpy (Px-y) */
+	for (i = 0; i < Ng; ++i) {
+		sum += i * Pxpy[i] ;
+		sum_sqr += i * i * Pxpy[i] ;
+		/* M. Boland sum += Pxpy[i];
+		sum_sqr += Pxpy[i] * Pxpy[i];*/
+	}
+	
+	/*tmp = Ng * Ng ;  M. Boland - wrong anyway, should be Ng */
+	/*var = ((tmp * sum_sqr) - (sum * sum)) / (tmp * tmp); */
+	
+	var = sum_sqr - sum*sum ;
+	
+	return var;
 }
-
-float f11_dentropy (P, Ng)
-  float **P;
-  int Ng;
 
 /* Difference Entropy */
-{
-  int i, j;
-  extern float Pxpy[2 * PGM_MAXMAXVAL];
-  float sum = 0;
-
-  for (i = 0; i <= 2 * Ng; ++i)
-    Pxpy[i] = 0;
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-      Pxpy[abs (i - j)] += P[i][j];
-
-  for (i = 0; i < Ng; ++i)
-    /*    sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
-    sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
-
-  return -sum;
+float f11_dentropy (float **P, int Ng) {
+	int i, j;
+	extern float Pxpy[2 * PGM_MAXMAXVAL];
+	float sum = 0;
+	
+	for (i = 0; i <= 2 * Ng; ++i)
+		Pxpy[i] = 0;
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j)
+			Pxpy[abs (i - j)] += P[i][j];
+	
+	for (i = 0; i < Ng; ++i)
+		/*    sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON); */
+		sum += Pxpy[i] * log10 (Pxpy[i] + EPSILON)/log10(2.0) ;
+		
+	return -sum;
 }
-
-float f12_icorr (P, Ng)
-  float **P;
-  int Ng;
 
 /* Information Measures of Correlation */
-/* All /log10(2.0) added by M. Boland */
-{
-  int i, j;
-  float *px, *py;
-  float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
-
-  px = pgm_vector (0, Ng);
-  py = pgm_vector (0, Ng);
-
-  /*
-   * px[i] is the (i-1)th entry in the marginal probability matrix obtained
-   * by summing the rows of p[i][j]
-   */
-  for (i = 0; i < Ng; ++i)
-  {
-    for (j = 0; j < Ng; ++j)
-    {
-      px[i] += P[i][j];
-      py[j] += P[i][j];
-    }
-  }
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-    {
-      hxy1 -= P[i][j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
-      hxy2 -= px[i] * py[j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
-      hxy -= P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0);
-    }
-
-  /* Calculate entropies of px and py - is this right? */
-  for (i = 0; i < Ng; ++i)
-  {
-    hx -= px[i] * log10 (px[i] + EPSILON)/log10(2.0);
-    hy -= py[i] * log10 (py[i] + EPSILON)/log10(2.0);
-  }
-/*  fprintf(stderr,"hxy1=%f\thxy=%f\thx=%f\thy=%f\n",hxy1,hxy,hx,hy); */
-  free(px);
-  free(py);
-  return ((hxy - hxy1) / (hx > hy ? hx : hy));
+float f12_icorr (float **P, int Ng) {
+	int i, j;
+	float *px, *py;
+	float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
+	
+	px = allocate_vector (0, Ng);
+	py = allocate_vector (0, Ng);
+	/* All /log10(2.0) added by M. Boland */
+	
+	/*
+	* px[i] is the (i-1)th entry in the marginal probability matrix obtained
+	* by summing the rows of p[i][j]
+	*/
+	for (i = 0; i < Ng; ++i) {
+		for (j = 0; j < Ng; ++j) {
+			px[i] += P[i][j];
+			py[j] += P[i][j];
+		}
+	}
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j) {
+			hxy1 -= P[i][j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
+			hxy2 -= px[i] * py[j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
+			hxy -= P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0);
+		}
+	
+	/* Calculate entropies of px and py - is this right? */
+	for (i = 0; i < Ng; ++i) {
+		hx -= px[i] * log10 (px[i] + EPSILON)/log10(2.0);
+		hy -= py[i] * log10 (py[i] + EPSILON)/log10(2.0);
+	}
+	
+	free(px);
+	free(py);
+	return ((hxy - hxy1) / (hx > hy ? hx : hy));
 }
-
-float f13_icorr (P, Ng)
-  float **P;
-  int Ng;
 
 /* Information Measures of Correlation */
-/* All /log10(2.0) added by M. Boland */
+float f13_icorr (float **P, int Ng) {
+	int i, j;
+	float *px, *py;
+	float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
+	
+	px = allocate_vector (0, Ng);
+	py = allocate_vector (0, Ng);
+	
+	/* All /log10(2.0) added by M. Boland */
+	
+	/*
+	* px[i] is the (i-1)th entry in the marginal probability matrix obtained
+	* by summing the rows of p[i][j]
+	*/
+	for (i = 0; i < Ng; ++i) {
+		for (j = 0; j < Ng; ++j) {
+		  px[i] += P[i][j];
+		  py[j] += P[i][j];
+		}
+	}
+	
+	for (i = 0; i < Ng; ++i)
+		for (j = 0; j < Ng; ++j) {
+			hxy1 -= P[i][j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
+			hxy2 -= px[i] * py[j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
+			hxy -= P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0);
+		}
+	
+	/* Calculate entropies of px and py */
+	for (i = 0; i < Ng; ++i) {
+		hx -= px[i] * log10 (px[i] + EPSILON)/log10(2.0);
+		hy -= py[i] * log10 (py[i] + EPSILON)/log10(2.0);
+	}
 
-{
-  int i, j;
-  float *px, *py;
-  float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
-
-  px = pgm_vector (0, Ng);
-  py = pgm_vector (0, Ng);
-
-  /*
-   * px[i] is the (i-1)th entry in the marginal probability matrix obtained
-   * by summing the rows of p[i][j]
-   */
-  for (i = 0; i < Ng; ++i)
-  {
-    for (j = 0; j < Ng; ++j)
-    {
-      px[i] += P[i][j];
-      py[j] += P[i][j];
-    }
-  }
-
-  for (i = 0; i < Ng; ++i)
-    for (j = 0; j < Ng; ++j)
-    {
-      hxy1 -= P[i][j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
-      hxy2 -= px[i] * py[j] * log10 (px[i] * py[j] + EPSILON)/log10(2.0);
-      hxy -= P[i][j] * log10 (P[i][j] + EPSILON)/log10(2.0);
-    }
-
-  /* Calculate entropies of px and py */
-  for (i = 0; i < Ng; ++i)
-  {
-    hx -= px[i] * log10 (px[i] + EPSILON)/log10(2.0);
-    hy -= py[i] * log10 (py[i] + EPSILON)/log10(2.0);
-  }
-/*  fprintf(stderr,"hx=%f\thxy2=%f\n",hx,hxy2); */
-  free(px);
-  free(py);
-  return (sqrt (abs (1 - exp (-2.0 * (hxy2 - hxy)))));
+	free(px);
+	free(py);
+	return (sqrt (abs (1 - exp (-2.0 * (hxy2 - hxy)))));
 }
-
-float f14_maxcorr (P, Ng)
-  float **P;
-  int Ng;
 
 /* Returns the Maximal Correlation Coefficient */
-{
-  int i, j, k;
-  float *px, *py, **Q;
-  float *x, *iy, tmp;
-  float f;
-
-  px = pgm_vector (0, Ng);
-  py = pgm_vector (0, Ng);
-  Q = pgm_matrix (1, Ng + 1, 1, Ng + 1);
-  x = pgm_vector (1, Ng);
-  iy = pgm_vector (1, Ng);
-
-  /*
-   * px[i] is the (i-1)th entry in the marginal probability matrix obtained
-   * by summing the rows of p[i][j]
-   */
-  for (i = 0; i < Ng; ++i)
-  {
-    for (j = 0; j < Ng; ++j)
-    {
-      px[i] += P[i][j];
-      py[j] += P[i][j];
-    }
-  }
-
-  /* Find the Q matrix */
-  for (i = 0; i < Ng; ++i)
-  {
-    for (j = 0; j < Ng; ++j)
-    {
-      Q[i + 1][j + 1] = 0;
-      for (k = 0; k < Ng; ++k)
-	Q[i + 1][j + 1] += P[i][k] * P[j][k] / px[i] / py[k];
-    }
-  }
-
-  /* Balance the matrix */
-  mkbalanced (Q, Ng);
-  /* Reduction to Hessenberg Form */
-  reduction (Q, Ng);
-  /* Finding eigenvalue for nonsymetric matrix using QR algorithm */
-  if (!hessenberg (Q, Ng, x, iy))
-	{ for (i=1; i<=Ng+1; i++) free(Q[i]+1);
-	  free(Q+1);
-	  free((char *)px);
-	  free((char *)py);
-	  free((x+1));
-	  free((iy+1));
-	  return 0.0;
-	  /* fixed for Linux porting,
-	   * I don't know what should be returned
-	   */
+float f14_maxcorr (float **P, int Ng) {
+	int i, j, k;
+	float *px, *py, **Q;
+	float *x, *iy, tmp;
+	float f;
+	
+	px = allocate_vector (0, Ng);
+	py = allocate_vector (0, Ng);
+	Q = allocate_matrix (1, Ng + 1, 1, Ng + 1);
+	x = allocate_vector (1, Ng);
+	iy = allocate_vector (1, Ng);
+	
+	/*
+	* px[i] is the (i-1)th entry in the marginal probability matrix obtained
+	* by summing the rows of p[i][j]
+	*/
+	for (i = 0; i < Ng; ++i) {
+		for (j = 0; j < Ng; ++j) {
+			px[i] += P[i][j];
+			py[j] += P[i][j];
+		}
 	}
-  /* simplesrt(Ng,x); */
-  /* Returns the sqrt of the second largest eigenvalue of Q */
-  for (i = 2, tmp = x[1]; i <= Ng; ++i)
-    tmp = (tmp > x[i]) ? tmp : x[i];
-
-  f = sqrt(x[Ng - 1]);
-
- for (i=1; i<=Ng+1; i++) free(Q[i]+1);
- free(Q+1);
- free((char *)px); 
- free((char *)py); 
- free((x+1)); 
- free((iy+1)); 
-
- return f;
+	
+	/* Find the Q matrix */
+	for (i = 0; i < Ng; ++i) {
+		for (j = 0; j < Ng; ++j) {
+			Q[i + 1][j + 1] = 0;
+			for (k = 0; k < Ng; ++k)
+				Q[i + 1][j + 1] += P[i][k] * P[j][k] / px[i] / py[k];
+		}
+	}
+	
+	/* Balance the matrix */
+	mkbalanced (Q, Ng);
+	/* Reduction to Hessenberg Form */
+	reduction (Q, Ng);
+	/* Finding eigenvalue for nonsymetric matrix using QR algorithm */
+	if (!hessenberg (Q, Ng, x, iy)) { 
+		/* Memmory cleanup */
+		for (i=1; i<=Ng+1; i++) free(Q[i]+1);
+		free(Q+1);
+		free((char *)px);
+		free((char *)py);
+		free((x+1));
+		free((iy+1));
+		
+		/* computation failed ! */
+		return 0.0;
+	}
+	
+	/* simplesrt(Ng,x); */
+	/* Returns the sqrt of the second largest eigenvalue of Q */
+	for (i = 2, tmp = x[1]; i <= Ng; ++i)
+		tmp = (tmp > x[i]) ? tmp : x[i];
+	
+	f = sqrt(x[Ng - 1]);
+	
+	for (i=1; i<=Ng+1; i++) free(Q[i]+1);
+	free(Q+1);
+	free((char *)px); 
+	free((char *)py); 
+	free((x+1)); 
+	free((iy+1)); 
+	
+	return f;
 }
 
-float *pgm_vector (nl, nh)
-  int nl, nh;
-{
-  float *v;
-  int    i;
-
-  v = (float *) malloc ((unsigned) (nh - nl + 1) * sizeof (float));
-  if (!v)
-    fprintf (stderr, "memory allocation failure (pgm_vector) "), exit (1);
-
-  for (i=0; i<=(nh-nl); i++) v[i]=0;
-  return v - nl;
+float *allocate_vector (int nl, int nh) {
+	float *v;
+	
+	v = (float *) calloc (1, (unsigned) (nh - nl + 1) * sizeof (float));
+	if (!v)
+		fprintf (stderr, "memory allocation failure (allocate_vector) "), exit (1);
+	
+	return v - nl;
 }
-
-
-float **pgm_matrix (nrl, nrh, ncl, nch)
-  int nrl, nrh, ncl, nch;
 
 /* Allocates a float matrix with range [nrl..nrh][ncl..nch] */
-{
-  int i;
-  float **m;
-
-  /* allocate pointers to rows */
-  m = (float **) malloc ((unsigned) (nrh - nrl + 1) * sizeof (float *));
-  if (!m)
-    fprintf (stderr, "memory allocation failure (pgm_matrix 1) "), exit (1);
-  m -= ncl;
-
-  /* allocate rows and set pointers to them */
-  for (i = nrl; i <= nrh; i++)
-  {
-    m[i] = (float *) malloc ((unsigned) (nch - ncl + 1) * sizeof (float));
-    if (!m[i])
-      fprintf (stderr, "memory allocation failure (pgm_matrix 2) "), 
-	exit (2);
-    m[i] -= ncl;
-  }
-  /* return pointer to array of pointers to rows */
-  return m;
+float **allocate_matrix (int nrl, int nrh, int ncl, int nch) {
+	int i;
+	float **m;
+	
+	/* allocate pointers to rows */
+	m = (float **) malloc ((unsigned) (nrh - nrl + 1) * sizeof (float *));
+	if (!m)
+		fprintf (stderr, "memory allocation failure (allocate_matrix 1) "), exit (1);
+	m -= ncl;
+	
+	/* allocate rows and set pointers to them */
+	for (i = nrl; i <= nrh; i++) {
+		m[i] = (float *) malloc ((unsigned) (nch - ncl + 1) * sizeof (float));
+		if (!m[i])
+			fprintf (stderr, "memory allocation failure (allocate_matrix 2) "), exit (2);
+		m[i] -= ncl;
+	}
+	
+	/* return pointer to array of pointers to rows */
+	return m;
 }
 
 void results (Tp, c, a)
