@@ -221,8 +221,6 @@ sub importFile() {
 	
 					$pixelsXML->removeAttribute( "DimensionOrder" );
 					$pixelsXML->removeAttribute( "BigEndian" );
-					$pixelsXML->removeAttribute( "NumChannels" );
-					$pixelsXML->removeAttribute( "NumTimes" );
 	
 					$pixelsXML->removeChild( $externalXML );
 					if( ! $ca ) {
