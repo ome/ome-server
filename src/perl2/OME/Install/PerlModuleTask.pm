@@ -720,7 +720,11 @@ sub execute {
 		}
 		
 		if ($MATLAB->{INSTALL}) {
-			print "Installing MATLAB modules\n";
+		
+			#
+			# MATLAB Perl API
+			#
+			print "Installing MATLAB Perl API \n";
 			
 			# Configure
 			print "  \\_ Configuring ";
@@ -760,6 +764,32 @@ sub execute {
 				and croak "Unable to install module, see $LOGFILE_NAME for details."
 				unless $retval;
 			print BOLD, "[SUCCESS]", RESET, ".\n";
+
+			#
+			# OME MATLAB .m files
+			#
+			print "Installing OME MATLAB .m files \n";
+			
+			# Compile
+			print "  \\_ Compiling ";
+			
+			$retval = compile_module ("src/matlab/", $LOGFILE);
+			
+			print BOLD, "[FAILURE]", RESET, ".\n"
+				and croak "Unable to compile MATLAB .m files, see $LOGFILE_NAME for details."
+				unless $retval;
+			print BOLD, "[SUCCESS]", RESET, ".\n";
+			
+			# Installing
+			print "  \\_ Installing ";
+			print $LOGFILE "Copying Matlab source files from ".cwd()."/src/matlab to $OME_BASE_DIR/matlab \n"; 
+			copy_tree("src/matlab", "$OME_BASE_DIR", sub{!/CVS$/i});
+			$retval = 1; # if there was a problem in copy_tree, it would have
+			             # croaked and died.
+			print BOLD, "[FAILURE]", RESET, ".\n"
+				and croak "Unable to install MATLAB .m files, see $LOGFILE_NAME for details."
+				unless $retval;
+			print BOLD, "[SUCCESS]", RESET, ".\n";			
 		}
 		$environment->matlab_conf($MATLAB);
 	}
