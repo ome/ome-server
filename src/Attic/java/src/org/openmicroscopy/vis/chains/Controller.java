@@ -117,6 +117,8 @@ public class Controller implements ApplicationController {
 		updateDatabase();
 		mainFrame.setLoggedIn(false,connection);
 		removeCanvasFrames();
+		// remove library
+		library.dispose();
 		chainCanvasCount = 0;
 	}
 	
