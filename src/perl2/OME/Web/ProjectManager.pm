@@ -21,11 +21,10 @@
 package OME::Web::ProjectManager;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use base qw{ OME::Web };
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Project Manager";
@@ -39,6 +38,10 @@ sub getPageBody {
 	
 	# do we need to save?
 	# ... check for save in cgi params, save, display message
+#don't forget to include these lines after saving
+	# this will add a script to reload OME::Home if it's necessary
+#	require OME::Web::Validation;
+#	$body .= OME::Web::Validation->ReloadHomeScript();
 	# display projects that user owns 
 	$body .= $self->print_form();
 	
