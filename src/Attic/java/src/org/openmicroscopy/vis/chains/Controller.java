@@ -311,8 +311,6 @@ public class Controller  implements LoginResponder {
 		initThreads = 3;
 		connection.initDatasets(this);
 		controlPanel  = new ControlPanel(this,connection);
-		controlPanel.setLoggedIn(connection.getUserName());
-		controlPanel.setEnabled(true);
 		// 2 threads
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		// 3 threads
@@ -334,6 +332,9 @@ public class Controller  implements LoginResponder {
 			closeStatusWindow();
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
+			controlPanel.completeInitialization();
+			controlPanel.setLoggedIn(connection.getUserName());
+			controlPanel.setEnabled(true);
 		}
 	}
 	/**
