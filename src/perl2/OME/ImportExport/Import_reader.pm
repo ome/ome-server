@@ -68,7 +68,6 @@ use Config;
 
 struct Image_reader => {
         image_file => '$',                    # input image file
-        project => '$',                       # Project under which image is being imported
 	host_endian => '$',                   # endain-ness of host machine
         endian => '$',                        # endian-ness of the image file
         obuffer => '$',
@@ -84,8 +83,6 @@ struct Image_reader => {
 	host => '$',                          # host where repository lives
 	url => '$',                           # URL to image
 	instrument_id => '$',                 # ID of scope
-	project_id => '$',                    # Project imported by this project
-	experimenter_id => '$',               # ID of experimenter (who took image? heads project?)
 	created => '$',                       # timestamp when created
 	inserted => '$',                      # timestamp when inserted
 	image_type => '$',                    # image type
@@ -118,10 +115,8 @@ sub new {
     croak "No image file to import"
 	unless defined $image_file;
     my $image_buf = shift;           # reference to buffer to fill w/ image
-    my $project = shift;
     my $xml_elements = shift;        # reference to hash for XML elements & their values
-    croak "Image file $image_file not associated with a project"
-	unless defined $project;
+
     my $our_endian;
 
     my $self = Image_reader->new();
@@ -131,7 +126,6 @@ sub new {
     $our_endian = (($byteorder == 1234) || ($byteorder == 12345678)) ? "little" : "big";
     $self->host_endian($our_endian);
     $self->image_file($image_file);
-    $self->project($project);
     $self->offset(0);
     $self->obuffer($image_buf);
     $self->xml_hash($xml_elements);
