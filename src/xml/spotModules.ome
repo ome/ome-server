@@ -10,8 +10,8 @@
    xmlns:STD=
    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
    xsi:schemaLocation = 
-   "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
@@ -23,8 +23,8 @@
 
   <!-- New semantic types -->
   <SemanticType 
-     Name="Timepoint" AppliesTo="F"
-     Description="Specifies a single timepoint that this feature belongs to">
+     Name="Timepoint" AppliesTo="F">
+    <Description>Specifies a single timepoint that this feature belongs to</Description>
     <Element Name="TheT" DBLocation="TIMEPOINT.THE_T" DataType="integer"/>
   </SemanticType>
 
@@ -33,16 +33,16 @@
   </SemanticType>
 
   <SemanticType
-     Name="Location" AppliesTo="F"
-     Description="Specifies a feature's 3D spatial location, in pixels">
+     Name="Location" AppliesTo="F">
+    <Description>Specifies a feature's 3D spatial location, in pixels</Description>
     <Element Name="TheX" DBLocation="LOCATION.X" DataType="float"/>
     <Element Name="TheY" DBLocation="LOCATION.Y" DataType="float"/>
     <Element Name="TheZ" DBLocation="LOCATION.Z" DataType="float"/>
   </SemanticType>
 
   <SemanticType
-     Name="Extent" AppliesTo="F"
-     Description="Specifies information about the shape of a feature">
+     Name="Extent" AppliesTo="F">
+    <Description>Specifies information about the shape of a feature</Description>
     <Element Name="MinX" DBLocation="EXTENT.MIN_X" DataType="integer"/>
     <Element Name="MinY" DBLocation="EXTENT.MIN_Y" DataType="integer"/>
     <Element Name="MinZ" DBLocation="EXTENT.MIN_Z" DataType="integer"/>
@@ -53,17 +53,20 @@
     <Element Name="SigmaY" DBLocation="EXTENT.SIGMA_Y" DataType="integer"/>
     <Element Name="SigmaZ" DBLocation="EXTENT.SIGMA_Z" DataType="integer"/>
     <Element Name="Volume" DBLocation="EXTENT.VOLUME" DataType="integer"/>
-    <Element Name="SurfaceArea" DBLocation="EXTENT.SURFACE_AREA" DataType="float"
-             Description="For 2D spots, this includes fenestrations"/>
-    <Element Name="Perimeter" DBLocation="EXTENT.PERIMETER" DataType="float"
-             Description="Outside perimeter; does not include inside perimeters in fenestrated spots"/>
-    <Element Name="FormFactor" DBLocation="EXTENT.FORM_FACTOR" DataType="float"
-             Description="3D: surface area/volume; 2D: perimeter/surface area; 1.0=circle or sphere"/>
+    <Element Name="SurfaceArea" DBLocation="EXTENT.SURFACE_AREA" DataType="float">
+    	<Description>For 2D spots, this includes fenestrations</Description>
+    </Element>
+    <Element Name="Perimeter" DBLocation="EXTENT.PERIMETER" DataType="float">
+    	<Description>Outside perimeter; does not include inside perimeters in fenestrated spots</Description>
+    </Element>
+    <Element Name="FormFactor" DBLocation="EXTENT.FORM_FACTOR" DataType="float">
+    	<Description>3D: surface area/volume; 2D: perimeter/surface area; 1.0=circle or sphere</Description>
+    </Element>
   </SemanticType>
 
   <SemanticType
-     Name="Signal" AppliesTo="F"
-     Description="Spectral information about a feature">
+     Name="Signal" AppliesTo="F">
+    <Description>Spectral information about a feature</Description>
     <Element Name="TheC" DBLocation="SIGNAL.THE_C" DataType="integer"/>
     <Element Name="CentroidX" DBLocation="SIGNAL.CENTROID_X" DataType="float"/>
     <Element Name="CentroidY" DBLocation="SIGNAL.CENTROID_Y" DataType="float"/>
@@ -79,11 +82,13 @@
      Name="Trajectory" AppliesTo="F">
     <Element Name="Name" DBLocation="TRAJECTORY.NAME" DataType="string"/>
     <Element Name="TotalDistance" DBLocation="TRAJECTORY.TOTAL_DISTANCE"
-             DataType="float"
-             Description="In pixels"/>
+             DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
     <Element Name="AverageVelocity" DBLocation="TRAJECTORY.AVERAGE_VELOCITY"
-             DataType="float"
-             Description="In microns/second"/>
+             DataType="float">
+    	<Description>In microns/second</Description>
+    </Element>
   </SemanticType>
 
   <SemanticType
@@ -91,16 +96,21 @@
     <Element Name="Trajectory" DBLocation="TRAJECTORY_ENTRY.TRAJECTORY"
              DataType="reference" RefersTo="Trajectory"/>
     <Element Name="Order" DBLocation="TRAJECTORY_ENTRY.ENTRY_ORDER" DataType="integer"/>
-    <Element Name="DeltaX" DBLocation="TRAJECTORY_ENTRY.DELTA_X" DataType="float"
-             Description="In pixels"/>
-    <Element Name="DeltaY" DBLocation="TRAJECTORY_ENTRY.DELTA_Y" DataType="float"
-             Description="In pixels"/>
-    <Element Name="DeltaZ" DBLocation="TRAJECTORY_ENTRY.DELTA_Z" DataType="float"
-             Description="In pixels"/>
-    <Element Name="Distance" DBLocation="TRAJECTORY_ENTRY.DISTANCE" DataType="float"
-             Description="In microns"/>
-    <Element Name="Velocity" DBLocation="TRAJECTORY_ENTRY.VELOCITY" DataType="float"
-             Description="In microns/second"/>
+    <Element Name="DeltaX" DBLocation="TRAJECTORY_ENTRY.DELTA_X" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="DeltaY" DBLocation="TRAJECTORY_ENTRY.DELTA_Y" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="DeltaZ" DBLocation="TRAJECTORY_ENTRY.DELTA_Z" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="Distance" DBLocation="TRAJECTORY_ENTRY.DISTANCE" DataType="float">
+    	<Description>In microns</Description>
+    </Element>
+    <Element Name="Velocity" DBLocation="TRAJECTORY_ENTRY.VELOCITY" DataType="float">
+    	<Description>In microns/second</Description>
+    </Element>
   </SemanticType>
 
   <SemanticType
@@ -135,8 +145,6 @@
    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
-  <Category FullName="Tracking"
-            Description="Modules for tracking objects in an image"/>
 
   <AnalysisModule 
      ModuleName="Find spots" 
@@ -186,6 +194,9 @@
                     Count="*" IBelongTo="[Iterator]"/>
     </Declaration>
   </AnalysisModule>
+  <Category Path="Tracking">
+  	<Description>Modules for tracking objects in an image</Description>
+  </Category>
 
 </AML:AnalysisModuleLibrary>
 
