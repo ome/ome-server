@@ -143,16 +143,14 @@ function openInfoImage (id) {
 
 // openPopUpImageAs()
 
-function openPopUpImageAs(field_name) {
+function openPopUpImageAs() {
 	if( document.forms && document.forms[0] && document.forms[0].thumb_click_opens) {
 		var radio_grp = document.forms[0].thumb_click_opens;
 		var val;
-		for( i in radio_grp ) {
+		for( var i=0; i<radio_grp.length; i++ ) {
 			if( radio_grp[i].checked ) val = radio_grp[i].value;
 		}
 		return val;
-		if( mode ) { openPopUpImageAs.mode = mode; }
-		else { return openPopUpImageAs.mode; }
 	}
 }
 
