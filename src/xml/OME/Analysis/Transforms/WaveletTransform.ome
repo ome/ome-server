@@ -40,7 +40,7 @@
 			</Description>
 			<Element 
 				Name="Parent" 
-				DBLocation="WAVELET.COEFFICIENTS_LEVEL_1"   
+				DBLocation="WAVELET_COEFFICIENTS1.PARENT"
 				DataType = "reference"
 				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
@@ -51,7 +51,7 @@
 			</Description>
 			<Element 
 				Name="Parent" 
-				DBLocation="WAVELET.COEFFICIENTS_LEVEL_2"   
+				DBLocation="WAVELET_COEFFICIENTS2.PARENT"
 				DataType = "reference"
 				RefersTo = "PixelsPlaneSlice"/>
 		</SemanticType>
