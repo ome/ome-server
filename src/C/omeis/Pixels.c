@@ -111,6 +111,7 @@ char *sha1DBfile="Pixels/sha1DB.idx";
 	
 	strcpy (myPixels->path_rep,root);
 	strcpy (myPixels->path_info,root);
+	strcpy (myPixels->path_thumb,root);
 	strcpy (myPixels->path_ID,pixIDfile);
 	strcpy (myPixels->path_DB,sha1DBfile);
 
@@ -130,6 +131,8 @@ char *sha1DBfile="Pixels/sha1DB.idx";
 		strcat (myPixels->path_info,".info");
 		strcpy (myPixels->path_conv,myPixels->path_rep);
 		strcat (myPixels->path_conv,".convert");
+		strcpy (myPixels->path_thumb,myPixels->path_rep);
+		strcat (myPixels->path_thumb,".thumb");
 		myPixels->ID = ID;
 	}
 
@@ -834,6 +837,10 @@ int result;
 	/* set the path of the convert file */
 	strcpy (myPixels->path_conv,myPixels->path_rep);
 	strcat (myPixels->path_conv,".convert");
+	
+	/* set the path of the thumbnail file */
+	strcpy (myPixels->path_thumb,myPixels->path_rep);
+	strcat (myPixels->path_thumb,".thumb");
 
 	return (myPixels);
 }
@@ -1793,6 +1800,7 @@ int FinishStats (PixelsRep *myPixels, char force) {
 
 static
 void deletePixels (PixelsRep *myPixels) {
+
 	if (!myPixels->is_mmapped) {
 		if (myPixels->planeInfos) free (myPixels->planeInfos);
 		if (myPixels->stackInfos) free (myPixels->stackInfos);
@@ -1829,7 +1837,43 @@ void deletePixels (PixelsRep *myPixels) {
 		unlink (myPixels->path_conv);
 	}
 
+	if (myPixels->path_thumb) {
+		chmod (myPixels->path_thumb,0600);
+		unlink (myPixels->path_thumb);
+	}
+
 }
+
+
+
+int ExpungePixels (PixelsRep *myPixels) {
+OID existOID;
+
+	if (! myPixels->DB)	
+		/* if we can't get its SHA1 entry thats really bad */
+		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
+			OMEIS_DoError ("In ExpungePixels, Error opening SHA1 DB for PixelsID=%llu",
+						   	(unsigned long long)myPixels->ID);
+			return (0);
+		}
+
+	if ( existOID = sha1DB_get (myPixels->DB, myPixels->head->sha1) ) {
+		sha1DB_del (myPixels->DB, myPixels->head->sha1);
+	} else {
+		OMEIS_DoError ("In ExpungePixels, Pixel's SHA1 not in DB for PixelsID=%llu ?!",
+						(unsigned long long)myPixels->ID);
+		sha1DB_close (myPixels->DB);
+		return (0);
+	}
+	sha1DB_close (myPixels->DB);
+	
+	deletePixels (myPixels);
+	
+	return (1);
+	
+	
+}
+
 
 OID FinishPixels (PixelsRep *myPixels, char force) {
 OID existOID;

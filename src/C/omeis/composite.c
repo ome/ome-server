@@ -249,7 +249,7 @@ int DoCompositeJPEG (CompositeSpec *myComposite, char setThumb, char **param) {
 
 int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param) {
 Pic *ome_pic, *out_pic;
-char out_name[256], mime_type[256];
+char *out_name, mime_type[256];
 char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
 char *xwindowname = 0, *ywindowname = 0;
 char *fileName;
@@ -272,8 +272,7 @@ Mapping m;
     ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
     ome_win.x1 = out_win.x1 = PIC_UNDEFINED;
 
-	strncpy (out_name,myComposite->thePixels->path_rep,256-strlen(myComposite->format)-2);
-	strcat (out_name,".");
+	out_name = myComposite->thePixels->path_thumb;
 
 	if ( !(ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r")) ) {
 		OMEIS_DoError ("Could not open input Pic (%s)",myComposite->thePixels->path_rep);
@@ -281,7 +280,6 @@ Mapping m;
 	}
 
 	if (setThumb) {
-		strcat (out_name,"thumb");
 		strcpy (myComposite->format,"jpeg");
 
         thumbHeader.signature = OMEIS_THUMB_SIGNATURE;

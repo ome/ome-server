@@ -50,6 +50,7 @@ get_method_by_name(char * m_name);
 #define M_GETPIXELS     6
 #define M_FINISHPIXELS  7
 #define M_CONVERT       8
+#define M_DELETEPIXELS  9
 
 	/* ROW METHODS */
 #define M_SETROWS       10

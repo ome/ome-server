@@ -279,6 +279,24 @@ char **cgivars=param;
 
 			freePixelsRep (thePixels);
 			break;
+		case M_DELETEPIXELS:
+			if (!ID) return (-1);
+
+			if (! (thePixels = GetPixelsRep (ID,'r',iam_BigEndian)) ) {
+				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
+				return (-1);
+			}
+	
+			if (!ExpungePixels (thePixels)) {
+				OMEIS_ReportError (method, "PixelsID", ID, "ExpungePixels failed.");
+				return (-1);
+			}
+
+			HTTP_ResultType ("text/plain");
+			fprintf (stdout,"%llu\n",(unsigned long long)thePixels->ID);
+			freePixelsRep (thePixels);
+
+			break;
 		case M_GETPLANESSTATS:
 			if (!ID) return (-1);
 		

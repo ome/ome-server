@@ -207,9 +207,6 @@ OID existOID;
 			DeleteFile (myFile);
 			return (0);
 		}
-
-	OMEIS_DoError ("What about this ? OMEIS_DoError is working:");	
-	OMEIS_DoError ("If you can see this OMEIS_DoError is working: %s.", strerror (errno));
 	
 	/* check to see if the file hasAlias or isAlias */
 	if ( myFile->file_info.isAlias == 0 && myFile->file_info.nAliases == 0 ){ 

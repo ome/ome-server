@@ -59,6 +59,8 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "GetPixels") == 0) return M_GETPIXELS;
 	if (strcmp(m_name, "FinishPixels") == 0) return M_FINISHPIXELS;
 	if (strcmp(m_name, "Convert") == 0) return M_CONVERT;
+	if (strcmp(m_name, "DeletePixels") == 0) return M_DELETEPIXELS;
+	
 
 	/* Row comparisions */
 	if (strcmp(m_name, "SetRows") == 0) return M_SETROWS;

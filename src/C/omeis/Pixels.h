@@ -110,6 +110,7 @@ typedef struct
 	char  path_info[OMEIS_PATH_SIZE]; /* Path to the info header */
 	char  path_conv[OMEIS_PATH_SIZE]; /* Path to the info header */
 	char  path_DB[OMEIS_PATH_SIZE];    /* Path to the sha1 DB */
+	char  path_thumb[OMEIS_PATH_SIZE];    /* Path to the thumbnail file */
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
 	int   fd_conv;  /* This will be < 0 when closed */
@@ -213,6 +214,9 @@ GetPixelsRep (OID ID, char rorw, char isBigEndian);
 
 void
 PurgePixels (OID myID);
+
+int
+ExpungePixels (PixelsRep *myPixels);
 
 int
 isConvertVerified (PixelsRep *myPixels);
