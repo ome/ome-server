@@ -165,20 +165,16 @@ sub getPageBody {
 	# button to merge outputs
 	$tmpl_data{ merge_button } = $q->submit( -name => 'Merge Outputs' );
 	
-
-
 	# Merged outputs.
 	foreach my $group( @merged_output_groups ) {
 		my @table_data;
 		my $group_id = join( ',', map( $_->id, @{$group} ) );
 		foreach my $fo ( @{$group} ) {
 			next unless $fo->semantic_type;
-			my $attributes = OME::Tasks::ModuleExecutionManager->
-				getAttributesForMEX($mex,$fo->semantic_type);
 			push @table_data, {
 				title   => $fo->name(),
 				type    => $self->_STformalName( $fo->semantic_type() ),
-				objects => $attributes
+				search  => {module_execution_id => $mex->id}
 			};
 		}
 		my @tables = $tableMaker->getJoinTable( 
@@ -218,6 +214,7 @@ sub getPageBody {
 				{ module_execution => $mex }
 			)
 		} );
+		$tmpl_data{ popup_overlay } = $mex->id() if $fo->name() eq 'Location';
 	}
 		
 	# Untyped Outputs Tables
