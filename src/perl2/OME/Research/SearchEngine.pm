@@ -77,8 +77,9 @@ sub searchEngine{
   foreach (@$results){
 	push(@list,$_) unless  ($_->{name} eq "Dummy import dataset");
   }
-  return \@list;
-  #return $results;
+  return (scalar(@list)==0)?undef:\@list;
+
+  #return \@list;
 }
 
 
