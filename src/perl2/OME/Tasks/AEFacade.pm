@@ -23,6 +23,17 @@ package OME::Tasks::AEFacade;
 
 our $VERSION = 2.000_000;
 
+=pod
+
+=head1 WARNING!
+
+This class is a quick and dirty implementation for alpha. This class will be removed and its functionality moved to other places. 
+The most likely place will be under OME::Web, since this is a web utility function.
+
+This warning added by Josiah <siah@nih.gov> based on correspondence with Jean-Marie & Andrea.
+
+=cut
+
 =head1 NAME
 
 OME::Tasks::AEFacade 

@@ -17,6 +17,18 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+=pod
+
+=head1 WARNING!
+
+This class is a quick and dirty implementation for alpha. This class will be removed and its functionality moved to other places.
+the functionality of importXMLfile pretty much replicates the functionality of OME::Tasks::OMEImport
+the functionality of exportToXMLFile will be moved to imageManager. Similar functionality will be added to DatasetManager, ProjectManager, and the other Managers.
+
+
+This warning added by Josiah <siah@nih.gov> based on correspondence with Jean-Marie & Andrea.
+
+=cut
 
 package OME::Tasks::OMEXMLImportExport;
 
