@@ -28,7 +28,21 @@ use OME::SessionManager;
 use Apache::Session::File;
 
 use base qw(Class::Data::Inheritable);
-__PACKAGE__->mk_classdata('Session');
+__PACKAGE__->mk_classdata('__Session');
+# Source of problem noticed on 2/20!
+# Explanation:
+#	Class data behaves oddly when mutated through children classes.
+#	When a child class uses $self->Session($session), a new instance of
+#	class data is made for the child class. This change is not reflected to
+#	the base class. In addition, changes to the base class's data are
+#	reflected to the child class.
+#	Methods (specifically ensureLogin) in OME::Web that used $self->Session($session),
+#	were called from the child class you were trying to load, not from OME::Web
+#
+#	My solution: Use the class variable __Session and have a Session 
+#	accessor/mutator method that deals with things appropriately.
+
+
 
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
@@ -115,7 +129,8 @@ sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->{user}; }
-
+# accessor works fine from subclasses using $self. Mutator doesn't work except via OME::Web
+sub Session { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__Session( shift ); } return $self->__Session(); }
 
 # redirectURL
 # -----------
@@ -140,6 +155,7 @@ sub ensureLogin {
 	my $sessionKey = $self->getSessionKey();
 
 	if (defined $sessionKey) {
+#		$self->setSession($manager->createSession($sessionKey));
 		$self->Session($manager->createSession($sessionKey));
 		$self->setSessionCookie();
 	}
@@ -147,7 +163,7 @@ sub ensureLogin {
 	if (defined $self->Session()) {
 		$self->{user} = $self->Session()->experimenter();
 	}
-
+	
 	return defined $self->Session();
 }
 
