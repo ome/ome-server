@@ -1178,7 +1178,7 @@ sub readFile {
 =head2 convert
 
 	my $pixelsWritten = OME::Image::Server->
-	    convert($pixelsID,$fileID,$offset);
+	    convert($pixelsID,$fileID,$offset,$bigEndian);
 
 Copies pixels from an original file into a new pixels file.  The
 original file should have been previously uploaded via the uploadFile
