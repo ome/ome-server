@@ -44,34 +44,6 @@ use OME::Factory;
 
 use OME::Remote::DTO::GenericAssembler;
 
-our %DATA_CLASSES =
-  (
-   Project           => 'OME::Project',
-   Dataset           => 'OME::Dataset',
-   Image             => 'OME::Image',
-   Feature           => 'OME::Feature',
-   UserState         => 'OME::UserState',
-   DataTable         => 'OME::DataTable',
-   DataColumn        => 'OME::DataTable::Column',
-   SemanticType      => 'OME::SemanticType',
-   SemanticElement   => 'OME::SemanticType::Element',
-   LookupTable       => 'OME::LookupTable',
-   LookupTableEntry  => 'OME::LookupTable::Entry',
-   Module            => 'OME::Module',
-   FormalInput       => 'OME::Module::FormalInput',
-   FormalOutput      => 'OME::Module::FormalOutput',
-   ModuleCategory    => 'OME::Module::Category',
-   AnalysisChain     => 'OME::AnalysisChain',
-   AnalysisNode      => 'OME::AnalysisChain::Node',
-   AnalysisLink      => 'OME::AnalysisChain::Link',
-   AnalysisPath      => 'OME::AnalysisPath',
-   AnalysisPathEntry => 'OME::AnalysisPath::Map',
-   ModuleExecution   => 'OME::ModuleExecution',
-   ActualInput       => 'OME::ModuleExecution::ActualInput',
-   NodeExecution     => 'OME::AnalysisChainExecution::NodeExecution',
-   ChainExecution    => 'OME::AnalysisChainExecution'
-  );
-
 =head1 NAME
 
 OME::Remote::Facades::GenericFacade - remote facade methods for
@@ -155,6 +127,26 @@ sub retrieveObjects {
       makeDTOList(\@result,$fields_wanted);
 
     return $dtos;
+}
+
+sub updateObject {
+    my ($proto,$object_type,$serialized) = @_;
+
+    OME::Factory->__checkClass($class_name);
+    my $factory = OME::Session->instance()->Factory();
+
+    die "Serialized object must be a hash, not $serialized"
+      if (defined $serialized) && (ref($serialized) ne 'HASH');
+
+    return OME::Remote::DTO::GenericAssembler->
+        updateDTO($object_type,$serialized);
+}
+
+sub updateObjects {
+    my ($proto,$list) = @_;
+
+    return OME::Remote::DTO::GenericAssembler->
+      updateDTOList($list);
 }
 
 1;
