@@ -45,6 +45,9 @@ package org.openmicroscopy.vis.chains;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ApplicationController;
 import org.openmicroscopy.util.LoginDialog;
+import javax.swing.JFrame;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /** 
  * <p>Control and top-level management for the Chain-building application.<p>
@@ -58,7 +61,11 @@ public class Controller implements ApplicationController {
 	
 	private CmdTable cmd;
 	private ModulePaletteFrame mainFrame;
+	private ChainLibraryFrame library;
+	
+	ArrayList canvasFrames = new ArrayList();
 	private Connection connection = null;
+	private int chainCanvasCount = 0;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -70,6 +77,14 @@ public class Controller implements ApplicationController {
 	
 	public void setMainFrame(ModulePaletteFrame mf) {
 		this.mainFrame = mf;
+	}
+	
+	public JFrame getMainFrame() {
+		return mainFrame;
+	}
+	
+	public ChainLibraryFrame getLibrary() {
+			return library;
 	}
 	
 	/**
@@ -94,12 +109,26 @@ public class Controller implements ApplicationController {
 	
 	public void completeLogin() {
 		mainFrame.setLoggedIn(true,connection);
+		library = new ChainLibraryFrame(this,connection); 
 	}
 	
 	public void doLogout() {
 		System.err.println("logout...");
 		updateDatabase();
 		mainFrame.setLoggedIn(false,connection);
+		removeCanvasFrames();
+		chainCanvasCount = 0;
+	}
+	
+	private void removeCanvasFrames() {
+		Iterator iter = canvasFrames.iterator();
+
+		ChainFrame canvasFrame;
+		while (iter.hasNext()) {
+			canvasFrame = (ChainFrame) iter.next();
+			canvasFrame.dispose();
+		}
+		canvasFrames = new ArrayList();
 	}
 	
 	public void quit() {
@@ -113,6 +142,17 @@ public class Controller implements ApplicationController {
 	 */
 	public void updateDatabase() {
 	}
+		
+		
+	public void newChain() {
+		System.err.println("new chain");
+		ChainFrame canvasFrame = 
+			new ChainFrame(this,connection,chainCanvasCount++);
+		canvasFrames.add(canvasFrame);
+	}
 	
+	public void disposeChainCanvas(ChainFrame c) {
+		canvasFrames.remove(c);
+	}
 }
 
