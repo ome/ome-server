@@ -126,6 +126,8 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	
 	public void updateExecutionChoices(CChain chain) {
 		List execs = chain.getCurrentDatasetExecutions();
+		System.err.println("populating toolbar pulldown with "+
+			execs.size()+" executions");
 		Object[] a = new Object[0];
 		a = execs.toArray(a);
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
