@@ -36,6 +36,7 @@
 
 
 package OME::Remote::DTO;
+use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
@@ -101,7 +102,7 @@ sub __makeHash ($$$) {
     }
 
     # Massage the incoming requests
-    my %method_requests;
+    my %requests;
     foreach my $request (@$request_list) {
         if (ref($request) eq 'ARRAY') {
             my ($dto_name,$method_name) = @$request;
@@ -133,7 +134,7 @@ sub __makeHash ($$$) {
 	    # been requested that may have an alias. That shouldn't happen unless
 	    # someone writes sloppy requests, but it mimics the behavior of the
 	    # last implementation.
-    	foreach my $method ( @method_list ) {
+    	foreach my $method ( @method_request_list ) {
 	    	$requests{ $method } = $method
 	    		unless exists $requests{ $method };
 	    }
@@ -165,10 +166,6 @@ sub __makeHash ($$$) {
 		} else {
 			$dto->{ $dto_name } = $object->$method_request();
 		}
-		# gotta clear this out because it's not reset in GenericAssembler. 
-		# It's easier to mimic the behavior of the previous implementation than to
-		# muck with yet another package.
-		delete $requests{ $method_request };
 	}
 
     return $dto;
