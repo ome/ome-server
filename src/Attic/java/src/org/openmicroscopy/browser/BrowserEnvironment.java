@@ -38,6 +38,7 @@
  */
 package org.openmicroscopy.browser;
 
+import org.openmicroscopy.browser.events.EventModeMap;
 import org.openmicroscopy.browser.ome.OMEBrowserAgent;
 
 /**
@@ -57,6 +58,8 @@ public final class BrowserEnvironment
   private OMEBrowserAgent browserAgent;
   // private static OMEDataAgent dataAgent;
   private MessageHandler messageHandler;
+  
+  private EventModeMap eventModeMap;
   
   private BrowserEnvironment()
   {
@@ -102,6 +105,26 @@ public final class BrowserEnvironment
   public void setMessageHandler(MessageHandler handler)
   {
     this.messageHandler = handler;
+  }
+  
+  /**
+   * Gets the browser mode-event handler map for the environment.
+   * 
+   * @return The mode/event map for the environment.
+   */
+  public EventModeMap getEventModeMap()
+  {
+    return eventModeMap;
+  }
+  
+  /**
+   * Sets the browser mode-event handler map for the environment.
+   * 
+   * @param modeMap The mode/event map for the environment.
+   */
+  public void setEventModeMap(EventModeMap modeMap)
+  {
+    this.eventModeMap = modeMap;
   }
   
   // TODO: Add OMEDataAgent get/set methods
