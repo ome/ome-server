@@ -70,6 +70,7 @@ use Class::Data::Inheritable;
 use Log::Agent;
 use OME::Image;
 use OME::Dataset;
+use OME::Tasks::ImportManager;
 use UNIVERSAL::require;
 
 # ---------------------
@@ -124,7 +125,7 @@ sub __debug {
 
 sub __getFormats {
     my $self = shift;
-    my $session = $self->{_flags}->{session};
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
     # And find the import formats we can handle
@@ -183,7 +184,7 @@ sub importFiles {
         $filenames = shift;
     }
 
-    my $session = $self->{_flags}->{session};
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
     # Create the new dummy dataset.
@@ -197,24 +198,8 @@ sub importFiles {
                  owner_id => $session->User()->id(),
                 });
 
-    # Find the importer module and chain based on the CONFIGURATION table.
-
-    my $config = $session->Configuration();
-    my $importer_module = $config->import_module();
-    my $importer_chain = $config->import_chain();
-
-    # Create a new module execution to represent what this importer is
-    # about to do.
-
-    my $module_execution = $factory->
-      newObject("OME::ModuleExecution",
-                {
-                 dependence => 'I',
-                 status     => 'RUNNING',
-                 dataset_id => $dataset->id(),
-                 module_id  => $importer_module->id(),
-                });
-
+    OME::Tasks::ImportManager->startImport();
+    my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
 
     # Find the formats that are known to the system.
@@ -239,7 +224,7 @@ sub importFiles {
             $format_class->require();
 
             # Create and save a new instance of the format class
-            my $format = $format_class->new($session,$module_execution);
+            my $format = $format_class->new();
             $formats{$format_class} = $format;
 
             # Have the format class search for images in the list of
@@ -299,8 +284,8 @@ sub importFiles {
 
             if (defined $sha1) {
                 my $old_file = $factory->
-                  findObject("OME::Image::ImageFilesXYZWT",
-                             file_sha1 => $sha1);
+                  findAttribute("OriginalFile",
+                                SHA1 => $sha1);
 
                 if (defined $old_file) {
                     __debug("Image has already been imported.  ");
@@ -322,7 +307,7 @@ sub importFiles {
             };
 
             if ($@) {
-                logwarn "Error importing image: $format_class $group";
+                logwarn "Error importing image: $format_class $group\n$@";
                 $session->rollbackTransaction();
                 next GROUP;
             }
@@ -340,6 +325,11 @@ sub importFiles {
                                  dataset_id => $dataset->id(),
                                 });
 
+            my $image_mex = OME::Tasks::ImportManager->
+              getImageImportMEX($image);
+            $image_mex->status('FINISHED');
+            $image_mex->storeObject();
+
             $session->commitTransaction();
 
             push @images, $image;
@@ -350,8 +340,10 @@ sub importFiles {
 
     # Wrap up things in the database.
 
-    $module_execution->status('FINISHED');
-    $module_execution->storeObject();
+    $files_mex->status('FINISHED');
+    $files_mex->storeObject();
+
+    OME::Tasks::ImportManager->finishImport();
 
     $session->commitTransaction();
 
