@@ -230,16 +230,10 @@ B<This method is not yet written -- holler at Doug>
 
 =head2 newNumericScalar
 
-	my $array = OME::Matlab::Array->newNumericScalar($value,
-	                                                 [$class],
-	                                                 [$complexity]);
+	my $array = OME::Matlab::Array->newNumericScalar($value, [$class]);
 
-Creates a new numeric scalar of arbitrary class and complexity.  If
-$class and/or $complexity are not specified, they default to C<double>
-and I<real>, respectively.  If $complexity is $mxCOMPLEX, then two
-values must be given.
-
-B<This method is not yet written -- holler at Doug>
+Creates a new scalar of arbitrary numeric class (except mxCHAR, mxLOGICAL).  If
+$class are not specified, they default to C<double>.
 
 =head2 newLogicalScalar
 
