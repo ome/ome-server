@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Nikita Orlov <norlov@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="ChebyshevCoefficientMatrix" AppliesTo="I">
+			<Description>
+			Nikita, please fill this out.
+			</Description>
+			<Element 
+				Name="Parent" 
+				DBLocation="CHEBYSHEV.COEFFICIENT_MATRIX"   
+				DataType = "reference"
+				RefersTo = "PixelsSlice"/>
+		</SemanticType>
+		
+		<SemanticType Name="MaxChebyshevPolynomialDegree" AppliesTo="G">
+			<Description>
+			Nikita, please fill this out.
+			</Description>
+			<Element 
+				Name="MaxDegree" 
+				DBLocation="CHEBYSHEV_PARAMETERS.DEGREE"   
+				DataType = "integer"/>
+		</SemanticType>	
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Chebyshev Transform"
+		   Category="Transforms. "
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="ChebyshevTransform"
+		   ID="urn:lsid:openmicroscopy.org:Module:7802">
+		  <Description>
+		  This module computes the coefficients for 2D Chebyshev transform.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+			<FormalInput
+				Name="Max degree of Chebyshev Polynomials"
+				SemanticTypeName="MaxChebyshevPolynomialDegree"
+				Count="*"/>
+			<FormalOutput
+				Name="Chebyshev Coefficient Matrix"
+				SemanticTypeName="ChebyshevCoefficientMatrix"
+				Count="!"/>
+ 		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="inPixels"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="fftPixels"/>
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+		
+		<!-- Typecaster module for the Chebyshev Transform -->
+		<AnalysisModule
+		   ModuleName="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice"
+		   Category="Transforms.Typecasts"
+		   ModuleType="OME::Analysis::Modules::PPM::Typecast"
+		   ProgramID=""
+		   ID="urn:lsid:openmicroscopy.org:Module:7803">
+		  <Description>
+			This module allows a Chebyshev Coefficient Matrix to be used as a 
+			PixelsPlaneSlice.
+		  </Description>
+		  <Declaration>
+			<FormalInput
+				Name="Chebyshev Coefficient Matrix"
+				SemanticTypeName="ChebyshevCoefficientMatrix"
+				Count="!"/>
+			<FormalOutput
+				Name="Pixels Plane Slice"
+				SemanticTypeName="PixelsPlaneSlice"
+				Count="!"/>
+		  </Declaration>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>
