@@ -137,6 +137,7 @@ __PACKAGE__->manyToMany('datasets',
 
 __PACKAGE__->hasMany('all_features','OME::Feature' => 'image');
 __PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'image');
+__PACKAGE__->addACL({user => 'experimenter_id',group => 'group_id'});
 
 =head2 experimenter
 
