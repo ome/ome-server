@@ -775,12 +775,7 @@ sub Finish ()
 	$self->Commit();
 
 # Update session info
-	my $session = $self->Session;
-	my $analysis = $session->{Analyses}->{$$};
-	$analysis->{Status} = 'Finished' if defined $analysis->{Status} and $analysis->{Status} eq 'Executing' ;
-	$analysis->{TimeFinished} = time;
-	$self->Session($session);
-
+	$self->StopProgress();
 
 
 	$self->{dbHandle}->disconnect if (defined $self->{dbHandle});
@@ -1368,25 +1363,7 @@ sub StartAnalysis()
 
 	$self->Commit();
 	
-	my $session = $self->Session;
-	my %analysis;
-	$analysis{ProgramPID} = $$;
-	$analysis{ProgramStarted} = time;
-	$analysis{ProgramName} = $0;
-	$analysis{ProgramID} = undef;
-	$analysis{Status} = 'Executing';
-	$analysis{Message} = '';
-	$analysis{Error} = '';
-	$analysis{NumSelectedDatasets} = $self->NumSelectedDatasets();
-	$analysis{NumDatasetsCompleted} = 0;
-	$analysis{CurrentAnalysisID} = undef;
-	$analysis{CurrentDatasetID} = undef;	
-	$analysis{LastCompletedDatasetID} = undef;
-	$analysis{LastCompletedDatasetTime} = undef;
-	$analysis{AverageTimePerDataset} = undef;
-	$analysis{TimeFinished} = undef;
-	$session->{Analyses}->{$$} = {%analysis};
-	$self->Session ($session);
+	$self->TrackProgress();
 
 #	my %Analysis_Data = (
 #		AnalysisID => undef,
@@ -1397,6 +1374,160 @@ sub StartAnalysis()
 #		Status => undef
 #		);
 
+}
+
+
+
+
+=pod
+
+=item TrackProgress()
+
+This method initiates a progress tracker.  By default, the number of total number of items is set to C<NumSelectedDatasets()>.
+The number of items processed are set by calling C<IncrementProgress()>.
+The total number of items can be sent as an integer parameter.  This method is called by C<StartAnalysis()>, so one normally
+does not need to call it unless you are processing something that can fail and will take some time, but is not in fact an
+OME analysis.  One example of this use is during Dataset import.
+
+B<Examples:>
+
+ # Begin tracking progress with total number of items set to the number of user-selected datasets.
+   $OME->TrackProgress ();
+   foreach (@datasets) {
+     # Do some stuff
+     ...
+     $OME->IncrementProgress();
+   }
+ # Begin tracking progress with total number of items set to 123:
+   $OME->TrackProgress (123);
+   foreach (@items) {
+     # Do some stuff
+     ...
+     $OME->IncrementProgress();
+   }
+
+=cut
+
+sub TrackProgress()
+{
+my $self = shift;
+my $numItems = shift;
+	
+	my $session = $self->Session;
+	my %analysis;
+	$analysis{ProgramPID} = $$;
+	$analysis{ProgramStarted} = time;
+	$analysis{ProgramName} = $0;
+	$analysis{ProgramID} = undef;
+	$analysis{Status} = 'Executing';
+	$analysis{Message} = '';
+	$analysis{Error} = '';
+	if (defined $numItems) {
+		$analysis{NumSelectedDatasets} = $numItems;
+	} else {
+		$analysis{NumSelectedDatasets} = $self->NumSelectedDatasets();
+	}
+	$analysis{NumDatasetsCompleted} = 0;
+	$analysis{CurrentAnalysisID} = undef;
+	$analysis{CurrentDatasetID} = undef;	
+	$analysis{LastCompletedDatasetID} = undef;
+	$analysis{LastCompletedDatasetTime} = undef;
+	$analysis{AverageTimePerDataset} = undef;
+	$analysis{TimeFinished} = undef;
+	$session->{Analyses}->{$$} = {%analysis};
+	$self->Session ($session);
+}
+
+
+=pod
+
+=item IncrementProgress()
+
+Once TrackProgress has been called, call IncrementProgress once for each 'item'.
+This method is also called by C<WriteFeatures()>.  If the item count reaches the total number of items,
+C<StopProgress()> is called automatically.  See also C<TrackProgress()> and C<UpdateProgress>.
+
+=cut
+
+sub IncrementProgress
+{
+my $self = shift;
+
+	my $session = $self->Session;
+	return unless exists $session->{Analyses};
+	return unless exists $session->{Analyses}->{$$};
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{CurrentAnalysisID} = undef;
+	$analysis->{LastCompletedDatasetID} = $analysis->{CurrentDatasetID};
+	$analysis->{LastCompletedDatasetTime} = time;
+	$analysis->{NumDatasetsCompleted}++;
+	$analysis->{AverageTimePerDataset} = ($analysis->{LastCompletedDatasetTime} - $analysis->{ProgramStarted}) / $analysis->{NumDatasetsCompleted};
+
+	$analysis->{CurrentDatasetID} = undef;
+	if ($analysis->{NumDatasetsCompleted} ge $analysis->{NumSelectedDatasets}) {
+		$self->StopProgress();
+	}
+	$self->Session($session);
+}
+
+=pod
+
+=item UpdateProgress()
+
+Call this to update progress info without incrementing the item count.  This is called from C<RegisterAnalysis>.
+Named parameters passed in here are written directly to the progress info for this session.
+
+B<Examples:>
+
+ UpdateProgress(Error => 'Help me!');
+ UpdateProgress(Message => 'Hi there!');
+ UpdateProgress(ProgramName => 'SomeBigProgram');
+
+Note that anything sent in the Error parameter will be appended to the existing contents of the Error field (if any).
+All other fields will be set to the passed-in value.
+ 	
+
+=cut
+
+sub UpdateProgress
+{
+my $self = shift;
+my %params = @_;
+my ($key,$value);
+
+	my $session = $self->Session;
+	return unless exists $session->{Analyses};
+	return unless exists $session->{Analyses}->{$$};
+	my $analysis = $session->{Analyses}->{$$};
+	while ( ($key,$value) = each %params ) {
+		if ($key eq 'Error') {
+			$analysis->{$key} .= $value;
+		} else {
+			$analysis->{$key} = $value;
+		}
+	}
+	$self->Session($session);
+}
+
+=pod
+
+=item StopProgress()
+
+Terminates progress tracking.  Records the time, and sets the Status field to 'Finished'.
+
+=cut
+
+sub StopProgress
+{
+my $self = shift;
+	my $session = $self->Session;
+	return unless exists $session->{Analyses};
+	return unless exists $session->{Analyses}->{$$};
+	my $analysis = $session->{Analyses}->{$$};
+
+	$analysis->{Status} = 'Finished' if defined $analysis->{Status} and $analysis->{Status} eq 'Executing' ;
+	$analysis->{TimeFinished} = time;
+	$self->Session($session);
 }
 
 
@@ -1495,13 +1626,11 @@ sub RegisterAnalysis()
 	$self->{CurrentAnalysisID} = $analysisID;
 
 # Update session info
-	my $session = $self->Session;
-	my $analysis = $session->{Analyses}->{$$};
-	$analysis->{CurrentAnalysisID} = $analysisID;
-	$analysis->{CurrentDatasetID} = $datasetID;
-	$analysis->{ProgramID} = $programID;
-	$self->Session($session);
-	
+	$self->UpdateProgress(
+		CurrentAnalysisID => $analysisID,
+		CurrentDatasetID => $datasetID,
+		ProgramID => $programID
+	);	
 
 	return $analysisID;
 }
@@ -1814,16 +1943,7 @@ sub FinishAnalysis {
 #	$self->SetDatasetView();
 
 # Update session info
-	my $session = $self->Session;
-	my $analysis = $session->{Analyses}->{$$};
-	$analysis->{CurrentAnalysisID} = undef;
-	$analysis->{LastCompletedDatasetID} = $analysis->{CurrentDatasetID};
-	$analysis->{LastCompletedDatasetTime} = time;
-	$analysis->{NumDatasetsCompleted}++;
-	$analysis->{AverageTimePerDataset} = ($analysis->{LastCompletedDatasetTime} - $analysis->{ProgramStarted}) / $analysis->{NumDatasetsCompleted};
-
-	$analysis->{CurrentDatasetID} = undef;
-	$self->Session($session);
+	$self->IncrementProgress();
 
 	$self->{CurrentAnalysisID} = undef;
 }

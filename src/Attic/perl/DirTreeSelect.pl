@@ -276,23 +276,26 @@ my $numSelections;
 		$reportEvery = $numSelections / $maxReport;
 		$reportEvery = 1 unless $reportEvery > 1;
 	}
+	$OME->TrackProgress (scalar @$selections);
+	$OME->UpdateProgress (ProgramName => 'Dataset Import');
 	foreach (@$selections) {
 #		print STDERR "DirTreeSelect:  Importing $_\n";
 		my $dataset = $OME->ImportDataset (Name => $_);
 		if (defined $dataset) {
 			push (@datasetIDs,$dataset->{ID});
-			if ($reportEvery eq 1) {
-				ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
-			} elsif (scalar (@datasetIDs) % $reportEvery eq 0) {
-				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
-				$OME->Commit();			
-			}
+			$OME->IncrementProgress();
+#			if ($reportEvery eq 1) {
+#				ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
+#			} elsif (scalar (@datasetIDs) % $reportEvery eq 0) {
+#				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
+#				$OME->Commit();			
+#			}
 		} else {
-			ReportDocStatus ($_.":  <B>Ignored</B> - type could not be determined.<BR>");
+			ReportDocStatus ($_.":  <B>Ignored</B> - file type not supprted.<BR>");
 		}
 	}
 	ReportDocStatus ("Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
-	
+	$OME->StopProgress();
 	return \@datasetIDs;
 }
 

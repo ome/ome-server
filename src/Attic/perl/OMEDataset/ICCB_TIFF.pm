@@ -315,10 +315,15 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
-	die "Could not determine the width of $datasetPath.\nError reported:\n".`cat $tempFileNameErr`
-		unless exists $self->{SizeX} and $self->{SizeX};
-	die "Could not determine the height of $datasetPath.\nError reported:\n".`cat $tempFileNameErr`
-		unless exists $self->{SizeY} and $self->{SizeY};
+# An error at this point probably means that the TIFF file is unreadable.
+# We return undef, meaning that this is not in fact a readable TIFF file.
+# FIXME:  There should be a distinction between unrecognized file type and a recognized
+# file-type which is not readable.
+# For now, we use the OME session info to append the error there.
+	if (not (exists $self->{SizeX} and $self->{SizeX} and exists $self->{SizeY} and $self->{SizeY}) ) {
+		$OME->UpdateProgress (Error => "TIFF file '$datasetPath' is UNREADABLE!!\n".`cat $tempFileNameErr`);
+		return undef;
+	}
 
 
 # This will calculate statistics about TIFF files, and output two lines -
@@ -328,7 +333,11 @@ my @columns;
 # This Import function ignores these values, because this class is for a single-plane dataset.
 # The file will actually be read at this point, and an error reported if its corrupt.
 	$command = "$DumpTIFFstats $datasetPath 2>> $tempFileNameErr |";
-	open (STDOUT_PIPE,$command) or die "Could not execute '$command'.\n";
+	if (not open (STDOUT_PIPE,$command) ) {
+		$OME->UpdateProgress (Error => "Error executing '$command'\n".`cat $tempFileNameErr`);
+		return undef;
+	}
+
 	@columns = split ('\t', <STDOUT_PIPE>);
 	while (<STDOUT_PIPE>) {
 		chomp;
