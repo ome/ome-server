@@ -43,7 +43,6 @@ import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CImage;
 
 import org.openmicroscopy.vis.ome.Connection;
-import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.util.Collection;
 import java.util.Iterator;
@@ -69,7 +68,6 @@ public class PDataset extends PGenericBox {
 	private double x=HGAP;
 	private double y=VGAP;
 	private PScalableDatasetLabel nameLabel;
-	private PText chainLabel;
 	private PChainLabels chainLabels;
 	private double LABEL_SCALE=.6;
 	
@@ -78,6 +76,7 @@ public class PDataset extends PGenericBox {
 	private double prevWidth;
 	private double width;
 	private double height = 0;
+	private PDatasetImagesNode images;
 	
 	public PDataset(CDataset dataset,Connection connection) {
 		super();
@@ -104,111 +103,125 @@ public class PDataset extends PGenericBox {
 		nameLabel.setConstrainWidthToTextWidth(false);
 		
 		y+= nameLabel.getBounds().getHeight()+VGAP;
+
+				
+		images = new PDatasetImagesNode();
 		
 		
-		// tweak width to make label fit.
-		//iter = getChildrenIterator();
+		System.err.println("+++++++++++++++++++++");
+		System.err.println("dataset..."+dataset.getName());
+		addChild(images);
+		
+		double totalArea = 0;
 		Iterator iter  = dataset.getCachedImages(connection).iterator();
-	
-	/*	System.err.println("layting out "+dataset.getName() +"...");
-		System.err.println("# of images is "+dataset.getImageCount());
-		System.err.println("height is "+height+", width is "+width);
-	*/	
-		
-		while (iter.hasNext() && y < height) {
+		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
-			thumb = new PThumbnail(image);
+			thumb  =new PThumbnail(image);
+			images.addImage(thumb);
+			b = thumb.getGlobalFullBounds();
+			totalArea += b.getWidth()*b.getHeight();
+		}
+		
+		double effectiveHeight = height -y;
+		double effectiveWidth = width;
+		
+		// account for chain exections..
+		
+		Collection chains = dataset.getChains(connection);
+		if (chains.size() > 0) {
+			chainLabels = new PChainLabels(chains);
+			addChild(chainLabels);
 			
-			addChild(thumb);
+			chainLabels.layout(width);
+			b =chainLabels.getGlobalFullBounds();
+			effectiveHeight -= b.getHeight()+2*VGAP;	
+			maxWidth = b.getWidth();
+		}
+			
+		
+		images.setOffset(x,y);
+		
+		double scaledArea = effectiveWidth*effectiveHeight;
+		
+		System.err.println("image area is "+totalArea+", scaledArea is "+scaledArea);
+		double scalefactor = Math.sqrt(totalArea/scaledArea);
+		System.err.println("scaled factor "+scalefactor);
+		double scaledWidth = scalefactor*effectiveWidth;
+		double scaledHeight = scalefactor*effectiveHeight;
+		System.err.println("width is "+effectiveWidth);
+		System.err.println("height is "+effectiveHeight);
+		System.err.println("scaled width is "+scaledWidth);
+		System.err.println("scaled height is "+scaledHeight);
+	
+		iter  = dataset.getCachedImages(connection).iterator();
+	
+		x=0;
+		y=0;
+		iter = images.getImageIterator();
+		while (iter.hasNext()) {
+			thumb = (PThumbnail) iter.next();
 			
 			
 			//PThumbnail thumb = (PThumbnail) obj;
 		
 			b =  thumb.getGlobalFullBounds();
 	
-	/*		System.err.println("dataset height is "+height);
-			System.err.println("dataset width is "+width);
-			System.err.println("thumb width is "+b.getWidth()+", height "+b.getHeight());
-			System.err.println("starting x is "+x+", starting y is "+y);*/
+	//		System.err.println("dataset scaled height is "+scaledHeight);
+	//		System.err.println("dataset scaled width is "+scaledWidth);
+	//		System.err.println("thumb width is "+b.getWidth()+", height "+b.getHeight());
+		//	System.err.println("starting x is "+x+", starting y is "+y);
 			double thumbWidth = b.getWidth();
-			if (x+thumbWidth  < width && y+b.getHeight() < height) {
+			if (x+thumbWidth  < scaledWidth) {
 				thumb.setOffset(x,y);
 				//System.err.println("same row. offset is "+x+","+y);
 			}
 			else {
-				if (y+ maxHeight+b.getHeight() +VGAP< height) {
-					y += maxHeight+VGAP;
-					x = HGAP;
-					thumb.setOffset(x,y);
+				y += maxHeight+VGAP;
+				x = 0;
+				thumb.setOffset(x,y);
 					
 				//	System.err.println("new row. offset is "+x+","+y);
-					maxHeight = 0;
-				}
-				else {
-				//	System.err.println("wouldn't fit. removing");
-					removeChild(thumb);
-					//removeChild(lastThumb);
-					break;
-				}
+				maxHeight = 0;
 			}
 			lastThumb=thumb;
-			if (thumb.getGlobalFullBounds().getHeight() > maxHeight) 
-				maxHeight = (float)thumb.getGlobalFullBounds().getHeight();
+			if (b.getHeight() > maxHeight) 
+				maxHeight = (float)b.getHeight();
 		 	x+= thumbWidth;
 		 	//System.err.println("new x is "+x+", new maxHeight is "+maxHeight);
 		 	if (x > maxWidth) 
 		 		maxWidth =  x;
 		 	x+= HGAP;
 		}	
+		images.completeImages(scaledWidth,scaledHeight);
+		y+= maxHeight;
 	
 		
-	//	y +=maxHeight;// move y ahead. to next row.
-		//System.err.println("y after all is "+y);
-	//	x=HGAP;
-		// adjust width
-		// insert chains, if any.
-		Collection chains = dataset.getChains(connection);
-		//System.err.println("max width after images..."+maxWidth);
-		
-		double fullWidth=0;
-		if (chains.size() > 0) {
-		
-			chainLabels = new PChainLabels(chains);
-			addChild(chainLabels);
-			
-			chainLabels.layout(width);
-			b =chainLabels.getGlobalFullBounds();
-		
-			System.err.println("adding chain labels. x is "+x+", width is "+b.getWidth());
-			System.err.println("box width is "+width);
-			if (x + b.getWidth() >= width) {
-				System.err.println("moving to next line");
-				y+=maxHeight;
-				x=HGAP;
-				maxHeight = 0;
-			}
-			chainLabels.setOffset(x,y);
-			if (b.getHeight() > maxHeight)
-				y+= b.getHeight();
-			else
-				y += maxHeight;
-			
-			fullWidth =  x+b.getWidth();
-			//System.err.println("full width with execs"+fullWidth);
-			if (fullWidth > maxWidth)
-				maxWidth = fullWidth;
-		}
-		else // no chain executions, but must move to next row.
-			y += maxHeight;
 		//System.err.println("calculated max widith of dataset.."+maxWidth);
 		//System.err.println("original width was "+width);
-		System.err.println("height of dataset..."+y);
-	//if (y < height) 
-	//		height = y;
+		System.err.println("final height of dataset..."+y);
+		if (y > scaledHeight) 
+			scaledHeight = y;
+		
+			
+		// calculate effective scale factor.
+		double scaleEffective = scaledHeight/effectiveHeight;
+		System.err.println("effective scale is "+scaleEffective);
+		//double scaleRatio = 1/(scaleEffective*scaleEffective);
+		double scaleRatio = 1/scaleEffective;
+		System.err.println("scale ratio is "+scaleRatio);
+		maxWidth /= scaleEffective;
 		if (maxWidth < width)
 			nameLabel.resetWidth(maxWidth);		
-		setExtent(width+PConstants.SMALL_BORDER,
-			height+PConstants.SMALL_BORDER); // was maxWidth
+		
+	
+		images.setScale(scaleRatio);
+		if (chains.size() > 0)  {
+			b= images.getGlobalFullBounds();
+			y = b.getY()+b.getHeight()+VGAP;
+			chainLabels.setOffset(HGAP,y);
+		}
+		setExtent(maxWidth+PConstants.SMALL_BORDER,
+				height+PConstants.SMALL_BORDER); // was maxWidth
 	}
 	
 	public double getContentsArea() {
