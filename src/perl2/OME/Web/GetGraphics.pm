@@ -330,6 +330,8 @@ sub SVGgetDataJS {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
 	foreach( @sigma ) {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	die "Could not find Stack Statistics for image (id=$ImageID).\n"
+		unless defined $sh;
 	my @ar1; # array 1
 	for( my $i = 0;$i<scalar(@$sh);$i++) {
 		my @ar2; # array 2
