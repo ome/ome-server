@@ -238,14 +238,15 @@ sub getGroups {
         $file->close();
 
         my $uic2 = UIC2;
-        next unless exists $tags->{$uic2};
-
         my $t_arr = $tags->{$uic2};
-        my $t_hash = $$t_arr[0];
-
-        # it's STK format, so remove from input list, put on output list
-        delete $fref->{$key};
-        push @outlist, $file;
+        
+        if ( defined($t_arr) )
+        {
+        	# it's STK format, so store the tags, remove from input list, put on output list
+        	$self->{ tags } = $tags;
+        	delete $fref->{$key};
+        	push @outlist, $file;
+        }
     }
 
     $self->{groups} = \@outlist;
@@ -299,13 +300,9 @@ sub importGroup {
     $params->fref($file);
     $params->oname($filename);
     
-	# open file and read TIFF tags or return undef
-	$file->open('r');
-	my $tags = readTiffIFD($file);
-    if (!defined($tags)) {
-		$file->close();
-		return undef;
-    }
+	# get tags
+	my $tags = $self->{ tags };
+    if ( !defined($tags) ) { return undef; }
     
     # use TIFF tags to fill-out info about the img
     my ($offsets_arr, $bytesize_arr) = getStrips($tags);
@@ -313,7 +310,7 @@ sub importGroup {
     $params->image_bytecounts($bytesize_arr);
     $params->endian($tags->{__Endian});
     
-    # read STK tags 
+    # read STK tags
     my @ui_tags = (UIC1, UIC2, UIC3, UIC4);
     my @tag_type;
     my @tag_count;
@@ -369,7 +366,8 @@ sub importGroup {
     $xref->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
    	$params->byte_size($xref->{'Data.BitsPerPixel'}/8);
     $params->row_size($xref->{'Image.SizeX'} * ($params->byte_size));
-						 
+	
+	$file->open('r');
     my $image = ($self->{super})->__newImage($filename);
     $self->{image} = $image;
 
