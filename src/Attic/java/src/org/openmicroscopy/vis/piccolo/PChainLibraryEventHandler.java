@@ -64,6 +64,7 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	
 	private int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
+	private PModule lastEntered;
 	
 	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
 		super();
@@ -112,4 +113,57 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		canvas.clearChainSelected();
 	}
 	
+	public void mouseEntered(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		//	System.err.println("entering "+node);
+		if (node instanceof PFormalParameter) {
+			PFormalParameter param = (PFormalParameter) node;
+			if (lastEntered != null) {
+				lastEntered.setParamsHighlighted(false);
+			}
+			param.setParamsHighlighted(true);
+			PModule pmod = param.getPModule();
+			pmod.setModulesHighlighted(true);
+			e.setHandled(true);
+		}
+		else if (node instanceof PParameterNode) {
+			if (lastEntered != null) {
+	//			System.err.println("entered parameter node ");
+	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
+				lastEntered.setParamsHighlighted(false);
+			}
+			e.setHandled(true);
+		}
+		else if (node instanceof PModule) {
+			PModule pmod = (PModule) node;
+			pmod.setAllHighlights(true);
+			e.setHandled(true);
+			//System.err.println("saving last module entered: "+pmod.getModule().getName());
+			lastEntered = pmod;
+		}
+		else {
+			super.mouseEntered(e);
+		}
+	}
+	
+	public void mouseExited(PInputEvent e) {
+		PNode node = e.getPickedNode();
+
+		//System.err.println("exiting"+node);
+		if (node instanceof PFormalParameter) {
+			PFormalParameter param = (PFormalParameter) node;
+			param.setParamsHighlighted(false);
+			PModule pmod = param.getPModule();
+			pmod.setAllHighlights(false);
+			e.setHandled(true);			
+		}
+		else if (node instanceof PModule) {
+			PModule pmod = (PModule) node;
+			pmod.setAllHighlights(false);
+			e.setHandled(true);
+			lastEntered = null;
+		}
+		else
+			super.mouseExited(e);
+	}
 }
