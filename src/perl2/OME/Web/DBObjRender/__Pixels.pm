@@ -86,7 +86,8 @@ __PACKAGE__->_allFieldNames( [
 
 =head2 getRefToObject
 
-html format uses a thumbnail for the link.
+html format returns a thumbnail linking to the image viewer and an id
+linking to the Pixels attribute.
 
 =cut
 
