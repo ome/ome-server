@@ -227,7 +227,7 @@ sub postcalculateImage {
             my $velocity = ($dT == 0)? undef: $distance/$dT;
             $tAttr->TotalDistance($distance);
             $tAttr->AverageVelocity($velocity);
-            $tAttr->commit();
+            $tAttr->storeObject();
         }
     }
 
