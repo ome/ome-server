@@ -71,7 +71,6 @@ my $STYLE = FTP_STYLE;
 #********* PRIVATE METHODS
 #*********
 
-
 # Build array for hidden CGI import field
 sub __processQueue {
 	my ($self, $queue, $add, $remove) = @_;
@@ -85,6 +84,28 @@ sub __processQueue {
 
 	return keys(%uniq);
 }
+
+# Resolves the import queue array, by recursion
+sub __resolveQueue {
+	my ($self, $queue) = @_;
+
+	for (my $i = 0; $i <= scalar(@$queue); ++$i) {
+		if (-d $queue->[$i]) {
+			# Splice of the directory
+			my $dir = splice(@$queue, $i, 1);
+
+			# Push its contents
+			push(@$queue, glob("$dir/*"));
+
+			# Changes
+			return 1;
+		}
+	}
+
+	# No changes
+	return 0;
+}
+
 
 # De-taint sub for FTP style
 sub __detaintPaths {
@@ -260,7 +281,7 @@ sub __getDirListHeader {
 
 	foreach (@dirs) {
 		$running_path = File::Spec->catdir($running_path, $_);
-		unless ($previous_path eq $running_path) {
+		unless (defined $previous_path and $previous_path eq $running_path) {
 			$path_text .= $q->a( {
 					-href => '#',
 					-onClick => "document.forms['datatable'].Path.value='$running_path'; document.forms['datatable'].submit(); return false",
@@ -378,6 +399,7 @@ sub __getQueueBody {
 
 	$body .= $q->startform({name => 'datatable'});
 
+
 	# Import queue *hidden*
 	$body .= $q->hidden({name => 'import_queue', default => \@importq});
 
@@ -395,6 +417,7 @@ sub __getQueueBody {
 			select_name => 'add_selected',
 			parent_pagelink => $self->pageURL(ref($self)),
 			parent_form => '1',
+			traverse => '1',
 			options_row => ["Add to Queue"],
 		}, $path_dir);
 	my $dir_list_header = $self->__getDirListHeader($path_dir);
@@ -516,6 +539,8 @@ sub __getImportBody {
 	$body .= $q->p({class => 'ome_info_strong'}, "Importing image paths...");
 	
 	my $info;
+
+	while ($self->__resolveQueue(\@import_q)) {};
 
 	foreach (@import_q) {
 		$info .= $q->span({class => 'ome_info'},

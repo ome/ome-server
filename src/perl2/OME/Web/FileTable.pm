@@ -103,17 +103,12 @@ sub __getParentDir {
 	return File::Spec->catdir(@dirs);
 }
 
-sub __getFileCount {
+sub __getItemCount {
 	my ($self, $dir_path) = @_;
 
-	my @files_or_dirs = <$dir_path/*>;
-	my @files;
+	my @items = <$dir_path/*>;
 
-	foreach (@files_or_dirs) {
-		if (-f $_) { push (@files, $_); }
-	}
-
-	return scalar(@files);
+	return scalar(@items);
 }
 
 #*********
@@ -136,7 +131,7 @@ sub getTable {
 	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
 
 	# File paths from directory
-	if ($#paths == 0 and -d $paths[0]) {
+	if ($#paths == 0 and -d $paths[0] and $options->{'traverse'}) {
 		unless (-r $paths[0]) {
 			return $q->span({class => 'ome_error'}, "Permission denied for '$paths[0]'\n")
 		}
@@ -178,11 +173,11 @@ sub getTable {
 		my $file_name = (File::Spec->splitpath($file_path))[2];
 		
 		if ($directory) {
-			my $file_count = $self->__getFileCount($file_path);
+			my $item_count = $self->__getItemCount($file_path);
 			$file_name = $q->a( {
 					-href => '#',
 					-onClick => "document.forms['datatable'].Path.value='$file_path'; document.forms['datatable'].submit(); return false",
-				}, "$file_name ($file_count Files)");
+				}, "$file_name ($item_count Items)");
 		}
 
 		# Select checkbox
