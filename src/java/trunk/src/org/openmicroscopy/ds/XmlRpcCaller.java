@@ -112,8 +112,8 @@ public class XmlRpcCaller
             xmlrpc = createClient(url);
             XmlRpc.setKeepAlive(false);
         } catch (Exception e) {
-            xmlrpc = null;
             System.err.println(e);
+            throw new RemoteException("Error logging in to data server");
         }
     }
 
