@@ -1,4 +1,4 @@
-# OME/module_execution/FindRatio.pm
+# OME/Analysis/Modules/Tests/FindRatio.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,22 +35,21 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::FindRatio;
-
-use OME::Analysis::DefaultLoopHandler;
+package OME::Analysis::Modules::Tests::FindRatio;
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use base qw(OME::Analysis::DefaultLoopHandler);
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
 
-sub calculateFeature {
-    my ($self) = @_;
+sub startFeature {
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
 
-    my $numerator_features = $self->getFeatureInputs('Golgi bounds');
-    my $denominator_features = $self->getFeatureInputs('Mito bounds');
+    my $numerator_features = $self->getCurrentInputAttributes('Golgi bounds');
+    my $denominator_features = $self->getCurrentInputAttributes('Mito bounds');
 
     my $numerator = scalar(@$numerator_features);
     my $denominator = scalar(@$denominator_features);

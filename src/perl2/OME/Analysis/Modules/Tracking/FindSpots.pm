@@ -1,4 +1,4 @@
-# OME/Analysis/FindSpotsHandler.pm
+# OME/Analysis/Modules/Tracking/FindSpots.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,26 +35,24 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::FindSpotsHandler;
+package OME::Analysis::Modules::Tracking::FindSpots;
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
 use IO::File;
-use OME::Analysis::DefaultLoopHandler;
 
-use base qw(OME::Analysis::DefaultLoopHandler);
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
 use fields qw(_options _inputHandle _outputHandle _errorHandle
-	      _inputFile _outputFile _errorFile _cmdLine);
+              _inputFile _outputFile _errorFile _cmdLine);
 
 sub new {
-    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
+    my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,
-                                  $chain_execution,$module,$node);
+    my $self = $class->SUPER::new(@_);
 
     $self->{_options} = "-db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
 
@@ -63,16 +61,17 @@ sub new {
     return $self;
 }
 
-sub precalculateImage {
-    my ($self) = @_;
+sub startImage {
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
 
     my $image = $self->getCurrentImage();
-    my $pixels = $self->getImageInputs("Pixels")->[0];
+    my $pixels = $self->getCurrentInputAttributes("Pixels")->[0];
     my $path = $image->getFullPath( $pixels );
-    my $location = $self->{_location};
+    my $location = $self->getModule()->location();
     my $options = $self->{_options};
 
-    my $params = $self->getGlobalInputs("Parameters")->[0];
+    my $params = $self->getCurrentInputAttributes("Parameters")->[0];
     my $paramopts = " ";
 
     my $channel = $params->Channel();
@@ -178,12 +177,12 @@ sub precalculateImage {
 
     print $input "$dimString\nWaveStats=\n";
 
-    my $mean_list = $self->getImageInputs('Stack means');
-    my $geomean_list = $self->getImageInputs('Stack geomeans');
-    my $sigma_list = $self->getImageInputs('Stack sigmas');
-    my $min_list = $self->getImageInputs('Stack minima');
-    my $max_list = $self->getImageInputs('Stack maxima');
-    my $geosigma_list = $self->getImageInputs('Stack geosigmas');
+    my $mean_list = $self->getCurrentInputAttributes('Stack means');
+    my $geomean_list = $self->getCurrentInputAttributes('Stack geomeans');
+    my $sigma_list = $self->getCurrentInputAttributes('Stack sigmas');
+    my $min_list = $self->getCurrentInputAttributes('Stack minima');
+    my $max_list = $self->getCurrentInputAttributes('Stack maxima');
+    my $geosigma_list = $self->getCurrentInputAttributes('Stack geosigmas');
 
     die "Bad input lists"
         if (scalar(@$mean_list) != scalar(@$geomean_list))
@@ -240,7 +239,7 @@ sub precalculateImage {
 }
 
 
-sub calculateFeature {
+sub finishImage {
     my ($self) = @_;
 
     my $output = $self->{_outputHandle};
@@ -356,6 +355,8 @@ sub calculateFeature {
 
     close $self->{_outputHandle};
     close $self->{_errorHandle};
+
+    $self->SUPER::finishImage();
 }
 
 

@@ -1,4 +1,4 @@
-# OME/module_execution/FindBounds.pm
+# OME/Analysis/Modules/Tests/FindBounds.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,15 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::FindBounds;
-
-use OME::Analysis::DefaultLoopHandler;
+package OME::Analysis::Modules::Tests::FindBounds;
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use base qw(OME::Analysis::DefaultLoopHandler);
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
 
 sub createBounds {
@@ -56,7 +54,7 @@ sub createBounds {
     # Modules can now specify the new feature tags.
 
     my ($feature,$output_bounds);
-    my $location = $self->{_location};
+    my $location = $self->getModule()->location();
 
     $feature = $self->newFeature(lc($location)." 1");
     $output_bounds = $self->
@@ -99,19 +97,30 @@ sub createBounds {
                       });
 }
 
+sub startImage {
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
 
-sub calculateFeature {
-    my ($self) = @_;
+    print STDERR "FindBounds->startImage\n";
 
-    if (defined $self->{_node}->iterator_tag()) {
-        my $input_bounds = $self->getFeatureInputs('Input bounds')->[0];
-        $self->createBounds($input_bounds->X(),$input_bounds->Y(),
-                            $input_bounds->Width(),$input_bounds->Height());
-    } else {
+    if (!$self->isIteratingFeatures()) {
         my $image = $self->getCurrentImage();
         my $pixels = $image->DefaultPixels();
 
         $self->createBounds(0,0,$pixels->SizeX(),$pixels->SizeY());
     }
+}
+
+sub startFeature {
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
+
+    print STDERR "FindBounds->startFeature\n";
+
+    my $input_bounds = $self->getCurrentInputAttributes('Input bounds')->[0];
+    $self->createBounds($input_bounds->X(),$input_bounds->Y(),
+                        $input_bounds->Width(),$input_bounds->Height());
 
 }
+
+1;

@@ -1,4 +1,4 @@
-# OME/Analysis/TrackSpotsHandler.pm
+# OME/Analysis/Modules/Tracking/TrackSpots.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,26 +35,24 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::TrackSpotsHandler;
+package OME::Analysis::Modules::Tracking::TrackSpots;
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
 use IO::File;
-use OME::Analysis::DefaultLoopHandler;
 
-use base qw(OME::Analysis::DefaultLoopHandler);
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
 use fields qw(_timepointSpots _nextTrajectoryNumber _spotEntries
               _spotTrajectories _spotOrders _physicalCoordinates);
 
 sub new {
-    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
+    my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,
-                                  $chain_execution,$module,$node);
+    my $self = $class->SUPER::new(@_);
     $self->{_timepointSpots} = {};
     $self->{_nextTrajectoryNumber} = 1;
     $self->{_spotEntries} = {};
@@ -66,10 +64,11 @@ sub new {
     return $self;
 }
 
-sub precalculateImage {
-    my ($self) = @_;
+sub startImage {
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
 
-    my $dims = $self->getImageInputs("Dimensions")->[0];
+    my $dims = $self->getCurrentInputAttributes("Dimensions")->[0];
     if (defined $dims) {
         $self->{_pixelX} = $dims->PixelSizeX() || 1;
         $self->{_pixelY} = $dims->PixelSizeY() || 1;
@@ -83,16 +82,16 @@ sub precalculateImage {
     $self->{_spotCount} = 0;
 }
 
-sub calculateFeature {
-    my ($self) = @_;
-    my $spot = $self->getCurrentFeature();
+sub startFeature {
+    my ($self,$spot) = @_;
+    $self->SUPER::startFeature($spot);
 
     # Sort the spots by timepoint
-    my $t = $self->getFeatureInputs("Timepoint")->[0]->TheT();
+    my $t = $self->getCurrentInputAttributes("Timepoint")->[0]->TheT();
     push @{$self->{_timepointSpots}->{$t}}, $spot;
 
     # Calculate the physical location of the spot
-    my $location = $self->getFeatureInputs("Location")->[0];
+    my $location = $self->getCurrentInputAttributes("Location")->[0];
     my %phys;
     $phys{X} = $location->TheX() * $self->{_pixelX};
     $phys{Y} = $location->TheY() * $self->{_pixelY};
@@ -104,11 +103,11 @@ sub calculateFeature {
     print STDERR $self->{_spotCount}," " if ($self->{_spotCount} % 10 == 0);
 }
 
-sub postcalculateImage {
+sub finishImage {
     my ($self) = @_;
 
     my @timepoints = sort {$a <=> $b} keys %{$self->{_timepointSpots}};
-    my $dims = $self->getImageInputs("Dimensions")->[0];
+    my $dims = $self->getCurrentInputAttributes("Dimensions")->[0];
     my $timeSize = (defined $dims)? $dims->PixelSizeT() || 1: 1;
 
     my %trajectories;
@@ -134,13 +133,13 @@ sub postcalculateImage {
                 $trajectory = $self->createNewTrajectory();
                 $order = 1;
                 my $tAttr = $self->
-                  newAttributesWithTargets("Trajectory",
-                                           {
-                                            target          => $trajectory,
-                                            Name            => $trajectory->name(),
-                                            TotalDistance   => undef,
-                                            AverageVelocity => undef,
-                                           });
+                  newAttributes("Trajectory",
+                                {
+                                 target          => $trajectory,
+                                 Name            => $trajectory->name(),
+                                 TotalDistance   => undef,
+                                 AverageVelocity => undef,
+                                });
                 $trajectories{$trajectory->id()}->{trajectory} = $trajectory;
                 $trajectories{$trajectory->id()}->{attribute} = $tAttr->[0];
                 $trajectories{$trajectory->id()}->{minX} = $phys->{X};
@@ -159,17 +158,17 @@ sub postcalculateImage {
             print STDERR ":",$nextSpot->id()," ";
 
             my $spotEntry = $self->
-              newAttributesWithTargets("Entries",
-                                       {
-                                        target     => $spot,
-                                        Trajectory => $trajectory->id(),
-                                        Order      => $order,
-                                        DeltaX     => $deltaX,
-                                        DeltaY     => $deltaY,
-                                        DeltaZ     => $deltaZ,
-                                        Distance   => $distance,
-                                        Velocity   => $velocity,
-                                       });
+              newAttributes("Entries",
+                            {
+                             target     => $spot,
+                             Trajectory => $trajectory->id(),
+                             Order      => $order,
+                             DeltaX     => $deltaX,
+                             DeltaY     => $deltaY,
+                             DeltaZ     => $deltaZ,
+                             Distance   => $distance,
+                             Velocity   => $velocity,
+                            });
             $trajectories{$trajectory->id()}->{maxX} = $phys->{X};
             $trajectories{$trajectory->id()}->{maxY} = $phys->{Y};
             $trajectories{$trajectory->id()}->{maxZ} = $phys->{Z};
@@ -201,12 +200,12 @@ sub postcalculateImage {
         }
 
         my $spotEntry = $self->
-          newAttributesWithTargets("Entries",
-                                   {
-                                    target     => $spot,
-                                    Trajectory => $trajectory->id(),
-                                    Order      => $order,
-                                   });
+          newAttributes("Entries",
+                        {
+                         target     => $spot,
+                         Trajectory => $trajectory->id(),
+                         Order      => $order,
+                        });
         $trajectories{$trajectory->id()}->{maxX} = $phys->{X};
         $trajectories{$trajectory->id()}->{maxY} = $phys->{Y};
         $trajectories{$trajectory->id()}->{maxZ} = $phys->{Z};
@@ -239,6 +238,8 @@ sub postcalculateImage {
     $self->{_physicalCoordinates} = {};
     $self->{_spotTrajectories} = {};
     $self->{_spotOrders} = {};
+
+    $self->SUPER::finishImage();
 }
 
 sub createNewTrajectory {
@@ -275,3 +276,5 @@ sub findNearestSpot {
 
     return ($nearestSpot, $deltaX, $deltaY, $deltaZ, $minimumSquaredDistance);
 }
+
+1;

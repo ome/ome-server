@@ -1,4 +1,4 @@
-# OME/Analysis/MatlabHandler.pm
+# OME/Analysis/Handlers/MatlabHandler.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -32,16 +32,16 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::MatlabHandler;
+package OME::Analysis::Handlers::MatlabHandler;
 
 =head1 NAME
 
-OME::Analysis::MatlabHandler - analysis handler for interfacing with
-Matlab routines
+OME::Analysis::Handlers::MatlabHandler - analysis handler for
+interfacing with Matlab routines
 
 =head1 SYNOPSIS
 
-	use OME::Analysis::MatlabHandler;
+	use OME::Analysis::Handlers::MatlabHandler;
 
 =head1 DESCRIPTION
 
@@ -53,8 +53,8 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::Analysis::DefaultLoopHandler;
-use base qw(OME::Analysis::DefaultLoopHandler);
+use OME::Analysis::Handlers::DefaultLoopHandler;
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
 
 use OME::Matlab;
@@ -78,11 +78,10 @@ sub newtest {
 }
 
 sub new {
-    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
+    my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,
-                                  $chain_execution,$module,$node);
+    my $self = $class->SUPER::new(@_);
 
     $self->__parseInstructions();
 
@@ -101,7 +100,7 @@ sub DESTROY {
 sub __parseInstructions {
     my $self = shift;
 
-    my $module                = $self->{_module};
+    my $module                = $self->getModule();
     my $executionInstructions = $module->execution_instructions();
     my $parser                = XML::LibXML->new();
     my $tree                  = $parser->parse_string( $executionInstructions );
@@ -470,91 +469,82 @@ sub startAnalysis {
     $self->__openEngine();
 }
 
-sub globalInputs {
-    my ($self,$input_hash) = @_;
-    $self->SUPER::globalInputs($input_hash);
+sub placeInputs {
+    my ($self,$granularity) = @_;
+    my $factory = OME::Session->instance()->Factory();
 
-    foreach my $formal_input_name (keys %$input_hash) {
-        my $semantic_type = $self->
-          getFormalInput($formal_input_name)->semantic_type();
-        $self->placeAttributes($formal_input_name,
-                               $semantic_type,
-                               $input_hash->{$formal_input_name});
+    my @inputs = $factory->
+      findObjects('OME::Module::FormatInputs',
+                  {
+                   module => $self->getModule(),
+                   'semantic_type.granularity' => $granularity,
+                  });
+
+    foreach my $formal_input (@inputs) {
+        my $semantic_type = $formal_input->semantic_type();
+        $self->
+          placeAttributes($formal_input->name(),
+                          $semantic_type,
+                          $self->getCurrentInputAttributes($formal_input));
     }
 }
 
-sub datasetInputs {
-    my ($self,$input_hash) = @_;
-    $self->SUPER::datasetInputs($input_hash);
+sub executeGlobal {
+    my ($self) = @_;
+    $self->SUPER::executeGlobal();
+    $self->placeInputs('G');
+    $self->__execute() if $self->{__executeAt} eq 'executeGlobal';
+}
 
-    foreach my $formal_input_name (keys %$input_hash) {
-        my $semantic_type = $self->
-          getFormalInput($formal_input_name)->semantic_type();
-        $self->placeAttributes($formal_input_name,
-                               $semantic_type,
-                               $input_hash->{$formal_input_name});
+sub startDataset {
+    my ($self,$dataset) = @_;
+    $self->SUPER::startDataset($dataset);
+    $self->placeInputs('G');
+    $self->placeInputs('D');
+    $self->__execute() if $self->{__executeAt} eq 'startDataset';
+}
+
+sub startImage {
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
+
+    # startImage can be executed either in dataset or image-dependence.
+    # If we're image-dependent, then we need to make sure to feed in any
+    # global attributes there might be.  (If we're dataset-dependent,
+    # the startDataset method will have already done this.)
+
+    if ($self->getModuleExecution()->dependence() eq 'I') {
+        $self->placeInputs('G');
     }
+
+    $self->placeInputs('I');
+
+    $self->__execute() if $self->{__executeAt} eq 'startImage';
 }
 
-sub imageInputs {
-    my ($self,$input_hash) = @_;
-    $self->SUPER::imageInputs($input_hash);
-
-    foreach my $formal_input_name (keys %$input_hash) {
-        my $semantic_type = $self->
-          getFormalInput($formal_input_name)->semantic_type();
-        $self->placeAttributes($formal_input_name,
-                               $semantic_type,
-                               $input_hash->{$formal_input_name});
-    }
+sub startFeature {
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
+    $self->placeInputs('F');
+    $self->__execute() if $self->{__executeAt} eq 'startFeature';
 }
 
-sub featureInputs {
-    my ($self,$input_hash) = @_;
-    $self->SUPER::featureInputs($input_hash);
-
-    foreach my $formal_input_name (keys %$input_hash) {
-        my $semantic_type = $self->
-          getFormalInput($formal_input_name)->semantic_type();
-        $self->placeAttributes($formal_input_name,
-                               $semantic_type,
-                               $input_hash->{$formal_input_name});
-    }
-}
-
-sub precalculateGlobal {
+sub finishFeature {
     my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'precalculateGlobal';
+    $self->SUPER::finishFeature();
+    $self->__execute() if $self->{__executeAt} eq 'finishFeature';
 }
 
-sub precalculateDataset {
+sub finishImage {
     my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'precalculateDataset';
+    $self->SUPER::finishImage();
+    $self->__execute() if $self->{__executeAt} eq 'finishImage';
 }
 
-sub precalculateImage {
+sub finishDataset {
     my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'precalculateImage';
-}
-
-sub calculateFeature {
-    my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'calculateFeature';
-}
-
-sub postcalculateImage {
-    my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'postcalculateImage';
-}
-
-sub postcalculateDataset {
-    my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'postcalculateDataset';
-}
-
-sub postcalculateGlobal {
-    my ($self) = @_;
-    $self->__execute() if $self->{__executeAt} eq 'postcalculateGlobal';
+    $self->SUPER::finishDataset();
+    $self->__execute() if $self->{__executeAt} eq 'finishDataset';
 }
 
 
