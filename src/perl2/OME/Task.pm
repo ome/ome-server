@@ -272,6 +272,27 @@ sub setError {
 	return $error;
 }
 
+
+=head2 setPID()
+
+Set the PID for the task.  This is useful for tasks involving a fork.
+Unlike the C<process_id()> field, this will immediately
+write the object to the DB, making the PID change available to other processes.
+
+=cut
+
+sub setPID {
+	my $self = shift;
+	my $pid;
+	
+	if (@_) {
+		$pid = shift;
+		$self->process_id($pid);
+		$self->storeObject();
+	}
+	return $pid;
+}
+
 =head2 died()
 
 Specify that the task has died.  The optional parameter is stored in the error message.
