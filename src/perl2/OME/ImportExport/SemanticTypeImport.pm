@@ -484,6 +484,18 @@ sub processDOM {
                           " in table ".$newTable->table_name();
                     }
                 }
+                
+                if (length ($newColumn->description()) > 0 ) {
+					$statement = 'COMMENT ON COLUMN '.$newTable->table_name().'.'.$newColumn->column_name().' IS ?';
+					$sth = $dbh->prepare($statement)
+					  or logdie "Could not prepare comment for table $tName";
+					$sth->execute($newColumn->description())
+					  or logdie "Could not add comment to table $tName";
+		
+					logdbg "debug", ref ($self) .
+					  "->processDOM: successfully created table\n";
+           	 	}
+
 
                 logdbg "debug", ref ($self) . "->processDOM: created column in db\n";
                 #
