@@ -156,14 +156,14 @@ sub _getDBObjDetail {
 
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
 
-	my $table_label = 
+	my $display_type = "Displaying ".
 		( $ST ?
-			$q->a( { -href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id()},
-				   $q->font( { -class => 'ome_header_label' }, $common_name) ):
-			$q->font( { -class => 'ome_header_label' }, $common_name)
-		).
-		$q->font( { -class => 'ome_header_label' }, ": ").
-		$q->font( { -class => 'ome_header_title' }, OME::Web::DBObjRender->getObjectLabel($object) );
+			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
+				   $common_name ) :
+			$common_name
+		);
+	my $table_label = $q->font( { -class => 'ome_header_title' },
+		OME::Web::DBObjRender->getObjectLabel($object) );
 
 	my $obj_table;
 
@@ -174,6 +174,12 @@ sub _getDBObjDetail {
 	
 	$obj_table .= $q->table( { -class => 'ome_table' },
 		$q->caption( $table_label ),
+		$q->Tr(
+			# table descriptor
+			$q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, 
+				$q->span( { -class => 'ome_widget' }, $display_type )
+			), 
+		),
 		map(
 			$q->Tr( 
 				$q->td( { -class => 'ome_td', -align => 'left', -valign => 'top' }, $labels{ $_ } ),
@@ -194,14 +200,13 @@ sub _getManyRelations {
 	my @relations;
 
 	# print tables for has many relations
-	my $manyRefs = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-	foreach my $accessor (keys %$manyRefs ) {
-		my $type = $manyRefs->{ $accessor };
-		my @objects = $object->$accessor();
-		(my $table_name = $accessor ) =~ s/_/ /g;
-		$table_name = uc( $table_name );
-		push @relations, $q->p( $tableMaker->getList( 
+	if( $iter->first() ) { do {
+		my $type = $iter->return_type();
+		my $objects = $iter->getList();
+		my $table_name = $iter->name();
+		push( @relations, $q->p( $tableMaker->getList( 
 			{
 				title            => $table_name, 
 				embedded_in_form => $self->{ form_name },
@@ -209,10 +214,10 @@ sub _getManyRelations {
 				width            => '100%'
 			}, 
 			$type, 
-			\@objects
-		) );
-	}
-
+			$objects
+		) ) );
+	} while( $iter->next() ); }
+	
 	return @relations;
 }
 
