@@ -48,6 +48,7 @@ sub getCommands {
        'users' => ['OME::Util::UserAdmin'],
        'groups' => ['OME::Util::GroupAdmin'],
        'data' => ['OME::Util::dbAdmin'],
+       'uninstall' => ['OME::Util::Uninstall'],
       };
 }
 
@@ -65,6 +66,7 @@ $script $command_name commands are:
     users            Commands for administering OME users
     groups           Commands for administering OME groups
     data             Commands for administering OME data
+    uninstall        Command  for removing your OME installation
     help <command>   Display help information about a specific command
 
 Note that most of these commands will require you to log in as an
