@@ -43,8 +43,8 @@ import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.chains.ControlPanel;
 import org.openmicroscopy.vis.chains.SelectionState;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.SelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -63,8 +63,7 @@ import java.util.Collection;
  * @version 2.1
  * @since OME2.1
  */
-public class PChainBox extends PGenericBox implements 
-	DatasetSelectionEventListener{
+public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	/**
 	 * The color for display of the lock icon
@@ -78,7 +77,7 @@ public class PChainBox extends PGenericBox implements
 	
 	public static final double MAX_NAME_SCALE=6;
 	
-	public static final double LABEL_SCALE=3;
+	public static final double LABEL_SCALE=4;
 	/**
 	 * 
 	 * The ID of the chain being stored
@@ -116,7 +115,7 @@ public class PChainBox extends PGenericBox implements
 		this.chain = chain;
 		chainID = chain.getID();
 		SelectionState selectionState = controlPanel.getSelectionState();
-		selectionState.addDatasetSelectionEventListener(this);
+		selectionState.addSelectionEventListener(this);
 		
 		// base Color is EXECUTED_COLOR if there are any executions at all
 		// or PGenericBox.CATEGORY_COLOR, otherwise.
@@ -166,13 +165,14 @@ public class PChainBox extends PGenericBox implements
 		if (datasets.size() > 0) {
 			// add indication of datasets
 			PText datasetLabel = new PText("Datasets: ");
-			datasetLabel.setFont(NAME_FONT);
-			datasetLabel.setOffset(x+HGAP,y+VGAP);
+			datasetLabel.setFont(PConstants.LABEL_FONT);
+			datasetLabel.setOffset(x+HGAP,y);
 			datasetLabel.setPickable(false);
 			datasetLabel.setScale(LABEL_SCALE);
 			chainLayer.addChild(datasetLabel);
-			y+=datasetLabel.getGlobalFullBounds().getHeight()+VGAP;
-			double datasetsWidth = width - (datasetLabel.getWidth()+HGAP);
+			PBounds dlbounds = datasetLabel.getGlobalFullBounds();
+			//y+=dlbounds.getHeight()+VGAP;
+			double datasetsWidth = width - (dlbounds.getWidth()+2*HGAP);
 			
 			// add individual datasets
 			PDatasetLabels datasetLabels = new 
@@ -180,11 +180,24 @@ public class PChainBox extends PGenericBox implements
 			
 			// adjust size
 			chainLayer.addChild(datasetLabels);
-			datasetLabels.setOffset(x+HGAP+datasetLabel.getWidth()+HGAP,y);
-			y+= datasetLabels.getHeight()+VGAP;
+			double ratio = PDatasetLabelText.LABEL_SCALE/LABEL_SCALE;
+			y += (1-ratio)*dlbounds.getHeight()-VGAP;
+			datasetLabels.setOffset(x+dlbounds.getWidth()+2*HGAP,y);
+			PBounds b2 = datasetLabels.getGlobalFullBounds();
+			double datasetHeight = dlbounds.getHeight();
+			if (b2.getHeight() > datasetHeight)
+				datasetHeight = b2.getHeight();
+			y+= datasetHeight+VGAP;
 			// add indications of executions
 			
-			// adjust size
+			PText execs = new PText("Executions");
+			execs.setFont(NAME_FONT);
+			execs.setOffset(x+HGAP,y);
+			execs.setPickable(false);
+			execs.setScale(LABEL_SCALE);
+			chainLayer.addChild(execs);
+			
+			/// add the individual labels;
 		}
 		
 		
@@ -234,19 +247,18 @@ public class PChainBox extends PGenericBox implements
 	}
 			
 	
-	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		
-		SelectionState selectionState = e.getSelectionState();
-		boolean selected = 
-			chain.hasExecutionsInSelectedDatasets(selectionState);
-		setSelected(selected);
-	} 
-	
 	public void setSelected(boolean v) {
 		if (v == true)
 			setPaint(SELECTED_COLOR);
 		else
 			setPaint(baseColor);
 		repaint();
+	}
+	
+	public void selectionChanged(SelectionEvent e) {
+		SelectionState selectionState = e.getSelectionState();
+		boolean selected = 
+			chain.hasExecutionsInSelectedDatasets(selectionState);
+		setSelected(selected);
 	}
 }
