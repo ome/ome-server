@@ -5,8 +5,7 @@
 	<xsd:group name = "inputRecordModel">
 		<xsd:choice>
 			<xsd:element ref = "Input" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "XYPlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "XYPlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "XYPlane" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFile" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeT" minOccurs = "0" maxOccurs = "unbounded"/>
@@ -15,19 +14,12 @@
 			<xsd:element ref = "sizeY" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeZ" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "BitsPerPixel" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "BytesPerPixel" minOccurs = "0" maxOccurs = "unbounded"/>
 		</xsd:choice>
 	</xsd:group>
 	<xsd:element name = "ExecutionInstructions">
 		<xsd:annotation>
 			<xsd:documentation>Tied to DB. Table PROGRAMS Column EXECUTION
-			
-			
-			
-			
-			
-			
-			
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -40,14 +32,6 @@
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
-					
-					
-					
-					
-					
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -70,14 +54,6 @@ Example:
 when you use the program, you type: /OME/bin/OME_Image_XYZ_stats Path=[path to repository file] Dims=[X],[Y],[Z],[W],[T],[BytesPerPix]
 XML specification of the command line parameters is:
 &lt;CommandLine>Path=&lt;RawImageFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>&lt;/CommandLine>
-			
-			
-			
-			
-			
-			
-			
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType mixed = "true">
@@ -91,6 +67,7 @@ XML specification of the command line parameters is:
 			<xsd:documentation>This specifies what and how to write to STDIN.
 
 Not yet supported.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -102,6 +79,7 @@ Not yet supported.
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read STDOUT.
+			
 			
 			
 			</xsd:documentation>
@@ -121,14 +99,6 @@ Not yet supported.
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a particular column of a FormalInput. It should corrospond to an FormalInputColumnID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
-					
-					
-					
-					
-					
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -190,17 +160,22 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 			</xsd:choice>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "XYPlaneFilePath">
+	<xsd:element name = "XYPlane">
 		<xsd:annotation>
-			<xsd:documentation>Used with variable substitution. This will be substituted with a dynamically generated plane.</xsd:documentation>
+			<xsd:documentation>Describes an XY plane. Used with variable substitution. This will be substituted with a dynamically generated plane.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "PlaneIndex"/>
+				<xsd:element ref = "theZ"/>
+				<xsd:element ref = "theT"/>
+				<xsd:element ref = "theW"/>
 			</xsd:sequence>
 			<xsd:attribute name = "BPP">
 				<xsd:annotation>
-					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with both 8 and 16 bit images, leave this out and the BPP of the image will be used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.</xsd:documentation>
+					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with either 8 or 16 bit images, leave this out or specify 16. Both of these result in the BPP of the image being used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.
+
+Currently, only native image pixels are supported.
+					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:integer">
@@ -209,19 +184,13 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "Format" use = "required">
+			<xsd:attribute name = "Format">
 				<xsd:annotation>
 					<xsd:documentation>Specifies the expected format of the plane.
 RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
-					
-					
-					
-					
-					
-					
-					
-					
+
+Currently only TIFF is supported.
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -236,46 +205,14 @@ TIFF corrosponds to TIFF files.
 					<xsd:documentation>Needed if you need another plane to match indexes. Referenced by the Match element.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "XYPlaneFile">
-		<xsd:annotation>
-			<xsd:documentation>Used with variable substitution. This will be substituted with pixel contents of the plane. If the plane is of format TIFF, this will return the contents of the TIFF file. If this plane is of type RAW, this will return a pixel dump.</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref = "PlaneIndex"/>
-			</xsd:sequence>
-			<xsd:attribute name = "BPP">
+			<xsd:attribute name = "Return">
 				<xsd:annotation>
-					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with both 8 and 16 bit images, leave this out and the BPP of the image will be used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:integer">
-						<xsd:enumeration value = "8"/>
-						<xsd:enumeration value = "16"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
-			<xsd:attribute name = "Format">
-				<xsd:annotation>
-					<xsd:documentation>Specifies the expected format of the plane.
-RAW corrosponds to OME repository format of pixel dump.
-TIFF corrosponds to TIFF format
-					
-					
-					
-					
-					
-					
-					
-					
-					</xsd:documentation>
+					<xsd:documentation>Specifies whether to the program needs the FilePath or the FileContents. Currently, only the FilePath is supported.</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:string">
-						<xsd:enumeration value = "RAW"/>
-						<xsd:enumeration value = "TIFF"/>
+						<xsd:enumeration value = "FilePath"/>
+						<xsd:enumeration value = "File"/>
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
@@ -316,7 +253,7 @@ TIFF corrosponds to TIFF format
 			<xsd:documentation>Used with variable substitution. This will be substituted with the path and file of the raw pixel dump image file.
 e.g. /OME/repository/1-tinyTest.ori
 
-Not yet supported.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -326,6 +263,7 @@ Not yet supported.
 			<xsd:documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
 
 Not yet supported.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -341,15 +279,6 @@ Not yet supported.
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
-
-					
-					
-					
-					
-					
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -368,29 +297,13 @@ Not yet supported.
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to read a record. If it is not specified, reading will continue until it reaches the end of the output stream.
 If used in conjuction with TerminateAt, reading will stop after RepeatCount or TerminateAt, whichever comes first.
-					
-					
-					
-					
-					
-					
-					
-					
-					</xsd:documentation>
+				</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "TerminateAt" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
-					
-					
-					
-					
-					
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -412,18 +325,6 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Used for variable substitution. This is substituted for bytes per pixel. Used in the context of per image processing.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
-	</xsd:element>
-	<xsd:element name = "PlaneIndex">
-		<xsd:annotation>
-			<xsd:documentation>Describes the constraints on Z, wavenumber, and time to uniquely describe a plane.</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref = "theZ"/>
-				<xsd:element ref = "theT"/>
-				<xsd:element ref = "theW"/>
-			</xsd:sequence>
-		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "Match">
 		<xsd:annotation>
@@ -482,6 +383,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Specifies an end point of iteration.
 
 Not currently supported.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -497,6 +399,7 @@ Not currently supported.
 			<xsd:documentation>Specifies a starting point of iteration. 
 
 Not currently supported.
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
