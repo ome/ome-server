@@ -37,8 +37,14 @@
 #ifndef sha1DB_h
 #define sha1DB_h
 
+#include <sys/types.h>
 
+/* BSD doesn't ship newer versions of Berkeley DB by default */
+#ifdef __DARWIN__
 #include <db.h>
+#else
+#include <db_185.h>
+#endif
 #include "digest.h"
 #include "repository.h"
 

@@ -27,8 +27,13 @@
 
 DB *sha1DB_open (const char *file) {
 DB *myDB;
-	
+
+/* O_EXLOCK is a BSD extension */
+#ifdef __DARWIN__
 	myDB = dbopen (file,O_CREAT|O_RDWR|O_EXLOCK, 0600, DB_BTREE, NULL);
+#else
+	myDB = dbopen (file,O_CREAT|O_RDWR, 0600, DB_BTREE, NULL);
+#endif
 	
 	return (myDB);
 }
