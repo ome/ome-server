@@ -159,7 +159,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('datatype_columns');
 __PACKAGE__->sequence('datatype_column_seq');
 __PACKAGE__->columns(Primary => qw(datatype_column_id));
-__PACKAGE__->columns(Essential => qw(datatype_id column_name reference_type));
+__PACKAGE__->columns(Essential => qw(datatype_id column_name description reference_type));
 __PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
 
 __PACKAGE__->make_filter('__type_column' => 'datatype_id = ? and column_name = ?');
