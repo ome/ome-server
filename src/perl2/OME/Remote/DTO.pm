@@ -43,6 +43,8 @@ use Exporter;
 use base qw(Exporter);
 our @EXPORT = qw(__makeHash __updateHash);
 our @EXPORT_OK = @EXPORT;
+use Carp;
+use Carp qw(cluck);
 
 use OME::Session;
 
@@ -89,79 +91,85 @@ This is the inverse of C<__updateHash>.
 =cut
 
 sub __makeHash ($$$) {
-    my ($object,$class,$columns) = @_;
+    my ($object,$class,$request_list) = @_;
 
+	# Sanity Checks
     return undef unless defined $object;
-
     if (defined $class) {
         die "makeDTO expects a $class object"
           unless UNIVERSAL::isa($object,$class);
     }
 
+    # Massage the incoming requests
+    my %method_requests;
+    foreach my $request (@$request_list) {
+        if (ref($request) eq 'ARRAY') {
+            my ($dto_name,$method_name) = @$request;
+            $requests{$method_name} = $dto_name;
+        } else {
+            $requests{$request} = $request;
+        }
+    }
+
+	# expand ":all:" into everything that should be transferred.
+	if( exists $requests{":all:"} ) {
+	    delete $requests{ ":all:" };
+		my @method_request_list = (
+			$object->getColumns(),
+			keys %{$object->getHasMany()},
+			map( '#'.$_, keys %{$object->getHasMany()} ), # counts of those
+			keys %{$object->getManyToMany()},
+			map( '#'.$_, keys %{$object->getManyToMany()} ), # counts of those
+			$object->getPseudoColumns()
+		);
+		# only include inferred relations for STs
+	    if( UNIVERSAL::isa($object,'OME::SemanticType::Superclass') ) {
+			push @method_request_list, (
+				keys %{$object->getInferredHasMany()},
+				map( '#'.$_, keys %{$object->getInferredHasMany()} )
+			)
+		}
+	    # add these method requests to columns. skip those that have already 
+	    # been requested that may have an alias. That shouldn't happen unless
+	    # someone writes sloppy requests, but it mimics the behavior of the
+	    # last implementation.
+    	foreach my $method ( @method_list ) {
+	    	$requests{ $method } = $method
+	    		unless exists $requests{ $method };
+	    }
+	}
+
+	# force inference of relationships. This allows requests of inferred
+	# methods to be granted.
+	$object->getInferredHasMany();
+
+	# Actually make the hash
     my $dto = {};
-    my %columns;
-    foreach my $column (@$columns) {
-        my ($dto_name,$object_name);
-
-        if (ref($column) eq 'ARRAY') {
-            my ($dto_name,$object_name) = @$column;
-            $columns{$object_name} = $dto_name;
-        } else {
-            $columns{$column} = $column;
-        }
-    }
-
-    my @defined_columns = $object->getColumns();
-    push @defined_columns, keys %{$object->getAllHasMany()};
-    push @defined_columns, keys %{$object->getManyToMany()};
-    push @defined_columns, $object->getPseudoColumns();
-
-    foreach my $object_name (@defined_columns) {
-        my $type = $object->getColumnType($object_name);
-        #print STDERR "   --- $object_name $type";
-
-        if ($type =~ m/(has-many|many-to-many)/o) {
-            # The user asked for a count of this column
-            if (exists $columns{"#".$object_name} ||
-                exists $columns{":all:"}) {
-                #print STDERR ", adding count";
-                my $dto_name = $columns{"#".$object_name};
-                $dto_name = "#".$object_name unless defined $dto_name;
-                my $counter = "count_${object_name}";
-                $dto->{$dto_name} = $object->$counter();
-                delete $columns{"#".$object_name};
-            }
-
-            # The user asked for this column
-            if (exists $columns{$object_name} ||
-                exists $columns{":all:"}) {
-                #print STDERR ", adding list";
-                my $dto_name = $columns{$object_name};
-                $dto_name = $object_name unless defined $dto_name;
-                my @results = $object->$object_name();
-                $dto->{$dto_name} = \@results;
-                delete $columns{$object_name};
-            }
-        } else {
-            if (exists $columns{$object_name} ||
-                exists $columns{":all:"}) {
-                #print STDERR ", adding";
-                my $dto_name = $columns{$object_name};
-                $dto_name = $object_name unless defined $dto_name;
-                $dto->{$dto_name} = $object->$object_name();
-                delete $columns{$object_name};
-            }
-        }
-        #print STDERR "\n";
-    }
-
-    delete $columns{":all:"};
-    delete $columns{"id"};
-
-    if (scalar(keys %columns) > 0) {
-        my ($object_name,$dummy) = each %columns;
-        die "Unknown column $object_name";
-    }
+	foreach my $method_request ( keys %requests ) {
+		my $dto_name = $requests{ $method_request };
+		# request for a list count
+		if( $method_request =~ /^#(.*)$/ ) {
+			my $method = $1;
+			die "Cannot find a relationship by the name of $method to count in $object" 
+				unless( defined $object->getColumnType($method) );
+			$method = "count_".$method;
+			$dto->{ $dto_name } = $object->$method();
+		# die unless the method is defined
+		} elsif( not defined $object->getColumnType($method_request) ) {
+			confess "Cannot find a column or relation by the name of $method_request in $object";
+		# request returns a list of objects
+		} elsif( $object->getColumnType($method_request) =~ /(has-many|many-to-many)/o ) {
+			my @results = $object->$method_request();
+			$dto->{ $dto_name } = \@results;
+		# request returns a scalar or a single object
+		} else {
+			$dto->{ $dto_name } = $object->$method_request();
+		}
+		# gotta clear this out because it's not reset in GenericAssembler. 
+		# It's easier to mimic the behavior of the previous implementation than to
+		# muck with yet another package.
+		delete $requests{ $method_request };
+	}
 
     return $dto;
 }
@@ -207,3 +215,4 @@ sub __updateHash ($$$;$) {
 Douglas Creager (dcreager@alum.mit.edu)
 
 =cut
+
