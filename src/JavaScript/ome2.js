@@ -50,7 +50,7 @@
  InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Project&Popup=1';
  InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Dataset&Popup=1';
  DetailPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail';
-RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
+ RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
 
 /*
  *
@@ -176,7 +176,7 @@ function openPopUpImage (id) {
 	} else {
 		window.open(GetGraphicsPage + '&ImageID=' + id,
 			'_blank',
-			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
+			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
 	} 
 }
 
