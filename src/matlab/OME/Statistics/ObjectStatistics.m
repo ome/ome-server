@@ -38,8 +38,7 @@ function [Count, Euler, Centroid, ...
 
 % How many bins the histograms have
 NUM_BINS = 10;
-class(BinaryMask)
-size(BinaryMask)
+
 % Calculate number of contiguous regions in the image
 features = bwlabel(im2bw(BinaryMask));
 Count = max(max(features));
