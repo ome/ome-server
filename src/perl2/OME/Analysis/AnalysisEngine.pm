@@ -744,7 +744,7 @@ sub findModuleHandler {
                     })
           foreach 0..$max_input_analyses-1;
 
-        print join("\n",@analyses),"\n";
+        #print join("\n",@analyses),"\n";
 
         # Create a hash, recording which analysis we will associate each
         # user input with.  We won't actually clone the user inputs
@@ -767,11 +767,11 @@ sub findModuleHandler {
     # __checkInputs method.
 
     sub __cloneUserInputs {
-        print "      CLONE $curr_nodeID\n";
+        #print "      CLONE $curr_nodeID\n";
         foreach my $inputID (keys %{$user_input_analyses{$curr_nodeID}}) {
             my $inputs = $input_parameters->{$curr_nodeID}->{$inputID};
             my $analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
-            print "         $inputID - ",$analysis->id(),"\n";
+            #print "         $inputID - ",$analysis->id(),"\n";
 
             foreach my $attribute (@$inputs) {
                 my $type = $attribute->attribute_type();
@@ -781,7 +781,7 @@ sub findModuleHandler {
                 my $clone = $factory->
                   newAttribute($type,$target,$analysis,$hash);
                 $session->commitTransaction();
-                print "          $clone\n";
+                #print "          $clone\n";
             }
         }
     }
@@ -1051,11 +1051,11 @@ sub findModuleHandler {
             }
 
             my $pred_analysisID = $pred_analysis->id();
-            print "   $pred_analysisID\n";
+            #print "   $pred_analysisID\n";
 
             my %attributes;
             foreach my $table_name (__getDataTables($formal_input)) {
-                print "   $table_name\n";
+                #print "   $table_name\n";
                 $sth = $self->sql_get_input_attributes($table_name);
                 $sth->execute($pred_analysisID);
 
@@ -1941,7 +1941,7 @@ sub findModuleHandler {
             $pred_analysis = __getAnalysis($pred_node->id());
         } else {
             $pred_analysis = $user_input_analyses{$curr_nodeID}->{$inputID};
-            print "        ${curr_nodeID}.${inputID} = $pred_analysis\n";
+            #print "        ${curr_nodeID}.${inputID} = $pred_analysis\n";
         }
 
         my $sth;
