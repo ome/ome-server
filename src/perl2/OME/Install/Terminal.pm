@@ -75,7 +75,7 @@ sub print_header {
 sub confirm {
     my $text = shift;
 
-    print "Using \"$text\", are you sure ? ", BOLD, "[y/n]", RESET, ": ";
+    print "Using \"$text\", are you sure ? [y/", BOLD, "n", RESET, "]: ";
     my $y_or_n = ReadLine 0;
     chomp $y_or_n;
 
@@ -122,7 +122,7 @@ sub question {
 	my $input = ReadLine 0;
 	chomp $input;
 
-	print "Using \"$input\", are you sure ? ", BOLD, "[y/n]", RESET, ": ";
+	print "Using \"$input\", are you sure ? [y/", BOLD, "n", RESET, "]: ";
 	my $y_or_n = ReadLine 0;
 	chomp $y_or_n;
 
@@ -133,7 +133,7 @@ sub question {
 sub y_or_n {
     my $text = shift;
 
-    print "$text ", BOLD, "[y/n]", RESET, ": ";
+    print "$text [y/", BOLD, "n", RESET, "]: ";
     my $y_or_n = ReadLine 0;
     chomp $y_or_n;
 
