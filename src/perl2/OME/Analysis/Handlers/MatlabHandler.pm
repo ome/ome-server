@@ -299,7 +299,7 @@ sub Pixels_to_MatlabArray {
 		    unless $ascender->can( 'Parent' );
 		$ascender = $ascender->Parent();
 	}
-	
+
 	# Ensure PixelType is supported.
 	my $pixelType = $pixels->PixelType();
 	die "The OME-Matlab interface does not support $pixelType at this time."
@@ -327,18 +327,36 @@ sub Pixels_to_MatlabArray {
 		@Dims
 	) or die "Could not make an array in matlab for Pixels";
 	$matlab_pixels->makePersistent();
-	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->eval("global $matlab_var_name;");
 	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
+	
 	# magic one-liner. One liner means no variables are left in matlab's workplace
 	# this one-liner fills an array from the temp file
-	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
-
+	$self->{__engine}->eval("[$matlab_var_name"."_serialized] = fread(fopen('$filename', 'r'), '$pixelType');");
+	
+	# verify that all pixels were read
+	my $nPix;
+	my $expectedPix = $Dims[0]*$Dims[1]*$Dims[2]*$Dims[3]*$Dims[4];
+	
+	$self->{__engine}->eval("nPix=prod(size($matlab_var_name"."_serialized));");
+	
+	if (not defined($self->{__engine}->getVariable('nPix')) or 
+	    ($nPix = $self->{__engine}->getVariable('nPix')->getScalar()) ne $expectedPix) {
+		die "Could not read Pixels into Matlab. Read $nPix, expected $expectedPix."
+	}
+	
+	$self->{__engine}->eval("$matlab_var_name = reshape($matlab_var_name"."_serialized, size($matlab_var_name))");
+	
 	# Convert array datatype if requested
 	# FIXME: does this datatype conversion taint $matlab_pixels ?
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name)");
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
 	}
 	
+	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+	# This is diametrically opposite to MATLAB's assumptions.
+	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
+
 	# Cleanup
 	$session->finishTemporaryFile($filename);
 }
@@ -372,7 +390,7 @@ sub Attr_to_MatlabScalar {
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
 	my $array = OME::Matlab::Array->newDoubleScalar($value);
 	$array->makePersistent();
-	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->eval("global $matlab_var_name;");
 	$self->{__engine}->putVariable($matlab_var_name,$array);
 }
 
@@ -450,11 +468,15 @@ sub MatlabArray_to_Pixels {
 	
 	# Convert array datatype if requested
 	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
-		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name)");
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name);");
 	}
 	
+	# In OMEIS Size_X corresponds to columns and Size_Y corresponds to rows.
+	# This is diametrically opposite to MATLAB's assumptions.
+	$self->{__engine}->eval("$matlab_var_name = permute($matlab_var_name, [2 1 3 4 5]);");
+
 	# Get array's dimensions.
-	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name)");
+	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name);");
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
 		($self->{__engine}->getVariable('sizeX')->getScalar(),
 		 $self->{__engine}->getVariable('sizeY')->getScalar(),
@@ -463,7 +485,7 @@ sub MatlabArray_to_Pixels {
 		 $self->{__engine}->getVariable('sizeT')->getScalar());
 	
 	# Get pixel type
-	$self->{__engine}->eval("str = class($matlab_var_name)");
+	$self->{__engine}->eval("str = class($matlab_var_name);");
 	my $type = $self->{__engine}->getVariable('str')->getScalar();
 	die "Pixels of Matlab class $type are not supported at this time"
 		unless exists $self->{ _matlab_class_to_pixel_type }->{ $type };
@@ -490,8 +512,10 @@ sub MatlabArray_to_Pixels {
 	
 	# Shovel data into image server via tmp file
 	my $filename = $session->getTemporaryFilename("pixels","raw");
-	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name))");
-	my $pixelsWritten = $pixels_data->setPixelsFile($filename,1);
+	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name));");
+	die "Could not write the expected number of pixels to OMEIS" 
+	   unless $pixels_data->setPixelsFile($filename,1) == $sizeX*$sizeY*$sizeZ*$sizeC*$sizeT;
+	   
 	$session->finishTemporaryFile($filename);
 
 	# Finalize Pixels
@@ -609,8 +633,6 @@ sub MatlabVector_to_Attrs {
 		# See: "Hackaround for XS variable hidden uniqueness." in MatlabScalar_to_Attr()
 		my $index = $element->getAttribute( 'Index' )
 			or die "Index attribute not specified in ".$element->toString();
-		die "Vector index is out of bounds. Index is $index, and vector length is ".scalar( @$values ).". Error when processing ".$element->toString()
-			unless $index <= scalar( @$values );
 		my $value = $values->[ $index - 1 ];
 		$vectorData{ $formal_output_name }->{ $SE_name } = "$value";
 	}
