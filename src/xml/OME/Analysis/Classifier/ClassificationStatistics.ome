@@ -53,9 +53,17 @@
 				DataType="float">
 				<Description>
 				This ratio represents the ratio of the correct predictions to 
-				the total predictions.
+				the total number of predictions.
 
 				The value must be between 0 and 1.
+				</Description>
+			</Element>
+			<Element
+				Name="TotalUnknown"
+				DBLocation="CONFUSION_MATRIX.TOTAL_UNKNOWN"
+				DataType="integer">
+				<Description>
+				This is the number of predictions that could not be performed.
 				</Description>
 			</Element>
 			<Element
