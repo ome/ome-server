@@ -1,21 +1,3 @@
-/*
-# Copyright (C) 2002 Open Microscopy Environment
-# Author:  Ilya G. Goldberg <igg@nih.gov>
-#
-#    This library is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU Lesser General Public
-#    License as published by the Free Software Foundation; either
-#    version 2.1 of the License, or (at your option) any later version.
-#
-#    This library is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    Lesser General Public License for more details.
-#
-#    You should have received a copy of the GNU Lesser General Public
-#    License along with this library; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -92,11 +74,11 @@ int main (int argc, char **argv)
 		} else isRGB = 0;
 	} else isRGB = 1;
 
-/*
+
 	for(i=0; cgivars[i]; i += 2){
 		fprintf (stderr,"%s = '%s'\n",cgivars[i],cgivars[i+1]);
 	}
-*/
+
 
 	
 	if (isCGI)
@@ -291,7 +273,7 @@ void make_Gray_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *t
 	
 	numInts  = sscanf (type,"%d,%d,%f",&wave, &blck, &scale);
 	if (numInts < 3) {
-		fprintf (stderr,"The RGB parameter must supply 9 numbers, not %d: %s\n",numInts,type);
+		fprintf (stderr,"The Gray parameter must supply 3 numbers, not %d: %s\n",numInts,type);
 		exit (-1);
 	}
 
@@ -451,7 +433,7 @@ char *get_param (char **cgivars, char *param)
 
 	for(k=0; cgivars[k]; k += 2){
 		
-		if( strstr(cgivars[k],param) ){
+		if( !strcmp(cgivars[k],param) ){
 			returnVal = cgivars[k+1];
 			break;
 		}
