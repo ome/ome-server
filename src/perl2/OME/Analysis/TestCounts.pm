@@ -61,7 +61,7 @@ sub precalculateImage {
 	#			       0,$sizeW-1,
 	#			       0,$sizeT-1);
     #my $length = scalar(@$pixels);
-    my @pixels = unpack("S*",$pix);
+    my @pixels = unpack(($bbp == 8)? "C*": "S*",$pix);
     my $length = scalar(@pixels);
     
     my $numBright = 0;

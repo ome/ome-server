@@ -50,6 +50,7 @@ sub precalculateImage {
     my $sizeZ = $dimensions->size_z();
     my $sizeW = $dimensions->num_waves();
     my $sizeT = $dimensions->num_times();
+    my $bbp   = $dimensions->bits_per_pixel();
 
     my $pix = $image->Pix()->GetPixels();
     #my $pixels = $image->GetPixelArray(0,$sizeX-1,
@@ -58,8 +59,12 @@ sub precalculateImage {
 	#			       0,$sizeW-1,
 	#			       0,$sizeT-1);
     #my $length = scalar(@$pixels);
-    my @pixels = unpack("S*",$pix);
+    my @pixels = unpack(($bbp == 8)? "C*": "S*",$pix);
     my $length = scalar(@pixels);
+
+    print STDERR "      Dim: $sizeX $sizeY $sizeZ $sizeW $sizeT\n";
+    print STDERR "      Dimsize: ".$sizeX*$sizeY*$sizeZ*$sizeW*$sizeT."\n";
+    print STDERR "      Length   $length\n";
     
     my $sum = 0;
     my $mean = 0;
@@ -80,6 +85,11 @@ sub precalculateImage {
 	    $sum = 0;
 	}
     }
+
+    no integer;
+    $sum /= $length;
+    $mean += sum;
+    use integer;
 
     print STDERR "      Mean: $mean\n";
     print STDERR "      Min:  $min\n";
