@@ -2,7 +2,7 @@
 
 <OME
   xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
   xmlns:xsi=
     "http://www.w3.org/2001/XMLSchema-instance"
   xmlns:AML=
