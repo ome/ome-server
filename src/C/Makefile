@@ -6,9 +6,12 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		cgrayce2 omeis2 extractBinData insertBinData maxIntensity
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql -I/usr/local/include -I/sw/include
 DB_LIBS = -lpq
+COMPRESSION_LIBS = -lz -lbz2
+IMAGE_LIBS = -ltiff
 MATH_LIBS = -lm
 LIBPATHS = -L. -L/usr/local/lib -L/sw/lib
-LIBS = $(DB_LIBS) $(MATH_LIBS)  $(LIBPATHS) -lOME 
+BIN_DATA_LIBS = $(IMAGE_LIBS) $(COMPRESSION_LIBS) $(LIBPATHS)
+LIBS = $(DB_LIBS) $(MATH_LIBS) $(LIBPATHS) -lOME 
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
 OME_LIB = libOME.a
@@ -118,13 +121,13 @@ b64z_lib.o: b64z_lib.c b64z_lib.h
 	$(CC) $(CFLAGS) -c b64z_lib.c
 
 extractBinData: extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c -o extractBinData -lz -lbz2 -ltiff
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -o extractBinData extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c $(BIN_DATA_LIBS)
 
 insertBinData: insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c  -o insertBinData -lz -lbz2 -ltiff
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -o insertBinData insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c $(BIN_DATA_LIBS)
 
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(LIBPATHS) maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -o maxIntensity -ltiff -lm
+	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
