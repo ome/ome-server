@@ -17,9 +17,6 @@
 			OME XML Schema 1.0 RC6
 			Author:  Ilya G. Goldberg
 			Copyright 2002,2003 OME. All rights reserved.
-		
-		
-		
 		</xs:documentation>
 	</xs:annotation>
 	<xs:group name = "Person">
@@ -35,9 +32,6 @@
 			<xs:documentation>
 				The OME element must contain one or more Image and one or more Experimenter elements.
 				All other elements are optional.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -76,9 +70,6 @@
 				TimeIncrement is used for time series that have a global timing specification instead of per-timepoint timing info.
 				For example in a video stream.  The unit is seconds.
 				Similarly, WaveStart and WaveIncrement are used in spectral images like FTIR.  These are both positive integers.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -126,9 +117,6 @@
 			<xs:documentation>
 				The creation date of the Image - when the Image was acquired.
 				The element contains a string in the dateTime format (i.e. 1988-04-07T18:39:09)
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -143,9 +131,6 @@
 				This element must contain a list of BinData or External elements.  These elements, when read in order, must produce a 5-D pixel array
 				of the size and dimension order specified elsewhere in this document.
 				If BinData elements are used, there must be at least one BinData element per XY plane in the 5-D array.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -203,9 +188,6 @@
 				FRAP Photoablation Optical-Trapping Photoactivation Fluorescence-Lifetime Other
 				FP refers to fluorescent proteins, PGI/Docuemntation is not a 'data' image.
 				The optional Description element may contain free text to further describe the experiment.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -282,9 +264,6 @@
 				This is also not correctly specified in the schema (FIXME?).
 				The optional FilterID, LightSourceID, CameraID and OTFID  attributes refer to a Filter, LightSource Camera and OTF
 				elements defined within the Instrument element.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -378,9 +357,6 @@
 				The MIME type of the desired video format is specified by Movie's MIMEtype attribute.
 				The ROI element describes a 3-D region of interest.  It is up to the viewer to either display the ROI only,
 				or to simply mark it somehow.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -404,9 +380,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the red channel of an RGB image.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -414,9 +387,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the green channel of an RGB image.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -424,9 +394,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the blue channel of an RGB image.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -435,9 +402,6 @@
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for a greyscale image.
 				The GreyChannel element may contain an optional ColorMap attribute, which can be set to ''
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -467,9 +431,6 @@
 			<xs:documentation>
 				The presence of this element indicates the user wants to view the Image as a maximum intensity projection.
 				The Zstart and Zstop attributes are optional.  If they are not specified, then the entire Z stack will be projected.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -484,9 +445,6 @@
 				If they are not specified, the movie is to include all timepoints.
 				If the Time attributes point to a single time-point, that is the timepoint to be initially displayed.
 				If the entire element is missing, the first time-point  will be displayed
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -510,9 +468,6 @@
 				Each of these has their own ID attribute, which can be referred to from ChannelInfo.
 				It is understood that the light path configuration can be different for each wavelength,
 				but cannot be different for each timepoint or each plane of an XYZ stack.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -537,9 +492,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				The StageLabel is used to specify a name and position for a stage position in the microscope's reference frame.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -559,9 +511,6 @@
 				This is because this is an image-centric document, so the image itself is affiliated with an experimenter and a group.
 				We can infer that at the time of acquisition, the experimenter who acquired the image belonged to that group,
 				but that may no longer be the case.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -594,9 +543,6 @@
 				A description of the screen may be specified in the Description element.
 				Screens may contain overlapping sets of Plates i.e.  Screens and Plates have a many-to-many relationship.
 				Plates contain one or more ScreenRef elements to specify what screens they belong to.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -620,9 +566,6 @@
 				The ScreenRef element is a reference to a Screen element.
 				Plate elements may have one or more ScreenRef elements to define the screen that a plate belongs to.
 				Plates may belong to more than one screen.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -648,9 +591,6 @@
 				The EternRef attribute may contain a reference to an external database.
 				The PlateID and Name attributes are required.
 				The Name identifies the plate to the user.  It is used much like the PlateID, and so must be unique within the document.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -673,9 +613,6 @@
 			<xs:documentation>
 				A description of the microscope's objective lens.
 				Required tags include the lens numerical aperture, and the magnification, both of which a floating point (real) numbers.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -707,9 +644,6 @@
 				All  elements are FilterSpec type, so they have the required attributes Manufacturer, Model, and LotNumber.
 				The ExFilter an EmFilter elements may also contain a Type attribute which may be set to
 				'LongPass', 'ShortPass', 'BandPass', or 'MultiPass'.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -747,9 +681,6 @@
 			<xs:documentation>
 				Excitation filter manufacturer specification.
 				The optional Type attribute may contain 'LongPass', 'ShortPass', 'BandPass', or 'MultiPass'.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -774,9 +705,6 @@
 			<xs:documentation>
 				Emission filter manufacturer specification.
 				The optional Type attribute may contain 'LongPass', 'ShortPass', 'BandPass', or 'MultiPass'.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -807,9 +735,6 @@
 				The type of detector used to capture the image.
 				The DetectorID can be used as a reference within the ChannelInfo element in the Image element.
 				The Type attribute can be set to 'CCD', 'Intensified-CCD', 'PMT', etc.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -849,9 +774,6 @@
 			<xs:documentation>
 				Just some free-form text to describe Images, Screens and Projects.
 				The content model is ANY, which means that en entire XML sub-document can be placed here.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -887,9 +809,6 @@
 				The thumbnail may be an external URI reference specified by the href attribute, or it may contain an SVG sub-document
 				(denoted by the #wildCard 'element').
 				The MIMEtype is a required attribute, and must be set to 'SVG' if the tag's contents are an SVG document.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -907,9 +826,6 @@
 				Datasets can be grouped into projects using a many-to-many relationship.
 				A Dataset may belong to one or more Projects by including one or more ProjectRef elements which refer to ProjectIDs.
 				Projects do not directly contain images - only by virtue of containing datasets, which themselves contain images.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1020,9 +936,6 @@
 			<xs:documentation>
 				There may be one or more of these in a Dataset.
 				This empty element has a required ProjectID attribute that refers to Projects defined within the OME element.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1043,9 +956,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				This empty element has a required ExperimenterID attribute which refers to one of the Experimenters defined within OME.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1069,9 +979,6 @@
 				Contact information should be specified for the leader of the group and a contact person.
 				The Leader and/or Contact may themselves be experimenters defined in OME,
 				in which case they can refer to Experimenters defined within OME using their ExperimenterRef elements.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1095,9 +1002,6 @@
 				Contact information for a Group leader.
 				The contact info may be specified within this element using FirstName, LastName, email and Institution elements,
 				or the contact information may be specified using the ExperimenterRef element if the group leader is defined as an Experimenter.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1119,9 +1023,6 @@
 			<xs:documentation>
 				An element type to specify an Experimenter under OME.
 				It consists of a Person element group and a login name specified under OMEname.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
@@ -1143,9 +1044,6 @@
 				The Contact element describes the contact person for a group of experimenters - typically a project leader or lab manager.
 				This person may be specified as a reference to an OME experimenter, or the full contact information can be specified
 				within the element using the FIrstName, LastName, email and Institution elements.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1184,9 +1082,6 @@
 		<xs:annotation>
 			<xs:documentation>
 				This empty element can be used (via the required InstrumentID attribute) to refer to an Instrument defined within OME.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1219,9 +1114,6 @@
 				We do not specify a department element, and do not mean for Institution to be used in this way.
 				We simply wish to say XXX at YYY.  Where YYY has a better chance of being tied to a geographically fixed location
 				and of being more recognizable than a group of experimenters. 
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
@@ -1237,9 +1129,6 @@
 				If they are not used, and the Image has more than one plane,
 				the entire set of planes is assumed to be included in the ROI.
 				Multiple ROIs may be specified - these are meant to be displayed somehow.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1258,9 +1147,6 @@
 			<xs:documentation>
 				An element type specifying a filter specification.
 				Unlike the ManufactSpec, filters are referred to by lot number rather than serial number.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:attribute name = "Manufacturer" use = "required" type = "xs:string"/>
@@ -1276,9 +1162,6 @@
 				(eg, Nd-YAG for Laser or Hg for Arc).
 				A LightSourceID must be specified for each light source,
 				and the individual light sources can be referred to by their LightSourceIDs (eg from ChannelInfo).
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1309,9 +1192,6 @@
 				SizeX, SizeY specify the width and height of the OTF.
 				This element must contain either an External element or a BinData element.
 				Both of these work the same way as they do for the Data element within Image.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1359,9 +1239,6 @@
 				The ExperimenterRef and GroupRef elements specify the person and group this Dataset belongs to.
 				Projects may contain one or more Datasets, and Datasets may belong to one or more Projects.
 				This relationship is specified by listing ProjectRef elements within the Dataset element.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1389,9 +1266,6 @@
 				The DatasetRef element refers to a Dataset by specifying the DatasetID attribute.
 				One or more DatasetRef elements may be listed within the Image element to specify what Datasets
 				the Image belongs to.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1415,9 +1289,6 @@
 				The documents in the group are specified using one or more DocumentRef elements.
 				Each of the documents in the group must have the same documents listed in their respective DocumentGroup element.
 				It is not necessary (or even possible, due to the SHA1 attribute) to make self-references in this list.
-			
-			
-			
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -1469,9 +1340,6 @@
 				<xs:annotation>
 					<xs:documentation>Specifies which component of Photometric Interpretation to map a channel component to. i.e. w/ RGB this could be 'R', 'G', 'B'
 This can be null if a channel maps to a logical channel but is not included in the photometric interpretation. If this was null then the channel specified would normally be ignored.
-					
-					
-					
 					</xs:documentation>
 				</xs:annotation>
 			</xs:attribute>
