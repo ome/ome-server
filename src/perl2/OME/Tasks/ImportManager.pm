@@ -218,6 +218,12 @@ sub finishImport {
     $self = undef;
 }
 
+sub forgetImport {
+    my $class = shift;
+    die "No active import!" unless defined $self;
+    $self = undef;
+}
+
 =head2 getOriginalFilesMEX
 
 	my $original_files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
