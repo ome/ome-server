@@ -1444,12 +1444,12 @@ char **cgivars=param;
 	/* ID requirements */
 	if ( (theParam = get_param (param,"PixelsID")) )
 		sscanf (theParam,"%llu",&ID);
-	else if (m_val == M_NEWPIXELS    ||
-			 m_val == M_PIXELSINFO   ||
-			 m_val == M_PIXELSSHA1   ||
-			 m_val == M_SETPIXELS    ||
-			 m_val == M_GETPIXELS    ||
-			 m_val == M_PIXELS) {
+	else if (m_val != M_NEWPIXELS    &&
+			 m_val != M_FILEINFO     &&
+			 m_val != M_FILESHA1     &&
+			 m_val != M_READFILE     &&
+			 m_val != M_UPLOADFILE   &&
+			 m_val != M_GETLOCALPATH) {
 			HTTP_DoError (method,"PixelsID Parameter missing");
 			return (-1);
 	}
