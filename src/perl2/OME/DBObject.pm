@@ -431,6 +431,10 @@ sub __getCachedObject {
     my ($proto,$id) = @_;
     my $class = ref($proto) || $proto;
 
+    # Don't look for a cached object if caching is not enabled for
+    # this object's class.
+    return undef unless $class->Caching();
+
     #print STDERR "### Looking in cache $class $id\n";
     my $cache = $class->__cache()->{$class};
     return $cache->{$id};
@@ -439,6 +443,10 @@ sub __getCachedObject {
 sub __storeCachedObject {
     my ($self) = @_;
     my $class = ref($self);
+
+    # Don't store the object in the cache if caching is not enabled for
+    # this object's class.
+    return unless $class->Caching();
 
     my $id = $self->id();
 
