@@ -77,13 +77,10 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	public static final Color DEFAULT_COLOR=Color.black;
 	public static final Color HIGHLIGHT_COLOR=Color.WHITE;
 	
-	public static final float END_BULB=12;
-	public static final float END_BULB_RADIUS = END_BULB/2;
-	
-
-	
+	// degree for splines.
+	private static final int DEGREE = 3;	
 	protected ArrayList points  = new ArrayList();
-	protected PPath arrow;
+	protected PPath bulb;
 	
 	protected Point2D pts[];
 	
@@ -102,32 +99,19 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		super();
 		setStroke(LINK_STROKE);
 		setStrokePaint(DEFAULT_COLOR);
-		buildArrow();
+		buildBulb();
 		addChild(targets);
 		targets.setVisible(false);
 		setPickable(true);
 	}
 		
 	
-	protected void buildArrow() {
-		arrow = new PPath();
-		
-		arrow.moveTo(0,0);
-		float top = -5;
-		float bottom = 5;
-		arrow.lineTo(-4,top);
-		arrow.lineTo(PConstants.ARROWHEAD_WIDTH,0);
-		arrow.lineTo(-4,bottom);
-		
-		/*float left = -PConstants.ARROWHEAD_WIDTH;
-		
-		arrow.lineTo(left,top);
-		arrow.lineTo(left-4,0);
-		
-		arrow.lineTo(left,bottom);*/
-		arrow.closePath();
-		arrow.setPaint(DEFAULT_COLOR);
-		addChild(arrow);
+	protected void buildBulb() {
+	
+		bulb = PPath.createEllipse(0,0,PConstants.LINK_BULB_SIZE,
+			PConstants.LINK_BULB_SIZE);
+		bulb.setPaint(DEFAULT_COLOR);
+		addChild(bulb);
 	}
 	
 	
@@ -180,94 +164,161 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		Point2D pts[] = (Point2D []) points.toArray(new Point2D[0]);
 		int size = pts.length;
 		if (size == 2) {
-			System.err.println("painting link with line - 2 pts.");
-			System.err.println("pt1 : "+pts[0].getX()+","+pts[0].getY());
-			System.err.println("pt2 : "+pts[1].getX()+","+pts[1].getY());
 			line.setLine(pts[0],pts[1]);
 			s= line;	
 		}
 		else if (size == 3) {
-			System.err.println("link with quad  - 3pts");
 			quad.setCurve(pts[0],pts[1],pts[2]);
 			s= quad;
 					}
 		else if (size > 3){
-			System.err.println("spline...");
 			s = drawBSpline(pts);	
 		}
 		return s;
 	}
 	
 	
-	// Based on sample code from "Computer Graphics for Java Programmers"
-	// http://home.planet.nl/~ammerall/grjava.html.
-	// I'm not aware of any restrictions on the use of this example code	
+	/*
+	protected GeneralPath drawBSpline(Point2D pts[]) {
+		GeneralPath p = new GeneralPath();
+		int n = pts.length;
+		float[] knots = buildKnotArray(n);
+		boolean first = true;
+		
+		float x,y;
+		
+		dumpPoints(pts);
+		int len = knots.length;
+		float maxKnot = knots[knots.length-1];
+		for (int i =0; i < len; i++) {
+			double t = (double) knots[i];
+		//for (double t = 0; t < n; t+= .2) {
+			System.err.println("point "+i+", t="+t);
+		
+			Point2D pt = getSplinePoint(t,knots,pts);
+			if (first) {
+				System.err.println("moving to "+pt.getX()+","+pt.getY());
+				p.moveTo((float) pt.getX(),(float)pt.getY());
+				first  = false;
+			}
+			else {
+				p.lineTo((float) pt.getX(),(float)pt.getY());
+				System.err.println("line to "+pt.getX()+","+pt.getY());
+			}	
+		}
+		return p;
+	}
+	
+	private void dumpPoints(Point2D[] pts) {
+		for (int i = 0; i < pts.length; i++ ) {
+			System.err.println(i+") ("+pts[i].getX()+","+pts[i].getY()+")");
+		}
+	}
+	
+	private float[] buildKnotArray(int n) {
+		int size = (n-1)+2*DEGREE;
+		float[] knots  =new float[size];
+		
+		//low end
+		for (int i = 0; i< DEGREE;i++)  
+			knots[i] =0;
+		
+		for (int i = size-1;  i >= size-DEGREE+1;i--)
+			knots[i]=n;
+		int num = size-1;
+		float interval = num/n;
+		
+		for (int i= DEGREE;  i <= DEGREE+n-1; i++) 
+			knots[i]=(i-DEGREE)*interval;
+			
+		int size = n+2*DEGREE;
+		int[] knots = new int[size];
+		for (int i =0; i < size; i++) {
+			if (i < DEGREE)
+				knots[i]=0;
+			else if (i >= n+DEGREE) 
+				knots[i]=n-1;
+			else 
+				knots[i]= i-DEGREE;
+		}
+		
+		for (int i = 0; i < size; i++ ) {
+			System.err.println("knot "+i+"+ is "+knots[i]);
+		}
+		return knots;
+	} 
+	
+	private Point2D getSplinePoint(double u,float[] knots,Point2D[] pts) {
+		Point2D p = new Point2D.Double();
+	
+		int n = pts.length;
+		double x=0,y=0;
+		
+		System.err.println("point for u ="+u);
+		for (int i = 0; i< n; i++) {
+			double cdb = coxDeBoor(i,DEGREE,u,knots);	
+			System.err.println("cdb  is "+cdb);
+			x +=cdb*pts[i].getX();
+			y +=cdb*pts[i].getY();
+		}
+//		System.err.println("found spline point "+x+","+y);
+		p.setLocation(x,y);
+		return p;
+	}
+	
+	private double coxDeBoor(int k, int d,double u,float[] knots){
+		if (d == 0) {
+			if (u >= knots[k] && u <knots[k+1])
+				return 1;
+			else
+				return 0;
+		}
+		
+		double sum = 0;
+		double denom1 = knots[k+d]-knots[k];
+		if (denom1 != 0)
+			sum += (u-knots[k])/denom1*coxDeBoor(k,d-1,u,knots);
+		double denom2  = knots[k+d+1]-knots[k+1];
+		if (denom2 !=0) 
+			sum += (knots[k+d+1]-u)/denom2*coxDeBoor(k+1,d-1,u,knots);
+		return sum;
+	} */
 	
 	protected GeneralPath drawBSpline(Point2D[] pts) {
 		int m = 50, n = pts.length;
 		
-		float p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y;
-		float x,y;
 		
 		GeneralPath p = new GeneralPath();
 		p.moveTo((float)pts[0].getX(),(float)pts[0].getY());
 		n = pts.length;
 		for (int i=1; i<n-2; i++) { 
-			  
-			  p3x=(float) ((-pts[i-1].getX()+3*(pts[i].getX()-pts[i+1].getX())+
-			  	pts[i+2].getX())/6); 
-			  p3y=(float) ((-pts[i-1].getY()+3*(pts[i].getY()-pts[i+1].getY())+
-			  	pts[i+2].getY())/6);
-			  
-			  p2x=(float) ((pts[i-1].getX()-2*pts[i].getX()+pts[i+1].getX())/2);
-			  p2y=(float) ((pts[i-1].getY()-2*pts[i].getY()+pts[i+1].getY())/2);
-			  p1x=(float) ((pts[i+1].getX()-pts[i-1].getX())/2);
-			  p1y=(float) ((pts[i+1].getY()-pts[i-1].getY())/2);
-		      p0x=(float) ((pts[i-1].getX()+4*pts[i].getX()+pts[i+1].getX())/6);
-		      p0y=(float) ((pts[i-1].getY()+4*pts[i].getY()+pts[i+1].getY())/6);
-		      
-			  for (float t=0; t<=1; t+=0.02) {  
-				x = ((p3x*t+p2x)*t+p1x)*t+p0x;
-				y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-				p.lineTo(x,y);
-			}
+			getPoints(p,pts[i-1],pts[i],pts[i+1],pts[i+2]);
 		}	
 		p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
 		return p;
-	}
+	} 
 	
-	protected GeneralPath drawBezier(Point2D[] pts) {
-		int m = 50, n = pts.length;
-		double  p0x, p1x, p2x, p3x, p0y, p1y, p2y, p3y, x, y;
+	
+	
+  	private void getPoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,Point2D p3) {
+		float p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y;
+		float x,y;
 		
-		GeneralPath p = new GeneralPath();
-		p.moveTo((float)pts[0].getX(),(float)pts[0].getY());
-		n = pts.length;
-		for (int i=1; i<n-2; i+=4) { 
+		p3x=(float) ((-p0.getX()+3*(p1.getX()-p2.getX())+p3.getX())/6); 
+		p3y=(float) ((-p0.getY()+3*(p1.getY()-p2.getY())+p3.getY())/6);
 			  
-			p0x=pts[i-1].getX();
-			p0y=pts[i-1].getY();
-			
-			p1x=-3*pts[i-1].getX()+3*pts[i].getX();
-			p1y=-3*pts[i-1].getY()+3*pts[i].getY();
-			
-			p2x = 3*pts[i-1].getX()-6*pts[i].getX()+3*pts[i+1].getX();
-			p2y = 3*pts[i-1].getY()-6*pts[i].getY()+3*pts[i+1].getY();
-			
-			p3x=-pts[i-1].getX()+3*(pts[i].getX()-pts[i+1].getX())+
-				pts[i+2].getX(); 
-						  
-			p3y=-pts[i-1].getY()+3*(pts[i].getY()-pts[i+1].getY())+
-							pts[i+2].getY(); 
-			
-			for (float t=0; t<=1; t+=0.02) {  
-				x = ((p3x*t+p2x)*t+p1x)*t+p0x;
-				y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-				p.lineTo((float)x,(float)y);
-			}
-		}	
-		p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		return p;
+		p2x=(float) ((p0.getX()-2*p1.getX()+p2.getX())/2);
+		p2y=(float) ((p0.getY()-2*p1.getY()+p2.getY())/2);
+		p1x=(float) ((p2.getX()-p0.getX())/2);
+		p1y=(float) ((p2.getY()-p0.getY())/2);
+		p0x=(float) ((p0.getX()+4*p1.getX()+p2.getX())/6);
+		p0y=(float) ((p0.getY()+4*p1.getY()+p2.getY())/6);
+		for (float t=0; t<=1; t+=0.02) {  
+			x = ((p3x*t+p2x)*t+p1x)*t+p0x;
+			y = ((p3y*t+p2y)*t+p1y)*t+p0y;
+			p.lineTo(x,y);
+		}
+	
 	}
 	
 	protected void updateBounds() {
@@ -290,31 +341,10 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		return getLinkShape().intersects(aBounds);
 	}
 		
-	/*protected double getAngle(float xs,float ys,float xe,float ye) {
-		double angle = 0;de
-		double arctan = 0;
-		
-		if (xe !=xs) {
-			arctan = (double) (ye-ys)/(xe-xs);
-			angle = Math.atan(arctan);
-			if (xe < xs)
-				 angle += Math.PI;	
-		}
-		// shouldn't have to do this, but there's a bug on Mac OS X java.
-		if (angle > 0.8) {
-			if (angle <0.85) 
-				angle = 0.7;
-			else if (angle < 0.9)
-				angle = 1.0;
-		}
-		return angle;
-	} */
  	
 	protected void drawLinkEnd(float x,float y) {
-		System.err.println("setting arrow to be at "+x+","+y);
-		Point2D pt = globalToLocal(new Point2D.Float(x,y));
-		//arrow.setRotation(theta);
-		arrow.setOffset(pt.getX(),pt.getY());
+		bulb.setOffset(x-PConstants.LINK_BULB_RADIUS,
+			y-PConstants.LINK_BULB_RADIUS);
 		invalidateFullBounds(); 
 		
 		repaint(); 
@@ -339,6 +369,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		endTarget.setSelected(v);
 		targets.removeAllChildren();
 		if (v == true) { // set up children 
+			bulb.setPaint(HIGHLIGHT_COLOR);
 			targets.setVisible(true);
 			int count =  points.size();
 			for (int i = 1; i < count-1; i++) {
@@ -350,6 +381,8 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 				t.setSelected(v);
 			}
 		}
+		else
+			bulb.setPaint(DEFAULT_COLOR);
 		repaint();
 	}
 	
