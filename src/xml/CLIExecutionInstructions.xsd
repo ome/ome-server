@@ -4,34 +4,39 @@
 	 elementFormDefault = "qualified">
 	<xsd:group name = "inputRecordModel">
 		<xsd:choice>
-			<xsd:element ref = "Input" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "XYPlane" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "RawImageFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "RawImageFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeT" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeW" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeX" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeY" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeZ" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "BitsPerPixel" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "BytesPerPixel" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "Input"/>
+			<xsd:element ref = "XYPlane"/>
+			<xsd:element ref = "RawImageFile"/>
+			<xsd:element ref = "RawImageFilePath"/>
+			<xsd:element ref = "sizeT"/>
+			<xsd:element ref = "sizeW"/>
+			<xsd:element ref = "sizeX"/>
+			<xsd:element ref = "sizeY"/>
+			<xsd:element ref = "sizeZ"/>
+			<xsd:element ref = "BitsPerPixel"/>
+			<xsd:element ref = "BytesPerPixel"/>
+			<xsd:element ref = "RawText"/>
 		</xsd:choice>
 	</xsd:group>
 	<xsd:element name = "ExecutionInstructions">
 		<xsd:annotation>
 			<xsd:documentation>Tied to DB. Table PROGRAMS Column EXECUTION
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:choice>
+			<xsd:sequence>
 				<xsd:element ref = "CommandLine" minOccurs = "0"/>
 				<xsd:element ref = "STDIN" minOccurs = "0"/>
 				<xsd:element ref = "STDOUT" minOccurs = "0"/>
-			</xsd:choice>
+			</xsd:sequence>
 			<xsd:attribute name = "ExecutionPoint" use = "required">
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -54,11 +59,13 @@ Example:
 when you use the program, you type: /OME/bin/OME_Image_XYZ_stats Path=[path to repository file] Dims=[X],[Y],[Z],[W],[T],[BytesPerPix]
 XML specification of the command line parameters is:
 &lt;CommandLine>Path=&lt;RawImageFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>&lt;/CommandLine>
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType mixed = "true">
+		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:group ref = "inputRecordModel"/>
+				<xsd:element ref = "InputSubString" minOccurs = "0" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
@@ -67,6 +74,8 @@ XML specification of the command line parameters is:
 			<xsd:documentation>This specifies what and how to write to STDIN.
 
 Not yet supported.
+			
+			
 			
 			</xsd:documentation>
 		</xsd:annotation>
@@ -79,6 +88,8 @@ Not yet supported.
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read STDOUT.
+			
+			
 			
 			
 			
@@ -99,6 +110,8 @@ Not yet supported.
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a particular column of a FormalInput. It should corrospond to an FormalInputColumnID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -109,14 +122,12 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 			<xsd:documentation>References a particular column of a FormalOutput.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref = "OutputTo" maxOccurs = "unbounded"/>
+			</xsd:sequence>
 			<xsd:attribute name = "AccessBy" use = "required" type = "xsd:integer">
 				<xsd:annotation>
 					<xsd:documentation>Describes how to access information extracted using a regular expression. Examples are 1, 2, 3, ...</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>References a specifc column in a FormalOutput.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -175,6 +186,8 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with either 8 or 16 bit images, leave this out or specify 16. Both of these result in the BPP of the image being used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.
 
 Currently, only native image pixels are supported.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -191,6 +204,8 @@ RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
 
 Currently only TIFF is supported.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -254,6 +269,8 @@ Currently only TIFF is supported.
 e.g. /OME/repository/1-tinyTest.ori
 
 			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -264,6 +281,8 @@ e.g. /OME/repository/1-tinyTest.ori
 
 Not yet supported.
 			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -273,12 +292,14 @@ Not yet supported.
 			<xsd:documentation>Groups a set of inputs into records.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType mixed = "true">
-			<xsd:sequence>
-				<xsd:group ref = "inputRecordModel"/>
-			</xsd:sequence>
+			<xsd:choice>
+				<xsd:element ref = "InputSubString" minOccurs = "0" maxOccurs = "unbounded"/>
+			</xsd:choice>
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -288,7 +309,7 @@ Not yet supported.
 		<xsd:annotation>
 			<xsd:documentation>Groups a set of outputs into records.</xsd:documentation>
 		</xsd:annotation>
-		<xsd:complexType mixed = "true">
+		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref = "pat"/>
 				<xsd:element ref = "Output" minOccurs = "0" maxOccurs = "unbounded"/>
@@ -297,13 +318,17 @@ Not yet supported.
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to read a record. If it is not specified, reading will continue until it reaches the end of the output stream.
 If used in conjuction with TerminateAt, reading will stop after RepeatCount or TerminateAt, whichever comes first.
-				</xsd:documentation>
+				
+					
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "TerminateAt" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -384,6 +409,8 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 
 Not currently supported.
 			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -400,6 +427,8 @@ Not currently supported.
 
 Not currently supported.
 			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -408,6 +437,37 @@ Not currently supported.
 					<xsd:documentation>Used to reference a particular column of a FormalInput.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "OutputTo">
+		<xsd:annotation>
+			<xsd:documentation>Specifies location to write output. One data chunk that the Output element references may be written to one or more places.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>References a specific column in a FormalOutput.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "RawText" type = "xsd:string"/>
+	<xsd:element name = "InputSubString">
+		<xsd:complexType>
+			<xsd:choice>
+				<xsd:element ref = "Input"/>
+				<xsd:element ref = "XYPlane"/>
+				<xsd:element ref = "RawImageFile"/>
+				<xsd:element ref = "RawImageFilePath"/>
+				<xsd:element ref = "sizeT"/>
+				<xsd:element ref = "sizeW"/>
+				<xsd:element ref = "sizeX"/>
+				<xsd:element ref = "sizeY"/>
+				<xsd:element ref = "sizeZ"/>
+				<xsd:element ref = "BitsPerPixel"/>
+				<xsd:element ref = "BytesPerPixel"/>
+				<xsd:element ref = "RawText"/>
+			</xsd:choice>
 		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>
