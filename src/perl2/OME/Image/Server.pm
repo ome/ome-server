@@ -777,23 +777,38 @@ sub getROI {
 	OME::Image::Server->
 	    setThumb($pixelsID,$theT,$theZ,$channels,$levelBasis);
 
-This method sets the thumbnail of a pixel set. The composite format will
-be set to 'jpeg', and the composite will be written to the same path as
-the Pixels file with a '.thumb' extension. The GetThumb method will
-retrieve this file. The following parameters are required.
+This method sets the thumbnail of a pixel set. The composite format
+will be set to 'jpeg', and the composite will be written to the same
+path as the Pixels file with a '.thumb' extension. The GetThumb method
+will retrieve this file. The following parameters are required.
 
-	channels: A hash reference. Keys are one or more of red, green, blue,
-gray. Values are arrays with 4 values representing channel index, black
-level, white level and gamma. For example { Red => [0, 300, 2563, 1.0]
-}. The levels and gamma are floating point numbers, the channel index is
+=over
+
+=item $channels
+
+A hash reference. Keys are one or more of C<red>, C<green>, C<blue>,
+C<gray>.  Values are arrays with 4 values representing channel index,
+black level, white level and gamma.  For example,
+
+	{ red => [0, 300, 2563,1.0] }.
+
+The levels and gamma are floating point numbers; the channel index is
 an integer.
-	levelBasis: An optional levelBasis parameter can be used to set the
-levels based on statistics (mean or geomean) rather than absolute pixel
-intensities. For example, LevelBasis=mean allows you to specify the
-channel levels based on mean +/- standard deviations, e.g.
-{ Red => [0, 1.5, 4.5, 1.0] } will set the black level to the mean+1.5*sigma
-and white level to mean+4.5*sigma. The statistics used are stack
-statistics (different for every channel and every timepoint).
+
+=item $levelBasis
+
+An optional $levelBasis parameter can be used to set the levels based
+on statistics (mean or geomean) rather than absolute pixel
+intensities.  For example, a $levelBasis of "mean" allows you to
+specify the channel levels based on mean +/- standard deviations, e.g.
+
+	{ Red => [0, 1.5, 4.5, 1.0] }
+
+will set the black level to the mean+1.5*sigma and white level to
+mean+4.5*sigma.  The statistics used are stack statistics (different
+for every channel and every timepoint).
+
+=back
 
 =cut
 
