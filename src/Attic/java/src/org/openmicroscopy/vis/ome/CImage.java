@@ -124,10 +124,10 @@ public class CImage extends RemoteImage {
 	private boolean reentrant=false;
 	
 	public void highlightThumbnails(boolean v) {
-		System.err.println("calling cimage highlight thumbnail...");
+		//System.err.println("calling cimage highlight thumbnail...");
 		if (reentrant == true)
 			return;
-		System.err.println("not re-entrant");
+		//System.err.println("not re-entrant");
 		// so each of the setHighlighted() calls don't lead to a call back here
 		//System.err.println("in highlight thumbnails");
 		reentrant = true;
@@ -135,7 +135,7 @@ public class CImage extends RemoteImage {
 		PThumbnail thumb;
 		while (iter.hasNext()) {
 			thumb = (PThumbnail) iter.next();
-			System.err.println("highlighting a sibling..."+thumb);
+		//	System.err.println("highlighting a sibling..."+thumb);
 			thumb.setHighlighted(v);
 		}
 		reentrant = false;
