@@ -1,8 +1,8 @@
 <table class="ome_table" align="center">
 	<caption>
-		<font class="ome_header_title"><!-- TMPL_VAR NAME='_common_name' -->: <!-- TMPL_VAR NAME='_name' --></font> 
+		<font class="ome_header_title"><!-- TMPL_VAR NAME='/common_name' -->: <!-- TMPL_VAR NAME='/name' --></font> 
 	</caption>
-	<!-- TMPL_LOOP NAME="name_value_pairs" -->
+	<!-- TMPL_LOOP NAME="/datum" -->
 	<tr>
 		<td valign=top class="ome_td"><!-- TMPL_VAR NAME="name" --></td>
 		<td valign=top class="ome_td"><!-- TMPL_VAR NAME="value" --></td>
@@ -11,10 +11,10 @@
 </table>
 <table>
 	<tr>
-		<!-- TMPL_LOOP NAME="!relations" -->
+		<!-- TMPL_LOOP NAME="/relations" -->
 			<td valign="top">
 				<font class="ome_relation_title"><!-- TMPL_VAR NAME="name" --></font>
-				<!-- TMPL_VAR NAME="!ref_list" -->
+				<!-- TMPL_VAR NAME="/object_list/render-ref_list" -->
 			</td>
 		<!-- /TMPL_LOOP -->
 	</tr>

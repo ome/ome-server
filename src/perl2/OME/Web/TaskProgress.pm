@@ -93,15 +93,11 @@ sub getPageBody {
 
 	my $body;
 	if (scalar @tasks) {
-		$body = $tableMaker->getTable( {
-			title            => 'Tasks',
-			noSearch         => 1,
-			actions          => ['Update','Clear Selected','Clear All'],
-			select_column    => 1,
-			select_name      => 'selected',
-			noTxtDownload    => 1,
-			},
-			'OME::Task', \@tasks );
+		$body = 
+			$cgi->startform().
+			$self->Renderer()->renderArray( \@tasks, 'table', { type => 'OME::Task' } ).
+			$cgi->hidden(-name=>'action').
+			$cgi->endform();
 	} else {
 		$body = '<h3>No active tasks for this session.</h3>';
 	}

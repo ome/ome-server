@@ -56,76 +56,19 @@ use OME;
 our $VERSION = $OME::VERSION;
 use OME::Tasks::PixelsManager;
 use base qw(OME::Web::DBObjRender);
-use Carp qw(cluck);
 
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _summaryFields } = [
-		'id',
-		'SizeX',
-		'SizeY',
-		'SizeZ',
-		'SizeC',
-		'SizeT',
-		'image',
-		'module_execution'
-	];
-	$self->{ _allFields } = [
-		@{ $self->{ _summaryFields } },
-		'PixelType',
-		'FileSHA1',
-		'ImageServerID',
-		'Repository'
-	];
-	
-	return $self;
-}
+=head2 _renderData
 
-
-=head2 _getRef
-
-html format returns a thumbnail linking to the image viewer and a link
-to the Pixels attribute.
+makes virtual fields thumb_url
 
 =cut
 
-sub _getRef {
-	my ($self,$obj,$format) = @_;
-
-	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		if( /^html$/ ) {
-			my ($package_name, $common_name, $formal_name, $ST) =
-				$self->_loadTypeAndGetInfo( $obj );
-			my $id   = $obj->id();
-			my $source_module; $source_module = $obj->module_execution()->module()->name()
-				if $obj->module_execution() and $obj->module_execution()->module();
-			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute' class='ome_detail'>Pixels info</a><br>".
-			          "<a href='javascript: openPopUpPixels($id);' title='View this pixel set'><img src='$thumbURL'></a>";
-			return $ref;
-		}
-	}
-}
-
-=head2 getRefSearchField
-
-No search field to Pixels
-
-=cut
-
-sub _getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
-	
+sub _renderData {
+	my ($self, $obj, $field_requests, $options) = @_;
+	return ( 'thumb_url' => OME::Tasks::PixelsManager->getThumbURL( $obj ) ) 
+		if( exists $field_requests->{ 'thumb_url' } );
 	return ();
 }
-
-
 
 =head1 Author
 

@@ -2,15 +2,17 @@
 <TR>
 	<TD COLSPAN="2">
 		<table><tr><td>
-		<!-- TMPL_VAR NAME=name -->
+		<a title="<!-- TMPL_VAR NAME=name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
+			<!-- TMPL_VAR NAME=name/max_text_length-25 -->
+		</a>
 		</td><td align="right">
-		<!-- TMPL_VAR NAME=_checkbox -->
+		<!-- TMPL_VAR NAME=/checkbox -->
 		</td></tr></table>
 	</TD>
 </TR>
 <TR>
 	<TD WIDTH="50">
-		<A TITLE="View this image" HREF="javascript: openPopUpImage(<!-- TMPL_VAR NAME=_id -->);">
+		<A TITLE="View this image" HREF="javascript: openPopUpImage(<!-- TMPL_VAR NAME=id -->);">
 			<IMG SRC="<!-- TMPL_VAR NAME=thumb_url -->">
 		</A>
 	</TD>
@@ -24,7 +26,7 @@
 </TR>
 <TR>
 	<TD COLSPAN="2">
-		<!-- TMPL_VAR NAME=description -->
+		<!-- TMPL_VAR NAME=description/max_text_length-60 -->
 		<BR>
 		<!-- TMPL_VAR NAME=module_executions!popup -->
 	</TD>

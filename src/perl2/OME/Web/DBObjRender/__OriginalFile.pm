@@ -54,38 +54,22 @@ Provides custom behavior for rendering OriginalFile ST
 use strict;
 use vars qw($VERSION);
 use OME;
-use OME::Web;
+$VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjRender);
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _fieldTitles } = {
-	'Path'             => "Name",
-	};
-	
-	return $self;
-}
 
 =head2 _renderData
 
-makes Path link to original file from image server if format is html
+makes virtual field path_url: a url to download the original file from image server
 
 =cut
 
 sub _renderData {
-	my ($proto, $obj, $field_names, $format, $mode, $options) = @_;
-
-	return () unless( grep( /Path/, @$field_names ) and $format eq 'html' );
-
-	my %record;	
-	my $path = $proto->_trim( $obj->Path, $options );
-	my $originalFile_url = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
-	$record{Path} = "<a href='$originalFile_url'>".$path."</a>";
-
-	return %record;
+	my ($proto, $obj, $field_requests, $options) = @_;
+	if( exists $field_requests->{ 'path_url' }  ) {
+		my $originalFile_url = $obj->Repository()->ImageServerURL() . '?Method=ReadFile&FileID='.$obj->FileID();
+		return ( 'path_url' => $originalFile_url );
+	}
+	return ();
 }
 
 

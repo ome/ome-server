@@ -41,12 +41,7 @@ package OME::Web::DBObjRender::__OME_AnalysisChain_Node;
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_AnalysisChainExecution_NodeExecution - Specialized rendering for OME::AnalysisChainExecution::NodeExecution
-
-=head1 DESCRIPTION
-
-This name will be the name of the module execution it represents.
-The reference will contain both links to the MEX and the Node Execution.
+OME::Web::DBObjRender::__OME_AnalysisChainExecution_NodeExecution - Specialized rendering
 
 =head1 METHODS
 
@@ -56,40 +51,25 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use HTML::Template;
-use OME::Tasks::ImageManager;
-use OME::Tasks::ModuleExecutionManager;
-use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
-=head2 _getName
+=head2 _renderData
+
+sets '/name' to the module's name
 
 =cut
 
-#sub _getName {
-
-=head2 _getRef
-
-=cut
-
-sub _getRef {
-	my ($self,$obj,$format) = @_;
-	
-	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		if( /^html$/ ) {
-			my ($package_name, $common_name, $formal_name, $ST) =
-				OME::Web->_loadTypeAndGetInfo( $obj );
-			my $id   = $obj->id();
-			my $module_name = $obj->module()->name();
-			my $module_href = $self->getObjDetailURL( $obj->module() );
-			my $obj_href = $self->getObjDetailURL( $obj );
-			my $ref = "<a href='$module_href' title='Details on this Module'>$module_name</a> (<a href='$obj_href' title='Details on this Node'>$id</a>)";
-			return $ref;
-		}
+sub _renderData {
+	my ($self, $obj, $field_requests, $options) = @_;
+	my %record;
+	if( exists $field_requests->{ '/name' } ) {
+		%record = $self->renderData( 
+			$obj->module(), 
+			{ '/name' => $field_requests->{ '/name' } },
+			$options
+		);
 	}
+	return %record;
 }
 
 =head1 Author

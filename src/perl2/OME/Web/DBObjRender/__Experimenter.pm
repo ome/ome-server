@@ -57,39 +57,22 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Web::DBObjRender);
 
-=head2 _getName
-
-FirstName LastName
-
-=cut
-
-sub _getName {
-	my ($self, $obj, $options) = @_;
-
-	my $name = $obj->FirstName." ".$obj->LastName;
-	$name = $self->_trim( $name, $options );
-	return $name;
-}
-
 =head2 _renderData
 
-make email address a link in html format
+sets '/name' to FirstName LastName
 
 =cut
 
 sub _renderData {
-	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
-
-	return () unless( grep( /Email/, @$field_names ) and $format eq 'html' );
-
-	my %record;	
-	my $email = $self->_trim( $obj->Email(), $options );
-	my $emailURL = 'mailto:'.$obj->Email();
-	$record{ 'Email' } = "<a href='$emailURL'>$email</a>";
-	
+	my ($self, $obj, $field_requests, $options) = @_;
+	my %record;
+	# thumbnail url
+	if( exists $field_requests->{ '/name' } ) {
+		$record{ '/name' } = $obj->FirstName." ".$obj->LastName;
+		$record{ '/name' } = $self->_trim( $record{ '/name' }, $field_requests->{ '/name' } );
+	}
 	return %record;
 }
-
 
 =head2 getRefSearchField
 

@@ -59,28 +59,6 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Web::DBObjRender);
 
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _summaryFields } = [
-		'name',
-		'description',
-		'owner',
-		'group',
-	];
-	$self->{ _allFields } = [
-		'id',
-		'name',
-		'description',
-		'owner',
-		'group',
-	];
-	
-	return $self;
-}
-
 =head2 getRefSearchField
 
 Set default to session's active project.

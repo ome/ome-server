@@ -43,10 +43,6 @@ package OME::Web::DBObjRender::__OME_Dataset;
 
 OME::Web::DBObjRender::__OME_Dataset - Specialized rendering for OME::Dataset
 
-=head1 DESCRIPTION
-
-Provides custom behavior for rendering an OME::Dataset. Orders fields.
-
 =head1 METHODS
 
 =cut
@@ -54,35 +50,11 @@ Provides custom behavior for rendering an OME::Dataset. Orders fields.
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-
-use OME::Tasks::ImageManager;
-use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
-use Carp 'cluck';
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _summaryFields } = [
-		'name',
-		'description',
-		'owner',
-		'group',
-	];
-	$self->{ _allFields } = [
-		'id',
-		@{ $self->{ _summaryFields } },
-		'locked',
-	];
-	
-	return $self;
-}
 
 =head2 getRefSearchField
 
-Set default to session's active project.
+Set default to session's active dataset.
 
 =cut
 

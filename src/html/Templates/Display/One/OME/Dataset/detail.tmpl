@@ -1,6 +1,6 @@
 <table width="100%">
 	<caption>
-		<font class="ome_header_title">Dataset: <!-- TMPL_VAR NAME='_name' --></font> 
+		<font class="ome_header_title">Dataset: <!-- TMPL_VAR NAME='name' --></font> 
 	</caption>
 	<tr>
 		<td valign="top">
@@ -49,11 +49,11 @@
 		</td>
 		<td align="right" valign="top">
 			<font class="ome_relation_title">Projects:</font>
-				<!-- TMPL_VAR NAME=projects!ref_list --><br>
+				<!-- TMPL_VAR NAME=projects/render-ref_list --><br>
 			<font class="ome_relation_title">Module Executions:</font>
-				<!-- TMPL_VAR NAME=module_executions!list -->
+				<!-- TMPL_VAR NAME=module_executions/render-list -->
 		</td>
 	</tr>
 </table>
 <font class="ome_relation_title">Images:</font>
-	<!-- TMPL_VAR NAME=images!ref_mass -->
+	<!-- TMPL_VAR NAME=images/render-ref_mass -->

@@ -140,6 +140,14 @@ sub getPageBody {
 
 =head2 getTable
 
+Please don't use this if you can use DBObjRender and a custom template instead. 
+OME::Web::TaskProgress and OME_Task_table.tmpl provide an example of using 
+DBObjRender services to get a table.
+This was made some time ago and was built according to a since
+depricated rendering model.
+This does allow selections and actions, which is not fully and readily
+implemented in Search or DBObjRender. Yet...
+
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
 
 	# make a table from CGI parameters 'Type' and search params. CGI
@@ -194,7 +202,7 @@ sub getTable {
 		if exists $options->{excludeFields};
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
 	my ($searches, $search_on)  = $self->Renderer()->getSearchFields( $formal_name, \@fieldNames, $self->{search_params} );
-	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, '_id'], 'html', 'summary' );
+	my @records    = $self->Renderer()->renderData( $objects, [@fieldNames, 'id', '/obj_detail_url' ]);
 
 	# table data
 	my @table_data;
@@ -204,12 +212,19 @@ sub getTable {
 			$q->td( { -class => 'ome_td', -align => 'center'},
 				$q->checkbox( {
 					-name    => ($options->{ select_name } or 'Selected_'.$formal_name), 
-					-value   => $record->{_id}, 
+					-value   => $record->{id}, 
 					-checked => '',
 					-label => ''
 				} )
 			)
 			if( $options->{ select_column } );
+		$table_cells = 
+			$q->td( { -class => 'ome_td', -align => 'center'},
+				$q->a( {
+					-href    => $record->{ '/obj_detail_url' },
+					-title   => "Detailed info about this object"
+				}, $record->{ 'id' } )
+			);
 		$table_cells .= 
 			$q->td( { -class => 'ome_td' }, 
 				[ map( $record->{$_}, @fieldNames ) ] 
@@ -247,6 +262,7 @@ sub getTable {
 	# do not enable column sorting
 	if( $options->{ embedded_in_form } ) {
 		@columnHeaders = map( $labels{ $_ }, @fieldNames );
+		unshift( @columnHeaders, 'ID' );
 		unshift( @columnHeaders, 'Select' )
 			if( $options->{ select_column } );
 	# enable column sorting. make the column that records are currently sorted on inactive.
@@ -264,6 +280,7 @@ sub getTable {
 			) : 
 			$labels{ $_ } )
 		, @fieldNames );
+		unshift( @columnHeaders, 'ID' );
 		unshift( @columnHeaders, 'Select' )
 			if( $options->{ select_column } );
 	}
@@ -519,7 +536,7 @@ sub getTextTable {
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, 'txt', 'detail' );
+	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames );
 
 	# column headers
 	my @columnHeaders = map( $labels{ $_ }, @fieldNames );
@@ -656,7 +673,7 @@ sub __getJoinedGroups {
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
 		my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, $options->{Format}, 'detail' );
+		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames );
 
 		# Determine what known indexes this record contains.
 		my @index_fields = sort( grep( exists( $standard_index_fields{$_} ), @fieldNames ) );
@@ -664,7 +681,7 @@ sub __getJoinedGroups {
 			if( scalar( grep( $_ eq 'image', @index_fields ) ) > 0 );
 		
 		# merge_records will be used for merging the other records
-		my @merge_records = $self->Renderer()->renderData( $objects, \@index_fields, 'txt', 'detail' );
+		my @merge_records = $self->Renderer()->renderData( $objects, \@index_fields );
 
 		# identifies which joining group these records belong to
 		my $j_group_id = join( '.',  @index_fields);

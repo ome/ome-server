@@ -1,18 +1,17 @@
-<!-- TMPL_IF NAME=_obj_loop -->
+<!-- TMPL_IF NAME=/obj_loop -->
 	<table class="ome_table">
-		<!-- TMPL_IF NAME=_more_info_url -->
+		<tr>
+			<td class="ome_td" align="right">
+				<!-- TMPL_VAR NAME=/pager_text -->
+				<!-- TMPL_IF NAME=/more_info_url -->
+					<!-- TMPL_IF NAME=/pager_text -->|<!-- /TMPL_IF -->
+					<a href="<!-- TMPL_VAR NAME=/more_info_url -->">More info...</a>
+				<!-- /TMPL_IF -->
+			</td>
+		</tr>
+		<!-- TMPL_LOOP NAME=/obj_loop -->
 			<tr>
-				<td class="ome_td" align="right">
-					<!-- TMPL_IF NAME=_pager_text -->
-						<!-- TMPL_VAR NAME=_pager_text --> |
-					<!-- /TMPL_IF -->
-					<a href="<!-- TMPL_VAR NAME=_more_info_url -->">More info...</a>
-				</td>
-			</tr>
-		<!-- /TMPL_IF -->
-		<!-- TMPL_LOOP NAME=_obj_loop -->
-			<tr>
-				<td class="ome_td"><!-- TMPL_VAR NAME=_ref --></td>
+				<td class="ome_td"><!-- TMPL_VAR NAME=/object/render-ref --></td>
 			</tr>
 		<!-- /TMPL_LOOP -->
 	</table>

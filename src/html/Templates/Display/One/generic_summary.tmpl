@@ -1,5 +1,12 @@
 <table>
-	<!-- TMPL_LOOP NAME="name_value_pairs" -->
+	<tr>
+		<td valign=top colspan="2">
+			<a title="Detailed information about this <!-- TMPL_VAR NAME=/common_name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
+				<!-- TMPL_VAR NAME="/name" -->
+			</a>
+		</td>
+	</tr>
+	<!-- TMPL_LOOP NAME="/datum" -->
 	<tr>
 		<td valign=top><!-- TMPL_VAR NAME="name" --></td>
 		<td valign=top><!-- TMPL_VAR NAME="value" --></td>

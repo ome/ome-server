@@ -1,4 +1,4 @@
-# OME/Web/DBObjRender/__OME_AnalysisChainExecution_NodeExecution.pm
+# OME/Web/DBObjRender/__OME_AnalysisChain_Link.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -41,14 +41,9 @@ package OME::Web::DBObjRender::__OME_AnalysisChain_Link;
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_AnalysisChainExecution_NodeExecution - Specialized rendering for OME::AnalysisChainExecution::NodeExecution
+OME::Web::DBObjRender::__OME_AnalysisChain_Link - nada!
 
-=head1 DESCRIPTION
-
-This name will be the name of the module execution it represents.
-The reference will contain both links to the MEX and the Node Execution.
-
-=head1 METHODS
+..the functions of this class have been superceded by a template
 
 =cut
 
@@ -56,43 +51,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use HTML::Template;
-use OME::Tasks::ImageManager;
-use OME::Tasks::ModuleExecutionManager;
-use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
-
-=head2 _getName
-
-=cut
-
-#sub _getName {
-
-=head2 _getRef
-
-=cut
-
-sub _getRef {
-	my ($self,$obj,$format) = @_;
-	
-	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		if( /^html$/ ) {
-			my ($package_name, $common_name, $formal_name, $ST) =
-				OME::Web->_loadTypeAndGetInfo( $obj );
-			my $id   = $obj->id();
-			my $from_node_name = $obj->from_node->module()->name();
-			my $to_node_name = $obj->to_node->module()->name();
-			my $from_node_href = $self->getObjDetailURL( $obj->from_node->module() );
-			my $to_node_href = $self->getObjDetailURL( $obj->to_node->module() );
-			my $obj_href = $self->getObjDetailURL( $obj );
-			my $ref = " <a href='$from_node_href' title='Details on the from Module'>$from_node_name</a> to <a href='$to_node_href' title='Details on the from Module'>$to_node_name</a> (<a href='$obj_href' title='Details on this Link'>$id</a>)";
-			return $ref;
-		}
-	}
-}
 
 =head1 Author
 

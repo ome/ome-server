@@ -44,11 +44,6 @@ package OME::Web::DBObjRender::__OME_AnalysisChainExecution_NodeExecution;
 OME::Web::DBObjRender::__OME_AnalysisChainExecution_NodeExecution -
 Specialized rendering
 
-=head1 DESCRIPTION
-
-Return links to the MEX instead of ref to self.
-OME::AnalysisChainExecution::NodeExecution
-
 =head1 METHODS
 
 =cut
@@ -56,33 +51,27 @@ OME::AnalysisChainExecution::NodeExecution
 use strict;
 use vars qw($VERSION);
 use OME;
-use OME::Session;
+$VERSION = $OME::VERSION;
 use base qw(OME::Web::DBObjRender);
 
-=head2 _getName
+=head2 _renderData
 
-returns name of MEX
-
-=cut
-
-sub _getName {
-	my ($self, $obj, $options) = @_;
-
-	return $self->getName( $obj->module_execution() );
-}
-
-=head2 _getRef
-
-returns ref of MEX
+sets '/name' to the MEX's name
 
 =cut
 
-sub _getRef {
-	my ($self, $obj, $format, $options) = @_;
-
-	return $self->getRef( $obj->module_execution(), $format, $options );
+sub _renderData {
+	my ($self, $obj, $field_requests, $options) = @_;
+	my %record;
+	if( exists $field_requests->{ '/name' } ) {
+		%record = $self->renderData( 
+			$obj->module_execution(), 
+			{ '/name' => $field_requests->{ '/name' } },
+			$options
+		);
+	}
+	return %record;
 }
-
 
 =head1 Author
 

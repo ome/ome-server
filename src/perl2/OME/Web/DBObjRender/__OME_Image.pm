@@ -55,91 +55,31 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use HTML::Template;
 use OME::Tasks::ImageManager;
 use OME::Tasks::ModuleExecutionManager;
 use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _fieldTitles } = {
-		'default_pixels' => "Preview", 
-		'image_guid'     => "GUID",
-		'original_file'  => "Original File"
-	};
-	$self->{ _summaryFields } = [
-		'default_pixels',
-		'name',
-		'description',
-		'owner',
-		'group',
-		'created',
-	];
-	$self->{ _allFields } = [
-		'default_pixels',
-		'name',
-		'description',
-		'owner',
-		'group',
-		'created',
-		'original_file',
-		'inserted',
-		'image_guid',
-	];
-	
-	return $self;
-}
-
-=head2 _getRef
-
-html format returns a thumbnail linking to the image viewer and the image name
-linking to the Image object.
-
-=cut
-
-sub _getRef {
-	my ($self,$obj,$format) = @_;
-	
-	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		if( /^html$/ ) {
-			my ($package_name, $common_name, $formal_name, $ST) =
-				OME::Web->_loadTypeAndGetInfo( $obj );
-			my $id   = $obj->id();
-			my $name = $obj->name();
-			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			my $ref = #"<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed info about this Image' class='ome_detail'>$name</a><br>".
-			          "<a href='javascript: openImage($id);' title='View this image'><img src='$thumbURL'></a>";
-			return $ref;
-		}
-	}
-}
-
 =head2 _renderData
 
-populates thumb_url, original_file, and module_executions
+makes virtual fields thumb_url and original_file
+original file doesn't make sense for images with multiple source files
 
 =cut
 
 sub _renderData {
-	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
+	my ($self, $obj, $field_requests, $options) = @_;
 	
 	my $factory = $obj->Session()->Factory();
-	my $q = $self->CGI();
 	my %record;
 
 	# thumbnail url
-	if( grep( /thumb_url/, @$field_names ) ) {
+	if( exists $field_requests->{ 'thumb_url' } ) {
 		$record{ 'thumb_url' } = OME::Tasks::ImageManager->getThumbURL( $obj );
 	}
 	# original file
-	if( grep( /original_file/, @$field_names ) ) {
+	if( exists $field_requests->{ 'original_file' } ) {
+		# Find the original file (this code should really live in ImageManager)
 		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 			'module.name' => 'Image import', 
 			image => $obj, 
@@ -152,17 +92,17 @@ sub _renderData {
 			$ai->input_module_execution,
 			$ai->formal_input()->semantic_type
 		) if $ai;
+		# Try to guess which file was the original one
 		my $img_name = $obj->name();
 		$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
 			if( $original_files and scalar( @$original_files ) > 1);
 		my $original_file = $original_files->[0];
-		if( $original_file and $original_file->Repository() ) { 
-			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-			my $path = $self->_trim( $original_file->Path(), $options );
-			$record{ 'original_file' } = $q->a( { -href => $originalFile_url, title => 'Download original file' }, $path )
-				if( $format eq 'html' );
-			$record{ 'original_file' } = $path
-				if( $format eq 'txt' );
+		if( scalar( @$original_files) eq 1 && $original_file && $original_file->Repository() ) { 
+			$record{ 'original_file' } = $self->render( 
+				$original_file, 
+				( $field_requests->{ original_file }->{ render } or 'ref' ), 
+				$field_requests->{ original_file } 
+			);
 		} else {
 			$record{ 'original_file' } = undef;
 		}

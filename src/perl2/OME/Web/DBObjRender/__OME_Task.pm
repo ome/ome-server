@@ -1,4 +1,4 @@
-# OME/Web/DBObjRender/__OME_ModuleExecution.pm
+# OME/Web/DBObjRender/__OME_Task.pm
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
@@ -36,58 +36,15 @@
 
 
 package OME::Web::DBObjRender::__OME_Task;
+use base qw(OME::Web::DBObjRender);
 
 =pod
 
 =head1 NAME
 
-OME::Web::DBObjRender::__OME_ModuleExecution - Specialized rendering for OME::ModuleExecution
+OME::Web::DBObjRender::__OME_Task - nada!
 
-=head1 DESCRIPTION
-
-Provides custom behavior for rendering an OME::ModuleExecution
-
-=head1 METHODS
-
-=cut
-
-use strict;
-use vars qw($VERSION);
-use OME;
-use OME::Session;
-use base qw(OME::Web::DBObjRender);
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-	
-	$self->{ _summaryFields } = [
-		'name',
-		'state',
-		'message',
-		'error',
-		'last_step',
-		'n_steps',
-		'process_id',
-	];
-	$self->{ _allFields } = [
-		@{ $self->{ _summaryFields } },
-		't_start',
-		't_stop',
-		't_last'
-	];
-
-	$self->{ _fieldTitles } = {
-		name              => "Task",
-		process_id        => "PID",
-		state             => "Status",
-	};
-
-	
-	return $self;
-}
-
+needs deprication!
 
 =head1 Author
 

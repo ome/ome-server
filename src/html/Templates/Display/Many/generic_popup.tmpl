@@ -1,6 +1,6 @@
-<SELECT NAME="" ONCHANGE="javascript: if( this.value != '' ) { document.location='serve.pl?Page=OME::Web::DBObjDetail&Type=<!-- TMPL_VAR NAME=_formal_name -->&ID='+this.value; }">
-	<OPTION  VALUE=""><!-- TMPL_VAR NAME=_common_name -->(s)
-	<!-- TMPL_LOOP NAME=_obj_loop -->
-		<OPTION  VALUE="<!-- TMPL_VAR NAME=_id -->"><!-- TMPL_VAR NAME='_name!MaxLength:20' -->
+<SELECT NAME="" ONCHANGE="javascript: if( this.value != '' ) { document.location='serve.pl?Page=OME::Web::DBObjDetail&Type=<!-- TMPL_VAR NAME=/formal_name -->&ID='+this.value; }">
+	<OPTION  VALUE=""><!-- TMPL_VAR NAME=/common_name -->(s)
+	<!-- TMPL_LOOP NAME=/obj_loop -->
+		<OPTION  VALUE="<!-- TMPL_VAR NAME=id -->"><!-- TMPL_VAR NAME='/name/max_text_length-20' -->
 	<!-- /TMPL_LOOP -->
 </SELECT>
