@@ -320,6 +320,35 @@ sub __touchOriginalFile {
     return $file;
 }
 
+
+=head2 __storeInstrumemtInfo
+
+        $self->storeInstrumemtInfo($image,$model, $manufacturer, $orientation, $sn);
+
+Creates an Instruments attribute for this image. Parameters are ordered
+in expected frequency of occurrence; unknown parameters may be left off
+the end of the argument string. Should be called once per image if there
+is any instrument data to store. This will not accurately handle the
+creation of an image composed from input images taken by different instruments.
+
+=cut
+
+sub __storeInstrumemtInfo {
+    my ($self,$image,$model,$manufacturer,$orientation,$serialnum) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    my $img_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
+
+    $factory->newAttribute("Instrument", undef, $img_mex,
+			   {
+			       Model => $model,
+			       Manufacturer => $manufacturer,
+			       SerialNumber => $serialnum,
+			       Type => $orientation,
+			   });
+}
+
+
 =head2 __removeFilenames
 
 	$self->__removeFilenames($filenames,$to_remove);
