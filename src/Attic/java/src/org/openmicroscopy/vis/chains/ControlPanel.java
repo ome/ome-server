@@ -50,6 +50,8 @@ import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
 import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent;
 import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import org.openmicroscopy.Project;
 import org.openmicroscopy.ChainExecution;
@@ -87,17 +89,17 @@ import java.util.Collection;
  */
 public class ControlPanel extends JFrame implements ListSelectionListener, 
 	MouseListener, ChainSelectionEventListener, 
-		ExecutionSelectionEventListener {
+		ExecutionSelectionEventListener, DatasetSelectionEventListener {
 	
 	protected JLabel statusLabel;
 	protected JPanel panel;
 	
 	protected JButton newChainButton;
 	
-	protected JButton viewResultsButton;
+	//protected JButton viewResultsButton;
 	
-	protected final JList projList;
-	protected final JList datasetList;
+	protected JList projList=null;
+	protected JList datasetList;
 	
 	
 	
@@ -146,32 +148,35 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		
 		
 		// projects
-		JPanel projectPanel = new JPanel();
+		getProjects(connection);
+		if (projects.size() > 0) {
+			JPanel projectPanel = new JPanel();
 		
-		projectPanel.setLayout(new BoxLayout(projectPanel,BoxLayout.Y_AXIS));
-		JLabel projectLabel = new JLabel("Projects");
-		projectLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		projectPanel.add(projectLabel);
+			projectPanel.setLayout(new BoxLayout(projectPanel,BoxLayout.Y_AXIS));
+			JLabel projectLabel = new JLabel("Projects");
+			projectLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+			projectPanel.add(projectLabel);
 		
-		projectPanel.add(Box.createRigidArea(new Dimension(0,3)));
+			projectPanel.add(Box.createRigidArea(new Dimension(0,3)));
 		
- 		getProjects(connection);
-		projList = new JList(projects);
-		projList.setAlignmentX(Component.LEFT_ALIGNMENT);
-		projList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		projList.setVisibleRowCount(-1);
-		projList.setLayoutOrientation(JList.VERTICAL);
-		
-		projList.setCellRenderer(new ProjectRenderer(selectionState));
-		projList.addListSelectionListener(this);
-		projList.addMouseListener(this);
-		JScrollPane projScroller = new JScrollPane(projList);
-		projScroller.setMinimumSize(new Dimension(100,200));
-		projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
-		projectPanel.add(projScroller);
-
-		
-		topPanel.add(projectPanel);
+ 	
+			projList = new JList(projects);
+			projList.setAlignmentX(Component.LEFT_ALIGNMENT);
+			projList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			projList.setVisibleRowCount(-1);
+			projList.setLayoutOrientation(JList.VERTICAL);
+			
+			projList.setCellRenderer(new ProjectRenderer(selectionState));
+			projList.addListSelectionListener(this);
+			projList.addMouseListener(this);
+			JScrollPane projScroller = new JScrollPane(projList);
+			projScroller.setMinimumSize(new Dimension(100,200));
+			projScroller.setAlignmentX(Component.LEFT_ALIGNMENT);
+			projectPanel.add(projScroller);
+	
+			
+			topPanel.add(projectPanel);
+		}
 		topPanel.add(Box.createRigidArea(new Dimension(5,0)));
 		
 		//dataset
@@ -222,6 +227,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 		selectionState.addChainSelectionEventListener(this);
 		selectionState.addDatasetSelectionEventListener(browser);
+		selectionState.addDatasetSelectionEventListener(this);
 		selectionState.addExecutionSelectionEventListener(this);
 		//selectionState.setDatasetSelections(datasets,null);
 	}
@@ -241,11 +247,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		tool.add(newChainButton);
 		
 		tool.add(Box.createRigidArea(new Dimension(10,0)));		
-		viewResultsButton = new JButton("View Results");
+		/*viewResultsButton = new JButton("View Results");
 		viewResultsButton.addActionListener(
 			 controller.getCmdTable().lookupActionListener("view results"));
 		viewResultsButton.setEnabled(true);
-		tool.add(viewResultsButton);
+		tool.add(viewResultsButton);*/
 		tool.add(Box.createRigidArea(new Dimension(10,0)));
 		//Logout
 		
@@ -279,7 +285,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private void getProjects(Connection connection) {
 		
 		List p  = connection.getProjectsForUser();
-		curProject =(Project) p.get(0);
+		if (p != null && p.size() > 0) {
+			curProject =(Project) p.get(0);
+		}
 		projects = new Vector(p);
 	}
 	
@@ -369,7 +377,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 		fireEvents();	
 		datasetList.repaint();
-		projList.repaint();
+		if (projList != null)
+			projList.repaint();
 	
 	}
 	
@@ -432,6 +441,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 
 		
 	private void fireEvents() {
+		if (reentrant == true)
+			return;
 		selectionState.setDatasetSelections(activeDatasets,curDataset);
 		selectionState.setProjectSelections(activeProjects,curProject);
 	}
@@ -447,9 +458,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			//change active datasets
 			reentrant = true;
 			datasetList.clearSelection();
-			projList.clearSelection();
+			if (projList !=null)
+				projList.clearSelection();
 			curDataset = null;
-			projList.clearSelection();
+			if (projList != null)
+				projList.clearSelection();
 			reentrant = false;
 			activeProjects =null;
 			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
@@ -462,11 +475,13 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			else { // multiple active. 
 				fireEvents();	
 				datasetList.repaint();
-				projList.repaint();
+				if (projList != null)
+					projList.repaint();
 			}
 		}
 		datasetList.repaint();
-		projList.repaint();
+		if (projList != null)
+			projList.repaint();
 	}
 	
 	public void executionSelectionChanged(ExecutionSelectionEvent e) {
@@ -477,6 +492,10 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		updateDatasetChoice(exec.getDataset());
 	}
 	
+	public void datasetSelectionChanged(DatasetSelectionEvent e) {
+		//CDataset d = e.getSelectedDataset();
+		//updateDatasetChoice(d);
+	}
 }
 
 class ProjectRenderer  extends JLabel implements ListCellRenderer {
