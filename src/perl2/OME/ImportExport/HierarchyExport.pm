@@ -580,6 +580,8 @@ my ($self, $object, $parent) = @_;
 			if (not exists $self->{_docIDs}->{$refID}) {
 				$self->{_unresolvedRefs}->{$refID} = $ref;
 			}
+		} elsif ($type eq 'boolean') {
+			$element->setAttribute( $SEName, $object->$SEName() ? 'true' : 'false');
 		} else {
 			$element->setAttribute( $SEName, $object->$SEName() );
 		}
