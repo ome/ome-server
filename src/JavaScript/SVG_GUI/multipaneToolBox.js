@@ -67,20 +67,11 @@ multipaneToolBox.VERSION = .2;
 *   multipaneToolBox constructor
 *
 *     Parameter description:
-*       The last three parameters are optional. They allow the user to control
-*       the appearance of the toolBox. AT THIS TIME menuBar needs to be
-*       15 pixels tall and "$width" wide. hideControl should not be
-*       longer or taller than 9 pixels. GUIbox needs to be "$height" tall
-*       and "$width" wide.
-*       hideControl's animations can be adjusted, but they must
-*       the first and second animations.
-*		The same goes with GUIbox's animations, and GUIbox needs to retain its 
-*       on and off switches.
+*       read documentation for toolbox
 *
 *****/
-function multipaneToolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
-	if(arguments.length >= 4 )
-		this.init(x,y,width,height,menuBarText,hideControlText,GUIboxText);
+function multipaneToolBox(x, y, width, height, menuBarText, hideControlText, GUIboxText, noclip) {
+	this.init(x, y, width, height, menuBarText, hideControlText, GUIboxText, noclip);
 }
 
 /*****
@@ -113,32 +104,27 @@ multipaneToolBox.prototype.updateLabel = function(val) {
 		returns index to newPane
 *****/
 multipaneToolBox.prototype.addPane = function(newPane, name) {
-	var i = ( name ? name : this.panes.length )
+	var i = ( name ? name : this.panes.length );
 
 	//	make a new pane, turn its display off
 	this.panes[i] = svgDocument.createElementNS(svgns, 'g');
 	this.panes[i].setAttribute("display","none");
-	this.getGUIboxNoClip().appendChild(this.panes[i]);
+	this.getGUIbox().appendChild(this.panes[i]);
 
 	//	add pane content
-	if(newPane)
+	if(newPane) {
+		// magic to draw background of appropriate size
+		var bbox = newPane.getBBox();
+		var old_height = this.height;
+		this.height = Math.max( bbox.height + Math.max( bbox.y, 0 ), 1 );
+		this.panes[i].appendChild( this.textToSVG( this.GUIboxText ) );
+		this.height = old_height;
+		
 		this.panes[i].appendChild(newPane);
+	}
 
 	// return index to pane
 	return i;
-}
-
-/*****
-	addPanes( newPanes )
-		adds multiple panes at once
-		newPanes is an array of SVG nodes
-		returns array of indexes to panes
-*****/
-multipaneToolBox.prototype.addPanes = function(newPanes) {
-	var indexes = new Array();
-	for(var i in newPanes)
-		indexes.push(this.addPane(newPanes[i]));
-	return indexes;
 }
 
 /*****
@@ -150,19 +136,6 @@ multipaneToolBox.prototype.addPanes = function(newPanes) {
 *****/
 multipaneToolBox.prototype.addPaneText = function( paneText, name ) {
 	return this.addPane( this.textToSVG( paneText ), name );
-}
-
-/*****
-	addPanesText( paneTextArray )
-		adds multiple panes, makes content from SVG text
-		paneTextArray is an array of SVG tags
-		returns array of indexes to panes
-*****/
-multipaneToolBox.prototype.addPanesText = function( paneTextArray ) {
-	var indexes = new Array();
-	for(i in paneTextArray)
-		indexes.push(this.addPaneText( paneTextArray[i] ));
-	return indexes;
 }
 
 /*****
@@ -230,10 +203,26 @@ multipaneToolBox.prototype.getPane = function(index) {
                                  Private Functions 
 ********************************************************************************************/
 
-multipaneToolBox.prototype.init = function( x, y, width, height, menuBarText,
-		hideControlText, GUIboxText) {
+multipaneToolBox.prototype.init = function( x, y, width, menuBarText,
+		hideControlText, GUIboxText, noclip) {
 	// call superclass method
-	multipaneToolBox.superclass.init.call(this,x,y, width, height, menuBarText, hideControlText, GUIboxText );
+	var params;
+	if( x.constructor != Number ) {
+		params = x;
+		params[ 'height' ] = 0;
+	} else {
+		params = {
+			'x': x,
+			'y': y, 
+			'width': width,
+			'height': 0,
+			'menuBarText': menuBarText,
+			'hideControlText': hideControlText,
+			'GUIboxText': GUIboxText,
+			'noclip': noclip
+		};
+	}
+	multipaneToolBox.superclass.init.call(this, params);
 
 	this.panes = new Array();
 	this.currentDisplay = null;
