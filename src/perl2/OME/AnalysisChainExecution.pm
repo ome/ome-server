@@ -49,7 +49,6 @@ use base qw(OME::DBObject);
 __PACKAGE__->AccessorNames({
     analysis_chain_id => 'analysis_chain',
     dataset_id => 'dataset',
-#    experimenter_id => 'experimenter'
     });
 
 __PACKAGE__->table('analysis_chain_executions');
@@ -59,7 +58,6 @@ __PACKAGE__->columns(Essential => qw(analysis_chain_id dataset_id
 				     experimenter_id timestamp));
 __PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
-#__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 __PACKAGE__->has_many('node_executions',
                       'OME::AnalysisExecution::NodeExecution' =>
                       qw(analysis_chain_execution_id));
