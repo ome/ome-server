@@ -334,27 +334,38 @@ sub addClassToDatabase {
                     my ($pk_num) =
                       $dbh->selectrow_array($find_column_by_name,{},
                                             $reloid,$dbo_primary_column);
-
                     my $sql;
                     my @bind_vals;
-                    if (defined $pk_num) {
-                        $sql =
-                          "ALTER TABLE $table ADD CONSTRAINT PRIMARY KEY(".
-                            "$dbo_primary_column)";
-                    } else {
+                    #
+                    # IGG 12/10/03:  Refactored this a wee bit to work with 7.2
+                    # No column, so add it.
+                    if (not defined $pk_num) {
                         $sql =
                           "ALTER TABLE $table ADD COLUMN ".
                             "$dbo_primary_column INTEGER";
-                        if (defined $sequence) {
-                            $sql .= " DEFAULT NEXTVAL(?)";
-                            push @bind_vals, $sequence;
-                        }
-                        $sql .= " PRIMARY KEY";
+                        $dbh->do($sql)
+                          or die "Could not add primary key column to existing table!";
                     }
 
-                    #print "$sql\n(",join(',',@bind_vals),")\n";
-                    $dbh->do($sql,{},@bind_vals)
+                    # Give the column a NOT NULL constraint.  No harm, no foul if its already there
+                    $sql = "UPDATE pg_attribute SET attnotnull = TRUE WHERE attname = '$dbo_primary_column' ".
+                        "AND attrelid = ( SELECT oid FROM pg_class WHERE relname = '$table')";
+                    $dbh->do($sql)
+                      or die "Could not add NOT NULL constraint to column $dbo_primary_column in table $table!";
+
+                    # Add the primary key constraint
+                    $sql = "ALTER TABLE $table ADD PRIMARY KEY ($dbo_primary_column)";
+                    $dbh->do($sql)
                       or die "Could not add primary key to existing table!";
+ 
+                    # Add the sequence if there is one.
+                    if (defined $sequence) {
+                        my @bind_vals;
+                    	$sql = "ALTER TABLE $table ALTER $dbo_primary_column SET DEFAULT NEXTVAL(?)"; 
+                        push @bind_vals, $sequence;
+						$dbh->do($sql,{},@bind_vals)
+						  or die "Could not add default for column $dbo_primary_column in table $table!";
+                    }
                 }
             }
 
@@ -382,24 +393,39 @@ sub addClassToDatabase {
                     # other SQL options.
                 } else {
                     #print "New column ($column)!\n";
+                    # IGG 12/10/03:  Refactored this a wee bit to work with 7.2
 
                     my $sql = "ALTER TABLE $table ADD COLUMN $column $sql_type";
-                    my @bind_vals;
-
-                    if (defined $default) {
-                        $sql .= " DEFAULT ?";
-                        push @bind_vals, $default;
-                    }
-
-                    $sql .= " NOT NULL" if $not_null;
-                    $sql .= " UNIQUE" if $unique;
                     $sql .=
                       " REFERENCES $references DEFERRABLE INITIALLY DEFERRED"
                         if defined $references;
+                    $dbh->do($sql)
+                      or die "Could not add column $column to $table!";
+
+
+                    if (defined $default) {
+                        my @bind_vals;
+                    	$sql = "ALTER TABLE $table ALTER $column SET DEFAULT ?"; 
+                        push @bind_vals, $default;
+						$dbh->do($sql,{},@bind_vals)
+						  or die "Could not add default for column $column in table $table!";
+                    }
+                    
+                    if ($not_null) {
+                        $sql = "UPDATE pg_attribute SET attnotnull = TRUE WHERE attname = '$column' ".
+                            "AND attrelid = ( SELECT oid FROM pg_class WHERE relname = '$table')";
+						$dbh->do($sql)
+						  or die "Could not add NOT NULL constraint to column $column in table $table!";
+                    }
+
+                    if ($unique) {
+                     	$sql = "ALTER TABLE $table ADD CONSTRAINT $table"."_$column"."_key UNIQUE ($column)"; 
+						$dbh->do($sql)
+						  or die "Could not add UNIQUE constraint to column $column in table $table!";
+                   }
+
 
                     #print STDERR "$sql\n(",join(',',@bind_vals),")\n";
-                    $dbh->do($sql,{},@bind_vals)
-                      or die "Could not add column $column to $table!";
                 }
             }
         } else {
