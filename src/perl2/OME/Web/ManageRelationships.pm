@@ -134,6 +134,7 @@ sub __getGenericBody {
 	if ($action eq 'Add') {
 		$self->__addRelations($o_type, $r_type, $oid, @add_selected);
 		$body .= $q->p({class => 'ome_info'}, 'Addition successful.');
+		$body .= qq{<script language="Javascript" type="text/javascript">window.opener.location = window.opener.location</script>};  # Refresh parent window
 	} elsif ($action eq 'Remove') {
 		$self->__remRelations($o_type, $r_type, $oid, @add_selected);
 		$body .= $q->p({class => 'ome_error'}, 'Sorry: Function un-implemented.');
@@ -232,6 +233,9 @@ sub getPageBody {
 	# Type of OME relationship object
 	my $r_type = $q->param('r_type');
 
+	# If this page is a popup
+	my $is_popup = $q->param('Popup');
+
 	my $body = $q->startform({name => 'datatable'});
 
 	# o_type *hidden*
@@ -245,6 +249,9 @@ sub getPageBody {
 	
 	# action *hidden*
 	$body .= $q->hidden({name => 'action'});
+
+	# popup propagation
+	$body .= $q->hidden({name => 'Popup', default => 1}) if $is_popup;
 
 	$body .= $self->__getGenericBody($o_type, $r_type, $oid);
 
