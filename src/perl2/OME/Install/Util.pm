@@ -102,14 +102,12 @@ my %os_specific = (
 	add_group => sub {
 	    my $group = shift;
 
-	    # First add our group
 	    (system ("/usr/sbin/groupadd $group") == 0) or return 0;
 	},
 
+	# XXX: In order to add a user to a group in Linux without modifying the /etc/group file by hand
+	#      we first need to search for the user in every group, then allow usermod to work it's magic.
 	add_user_to_group => sub {
-	    # In order to add a user to a group in Linux without modifying the /etc/group file by hand
-	    # we first need to search for the user in all groups and then allow usermod to work it's magic with
-	    # all the groups we want the user to be a member of.
 	    my ($user, $group) = @_;
 	    my @groups;
 
@@ -184,15 +182,18 @@ my %os_specific = (
 		$gid = ++$gids[$#gids];  # Value of the last element plus one
 	    } else { return 0 }
 
-	    # First add the group
 	    (system ("nicl / -create /groups/$group gid $gid") == 0) or return 0;
 	    (system ("nicl / -create /groups/$group passwd \'\*\'") == 0) or return 0;
 
-	    # Second add each user to our group
-	    #(system ("nicl / -merge /groups/$group users ", join (" ", @users)) == 0) or return 0;
-
 	    return 1;
 	},
+
+	# XXX: This is about the only thing that's easier in OS X, and *much* easier it is, a single command.
+	add_user_to_group => sub {
+	    my ($user, $group) = @_;
+	    
+	    (system ("nicl / -merge /groups/$group users $user") == 0) or return 0;
+	}
 
     },
 
@@ -278,6 +279,32 @@ my %os_specific = (
 	    my $group = shift;
 
 	    return system ("/usr/sbin/pw groupadd $group") == 0 ? 1 : 0;
+	}
+
+	# XXX: See the linux implementation of add_user_to_group () for more details.
+	add_user_to_group => sub {
+	    my ($user, $group) = @_;
+	    my @groups;
+
+	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
+
+	    # Search the group file for groups that the user is in
+	    while (<GR_FILE>) {
+		chomp;
+		my ($group_name, $member_string) = (split (/:/, $_))[0,3];  # ($groupname, $password, $gid, $members)
+		my @members = split (/,/, $member_string) if $member_string or undef;
+
+		if (@members) {
+		    foreach my $member (@members) {
+			push (@groups, $group_name) if $user eq $member;
+		    }
+		}
+	    }
+	    close (GR_FILE);
+
+	    push (@groups, $group);
+
+	    return system ("/usr/sbin/pw usermod -G " . join (",", @groups) . " $user") == 0 ? 1 : 0;
 	}
 
     }
