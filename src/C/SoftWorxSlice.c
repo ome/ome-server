@@ -22,6 +22,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAXWAVES 5
 typedef struct dv_head DVhead;
@@ -136,6 +138,8 @@ void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes);
 void BSUtilsSwapHeader(char *cTheHeader);
 
 void DumpGrey (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
+	long greyWave,long greyClip,long greyThresh,float greyScale);
+void DumpGrey2 (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
 	long greyWave,long greyClip,long greyThresh,float greyScale);
 
 void DumpRGB2 (char *theDVfileName,DVhead *theDVhead,long timePoint,long zSection,
@@ -334,7 +338,7 @@ DVstack *inStack;
 
 PixPtr ReadDVslice (FILE *fp,DVhead *head,long time,long z,long w)
 {
-unsigned long Rows,Cols,numZ,num,numWaves,numRead;
+unsigned long Rows,Cols,numZ,num=0,numWaves,numRead;
 PixPtr thePixels;
 
 	Rows = head->numRow;
@@ -542,6 +546,50 @@ void GetMinMax (pixel *mins,pixel *maxs, DVhead *head) {
 
 void DumpGrey (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
 	long greyWave,long greyClip,long greyThresh,float greyScale) {
+
+unsigned long length=theDVhead->numRow*theDVhead->numCol;
+unsigned long numZ = theDVhead->numImages / (theDVhead->NumWaves*theDVhead->numtimes);
+unsigned long planeOffset = (timePoint * numZ * theDVhead->NumWaves) + (greyWave * numZ) + zSection;
+unsigned long offset=1024+theDVhead->next+(planeOffset*2*length);
+unsigned long i,numRead;
+pixel greyPixel;
+PixPtr greyPix=NULL,greyPixPtr=NULL;
+
+/* We set the file pointer to the begining of our timepoint */
+	fseek( theDVfile, offset, SEEK_SET );
+
+	if (greyWave > -1) {
+		greyPix = greyPixPtr = (PixPtr) malloc (sizeof(pixel)*length);
+		if (!greyPix) {
+			fprintf (stderr,"Couldn't allocate memory for red pixels\n");
+			exit (-1);
+		}
+		numRead = fread( greyPix, sizeof(pixel), length, theDVfile );
+		if (numRead != length)
+			{
+			fprintf (stderr,"Number of pixels in file does not match number in header.\n");
+			if (greyPix) free (greyPix);
+			exit (-1);
+			}
+		if (theDVhead->nDVID == DV_REV_ENDIAN_MAGIC)
+			BSUtilsSwap2Byte ( (char *) (greyPix), length);
+	}
+	for (i=0;i<length;i++) {
+		greyPixel = *greyPixPtr++;
+		putc (greyPixel > greyThresh ? greyPixel < greyClip ? ((greyPixel-greyThresh)/greyScale) : 255 : 0 ,stdout);
+	}
+	
+	free (greyPix);
+
+}
+
+
+
+
+
+void DumpGrey2 (FILE *theDVfile,DVhead *theDVhead,long timePoint,long zSection,
+	long greyWave,long greyClip,long greyThresh,float greyScale)
+{
 
 unsigned long length=theDVhead->numRow*theDVhead->numCol;
 unsigned long numZ = theDVhead->numImages / (theDVhead->NumWaves*theDVhead->numtimes);
@@ -759,39 +807,39 @@ pixel *mins,*maxs;
 		if (!strncmp (argv[i],"Path=",5) )
 			sscanf (argv[i],"Path=%s",filePath);
 		if (!strncmp (argv[i],"z=",2) )
-			sscanf (argv[i],"z=%d",&zSection);
+			sscanf (argv[i],"z=%ld",&zSection);
 		if (!strncmp (argv[i],"t=",2) )
-			sscanf (argv[i],"t=%d",&timePoint);
+			sscanf (argv[i],"t=%ld",&timePoint);
 		if (!strncmp (argv[i],"Wave=",5) )
-			sscanf (argv[i],"Wave=%d",&greyWave);
+			sscanf (argv[i],"Wave=%ld",&greyWave);
 		if (!strncmp (argv[i],"GreyWave=",9) )
-			sscanf (argv[i],"GreyWave=%d",&greyWave);
+			sscanf (argv[i],"GreyWave=%ld",&greyWave);
 		if (!strncmp (argv[i],"RedWave=",8) )
-			sscanf (argv[i],"RedWave=%d",&redWave);
+			sscanf (argv[i],"RedWave=%ld",&redWave);
 		if (!strncmp (argv[i],"GreenWave=",10) )
-			sscanf (argv[i],"GreenWave=%d",&greenWave);
+			sscanf (argv[i],"GreenWave=%ld",&greenWave);
 		if (!strncmp (argv[i],"BlueWave=",9) )
-			sscanf (argv[i],"BlueWave=%d",&blueWave);
+			sscanf (argv[i],"BlueWave=%ld",&blueWave);
 		if (!strncmp (argv[i],"thresh=",7) )
-			sscanf (argv[i],"thresh=%d",&greyThresh);
+			sscanf (argv[i],"thresh=%ld",&greyThresh);
 		if (!strncmp (argv[i],"GreyThresh=",11) )
-			sscanf (argv[i],"GreyThresh=%d",&greyThresh);
+			sscanf (argv[i],"GreyThresh=%ld",&greyThresh);
 		if (!strncmp (argv[i],"RedThresh=",10) )
-			sscanf (argv[i],"RedThresh=%d",&redThresh);
+			sscanf (argv[i],"RedThresh=%ld",&redThresh);
 		if (!strncmp (argv[i],"GreenThresh=",12) )
-			sscanf (argv[i],"GreenThresh=%d",&greenThresh);
+			sscanf (argv[i],"GreenThresh=%ld",&greenThresh);
 		if (!strncmp (argv[i],"BlueThresh=",11) )
-			sscanf (argv[i],"BlueThresh=%d",&blueThresh);
+			sscanf (argv[i],"BlueThresh=%ld",&blueThresh);
 		if (!strncmp (argv[i],"clip=",5) )
-			sscanf (argv[i],"clip=%d",&greyClip);
+			sscanf (argv[i],"clip=%ld",&greyClip);
 		if (!strncmp (argv[i],"GreyClip=",9) )
-			sscanf (argv[i],"GreyClip=%d",&greyClip);
+			sscanf (argv[i],"GreyClip=%ld",&greyClip);
 		if (!strncmp (argv[i],"RedClip=",8) )
-			sscanf (argv[i],"RedClip=%d",&redClip);
+			sscanf (argv[i],"RedClip=%ld",&redClip);
 		if (!strncmp (argv[i],"GreenClip=",10) )
-			sscanf (argv[i],"GreenClip=%d",&greenClip);
+			sscanf (argv[i],"GreenClip=%ld",&greenClip);
 		if (!strncmp (argv[i],"BlueClip=",9) )
-			sscanf (argv[i],"BlueClip=%d",&blueClip);
+			sscanf (argv[i],"BlueClip=%ld",&blueClip);
 		if (!strncmp (argv[i],"scale=",6) )
 			sscanf (argv[i],"scale=%f",&greyScale);
 		if (!strncmp (argv[i],"GreyScale=",10) )
@@ -914,5 +962,6 @@ pixel *mins,*maxs;
 			blueWave,blueClip,blueThresh,blueScale);
 	}
 	fclose (theDVfile);
+	return (0);
 }
 
