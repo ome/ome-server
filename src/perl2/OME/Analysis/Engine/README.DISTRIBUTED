@@ -41,21 +41,14 @@ INSERT INTO analysis_workers(status, url)
 VALUES ('IDLE','http://localhost/perl2/NonblockingSlaveWorkerCGI.pl');
 
 * And lastly, the OME::Analysis::Engine::SimpleWorkerExecutor is selected as
-the executor by setting the OME_DISTRIBUTED environment variable.  If that's
-not convenient, you can change how getDefaultExecutor() does this in:
-OME/Analysis/Engine/Executor.pm
-
+the executor by setting a variable in the CONFIGURATION table:
+UPDATE configuration SET value='OME::Analysis::Engine::SimpleWorkerExecutor'
+WHERE name='executor';
+The default value is 'OME::Analysis::Engine::UnthreadedPerlExecutor'.
 
 Additional Setup to Back End to support remote Workers
 -------------------------------------------------
-* This is very temporary, but currently the back-end's data-source is
-hard-coded in OME/Analysis/Engine/SimpleWorkerExecutor.pm:
-use constant DATA_SOURCE     => 'dbi:Pg:dbname=ome;host=localhost';
-
-The 'host' part needs to be changed to the FQDN of your back-end unless you
-will only run localhost workers.
-
-* Finally, if you will be using remote workers, you will need to configure
+* If you will be using remote workers, you will need to configure
 pg_hba.conf which lives on the back-end in pgsql/data/ (the postgres 'home') to
 allow the remote workers to connect to your DB.  Usually a trusted
 authentication from specified IPs is sufficient:
