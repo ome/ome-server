@@ -63,7 +63,6 @@
 
 
 use DBI;
-use GraphViz;
 use strict;
 
 # Allows file locking
