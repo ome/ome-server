@@ -88,11 +88,20 @@ sub _renderData {
 				'module.name' => 'Image import', 
 				image => $obj, 
 				__order => 'timestamp' );
+			unless( $import_mex ) {
+				$record{ $request_string } = "No Image import MEX found for this image.";
+				next;
+			}
 			my $ai = $factory->findObject( 
 				"OME::ModuleExecution::ActualInput", 
 				module_execution => $import_mex,
 				'formal_input.semantic_type.name' => 'OriginalFile'
 			);
+			unless( $ai ) {
+				$record{ $request_string } = "No OriginalFile inputs were found for Image import MEX ".
+					$self->Renderer()->render( $import_mex, 'ref' )." for this image.";
+				next;
+			}
 			my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 				$ai->input_module_execution,
 				'OriginalFile'
