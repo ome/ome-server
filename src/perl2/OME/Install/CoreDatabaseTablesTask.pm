@@ -680,12 +680,10 @@ sub make_repository {
     my $hostname = hostname();
 
     # FIXME Make this a little more verbose, probably needs some explanation.
-    my $repository_url = $ENVIRONMENT->omeis_url();
-    if ($ENVIRONMENT->apache_conf->{OMEIS} and not $repository_url) {
-	    my $repository_def = "http://$hostname/cgi-bin/omeis";
-    	$repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
-    	$ENVIRONMENT->omeis_url($repository_url);
-    }
+    my $repository_def = $ENVIRONMENT->omeis_url();
+    $repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
+    my $repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
+    $ENVIRONMENT->omeis_url($repository_url);
     
     my $repository = $factory->
     newObject('OME::SemanticType::BootstrapRepository',
@@ -721,7 +719,7 @@ sub check_repository {
 		print $LOGFILE "   Matches ".$ENVIRONMENT->omeis_url()." from stored environment\n";
 	}
  	$ENVIRONMENT->omeis_url($repository_url);
- 	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url() );
+ 	OME::Install::ApacheConfigTask::omeis_test($ENVIRONMENT->omeis_url(), $LOGFILE );
  }
 
 sub load_xml_core {
@@ -1002,6 +1000,7 @@ sub execute {
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
         make_repository ($session);
+        check_repository ($session);
         # Set the UID to whoever owns the install directory
         $EUID = (stat ('.'))[4];
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";

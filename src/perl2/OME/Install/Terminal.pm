@@ -53,6 +53,7 @@ our @EXPORT = qw(confirm_path
 		 confirm_default
 		 get_password
 		 y_or_n
+		 multiple_choice
 		 whereis
 		 );
 
@@ -170,20 +171,40 @@ sub y_or_n {
     my $def_yorn = shift;
     my $y_or_n;
     my $environment = initialize OME::Install::Environment;
-    my $retVal;
+    my $retVal=1;
     
-    return 1 if ($environment->get_flag ("ANSWER_Y"));
     $def_yorn = 'n' unless defined $def_yorn;
     
-	if ($def_yorn eq 'n') {
-   	    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
-   	} else {
-   	    print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
-   	}
-   	
-   	$y_or_n = ReadLine 0;
-    chomp $y_or_n;
-    if (lc($y_or_n) eq "y") {$retVal = 1} else {$retVal = 0} ;
+    return 1 if ($environment->get_flag ("ANSWER_Y"));
+    
+   	# keep asking the question until the user answers it properly
+   	my $semaphore = 1;
+   	while ($semaphore) {
+		if ($def_yorn eq 'n') {
+			print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
+		} else {
+			print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
+		}
+		
+		$y_or_n = ReadLine 0;
+		chomp $y_or_n;
+		
+		# tests whether user's input is proper
+		$semaphore = 0;
+		if (lc($y_or_n) eq "y") {
+			$retVal = 1;
+		} elsif (lc($y_or_n) eq "n") {
+			$retVal = 0;
+		} elsif (lc($y_or_n) eq "") {
+			if ($def_yorn eq 'y'){ 
+				$retVal = 1;
+			} else {
+				$retVal = 0;
+			}
+		} else{
+			$semaphore = 1;
+		}
+	}
         
    	# log the question and the user's selected choice
     if ($environment->tmp_dir()) {
@@ -199,4 +220,41 @@ sub y_or_n {
  	   	close (FILEOUT);
     }
    	return $retVal;
+}
+
+sub multiple_choice {
+	my $text = shift;
+	my $default = shift;
+	my @choices = @_;
+	my $i;
+	
+	for ($i=0; $i < scalar @choices; $i++) {
+		last if lc ($choices[$i]) eq lc ($default);
+	}
+	croak "multipe_choice incorrectly called\n" unless $i = scalar (@choices);
+
+	my $environment = initialize OME::Install::Environment;
+	
+	while (1) {
+		print wrap("","", $text," [");
+		for ($i = 0; $i < scalar(@choices); $i++){
+			print "/" unless ($i eq 0);
+			if (lc ($choices[$i]) ne lc ($default)){
+				print "$choices[$i]";
+			} else {
+				print BOLD, "$choices[$i]", RESET;
+			}
+		}
+		print "]: ";
+		
+		my $selected_choice = ReadLine 0;
+		chomp $selected_choice;
+		if ($selected_choice eq "") {
+			return $default;
+		}
+
+		for ($i=0; $i < scalar @choices; $i++) {
+			return ($choices[$i]) if lc ($choices[$i]) eq lc ($selected_choice);
+		}
+   	}
 }

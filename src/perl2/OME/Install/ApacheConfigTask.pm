@@ -293,7 +293,7 @@ sub httpd_test {
 		print "  \\__ omeis " and
 			print $LOGFILE "Testing omeis installation\n";
 		my $ENVIRONMENT = initialize OME::Install::Environment;
-		omeis_test($ENVIRONMENT->omeis_url());
+		omeis_test('http://localhost/cgi-bin/omeis');
 		print $LOGFILE "OMEIS is configured correctly\n";
 
 	}
@@ -301,6 +301,7 @@ sub httpd_test {
 
 sub omeis_test {
 	my $url = shift;
+	$LOGFILE = shift if @_;
 	
 	print $LOGFILE "Getting an LWP user agent\n";
 	my $user_agent = LWP::UserAgent->new();
@@ -650,7 +651,6 @@ sub execute {
 			print BOLD,"Apache directories:\n",RESET if $APACHE->{WEB} or $APACHE->{OMEIS};
 			print "           DocumentRoot: ", BOLD, $APACHE->{WEB}, RESET, "\n" if $APACHE->{WEB};
 			print "                cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
-			print "              OMEIS url: ", BOLD, $environment->omeis_url(), RESET, "\n" if $APACHE->{OMEIS};
 			print "\n";  # Spacing
 
 			y_or_n ("Are these values correct ?",'y') and last;
@@ -698,13 +698,6 @@ sub execute {
 			while (! -e $APACHE->{CGI_BIN} or ! -d $APACHE->{CGI_BIN}) {
 				$APACHE->{CGI_BIN} = confirm_path ('Apache cgi-bin directory :', $cgi_bin);
 			}
-			
-			my $hostname = hostname();
-			my $repository_def = $environment->omeis_url();
-			$repository_def = "http://$hostname/cgi-bin/omeis" if not $repository_def;
-			my $repository_url = confirm_default ("OME Image server (omeis) url ?", $repository_def);
-			$environment->omeis_url($repository_url);
-			
 			$APACHE->{OMEIS} = 1;
 		} else {
 			$APACHE->{OMEIS} = 0;
