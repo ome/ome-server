@@ -10,6 +10,8 @@ if (scalar(@ARGV) != 1) {
 my $session = OME::SessionManager->TTYlogin();
 
 
-OME::Tasks::ProgramImport->importXMLFile( $session, $ARGV[0] );
+my $newPrograms = OME::Tasks::ProgramImport->importXMLFile( $session, $ARGV[0] );
+
+print "Imported ".scalar(@$newPrograms)." of 2 progams sucessfully.\n";
 
 print "\n";
