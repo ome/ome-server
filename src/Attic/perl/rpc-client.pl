@@ -1,3 +1,4 @@
+#!/usr/bin/perl -w
 #
 # Copyright (C) 1998 Ken MacLeod
 # See the file COPYING for distribution terms.

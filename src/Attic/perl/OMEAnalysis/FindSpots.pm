@@ -24,6 +24,7 @@ use vars qw($VERSION @ISA);
 $VERSION = '1.20';
 
 use OMEpl;
+use OMEhtml;
 use OMEAnalysis;
 
 @ISA = ("OMEAnalysis");
@@ -259,91 +260,121 @@ sub OutputHTMLForm {
     my $self = shift;
     my $OME  = $self->{OME};
     my $CGI  = $OME->cgi();
-    my @tableRows;
-    my @tableColumns;
     my @radioGrp;
+    my $html = new OMEhtml($OME);
 
+    my (@rows, $header, $sidebar, $title, $c1, $c2, $c3);
 
-    # The user supplies the TIME_START, TIME_STOP (begining to end, or
-    # number to end or begining to number) The WAVELEGTH.  This is a
-    # popup containing the wavelegths in the dataset(s), The
-    # THRESHOLD.  This is either a number or relative to the mean or
-    # to the geometric mean.  Minimum spot volume - a number Intensity
-    # weight - default 0.
+    my $debug = 0;
+    
+    print STDERR "*** $debug\n"; $debug++;
 
-    $tableColumns[0]=$CGI->th('Time');
-    $tableColumns[1]='<b>From:</b>';
+    $header = $html->tableHeaders({},{colspan => 5},'FindSpots parameters');
+    $sidebar = $html->tableCell({rowspan => 9, bgcolor => 'BLACK', width => 2},$html->spacer(1,1));
+    $title = $html->tableCell({colspan => 3, bgcolor => '#a0a0a0', align => 'center'},
+			      $html->font({color=>'WHITE'},"Time"));
+    push @rows, $html->tableRow({},$sidebar,$title,$sidebar);
+
+    print STDERR "*** $debug\n"; $debug++;
+
     @radioGrp = $CGI->radio_group(-name     => 'startTime',
 				  -values   => ['Beginning','timePoint'],
 				  -default  => 'Beginning',
 				  -nolabels => 1);
-    $tableColumns[2] = $radioGrp[0]."Beginning";
-    $tableColumns[3] = $radioGrp[1]."Timepoint".$CGI->textfield(-name=>'Start',-size=>4);
-    @tableColumns = $CGI->td (\@tableColumns);
-    push (@tableRows,@tableColumns);
-    @tableColumns = ();
+    $c1 = $html->tableCell({bgcolor => '#e0e0e0'},'From:');
+    $c2 = $html->tableCell({bgcolor => '#e0e0e0'},$radioGrp[0].' Beginning');
+    $c3 = $html->tableCell({bgcolor => '#e0e0e0'},
+			   $radioGrp[1]." Timepoint ".$CGI->textfield(-name=>'Start',-size=>4));
+    push @rows, $html->tableRow({},$c1,$c2,$c3);
 
-    $tableColumns[0]=$CGI->td(' ');
-    $tableColumns[1]='<b>To:</b>';
-    @radioGrp = $CGI->radio_group(-name=>'stopTime',
-				  -values=>['End','timePoint'],-default=>'End',-nolabels=>1);
-    $tableColumns[2] = $radioGrp[0]."End";
-    $tableColumns[3] = $radioGrp[1]."Timepoint".$CGI->textfield(-name=>'Stop',-size=>4);
-    @tableColumns = $CGI->td (\@tableColumns);
-    push (@tableRows,@tableColumns);
-    @tableColumns = ();
+    print STDERR "*** $debug\n"; $debug++;
 
+    @radioGrp = $CGI->radio_group(-name     => 'stopTime',
+				  -values   => ['End','timePoint'],
+				  -default  => 'End',
+				  -nolabels => 1);
+    $c1 = $html->tableCell({bgcolor => '#e0e0e0'},'To:');
+    $c2 = $html->tableCell({bgcolor => '#e0e0e0'},$radioGrp[0].' End');
+    $c3 = $html->tableCell({bgcolor => '#e0e0e0'},
+			   $radioGrp[1]." Timepoint ".$CGI->textfield(-name=>'Stop',-size=>4));
+    push @rows, $html->tableRow({},$c1,$c2,$c3);
 
+    print STDERR "*** $debug\n"; $debug++;
 
-# Collect the wavelengths available for the selected datasets
+    $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
+			      $html->font({color=>'WHITE'},"Wavelength"));
+    push @rows, $html->tableRow({},$title);
+
+    print STDERR "*** $debug\n"; $debug++;
+
     my $wavelengths = $OME->GetSelectedDatasetsWavelengths();
-    $tableColumns[0] = $CGI->th ('Wavelength');
-    $tableColumns[1] = $CGI->popup_menu(-name=>'wavelengths',
-					-values=>$wavelengths);
-    $tableColumns[2] = $CGI->td (' ');
-    @tableColumns = $CGI->td (\@tableColumns);
-    push (@tableRows,@tableColumns);
-    @tableColumns = ();
+    $c1 = $html->tableCell({bgcolor => '#e0e0e0',colspan => 3,align=>'CENTER'},
+			   $CGI->popup_menu(-name   => 'wavelengths',
+					    -values => $wavelengths));
+    push @rows, $html->tableRow({},$c1);
 
-    $tableColumns[0] = $CGI->th ('Threshold');
-    @radioGrp = $CGI->radio_group(-name=>'threshold',
-				  -values=>['Absolute','Relative','Automatic'],
-				  -default=>'Relative',
-				  -nolabels=>1);
-    $tableColumns[1] = $radioGrp[0]."Absolute :<BR>".$CGI->textfield(-name=>'Absolute',-size=>4);
-    $tableColumns[2] = $radioGrp[1]."Relative to:".$CGI->popup_menu(-name=>'means',
-								    -values=>['Mean','Geometric Mean'],
-								    default=>'Geometric Mean').
-									"<BR>+/-".$CGI->textfield(-name=>'nSigmas',-size=>4).
-									" standard deviations.</blockquote>";
-    $tableColumns[3] = $radioGrp[2]."Automatic:<BR>".$CGI->popup_menu(-name=>'autoThresh',
-								      -values=>['Maximum Entropy','Kittler\'s minimum error','Moment-Preservation','Otsu\'s moment preservation'],
-								      default=>'Maximum Entropy');
-    @tableColumns = $CGI->td (\@tableColumns);
-    push (@tableRows,@tableColumns);
-    @tableColumns = ();
+    print STDERR "*** $debug\n"; $debug++;
 
+    $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
+			      $html->font({color=>'WHITE'},"Threshold"));
+    push @rows, $html->tableRow({},$title);
 
-    $tableColumns[0] = $CGI->th ('Min. volume');
-    $tableColumns[1] = $CGI->textfield(-name=>'minPix',-size=>4,default=>'4')."pixels.";
-    @tableColumns = $CGI->td (\@tableColumns);
-    push (@tableRows,@tableColumns);
-    @tableColumns = ();
+    print STDERR "*** $debug\n"; $debug++;
 
+    @radioGrp = $CGI->radio_group(-name     => 'threshold',
+				  -values   => ['Absolute','Relative','Automatic'],
+				  -default  => 'Relative',
+				  -nolabels => 1);
+    print STDERR "*** $debug ab!\n"; $debug++;
+    my $popup = $CGI->popup_menu(-name    => 'means',
+				 -values  => ['Mean', 'Geometric Mean'],
+				 -default => 'Geometric Mean');
+    print STDERR "*** $debug\n"; $debug++;
+    $c1 = $html->tableCell({bgcolor => '#e0e0e0'},
+			   $radioGrp[0]." Absolute ".$CGI->textfield(-name=>'Absolute',-size=>4));
+    print STDERR "*** $debug\n"; $debug++;
+    $c2 = $html->tableCell({bgcolor => '#e0e0e0'},
+			   $radioGrp[1]." Relative to ".$popup.
+			   "<BR>+/- ".$CGI->textfield(-name=>'nSigmas',-size=>4).
+			   " std devs");
+    print STDERR "*** $debug\n"; $debug++;
+    $c3 = $html->tableCell({bgcolor => '#e0e0e0'},
+			   $radioGrp[2]." Automatic ".
+			   $CGI->popup_menu(-name    => 'autoThresh',
+					    -values  => ['Maximum Entropy',
+							 'Kittler\'s minimum error',
+							 'Moment-Preservation',
+							 'Otsu\'s moment preservation'],
+					    -default => 'Maximum Entropy'));
+    push @rows, $html->tableRow({},$c1,$c2,$c3);
+
+    print STDERR "*** $debug\n"; $debug++;
+
+    $title = $html->tableCell({bgcolor => '#a0a0a0', colspan => 3, align => 'center'},
+			      $html->font({color=>'WHITE'},"Minimum volume"));
+    push @rows, $html->tableRow({},$title);
+
+    print STDERR "*** $debug\n"; $debug++;
+
+    $c1 = $html->tableCell({bgcolor => '#e0e0e0',colspan => 3,align=>'CENTER'},
+			   $CGI->textfield(-name    => 'minPix',
+					   -size    => 4,
+					   -default => '4') .
+			   " pixels");
+    push @rows, $html->tableRow({},$c1);
+
+    print STDERR "*** $debug\n"; $debug++;
 
 
     print $OME->CGIheader (-type=>'text/html');
-    print $CGI->start_html(-title=>'Run findSpots');
-    print $CGI->h2("Enter parameters for findSpots");
+    print $CGI->start_html(-title=>'Run FindSpots');
     print $CGI->startform;
 
-    print $CGI->table({-border=>1,-cellspacing=>1,-cellpadding=>1},
-		      $CGI->Tr(\@tableRows)
-		      );
-    
+    print $html->table({cellspacing => 0},
+		       $header,
+		       @rows,
+		       $html->tableLine(5,10));
+
     print "<CENTER>", $CGI->submit(-name=>'Execute',-value=>'Run findSpots'), "</CENTER>";
     print $CGI->endform;
 }
-
-
-
