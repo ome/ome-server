@@ -3,7 +3,7 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ plane. Produced from XML specification."
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-	xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/cvs/OME/src/xml/AnalysisModule.xsd">
+	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
 	<Declaration>
 		<Table AttributeType = "I" TableName = "XYZ_IMAGE_INFO" 
 			Description = "General image XYZ stack attributes. Produced from XML.">
@@ -62,7 +62,7 @@
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/cvs/OME/src/xml/CLIExecutionInstructions.xsd">
+		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
 				<RawText>Path=</RawText>
