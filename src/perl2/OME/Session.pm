@@ -146,6 +146,7 @@ use OME::DBObject;
 use base qw(Class::Accessor);
 use POSIX;
 use File::Path;
+use File::Spec;
 
 #use Benchmark::Timer;
 
@@ -431,9 +432,11 @@ sub getTemporaryFilename {
     my $self = shift;
     my $progName = shift;
     my $extension = shift;
+    my $tmpRoot = shift;
 
     my ($base_name,$full_path);
-	my $tmpRoot = $self->Configuration()->tmp_dir();
+	$tmpRoot = $self->Configuration()->tmp_dir()
+      unless defined $tmpRoot;
 
     # Find a unique filename for the new pixels
     my $time = time();
@@ -506,7 +509,15 @@ sub finishTemporaryFile {
     die "Need a filename"
       unless defined $filename;
 
-    if (-e $filename) {
+    print "*** $filename\n";
+
+    if (-f $filename) {
+        print "Found\n";
+        eval { unlink $filename; };
+        print "Sweet '$@' '$!'\n";
+        warn "Error removing temp file/directory $filename: $@" if $@;
+        warn "Error removing temp file/directory $filename: $!" if $!;
+    } elsif (-d $filename) {
         eval { rmtree($filename,0,1); };
         warn "Error removing temp file/directory $filename: $@" if $@;
         warn "Error removing temp file/directory $filename: $!" if $!;
