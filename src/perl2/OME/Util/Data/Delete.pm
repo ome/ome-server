@@ -137,7 +137,7 @@ sub DeleteMEX {
 	$keep_pixels = 1 if $noop;
 	
 	my $manager = OME::SessionManager->new();
-	my $session = $manager->TTYlogin();
+    my $session = $self->getSession();
 	$FACTORY = $session->Factory();
 	
 	# This is useful for debugging:

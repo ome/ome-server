@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Util::OMEcommander;
+package OME::Util::OMECommander;
 
 use strict;
 use OME;

@@ -65,6 +65,14 @@ use Time::Local;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
+
+sub getCommands {
+    return
+      {
+       'top'     => 'top',
+      };
+}
+
 sub top_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
@@ -86,17 +94,8 @@ USAGE
     CORE::exit(1);
 }
 
-sub handleCommand {
-	my ($self,$help,$supercommands) = @_;
-	if ($help) {
-		top_help($self, $supercommands);
-	} else {
-		top();
-	}
-}
-
 sub top {	
-	my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
 	my $install_date = "UNKNOWN";
 	
 	my $update_delay = 10;

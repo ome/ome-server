@@ -63,13 +63,11 @@ use DBI;
 
 require Storable;
 
-sub handleCommand {
-	my ($self,$help,$commands) = @_;
-	if ($help) {
-		uninstall_help($self,$commands);
-	} else {
-		uninstall($self,$commands);
-	}
+sub getCommands {
+    return
+      {
+       'uninstall'     => 'uninstall',
+      };
 }
 
 sub uninstall_help {

@@ -105,7 +105,7 @@ ERROR
         exit 1;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
 
     my $keep = 0;
@@ -262,7 +262,7 @@ sub listGroup {
         exit;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
 
     my $criteria =
@@ -436,7 +436,7 @@ sub editGroup {
         exit 1;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
 
     my $group = $factory->loadAttribute('Group',$group_id);

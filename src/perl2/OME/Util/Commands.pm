@@ -94,6 +94,11 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use UNIVERSAL::require;
+use Getopt::Long;
+
+our $DATA_SOURCE;
+our $DB_USER;
+our $DB_PASSWORD;
 
 =head2 getCommands
 
@@ -241,6 +246,13 @@ sub handleCommand {
                     $self->noHelpForCommand($supercommands);
                 }
             } else {
+                # Get global options
+                Getopt::Long::Configure('pass_through');
+                my ($datasource,$user,$password);
+                GetOptions('DataSource|db=s' => \$DATA_SOURCE,
+                                     'DBUser|dbu=s' => \$DB_USER,
+                                     'DBPassword|dbpw=s' => \$DB_PASSWORD);
+                Getopt::Long::Configure('no_pass_through');
                 # Execute a specific command
 
                 $self->$base_method($supercommands);
@@ -293,6 +305,19 @@ sub printHeader {
     if (UNIVERSAL::can('OME::Util::Output','printHeader')) {
         OME::Util::Output->printHeader();
     }
+}
+
+sub getSession {
+    my ($self) = @_;
+
+    my $session = OME::SessionManager->TTYlogin({
+# We're turning this off until we determine wether or not this is sane
+#    	DataSource => $DATA_SOURCE,
+#    	DBUser     => $DB_USER,
+#    	DBPassword => $DB_PASSWORD,
+    });
+    return $session;
+
 }
 
 sub noHelpForCommand {

@@ -104,7 +104,7 @@ sub addUser {
         exit;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
     
     # correct user properties till OME system is happy
@@ -263,7 +263,7 @@ sub listUsers {
         exit;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
 
     my $criteria =
@@ -426,7 +426,7 @@ sub changePassword {
         exit 1;
     }
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
 
     my $user;
@@ -536,7 +536,7 @@ sub editUser {
     }
 
 
-	my $session = OME::SessionManager->TTYlogin();
+    my $session = $self->getSession();
     my $factory = $session->Factory();
     my $user;
 

@@ -46,7 +46,6 @@ use Carp;
 use Getopt::Long;
 
 use OME::Session;
-use OME::SessionManager;
 use OME::AnalysisChain;
 use OME::Dataset;
 use OME::Analysis::Engine;
@@ -65,6 +64,14 @@ use strict 'refs';
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
+
+sub getCommands {
+    return
+      {
+       'execute'     => 'execute',
+      };
+}
+
 sub execute_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
@@ -80,15 +87,6 @@ USAGE
     CORE::exit(1);
 }
 
-sub handleCommand {
-	my ($self,$help,$supercommands) = @_;
-	if ($help or @ARGV < 2) {
-		$self->execute_help($supercommands);
-	} else {
-		$self->execute();
-	}
-}
-
 sub execute {
 my $self = shift;
 
@@ -98,8 +96,7 @@ my $self = shift;
 	my $chainID = shift(@ARGV);
 	my $datasetID = shift(@ARGV);
 	
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->TTYlogin();
+    my $session = $self->getSession();
 	
 	
 	my $factory = $session->Factory();

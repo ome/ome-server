@@ -53,6 +53,16 @@ use OME::Tasks::ImageTasks;
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
+
+
+sub getCommands {
+    return
+      {
+       'import'     => 'import',
+      };
+}
+
+
 sub import_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
@@ -86,14 +96,6 @@ USAGE
     CORE::exit(1);
 }
 
-sub handleCommand {
-	my ($self,$help,$commands) = @_;
-	if ($help) {
-		$self->import_help($commands);
-	} else {
-		$self->import($commands);
-	}
-}
 
 sub import {
  	my ($self,$commands) = @_;
@@ -109,8 +111,7 @@ sub import {
     # preliminary idiot traps
     
     
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->TTYlogin();
+    my $session = $self->getSession();
 	my $factory = $session->Factory();
 	
 	# Get command Line params
