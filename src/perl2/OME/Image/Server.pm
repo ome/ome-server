@@ -1514,6 +1514,27 @@ sub finishPixels {
     return $result;
 }
 
+=head2 deletePixels
+
+	OME::Image::Server->deletePixels($pixelsID);
+
+This method deletes the pixels from the image server, freeing up disk space.
+This cannot be undone.
+
+
+=cut
+
+sub deletePixels {
+    my $proto = shift;
+    my ($pixelsID) = @_;
+    my $result = $proto->__callOMEIS(Method   => 'DeletePixels',
+                                     PixelsID => $pixelsID);
+    chomp ($result);
+    die "Error deleting pixels"
+      unless $result;
+    return $result;
+}
+
 =head2 getPlaneStatistics
 
 	my $statsHash = OME::Image::Server->getPlaneStatistics($pixelsID);

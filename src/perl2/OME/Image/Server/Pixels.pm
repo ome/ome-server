@@ -575,6 +575,21 @@ sub finishPixels {
     return ($ID);
 }
 
+=head2 deletePixels
+
+	$pixels->deletePixels();
+
+Deletes the Pixels from the image server - this cannot be undone.
+
+=cut
+
+sub deletePixels {
+    my $self = shift;
+    my $ID = OME::Image::Server->deletePixels($self->[PIXELS_ID]);
+    $self->[PIXELS_ID] = $ID;
+    return ($ID);
+}
+
 =head2 getTemporaryLocalPixels
 
 	my $filename = $self->getTemporaryLocalPixels($big_endian);
