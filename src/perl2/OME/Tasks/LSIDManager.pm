@@ -133,7 +133,7 @@ my ($self,$object) = @_;
 		namespace => $type });
 	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
 	
-	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id().":$DB_INSTANCE";
+	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id()."_$DB_INSTANCE";
 	
 	$self->setLSID( $object, $LSIDstring );
 	
@@ -194,7 +194,9 @@ This determines if an LSID is properly formed. Returns undef if not, $LSID if so
 
 sub checkLSID ($) {
 my ($self,$lsid) = @_;
-	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
+      split (/:/,$lsid);
+    my ($localID,$dbInstance) = split (/-/,$localIDdbInstance);
 	return undef unless defined $authority;
 	return undef unless defined $urn and $urn eq 'urn';
 	return undef unless defined $urnType and $urnType eq 'lsid';
@@ -216,7 +218,9 @@ sub getLocalObject () {
 	my $lsid = $self->checkLSID (shift) || return undef;
     my $factory = OME::Session->instance()->Factory();
 
-	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
+      split (/:/,$lsid);
+    my ($localID,$dbInstance) = split (/-/,$localIDdbInstance);
 	
 # FIXME:  This should return a locally stored object even if its got a different authority.
 	my $lsid_map = $factory->findObject('OME::LSID', lsid => $lsid );
@@ -282,7 +286,9 @@ sub getRemoteObject ($) {
 	my $self = shift;
 	my $lsid = checkLSID (shift) || return undef;
 
-	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
+      split (/:/,$lsid);
+    my ($localID,$dbInstance) = split (/-/,$localIDdbInstance);
 
 	return undef;
 }

@@ -125,7 +125,7 @@ is guaranteed to be unique.  Therefore, the writeInterfaces method
 will create additional Java interfaces for each LSID.  An ST's LSID
 has the form
 
-	urn:lsid:[LSID authority]:SemanticType:[number]:[db instance]
+	urn:lsid:[LSID authority]:SemanticType:[number]-[db instance]
 
 The LSID authority looks like a hostname, and has the same function as
 a package name in Java -- it just defines a namespace.  The number is

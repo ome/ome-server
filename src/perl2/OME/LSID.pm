@@ -119,8 +119,9 @@ sub parseLSID {
     # OME::LSID->parseLSID($lsid_string)
     my $lsid = ref($proto)? $proto->lsid(): shift;
 
-	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) =
+	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
       split (/:/,$lsid);
+    my ($localID,$dbInstance) = split (/-/,$localIDdbInstance);
 	return { 
 		authority   => $authority,
 		namespace   => $namespace,
