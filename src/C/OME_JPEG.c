@@ -11,7 +11,7 @@ void unescape_url(char *url);
 char **getcgivars(void);
 char **getCLIvars(int argc, char **argv);
 void usage(int argc, char **argv);
-void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type);
+void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type, char *RGBon);
 void make_Gray_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type);
 void scale_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
 void scale_Gray_buf (unsigned char *imageBuf, unsigned short *fileBuf, int numB, int numSamples, int blck, float scale);
@@ -22,7 +22,7 @@ int main (int argc, char **argv)
 	char *path;
 	char *dims;
 	char *theZ,*theT;
-	char *type;
+	char *type,*RGBon;
 	char isRGB=0;
 	char isCGI=0;
 	char **cgivars;
@@ -73,19 +73,22 @@ int main (int argc, char **argv)
 			exit (-1);
 		} else isRGB = 0;
 	} else isRGB = 1;
+	
+	if (isRGB)
+		RGBon = get_param (cgivars,"RGBon");
 
-
+/*
 	for(i=0; cgivars[i]; i += 2){
 		fprintf (stderr,"%s = '%s'\n",cgivars[i],cgivars[i+1]);
 	}
-
+*/
 
 	
 	if (isCGI)
 		fprintf (stdout,"Content-type: image/jpeg\n\n");
 
 	if (isRGB)
-		make_RGB_JPEG (path,dims,theZ,theT,type);
+		make_RGB_JPEG (path,dims,theZ,theT,type,RGBon);
 	else
 		make_Gray_JPEG (path,dims,theZ,theT,type);
 
@@ -100,7 +103,7 @@ int main (int argc, char **argv)
 
 
 
-void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type)
+void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *type, char *RGBon)
 {
 	FILE *imgFileR, *imgFileG, *imgFileB;
 	int numX, numY, numZ, numW, numT, numB;
@@ -109,6 +112,7 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 	int rWav, rBlck;
 	int gWav, gBlck;
 	int bWav, bBlck;
+	int rOn=1,gOn=1,bOn=1;
 	float rScale,gScale,bScale;
 	int numInts;
 	
@@ -140,6 +144,11 @@ void make_RGB_JPEG (char *path, char *dims, char *theZ_s, char *theT_s, char *ty
 		fprintf (stderr,"The RGB parameter must supply 9 numbers, not %d: %s\n",numInts,type);
 		exit (-1);
 	}
+
+	if (RGBon) sscanf (RGBon,"%d,%d,%d",&rOn, &gOn, &bOn);
+	if (!rOn) rScale = 0.0;
+	if (!gOn) gScale = 0.0;
+	if (!bOn) bScale = 0.0;
 
 	imageBuf = (JSAMPLE *)malloc (numX*3*rowsPerChunk);
 	if (!imageBuf) {
