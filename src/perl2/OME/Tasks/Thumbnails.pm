@@ -22,8 +22,9 @@ package OME::Tasks::Thumbnails;
 
 use POSIX;
 use GD;
+use OME::Tasks::ImageInfo;
 use strict;
-our $VERSION = 2.000_000;
+our $VERSION = '1.0';
 
 =head1 NAME
 
@@ -94,11 +95,17 @@ sub generateOMEimage{
   	my $RGBon=undef;
   	my $isRGB=undef;
 	# retrieve image data
-
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);
 	my $stats=getImageStats($factory,$image);				# ref array
 	my $wavelengths=getImageWavelengths($factory,$image);		# ref array
-	
+  if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
+  ||not defined $numW || not defined $numT || not defined $bpp || not defined $path){
+   return undef;
+
+  }
+   if (scalar(@$wavelengths) != $numW ||  scalar(@$stats) != $numW){
+    return undef;
+   }
 	$theZ = $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0 );
 	$theT = $T_param || 0;
 	$isRGB=1;
@@ -123,13 +130,27 @@ sub generateOMEmovie{
 	my $session=$self->{session};
 	my $factory=$session->Factory();
 	my $WBS=undef;
-  	my $RGBon=undef;
-  	my $isRGB=undef;
+	my $RGBon=undef;
+  my $isRGB=undef;
 
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);	
 	my $stats=getImageStats($factory,$image);				# ref array
 	my $wavelengths=getImageWavelengths($factory,$image);	# ref array
-	my $Z; 
+	my $Z;
+   my $error;
+  if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
+  ||not defined $numW || not defined $numT || not defined $bpp || not defined $path){
+   return undef;
+  
+  }
+   if (scalar(@$wavelengths) != $numW ||  scalar(@$stats) != $numW){
+    return undef;
+   }
+
+
+
+
+        
 	$Z= $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0) ;
 	$isRGB=1;
    	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
@@ -164,8 +185,6 @@ sub generateOMEthumbnail{
 }
 
 
-
-
 ######################################
 sub writeOMEimage{
 	my $self=shift;
@@ -176,6 +195,9 @@ sub writeOMEimage{
 	my $t="theT=".$theT;
 	my $path="Path=".$self->{path};
   	my $color=$self->getConvertedWBS($theT);
+	if (not defined $color){
+		return undef;
+	}
 	my $rgb="RGB=".join(",",@$color);
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
 
@@ -184,7 +206,7 @@ sub writeOMEimage{
 	my $bin_dir=$configuration->bin_dir;
   	my $script=$bin_dir."/".$self->{OME_JPEG};
 	my $out="";
-	open (JPG, "$script $path $z $t $d $rgb $rgbon|");
+	open (JPG, "$script $path $z $t $d $rgb $rgbon|") || die ("Error reading file, ",$script," ",$!);
   	while (<JPG>) {
 		$out.=$_;
 	 };
@@ -305,6 +327,14 @@ sub getConvertedWBS{
 	my $ref=$self->{WBS};
 	my @WBS=@$ref;
 	my $refstats=$self->{stats};
+	my $refdim=$self->{dim};
+	if (scalar(@$refstats)==0|| scalar(@$refdim)==0){
+		return undef;
+	}
+	if ($theT<0||$theT>$self->{T} || $theT != round($theT)){
+	  return undef;
+	}
+
 	for (my $i=0;$i<4;$i++){
 		my $wavenum=$WBS[$i*3];
   		push(@cWBS,$wavenum);
@@ -334,27 +364,27 @@ sub getImageStats{
 	my ($factory,$image)=@_;
   	# new version
   	my $pixels = $image->DefaultPixels();
-  	my $stackStats = $factory->findObject( "OME::Module", name => 'Stack statistics' )
+  	my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
-		module_id => $stackStats->id(),
+	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput",
+		program_id => $stackStats->id(),
 		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for module 'Stack Statistics'.\n";
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+		or die "Cannot find 'Pixels' formal input for Program 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::Analysis::ActualInput",
 		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
+		input_analysis_id => $pixels->analysis()->id() )
 		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+	my $stackStatsAnalysisID = $actualInput->analysis()->id();
 
-	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+	my @mins   = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackMinimum", $image ) );
-	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+	my @maxes  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackMaximum", $image ) );
-	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+	my @means  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackMean", $image ) );
-	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+	my @gmeans = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
+	my @sigma  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
 		$factory->findAttributes( "StackSigma", $image ) );
 
 	my $sh; # stats hash
@@ -390,12 +420,14 @@ sub getImageWavelengths{
 	foreach my $cc (@channelComponents) {
 		my $ChannelNum = $cc->Index();
 		my $Label;
+    my @overlap=();
 		$Label = $cc->LogicalChannel()->Name()  || 
 		         $cc->LogicalChannel()->Fluor() || 
 		         $cc->LogicalChannel()->EmissionWavelength();
-		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
-		$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
 
+		#@overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
+		#$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
+     $Label .= $cc->Index() if( not defined $Label || scalar( @overlap ) > 1);
 		my %h=();
 		$h{WaveNum}=$ChannelNum;
 		$h{Label}=$Label;
@@ -436,7 +468,15 @@ sub getImageDim{
 }
 
 
-
+#######
+sub round{
+	my ($x)=@_;
+	my $halfhex = unpack('H*', pack('d', 0.5));
+	my $half = unpack('d',pack('H*', $halfhex));
+	my $y;
+ 	$y=floor($x + $half);
+  	return $y;
+}
 
 =head1 AUTHOR
 
