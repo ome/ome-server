@@ -48,3 +48,25 @@ WHERE extent.analysis_id = a1.analysis_id
 	AND datasets.project_id = $(ProjectID)
 GROUP BY datasets.dataset_id, datasets.name,
 	attributes_iccb_tiff.well, attributes_iccb_tiff.compound_id, cccp.correlation
+
+-- Select attributes for the same features from different analyses
+SELECT datasets.dataset_id AS "Dataset ID",
+	datasets.name as "Name",
+	location.x AS "Centroid X",
+	location.y AS "Centroid Y",
+	location.z AS "Centroid Z",
+	timepoint.timepoint AS "Time",
+	extent.volume AS "Volume",
+	delta.trajectory_id AS "TrajID"
+FROM datasets, timepoint, location, extent, delta
+WHERE 	timepoint.attribute_of = location.attribute_of
+	AND location.attribute_of = extent.attribute_of
+	AND extent.attribute_of = delta.attribute_of
+	AND delta.analysis_id = analyses.analysis_id
+	AND analyses.analysis_id = (SELECT analyses.analysis_id FROM analyses WHERE
+		dataset_id = $(DatasetID)
+		AND experimenter_id = $(ExperimenterID)
+		AND status = 'ACTIVE'
+		LIMIT 1
+	)
+	AND datasets.dataset_id = analyses.dataset_id
