@@ -1139,7 +1139,7 @@ OID existOID;
 	if (!FinishStats (myPixels,force)) return (0);
 
 	/* Get the SHA1 message digest */
-	if (get_md_from_fd (myPixels->fd_rep, myPixels->head->sha1) < 0) {
+	if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, myPixels->head->sha1) < 0) {
 		fprintf(stderr, "Unable to retrieve SHA1.");
 		return(0);
 	}
