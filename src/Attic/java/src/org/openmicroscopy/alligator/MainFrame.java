@@ -64,9 +64,9 @@ public class MainFrame
     JScrollPane jScrollPane3 = new JScrollPane();
     JScrollPane jScrollPane4 = new JScrollPane();
     JTable jRemoteTypesTable = new JTable();
-    JTree jLocalModuesTree = new JTree();
+    //JTree jLocalModuesTree = new JTree();
     JTree jRemoteModulesTree = new JTree();
-    JLabel jLocalLabel = new JLabel();
+    //JLabel jLocalLabel = new JLabel();
     JLabel jRemoteLabel = new JLabel();
     JLabel jTypesLabel = new JLabel();
     JLabel jModulesLabel = new JLabel();
@@ -100,14 +100,14 @@ public class MainFrame
         border1 = BorderFactory.createEmptyBorder(8,8,8,8);
         this.getContentPane().setLayout(borderLayout1);
         jPanel1.setLayout(gridBagLayout1);
-        jLocalLabel.setToolTipText("");
+        /*jLocalLabel.setToolTipText("");
         jLocalLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        jLocalLabel.setText("Local");
+        jLocalLabel.setText("Local"); */
         jRemoteLabel.setHorizontalAlignment(SwingConstants.CENTER);
         jRemoteLabel.setText("Remote");
         jTypesLabel.setText("Types");
         jModulesLabel.setText("Modules");
-        jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        //jScrollPane1.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         jScrollPane2.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane2.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -119,20 +119,20 @@ public class MainFrame
         jConnectedLabel.setText("Not connected to an OME server.");
         jPanel1.setBorder(border1);
         this.getContentPane().add(jPanel1, BorderLayout.CENTER);
-        jPanel1.add(jScrollPane1,        new GridBagConstraints(1, 1, 1, 1, 1.0, 1.0
-                                                                ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 2, 2), 0, 0));
+      //  jPanel1.add(jScrollPane1,        new GridBagConstraints(1, 1, 1, 1, 1.0, 1.0
+        //                                                        ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 2, 2), 0, 0));
         jScrollPane1.getViewport().add(jLocalTypesTable, null);
         jPanel1.add(jScrollPane2,      new GridBagConstraints(2, 1, 1, 1, 1.0, 1.0
                                                               ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 2, 4), 0, 0));
         jScrollPane2.getViewport().add(jRemoteTypesTable, null);
-        jPanel1.add(jScrollPane3,       new GridBagConstraints(1, 2, 1, 1, 1.0, 1.0
-                                                               ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 4, 2), 0, 0));
+        //jPanel1.add(jScrollPane3,       new GridBagConstraints(1, 2, 1, 1, 1.0, 1.0
+               //                                                ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 4, 2), 0, 0));
         jPanel1.add(jScrollPane4,       new GridBagConstraints(2, 2, 1, 1, 1.0, 1.0
                                                                ,GridBagConstraints.CENTER, GridBagConstraints.BOTH, new Insets(2, 2, 4, 4), 0, 0));
-        jScrollPane3.getViewport().add(jLocalModuesTree, null);
+       // jScrollPane3.getViewport().add(jLocalModuesTree, null);
         jScrollPane4.getViewport().add(jRemoteModulesTree, null);
-        jPanel1.add(jLocalLabel,    new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0
-                                                           ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(4, 4, 2, 4), 0, 0));
+        //jPanel1.add(jLocalLabel,    new GridBagConstraints(1, 0, 1, 1, 0.0, 0.0
+          //                                                 ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(4, 4, 2, 4), 0, 0));
         jPanel1.add(jRemoteLabel,    new GridBagConstraints(2, 0, 1, 1, 0.0, 0.0
                                                             ,GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(4, 4, 2, 4), 0, 0));
         jPanel1.add(jTypesLabel,   new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0
@@ -159,6 +159,7 @@ public class MainFrame
 
         jLocalTypesTable.setModel(controller.localTypesTableModel);
         jRemoteTypesTable.setModel(controller.remoteTypesTableModel);
+        jRemoteModulesTree.setRootVisible(false);
         jRemoteModulesTree.setModel(controller.remoteModulesTreeModel);
 
         jRemoteTypesTable.addMouseListener(new MouseAdapter()
