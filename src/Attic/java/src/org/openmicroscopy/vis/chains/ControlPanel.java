@@ -320,6 +320,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			activeDatasets.addAll(curProject.getDatasets());	
 			activeProjects.add(curProject);
 		}
+		if (curDataset!=null)
+			activeProjects.addAll(curDataset.getProjects());
 			
 		int pos = projects.indexOf(curProject);
 		
@@ -355,8 +357,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		
 		reentrant =true;
 		datasetList.setSelectedIndex(pos);
-		if (curProject != null &&
-			 !curDataset.getProjects().contains(curProject)) {
+		if (curProject != null && 
+			(curDataset == null ||
+			 !curDataset.getProjects().contains(curProject))) {
 			projList.clearSelection();
 			curProject = null;
 		}
@@ -438,6 +441,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public void chainSelectionChanged(ChainSelectionEvent e) {
 		
 		CChain chain = e.getChain();
+		System.err.println("changing to chain.."+chain.getName());
 				
 		if (e.getStatus() == ChainSelectionEvent.SELECTED) {
 			//change active datasets
@@ -449,11 +453,17 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			reentrant = false;
 			activeProjects =null;
 			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
+			System.err.println("active datasets"+activeDatasets.size());
 			if (activeDatasets.size() ==1) {
 				Object objs[] = activeDatasets.toArray();
-				curDataset = (CDataset) objs[0]; 
+				curDataset = (CDataset) objs[0];
+				updateDatasetChoice(curDataset); 
 			}
-			updateDatasetChoice(curDataset);
+			else { // multiple active. 
+				fireEvents();	
+				datasetList.repaint();
+				projList.repaint();
+			}
 		}
 		datasetList.repaint();
 		projList.repaint();
