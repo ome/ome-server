@@ -9,8 +9,8 @@ $VERSION = '1.00';
 
 
 my $datasource = "dbi:Pg:dbname=ome";
-my $dbuser     = "postgres";
-my $dbpass     = "lemondave0";
+my $dbuser = undef;
+my $dbpass = undef;
 
 # new
 # ---
