@@ -53,13 +53,38 @@ use base qw(OME::Install::InstallationTask);
 #********* GLOBALS AND DEFINES
 #*********
 
+# Global OME default user, group, UID and GID
+our $OME_USER = "ome"; 
+our $OME_GROUP = "ome";
+our $OME_UID;
+our $OME_GID;
+
+# Global Apache user
+our $APACHE_USER;
+
+# Postgres admin
+our $POSTGRES_USER = "postgres";
+
+# A Unix user that will be the ome admin (belongs to the ome group, but is not the ome user)
+our $ADMIN_USER = '';
+
 # Default core directory locations
 our @core_dirs = (
     {
 	name => "base",
 	path => "/OME",
 	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository", "OMEIS", "OMEIS/Files", "OMEIS/Pixels"]
+	children => ["xml", "bin", "perl2", "cgi", "repository", "OMEIS", "OMEIS/Files", "OMEIS/Pixels"],
+	children_owner_override => { 
+		'OMEIS' => [\$APACHE_USER, \$OME_GROUP],
+		'OMEIS/Files' => [\$APACHE_USER, \$OME_GROUP],
+		'OMEIS/Pixels' =>  [\$APACHE_USER, \$OME_GROUP],
+		},
+	children_permissions_override => { 
+		'OMEIS' => 0700,
+		'OMEIS/Files' => 0700,
+		'OMEIS/Pixels' =>  0700,
+		},	
     },
     {
 	name => "temp_base",
@@ -82,31 +107,17 @@ our @config_core = ("conf");
 our $OME_BASE_DIR = \$core_dirs[0]->{path};
 our $OME_TMP_DIR = \$core_dirs[1]->{path};
 
-# Global OME default user, group, UID and GID
-our $OME_USER = "ome"; 
-our $OME_GROUP = "ome";
-our $OME_UID;
-our $OME_GID;
-
-# Global Apache user
-our $APACHE_USER;
-
-# Postgres admin
-our $POSTGRES_USER = "postgres";
-
-# A Unix user that will be the ome admin (belongs to the ome group, but is not the ome user)
-our $ADMIN_USER = '';
-
 #*********
 #********* LOCAL SUBROUTINES
 #*********
 
 sub fix_ownership {
-    my ($user, $dir) = @_;
+    my ($user, $dir, $group) = @_;
 
     # Get directory info
     my ($dir_uid, $dir_gid) = (stat($dir))[4,5] or croak "Unable to find directory: \"$dir\"";
     my ($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\"";
+    $gid = (getgrnam($group))[2] if $group;
 
     # If we've got a wrong UID or GID do a full chown, no harm in doing both if we only need one
     if (($dir_uid != $uid) or ($dir_gid != $gid)) {
@@ -406,13 +417,21 @@ sub execute {
 
 		# Create each core dir's children
 		foreach my $child (@{$directory->{children}}) {
+	    	my ($owner, $group) = map( $$_, @{ $directory->{children_owner_override}->{$child} } )
+	    		if exists $directory->{children_owner_override}->{$child};
+	    	( $owner = $OME_USER and $group = $OME_GROUP )
+	    		unless $owner;
+	    	my $child_permissions; $child_permissions = $directory->{children_permissions_override}->{$child};
 	    	$child = $directory->{path} . "/" . $child;
 	    	unless (-d $child) {
 				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
 				mkdir $child or croak "Unable to create directory \"$child\": $!";
 	    	}
-			fix_ownership($OME_USER, $child)
+			fix_ownership($owner, $child, $group)
 				or croak "Failure setting permissions on \"$child\" $!";
+			( chmod($child_permissions, $child ) or 
+			  croak "Failure setting permissions $child_permissions on \"$child\" $!" )
+				if $child_permissions;
 		}
     }
 
