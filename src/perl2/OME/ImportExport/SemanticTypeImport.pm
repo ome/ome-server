@@ -125,7 +125,9 @@ sub processDOM {
 
     ###########################################################################
     #
-    # Process Record and Column elements. Make new tables and columns as needed.
+    # First pass through the STDs.
+    #   Check for conflicting STDs.
+    #   Make new tables and columns as needed.
     #
     # dataColumns is a hash used to store the DataColumn where a Semantic Element lives.
     # It gets populated when we are making tables/columns after the first pass through the STs
@@ -146,6 +148,7 @@ sub processDOM {
     # Check if the attribute type exists, and if so that it doesn't conflict.
     #
         my $stName = $ST_XML->getAttribute('Name');
+        $semanticTypes->{ $stName } = undef;
         my $stDescription = $ST_XML->getAttribute('Description');
         my @SEs_XML = $ST_XML->getElementsByLocalName ('Element');
 
@@ -210,16 +213,17 @@ sub processDOM {
             }
             logdbg "debug", ref ($self) . 
               "->processDOM: Complete match between revious and current definition of $stName.";
-        }
     # END:  Check for conflict with existing Semantic Type.
     ###########################################################################
+        }            
    
     ###########################################################################
     # Build the table hash:
     # $granularity = $tables{$tableName}->{granularity};
     # @tDescriptions = $tables{$tableName}->{description};    # array of ST descriptions
     # $datatype = $tables{$tableName}->{columns}->{$cName}->{datatype};
-    # $tableName = $tables{$tableName}->{columns}->{$cName}->{referenceTo};
+    # $referenceTo_DBObject = $tables{$tableName}->{columns}->{$cName}->{reference}->{DBObject};
+    # $referenceTo_STname = $tables{$tableName}->{columns}->{$cName}->{reference}->{STname};
     # @cDescriptions = $tables{$tableName}->{columns}->{$cName}->{description}; # array of SE descriptions
         foreach my $SE_XML (@SEs_XML) {
             my $DBLocation = $SE_XML->getAttribute('DBLocation');
@@ -231,10 +235,16 @@ sub processDOM {
                 $tables->{$tName}->{name} = $tName;
                 $tables->{$tName}->{order} = scalar (keys %{$tables}) + 1;
             }
+            
+            # Put the required column in the table hash.
+            # If the column doesn't exist yet and is a reference,
+            # try to get the DBObject it points to from the DB.
             if (not exists ($tables->{$tName}->{columns}->{$cName})) {
                 $tables->{$tName}->{columns}->{$cName}->{datatype} = $dataType;
                 if ($dataType eq 'reference') {
-                    $tables->{$tName}->{columns}->{$cName}->{referenceTo} = $SE_XML->getAttribute('RefersTo');
+                    my $referenceTo = $SE_XML->getAttribute('RefersTo');
+                    $tables->{$tName}->{columns}->{$cName}->{reference}->{STname} = $referenceTo;
+                    $tables->{$tName}->{columns}->{$cName}->{reference}->{DBObject} = $factory->findObject("OME::AttributeType",name => $referenceTo);
                 }
                 $tables->{$tName}->{columns}->{$cName}->{order} = scalar (keys %{$tables->{$tName}->{columns}}) + 1;
                 $tables->{$tName}->{columns}->{$cName}->{description} = [];
@@ -402,6 +412,13 @@ sub processDOM {
             my $newColumn;
 
             if (!defined $cols) {
+                # If the column is a reference, the reference must be resolved at this point - either because its in the DB already or in the current document.
+                if (exists $column->{reference}) {
+                    logdie ref ($self).":  Unresolved reference.  The Semantic Type ".$column->{reference}->{STname}.
+                        " was used in a reference, but it does not exist in the database or in the current document."
+                        unless exists $column->{reference}->{DBObject} or exists $semanticTypes->{$column->{reference}->{STname}};
+                }
+
                 logdbg "debug", ref ($self) . 
                   "->processDOM: could not find matching column. creating it";
 
@@ -424,7 +441,7 @@ sub processDOM {
 #
 # The usage of sql_type indicates that this is in fact the XML datatype, not a SQL type (which is good IMHO),
 # specifically with regard to 'reference'.  sql_type should really be renamed to datatype, though.
-                                'reference_type' => $column->{referenceTo}
+                                'reference_type' => $column->{reference}->{STname}
                                };
 
                 logdbg "debug", ref ($self) .
