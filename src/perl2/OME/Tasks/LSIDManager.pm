@@ -191,4 +191,15 @@ my ($self,$lsid) = @_;
 	return undef;
 }
 
+
+
+=pod
+
+=head1 AUTHOR
+
+Ilya Goldberg (igg@nih.gov)
+
+=cut
+
+
 1;
