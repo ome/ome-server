@@ -228,7 +228,9 @@ sub getSHA1 {
 # Read in the image & metadata
 
 sub importGroup {
-    my ($self,$fn, $sha1) = @_;
+    my ($self,$fn) = @_;
+
+    my $sha1 = $self->__getFileSHA1($fn);
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
