@@ -101,4 +101,93 @@ public class RemoteImagePixels
             throw new RemoteException("GetROI: expect byte[], got "+o.getClass());
     }
 
+    private static final int BYTES_PER_PIXEL = 2;
+
+    public int getPixelsBufferSize()
+    {
+        return
+            dimensions.getIntElement("SizeX")*
+            dimensions.getIntElement("SizeY")*
+            dimensions.getIntElement("SizeZ")*
+            dimensions.getIntElement("SizeC")*
+            dimensions.getIntElement("SizeT")*
+            BYTES_PER_PIXEL;
+    }
+
+    public int getPlaneBufferSize(int z, int c, int t)
+    {
+        return
+            dimensions.getIntElement("SizeX")*
+            dimensions.getIntElement("SizeY")*
+            BYTES_PER_PIXEL;
+    }
+
+    public int getStackBufferSize(int c, int t)
+    {
+        return
+            dimensions.getIntElement("SizeX")*
+            dimensions.getIntElement("SizeY")*
+            dimensions.getIntElement("SizeZ")*
+            BYTES_PER_PIXEL;
+    }
+
+    public int getROIBufferSize(int x0, int y0, int z0, int c0, int t0,
+                                int x1, int y1, int z1, int c1, int t1)
+    {
+        return
+            (x1-x0)*
+            (y1-y0)*
+            (z1-z0)*
+            (c1-c0)*
+            (t1-t0)*
+            BYTES_PER_PIXEL;
+    }
+
+    public void getPixels(byte[] buf)
+    {
+        if (buf == null) 
+            throw new IllegalArgumentException("Input buffer is null");
+        byte[] inBuf = getPixels();
+        if (buf.length < inBuf.length)
+            throw new IllegalArgumentException("Input buffer too small");
+        for (int i = 0; i < inBuf.length; i++)
+            buf[i] = inBuf[i];
+    }
+
+    public void getPlane(byte[] buf, int z, int c, int t)
+    {
+        if (buf == null) 
+            throw new IllegalArgumentException("Input buffer is null");
+        byte[] inBuf = getPlane(z,c,t);
+        if (buf.length < inBuf.length)
+            throw new IllegalArgumentException("Input buffer too small");
+        for (int i = 0; i < inBuf.length; i++)
+            buf[i] = inBuf[i];
+    }
+
+    public void getStack(byte[] buf, int c, int t)
+    {
+        if (buf == null) 
+            throw new IllegalArgumentException("Input buffer is null");
+        byte[] inBuf = getStack(c,t);
+        if (buf.length < inBuf.length)
+            throw new IllegalArgumentException("Input buffer too small");
+        for (int i = 0; i < inBuf.length; i++)
+            buf[i] = inBuf[i];
+    }
+
+    public void getROI(byte[] buf,
+                       int x0, int y0, int z0, int c0, int t0,
+                       int x1, int y1, int z1, int c1, int t1)
+    {
+        if (buf == null) 
+            throw new IllegalArgumentException("Input buffer is null");
+        byte[] inBuf = getROI(x0,y0,z0,c0,t0,x1,y1,z1,c1,t1);
+        if (buf.length < inBuf.length)
+            throw new IllegalArgumentException("Input buffer too small");
+        for (int i = 0; i < inBuf.length; i++)
+            buf[i] = inBuf[i];
+    }
+
+    public void finishPixels() {}
 }
