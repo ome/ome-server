@@ -89,7 +89,7 @@ public class ClientContents extends JFrame {
     ImageViewer    imV;
     ChainViewer    chV;
     ImageController imC;
-    ImagePanel     pixPanel;
+    ZoomImagePanel     pixPanel;
     JScrollPane    holdsImage;
     JPanel         workstationPanel;
     JSplitPane     Viewers;
@@ -118,9 +118,9 @@ public class ClientContents extends JFrame {
 	Accessor = ourLogin.getAccessor();
 	userName = new String(ourLogin.getExperimenter());
 	groupName = new String(ourLogin.getGroup());
-	pixPanel = new ImagePanel(Accessor.bindings);
-	holdsImage = new JScrollPane(pixPanel);
 	imC = ImageController.getInstance(Accessor.bindings);
+	pixPanel = new ZoomImagePanel();
+	holdsImage = new JScrollPane(pixPanel);
         statusBar = new ClientStatusBar(this);
         tabPanel  = new ClientTabs(this, Accessor);
         viewPane  = new ClientViewPane(this, Accessor);
