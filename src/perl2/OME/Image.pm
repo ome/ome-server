@@ -29,6 +29,8 @@ use base qw(OME::DBObject);
 use OME::Repository;
 use IO::File;
 
+use OME::Image::Pix;
+
 use fields qw(_fileOpen _fileHandle);
 
 __PACKAGE__->AccessorNames({
@@ -56,9 +58,22 @@ sub _init {
    
     $self->{_fileOpen} = 0;
     $self->{_fileHandle} = undef;
+    $self->{Pix} = undef;
     return $self;
 }
 
+sub Pix {
+    my $self = shift;
+    return ($self->{Pix}) if defined $self->{Pix};
+    my $attributes = $self->ImageAttributes();
+    $self->{Pix} = new OME::Image::Pix (
+        $self->getFullPath(),
+        $attributes->size_x(),$attributes->size_y(),$attributes->size_z(),
+        $attributes->num_waves(),$attributes->num_times(),
+        $attributes->bits_per_pixel()/8
+    ) || die ref($self)."->Pix:  Could not instantiate OME::Image::Pix object\n";
+    return ($self->{Pix});
+}
 
 sub ImageAttributes {
     my $self = shift;
@@ -106,83 +121,9 @@ sub closeFile {
 
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
-
-    my $attributes = $self->ImageAttributes();
-
-    my $sX = $attributes->size_x();
-    my $sY = $attributes->size_y();
-    my $sZ = $attributes->size_z();
-    my $sW = $attributes->num_waves();
-    my $sT = $attributes->num_times();
-
-    # make sure x1 < x2, etc
-    my $x1 = ($xx1 < $xx2)? $xx1: $xx2;
-    my $x2 = ($xx1 < $xx2)? $xx2: $xx1;
-    my $y1 = ($yy1 < $yy2)? $yy1: $yy2;
-    my $y2 = ($yy1 < $yy2)? $yy2: $yy1;
-    my $z1 = ($zz1 < $zz2)? $zz1: $zz2;
-    my $z2 = ($zz1 < $zz2)? $zz2: $zz1;
-    my $w1 = ($ww1 < $ww2)? $ww1: $ww2;
-    my $w2 = ($ww1 < $ww2)? $ww2: $ww1;
-    my $t1 = ($tt1 < $tt2)? $tt1: $tt2;
-    my $t2 = ($tt1 < $tt2)? $tt2: $tt1;
-
-    # make sure coordinates are within their appropriate bounds
-    return undef
-	if (($x1 < 0) ||
-	    ($x2 >= $sX) ||
-	    ($y1 < 0) ||
-	    ($y2 >= $sY) ||
-	    ($z1 < 0) ||
-	    ($z2 >= $sZ) ||
-	    ($w1 < 0) ||
-	    ($w2 >= $sW) ||
-	    ($t1 < 0) ||
-	    ($t2 >= $sT));
-
-    my $closeFileLater = 0;
-
-    if (!$self->{_fileOpen}) {
-        $self->openFile();
-        $closeFileLater = 1;
-    }
-
-    my $handle = $self->{_fileHandle};
-
-    my $oX = 2;
-    my $oY = $oX*$sX;
-    my $oZ = $oY*$sY;
-    my $oW = $oZ*$sZ;
-    my $oT = $oW*$sW;
-
-    my $offset = $x1*$oX + $y1*$oY + $z1*$oZ + $w1*$oW + $t1*$oT;
-    my $dX = $x2-$x1+1;
-
-    my $result = "";
-    my $scanline;
-
-    for (my $t = $t1; $t <= $t2; $t++) {
-	for (my $w = $w1; $w <= $w2; $w++) {
-	    for (my $z = $z1; $z <= $z2; $z++) {
-		for (my $y = $y1; $y <= $y2; $y++) {
- 		    seek($handle,$offset,0);
-		    read($handle,$scanline,$dX*$oX) or return undef;
-		    $result .= $scanline;
-
-		    $offset += $oY;
-		}
-		$offset += $oZ;
-	    }
-	    $offset += $oW;
-	}
-	$offset += $oT;
-    }
-
-    if ($closeFileLater) {
-        $self->closeFile();
-    }
-
-    return $result;
+ 
+    return $self->Pix->GetPixROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
+        || die ref($self)."->GetPixels:  Could not read pixels\n";
 }
 
 # gets the pixels as an multi-dimensional array of ints
