@@ -57,8 +57,9 @@ Go to the C directory, and do:<br><ul><pre>
 On development servers I make a symbolic link between<pre>
 perl/OMEpl.pm, perl/OMEDataset.pm, perl/OMEDataset/</pre>and wherever packages
 are kept in your perl distribution, so that the perl interpreter picks
-them up.&nbsp; On production servers, you might want to actually copy those
-files + directories there.
+them up.&nbsp;  This is necessary only for running OME scripts from the shell rather than from Apache.  
+You should definitely make symbolic links rather than copying the files so that updates get properly picked up.
+
 <li>
 You need to create the directories /var/tmp/OME, /var/tmp/OME/lock, /var/tmp/OME/sessions</li>
 

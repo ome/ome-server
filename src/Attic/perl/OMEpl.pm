@@ -44,6 +44,9 @@
 # Get rid of the requirement for CPAN::Alias.
 package OMEpl;
 use strict;
+use vars qw($VERSION);
+$VERSION = '1.10';
+
 use OMEfeature;
 use OMEDataset;
 my @knownDatasetTypes;
