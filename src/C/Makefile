@@ -76,10 +76,7 @@ SetDVwave: SetDVwave.c BSUtils.o
 
 cgrayce2:
 	$(MAKE) -C cgrayce
-
-maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
-
+	
 clean :
 	rm -f *.o
 	rm -f $(TARGETS)
