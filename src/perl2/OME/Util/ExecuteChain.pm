@@ -133,12 +133,14 @@ my $self = shift;
 		print "\n",$module->name(),".",$formal_input->name(),":\n";
 	
 		my $new = '';
-		while ($new ne 'N' && $new ne 'E' && $new ne 'S') {
+		my %valid_entries = ( 'N' => undef, 'E' => undef );
+		$valid_entries{'S'} = undef if $formal_input->optional();
+		while (not exists $valid_entries{ $new }) {
 			unless ( $formal_input->optional() ){		
 				print "  New or existing? [N]/E  ";
 			} else {
 				print "This input is optional.  New, existing, or skip? [N]/E/S  ";
-			}			
+			}
 			$new = <STDIN>;
 			chomp($new);
 			$new = uc($new) || 'N';
