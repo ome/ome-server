@@ -37,8 +37,8 @@ require Exporter;
 #********* GLOBALS AND DEFINES
 #*********
 
-our @ISA = qw(print_header confirm_default);
-our @EXPORT = qw(blarg);
+our @ISA = qw(Exporter);
+our @EXPORT = qw(confirm_default print_header);
 
 #*********
 #********* EXPORTED SUBROUTINES
