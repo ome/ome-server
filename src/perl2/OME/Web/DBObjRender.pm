@@ -614,7 +614,7 @@ This list will be constructed in one of three ways.
 
 sub getFields {
 	my ($self, $type, $mode) = @_;
-	
+	print STDERR "hello world\n";
 	my $specializedRenderer = ( $self->_getSpecializedRenderer( $type ) or {} );
 
 	# default: return all fields (insensitive to mode)
@@ -635,7 +635,33 @@ sub getFields {
 	}
 	
 	# We don't need no target
-	return ( sort( grep( $_ ne 'target', @cols) ) );
+	return ( sort __numerical_lexical grep( $_ ne 'target', @cols));
+	
+}
+
+# This helper function does modified alphanumerical sorting so that, 
+# for example, Bin10 comes  AFTER Bin2. Written by Tom Macura.
+sub __numerical_lexical {
+	my ($aa, $bb) = ($a, $b);
+	while ($aa ne '' and $bb ne '') {
+		$aa =~ s/^(\D*)//;
+		my $a_str = $1;
+		$bb =~ s/^(\D*)//;
+		my $b_str = $1;
+		
+		return $a_str cmp $b_str if (not ($a_str eq $b_str));
+		
+		$aa =~ s/^(\d*)//;
+		$a_str = $1 or $a_str = 0;
+		$bb =~ s/^(\d*)//;
+		$b_str = $1 or $b_str = 0;
+
+		return $a_str <=> $b_str if (not ($a_str == $b_str));
+	}
+	
+	# one of the strings is ultimately empty
+	return 0 if ($aa eq '');
+	return 1;
 }
 
 
