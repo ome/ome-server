@@ -48,6 +48,7 @@ use vars qw($VERSION);
 use CGI;
 use Carp;
 use Data::Dumper;
+use Log::Agent;
 
 # OME Modules
 use OME;
@@ -142,20 +143,9 @@ sub __filterObjects {
 	my $factory = $self->Session()->Factory();
 	my @objects;
 
-	my %filter;
-
-	# Copy each of our array based option filters to a filter hash
-	foreach (@{$options->{filters}}) {
-		$filter{$_->[0]} = $_->[1];
-	}
-
 	# Filter the objects if needed
 	if ($options->{filters}) { 
-		# Get a cursor for our search
-		my $cursor = $factory->findObjectsLike($options->{filter_object}, %filter);
-
-		# Iterate and populate list
-		while (my $object = $cursor->next()) { push(@objects, $object) }
+		@objects = $factory->findObjectsLike($options->{filter_object}, %{$options->{filters}});
 	} else {
 		@objects = $factory->findObjects($options->{filter_object});
 	}
@@ -243,7 +233,7 @@ sub getPageBody {
 	# Make a filterset to pass to getTable()
 	my $filterset;
 	if ($q->param('filter_field') and $q->param('filter_string')) {
-		push(@$filterset, [$q->param('filter_field'), $q->param('filter_string')]);
+		$filterset->{ $q->param('filter_field') } = $q->param('filter_string');
 	}
 	
 	# Cleanup so we don't get superfluous propagation
@@ -258,7 +248,7 @@ sub getPageBody {
 				select_column => 0,
 		},
 	);
-	$filter_table = $self->__genericTableFooter(@column_aliases);
+#	$filter_table = $self->__genericTableFooter(@column_aliases);
 
 	
 	return (
