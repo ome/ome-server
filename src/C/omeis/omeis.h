@@ -110,6 +110,21 @@ typedef struct {
 	unsigned long nPix;
 } convertFileRec;
 
+typedef enum {
+	GEOSIGMA_BASIS, SIGMA_BASIS, FIXED_BASIS
+} levelBasisType;
+
+typedef struct {
+	int channel;
+	int time; /* to know which stack statistics to use for the basis */
+	float black, white, gamma;
+	levelBasisType basis;
+	float scale;  /* the computed scaling factor to multiply pixels by. */
+	char isOn;
+	char isFixed;
+} channelSpecType;
+
+
 
 /* ------------------- */
 /* External Prototypes */
@@ -144,5 +159,17 @@ NewPixels (unsigned long dx,
 		   char isSigned,
 		   char isFloat);
 
+
+off_t
+GetOffset (PixelsRep *myPixels,
+	int theX, int theY, int theZ, int theC, int theT);
+
+void
+ScalePixels (
+	PixelsRep *myPixels, off_t offset, size_t nPix,
+	unsigned char *buf, off_t jump,
+	channelSpecType *chSpec);
+
+void fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec);
 
 #endif /* omeis_h */
