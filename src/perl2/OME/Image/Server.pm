@@ -447,10 +447,6 @@ sub __callOMEIS {
             push @params, $stdin_param, [$stdin_filename];
         }
 
-        my $request =
-          POST($server_path,
-               Content_Type => 'form-data',
-               Content      => \@params);
         if ($SHOW_CALLS) {
             print STDERR "Calling remote OMEIS: $server_path\n";
             print STDERR "  Params: \n";
@@ -458,7 +454,10 @@ sub __callOMEIS {
                 print STDERR "    '$k' = '",$params{$k},"'\n";
             }
         }
-
+        my $request =
+          POST($server_path,
+               Content_Type => 'form-data',
+               Content      => \@params);
         $proto->__createUserAgent() unless defined $user_agent;
         my $response = $user_agent->request($request,$to_filename);
 
@@ -774,62 +773,50 @@ sub getROI {
 
 =head2 setThumb
 
-	OME::Image::Server->
-	    setThumb($pixelsID,$theT,$theZ,$channels,$levelBasis);
+	OME::Image::Server->setThumb(
+		PixelsID => $pixelsID,
+		theT     => $theT,
+		theZ     => $theZ,
+		Red      => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Green    => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Blue     => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Gray     => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		LevelBasis => $levelBasis
+	);
 
-This method sets the thumbnail of a pixel set. The composite format
-will be set to 'jpeg', and the composite will be written to the same
-path as the Pixels file with a '.thumb' extension. The GetThumb method
-will retrieve this file. The following parameters are required.
+This method sets the thumbnail of a pixel set. The composite format will
+be set to 'jpeg', and the composite will be written to the same path as
+the Pixels file with a '.thumb' extension. The GetThumb method will
+retrieve this file.
 
-=over
-
-=item $channels
-
-A hash reference. Keys are one or more of C<red>, C<green>, C<blue>,
-C<gray>.  Values are arrays with 4 values representing channel index,
-black level, white level and gamma.  For example,
-
-	{ red => [0, 300, 2563,1.0] }.
-
-The levels and gamma are floating point numbers; the channel index is
-an integer.
-
-=item $levelBasis
-
-An optional $levelBasis parameter can be used to set the levels based
-on statistics (mean or geomean) rather than absolute pixel
-intensities.  For example, a $levelBasis of "mean" allows you to
-specify the channel levels based on mean +/- standard deviations, e.g.
-
-	{ Red => [0, 1.5, 4.5, 1.0] }
-
-will set the black level to the mean+1.5*sigma and white level to
-mean+4.5*sigma.  The statistics used are stack statistics (different
-for every channel and every timepoint).
-
-=back
+	channels: Specify only the channels you wish to have displayed.
+The channel arrays have 4 values representing channel index, black
+level, white level and gamma. The levels and gamma are floating point 
+numbers, the channel index is an integer.
+	levelBasis: An optional levelBasis parameter can be used to set the
+levels based on statistics (mean or geomean) rather than absolute pixel
+intensities. For example, LevelBasis=mean allows you to specify the
+channel levels based on mean +/- standard deviations, e.g.
+	Red => [0, 1.5, 4.5, 1.0], LevelBasis => 'mean' 
+will set the black level to the mean+1.5*sigma
+and white level to mean+4.5*sigma. The statistics used are stack
+statistics (different for every channel and every timepoint).
 
 =cut
 
 sub setThumb {
-    my $proto = shift;
-    my ($pixelsID,$theT,$theZ,$channels,$levelBasis) = @_;
+    my ($proto, %composite) = @_;
     my %params = (Method       => 'Composite',
                   SetThumb     => 1,
-                  PixelsID     => $pixelsID,
-                  theZ         => $theZ,
-                  theT         => $theT,
+                  PixelsID     => $composite{PixelsID},
+                  theZ         => $composite{theZ},
+                  theT         => $composite{theT},
+                  LevelBasis     => $composite{LevelBasis}
                  );
-    $params{RedChannel}   = join(',', @{ $channels->{red} })
-    	if exists $channels->{red} and defined $channels->{red};
-    $params{BlueChannel}  = join(',', @{ $channels->{blue} })
-    	if exists $channels->{blue} and defined $channels->{blue};
-    $params{GreenChannel} = join(',', @{ $channels->{green} })
-    	if exists $channels->{green} and defined $channels->{green};
-    $params{GrayChannel}  = join(',', @{ $channels->{gray} })
-    	if exists $channels->{gray} and defined $channels->{gray};
-    $params{LevelBasis}   = $levelBasis if defined $levelBasis;
+	$params{RedChannel} = join(',', @{ $composite{Red} }) if $composite{Red};
+	$params{GreenChannel} = join(',', @{ $composite{Green} }) if $composite{Green};
+	$params{BlueChannel} = join(',', @{ $composite{Blue} }) if $composite{Blue};
+	$params{GrayChannel} = join(',', @{ $composite{Gray} }) if $composite{Gray};
     $proto->__callOMEIS(%params);
 }
 
@@ -1186,6 +1173,49 @@ sub readFile {
           if $SHOW_READS;
         return $result;
     }
+}
+
+=head2 convert
+
+	my $pixelsWritten = OME::Image::Server->
+	    convert($pixelsID,$fileID,$offset);
+
+Copies pixels from an original file into a new pixels file.  The
+original file should have been previously uploaded via the uploadFile
+method.  The pixels file should have been previously created via the
+newPixels method.  
+
+The Pixels in this file are in XYZCT order, which matches the order in
+Pixels files. Otherwise, you would call ConvertRows, ConvertPlane,
+ConvertTIFF or ConvertStack. The optional Offset parameter is used to
+skip headers. It is the number of bytes from the begining of the file to
+begin reading.
+
+The endian-ness of the uploaded file should be specified; if this
+differs from the endian-ness of the new pixels file, byte swapping will
+be performed by the server.
+
+If the specified pixel file isn't in write-only mode on the image
+server, an error will be thrown.
+
+The number of pixels successfully written by the image server will be
+returned.  This value can be used as an additional error check by
+client code.
+
+=cut
+
+sub convert {
+    my $proto = shift;
+    my ($pixelsID,$fileID,$offset,$bigEndian) = @_;
+    my %params = (Method   => 'Convert',
+                  PixelsID => $pixelsID,
+                  FileID   => $fileID,
+                  Offset   => $offset);
+    $params{BigEndian} = $proto->__setBoolean($bigEndian);
+    my $result = $proto->__callOMEIS(%params);
+    die "Error converting pixels" unless defined $result;
+    chomp $result;
+    return $result;
 }
 
 =head2 convertStack
