@@ -1,4 +1,4 @@
-# OME/module_execution/Handler.pm
+# OME/Analysis/Handler.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -35,12 +35,12 @@ OME::Analysis::Handler - the superclass of all module_execution handlers
 The module_execution handlers are the chief mechanism supporting language
 independence in the modules of the module_execution system.  The handlers
 serve to decouple the details of interfacing with a given language
-from the module_execution engine, and to decouple the common functionality of
-interacting with the database away from the module_execution modules.
+from the analysis engine, and to decouple the common functionality of
+interacting with the database away from the modules.
 
-The Handler class follows the same interface that the module_execution engine
+The Handler class follows the same interface that the analysis engine
 expects of its modules; in this way, the handlers can be seen as
-delegate classes, deferring to the module_execution module itself to perform
+delegate classes, deferring to the module itself to perform
 the actual calculations.
 
 =cut
@@ -54,7 +54,7 @@ use OME::SemanticType;
 use Benchmark qw(timediff timesum timestr);
 
 use fields qw(_location _session _node _output_types _untyped_output
-              _program _formal_inputs _formal_outputs _analysis
+              _module _formal_inputs _formal_outputs _module_execution
               _inputs_by_granularity
               _current_dataset _current_image _current_feature
               _global_inputs _dataset_inputs _image_inputs _feature_inputs
@@ -71,7 +71,7 @@ use fields qw(_location _session _node _output_types _untyped_output
 
 Creates a new instance of the module_execution handler.  Subclass constructors
 I<must> call this as part of their construction code.  The helper
-methods used to create new attributes for the module_execution results will
+methods used to create new attributes for the module results will
 not work without the variables assigned by this method.
 
 =cut
@@ -83,7 +83,7 @@ sub new {
     my $self = {};
     $self->{_location} = $location;
     $self->{_session} = $session;
-    $self->{_program} = $module;
+    $self->{_module} = $module;
     $self->{_node} = $node;
 
     # Hash the formal inputs by name and by granularity, so they can
@@ -173,7 +173,7 @@ sub Factory {
 	my $feature = $handler->getCurrentFeature();
 
 These methods can be used by Handler subclasses during the execution
-of the module_execution module.  They return the dataset, image, and feature
+of the analysis module.  They return the dataset, image, and feature
 that is currently being analyzed by the module.  As the module
 progresses through the methods defined by the Module interface, the
 values these methods return are automatically updated.
@@ -281,7 +281,7 @@ sub getFeatureInputs {
 
 Creates a new feature for use as an actual output of this module.  The
 name of the feature is specified as input.  The tag of the feature is
-determined by the module_execution chain to which this module belongs.  New
+determined by the analysis chain to which this module belongs.  New
 feature attributes are associated with this feature via the
 newAttribute method.
 
@@ -371,11 +371,11 @@ the new attribute is automatically targeted to the currently analyzed
 dataset and image.  In the case of feature outputs, there are three
 possibilities.  The new attribute can be targeted to the current
 feature, the current feature's parent, or a new feature created by the
-module.  The feature actually used is determined by the module_execution chain
+module.  The feature actually used is determined by the analysis chain
 that the module appears in.
 
 Any attributes created via this method will automatically be returned
-to the module_execution engine when the collectFeatureOutputs,
+to the analysis engine when the collectFeatureOutputs,
 collectImageOutputs, and collectDatasetOutputs methods are called.
 Subclasses need not reimplement this functionality.
 
@@ -496,7 +496,7 @@ sub newAttributes {
     OME::SemanticType->__addOneTime('_sortTime',timediff($t1,$t0));
 
     my $attributes = OME::SemanticType->newAttributes($self->Session(),
-                                                       $self->{_analysis},
+                                                       $self->{_module_execution},
                                                        @new_attribute_info);
 
     $self->__saveAttributes($attributes);
@@ -520,7 +520,7 @@ attribute column names to values.  The target of the attributes must
 be specified in the data hashes.
 
 Any attributes created via this method will automatically be returned
-to the module_execution engine when the collectFeatureOutputs,
+to the analysis engine when the collectFeatureOutputs,
 collectImageOutputs, and collectDatasetOutputs methods are called.
 Subclasses need not reimplement this functionality.
 
@@ -617,14 +617,14 @@ sub newAttributesWithTargets {
     }
 
     my $attributes = OME::SemanticType->newAttributes($self->Session(),
-                                                       $self->{_analysis},
+                                                       $self->{_module_execution},
                                                        @new_attribute_info);
 
     $self->__saveAttributes($attributes);
     return $attributes;
 }
 
-# A helper method used to save any attributes created by the module_execution.
+# A helper method used to save any attributes created by the analysis module.
 
 sub __saveAttributes {
     my ($self,$attributes) = @_;
@@ -793,7 +793,7 @@ as it progresses through these interface methods.
 
 sub startAnalysis {
     my ($self,$module_execution) = @_;
-    $self->{_analysis} = $module_execution;
+    $self->{_module_execution} = $module_execution;
     OME::SemanticType->__resetTiming();
 }
 
@@ -936,7 +936,7 @@ sub finishAnalysis {
     $self->{_dataset_outputs} = undef;
     $self->{_global_outputs} = undef;
 
-    my $module_execution = $self->{_analysis};
+    my $module_execution = $self->{_module_execution};
     return unless defined $module_execution;
     $module_execution->attribute_sort_time(OME::SemanticType->__getSeconds('_sortTime'));
     $module_execution->attribute_db_time(OME::SemanticType->__getSeconds('_dbTime'));
