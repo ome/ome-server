@@ -73,6 +73,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 use OME::Session;
 use OME::Web;
+use OME::Tasks::LSIDManager;
 use CGI;
 use Log::Agent;
 use Carp;
@@ -177,7 +178,7 @@ sub getRef {
 
 =head2 render
 
-	my $obj_summary = OME::Web::DBObjRender->render( $object, $mode );
+	my $obj_summary = OME::Web::DBObjRender->render( $object, $mode, $options );
 
 $object is an instance of a DBObject or an Attribute.
 $mode is 'summary' or 'detail'
@@ -201,7 +202,7 @@ this.
 =cut
 
 sub render {
-	my ($self, $obj, $mode) = @_;
+	my ($self, $obj, $mode, $options) = @_;
 	my ($tmpl, %tmpl_data);
 
 	# look for custom template
@@ -210,7 +211,7 @@ sub render {
 		$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 		# load template variable requests
 		my @fields = grep( !m/^!/, $tmpl->param() );
-		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
+		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode, $options );
 	} else {
 
 		# use generic template
@@ -223,14 +224,14 @@ sub render {
 	
 		# load object data
 		my @fields = $self->getFields( $obj, $mode );
-		my %data = $self->renderData( $obj, \@fields, 'html', $mode );
+		my %data = $self->renderData( $obj, \@fields, 'html', $mode, $options );
 		my @name_values;
 		push @name_values, { name => $_, value => $data{ $_ } }
 			foreach @fields;
 		
 		# load template variable requests
 		@fields = grep( !m'^name_value_pairs$|^!relations$', $tmpl->param() );
-		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
+		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode, $options );
 		$tmpl_data{ name_value_pairs } = \@name_values;
 	}
 
@@ -366,7 +367,7 @@ sub renderArray {
 				# grab the next bunch of objects
 				my @objs2tile = splice( @$objs, 0, $n_tiles );
 				# render their data
-				my @objs_data = $self->renderData( \@objs2tile, \@obj_fields, 'html', $mode );
+				my @objs_data = $self->renderData( \@objs2tile, \@obj_fields, 'html', $mode, $options );
 				# pad the data block to match the other rows. Now we have a 'tile'
 				if( scalar( @tile_data ) ) {
 					push( @objs_data, {} ) for( 1..( $n_tiles - scalar( @objs2tile ) ) );
@@ -381,7 +382,7 @@ sub renderArray {
 		if( $tmpl->query( name => '_obj_loop' ) ) {
 			# populate the fields inside the loop
 			my @obj_fields = $tmpl->query( loop => '_obj_loop' );
-			$tmpl_data{ _obj_loop } = [ $self->renderData( \@$objs, \@obj_fields, 'html', $mode ) ];
+			$tmpl_data{ _obj_loop } = [ $self->renderData( \@$objs, \@obj_fields, 'html', $mode, $options ) ];
 					
 		}
 	}
@@ -402,7 +403,7 @@ sub _pagerControl {
 	my $numPages = POSIX::ceil( $obj_count / $limit );
 
 	# Turn the page
-	my $action = $q->param( 'action' ) ;
+	my $action = $q->param( 'page_action' ) ;
 	if( $action ) {
 		if( $action eq 'FirstPage_'.$control_name ) {
 			$offset = 0;
@@ -422,14 +423,14 @@ sub _pagerControl {
 		$pagingText = "<input type='hidden' name='".$control_name."___offset' VALUE='$offset'>";
 		$pagingText .= $q->a( {
 				-title => "First Page",
-				-href => "javascript: document.forms[0].action.value='FirstPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms[0].page_action.value='FirstPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'<<'
 			)." "
 			if ( $currentPage > 1 and $numPages > 2 );
 		$pagingText .= $q->a( {
 				-title => "Previous Page",
-				-href => "javascript: document.forms[0].action.value='PrevPage_$control_name'; document.forms[0].submit();",
+				-href => "javascript: document.forms[0].page_action.value='PrevPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'<'
 			)." "
@@ -437,14 +438,14 @@ sub _pagerControl {
 		$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 		$pagingText .= "\n".$q->a( {
 				-title => "Next Page",
-				-href  => "javascript: document.forms[0].action.value='NextPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms[0].page_action.value='NextPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'>'
 			)." "
 			if $currentPage < $numPages;
 		$pagingText .= "\n".$q->a( {
 				-title => "Last Page",
-				-href  => "javascript: document.forms[0].action.value='LastPage_$control_name'; document.forms[0].submit();",
+				-href  => "javascript: document.forms[0].page_action.value='LastPage_$control_name'; document.forms[0].submit();",
 				}, 
 				'>>'
 			)
@@ -535,6 +536,15 @@ sub renderData {
 		} elsif( $request eq '_ref' ) {
 			$record{ $request } = $self->getRef( $obj, $format, $options );
 					
+		# _checkbox = Checkbox w/ LSID
+		} elsif( $request eq '_checkbox' ) {
+			$record{ $request } = $q->checkbox( 
+				-name => "selected_objects",
+				-value => $self->_getLSIDmanager()->getLSID( $obj ),
+				-label => '',
+			)
+				if( $options->{ draw_checkboxes } );
+					
 		# populate has many aliases
 		} elsif( $request =~ m/^(.+)!(.+)$/ ) {
 			my ($method, $render_mode) = ($1, $2);
@@ -549,7 +559,7 @@ sub renderData {
 		# populate mode render requests
 		} elsif( $request =~ m/^!(.+)$/ ) {
 			my $render_mode = $1;
-			$record{ $request } = $self->render( $obj, $render_mode );
+			$record{ $request } = $self->render( $obj, $render_mode, $options );
 		
 		# make name and id into links for html summary views
 		} elsif( ( $request eq 'id' || $request eq 'name' ) &&
@@ -916,6 +926,13 @@ sub _findTemplate {
 	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
 	return $tmpl_path if -e $tmpl_path;
 	return undef;
+}
+
+sub _getLSIDmanager {
+	my $self=shift;
+	return $self->{ _LSIDmanager } if $self->{ _LSIDmanager };
+	$self->{ _LSIDmanager } = new OME::Tasks::LSIDManager ();
+	return $self->{ _LSIDmanager };
 }
 
 =head1 Specialized Rendering
