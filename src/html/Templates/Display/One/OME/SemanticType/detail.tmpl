@@ -1,0 +1,18 @@
+<table>
+	<caption>
+		SemanticType: <font class="ome_header_title"><TMPL_VAR NAME='name'></font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<nobr>ID: <TMPL_VAR Name='id'></nobr>, 
+			<nobr>Granularity: <TMPL_VAR NAME=granularity></nobr>
+			<table style=" border: 1px #000000 solid;">
+				<tr><td align="left" valign="top">
+					Description: <TMPL_VAR NAME=description>
+				</td></tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<font class="ome_relation_title">Contains Elements:</font>
+<TMPL_VAR NAME=semantic_elements/render-tiled_list>
