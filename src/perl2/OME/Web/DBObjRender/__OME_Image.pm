@@ -110,7 +110,10 @@ sub getRefToObject {
 			my $type = $proto->_getType( $obj );
 			my $id   = $obj->id();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>I($id)</font></td></tr></table></a>";
+			my $ref = "<a href='serve.pl?Page=OME::Web::GetGraphics&ImageID=$id'><img src='$thumbURL'></a>";
+			$ref .= "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>I($id)</a>";
+			return $ref;
+# 			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'><table style='background-image:url(\"$thumbURL\")' width='50' height='50' cellpadding='0'><tr valign='bottom'><td align='right'><font class='ome_text_over_thumbnail'>I($id)</font></td></tr></table></a>";
 		}
 	}
 }
