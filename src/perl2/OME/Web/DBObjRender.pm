@@ -41,6 +41,7 @@ use strict;
 use vars qw($VERSION);
 use OME;
 use OME::Session;
+use OME::Web;
 
 $VERSION = $OME::VERSION;
 
@@ -132,12 +133,13 @@ sub getFieldNames {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
 		    not $doNotSpecialize);
 
-	$type = $proto->_getProto( $type );
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
 	
 	# We don't need no *_id aliases or target
 	my $fieldNames = ( 
 		$proto->_fieldNames() or
-		['id', sort( grep( (!/_id$/ and !/^target$/), $type->getColumns()) ) ] 
+		['id', sort( grep( (!/_id$/ and !/^target$/), $package_name->getColumns()) ) ] 
 	);
 	return @$fieldNames if wantarray;
 	return $fieldNames;
@@ -194,8 +196,9 @@ sub getFieldTypes {
 		    not $doNotSpecialize);
 
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	$type = $proto->_getProto( $type );
-	my %fieldTypes = map{ $_ => $type->getPackageReference($_) } @$fieldNames;
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
+	my %fieldTypes = map{ $_ => $package_name->getPackageReference($_) } @$fieldNames;
 
 	return %fieldTypes if wantarray;
 	return \%fieldTypes;
@@ -224,9 +227,11 @@ sub getFieldLabels {
 		    not $doNotSpecialize);
 	
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	$type = $proto->_getProto( $type );
+
 	# make labels by prettifying the aliases
 	my %labels;
+	
+	# _fieldLabels is class data that allows specialized renderers to overide a subset of labels
 	my $pkg_labels = $proto->_fieldLabels();
 	foreach( @$fieldNames ) {
 		my ($alias,$label) = ($_,$_);
@@ -294,14 +299,15 @@ sub renderSingle {
 		    not $doNotSpecialize);
 
 	my $q = new CGI;
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
 	$fieldNames = $proto->getFieldNames( $obj ) unless $fieldNames;
-	my $type = $proto->_getType( $obj );
 	my $id   = $obj->id();
 	my %record;
 	foreach my $field( @$fieldNames ) {
 		if( $field eq 'id') {
 			$record{ $field } = $q->a( 
-				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id" },
+				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id" },
 				$id
 			);
 		} else {
@@ -315,6 +321,28 @@ sub renderSingle {
 	return \%record;
 }
 
+=head2 getObjectLabel
+
+	my $object_label = OME::Web::RenderData->getObjectLabel( $object, $format );
+
+Gets a name for this object. Subclasses may override this method.
+If a 'name' or a 'Name' method exists for this object, it will be returned.
+Otherwise, 'id' will be returned.
+
+=cut
+
+sub getObjectLabel {
+	my ($proto,$obj,$format, $doNotSpecialize) = @_;
+
+	my $specializedRenderer;
+	return $specializedRenderer->getObjectLabel( $obj, $format )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+		    not $doNotSpecialize);
+
+	return $obj->id().". ".$obj->name() if( $obj->getColumnType( 'name' ) );
+	return $obj->id().". ".$obj->Name() if( $obj->getColumnType( 'Name' ) );
+	return $obj->id();
+}
 
 =head2 getRefToObject
 
@@ -344,11 +372,13 @@ sub getRefToObject {
 		}
 		# FIXME
 		if( /^html$/ ) {
-			my $type = $proto->_getType( $obj );
-			my $id   = $obj->id();
+			my ($package_name, $common_name, $formal_name, $ST) =
+				OME::Web->_loadTypeAndGetInfo( $obj );
+			my $id = $obj->id();
+			my $label = $proto->getObjectLabel( $obj, $format );
 			return  $q->a( 
-				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id" },
-				$id
+				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id" },
+				$label
 			);
 		}
 	}
@@ -376,11 +406,12 @@ sub getSearchFields {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
 		    not $doNotSpecialize);
 
-	$type = $proto->_getType( $type );
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
 
 	my %searchFields;
 	my $q = new CGI;
-	$searchFields{ $_ } = $q->textfield( -name => $type."_".$_ , -size => '5' )
+	$searchFields{ $_ } = $q->textfield( -name => $formal_name."_".$_ , -size => '5' )
 		foreach ( @$fieldNames );
 
 	return %searchFields if wantarray;
@@ -401,15 +432,16 @@ called with with a specialized prototype.
 =cut
 
 sub _getSpecializedRenderer {
-	my ($proto,$specialization) = @_;
+	my ($proto,$type) = @_;
 	
 	# get DBObject prototype or ST name from instance
-	$specialization = $proto->_getProto( $specialization );
-	my $type = $proto->_getType( $specialization );
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
 	
 	# construct specialized package name
-	($type =~ s/::/_/g or $type =~ s/@//);
-	my $specializedPackage = "OME::Web::RenderData::__".$type;
+	my $specializedPackage = $formal_name;
+	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
+	$specializedPackage = "OME::Web::RenderData::__".$specializedPackage;
 
 	# obtain package
 	eval( "use $specializedPackage" );
@@ -417,81 +449,6 @@ sub _getSpecializedRenderer {
 		unless $@ or $proto eq $specializedPackage;
 
 	return undef;
-}
-
-=head2 _getProto
-
-	my $type = OME::Web::RenderData->_getProto( $type );
-
-$type can be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-
-This holds the magic to return the DBObject prototype from whatever
-$type happens to be. It also loads the DBObject so methods can be called on it.
-
-=cut
-
-sub _getProto {
-	my ($proto, $type) = @_;
-
-	# get prototype from instance
-	if( ref($type) ) {
-		$type = ref( $type ) ;
-	}
-	
-	# Don't try to load proto if type is a ST.
-	return $type if $type =~ /^OME::SemanticType::__/;
-	
-	# get DBObject from attribute & ensure it is loaded.
-	if( $type =~ /^@/ ) {
-		my $session = OME::Session->instance();
-		my $attr_name = substr( $type, 1 );
-		my $ST = $session->Factory->findObject("OME::SemanticType", name=>$attr_name);
-		$ST->requireAttributeTypePackage();
-		$type = $ST->getAttributeTypePackage();
-	} else {
-	# make sure DBObject is loaded. We'll be needing to call methods on it later.
-		eval( "use $type" ) ;
-		die "Error loading package $type. Error msg is:\n$@"
-			if $@;
-	}
-	return $type;
-}
-
-
-=head2 _getType
-
-	my $type = OME::Web::RenderData->_getType( $type );
-
-$type can be a DBObject name ("OME::Image"), an Attribute DBObject
-("OME::SemanticType::__STName"), or an instance of either
-
-Returns either the DBObject prototype or @AttrName from whatever
-$type happens to be.
-
-=cut
-
-sub _getType {
-	my ($proto, $type) = @_;
-
-	# get prototype from instance
-	$type = ref( $type ) if( ref($type) );
-
-	# @Attr_name is already formatted properly
-	return $type if $type =~ /^@/;
-	
-	# Attribute DBObject -> @AttrName
-	return $type if $type =~ s/^OME::SemanticType::__(.*)$/\@$1/;
-
-	# it's a DBObject proto
-	return $type;
-}
-
-sub _typeIsST {
-	my ($proto, $type) = @_;
-	$type = $proto->_getProto( $type );
-	return 1 if $type =~ /OME::SemanticType::__/;
-	return 0;
 }
 
 =head1 Author
