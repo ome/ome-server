@@ -1,6 +1,5 @@
 # OME/Install/ApacheConfigTask.pm
-# This task initializes the core OME system which currently consists of the 
-# OME_BASE directory structure and ome user/group.
+# This task installs and configures the Apache portion of OME.
 
 #-------------------------------------------------------------------------------
 #
@@ -48,6 +47,12 @@ use OME::Install::Util;
 
 use base qw(OME::Install::InstallationTask);
 
+#*********
+#********* GLOBALS AND DEFINES
+#*********
+
+# Our basedir which we grab from the environment
+my $OME_BASE_DIR;
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -113,21 +118,21 @@ sub httpd_restart {
 	print `$apachectlBin restart`;
 }
 
-sub copy_ome_conf {
-    my $OME_INSTALL_BASE = shift;
+sub fix_ome_conf {
+	my $OME_CONF_DIR = shift;
 	my $OME_DIST_BASE = getcwd;
-    my @files = glob ($OME_DIST_BASE.'/conf/httpd.ome*.conf');
-	my $file;
 
-	foreach $file (@files) {	
-		open(FILE, "< $file") or croak "can't open $file for reading: $!\n";
+    my @files = glob ("$OME_CONF_DIR/httpd.ome.*.conf");
+
+	foreach my $file (@files) {	
+		open(FILE, "<", $file) or croak "Can't open $file for reading: $!";
 		my @lines = <FILE>;
 		close (FILE);
 		my $config = join ('',@lines); 
 		$config =~ s/%OME_DIST_BASE/$OME_DIST_BASE/mg;
-		$config =~ s/%OME_INSTALL_BASE/$OME_INSTALL_BASE/mg;
-		$file =~ s/$OME_DIST_BASE/$OME_INSTALL_BASE/;
-		open(FILE, "> $file") or croak "can't open $file for writing: $!\n";
+		$config =~ s/%OME_INSTALL_BASE/$OME_BASE_DIR/mg;
+		$file =~ s/$OME_DIST_BASE/$OME_BASE_DIR/;
+		open(FILE, "> $file") or croak "Can't open $file for writing: $!";
 		print FILE $config;
 		close (FILE);
 	}
@@ -138,17 +143,17 @@ sub copy_ome_conf {
 
 sub getApacheBin {
 	my $apache_info = {};
-	my $httpdBin;
-	my $apachectlBin;
 
 	# First, get the httpd executable.
-	$httpdBin = which ('httpd');
-	$httpdBin = whereis ("httpd") or croak "Unable to locate httpd binary." unless $httpdBin;
-	$apache_info->{bin} = $httpdBin;
-	
-	$apachectlBin = which ('apachectl');
-	$apachectlBin = whereis ("apachectl") or croak "Unable to locate apachectl binary." unless $apachectlBin;
-	$apache_info->{apachectl} = $apachectlBin;
+	$apache_info->{bin} = which ('httpd')
+	                      || which ('apache')
+						  || whereis ("httpd")
+						  || croak "Unable to locate httpd binary";
+
+	$apache_info->{apachectl} = which ('apachectl')
+	                            || which ('apachectl-ssl')
+								|| whereis ("apachectl")
+								|| croak "Unable to locate apachectl binary";
 	
 	return $apache_info;
 }
@@ -159,6 +164,7 @@ sub getApacheInfo {
 	my ($httpdConf,$httpdBin,$httpdRoot,$omeConf);
 
 	$httpdBin = $apache_info->{bin};
+	print "bin: $httpdBin\n";
 	
 	if (-x $httpdBin) {
 		# Get the location of httpd.conf from the compiled-in options to httpd
@@ -169,7 +175,7 @@ sub getApacheInfo {
 		chomp $httpdRoot;
 		$apache_info->{root} = $httpdRoot;
 	
-		if (not File::Spec->file_name_is_absolute  ($httpdConf) ) {
+		if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
 			$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
 			$httpdConf = File::Spec->canonpath( $httpdConf ); 
 		}
@@ -199,6 +205,7 @@ sub getApacheInfo {
 				$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
 				$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
 				$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
+				# FIXME: Some versions of apache use no quotes
 			}
 			$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
 			$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
@@ -206,6 +213,8 @@ sub getApacheInfo {
 			print STDERR  "Could not open httpd.conf ($httpdConf) for reading: $!\n";
 		}
 	}
+
+	chomp $apache_info->{DocumentRoot} if $apache_info->{DocumentRoot};
 
 	return $apache_info;
 }
@@ -218,9 +227,15 @@ sub getApacheInfo {
 
 sub execute {
 	return unless y_or_n('Configure Apache server?');
+
+	print "\n";  # Spacing
   
 	# Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+    $OME_BASE_DIR = $environment->base_dir() or croak "Could not get base installation environment\n";
+
+	# The configuration directory
+	my $OME_CONF_DIR = $OME_BASE_DIR . '/conf';
     
     print_header ("Apache Setup");
 
@@ -232,19 +247,18 @@ sub execute {
     print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
     umask (0002);
 
-    my $OME_BASE_DIR = $environment->base_dir() or croak "Could not get base installation environment\n";
 
 	my $apache_info = getApacheBin();
 
-    
     #********
     #******** Fix paths in conf/httpd.ome.*.conf
     #********
-	copy_ome_conf($OME_BASE_DIR);
+
+	fix_ome_conf("$OME_CONF_DIR");
 	
-	my $ome_conf = $OME_BASE_DIR.'/conf/httpd.ome.dev.conf';
+	my $ome_conf = $OME_CONF_DIR . '/httpd.ome.dev.conf';
 	$ome_conf = $OME_BASE_DIR.'/conf/httpd.ome.conf'
-		unless y_or_n("Use OME Apache configuration for developers ($ome_conf)?");
+		unless y_or_n("Use OME Apache configuration for developers ($ome_conf) ?");
 
 	croak "Could not read OME Apache configuration file \"\n" unless -r $ome_conf;
 	$apache_info->{ome_conf} = $ome_conf;
@@ -262,7 +276,7 @@ sub execute {
     #********
     my $apacheBak = $apache_info->{conf_bak};
 	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
-	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf\n" if $apache_info->{mod_perl_off};
+	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf" if $apache_info->{mod_perl_off};
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
 		if (not -w $httpdConf) {
 			print "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
@@ -303,5 +317,6 @@ sub rollback {
     print "Rollback";
     return;
 }
+
 
 1;
