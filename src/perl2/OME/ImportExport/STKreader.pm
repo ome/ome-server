@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# OME/ImportExport/STKreader.pm
+# STKreader.pm
 # Copyright (C) 2003 Open Microscopy Environment
 # Author:  Brian S. Hughes
 #
@@ -392,8 +392,8 @@ sub partition_and_sort {
 	    $depth = 3 - scalar @ndx_keys;
 	    for ($i = $st_slice; $i <= $end_slice; $i++) {
 		my @xy;
+		$offset = $st_offset + ($planes->{$i}) * $plane_size;
 		for ($row = 0; $row < $num_rows; $row++) {
-		    $offset = $st_offset + ($planes->{$i}) * $plane_size;
 		    $status = OME::ImportExport::FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
 		    last
 			unless $status eq "";
