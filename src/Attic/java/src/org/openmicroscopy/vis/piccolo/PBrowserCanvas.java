@@ -43,8 +43,9 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.vis.chains.events.SelectionEvent;
+import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.util.SwingWorker;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
@@ -65,8 +66,8 @@ import java.util.Collection;
  * @since OME2.0
  */
 
-public class PBrowserCanvas extends PCanvas implements PBufferedObject,
-	DatasetSelectionEventListener {
+public class PBrowserCanvas extends PCanvas implements PBufferedObject, 
+		SelectionEventListener  {
 	
 	/**
 	 * The initial magnification of the  canvas
@@ -192,11 +193,20 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			b.getHeight()+2*PConstants.SMALL_BORDER); 
 	}
 	
-	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		Collection selections = e.getDatasets();
-		if (e.getSelectedDataset() != null) {
+	
+	public void displayAllDatasets() {
+		datasets= new TreeSet(connection.getDatasetsForUser());
+		displayDatasets();
+	}
+	
+	public void selectionChanged(SelectionEvent e) {
+		SelectionState state = e.getSelectionState();
+		Collection selections = state.getActiveDatasets();
+		CDataset selected = state.getSelectedDataset();
+		
+		if (selected != null) {
 			datasets = new TreeSet();
-			datasets.add(e.getSelectedDataset());
+			datasets.add(selected);
 		}
 		else {
 			if (selections != null && selections.size() > 0)
@@ -204,11 +214,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			else
 				datasets = new TreeSet(connection.getDatasetsForUser());
 		}	
-		displayDatasets();
-	}
-	
-	public void displayAllDatasets() {
-		datasets= new TreeSet(connection.getDatasetsForUser());
 		displayDatasets();
 	}
  }
