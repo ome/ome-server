@@ -212,7 +212,7 @@ my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a na
 			$OME->PurgeDataset($datasetID);
 			$OME->FinishAnalysis();
 		}
-	# Report the error.  Getting a bogus CCCP is fatal!
+	# Report the error.  Getting a bogus TMCP is fatal!
 		else {
 			die "$programName returned '$TMCP' - was expecting a number.\n$programName ERROR:".`cat $tempFileNameErr`."\n";
 		}
