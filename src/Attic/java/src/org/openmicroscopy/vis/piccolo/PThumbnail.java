@@ -125,6 +125,16 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 			highlightRect = null;
 		}
 		image.highlightThumbnails(v);
+		
+		// ok. if I'm under a pdatasetimages node, setup the halo
+		PNode parent = getParent();
+		if (parent != null) {
+			parent = parent.getParent();
+			if (parent != null && (parent instanceof PDatasetImagesNode)) {
+				PDatasetImagesNode pin = (PDatasetImagesNode) parent;
+				pin.highlightThumbnail(this,v);
+			}
+		}
 	}
 	
 	private PPath makeHighlight() {
