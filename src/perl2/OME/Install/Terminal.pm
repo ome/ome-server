@@ -86,47 +86,36 @@ sub confirm {
 sub confirm_path {
     my ($text, $default) = @_; 
 
-    while (1) {
-	print "$text ", BOLD, "[$default]", RESET, ": ";
-	my $input = ReadLine 0;
-	chomp $input;
-	($input = $default) unless $input;
-	# Rip trailing slash
-	if ($input =~ /^(.*)\/$/) { $input = $1 }
+    print "$text ", BOLD, "[$default]", RESET, ": ";
+    my $input = ReadLine 0;
+    chomp $input;
+    ($input = $default) unless $input;
 
-	return $input unless not confirm($input);
-    }
+    # Rip trailing slash
+    if ($input =~ /^(.*)\/$/) { $input = $1 }
 
+    return $input;
 }
 
 sub confirm_default {
     my ($text, $default) = @_; 
 
-    while (1) {
-	print "$text ", BOLD, "[$default]", RESET, ": ";
-	my $input = ReadLine 0;
-	chomp $input;
-	($input = $default) unless $input;
+    print "$text ", BOLD, "[$default]", RESET, ": ";
+    my $input = ReadLine 0;
+    chomp $input;
+    ($input = $default) unless $input;
 
-	return $input unless not confirm($input);
-    }
-
+    return $input;
 }
 
 sub question {
     my $text = shift;
 
-    while (1) {
-	print "$text";
-	my $input = ReadLine 0;
-	chomp $input;
+    print "$text";
+    my $input = ReadLine 0;
+    chomp $input;
 
-	print "Using \"$input\", are you sure ? [y/", BOLD, "n", RESET, "]: ";
-	my $y_or_n = ReadLine 0;
-	chomp $y_or_n;
-
-	if (lc($y_or_n) eq "y") { return $input };
-    }
+    return $input;
 }
 
 sub whereis {
