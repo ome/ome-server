@@ -132,7 +132,7 @@ foreach my $imageID (@imageIDs) {
 	for(my $theZ = 0; $theZ < $pixels->SizeZ(); $theZ++) {
 		for( my $theC = 0; $theC < $pixels->SizeC(); $theC++) {
 			for( my $theT = 0; $theT < $pixels->SizeT(); $theT++) {
-				my $path = $output_directory.$image->name()."-Z$theZ.C$theC.T$theT.tiff";
+				my $path = $output_directory.$image->name()."-C$theC.T$theT.Z$theZ.tiff";
 				
 				# Plane2TIFF produces black images. I don't know what's up with that.
 				# Till that problem is solved, Plane2TIFF8 will have to do.
