@@ -52,9 +52,8 @@ import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.CNode;
-import org.openmicroscopy.Module;
+import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import org.openmicroscopy.vis.dnd.ModuleFlavor;
@@ -131,7 +130,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 
 	
 	public void dragEnter(DropTargetDragEvent e) {
-		System.err.println("drag enter canvas");
+		//System.err.println("drag enter canvas");
 		removeInputEventListener(handler);
 		e.acceptDrag (DnDConstants.ACTION_MOVE);
 	
@@ -140,18 +139,18 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	public void drop(DropTargetDropEvent e) {
 		try {
 			Transferable transferable =  e.getTransferable();
-			System.err.println("got a drop on canvavs "+transferable);
+		//	System.err.println("got a drop on canvavs "+transferable);
 			if (transferable.isDataFlavorSupported(ModuleFlavor.moduleFlavor)) { 
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				String i = (String)transferable.getTransferData(
 						ModuleFlavor.moduleFlavor);
-				System.err.println("just dropped module "+i+" onto chain canvas.");
+		//		System.err.println("just dropped module "+i+" onto chain canvas.");
 				e.getDropTargetContext().dropComplete(true);
 				int id = Integer.parseInt(i);
-				ModuleInfo mInfo = connection.getModuleInfo(id);
-				System.err.println("module is "+mInfo.getModule().getName());
+				CModule mod = connection.getModule(id);
+		//		System.err.println("module is "+mod.getName());
 				Point2D loc = e.getLocation();
-				createDroppedModule(mInfo,loc);
+				createDroppedModule(mod,loc);
 				addInputEventListener(handler);
 			}
 			else if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor)) {
@@ -160,7 +159,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 					getTransferData(ChainFlavor.chainFlavor);
 				e.getDropTargetContext().dropComplete(true);
 				int id = i.intValue();
-				System.err.println("dropping chain id "+id);
+		//		System.err.println("dropping chain id "+id);
 				Point2D loc = e.getLocation();
 				Chain chain = connection.getChain(id);
 				createDroppedChain(chain,loc);
@@ -169,7 +168,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 			} 
 		}
 		catch(Exception exc ) {
-			System.err.println("drop failed");
+		//	System.err.println("drop failed");
 			exc.printStackTrace();
 			clearDrop(e);
 		}
@@ -191,24 +190,22 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	}
 	
 	
-	private void createDroppedModule(ModuleInfo info,Point2D location) {
+	private void createDroppedModule(CModule mod,Point2D location) {
 		// create the PModule
 		
-		System.err.println("creating new dropped module at "+
-			location.getX()+","+ location.getY());
+	//	System.err.println("creating new dropped module at "+
+	//		location.getX()+","+ location.getY());
 		getCamera().localToView(location);
-		System.err.println("view coords are "+location.getX()+","+
-			location.getY());
-		PModule mNode = new PModule(connection,info,
+	//	System.err.println("view coords are "+location.getX()+","+
+	//		location.getY());
+		PModule mNode = new PModule(connection,mod,
 			(float) location.getX(), (float) location.getY());
-		info.addModuleWidget(mNode);
+		mod.addModuleWidget(mNode);
 		
 		// add it to layer.
 		layer.addChild(mNode);
 		
 		// put the module info back into the connection
-		Module module = info.getModule();
-		connection.setModuleInfo(module.getID(),info);
 		setSaveEnabled(true);
 	}
 	
@@ -293,7 +290,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		PNode node;
 		PParamLink link;
 		
-		System.err.println("adding links");
+	//	System.err.println("adding links");
 		Iterator iter = linkLayer.linkIterator();
 		while (iter.hasNext()) {
 			node = (PNode) iter.next();
@@ -312,7 +309,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 				//to node
 				Node toNode = input.getPModule().getNode();
 				// add it.
-				System.err.println("adding link...");
+	//			System.err.println("adding link...");
 				manager.addLink(chain,fromNode,fromOutput,toNode,toInput);
 			}
 		}
