@@ -192,9 +192,20 @@ function openImage (id) {
 	var mode = openPopUpImageAs();
 	if ( mode == 'image_detail' ) {
 		openInfoImage(id)
+	} else if( mode == 'declassify' ) {
+		declassifyImage( id );
 	} else {
 		openPopUpImage( id );
 	} 
+}
+
+function declassifyImage (id) {
+	if( document.forms && document.forms[0] && document.forms[0].declassifyImage) {
+		document.forms[0].declassifyImage.value = id;
+		document.forms[0].submit();
+	} else {
+		alert( 'The document does not have a form properly set up to declassify images.' );
+	}
 }
 
 // openPopUpImage()
