@@ -53,6 +53,7 @@ __PACKAGE__->addColumn(image => 'image_id','OME::Image',
                         Indexed => 1,
                         ForeignKey => 'images',
                        });
+__PACKAGE__->addDeleteKey('image_id');
 __PACKAGE__->addColumn(dataset_id => 'dataset_id');
 __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
                        {
@@ -61,6 +62,7 @@ __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
                         Indexed => 1,
                         ForeignKey => 'datasets',
                        });
+__PACKAGE__->addDeleteKey('dataset_id');
 
 # Our current caching implements breaks when there is not a single
 # primary key column for the table.  As this is the case for this

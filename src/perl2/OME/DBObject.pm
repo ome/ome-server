@@ -90,6 +90,10 @@ __PACKAGE__->mk_classdata('__tables');
 # __primaryKeys()->{$table} = $column
 __PACKAGE__->mk_classdata('__primaryKeys');
 
+# Columns which can be used to delete
+# __primaryKeys()->{$table} = [$column,...]
+__PACKAGE__->mk_classdata('__deleteKeys');
+
 # A list of the has-many accessors which have been defined, stored as a
 # hash-set (contents in keys, "undef" in values)
 __PACKAGE__->mk_classdata('__hasManys');
@@ -236,6 +240,7 @@ sub newClass {
     $class->__defaultTable(undef);
     $class->__tables({});
     $class->__primaryKeys({});
+    $class->__deleteKeys({});
     $class->__hasManys({});
     $class->__sequence(undef);
 
@@ -337,6 +342,43 @@ sub addPrimaryKey {
         no strict 'refs';
         *{"$class\::$column"} = $accessor;
     }
+
+    return;
+}
+
+=head2 addDeleteKey
+
+	__PACKAGE__->addDeleteKey($location);
+
+Declares a delete key column for this subclass.  A delete key is
+basically a big huge hack, which allows DBObject classes which don't
+have primary keys to be deleted.  Currently the only cases of this are
+the many-to-many mapping classes between projects, datasets, and
+images.  They should be used with extreme prejudice, and will
+hopefully be replaced with something more robust in the near future.
+
+The $location parameter should be in one of two forms: "TABLE.COLUMN"
+or "COLUMN".  The second form can only be used if the setDefaultTable
+method has been called previously.
+
+=cut
+
+sub addDeleteKey {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($location) = @_;
+
+    # Verify that the location is valid.
+    my ($table,$column) = $class->__verifyLocation($location);
+
+    #print "Adding delete key $table.$column to $class\n";
+
+    # Add an entry to __deleteKeys
+    $class->__deleteKeys()->{$table}->{$column} = undef;
+
+    # Maintain a list of all the tables this class is stored in.
+    $class->__tables()->{$table} = undef;
 
     return;
 }
@@ -907,6 +949,38 @@ sub writeObject {
     my $self = shift;
     $self->storeObject();
     $self->Session()->commitTransaction();
+}
+
+=head2 deleteObject
+
+	$instance->deleteObject();
+
+Deletes this object from the database.  Be very careful before calling
+this!  No referential integrity constraints are enforced; if the
+database engine does not want you to delete this object, you will get
+an error.
+
+This method does B<absolutely no transaction control whatsoever>.  You
+must manage that yourself with the transaction control methods in
+L<OME::Session|OME::Session>.  Note that Postgres, at least, does not
+automatically commit a transaction at the end of a program, so any
+uncommitted changes will not make it into the database.
+
+=cut
+
+sub deleteObject {
+    my $self = shift;
+
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+    $factory or confess ("Failure to retrieve factory.");
+    my $dbh = $factory->obtainDBH();
+    eval {
+        $self->__deleteFromDatabase($dbh);
+    };
+    die $@ if $@;
+
+    return;
 }
 
 =head2 getDataHash
@@ -1814,6 +1888,48 @@ sub __makeUpdateSQLs {
     return \@sqls;
 }
 
+=head2 __makeDeleteSQLs
+
+	my $sqls = $instance->__makeDeleteSQLs();
+
+Creates a series of DELETE SQL statements suitable for deleting the
+specified DBObject instance from the database.  The $sqls result has
+the same format as the $sqls result of the __makeInsertSQLs method.
+
+=cut
+
+sub __makeDeleteSQLs {
+    my $self = shift;
+
+    my $tables = $self->__tables();
+    my $keys = $self->__primaryKeys();
+    my $deletes = $self->__deleteKeys();
+
+    my @sqls;
+    foreach my $table (keys %$tables) {
+        my $key = $keys->{$table};
+        my $delete = $deletes->{$table};
+
+        if (defined $key) {
+            my $sql = "delete from $table where $table.$key = ?";
+            my $values = [$self->{__id}];
+            push @sqls, [$sql,$values];
+        } elsif (defined $delete) {
+            my @deletes = keys %$delete;
+            my $sql = "delete from $table where ";
+            my @wheres = map { "${table}.$_ = ?" } @deletes;
+            $sql .= join (" and ",@wheres);
+            my @values = map { $self->$_() } @deletes;
+            push @sqls, [$sql,\@values];
+        } else {
+            die "Cannot delete $table if we don't know the primary key!"
+              unless defined $key;
+        }
+    }
+
+    return \@sqls;
+}
+
 =head2 __createNewInstance
 
 	my $instance = $class->__createNewInstance($dbh,$data_hash);
@@ -1916,6 +2032,49 @@ sub __writeToDatabase {
     }
 
     $self->{__changedFields} = {};
+
+    return;
+}
+
+=head2 __writeToDatabase
+
+	$instance->__writeToDatabase($dbh);
+
+Deletes this instance from the database.  No referential integrity
+constraints are checked; if the database doesn't want you to delete
+this object, you'll get an error.
+
+Note that this method is not truly atomic in the case of subclasses
+which span tables since we cannot rely on hierarchical transactions in
+the underlying database.  (In other words, we cannot necessarily start
+a "subtransaction" without clobbering a transaction which is occuring
+outside of this method.)  Therefore, if one of the DELETE statements
+fails, this method cannot roll back the DELETE statements which had
+succeeded to that point.
+
+=cut
+
+sub __deleteFromDatabase {
+    my ($self,$dbh) = @_;
+
+    my $sqls = $self->__makeDeleteSQLs();
+
+    # FIXME: Just like in __createNewInstance, we don't handle
+    # atomicity very well.
+    my $i = 1;
+    foreach my $sql_entry (@$sqls) {
+        my ($sql,$values) = @$sql_entry;
+        my $sth = $dbh->prepare($sql);
+        $sth->execute(@$values) or die "Cannot delete object from database!";
+    }
+
+    # Once deleted from the database the entire contents of the object
+    # in memory have been "modified".
+
+    $self->{__changedFields} = {};
+    foreach my $alias (keys %{$self->__columns()}) {
+        $self->{__changedFields}->{$alias} = undef;
+    }
 
     return;
 }

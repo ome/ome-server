@@ -292,6 +292,7 @@ __PACKAGE__->addColumn('project','project_id','OME::Project',
                        NotNull => 1,
                        ForeignKey => 'projects',
                       });
+__PACKAGE__->addDeleteKey('project_id');
 __PACKAGE__->addColumn('dataset_id','dataset_id');
 __PACKAGE__->addColumn('dataset','dataset_id','OME::Dataset',
                       {
@@ -299,6 +300,7 @@ __PACKAGE__->addColumn('dataset','dataset_id','OME::Dataset',
                        NotNull => 1,
                        ForeignKey => 'datasets',
                       });
+__PACKAGE__->addDeleteKey('dataset_id');
 
 
 # Our current caching implements breaks when there is not a single
