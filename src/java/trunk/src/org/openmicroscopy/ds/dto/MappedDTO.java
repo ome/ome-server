@@ -207,6 +207,8 @@ public abstract class MappedDTO
         try
         {
             Map m = (Map) elements.get(element);
+            if (m == null)
+                return;
             MappedDTO dto = (MappedDTO) dtoClazz.newInstance();
             dto.setMap(m);
             elements.put(element,dto);
