@@ -53,7 +53,7 @@ public class XmlRpcCaller
 {
     public static final String NULL_REFERENCE = ">>OBJ:NULL";
     public static boolean TRACE_CALLS = false;
-    public static boolean USE_LITE_CLIENT = false;
+    public static boolean USE_LITE_CLIENT = true;
 
     private XmlRpcClient  xmlrpc;
     private Vector        vparams = new Vector();
