@@ -74,10 +74,10 @@
 	  <Node NodeID = "Import" ProgramName = "Image import"/>
 	  <Node NodeID = "TypeCast" ProgramName="Create pixels slices"/>
 	  <Node NodeID = "Deli" ProgramName="Create plane slices"/>
-	  <Node NodeID = "HaralickFeatures0" ProgramName="Haralick Features (Dist 1, Angle 0)"/>
-	  <Node NodeID = "HaralickFeatures45" ProgramName="Haralick Features (Dist 1, Angle 45)"/>
-	  <Node NodeID = "HaralickFeatures90" ProgramName="Haralick Features (Dist 1, Angle 90)"/>
-	  <Node NodeID = "HaralickFeatures135" ProgramName="Haralick Features (Dist 1, Angle 135)"/>
+	  <Node NodeID = "HaralickFeatures0" ProgramName="Haralick Features (Angle 0)"/>
+	  <Node NodeID = "HaralickFeatures45" ProgramName="Haralick Features (Angle 45)"/>
+	  <Node NodeID = "HaralickFeatures90" ProgramName="Haralick Features (Angle 90)"/>
+	  <Node NodeID = "HaralickFeatures135" ProgramName="Haralick Features (Angle 135)"/>
     </Nodes>
 
     <Links>

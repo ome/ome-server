@@ -260,7 +260,7 @@
 		</AnalysisModule>
 		
 		<AnalysisModule
-		   ModuleName="Haralick Features (Dist 1, Angle 0)"
+		   ModuleName="Haralick Features (Angle 0)"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
@@ -319,7 +319,7 @@
 		</AnalysisModule>
 
 		<AnalysisModule
-		   ModuleName="Haralick Features (Dist 1, Angle 45)"
+		   ModuleName="Haralick Features (Angle 45)"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
@@ -378,7 +378,7 @@
 		</AnalysisModule>
 
 		<AnalysisModule
-		   ModuleName="Haralick Features (Dist 1, Angle 90)"
+		   ModuleName="Haralick Features (Angle 90)"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
@@ -437,7 +437,7 @@
 		</AnalysisModule>
 
 		<AnalysisModule
-		   ModuleName="Haralick Features (Dist 1, Angle 135)"
+		   ModuleName="Haralick Features (Angle 135)"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="mb_texture"
