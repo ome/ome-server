@@ -1,12 +1,13 @@
 #!/bin/sh
 #
 # OMEtouch.sh
-# Copyright (C) 2002 Brian Hughes
+# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Author:  Brian S. Hughes
 #
 #    This library is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU General Public
+#    modify it under the terms of the GNU Lesser General Public
 #    License as published by the Free Software Foundation; either
-#    version 2.0 of the License, or (at your option) any later version.
+#    version 2.1 of the License, or (at your option) any later version.
 #
 #    This library is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,10 +18,11 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-#
+
 # Script to insure that directories needed by Apache to run OME exist.
 #
-# Run this script once immediately after OME is installed to create
+# Run this script once immediately after OME is installed, but before
+# the OME database is created by bootstrapOME.pl, to create
 # OME's Apache directories.
 #
 # On RedHat Linux, place this script in /etc/cron.daily. This will insure
@@ -35,7 +37,6 @@ then
     touch /var/tmp/OME
 else
     mkdir /var/tmp/OME
-    chmod 0777 /var/tmp/OME
 fi
 
 if [ -d /var/tmp/OME/lock ]
@@ -43,7 +44,6 @@ then
     touch /var/tmp/OME/lock
 else
     mkdir /var/tmp/OME/lock
-    chmod 0777 /var/tmp/OME/lock
 fi
 
 if [ -d /var/tmp/OME/sessions ]
@@ -51,7 +51,6 @@ then
     touch /var/tmp/OME/sessions
 else
     mkdir /var/tmp/OME/sessions
-    chmod 0777 /var/tmp/OME/sessions
 fi
 
 
