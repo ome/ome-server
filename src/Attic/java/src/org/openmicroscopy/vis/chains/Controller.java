@@ -41,7 +41,6 @@
 
 
 package org.openmicroscopy.vis.chains;
-
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.util.LoginResponder;
 import javax.swing.JFrame;
@@ -52,6 +51,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.awt.Component;
 import java.awt.Image;
 import java.net.URL;
 import java.awt.image.ImageProducer;
@@ -102,6 +102,8 @@ public class Controller  implements LoginResponder {
 	private ControlPanel controlPanel;
 	
 	private ResultFrame currentResultFrame;
+	
+	private int initThreads = 0;
 	
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -253,10 +255,14 @@ public class Controller  implements LoginResponder {
 		
 		panel.add(Box.createRigidArea(new Dimension(0,5)));		
 		JLabel title = new JLabel("Loading...");
+		title.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.add(title);
-		statusLabel = new JLabel("OME Database Contents               ");
-		panel.add(Box.createRigidArea(new Dimension(0,5)));
+		statusLabel = new JLabel("OME Database Contents ");
+		statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		statusLabel.setPreferredSize(new Dimension(350,20));
 		panel.add(statusLabel);
+		Component box = Box.createRigidArea(new Dimension(0,5));
+		panel.add(box);
 		status.pack();
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		Rectangle bounds = status.getBounds();
@@ -296,14 +302,36 @@ public class Controller  implements LoginResponder {
 	 * {@link ChainLibraryFrame}
 	 */
 	public void completeWindows() {
+		
+		//1 thread
+		initThreads++;
+		connection.initDatasets(this);
 		controlPanel  = new ControlPanel(this,connection);
 		controlPanel.setLoggedIn(connection.getUserName());
 		controlPanel.setEnabled(true);
+		// 2 threads
+		initThreads++;
 		moduleFrame = new ModulePaletteFrame(this,connection);
+		// 3 threads
+		initThreads++;
 		connection.layoutChains();
-		library = new ChainLibraryFrame(this,connection);
-	}
 
+		
+	}
+	
+	public void buildLibraryFrame() {
+		library = new ChainLibraryFrame(this,connection);
+		System.err.println("finishing chain library frame");
+		finishInitThread();
+	}
+	
+
+	public synchronized void finishInitThread() {
+		initThreads--;
+		System.err.println("setting # of active threads to "+initThreads);
+		if (initThreads == 0)
+			closeStatusWindow();
+	}
 	/**
 	 * Logout of the system - remove all active windows and 
 	 * present the login dialog.
