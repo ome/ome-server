@@ -154,8 +154,8 @@ sub projectNotDefined {
 	$text .= "<p>There is not a project defined for your session. <li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::MakeNewProject'},'here')." to create a new project. ";
 	#$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
 	#	if( (scalar @$projects) > 0 );
-	$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
-		if( (scalar @$ownProjects) > 0 );
+	#$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
+	#	if( (scalar @$ownProjects) > 0 );
 	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpID)\"> here </a> to have a description of existing project(s)."
 		if( (scalar @$projects) > 0);
 
