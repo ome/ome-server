@@ -730,10 +730,11 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			my @outputs = $outputRecord->getElementsByTagNameNS( $CLIns, "Output" );
 
 
+          KEEP_GOING:
 			while( keepGoing($repeatCount, $terminateAt, $outputStream)) {
 				print STDERR "$outputStream\n" if $debug eq 2;
 				if ($outputStream =~ s/$patRE//) {
-					print STDERR "Pattern Match\n" if $debug eq 2;
+					print STDERR "Pattern Match '$patRE'\n" if $debug eq 2;
 					$repeatCount-- if defined $repeatCount;
 					my @outputRecord;
 					foreach my $output(@outputs) {
@@ -751,7 +752,10 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							eval $cmd;	
 						}
 					}
-				}
+				} else {
+                    die "Module's output does not match the regular expressions in the ExecutionInstructions";
+                    last KEEP_GOING;
+                }
 
 				#########################################################
 				#   
