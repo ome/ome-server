@@ -39,7 +39,7 @@ print STDERR "\nLogging out...\n\n";
 	$self->setSessionCookie();
 
 	# this will add a script to reload OME::Home 
-	my $body = OME::Web::Validation->ReloadHomeScript();
+	my $body = "<script>top.location.href = top.location.href;</script>";
 
     return ('HTML',$body);
 }
