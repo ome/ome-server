@@ -39,6 +39,7 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::Util::Commands);
 
+use Cwd;
 use Carp;
 use English;
 use Getopt::Long;
@@ -51,7 +52,7 @@ use OME::Factory;
 use OME::Install::Util;
 use OME::Install::Terminal;
 use OME::Install::Environment;
-use OME::Install::CoreDatabaseTablesTask;
+use OME::Install::CoreDatabaseTablesTask; # used for OME::Install::CoreDatabaseTablesTask::get_db_version()
 
 use DBI;
 
@@ -67,11 +68,15 @@ sub getCommands {
 }
 
 sub listCommands {
-    my $self = shift;
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
     $self->printHeader();
+    
     print <<"CMDS";
 Usage:
-    omeadmin data [command] [options]
+    $script $command_name [command] [options]
 
 Available OME database related commands are:
     backup      Backup OME data to an .tar.bz2 archive.
@@ -80,7 +85,9 @@ CMDS
 }
 
 sub backup {
-    my $self = shift;
+    my ($self, $commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
     
 	# Default env file location 
 	my $env_file = "/etc/ome-install.store";
@@ -96,16 +103,14 @@ sub backup {
 	exit(1) unless $result;
 	
 	# idiot nets
-	croak "You must run omeadmin with uid=0 (root). " if ($< ne 0);
+	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
 	croak "Environment file '$env_file' does not exist.\n".
-		  "Call omeadmin data backup with the -f flag to specify it. " if (not -e $env_file);
-	
-	croak "Archive's path not given.\n".
-		  "Call omeadmin data backup with the -a flag to specify it. " if ($backup_file eq "");
-	
-	if ($backup_file) {
-		$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//; $backup_file  =~ s/\.gzip//;
+		  "Call $script $command_name backup with the -f flag to specify it. " if (not -e $env_file);
+	if ($backup_file eq "") {
+		$backup_file = confirm_default("Backup to archive",cwd()."/ome_backup.tar.bz2");
 	}
+	
+	$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
 	my @progs = ('tar', 'bzip2', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
@@ -163,11 +168,14 @@ sub backup {
 }
 
 sub backup_help {
-    my $self = shift;
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
     $self->printHeader();
     print <<"CMDS";
 Usage:
-    omeadmin data backup [<options>]
+    $script $command_name [<options>]
 
 Backs up OMEIS's image repository and OME's postgress db to an .tar.bz2 archive of 
 specified name.
@@ -184,7 +192,9 @@ CMDS
 }
 
 sub restore {
-    my $self = shift;
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
     
 	# Default env file location 
 	my $env_file = "/etc/ome-install.store";
@@ -200,16 +210,15 @@ sub restore {
 	exit(1) unless $result;
 	
 	# idiot nets
-	croak "You must run omeadmin with uid=0 (root). " if ($< ne 0);
+	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
 	croak "Environment file '$env_file' does not exist.\n".
-		  "Call omeadmin data backup with the -f flag to specify it. " if (not -e $env_file);
-	
-	croak "Archive's path not given.\n".
-		  "Call omeadmin data backup with the -a flag to specify it. " if ($restore_file eq "");
-	
-	if ($restore_file) {
-		$restore_file  =~ s/\.tar//; $restore_file  =~ s/\.bz2//; $restore_file  =~ s/\.gzip//;
+		  "Call $script $command_name with the -f flag to specify it. " if (not -e $env_file);
+
+	if ($restore_file eq "") {
+		$restore_file = confirm_default("Restore from archive",cwd()."/ome_backup.tar.bz2");
 	}
+
+	$restore_file  =~ s/\.tar//; $restore_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
 	my @progs = ('tar', 'bzip2', 'pg_dump', 'pg_restore', 'psql', 'sudo', 'touch', 'mv', 
@@ -279,7 +288,7 @@ sub restore {
 	# restoring ome db 
 	print "    \\_ Restoring postgress database ome\n";
 	# Drop our UID to the OME_USER
-    $EUID = getpwnam ($environment->user());
+    euid (scalar(getpwnam $environment->user() ));
     my $db_version = eval ("OME::Install::CoreDatabaseTablesTask::get_db_version()");
     
 	if ($db_version) {
@@ -287,8 +296,7 @@ sub restore {
 			system($prog_path{'dropdb'}." ome");
 		}	
 	}
-	$EUID = 0;
-	$EUID = getpwnam ($postgress_user);
+	euid (scalar(getpwnam $postgress_user ));
 	system ($prog_path{'createuser'}." --adduser --createdb  ome");
 	system ($prog_path{'createdb'}." ome");
 	system ($prog_path{'pg_restore'}." -d ome omeDB_backup");
@@ -296,11 +304,14 @@ sub restore {
 }
 
 sub restore_help {
-    my $self = shift;
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
     $self->printHeader();
     print <<"CMDS";
 Usage:
-    omeadmin data restore [<options>]
+    $script $command_name [<options>]
 
 Restores OMEIS's image repository and OME's postgress db from an .tar.bz2 archive of 
 specified name.

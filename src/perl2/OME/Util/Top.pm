@@ -66,11 +66,16 @@ use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
 sub top_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    
     print <<"USAGE";
-OME Command-Line Commander, version $OME::VERSION_STRING
-
-ome top
-
+Usage:
+    $script $command_name 
+    
 This utility prints out detailed information about OME Tasks that are executing 
 or finished execution.
 

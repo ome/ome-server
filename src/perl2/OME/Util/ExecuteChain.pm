@@ -66,8 +66,16 @@ use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
 sub execute_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
     print <<"USAGE";
-Usage:  ExecuteView <analysis chain id> <dataset id> <flags>\n";
+Usage:  
+	    $script $command_name <analysis chain id> <dataset id> [<options>]
+Options:
+
 known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n";
 USAGE
     CORE::exit(1);

@@ -79,7 +79,6 @@ sub addUser {
     my $self = shift;
 
     my $help = 0;
-    my $batch = 0;
     my $username = "";
     my $firstname = "";
     my $lastname = "";
@@ -90,7 +89,6 @@ sub addUser {
     my $result;
 
     $result = GetOptions('help|h' => \$help,
-                         'batch|b' => \$batch,
                          'username|u=s' => \$username,
                          'first-name|f=s' => \$firstname,
                          'last-name|l=s' => \$lastname,
@@ -106,82 +104,39 @@ sub addUser {
         exit;
     }
 
-    if ($batch &&
-        ($username ne '' ||
-         $firstname ne '' ||
-         $lastname ne '' ||
-         $email ne '' ||
-         $directory ne '' ||
-         $password ne '' ||
-         $group_id ne '')) {
-        print <<"ERROR";
-Error:  --batch option must appear alone.
-ERROR
-        exit 1;
-    }
-
     my $session = OME::SessionManager->TTYlogin();
     my $factory = $session->Factory();
-
-    my $keep = 0;
-    while (1) {
-        if ($batch && !$keep) {
-            $username = '';
-            $firstname = '';
-            $lastname = '';
-            $email = '';
-            $directory = '';
-            $password = '';
-            # Let's be clever and keep the group ID around
-        }
-
-        # In the prompts below, the current behavior is to re-prompt
-        # for everything in the case of an error.  If we decide that a
-        # better solution would to only prompt for the things that
-        # _caused_ the error, then all we have to do is eliminate the
-        # "|| $keep" from each of the if statements below.
-
-        $username  = confirm_default("Username?      ",$username)
-          if $batch || $keep || $username eq '';
-
-        # Allow the user to cancel the batch operation by hitting enter
-        last if $username eq '';
-
-        $firstname = confirm_default("First Name?    ",$firstname)
-          if $batch || $keep || $firstname eq '';
-
-        $lastname  = confirm_default("Last Name?     ",$lastname)
-          if $batch || $keep || $lastname eq '';
-
-        $email     = confirm_default("Email Address? ",$email)
-          if $batch || $keep || $email eq '';
-
-        $directory = confirm_path   ("Data Directory?",$directory)
-          if $batch || $keep || $directory eq '';
-
-        $group_id  = confirm_default("Group ID?      ",$group_id)
-          if $batch || $keep || $group_id eq '';
-
-        if ($group_id !~ /^[0-9]+$/) {
-            print "\nThe group ID must be a number.\n\n";
-            $group_id = '';
-            $keep = 1;
-            redo;
-        }
-
-        $password  = get_password   ("Password?       ",6)
-          if $batch || $keep || $password eq '';
-
-        $keep = 0;
-
-        # Create the user
-
+    
+    # correct user properties till OME system is happy
+	while (1) {
+		# correct user properties till ome admin-user is happy
+		while (1) {
+			$username  = confirm_default("Username?",$username);
+			$firstname = confirm_default("First Name?",$firstname);
+			$lastname  = confirm_default("Last Name?",$lastname);
+			$email     = confirm_default("Email Address?",$email);
+			$directory = confirm_path   ("Data Directory?",$directory);
+			$group_id  = confirm_default("Group ID?",$group_id);
+			$password  = get_password   ("Password?",6);
+	
+			print BOLD,"\nConfirm New User's Properties:\n",RESET;
+			print      "      Username: ", BOLD, $username, RESET, "\n";
+			print      "    First Name: ", BOLD, $firstname, RESET, "\n";
+			print      "     Last Name: ", BOLD, $lastname, RESET, "\n";
+			print      " Email Address: ", BOLD, $email, RESET, "\n";
+			print      "Data Directory: ", BOLD, $directory, RESET, "\n";
+			print      "      Group ID: ", BOLD, $group_id, RESET, "\n";
+			
+			y_or_n ("Are these values correct ?",'y') and last;
+		}
+			
+        # verify the data directory 
         if (not -e $directory) {
             print "\n";
             
             if (y_or_n("The $directory directory does not exist. Create it?")) {
                 unless (mkdir $directory, 0755) {
-                    print "Error creating directory:\n$!\n";
+                    print STDERR "Error creating directory:\n$!\n";
                 }
             }
         }
@@ -194,19 +149,22 @@ ERROR
                      });
 
         if (defined $existing) {
-            print "\nThe username '$username' is taken.\n\n";
+            print STDERR "\nThe username '$username' is taken.\n\n";
             $username = '';
-            $keep = 1;
             redo;
         }
 
         # Verify that the specified group exists.
+		if ($group_id !~ /^[0-9]+$/) {
+            print STDERR "\nThe group ID must be a number.\n\n";
+            $group_id = '';
+            redo;
+        }
 
         my $group = $factory->loadAttribute('Group',$group_id);
         unless (defined $group) {
-            print "\nThe ID $group_id does not specify an existing group.\n\n";
+            print STDERR "\nThe ID $group_id does not specify an existing group.\n\n";
             $group_id = '';
-            $keep = 1;
             redo;
         }
 
@@ -225,16 +183,15 @@ ERROR
                      DataDirectory => $directory,
                      Group         => $group_id,
                     });
-
+		$session->commitTransaction();
+		
         if (defined $experimenter) {
             print "Created user #",$experimenter->id(),".\n";
+            last;
         } else {
-            print "Error creating user.\n";
+            print STDERR "Error creating user.\n";
+            last;
         }
-
-        $session->commitTransaction();
-
-        last unless $batch;
     }
 }
 
@@ -249,15 +206,9 @@ Usage:
     $script $command_name \[<options>]
 
 Creates a new OME user.  You can specify the information about the new
-user on the command line, or type it in at the prompts.  There is also a
-batch mode which allows you to type in several new users with a single
-execution of this command.
+user on the command line, or type it in at the prompts.
 
 Options:
-    -b, --batch
-        Allows you to type in several users in one execution of this
-        command.  If you specify this option, you cannot specify any of
-        other data options.
 
     -u, --username <name>
         Specify the username for the new user.
@@ -346,7 +297,7 @@ sub listUsers {
                   "\n";
         }
     } else {
-        my $max_id_len = 5;
+        my $max_id_len = 3;
         foreach my $user (@users) {
             my $id = $user->id();
             $max_id_len = $id
@@ -354,17 +305,26 @@ sub listUsers {
         }
 
         my $username_len = 8;
-        my $name_len = 72 - $max_id_len - $username_len - 2;
-
-        printf "%-*.*s %-*.*s %-*.*s\n",
+        my $name_len = 20;
+		my $email_len = 20;
+		my $directory_len = 20;
+		my $group_len = 3;
+		
+        printf "%-*.*s %-*.*s %-*.*s %-*.*s %-*.*s %-*.*s\n",
           $max_id_len, $max_id_len, "ID",
+          $group_len, $group_len, "GID",
           $username_len, $username_len, "Username",
-          $name_len, $name_len, "Name";
+          $name_len, $name_len, "Name",
+          $email_len, $email_len, "Email",
+          $directory_len, $directory_len, "Data Directory";
 
         print
           "-" x $max_id_len, " ",
+          "-" x $group_len, " ",
           "-" x $username_len, " ",
-          "-" x $name_len, "\n";
+          "-" x $name_len, " ",
+          "-" x $email_len, " ",
+          "-" x $directory_len, "\n";
 
         foreach my $user (@users) {
         	my $OMEName;
@@ -374,11 +334,13 @@ sub listUsers {
         		$OMEName = '';
         	} 
         	
-            printf "%*.*s %-*.*s %-*.*s\n",
+            printf "%-*.*s %-*.*s %-*.*s %-*.*s %-*.*s %-*.*s\n",
               $max_id_len, $max_id_len, $user->id(),
+          	  $group_len, $group_len, $user->Group()->{__id},
               $username_len, $username_len, $OMEName,
-              $name_len, $name_len,
-                ($user->FirstName() . " ". $user->LastName());
+              $name_len, $name_len, ($user->FirstName() . " ". $user->LastName()),
+              $email_len, $email_len, $user->Email(),
+          	  $directory_len, $directory_len, $user->DataDirectory();
         }
     }
 }
@@ -540,7 +502,8 @@ sub editUser {
     my $email = "";
     my $directory = "";
     my $group_id = "";
-   
+   	my $group;
+   	
    	my $result;
    	my $interactive_mode;
 
@@ -606,8 +569,7 @@ sub editUser {
 		$directory = $user->DataDirectory()
 		  if $directory eq '';
 		  
-		my %group_hash = %{$user->Group()};
-		$group_id = $group_hash{__id}
+		$group_id = $user->Group()->{__id}
 		  if $group_id eq '';
       
       	# let user type in new properties until he is satisfied
@@ -618,7 +580,7 @@ sub editUser {
 			$directory = confirm_default("Data Directory?", $directory);
 			$group_id  = confirm_default("Group ID?", $group_id);
 			
-			print BOLD,"\nConfirm New User Properties:\n",RESET;
+			print BOLD,"\nConfirm User's New Properties:\n",RESET;
 			print      "      Username: ", BOLD, $username, RESET, "\n";
 			print      "    First Name: ", BOLD, $firstname, RESET, "\n";
 			print      "     Last Name: ", BOLD, $lastname, RESET, "\n";
@@ -641,11 +603,20 @@ sub editUser {
 	 }
 
 	 # Verify that the specified group exists.
-	 my $group = $factory->loadAttribute('Group',$group_id);
-	 unless (defined $group) {
-		 print "The ID $group_id does not specify an existing group.\n";
-		 exit 1;
+	 if ($group_id !~ /^[0-9]+$/) {
+		print "\nThe group ID must be a number.\n\n";
+		$group_id = '';
+		exit 1;
+     }
+        
+	 if ($group_id ne '') {
+	 	$group = $factory->loadAttribute('Group',$group_id);
+	 	unless (defined $group) {
+	 		print "The ID $group_id does not specify an existing group.\n";
+	 		exit 1;
+	 	}
 	 }
+		
 	
 	$user->FirstName($firstname)
 	  if $firstname ne '';
@@ -661,19 +632,16 @@ sub editUser {
 
     $user->Group($group)
       if defined $group;
-      
+
     eval {
         $user->storeObject();
         $session->commitTransaction();
     };
 
     if ($@) {
-        print "Error editing user:\n$@\n";
+        print STDERR "Error editing user:\n$@\n";
         exit 1;
-    } else {
-        print "Changes saved.\n";
     }
-
 }
 
 sub editUser_help {
@@ -686,12 +654,14 @@ sub editUser_help {
 Usage:
     $script $command_name \[<options>]
 
-Edits an existing OME user.  You specify the user to edit with the -i
-or -u options; you must specify exactly one of these.  You must
-specify the modified values for the user on the command line; no
-prompting is done.  The edit is performed atomically; if there is any
-database error or inconsistency in the data, none of the other
-(possibly valid) changes are saved.
+Edits an existing OME user. 
+
+If you don't want to use this utility in interactive mode, specify the user with the 
+-i or -u flags and use the edit options.
+
+The edit is performed atomically; if there is any database error or 
+inconsistency in the data, none of the other (possibly valid) changes are 
+saved.
 
 Options:
     -i, --id <user ID>
@@ -702,7 +672,6 @@ Options:
     -u, --username <username>
         Specify the user by their username.
 
-Edit options:
     -f, --first-name <name>
         Change the user's first name.
 
@@ -716,7 +685,7 @@ Edit options:
         Change the user's data directory.
 
     -g, --group-id <id>
-        Change the user's main group..  You'll need to have already
+        Change the user's main group.  You'll need to have already
         looked up the ID for the group with the "groups list" command.
 CMDS
 }

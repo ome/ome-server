@@ -54,13 +54,20 @@ use Getopt::Long;
 Getopt::Long::Configure("bundling");
 
 sub import_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
     print <<"USAGE";
-OME Command-Line Commander, version $OME::VERSION_STRING
+Usage:
+    $script $command_name [<options>] [<list of files>]
 
-ome import [options] [list of files]
+This utility imports files into OME database and runs the import analysis 
+chain against them.
 
-This utility Imports files defining proprietary images or OME objects into an 
-OME database, and runs the import analysis chain against them.
+The files can be proprietary format image files or OME XML files that define 
+OME objects.
 
 Options:
       
@@ -81,7 +88,7 @@ USAGE
 sub handleCommand {
 	my ($self,$help,$supercommands) = @_;
 	if ($help) {
-		import_help();
+		import_help($self,$supercommands);
 	} else {
 		import();
 	}
@@ -157,7 +164,8 @@ sub import {
 	$opts{AllowDuplicates} = 1 if $reuse;
 	
 	print "Importing files\n";
-	my $task = OME::Tasks::ImageTasks::forkedImportFiles
+	# don't use forkedimportFiles so users can always control c
+	my $task = OME::Tasks::ImageTasks::importFiles
 	  ($dataset, \@file_names, \%opts);
 	
 	my $lastStep = -1;
