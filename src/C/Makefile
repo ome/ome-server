@@ -140,6 +140,7 @@ install:
 	install -c OME_Image_XYZ_fastStats /OME/bin/OME_Image_XYZ_fastStats
 	install -c OME_Image_XY_stats /OME/bin/OME_Image_XY_stats
 	install -c OME_Image_XY_sums /OME/bin/OME_Image_XY_sums
+	install -c OME_JPEG /OME/bin/OME_JPEG
 	install -c SoftWorxSlice /OME/bin/SoftWorxSlice
 	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
 	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
