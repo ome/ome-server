@@ -5,7 +5,7 @@
 *	Originally written: June 4, 2003
 *	Standard licence blurb:
 
- Copyright (C) 2003 Open Microscopy Environment, MIT
+ Copyright (C) 2003 Open Microscopy Environment
  Author:  Josiah Johnston <siah@nih.gov>
 
 	This library is free software; you can redistribute it and/or
