@@ -78,12 +78,13 @@ sub getTemporaryFilename {
     my $count=-1;
 
     my $base_name;
-    local *FH;
-    
+	my $tmpRoot = $self->Configuration()->tmp_dir();
+	
+	local *FH;
     until (defined(fileno(FH)) || $count++ > 999)
     {
 	$base_name = sprintf("%s/%s-%03d.%s", 
-			     "/tmp",
+				$tmpRoot,
 			     $progName,$count,$extension);
 	sysopen(FH, $base_name, O_WRONLY|O_EXCL|O_CREAT);
     }
