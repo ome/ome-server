@@ -8,10 +8,10 @@
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
-	<attributeGroup name = "OutputLocation">
+	<attributeGroup name = "InputLocation">
 		<attribute name = "Location" use = "required" type = "string"/>
 	</attributeGroup>
-	<attributeGroup name = "InputLocation">
+	<attributeGroup name = "OutputLocation">
 		<attribute name = "Location" use = "required" type = "string"/>
 	</attributeGroup>
 	<element name = "ExecutionInstructions">
@@ -95,6 +95,8 @@ Currently this is still in development. I would STRONGLY recommend contacting Jo
 		</annotation>
 		<complexType>
 			<attributeGroup ref = "CLI:InputLocation"/>
+			<attribute name = "DivideBy" type = "string"/>
+			<attribute name = "MultiplyBy" type = "string"/>
 		</complexType>
 	</element>
 	<element name = "Output">
