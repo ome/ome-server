@@ -69,21 +69,19 @@ sub getPageBody {
 				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
 				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
 			}
-# magic line to import:
+
+			my $errorMessage = '';
 			if ($dataset) {
-print STDERR "Importing images: @paths\n\tinto Dataset '".$dataset->name()."'.\n";
 				$dataset->writeObject();
-			    my $status = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
+			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
 				die $status if $status;
 				$dataset->writeObject();
 				$project->writeObject();
 				$session->dataset($dataset);
 				$session->writeObject();
+			} else {
+				$errorMessage = "No Dataset to import into.\n";
 			}
-			my $datasetIDs;# = ImportSelections(\@paths);
-		# We want to commit the imported projects no matter what errors we get while doing the extra stuff that follows.
-#			$OME->Commit();
-			my $errorMessage;# = process_form($datasetIDs);
 			if ($errorMessage) {
 				$body .= $cgi->h3($errorMessage);
 				$body .= $self->print_form($selections[0]);
