@@ -26,7 +26,6 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-use OME::Repository;
 use IO::File;
 
 use OME::Image::Pix;
@@ -35,10 +34,6 @@ use OME::Feature;
 use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
 __PACKAGE__->AccessorNames({
-#    instrument_id   => 'instrument',
-#    experimenter_id => 'experimenter',
-#    repository_id   => 'repository',
-#    group_id        => 'group'
 });
 
 __PACKAGE__->table('images');
@@ -47,13 +42,9 @@ __PACKAGE__->columns(Primary => qw(image_id));
 __PACKAGE__->columns(Essential => qw(image_guid name));
 __PACKAGE__->columns(Others => qw(created inserted description
                                   experimenter_id group_id pixels_id));
-# pixels_id is part of a hack added by josiah on 6/9/03
+# pixels_id is part of a hack added by josiah <siah@nih.gov> on 6/9/03
 # it references the "primary" set of pixels. 
 
-#__PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
-#__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
-#__PACKAGE__->hasa('OME::Repository' => qw(repository_id));
-#__PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
