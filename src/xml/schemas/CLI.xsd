@@ -8,31 +8,11 @@
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
-	<attributeGroup name = "InputLocation">
-		<attribute ref = "AML:FormalInputName"/>
-		<attribute name = "SemanticElementName" use = "required">
-			<annotation>
-				<documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</documentation>
-			</annotation>
-			<simpleType>
-				<restriction base = "string">
-					<maxLength value = "64"/>
-				</restriction>
-			</simpleType>
-		</attribute>
-	</attributeGroup>
 	<attributeGroup name = "OutputLocation">
-		<attribute ref = "AML:FormalOutputName"/>
-		<attribute name = "SemanticElementName" use = "required">
-			<annotation>
-				<documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</documentation>
-			</annotation>
-			<simpleType>
-				<restriction base = "string">
-					<maxLength value = "64"/>
-				</restriction>
-			</simpleType>
-		</attribute>
+		<attribute name = "Location" use = "required" type = "string"/>
+	</attributeGroup>
+	<attributeGroup name = "InputLocation">
+		<attribute name = "Location" use = "required" type = "string"/>
 	</attributeGroup>
 	<element name = "ExecutionInstructions">
 		<annotation>
