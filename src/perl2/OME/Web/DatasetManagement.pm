@@ -30,7 +30,8 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Josiah <siah@nih.gov>
+# Original by:    Josiah <siah@nih.gov>
+# New version:    Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
 
@@ -45,6 +46,7 @@ use CGI;
 use OME::Web::Validation;
 use OME::Tasks::DatasetManager;
 use OME::Web::ImageTable;
+use Carp;
 
 use base qw{ OME::Web };
 
@@ -62,11 +64,13 @@ sub getPageBody {
 	my $d_manager = $self->{datasetManager} = new OME::Tasks::DatasetManager;
 	my $i_manager = new OME::Tasks::ImageManager;
 	
-	if ($cgi->param('dataset_id')) {
-		$self->{__dataset} = $dataset = $d_manager->load($cgi->param('dataset_id'));
+	if ($cgi->param('DatasetID')) {
+		$self->{__dataset} = $dataset = $d_manager->load($cgi->param('DatasetID'));
 	} else {
 		$self->{__dataset} = $dataset = $session->dataset();
 	}
+	
+	croak "Dataset not specified or Dataset ID not found" unless $dataset;
 
 	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
 

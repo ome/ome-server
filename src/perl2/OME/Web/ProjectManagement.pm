@@ -30,7 +30,7 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Josiah Johnston <siah@nih.gov>
+# Original by:    Josiah Johnston <siah@nih.gov>
 # New version:   Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
@@ -74,8 +74,8 @@ sub getPageBody {
 	my $p_manager = new OME::Tasks::ProjectManager;
 	my $d_manager = new OME::Tasks::DatasetManager;
 
-	if ($cgi->param('project_id')) {
-		$self->{__project} = $project = $p_manager->load($cgi->param('project_id'));
+	if ($cgi->param('ProjectID')) {
+		$self->{__project} = $project = $p_manager->load($cgi->param('ProjectID'));
 	} else {
 		$self->{__project} = $project = $session->project();
 	}

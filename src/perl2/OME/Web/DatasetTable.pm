@@ -131,7 +131,8 @@ sub getTable {
 				$q->td({-align => 'center'}, [
 					$id,
 					$status,
-					$q->a({-href => "javascript:openInfoDataset($id);"}, $name),
+					$q->a({-href => "/perl2/serve.pl?Page=OME::Web::DatasetManagement&DatasetID=$id"}, $name) . " " .
+					$q->a({-href => "javascript:openInfoDataset($id);"}, '(Popup)'),
 					$owner,
 					$group,
 					$description,

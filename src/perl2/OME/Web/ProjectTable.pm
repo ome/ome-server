@@ -118,7 +118,8 @@ sub getTable {
 			$checkbox || '',
 			$q->td({-align => 'center'}, [
 				$id,
-				$q->a({-href => "javascript:openInfoProject($id);"}, $name),
+				$q->a({-href => "/perl2/serve.pl?Page=OME::Web::ProjectManagement&ProjectID=$id"}, $name) . " " .
+				$q->a({-href => "javascript:openInfoProject($id);"}, '(Popup)'),
 				$owner,
 				$group,
 				$description,

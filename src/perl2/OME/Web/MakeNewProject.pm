@@ -30,7 +30,8 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    J-M Burel <j.burel@dundee.ac.uk>
+# Original by:    J-M Burel <j.burel@dundee.ac.uk>
+# New version:    Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
 
@@ -42,9 +43,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
-use OME::Web::Helper::HTMLFormat;
 
 use base qw{ OME::Web };
 
@@ -55,62 +54,137 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $session = $self->Session();
-	my $manager=new OME::Tasks::ProjectManager($session);
-	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-
-	my $user=$session->User();
-	my $body = "";
+	my $user = $self->Session()->User();
+	my $p_manager = new OME::Tasks::ProjectManager;
 	
-		if( $cgi->param('create')) {
-		
-			my $projectname=cleaning($cgi->param('name'));
-			return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
+	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, 'Make New Project');
 	
-			# $projectname exists??
-			my $ref=$manager->nameExists($projectname);
-			return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless (defined $ref);
-		
-			my $data = {name => $cgi->param('name'),
-				description => $cgi->param('description'),
-				owner_id => $user->id(),
-				group_id => $user->Group()->id()
-				};
-			$manager->create($data); 
+	# The action that was "clicked"
+	my $action = $cgi->param('action') || '';
+	
+	if ($action eq 'create') {
+		my $name = cleaning($cgi->param('name'));
+		my $description = $cgi->param('description') || '';
 
-			# this will add a script to reload OME::Home. User will be automatically directed to define a dataset.
-		
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-			$body .= "<script>top.location.href = top.location.href;</script>";
+		unless ($name) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: Name is a required field.');
+		} elsif ($p_manager->nameExists($name)) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: This name is already used, please choose another.');
 		} else {
-			# print an input form
-			$body .= print_form($htmlFormat,$cgi,$user->Group()->id());
-		}
+			# Action
+			$p_manager->create( {
+					name => $name,
+					description => $description,
+					owner_id => $user->id(),
+					group_id => $user->Group()->id(),
+				}
+			);
+			
+			# Info
+			$body .= $cgi->p({-class => 'ome_info'},
+				'Creation of project successful.');
 
-    		return ('HTML',$body);
+			# Reload top-frame
+			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		}
+	}
+
+	# Input-form
+	$body .= $self->__printForm();
+
+	return ('HTML',$body);
 }
 
 ######################
 
-sub print_form {
-	my ($htmlFormat,$cgi,$usergpid) = @_;
-	my $text="";
-	$text.= $cgi->startform;
-	$text.=$htmlFormat->formCreate("project",$usergpid);
-	$text .= $cgi->endform;
-	return $text;
+sub __printForm {
+	my $self = shift;
+	my $q = $self->CGI();
+	my $group_id = $self->User()->Group()->id();
 
+	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
+		$q->td( [
+			$q->span("Name *"),
+			$q->textfield( {
+					-name => 'name',
+					-size => 40
+				}
+			)
+			]
+		),
+		$q->td( [
+			$q->span("Description"),
+			$q->textarea( {
+					-name => 'description',
+					-rows => 3,
+					-columns => 50,
+				}
+			)
+			]
+		),
+		]
+	);
+
+	my $footer_table = $q->table( {
+			-width => '100%',
+			-cellspacing => 0,
+			-cellpadding => 3,
+		},
+		$q->Tr( {-bgcolor => '#E0E0E0'},
+			$q->td({-align => 'left'},
+				$q->span( {
+						-class => 'ome_info',
+						-style => 'font-size: 10px;',
+					}, "Items marked with a * are required unless otherwise specified"
+				),
+			),
+			$q->td({-align => 'right'},
+				$q->a( {
+						-href => "#",
+						-onClick => "openExistingProject($group_id); return false",
+						-class => 'ome_widget'
+					}, "Existing Projects"
+				),
+				"|",
+				$q->a( {
+						-href => "#",
+						-onClick => "document.forms['metadata'].action.value='create'; document.forms['metadata'].submit(); return false",
+						-class => 'ome_widget'
+					}, "Create Project"
+				),
+			),
+		),
+	);
+
+
+	my $border_table = $q->table( {
+			-class => 'ome_table',
+			-width => '100%',
+			-cellspacing => 1,
+			-cellpadding => 3,
+		},
+		$q->startform({-name => 'metadata'}),
+		$q->hidden(-name => 'action', -default => ''),
+		$metadata,
+	);	
+
+	return $border_table .
+	       $footer_table .
+		   $q->endform();
 }
 
-sub cleaning{
- my ($string)=@_;
- chomp($string);
- $string=~ s/^\s*(.*\S)\s*/$1/;
- return $string;
+sub cleaning {
+	my ($string)=@_;
 
+	chomp($string);
+	$string=~ s/^\s*(.*\S)\s*/$1/;
+
+	return $string;
 }
-
-
 
 
 1;
