@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+	
+		<!-- FORMAL INPUT STs-->
+		<SemanticType Name="HaralickTextureDirection" AppliesTo="I">
+			<Description>
+			Each co-occurrence matrix is for a specific, fixed, direction and distance.
+			Use this ST to specify the direction.
+			</Description>
+			<Element
+				Name="Direction_Units" 
+				DBLocation="CO_OCCURRENCE_MATRIX.DIRECTION_UNITS"  
+				DataType="string">
+			<Description>Units can be either degrees or radians.</Description>	
+			</Element>	
+			<Element 
+				Name="Direction_Value" 
+				DBLocation="CO_OCCURRENCE_MATRIX.DIRECTION_VALUE"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="HaralickTextureDistance" AppliesTo="I">
+			<Description>
+			Each co-occurrence matrix is for a specific, fixed, direction and distance.
+			Use this ST to specify the distance.
+			</Description>
+			<Element 
+				Name="Distance" 
+				DBLocation="CO_OCCURRENCE_MATRIX.DISTANCE"  
+				DataType="integer">
+			<Description>Units are number of pixels.</Description>	
+			</Element>
+		</SemanticType>
+		
+		<!-- FORMAL OUTPUT STs-->
+		 <SemanticType Name="CoOcMat_AngularSecondMoment" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="ASM" 
+				DBLocation="CO_OCCURRENCE_MATRIX.ASM"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Contrast" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="Contrast" 
+				DBLocation="CO_OCCURRENCE_MATRIX.CONTRAST"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Correlation" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="Correlation" 
+				DBLocation="CO_OCCURRENCE_MATRIX.CORRELATION"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="CoOcMat_Variance" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="Variance" 
+				DBLocation="CO_OCCURRENCE_MATRIX.VARIANCE"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_InverseDifferenceMoment" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="IDM" 
+				DBLocation="CO_OCCURRENCE_MATRIX.IDM"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SumAverage" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="SumAvg" 
+				DBLocation="CO_OCCURRENCE_MATRIX.SUM_AVG"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SumVariance" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="SumVar" 
+				DBLocation="CO_OCCURRENCE_MATRIX.SUM_VAR"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SumEntropy" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="SumEntropy" 
+				DBLocation="CO_OCCURRENCE_MATRIX.SUM_ENTROPY"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_Entropy" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="Entropy" 
+				DBLocation="CO_OCCURRENCE_MATRIX.ENTROPY"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_DifferenceEntropy" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="DiffEntropy" 
+				DBLocation="CO_OCCURRENCE_MATRIX.DIFF_ENTROPY"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_DifferenceVariance" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="DiffVar" 
+				DBLocation="CO_OCCURRENCE_MATRIX.DIFF_VAR"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_FirstMeasureOfCorrelation" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="MeasCorr1" 
+				DBLocation="CO_OCCURRENCE_MATRIX.MEAS_CORR_1"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_SecondMeasureOfCorrelation" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="MeasCorr2" 
+				DBLocation="CO_OCCURRENCE_MATRIX.MEAS_CORR_2"  
+				DataType="float"/>
+		</SemanticType>	
+		
+		<SemanticType Name="CoOcMat_MaximalCorrelationCoefficient" AppliesTo="I">
+			<Description>Statistical value computed from co-ocurrence matrx.</Description>
+			<Element 
+				Name="MaxCorrCoef" 
+				DBLocation="CO_OCCURRENCE_MATRIX.MAX_CORR_COEF"  
+				DataType="float"/>
+		</SemanticType>	
+	</SemanticTypeDefinitions>	
+	
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Haralick Features"
+		   Category="Signature"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="HaralickFeatures"
+		   ID="urn:lsid:openmicroscopy.org:Module:93">
+		  <Description>
+			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
+			between pairs of pixels, separated by a distance, \(d\), in a given direction, \(r\). 
+			
+			In the following seminal paper, Haralick suggested using co-occurrence matrices to extract second order 
+			statistics from an image: 
+			
+			Textural Features for Image Classification, R.M.Haralick, K.Shanmugam, I.Dinstein, IEEE
+			Transactions on Systems, Man and Cybernetics, 1973, p.610-621
+			
+			The co-occurence matrix is a square matrix with dimensions equal to the quantization level of the
+			intensity space. Typically the co-occurrence matrix is 256x256 or 16x16. Each co-occurrence matrix is
+			for a specific, fixed, direction and distance. Since only one distance and one direction are typically
+			insufficient to describe textural features, it is common to use four directions (i.e. 0, 45, 90, 135)
+			and five distances.
+			
+			From the co-occurence matrix, various features can be computed. Haralick defined 14 statistical measures, 
+			which is based on textural characteristics such as homogeneity, contrast, organized structure, complexity
+			and nature of gray level transitions.
+		  </Description>
+		  <Declaration>
+			<FormalInput    Name="Pixels"            SemanticTypeName="Pixels"                   Count="!"/>
+			<FormalInput    Name="Texture Direction" SemanticTypeName="HaralickTextureDirection" Count="!"/>
+			<FormalInput    Name="Texture Distance"  SemanticTypeName="HaralickTextureDistance"  Count="!"/>	
+			
+			<FormalOutput	Name="Angular Second Moment"			SemanticTypeName="CoOcMat_AngularSecondMoment" 		    	Count="!"/>
+			<FormalOutput	Name="Contrast"							SemanticTypeName="CoOcMat_Contrast" 						Count="!"/>
+			<FormalOutput	Name="Correlation"						SemanticTypeName="CoOcMat_Correlation" 						Count="!"/>
+			<FormalOutput	Name="Variance"							SemanticTypeName="CoOcMat_Variance" 						Count="!"/>
+			<FormalOutput	Name="Inverse Difference Moment"		SemanticTypeName="CoOcMat_InverseDifferenceMoment" 	    	Count="!"/>
+			<FormalOutput	Name="Sum Average"						SemanticTypeName="CoOcMat_SumAverage" 						Count="!"/>
+			<FormalOutput	Name="Sum Variance"						SemanticTypeName="CoOcMat_SumVariance" 				    	Count="!"/>
+			<FormalOutput	Name="Sum Entropy"						SemanticTypeName="CoOcMat_SumEntropy" 						Count="!"/>
+			<FormalOutput	Name="Entropy"							SemanticTypeName="CoOcMat_Entropy" 							Count="!"/>
+			<FormalOutput	Name="Difference Entropy"				SemanticTypeName="CoOcMat_DifferenceEntropy" 				Count="!"/>
+			<FormalOutput	Name="Difference Variance"				SemanticTypeName="CoOcMat_DifferenceVariance"				Count="!"/>
+			<FormalOutput	Name="First Measure of Correlation"		SemanticTypeName="CoOcMat_FirstMeasureOfCorrelation"		Count="!"/>
+			<FormalOutput	Name="Second Measure of Correlation" 	SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" 	    Count="!"/>
+			<FormalOutput	Name="Maximal Correlation Coefficient"	SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient"	Count="!"/>
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage"
+			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="Pixels"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="RegularBlobNum"/>
+			  <!-- Fill it out later. -->
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>

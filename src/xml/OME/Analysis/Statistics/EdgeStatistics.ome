@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		 
+		 <!-- Global Edge Descriptors -->
+		 <SemanticType Name="EdgeArea" AppliesTo="I">
+			<Description>Number of image pixels that are edge pixels. Edge pixels are pixels that are on after Otsu's method is used to threshold gradient magnitudes.</Description>
+			<Element 
+				Name="EdgeArea" 
+				DBLocation="EDGE_STATISTICS.EDGE_AREA"  
+				DataType="integer"/>
+		</SemanticType>
+		
+		<!-- A pixel's edge magnitude is the magnitude of the pixel's gradient vector -->
+		<SemanticType Name="EdgeMagMean" AppliesTo="I">
+			<Description>Mean edge magnitude.</Description>
+			 <Element
+				Name="MagMean"
+				DBLocation="EDGE_STATISTICS.MAG_MEAN"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="EdgeMagMedian" AppliesTo="I">
+			<Description>Median edge magnitude.</Description>
+			 <Element
+				Name="MagMedian"
+				DBLocation="EDGE_STATISTICS.MAG_MEDIAN"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="EdgeMagVar" AppliesTo="I">
+			<Description>Variance of edge magnitudes.</Description>
+			 <Element
+				Name="MagVar"
+				DBLocation="EDGE_STATISTICS.MAG_VAR"
+				DataType="float"/>
+		</SemanticType>
+	
+		<SemanticType Name="EdgeMagHist" AppliesTo="I">
+			<Description>Histogram of edge magnitudes binned into uniform bins.</Description>
+			<Element
+				Name="Bin0"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN0"
+				DataType="integer"/>
+			<Element
+				Name="Bin1"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN1"
+				DataType="integer"/>
+			<Element
+				Name="Bin2"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN2"
+				DataType="integer"/>
+			<Element
+				Name="Bin3"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN3"
+				DataType="integer"/>
+			<Element
+				Name="Bin4"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN4"
+				DataType="integer"/>
+			<Element
+				Name="Bin5"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN5"
+				DataType="integer"/>
+			<Element
+				Name="Bin6"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN6"
+				DataType="integer"/>
+			<Element
+				Name="Bin7"
+				DBLocation="EDGE_STATISTICS.MAG_HIST_BIN7"
+				DataType="integer"/>
+		</SemanticType>
+		
+		<!-- A pixel's edge direction is the direction of the pixel's gradient vector -->
+		<SemanticType Name="EdgeDirecMean" AppliesTo="I">
+			<Description>Mean edge direction.</Description>
+			 <Element
+				Name="DirMean"
+				DBLocation="EDGE_STATISTICS.DIR_MEAN"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="EdgeDirecMedian" AppliesTo="I">
+			<Description>Median edge direction.</Description>
+			 <Element
+				Name="DirMedian"
+				DBLocation="EDGE_STATISTICS.DIR_MEDIAN"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="EdgeDirecVar" AppliesTo="I">
+			<Description>Variance of edge directions.</Description>
+			 <Element
+				Name="DirVar"
+				DBLocation="EDGE_STATISTICS.DIR_VAR"
+				DataType="float"/>
+		</SemanticType>
+	
+		<SemanticType Name="EdgeDirecHist" AppliesTo="I">
+			<Description>Histogram of edge directions binned into uniform bins.</Description>
+			<Element
+				Name="Bin0"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN0"
+				DataType="integer"/>
+			<Element
+				Name="Bin1"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN1"
+				DataType="integer"/>
+			<Element
+				Name="Bin2"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN2"
+				DataType="integer"/>
+			<Element
+				Name="Bin3"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN3"
+				DataType="integer"/>
+			<Element
+				Name="Bin4"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN4"
+				DataType="integer"/>
+			<Element
+				Name="Bin5"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN5"
+				DataType="integer"/>
+			<Element
+				Name="Bin6"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN6"
+				DataType="integer"/>
+			<Element
+				Name="Bin7"
+				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN7"
+				DataType="integer"/>
+		</SemanticType>
+		
+		<!-- These statistics are meant to describe the differences between bins of histogram at
+			 angle and angle+PI. In general, objects have an equal number of pixels at an angle
+			 and angle+PI -->
+		<SemanticType Name="EdgeDiffDirecMean" AppliesTo="I">
+			<Description>Mean of the difference in direction histogram.</Description>
+			 <Element
+				Name="DirMean"
+				DBLocation="EDGE_STATISTICS.DIR_MEAN"
+				DataType="float"/>
+		</SemanticType>
+	
+		<SemanticType Name="EdgeDiffDirecHist" AppliesTo="I">
+			<Description>Histogram created by computing differences amongst histogram bins at 
+			angle and angle+PI.</Description>
+			<Element
+				Name="Bin0"
+				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN0"
+				DataType="integer"/>
+			<Element
+				Name="Bin1"
+				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN1"
+				DataType="integer"/>
+			<Element
+				Name="Bin2"
+				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN2"
+				DataType="integer"/>
+			<Element
+				Name="Bin3"
+				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN3"
+				DataType="integer"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Edge Statistics"
+		   Category="Signature"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="EdgeStatistics"
+		   ID="urn:lsid:openmicroscopy.org:Module:92">
+		  <Description>
+		   This module computes statistics about the image's edge magnitudes and directions.
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="Gradient"            SemanticTypeName="Gradient"    Count="!"/>
+						
+			<!-- Statistics about Edge Magnitudes -->
+			<FormalOutput Name="Edge Area"           SemanticTypeName="EdgeArea"   Count="!"/>
+
+			<FormalOutput Name="Magnitude Mean"      SemanticTypeName="EdgeMagMean"    Count="!"/>	
+			<FormalOutput Name="Magnitude Median"    SemanticTypeName="EdgeMagMedian"  Count="!"/>	
+			<FormalOutput Name="Magnitude Variance"  SemanticTypeName="EdgeMagVar"     Count="!"/>	
+			<FormalOutput Name="Magnitude Histogram" SemanticTypeName="EdgeMagHist"    Count="!"/>
+			
+			<!-- Statistics about Edge Directions -->
+			<FormalOutput Name="Direction Mean"      SemanticTypeName="EdgeDirecMean"   Count="!"/>
+			<FormalOutput Name="Magnitude Median"    SemanticTypeName="EdgeDirecMedian" Count="!"/>	
+			<FormalOutput Name="Direction Variance"  SemanticTypeName="EdgeDirecVar"    Count="!"/>	
+			<FormalOutput Name="Direction Histogram" SemanticTypeName="EdgeDirecHist"   Count="!"/>
+			
+			<!-- Boland's Statistics -->
+			<FormalOutput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="!"/>
+			<FormalOutput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage"
+			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="Pixels"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="RegularBlobNum"/>
+			  <!-- Fill it out later. -->
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		 
+		 <!-- Global Feature Descriptors -->
+		 <SemanticType Name="FeatureCount" AppliesTo="I">
+			<Description>Number of contigious regions (features) there are in the image after thresholding.</Description>
+			<Element 
+				Name="FeatureNum" 
+				DBLocation="FEATURE_STATISTICS.COUNT"  
+				DataType="integer"/>
+		</SemanticType>
+		
+		<SemanticType Name="FeatureEuler" AppliesTo="I">
+			<Description>Euler Number is a topological invariant that equals the number of features in the region minus the number of holes in the features.</Description>
+			 <Element
+				Name="FeatureEuler"
+				DBLocation="FEATURE_STATISTICS.EULER"
+				DataType="integer"/>
+		</SemanticType>
+		
+		<SemanticType Name="FeatureCentriod" AppliesTo="I">
+			<Description>Centroid of the image's features.</Description>
+			 <Element
+				Name="X"
+				DBLocation="FEATURE_STATISTICS.CENTROID_X"
+				DataType="integer"/>
+			 <Element
+				Name="Y"
+				DBLocation="FEATURE_STATISTICS.CENTROID_Y"
+				DataType="integer"/>
+		</SemanticType>
+		
+		<!-- Feature Area Descriptors -->
+		<SemanticType Name="FeatureAreaMin" AppliesTo="I">
+			<Description>Minimum area of the features. In pixels.</Description>
+			<Element
+				Name="FeatureAreaMin"
+				DBLocation="FEATURE_STATISTICS.AREA_MIN"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureAreaMax" AppliesTo="I">
+			<Description>Maximum area of the features. In pixels.</Description>
+			<Element
+				Name="FeatureAreaMax"
+				DBLocation="FEATURE_STATISTICS.AREA_MAX"
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="FeatureAreaMean" AppliesTo="I">
+			<Description>Average area of the features. In pixels.</Description>
+			<Element
+				Name="FeatureAreaMean"
+				DBLocation="FEATURE_STATISTICS.AREA_MEAN"
+				DataType="float"/>
+		</SemanticType> 
+
+		<SemanticType Name="FeatureAreaMedian" AppliesTo="I">
+			<Description>Median area of the features. In pixels.</Description>
+			<Element
+				Name="FeatureAreaMean"
+				DBLocation="FEATURE_STATISTICS.AREA_MEDIAN"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureAreaVar" AppliesTo="I">
+			<Description>Variance of feature areas.</Description>
+			<Element
+				Name="FeatureAreaVar"
+				DBLocation="FEATURE_STATISTICS.AREA_VAR"
+				DataType="float"/>
+		</SemanticType> 
+
+		<SemanticType Name="FeatureAreaHist" AppliesTo="I">
+			<Description>Histogram of feature areas binned into uniform bins.</Description>
+			<Element
+				Name="Bin0"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN0"
+				DataType="integer"/>
+			<Element
+				Name="Bin1"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN1"
+				DataType="integer"/>
+			<Element
+				Name="Bin2"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN2"
+				DataType="integer"/>
+			<Element
+				Name="Bin3"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN3"
+				DataType="integer"/>
+			<Element
+				Name="Bin4"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN4"
+				DataType="integer"/>
+			<Element
+				Name="Bin5"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN5"
+				DataType="integer"/>
+			<Element
+				Name="Bin6"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN6"
+				DataType="integer"/>
+			<Element
+				Name="Bin7"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN7"
+				DataType="integer"/>
+			<Element
+				Name="Bin8"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN8"
+				DataType="integer"/>
+			<Element
+				Name="Bin9"
+				DBLocation="FEATURE_STATISTICS.AREA_HIST_BIN9"
+				DataType="integer"/>
+		</SemanticType>
+		
+		<!-- Feature Distance Descriptors -->
+		<SemanticType Name="FeatureDistMin" AppliesTo="I">
+			<Description>Minimum distance between the features and the feature centroid.</Description>
+			<Element
+				Name="FeatureDistMin"
+				DBLocation="FEATURE_STATISTICS.DIST_MIN"
+				DataType="float"/>
+		</SemanticType> 
+	
+		<SemanticType Name="FeatureDistMax" AppliesTo="I">
+			<Description>Maximum distance between the features and the feature centroid.</Description>
+			<Element
+				Name="FeatureDistMax"
+				DBLocation="FEATURE_STATISTICS.DIST_MAX"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureDistMean" AppliesTo="I">
+			<Description>Average distance between the features and the feature centroid.</Description>
+			<Element
+				Name="FeatureDistMean"
+				DBLocation="FEATURE_STATISTICS.DIST_MEAN"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureDistMedian" AppliesTo="I">
+			<Description>Median distance between the features and the feature centroid.</Description>
+			<Element
+				Name="FeatureDistMean"
+				DBLocation="FEATURE_STATISTICS.DIST_MEDIAN"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureDistVar" AppliesTo="I">
+			<Description>Variance of feature distances.</Description>
+			<Element
+				Name="FeatureDistVar"
+				DBLocation="FEATURE_STATISTICS.DIST_VAR"
+				DataType="float"/>
+		</SemanticType> 
+		
+		<SemanticType Name="FeatureDistHist" AppliesTo="I">
+			<Description>Histogram of feature distances binned into uniform bins.</Description>
+			<Element
+				Name="Bin0"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN0"
+				DataType="integer"/>
+			<Element
+				Name="Bin1"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN1"
+				DataType="integer"/>
+			<Element
+				Name="Bin2"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN2"
+				DataType="integer"/>
+			<Element
+				Name="Bin3"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN3"
+				DataType="integer"/>
+			<Element
+				Name="Bin4"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN4"
+				DataType="integer"/>
+			<Element
+				Name="Bin5"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN5"
+				DataType="integer"/>
+			<Element
+				Name="Bin6"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN6"
+				DataType="integer"/>
+			<Element
+				Name="Bin7"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN7"
+				DataType="integer"/>
+			<Element
+				Name="Bin8"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN8"
+				DataType="integer"/>
+			<Element
+				Name="Bin9"
+				DBLocation="FEATURE_STATISTICS.DIST_HIST_BIN9"
+				DataType="integer"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Feature Statistics"
+		   Category="Signature"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="FeatureStatistics"
+		   ID="urn:lsid:openmicroscopy.org:Module:91">
+		  <Description>
+		   This module computes statistics about the contiguous regions of the image 
+		   (features). It is passed in a binary image such that non-zero pixel intensities 
+		   are of features.
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="Binary Mask"   SemanticTypeName="BinaryMask" Count="!"/>
+			
+			<FormalOutput Name="Count"         SemanticTypeName="FeatureCount"     Count="!"/>	
+			<FormalOutput Name="Euler"         SemanticTypeName="FeatureEuler"     Count="!"/>	
+			<FormalOutput Name="Centroid"      SemanticTypeName="FeatureCentroid"  Count="!"/>
+
+			<FormalOutput Name="Area Min"      SemanticTypeName="FeatureAreaMin"    Count="!"/>	
+			<FormalOutput Name="Area Max"      SemanticTypeName="FeatureAreaMax"    Count="!"/>	
+			<FormalOutput Name="Area Mean"     SemanticTypeName="FeatureAreaMean"   Count="!"/>	
+			<FormalOutput Name="Area Median"   SemanticTypeName="FeatureAreaMedian" Count="!"/>	
+			<FormalOutput Name="Area Variance" SemanticTypeName="FeatureAreaVar"    Count="!"/>	
+			<FormalOutput Name="Area Hist"     SemanticTypeName="FeatureAreaHist"   Count="!"/>
+			
+			<FormalOutput Name="Dist Min"      SemanticTypeName="FeatureDistMin"    Count="!"/>	
+			<FormalOutput Name="Dist Max"      SemanticTypeName="FeatureDistMax"    Count="!"/>	
+			<FormalOutput Name="Dist Mean"     SemanticTypeName="FeatureDistMean"   Count="!"/>	
+			<FormalOutput Name="Dist Median"   SemanticTypeName="FeatureDistMedian" Count="!"/>	
+			<FormalOutput Name="Dist Variance" SemanticTypeName="FeatureDistVar"    Count="!"/>	
+			<FormalOutput Name="Dist Hist"     SemanticTypeName="FeatureDistHist"   Count="!"/>
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage"
+			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="Pixels"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="RegularFeatureNum"/>
+			  <!-- Fill it out later. -->
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>

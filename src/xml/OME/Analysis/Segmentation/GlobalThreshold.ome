@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		 <SemanticType Name="ThresholdLevel" AppliesTo="I">
+			<Description>The gray-level pixel intensity used to threshold an image into the black
+			and white pixels. The ThresholdLevel must be a floating point precision number 
+			between 0 and 1.
+			</Description>
+			<Element 
+				Name="ThresholdLevel" 
+				DBLocation="IMAGE_THRESHOLD.THRESHOLD_LEVEL"  
+				DataType="float"/>
+		</SemanticType>
+		
+		<SemanticType Name="BinaryMask" AppliesTo="G">
+			<Description>  After Global Thresholding, the resulting Pixels are binary. The 
+			high bit represents the foreground.
+			</Description>
+			<Element 
+				Name="Direction" 
+				DBLocation="IMAGE_THRESHOLD.BINARY_MASK"  
+				DataType = "reference"
+				RefersTo = "PixelChannelComponent"/>
+			</SemanticType>
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Global Threshold"
+		   Category="Segmentation"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="GlobalThreshold"
+		   ID="urn:lsid:openmicroscopy.org:Module:81">
+		  <Description>
+			This module produces binary images from intensity images by normalizing the image's
+			pixel intensities to the [0,1] range and thresholding at the user-specified level.
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="Pixels"           SemanticTypeName="Pixels" Count="!"/>
+			<FormalInput  Name="Channel Index"    SemanticTypeName="ChannelIndex"   Count="!"/>
+			<FormalInput  Name="Threshold Level"  SemanticTypeName="ThresholdLevel" Count="!"/>
+			
+			<FormalOutput Name="Binary Mask"      SemanticTypeName="BinaryMask" Count="!"/>	
+			<FormalOutput Name="BinaryPixels"     SemanticTypeName="Pixels"                Count="!"/>
+			<FormalOutput Name="LogicalChannel"   SemanticTypeName="LogicalChannel"        Count="!"/>
+			<FormalOutput Name="ChannelComponent" SemanticTypeName="PixelChannelComponent" Count="+"/>
+		   </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage"
+			xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+			xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="Pixels"/>
+			  <Input Name="Channel Index.theC"/>
+			  <Input Name="Threshold Level.ThresholdLevel"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="BinaryPixels"/>
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>

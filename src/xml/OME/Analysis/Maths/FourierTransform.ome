@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		<SemanticType Name="FrequencySpace" AppliesTo="G">
+			<Description>  The frequency space (i.e. the Fourier Transform of Real space) is, in general, complex.
+			We represent it by its magnitude and phase rather than its real and imaginary parts. 
+			Magnitude(F) = sqrt (real(F)^2 + imag(F)^2). Also Phase(F) = atan(imag(F)/real(F)). The magnitude is
+			encoded as channel 0 and the phase is channel 1 of the output pixels set.
+			</Description>
+			<Element 
+				Name="Magnitude" 
+				DBLocation="FOURIER.MAGNITUDE"   
+				DataType = "reference"
+				RefersTo = "PixelChannelComponent"/>
+			<Element 
+				Name="Direction" 
+				DBLocation="FOURIER.DIRECTION"  
+				DataType = "reference"
+				RefersTo = "PixelChannelComponent"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>	
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Fourier Transform"
+		   Category="Maths"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="FourierTransform"
+		   ID="urn:lsid:openmicroscopy.org:Module:7701">
+		  <Description>
+		  This module computes the image's Fourier Transform.
+		  </Description>
+		  <Declaration>
+			<FormalInput  Name="Pixels"         SemanticTypeName="Pixels"       Count="!"/>
+			<FormalInput  Name="Channel Index"  SemanticTypeName="ChannelIndex" Count="!"/>
+		
+			<FormalOutput Name="FFT"            SemanticTypeName="FrequencySpace"        Count="!"/>
+			<FormalOutput Name="FFTPixels"      SemanticTypeName="Pixels"                Count="!"/>
+			<FormalOutput Name="LogicalChannel" SemanticTypeName="LogicalChannel"        Count="!"/>
+			<FormalOutput Name="PixelChannel"   SemanticTypeName="PixelChannelComponent" Count="+"/>
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+			<Inputs>
+			  <Input Name="inPixels"/>
+			</Inputs>
+			<Outputs>
+			  <Output Name="fftPixels"/>
+			</Outputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+	</AML:AnalysisModuleLibrary>
+</OME>
