@@ -46,6 +46,7 @@ import org.openmicroscopy.*;
 import java.util.List;
 //import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class RemoteChain
     extends RemoteOMEObject
@@ -152,8 +153,12 @@ public class RemoteChain
         { setStringElement("new_feature_tag",newFeatureTag); }
 
         public List getInputLinks()
-        { return getCachedRemoteListElement("OME::AnalysisChain::Link",
-                                      "input_links"); }
+        { 
+        	List list =getCachedRemoteListElement("OME::AnalysisChain::Link",
+                                      "input_links"); 
+            return list;
+        }
+        
         public Iterator iterateInputLinks()
         {
             RemoteIterator i = (RemoteIterator)
@@ -164,14 +169,18 @@ public class RemoteChain
         }
 
         public List getOutputLinks()
-        { return getCachedRemoteListElement("OME::AnalysisChain::Link",
-                                      "output_links"); }
+        {
+        	List list = getCachedRemoteListElement("OME::AnalysisChain::Link",
+                       	               "output_links"); 
+            return list;
+        }
+        
         public Iterator iterateOutputLinks()
         {
             RemoteIterator i = (RemoteIterator)
                 getRemoteElement("OME::Factory::Iterator",
                                  "iterate_output_links");
-            i.setClass("OME::AnalysisClass:Link");
+            i.setClass("OME::AnalysisChain::Link");
             return i;
         }
     }
