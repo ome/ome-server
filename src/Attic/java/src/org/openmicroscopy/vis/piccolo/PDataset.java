@@ -39,11 +39,12 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CImage;
-
 import org.openmicroscopy.vis.ome.Connection;
-import edu.umd.cs.piccolo.util.PBounds;
+import org.openmicroscopy.vis.chains.SelectionState;
+
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -308,5 +309,9 @@ public class PDataset extends PGenericBox {
 	public void enableHalo() {
 		if (images != null)
 			images.enableHalo();
+	}
+	
+	public void rollover() {
+		SelectionState.getState().setRolloverDataset(dataset);
 	}
 }
