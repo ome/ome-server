@@ -199,6 +199,15 @@ newLogicalScalar(package,value)
                 RETVAL
 
 OME::Matlab::Array
+newStringScalar(package,value)
+        const char *package = NO_INIT;
+        const char *value
+        CODE:
+                RETVAL = mxCreateString(value);
+        OUTPUT:
+                RETVAL
+
+OME::Matlab::Array
 newDoubleMatrix(package,m,n,complexity=mxREAL)
         const char *package = NO_INIT;
         int m
@@ -525,6 +534,7 @@ get(pArray,...)
                 numdims = mxGetNumberOfDimensions(pArray);
                 if (numsubs != numdims)
                 {
+                    printf("numsubs %d numdims %d\n",numsubs,numdims);
                     croak("get: number of subscripts doesn't match number of dimensions");
                 }
 
@@ -897,6 +907,43 @@ setAll(pArray,valueref)
                         break;
                 }
         OUTPUT:
+
+OME::Matlab::Array
+getField(pArray,index,field_number)
+        OME::Matlab::Array pArray
+        int index
+        int field_number
+        CODE:
+            RETVAL = mxGetFieldByNumber(pArray,index,field_number);
+        OUTPUT:
+            RETVAL
+
+void
+setField(pArray,index,field_number,pValue)
+        OME::Matlab::Array pArray
+        int index
+        int field_number
+        OME::Matlab::Array pValue;
+        CODE:
+            mxSetFieldByNumber(pArray,index,field_number,pValue);
+        OUTPUT:
+
+int
+getNumFields(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+            RETVAL = mxGetNumberOfFields(pArray);
+        OUTPUT:
+            RETVAL
+
+const char *
+getFieldName(pArray,index)
+        OME::Matlab::Array pArray
+        int index
+        CODE:
+            RETVAL = mxGetFieldNameByNumber(pArray,index);
+        OUTPUT:
+            RETVAL
 
 MODULE = OME::Matlab	PACKAGE = OME::Matlab::Engine
 
