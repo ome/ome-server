@@ -451,7 +451,7 @@ OMEimage.prototype.prefetchImages = function() {
 		changes the X,Y position of the image layer
 *****/
 OMEimage.prototype.moveImageLayer = function( x, y ) {
-	this.SVGimageContainer.setAttribute( 'transform', 'translate( '+x+', '+y+')' );
+	this.SVGparentNode.setAttribute( 'transform', 'translate( '+x+', '+y+')' );
 }
 
 
