@@ -35,7 +35,12 @@ var svgns = "http://www.w3.org/2000/svg";
 	
 *****/
 Statistics.VERSION = .2;
-Statistics.prototype.padding = 5;
+Statistics.toolboxApperance = {
+	x: 260,
+	y: 150,
+	width: 165,
+	height: 55
+};
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -60,11 +65,10 @@ function Statistics(stats, waveLabels) {
 Statistics.prototype.buildToolBox = function( controlLayer ) {
 	this.buildDisplay();
 	var bbox = this.displayContent.getBBox();
-	var width = bbox.width + 2 * toolBox.prototype.padding;
-	var height = bbox.height + 2 * toolBox.prototype.padding;
-	this.toolBox = new toolBox(
-		255, 50, width, height
-	);
+	this.toolboxApperance = Statistics.toolboxApperance;
+	this.toolboxApperance['width'] = bbox.width + 2 * toolBox.padding;
+	this.toolboxApperance['height'] = bbox.height + 2 * toolBox.padding;
+	this.toolBox = new toolBox( this.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
 	this.toolBox.setLabel(10,12,"Statistics");
 	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
