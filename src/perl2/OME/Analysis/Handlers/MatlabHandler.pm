@@ -924,41 +924,56 @@ sub validateAndProcessExecutionInstructions {
 	$executionInstructionsXML->setAttribute( "xmlns:MLI", $supported_NS );
 
 	#	Output Checking:
-	# Check <Scalar> OutputLocation attributes
+	# Verify OutputLocation of <Scalar>'s refer to something that exists.
 	my @scalar_outputs = $executionInstructionsXML->findnodes( 
-		"MLI:FunctionOutputs/MLI:Output/MLI:Scalar"
+		".//MLI:Output/MLI:Scalar"
 	);
 	foreach my $scalar ( @scalar_outputs ) {
-		my $output_location = $scalar->getAttribute( 'OutputLocation' );
-		my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
-			or die "output_location '$output_location' could not be parsed.";
-		my $formal_output = $factory->
-			findObject( "OME::Module::FormalOutput",
-				module => $module,
-				name   => $formal_output_name
-			)
-			or confess "Could not find formal output '$formal_output_name' (from output location '$output_location').";
-		confess "Semantic element ('$SEforScalar') specified in ".$scalar->toString()." is not defined in the semantic type ".$formal_output->semantic_type->name.". Error importing Module ".$module->name()
-			unless $factory->
-				findObject( 'OME::SemanticType::Element', 
-					semantic_type => $formal_output->semantic_type, 
-					name          => $SEforScalar 
-				);
+		my $output_location = $scalar->getAttribute( 'OutputLocation' )
+			or die "OutputLocation is not specified in ".$scalar->toString();
+		$self->__check_output_location( $module, $output_location );
 	}
 
-	#	Output Checking:
-	# Make sure two Vector elements don't write the the same place
-	# Check for data collision. 
-	my @vectors = $executionInstructionsXML->findnodes( 'MLI:VectorDecoder' );
-	foreach my $vector ( @vectors ) {
-		my @elements = $vector->findnodes( 'MLI:Element' );
+	#	Output Checking: <VectorDecoder>
+	my @vector_defs = $executionInstructionsXML->findnodes( 'MLI:VectorDecoder' );
+	my %vector_def_ids;
+	foreach my $vector_def ( @vector_defs ) {
+		# prevent duplicate IDs
+		my $vectorID = $vector_def->getAttribute( 'ID' )
+			or die "ID not specified in ".$vector_def->toString();
+		die "A VectorDecoder with this ID has already been defined. Duplicate IDs found in:\n".
+			$vector_def_ids{ $vectorID }->toString."\n-- AND --\n".
+			$vector_def->toString."\n"
+			if exists $vector_def_ids{ $vectorID };
+		$vector_def_ids{ $vectorID } = $vector_def;
+
+		# Is this vector used?
+		my @vector_outputs = $executionInstructionsXML->findnodes( 
+			'.//MLI:Vector[@DecodeWith="'.$vectorID.'"]' )
+			or warn "Warning, VectorDecoder ID='$vectorID' is not referenced by any outputs.";
+	
+		# Make sure two Vector elements don't write the the same place
+		# Check for data collision and referential integrity of output location.
+		my @elements = $vector_def->findnodes( 'MLI:Element' );
 		my %outputLocations;
 		foreach my $element( @elements ) {
 			my $output_location = $element->getAttribute( 'OutputLocation' );
-			confess "Write collision! Another Vector Element references this $output_location. Error processing ".$vector->toString()." in Module ".$module->name()
+			confess "Write collision! Another Vector Element references this $output_location. Error processing ".$vector_def->toString()." in Module ".$module->name()
 				if exists $outputLocations{ $output_location };
+			$self->__check_output_location( $module, $output_location );
 			$outputLocations{ $output_location } = undef;
 		}
+	}
+
+	#	Output Checking: <Vector>
+	my @vectors = $executionInstructionsXML->findnodes( './/MLI:Output/MLI:Vector' );
+	foreach my $vector ( @vectors ) {
+		# Does the decoder referenced actually exist?
+		my $vectorDecodeID = $vector->getAttribute( 'DecodeWith' )
+			or die "DecodeWith attribute not specified in ".$vector->toString();
+		my @vector_decoders = $executionInstructionsXML->findnodes( 
+			'.//MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]' )
+			or die "Can't find VectorDecoder referenced by Vector output ".$vector->toString;
 	}		
 
     return $executionInstructionsXML;
