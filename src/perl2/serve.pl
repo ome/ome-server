@@ -100,9 +100,14 @@ if ($pageClass) {
 	};
 	
 	if ($@) {
-		carp "Error serving $pageClass: ", $@ || "no error message available.";
+		my $error = $@;
+		carp "Error serving $pageClass: ", $error || "no error message available.";
 		print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
-		      "<pre>Error serving $pageClass: ", $@ || "no error message available.", "</pre>";
+		      "<pre>Error serving $pageClass: ", $error || "no error message available.", "</pre>";
+		my @tasks = OME::Tasks::NotificationManager->list(process_id => $$);
+		foreach (@tasks) {
+			$_->died ($error || "no error message available.");
+		}
 
 		exit(1);
 	}
