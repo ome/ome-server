@@ -47,7 +47,6 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
-import org.openmicroscopy.Chain;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.chains.ChainFrame;
@@ -162,7 +161,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 				int id = i.intValue();
 		//		System.err.println("dropping chain id "+id);
 				Point2D loc = e.getLocation();
-				Chain chain = connection.getChain(id);
+				CChain chain = connection.getChain(id);
 				createDroppedChain(chain,loc);
 				addInputEventListener(handler);
 				
@@ -210,7 +209,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setSaveEnabled(true);
 	}
 	
-	public void createDroppedChain(Chain chain,Point2D location) {
+	public void createDroppedChain(CChain chain,Point2D location) {
 		getCamera().localToView(location);
 		float x = (float) location.getX();
 		float y = (float) location.getY();

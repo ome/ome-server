@@ -43,7 +43,7 @@ import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.Chain;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.Chain.Link;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Module.FormalInput;
@@ -56,7 +56,7 @@ import java.util.Iterator;
 public class PChain {
 
 
-	private Chain chain;
+	private CChain chain;
 	private HashMap nodes = new HashMap(); 
 	private float chainHeight = 0;
 	
@@ -69,7 +69,7 @@ public class PChain {
 	
 	
 	
-	public PChain(Connection connection,Chain chain, PLayer layer,
+	public PChain(Connection connection,CChain chain, PLayer layer,
 			PLinkLayer linkLayer,float x,float y) {
 		
 		
@@ -77,7 +77,7 @@ public class PChain {
 		this.x = x;
 		xInit = x;
 		
-		System.err.println("building chain for "+chain.getName());
+		//System.err.println("building chain for "+chain.getName());
 		Collection chainNodes = chain.getNodes();
 		Iterator iter = chainNodes.iterator();	
 		while (iter.hasNext()) {

@@ -49,7 +49,7 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.Chains;
-import org.openmicroscopy.Chain;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.dnd.ChainSelection;
 import java.util.Iterator;
 import java.awt.Font;
@@ -124,7 +124,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	private void populate() {
 
 	
-		Chain chain;
+		CChain chain;
 
 		Chains chains = connection.getChains();
 		
@@ -132,13 +132,13 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
 		// draw each of them.
 		while (iter.hasNext()) {
-			chain = (Chain) iter.next();
+			chain = (CChain) iter.next();
 			drawChain(chain);
 		}
 		
 	}
 	
-	public  void drawChain(Chain chain) {
+	public  void drawChain(CChain chain) {
 		// draw the modules 
 		chainHeight = 0;
 		chainWidth = 0;
