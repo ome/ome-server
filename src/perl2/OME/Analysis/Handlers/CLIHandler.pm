@@ -205,7 +205,7 @@ sub _execute {
 
 	my $module                = $self->getModule();
 	my %outputs;
-	my (%tmpFileFullPathHash, %tmpFileRelativePathHash);
+	my (%tmpFileFullPathHash);
 	my $executionInstructions = $module->execution_instructions();
 	my $debug                 = 0;
 	my $session               = $self->Session();
@@ -430,7 +430,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					$imagePix,
 					\%dims,
 					\%tmpFileFullPathHash,
-					\%tmpFileRelativePathHash,
 				);
 			}
 			push (@command, $paramString);
@@ -839,11 +838,11 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	
 	} while($runAgain);
-	#
 	# END "Execute the module"
-	#
 	#####################################################################
 
+	# cleanup
+	$session->finishTemporaryFile($_) foreach values %tmpFileFullPathHash;
 }
 
 
@@ -891,7 +890,6 @@ sub resolveSubString {
 	my $imagePix = shift;
 	my $dims = shift;
 	my $tmpFileFullPathHash = shift;
-	my $tmpFileRelativePathHash = shift;
 			
 	#############################################################
 	#
@@ -929,7 +927,8 @@ sub resolveSubString {
 		my $pixels_attr = resolveLocation( $location, $inputs );
 		
 		my $pixels_obj = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
-		return $pixels_obj->getTemporaryLocalPixels();
+		$tmpFileFullPathHash->{ '__LocalPixels_'.$pixels_obj->getPixelsID() } = $pixels_obj->getTemporaryLocalPixels();
+		return $tmpFileFullPathHash->{ '__LocalPixels_'.$pixels_obj->getPixelsID() };
 	#
 	#############################################################
 	#
@@ -973,12 +972,8 @@ sub resolveSubString {
 	#		
 	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
 		my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
-		my $tmpFilePath;
-		my $tmpFileRelativePath;
-		$tmpFilePath = $session->getTemporaryFilename( 'CLIHandler','' );
-			
+		my $tmpFilePath = $session->getTemporaryFilename( 'CLIHandler','' );
 		$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
-		$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
 		return $tmpFilePath;
 	#
 	#
