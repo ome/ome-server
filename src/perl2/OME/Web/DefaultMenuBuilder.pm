@@ -189,7 +189,7 @@ sub __getMenuEntryOfCurrentClass {
 		my $url_params_Match = 1;
 		foreach my $url_param( %{ $entry->{url_param} } ) {
 			$url_params_Match = 0
-				unless $q->url_param( $url_param ) eq $entry->{url_param}->{$url_param};
+				unless $q->url_param( $url_param ) and $q->url_param( $url_param ) eq $entry->{url_param}->{$url_param};
 		}
 		return $entry if $url_params_Match;
 	}
