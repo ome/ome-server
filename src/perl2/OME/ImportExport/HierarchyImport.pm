@@ -275,31 +275,14 @@ sub processDOM {
 		my $display_options = undef;
 		foreach $CA ( @CAs ) {
 			my $imgAttr = $self->importObject ($CA,'I',$objectID,undef);
-# This is a hack to rename the pixels repository file to the standard naming convention
-# this block will execute even if the pixels already exist in the db. ..not ideal behavior, but it doesn't break anything.
-			if( $CA->tagName() eq 'Pixels' ) {
-				# Get the Repository object from the LSID
-				my $repository = $lsid->getLocalObject ($CA->getAttribute('Repository'))
-					or die "A repository was not assigned for Pixels ID: '".$CA->getAttribute('ID')."'!\n";
-				# Assign the pixels to the proper repository
-				$imgAttr->Repository ($repository);
-				my $normalized_name = $object->name();
-				$normalized_name =~ s/[^a-zA-Z0-9]/_/g;
-				my $newPath = $imgAttr->id().'-'.$normalized_name.'.ori';
-				rename ($object->getFullPath($imgAttr),$imgAttr->Repository()->Path().'/'.$newPath)
-					or die "Could not rename repository file ".$object->getFullPath($imgAttr).
-					" to ".$imgAttr->Repository()->Path().'/'.$newPath."\n$!\n";
-				$imgAttr->Path( $newPath );
-				# Assign pixels to image
-				$object->DefaultPixels( $imgAttr->id() ) 
-					unless $object->DefaultPixels();
-			} elsif( $CA->tagName() eq 'DisplayOptions' ) {
-				$display_options = $imgAttr;
-			}
+			# Assign pixels to image
+			( $object->default_pixels( $imgAttr->id() ) and $object->storeObject )
+				if(  $CA->tagName() eq 'Pixels' and not $object->default_pixels() );
+			$display_options = $imgAttr
+				if( $CA->tagName() eq 'DisplayOptions' );
 		}
-# end of hack
-
-		my $image = $object;
+ 
+ 		my $image = $object;
 		my $imageID = $image->id();
 		
 		( $display_options->Pixels($image->DefaultPixels()) and $display_options->storeObject() )
