@@ -394,44 +394,47 @@ sub execute {
 
     chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
-    print_header ("Core Binary Setup");
+    # Unless we're just doing the LIB_CHECK sanity check
+    unless ($environment->flag ("LIB_CHECK")) {
+	print_header ("Core Binary Setup");
     
-    print "(All verbose information logged in $OME_TMP_DIR/$LOGFILE_NAME)\n\n";
+	print "(All verbose information logged in $OME_TMP_DIR/$LOGFILE_NAME)\n\n";
 
-    my $retval = 0;
+	my $retval = 0;
 
-    print "Installing core binaries\n";
+	print "Installing core binaries\n";
 
-    # XXX: Unneeded at the moment
-    # Configure
-    # print "  \\_ Configuring ";
-    # $retval = configure_module ("src/C/", $LOGFILE);
-    # 
-    #print BOLD, "[FAILURE]", RESET, ".\n"
-    #    and croak "Unable to configure module, see $LOGFILE_NAME for details."
-    #    unless $retval;
-    #print BOLD, "[SUCCESS]", RESET, ".\n";
+	# XXX: Unneeded at the moment
+	# Configure
+	# print "  \\_ Configuring ";
+	# $retval = configure_module ("src/C/", $LOGFILE);
+	# 
+	#print BOLD, "[FAILURE]", RESET, ".\n"
+	#    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+	#    unless $retval;
+	#print BOLD, "[SUCCESS]", RESET, ".\n";
 
-    # Compile
-    print "  \\_ Compiling ";
-    $retval = compile_module ("src/C/", $LOGFILE);
+	# Compile
+	print "  \\_ Compiling ";
+	$retval = compile_module ("src/C/", $LOGFILE);
     
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
 
-    # Install
-    print "  \\_ Installing ";
-    $retval = install_module ("src/C/", $LOGFILE);
+	# Install
+	print "  \\_ Installing ";
+	$retval = install_module ("src/C/", $LOGFILE);
 
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
+	    unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
 
 
-    print "\n";  # Spacing
+	print "\n";  # Spacing
+    }
 
     return 1;
 }
@@ -442,3 +445,5 @@ sub rollback {
     # Just a stub for now
     return 1;
 }
+
+1;
