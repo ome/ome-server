@@ -192,10 +192,11 @@ public class Controller implements ApplicationController {
 	}
 	
 	public void completeLogin(Connection connection) {
-	//	this.connection = connection;
+		this.connection = connection;
 		mainFrame.setLoggedIn(true,connection);
-		library = new ChainLibraryFrame(this,connection); 
 		connection.layoutChains();
+		System.err.println("doing library frame..");
+		library = new ChainLibraryFrame(this,connection); 
 	}
 	
 	public void doLogout() {
