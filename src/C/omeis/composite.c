@@ -42,7 +42,7 @@
 #include <zoom.h>
 #include "composite.h"
 
-int DoCompositeZoom (CompositeSpec *myComposite, char **param);
+int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 
 
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
@@ -67,10 +67,9 @@ CompositeSpec theComposite;
 	theComposite.theZ = theZ;
 	theComposite.theT = theT;
 	
-	if ( (theParam = get_param (param,"SetThumbnail")) ) {
+	if ( (theParam = get_param (param,"SetThumb")) )
 		setThumb=1;
-	}
-	if ( (theParam = get_lc_param (param,"Format")) && strlen (theParam) )
+	else if ( (theParam = get_lc_param (param,"Format")) && strlen (theParam) )
 		theFormat = theParam;
 
 	theComposite.sizeX = myPixels->head->dx;
@@ -83,8 +82,8 @@ CompositeSpec theComposite;
 	 note that gamma is not implemented as of 1/04 (== 0).
 	 LevelBasis is a separate parameter with the following values:
 	 geomean, mean, fixed.  fixed is the default if LevelBasis is not specified.
-	 which means that the blkLevel and whtLevel values are either 
-	 i.e.  geosigma + blkLevel*geosigma or sigma + blkLevel*sigma or just blkLevel.
+	 The blkLevel and whtLevel values are either 
+	 geomean + blkLevel*geosigma or mean + blkLevel*sigma or just blkLevel.
 	*/
 	if ( (theParam = get_lc_param (param,"LevelBasis")) ) {
 		if (! strcmp (theParam,"geomean")) levelBasis=GEOMEAN_BASIS;
@@ -157,7 +156,7 @@ CompositeSpec theComposite;
 	This isn't working, and the left-over code is in compositeIM.c
 	DoCompositeIM   (&theComposite, param);
 */
-	DoCompositeZoom (&theComposite, param);
+	DoCompositeZoom (&theComposite, setThumb, param);
 	
 	return (0);
 }
@@ -166,20 +165,21 @@ CompositeSpec theComposite;
 /*
   Might try implementing this with native libjpeg calls if not doing zooming.
   Or just let DoCompositeZoom take care of it all.
-*/
-int DoCompositeJPEG (CompositeSpec *myComposite, char **param) {
+int DoCompositeJPEG (CompositeSpec *myComposite, char setThumb, char **param) {
 	return (0);
 }
+*/
+
 
 #define FILTER_DEFAULT "triangle"
 #define WINDOW_DEFAULT "blackman"
 
-int DoCompositeZoom (CompositeSpec *myComposite, char **param) {
+int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param) {
 Pic *ome_pic, *out_pic;
-char out_name[256], mime_type[256];
+char out_name[256], mime_type[256], error[512];
 char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
 char *xwindowname = 0, *ywindowname = 0;
-int  square, intscale=0;
+int  square=1, intscale=0;
 double xsupp = -1., ysupp = -1.;
 double xblur = -1., yblur = -1.;
 Window_box ome_win, out_win;
@@ -192,20 +192,35 @@ Mapping m;
     ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
     ome_win.x1 = out_win.x1 = PIC_UNDEFINED;
 
-	strncpy (out_name,myComposite->thePixels->path_ID,256-strlen(myComposite->format)-2);
+	strncpy (out_name,myComposite->thePixels->path_rep,256-strlen(myComposite->format)-2);
 	strcat (out_name,".");
-	strcat (out_name,myComposite->format);
 
-	ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r");
-	out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w");
-	
-	if (ome_pic && out_pic) {
-		strcpy (mime_type,"image/");
-		strncat (mime_type,myComposite->format,200);
-		HTTP_ResultType (mime_type);
-	} else {
-		HTTP_DoError ("DoCompositeZoom","Could not open input and/or output Pic");
+	if ( !(ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r")) ) {
+		sprintf (error,"Could not open input Pic (%s)",myComposite->thePixels->path_rep);
+		HTTP_DoError ("DoCompositeZoom",error);
+		return (-1);
 	}
+
+	if (setThumb) {
+		strcat (out_name,"thumb");
+		strcpy (myComposite->format,"jpeg");
+		if ( !(out_pic = pic_open_dev ("jpeg", out_name, "w")) ) {
+			sprintf (error,"Could not open output Pic for thumbnail (%s)",out_name);
+			HTTP_DoError ("DoCompositeZoom",error);
+			return (-1);
+		}
+	} else {
+		strcat (out_name,myComposite->format);
+		if ( !(out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w")) ) {
+			sprintf (error,"Could not open output Pic for streaming (%s format)",myComposite->format);
+			HTTP_DoError ("DoCompositeZoom",error);
+			return (-1);
+		}
+	}
+	
+	strcpy (mime_type,"image/");
+	strncat (mime_type,myComposite->format,200);
+	HTTP_ResultType (mime_type);
 	
 	if (myComposite->isRGB) pic_set_nchan (out_pic,3);
 	else pic_set_nchan (out_pic,1);
@@ -250,7 +265,7 @@ Mapping m;
 			yfilt = filt_window(yfilt, ywindowname);
 	}
 
-	zoom_opt(ome_pic, &ome_win, out_pic, &out_win, xfilt, yfilt, 1, intscale);
+	zoom_opt(ome_pic, &ome_win, out_pic, &out_win, xfilt, yfilt, square, intscale);
 
     pic_close(ome_pic);
     pic_close(out_pic);

@@ -53,8 +53,6 @@ typedef struct {
 
 
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param);
-int DoCompositeIM   (CompositeSpec *myComposite, char **param);
-int DoCompositeJPEG (CompositeSpec *myComposite, char **param);
 
 
 #endif
