@@ -30,7 +30,7 @@ use base qw(OME::DBObject);
 __PACKAGE__->AccessorNames({
     project_id => 'project',
  #   owner_id   => 'owner',		
-    group_id   => 'group',
+ #   group_id   => 'group',
     image_id => 'image',		
     });
 
@@ -54,6 +54,20 @@ sub owner {
     } else {
         return $self->Session()->Factory()->loadAttribute("Experimenter",
                                                           $self->owner_id());
+    }
+}
+
+sub group {
+    my $self = shift;
+    if (@_) {
+        my $attribute = shift;
+        die "group must be of Group semantic type"
+          unless $attribute->attribute_type()->name() eq "Group";
+        $self->group_id($attribute->id());
+        return undef;
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Group",
+                                                          $self->group_id());
     }
 }
 
