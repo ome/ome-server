@@ -99,8 +99,6 @@ sub processDOM {
     my $moduleImporter = OME::Tasks::ProgramImport->
       new(session         => $self->{session},
           _parser         => $self->{_parser},
-          semanticTypes   => $semanticTypes,
-          semanticColumns => $semanticColumns,
          debug => $self->{debug});
 
     my $amlElement = $root->
