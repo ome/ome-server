@@ -1409,7 +1409,8 @@ sub __makeInsertSQLs {
         my ($table, $column, $foreign_key_class, $sql_options) = @$column_def;
 
         if (defined $sql_options &&
-            $sql_options->{SQLType} eq 'boolean') {
+            $sql_options->{SQLType} eq 'boolean' and 
+            $datum ) {
 
             # This is a Boolean column, so we need to make sure that
             # the value is 'true' or 'false', not 1 or 0.
