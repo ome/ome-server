@@ -45,8 +45,11 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.openmicroscopy.ds.dto.DataInterface;
+import org.openmicroscopy.ds.dto.SemanticType;
+import org.openmicroscopy.ds.dto.Attribute;
 import org.openmicroscopy.ds.dto.UserState;
 import org.openmicroscopy.ds.dto.MappedDTO;
+import org.openmicroscopy.ds.dto.AttributeDTO;
 
 /**
  * <p>Provides a higher-level interface to the data server than that
@@ -165,6 +168,29 @@ public class DataFactory
         }
     }
 
+    private Map semanticTypeClassCache = new HashMap();
+
+    private Class getSemanticTypeClass(String semanticTypeName)
+    {
+        if (semanticTypeClassCache.containsKey(semanticTypeName))
+            return (Class) semanticTypeClassCache.get(semanticTypeName);
+
+        try
+        {
+            Class clazz = Class.forName("org.openmicroscopy.ds.st."+
+                                        semanticTypeName+"DTO");
+            if (clazz == null)
+                clazz = AttributeDTO.class;
+
+            semanticTypeClassCache.put(semanticTypeName,clazz);
+            return clazz;
+        } catch (ClassNotFoundException e) {
+            Class clazz = AttributeDTO.class;
+            semanticTypeClassCache.put(semanticTypeName,clazz);
+            return clazz;
+        }
+    }
+
     /**
      * Returns a {@link UserState} object for the current session's
      * active user.  The <code>fieldSpec</code> parameter is used to
@@ -185,7 +211,8 @@ public class DataFactory
             Map map = (Map) result;
             return (UserState) instantiateDTO(dtoClass,map);
         } else
-            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
     }
 
     /**
@@ -210,10 +237,32 @@ public class DataFactory
         Map crit = createCriteriaMap(criteria);
 
         Object result = caller.dispatch("countObjects",remoteType,crit);
-        if (result instanceof Integer)
+        if (result == null)
+            return 0;
+        else if (result instanceof Integer)
             return ((Integer) result).intValue();
         else
-            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+    }
+
+    public int count(SemanticType semanticType, Criteria criteria)
+    {
+        return count(semanticType.getName(),criteria);
+    }
+
+    public int count(String semanticType, Criteria criteria)
+    {
+        Map crit = createCriteriaMap(criteria);
+
+        Object result = caller.dispatch("countObjects","@"+semanticType,crit);
+        if (result == null)
+            return 0;
+        else if (result instanceof Integer)
+            return ((Integer) result).intValue();
+        else
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
     }
 
     /**
@@ -254,7 +303,38 @@ public class DataFactory
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
         } else {
-            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+        }
+    }
+
+    public DataInterface load(SemanticType semanticType, int id,
+                              FieldsSpecification fieldSpec)
+    {
+        return load(semanticType.getName(),id,fieldSpec);
+    }
+
+    public DataInterface load(String semanticType, int id,
+                              FieldsSpecification fieldSpec)
+    {
+        Map fields = fieldSpec.getFieldsWanted();
+
+        Object result = caller.dispatch("loadObject",
+                                        new Object[] {
+                                            "@"+semanticType,
+                                            new Integer(id),
+                                            fields
+                                        });
+        if (result == null)
+        {
+            return null;
+        } else if (result instanceof Map) {
+            Class dtoClass = getSemanticTypeClass(semanticType);
+            Map map = (Map) result;
+            return instantiateDTO(dtoClass,map);
+        } else {
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
         }
     }
 
@@ -293,7 +373,37 @@ public class DataFactory
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
         } else {
-            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+        }
+    }
+
+    public Attribute retrieve(SemanticType semanticType, Criteria criteria)
+    {
+        return retrieve(semanticType.getName(),criteria);
+    }
+
+    public Attribute retrieve(String semanticType, Criteria criteria)
+    {
+        Map crit = createCriteriaMap(criteria);
+        Map fields = criteria.getFieldsWanted();
+
+        Object result = caller.dispatch("retrieveObject",
+                                        new Object[] {
+                                            "@"+semanticType,
+                                            crit,
+                                            fields
+                                        });
+        if (result == null)
+        {
+            return null;
+        } else if (result instanceof Map) {
+            Class dtoClass = getSemanticTypeClass(semanticType);
+            Map map = (Map) result;
+            return (Attribute) instantiateDTO(dtoClass,map);
+        } else {
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
         }
     }
 
@@ -332,7 +442,38 @@ public class DataFactory
             instantiateDTOList(dtoClass,list);
             return list;
         } else {
-            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
+        }
+    }
+
+    public List retrieveList(SemanticType semanticType, Criteria criteria)
+    {
+        return retrieveList(semanticType.getName(),criteria);
+    }
+
+    public List retrieveList(String semanticType, Criteria criteria)
+    {
+        Map crit = createCriteriaMap(criteria);
+        Map fields = criteria.getFieldsWanted();
+
+        Object result = caller.dispatch("retrieveObjects",
+                                        new Object[] {
+                                            "@"+semanticType,
+                                            crit,
+                                            fields
+                                        });
+        if (result == null)
+        {
+            return null;
+        } else if (result instanceof List) {
+            Class dtoClass = getSemanticTypeClass(semanticType);
+            List list = (List) result;
+            instantiateDTOList(dtoClass,list);
+            return list;
+        } else {
+            throw new RemoteServerErrorException("Invalid result type "+
+                                                 result.getClass());
         }
     }
 
@@ -350,6 +491,20 @@ public class DataFactory
         MappedDTO dto = instantiateDTO(dtoClass,emptyMap);
         dto.setNew(true);
         return dto;
+    }
+
+    public Attribute createNew(SemanticType semanticType)
+    {
+        return createNew(semanticType.getName());
+    }
+
+    public Attribute createNew(String semanticType)
+    {
+        Class dtoClass = getSemanticTypeClass(semanticType);
+        Map emptyMap = new HashMap();
+        MappedDTO dto = instantiateDTO(dtoClass,emptyMap);
+        dto.setNew(true);
+        return (Attribute) dto;
     }
 
     /**
@@ -412,8 +567,10 @@ public class DataFactory
                 }
             } else if (element instanceof List) {
                 // Skip List elements
+            } else if (element instanceof Map) {
+                // Skip Map elements
             } else {
-                // Store anything else in there
+                // Store anything else as is
                 serialized.put(key,element);
             }
         }
@@ -512,7 +669,8 @@ public class DataFactory
         } else if (result instanceof String) {
             realID = Integer.parseInt((String) result);
         } else {
-            throw new RemoteServerErrorException("Server returned an invalid type "+result.getClass());
+            throw new RemoteServerErrorException("Server returned an invalid type "+
+                                                 result.getClass());
         }
 
         // If the object was new, save the ID that was returned from
@@ -635,7 +793,8 @@ public class DataFactory
         } else if (result instanceof Map) {
             realIDs = (Map) result;
         } else {
-            throw new RemoteServerErrorException("Server returned an invalid type "+result.getClass());
+            throw new RemoteServerErrorException("Server returned an invalid type "+
+                                                 result.getClass());
         }
 
         // Go through each of the new objects, and populate it with
