@@ -156,8 +156,26 @@ my @modules = (
 	repository_file => 'XML-NamespaceSupport-1.08.tar.gz'
     },{
 	name => 'XML::Sax',
-	repository_file => 'XML-SAX-0.12.tar.gz'
-	#getVersion => \&XML_SAX_getVersion
+	repository_file => 'XML-SAX-0.12.tar.gz',
+	# XML::SAX v0.12 doesn't report a $VERSION
+	# However, XML::SAX::ParserFactory loads OK and reports properly
+	get_module_version => sub {
+	    my $version;
+	    my $eval = 'use XML::SAX::ParserFactory; $version = $XML::SAX::ParserFactory::VERSION;';
+
+	    eval($eval);
+
+	    return $version ? $version : undef;
+	}
+    },{
+	name => 'XML::LibXML::Common',
+	repository_file => 'XML-LibXML-Common-0.12.tar.gz'
+    },{
+	name => 'XML::LibXML',
+	repository_file => 'XML-LibXML-1.53.tar.gz',
+    },{
+	name => 'XML::LibXSLT',
+	repository_file => 'XML-LibXSLT-1.53.tar.gz',
     }
 );
 
@@ -194,14 +212,22 @@ sub install_module {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+    my $OME_BASE_DIR = $environment->base_dir()
+	or croak "Unable to retrieve OME_BASE_DIR!";
+    my $OME_TMP_DIR = $environment->tmp_dir()
+	or croak "Unable to retrieve OME_TMP_DIR!";
     
     print_header ("Perl Module Setup");
+
+    # Get our logfile and open it for reading
+    open (LOGFILE, ">", $OME_TMP_DIR."/install/PerlModuleTask.log")
+	or croak "Unable to open logfile \"$OME_TMP_DIR/install/PerlModuleTask.log\", $!";
 
     #*********
     #********* Check each module (exceptions then version)
     #*********
 
-    print "Checking modules\n";
+    print "Checking modules\n(Failure information in $OME_TMP_DIR/install/PerlModuleTask.log)\n";
 
     foreach my $module (@modules) {
 	print "  \\_ $module->{name}";
@@ -211,9 +237,15 @@ sub execute {
 	    next;
 	}
 
-	$module->{version} = get_module_version($module->{name}); 
+	# If we've got a get_module_version() override in the module definition use it,
+	# otherwise just use the default function.
+	$module->{version} = &{$module->{get_module_version}} if exists $module->{get_module_version};
+	$module->{version} = get_module_version($module->{name}) unless $module->{version}; 
 
 	if (not $module->{version}) {
+	    # Log the error returned by get_module_version()
+	    print LOGFILE "ERRORS LOADING MODULE \"$module->{name}\" -- OUTPUT FROM EVAL: \"$@\"\n\n";
+
 	    print BOLD, " [NOT INSTALLED]", RESET;
 	    my $retval = y_or_n("\n\nWould you like to install $module->{name} from the repository ?");
 
