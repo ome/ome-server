@@ -75,22 +75,17 @@ $PIXEL_TYPES{4}{0}{1} = 'unsigned double?';
 $PIXEL_TYPES{4}{1}{0} = 'int32';
 $PIXEL_TYPES{4}{0}{0} = 'uint32';
 
+our %PIXEL_INFO;
+
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
 
-The OME::Image::Pixels interface provides a generalized way of reading
-and writing to pixels files.  This is provided as a generic class to
-ease the transition from a local image repository to the image server.
-There are currently two implementations of this interface --
-OME::Image::LocalPixels and OME::Image::Server::Pixels.
-
-A pixels file has an explicitly defined life cycle: It can only be
-written to immediately after creation.  Once the writing has finished,
-and the pixels marked as complete, they cannot be written to anymore.
-Further, they cannot be read from until the writing phase is finished.
+Provides methods to accomplish common Pixel tasks.
 
 =head1 METHODS
+
+=head2 createOriginalFileAttribute
 
 =cut
 
@@ -166,6 +161,10 @@ sub createOriginalFileAttribute {
     }
 }
 
+=head2 loadOriginalFile
+
+=cut
+
 sub loadOriginalFile {
     my $proto = shift;
     my ($attr) = @_;
@@ -179,6 +178,13 @@ sub loadOriginalFile {
     }
 }
 
+=head2 findRepository
+
+Usage: my $repository = OME::Tasks::PixelsManager->findRepository();
+
+get a repository
+
+=cut
 sub findRepository {
     my $proto = shift;
     my $factory = OME::Session->instance()->Factory();
@@ -188,6 +194,56 @@ sub findRepository {
     return $repository;
 }
 
+=head2 getPixelType
+
+Usage
+
+	my $pixelType = OME::Tasks::PixelsManager->getPixelType(
+		$bytesPerPixel,$isSigned,$isFloat);
+
+retrieves the name of a Pixel type from a description.
+=cut
+sub getPixelType {
+	my ($proto, $bpp, $signed, $float) = @_;
+	return $PIXEL_TYPES{$bpp}{$signed}{$float};
+}
+
+=head2 getPixelTypeInfo
+
+Usage
+	my ($bytesPerPixel, $isSigned, $isFloat) = 
+		OME::Tasks::PixelsManager->getPixelTypeInfo( $data_hash->{PixelType} );
+
+=cut
+
+sub getPixelTypeInfo {
+	my ($proto,$pixelType) = @_;
+	$proto->__populatePixelInfo() unless( %PIXEL_INFO );
+	return @{ $PIXEL_INFO{$pixelType} };
+}
+
+=head2 createPixels
+
+Usage:
+    my ($pixels_data, $pixels_attr) = OME::Tasks::PixelsManager->
+      createPixels($image,$module_execution, {
+        SizeX        => $sizeX,
+        SizeY        => $sizeY,
+        SizeZ        => $sizeZ,
+        SizeC        => $sizeC,
+        SizeT        => $sizeT,
+        BitsPerPixel => $bitsPerPixel,
+        PixelType    => $pixelType
+      } );
+
+Creates Object representations of the pixels data (see
+OME::Image::Pixels) and the pixels attribute (see
+OME::SemanticTypes::Superclass and Pixels Semantic Type Definition).
+
+OME::Tasks::PixelsManager->finishPixels( $pixels_attr ) will need to be
+called after the data has been written.
+
+=cut
 sub createPixels {
     my $proto = shift;
 
@@ -197,6 +253,27 @@ sub createPixels {
       $proto->serverCreatePixels($repository,@_);
 }
 
+=head2 finishPixels
+
+Usage:
+    OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
+
+Finalizes the pixels data, sets the FileSHA1 of the pixels attribute,
+and sets the thumbnail.
+
+=cut
+sub finishPixels {
+    my ($proto, $pixels_data, $pixels_attr) = @_;
+
+	$pixels_data->finishPixels();
+	$pixels_attr->FileSHA1( $pixels_data->getSHA1() );
+	$proto->saveThumb( $pixels_attr );
+	$pixels_attr->storeObject();
+}
+
+=head2 loadPixels
+
+=cut
 sub loadPixels {
     my $proto = shift;
     my ($attr) = @_;
@@ -208,6 +285,110 @@ sub loadPixels {
     return $repository->IsLocal()?
       $proto->localLoadPixels($attr):
       $proto->serverLoadPixels($attr);
+}
+
+
+=head2 saveThumb
+
+Usage: 
+	# set the image thumbnail to the default display options
+	OME::Tasks::PixelsManager->saveThumb( $pixels_attr );
+
+	# set the image thumbnail to the provided DisplayOptions attribute
+	OME::Tasks::PixelsManager->saveThumb( $pixels_attr, $displayOptions );
+
+=cut
+sub saveThumb {
+    my ($proto, $pixels_attr, $displayOptions) = @_;
+    my $session = OME::Session->instance();
+    my $image = $pixels_attr->image();
+    my $pixels_data = $proto->loadPixels( $pixels_attr );
+
+ 	# save default display options to omeis as thumbnail settings.
+	$display_options = $proto->getDisplayOptions($pixels_attr)
+		unless $display_options;
+	$pixels_data->setThumb( $display_options );
+}
+
+=head2 getDisplayOptions
+
+Usage: 
+	my $displayOptions = OME::Tasks::PixelsManager->getDisplayOptions( $pixels_attr );
+
+	will load a displayOptions or make default if none exist
+
+=cut
+sub getDisplayOptions {
+    my ($proto, $pixels_attr) = @_;
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+    my $image   = $pixels_attr->image();
+    my $theT    = 0;
+    my $pixels_data = $proto->loadPixels( $pixels_attr );
+
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', {
+		Pixels => $pixels_attr } )]->[0];
+	return $displayOptions if $displayOptions;
+	
+	my %displayData = (
+		Pixels => $pixels_attr,
+		ZStart => sprintf( "%d", $pixels_attr->SizeZ() / 2 ),
+		ZStop  => sprintf( "%d", $pixels_attr->SizeZ() / 2 ),
+		TStart => $theT,
+		TStop  => $theT,
+		DisplayRGB => 1,
+		ColorMap   => 'RGB',
+	);
+	
+	# set display channels
+	my (%displayChannelData, $channelIndex);
+	my $statsHash = $pixels_data->getStackStatistics();
+
+	# Red Channel
+	$displayData{RedChannelOn} = 1;
+	$channelIndex = 0;
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
+	$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+	$displayChannelData{ Gamma } = 0.0;
+	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+	$displayData{ RedChannel } = $displayChannel;
+
+	# Gray Channel
+	$displayData{ GreyChannel } = $displayChannel;
+	
+	# Green Channel
+	if( $pixels_attr->SizeC > 1 ) {
+		$displayData{GreenChannelOn} = 1;
+		$channelIndex = 1;
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
+		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+		$displayChannelData{ Gamma } = 0.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+	} else {
+		$displayData{GreenChannelOn} = 0;
+	}
+	$displayData{ GreenChannel } = $displayChannel;
+
+
+	# Blue Channel
+	if( $pixels_attr->SizeC > 2 ) {
+		$displayData{BlueChannelOn} = 1;
+		$channelIndex = 2;
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
+		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+		$displayChannelData{ Gamma } = 0.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
+	} else {
+		$displayData{BlueChannelOn} = 0;
+	}
+	$displayData{ BlueChannel } = $displayChannel;
+
+	# Make DisplayOptions
+	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData );
+	return $displayOptions;
 }
 
 sub findLocalRepository {
@@ -225,8 +406,7 @@ sub findLocalRepository {
 
 sub localCreatePixels {
     my $proto = shift;
-    my ($repository,$image,$mex,
-        $xx,$yy,$zz,$cc,$tt,$bbp,$signed,$float) = @_;
+    my ($repository,$image,$mex,$data_hash) = @_;
     my $factory = OME::Session->instance()->Factory();
 
     # Find a local repository to store this pixels file in.
@@ -245,24 +425,20 @@ sub localCreatePixels {
         $pathname = File::Spec->catfile($path,$filename);
     }
 
-    my $pixels = OME::Image::LocalPixels->
-      new($pathname,$xx,$yy,$zz,$cc,$tt,
-          $bbp,$signed,$float,OME->BIG_ENDIAN());
+    my $pixels = OME::Image::LocalPixels->new(
+        $pathname,
+        $data_hash->{SizeX},
+      	$data_hash->{SizeY},
+      	$data_hash->{SizeZ},
+      	$data_hash->{SizeC},
+      	$data_hash->{SizeT},
+      	$proto->getPixelTypeInfo( $data_hash->{PixelType} ),
+      	OME->BIG_ENDIAN());
+
+	$data_hash->{ Repository } = $repository;
+	$data_hash->{ Path }       = $filename;
     my $attr = $factory->
-      newAttribute('Pixels',$image,$mex,
-                   {
-                    SizeX          => $xx,
-                    SizeY          => $yy,
-                    SizeZ          => $zz,
-                    SizeC          => $cc,
-                    SizeT          => $tt,
-                    BitsPerPixel   => $bbp*8,
-                    PixelType      => $PIXEL_TYPES{$bbp}{$signed}{$float},
-                    FileSHA1       => undef,
-                    Repository     => $repository,
-                    Path           => $filename,
-                    ImageServerID  => undef,
-                   });
+      newAttribute('Pixels',$image,$mex,$data_hash);
 
     return ($pixels,$attr);
 }
@@ -279,6 +455,13 @@ sub localLoadPixels {
     return OME::Image::LocalPixels->open($pathname);
 }
 
+=head2 activateRepository
+
+Usage: my $repository = OME::Tasks::PixelsManager->activateRepository( $repository );
+
+prepare OME::Image::Server to operate on a remote repository.
+
+=cut
 my $active_repository = undef;
 
 sub activateRepository {
@@ -322,31 +505,26 @@ sub findServerRepository {
 
 sub serverCreatePixels {
     my $proto = shift;
-    my ($repository,$image,$mex,
-        $xx,$yy,$zz,$cc,$tt,$bbp,$signed,$float) = @_;
+    my ($repository,$image,$mex,$data_hash) = @_;
     my $factory = OME::Session->instance()->Factory();
 
     $repository = $proto->findServerRepository()
       unless defined $repository;
     $proto->activateRepository($repository);
 
-    my $pixels = OME::Image::Server::Pixels->
-      new($xx,$yy,$zz,$cc,$tt,$bbp,$signed,$float);
+    my $pixels = OME::Image::Server::Pixels->new(
+      	$data_hash->{SizeX},
+      	$data_hash->{SizeY},
+      	$data_hash->{SizeZ},
+      	$data_hash->{SizeC},
+      	$data_hash->{SizeT},
+      	$proto->getPixelTypeInfo( $data_hash->{PixelType} )
+    );
+
+	$data_hash->{ Repository }    = $repository;
+	$data_hash->{ ImageServerID } = $pixels->getPixelsID();
     my $attr = $factory->
-      newAttribute('Pixels',$image,$mex,
-                   {
-                    SizeX          => $xx,
-                    SizeY          => $yy,
-                    SizeZ          => $zz,
-                    SizeC          => $cc,
-                    SizeT          => $tt,
-                    BitsPerPixel   => $bbp*8,
-                    PixelType      => $PIXEL_TYPES{$bbp}{$signed}{$float},
-                    FileSHA1       => undef,
-                    Repository     => $repository,
-                    Path           => undef,
-                    ImageServerID  => $pixels->getPixelsID(),
-                   });
+      newAttribute('Pixels',$image,$mex,$data_hash);
     return ($pixels,$attr);
 }
 
@@ -357,6 +535,17 @@ sub serverLoadPixels {
     my $repository = $attr->Repository();
     $proto->activateRepository($repository);
     return OME::Image::Server::Pixels->open($attr->ImageServerID());
+}
+
+sub __populatePixelInfo {
+	foreach my $bytesPerPixel (keys %PIXEL_TYPES) {
+		foreach my $isSigned (keys %{ $PIXEL_TYPES{$bytesPerPixel} }) {
+			foreach my $isFloat (keys %{ $PIXEL_TYPES{$bytesPerPixel}{$isSigned} }) {
+				$PIXEL_INFO{$PIXEL_TYPES{$bytesPerPixel}{$isSigned}{$isFloat}} = 
+					[ $bytesPerPixel, $isSigned, $isFloat ];
+			}	
+		}	
+	}	
 }
 
 1;
