@@ -197,7 +197,7 @@ sub findModuleHandler {
     # The following variables are only valid within the per-node loop.
     # They refer to the module currently being examined/executed.
     my ($curr_node,$curr_nodeID,@curr_predecessorIDs);
-    my ($curr_module,$curr_inputs,$curr_outputs);
+    my ($curr_inputs,$curr_outputs);
     my (@curr_global_inputs,@curr_dataset_inputs,
         @curr_image_inputs,@curr_feature_inputs);
     my (@curr_global_outputs,@curr_dataset_outputs,
@@ -221,7 +221,6 @@ sub findModuleHandler {
         %node_inputs = ();
         @nodes = ();
         %nodes = ();
-        %node_modules = ();
         %node_states = ();
         $analysis_chain_execution = undef;
         %dependence = ();
@@ -234,7 +233,6 @@ sub findModuleHandler {
         $curr_node = undef;
         $curr_nodeID = undef;
         @curr_predecessorIDs = ();
-        $curr_module = undef;
         $curr_inputs = undef;
         $curr_outputs = undef;
         @curr_global_inputs = ();
@@ -1393,8 +1391,6 @@ sub findModuleHandler {
                 } else {
                     __debug("  Executing ".$curr_node->module()->name());
                 }
-
-                $curr_module = $node_modules{$curr_nodeID};
 
                 my $debug = 1;
 
