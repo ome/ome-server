@@ -110,11 +110,12 @@ char **cgivars=param;
 	/* ID requirements */
 	if ( (theParam = get_param (param,"PixelsID")) )
 		sscanf (theParam,"%llu",&ID);
-	else if (m_val != M_NEWPIXELS    &&
-			 m_val != M_FILEINFO     &&
-			 m_val != M_FILESHA1     &&
-			 m_val != M_READFILE     &&
-			 m_val != M_UPLOADFILE   &&
+	else if (m_val != M_NEWPIXELS     &&
+			 m_val != M_FILEINFO      &&
+			 m_val != M_FILESHA1      &&
+			 m_val != M_READFILE      &&
+			 m_val != M_UPLOADFILE    &&
+			 m_val != M_IMPORTOMEFILE &&
 			 m_val != M_GETLOCALPATH) {
 			HTTP_DoError (method,"PixelsID Parameter missing");
 			return (-1);
@@ -575,44 +576,44 @@ char **cgivars=param;
 
 			break;
 			
-			case M_COMPOSITE:
-				if (theZ < 0 || theT < 0) {
-					HTTP_DoError (method,"Parameters theZ, and theT must be specified for the composite method." );
-					return (-1);
-				}
-				if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-					if (errno) HTTP_DoError (method,strerror( errno ) );
-					else  HTTP_DoError (method,"Access control error - check error log for details" );
-					return (-1);
-				}
-				
-				DoComposite (thePixels, theZ, theT, param);
-			break;
+		case M_COMPOSITE:
+			if (theZ < 0 || theT < 0) {
+				HTTP_DoError (method,"Parameters theZ, and theT must be specified for the composite method." );
+				return (-1);
+			}
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
 			
-			case M_GETTHUMB:
-				strcpy (file_path,"Pixels/");
-				if (! getRepPath (ID,file_path,0)) {
-					HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",ID);
-					return (-1);
-				}
-				strcat (file_path,".thumb");
+			DoComposite (thePixels, theZ, theT, param);
+		break;
+		
+		case M_GETTHUMB:
+			strcpy (file_path,"Pixels/");
+			if (! getRepPath (ID,file_path,0)) {
+				HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",ID);
+				return (-1);
+			}
+			strcat (file_path,".thumb");
 
-				if ( stat (file_path,&fStat) != 0 ) {
-					HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
-					return (-1);
-				}
+			if ( stat (file_path,&fStat) != 0 ) {
+				HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
+				return (-1);
+			}
 
-				if ( !(file=fopen(file_path, "r")) ) {
-					HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
-					return (-1);
-				}
+			if ( !(file=fopen(file_path, "r")) ) {
+				HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
+				return (-1);
+			}
 
-				HTTP_ResultType ("image/jpeg");
-				while ((nIO = fread(buf,1,sizeof(buf),file)) > 0)
-					if ( fwrite(buf,nIO,1,stdout ) != 1) break;
-				fclose(file); 
+			HTTP_ResultType ("image/jpeg");
+			while ((nIO = fread(buf,1,sizeof(buf),file)) > 0)
+				if ( fwrite(buf,nIO,1,stdout ) != 1) break;
+			fclose(file); 
 
-			break;
+		break;
 	} /* END case (method) */
 
 	/* ----------------------- */
