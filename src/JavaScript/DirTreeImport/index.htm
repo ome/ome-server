@@ -1,6 +1,6 @@
 <HTML>
 <HEAD>
-<TITLE>OME Menu</TITLE>
+<TITLE>Image Importer</TITLE>
 
 <!--
 Joust Outliner Version 2.5.4
@@ -146,7 +146,7 @@ function MIDraw (indentStr) {
 	}
 	aLine += '</nobr>';
 	if ((theBrowser.hasW3CDOM) && (theBrowser.hasDHTML) && (!this.multiLine))  { aLine += '<br>'; }
-	return aLine;
+	return aLine
 }
 function MIGetPMIconName() {
 	var n = 'icon' + ((this.FirstChild != -1) ? ((this.isopen == true) ? 'Minus' : 'Plus') : 'Join');
@@ -265,10 +265,7 @@ function Menu () {
 	this.toggle = MenuToggle;
 }
 function MenuGetContentWin() {
-// 'parent' changed from 'self' by josiah johnston
-// self was for old implementation where this file held content frame
-// current implementation is this file contains menu and only the menu
-	return eval(((myOpener != null) ? 'myOpener.' : 'parent.') + this.contentFrame);
+	return eval(((myOpener != null) ? 'myOpener.' : 'self.') + this.contentFrame);
 }
 function MenuGetEmptyEntry() {
 	for (var i = 0; i <= this.count; i++) {if (this.entry[i] == null) {break;}}
@@ -526,8 +523,8 @@ function MenuItemClicked(entryNo, fromToggle) {
 
 	this.selectEntry(entryNo);
 	if (this.wizardInstalled) {w.menuItemClicked(entryNo);}
-	if(e.onClickFunc) {e.onClick = e.onClickFunc ;}
-	if(e.onClick) {var me=e;if(eval(e.onClick) == false){r = false;}}
+	if(e.onClickFunc) {e.onClick = e.onClickFunc;}
+	if(e.onClick) {var me=e;if(eval(e.onClick) == false) {r = false;}}
 	if (r) {
 		if (((this.toggleOnLink) && (e.FirstChild != -1) && !(fromToggle)) || e.noOutlineImg) {
 			if (b.hasDHTML) {
@@ -780,9 +777,9 @@ function setMode(theMode, callerWin) {
 			}
 			if (okToGo && smSetCookie(theMode)) {
 				if (theMode == 'NoFrames') {
-					parent.location.href = (index3 == '') ? ((dest == '') ? '/' : dest) : index3;
+					location.href = (index3 == '') ? ((dest == '') ? '/' : dest) : index3;
 				} else {
-					parent.location.href = index2 + ((dest == '') ? '' : '&content=' + escape(dest));
+					location.href = index2 + ((dest == '') ? '' : '?page=' + escape(dest));
 				}
 			}
 		}
@@ -816,14 +813,9 @@ function getParm(theStr, parm, delim) {
 	return unescape(theStr.substring(sPos, ePos));
 }
 function pageFromSearch(def, m, selIt) {
-
 	var s = self.location.search;
-	if(myOpener)
-		s=self.location.search;
-	else
-		s = parent.location.search;
 	if ((s == null) || (s.length <= 1)) {return def;}
-	var p = getParm(s, 'content', '&');
+	var p = getParm(s, 'page', '&');
 	p = (p != '') ? fixPath(p) : def;
 	if (m != null) {
 		var e = m.findEntry(p, 'URL', 'exact');
@@ -866,7 +858,7 @@ if (theBrowser.canOnError) {self.onerror = defOnError;}
 var theMenu = new Menu;
 var JoustFrameset = true;
 var statusTimeout = 0;
-var index1 = 'index.html';
+var index1 = 'index.htm';
 var index2 = 'index2.htm';
 var index3 = 'index3.htm';
 var smCallerWin;
@@ -895,7 +887,7 @@ if (floatingMode == true) {
 //	############################   End of Joust   ############################
 
 function initOutlineIcons(imgStore) {
-	var ip = '/images/joust/menu/';
+	var ip = 'images/menu/';
 	ip += (theBrowser.platform == 'Mac') ? 'mac/' : ((theBrowser.platform == 'OS/2') ? 'os2/' : 'win/');
 	
 	imgStore.add('iconPlusTop', ip + 'plustop.gif', 18, 16);
@@ -913,30 +905,32 @@ function initOutlineIcons(imgStore) {
 	imgStore.add('iconJoinBottom', ip + 'joinbottom.gif', 18, 16);
 
 	//Add folder and document images to the imgStore.
-	imgStore.add('Folder', ip + 'folderclosed.gif', 18, 16);
+	imgStore.add('Folder', ip + 'folderclosed.gif', 36, 16);
+	imgStore.add('FolderSelected', ip + 'folderopen.gif', 36, 16);
 	
-	var di = '/images/joust/menu/';
+	var di = 'images/menu/';
 	if ((theBrowser.code == 'NS') || (theBrowser.code == 'MSIE')) {
 		di += theBrowser.code.toLowerCase() + '_doc';
-		imgStore.add('Document', di + '.gif', 18, 16);
-		imgStore.add('DocumentMouseOver', di + '_mo.gif', 18, 16);
-		imgStore.add('DocumentSelected', di + '_sel.gif', 18, 16);
+		imgStore.add('Document', di + '.gif', 36, 16);
+//		imgStore.add('DocumentMouseOver', di + '_mo.gif', 36, 16);
+		imgStore.add('DocumentSelected', di + '_sel.gif', 36, 16);
 	} else {
-		imgStore.add('Document', di + 'doc.gif', 18, 16);
+		imgStore.add('Document', di + 'doc.gif', 36, 16);
+		imgStore.add('DocumentSelected', di + 'doc_sel.gif', 36, 16);
 	}
 }
 function initialise() {
 	// Tell joust where to find the various index files it needs
-	index1 = '/perl2/serve.pl?Page=OME::Web::Home';
-	index2 = '/perl2/serve.pl?Page=OME::Web::Home&Float=true';
-	index3 = '/html/noOp.html';
+	index1 = 'index.htm';
+	index2 = 'index2.htm';
+	index3 = 'index3.htm';
 	
 	// Set up parameters to control menu behaviour
 	theMenu.autoScrolling = true;	
 	theMenu.modalFolders = false;
 	theMenu.linkOnExpand = false;
 	theMenu.toggleOnLink = false;
-	theMenu.showAllAsLinks = false;
+	theMenu.showAllAsLinks = true;
 	theMenu.savePage = true;
 	theMenu.tipText = "status";
 	theMenu.selectParents = false;
@@ -945,90 +939,47 @@ function initialise() {
 	theMenu.reverseRef = "parent";
 	theMenu.contentFrame = "text";
 	theMenu.defaultTarget = "text";
+	theMenu.canFloat = false;
 	
 	// Initialise all the icons
 	initOutlineIcons(theMenu.imgStore);
 	
-	// Now set up the menu with a whole lot of addEntry and addChild function calls
-	var level1ID = -1;
-	var level2ID = -1;
-	var level3ID = -1;
-	var level4ID = -1;
-// Data Management 
-	level1ID = theMenu.addEntry(-1, "Folder", "Data Management", "", "Management commands");
-
-	//Project
-	level2ID = theMenu.addChild(level1ID, "Folder", "Project", "", "Project commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Projects List", "/perl2/serve.pl?Page=OME::Web::ManageProject", "Change other user's read/write permissions");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ProjectSearch", "Search through all projects");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Make new project", "/perl2/serve.pl?Page=OME::Web::MakeNewProject", "Make a new project");
-	
-	//Dataset
-	level2ID = theMenu.addChild(level1ID, "Folder", "Dataset", "", "Dataset commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Datasets List", "/perl2/serve.pl?Page=OME::Web::ManageDataset", "Change other user's read/write permissions");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::DatasetSearch", "Search through all datasets");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Make Dataset/Import images", "/JavaScript/DirTree/index.htm", "Link to Image:Make Dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Make Dataset/Existing images", "/perl2/serve.pl?Page=OME::Web::ProjectDatasetImage", "Link to Image:Make Dataset");
-	
-
-	//Image
-	level2ID = theMenu.addChild(level1ID, "Folder", "Image", "", "Image commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Manage my Images", "/perl2/serve.pl?Page=OME::Web::ManageImage", "Change other user's read/write permissions");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ImageSearch", "Search through all images");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Add Images/Existing dataset", "/perl2/serve.pl?Page=OME::Web::AddImageDataset", "Add images in Existing dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Thumbnails", "/perl2/serve.pl?Page=OME::Web::Thumb", "Thumbnails");
+	// Menus are initialized by the JavaScript loaded in the hiddenFrame by the /perl2/OME/Web/DirTree.pm script.
+	// The initial call when the frame is loaded causes the root entry to be initialized.
+	// Subsequent calls are made through the loadOnToggle function bellow.
+}
 
 
+function loadOnToggle(theEntry, url1) { 
+    if (theEntry.FirstChild == -2) {
+		 self.hiddenFrame.location.href = url1+'&action=readDir;fullPath='+theEntry.fullPath+';entryID='+theEntry.id;
+    }
+}
 
-// Current Work
-	level1ID = theMenu.addEntry(-1, "Folder", "My work", "", "current project/dataset");
-	
-	//Project
-	level2ID = theMenu.addChild(level1ID, "Folder", "Project", "", "Current project");
-	level3ID = theMenu.addChild (level2ID, "Document", "Properties", "/perl2/serve.pl?Page=OME::Web::ProjectMetadata", "View & Edit metadata");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Switch", "/perl2/serve.pl?Page=OME::Web::ProjectSwitch", "Switch current project");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Datasets used", "/perl2/serve.pl?Page=OME::Web::ProjectDataset", "View & Edit components");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Thumbnails", "/perl2/serve.pl?Page=OME::Web::ThumbCurrentProject", "Thumbnails/Current Project");
-	
-	//Dataset
-	level2ID = theMenu.addChild(level1ID, "Folder", "Dataset", "", "Current dataset");
-	level3ID = theMenu.addChild (level2ID, "Document", "Properties", "/perl2/serve.pl?Page=OME::Web::DatasetMetadata", "View & Edit metadata of current dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Components", "/perl2/serve.pl?Page=OME::Web::DatasetComponents", "View & Edit components of current dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Switch", "/perl2/serve.pl?Page=OME::Web::DatasetSwitch", "Switch current dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Viewer", "/perl2/serve.pl?Page=OME::Web::Viewer", "Open viewer on this dataset");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Thumbnails", "/perl2/serve.pl?Page=OME::Web::ThumbCurrentDataset", "Thumbnails/Current Dataset");
-
-	//	level4ID = theMenu.addChild (level3ID, "Document", "Layers", "noOp.html", "Layer setup: View & Edit");
-	//level3ID = theMenu.addEntry (level3ID, "Document", "Viewer new Window", "/perl2/serve.pl?Page=OME::Web::ViewerPopUp", "Open viewer on this dataset");
-
-
-	level3ID = theMenu.addEntry (level3ID, "Document", "Projects I belong to", "/perl2/serve.pl?Page=OME::Web::DatasetInProjects", "List of all projects currect dataset belongs to");
-	level3ID = theMenu.addEntry (level3ID, "Document", "Manage analysis", "noOp.html", "Work on analysis for current dataset");
-	level4ID = theMenu.addChild (level3ID, "Document", "Export", "/perl2/serve.pl?Page=OME::Web::ExportSession", "Export Images");
-
-	//Analysis
-	level1ID = theMenu.addEntry(-1, "Folder", "Analysis", "", "Analysis Commands");
-	level2ID = theMenu.addChild(level1ID, "Document", "Export to XML File", "/perl2/serve.pl?Page=OME::Web::XMLFileExport", "Export to an XML file");
-
-	level2ID = theMenu.addChild(level1ID, "Document", "Import XML File", "/JavaScript/DirTreeImport/index.htm", "Import XML file");
-	level2ID = theMenu.addEntry (level2ID, "Document", "Find Spots", "/perl2/serve.pl?Page=OME::Web::FindSpots", "Find spots");
-	//level2ID = theMenu.addEntry (level2ID, "Document", "Status of Run", "noOp.html", "Run Status");
-	//level2ID = theMenu.addEntry (level2ID, "Folder", "Node", "", "Node Controls");
-
-	//level3ID = theMenu.addChild (level2ID, "Document", "User Input", "noOp.html", "User input of node");
-	//level3ID = theMenu.addEntry (level3ID, "Document", "Static info", "noOp.html", "Static Information");
-	//level3ID = theMenu.addEntry (level3ID, "Document", "Other info", "noOp.html", "Info available after run");
-
-	//level2ID = theMenu.addEntry (level2ID, "Folder", "Graph", "", "Graph Controls");
-
-	//level3ID = theMenu.addChild (level2ID, "Document", "Graphical representation", "noOp.html", "View picture of graph");
-	//level3ID = theMenu.addEntry (level3ID, "Document", "Prune", "noOp.html", "Prune graph");
-
+function selectOnClick(theEntry, url1) {
+    if (theEntry.isMultiSelected) {
+		theEntry.isMultiSelected = false;
+    } else {
+		theEntry.isMultiSelected = true;
+	}
+	theMenu.selectedEntry = -1;
+	theEntry.setSelected (theEntry.isMultiSelected);
 
 	
-// Logout
-	level1ID = theMenu.addEntry(-1, "Document", "Logout", "/perl2/serve.pl?Page=OME::Web::Logout", "Logout");
-	
+	var eID = theMenu.findEntry(true, "isMultiSelected", "exact", 0);
+	var selections = '';
+	if (eID >=0 ) {
+		selections = '&action=selectionList';
+		while (eID >= 0) {
+			selections = selections + ";" + escape (theMenu.entry[eID].fullPath) + "=1;";
+			// Then find next match
+			eID = theMenu.findEntry(true, "isMultiSelected", "exact", eID + 1);
+		}
+	} else {
+		selections = '';
+	}
+	eval (theMenu.contentFrame).location.href = url1+selections;
+	return false;
 }
 
 self.defaultStatus = "";	
@@ -1042,27 +993,22 @@ self.defaultStatus = "";
 if (self.name == 'menu') {
 	// Sometimes, Netscape will try to load this index inside the menu frame.  I haven't
 	// worked out why but this will detect that situation and reset the location property.
-	self.location.href = "menuFrame.html";
+	self.location.href = "menu.htm";
 } else {
 	initialise();
-	var thePage = pageFromSearch('noOp.html', theMenu, true);
- 	
-	if (floatingMode) {
-		self.document.writeln('<frameset cols="100%" rows="*,48" onUnload="unloadFloating();" onResize="defaultResizeHandler();">');
-		self.document.writeln('<frame name="menu" src="menu.html" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">');
-		self.document.writeln('<frame name="menuCntrl" src="menucntrl.html" scrolling="no" marginwidth="0" marginheight="0" APPLICATION="yes">');
-		self.document.writeln('</frameset>');
-	} else {
-		self.document.writeln('<frameset cols="100%" rows="*,48" onResize="defaultResizeHandler();">');
-		self.document.writeln('<frame name="menu" src="menu.html" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">');
-		self.document.writeln('<frame name="menuCntrl" src="menucntrl.html" scrolling="no" marginwidth="0" marginheight="0" APPLICATION="yes">');
-		self.document.writeln('</frameset>');
-	}
+	
+			self.document.writeln('<frameset cols="50%,*" rows="100%" onResize="defaultResizeHandler();">');
+				self.document.writeln('<frameset cols="100%" rows="100%,*" border="0">');
+					self.document.writeln('<frame name="menu" src="menu.htm" scrolling="auto" marginwidth="1" marginheight="1" APPLICATION="yes">');
+					self.document.writeln('<frame name="hiddenFrame" src="/perl2/serve.pl?Page=OME::Web::DirTreeImport" FRAMEBORDER="0" scrolling="no" marginwidth="0" marginheight="0" APPLICATION="yes">');
+				self.document.writeln('</frameset>');
+				self.document.writeln('<frame name="text" src="/perl2/serve.pl?Page=OME::Web::DirTreeImportSelect" scrolling="auto" APPLICATION="yes">');
+			self.document.writeln('</frameset>');
 }
 //-->
 </SCRIPT>
 <NOSCRIPT>
-<BODY BGCOLOR="#FFFFCC" onload="window.focus()">
+<BODY BGCOLOR="white">
 <h1>Joust Outliner</h1>
 <P>Your browser does not support JavaScript (if you are using Netscape 3 or higher or Microsoft Internet
 Explorer 4 or higher you may have JavaScript turned off in your preferences), so this page,
@@ -1079,7 +1025,6 @@ if you have the local cache turned off.</I></P>
 
 <P>If you have any problems with this site, please contact the Webmaster.</P>
 
-<P>Click <a HREF="index3.htm">here</a> to see the non-JavaScript version of this site.</P>
 
 <A HREF="robots.htm"> </A>
 </BODY>
