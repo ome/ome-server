@@ -766,6 +766,24 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				DataType = "string"/>
 		</SemanticType>
 
+		<!--
+			This ST is used by the Gradient, Segmentation, and Thresholding Analysis Modules.
+			Idealy, it will be replaced by the PixelChannelComponent ST. Its unclear what
+			behaviour OME would have with the dangling LogicalChannel refrence.
+		-->
+		<SemanticType Name="ChannelIndex" AppliesTo="I">
+			<Description>Specifies a single channel in a Pixels attribute.</Description>
+			<Element
+				Name="theC"
+				DBLocation="CHANNEL_INDEX.THE_C"
+				DataType="integer"/>
+			<Element 
+				Name="Pixels"
+				DBLocation="CHANNEL_INDEX.PIXELS"
+				DataType="reference"
+				RefersTo = "Pixels"/>
+		</SemanticType>
+		
 		<SemanticType
 			Name= "PixelChannelComponent"
 			AppliesTo = "I">
