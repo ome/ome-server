@@ -270,7 +270,8 @@ sub processDOM {
             if (not exists ($tables->{$tName}->{columns}->{$cName})) {
                 $tables->{$tName}->{columns}->{$cName}->{datatype} = $dataType;
                 if ($dataType eq 'reference') {
-                    my $referenceTo = $SE_XML->getAttribute('RefersTo');
+                    my $referenceTo = $SE_XML->getAttribute('RefersTo')
+                    	or die "Semantic Element '".$SE_XML->getAttribute( 'Name' )."' in Semantic Type '$stName' is a reference, but lacks a RefersTo.\n".$SE_XML->toString();
                     $tables->{$tName}->{columns}->{$cName}->{reference}->{STname} = $referenceTo;
                     $tables->{$tName}->{columns}->{$cName}->{reference}->{DBObject} = $factory->findObject("OME::SemanticType",name => $referenceTo);
                 }
