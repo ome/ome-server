@@ -207,6 +207,17 @@ print STDERR "getOMESession: returning session.\n";
 }
 
 
+#
+# logout
+# ------
+sub logout () {
+my $self = shift;
+my $session = shift;
+return undef unless defined $session;
+print STDERR ref($self)."->logout: logging out.\n";
+	$self->deleteApacheSession ($session->{ApacheSession});
+	delete $session->{ApacheSession};
+}
 
 
 #
@@ -263,6 +274,7 @@ print STDERR "getApacheSession: key=".$apacheSession->{SessionKey}."\n";
     return $apacheSession;
 }
 
+
 #
 # refreshApacheSession
 # --------------------
@@ -272,6 +284,30 @@ my $self = shift;
 my $apacheSession = shift;
 # FIXME:  Need some code here to expire stale sessions, calling tied(%apacheSession)->delete;
     
+}
+
+
+#
+# deleteApacheSession
+# --------------------
+
+sub deleteApacheSession {
+my $self = shift;
+my $apacheSession = shift;
+my $sessionKey = $apacheSession->{SessionKey};
+my %tiedApacheSession;
+print STDERR ref($self)."->deleteApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined')."\n";
+
+    eval {
+        tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
+            Directory     => '/var/tmp/OME/sessions',
+            LockDirectory => '/var/tmp/OME/lock'
+        };
+    };
+    return undef if $@;
+    
+    tied(%tiedApacheSession)->delete();
+
 }
 
 #
@@ -284,19 +320,22 @@ my $session = shift;
 return undef unless defined $session;
 my $apacheSessionRef = $session->{ApacheSession};
 my $sessionKey = $apacheSessionRef->{SessionKey};
-my %apacheSessionTied;
+my %tiedApacheSession;
 print STDERR "storeApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined')."\n";
 my ($key,$value);
 
-    tie %apacheSessionTied, 'Apache::Session::File', $sessionKey, {
-    Directory     => '/var/tmp/OME/sessions',
-    LockDirectory => '/var/tmp/OME/lock'
+    eval {
+        tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
+            Directory     => '/var/tmp/OME/sessions',
+            LockDirectory => '/var/tmp/OME/lock'
+        };
     };
+    return undef if $@;
     
     while ( ($key,$value) = each %$apacheSessionRef ) {
-        $apacheSessionTied{$key} = $value unless $key eq '_session_id';
+        $tiedApacheSession{$key} = $value unless $key eq '_session_id';
     }
-    untie %apacheSessionTied;
+    untie %tiedApacheSession;
 
     return $apacheSessionRef;
 }
