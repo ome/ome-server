@@ -118,7 +118,7 @@ popupList.prototype.issueCallback = function(value) {
 	} else { 
 		if( this.callback) { this.callback(value); } 
 	}
-}
+};
 
 /*****
 
@@ -131,21 +131,14 @@ popupList.prototype.issueCallback = function(value) {
 
 *****/
 popupList.prototype.setSelectionByValue = function(val, noCallback) {
-	// search through itemList for val
-	for(var i in this.itemList)
-		if(this.itemList[i] == val) {
-			// found it. now find corrosponding selection.
-			for(var j in this.listIndex)
-				if(this.listIndex[j] == i)
-					break;
-			this.setSelection(j, true, noCallback);
-			break;
-		}
-	if(this.itemList[i] == val)
+	var index = this.getIndexFromValue(val);
+	if(this.itemList[ this.listIndex[ index ] ] == val) {
+		this.setSelection(index, true, noCallback);
 		return true;
-	else
+	} else {
 		return false;
-}
+	}
+};
 
 
 popupList.prototype.getItemList = function() {
@@ -154,17 +147,56 @@ popupList.prototype.getItemList = function() {
 	for(i in this.itemList)
 		itemList[i] = this.itemList[i];
 	return itemList;
-}
+};
 
 
 popupList.prototype.getSelection = function() {
 	return this.listIndex[this.selection];
-}
+};
 
+/*
+	getIndexFromValue
+		val: value to look up index for
+	returns internal index corresponding to a value in the popup list
+*/
+popupList.prototype.getIndexFromValue = function( val ) {
+	for(var i in this.itemList) {
+		if(this.itemList[i] == val) {
+			// found it. now find corrosponding selection.
+			for(var j in this.listIndex) {
+				if(this.listIndex[j] == i) {
+					break;
+				}
+			}
+			return j;
+		}
+	}
+};
 
 popupList.prototype.getSelectionName = function() {
 	return this.itemList[ this.getSelection() ];
-}
+};
+
+/*
+	makeCellIntoLink
+		index: index to cell
+		attrs: associative array of attr_name: attr_value to add to link
+	will make a cell into a href link.
+	returns the DOM representation of the created link
+*/
+popupList.prototype.makeCellIntoLink = function( index, attrs ) {
+	if( ! this.itemBox[ index ] ) { 
+		alert('invalid index passed to popupList.prototype.makeCellIntoLink'); 
+		return; 
+	}
+	var href = svgDocument.createElementNS( svgns, 'a' );
+	for( var i in attrs ) {
+		href.setAttribute( i, attrs[i] );
+	}
+	this.itemBox[ index ].replaceChild( href, this.itemMouseCatcher[ index ] );
+	href.appendChild( this.itemMouseCatcher[ index ] );
+	return href;
+};
 
 /*****
 *
