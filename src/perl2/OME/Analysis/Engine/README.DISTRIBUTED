@@ -39,3 +39,64 @@ OME/Analysis/Engine/Executor.pm
 
 As this gets incorporated into the system more, these steps will gradually
 disappear.
+
+--------------------------
+Some implementation notes:
+--------------------------
+The Analysis Engine calls the executor's executeModule() for each module that
+can execute concurrently.  If executeModule() is non-blocking, then the AE will
+keep calling it until its finished with a "ROUND".  At this point, it will call
+waitForAnyModules() and when this returns, tries to go on to the next round. 
+Finally it will call waitForAllModules to let the executor finish.
+
+The SimpleWorkerExecutor uses a FIFO stack to manage jobs.  As the AE calls
+executeModule(), a job is added to the queue.  Before executeModule() returns,
+a call is made to shiftQueue(), which attempts to shift jobs off the queue
+until the queue is empty or no workers are found, or a worker reports an error.
+All of these calls are non-blocking.
+
+Workers are used in a round-robin fashion.  shiftQueue gets a worker that's
+been idle for the longest time by calling the DB directly to return the first
+worker with an 'IDLE' status from a list sorted by the last_used timestamp.  If
+the DB returns a worker, its assigned the job and the process repeats until
+there are no idle workers or no jobs in the queue, or a worker returns an
+error, at which point shiftQueue returns.
+
+The method used to assign a job to a worker is called pressWorker().  If the
+worker returns an error response, the worker's last_used is updated to 'now()'
+so that it goes to the back of the line.  The worker call is partially
+blocking:  The worker blocks until it can establish a remote session, and
+gather all of its required parameters without error.  The worker then sends a
+responce (200 OK) before proceeding to actually execute the module.
+
+The Job specification for a worker includes a DataSource, SessionKey, and
+WorkerID parameter.  The worker establishes an OME::Session on the supplied
+DataSource using the supplied SessionKey, registers the actual module execution
+as a cleanup task, marks its status (using the WorkerID) as 'BUSY', and returns
+an OK response.  The cleanup task executes the module and then sends the DB all
+the notices (using NotificationManager->notify()) specified in the Notices
+parameter.  There are two kinds of Notices set up by the SimpleWorkerExecutor:
+One that includes a unique ID string for that executor instance, and one that
+is generic (The notices are 'WorkerIdleUniqueID' and 'WorkerIdle').
+
+Worker nodes can be used by any back-end, so steps are taken to ensure than no
+more than the specified maximum number of workers are ever running on the same
+node - regardless of the back-end(s) they are connected to.  This is done by
+maintaining worker PIDs in /var/tmp/OME/WorkerPIDs (or wherever the temp
+directory is).  When a worker starts up, the first thing it does is acquire a
+lock on this file and determine how many PIDs are in it.  If there are less
+than MaxWorkers for this node, then it writes its own PID in the file and
+continues.  If not, it responds with a 503 status (BUSY).
+
+Meanwhile, back at the farm, the executor has been called a bunch of times and
+finally reaches waitForAnyModules.  This method blocks until at least one
+worker is finished.  Since workers signal they are finished by sending IPC
+notices, this method is nothing more than a listener for these notices
+(NotificationManager->listen()).  If a notice includes the executor's unique
+ID, the executor knows that one of its own jobs is finished.  A generic notice
+means that a worker working with some other executor (but on the same DB)
+became idle.  Either way, a call is placed to shiftQueue before returning.  The
+executor registers its listeners in its constructor and unregisters them in the
+destructor to make sure it doesn't miss anything.
+
+
