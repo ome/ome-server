@@ -2342,6 +2342,10 @@ no warnings "uninitialized";
             my $question = '?';
 			my $have_values = 1;
 
+            my $sql_type = exists $columns->{$column_alias}?
+              $columns->{$column_alias}->[3]->{SQLType}:
+              "";
+
             # If the value is an object, assume that it has an id
             # method, and use that in the SQL query.
 
@@ -2356,6 +2360,10 @@ no warnings "uninitialized";
                             push @questions, '?';
                             $arrayval = $arrayval->id()
                               if UNIVERSAL::isa($arrayval,"OME::DBObject");
+							$arrayval = 'NaN'
+								if( $class->isRealType($sql_type) && 
+									$arrayval && 
+									$value =~ m'Infinity$'i );
                             push @new_values, $arrayval;
                         }
                     }
@@ -2363,20 +2371,24 @@ no warnings "uninitialized";
                 } else {
                     $value = $value->id()
                       if UNIVERSAL::isa($value,"OME::DBObject");
+					$value = 'NaN'
+						if( $class->isRealType($sql_type) && 
+							$value && 
+							$value =~ m'Infinity$'i );
                     push @new_values, $value;
                 }
                 $operation = defined $value? $criterion->[0]: "is";
             } else {
                 $value = $criterion;
+				$value = 'NaN'
+					if( $class->isRealType($sql_type) && 
+						$value && 
+						$value =~ m'Infinity$'i );
                 $value = $value->id()
                   if UNIVERSAL::isa($value,"OME::DBObject");
                 push @new_values, $value;
                 $operation = defined $value? "=": "is";
             }
-
-            my $sql_type = exists $columns->{$column_alias}?
-              $columns->{$column_alias}->[3]->{SQLType}:
-              "";
 
 			# It appears to be impossible to silence an incorrect warning about
 			# Use of uninitialized value in string eq in the following line:
@@ -2395,7 +2407,7 @@ no warnings "uninitialized";
                     $value = 'false' if $value eq '0';
                 }
                 push @join_clauses, "$location $operation $question";
-            } elsif ($class->isRealType($sql_type) && $operation eq '=') {
+            } elsif ($class->isRealType($sql_type) && $operation eq '=' && uc($value) != 'NAN') {
                 # If the column is a float, = won't work.
                 push @join_clauses, "abs($location - $question) < ?";
                 push @new_values, $EPSILON;
@@ -2569,22 +2581,27 @@ sub __makeInsertSQLs {
         my ($table, $column, $foreign_key_class, $sql_options) = @$column_def;
 
         if (defined $sql_options && defined $sql_options->{SQLType} &&
-            $sql_options->{SQLType} eq 'boolean' and 
             defined $datum ) {
+			if( $sql_options->{SQLType} eq 'boolean' ) {
+	
+				# This is a Boolean column, so we need to make sure that
+				# the value is 'true' or 'false', not 1 or 0.
+	
+				# FIXME: Eventually, this should move into the
+				# DatabaseDelegate, since this Boolean translation is
+				# Postgres-specific.
+	
+				die "Illegal Boolean column value '$datum'"
+				  unless $datum =~ /^f(alse)?$|^t(rue)?$|^0$|^1$/i;
+	
+				$datum = 'false' if $datum eq '0';
+				$datum = 'true' if $datum eq '1';
+			} elsif( $class->isRealType( $sql_options->{SQLType} ) && 
+			         $datum =~ m'Infinity$'i ) {
+				$datum = 'NaN';
+			}
+		}
 
-            # This is a Boolean column, so we need to make sure that
-            # the value is 'true' or 'false', not 1 or 0.
-
-            # FIXME: Eventually, this should move into the
-            # DatabaseDelegate, since this Boolean translation is
-            # Postgres-specific.
-
-            die "Illegal Boolean column value '$datum'"
-              unless $datum =~ /^f(alse)?$|^t(rue)?$|^0$|^1$/i;
-
-            $datum = 'false' if $datum eq '0';
-            $datum = 'true' if $datum eq '1';
-        }
 
         $tables_used{$table} = undef;
         push @{$columns_needed{$table}}, $column;
