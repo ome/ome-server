@@ -27,6 +27,9 @@ use CGI;
 use OME::SessionManager;
 use Apache::Session::File;
 
+use base qw(Class::Data::Inheritable);
+__PACKAGE__->mk_classdata('Session');
+
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
 # are defined here.	 Each webpage is defined by a subclass (ideally
@@ -110,9 +113,23 @@ sub new {
 sub CGI { my $self = shift; return $self->{CGI}; }
 sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
-sub Session { my $self = shift; return $self->{session}; }
-sub Factory { my $self = shift; return $self->{session}->Factory(); }
-sub ApacheSession { my $self = shift; return $self->{session}->{ApacheSession}; }
+# Make sure parameter is actually a OME::Session
+sub Session { 
+	my $self = shift;
+	my $session = shift;
+	if ($session) {
+		if ($session->isa("OME::Session") || $session eq undef) {
+			$self->_Session_accessor($session)
+		} else {
+			die '\nOME::DBObject->Session called with something other than a OME::Session object.\n';
+		}
+	}
+	else {
+		return $self->_Session_accessor();
+	}
+}
+sub Factory { my $self = shift; return $self->Session()->Factory(); }
+sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->{user}; }
 
 
@@ -137,20 +154,17 @@ sub ensureLogin {
 
 	#or a new session if we got no cookie my %session;
 	my $sessionKey = $self->getSessionKey();
-print STDERR "\nensureLogin: sessionKey is ".(defined $sessionKey ? "defined" : "undefined")."\n";
-	$self->{session} = undef;
+
 	if (defined $sessionKey) {
-		$self->{session} = $manager->createSession($sessionKey);
+		$self->Session($manager->createSession($sessionKey));
 		$self->setSessionCookie();
 	}
 
-	if (defined $self->{session}) {
-		$self->{user} = $self->{session}->experimenter();
+	if (defined $self->Session()) {
+		$self->{user} = $self->Session()->experimenter();
 	}
 
-print STDERR "\nensureLogin: session is ".(defined $self->{session} ? "defined" : "undefined")."\n";
-print STDERR "\nensureLogin: user is ".(defined $self->{user} ? "defined" : "undefined")."\n";
-	return defined $self->{session};
+	return defined $self->Session();
 }
 
 
@@ -164,8 +178,7 @@ my $cgi = $self->CGI();
 my %params = @_;
 my $sessionKey;
 
-	$sessionKey = $self->{session}->SessionKey() if defined $self->{session};
-
+	$sessionKey = $self->Session()->SessionKey() if defined $self->Session();
 	if (defined $sessionKey) {
 print STDERR "\nSetting cookie: $sessionKey\n";
 		$self->{_cookies}->{'SESSION_KEY'} =
@@ -207,7 +220,6 @@ sub getLogin {
 # -------
 sub serve {
 	my $self = shift;
-
 	if ($self->{RequireLogin}) {
 	if (!$self->ensureLogin()) {
 		$self->getLogin();
@@ -309,7 +321,6 @@ sub createOMEPage {
 				 text => 'BLACK'});
 	my $tail = $CGI->end_html;
 
-	#print STDERR $head . $html . $tail;
 	return ('HTML', $head . $body . $tail);
 }
 
