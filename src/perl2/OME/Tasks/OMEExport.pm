@@ -31,11 +31,11 @@ use Log::Agent;
 use XML::LibXML;
 use XML::LibXSLT;
 
-use OME::Tasks::SemanticTypeExport;
+use OME::ImportExport::SemanticTypeExport;
 #use OME::Tasks::ProgramExport;
 #use OME::Tasks::ChainExport;
-use OME::Tasks::HierarchyExport;
-use OME::Tasks::InsertFiles;
+use OME::ImportExport::HierarchyExport;
+use OME::ImportExport::InsertFiles;
 
 sub new {
 	my ($proto, %params) = @_;
@@ -84,7 +84,7 @@ sub exportFile {
 		
 	my $session = $self->{session};
 	my $parser  = $self->{_parser};
-	my $insert = OME::Tasks::InsertFiles->new( session => $session, parser => $parser );
+	my $insert = OME::ImportExport::InsertFiles->new( session => $session, parser => $parser );
 
  	# Apply Stylesheet
  	my $xslt = XML::LibXSLT->new();
@@ -93,6 +93,7 @@ sub exportFile {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	my $CA_doc = $stylesheet->transform($doc);
 
+# these hacks were added by josiah <siah@nih.gov>
 # this is a debugging tool. actual output of the file is delegated to OME::Tasks::InsertFile->exportFile
 #$CA_doc->toFile($filename.'.fucked', 1); 
 # end debugging tool
@@ -142,14 +143,14 @@ sub buildDOM {
 
 	# Export the hierarchy and custom attributes
 	logdbg "debug", ref ($self).'->buildDOM:  Getting a Hierarchy Exporter';
-	my $hierarchyExporter = new OME::Tasks::HierarchyExport (session  => $self->{session}, _doc => $doc);
+	my $hierarchyExporter = new OME::ImportExport::HierarchyExport (session  => $self->{session}, _doc => $doc);
 	logdbg "debug", ref ($self).'->buildDOM:  Exporting Hierarchy to DOM';
 	$hierarchyExporter->buildDOM($objects,%flags);
 
 	# Export semantic type definitions only if ExportSTDs is set
 	if ($flags{ExportSTDs}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a STD Exporter';
-		my $typeExporter = new OME::Tasks::SemanticTypeExport (session => $self->{session}, _doc => $doc);
+		my $typeExporter = new OME::ImportExport::SemanticTypeExport (session => $self->{session}, _doc => $doc);
 		logdbg "debug", ref ($self).'->buildDOM:  Exporting STDs to DOM';
 		$typeExporter->buildDOM($objects,%flags);
 	}
