@@ -187,7 +187,8 @@
      ModuleType="OME::Analysis::FindSpotsHandler"
      ProgramID="/OME/bin/findSpots/findSpotsOME"
      Category="Tracking"
-     NewFeatureName="SPOT">
+     NewFeatureName="SPOT"
+     ID="urn:lsid:openmicroscopy.org:Module:11">
     <Declaration>
       <FormalInput Name="Parameters"
                    SemanticTypeName="FindSpotsInputs" Count="!"/>
@@ -218,7 +219,8 @@
      ProgramID=""
      Category="Tracking"
      FeatureIterator="SPOT"
-     NewFeatureName="[Root:TRAJECTORY]">
+     NewFeatureName="[Root:TRAJECTORY]"
+     ID="urn:lsid:openmicroscopy.org:Module:12">
 
     <Declaration>
       <FormalInput Name="Location" SemanticTypeName="Location" Count="!"/>

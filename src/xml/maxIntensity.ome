@@ -113,7 +113,8 @@
 
 <AnalysisModule ModuleName = "Maximum Intensity Projection" 
         Category="Plane Conversion"
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/maxIntensity" >
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/maxIntensity"
+	ID="urn:lsid:openmicroscopy.org:Module:9">
 	<Description>Calculate pixel statistics for each XY plane.</Description>
 	<Declaration>
 <!--

@@ -156,7 +156,7 @@
 
 <AnalysisModule ModuleName = "Fast Stack statistics" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_fastStats"
-	 ID="urn:lsid:openmicroscopy.org:Module:3">
+	ID="urn:lsid:openmicroscopy.org:Module:3">
 	<Description>Calculate pixel statistics for each XYZ Stack.</Description>
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>

@@ -87,7 +87,8 @@
     ModuleType="OME::Analysis::FindBounds"
     ProgramID=""
     Category="Testing"
-    NewFeatureName="CELL">
+    NewFeatureName="CELL"
+    ID="urn:lsid:openmicroscopy.org:Module:4">
   <Description>Find cells</Description>
 
   <Declaration>
@@ -104,7 +105,8 @@
     ProgramID=""
     Category="Testing"
     FeatureIterator="CELL"
-    NewFeatureName="MITOCHONDRIA">
+    NewFeatureName="MITOCHONDRIA"
+    ID="urn:lsid:openmicroscopy.org:Module:5">
   <Description>Find mito</Description>
 
   <Declaration>
@@ -124,7 +126,8 @@
     ProgramID=""
     Category="Testing"
     FeatureIterator="CELL"
-    NewFeatureName="GOLGI">
+    NewFeatureName="GOLGI"
+    ID="urn:lsid:openmicroscopy.org:Module:6">
   <Description>Find golgi</Description>
 
   <Declaration>
@@ -143,7 +146,8 @@
     ModuleType="OME::Analysis::FindRatio"
     ProgramID=""
     Category="Testing"
-    FeatureIterator="CELL">
+    FeatureIterator="CELL"
+    ID="urn:lsid:openmicroscopy.org:Module:7">
   <Description>Find ratio</Description>
 
   <Declaration>

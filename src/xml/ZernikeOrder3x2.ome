@@ -141,7 +141,8 @@
 <AnalysisModule ModuleName = "Zernike Coefficients Order 3x2" 
     Category="Signature Extraction"
 	ModuleType = "OME::Analysis::MatlabHandler"
-	ProgramID = "Zernike" >
+	ProgramID = "Zernike"
+	ID="urn:lsid:openmicroscopy.org:Module:13">
 	<Description></Description>
 	<Declaration>
 		<FormalInput Name = "PixelsPlane" SemanticTypeName = "PixelsPlane" Count="!"/>

@@ -115,7 +115,8 @@
 
 <AnalysisModule ModuleName = "Plane statistics" 
         Category="Statistics"
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" >
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats"
+	ID="urn:lsid:openmicroscopy.org:Module:15">
 	<Description>Calculate pixel statistics for each XY plane.</Description>
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>

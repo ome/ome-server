@@ -88,7 +88,9 @@
     </SemanticType>
   </STD:SemanticTypeDefinitions>
   <AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-    <AnalysisModule ModuleName="Stack statistics" Category="Statistics" ModuleType="OME::Analysis::CLIHandler" ProgramID="/OME/bin/OME_Image_XYZ_stats">
+    <AnalysisModule ModuleName="Stack statistics" Category="Statistics" 
+      ModuleType="OME::Analysis::CLIHandler" ProgramID="/OME/bin/OME_Image_XYZ_stats"
+      ID="urn:lsid:openmicroscopy.org:Module:14">
       <Description>Calculate pixel statistics for each XYZ Stack. Produced from XML specification.</Description>
       <Declaration>
         <FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
