@@ -41,6 +41,7 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.piccolo.PChainCanvas;
+import org.openmicroscopy.vis.piccolo.PChainLibraryCanvas;
 import edu.umd.cs.piccolo.PCanvas;
 import javax.swing.BoxLayout;
 import java.awt.Rectangle;
@@ -60,12 +61,16 @@ import java.awt.event.WindowAdapter;
 public class ChainFrame extends ChainFrameBase {
 	
 	private ChainToolBar toolBar;
+	PChainLibraryCanvas libraryCanvas;
 	
-	public ChainFrame(Controller controller,Connection connection,int i) {
+	public ChainFrame(Controller controller,Connection connection,int i,
+		PChainLibraryCanvas libraryCanvas) {
 		super(controller,connection,new String("OME Chain: "+i));
 		
 		PChainCanvas chainCanvas = (PChainCanvas) canvas;
 		chainCanvas.setFrame(this);
+		chainCanvas.setLibraryCanvas(libraryCanvas);
+	
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
