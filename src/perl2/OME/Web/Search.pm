@@ -199,7 +199,7 @@ sub getPageBody {
 						"document.forms[0].elements[\"__order\"].value = ".
 						"\"!".$search_paths->{ $field }."\";".
 						"document.forms[0].submit();' title='Sort results by ".
-					$field_titles{ $field }." in increasing order'".
+					$field_titles{ $field }." in decreasing order'".
 					# $order is prefixed by a ! for descending sort. that explains substr().
 					( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
 						" class = 'ome_active_sort_arrow'" : ''
@@ -214,7 +214,7 @@ sub getPageBody {
 			}
 		}
 		
-		# SEARCH & RENDER
+		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ _pager_text => $paging_text, type => $type } );
@@ -239,7 +239,7 @@ sub getPageBody {
 		
 	}
 	
-	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	my $tmpl = HTML::Template->new( filename => 'Search.tmpl', path => $tmpl_dir );
 	$tmpl->param( %tmpl_data );
 
