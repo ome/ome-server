@@ -418,7 +418,7 @@ sub createOMEPage {
 	if (my $menu_builder = $self->getMenuBuilder()) {
 		$menu_td =
 			$CGI->td( {
-					width => '200px',
+					width => '130px',
 					valign => 'top',
 					class => 'ome_main_menu_td',
 				}, $menu_builder->getPageMenu());
