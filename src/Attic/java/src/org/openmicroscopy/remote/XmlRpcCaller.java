@@ -49,9 +49,8 @@ import org.apache.xmlrpc.*;
 import org.openmicroscopy.Session;
 
 public class XmlRpcCaller
-    implements RemoteCaller
+    implements RemoteCaller, RemoteConstants
 {
-    public static final String NULL_REFERENCE = ">>OBJ:NULL";
     public static boolean TRACE_CALLS = false;
     public static boolean USE_LITE_CLIENT = true;
 

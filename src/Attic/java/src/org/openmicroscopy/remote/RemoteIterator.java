@@ -47,7 +47,7 @@ import java.util.Iterator;
 
 public class RemoteIterator
     extends RemoteObject
-    implements Iterator
+    implements Iterator, RemoteConstants
 {
     static
     {
@@ -57,8 +57,6 @@ public class RemoteIterator
     protected String perlClass;
     protected String nextReference;
     protected boolean haveNextReference = false;
-
-    public static final String  NULL_REFERENCE = ">>OBJ:NULL";
 
     public RemoteIterator() { super(); }
 
