@@ -40,12 +40,8 @@ package OME::Web::DBObjRender;
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-
 use OME::Session;
 use OME::Web;
-
-$VERSION = $OME::VERSION;
-
 use CGI;
 use Log::Agent;
 
@@ -280,8 +276,8 @@ $format is either 'html' or 'txt'
 
 Render object data suitable for display in $format. Current supported
 formats are 'html' and 'txt'.
-Depending on the calling parameters, returns an array of hashes 
-the hashes will take the form { field_name => rendered_field, ... }
+Returns an array of hashes of the form { field_name => rendered_field, ... }
+Each hash will contain an _id key with the record's id.
 
 $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
@@ -320,30 +316,39 @@ same as render, but works with an individual instance instead of arrays.
 
 sub renderSingle {
 	my ($proto,$obj,$format,$fieldnames) = @_;
-
-	my $specializedRenderer;
-	return $specializedRenderer->renderSingle( $obj, $format, $fieldnames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    $proto eq __PACKAGE__);
-
-	my $q = new CGI;
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $obj );
-	$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
-	my $id   = $obj->id();
-	my %record;
-	foreach my $field( @$fieldnames ) {
-		if( $field eq 'id') {
-			$record{ $field } = $q->a( 
-				{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
-				$id
-			);
-		} else {
-			$record{ $field } = $obj->$field;
-			$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format )
-				if( ref( $record{ $field } ) );
+	my ( %record, $specializedRenderer );
+	
+	# specialize
+	if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+	    $proto eq __PACKAGE__) {
+		%record = $specializedRenderer->renderSingle( $obj, $format, $fieldnames );
+	# general case
+	} else {
+		my $q = new CGI;
+		my ($package_name, $common_name, $formal_name, $ST) =
+			OME::Web->_loadTypeAndGetInfo( $obj );
+		$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
+		my $id   = $obj->id();
+		foreach my $field( @$fieldnames ) {
+			if( $field eq 'id') {
+				$record{ $field } = ( 
+					($format eq 'html') ?
+					$q->a( 
+						{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id" },
+						$id
+					) :
+					$id
+				);
+			} else {
+				$record{ $field } = $obj->$field;
+				$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format )
+					if( ref( $record{ $field } ) );
+			}
 		}
 	}
+
+	# magic id field
+	$record{ _id } = $obj->id();
 	
 	return %record if wantarray;
 	return \%record;
