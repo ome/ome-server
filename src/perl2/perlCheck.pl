@@ -10,6 +10,7 @@ use Getopt::Std;
 my $moduleRepository = 'http://openmicroscopy.org/packages/perl';
 my $DEFAULT_badTestsFatal = 0;
 my $installCommand = 'make install';
+my $ranlibCommand = 'ranlib';
 
 $ENV{PATH} .= ':/usr/local/bin';
 
@@ -41,7 +42,7 @@ my @modules = ({
 	repositoryFile => 'Tie-IxHash-1.21.tar.gz'
 	},{
 	Name => 'DBD::Pg',
-	repositoryFile => 'DBD-Pg-0.95.tar.gz',
+	repositoryFile => 'DBD-Pg-1.21.tar.gz',
 	checkVersion => \&DBD_Pg_VersionOK,
 	installModule => \&DBD_Pg_Install
 	},{
@@ -150,6 +151,8 @@ if ($options{h}) { die "Usage: perl perlcheck.pl [OPTIONS]\nPerforms version che
 
 $installCommand = 'sudo make install'
     if ($options{s});
+$ranlibCommand = 'sudo ranlib'
+    if ($options{s});
 
 
 # Make sure there is a modules directory, and cwd into it.
@@ -204,6 +207,7 @@ my $version = shift;
 	return (1) if $version == 0.95;
 	return (1) if $version == 1.01;
 	return (1) if $version == 1.20;
+	return (1) if $version == 1.21;
 	return (0);
 }
 
@@ -251,7 +255,7 @@ my $error;
 	
 	if ($^O eq 'darwin') {
 		print "\nranlib $libDir/libpq.a","\n";
-		die "Couldn't run ranlib on $libDir/libpq.a\n" if system ("ranlib $libDir/libpq.a") != 0;
+		die "Couldn't run ranlib on $libDir/libpq.a\n" if system ($ranlibCommand." $libDir/libpq.a") != 0;
 	}
 	
 	InstallModule ($module);
