@@ -82,5 +82,17 @@ sub tmp_dir {
     return undef;
 }
 
+sub user {
+    my ($self, $user) = @_;
+
+    if ($user) {
+	$self->{user} = $user;
+    } else {
+	return $self->{user} unless not exists $self->{user};
+    }
+
+    return undef;
+}
+
 
 1;
