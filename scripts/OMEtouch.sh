@@ -53,9 +53,9 @@ else
     mkdir /var/tmp/OME/sessions
 fi
 
-APACHECONFIG=`httpd -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`
-APACHEUSER=`grep "^User"  $APACHECONFIG | cut -d " " -f 2`
-chown -R $APACHEUSER /var/tmp/OME
-
+# FIXME:  apche needs access, and should probably be owned by the apache user.
+# Command-line sessions (owwned by the user executing them) can't acess this then
+# Do they need to?
+chmod -R 0777 /var/tmp/OME
 
 
