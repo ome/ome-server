@@ -64,7 +64,11 @@ import java.awt.BasicStroke;
 public class PThumbnail extends PNode implements PBufferedNode {
 
 	private final static String DEFAULT_LABEL="No Thumbnail";
-	private final static Font LABEL_FONT = new Font("HELVETICA",Font.BOLD,10);
+	private final static Font LABEL_FONT = new Font("HELVETICA",Font.PLAIN,6);
+	private final static Font THUMBNAIL_FONT 
+			= new Font("HELVETICA",Font.PLAIN,8);
+	private final static Font TOOLTIP_FONT 
+			= new Font("HELVETICA",Font.PLAIN,8);
 	private CImage image;	
 	private PImage imageNode=null;
 	private Image imageData;
@@ -84,7 +88,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		}
 		else {
 //			System.err.println("thumbnail for image "+image.getID()+", data not ready");
-			label = new PText(DEFAULT_LABEL+" "+image.getID());
+			label = new PText(image.getName());
 			label.setFont(LABEL_FONT);
 			addChild(label);
 		}
@@ -160,10 +164,10 @@ public class PThumbnail extends PNode implements PBufferedNode {
 			if (highlightRect == null)
 				highlightRect = makeHighlight(imageNode);
 			addChild(highlightRect);
-			System.err.println("highlighting image for "+image.getID());
+		//	System.err.println("highlighting image for "+image.getID());
 		}
 		else {
-			System.err.println("unhighlighting image for "+image.getID());
+		//	System.err.println("unhighlighting image for "+image.getID());
 			if (highlightRect != null && isAncestorOf(highlightRect))
 				removeChild(highlightRect);
 		}
@@ -177,5 +181,25 @@ public class PThumbnail extends PNode implements PBufferedNode {
 			BasicStroke(3,BasicStroke.CAP_BUTT,BasicStroke.JOIN_ROUND));
 		path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
 		return path;
+	}
+	
+	public PNode getFullTooltip() {
+		if (imageNode == null)
+			return null;
+		PNode n = new PNode();
+		Image im = imageNode.getImage();
+		PImage imNode = new PImage(im,false);
+		PText text  = new PText(image.getName());
+		text.setOffset(0.0,imNode.getHeight());
+		text.setFont(THUMBNAIL_FONT);
+		n.addChild(imNode);
+		n.addChild(text);
+		return n;
+	}
+	
+	public PNode getTextToolTip() {
+		PText text  = new PText(image.getName());
+		text.setFont(TOOLTIP_FONT);
+		return text;
 	}
 }
