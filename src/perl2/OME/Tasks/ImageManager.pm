@@ -320,7 +320,7 @@ sub deleteInMap{
   	my @dynamic=();
   	foreach (@tablesDynamic){
 		my $tablename=lc($_->table_name());
-  	 push(@dynamic,$tablename) unless $tablename="image_pixels";
+  	 push(@dynamic,$tablename) unless $tablename eq "image_pixels";
   	}
   	push(@tables,@dynamic);
  	foreach (@tables){
