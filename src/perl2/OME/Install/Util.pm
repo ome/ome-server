@@ -65,6 +65,7 @@ our @EXPORT = qw(
 		configure_library
 		compile_module
 		test_module
+		test_module_as_user
 		install_module
 		normalize_path
 		path_in_tree
@@ -834,6 +835,32 @@ sub test_module {
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
     my @output = `make test 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	return 1;
+    }
+
+    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+
+    return 0;
+}
+
+sub test_module_as_user {
+    my ($path, $logfile, @user_name) = @_;
+    my $iwd = getcwd ();  # Initial working directory
+    
+    # Expand our relative path to an absolute one
+    $path = rel2abs ($path);
+    
+    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `sudo -u @user_name make test 2>&1`;
 
     if ($? == 0) {
 	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
