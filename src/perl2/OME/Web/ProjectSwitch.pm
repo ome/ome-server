@@ -110,8 +110,8 @@ sub print_form {
       my $session =$self->Session();
 
 	# User's projects
-     # my @projects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
-      my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->experimenter_id );
+     # my @projects = OME::Project->search( owner_id => $self->Session()->User()->id() );
+      my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
 
 
       my %projectList = map { $_->project_id() => $_->name()} @projects

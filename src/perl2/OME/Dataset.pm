@@ -29,7 +29,7 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
     project_id => 'project',
-    owner_id   => 'owner',
+ #   owner_id   => 'owner',
     group_id   => 'group',
     image_id => 'image',		#jm
     });
@@ -37,14 +37,11 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('datasets');
 __PACKAGE__->sequence('dataset_seq');
 __PACKAGE__->columns(Primary => qw(dataset_id));
-__PACKAGE__->columns(Essential => qw(name description locked));
+__PACKAGE__->columns(Essential => qw(name description locked owner_id group_id));
 __PACKAGE__->has_many('image_links','OME::Image::DatasetMap' => qw(dataset_id));
 __PACKAGE__->has_many('project_links','OME::Project::DatasetMap' => qw(dataset_id));
-__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
-__PACKAGE__->hasa('OME::Group' => qw(group_id));
-
-__PACKAGE__->make_filter('search3' =>
-			 '%s = ? and %s = ? and %s = ?');
+#__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
+#__PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 sub projects {
 my $self = shift;

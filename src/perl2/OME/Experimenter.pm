@@ -31,11 +31,13 @@ __PACKAGE__->AccessorNames({
     });
 
 __PACKAGE__->table('experimenters');
-__PACKAGE__->sequence('experimenter_seq');
-__PACKAGE__->columns(Primary => qw(experimenter_id));
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(ome_name firstname lastname email
-                                     data_dir password));
-__PACKAGE__->hasa('OME::Group' => qw(group_id));
+                                     data_dir password group_id));
+#__PACKAGE__->has_a(group_id => 'OME::AttributeType::__Group',
+#                   inflate => 'load',
+#                   deflate => 'id');
 
 
 1;

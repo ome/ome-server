@@ -67,7 +67,7 @@ sub SavePreferences {
 		$viewerPreferences->toolbox_scale( $toolBoxScale );
 	} else {
 		my $data = {
-			experimenter_id  => $session->User(),
+			experimenter_id  => $session->User()->id(),
 			toolbox_scale    => $toolBoxScale
 		};
 		$viewerPreferences = $factory->newObject( 'OME::ViewerPreferences', $data )

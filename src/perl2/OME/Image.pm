@@ -36,20 +36,21 @@ use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
 __PACKAGE__->AccessorNames({
     instrument_id   => 'instrument',
-    experimenter_id => 'experimenter',
-    repository_id   => 'repository',
-    group_id        => 'group'
+#    experimenter_id => 'experimenter',
+#    repository_id   => 'repository',
+#    group_id        => 'group'
 });
 
 __PACKAGE__->table('images');
 __PACKAGE__->sequence('image_seq');
 __PACKAGE__->columns(Primary => qw(image_id));
-__PACKAGE__->columns(Essential => qw(image_guid file_sha1 name path image_type));
-__PACKAGE__->columns(Others => qw(lens_id created inserted description));
-__PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
-__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
-__PACKAGE__->hasa('OME::Repository' => qw(repository_id));
-__PACKAGE__->hasa('OME::Group' => qw(group_id));
+__PACKAGE__->columns(Essential => qw(image_guid name));
+__PACKAGE__->columns(Others => qw(created inserted description
+                                  experimenter_id group_id));
+#__PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+#__PACKAGE__->hasa('OME::Repository' => qw(repository_id));
+#__PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
@@ -87,6 +88,14 @@ sub GetPix {
 
 # Accessor/Mutator
 # Mutator behavior has not been subjected to thorough testing.
+
+# DC - 04/18/2003
+# This is now one big hack.  This method will create or retrieve an
+# instance of the Dimensions semantic type, and then create an
+# instance of the OME::Image::Dimensions class to represent it.  (This
+# is so that existing methods which use O::I::Dimensions will continue
+# to work while we switch them over to using attributes.)
+
 sub Dimensions {
     my $self = shift;
     
@@ -96,39 +105,52 @@ sub Dimensions {
 
 	# nab mutator parameters if they exist
     my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
-    
+    my $factory = $self->Session()->Factory();
+
    	# look for dimensions
-    my @dimensions = $self->Session()->Factory()->findObject( "OME::Image::Dimensions", image_id => $self->id());
+    my @dimensions = $factory->findAttributes("Dimensions",$self->id());
+    #my @dimensions = $self->Session()->Factory()->findObject( "OME::Image::Dimensions", image_id => $self->id());
 
     # if they gave us some parameters to mutate with, let's mutate!
     if( defined $BitsPerPixel ) {
     	die ref ($self) . "->Dimensions() does not allow mutator behavior once dimensions have been set!\n"
     		if ( scalar(@dimensions) > 0 );
-    	my $recordData = { image_id       => $self->id(),
-    	                   size_x         => $x,
-    	                   size_y         => $y,
-    	                   size_z         => $z,
-    	                   num_waves      => $w,
-    	                   num_times      => $t,
-    	                   bits_per_pixel => $BitsPerPixel };
-    	my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
+    	my $recordData = { #image_id       => $self->id(),
+    	                   SizeX         => $x,
+    	                   SizeY         => $y,
+    	                   SizeZ         => $z,
+    	                   SizeC      => $w,
+    	                   SizeT      => $t,
+    	                   BitsPerPixel => $BitsPerPixel };
+        my $dims = $factory->newAttribute("Dimensions",$self->id(),$recordData)
+    	#my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
     		or die ref ($self) . "->Dimensions() could not create a new object of type OME::Image::Dimensions. Parameters used were: ". values (%$recordData) . "\n";
-    	$self->{_dimensions} = $dims;
+    	$self->{_dimensions} = $factory->
+          loadObject("OME::Image::Dimensions",$dims->id());
     	return $self->{_dimensions};
     }
     
     die ref ($self) . "->Dimensions(): Image has multiple dimension entries\n"
     	if (scalar(@dimensions) > 1);
-    $self->{_dimensions} = $dimensions[0];
+    $self->{_dimensions} = $factory->
+      loadObject("OME::Image::Dimensions",$dimensions[0]->id());
     return $self->{_dimensions};
 }
 
 sub getFullPath {
     my $self = shift;
-    my $repository = $self->repository();
-    my $path = $self->path();
+    my @pixels = $self->Session()->Factory()->
+      findAttributes("Pixels",$self->id());
+    die "Cannot find any pixels"
+      if scalar(@pixels) == 0;
+    die "This image has more than one pixel attribute!"
+      if scalar(@pixels) > 1;
+    my $pixels = $pixels[0];
 
-    return $repository->path() . $path;
+    my $repository = $pixels->Repository();
+    my $path = $pixels->Path();
+
+    return $repository->Path() . $path;
 }
 
 sub openFile {
@@ -191,12 +213,17 @@ __PACKAGE__->table('image_dimensions');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(image_id size_x size_y size_z 
-				     num_waves num_times 
+				     size_c size_t
 				     bits_per_pixel));
 __PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
-				  wave_increment time_increment)); 
+				                  pixel_size_c pixel_size_t));
 __PACKAGE__->hasa('OME::Image' => qw(image_id));
 
+
+sub num_waves { shift->size_c(@_); }
+sub num_times { shift->size_t(@_); }
+sub wave_increment { shift->pixel_size_c(@_); }
+sub time_increment { shift->pixel_size_t(@_); }
 
 
 package OME::Image::Wavelengths;

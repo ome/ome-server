@@ -467,10 +467,14 @@ sub findObject {
 sub findObjects {
     my ($self, $class, @criteria) = @_;
 
-    return undef unless (scalar(@criteria) > 0) && ((scalar(@criteria) % 2) == 0);
+    return undef unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
 
     eval "require $class";
-    return $class->search(@criteria);
+    if (scalar(@criteria) == 0) {
+        return $class->retrieve_all();
+    } else {
+        return $class->search(@criteria);
+    }
 }
 
 
@@ -530,7 +534,7 @@ sub maybeNewObject {
 }
 
 sub newAttribute {
-    my ($self, $attribute_type, $target, $rows) = @_;
+    my ($self, $attribute_type, $target, $data_hash) = @_;
 
     my $type =
       ref($attribute_type) eq "OME::AttributeType"?
@@ -539,7 +543,37 @@ sub newAttribute {
                           name => $attribute_type);
     die "Cannot find attribute type $attribute_type"
         unless defined $type;
-    return $type->newAttribute($target, $rows);
+
+    my $granularity = $type->granularity();
+    if ($granularity eq 'D') {
+        $data_hash->{dataset_id} = $target;
+    } elsif ($granularity eq 'I') {
+        $data_hash->{image_id} = $target;
+    } elsif ($granularity eq 'F') {
+        $data_hash->{feature_id} = $target;
+    }
+
+    my $result = OME::AttributeType->newAttributes(undef,$type => $data_hash);
+
+
+    # We're only creating one attribute, so it doesn't need to be
+    # wrapped in an array.
+    return undef if (!defined $result);
+    return $result->[0];
+}
+
+sub findAttributes {
+    my ($self, $attribute_type, $target) = @_;
+
+    my $type =
+      ref($attribute_type) eq "OME::AttributeType"?
+        $attribute_type:
+        $self->findObject("OME::AttributeType",
+                          name => $attribute_type);
+    die "Cannot find attribute type $attribute_type"
+        unless defined $type;
+
+    return $type->findAttributes($target);
 }
 
 =head1 AUTHOR

@@ -45,8 +45,8 @@ sub createBounds {
                       {
                        X          => $x1,
                        Y          => $y1,
-                       WIDTH      => $xw,
-                       HEIGHT     => $yh,
+                       Width      => $xw,
+                       Height     => $yh,
                       });
 
     $feature = $self->newFeature(lc($location)." 2");
@@ -55,8 +55,8 @@ sub createBounds {
                       {
                        X          => $x1+$xw,
                        Y          => $y1,
-                       WIDTH      => $xw,
-                       HEIGHT     => $yh
+                       Width      => $xw,
+                       Height     => $yh
                       });
 
     $feature = $self->newFeature(lc($location)." 3");
@@ -65,8 +65,8 @@ sub createBounds {
                       {
                        X          => $x1,
                        Y          => $y1+$yh,
-                       WIDTH      => $xw,
-                       HEIGHT     => $yh
+                       Width      => $xw,
+                       Height     => $yh
                       });
 
     $feature = $self->newFeature(lc($location)." 4");
@@ -75,8 +75,8 @@ sub createBounds {
                       {
                        X          => $x1+$xw,
                        Y          => $y1+$yh,
-                       WIDTH      => $xw,
-                       HEIGHT     => $yh
+                       Width      => $xw,
+                       Height     => $yh
                       });
 }
 
@@ -87,7 +87,7 @@ sub calculateFeature {
     if (defined $self->{_node}->iterator_tag()) {
         my $input_bounds = $self->getFeatureInputs('Input bounds')->[0];
         $self->createBounds($input_bounds->X(),$input_bounds->Y(),
-                            $input_bounds->WIDTH(),$input_bounds->HEIGHT());
+                            $input_bounds->Width(),$input_bounds->Height());
     } else {
         my $image = $self->getCurrentImage();
         my $dims = $image->Dimensions();

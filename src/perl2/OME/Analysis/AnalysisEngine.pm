@@ -1784,7 +1784,7 @@ sub findModuleHandler {
                     {
                      analysis_view => $analysis_view,
                      dataset       => $dataset,
-                     experimenter  => $session->User()
+                     experimenter_id  => $session->User()->id()
                     });
 
         # initialize all of the nodes

@@ -180,7 +180,7 @@ sub format_list_images{
  my $session=$self->Session();
  my $user=$session->User() 
 	or die ref ($self)."->format_list_images() say: There is no user defined for this session.";
- my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->group()->group_id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
+ my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->Group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
  my @datasetsImages=$dataset->images();
  my $rep=not_used_images(\@groupImages,\@datasetsImages);	
  if (scalar(@$rep)>0){

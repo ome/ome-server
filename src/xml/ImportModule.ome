@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+  xmlns:STD=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<DocumentGroup>
+  <Include
+    DocumentID="1"
+    href="/home/dcreager/cvs/OME/src/xml/OMECoreTypes.xml"/>
+</DocumentGroup>
+
+<AML:AnalysisModuleLibrary>
+
+<AnalysisModule
+  ModuleName="Importer"
+  Description="Placeholder module which represents the act of importing an image into OME."
+  ModuleType="OME::Analysis::NoopHandler"
+  ProgramID="">
+
+    <Declaration>
+
+        <FormalOutput
+          FormalOutputName="Pixels"
+          Description="The original image pixels"
+          STD:SemanticTypeName="Pixels"
+          Count=""/>
+
+        <FormalOutput
+          FormalOutputName=""
+          Description=""
+          STD:SemanticTypeName=""
+          Count=""/>
+
+        <FormalOutput
+          FormalOutputName=""
+          Description=""
+          STD:SemanticTypeName=""
+          Count=""/>
+
+        <FormalOutput
+          FormalOutputName=""
+          Description=""
+          STD:SemanticTypeName=""
+          Count=""/>
+
+        <FormalOutput
+          FormalOutputName=""
+          Description=""
+          STD:SemanticTypeName=""
+          Count=""/>
+
+    </Declaration>
+
+</AnalysisModule>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

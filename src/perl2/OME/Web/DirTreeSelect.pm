@@ -40,7 +40,7 @@ sub getPageBody {
 	my $self = shift;
 	my $rootName = "Home";
 	my $cgi = $self->CGI();
-	my $rootDir = $self->User()->data_dir();
+	my $rootDir = $self->User()->DataDirectory();
 
 	my @selections = ();
 	my $selection;

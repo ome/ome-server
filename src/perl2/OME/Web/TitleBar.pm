@@ -39,8 +39,8 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $experimenter = $self->User()
 		or die "User not defined for this session";
-	my $firstName   = $experimenter->firstname();
-	my $lastName    = $experimenter->lastname();
+	my $firstName   = $experimenter->FirstName();
+	my $lastName    = $experimenter->LastName();
 	
 	my $project   = $session->project();
 	my $dataset;

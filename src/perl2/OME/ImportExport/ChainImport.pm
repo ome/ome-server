@@ -32,7 +32,7 @@ sub new {
     my ($proto, %params) = @_;
     my $class = ref($proto) || $proto;
 
-    my @fieldsILike = qw(session);
+    my @fieldsILike = qw(session _parser);
 
     my $self;
 
@@ -42,13 +42,15 @@ sub new {
       unless exists $self->{session} &&
              UNIVERSAL::isa($self->{session},'OME::Session');
 
-    my $parser = XML::LibXML->new();
-    die "Cannot create XML parser"
-      unless defined $parser;
+    if (!defined $self->{_parser}) {
+        my $parser = XML::LibXML->new();
+        die "Cannot create XML parser"
+          unless defined $parser;
 
-    $parser->validation(exists $params{ValidateXML}?
-                        $params{ValidateXML}: 0);
-    $self->{_parser} = $parser;
+        $parser->validation(exists $params{ValidateXML}?
+                            $params{ValidateXML}: 0);
+        $self->{_parser} = $parser;
+    }
 
     return bless $self, $class;
 }
@@ -58,22 +60,21 @@ sub importFile {
     my ($self, $filename, %flags) = @_;
     my $doc = $self->{_parser}->parse_file($filename)
       or die "Cannot parse file $filename";
-    return $self->__importTree($doc,%flags);
+    return $self->processDOM($doc->getDocumentElement(),%flags);
 }
 
 sub importXML {
     my ($self, $xml, %flags) = @_;
     my $doc = $self->{_parser}->parse_string($xml)
       or die "Cannot parse XML string";
-    return $self->__importTree($doc,%flags);
+    return $self->processDOM($doc->getDocumentElement(),%flags);
 }
 
 
-sub __importTree {
-    my ($self, $doc, %flags) = @_;
+sub processDOM {
+    my ($self, $root, %flags) = @_;
     my $session = $self->{session};
     my $factory = $session->Factory();
-    my $root = $doc->getDocumentElement();
     my $chains = $root->getElementsByTagName('AnalysisChain');
 
     my @chains;
@@ -104,8 +105,10 @@ sub __importTree {
 
             my $hash = {
                         program         => $program,
-                        iterator_tag    => $node->getAttribute('IteratorTag'),
-                        new_feature_tag => $node->getAttribute('NewFeatureTag'),
+                        iterator_tag    => $node->getAttribute('IteratorTag') ||
+                                           $program->default_iterator(),
+                        new_feature_tag => $node->getAttribute('NewFeatureTag') ||
+                                           $program->new_feature_tag(),
                        };
 
             $nodes{$nodeID} = $hash;
@@ -151,7 +154,7 @@ sub __importTree {
         my $chainObject = $factory->
           newObject("OME::AnalysisView",
                     {
-                     owner  => $session->User(),
+                     owner  => $session->User()->id(),
                      name   => $chain->getAttribute('Name'),
                      locked => $chain->getAttribute('Locked') || 'f',
                     });

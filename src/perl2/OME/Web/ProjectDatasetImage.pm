@@ -92,7 +92,7 @@ sub print_form {
  my $session=$self->Session();
  my $user=$self->Session()->User() 
 	or die ref ($self)."->print_form() say: There is no user defined for this session.";
- my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->group()->group_id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
+ my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->Group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
 	
  if (scalar(@groupImages)>0){
    $text.=format_popup();
@@ -102,7 +102,7 @@ sub print_form {
    #format output
    $text.=$cgi->h3("Create a new dataset from existing images");
    $text.=$cgi->startform;
-   $text.=create_button_dataset($user->group()->ID());
+   $text.=create_button_dataset($user->Group()->id());
    $text.="<br><br>";
    $text.=$textarea;
    $text .= "<br><br><CENTER>".$cgi->submit (-name=>'Create',-value=>'Create a new dataset')."</CENTER>";

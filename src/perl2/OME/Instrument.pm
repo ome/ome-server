@@ -28,8 +28,8 @@ use base qw(OME::DBObject);
 
 
 __PACKAGE__->table('instruments');
-__PACKAGE__->sequence('instrument_seq');
-__PACKAGE__->columns(Primary => qw(instrument_id));
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(name description));
 
 

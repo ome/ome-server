@@ -39,7 +39,7 @@ if ((scalar(@ARGV) == 0) || (($ARGV[0] =~ m/^-*/) && (scalar(@ARGV) == 1))) {
 
 my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
-
+my $factory = $session->Factory();
 
 my $projectName = "ImportTest2 project";
 my $projectDesc = "This project was created by the ImportTest test case.";
@@ -54,24 +54,24 @@ my @projects;
 
 # See if this project already defined. If not, create it.
 
-@projects = OME::Project->search(name => $projectName);
-if (scalar @projects > 0) {
-    $project = $projects[0];    # it exists, retrieve it from the DB
+$project = $factory->
+  findObject("OME::Project",
+             name => $projectName);
+
+if (defined $project) {
     $project_id = $project->ID();
-    $project = $session->Factory()->loadObject("OME::Project", $project_id);
-    $status = 0
-	unless defined $project;
+    $status = 0;
     $age = "old";
 }
 else {             # otherwise create it
     print STDERR "- Creating a new project...\n";
     $age = "new";
-    $projectGroup = $projectUser->group()->ID();
+    $projectGroup = $projectUser->Group()->id();
     $data = {name => $projectName,
-		description => $projectDesc,
-	        owner_id => $projectUser->ID(),
+             description => $projectDesc,
+	        owner_id => $projectUser->id(),
 	        group_id => $projectGroup};
-    $project = $session->Factory()->newObject("OME::Project", $data);
+    $project = $factory->newObject("OME::Project", $data);
     if (!defined $project) {
 	$status = 0;
 	print " failed to create new project $projectName.\n";
@@ -94,7 +94,11 @@ if (($ARGV[0]) =~ m/^-/) {
     $switch = shift;  # if 1st arg in ARGV starts w/ a "-" it's a switch
 }
 my $datasetName = shift; # from @ARGV
-my $datasetIter = OME::Dataset->search3(name => $datasetName, owner_id => $projectUser->ID(), locked => 'false');
+my $datasetIter = $factory->
+  findObjects("OME::Dataset",
+              name => $datasetName,
+              owner_id => $projectUser->ID(),
+              locked => 'false');
 my $dataset = $project->addDataset ($datasetIter->next()) if defined $datasetIter;
 $dataset = $project->newDataset ($datasetName) unless defined $dataset;
 

@@ -53,6 +53,7 @@ our $VERSION = '1.0';
 use Carp;
 use Log::Agent;
 use OME::DBObject;
+use OME::DataTable;
 use base qw(OME::DBObject);
 
 __PACKAGE__->mk_classdata('_attributeTypePackages');
@@ -82,9 +83,10 @@ sub getAttributeTypePackage {
 }
 
 sub requireAttributeTypePackage {
-    my $self = shift;
+    my ($self,$force) = @_;
     my $pkg = $self->getAttributeTypePackage();
-    return $pkg if exists $self->_attributeTypePackages()->{$pkg};
+    return $pkg 
+      if (!$force) && (exists $self->_attributeTypePackages()->{$pkg});
     logdbg "debug", "Loading data table package $pkg";
 
     logcroak "Malformed class name $pkg"
@@ -109,7 +111,7 @@ sub requireAttributeTypePackage {
         my $name = $attribute_column->name();
         *{$pkg."::".$name} = sub {
             my ($self) = shift;
-            return $self->_getField($name);
+            return @_? $self->_setField($name,@_): $self->_getField($name);
         };
     }
 
@@ -133,6 +135,19 @@ sub requireAttributeTypePackage {
     return $pkg;
 }
 
+sub dataTables {
+    my ($self) = @_;
+
+    my %tables;
+
+    foreach my $attr_column ($self->attribute_columns()) {
+        my $data_table = $attr_column->data_column()->data_table();
+        $tables{$data_table->id()} = $data_table;
+    }
+
+    return values %tables;
+}
+
 sub loadAttribute {
     my ($self,$id) = @_;
     my $pkg = $self->requireAttributeTypePackage();
@@ -140,11 +155,42 @@ sub loadAttribute {
 }
 
 sub newAttribute {
-    my ($self,$target,$rows) = @_;
+    my ($self,$target,$id,$rows) = @_;
     my $pkg = $self->requireAttributeTypePackage();
-    return $pkg->new($target,$rows);
+    return $pkg->new($target,$id,$rows);
 }
 
+sub findAttributes {
+    my ($self,$target) = @_;
+
+    my $granularity = $self->granularity();
+    my $factory = $self->Session()->Factory();
+
+    my @data_tables = $self->dataTables();
+    my @criteria;
+
+    if ($granularity eq 'D') {
+        @criteria = (dataset_id => $target);
+    } elsif ($granularity eq 'I') {
+        @criteria = (image_id => $target);
+    } elsif ($granularity eq 'F') {
+        @criteria = (feature_id => $target);
+    }
+
+    my %ids;
+
+    foreach my $data_table (@data_tables) {
+        my $pkg = $data_table->requireDataTablePackage();
+        my @rows = $factory->
+          findObjects($pkg,@criteria);
+        $ids{$_->id()} = undef foreach @rows;
+    }
+
+    my @attributes;
+    push @attributes, $self->loadAttribute($_) foreach keys %ids;
+
+    return @attributes;
+}
 
 sub __debug {
     #logdbg "debug", @_;
@@ -244,7 +290,7 @@ sub newAttributes {
             # Pull out the datum from the attribute hash.
             my $new_data = $data_hash->{$attribute_column_name};
 
-            __debug("      = $new_data");
+            #__debug("      = $new_data");
 
             # If we've already filled in this column in the data table
             # hash, ensure it doesn't clash with this new piece of
@@ -252,7 +298,7 @@ sub newAttributes {
 
             if (exists $data{$table_name}->{$column_name}) {
                 my $old_data = $data{$table_name}->{$column_name};
-                __debug("      ?= $old_data");
+                #__debug("      ?= $old_data");
                 croak "Attribute values clash"
                     if ($new_data ne $old_data);
             }
@@ -266,6 +312,7 @@ sub newAttributes {
     # Now, create a new row in each data table.
 
     my %data_rows;
+    my $id;
 
     __debug("Creating data rows");
 
@@ -279,12 +326,20 @@ sub newAttributes {
         #    __debug("    $column_name = ".$data->{$column_name}."\n");
         #}
 
-        # We've already created the correct data hash, so just create
-        # the object.
+        # We've already created the correct data hash.  However, we
+        # want all of the data rows to have the same ID.  So, if we've
+        # created an ID already, use it, otherwise, allow the Factory
+        # to assign a new ID.
+
+        $data{$table_name}->{attribute_id} = $id
+          if (defined $id);
 
         my $data_row = $data_table->newRow($analysis,
                                            $targets{$table_name},
                                            $data{$table_name});
+
+        $id = $data_row->id()
+          if (!defined $id);
 
         # Store the new data row objects so that we can create the
         # attributes from then.
@@ -320,7 +375,7 @@ sub newAttributes {
         # a logical view into the database, it does not create any new
         # entries in the database itself.)
 
-        my $attribute = $attribute_type->newAttribute($target,$rows);
+        my $attribute = $attribute_type->newAttribute($target,$id,$rows);
 
         push @attributes, $attribute;
     }
@@ -335,6 +390,7 @@ use strict;
 our $VERSION = '1.0';
 
 use OME::DBObject;
+use OME::Factory;
 use base qw(OME::DBObject);
 
 
@@ -362,28 +418,31 @@ use base qw(Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('_attribute_type');
 
-use fields qw(_data_table_rows _target);
+use fields qw(_data_table_rows _target _id);
 
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($target,$rows) = @_;
+    my ($target,$id,$rows) = @_;
+
+    die "Cannot create attribute without data rows"
+      if !scalar(%$rows);
 
     my $self = {};
     $self->{_data_table_rows} = $rows;
     $self->{_target} = $target;
+    $self->{_id} = $id;
 
     bless $self, $class;
     return $self;
 }
 
 sub load {
-    my $proto = shift;
+    my ($proto,$id) = @_;
     my $class = ref($proto) || $proto;
 
-    my ($id) = @_;
     my $rows = {};
     my $target;
 
@@ -411,8 +470,11 @@ sub load {
         }
     }
 
-    return $class->new($target,$rows);
+    return $class->new($target,$id,$rows);
 }
+
+sub id { return shift->{_id}; }
+sub ID { return shift->{_id}; }
 
 sub _getTarget {
     my ($self) = @_;
@@ -434,5 +496,43 @@ sub _getField {
     my $data_table = $data_column->data_table();
     my $data_row = $rows->{$data_table->id()};
 
-    return $data_row->$column_name();
+    my $value = $data_row->$column_name();
+    if ($data_column->sql_type() eq 'reference') {
+        my $reference_type = $data_column->reference_type();
+        $value = OME::Factory->loadAttribute($reference_type,$value);
+    }
+
+    return $value;
 }
+
+sub _setField {
+    my ($self, $field_name, $value) = @_;
+    my $rows = $self->{_data_table_rows};
+    my $attribute_type = $self->_attribute_type();
+
+    my $attribute_columns = OME::AttributeType::Column->
+        search(attribute_type_id => $attribute_type->id(),
+               name              => $field_name);
+    my $attribute_column = $attribute_columns->next() or return undef;
+
+    my $data_column = $attribute_column->data_column();
+    my $column_name = lc($data_column->column_name());
+    my $data_table = $data_column->data_table();
+    my $data_row = $rows->{$data_table->id()};
+
+    if (($data_column->sql_type() eq 'reference') &&
+        UNIVERSAL::isa($value,"OME::AttributeType::Superclass")) {
+        $data_row->$column_name($value->id());
+    } else {
+        $data_row->$column_name($value);
+    }
+}
+
+sub writeObject {
+    my ($self) = @_;
+    my $rows = $self->{_data_table_rows};
+    $_->writeObject() foreach (values %$rows);
+}
+
+
+1;

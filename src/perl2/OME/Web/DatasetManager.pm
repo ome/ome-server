@@ -187,7 +187,7 @@ sub retrieve_result{
   my $text="";
   my $cgi=$self->CGI();
   my $session=$self->Session();
-  my $ownerid=$session->User()->experimenter_id;
+  my $ownerid=$session->User()->id();
   #my @userProjects = OME::Project->search( owner_id => $ownerid );
   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $ownerid);
 

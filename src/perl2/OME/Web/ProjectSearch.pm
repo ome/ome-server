@@ -41,7 +41,7 @@ sub getPageBody {
 	my 	$cgi = $self->CGI() ;
 	my 	$body="" ;
 	my 	$session=$self->Session();
-	my	$userID=$session->User()->experimenter_id;
+	my	$userID=$session->User()->id();
 	my 	$table="projects";			#table name
       my 	$selectedcolumns="name,description,project_id,owner_id";	#columns in table projects
 	my    $ref;

@@ -191,7 +191,8 @@ sub store_image {
 	# everything went OK - commit all the DB inserts
 	$image->commit;
         $image->dbi_commit();
-	$attributes->dbi_commit();
+    $self->{pixelsAttr}->writeObject();
+	$attributes->writeObject();
 	$session->DBH()->commit;
 
 	#$ds->Field("images", $image);
@@ -355,15 +356,16 @@ sub store_image_metadata {
     $guid = $self->{config}->mac_address;
     
     my $recordData = {'name' => $name,
-		      'path' => $path,
+		      #'path' => $path,
 		      'image_guid' => $guid,
 		      'description' => $href->{'Image.Description'},
-		      'experimenter_id' => $session->User(),
-		      'group_id' => $session->User()->Field("group"),
-		      'lens_id'  => $href->{'Image.LensID'},
+		      'experimenter_id' => $session->User()->id(),
+		      'group_id' => $session->User()->Group()->id(),
+		      #'lens_id'  => $href->{'Image.LensID'},
 		      'created' => $created,
 		      'inserted' => "now",
-		      'repository_id' => $repository};
+		      #'repository_id' => $repository
+              };
 
     $image = $session->Factory->newObject("OME::Image", $recordData);
     if (!defined $image) {
@@ -373,10 +375,18 @@ sub store_image_metadata {
 
     # Now, create the real filename.
     $path = $image->id()."-".$name.".ori";
-    $image->path($path);
-    $image->writeObject();
+    #$image->path($path);
+    #$image->writeObject();
+
+    my $pixels = $session->Factory()->
+      newAttribute("Pixels",$image,
+                   {
+                    Repository => $repository->id(),
+                    Path       => $path,
+                   });
 
     $self->{image} = $image;
+    $self->{pixelsAttr} = $pixels;
     my $imageID = $image->id();
     $self->{realpath} = $image->getFullPath();
 
@@ -389,14 +399,16 @@ sub store_image_attributes {
     my ($self, $href, $session) = @_;
     my $status = "";
     my $image = $self->{image};
-    my $recordData = {'image_id' => $image->id,
-		   'size_x' => $href->{'Image.SizeX'},
-		   'size_y' => $href->{'Image.SizeY'},
-		   'size_z' => $href->{'Image.SizeZ'},
-		   'num_waves' => $href->{'Image.NumWaves'},
-		   'num_times' => $href->{'Image.NumTimes'},
-		   'bits_per_pixel' => $href->{'Image.BitsPerPixel'}};
-    my $attributes = $session->Factory()->newObject("OME::Image::Dimensions", $recordData);
+    my $recordData = {#'image_id' => $image->id,
+		   'SizeX' => $href->{'Image.SizeX'},
+		   'SizeY' => $href->{'Image.SizeY'},
+		   'SizeZ' => $href->{'Image.SizeZ'},
+		   'SizeC' => $href->{'Image.NumWaves'},
+		   'SizeT' => $href->{'Image.NumTimes'},
+		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}};
+    my $attributes = $session->Factory()->
+      newAttribute("Dimensions",$image,$recordData);
+    #my $attributes = $session->Factory()->newObject("OME::Image::Dimensions", $recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
@@ -444,7 +456,7 @@ sub store_image_pixels {
     $sha1 = getSha1($realpath);
 
     $image = $self->{'image'};
-    $image->file_sha1($sha1);
+    $self->{pixelsAttr}->FileSHA1($sha1);
 
     return $status;
 }
@@ -462,9 +474,10 @@ my $onlyRepository;
 
 sub findRepository {
     return $onlyRepository if defined $onlyRepository;
-    
+
     my ($session, $aref) = @_;
-    $onlyRepository = $session->Factory()->loadObject("OME::Repository",1);
+    my @repositories = $session->Factory()->findAttributes("Repository");
+    $onlyRepository = $repositories[0];
     return $onlyRepository if defined $onlyRepository;
     die "Cannot find repository #1.";
 }
@@ -486,7 +499,7 @@ sub store_wavelength_info {
     # (code per IGG 10/6/02)
     my @WavelengthInfo = ({});
     my $wave;
-    my $sth = $session->DBH()->prepare ('INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)');
+    #my $sth = $session->DBH()->prepare ('INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)');
     if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
 	# Make sure its sorted on WaveNumber.
 	@WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
@@ -504,13 +517,29 @@ sub store_wavelength_info {
 	    $wave->{'WavelengthInfo.Fluor'} = undef;
 	    $wave->{'WavelengthInfo.NDfilter'} = undef;
 	}
-	$sth->execute($imageID,
-		      $wave->{'WavelengthInfo.WaveNumber'},
-		      $wave->{'WavelengthInfo.ExWave'},
-		      $wave->{'WavelengthInfo.EmWave'},
-		      $wave->{'WavelengthInfo.Fluor'},
-		      $wave->{'WavelengthInfo.NDfilter'}
-		      );
+	#$sth->execute($imageID,
+	#	      $wave->{'WavelengthInfo.WaveNumber'},
+	#	      $wave->{'WavelengthInfo.ExWave'},
+	#	      $wave->{'WavelengthInfo.EmWave'},
+	#	      $wave->{'WavelengthInfo.Fluor'},
+	#	      $wave->{'WavelengthInfo.NDfilter'}
+	#	      );
+    my $logical = $session->Factory()->
+      newAttribute("LogicalChannel",$image,
+                   {
+                    ExWave   => $wave->{'WavelengthInfo.ExWave'},
+                    EmWave   => $wave->{'WavelengthInfo.ExWave'},
+                    Fluor    => $wave->{'WavelengthInfo.ExWave'},
+                    NDFilter => $wave->{'WavelengthInfo.ExWave'},
+                    PhotometricInterpretation => 'monochrome',
+                   });
+
+    my $component = $session->Factory()->
+      newAttribute("ChannelComponent",$image,
+                   {
+                    Index          => $wave->{'WavelengthInfo.WaveNumber'},
+                    LogicalChannel => $logical->id(),
+                   });
     }
 
 }
@@ -527,7 +556,9 @@ sub store_xyz_info {
     my ($self,$session,$href) = @_;
 
     my $factory = $session->Factory();
-    my $view = $factory->findObject("OME::AnalysisView",name => 'Image import analyses');
+    my $view = $factory->
+      findObject("OME::AnalysisView",
+                 name => 'Image import analyses');
     if (!defined $view) {
         carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
         return "";
@@ -542,8 +573,8 @@ sub store_xyz_info {
                    name => 'Dummy import dataset',
                    description => '',
                    locked => 'true',
-                   owner => $session->User(),
-                   group => undef
+                   owner_id => $session->User()->id(),
+                   group_id => undef
                   });
     my $image_map = $factory->
         newObject("OME::Image::DatasetMap",

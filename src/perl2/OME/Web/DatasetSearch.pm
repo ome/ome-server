@@ -40,7 +40,7 @@ sub getPageBody {
 	my	$self = shift ;
 	my 	$cgi = $self->CGI() ;
 	my 	$session=$self->Session();
-	my	$ownerID=$session->User()->experimenter_id;
+	my	$ownerID=$session->User()->id();
 	my 	$body="" ;
 	my 	$table="datasets";		#table name
       my 	$selectedcolumns="name,description,locked,dataset_id";	#columns in table projects

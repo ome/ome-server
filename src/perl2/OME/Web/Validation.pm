@@ -135,12 +135,12 @@ sub projectNotDefined {
 	# Has this function been called inappropriately?
 	die ref ($self)."->projectNotDefined() has been called inappropriately. There is a project defined for this session."
 		if( defined $session->project() );
-	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->group()->group_id());
-	my @ownprojects=$session->Factory()->findObjects("OME::Project",'owner_id' =>$user->experimenter_id);
+	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->Group()->id());
+	my @ownprojects=$session->Factory()->findObjects("OME::Project",'owner_id' =>$user->id());
 
 	#my @projects = OME::Project->search( group_id => $user->group()->group_id());
 	#my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
-      my $usergpid=$user->group()->group_id();
+      my $usergpid=$user->Group()->id();
 
 	# Is this a first time login? How do I check for that? For the time being, I'm going to say if neither a project nor dataset is defined, it is a first time login. Since this function won't be called if a project
 	if( not defined $session->dataset() ) {
@@ -191,9 +191,9 @@ sub datasetNotDefined {
 		$session->writeObject();
 		return $text;
 	}
-	my $usergpid=$user->group()->group_id();
-      @datasets =$session->Factory()->findObjects("OME::Dataset",'group_id'=>$user->group()->group_id());
-      my @images =$session->Factory()->findObjects("OME::Image",'group_id'=>$user->group()->group_id());
+	my $usergpid=$user->Group()->id();
+      @datasets =$session->Factory()->findObjects("OME::Dataset",'group_id'=>$user->Group()->id());
+      my @images =$session->Factory()->findObjects("OME::Image",'group_id'=>$user->Group()->id());
 
 
 	#@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());

@@ -86,9 +86,10 @@ sub getDataTablePackage {
 }
 
 sub requireDataTablePackage {
-    my $self = shift;
+    my ($self,$force) = @_;
     my $pkg = $self->getDataTablePackage();
-    return $pkg if exists $self->_dataTablePackages()->{$pkg};
+    return $pkg 
+      if (!$force) && (exists $self->_dataTablePackages()->{$pkg});
     logdbg "debug", "Loading data table package $pkg";
 
     logcroak "Malformed class name $pkg"
@@ -111,16 +112,28 @@ sub requireDataTablePackage {
     my $table = $self->table_name();
     $pkg->table($table);
     $pkg->sequence('attribute_seq');
-    $pkg->columns(Primary => qw(attribute_id));
+    $pkg->columns(Primary => qw(attribute_id analysis_id));
 
     my $columns = $self->data_columns();
     my @column_defs = ('analysis_id');
     while (my $column = $columns->next()) {
-	push @column_defs, lc($column->column_name());
+        push @column_defs, lc($column->column_name());
+        #print STDERR "   $table.".lc($column->column_name())."\n";
     }
 
+    my $type = $self->granularity();
+    if ($type eq 'D') {
+        push @column_defs, 'dataset_id';
+    } elsif ($type eq 'I') {
+        push @column_defs, 'image_id';
+    } elsif ($type eq 'F') {
+        push @column_defs, 'feature_id';
+    }
+
+    $pkg->columns(Essential => @column_defs);
+
     #$pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
-    $pkg->hasa('OME::Analysis' => qw(analysis_id));
+    $pkg->has_a(analysis_id => 'OME::Analysis');
 
     no strict 'refs';
     *{$pkg."::analysis"} = \&{$pkg."::analysis_id"};
@@ -128,22 +141,21 @@ sub requireDataTablePackage {
 
     # Make accessors for actual output, dataset, image, and feature.
 
-    my $type = $self->granularity();
     my $accessors = {};
     if ($type eq 'D') {
-	$pkg->hasa('OME::Dataset' => qw(dataset_id));
+        $pkg->has_a(dataset_id => 'OME::Dataset');
 
         no strict 'refs';
         *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
         use strict 'refs';
     } elsif ($type eq 'I') {
-	$pkg->hasa('OME::Image' => qw(image_id));
+        $pkg->has_a(image_id => 'OME::Image');
 
         no strict 'refs';
         *{$pkg."::image"}   = \&{$pkg."::image_id"};
         use strict 'refs';
     } elsif ($type eq 'F') {
-	$pkg->hasa('OME::Feature' => qw(feature_id));
+        $pkg->has_a(feature_id => 'OME::Feature');
 
         no strict 'refs';
         *{$pkg."::feature"} = \&{$pkg."::feature_id"};
@@ -151,8 +163,6 @@ sub requireDataTablePackage {
     } elsif ($type eq 'G') {
         # No target column
     }
-
-    $pkg->columns(Essential => @column_defs);
 
 
     $self->_dataTablePackages()->{$pkg} = 1;
@@ -173,11 +183,11 @@ sub newRow {
     my $granularity = $self->granularity();
     $data->{analysis_id} = $analysis;
     if ($granularity eq 'D') {
-        $data->{dataset_id} = $target;
+        $data->{dataset_id} = $target->id();
     } elsif ($granularity eq 'I') {
-        $data->{image_id} = $target;
+        $data->{image_id} = $target->id();
     } elsif ($granularity eq 'F') {
-        $data->{feature_id} = $target;
+        $data->{feature_id} = $target->id();
     }
     return $self->Session()->Factory()->newObject($pkg,$data);
 }
@@ -198,7 +208,8 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('data_columns');
 __PACKAGE__->sequence('data_column_seq');
 __PACKAGE__->columns(Primary => qw(data_column_id));
-__PACKAGE__->columns(Essential => qw(data_table_id column_name description sql_type));
+__PACKAGE__->columns(Essential => qw(data_table_id column_name description
+                                     sql_type reference_type));
 __PACKAGE__->hasa('OME::DataTable' => qw(data_table_id));
 
 __PACKAGE__->make_filter('__type_column' => 'data_table_id = ? and column_name = ?');

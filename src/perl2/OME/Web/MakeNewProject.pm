@@ -59,8 +59,8 @@ sub getPageBody {
 		return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless scalar(@nameprojects)==0;
 		my $data = {name => $cgi->param('name'),
 			description => $cgi->param('description'),
-			owner_id => $user->ID(),
-			group_id => $user->group()->ID()};
+			owner_id => $user->id(),
+			group_id => $user->Group()->id()};
 		my $project = $session->Factory()->newObject("OME::Project", $data)
 			or die "Failed to create new project ".$cgi->param('name')."\n";
 		$project->writeObject();
@@ -80,7 +80,7 @@ sub getPageBody {
 	      #$body .= OME::Web::Validation->ReloadHomeScript();
 	} else {
 		# print an input form
-		$body .= print_form($cgi,$user->group()->ID());
+		$body .= print_form($cgi,$user->Group()->id());
 	}
 
     return ('HTML',$body);

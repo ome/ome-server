@@ -161,7 +161,7 @@ sub print_form {
 	my @projectDatasets = $project->datasets();
 	my $user    = $session->User()
 		or die ref ($self)."->print_form() say: There is no user defined for this session.";
-	my @groupDatasets = $session->Factory()->findObjects("OME::Dataset", 'group_id' =>  $user->group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
+	my @groupDatasets = $session->Factory()->findObjects("OME::Dataset", 'group_id' =>  $user->Group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
 	my %datasetList;
 	my %Listgeneral=();
 	# remove empty datasets 

@@ -53,7 +53,7 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 
-	my $rootDir = $self->User()->data_dir();
+	my $rootDir = $self->User()->DataDirectory();
 	my $rootName = "Home ($rootDir)";
 
 	my $action = $cgi->url_param('action');

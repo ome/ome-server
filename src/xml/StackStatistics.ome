@@ -1,0 +1,327 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+  xmlns:STD=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<SemanticType
+  STD:SemanticTypeName="StackMean"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Mean"
+      FieldID="STACK_STATISTICS.MEAN"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="StackGeometricMean"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="GeometricMean"
+      FieldID="STACK_STATISTICS.GEOMEAN"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="StackSigma"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Sigma"
+      FieldID="STACK_STATISTICS.SIGMA"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="StackMinimum"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Minimum"
+      FieldID="STACK_STATISTICS.MINIMUM"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="StackMaximum"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Maximum"
+      FieldID="STACK_STATISTICS.MAXIMUM"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="StackCentroid"
+  Description="">
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="STACK_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="STACK_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="X"
+      FieldID="STACK_STATISTICS.CENTROID_X"/>
+
+    <SemanticElement
+      Name="Y"
+      FieldID="STACK_STATISTICS.CENTROID_Y"/>
+
+    <SemanticElement
+      Name="Z"
+      FieldID="STACK_STATISTICS.CENTROID_Z"/>
+
+</SemanticType>
+
+<DataDefinitions>
+
+<Record
+  AppliesTo="I"
+  Name="STACK_STATISTICS">
+
+    <Field
+      FieldID="STACK_STATISTICS.THE_C"
+      Name="THE_C"
+      DataType="integer"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.THE_T"
+      Name="THE_T"
+      DataType="integer"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.MINIMUM"
+      Name="MINIMUM"
+      DataType="integer"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.MAXIMUM"
+      Name="MAXIMUM"
+      DataType="integer"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.MEAN"
+      Name="MEAN"
+      DataType="float"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.GEOMEAN"
+      Name="GEOMEAN"
+      DataType="float"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.SIGMA"
+      Name="SIGMA"
+      DataType="float"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.CENTROID_X"
+      Name="CENTROID_X"
+      DataType="float"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.CENTROID_Y"
+      Name="CENTROID_Y"
+      DataType="float"/>
+
+    <Field
+      FieldID="STACK_STATISTICS.CENTROID_Z"
+      Name="CENTROID_Z"
+      DataType="float"/>
+
+</Record>
+
+</DataDefinitions>
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule Category = "Statistics" ModuleName = "Stack statistics" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
+	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
+	<Declaration>
+		<FormalOutput Name = "Stack minimum"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack"/>
+		<FormalOutput Name = "Stack maximum"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack"/>
+		<FormalOutput Name = "Stack mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack geomean"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack sigma"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack"/>
+		<FormalOutput Name = "Stack centroid" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack"/>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		<CommandLine>
+			<InputSubString>
+				<RawText>Path=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<RawImageFilePath/>
+			</InputSubString>
+			<InputSubString>
+				<RawText> Dims=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeX/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeY/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeZ/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeW/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeT/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<BytesPerPixel/>
+			</InputSubString>
+		</CommandLine>
+		<STDOUT>
+			<OutputRecord RepeatCount = "1">
+				<pat>^.*?\n</pat>
+			</OutputRecord>
+			<!-- That eats a line. The first line of the output is column headers -->
+			<OutputRecord>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<Output AccessBy = "1">
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack minimum"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack maximum"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack mean"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack geomean"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack sigma"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack centroid"/>
+				</Output>
+				<Output AccessBy = "2">
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack minimum"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack maximum"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack mean"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack geomean"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack sigma"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack centroid"/>
+				</Output>
+				<Output AccessBy = "3">
+					<OutputTo SemanticElementName = "Minimum"       FormalOutputName = "Stack minimum"/>
+				</Output>
+				<Output AccessBy = "4">
+					<OutputTo SemanticElementName = "Maximum"       FormalOutputName = "Stack maximum"/>
+				</Output>
+				<Output AccessBy = "5">
+					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack mean"/>
+				</Output>
+				<Output AccessBy = "6">
+					<OutputTo SemanticElementName = "GeometricMean"   FormalOutputName = "Stack geomean"/>
+				</Output>
+				<Output AccessBy = "7">
+					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigma"/>
+				</Output>
+				<Output AccessBy = "8">
+					<OutputTo SemanticElementName = "X" FormalOutputName = "Stack centroid"/>
+				</Output>
+				<Output AccessBy = "9">
+					<OutputTo SemanticElementName = "Y" FormalOutputName = "Stack centroid"/>
+				</Output>
+				<Output AccessBy = "10">
+					<OutputTo SemanticElementName = "Z" FormalOutputName = "Stack centroid"/>
+				</Output>
+			</OutputRecord>
+			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

@@ -9,6 +9,7 @@
 
   <!-- IMAGE_DIMENSIONS table -->
 
+  <!--
   <Table 
       Granularity="I" TableName="IMAGE_DIMENSIONS"
       Description="Describes the extents of each dimension of a 5D image - both in number of pixels and in the physical size of the pixels in microns.">
@@ -47,10 +48,10 @@
         ColumnName="TIME_INCREMENT" SQL_DataType="float"
         Description="Size (in seconds) of each pixel in the T dimension"/>
   </Table>
-
+  -->
 
   <!-- IMAGE_WAVELENGTHS table -->
-
+  <!--
   <Table 
       Granularity="I" TableName="IMAGE_WAVELENGTHS"
       Description="Describes each wavelength in the image">
@@ -70,7 +71,7 @@
         ColumnName="FLUOR" SQL_DataType="string"
         Description="The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not GFP-p53 or FITC-goat-anti-rabbit"/>
   </Table>
-
+  -->
 
   <!-- DISPLAY_SETTINGS table -->
 
@@ -141,6 +142,7 @@
 
   <!-- IMAGE_DIMENSIONS semantic types -->
 
+  <!--
   <SemanticType
       Name="Image dimensions"
       Description="Pixel dimensions of the image">
@@ -183,10 +185,10 @@
         Name="T" TableName="IMAGE_DIMENSIONS" ColumnName="TIME_INCREMENT"
         Description="Size (in seconds) of each pixel in the T dimension"/>
   </SemanticType>
-
+  -->
 
   <!-- IMAGE_WAVELENGTHS semantic types -->
-
+  <!--
   <SemanticType
       Name="Wavelength"
       Description="Describes each wavelength in the image">
@@ -208,7 +210,7 @@
         Name="FLUOR" TableName="IMAGE_WAVELENGTHS" ColumnName="FLUOR"
         Description="The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not GFP-p53 or FITC-goat-anti-rabbit"/>
   </SemanticType>
-
+  -->
 
   <!-- DISPLAY_SETTINGS semantic types -->
 

@@ -34,10 +34,10 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('projects');
 __PACKAGE__->sequence('project_seq');
 __PACKAGE__->columns(Primary => qw(project_id));
-__PACKAGE__->columns(Essential => qw(name description));
+__PACKAGE__->columns(Essential => qw(name description owner_id group_id));
 __PACKAGE__->has_many('dataset_links','OME::Project::DatasetMap' => qw(project_id));
-__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
-__PACKAGE__->hasa('OME::Group' => qw(group_id));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
+#__PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 
 sub datasets {
@@ -117,16 +117,20 @@ sub doesDatasetBelongID {
 }
 
 sub newDataset {
-my $self = shift;
-my $datasetName = shift;
-my $datasetDescription = shift if @_ > 0;
+    my $self = shift;
+    my $datasetName = shift;
+    my $datasetDescription = shift if @_ > 0;
+
+    my $factory = $self->Session()->Factory();
+    my $owner = $factory->loadAttribute("Experimenter",$self->owner());
+    my $group = $owner->Group();
 
 	my $dataset = OME::Dataset->create ( {
 		name        => $datasetName,
 		description => $datasetDescription,
 		locked      => 'false',
-		owner_id    => $self->owner()->ID(),
-		group_id    => $self->owner()->group()->ID()
+		owner_id    => $owner->id(),
+		group_id    => $group->id(),
 	} )
 		or die ref($self)."->newDataset:  Could not create a new dataset.\n";
 	

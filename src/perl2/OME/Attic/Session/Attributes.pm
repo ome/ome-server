@@ -16,8 +16,8 @@ __PACKAGE__->table('ome_sessions');
 __PACKAGE__->sequence('session_seq');
 __PACKAGE__->columns(Primary => qw(session_id));
 __PACKAGE__->columns(Essential => qw(session_key analysis));
-__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings last_access started));
-__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+__PACKAGE__->columns(Others => qw(host image_view feature_view display_settings last_access started experimenter_id project_id));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 __PACKAGE__->hasa('OME::Project' => qw(project_id));
 
 1;

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+  xmlns:STD=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+  <SemanticType
+      STD:SemanticTypeName="Bounds"
+      Description="Bounds of a feature">
+    <SemanticElement
+        Name="X" FieldID="BOUNDS.X"
+        Description=""/>
+    <SemanticElement
+        Name="Y" FieldID="BOUNDS.Y"
+        Description=""/>
+    <SemanticElement
+        Name="Width" FieldID="BOUNDS.WIDTH"
+        Description=""/>
+    <SemanticElement
+        Name="Height" FieldID="BOUNDS.HEIGHT"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      STD:SemanticTypeName="Ratio"
+      Description="Ratio">
+    <SemanticElement
+        Name="Ratio" FieldID="RATIO.RATIO"
+        Description=""/>
+  </SemanticType>
+
+<DataDefinitions>
+
+    <Record
+        AppliesTo="F" Name="BOUNDS"
+        Description="">
+      <Field
+          FieldID="BOUNDS.X"
+          Name="X"
+          DataType="integer" Description=""/>
+      <Field
+          FieldID="BOUNDS.Y"
+          Name="Y"
+          DataType="integer" Description=""/>
+      <Field
+          FieldID="BOUNDS.WIDTH"
+          Name="WIDTH"
+          DataType="integer" Description=""/>
+      <Field
+          FieldID="BOUNDS.HEIGHT"
+          Name="HEIGHT"
+          DataType="integer" Description=""/>
+    </Record>
+
+    <Record
+        AppliesTo="F" Name="RATIO"
+        Description="">
+      <Field
+          FieldID="RATIO.RATIO"
+          Name="RATIO"
+          DataType="float" Description=""/>
+    </Record>
+
+
+</DataDefinitions>
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find cells"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find cells"
+    NewFeatureName="CELL">
+
+  <Declaration>
+    <FormalOutput
+        Name="Output bounds" STD:SemanticTypeName="Bounds"
+        Description="" IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find mito"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find mito"
+    FeatureIterator="CELL"
+    NewFeatureName="MITOCHONDRIA">
+
+  <Declaration>
+    <FormalInput
+        Name="Input bounds" STD:SemanticTypeName="Bounds"
+        Description=""/>
+
+    <FormalOutput
+        Name="Output bounds" STD:SemanticTypeName="Bounds"
+        Description="" IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find golgi"
+    ModuleType="OME::Analysis::FindBounds"
+    ProgramID=""
+    Description="Find golgi"
+    FeatureIterator="CELL"
+    NewFeatureName="GOLGI">
+
+  <Declaration>
+    <FormalInput
+        Name="Input bounds" STD:SemanticTypeName="Bounds"
+        Description="" />
+
+    <FormalOutput
+        Name="Output bounds" STD:SemanticTypeName="Bounds"
+        Description="" IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    Category="Testing" ModuleName="Find ratio"
+    ModuleType="OME::Analysis::FindRatio"
+    ProgramID=""
+    Description="Find ratio"
+    FeatureIterator="CELL">
+
+  <Declaration>
+    <FormalInput
+        Name="Mito bounds" STD:SemanticTypeName="Bounds"
+        Description="" />
+
+    <FormalInput
+        Name="Golgi bounds" STD:SemanticTypeName="Bounds"
+        Description="" />
+
+    <FormalOutput
+        Name="Golgi-mito ratio" STD:SemanticTypeName="Ratio"
+        Description="" IBelongTo="[Iterator]" />
+
+  </Declaration>
+</AnalysisModule>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

@@ -40,7 +40,7 @@ __PACKAGE__->set_db('Main',
                   OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 __PACKAGE__->set_sql('find_user',<<"SQL",'Main');
-      select experimenter_id, password
+      select attribute_id, password
         from experimenters
        where ome_name = ?
 SQL

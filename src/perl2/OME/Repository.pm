@@ -28,8 +28,8 @@ use base qw(OME::DBObject);
 
 
 __PACKAGE__->table('repositories');
-__PACKAGE__->sequence('repository_seq');
-__PACKAGE__->columns(Primary => qw(repository_id));
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(path));
 
 

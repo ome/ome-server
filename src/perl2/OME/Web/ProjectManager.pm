@@ -117,10 +117,10 @@ sub delete_process{
    my ($deleteproject,$session)=@_;
    my $text="";
    my @datasetused=$deleteproject->datasets();
-   my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->experimenter_id ) if (defined $session);
+   my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() ) if (defined $session);
    
 
-   #my @myProjects=OME::Project->search( owner_id => $session->User()->experimenter_id ) if (defined $session);
+   #my @myProjects=OME::Project->search( owner_id => $session->User()->id() ) if (defined $session);
    
    my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
    or die "Unable to connect <br>";
@@ -234,8 +234,8 @@ sub print_form {
 	my $session=$self->Session();
 	my $text ="";
 	my $tableRows="";
-	#my @projects=OME::Project->search( owner_id => $session->User()->experimenter_id );
-	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->experimenter_id );
+	#my @projects=OME::Project->search( owner_id => $session->User()->id() );
+	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
    
 
 

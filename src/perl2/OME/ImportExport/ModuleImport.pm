@@ -42,12 +42,12 @@ sub new {
 	my $proto  = shift;
 	my $class  = ref($proto) || $proto;
 	my %params = @_;
-	my $debug = $params{debug};
+	my $debug = $params{debug} || 0;
 	
 	print STDERR $proto . "->new called with parameters:\n\t" . join( "\n\t", map { $_."=>".$params{$_} } keys %params ) ."\n" 
 		if $debug > 1;
 	
-	my @requiredParams = ('session');
+	my @requiredParams = ('session','semanticTypes','semanticColumns');
 	
 	foreach (@requiredParams) {
 		die ref ($class) . "->new called without required parameter '$_'"
@@ -56,9 +56,22 @@ sub new {
 
 	my $self = {
 		session => $params{session},
-		debug   => $params{debug}
+		debug   => $params{debug} || 0,
+                semanticTypes => $params{semanticTypes},
+                semanticColumns => $params{semanticColumns},
+                _parser => $params{_parser},
 	};
 	
+        if (!defined $self->{_parser}) {
+            my $parser = XML::LibXML->new();
+            die "Cannot create XML parser"
+              unless defined $parser;
+            
+            $parser->validation(exists $params{ValidateXML}?
+                                $params{ValidateXML}: 0);
+            $self->{_parser} = $parser;
+        }
+
 	bless($self,$class);
 	print STDERR ref ($self) . "->new returning successfully\n" 
 		if $debug > 1;
@@ -92,7 +105,8 @@ sub importXMLFile {
 
 	print STDERR ref ($self) . "->importXMLFile called with parameters:\n\t[filePath=] $filePath\n"
 		if $debug > 0;
-	my $parser     = XML::LibXML->new();
+	#my $parser     = XML::LibXML->new();
+        my $parser = $self->{_parser};
 #	print STDERR ref ($self) . "->importXMLFile about to validate file\n"
 #		if $debug > 1;
 	#Validate file against Schema
@@ -146,367 +160,15 @@ sub processDOM {
 
 	my @commitOnSuccessfulImport;
 	my @newPrograms;
-	print STDERR ref ($self) . "->processDOM called to process " . scalar(@{$root->getElementsByTagName( "AnalysisModule" )} ) . " modules\n"
+	print STDERR ref ($self) . "->processDOM called to process " . scalar(@{$root->getElementsByLocalName( "AnalysisModule" )} ) . " modules\n"
 		if $debug > 0;
 
 
-###############################################################################
-#
-# Make new tables, columns, and Attribute types
-#
-# semanticTypes is keyed by name, valued by DBObject AttributeType
-my %semanticTypes;
-# semanticColumns is a double keyed hash
-#	keyed by {Attribute_Type.Name}->{Attribute_Column.Name}
-#	valued by DBObject AttributeColumn
-my %semanticColumns;
-
-my $SemanticDefinitionsXML = $root->getElementsByTagName( "SemanticTypeDefinitions" )->[0];
-
-	print STDERR ref ($self) . "->processDOM: about to process SemanticTypeDefinitions\n";
-
-	###########################################################################
-	#
-	# Process Table and Column elements. Make new tables and columns as needed.
-	#
-	# dataColumns is a double keyed hash
-	#	keyed by {Data_Type.Name}->{Data_Column.Name}
-	#	valued by DBobject DataColumn
-	my %dataColumns;
-
-	print STDERR ref ($self) . "->processDOM: about to process tables and columns\n"
-		if $debug > 1;
-	foreach my $tableXML ( $SemanticDefinitionsXML->getElementsByTagName( "Table" ) ) {
-		#######################################################################
-		#
-		# Process a Table
-		#
-		print STDERR ref ($self) . "->processDOM: looking for table ".$tableXML->getAttribute( 'TableName' )."\n"
-			if $debug > 1;
-		my @tables = $factory->findObjects( "OME::DataTable", 'table_name' => $tableXML->getAttribute( 'TableName' ) );
-		
-		my $newTable;
-		if( scalar(@tables) == 0 ) { # the table doesn't exist. create it.
-			print STDERR ref ($self) . "->processDOM: table not found. creating it.\n"
-				if $debug > 1;
-			my $data = {
-				table_name  => $tableXML->getAttribute( 'TableName' ),
-				description => $tableXML->getAttribute( 'Description' ),
-				granularity => $tableXML->getAttribute( 'Granularity' )
-			};
-			print STDERR ref ($self) . "->processDOM: OME::DataTable DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-				if $debug > 1;
-			$newTable = $factory->newObject( "OME::DataTable", $data )
-				or die ref ($self) . " could not create OME::DataTable. name = " . $tableXML->getAttribute( 'TableName' );
-			print STDERR ref ($self) . "->processDOM: successfully created OME::DataTable DBObject\n"
-				if $debug > 1;
-
-			###################################################################
-			#
-			# Make the table in the database. 
-			# Should this functionality be moved to OME::Datatype 
-			# so making a new entry there will cause a new table
-			# to be created?
-			#
-			my $statement = "
-				CREATE TABLE ".$newTable->table_name()." (
-					ATTRIBUTE_ID	 OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
-					ANALYSIS_ID      OID REFERENCES ANALYSES DEFERRABLE INITIALLY DEFERRED,";
-			if( $newTable->granularity() eq 'I' ) {
-				$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
-			} elsif ( $newTable->granularity() eq 'D' ) {
-				$statement .= "DATATSET_ID   OID NOT NULL REFERENCES DATASETS DEFERRABLE INITIALLY DEFERRED";
-			} elsif ( $newTable->granularity() eq 'F' ) {
-				$statement .= "FEATURE_ID    OID NOT NULL REFERENCES FEATURES DEFERRABLE INITIALLY DEFERRED";
-			}
-			$statement .= ")";
-			print STDERR ref ($self) . "->processDOM: about to create table in DB using statement\n".$statement."\n"
-				if $debug > 1;
-			my $dbh = $session->DBH();
-			my $sth = $dbh->prepare( $statement )
-				or die "Could not prepare Table create statement when making table ".$newTable->table_name()."\nStatement was\n$statement";
-			$sth->execute()
-				or die "Unable to create table ".$newTable->table_name()."\n";
-			print STDERR ref ($self) . "->processDOM: successfully created table\n"
-				if $debug > 1;
-			#
-			#
-			###################################################################
-
-			push(@commitOnSuccessfulImport, $newTable);
-		} else {
-			print STDERR ref ($self) . "->processDOM: found table. using existing table.\n"
-				if $debug > 1;
-			$newTable = $tables[0];
-		}
-		#
-		# END 'Process a Table'
-		#
-		########################################################################
+        my $semanticTypes = $self->{semanticTypes};
+        my $semanticColumns = $self->{semanticColumns};
 
 
-		########################################################################
-		#
-		# Process columns in this table
-		#
-		print STDERR ref ($self) . "->processDOM: processing columns\n"
-			if $debug > 1;
-		foreach my $columnXML($tableXML->getElementsByTagName( "Column" ) ){
-			my %dataTypeConversion = (
-			#	XMLType  => SQL_Type
-				integer  => 'integer',
-				double   => 'double precision',
-				float    => 'real',
-				boolean  => 'boolean',
-				string   => 'text',
-				dateTime => 'timestamp'
-				);
-			$columnXML->setAttribute( 
-				'SQL_DataType', 
-				$dataTypeConversion{ $columnXML->getAttribute( 'SQL_DataType' ) }
-			);
-
-			
-			print STDERR ref ($self) . "->processDOM: searching OME::DataTable::Column with\n\tdata_table_id=".$newTable->id()."\n\tcolumn_name=". $columnXML->getAttribute( 'ColumnName' )."\n"
-				if $debug > 1;
-#				my @cols = $factory->findObjects( "OME::DataTable::Column", {
-#					data_table_id => $newTable->id(),
-#					column_name   => $columnXML->getAttribute( 'ColumnName' )
-#				});
-# change this to a factory search after factory can take multi way searches
-			require OME::DataTable;
-			my @cols = OME::DataTable::Column->search( 
-				data_table_id => $newTable->id(),
-				column_name   => $columnXML->getAttribute( 'ColumnName' )
-			);
-			
-			my $newColumn;
-			if( scalar(@cols) == 0 ) {
-				print STDERR ref ($self) . "->processDOM: could not find matching column. creating it\n"
-					if $debug > 1;
-				my $data     = {
-					data_table_id  => $newTable,
-					column_name    => $columnXML->getAttribute( 'ColumnName' ),
-					description    => $columnXML->getAttribute( 'Description' ),
-					sql_type       => $columnXML->getAttribute( 'SQL_DataType' )
-				};
-				print STDERR ref ($self) . "->processDOM: OME::DataTable::Column DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-					if $debug > 1;
-				$newColumn = $factory->newObject( "OME::DataTable::Column", $data )
-					or die "Could not create OME::DataType::Column object\n";
-				print STDERR ref ($self) . "->processDOM: created OME::DataTable::Column DBObject\n"
-					if $debug > 1;
-		
-				################################################################
-				#
-				# Create the column in the database. 
-				# Should this functionality be moved to OME::DataTable::Column 
-				# so making a new entry there will cause a new column
-				# to be created?
-				#
-				my $statement =
-					"ALTER TABLE ".$newTable->table_name().
-					"	ADD ".$newColumn->column_name()." ".$columnXML->getAttribute( 'SQL_DataType' );
-				my $dbh = $session->DBH();
-				my $sth = $dbh->prepare( $statement )
-					or die "Could not prepare statment when adding column ".$newColumn->column_name()." to table ".$newTable->table_name()."\nStatement:\n$statement";
-				print STDERR ref ($self) . "->processDOM: about to create column in DB using statement\n$statement\n"
-					if $debug > 1;
-				$sth->execute()
-					or die "Unable to create column ".$newColumn->column_name()." in table ".$newTable->table_name();
-				print STDERR ref ($self) . "->processDOM: created column in db\n"
-					if $debug > 1;
-				#
-				#
-				################################################################
-		
-				push(@commitOnSuccessfulImport, $newColumn);
-			} else {
-				die "Found matching column with different sql data type."
-					unless $cols[0]->sql_type() eq $columnXML->getAttribute( 'SQL_DataType' );
-				print STDERR ref ($self) . "->processDOM: found column. using existing column.\n"
-					if $debug > 1;
-				$newColumn = $cols[0];
-			}
-			$dataColumns{$newTable->table_name()}->{ $newColumn->column_name()} =
-				$newColumn;
-		}
-		#
-		# END 'Process columns in this table'
-		#
-		########################################################################
-		print STDERR ref ($self) . "->processDOM: finished processing columns in that table\n"
-			if $debug > 1;
-	}
-	print STDERR ref ($self) . "->processDOM: finished processing tables\n"
-		if $debug > 1;
-	#
-	# END 'Process Table and Column elements. Make new tables and columns as needed.'
-	#
-	###########################################################################
-
-	###########################################################################
-	#
-	# Make AttributeTypes
-	#
-	print STDERR ref ($self) . "->processDOM: making new AttributeTypes from SemanticTypes\n"
-		if $debug > 1;
-	foreach my $semanticTypeXML ( $SemanticDefinitionsXML->getElementsByTagName( "SemanticType" ) ) {
-		# look for existing AttributeType
-		print STDERR ref ($self) . "->processDOM is looking for an OME::AttributeType object\n\t[name=]".$semanticTypeXML->getAttribute( 'Name' )."\n"
-			if $debug > 1;
-		my $existingAttrType = $factory->findObject( 
-			"OME::AttributeType",
-			name => $semanticTypeXML->getAttribute( 'Name' )
-		);
-		
-		my $newAttrType;
-		###########################################################################
-		#
-		# if AttributeType doesn't exist, create it
-		#
-		if( not defined $existingAttrType ) {
-			print STDERR ref ($self) . "->processDOM: couldn't find it. creating it.\n"
-				if $debug > 1;
-			my $data = {
-				name        => $semanticTypeXML->getAttribute('Name'),
-				granularity => 'F',
-				description => $semanticTypeXML->getAttribute( 'Description')
-			};
-			# Granularity is set properly below. DB set up won't let us use NULL for it and we don't have enough info to know what it is yet.
-			print STDERR ref ($self) . "->processDOM: about to make a new OME::AttributeType. (granularity will be reset below) parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-				if $debug > 1;
-			$newAttrType = $factory->newObject("OME::AttributeType",$data)
-				or die ref ($self) . " could not create new object of type OME::AttributeType with parameters:\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
-			print STDERR ref ($self) . "->processDOM: made a new OME::AttributeType object\n"
-				if $debug > 1;
-	
-	
-			#######################################################################
-			#
-			# make OME::AttributeType::Column objects
-			#
-			my $granularity;
-			my $tableName;
-			print STDERR ref ($self) . "->processDOM: about to make AttributeColumns from SemanticElements in this SemanticType\n"
-				if $debug > 1;
-			foreach my $SemanticElementXML ($semanticTypeXML->getElementsByTagName( "SemanticElement") ) {
-				print STDERR ref ($self) . "->processDOM: processing attribute column,\n\tname=".$SemanticElementXML->getAttribute('Name')."\n"
-					if $debug > 1;
-				#check ColumnID
-				die ref ($self) . " could not find entry for column '".$SemanticElementXML->getAttribute('ColumnName')."'\n"
-					unless exists $dataColumns{$SemanticElementXML->getAttribute('TableName')}->{ $SemanticElementXML->getAttribute('ColumnName') };
-			
-				#check granularity
-				my $attrColumnGranularity =
-					$dataColumns{$SemanticElementXML->getAttribute('TableName')}->{ $SemanticElementXML->getAttribute('ColumnName') }->data_table()->granularity();
-				$granularity = $attrColumnGranularity
-					if (not defined $granularity);
-				die ref ($self) . " SemanticType (name=".$semanticTypeXML->getAttribute('Name').") has elements with different granularities. Died on element (Name=".$SemanticElementXML->getAttribute('Name').", ColumnName=".$SemanticElementXML->getAttribute('ColumnName').") with granularity '$attrColumnGranularity'"
-					unless $granularity eq $attrColumnGranularity;
-					
-				#check table
-				$tableName = $SemanticElementXML->getAttribute('TableName')
-					if (not defined $tableName);
-				die ref ($self) . " SemanticType (name=".$semanticTypeXML->getAttribute('Name').") has elements in multiple tables. Died on column (Name=".$SemanticElementXML->getAttribute('Name').", ColumnName=".$SemanticElementXML->getAttribute('ColumnName').") in table '".$SemanticElementXML->getAttribute('TableName')."'"
-					unless $tableName eq $SemanticElementXML->getAttribute('TableName');
-				
-				#create object
-				my $newAttrColumn = $factory->newObject( "OME::AttributeType::Column", {
-					attribute_type => $newAttrType,
-					name           => $SemanticElementXML->getAttribute('Name'),
-					data_column    => $dataColumns{$SemanticElementXML->getAttribute('TableName')}->{ $SemanticElementXML->getAttribute('ColumnName') },
-					description    => $SemanticElementXML->getAttribute('Description')
-				})
-					or die ref ($self) . " could not create new OME::AttributeType::Column object, name = ". $SemanticElementXML->getAttribute('Name');
-				
-				$semanticColumns{$newAttrType->name()}->{ $newAttrColumn->name() } =
-					$newAttrColumn;
-				print STDERR ref ($self) . "->processDOM added entry to semanticColumns.\n\t".$newAttrType->name().".".$newAttrColumn->name()."=>".$semanticColumns{$newAttrType->name()}->{ $newAttrColumn->name() }."\n"
-					if $debug > 1;
-	
-				push(@commitOnSuccessfulImport, $newAttrColumn);
-				print STDERR ref ($self) . "->processDOM finished processing attribute column ".$newAttrColumn->name()."\n"
-					if $debug > 1;
-			}
-			print STDERR ref ($self) . "->processDOM: finished making AttributeColumns from SemanticElements\n"
-				if $debug > 1;
-			#
-			#
-			#######################################################################
-	
-			$newAttrType->granularity( $granularity );
-			print STDERR ref ($self) . "->processDOM: determined granularity. Setting granularity to '$granularity'. \n"
-				if $debug > 1;
-			push(@commitOnSuccessfulImport, $newAttrType);
-                        # DC -> 3/24/2003
-                        # The attribute types aren't getting committed
-                        # unless there's a module declared.
-                        $newAttrType->commit();
-		}
-		#
-		# END "if AttributeType doesn't exist, create it"
-		#
-		###########################################################################
-	
-	
-		###########################################################################
-		#
-		# AttributeType exists, verify that the attribute columns are identical
-		#	also, populate formalInputColumn_xmlID_dbObject hash
-		#
-		else { 
-			print STDERR ref ($self) . "->processDOM: found a OME::AttributeType object with matching name. inspecting it to see if it completely matches.\n"
-				if $debug > 1;
-			my @attrColumns = $existingAttrType->attribute_columns();
-			die ref ($self) . " While processing Semantic Type (name=".$semanticTypeXML->getAttribute('Name')."), found existing AttributeType with same name and a different number of columns. Existing AttributeType has ".scalar(@attrColumns)." columns, new AttributeType of same name has ".scalar(@$semanticTypeXML->getElementsByTagName( "SemanticElement") )." columns."
-				unless( scalar(@attrColumns) eq scalar(@ {$semanticTypeXML->getElementsByTagName( "SemanticElement")}) );
-			foreach my $SemanticElementXML ($semanticTypeXML->getElementsByTagName( "SemanticElement") ) {
-				#check ColumnID
-				die ref ($self) . " While processing Semantic Type (name=".$semanticTypeXML->getAttribute('Name')."), could not find matching data column for ColumnName '".$SemanticElementXML->getAttribute('ColumnName')."'\n"
-					unless exists $dataColumns{$SemanticElementXML->getAttribute('TableName')}->{ $SemanticElementXML->getAttribute('ColumnName') };
-	
-				#find existing AttributeType::Column object corrosponding to SemanticElementXML
-				map {
-					$semanticColumns{$existingAttrType->name()}->{ $SemanticElementXML->getAttribute( 'Name' ) } = $_
-						if $dataColumns{$SemanticElementXML->getAttribute('TableName')}->{ $SemanticElementXML->getAttribute('ColumnName') }->id() eq $_->data_column()->id();
-				} @attrColumns;
-				print STDERR ref ($self) . "->processDOM: added entry to semanticColumns.\n\t".$newAttrType->name().".".$SemanticElementXML->getAttribute( 'Name' )."=>".$semanticColumns{$newAttrType->name()}->{ $SemanticElementXML->getAttribute( 'Name' ) }."\n"
-					if $debug > 1;
-	
-				die ref ($self) . " While processing Semantic Type (name=".$existingAttrType->getAttribute('Name')."), found existing AttributeType with the same name. Could not find matching column in existing AttributeType for new AttributeColumn (Name=".$SemanticElementXML->getAttribute('Name').",ColumnName=".$SemanticElementXML->getAttribute('ColumnName').")."
-					unless exists $semanticColumns{$existingAttrType->name()}->{ $SemanticElementXML->getAttribute( 'Name' ) };
-			}
-			$newAttrType = $existingAttrType;
-			print STDERR ref ($self) . "->processDOM: determined the Attribute types match. using existing attribute type.\n"
-				if $debug > 1;
-		}
-		#
-		# END "AttributeType exists, verify that the attribute columns are identical"
-		#
-		###########################################################################
-
-		$semanticTypes{ $newAttrType->name() } = $newAttrType;
-		print STDERR ref ($self) . "->processDOM: finished processing semanticType ".$newAttrType->name()."\n"
-			if $debug > 1;
-
-	}
-	#
-	# END "Make AttributeTypes"
-	#
-	###########################################################################
-
-	print STDERR ref ($self) . "->processDOM: finished processing SemanticTypeDefinitions\n"
-			if $debug > 1;
-
-#
-# END 'Make new tables, columns, and Semantic types'
-#
-###############################################################################
-
-
-
-foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
+foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 	###########################################################################
 	#
@@ -552,7 +214,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 
 	print STDERR ref ($self) . "->processDOM about to process formal inputs\n"
 		if $debug > 1;
-	foreach my $formalInputXML ( $moduleXML->getElementsByTagName( "FormalInput" ) ) {
+	foreach my $formalInputXML ( $moduleXML->getElementsByLocalName( "FormalInput" ) ) {
 		print STDERR ref ($self) . "->processDOM is processing formal input, ".$formalInputXML->getAttribute('Name')."\n"
 			if $debug > 1;
 
@@ -563,7 +225,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		#
 		my $newLookupTable;
-		my @lookupTables = $formalInputXML->getElementsByTagName( "LookupTable" );
+		my @lookupTables = $formalInputXML->getElementsByLocalName( "LookupTable" );
 		# lookupTables may or may not exist. Either way is fine.
 		if( scalar( @lookupTables ) == 1 ) {
 
@@ -586,7 +248,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			#
 			# make OME::LookupTable::Entry objects
 			#
-			my @entries = $lookupTableXML->getElementsByTagName( "LookupTableEntry" );
+			my @entries = $lookupTableXML->getElementsByLocalName( "LookupTableEntry" );
 			foreach my $entry (@entries) {
 				my $data = {
 					value           => $entry->getAttribute( 'Value' ),
@@ -609,7 +271,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		# make OME::FormalInput object
 		#
 		die "When processing Formal Input (name=".$formalInputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalInputXML->getAttribute( 'SemanticTypeName' )."\n"
-			unless exists $semanticTypes{ $formalInputXML->getAttribute( 'SemanticTypeName' ) };
+			unless exists $semanticTypes->{ $formalInputXML->getAttribute( 'SemanticTypeName' ) };
 
 		my ($optional, $list, $count);
 		$count = $formalInputXML->getAttribute( 'Count' );
@@ -624,7 +286,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			name               => $formalInputXML->getAttribute( 'Name' ),
 			description        => $formalInputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
-			attribute_type_id  => $semanticTypes{ $formalInputXML->getAttribute( 'SemanticTypeName' ) },
+			attribute_type_id  => $semanticTypes->{ $formalInputXML->getAttribute( 'SemanticTypeName' ) },
 			lookup_table_id    => $newLookupTable,
 			optional           => $optional,
 			list               => $list,
@@ -658,7 +320,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 
 	print STDERR ref ($self) . "->processDOM about to process formal outputs\n"
 		if $debug > 1;
-	foreach my $formalOutputXML ( $moduleXML->getElementsByTagName( "FormalOutput" ) ) {
+	foreach my $formalOutputXML ( $moduleXML->getElementsByLocalName( "FormalOutput" ) ) {
 
 		print STDERR ref ($self) . "->processDOM is processing formal output, ".$formalOutputXML->getAttribute('Name')."\n"
 			if $debug > 1;
@@ -668,7 +330,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		# make OME::FormalOutput object
 		#
 		die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalOutputXML->getAttribute( 'SemanticTypeName' )."\n"
-			unless exists $semanticTypes{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) };
+			unless exists $semanticTypes->{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) };
 		my ($optional, $list, $count);
 		$count = $formalOutputXML->getAttribute( 'Count' );
 		if( $count ) {
@@ -682,7 +344,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
 			description        => $formalOutputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
-			attribute_type_id  => $semanticTypes{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) },
+			attribute_type_id  => $semanticTypes->{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) },
 			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' ),
 			optional           => $optional,
 			list               => $list
@@ -712,7 +374,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	print STDERR ref ($self) . "->processDOM about to process ExecutionInstructions\n"
 		if $debug > 1;
 	my @executionInstructions = 
-		$moduleXML->getElementsByTagName( "ExecutionInstructions" );
+		$moduleXML->getElementsByLocalName( "ExecutionInstructions" );
 	
 	# XML schema & DBdesign currently allow at most one execution point per module
 	if(scalar(@executionInstructions) == 1) {
@@ -731,14 +393,14 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		my @inputTypes = ( "Input", "UseValue", "End", "Start" );
 		my @inputs;
 		map {
-			push(@inputs, $executionInstructionXML->getElementsByTagName( $_ ));
+			push(@inputs, $executionInstructionXML->getElementsByLocalName( $_ ));
 		} @inputTypes;
 
 		foreach my $input (@inputs) {
 			my $formalInput    = $formalInputs{ $input->getAttribute( "FormalInputName" ) }
 				or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
 			my $semanticType   = $formalInput->attribute_type();
-			my $semanticElement = $semanticColumns{ $semanticType->name() }->{ $input->getAttribute( "SemanticElementName" ) }
+			my $semanticElement = $semanticColumns->{ $semanticType->name() }->{ $input->getAttribute( "SemanticElementName" ) }
 				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
 		
 			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and ATTRIBUTE_COLUMN_ID.
@@ -766,14 +428,14 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
 		my @outputs;
 		map {
-			push(@outputs, $executionInstructionXML->getElementsByTagName( $_ ));
+			push(@outputs, $executionInstructionXML->getElementsByLocalName( $_ ));
 		} @outputTypes;
 
 		foreach my $output (@outputs) {
 			my $formalOutput    = $formalOutputs{ $output->getAttribute( "FormalOutputName" ) }
 				or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
 			my $semanticType   = $formalOutput->attribute_type();
-			my $semanticElement = $semanticColumns{ $semanticType->name() }->{ $output->getAttribute( "SemanticElementName" ) }
+			my $semanticElement = $semanticColumns->{ $semanticType->name() }->{ $output->getAttribute( "SemanticElementName" ) }
 				or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
 
 			# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
@@ -801,7 +463,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		my $currentID = 0;
 		my %idMap;
 		# first run: normalize XYPlaneID's in XYPlane's
-		foreach my $plane($executionInstructionXML->getElementsByTagName( "XYPlane" ) ) {
+		foreach my $plane($executionInstructionXML->getElementsByLocalName( "XYPlane" ) ) {
 			$currentID++;
 			die "Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
 				if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
@@ -814,7 +476,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 			$plane->setAttribute('XYPlaneID', $currentID);
 		}
 		# second run: clean up references to XYPlanes
-		foreach my $match ( $executionInstructionXML->getElementsByTagName( "Match" ) ) {
+		foreach my $match ( $executionInstructionXML->getElementsByLocalName( "Match" ) ) {
 			die "'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID').". Did you make a typo?"
 				unless exists $idMap{ $match->getAttribute('XYPlaneID') };
 			print STDERR ref ($self) . "->processDOM: altering XYPlaneID in element type Match\n" .
@@ -834,7 +496,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		print STDERR ref ($self) . "->processDOM: checking regular expression patterns for validity\n"
 			if $debug > 1;
-		my @pats =  $executionInstructionXML->getElementsByTagName( "pat" );
+		my @pats =  $executionInstructionXML->getElementsByLocalName( "pat" );
 		foreach (@pats) {
 			my $pat = $_->getFirstChild->getData();
 			print STDERR ref ($self) . "->processDOM: inspecting pattern:\n$pat\n"

@@ -30,7 +30,7 @@ __PACKAGE__->table('viewer_preferences');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(experimenter_id toolbox_scale));
-__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 
 1;
 

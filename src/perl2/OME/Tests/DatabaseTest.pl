@@ -26,13 +26,24 @@ print "-------------------------------\n";
 
 my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
+my $factory = $session->Factory();
+
+my $user = $session->User();
+
+print "$user\n";
+print $user->id()," ",$user->FirstName()," ",$user->LastName(),"\n";
+
+my $group = $user->Group();
+
+print "$group\n";
+print $group->id()," ",$group->Name(),"\n";
 
 
+my @users = $factory->findAttributes("Experimenter");
 
-my $project = $session->Factory()->loadObject("OME::Project",1);
-print "Project \#1:\n   Name: " . $project->name() . "\n";
-$project->name("Changed the name!");
-$project->commit();
-$session->DBH()->commit();
-    
+foreach my $user (@users) {
+    print "$user\n";
+    print $user->id()," ",$user->FirstName()," ",$user->LastName(),"\n";
+}
+
 exit 0;

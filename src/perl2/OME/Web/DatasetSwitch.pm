@@ -64,9 +64,9 @@ sub print_form {
    my $dataset = $self->Session()->dataset();
    my $session=$self->Session();
    # Switch to  a dataset you are using
-   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$self->Session()->User()->experimenter_id  );
+   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$self->Session()->User()->id()  );
 
-  #my @userProjects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
+  #my @userProjects = OME::Project->search( owner_id => $self->Session()->User()->id() );
   return "You must define a project first." unless scalar(@userProjects)>0;
   my %datasetList=();
   foreach (@userProjects){

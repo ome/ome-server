@@ -164,7 +164,7 @@ sub ensureLogin {
 	}
 
 	if (defined $self->Session()) {
-		$self->{user} = $self->Session()->experimenter();
+		$self->{user} = $self->Session()->User();
 	}
 	
 	return defined $self->Session();
@@ -299,8 +299,8 @@ sub getSidebar {
 	
 	if (defined $session) {
 	my $user = $self->User();
-	my $firstName = $user->firstname();
-	my $lastName = $user->lastname();
+	my $firstName = $user->FirstName();
+	my $lastName = $user->LastName();
 	$loginMessage = "<hr>$firstName $lastName";
 	my $url = $self->pageURL('OME::Web::Logout');
 	$loginMessage .= "<br><small><a href=\"$url\">LOGOUT</a></small>";

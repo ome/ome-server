@@ -27,11 +27,11 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->table('groups');
-__PACKAGE__->sequence('group_seq');
-__PACKAGE__->columns(Primary => qw(group_id));
-__PACKAGE__->columns(Essential => qw(name));
-__PACKAGE__->hasa('OME::Experimenter' => qw(leader));
-__PACKAGE__->hasa('OME::Experimenter' => qw(contact));
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(name leader contact));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(leader));
+#__PACKAGE__->hasa('OME::Experimenter' => qw(contact));
 
 
 1;

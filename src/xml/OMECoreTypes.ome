@@ -898,6 +898,10 @@
       FieldID="IMAGE_PIXELS.PIXEL_TYPE"/>
 
     <SemanticElement
+      Name="FileSHA1"
+      FieldID="IMAGE_PIXELS.FILE_SHA1"/>
+
+    <SemanticElement
       Name="Repository"
       FieldID="IMAGE_PIXELS.REPOSITORY"/>
 
@@ -928,12 +932,12 @@
 
     <Field
       FieldID="EXPERIMENTER.FIRST_NAME"
-      Name="FIRST_NAME"
+      Name="FIRSTNAME"
       DataType="string"/>
 
     <Field
       FieldID="EXPERIMENTER.LAST_NAME"
-      Name="LAST_NAME"
+      Name="LASTNAME"
       DataType="string"/>
 
     <Field
@@ -958,12 +962,12 @@
 
     <Field
       FieldID="EXPERIMENTER.DATA_DIRECTORY"
-      Name="DATA_DIRECTORY"
+      Name="DATA_DIR"
       DataType="string"/>
 
     <Field
       FieldID="EXPERIMENTER.GROUP"
-      Name="GROUP"
+      Name="GROUP_ID"
       DataType="reference"
       ReferenceType="Group"/>
 
@@ -1237,7 +1241,7 @@
 
     <Field
       FieldID="DETECTOR.OFFSET"
-      Name="OFFSET"
+      Name="D_OFFSET"
       DataType="float"/>
 
     <Field
@@ -1549,7 +1553,7 @@
 
     <Field
       FieldID="IMAGE_INFO.GROUP"
-      Name="GROUP"
+      Name="GROUP_ID"
       DataType="reference"
       ReferenceType="Group"/>
 
@@ -1587,8 +1591,8 @@
       DataType="float"/>
 
     <Field
-      FieldID="IMAGING_ENVIRONMENT.CO2_PRESSURE"
-      Name="CO2_PRESSURE"
+      FieldID="IMAGING_ENVIRONMENT.CO2_PERCENT"
+      Name="CO2_PERCENT"
       DataType="float"/>
 
 </Record>
@@ -1725,6 +1729,11 @@
       Name="AUX_LIGHT_SOURCE"
       DataType="reference"
       ReferenceType="LightSource"/>
+
+    <Field
+      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_ATTENUATION"
+      Name="AUX_LIGHT_ATTENUATION"
+      DataType="float"/>
 
     <Field
       FieldID="LOGICAL_CHANNEL.AUX_LIGHT_POWER"
@@ -1951,6 +1960,11 @@
     <Field
       FieldID="IMAGE_PIXELS.PIXEL_TYPE"
       Name="PIXEL_TYPE"
+      DataType="string"/>
+
+    <Field
+      FieldID="IMAGE_PIXELS.FILE_SHA1"
+      Name="FILE_SHA1"
       DataType="string"/>
 
     <Field

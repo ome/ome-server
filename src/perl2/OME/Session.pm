@@ -31,7 +31,6 @@ use POSIX;
 use fields qw(Factory Manager DBH ApacheSession SessionKey);
 __PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH ApacheSession SessionKey));
 __PACKAGE__->AccessorNames({
-    experimenter_id => 'experimenter',
     dataset_id      => 'dataset',
     project_id      => 'project',
     analysis_id     => 'analysis',
@@ -42,17 +41,22 @@ __PACKAGE__->sequence('session_seq');
 __PACKAGE__->columns(Primary => qw(session_id));
 __PACKAGE__->columns(Essential => qw(experimenter_id dataset_id project_id last_access));
 __PACKAGE__->columns(Others => qw(host image_view feature_view display_settings analysis_id started));
-__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
-__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
-__PACKAGE__->hasa('OME::Project' => qw(project_id));
-__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+#__PACKAGE__->has_a(experimenter_id => 'OME::AttributeType::__Experimenter',
+#b                   inflate => 'load', deflate => 'id');
+__PACKAGE__->has_a(dataset_id => 'OME::Dataset');
+__PACKAGE__->has_a(project_id => 'OME::Project');
+__PACKAGE__->has_a(analysis_id => 'OME::Analysis');
 
 
 
 # Accessors
 # ---------
 sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
-sub User { my $self = shift; return $self->experimenter(); }
+sub User {
+    my $self = shift;
+    return $self->Factory()->loadAttribute("Experimenter",
+                                           $self->experimenter_id());
+}
 
 sub getTemporaryFilename {
     my $self = shift;

@@ -1,0 +1,353 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+  xmlns:STD=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd
+      http://openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
+
+<SemanticType
+  STD:SemanticTypeName="PlaneMean"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Mean"
+      FieldID="PLANE_STATISTICS.MEAN"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="PlaneGeometricMean"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="GeometricMean"
+      FieldID="PLANE_STATISTICS.GEOMEAN"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="PlaneSigma"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Sigma"
+      FieldID="PLANE_STATISTICS.SIGMA"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="PlaneMinimum"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Minimum"
+      FieldID="PLANE_STATISTICS.MINIMUM"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="PlaneMaximum"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="Maximum"
+      FieldID="PLANE_STATISTICS.MAXIMUM"/>
+
+</SemanticType>
+
+<SemanticType
+  STD:SemanticTypeName="PlaneCentroid"
+  Description="">
+
+    <SemanticElement
+      Name="TheZ"
+      FieldID="PLANE_STATISTICS.THE_Z"/>
+
+    <SemanticElement
+      Name="TheC"
+      FieldID="PLANE_STATISTICS.THE_C"/>
+
+    <SemanticElement
+      Name="TheT"
+      FieldID="PLANE_STATISTICS.THE_T"/>
+
+    <SemanticElement
+      Name="X"
+      FieldID="PLANE_STATISTICS.CENTROID_X"/>
+
+    <SemanticElement
+      Name="Y"
+      FieldID="PLANE_STATISTICS.CENTROID_Y"/>
+
+</SemanticType>
+
+<DataDefinitions>
+
+<Record
+  AppliesTo="I"
+  Name="PLANE_STATISTICS">
+
+    <Field
+      FieldID="PLANE_STATISTICS.THE_Z"
+      Name="THE_Z"
+      DataType="integer"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.THE_C"
+      Name="THE_C"
+      DataType="integer"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.THE_T"
+      Name="THE_T"
+      DataType="integer"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.MINIMUM"
+      Name="MINIMUM"
+      DataType="integer"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.MAXIMUM"
+      Name="MAXIMUM"
+      DataType="integer"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.MEAN"
+      Name="MEAN"
+      DataType="float"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.GEOMEAN"
+      Name="GEOMEAN"
+      DataType="float"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.SIGMA"
+      Name="SIGMA"
+      DataType="float"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.CENTROID_X"
+      Name="CENTROID_X"
+      DataType="float"/>
+
+    <Field
+      FieldID="PLANE_STATISTICS.CENTROID_Y"
+      Name="CENTROID_Y"
+      DataType="float"/>
+
+</Record>
+
+</DataDefinitions>
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule Category = "Statistics" ModuleName = "Plane statistics" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
+	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
+	<Declaration>
+		<FormalOutput Name = "Plane minimum" SemanticTypeName = "PlaneMinimum" Description = ""/>
+		<FormalOutput Name = "Plane maximum" SemanticTypeName = "PlaneMaximum" Description = ""/>
+		<FormalOutput Name = "Plane mean" SemanticTypeName = "PlaneMean" Description = ""/>
+		<FormalOutput Name = "Plane geomean" SemanticTypeName = "PlaneGeometricMean" Description = ""/>
+		<FormalOutput Name = "Plane sigma" SemanticTypeName = "PlaneSigma" Description = ""/>
+		<FormalOutput Name = "Plane centroid" SemanticTypeName = "PlaneCentroid" Description = ""/>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
+		<CommandLine>
+			<InputSubString>
+				<RawText>Path=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<RawImageFilePath/>
+			</InputSubString>
+			<InputSubString>
+				<RawText> Dims=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeX/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeY/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeZ/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeW/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeT/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<BytesPerPixel/>
+			</InputSubString>
+		</CommandLine>
+		<STDOUT>
+			<OutputRecord RepeatCount = "1">
+				<pat>^.*?\n</pat>
+			</OutputRecord>
+			<!-- That eats a line. The first line of the output is column headers -->
+			<OutputRecord>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<Output AccessBy = "1">
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane minimum"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane maximum"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane mean"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane geomean"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane sigma"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane centroid"/>
+				</Output>
+				<Output AccessBy = "2">
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane minimum"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane maximum"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane mean"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane geomean"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane sigma"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane centroid"/>
+				</Output>
+				<Output AccessBy = "3">
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane minimum"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane maximum"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane mean"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane geomean"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane sigma"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane centroid"/>
+				</Output>
+				<Output AccessBy = "4">
+					<OutputTo SemanticElementName = "Minimum" FormalOutputName = "Plane minimum"/>
+				</Output>
+				<Output AccessBy = "5">
+					<OutputTo SemanticElementName = "Maximum" FormalOutputName = "Plane maximum"/>
+				</Output>
+				<Output AccessBy = "6">
+					<OutputTo SemanticElementName = "Mean" FormalOutputName = "Plane mean"/>
+				</Output>
+				<Output AccessBy = "7">
+					<OutputTo SemanticElementName = "GeometricMean" FormalOutputName = "Plane geomean"/>
+				</Output>
+				<Output AccessBy = "8">
+					<OutputTo SemanticElementName = "Sigma" FormalOutputName = "Plane sigma"/>
+				</Output>
+				<Output AccessBy = "9">
+					<OutputTo SemanticElementName = "X" FormalOutputName = "Plane centroid"/>
+				</Output>
+				<Output AccessBy = "10">
+					<OutputTo SemanticElementName = "Y" FormalOutputName = "Plane centroid"/>
+				</Output>
+			</OutputRecord>
+			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
+
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

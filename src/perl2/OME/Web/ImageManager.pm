@@ -135,11 +135,11 @@ sub print_list{
   my $cgi = $self->CGI();
   my $session = $self->Session();
   my $user=$session->User();
-  my $ownerid=$user->experimenter_id;
+  my $ownerid=$user->id();
  # my @userProjects = OME::Project->search( owner_id => $ownerid );
-  #my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
+  #my @groupProjects=OME::Project->search( group_id => $user->Group()->id());
 
-  my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->group()->group_id());
+  my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->Group()->id());
   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $ownerid);
  
 
@@ -204,7 +204,7 @@ sub print_list{
 		$userImageList{$i->image_id()}->{image}=$formatimage;
  		$userImageList{$i->image_id()}->{remove}=\%Remove;
 		$userImageList{$i->image_id()}->{name}=$i->name();
-		$userImageList{$i->image_id()}->{owner}=$i->experimenter()->ID ;
+		$userImageList{$i->image_id()}->{owner}=$i->experimenter_id();
 
 		$userImageList{$i->image_id()}->{booldel}=$booldel;
 
