@@ -48,10 +48,9 @@ import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.ModuleCategory;
-import org.openmicroscopy.Module;
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Modules;
-import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.dnd.ModuleSelection;
 import java.util.Iterator;
 import java.util.List;
@@ -159,8 +158,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		categoryWidth=0;
 		iter = modules.uncategorizedModuleIterator();
 		while (iter.hasNext()) {
-			ModuleInfo info = (ModuleInfo) iter.next();
-			displayModule(info);
+			CModule mod = (CModule) iter.next();
+			displayModule(mod);
 		}
 		// box up this row.
 		newRow();
@@ -177,9 +176,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		float top = y;
 		displayCategoryName(cat.getName());
 		while (iter.hasNext()) {
-			Module mod = (Module) iter.next();
-			ModuleInfo info = modules.getModuleInfo(mod);
-			displayModule(info);
+			CModule mod = (CModule) iter.next();
+			displayModule(mod);
 		}
 		
 		// recursively iterate over children categories.
@@ -234,10 +232,10 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * 
 	 * @param module The module to be displayed.
 	 */	
-	private void displayModule(ModuleInfo modInfo) {
+	private void displayModule(CModule mod) {
 		
-		PModule mNode = new PModule(connection,modInfo,x,y);
-		modInfo.addModuleWidget(mNode);
+		PModule mNode = new PModule(connection,mod,x,y);
+		mod.addModuleWidget(mNode);
 		float w = (float) mNode.getBounds().getWidth();
 		x += w+HGAP;
 		layer.addChild(mNode);
@@ -296,7 +294,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			selected.setModulesHighlighted(false);
 			int id = selected.getModule().getID();
 			ModuleSelection text = new ModuleSelection(id);
-			System.err.println("dragging.module set module selection.."+id);
+		//	System.err.println("dragging.module set module selection.."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
 	}
