@@ -270,6 +270,15 @@ function openPopUpImage (id) {
 	} 
 }
 
+// openPopUpOverlay()
+
+function openPopUpOverlay (mex) {
+
+	window.open(GetGraphicsPage + '&MEX_ID=' + mex,
+			'_blank',
+			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
+}
+
 // openPopUpPixels()
 
 function openPopUpPixels (pixels_id) {
