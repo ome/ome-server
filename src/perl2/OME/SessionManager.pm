@@ -138,12 +138,12 @@ sub createSession {
     } elsif (defined $key) {
         $session = $self->createWithKey($key);
     }
-     # 14-05
+     
     if (defined $session){
-     $self->storeApacheSession($session);
-    # $session->Session($session);
+		$self->storeApacheSession($session);
     }
-    return $session;
+
+    return $session or undef;
 }
 
 
@@ -239,7 +239,7 @@ sub createWithKey {
     my $self = shift;
     my $key = shift;
 
-    my $apacheSession = $self->getApacheSession($key);
+    my $apacheSession = $self->getApacheSession($key) or return undef;
     logdbg "debug", "createWithKey: username=".$apacheSession->{username};
     logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
     my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
@@ -269,7 +269,7 @@ sub getOMESession {
 
     return undef unless $username and $password;
 
-    my $bootstrap_factory = OME::Factory->new(undef);
+    my $bootstrap_factory = OME::Factory->new();
 
     my $dbh = $bootstrap_factory->obtainDBH();
     my ($experimenterID,$dbpass);
@@ -398,7 +398,7 @@ sub getApacheSession {
         };
     };
     return undef if $@;
-    
+
     #
     # Check for a stale session key.  If its stale, delete it and return undef.
     if (defined $sessionKey) {
@@ -410,7 +410,7 @@ sub getApacheSession {
 			print STDERR "Session is ".($sessionAge/60)." minutes long - expired.\n";
 			return undef;
 		}
-    }
+	}
     
     $tiedApacheSession{timestamp} = time();
 
