@@ -382,7 +382,7 @@ sub importFiles {
     }
 
     #print STDERR "\n";
-
+	push( @{ $self->{_images} }, @images );
     $self->finishImport() if $called_as_class;
 
     return \@images;
@@ -400,6 +400,13 @@ sub finishImport {
 	$files_mex->storeObject();
 
     OME::Tasks::ImportManager->finishImport();
+
+	# Set thumbnail and display options for each imported pixel set
+	foreach my $image ( @{ $self->{_images} } ) {
+		foreach my $pixels ( $image->pixels() ) {
+			OME::Tasks::PixelsManager->saveThumb( $pixels );
+		}
+	}
 
     $session->commitTransaction();
 
