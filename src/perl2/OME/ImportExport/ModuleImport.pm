@@ -822,6 +822,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		if $debug > 1;
 	my @executionInstructions = 
 		$moduleXML->getElementsByTagName( "ExecutionInstructions" );
+	my $executionInstructionXML;
 	
 	# XML schema & DBdesign currently allow at most one execution point per module
 	if(scalar(@executionInstructions) == 1) {
@@ -829,7 +830,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		# CLI Handler specific execution Instructions
 		#
-		my $executionInstructionXML = $executionInstructions[0];
+		$executionInstructionXML = $executionInstructions[0];
 
 		#######################################################################
 		#
@@ -990,9 +991,11 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		#######################################################################
 
+		print STDERR ref ($self) . "->processDOM's modified ExecutionInstructions are:\n". $executionInstructionXML->toString() ."\n"
+			if $debug > 2;
 		# save executionInstructions
-		$newProgram->execution_instructions( $executionInstructionXML->toString() );
-		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions. ExecutionInstructions saved to DB.\n"
+#		$newProgram->execution_instructions( $executionInstructionXML->toString() );
+		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions.\n"
 			if $debug > 1;
 	}
 	#
@@ -1004,10 +1007,31 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	#
 	print STDERR ref ($self) . "->processDOM imported module '".$newProgram->program_name."' sucessfully. Committing to DB...\n"
 		if $debug > 0;
+	print STDERR ref ($self) . "->processDOM saving DBObjects\n"
+		if $debug > 2;
 	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
+		print STDERR ref ($self) . "->processDOM calling writeObject on $DBObjectInstance\n"
+			if $debug > 2;
 		$DBObjectInstance->writeObject;
 	}                             # commits all DBObjects
+	print STDERR ref ($self) . "->processDOM finished saving DBObjects\n"
+		if $debug > 2;
+	print STDERR ref ($self) . "->processDOM saving changes to tables and columns\n"
+		if $debug > 2;
 	$session->DBH()->commit();    # new tables & columns written w/ this handle
+	print STDERR ref ($self) . "->processDOM finished saving changes to tables and columns\n"
+		if $debug > 2;
+
+	# Save ExecutionInstructions
+	if( defined $executionInstructionXML ) {
+		print STDERR ref ($self) . "->processDOM saving executionInstructions\n"
+			if $debug > 2;
+		$newProgram->execution_instructions( $executionInstructionXML->toString() );
+		$newProgram->writeObject();
+		print STDERR ref ($self) . "->processDOM finished saving executionInstructions\n"
+			if $debug > 2;
+	}
+
 	print STDERR ref ($self) . "->processDOM commit successful\n"
 		if $debug > 0;
 	#
