@@ -6,13 +6,13 @@ use strict;
 use File::Basename;
 use XML::RSS;
 my $DEBUG = 0;
-my $WEB_FILE_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/diff.php/';
-my @WEB_FILE_PARAMS = (
+my $WEB_DIFF_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/diff.php/';
+my @WEB_DIFF_BASE = (
 	'ty=h',
 	'num=10',
 	);
 my $WEB_DIR_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/cvs.php/';
-
+my $WEB_DISPLAY_BASE = 'http://cvs.openmicroscopy.org.uk/horde/chora/co.php/';
 
 {
 	
@@ -58,7 +58,7 @@ sub entry_title {
 	if (entry_is_directory($cvsInfo)) {
 		return $cvsInfo->directory();
 	} else {
-		return $cvsInfo->files()->[0]->{filename};
+		return $cvsInfo->files()->[0]->{directory}.'/'.$cvsInfo->files()->[0]->{filename};
 	}
 }
 
@@ -105,10 +105,18 @@ sub entry_is_directory {
 sub entry_file_link {
 	my ($cvsInfo,$file) = @_;
 	$file = $cvsInfo->files()->[0] unless defined $file;
-	return $WEB_FILE_BASE.$file->{directory}.'/'.$file->{filename}.
-		'?r1='.$file->{version_from}. 
-		'&r2='.$file->{version_to}.'&'.
-		join ('&',@WEB_FILE_PARAMS);
+	if ($file->{version_from} eq 'NONE') {
+		return $WEB_DISPLAY_BASE.$file->{directory}.'/'.$file->{filename}.
+			'?r='.$file->{version_from};
+	} elsif ($file->{version_to} eq 'NONE') {
+		return $WEB_DISPLAY_BASE.$file->{directory}.'/'.$file->{filename}.
+			'?r='.$file->{version_to};
+	} else {
+		return $WEB_DIFF_BASE.$file->{directory}.'/'.$file->{filename}.
+			'?r1='.$file->{version_from}. 
+			'&r2='.$file->{version_to}.'&'.
+			join ('&',@WEB_DIFF_BASE);
+	}
 }
 
 
