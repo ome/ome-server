@@ -55,3 +55,5 @@ foreach (@ARGV) {
 print STDERR "\nImported $totalChains chains from ".scalar(@ARGV)." files.";
 
 print STDERR "\n";
+
+$session->commitTransaction();
