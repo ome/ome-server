@@ -46,7 +46,6 @@ use CGI;
 use OME::Analysis::Engine;
 use OME::Tasks::AnnotationManager;
 use OME::Tasks::ChainManager;
-use OME::Tasks::AEFacade;
 use OME::Tasks::ImageManager;
 
 
