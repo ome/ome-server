@@ -120,6 +120,7 @@ public class ConnectionWorker extends SwingWorker {
 			Class.forName("org.openmicroscopy.vis.ome.CLink");
 			Class.forName("org.openmicroscopy.vis.ome.CDataset");
 			Class.forName("org.openmicroscopy.vis.ome.CImage");
+			Class.forName("org.openmicroscopy.vis.ome.CProject");
 		}
 		catch (ClassNotFoundException e) {
 			System.err.println("Chains extension classes not found");
