@@ -123,7 +123,6 @@ public class PDataset extends PGenericBox {
 				thumb  =new PThumbnail(image);
 				images.addImage(thumb);
 				b = thumb.getGlobalFullBounds();
-				System.err.println("addign image.."+b.getWidth()+","+b.getHeight());
 				totalArea += b.getWidth()*b.getHeight();
 			}
 			images.setOffset(x,y);
@@ -310,5 +309,11 @@ public class PDataset extends PGenericBox {
 	public void scaleArea(double scale) {
 		width *=scale;
 		height *=scale;
+	}
+	
+	public void setSelected(boolean v) {
+		setHighlighted(v);
+		if (images !=null) 
+			images.setSelected(v);
 	}
 }
