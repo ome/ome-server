@@ -38,7 +38,6 @@
 # DESTROY()
 # check_type()
 # readFile()
-# extract_rows()
 # endian()
 # host_endian()
 # obuffer()
@@ -47,7 +46,6 @@
 # fref()
 # fouf()
 # offset()
-# get_image_fmt()
 # flip_float()
 
 # ---- Private routines ------
@@ -127,6 +125,7 @@ sub new {
     my $byteorder = $Config{byteorder};
     $our_endian = (($byteorder == 1234) || ($byteorder == 12345678)) ? "little" : "big";
     $self->host_endian($our_endian);
+    $self->{host_endian} = $our_endian;
     $self->image_file($image_file);      # save 1st file for those readers that
     $self->image_group($image_group);   #    don't do groups
     $self->offset(0);
@@ -223,36 +222,6 @@ sub readFile {
 }
 
 
-# Read the specified number of rows of the specified size from the specified
-# file & pack into specified buffer. Assumes rows are contiguous in the file.
-# Will unpack & then repack via the specified formats.
-# Designed to be used to extract a XY plane of pixels from an image file being
-# imported, and convert them prior to being placed into the repository.
-
-sub extract_rows {
-    my ($self, $num_rows, $row_size, $fih, $foh, $offset, $ifmt, $ofmt, $oarray) = @_;
-    my ($ibuf, $rowbuf);
-    my $row;
-    my $status;
-    my @obuf;
-    my @xy;
-
-    for ($row = 0; $row < $num_rows; $row++) {
-	$status = FileUtils::seek_and_read($fih, \$ibuf, $offset, $row_size);
-	last
-	    unless $status eq "";
-	@obuf = unpack($ifmt, $ibuf);
-	$rowbuf = pack($ofmt, @obuf);
-	push @xy, $rowbuf;
-	print $foh  $ibuf;              # write to repository file
-	$offset += $row_size;
-    }
-    push @$oarray, \@xy;
-
-    return $status;
-}
-
-
 
 
 # Store/retrieve endian value
@@ -319,43 +288,6 @@ sub offset {
 }
 
 
-
-# Helper method to return the proper format strings for: a) unpacking the image data
-# on input, and b) packing it back up in our native format for output to repository
-sub get_image_fmt {
-    my ($self, $pixel_size, $num_bytes, $endian) = @_;
-    my $ifmt = "";
-    my $ofmt;
-    my $cnt = $num_bytes/$pixel_size;   # convert num. bytes to num. values
-
-    if ($pixel_size == 1) {
-	$ifmt = "C$cnt";
-    }
-    elsif ($pixel_size == 2) {
-	if ($endian eq "little") {
-	    $ifmt = "v$cnt";
-	}
-	else {
-	    $ifmt = "n$cnt";
-	}
-    }
-    elsif ($pixel_size == 4) {
-	if ($endian eq "little") {
-	    $ifmt = "V$cnt";
-	}
-	else {
-	    $ifmt = "N$cnt";
-	}
-    }
-    else {
-	carp "Can't handle $pixel_size pixels";
-    }
-
-    $ofmt = $ifmt;
-    $ofmt =~ tr/nNvV/SLSL/;      # convert either endian short/long to our endian short/long
-
-    return ($ifmt, $ofmt);
-}
 
 
 # called if host and input file are of different endian order, and a float
