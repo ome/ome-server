@@ -125,9 +125,10 @@ my @modules = (
 	name => 'MIME::Base64',
 	repository_file => "$REPOSITORY/MIME-Base64-2.12.tar.gz"
     },{
-	name => 'Apache::Session',
-	repository_file => "$REPOSITORY/Apache-Session-1.54.tar.gz"
-    },{
+	# XXX DEPRECATED
+	#name => 'Apache::Session',
+	#repository_file => "$REPOSITORY/Apache-Session-1.54.tar.gz"
+    #},{
 	name => 'Log::Agent',
 	repository_file => "$REPOSITORY/Log-Agent-0.208.tar.gz"
     },{
