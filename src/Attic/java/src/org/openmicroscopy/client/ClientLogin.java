@@ -163,7 +163,6 @@ public class ClientLogin {
 	    Attribute attrGroup = attrUser.getAttributeElement("Group");
 	    group = attrGroup.getStringElement("Name");
 	    logged_in = true;
-	    System.err.println("login group: "+group);
 	} catch (Exception e) {
 	    System.err.println("Took exception to: " + e);
 	    if (tryAgain() == false) {
@@ -223,12 +222,8 @@ public class ClientLogin {
     private String getGroup(String experimenter) {
 	String myGroup;
 	HashMap    criteria = new HashMap();
-	//System.err.println("getGroup will use Session: "+bindings.getSession());
 	criteria.put(new String("ome_name"), experimenter);
-	System.err.println("criteria: "+criteria.toString());
 	try {
-	    System.err.println("Got remote factory");
-	    //bindings.getFactory().findObject(new String("OME::Experimenter"), criteria);
 	    Accessor.Lookup("OME::Experimenter", criteria);
 	}
 	catch (Exception e) {
