@@ -319,11 +319,9 @@ toolBox.prototype.setLabel = function(x, y, content) {
 
 /*****
 
-	setScale(scale)
-		scale: a scaling value greater than 0
-		
-		purpose:
-			alter the size of the toolbox
+setScale(scale)
+	scale: a scaling value greater than 0
+alter the size of the toolbox
 			
 *****/
 toolBox.prototype.setScale = function(scale) {
@@ -332,6 +330,21 @@ toolBox.prototype.setScale = function(scale) {
 	if(this.nodes.root)
 		this.nodes.root.setAttribute("transform", "translate( "+this.x+","+this.y+") scale("+this.scale+")");
 }
+
+/*****
+*
+*   getActualHeight()
+*		returns the total height of the toolBox (GUI box & menu bar)
+*
+*****/
+toolBox.prototype.getActualHeight = function() {
+	/* 15 is the typical menu box height.
+	this.nodes.menuBar.getBBox().height is the technically accurate way
+	of determining height, but getBBox is notorious for messing up when
+	text is involved. */
+	return Math.round( ( this.height + 15 ) * this.scale );
+};
+
 
 /****************   Visual functions   *******************/
 
