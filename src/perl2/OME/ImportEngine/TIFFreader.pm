@@ -33,6 +33,7 @@
 #-------------------------------------------------------------------------------
 #
 # Written by:    Brian S. Hughes
+#				 Arpun Nagaraja
 #
 #-------------------------------------------------------------------------------
 
@@ -95,8 +96,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 
-use constant WHITE_IS_ZERO => 0;
-
 =head2 Patterns Defining Groups
 
 All the files in a TIFF file group will have the same filename pattern. 
@@ -116,13 +115,6 @@ configuration records.
 
 
 =cut
-
-use constant LONE_TIFF => '.+\.[tT][iI][fF][fF]?$';
-
-my %fmts = (fpat1 => '^(.+)(_w)([1-9])(\.tif+)$',
-             fpat2 => '^(.+)(_w)([1-9])(.+)(\.tif+)$',
-            );
-
 
 =head1 METHODS
 
@@ -188,65 +180,66 @@ extract it and create it in the repository to hold the new import.
 sub getGroups {
     my $self = shift;
     my $fref = shift;
-    my $digits = '[1-9]';
-    my @inlist = sort keys %$fref;
     my @outlist;
+    my $xref;
+    
+    # Group files with recognized patterns together
+    # Sort them by channels, z's, then timepoints
+    my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
+    my $numPatterns = $infoHash->{ numPatterns };
 
-    while (my $fn = shift @inlist) {
-        my $file = $fref->{$fn};
-
-		# skip this image unless its a tiff
-        next unless (defined(verifyTiff($file)));
-
-        my $bn = basename($fn);
-        my $matched = 0;
-        my @grp;
-        foreach my $k (keys %fmts) {
-            my $pattern = $fmts{$k};
-            if ($bn =~ m/$pattern/i) { # found a file that matches a pattern
-                $matched = 1;
-                my $subp = $5 ? "$4$5" : "$4";
-                my $outname = defined($5) ? "$1$4" : "$1";
-                my $subpattern = "$1$2$digits$subp";
-                @grp = ($file);
-                delete $fref->{$fn};
-                while (1) {    #    now find all similarly named files
-                    if ($fn = shift @inlist) {
-                        $file = $fref->{$fn};
-                        my $bn2 = basename($fn);
-                        if ($bn2 =~ m/$subpattern/i) {
-                            push @grp, $file;
-                            delete $fref->{$fn};
-                            $matched++;
-                        } else {
-                            unshift @inlist, $fn;
-                            last;
-                        }
-                    } else {
-                        last;
-                    }
-                }
-                if ($matched > 1) {
-                    push @grp, $outname;
-                } else {
-                    push @grp, $bn;
-                }
-                push @outlist, \@grp;
-                last;
-            }
-        }
-        if ($matched == 0) {
-            if ($fn =~ LONE_TIFF) {
-                push @grp, $file;
-		push @grp, $self->{super}->__nameOnly($fn);
-                push @outlist, \@grp;
-                delete $fref->{$fn};
-            }
-        }
+    for (my $pattern = 0; $pattern < $numPatterns; $pattern++)
+    {
+    	my @groupList;
+    	my $maxZ = $infoHash->{ $pattern }->{ maxZ };
+		my $maxT = $infoHash->{ $pattern }->{ maxT };
+		my $maxC = $infoHash->{ $pattern }->{ maxC };
+		for (my $t = 0; $t <= $maxT; $t++)
+    	{
+    		for (my $z = 0; $z <= $maxZ; $z++)
+    		{
+    			for (my $c = 0; $c <= $maxC; $c++)
+    			{
+    				my $file = $$groups[$pattern][$z][$t][$c];
+#     				my $status = ( defined($file) ) ? "File is $file\n" : "No file at $pattern $z $t $c\n";
+#     				print $status;
+    				next unless ( defined($file) );
+    				
+    				# skip this image unless it's a tiff
+    				next unless ( defined(verifyTiff($file)) );
+    				
+    				push (@groupList, $file);
+    				$xref->{ $file }->{ 'Image.SizeZ' } = $maxZ;
+    				$xref->{ $file }->{ 'Image.NumTimes' } = $maxT;
+    				$xref->{ $file }->{ 'Image.NumWaves' } = $maxC;
+    				
+    				# delete the file from the hash, so it's not processed by other importers
+    				delete $fref->{ $file };
+    			}
+    		}
+    	}
+    	push (@outlist, \@groupList) if ( scalar(@groupList) > 0 );
     }
-
+    # Now look at the rest of the files in the list to see if you have any other tiffs.
+    foreach my $file ( values %$fref )
+    {
+    	my @groupList;
+    	
+    	# skip this image unless it's a tiff
+    	next unless (defined(verifyTiff($file)));
+    	
+    	push (@groupList, $file);
+    	$xref->{ $file }->{ 'Image.SizeZ' } = 1;
+    	$xref->{ $file }->{ 'Image.NumTimes' } = 1;
+    	$xref->{ $file }->{ 'Image.NumWaves' } = 1;
+    	push (@outlist, \@groupList);
+    	delete $fref->{ $file };
+    }
+    
+    # Store the xml hash for later use in importGroup.
+    $self->{ params }->{ xml_hash } = $xref;
+	
     return \@outlist;
-
 }
 
 
@@ -256,10 +249,9 @@ sub getGroups {
 
 This method imports a group of related TIFF files into a single
 OME 5D image. The caller passes the ordered set of input files 
-comprising the group (plus the name of the output file to create)
-by reference. This method opens each file in turn, extracting its 
-metadata and pixels, and adding them to the accumulating OME pixels
-and metadata.
+comprising the group by reference. This method opens each file in turn,
+extracting its metadata and pixels, and adding them to the accumulating
+OME pixels and metadata.
 
 TIFF files carry metadata in one or more sections called IFDs. Each IFD
 holds a set of information fields called tag fields. These fields hold
@@ -293,135 +285,119 @@ use constant PHOTOMETRIC =>
   };
   
 sub importGroup {
-    my ($self, $grp, $callback) = @_;
+    my ($self, $groupList, $callback) = @_;
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
     my $params  = $self->{params};
     my $status = "";
-    my ($file, $fn);
-
-    # getGroups has left the output image file name at the end of @$grp
-    my $ofn = pop @$grp;
-
-    # Use the 1st file's parameters to get the X, Y, pixel size
-    $file = $grp->[0];
-    $file->open('r');
-    my $tags =  readTiffIFD($file);
-    $file->close();
-    $params->endian($tags->{__Endian});
-    my $xref = $params->{xml_hash};
-    $xref->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
-    $xref->{'Image.SizeY'} = $tags->{TAGS->{ImageLength}}->[0];
-    $xref->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
-    $params->byte_size( $self->__bitsPerPixel2bytesPerPixel($xref->{'Data.BitsPerPixel'}));
-    $self->{plane_size} = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'};
     
-	# This assumes that a group has multiple wavelengths, but only 1 T & 1 Z
-    # TODO - generalize to handle multiple T & Z too
-    $params->xml_hash->{'Image.SizeZ'} = 0;
-    $params->xml_hash->{'Image.NumTimes'} = 0;
-    
-	# for rgb tiffs, each single image gives three channels
-	my $chansImg;
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
-		$chansImg = 3;
-	} else {
-		$chansImg = 1;
-	}
+    my $file = $$groupList[0];
+	$file->open('r');
+	my $tags =  readTiffIFD($file);
+	$params->endian($tags->{__Endian});
+	my $xref = $params->{ xml_hash };
+	$xref->{ $file }->{'Image.SizeX'} = $tags->{TAGS->{ImageWidth}}->[0];
+	$xref->{ $file }->{'Image.SizeY'} = $tags->{TAGS->{ImageLength}}->[0];
+	$xref->{ $file }->{'Data.BitsPerPixel'} = $tags->{TAGS->{BitsPerSample}}->[0];
+	$params->byte_size( $self->__bitsPerPixel2bytesPerPixel($xref->{ $file}->{'Data.BitsPerPixel'}));
 	
-    $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp)*$chansImg;
-
-    my $image = ($self->{super})->__newImage($ofn);
-    $self->{image} = $image;
-    
-    my $zs = ($xref->{'Image.SizeZ'} > 0)    ? $xref->{'Image.SizeZ'}    : 1;
-    my $cs = ($xref->{'Image.NumWaves'} > 0) ? $xref->{'Image.NumWaves'} : 1;
-    my $ts = ($xref->{'Image.NumTimes'} > 0) ? $xref->{'Image.NumTimes'} : 1;
-
-    my ($pixels, $pix) = ($self->{super})->__createRepositoryFile($image, 
-						 					$xref->{'Image.SizeX'},
-						 					$xref->{'Image.SizeY'},
-									  		$zs,
-						 					$cs,
-						 					$ts,
-						 					$xref->{'Data.BitsPerPixel'});
-	$self->{pix} = $pix;
-    $self->{pixels} = $pixels;				 					
-						 			
-    my (@finfo, @channelInfo);
-    
-	# for each channel (wavelength) read an input file and append to output
-	for (my $c = 0; $c < scalar(@$grp); $c++) {
-		$file = $grp->[$c];
-		$file->open('r');
-		$params->fref($file);
-		$tags =  readTiffIFD($file)
-		  unless ($c == 0);     # 1st file's tags already read
-		$status = readWritePixels($self, $tags, $c, $callback);
-		
-		if ($status ne "") {
-			$file->close();
-			last;
-		}
-		
-		for (my $i=0; $i<$chansImg; $i++){
-			# Store summary info about each input file
-			$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-								  0, $xref->{'Image.SizeX'}-1,
-								  0, $xref->{'Image.SizeY'}-1,
-								  0, 0,
-								  $c+$i, $c+$i,
-								  0, 0,
-								  "TIFF");
-								  
-			# Store info about each input channel (wavelength)
-			push @channelInfo, {chnlNumber => $c+$i,
-								ExWave     => undef,
-								EmWave     => undef,
-								Fluor      => undef,
-								NDfilter   => undef};
-		}
+	# for rgb tiffs, each single image gives three channels
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
+		$xref->{ $file }->{'Image.NumWaves'} = 3;
 	}
+	my $filename = $file->getFilename();
+	my $basename = ($self -> {super}) -> __nameOnly( $filename );
+	my $image = ($self->{super})->__newImage($basename);
+	$self->{image} = $image;
+
+	# pack together & store info in input file
+	my @finfo;
+	$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+				  0, $xref->{ $file }->{'Image.SizeX'}-1,
+				  0, $xref->{ $file }->{'Image.SizeY'}-1,
+				  0, $xref->{ $file }->{'Image.SizeZ'}-1,
+				  0, $xref->{ $file }->{'Image.NumWaves'}-1,
+				  0, $xref->{ $file }->{'Image.NumTimes'}-1,
+				  "TIFF");
+
+	my ($pixels, $pix) = 
+	($self->{super})->__createRepositoryFile($image, 
+						 $xref->{ $file }->{'Image.SizeX'},
+						 $xref->{ $file }->{'Image.SizeY'},
+						 $xref->{ $file }->{'Image.SizeZ'},
+						 $xref->{ $file }->{'Image.NumWaves'},
+						 $xref->{ $file }->{'Image.NumTimes'},
+						 $xref->{ $file }->{'Data.BitsPerPixel'});
+	$self->{pixels} = $pixels;
 
 	$file->close();
-    OME::Tasks::PixelsManager->finishPixels ($self->{pix},$self->{pixels});
-
-    if ($status ne "") {
-    	($self->{super})->__destroyRepositoryFile($pixels, $pix);
-		die $status;
-    }
 	
-	$self->__storeInputFileInfo($session,\@finfo);
-	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}){
-		$self->__storeChannelInfoRGB($session, scalar(@$grp)*$chansImg, @channelInfo);
-	} else {
-		$self->__storeChannelInfo($session, scalar(@$grp)*$chansImg, @channelInfo);
+	my $maxZ = $xref->{ $file }->{'Image.SizeZ'};
+	my $maxT = $xref->{ $file }->{'Image.NumTimes'};
+	my $maxC = $xref->{ $file }->{'Image.NumWaves'};
+	my $c = 0;
+	my @channelInfo;
+	
+	# Do a check for RGB.  If it's RGB, each file has 3 channels.
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB})
+	{
+		foreach my $file (@$groupList)
+		{
+			for (my $c = 0; $c < 3; $c++)
+			{
+				$pix->convertPlaneFromTIFF($file, 0, $c, 0);
+				doSliceCallback($callback);
+			}
+		}
+	}
+
+	# This isn't RGB, so import it normally.  The files are processed in this way because
+	# of the sorting done in the getGroups method.
+	else
+	{
+		for (my $t = 0; $t < $maxT; $t++)
+		{
+			for (my $z = 0; $z < $maxZ; $z++)
+    		{
+    			for (my $c = 0; $c < $maxC; $c++)
+    			{
+    				eval
+    				{
+						my $file = shift( @$groupList );
+						$pix->convertPlaneFromTIFF($file, $z, $c, $t);
+					};
+					die "convertPlaneFromTIFF failed: $@\n" if $@;
+					doSliceCallback($callback);
+				}
+			}
+		}
+	}
+	$status = OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
+
+	if ($status ne "") {
+		($self->{super})->__destroyRepositoryFile($pixels, $pix);
+		die $status;
 	}
 	
-	return  $image;
-}
-
-
-
-sub readWritePixels {
-    my $self = shift;
-    my $tags = shift;
-    my $theC = shift;
-    my $callback =shift;
-
-    my $theY = 0;
-    my $buf;
-    my $params  = $self->{params};
-    my $xref = $params->{xml_hash};
-    my $sz_read = 0;
-    my $fih      = $params->fref;
-    my $status = "";
-
-    $self->{pix}->convertPlaneFromTIFF($fih,0,$theC,0);
-    doSliceCallback($callback);
-
-    return $status;
+	$self->__storeInputFileInfo($session,\@finfo);
+	
+	# Store info about each input channel (wavelength)
+	# 				push @channelInfo, {chnlNumber => $c+$i,
+	# 						ExWave     => undef,
+	# 						EmWave     => undef,
+	# 						Fluor      => undef,
+	# 						NDfilter   => undef};
+# 	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB})
+# 	{
+# 		$self->__storeChannelInfoRGB($session, scalar(@$groupList)*3, @channelInfo);
+# 	}
+# 	else
+# 	{
+# 		$self->__storeChannelInfo($session, scalar(@$groupList), @channelInfo);
+# 	}
+	
+	return $image;
 }
 
 sub getSHA1 {
@@ -439,9 +415,18 @@ sub cleanup {
 	OME::ImportEngine::TIFFUtils::cleanup();
 }
 
-=head1 Author
+# returns a string representing a hash dump. Usage:
+# 	dumpHash( %hash )
+sub dumpHash
+{
+	my %hash = @_;
+	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n\n";
+}
+
+=head1 Authors
 
 Brian S. Hughes
+Arpun Nagaraja
 
 =head1 SEE ALSO
 
