@@ -18,16 +18,19 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-use OME::SessionManager;
+use OME::Image;
+use OME::Project;
 use OME::Session;
+use OME::SessionManager;
 use OME::Tasks::ImageTasks;
+use OME::Project;
 use Term::ReadKey;
 
 print "\nOME Test Case - Image Import\n";
 print "----------------------------\n";
 
 if (scalar(@ARGV) == 0) {
-    print "Usage:  ImportTest [file list]\n\n";
+    print "Usage:  ImportTest dataset_name [file list]\n\n";
     exit -1;
 }
 
@@ -55,24 +58,54 @@ if (!defined $session) {
 
 print "Great, you're in.\n\n";
 
-print STDERR $session->DBH()->{AutoCommit}? "Autocommit\n": "Manual commit\n";
+my $projectName = "ImportTest2 project";
+my $projectDesc = "This project was created by the ImportTest test case.";
+my $projectUser;
+my $projectGroup;
+my $status = 1;
+my $age;
+my $project;
+my $project_id;
+my @projects;
 
-print "- Creating a new project...";
+# See if this project already defined. If not, create it.
 
-my $data = {
-    name => 'ImportTest project',
-    owner => $session->User(),
-    description => 'This project was created by the ImportTest test case.'
-};
-my $project = $session->Factory()->newObject("OME::Project",$data);
+@projects = OME::Project->search(name => $projectName);
+if (scalar @projects > 0) {
+    $project = $projects[0];    # it exists, retrieve it from the DB
+    $project_id = $project->project_id;
+    $project = $session->Factory()->loadObject("OME::Project", $project_id);
+    $status = 0
+	unless defined $project;
+    $age = "old";
+}
+else {             # otherwise create it
+    print STDERR "- Creating a new project...";
+    print STDERR " using ";
+    $age = "new";
+    $projectUser = $session->User();
+    $projectGroup = $projectUser->group();
+    my $data = {name => $projectName,
+		description => $projectDesc,
+	        owner_id => $projectUser,
+	        group_id => $projectGroup};
+    $project = $session->Factory()->newObject("OME::Project", $data);
+    if (!defined $project) {
+	$status = 0;
+	print " failed to create new project $projectName.\n";
+    }
+    else {
+	$project->writeObject();
+    }
+}
 
-$project->commit();
-#$session->DBH()->commit();
+if ($status) {
+    $session->commit;
+    print "- Importing files into $age project... ";
+    my $datasetName = shift;
+  OME::Tasks::ImageTasks::importFiles($session, $project, $datasetName, \@ARGV);
+    print "done.\n";
+}
 
-print "done.\n";
+exit $status == 1 ? 0 : 1;
 
-print "- Importing files...";
-OME::Tasks::ImageTasks::importFiles($session,$project,\@ARGV);
-print "done.\n";
-
-exit 0;
