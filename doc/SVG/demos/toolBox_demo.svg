@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+    "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd" [
+    <!ATTLIST svg
+              xmlns:a3 CDATA #IMPLIED
+              a3:scriptImplementation CDATA #IMPLIED>
+    <!ATTLIST script
+              a3:scriptImplementation CDATA #IMPLIED>
+]>
+<svg xml:space="preserve" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:a3="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+     a3:scriptImplementation="Adobe">
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/widget.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/toolBox.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/slider.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/AntiZoomAndPan.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
+        var toolBox1, toolBox2;
+		var zSlider, tSlider;
+        var azap = new AntiZoomAndPan();
+
+
+        function init(e) {
+            if ( window.svgDocument == null )
+                svgDocument = e.ownerDocument;
+
+            var controls  = svgDocument.getElementById("controls");
+
+			toolBox1 = new toolBox(
+				160, 30, 180, 150,
+				svgDocument.getElementById("menuBar").firstChild.data,
+				svgDocument.getElementById("hideControl").firstChild.data,
+				svgDocument.getElementById("GUIbox").firstChild.data
+			);
+			toolBox1.setLabel(90,12,"Controls")
+			toolBox1.getLabel().setAttributeNS(null, "text-anchor", "middle");
+
+			toolBox2 = new toolBox(
+				5, 5, 110, 150
+			);
+			toolBox2.setLabel(3,12,"Description");
+			
+			zSlider = new Slider(
+				30, 120, 100, -90,
+				updateZLabel,
+				svgDocument.getElementById("zSliderBody").firstChild.data,
+				svgDocument.getElementById("zSliderThumb").firstChild.data
+			);
+			
+			tSlider = new Slider(
+				60, 30, 100, 0,
+				updateTLabel
+			);
+
+            toolBox1.realize(controls);
+            toolBox2.realize(controls);
+			zSlider.realize(toolBox1.getGUIbox());
+			tSlider.realize(toolBox1.getGUIbox());
+			
+			toolBox2.getGUIbox().appendChild( toolBox2.textToSVG( 
+				svgDocument.getElementById(
+				"toolBox2TextContent").firstChild.data ) );
+			
+            
+            azap.appendNode(controls);
+        }
+		
+		function updateZLabel(data) {
+			data=Math.round(data);
+			zSlider.setValue(data);
+			svgDocument.getElementById("zLabel").firstChild.data =
+				"z-value is " + data;
+		}
+		function updateTLabel(data) {
+			data=Math.round(data);
+			tSlider.setValue(data);
+			svgDocument.getElementById("tLabel").firstChild.data =
+				"t-value is " + data;
+		}
+
+    ]]></script>
+	<defs>
+		<text id="menuBar"><![CDATA[
+			<g>
+				<g opacity="0.3">
+					<rect width="{$width}" height="15" fill="lawngreen" rx="10" ry="5"/>
+					<rect y="5" width="{$width}" height="10" fill="lawngreen"/>
+				</g>
+			</g>
+		]]></text>
+		<text id="hideControl"><![CDATA[
+			<g>
+				<ellipse rx="5" ry="5" fill="ghostwhite" stroke="forestgreen" stroke-width="1">
+					<animate id="anim1" attributeName="ry" from="5" to="2" dur="0.5s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
+					<animate id="anim2" attributeName="ry" from="2" to="5" dur="0.5s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
+				</ellipse>
+			</g>
+		]]></text>
+		<text id="GUIbox"><![CDATA[
+			<g>
+				<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">
+					<stop offset="5%" stop-color="green" />
+					<stop offset="95%" stop-color="palegreen" />
+				</linearGradient>
+				<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.4"/>
+
+				<text x="120" y="17" style="font-size:10;">time select</text>
+
+				<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.5s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
+				<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.5s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
+				<set attributeName="display" to="inline" begin="indefinite"/>
+				<set attributeName="display" to="none" begin="indefinite"/>
+			</g>
+		]]></text>
+		<text id="toolBox2TextContent"><![CDATA[
+			<g transform="translate(5,12)">
+				<text>This is the default</text>
+				<text y="1em">appearance and</text>
+				<text y="2em">animation of the</text>
+				<text y="3em">toolbox. The other</text>
+				<text y="4em">toolbox has</text>
+				<text y="5em">overridden these</text>
+				<text y="6em">defaults.</text>
+				<text y="8em">These toolboxes</text>
+				<text y="9em">can be minimized</text>
+				<text y="10em">and moved.</text>
+			</g>
+		]]></text>
+		<text id="zSliderBody"><![CDATA[
+			<g stroke="rgb(80,80,80)" transform="rotate(90)">
+				<g id="xyPlane" transform="scale(.6) skewX(-45)">
+					<polyline points=
+						"-27,0 -25,-3 -30,0 -25,3 -27,0 27,0 25,3 30,0 25,-3 27,0"/>
+					<text x="17" y="10" style="font-size:10;">x</text>
+					<polyline points=
+						"0,-27 -3,-25 0,-30 3,-25 0,-27 0,27 3,25 0,30 -3,25 0,27"/>
+					<text x="5" y="-17" style="font-size:10;">y</text>
+				</g>
+				<g id="zAxis">
+					<polyline points="0,0 0,-100 -4,-92 0,-95 4,-92 0,-100"/>
+					<rect x="-7" y="-100" width="14" height="100" opacity="0"/>
+					<text x="-9" y="-82" style="font-size:12;">z</text>
+				</g>
+			</g>
+		]]></text>
+		<text id="zSliderThumb"><![CDATA[
+			<g>
+				<rect x="-1" y="-7" width="2" height="14" fill="black"/>
+				<rect x="-3" y="-7" width="6" height="14" fill="red" opacity="0">
+					<set attributeName="opacity" to="0.4" begin="mouseover"
+						end="mouseout"/>
+				</rect>
+			</g>
+		]]></text>
+	</defs>
+    <g id="controls">
+    </g>
+	<g id="world">
+	</g>
+	<g id="info" transform="translate(160,250) scale(2)">
+		<rect x="-5" y="-15" width="110" height="60" fill="none" stroke="black"
+		stroke-width="2"/>
+		<text>Information:</text>
+		<text x="30" y="15" id="zLabel">z-value is 0</text>
+		<text x="30" y="30" id="tLabel">t-value is 0</text>
+	</g>
+</svg>
