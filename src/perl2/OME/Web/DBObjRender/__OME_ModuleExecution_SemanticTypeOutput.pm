@@ -94,17 +94,19 @@ sub getRelationAccessors {
 	my $return_type = $obj->semantic_type();
 	my $mex         = $obj->module_execution();
 	my $param       = [$mex,$return_type];
-	my $name        = 'Attributes';
+	my $name        = 'attributes';
+	my $title       = 'Attributes';
 
 	push( @$objects,        \$object);
 	push( @$methods,        $method);
 	push( @$params,         $param);
 	push( @$return_types,   $return_type);
 	push( @$names,          $name);
+	push( @$titles,         $title);
 	push( @$call_as_scalar, 1);
 
 	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
-		$objects, $methods, $params, $return_types, $names, $call_as_scalar );
+		$objects, $methods, $params, $return_types, $names, $titles, $call_as_scalar );
 	return $iterator;
 }
 
