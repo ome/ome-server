@@ -325,7 +325,7 @@ sub __getRegexGroups {
 	# $patterns{$regex}->{$basename}->{Z}->{$z}
 	# $patterns{$regex}->{$basename}->{C}->{$c}
 	# $patterns{$regex}->{$basename}->{T}->{$t}
-	# Then we'll sort the Z C T lexically to get
+	# Then we'll sort the Z C T to get
 	# $groups{ $basename }[$z][$t][$c] = $file;
 	my %patterns;
 	my ($regex,$name);
@@ -388,9 +388,9 @@ sub __getRegexGroups {
 	my ($z,$c,$t);
 	foreach $regex (values %patterns) {
 		while ( ($name,$pattern) = each %$regex) {
-			@Zs = sort keys %{$pattern->{Z}};
-			@Cs = sort keys %{$pattern->{C}};
-			@Ts = sort keys %{$pattern->{T}};
+			@Zs = sort { $a <=> $b } keys %{$pattern->{Z}};
+			@Cs = sort { $a <=> $b } keys %{$pattern->{C}};
+			@Ts = sort { $a <=> $b } keys %{$pattern->{T}};
 			$infoHash->{ $name }->{ maxZ } = scalar (@Zs);
 			$infoHash->{ $name }->{ maxC } = scalar (@Cs);
 			$infoHash->{ $name }->{ maxT } = scalar (@Ts);
