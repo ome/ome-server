@@ -53,14 +53,21 @@ sub getPageBody {
 		}
 		else {
 			$project->writeObject();
-			# is this the first project? if so, we need to redirect to
-			# import images
-			my $redirect = (not defined $session->project() ? 1 : undef);
+			# is this the first project? if so, we need to redirect to import images
+			my $redirectImport = (defined $session->project() ? undef : 1);
 			$session->project($project);
 			$session->writeObject();
-			$body .= "Project Creation successfull.";
-			$body .= " Click ".$cgi->a({href=>'javascript: parent.location.href = parent.location.href'},'here')." to continue on to import images."
-				if defined $redirect;
+			$body .= "Project creation successful.";
+
+			# update titlebar
+			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+
+			# redirect: import images OR choose datasets?
+			if (defined $redirectImport) {
+				$body .= " Click ".$cgi->a({href=>'javascript: top.location.href = top.location.href'},'here')." to continue on to import images.";
+			} else {
+				$body .= "<br>This should redirect you to add datasets to your new project. But that's not implemented yet.";
+			}
 		}
 
 	
@@ -92,7 +99,7 @@ sub print_form {
 				$cgi->td( { -align=>'LEFT' },
 					'Description:' ),
 				$cgi->td( { -align=>'LEFT' },
-					$cgi->textfield(-name=>'description', -size=>101) ) ) );
+					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3) ) ) );
 			
 	$text .= $cgi->endform."\n";
 	return $text;
