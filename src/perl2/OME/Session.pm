@@ -324,11 +324,9 @@ sub instance {
 }
 
 sub __salvageSession {
-	my $self = shift;
-	my $vis_users = shift;
-	my $vis_groups = shift;
+	my ($self, $userstate, $vis_users, $vis_groups) = @_;
 
-	$self->{UserState} = shift;
+	$self->{UserState} = $userstate;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     $self->{VisUsers} = $vis_users;
     $self->{VisGroups} = $vis_groups;
