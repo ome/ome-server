@@ -49,6 +49,7 @@
  DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Dataset&Popup=1';
  InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Project&Popup=1';
  InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::DBObjTable&Type=OME::Dataset&Popup=1';
+ DetailPage = '/perl2/serve.pl?Page=OME::Web::DBObjDetail';
 RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
 
 /*
@@ -133,13 +134,34 @@ function openInfoDatasetImport (dataset_id) {
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
 }
-	
+
+// openPopUpImageAs()
+
+function openPopUpImageAs(field_name) {
+	if( document.forms && document.forms[0] && document.forms[0].thumb_click_opens) {
+		var radio_grp = document.forms[0].thumb_click_opens;
+		var val;
+		for( i in radio_grp ) {
+			if( radio_grp[i].checked ) val = radio_grp[i].value;
+		}
+		return val;
+		if( mode ) { openPopUpImageAs.mode = mode; }
+		else { return openPopUpImageAs.mode; }
+	}
+}
+
 // openPopUpImage()
 
-function openPopUpImage (image_id) {
-	window.open(GetGraphicsPage + '&ImageID=' + image_id,
-		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
+function openPopUpImage (id) {
+
+	var mode = openPopUpImageAs();
+	if ( mode == 'image_detail' ) {
+		document.location.href = DetailPage + '&Type=OME::Image&ID=' + id;
+	} else {
+		window.open(GetGraphicsPage + '&ImageID=' + id,
+			'_blank',
+			'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
+	} 
 }
 
 // openPopUpPixels()
