@@ -90,42 +90,42 @@ our $DB_VERSION = "2.3";
 
 our @core_classes =
   (
-   ['OME::LookupTable',                         'OME::LookupTable'],
-   [undef,                                      'OME::LookupTable::Entry'],
-   ['OME::DataTable',                           'OME::DataTable'],
-   [undef,                                      'OME::DataTable::Column'],
-   ['OME::SemanticType',                        'OME::SemanticType'],
-   ['OME::SemanticType::Element',               'OME::SemanticType::Element'],
-   ['OME::SemanticType::BootstrapExperimenter', 'OME::SemanticType::BootstrapExperimenter'],
-   ['OME::SemanticType::BootstrapGroup',        'OME::SemanticType::BootstrapGroup'],
-   ['OME::SemanticType::BootstrapRepository',   'OME::SemanticType::BootstrapRepository'],
-   ['OME::Dataset',                             'OME::Dataset'],
-   ['OME::Project',                             'OME::Project'],
-   ['OME::Project',                             'OME::Project::DatasetMap'],
-   ['OME::Image',                               'OME::Image'],
-   ['OME::Image::DatasetMap',                   'OME::Image::DatasetMap'],
-   ['OME::Image::ImageFilesXYZWT',              'OME::Image::ImageFilesXYZWT'],
-   ['OME::Feature',                             'OME::Feature'],
-   ['OME::UserState',                           'OME::UserState'],
-   ['OME::ViewerPreferences',                   'OME::ViewerPreferences'],
-   ['OME::LSID',                                'OME::LSID'],
-   ['OME::Module::Category',                    'OME::Module::Category'],
-   ['OME::Module',                              'OME::Module'],
-   ['OME::Module::FormalInput',                 'OME::Module::FormalInput'],
-   ['OME::Module::FormalOutput',                'OME::Module::FormalOutput'],
-   ['OME::AnalysisChain',                       'OME::AnalysisChain'],
-   ['OME::AnalysisChain',                       'OME::AnalysisChain::Node'],
-   ['OME::AnalysisChain',                       'OME::AnalysisChain::Link'],
-   ['OME::AnalysisPath',                        'OME::AnalysisPath'],
-   ['OME::AnalysisPath',                        'OME::AnalysisPath::Map'],
-   ['OME::ModuleExecution',                     'OME::ModuleExecution'],
-   ['OME::ModuleExecution',                     'OME::ModuleExecution::ActualInput'],
-   ['OME::ModuleExecution',                     'OME::ModuleExecution::SemanticTypeOutput'],
-   ['OME::ModuleExecution',                     'OME::ModuleExecution::VirtualMEXMap'],
-   ['OME::AnalysisChainExecution',              'OME::AnalysisChainExecution'],
-   ['OME::AnalysisChainExecution',              'OME::AnalysisChainExecution::NodeExecution'],
+   'OME::LookupTable',
+   'OME::LookupTable::Entry',
+   'OME::DataTable',
+   'OME::DataTable::Column',
+   'OME::SemanticType',
+   'OME::SemanticType::Element',
+   'OME::SemanticType::BootstrapExperimenter',
+   'OME::SemanticType::BootstrapGroup',
+   'OME::SemanticType::BootstrapRepository',
+   'OME::Dataset',
+   'OME::Project',
+   'OME::Project::DatasetMap',
+   'OME::Image',
+   'OME::Image::DatasetMap',
+   'OME::Image::ImageFilesXYZWT',
+   'OME::Feature',
+   'OME::UserState',
+   'OME::ViewerPreferences',
+   'OME::LSID',
+   'OME::Module::Category',
+   'OME::Module',
+   'OME::Module::FormalInput',
+   'OME::Module::FormalOutput',
+   'OME::AnalysisChain',
+   'OME::AnalysisChain::Node',
+   'OME::AnalysisChain::Link',
+   'OME::AnalysisPath',
+   'OME::AnalysisPath::Map',
+   'OME::ModuleExecution',
+   'OME::ModuleExecution::ActualInput',
+   'OME::ModuleExecution::SemanticTypeOutput',
+   'OME::ModuleExecution::VirtualMEXMap',
+   'OME::AnalysisChainExecution',
+   'OME::AnalysisChainExecution::NodeExecution',
    # Make sure this next one is last
-   ['OME::Configuration::Variable',             'OME::Configuration::Variable'],
+   'OME::Configuration::Variable',
   );
 
 #*********
@@ -347,25 +347,24 @@ sub load_schema {
     print "Loading the database schema\n";
 
     foreach my $class (@core_classes) {
-	my ($require_class, $instantiate_class) = @$class;
 
-	print "  \\__ ", $require_class || "", " $instantiate_class ";
+	print "  \\__ $class ";
 	
-	$require_class->require() if defined $require_class;
+	$class->require();
 
 	# Add our class to the DB
 	eval {
-	    $delegate->addClassToDatabase($dbh,$instantiate_class);
+	    $delegate->addClassToDatabase($dbh,$class);
 	};
     
 	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and print $logfile "ERROR LOADING CLASS \"$instantiate_class\" -- OUTPUT: \"$@\"\n"
-	    and croak "Error loading class \"$instantiate_class\", see $LOGFILE_NAME details."
+	    and print $logfile "ERROR LOADING CLASS \"$class\" -- OUTPUT: \"$@\"\n"
+	    and croak "Error loading class \"$class\", see $LOGFILE_NAME details."
         if $@;
 
 
 	print BOLD, "[SUCCESS]", RESET, ".\n"
-	    and print $logfile "SUCCESS LOADING CLASS \"$instantiate_class\"\n";
+	    and print $logfile "SUCCESS LOADING CLASS \"$class\"\n";
     }
 
     $factory->commitTransaction();
