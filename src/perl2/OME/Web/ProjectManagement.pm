@@ -204,12 +204,13 @@ sub makeDatasetListings {
 	# Only display the datasets that aren't in the project
 	foreach my $dataset ($factory->findObjects("OME::Dataset")) {
 		my $add_this_id = 1;
-		foreach my $id_in_project (@$in_project) {
-			if (($dataset->id() == $id_in_project) or ($dataset->name() eq 'Dummy import dataset')) {
-				# Dummy import datasets... joy.
-				$add_this_id = 0;
-			};
-		}
+
+		unless ($dataset->name() eq 'Dummy import dataset') {  # Dummy import datasets... joy.  
+			foreach my $id_in_project (@$in_project) {
+				if ($dataset->id() == $id_in_project) { $add_this_id = 0 }
+			}
+		} else { $add_this_id = 0 }
+
 		push(@additional_datasets, $dataset->name()) if $add_this_id;
 	}
 

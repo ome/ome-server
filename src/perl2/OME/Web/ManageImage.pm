@@ -42,10 +42,11 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::SetDB;
 use OME::Tasks::ImageManager;
-use OME::Web::Helper::HTMLFormat;
 use OME::Web::Helper::JScriptFormat;
+use OME::Web::Table;
+
+use Data::Dumper;
 
 use base qw{ OME::Web };
 
@@ -53,136 +54,87 @@ sub getPageTitle {
 	return "Open Microscopy Environment - Image Manager";
 }
 
-# project owner
-# datasets used
-# images in datasets.
-
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $session=$self->Session();
+	my $factory=$session->Factory();
 	my $imageManager=new OME::Tasks::ImageManager($session);
-	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
 	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
 
 	my $body = "";
-
-	my @names = $cgi->param();
-	my %revArgs = map { $cgi->param($_) => $_ } @names;
-	my @dynamics=$session->Factory()->findObjects("OME::DataTable",'granularity'=>'D');
-
-	if (exists $revArgs{Remove}){
-	   my @groupdatasets=$cgi->param('List');
-	   $body.=remove_image($imageManager,\@groupdatasets);
-	}elsif(exists $revArgs{Delete}){
-         $body.=delete_image_process($imageManager,$revArgs{Delete});	  
-	}  
 	$body .= $jscriptFormat->popUpImage();    
-	$body.=$self->print_list($session,$imageManager,$htmlFormat,$cgi);  
-      return ('HTML',$body);
+	$body .= $cgi->p({-class => 'ome_title'}, 'My Images');
+
+	my @selected = $cgi->param('selected');
+	my @rel_selected = $cgi->param('rel_selected');
+
+	if ($cgi->param('Remove')) {
+		# Action
+		my $to_remove = {};
+
+		foreach (@rel_selected) {  # Slightly arcane but it works
+			my ($image, $dataset) = split(/,/, $_);
+			push(@{$to_remove->{$image}}, $dataset);
+		}
+
+		# Make sure we're not operating on a locked dataset (values() operates on the actual hash)
+		foreach my $datasets (values(%$to_remove)) {
+			my $c = 0;
+			foreach my $dataset_id (@$datasets) {
+				my $dataset = $factory->loadObject("OME::Dataset", $dataset_id);
+				if ($dataset->locked()) {
+					delete(@$datasets[$c]);
+					$body .= $cgi->p({class => 'ome_error'},
+						"WARNING: Images not being removed from locked dataset ", $dataset->name(), ".");
+				}
+				$c++;  # Keep track of the array_index
+			}
+		}
+
+		# Cleanse our keys
+		foreach (keys(%$to_remove)) { delete ($to_remove->{$_}) unless @{$to_remove->{$_}} }
+
+		$imageManager->remove($to_remove);
+		
+		# Data
+		while (my ($image_id, $dataset_ids) = each (%$to_remove)) {
+			$body .= $cgi->p({-class => 'ome_info'}, "Removed image $image_id from dataset(s) @$dataset_ids.");
+		}
+	} elsif ($cgi->param('Delete')) {
+		# Action
+		foreach (@selected) { $imageManager->delete($_) }
+		
+		# Data
+		$body .= $cgi->p({-class => 'ome_info'}, "Deleted image(s) @selected.");
+	}  
+
+	$body .= $self->printImages();
+	
+	return ('HTML',$body);
 }
-
-
-
-
-
 
 #---------------------------
 # PRIVATE METHODS
 #---------------------------
 
-sub delete_image_process{
-	my ($imageManager,$id)=@_;
-	my $text="";
-	my $result=$imageManager->delete($id);
-	$text.="Image deleted" if (defined $result);
-	return $text;
-}
-
-
-
-
-
-sub remove_image{
-	my ($imageManager,$ref)=@_;
-	my %list=();
-	my $text="";
-	return undef if (scalar(@$ref)==0);
-	foreach (@$ref){
-		my ($imageID,$datasetID)=split("-",$_);
-		if (exists $list{$imageID}){
-	 	 my $val=$list{$imageID};
-	  	 push(@$val,$datasetID);
-	 	 $list{$imageID}=$val;
-		}else{
-	  	 my @a=($datasetID);
-	  	 $list{$imageID}=\@a;
+sub printImages {
+	my $self = shift;
+	my $t_generator = new OME::Web::Table;
+	my $cgi = $self->CGI();;
+	my $factory = $self->Session()->Factory();
+	
+	# Gen our images table
+	my $html = $t_generator->getTable( {
+			type => 'image',
+			filters => [ ["experimenter_id", $self->Session()->User()->id()] ],
+			options_row => ["Delete", "Remove"],
+			relations => 1,
 		}
-  	}
-  	my $rep=$imageManager->remove(\%list);
-  	$text.="<b>image removed<b>" if (defined $rep);
-  	return $text;
+	);
 
-}
-
-
-sub print_list{
-
-	my ($self,$session,$imageManager,$htmlFormat,$cgi)=@_;;
-	my $text="";
-	my ($gpImages,$userImages)=$imageManager->manage();
-	my $count=0;
-	foreach (keys %$userImages){
-		$count++;
-		my $a=${$userImages}{$_}->{remove};
-		my $boolremove=undef;
-      	foreach my $r (keys %$a){
-	 	  if (defined ${$a}{$r}){
-	  		 $boolremove=1;
-	 	  }
-      	}
-		my $booldel=1;
-      	if (exists ${$gpImages}{$_}){
-	   		$booldel=undef;
-		}
-		my $formatimage=$self->format_image($session->Factory(),${$userImages}{$_}->{image},$session->User()->id(),$htmlFormat,$booldel);
-  	 	${$userImages}{$_}->{text}=$formatimage;
-
-  	}
-  	if ($count==0){
-   		$text.="<br><b>no images to display.</b>";
-  	}else{
-     		$text.=format_output($userImages,$htmlFormat,$cgi);
-  	}
-	return $text;
-}
-
-sub format_output{
-	my ($userImage,$htmlFormat,$cgi)=@_;   
-	my $summary="";
-	my $rows="";
-	$summary.="<h3>List of image(s) used:</h3>";
-	$summary.=$cgi->startform;
-	$summary.=$htmlFormat->manager($userImage,"Remove","Remove","image");
-	$summary.=$cgi->endform;
-	return $summary;
-}
-
-
-sub format_image{
-	my ($self,$factory,$image,$userID,$htmlFormat,$bool)=@_;
-	my $summary="";
-	my $ownerID=$image->experimenter_id();
-	my $owner=$factory->loadAttribute("Experimenter",$ownerID);
-	$summary.=$htmlFormat->formatImage($image);
-	my $imID=$image->id();
-
-	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imID align=\"bottom\" border=0></a>";
-	$summary.=$thumbnail;
-	$summary.=$htmlFormat->buttonControl($image,$userID,$owner,$bool,"image");
-	return $summary;
+	return $html;
 }
 
 
 1;
-
