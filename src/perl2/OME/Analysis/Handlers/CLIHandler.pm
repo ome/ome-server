@@ -48,7 +48,6 @@ sub precalculateDataset {
 	my $program                  = $self->{_program};
 	my $executionInstructions    = $program->execution_instructions();
 	my $parser                   = XML::LibXML->new();
-	$parser->validation(1);
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
 	my $root                     = $tree->getDocumentElement();
@@ -67,7 +66,6 @@ sub precalculateImage {
 	my $program                  = $self->{_program};
 	my $executionInstructions    = $program->execution_instructions();
 	my $parser                   = XML::LibXML->new();
-	$parser->validation(1);
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
 	my $root                     = $tree->getDocumentElement();
@@ -86,7 +84,6 @@ sub calculateFeature {
 	my $program                  = $self->{_program};
 	my $executionInstructions    = $program->execution_instructions();
 	my $parser                   = XML::LibXML->new();
-	$parser->validation(1);
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
 	my $root                     = $tree->getDocumentElement();
@@ -106,7 +103,6 @@ sub postcalculateImage {
 	my $program                  = $self->{_program};
 	my $executionInstructions    = $program->execution_instructions();
 	my $parser                   = XML::LibXML->new();
-	$parser->validation(1);
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
 	my $root                     = $tree->getDocumentElement();
@@ -125,7 +121,6 @@ sub postcalculateDataset {
 	my $program                  = $self->{_program};
 	my $executionInstructions    = $program->execution_instructions();
 	my $parser                   = XML::LibXML->new();
-	$parser->validation(1);
 	
 	my $tree                     = $parser->parse_string( $executionInstructions );
 	my $root                     = $tree->getDocumentElement();
@@ -162,7 +157,6 @@ sub _execute {
 				 );
 	
 	my $parser = XML::LibXML->new();
-	$parser->validation(1);
 	my $tree = $parser->parse_string( $executionInstructions );
 	my $root = $tree->getDocumentElement();
 	
