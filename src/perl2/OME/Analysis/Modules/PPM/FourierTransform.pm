@@ -72,7 +72,7 @@ sub startImage {
 		my $parent = $factory->
 		  newAttribute('PixelsSlice',undef,$mex,
 					   {
-						Pixels => $slice->Pixels(),
+						Parent => $slice->Parent(),
 						StartX => $slice->StartX(),
 						EndX   => $slice->EndX(),
 						StartY => $slice->StartY(),
