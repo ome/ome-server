@@ -58,7 +58,7 @@ method discovers which files in a set of files have the TIFF format,
 and the importGroup() method imports TIFF format files into OME 5D
 image files and metadata.
 
-See http://partners.adobe.com/asn/developer/PDFS/TIFF6.pdf for the
+See http://partners.adobe.com/asn/developer/pdfs/tn/TIFF6.pdf for the
 complete TIFF specification.
 
 The  getGroups() method will assemble groups of TIFF files that
@@ -376,13 +376,16 @@ sub readWritePixels {
     my $self = shift;
     my $tags = shift;
     my $theC = shift;
-    my $rows_per_strip = $tags->{TAGS->{RowsPerStrip}}->[0];
     my $theY = 0;
     my $buf;
     my $params  = $self->{params};
+    my $xref = $params->{xml_hash};
     my $sz_read = 0;
     my $fih      = $params->fref;
     my $status = "";
+    my $rows_per_strip = $tags->{TAGS->{RowsPerStrip}}->[0];
+    $rows_per_strip = $xref->{'Image.SizeY'}
+        unless (defined $rows_per_strip);
 
 
     my ($offsets_arr, $bytesize_arr) = getStrips($tags);
@@ -403,7 +406,7 @@ sub readWritePixels {
 	my $nPixOut = $self->{pix}->SetRows($buf, $rows_per_strip, 
 					    $theY, 0, $theC, 0);
 	if ($self->{plane_size}/$params->byte_size != $nPixOut) {
-	    $status = "Failed to write repository file - $self->{plane_size}/$params->byte_size != $nPixOut";
+	    $status = "Failed to write repository file - $self->{plane_size}/".$params->byte_size." != $nPixOut";
 	}
 	$theY += $rows_per_strip;
     }
