@@ -33,6 +33,8 @@ foreach $pixels (@pixelses) {
 		} else {
 			print " OMEIS ID = $pixelsID\n";
 			$pixels->ImageServerID ($pixelsID);
+			$pixels->Repository ($repository);
+			$pixels->Path (undef);
 			$pixels->storeObject();
 			$factory->commitTransaction();
 		}
