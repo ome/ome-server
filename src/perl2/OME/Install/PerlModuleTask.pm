@@ -248,6 +248,12 @@ my @modules = (
 	    return 1;
 	}
     },{
+	name => 'HTML::Tagset',
+	repository_file => "$REPOSITORY/HTML-Tagset-3.03.tar.gz"
+    },{
+	name => 'HTML::Parser',
+	repository_file => "$REPOSITORY/HTML-Parser-3.27.tar.gz"
+    },{
 	name => 'Image::Magick',
 	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
 	#installModule => \&ImageMagickInstall
