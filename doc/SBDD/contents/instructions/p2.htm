@@ -278,13 +278,14 @@
                 so, we reccomend that you set this to the value of OME_DEPLOY 
                 and then accept the default values for the repository and input 
                 directories. </li>
-              <li>Ask you to enter the database administrator username; we reccomend 
-                that you specifiy the OME user, <code>ome</code>.</li>
+              <li>Ask you to enter the database administrator username. This has 
+                to be an already existing Unix user; we reccomend that you specifiy 
+                the OME user, <code>ome</code>.</li>
               <li>Create the OME database and load the schema.</li>
-              <li>Create an initial OME experimenter. This will default to your 
-                current Unix login. After installation, you can create new OME 
-                experimenters by running the <i>addOMEuser.pl</i> script contained 
-                in <i>OME/src/SQL</i> under CVS_LOCAL.</li>
+              <li>Create an initial OME experimenter. This will default to whomever 
+                you selected as the database administrator. After installation, 
+                you can create new OME experimenters by running the <i>addOMEuser.pl</i> 
+                script contained in <i>OME/src/SQL</i> under CVS_LOCAL.</li>
               <li>Install the core analysis modules.</li>
               <li>Create an analysis chain to run at image import.</li>
             </ul>
