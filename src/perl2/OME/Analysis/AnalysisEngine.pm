@@ -527,6 +527,42 @@ sub findModuleHandler {
     my $start_time;
     my $end_time;
 
+    sub __clearEverything {
+        $factory = undef;
+        %user_input_analyses = ();
+        %node_inputs = ();
+        @nodes = ();
+        %nodes = ();
+        %node_modules = ();
+        %node_states = ();
+        $analysis_execution = undef;
+        %dependence = ();
+        %global_analysis = ();
+        %perdataset_analysis = ();
+        %perimage_analysis = ();
+        $continue = undef;
+        $round = undef;
+        $last_node = undef;
+        $curr_node = undef;
+        $curr_nodeID = undef;
+        @curr_predecessorIDs = ();
+        $curr_module = undef;
+        $curr_inputs = undef;
+        $curr_outputs = undef;
+        @curr_global_inputs = ();
+        @curr_dataset_inputs = ();
+        @curr_image_inputs = ();
+        @curr_feature_inputs = ();
+        @curr_global_outputs = ();
+        @curr_dataset_outputs = ();
+        @curr_image_outputs = ();
+        @curr_feature_outputs = ();
+        @data_paths = ();
+        %data_paths = ();
+        $start_time = undef;
+        $end_time = undef;
+    }
+
     # A debug routine
     sub __debug {
         my ($message,$group) = @_;
@@ -1982,6 +2018,8 @@ sub findModuleHandler {
     # possible.
     sub executeAnalysisView {
         ($self, $session, $analysis_view, $input_parameters, $dataset) = @_;
+
+        __clearEverything();
         $factory = $session->Factory();
 
         $start_time = new Benchmark;
