@@ -76,7 +76,12 @@ method.
 
 The following methods are available to all attribute subclasses.  In
 addition, accessor/mutator methods will automatically be created for
-each semantic element in the attribute's semantic type.
+each semantic element in the attribute's semantic type. Finally,
+accessor methods for has-many relationships will be dynamically created
+as they are called. For example,
+	$categoryGroup->CategoryList();
+will result in a has-many accessor transparently being created and
+called. AUTOLOAD magic is used to implement this functionality.
 
 =cut
 
