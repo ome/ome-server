@@ -139,7 +139,7 @@ sub getFieldNames {
 	# We don't need no target
 	my $fieldNames = ( 
 		$proto->_fieldNames() or
-		['id', sort( grep( ( !m/^target$/o ), $package_name->getPublishedCols()) ) ] 
+		['id', sort( grep( $_ ne 'target', $package_name->getPublishedCols()) ) ] 
 	);
 	return @$fieldNames if wantarray;
 	return $fieldNames;
@@ -199,7 +199,7 @@ sub getFieldTypes {
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
-	my %fieldTypes = map{ $_ => $package_name->getPackageReference($_) } @$fieldNames;
+	my %fieldTypes = map{ $_ => $package_name->getAccessorReferenceType($_) } @$fieldNames;
 
 	return %fieldTypes if wantarray;
 	return \%fieldTypes;
@@ -292,20 +292,20 @@ same as render, but works with an individual instance instead of arrays.
 =cut
 
 sub renderSingle {
-	my ($proto,$obj,$format,$fieldNames) = @_;
+	my ($proto,$obj,$format,$fieldnames) = @_;
 
 	my $specializedRenderer;
-	return $specializedRenderer->renderSingle( $obj, $format, $fieldNames )
+	return $specializedRenderer->renderSingle( $obj, $format, $fieldnames )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
 		    $proto eq __PACKAGE__);
 
 	my $q = new CGI;
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $obj );
-	$fieldNames = $proto->getFieldNames( $obj ) unless $fieldNames;
+	$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
 	my $id   = $obj->id();
 	my %record;
-	foreach my $field( @$fieldNames ) {
+	foreach my $field( @$fieldnames ) {
 		if( $field eq 'id') {
 			$record{ $field } = $q->a( 
 				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$formal_name&ID=$id" },
@@ -340,8 +340,8 @@ sub getObjectLabel {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
 		    $proto eq __PACKAGE__);
 
-	return $obj->id().". ".$obj->name() if( $obj->getColumnType( 'name' ) );
-	return $obj->id().". ".$obj->Name() if( $obj->getColumnType( 'Name' ) );
+	return $obj->name() if( $obj->getColumnType( 'name' ) );
+	return $obj->Name() if( $obj->getColumnType( 'Name' ) );
 	return $obj->id();
 }
 
@@ -395,7 +395,7 @@ $type can be a DBObject name ("OME::Image"), an Attribute name
 $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
 
-returns a hash { field_name => search_field, ... }
+returns a hash { field_name => form_input, ... }
 
 =cut
 
@@ -409,14 +409,54 @@ sub getSearchFields {
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
+	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 
 	my %searchFields;
 	my $q = new CGI;
-	$searchFields{ $_ } = $q->textfield( -name => $formal_name."_".$_ , -size => '5' )
-		foreach ( @$fieldNames );
+	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$fieldNames;
+	foreach my $accessor ( @$fieldNames ) {
+		if( $fieldRefs{ $accessor } ) {
+			$searchFields{ $accessor } = $proto->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor );
+		} else {
+			$searchFields{ $accessor } = $q->textfield( -name => $formal_name."_".$accessor , -size => '5' );
+		}
+	}
 
 	return %searchFields if wantarray;
 	return \%searchFields;
+}
+
+=head2 getRefSearchField
+
+	# get an html form element that will allow searches to $type
+	my $searchField = OME::Web::RenderData->getRefSearchField( $from_type, $to_type, $accessor_to_type );
+
+the types may be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+$from_type is the type you are searching from
+$accessor_to_type is an accessor of $from_type that returns an instance of $to_type
+$to_type is the type the accessor returns
+
+returns a form input
+
+=cut
+
+sub getRefSearchField {
+	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	
+	my $specializedRenderer;
+	return $specializedRenderer->getRefSearchField( $from_type, $to_type, $accessor_to_type )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $to_type ) and
+		    $proto ne $to_type);
+
+	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
+	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
+	my $searchOn = '';
+	$searchOn = '.name' if( $to_package->getColumnType( 'name' ) );
+	$searchOn = '.Name' if( $to_package->getColumnType( 'Name' ) );
+
+	my $q = new CGI;
+	return $q->textfield( -name => $from_formal_name."_".$accessor_to_type.$searchOn , -size => '5' );
 }
 
 =head2 _getSpecializedRenderer
