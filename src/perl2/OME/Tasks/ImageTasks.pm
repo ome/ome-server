@@ -143,9 +143,9 @@ sub importFiles {
 }
 
 
-=head2 forkedImportFiles
+=head2 forkedImportImages
 
-	my $task = forkedImportFiles($dataset,\@filenames,\%options);
+	my $task = forkedImportImages($dataset,\@filenames,\%options);
 
 Performs the same operation as importFiles, but forks off a new
 process first.  An OME::Task object is created to track the import's
@@ -153,7 +153,7 @@ progress.
 
 =cut
 
-sub forkedImportFiles {
+sub forkedImportImages {
 	my ($dataset, $filenames, $options) = @_;
 
     my $task = OME::Tasks::NotificationManager->
@@ -223,6 +223,62 @@ sub forkedImportFiles {
         $task->finish();
         $task->setMessage('Successfully imported '.scalar(@$image_list).
                           ' images');
+
+        CORE::exit(0);
+    }
+}
+
+=head2 forkedImportAnalysisModules
+
+	my $task = forkedImportAnalysisModules(\@filenames,\%options);
+
+Imports the xml (or ome) files given by @filenames into OME.
+
+=cut
+
+sub forkedImportAnalysisModules {
+	my ($filenames, $options) = @_;
+
+	my $task = OME::Tasks::NotificationManager->
+      new('Importing analysis modules',scalar(@$filenames));
+	
+	my $session = OME::Session->instance();
+    my $OMEimporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+    my $factory = $session->Factory();
+	
+    my $session_key = $session->SessionKey();
+
+    my $parent_pid = $$;
+    my $pid = fork;
+
+    if (!defined $pid) {
+        die "Could not fork off process to perform the import";
+    } elsif ($pid) {
+        # Parent process
+        # do nothing
+        return $task;
+    } else {
+        # Child process
+
+        POSIX::setsid() or die "Can't start a new session. $!";
+        OME::Session->forgetInstance();
+        OME::Tasks::NotificationManager->forget();
+	
+        my $session = OME::SessionManager->createSession($session_key);
+		my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+		my @file_list = @$filenames;
+		
+        $task->setMessage('Starting import');
+		
+		foreach my $path (@$filenames){
+			$task->setMessage ("Importing $path");
+			$OMEImporter->importFile( $path );
+			$task->step();
+		}	
+		
+        $task->finish();
+        $task->setMessage('Successfully imported '.scalar(@$filenames).
+                          ' analysis modules');
 
         CORE::exit(0);
     }
