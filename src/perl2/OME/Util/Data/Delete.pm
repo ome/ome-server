@@ -57,7 +57,12 @@ our @DATASET_STs;
 our %DELETED_ATTRS;
 our $RECURSION_LEVEL;
 our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
+# Analysis chain execution ids with deleted nodes (keys are ACE ids, values are hash of node ids)
 our %ACS_DELETED_NODES;
+# Deleted omeis Pixels.  Keys are DB PixelIDs, values are Pixels attributes.
+our %DELETED_PIXELS;
+# Deleted omeis Files.  Keys are DB OriginalFile IDs, values are OriginalFile attributes.
+our %DELETED_ORIGINAL_FILES;
 
 sub getCommands {
     return
@@ -131,6 +136,10 @@ sub DeleteMEX {
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
 	$FACTORY = $session->Factory();
+	
+	# This is useful for debugging:
+	#$FACTORY->obtainDBH()->{AutoCommit} = 1;
+
 	$IMAGE_IMPORT_MODULE_ID = $session->Configuration()->image_import_module()->id();
 
 	# Get the MEX
@@ -158,11 +167,16 @@ sub delete_mex {
 my $self = shift;
 my $mex = shift;
 my $delete = shift;
+my $mex_id;
 
-	return if exists $DELETED_MEXES{$mex->id()};
+	$mex_id = $mex->id();
+
+	return if exists $DELETED_MEXES{$mex_id};
 	$RECURSION_LEVEL++;
 	my $recurs_indent='';
-	for (1..$RECURSION_LEVEL) { $recurs_indent .= '  ' }
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	print $recurs_indent,"++MEX $mex_id: ",$mex->module()->name(),"\n";
 
 	my $input;
 	my @actual_inputs = $FACTORY->
@@ -174,7 +188,6 @@ my $delete = shift;
 		$self->delete_mex ($input->module_execution(),$delete);
 	}
 
-	print $recurs_indent,"++MEX ",$mex->id(),": ",$mex->module()->name(),"\n";
 	
 	# Gather up the typed an untyped outputs
 	my @outputs = $mex->module()->outputs();
@@ -192,57 +205,40 @@ my $delete = shift;
 		my $attributes = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX($mex,$ST);
 
-		foreach my $attr (@$attributes) {
-			next unless $attr;
-			next if exists $DELETED_ATTRS{$attr->id()};
-			
-			# These attributes may have virtual MEXes, so descend again
-			my $vMEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($attr);
-			foreach my $vMex (@$vMEXes) {
-				next unless $vMex;
-				$self->delete_mex ($vMex,$delete) unless $vMex->id() == $mex->id();
-			}
-			
-			# These attributes may be referred to by references.
-			my $refs = $self->get_references_to ($attr);
-			foreach my $ref_attr (@$refs) {
-				next if exists $DELETED_ATTRS{$ref_attr->id()};
-
-				my $ref_MEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($ref_attr);
-				foreach my $ref_MEX (@$ref_MEXes) {
-					next unless $ref_MEX;
-					$self->delete_mex ($ref_MEX,$delete) unless $ref_MEX->id() == $mex->id();
-				}
-				print $recurs_indent,"      Reference Attribute ",$ref_attr->id()," (",$ref_attr->semantic_type()->name(),")\n";
-				$ref_attr->deleteObject() if $delete;
-				$DELETED_ATTRS{$ref_attr->id()} = 1;
-			}
-			
-			print $recurs_indent,"    Attribute = ",$attr->id(),"\n";
-			$attr->deleteObject() if $delete;
-			$DELETED_ATTRS{$attr->id()} = 1;
-		}
+		# Delete all attributes - this will delete any vMexes, any references, and the mexes that generated the references.
+		foreach my $attr (@$attributes) { $self->delete_attribute ($attr,$mex,$delete) ;}
 	}
 	
-	# Delete any untyped outputs
+	# Delete any untyped outputs - these are OME::ModuleExecution::SemanticTypeOutput
 	foreach my $output (@untyped_outputs) {
 		print $recurs_indent,"  Untyped output ",$output->id(),"\n";
 		$output->deleteObject() if $delete;
 	}
 	
-	# Delete the node executions
+	# Delete the ACE node executions
 	my @node_executions = $FACTORY->
 		findObjects("OME::AnalysisChainExecution::NodeExecution",
 			{
-			module_execution_id => $mex->id(),
+			module_execution_id => $mex_id,
 			});
+
 	foreach my $nodex (@node_executions) {
 		print $recurs_indent,"  Node execution ",$nodex->id(),"\n";
 		$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{$nodex->id()} = 1;
+		$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{'ACE'} = $nodex->analysis_chain_execution();
 		$nodex->deleteObject() if $delete;
 	}
 	
-	# Delete the actual_inputs that used this mex as an input module
+	# @actual_inputs has actual inputs with this mex as an input mex.
+	# To these, we want to add the actual inputs produced by this module.
+	my @mex_actual_inputs = $FACTORY->
+		findObjects("OME::ModuleExecution::ActualInput",
+			{
+			module_execution_id => $mex_id,
+			});
+	push (@actual_inputs,@mex_actual_inputs);
+
+	# Delete actual_inputs that used this mex as an input module and those produced by this module
 	foreach $input (@actual_inputs) {
 		print $recurs_indent,"  Actual input ",$input->id(),"\n";
 		$input->deleteObject() if $delete;
@@ -260,26 +256,15 @@ my $delete = shift;
 				image_id => $image->id(),
 				});
 		foreach my $image_mex (@image_mexes) {
-			next if $image_mex->id() == $mex->id();
+			next if $image_mex->id() == $mex_id;
 			print $recurs_indent,"  Image MEX ",$image_mex->id(),"\n";
 			$self->delete_mex ($image_mex,$delete);
 		}
 		
 		# Next, delete any left-over image attributes that don't have this image as the target.
 		my $image_attrs = $self->get_image_attributes ($mex->image());
-		foreach my $img_attr (@$image_attrs) {
-			next if exists $DELETED_ATTRS{$img_attr->id()};
+		foreach my $attr (@$image_attrs) { $self->delete_attribute ($attr,$mex,$delete) ;}
 
-			my $img_MEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($img_attr);
-			foreach my $img_MEX (@$img_MEXes) {
-				next unless $img_MEX;
-				$self->delete_mex ($img_MEX,$delete) unless $img_MEX->id() == $mex->id();
-			}
-			print $recurs_indent,"    Image Attribute ",$img_attr->id()," (",$img_attr->semantic_type()->name(),")\n";
-			$img_attr->deleteObject() if $delete;
-			$DELETED_ATTRS{$img_attr->id()} = 1;
-		}
-		
 		# Since we're at it, we have to delete the image from the OME::Image::DatasetMap
 		my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",{ image_id => $mex->image()->id()});
 		my @datasets;
@@ -298,7 +283,7 @@ my $delete = shift;
 					dataset_id => $dataset->id(),
 					});
 			foreach my $dataset_mex (@dataset_mexes) {
-				next if $dataset_mex->id() == $mex->id();
+				next if $dataset_mex->id() == $mex_id;
 				print $recurs_indent,"      Dataset MEX ",$dataset_mex->id(),"\n";
 				$self->delete_mex ($dataset_mex,$delete);
 			}
@@ -312,11 +297,16 @@ my $delete = shift;
 	}
 
 	# Delete the MEX
-	print $recurs_indent,"--MEX ",$mex->id(),": ",$mex->module()->name(),"\n";
+	print $recurs_indent,"--MEX $mex_id: ",$mex->module()->name(),"\n";
 	$mex->deleteObject() if $delete;
-	$DELETED_MEXES{$mex->id} = 1;
+	$DELETED_MEXES{$mex_id} = 1;
 	$RECURSION_LEVEL--;
+	
+	# Perform cleanup tasks on orphaned objects
+	# Note that nothing in here should directly or indirectly call delete_mex(), or delete_attribute()
 	if ($RECURSION_LEVEL == 0) {
+	
+		# Clean up AnalysisChainExecution objects consisting only of deleted OME::AnalysisChainExecution::NodeExecution
 		my ($ACE_ID,$del_nodes);
 		while ( ($ACE_ID,$del_nodes) = each (%ACS_DELETED_NODES) ) {
 			my @ACE_nodes = $FACTORY->
@@ -324,20 +314,80 @@ my $delete = shift;
 					{
 					analysis_chain_execution_id => $ACE_ID,
 					});
+
+			my $del_ACE = $del_nodes->{'ACE'};
 			foreach my $ACE_node (@ACE_nodes) {
-				$del_nodes->{$ACE_node->id()}++
+				if (not exists $del_nodes->{$ACE_node->id()}) {
+					$del_ACE = undef;
+					last;
+				}
 			}
-			# Delete the AC_Execution iff all $del_nodes == 2
-			my $del_ACE = $ACE_nodes[0]->analysis_chain_execution();
-			foreach (values %$del_nodes) {undef $del_ACE and last if $_ != 2;}
+
 			if ($del_ACE) {
-				print $recurs_indent,"  Analysis Chain Execution ",$del_ACE->id(),", ",$del_ACE->analysis_chain()->name()," (Chain ID=",$del_ACE->analysis_chain()->id(),")\n";
+				print $recurs_indent,"Analysis Chain Execution ",$del_ACE->id(),", ",$del_ACE->analysis_chain()->name()," (Chain ID=",$del_ACE->analysis_chain()->id(),")\n";
 				$del_ACE->deleteObject() if $delete;
 			}
 			
 		}
-	}
-}
+		
+		# Delete omeis objects that are no longer being refered to
+		# This may possibly need a flag
+		my $omeis_del;
+		my %omeis_ids;
+		foreach my $pixels_spec (values %DELETED_PIXELS) {
+			# Get all the Pixels that have the same repository and image_server_id
+			my @db_pixelses = $FACTORY->
+				findAttributes('Pixels',
+					{
+					ImageServerID => $pixels_spec->{ImageServerID},
+					Repository    => $pixels_spec->{RepositoryID},
+					});
+
+			$omeis_del = 1;
+			foreach my $db_pixels (@db_pixelses) {
+				if (not exists $DELETED_PIXELS {$db_pixels->id()}) {
+					$omeis_del = 0;
+					last;
+				}
+			}
+
+			if ($omeis_del) {
+				my $omeis_ids_key = $pixels_spec->{RepositoryID}.':'.$pixels_spec->{ImageServerID};
+				if (not exists $omeis_ids{$omeis_ids_key}) {
+					print "Deleting OMEIS Pixels $omeis_ids_key\n";
+				}
+				$omeis_ids{$omeis_ids_key} = 1;
+			}
+		} # DELETED_PIXELS
+
+		%omeis_ids = ();
+		foreach my $file_spec (values %DELETED_ORIGINAL_FILES) {
+			# Get all the Files that have the same repository and image_server_id
+			my @db_files = $FACTORY->
+				findAttributes('OriginalFile',
+					{
+					FileID => $file_spec->{FileID},
+					Repository    => $file_spec->{RepositoryID},
+					});
+
+			$omeis_del = 1;
+			foreach my $db_file (@db_files) {
+				if (not exists $DELETED_ORIGINAL_FILES {$db_file->id()}) {
+					$omeis_del = 0;
+					last;
+				}
+			}
+
+			if ($omeis_del) {
+				my $omeis_ids_key = $file_spec->{RepositoryID}.':'.$file_spec->{FileID};
+				if (not exists $omeis_ids{$omeis_ids_key}) {
+					print "Deleting OMEIS File $omeis_ids_key\n";
+				}
+				$omeis_ids{$omeis_ids_key} = 1;
+			}
+		} # DELETED_ORIGINAL_FILES
+	} # Cleanup (RECURSION_LEVEL == 0)
+} # delete_mex()
 
 
 sub get_image_attributes () {
@@ -394,5 +444,62 @@ my @ref_attrs;
 
 	return \@ref_attrs;
 }
+
+# This deletes an attribute.
+# It collects any vMEXes, references, and any MEXes for the references,
+# And deletes all of those as well.
+# It maintains a list of deleted attributes that require special handling (things stored in omeis)
+sub delete_attribute {
+my $self = shift;
+my $attr = shift;
+# This is the context mex, which isn't necessarily the attribute's mex.
+my $mex = shift;
+my $delete = shift;
+
+	return unless $attr;
+	return if exists $DELETED_ATTRS{$attr->id()};
+			
+	my $recurs_indent='';
+	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
+
+	my $mex_id = $mex->id();
+
+	# This attribute may have virtual MEXes, so descend again
+	my $vMEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($attr);
+	foreach my $vMex (@$vMEXes) {
+		next unless $vMex;
+		$self->delete_mex ($vMex,$delete) unless $vMex->id() == $mex_id;
+	}
+	
+	# These attributes may be referred to by references.
+	my $refs = $self->get_references_to ($attr);
+	foreach my $ref_attr (@$refs) {
+		next if exists $DELETED_ATTRS{$ref_attr->id()};
+
+		my $ref_MEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($ref_attr);
+		foreach my $ref_MEX (@$ref_MEXes) {
+			next unless $ref_MEX;
+			$self->delete_mex ($ref_MEX,$delete) unless $ref_MEX->id() == $mex_id;
+		}
+		print $recurs_indent,"      Reference Attribute ",$ref_attr->id()," (",$ref_attr->semantic_type()->name(),")\n";
+		$ref_attr->deleteObject() if $delete;
+		$DELETED_ATTRS{$ref_attr->id()} = 1;
+	}
+	
+	if ($attr->semantic_type()->name() eq 'Pixels') {
+		$DELETED_PIXELS {$attr->id()}->{RepositoryID} = $attr->Repository()->id();
+		$DELETED_PIXELS {$attr->id()}->{ImageServerID} = $attr->ImageServerID();
+		$DELETED_PIXELS {$attr->id()}->{RefCount} = 1;
+	} elsif ($attr->semantic_type()->name() eq 'OriginalFile') {
+		$DELETED_ORIGINAL_FILES {$attr->id()}->{RepositoryID} = $attr->Repository()->id();
+		$DELETED_ORIGINAL_FILES {$attr->id()}->{FileID} = $attr->FileID();
+		$DELETED_ORIGINAL_FILES {$attr->id()}->{RefCount} = 1;
+	}
+
+	print $recurs_indent,"    Attribute = ",$attr->id(),"\n";
+	$DELETED_ATTRS{$attr->id()} = 1;
+	$attr->deleteObject() if $delete;
+}
+
 
 1;
