@@ -132,6 +132,9 @@ sub execute {
     # Confirm and/or update our user information
     $OME_USER = confirm_default ("The user which OME should be run under", $OME_USER);
 
+    # Make sure the rest of the installation knows what the user is 
+    $environment->user($OME_USER);
+
     print "\nBuilding the core system\n";
 
     #********
