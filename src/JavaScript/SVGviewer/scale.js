@@ -42,6 +42,12 @@ Scale.displayChannelBGs = {
 	Green: skinLibrary['greenGUIboxBG'],
 	Grey:  skinLibrary['greyGUIboxBG']
 };
+Scale.displayMenubars = { 
+	Red:   skinLibrary['redMenubar'],
+	Blue:  skinLibrary['blueMenubar'],
+	Green: skinLibrary['greenMenubar'],
+	Grey:  skinLibrary['greyMenubar']
+};
 Scale.CBWmap = { 
 	Red: 0,
 	Green: 3,
@@ -282,7 +288,7 @@ Scale.prototype.buildToolBox = function( ) {
 	var height = bbox.height + 2 * toolBox.prototype.padding;
 	this.toolBox = new toolBox(
 		255, 250, width, height, 
-		null,                                             // menu bar skin
+		Scale.displayMenubars[this.displayChannelLabel],  // menu bar skin
 		skinLibrary["XhideControl"],                      // hide control skin
 		Scale.displayChannelBGs[this.displayChannelLabel] // background skin
 	);
@@ -332,7 +338,7 @@ Scale.prototype.buildDisplay = function() {
 		blackSliderPosition
 	);
 	this.whiteSlider = new Slider( 
-		0, 60, Scale.scaleWidth, 0, 
+		0, 58, Scale.scaleWidth, 0, 
 		{ method: 'updateWhiteLevel', obj: this },
 		'<rect width="'+Scale.scaleWidth+'" height="10" opacity="0"/>',
 		'<rect x="-2" width="4" height="10" fill="white"/>',
@@ -391,7 +397,7 @@ Scale.prototype.buildDisplay = function() {
 			y: 10, 
 			'dominant-baseline': 'hanging',
 			fill: 'darkslategrey',
-			opacity: 0.5
+			opacity: 0.7
 		}) 
 	);
 	// stack label
@@ -401,7 +407,7 @@ Scale.prototype.buildDisplay = function() {
 			x: (Scale.scaleWidth/2), 
 			y: -2, 
 			fill: 'darkslategrey',
-			opacity: 0.5
+			opacity: 0.7
 		}) 
 	);
 	// stack min/max ticks & labels
@@ -440,7 +446,7 @@ Scale.prototype.buildDisplay = function() {
 	this.backgroundLayer.appendChild( this.blackBar );
 	this.whiteBar = createElementSVG( 'rect', {
 		x: whiteSliderPosition,
-		y: -10,
+		y: -12,
 		width: ( Scale.scaleWidth - whiteSliderPosition ),
 		height: 10,
 		fill: 'white',
