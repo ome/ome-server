@@ -57,6 +57,26 @@ RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
  *
  */
 
+// selectAllCheckboxes()
+function selectAllCheckboxes (select_name) {
+	for (i = 0; i < document.datatable.length; i++)
+	{
+		if (document.datatable.elements[i].type == "checkbox" &&
+		    document.datatable.elements[i].name == select_name)
+			document.datatable.elements[i].checked = true;
+	}
+}
+
+// deselectAllCheckboxes()
+function deselectAllCheckboxes (select_name) {
+	for (i = 0; i < document.datatable.length; i++)
+	{
+		if (document.datatable.elements[i].type == "checkbox" &&
+		    document.datatable.elements[i].name == select_name)
+			document.datatable.elements[i].checked = false;
+	}
+}
+
 // openRelationships()
 
 function openRelationships (o_type, r_type, oid) {
