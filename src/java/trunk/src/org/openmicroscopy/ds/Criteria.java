@@ -57,7 +57,7 @@ import java.util.HashMap;
 public class Criteria
 {
     private Map  criteria = new HashMap();
-    private List  orderBy = null;
+    private List  orderBy = new ArrayList();
     private int  limit = -1;
     private int  offset = -1;
     private Map  fieldsWanted = new HashMap();
