@@ -357,7 +357,8 @@ sub importGroup {
 	storeChannelInfo($self, $session);
 	return $image;
     } else {
-	return undef;
+	($self->{super})->__destroyRepositoryFile($pixels, $pix);
+	die $status;
     }
 
 }
@@ -476,7 +477,7 @@ sub readWritePixels {
 	for ($c = 0; $c < $maxC; $c++) {
 	    for ($z = 0; $z < $maxZ; $z++) {
 		my $offset = $start_offset + ($planes{$i}) * $plane_size;
-		$pix->convertPlane($fih,$offset,$z,$c,$t,$endian);
+		$pix->convertPlane($fih,$offset,$z,$c,$t,$endian == BIG_ENDIAN);
 		doSliceCallback($callback);
 	    }
 	}
