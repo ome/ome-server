@@ -461,7 +461,7 @@ sub Connect {
 	elsif ($self->inWebServer() and not $self->gotBrowser()) { $self->{remoteAddr} = $ENV{REMOTE_ADDR}; }
 	else { $self->{remoteAddr} = '127.0.0.1'; }
 
-#	DBI->trace(2);
+	DBI->trace(2);
 	if (not exists $self->{sessionKey} or not defined $self->{sessionKey}) {
 	print STDERR "Connect:  Getting new session\n";
 		$session = $self->Session();
@@ -1303,10 +1303,10 @@ sub WriteFeaturesOLD ()
 			$column = $$memberTypeData[1];
 			if (exists $tableNames{$table}) { $tableHash = $tableNames{$table}; }
 			else { $tableNames{$table} = {};  $tableHash = $tableNames{$table}; }
-			if (defined $$memberTypeData[3] and $$memberTypeData[3] eq 'ONE2MANY')
+			if (defined $$memberTypeData[2] and $$memberTypeData[2] eq 'ONE2MANY')
 			{
 			# Set the discriminator value.
-				push ( @{$$tableHash{$$memberTypeData[4]}},$$memberTypeData[5] );
+				push ( @{$$tableHash{$$memberTypeData[3]}},$$memberTypeData[4] );
 			}
 			push (@{$$tableHash{$column}},$feature->$dataMember());
 		}
@@ -1407,10 +1407,10 @@ sub WriteFeatures ()
 			}
 
 			$tableHash = $tableNames{$table};
-			if (defined $memberTypeData->[3] and $memberTypeData->[3] eq 'ONE2MANY')
+			if (defined $memberTypeData->[2] and $memberTypeData->[2] eq 'ONE2MANY')
 			{
-				$discColumn = $memberTypeData->[4];
-				$discValue = $memberTypeData->[5];
+				$discColumn = $memberTypeData->[3];
+				$discValue = $memberTypeData->[4];
 				if (not exists $tableHash->{subTables}) {$tableHash->{subTables} = {}};
 
 				if (not exists $tableHash->{subTables}->{$discValue}) {
