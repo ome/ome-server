@@ -24,19 +24,6 @@
  *------------------------------------------------------------------------------
  */
 
-/*
-Changes to this file
-Parse XML doc (first through tmp file. To improve, try mmap tricks & memory parsing. Stream parsing w/ callbacks is not available.)
-	Go to <Pixels>
-Change Pixels Repository File reading calls
-	insert BinData
-
-/* Calling code sets up Input and return headers before calling this code. * /
-# Perl calling code posts a multi-part form
-# does pipe redirection
-*/
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:	Josiah Johnston <siah@nih.gov>    
@@ -45,50 +32,23 @@ Change Pixels Repository File reading calls
  */
 
 /******************************************************************************
-*
-*	insertBinData.c
-*	
-*	Originally written: ~ May 18, 2003
-****
 
-	Intent: The intent of this program is to process an OME xml document,
-	replacing <External .../> elements with <BinData>...</BinData> elements.
+	xmlBinaryInsertion.c
 
+	Intent: Graze an OME document, inserting Binary Pixel Data under <Pixels>.
+
+	Maintence notes:
+	The interesting part of this code is three functions:
+		OME_StartElement, 
+		OME_Characters,
+		OME_EndElement
+	The parser moves sequentially through the document and calls these
+	functions when it hits the beginning of an element, characters
+	inside an element, and the end of an element. Sensitivity to certain
+	elements and their relative positions is encoded here.
+		
 	Libraries: This program uses libxml2's SAX library. SAX is a stream based
 	xml parser, so memory usage does not inflate when file size inflates. 
-
-	Behavior: The modified xml document will be spewed to stdout. <External>s 
-	to be replaced are flagged by an empty SHA1 attribute. To target an
-	<External> under <Pixels>, place exactly ONE <External> inside <Pixels>.
-	This <External> will be replaced with <BinData>s, one per plane.
-	So, 
-		<Pixels...>...
-			<External xmlns="BinNS" href="/path/to/repository/file" SHA1=""/>
-		</Pixels>
-	becomes
-		<Pixels...>...
-			<BinData xmlns="BinNS" ...>...</BinData>
-			<BinData xmlns="BinNS" ...>...</BinData>
-			<BinData xmlns="BinNS" ...>...</BinData>
-			...
-		</Pixels>
-	If the Compression attribute is specified in <External>, then that 
-	Compression will be used by the <BinData>(s) that replaces it. If 
-	Compression is not specified, the default behavior is to use no 
-	compression.
-	The namespace, "BinNS" is a #defined constant. Look in the define 
-	section below to see what it will evaluate to.
-	The <BinData>s that are implanted will be converted (if necessary) to the
-	endian specified in <Pixels>. 
-
-	Compilation notes: Use the xml2-config utility to find the location of the
-	libxml2 libraries. The flags --libs and --cflags cause xml2-config to 
-	produce the proper flags to pass to the compiler. The one line compilation
-	command is:
-
-		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 \
-		-ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c \
-		b64z_lib.c -o insertBinData
 
 *
 ******************************************************************************/
@@ -114,16 +74,14 @@ Change Pixels Repository File reading calls
 *	Data structures & Constants
 *
 *****************************************************************************/
-#define ExternalLocal "External"
 #define PixelLocal "Pixels"
-#define CompressionAttr "Compression"
 #define BinNS "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 #define SIZEOF_BUFS 1048576
 
-/* This is a stack to store information about an XML element. It keeps track of
+/* This is a stack to store information about each XML element. It keeps track of
 / whether an element has content or is empty AND
 / whether the opening tag of the element is open (e.g. "<foo" is open, 
-/ "<foo>" and "<foo/>" are not). It is used for every element except BinData.
+/ "<foo>" and "<foo/>" are not).
 */
 typedef struct _elementInfo {
 	int hasContent;
