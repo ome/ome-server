@@ -248,6 +248,15 @@ toolBox.prototype.getMenuBar = function() {
 	return this.nodes.menuBar;
 }
 
+/*****
+*
+*	getScale
+*
+*****/
+toolBox.prototype.getScale = function() {
+	return this.scale;
+}
+
 /****************   Set functions   **********************/
 
 /*****
