@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Fri Feb 20 11:14:34 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,6 +52,9 @@ public class PixelsDTO
 {
     public PixelsDTO() { super(); }
     public PixelsDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Pixels"; }
+    public Class getDTOType() { return Pixels.class; }
 
     public Integer getSizeX()
     { return getIntegerElement("SizeX"); }

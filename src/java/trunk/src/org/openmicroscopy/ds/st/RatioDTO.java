@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class RatioDTO
 {
     public RatioDTO() { super(); }
     public RatioDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Ratio"; }
+    public Class getDTOType() { return Ratio.class; }
 
     public Float getRatio()
     { return getFloatElement("Ratio"); }

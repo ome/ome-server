@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -74,22 +74,22 @@ public interface Experimenter
 
     /** Criteria field name: <code>Experiments</code> */
     public List getExperiments();
-    /** Criteria field name: <code>#Experiments</code> */
+    /** Criteria field name: <code>#Experiments</code> or <code>Experiments</code> */
     public int countExperiments();
 
     /** Criteria field name: <code>ExperimenterGroups</code> */
     public List getExperimenterGroups();
-    /** Criteria field name: <code>#ExperimenterGroups</code> */
+    /** Criteria field name: <code>#ExperimenterGroups</code> or <code>ExperimenterGroups</code> */
     public int countExperimenterGroups();
 
     /** Criteria field name: <code>GroupsByContact</code> */
     public List getGroupsByContact();
-    /** Criteria field name: <code>#GroupsByContact</code> */
+    /** Criteria field name: <code>#GroupsByContact</code> or <code>GroupsByContact</code> */
     public int countGroupsByContact();
 
     /** Criteria field name: <code>GroupsByLeader</code> */
     public List getGroupsByLeader();
-    /** Criteria field name: <code>#GroupsByLeader</code> */
+    /** Criteria field name: <code>#GroupsByLeader</code> or <code>GroupsByLeader</code> */
     public int countGroupsByLeader();
 
 }

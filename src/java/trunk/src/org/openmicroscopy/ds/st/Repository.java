@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,27 +64,27 @@ public interface Repository
 
     /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> */
+    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
     public int countOTFs();
 
     /** Criteria field name: <code>OriginalFiles</code> */
     public List getOriginalFiles();
-    /** Criteria field name: <code>#OriginalFiles</code> */
+    /** Criteria field name: <code>#OriginalFiles</code> or <code>OriginalFiles</code> */
     public int countOriginalFiles();
 
     /** Criteria field name: <code>Pixelses</code> */
     public List getPixelses();
-    /** Criteria field name: <code>#Pixelses</code> */
+    /** Criteria field name: <code>#Pixelses</code> or <code>Pixelses</code> */
     public int countPixelses();
 
     /** Criteria field name: <code>PixelsPlanes</code> */
     public List getPixelsPlanes();
-    /** Criteria field name: <code>#PixelsPlanes</code> */
+    /** Criteria field name: <code>#PixelsPlanes</code> or <code>PixelsPlanes</code> */
     public int countPixelsPlanes();
 
     /** Criteria field name: <code>Thumbnails</code> */
     public List getThumbnails();
-    /** Criteria field name: <code>#Thumbnails</code> */
+    /** Criteria field name: <code>#Thumbnails</code> or <code>Thumbnails</code> */
     public int countThumbnails();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class PlaneMinimumDTO
 {
     public PlaneMinimumDTO() { super(); }
     public PlaneMinimumDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@PlaneMinimum"; }
+    public Class getDTOType() { return PlaneMinimum.class; }
 
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }

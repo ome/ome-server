@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -68,32 +68,32 @@ public interface LightSource
 
     /** Criteria field name: <code>Arcs</code> */
     public List getArcs();
-    /** Criteria field name: <code>#Arcs</code> */
+    /** Criteria field name: <code>#Arcs</code> or <code>Arcs</code> */
     public int countArcs();
 
     /** Criteria field name: <code>Filaments</code> */
     public List getFilaments();
-    /** Criteria field name: <code>#Filaments</code> */
+    /** Criteria field name: <code>#Filaments</code> or <code>Filaments</code> */
     public int countFilaments();
 
     /** Criteria field name: <code>LasersByLightSource</code> */
     public List getLasersByLightSource();
-    /** Criteria field name: <code>#LasersByLightSource</code> */
+    /** Criteria field name: <code>#LasersByLightSource</code> or <code>LasersByLightSource</code> */
     public int countLasersByLightSource();
 
     /** Criteria field name: <code>LasersByPump</code> */
     public List getLasersByPump();
-    /** Criteria field name: <code>#LasersByPump</code> */
+    /** Criteria field name: <code>#LasersByPump</code> or <code>LasersByPump</code> */
     public int countLasersByPump();
 
     /** Criteria field name: <code>LogicalChannelsByAuxLightSource</code> */
     public List getLogicalChannelsByAuxLightSource();
-    /** Criteria field name: <code>#LogicalChannelsByAuxLightSource</code> */
+    /** Criteria field name: <code>#LogicalChannelsByAuxLightSource</code> or <code>LogicalChannelsByAuxLightSource</code> */
     public int countLogicalChannelsByAuxLightSource();
 
     /** Criteria field name: <code>LogicalChannelsByLightSource</code> */
     public List getLogicalChannelsByLightSource();
-    /** Criteria field name: <code>#LogicalChannelsByLightSource</code> */
+    /** Criteria field name: <code>#LogicalChannelsByLightSource</code> or <code>LogicalChannelsByLightSource</code> */
     public int countLogicalChannelsByLightSource();
 
 }

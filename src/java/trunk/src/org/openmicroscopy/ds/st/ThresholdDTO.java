@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class ThresholdDTO
 {
     public ThresholdDTO() { super(); }
     public ThresholdDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Threshold"; }
+    public Class getDTOType() { return Threshold.class; }
 
     public Integer getThreshold()
     { return getIntegerElement("Threshold"); }

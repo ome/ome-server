@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,6 +53,9 @@ public class LogicalChannelDTO
 {
     public LogicalChannelDTO() { super(); }
     public LogicalChannelDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@LogicalChannel"; }
+    public Class getDTOType() { return LogicalChannel.class; }
 
     public String getName()
     { return getStringElement("Name"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -58,32 +58,32 @@ public interface Filter
 
     /** Criteria field name: <code>Dichroics</code> */
     public List getDichroics();
-    /** Criteria field name: <code>#Dichroics</code> */
+    /** Criteria field name: <code>#Dichroics</code> or <code>Dichroics</code> */
     public int countDichroics();
 
     /** Criteria field name: <code>EmissionFilters</code> */
     public List getEmissionFilters();
-    /** Criteria field name: <code>#EmissionFilters</code> */
+    /** Criteria field name: <code>#EmissionFilters</code> or <code>EmissionFilters</code> */
     public int countEmissionFilters();
 
     /** Criteria field name: <code>ExcitationFilters</code> */
     public List getExcitationFilters();
-    /** Criteria field name: <code>#ExcitationFilters</code> */
+    /** Criteria field name: <code>#ExcitationFilters</code> or <code>ExcitationFilters</code> */
     public int countExcitationFilters();
 
     /** Criteria field name: <code>FilterSets</code> */
     public List getFilterSets();
-    /** Criteria field name: <code>#FilterSets</code> */
+    /** Criteria field name: <code>#FilterSets</code> or <code>FilterSets</code> */
     public int countFilterSets();
 
     /** Criteria field name: <code>LogicalChannels</code> */
     public List getLogicalChannels();
-    /** Criteria field name: <code>#LogicalChannels</code> */
+    /** Criteria field name: <code>#LogicalChannels</code> or <code>LogicalChannels</code> */
     public int countLogicalChannels();
 
     /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> */
+    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
     public int countOTFs();
 
 }

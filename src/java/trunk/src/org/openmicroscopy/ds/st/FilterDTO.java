@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,6 +55,9 @@ public class FilterDTO
 {
     public FilterDTO() { super(); }
     public FilterDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Filter"; }
+    public Class getDTOType() { return Filter.class; }
 
     public Instrument getInstrument()
     { return (Instrument) getObjectElement("Instrument"); }

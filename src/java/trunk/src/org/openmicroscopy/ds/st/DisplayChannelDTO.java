@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,6 +49,9 @@ public class DisplayChannelDTO
 {
     public DisplayChannelDTO() { super(); }
     public DisplayChannelDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@DisplayChannel"; }
+    public Class getDTOType() { return DisplayChannel.class; }
 
     public Integer getChannelNumber()
     { return getIntegerElement("ChannelNumber"); }

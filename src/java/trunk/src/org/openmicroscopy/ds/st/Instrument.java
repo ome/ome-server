@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -69,32 +69,32 @@ public interface Instrument
 
     /** Criteria field name: <code>Detectors</code> */
     public List getDetectors();
-    /** Criteria field name: <code>#Detectors</code> */
+    /** Criteria field name: <code>#Detectors</code> or <code>Detectors</code> */
     public int countDetectors();
 
     /** Criteria field name: <code>Filters</code> */
     public List getFilters();
-    /** Criteria field name: <code>#Filters</code> */
+    /** Criteria field name: <code>#Filters</code> or <code>Filters</code> */
     public int countFilters();
 
     /** Criteria field name: <code>ImageInstruments</code> */
     public List getImageInstruments();
-    /** Criteria field name: <code>#ImageInstruments</code> */
+    /** Criteria field name: <code>#ImageInstruments</code> or <code>ImageInstruments</code> */
     public int countImageInstruments();
 
     /** Criteria field name: <code>LightSources</code> */
     public List getLightSources();
-    /** Criteria field name: <code>#LightSources</code> */
+    /** Criteria field name: <code>#LightSources</code> or <code>LightSources</code> */
     public int countLightSources();
 
     /** Criteria field name: <code>OTFs</code> */
     public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> */
+    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
     public int countOTFs();
 
     /** Criteria field name: <code>Objectives</code> */
     public List getObjectives();
-    /** Criteria field name: <code>#Objectives</code> */
+    /** Criteria field name: <code>#Objectives</code> or <code>Objectives</code> */
     public int countObjectives();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -62,17 +62,17 @@ public interface Group
 
     /** Criteria field name: <code>Experimenters</code> */
     public List getExperimenters();
-    /** Criteria field name: <code>#Experimenters</code> */
+    /** Criteria field name: <code>#Experimenters</code> or <code>Experimenters</code> */
     public int countExperimenters();
 
     /** Criteria field name: <code>ExperimenterGroups</code> */
     public List getExperimenterGroups();
-    /** Criteria field name: <code>#ExperimenterGroups</code> */
+    /** Criteria field name: <code>#ExperimenterGroups</code> or <code>ExperimenterGroups</code> */
     public int countExperimenterGroups();
 
     /** Criteria field name: <code>ImageGroups</code> */
     public List getImageGroups();
-    /** Criteria field name: <code>#ImageGroups</code> */
+    /** Criteria field name: <code>#ImageGroups</code> or <code>ImageGroups</code> */
     public int countImageGroups();
 
 }

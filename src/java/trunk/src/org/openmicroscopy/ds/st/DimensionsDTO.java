@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class DimensionsDTO
 {
     public DimensionsDTO() { super(); }
     public DimensionsDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Dimensions"; }
+    public Class getDTOType() { return Dimensions.class; }
 
     public Float getPixelSizeX()
     { return getFloatElement("PixelSizeX"); }

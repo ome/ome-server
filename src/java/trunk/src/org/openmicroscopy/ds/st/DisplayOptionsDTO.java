@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,6 +51,9 @@ public class DisplayOptionsDTO
 {
     public DisplayOptionsDTO() { super(); }
     public DisplayOptionsDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@DisplayOptions"; }
+    public Class getDTOType() { return DisplayOptions.class; }
 
     public Pixels getPixels()
     { return (Pixels) getObjectElement("Pixels"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -144,7 +144,7 @@ public interface LogicalChannel
 
     /** Criteria field name: <code>PixelChannelComponents</code> */
     public List getPixelChannelComponents();
-    /** Criteria field name: <code>#PixelChannelComponents</code> */
+    /** Criteria field name: <code>#PixelChannelComponents</code> or <code>PixelChannelComponents</code> */
     public int countPixelChannelComponents();
 
 }

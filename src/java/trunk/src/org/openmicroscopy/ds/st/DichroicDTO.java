@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,6 +49,9 @@ public class DichroicDTO
 {
     public DichroicDTO() { super(); }
     public DichroicDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Dichroic"; }
+    public Class getDTOType() { return Dichroic.class; }
 
     public String getManufacturer()
     { return getStringElement("Manufacturer"); }

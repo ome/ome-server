@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,6 +51,9 @@ public class ExperimenterDTO
 {
     public ExperimenterDTO() { super(); }
     public ExperimenterDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@Experimenter"; }
+    public Class getDTOType() { return Experimenter.class; }
 
     public String getFirstName()
     { return getStringElement("FirstName"); }

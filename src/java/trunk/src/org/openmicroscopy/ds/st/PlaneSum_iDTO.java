@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class PlaneSum_iDTO
 {
     public PlaneSum_iDTO() { super(); }
     public PlaneSum_iDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@PlaneSum_i"; }
+    public Class getDTOType() { return PlaneSum_i.class; }
 
     public Integer getTheZ()
     { return getIntegerElement("TheZ"); }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -88,7 +88,7 @@ public interface OTF
 
     /** Criteria field name: <code>LogicalChannels</code> */
     public List getLogicalChannels();
-    /** Criteria field name: <code>#LogicalChannels</code> */
+    /** Criteria field name: <code>#LogicalChannels</code> or <code>LogicalChannels</code> */
     public int countLogicalChannels();
 
 }

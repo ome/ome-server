@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,6 +48,9 @@ public class ImagingEnvironmentDTO
 {
     public ImagingEnvironmentDTO() { super(); }
     public ImagingEnvironmentDTO(Map elements) { super(elements); }
+
+    public String getDTOTypeName() { return "@ImagingEnvironment"; }
+    public Class getDTOType() { return ImagingEnvironment.class; }
 
     public Float getTemperature()
     { return getFloatElement("Temperature"); }

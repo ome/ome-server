@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Wed Feb 18 17:57:29 2004
+ * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -64,22 +64,22 @@ public interface DisplayChannel
 
     /** Criteria field name: <code>DisplayOptionsesByBlueChannel</code> */
     public List getDisplayOptionsesByBlueChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByBlueChannel</code> */
+    /** Criteria field name: <code>#DisplayOptionsesByBlueChannel</code> or <code>DisplayOptionsesByBlueChannel</code> */
     public int countDisplayOptionsesByBlueChannel();
 
     /** Criteria field name: <code>DisplayOptionsesByGreenChannel</code> */
     public List getDisplayOptionsesByGreenChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByGreenChannel</code> */
+    /** Criteria field name: <code>#DisplayOptionsesByGreenChannel</code> or <code>DisplayOptionsesByGreenChannel</code> */
     public int countDisplayOptionsesByGreenChannel();
 
     /** Criteria field name: <code>DisplayOptionsesByGreyChannel</code> */
     public List getDisplayOptionsesByGreyChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByGreyChannel</code> */
+    /** Criteria field name: <code>#DisplayOptionsesByGreyChannel</code> or <code>DisplayOptionsesByGreyChannel</code> */
     public int countDisplayOptionsesByGreyChannel();
 
     /** Criteria field name: <code>DisplayOptionsesByRedChannel</code> */
     public List getDisplayOptionsesByRedChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByRedChannel</code> */
+    /** Criteria field name: <code>#DisplayOptionsesByRedChannel</code> or <code>DisplayOptionsesByRedChannel</code> */
     public int countDisplayOptionsesByRedChannel();
 
 }
