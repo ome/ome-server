@@ -311,17 +311,6 @@ sub GetPixels {
         || die ref($self)."->GetPixels:  Could not read pixels\n";
 }
 
-# gets the pixels as an multi-dimensional array of ints
-# WARNING: USES DEPRICATED LOGIC!
-sub GetPixelArray {
-    my ($self,$x1,$x2,$y1,$y2,$z1,$z2,$w1,$w2,$t1,$t2) = @_;
-    my $pixels = $self->GetPixels($x1,$x2,$y1,$y2,$z1,$z2,$w1,$w2,$t1,$t2);
-
-    my @result = unpack("S*",$pixels);
-
-    return \@result;
-}
-
 
 =head1 AUTHOR
 
