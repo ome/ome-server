@@ -516,6 +516,22 @@ sub update_configuration {
     return 1;
 }
 
+sub make_repository {
+	my $session = shift;
+	my $factory = $session->Factory();
+	print "  \\__ Creating repository object\n";
+    my $repository = $factory->
+	newObject('OME::SemanticType::BootstrapRepository',
+	        {
+	         ImageServerURL => 'http://localhost/cgi-bin/omeis',
+	         IsLocal        => 0,
+	        });
+	$repository->storeObject;
+
+    $session->commitTransaction();
+	return $repository;
+}
+
 sub load_xml_core {
     my ($session, $logfile) = @_;
     my @core_xml;
@@ -592,17 +608,6 @@ sub commit_experimenter {
     $experimenter->Group($group->id());
 
     $experimenter->storeObject();
-
-	print "  \\__ Creating repository object\n";
-    my $repository = $factory->newAttribute("Repository",undef,undef,
-    # FIXME: Yes there's a trailing slash, yes it needs to be there and no
-    # I don't know why the importer doesn't detect its existance or abscence.
-               {
-                Path => $OME_BASE_DIR."/repository/",
-                IsLocal => 1
-               });
-
-	$repository->storeObject;
 
     $session->commitTransaction();
 
@@ -771,6 +776,7 @@ sub execute {
         $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
         print_header "Finalizing Database";
+        make_repository( $session );
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         commit_experimenter ($session) or croak "Unable to load commit experimenter.";
         load_analysis_core ($session, $LOGFILE)
