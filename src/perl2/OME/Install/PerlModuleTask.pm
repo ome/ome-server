@@ -168,7 +168,7 @@ my @modules = (
 	repository_file => "$REPOSITORY/Test-Simple-0.47.tar.gz"
     },{
 	name => 'HTML::Template',
-	repository_file => "$REPOSITORY/ HTML-Template-2.6.tar.gz"
+	repository_file => "$REPOSITORY/HTML-Template-2.6.tar.gz"
     },{
 	name => 'IPC::Run',
 	repository_file => "$REPOSITORY/IPC-Run-0.75.tar.gz"
