@@ -77,7 +77,7 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
 	
-	$self->{ _default_Length } = 10;
+	$self->{ _default_Length } = 25;
 	
 	return $self;
 }
@@ -189,7 +189,6 @@ sub getTable {
 	my $q       = $self->CGI();
 	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @_ );
-	my $display_type = $self->{display_type};
 	my $form_name    = $self->{form_name};
 	my $pagingText   = $self->{pagingText};
 
@@ -280,7 +279,6 @@ sub getTable {
 				# table descriptor
 				$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						$display_type, 
 						$q->a( { -href => 
 							$self->pageURL('OME::Web::DBObjTable', { 
 								%{ $self->{__params} },
@@ -566,7 +564,6 @@ sub getList {
 	my $q       = $self->CGI();
 	my ( $objects, $options, $title, $formal_name ) =
 		$self->__parseParams( @_ );
-	my $display_type = $self->{display_type};
 	my $form_name    = $self->{form_name};
 	my $pagingText   = $self->{pagingText};
 	
@@ -588,7 +585,6 @@ sub getList {
 				# table descriptor
 				$q->td( { -class => 'ome_td', -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						$display_type, 
 						( $allowPaging ? '<nobr>'.$pagingText.'</nobr>' : ()),
 						$q->a( { href => $self->pageURL( "OME::Web::DBObjTable", $self->{__params} ) }, "More details" )
 					) ) )
@@ -826,13 +822,10 @@ sub __parseParams {
 	
 	# make form name, title, display type
 	my $form_name   = ( $options->{ embedded_in_form } or $common_name."_TABLE" );
-	my $title       = ( $options->{ title } or $common_name );
-	my $display_type  =
-		"Displaying ".
+	my $title       = ( $options->{ title } or $common_name ).
 		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name ) :
-			$common_name
+			' '.$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },'?') 
+			: ''			
 		);
 	
 	# paging
@@ -881,7 +874,6 @@ sub __parseParams {
 	$self->{pagingText}   = $pagingText;
 	$self->{form_name}    = $form_name;
 	$self->{title}        = $title;
-	$self->{display_type} = $display_type;
 	$self->{common_name}  = $common_name;
 	$self->{formal_name}  = $formal_name;
 	$self->{ST}           = $ST;
