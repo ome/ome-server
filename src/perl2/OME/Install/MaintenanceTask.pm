@@ -295,7 +295,7 @@ BLURB
 	
 			print BOLD,"Maintenance tasks:\n",RESET;
 			print "     Install the OME admin utility?: ", BOLD, $MAINT_CONF->{omeadmin} ? 'yes':'no', RESET, "\n";
-			print "                Install omeadmin to: ", BOLD, "[", $MAINT_CONF->{omeadmin_path},"]", RESET, "\n" if $MAINT_CONF->{omeadmin};
+			print "                     Install ome to: ", BOLD, "[", $MAINT_CONF->{omeadmin_path},"]", RESET, "\n" if $MAINT_CONF->{omeadmin};
 			print "Install periodic maintenance tasks?: ", BOLD, $MAINT_CONF->{do_it}     ? 'yes':'no', RESET, "\n";
 			print "           Database vacuum/analyze?: ", $MAINT_CONF->{t_vacuum}  ? "Daily at ".BOLD.$MAINT_CONF->{t_vacuum}.RESET  :BOLD.'no'.RESET,"\n";
 			print "              Compress OMEIS Files?: ", ($MAINT_CONF->{file_comp} and $MAINT_CONF->{t_compress}) ? "Daily at ".BOLD.$MAINT_CONF->{t_compress}.RESET:BOLD.'no'.RESET,"\n";
@@ -313,7 +313,7 @@ BLURB
 		}
 
 		$confirm_all = 0;
-		if (y_or_n ('Install the OME admin utility (omeadmin)?','y') ){
+		if (y_or_n ('Install the OME admin utility (ome)?','y') ){
 			$MAINT_CONF->{omeadmin} = 1;
 			$MAINT_CONF->{omeadmin_path} = confirm_default("Install omeadmin to","/usr/local/bin");
 		} else {
@@ -405,26 +405,26 @@ BLURB
 	fix_cron_scripts();
 
 	#
-	# Install omeadmin to /OME/bin and /usr/local/bin if appropriate.
+	# Install ome (command-line program) to /OME/bin and /usr/local/bin if appropriate.
 	#
-	copy(getcwd()."/src/util/omeadmin", "$OME_BASE_DIR/bin/omeadmin") or
-		print $LOGFILE "Could not copy src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin: $!\n" and
-		croak "Could not copy src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin: $!";
-	print $LOGFILE "copied src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin\n";
-	chmod(0755,"$OME_BASE_DIR/bin/omeadmin") or
-		print $LOGFILE "Could not chmod $OME_BASE_DIR/bin/omeadmin: $!\n" and
-		croak "Could not chmod $OME_BASE_DIR/bin/omeadmin: $!";
-	print $LOGFILE "chmod 0755 $OME_BASE_DIR/bin/omeadmin\n";
+	copy(getcwd()."/src/util/ome", "$OME_BASE_DIR/bin/ome") or
+		print $LOGFILE "Could not copy src/util/ome to $OME_BASE_DIR/bin/ome: $!\n" and
+		croak "Could not copy src/util/ome to $OME_BASE_DIR/bin/ome: $!";
+	print $LOGFILE "copied src/util/ome to $OME_BASE_DIR/bin/ome\n";
+	chmod(0755,"$OME_BASE_DIR/bin/ome") or
+		print $LOGFILE "Could not chmod $OME_BASE_DIR/bin/ome: $!\n" and
+		croak "Could not chmod $OME_BASE_DIR/bin/ome: $!";
+	print $LOGFILE "chmod 0755 $OME_BASE_DIR/bin/ome\n";
 
 	if ($MAINT_CONF->{omeadmin} == 1) {
-		copy(getcwd()."/src/util/omeadmin", "$MAINT_CONF->{omeadmin_path}/omeadmin") or
-			print $LOGFILE "Could not copy src/util/omeadmin to $MAINT_CONF->{omeadmin_path}/omeadmin: $!\n" and
-			croak "Could not copy src/util/omeadmin to $MAINT_CONF->{omeadmin_path}/omeadmin: $!";
-		print $LOGFILE "copied src/util/omeadmin to $MAINT_CONF->{omeadmin_path}/omeadmin\n";
-		chmod(0755,"$MAINT_CONF->{omeadmin_path}/omeadmin") or
-			print $LOGFILE "Could not chmod $MAINT_CONF->{omeadmin_path}/omeadmin: $!\n" and
-			croak "Could not chmod $MAINT_CONF->{omeadmin_path}/omeadmin: $!";
-		print $LOGFILE "chmod 0755 $MAINT_CONF->{omeadmin_path}/omeadmin\n";
+		copy(getcwd()."/src/util/ome", "$MAINT_CONF->{omeadmin_path}/ome") or
+			print $LOGFILE "Could not copy src/util/ome to $MAINT_CONF->{omeadmin_path}/ome: $!\n" and
+			croak "Could not copy src/util/ome to $MAINT_CONF->{ome_path}/ome: $!";
+		print $LOGFILE "copied src/util/ome to $MAINT_CONF->{omeadmin_path}/ome\n";
+		chmod(0755,"$MAINT_CONF->{omeadmin_path}/ome") or
+			print $LOGFILE "Could not chmod $MAINT_CONF->{omeadmin_path}/ome: $!\n" and
+			croak "Could not chmod $MAINT_CONF->{omeadmin_path}/ome: $!";
+		print $LOGFILE "chmod 0755 $MAINT_CONF->{omeadmin_path}/ome\n";
 	}
 	
 	# Return unless we're actually going to do something.
