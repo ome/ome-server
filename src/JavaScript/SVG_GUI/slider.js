@@ -75,7 +75,7 @@ Slider.prototype.init = function(x, y, size, direction, callback, bodyText, thum
 	// record initialization params...
 	this.size      = size;
 	this.direction = direction;
-	if( !callback || isFunction(callback) ) {
+	if( !callback || Util.isFunction(callback) ) {
 		this.callback = callback;
 	} else {
 		this.callback = callback['method'];
