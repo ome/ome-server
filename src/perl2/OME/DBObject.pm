@@ -168,12 +168,12 @@ sub retrieve {
         if (exists $cache->{$class}->{$id}) {
             # Found it
 
-            logdbg "debug", "Retrieving from cache $class.$id";
+            #logdbg "debug", "Retrieving from cache $class.$id";
             return $cache->{$class}->{$id};
         }
 
         # Object not found, so delegate
-        logdbg "debug", "Loading object $class.$id";
+        #logdbg "debug", "Loading object $class.$id";
         my $object = $class->SUPER::retrieve($id);
 
         # Storing the object here turns out to be unnecessary, as
@@ -202,12 +202,12 @@ sub construct {
         if (exists $cache->{$class}->{$id}) {
             # Found it
 
-            logdbg "debug", "Retrieving from cache $class.$id\n";
+            #logdbg "debug", "Retrieving from cache $class.$id\n";
             return $cache->{$class}->{$id};
         }
 
         # Object not found, so delegate
-        logdbg "debug", "Creating object $class.$id\n";
+        #logdbg "debug", "Creating object $class.$id\n";
         my $object = $proto->SUPER::construct($data);
 
         # Store the object in the cache
