@@ -72,7 +72,7 @@ popupList.prototype.fadeOutText =
 *****/
 function popupList(x, y, itemList, callback, selection, anchorText, 
 	itemBackgroundText, itemHighlightText) {
-	if(arguments.length >= 4)
+	if(arguments.length >= 3)
 		this.init(x, y, itemList, callback, selection, anchorText,
 			itemBackgroundText, itemHighlightText);
 }
@@ -95,6 +95,28 @@ popupList.prototype.setSelection = function(i) {
 	this.update();
 	if( this.callback )
 		this.callback( this.getSelection() );
+}
+
+/*****
+*
+*	setSelectionByValue(val)
+*
+*****/
+popupList.prototype.setSelectionByValue = function(val) {
+	// search through itemList for val
+	for(var i in this.itemList)
+		if(this.itemList[i] == val) {
+			// found it. now find corrosponding selection.
+			for(var j in this.listIndex)
+				if(this.listIndex[j] == i)
+					break;
+			this.setSelection(j);		
+			break;
+		}
+	if(this.itemList[i] == val)
+		return true;
+	else
+		return false;
 }
 
 /*****
@@ -214,8 +236,10 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 		this.anchorText = anchorText;
 	if(itemBackgroundText != null)
 		this.itemBackgroundText = itemBackgroundText;
+
 	if(itemHighlightText != null)
 		this.itemHighlightText = itemHighlightText;
+		
 }
 
 
@@ -227,7 +251,7 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 popupList.prototype.buildSVG = function() {
 	// set up translation for root node
 	var transform = "translate(" + this.x + "," + this.y  + ")";
-	
+
 	// create root node
 	root = svgDocument.createElementNS(svgns, "g");
 	root.setAttributeNS(null, "transform", transform);
