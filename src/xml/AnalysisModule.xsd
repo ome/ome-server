@@ -5,8 +5,8 @@
 	<xsd:group name = "inputRecordModel">
 		<xsd:choice>
 			<xsd:element ref = "Input" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "PlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "PlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "XYPlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "XYPlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFile" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeT" minOccurs = "0" maxOccurs = "unbounded"/>
@@ -20,8 +20,8 @@
 	<xsd:group name = "outputRecordModel">
 		<xsd:choice>
 			<xsd:element ref = "Output" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "PlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "PlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "XYPlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "XYPlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFile" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "RawImageFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeT" minOccurs = "0" maxOccurs = "unbounded"/>
@@ -34,7 +34,7 @@
 	</xsd:group>
 	<xsd:element name = "Declaration">
 		<xsd:annotation>
-			<xsd:documentation>States module requirements. This includes inputs, outputs, and 2D planes (i.e. TIFF images).
+			<xsd:documentation>States module requirements.
 Formal Inputs are optional because input requirements may be specified by guaranteed image attributes. For example, OME_Image_XYZ_stats requires a path to the OME repository file, and Dimensions.
 These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &lt;sizeT>, and &lt;sizeW>.
 			
@@ -44,13 +44,12 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 			<xsd:sequence>
 				<xsd:element ref = "FormalInput" minOccurs = "0" maxOccurs = "unbounded"/>
 				<xsd:element ref = "FormalOutput" maxOccurs = "unbounded"/>
-				<xsd:element ref = "XYPlane" minOccurs = "0" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "FormalInput" abstract = "true">
 		<xsd:annotation>
-			<xsd:documentation>Specifies an input requirement for a module. Image dimensions and image file locations (repository or other format) should not be specified with this. Image dimensions are intrisic to an image. They do not represent a special requirement. Image file locations and contents are specified by other elements. Specifically, RawImageFile, RawImageFilePath, PlaneFile, and PlaneFilePath.
+			<xsd:documentation>Specifies an input requirement for a module. Image dimensions and image file locations (repository or other format) should not be specified with this. Image dimensions are intrisic to an image. They do not represent a special requirement. Image file locations and contents are specified by other elements. Specifically, RawImageFile, RawImageFilePath, XYPlaneFile, and XYPlaneFilePath.
 
 			
 			</xsd:documentation>
@@ -72,12 +71,9 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 			</xsd:attribute>
 			<xsd:attribute name = "UserDefined" default = "F" type = "xsd:boolean">
 				<xsd:annotation>
-					<xsd:documentation>This offers recommendation only. It may be overridden in an execution plan. But it is noticed and referenced. Proper attention is paid to it. Don't leave it out.
+					<xsd:documentation>OME interprets this as a recommendation rather than a requirement.
 
 Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -105,7 +101,7 @@ If it is necessary to generate a table and/or column in the Database, it will be
 	</xsd:element>
 	<xsd:element name = "FormalOutput">
 		<xsd:annotation>
-			<xsd:documentation>Specifies an output of a module.</xsd:documentation>
+			<xsd:documentation>Specifies an output element of a module.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
@@ -184,7 +180,10 @@ Tied to DB. Table DATATYPES Column ATTRIBUTE_TYPE
 			</xsd:attribute>
 			<xsd:attribute name = "ColumnName">
 				<xsd:annotation>
-					<xsd:documentation>Tied to DB. Table DATATYPE_COLUMNS Column COLUMN_NAME</xsd:documentation>
+					<xsd:documentation>If specified, the datatype will map to a specific column in a table (i.e. a cell). If not specified, the datatype will map across all columns of a table (i.e. a row).
+
+Tied to DB. Table DATATYPE_COLUMNS Column COLUMN_NAME
+					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:string">
@@ -264,22 +263,38 @@ Tied to DB. Table DATATYPE_COLUMNS Column REFERENCE_TYPE
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "AnalysisModuleProgram">
+	<xsd:element name = "AnalysisModuleLibrary">
 		<xsd:annotation>
 			<xsd:documentation>An analysis module is defined by two things: 
-1) A program or script &lt;Program>
-2) An interface &lt;Interface>
-A single program may have multiple interfaces. Each interface describes one behavior of a program.
-For example, the correlation program can optionally use an image mask. It would have two interfaces, one using the mask, the other not. Different input requirements would be specified for each.
-To deal with this, module information (name, description, etc.) is specified in interface.
-In technical terms, there is a one to one corrospondence between an Interface and an AnalysisModule. That is the only one to one corrospondence AnalysisModule has. So information goes there.
-			
+1) A program
+2) An interface
+A single program may have multiple interfaces. Why do you need multiple interfaces?
+Pretend you have a program that calculates simple statistics on the pixels of an image. You can specify which statistics you want via parameters.
+
+Typing
+./stats -mean -sigma image1
+
+will ouput
+Image | mean | sigma
+image1 12.4 1
+
+Typing
+./stats -geomean -mean image1
+
+will output
+Image | geomean | mean
+image1 12.2 12.4
+
+The outputs are completely different. You need to specify an interface for each of these behaviors. 
+Or pretend you have a powerful program that can do 10 unrelated tasks, each of which outputs an image. While the outputs are the same type and format, they represent 10 completely different things. In this case, it might make sense to define 10 corrosponding AnalysisModule to represent the 10 logical functions.
+
+In any case, use AnalysisModule to define an interface and Program to store installation software for a program.
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "Interface" maxOccurs = "unbounded"/>
-				<xsd:element ref = "Program"/>
+				<xsd:element ref = "AnalysisModule" maxOccurs = "unbounded"/>
+				<xsd:element ref = "Program" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
@@ -287,6 +302,10 @@ In technical terms, there is a one to one corrospondence between an Interface an
 		<xsd:annotation>
 			<xsd:documentation>Specifies execution instructions. Perl packages do not need this element because they internally specify execution instructions by overriding functions from a base class. Command Line programs need to use this.
 The schema does not check the need for this against ModuleType, so it may not report errors the installation logic will detect.
+
+The location does not yet exist in the DB. The contents of this element (in XML format) will be stored in the DB.
+
+Tied to DB. Table PROGRAMS Column EXECUTION
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -328,8 +347,6 @@ XML specification of the command line parameters is:
 	Path=&lt;PlaneFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>
 &lt;/CommandLine>
 
-There is not currently a location in the database set up to deal with this. 
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType mixed = "true">
@@ -342,8 +359,6 @@ There is not currently a location in the database set up to deal with this.
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to write content the analysis module will read from STDIN.
 
-There is not currently a location in the database set up to deal with this. 
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -356,8 +371,6 @@ There is not currently a location in the database set up to deal with this.
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read content the analysis module prints to STDOUT.
 
-There is not currently a location in the database set up to deal with this. 
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -371,8 +384,6 @@ There is not currently a location in the database set up to deal with this.
 			<xsd:documentation>If the analysis module reads input from a file, this is the place to describe the format of the file so it can automatically be generated.
 There is not currently a use scenario for this, so it is not supported. If you have a module that needs to read input from a text file, contact OME developers.
 
-There is not currently a location in the database set up to deal with this. 
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -395,8 +406,6 @@ There is not currently a location in the database set up to deal with this.
 			<xsd:documentation>If the analysis module reads output from a file, this is the place to describe the format of the file so it can automatically read into the DB.
 There is not currently a use scenario for this, so it is not supported. If you have a module that needs to read input from a text file, contact OME developers.
 
-There is not currently a location in the database set up to deal with this. 
-			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -414,10 +423,7 @@ There is not currently a location in the database set up to deal with this.
 			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
-					
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -431,8 +437,7 @@ Referential integrity is not enforced by this schema. That is, if you screw up a
 			<xsd:attribute name = "FormalOutputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a FormalOutput Element. It should corrospond to a FormalOutputID specified in a FormalOutput Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
 					
 					
 					</xsd:documentation>
@@ -440,7 +445,7 @@ Referential integrity is not enforced by this schema. That is, if you screw up a
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "Interface">
+	<xsd:element name = "AnalysisModule">
 		<xsd:annotation>
 			<xsd:documentation>Describes an interface to use with a program.</xsd:documentation>
 		</xsd:annotation>
@@ -451,7 +456,7 @@ Referential integrity is not enforced by this schema. That is, if you screw up a
 			</xsd:sequence>
 			<xsd:attribute name = "ModuleName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>PROGRAM_NAME in the database is a misnomer. It really should be changed to MODULE_NAME or just NAME.
+					<xsd:documentation>PROGRAM_NAME in the database is a misnomer. It really should be changed to NAME.
 
 Tied to DB. Table PROGRAMS Column PROGRAM_NAME
 					
@@ -500,31 +505,21 @@ Tied to DB. Table PROGRAMS Column VISUAL_DESIGN
 			</xsd:attribute>
 			<xsd:attribute name = "isStreamAlgorithm" default = "F" type = "xsd:boolean">
 				<xsd:annotation>
-					<xsd:documentation>If the output of the analysis will be the same when pixel positions are scrambled, the analysis is a stream algorithm. 
+					<xsd:documentation>This is a stub for future development. The database location doesn't even exist yet.
+
+If the output of the analysis will be the same when pixel positions are scrambled, the analysis is a stream algorithm. 
 Examples of stream algorithms are:
 	A statistics module that produces mean, geometric mean, standard deviation, etc. for pixel intensities.
 	A module to cross correlate pixel intensities across wavelengths.
 Example of an algorithms that is not a stream algorithm is:
-	FindSpots. It's a module to find blobs in an image.
+	FindSpots. (It's a module to find blobs in an image.)
 
 If a module is a stream algorithm, it can function across the x, y, z, and time dimensions.
-					
-					
-					
+
+Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "Program">
-		<xsd:annotation>
-			<xsd:documentation>A program may be specified by either source code or executable file(s).</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:choice>
-				<xsd:element ref = "SourceCode"/>
-				<xsd:element ref = "Executable"/>
-			</xsd:choice>
 			<xsd:attribute name = "ModuleType" use = "required">
 				<xsd:annotation>
 					<xsd:documentation>As more handlers, are added, this part of the schema needs to be changed
@@ -540,27 +535,42 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
+			<xsd:attribute name = "ProgramID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Used to reference a Program Element. It should corrospond to a ProgramID specified in a Program Element.
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "SourceCode">
+	<xsd:element name = "Program">
 		<xsd:annotation>
-			<xsd:documentation>Source code requires a Makefile and source files. Source files should be stored in TextFiles. </xsd:documentation>
+			<xsd:documentation>Stores an installation package and installation script for a program.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "MakeFile"/>
-				<xsd:element ref = "TextFile" maxOccurs = "unbounded"/>
+				<xsd:element ref = "InstallationScript"/>
+				<xsd:element ref = "InstallationFile"/>
 			</xsd:sequence>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "Executable">
-		<xsd:annotation>
-			<xsd:documentation>Contains binary files for a program.</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref = "BinaryFile" maxOccurs = "unbounded"/>
-			</xsd:sequence>
+			<xsd:attribute name = "ProgramID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Referenced by AnalysisModule elements. Accordingly, each FormalOutput needs to be unique. This is not enforced in the schema, so watch your back.
+
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "Name">
+				<xsd:annotation>
+					<xsd:documentation>Program name. Does not have to be the name of the program's file.</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "Version" type = "xsd:string"/>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "BinaryFile">
@@ -579,13 +589,6 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "MakeFile">
-		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref = "TextFile"/>
-			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "External">
@@ -635,31 +638,42 @@ TEXT
 		</xsd:annotation>
 		<xsd:restriction base = "xsd:string"/>
 	</xsd:simpleType>
-	<xsd:element name = "TextFile">
+	<xsd:element name = "theZ">
 		<xsd:complexType>
-			<xsd:sequence>
-				<xsd:element ref = "External"/>
-				<xsd:element ref = "TextData"/>
-			</xsd:sequence>
-			<xsd:attribute name = "FileName" use = "required">
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "64"/>
-					</xsd:restriction>
-				</xsd:simpleType>
+			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					</xsd:documentation>
+				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "TextData" type = "xsd:string"/>
-	<xsd:element name = "XYPlane">
+	<xsd:element name = "theW">
+		<xsd:complexType>
+			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "theT">
+		<xsd:complexType>
+			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "XYPlaneFilePath">
 		<xsd:annotation>
-			<xsd:documentation>If the analysis operates on a plane (i.e. reads a TIFF file), specify the plane using this element.
-An XY plane is defined by theZ, theT, and theW. Consequently, these needed to be specified as formal inputs.
-
-			
-			
-			
-			</xsd:documentation>
+			<xsd:documentation>Used with variable substitution. This will be substituted with a dynamically generated plane. Currently that means a TIFF.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
@@ -667,14 +681,20 @@ An XY plane is defined by theZ, theT, and theW. Consequently, these needed to be
 				<xsd:element ref = "theT"/>
 				<xsd:element ref = "theW"/>
 			</xsd:sequence>
-			<xsd:attribute name = "PlaneID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "BPP">
 				<xsd:annotation>
-					<xsd:documentation>Used for reference purposes in Command Line programs. Accordingly, each PlaneID needs to be unique. This is not enforced in the schema, so watch your back.</xsd:documentation>
+					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with both 8 and 16 bit images, leave this out and the BPP of the image will be used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:integer">
+						<xsd:enumeration value = "8"/>
+						<xsd:enumeration value = "16"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 			<xsd:attribute name = "Format">
 				<xsd:annotation>
-					<xsd:documentation>Specifies the expected format of the image plane.
+					<xsd:documentation>Specifies the expected format of the plane.
 RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
 					
@@ -687,9 +707,21 @@ TIFF corrosponds to TIFF files.
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "BPP" default = "8">
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "XYPlaneFile">
+		<xsd:annotation>
+			<xsd:documentation>Used with variable substitution. This will be substituted with pixel contents of the plane. If the plane is of format TIFF, this will return the contents of the TIFF file. If this plane is of type RAW, this will return a pixel dump.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref = "theZ"/>
+				<xsd:element ref = "theT"/>
+				<xsd:element ref = "theW"/>
+			</xsd:sequence>
+			<xsd:attribute name = "BPP">
 				<xsd:annotation>
-					<xsd:documentation>Specifies bits per pixel the module is expecting. Currently, most programs only work with 8 bit image. If you have a niftly new program that deals with 16 bit images, override this.</xsd:documentation>
+					<xsd:documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with both 8 and 16 bit images, leave this out and the BPP of the image will be used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:integer">
@@ -698,81 +730,20 @@ TIFF corrosponds to TIFF files.
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "theZ">
-		<xsd:complexType>
-			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "Format">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
+					<xsd:documentation>Specifies the expected format of the plane.
+RAW corrosponds to OME repository format of pixel dump.
+TIFF corrosponds to TIFF files.
 					
 					</xsd:documentation>
 				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "theW">
-		<xsd:complexType>
-			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "theT">
-		<xsd:complexType>
-			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "PlaneFilePath">
-		<xsd:annotation>
-			<xsd:documentation>Used with variable substitution. This will be substituted with a dynamically generated plane. Currently that means a TIFF.</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name = "PlaneID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used to reference a Plane Element. It should corrospond to a PlaneID specified in a Plane Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-	<xsd:element name = "PlaneFile">
-		<xsd:annotation>
-			<xsd:documentation>Used with variable substitution. This will be substituted with pixel contents of the plane. If the plane is of format TIFF, this will return the contents of the TIFF file. If this plane is of type RAW, this will return a pixel dump.</xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name = "PlaneID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used to reference a Plane Element. It should corrospond to a PlaneID specified in a Plane Element.
-Referential integrity is not enforced by this schema. That is, if you screw up and make a typo here, the error won't be detected until your file is processed.
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "RAW"/>
+						<xsd:enumeration value = "TIFF"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -872,5 +843,33 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Used for variable substitution. This is substituted for bytes per pixel. </xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
+	</xsd:element>
+	<xsd:element name = "InstallationScript">
+		<xsd:annotation>
+			<xsd:documentation>The script should interface with the OME API to find all information it needs. (i.e. installation path) It also needs to set the location of the program after the program is installed. The location should be set through the API, but it will propogate to the LOCATION column of the PROGRAMS table.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref = "BinaryFile"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "InstallationFile">
+		<xsd:annotation>
+			<xsd:documentation>Contains a packaged or zipped installation files (binaries or source code).</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref = "BinaryFile"/>
+			</xsd:sequence>
+			<xsd:attribute name = "Format" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>This is a stub for future development. Don't bother with it unless you know more about it.
+
+Specifies the packaging and/or compression format of the Installation file.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>
