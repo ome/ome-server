@@ -285,19 +285,19 @@ my $numSelections;
 			push (@datasetIDs,$dataset->{ID});
 			$OME->IncrementProgress();
 #			if ($reportEvery eq 1) {
-#				ReportDocStatus ($dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B><BR>");
+#				ReportDocStatus ('<font size=-1>'.$dataset->{Path}.$dataset->{Name}.":  Imported as type:  <B>".$dataset->{Type}."</B></font><BR>");
 #			} elsif (scalar (@datasetIDs) % $reportEvery eq 0) {
-#				ReportDocStatus ("<B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.<BR>");
+#				ReportDocStatus ("<font size=-1><B>".scalar @datasetIDs."</B> of <B>".$numSelections."</B> Datasets imported.</font><BR>");
 #				$OME->Commit();			
 #			}
 		} elsif ($@) {
 			$OME->UpdateProgress (Error => $@);
-			ReportDocStatus ($_.':  <B><font color="#FF0000">Error!</font></B> - file is corrupt!<BR>');
+			ReportDocStatus ('<B><font size=-1 color="#FF0000">Error!</font><font size=-1></B>'."  $_ is corrupt!</font><BR>");
 		} else {
-			ReportDocStatus ($_.":  <B>Ignored</B> - file type not supprted.<BR>");
+			ReportDocStatus ('<font size=-1>'.$_.":  <B>Ignored</B> - file type not supprted.</font><BR>");
 		}
 	}
-	ReportDocStatus ("Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
+	ReportDocStatus ("<font size=-1>Total: <B>".scalar @datasetIDs."</B> Datasets imported.</font><BR>");
 	$OME->StopProgress();
 	return \@datasetIDs;
 }
@@ -308,7 +308,7 @@ my $message = shift;
 print qq {
 	<script language="JavaScript">
 		<!--
-			importStatWin.document.writeln ("<font size=-1>$message</font>");
+			importStatWin.document.writeln ("$message");
 		//-->
 	</script>
 	}
