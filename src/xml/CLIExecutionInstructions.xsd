@@ -23,6 +23,7 @@
 			<xsd:documentation>Tied to DB. Table PROGRAMS Column EXECUTION
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -35,6 +36,7 @@
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
+					
 					
 					
 					</xsd:documentation>
@@ -61,6 +63,7 @@ XML specification of the command line parameters is:
 &lt;CommandLine>Path=&lt;RawImageFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>&lt;/CommandLine>
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -77,6 +80,7 @@ Not yet supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -88,6 +92,7 @@ Not yet supported.
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read STDOUT.
+			
 			
 			
 			
@@ -110,6 +115,7 @@ Not yet supported.
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a particular column of a FormalInput. It should corrospond to an FormalInputColumnID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
 					
 					
 					</xsd:documentation>
@@ -188,6 +194,7 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 Currently, only native image pixels are supported.
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -204,6 +211,7 @@ RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
 
 Currently only TIFF is supported.
+					
 					
 					
 					</xsd:documentation>
@@ -271,6 +279,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -280,6 +289,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			<xsd:documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
 
 Not yet supported.
+			
 			
 			
 			
@@ -298,6 +308,7 @@ Not yet supported.
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
+					
 					
 					
 					</xsd:documentation>
@@ -320,6 +331,7 @@ Not yet supported.
 If used in conjuction with TerminateAt, reading will stop after RepeatCount or TerminateAt, whichever comes first.
 				
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -327,6 +339,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
 					
 					
 					</xsd:documentation>
@@ -411,6 +424,7 @@ Not currently supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -426,6 +440,7 @@ Not currently supported.
 			<xsd:documentation>Specifies a starting point of iteration. 
 
 Not currently supported.
+			
 			
 			
 			
