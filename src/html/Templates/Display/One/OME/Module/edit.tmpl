@@ -1,0 +1,62 @@
+<table width="100%">
+	<caption>
+		<font class="ome_header_title"><TMPL_VAR NAME='/common_name'>: <TMPL_VAR NAME='/name'></font> 
+	</caption>
+	<tr>
+		<td valign=top class="ome_td">ID</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="id"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">name</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="name"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">description</td>
+		<td><textarea name="description" rows="3" cols="100"><TMPL_VAR NAME='description'></textarea></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">category</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="category"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">default_iterator</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="default_iterator"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">location</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="location"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">module_type</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="module_type"></td>
+	</tr>
+	<tr>
+		<td valign=top class="ome_td">new_feature_tag</td>
+		<td valign=top class="ome_td"><TMPL_VAR NAME="new_feature_tag"></td>
+	</tr>
+	<tr>
+		<td>execution_instructions</td>
+		<td><textarea name="execution_instructions" rows="20" cols="100"><TMPL_VAR NAME='execution_instructions'></textarea></td>
+	</tr>
+	<tr colspan=2>
+		<td align='right'>
+			 <table cellpadding="3" class="ome_table">
+				<tr>
+					<td style="background-color: #D1D7DC">
+<a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
+<table>
+	<tr>
+		<TMPL_LOOP NAME="/relations">
+			<td valign="top">
+				<font class="ome_relation_title"><TMPL_VAR NAME="name"></font>
+				<TMPL_VAR NAME="/object_list/render-ref_list">
+			</td>
+		</TMPL_LOOP>
+	</tr>
+</table>
