@@ -49,9 +49,10 @@ import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
+
 import org.openmicroscopy.Module;
-//import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
@@ -66,6 +67,7 @@ import java.lang.Object;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.TreeSet;
+import java.util.Collection;
 
 /** 
  * A Piccolo widget for a module. This widget will consist of a 
@@ -159,7 +161,7 @@ public class PModule extends PPath implements PBufferedNode {
 		
 		inputLinkTarget = new PLinkTarget();
 		linkTargets.addChild(inputLinkTarget);
-		inputLinkTarget.setOffset(-PLinkTarget.CIRC_HALF_SIZE,height);
+		inputLinkTarget.setOffset(-PLinkTarget.LINK_TARGET_HALF_SIZE,height);
 				
 		nameWidth = (float) name.getBounds().getWidth();
 		
@@ -167,7 +169,7 @@ public class PModule extends PPath implements PBufferedNode {
 		addParameterLabels(module,connection);  
 		
 		// set width of the whole bounding rectangle
-	    width = NAME_LABEL_OFFSET*2+width-PLinkTarget.CIRC_HALF_SIZE;
+	    width = NAME_LABEL_OFFSET*2+width-PLinkTarget.LINK_TARGET_HALF_SIZE;
 		
 		// create bounding rectangle, set it to be this node's path,
 		// and finish other parameters.
@@ -183,7 +185,7 @@ public class PModule extends PPath implements PBufferedNode {
 		// add the other target
 		outputLinkTarget = new PLinkTarget();
 		linkTargets.addChild(outputLinkTarget);
-		outputLinkTarget.setOffset(width-PLinkTarget.CIRC_HALF_SIZE,
+		outputLinkTarget.setOffset(width-PLinkTarget.LINK_TARGET_HALF_SIZE,
 			linkTargetHeight);
 	
 		
@@ -455,10 +457,6 @@ public class PModule extends PPath implements PBufferedNode {
 	// handles
 	
 	public void addHandles() {
-		addChild(new PModuleHandles(PBoundsLocator.createEastLocator(this)));
-		addChild(new PModuleHandles(PBoundsLocator.createWestLocator(this)));
-		addChild(new PModuleHandles(PBoundsLocator.createNorthLocator(this)));
-		addChild(new PModuleHandles(PBoundsLocator.createSouthLocator(this)));
 		addChild(new PModuleHandles(PBoundsLocator.createNorthEastLocator(this)));
 		addChild(new PModuleHandles(PBoundsLocator.createNorthWestLocator(this)));
 		addChild(new PModuleHandles(PBoundsLocator.createSouthEastLocator(this)));
@@ -515,13 +513,43 @@ public class PModule extends PPath implements PBufferedNode {
 	}
 	
 	public boolean isOnInputSide(Point2D pos) {
-		boolean res = true;
+		boolean res = false;
 		globalToLocal(pos);
 		float posX = (float)pos.getX();
 		PBounds b = getFullBoundsReference();
 		float mid = (float) (b.getWidth()/2);
 		if (posX < mid)
-			res = false;
+			res = true;
 		return res;
+	}
+	
+	public Collection getInputParameters() {
+		PNodeFilter inputFilter = new PNodeFilter() {
+			public boolean accept(PNode aNode) {
+				// want only those things that are inputs.
+				if (!(aNode instanceof PFormalInput))
+					return false;
+				PFormalInput inp = (PFormalInput) aNode;
+				// and can still be origins - don't have anything 
+				// linked to them.
+				return inp.canBeLinkOrigin();
+			}
+			public boolean acceptChildrenOf(PNode aNode) {
+				return true;
+			}
+		};
+		return labelNodes.getAllNodes(inputFilter,null);
+	}
+	
+	public Collection getOutputParameters() {
+		PNodeFilter outputFilter = new PNodeFilter() {
+			public boolean accept(PNode aNode) {
+				return (aNode instanceof PFormalOutput);
+			}
+			public boolean acceptChildrenOf(PNode aNode) {
+				return true;
+			}
+		};
+		return labelNodes.getAllNodes(outputFilter,null);
 	}
 }
