@@ -54,6 +54,7 @@ import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Modules;
 import org.openmicroscopy.vis.dnd.ModuleSelection;
+import org.openmicroscopy.vis.chains.Controller;
 import java.util.Iterator;
 import java.util.List;
 import java.awt.Font;
@@ -114,6 +115,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		removeInputEventListener(getPanEventHandler());
 		removeInputEventListener(getZoomEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));
@@ -143,7 +145,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
   	 * @param connection The connection to the database.
   	 *  
  	 */
-	public void setConnection(Connection connection) {
+	public void setConfig(Connection connection,Controller controller) {
 		
 		this.connection = connection;
 		modules = connection.getModules();
@@ -152,7 +154,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		Iterator iter = modules.rootCategoryIterator();
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
-			//connection.setStatusLabel("Arranging Modules.."+cat.getName());
+			controller.setStatusLabel("Arranging Modules.."+cat.getName());
 			//System.err.println(" Arranging modules in category..."+cat.getName());
 			displayModulesByCategory(layer,cat);			
 		}
@@ -161,7 +163,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 		PCategoryBox  box = decorateCategory(layer);
 		displayCategoryName(box,"Uncategorized");
-		connection.setStatusLabel("Arranging Modules.. Uncategorized");
+		controller.setStatusLabel("Arranging Modules.. Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
 		//System.err.println("arranging uncategorized modules");
@@ -177,9 +179,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		PBounds b = new PBounds();
 		b = layer.getUnionOfChildrenBounds(b);
 		//System.err.pr("layer bounds are "+b.getWidth()+","+b.getHeight());
-		layer.setBounds(b);
-		layer.repaint();
 		
+		layer.setBounds(b);
 	}
 	
 	/*
@@ -432,13 +433,5 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		//	System.err.println("dragging.module set module selection.."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
-	}
-	
-	
-	public void logout() {
-		layer.removeAllChildren();
-		//categoryLayer  = new PLayer();
-		//layer.addChild(categoryLayer);
-		//categoryLayer.moveToBack();
 	}
 }
