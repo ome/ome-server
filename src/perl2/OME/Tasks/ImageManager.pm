@@ -271,15 +271,11 @@ sub load{
 
 =head2 getThumbURL
 
-usage:
 	# retrieve the URL for the thumbnail of the default pixels of a given image
 	my $thumbnailURL = $imageManager->getThumbURL($image);
 	
-	# retrieve the URL for the thumbnail of the specified pixels attribute
-	my $thumbnailURL = $imageManager->getThumbURL($pixels);
-	
 Will return undef if there is not a default pixels associated with
-the image or the repository is not local.
+the image.
 	
 =cut
 sub getThumbURL{
@@ -293,9 +289,7 @@ sub getThumbURL{
 	} else {
 		$pixels = $param;
 	}
-	my $rep = $pixels->Repository();
-	return undef if($rep->IsLocal());
-	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
+	return OME::Tasks::PixelsManager->getThumbURL($pixels);
 }
 
 
