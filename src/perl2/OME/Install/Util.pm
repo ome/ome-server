@@ -59,6 +59,7 @@ our @EXPORT = qw(add_user
 		 configure_module
 		 compile_module
 		 test_module
+		 install_module
 		 which
 		 );
 
@@ -183,7 +184,7 @@ my %os_specific = (
 	add_group => sub {
 	    my $group = shift;
 
-	    carp "Unsupported addgroup() platform, please create the group  \"$group\"manually";
+	    carp "Unsupported addgroup() platform, please create the group \"$group\"manually";
 
 	    return undef;
 	},
@@ -485,22 +486,17 @@ sub unpack_archive {
 
     chdir ($dir) or croak "Unable to chdir into \"$dir\". $!";
 
-    #system ("pwd");
-    #print "Execution: tar zxf $filename 2>&1\n";
-    #system ("ls -al");
-
     my @output = `tar zxf $filename 2>&1`;
 
     if ($? == 0) {
 	print $logfile "SUCCESS EXTRACTING $dir","$filename\n\n";
 
-	chdir ($iwd);
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
     } 
 
     print $logfile "FAILURE EXTRACTING $dir","$filename -- OUTPUT FROM TAR: \"@output\"\n\n";
-
-    chdir ($iwd);
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
 }
@@ -516,12 +512,12 @@ sub configure_module {
     if ($? == 0) {
 	print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
 
-	chdir ($iwd);
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
     }
 
     print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd);
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
 }
@@ -537,12 +533,12 @@ sub compile_module {
     if ($? == 0) {
 	print $logfile "SUCCESS COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
 
-	chdir ($iwd);
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
     }
     
     print $logfile "FAILURE COMPILING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd);
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
 }
@@ -558,16 +554,36 @@ sub test_module {
     if ($? == 0) {
 	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
 
-	chdir ($iwd);
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 	return 1;
     }
 
     print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd);
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
 
     return 0;
 }
 
+sub install_module {
+    my ($path, $logfile) = @_;
+    my $iwd = getcwd;  # Initial working directory
+
+    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+
+    my @output = `make install 2>&1`;
+
+    if ($? == 0) {
+	print $logfile "SUCCESS INSTALLING MODULE -- OUTPUT: \"@output\"\n\n";
+
+	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+	return 1;
+    }
+
+    print $logfile "FAILURE INSTALLING MODULE -- OUTPUT: \"@output\"\n\n";
+    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+
+    return 0;
+}
 
 # Ported from FreeBSD's /usr/bin/which
 #
@@ -623,4 +639,6 @@ sub which {
 
     return 0;
 }
+
+
 1;
