@@ -492,6 +492,12 @@ sub create{
 	my $self=shift;
 	my $session=$self->Session();
 	my ($ref)=@_;
+	$ref->{owner_id} = $session->experimenter_id()
+		unless (exists $ref->{owner} and $ref->{owner})
+		or (exists $ref->{owner_id} and $ref->{owner_id});
+	$ref->{group_id} = $session->experimenter()->Group()->id()
+		unless (exists $ref->{group} and $ref->{group})
+		or (exists $ref->{group_id} and $ref->{group_id});
 	my $project = $session->Factory()->newObject("OME::Project", $ref);
 
 	$project->storeObject();
