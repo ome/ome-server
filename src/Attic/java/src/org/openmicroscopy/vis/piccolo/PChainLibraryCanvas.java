@@ -44,7 +44,6 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
-import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.PCamera;
@@ -124,12 +123,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	private float rowHeight =0;
 	
 	/**
-	 * A scenegraph layer holding links
-	 */
-	private PLinkLayer linkLayer;
-	
-	
-	/**
 	 * The currently selected chain
 	 */
 	private CChain selectedChain;
@@ -153,8 +146,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		this.connection  = c;
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		layer = getLayer();
-		linkLayer = new PLinkLayer();
-		getCamera().addLayer(linkLayer);
 		
 		// make sure that rendering is always high quality
 		
@@ -167,10 +158,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		removeInputEventListener(getZoomEventHandler());
 		removeInputEventListener(getPanEventHandler());
 		addInputEventListener(new PChainLibraryEventHandler(this,controller)); 
-		
-		// set up link layer
-		linkLayer.setPickable(false);
-		linkLayer.moveToFront();
 		
 		// initialize data transfer
 		dragListener = new DragSourceAdapter() {
@@ -225,64 +212,24 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		
 		float height = 0;
 		
-		
- 		PText name = new PText(chain.getName());
-		name.setFont(nameFont);
-		name.setPickable(false);
-		 
-		 
-		name.setScale(2);
-		height += name.getHeight()+VGAP;
-		 
-		
-		// add another label.
-		PText owner = new PText(connection.getUserName());
-		owner.setFont(nameFont);
-		owner.setPickable(false);
-		height += owner.getHeight();
-		
-		// create the chain box.
-		PChainBox box = decorateChain(chain,x,y);
-			
+		PChainBox box = new PChainBox(connection,controller.getControlPanel(),
+					chain);
+		layer.addChild(box);
+		box.moveToBack();
+		box.setOffset(x,y);
 
 		//	setup the chain widget
-		PChain p = new PChain(connection,chain,box,linkLayer,x+HGAP*2,y+height);
-		 
-		height += p.getHeight()+VGAP;
- 		
-					
-		box.setExtent(p.getWidth(),height);
- 		 
-		box.addChild(name);
-		name.setOffset(x+HGAP,y);
 		
-		box.addChild(owner);
-		owner.setOffset(x+HGAP,y+name.getHeight()+VGAP);
-		
+		height = (float) box.getHeight();
  		// set the row height if this is taller than others in the row.
 		if (height+VGAP>rowHeight)
 			rowHeight = height+VGAP;
 		
 		//advance the horizontal position
-		x+= p.getWidth()+HGAP;
+		x+= box.getWidth()+HGAP;
 	}
 	
-	/**
-	 * Draw a box of the appropriate size to go around the chain, at the 
-	 * appropriate position.
-	 * @param id
-	 * @param left
-	 * @param top
-	 * @param height
-	 * @param width
-	 */
-	private PChainBox decorateChain(CChain chain,float left,float top) {
-		PChainBox box = new PChainBox(controller.getControlPanel(),
-			chain,left,top);
-		layer.addChild(box);
-		box.moveToBack();
-		return box;
-	}
+
 	
 	
 	/**
