@@ -329,7 +329,7 @@ my $isRGB = $self->{isRGB} ? 'true' : 'false';
 	my $image = $self->{Parent}->{Session}->Factory()->loadObject("OME::Image",$self->{Parent}->{ImageID})
 		|| die "JSinstance called without a defined Image object in Parent\n";
 
-	$self->{Path} = $image->getFullPath();
+	$self->{Path} = $image->getFullPath( $image->DefaultPixels() );
 	$self->{JS_Dims} = join (',', @{$self->{Parent}->{Dims}});
 
 # Now make the WBS JS 'object'
