@@ -36,8 +36,6 @@ skinLibrary["GUIbox"] =
 '	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="3" opacity="1"/>' +
 '	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
-'	<set attributeName="display" to="inline" begin="indefinite"/>' +
-'	<set attributeName="display" to="none" begin="indefinite"/>' +
 '</g>';
 skinLibrary["menuBar17"] =
 '<g>' +
