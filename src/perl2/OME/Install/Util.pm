@@ -126,13 +126,13 @@ my %os_specific = (
 	    my @uids = `nireport / /users uid`;
 	    if ($? == 0) {
 		@uids = sort {$a <=> $b} @uids;
-		$uid = $uids[$#uids]++;  # Value of the last element plus one
+		$uid = ++$uids[$#uids];  # Value of the last element plus one
 	    } else { return 0 }
 
 	    (system ("nicl / -create /users/$user uid $uid") == 0) or return 0;
 	    (system ("nicl / -create /users/$user gid $gid") == 0) or return 0;
-	    # XXX: Yes, more of OS X being braindead, putting false in /usr/bin
-	    (system ("nicl / -create /users/$user shell /usr/bin/false") == 0) or return 0;
+	    # XXX: OS X prefers /dev/null for its null shells
+	    (system ("nicl / -create /users/$user shell /dev/null") == 0) or return 0;
 	    (system ("nicl / -create /users/$user home $homedir") == 0) or return 0;
 	    (system ("nicl / -create /users/$user realname \"OME User\"") == 0) or return 0;
 	    (system ("nicl / -create /users/$user passwd \'\*\'") == 0) or return 0;
@@ -148,11 +148,11 @@ my %os_specific = (
 	    my @gids = `nireport / /groups gid`;
 	    if ($? == 0) {
 		@gids = sort {$a <=> $b} @gids;
-		$gid = $gids[$#gids]++;  # Value of the last element plus one
+		$gid = ++$gids[$#gids];  # Value of the last element plus one
 	    } else { return 0 }
 
 	    (system ("nicl / -create /groups/ome gid $gid") == 0) or return 0;
-	    (system ("nicl / -create /groups/ome password \'\*\'") == 0) or return 0;
+	    (system ("nicl / -create /groups/ome passwd \'\*\'") == 0) or return 0;
 
 	    return 1;
 	},
