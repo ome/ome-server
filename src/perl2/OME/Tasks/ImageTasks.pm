@@ -46,6 +46,8 @@ use OME::Tasks::PixelsManager;
 use OME::Tasks::ImageManager;
 use OME::Image::Server::File;
 
+use OME::Fork;
+
 use OME::Project;
 use IO::File;
 use Carp;
@@ -191,24 +193,21 @@ sub forkedImportFiles {
     my $session_key = $session->SessionKey();
 
     my $parent_pid = $$;
-    my $pid = fork;
+    my $pid = OME::Fork->fork();
 
     if (!defined $pid) {
         die "Could not fork off process to perform the import";
     } elsif ($pid) {
         # Parent process
 
-        OME::Tasks::ImportManager->forgetImport();
         return $task;
     } else {
         # Child process
 
+        my $session = OME::Session->instance();
+
         eval {
             POSIX::setsid() or die "Can't start a new session. $!";
-            OME::Session->forgetInstance();
-            OME::Tasks::NotificationManager->forget();
-
-            my $session = OME::SessionManager->createSession($session_key);
 
             $task->step();
             $task->setMessage('Starting import');
