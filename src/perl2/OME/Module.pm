@@ -33,6 +33,7 @@ __PACKAGE__->columns(Essential => qw(program_name description category));
 __PACKAGE__->columns(Definition => qw(module_type location
                                       default_iterator new_feature_tag
                                       execution_instructions ));
+__PACKAGE__->hasa('OME::Program::Category' => qw(category));
 __PACKAGE__->has_many('inputs','OME::Program::FormalInput' => qw(program_id));
 __PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
 __PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
