@@ -253,10 +253,11 @@ my @modules = (
 	name => 'HTML::Parser',
 	repository_file => "$REPOSITORY/HTML-Parser-3.27.tar.gz"
     },{
-	name => 'Image::Magick',
-	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
-	#installModule => \&ImageMagickInstall
-    },{
+	# XXX DEPRECATED
+#	name => 'Image::Magick',
+#	repository_file => "$REPOSITORY/ImageMagick-5.5.6.tar.gz"
+#	#installModule => \&ImageMagickInstall
+#    },{
 	name => 'LWP',
 	repository_file => "$REPOSITORY/libwww-perl-5.69.tar.gz",
 	configure_module => sub {
