@@ -143,9 +143,9 @@ sub importFiles {
 }
 
 
-=head2 forkedImportImages
+=head2 forkedImportFiles
 
-	my $task = forkedImportImages($dataset,\@filenames,\%options);
+	my $task = forkedImportFiles($dataset,\@filenames,\%options);
 
 Performs the same operation as importFiles, but forks off a new
 process first.  An OME::Task object is created to track the import's
@@ -153,7 +153,7 @@ progress.
 
 =cut
 
-sub forkedImportImages {
+sub forkedImportFiles {
 	my ($dataset, $filenames, $options) = @_;
 
     my $task = OME::Tasks::NotificationManager->
@@ -190,106 +190,54 @@ sub forkedImportImages {
     } else {
         # Child process
 
-        POSIX::setsid() or die "Can't start a new session. $!";
-        OME::Session->forgetInstance();
-        OME::Tasks::NotificationManager->forget();
+        eval {
+            POSIX::setsid() or die "Can't start a new session. $!";
+            OME::Session->forgetInstance();
+            OME::Tasks::NotificationManager->forget();
 
-        my $session = OME::SessionManager->createSession($session_key);
+            my $session = OME::SessionManager->createSession($session_key);
 
-        $task->step();
-        $task->setMessage('Starting import');
-
-        my @files;
-
-        foreach my $filename (@$filenames) {
-            push @files, OME::Image::Server::File->upload($filename);
             $task->step();
-            $task->setMessage("Uploaded $filename");
+            $task->setMessage('Starting import');
+
+            my @files;
+
+            foreach my $filename (@$filenames) {
+                push @files, OME::Image::Server::File->upload($filename);
+                $task->step();
+                $task->setMessage("Uploaded $filename");
+            }
+
+            $task->step();
+            $task->setMessage('Importing');
+            my $image_list = $importer->importFiles(\@files);
+            $importer->finishImport();
+
+            $task->step();
+            $task->setMessage('Executing import chain');
+            my $chain = $session->Configuration()->import_chain();
+            if (defined $chain) {
+                $OME::Analysis::Engine::DEBUG = 0;
+                OME::Analysis::Engine->executeChain($chain,$dataset,{});
+            }
+        };
+
+        if ($@) {
+            my $error = $@;
+            eval {
+                $task->died($error);
+            };
+
+            logwarn "Could not close task - $@" if $@;
+        } else {
+            eval {
+                $task->finish();
+                $task->setMessage('Successfully imported '.scalar(@$image_list).
+                                  ' images');
+            };
+
+            logwarn "Could not close task - $@" if $@;
         }
-
-        $task->step();
-        $task->setMessage('Importing');
-        my $image_list = $importer->importFiles(\@files);
-        $importer->finishImport();
-
-        $task->step();
-        $task->setMessage('Executing import chain');
-        my $chain = $session->Configuration()->import_chain();
-        if (defined $chain) {
-            $OME::Analysis::Engine::DEBUG = 0;
-            OME::Analysis::Engine->executeChain($chain,$dataset,{});
-        }
-
-        $task->finish();
-        $task->setMessage('Successfully imported '.scalar(@$image_list).
-                          ' images');
-
-        CORE::exit(0);
-    }
-}
-
-=head2 forkedImportAnalysisModules
-
-	my $task = forkedImportAnalysisModules(\@filenames,\%options);
-
-Imports the xml (or ome) files given by @filenames into OME.
-
-=cut
-
-sub forkedImportAnalysisModules {
-	my ($filenames, $options) = @_;
-
-	my $task = OME::Tasks::NotificationManager->
-      new('Importing analysis modules',scalar(@$filenames));
-	
-	my $session = OME::Session->instance();
-    my $OMEimporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
-    my $factory = $session->Factory();
-	
-    my $session_key = $session->SessionKey();
-
-    my $parent_pid = $$;
-    my $pid = fork;
-
-    if (!defined $pid) {
-        die "Could not fork off process to perform the import";
-    } elsif ($pid) {
-        # Parent process
-        # do nothing
-        return $task;
-    } else {
-        # Child process
-
-        POSIX::setsid() or die "Can't start a new session. $!";
-        OME::Session->forgetInstance();
-        OME::Tasks::NotificationManager->forget();
-	
-        my $session = OME::SessionManager->createSession($session_key);
-		my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
-		my @file_list;
-		
-        $task->setMessage('Starting import');
-		# import the ome modules before the xml chains
-		foreach (@$filenames) {
-			if ($_ =~ m/\.ome$/) {
-				push (@file_list, $_);
-			}
-		}
-		foreach (@$filenames) {
-			if ($_ =~ m/\.xml$/) {
-				push (@file_list, $_);
-			}
-		}	
-		
-		foreach my $path (@file_list){
-			$task->setMessage ("Importing $path");
-			$OMEImporter->importFile( $path );
-			$task->step();
-		}	
-		
-        $task->finish();
-        $task->setMessage('Successfully imported '.scalar(@$filenames).
-                          ' analysis modules');
 
         CORE::exit(0);
     }

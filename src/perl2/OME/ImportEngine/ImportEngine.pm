@@ -183,6 +183,10 @@ sub startImport {
 
     my $session = OME::Session->instance();
 
+    if (defined $dataset && $dataset->locked()) {
+        die "Cannot import into a locked dataset";
+    }
+
     # Have the manager officially start the import process, and create
     # the MEX (module execution record) that represents the act of
     # importation, which creates the OME file.
@@ -212,10 +216,6 @@ sub importFiles {
         $files = shift;
         $dataset = $self->{_dataset};
     }
-
-	# error check
-	die "Cannot import into a locked dataset"
-		if $dataset->locked();
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
