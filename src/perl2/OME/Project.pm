@@ -37,6 +37,57 @@
 
 package OME::Project;
 
+=head1 NAME
+
+OME::Project - a collection of datasets
+
+=head1 DESCRIPTION
+
+The C<Project> class represents OME projects, which are a collection
+of datasets.  Projects and datasets form a many-to-many map, as do
+images and datasets.  A user's session usually has a single project
+selected as the "active project".
+
+=head1 METHODS (C<Project>)
+
+The following methods are available to C<Project> in addition to those
+defined by L<OME::DBObject>.
+
+=head2 name
+
+	my $name = $project->name();
+	$project->name($name);
+
+Returns or sets the name of this project.
+
+=head2 description
+
+	my $description = $project->description();
+	$project->description($description);
+
+Returns or sets the description of this project.
+
+=head2 owner
+
+	my $owner = $project->owner();
+	$project->owner($owner);
+
+Returns or sets the owner of this project.
+
+=head2 group
+
+	my $group = $project->group();
+	$project->group($group);
+
+Returns or sets the group that this project belongs to.
+
+=head2 ...
+
+	other methods exist. check out the code to see them.
+
+
+=cut
+
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -53,13 +104,13 @@ __PACKAGE__->addColumn(name => 'name',
                         SQLType => 'varchar(64)',
                         NotNull => 1,
                        });
-__PACKAGE__->addColumn(['owner','owner_id'] => 'owner_id',
+__PACKAGE__->addColumn('owner_id' => 'owner_id',
                        {
                         SQLType => 'integer',
                         NotNull => 1,
                         ForeignKey => 'experimenters',
                        });
-__PACKAGE__->addColumn(['group','group_id'] => 'group_id',
+__PACKAGE__->addColumn('group_id' => 'group_id',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'groups',
@@ -85,6 +136,32 @@ sub datasets {
 	} 
 	return @datasets;
 	
+}
+
+sub owner {
+    my $self = shift;
+    if (@_) {
+        my $attribute = shift;
+        $attribute->verifyType('Experimenter');
+        $self->owner_id($attribute->id());
+        return undef;
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                          $self->owner_id());
+    }
+}
+
+sub group {
+    my $self = shift;
+    if (@_) {
+        my $attribute = shift;
+        $attribute->verifyType('Group');
+        $self->group_id($attribute->id());
+        return undef;
+    } else {
+        return $self->Session()->Factory()->loadAttribute("Group",
+                                                          $self->group_id());
+    }
 }
 
 sub unlockedDatasets {
