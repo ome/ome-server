@@ -226,7 +226,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 				controller.finishInitThread();
 			}
 		};
-		worker.start();
+		worker.start();	
 	}
 	
 	/*
