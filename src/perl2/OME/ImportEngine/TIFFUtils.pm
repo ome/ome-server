@@ -65,6 +65,7 @@ use constant _x => ['n','v'];
 use constant _X => ['N','V'];
 use constant _XX => ['NN','VV'];
 use constant _xxXX => ['nnNN','vvVV'];
+use constant _xxXXshort => ['nnNn','vvVv'];
 
 use constant TAG_BYTE => 1;
 use constant TAG_ASCII => 2;
@@ -76,7 +77,7 @@ use constant TAG_FORMATS => [['_','_'],['c','c'],['_','_'],_x,_X,_XX];
 
 =head2 constant TAGS
 
-This set of contants associates meaningful names to standard TIFF
+This set of constants associates meaningful names to standard TIFF
 tag values.
 
 =cut
@@ -164,6 +165,11 @@ use constant TAGS =>
 
 use constant MAX_TIFF_TAG => 33342;
 
+my $tagHash = TAGS;
+my %tagnames = reverse %$tagHash;
+my $dumpHeader = 0;
+
+
 # Derived from Import_read->checkTIFF, TIFFreader->readTiffIFD, and
 # TIFFreader->readTiffTag
 #
@@ -203,13 +209,11 @@ sub readTiffIFD (*) {
     if ($buf[0] == 73 && $buf[1] == 73 && $buf[2] == 42) {
         $endian = LITTLE_ENDIAN;
         $offset = $buf[3];
-        #print STDERR "Found little endian - $offset\n";
     } elsif ($buf[0] == 77 && $buf[0] == 77) {
         @buf = unpack('CCnN',$buf);
         if ($buf[2] == 42) {
             $endian = BIG_ENDIAN;
             $offset = $buf[3];
-            #print STDERR "Found big endian - $offset\n";
         } else {
             return undef;
         }
@@ -223,14 +227,12 @@ sub readTiffIFD (*) {
     # Read in each IFD
 
     while ($offset > 0) {
-        #print STDERR "IFD at offset $offset\n";
         seek($fh,$offset,0) or return undef;
 
         # Read the number of tags in this IFD
         read($fh,$buf,2) or return undef;
         my $tag_count = unpack(_x->[$endian],$buf);
 
-        #print STDERR "  $tag_count tags\n";
 
         while ($tag_count) {
             # Read the tag
@@ -239,6 +241,16 @@ sub readTiffIFD (*) {
 
             my ($tag_id,$tag_type,$value_count,$value_offset) =
               unpack(_xxXX->[$endian],$buf);
+	    if ($dumpHeader) {
+		print STDERR "tag: $tag_id: ".$tagnames{$tag_id}.": ";
+	    }
+	    # Single short values are stored, left justified,
+	    # in the tag's value_count field
+	    if (($tag_type == TAG_SHORT) && ($value_count == 1)) {
+		($tag_id,$tag_type,$value_count,$value_offset) =
+		    unpack(_xxXXshort->[$endian],$buf);
+	    }
+
 
             my @value;
 
@@ -249,6 +261,9 @@ sub readTiffIFD (*) {
 					'tag_type' => $tag_type,
 					'value_count' => $value_count,
 					'value_offset' => $value_offset};
+		if ($dumpHeader) {
+		    print STDERR "\n";
+		}
 	    }
 	    else {
 		return undef
@@ -270,10 +285,17 @@ sub readTiffIFD (*) {
 		    seek($fh,$tell,0) or return undef;
 
 		    push @{$ifd{$tag_id}}, $buf;
+		    if ($dumpHeader) {
+			print STDERR unpack('C*', $buf);
+			print STDERR "\n";
+		    }
 		} elsif ($value_count == 1 && $tag_type != TAG_RATIONAL) {
 		    # If this is a simple type, with only a single value,
 		    # that value is stored directly in the offset field.
 		    push @{$ifd{$tag_id}}, $value_offset;
+		    if ($dumpHeader) {
+			print STDERR "$value_offset\n";
+		    }
 		} else {
 		    # Otherwise read a list of values
 		    my $tell = tell($fh);
@@ -285,15 +307,19 @@ sub readTiffIFD (*) {
 			    unpack(TAG_FORMATS->[$tag_type]->[$endian],$buf);
 			my $value =
 			    ($tag_type == TAG_RATIONAL)? $val1/$val2: $val1;
-			
+
 			push @{$ifd{$tag_id}}, $value;
+			if ($dumpHeader) {
+			    print STDERR "$value";
+			}
 			$value_count--;
+		    }
+		    if ($dumpHeader) {
+			print STDERR "\n";
 		    }
 		    
 		    seek($fh,$tell,0);
 		}
-		
-		#push @{$ifd{$tag_id}}, @value;
 	    }
             $tag_count--;
         }
@@ -326,6 +352,17 @@ sub getStrips {
     $counts_arr = $tags->{TAGS->{StripByteCounts}};  # how long the strip is
     return($offs_arr, $counts_arr);
 } 
+
+
+=head2 initDump
+
+# Set dump flag to 1, which enables printing out header info
+
+=cut
+
+sub initDump {
+    $dumpHeader = 1;
+}
 
 
 =head1 AUTHOR
