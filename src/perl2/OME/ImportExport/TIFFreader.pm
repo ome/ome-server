@@ -318,7 +318,7 @@ sub formatImage {
 
 	# ref to array built by TIFFreader
 	my $xref    =  $xml_hash->{'XYinfoPlane.'};
-	if (defined @$xref->[0]->[0]->[0]) {       # don't proceed if no data
+	if (defined $xref->[0]->[0]->[0]) {       # don't proceed if no data
 	    delete $xml_hash->{'XYinfoPlane.'};
 	    # ref to array built by TIFFreader
 	    my $wref    =  $xml_hash->{'WavelengthInfoPlane.'};
@@ -330,8 +330,8 @@ sub formatImage {
 	    my $xyhref = {};
 	    # N.B. If TIFFReader leaves more than 1 pair of key/value,
 	    # the following must be expanded.
-	    $key = @$xref->[0]->[0]->[0];  # copy, in proper order, XYinfo
-	    $val = @$xref->[0]->[0]->[1];  #    left by TIFFreader
+	    $key = $xref->[0]->[0]->[0];  # copy, in proper order, XYinfo
+	    $val = $xref->[0]->[0]->[1];  #    left by TIFFreader
 	    $xyhref->{'XYinfo.'.$key} = $val;  # copy
 	    push @$xy_aref, $xyhref;
 
@@ -341,8 +341,8 @@ sub formatImage {
 	    my $wvhref = {};
 	    # N.B. If TIFFReader leaves more than 1 pair of key/value,
 	    # the following must be expanded.
-	    $key = @$wref->[0]->[0]->[0];  # copy, in proper order, Waveleninfo
-	    $val = @$wref->[0]->[0]->[1];  #    left by TIFFreader
+	    $key = $wref->[0]->[0]->[0];  # copy, in proper order, Waveleninfo
+	    $val = $wref->[0]->[0]->[1];  #    left by TIFFreader
 	    $wvhref->{'WavelengthInfo.'.$key} = $val;  # copy
 	    push @$wv_aref, $wvhref;
 

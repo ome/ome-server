@@ -289,8 +289,8 @@ sub formatImage {
 	my $xyhref = {};
 	# N.B. If TIFFReader leaves more than 1 pair of key/value,
 	# the following must be expanded.
-	$key = @$xref->[0]->[$plane_num]->[0];  # copy, in proper order, XYinfo
-	$val = @$xref->[0]->[$plane_num]->[1];  #    left by TIFFreader
+	$key = $xref->[0]->[$plane_num]->[0];  # copy, in proper order, XYinfo
+	$val = $xref->[0]->[$plane_num]->[1];  #    left by TIFFreader
 	$xyhref->{'XYinfo.'.$key} = $val;  # copy
 	$xyhref->{'XYinfo.Stagepos.Z'} = $self->{uic2}->{$plane_num}[1];
 	# IGG 10/06/02:  OME dimensions begin at 0.
@@ -303,8 +303,8 @@ sub formatImage {
 	my $whref = {};
 	# N.B. If TIFFReader leaves more than 1 pair of key/value,
 	# the following must be expanded.
-	$key = @$wref->[0]->[$plane_num]->[0];  # copy Wave data, in order
-	$val = @$wref->[0]->[$plane_num]->[1];  #    left by TIFFreader
+	$key = $wref->[0]->[$plane_num]->[0];  # copy Wave data, in order
+	$val = $wref->[0]->[$plane_num]->[1];  #    left by TIFFreader
 	$whref->{'WavelengthInfo.'.$key} = $val;  # copy
 	$whref->{'WavelengthInfo.EmWave'} = $self->{uic3}->{$plane_num};
 	# IGG 10/06/02:  OME dimensions begin at 0.
