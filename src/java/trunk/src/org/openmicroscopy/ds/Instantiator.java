@@ -38,6 +38,7 @@
 
 package org.openmicroscopy.ds;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -260,6 +261,94 @@ public class Instantiator
                                                  result.getClass());
         }
 
+    }
+
+    /**
+     * <p>Creates a serialized {@link Map} of the format expected by
+     * the <code>updateObject</code> and <code>updateObjects</code>
+     * remote server methods.  The <code>newIDs</code> parameter is
+     * used to store all of the new objects (i.e., not in the database
+     * yet) which had been serialized previously for this remote
+     * method call.  It is used to ensure that any object references
+     * in the data object refer to existent objects.</p>
+     *
+     * @param dto the data object to serialize
+     * @param newIDs a {@link Map} linking new-ID values to data
+     * objects
+     * @return a serialized {@link Map} suitable to be sent to the
+     * XML-RPC layer
+     */
+    public Map serializeForUpdate(MappedDTO dto, Map newIDs)
+    {
+        Map serialized = new HashMap();
+
+        Map elements = dto.getMap();
+        Iterator keys = elements.keySet().iterator();
+
+        // Create a Map of the format expected by the updateObject
+        // method
+
+        while (keys.hasNext())
+        {
+            Object key = keys.next();
+            Object element = elements.get(key);
+
+            if (element == null)
+            {
+                // Null values can be saved
+
+                serialized.put(key,element);
+            } else if (element instanceof MappedDTO) {
+                // References are turned into primary key ID's.  If
+                // the referent object is new, then it must have a
+                // new-ID specified in the newIDs map in order to be
+                // serialized.  If it doesn't, throw an error.
+
+                MappedDTO child = (MappedDTO) element;
+                if (child.isNew())
+                {
+                    Object id;
+                    if (newIDs != null &&
+                        (id = newIDs.get(child)) != null)
+                    {
+                        serialized.put(key,id);
+                    } else {
+                        throw new DataException("Referent object in "+key+" field is new, and has not been assigned a new-ID");
+                    }
+                } else {
+                    serialized.put(key,
+                                   "REF:"+
+                                   child.getDTOTypeName()+":"+
+                                   child.getMap().get("id"));
+                }
+            } else if (element instanceof List) {
+                // Skip List elements
+            } else if (element instanceof Map) {
+                // Skip Map elements
+            } else {
+                // Store anything else as is
+                serialized.put(key,element);
+            }
+        }
+
+        // If the object being saved is new, make sure that its "id"
+        // field signifies it as such.
+
+        if (dto.isNew())
+        {
+            if (newIDs == null)
+            {
+                serialized.put("id","NEW:1");
+            } else {
+                Object id = newIDs.get(dto);
+                if (id == null)
+                    throw new DataException("Fatal error -- new object has not been assigned an ID yet");
+                else
+                    serialized.put("id",id);
+            }
+        }
+
+        return serialized;
     }
 
 
