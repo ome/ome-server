@@ -229,7 +229,7 @@ PixelsRep *NewPixels (
 char error[256];
 pixHeader *head;
 PixelsRep *myPixels;
-off_t size;
+size_t size;
 int result;
 
 
@@ -332,7 +332,7 @@ int result;
 	return (myPixels);
 }
 
-static int
+int
 CheckCoords (PixelsRep * myPixels,
              ome_coord theX,
              ome_coord theY,
@@ -359,12 +359,11 @@ CheckCoords (PixelsRep * myPixels,
 /*
   Note that this is a byte offset - not a pixel offset.
 */
-off_t GetOffset (PixelsRep *myPixels, ome_coord theX, ome_coord theY, ome_coord theZ, ome_coord theC, ome_coord theT) {
+size_t GetOffset (PixelsRep *myPixels, ome_coord theX, ome_coord theY, ome_coord theZ, ome_coord theC, ome_coord theT) {
 pixHeader *head;
 
-	if (!myPixels) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
-	if (! CheckCoords (myPixels,theX,theY,theZ,theC,theT)) return (-1);
+	if (!myPixels) return (0);
+	if (! (head = myPixels->head) ) return (0);
 	return ((((((theT*head->dc) + theC)*head->dz + theZ)*head->dy + theY)*head->dx + theX)*head->bp);
 }
 
@@ -377,19 +376,18 @@ pixHeader *head;
   Note that the offset parameter is a byte offset from (GetOffset),
   but the number returned is the number of pixels (not bytes).
 */
-size_t DoPixelIO (PixelsRep *myPixels, off_t offset, size_t nPix, char rorw) {
+size_t DoPixelIO (PixelsRep *myPixels, size_t offset, size_t nPix, char rorw) {
 size_t nIO=0;
 size_t nBytes;
 char *pixels,*pix_P;
 pixHeader *head;
 unsigned char bp;
-off_t file_off;
+size_t file_off;
 char *IO_buf;
 unsigned char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
 
-	if (offset < 0) return (0);
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
 	if (! (pixels = myPixels->pixels) ) return (0);
@@ -499,7 +497,7 @@ unsigned long written=0;
 void fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec) {
 stackInfo *stackInfoP;
 pixHeader *head;
-off_t stack_offset;
+size_t stack_offset;
 
 	if (!chSpec) return;
 	if (chSpec->isFixed) return;
@@ -556,8 +554,8 @@ off_t stack_offset;
   (i.e. 1 for grayscale, 3 for RGB, 4 for RGBA).
 */
 void ScalePixels (
-	PixelsRep *myPixels, off_t offset, size_t nPix,
-	unsigned char *buf, off_t jump,
+	PixelsRep *myPixels, size_t offset, size_t nPix,
+	unsigned char *buf, size_t jump,
 	channelSpecType *chSpec)
 {
 size_t nIO=0, nBytes;
@@ -567,7 +565,6 @@ unsigned char bp;
 register float theVal;
 float scale, blk;
 
-	if (offset < 0) return;
 	if (!myPixels) return;
 	if (! (head = myPixels->head) ) return;
 	if (! (bp = head->bp) ) return;
@@ -664,10 +661,14 @@ float scale, blk;
 
 /* This is a high level interface to set a pixel plane from a memory buffer. */
 size_t setPixelPlane (PixelsRep *thePixels, void *buf , ome_coord theZ, ome_coord theC, ome_coord theT ) {
-off_t offset=0;
+size_t offset=0;
 size_t nPix, nIO=0;
 
 	nPix = thePixels->head->dx * thePixels->head->dy;
+	if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+		return (0);
+	}
+
 	offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
 	thePixels->IO_stream = NULL;
 	thePixels->IO_buf = buf;
@@ -690,13 +691,15 @@ ome_dim dx,dy,dz,dc,dt,bp;
 ome_coord x,y,z,w,t;
 size_t sizeX, nIO_t=0, nIO=0;
 char *pix;
-off_t off0, off1;
+size_t off0, off1;
 
 	if (!myPixels) return (0);
 	if (! (pix = (char *)myPixels->pixels) ) return (0);
 	if (! (head = myPixels->head) ) return (0);
-	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (0);
-	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (0);
+	if ( ! CheckCoords (myPixels, x0, y0, z0, w0, t0) ) return (0);
+	off0 = GetOffset (myPixels, x0, y0, z0, w0, t0);
+	if ( !CheckCoords (myPixels, x1, y1, z1, w1, t1) ) return (0);
+	off1 = GetOffset (myPixels, x1, y1, z1, w1, t1);
 	if (off0 >= off1) return (0);
 	dx = head->dx;
 	dy = head->dy;
@@ -732,7 +735,7 @@ static
 int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, ome_coord z, ome_coord c, ome_coord t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
-off_t file_off,plane_offset;
+size_t file_off,plane_offset;
 
 	if (!myPixels) return (0);
 	if (!myPixels->planeInfos) return (0);
@@ -759,7 +762,7 @@ static
 int DoStackInfoIO (PixelsRep *myPixels, stackInfo *theInfo, ome_coord c, ome_coord t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (stackInfo);
-off_t file_off,stack_offset;
+size_t file_off,stack_offset;
 
 	if (!myPixels) return (0);
 	if (!myPixels->stackInfos) return (0);
@@ -792,7 +795,7 @@ planeInfo myPlaneInfo;
 pixHeader *head;
 ome_dim dx, dy, nPix;
 ome_coord x, y;
-off_t pix_off;
+size_t pix_off;
 char *thePix;
 unsigned char  *uCharP;
 unsigned short *uShrtP;
@@ -966,7 +969,7 @@ ome_dim dz;
 ome_coord z;
 stackInfo *stackInfoP;
 planeInfo *planeInfoP;
-off_t plane_offset,stack_offset;
+size_t plane_offset,stack_offset;
 register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0,nPix;
 
 	if (!myPixels) return (0);
@@ -1093,7 +1096,7 @@ int FinishPixels (PixelsRep *myPixels, char force) {
 }
 
 
-size_t ConvertFile (PixelsRep *myPixels, OID fileID, off_t file_offset, off_t pix_offset, size_t nPix) {
+size_t ConvertFile (PixelsRep *myPixels, OID fileID, size_t file_offset, size_t pix_offset, size_t nPix) {
 pixHeader *head;
 FileRep *myFile;
 unsigned long nIO;
@@ -1153,7 +1156,7 @@ pixHeader *head;
 FileRep *myFile;
 char file_path[MAXPATHLEN],bp;
 unsigned long nIO=0, nOut;
-off_t pix_offset;
+size_t pix_offset;
 size_t nPix;
 convertFileRec convFileRec;
 FILE *convFileInfo;
@@ -1182,11 +1185,13 @@ tsize_t stripSize;
 
 	bp = head->bp;
 
-	if ( (pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT)) < 0) {
+	if (!CheckCoords (myPixels, 0, 0, theZ, theC, theT)){
 		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)",
 			myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
 		return (0);
 	}
+
+	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
 	
     if (! (tiff = TIFFOpen(myFile->path_rep, "r")) ) {
 		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.",myPixels->ID,

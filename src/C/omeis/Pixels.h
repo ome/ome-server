@@ -184,24 +184,28 @@ freePixelsRep (PixelsRep *myPixels);
 PixelsRep *
 GetPixelsRep (OID ID, char rorw, char isBigEndian);
 
-off_t
-GetOffset (PixelsRep *myPixels,
-	int theX, int theY, int theZ, int theC, int theT);
-
 void
 ScalePixels (
-	PixelsRep *myPixels, off_t offset, size_t nPix,
-	unsigned char *buf, off_t jump,
+	PixelsRep *myPixels, size_t offset, size_t nPix,
+	unsigned char *buf, size_t jump,
 	channelSpecType *chSpec);
 
 void
 fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec);
 
-off_t
+int
+CheckCoords (PixelsRep * myPixels,
+             ome_coord theX,
+             ome_coord theY,
+             ome_coord theZ,
+             ome_coord theC,
+             ome_coord theT);
+
+size_t
 GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT);
 
 size_t
-DoPixelIO (PixelsRep *myPixels, off_t offset, size_t nPix, char rorw);
+DoPixelIO (PixelsRep *myPixels, size_t offset, size_t nPix, char rorw);
 
 size_t
 DoROI (PixelsRep *myPixels,
@@ -222,8 +226,8 @@ size_t
 ConvertFile (
 	PixelsRep *myPixels,
 	OID fileID,
-	off_t file_offset,
-	off_t pix_offset,
+	size_t file_offset,
+	size_t pix_offset,
 	size_t nPix);
 
 

@@ -65,8 +65,7 @@ dispatch (char **param)
 	size_t nPix=0, nIO=0;
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0;
-	off_t offset=0;
-	off_t file_offset=0;
+	size_t offset=0, file_offset=0;
 	unsigned char isLocalFile;
 	char *dims;
 	int isSigned,isFloat;
@@ -442,7 +441,7 @@ char **cgivars=param;
 
 			if ( (theParam = get_param (param,"Offset")) )
             {
-				sscanf (theParam,"%lld",&offset);
+				sscanf (theParam,"%lu",&offset);
             }
 
 			if ( !(theFile = GetFileRep (fileID)) ) {
@@ -492,7 +491,7 @@ char **cgivars=param;
 			}
 
 			if ( (theParam = get_param (param,"Offset")) )
-				sscanf (theParam,"%lld",&file_offset);
+				sscanf (theParam,"%lu",&file_offset);
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
@@ -510,6 +509,10 @@ char **cgivars=param;
 					return (-1);
 				}
 				nPix = head->dx*head->dy*head->dz;
+				if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
+					HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+					return (-1);
+				}
 				offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 			} else if (m_val == M_CONVERTPLANE || m_val == M_CONVERTTIFF) {
 				if (theZ < 0 || theC < 0 || theT < 0) {
@@ -518,6 +521,10 @@ char **cgivars=param;
 					return (-1);
 				}
 				nPix = head->dx*head->dy;
+				if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+					HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+					return (-1);
+				}
 				offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
 			} else if (m_val == M_CONVERTROWS) {
 				long nRows=1;
@@ -531,6 +538,16 @@ char **cgivars=param;
 				}
 
 				nPix = nRows*head->dy;
+				if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
+					HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
+						theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+					return (-1);
+				}
+				if (theY+nRows-1 >= head->dy) {
+					HTTP_DoError (method,"theY + nRows (%d + %d = %d) must be less than dY (%d).",
+						theY,nRows,theY+nRows,head->dy);
+					return (-1);
+				}
 				offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
 			}
 
@@ -625,6 +642,10 @@ char **cgivars=param;
 				return (-1);
 			}
 			nPix = head->dx*head->dy*head->dz;
+			if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
+				HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+				return (-1);
+			}
 			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 		} else if (strstr (method,"Plane")) {
 			if (theZ < 0 || theC < 0 || theT < 0) {
@@ -633,6 +654,10 @@ char **cgivars=param;
 				return (-1);
 			}
 			nPix = head->dx*head->dy;
+			if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+				HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+				return (-1);
+			}
 			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
 		}
 

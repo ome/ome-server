@@ -40,6 +40,7 @@
 #include <filt.h>
 #include <zoom.h>
 #include "composite.h"
+#include "cgi.h"
 
 int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 

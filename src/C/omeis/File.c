@@ -279,7 +279,7 @@ int FinishFile (FileRep *myFile) {
 
 
 /*
-  UploadFile (char *filename, off_t size)
+  UploadFile (char *filename, size_t size)
   Makes new rep file in 'Files' of the specified size.
   copies filename parameter to OID.info
   Reads stdin, writing to the file.

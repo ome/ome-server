@@ -42,7 +42,6 @@
 #include <fcntl.h>
 
 
-#include "omeis.h"
 #include "repository.h"
 
 /*
