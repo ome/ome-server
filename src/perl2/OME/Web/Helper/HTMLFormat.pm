@@ -629,7 +629,7 @@ sub formImport{
 	$rows.=addRow(\%b);
 	$html.=$submit."<BLOCKQUOTE>";
 	$html.=writeTable($rows,\%c);
-	$html.=$rad[1]."<br>".$dropDownTable;
+	$html.=$rad[1]."<br>".$dropDownTable if $rad[1];
 	
 	$html.="</BLOCKQUOTE>";
 	return $html;
@@ -858,7 +858,7 @@ sub imageInDataset{
 	);
 	$rows.=addRow(\%H);
 	foreach my $k (@$ref){
-		my ($name,$id,$view);
+		my ($sid,$name,$id,$view);
 		if (defined $search){
 			$name=$k->{name};
 			$id=$k->{image_id};
@@ -867,8 +867,9 @@ sub imageInDataset{
 		}else{
 			$name=$k->name();
 			$id=$k->id();
+			$sid=$k->Session()->SessionKey();
 		}
-		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$id." align=\"bottom\" border=0></a>";
+		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$id&sid=$sid align=\"bottom\" border=0></a>";
 
 		#$view=buttonPopUp($id,"View","openPopUpImage");
 	
