@@ -104,7 +104,7 @@ truncation and concatenation of '...'. This length may be overridden by specifyi
 'max_text_length' option. A 0 or undefined value results in no truncation. A
 'max_text_length' of 3 or less will result in irregular behavior.
 
-Subclasses must implement 'max_text_length'. 
+Subclasses are expected to implement 'max_text_length'. 
 
 =cut
 
@@ -156,7 +156,7 @@ sub getTitle {
 
 	return "$prefix: $name".
 		( ( $ST and $obj->module_execution() and $obj->module_execution()->module() ) ?
-			' from '.__PACKAGE__->getRef( $obj->module_execution(), $format ) :
+			' from '.$self->getRef( $obj->module_execution(), $format ) :
 			''
 		);
 
@@ -174,14 +174,16 @@ For 'txt' format, it will be an id number.
 For 'html' format, it will be an '<a href=...' that links to a
 detailed display of the object.
 
+subclasses should not override this. instead their method should be named _getRef
+
 =cut
 
 sub getRef {
 	my ($self, $obj, $format, $options) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->getRef( $obj, $format )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getRef( $obj, $format )
+		if( $specializedRenderer and $specializedRenderer->can('_getRef') );
 	
 	my $q = new CGI;
 	for( $format ) {
