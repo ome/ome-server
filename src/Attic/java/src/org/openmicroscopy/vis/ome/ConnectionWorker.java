@@ -101,7 +101,6 @@ public class ConnectionWorker extends SwingWorker {
 						chains = new Chains(controller,connection);
 						connection.setModules(modules);
 						connection.setChains(chains);
-						connection.createThumbnailAgent();
 						controller.completeWindows(); 
 					}
 				}
@@ -119,9 +118,7 @@ public class ConnectionWorker extends SwingWorker {
 			Class.forName("org.openmicroscopy.vis.ome.CModule");
 			Class.forName("org.openmicroscopy.vis.ome.CChain");
 			Class.forName("org.openmicroscopy.vis.ome.CLink");
-			Class.forName("org.openmicroscopy.vis.ome.CChainExecution");
 			Class.forName("org.openmicroscopy.vis.ome.CDataset");
-			Class.forName("org.openmicroscopy.vis.ome.CProject");
 			Class.forName("org.openmicroscopy.vis.ome.CImage");
 		}
 		catch (ClassNotFoundException e) {
