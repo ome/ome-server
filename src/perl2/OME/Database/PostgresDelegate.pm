@@ -186,7 +186,7 @@ SQL
 
 sub __collectSQLOptions ($$) {
     my ($columns,$aliases) = @_;
-    my ($sql_type,$default,$not_null,$unique,$references);
+    my ($sql_type,$default,$not_null,$unique,$references,$indexed);
 
     foreach my $alias (@$aliases) {
         my $sql_options = $columns->{$alias}->[3];
@@ -226,9 +226,80 @@ sub __collectSQLOptions ($$) {
                 $sql_options->{ForeignKey} ne $references;
             $references = $sql_options->{ForeignKey};
         }
+
+        if (defined $sql_options->{Indexed}) {
+            die "INDEXes mismatch"
+              if defined $indexed &&
+                $sql_options->{Indexed} ne $indexed;
+            $indexed = $sql_options->{Indexed};
+        }
     }
 
-    return ($sql_type,$default,$not_null,$unique,$references);
+    return ($sql_type,$default,$not_null,$unique,$references,$indexed);
+}
+
+sub __createSequence {
+    my ($self,$dbh,$sequence) = @_;
+    my $find_relation = $dbh->prepare_cached(FIND_RELATION_SQL);
+
+    #print "\n$sequence\n------------------\n";
+
+    my ($reloid,$relkind) =
+      $dbh->selectrow_array($find_relation,{},$sequence);
+    die "Database contains object named $sequence which is not a sequence!"
+      if defined $relkind && $relkind ne 'S';
+
+    if (defined $relkind) {
+        #print "Exists!\n";
+    } else {
+        #print "New sequence!\n";
+        my $sql = "CREATE SEQUENCE $sequence";
+        $dbh->do($sql)
+          or die "Could not create sequence $sequence";
+    }
+
+    return;
+}
+
+my $index_sequence_created = 0;
+use constant INDEX_SEQUENCE_NAME => 'OME__INDEX_SEQ';
+
+our $CREATE_INDICES = 1;
+
+sub __createIndex {
+    my ($self,$dbh,$table,$column) = @_;
+
+    return unless $CREATE_INDICES;
+
+    die "Invalid table name"
+      unless $table =~ /^\w+$/;
+    die "Invalid column name"
+      unless $column =~ /^\w+$/;
+
+    if (!$index_sequence_created) {
+        $self->__createSequence($dbh,INDEX_SEQUENCE_NAME());
+        $index_sequence_created = 1;
+    }
+
+    my $index_name;
+    my $index_good = 0;
+
+    my $find_relation = $dbh->prepare_cached(FIND_RELATION_SQL);
+
+    until ($index_good) {
+        my $index_number = $self->
+          getNextSequenceValue($dbh,INDEX_SEQUENCE_NAME());
+        $index_name = "OME__INDEX_".$index_number;
+
+        my ($reloid,$relkind) =
+          $dbh->selectrow_array($find_relation,{},$index_name);
+
+        $index_good = !defined $relkind;
+    }
+
+    my $sql = "CREATE INDEX $index_name ON $table ($column)";
+    $dbh->do($sql)
+      or die "Could not create index of ${table}.${column}";
 }
 
 sub addClassToDatabase {
@@ -256,21 +327,7 @@ sub addClassToDatabase {
 
     # Create the primary key sequence if needed
     if (defined $sequence) {
-        #print "\n$sequence\n------------------\n";
-
-        my ($reloid,$relkind) =
-          $dbh->selectrow_array($find_relation,{},$sequence);
-        die "Database contains object named $sequence which is not a sequence!"
-          if defined $relkind && $relkind ne 'S';
-
-        if (defined $relkind) {
-            #print "Exists!\n";
-        } else {
-            #print "New sequence!\n";
-            my $sql = "CREATE SEQUENCE $sequence";
-            $dbh->do($sql)
-              or die "Could not create sequence $sequence";
-        }
+        $self->__createSequence($dbh,$sequence);
     }
 
     # Ensure that each table exists
@@ -375,7 +432,7 @@ sub addClassToDatabase {
           COLUMN:
             foreach my $column (keys %$table_hash) {
                 my $aliases = $table_hash->{$column};
-                my ($sql_type,$default,$not_null,$unique,$references) =
+                my ($sql_type,$default,$not_null,$unique,$references,$indexed) =
                   __collectSQLOptions($columns,$aliases);
 
                 next COLUMN
@@ -424,8 +481,11 @@ sub addClassToDatabase {
 						  or die "Could not add UNIQUE constraint to column $column in table $table!";
                    }
 
-
                     #print STDERR "$sql\n(",join(',',@bind_vals),")\n";
+                }
+
+                if ($indexed) {
+                    $self->__createIndex($dbh,$table,$column);
                 }
             }
         } else {
@@ -433,6 +493,7 @@ sub addClassToDatabase {
             #print "New table!\n";
             my @column_sqls;
             my @bind_vals;
+            my @indices;
 
             # First, add the primary key for this table (if any).
             if (defined $primaries->{$table}) {
@@ -451,7 +512,7 @@ sub addClassToDatabase {
             foreach my $column (keys %$table_hash) {
                 #print "  $column\n";
                 my $aliases = $table_hash->{$column};
-                my ($sql_type,$default,$not_null,$unique,$references) =
+                my ($sql_type,$default,$not_null,$unique,$references,$indexed) =
                   __collectSQLOptions($columns,$aliases);
 
                 die "$column does not have an SQL type!"
@@ -471,6 +532,8 @@ sub addClassToDatabase {
                     if defined $references;
 
                 push @column_sqls, $column_sql;
+                push @indices, $column
+                  if $indexed;
             }
 
             # Join all of the column definitions together into a
@@ -482,6 +545,10 @@ sub addClassToDatabase {
             #print "$create_sql\n(",join(", ",@bind_vals),")\n";
             $dbh->do($create_sql,{},@bind_vals)
               or die "Could not create table $table";
+
+            foreach my $column (@indices) {
+                $self->__createIndex($dbh,$table,$column);
+            }
         }
     }
 }
