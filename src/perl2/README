@@ -1,9 +1,0 @@
-Before installing, execute perlCheck to make sure the prerequisites are installed:
-sudo perl perlCheck.pl
-Running this as root will allow perlCheck to install the prerequisites on your system.
-Once perlCheck is satisfied, do the standard:
-
-perl Makefile.PL
-make
-make test
-make install
