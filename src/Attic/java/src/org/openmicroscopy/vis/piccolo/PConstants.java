@@ -64,4 +64,7 @@ public class PConstants {
 	public static final double SCALE_FACTOR=1.2;
 	
 	public static final Color HIGHLIGHT_COLOR = new Color(204,51,255);
+	
+	public static final double CATEGORY_LABEL_OFFSET_X=40;
+	public static final double CATEGORY_LABEL_OFFSET_Y=20;
 }
