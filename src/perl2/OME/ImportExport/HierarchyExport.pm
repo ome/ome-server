@@ -275,7 +275,7 @@ sub buildDOM {
 
 		# Only add the projects in the $objects list.
 		foreach (values %datasetProjects) {
-			$self->addRefNode ($_, 'Project', $dataset->{node})
+			$self->addRefNode ($_, 'ProjectRef', $dataset->{node})
 				if exists $Projects->{$_->id()};
 		}
 	}
@@ -287,7 +287,7 @@ sub buildDOM {
 
 		# Only add the datasets in the $objects list.
 		foreach (values %imageDatasets) {
-			$self->addRefNode ($_, 'Dataset', $image->{node})
+			$self->addRefNode ($_, 'DatasetRef', $image->{node})
 				if exists $Datasets->{$_->id()};
 		}
 
@@ -506,8 +506,7 @@ my ($self, $object, $name, $parent) = @_;
 
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
-	my $element = $DOM->createElement('Ref');
-	$element->setAttribute( 'Name' , $name);
+	my $element = $DOM->createElement($name);
 	$element->setAttribute( 'ID' , $lsid->getLSID($object));
 	if (defined $parent) {
 		$parent->appendChild ($element);
