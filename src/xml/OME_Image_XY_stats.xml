@@ -1,3 +1,4 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
 <AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
@@ -45,11 +46,53 @@
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false">
-		<CommandLine>Path=<RawImageFilePath/> Dims=<sizeX/>,<sizeY/>,<sizeZ/>,<sizeT/>,<sizeW/>,<BytesPerPixel/></CommandLine>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/CLIExecutionInstructions.xsd">
+		<CommandLine>
+			<InputSubString>
+				<RawText>Path=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<RawImageFilePath/>
+			</InputSubString>
+			<InputSubString>
+				<RawText> Dims=</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeX/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeY/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeZ/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeT/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<sizeW/>
+			</InputSubString>
+			<InputSubString>
+				<RawText>,</RawText>
+			</InputSubString>
+			<InputSubString>
+				<BytesPerPixel/>
+			</InputSubString>
+		</CommandLine>
 		<STDOUT>
-			<!-- This exact setup for STDOUT completely works on the output of this program. -->
-			<OutputRecord RepeatCount= "1">
+			<OutputRecord RepeatCount = "1">
 				<pat>^.*?\n</pat>
 			</OutputRecord>
 			<!-- That eats a line. The first line of the output is column headers -->
