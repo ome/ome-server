@@ -60,7 +60,7 @@ sub startImage {
     $self->SUPER::startImage($image);
 
     my $session = OME::Session->instance();
-    my $factory = OME::Session->instance();
+    my $factory = $session->Factory();
     my $mex     = $self->getModuleExecution();
 
     my @fses  = $self->getCurrentInputAttributes("Frequency Space");
@@ -70,7 +70,7 @@ sub startImage {
     	
     	# PixelsSlice points to the zeroth Channel
 		my $parent = $factory->
-		  newAttribute('PixelsSlice',undef,$mex,
+		  newParentAttribute('PixelsSlice',undef,$mex,
 					   {
 						Parent => $slice->Parent(),
 						StartX => $slice->StartX(),
