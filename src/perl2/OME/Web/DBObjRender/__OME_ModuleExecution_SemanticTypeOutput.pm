@@ -86,7 +86,7 @@ DBObject methods + attributes
 sub getRelationAccessors {
 	my ($proto,$obj) = @_;
 
-	my ($objects, $methods, $params, $return_types, $names, $call_as_scalar )
+	my ($objects, $methods, $params, $return_types, $names, $titles, $call_as_scalar )
 		= $proto->__gather_PublishedManyRefs( $obj );
 
 	my $object      = 'OME::Tasks::ModuleExecutionManager';
