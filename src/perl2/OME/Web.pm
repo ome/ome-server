@@ -311,6 +311,9 @@ sub serve {
 		print "You shouldn't be accessing the $class page.";
 		print "<br>Here's the error message:<br>$content" unless !(defined $content);
 	}
+	
+	$self->Session()->closeSession()
+		if defined $self->Session();
 }
 
 sub headers {
