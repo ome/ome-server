@@ -49,6 +49,7 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.ome.Chains;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.dnd.ChainSelection;
@@ -98,6 +99,11 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	private Connection connection=null;
 	
 	/**
+	 * Chains controller
+	 */
+	private Controller controller = null;
+	
+	/**
 	 * Scengraph layer for the canvas.
 	 */
 	private PLayer layer;
@@ -140,8 +146,10 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 */
 	private DragSource dragSource;
 
-	public PChainLibraryCanvas(Connection c) {
+	public PChainLibraryCanvas(Controller controller,Connection c) {
 		super();
+		
+		this.controller = controller;
 		this.connection  = c;
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		layer = getLayer();
@@ -158,7 +166,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 		
 		removeInputEventListener(getZoomEventHandler());
 		removeInputEventListener(getPanEventHandler());
-		addInputEventListener(new PChainLibraryEventHandler(this)); 
+		addInputEventListener(new PChainLibraryEventHandler(this,controller)); 
 		
 		// set up link layer
 		linkLayer.setPickable(false);
@@ -269,7 +277,8 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 * @param width
 	 */
 	private PChainBox decorateChain(CChain chain,float left,float top) {
-		PChainBox box = new PChainBox(chain,left,top);
+		PChainBox box = new PChainBox(controller.getControlPanel(),
+			chain,left,top);
 		layer.addChild(box);
 		box.moveToBack();
 		return box;
