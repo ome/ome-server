@@ -98,11 +98,21 @@ sub getTable {
 
 	# If we're showing relations
 	if ($options->{relations}) { push(@column_headers, 'Datasets Related') }
+	
+	# If we're showing select checkboxes
+	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
 
 	# Generate our table data
 	foreach my $image (@images) {
 		my $id = $image->id();
-		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
+		my $checkbox;	
+		
+		if ($options->{select_column}) {
+			$checkbox = $q->td({-align => 'center'},
+				$q->checkbox(-name => 'selected', -value => $id, -label => '')
+			);
+		}
+
 		my $name = $image->name();
 		my $thumbnail = $q->img( {
 				-align => 'bottom',
@@ -131,8 +141,8 @@ sub getTable {
 		}
 
 		$table_data .= $q->Tr({-class => 'ome_td'},
+			$checkbox || '',
 			$q->td({-align => 'center'}, [
-				$checkbox,
 				$id,
 				$name,
 				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
@@ -157,7 +167,7 @@ sub getTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
+		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
 		$table_data,
 		$options_row || '',
 		$q->endform()

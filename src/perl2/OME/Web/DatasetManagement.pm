@@ -166,6 +166,7 @@ sub makeImageListings {
 	# Gen our "Images in Project" table
 	my $html = $t_generator->getTable( {
 			options_row => ["Remove"],
+			select_column => 1,
 		},
 		$dataset->images()
 	);

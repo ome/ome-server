@@ -125,6 +125,7 @@ sub displayDatasets {
 	my $html = $t_generator->getTable( {
 			options_row => ["Switch To", "Remove", "Delete"],
 			relations => 1,
+			select_column => 1,
 		},
 		$d_manager->getUserDatasets()
 	);

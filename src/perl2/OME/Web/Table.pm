@@ -51,9 +51,6 @@ use Data::Dumper;
 
 # OME Modules
 use OME;
-use OME::Tasks::ProjectManager;
-use OME::Tasks::DatasetManager;
-use OME::Tasks::ImageManager;
 use OME::ModuleExecution;
 
 #*********
@@ -62,9 +59,6 @@ use OME::ModuleExecution;
 
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
-
-# Global display types, one for each object type we have a table method for
-my @DISPLAY_TYPES = qw(Projects Datasets Images MEXes);  # First element is default
 
 #*********
 #********* PRIVATE METHODS
@@ -130,14 +124,23 @@ sub __MEXTable {
                                                                                                           
     return $table;
 }
-                                                                                                          
-sub __genericTableHeader {
+
+sub __getDisplayLinks {
 	my $self = shift;
-	my ($title) = @_;
 	my $q = $self->CGI();
 
-	# Title text
-	$title = $q->span({-class => 'ome_title'}, $title);
+	return $q->a({href => 'serve.pl?Page=OME::Web::ProjectTable'}, 'Projects') . ' | ' .
+	       $q->a({href => 'serve.pl?Page=OME::Web::DatasetTable'}, 'Datasets') . ' | ' .
+	       $q->a({href => 'serve.pl?Page=OME::Web::ImageTable'}, 'Images')     . ' | ' .
+	       $q->a({href => 'serve.pl?Page=OME::Web::MEXTable'}, 'MEXes');
+}
+
+sub __genericTableHeader {
+	my ($self, $title_text) = @_;
+	my $q = $self->CGI();
+
+	# Title text, yay variable reuse!
+	$title_text = $q->span({-class => 'ome_title'}, $title_text);
 
 	# "Display:" selection box table and form
 	my $table = $q->table( {
@@ -146,16 +149,9 @@ sub __genericTableHeader {
 		},
 		$q->start_form() .
 		$q->Tr(
-			$q->td({-align => 'left'}, $title),
+			$q->td({-align => 'left'}, $title_text),
 			$q->td({-align => 'right'},
-				"Display: " .
-				$q->popup_menu( {
-						-name => 'type',
-						-values => [@DISPLAY_TYPES],
-						-default => $DISPLAY_TYPES[0]
-					}) .
-				'&nbsp' .
-				$q->submit({-value => 'Go'})
+				$q->b("Display: ") . $self->__getDisplayLinks()
 			)
 		) .
 		$q->endform()

@@ -124,6 +124,7 @@ sub printImages {
 	my $html = $t_generator->getTable( {
 			options_row => ["Delete", "Remove"],
 			relations => 1,
+			select_column => 1,
 		},
 		$i_manager->getUserImages()
 	);

@@ -95,19 +95,29 @@ sub getTable {
 	}
 	
 	my @column_headers = qw(ID Name Owner Group Description);
+	
+	# If we're showing select checkboxes
+	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
 
 	# Generate our table data
 	foreach my $project (@projects) {
 		my $id = $project->id();
-		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
+		my $checkbox;
+
+		if ($options->{select_column}) {
+			$checkbox = $q->td({-align => 'center'},
+				$q->checkbox(-name => 'selected', -value => $id, -label => '')
+			);
+		}
+
 		my $name = $project->name();
 		my $description = $project->description();
 		my $owner = $project->owner()->FirstName() . " " . $project->owner()->LastName();
 		my $group = $project->group() ? $project->group()->Name() : " - ";
 
 		$table_data .= $q->Tr({-class => 'ome_td'},
+			$checkbox || '',
 			$q->td({-align => 'center'}, [
-				$checkbox,
 				$id,
 				$q->a({-href => "javascript:openInfoProject($id);"}, $name),
 				$owner,
@@ -130,7 +140,7 @@ sub getTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
+		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
 		$table_data,
 		$options_row || '',
 		$q->endform(),

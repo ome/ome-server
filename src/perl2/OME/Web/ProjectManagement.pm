@@ -196,6 +196,7 @@ sub makeDatasetListings {
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
 			options_row => ["Switch To", "Remove", "Delete"],
+			select_column => 1,
 		},
 		$project->datasets()
 	);

@@ -130,6 +130,7 @@ sub print_form {
 
 	my $html = $t_generator->getTable( {
 			options_row => ["Switch To", "Delete"],
+			select_column => 1,
 		},
 		$p_manager->getUserProjects()
 	);

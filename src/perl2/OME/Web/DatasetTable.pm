@@ -98,10 +98,20 @@ sub getTable {
 	# If we're showing relations
 	if ($options->{relations}) { push(@column_headers, 'Projects Related') }
 
+	# If we're showing select checkboxes
+	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
+
 	# Generate our table data
 	foreach my $dataset (@datasets) {
 		my $id = $dataset->id();
-		my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
+		my $checkbox;
+
+		if ($options->{select_column}) {
+			$checkbox = $q->td({-align => 'center'},
+				$q->checkbox(-name => 'selected', -value => $id, -label => '')
+			);
+		}
+
 		my $name = $dataset->name();
 		my $description = $dataset->description();
 		my $owner = $dataset->owner()->FirstName() . " " . $dataset->owner()->LastName();
@@ -117,8 +127,8 @@ sub getTable {
 		
 		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...
 			$table_data .= $q->Tr({-class => 'ome_td'},
+				$checkbox || '',
 				$q->td({-align => 'center'}, [
-					$checkbox,
 					$id,
 					$status,
 					$q->a({-href => "javascript:openInfoDataset($id);"}, $name),
@@ -144,7 +154,7 @@ sub getTable {
 			-width => '100%',
 		},
 		$q->startform(),
-		$q->th({-class => 'ome_td'}, ["Select", @column_headers]),  # Space for the checkbox field
+		$q->th({-class => 'ome_td'}, [@column_headers]),  # Space for the checkbox field
 		$table_data,
 		$options_row || '',
 		$q->endform()
