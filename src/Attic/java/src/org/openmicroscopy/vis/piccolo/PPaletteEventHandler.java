@@ -99,7 +99,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		System.err.println("# of clicks was "+e.getClickCount());
 		System.err.println("node was "+node);
 		if (mask == MouseEvent.BUTTON1_MASK &&
-			e.getClickCount() == 2) {
+			e.getClickCount() == 1) {
 			if (node instanceof PBufferedNode) {
 				PBufferedNode cBox = (PBufferedNode) node;
 				//System.err.println("zooming into .."+cBox);

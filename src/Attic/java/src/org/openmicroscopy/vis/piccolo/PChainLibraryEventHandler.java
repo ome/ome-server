@@ -76,7 +76,7 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		if (mask == MouseEvent.BUTTON1_MASK &&
-			e.getClickCount() == 2) {
+			e.getClickCount() == 1) {
 			if (node instanceof PBufferedNode) {
 				PBufferedNode cBox = (PBufferedNode) node;
 				PBounds b = cBox.getBufferedBounds();
