@@ -116,6 +116,10 @@ returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp
 sub getName {
 	my ($proto, $obj, $options) = @_;
 
+	if( !$options or not exists $options->{max_text_length} ) {
+		$options->{max_text_length} = 33;
+	}
+
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
 			or die "Could not parse timestamp ".$obj->timestamp();
@@ -136,7 +140,7 @@ sub getName {
 			12 => 'Dec'
 		);
 		my $name = $obj->module()->name();
-		unless( exists $options->{max_text_length} and not defined $options->{max_text_length} ) {
+		unless( not defined $options->{max_text_length} ) {
 			my $len = $options->{max_text_length} - 23;
 			$name =~ s/^(.{$len})....*$/$1\.\.\./;
 		}
