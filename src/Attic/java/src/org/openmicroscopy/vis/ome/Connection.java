@@ -407,7 +407,7 @@ public class Connection {
 				controller.finishInitThread();
 			}
 		};
-		worker.start();
+		worker.start();	
 	}
 	
 	public List getChainExecutions(CChain c) {
