@@ -188,10 +188,10 @@ sub __execute {
 	my $start_time = [gettimeofday()];
 	
 	$self->{__engine}->eval($command);
-	
+	$outBuffer =~ s/(\0.*)$//;
 	$mex->total_time(tv_interval($start_time));
 	if ($outBuffer ne $blankOutBuffer) {
-		# $mex->error_message("$OutBuffer");
+		$mex->error_message("$outBuffer");
 		logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";
 	} else {
 		logdbg "debug", "***** Output from Matlab:\n";

@@ -178,7 +178,7 @@ sub childProcess {
     if ($@) {
         logdbg "debug", "    **** $pid - Error - $@\n";
         $mex->status('ERROR');
-        $mex->error_message($@);
+        $mex->error_message($mex->error_message."\n".$@);
         logdbg "debug", "      Error during execution: $@\n";
     } else {
         logdbg "debug", "    **** $pid - Success\n";
