@@ -18,14 +18,17 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+# 2do: Add verify form capability to check if they have entered required data in appropriate format.
+# 2do: Maintence & redirection after project creation
+
 package OME::Web::MakeNewProject;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use OME::Web::Validation;
+use base qw{ OME::Web };
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Make New Project";
@@ -42,35 +45,26 @@ sub getPageBody {
 	# try to make a project, print status message, include some mechanism
 	# 	to redirect to import images if this is a first time login
 
-		my $user = $session->User();
+		my $user = $session->User()
+			or die "User is not defined for this session";
 		my $data = {name => $cgi->param('name'),
 			description => $cgi->param('description'),
 			owner_id => $user->ID(),
 			group_id => $user->group()->ID()};
-		my $project = $session->Factory()->newObject("OME::Project", $data);
-		if (!defined $project) {
-			$body .= " Failed to create new project $cgi->param('name').\n";
-		}
-		else {
-			$project->writeObject();
-			# is this the first project? if so, we need to redirect to import images
-			my $redirectImport = (defined $session->project() ? undef : 1);
-			$session->project($project);
-			$session->writeObject();
-			$body .= "Project creation successful.";
+		my $project = $session->Factory()->newObject("OME::Project", $data)
+			or die "Failed to create new project ".$cgi->param('name')."\n";
+		$project->writeObject();
+		$session->project($project);
+		$session->writeObject();
+		
+		$body .= "At this point, session's dataset should be set to undef and you should be directed to create or choos a dataset. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
+		$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
+		$body .= "</pre><br>I believe this teaches us that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?";
 
-			# update titlebar
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-			# redirect: import images OR choose datasets?
-			if (defined $redirectImport) {
-				$body .= " Click ".$cgi->a({href=>'javascript: top.location.href = top.location.href'},'here')." to continue on to import images.";
-			} else {
-				$body .= "<br>This should redirect you to add datasets to your new project. But that's not implemented yet.";
-			}
-		}
-
-	
+		# this will add a script to reload OME::Home. User will be automatically directed to define a dataset.
+#		$body .= OME::Web::Validation->ReloadHomeScript();
+		# javascript to reload titlebar
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
 	} else {
 	# print an input form
 		$body .= $self->print_form();
@@ -85,14 +79,14 @@ sub print_form {
 	
 	my $text = '';
 
-	$text .= "\n".$cgi->startform;
-	$text .= "<CENTER>\n	".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."\n</CENTER>\n";
+	$text .= $cgi->startform;
+	$text .= "<CENTER>".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."</CENTER>\n";
 
 	$text .= 
 		$cgi->table(
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
-					'Name:' ),
+					'*Name:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textfield(-name=>'name', -size=>32) ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
@@ -100,8 +94,9 @@ sub print_form {
 					'Description:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3) ) ) );
-			
-	$text .= $cgi->endform."\n";
+					
+	$text .= $cgi->endform;
+	$text .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
 	return $text;
 }
 
