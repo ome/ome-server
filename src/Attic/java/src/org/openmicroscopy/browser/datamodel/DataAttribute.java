@@ -60,9 +60,15 @@ public class DataAttribute
    * Creates a new DataAttribute with the given type name.
    * 
    * @param typeName The name of the attribute type.
+   * @throws IllegalArgumentException if typeName is null.
    */
   public DataAttribute(String typeName)
+    throws IllegalArgumentException
   {
+    if(typeName == null)
+    {
+      throw new IllegalArgumentException("typeName cannot be null.");
+    }
     elementMap = new HashMap();
     elementTypeMap = new HashMap();
     this.typeName = typeName;
@@ -80,6 +86,15 @@ public class DataAttribute
     List list = new ArrayList(elementMap.keySet());
     Collections.sort(list);
     return Collections.unmodifiableList(list);
+  }
+  
+  /**
+   * Returns the name of the attribute.
+   * @return The name of the attribute.
+   */
+  public String getAttributeName()
+  {
+    return typeName;
   }
   
   /**
@@ -115,15 +130,20 @@ public class DataAttribute
     return elementMap.get(key);
   }
   
-  /**
-   * Alternate name for base object getElement() method.
+  /** Returns the object element tied to the key value.  Will return null if
+   * the key is either invalid or does not refer to an object (non-primitive).
    * 
-   * @param key The name of the element to retrieve.
-   * @return An object value, or null if the key is invalid.
+   * @param key The name of the element.
+   * @return The Integer corresponding to this element, or null if the name
+   *         is invalid or does not refer to an integer type.
    */
   public Object getObjectElement(String key)
   {
-    return elementMap.get(key);
+    if(elementTypeMap.get(key) != DataElementType.OBJECT)
+    {
+      return null;
+    }
+    return elementMap.get(key); 
   }
   
   /**
