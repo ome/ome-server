@@ -45,8 +45,9 @@ OME::Web::DBObjDetail::__OME_Dataset
 
 =head1 DESCRIPTION
 
-sets Session->dataset to the dataset displayed
-implements _takeAction to allow changes to name and description
+_takeAction() sets Session->dataset to the dataset displayed and
+implements adding images to the dataset and
+implements editing name or description and.
 
 =cut
 
@@ -62,30 +63,17 @@ use OME::Tasks::DatasetManager;
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
 
-#*********
-#********* PUBLIC METHODS
-#*********
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-
-	bless $self, $class;
-
-	my $object = $self->_loadObject();
-	$self->Session()->dataset( $object );
-	$self->Session()->storeObject();
-	$self->Session()->commitTransaction();
-	
-	return $self;
-}
-
-
 sub _takeAction {
 	my $self = shift;
 	my $object = $self->_loadObject();
 	my $q = $self->CGI();
+
+	# make this dataset the "most recent"
+	$self->Session()->dataset( $object );
+	$self->Session()->storeObject();
+	$self->Session()->commitTransaction();
+	
+	# allow editing of dataset name & description
 	if( $q->param( 'action' ) && $q->param( 'action' ) eq 'SaveChanges' ) {
 		$object->description( $q->param( 'description' ) );
 		$object->name( $q->param( 'name' ) );
@@ -93,6 +81,7 @@ sub _takeAction {
 		$self->Session()->commitTransaction();
 	}
 	
+	# allow adding images to a dataset
 	my $image_ids = $q->param( 'images_to_add' );
 	if( $image_ids ) {
 		OME::Tasks::DatasetManager->addImages( [ split( m',', $image_ids ) ] );

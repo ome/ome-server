@@ -70,11 +70,12 @@ are Overridable.
 
 sub new {
 	my $proto = shift;
+	my @saved_params = @_;
 	my $class = ref($proto) || $proto;
 	
-	# try to get a specialized class unless this call is coming from a subclass
+	# try to get a specialized subclass unless this call is coming from a subclass
 	unless( $class ne __PACKAGE__ ) {
-		my %params = @_;
+		my %params = @saved_params;
 		my $q    = $params{ CGI };
 		if( defined $q && ( my $formal_name = $q->param( 'Type' ) ) ) {
 			# construct specialized package name
@@ -84,11 +85,15 @@ sub new {
 	
 			# obtain package
 			eval( "use $specializedPackage" );
-			$class = $specializedPackage unless $@ || $specializedPackage eq __PACKAGE__;
+			unless ($@ || $specializedPackage eq __PACKAGE__) {
+				return $specializedPackage->new( @saved_params );
+			}
 		}
 	}
-
-	my $self  = $class->SUPER::new(@_);
+	
+	# either there isn't a specialized class or it's loaded and hasn't overridden this method
+	# either way, pass the buck to OME::Web
+	my $self  = $class->SUPER::new(@saved_params);
 
 	return $self;
 }

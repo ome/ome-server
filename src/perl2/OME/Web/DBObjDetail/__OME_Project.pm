@@ -45,13 +45,11 @@ OME::Web::DBObjDetail::__OME_Project - Show detailed information on an Project
 
 =head1 DESCRIPTION
 
-Displays detailed information about a Project
+_takeAction() sets Session->project to the project displayed and
+implements adding datasets to the project and
+implements editing name or description and.
 
 =cut
-
-#*********
-#********* INCLUDES
-#*********
 
 use strict;
 use OME;
@@ -63,31 +61,17 @@ use OME::Tasks::ProjectManager;
 
 use base qw(OME::Web::DBObjDetail);
 
-#*********
-#********* PUBLIC METHODS
-#*********
-
-sub new {
-	my $proto = shift;
-	my $class = ref($proto) || $proto;
-	my $self  = $class->SUPER::new(@_);
-
-	bless $self, $class;
-
-	# this project has the focus
-	my $object = $self->_loadObject();
-	$self->Session()->project( $object );
-	$self->Session()->storeObject();
-	$self->Session()->commitTransaction();
-	
-	return $self;
-}
-
 sub _takeAction {
 	my $self = shift;
 	my $object = $self->_loadObject();
 	my $q = $self->CGI();
 
+	# make this project the "most recent"
+	$self->Session()->project( $object );
+	$self->Session()->storeObject();
+	$self->Session()->commitTransaction();
+
+	# allow editing of project name & description
 	if( $q->param( 'action' ) eq 'SaveChanges' ) {
 		$object->description( $q->param( 'description' ) );
 		$object->name( $q->param( 'name' ) );
@@ -95,6 +79,7 @@ sub _takeAction {
 		$self->Session()->commitTransaction();
 	}
 
+	# allow adding datasets to a project
 	my $dataset_ids = $q->param( 'datasets_to_add' );
 	if( $dataset_ids ) {
 		OME::Tasks::ProjectManager->addDatasets( [ split( m',', $dataset_ids ) ], $object->id() );
