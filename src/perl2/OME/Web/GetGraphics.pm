@@ -802,6 +802,7 @@ $SVG .= <<ENDSVG;
 			);
 			controlToolBox.setLabel(90,12,"Primary Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+//			controlToolBox.setScale(1.5);
 			
 			multiToolBox = new multipaneToolBox(
 				55, 265, 200, 100,
@@ -990,14 +991,14 @@ $SVG .= <<ENDSVG;
 			BWpopupListBox.setAttribute( "display", "none" );
 			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
 			bwPopupList.realize( BWpopupListBox );
-			
+
 			statsButton.realize( controlToolBox.getGUIbox() );
 			scaleButton.realize( controlToolBox.getGUIbox() );
 			overlayButton.realize( controlToolBox.getGUIbox() );
-			
+
 			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
-			
+
 			// set up panes
 // These panes to come from DB eventually?
 			stats = new Statistics( Stats, fluors, updateStatsWave );
@@ -1023,8 +1024,10 @@ $SVG .= <<ENDSVG;
 			multiToolBox.getMenuBar().setAttribute( "onmouseover", 'multiToolBox.drawMenuTop()' );
 
 
-            azap.appendNode(controls); 
-            
+			azap.appendNode(controls);
+			mouseTrap = svgDocument.getElementById("mouseTrap");
+			azap.appendNode(mouseTrap); 
+
 			// Set up display. These values should come from DB eventually.
 			setTimeout( "redPopupList.setSelection(0)", 0 );
 			setTimeout( "greenPopupList.setSelection(1)", 0 );
@@ -1251,6 +1254,13 @@ $SVG .= <<'ENDSVG';
 		}
 		
     ]]></script>
+	<g id="mouseTrap">
+		<!-- The mouse only registers over elements. This rect prevents
+			 loosing the mouse while moving the toolbox. It is placed
+			 on top so it will not trap mouse events unless nothing
+			 else does. -->
+		<rect width="100%" height="100%" fill="blue" opacity="0"/>	
+	</g>
 	<g id="image">
 	</g>
 	<g id="overlays">
