@@ -50,6 +50,7 @@ our %DATA_CLASSES =
    Dataset           => 'OME::Dataset',
    Image             => 'OME::Image',
    Feature           => 'OME::Feature',
+   UserState         => 'OME::UserState',
    DataTable         => 'OME::DataTable',
    DataColumn        => 'OME::DataTable::Column',
    SemanticType      => 'OME::SemanticType',
