@@ -1,0 +1,4 @@
+OME::Matlab::Array      T_PTROBJ
+mxComplexity            T_IV
+mxLogical               T_BOOL
+mxChar                  T_U_SHORT

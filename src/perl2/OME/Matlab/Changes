@@ -1,0 +1,6 @@
+Revision history for Perl extension Matlab.
+
+0.01  Mon Jul 21 15:59:13 2003
+	- original version; created by h2xs 1.2 with options
+		-A -n Matlab
+
