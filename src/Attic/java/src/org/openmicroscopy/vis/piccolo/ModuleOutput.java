@@ -43,17 +43,30 @@ import org.openmicroscopy.SemanticType;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
 import java.util.ArrayList;
 
+/** 
+ * Nodes for displaying module outputs.<p>
+ * 
+ * @author Harry Hochheiser
+ * @version 0.1
+ * @since OME2.0
+ */
+
 public class ModuleOutput extends ModuleParameter {
 	
 	public ModuleOutput(FormalParameter param,ChainCanvas canvas) {
 		super(param,canvas);
-		//System.err.println("adding output "+param.getParameterName());
 		if (param.getSemanticType() != null)
 			canvas.addOutput(param.getSemanticType(),this);
 		locator = PBoundsLocator.createEastLocator(this);
 	}
 	
-	//for outputs, the correpsonding items are inputs.
+	/**
+	 * For outputs, the corresponding list is a list of ModuleInputs.
+	 * Find the semantic type of the parameter associated with this widget,
+	 * and then ask the canvas for the list of inputs with that semantic type.
+	 * 
+	 * @return a list of ModuleInputs with the same semantic type as param.  
+	 */
  	public ArrayList getCorresponding() {
 		SemanticType type = param.getSemanticType();
 		if (type == null)

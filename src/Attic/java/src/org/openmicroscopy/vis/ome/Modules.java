@@ -44,8 +44,10 @@ public class Modules extends ArrayList {
 	
 	public Modules(Factory factory) {
 	
+		// Get all of the modules that are avialable.
 		super(factory.findObjects("OME::Module",null));
 		
+		// populate each of them.
 		Iterator iter = this.iterator();
 		while (iter.hasNext()) {
 			RemoteModule mod = (RemoteModule) iter.next();
@@ -61,6 +63,18 @@ public class Modules extends ArrayList {
 		}
 	}
 	
+	/**
+	 * Access individual fields of a module. By default, accessing each of 
+	 * these fields requires an XMLRPC call to the OME Server. By performing 
+	 * each of these calls and ignoring the results, we can lump all of the 
+	 * database overhead together in one place, thus removing the possibility
+	 * of repeated delays due to database latencies.<p>
+	 * 
+	 * This code may need to be revisited when OME server and client-side 
+	 * caching are reworked.<p>
+	 * 
+	 * @param mod The module to be populated.
+	 */
 	private void populateModule(RemoteModule mod) {
 				
 		mod.getName();
@@ -77,6 +91,11 @@ public class Modules extends ArrayList {
 		populateParameters(params);
 	}
 	
+	/**
+	 * Populating the list of parameters - formal inputs or outputs.<p> 
+	 * 
+	 * @param params parameter list to be populated.
+	 */
 	private void populateParameters(List params) {
 		FormalParameter param;
 		
@@ -92,6 +111,11 @@ public class Modules extends ArrayList {
 		}
 	}
 		
+	/**
+	 * Utility procedures for dumping a module and its contents to stderr.<p>
+	 * 
+	 * @param mod
+	 */
 	private void dumpModule(RemoteModule mod) {
 		System.err.println("MODULE: "+mod.getName());
 		System.err.println("Description: "+mod.getDescription());
@@ -123,6 +147,12 @@ public class Modules extends ArrayList {
 		}
 	}
 	
+	/**
+	 * Convenience call to access individual modules.<p>
+	 * 
+	 * @param i 
+	 * @return the ith module, or null.
+	 */
 	public RemoteModule getModule(int i) {
 		try {
 			return (RemoteModule) get(i);

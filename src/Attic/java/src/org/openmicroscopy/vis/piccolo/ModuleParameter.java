@@ -45,6 +45,26 @@ import org.openmicroscopy.SemanticType;
 import java.awt.Color;
 import java.util.ArrayList;
 
+/** 
+ * Nodes for displaying module inputs and outputs. Currently, all
+ * module parameters are displayed as text, with decorations (color) to
+ * indicate change of state. For example, the node will be painted in 
+ * HIGHLIGHT_COLOR when it is a candidate for a link with another actively
+ * selected parameter.<p>
+ * 
+ * Generally, there will be two subclasses of this class - one for inputs
+ * and one for outputs.<p>
+ * 
+ * It's likely that this will become a more complicated widget as the 
+ * application evolves.<p>
+ * 
+ * 
+ * @author Harry Hochheiser
+ * @version 0.1
+ * @since OME2.0
+ */
+
+
 public abstract class ModuleParameter extends PText {
 	
 	protected static final Color NORMAL_COLOR = Color.black;
@@ -52,6 +72,10 @@ public abstract class ModuleParameter extends PText {
 	
 	protected FormalParameter param;
 	protected ChainCanvas canvas=null;
+	
+	// We assume a model that has Modules in a box, with inputs on
+	// the left and outputs on the right. Thus, for inputs, the locator
+	// will be on the west, and outputs will have the locator on the east.
 	
 	protected PBoundsLocator locator;
 	protected boolean linkable;
@@ -79,6 +103,14 @@ public abstract class ModuleParameter extends PText {
 		return param.getParameterName();
 	}
 	
+	/**
+	 * A module parameter is said to be linkable if (1) it has the same
+	 * semantic type as a currently selected parameter, and (2) it's position 
+	 * (input vs. output) corresponds appropriately to that of the current 
+	 * selection. Inputs can only link to outputs, and vice-versa.<p>
+	 * 
+	 * @param v
+	 */
 	public void setLinkable(boolean v) {
 		linkable = v;
 		if (v == true)
@@ -88,6 +120,10 @@ public abstract class ModuleParameter extends PText {
 		repaint();
 	}
 	
+	public boolean isLinkable() {
+		return linkable;
+	}
+
 	public SemanticType getSemanticType() {
 		return param.getSemanticType();
 	}
@@ -100,9 +136,13 @@ public abstract class ModuleParameter extends PText {
 		return locator;
 	}
 	
-	public boolean isLinkable() {
-		return linkable;
-	}
-	
+	/**
+	 * Get a list of parameters that have the same semantic type
+	 * as this one, but in the opposite position. If this is an input(output),
+	 * get all of the outputs(inputs) with the same semantic type.<p>
+	 * 
+	 * @return A list of FormalParameters of the appropriate type and 
+	 * 	corresponding position.
+	 */
 	public abstract ArrayList getCorresponding();
 }

@@ -72,13 +72,20 @@ public class Controller implements ApplicationController {
 		this.mainFrame = mf;
 	}
 	
+	/**
+	 * Creates the database connection via results from a LoginDialog.
+	 * This database connecdtion will spawn a thread and call completeLogin(),
+	 * below.<p>
+	 *
+	 */
 	public void doLogin() {
 		System.err.println("login...");
 		
 		LoginDialog  loginDialog = new LoginDialog(mainFrame);
 		loginDialog.show();
 		if (loginDialog.isOk()) 
-			connection =  new Connection(this,loginDialog.getURL(),loginDialog.getUserName(),loginDialog.getPassword());
+			connection =  new Connection(this,loginDialog.getURL(),
+				loginDialog.getUserName(),loginDialog.getPassword());
 	}
 
 	public void cancelLogin() {
@@ -99,6 +106,11 @@ public class Controller implements ApplicationController {
 		System.exit(0);
 	}
 	
+	/**
+	 * A placeholder (for now) that might eventually be used to make sure that 
+	 * the database is updated before the program exits.
+	 *
+	 */
 	private void updateDatabase() {
 	}
 	

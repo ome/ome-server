@@ -78,6 +78,8 @@ public class Connection {
 	public Connection(final ApplicationController controller,
 		final String URL,final String userName,final String passWord) {
 		
+		// wrap it up in a Swing thread to allow UI to proceed 
+		// uninterrupted.
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
 				try {
@@ -93,10 +95,12 @@ public class Connection {
 				if (remote != null) {
 					session = remote.getSession();
 					factory = remote.getFactory();
+					// this reads in all of the modules in the database
+					// similar additional calls might end up here.
 					modules  = new Modules(factory);
 					controller.completeLogin();
-				// for debugging only
-				//modules.dump();
+					// for debugging only
+					//modules.dump();
 				}
 			}
 		};
@@ -109,6 +113,13 @@ public class Connection {
 			user.getStringElement("LastName"));
 	}
 	
+	/**
+	 * Shortcut interface to allow users to get access to modules
+	 * without going through the Modules object. <p>
+	 * 
+	 * @param i
+	 * @return
+	 */
 	public RemoteModule getModule(int i) {
 		return modules.getModule(i);
 	}
