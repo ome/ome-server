@@ -32,17 +32,6 @@ export OME_ROOT
 
 all: $(TARGETS)
 
-zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
-	$(CC) $(CFLAGS) -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
-zernike2 : dataset.h dataset.c dataset.o zernike2.c zernike.h BSUtils.o zernike2.o
-	$(CC) $(CFLAGS) -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
-
-trackSpotsOMEwrpr : $(OBJECTS) trackSpotsOMEwrpr.o
-	$(CC) $(CFLAGS) -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
-
-findSpotsOMEwrpr : $(OBJECTS) findSpotsOMEwrpr.o
-	$(CC) $(CFLAGS) -o findSpotsOMEwrpr findSpotsOMEwrpr.o $(LIBS)
-
 OMEimportDVfile : $(OBJECTS) OMEimportDVfile.o
 	$(CC) $(CFLAGS) -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
 
