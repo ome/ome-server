@@ -97,27 +97,26 @@ sub startImage {
       getStackHistogram($pixels_attr->ImageServerID());
 	  
     foreach my $c (keys %$hist) {
-  	     foreach my $t (keys %{$hist->{$c}}) {
+  	    foreach my $t (keys %{$hist->{$c}}) {
        		my ($lowBound,$uppBound,@histBins) = @{%$hist->{$c}{$t}};
-		my $hist_str;
+			my $hist_str;
 
-		# convert list of histogram bins into a space delimited string
+			# convert list of histogram bins into a space delimited string
        		foreach my $i (@histBins){
-			$hist_str .= "$i ";
-		}
+				$hist_str .= "$i ";
+			}
 
-          	$self->newAttributes('StackHistNumBins',
+          	$self->newAttributes('StackHistogram',
            		{
-                        TheC => $c,
-                        TheT => $t,
+                TheC => $c,
+                TheT => $t,
            		NumBins => 128,
-            		LowBound => $lowBound,
-            		UppBound => $uppBound,
-			Bins => $hist_str
-		});
-             }
-     }
-    
+            	LowBound => $lowBound,
+            	UppBound => $uppBound,
+				Bins => $hist_str
+				});
+       	}
+	}
 }
 
 
