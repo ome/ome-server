@@ -184,7 +184,7 @@ public interface Factory
 
     /**
      * Returns a {@link List} of {@link OMEObject OMEObjects} matching
-     * the given criteria, if there are any.  If there isn't, returns
+     * the given criteria, if there are any.  If there aren't, returns
      * an empty {@link List}.  Please see the <i>Search criteria</i>
      * section of the class documentation for details on forming the
      * <code>criteria</code> map.
@@ -284,12 +284,44 @@ public interface Factory
      * The <code>typeName</code> parameter should be a semantic type
      * name.  The <code>target</code> must be an instance of {@link
      * Dataset}, {@link Image}, or {@link Feature}, depending on the
-     * granularity of the type.  Note that arbitrary search criteria
-     * is not yet supported in this method.  We are currently deciding
-     * how best to add this functionality.
+     * granularity of the type.
      * @param typeName the name of a semantic type
      * @param target the target of the attributes to find
      * @return a {@link List} of {@link Attribute Attributes}
+     * @deprecated the {@link #findAttributes(String,List)} version of
+     * this method, which supports arbitrary search criteria, should
+     * be used in future code
      */
     public List findAttributes(String typeName, OMEObject target);
+
+    /**
+     * Returns a {@link List} of {@link Attribute Attributes} matching
+     * the given criteria, if there are any.  If there aren't, returns
+     * an empty {@link List}.  Please see the <i>Search criteria</i>
+     * section of the class documentation for details on forming the
+     * <code>criteria</code> map.  The target of the attribute can be
+     * referred to as <code>target</code> or as <code>dataset</code>,
+     * <code>image</code>, or <code>feature</code>, as appropriate.
+     * @param typeName the name of the semantic type to search through
+     * @param criteria the search criteria
+     * @return a {@link List} of attributes that match the given
+     * criteria
+     */
+    public List findAttributes(String typeName, Map criteria);
+
+    /**
+     * Returns an {@link Iterator} of {@link Attribute Attributes}
+     * matching the given criteria, if there are any.  If there
+     * aren't, returns an empty {@link Iterator}.  Please see the
+     * <i>Search criteria</i> section of the class documentation for
+     * details on forming the <code>criteria</code> map.  The target
+     * of the attribute can be referred to as <code>target</code> or
+     * as <code>dataset</code>, <code>image</code>, or
+     * <code>feature</code>, as appropriate.
+     * @param typeName the name of the semantic type to search through
+     * @param criteria the search criteria
+     * @return an {@link Iterator} of attributes that match the given
+     * criteria
+     */
+    public Iterator iterateAttributes(String typeName, Map criteria);
 }
