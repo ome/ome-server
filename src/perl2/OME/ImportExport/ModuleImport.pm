@@ -51,11 +51,10 @@ install the module onto the local system
 register the module with the database
 add any custom tables & columns (to the DB) that the module requires
 
-=head1 IMPROVEMENTS/2do
-
-Should verify that every table and column declared are used. 
-
 =cut
+
+# FIXME: Should verify that every table and column declared are used. 
+
 
 sub new {
 	my $proto  = shift;
@@ -103,7 +102,7 @@ Input Parameters:
 	filePath - path to xml file to import
 
 Description:
-	Import a module from its descriptiong in an xml file
+	Import a module from its description in an xml file
 
 =cut
 
@@ -227,7 +226,6 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	#
 	# make OME::Modules object
 	#
-# À use find_or_create instead ?
 	print STDERR ref ($self) . "->processDOM about to create an OME::Module object\n"
 		if $debug > 1;
 	my @programs = $factory->findObjects( "OME::Module", 
@@ -249,8 +247,6 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		location         => $moduleXML->getAttribute( 'ProgramID' ),
 		default_iterator => $moduleXML->getAttribute( 'FeatureIterator' ),
 		new_feature_tag  => $moduleXML->getAttribute( 'NewFeatureName' ),
-		#visual_design => $moduleXML->getAttribute( 'VisualDesign' )
-		# visual design is not implemented in the api. I think it is depricated.
 	};
 	print STDERR "OME::Module parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
 		if $debug > 1;
@@ -461,23 +457,24 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		} @inputTypes;
 
 		foreach my $input (@inputs) {
-			my $formalInput    = $formalInputs{ $input->getAttribute( "FormalInputName" ) }
+			my ($formalInputName, $path) = split( /\./, $input->getAttribute( "Location" ), 2 );
+
+			my $formalInput    = $formalInputs{ $formalInputName }
 				or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
 			my $semanticType   = $formalInput->semantic_type();
 
-			my $sen = $input->getAttribute( "SemanticElementName" );
-			$sen =~ s/^(.*?)\..*$/$1/;
+			my $sen = $path;
+			$sen =~ s/^(.*?)\..*$/$1/; # check the SE belonging to this ST, not referenced attributes
+			                           # i guess ideally, you would trace through the references and do a full sweep.
 			my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
-				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
+				or die "Could not find semantic element '$sen' referenced by ".$input->toString().".\n";
 		
-			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and semantic_element_id.
-			print STDERR ref ($self) . "->processDOM: creating FormalInputID attribute in element type ".$input->tagName()."\n\tValue is ".
-				$formalInput->id() . "\n"
-				if $debug > 1;
+			# Create attributes FormalInputID and SemanticElementID
+			# also create FormalInputName and SemanticElementName to work with CLIHandler code
+			# maybe should change CLIHandler code sometime?
+			$input->setAttribute ( "FormalInputName", $formalInputName );
+			$input->setAttribute ( "SemanticElementName", $path );
 			$input->setAttribute ( "FormalInputID", $formalInput->id() );
-			print STDERR ref ($self) . "->processDOM: creating SemanticElementID attribute in element type ".$input->tagName()."\n\tValue is ".
-				$semanticElement->id()."\n"
-				if $debug > 1;
 			$input->setAttribute ( "SemanticElementID", $semanticElement->id() );
 
 		}
@@ -499,20 +496,18 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		} @outputTypes;
 
 		foreach my $output (@outputs) {
-			my $formalOutput    = $formalOutputs{ $output->getAttribute( "FormalOutputName" ) }
+			my ($formalOutputName, $sen) = split( /\./, $output->getAttribute( "Location" ) );
+
+			my $formalOutput    = $formalOutputs{ $formalOutputName }
 				or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
 			my $semanticType   = $formalOutput->semantic_type();
-			my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $output->getAttribute( "SemanticElementName" ) )
+			my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
 				or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
 
 			# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
-			print STDERR ref ($self) . "->processDOM: creating FormalOutputID attribute in element type ".$output->tagName()."\n\tValue is ".
-				$formalOutput->id() . "\n"
-				if $debug > 1;
+			$output->setAttribute ( "FormalOutputName", $formalOutputName );
+			$output->setAttribute ( "SemanticElementName", $sen );
 			$output->setAttribute ( "FormalOutputID", $formalOutput->id() );
-			print STDERR ref ($self) . "->processDOM: creating SemanticElementID attribute in element type ".$output->tagName()."\n\tValue is ".
-				$semanticElement->id()."\n"
-				if $debug > 1;
 			$output->setAttribute ( "SemanticElementID", $semanticElement->id() );
 
 		}
@@ -584,6 +579,8 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	#
 	#
 	###########################################################################
+
+
 
 	###########################################################################
 	# commit this module. It's been successfully imported
