@@ -624,7 +624,100 @@ sub findModuleHandler {
         return __fetchall($sth);
     }
 
-    # Builds the data paths for an analysis chain.
+    # Verifies that every formal input has zero or one links feeding
+    # it.  It a formal input has zero links feeding it, verifies that
+    # the user input provided for the input (defaulting to null) is
+    # valid, according to the input's optional and list specification.
+    # Also verifies that each link is well-formed; i.e., that the
+    # "from output" belongs to the "from node", the "to input" belongs
+    # to the "to node", and that the types of the "from output" and
+    # "to input" match.
+    sub __checkInputs {
+        my %node_inputs;
+
+        __debug("    Sorting and checking links");
+        foreach my $link ($analysis_view->links()) {
+            my $from_node = $link->from_node();
+            my $from_output = $link->from_output();
+            my $to_node = $link->to_node();
+            my $to_input = $link->to_input();
+
+            my $long_name =
+              $from_node->program()->program_name().".".
+              $from_output->name()." -> ".
+              $to_node->program()->program_name().".".
+              $to_input->name();
+            my $short_name =
+              $to_node->program()->program_name().".".
+              $to_input->name();
+
+            die
+              "$long_name: 'From output' does not belong to 'from node'"
+              if ($from_output->program()->id() ne
+                  $from_node->program()->id());
+
+            die
+              "$long_name: 'To input' does not belong to 'to node'"
+              if ($to_input->program()->id() ne
+                  $to_node->program()->id());
+
+            die
+              "$long_name: Types don't match"
+              unless (!defined $from_output->attribute_type())
+                || ($from_output->attribute_type()->id() eq
+                    $to_input->attribute_type()->id());
+
+            die
+              "$short_name: Two links cannot feed into the same input!"
+              if (exists $node_inputs{$to_node->id()}->{$to_input->id()});
+
+            $node_inputs{$to_node->id()}->{$to_input->id()} = $link;
+        }
+
+        __debug("    Checking nodes");
+        foreach my $node (@nodes) {
+            __debug("      ".$node->program()->program_name());
+            my @inputs = $node->program()->inputs();
+            foreach my $input (@inputs) {
+                # Okay if there's a link feeding this input
+                next if exists $node_inputs{$node->id()}->{$input->id()};
+
+                # See if the user provided inputs
+                my $user;
+                if (exists $input_parameters->{$node->id()}->{$input->id()}) {
+                    $user = $input_parameters->{$node->id()}->{$input->id()};
+                    if (UNIVERSAL::isa($user,"OME::AttributeType::Superclass")) {
+                        # If the user provided a single input, wrap it
+                        # in an array ref
+                        $user = [$user];
+                        $input_parameters->{$node->id()}->{$input->id()} = $user;
+                    } elsif (ref($user) ne 'ARRAY') {
+                        # Otherwise only accept the input if its an
+                        # array ref
+                        die
+                          $node->program()->program_name().".".
+                          $input->name().
+                          ": User input must be an attribute ".
+                          "or array of attributes";
+                    }
+                } else {
+                    # User did not provide input, so treat this input
+                    # as receiving an empty array
+                    $user = [];
+                    $input_parameters->{$node->id()}->{$input->id()} = $user;
+                }
+
+                # Check those inputs against the spec
+                die "Input is not optional"
+                  if (!$input->optional()) && (scalar(@$user) == 0);
+                die "Input cannot accept a list"
+                  if (!$input->list()) && (scalar(@$user) > 1);
+            }
+        }
+    }
+
+    # Builds the data paths for an analysis chain.  Simultaneous
+    # verifies that the graph is acyclic.
     sub __buildDataPaths {
         __debug("  Building data paths");
 
@@ -657,6 +750,13 @@ sub findModuleHandler {
                 if ($num_successors == 0) {
                     push @new_paths,$data_path;
                 } elsif ($num_successors == 1) {
+                    # Check for a cycle
+                    foreach (@$data_path) {
+                        die
+                          "Cycle! ".join(':',@$data_path,$successors->[0])
+                            if $_ eq $successors->[0];
+                    }
+
                     __debug("    Extending ".
                       join(':',@$data_path)." with ".
                         $successors->[0]);
@@ -665,6 +765,13 @@ sub findModuleHandler {
                     $continue = 1;
                 } else {
                     foreach my $successor (@$successors) {
+                        # Check for a cycle
+                        foreach (@$data_path) {
+                            die
+                              "Cycle! ".join(':',@$data_path,$successors->[0])
+                                if $_ eq $successors->[0];
+                        }
+
                         # make a copy
                         my $new_path = [@$data_path];
                         __debug("    Extending ".
@@ -1758,6 +1865,9 @@ sub findModuleHandler {
         @nodes = $analysis_view->nodes();
 
         __debug("Setup");
+
+        __debug("  Validating chain");
+        __checkInputs();
 
         __debug("  Locking the dataset");
         $dataset->locked('true');
