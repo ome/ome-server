@@ -48,6 +48,7 @@ use CGI;
 use Carp;
 use Data::Dumper;
 use UNIVERSAL::require;
+use HTML::Template;
 
 # OME Modules
 use OME;
@@ -74,43 +75,6 @@ use constant MAX_PREVIEW_DATASETS => 7;
 
 =head1 PRIVATE METHODS
 
-=head2 __getQuickViewFooter
-
-Builds a table row/table definition pair for inclusion in the quick view.
-
-=cut
-
-sub __getQuickViewFooter {
-	my $self = shift;
-	my $q = $self->CGI();
-
-	my @footer_elements = (
-		['New Project', $self->pageURL('OME::Web::DBObjCreate', { Type => 'OME::Project' } )],
-		['New Dataset', $self->pageURL('OME::Web::DBObjCreate', { Type => 'OME::Dataset' } )],
-		['Import Images', $self->pageURL('OME::Web::ImportImages')],
-	);
-
-	my ($footer_data, $prev);
-
-	foreach my $element (@footer_elements) {
-		$footer_data .= ' | ' if $prev;
-		$footer_data .= $q->a( {
-				class => 'ome_quiet',
-				href => $element->[1]
-			}, $element->[0]);
-		
-		$prev = 1;  # Track if this is the first element
-	}
-
-	return $q->Tr(
-		$q->td( {
-				colspan => 3,
-				align => 'right',
-				class => 'ome_menu_td',
-			}, $footer_data)
-	);
-}
-
 =head2 __getQuickViewImageData
 
 Composes the header and content for the thumbs/image area of the quick view. Each element of content is a thumbnail for an image in the dataset, limited by the MAX_PREVIEW_THUMBS constant.
@@ -123,13 +87,9 @@ sub __getQuickViewImageData {
 
 	# Build image header/content
 	my ($i_header, $i_content);
-	
-	# Managers
-	my $i_manager = $self->{'__i_manager'};
-	my $d_manager = $self->{'__d_manager'};
 
 	# Count of images in the dataset
-	my $d_icount = $d_manager->getImageCount($d);
+	my $d_icount = $d->count_images();
 	
 	if ($d) {
 		# Header
@@ -150,7 +110,7 @@ sub __getQuickViewImageData {
 				$i_content .= $q->a( {
 						href => 'javascript:openPopUpImage(' . $_->id() . ');',
 						alt => 'N/A',
-					}, $q->img({src => $i_manager->getThumbURL($_), border => 1}));
+					}, $q->img({src => OME::Tasks::ImageManager->getThumbURL($_), border => 1}));
 				$i_content .= '&nbsp';  # Spacing
 				++$i;	
 				last if ($i == MAX_PREVIEW_THUMBS);
@@ -174,11 +134,8 @@ sub __getQuickViewProjectData {
 	my ($self, $p) = @_;
 	my $q = $self->CGI();
 
-	# Managers
-	my $p_manager = $self->{'__p_manager'};
-
 	# Count of projects owned by the Sesssion's user in teh entire DB
-	my $p_count  = $p_manager->getUserProjectCount();
+	my $p_count  = OME::Tasks::ProjectManager->getUserProjectCount();
 
 	# Build projects header/content
 	my ($p_header, $p_content);
@@ -195,14 +152,14 @@ sub __getQuickViewProjectData {
 		$p_header .= $q->span({class => 'ome_quiet'}, "[$p_count project(s)]");
 
 			# Content
-		foreach ($p_manager->getUserProjectsLimit(MAX_PREVIEW_PROJECTS)) {
+		foreach (OME::Tasks::ProjectManager->getUserProjectsLimit(MAX_PREVIEW_PROJECTS)) {
 			my $a_options = {
 				href => $self->getObjDetailURL( $_ ),
 				class => 'ome_quiet',
 			};
 	
 			# Local count of the datasets for *THIS* project
-			my $local_p_dcount = $p_manager->getDatasetCount($_);
+			my $local_p_dcount = $_->count_datasets();
 
 			# Active/most recent objects are highlighted
 			if ($_->id == $p_id) { $a_options->{'bgcolor'} = 'grey'; }
@@ -229,12 +186,8 @@ sub __getQuickViewDatasetData {
 	my ($self, $p) = @_;
 	my $q = $self->CGI();
 
-	# Managers
-	my $p_manager = $self->{'__p_manager'};
-	my $d_manager = $self->{'__d_manager'};
-
 	# Count of datasets in the "most recent" project
-	my $p_dcount = $p_manager->getDatasetCount($p);
+	my $p_dcount = $p->count_datasets();
 
 	# Build datasets in project header/content
 	my ($d_header, $d_content);
@@ -252,7 +205,7 @@ sub __getQuickViewDatasetData {
 		# Content
 		foreach ($p->datasets()) {
 			# Local count of the images for *THIS* dataset
-			my $local_d_icount = $d_manager->getImageCount($_);
+			my $local_d_icount = $_->count_images();
 
 			$d_content .= $q->a( {
 					href => $self->getObjDetailURL( $_ ),
@@ -273,77 +226,6 @@ sub __getQuickViewDatasetData {
 	return ($d_header, $d_content);
 }
 
-=head2 __getQuickView
-
-Assembles image, project and dataset previews into a common "quick view" table.
-
-=cut
-
-sub __getQuickView {
-	my $self = shift;
-	my $q = $self->CGI();
-	my $session = $self->Session();
-
-	# Managers
-	my $p_manager = $self->{'__p_manager'} = new OME::Tasks::ProjectManager;
-	my $d_manager = $self->{'__d_manager'} = new OME::Tasks::DatasetManager;
-	my $i_manager = $self->{'__i_manager'} = new OME::Tasks::ImageManager;
-
-	# Project, dataset and counts we'll be using for the quick view
-	my $p = $session->project();
-	my $d = $session->dataset();
-
-	# Build image header/content
-	my ($i_header, $i_content) = $self->__getQuickViewImageData($d);
-	
-	# Build projects header/content
-	my ($p_header, $p_content) = $self->__getQuickViewProjectData($p);
-
-	# Build datasets in project header/content
-	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
-
-	my $quickview = $q->table( {
-			cellspacing => 0,
-			cellpadding => 3,
-			width => '100%'
-		}, $q->Tr( [
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 0px;',
-					width => '33%',
-					align => 'center',
-				}, $i_header) .
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 2px;',
-					width => '33%',
-					align => 'center',
-				}, $p_header) .
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 2px;',
-					width => '33%',
-					align => 'center',
-				}, $d_header),
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 0px;',
-					width => '33%',
-					valign => 'top',
-				}, $i_content) .
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 2px;',
-					width => '33%',
-					valign => 'top',
-					align => 'right',
-				}, $p_content) .
-			$q->td( {
-					style => 'border-style: solid; border-width: 0px 0px 2px 2px;',
-					width => '33%',
-					valign => 'top',
-					align => 'right',
-				}, $d_content),
-			]), $self->__getQuickViewFooter(),
-	);
-
-	return $quickview;
-}
 
 #*********
 #********* PUBLIC METHODS
@@ -363,18 +245,37 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
+	my $session = $self->Session();
 	my $q = $self->CGI();
 
-	# The initial "quick view" of the experimenter's data
-	my $body = $self->__getQuickView();
+	# Project, dataset and counts we'll be using for the quick view
+	my $p = $session->project();
+	my $d = $session->dataset();
 
-	# Home page content, to be extended!
-	$body .= $q->p({class => 'ome_menu_title'}, 'Welcome to the Open Microscopy Environment!');
-	$body .= $q->p('Most of your initial tasks with OME will start with this page; the <i>\'Home\'</i> page. From here you can create new projects and datasets as well as import images. For more sophisticated tasks, you can nativigate to various pages using the menu on the left or using the links given to you in the previews above. If for some reason you get lost, you can always return to this <i>\'Home\'</i> page by clicking the OME logo in the top-left hand corner of your screen.');
-	$body .= $q->hr();
-	$body .= $q->p({class => 'ome_quiet', align => 'center'}, 'Copyright &copy 2004 the OME Project.');
+	# Build image header/content
+	my ($i_header, $i_content) = $self->__getQuickViewImageData($d);
+	
+	# Build projects header/content
+	my ($p_header, $p_content) = $self->__getQuickViewProjectData($p);
 
-	return ('HTML', $body);
+	# Build datasets in project header/content
+	my ($d_header, $d_content) = $self->__getQuickViewDatasetData($p);
+
+	# Load & populate the template
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
+	my $tmpl_path = $tmpl_dir."/Home.tmpl";
+	my $tmpl = HTML::Template->new( filename => $tmpl_path,
+	                                case_sensitive => 1 );
+	$tmpl->param(
+		image_header   => $i_header,
+		project_header => $p_header,
+		dataset_header => $d_header,
+		images         => $i_content,
+		projects       => $p_content,
+		datasets       => $d_content
+	);
+
+	return ('HTML', $tmpl->output());
 }
 
 

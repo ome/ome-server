@@ -1,0 +1,43 @@
+<!-- This is the home page for the Web UI. This is used by OME::Web::Home -->
+<table cellpadding="3" width="100%" cellspacing="0">
+	<tr>
+		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 0px;">
+			<TMPL_VAR NAME=image_header>
+		</td>
+		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
+			<TMPL_VAR NAME=project_header>
+		</td>
+		<td align="center" width="33%" style="border-style: solid; border-width: 0px 0px 2px 2px;">
+			<TMPL_VAR NAME=dataset_header>
+		</td>
+	</tr>
+	<tr>
+		<td width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 0px;">
+			<TMPL_VAR NAME=images>
+		</td>
+		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
+			<TMPL_VAR NAME=projects>
+		</td>
+		<td align="right" width="33%" valign="top" style="border-style: solid; border-width: 0px 0px 2px 2px;">
+			<TMPL_VAR NAME=datasets>
+		</td>
+	</tr>
+	<tr>
+		<td align="right" class="ome_menu_td" colspan="3">
+			<a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Project" class="ome_quiet">New Project</a> | 
+			<a href="serve.pl?Page=OME::Web::DBObjCreate&amp;Type=OME::Dataset" class="ome_quiet">New Dataset</a> | 
+			<a href="serve.pl?Page=OME::Web::ImportImages" class="ome_quiet">Import Images</a> |
+			<a href="serve.pl?Page=OME::Web::Search&amp;Type=OME::Image&amp;__order=!inserted" class="ome_quiet">Recently Imported Images</a>
+		</td>
+	</tr>
+</table>
+<p class="ome_menu_title">Welcome to the Open Microscopy Environment!</p>
+<p>Most of your initial tasks with OME will start with this page; the
+<em>'Home'</em> page. From here you can create new projects and datasets
+as well as import images. For more sophisticated tasks, you can
+nativigate to various pages using the menu on the left or using the
+links given to you in the previews above. If for some reason you get
+lost, you can always return to this <em>'Home'</em> page by clicking the
+OME logo in the top-left hand corner of your screen.</p>
+<hr>
+<p align="center" class="ome_quiet">Copyright © 2004 the OME Project.</p>
