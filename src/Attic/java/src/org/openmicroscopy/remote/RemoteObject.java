@@ -255,7 +255,7 @@ public class RemoteObject
             return 0.0D;
         } else {
             if (o == null) o = "null";
-            throw new RemoteException(element+": expect boolean, got "+o.getClass());
+            throw new RemoteException(element+": expect double, got "+o.getClass());
         }
     }
     protected void setDoubleElement(String element, double value)
