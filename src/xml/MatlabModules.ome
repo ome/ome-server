@@ -122,9 +122,9 @@
       <Description>Transposes the image matrix.</Description>
       <Declaration>
         <FormalInput
-           Name="inPixels" SemanticTypeName="Pixels" Count="!"/>
+           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
         <FormalOutput
-           Name="outPixels" SemanticTypeName="Pixels" Count="!"/>
+           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
       </Declaration>
 
       <ExecutionInstructions ExecutionPoint="startImage"
@@ -137,12 +137,12 @@
         <!-- specifies the order that the Matlab function expects the
              formal inputs -->
         <Inputs>
-          <Input Name="inPixels"/>
+          <Input Name="Pixels"/>
         </Inputs>
 
         <!-- specifies the order of the formal outputs -->
         <Outputs>
-          <Output Name="ouPixels"/>
+          <Output Name="Pixels"/>
         </Outputs>
       </ExecutionInstructions>
     </AnalysisModule>
