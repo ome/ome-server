@@ -126,7 +126,7 @@ sub fix_ome_conf {
 	my $OME_CONF_DIR = shift;
 	my $OME_DIST_BASE = getcwd;
 
-    my @files = glob ("$OME_CONF_DIR/httpd.ome.*.conf");
+    my @files = glob ("$OME_CONF_DIR/httpd.ome*.conf $OME_CONF_DIR/httpd2.ome*.conf");
 
 	foreach my $file (@files) {	
 		open(FILE, "<", $file) or croak "Can't open $file for reading: $!";
@@ -147,76 +147,79 @@ sub fix_ome_conf {
 
 sub getApacheBin {
 	my $apache_info = {};
+	my ($httpdConf,$httpdBin,$httpdRoot,$httpdVers);
 
 	# First, get the httpd executable.
-	$apache_info->{bin} = which ('httpd')
+	$httpdBin = which ('httpd')
 	                      || which ('apache')
 						  || whereis ("httpd")
 						  || croak "Unable to locate httpd binary";
+	croak "Unable to execute httpd binary ($httpdBin)" unless -x $httpdBin;
+	$apache_info->{bin} = $httpdBin;
 
 	$apache_info->{apachectl} = which ('apachectl')
 	                            || which ('apachectl-ssl')
 								|| whereis ("apachectl")
 								|| croak "Unable to locate apachectl binary";
 	
+
+	# Get the location of httpd.conf from the compiled-in options to httpd
+	$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
+	chomp $httpdConf;
+
+	$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
+	chomp $httpdRoot;
+	$apache_info->{root} = $httpdRoot;
+	
+	$httpdVers = `$httpdBin -V | grep 'Server version'`;
+	$httpdVers = $1 if $httpdVers =~ /:\s*Apache\/(\d)/;
+	croak "Could not determine Apache version\n" unless defined $httpdVers;
+	$apache_info->{version} = $httpdVers;
+
+	if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
+		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
+		$httpdConf = File::Spec->canonpath( $httpdConf ); 
+	}
+	$apache_info->{conf} = $httpdConf;
+
 	return $apache_info;
 }
 
 
 sub getApacheInfo {
 	my $apache_info = shift;
-	my ($httpdConf,$httpdBin,$httpdRoot,$omeConf);
+	my ($httpdConf,$omeConf);
 
-	$httpdBin = $apache_info->{bin};
-	print "bin: $httpdBin\n";
+	$httpdConf = $apache_info->{conf};
 	
-	if (-x $httpdBin) {
-		# Get the location of httpd.conf from the compiled-in options to httpd
-		$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
-		chomp $httpdConf;
-	
-		$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
-		chomp $httpdRoot;
-		$apache_info->{root} = $httpdRoot;
-	
-		if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
-			$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
-			$httpdConf = File::Spec->canonpath( $httpdConf ); 
+
+	print STDERR  "Apache configuration file ($httpdConf) does not exist\n" unless -e $httpdConf;
+	print STDERR  "Apache configuration file ($httpdConf) is not readable\n" unless -r $httpdConf;
+	confirm_path ('Apache configuration file', $httpdConf);
+	$apache_info->{conf} = $httpdConf;
+	croak "Could not find $httpdConf\n" unless -e $httpdConf;
+	croak "Could not read $httpdConf\n" unless -r $httpdConf;
+
+	$apache_info->{conf_bak} = $httpdConf.'.bak.ome';
+	$omeConf = $apache_info->{ome_conf};
+
+	# Parse httpd.conf to see if it includes ome.conf
+	if ( open(FILE, "< $httpdConf") ) {
+		my ($mod_loaded,$mod_added,$mod_loaded_off,$mod_added_off);
+		while (<FILE>) {
+			$apache_info->{hasOMEinc} = 1 if $_ =~ /\s*Include $omeConf/;
+			$mod_loaded = 1 if $_ =~ /^\s*LoadModule perl_module/;
+			$mod_added = 1 if $_ =~ /^\s*AddModule mod_perl.c/;
+			$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
+			$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
+			$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
+			$apache_info->{cgi_bin} = $1 if $_ =~ /^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"]+)["]*/;
+			# FIXME: Some versions of apache use no quotes
 		}
+		$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
+		$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
 	} else {
-		print STDERR  "httpd ($httpdBin) is not executable\n";
-		return undef;
-	}
-
-	print STDERR  "Apache configuration file (httpd.conf) does not exist\n" unless -e $httpdConf;
-	print STDERR  "Apache configuration file (httpd.conf) is not readable\n" unless -r $httpdConf;
-	confirm_path ('Apache configuration file (httpd.conf)', $httpdConf);
-	croak "Could not find Apache configuration file\n" unless -e $httpdConf;
-	croak "Could not read Apache configuration file\n" unless -r $httpdConf;
-
-	if (-r $httpdConf) {
-		$apache_info->{conf} = $httpdConf;
-		$apache_info->{conf_bak} = $httpdConf.'.bak.ome';
-		$omeConf = $apache_info->{ome_conf};
-	
-		# Parse httpd.conf to see if it includes ome.conf
-		if ( open(FILE, "< $httpdConf") ) {
-			my ($mod_loaded,$mod_added,$mod_loaded_off,$mod_added_off);
-			while (<FILE>) {
-				$apache_info->{hasOMEinc} = 1 if $_ =~ /\s*Include $omeConf/;
-				$mod_loaded = 1 if $_ =~ /^\s*LoadModule perl_module/;
-				$mod_added = 1 if $_ =~ /^\s*AddModule mod_perl.c/;
-				$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
-				$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
-				$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
-				$apache_info->{cgi_bin} = $1 if $_ =~ /^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"]+)["]*/;
-				# FIXME: Some versions of apache use no quotes
-			}
-			$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
-			$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
-		} else {
-			print STDERR  "Could not open httpd.conf ($httpdConf) for reading: $!\n";
-		}
+		print STDERR  "Could not open httpd.conf ($httpdConf) for reading: $!\n";
 	}
 
 	chomp $apache_info->{DocumentRoot} if $apache_info->{DocumentRoot};
@@ -265,12 +268,18 @@ sub execute {
     #********
 
 	fix_ome_conf("$OME_CONF_DIR");
-	
-	my $ome_conf = $OME_CONF_DIR . '/httpd.ome.dev.conf';
-	$ome_conf = $OME_BASE_DIR.'/conf/httpd.ome.conf'
-		unless y_or_n("Use OME Apache configuration for developers ($ome_conf) ?");
+	my $ome_conf;
+	if ($apache_info->{version} == 2) {
+		$ome_conf = $OME_CONF_DIR . '/httpd2.ome.dev.conf';
+		$ome_conf = $OME_BASE_DIR.'/conf/httpd2.ome.conf'
+			unless y_or_n("Use OME Apache-2.x configuration for developers?");
+	} else {
+		$ome_conf = $OME_CONF_DIR . '/httpd.ome.dev.conf';
+		$ome_conf = $OME_BASE_DIR.'/conf/httpd.ome.conf'
+			unless y_or_n("Use OME Apache-1.x configuration for developers?");
+	}
 
-	croak "Could not read OME Apache configuration file \"\n" unless -r $ome_conf;
+	croak "Could not read OME Apache configuration file ($ome_conf)\n" unless -r $ome_conf;
 	$apache_info->{ome_conf} = $ome_conf;
 
     
