@@ -505,7 +505,7 @@
 		<xs:annotation>
 			<xs:documentation>
 				The ExperimenterID attribute is required, and the presence of at least one Experimenter element is required within OME.
-				The required elements are the same as for the ContactInfo type, but include the OMEname element,
+				The required elements are the same as for the ContactInfo type, but include the OMEName element,
 				which is the experimenters login or username in OME.
 				Interestingly, Experimenters don't have a group affiliation.\
 				This is because this is an image-centric document, so the image itself is affiliated with an experimenter and a group.
@@ -514,7 +514,7 @@
 			</xs:documentation>
 		</xs:annotation>
 	</xs:element>
-	<xs:element name = "OMEname" type = "xs:string">
+	<xs:element name = "OMEName" type = "xs:string">
 		<xs:annotation>
 			<xs:documentation>This is the username of the experimenter (in a 'unix' or 'database' sense).</xs:documentation>
 		</xs:annotation>
@@ -1022,12 +1022,12 @@
 		<xs:annotation>
 			<xs:documentation>
 				An element type to specify an Experimenter under OME.
-				It consists of a Person element group and a login name specified under OMEname.
+				It consists of a Person element group and a login name specified under OMEName.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
 			<xs:group ref = "Person"/>
-			<xs:element ref = "OMEname"/>
+			<xs:element ref = "OMEName"/>
 			<xs:element ref = "GroupRef" maxOccurs = "unbounded"/>
 		</xs:sequence>
 		<xs:attribute name = "ExperimenterID" use = "required">
