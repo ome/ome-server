@@ -85,7 +85,7 @@ public class RemoteProject
     static class DatasetLink
         extends RemoteOMEObject
     {
-        static { RemoteObject.addClass("OME::Project::DatasetLink",
+        static { RemoteObject.addClass("OME::Project::DatasetMap",
                                        DatasetLink.class); }
         
         public DatasetLink() { super(); }

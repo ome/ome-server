@@ -117,7 +117,7 @@ public class RemoteImage
     static class DatasetLink
         extends RemoteOMEObject
     {
-        static { RemoteObject.addClass("OME::Image::DatasetLink",
+        static { RemoteObject.addClass("OME::Image::DatasetMap",
                                        DatasetLink.class); }
         
         public DatasetLink() { super(); }
