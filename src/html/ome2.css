@@ -13,6 +13,8 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 /* Some generic style definitions */
 .ome_title { font-size: 14px; font-weight: bold; }
 
+.ome_info { color: blue; } 
+
 .ome_error { color: red; }
 
 .ome_footer { font-size: 10px; color: #444444; }
