@@ -323,9 +323,7 @@ sub getOMESession {
     logdie ref($self)."->getOMESession:  Could not create userState object"
       unless defined $userState;
 
-	  #$OME::Session::__soleInstance = undef;
-
-    my $session = OME::Session->instance($userState);
+    my $session = OME::Session->instance($userState, $bootstrap_factory);
     
     logdbg "debug", "getOMESession: updating userState";
     $userState->storeObject();
