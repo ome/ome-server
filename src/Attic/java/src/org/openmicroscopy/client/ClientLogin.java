@@ -149,8 +149,7 @@ public class ClientLogin {
       Attribute attrUser;
     String urlString =
         (NamePassURL[2].equals("")) ?
-        //"http://localhost:8002/" :
-        "http://sorgerlab1.mit.edu:8002/" :
+        "http://localhost:8002/" :
 	  NamePassURL[2] ;
     URL url = null;
       System.err.println("Logging in for "+NamePassURL[0]+" on "+urlString);
@@ -198,9 +197,7 @@ public class ClientLogin {
       JPanel host = new JPanel();
       host.add("West", new JLabel("Host"));
       //JComboBox hostURL = new JComboBox(new String [] {"http://localhost:8002"});
-      JComboBox hostURL = new JComboBox(new String [] {"http://localhost:8002",
-						       "http://sorgerlabo.mit.edu:8002",
-						       "http://sorgerlab1.mit.edu:8002"});
+      JComboBox hostURL = new JComboBox(new String [] {"http://localhost:8002"});
       hostURL.setEditable(true);
       host.add("East", hostURL);
       JLabel message = new JLabel(OMEprompt);
