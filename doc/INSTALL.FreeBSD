@@ -43,6 +43,7 @@ Install DBI,MD5,Apache::Session, Log::Agent, Tie::IxHash, Term::ReadKey, Carp::A
 /usr/ports/devel/p5-Class-Accessor
 ==> /usr/ports/devel/p5-Class-Fields (Dependancy)
 /usr/ports/devel/p5-Class-Data-Inheritable
+==> /usr/ports/devel/p5-IO-stringy (Dependancy)
 /usr/ports/devel/p5-Class-Trigger
 /usr/ports/textproc/p5-Text-CSV_XS
 /usr/ports/databases/p5-SQL-Statement
@@ -60,7 +61,7 @@ Download and install DBD-Pg from CPAN:
 
 http://search.cpan.org/CPAN/authors/id/D/DW/DWHEELER/DBD-Pg-1.22.tar.gz
 
-Install Sort::Array, IO::Scalar, Exporter::Lite, UNIVERSAL::exports and Date::Simple using OME supplied PerlCheck:
+Install Sort::Array, Exporter::Lite, UNIVERSAL::exports and Date::Simple using OME supplied PerlCheck:
 
 cd OME/src/perl2/; perl perlCheck.pl
 
