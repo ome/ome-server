@@ -90,6 +90,11 @@ sub features {
     return OME::Feature->__image_roots(image_id => $self->id());
 }
 
+sub datasets {
+	my $self = shift;
+	return map $_->dataset(), $self->dataset_links();
+}
+
 sub _init {
     my $class = shift;
     my $self = $class->SUPER::_init();
