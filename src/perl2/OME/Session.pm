@@ -107,7 +107,7 @@ Returns the singleton session object.
 
 =head2 deleteInstance
 
-Explicitly deletes the singleton instance from the process. This should only be used when a true recycle of the Session object (either Configuration or UserState is updated) is needed. You will occur a STDERR warning when using this method.
+Explicitly deletes the singleton instance from the process. This should only be used when a true recycle of the Session object (either Configuration or UserState is updated) is needed. You will incur a STDERR warning when using this method.
 
 =cut
 
