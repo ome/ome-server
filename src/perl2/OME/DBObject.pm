@@ -581,6 +581,40 @@ sub __addForeignJoin {
 
 }
 
+sub __getQueryLocation {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($foreign_key_number,
+        $foreign_tables,$foreign_aliases,$join_clauses,
+        $tables_used,$column_alias) = @_;
+
+    my $location;
+    if ($column_alias eq 'id') {
+        $location = "id";
+    } elsif ($column_alias =~ /\./) {
+        # If there's a period, then we'll need to do some
+        # foreign joins.
+
+        my @aliases = split(/\./,$column_alias);
+        my $foreign_alias = $class->
+          __addForeignJoin($foreign_key_number,\@aliases,
+                           $foreign_tables,$foreign_aliases,
+                           $join_clauses);
+        my $foreign_column = $foreign_aliases->{$foreign_alias};
+
+        $location = $foreign_column->[0].".".$foreign_column->[1];
+    } else {
+        my $column = $class->__columns()->{$column_alias};
+        confess "Column $column_alias does not exist"
+          unless defined $column;
+        $location = $column->[0].".".$column->[1];
+        $tables_used->{$column->[0]} = undef;
+    }
+
+    return $location;
+}
+
 sub __makeSelectSQL {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -591,15 +625,16 @@ sub __makeSelectSQL {
         $columns_wanted = [keys %{$class->__columns()}];
     }
 
-    # These three variables will correspond to the three sections of
+    # These three variables will correspond to the four sections of
     # the SELECT statement: the list of columns, the list of tables,
-    # and the WHERE clause.
+    # the WHERE clause, and the ORDER BY clause.
     my @columns_needed;
     my %tables_used;
     my @foreign_tables;
     my %foreign_aliases;
     my @join_clauses;
     my @values;
+    my @order_by;
 
     my $columns = $class->__columns();
 
@@ -624,6 +659,9 @@ sub __makeSelectSQL {
     # tables we have to include.
     my $id_criteria = 0;
 
+    # Same, but for ORDER BY
+    my $id_order = 0;
+
     # A counter used to construct unique table aliases for any foreign
     # tables we join with.  (We can't just use the foreign table name,
     # because each table might occur in the query more than once.)
@@ -633,32 +671,29 @@ sub __makeSelectSQL {
     # entries to the WHERE clause list, and also make sure that the
     # tables used by each criterion are in the %tables_used hash.
     if (defined $criteria) {
+
+        # Pull out and parse the ORDER BY clause, if one exists
+        my $order_by = $criteria->{__order};
+        delete $criteria->{__order};
+        $order_by ||= [];
+        $order_by = [$order_by] unless ref($order_by);
+
+        foreach my $column_alias (@$order_by) {
+            my $location = $class->
+              __getQueryLocation(\$foreign_key_number,
+                                 \@foreign_tables,\%foreign_aliases,
+                                 \@join_clauses,\%tables_used,
+                                 $column_alias);
+            $id_order = 1 if $location eq 'id';
+            push @order_by, $location;
+        }
+
         foreach my $column_alias (keys %$criteria) {
-            my $location;
-
-            # A key of "id" in the criteria hash is a special case -
-            # it will always refer to the primary key field.
-            if ($column_alias eq 'id') {
-                $location = "id";
-            } elsif ($column_alias =~ /\./) {
-                # If there's a period, then we'll need to do some
-                # foreign joins.
-
-                my @aliases = split(/\./,$column_alias);
-                my $foreign_alias = $class->
-                  __addForeignJoin(\$foreign_key_number,\@aliases,
-                                   \@foreign_tables,\%foreign_aliases,
-                                   \@join_clauses);
-                my $foreign_column = $foreign_aliases{$foreign_alias};
-
-                $location = $foreign_column->[0].".".$foreign_column->[1];
-            } else {
-                my $column = $columns->{$column_alias};
-                confess "Column $column_alias does not exist"
-                  unless defined $column;
-                $location = $column->[0].".".$column->[1];
-                $tables_used{$column->[0]} = undef;
-            }
+            my $location = $class->
+              __getQueryLocation(\$foreign_key_number,
+                                 \@foreign_tables,\%foreign_aliases,
+                                 \@join_clauses,\%tables_used,
+                                 $column_alias);
 
             my $criterion = $criteria->{$column_alias};
             my ($operation,$value);
@@ -719,6 +754,12 @@ sub __makeSelectSQL {
         map { $_ = "$first_key ".$_->[0]." ".$_->[1] if ref($_); } @join_clauses;
     }
 
+    if ($id_order) {
+        die "Cannot order by an ID; none is in the SQL statement!"
+          unless defined $first_key;
+        map { $_ = $first_key if $_ eq 'id' } @order_by;
+    }
+
     my $sql = "select ". join(", ",@columns_needed). " from ".
       join(", ",
            keys(%tables_used),
@@ -727,6 +768,11 @@ sub __makeSelectSQL {
 
     $sql .= " where ". join(" and ",@join_clauses)
       if scalar(@join_clauses) > 0;
+
+    $sql .= " order by ". join(", ",@order_by)
+      if scalar(@order_by) > 0;
+
+    #print STDERR "\n$sql\n";
 
     return ($sql,defined $first_key,\@values);
 }
