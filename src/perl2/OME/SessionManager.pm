@@ -129,21 +129,25 @@ sub new {
 
 This method will attempt a connection to the DB using $username/$password or $sessionKey,
 and return an L<C<OME::Session>|OME::Session> object if successful.
+A set of flags can be optionally passed in the last parameter as a hash reference.
+Supported flags include DataSource, DBUser and DBPassword:
+	$manager->createSession ($sessionKey, {DataSource => 'foo', DBUser => 'bar'});
 
 =cut
 
 sub createSession {
     my $self = shift;
     my ($username,$password,$key);
+    my $flags = pop if ref ($_[1]) eq 'HASH' or ref ($_[2]) eq 'HASH';    
     ($username,$password) = @_ if scalar (@_) == 2;
     ($key) = @_ if scalar (@_) == 1;
 
     my $session;
 
     if (defined $username and defined $password) { 
-        $session = $self->createWithPassword($username,$password);
+        $session = $self->createWithPassword($username,$password,$flags);
     } elsif (defined $key) {
-        $session = $self->createWithKey($key);
+        $session = $self->createWithKey($key,$flags);
     }
 
     return $session or undef;
@@ -164,6 +168,7 @@ If successfull, it will cache the SessionKey in the user's ~/.omelogin file.
 
 sub TTYlogin {
     my $self = shift;
+    my $flags = pop @_ if ref ($_[0]) eq 'HASH';
     my $homeDir = $ENV{"HOME"} || ".";
     my $loginFile = "$homeDir/.omelogin";
 
@@ -174,7 +179,7 @@ sub TTYlogin {
     if ($loginFound) {
         my $key = <LOGINFILE>;
         chomp($key);
-        $session = $self->createSession($key);
+        $session = $self->createWithKey($key,$flags);
         close LOGINFILE;
 
         if (!defined $session) {
@@ -197,7 +202,7 @@ sub TTYlogin {
         print "\n";
         ReadMode(1);
 
-        $session = $self->createSession($username,$password);
+        $session = $self->createWithPassword($username,$password,$flags);
 
         if (defined $session) {
             my $created = open LOGINFILE, "> $loginFile";
@@ -227,9 +232,10 @@ sub TTYlogin {
 sub createWithKey {
 	my $self = shift;
 	my $sessionKey = shift;
+	my $flags = shift;
 
 	
-	my $bootstrap_factory = OME::Factory->new();
+	my $bootstrap_factory = OME::Factory->new($flags);
 	my $dbh = $bootstrap_factory->obtainDBH();
 	eval {
 		$dbh->do (INVALIDATE_OLD_SESSION_KEYS_SQL,{},$SESSION_KEY_LIFETIME*60);
@@ -276,15 +282,11 @@ sub createWithKey {
 
 sub createWithPassword {
 	my $self = shift;
-	my ($username,$password) = @_;
-	my @row		= ();
-	my $rows	= 0;
-	my @tab		= ();
-	my $Err			= undef; 
+	my ($username,$password,$flags) = @_;
 	
 	return undef unless $username and $password;
 	
-	my $bootstrap_factory = OME::Factory->new();
+	my $bootstrap_factory = OME::Factory->new($flags);
 	
 	my $dbh = $bootstrap_factory->obtainDBH();
 	eval {
