@@ -66,23 +66,36 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	
 	private PModule lastEntered;
 	
+	/**
+	 * A flag indicating that the previous event was a popup
+	 * 
+	 */
+	private static boolean postPopup = false;
+	
 	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
 		super();
 		this.canvas = canvas;	
-		//setEventFilter(new PInputEventFilter());
-		//setAutopan(false);
 	}
 	
 	/**
-	 * When we click on the {@link PChainLibraryCanvas}, there are two 
+	 * When we click on the {@link PChainLibraryCanvas}, there are four 
 	 * possibilities:
-	 * 	1) we clicked on the camera. In that case, zoom to center 
+	 *  1) The post popup flag is set. In this case, the event is in artifact
+	 * 		and should be ignored.
+	 * 	2) we clicked on the camera. In that case, zoom to center 
 	 * 		the contents of the canvas
-	 *  2) We clicked on a {@link PBufferedNode}. More specifically, 
+	 *  3) We clicked on a {@link PBufferedNode}. More specifically, 
 	 * 	    a {@link PModule} or a {@link PChainBox}. In this case, zoom
-	 * 		to center te node.
+	 * 		to center the node.
+	 *  4) We right clicked or control-clicked. Handle this like a popup. 
 	 */
 	public void mouseClicked(PInputEvent e) {
+		
+		if (postPopup == true) {
+			postPopup = false;
+			e.setHandled(true);
+			return;
+		}
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		if (mask == MouseEvent.BUTTON1_MASK &&
@@ -104,6 +117,8 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			else
 				super.mouseClicked(e);
 		}
+		else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK) ==1)
+			handlePopup(e);
 		else
 			super.mouseClicked(e);
 	}
@@ -111,10 +126,14 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	/**
 	 * When the user presses the mouse on a {@link PChainBox}, tell the
 	 * {@link PChainLibraryCanvas} which chain has been selected.
+	 * Or, if it's a popup, handle it as such.
 	 */
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		if (node instanceof PChainBox) {
+		if (e.isPopupTrigger()) {
+			handlePopup(e);
+		}
+		else if (node instanceof PChainBox) {
 			PChainBox box = (PChainBox) node;
 			canvas.setSelectedChainID(box.getChainID());
 		}
@@ -127,7 +146,11 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	 * a selected chain.
 	 */
 	public void mouseReleased(PInputEvent e) {
-		canvas.clearChainSelected();
+		if (e.isPopupTrigger()) {
+			handlePopup(e);
+		}
+		else
+			canvas.clearChainSelected();
 	}
 	
 	/**
@@ -199,4 +222,30 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		else
 			super.mouseExited(e);
 	}
+	
+	/**
+	 * To handle a popup, look at the parent of the node that the event was 
+	 * on. If that parent is a bufferend node, zoom to center it.
+	 * Or, if the parent is the camera, zoom to center it.
+	 * Or, if the event was on the camera, zoom to center it.
+	 */
+	private void handlePopup(PInputEvent e) {
+		postPopup = true;
+		PNode node = e.getPickedNode();
+		PNode p = node.getParent();
+			
+		if (p instanceof PBufferedNode) {
+			PBufferedNode bn=(PBufferedNode) p;
+			PBounds b = bn.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
+		} else if (p instanceof PCamera || p == canvas.getLayer() ||
+			node instanceof PCamera || node == canvas.getLayer()) {
+			PBounds b = canvas.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+		}
+		e.setHandled(true);	 
+	}
+	 
 }
