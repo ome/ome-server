@@ -27,9 +27,6 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:    Douglas Creager <dcreager@alum.mit.edu>
@@ -37,14 +34,11 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 package org.openmicroscopy.is;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 /**
  * <p>Defines methods for interacting with an OME image server.  There
@@ -110,6 +104,24 @@ public abstract class ImageServer
     protected ImageServer()
     {
         super();
+    }
+
+    // inherited javadoc
+    public boolean equals(Object o)
+    {
+        if (o instanceof ImageServer)
+            return equals((ImageServer) o);
+        else
+            return (o == this);
+    }
+
+    /**
+     * Returns whether two image servers refer to the same image
+     * server installation.
+     */
+    public boolean equals(ImageServer is)
+    {
+        return (is == this);
     }
 
     /**
@@ -578,13 +590,23 @@ public abstract class ImageServer
      * for the pixels file, and the reading methods
      * (<code>get*</code>) become available.</p>
      *
+     * <p>The image server will try to determine if the pixels file
+     * that is being finished already exists in the repository.  If it
+     * does, then the server will return the pixels ID of the existing
+     * pixels file, and the original pixels ID (passed into this
+     * method) will <b><i>no longer be valid</i></b>.  Care must be
+     * taken to ensure that all future access to the pixels file is
+     * done via the new pixels ID.</p>
+     *
      * @param pixelsID the pixels ID of a previously created pixels
      * file
+     * @return the final pixels ID of the pixels file (might not be
+     * the same as the <code>pixelsID</code> parameter
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * writeable
      */
-    public abstract void finishPixels(long pixelsID)
+    public abstract long finishPixels(long pixelsID)
         throws ImageServerException;
 
     /**
@@ -616,9 +638,9 @@ public abstract class ImageServer
      * file
      * @param settings a {@link CompositingSettings} object describing
      * the compositing which should be performed
-     * @return an AWT {@link Image} suitable for display
+     * @return an AWT {@link BufferedImage} suitable for display
      */
-    public abstract Image getComposite(long pixelsID,
+    public abstract BufferedImage getComposite(long pixelsID,
                                        CompositingSettings settings)
         throws ImageServerException;
 
@@ -644,7 +666,7 @@ public abstract class ImageServer
      * @param pixelsID the pixels ID of a previously created pixels
      * file
      */
-    public abstract Image getThumbnail(long pixelsID)
+    public abstract BufferedImage getThumbnail(long pixelsID)
         throws ImageServerException;
 
     /**
