@@ -120,7 +120,8 @@ sub __printForm {
 		{
 			title         => 'Export images to an XML file',
 			actions       => ['Export'],
-			select_column => 'selected',
+			select_column => 1,
+			select_name   => 'selected',
 			noTxtDownload => 1
 		}, 
 		"OME::Image", 
