@@ -45,6 +45,8 @@ package org.openmicroscopy.vis.chains;
 import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.chains.Controller;
+import org.openmicroscopy.vis.chains.SelectionState;
 import javax.swing.Box;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
@@ -57,7 +59,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Component;
-import java.util.List;
+import java.util.Collection;
 
 /** 
  * Toolbar for a {@link ChainFrame}. This toolbar contains a "save" button
@@ -78,16 +80,24 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	protected JComboBox execList;
 	
 	protected ResultFrame frame;
+	
+	private SelectionState selectionState;
+	
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
 	 */
-	public ResultToolBar(ResultFrame frame,CmdTable cmd,Connection connection) {
+	public ResultToolBar(ResultFrame frame,Controller controller,
+			Connection connection) {
 		super();
-		this.cmd=cmd;
+		
 		this.frame = frame;
 		this.connection = connection;
 		
+		cmd=controller.getCmdTable();
+		
+		selectionState = controller.getControlPanel().getSelectionState();
+		setFloatable(false);
 		Dimension dim = new Dimension(5,0);
 		
 		add(Box.createRigidArea(dim));
@@ -125,7 +135,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	}
 	
 	public void updateExecutionChoices(CChain chain) {
-		List execs = chain.getCurrentDatasetExecutions();
+		Collection execs = chain.getCurrentDatasetExecutions(selectionState);
 		System.err.println("populating toolbar pulldown with "+
 			execs.size()+" executions");
 		Object[] a = new Object[0];
@@ -134,6 +144,7 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 		execList.setModel(model);
 		// set initial
 		CChainExecution exec = (CChainExecution) a[0];
+		chainName.setText(chain.getName());
 		frame.setExecution(exec);
 	}
 }
