@@ -80,6 +80,7 @@ use OME::AnalysisChainExecution;
 use OME::SessionManager;
 use OME::DBConnection;
 use Ima::DBI;
+use OME::Analysis::CLIHandler;
 
 use Benchmark qw(timediff timesum timestr);
 
