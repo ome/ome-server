@@ -101,7 +101,8 @@ sub annotateAttributes {
         my $data_hash = shift;
         delete $data_hash->{semantic_type};
         my $new_id = OME::Remote::DTO::GenericAssembler->
-          __parseUpdateHash($data_hash,$id_hash);
+          __parseUpdateHash($st->requireAttributeTypePackage(),
+                            $data_hash,$id_hash);
 
         push @new_ids, $new_id;
         push @params, $data_hash;
