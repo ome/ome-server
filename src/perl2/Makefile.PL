@@ -6,5 +6,6 @@ WriteMakefile(
     VERSION_FROM => 'OME.pm', # finds $VERSION
     AUTHOR       => 'Ilya Goldberg, Doug Creager, Brian Hughes, Josiah Johnston (igg@nih,gov, dcreager@alum.mit.edu, bshughes@alum.mit.edu, siah@nih.gov)',
     ABSTRACT     => 'The Open Microscopy Environment',
-    DIR    => ['OME/Image/Pix'],
+    DIR          => ['OME/Image/Pix'],
+#    realclean    => {FILES => 'OME/Image/blib'}  
 );

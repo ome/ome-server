@@ -8,5 +8,7 @@ WriteMakefile(
     'LIBS'		=> [''], # e.g., '-lm'
     'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
     'INC'		=> '', # e.g., '-I/usr/include/other'
-	'OBJECT'    => 'Pix.o libpix.o'
+	'OBJECT'    => 'Pix.o libpix.o',
+	'realclean'    =>   {FILES => '../blib'},
+	'clean'    =>   {FILES => '../blib'},
 );

@@ -2,7 +2,7 @@
 
 # t/040_load.t - check module loading and create testing directory
 
-use Test::More tests => 22;
+use Test::More tests => 23;
 
 BEGIN { use_ok( 'OME::Image::Pix' ); }
 END {unlink ('pixTest16');unlink('pixTestROI');unlink('pixTestROI2');}
@@ -65,7 +65,7 @@ my @pixArrayPlane = (0..$nPixPlane-1);
 my $pix16Plane = pack("S*",@pixArrayPlane);
 my $nOutPlane = $pixROI->SetROI ($pix16Plane,0,0,4,1,1,5,5,5,2,2);
 die "Expecting to write ".scalar (@pixArrayPlane)." pixels, wrote $nOutPlane\n" unless $nOutPlane == @pixArrayPlane;
-print "ok 9\n";
+ok (1,'Image::Pix->SetROI()');
 
 my $pixelsPlane = $pixROI->GetPlane (4,1,1) || die "Could not allocate buffer\n";
 my @testPixPlane = unpack ("S*",$pixelsPlane);
@@ -73,7 +73,7 @@ die "GetPixPlane() returned ".scalar(@testPixPlane)." pixels, expecting ".scalar
 for (my $i = 0; $i < @pixArrayPlane; $i++) {
 	die "GetPix() returned different pixels than SetPix(). Index=$i\n" unless $testPixPlane[$i] == $pixArrayPlane[$i];
 }
-ok (1,'Image::Pix->GetPlane()');
+ok (1,'Image::Pix->SetROI() -> Image::Pix->GetPlane()');
 
 my $nPixStack = 5*5*5;
 my @pixArrayStack = (0..$nPixStack-1);
