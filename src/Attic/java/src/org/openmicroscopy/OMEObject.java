@@ -71,6 +71,13 @@ public interface OMEObject
     public void populate();
 
     /**
+     * Retrieves all of the data for this object in a single call.
+     * @param force if <code>false</code>, the object is only
+     * populated if it hasn't been populated before.
+     */
+    public void populate(boolean force);
+
+    /**
      * Saves this object's state to the OME database and commits any
      * active database transaction.
      */

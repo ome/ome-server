@@ -55,6 +55,11 @@ public class RemoteOMEObject
         RemoteObjectCache.addClass("OME::DBObject",RemoteOMEObject.class);
     }
 
+    private boolean populated = false;
+
+    public boolean isPopulated() { return populated; }
+    public void setPopulated(boolean populated) { this.populated = populated; }
+
     public RemoteOMEObject() { super(); }
     public RemoteOMEObject(RemoteSession session, String reference)
     { super(session,reference); }
@@ -65,15 +70,21 @@ public class RemoteOMEObject
     public void writeObject() 
     { caller.dispatch(this,"writeObject"); }
 
-    public void populate()
-    {
-        Object result = caller.dispatch(this,"populate");
+    public void populate() { populate(true); }
 
-        if (result instanceof Map)
+    public void populate(boolean force)
+    {
+        if (force || !populated)
         {
-            elementCache = (Map) result;
-        } else {
-            System.err.println("Unknown result type: "+result.getClass());
+            Object result = caller.dispatch(this,"populate");
+
+            if (result instanceof Map)
+            {
+                elementCache = (Map) result;
+                populated = true;
+            } else {
+                System.err.println("Unknown result type: "+result.getClass());
+            }
         }
     }
 
