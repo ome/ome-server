@@ -433,7 +433,7 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	
 	public PFormalInput getFormalInputNode(FormalInput in) {
-		return (PFormalInput) getMatchingParameterNode(PFormalInput.class,in);
+	 	return (PFormalInput) getMatchingParameterNode(PFormalInput.class,in);
 	}	
 	
 	private PFormalParameter getMatchingParameterNode(final Class clazz,
@@ -449,7 +449,7 @@ public class PModule extends PPath implements PBufferedNode {
 			Class pClass = p.getClass();
 			if (pClass ==  clazz) {
 				param = p.getParameter();
-				if (target == param)
+				if (target.getID() == param.getID())
 					return p;
 			}
 		}
