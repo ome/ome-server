@@ -425,7 +425,7 @@ sub copy_tree {
     $from = File::Spec->rel2abs($from);  # does clean up as well
     $to = File::Spec::->catdir(File::Spec->rel2abs($to), basename($from));
 
-	unless (-d $from) { croak "OME::Install::Util::copy_tree() can only operate on directories" }
+	unless (-d $from) { croak "OME::Install::Util::copy_tree() can only operate on directories. While copying '$from', $!" }
 
     unless (-e $to) { mkdir($to) or croak "Couldn't make directory $to: $!" }
 
