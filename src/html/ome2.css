@@ -7,9 +7,14 @@ body {
 /* General font families for common tags */
 font,th,td,p { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 12px; }
 
+/* General formatting for common tags */
+hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
+
 /* Some generic style definitions */
 .ome_title { font-size: 14px; font-weight: bold; }
 
 .ome_error { color: red; }
+
+.ome_footer { font-size: 10px; color: #444444; }
 
 .ome_table { border: 1px #000000 solid; }
