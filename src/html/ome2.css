@@ -66,11 +66,13 @@ a.ome_quiet:hover { text-decoration: none; color : #FF0000; }  /* Red is tempora
 td.ome_main_menu_heading { background-color: #6E8489; }
 .ome_main_menu_heading { color: #D1D7DC; font-size: 11px; font-weight: bold; }
 
+td.ome_main_menu_link_hover { background-color: #A3A7AB; }  /* JScript rollovers */
 a.ome_main_menu_link { text-decoration: none; color: #444444; font-size: 10px; }
-.ome_main_menu_link:visited { text-decoration: none; color: #444444; }
+a.ome_main_menu_link:visited { text-decoration: none; color: #444444; }
 a.ome_main_menu_link:hover { text-decoration: none; color: #FF0000; }  /* Red is temporary */
 
 td.ome_main_menu_link_active { background-color: #444444; }
+td.ome_main_menu_link_active_hover { background-color: #444444; }  /* JScript rollovers */
 a.ome_main_menu_link_active { text-decoration: none; color: #D1D7DC; font-size: 10px; }
 a.ome_main_menu_link_active:visited { text-decoration: none; color: #D1D7DC; }
 a.ome_main_menu_link_active:hover { text-decoration: none; color : #FF0000; }  /* Red is temporary */

@@ -261,9 +261,11 @@ sub __processElement {
 		my $href = $web_class->pageURL($web_class, $menu_element->{ url_param } );
 
 		# Build TR
-		$element_data .= $q->Tr($q->td(
-			{class => $css_class},
-			$q->a({class => $css_class, href => $href}, $text)
+		$element_data .= $q->Tr($q->td( {
+					class => $css_class,
+					onMouseOver => "this.className=\'$css_class" . '_hover\'',
+					onMouseOut => "this.className=\'$css_class\'",
+				}, $q->a({class => $css_class, href => $href}, $text)
 		));
 	} else {
 		carp "Unknown menu type '$menu_element->{'type'}'";
