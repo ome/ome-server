@@ -73,10 +73,7 @@ XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
 };
 
 XYPlaneControls.prototype.updatePlaneURL = function ( ) {
-	if( this.openImgLink ) {
-		this.openImgLink.setAttributeNS( xlinkns, 'href', this.image.getImageURL() );
-		this.saveAsTIFFLink.setAttributeNS( xlinkns, 'href', this.image.getImageURL() );
-	}
+	this.saveAsTIFFLink.setAttributeNS( xlinkns, 'href', this.image.getImageURL() );
 };
 
 
