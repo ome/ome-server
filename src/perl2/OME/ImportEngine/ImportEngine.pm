@@ -190,7 +190,7 @@ sub startImport {
                  name => "ImportSet",
                  description => "Images imported by OME::ImportEngine",
                  locked => 1,
-                 owner_id => $session->User()->id(),
+                 owner_id => $session->experimenter_id(),
                 });
 
     # Have the manager officially start the import process, and create
@@ -333,7 +333,7 @@ sub importFiles {
             }
 
             # This hasn't been imported yet, so slurp it in.
-            my $image;
+            my ($image,$import_images);
             eval {
                 $image = $format->importGroup($group, \&localSliceCallback);
             };
@@ -350,24 +350,34 @@ sub importFiles {
                 $session->rollbackTransaction();
                 doGroupCallback($self->{_flags}, 0);
                 next GROUP;
+            } elsif (ref ($image) eq 'ARRAY') {
+            	$import_images = $image;
+            } elsif (UNIVERSAL::isa($image,'OME::Image')) {
+            	$import_images = [$image];
+			} else {
+				logdie ref ($self)."->importFiles $format_class returned a ".
+					ref($image). " instead of an OME::Image";
+			}
+			
+			foreach $image (@$import_images) {
+				# Add the new image to the dummy dataset.
+				$factory->newObject("OME::Image::DatasetMap",
+									{
+									 image_id   => $image->id(),
+									 dataset_id => $dataset->id(),
+									});
+	
+				my $image_mex = OME::Tasks::ImportManager->
+				  getImageImportMEX($image);
+				$image_mex->status('FINISHED');
+				$image_mex->storeObject();
+				doGroupCallback($self->{_flags}, 1);
+	
+				$session->commitTransaction();
+	            push @images, $image;
+				logdbg "debug", ref ($self)."->importFiles: imported ".$image->name();
             }
 
-            # Add the new image to the dummy dataset.
-            $factory->newObject("OME::Image::DatasetMap",
-                                {
-                                 image_id   => $image->id(),
-                                 dataset_id => $dataset->id(),
-                                });
-
-            my $image_mex = OME::Tasks::ImportManager->
-              getImageImportMEX($image);
-            $image_mex->status('FINISHED');
-            $image_mex->storeObject();
-            doGroupCallback($self->{_flags}, 1);
-
-            $session->commitTransaction();
-
-            push @images, $image;
         }
     }
 
@@ -386,9 +396,8 @@ sub finishImport {
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
     # Wrap up things in the database.
-
-    $files_mex->status('FINISHED');
-    $files_mex->storeObject();
+	$files_mex->status('FINISHED');
+	$files_mex->storeObject();
 
     OME::Tasks::ImportManager->finishImport();
 
