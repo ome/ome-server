@@ -117,7 +117,7 @@ Delete a project and update OME session if the project is the current project.
 
 Note: If the user doesn't have another project, the current active project and dataset are set to undefined. Otherwise the first arbitrary project and/or dataset are set to active.
 
-=head2 getAllProjectCount()
+=head2 getAllProjectCount ()
 
 	my $p_count = $projectManager->getAllProjectCount();
 
@@ -128,6 +128,18 @@ Note: If the user doesn't have another project, the current active project and d
 	my @projects = $projectManager->getAllProjects();
 
 	Get all the projects in the database.
+
+=head2 getAllProjectsLimit ($limit, $offset)
+
+	my $p_count = $projectManager->getAllProjectCount();
+	my @projects1 = $projectManager->getAllProjectsLimit($p_count / 2);
+	my @projects2 = $projectManager->getAllProjectsLimit(
+		$p_count / 2, $p_count - 100
+	);
+
+Retrieves a list of projects from the database using the LIMIT and OFFSET parameters to the query.
+
+Note: The fields are ordered by their ID.
 
 =head2 getDatasetCount ($project/$project_id)
 
@@ -159,6 +171,21 @@ Note: By default this method uses the Session's experimenter as a filter.
 	Get all the projects owned by a given user.
 
 Note: By default this method uses the Session's experimenter as a filter.
+
+=head2 getUserProjectsLimit ([$experimenter], $limit, $offset)
+
+	my $p_count = $projectManager->getAllProjectCount();
+	my @projects1 = $projectManager->getUserProjectsLimit($p_count / 2);
+	my @projects2 = $projectManager->getUserProjectsLimit(
+		$p_count / 2, $p_count - 100
+	);
+	my @projects3 = $projectManager->getUserProjectsLimit( 
+		$experimenter, $p_count / 2, $p_count - 100
+	);
+
+Retrieves a list of projects from the database using the LIMIT and OFFSET parameters to the query for a given user.
+
+Note: By default this method uses the Session's experimenter as a filter. In addition, the fields are ordered by ID.
 
 =head2 nameExists ($name)
 
@@ -305,6 +332,24 @@ sub getAllProjects {
 }
 
 #################
+# Parameters: ($limit, $offset)
+# 	
+sub getAllProjectsLimit {
+	my ($self, $limit, $offset) = @_;
+	my $factory = $self->Session()->Factory();
+
+	# Sanity
+	return unless $limit;
+	
+	# Factory criterea specification
+	my $criteria = {__limit => $limit , __order => ['id']};
+
+	if ($offset) { $criteria->{'__offset'} = $offset; }
+
+	return $factory->findObjects("OME::Project", $criteria);
+}
+
+#################
 # Parameters: (void)
 # 	
 sub getAllProjectCount {
@@ -339,6 +384,43 @@ sub getUserProjects {
 
 	return $factory->findObjects("OME::Project", owner_id => $experimenter->id());
 }
+
+#################
+# Parameters: ([experimenter object], limit, offset)
+#
+sub getUserProjectsLimit {
+	my ($self, @fields) = @_;
+	my $factory = $self->Session()->Factory();
+
+	my ($experimenter, $limit, $offset);
+
+	return if scalar(@fields) > 3;
+
+	foreach (shift @fields) {
+		if (ref($_) eq 'OME::SemanticType::__Experimenter') { 
+			$experimenter = $_;
+		} elsif (not defined $limit) {
+			$limit = $_;
+		} else {
+			$offset = $_;
+		}
+	}
+
+	$experimenter = $self->Session->User() unless $experimenter;
+
+	return unless $limit;
+
+	my $criteria = {
+		owner_id => $experimenter->id(),
+		__limit => $limit,
+		__order => ['id'],
+	};
+
+	if ($offset) { $criteria->{'__offset'} = $offset; }
+
+	return $factory->findObjects("OME::Project", $criteria);
+}
+
 
 #################
 # Parameters: (experimenter object)
