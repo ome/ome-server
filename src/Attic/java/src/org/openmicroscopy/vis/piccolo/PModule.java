@@ -90,7 +90,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_SPACING=15.0f;
 	public static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
-	private static final float SCALE_THRESHOLD=.3f;
+	private static final float SCALE_THRESHOLD=.5f;
 	
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
@@ -117,8 +117,10 @@ public class PModule extends PPath implements PBufferedNode {
 	// The node that will contain nodes for each of the formal parameters
 	private PParameterNode labelNodes;
 	
-	//	PFormalInput ins[];
-	//PFormalOutput outs[];
+	private PNode linkTargets;
+	
+	private PLinkTarget inputLinkTarget;
+	private PLinkTarget outputLinkTarget;
 	
 	
 	/**
@@ -141,20 +143,29 @@ public class PModule extends PPath implements PBufferedNode {
 		// create the name and position it.
 		name = new PText(module.getName());
 		name.setFont(NAME_FONT);
+		name.setPickable(false);
 		addChild(name);
 		
 		name.setOffset(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET);
 		
 		// calculate starting height for parameters.
 		height = NAME_LABEL_OFFSET+((float) name.getBounds().getHeight());
+	
+		linkTargets = new PNode();
+		addChild(linkTargets);	
+		float linkTargetHeight = height;
 		
+		inputLinkTarget = new PLinkTarget();
+		linkTargets.addChild(inputLinkTarget);
+		inputLinkTarget.setOffset(-PLinkTarget.CIRC_HALF_SIZE,height);
+				
 		nameWidth = (float) name.getBounds().getWidth();
 		
 		// do the individual parameter labels.
 		addParameterLabels(module,connection);  
 		
 		// set width of the whole bounding rectangle
-		width = NAME_LABEL_OFFSET*2+width;
+	    width = NAME_LABEL_OFFSET*2+width-PLinkTarget.CIRC_HALF_SIZE;
 		
 		// create bounding rectangle, set it to be this node's path,
 		// and finish other parameters.
@@ -166,6 +177,13 @@ public class PModule extends PPath implements PBufferedNode {
 		setPaint(DEFAULT_FILL);
 		setStrokePaint(DEFAULT_COLOR);
 		setStroke(DEFAULT_STROKE);
+		
+		// add the other target
+		outputLinkTarget = new PLinkTarget();
+		linkTargets.addChild(outputLinkTarget);
+		outputLinkTarget.setOffset(width-PLinkTarget.CIRC_HALF_SIZE,
+			linkTargetHeight);
+	
 		
 		//zoomname.
 		zoomName = new PText(module.getName());
@@ -201,6 +219,7 @@ public class PModule extends PPath implements PBufferedNode {
 	 */
 	private void addParameterLabels(Module module,Connection connection) {
 		
+		System.err.println("building a PModule for "+module.getName());
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
 		int inSize = inputs.size();
@@ -225,19 +244,29 @@ public class PModule extends PPath implements PBufferedNode {
 				// as long as I have more inputs, create them, 
 				// add them to label nodes, 
 				// and store max width
-				param = (FormalParameter) inputs.get(i);
+				Object obj = inputs.get(i);
+				System.err.println("trying to get a formal input: "+obj.getClass().getName());
+				param = (FormalParameter) obj;
+				System.err.println("got ..."+param.getParameterName());
 				ins[i]= new PFormalInput(this,param,connection);
 				labelNodes.addChild(ins[i]);
-				if (ins[i].getFullBoundsReference().getWidth() > maxInputWidth)
-					maxInputWidth = (float) ins[i].getFullBoundsReference().getWidth();
+				if (ins[i].getLabelWidth() > maxInputWidth)
+					maxInputWidth = ins[i].getLabelWidth();
+				//if (ins[i].getFullBoundsReference().getWidth() > maxInputWidth)
+					//maxInputWidth = (float) ins[i].getFullBoundsReference().getWidth();
 			}
 			if (i < outSize) {
 				// do the same for outputs.
-				param = (FormalParameter) outputs.get(i);
+				Object obj = outputs.get(i);
+				System.err.println("trying to get a formal output: "+obj.getClass().getName());
+				param = (FormalParameter) obj;
+				System.err.println("got ..."+param.getParameterName());
 				outs[i]= new PFormalOutput(this,param,connection);
 				labelNodes.addChild(outs[i]);
-				if (outs[i].getFullBoundsReference().getWidth() > maxOutputWidth)
-					maxOutputWidth = (float) outs[i].getFullBoundsReference().getWidth();
+				if (outs[i].getLabelWidth() > maxOutputWidth)
+					maxOutputWidth = outs[i].getLabelWidth();
+				//if (outs[i].getFullBoundsReference().getWidth() > maxOutputWidth)
+				//	maxOutputWidth = (float) outs[i].getFullBoundsReference().getWidth();
 			}
 			
 		}
@@ -268,8 +297,10 @@ public class PModule extends PPath implements PBufferedNode {
 				// we want to right-justify these. So, 
 				// find difference bwtween the maximum output width
 				// and the width of this one.
+				//float rightJustifyGap = maxOutputWidth-
+				//	((float) outs[i].getFullBoundsReference().getWidth());
 				float rightJustifyGap = maxOutputWidth-
-					((float) outs[i].getFullBoundsReference().getWidth());
+					outs[i].getLabelWidth();
 				// and then move right by that amount.
 				outs[i].setOffset(outputColumnX+rightJustifyGap,height);
 				rowHeight = (float) outs[i].getFullBoundsReference().getHeight();
@@ -292,8 +323,10 @@ public class PModule extends PPath implements PBufferedNode {
 			labelNodes.setVisible(false);
 			name.setVisible(false);
 			zoomName.setVisible(true);
+			linkTargets.setVisible(true);
 		}
 		else {
+			linkTargets.setVisible(false);
 			name.setVisible(true);
 			labelNodes.setVisible(true);
 			zoomName.setVisible(false);
