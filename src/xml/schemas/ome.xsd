@@ -3,10 +3,10 @@
 <xs:schema xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
 	 targetNamespace = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
 	 xmlns:xs = "http://www.w3.org/2001/XMLSchema"
-	 xmlns:STD = "http://openmicroscopy.org/2003/STDSchema"
+	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
 	 version = "RC5"
 	 elementFormDefault = "qualified">
-	<xs:import namespace = "http://openmicroscopy.org/2003/STDSchema" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/josiah_scratch/STD.xsd"/>
+	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"/>
 	<xs:annotation>
 		<xs:documentation>
 			Open Microscopy Environment
