@@ -356,7 +356,7 @@ Sets an thumbnail image for this Pixels. see also OME::Image::Server->setThumb
 
 sub setThumb {
 	my $self = shift;
-	my %params = @_;
+	my @params = @_;
 	my $displayOptions = shift;
 	if( UNIVERSAL::isa($displayOptions,'OME::SemanticType::Superclass')
         && $displayOptions->verifyType('DisplayOptions') ) {
@@ -399,7 +399,7 @@ sub setThumb {
 		}
 		OME::Image::Server->setThumb( %data );
 	} else {
-		OME::Image::Server->setThumb( PixelsID => $self->getPixelsID, %params );
+		OME::Image::Server->setThumb( PixelsID => $self->getPixelsID, @params );
 	}
 }
 
