@@ -119,8 +119,8 @@ configuration records.
 
 use constant LONE_TIFF => '.+\.[tT][iI][fF][fF]?$';
 
-my %fmts = (fpat1 => '^(\w+)(_w)([1-9])(.tif+)$',
-             fpat2 => '^(\w+)(_w)([1-9])(\w+)(.tif+)$',
+my %fmts = (fpat1 => '^(.+)(_w)([1-9])(\.tif+)$',
+             fpat2 => '^(.+)(_w)([1-9])(.+)(\.tif+)$',
             );
 
 
