@@ -170,22 +170,23 @@ sub getRef {
 	return $specializedRenderer->_getRef( $obj, $format, $options )
 		if( $specializedRenderer and $specializedRenderer->can('_getRef') );
 	
+	return $obj->id()
+		if( $format eq 'txt' );
+
+	# html is default format
 	my $q = $self->CGI();
-	if( $format eq 'html' ) {
-		my ($package_name, $common_name, $formal_name, $ST) =
-			OME::Web->_loadTypeAndGetInfo( $obj );
-		my $id = $obj->id();
-		my $name = $self->getName( $obj, $options );
-		return  $q->a( 
-			{ 
-				href => $self->getObjDetailURL( $obj ),
-				title => "Detailed info about this $common_name",
-				class => 'ome_detail'
-			},
-			$name
-		);
-	}
-	return $obj->id();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+	my $id = $obj->id();
+	my $name = $self->getName( $obj, $options );
+	return  $q->a( 
+		{ 
+			href => $self->getObjDetailURL( $obj ),
+			title => "Detailed info about this $common_name",
+			class => 'ome_detail'
+		},
+		$name
+	);
 }
 
 
@@ -220,7 +221,7 @@ sub render {
 	my ($tmpl, %tmpl_data);
 
 	# HACK to render references
-	return $self->getRef( $obj, 'html' ) if $mode eq 'ref';
+	return $self->getRef( $obj, $options->{ 'format' } ) if $mode eq 'ref';
 
 	# look for custom template
 	my $tmpl_path = $self->_findTemplate( $obj, $mode );
@@ -510,6 +511,9 @@ sub renderData {
 	my ($self, $obj, $field_requests, $format, $mode, $options) = @_;
 	my ( %record, $specializedRenderer );
 	$options = {} unless $options; # makes things easier
+	# lazy hack. need to change calling parameters to put $format in $options. better yet, take all parameter in as a hash
+	# this is necessary in order to pass $format into render()
+	$options->{ 'format' } = $format;
 	
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
