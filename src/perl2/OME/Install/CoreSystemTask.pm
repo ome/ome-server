@@ -63,7 +63,7 @@ my @core_dirs = (
 	name => "temp_base",
 	path => "/var/tmp/OME",
 	description => "Base temporary directory",
-	children => ["lock", "sessions"]
+	children => ["lock", "sessions", "install"]
     }
 );
 
@@ -121,6 +121,10 @@ sub execute {
     foreach my $directory (@core_dirs) {
 	$directory->{path} = confirm_path ($directory->{description}, $directory->{path});
     }
+
+    # Make sure the rest of the installation knows where the core directories are
+    $environment->base_dir($$OME_BASE_DIR);
+    $environment->tmp_dir($$OME_TMP_DIR);
     
     # Confirm and/or update our group information
     $OME_GROUP = confirm_default ("The group which OME should be run under", $OME_GROUP);
@@ -154,7 +158,7 @@ sub execute {
 
     foreach my $directory (@core_dirs) {
 	# Create the core dirs
-	if (not -e $directory->{path}) { 
+	if (not -d $directory->{path}) { 
 	    print "  \\_ Creating directory ", BOLD, "\"$directory->{path}\"", RESET, ".\n";
 	    mkdir $directory->{path} or croak "Unable to create directory \"$directory->{path}\": $!";
 	}
@@ -168,7 +172,7 @@ sub execute {
 	# Create each core dir's children
 	foreach my $child (@{$directory->{children}}) {
 	    $child = $directory->{path}."/".$child;
-	    if (not -e $child) {
+	    if (not -d $child) {
 		# There's no need to be UID 0 for these creations
 		$EUID = $OME_UID;
 
