@@ -26,11 +26,13 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
 use OME::DBObject;
-use OME::Dataset;		#jm
+use OME::Dataset;		
+use OME::Tasks::ImageTasks;
+use OME::Tasks::DatasetManager;
+use OME::Tasks::ProjectManager;
 
 use base qw{ OME::Web };
 
-use OME::Tasks::ImageTasks;
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Select Images";
@@ -40,8 +42,11 @@ sub getPageBody {
 	my $self = shift;
 	my $rootName = "Home";
 	my $cgi = $self->CGI();
-	my $rootDir = $self->User()->DataDirectory();
+	my $session=$self->Session();
+	my $rootDir=$self->User()->DataDirectory();
 
+	my $datasetManager=new OME::Tasks::DatasetManager($session);
+	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my @selections = ();
 	my $selection;
 	my @paths;
@@ -67,8 +72,7 @@ sub getPageBody {
 			
 			# If there is no dataset defined, then whole page will need 
 			# to be reloaded so Web::Home will display menubar
-			$reloadPage = 1
-				if( not defined $session->dataset);
+			$reloadPage = 1	if( not defined $session->dataset);
 			# radios are not drawn on the form if there are no datasets
 			# in the project. In this case, 'addNewDataset' is implicitly chosen
 			if (not defined $radioSelect or $radioSelect eq 'addNewDataset') {
@@ -84,42 +88,28 @@ sub getPageBody {
 				return ('HTML',$text) unless $datasetname;
          			
         			#name already exists
-				my @namedatasets=$session->Factory()->findObjects("OME::Dataset",'name'=>$datasetname);
+				
+				my $rep=$datasetManager->exist($datasetname);
 
-				#my @namedatasets=OME::Dataset->search(name=>$datasetname);
 				my $txt="";
 				$txt.="<b>This name already exists. Please enter a new name for your dataset</b><br>";
 				$txt.=$self->print_form($selections[0]);
 				$txt .= $cgi->h4 ('Selected Files and Folders:');
 				$txt .= join ("<BR>",@selections);
 
-	   			return ('HTML',$txt) unless scalar(@namedatasets)==0;
-				
-				$dataset = $project->newDataset($cgi->param('newDataset'), $cgi->param('description') );
-				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
-				
-				# comments? not here 
-				#$session->dataset($dataset);
+	   			return ('HTML',$txt) unless (defined $rep);
+				$txt="";
+				$datasetManager->createWithoutImage($cgi->param('newDataset'),$cgi->param('description'));
 
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
-				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
-				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
-				
+				$projectManager->add($cgi->param('addDataset'));
+								
 			}
 
 			my $errorMessage = '';
-			if ($dataset) {
-				$dataset->writeObject(); 
-				$session->dataset($dataset);
-
+			if ($session->dataset()) {
 			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
-				#die $errorMessage if $errorMessage;
-						
-				#$dataset->writeObject();
-				#$project->writeObject();
-				#$session->dataset($dataset);
-				#$session->writeObject();
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
 			}
@@ -128,16 +118,16 @@ sub getPageBody {
 				#Delete $dataset 
 				# +link.
 				$body .= $cgi->h3($errorMessage);
-				$body .= $self->print_form($selections[0]);
+				$body .= print_form($session,$cgi,$selections[0]);
 				$body .= $cgi->h4 ('Selected Files and Folders:');
 				$body .= join ("<BR>",@selections);
 			} else {
 				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
-				$dataset->writeObject();
-				$project->writeObject();
-				$session->dataset($dataset);
-				$session->writeObject();
+				#$dataset->writeObject();
+				#$project->writeObject();
+				#$session->dataset($dataset);
+				#$session->writeObject();
 
 				
 				# javascript to reload titlebar
@@ -152,7 +142,7 @@ sub getPageBody {
 		}
 		# If we have a selection, but import button wasn't clicked, print the form:
 		else {
-			$body .= $self->print_form($selections[0]);
+			$body .= print_form($session,$cgi,$selections[0]);
 			$body .= $cgi->h4 ('Selected Files and Folders:');
 			$body .= join ("<BR>",@selections);
 		}
@@ -168,11 +158,10 @@ sub getPageBody {
 
 
 sub print_form {
-	my $self = shift;
-	my $recentSelection = shift;
-	my $cgi = $self->CGI();
+	my ($session,$cgi,$recentSelection) = @_;
+
 	
-	my $project = $self->Session()->project();
+	my $project = $session->project();
 	my @datasets = $project->unlockedDatasets() if defined $project;
 	my %datasetHash  = map { $_->ID() => $_->name()} @datasets if @datasets > 0;;
 	my $text = '';
@@ -192,7 +181,7 @@ sub print_form {
 	$defaultRadio = 'addExistDataset' if $defaultDatasetID;
 	my $newDatasetName = '';
 	$newDatasetName = $datasetName unless $defaultDatasetID;
-	$defaultDatasetID = $self->Session()->dataset()->ID() unless not defined $self->Session()->dataset() or $defaultDatasetID;
+	$defaultDatasetID = $session->dataset()->ID() unless not defined $session->dataset() or $defaultDatasetID;
 	
 	$text .= "<BLOCKQUOTE>\n";
 	my @datasetRadios = $cgi->radio_group(-name=>'DoDatasetType',

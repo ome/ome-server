@@ -24,7 +24,13 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
+use OME::Tasks::DatasetManager;
+use OME::Tasks::ImageManager;
+use OME::Web::Helper::HTMLFormat;
+use OME::Web::Helper::JScriptFormat;
+
 use OME::Web::Validation;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -34,225 +40,71 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $body = "";
 	my $session = $self->Session();
+	my $datasetManager=new OME::Tasks::DatasetManager($session);
+	my $imageManager=new OME::Tasks::ImageManager($session);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
+
+
+	my $body = "";
 	my $project =$session->project();
+	my $usergpID=$session->User()->Group()->id();
 	if( not defined $project ) {
 		$body .= OME::Web::Validation->ReloadHomeScript();
 		return ("HTML",$body);
      }
-     if ($cgi->param('Create')){
-        my $datasetname=$cgi->param('newDataset');
-        my @addImages=$cgi->param('ListImage');
-	  return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
-        my @namedatasets=OME::Dataset->search(name=>$datasetname);
-	  return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
-	  
+     $body .= $jscriptFormat->openExistingDataset();	
 
-	 return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
-	
-	  my $dataset = $project->newDataset($cgi->param('newDataset'), $cgi->param('description') );
-	  die ref($self)."->create:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
-	  if ($dataset){
-		$dataset->writeObject();
-            foreach (@addImages){
-              my $image=$dataset->addImageID($_);
-		}
-		$session->dataset($dataset);
-		$session->writeObject();
-		$body.="Dataset Created";
-		#$body .= OME::Web::Validation->ReloadHomeScript();
-		$body .= "<script>top.location.href = top.location.href;</script>";
-
-       	$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+     if ($cgi->param('create')){
+         my $datasetName=cleaning($cgi->param('name'));
+         my @addImages=$cgi->param('ListImage');
+	   return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetName;
+	   my $rep=$datasetManager->exist($datasetName);
+         return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless (defined $rep);
+	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
+	   my $result=$datasetManager->create($cgi->param('name'), $cgi->param('description'),\@addImages); 
+	 if (defined $result){
+         $body .= "<script>top.location.href = top.location.href;</script>";
+         $body .= "<script>top.title.location.href = top.title.location.href;</script>";
+	 }else{
+	   $body .= print_form($usergpID,$imageManager,$htmlFormat,$cgi);
 	 }			
-
-
-
-
     }else{
-	$body .= $self->print_form();
+	   $body .= print_form($usergpID,$imageManager,$htmlFormat,$cgi);
     }
-    return ('HTML',$body);
-
-	
+    return ('HTML',$body);	
 }
 
 
 
 
 #--------------------
-
+#
 sub print_form {
- my $self=shift;
- my $cgi=$self->CGI();
- my $text="";
- my $textarea="";
- my $checkbox="";
- my $session=$self->Session();
- my $user=$self->Session()->User() 
-	or die ref ($self)."->print_form() say: There is no user defined for this session.";
- my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->Group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
-	
- if (scalar(@groupImages)>0){
-   $text.=format_popup();
-   $text.=format_popupDataset();
-   $textarea.=print_textarea($cgi);
-   $checkbox.=print_checkbox($cgi,\@groupImages);
-   #format output
-   $text.=$cgi->h3("Create a new dataset from existing images");
-   $text.=$cgi->startform;
-   $text.=create_button_dataset($user->Group()->id());
-   $text.="<br><br>";
-   $text.=$textarea;
-   $text .= "<br><br><CENTER>".$cgi->submit (-name=>'Create',-value=>'Create a new dataset')."</CENTER>";
-   $text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
-   $text.=$cgi->h3("Please select images in the list below.");
-   $text.=$checkbox;
- 
-   $text.$cgi->endform;
-   
-
- }
-
-
-
-
- return $text;
+	my ($usergpID,$imageManager,$htmlFormat,$cgi)=@_;
+	my $text="";
+	my $images=$imageManager->listGroup();
+ 	if (scalar(@$images)>0){
+	   my %list=map { $_->image_id() => $_} @$images;
+         $text.=$cgi->startform;
+  	   $text.=$htmlFormat->formCreate("dataset",$usergpID,\%list);
+	   $text.$cgi->endform;
+ 	}else{
+	   $text.="no images in your Research group";
+ 	}
+ 	return $text;
 }
 
 
-sub print_textarea{
- my ($cgi)=@_;
- my $text="";
- $text .= $cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					  '*Name:'),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textfield(-name=>'newDataset', -size=>32)
-					   )
-				  ),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'RIGHT' },
-					'Description:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3)
-					   )
-				   )
-			 );
-	
-return $text;
+
+sub cleaning{
+ my ($string)=@_;
+ chomp($string);
+ $string=~ s/^\s*(.*\S)\s*/$1/;
+ return $string;
 
 }
-
-
-sub print_checkbox{
- my ($cgi,$ref)=@_;
- my %List=();
- my %ReverseList=();
- my $text="";
- my @names=();
- # necessary because not control before import process!
- foreach (@$ref){
-   $ReverseList{$_->name()}=$_->image_id();
-   # push(@names,$_->name());
-   
- }
- %List= reverse %ReverseList;
-  
- 
- my @list=();
- foreach (keys %List){
-  my ($val,$button);
-  $button=create_button($_);
-  $val=$button."&nbsp;&nbsp;<input type=\"checkbox\" name=\"ListImage\" value=\"$_\"/>".$List{$_};
-  push(@list,$val);
-
- }
- $text.=join("<br>",@list);
-
-
-
-
-
- return $text;
-}
-
-sub format_popup{
-  my ($text)=@_;
- $text.=<<ENDJS;
-<script language="JavaScript">
-<!--
-var ID;
-function OpenPopUp(id) {
-	
-      ID=id;
-	var OMEfile;
-	var ImageViewer;
-	OMEfile='/perl2/serve.pl?Page=OME::Web::GetGraphics&ImageID='+ID;
-	ImageViewer=window.open(
-		OMEfile,
-		"ImageViewer",
-		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-	ImageViewer.focus();
-      return false;
-}
--->
-</script>
-ENDJS
-
-return $text;
-}
-sub create_button{
- my ($id)=@_;
- my $text="";
- $text.=<<END;
-	<input type=button
-	onclick="return OpenPopUp($id)"
-	value="View"
-	name="submit">
-END
- return $text;
-}
-
-sub format_popupDataset{
-  my ($text)=@_;
- $text.=<<ENDJS;
-<script language="JavaScript">
-<!--
-var ID;
-function OpenPopUpDataset(id) {
-	
-      ID=id;
-	var OMEfile;
-	var Dataset;
-	OMEfile='/perl2/serve.pl?Page=OME::Web::InfoDataset&UsergpID='+ID;
-	Dataset=window.open(
-		OMEfile,
-		"Dataset",
-		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-	Dataset.focus();
-      return false;
-}
--->
-</script>
-ENDJS
-
-return $text;
-}
-sub create_button_dataset{
- my ($id)=@_;
- my $text="";
- $text.=<<END;
-	<input type=button
-	onclick="return OpenPopUpDataset($id)"
-	value="Description existing dataset(s)"
-	name="submit">
-END
- return $text;
-}
-
 
 
 1;

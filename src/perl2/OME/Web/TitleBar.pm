@@ -24,8 +24,10 @@ package OME::Web::TitleBar;
 use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
-use CGI;
+
 use OME::DBObject;
+use OME::Web::Helper::HTMLFormat;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -34,55 +36,14 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
-	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
 	my $experimenter = $self->User()
 		or die "User not defined for this session";
-	my $firstName   = $experimenter->FirstName();
-	my $lastName    = $experimenter->LastName();
-	
-	my $project   = $session->project();
-	my $dataset;
-	#my ($projectName,$datasetName) = ('*** UNDEFINED ***','*** UNDEFINED ***');
-      $dataset   = $session->dataset();
-	my $datasetID;
-	$datasetID = $dataset->ID() if defined $dataset;
-	
-	my ($sentencedataset,$sentenceproject)=undef;
-	if (defined $project){
- 	  $sentenceproject="You are working on project:".$project->name()."<br>",
-	}else{
-	  $sentenceproject=" no project defined <br>";
-	}
-	if (defined $dataset){
- 	  $sentencedataset="You are working on dataset:".$dataset->name()."<br>",
-	}else{
-	  $sentencedataset.="no dataset defined <br>";
-	}
-	# maybe add smart sizing of viewer Popupwindow by looking up dimensions of image?
 
-	my ($left, $right);
-	$left = $cgi->td(
-		{ width=>"105" },
-		$cgi->img( { src   => "/images/AnimalCell.aa.jpg.png",
-		               width => "105",
-		               height => "77",				
-		               border => "0",
-		               alt    => "Cell in mitosis" }));
-			$right = $cgi->td(
-		"Welcome $firstName $lastName<br>",
-		$sentenceproject,
-		$sentencedataset);
-	
-	$body = $cgi->table(
-		{ cellspacing => 0, cellpadding => 2, border => 0, width=> '100%' },
-		$cgi->Tr( 
-			{ valign => 'MIDDLE', align => 'CENTER' },
-			$left,
-			$right ));
-		
-return ('HTML',$body);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	$body.=$htmlFormat->titleBar($experimenter,$session->project(),$session->dataset());
+	return ('HTML',$body);
 }
 
 

@@ -25,6 +25,9 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
 use OME::Web::Validation;
+use OME::Tasks::DatasetManager;
+use OME::Web::Helper::HTMLFormat;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -34,17 +37,18 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $body = "";
 	my $session = $self->Session();
+	my $datasetManager=new OME::Tasks::DatasetManager($session);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+
+	my $body = "";
+	
 
 	if ($cgi->param('Switch')){
-	  my $newDataset = $session->Factory()->loadObject("OME::Dataset", $cgi->param('newDataset') )
-		or die "Unable to load project (id: ".$cgi->param('newDataset').")\n";
-	  $session->dataset($newDataset);
-	  $session->writeObject();
+	  $datasetManager->switch($cgi->param('newDataset'));
 	}
-	$body.=$self->print_form();
-	
+	$body.=print_form($session,$datasetManager,$htmlFormat,$cgi);
+	$body .= "<script>top.title.location.href = top.title.location.href;</script>";
       return ('HTML',$body);
 }
 
@@ -58,70 +62,22 @@ sub getPageBody {
 #------------------
 
 sub print_form {
-   my $self = shift;
-   my $cgi = $self->CGI();
+   my ($session,$datasetManager,$htmlFormat,$cgi)= @_;
    my $text="";
-   my $dataset = $self->Session()->dataset();
-   my $session=$self->Session();
-   # Switch to  a dataset you are using
-   my @userProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$self->Session()->User()->id()  );
-
-  #my @userProjects = OME::Project->search( owner_id => $self->Session()->User()->id() );
-  return "You must define a project first." unless scalar(@userProjects)>0;
-  my %datasetList=();
-  foreach (@userProjects){
-     my @datasets=$_->datasets();
-     foreach my $data (@datasets){
-	 my @images=$data->images();
-       if (scalar(@images)>0){
-           $datasetList{$data->dataset_id()}=$data->name() unless $datasetList{$data->dataset_id()};
-	 }
-     }
-  }
-  
-  #my %datasetList = map { $_->dataset_id() => $_->name()} @datasets if (scalar @datasets) > 0;
-
+   my $dataset = $session->dataset();
+   my $ref=$datasetManager->listAll();
    if (defined $dataset){
-    $text.=format_currentdataset($dataset,$cgi);
+    $text.=$htmlFormat->formatDataset($dataset);
    }else{
-    $text.=$cgi->h3('No current dataset');
+    $text.="<h3>No current dataset</h3>";
    }
    $text .= $cgi->startform;
-   $text .= $cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->popup_menu (
-						-name => 'newDataset',
-						-values => [keys %datasetList],
-						-labels => \%datasetList)
-					  ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->submit (-name=>'Switch',-value=>'Switch Datasets') ) ),
-		);
-			
-	$text .= $cgi->endform;
-	$text .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-
-	return $text;
+   $text .=$htmlFormat->dropDownTable("newDataset",$ref,"Switch","Switch dataset");
+   $text .= $cgi->endform;
+   return $text;
 	
 }
 
-sub format_currentdataset {
- my ($data,$cgi)=@_;
- my $summary="";
- $summary .= $cgi->h3('Your current dataset is:') ;
- $summary .= "<NOBR><B>Name:</B> ".$data->name()."</NOBR><BR>" ;
- $summary .= "<NOBR><B>ID:</B> ".$data->dataset_id()."</NOBR><BR>" ;
- $summary .= "<B>Description:</B> ".$data->description()."<BR>" ;
- $summary .= "<NOBR><B>Locked:</B> ".($data->locked()?'YES':'NO')."</NOBR><br>";                  
- $summary .= "<NOBR><B>Owner:</B> ".$data->owner()->firstname()." ".$data->owner()->lastname()."</NOBR><BR>";
- $summary.="<NOBR><B>E-mail:</B><a href='mailto:".$data->owner()->email()."'>".$data->owner()->email()."</a></NOBR><BR>";
- $summary .="<NOBR><B>Nb Images in dataset:</B> ".scalar($data->images())."</NOBR>" ;
-
- return $summary ;
-
-}
 
 
 

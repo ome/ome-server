@@ -1,7 +1,7 @@
 # OME/Web/ProjectSwitch.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
-# Author:  Douglas Creager <dcreager@alum.mit.edu>
+# Author:  JM Burel <j.burel@dundee.ac.uk>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -17,7 +17,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# JM change 11-03
+
 
 package OME::Web::ProjectSwitch;
 
@@ -26,6 +26,10 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
 use OME::Web::Validation;
+use OME::Tasks::ProjectManager;
+use OME::Tasks::DatasetManager;
+use OME::Web::Helper::HTMLFormat;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -35,157 +39,75 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
-	my $body = "";
-	my $formatproject;
-	my @datasets=();
 	my $session = $self->Session();
+	my $projectManager=new OME::Tasks::ProjectManager($session);
+	my $datasetManager= new OME::Tasks::DatasetManager($session);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+
+	my $body = "";
 	# figure out what to do: switch & print form or just print?
 	if( $cgi->param('Switch')) {
-		my $newProject = $session->Factory()->loadObject("OME::Project", $cgi->param('newProject') )
-		or die "Unable to load project (id: ".$cgi->param('newProject').")\n";
-		
-		# FIXME: validate permissions
-		
-
-		# switch current project to new project
-		$session->project($newProject);
-		$session->writeObject();
-		
-		#my $formatdataset="";
-		my $projectnew=$session->project();
-		@datasets=$projectnew->datasets();
-		if (scalar(@datasets)==0){
-		  $session->dissociateObject('dataset');
-		  $session->writeObject();
-
-		  $body.="No Dataset associated to this project. Please define a dataset.";
-		  $body .= OME::Web::Validation->ReloadHomeScript();
+		  $projectManager->switch($cgi->param('newProject'));
+		  my @datasets=$session->project()->datasets();
+		  $body.=$htmlFormat->formatProject($session->project());
+		  if (scalar (@datasets)>0){
+		  	$body.=format_datasetList($htmlFormat,$session->dataset()->name(),\@datasets,$cgi);	
+		  }else{
+			$body.="No Dataset associated to this project. Please define a dataset.";
+		  }
 		  $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		 return('HTML',$body);
-		}	
-		$session->dataset($datasets[0]);
-		$session->writeObject();
-
-
-		$formatproject=format_project($projectnew,$cgi);
-		my $formatdataset=format_dataset($datasets[0]->name(),\@datasets,$cgi);		
-		# update titlebar
-		$body.=$formatproject;
-		$body.=$formatdataset;
+	}elsif( $cgi->param('execute')) {
+		$datasetManager->switch($cgi->param('newdataset'));
+		
+		my @datasets=$session->project()->datasets();
+		my $formatdata=format_datasetList($htmlFormat,$session->dataset()->name(),\@datasets,$cgi);
+		
+		$body.=$htmlFormat->formatProject($session->project());
+		$body	.=$formatdata;
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-		# this will add a script to reload OME::Home if it's necessary
-		# $body .= OME::Web::Validation->ReloadHomeScript();
-
-	}
-	elsif( $cgi->param('execute')) {
-
-		#$body="";
-     		my $newdataset= $session->Factory()->loadObject("OME::Dataset", $cgi->param('newdataset'))
-			or die "Unable to load dataset (id: ".$cgi->param('newdataset').")\n";
-
-		$session->dataset($newdataset);
-		$session->writeObject();
-		my $name=$session->dataset()->name();
-		$formatproject=format_project($session->project(),$cgi);
-		@datasets=$session->project()->datasets();
-		my $formatdata=format_dataset($name,\@datasets,$cgi);
-		$body.=$formatproject;
-		$body.=$formatdata;
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		# this will add a script to reload OME::Home if it's necessary
-		# $body .= OME::Web::Validation->ReloadHomeScript();
-
       }else{
 	# print form
-	$body .= $self->print_form();
+		$body .= print_form($session,$projectManager,$htmlFormat,$cgi);
 	}
       return ('HTML',$body);
 }
 
+####################
+# PRIVATE METHODS	 #
+####################
+
 sub print_form {
-	my $self = shift;
-	my $cgi = $self->CGI();
-	my $project = $self->Session()->project();
-      my $session =$self->Session();
-
-	# User's projects
-     # my @projects = OME::Project->search( owner_id => $self->Session()->User()->id() );
-      my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
-
-
-      my %projectList = map { $_->project_id() => $_->name()} @projects
-		if (scalar @projects) > 0;
-	my $text = '';
-	$text .= format_project($project,$cgi) if(defined $project);
-
-	$text .= $cgi->startform;
-	$text .= $cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->popup_menu (
-						-name => 'newProject',
-						-values => [keys %projectList],
-						-labels => \%projectList
-					) ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->submit (-name=>'Switch',-value=>'Switch Projects') ) ),
-		);
-			
-	$text .= $cgi->endform;
+	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
+	my $text ="";
+	my $ref=$projectManager->list();
+     	$text	.=$htmlFormat->formatProject($session->project()) if (defined $session->project());
+	if (scalar (@$ref) > 0){
+		my %projectList = map { $_->project_id() => $_->name()} @$ref;
+		$text .= $cgi->startform;
+		$text .=$htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project");			
+		$text .= $cgi->endform;
+	}
 	return $text;
 }
 
 
+########################
+sub format_datasetList{
 
-#--------------------
-# PRIVATE METHODS
-#------------------
-
-
-sub format_project{
- my ($project,$cgi)=@_;
- my $summary="";
- $summary .= $cgi->h3('Your current project is:') ;
- $summary .= "<P><NOBR><B>Name:</B> ".$project->name()."</NOBR><BR>" ;
- $summary .= "<NOBR><B>ID:</B> ".$project->project_id()."</NOBR><BR>" ;
- $summary .= "<B>Description:</B> ".$project->description()."<BR></P>" ;
- return $summary ;
-
-
-
-
-}
-
-sub format_dataset{
- my ($dataname,$ref,$cgi)=@_;
- my @datasets=();
- my $summary="";
- @datasets=@$ref;
- if (scalar(@datasets)>1){
+ my ($htmlFormat,$dataname,$ref,$cgi)=@_;
+ my $html="";
+ $html.="<P>Your current dataset is: <B>".$dataname."</B></P>";
+  if (scalar(@$ref)>1){
 	# display a list
 
-	my %datasetList= map {$_->dataset_id() => $_->name()} @datasets;
-	$summary.="<P>Your current dataset is: <B>".$dataname."</B></P>";
-	$summary.="<p> If you want to switch, please choose a dataset in the list below.</p>";
-	$summary.=$cgi->startform;
-	$summary.=$cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->popup_menu (
-						-name => 'newdataset',
-						-values => [keys %datasetList],
-						-labels => \%datasetList)
-					 ),
-			$cgi->td( { -align=>'LEFT' },
-					$cgi->submit (-name=>'execute',-value=>'Switch') ) ),
-		);
-	$summary .= $cgi->endform;
-		
- }else{
- 	$summary.="<P>Your current dataset is: <B>".$dataname."</B></P>";
+	my %datasetList= map {$_->dataset_id() => $_->name()} @$ref;
+	$html.="<p> If you want to switch, please choose a dataset in the list below.</p>";
+	$html.=$cgi->startform;
+	$html.=$htmlFormat->dropDownTable("newdataset",\%datasetList,"execute","Switch Dataset");			
+	$html .= $cgi->endform;
+
  }
- return $summary;
+ return $html;
 }
 
 

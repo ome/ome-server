@@ -26,44 +26,54 @@ $VERSION = '1.0';
 use CGI;
 
 use OME::Research::SearchEngine;
+use OME::Web::Helper::HTMLFormat;
+use OME::Web::Helper::JScriptFormat;
+
 use base qw(OME::Web);
 
-
-
-
+#####################
 sub getPageTitle {
 	return "Open Microscopy Environment - Image Search" ;
 
 }
+####################
 
 sub getPageBody {
 	my	$self = shift ;
 	my 	$cgi = $self->CGI() ;
+	my	$htmlFormat=new OME::Web::Helper::HTMLFormat;
+	my 	$jscriptFormat=new OME::Web::Helper::JScriptFormat;
+
 	my 	$body="" ;
-	my 	$table="images";			#table name
-      my 	$selectedcolumns="name,inserted,image_id";	#columns in table images
+
+	##########################
+	# DB info
+	# 	table name 
+	#	selected columns
+
+	my 	$table="images";			
+      my 	$selectedcolumns="name,inserted,image_id";	
+	##########################
+
 	my    $ref;
-     
-	if ($cgi->param('execute') ) {
+	if ($cgi->param('search') ) {
 	   my $tableRows="";
          my $string=cleaning($cgi->param('name'));
          return ('HTML',"<b>Please enter a data.</b>") unless length($string)>1;
-
-
          my $research=new OME::Research::SearchEngine($table,$string,$selectedcolumns);
          if (defined $research){
 	    $ref=$research->searchEngine;
          }
          if (defined $ref){
-		$body .=format_popup();
-		$body .=format_output($ref,$cgi);
+		$body .= $jscriptFormat->popUpImage();    
+		$body .=format_output($ref,$htmlFormat,$cgi);
          }else{
 		$body.="No Image found.";
 
          }
 
 	}else{
-       $body .=format_form($cgi);
+	   $body .=format_form($htmlFormat,$cgi);
       }
 	return ('HTML',$body) ;
 }
@@ -75,96 +85,25 @@ sub getPageBody {
 
 
 sub format_output{
- # format informations on images
-
-   my ($ref,$cgi)=@_;
-   my $text="";
-   my $tableRows="";
-   foreach (@$ref){
-      my $button=create_button($_->{image_id});
-
-	$tableRows .=$cgi->Tr( { -valign=>'MIDDLE' },
-	   		   $cgi->td( { -align=>'LEFT' },$_->{name} ),
-			   $cgi->td( { -align=>'LEFT' },$_->{inserted}),
-			   $cgi->td( { -align=>'CENTER' },$button),
-				  );
-
-  }
-  $text.=$cgi->h3("List of image(s) matching your data.");
-  $text.="<form>";
-  $text.=$cgi->table( { -border=>1 },
-	   $cgi->Tr( { -valign=>'MIDDLE' },
-	      $cgi->td( { -align=>'LEFT' },'<b>Name</b>' ),
-	      $cgi->td( { -align=>'CENTER' },'<b>Inserted</b>' ),
-	      $cgi->td( { -align=>'CENTER' },'<b>View Image</b>' ),	
-			),
-         $tableRows );
-  $text.="</form>";
-return $text;
+	my ($ref,$htmlFormat,$cgi)=@_;
+	my $text="";
+	$text.="<h3>List of image(s) matching your data.</h3>";
+	$text.="<form>";
+	$text.=$htmlFormat->imageInDataset($ref,1,1);	
+	$text.="</form>";
+	return $text;
 }
 
 
 
 sub format_form{
-	my ($cgi) =@_ ;
+	my ($htmlFormat,$cgi) =@_ ;
 	my $form="";
-	$form .= $cgi->h3('Search For Images') ;
-	$form .= $cgi->p('Please enter the data to match.') ;
 	$form .=$cgi->startform;
-	$form .= $cgi->start_table({-border=>0,-cellspacing=>4,-cellpadding=>0}) ;
-	$form .= $cgi->Tr({-align=>'left',-valign=>'middle'},
-				$cgi->td( $cgi->b('Name contains'),
-						$cgi->textfield(-name=>'name',-size=>25) ) 
-			) ;
-	$form .= $cgi->Tr({-align=>'center',-valign=>'middle'},
-   				$cgi->td( {-colspan => 2},
-						$cgi->submit({-name=>'execute',-value=>'OK'}) )  
-			) ;
-	$form .= $cgi->end_table() ;
+	$form.=$htmlFormat->formSearch("Images");
 	$form .=$cgi->endform;
 	return $form ;
-
-
 }
-
-sub format_popup{
-  my ($text)=@_;
- $text.=<<ENDJS;
-<script language="JavaScript">
-<!--
-var imageid;
-function OpenPopUp(id) {
-      imageid=id;
-	var OMEfile;
-	OMEfile='/perl2/serve.pl?Page=OME::Web::GetGraphics&ImageID='+imageid;
-	ImageViewer=window.open(
-		OMEfile,
-		"ImageViewer",
-		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
-	ImageViewer.focus();
-      return false;
-}
--->
-</script>
-ENDJS
-
-return $text;
-}
-
-
-
-sub create_button{
- my ($id)=@_;
- my $text="";
- $text.=<<END;
-	<input type="button"
-	onclick="OpenPopUp($id)"
-	value="View"
-	name="submit">
-END
- return $text;
-}
-
 
 
 sub cleaning{
@@ -174,16 +113,6 @@ sub cleaning{
  return $string;
 
 }
-
-
-
-
-
-
-
-
-
-
 
 1;
 

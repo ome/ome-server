@@ -571,7 +571,7 @@ sub DrawDatasetControl {
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
 		push (@ImageIDs, $imageMap->image()->image_id());
-		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->path();
+		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->getFullPath();
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );

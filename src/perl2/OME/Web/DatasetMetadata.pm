@@ -1,7 +1,7 @@
 # OME/Web/DatasetMetadata.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
-# Author:  Douglas Creager <dcreager@alum.mit.edu>
+# Author:  J-M Burel <j.burel@dundee.ac.uk>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -17,15 +17,18 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# JM 12-03-03
 
 package OME::Web::DatasetMetadata;
 
 use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
+
 use CGI;
 use OME::Web::Validation;
+use OME::Tasks::DatasetManager;
+use OME::Web::Helper::HTMLFormat;
+
 use base qw{ OME::Web };
 
 sub getPageTitle {
@@ -37,101 +40,55 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
-	my $project=$session->project();
-      my @listdataset=$project->datasets();
+	my $datasetManager=new OME::Tasks::DatasetManager($session);
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	
+      my @listdataset=$session->project()->datasets();
       if (scalar(@listdataset)==0){
-		$body.=$cgi->h3("No current dataset. Please define a dataset");
-		 return ('HTML',$body);
+	 	$body.="<h3>No current dataset. Please define a dataset<h3>";
+		return ('HTML',$body);
 
       }
 
-	my $dataset = $session->dataset()
-		or die "Dataset not defined for the session.";
-
-	# figure out what to do: save & print info or just print?
-	if( $cgi->param('Save')) {
-# FIXME: Some validation is needed here
+	if( $cgi->param('save')) {
 		my $datasetname=cleaning($cgi->param('name'));
-		return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
-		if ($dataset->name() ne $cgi->param('name')){
-                  my @namedatasets=$session->Factory()->findObjects("OME::Dataset", 'name'=>$datasetname);
-         		#my @namedatasets=OME::Dataset->search(name=>$datasetname);
-	   		return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
-     		 }
-
-
-
-
 		
-		my $reloadTitleBar = ($dataset->name() eq $cgi->param('name') ? undef : 1);
-		# change stuff.
-		$dataset->name( $cgi->param('name') );
-		$dataset->description( $cgi->param('description') );
+		$body.="<b>Please enter a name for your dataset.</b>";
+		$body.=print_form($session,$htmlFormat,$cgi);
+		return ('HTML',$body) unless $datasetname;
+		if ($session->dataset()->name() ne $cgi->param('name')){
+         		my $ref=$datasetManager->exist($datasetname);
+			$body="";
+			$body.="<b>This name is already used. Please enter a new name for your dataset.</b>";
+			$body.=print_form($session,$htmlFormat,$cgi);
+	   		return ('HTML',$body) unless (defined $ref);
 
-		$dataset->writeObject();
-		# javascript to reload titlebar
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
-			if defined $reloadTitleBar;
+	      }
+		$body="";
+		$datasetManager->change($cgi->param('description'),$cgi->param('name'));
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		$body .= "Save successful<br>";
 	}
-	# print info & form
-	$body .= $self->print_stuff();
-
-    return ('HTML',$body);
-}
-
-sub print_stuff {
-	my $self = shift;
-	my $cgi = $self->CGI();
-	my $dataset = $self->Session()->dataset();
 	
-	my $text = '';
-
-	$text .= "\n".$cgi->startform;
-	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Save',-value=>'Save Changes')."\n</CENTER>\n";
-
-	$text .= 
-		$cgi->table(
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'ID:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$dataset->dataset_id() ) ),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'*Name:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textfield(-name=>'name', -size=>32, -default=>$dataset->name()) ) ),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'Description:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3, -default=>$dataset->description() ))),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'Locked/Unlocked:' ),
-				$cgi->td( { -align=>'LEFT' },
-					($dataset->locked() ? "locked" : "unlocked"))),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'Owner:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$dataset->owner()->firstname()." ".$dataset->owner()->lastname()." <a href='mailto:".$dataset->owner()->email()."'>".$dataset->owner()->email()."</a>" ) ),
-			$cgi->Tr( { -valign=>'MIDDLE' },
-				$cgi->td( { -align=>'LEFT' },
-					'Group:' ),
-				$cgi->td( { -align=>'LEFT' },
-					$dataset->group()->name() ) )
-		);
-			
-	$text .= $cgi->endform."\n";
-	$text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
-
-	return $text;
+	$body .= print_form($session,$htmlFormat,$cgi);
+    	return ('HTML',$body);
 }
+
 #-----------------
 # PRIVATE METHODS
 #------------------
+
+sub print_form {
+	my ($session,$htmlFormat,$cgi) = @_;
+	my $text ="";
+	my $userID=$session->dataset()->owner_id();
+	my $user=$session->Factory()->loadAttribute("Experimenter",$userID);	
+
+	$text .=$cgi->startform;
+	$text .=$htmlFormat->formChange("dataset",$session->dataset(),$user);			
+	$text .=$cgi->endform;
+	return $text;
+}
 
 
 sub cleaning{

@@ -24,7 +24,7 @@ package OME::Web::Viewer;
 use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
-use CGI;
+
 use base qw{ OME::Web };
 sub getPageTitle {
 	return "Open Microscopy Environment - Dataset Viewer";
@@ -32,14 +32,13 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
-	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
 
    	# MUST BE CHANGED
       my @list=$session->project()->datasets();
       if (scalar(@list)==0){
-		$body.=$cgi->h3("No current dataset. Please define a dataset");
+		$body.="<h3>No current dataset. Please define a dataset</h3>";
 		 return ('HTML',$body);
 
 

@@ -27,6 +27,9 @@ use CGI;
 use OME::Dataset;
 use OME::Project;
 use OME::Image;
+use OME::Tasks::ProjectManager;
+use OME::Tasks::DatasetManager;
+use OME::Tasks::ImageManager;
 
 use base qw{ OME::Web };
 __PACKAGE__->mk_classdata('ReloadHome');
@@ -42,7 +45,7 @@ sub getPageBody {
 
 	$body .= $self->showMessage();
 
-    return ('HTML',$body);
+    	return ('HTML',$body);
 }
 
 =pod
@@ -130,17 +133,18 @@ sub projectNotDefined {
 	my $user    = $session->User()
 		or die ref ($self)."->projectNotDefined() say: There is no user defined for this session.";
 	my $cgi     = $self->CGI();
+	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $text    = '';
 	
 	# Has this function been called inappropriately?
 	die ref ($self)."->projectNotDefined() has been called inappropriately. There is a project defined for this session."
 		if( defined $session->project() );
-	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=> $user->Group()->id());
-	my @ownprojects=$session->Factory()->findObjects("OME::Project",'owner_id' =>$user->id());
+	
+      my $usergpID=$user->Group()->id();
+	my $projects=$projectManager->listGroup($usergpID);
+	my $ownProjects=$projectManager->list();
 
-	#my @projects = OME::Project->search( group_id => $user->group()->group_id());
-	#my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
-      my $usergpid=$user->Group()->id();
+
 
 	# Is this a first time login? How do I check for that? For the time being, I'm going to say if neither a project nor dataset is defined, it is a first time login. Since this function won't be called if a project
 	if( not defined $session->dataset() ) {
@@ -149,11 +153,11 @@ sub projectNotDefined {
 	$text .=$self->printPopUp();
 	$text .= "<p>There is not a project defined for your session. <li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::MakeNewProject'},'here')." to create a new project. ";
 	#$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
-	#	if( (scalar @projects) > 0 );
+	#	if( (scalar @$projects) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
-		if( (scalar @ownprojects) > 0 );
-	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpid)\"> here </a> to have a description of existing project(s)."
-		if( (scalar @projects) > 0);
+		if( (scalar @$ownProjects) > 0 );
+	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpID)\"> here </a> to have a description of existing project(s)."
+		if( (scalar @$projects) > 0);
 
 	$text .= "</p>";
 	$text .= $self->printLogout();
@@ -173,6 +177,9 @@ sub datasetNotDefined {
 	my $self    = shift;
 	my $session = $self->Session();
 	my $cgi     = $self->CGI();
+	my $datasetManager=new OME::Tasks::DatasetManager($session);
+	my $imageManager=new OME::Tasks::ImageManager($session);
+
 	my $text    = '';
 	my $project = $self->Session()->project()
 		or die "There is no project defined for this session.\n";
@@ -184,30 +191,31 @@ sub datasetNotDefined {
 		if( defined $session->dataset() );
 
 	# if the project only has one dataset, we can fix the problem.
-	my @datasets = $project->datasets();
-	if( scalar @datasets == 1 ) {
-		$text .= $self->ReloadHomeScript();
-		$session->dataset( $datasets[0] );
-		$session->writeObject();
-		return $text;
-	}
-	my $usergpid=$user->Group()->id();
-      @datasets =$session->Factory()->findObjects("OME::Dataset",'group_id'=>$user->Group()->id());
-      my @images =$session->Factory()->findObjects("OME::Image",'group_id'=>$user->Group()->id());
+	#my @datasets = $project->datasets();
+	#if( scalar @datasets == 1 ) {
+	#	$text .= $self->ReloadHomeScript();
+	#	$session->dataset( $datasets[0] );
+	#	$session->writeObject();
+	#	return $text;
+	#}
+
+	my $usergpID=$user->Group()->id();
+	my $datasets=$datasetManager->listGroup($usergpID);
+      
+      my $images =$imageManager->listGroup($usergpID);
 
 
-	#@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());
-	#my @images   = OME::Image->search( group_id => $user->group()->group_id());
+
 	$text	.=$self->printPopUpdataset();
 	$text .= "<p>There is not a dataset defined for your session. <li>Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to create a new dataset by importing images. ";
 	#$text .= "<li>Click ".$cgi->a({href=>qq{javascript: alert('This is not implemented yet.')}},'here')." to make a dataset from existing images. "
-	#	if( (scalar @images) > 0 );
+	#	if( (scalar @$images) > 0 );
       $text .= "<li>Click ".$cgi->a({href=>"/perl2/serve.pl?Page=OME::Web::ProjectDatasetImage"},'here')." to make a dataset from existing images. "
-		if( (scalar @images) > 0 );
+		if( (scalar @$images) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>"/perl2/serve.pl?Page=OME::Web::ProjectDataset"},'here')." to choose an existing dataset."
-		if( (scalar @datasets) > 0 );
-	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpid)\">  here </a> to view existing dataset(s)."
-		if( (scalar @datasets) > 0 );
+		if( (scalar @$datasets) > 0 );
+	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpID)\">  here </a> to view existing dataset(s)."
+		if( (scalar @$datasets) > 0 );
 
 	$text .= "</p><br>";
 	$text .= $self->printLogout();
@@ -223,8 +231,7 @@ What it does: return a link to logout
 
 =cut
 sub printLogout {
-	#return qq{Click <a href="/perl2/serve.pl?Page=OME::Web::Logout">here</a> to logout.};
-	#JM 03-03-03
+	
 	return qq{Click <a href="#" onClick="top.location.href='/perl2/serve.pl?Page=OME::Web::Logout'"> here</a> to logout.};
 
 }
