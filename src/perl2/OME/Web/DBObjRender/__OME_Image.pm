@@ -52,8 +52,9 @@ Provides custom behavior for rendering an OME::Image
 =cut
 
 use strict;
-use vars qw($VERSION);
 use OME;
+our $VERSION = $OME::VERSION;
+
 use OME::Tasks::ImageManager;
 use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
