@@ -57,6 +57,7 @@ our @EXPORT = qw(
 		delete_tree
 		copy_tree
 		fix_ownership
+		check_permissions
 		fix_permissions
 		get_module_version
 		download_package
@@ -551,7 +552,10 @@ sub fix_ownership {
 		# Just do a full chown, no harm in doing both if we only need one or
 		# not at all.
 		# XXX We're not following symlinks.
-		fix_ownership($o_and_g, glob ("$item/*")) if (-d $item);
+		if (-d $item){
+			fix_ownership($o_and_g, glob ("$item/*"))
+				unless exists $o_and_g->{'recurse'} and $o_and_g->{'recurse'} eq 0;
+		}
 		
 		$uid = (stat ($item))[4] unless defined $uid;
 		$gid = (stat ($item))[5] unless defined $gid;
