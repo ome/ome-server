@@ -76,7 +76,7 @@ import java.awt.geom.Point2D;
 
 
 public abstract class PFormalParameter extends PNode implements 
-	PNodeEventListener{
+	PNodeEventListener, Comparable {
 	
 	public static final Color NORMAL_COLOR = Color.black;
 	public static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
@@ -367,5 +367,33 @@ public abstract class PFormalParameter extends PNode implements
 	
 	public PLinkTarget getLinkTarget() {
 		return circle;
+	}
+	
+	public int compareTo(Object o) {
+		if (!(o instanceof PFormalParameter))
+			return -1;
+		PFormalParameter other =(PFormalParameter) o;
+		
+		// defaults
+		int myID=-1;
+		int otherID =-1;
+		
+		SemanticType myType = getSemanticType();
+		if (myType != null)
+			myID = myType.getID();
+		SemanticType otherType = other.getSemanticType();
+		if (otherType != null)
+			otherID = otherType.getID();
+		int diff =  myID-otherID;
+		
+		// if they're different, return this result
+		if (diff != 0)
+			return diff;
+			
+		// else, semantic types are the same, order by Ids.
+		myID  = getParameter().getID();
+		otherID = other.getParameter().getID();
+
+		return (myID-otherID);
 	}
 }
