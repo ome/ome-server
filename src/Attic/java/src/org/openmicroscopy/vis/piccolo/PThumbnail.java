@@ -59,7 +59,7 @@ import java.awt.Image;
  * @since OME2.0
  */
 
-public class PThumbnail extends PBufferedImage implements PBufferedNode, 
+public class PThumbnail extends PImage implements PBufferedObject, 
 	PBrowserNodeWithToolTip {
 
 	private final static String DEFAULT_LABEL="No Thumbnail";
@@ -72,13 +72,21 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 	
 	public PThumbnail(CImage image) {
 		super();
+		setAccelerated(true);
 		this.image=image;
 		BufferedImage imageData = image.getImageData();
 		setImage(imageData);
 		
 		image.addThumbnail(this);
 	}
-		
+	
+	/**
+	 * Buffered Bounds of the thumbnail, as required by {@link PBufferedObject}.
+	 * Buffer must be scaled to
+	 * account for scaling of the node
+	 * 
+	 * @return buffered bounds
+	 */	
 	public PBounds getBufferedBounds() {
 		PBounds b = getGlobalFullBounds();
 		return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
@@ -87,28 +95,44 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 			b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
 	}
 	
-
 	
-	public int compareTo(Object o) {
-		if (o instanceof PBufferedNode) {
-			PBufferedNode node = (PBufferedNode) o;
-			double myArea = getHeight()*getWidth();
-			PBounds bounds = node.getBufferedBounds();
-			double nodeArea = bounds.getHeight()*bounds.getWidth();
-			int res =(int) (myArea-nodeArea);
-			return res;
-		}
-		else
-			return -1;
-	}
-	
+	/**
+	 * To turn the highlight for this image on or off, tell the associated
+	 * {@link CImage} to highlight all of its thumbnails. This will cause
+	 * thumbnails of this image in other datasets to be similarly highlighted.
+	 * 
+	 * @parm v true if highlighting, false if not.
+	 */
 	public void setHighlighted(boolean v) {
 	
-		image.highlightThumbnails(v);	
+		
+		// Show highlighted path.
+		if (v == true) {
+			if (highlightRect == null) 
+				highlightRect = makeHighlight();
+			addChild(highlightRect);
+		}
+		else {
+			if (highlightRect != null && isAncestorOf(highlightRect))
+					removeChild(highlightRect);
+			highlightRect = null;
+		}
+		image.highlightThumbnails(v);
 	}
 	
+	private PPath makeHighlight() {
+		 PBounds b = getBounds();
+		 PPath path = new PPath(b);
+		 path.setStroke(PConstants.BORDER_STROKE);
+		 path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
+		 path.setPickable(false);
+		 return path;
+ 	}
 
-	
+	/**
+	 * The full tooltip for a thumbnail contains both a scaled version of the
+	 * thumbnail image and the name of the image.
+	 */
 	public PNode getFullToolTip() {
 		//if (imageNode == null)
 		//	return null;
@@ -117,8 +141,9 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		PImage imNode = new PImage(im,false);
 		n.addChild(imNode);
 		PPath p = new PPath();
-		PText text  = new PText(image.getName());
-		text.setFont(PConstants.TOOLTIP_FONT);
+		//PText text  = new PText(image.getName());
+		//text.setFont(PConstants.TOOLTIP_FONT);
+		PNode text = getShortToolTip();
 		p.addChild(text);
 		n.addChild(p);
 		p.moveToBack();
@@ -131,6 +156,9 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		return n;
 	}
 	
+	/**
+	 * The shorter tooltip contains simply the name of the image.
+	 */
 	public PNode getShortToolTip() {
 		PText text  = new PText(image.getName());
 		text.setFont(PConstants.TOOLTIP_FONT);
@@ -138,18 +166,27 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		return text;
 	}
 	
-	// pthumbnails will generally be held in PDatasetImageNodes, which
-	// has a child node aboove the thumbnail and is then contained in a dataset. will fail gracefully otherwise
-	
-	public PBufferedNode getBufferedParentNode() {
+	/**
+	 * To get the buffered parent node  for a thumbnail, go up the chain 
+	 * of ancenstors until a {@link PBufferedObject} is found.
+	 * 
+	 * @return the first {@link PBufferedObject} in the ancestros, or null. 
+	 */
+	public PBufferedObject getBufferedParentNode() {
 		
 		PNode parent=this.getParent();
-		while (parent != null  && !(parent instanceof PBufferedNode))
+		while (parent != null  && !(parent instanceof PBufferedObject))
 			parent = parent.getParent();
-		return (PBufferedNode) parent;
+		return (PBufferedObject) parent;
 		
 	}
 	
+	/**
+	 * These objects will generally be used as children of 
+	 * {@link PDatasetImagesNode} objects.  However, they are grandchildren
+	 * of the {@link PDatasetImagesNode} objects. Use this relationship to find our 
+	 * way back to the {@link PDatasetImagesNode}
+	 */
 	public PDatasetImagesNode getDatasetImagesNode() {
 		PNode parent = getParent();
 		if (parent == null)
@@ -166,16 +203,14 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		return pin;
 	}
 	
-	// a thumbnail is zoomable if (a) it's not under a pdatasetimages node or 
-	// (b) the pdatasetimagesnode that is it's parent does not have a halo
-	public boolean isZoomable() {
-		PDatasetImagesNode pin = getDatasetImagesNode();
-		
-		if (pin == null)
-			return true;  // case a
-		return !pin.hasVisibleHalo(); // case b
- 	}
- 	
+ 	/**
+ 	 * Called to turn the highlight of this thumbnail on or off. 
+ 	 * Finds the appropriate {@link PDatasetImagesNode} and calls 
+ 	 * the appropriate procedure for turning the highlight on or off.
+ 	 * @param v true if highlighted. else false.
+ 	 * @param level the magnification level of the canvas. 
+ 	 * 	See {@link PDatasetImagesNode}  for descriptions of these levels
+ 	 */
 	public void setZoomingHalo(boolean v,int level) {
 		//	ok. if I'm under a pdatasetimages node, setup the halo
 		PDatasetImagesNode pin = getDatasetImagesNode();
@@ -183,11 +218,24 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		 	pin.highlightThumbnail(this,v,level);
 	} 	
 	
+	/**
+	 *  Called on mouse events from {@link PBrowserEventHandler},
+	 *  to set the highlight on this node and then the halo.
+	 * @param v
+	 * @param level
+	 */
 	public void setHighlightedWithHalo(boolean v,int level) {
 		setHighlighted(v);
 		setZoomingHalo(v,level);
 	}
 	
+	/**
+	 * When the user clicks on a thumbnail, the thumbnail will be zoomed to the 
+	 * next greater level of magnification
+	 * 
+	 * @param The original level
+	 * @return The zoom level after the zoom 
+	 */
 	public int zoomInToHalo(int level) {
 		PDatasetImagesNode pin = getDatasetImagesNode();
 		if (pin != null)
@@ -197,6 +245,13 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 			
 	}
 	
+	/**
+	 * When the user right-clicks on a thumbnail, the thumbnail will be 
+	 * zoomed to the next lower level of magnification
+	 * 
+	 * @param The original level
+	 * @return The zoom level after the zoom 
+	 */
 	public int zoomOutOfHalo(int level) {
 		PDatasetImagesNode pin = getDatasetImagesNode();
 		if (pin != null)

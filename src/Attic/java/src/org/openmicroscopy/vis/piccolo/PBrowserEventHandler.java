@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.PBrowserEventHandler
+ * org.openmicroscopy.vis.piccolo.ProwserEventHandler
  *
  *------------------------------------------------------------------------------
  *
@@ -64,37 +64,55 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	 */
 	private static boolean postPopup = false;
 	
+	/**
+	 * The canvas to which this is attached
+	 */
 	private PBrowserCanvas canvas;
 	
-	//a counter indicating how far in I have zoomed.
+	/**
+	 * How far down we have zoomed. Zooming a large browser canvas works on a 
+	 * principal of varying zoom levels, rooughly based on exponentially 
+	 * smaller steps: starting with zoom level 0 (the full screen), each 
+	 * susbsequent zoom lvel zooms to a smaller subset - see 
+	 * {@link PDatasetImagesNode} for details on the zooming 
+	 */
 	private int zoomLevel = 0;
 	
 	public PBrowserEventHandler(PBrowserCanvas canvas) {
 		super(canvas);
 		this.canvas = canvas;	
 	}
-	
+
+	/**
+	 * Handler for entering a node
+	 */	
 	public void mouseEntered(PInputEvent e) {
 		PNode n = e.getPickedNode();
-		//System.err.println("browser event mouse entered "+n);
+
 		if (n instanceof PSelectableText) {
 			((PSelectableText) n).setHighlighted(true);
 			if (n instanceof PChainLabelText) {
+				// if I enter the chain labels, show the associated 
+				// execution list
 				PChainLabelText clt = (PChainLabelText) n;
 				canvas.showExecutionList(clt);
 			}
 		} 
 		else {
+			// otherwise ,clear the list
 			canvas.clearExecutionList();
 			if (n instanceof PThumbnail)  {
+				// show the halo if I enter a thumbnail
 				PThumbnail pt = (PThumbnail) n;
 				pt.setHighlightedWithHalo(true,zoomLevel);
 			}
 			else if (n instanceof PDataset) {
+				// if I entered a dataset, rollover
 				PDataset dn = (PDataset) n;
 				dn.rollover();	
 			}
-			else if (!(n instanceof PThumbnailSelectionHalo))  {// entering anything else means setting selected datset is null
+			else if (!(n instanceof PThumbnailSelectionHalo))  {
+				// entering anything else means setting selected datset is null
 				SelectionState.getState().setRolloverDataset(null);
 				zoomLevel = 0;	 
 			}
@@ -102,18 +120,27 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		e.setHandled(true);
 	}
 	
+	/**
+	 * Mouse exited handler
+	 */
 	public void mouseExited(PInputEvent e) {
 		PNode n = e.getPickedNode();
 		if (n instanceof PThumbnail) {
+			// if I exit a thumbnail, turn off the halo
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlightedWithHalo(false,zoomLevel);
 		}
 		else if (n instanceof PSelectableText) {
+			// otherwise, if it's selectable text (like the chain label)
+			// turn off the highlight
 			((PSelectableText)n).setHighlighted(false);
 		} 
 		e.setHandled(true);
 	}	
 	
+	/**
+	 * Mouse release event can lead to a popup
+	 */
 	public void mouseReleased(PInputEvent e) {
 		if (e.isPopupTrigger()) {
 			handlePopup(e);
@@ -121,30 +148,44 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		}
 	}
 	
+	/**
+	 * Mouse press event can lead to a popup
+	 */
 	public void mousePressed(PInputEvent e) {
 		mouseReleased(e);
 	}
 	
+	/** 
+	 * Right button click
+	 */
 	public void handlePopup(PInputEvent e) {
 		postPopup = true;
 		PNode node = e.getPickedNode();
 		if (node instanceof PDataset) {
+			// right click on a dataset deslects
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
 			zoomLevel = 0;
 		}
 		else if (node instanceof PThumbnail) {
+			// on a thumbnail, we zoom out
 			PThumbnail pt = (PThumbnail) node;
 			zoomLevel = pt.zoomOutOfHalo(zoomLevel);
 			
 		}
 		else {
+			// otherwise, default behavior.
 			super.handlePopup(e);
 		}
 	}
+	
+	/**
+	 * left-mouse click
+	 */
 	public void mouseClicked(PInputEvent e) {
 		// left button.
 		
+		// ignore if this is right after a popup
 		if (postPopup == true ) {
 			postPopup = false;
 			e.setHandled(true);
@@ -155,6 +196,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		if ((e.getModifiers() & MouseEvent.BUTTON1_MASK) 
 			== MouseEvent.BUTTON1_MASK) {
 			if (node instanceof PDataset) { 
+				// if it's a dataset, select it and animate to it.
 				PDataset d = (PDataset) node;
 				selectionState.setSelectedDataset(d.getDataset());
 				zoomLevel = 0;
@@ -165,13 +207,16 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				//placeholder
 			}
 			else if (isBackgroundClick(node)) {
+				// click on background clears selected dataset
 				selectionState.setSelectedDataset(null);
 				zoomLevel =0;
 			} else if (node instanceof PThumbnail) {
+				// click on thumbnail, we zomo in to it and 
+				// adjust zoomLevel
 				PThumbnail thumb = (PThumbnail)node;
 				zoomLevel = thumb.zoomInToHalo(zoomLevel);
 			}
-			else 
+			else  // default behavior.
 				super.mouseClicked(e);	
 		}
 		e.setHandled(true);

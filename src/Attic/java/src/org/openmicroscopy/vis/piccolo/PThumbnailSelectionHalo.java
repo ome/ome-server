@@ -45,29 +45,29 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.BasicStroke;
 
 /** 
- * Popup halo path that can go around PThumbnail for zooming into a Dataset.
+ * Popup halo path that can go around a PThumbnail or a group of PThumbnails
+ * for zooming into a Dataset. Generally contained as a child of   
+ * {@link PDatasetImagesNode}, this rect scales its stroke to give appearance
+ * of a constant width (in terms of screen pixels) at any magnification
+ * 
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
+public class PThumbnailSelectionHalo extends PPath implements PBufferedObject {
 
 	// leave on pixel on either side of border
 	public static final int OFFSET=3;
 	public static final float BASE_STROKE_WIDTH=PConstants.DATASET_IMAGE_GAP-
 		OFFSET;
-	private static final BasicStroke stroke = 
-		new BasicStroke(BASE_STROKE_WIDTH);
 	
-
 
 	public PThumbnailSelectionHalo() {
 		super();
 		setVisible(false);
 		setPickable(false);
-		setStroke(stroke);
 		setStrokePaint(PConstants.HALO_COLOR);	
 	}
 	
@@ -84,7 +84,20 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 		setPickable(v);
 	}
 	
-	
+	/**
+	 * Return the bounds as defined in {@link PBufferedObject},  so we can zoom 
+	 * into the halo while still leading a buffer.
+	 * 
+	 * Note that since this node is generally enclosed in other nodes, we need 
+	 * multiply the spacing by the global scale. This is because of the 
+	 * scaling used in {@link PDatasetImagesNode}, which scales thumbnails
+	 * as needed to put a large set of thumbnails in a given space. Since that 
+	 * may lead the halo to be displayed with a small scale, we need to multiply
+	 * the buffer by that scale in order to avoid a disproportionately large 
+	 * buffer.
+	 * 
+	 * @return the buffered bounds to zoom to
+	 */	
 	public PBounds getBufferedBounds() {
 		PBounds b = getGlobalFullBounds();
 		return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
@@ -93,7 +106,14 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 			b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
 	}
 	
-
+	/**
+	 * To set that path to given bouds, add a border that is a scaled version
+	 * of OFFSET, as needed to put the border outside the thumbnail(s) being 
+	 * highlighted. As with {@link #getBufferedBounds getBufferedBounds}, 
+	 * this spacing must be scaled.
+	 * 
+	 * @param b original bounds
+	 */
 	public void setPathTo(PBounds b) {
 		double scale = getGlobalScale();
 		double border =OFFSET*scale;
@@ -101,20 +121,14 @@ public class PThumbnailSelectionHalo extends PPath implements PBufferedNode {
 			b.getWidth()+2*border,b.getHeight()+2*border);
 		super.setPathTo(b2);
 	}
-	
-	public int compareTo(Object o) {
-		if (o instanceof PBufferedNode) {
-			PBufferedNode node = (PBufferedNode) o;
-			double myArea = getHeight()*getWidth();
-			PBounds bounds = node.getBufferedBounds();
-			double nodeArea = bounds.getHeight()*bounds.getWidth();
-			int res =(int) (myArea-nodeArea);
-			return res;
-		}
-		else
-			return -1;
-	}
-	
+		
+	/**
+	 * To paint the halo, create a stroke with a width that is divided by the
+	 * width of the {@link PPaintContext}, and call the superclass method. 
+	 * This makes the width seem constant, independent of magnification.
+	 * 
+	 * @param aPaintContext the context for painting.
+	 */
 	public void paint(PPaintContext aPaintContext) {
 		float scale = (float) aPaintContext.getScale();
 		float strokeScale = BASE_STROKE_WIDTH/scale;
