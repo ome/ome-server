@@ -120,7 +120,7 @@ struct stat fStat;
 
 	if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
 		freeFileRep (myFile);
-		fprintf( stderr, "Could not open File. openRepFile returned < 0. FileID = %llu.\n", (unsigned long long)ID);
+		fprintf (stderr,"Could not open repository file (FileID = %llu: %s\n", (unsigned long long)ID,strerror( errno ));
 		return (NULL);
 	}
 
