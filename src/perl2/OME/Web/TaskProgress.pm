@@ -87,7 +87,7 @@ sub getPageBody {
 	foreach (@selected) {
 		OME::Tasks::NotificationManager->clear (id => $_);
 	}
-	
+
 	# reload the tasks after 'action' if any.
 	@tasks = OME::Tasks::NotificationManager->list() if scalar (@selected);
 
@@ -96,7 +96,6 @@ sub getPageBody {
 		$body = $tableMaker->getTable( {
 			title            => 'Tasks',
 			noSearch         => 1,
-			select_column    => 1,
 			actions          => ['Update','Clear Selected','Clear All'],
 			select_column    => 1,
 			select_name      => 'selected',
@@ -110,101 +109,5 @@ sub getPageBody {
 
 	return ('HTML',$body);
 }
-
-######################
-
-sub __printForm {
-	my $self = shift;
-	my $q = $self->CGI();
-	my $group_id = $self->User()->Group()->id();
-	
-	my @tasks = OME::Tasks::NotificationManager->list();
-	my @rows;
-
-	foreach (@tasks) {
-		$q->td
-	}
-
-	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
-		$q->td( [
-			$q->span("Name *"),
-			$q->textfield( {
-					-name => 'name',
-					-size => 40
-				}
-			)
-			]
-		),
-		$q->td( [
-			$q->span("Description"),
-			$q->textarea( {
-					-name => 'description',
-					-rows => 3,
-					-columns => 50,
-				}
-			)
-			]
-		),
-		]
-	);
-
-	my $footer_table = $q->table( {
-			-width => '100%',
-			-cellspacing => 0,
-			-cellpadding => 3,
-		},
-		$q->Tr( {-bgcolor => '#E0E0E0'},
-			$q->td({-align => 'left'},
-				$q->span( {
-						-class => 'ome_info',
-						-style => 'font-size: 10px;',
-					}, "Items marked with a * are required unless otherwise specified"
-				),
-			),
-			$q->td({-align => 'right'},
-				$q->a( {
-						-href => "#",
-						-onClick => "openExistingProject($group_id); return false",
-						-class => 'ome_widget'
-					}, "Existing Projects"
-				),
-				"|",
-				$q->a( {
-						-href => "#",
-						-onClick => "document.forms['metadata'].action.value='create'; document.forms['metadata'].submit(); return false",
-						-class => 'ome_widget'
-					}, "Create Project"
-				),
-			),
-		),
-	);
-
-
-	my $border_table = $q->table( {
-			-class => 'ome_table',
-			-width => '100%',
-			-cellspacing => 1,
-			-cellpadding => 3,
-		},
-		$q->startform({-name => 'metadata'}),
-		$q->hidden(-name => 'action', -default => ''),
-		$metadata,
-	);	
-
-	return $border_table .
-	       $footer_table .
-		   $q->endform();
-}
-
-# Clean superfluous spaces
-sub cleaning {
-	my ($string)=@_;
-
-	chomp($string);
-	$string=~ s/^\s*(.*\S)\s*/$1/;
-
-	return $string;
-}
-
 
 1;
