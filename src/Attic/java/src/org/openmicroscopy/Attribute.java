@@ -22,10 +22,10 @@
 package org.openmicroscopy;
 
 /**
- * <p>The <code>Attribute</code> interface represents every piece of
- * semantically-typed data in OME.  This includes attributes created
- * by the user during image import, and any attributes created as
- * output by the execution of analysis modules.</p>
+ * <p>Represents a piece of semantically-typed data in OME.  This
+ * includes attributes created by the user during image import, and
+ * any attributes created as output by the execution of analysis
+ * modules.</p>
  *
  * <p>Each attribute has a single semantic type, which is represented
  * by an instance of {@link SemanticType}.  Based on the semantic

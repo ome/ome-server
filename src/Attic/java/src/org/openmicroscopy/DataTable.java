@@ -25,14 +25,14 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <p>The <code>DataTable</code> interface describes the database
- * tables used to store OME semantic types.  Note that there can be a
- * many-to-many relationship between semantic types and data tables.
- * Semantic types which are logically related can be stored in the
- * same database table, to help reduce the overhead of columns added
- * to each table by the analysis engine.  Further, semantic types
- * which can be broken into sparse distinct subparts can be stored in
- * separate tables to help reduce the sparsity of each data row.</p>
+ * <p>Represents the database tables used to store OME semantic types.
+ * Note that there can be a many-to-many relationship between semantic
+ * types and data tables.  Semantic types which are logically related
+ * can be stored in the same database table, to help reduce the
+ * overhead of columns added to each table by the analysis engine.
+ * Further, semantic types which can be broken into sparse distinct
+ * subparts can be stored in separate tables to help reduce the
+ * sparsity of each data row.</p>
  *
  * <p>The actual mapping between semantic types and data tables occurs
  * as a link between semantic type columns and data table columns.
@@ -67,9 +67,8 @@ public interface DataTable
     public String getDescription();
 
     /**
-     * Sets a human-helpful description of this data table.
-     * @param description a human-helpful description of this data
-     * table.
+     * Sets a description of this data table.
+     * @param description a description of this data table.
      */
     public void setDescription(String description);
         
@@ -104,12 +103,11 @@ public interface DataTable
     public Iterator iterateColumns();
 
     /**
-     * <p>The <code>DataTable.Column</code> interface describes one
-     * column in a data table.  There is a many-to-one map between
-     * data columns and semantic elements.  If two semantic elements
-     * live in the same data column, then two attributes must have the
-     * same value for the respective elements in order to be able to
-     * be stored in the same data row.</p>
+     * <p>Represents one column in a data table.  There is a
+     * many-to-one map between data columns and semantic elements.  If
+     * two semantic elements live in the same data column, then two
+     * attributes must have the same value for the respective elements
+     * in order to be able to be stored in the same data row.</p>
      *
      * @author Douglas Creager
      * @version 2.0

@@ -25,12 +25,11 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <p>The <code>Chain</code> interface represents an OME analysis
- * chain.  An analysis chain consists of a directed acyclic graph
- * (DAG) representing the series of steps to be performed when
- * executing the chain.  The nodes of this graph are analysis modules;
- * the links are data dependencies specifying that the output of a
- * module should be used as input to another.</p>
+ * <p>Represents an OME analysis chain.  An analysis chain consists of
+ * a directed acyclic graph (DAG) representing the series of steps to
+ * be performed when executing the chain.  The nodes of this graph are
+ * analysis modules; the links are data dependencies specifying that
+ * the output of a module should be used as input to another.</p>
  *
  * <p>Once an analysis chain has been executed, is must be locked to
  * prevent the set of nodes and links in its graph from changing.  If
@@ -152,9 +151,9 @@ public interface Chain
     public Iterator iteratePaths();
 
     /**
-     * <p>The <code>Chain.Node</code> interface represents the modules
-     * in an analysis chain.  The data dependency links between the
-     * nodes are specified by the {@link Chain.Link} interface.</p>
+     * <p>Represents the modules in an analysis chain.  The data
+     * dependency links between the nodes are specified by the {@link
+     * Chain.Link} interface.</p>
      *
      * @author Douglas Creager
      * @version 2.0
@@ -209,9 +208,9 @@ public interface Chain
     }
 
     /**
-     * <p>The <code>Chain.Link</code> interface represents the data
-     * dependency links between nodes in an analysis chain.  The nodes
-     * themselves are specified by the {@link Chain.Node} interface.
+     * <p>Represents the data dependency links between nodes in an
+     * analysis chain.  The nodes themselves are specified by the
+     * {@link Chain.Node} interface.
      *
      * @author Douglas Creager
      * @version 2.0
