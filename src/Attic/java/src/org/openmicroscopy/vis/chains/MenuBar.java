@@ -52,11 +52,11 @@ import javax.swing.KeyStroke;
 import java.awt.Toolkit;
 
 /** 
- * <p>Menu selections for chains application.<p>
+ * <p>Menu selections for a {@link ModulePaletteFrame}
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class MenuBar extends JMenuBar {
@@ -70,6 +70,11 @@ public class MenuBar extends JMenuBar {
 		this.add(file);
 	}
 	
+	/**
+	 * 
+	 * @param cmd the hash associating strings with actions
+	 * @return the file menu
+	 */
 	protected JMenu createFileMenu(CmdTable cmd) {
 		
 		JMenu menu = new JMenu("File");
@@ -85,6 +90,15 @@ public class MenuBar extends JMenuBar {
 		return menu;
 	}
 	
+	/**
+	 * Convenience procedure for creating menu items
+	 * 
+	 * @param text the text string shown in the menu
+	 * @param key  the shortcut key
+	 * @param mask any modifier keys that must be held down along with the shortcut
+	 * @param listener the {@link ActionListener} that responds to the selection
+	 * @return
+	 */
 	private JMenuItem createMenuItem(String text,int key,int mask,ActionListener listener) {
 		JMenuItem item;
 		
@@ -95,9 +109,12 @@ public class MenuBar extends JMenuBar {
 		return item;
 	}	
 	
+	/**
+	 * Set the status of whether or not logins should be allowed
+	 * @param v  true if logout should be enabled, else false
+	 */
+	 	 
 	public void setLoginsDisabled(boolean v) {
-		// v is true if login should be disabled and logout enabled,
-		// false if login should be enabled and logout disabled.
 		logoutItem.setEnabled(v);
 	}
 }

@@ -42,13 +42,6 @@
 
 package org.openmicroscopy.vis.chains;
 
-/** 
- * <p>Toolbar for the hain canvas in the Chains application<p>
- * 
- * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
- */
 
 import javax.swing.Box;
 import javax.swing.JToolBar;
@@ -56,6 +49,13 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import java.awt.Dimension;
 
+/** 
+ * Toolbar for a {@link ChainFrame}. This toolbar contains a "save" button
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class ChainToolBar extends JToolBar{
 	
 	protected JLabel nameLabel;
@@ -63,6 +63,10 @@ public class ChainToolBar extends JToolBar{
 	protected CmdTable cmd;
 	protected JButton saveChainButton;
 	
+	/**
+	 * 
+	 * @param cmd The hash table linking strings to actions
+	 */
 	public ChainToolBar(CmdTable cmd) {
 		super();
 		this.cmd=cmd;
@@ -82,6 +86,11 @@ public class ChainToolBar extends JToolBar{
 		
 	}
 	
+	/**
+	 * Set the state of the save button.
+	 * 
+	 * @param v true if saves are enabled, else false.
+	 */
 	public void setSaveEnabled(boolean v) {
 		saveChainButton.setEnabled(v);
 	}

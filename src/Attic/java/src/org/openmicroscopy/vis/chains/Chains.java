@@ -37,7 +37,6 @@
  *------------------------------------------------------------------------------
  */
 package org.openmicroscopy.vis.chains;
-//import edu.umd.cs.piccolo.util.PDebug;
 
 /** 
  * <p>The main class for the Chain-building application. This class
@@ -45,8 +44,8 @@ package org.openmicroscopy.vis.chains;
  * display, control, and other functionality.<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class Chains {
@@ -58,7 +57,6 @@ public class Chains {
 
 
     public static void main(String[] args) {
-		//System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
 		System.out.println(INFO);
 		
 		// These property calls should fail silently if the given things aren't there.

@@ -46,11 +46,13 @@ import java.util.Hashtable;
 import java.awt.event.*;
 
 /** 
- * <p>Mapping of functions to code via command strings.<p>
+ * <p>Mapping of functionality to code via named strings. Used to separate out
+ *  named actions from the code that handles them, thus reducing redundancy in 
+ *  handlers for toolbars as opposed to menu bars, etc.
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class CmdTable {
@@ -58,6 +60,10 @@ public class CmdTable {
 	protected Hashtable actionMap;
 	protected Controller controller;
 	
+	/**
+	 * 
+	 * @param c the {@link Controller} object for the current instance
+	 */
 	public CmdTable(Controller c) {
 		this.controller = c;
 			
@@ -94,6 +100,11 @@ public class CmdTable {
 		});
 	}	
 	
+	/**
+	 * 
+	 * @param key the name of an action
+	 * @return the corresponding {@link ActionListener}
+	 */
 	public ActionListener lookupActionListener(String key) {
 		return (ActionListener)actionMap.get(key);
 	}

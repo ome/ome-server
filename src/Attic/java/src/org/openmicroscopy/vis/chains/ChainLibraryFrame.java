@@ -46,12 +46,11 @@ import java.awt.Rectangle;
 
 
 /** 
- * <p>Main operational chain for the Chain-building application holds
- * toolbar and the chain canvas.<p>
+ * <p>An instance of {@link ChainFrameBase} that holds the chain library<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class ChainLibraryFrame extends ChainFrameBase {
@@ -63,6 +62,10 @@ public class ChainLibraryFrame extends ChainFrameBase {
 		libraryCanvas.scaleToSize();
 	}
 	
+	/**
+	 * The canvas for this frame is an instance of {@link PChainLibraryCanvas}
+	 * @return a PChainLibraryCanvas
+	 */
 	public PCanvas createCanvas(Connection connection) {
 		return new PChainLibraryCanvas(connection);
 	}

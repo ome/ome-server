@@ -53,11 +53,14 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 
-/**
- * A dialog frame for saving chains
+
+/** 
+ * A frame containing fields used when saving a chain
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
  */
-
-
 public class ChainSaveFrame extends JFrame implements ActionListener {
 	
 	private ChainFrame frame;
@@ -69,6 +72,10 @@ public class ChainSaveFrame extends JFrame implements ActionListener {
 	JTextField nameField;
 	JTextArea descField;
 	
+	/**
+	 * 
+	 * @param The {@link Chain Frame} that contains the chain being saved
+	 */
 	public ChainSaveFrame(ChainFrame frame) {
 		super("Save Chain");
 		this.frame = frame;
@@ -139,6 +146,11 @@ public class ChainSaveFrame extends JFrame implements ActionListener {
 		pack();
 	}	
 	
+	/**
+	 * Processing of user selection of the buttons.
+	 * 
+	 * @param e The user event
+	 */
 	public void actionPerformed(ActionEvent e) {
 		JButton src = (JButton) e.getSource();
 		if (src == save)

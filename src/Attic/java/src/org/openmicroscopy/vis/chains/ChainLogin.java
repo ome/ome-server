@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.Toolbar
+ * org.openmicroscopy.vis.chains.ChainLogin
  *
  *------------------------------------------------------------------------------
  *
@@ -37,61 +37,30 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
-package org.openmicroscopy.vis.chains;
-
-import javax.swing.Box;
-import javax.swing.JToolBar;
-import javax.swing.JButton;
-import javax.swing.JLabel;
+ package org.openmicroscopy.vis.chains;
+ 
+import org.openmicroscopy.util.LoginFrame;
+import org.openmicroscopy.util.LoginResponder; 
+import java.awt.Toolkit;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 
 /** 
- * Toolbar for a {@link ModulePaletteFrame}. This toolbar contains a 
- * "New Chain" button, and a text label indicating the name of the OME user
+ * An extension of {@link LoginFrame} that centers the login window in the 
+ * middle of the screen
  * 
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
-public class ToolBar extends JToolBar{
-	
-	protected JLabel statusLabel;
-	
-	protected CmdTable cmd;
-	protected JButton newChainButton;
-	
-	/**
-	 * 
-	 * @param cmd The hash table linking strings to actions
-	 */
-	public ToolBar(CmdTable cmd) {
-		super();
-		this.cmd=cmd;
-		
-		add(Box.createRigidArea(new Dimension(5,0)));
-		
-		newChainButton = new JButton("New Chain");
-		newChainButton.addActionListener(cmd.lookupActionListener("new chain"));
-		newChainButton.setEnabled(false);
-		add(newChainButton);
-		add(Box.createHorizontalGlue());
-		
-		statusLabel = new JLabel();
-		add(statusLabel);
-		
-		add(Box.createRigidArea(new Dimension(5,0)));
-		
-	}
-	
-	/**
-	 * set the status to be logged in
-	 */
-	public void setLoggedIn(String s) {
-		statusLabel.setText(s);
-		newChainButton.setEnabled(true);
-	}
-	
-}
+public class ChainLogin extends LoginFrame {
+ 	
+ 	public ChainLogin(LoginResponder responder) {
+ 		super(responder);
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		Rectangle bounds = getBounds();
+		int x = (int) (screen.getWidth()-bounds.getWidth())/2;
+		int y = (int) (screen.getHeight()-bounds.getHeight())/2;
+		setBounds(x,y,(int) bounds.getWidth(),(int) bounds.getHeight());
+ 	}
+ }

@@ -52,11 +52,12 @@ import org.openmicroscopy.vis.ome.Connection;
 
 
 /** 
- * <p>Main operational frame  for the Chain-building application.<p>
+ * <p>Abstract superclass for functionality common to all JFrames 
+ * in chain-building tool<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public abstract class ChainFrameBase extends JFrame {
@@ -88,13 +89,29 @@ public abstract class ChainFrameBase extends JFrame {
 		setIconImage(controller.getIcon());	
 	}
 
+	/**
+	 * @return the {@link Controller} associated with the window
+	 */
 	public Controller getController() {
 			return controller;
 	}
 	
+	/**
+	 * Build the piccolo canvas that is placed in this frame
+	 * 
+	 * @param connection The {@link Connection} to the database
+	 * @return a piccolo canvas of the appropriate subclass of {@link PCanvas}
+	 */
 	public abstract PCanvas createCanvas(Connection connection);
 	
+	/**
+	 * @return the initial bounds of the frame
+	 */
 	public abstract Rectangle getInitialBounds();
 	
+	/**
+	 * Adds the desired elements to the frame and lays them out.
+	 *
+	 */
 	protected abstract void layoutFrame();
 }

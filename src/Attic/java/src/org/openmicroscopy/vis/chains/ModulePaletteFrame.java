@@ -49,12 +49,11 @@ import javax.swing.BoxLayout;
 import java.awt.Rectangle;
 
 /** 
- * <p>Main operational chain for the Chain-building application holds
- * toolbar and the chain canvas.<p>
+ * <p>The {@link ChainFrameBase} instance that holds the palette of modules.<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class ModulePaletteFrame extends ChainFrameBase {
@@ -64,10 +63,12 @@ public class ModulePaletteFrame extends ChainFrameBase {
 	private MenuBar menuBar;
 	private ToolBar toolBar;
 	
+	public static int X=10;
+	public static int Y=10;
 	public static int HEIGHT=400;
 	public static int WIDTH=400;
 	
-	//private ChainFrameBase canvasFrame;
+	
 	
 	public ModulePaletteFrame(Controller controller,Connection connection) {
 		super(controller,connection,"OME Chains Palette");
@@ -80,9 +81,13 @@ public class ModulePaletteFrame extends ChainFrameBase {
 	}
 	
 	public Rectangle getInitialBounds() {
-		return new Rectangle(10,10,WIDTH,HEIGHT);
+		return new Rectangle(X,Y,WIDTH,HEIGHT);
 	}
 	
+	/**
+	 * The canvas for this frame is an instance of {@link PPaletteCanvas}
+	 * @return a PPaletteCanvas
+	 */
 	public PCanvas createCanvas(Connection connection) {
 		return new PPaletteCanvas();
 	}
@@ -91,11 +96,18 @@ public class ModulePaletteFrame extends ChainFrameBase {
 		return (PPaletteCanvas) canvas;
 	}
 	
+	/**
+	 * Build a menu bar based on  a {@link CmdTable}
+	 * @param cmd hash associating tags with actions
+	 */
 	private void buildMenuBar(CmdTable cmd) {
 		menuBar = new MenuBar(cmd);
 		setJMenuBar(menuBar);
 	}
 
+	/**
+	 * This frame has a toolbar along with the canvas
+	 */
 	protected void layoutFrame() {
 		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
 		CmdTable cmd = controller.getCmdTable();

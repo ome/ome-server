@@ -50,18 +50,22 @@ import java.awt.event.WindowAdapter;
 
 
 /** 
- * <p>Main operational chain for the Chain-building application holds
- * toolbar and the chain canvas.<p>
+ * <p>An instance of {@link ChainFrameBase} that holds a chain being created<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class ChainFrame extends ChainFrameBase {
 	
 	private ChainToolBar toolBar;
 	PChainLibraryCanvas libraryCanvas;
+	
+	private static int X = 410;
+	private static int Y=10;
+	private static int WIDTH=400;
+	private static int HEIGHT=400;
 	
 	public ChainFrame(Controller controller,Connection connection,int i,
 		PChainLibraryCanvas libraryCanvas) {
@@ -88,14 +92,22 @@ public class ChainFrame extends ChainFrameBase {
 		
 	}
 	
+	/**
+	 * The canvas for this frame is an instance of {@link PChainCanvas}
+	 * @return a PChainCanvas
+	 */
 	public PCanvas createCanvas(Connection connection) {
 		return new PChainCanvas(connection);
 	}
 	
 	public Rectangle getInitialBounds() {
-		return new Rectangle(410,10,400,400);
+		return new Rectangle(X,Y,WIDTH,HEIGHT);
 	}
 	
+	/**
+	 * This frame contains a toolbar along with the canvas 
+	 * @see org.openmicroscopy.vis.chains.ChainFrameBase#layoutFrame()
+	 */
 	protected void layoutFrame() {
 		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
 		toolBar = new ChainToolBar(controller.getCmdTable());
@@ -103,20 +115,32 @@ public class ChainFrame extends ChainFrameBase {
 		contentPane.add(canvas);
 	}
 	
+	/**
+	 * When the user presses "save" on the toolbar, open up a {@link ChainSaveFrame}
+	 *
+	 */
 	public void save() {
 		ChainSaveFrame saveFrame  = new ChainSaveFrame(this);
 		saveFrame.show();
-		
-		// put up a dialog
-		// get a name and description from it.
 	}
 	
+	/**
+	 * Complete the saving of a chain
+	 * 
+	 * @param name the name for the new chain
+	 * @param desc it's description
+	 */
 	public void completeSave(String name,String desc) {
 		//System.err.println("finishing save.. "+name+","+desc);		
 		PChainCanvas chainCanvas = (PChainCanvas) canvas;
 		chainCanvas.save(name,desc);
 	}
 	
+	/** 
+	 * Update the status of the "save" button on the toolbar. 
+	 * 
+	 * @param v true if save should be enabled, else false 
+	 */
 	public void setSaveEnabled(boolean v) {
 		if (toolBar != null)
 			toolBar.setSaveEnabled(v);

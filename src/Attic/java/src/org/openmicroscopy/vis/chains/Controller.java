@@ -66,8 +66,8 @@ import javax.swing.Box;
  * <p>Control and top-level management for the Chain-building application.<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class Controller  implements LoginResponder {
@@ -114,14 +114,26 @@ public class Controller  implements LoginResponder {
 		doLogin();
 	}
 	
+	/**
+	 * 
+	 * @return the icon associated with the application
+	 */
 	public Image getIcon() {
 		return icon;
 	}
 
+	/**
+	 * 
+	 * @return The application's command hash
+	 */
 	public CmdTable getCmdTable() {
 			return cmd;	
 	}
 
+	/**
+	 * Place a splash window on the screen and leave it there for a bit
+	 *
+	 */
 	private void doSplash() {
 		JWindow splash = new JWindow();
 		JPanel content = (JPanel) splash.getContentPane();
@@ -164,6 +176,10 @@ public class Controller  implements LoginResponder {
 		splash.setVisible(false);
 	}
 
+	/**
+	 * Update the contents of the status label in the status window
+	 * @param s new text of the status label
+	 */
 	public void setStatusLabel(String s) {
 		if (statusLabel != null)
 			statusLabel.setText(s);
@@ -178,22 +194,16 @@ public class Controller  implements LoginResponder {
 		statusLabel =null;
 	}
 	
-	public void setMainFrame(ModulePaletteFrame mf) {
-		this.moduleFrame = mf;
-	}
-	
+	/**
+	 * Return a pointer to the {@link ModulePaletteFrame}
+	 */
 	public JFrame getMainFrame() {
 		return moduleFrame;
 	}
 	
-	public ChainLibraryFrame getLibrary() {
-			return library;
-	}
 	
 	/**
-	 * Creates the database connection via results from a LoginDialog.
-	 * This database connecdtion will spawn a thread and call completeLogin(),
-	 * below.<p>
+	 * Show the login window
 	 *
 	 */
 	public void doLogin() {
@@ -202,6 +212,12 @@ public class Controller  implements LoginResponder {
 		loginDialog.show();
 	}
 	
+	/** 
+	 * Callback from {@link LoginResponder}. 
+	 * Creates the database connection via results from a {@link ChainLogin}.
+	 * This database connection will spawn a thread and call 
+	 * {@link completeLogin()},below.<p>
+	 */
 	public void loginOK() {
 		connection =  new Connection(this,loginDialog.getURL(),
 			loginDialog.getUserName(),loginDialog.getPassword());
@@ -209,10 +225,18 @@ public class Controller  implements LoginResponder {
 		buildStatusWindow();
 	}
 	
+	/**
+	 * The program will exit if the user chooses not to login
+	 */
 	public void loginCancel() {
 		quit();
 	}
 
+	/**
+	 * Populate the window used to indicate the status of initializing the 
+	 * various components of the tool
+	 *
+	 */
 	private void buildStatusWindow() {
 		status = new JWindow();
 		JPanel content = (JPanel) status.getContentPane();
@@ -238,18 +262,32 @@ public class Controller  implements LoginResponder {
 		status.setVisible(true);	
 	}
 	
+	/**
+	 * Cancel a login and return to the login screen
+	 *
+	 */
 	public void cancelLogin() {
 			connection = null;
 			closeStatusWindow();
 			doLogin();	
 	}
 	
+	/**
+	 * After the basic login has completed and the database connection has 
+	 * been made, populate a {@link ModulePaletteFrame} and a 
+	 * {@link ChainLibraryFrame}
+	 */
 	public void completeWindows() {
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		connection.layoutChains();
 		library = new ChainLibraryFrame(this,connection);
 	}
-	
+
+	/**
+	 * Logout of the system - remove all active windows and 
+	 * present the login dialog.
+	 *
+	 */	
 	public void doLogout() {
 
 		moduleFrame.dispose();
@@ -261,6 +299,10 @@ public class Controller  implements LoginResponder {
 		doLogin();
 	}
 	
+	/**
+	 * Remove all active {@link ChainFrame} instances 
+	 *
+	 */
 	private void removeCanvasFrames() {
 		Iterator iter = canvasFrames.iterator();
 
@@ -272,6 +314,10 @@ public class Controller  implements LoginResponder {
 		canvasFrames = new ArrayList();
 	}
 	
+	/**
+	 * Exit the program.
+	 *
+	 */
 	public void quit() {
 		System.exit(0);
 	}
@@ -279,21 +325,22 @@ public class Controller  implements LoginResponder {
 		
 		
 	public void newChain() {
-//		System.err.println("new chain");
 		ChainFrame canvasFrame = 
 			new ChainFrame(this,connection,chainCanvasCount++,
 				library.getCanvas());
 		canvasFrames.add(canvasFrame);
 	}
 	
+	/**
+	 * Remove a specific chain canvas/frame
+	 * @param c the frame to be removed
+	 */
 	public void disposeChainCanvas(ChainFrame c) {
 		canvasFrames.remove(c);
 	}
 	
 	public void saveChain() {
-//		System.err.println("saving chain...");
 		if (currentChainFrame != null) {
-//			System.err.println("chain is "+currentChainFrame);
 			currentChainFrame.save();
 		}
 	}
