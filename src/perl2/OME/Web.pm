@@ -129,9 +129,9 @@ sub new {
 	};
 
 	# Popup info
-	$self->{_popup} = 1 if $CGI->param('Popup');
-	$self->{_nomenu} = 1 if $CGI->param('NoMenu');
-	$self->{_noheader} = 1 if $CGI->param('NoHeader');
+	$self->{_popup} = 1 if ( $CGI->param('Popup') or $CGI->url_param('Popup') );
+	$self->{_nomenu} = 1 if ( $CGI->param('NoMenu') or $CGI->url_param('Popup') );
+	$self->{_noheader} = 1 if ( $CGI->param('NoHeader') or $CGI->url_param('Popup') );
 
 	$self->{RequireLogin} = 1;
 
