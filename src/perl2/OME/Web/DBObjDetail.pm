@@ -81,9 +81,21 @@ sub new {
 	return $self;
 }
 
-sub getMenuBuilder { return undef }  # No menu
+{
 
-sub getHeaderBuilder { return undef }  # No header
+my $menuText = "DB Detail";
+sub getMenuText {
+	my $self = shift;
+	return $menuText unless ref($self);
+	my $object = $self->_loadObject();
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
+	return "$common_name Detail";
+}
+}
+
+#sub getMenuBuilder { return undef }  # No menu
+
+#sub getHeaderBuilder { return undef }  # No header
 
 sub getPageTitle {
 	my $self = shift;
@@ -97,21 +109,43 @@ sub getPageBody {
 	my $self = shift;
 	my $q = $self->CGI();
 
-	print STDERR "cgi params are\n\t".join( "\n\t", map( $_." => ".$q->param( $_ ), $q->param() ) )."\n";
 	my $object = $self->_loadObject();
 	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
-	my $html = "\n".$q->startform( { -name => $self->{ form_name } } ).
-	           $self->_getDBObjDetail( $object )."\n".
+	my $html = $q->startform( { -name => $self->{ form_name } } ).
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''});
 
-	$html .= $self->_getRelatedTables( $object )
-		unless $q->param( 'NoTables' );
+	my @relations = $self->_getManyRelations( $object );
+	my (@col1, @col2, @col3, @col4);
+	
+	push( @col3, splice( @relations, 0, 2 ) );
+	push( @col4, splice( @relations, 0, 2 ) );
+
+	my $r = POSIX::ceil( scalar( @relations) / 4 );
+	push( @col1, splice( @relations, 0, $r ) );
+	push( @col2, splice( @relations, 0, $r ) );
+	push( @col3, splice( @relations, 0, $r ) );
+	push( @col4, splice( @relations, 0, $r ) );
+
+	$html .= $q->table( {-width => '100%', -cellpadding => 10 },
+		$q->Tr(
+			$q->td(  { -colspan => '2', -width => '50%', -valign => 'top', -align => 'center'}, 
+				$self->_getDBObjDetail( $object )
+			),
+			$q->td(  { -rowspan => '2', -width => '25%', -valign => 'top', -align => 'right' }, [
+				join( '', @col3 ),
+				join( '', @col4 ),
+			] )
+		),
+		$q->Tr( $q->td(  { -width => '25%', -valign => 'top', -align => 'right' }, [
+			join( '', @col1 ),
+			join( '', @col2 ),
+		] ) )
+	);
+
 	$html .= $q->endform();
-	
-	print STDERR "cgi params are\n\t".join( "\n\t", map( $_." => ".$q->param( $_ ), $q->param() ) )."\n";
-	
+		
 	return ('HTML', $html);
 }
 
@@ -124,40 +158,40 @@ sub _getDBObjDetail {
 
 	my $table_label = 
 		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id()},
-				   $q->font( { class => 'ome_header_label' }, $common_name) ):
-			$q->font( { class => 'ome_header_label' }, $common_name)
+			$q->a( { -href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id()},
+				   $q->font( { -class => 'ome_header_label' }, $common_name) ):
+			$q->font( { -class => 'ome_header_label' }, $common_name)
 		).
-		$q->font( { class => 'ome_header_label' }, ": ").
-		$q->font( { class => 'ome_header_title' }, OME::Web::DBObjRender->getObjectLabel($object) );
+		$q->font( { -class => 'ome_header_label' }, ": ").
+		$q->font( { -class => 'ome_header_title' }, OME::Web::DBObjRender->getObjectLabel($object) );
 
-	my $html;
+	my $obj_table;
 
 	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
 	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames );
 	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
 
 	
-	$html .= $q->table(
+	$obj_table .= $q->table( { -class => 'ome_table' },
 		$q->caption( $table_label ),
 		map(
 			$q->Tr( 
-				$q->td( { align => 'left' }, $labels{ $_ } ),
-				$q->td( { align => 'right' }, $record{ $_ } ) 
+				$q->td( { -class => 'ome_td', -align => 'left', -valign => 'top' }, $labels{ $_ } ),
+				$q->td( { -class => 'ome_td', -align => 'right', -valign => 'top' }, $record{ $_ } ) 
 			),
 			@fieldNames
 		)
 	);
 	
-	return $html;
+	return $obj_table;
 }
 
 
-sub _getRelatedTables {
+sub _getManyRelations {
 	my ($self, $object) = @_;
 	my $q = $self->CGI();
 	
-	my $html;
+	my @relations;
 
 	# print tables for has many relations
 	my $manyRefs = $object->getPublishedManyRefs(); 
@@ -167,19 +201,19 @@ sub _getRelatedTables {
 		my @objects = $object->$accessor();
 		(my $table_name = $accessor ) =~ s/_/ /g;
 		$table_name = uc( $table_name );
-		$html .= $q->p( $tableMaker->getTable( 
+		push @relations, $q->p( $tableMaker->getList( 
 			{
 				title            => $table_name, 
-				table_width      => '100%',
 				embedded_in_form => $self->{ form_name },
-				table_length     => 5
+				Length           => 5,
+				width            => '100%'
 			}, 
 			$type, 
 			\@objects
 		) );
 	}
 
-	return $html;
+	return @relations;
 }
 
 sub _loadObject {
