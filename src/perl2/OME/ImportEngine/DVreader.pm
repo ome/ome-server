@@ -593,8 +593,17 @@ sub readUIHdr {
             $typ = $tag_table{$i}[2];
             $buf = $file->readData($len);
 			$fmt = get_fmt($typ, $endian);
-			$fmt =~ s/^(.)$/$1$len/;
-			$val = unpack($fmt, $buf);
+			if ($fmt eq 'f' and $params->host_endian ne $params->endian) {
+				# Okay, this is just a huge hack to get around endian-ness
+				# issues with floats. It essentially byte swaps using a
+				# pack/unpack integer reversal and then unpacks the float.
+				#
+				# -Chris [Bug #290]
+				$val = unpack('f', pack('V', unpack('N', $buf)));
+			} else {
+				$fmt =~ s/^(.)$/$1$len/;
+				$val = unpack($fmt, $buf);
+			}
 			$self->{$k} = $val;
     	}
     # Put relevant pieces of metadata into xml_elements for later DB storage
