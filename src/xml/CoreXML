@@ -1,0 +1,10 @@
+/OME/Core/OMECoreTypes.ome
+/OME/Import/ImportModule.ome
+/OME/Import/ImageServerStatistics.ome
+/OME/Annotations/AnnotationModule.ome
+/OME/Annotations/annotations.ome
+/OME/Annotations/classification.ome
+/OME/Analysis/FindSpots/spotModules.ome
+/OME/Tests/EchoModule.ome
+/OME/Tests/datasetExample.ome
+/OME/Tests/featureExample.ome

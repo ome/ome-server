@@ -732,8 +732,8 @@ sub load_xml_core {
     my @core_xml;
 
     # get list of files
-    open (CORE_XML, "<", "src/SQL/CoreXML" )
-    or croak "Could not open file \"src/SQL/CoreXML\". $!";
+    open (CORE_XML, "<", "src/xml/CoreXML" )
+    or croak "Could not open file \"src/xml/CoreXML\". $!";
 
     while (<CORE_XML>) { 
         chomp;
@@ -815,8 +815,8 @@ sub load_analysis_core {
     print "Loading core analysis chains\n";
 
     # get list of files
-    open( CORE_CHAINS, "<", "src/SQL/CoreChains" )
-    or die "Could not open file 'CoreChains'";
+    open( CORE_CHAINS, "<", "src/xml/CoreChains" )
+    or die "Could not open file 'src/xml/CoreChains'";
 
     while(<CORE_CHAINS>) {
     chomp;
