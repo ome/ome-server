@@ -112,13 +112,6 @@ __PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
 ORDER BY attr.attribute_id
 SQL;
 
-sub findColumnByName {
-    my ($self, $column_name) = @_;
-    my $type_id = $self->id();
-    return OME::DataTable::Column->findByTypeAndColumn($type_id,
-						      $column_name);
-}
-
 sub findAttributesByTarget {
     my ($self, $targetID) = @_;
     my $granularity = $self->semantic_type();
@@ -308,16 +301,6 @@ Returns or sets the semantic type that this data column refers to,
 assuming that the storage type is "reference".
 
 =cut
-
-sub findByTypeAndColumn {
-    my ($class, $type_id, $column_name) = @_;
-    my @columns = $class->__type_column(data_table_id => $type_id,
-					column_name => $column_name);
-    die "Multiple matching columns" if (scalar(@columns) > 1);
-    return $columns[0]; 
-}
-
-
 
 1;
 
