@@ -42,18 +42,19 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use IO::File;
-use OME::Analysis::Handler;
+use OME::Analysis::DefaultLoopHandler;
 
-use base qw(OME::Analysis::Handler);
+use base qw(OME::Analysis::DefaultLoopHandler);
 
 use fields qw(_options _inputHandle _outputHandle _errorHandle
 	      _inputFile _outputFile _errorFile _cmdLine);
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$module,$node);
+    my $self = $class->SUPER::new($location,$session,
+                                  $chain_execution,$module,$node);
 
     $self->{_options} = "-db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
 

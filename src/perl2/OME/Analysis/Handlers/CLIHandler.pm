@@ -43,17 +43,18 @@ our $VERSION = $OME::VERSION;
 
 use IPC::Run;
 
-use OME::Analysis::Handler;
+use OME::Analysis::DefaultLoopHandler;
 use XML::LibXML;
-use base qw(OME::Analysis::Handler);
+use base qw(OME::Analysis::DefaultLoopHandler);
 
 use fields qw(_outputHandle);
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$module,$node);
+    my $self = $class->SUPER::new($location,$session,
+                                  $chain_execution,$module,$node);
 
     bless $self,$class;
     return $self;

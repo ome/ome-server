@@ -37,13 +37,13 @@
 
 package OME::Analysis::FindBounds;
 
-use OME::Analysis::Handler;
+use OME::Analysis::DefaultLoopHandler;
 
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use base qw(OME::Analysis::Handler);
+use base qw(OME::Analysis::DefaultLoopHandler);
 
 
 sub createBounds {

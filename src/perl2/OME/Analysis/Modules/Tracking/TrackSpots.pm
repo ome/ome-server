@@ -42,18 +42,19 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use IO::File;
-use OME::Analysis::Handler;
+use OME::Analysis::DefaultLoopHandler;
 
-use base qw(OME::Analysis::Handler);
+use base qw(OME::Analysis::DefaultLoopHandler);
 
 use fields qw(_timepointSpots _nextTrajectoryNumber _spotEntries
               _spotTrajectories _spotOrders _physicalCoordinates);
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$module,$node);
+    my $self = $class->SUPER::new($location,$session,
+                                  $chain_execution,$module,$node);
     $self->{_timepointSpots} = {};
     $self->{_nextTrajectoryNumber} = 1;
     $self->{_spotEntries} = {};

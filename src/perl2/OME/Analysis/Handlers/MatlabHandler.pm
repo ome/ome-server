@@ -53,8 +53,8 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::Analysis::Handler;
-use base qw(OME::Analysis::Handler);
+use OME::Analysis::DefaultLoopHandler;
+use base qw(OME::Analysis::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
 
 use OME::Matlab;
@@ -78,10 +78,11 @@ sub newtest {
 }
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$module,$node);
+    my $self = $class->SUPER::new($location,$session,
+                                  $chain_execution,$module,$node);
 
     $self->__parseInstructions();
 
