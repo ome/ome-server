@@ -29,7 +29,7 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
     project_id => 'project',
- #   owner_id   => 'owner',
+    owner_id   => 'owner',
     group_id   => 'group',
     image_id => 'image',		#jm
     });
