@@ -263,27 +263,30 @@ sub buildDOM {
 	
 	my $element;
 
+	# Add the Projects
 	foreach (values %$Projects) {
 		$root->appendChild ($_->{node});
 	}
 	
+	# Add the Datasets and their CustomAttributes
 	foreach my $dataset (values %$Datasets) {
 		$root->appendChild ($dataset->{node});
-		my @datasetProjects = $dataset->{object}->projects();
+		my %datasetProjects = map {$_->id() => $_} $dataset->{object}->projects();
 
 		# Only add the projects in the $objects list.
-		foreach (@datasetProjects) {
+		foreach (values %datasetProjects) {
 			$self->addRefNode ($_, 'Project', $dataset->{node})
 				if exists $Projects->{$_->id()};
 		}
 	}
 
+	# Add the Images, Features and their CustomAttributes
 	foreach my $image (values %$Images) {
 		$root->appendChild ($image->{node});
-		my @imageDatasets = $image->{object}->datasets();
+		my %imageDatasets = map {$_->id() => $_} $image->{object}->datasets();
 
 		# Only add the datasets in the $objects list.
-		foreach (@imageDatasets) {
+		foreach (values %imageDatasets) {
 			$self->addRefNode ($_, 'Dataset', $image->{node})
 				if exists $Datasets->{$_->id()};
 		}
@@ -295,6 +298,7 @@ sub buildDOM {
 
 	}
 	
+	# Add the Global CustomAttributes
 	my @CAs = values (%$GlobalCAs);
 	if (@CAs > 0) {
 		my $CAnode = $self->newCAnode ($root);
