@@ -149,6 +149,9 @@ $worker->storeObject();
 
 # Register the module execution for later
 OME::Fork->doLater ( sub {
+	# Note that this executor sets the module status on error and stores the MEX
+	# We probably don't need an eval here, because there's already one in this
+	# executor.
 	eval {
 		my $executor = OME::Analysis::Engine::UnthreadedPerlExecutor->new();
 		$executor->executeModule ($mex,$Dependence,$target);
