@@ -38,7 +38,7 @@
 				svgDocument.getElementById("hideControl").firstChild.data,
 				svgDocument.getElementById("GUIbox").firstChild.data
 			);
-			toolBox1.setLabel(90,12,"Controls")
+			toolBox1.setLabel(90,15,"Controls")
 			toolBox1.getLabel().setAttributeNS(null, "text-anchor", "middle");
 
 			toolBox2 = new toolBox(
@@ -89,8 +89,8 @@
 		<text id="menuBar"><![CDATA[
 			<g>
 				<g opacity="0.3">
-					<rect width="{$width}" height="15" fill="lawngreen" rx="10" ry="5"/>
-					<rect y="5" width="{$width}" height="10" fill="lawngreen"/>
+					<rect width="{$width}" height="19" fill="lawngreen" rx="10" ry="5"/>
+					<rect y="9" width="{$width}" height="10" fill="lawngreen"/>
 				</g>
 			</g>
 		]]></text>

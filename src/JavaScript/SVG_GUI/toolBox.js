@@ -31,9 +31,7 @@ toolBox.superclass = Widget.prototype;
 toolBox.VERSION = 1.0;
 
 toolBox.prototype.menuBarText = 
-'<g>' +
-'	<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>' +
-'</g>';
+'<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>';
 
 toolBox.prototype.hideControlText = 
 '<g>' +
@@ -65,7 +63,7 @@ toolBox.prototype.offSwitchText =
 '<set attributeName="display" to="none" begin="indefinite"/>';
 
 // GUIboxHideDelay is the delay from clicking hideControl till GUIbox's display
-// is hidden. It should match the animations' duration.
+// is hidden. buildSVG sets it to the duration of GUIbox's off animation.
 toolBox.prototype.GUIboxHideDelay = 1;
 
 
@@ -74,15 +72,20 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *   toolBox constructor
 *
 *     Parameter description:
+*		x,y = x,y of upper left corner of toolbox
+*		width = width of toolbox
+*		height = height of GUIbox
 *       The last three parameters are optional. They allow the user to control
-*       the appearance of the toolBox. AT THIS TIME menuBar needs to be
-*       15 pixels tall and "$width" wide. hideControl should not be
-*       longer or taller than 9 pixels. GUIbox needs to be "$height" tall
-*       and "$width" wide.
-*       hideControl's animations can be adjusted, but they must
-*       the first and second animations.
-*		The same goes with GUIbox's animations, and GUIbox needs to retain its 
-*       on and off switches.
+*       the appearance of the toolBox. width of menuBar and GUIbox should be
+*		{$width} wide. GUIbox should be "{$height}" tall.
+*		hideControl needs to have animations. The first animation will be
+*		called when the control is activated, the second when deactivated.
+*		If you do not specify animations for GUIbox, it will fade in and out.
+*		If you specify animations for GUIbox they will be called in the same
+*		fashion	as hideControl's.
+*		GUIbox may have elements placed inside it. So you should use a g as
+*		the root node.
+*		No elements are placed inside menuBar. It is a background and mouseListener.
 *
 *****/
 function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
@@ -105,7 +108,6 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 	this.width = width;
 	this.activeMove = false;
 	this.hidden = false;
-	this.GUIboxScale = 1;
 	
 	// allow user defined custimization of apperance
 	if( menuBarText != null ) this.menuBarText = menuBarText;
@@ -159,6 +161,8 @@ toolBox.prototype.buildSVG = function() {
 	var hideControlAnimations = findAnimationsInNode( this.nodes.hideControl );
 	this.hideControlAnimate1 = hideControlAnimations.item(0);
 	this.hideControlAnimate2 = hideControlAnimations.item(1);
+	
+	// Look for GUIboxAnimations. If not found, add standard animations.
 	var GUIboxAnimations = findAnimationsInNode( this.nodes.GUIbox );
 	if(GUIboxAnimations.length == 2) {
 		this.GUIboxAnimate1 = GUIboxAnimations.item(0);
@@ -170,6 +174,8 @@ toolBox.prototype.buildSVG = function() {
 		this.nodes.GUIbox.appendChild( this.textToSVG( this.fadeInText ));
 		this.GUIboxAnimate2 = this.nodes.GUIbox.lastChild;
 	}
+	
+	// Add on and off switches to control GUIbox display
 	this.nodes.GUIbox.appendChild( this.textToSVG( this.onSwitchText ));
 	this.GUIboxOn = this.nodes.GUIbox.lastChild;
 	this.nodes.GUIbox.appendChild( this.textToSVG( this.offSwitchText ));
@@ -177,11 +183,14 @@ toolBox.prototype.buildSVG = function() {
 	this.GUIboxHideDelay = this.GUIboxAnimate2.getAttributeNS( null, "dur" );
 	
 	// Move hideControl and GUIbox to proper position
-	var newX = this.width - 8;
-	translate = "translate(" + newX + ",8 )";
+	var menuHeight = this.nodes.menuBar.getBBox().height;
+	var hideY = Math.round( menuHeight/2 );
+	var hideX = this.width - hideY;
+	translate = "translate(" + hideX + "," + hideY +")";
 	transform = translate;
 	this.nodes.hideControl.setAttributeNS(null, "transform", transform );
-	GUIboxContainer.setAttributeNS(null, "transform", "translate(0,15)");
+
+	GUIboxContainer.setAttributeNS(null, "transform", "translate(0,"+ menuHeight +")");
 }
 
 
