@@ -83,7 +83,8 @@ sessions which are open and have not been recently used.)
 
 =head2 dispatch
 
-	OME::Remote::Dispatcher->($session,$object,$methodName,@params);
+	OME::Remote::Dispatcher->
+	    dispatch($session,$object,$methodName,@params);
 
 The workhouse of the Remote Access dispatcher.  Has the same effect as
 calling
@@ -102,7 +103,7 @@ cache, so that it can be referred to in later dispatch calls.
 
 =head2 freeObject
 
-	OME::Remote::Dispatcher->($session,$object);
+	OME::Remote::Dispatcher->freeObject($session,$object);
 
 Tells the Dispatcher that the given object will no longer be used by
 the client.  Allows the Dispatcher to remove the object from the
