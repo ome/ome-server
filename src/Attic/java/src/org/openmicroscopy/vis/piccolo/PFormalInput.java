@@ -38,11 +38,12 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.vis.ome.Connection;
 import javax.swing.SwingConstants;
 import java.util.ArrayList;
+
 
 /**
  * Nodes for displaying module inputs<p>
@@ -72,8 +73,9 @@ public class PFormalInput extends PFormalParameter {
 				PFormalParameter.TYPE_NODE_VERTICAL_OFFSET);	
 		// create locator
 		locator = new PParameterLocator(this,SwingConstants.WEST);
-		setBounds(textNode.getFullBounds());
+		updateBounds();
 	}
+	
 	
 	/**
 	 * For inputs, the corresponding list is a list of ModuleOutputs.

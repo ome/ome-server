@@ -38,7 +38,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.remote.RemoteModule.FormalParameter;
+import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.vis.ome.Connection; 
 import org.openmicroscopy.SemanticType;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -61,7 +61,7 @@ public class PFormalOutput extends PFormalParameter {
 		if (param.getSemanticType() != null)
 			connection.addOutput(param.getSemanticType(),this);
 		locator = new PParameterLocator(this,SwingConstants.EAST);
-		setBounds(textNode.getFullBounds());
+		updateBounds();  
 	}
 	
 	protected void layoutChildren() {
@@ -85,7 +85,7 @@ public class PFormalOutput extends PFormalParameter {
 				typeNode.setOffset(0,TYPE_NODE_VERTICAL_OFFSET);
 			}
 		}		
-		setBounds(textNode.getFullBounds());
+		updateBounds(); 
 	}
 	
 	/**
