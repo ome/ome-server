@@ -2,7 +2,6 @@
 
 	overlay.js
 		
-		A superclass for all overlays.
 		
 	Copyright (C) 2002 Open Microscopy Environment
 	Author: Josiah Johnston <siah@nih.gov>
@@ -20,7 +19,11 @@
 	You should have received a copy of the GNU Lesser General Public
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	Written by: Josiah Johnston <siah@nih.gov>
 	
+	A superclass for all overlays.
+
 *****/
 
 var svgns = "http://www.w3.org/2000/svg";
@@ -30,20 +33,16 @@ var svgns = "http://www.w3.org/2000/svg";
 	class variables
 	
 *****/
-Overlay.VERSION = 1;
+Overlay.VERSION = .1;
 
-/********************************************************************************************/
-/********************************************************************************************/
-/*************************** Functions open to the world ************************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Public Functions 
+********************************************************************************************/
 
 /*****
 
 	constructor
 				
-	tested
-
 *****/
 function Overlay( ) {
 }
@@ -54,9 +53,7 @@ function Overlay( ) {
 	
 	returns:
 		The controls for this class, loaded into DOM with a <g> as the root.
-		
-	tested
-		
+				
 *****/
 Overlay.prototype.makeControls = function() {
 }
@@ -68,9 +65,7 @@ Overlay.prototype.makeControls = function() {
 	returns:
 		The overlay for this instance.
 		The data it uses was acquired during initialization.
-		
-	tested
-		
+				
 *****/
 Overlay.prototype.makeOverlay = function( ) {
 }
@@ -80,8 +75,6 @@ Overlay.prototype.makeOverlay = function( ) {
 	updateIndex
 	
 	switches overlays on and off based on changes to Z and T indexes
-		
-	untested
 		
 *****/
 Overlay.prototype.updateIndex = function( theZ, theT ) {
@@ -189,19 +182,9 @@ Overlay.prototype.addLayerSlice = function( theZ, theT, layerSlice ) {
 	this.overlayRoot.appendChild( layerSlice );
 }
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
-
-/*****
-
-	init
-		
-	tested
-
-*****/
+/********************************************************************************************
+                                 Private Functions 
+********************************************************************************************/
 
 Overlay.prototype.init = function( ) {
 
@@ -216,17 +199,8 @@ Overlay.prototype.init = function( ) {
 }
 
 /*****
-	
 	makeColors
-	
-	purpose:
-		make a list of valid colors
-		
-	returns:
-		list of colors
-		
-	tested
-	
+		returns a list of colors
 *****/
 
 Overlay.prototype.makeColors = function() {
