@@ -1291,6 +1291,7 @@ sub findModuleHandler {
         ($self, $session, $analysis_chain, $input_parameters, $dataset) = @_;
 
         __clearEverything();
+        $session->commitTransaction();
         $factory = $session->Factory();
 
         $start_time = new Benchmark;
