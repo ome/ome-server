@@ -99,7 +99,7 @@ public class Controller  implements LoginResponder {
 	
 	private ChainLogin loginDialog;
 	
-	private ToolBar toolBar;
+	private ControlPanel controlPanel;
 	
 	private ResultFrame currentResultFrame;
 
@@ -282,9 +282,9 @@ public class Controller  implements LoginResponder {
 	 * {@link ChainLibraryFrame}
 	 */
 	public void completeWindows() {
-		toolBar  = new ToolBar(getCmdTable());
-		toolBar.setLoggedIn(connection.getUserName());
-		toolBar.setEnabled(true);
+		controlPanel  = new ControlPanel(getCmdTable(),connection);
+		controlPanel.setLoggedIn(connection.getUserName());
+		controlPanel.setEnabled(true);
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		connection.layoutChains();
 		library = new ChainLibraryFrame(this,connection);
@@ -298,7 +298,7 @@ public class Controller  implements LoginResponder {
 	public void doLogout() {
 
 		moduleFrame.dispose();
-		toolBar.dispose();
+		controlPanel.dispose();
 		removeFrames();
 		// remove library
 		if (library !=null)
