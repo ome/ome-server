@@ -27,4 +27,7 @@ public interface Granularity
     public static final int DATASET = 1;
     public static final int IMAGE   = 2;
     public static final int FEATURE = 3;
+
+    public static final String[] LABELS = 
+    {"Global","Dataset","Image","Feature"};
 }
