@@ -248,215 +248,53 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		}
 		
 		else if (size > 3){
-			s= drawBezier(pts);	
+			s= drawBezierCurve(pts);	
 		}
 		return s;
 	}
-	
-	
-	/**
-	 *  A procedure for drawing a general b-spline between the given points
-	 *  This implementation is a bit of a hack, most likely due to my lack of 
-	 *  complete understanding of how these things are implemented. The lineTo
-	 *  at the end is particularly ugly, as it introduces a bend that should
-	 *  not be there. This should probably be replaced by a better 
-	 *  implementation. Currently, it is not in use.
-	 *  (10/29/03 hsh)
-	 *  
-	 * @param pts
-	 * @return
-	 */
-	protected GeneralPath drawGeneralBSpline(Point2D pts[]) {
+			
+	protected GeneralPath drawBezierCurve(Point2D[] pts) {
 		GeneralPath p = new GeneralPath();
-		// subtract out last point, which is generally doubled.
-		int n = pts.length-1;
-		int[] knots = buildKnotArray(n);
-		boolean first = true;
-		
-		float x,y;
-		
-		dumpPoints(pts);
-		int len = knots.length;
-		float maxKnot = knots[len-DEGREE-2]; // was  len-degree-2
-		float minKnot = knots[3]; // was 1
-		System.err.println("maxKnot is "+maxKnot);
-		double max = (double) n-2;
-		if (max < 4)
-			max = 4;
-		//for (double t = (double) minKnot; t<= maxKnot; t+=.4) { // was t<=n-2, t+=.05
-		for (double t = 0; t < n; t+=.4) {
-			System.err.println("t = "+t);
-			Point2D pt = getSplinePoint(t,knots,pts);
-			if (first) {
-				System.err.println("moving to "+pt.getX()+","+pt.getY());
-				p.moveTo((float) pt.getX(),(float)pt.getY());
-				first  = false;
-			}
-			else {
-				p.lineTo((float) pt.getX(),(float)pt.getY());
-				System.err.println("line to "+pt.getX()+","+pt.getY());
-			}	
-		}
-		//p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		return p;
-	}
-	
-	private void dumpPoints(Point2D[] pts) {
-		for (int i = 0; i < pts.length; i++ ) {
-			System.err.println(i+") ("+pts[i].getX()+","+pts[i].getY()+")");
-		}
-	}
-	
-	private int[] buildKnotArray(int n) {
-		int size = n+2*DEGREE;
-		int[] knots  =new int[size];
-		
-		/*for (int i =0; i < size; i++) {
-			if (i < DEGREE)
-				knots[i]=0;
-			else if (i >= n+DEGREE) 
-				knots[i]=n-1;
-			else 
-				knots[i]= i-DEGREE;
-		}*/
-		for (int i = 0; i < size; i++)
-			knots[i]=i;
-		for (int i = 0; i < size; i++ ) {
-			System.err.println("knot "+i+"+ is "+knots[i]);
-		}
-		return knots;
-	} 
-	
-	private Point2D getSplinePoint(double u,int[] knots,Point2D[] pts) {
-		Point2D p = new Point2D.Double();
 	
 		int n = pts.length;
-		//int n = knots.length;
-		double x=0,y=0;
+		//System.err.println("drawing bezier. "+n+" points");
+		// width of space?
+		int w2=100;
+		double width =w2;
+		double step = 1./width;
+		double t = step;
+		float x;
+		float y;
+		double newx=0;
+		double newy=0;
+		//System.err.println("width is "+width+", step is "+step);
 		
-		System.err.println("point for u ="+u);
-		for (int i = 0; i< n; i++) {
-			double cdb = coxDeBoor(i,DEGREE,u,knots);	
-			System.err.println("cdb  of "+i+" is "+cdb);
-			x +=cdb*pts[i].getX();
-			y +=cdb*pts[i].getY();
+		double[] pxi = new double[n];
+		double[] pyi = new double[n];
+		double[] px = new double[n];
+		double[] py = new double[n];
+		
+		//more convenient notation...
+		for (int i = 0; i < n; i++) {
+			px[i] = pts[i].getX();
+			py[i]=pts[i].getY();
 		}
-		//System.err.println("found spline point "+x+","+y);
-		p.setLocation(x,y);
+		
+		p.moveTo((float) px[0],(float) py[0]);
+		for (int k = 1; k < w2; k++){
+			System.arraycopy(px,0,pxi,0,n);
+			System.arraycopy(py,0,pyi,0,n);
+		 	for (int j = n-1; j > 0; j--) {       //  points calculation
+				for (int i = 0; i < j; i++) {
+			 		px[i]=(1-t)*pxi[i]+t*pxi[i+1];
+					py[i]=(1-t)*pyi[i]+t*pyi[i+1];
+				}
+		 	}	
+			p.lineTo((float)pxi[0],(float)pyi[0]); 
+		 	t += step;
+		}
 		return p;
-	}
-	
-	private double coxDeBoor(int k, int d,double u,int[] knots){
-		if (d == 0) {
-			if (u >= knots[k] && u <knots[k+1])
-				return 1;
-			else
-				return 0;
-		}
-		int n = knots.length;
-		
-		double sum = 0;
-		double denom1 = knots[k];
-		if (k+d < knots.length)
-			denom1 += knots[k+d];
-		if (denom1 != 0)
-			sum += (u-knots[k])/denom1*coxDeBoor(k,d-1,u,knots);
-		double denom2 = -knots[k+1];
-		if (k+d+1 < knots.length)
-			denom2+=knots[k+d+1];
-		if (denom2 !=0) {
-			double num = -u;
-			if (k+d+1 < knots.length)
-				num+=knots[k+d+1];	
-			sum += num/denom2*coxDeBoor(k+1,d-1,u,knots);
-		}
-		return sum;
-	}
-	
-	
-	private boolean first = true;
-	/**
-	 * A B-spline version of the line. Also not currently used.
-	 * @param pts
-	 * @return
-	 */
-	protected GeneralPath drawBSpline(Point2D[] pts) {
-		int m = 50, n = pts.length;
-		
-		first = true;		
-		GeneralPath p = new GeneralPath();
-	//	p.moveTo((float)pts[0].getX(),(float)pts[0].getY());
-		n = pts.length;
-		for (int i=1; i<n-2; i++) { 
-			getSplinePoints(p,pts[i-1],pts[i],pts[i+1],pts[i+2]);		 
-		}	
-	//	p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		return p;	
-	
-	}
-	
-	
-	private void getSplinePoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,
-		Point2D p3) {
-
-		float p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y;
-		float x,y;
-									
-		p3x=(float) ((-p0.getX()+3*(p1.getX()-p2.getX())+p3.getX())/6); 
-		p3y=(float) ((-p0.getY()+3*(p1.getY()-p2.getY())+p3.getY())/6);
-			  
-		p2x=(float) ((p0.getX()-2*p1.getX()+p2.getX())/2);
-		p2y=(float) ((p0.getY()-2*p1.getY()+p2.getY())/2);
-		p1x=(float) ((p2.getX()-p0.getX())/2);
-		p1y=(float) ((p2.getY()-p0.getY())/2);
-		p0x=(float) ((p0.getX()+4*p1.getX()+p2.getX())/6);
-		p0y=(float) ((p0.getY()+4*p1.getY()+p2.getY())/6);
-		
-		
-		for (float t=0; t<=1; t+=0.02) {  
-			x = ((p3x*t+p2x)*t+p1x)*t+p0x;
-			y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-			
-			if (first == true) {
-				p.moveTo(x,y);
-				first = false;
-			}
-			else
-				p.lineTo(x,y);
-		}	
-	}
-	
-	/**
-	 * 
-	 * Draw a bezier curve between the points. doesn't do very well with
-	 * the boundaries between each four-point section. I should look up how
-	 * to do that.
-	 * @param pts
-	 * @return A Bezier curve for the following points
-	 */
-	protected GeneralPath drawBezier(Point2D[] pts) {
-		int m = 50, n = pts.length;
-		int i;
-		first = true;		
-		GeneralPath p = new GeneralPath();
-		n = pts.length;
-		
-		p.moveTo((float) pts[0].getX(),(float) pts[0].getY());
-		for (i=0; i<n-3; i+=3) {
-			p.curveTo((float)pts[i+1].getX(),(float)pts[i+1].getY(),
-				(float)pts[i+2].getX(),(float)pts[i+2].getY(),
-				(float) pts[i+3].getX(),(float)pts[i+3].getY());
-		}
-		
-		if (i == n-2)
-			p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		else if (i == n-3) 
-			p.quadTo((float) pts[n-2].getX(),(float) pts[n-2].getY(),
-				(float) pts[n-1].getX(),
-				(float) pts[n-1].getY());
-		return p;	
-	}
-	
+	}	
 		
 	/**
 	 * Set the bounds based on the shape of the link.
