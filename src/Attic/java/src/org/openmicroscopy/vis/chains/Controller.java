@@ -46,8 +46,21 @@ import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ApplicationController;
 import org.openmicroscopy.util.LoginDialog;
 import javax.swing.JFrame;
+import javax.swing.JWindow;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.awt.Image;
+import java.net.URL;
+import java.awt.image.ImageProducer;
+import java.awt.Toolkit;
+import java.awt.Font;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+
 
 /** 
  * <p>Control and top-level management for the Chain-building application.<p>
@@ -59,9 +72,21 @@ import java.util.Iterator;
 
 public class Controller implements ApplicationController {
 	
+	private static final String 
+		ICON_PATH="org/openmicroscopy/vis/chains/resources/chain-logo.jpg";
+	private static final String SPLASH_IMAGE=
+		"org/openmicroscopy/vis/chains/resources/splash.jpg";
+    
+    private static final String COPY_STRING =
+    	"Copyright 2003, OME: MIT,NIH, University of Dundee";
+	private static final int SPLASH_DELAY=5000; // 5 seconds
+	
+	private Font copyFont = new Font("Sans-Serif",Font.BOLD,9);
 	private CmdTable cmd;
 	private ModulePaletteFrame mainFrame;
 	private ChainLibraryFrame library;
+	
+	private Image icon;
 	
 	ArrayList canvasFrames = new ArrayList();
 	private Connection connection = null;
@@ -71,11 +96,70 @@ public class Controller implements ApplicationController {
 
 	public Controller() {
 		cmd = new CmdTable(this);
+		try {
+			ClassLoader cload = this.getClass().getClassLoader();
+			URL url = cload.getResource(ICON_PATH);
+			Toolkit toolkit = Toolkit.getDefaultToolkit();
+			icon = toolkit.createImage((ImageProducer) url.getContent());
+		}
+		catch(Exception e) {
+			icon = null;
+		}
+		doSplash();
+	}
+	
+	public Image getIcon() {
+		return icon;
 	}
 
 	public CmdTable getCmdTable() {
 			return cmd;	
 	}
+
+	private void doSplash() {
+		JWindow splash = new JWindow();
+		JPanel content = (JPanel) splash.getContentPane();
+		int width=0;
+		int height = 0;
+		JLabel label = null;
+		
+		content.setLayout(new BoxLayout(content,BoxLayout.Y_AXIS));
+		ClassLoader cload = this.getClass().getClassLoader();
+		URL url = cload.getResource(SPLASH_IMAGE);
+		if (url != null) {
+			System.err.println("got image");
+			ImageIcon icon = new ImageIcon(url);
+			label  = new JLabel(icon);
+			content.add(label);
+		}
+		
+		JLabel info  = new JLabel(Chains.INFO);
+		info.setFont(copyFont);
+		JLabel copy = new JLabel(COPY_STRING);
+		copy.setFont(copyFont);
+		
+		
+		content.add(info);
+		content.add(copy);
+		splash.pack();
+		if (url != null) {
+			width += label.getWidth();
+			height += label.getHeight();
+		}
+		else
+			width +=info.getWidth();
+		height += copy.getHeight()+info.getHeight();
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		Rectangle bounds = splash.getBounds();
+		int x = (int) (screen.getWidth()-width)/2;
+		int y = (int) (screen.getHeight()-height)/2;
+		splash.setBounds(x,y,width,height);
+		splash.setVisible(true);
+		try { Thread.sleep(SPLASH_DELAY); }catch (Exception e) { }
+		splash.setVisible(false);
+	}
+
+
 	
 	public void setMainFrame(ModulePaletteFrame mf) {
 		this.mainFrame = mf;
