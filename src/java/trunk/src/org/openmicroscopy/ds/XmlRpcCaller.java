@@ -241,7 +241,7 @@ public class XmlRpcCaller
                 }
 
                 Object retval = xmlrpc.execute(method,vparams);
-                return retval;
+                return decodeObject(retval);
             } catch (IOException e) {
                 throw new RemoteConnectionException(e.getMessage());
             } catch (Exception e) {
