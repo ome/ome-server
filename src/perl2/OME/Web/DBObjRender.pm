@@ -128,9 +128,9 @@ sub getFieldNames {
 	return $specializedRenderer->getFieldNames( $type )
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
 
-	$type = _getProto( $type );
-	# We don't need no *_id aliases.
-	my @fieldNames = ('id', sort( grep( !/_id$/, $type->getColumns()) ) );
+	$type = $proto->_getProto( $type );
+	# We don't need no *_id aliases or target
+	my @fieldNames = ('id', sort( grep( (!/_id$/ and !/^target$/), $type->getColumns()) ) );
 	return @fieldNames if wantarray;
 	return \@fieldNames;
 }
@@ -173,7 +173,7 @@ sub getFieldTypes {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
 
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	$type = _getProto( $type );
+	$type = $proto->_getProto( $type );
 	my %fieldTypes = map{ $_ => $type->getPackageReference($_) } @$fieldNames;
 
 	return %fieldTypes if wantarray;
@@ -199,7 +199,7 @@ sub getFieldLabels {
 		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
 	
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	$type = _getProto( $type );
+	$type = $proto->_getProto( $type );
 	# make labels by prettifying the aliases
 	my %labels;
 	foreach( @$fieldNames ) {
@@ -290,7 +290,9 @@ sub getRefToObject {
 		}
 		# FIXME
 		if( /^html$/ ) {
-			return $obj->id();
+			my $type = $proto->_getType( $obj );
+			my $id   = $obj->id();
+			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>$id</a>";
 		}
 	}
 }
@@ -310,7 +312,7 @@ sub _getSpecializedRenderer {
 	my ($proto,$specialization) = @_;
 	
 	# get prototype from instance
-	$specialization = _getProto( $specialization );
+	$specialization = $proto->_getProto( $specialization );
 	
 	# construct specialized package name
 	$specialization =~ s/::/_/g;
@@ -326,7 +328,7 @@ sub _getSpecializedRenderer {
 
 =head2 _getProto
 
-	my $type = _getProto( $type );
+	my $type = OME::Web::RenderData->_getProto( $type );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -335,7 +337,7 @@ This holds the magic to return the DBObject prototype from whatever
 $type happens to be. It also loads the DBObject so methods can be called on it.
 =cut
 sub _getProto {
-	my $type = shift;
+	my ($proto, $type) = @_;
 
 	# get prototype from instance
 	if( ref($type) ) {
@@ -356,6 +358,33 @@ sub _getProto {
 		die "Error loading package $type. Error msg is:\n$@"
 			if $@;
 	}
+	return $type;
+}
+
+
+=head2 _getType
+
+	my $type = OME::Web::RenderData->_getType( $type );
+
+$type can be a DBObject name ("OME::Image"), an Attribute DBObject
+("OME::SemanticType::__STName"), or an instance of either
+
+Returns either the DBObject prototype or @AttrName from whatever
+$type happens to be.
+=cut
+sub _getType {
+	my ($proto, $type) = @_;
+
+	# get prototype from instance
+	$type = ref( $type ) if( ref($type) );
+
+	# @Attr_name is already formatted properly
+	return $type if $type =~ /^@/;
+	
+	# Attribute DBObject -> @AttrName
+	return $type if $type =~ s/^OME::SemanticType::__(.*)$/\@$1/;
+	
+	# DBObject is
 	return $type;
 }
 
