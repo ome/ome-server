@@ -185,10 +185,7 @@
 			<xsl:attribute name = "Index">
 				<xsl:value-of select = "@Index"/>
 			</xsl:attribute>
-			<!--xsl:apply-templates select = "@ColorDomain" mode = "OptionalAttribute"/-->
-			<xsl:attribute name = "ColorDomain">
-				<xsl:value-of select = "@ColorDomain"/>
-			</xsl:attribute>
+			<xsl:apply-templates select = "@ColorDomain" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "." mode = "MakeRefs">
 				<xsl:with-param name = "Name">LogicalChannel</xsl:with-param>
 				<xsl:with-param name = "ID">
