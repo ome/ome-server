@@ -140,8 +140,15 @@ eval {
 	$executor->executeModule ($mex,$Dependence,$target);
 };
 
+my $status = $mex->status();
+my $error;
+$error = $mex->error_message() if $status and $status eq 'ERROR';
+
 # report error
-do_response (SERVER_ERROR,$@) if $@;
+if ($error) {
+	$session->rollbackTransaction();
+	do_response (SERVER_ERROR,$error) if $error;
+}
 
 # Commit transaction 
 $session->commitTransaction();
@@ -159,6 +166,7 @@ do_response (STATUS_OK,'OK');
 sub do_response {
 my ($code,$message) = @_;
 # If the message spans multiple lines, put the first line in the header, and the rest as text/plain
+
 	my @lines = split (/\n/,$message);
 	
 	my $line1 = shift @lines;
@@ -172,7 +180,6 @@ my ($code,$message) = @_;
 
 sub register_worker {
 	my($max_pids) = @_;
-
 	sysopen(PID_FH, $PID_FILE_PATH, O_RDWR | O_CREAT)
 		or die "Couldn't open $PID_FILE_PATH: $!";
 
@@ -184,16 +191,16 @@ sub register_worker {
 	my @pids = <PID_FH>;
 
 	# Ping each PID to see if its alive, and push the live ones on @live_pids
-	my @live_pids;
+	my @live_pids=();
 	foreach my $pid (@pids) {
 		chomp $pid;
-		if ($pid and $pid =~ /^\d+$/) {
-			push (@live_pids, $pid) if kill (0, $pid) > 0;
+		if ($pid and $pid =~ /^\d+$/ and kill (0, $pid) > 0) {
+			push (@live_pids, $pid);
 		}
 	}
 
 	# If there are less than the maximum live pids, push ourselves on
-	my $worker_registered;
+	my $worker_registered = undef;
 	if (scalar @live_pids < $max_pids ) {
 		push (@live_pids,$$);
 		$worker_registered = 1;
@@ -201,8 +208,7 @@ sub register_worker {
 
 	# Rewind and put the live PIDs back in the file
 	seek (PID_FH,0,0);
-	print PID_FH join ("\n",@live_pids);
-	print PID_FH "\n";
+	print PID_FH join ("\n",@live_pids)."\n";
 
 	# Truncate the file, unlock and close
 	truncate (PID_FH,tell (PID_FH));
@@ -227,18 +233,17 @@ sub unregister_worker {
 	# Ping each PID to see if its alive,
 	# and push the live ones on @live_pids
 	# Except this one.
-	my @live_pids;
+	my @live_pids=();
 	foreach my $pid (@pids) {
 		chomp $pid;
-		if ( $pid and $pid =~ /^\d+$/ and $pid != $$) {
-			push (@live_pids, $pid) if kill (0, $pid) > 0;
+		if ( $pid and $pid =~ /^\d+$/ and $pid != $$ and kill (0, $pid) > 0) {
+			push (@live_pids, $pid);
 		}
 	}
 
 	# Rewind and put the live PIDs back in the file
 	seek (PID_FH,0,0);
-	print PID_FH join ("\n",@live_pids);
-	print PID_FH "\n";
+	print PID_FH join ("\n",@live_pids)."\n";
 
 	# Truncate the file, unlock and close
 	truncate (PID_FH,tell (PID_FH));
