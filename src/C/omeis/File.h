@@ -37,6 +37,9 @@
 #ifndef File_h
 #define File_h
 
+#include "repository.h"
+#include "sha1DB.h"
+
 
 /* -------- */
 /* Typedefs */
@@ -52,8 +55,10 @@ typedef struct {
 	char path_ID[256];
 	char path_rep[256];
 	char path_info[256];
+	char path_DB[256];
 	int  fd_rep;
 	int  fd_info;
+	DB *DB;
 	size_t size_rep;
 	size_t size_info;
     size_t size_buf;
@@ -79,7 +84,7 @@ DeleteFile (FileRep *myFile);
 FileRep *
 NewFile (char *filename, size_t size);
 
-int
+OID
 FinishFile (FileRep *myFile);
 
 int

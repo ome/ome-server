@@ -29,28 +29,23 @@
 
 /*------------------------------------------------------------------------------
  *
- * Written by:	Chris Allan <callan@blackcat.ca>   01/2004
+ * Written by:	Ilya G. Goldberg <igg@nih.gov>   3/2004
  * 
  *------------------------------------------------------------------------------
  */
 
-#ifndef digest_h
-#define digest_h
+#ifndef sha1DB_h
+#define sha1DB_h
 
-#define OME_DIGEST "SHA1"
-#define OME_DIGEST_LENGTH 20
-#define MD_BUFSIZE 16384
 
-int
-get_md_from_file (char * filename, unsigned char * md_value);
+#include <db.h>
+#include "digest.h"
+#include "repository.h"
 
-int
-get_md_from_fd (int fd, unsigned char * md_value);
+DB *sha1DB_open (const char *file);
+OID sha1DB_get (DB *myDB, unsigned char *md_value);
+int sha1DB_put (DB *myDB, unsigned char *md_value, OID theOID);
+int sha1DB_close (DB *myDB);
 
-int
-get_md_from_buffer (void * buf, size_t buf_len, unsigned char * md_value);
 
-void 
-print_md (unsigned char *md_value);
-
-#endif /* digest_h */
+#endif /* sha1DB_h */

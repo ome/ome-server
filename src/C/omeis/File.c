@@ -47,7 +47,6 @@
 #include <limits.h>
 
 
-#include "repository.h"
 #include "File.h"
 
 void freeFileRep (FileRep *myFile)
@@ -71,6 +70,7 @@ FileRep *newFileRep (OID ID)
 FileRep *myFile;
 char *root="Files/";
 char *filesIDfile="Files/lastFileID";
+char *sha1DBfile="Files/sha1DB.idx";
 
 	if (! (myFile =  (FileRep *)malloc (sizeof (FileRep)))  )
 		return (NULL);
@@ -79,6 +79,7 @@ char *filesIDfile="Files/lastFileID";
 	strcpy (myFile->path_rep,root);
 	strcpy (myFile->path_info,root);
 	strcpy (myFile->path_ID,filesIDfile);
+	strcpy (myFile->path_DB,sha1DBfile);
 
 
 	/* file descriptors reset to -1 */
@@ -254,32 +255,47 @@ int GetFileInfo (FileRep *myFile) {
 /*
   Call this only to balance a call to NewFile()
 */
-int FinishFile (FileRep *myFile) {
-
-	if ( (myFile->fd_info = open (myFile->path_info, O_RDWR, 0600)) < 0) {
-		DeleteFile (myFile);
-		return (-1);
-	}
+OID FinishFile (FileRep *myFile) {
+OID existOID;
 
 	/* Get SHA1 */
 	if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, myFile->file_info.sha1) < 0 ) {
 		DeleteFile (myFile);
-		return (-2);
+		return (-1);
+	}
+	
+	/* Open the DB file if necessary */
+	if (! myFile->DB)
+		if (! (myFile->DB = sha1DB_open (myFile->path_DB)) ) {
+			DeleteFile (myFile);
+			return (-2);
+		}
+
+	/* Check if SHA1 exists */
+	if ( (existOID = sha1DB_get (myFile->DB, myFile->file_info.sha1)) ) {
+		sha1DB_close (myFile->DB);
+		myFile->DB = NULL;
+		DeleteFile (myFile);
+		return (existOID);
 	}
 
-	if ( write (myFile->fd_info,(void *)&(myFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
+	if ( (myFile->fd_info = open (myFile->path_info, O_RDWR, 0600)) < 0) {
 		DeleteFile (myFile);
 		return (-3);
 	}
 
-	close (myFile->fd_info);
+	if ( write (myFile->fd_info,(void *)&(myFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
+		DeleteFile (myFile);
+		return (-4);
+	}
 
+	close (myFile->fd_info);
 	myFile->fd_info = -1;
 
 	if (myFile->is_mmapped) {
 		if (msync (myFile->file_buf , myFile->size_rep , MS_SYNC) != 0) {
 			DeleteFile (myFile);
-			return (-4);
+			return (-5);
 		}
 		munmap (myFile->file_buf, myFile->size_rep);
 		myFile->file_buf = NULL;
@@ -292,11 +308,24 @@ int FinishFile (FileRep *myFile) {
 		myFile->fd_rep = -1;
 	}
 
+	/* put the SHA1 in the DB */
+	if ( sha1DB_put (myFile->DB, myFile->file_info.sha1, myFile->ID) ) {
+		sha1DB_close (myFile->DB);
+		myFile->DB = NULL;
+		DeleteFile (myFile);
+		return (-6);
+	}
+
+	/* Close the DB (and release the exclusive lock) */
+	sha1DB_close (myFile->DB);
+	myFile->DB = NULL;
+
+
 	chmod (myFile->path_info,0400);
 	chmod (myFile->path_rep,0400);
 
 	
-	return (0);
+	return (myFile->ID);
 }
 
 
@@ -329,7 +358,7 @@ FILE *infile;
 	        }
     }
 
-	FinishFile (myFile);
+	ID = FinishFile (myFile);
 	freeFileRep (myFile);
 	closeInputFile (infile,isLocalFile);
 	return (ID);

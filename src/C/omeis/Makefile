@@ -18,7 +18,7 @@ IM_LIBS = -Lzoom/lib/ -lzoom -lpic -ltiff -ljpeg -lpng
 CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wundef -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_LIB) $(IM_LIBS)
 INCS   = $(FINK_INCLUDE) 
-OBJS   = digest.o method.o composite.o cgi.o repository.o Pixels.o File.o \
+OBJS   = digest.o method.o composite.o cgi.o repository.o Pixels.o File.o sha1DB.o \
 		xmlBinaryResolution.o ../base64.o ../b64z_lib.o
 
 ifndef OME_ROOT
@@ -77,6 +77,9 @@ Pixels.o: Pixels.c Pixels.h
 
 File.o: File.c File.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c File.c
+
+sha1DB.o: sha1DB.c sha1DB.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) -c sha1DB.c
 
 xmlBinaryResolution.o: xmlBinaryResolution.c xmlBinaryResolution.h Pixels.h digest.h ../base64.h ../b64z_lib.h
 	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(INCS) $(XML2_CFLAGS)
