@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -72,16 +72,13 @@
 				Count="!"/>
 		  </Declaration>
 		
-		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input><PixelsSlice FormalInput="Pixels Plane Slice" ID="_input"/></Input>
-			</Inputs>
-			<Outputs>
-			  <Output Name="GradientPixels"/>
-			  <Output Name="LogicalChannel"/>
-	<!--		  <Output Name="ref Gradient.Magnitude" and Name="PixelChannel"/>
-			  <Output Name="ref Gradient.Direction" and Name="PixelChannel"/> -->
-			</Outputs>
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><PixelsArray FormalOutput="Gradient"/></Output>
+			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 		
