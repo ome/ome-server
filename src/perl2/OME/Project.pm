@@ -80,12 +80,14 @@ my $datasetID = shift;
 sub newDataset {
 my $self = shift;
 my $datasetName = shift;
+my $datasetDescription = shift if @_ > 0;
 
 	my $dataset = OME::Dataset->create ( {
-		name     => $datasetName,
-		locked   => 'false',
-		owner_id => $self->owner()->ID(),
-		group_id => $self->owner()->group()->ID()
+		name        => $datasetName,
+		description => $datasetDescription,
+		locked      => 'false',
+		owner_id    => $self->owner()->ID(),
+		group_id    => $self->owner()->group()->ID()
 	} )
 		or die ref($self)."->newDataset:  Could not create a new dataset.\n";
 	
