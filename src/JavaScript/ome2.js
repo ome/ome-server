@@ -141,7 +141,7 @@ function SEdocPopup( SE_id ) {
 function selectOne( type, return_to ) {
 	window.open(
 		SearchPage + '&Locked_Type=' + type + '&select=one&return_to=' + return_to,
-		'_select_'+type+'_for_'+return_to,
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
 }
@@ -151,7 +151,7 @@ function selectOne( type, return_to ) {
 function selectMany( type, return_to ) {
 	window.open(
 		SearchPage + '&Locked_Type=' + type + '&select=many&return_to=' + return_to,
-		'_select_'+type+'_for_'+return_to,
+		'_blank',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
 	);
 }
