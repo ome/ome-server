@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.st.OriginalFileDTO
+ * org.openmicroscopy.ds.st.DatasetAnnotationDTO
  *
  *------------------------------------------------------------------------------
  *
@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:22 2004
+ * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,50 +38,40 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Repository;
+import org.openmicroscopy.ds.st.Experimenter;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
 
-public class OriginalFileDTO
+public class DatasetAnnotationDTO
     extends AttributeDTO
-    implements OriginalFile
+    implements DatasetAnnotation
 {
-    public OriginalFileDTO() { super(); }
-    public OriginalFileDTO(Map elements) { super(elements); }
+    public DatasetAnnotationDTO() { super(); }
+    public DatasetAnnotationDTO(Map elements) { super(elements); }
 
-    public String getDTOTypeName() { return "@OriginalFile"; }
-    public Class getDTOType() { return OriginalFile.class; }
+    public String getDTOTypeName() { return "@DatasetAnnotation"; }
+    public Class getDTOType() { return DatasetAnnotation.class; }
 
-    public String getFormat()
-    { return getStringElement("Format"); }
-    public void setFormat(String value)
-    { setElement("Format",value); }
+    public Long getTimestamp()
+    { return getLongElement("Timestamp"); }
+    public void setTimestamp(Long value)
+    { setElement("Timestamp",value); }
 
-    public String getSHA1()
-    { return getStringElement("SHA1"); }
-    public void setSHA1(String value)
-    { setElement("SHA1",value); }
+    public String getContent()
+    { return getStringElement("Content"); }
+    public void setContent(String value)
+    { setElement("Content",value); }
 
-    public Long getFileID()
-    { return getLongElement("FileID"); }
-    public void setFileID(Long value)
-    { setElement("FileID",value); }
-
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("Experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
+        parseChildElement("Experimenter",ExperimenterDTO.class);
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.st.OriginalFileDTO
+ * org.openmicroscopy.ds.st.ClassificationDTO
  *
  *------------------------------------------------------------------------------
  *
@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:22 2004
+ * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,50 +38,35 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Repository;
+import org.openmicroscopy.ds.st.Category;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
 
-public class OriginalFileDTO
+public class ClassificationDTO
     extends AttributeDTO
-    implements OriginalFile
+    implements Classification
 {
-    public OriginalFileDTO() { super(); }
-    public OriginalFileDTO(Map elements) { super(elements); }
+    public ClassificationDTO() { super(); }
+    public ClassificationDTO(Map elements) { super(elements); }
 
-    public String getDTOTypeName() { return "@OriginalFile"; }
-    public Class getDTOType() { return OriginalFile.class; }
+    public String getDTOTypeName() { return "@Classification"; }
+    public Class getDTOType() { return Classification.class; }
 
-    public String getFormat()
-    { return getStringElement("Format"); }
-    public void setFormat(String value)
-    { setElement("Format",value); }
+    public Float getConfidence()
+    { return getFloatElement("Confidence"); }
+    public void setConfidence(Float value)
+    { setElement("Confidence",value); }
 
-    public String getSHA1()
-    { return getStringElement("SHA1"); }
-    public void setSHA1(String value)
-    { setElement("SHA1",value); }
-
-    public Long getFileID()
-    { return getLongElement("FileID"); }
-    public void setFileID(Long value)
-    { setElement("FileID",value); }
-
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
+    public Category getCategory()
+    { return (Category) getObjectElement("Category"); }
+    public void setCategory(Category value)
+    { setElement("Category",value); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
+        parseChildElement("Category",CategoryDTO.class);
     }
 
 }

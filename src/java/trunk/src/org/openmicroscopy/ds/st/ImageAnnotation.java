@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.st.OriginalFileDTO
+ * org.openmicroscopy.ds.st.ImageAnnotation
  *
  *------------------------------------------------------------------------------
  *
@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:22 2004
+ * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,50 +38,36 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Repository;
-import org.openmicroscopy.ds.dto.AttributeDTO;
+import org.openmicroscopy.ds.st.Experimenter;
+import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
 
-public class OriginalFileDTO
-    extends AttributeDTO
-    implements OriginalFile
+public interface ImageAnnotation
+    extends DataInterface, Attribute
 {
-    public OriginalFileDTO() { super(); }
-    public OriginalFileDTO(Map elements) { super(elements); }
+    /** Criteria field name: <code>TheZ</code> */
+    public Integer getTheZ();
+    public void setTheZ(Integer value);
 
-    public String getDTOTypeName() { return "@OriginalFile"; }
-    public Class getDTOType() { return OriginalFile.class; }
+    /** Criteria field name: <code>TheT</code> */
+    public Integer getTheT();
+    public void setTheT(Integer value);
 
-    public String getFormat()
-    { return getStringElement("Format"); }
-    public void setFormat(String value)
-    { setElement("Format",value); }
+    /** Criteria field name: <code>TheC</code> */
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
-    public String getSHA1()
-    { return getStringElement("SHA1"); }
-    public void setSHA1(String value)
-    { setElement("SHA1",value); }
+    /** Criteria field name: <code>Timestamp</code> */
+    public Long getTimestamp();
+    public void setTimestamp(Long value);
 
-    public Long getFileID()
-    { return getLongElement("FileID"); }
-    public void setFileID(Long value)
-    { setElement("FileID",value); }
+    /** Criteria field name: <code>Content</code> */
+    public String getContent();
+    public void setContent(String value);
 
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
-
-    public void setMap(Map elements)
-    {
-        super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
-    }
+    /** Criteria field name: <code>Experimenter</code> */
+    public Experimenter getExperimenter();
+    public void setExperimenter(Experimenter value);
 
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.ds.st.OriginalFileDTO
+ * org.openmicroscopy.ds.st.CategoryDTO
  *
  *------------------------------------------------------------------------------
  *
@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:22 2004
+ * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -38,50 +38,47 @@
 package org.openmicroscopy.ds.st;
 
 import org.openmicroscopy.ds.dto.Attribute;
-import org.openmicroscopy.ds.st.Repository;
+import org.openmicroscopy.ds.st.CategoryGroup;
+import org.openmicroscopy.ds.st.Classification;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
 
-public class OriginalFileDTO
+public class CategoryDTO
     extends AttributeDTO
-    implements OriginalFile
+    implements Category
 {
-    public OriginalFileDTO() { super(); }
-    public OriginalFileDTO(Map elements) { super(elements); }
+    public CategoryDTO() { super(); }
+    public CategoryDTO(Map elements) { super(elements); }
 
-    public String getDTOTypeName() { return "@OriginalFile"; }
-    public Class getDTOType() { return OriginalFile.class; }
+    public String getDTOTypeName() { return "@Category"; }
+    public Class getDTOType() { return Category.class; }
 
-    public String getFormat()
-    { return getStringElement("Format"); }
-    public void setFormat(String value)
-    { setElement("Format",value); }
+    public String getDescription()
+    { return getStringElement("Description"); }
+    public void setDescription(String value)
+    { setElement("Description",value); }
 
-    public String getSHA1()
-    { return getStringElement("SHA1"); }
-    public void setSHA1(String value)
-    { setElement("SHA1",value); }
+    public CategoryGroup getCategoryGroup()
+    { return (CategoryGroup) getObjectElement("CategoryGroup"); }
+    public void setCategoryGroup(CategoryGroup value)
+    { setElement("CategoryGroup",value); }
 
-    public Long getFileID()
-    { return getLongElement("FileID"); }
-    public void setFileID(Long value)
-    { setElement("FileID",value); }
+    public String getName()
+    { return getStringElement("Name"); }
+    public void setName(String value)
+    { setElement("Name",value); }
 
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
+    public List getClassifications()
+    { return (List) getObjectElement("Classifications"); }
+    public int countClassifications()
+    { return countListElement("Classifications"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Repository",RepositoryDTO.class);
+        parseChildElement("CategoryGroup",CategoryGroupDTO.class);
+        parseListElement("Classifications",ClassificationDTO.class);
     }
 
 }
