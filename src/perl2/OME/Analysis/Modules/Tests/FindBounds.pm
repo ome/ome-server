@@ -90,9 +90,9 @@ sub calculateFeature {
                             $input_bounds->Width(),$input_bounds->Height());
     } else {
         my $image = $self->getCurrentImage();
-        my $dims = $image->Dimensions();
+        my $pixels = $image->DefaultPixels();
 
-        $self->createBounds(0,0,$dims->size_x(),$dims->size_y());
+        $self->createBounds(0,0,$pixels->SizeX(),$pixels->SizeY());
     }
 
 }
