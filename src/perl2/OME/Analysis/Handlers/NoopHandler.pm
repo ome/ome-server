@@ -84,10 +84,11 @@ use base qw(OME::Analysis::Handler);
 # needs to execute.
 
 sub new {
-    my ($proto,$location,$session,$module,$node) = @_;
+    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,$module,$node);
+    my $self = $class->SUPER::new($location,$session,
+                                  $chain_execution,$module,$node);
 
     bless $self,$class;
     return $self;
