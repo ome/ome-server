@@ -761,8 +761,9 @@ int setConvertFile (Pix *pPix, char *inPath, int bp, int fileBigEndian)
 
 void byteSwap2 (char *theBuf, size_t length)
 {
+/*
+use glibc hardware swap - doesn't work in new glibc.
 #ifdef __linux__
-    /* Use glibc hardware-accelerated swap */
     unsigned short *uptr = (unsigned short *)theBuf;
     int i;
     
@@ -771,6 +772,7 @@ void byteSwap2 (char *theBuf, size_t length)
         *uptr = bswap_16(*uptr);
     }
 #else
+*/
 	char holder;
 	char *maxBuf = theBuf+(length*2);
 	
@@ -780,7 +782,9 @@ void byteSwap2 (char *theBuf, size_t length)
 		*(theBuf-1) = *theBuf;
 		*theBuf++ = holder;
 	}
+/*
 #endif
+*/
 }
 
 
