@@ -64,6 +64,7 @@ our $VERSION = $OME::VERSION;
 use OME::Matlab;
 use OME::Tasks::PixelsManager;
 use OME::Analysis::Handler;
+use OME::Session;
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
 
@@ -129,8 +130,6 @@ sub startAnalysis {
 	my $parser = XML::LibXML->new();
 	my $tree   = $parser->parse_string( $self->getModule()->execution_instructions() );
 	my $root   = $tree->getDocumentElement();
-	# This Allows xpath queries on the MLI NS. i.e. $root->findnodes( "MLI:Inputs/*" )
-	$root->setAttribute( "xmlns:MLI", $supported_NS );
 	
 	$self->{ execution_instructions } = $root;
 }
@@ -573,14 +572,9 @@ sub MatlabVector_to_Attrs {
 		my $formal_output = $self->getFormalOutput( $formal_output_name )
 			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 	
-# Check for data collision. 
-# FIXME: This should go in the as yet unwritten "validateExecutionInstructions()"
-die "Data collision! Another Vector Element has already written to this $output_location. Error processing Vector element ".$element->toString()." of output ".$xmlInstr->toString()
-	if exists $vectorData{ $formal_output_name }->{ $SE_name };
-	
 		# Make a data hash
 		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' )
-			and die "UseTemplate is not supported ATM. ask Josiah <siah\@nih.gov> to fix this.";
+			and die "UseTemplate is not supported ATM for ".$xmlInstr->tagName().". ask Josiah <siah\@nih.gov> to fix this.";
 #		my $data_hash;
 #		if( $template_id ) {
 #			my $ST_name;
@@ -627,16 +621,8 @@ sub MatlabScalar_to_Attr {
 	
 	# gather formal output & SE
 	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
-	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
-		or die "output_location '$output_location' could not be parsed.";
-	my $formal_output = $self->getFormalOutput( $formal_output_name )
-		or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
-
-# FIXME: This sort of verification should happen at module import. A
-# function called "validateExecutionInstructions" should be written 
-# that accepts a module and checks over its execution instructions.
-die "Semantic element ('$SEforScalar') specified in ".$xmlInstr->toString()." is not defined in the semantic type ".$formal_output->semantic_type->name
-	unless $factory->findObject( 'OME::SemanticType::Element', semantic_type => $formal_output->semantic_type, name => $SEforScalar );
+	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location );
+	my $formal_output = $self->getFormalOutput( $formal_output_name );
 
 	# Retrieve value from matlab
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
@@ -917,6 +903,63 @@ sub __checkExecutionGranularity {
 	# FIXME: It's illegal to have execution granularity finer than the coursest output granularity. Check for this.
 	
 	return $granularity;
+}
+
+
+=head2 validateAndProcessExecutionInstructions
+	
+overrides superclass method to check
+
+=cut
+
+sub validateAndProcessExecutionInstructions {
+    my ($self, $module, $executionInstructionsXML) = @_; 
+    
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+    
+	# This Allows xpath queries on the MLI NS. i.e. $root->findnodes( "MLI:Inputs/*" )
+	$executionInstructionsXML->setAttribute( "xmlns:MLI", $supported_NS );
+
+	#	Output Checking:
+	# Check <Scalar> OutputLocation attributes
+	my @scalar_outputs = $executionInstructionsXML->findnodes( 
+		"MLI:FunctionOutputs/MLI:Output/MLI:Scalar"
+	);
+	foreach my $scalar ( @scalar_outputs ) {
+		my $output_location = $scalar->getAttribute( 'OutputLocation' );
+		my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
+			or die "output_location '$output_location' could not be parsed.";
+		my $formal_output = $factory->
+			findObject( "OME::Module::FormalOutput",
+				module => $module,
+				name   => $formal_output_name
+			)
+			or confess "Could not find formal output '$formal_output_name' (from output location '$output_location').";
+		confess "Semantic element ('$SEforScalar') specified in ".$scalar->toString()." is not defined in the semantic type ".$formal_output->semantic_type->name.". Error importing Module ".$module->name()
+			unless $factory->
+				findObject( 'OME::SemanticType::Element', 
+					semantic_type => $formal_output->semantic_type, 
+					name          => $SEforScalar 
+				);
+	}
+
+	#	Output Checking:
+	# Make sure two Vector elements don't write the the same place
+	# Check for data collision. 
+	my @vectors = $executionInstructionsXML->findnodes( 'MLI:VectorDecoder' );
+	foreach my $vector ( @vectors ) {
+		my @elements = $vector->findnodes( 'MLI:Element' );
+		my %outputLocations;
+		foreach my $element( @elements ) {
+			my $output_location = $element->getAttribute( 'OutputLocation' );
+			confess "Write collision! Another Vector Element references this $output_location. Error processing ".$vector->toString()." in Module ".$module->name()
+				if exists $outputLocations{ $output_location };
+			$outputLocations{ $output_location } = undef;
+		}
+	}		
+
+    return $executionInstructionsXML;
 }
 
 =pod

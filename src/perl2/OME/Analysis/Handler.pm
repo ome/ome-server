@@ -476,6 +476,29 @@ sub finishAnalysis {
     my ($self) = @_;
 }
 
+=head2 validateAndProcessExecutionInstructions
+	
+	# get $handler_class
+	eval( 'use $handler_class' );
+	die "Couldn't load handler '$handler_class' for module ".$module->name."\n$@"
+		if $@;
+	my $processed_execution_instructions = $handler_class->
+		validateAndProcessExecutionInstructions( $module, $executionInstructionsXML );
+
+Virtual function to be overriden by specific handler classes that use
+<ExecutionInstructions>. Should confess the error if one is found in
+$executionInstructionsXML (a DOM tree of the module's execution
+instructions).
+
+Return undef if no changes were made to the execution instructions.
+
+=cut
+
+sub validateAndProcessExecutionInstructions {
+    my ($self, $module, $executionInstructionsXML) = @_;
+    return undef;
+}
+
 =head1 AUTHOR
 
 Douglas Creager (dcreager@alum.mit.edu)

@@ -426,134 +426,19 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	###########################################################################
 	
 	
-	###########################################################################
-	#
-	# process executionInstructions (CLI handler specific)
-	#
+	# validate & process executionInstructions
 	logdbg "debug", ref ($self) . "->processDOM processing ExecutionInstructions";
-	my @executionInstructions = 
+	my @executionInstructionList = 
 		$moduleXML->getElementsByLocalName( "ExecutionInstructions" );
-	
-	# XML schema & DBdesign currently allow at most one execution point per module
-	if(scalar(@executionInstructions) == 1) {
-		#######################################################################
-		#
-		# CLI Handler specific execution Instructions
-		#
-		my $executionInstructionXML = $executionInstructions[0];
-
-		if ($module_type eq 'OME::Analysis::CLIHandler') {
-
-			#######################################################################
-			#
-			# verify FormalInputNames. also add ID attributes.
-			#
-			my @inputTypes = ( "Input", "UseValue", "End", "Start" );
-			my @inputs;
-			map {
-				push(@inputs, $executionInstructionXML->getElementsByLocalName( $_ ));
-			} @inputTypes;
-	
-			foreach my $input (@inputs) {
-				my ($formalInputName, $path) = split( /\./, $input->getAttribute( "Location" ), 2 );
-
-				my $formalInput    = $formalInputs{ $formalInputName }
-				  or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
-				my $semanticType   = $formalInput->semantic_type();
-
-				my $sen = $path;
-				$sen =~ s/^(.*?)\..*$/$1/; # check the SE belonging to this ST, not referenced attributes
-				# i guess ideally, you would trace through the references and do a full sweep.
-				my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
-				  or die "Could not find semantic element '$sen' referenced by ".$input->toString().".\n";
-	
-				# Create attributes FormalInputID and SemanticElementID
-				# also create FormalInputName and SemanticElementName to work with CLIHandler code
-				# maybe should change CLIHandler code sometime?
-				$input->setAttribute ( "FormalInputName", $formalInputName );
-				$input->setAttribute ( "SemanticElementName", $path );
-				$input->setAttribute ( "FormalInputID", $formalInput->id() );
-				$input->setAttribute ( "SemanticElementID", $semanticElement->id() );
-	
-			}
-			#
-			#######################################################################
-		
-			#######################################################################
-			#
-			# verify outputs. also add ID attributes.
-			#
-			my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
-			my @outputs;
-			map {
-				push(@outputs, $executionInstructionXML->getElementsByLocalName( $_ ));
-			} @outputTypes;
-	
-			foreach my $output (@outputs) {
-				my ($formalOutputName, $sen) = split( /\./, $output->getAttribute( "Location" ) );
-	
-				my $formalOutput    = $formalOutputs{ $formalOutputName }
-				  or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
-				my $semanticType   = $formalOutput->semantic_type();
-				my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
-				  or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
-	
-				# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
-				$output->setAttribute ( "FormalOutputName", $formalOutputName );
-				$output->setAttribute ( "SemanticElementName", $sen );
-				$output->setAttribute ( "FormalOutputID", $formalOutput->id() );
-				$output->setAttribute ( "SemanticElementID", $semanticElement->id() );
-	
-			}
-			#
-			#######################################################################
-	
-			#######################################################################
-			#
-			# normalize XYPlaneID's
-			#
-			my $currentID = 0;
-			my %idMap;
-			# first run: normalize XYPlaneID's in XYPlane's
-			foreach my $plane ($executionInstructionXML->getElementsByLocalName( "XYPlane" ) ) {
-				$currentID++;
-				die "Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
-				  if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
-				$idMap{ $plane->getAttribute('XYPlaneID') } = $currentID
-				  if defined $plane->getAttribute('XYPlaneID');
-				$plane->setAttribute('XYPlaneID', $currentID);
-			}
-			# second run: clean up references to XYPlanes
-			foreach my $match ( $executionInstructionXML->getElementsByLocalName( "Match" ) ) {
-				die "'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID').". Did you make a typo?"
-					unless exists $idMap{ $match->getAttribute('XYPlaneID') };
-				$match->setAttribute('XYPlaneID',
-					 $idMap{ $match->getAttribute('XYPlaneID') } );
-			}
-			#
-			#######################################################################
-			
-			#######################################################################
-			#
-			# check regular expressions for validity
-			#
-			my @pats =  $executionInstructionXML->getElementsByLocalName( "pat" );
-			foreach (@pats) {
-				my $pat = $_->getFirstChild->getData();
-				eval { "" =~ /$pat/; };
-				die "Invalid regular expression pattern: $pat in module ".$newProgram->name()
-				  if $@;
-			}
-			#
-			#######################################################################
-
-            }
-
-            $newProgram->execution_instructions( $executionInstructionXML->toString() );
+	if(scalar(@executionInstructionList) == 1) {
+		my $executionInstructionsXML = $executionInstructionList[0];
+		eval( "use $module_type" );
+		die "module type $module_type cannot be loaded.\n$@" if $@;
+		my $modifiedEIs = $module_type->
+			validateAndProcessExecutionInstructions( $newProgram, $executionInstructionsXML );
+        $newProgram->execution_instructions( $modifiedEIs->toString() )
+        	if $modifiedEIs;
 	}
-	#
-	#
-	###########################################################################
 
 
 
