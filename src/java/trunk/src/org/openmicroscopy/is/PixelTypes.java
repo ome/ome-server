@@ -75,7 +75,6 @@ public class PixelTypes
         else
             return "invalid";
 
-        /*TEMP*/System.out.println("CTR: Pixel type is " + PIXEL_TYPES[bbpIndex][isFloat?1:0][isSigned?1:0]);
         return PIXEL_TYPES[bbpIndex][isFloat? 1: 0][isSigned? 1: 0];
     }
 
