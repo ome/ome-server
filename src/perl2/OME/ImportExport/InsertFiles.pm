@@ -59,7 +59,7 @@ into an OME xml document and writes the document out to file.
 
 use strict;
 use XML::LibXML;
-use OME::LSID;
+use OME::Tasks::LSIDManager;
 
 # package constants
 my $BinNS = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd";
@@ -126,7 +126,7 @@ sub exportFile {
 	my $debug         = $self->{debug};
 	my $configuration = $session->Configuration();
 	my $parser        = $self->{_parser};
-	my $LSIDresolver  = OME::LSID->new( session => $session );
+	my $LSIDresolver  = OME::Tasks::LSIDManager->new( session => $session );
 	
 
 	my $executeInsertBinData = undef; # a flag to stuff the Pixels in the XML file
