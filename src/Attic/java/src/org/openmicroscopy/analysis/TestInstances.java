@@ -60,75 +60,75 @@ public class TestInstances
 
     // XYZ_IMAGE_INFO attribute types
 
-    public static SimpleAttributeType  stackMin =
-    new SimpleAttributeType(1,"Stack minimum",
+    public static SimpleSemanticType  stackMin =
+    new SimpleSemanticType(1,"Stack minimum",
                             "Minimum pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackMin_theW =
-    stackMin.addColumn(1,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackMin_theT =
-    stackMin.addColumn(2,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackMin_min =
-    stackMin.addColumn(3,"Minimum","Minimum",xyzImageInfo_min);
+    public static SimpleSemanticType.Element  stackMin_theW =
+    stackMin.addElement(1,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackMin_theT =
+    stackMin.addElement(2,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackMin_min =
+    stackMin.addElement(3,"Minimum","Minimum",xyzImageInfo_min);
 
-    public static SimpleAttributeType  stackMax =
-    new SimpleAttributeType(2,"Stack maximum",
+    public static SimpleSemanticType  stackMax =
+    new SimpleSemanticType(2,"Stack maximum",
                             "Maximum pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackMax_theW =
-    stackMax.addColumn(4,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackMax_theT =
-    stackMax.addColumn(5,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackMax_max =
-    stackMax.addColumn(6,"Maximum","Maximum",xyzImageInfo_max);
+    public static SimpleSemanticType.Element  stackMax_theW =
+    stackMax.addElement(4,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackMax_theT =
+    stackMax.addElement(5,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackMax_max =
+    stackMax.addElement(6,"Maximum","Maximum",xyzImageInfo_max);
 
-    public static SimpleAttributeType  stackMean =
-    new SimpleAttributeType(3,"Stack mean",
+    public static SimpleSemanticType  stackMean =
+    new SimpleSemanticType(3,"Stack mean",
                             "Mean pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackMean_theW =
-    stackMean.addColumn(7,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackMean_theT =
-    stackMean.addColumn(8,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackMean_mean =
-    stackMean.addColumn(9,"Mean","Mean",xyzImageInfo_mean);
+    public static SimpleSemanticType.Element  stackMean_theW =
+    stackMean.addElement(7,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackMean_theT =
+    stackMean.addElement(8,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackMean_mean =
+    stackMean.addElement(9,"Mean","Mean",xyzImageInfo_mean);
 
-    public static SimpleAttributeType  stackGeomean =
-    new SimpleAttributeType(4,"Stack geomean",
+    public static SimpleSemanticType  stackGeomean =
+    new SimpleSemanticType(4,"Stack geomean",
                             "Geomean pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackGeomean_theW =
-    stackGeomean.addColumn(10,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackGeomean_theT =
-    stackGeomean.addColumn(11,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackGeomean_geomean =
-    stackGeomean.addColumn(12,"Geomean","Geomean",xyzImageInfo_geomean);
+    public static SimpleSemanticType.Element  stackGeomean_theW =
+    stackGeomean.addElement(10,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackGeomean_theT =
+    stackGeomean.addElement(11,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackGeomean_geomean =
+    stackGeomean.addElement(12,"Geomean","Geomean",xyzImageInfo_geomean);
 
-    public static SimpleAttributeType  stackSigma =
-    new SimpleAttributeType(5,"Stack sigma",
+    public static SimpleSemanticType  stackSigma =
+    new SimpleSemanticType(5,"Stack sigma",
                             "Sigma pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackSigma_theW =
-    stackSigma.addColumn(13,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackSigma_theT =
-    stackSigma.addColumn(14,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackSigma_sigma =
-    stackSigma.addColumn(15,"Sigma","Sigma",xyzImageInfo_sigma);
+    public static SimpleSemanticType.Element  stackSigma_theW =
+    stackSigma.addElement(13,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackSigma_theT =
+    stackSigma.addElement(14,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackSigma_sigma =
+    stackSigma.addElement(15,"Sigma","Sigma",xyzImageInfo_sigma);
 
-    public static SimpleAttributeType  stackCentroid =
-    new SimpleAttributeType(6,"Stack centroid",
+    public static SimpleSemanticType  stackCentroid =
+    new SimpleSemanticType(6,"Stack centroid",
                             "Centroid pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  stackCentroid_theW =
-    stackCentroid.addColumn(16,"Wavepoint","Wavepoint",xyzImageInfo_theW);
-    public static SimpleAttributeType.Column  stackCentroid_theT =
-    stackCentroid.addColumn(17,"Timepoint","Timepoint",xyzImageInfo_theT);
-    public static SimpleAttributeType.Column  stackCentroid_centroidX =
-    stackCentroid.addColumn(18,"Centroid_X","Centroid X",xyzImageInfo_centroidX);
-    public static SimpleAttributeType.Column  stackCentroid_centroidY =
-    stackCentroid.addColumn(19,"Centroid_Y","Centroid Y",xyzImageInfo_centroidY);
-    public static SimpleAttributeType.Column  stackCentroid_centroidZ =
-    stackCentroid.addColumn(20,"Centroid_Z","Centroid Z",xyzImageInfo_centroidZ);
+    public static SimpleSemanticType.Element  stackCentroid_theW =
+    stackCentroid.addElement(16,"Wavepoint","Wavepoint",xyzImageInfo_theW);
+    public static SimpleSemanticType.Element  stackCentroid_theT =
+    stackCentroid.addElement(17,"Timepoint","Timepoint",xyzImageInfo_theT);
+    public static SimpleSemanticType.Element  stackCentroid_centroidX =
+    stackCentroid.addElement(18,"Centroid_X","Centroid X",xyzImageInfo_centroidX);
+    public static SimpleSemanticType.Element  stackCentroid_centroidY =
+    stackCentroid.addElement(19,"Centroid_Y","Centroid Y",xyzImageInfo_centroidY);
+    public static SimpleSemanticType.Element  stackCentroid_centroidZ =
+    stackCentroid.addElement(20,"Centroid_Z","Centroid Z",xyzImageInfo_centroidZ);
 
     // XY_IMAGE_INFO data table
 
@@ -160,85 +160,85 @@ public class TestInstances
 
     // XY_IMAGE_INFO attribute types
 
-    public static SimpleAttributeType  planeMin =
-    new SimpleAttributeType(7,"Plane minimum",
+    public static SimpleSemanticType  planeMin =
+    new SimpleSemanticType(7,"Plane minimum",
                             "Minimum pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeMin_theW =
-    planeMin.addColumn(21,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeMin_theT =
-    planeMin.addColumn(22,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMin_theZ =
-    planeMin.addColumn(23,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMin_min =
-    planeMin.addColumn(24,"Minimum","Minimum",xyImageInfo_min);
+    public static SimpleSemanticType.Element  planeMin_theW =
+    planeMin.addElement(21,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeMin_theT =
+    planeMin.addElement(22,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMin_theZ =
+    planeMin.addElement(23,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMin_min =
+    planeMin.addElement(24,"Minimum","Minimum",xyImageInfo_min);
 
-    public static SimpleAttributeType  planeMax =
-    new SimpleAttributeType(8,"Plane maximum",
+    public static SimpleSemanticType  planeMax =
+    new SimpleSemanticType(8,"Plane maximum",
                             "Maximum pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeMax_theW =
-    planeMax.addColumn(25,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeMax_theT =
-    planeMax.addColumn(26,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMax_theZ =
-    planeMax.addColumn(27,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMax_max =
-    planeMax.addColumn(28,"Maximum","Maximum",xyImageInfo_max);
+    public static SimpleSemanticType.Element  planeMax_theW =
+    planeMax.addElement(25,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeMax_theT =
+    planeMax.addElement(26,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMax_theZ =
+    planeMax.addElement(27,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMax_max =
+    planeMax.addElement(28,"Maximum","Maximum",xyImageInfo_max);
 
-    public static SimpleAttributeType  planeMean =
-    new SimpleAttributeType(9,"Plane mean",
+    public static SimpleSemanticType  planeMean =
+    new SimpleSemanticType(9,"Plane mean",
                             "Mean pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeMean_theW =
-    planeMean.addColumn(29,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeMean_theT =
-    planeMean.addColumn(30,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMean_theZ =
-    planeMean.addColumn(31,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeMean_mean =
-    planeMean.addColumn(32,"Mean","Mean",xyImageInfo_mean);
+    public static SimpleSemanticType.Element  planeMean_theW =
+    planeMean.addElement(29,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeMean_theT =
+    planeMean.addElement(30,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMean_theZ =
+    planeMean.addElement(31,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeMean_mean =
+    planeMean.addElement(32,"Mean","Mean",xyImageInfo_mean);
 
-    public static SimpleAttributeType  planeGeomean =
-    new SimpleAttributeType(10,"Plane geomean",
+    public static SimpleSemanticType  planeGeomean =
+    new SimpleSemanticType(10,"Plane geomean",
                             "Geomean pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeGeomean_theW =
-    planeGeomean.addColumn(33,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeGeomean_theT =
-    planeGeomean.addColumn(34,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeGeomean_theZ =
-    planeGeomean.addColumn(35,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeGeomean_geomean =
-    planeGeomean.addColumn(36,"Geomean","Geomean",xyImageInfo_geomean);
+    public static SimpleSemanticType.Element  planeGeomean_theW =
+    planeGeomean.addElement(33,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeGeomean_theT =
+    planeGeomean.addElement(34,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeGeomean_theZ =
+    planeGeomean.addElement(35,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeGeomean_geomean =
+    planeGeomean.addElement(36,"Geomean","Geomean",xyImageInfo_geomean);
 
-    public static SimpleAttributeType  planeSigma =
-    new SimpleAttributeType(11,"Plane sigma",
+    public static SimpleSemanticType  planeSigma =
+    new SimpleSemanticType(11,"Plane sigma",
                             "Sigma pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeSigma_theW =
-    planeSigma.addColumn(37,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeSigma_theT =
-    planeSigma.addColumn(38,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeSigma_theZ =
-    planeSigma.addColumn(39,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeSigma_sigma =
-    planeSigma.addColumn(40,"Sigma","Sigma",xyImageInfo_sigma);
+    public static SimpleSemanticType.Element  planeSigma_theW =
+    planeSigma.addElement(37,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeSigma_theT =
+    planeSigma.addElement(38,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeSigma_theZ =
+    planeSigma.addElement(39,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeSigma_sigma =
+    planeSigma.addElement(40,"Sigma","Sigma",xyImageInfo_sigma);
 
-    public static SimpleAttributeType  planeCentroid =
-    new SimpleAttributeType(12,"Plane centroid",
+    public static SimpleSemanticType  planeCentroid =
+    new SimpleSemanticType(12,"Plane centroid",
                             "Centroid pixel intensity",
                             Granularity.IMAGE);
-    public static SimpleAttributeType.Column  planeCentroid_theW =
-    planeCentroid.addColumn(41,"Wavepoint","Wavepoint",xyImageInfo_theW);
-    public static SimpleAttributeType.Column  planeCentroid_theT =
-    planeCentroid.addColumn(42,"Timepoint","Timepoint",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeCentroid_theZ =
-    planeCentroid.addColumn(43,"Z","Z-section",xyImageInfo_theT);
-    public static SimpleAttributeType.Column  planeCentroid_centroidX =
-    planeCentroid.addColumn(44,"Centroid_X","Centroid X",xyImageInfo_centroidX);
-    public static SimpleAttributeType.Column  planeCentroid_centroidY =
-    planeCentroid.addColumn(45,"Centroid_Y","Centroid Y",xyImageInfo_centroidY);
+    public static SimpleSemanticType.Element  planeCentroid_theW =
+    planeCentroid.addElement(41,"Wavepoint","Wavepoint",xyImageInfo_theW);
+    public static SimpleSemanticType.Element  planeCentroid_theT =
+    planeCentroid.addElement(42,"Timepoint","Timepoint",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeCentroid_theZ =
+    planeCentroid.addElement(43,"Z","Z-section",xyImageInfo_theT);
+    public static SimpleSemanticType.Element  planeCentroid_centroidX =
+    planeCentroid.addElement(44,"Centroid_X","Centroid X",xyImageInfo_centroidX);
+    public static SimpleSemanticType.Element  planeCentroid_centroidY =
+    planeCentroid.addElement(45,"Centroid_Y","Centroid Y",xyImageInfo_centroidY);
 
     // LOCATION_5 data table
 
@@ -260,18 +260,18 @@ public class TestInstances
 
     // LOCATION_5 attributes
 
-    public static SimpleAttributeType  location5 =
-    new SimpleAttributeType(13,"5D location","5D location",Granularity.FEATURE);
-    public static SimpleAttributeType.Column  location5_X =
-    location5.addColumn(46,"X","X",location5table_X);
-    public static SimpleAttributeType.Column  location5_Y =
-    location5.addColumn(47,"Y","Y",location5table_Y);
-    public static SimpleAttributeType.Column  location5_Z =
-    location5.addColumn(48,"Z","Z",location5table_Z);
-    public static SimpleAttributeType.Column  location5_W =
-    location5.addColumn(49,"W","W",location5table_W);
-    public static SimpleAttributeType.Column  location5_T =
-    location5.addColumn(50,"T","T",location5table_T);
+    public static SimpleSemanticType  location5 =
+    new SimpleSemanticType(13,"5D location","5D location",Granularity.FEATURE);
+    public static SimpleSemanticType.Element  location5_X =
+    location5.addElement(46,"X","X",location5table_X);
+    public static SimpleSemanticType.Element  location5_Y =
+    location5.addElement(47,"Y","Y",location5table_Y);
+    public static SimpleSemanticType.Element  location5_Z =
+    location5.addElement(48,"Z","Z",location5table_Z);
+    public static SimpleSemanticType.Element  location5_W =
+    location5.addElement(49,"W","W",location5table_W);
+    public static SimpleSemanticType.Element  location5_T =
+    location5.addElement(50,"T","T",location5table_T);
 
     // Stack statistics module
 
@@ -279,7 +279,7 @@ public class TestInstances
     new SimpleModule(1,"Stack statistics",
                      "Calculate pixel statitics per XYZ stack",
                      "/OME/bin/OME_Image_XYZ_stats",
-                     "OME::Analysis::CLIHandler",
+                     "OME::ModuleExecution::CLIHandler",
                      "Statistics",
                      null,
                      null);
@@ -302,7 +302,7 @@ public class TestInstances
     new SimpleModule(2,"Plane statistics",
                      "Calculate pixel statitics per XY plane",
                      "/OME/bin/OME_Image_XY_stats",
-                     "OME::Analysis::CLIHandler",
+                     "OME::ModuleExecution::CLIHandler",
                      "Statistics",
                      null,
                      null);
@@ -325,7 +325,7 @@ public class TestInstances
     new SimpleModule(3,"Find spots",
                      "Finds spots in the image",
                      "/OME/bin/findSpotsOME",
-                     "OME::Analysis::FindSpotsHandler",
+                     "OME::ModuleExecution::FindSpotsHandler",
                      "Segmentation",
                      null,
                      "SPOT");

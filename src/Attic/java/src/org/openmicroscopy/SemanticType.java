@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.AttributeType
+ * org.openmicroscopy.SemanticType
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -25,19 +25,19 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <p>The <code>AttributeType</code> interface describes the semantic
+ * <p>The <code>SemanticType</code> interface describes the semantic
  * types known to OME.  A semantic type is similar to a record or
  * class in standard programming languages, in that is has a list of
  * columns (or <i>semantic elements</i>) which contain the actual data
  * of the attribute.  These elements are represented by instance of
- * {@link AttributeType.Column}.</p>
+ * {@link SemanticType.Element}.</p>
  *
  * <p>Semantic types also define, indirectly, where in the OME
  * database their data is stored.  This information is represented by
  * instances of {@link DataTable} and {@link DataTable.Column}
  * classes, and can be accessed via the {@link
- * AttributeType.Column#getDataColumn()} method of {@link
- * AttributeType.Column}.</p>
+ * SemanticType.Element#getDataColumn()} method of {@link
+ * SemanticType.Element}.</p>
  *
  * @author Douglas Creager
  * @version 2.0
@@ -45,7 +45,7 @@ import java.util.Iterator;
  * @see DataTable
  */
 
-public interface AttributeType
+public interface SemanticType
     extends OMEObject
 {
     /**
@@ -90,24 +90,24 @@ public interface AttributeType
 
     /**
      * Returns a list of elements in this semantic type.
-     * @return a {@link List} of {@link AttributeType.Column Columns}
+     * @return a {@link List} of {@link SemanticType.Element Elements}
      */
-    public List getColumns();
+    public List getElements();
 
     /**
      * Returns an iterator of elements in this semantic type.
-     * @return an {@link Iterator} of {@link AttributeType.Column
-     * Columns}
+     * @return an {@link Iterator} of {@link SemanticType.Element
+     * Elements}
      */
-    public Iterator iterateColumns();
+    public Iterator iterateElements();
 
     /**
-     * <p>This <code>AttributeType.Column</code> interface represents
+     * <p>This <code>SemanticType.Element</code> interface represents
      * one element of a semantic type.  The storage type of the
      * element can be accessed via the element's data column:</p>
      *
      * <pre>
-     *    DataTable.Column dataColumn = attributeColumn.getDataColumn();
+     *    DataTable.Column dataColumn = semanticElement.getDataColumn();
      *    String sqlType = dataColumn.getSQLType();
      * </pre>
      *
@@ -117,44 +117,44 @@ public interface AttributeType
      * @see DataTable.Column
      */
 
-    public interface Column
+    public interface Element
         extends OMEObject
     {
         /**
          * Returns the semantic type that this element belongs to.
          * @return the semantic type that this element belongs to.
          */
-        public AttributeType getAttributeType();
+        public SemanticType getSemanticType();
 
         /**
          * Returns the name of this semantic element.
          * @return the name of this semantic element.
          */
-        public String getColumnName();
+        public String getElementName();
 
         /**
          * Sets the name of this semantic element.
-         * @param columnName the name of this semantic element.
+         * @param elementName the name of this semantic element.
          */
-        public void setColumnName(String columnName);
+        public void setElementName(String elementName);
 
         /**
          * Returns the description of this semantic element.
          * @return the description of this semantic element.
          */
-        public String getColumnDescription();
+        public String getElementDescription();
 
         /**
          * Sets the description of this semantic element.
-         * @param columnDescription the description of this semantic
+         * @param elementDescription the description of this semantic
          * element.
          */
-        public void setColumnDescription(String columnDescription);
+        public void setElementDescription(String elementDescription);
 
         /**
          * Returns the data column associated with this semantic
          * element.  The data column specifies where in the OME
-         * database this column is stored, and what its storage type
+         * database this element is stored, and what its storage type
          * is.
          * @return the data column associated with this semantic
          * element.
