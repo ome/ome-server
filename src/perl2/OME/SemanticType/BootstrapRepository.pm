@@ -74,6 +74,12 @@ __PACKAGE__->addColumn(IsLocal => 'is_local',
                        });
 
 
+# I don't think we want to inherit from SemanticTypeSuperclass necessarily,
+# but we need this method called from DBObject.
+sub verifyType {
+    return 1;
+}
+
 1;
 
 __END__

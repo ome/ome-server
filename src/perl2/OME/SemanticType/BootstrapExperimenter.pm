@@ -78,6 +78,13 @@ __PACKAGE__->addColumn(DataDirectory => 'data_dir',{SQLType => 'varchar(256)'});
 __PACKAGE__->addColumn(Institution => 'institution',{SQLType => 'varchar(256)'});
 
 
+# I don't think we want to inherit from SemanticTypeSuperclass necessarily,
+# but we need this method called from DBObject.
+sub verifyType {
+    return 1;
+}
+
+
 1;
 
 __END__
