@@ -153,11 +153,6 @@ sub import {
     	}
     }
     
-    foreach(@file_names) {
-    	print STDERR "fily ".$_."\n";
-    }
-    die;
-    
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
 	my $factory = $session->Factory();
