@@ -7,12 +7,12 @@ function filename = ome_getRepositoryFilename(pixels)
 % If we're given an index, pull the appropriate Pixels structure
 % out of the ome_Pixels array.
 
-global ome_Pixels ome_Repository
+global ome_Pixels
 
 if ~isstruct(pixels)
   pixels = ome_Pixels(pixels);
 end
 
-repository = ome_Repository(pixels.Repository);
+repository = pixels.Repository;
 
 filename = [repository.Path pixels.Path];
