@@ -270,10 +270,10 @@ sub createOMEPage {
 		return('SVG', $self->BuildSVGviewer());
 	} elsif ( $cgi->url_param('DrawDatasetControl')) {
 		return('HTML', $self->DrawDatasetControl());
+	} elsif ( $cgi->url_param('ImageID')) {
+		return('HTML', $self->DrawMainWindowSVGimage());
 	} elsif ( $cgi->url_param('DatasetID')) {
 		return('HTML', $self->DrawMainWindowSVGdataset());
-	} else {
-		return('HTML', $self->DrawMainWindowSVGimage());
 	}
 }
 
@@ -451,9 +451,10 @@ an HTML file
 =cut
 
 sub DrawMainWindowSVGimage {
-my $self = shift;
-my $cgi   = $self->CGI();
-my $ImageID = $cgi->url_param("ImageID")  || die "\nImage id not supplied to GetGraphics.pm ";
+my $self      = shift;
+my $cgi       = $self->CGI();
+my $ImageID   = $cgi->url_param("ImageID")  || die "\nImage id not supplied to GetGraphics.pm ";
+my $DatasetID = $cgi->url_param("DatasetID");
 my $HTML='';
 
 	$self->{contentType} = 'text/html';
@@ -465,7 +466,12 @@ my $HTML='';
 <html>
 <title>OME SVG 2D Viewer</title>
 	<frameset rows="*">
-		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">
+		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID
+ENDHTML
+$HTML .= "&DatasetID=$DatasetID"
+	if defined $DatasetID;
+$HTML .= <<ENDHTML;
+">
 	</frameset>
 </html>
 ENDHTML
@@ -640,7 +646,8 @@ function changeImage(i) {
 function update() {
 	imageNumTextBox.value  = currentIndex+1;
 	imageInfoTextBox.value = imagePaths[ imageIDs[currentIndex] ];
-	parent.viewer.location.href = "serve.pl?Page=OME::Web::GetGraphics&ImageID=" + imageIDs[currentIndex];
+	var str = "serve.pl?Page=OME::Web::GetGraphics&DatasetID=$DatasetID&ImageID=" + imageIDs[currentIndex];
+	parent.viewer.location.href = str;
 }
 
 //-->
@@ -695,21 +702,27 @@ an SVG file
 # Build the SVG viewer.
 sub BuildSVGviewer {
 	# A server link needs to be made to src/JavaScript/ for the SVG JavaScript references to function
-my $self = shift;
+my $self      = shift;
+my $cgi       = $self->CGI();
 my $SVG;
+
 
 my $JSinfo = $self->SVGgetDataJS();
 
-my $ImageID       = $JSinfo->{ ImageID };
-my $Stats         = $JSinfo->{ Stats };
-my $Wavelengths   = $JSinfo->{ Wavelengths };
-my $Dims          = $JSinfo->{ Dims };
-my $CGI_URL       = $JSinfo->{ CGI_URL };
-my $CGI_optionStr = $JSinfo->{ CGI_optionStr };
-my $theZ          = $JSinfo->{ theZ };
-my $theT          = $JSinfo->{ theT };
-
-
+my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
+my $ImageID            = $JSinfo->{ ImageID };
+my $Stats              = $JSinfo->{ Stats };
+my $Wavelengths        = $JSinfo->{ Wavelengths };
+my $Dims               = $JSinfo->{ Dims };
+my $CGI_URL            = $JSinfo->{ CGI_URL };
+my $CGI_optionStr      = $JSinfo->{ CGI_optionStr };
+my $SaveDisplayCGI_URL = $JSinfo->{ SaveDisplayCGI_URL };
+my $theZ               = $JSinfo->{ theZ };
+my $theT               = $JSinfo->{ theT };
+my $isRGB              = $JSinfo->{ isRGB };
+my $WBS                = $JSinfo->{ WBS };
+my $RGBon              = $JSinfo->{ RGBon };
+my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
@@ -754,6 +767,8 @@ my $theT          = $JSinfo->{ theT };
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/overlay.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/ViewerPreferences.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/stats.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 ENDSVG
@@ -775,15 +790,19 @@ $SVG .= <<ENDSVG;
 		var scale;
 		var stats;
 		var overlay;
+		var viewerPreferences;
 		
 	// constants & references
-		var Wavelengths = $Wavelengths;
-		var Stats       = $Stats;
-		var Dims        = $Dims;
+		var Wavelengths        = $Wavelengths;
+		var Stats              = $Stats;
+		var Dims               = $Dims;
+		var DatasetID          = $DatasetID;
 		// Z and T are dims of z and t
-		var Z           = Dims[2];
-		var T           = Dims[4];
-		var fluors      = new Array();
+		var Z                  = Dims[2];
+		var T                  = Dims[4];
+		var fluors             = new Array();
+		var SaveDisplayCGI_URL = "$SaveDisplayCGI_URL";
+		var toolBoxScale       = $toolBoxScale;
 		
 	// global variables
 		// theZ & theT are current values of z & t
@@ -794,9 +813,9 @@ $SVG .= <<ENDSVG;
 			if ( window.svgDocument == null )
 				svgDocument = e.ownerDocument;
 		// initialize back end
-			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
+			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
+				SaveDisplayCGI_URL, $WBS, $RGBon, $isRGB, DatasetID);
 			image.realize( svgDocument.getElementById("image") );
-// need to add query for RGBon for image.setRGBon			
 
 			// setup fluors used in this image
 			for(i in Wavelengths)
@@ -810,7 +829,6 @@ $SVG .= <<ENDSVG;
 			);
 			controlToolBox.setLabel(90,12,"Primary Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
-//			controlToolBox.setScale(1.5);	// enlarges the controlToolBox to 1.5 times normal size
 			
 			multiToolBox = new multipaneToolBox(
 				55, 265, 200, 100,
@@ -882,6 +900,14 @@ $SVG .= <<ENDSVG;
 				skinLibrary["blankButtonRadius5Highlight"]
 			);
 			
+			// save button
+			saveButton = new button(
+				85, 132, saveImage,
+				'<text fill="black" text-anchor="end">Save</text>',
+				null,
+				'<text fill="white" text-anchor="end">Save</text>'
+			);
+
 			// set up RGB to grayscale button
 			RGB_BWbutton = new button(
 				110, 115, switchRGB_BW,
@@ -890,23 +916,30 @@ $SVG .= <<ENDSVG;
 				skinLibrary["blankButtonRadius13Highlight"]
 			);
 			
+			// buttons to access panes
 			statsButton = new button(
-				190, 120, showStats,
+				190, 110, showStats,
 				'<text fill="black" text-anchor="end">Stats</text>',
 				null,
 				'<text fill="white" text-anchor="end">Stats</text>'
 			);
 			scaleButton = new button(
-				190, 130, showScale,
+				190, 120, showScale,
 				'<text fill="black" text-anchor="end">Scale</text>',
 				null,
 				'<text fill="white" text-anchor="end">Scale</text>'
 			);
 			overlayButton = new button(
-				190, 140, showOverlay,
+				190, 130, showOverlay,
 				'<text fill="black" text-anchor="end">Overlay</text>',
 				null,
 				'<text fill="white" text-anchor="end">Overlay</text>'
+			);
+			settingsButton = new button(
+				190, 140, showPreferences,
+				'<text fill="black" text-anchor="end">Preferences</text>',
+				null,
+				'<text fill="white" text-anchor="end">Preferences</text>'
 			);
 				
 		
@@ -981,6 +1014,9 @@ $SVG .= <<ENDSVG;
 
 			// RGB & BW switcheroo
 			RGB_BWbutton.realize(controlToolBox.getGUIbox());
+			
+			// Save button
+			saveButton.realize(controlToolBox.getGUIbox());
 
 			// RGB channel controls
 			RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
@@ -1003,11 +1039,12 @@ $SVG .= <<ENDSVG;
 			statsButton.realize( controlToolBox.getGUIbox() );
 			scaleButton.realize( controlToolBox.getGUIbox() );
 			overlayButton.realize( controlToolBox.getGUIbox() );
+			settingsButton.realize( controlToolBox.getGUIbox() );
 
 			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
 
-			// set up panes
+			// set up panes in the multi toolbox
 // These panes to come from DB eventually?
 			stats = new Statistics( Stats, fluors, updateStatsWave );
 			multiToolBox.addPane( stats.buildSVG(), "Stats" );
@@ -1016,8 +1053,11 @@ $SVG .= <<ENDSVG;
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			overlay = new Overlay();
 			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
+			viewerPreferences = new ViewerPreferences( resizeToolBox, resizeMultiToolBox, savePreferences );
+			multiToolBox.addPane( viewerPreferences.buildSVG(), "Preferences");
 			// finish setup & make controller
 			multiToolBox.closeOnMinimize(true);
+			
 			panePopupList = new popupList(
 				0, 0, multiToolBox.getPaneIndexes(), updatePane, 0,
 				skinLibrary["popupListAnchorUpperLeftRoundedLightslategray"],
@@ -1025,6 +1065,7 @@ $SVG .= <<ENDSVG;
 				skinLibrary["popupListHighlightAquamarine"]
 			);
 			panePopupList.realize( multiToolBox.getMenuBar() );
+			
 			
 			// voodoo to switch which component is rendered on top
 			//  this makes the popupList be drawn on top 
@@ -1036,7 +1077,7 @@ $SVG .= <<ENDSVG;
 			mouseTrap = svgDocument.getElementById("mouseTrap");
 			azap.appendNode(mouseTrap); 
 
-			// Set up display. These values should come from DB eventually.
+			// Set up display. These values come from DB eventually.
 			var WBS = image.getWBS();
 			setTimeout( "redPopupList.setSelectionByValue("+ 
 				redPopupList.getItemList()[ WBS[0] ]
@@ -1051,11 +1092,13 @@ $SVG .= <<ENDSVG;
 				bwPopupList.getItemList()[ WBS[9] ]
 				+")", 0 );
 			var RGBon = image.getRGBon(); 
+			setTimeout( "resizeToolBox(50 * ("+toolBoxScale+" - 1 ) )", 0);
+			setTimeout( "resizeMultiToolBox()", 1);
 			setTimeout( "multiToolBox.hide()", 0);
 			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "RGB_BWbutton.setState(true)", 0 );
+			setTimeout( "RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
 			setTimeout( "loadButton.setState(false)", 0 );
 			zSlider.setValue(theZ/Z*100,true);
 			tSlider.setValue(theT/T*100,true);
@@ -1068,6 +1111,35 @@ $SVG .= <<'ENDSVG';
         
 		
 	// these functions connect GUI with backend
+		function savePreferences() {
+			var tmpImg;
+			tmpImg = svgDocument.createElementNS(svgns,"image");
+			tmpImg.setAttribute("width",0);
+			tmpImg.setAttribute("height",0);
+			// The purpose of unique is to bypass any image caching
+			var unique   = Math.random();
+			var imageURL = SaveDisplayCGI_URL + 
+				'&toolBoxScale=' + controlToolBox.getScale() +
+				"&Unique=" + unique;
+			tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
+		
+			controlToolBox.getGUIbox().appendChild(tmpImg);
+			controlToolBox.getGUIbox().removeChild(tmpImg);
+		}
+	
+		function resizeToolBox(data) {
+			viewerPreferences.toolBoxSizeSlider.setValue(data);
+			controlToolBox.setScale(1 + data/50);	// resizes the controlToolBox
+		}
+		function resizeMultiToolBox() {
+			multiToolBox.setScale( controlToolBox.getScale() );	// resizes the multiToolBox
+		}
+
+		
+		function saveImage() {
+			image.saveState();
+		}
+	
 		function loadAllImages(val) {
 			image.setPreload(val);
 		}
@@ -1190,6 +1262,9 @@ $SVG .= <<'ENDSVG';
 		function showOverlay() {
 			panePopupList.setSelectionByValue("Overlay");
 		}
+		function showPreferences() {
+			panePopupList.setSelectionByValue("Preferences");
+		}
 
 		// Stats stuff
 		function showStats() {
@@ -1273,8 +1348,9 @@ $SVG .= <<'ENDSVG';
     ]]></script>
 	<g id="mouseTrap">
 		<!-- The mouse only registers over elements. This rect prevents
-			 loosing the mouse while moving the toolbox. It is placed
-			 on top so it will not trap mouse events unless nothing
+			 loosing the mouse while moving the toolbox. It is drawn first
+			 so it will be placed
+			 on bottom so it will not trap mouse events unless nothing
 			 else does. -->
 		<rect width="100%" height="100%" fill="blue" opacity="0"/>	
 	</g>
@@ -1330,9 +1406,11 @@ A hash of data, JavaScript formatted.
 =cut
 
 sub SVGgetDataJS {
-	my $self = shift;
-	my $cgi   = $self->CGI();
-	my $JSinfo = {};
+	my $self    = shift;
+	my $cgi     = $self->CGI();
+	my $JSinfo  = {};
+	my $session = $self->Session();
+	my $factory = $session->Factory();
 
     my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
 
@@ -1393,15 +1471,36 @@ sub SVGgetDataJS {
 	}
 	$JSstats = '['.join (',',@JS_Stats_Waves).']';
 	
-	$JSinfo->{ ImageID }       = $ImageID;
-	$JSinfo->{ Stats }         = $JSstats;
-	$JSinfo->{ Wavelengths }   = '['.join(',',@JSwavelengths).']';
-	$JSinfo->{ pDims }         = $dims;
-	$JSinfo->{ Dims }          = '['.join (',', @$dims).']';
-	$JSinfo->{ CGI_URL }       = '/cgi-bin/OME_JPEG';
-	$JSinfo->{ CGI_optionStr } = '&Path='.$image->getFullPath();
-	$JSinfo->{ theZ }          = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
-	$JSinfo->{ theT }          = $cgi->url_param('theT') || 0;
+	# get display settings
+	my $displaySettings   = $factory->findObject( 'OME::DisplaySettings', image_id => $image->id() );
+	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
+	
+	$JSinfo->{ ImageID }            = $ImageID;
+	$JSinfo->{ Stats }              = $JSstats;
+	$JSinfo->{ Wavelengths }        = '['.join(',',@JSwavelengths).']';
+	$JSinfo->{ pDims }              = $dims;
+	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
+	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
+	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath();
+	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
+	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
+	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
+	$JSinfo->{ isRGB }              = 'null';
+	$JSinfo->{ WBS }                = 'null';
+	$JSinfo->{ RGBon }              = 'null';
+	$JSinfo->{ toolBoxScale }       = 1;
+	if( defined $displaySettings ) {
+		$JSinfo->{ theZ }      = $displaySettings->theZ()
+			if( not defined $cgi->url_param('theZ') );
+		$JSinfo->{ theT }      = $displaySettings->theT()
+			if( not defined $cgi->url_param('theT') );
+		$JSinfo->{ isRGB }     = $displaySettings->isRGB();
+		$JSinfo->{ WBS }       = '[' . join(',', @{ $displaySettings->WBS() }) . ']';
+		$JSinfo->{ RGBon }     = '[' . join(',', @{ $displaySettings->RGBon() } ) . ']';
+	}
+	if( defined $viewerPreferences ) {
+		$JSinfo->{ toolBoxScale } = $viewerPreferences->toolbox_scale();
+	}
 
 	return $JSinfo;
 }
