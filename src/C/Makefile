@@ -9,7 +9,7 @@ DB_LIBS = -lpq
 MATH_LIBS = -lm
 LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
-COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O2
+COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
 MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
@@ -19,75 +19,75 @@ CC = gcc
 all: $(TARGETS)
 
 zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
-	gcc -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+	$(CC) ${CFLAGS} -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
 zernike2 : dataset.h dataset.c dataset.o zernike2.c zernike.h BSUtils.o zernike2.o
-	gcc -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+	$(CC) ${CFLAGS} -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
 
 trackSpotsOMEwrpr : $(OBJECTS) trackSpotsOMEwrpr.o
-	gcc -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
+	$(CC) ${CFLAGS} -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
 
 findSpotsOMEwrpr : $(OBJECTS) findSpotsOMEwrpr.o
-	gcc -o findSpotsOMEwrpr findSpotsOMEwrpr.o $(LIBS)
+	$(CC) ${CFLAGS} -o findSpotsOMEwrpr findSpotsOMEwrpr.o $(LIBS)
 
 OMEimportDVfile : $(OBJECTS) OMEimportDVfile.o
-	gcc -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
+	$(CC) ${CFLAGS} -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
 
 trackSpotsDB :  BSUtils.o trackSpotsDB.o
-	gcc  -o trackSpotsDB trackSpotsDB.o $(LIBS)
+	$(CC) ${CFLAGS} -o trackSpotsDB trackSpotsDB.o $(LIBS)
 
 findSpotsDB : findSpotsDB.o
-	gcc $(DEFINES) findSpotsDB.o -o findSpotsDB -lm 
+	$(CC) $(DEFINES) ${CFLAGS} findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
 
 findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
-	gcc $(DEFINES) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME -lm -ltiff
+	$(CC) $(DEFINES) ${CFLAGS} findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
 
 #makemesh: makemesh.o iolib/argarray.o iolib/failio.o iolib/repository.o
-#	gcc $(DEFINES) $+ -o $@
+#	$(CC) $(DEFINES) $+ -o $@
 
 BinarizeGlobal : BinarizeGlobal.o readTiffData.o BSUtils.o
-	gcc $(DEFINES) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal -lm -ltiff
+	$(CC) $(DEFINES) ${CFLAGS} BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
 
 SoftWorxSlice : SoftWorxSlice.o BSUtils.o
-	gcc $(DEFINES) SoftWorxSlice.o BSUtils.o -o SoftWorxSlice -lm
+	$(CC) $(DEFINES) ${CFLAGS} SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
 
 DumpSoftWorxHeader : DumpSoftWorxHeader.o BSUtils.o
-	gcc $(DEFINES) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader -lm
+	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
 
 DumpSoftWorxExHeader : DumpSoftWorxExHeader.o BSUtils.o
-	gcc $(DEFINES) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader -lm
+	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
 
 DumpSoftWorxStats : DumpSoftWorxStats.o BSUtils.o
-	gcc $(DEFINES) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats -lm
+	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
 
 DumpTIFFheader : DumpTIFFheader.o
-	gcc $(DEFINES) DumpTIFFheader.o -o DumpTIFFheader -lm -ltiff
+	$(CC) $(DEFINES) ${CFLAGS} DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
 
 DumpTIFFstats : DumpTIFFstats.o readTiffData.o
-	gcc $(DEFINES) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats -lm -ltiff
+	$(CC) $(DEFINES) ${CFLAGS} DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
 
 OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
-	gcc $(DEFINES) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats -lm
+	$(CC) $(DEFINES) ${CFLAGS} OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
 
 OME_Image_XY_stats : OME_Image_XY_stats.o
-	gcc $(DEFINES) OME_Image_XY_stats.o -o OME_Image_XY_stats -lm
+	$(CC) $(DEFINES) ${CFLAGS} OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
 
 #DumpTIFF : DumpTIFF.o
-#	gcc $(DEFINES) DumpTIFF.o -o DumpTIFF -lm -ltiff
+#	$(CC) $(DEFINES) DumpTIFF.o -o DumpTIFF ${MATH_LIBS} -ltiff
 
 spawnSpots : $(OBJECTS) spawnSpots.o
-	gcc -o spawnSpots spawnSpots.o $(LIBS)
+	$(CC) ${CFLAGS} -o spawnSpots spawnSpots.o $(LIBS)
 
 testFoo : $(OBJECTS) testFoo.o
-	gcc  -o testFoo testFoo.o $(LIBS)
+	$(CC) ${CFLAGS} -o testFoo testFoo.o $(LIBS)
 
 DumpDV: DumpDV.o  BSUtils.o
-	gcc  -o DumpDV DumpDV.o  BSUtils.o
+	$(CC) ${CFLAGS} -o DumpDV DumpDV.o BSUtils.o
 
 SetDVwave: SetDVwave.o  BSUtils.o
-	gcc  -o SetDVwave SetDVwave.o  BSUtils.o
+	$(CC) ${CFLAGS} -o SetDVwave SetDVwave.o BSUtils.o
 
 OME_JPEG: OME_JPEG.c
-	gcc -o OME_JPEG -O3 OME_JPEG.c -ljpeg
+	$(CC) ${CFLAGS} -o OME_JPEG OME_JPEG.c -ljpeg
 
 $(OME_LIB): $(OBJECTS)
 	ar cr $@ $(OBJECTS)
@@ -100,10 +100,10 @@ cgrayce2:
 # I think they could be cleaned up, but I don't know how and don't have time now.
 # If anyone sees this, feel free to clean them up and erase this message.
 extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	gcc $(CFLAGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+	$(CC) ${DEFINES} $(CFLAGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
 
 insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	gcc $(CFALGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
+	$(CC) ${DEFINES} $(CFALGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
