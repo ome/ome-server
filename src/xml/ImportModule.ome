@@ -61,7 +61,8 @@
 <AnalysisModule
   ModuleName="Importer"
   ModuleType="OME::Analysis::NoopHandler"
-  ProgramID="">
+  ProgramID=""
+  ID="urn:lsid:openmicroscopy.org:Module:1">
 	<Description>Placeholder module which represents the act of importing an image into OME.</Description>
 
     <Declaration>

@@ -201,7 +201,8 @@
 <AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule ModuleName = "Plane statistics and sums" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_sums" >
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_sums" 
+	ID="urn:lsid:openmicroscopy.org:Module:2">
 	<Description>Calculate pixel statistics and sums for each XY plane.</Description>
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Count="!"/>
