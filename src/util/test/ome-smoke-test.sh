@@ -64,6 +64,7 @@ echo "Starting DB backup on $HOST on `date`" > $LOG_FILE
 cd $SOURCE_DIR/src/perl2/
 rm -f $DB_BACKUP > /dev/null 2>&1
 ome admin data backup -q -a $DB_BACKUP >> $LOG_FILE 2>&1
+echo "Dropping database $DB_NAME" >> $LOG_FILE
 su -l $OME_ADMIN -c "dropdb $DB_NAME" >> $LOG_FILE 2>&1
 DROPPED=`su -l $OME_ADMIN -c "psql -l -d ome | grep $DB_NAME"`
 if (test "$DROPPED") ;
@@ -72,8 +73,8 @@ if (test "$DROPPED") ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` Could not drop DB" $MAIL_TO < $LOG_FILE ;
 	fi;
-	PATH=$OLD_PATH
-	export PATH
+	PATH=$OLD_PATHA ;
+	export PATH ;
 	exit -1 ;
 fi;
 #
@@ -104,8 +105,8 @@ if (! test /etc/ome-install.store -nt $TEMP_DIR/smoke-test-install-start ) ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
-	PATH=$OLD_PATH
-	export PATH
+	PATH=$OLD_PATH ;
+	export PATH ;
 	exit -1 ;
 fi;
 #
@@ -126,8 +127,11 @@ if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	echo "Tasks table:" ;
 	echo "------------" ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
+	echo "Images table:" ;
+	echo "------------" ;
+	su -l $OME_ADMIN -c "psql -qc 'select * from images' -d $TEST_DB" >> $LOG_FILE ;
 	# Kill all the PIDs listed in the tasks table
-	PID=`su -l $OME_ADMIN -qtc "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
+	PID=`su -l $OME_ADMIN -c "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
 	kill $PID ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
@@ -136,8 +140,8 @@ if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
-	PATH=$OLD_PATH
-	export PATH
+	PATH=$OLD_PATH ;
+	export PATH ;
 	exit -1 ;
 fi;
 #
