@@ -55,6 +55,8 @@ import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.vis.ome.Modules;
 import org.openmicroscopy.vis.dnd.ModuleSelection;
 import org.openmicroscopy.vis.chains.Controller;
+import org.openmicroscopy.vis.chains.ModuleTreeNode;
+import org.openmicroscopy.vis.chains.ModulePaletteFrame;
 import java.util.Iterator;
 import java.util.List;
 import java.awt.Font;
@@ -120,11 +122,30 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * The currently active {@link PModule}
 	 */
 	private PModule selected;
-
+	
+	/**
+	 * The nodes in the module Tree that we build up as we go along
+	 *
+	 */
+	private ModuleTreeNode treeNode = null;
+	
+	
+	/**
+	 * The event handler for this canvas
+	 *
+	 */
+	private PPaletteEventHandler handler;
+	
+	/**
+	 * the frame that this goes in
+	 *
+	 */
+	private ModulePaletteFrame frame;
+	
 		
-	public PPaletteCanvas() {
+	public PPaletteCanvas(ModulePaletteFrame frame) {
 		super();
-		
+		this.frame = frame;
 		// set up rendering, colors, and event listeners
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -132,7 +153,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		removeInputEventListener(getPanEventHandler());
 		removeInputEventListener(getZoomEventHandler());
-		addInputEventListener(new PPaletteEventHandler(this));
+		handler = new PPaletteEventHandler(this);
+		addInputEventListener(handler);
 		layer = getLayer();
 		
 		// configure data transfer
@@ -165,13 +187,15 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		this.connection = connection;
 		modules = connection.getModules();
 		
+		treeNode = new ModuleTreeNode();
+		
 		// do it by categories
 		Iterator iter = modules.rootCategoryIterator();
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
 			controller.setStatusLabel("Arranging Modules.."+cat.getName());
 			
-			displayModulesByCategory(layer,cat);			
+			displayModulesByCategory(layer,cat,treeNode);			
 		}
 		
 		// do uncategorized.
@@ -180,9 +204,12 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		controller.setStatusLabel("Arranging Modules.. Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
+		ModuleTreeNode uncatNode = new ModuleTreeNode("Uncategorized");
+		treeNode.add(uncatNode);
+		
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
-			displayModule(box,mod);
+			displayModule(box,mod,uncatNode);
 		} 
 		
 		// arrange the uncategorized modules
@@ -201,9 +228,10 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * 
 	 * @param parent the parent node that will old all of the modules
 	 * @param cat the {@link ModuleCategory} that the nodes fit in.
-	 * 
+	 * @param treeParent the {@link ModuleTreeNode} for the containing category
 	 */
-	private void displayModulesByCategory(PNode parent,ModuleCategory cat) {
+	private void displayModulesByCategory(PNode parent,ModuleCategory cat,
+				ModuleTreeNode treeParent) {
 		// display all modules for this category
 		List mods = cat.getModules();
 		Iterator iter  = mods.iterator();
@@ -211,11 +239,13 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		//decorate the category with a box.		
 		PCategoryBox box = decorateCategory(parent);
 		displayCategoryName(box,cat.getName());
+		ModuleTreeNode catNode = new ModuleTreeNode(cat.getName(),cat.getID());
+		treeParent.add(catNode);
 
 		// display the module in the box.
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
-			displayModule(box,mod);
+			displayModule(box,mod,catNode);
 		}
 		
 		// recursively iterate over children categories.
@@ -223,7 +253,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		iter = children.iterator();
 		while (iter.hasNext()) {
 			ModuleCategory child = (ModuleCategory) iter.next();
-			displayModulesByCategory(box,child);
+			displayModulesByCategory(box,child,catNode);
 						
 		}
 		// arrnange everything.
@@ -271,15 +301,46 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * 
 	 * @param box    The parent of this module
 	 * @param module The module to be displayed.
+	 * @param catNode The tree node for the containing category
 	 */	
-	private void displayModule(PCategoryBox box,CModule mod) {
+	private void displayModule(PCategoryBox box,CModule mod,
+		ModuleTreeNode catNode) {
 		
 		PModule mNode = new PModule(connection,mod);
 		mod.addModuleWidget(mNode);
 		box.addChild(mNode);
 		mNode.setOffset(0,0);
+		
+		ModuleTreeNode modNode = new ModuleTreeNode(mod.getName(),mod.getID());
+		catNode.add(modNode);
 	}	
 
+	public ModuleTreeNode getModuleTreeNode() {
+		return treeNode;
+	}
+	
+	/**
+	 * Highlight a module, based on an event from the module {@link JTree}
+	 * @param id the module id
+	 */
+	public void highlightModule(int id) {
+		handler.highlightModules(modules.getModule(id));	
+	}
+	
+	public void unhighlightModules() {
+		handler.unhighlightModules();
+	}
+	
+	/**
+	 *  set and clear the selection in the frame's tree
+	 */
+	public void clearTreeSelection() {
+		frame.clearTreeSelection();
+	}
+	
+	public void setTreeSelection(CModule mod) {
+		frame.setTreeSelection(mod);
+	}
 
 	/*
 	 * arrangeChildren() does a pseudo-treemap layout, attempting
