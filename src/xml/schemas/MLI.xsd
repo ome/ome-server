@@ -7,6 +7,7 @@
 #       National Institutes of Health,
 #       University of Dundee
 #
+#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 	<!--
@@ -21,13 +22,6 @@
 	 version = "IR1"
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
-	<attributeGroup name = "Formal_IO_Ref">
-		<attribute name = "Name" use = "required" type = "string">
-			<annotation>
-				<documentation>This references an Input or Output by its Formal (Input or Output) Name.</documentation>
-			</annotation>
-		</attribute>
-	</attributeGroup>
 	<attributeGroup name = "SemanticElementRef">
 		<attribute name = "Location" use = "required" type = "string">
 			<annotation>
@@ -35,7 +29,6 @@
 			</annotation>
 		</attribute>
 	</attributeGroup>
-
 	<element name = "ExecutionInstructions">
 		<annotation>
 			<documentation>Specifies the Instructions for a given module that are specific to the Matlab Handler.	
@@ -65,7 +58,7 @@
 	</element>
 	<element name = "ReferencesNeeded">
 		<annotation>
-			<documentation>Contains a list of references that will be resolved by the Module. This data will be preloaded before being presented to the module. An example of this is Pixels.Repository . The Pixels attribute only stores the relative path to the file containing the pixel dump. The root path is contained in the Repository attrbute, which is referenced from the Pixels attribute.</documentation>
+			<documentation>Contains a list of references that will be resolved by the Module. This data will be preloaded before being presented to the module. An example of this is Pixels.Repository . The Pixels attribute only stores the relative path to the file containing the pixel dump. The root path is contained in the Repository attribute, which is referenced from the Pixels attribute.</documentation>
 		</annotation>
 		<complexType>
 			<sequence>
@@ -75,7 +68,7 @@
 	</element>
 	<element name = "Inputs">
 		<annotation>
-			<documentation>specifies the order that the Matlab function expects the formal inputs</documentation>
+			<documentation>Specifies the function's parameter order.</documentation>
 		</annotation>
 		<complexType>
 			<sequence>
@@ -85,7 +78,7 @@
 	</element>
 	<element name = "Outputs">
 		<annotation>
-			<documentation>specifies the order of the formal outputs</documentation>
+			<documentation>Specifies the function's order of outputs</documentation>
 		</annotation>
 		<complexType>
 			<sequence>
@@ -94,18 +87,70 @@
 		</complexType>
 	</element>
 	<element name = "Input">
+		<annotation>
+			<documentation>Either Name or Value must be specified. If neither is specified, the handler will throw an error. loadPixelsPlane may only be used in conjuction with Name.</documentation>
+		</annotation>
 		<complexType>
-			<attributeGroup ref = "MLI:Formal_IO_Ref"/>
+			<attribute name = "Name" type = "string">
+				<annotation>
+					<documentation>This references an Input by Formal Input Name.</documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "Value" type = "string">
+				<annotation>
+					<documentation>Allows you to pass a literal string as an input parameter. This means a character string must be quoted with single quotes.</documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "loadPixelsPlane" default = "false" type = "boolean">
+				<annotation>
+					<documentation>Only valid for Inputs of PixelsPlane ST. If specified as true, the pixel data from the repository file will be loaded and presented to the function as input. The datatype of the image array is determined by the Type of the pixels.</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 	<element name = "Output">
+		<annotation>
+			<documentation>Default behavior is to assume the output retrieved from the function will be an array of structures.
+The structure is assumed to have fields of the same name as the elements of the semantic type of this output.
+Furthermore, the structure is assumed to have no extra fields.
+Default behavior can be overridden by using &lt;Elements>
+			</documentation>
+		</annotation>
 		<complexType>
-			<attributeGroup ref = "MLI:Formal_IO_Ref"/>
+			<sequence>
+				<element ref = "MLI:Element" minOccurs = "0" maxOccurs = "unbounded"/>
+			</sequence>
+			<attribute name = "Name" type = "string">
+				<annotation>
+					<documentation>This references an Input or Output by its Formal (Input or Output) Name.</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 	<element name = "Reference">
 		<complexType>
 			<attributeGroup ref = "MLI:SemanticElementRef"/>
+		</complexType>
+	</element>
+	<element name = "Element">
+		<annotation>
+			<documentation>Allows overriding of default interpretation of an &lt;Output>. MatlabField is mutually exclusive with OrderedArrayIndex.</documentation>
+		</annotation>
+		<complexType>
+			<attribute name = "MatlabField" type = "string">
+				<annotation>
+					<documentation>Used to stuff a matlab field into an semantic element of a different name.
+Overrides default assumption that the matlab structure has the same name as the semantic element.
+This overrides on a per-element basis.
+					</documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "OrderedArrayIndex" type = "integer">
+				<annotation>
+					<documentation>Overrides assumption that matlab output is a structure. If specified, the handler will treat the output as an ordered array and retrieve semantic elements by index values. Indexes follow the matlab indexing convention, that is they are numbered (1:n) rather than (0:n-1).
+					</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
 	</element>
 </schema>
