@@ -7,7 +7,7 @@ FINK_LIB = -L/sw/lib/
 #CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 -pedantic
 CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 $(XML2_CFLAGS)
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
-OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.o ../b64z_lib.o
+OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
 ifndef OME_ROOT
 OME_ROOT=/OME
 endif
@@ -30,11 +30,11 @@ digest.o: digest.c digest.h
 method.o: method.c method.h
 	$(CC) $(CFLAGS) -c method.c
 
-../base64.o: ../base64.c ../base64.h
-	$(CC) $(CFLAGS) -c ../base64.c -o ../base64.o
+#../base64.o: ../base64.c ../base64.h
+#	$(CC) $(CFLAGS) -c ../base64.c -o ../base64.o
 
-../b64z_lib.o: ../b64z_lib.c ../b64z_lib.h
-	$(CC) $(CFLAGS) -c ../b64z_lib.c -o ../b64z_lib.o
+#../b64z_lib.o: ../b64z_lib.c ../b64z_lib.h
+#	$(CC) $(CFLAGS) -c ../b64z_lib.c -o ../b64z_lib.o
 
 xmlBinaryResolution.o: xmlBinaryResolution.c
 	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(FINK_INCLUDE)
