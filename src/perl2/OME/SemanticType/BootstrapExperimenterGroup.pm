@@ -61,19 +61,25 @@ __PACKAGE__->addColumn(module_execution => 'module_execution_id',
                         Indexed => 1,
                         #ForeignKey => 'module_executions',
                        });
-__PACKAGE__->addColumn(Leader => 'experimenter_id',
+__PACKAGE__->addColumn(Experimenter => 'experimenter_id',
                        'OME::SemanticType::BootstrapExperimenter',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'experimenters',
                        });
-__PACKAGE__->addColumn(Contact => 'group_id',
+__PACKAGE__->addColumn(Group => 'group_id',
                        'OME::SemanticType::BootstrapGroup',
                        {
                         SQLType => 'integer',
                         ForeignKey => 'groups',
                        });
 
+
+# I don't think we want to inherit from SemanticTypeSuperclass necessarily,
+# but we need this method called from DBObject.
+sub verifyType {
+    return 1;
+}
 
 1;
 
