@@ -41,10 +41,11 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.openmicroscopy.ds.RemoteServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
-import org.openmicroscopy.ds.AbstractManager;
+import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.Image;
 
@@ -56,22 +57,21 @@ import org.openmicroscopy.ds.dto.Image;
  */
 
 public class DatasetManager
-    extends AbstractManager
+    extends AbstractService
 {
+    public DatasetManager() { super(); }
+
     /**
      * Creates a new <code>DatasetManager</code> which communicates
      * with a data server using the specified {@link RemoteCaller}.
      * This {@link RemoteCaller} is first wrapped in an instance of
      * {@link InstantiatingCaller}.
      */
-    public DatasetManager(RemoteCaller caller) { super(caller); }
-
-    /**
-     * Creates a new <code>DatasetManager</code> which communicates
-     * with a data server using the specified {@link
-     * InstantiatingCaller}.
-     */
-    public DatasetManager(InstantiatingCaller caller) { super(caller); }
+    public DatasetManager(RemoteCaller caller)
+    {
+        super();
+        initializeService(RemoteServices.getInstance(caller));
+    }
 
     /**
      * Adds a {@link Image} to a {@link Dataset}.  If the image
@@ -84,11 +84,11 @@ public class DatasetManager
         if (image == null)
             throw new IllegalArgumentException("Image cannot be null");
 
-        getRemoteCaller().dispatch("addImagesToDataset",
-                                   new Object[] {
-                                       new Integer(dataset.getID()),
-                                       new Integer(image.getID())
-                                   });
+        caller.dispatch("addImagesToDataset",
+                        new Object[] {
+                            new Integer(dataset.getID()),
+                            new Integer(image.getID())
+                        });
     }
 
     /**
@@ -97,11 +97,11 @@ public class DatasetManager
      */
     public void addImageToDataset(int datasetID, int imageID)
     {
-        getRemoteCaller().dispatch("addImagesToDataset",
-                                   new Object[] {
-                                       new Integer(datasetID),
-                                       new Integer(imageID)
-                                   });
+        caller.dispatch("addImagesToDataset",
+                        new Object[] {
+                            new Integer(datasetID),
+                            new Integer(imageID)
+                        });
     }
 
     /**
@@ -126,11 +126,11 @@ public class DatasetManager
                 throw new IllegalArgumentException("List must contain Images");
         }
  
-        getRemoteCaller().dispatch("addImagesToDataset",
-                                   new Object[] {
-                                       new Integer(dataset.getID()),
-                                       list
-                                   });
+        caller.dispatch("addImagesToDataset",
+                        new Object[] {
+                            new Integer(dataset.getID()),
+                            list
+                        });
     }
 
     /**
@@ -142,11 +142,11 @@ public class DatasetManager
         if (imageIDs == null)
             throw new IllegalArgumentException("Image IDs cannot be null");
 
-        getRemoteCaller().dispatch("addImagesToDataset",
-                                   new Object[] {
-                                       new Integer(datasetID),
-                                       imageIDs
-                                   });
+        caller.dispatch("addImagesToDataset",
+                        new Object[] {
+                            new Integer(datasetID),
+                            imageIDs
+                        });
     }
 
     /**
@@ -160,11 +160,11 @@ public class DatasetManager
         if (image == null)
             throw new IllegalArgumentException("Image cannot be null");
 
-        getRemoteCaller().dispatch("removeImagesFromDataset",
-                                   new Object[] {
-                                       new Integer(dataset.getID()),
-                                       new Integer(image.getID())
-                                   });
+        caller.dispatch("removeImagesFromDataset",
+                        new Object[] {
+                            new Integer(dataset.getID()),
+                            new Integer(image.getID())
+                        });
     }
 
     /**
@@ -173,11 +173,11 @@ public class DatasetManager
      */
     public void removeImageFromDataset(int datasetID, int imageID)
     {
-        getRemoteCaller().dispatch("removeImagesFromDataset",
-                                   new Object[] {
-                                       new Integer(datasetID),
-                                       new Integer(imageID)
-                                   });
+        caller.dispatch("removeImagesFromDataset",
+                        new Object[] {
+                            new Integer(datasetID),
+                            new Integer(imageID)
+                        });
     }
 
     /**
@@ -203,11 +203,11 @@ public class DatasetManager
                 throw new IllegalArgumentException("List must contain Images");
         }
  
-        getRemoteCaller().dispatch("removeImagesFromDataset",
-                                   new Object[] {
-                                       new Integer(dataset.getID()),
-                                       list
-                                   });
+        caller.dispatch("removeImagesFromDataset",
+                        new Object[] {
+                            new Integer(dataset.getID()),
+                            list
+                        });
     }
 
     /**
@@ -220,11 +220,11 @@ public class DatasetManager
         if (imageIDs == null)
             throw new IllegalArgumentException("Image IDs cannot be null");
 
-        getRemoteCaller().dispatch("removeImagesFromDataset",
-                                   new Object[] {
-                                       new Integer(datasetID),
-                                       imageIDs
-                                   });
+        caller.dispatch("removeImagesFromDataset",
+                        new Object[] {
+                            new Integer(datasetID),
+                            imageIDs
+                        });
     }
 
 }

@@ -41,10 +41,11 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.openmicroscopy.ds.RemoteServices;
 import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
-import org.openmicroscopy.ds.AbstractManager;
+import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.dto.Project;
 import org.openmicroscopy.ds.dto.Dataset;
 
@@ -56,22 +57,21 @@ import org.openmicroscopy.ds.dto.Dataset;
  */
 
 public class ProjectManager
-    extends AbstractManager
+    extends AbstractService
 {
+    public ProjectManager() { super(); }
+
     /**
      * Creates a new <code>ProjectManager</code> which communicates
      * with a data server using the specified {@link RemoteCaller}.
      * This {@link RemoteCaller} is first wrapped in an instance of
      * {@link InstantiatingCaller}.
      */
-    public ProjectManager(RemoteCaller caller) { super(caller); }
-
-    /**
-     * Creates a new <code>ProjectManager</code> which communicates
-     * with a data server using the specified {@link
-     * InstantiatingCaller}.
-     */
-    public ProjectManager(InstantiatingCaller caller) { super(caller); }
+    public ProjectManager(RemoteCaller caller)
+    {
+        super();
+        initializeService(RemoteServices.getInstance(caller));
+    }
 
     /**
      * Adds a {@link Dataset} to a {@link Project}.  If the dataset
@@ -84,11 +84,11 @@ public class ProjectManager
         if (dataset == null)
             throw new IllegalArgumentException("Dataset cannot be null");
 
-        getRemoteCaller().dispatch("addDatasetsToProject",
-                                   new Object[] {
-                                       new Integer(project.getID()),
-                                       new Integer(dataset.getID())
-                                   });
+        caller.dispatch("addDatasetsToProject",
+                        new Object[] {
+                            new Integer(project.getID()),
+                            new Integer(dataset.getID())
+                        });
     }
 
     /**
@@ -97,11 +97,11 @@ public class ProjectManager
      */
     public void addDatasetToProject(int projectID, int datasetID)
     {
-        getRemoteCaller().dispatch("addDatasetsToProject",
-                                   new Object[] {
-                                       new Integer(projectID),
-                                       new Integer(datasetID)
-                                   });
+        caller.dispatch("addDatasetsToProject",
+                        new Object[] {
+                            new Integer(projectID),
+                            new Integer(datasetID)
+                        });
     }
 
     /**
@@ -127,11 +127,11 @@ public class ProjectManager
                 throw new IllegalArgumentException("List must contain Datasets");
         }
  
-        getRemoteCaller().dispatch("addDatasetsToProject",
-                                   new Object[] {
-                                       new Integer(project.getID()),
-                                       list
-                                   });
+        caller.dispatch("addDatasetsToProject",
+                        new Object[] {
+                            new Integer(project.getID()),
+                            list
+                        });
     }
 
     /**
@@ -144,11 +144,11 @@ public class ProjectManager
         if (datasetIDs == null)
             throw new IllegalArgumentException("Dataset IDs cannot be null");
 
-        getRemoteCaller().dispatch("addDatasetsToProject",
-                                   new Object[] {
-                                       new Integer(projectID),
-                                       datasetIDs
-                                   });
+        caller.dispatch("addDatasetsToProject",
+                        new Object[] {
+                            new Integer(projectID),
+                            datasetIDs
+                        });
     }
 
     /**
@@ -162,11 +162,11 @@ public class ProjectManager
         if (dataset == null)
             throw new IllegalArgumentException("Dataset cannot be null");
 
-        getRemoteCaller().dispatch("removeDatasetsFromProject",
-                                   new Object[] {
-                                       new Integer(project.getID()),
-                                       new Integer(dataset.getID())
-                                   });
+        caller.dispatch("removeDatasetsFromProject",
+                        new Object[] {
+                            new Integer(project.getID()),
+                            new Integer(dataset.getID())
+                        });
     }
 
     /**
@@ -175,11 +175,11 @@ public class ProjectManager
      */
     public void removeDatasetFromProject(int projectID, int datasetID)
     {
-        getRemoteCaller().dispatch("removeDatasetsFromProject",
-                                   new Object[] {
-                                       new Integer(projectID),
-                                       new Integer(datasetID)
-                                   });
+        caller.dispatch("removeDatasetsFromProject",
+                        new Object[] {
+                            new Integer(projectID),
+                            new Integer(datasetID)
+                        });
     }
 
     /**
@@ -205,11 +205,11 @@ public class ProjectManager
                 throw new IllegalArgumentException("List must contain Datasets");
         }
  
-        getRemoteCaller().dispatch("removeDatasetsFromProject",
-                                   new Object[] {
-                                       new Integer(project.getID()),
-                                       list
-                                   });
+        caller.dispatch("removeDatasetsFromProject",
+                        new Object[] {
+                            new Integer(project.getID()),
+                            list
+                        });
     }
 
     /**
@@ -222,11 +222,11 @@ public class ProjectManager
         if (datasetIDs == null)
             throw new IllegalArgumentException("Dataset IDs cannot be null");
 
-        getRemoteCaller().dispatch("removeDatasetsFromProject",
-                                   new Object[] {
-                                       new Integer(projectID),
-                                       datasetIDs
-                                   });
+        caller.dispatch("removeDatasetsFromProject",
+                        new Object[] {
+                            new Integer(projectID),
+                            datasetIDs
+                        });
     }
 
 }
