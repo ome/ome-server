@@ -212,7 +212,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
-			canvas.setTreeSelection((CModule)pmod.getModule());
+			//canvas.setTreeSelection((CModule)pmod.getModule());
 			e.setHandled(true);
 		}
 		
@@ -221,10 +221,9 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
 			lastEntered = pmod;
-			canvas.setTreeSelection((CModule)pmod.getModule());
+			//canvas.setTreeSelection((CModule)pmod.getModule());
 		}
 		else {
-			canvas.clearTreeSelection();
 			super.mouseEntered(e);
 		}
 	}
@@ -253,7 +252,6 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			pmod.setAllHighlights(false);
 			e.setHandled(true);
 			lastEntered = null;
-			canvas.clearTreeSelection();
 		}
 		else
 			super.mouseExited(e);
