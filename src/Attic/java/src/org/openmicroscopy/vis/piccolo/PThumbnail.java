@@ -80,12 +80,11 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 	}
 		
 	public PBounds getBufferedBounds() {
-			PBounds b = getGlobalFullBounds();
-			System.err.println("thumbnail global scale is "+getGlobalScale());
-			return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getY()-PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getWidth()+2*PConstants.SMALL_BORDER*getGlobalScale(),
-				b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
+		PBounds b = getGlobalFullBounds();
+		return new PBounds(b.getX()-PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getY()-PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getWidth()+2*PConstants.SMALL_BORDER*getGlobalScale(),
+			b.getHeight()+2*PConstants.SMALL_BORDER*getGlobalScale());
 	}
 	
 
@@ -154,12 +153,14 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		p.setStrokePaint(PToolTipHandler.BORDER_COLOR);
 		p.setBounds(p.getUnionOfChildrenBounds(null));
 		p.setOffset(0.0,imNode.getHeight());
+		n.setPickable(false);
 		return n;
 	}
 	
 	public PNode getShortToolTip() {
 		PText text  = new PText(image.getName());
 		text.setFont(PConstants.TOOLTIP_FONT);
+		text.setPickable(false);
 		return text;
 	}
 	
@@ -201,22 +202,20 @@ public class PThumbnail extends PBufferedImage implements PBufferedNode,
 		return !pin.hasVisibleHalo(); // case b
  	}
  	
-	public void setZoomingHalo(boolean v) {
+	public void setZoomingHalo(boolean v,int level) {
 		//	ok. if I'm under a pdatasetimages node, setup the halo
 		 PNode parent = getParent();
 		 if (parent != null) {
 			 parent = parent.getParent();
 			 if (parent != null && (parent instanceof PDatasetImagesNode)) {
 				 PDatasetImagesNode pin = (PDatasetImagesNode) parent;
-				 pin.highlightThumbnail(this,v);
+				 pin.highlightThumbnail(this,v,level);
 			 }
 		 }
 	} 	
 	
-	public void setHighlightedWithHalo(boolean v) {
+	public void setHighlightedWithHalo(boolean v,int level) {
 		setHighlighted(v);
-		setZoomingHalo(v);
+		setZoomingHalo(v,level);
 	}
-	
-
 }
