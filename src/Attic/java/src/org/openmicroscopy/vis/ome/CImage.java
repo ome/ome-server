@@ -38,7 +38,6 @@
  */
  
 package org.openmicroscopy.vis.ome;
-//import org.openmicroscopy.Attribute;
 import org.openmicroscopy.remote.RemoteException;
 import org.openmicroscopy.remote.RemoteImage;
 import org.openmicroscopy.remote.RemoteSession;
