@@ -88,7 +88,7 @@ Acessor for getting the task's process ID (i.e., the operating system's PID).
 =head2 state ()
 
 Acessor for getting the task's state.  This is a controlled
-vocabulary, so state is supposed to be 'IN PROGRESS', 'FINISHED', and 'ABORTED'.
+vocabulary, so state is supposed to be 'IN PROGRESS', 'FINISHED', and 'DIED'.
 Do not modify the state directly.
 
 =head2 message ()
@@ -233,6 +233,28 @@ sub finish {
 	$self->storeObject();
 }
 
+=head2 died()
+
+Signal to kill the task.  The optional parameter is stored in the error message.
+
+=cut
+
+sub kill {
+	my $self = shift;
+	my $error;
+	kill 9, $self->process_id();
+	
+	$self->t_stop('now');
+	$self->state ('DIED');
+	
+	if (@_) {
+		$error = shift;
+		$self->error($error);
+	}
+	$self->storeObject();
+}
+
+
 =head2 setMessage()
 
 Set the message for the task.  Unlike the C<message()> field, this will immediately
@@ -312,8 +334,6 @@ sub died {
 	}
 	$self->storeObject();
 }
-
-
 
 =head2 setnSteps()
 
