@@ -51,26 +51,26 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
-=head2 addImages
+=head2 addImages ($ref)
 
 Add images to a dataset.
 
-=head2 change
+=head2 change ($description,$name)
 
 Modify name/description of a dataset.
 
-=head2 create
+=head2 create ($name,$description,$ref)
 
 Create a new dataset with/without images.
 
 
-=head2 delete
+=head2 delete ($id)
 
 Delete a dataset, update OME session if the dataset is the current dataset.
 If the user doesn't have other dataset: current dataset sets to undef
 otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
 
-=head2 exist
+=head2 exist ($name)
 
 Check if the dataset's name already exists (in DB).
 Return: 1 or undef
@@ -79,7 +79,10 @@ Return: 1 or undef
 
 Check images not used in the current dataset
 
-=head2 listAll
+
+=head2 listMatching ($usergpID)
+
+=head2 listAll (deprecated)
 
 Given a user, Check datasets used in user's projects 
 
@@ -87,17 +90,17 @@ Return ref hash of datasets used in projects of a given user
 
 Return: ref array of project objects owned by a given user.
 
-=head2 listGroup
+=head2 listGroup (deprecated)
 
 List datasets used in a given Research group
 Return : ref array of  dataset objects in a given research group.
 
-=head2 load
+=head2 load ($datasetID)
 
 Load a dataset object 
 Return: dataset object
 
-=head2 lockUnlock
+=head2 lockUnlock ($id,$bool)
 
 Lock/Unlock a dataset
 
@@ -119,7 +122,7 @@ if current project has dataset(s), return ref hash of datasets not already used
  
 Return: ref hash
 
-=head2 remove
+=head2 remove ($ref)
 
 remove datasets from project
 parameters: ref hash: key=dataset_id; value=ref array of associated projects.
@@ -136,11 +139,9 @@ Return : ref hash (share,use)
 
 
 
-=head2 switch
+=head2 switch ($id)
 
 Switch dataset 
-
-
 
 =cut
 
@@ -236,28 +237,6 @@ sub create{
 
 }
 
-#################
-# Parameters:
-#	name = dataset's name
-#	description = dataset's description
-
-
-#sub createWithoutImage{
-#	my $self=shift;
-#	my $session=$self->{session};
-#	my ($name,$description)=@_;
-#	my $project=$session->project();
-#	my $dataset = $project->newDataset($name,$description);
-#	if ($dataset){
-#	   $dataset->writeObject();
-#	   $session->dataset($dataset);
-#	   $session->writeObject();
-#	   return 1;
-#	}else{
-#		return undef;
-#	}
-
-#}
 
 
 #################
@@ -331,40 +310,66 @@ sub imageNotIn{
 	return $rep;
 }
 
+
+###################
+# Parameters:
+#	userID= user id
+# Return: ref array of dataset objects 
+
+sub listMatching{
+	my $self=shift;
+	my $session=$self->{session};
+	my ($usergpID)=@_;
+	my @list=();
+	my $ref;
+	if (defined $usergpID){
+	   my @datasets=$session->Factory()->findObjects("OME::Dataset",'group_id'=>$usergpID);
+	   $ref=\@datasets;
+
+	 }else{
+	   my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+	   foreach (@projects){
+	     push(@list,$_->datasets());
+	   }
+	   $ref=checkDuplicate(\@list);
+	}
+	return $ref;
+}
+
 ################
 # Parameters: no
 # Return: ref hash of datasets used in projects of a given user
 
-sub listAll{
-	my $self=shift;
-	my $session=$self->{session};
-	my %list=();
-	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+#sub listAll{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my %list=();
+#	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
 	
-	foreach (@projects){
-	   my @datasets=$_->datasets();
-     	   foreach my $dataset (@datasets){
-	     $list{$dataset->dataset_id()}=$dataset->name() unless $list{$dataset->dataset_id()};
-         }
+#	foreach (@projects){
+#	   my @datasets=$_->datasets();
+#     	   foreach my $dataset (@datasets){
+#	     $list{$dataset->dataset_id()}=$dataset->name() unless $list{$dataset->dataset_id()};
+#         }
 
-	}
+#	}
 
-	return \%list;
-}
+#	return \%list;
+#}
 
 ##############
 # Parameters:
 #	userID= user id
 # Return: ref array of dataset objects (datasets used in a Research group)
 
-sub listGroup{
-	my $self=shift;
-	my $session=$self->{session};
-	my ($usergpID)=@_;
-	my @datasets=$session->Factory()->findObjects("OME::Dataset",'group_id'=>$usergpID);
-	return \@datasets;
+#sub listGroup{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my ($usergpID)=@_;
+#	my @datasets=$session->Factory()->findObjects("OME::Dataset",'group_id'=>$usergpID);
+#	return \@datasets;
 
-}
+#}
 
 
 #################
@@ -526,6 +531,19 @@ sub switch{
 # PRIVATE METHODS		 #
 ##########################
 
+sub checkDuplicate{
+	my ($ref)=@_;
+	my %seen=();
+  	my $objet;
+  	my @a=();
+  	foreach $objet (@$ref){
+    	 push(@a,$objet) unless $seen{$objet}++;
+   	}
+  	return \@a;
+
+
+}
+
 sub deleteDataset{
    	my ($deletedataset,$db)=@_;
    	my $tableDataset="datasets";
@@ -548,7 +566,6 @@ sub deleteInMap{
   	} 
       return (defined $result)?1:undef;
 }
-
 
 sub notMyProject{
 	my ($session)=@_;

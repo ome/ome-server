@@ -56,45 +56,42 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
-=head2 add
+=head2 add ($id)
 
 Add an existing dataset to a project.
 
-=head2 change
+=head2 change ($description,$name)
 
 Modify name/description of a project.
 
-=head2 create
+=head2 create ($ref)
 
 Create a new project and update the OME session i.e. current dataset sets to undef.
 
-=head2 delete
+=head2 delete ($id)
 
 Delete a project, update OME session if the project is the current project.
 If the user doesn't have other project: current project and current dataset set to undef
 otherwise set the first (arbitrary in the project list) project (+ dataset) to the current project.
 
-=head2 exist
+=head2 exist ($name)
 
 Check if the project's name already exists (in DB).
 Return: 1 or undef
 
-=head2 list
+=head2 listMatching (userID)
 
-List projects owned by a given user
-Return: ref array of project objects owned by a given user.
+List projects owned by a given user if no parameter
+List projects in a given Research group if userId parameter
 
-=head2 listGroup
+Return: ref array of project objects 
 
-List projects in a given Research group
-Return : ref array of project objects in a given research group.
-
-=head2 load
+=head2 load ($projectID)
 
 Load a project object 
 Return: project object
 
-=head2 switch
+=head2 switch ($id,$bool)
 Switch project 
 
 
@@ -126,9 +123,11 @@ sub add{
 	my ($id)=@_;
 	my $project=$session->project();
 	my $dataset=$project->addDatasetID($id);
+	#my $object=$session->Factory()->loadObject("OME::Dataset",$dataset->dataset_id());
 	$session->dataset($dataset);
-	$session->writeObject();
 	$project->writeObject();
+	$session->writeObject();
+
 	return 1;
 
 }
@@ -226,28 +225,41 @@ sub exist{
 # Parameters: no
 # Return: ref array of project objects owned by a given user.
 
-sub list{
+sub listMatching{
 	my $self=shift;
 	my $session=$self->{session};
-	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+	my ($userID)=@_;
+	my @projects=();
+	if (defined $userID){
+	   @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$userID);
+	}else{
+	   @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+	}
 	return \@projects;
-
 }
+
+#sub list{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+#	return \@projects;
+
+#}
 
 ##############
 # Parameters:
 # 	usergpID = user's group_id
 # Return : ref array of project objects in a given research group.
 
-sub listGroup{
-	my $self=shift;
-	my $session=$self->{session};
-	my ($usergpID)=@_;
-	#my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$session->User()->Group()->id());
-	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$usergpID);
-	return \@projects;
+#sub listGroup{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my ($usergpID)=@_;
+#	#my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$session->User()->Group()->id());
+#	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$usergpID);
+#	return \@projects;
 
-}
+#}
 
 ############
 # Parameters:

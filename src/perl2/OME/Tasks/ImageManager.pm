@@ -51,11 +51,17 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
-=head2 delete
+=head2 delete ($id)
 
 Delete Image from database
 
-=head1 listGroup
+
+=head2 listMatching ($usergpID,$used)
+Images in Research group
+if bool defined, images in Research group not already used by project
+
+
+=head2 listGroup
 
 Check images associated to a given Research group
 Return: ref array with image objects
@@ -66,7 +72,7 @@ Compare images in the current dataset and ones available in the Research group
 return list of images not used.
 Return: ref array with image object
 
-=head2 load
+=head2 load ($imageID)
 
 Load image object
 Return: image object
@@ -87,7 +93,7 @@ key: image_id
 ->{image} => image object;
 
 
-=head2 remove
+=head2 remove ($ref)
 Remove image from datasets
 
 =cut
@@ -123,35 +129,57 @@ sub delete{
 	
 }
 
+
+#########################
+# Parameters:
+#	used if defined check images used and the ones in Research group
+# Return: ref array of image objects
+
+sub listMatching{
+	my $self=shift;
+	my $session=$self->{session};
+	my ($usergpID,$used)=@_;
+	my $result;
+	if (defined $used){
+		
+	   my @gpImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>$usergpID);
+	   my @usedImages=$session->dataset()->images();
+	   $result=notUsedImages(\@gpImages,\@usedImages);
+	}else{
+	   my @images = $session->Factory()->findObjects("OME::Image", 'group_id' =>$usergpID);
+	   $result=\@images;
+	}
+	return $result;
+}
 ###############
 # Parameters: 
 #	usergp = group_id (future) ?
 # Return: ref array with image objects
 
-sub listGroup{
-	my $self=shift;
-	my $session=$self->{session};
-	#my ($usergpID)=@_;
-	my @images = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id());
-	
-	return \@images;
-
-}
+#sub listGroup{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	#my ($usergpID)=@_;
+#	my @images = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id());
+#	
+#	return \@images;
+#
+#}
 
 
 ###############
 # Parameters: no
 # Return: ref array with image object
 
-sub listNotUsed{
-	my $self=shift;
-	my $session=$self->{session};
-	my @gpImages = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id() );
-	my @usedImages=$session->dataset()->images();
-	my $result=notUsedImages(\@gpImages,\@usedImages);
- 	return $result;
+#sub listNotUsed{
+#	my $self=shift;
+#	my $session=$self->{session};
+#	my @gpImages = $session->Factory()->findObjects("OME::Image", 'group_id' => $session->User()->Group()->id() );
+#	my @usedImages=$session->dataset()->images();
+#	my $result=notUsedImages(\@gpImages,\@usedImages);
+# 	return $result;
 
-}
+#}
 
 
 #############
