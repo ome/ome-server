@@ -37,6 +37,33 @@
 
 package OME::Tasks::OMEImport;
 
+=head1 NAME
+
+OME::Tasks::OMEImport - A class to import OME XML
+
+=head1 SYNOPSIS
+
+	use OME::Tasks::OMEImport;
+	use OME::SessionManager;
+
+	# Acquire a session. See OME::Session for more details
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->TTYlogin();
+
+	# Get an instance of this class
+	my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+
+	# Get an OME::Image::Server::File object, import the file object.
+	$file = OME::Image::Server::File->upload($path);	
+	my $objects = $OMEImporter->importFile( $file );
+
+=head1 DESCRIPTION
+
+This class imports an OME XML file into the OME database.
+
+=cut
+
+
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
@@ -56,6 +83,17 @@ use OME::ImportExport::DataHistoryImport;
 use OME::ImportExport::ResolveFiles;
 use OME::Image::Server::File;
 use OME::Tasks::PixelsManager;
+
+
+=head1 METHODS
+
+=head2 new
+
+	my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+
+Returns an instance of the XML importer.
+
+=cut
 
 sub new {
     my ($proto, %params) = @_;
@@ -85,38 +123,41 @@ sub new {
 }
 
 
+=head2 importFile
+
+	my $ImportedObjects = $OMEImporter->importFile( $file );
+
+Imports the OME::Image::Server::File object given by $file.
+The importer returns a hash reference keyed by LSID with values containing object references.
+
+=cut
+
 sub importFile {
-    my ($self, $filename, %flags) = @_;
+    my ($self, $file, %flags) = @_;
     my $session = $self->{session};
     my $parser  = $self->{_parser};
-	my $factory       = $session->Factory();
+	my $repository = $session->findRepository();
+	my $filename;
+	my $originalFile;
 
-	my $repository;
-	eval {
-		$repository = $factory->findAttribute( "Repository", IsLocal => 'f' );
-	};
-	$repository = $factory->findObject( "OME::SemanticType::BootstrapRepository", IsLocal => 'f' )
-		unless $repository;
-	die "Could not find a remote image server to load"
-		unless $repository;
-
-    OME::Tasks::PixelsManager->activateRepository($repository);
-
-	my $file = OME::Image::Server::File->upload($filename);	
-
-	# FIXME: image server should autodetect duplicate file and take action --or--
-	#  this code should delete this just uploaded file if it has duplicate SHA1
-	my $sha1 = $file->getSHA1();
-    my $originalFile;
-    eval {
-        $originalFile = $session->Factory->
-          findAttribute("originalFile",SHA1 => $sha1);
-    };
-	return if defined $originalFile;
+	if (not UNIVERSAL::isa($file,'OME::Image::Server::File') ) {
+	# This serves as a signal that we're doing the import internally - not through ImportEngine
+		$filename = $file;
+		$file = OME::Image::Server::File->upload($filename)
+			or die "Couldn't upload $filename to server";
+		my $sha1 = $file->getSHA1();
+		eval {
+			$originalFile = $session->Factory->
+			  findAttribute("originalFile",SHA1 => $sha1);
+		};
+		return if defined $originalFile;
+	}
 
     my $resolver = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
     	or die "Could not instantiate OME::ImportExport::ResolveFiles\n";
+    
     my $doc = $resolver->importFile( $file->getFileID(), $repository );
+	logdbg "debug", ref ($self)."->importFile: imported ".$file->getFilename();
  	
  	# Apply Stylesheet
  	my $xslt = XML::LibXSLT->new();
@@ -125,30 +166,31 @@ sub importFile {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	my $CA_doc = $stylesheet->transform($doc);
 
-    OME::Tasks::ImportManager->startImport();
+	# Either initiate the import at this point or use an already initiated import.
+    my $importSelfInitiated = OME::Tasks::ImportManager->startImport(1);
 
-	$self->processDOM($CA_doc->getDocumentElement(),%flags);
-    
-	# Store the file hash.
-    my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
-    if (defined $mex) {
-        $originalFile = $session->Factory->
-          newAttribute("OriginalFile",undef,$mex,
-                       {SHA1 => $file->getSHA1(), 
-                        Path => $file->getFilename(), 
-                        FileID => $file->getFileID(), 
-                        Format => 'OME XML',
-                        Repository => $repository });
-        $mex->status('FINISHED');
-        $mex->storeObject();
+	my $importedObjects = $self->processDOM($CA_doc->getDocumentElement(),%flags);
+
+	# Store the file hash if we're doing the import.
+	if ($importSelfInitiated && $filename) {
+		my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+		if (defined $mex) {
+			$originalFile = $session->Factory->
+			  newAttribute("OriginalFile",undef,$mex,
+						   {SHA1 => $file->getSHA1(), 
+							Path => $file->getFilename(), 
+							FileID => $file->getFileID(), 
+							Format => 'OME XML',
+							Repository => $repository });
+			$mex->status('FINISHED');
+			$mex->storeObject();
+		}
     }
 
     # Commit the transaction to the DB.
     $self->{session}->commitTransaction();
 
-    OME::Tasks::ImportManager->finishImport();
-
-	return;
+	return $importedObjects;
 }
 
 # importXML commented out by josiah 6/10/03
@@ -211,7 +253,7 @@ sub processDOM {
           semanticTypes   => $semanticTypes,
           semanticColumns => $semanticColumns);
 
-    my ($importedObjects, $importDataset ) = $hierarchyImporter->processDOM($root);
+    my $importedObjects = $hierarchyImporter->processDOM($root);
 
     # Parse the data History
     my $historyImporter = OME::ImportExport::DataHistoryImport->
@@ -225,33 +267,12 @@ sub processDOM {
 	$self->detectAndMarkDuplicateObjects($hierarchyImporter);
     # Store unmarked objects.
 	$hierarchyImporter->storeObjects( );
-	
-	# Run the engine on the imported dataset.
-	if( $importDataset ) {
-		my $chain = $self->{session}->Factory->
-			findObject("OME::AnalysisChain",name => 'Image import analyses');
-		
-		if (!defined $chain) {
-			logcarp "The image import analysis chain is not defined.  Skipping predefined analyses..."
-				if !defined $chain;
-		} else {
-			logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
-			OME::Analysis::Engine->
-                executeChain($chain,$importDataset,{});
-		}
-
-		# set default thumbnail for all imported pixels
-		foreach my $image ( $importDataset->images() ) {
-			foreach my $pixels ($image->pixels() ) {
-				OME::Tasks::PixelsManager->saveThumb( $pixels );
-			}
-		}
-	}
-
 
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
     $self->{session}->commitTransaction();
+    
+    return ($importedObjects);
 
 }
 
