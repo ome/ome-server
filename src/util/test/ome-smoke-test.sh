@@ -60,10 +60,22 @@ su -l $OME_ADMIN -c "cd $IMAGE_DIR ; cvs up -dP" > /dev/null 2>&1
 #
 # Backup the DB
 #
+echo "Starting DB backup on $HOST on `date`" > $LOG_FILE
 cd $SOURCE_DIR/src/perl2/
 rm -f $DB_BACKUP > /dev/null 2>&1
-ome admin data backup -q -a $DB_BACKUP > /dev/null 2>&1
-su -l $OME_ADMIN -c "dropdb $DB_NAME" > /dev/null 2>&1
+ome admin data backup -q -a $DB_BACKUP >> $LOG_FILE 2>&1
+su -l $OME_ADMIN -c "dropdb $DB_NAME" >> $LOG_FILE 2>&1
+DROPPED=`su -l $OME_ADMIN -c "psql -l -d ome | grep $DB_NAME"`
+if (test "$DROPPED") ;
+	then echo "Could not drop DB $DB_NAME" >> $LOG_FILE ;
+	echo "Exiting" >> $LOG_FILE ;
+	if test "$MAIL_TO" ;
+		then $MAIL_PROGRAM"`date` Could not drop DB" $MAIL_TO < $LOG_FILE ;
+	fi;
+	PATH=$OLD_PATH
+	export PATH
+	exit -1 ;
+fi;
 #
 # Set up the test environment
 #
