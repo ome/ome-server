@@ -217,14 +217,14 @@ sub writeOneSemanticElement ($$) {
     my $data_column = $element->data_column();
     my $sql_type = $data_column->sql_type();
 
-    $element_name =~ s/^Is// if $sql_type eq 'boolean';
-
     my $java_type;
     if ($sql_type eq 'reference') {
         $java_type = $data_column->reference_type();
     } else {
         $java_type = $JAVA_TYPES{$sql_type};
     }
+    
+    $element_name =~ s/^Is// if $sql_type eq 'boolean';
 
     push @{$class_desc->{Fields}},
       $element_name, [$java_type, $element_name];
