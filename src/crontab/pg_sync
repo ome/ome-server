@@ -1,4 +1,0 @@
-#!/bin/sh
-
-cp /etc/shadow ~postgres/data/passwd
-chown postgres:postgres ~postgres/data/passwd

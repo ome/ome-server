@@ -1,0 +1,11 @@
+#!/bin/bash
+OMEIS_BASE=%OMEIS_BASE%
+OME_BIN=%OME_BIN%
+PIX_COMP=%PIX_COMP%
+FILE_COMP=%FILE_COMP%
+# FIXME:  This will delete files that already have a compressed version, but we should probably do this in a safer way - probably with signatures
+#find $OMEIS_BASE/Files  -regex '.*/[0123456789]*' -atime +$FILE_COMP \( -exec test \! -e '{}'.bz2 \; -exec bzip2 -9 '{}' \; \) -or \( -exec test -e '{}'.bz2 \; -delete \)
+#find $OMEIS_BASE/Pixels -regex '.*/[0123456789]*' -atime +$PIX_COMP \( -exec test \! -e '{}'.bz2 \; -exec bzip2 -9 '{}' \; \) -or \( -exec test -e '{}'.bz2 \; -delete \)
+# for now, we are not deleting expired pixels with an already existing compressed version
+find $OMEIS_BASE/Files  -regex '.*/[0123456789]*' -atime +$FILE_COMP -exec test \! -e '{}'.bz2 \; -exec bzip2 -9 '{}' \;
+find $OMEIS_BASE/Pixels -regex '.*/[0123456789]*' -atime +$PIX_COMP -exec test \! -e '{}'.bz2 \; -exec bzip2 -9 '{}' \;
