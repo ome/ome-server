@@ -1,0 +1,98 @@
+# OME/Tasks/OMEXMLImportExport.pm
+
+# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Author:  JM Burel <jburel@dundee.ac.uk>
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+package OME::Tasks::AEFacade;
+
+
+our $VERSION = '1.0';
+
+=head1 NAME
+
+OME::Tasks::AEFacade 
+
+=head1 SYNOPSIS
+
+		
+=head1 DESCRIPTION
+
+=head1 METHODS 
+
+=head2 
+=cut
+
+
+
+
+
+
+
+
+use strict ;
+use OME::Tasks::AnalysisEngine;
+use OME::Tasks::ChainManager;
+
+#####################################################
+# Constructor. This is not an instance method as well.
+# new($session)
+
+sub new {
+	my ($class,$session) = @_ ;
+	my  $self = {} ;
+	$self->{session} = $session ;
+	bless($self,$class) ;
+	return  $self ;
+}
+
+
+#################
+sub executeView{
+	my $self=shift;
+	my $session=$self->{session};
+	my ($dataset,$nameView,$string,$nameFunction,$refh,$attributeType)=@_;
+	my %user_inputs=();
+	my @attributes=();
+	my $engine = OME::Tasks::AnalysisEngine->new();
+	my $cmanager = OME::Tasks::ChainManager->new($session);
+	my $view=$self->{session}->Factory()->findObject("OME::AnalysisView",
+							name=>$nameView);
+	print STDERR "view===".$view->analysis_view_id()."\n";
+	my $node=$cmanager->getNode($view,$nameFunction);
+print STDERR "nodeID===".$node->analysis_view()->id()."\n";
+
+	my $formal_input=$cmanager->getFormalInput($view,$node,$string);
+
+	my $attribute = $session->Factory()->newAttribute($attributeType,undef,undef,$refh);
+      push (@attributes,$attribute);
+
+	$user_inputs{$node->id()}->{$formal_input->id()} =\@attributes;
+	$engine->executeAnalysisView($session,$view,\%user_inputs,$dataset);
+	return ;
+
+}
+
+
+=head1 AUTHOR
+
+JM Burel (jburel@dundee.ac.uk)
+
+=cut
+
+1;
+
