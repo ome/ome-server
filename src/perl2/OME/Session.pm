@@ -470,6 +470,8 @@ sub getTemporaryFilename {
     my ($base_name,$full_path);
 	$tmpRoot = $self->Configuration()->tmp_dir()
       unless defined $tmpRoot;
+	unless (-d $tmpRoot)
+		{ mkdir($tmpRoot) or croak "Couldn't make directory $tmpRoot: $!" }
 
     # Find a unique filename for the new pixels
     my $time = time();

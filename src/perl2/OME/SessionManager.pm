@@ -94,7 +94,11 @@ use constant FIND_USER_SQL => <<"SQL";
 SQL
 
 # The lifetime of server-side session keys in seconds
-our $APACHE_SESSION_LIFETIME = 1800;  # 30 minutes
+our $APACHE_SESSION_LIFETIME = 30;  # 30 minutes
+
+# FIXME:  This hard-coded path should come from Configuration->tmp_dir()
+# Or some other cleverness other than hard-coding it here
+our $TEMP_ROOT = '/var/tmp/OME';
 
 =head1 METHODS
 
@@ -388,11 +392,19 @@ sub getApacheSession {
     my %tiedApacheSession;
     my $apacheSession;
     my ($key,$value);
+    my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
+	unless (-d $TEMP_ROOT)
+		{ mkdir($TEMP_ROOT) or croak "Couldn't make directory $TEMP_ROOT: $!" }
+	unless (-d $lock_dir)
+		{ mkdir($lock_dir) or croak "Couldn't make directory $lock_dir: $!" }
+	unless (-d $sess_dir)
+		{ mkdir($sess_dir) or croak "Couldn't make directory $sess_dir: $!" }
+
 
     eval {
         tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => '/var/tmp/OME/sessions',
-            LockDirectory => '/var/tmp/OME/lock'
+            Directory     => $sess_dir,
+            LockDirectory => $lock_dir,
         };
     };
     return undef if $@;
@@ -400,12 +412,12 @@ sub getApacheSession {
     #
     # Check for a stale session key.  If its stale, delete it and return undef.
     if (defined $sessionKey) {
-    	my $sessionAge = POSIX::difftime(time(),$tiedApacheSession{timestamp});
-		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is ".($sessionAge / 60)." minutes old";
+    	my $sessionAge = sprintf ( "%d",(POSIX::difftime(time(),$tiedApacheSession{timestamp}) / 60) );
+		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is $sessionAge minutes old";
 		if ($sessionAge > $APACHE_SESSION_LIFETIME) {
 			logdbg "debug", "Deleting session";
 			tied (%tiedApacheSession)->delete();
-			print STDERR "Session is ".($sessionAge/60)." minutes long - expired.\n";
+			print STDERR "Session is $sessionAge minutes long - expired.\n";
 			return undef;
 		}
 	}
@@ -439,11 +451,12 @@ my $apacheSession = shift;
 my $sessionKey = $apacheSession->{SessionKey};
 my %tiedApacheSession;
 logdbg "debug", ref($self)."->deleteApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
+my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
 
     eval {
         tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => '/var/tmp/OME/sessions',
-            LockDirectory => '/var/tmp/OME/lock'
+            Directory     => $sess_dir,
+            LockDirectory => $lock_dir
         };
     };
     return undef if $@;
@@ -465,11 +478,19 @@ my $sessionKey = $apacheSessionRef->{SessionKey};
 my %tiedApacheSession;
 logdbg "debug", "storeApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
 my ($key,$value);
+my ($lock_dir,$sess_dir) = ("$TEMP_ROOT/lock","$TEMP_ROOT/sessions");
+
+	unless (-d $TEMP_ROOT)
+		{ mkdir($TEMP_ROOT) or croak "Couldn't make directory $TEMP_ROOT: $!" }
+	unless (-d $lock_dir)
+		{ mkdir($lock_dir) or croak "Couldn't make directory $lock_dir: $!" }
+	unless (-d $sess_dir)
+		{ mkdir($sess_dir) or croak "Couldn't make directory $sess_dir: $!" }
 
     eval {
         tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
-            Directory     => '/var/tmp/OME/sessions',
-            LockDirectory => '/var/tmp/OME/lock'
+            Directory     => $sess_dir,
+            LockDirectory => $lock_dir
         };
     };
     return undef if $@;
