@@ -279,8 +279,9 @@ sub writeOneHasManyType ($$$) {
     my @element_names = sort keys %$element_hash;
 
     # Attempt to make the pluralization look somewhat correct
-    $hasmany_type_name =~ s/y$/ie/;
-    $hasmany_type_name =~ s/s$//;
+    $hasmany_type_name =~ s/y$/ies/ or
+    $hasmany_type_name =~ s/s$/ses/ or
+    $hasmany_type_name =~ s/$/s/;
 
     if (scalar(@element_names) == 1) {
         # If there's only one element in the has-many type which points
@@ -288,7 +289,7 @@ sub writeOneHasManyType ($$$) {
         # (get[TypeName]s).
 
         print $fh <<"JAVA";
-    public List get${hasmany_type_name}s();
+    public List get${hasmany_type_name}();
 
 JAVA
     } else {
@@ -298,7 +299,7 @@ JAVA
 
         foreach my $element_name (@element_names) {
             print $fh <<"JAVA";
-    public List get${hasmany_type_name}sBy${element_name}();
+    public List get${hasmany_type_name}By${element_name}();
 JAVA
         }
 
