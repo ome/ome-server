@@ -46,6 +46,8 @@ import java.net.URL;
 import java.net.MalformedURLException;
 
 /**
+ * Factory class for retrieving instances of the {@link RemoteCaller}
+ * interface.
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
  * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
@@ -54,12 +56,35 @@ import java.net.MalformedURLException;
 
 public class DataServer
 {
+    /**
+     * This class should never be instantiated, so the constructor
+     * throws an exception.
+     * @throws UnsupportedOperationException always
+     */
+    private DataServer()
+    { 
+        throw new UnsupportedOperationException(
+            "DataServer should not be instantiated");
+    }
+
+    /**
+     * Returns a {@link RemoteCaller} which can be used to communicate
+     * with a data server at the specified URL.
+     * @param url the URL of the data server
+     * @throws MalformedURLException if <code>url</code> does not
+     * encode a well-formed URL
+     */
     public static RemoteCaller getDefaultCaller(String url)
         throws MalformedURLException
     {
         return getDefaultCaller(new URL(url));
     }
 
+    /**
+     * Returns a {@link RemoteCaller} which can be used to communicate
+     * with a data server at the specified URL.
+     * @param url the URL of the data server
+     */
     public static RemoteCaller getDefaultCaller(URL url)
     {
         return new XmlRpcCaller(url);

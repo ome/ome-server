@@ -28,8 +28,6 @@
  */
 
 
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:    Douglas Creager <dcreager@alum.mit.edu>
@@ -38,13 +36,33 @@
  */
 
 
-
-
 package org.openmicroscopy.ds;
+
+/**
+ * Signifies an attempt to read an unpopulated portion of a DTO
+ * object.  The methods of the OME remote framework allow you to
+ * specify which fields of a retrieved object should be filled in.  If
+ * a DTO accessor is called to read a field which was not filled in by
+ * the remote framework (or by a subsequent call to the field's
+ * mutator), this exception is thrown.
+ *
+ * @author Douglas Creager (dcreager@alum.mit.edu)
+ * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @since OME2.2
+ */
 
 public class DataException
     extends RuntimeException
 {
+    /**
+     * Constructs a <code>DataException</code> with no detail message.
+     */
     public DataException() { super(); }
+
+    /**
+     * Constructs a <code>DataException</code> with the specified
+     * detail message.
+     * @param msg the detail message
+     */
     public DataException(String msg) { super(msg); }
 }
