@@ -321,9 +321,10 @@ END_HTML
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
 			$q->hidden( -name => 'page_action', -default => undef, -override => 1 ).
-			$q->hidden( -name => 'accessor_id' ).
-			# This is used to retain selected objects across pages.
-			$q->hidden( -name => 'selected_objects' );
+			$q->hidden( -name => 'accessor_id' );
+		# This is used to retain selected objects across pages.
+		$html .= $q->hidden( -name => 'selected_objects' )
+			if( $select && $select eq 'many' );
 		
 	}
 	
