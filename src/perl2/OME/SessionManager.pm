@@ -84,30 +84,57 @@ sub createSession {
 # TTYlogin
 # --------
 sub TTYlogin {
+    my $homeDir = $ENV{"HOME"} || ".";
+    my $loginFile = "$homeDir/.omelogin";
+
+    my $manager = OME::SessionManager->new();
+    my $session;
+
+    my $loginFound = open LOGINFILE, "< $loginFile";
+
+    if ($loginFound) {
+        my $key = <LOGINFILE>;
+        chomp($key);
+        $session = $manager->createSession($key);
+        close LOGINFILE;
+
+        if (!defined $session) {
+            print "Cannot login via previous session.\n";
+        }
+    }
+
+    if (!defined $session) {
 	print "Please login to OME:\n";
-	
+
 	print "Username? ";
 	ReadMode(1);
 	my $username = ReadLine(0);
 	chomp($username);
-	
+
 	print "Password? ";
 	ReadMode(2);
 	my $password = ReadLine(0);
 	chomp($password);
 	print "\n";
 	ReadMode(1);
-	
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->createSession($username,$password);
-	
+
+	$session = $manager->createSession($username,$password);
+
 	if (!defined $session) {
-		print "That username/password does not seem to be valid.\nBye.\n\n";
-		exit -1;
+            print "That username/password does not seem to be valid.\nBye.\n\n";
+            exit -1;
+        } else {
+            my $created = open LOGINFILE, "> $loginFile";
+            if ($created) {
+                print LOGINFILE $session->{SessionKey}, "\n";
+                close LOGINFILE;
+            }
 	}
-	
+
 	print "Great, you're in.\n\n";
-	return $session;
+    }
+
+    return $session;
 }
 
 

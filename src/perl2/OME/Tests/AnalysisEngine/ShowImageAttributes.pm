@@ -22,7 +22,7 @@ use OME::Session;
 use OME::SessionManager;
 use OME::Image;
 use OME::Feature;
-use OME::DataType;
+use OME::DataTable;
 use Term::ReadKey;
 
 # I really hate those "method clash" warnings, especially since these
@@ -40,34 +40,14 @@ if (scalar(@ARGV) == 0) {
     exit -1;
 }
 
-print "Please login to OME:\n";
-
-print "Username? ";
-ReadMode(1);
-my $username = ReadLine(0);
-chomp($username);
-
-print "Password? ";
-ReadMode(2);
-my $password = ReadLine(0);
-chomp($password);
-print "\n";
-ReadMode(1);
-
 my $manager = OME::SessionManager->new();
-my $session = $manager->createSession($username,$password);
+my $session = $manager->TTYlogin();
 
-if (!defined $session) {
-    print "That username/password does not seem to be valid.\nBye.\n\n";
-    exit -1;
-}
-
-print "Great, you're in.\n\n";
 
 my $factory = $session->Factory();
 $factory->Debug(0);
 
-my @all_datatypes = OME::DataType->retrieve_all();
+my @all_datatypes = OME::DataTable->retrieve_all();
 
 my %temp_datatypes = (D => [], I => [], F => []);
 push @{$temp_datatypes{$_->attribute_type()}}, $_ foreach @all_datatypes;
