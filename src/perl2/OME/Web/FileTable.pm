@@ -171,6 +171,9 @@ sub getTable {
 		# Cleanup path and find file name
 		$file_path = File::Spec->canonpath($file_path);
 
+		# Just nix the loop if the path doesn't exist
+		unless (-e $file_path) { next; }
+
 		# Directory flag
 		my $directory = (-d $file_path) ? 1 : 0;
 		

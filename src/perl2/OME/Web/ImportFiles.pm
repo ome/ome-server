@@ -61,19 +61,15 @@ use OME::Tasks::ImageTasks;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
 
+use constant UNIX_STYLE => 1;
+use constant FTP_STYLE  => 2;
+
+my $STYLE = FTP_STYLE;
+
 #*********
 #********* PRIVATE METHODS
 #*********
 
-sub getPageTitle {
-	return "Open Microscopy Environment - Import Files";
-}
-
-{
-	my $menu_text = "Import Files";
-
-	sub getMenuText { return $menu_text }
-}
 
 # Build array for hidden CGI import field
 sub __processQueue {
@@ -87,6 +83,61 @@ sub __processQueue {
 	foreach (@$remove) { delete($uniq{$_}); }
 
 	return keys(%uniq);
+}
+
+# De-taint sub for FTP style
+sub __detaintPaths {
+	my ($self, $paths, $home_dir) = @_;
+		
+	# Settle the trailing "/" if it exists
+	$home_dir = File::Spec->canonpath($home_dir);
+
+	my (@good_paths, @bad_paths);
+	my $home_path_len = scalar(File::Spec->splitdir($home_dir));
+
+	foreach (@$paths) {
+		unless (File::Spec->file_name_is_absolute($_)) {
+			# This should *NEVER* happen from our code, only if someone
+			# is mucking around with the CGI variables.
+			carp "*WARNING*: Removing *nasty* non-absolute path '$_' in __detaintPaths().";
+			push (@bad_paths, $_);
+			next;
+		}
+
+		# Settle the trailing "/" if it exists
+		$_ = File::Spec->canonpath($_);
+
+		my @dirs;
+
+		# If it's a file, cleanse it of it's fileness we only care about dirs
+		if (-f $_) {
+			my ($vol, $dir, $file_name) = File::Spec->splitpath($_);
+			# De-taint of file being specified
+			$_ = $dir;
+			@dirs = File::Spec->splitdir($dir);
+		} else {
+			@dirs = File::Spec->splitdir($_);
+		}
+		
+		# First checkpoint (evil characters/sequences in the path)
+		if ($_ =~ /\.\.\/|\||\\|\;|\:/) {
+			push (@bad_paths, $_);
+			next;
+		# Second checkpoint (path obviously not below the home dir)
+		} elsif (scalar(@dirs) < $home_path_len) {
+			push (@bad_paths, $_);
+			next;
+		# Third checkpoint (path is not a child of homedir)
+		} elsif (not ($_ =~ /^$home_dir.*/)) {
+			print STDERR "*HERE*: '$_', '$home_dir'\n";
+			push (@bad_paths, $_);	
+			next;
+		}
+
+		push (@good_paths, $_);
+	}
+
+	return (\@good_paths, \@bad_paths);
 }
 
 sub __getDatasetForm {
@@ -250,7 +301,7 @@ sub __getQueueBody {
 
 	# Action button clicked on
 	my $action = $q->param('action') || '';
-
+	
 	# CGI cleanup
 	$q->delete('action');
 	$q->delete('add_selected');
@@ -261,7 +312,42 @@ sub __getQueueBody {
 	if ($action eq 'Remove from Queue') { $action = 'remove'; }
 
 	my $body = $q->p({class => 'ome_title', align => 'center'}, 'Import Images');
+
+	# If we're running using the FTP style de-taint our paths
+	if ($STYLE == FTP_STYLE) {
+		my ($good_paths, $bad_paths);
+
+		# De-taint the root path dir
+		($good_paths, $bad_paths) = $self->__detaintPaths([$path_dir], $home_dir);
+
+		# Report badness
+		if (@$bad_paths) {
+			foreach (@$bad_paths) {
+				$body .= $q->p({class => 'ome_error'},
+					"You have been returned to your home directory. The path you attempted to enter '$_' was not a child of your home directory '$home_dir' or contained illegal characters."
+				);
+			}
+			$path_dir = $home_dir;
+		} else {
+			# De-tainted $path_dir
+			$path_dir = shift(@$good_paths);
+		}
 	
+		# Also de-taint the importq
+		($good_paths, $bad_paths) = $self->__detaintPaths(\@importq, $home_dir);
+
+		# Report badness
+		if (@$bad_paths) {
+			foreach (@$bad_paths) {
+				$body .= $q->p({class => 'ome_error'},
+					"A path '$_' which is not a child of your home directory '$home_dir' or which contained illegal characters, was removed from the 'Import Queue'. Please try again or contact your systems administrator."
+				);
+			}
+		}
+
+		@importq = @$good_paths;
+	}
+
 	# Rebuild importq
 	if ($action eq 'add') {
 		@importq = $self->__processQueue(\@importq, \@add_selected, undef);
@@ -421,6 +507,19 @@ sub __getImportBody {
 #*********
 #********* PUBLIC METHODS
 #*********
+
+
+# Override's OME::Web
+sub getPageTitle {
+	return "Open Microscopy Environment - Import Files";
+}
+
+# Override's OME::Web
+{
+	my $menu_text = "Import Files";
+
+	sub getMenuText { return $menu_text }
+}
 
 # Override's OME::Web
 sub getOnLoadJS {
