@@ -52,6 +52,8 @@ package OME::ImportEngine::TIFFUtils;
 
 use strict;
 use OME;
+use Carp;
+use Carp qw'cluck';
 our $VERSION = $OME::VERSION;
 
 use Exporter;
@@ -181,52 +183,82 @@ my $tag_hash;
 
 =head2 readTiffIFD
 
-This routine first examines the file at the passed file handle to
-determine if it is or is not a TIFF file. If it isn't, the routine
-immediately returns I<undef>.
+This function can be called in three different ways:
+	%tag  = readTiffIFD($file);
+	%tag  = readTiffIFD($file,3);
+	@tags = readTiffIFD($file);
+	
+This function first examines the file at the passed file handle to
+determine if it is a TIFF file. If it isn't, the routine immediately 
+returns I<undef>.
 
-If the file is TIFF, the routine walks the file collecing tags and 
-thier values. Any tag whose key lives in the constants hash TAGS 
-will have its id and value recorded in a return hash. Any tag whose key does
-not have an entry in TAGS will have its id, type, count, and offset
-recorded in the return hash. This latter action allows TIFF variant format
-importers to access possible custom tags.
+If the file is a TIFF, the routine walks the file collecting tags and 
+their values. Any tag whose key exists in the constants hash TAGS 
+will have its id and value recorded. Any tag whose key does not have an entry 
+in TAGS will have its id, type, count, and offset recorded in the return hash. 
+This allows TIFF variant format importers to access and parse for custom tags.
 
-When this routine has exhausted all the tags in the passed file, it returns
-the return tag hash it has been accumulating.
+This function can be called in the scalar context without explicitely specifying
+which IFD's tags to return. Then this function returns the 0 IFD directory as a 
+hash of tags.
+
+If the function is called in the scalar contex and the the target IFD directory 
+is specified, only the tags from that directory will be returned.
+
+If the function is called in the list context, it returns an array of hashes where
+each hash corresponds to the tags of an IFD directory. Ipso facto, the length of 
+the returned array is equal to the number of IFD directories in the image.
+
+This function uses a caching mechanism keyed on the SHA1 digest of the passed in 
+file. So if you call readTiffIFD on the same file, the subsequent times the tags 
+are returned from memory. The cache is cleaned out when image format importers's 
+cleanup() methods call OME::ImportEngine::TIFFUtils::cleanup(). 
+
+Caching is neccesitated by the extremely slow speed with which this utility reads 
+tiff tags. Reading 700 planes (approximately 5000 tags) takes 25 minutes. 
+libtiff's tiffdump utility processes the same amount of tags in less than 10 seconds.
+
+However calls to readTiffIFD where the target IFD directory is explicitely specified,
+are not cached.
 
 =cut
 
-sub readTiffIFD ($) {
+sub readTiffIFD {
     my ($file) = shift;
+    my ($targetIFD);
     my ($buf,$endian,@buf,$offset);
     
-    # Read the TIFF header to determine endianness and to locate the
-    # first IFD.
-
+    # Read the TIFF header to determine endianness and to locate the first IFD.
     ($endian, $offset) = __verifyTiff($file);
     return undef unless defined($endian);
 
     my @IFDs;
     
-    # CACHING: check if we ever read-in this file's TIFF tags before.
-    # If so, don't read the tags again, but return the pre-computed IFD tag array
+    # CACHING: check if we previously read-in this file's TIFF tags 
+    # If so, don't read the tags again, but return the cached tags
     my $sha1 = $file->getSHA1();
-    if (exists $tag_hash->{$sha1}) {
+    if (exists $tag_hash->{$sha1} and not $targetIFD) {
   		my $IFD_ref =  $tag_hash->{$file->getSHA1()};
-  		@IFDs = @$IFD_ref;
   		
+  		# did we already compute only the first IFD or all IFDs ? 		
+  		if (ref $IFD_ref eq 'ARRAY') {		
+			@IFDs = @$IFD_ref;
+		}
+			
 		if (wantarray) {
-			return (@IFDs);
+			return @IFDs if @IFDs;
 		} else {
-			return ($IFDs[0]);
+			return ($IFDs[0]) if @IFDs;
+			return ($IFD_ref);
 		}
 	}
 	
     # Read in each IFD
-
+    my $currentIFD = 0;
     while ($offset > 0) {
-        eval {
+    	$currentIFD++;
+    	
+    	eval {
             my %ifd;
             $ifd{__Endian} = $endian;
 
@@ -235,91 +267,86 @@ sub readTiffIFD ($) {
             # Read the number of tags in this IFD
             $buf = $file->readData(2);
             my $tag_count = unpack(_x->[$endian],$buf);
+			
+			# read the IFD
+			if (wantarray || not $targetIFD || $targetIFD == $currentIFD) {
+				while ($tag_count) {
 
-            while ($tag_count) {
-                # Read the tag
-                my $tell = $file->getCurrentPosition();
-                $buf = $file->readData(12);
+					# Read the tag
+					my $tell = $file->getCurrentPosition();
+					$buf = $file->readData(12);
+	
+					my ($tag_id,$tag_type,$value_count,$value_offset) =
+					  unpack(_xxXX->[$endian],$buf);
+	
+					if ($dumpHeader) { my $tagname = $tagnames{$tag_id}; $tagname = "unknown tag" unless defined($tagname); print STDERR "tag: $tag_id = $tagname, "; }
+	
+					# Single short values are stored, in the tag's value_offset field
+					if (($tag_type == TAG_SHORT) && ($value_count == 1)) {
+						($tag_id,$tag_type,$value_count,$value_offset) =
+						  unpack(_xxXx->[$endian],$buf);
+					}
+	
+					my @values;
 
-                my ($tag_id,$tag_type,$value_count,$value_offset) =
-                  unpack(_xxXX->[$endian],$buf);
+					# if tag is > max TIFF tag, the file might still be a TIFF variant.
+					# save tag for tiff variant importers to chew on
+					if ($tag_id > MAX_TIFF_TAG) {
+						push @{$ifd{$tag_id}},
+						  {'tag_id' => $tag_id,
+						   'tag_type' => $tag_type,
+						   'value_count' => $value_count,
+						   'value_offset' => $value_offset,
+						   'current_offset' => $file->getCurrentPosition()};
 
-                if ($dumpHeader) {
-                    my $tagname = $tagnames{$tag_id};
-                    $tagname = "unknown tag"
-                      unless defined($tagname);
-                    print STDERR "tag: $tag_id = $tagname, ";
-                }
-
-                # Single short values are stored, left justified,
-                # in the tag's value_offset field
-                if (($tag_type == TAG_SHORT) && ($value_count == 1)) {
-                    ($tag_id,$tag_type,$value_count,$value_offset) =
-                      unpack(_xxXx->[$endian],$buf);
-                }
-
-                my @values;
-
-                # if tag is > max TIFF tag, the file may
-                # still be a TIFF variant. Save tag info for
-                # variant handlers to chew on. Depending upon
-                # the definition of the tag, the variant handler
-                # may just call one of these utility decoder
-                # routines (see GELreader.pm), or execute a
-                # special decoding routine (see STKreader.pm).
-                if ($tag_id > MAX_TIFF_TAG) {
-                    push @{$ifd{$tag_id}},
-                      {'tag_id' => $tag_id,
-                       'tag_type' => $tag_type,
-                       'value_count' => $value_count,
-                       'value_offset' => $value_offset,
-                       'current_offset' => $file->getCurrentPosition()};
-                    if ($dumpHeader) {
-                        print STDERR " type: $tag_type, count: $value_count, offset: $value_offset\n";
-                        print STDERR "\t\t";
-                        @values = getTagValue($file, $tag_type, $value_count,
-                                              $value_offset, $endian);
-                    }
-                } else {
-                    if ($tag_type == TAG_BYTE    ||
-                          $tag_type == TAG_ASCII ||
-                          $tag_type == TAG_SHORT ||
-                          $tag_type == TAG_LONG  ||
-                          $tag_type == TAG_RATIONAL) {
-                                @values = getTagValue($file, $tag_type, $value_count,
-                                          $value_offset, $endian);
-                                push @{$ifd{$tag_id}}, @values;
-                          } else {
-                                push @{$ifd{$tag_id}},
-                                  {'tag_id' => $tag_id,
-                                   'tag_type' => $tag_type,
-                                   'value_count' => $value_count,
-                                   'value_offset' => $value_offset,
-                                   'current_offset' => $file->getCurrentPosition()};
-                                   }
-                }
-                $tag_count--;
-            }
-
-            push (@IFDs,\%ifd);
+						if ($dumpHeader) { print STDERR " type: $tag_type, count: $value_count, offset: $value_offset\n\t\t"; @values = getTagValue($file, $tag_type, $value_count,$value_offset, $endian); }
+					} else {
+						if ($tag_type == TAG_BYTE  || $tag_type == TAG_ASCII ||
+							$tag_type == TAG_SHORT || $tag_type == TAG_LONG  || 
+							$tag_type == TAG_RATIONAL) {
+								@values = getTagValue($file, $tag_type, $value_count, $value_offset, $endian);
+								push @{$ifd{$tag_id}}, @values;
+							} else {
+								push @{$ifd{$tag_id}},
+								  {'tag_id' => $tag_id,
+								   'tag_type' => $tag_type,
+								   'value_count' => $value_count,
+								   'value_offset' => $value_offset,
+								   'current_offset' => $file->getCurrentPosition()};
+							}
+					}
+					$tag_count--;
+				}
+				push (@IFDs,\%ifd);
+            }# finish reading the IFD
+            
             # Read the offset to the next IFD.
             $buf = $file->readData(4);
             $offset = unpack(_X->[$endian],$buf);
         };
-
-        if ($@) {
-            warn $@;
-            return undef;
+        
+        
+        last if (not wantarray and not $targetIFD); # exit loop if only want IFD 0
+        last if ($targetIFD == $currentIFD);        # exit loop if found IFD looking for
+            
+            
+		if ($@) {
+			warn $@;
+			return undef;
+		}
+           	
+        if ($targetIFD and $targetIFD > $currentIFD) { 
+        	croak "in readTiffIFD, specified IFD is greater than number of IFDS\n";
         }
     }
 
-
 	# CACHING: log this image's IFD tag array.
-    $tag_hash->{$sha1} = \@IFDs;
     if (wantarray) {
+    	$tag_hash->{$sha1} = \@IFDs;    # store reference to list
         return (@IFDs);
-    } else {
-        return ($IFDs[0]);
+    } elsif (not $targetIFD) {
+        $tag_hash->{$sha1} = $IFDs[0];  # store reference to hash
+        return $IFDs[0];
     }
 }
 
