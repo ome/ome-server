@@ -74,7 +74,7 @@ public class ModulePaletteFrame extends JFrame {
 	public static int HEIGHT=600;
 	public static int WIDTH=600;
 	
-	private CanvasFrame canvasFrame;
+	//private ChainFrameBase canvasFrame;
 	
 	public ModulePaletteFrame(Controller controller) {
 		super("OME Chains Palette");
@@ -92,6 +92,7 @@ public class ModulePaletteFrame extends JFrame {
 		canvas = new PPaletteCanvas();
 		getContentPane().add(canvas);
 		setBounds(new Rectangle(10,10,WIDTH,HEIGHT));	
+		canvas.setBounds(10,10,WIDTH,HEIGHT);
 		show();	
 	}
 	
@@ -111,20 +112,13 @@ public class ModulePaletteFrame extends JFrame {
 		menuBar.setLoginsDisabled(v);
 		if (v == true) {
 			canvas.setConnection(connection);
-			toolBar.setUserName(connection.getUserName());
-			// create a pallete, show it on the screen, make it visible.
-	
-			canvas.scaleToSize((double) WIDTH,(double) HEIGHT);
-			
-			canvasFrame = new CanvasFrame(connection);
+			toolBar.setLoggedIn(connection.getUserName());
+			canvas.scaleToSize();
 		}
 		else {
+			toolBar.setLoggedOut();
 			canvas.logout();
-			canvasFrame.logout();
-			canvasFrame.dispose();
-			canvasFrame = null;
 			connection = null;
-			toolBar.clearStatus();
 		}
 	}
 }
