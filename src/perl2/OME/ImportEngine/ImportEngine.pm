@@ -317,16 +317,9 @@ sub importFiles {
                                 SHA1 => $sha1);
 
                 if (defined $old_file) {
-                    my $old_id = $old_file->{__fields}->{original_files}->{file_id};
-                    # delete file that's just been uploaded since its a copy
-                    my $fref = getFileRef($group);
-                    OME::Image::Server->deleteFile($fref->getFileID);
-
                     __debug("Image has already been imported.  ");
                     if ($self->{_flags}->{AllowDuplicates}) {
                         __debug("AllowDuplicates is on.\n");
-                        my $f = OME::Image::Server::File->new($old_id);
-                        $group = replaceFileRef($group, $f);
                     } else {
                         __debug("Skipping...\n");
                         next GROUP;
