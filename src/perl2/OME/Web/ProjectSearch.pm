@@ -22,7 +22,7 @@ package OME::Web::ProjectSearch;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+$VERSION = '1.0';
 use CGI;
 
 use OME::Research::SearchEngine;
@@ -67,11 +67,17 @@ sub getPageBody {
 
 	if ($cgi->param('search') ) {
          my $string=cleaning($cgi->param('name'));
-	   return ('HTML',"<b>Please enter a data.</b>") unless length($string)>1;
-        
-         my $research=new OME::Research::SearchEngine($table,$string,$selectedcolumns);
+	   $body.="<b>Please enter a data.</b>";
+	   $body.=format_form($htmlFormat,$cgi); 
+         return ('HTML',$body) unless length($string)>1;
+	   $body="";
+         
+	  		
+
+	  
+         my $research=new OME::Research::SearchEngine($table,$selectedcolumns);
          if (defined $research){
-	    $ref=$research->searchEngine;
+	    $ref=$research->searchEngine($string);
          }
           if (defined $ref){
 		$body .= $jscriptFormat->openInfoProject();	

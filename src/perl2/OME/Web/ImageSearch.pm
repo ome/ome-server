@@ -22,7 +22,7 @@ package OME::Web::ImageSearch;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+$VERSION = '1.0';
 use CGI;
 
 use OME::Research::SearchEngine;
@@ -59,10 +59,24 @@ sub getPageBody {
 	if ($cgi->param('search') ) {
 	   my $tableRows="";
          my $string=cleaning($cgi->param('name'));
-         return ('HTML',"<b>Please enter a data.</b>") unless length($string)>1;
-         my $research=new OME::Research::SearchEngine($table,$string,$selectedcolumns);
+	   $body.=format_form($htmlFormat,$cgi); 
+         return ('HTML',$body) unless length($string)>1;
+	   $body="";
+	   my $year=$cgi->param('year');
+	   my $month=$cgi->param('month');
+	   my $day=$cgi->param('day');
+	   my %htime=(
+		year=>$year,
+		month=>$month,
+		day =>$day,
+	   );
+
+
+
+         my $research=new OME::Research::SearchEngine($table,$selectedcolumns);
          if (defined $research){
-	    $ref=$research->searchEngine;
+	    $ref=$research->searchEngine($string,\%htime);
+	
          }
          if (defined $ref){
 		$body .= $jscriptFormat->popUpImage();    
@@ -101,7 +115,7 @@ sub format_form{
 	my ($htmlFormat,$cgi) =@_ ;
 	my $form="";
 	$form .=$cgi->startform;
-	$form.=$htmlFormat->formSearch("Images");
+	$form.=$htmlFormat->formSearch("Images",1);
 	$form .=$cgi->endform;
 	return $form ;
 }

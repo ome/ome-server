@@ -22,7 +22,7 @@ package OME::Web::DatasetSearch;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+$VERSION = '1.0';
 use CGI;
 
 use OME::Research::SearchEngine;
@@ -71,9 +71,11 @@ sub getPageBody {
 	   $body.=format_form($htmlFormat,$cgi); 
          return ('HTML',$body) unless length($string)>1;
 	   $body="";
-         my $research=new OME::Research::SearchEngine($table,$string,$selectedcolumns);
+	 
+
+         my $research=new OME::Research::SearchEngine($table,$selectedcolumns);
          if (defined $research){
-	    $ref=$research->searchEngine;
+	    $ref=$research->searchEngine($string);
          }
           if (defined $ref){
 		$body .= $jscriptFormat->openInfoDataset();	
