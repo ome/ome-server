@@ -63,7 +63,10 @@ public class PConstants {
 	// scale multiplier for chains and library
 	public static final double SCALE_FACTOR=1.2;
 	
-	public static final Color HIGHLIGHT_COLOR = new Color(104,51,155); // was 204,51,255
+	public static final Color CANVAS_BACKGROUND_COLOR = new Color(100,100,100);
+	
+	public static final Color HIGHLIGHT_COLOR = new Color(154,51,155); 
+	public static final Color SELECTED_HIGHLIGHT_COLOR = new Color(51,204,255);
 	
 	public static final double CATEGORY_LABEL_OFFSET_X=40;
 	public static final double CATEGORY_LABEL_OFFSET_Y=20;
