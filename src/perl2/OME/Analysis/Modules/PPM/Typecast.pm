@@ -79,8 +79,9 @@ sub execute {
     # Find all of the formal inputs for this module.  Each one should
     # have a semantic type which is a PPM subclass.
 
-    my @formal_inputs = $module->inputs();
-
+    my @formal_inputs  = $module->inputs();
+	my @formal_outputs = $module->outputs();
+	
   INPUT:
     foreach my $formal_input (@formal_inputs) {
         # Since the input represents a PPM subclass ST, it should have
@@ -98,17 +99,18 @@ sub execute {
 
         if (!defined $element) {
             # No element named Parent
-            warn "Formal input $formal_input to module ".$module->name().
+            warn "Formal input ".$formal_input->name()." to module ".$module->name().
               " is not a PPM semantic type (no Parent element)";
             next INPUT;
         }
 
         if ($element->data_column()->sql_type() ne 'reference') {
             # Element is not a reference
-            warn "Formal input $formal_input to module ".$module->name().
+            warn "Formal input ".$formal_input->name()." to module ".$module->name().
               " is not a PPM semantic type (Parent element isn't a reference)";
             next INPUT;
         }
+       
 
         # We have a valid Parent link for this input.  So, find all of
         # the input values, follow their Parent links, and create
@@ -124,6 +126,23 @@ sub execute {
                          module_execution => $mex,
                          attribute        => $parent,
                         });
+                        
+			# check that the Formal Input's Parent has a corresponding 
+			# formal output
+			my $found = 0;
+			foreach (@formal_outputs) {
+				if ($_->semantic_type()->name() eq 
+				    $parent->semantic_type()->name() ) {
+					$found = 1;
+				}
+			}
+			if ($found != 1) {
+				# Element is not a reference
+				die  "Formal input '".$formal_input->name()."' of module '".
+				  $module->name()." PPM inherits from semantic type '".
+				  $parent->semantic_type()->name(). "' which does not correspond "
+				  ."to the ST of any of the module's formal outputs.";
+			}
         }
     }
 }
