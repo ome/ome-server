@@ -358,8 +358,8 @@ sub saveObject {
 
     # Only store the object if it's not already there.
     if (!exists $remoteObjects{$sessionKey}->{$reference}) {
-        print "  Saving object ",ref($object)," $sessionKey/$reference\n"
-          if $OME::Remote::Dispatcher::SHOW_CACHING;
+        #print "  Saving object ",ref($object)," $sessionKey/$reference\n"
+        #  if $OME::Remote::Dispatcher::SHOW_CACHING;
         $remoteObjects{$sessionKey}->{$reference} = $object;
     }
 }
@@ -422,15 +422,15 @@ sub getObjectReference {
       if (!$class);
 
     my $reference = $class."::".$object;
-    #print STDERR "$object\n  -> $reference\n";
 
     my $cryptRef;
 
     if (exists $remoteReferences{$sessionKey}->{$reference}) {
         $cryptRef = $remoteReferences{$sessionKey}->{$reference};
     } else {
-        my $salt = join('',('.','/',0..9,'A'..'Z','a'..'z')[rand 64,rand 64]);
-        $cryptRef = ">>OBJ:".crypt($reference,$salt);
+        #my $salt = join('',('.','/',0..9,'A'..'Z','a'..'z')[rand 64,rand 64]);
+        #$cryptRef = ">>OBJ:".crypt($reference,$salt);
+        $cryptRef = ">>OBJ:$object";
         $remoteReferences{$sessionKey}->{$reference} = $cryptRef;
     }
 
@@ -439,7 +439,6 @@ sub getObjectReference {
         $remoteReferences{$realSessionKey}->{$reference} = $cryptRef;
     }
 
-    #print STDERR "  -> $cryptRef\n";
     return $cryptRef;
 }
 
