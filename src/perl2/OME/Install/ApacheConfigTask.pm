@@ -205,6 +205,7 @@ sub getApacheInfo {
 				$mod_loaded_off = 1 if $_ =~ /#\s*LoadModule\s+perl_module/;
 				$mod_added_off = 1 if $_ =~ /#\s*AddModule\s+mod_perl\.c/;
 				$apache_info->{DocumentRoot} = $1 if $_ =~ /^\s*DocumentRoot\s+["]*([^"]+)["]*/;
+				$apache_info->{cgi_bin} = $1 if $_ =~ /^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"]+)["]*/;
 				# FIXME: Some versions of apache use no quotes
 			}
 			$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
@@ -215,6 +216,7 @@ sub getApacheInfo {
 	}
 
 	chomp $apache_info->{DocumentRoot} if $apache_info->{DocumentRoot};
+	chomp $apache_info->{cgi_bin} if $apache_info->{cgi_bin};
 
 	return $apache_info;
 }
@@ -288,6 +290,14 @@ sub execute {
 			}
 		}
 	}
+    
+    #********
+    #******** Copy things to cgi-bin
+    #********
+    my $cgiBin = $apache_info->{cgi_bin};
+	croak "Apache httpd.conf does not have a cgi-bin directory" if not $cgiBin;
+	my $OME_JPEG = 'src/C/OME_JPEG';
+	copy ($OME_JPEG,$cgiBin) or croak "Could not copy $OME_JPEG to $cgiBin:\n$!\n";
 
     
     
