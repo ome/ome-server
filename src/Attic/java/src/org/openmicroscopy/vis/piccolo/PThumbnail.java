@@ -189,11 +189,16 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		PNode n = new PNode();
 		Image im = imageNode.getImage();
 		PImage imNode = new PImage(im,false);
-		PText text  = new PText(image.getName());
-		text.setOffset(0.0,imNode.getHeight());
-		text.setFont(THUMBNAIL_FONT);
 		n.addChild(imNode);
-		n.addChild(text);
+		PPath p = new PPath();
+		PText text  = new PText(image.getName());
+		text.setFont(THUMBNAIL_FONT);
+		p.addChild(text);
+		p.setBounds(p.getUnionOfChildrenBounds(null));
+		p.setPaint(PToolTipHandler.FILL_COLOR);
+		p.setStrokePaint(PToolTipHandler.BORDER_COLOR);
+		n.addChild(p);
+		p.setOffset(0.0,imNode.getHeight());
 		return n;
 	}
 	
