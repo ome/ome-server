@@ -226,8 +226,8 @@ sub execute {
 
     if (@members) {
 	    foreach my $member (@members) {
-		    $need_to_add_apache = 0 if $member eq $APACHE_USER
-		    $need_to_add_user = 0 if $member eq $OME_USER
+		    $need_to_add_apache = 0 if $member eq $APACHE_USER;
+		    $need_to_add_user = 0 if $member eq $OME_USER;
 	    };
     }
     add_user_to_group ($APACHE_USER, $OME_GROUP) or croak "Failure adding \"$APACHE_USER\" to \"$OME_GROUP\""
