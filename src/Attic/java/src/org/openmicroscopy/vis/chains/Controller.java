@@ -272,6 +272,18 @@ public class Controller  implements LoginResponder {
 	 */
 	public void cancelLogin() {
 			connection = null;
+			if (library != null) { 
+				library.dispose();
+				library = null;
+			}
+			if (controlPanel != null) {
+				controlPanel.dispose();
+				controlPanel = null;
+			}
+			if (moduleFrame != null) {
+				moduleFrame.dispose();
+				moduleFrame = null;
+			}
 			closeStatusWindow();
 			doLogin();	
 	}
