@@ -28,25 +28,32 @@ for (my $i=0; $i < @ARGV; $i++) {
 	if ($ARGV[$i] eq '--file') {
 		$file = $ARGV[$i+1];
 		$i++;
-	} elsif ($ARGV[$i] eq '--exportSTDs') {
+	}
+	if ($ARGV[$i] eq '--exportSTDs') {
 		logdbg "debug", 'Will be exporting STDs';
 		$ExportSTDs = 1;
-	} elsif ($ARGV[$i] eq 'User' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'User' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding User';
 		push (@objects, $session->User());
-	} elsif ($ARGV[$i] eq 'Group' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'Group' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Group';
 		push (@objects, $session->User()->Group());
-	} elsif ($ARGV[$i] eq 'Project' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'Project' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Project';
 		push (@objects, $session->project());
-	} elsif ($ARGV[$i] eq 'Dataset' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'Dataset' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Dataset';
 		push (@objects, $session->dataset());
-	} elsif ($ARGV[$i] eq 'Images' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'Images' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Images';
 		push (@objects, $session->dataset()->images());
-	} elsif ($ARGV[$i] eq 'Features' or $ARGV[$i] eq 'All') {
+	}
+	if ($ARGV[$i] eq 'Features' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding Features';
 		my @images = $session->dataset()->images();
 		foreach (@images) {
