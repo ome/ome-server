@@ -22,7 +22,7 @@
 package org.openmicroscopy.remote;
 
 import org.openmicroscopy.Factory;
-import org.openmicroscopy.Analysis;
+import org.openmicroscopy.ModuleExecution;
 import org.openmicroscopy.Attribute;
 import org.openmicroscopy.OMEObject;
 
@@ -165,7 +165,7 @@ public class RemoteFactory
 
     public Attribute newAttribute(String typeName,
                                   OMEObject target,
-                                  Analysis analysis,
+                                  ModuleExecution analysis,
                                   Map data)
     {
         String newRef = (String) caller.dispatch(this,"newAttribute",

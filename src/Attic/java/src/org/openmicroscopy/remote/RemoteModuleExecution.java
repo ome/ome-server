@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.remote.RemoteAnalysis
+ * org.openmicroscopy.remote.RemoteModuleExecution
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -26,20 +26,20 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class RemoteAnalysis
+public class RemoteModuleExecution
     extends RemoteOMEObject
-    implements Analysis
+    implements ModuleExecution
 {
     static
     {
-        RemoteObject.addClass("OME::Analysis",RemoteAnalysis.class);
-        RemoteObject.addClass("OME::Analysis::ActualInput",
-                              RemoteAnalysis.ActualInput.class);
+        RemoteObject.addClass("OME::ModuleExecution",RemoteModuleExecution.class);
+        RemoteObject.addClass("OME::ModuleExecution::ActualInput",
+                              RemoteModuleExecution.ActualInput.class);
     }
 
 
-    public RemoteAnalysis() { super(); }
-    public RemoteAnalysis(String reference) { super(reference); }
+    public RemoteModuleExecution() { super(); }
+    public RemoteModuleExecution(String reference) { super(reference); }
 
     public Module getModule()
     { return (Module) getRemoteElement(RemoteModule.class,"program"); }
@@ -98,20 +98,20 @@ public class RemoteAnalysis
 
     public static class ActualInput
         extends RemoteOMEObject
-        implements Analysis.ActualInput
+        implements ModuleExecution.ActualInput
     {
         public ActualInput() { super(); }
         public ActualInput(String reference) { super(reference); }
 
-        public Analysis getAnalysis()
-        { return (Analysis)
-              getRemoteElement(RemoteAnalysis.class,"analysis"); }
+        public ModuleExecution getModuleExecution()
+        { return (ModuleExecution)
+              getRemoteElement(RemoteModuleExecution.class,"analysis"); }
 
-        public Analysis getInputAnalysis()
-        { return (Analysis)
-              getRemoteElement(RemoteAnalysis.class,"input_analysis"); }
-        public void setInputAnalysis(Analysis inputAnalysis)
-        { setRemoteElement("input_analysis",inputAnalysis); }
+        public ModuleExecution getInputModuleExecution()
+        { return (ModuleExecution)
+              getRemoteElement(RemoteModuleExecution.class,"input_analysis"); }
+        public void setInputModuleExecution(ModuleExecution inputModuleExecution)
+        { setRemoteElement("input_analysis",inputModuleExecution); }
 
         public Module.FormalInput getFormalInput()
         { return (Module.FormalInput)
