@@ -224,8 +224,8 @@ are not cached.
 =cut
 
 sub readTiffIFD {
-    my ($file) = shift;
-    my ($targetIFD);
+    my $file = shift;
+    my $targetIFD = shift;
     my ($buf,$endian,@buf,$offset);
     
     # Read the TIFF header to determine endianness and to locate the first IFD.
@@ -252,24 +252,22 @@ sub readTiffIFD {
 			return ($IFD_ref);
 		}
 	}
-	
+
     # Read in each IFD
     my $currentIFD = 0;
     while ($offset > 0) {
-    	$currentIFD++;
     	
     	eval {
             my %ifd;
             $ifd{__Endian} = $endian;
-
             $file->setCurrentPosition($offset,0);
-
+			
             # Read the number of tags in this IFD
             $buf = $file->readData(2);
             my $tag_count = unpack(_x->[$endian],$buf);
 			
 			# read the IFD
-			if (wantarray || not $targetIFD || $targetIFD == $currentIFD) {
+			if (wantarray or not $targetIFD or $targetIFD == $currentIFD) {
 				while ($tag_count) {
 
 					# Read the tag
@@ -318,27 +316,31 @@ sub readTiffIFD {
 					$tag_count--;
 				}
 				push (@IFDs,\%ifd);
-            }# finish reading the IFD
-            
-            # Read the offset to the next IFD.
-            $buf = $file->readData(4);
-            $offset = unpack(_X->[$endian],$buf);
+				
+				# Read the offset to the next IFD.
+         	    $buf = $file->readData(4);
+            	$offset = unpack(_X->[$endian],$buf);
+            } else { 
+            	# don't read the IFD but skip to the next IFD
+            	$file->setCurrentPosition(12*$tag_count,1);
+            	$buf = $file->readData(4);
+            	$offset = unpack(_X->[$endian],$buf);
+            }            
         };
-        
-        
-        last if (not wantarray and not $targetIFD); # exit loop if only want IFD 0
-        last if ($targetIFD == $currentIFD);        # exit loop if found IFD looking for
-            
-            
 		if ($@) {
 			warn $@;
 			return undef;
 		}
-           	
-        if ($targetIFD and $targetIFD > $currentIFD) { 
-        	croak "in readTiffIFD, specified IFD is greater than number of IFDS\n";
-        }
+		
+        last if (not wantarray and not $targetIFD); # exit loop if only want IFD 0
+        last if ($targetIFD == $currentIFD);        # exit loop if found IFD looking for
+        
+        $currentIFD++;
     }
+
+	if ($targetIFD and $targetIFD > $currentIFD) { 
+		croak "in readTiffIFD, specified targetIFD is greater than number of IFDs\n";
+	}
 
 	# CACHING: log this image's IFD tag array.
     if (wantarray) {
@@ -347,10 +349,10 @@ sub readTiffIFD {
     } elsif (not $targetIFD) {
         $tag_hash->{$sha1} = $IFDs[0];  # store reference to hash
         return $IFDs[0];
-    }
+    } else {
+    	return $IFDs[0]; # return without caching
+  	}
 }
-
-
 
 =head2 getTagValue
 
