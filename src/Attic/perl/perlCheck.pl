@@ -6,7 +6,7 @@ my $cwd = getcwd;
 my $libDir = $Config{installprivlib};
 
 
-my $moduleRepository = 'http://ome1-sorger.mit.edu/packages/perl';
+my $moduleRepository = 'http://openmicroscopy.org/packages/perl';
 my $DEFAULT_badTestsFatal = 0;
 
 $ENV{PATH} .= ':/usr/local/bin';
@@ -98,6 +98,9 @@ my @modules = ({
 	Name => 'UNIVERSAL::exports',
 	repositoryFile => 'UNIVERSAL-exports-0.03.tar.gz',
 	},{
+	Name => 'Date::Simple',
+	repositoryFile => 'Date-Simple-2.04.tar.gz',
+        },{
 	Name => 'Class::DBI',
 	repositoryFile => 'Class-DBI-0.90.tar.gz',
 	checkVersion => \&Class_DBI_VersionOK,
@@ -138,7 +141,7 @@ chdir ('..') or die "Couldn't change working directory to '..': $!\n";
 # Where to install private libs: $Config{installprivlib}
 my @OMEmodules = ('OMEpl.pm','OMEDataset.pm','OMEDataset','OMEfeature.pm','OMEwebLogin.pm');
 foreach (@OMEmodules) {
-	if (-e $libDir.'/'.$_) {
+	if (-l $libDir.'/'.$_) {
 		unlink ("$libDir/$_") or die "Could't delete '$libDir/$_': $!\n";
 	}
 	symlink ("$cwd/$_", "$libDir/$_") or die "Could't make a symbolic link to '$cwd/$_' from '$libDir/$_':  $!";
