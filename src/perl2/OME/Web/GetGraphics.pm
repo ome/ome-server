@@ -41,21 +41,21 @@ use Benchmark;
 
 =head1 Package information
 
-=over 4
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">
 
-=item Description:
+=head2 Description
 
 Generates 2D viewer of an image using html with JavaScript controls
 
-=item Path
+=head2 Path
 
 src/perl2/OME/Web/
 
-=item Package name
+=head2 Package name
 
 OME::Web::GetGraphics
 
-=item Dependencies
+=head2 Dependencies
 
  
 Inherits from:
@@ -74,8 +74,6 @@ OME-Modules
 	OME::Graphics::JavaScript::Layer::Vectors
 	OME::Graphics::JavaScript::Layer::Centroids
 	OME::Graphics::JavaScript::Layer::OMEimage
-
-=back
 
 =head1 Externally referenced functions
 
