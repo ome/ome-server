@@ -270,7 +270,7 @@ END_HTML
 			$q->hidden( -name => '__order' ).
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
-			$q->hidden( -name => 'page_action' ).
+			$q->hidden( -name => 'page_action', -default => undef, -override => 1 ).
 			$q->hidden( -name => 'accessor_id' ).
 			# This is used to retain selected objects across pages.
 			$q->hidden( -name => 'selected_objects' );
@@ -541,14 +541,21 @@ sub search {
 	my $currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } );
 	my $action = $q->param( 'page_action' ) ;
 	if( $action ) {
+		my $max_offset = ($numPages - 1) * $searchParams{ __limit };
 		if( $action eq 'FirstPage' ) {
 			$searchParams{ __offset } = 0;
 		} elsif( $action eq 'PrevPage' ) {
 			$searchParams{ __offset } = ( $currentPage - 1 ) * $searchParams{ __limit };
+			# paranoid check
+			$searchParams{ __offset } = 0
+				if $searchParams{ __offset } < 0;
 		} elsif( $action eq 'NextPage' ) {
 			$searchParams{ __offset } = ( $currentPage + 1 ) * $searchParams{ __limit };
+			# paranoid check
+			$searchParams{ __offset } = $max_offset
+				if $searchParams{ __offset } > $max_offset;
 		} elsif( $action eq 'LastPage' ) {
-			$searchParams{ __offset } = ($numPages - 1) * $searchParams{ __limit };
+			$searchParams{ __offset } = $max_offset;
 		}
 	}
 	# update last_order_by. don't add a key to searchParams by accident in the process.
