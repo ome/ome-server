@@ -54,9 +54,9 @@ var xlinkns  = "http://www.w3.org/1999/xlink";
 
 *****/
 function OMEimage( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
-                   SaveDisplayCGI_URL, CBW, RGBon, isRGB ) {
+                   SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis ) {
 	this.init( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
-	           SaveDisplayCGI_URL, CBW, RGBon, isRGB );
+	           SaveDisplayCGI_URL, CBW, RGBon, isRGB, use_omeis );
 }
 
 /*****
@@ -290,12 +290,12 @@ OMEimage.prototype.getDimT = function() {
 	return this.Dims['T'];
 };
 
-/********************************************************************************************/
-/*                                 Private Functions */
-/********************************************************************************************/
+/********************************************************************************************
+                                 Private Functions
+********************************************************************************************/
 
 OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionStr,
-	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB ) {
+	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB, use_omeis ) {
 	this.initialized        = true;
 	// set variables
 	this.imageID            = imageID;
@@ -313,6 +313,12 @@ OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionSt
 	this.CBW = default_CBW;
 	this.inColor = default_isRGB;
 	this.RGBon = default_RGBon;
+	
+	if( use_omeis ) {
+		this.loadPlane = this.loadPlaneOMEIS;
+	} else {
+		this.loadPlane = this.loadPlaneNoOMEIS;
+	}
 
 	// make SVGimages array. It is indexable by [z][t]
 	this.SVGimages = new Array(this.Dims['Z']);
@@ -345,7 +351,7 @@ OMEimage.prototype.buildSVG = function() {
 
 }
 
-OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
+OMEimage.prototype.loadPlaneNoOMEIS = function(theZ, theT, invisible) {
 	// color or RGB?
 	var colorStr;
 	var CBS = this.getCBS(theT);
@@ -358,7 +364,7 @@ OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	var d=new Array();
 	for(i in this.Dims) d.push(this.Dims[i]);
 	
-	var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
+	this.imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
 		theT + '&Dims=' + d.join(',') + colorStr + "&RGBon=" + this.RGBon +
 		'&'+this.CGI_optionStr;
 
@@ -367,14 +373,13 @@ OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 		height: this.Dims['Y'],
 		display: (invisible ? 'none' : 'inline')
 	});
-	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",imageURL);
+	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",this.imageURL);
 	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.SVGimages[theZ][theT];
+	return imageURL;
 };
 
-/*
-this function is the transition to omeis
-OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
+// this function is the transition to omeis
+OMEimage.prototype.loadPlaneOMEIS = function(theZ, theT, invisible) {
 	// color or RGB?
 	var colorStr = '';
 	if( this.inColor == 1 ) {
@@ -392,21 +397,24 @@ OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	}
 	
 	var imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
-		theT + colorStr + this.CGI_optionStr;
+		theT + colorStr + this.CGI_optionStr + '&Format=JPEG';
+	this.imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
+		theT + colorStr + this.CGI_optionStr + '&Format=TIFF';
 
 	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
 		width: this.Dims['X'],
 		height: this.Dims['Y'],
 		display: (invisible ? 'none' : 'inline')
 	});
-	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",imageURL);
+	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href", imageURL);
 	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.SVGimages[theZ][theT];
+	return this.imageURL;
 };
-*/
 
 
-
+OMEimage.prototype.getImageURL = function() {
+	return this.imageURL;
+}
 
 /*****
 	loadAllPics()
