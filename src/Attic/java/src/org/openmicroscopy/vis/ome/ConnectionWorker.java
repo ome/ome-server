@@ -90,11 +90,8 @@ public class ConnectionWorker extends SwingWorker {
 			//	XmlRpcCaller.TRACE_CALLS=true;
 				remote = new RemoteBindings();
 				if (remote != null) {
-					Class.forName("org.openmicroscopy.vis.ome.CNode");
-					Class.forName("org.openmicroscopy.vis.ome.CModule");
-					Class.forName("org.openmicroscopy.vis.ome.CChain");
-					Class.forName("org.openmicroscopy.vis.ome.CLink");
 					remote.loginXMLRPC(URL,userName,passWord);
+					loadCustomClasses();
 					session = remote.getSession();
 					factory = remote.getFactory();
 					if (remote != null && session != null && factory != null) {
@@ -113,6 +110,20 @@ public class ConnectionWorker extends SwingWorker {
 				controller.cancelLogin();
 			}
 			return remote;
+	}
+	
+	private void loadCustomClasses() {
+		try {
+			Class.forName("org.openmicroscopy.vis.ome.CNode");
+			Class.forName("org.openmicroscopy.vis.ome.CModule");
+			Class.forName("org.openmicroscopy.vis.ome.CChain");
+			Class.forName("org.openmicroscopy.vis.ome.CLink");
+			Class.forName("org.openmicroscopy.vis.ome.CChainExecution");
+		}
+		catch (ClassNotFoundException e) {
+			System.err.println("Chains extension classes not found");
+			System.exit(0);		
+		}
 	}
 	
 	/**
