@@ -295,6 +295,8 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 					column_name   => $columnXML->getAttribute( 'ColumnName' )
 				);
 				
+                                my $desiredSQLType = $columnXML->getAttribute('SQL_DataType');
+
 				my $newColumn;
 				if( scalar(@cols) == 0 ) {
 					print STDERR ref ($self) . "->processDOM could not find matching column. creating it\n"
@@ -303,6 +305,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 						data_table_id  => $newTable,
 						column_name    => $columnXML->getAttribute( 'ColumnName' ),
 						description    => $columnXML->getAttribute( 'Description' ),
+                                                sql_type       => $desiredSQLType,
 						#column_sql     => $columnXML->getAttribute( 'Column_SQL' )
 # Do we need to store column_sql in the database?
 # What if two modules declare a column in the same table with the same name, but the
@@ -325,7 +328,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 					#
 					my $statement =
 						"ALTER TABLE ".$newTable->table_name().
-						"	ADD ".$newColumn->column_name()." ".$dataTypeConversion{$columnXML->getAttribute( 'SQL_DataType' )};
+						"	ADD ".$newColumn->column_name()." ".$dataTypeConversion{$desiredSQLType};
 					my $dbh = $session->DBH();
 					my $sth = $dbh->prepare( $statement );
 					print STDERR ref ($self) . "->processDOM about to create column in DB using statement\n$statement\n"
@@ -343,6 +346,8 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 					print STDERR ref ($self) . "->processDOM found column. using existing column.\n"
 						if $debug > 1;
 					$newColumn = $cols[0];
+                                        die "Desired SQL type does not match existing database column"
+                                          if ($newColumn->sql_type() ne $desiredSQLType);
 				}
 				$column_xmlID_object{ $columnXML->getAttribute('ColumnID')} =
 					$newColumn;

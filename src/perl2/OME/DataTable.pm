@@ -165,7 +165,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('data_columns');
 __PACKAGE__->sequence('data_column_seq');
 __PACKAGE__->columns(Primary => qw(data_column_id));
-__PACKAGE__->columns(Essential => qw(data_table_id column_name description));
+__PACKAGE__->columns(Essential => qw(data_table_id column_name description sql_type));
 __PACKAGE__->hasa('OME::DataTable' => qw(data_table_id));
 
 __PACKAGE__->make_filter('__type_column' => 'data_table_id = ? and column_name = ?');
