@@ -95,7 +95,7 @@ Changes the "Project's" name and/or description by reference of its ID (or the c
 		owner_id => $session->User()->ID(),
 	});
 
-Create a new project and update the OME session; sets the current dataset to undefined.
+Create a new project and update the OME session.
 
 Note: This method is purely a macro for OME::Factory->newObject().
 
@@ -319,17 +319,12 @@ sub create{
 	my $self=shift;
 	my $session=$self->Session();
 	my ($ref)=@_;
-	my $existingDataset=$session->dataset();
 	my $project = $session->Factory()->newObject("OME::Project", $ref);
+
 	$project->storeObject();
 	$session->project($project);
-	if (defined $existingDataset){
-		 $session->dataset(undef);
-	}
 	$session->storeObject();
 	$session->commitTransaction();
-	
-
 
 	return 1;
 

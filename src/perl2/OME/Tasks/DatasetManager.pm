@@ -364,7 +364,6 @@ sub create{
 	}else{
 		$project=$session->project();
 	}
-	#my $dataset=$session->project()->newDataset($name,$description);
 	my $dataset = $self->newDataset($name,$description,$ownerID,$groupID,$project->id());
 
 	if ($dataset){
