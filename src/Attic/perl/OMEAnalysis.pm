@@ -94,7 +94,7 @@ sub GetHTMLParams {
     return \%params;
 }
 
-# GetSelectedDatasets([wavelength])
+# GetSelectedDatasets()
 # ---------------------------------
 # Retrieves the selected datasets from the OME system.  Override this
 # to filter the list if the user can specify extra constraints.
@@ -125,12 +125,14 @@ sub StartAnalysis {
 sub Execute {
 }
 
+
 # FinishAnalysis()
 # ----------------
 # Performs any cleanup after analyzing all of the datasets.
 
 sub FinishAnalysis {
 }
+
 
 # PerformAnalysis(Input parameters)
 # ---------------------------------

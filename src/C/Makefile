@@ -17,6 +17,11 @@ CC = gcc
 
 all: $(TARGETS)
 
+zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
+	gcc -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+zernike2 : dataset.h dataset.c dataset.o zernike2.c zernike.h BSUtils.o zernike2.o
+	gcc -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+
 trackSpotsOMEwrpr : $(OBJECTS) trackSpotsOMEwrpr.o
 	gcc -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
 
@@ -88,8 +93,7 @@ OMEimportDVfile.o : OMEdb.h
 .PHONY : clean
 clean :
 	rm -f *.o
-	rm -f $(TARGETS)
-	
+	rm -f $(TARGETS)	
 	$(MAKE) -C cgrayce clean
 
 install:
