@@ -21,11 +21,11 @@
 package OME::Web::DatasetMetadata;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use OME::Web::Validation;
+use base qw{ OME::Web };
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Dataset Metadata";
@@ -36,36 +36,22 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
+	my $dataset = $session->dataset()
+		or die "Dataset not defined for the session.";
 
 	# figure out what to do: save & print info or just print?
 	if( $cgi->param('Save')) {
+# FIXME: Some validation is needed here
+		my $reloadTitleBar = ($dataset->name() eq $cgi->param('name') ? undef : 1);
+		# change stuff.
+		$dataset->name( $cgi->param('name') );
+		$dataset->description( $cgi->param('description') );
 
-		my $dataset = $session->dataset();
-		if (!defined $dataset) {
-			# we got problems
-			$body .= "Problem: There is not a current dataset defined in session.<br>";
-# possible bug: the link in the line below is intended to reload the root window (OME::Home)
-# it will not do it in all conditions. When a better solution is found, implement the new
-# solution everywhere this current solution is used.
-			$body .= "Solutions: Define a dataset. Clicking <a href=\"javascript: top.location.href = top.location.href\">here</a> should take you where you need to go.";
-		}
-		else {
-# FIXME: Better validation is needed
-			if(not ($session->User()->experimenter_id() eq $dataset->owner()->experimenter_id()) ) {
-				$body .= "You do not have permission to modify this.";
-				return ('HTML',$body);
-			}
-			my $reloadTitleBar = ($dataset->name() eq $cgi->param('name') ? undef : 1);
-			# change stuff.
-			$dataset->name( $cgi->param('name') );
-			$dataset->description( $cgi->param('description') );
-
-			$dataset->writeObject();
-			# javascript to reload titlebar
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>"
-				if defined $reloadTitleBar;
-			$body .= "Save successful<br>";
-		}
+		$dataset->writeObject();
+		# javascript to reload titlebar
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+			if defined $reloadTitleBar;
+		$body .= "Save successful<br>";
 	}
 	# print info & form
 	$body .= $self->print_stuff();
