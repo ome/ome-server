@@ -53,8 +53,10 @@ use OME::Session;
 use OME::Tasks::ImageTasks;
 use OME::Tasks::ChainManager;
 use OME::Tasks::OMEImport;
+use OME::Tasks::ModuleExecutionManager;
 use OME::ImportExport::ChainExport;
 use OME::Matlab;
+use OME::Session;
 
 use Getopt::Long;
 Getopt::Long::Configure("bundling");
@@ -231,7 +233,6 @@ sub compile_sigs {
 	
 	# get a dataset
 	my $dataset;
-
 	if ($datasetStr =~ /^([0-9]+)$/) {
 		my $datasetID = $1;
 		$dataset = $factory->loadObject ("OME::Dataset", $datasetID);
@@ -243,33 +244,6 @@ sub compile_sigs {
 						  };
 		$dataset = $factory->findObject( "OME::Dataset", $datasetData);
 		die "Dataset with name $datasetStr doesn't exist!" unless $dataset;
-	}
-	
-	my @images = $dataset->images;
-	@images = sort {$a->id <=> $b->id} @images;
-	
-	# collect image classifications.
-	logdbg "debug", "collecting image classifications.";
-	my %classifications;
-	my $category_group;
-	foreach my $image ( @images ) {
-		my @classification_list = $factory->findAttributes( 'Classification', image => $image )
-			or die "Could not find a classification for image id=".$image->id;
-		die "More than one classification found for image id=".$image->id
-			unless scalar( @classification_list ) eq 1;
-		$category_group = $classification_list[0]->Category->CategoryGroup
-			unless $category_group;
-		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
-			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
-		$classifications{ $image->id } = $classification_list[0];
-	}
-	# map categories to category numbers
-	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
-	my %category_numbers;
-	my $cn = 0;
-	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
-		$cn++;
-		$category_numbers{ $_->id } = $cn;
 	}
 	
 	# collect sig stitcher module execution for this chain
@@ -285,7 +259,7 @@ sub compile_sigs {
 			$chex = OME::Analysis::Engine->executeChain($chain,$dataset);
 		}
 	} else {
-		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, undef, ReuseResults => 0);
+		$chex = OME::Analysis::Engine->executeChain($chain,$dataset,{}, ReuseResults => 0);
 	}
 	my $stitcher_nex = $factory->findObject( "OME::AnalysisChainExecution::NodeExecution",
 		analysis_chain_execution => $chex,
@@ -297,46 +271,10 @@ sub compile_sigs {
 	logdbg "debug", "found signature stitcher module execution (mex=".$stitcher_mex->id().").";
 	
 	# make the matlab signature array. 
-	#	number of columns is the size of the signature vector plus one for the image classification.
-	#	number of rows is the number of images.
-	logdbg "debug", "Making the signature array.";
-	my @vector_legends = $factory->findAttributes( "SignatureVectorLegend", module_execution => $stitcher_mex )
-		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
-	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @images ));
-	$signature_array->makePersistent();
-	
-	# populate the signature matrix. The format is:
-	#	        Img 1  Img 2  ...
-	#	Sig 1 [     x,     x, ... ]
-	#	Sig 2 [     x,     x, ... ]
-	#	...   [   ...,   ..., ... ]
-	#	Sig n [     x,     x, ... ]
-	#	Class [     x,     x, ... ]
-	my $image_number = 0;
-	my @sig_array;
-	foreach my $image ( @images ) {
-		my $signature_entry_iterator = $factory->findAttributes( "SignatureVectorEntry", 
-			module_execution => $stitcher_mex,
-			image            => $image
-		) or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
-		# set the image category
-		$signature_array->set( 
-			scalar( @vector_legends ), 
-			$image_number, 
-			$category_numbers{ $classifications{ $image->id }->Category->id }
-		);
-		# set the image's signature vector
-		while (my $sig_entry = $signature_entry_iterator->next()) {
-			# VectorPosition is numbered 1 to n.
-			# Array positions should be 0 to (n-1).
-			$signature_array->set( 
-				$sig_entry->Legend->VectorPosition() - 1, 
-				$image_number, 
-				$sig_entry->Value()
-			);
-		}
-		$image_number += 1;
-	}
+	my @images = $dataset->images;
+	@images = sort {$a->id <=> $b->id} @images;
+	my $signature_array = $self->
+		compile_signature_matrix( $stitcher_mex, \@images);
 
 	# save the array to disk
 	logdbg "debug", "Saving the array to disk.";
@@ -515,6 +453,75 @@ ENDDESCRIPTION
 	$chainExport->buildDOM ([$new_chain]);
 	$chainExport->exportFile ($chain_file, compression => 0 );
 	
+}
+
+# I'm putting this in a separate function because the implementation
+# will probably change.
+sub get_classifications_and_category_numbers {
+	my ($proto, $images) = @_;
+	logdbg "debug", "collecting image classifications.";
+	my $factory = OME::Session->instance()->Factory();
+	my %classifications;
+	my $category_group;
+	foreach my $image ( @$images ) {
+		my @classification_list = $factory->findAttributes( 'Classification', image => $image )
+			or die "Could not find a classification for image id=".$image->id;
+		die "More than one classification found for image id=".$image->id
+			unless scalar( @classification_list ) eq 1;
+		$category_group = $classification_list[0]->Category->CategoryGroup
+			unless $category_group;
+		die "Classification for image id=".$image->id." does not belong to the same category group as other images in this dataset."
+			unless $category_group->id eq $classification_list[0]->Category->CategoryGroup->id;
+		$classifications{ $image->id } = $classification_list[0];
+	}
+	# map categories to category numbers
+	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
+	my %category_numbers;
+	my $cn = 0;
+	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
+		$cn++;
+		$category_numbers{ $_->id } = $cn;
+	}
+	return (\%classifications, \%category_numbers );
+}
+
+# returns the matlab signature array
+sub compile_signature_matrix {
+	my ($proto, $stitcher_mex, $images) = @_;
+	my $factory = OME::Session->instance()->Factory();
+	my ( $classifications, $category_numbers ) = 
+		$proto->get_classifications_and_category_numbers( $images );
+
+	# instantiate the matlab signature array. 
+	#	number of columns is the size of the signature vector plus one for the image classification.
+	#	number of rows is the number of images.
+	my @vector_legends = OME::Tasks::ModuleExecutionManager->
+		getAttributesForMEX( $stitcher_mex, "SignatureVectorLegend" )
+		or die "Could not load signature vector legend for mex (id=".$stitcher_mex->id.")";
+	my $signature_array = OME::Matlab::Array->newDoubleMatrix(scalar( @vector_legends ) + 1, scalar( @$images ));
+	$signature_array->makePersistent();
+	
+	# populate the signature matrix.
+	my $image_number = 0;
+	my $category_col_index = scalar( @vector_legends );
+	foreach my $image ( @$images ) {
+		my $signature_entry_list = OME::Tasks::ModuleExecutionManager->
+			getAttributesForMEX( $stitcher_mex, "SignatureVectorEntry",
+				{ image => $image }
+			)
+			or die "Could not load image signature vector for image (id=".$image->id."), mex (id=".$stitcher_mex->id.")";
+		# set the image category
+		my $category_num = $category_numbers->{ $classifications->{ $image->id }->Category->id };
+		$signature_array->set( $category_col_index, $image_number, $category_num );
+		# set the image's signature vector
+		foreach my $sig_entry ( @$signature_entry_list ) {
+			# VectorPosition is numbered 1 to n. Array positions should be 0 to (n-1).
+			my $col_index = $sig_entry->Legend->VectorPosition() - 1;
+			$signature_array->set( $col_index, $image_number, $sig_entry->Value() );
+		}
+		$image_number += 1;
+	}	
+	return $signature_array;
 }
 
 sub get_next_LSID {
