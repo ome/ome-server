@@ -51,33 +51,34 @@ get_method_by_name(char * m_name);
 #define M_FINISHPIXELS  7
 
 	/* PLANE METHODS */
-#define M_PLANE         8
-#define M_SETPLANE      9
-#define M_GETPLANE      10
-#define M_GETPLANESTATS 11
+#define M_PLANE         10
+#define M_SETPLANE      11
+#define M_GETPLANE      12
+#define M_GETPLANESTATS 13
+#define M_GETSTACKSTATS 14
 
 	/* STACK METHODS */
-#define M_STACK         12
-#define M_SETSTACK      13
-
-#define M_GETSTACK      14
+#define M_STACK         20
+#define M_SETSTACK      21
+#define M_GETSTACK      22
 
 	/* ROI METHODS */
-#define M_SETROI        15
-#define M_GETROI        16
+#define M_SETROI        30
+#define M_GETROI        31
 
 	/* FILE METHODS */
-#define M_FILEINFO      17
-#define M_FILESHA1      18 
-#define M_UPLOADFILE    19
-#define M_READFILE      20
+#define M_FILEINFO      40
+#define M_FILESHA1      41 
+#define M_UPLOADFILE    42
+#define M_READFILE      43
 
 	/* OTHER/UTILITY METHODS */
-#define M_GETLOCALPATH  21
-#define M_CONVERT       22
-#define M_IMPORTOMEFILE 23
-#define M_CONVERTSTACK  24
-#define M_CONVERTPLANE  25
-#define M_CONVERTTIFF   26
-#define M_CONVERTROWS   27
+#define M_GETLOCALPATH  50
+#define M_CONVERT       51
+#define M_IMPORTOMEFILE 52
+#define M_CONVERTSTACK  53
+#define M_CONVERTPLANE  54
+#define M_CONVERTTIFF   55
+#define M_CONVERTROWS   56
+#define M_COMPOSITE     57
 
