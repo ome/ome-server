@@ -2,7 +2,7 @@
 <TMPL_IF NAME="/locked_type">
 	<TMPL_VAR NAME='/locked_type'>
 <TMPL_ELSE>
-	<select name="Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
+	<select name="_Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
 		<option value="">-- Select a Type --</option>
 		<TMPL_LOOP NAME=/types_loop>
 			<option value="<TMPL_VAR NAME=formal_name>" <TMPL_VAR NAME=selected>><TMPL_VAR NAME=common_name></option>
