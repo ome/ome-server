@@ -146,6 +146,7 @@ sub __annotate {
         my %criteria = %$data;
 
         $criteria{'module_execution.module'} = $annotation_module;
+        $criteria{'target'} = $target if $granularity ne 'G';
 
         my $existing = $factory->
           findAttribute($semantic_type,\%criteria);
