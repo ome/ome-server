@@ -91,6 +91,13 @@ public interface Attribute
     public Dataset getDataset();
 
     /**
+     * Sets the target of this attribute, assuming that the semantic
+     * type has dataset granularity.
+     * @param dataset the target of this attribute
+     */
+    public void setDataset(Dataset dataset);
+
+    /**
      * Returns the target of this attribute, assuming that the
      * semantic type has image granularity.
      * @return the target of this attribute
@@ -98,6 +105,13 @@ public interface Attribute
      * image granularity
      */
     public Image getImage();
+
+    /**
+     * Sets the target of this attribute, assuming that the semantic
+     * type has image granularity.
+     * @param image the target of this attribute
+     */
+    public void setImage(Image image);
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -109,12 +123,27 @@ public interface Attribute
     public Feature getFeature();
 
     /**
+     * Sets the target of this attribute, assuming that the semantic
+     * type has feature granularity.
+     * @param feature the target of this attribute
+     */
+    public void setFeature(Feature feature);
+
+    /**
      * Returns the analysis that generated this attribute.  If this
      * attribute was entered by the user, it will be
      * <code>null</code>.
-     * @return the analysis that genreated this attribute.
+     * @return the analysis that generated this attribute.
      */
     public ModuleExecution getModuleExecution();
+
+    /**
+     * Sets the analysis that generated this attribute.  If this
+     * attribute was entered by the user, it should be
+     * <code>null</code>.
+     * @param mex the analysis that generated this attribute.
+     */
+    public void setModuleExecution(ModuleExecution mex);
 
     /**
      * Ensures that this attribute has the given semantic type.  If

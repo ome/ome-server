@@ -100,58 +100,45 @@ public class AttributeDTO
     // Inherited javadoc
     public Class getDTOType() { return Attribute.class; }
 
-    /**
-     * Returns the attribute's primary key ID.
-     * @return the attribute's primary key ID.
-     */
+    // Inherited javadoc
     public int getID()
     { return getIntElement("id"); }
 
-    /**
-     * Returns the semantic type of this attribute.
-     * @return the semantic type of this attribute.
-     */
+    // Inherited javadoc
     public SemanticType getSemanticType()
     { return (SemanticType) getObjectElement("semantic_type"); }
 
-    /**
-     * Returns the target of this attribute, assuming that the
-     * semantic type has dataset granularity.
-     * @return the target of this attribute
-     * @throws ClassCastException if the attribute does not have
-     * dataset granularity
-     */
+    // Inherited javadoc
     public Dataset getDataset()
     { return (Dataset) getObjectElement("dataset"); }
 
-    /**
-     * Returns the target of this attribute, assuming that the
-     * semantic type has image granularity.
-     * @return the target of this attribute
-     * @throws ClassCastException if the attribute does not have
-     * image granularity
-     */
+    // Inherited javadoc
+    public void setDataset(Dataset dataset)
+    { setElement("dataset",dataset); }
+
+    // Inherited javadoc
     public Image getImage()
     { return (Image) getObjectElement("image"); }
 
-    /**
-     * Returns the target of this attribute, assuming that the
-     * semantic type has feature granularity.
-     * @return the target of this attribute
-     * @throws ClassCastException if the attribute does not have
-     * feature granularity
-     */
+    // Inherited javadoc
+    public void setImage(Image image)
+    { setElement("image",image); }
+
+    // Inherited javadoc
     public Feature getFeature()
     { return (Feature) getObjectElement("feature"); }
 
-    /**
-     * Returns the analysis that generated this attribute.  If this
-     * attribute was entered by the user, it will be
-     * <code>null</code>.
-     * @return the analysis that genreated this attribute.
-     */
+    // Inherited javadoc
+    public void setFeature(Feature feature)
+    { setElement("feature",feature); }
+
+    // Inherited javadoc
     public ModuleExecution getModuleExecution()
     { return (ModuleExecution) getObjectElement("module_execution"); }
+
+    // Inherited javadoc
+    public void setModuleExecution(ModuleExecution mex)
+    { setElement("module_execution",mex); }
 
     /**
      * Ensures that this attribute has the given semantic type.  If
