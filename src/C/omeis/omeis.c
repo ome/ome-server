@@ -1637,16 +1637,21 @@ int FinishFile (FileRep *myFile) {
 	close (myFile->fd_info);
 	myFile->fd_info = -1;
 
-	if (myFile->is_mmapped)
+	if (myFile->is_mmapped) {
 		if (msync (myFile->file_buf , myFile->size_rep , MS_SYNC) != 0) {
 			DeleteFile (myFile);
 			return (-4);
 		}
+		munmap (myFile->file_buf, myFile->size_rep);
+		myFile->file_buf = NULL;
+	}	
 
-	lockRepFile (myFile->fd_rep,'u',0LL,0LL);
+	if (myFile->fd_rep >=0 ) {
+		close (myFile->fd_rep);
+		lockRepFile (myFile->fd_rep,'u',0LL,0LL);
+		myFile->fd_rep = -1;
+	}
 
-	close (myFile->fd_rep);
-	myFile->fd_rep = -1;
 	
 	return (0);
 }
