@@ -60,6 +60,7 @@
 **
 */
 
+#include <sys/types.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,17 +95,17 @@ int hessenberg ();
 double *allocate_vector (int nl, int nh);
 double **allocate_matrix (int nrl, int nrh, int ncl, int nch);
 
-double** CoOcMat_Angle_0   (int distance, unsigned char **grays,
+double** CoOcMat_Angle_0   (int distance, u_int8_t **grays,
 						   int rows, int cols, map_ii* tone);
-double** CoOcMat_Angle_45  (int distance, unsigned char **grays,
+double** CoOcMat_Angle_45  (int distance, u_int8_t **grays,
 						   int rows, int cols, map_ii* tone);
-double** CoOcMat_Angle_90  (int distance, unsigned char **grays,
+double** CoOcMat_Angle_90  (int distance, u_int8_t **grays,
 						   int rows, int cols, map_ii* tone);
-double** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
 						   int rows, int cols, map_ii* tone);
 						   
 TEXTURE * Extract_Texture_Features(int distance, int angle, 
-		 		register unsigned char **grays, int rows, int cols, int max_val)  
+		 		register u_int8_t **grays, int rows, int cols, int max_val)  
 {
 	map_ii tone; /* hash DataStructure from mapkit.c/h key=int value=int */
 	map_ii_element* tone_array;
@@ -172,7 +173,7 @@ TEXTURE * Extract_Texture_Features(int distance, int angle,
 } 
 
 /* Compute gray-tone spatial dependence matrix */
-double** CoOcMat_Angle_0 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_0 (int distance, u_int8_t **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
@@ -212,7 +213,7 @@ double** CoOcMat_Angle_0 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-double** CoOcMat_Angle_90 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_90 (int distance, u_int8_t **grays,
 						 int rows, int cols, map_ii*tone)
 {
 	int d = distance;
@@ -252,7 +253,7 @@ double** CoOcMat_Angle_90 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-double** CoOcMat_Angle_45 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_45 (int distance, u_int8_t **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
@@ -292,7 +293,7 @@ double** CoOcMat_Angle_45 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-double** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_135 (int distance, u_int8_t **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
