@@ -74,9 +74,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	}
 	
 	public void mouseEntered(PInputEvent e) {
-	//	System.err.println("got mouse entered in browser");
 		PNode n = e.getPickedNode();
-	//	System.err.println("node is "+n);
 		if (n instanceof PSelectableText) {
 			((PSelectableText) n).setHighlighted(true);
 			if (n instanceof PChainLabelText) {
@@ -152,7 +150,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			selectionState.setSelectedDataset(d.getDataset());
 			e.setHandled(true);
 		}
-		else if (node instanceof PChainLabelText) {
+		/*else if (node instanceof PChainLabelText) {
 			
 			try {
 				PChainLabelText label = (PChainLabelText) node;
@@ -163,7 +161,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				
 			}
 			e.setHandled(true);
-		}
+		}*/
 		else if (node instanceof PExecutionText) {
 			//System.err.println("clicked on execution text!");
 			e.setHandled(true);
