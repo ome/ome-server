@@ -342,7 +342,7 @@ sub getScratchDir {
     } while ( not defined $dir || $count++ > 999);
     if (defined $dir ) {
 		mkdir $dir
-			or die "Couldn't make directory $dir\n";
+			or die "Couldn't make directory $dir: $!\n";
 		return ($dir);
     } else {
 		closedir (DH);
