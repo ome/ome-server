@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.Chains
+ * org.openmicroscopy.vis.chains.Toolbar
  *
  * Copyright (C) 2003 Open Microscopy Environment, MIT
  * Author:  Harry Hochheiser <hsh@nih.gov>
@@ -22,31 +22,38 @@
 package org.openmicroscopy.vis.chains;
 
 /** 
- * <p>The main class for the Chain-building application. This class
- * is just a shell that will instantiate appropriate classes for
- * display, control, and other functionality.<p>
+ * <p>Toolbar for the Chains application<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class Chains {
+import javax.swing.JToolBar;
+import javax.swing.JLabel;
 
-    public static String VERSION="0.1";
-    public static String TIMESTAMP="094304082003";
-
-    public static void main(String[] args) {
-		System.out.println("OME Chains, Version "+VERSION+", "+TIMESTAMP);
+public class ToolBar extends JToolBar{
+	
+	protected JLabel statusLabel;
+	
+	protected CmdTable cmd;
+	
+	public ToolBar(CmdTable cmd) {
+		super();
+		this.cmd=cmd;
 		
-		Controller controller = new Controller();
-
-		MainFrame mainFrame = new MainFrame(controller);
-		mainFrame.setVisible(true);
-		controller.setMainFrame(mainFrame);
-    }
-    
-   
-
+		//setAlignmentX(Component.RIGHT_ALIGNMENT);
+		statusLabel = new JLabel();
+		add(statusLabel);
+		clearStatus();
+	}
+	
+	public void clearStatus() {
+		statusLabel.setText("Not Logged In");
+	}
+	
+	public void setUserName(String s) {
+		statusLabel.setText(s);
+	}
+	
 }
-    

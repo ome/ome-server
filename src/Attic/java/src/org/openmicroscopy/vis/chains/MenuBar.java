@@ -24,8 +24,11 @@ package org.openmicroscopy.vis.chains;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import javax.swing.KeyStroke;
+import java.awt.Toolkit;
 
 /** 
  * <p>Menu selections for chains application.<p>
@@ -37,6 +40,11 @@ import javax.swing.KeyStroke;
 
 public class MenuBar extends JMenuBar {
 	
+	public static int COMMAND_MASK=Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+
+	private JMenuItem loginItem;
+	private JMenuItem logoutItem;
+	
 	public MenuBar(CmdTable cmd) {
 		JMenu file = createFileMenu(cmd);
 		
@@ -46,20 +54,34 @@ public class MenuBar extends JMenuBar {
 	protected JMenu createFileMenu(CmdTable cmd) {
 		
 		JMenu menu = new JMenu("File");
-		JMenuItem item = createMenuItem("Login..",KeyStroke.getKeyStroke(KeyEvent.VK_L,0),
-			cmd.lookupActionListener("login"));
-		menu.add(item);
+		loginItem = createMenuItem("Login..",KeyEvent.VK_L,0,cmd.lookupActionListener("login"));
+		menu.add(loginItem);
+		
+		logoutItem = createMenuItem("Logout..",KeyEvent.VK_L,InputEvent.SHIFT_MASK,
+			cmd.lookupActionListener("logout"));
+		logoutItem.setEnabled(false);
+		menu.add(logoutItem);
+		
+		JMenuItem quit = createMenuItem("Quit..",KeyEvent.VK_Q,0,cmd.lookupActionListener("quit"));
+		menu.add(quit);
 		
 		return menu;
 	}
 	
-	private JMenuItem createMenuItem(String text,KeyStroke k,ActionListener listener) {
+	private JMenuItem createMenuItem(String text,int key,int mask,ActionListener listener) {
 		JMenuItem item;
 		
 		item = new JMenuItem(text);
-		item.setAccelerator(k);
+		item.setAccelerator(KeyStroke.getKeyStroke(key,COMMAND_MASK|mask));
 		item.addActionListener(listener);
 		
 		return item;
 	}	
+	
+	public void setLoginsDisabled(boolean v) {
+		// v is true if login should be disabled and logout enabled,
+		// false if login should be enabled and logout disabled.
+		loginItem.setEnabled(!v);
+		logoutItem.setEnabled(v);
+	}
 }

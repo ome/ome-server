@@ -21,6 +21,9 @@
 
 package org.openmicroscopy.vis.chains;
 
+import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.alligator.LoginDialog;
+
 /** 
  * <p>Control and top-level management for the Chain-building application.<p>
  * 
@@ -32,6 +35,8 @@ package org.openmicroscopy.vis.chains;
 public class Controller {
 	
 	private CmdTable cmd;
+	private MainFrame mainFrame;
+	private Connection connection = null;
 
 	public Controller() {
 		cmd = new CmdTable(this);
@@ -41,12 +46,39 @@ public class Controller {
 			return cmd;	
 	}
 	
+	public void setMainFrame(MainFrame mf) {
+		this.mainFrame = mf;
+	}
+	
 	public void doLogin() {
 		System.err.println("login...");
+		
+		LoginDialog  loginDialog = new LoginDialog(mainFrame);
+		loginDialog.show();
+		if (loginDialog.isOk()) 
+			connection =  new Connection(this,loginDialog.getURL(),loginDialog.getUserName(),loginDialog.getPassword());
+	}
+
+	public void cancelLogin() {
+			connection = null;	
+	}
+	
+	public void completeLogin() {
+		mainFrame.setLoggedIn(true,connection.getUserName());
 	}
 	
 	public void doLogout() {
-		System.err.println("logout");
+		System.err.println("logout...");
+		updateDatabase();
+		mainFrame.setLoggedIn(false,null);
 	}
+	
+	public void quit() {
+		System.exit(0);
+	}
+	
+	private void updateDatabase() {
+	}
+	
 }
 

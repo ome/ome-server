@@ -48,11 +48,17 @@ public class CmdTable {
 				}
 			}); 
 			
-			actionMap.put("logout",new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-						controller.doLogout();
-				}
-			});
+		actionMap.put("logout",new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+								controller.doLogout();
+						}
+					});
+					
+		actionMap.put("quit",new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+								controller.quit();
+						}
+					});
 	}	
 	
 	public ActionListener lookupActionListener(String key) {

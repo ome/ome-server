@@ -118,4 +118,20 @@ public class LoginDialog
         okay = e.getActionCommand().equals("OK");
         hide();
     }
+    
+    public boolean isOk() {
+    		return okay;
+    }
+    
+    public String getURL() {
+    	return jURLField.getText();
+    }
+    
+    public String getUserName() {
+    	return jUsernameField.getText();
+    }
+    
+    public String getPassword() {
+		return new String(jPasswordField.getPassword());
+    }
 }
