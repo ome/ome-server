@@ -1,23 +1,23 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<OME xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd file:///Users/igg/OME/SourceForge/OME/src/xml/schemas/ome.xsd">
+<OME xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
 	<DocumentGroup xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd">
 		<Include DocumentID = "123.456.70.123.123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
 	</DocumentGroup>
+	<Project Name = "Stress Response Pathway" ID = "123.456.1.123.123">
+		<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
+		<Ref Refer = "Group" ID = "123.456.73.123.123"/>
+	</Project>
+	<Dataset Name = "Controls" ID = "123.456.2.123.123" Locked = "true">
+		<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
+		<Ref Refer = "Group" ID = "123.456.73.123.123"/>
+		<Ref Refer = "Project" ID = "123.456.1.123.123"/>
+	</Dataset>
+	<Image ID = "123.456.3.123.123" Name = "P1W1S1" Description = "" Type = "OME">
+		<CustomAttributes>
+			<Dimensions SizeX = "512" SizeY = "512" SizeZ = "1" SizeC = "1" SizeT = "1" BitsPerPixel = "int16" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" PixelSizeC = "" PixelSizeT = ""/>
+		</CustomAttributes>
+	</Image>
 	<CustomAttributes>
-		<Image ID = "123.456.3.123.123" Name = "P1W1S1" Description = "" Type = "OME">
-			<CustomAttributes>
-				<Dimensions SizeX = "512" SizeY = "512" SizeZ = "1" SizeC = "1" SizeT = "1" BitsPerPixel = "int16" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" PixelSizeC = "" PixelSizeT = ""/>
-			</CustomAttributes>
-		</Image>
-		<Project Name = "Stress Response Pathway" ID = "123.456.1.123.123">
-			<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
-			<Ref Refer = "Group" ID = "123.456.73.123.123"/>
-		</Project>
-		<Dataset Name = "Controls" ID = "123.456.2.123.123" Locked = "true">
-			<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
-			<Ref Refer = "Group" ID = "123.456.73.123.123"/>
-			<Ref Refer = "Project" ID = "123.456.1.123.123"/>
-		</Dataset>
 		<Experimenter ID = "123.456.71.123.123" FirstName = "Nicola" LastName = "Sacco" email = "Nicola.Sacco@justice.net" Institution = "" OMEname = "nico">
 			<Ref Refer = "Group" ID = "123.456.73.123.123"/>
 		</Experimenter>

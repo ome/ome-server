@@ -6,17 +6,20 @@
 				<xsl:value-of select = "@xsi:schemaLocation"/>
 			</xsl:attribute>
 			<!-- Copy DocumentGroup in the original document -->
-			<xsl:copy-of select = "OME:DocumentGroup"/>
+			
 			<!-- Need to copy STD and AML also -->
+			<xsl:copy-of select = "OME:DocumentGroup"/>
+			<!-- Deal with the hierarchy -->
+			<xsl:apply-templates select = "OME:Project" mode = "E2A-Refs"/>
+			<xsl:apply-templates select = "OME:Dataset" mode = "E2A-Refs"/>
+			<xsl:apply-templates select = "OME:Image"/>
+			<!-- Deal with the global custom attributes -->
 			<xsl:element name = "CustomAttributes">
 				<!-- Copy descendants of CustomAttributes in the original document -->
 				<xsl:copy-of select = "OME:CustomAttributes/*"/>
 				<!-- Apply templates to children of OME excluding CustomAttributes and DocumentGroup (need to exclude STD and AML also) NOT TESTED! -->
 				
 				<!--xsl:apply-templates select = "*[name() != 'CustomAttributes'][name() != 'DocumentGroup']" mode = "Convert2CA"/-->
-				<xsl:apply-templates select = "OME:Image"/>
-				<xsl:apply-templates select = "OME:Project" mode = "E2A-Refs"/>
-				<xsl:apply-templates select = "OME:Dataset" mode = "E2A-Refs"/>
 				<xsl:apply-templates select = "OME:Experimenter" mode = "E2A-Refs"/>
 				<xsl:apply-templates select = "OME:Experiment" mode = "E2A-Refs"/>
 				<xsl:apply-templates select = "OME:Plate" mode = "E2A-Refs"/>
