@@ -39,8 +39,8 @@ package OME::Tasks::NotificationManager;
 
 use OME;
 use OME::Session;
+use OME::Database::Delegate;
 use Log::Agent;
-use IO::Select;
 our $VERSION = $OME::VERSION;
 
 our $__soleFactory = undef;
@@ -175,21 +175,15 @@ sub wait {
 	my ($proto,$condition,$timeout) = @_;
     my $class = ref($proto) || $proto;
 
-	my $DBH = $class->taskFactory()->obtainDBH();
-	$DBH->do (qq/LISTEN "$condition"/);
-	my $fd = $DBH->func ('getfd') or
-		die "Unable to get PostgreSQL back-end FD";
-	my $sel = IO::Select->new ($fd);
-	# Block
-	if (defined $timeout) {
-		$sel->can_read ($timeout);
-	} else {
-		$sel->can_read ();
-	}
-	# We're not listening anymore...
-	$DBH->do ("UNLISTEN $condition");
-	my $notice = $DBH->func ('pg_notifies');
-	return undef unless $notice and $notice->[0] eq $condition;
+	my $dbh = $class->taskFactory()->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+	$delegate->registerListener ($dbh,$condition);
+	$condition = $delegate->waitCondition ($dbh,$condition,$timeout);
+	$delegate->unregisterListener ($dbh,$condition);
+	
+	return ($condition);
+
+
 	return 1;
 }
 
@@ -213,8 +207,9 @@ sub notify {
     my $class = ref($proto) || $proto;
 
 	# We're just going to use the session's factory for this
-	my $DBH = OME::Session->instance()->Factory()->obtainDBH();
-	$DBH->do (qq/NOTIFY "$condition"/);
+	my $dbh = OME::Session->instance()->Factory()->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+	$delegate->notifyListeners ($dbh,$condition);
 	return (1);
 }
 
