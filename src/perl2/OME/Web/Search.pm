@@ -117,6 +117,7 @@ sub getMenuText {
 	return $menuText unless ref($self);
 
 	my $type = $self->CGI()->param( 'Type' );
+	$type = $self->CGI()->param( 'Locked_Type' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 		return "$common_name Search";
@@ -129,6 +130,7 @@ sub getPageTitle {
 	my $self = shift;
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
+	$type = $q->param( 'Locked_Type' ) unless $type;
 	if( $type ) {
 		my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
     	return "$common_name Search";
@@ -139,6 +141,8 @@ sub getPageBody {
 	my $self = shift;	
 	my $q    = $self->CGI();
 	my $type = $q->param( 'Type' );
+	$type = $q->param( 'Locked_Type' ) unless $type;
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 	my $html;
 
 	# Perform an action if the user just clicked one
@@ -175,6 +179,7 @@ END_HTML
 		$html = $q->p( 'action succeeded' );
 
 #		This code would complete the action by posting to another page
+#		instead of calling a method
 # 		$html = 
 # 			$q->startform( { -action => $self->pageURL( $action_entry->{ postTo } ) } ).
 # 			$q->hidden( $action_entry->{ param }, $q->param( 'selected_objects' ) ).
@@ -195,7 +200,14 @@ END_HTML
 		$_->{ checked } = 'checked'
 			if $_->{mode} eq $current_display_mode;
 	}
-	my %tmpl_data = ( types_loop => $types_data, modes_loop => $display_modes_data,  );
+	my %tmpl_data = ( 
+		types_loop => $types_data, 
+		( $q->param( 'Locked_Type' ) ? 
+			( Locked_Type => $common_name, formal_name => $formal_name ) :
+			()
+		),
+		modes_loop => $display_modes_data
+	);
 	
 	$html = $q->startform();
 	
@@ -218,7 +230,6 @@ END_HTML
 		
 		# accessor mode
 		if( grep( /^accessor$/, @cgi_search_names ) ) {
-			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
 			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = split( /,/, $q->param( 'accessor' ) );
 			my $objectTaAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
 				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
@@ -325,6 +336,7 @@ sub search {
 	my (%searchParams, @objects, $object_count);
 
 	my $type = $q->param( 'Type' );
+	$type = $q->param( 'Locked_Type' ) unless $type;
 	my @search_names = $q->param( 'search_names' );
 	foreach my $search_on ( @search_names ) {
 	if( $q->param( $search_on ) && $q->param( $search_on ) ne '') {
