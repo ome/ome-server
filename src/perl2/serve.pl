@@ -38,3 +38,5 @@ if ($pageClass) {
 	print STDERR "Class not specified\n";
 	print $CGI->header(-type => 'text/html',-status => '404 File not found');
 }
+
+undef($CGI);
