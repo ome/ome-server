@@ -157,6 +157,9 @@ our $__soleInstance = undef;
 
 # transparant interface to UserState
 sub getUserState { return shift->{UserState}; }
+sub id { return shift->{UserState}->id(); }
+sub ID { return shift->{UserState}->ID(); }
+sub session_id { return shift->{UserState}->ID(); }
 sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
 sub experimenter { return shift->{UserState}->experimenter(@_); }
 sub User { return shift->{UserState}->User(@_); }
