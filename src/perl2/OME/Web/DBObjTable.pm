@@ -58,6 +58,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 use Log::Agent;
 use Carp;
+use Carp 'cluck';
 
 use base qw(OME::Web);
 
@@ -259,23 +260,26 @@ sub getTable {
 	
 	# column headers
 	my @columnHeaders;
+	my $table_sort_field = '';
 	# do not enable column sorting
-	if( $options->{ embedded_in_form } ) {
+	if( $options->{ embedded_in_form } && !$options->{ table_id }) {
 		@columnHeaders = map( $labels{ $_ }, @fieldNames );
 		unshift( @columnHeaders, 'ID' );
 		unshift( @columnHeaders, 'Select' )
 			if( $options->{ select_column } );
 	# enable column sorting. make the column that records are currently sorted on inactive.
 	} else {
+		my $table_id = ( $options->{ table_id } || '' );
 		my $inactiveColumn;
-		if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
-			($inactiveColumn = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
+		$table_sort_field = $table_id.'_OrderBy';
+		if( $q->param( $table_sort_field ) and $q->param( $table_sort_field ) ne '' ) {
+			$inactiveColumn = $q->param( $table_sort_field );
 		} else {
 			$inactiveColumn = 'id';
 		}
 		@columnHeaders = map( ($_ ne $inactiveColumn ? 
 			$q->a( 
-				{ -href => "#", -onClick => "document.forms['$form_name'].action.value='OrderBy_$formal_name".$_."'; document.forms['$form_name'].submit(); return false", },
+				{ -href => "javascript: document.forms['$form_name'].${table_sort_field}.value='".$_."'; document.forms['$form_name'].submit();", },
 				$labels{ $_ }
 			) : 
 			$labels{ $_ } )
@@ -283,6 +287,7 @@ sub getTable {
 		unshift( @columnHeaders, 'ID' );
 		unshift( @columnHeaders, 'Select' )
 			if( $options->{ select_column } );
+		$table_sort_field = $q->hidden( -name => $table_sort_field );
 	}
 	
 	# Build the table
@@ -291,6 +296,7 @@ sub getTable {
 	$html .= $q->a( { name => $options->{ anchor } }, ' ' )
 		if exists $options->{ anchor };
 	$html .=
+		$table_sort_field.
 		$q->table( {
 				-class => 'ome_table',
 				-width => $options->{width},
@@ -368,6 +374,7 @@ sub getJoinTable {
 	my $q       = $self->CGI();
 	
 	my ( $options, %joined_groups ) = $self->__getJoinedGroups( @_ );
+	my $form_name    = ($options->{embedded_in_form} || 0);
 	# { joining_group_id => {
 	#	field_names => [...], # doubles as column order
 	#	records     => { joining_record_id => { field_name => value, ... }, ... }, # joined records
@@ -377,7 +384,8 @@ sub getJoinTable {
 
 	# build tables
 	my @tables;
-	foreach my $j_group ( values( %joined_groups ) ) {
+	foreach my $j_group_id (  sort( keys( %joined_groups ) ) ) {
+		my $j_group = $joined_groups{ $j_group_id };
 		my $table;
 		
 		# table content
@@ -387,7 +395,18 @@ sub getJoinTable {
 		my @headers = @{ $j_group->{ col_header } };		
 		my $title = "Displaying ".join( ', ', @{ $j_group->{ titles } } ).
 			join( '', map( $q->a( { -name => $_ }, ' ' ), @{ $j_group->{ titles } } ) );
-		
+
+		# order records
+		my $field_name_of_orderBy = ( $options->{ group_id } ? $options->{ group_id } : '' ).$j_group_id.'_OrderBy';
+		$field_name_of_orderBy =~ s/[,\.]/_/g;
+		$field_name_of_orderBy = '_'.$field_name_of_orderBy
+			if $field_name_of_orderBy =~ m/^\d/;
+		my $order_by = $fieldNames[ 0 ];
+		if( $q->param( $field_name_of_orderBy ) && $q->param( $field_name_of_orderBy ) ne '' ) {
+			$order_by = $q->param( $field_name_of_orderBy );
+			@records = sort( { $a->{ $order_by } cmp $b->{ $order_by } } @records );
+		}
+
 		# translate to html
 		my @table_data;
 		foreach my $record ( @records ) {
@@ -404,7 +423,18 @@ sub getJoinTable {
 			my ($name, $colspan) = @$entry;
 			push( @columnHeaders, $q->td( { -class => 'ome_td', -colspan => $colspan, -align => 'center' }, $name ) );
 		}
-		my @columnLabels = map( $q->td( { -class => 'ome_td' }, $labels{ $_ } ), @fieldNames );
+		my @columnLabels = map( 
+				$q->td( { -class => 'ome_td' }, 
+					# Make column headers into "Order By" links. Except the one that is currently ordering the table.
+					( $_ ne $order_by ?
+						$q->a( { -href  => "javascript: document.forms['$form_name'].${field_name_of_orderBy}.value = '$_'; document.forms[0].submit(); ",
+								 -title => "Order table by this column" },
+							   $labels{ $_ }
+						) :
+						$labels{ $_ }
+					)
+				), @fieldNames 
+		);
 		
 		# link to text table
 		my $txt_table_link = 
@@ -415,9 +445,9 @@ sub getJoinTable {
 				} ) }, "Download as txt"
 			);
 		
-		
 		# Build the table
 		$table .=
+			$q->hidden( -name => $field_name_of_orderBy ).
 			$txt_table_link.
 			$q->table( { -class => 'ome_table', width => $options->{width} },
 				# Table title
@@ -732,7 +762,9 @@ sub __getJoinedGroups {
 		push( @{ $j_group->{ formal_names } }, $formal_name );
 		push( @{ $j_group->{ col_header } }, [ ( 
 			$ST ?
-				$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
+				$q->a( { href  => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id(),
+				         title => "Documentation of this Semantic Type"
+				       },
 					   $common_name ) :
 				$common_name
 			), $colspan ] );
@@ -790,8 +822,9 @@ sub __parseParams {
 		delete $searchParams{ __offset };
 	}
 	my $orderBy = ( $package_name->getColumnType( 'id' ) ? 'id' : undef );
-	if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
-		($orderBy = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
+	my $table_id = ( $options->{ table_id } || '' );
+	if( $q->param( $table_id.'_OrderBy' ) and $q->param( $table_id.'_OrderBy' ) ne '' ) {
+		$orderBy = $q->param( $table_id.'_OrderBy' );
 	}
 
 	# get objects

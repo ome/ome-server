@@ -185,6 +185,7 @@ sub getPageBody {
 			{
 				excludeFields    => { module_execution => undef },
 				embedded_in_form => $self->{ form_name },
+				group_id         => $group_id
 			},
 			\@table_data
 		);
@@ -200,8 +201,6 @@ sub getPageBody {
 	
 	# Render outputs ( ungrouped )
 	foreach my $fo ( @formal_outputs ) {
-		my $attributes = OME::Tasks::ModuleExecutionManager->
-			getAttributesForMEX($mex,$fo->semantic_type);		
 		my $more_info_url = $self->pageURL( 'OME::Web::Search', {
 			Type             => $fo->semantic_type()->requireAttributeTypePackage()->getFormalName(),
 			module_execution => $mex->id()
@@ -209,12 +208,14 @@ sub getPageBody {
 		push( @{ $tmpl_data{ outputs } }, { 
 			output => $tableMaker->getTable( 
 				{
+					excludeFields    => { module_execution => undef },
 					noSearch => 1,
 					title    => $fo->name()." <a href='$more_info_url'>Search within these outputs</a>",
 					embedded_in_form => $self->{ form_name },
+					table_id => "Formal_Output_".$fo->id
 				},
 				$self->_STformalName( $fo->semantic_type() ),
-				$attributes
+				{ module_execution => $mex }
 			)
 		} );
 	}
@@ -256,10 +257,12 @@ sub getPageBody {
 	
 	# populate the template & print it out
 	$tmpl->param( %tmpl_data );
-	$html .= $tmpl->output();
 	$q->delete( 'UngroupID' );
-	$html .= $q->hidden(-name => 'UngroupID' );
-	$html .= $q->endform();
+	$html .= $tmpl->output().
+	         $q->hidden(-name => 'UngroupID' ).
+	         # For the DBObjTable column ordering
+	         $q->hidden(-name => 'action' ).
+	         $q->endform();
 
 	$self->_takeAction( );
 
