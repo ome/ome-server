@@ -4,13 +4,13 @@
 		<Include DocumentID = "123.456.70.123.123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
 	</DocumentGroup>
 	<Project Name = "Stress Response Pathway" ID = "123.456.1.123.123">
-		<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
-		<Ref Refer = "Group" ID = "123.456.73.123.123"/>
+		<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
 	</Project>
 	<Dataset Name = "Controls" ID = "123.456.2.123.123" Locked = "true">
-		<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
-		<Ref Refer = "Group" ID = "123.456.73.123.123"/>
-		<Ref Refer = "Project" ID = "123.456.1.123.123"/>
+		<ExperimenterRef ExperimenterID = "123.456.71.123.123"/>
+		<GroupRef GroupID = "123.456.73.123.123"/>
+		<ProjectRef ProjectID = "123.456.1.123.123"/>
 	</Dataset>
 	<Image ID = "123.456.3.123.123" Name = "P1W1S1" Description = "" Type = "OME">
 		<CustomAttributes>
@@ -19,7 +19,7 @@
 	</Image>
 	<CustomAttributes>
 		<Experimenter ID = "123.456.71.123.123" FirstName = "Nicola" LastName = "Sacco" email = "Nicola.Sacco@justice.net" Institution = "" OMEname = "nico">
-			<Ref Refer = "Group" ID = "123.456.73.123.123"/>
+			<!--Ref Refer = "Group" ID = "123.456.73.123.123"/-->
 		</Experimenter>
 		<Experiment Type = "Time-lapse" ID = "123.456.72.123.123" Description = "This was an experiment.">
 			<Ref Refer = "Experimenter" ID = "123.456.71.123.123"/>
