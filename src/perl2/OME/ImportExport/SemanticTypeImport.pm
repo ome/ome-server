@@ -46,20 +46,17 @@ use Log::Agent;
 use XML::LibXML;
 
 use OME::Database::Delegate;
+use OME::Session;
 
 sub new {
     my ($proto, %params) = @_;
     my $class = ref($proto) || $proto;
 
-    my @fieldsILike = qw(session _parser);
+    my @fieldsILike = qw( _parser);
 
     my $self;
 
     @$self{@fieldsILike} = @params{@fieldsILike};
-
-    logdie $class."->new needs a session"
-      unless exists $self->{session} &&
-             UNIVERSAL::isa($self->{session},'OME::Session');
 
     if (!defined $self->{_parser}) {
         my $parser = XML::LibXML->new();
@@ -108,7 +105,7 @@ Changes to tables and columns are made on that handle, but shouldn't be committe
 =cut
 sub processDOM {
     my ($self, $root, %flags) = @_;
-    my $session = $self->{session};
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
@@ -148,7 +145,7 @@ sub processDOM {
     my ($tables,$table);
 
     logdbg "debug", ref ($self) . 
-      "->processDOM: about to process SemanticTypeDefinitions\n";
+      "->processDOM: processing SemanticTypeDefinitions";
 
     ###########################################################################
     #
@@ -164,9 +161,6 @@ sub processDOM {
     #   valued by DBobject DataColumn
     my %dataColumns;
 
-    logdbg "debug", ref ($self) .
-      "->processDOM: about to process tables and columns\n";
-
     my @STDs = $root->getElementsByLocalName( 'SemanticType' );
 
     foreach my $ST_XML (@STDs) {
@@ -181,10 +175,6 @@ sub processDOM {
 			if $stDescriptions and $stDescriptions->[0]->childNodes()->size() ne 0;
         my @SEs_XML = $ST_XML->getElementsByLocalName ('Element');
 
-        # look for existing AttributeType
-        logdbg "debug", ref($self).
-          "->processDOM is looking for an OME::SemanticType ".
-          "object called:\n\t$stName";
         my $existingAttrType = $factory->
           findObject("OME::SemanticType",
                      name => $stName);
@@ -309,34 +299,27 @@ sub processDOM {
 
     foreach $table  ( sort { $a->{order} <=> $b->{order} } values %$tables ) {
         $tName = $table->{name};
-        logdbg "debug", ref ($self) . 
-          "->processDOM: looking for table ".$tName."\n";
+        logdbg "debug", ref ($self) . "->processDOM: processing table ".$tName;
         my @DT_tables = $factory->findObjects( "OME::DataTable", 'table_name' => $tName );
 
         my $newTable;
         if ( scalar(@DT_tables) == 0 ) { # the table doesn't exist. create it.
             logdbg "debug", ref ($self) . 
-              "->processDOM: table not found. creating it.\n";
+              "->processDOM: table $tName not found. creating it.";
             my $data = {
                         table_name  => $tName,
                         description => $table->{description}->[0],
                         granularity => $table->{granularity},
                        };
-            logdbg "debug", ref ($self) . 
-              "->processDOM: OME::DataTable DBObject parameters are\n\t".
-              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
 
             $newTable = $factory->newObject( "OME::DataTable", $data )
               or logdie ref($self)." could not create OME::DataTable. name=$tName";
-
-            logdbg "debug", ref ($self) . 
-              "->processDOM: successfully created OME::DataTable DBObject\n";
 
             push(@commitOnSuccessfulImport, $newTable);
 
         } else {
             logdbg "debug", ref ($self) .
-              "->processDOM: found table. using existing table.\n";
+              "->processDOM: table $tName already exists.";
             $newTable = $DT_tables[0];
         }
         #
@@ -362,8 +345,7 @@ sub processDOM {
               unless defined $sqlDataType and length ($sqlDataType) > 0;
 
             logdbg "debug", ref ($self) .
-              "->processDOM: searching OME::DataTable::Column with\n\t".
-              "data_table_id=".$newTable->id()."\n\tcolumn_name=$cName";
+              "->processDOM: processing column: $tName . $cName";
 
             my $cols = $factory->
               findObject("OME::DataTable::Column",
@@ -406,10 +388,6 @@ sub processDOM {
                                 'reference_type' => $column->{reference}->{STname}
                                };
 
-                logdbg "debug", ref ($self) .
-                  "->processDOM: OME::DataTable::Column DBObject parameters are\n".
-                  "\t".join( "\n\t", map { $_."=>'".$data->{$_}."'" } keys %$data );
-
                 $newColumn = $factory->newObject( 'OME::DataTable::Column', $data )
                     or logdie "Could not create OME::DataType::Column object";
 #
@@ -420,8 +398,6 @@ sub processDOM {
                 #} else {
                 #    $newColumn->sql_type($dataType);
                 #}
-                logdbg "debug", ref ($self) . 
-                  "->processDOM: created OME::DataTable::Column DBObject\n";
 
                 push(@commitOnSuccessfulImport, $newColumn);
 
@@ -430,7 +406,7 @@ sub processDOM {
                   unless $cols->sql_type() eq $column->{datatype};
 
                 logdbg "debug", ref ($self) . 
-                  "->processDOM: found column. using existing column.\n";
+                  "->processDOM: column already exists.";
                 $newColumn = $cols;
             }
             
@@ -443,10 +419,6 @@ sub processDOM {
         # END 'Process columns in this table'
         #
         ########################################################################
-
-
-        logdbg "debug", ref ($self) . 
-          "->processDOM: finished processing columns in that table\n";
 
         # Force this data table to regenerate its Perl package.  (So
         # that the new columns become visible)
@@ -461,8 +433,6 @@ sub processDOM {
 
     }
 
-    logdbg "debug", ref ($self) . 
-      "->processDOM: finished processing tables\n";
     #
     # END make necessary tables
     #
@@ -470,10 +440,10 @@ sub processDOM {
 
     ###########################################################################
     #
-    # Make AttributeTypes
+    # Make SemanticTypes
     #
     logdbg "debug", ref ($self) .
-      "->processDOM: making new AttributeTypes from SemanticTypes\n";
+      "->processDOM: creating SemanticTypes";
 
     foreach my $ST_XML (@STDs) {
         my $stName = $ST_XML->getAttribute('Name');
@@ -485,8 +455,7 @@ sub processDOM {
         # look for existing AttributeType
         # If the AttributeType exists, we already know it doesn't conflict from the first pass.
         logdbg "debug", ref($self).
-          "->processDOM is looking for an OME::SemanticType ".
-          "object\n\t[name=$stName]\n";
+          "->processDOM processing $stName";
         my $existingAttrType = $factory->
           findObject("OME::SemanticType",
                      name => $stName);
@@ -497,8 +466,7 @@ sub processDOM {
         # if AttributeType doesn't exist, create it
         #
         if ( not defined $existingAttrType ) {
-            logdbg "debug", ref ($self) .
-              "->processDOM: couldn't find it. creating it.\n";
+            logdbg "debug", ref ($self) . "->processDOM: Creating new semantic type.";
 
             my $data = {
                         name        => $stName,
@@ -506,36 +474,23 @@ sub processDOM {
                         description => $stDescription,
                        };
 
-            logdbg "debug", ref ($self) . 
-              "->processDOM: about to make a new OME::SemanticType for $stName.\n\t".
-              join( "\n\t", map { $_."=>".$data->{$_} } keys %$data );
-
             $newAttrType = $factory->newObject("OME::SemanticType",$data)
               or logdie ref ($self) . 
               " could not create new object of type OME::SemanticType with".
               "parameters:\n\t".
                 join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
 
-            logdbg "debug", ref ($self) . 
-              "->processDOM: made a new OME::SemanticType object\n";
-
 
             #######################################################################
             #
             # make OME::SemanticType::Element objects
             #
-            logdbg "debug", ref ($self) .
-              "->processDOM: about to make AttributeColumns from SemanticElements for $stName";
-
             foreach my $SemanticElementXML ($ST_XML->getElementsByLocalName( "Element") ) {
                 my $seName = $SemanticElementXML->getAttribute('Name');
                 my $seDBloc = $SemanticElementXML->getAttribute('DBLocation');
 				my $seDescriptions = $SemanticElementXML->getElementsByLocalName('Description');
 				my $seDescription = [$seDescriptions->[0]->childNodes()]->[0]->data()
 					if $seDescriptions;
-
-                logdbg "debug", ref ($self) .
-                  "->processDOM: processing attribute column,\n\tname=$seName\n";
 
                 #check ColumnID
                 logdie ref ($self) . 
@@ -560,18 +515,10 @@ sub processDOM {
 
                 $semanticColumns->{$stName}->{ $seName } =
                   $newAttrColumn;
-                logdbg "debug", ref ($self) . 
-                  "->processDOM added entry to semanticColumns.\n\t".
-                    "$stName.$seName => $newAttrColumn\n";
 
                 push(@commitOnSuccessfulImport, $newAttrColumn);
 
-                logdbg "debug", ref ($self) . 
-                  "->processDOM finished processing attribute column $seName\n";
             }
-            logdbg "debug", ref ($self) . 
-              "->processDOM: finished making AttributeColumns ".
-              "from SemanticElements\n";
             #
             #
             #######################################################################
@@ -584,15 +531,10 @@ sub processDOM {
         ###########################################################################
         else {
             $newAttrType = $existingAttrType;
-            logdbg "debug", ref ($self) . 
-              "->processDOM: using existing attribute type.\n";
+            logdbg "debug", ref ($self) ."->processDOM: semantic type already exists.";
         }
 
         $semanticTypes->{ $newAttrType->name() } = $newAttrType;
-        logdbg "debug", ref ($self) . 
-          "->processDOM: finished processing semanticType ".
-            $newAttrType->name()."\n";
-
 
         # Force this attribute type to regenerate its Perl
         # package.  (So that the new columns become visible)
@@ -602,8 +544,6 @@ sub processDOM {
     # END "Make AttributeTypes"
     #
     ###########################################################################
-
-    logdbg "debug", ref ($self) . "->processDOM: finished processing SemanticTypeDefinitions\n";
 
     #
     # END 'Make new tables, columns, and Semantic types'

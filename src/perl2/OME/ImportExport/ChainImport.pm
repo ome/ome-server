@@ -40,6 +40,7 @@ package OME::ImportExport::ChainImport;
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
+use OME::Session;
 
 use Carp;
 use Log::Agent;
@@ -50,15 +51,11 @@ sub new {
     my ($proto, %params) = @_;
     my $class = ref($proto) || $proto;
 
-    my @fieldsILike = qw(session _parser);
+    my @fieldsILike = qw(_parser);
 
     my $self;
 
     @$self{@fieldsILike} = @params{@fieldsILike};
-
-    die $class."->new needs a session"
-      unless exists $self->{session} &&
-             UNIVERSAL::isa($self->{session},'OME::Session');
 
     if (!defined $self->{_parser}) {
         my $parser = XML::LibXML->new();
@@ -91,7 +88,7 @@ sub importXML {
 
 sub processDOM {
     my ($self, $root, %flags) = @_;
-    my $session = $self->{session};
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
     my $chains = $root->getElementsByTagName('AnalysisChain');
 

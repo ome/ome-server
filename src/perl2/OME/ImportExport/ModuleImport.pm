@@ -39,6 +39,8 @@ package OME::ImportExport::ModuleImport;
 
 use XML::LibXML;
 use OME::Tasks::LSIDManager;
+use OME::Session;
+use Log::Agent;
 use strict;
 
 =head1 NAME
@@ -53,12 +55,8 @@ OME::ImportExport::ModuleImport - Import an Analysis Module XML specification.
 	my $manager       = OME::SessionManager->new();
 	my $session       = $manager->TTYlogin();
 	my $programImport = OME::ImportExport::ModuleImport->new( 
-		session => $session,
-		debug   => 0
+		_parser => $parser
 	);
-	# debug => 0 means report only fatal errors
-	# debug => 1 means give a description of what is happening
-	# debug => 2 means give an extremely detailed description of what is happening
 
 	my $newPrograms   = $programImport->importXMLFile( $filePath );
 
@@ -80,21 +78,10 @@ sub new {
 	my $proto  = shift;
 	my $class  = ref($proto) || $proto;
 	my %params = @_;
-	my $debug = $params{debug} || 0;
-	
-	print STDERR $proto . "->new called with parameters:\n\t" . join( "\n\t", map { $_."=>".$params{$_} } keys %params ) ."\n" 
-		if $debug > 1;
 	
 	my @requiredParams = ('session' );
 	
-	foreach (@requiredParams) {
-		die ref ($class) . "->new called without required parameter '$_'"
-			unless exists $params{$_}
-	}
-
 	my $self = {
-		session => $params{session},
-		debug   => $params{debug} || 0,
 		_parser => $params{_parser},
 	};
 	
@@ -109,8 +96,6 @@ sub new {
 	}
 
 	bless($self,$class);
-	print STDERR ref ($self) . "->new returning successfully\n" 
-		if $debug > 1;
 	return $self;
 }
 
@@ -129,40 +114,25 @@ Description:
 ###############################################################################
 #
 # parameter(s) are:
-#	$session - an OME::Session object
 #	$filePath
 #
 sub importXMLFile {
 	my $self       = shift;
 	my $filePath   = shift;
 
-	my $debug      = $self->{debug};
-	my $session    = $self->{session};
+	my $session    = OME::Session->instance();
 
-	print STDERR ref ($self) . "->importXMLFile called with parameters:\n\t[filePath=] $filePath\n"
-		if $debug > 0;
+#	logdbg "debug", ref ($self) . "->importXMLFile called with parameters:\n\t[filePath=] $filePath"
 	my $parser = $self->{_parser};
-#	print STDERR ref ($self) . "->importXMLFile about to validate file\n"
-#		if $debug > 1;
-	#FIXME: Validate file against Schema
-	# insert code here
-#	print STDERR ref ($self) . "->importXMLFile has validated file\n"
-#		if $debug > 1;
 
 	#Parse
 	my $tree = $parser->parse_file( $filePath )
 		or die ref($self) . " Could not parse file ($filePath)";
 
 	#process tree
-	print STDERR ref ($self) . "->importXMLFile about to process DOM (parsed file)\n"
-		if $debug > 1;
 	my $newPrograms = $self->processDOM( $tree->getDocumentElement() );
-	print STDERR ref ($self) . "->importXMLFile processed DOM\n"
-		if $debug > 1;
 
 	#return a list of imported programs (OME::Modules objects)
-	print STDERR ref ($self) . "->importXMLFile returning\n" 
-		if $debug > 0;
 	return $newPrograms;
 }
 #
@@ -175,7 +145,7 @@ sub importXMLFile {
 
 sub __getCategory {
     my ($self,$path,$description) = @_;
-    my $session = $self->{session};
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
     my @names = split(/\./,$path);
@@ -214,7 +184,6 @@ sub __getCategory {
 #
 # Process DOM tree
 # parameters:
-#	$session - an OME::Session object
 #	$root element (DOM model)
 # returns:
 #	list of imported programs
@@ -223,15 +192,13 @@ sub processDOM {
 	my $self    = shift;
 	my $root    = shift;
 
-	my $debug   = $self->{debug};
-	my $session = $self->{session};
+	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my $lsidManager = OME::Tasks::LSIDManager->new();
 
 	my @commitOnSuccessfulImport;
 	my @newPrograms;
-	print STDERR ref ($self) . "->processDOM called to process " . scalar(@{$root->getElementsByLocalName( "AnalysisModule" )} ) . " modules\n"
-		if $debug > 0;
+	logdbg "debug", ref ($self) . "->processDOM called to process " . scalar(@{$root->getElementsByLocalName( "AnalysisModule" )} ) . " modules";
 
 
 	foreach my $categoryXML ($root->getElementsByLocalName('Category')) {
@@ -250,11 +217,10 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	#
 	# make OME::Modules object
 	#
-	print STDERR ref ($self) . "->processDOM about to create an OME::Module object\n"
-		if $debug > 1;
+	logdbg "debug", ref ($self) . "->processDOM creating OME::Module ".$moduleXML->getAttribute( 'ModuleName' );
 	my $program = $lsidManager->getObject( $moduleXML->getAttribute( 'ID' ) );
 	if (defined $program) {
-		print STDERR ref($self)."->processDOM: ". $moduleXML->getAttribute( 'ModuleName' ) ." already exists.\n";
+		logdbg "debug", ref($self)."->processDOM: ". $moduleXML->getAttribute( 'ModuleName' ) ." already exists in the DB. Skipping...";
 		next;
 	}
         my $categoryPath = $moduleXML->getAttribute('Category');
@@ -278,15 +244,11 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		default_iterator => $moduleXML->getAttribute( 'FeatureIterator' ),
 		new_feature_tag  => $moduleXML->getAttribute( 'NewFeatureName' ),
 	};
-	print STDERR "OME::Module parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
-		if $debug > 1;
 	my $newProgram = $factory->newObject("OME::Module",$data)
 		or die "Could not create OME::Module object\n";
 	push(@commitOnSuccessfulImport, $newProgram);
 	$lsidManager->setLSID( $newProgram, $moduleXML->getAttribute( 'ID' ) )
-		or print STDERR "Couldn't set LSID for module ".$moduleXML->getAttribute( 'ID' )."\n";
-	print STDERR ref ($self) . "->processDOM created an OME::Module object\n"
-		if $debug > 1;
+		or die "Couldn't set LSID for module ".$moduleXML->getAttribute( 'ID' );
 	#
 	#
 	###########################################################################
@@ -299,12 +261,9 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	# this hash is keyed by FormalInput.Name, valued by DBObject FormalInput
 	my %formalInputs;
 
-	print STDERR ref ($self) . "->processDOM about to process formal inputs\n"
-		if $debug > 1;
+	logdbg "debug", ref ($self) . "->processDOM processing formal inputs";
 	foreach my $formalInputXML ( $moduleXML->getElementsByLocalName( "FormalInput" ) ) {
-		print STDERR ref ($self) . "->processDOM is processing formal input, ".$formalInputXML->getAttribute('Name')."\n"
-			if $debug > 1;
-
+		logdbg "debug", "\tformal input: ".$formalInputXML->getAttribute('Name');
 
 		#######################################################################
 		#
@@ -401,11 +360,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		#######################################################################
 
-		print STDERR ref ($self) . "->processDOM finished processing formal input, ".$newFormalInput->name()."\n"
-			if $debug > 1;
 	}
-	print STDERR ref ($self) . "->processDOM finished processing formal inputs\n"
-		if $debug > 1;
 	#
 	#
 	###########################################################################
@@ -418,12 +373,9 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	# this hash is keyed by FormalOutput.Name, valued by DBObject FormalOutput
 	my %formalOutputs;
 
-	print STDERR ref ($self) . "->processDOM about to process formal outputs\n"
-		if $debug > 1;
+	logdbg "debug", ref ($self) . "->processDOM processing formal outputs";
 	foreach my $formalOutputXML ( $moduleXML->getElementsByLocalName( "FormalOutput" ) ) {
-
-		print STDERR ref ($self) . "->processDOM is processing formal output, ".$formalOutputXML->getAttribute('Name')."\n"
-			if $debug > 1;
+		logdbg "debug", "\tformal output: ".$formalOutputXML->getAttribute('Name');
 
 		###################################################################
 		#
@@ -466,11 +418,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		###################################################################
 
-		print STDERR ref ($self) . "->processDOM finished processing formal output, ".$newFormalOutput->name()."\n"
-			if $debug > 1;
 	}
-	print STDERR ref ($self) . "->processDOM finished processing formal outputs\n"
-		if $debug > 1;
 	#
 	#
 	###########################################################################
@@ -480,153 +428,125 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	#
 	# process executionInstructions (CLI handler specific)
 	#
-	print STDERR ref ($self) . "->processDOM about to process ExecutionInstructions\n"
-		if $debug > 1;
+	logdbg "debug", ref ($self) . "->processDOM processing ExecutionInstructions";
 	my @executionInstructions = 
 		$moduleXML->getElementsByLocalName( "ExecutionInstructions" );
 	
 	# XML schema & DBdesign currently allow at most one execution point per module
 	if(scalar(@executionInstructions) == 1) {
-            #######################################################################
-            #
-            # CLI Handler specific execution Instructions
-            #
-            my $executionInstructionXML = $executionInstructions[0];
-
-            if ($module_type eq 'OME::Analysis::CLIHandler') {
-
 		#######################################################################
 		#
-		# verify FormalInputNames. also add ID attributes.
+		# CLI Handler specific execution Instructions
 		#
-		print STDERR ref ($self) . "->processDOM: verifying input references. (FormalInputNames and SemanticElementNames). Also creating ID attributes\n"
-                  if $debug > 1;
-		my @inputTypes = ( "Input", "UseValue", "End", "Start" );
-		my @inputs;
-		map {
-                    push(@inputs, $executionInstructionXML->getElementsByLocalName( $_ ));
-		} @inputTypes;
+		my $executionInstructionXML = $executionInstructions[0];
 
-		foreach my $input (@inputs) {
-                    my ($formalInputName, $path) = split( /\./, $input->getAttribute( "Location" ), 2 );
+		if ($module_type eq 'OME::Analysis::CLIHandler') {
 
-                    my $formalInput    = $formalInputs{ $formalInputName }
-                      or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
-                    my $semanticType   = $formalInput->semantic_type();
-
-                    my $sen = $path;
-                    $sen =~ s/^(.*?)\..*$/$1/; # check the SE belonging to this ST, not referenced attributes
-                    # i guess ideally, you would trace through the references and do a full sweep.
-                    my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
-                      or die "Could not find semantic element '$sen' referenced by ".$input->toString().".\n";
-		
-                    # Create attributes FormalInputID and SemanticElementID
-                    # also create FormalInputName and SemanticElementName to work with CLIHandler code
-                    # maybe should change CLIHandler code sometime?
-                    $input->setAttribute ( "FormalInputName", $formalInputName );
-                    $input->setAttribute ( "SemanticElementName", $path );
-                    $input->setAttribute ( "FormalInputID", $formalInput->id() );
-                    $input->setAttribute ( "SemanticElementID", $semanticElement->id() );
-
-		}
-		print STDERR ref ($self) . "->processDOM: finished verifying inputs and adding ID attributes.\n"
-                  if $debug > 1;
-		#
-		#######################################################################
+			#######################################################################
+			#
+			# verify FormalInputNames. also add ID attributes.
+			#
+			my @inputTypes = ( "Input", "UseValue", "End", "Start" );
+			my @inputs;
+			map {
+				push(@inputs, $executionInstructionXML->getElementsByLocalName( $_ ));
+			} @inputTypes;
 	
-		#######################################################################
-		#
-		# verify outputs. also add ID attributes.
-		#
-		print STDERR ref ($self) . "->processDOM: verifying output references (FormalOutputName and SemanticElementName). Also creating ID attributes.\n"
-                  if $debug > 1;
-		my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
-		my @outputs;
-		map {
-                    push(@outputs, $executionInstructionXML->getElementsByLocalName( $_ ));
-		} @outputTypes;
+			foreach my $input (@inputs) {
+				my ($formalInputName, $path) = split( /\./, $input->getAttribute( "Location" ), 2 );
 
-		foreach my $output (@outputs) {
-                    my ($formalOutputName, $sen) = split( /\./, $output->getAttribute( "Location" ) );
+				my $formalInput    = $formalInputs{ $formalInputName }
+				  or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
+				my $semanticType   = $formalInput->semantic_type();
 
-                    my $formalOutput    = $formalOutputs{ $formalOutputName }
-                      or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
-                    my $semanticType   = $formalOutput->semantic_type();
-                    my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
-                      or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
-
-                    # Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
-                    $output->setAttribute ( "FormalOutputName", $formalOutputName );
-                    $output->setAttribute ( "SemanticElementName", $sen );
-                    $output->setAttribute ( "FormalOutputID", $formalOutput->id() );
-                    $output->setAttribute ( "SemanticElementID", $semanticElement->id() );
-
-		}
-		print STDERR ref ($self) . "->processDOM: finished verifying outputs and adding ID attributes.\n"
-                  if $debug > 1;
-		#
-		#######################################################################
-
-		#######################################################################
-		#
-		# normalize XYPlaneID's
-		#
-		print STDERR ref ($self) . "->processDOM: normalizing XYPlaneID's\n"
-                  if $debug > 1;
-		my $currentID = 0;
-		my %idMap;
-		# first run: normalize XYPlaneID's in XYPlane's
-		foreach my $plane ($executionInstructionXML->getElementsByLocalName( "XYPlane" ) ) {
-                    $currentID++;
-                    die "Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
-                      if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
-                    print STDERR ref ($self) . "->processDOM: altering attribute XYPlaneID in element type XYPlane\n" .
-                      (defined $plane->getAttribute('XYPlaneID') ? $plane->getAttribute('XYPlaneID') : '[No value]') .
-                        " -> " . $currentID . "\n"
-                          if $debug > 1;
-                    $idMap{ $plane->getAttribute('XYPlaneID') } = $currentID
-                      if defined $plane->getAttribute('XYPlaneID');
-                    $plane->setAttribute('XYPlaneID', $currentID);
-		}
-		# second run: clean up references to XYPlanes
-		foreach my $match ( $executionInstructionXML->getElementsByLocalName( "Match" ) ) {
-                    die "'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID').". Did you make a typo?"
-                      unless exists $idMap{ $match->getAttribute('XYPlaneID') };
-                    print STDERR ref ($self) . "->processDOM: altering XYPlaneID in element type Match\n" .
-                      $match->getAttribute('XYPlaneID') .	" -> " . $idMap{ $match->getAttribute('XYPlaneID') } . "\n"
-                        if $debug > 1;
-                    $match->setAttribute('XYPlaneID',
-                                         $idMap{ $match->getAttribute('XYPlaneID') } );
-		}
-		print STDERR ref ($self) . "->processDOM: finished normalizing XYPlaneID's\n"
-                  if $debug > 1;
-		#
-		#######################################################################
+				my $sen = $path;
+				$sen =~ s/^(.*?)\..*$/$1/; # check the SE belonging to this ST, not referenced attributes
+				# i guess ideally, you would trace through the references and do a full sweep.
+				my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
+				  or die "Could not find semantic element '$sen' referenced by ".$input->toString().".\n";
+	
+				# Create attributes FormalInputID and SemanticElementID
+				# also create FormalInputName and SemanticElementName to work with CLIHandler code
+				# maybe should change CLIHandler code sometime?
+				$input->setAttribute ( "FormalInputName", $formalInputName );
+				$input->setAttribute ( "SemanticElementName", $path );
+				$input->setAttribute ( "FormalInputID", $formalInput->id() );
+				$input->setAttribute ( "SemanticElementID", $semanticElement->id() );
+	
+			}
+			#
+			#######################################################################
 		
-		#######################################################################
-		#
-		# check regular expressions for validity
-		#
-		print STDERR ref ($self) . "->processDOM: checking regular expression patterns for validity\n"
-                  if $debug > 1;
-		my @pats =  $executionInstructionXML->getElementsByLocalName( "pat" );
-		foreach (@pats) {
-                    my $pat = $_->getFirstChild->getData();
-                    print STDERR ref ($self) . "->processDOM: inspecting pattern:\n$pat\n"
-                      if $debug > 1;
-                    eval { "" =~ /$pat/; };
-                    die "Invalid regular expression pattern: $pat in module ".$newProgram->name()
-                      if $@;
-		}
-		print STDERR ref ($self) . "->processDOM: finished checking regular expression patterns\n"
-                  if $debug > 1;
-		#
-		#######################################################################
+			#######################################################################
+			#
+			# verify outputs. also add ID attributes.
+			#
+			my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
+			my @outputs;
+			map {
+				push(@outputs, $executionInstructionXML->getElementsByLocalName( $_ ));
+			} @outputTypes;
+	
+			foreach my $output (@outputs) {
+				my ($formalOutputName, $sen) = split( /\./, $output->getAttribute( "Location" ) );
+	
+				my $formalOutput    = $formalOutputs{ $formalOutputName }
+				  or die "Could not find formal output referenced by element ".$output->tagName()." with FormalOutputName ". $output->getAttribute( "FormalOutputName");
+				my $semanticType   = $formalOutput->semantic_type();
+				my $semanticElement = $factory->findObject( "OME::SemanticType::Element", semantic_type_id => $semanticType->id(), name => $sen )
+				  or die "Could not find semantic column referenced by element ".$output->tagName()." with SemanticElementName ".$output->getAttribute( "SemanticElementName" );
+	
+				# Create attributes FormalOutputID and SemanticElementID to store NAME and FORMAL_OUTPUT_ID
+				$output->setAttribute ( "FormalOutputName", $formalOutputName );
+				$output->setAttribute ( "SemanticElementName", $sen );
+				$output->setAttribute ( "FormalOutputID", $formalOutput->id() );
+				$output->setAttribute ( "SemanticElementID", $semanticElement->id() );
+	
+			}
+			#
+			#######################################################################
+	
+			#######################################################################
+			#
+			# normalize XYPlaneID's
+			#
+			my $currentID = 0;
+			my %idMap;
+			# first run: normalize XYPlaneID's in XYPlane's
+			foreach my $plane ($executionInstructionXML->getElementsByLocalName( "XYPlane" ) ) {
+				$currentID++;
+				die "Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
+				  if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
+				$idMap{ $plane->getAttribute('XYPlaneID') } = $currentID
+				  if defined $plane->getAttribute('XYPlaneID');
+				$plane->setAttribute('XYPlaneID', $currentID);
+			}
+			# second run: clean up references to XYPlanes
+			foreach my $match ( $executionInstructionXML->getElementsByLocalName( "Match" ) ) {
+				die "'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID').". Did you make a typo?"
+					unless exists $idMap{ $match->getAttribute('XYPlaneID') };
+				$match->setAttribute('XYPlaneID',
+					 $idMap{ $match->getAttribute('XYPlaneID') } );
+			}
+			#
+			#######################################################################
+			
+			#######################################################################
+			#
+			# check regular expressions for validity
+			#
+			my @pats =  $executionInstructionXML->getElementsByLocalName( "pat" );
+			foreach (@pats) {
+				my $pat = $_->getFirstChild->getData();
+				eval { "" =~ /$pat/; };
+				die "Invalid regular expression pattern: $pat in module ".$newProgram->name()
+				  if $@;
+			}
+			#
+			#######################################################################
 
             }
 
-            print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DB\n"
-              if $debug > 1;
             $newProgram->execution_instructions( $executionInstructionXML->toString() );
 	}
 	#
@@ -638,27 +558,10 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 	###########################################################################
 	# commit this module. It's been successfully imported
 	#
-	print STDERR ref ($self) . "->processDOM: imported module '".$newProgram->name."' sucessfully. Committing to DB...\n"
-		if $debug > 0;
-	print STDERR ref ($self) . "->processDOM: committing DBObjects\n"
-		if $debug > 2;
+	logdbg "debug", ref ($self) . "->processDOM: imported module '".$newProgram->name."' sucessfully. Committing to DB...";
 	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
-		print STDERR ref ($self) . "->processDOM: about to commit DBObject: $DBObjectInstance\n"
-			if $debug > 2;
 		$DBObjectInstance->storeObject();
-		print STDERR ref ($self) . "->processDOM: successfully commited DBObject: $DBObjectInstance\n"
-			if $debug > 2;
 	}                             # commits all DBObjects
-	print STDERR ref ($self) . "->processDOM: finished committing DBObjects\n"
-		if $debug > 2;
-
-	print STDERR ref ($self) . "->processDOM: committing changes to tables and columns\n"
-		if $debug > 2;
-	print STDERR ref ($self) . "->processDOM: finished committing changes to tables and columns\n"
-		if $debug > 2;
-
-	print STDERR ref ($self) . "->processDOM commit successful\n"
-		if $debug > 0;
     $session->commitTransaction();
 	#
 	###########################################################################
@@ -667,8 +570,6 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 
 } # END foreach my $moduleXML( @modules )
 	
-	print STDERR ref ($self) . "->processDOM returning \n"
-		if $debug > 0;
 	return \@newPrograms;
 	
 } # END sub processDOM

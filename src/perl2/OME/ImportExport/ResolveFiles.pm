@@ -59,6 +59,7 @@ use strict;
 use XML::LibXML;
 use OME::Tasks::LSIDManager;
 use OME::Image::Server;
+use OME::Session;
 use Log::Agent;
 
 # package constants
@@ -75,14 +76,8 @@ sub new {
 	my $class          = ref($proto) || $proto;
 	$params{debug}     = 0 unless exists $params{debug};
 	my $debug          = $params{debug};
-	my @requiredParams = ('session');
-	my @knownParams    = ( @requiredParams, '_parser', 'debug' );
+	my @knownParams    = ( '_parser', 'debug' );
 	
-	foreach (@requiredParams) {
-		die ref ($class) . "->new called without required parameter '$_'"
-			unless exists $params{$_}
-	}
-
 	my %selfHash = map { $_ => $params{$_} } @knownParams;
 	my $self = \%selfHash;
 	
@@ -114,7 +109,7 @@ sub importFile() {
 	my ($self, $omeisFileID, $repository) = @_;
 
 	# resources
-	my $session       = $self->{session};
+	my $session       = OME::Session->instance();
 	my $factory       = $session->Factory();
 	my $parser        = $self->{_parser};
 	my $LSIDresolver  = OME::Tasks::LSIDManager->new();

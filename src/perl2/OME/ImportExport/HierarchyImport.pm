@@ -47,12 +47,12 @@ OME::ImportExport::HierarchyImport - Import the OME ontology from XML.
 =head1 SYNOPSIS
 
 	# Should really have OMEImporter make the calls for you:
-	my $importer = new OME::Tasks::OMEImport (session => $session);
+	my $importer = new OME::Tasks::OMEImport ();
 	$importer->importFile ($filename);
 
 	# Or, if you insist on doing it yourself:
     my $parser = new XML::LibXML ();
-    my $hierarchyImporter = new OME::ImportExport::HierarchyImport->(session => $session);
+    my $hierarchyImporter = new OME::ImportExport::HierarchyImport->();
     my $doc = $parser->parse_string($xml);
     my $objectList = $hierarchyImporter->processDOM($doc->getDocumentElement());
 
@@ -79,14 +79,15 @@ use OME::Tasks::LSIDManager;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::ImportManager;
+use OME::Session;
 
 =head1 METHODS
 
 =head2 new
 
-	my $importer = new OME::ImportExport::HierarchyImport (session => $session, _lsidResolver => $lsidRslvr);
+	my $importer = new OME::ImportExport::HierarchyImport ( _lsidResolver => $lsidRslvr);
 
-This makes a new hierarchy importer.  The session parameter is required, and the _lsidResolver parameter is optional.
+This makes a new hierarchy importer.  The _lsidResolver parameter is optional.
 The _lsidResolver is an L<OME::Tasks::LSIDManager|OME::Tasks::LSIDManager> object used for resolving LSIDs to local DB IDs.  If one is not passed
 as a parameter a new resolver for this instance will be generated with this method call.
 
@@ -97,18 +98,7 @@ sub new {
 	my $class  = ref($proto) || $proto;
 	my %params = @_;
 	
-	logdbg "debug", $proto . "->new called with parameters:\n\t" .
-		join( "\n\t", map { $_."=>".$params{$_} } keys %params );
-	
-	my @requiredParams = ('session');
-	
-	foreach (@requiredParams) {
-		die ref ($class) . "->new called without required parameter '$_'"
-			unless exists $params{$_}
-	}
-
 	my $self = {
-		session         => $params{session},
 		_lsidResolver   => $params{_lsidResolver},
 		_docIDs         => {},
 		_docRefs		=> {},
@@ -125,11 +115,6 @@ sub new {
 	if (!defined $self->{_lsidResolver}) {
 		$self->{_lsidResolver} = OME::Tasks::LSIDManager->new();
 	}
-
-	$self->{factory} = $self->{session}->Factory()
-		or die "Could not obtain a Factory object for this session.";
-
-	
 
 	bless($self,$class);
 	logdbg "debug", ref ($self) . "->new returning successfully";
@@ -162,8 +147,8 @@ sub processDOM {
 	my $self    = shift;
 	my $root    = shift;
 
-	my $session = $self->{session};
-	my $factory = $self->{factory};
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
 	my $lsid = $self->{_lsidResolver};
 	my $datasetManager = new OME::Tasks::DatasetManager($session);
 	my $projectManager = new OME::Tasks::ProjectManager($session);
@@ -393,8 +378,8 @@ sub importObject ($$$$) {
 
 #	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 
-	my $session	   = $self->{session};
-	my $factory	   = $self->{factory};
+	my $session	   = OME::Session->instance();
+	my $factory	   = $session->Factory();
 
 	# It is fatal for an object ID to be non-unique
 	logdie ref ($self) . "->importObject: Attempt to import an attribute with duplicate ID '$LSID'"
@@ -545,7 +530,7 @@ sub getObjectTypeInfo ($$) {
 		$refCols = {};
 
 	} else {
-		my $factory	   = $self->{factory};
+		my $factory	   = OME::Session->instance()->Factory();
 		my $ST = $factory->findObject("OME::SemanticType",name => $objectType)
 			|| logdie ref ($self) . "->getObjectTypeInfo: Attempt to import an undefined attribute type: $objectType";
 		my @attrColumns = $ST->semantic_elements();

@@ -44,14 +44,9 @@ OME::Tasks::OMEImport - A class to import OME XML
 =head1 SYNOPSIS
 
 	use OME::Tasks::OMEImport;
-	use OME::SessionManager;
-
-	# Acquire a session. See OME::Session for more details
-	my $manager = OME::SessionManager->new();
-	my $session = $manager->TTYlogin();
 
 	# Get an instance of this class
-	my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+	my $OMEImporter = OME::Tasks::OMEImport->new( );
 
 	# Get an OME::Image::Server::File object, import the file object.
 	$file = OME::Image::Server::File->upload($path);	
@@ -66,6 +61,7 @@ This class imports an OME XML file into the OME database.
 
 use strict;
 use OME;
+use OME::Session;
 our $VERSION = $OME::VERSION;
 
 use Carp;
@@ -89,7 +85,7 @@ use OME::Tasks::PixelsManager;
 
 =head2 new
 
-	my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 0 );
+	my $OMEImporter = OME::Tasks::OMEImport->new( );
 
 Returns an instance of the XML importer.
 
@@ -99,15 +95,11 @@ sub new {
     my ($proto, %params) = @_;
     my $class = ref($proto) || $proto;
 
-    my @fieldsILike = qw(session _parser debug);
+    my @fieldsILike = qw(_parser debug);
 
     my $self;
 
     @$self{@fieldsILike} = @params{@fieldsILike};
-
-    die $class."->new needs a session"
-      unless exists $self->{session} &&
-             UNIVERSAL::isa($self->{session},'OME::Session');
 
     if (!defined $self->{_parser}) {
         my $parser = XML::LibXML->new();
@@ -134,7 +126,7 @@ The importer returns a hash reference keyed by LSID with values containing objec
 
 sub importFile {
     my ($self, $file, %flags) = @_;
-    my $session = $self->{session};
+    my $session = OME::Session->instance();
     my $parser  = $self->{_parser};
 	my $repository = $session->findRepository();
 	my $filename;
@@ -153,7 +145,7 @@ sub importFile {
 		return if defined $originalFile;
 	}
 
-    my $resolver = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
+    my $resolver = OME::ImportExport::ResolveFiles->new( parser => $parser )
     	or die "Could not instantiate OME::ImportExport::ResolveFiles\n";
     
     my $doc = $resolver->importFile( $file->getFileID(), $repository );
@@ -188,7 +180,7 @@ sub importFile {
     }
 
     # Commit the transaction to the DB.
-    $self->{session}->commitTransaction();
+    $session->commitTransaction();
 
 	return $importedObjects;
 }
@@ -210,9 +202,7 @@ sub processDOM {
     # Parse the semantic types
 
     my $typeImporter = OME::ImportExport::SemanticTypeImport->
-      new(session => $self->{session},
-          _parser => $self->{_parser},
-          debug => $self->{debug});
+      new(__parser => $self->{_parser});
 
     my $stdElement = $root->
       getElementsByLocalName("SemanticTypeDefinitions" )->[0];
@@ -226,9 +216,7 @@ sub processDOM {
     # Parse the modules
 
     my $moduleImporter = OME::ImportExport::ModuleImport->
-      new(session         => $self->{session},
-          _parser         => $self->{_parser},
-         debug => $self->{debug});
+      new(_parser         => $self->{_parser});
 
     my $amlElement = $root->
       getElementsByLocalName("AnalysisModuleLibrary" )->[0];
@@ -239,8 +227,7 @@ sub processDOM {
     # Parse the chains
 
     my $chainImporter = OME::ImportExport::ChainImport->
-      new(session => $self->{session},
-          _parser => $self->{_parser});
+      new(_parser => $self->{_parser});
 
     my $chainList = $chainImporter->processDOM($root,%flags);
 
@@ -248,8 +235,7 @@ sub processDOM {
     # Parse the hierarchy and custom attributes
 
     my $hierarchyImporter = OME::ImportExport::HierarchyImport->
-      new(session         => $self->{session},
-          _parser         => $self->{_parser},
+      new(_parser         => $self->{_parser},
           semanticTypes   => $semanticTypes,
           semanticColumns => $semanticColumns);
 
@@ -257,8 +243,7 @@ sub processDOM {
 
     # Parse the data History
     my $historyImporter = OME::ImportExport::DataHistoryImport->
-      new(session         => $self->{session},
-          _parser         => $self->{_parser},
+      new(_parser         => $self->{_parser},
           objects         => $hierarchyObjects);
 
     $historyImporter->processDOM($root);
@@ -270,7 +255,8 @@ sub processDOM {
 
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
-    $self->{session}->commitTransaction();
+	my $session = OME::Session->instance();
+    $session->commitTransaction();
     
     my @importedObjects = (
     	( $hierarchyObjects ? values %$hierarchyObjects : () ),
@@ -285,7 +271,7 @@ sub processDOM {
 sub detectAndMarkDuplicateObjects {
 	my ($self, $hierarchyImporter) = @_;
 	
-	my $factory	= $self->{session}->Factory();
+	my $factory	= OME::Session->instance()->Factory();
 	
 	logdbg "debug", ref ($self)."->detectDuplicateObjects: Looking for objects in the DB identical to imported objects with malformed LSIDs";
 

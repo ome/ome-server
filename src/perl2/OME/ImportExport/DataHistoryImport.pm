@@ -39,6 +39,7 @@ package OME::ImportExport::DataHistoryImport;
 
 use strict;
 use OME;
+use OME::Session;
 our $VERSION = $OME::VERSION;
 our $NAMESPACE = 'http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd';
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
@@ -56,15 +57,11 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc objects);
+	my @fieldsILike = qw(_doc objects);
 
 	my $self;
 
 	@$self{@fieldsILike} = @params{@fieldsILike};
-
-	logdie $class."->new needs a session"
-	  unless exists $self->{session} &&
-			 UNIVERSAL::isa($self->{session},'OME::Session');
 
     if (!defined $self->{_parser}) {
         my $parser = XML::LibXML->new();
@@ -100,7 +97,7 @@ sub processDOM {
 	my ($self, $root, %flags) = @_;
 
 	my $LSIDresolver  = $self->{_LSIDresolver};
-	my $session = $self->{session};
+	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my $objectLookup = $self->{objects};
 	my @objects2store;
