@@ -152,6 +152,11 @@ my @MENU = (
 		text => 'Options',
 	},
 	{
+		web_class => 'OME::Web::TaskProgress',
+		type => 'link',
+		text => undef,
+	},
+	{
 		web_class => 'OME::Web::Logout',
 		type => 'link',
 		text => undef,

@@ -1,0 +1,166 @@
+# OME/Web/DBObjRender/__OME_ModuleExecution.pm
+#-------------------------------------------------------------------------------
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#		Massachusetts Institute of Technology,
+#		National Institutes of Health,
+#		University of Dundee
+#
+#
+#
+#	 This library is free software; you can redistribute it and/or
+#	 modify it under the terms of the GNU Lesser General Public
+#	 License as published by the Free Software Foundation; either
+#	 version 2.1 of the License, or (at your option) any later version.
+#
+#	 This library is distributed in the hope that it will be useful,
+#	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#	 Lesser General Public License for more details.
+#
+#	 You should have received a copy of the GNU Lesser General Public
+#	 License along with this library; if not, write to the Free Software
+#	 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------
+#
+# Written by:  
+#	Ilya Goldberg <igg@nih.gov>
+#
+#-------------------------------------------------------------------------------
+
+
+package OME::Web::DBObjRender::__OME_Task;
+
+=pod
+
+=head1 NAME
+
+OME::Web::DBObjRender::__OME_ModuleExecution - Specialized rendering for OME::ModuleExecution
+
+=head1 DESCRIPTION
+
+Provides custom behavior for rendering an OME::ModuleExecution
+
+=head1 METHODS
+
+=cut
+
+use strict;
+use vars qw($VERSION);
+use OME;
+use OME::Session;
+use base qw(OME::Web::DBObjRender);
+
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _summaryFields } = [
+		'name',
+		'state',
+		'message',
+		'error',
+		'last_step',
+		'n_steps',
+		'process_id',
+	];
+	$self->{ _allFields } = [
+		@{ $self->{ _summaryFields } },
+		't_start',
+		't_stop',
+		't_last'
+	];
+
+	$self->{ _fieldTitles } = {
+		name              => "Task",
+		process_id        => "PID",
+		state             => "Status",
+	};
+
+	
+	return $self;
+}
+
+=head2 _renderData
+
+in summary mode and html format, module will link to a detailed view of the module execution
+
+=cut
+
+sub _renderData {
+	my ( $self, $obj, $field_names, $format, $mode, $options ) = @_;
+	# override module field to link to MEX detail
+	if( grep( m/^module$/, @$field_names ) && $mode eq 'summary' && $format eq 'html' && $obj->module()) {
+		my $q = $self->CGI();
+		my $module_name = $obj->module()->name();
+		return ( module => $q->a( 
+			{ 
+				href  => $self->getObjDetailURL( $obj ),
+				title => "More information about this Module Execution",
+				class => 'ome_detail'
+			},
+			$module_name
+		) );
+	}
+	return ();
+}
+
+=head2 _getName
+
+returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp 
+
+=cut
+
+sub _getName {
+	my ($proto, $obj, $options) = @_;
+
+	$options->{max_text_length} = 33
+		unless exists $options->{max_text_length};
+
+	if( $obj->module() ) {
+		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
+			or die "Could not parse timestamp ".$obj->timestamp();
+		my ( $yr, $mo, $dy, $hr, $min, $sec ) = ($1, $2, $3, $4, $5, $6);
+		( $mo, $dy, $hr ) = map( int( $_ ), ( $mo, $dy, $hr ) );
+		my %month_abbr = (
+			1  => 'Jan',
+			2  => 'Feb',
+			3  => 'Mar',
+			4  => 'Apr',
+			5  => 'May',
+			6  => 'Jun',
+			7  => 'Jul',
+			8  => 'Aug',
+			9  => 'Sep',
+			10 => 'Oct',
+			11 => 'Nov',
+			12 => 'Dec'
+		);
+		my $name = $obj->module()->name();
+		unless( not defined $options->{max_text_length} ) {
+			my $len = $options->{max_text_length} - 23;
+			$name =~ s/^(.{$len})....*$/$1\.\.\./;
+		}
+		my $short_year = substr( $yr, 2 );
+		return $name." ".$month_abbr{ $mo }." $dy, $short_year $hr:$min";
+	}
+
+	return $obj->id();
+}
+
+sub _getSearchFields {return (undef,undef);}
+
+=head1 Author
+
+Ilya Goldberg <igg@nih.gov>
+
+=cut
+
+1;
