@@ -1,7 +1,7 @@
 /*------------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 Open Microscopy Environment
- *      Massachusetts Institue of Technology,
+ *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
  *      University of Dundee
  *
