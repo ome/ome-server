@@ -61,7 +61,6 @@
 /* Internal Prototypes */
 /* ------------------- */
 
-static char *get_param (char **cgivars, char *param);
 static int inList(char **cgivars, char *str);
 static char x2c(char *what);
 static void unescape_url(char *url);
@@ -525,7 +524,7 @@ int result;
 * If anything goes wrong, the function returns NULL.
 */
 static
-PixelsRep *GetPixels (OID ID, char rorw, char isBigEndian)
+PixelsRep *GetPixelsRep (OID ID, char rorw, char isBigEndian)
 {
 PixelsRep *myPixels;
 pixHeader *head;
@@ -580,7 +579,6 @@ CheckCoords (PixelsRep * myPixels,
 	return (1);
 }
 
-static
 off_t GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT) {
 pixHeader *head;
 
@@ -1779,7 +1777,7 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"Force")) )
 				sscanf (theParam,"%d",&force);
 
-			if (! (thePixels = GetPixels (ID,'w',iam_BigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1897,7 +1895,7 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&fileID);
 
 			if (ID) {
-				if (! (thePixels = GetPixels (ID,'i',iam_BigEndian)) ) {
+				if (! (thePixels = GetPixelsRep (ID,'i',iam_BigEndian)) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
@@ -2073,7 +2071,7 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"Offset")) )
 				sscanf (theParam,"%lu",&file_off);
 		
-			if (! (thePixels = GetPixels (ID,'w',iam_BigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -2160,7 +2158,7 @@ char **cgivars=param;
             }
 		} else rorw = 'r';
 
-		if (! (thePixels = GetPixels (ID,rorw,iam_BigEndian)) ) {
+		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
@@ -2233,7 +2231,7 @@ char **cgivars=param;
 			return (-1);
 		}
 
-		if (! (thePixels = GetPixels (ID,rorw,iam_BigEndian)) ) {
+		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
@@ -2312,7 +2310,7 @@ int inList(char **cgivars, char *str)
 	return( returnVal );
 }
 
-static
+
 char *get_param (char **cgivars, char *param)
 {
 	register int k = 0;

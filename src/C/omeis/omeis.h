@@ -172,4 +172,12 @@ ScalePixels (
 
 void fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec);
 
+char *get_param (char **cgivars, char *param);
+
+char *get_lc_param (char **cgivars, char *param);
+
+off_t GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT);
+
+
+
 #endif /* omeis_h */
