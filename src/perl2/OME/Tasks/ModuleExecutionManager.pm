@@ -278,13 +278,33 @@ sub getInputTag {
             my $input_mex = $actual_input->input_module_execution();
 
             my $semantic_type = $formal_input->semantic_type();
-            my @attributes = $class->
+            my $attributes = $class->
               getAttributesForMEX($input_mex,$semantic_type,
                                   {
                                    __order => 'id',
                                   });
 
-            $input_tag .= $_->id()." " foreach @attributes;
+            my $first = $attributes->next();
+            if ($first) {
+                my $prev_id_top = $first->id();
+                my $prev_id_bot = $first->id();
+
+                while (my $attr = $attributes->next()) {
+                    my $id = $attr->id();
+                    if ($id == $prev_id_bot+1) {
+                        $prev_id_bot = $id;
+                    } else {
+                        $input_tag .= ($prev_id_top == $prev_id_bot)?
+                          "$prev_id_top ": "$prev_id_top-$prev_id_bot ";
+
+                        $prev_id_top = $prev_id_bot = $id;
+                    }
+                }
+
+                $input_tag .= ($prev_id_top == $prev_id_bot)?
+                  "$prev_id_top ": "$prev_id_top-$prev_id_bot ";
+            }
+
             $input_tag .= ") ";
         }
     }
