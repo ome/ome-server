@@ -444,7 +444,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	public abstract PLinkTarget getEndLinkTarget();
 
 	public void setSelected(boolean v) {
-		System.err.println(" setting a link to be selected..");
+		//System.err.println(" setting a link to be selected..");
 		PLinkTarget startTarget = getStartLinkTarget();
 		PLinkTarget endTarget = getEndLinkTarget();
 		startTarget.setSelected(v);
