@@ -46,7 +46,10 @@ __PACKAGE__->sequence('image_seq');
 __PACKAGE__->columns(Primary => qw(image_id));
 __PACKAGE__->columns(Essential => qw(image_guid name));
 __PACKAGE__->columns(Others => qw(created inserted description
-                                  experimenter_id group_id));
+                                  experimenter_id group_id pixels_id));
+# pixels_id is part of a hack added by josiah on 6/9/03
+# it references the "primary" set of pixels. 
+
 #__PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
 #__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 #__PACKAGE__->hasa('OME::Repository' => qw(repository_id));
@@ -109,106 +112,61 @@ sub _init {
 # Old prototype:
 # my $pix = $image->GetPix();
 # New prototype:
-# my $pix = OME::Image->GetPix($pixelAttribute,$dimensionsAttribute);
+# my $pix = OME::Image->GetPix($pixelAttribute);
 #
 # (Both work) The new prototype allows you to create a Pix object from
-# any pixel and dimensions attribute.  The old prototype assumes that
-# there is only one of each associated with $image, and creates a Pix
-# object from that.
+# any pixel attribute.  The old prototype uses the default Pixels associated 
+# with $image, and creates a Pix object from that.
 
 sub GetPix {
     my $self = shift;
 
     if (@_) {
-        my ($pixelAttr, $dimensionsAttr) = @_;
+        my ($pixelAttr) = @_;
         $pixelAttr->verifyType("Pixels");
-        $dimensionsAttr->verifyType("Dimensions");
         my $repositoryAttr = $pixelAttr->Repository();
         my $pix = OME::Image::Pix->
           new($repositoryAttr->Path().$pixelAttr->Path(),
-              $dimensionsAttr->SizeX(),
-              $dimensionsAttr->SizeY(),
-              $dimensionsAttr->SizeZ(),
-              $dimensionsAttr->SizeC(),
-              $dimensionsAttr->SizeT(),
-              $dimensionsAttr->BitsPerPixel()/8)
+              $pixelAttr->SizeX(),
+              $pixelAttr->SizeY(),
+              $pixelAttr->SizeZ(),
+              $pixelAttr->SizeC(),
+              $pixelAttr->SizeT(),
+              $pixelAttr->BitsPerPixel()/8)
             || die ref($self)."->GetPix  Could not instantiate OME::Image::Pix object";
         return $pix;
     } else {
         return ($self->{thePix}) if defined $self->{thePix};
-        my $dimensions = $self->Dimensions();
+        my $pixels = $self->DefaultPixels();
         $self->{thePix} = new OME::Image::Pix (
             $self->getFullPath(),
-            $dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
-            $dimensions->num_waves(),$dimensions->num_times(),
-            $dimensions->bits_per_pixel()/8
+            $pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
+            $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel()/8
         ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
         return ($self->{thePix});
     }
 }
 
-# Accessor/Mutator
-# Mutator behavior has not been subjected to thorough testing.
-
-# DC - 04/18/2003
-# This is now one big hack.  This method will create or retrieve an
-# instance of the Dimensions semantic type, and then create an
-# instance of the OME::Image::Dimensions class to represent it.  (This
-# is so that existing methods which use O::I::Dimensions will continue
-# to work while we switch them over to using attributes.)
-
-sub Dimensions {
-    my $self = shift;
-    
-    # It doesn't make sense to change images if they have been set. It's a one time only transaction.
-    # if $self->{_dimensions} is set, we've gone through this before and either mutated or loaded the dims
-    return ($self->{_dimensions}) if defined $self->{_dimensions};
-
-	# nab mutator parameters if they exist
-    my ($x, $y, $z, $w, $t, $BitsPerPixel) = @_;
-    #Carp::cluck "image->dimensions";
-    my $factory = $self->Session()->Factory();
-
-   	# look for dimensions
-    my @dimensions = $factory->findAttributes("Dimensions",$self->id());
-    #my @dimensions = $self->Session()->Factory()->findObject( "OME::Image::Dimensions", image_id => $self->id());
-
-    # if they gave us some parameters to mutate with, let's mutate!
-    if( defined $BitsPerPixel ) {
-    	die ref ($self) . "->Dimensions() does not allow mutator behavior once dimensions have been set!\n"
-    		if ( scalar(@dimensions) > 0 );
-    	my $recordData = { #image_id       => $self->id(),
-    	                   SizeX         => $x,
-    	                   SizeY         => $y,
-    	                   SizeZ         => $z,
-    	                   SizeC      => $w,
-    	                   SizeT      => $t,
-    	                   BitsPerPixel => $BitsPerPixel };
-        my $dims = $factory->newAttribute("Dimensions",$self->id(),undef,$recordData)
-    	#my $dims = $self->Session()->Factory()->newObject( "OME::Image::Dimensions", $recordData )
-    		or die ref ($self) . "->Dimensions() could not create a new object of type OME::Image::Dimensions. Parameters used were: ". values (%$recordData) . "\n";
-    	$self->{_dimensions} = $factory->
-          loadObject("OME::Image::Dimensions",$dims->id());
-    	return $self->{_dimensions};
-    }
-    
-    die ref ($self) . "->Dimensions(): Image has multiple dimension entries\n"
-    	if (scalar(@dimensions) > 1);
-    $self->{_dimensions} = $factory->
-      loadObject("OME::Image::Dimensions",$dimensions[0]->id());
-    return $self->{_dimensions};
+# This is an accessor/mutator for the default pixels associated with this image.
+sub DefaultPixels {
+	my $self = shift;
+	my $pixels_id = shift;
+	
+	if( not defined $pixels_id ) {
+		my $pixels = $self->Session()->Factory()->
+			loadAttribute("Pixels",$self->pixels_id());
+		return $pixels;
+	} else {
+		$self->pixels_id( $pixels_id );
+		return $self->DefaultPixels();
+	}
 }
+
 
 sub getFullPath {
     my $self = shift;
-    my @pixels = $self->Session()->Factory()->
-      findAttributes("Pixels",$self->id());
-    die "Cannot find any pixels"
-      if scalar(@pixels) == 0;
-    die "This image has more than one pixel attribute!"
-      if scalar(@pixels) > 1;
-    my $pixels = $pixels[0];
-
+    my $pixels = shift;
+    
     my $repository = $pixels->Repository();
     my $path = $pixels->Path();
 
@@ -257,38 +215,6 @@ sub GetPixelArray {
 
     return \@result;
 }
-
-
-# DEPRECATED!
-# Please use the Dimensions attribute instead.
-
-package OME::Image::Dimensions;
-
-use strict;
-our $VERSION = '1.0';
-
-use OME::DBObject;
-use base qw(OME::DBObject);
-
-__PACKAGE__->AccessorNames({
-    image_id     => 'image'
-});
-
-__PACKAGE__->table('image_dimensions');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id size_x size_y size_z 
-				     size_c size_t
-				     bits_per_pixel));
-__PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
-				                  pixel_size_c pixel_size_t));
-__PACKAGE__->hasa('OME::Image' => qw(image_id));
-
-
-sub num_waves { shift->size_c(@_); }
-sub num_times { shift->size_t(@_); }
-sub wave_increment { shift->pixel_size_c(@_); }
-sub time_increment { shift->pixel_size_t(@_); }
 
 
 # DEPRECATED!
