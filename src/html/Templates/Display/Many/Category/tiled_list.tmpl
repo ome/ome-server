@@ -1,0 +1,25 @@
+<input type="hidden" name="declassifyImage">
+<TMPL_IF NAME=/tile_loop/width-3>
+	<TMPL_VAR NAME=/pager_text>
+	<TMPL_IF NAME=/more_info_url>
+		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
+		<a href="<TMPL_VAR NAME=/more_info_url>">More info on these Categories...</a>
+	</TMPL_IF>
+	Clicking a thumbnail will:
+	<nobr><input type="radio" name="thumb_click_opens" value='viewer' checked>Open the Image Viewer</nobr>
+	<nobr><input type="radio" name="thumb_click_opens" value='image_detail' >Show Image detail</nobr>
+<!--
+	<nobr><input type="radio" name="thumb_click_opens" value='declassify' >Declassify the Image</nobr>
+-->
+	<table class="ome_table">
+		<TMPL_LOOP NAME=/tile_loop/width-3>
+			<tr>
+				<TMPL_LOOP NAME=/obj_loop>
+					<td class="ome_td" valign="top"><TMPL_VAR NAME=/object/render-summary_no_thumbnail_controls></td>
+				</TMPL_LOOP>
+			</tr>
+		</TMPL_LOOP>
+	</table>
+<TMPL_ELSE>
+<b>(none)</b>
+</TMPL_IF>
