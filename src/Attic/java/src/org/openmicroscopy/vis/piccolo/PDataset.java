@@ -43,7 +43,6 @@ import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CImage;
 import org.openmicroscopy.vis.ome.Connection;
 import edu.umd.cs.piccolo.nodes.PText;
-import edu.umd.cs.piccolo.util.PBounds;
 import java.util.Vector;
 import java.util.List;
 import java.util.Iterator;
@@ -68,6 +67,7 @@ public class PDataset extends PCategoryBox {
 	private double x=HGAP;
 	private double y=VGAP;
 	private float maxHeight = 0;
+	private PText nameLabel;
 	
 	public PDataset(CDataset dataset,Connection connection) {
 		super();
@@ -90,7 +90,7 @@ public class PDataset extends PCategoryBox {
 		float maxWidth = 0;
 		Vector nodes = new Vector();
 		// draw label
-		PText nameLabel = new PText(dataset.getName());
+		nameLabel = new PText(dataset.getName());
 		addChild(nameLabel);
 		nameLabel.setOffset(x,y);
 		y+= nameLabel.getHeight()+VGAP;
@@ -110,6 +110,8 @@ public class PDataset extends PCategoryBox {
 				maxWidth = width;
 			nodes.add(thumb);
 		}
+		
+	//	System.err.println("laying out images. width is "+maxWidth);
 	
 		// space them
 		maxHeight += VGAP;
@@ -117,25 +119,31 @@ public class PDataset extends PCategoryBox {
 		iter = nodes.iterator();
 		int rowSz = (int) Math.sqrt(nodes.size());
 		int i =0;
+		double maxRowWidth=0;
 		while (iter.hasNext()) {
 			PThumbnail thumb = (PThumbnail) iter.next();
+		
 			thumb.setOffset(x,y);
+			x += maxWidth;
+			if (x > maxRowWidth)
+				maxRowWidth = x;
 			if (i++ >= rowSz) {
 				y += maxHeight; 
 				x = HGAP;
 				i = 0;
-			}
-			else 
-				x+= maxWidth;
+				
+			}			
 		}	
 		// roll back y if we were just about to start a new row
 		if (x== HGAP)
 			y-=maxHeight;
 			
-		PBounds b = getFullBoundsReference();
 		height =(float)(y+maxHeight-VGAP);
 		
-		setExtent(b.getWidth()+PConstants.SMALL_BORDER,
+		maxRowWidth -= HGAP; // leave of the last horizontal space between nodes
+		if (maxRowWidth < nameLabel.getWidth())
+			maxRowWidth = nameLabel.getWidth();
+		setExtent(maxRowWidth+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER);
 	}
 }
