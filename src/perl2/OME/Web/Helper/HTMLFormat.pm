@@ -133,7 +133,7 @@ sub buttonControl{
 	}else{
 		$function="openPopUpImage";
 		$id=$object->image_id();
-		$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and defined $bool);
+		#$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and defined $bool);
 	}
 	
 		
@@ -496,7 +496,7 @@ sub formCreate{
 	$html .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
 	if (defined $ref){
 		$html.="<h3>Please select images in the list below.</h3>";
-		$html.=writeCheckBoxImage($ref);
+		$html.=$self->writeCheckBoxImage($ref);
 	}
 	return $html;
 
@@ -608,52 +608,14 @@ sub formImport{
 	$rows.=addRow(\%b);
 	$html.=$submit."<BLOCKQUOTE>";
 	$html.=writeTable($rows,\%c);
-	$html.=$rad[1]."<br>".$dropDownTable;
+	if ($dropDownTable ne ""){
+		$html.=$rad[1]."<br>".$dropDownTable;
+	}
 	$html.="</BLOCKQUOTE>";
 	return $html;
 
 }
 
-#####################
-# Parameters:
-#	nameSubmit = name submit button
-#	valueSubmit = value sbmit button
-# Return: html code table
-
-sub formImportFile{
-	my $self=shift;
-	my ($nameSubmit,$valueSubmit)=@_;
-	my $rows="";
-	my $html="";
-	my $text="";
-	my $button="";
-	my (%a,%b);
-	%a=(
-	"border"	=>0,
-	"cellspacing" =>4,
-	"cellpadding"=>0,
-	) ;
-	%b=(
-	"colspan" => 2,
-	);
-
-	$html .="<h3>Import XML file </h3>";
-	$html .="<p>Please enter a name</p>";
-	$text .="<b>Name: </b>";
-	$text .=buttonInput("text","name",undef,25);
-	$button .=buttonInput("submit",$nameSubmit,$valueSubmit);
-	my %h=(
-	1=>{ content=>$text, attribute=>$self->{cellCenter}},
-	);
-	my %ha=(
-	1=>{ content=>$button, attribute=>\%b},
-	);
-	$rows.=addRow(\%h);
-	$rows.=addRow(\%ha);
-	$html.=writeTable($rows,\%a);
-	return $html;
-
-}
 
 
 ##############################
@@ -700,6 +662,46 @@ sub formLogin{
 
 }
 
+sub formImportExportXML{
+	my $self=shift;
+	my ($ref,$nameButton,$valueButton)=@_;
+	my $html="";
+	my $rows="";
+	my $text="";
+	my $button="";
+	my (%a,%b);
+	%a=(
+	"border"	=>0,
+	"cellspacing" =>4,
+	"cellpadding"=>0,
+	) ;
+	%b=(
+	"colspan" => 2,
+	);
+	$text .="<b>Name(s): </b>";
+	my %hb=(
+	1=>{ content=>$text, attribute=>\%b},
+	);
+	$rows.=addRow(\%hb);
+
+	$button .=buttonInput("submit",$nameButton,$valueButton);
+	foreach(@$ref){
+		my %h=(
+		1=>{ content=>$_, attribute=>$self->{cellCenter}},
+		);
+		$rows.=addRow(\%h);
+	}
+	my %ha=(
+	1=>{ content=>$button, attribute=>\%b},
+	);
+	$rows.=addRow(\%ha);
+	$html.=writeTable($rows,\%a);
+
+	return $html;
+
+
+
+}
 ##################
 # Parameters:
 #	name= Projects/Datasets/Images
@@ -743,17 +745,22 @@ sub formSearch{
 ####################
 # Parameters
 # 	ref =ref array with html to format
-
+#	n= number of thumbnails/row
 sub gallery{
 	my $self=shift;
-	my ($ref)=@_;
+	my ($ref,$n)=@_;
 	my $html="";
 	my $rows="";
 	my $count=0;
 	my %h=();
-
+	my $num;
+	if (defined $n){
+		$num=$n;
+	}else{
+		$num=8;
+	}
 	foreach (@$ref){
-	 	if ($count<8){
+	 	if ($count<$num){
 		  $h{$count}={content=>$_, attribute=>$self->{cellCenter}};
 		  $count++;
 		}else{
@@ -805,6 +812,7 @@ sub imageInDataset{
 		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$id." align=\"bottom\" border=0></a>";
 
 		#$view=buttonPopUp($id,"View","openPopUpImage");
+	
 	   	my %h=(
 		1 =>	{ content=>$name,	attribute=>$self->{cellLeft}},
 		2 => 	{ content=>$id, attribute=>$self->{cellLeft}},
@@ -837,7 +845,7 @@ sub listImages{
 	1=>{ content=>$button, attribute=>$self->{cellLeft}},
 	);
 	$html.="<h3>Please select images in the list below.</h3>";
-	$html.=writeCheckBoxImage($ref);
+	$html.=$self->writeCheckBoxImage($ref);
 	$rows.=addRow(\%h);
 	$html.="<br>";
 	$html.=writeTable($rows);
@@ -1284,6 +1292,7 @@ sub writeCheckBox{
 }
 
 sub writeCheckBoxImage{
+	my $self=shift;
 	my ($ref)=@_;
 	my @list=();
 	my $html="";
@@ -1292,12 +1301,14 @@ sub writeCheckBoxImage{
 		my $view="<a href=\"#\" onClick=\"return openPopUpImage($i)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$i." align=\"bottom\" border=0></a>";
 
 		#my $view=buttonPopUp($i,"View","openPopUpImage");
-		$val.=$view."&nbsp;&nbsp;";
+		#$val.=$view."&nbsp;&nbsp;";
+		$val.=$view."<br>";
 	 	$val.=buttonInput("checkbox","ListImage",$i);
 	 	$val.=${$ref}{$i}->name();
 		push(@list,$val);
 	}
-	$html.=join("<br>",@list);
+	$html.=$self->gallery(\@list);
+	#$html.=join("<br>",@list);
 	return $html;
 }
 
