@@ -36,9 +36,9 @@ use strict;
 use warnings;
 use Carp;
 use English;
-use Cwd;
 use Term::ANSIColor qw(:constants);
 use File::Basename;
+use Cwd;
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -50,12 +50,13 @@ use base qw(OME::Install::InstallationTask);
 #*********
 
 # Default package repository
-my $REPOSITORY = "http://openmicroscopy.org/packages/perl/";
+my $REPOSITORY = "http://openmicroscopy.org/packages/perl";
 
 # Default ranlib command
 my $RANLIB= "ranlib";
 
-# Global logfile filehandle
+# Global logfile filehandle and name
+my $LOGFILE_NAME = "PerlModuleTask.log";
 my $LOGFILE;
 
 # Our basedirs and user which we grab from the environment
@@ -67,40 +68,73 @@ my ($OME_UID, $OME_GID);
 # Installation home
 my $INSTALL_HOME;
 
+# XXX: Notes on version checking
+#
+# Version checking in Perl is notoriously tricky and has only become more
+# muddled since the addition of v-strings in Perl 5.6.1. At the moment, at
+# least CPAN doesn't accept module versions made up of characters (1.01a)
+# or three numeric strings (1.0.1) so our job is a little easier (discerning
+# if a module's version is numeric or a string).
+#
+# Numeric examples:
+# $VERSION = 1.01';
+# $VERSION = '1.01';
+# 
+# Subsequent valid_versions syntax:
+# valid_versions => ['eq 1.01', 'ne 0.94']
+#
+# String examples:
+# $VERSION = "1.01";
+#
+# Subsequent valid_versions syntax:
+# valid_versions => ['eq "1.01"', 'ne "0.94"']
+#
+# You can check these version numbers in the module files themselves, for
+# example:
+#
+# egrep 'VERSION' /usr/lib/perl5/DBI.pm
+# $DBI::VERSION = "1.35";
+#
+# For a little more information:
+# http://perlmonks.thepen.com/102368.html
+#
+# Of course, I don't maintain that link so don't be surprised if it disappears.
+# 
+# -Chris (callan@blackcat.ca)
 
 my @modules = (
     {
 	name => 'DBI',
-	repository_file => 'http://openmicroscopy.org/packages/perl/DBI-1.30.tar.gz',
-	valid_versions => ['== 1.30', '== 1.32', '== 1.35']
+	repository_file => "$REPOSITORY/DBI-1.30.tar.gz",
+	valid_versions => ['eq "1.30"', 'eq "1.32"', 'eq "1.35"']
     },{
 	name => 'Digest::MD5',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Digest-MD5-2.13.tar.gz'
+	repository_file => "$REPOSITORY/Digest-MD5-2.13.tar.gz"
     },{
 	name => 'MD5',
-	repository_file => 'http://openmicroscopy.org/packages/perl/MD5-2.02.tar.gz',
+	repository_file => "$REPOSITORY/MD5-2.02.tar.gz",
 	exception => sub {
 	    if ($PERL_VERSION ge v5.8.0) { return 1 };
 	} 
     },{
 	name => 'MIME::Base64',
-	repository_file => 'http://openmicroscopy.org/packages/perl/MIME-Base64-2.12.tar.gz'
+	repository_file => "$REPOSITORY/MIME-Base64-2.12.tar.gz"
     },{
 	name => 'Storable',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Storable-1.0.13.tar.gz'
+	repository_file => "$REPOSITORY/Storable-1.0.13.tar.gz"
     },{
 	name => 'Apache::Session',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Apache-Session-1.54.tar.gz'
+	repository_file => "$REPOSITORY/Apache-Session-1.54.tar.gz"
     },{
 	name => 'Log::Agent',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Log-Agent-0.208.tar.gz'
+	repository_file => "$REPOSITORY/Log-Agent-0.208.tar.gz"
     },{
 	name => 'Tie::IxHash',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Tie-IxHash-1.21.tar.gz'
+	repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
     },{
 	name => 'DBD::Pg',
-	repository_file => 'http://openmicroscopy.org/packages/perl/DBD-Pg-1.21.tar.gz',
-	valid_versions => ['== 0.95', '== 1.01', '== 1.20', '== 1.21', '== 1.22'],
+	repository_file => "$REPOSITORY/DBD-Pg-1.21.tar.gz",
+	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.21', 'ne 1.22'],
 	pre_install => sub {
 	    which ("pg_config") or croak "Unable to execute pg_config, is PostgreSQL installed ?";
 
@@ -121,82 +155,82 @@ my @modules = (
 	}
     },{
 	name => 'Sort::Array',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Sort-Array-0.26.tar.gz',
+	repository_file => "$REPOSITORY/Sort-Array-0.26.tar.gz",
     },{
 	name => 'Test::Harness',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Test-Harness-2.26.tar.gz',
-	valid_versions => ['> 2.03']
+	repository_file => "$REPOSITORY/Test-Harness-2.26.tar.gz",
+	valid_versions => ['gt 2.03']
     },{
 	name => 'Test::Simple',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Test-Simple-0.47.tar.gz'
+	repository_file => "$REPOSITORY/Test-Simple-0.47.tar.gz"
     },{
 	name => 'IPC::Run',
-	repository_file => 'http://openmicroscopy.org/packages/perl/IPC-Run-0.75.tar.gz'
+	repository_file => "$REPOSITORY/IPC-Run-0.75.tar.gz"
     },{
 	name => 'Term::ReadKey',
-	repository_file => 'http://openmicroscopy.org/packages/perl/TermReadKey-2.21.tar.gz'
+	repository_file => "$REPOSITORY/TermReadKey-2.21.tar.gz"
     },{
 	name => 'Carp::Assert',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Carp-Assert-0.17.tar.gz'
+	repository_file => "$REPOSITORY/Carp-Assert-0.17.tar.gz"
     },{
 	name => 'Class::Accessor',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-Accessor-0.17.tar.gz'
+	repository_file => "$REPOSITORY/Class-Accessor-0.17.tar.gz"
     },{
 	name => 'Class::Data::Inheritable',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-Data-Inheritable-0.02.tar.gz'
+	repository_file => "$REPOSITORY/Class-Data-Inheritable-0.02.tar.gz"
     },{
 	name => 'IO::Scalar',
-	repository_file => 'http://openmicroscopy.org/packages/perl/IO-stringy-2.108.tar.gz'
+	repository_file => "$REPOSITORY/IO-stringy-2.108.tar.gz"
     },{
 	name => 'Class::Trigger',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-Trigger-0.05.tar.gz'
+	repository_file => "$REPOSITORY/Class-Trigger-0.05.tar.gz"
     },{
 	name => 'File::Temp',
-	repository_file => 'http://openmicroscopy.org/packages/perl/File-Temp-0.12.tar.gz'
+	repository_file => "$REPOSITORY/File-Temp-0.12.tar.gz"
     },{
 	name => 'Text::CSV_XS',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Text-CSV_XS-0.23.tar.gz'
+	repository_file => "$REPOSITORY/Text-CSV_XS-0.23.tar.gz"
     },{
 	name => 'SQL::Statement',
-	repository_file => 'http://openmicroscopy.org/packages/perl/SQL-Statement-1.004.tar.gz'
+	repository_file => "$REPOSITORY/SQL-Statement-1.004.tar.gz"
     },{
 	name => 'DBD::CSV',
-	repository_file => 'http://openmicroscopy.org/packages/perl/DBD-CSV-0.2002.tar.gz'
+	repository_file => "$REPOSITORY/DBD-CSV-0.2002.tar.gz"
     },{
 	name => 'Class::Fields',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-Fields-0.14.tar.gz'
+	repository_file => "$REPOSITORY/Class-Fields-0.14.tar.gz"
     },{
 	name => 'Class::WhiteHole',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-WhiteHole-0.03.tar.gz'
+	repository_file => "$REPOSITORY/Class-WhiteHole-0.03.tar.gz"
     },{
 	name => 'Ima::DBI',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Ima-DBI-0.27.tar.gz'
+	repository_file => "$REPOSITORY/Ima-DBI-0.27.tar.gz"
     },{
 	name => 'Exporter::Lite',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Exporter-Lite-0.01.tar.gz'
+	repository_file => "$REPOSITORY/Exporter-Lite-0.01.tar.gz"
     },{
 	name => 'UNIVERSAL::exports',
-	repository_file => 'http://openmicroscopy.org/packages/perl/UNIVERSAL-exports-0.03.tar.gz'
+	repository_file => "$REPOSITORY/UNIVERSAL-exports-0.03.tar.gz"
     },{
 	name => 'Date::Simple',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Date-Simple-2.04.tar.gz'
+	repository_file => "$REPOSITORY/Date-Simple-2.04.tar.gz"
     },{
 	name => 'Class::DBI',
-	repository_file => 'http://openmicroscopy.org/packages/perl/Class-DBI-0.90.tar.gz',
-	valid_versions => ['== 0.90']
+	repository_file => "$REPOSITORY/Class-DBI-0.90.tar.gz",
+	valid_versions => ['eq "0.90"']
     },{
 	name => 'GD',
-	repository_file => 'http://openmicroscopy.org/packages/perl/GD-1.33.tar.gz'
+	repository_file => "$REPOSITORY/GD-1.33.tar.gz"
     },{
 	name => 'Image::Magick',
-	repository_file => 'http://openmicroscopy.org/packages/ImageMagick-5.3.6-OSX.tar.gz'
+	repository_file => "$REPOSITORY-5.3.6-OSX.tar.gz"
 	#installModule => \&ImageMagickInstall
     },{
 	name => 'XML::NamespaceSupport',
-	repository_file => 'http://openmicroscopy.org/packages/XML-NamespaceSupport-1.08.tar.gz'
+	repository_file => "$REPOSITORY-NamespaceSupport-1.08.tar.gz"
     },{
 	name => 'XML::Sax',
-	repository_file => 'http://openmicroscopy.org/packages/XML-SAX-0.12.tar.gz',
+	repository_file => "$REPOSITORY-SAX-0.12.tar.gz",
 	# XML::SAX v0.12 doesn't report a $VERSION
 	# However, XML::SAX::ParserFactory loads OK and reports properly
 	get_module_version => sub {
@@ -209,13 +243,13 @@ my @modules = (
 	}
     },{
 	name => 'XML::LibXML::Common',
-	repository_file => 'http://openmicroscopy.org/packages/XML-LibXML-Common-0.12.tar.gz'
+	repository_file => "$REPOSITORY-LibXML-Common-0.12.tar.gz"
     },{
 	name => 'XML::LibXML',
-	repository_file => 'http://openmicroscopy.org/packages/XML-LibXML-1.53.tar.gz',
+	repository_file => "$REPOSITORY-LibXML-1.53.tar.gz",
     },{
 	name => 'XML::LibXSLT',
-	repository_file => 'http://openmicroscopy.org/packages/XML-LibXSLT-1.53.tar.gz',
+	repository_file => "$REPOSITORY-LibXSLT-1.53.tar.gz",
     }
 );
 
@@ -230,9 +264,10 @@ sub check_module {
     return 1 unless exists $module->{valid_versions};
 
     foreach my $valid_version (@{$module->{valid_versions}}) {
-	my $eval = 'if ($module->{version} '.$valid_version.') { $retval = 1 }';
+	my $eval = 'if ("$module->{version}" '.$valid_version.') { $retval = 1 }';
 
 	eval $eval;
+	last if $retval;
     }
 
     return $retval ? 1 : 0;
@@ -244,34 +279,32 @@ sub install {
     my $retval;
     my @output;
 
-    $EUID = 0;
-
     #*********
     #********* Initial setup
     #*********
 
     # Pre-install
     if (exists $module->{pre_install}) {
-	print "  \\_ Pre-install ";
+	print "    \\_ Pre-install ";
 	&{$module->{pre_install}};
 	print BOLD, "[SUCCESS]", RESET, ".\n";
     }
 
     # Download
-    print "  \\_ Downloading $module->{repository_file} ";
-    $retval = download_module ($module, $LOGFILE);
+    print "    \\_ Downloading $module->{repository_file} ";
+    $retval = download_package ($module, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to download module, see PerlModuleTask.log for details."
+        and croak "Unable to download package, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Unpack
-    print "  \\_ Unpacking ";
+    print "    \\_ Unpacking ";
     $retval = unpack_archive ($filename, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to unpack module, see PerlModuleTask.log for details."
+        and croak "Unable to unpack module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -282,38 +315,38 @@ sub install {
     my $wd = basename ($filename, ".tar.gz");
 
     # Configure
-    print "  \\_ Configuring ";
+    print "    \\_ Configuring ";
     $retval = configure_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to configure module, see PerlModuleTask.log for details."
+        and croak "Unable to configure module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Compile
-    print "  \\_ Compiling ";
+    print "    \\_ Compiling ";
     $retval = compile_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile module, see PerlModuleTask.log for details."
+        and croak "Unable to compile module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Test
-    print "  \\_ Testing ";
+    print "    \\_ Testing ";
     $retval = test_module ($wd, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to test module, see PerlModuleTask.log for details."
+        and croak "Unable to test module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Install
-    print "  \\_ Installing ";
+    print "    \\_ Installing ";
     $retval = install_module ($wd, $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to install module, see PerlModuleTask.log for details."
+        and croak "Unable to install module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -336,25 +369,25 @@ sub execute {
     $OME_USER = $environment->user()
 	or croak "Unable to retrieve OME_USER!";
     
-    # Store our CWD so we can get back to it later
-    my $cwd = getcwd;
+    # Store our IWD so we can get back to it later
+    my $iwd = getcwd ();
 
     # Retrieve some user info from the password database
     $OME_UID = getpwnam($OME_USER) or croak "Failure retrieving user id for \"$OME_USER\", $!";
 
     # Set our installation home
-    $INSTALL_HOME = $OME_TMP_DIR."/install";
+    $INSTALL_HOME = "$OME_TMP_DIR/install";
     
     # chdir into our INSTALL_HOME	
     chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
     
     print_header ("Perl Module Dependency Setup");
 
-    print "(All verbose information logged in $INSTALL_HOME/install/PerlModuleTask.log)\n\n";
+    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
     # Get our logfile and open it for reading
-    open ($LOGFILE, ">", "$INSTALL_HOME/PerlModuleTask.log")
-	or croak "Unable to open logfile \"$INSTALL_HOME/PerlModuleTask.log\", $!";
+    open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
+	or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\", $!";
 
     #*********
     #********* Check each module (exceptions then version)
@@ -412,14 +445,14 @@ sub execute {
     print "\n";  # Spacing
 
     #*********
-    #********* Return to our original working directory and then install OME's perl modules
+    #********* Return to our initial working directory and then install OME's perl modules
     #*********
 
-    chdir ($cwd) or croak "Unable to return to our original working directory \"$cwd\", $!";
+    chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
     print_header ("Core Perl Module Setup");
     
-    print "(All verbose information logged in $OME_TMP_DIR/install/PerlModuleTask.log)\n\n";
+    print "(All verbose information logged in $OME_TMP_DIR/$LOGFILE_NAME)\n\n";
 
     my $retval = 0;
 
@@ -430,7 +463,7 @@ sub execute {
     $retval = configure_module ("src/perl2/", $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to configure module, see PerlModuleTask.log for details."
+        and croak "Unable to configure module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -439,7 +472,7 @@ sub execute {
     $retval = compile_module ("src/perl2/", $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile module, see PerlModuleTask.log for details."
+        and croak "Unable to compile module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -448,7 +481,7 @@ sub execute {
     $retval = install_module ("src/perl2", $LOGFILE);
 
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to install module, see PerlModuleTask.log for details."
+        and croak "Unable to install module, see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
@@ -456,7 +489,8 @@ sub execute {
 }
 
 sub rollback {
-    print "Rollback!\n";
+    croak "Rollback!\n";
 
+    # Stub for the moment.
     return 1;
 }
