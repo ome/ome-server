@@ -46,7 +46,7 @@ if (scalar(@ARGV) >= 1) {
 	die "You must run the makefile as root to pass it a matlab_user" 
 		if ($EUID ne 0);
 }
-if (scalar(@ARGV) >= 2) {
+if (scalar(@ARGV) >= 1) {
 	$matlab_path = shift(@ARGV);
 }
 
