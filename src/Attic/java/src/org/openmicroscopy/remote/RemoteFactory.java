@@ -92,9 +92,9 @@ public class RemoteFactory
 
     public boolean objectExists(String className, Map criteria)
     {
-        return ((Boolean) caller.dispatch(this,"objectExists",
-                                          fixCriteria(className,criteria)))
-            .booleanValue();
+        return (caller.dispatch(this,"objectExists",
+				fixCriteria(className,criteria)).toString()
+		.equals("1"));
     }
 
     public OMEObject findObject(String className, Map criteria)
