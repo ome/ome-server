@@ -125,8 +125,8 @@
 			<GreenChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338" isOn = "true"/>
 			<BlueChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338" isOn = "true"/>
 			<GreyChannel ChannelNumber = "0" BlackLevel = "144" WhiteLevel = "338"/>
-			<Projection Zstart = "5" Zstop = "10"/>
-			<Time Tstart = "1" Tstop = "3"/>
+			<Projection Zstart = "3" Zstop = "3"/>
+			<Time Tstart = "3" Tstop = "3"/>
 			<ROI X0 = "0" X1 = "512" Y0 = "0" Y1 = "512" Z0 = "0" Z1 = "0" T0 = "0" T1 = "0"/>
 		</DisplayOptions>
 		<StageLabel Name="Zulu" X="123" Y="456" Z="789"/>
