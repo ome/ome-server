@@ -776,10 +776,80 @@ use glibc hardware swap - doesn't work in new glibc.
 */
 }
 
+void byteSwap4 (char *theBuf, size_t length)
+{
+  char  tmp;
+  int i;
+  
+  /*
+   * 0 -> 3
+   * 1 -> 2
+   * 2 -> 1
+   * 3 -> 0
+   */
+
+  for (i=0; i < length * 4; i++, theBuf+= 4) {
+    tmp = theBuf [0]; theBuf [0] = theBuf [3]; theBuf [3] = tmp;
+    tmp = theBuf [1]; theBuf [1] = theBuf [2]; theBuf [2] = tmp;
+  }
+}
+
+
+void byteSwap8 (char *theBuf, size_t length)
+{
+  char  tmp;
+  int i;
+  
+  /*
+   * 0 -> 7
+   * 1 -> 6
+   * 2 -> 5
+   * 3 -> 4
+   * ...
+   */
+
+  for (i=0; i < length * 8; i++, theBuf+= 8) {
+    tmp = theBuf [0]; theBuf [0] = theBuf [7]; theBuf [7] = tmp;
+    tmp = theBuf [1]; theBuf [1] = theBuf [6]; theBuf [6] = tmp;
+    tmp = theBuf [2]; theBuf [2] = theBuf [5]; theBuf [5] = tmp;
+    tmp = theBuf [3]; theBuf [3] = theBuf [4]; theBuf [4] = tmp;
+  }
+}
+
+
+void byteSwap16 (char *theBuf, size_t length)
+{
+  char  tmp;
+  int i;
+  
+  /*
+   * 0 -> 15
+   * 1 -> 14
+   * 2 -> 13
+   * 3 -> 12
+   * 4 -> 11
+   * 5 -> 10
+   * 6 -> 9
+   * 7 -> 8
+   * ...
+   */
+
+  for (i=0; i < length * 16; i++, theBuf+= 16) {
+    tmp = theBuf [0]; theBuf [0] = theBuf [15]; theBuf [15] = tmp;
+    tmp = theBuf [1]; theBuf [1] = theBuf [14]; theBuf [14] = tmp;
+    tmp = theBuf [2]; theBuf [2] = theBuf [13]; theBuf [13] = tmp;
+    tmp = theBuf [3]; theBuf [3] = theBuf [12]; theBuf [12] = tmp;
+    tmp = theBuf [4]; theBuf [4] = theBuf [11]; theBuf [11] = tmp;
+    tmp = theBuf [5]; theBuf [5] = theBuf [10]; theBuf [10] = tmp;
+    tmp = theBuf [6]; theBuf [6] = theBuf [ 9]; theBuf [ 9] = tmp;
+    tmp = theBuf [7]; theBuf [7] = theBuf [ 8]; theBuf [ 8] = tmp;
+  }
+}
+
 
 /*
 Josiah Johnston <siah@nih.gov>
-* Returns true if our machine is bigEndian.
+* Returns true if the machine executing this code is bigEndian.
 */
 int bigEndian()
 {

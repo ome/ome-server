@@ -74,7 +74,10 @@ size_t convertPlane (Pix *pPix, size_t offset, int theZ, int theW, int theT);
 size_t convertStack (Pix *pPix, size_t offset, int theW, int theT);
 void convertFinish (Pix *pPix);
 
-
+void byteSwap2 (char *theBuf, size_t length);
+void byteSwap4 (char *theBuf, size_t length);
+void byteSwap8 (char *theBuf, size_t length);
+void byteSwap16 (char *theBuf, size_t length);
 
 /* PRIVATE methods */
 FILE *GetPixFileUpdate (Pix *pPix);
