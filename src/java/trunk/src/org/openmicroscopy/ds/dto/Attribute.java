@@ -78,7 +78,7 @@ public interface Attribute
      * Returns the semantic type of this attribute.
      * @return the semantic type of this attribute.
      */
-    //public SemanticType getSemanticType();
+    public SemanticType getSemanticType();
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -96,7 +96,7 @@ public interface Attribute
      * @throws ClassCastException if the attribute does not have
      * image granularity
      */
-    //public Image getImage();
+    public Image getImage();
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -105,7 +105,7 @@ public interface Attribute
      * @throws ClassCastException if the attribute does not have
      * feature granularity
      */
-    //public Feature getFeature();
+    public Feature getFeature();
 
     /**
      * Returns the analysis that generated this attribute.  If this
@@ -113,7 +113,7 @@ public interface Attribute
      * <code>null</code>.
      * @return the analysis that genreated this attribute.
      */
-    //public ModuleExecution getModuleExecution();
+    public ModuleExecution getModuleExecution();
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -122,7 +122,7 @@ public interface Attribute
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    //public void verifySemanticType(SemanticType type);
+    public void verifySemanticType(SemanticType type);
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -133,7 +133,7 @@ public interface Attribute
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    //public void verifySemanticType(String typeName);
+    public void verifySemanticType(String typeName);
 
     /**
      * Returns the value of one of the attribute's elements as a

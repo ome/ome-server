@@ -79,10 +79,10 @@ public class AttributeDTO
     {
         super.setMap(elements);
         parseChildElement("dataset",DatasetDTO.class);
-        //parseChildElement("image",ImageDTO.class);
-        //parseChildElement("feature",FeatureDTO.class);
-        //parseChildElement("semantic_type",SemanticTypeDTO.class);
-        //parseChildElement("module_execution",ModuleExecutionDTO.class);
+        parseChildElement("image",ImageDTO.class);
+        parseChildElement("feature",FeatureDTO.class);
+        parseChildElement("semantic_type",SemanticTypeDTO.class);
+        parseChildElement("module_execution",ModuleExecutionDTO.class);
     }
 
     /**
@@ -96,7 +96,8 @@ public class AttributeDTO
      * Returns the semantic type of this attribute.
      * @return the semantic type of this attribute.
      */
-    //public SemanticType getSemanticType();
+    public SemanticType getSemanticType()
+    { return (SemanticType) getObjectElement("semantic_type"); }
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -106,7 +107,7 @@ public class AttributeDTO
      * dataset granularity
      */
     public Dataset getDataset()
-    { return (DatasetDTO) getObjectElement("dataset"); }
+    { return (Dataset) getObjectElement("dataset"); }
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -115,7 +116,8 @@ public class AttributeDTO
      * @throws ClassCastException if the attribute does not have
      * image granularity
      */
-    //public Image getImage();
+    public Image getImage()
+    { return (Image) getObjectElement("image"); }
 
     /**
      * Returns the target of this attribute, assuming that the
@@ -124,7 +126,8 @@ public class AttributeDTO
      * @throws ClassCastException if the attribute does not have
      * feature granularity
      */
-    //public Feature getFeature();
+    public Feature getFeature()
+    { return (Feature) getObjectElement("feature"); }
 
     /**
      * Returns the analysis that generated this attribute.  If this
@@ -132,7 +135,8 @@ public class AttributeDTO
      * <code>null</code>.
      * @return the analysis that genreated this attribute.
      */
-    //public ModuleExecution getModuleExecution();
+    public ModuleExecution getModuleExecution()
+    { return (ModuleExecution) getObjectElement("module_execution"); }
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -141,7 +145,7 @@ public class AttributeDTO
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    //public void verifySemanticType(SemanticType type) {}
+    public void verifySemanticType(SemanticType type) {}
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -152,7 +156,7 @@ public class AttributeDTO
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    //public void verifySemanticType(String typeName) {}
+    public void verifySemanticType(String typeName) {}
 
     /**
      * Returns the value of one of the attribute's elements as a
