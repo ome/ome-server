@@ -46,17 +46,21 @@ sub new {
     return $self;
 }
 
+sub getFullPath {
+    my $self = shift;
+    my $repository = $self->Field("repository");
+    my $rpath = $repository->Field("path");
+    my $path = $self->Field("path");
+
+    return ($rpath . $path);
+}
 
 sub openFile {
     my $self = shift;
 
     return if ($self->{fileOpen});
+	my $fullpath = $self->getFullPath();
 
-    my $repository = $self->Field("repository");
-    my $rpath = $repository->Field("path");
-    my $path = $self->Field("path");
-
-    my $fullpath = $rpath . $path;
     my $handle = new IO::File;
     open $handle, $fullpath or die "Cannot open image file!";
 
