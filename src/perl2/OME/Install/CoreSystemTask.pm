@@ -204,6 +204,10 @@ sub execute {
 	$APACHE_USER   = $environment->apache_user()   if $environment->apache_user() ;
 	$POSTGRES_USER = $environment->postgres_user() if $environment->postgres_user() ;
 	$ADMIN_USER    = $environment->admin_user()    if $environment->admin_user() ;
+	if (not defined $ADMIN_USER or not $ADMIN_USER) {
+	# Who owns the cwd?
+		$ADMIN_USER  = getpwuid((stat ('.'))[4]); 
+	}
 
 	# Confirm all flag
 	my $confirm_all;
