@@ -48,7 +48,7 @@ int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
 char *theParam;
 char setThumb=0;
-char defaultFormat[] = "JPEG", *theFormat = defaultFormat;
+char defaultFormat[] = "jpeg", *theFormat = defaultFormat;
 levelBasisType levelBasis=FIXED_BASIS;
 char isRGB=0;
 channelSpecType *theChannel;
