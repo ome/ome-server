@@ -290,13 +290,13 @@ static void extractBinDataEndDocument( ParserState *state ) {
 
 static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
 	char *localName, *binDataOutPath;
-	int i;
-	/* Unused variables
-	int freeLocalName;
-	int pathLength;
-	*/
+	int i, freeLocalName;
 	StructElementInfo* elementInfo;
+
+	/* Unused variables
+	int pathLength;
 	size_t bufferSize;
+	*/
 
 	// mark that the last open element has content, namely this element
 	if( state->elementInfo != NULL ) {
