@@ -39,7 +39,6 @@ package org.openmicroscopy.ds.managers;
 import java.util.Map;
 
 import org.openmicroscopy.ds.DataServices;
-import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.InstantiatingCaller;

@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.openmicroscopy.ds.DataServices;
-import org.openmicroscopy.ds.RemoteCaller;
 import org.openmicroscopy.ds.Instantiator;
 import org.openmicroscopy.ds.InstantiatingCaller;
 import org.openmicroscopy.ds.DataFactory;
