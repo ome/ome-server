@@ -116,7 +116,7 @@ sub __annotate {
         die "annotateGlobal needs a data hash"
           unless defined $data && ref($data) eq 'HASH';
 
-        push @params, [$semantic_type, $target, $data];
+        push @params, [$semantic_type, $data];
     }
 
     # Great, now let's create some attributes
@@ -135,7 +135,7 @@ sub __annotate {
 
   PARAM:
     foreach my $param (@params) {
-        my ($semantic_type, $target, $data) = @$param;
+        my ($semantic_type, $data) = @$param;
 
         # First, look for an existing annotation attribute with these
         # values.  If we find one, save it, and record the MEX that
@@ -181,8 +181,16 @@ sub __annotate {
     # array corresponding to each of the inputs.  If necessary, create
     # a virtual MEX for them via the ModuleExecutionManager.
 
-    return OME::Tasks::ModuleExecutionManager->
+    my $mex = OME::Tasks::ModuleExecutionManager->
       createVirtualMEX(\@attributes);
+
+    if (!defined wantarray) {
+        return;
+    } elsif (wantarray) {
+        return ($mex,\@attributes);
+    } else {
+        return $mex;
+    }
 }
 
 1;
