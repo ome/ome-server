@@ -210,7 +210,7 @@ sub _populate_object_in_template {
 	} else {
 		@fields = grep( !m'^/datum$|^/relations$', $tmpl->param() );
 	}
-	%tmpl_data = $self->renderData( $obj, \@fields, $options );
+	%tmpl_data = $self->renderData( $obj, \@fields, $options ) if( scalar @fields > 0 );
 
 	# /datum = iterate over the object's fields
 	my $datum_loc = [ ( $tmpl_loc ? @$tmpl_loc : () ), '/datum' ];
@@ -258,110 +258,6 @@ sub _populate_object_in_template {
 	return %tmpl_data;
 }
 
-
-sub renderType {
-	my ($self, $type, $mode, $options) = @_;
-	my ($tmpl, %tmpl_data);
-
-	my $q = $self->CGI();
-
-  	# load a template
- 	my $tmpl_path = $self->_findTemplate( $type, $mode );
- 	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
- 		unless $tmpl_path;
- 	die "Could not find a specialized or generic template to match Type $type with mode $mode"
- 		unless -e $tmpl_path;
- 	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
-
- 	# get data for the template
-	my $requests = $self->_parse_tmpl_fields( [ $tmpl->query( ) ] );
-	if( $type ) {
-		my ($package_name, $common_name, $formal_name, $ST) =
-			$self->_loadTypeAndGetInfo( $type );
-		if( exists $requests->{ '/common_name' } ) {
-			$tmpl_data{ '/common_name' } = $common_name;
-		} 
-		if( exists $requests->{ '/formal_name' } ) {
-			$tmpl_data{ '/formal_name' } = $formal_name;
-		}
-		if( exists $requests->{ '/type' } ) {
-			$tmpl_data{ '/type' } = $formal_name;
-		}
-		# Iterate over the fields in the type
-		if( exists $requests->{ '/field_loop' } ) {
-		foreach my $request ( @{ $requests->{ '/field_loop' } } ) {
-			my $inner_requests = $self->_parse_tmpl_fields( [ $tmpl->query( loop => $request->{ request_string } ) ] );
-			my %excluded_fields;
-			%excluded_fields = map{ $_ => undef } split( /,/, $request->{ exclude } )
-				if exists $request->{ exclude };
-			my @fields = grep( ( not exists $excluded_fields{ $_ }) , $package_name->getPublishedCols() );
-			foreach my $field ( @fields ) {
-				my %inner_data;
-				my $SQL_type = $package_name->getColumnSQLType( $field );
-				my $ref_to = $package_name->getAccessorReferenceType( $field );
-				my %validate;
-				if( exists $inner_requests->{ '/name' } ) {
-					$inner_data{ '/name' } = $field;
-				}
-				if( exists $inner_requests->{ '/sql_type' } ) {
-					$inner_data{ '/sql_type' } = $SQL_type;
-				}
-				# Make an input field for this field. Name will be the field name.
-				# type validation will occur using fValidate JS
-				# if requested w/ $options->{validate}
-				if( exists $inner_requests->{ '/field_input' } ) {
-					if( $ref_to ) {
-						# FIXME: should be a link to a search page to allow selection of exactly 1 of ref_to
-						$inner_data{ '/field_input' } = "ref to $ref_to";
-					} elsif( $SQL_type eq 'text' ) {
-						$inner_data{ '/field_input' } = $q->textfield(
-							-name => $field,
-							-size => 25,
-							%validate );
-					} elsif( $SQL_type eq 'timestamp' ) {
-						# FIXME: figure out what format timestamp should be and validate using a regex
-						# $validate{ -alt } = 'custom|regex'
-						$inner_data{ '/field_input' } = $q->textfield(
-							-name => $field,
-							-size => 25,
-							%validate );
-					} elsif( $SQL_type =~ m/^integer|bigint|smallint$/ ) {
-						$validate{ -alt } = 'number|1|bok' # optional integer
-							if $options->{validate};
-						$inner_data{ '/field_input' } = $q->textfield(
-							-name => $field,
-							-size => 25,
-							%validate );
-					} elsif( $SQL_type =~ m/^double precision|real$/ ) {
-						$validate{ -alt } = 'number|0|bok' # optional floating point 
-							if $options->{validate};
-						$inner_data{ '/field_input' } = $q->textfield(
-							-name => $field,
-							-size => 25,
-							%validate );
-					} elsif( $SQL_type eq 'boolean' ) {
-						$inner_data{ '/field_input' } = $q->checkbox(
-							-name => $field,
-							-value => 1,
-							%validate );
-					}
-				}
-				push( @{ $tmpl_data{ $request->{ request_string } } }, \%inner_data );
-			}	
-		} }
-	}
-	if( $requests->{ '/custom' } ) {
-		foreach my $request ( @{ $requests->{ '/custom' } } ) {
-			$tmpl_data{ $request->{ request_string } } = $options->{ $request->{ 'name' } }
-				if exists $options->{ $request->{ 'name' } };
-		}
-	}
-	
- 
- 	# populate template
- 	$tmpl->param( %tmpl_data );
- 	return ($options->{validate} ? $VALIDATION_INCS : '' ).$tmpl->output();
-}
 
 =head2 renderArray
 
@@ -629,12 +525,18 @@ sub renderData {
 				$record{ $request_string } = $self->render( $obj, $render_mode, $options );
 						
 			# /checkbox = Checkbox w/ LSID
-			} elsif( $field eq '/checkbox' ) {
+			} elsif( $field eq '/selector' ) {
+				my $lsid = $self->_getLSIDmanager()->getLSID( $obj );
 				$record{ $request_string } = $q->checkbox( 
 					-name => "selected_objects",
-					-value => $self->_getLSIDmanager()->getLSID( $obj ),
+					-value => $lsid,
 					-label => '',
 				) if( $options->{ draw_checkboxes } );
+				$record{ $request_string } = $q->radio_group( 
+					-name => "selected_objects",
+					-values => [$lsid],
+					-labels => { $lsid => '' },
+				) if( $options->{ draw_radiobuttons } );
 						
 			# /obj_detail_url = url to detailed description of object
 			} elsif( $field eq '/obj_detail_url' ) {
@@ -1049,7 +951,7 @@ sub _findTemplate {
 	return undef;
 }
 
-=head2 _findTemplate
+=head2 _getLSIDmanager
 
 	my $lsidManager = $self->_getLSIDmanager();
 
