@@ -256,15 +256,18 @@ my ($hour,$minute);
 	# Task blurb
 	my $blurb = <<BLURB;
 OME needs to run periodic tasks to maintain optimum performance.
-The database needs to be vacuumed and analyzed to maintain its query optimizer and prevent it from becoming sluggish as it grows.
-OMEIS can optimize disk space useage by compressing files and pixels that have not been accessed in a long time.
-OMEIS can also purge pixels if they are derived from original files stored on OMEIS.
-All of these tasks place a considerable burden on the server, and it is best to run them when the server is not being heavily used.
-If you are unsure of a particular question, please choose the default as that will be more than adequate for most people.
+The database needs to be vacuumed and analyzed to maintain its query 
+optimizer and prevent it from becoming sluggish as it grows. OMEIS can 
+optimize disk space useage by compressing files and pixels that have not 
+been accessed recently. OMEIS can also purge pixels if they are derived 
+from original files stored on OMEIS. All of these tasks place a 
+considerable burden on the server, and it is best to run them when the 
+server is not being heavily used. If you are unsure of a particular 
+question, please choose the default as that will be more than adequate
+for most people.
 BLURB
 
-# IGG: I hate this wrap business.  I didn't spend $$$ on an extra-wide LCD to have dinky-ass 80-column terminal windows.
-#	print wrap("", "", $blurb);
+	print wrap("", "", $blurb);
 	print "\n";  # Spacing
 
     # Get our logfile and open it for writing
