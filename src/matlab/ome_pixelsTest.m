@@ -35,4 +35,4 @@
 % test the Matlab handler handling of the pixels semantic type
 function [outPixels] = ome_pixelsTest (inPixels)
 
-outPixels = inPixels';
+outPixels = uint8(inPixels');
