@@ -1402,7 +1402,7 @@ sub convertPlane {
 
 =head2 convertPlaneFromTIFF
 
-	$pixels->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID);
+	$pixels->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID,$IFD);
 
 Copies pixels from an original file into a new pixels file.  The
 original file should have been previously uploaded via the uploadFile
@@ -1417,6 +1417,9 @@ dimensions and bytes per pixel as an XY plane in the pixels file.
 Currently, the image server only supports uploaded TIFF's with a
 single sample per pixel.
 
+The IFD parameter is optional, and may be specified for reading planes out of
+multi-plane TIFFs where there is one pixel plane per IFD.
+
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
 
@@ -1428,13 +1431,14 @@ client code.
 
 sub convertPlaneFromTIFF {
     my $proto = shift;
-    my ($pixelsID,$theZ,$theC,$theT,$fileID) = @_;
+    my ($pixelsID,$theZ,$theC,$theT,$fileID,$IFD) = @_;
     my %params = (Method   => 'ConvertTIFF',
                   PixelsID => $pixelsID,
                   theZ     => $theZ,
                   theC     => $theC,
                   theT     => $theT,
                   FileID   => $fileID);
+    $params{TIFFDirIndex} = $IFD if $IFD;
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
