@@ -71,7 +71,7 @@ sub startImage {
         my $new_slice = $self->
           newAttributes('Slices',
                         {
-                         Pixels => $pixels,
+                         Parent => $pixels,
                          StartX => 0,
                          EndX   => $pixels->SizeX() - 1,
                          StartY => 0,
