@@ -11,10 +11,9 @@
 			</table>
 				ID: <TMPL_VAR Name='id'><br>
 				Created by: <TMPL_VAR NAME=module_execution><br>
-				Dataset: <TMPL_VAR NAME=dataset>
 		</td>
 	</tr>
 </table>
 <font class="ome_relation_title">Categories in this group:</font>
 <a href="serve.pl?Page=OME::Web::DBObjCreate&Type=@Category&CategoryGroup=<TMPL_VAR NAME='id'>">Add a category...</a><br>
-<TMPL_VAR NAME=Categories/render-tiled_list>
+<TMPL_VAR NAME=CategoryList/inferred_relation/render-tiled_list>
