@@ -17,6 +17,47 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+=head1 NAME
+
+OME::Image - an OME image
+
+=head1 SYNOPSIS
+
+	use OME::Image;
+
+	# Acquire a factory from your session. See OME::Session for more details
+
+	# Load an image
+	my $image = $factory->loadObject( OME::Image, $imageID );
+	
+	# Load an OME::Image::Pix object
+	# acquire a Pixels attribute
+	my $pix = $image->GetPix( $pixels );
+	
+	
+=head1 DESCRIPTION
+
+To come.
+
+=head1 METHODS
+
+=head2 name
+
+accessor/mutator for name
+
+=head2 created
+
+accessor/mutator for creation timestamp
+
+=head2 inserted
+
+accessor/mutator for timestamp of image import
+
+=head2 description
+
+accessor/mutator for description
+
+=cut
 
 package OME::Image;
 
@@ -46,8 +87,13 @@ __PACKAGE__->columns(Others => qw(created inserted description
 # it references the "primary" set of pixels. 
 
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
-__PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
+
+=head2 experimenter
+
+accessor/mutator for Experimenter attribute
+
+=cut
 
 sub experimenter {
     my $self = shift;
@@ -63,6 +109,12 @@ sub experimenter {
     }
 }
 
+=head2 group
+
+accessor/mutator for Group attribute
+
+=cut
+
 sub group {
     my $self = shift;
     if (@_) {
@@ -77,11 +129,23 @@ sub group {
     }
 }
 
+=head2 features
+
+=cut
+
 
 sub features {
     my ($self) = @_;
     return OME::Feature->__image_roots(image_id => $self->id());
 }
+
+=head2 datasets
+
+$image->datasets();
+
+returns all datasets that the image belongs to
+
+=cut
 
 sub datasets {
 	my $self = shift;
@@ -98,6 +162,14 @@ sub _init {
     $self->{_dimensions} = undef;
     return $self;
 }
+
+=head2 GetPix
+
+$image->GetPix($pixelAttribute);
+
+loads and returns the OME::Image::Pix object associated with this pixels
+
+=cut
 
 # Old prototype (DEPRICATED):
 # my $pix = $image->GetPix();
@@ -130,18 +202,30 @@ sub GetPix {
             || die ref($self)."->GetPix  Could not instantiate OME::Image::Pix object";
         return $pix;
     } else {
-        return ($self->{thePix}) if defined $self->{thePix};
         my $pixels = $self->DefaultPixels();
-        $self->{thePix} = new OME::Image::Pix (
+        my $pix = new OME::Image::Pix (
             $self->getFullPath(),
             $pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
             $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel()/8
         ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
-        return ($self->{thePix});
+        return ($pix);
     }
 }
 
-# This is an accessor/mutator for the default pixels attribute associated with this image.
+=head2 DefaultPixels
+
+# accessor
+$image->DefaultPixels();
+
+# mutator
+$image->DefaultPixels( $pixels_ID );
+
+This is an accessor/mutator for the default pixels attribute associated with this image.
+Default pixels should NEVER be used for any computational purpose because they are mutable.
+They are used by image viewers and other non computational purposes.
+
+=cut
+
 sub DefaultPixels {
 	my $self = shift;
 	my $pixels_id = shift;
@@ -157,6 +241,14 @@ sub DefaultPixels {
 }
 
 
+=head2 getFullPath
+
+$image->getFullPath( $pixels );
+
+Returns the full path to the repository file of the Pixels attribute passed as a parameter
+
+=cut
+
 sub getFullPath {
     my $self = shift;
     my $pixels = shift or
@@ -168,11 +260,12 @@ sub getFullPath {
     return $repository->Path() . $path;
 }
 
+# WARNING: USES DEPRICATED LOGIC!
 sub openFile {
     my $self = shift;
 
     return if ($self->{fileOpen});
-    my $fullpath = $self->getFullPath();
+    my $fullpath = $self->getFullPath( $self->DefaultPixels() );
 
     my $handle = new IO::File;
     open $handle, $fullpath or die "Cannot open image file!";
@@ -181,6 +274,7 @@ sub openFile {
     $self->{_fileHandle} = $handle;
 }
 
+# WARNING: USES DEPRICATED LOGIC!
 sub closeFile {
     my $self = shift;
 
@@ -212,58 +306,11 @@ sub GetPixelArray {
 }
 
 
-# DEPRECATED!
-# Please use the LogicalChannel and ChannelComponents attributes
-# instead.
+=head1 AUTHOR
 
-package OME::Image::Wavelengths;
+Douglas Creager <dcreager@alum.mit.edu>, Open Microscopy Environment, MIT
 
-use strict;
-our $VERSION = 2.000_000;
-
-use OME::DBObject;
-use base qw(OME::DBObject);
-
-__PACKAGE__->AccessorNames({
-    attribute_id => 'attribute',
-    image_id     => 'image'
-});
-
-__PACKAGE__->table('channel_components');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id 
-				     number logical_channel));
-__PACKAGE__->hasa('OME::Image::LogicalChannel' => qw(logical_channel));
-
-sub wavenumber { shift->number(); }
-sub ex_wavelength { shift->logical_channel()->ex_wave(@_); }
-sub em_wavelength { shift->logical_channel()->em_wave(@_); }
-sub nd_filter { shift->logical_channel()->nd_filter(@_); }
-sub fluor { shift->logical_channel()->fluor(@_); }
-
-package OME::Image::LogicalChannel;
-
-use strict;
-our $VERSION = 2.000_000;
-
-use OME::DBObject;
-use base qw(OME::DBObject);
-
-__PACKAGE__->AccessorNames({
-    attribute_id => 'attribute',
-    image_id     => 'image'
-});
-
-__PACKAGE__->table('logical_channels');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id 
-				     ex_wave em_wave 
-				     nd_filter fluor));
-
-
-
+=cut
 
 package OME::Image::ImageFilesXYZWT;
 
