@@ -33,10 +33,11 @@ public class RemoteBindings
     {
         if (!classesLoaded)
         {
-            Class.forName("org.openmicroscopy.remote.RemoteAnalysis");
+            Class.forName("org.openmicroscopy.remote.RemoteModuleExecution");
+            Class.forName("org.openmicroscopy.remote.RemoteModuleCategory");
             Class.forName("org.openmicroscopy.remote.RemoteAnalysisPath");
             Class.forName("org.openmicroscopy.remote.RemoteAttribute");
-            Class.forName("org.openmicroscopy.remote.RemoteAttributeType");
+            Class.forName("org.openmicroscopy.remote.RemoteSemanticType");
             Class.forName("org.openmicroscopy.remote.RemoteChainExecution");
             Class.forName("org.openmicroscopy.remote.RemoteChain");
             Class.forName("org.openmicroscopy.remote.RemoteDataset");
