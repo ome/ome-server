@@ -190,21 +190,14 @@ multipaneToolBox.prototype.changePane = function(paneIndex) {
 		// change size to match size of new pane
 		// find size:
 		var oHeight, Obbox, nHeight, Nbbox;
-		if( this.panes[ this.currentDisplay ] )
-			if(this.panes[this.currentDisplay].height)
-				oHeight = this.panes[this.currentDisplay].height;
-			else {
-				Obbox = this.panes[ this.currentDisplay ].getBBox();
-				oHeight = Math.max( Obbox.height + Obbox.y*2, 1 );
-			}
+		if( this.panes[ this.currentDisplay ] ) {
+			Obbox = this.panes[ this.currentDisplay ].getBBox();
+			oHeight = Math.max( Obbox.height + Obbox.y*2, 1 );
+		}
 		else
 			oHeight = 1;
-		if(this.panes[paneIndex].height)
-			nHeight = this.panes[paneIndex].height;
-		else {
-			Nbbox = this.panes[paneIndex].getBBox();
-			nHeight = Math.max( Nbbox.height + Nbbox.y*2, 1 );
-		}
+		Nbbox = this.panes[paneIndex].getBBox();
+		nHeight = Math.max( Nbbox.height + Nbbox.y*2, 1 );
 
 		this.shrinkGUIboxHeight.setAttribute("from", oHeight);
 		this.shrinkGUIboxHeight.setAttribute("to", nHeight);
@@ -212,21 +205,6 @@ multipaneToolBox.prototype.changePane = function(paneIndex) {
 	}
 	this.currentDisplay = paneIndex;
 	return this.panes[paneIndex];
-}
-
-/*****
-	
-	takePaneSizeSnapshot
-	
-	purpose
-		find height for animation purposes. animation will move to the height found here.
-	
-*****/
-multipaneToolBox.prototype.takePaneSizeSnapshot = function() {
-	for(i in this.panes) {
-		bbox = this.panes[i].getBBox();
-		this.panes[i].height = Math.max(bbox.height + 2*bbox.y, 1);
-	}
 }
 
 /*****
