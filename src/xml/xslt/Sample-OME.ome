@@ -1,2 +1,20 @@
 <?xml version="1.0"?>
+<!-- Copyright (C) 2003 Open Microscopy Environment
+     Author:  
+      
+          This library is free software; you can redistribute it and/or
+          modify it under the terms of the GNU Lesser General Public
+          License as published by the Free Software Foundation; either
+          version 2.1 of the License, or (at your option) any later version.
+     
+          This library is distributed in the hope that it will be useful,
+          but WITHOUT ANY WARRANTY; without even the implied warranty of
+          MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+          Lesser General Public License for more details.
+     
+          You should have received a copy of the GNU Lesser General Public
+          License along with this library; if not, write to the Free Software
+          Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+-->
+
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"><Project ID="urn:lsid:foo.bar.com:Project:1" Name="foo"><Description>blah</Description></Project><Dataset ID="urn:lsid:foo.bar.com:Dataset:3" Name="foo2" Locked="true"><ProjectRef ID="urn:lsid:foo.bar.com:Project:1"/></Dataset><Experimenter ID="urn:lsid:foo.bar.com:Experimenter:1"><FirstName>Ilya</FirstName><LastName>Goldberg</LastName><Email>igg@IGG-TiBook.local.</Email><Institution></Institution><OMEName>igg</OMEName></Experimenter><Group ID="urn:lsid:foo.bar.com:Group:2" Name="OME"/><Image Name="tinyTest" ID="urn:lsid:foo.bar.com:Image:1" SizeX="" SizeY="" SizeZ="" NumChannels="" NumTimes="" PixelSizeX="" PixelSizeY="" PixelSizeZ=""><CreationDate>2003-05-28 10:31:26.107411-04</CreationDate><DatasetRef ID="urn:lsid:foo.bar.com:Dataset:3"/><DatasetRef ID="urn:lsid:foo.bar.com:Dataset:3"/><DatasetRef ID="urn:lsid:foo.bar.com:Dataset:3"/></Image></OME>
