@@ -21,8 +21,8 @@
 package OME::Tasks::Thumbnails;
 
 use POSIX;
-use Image::Magick;
 use GD;
+use strict;
 our $VERSION = '1.0';
 
 =head1 NAME
@@ -52,6 +52,13 @@ image= image object
 
 data= scalar (output of OME_JPEG via generateOMEimage) 
 n (optional) size thumbnail
+
+
+
+
+=head2 generateOMEmovie($image)
+
+image= image object
 
 =cut
 
@@ -84,8 +91,8 @@ sub generateOMEimage{
 	# retrieve image data
 
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);
-	my $stats=getImageStats($image);			# ref array
-	my $wavelengths=getImageWavelengths($image);	# ref array
+	my $stats=getImageStats($factory,$image);				# ref array
+	my $wavelengths=getImageWavelengths($factory,$image);		# ref array
 	
 	$theZ = $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0 );
 	$theT = $T_param || 0;
@@ -108,6 +115,47 @@ sub generateOMEimage{
 
 
 
+
+
+##########################
+#
+
+sub generateOMEmovie{
+
+	my $self=shift;
+	my ($image,$Z_param)=@_;
+	my $out;
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+	my $WBS=undef;
+  	my $RGBon=undef;
+  	my $isRGB=undef;
+
+	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=getImageDim($image);	
+	my $stats=getImageStats($factory,$image);				# ref array
+	my $wavelengths=getImageWavelengths($factory,$image);	# ref array
+	my $Z; 
+	$Z= $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0) ;
+	my $displaySettings  = $factory->findObject("OME::DisplaySettings", 'image_id' => $image->id() );
+	if (defined $displaySettings){
+		$Z	=$displaySettings->theZ() if (not defined $Z_param);
+		$isRGB= $displaySettings->isRGB();
+		$WBS	= @{ $displaySettings->WBS() };
+		$RGBon= @{ $displaySettings->RGBon() };
+	}
+	$isRGB=1;
+   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
+
+	for (my $theZ=0;$theZ<$Z;$theZ++){
+		for(my $theT=0;$theT<$self->{T};$theT++){
+			#generate image
+			my $jpg=$self->writeOMEimage($theZ,$theT);
+			$out->[$theZ][$theT]=$jpg;
+		}
+	}
+	return $out;
+}
+
 #######################
 # Parameters
 #	data= jpeg
@@ -122,11 +170,8 @@ sub generateOMEthumbnail{
 	my $r = $x>$y ? $x / $n : $y / $n;
 
 	my $thumb = GD::Image->new($x/$r,$y/$r);
-	
 	$thumb->copyResized($image,0,0,0,0,$x/$r,$y/$r,$x,$y);
 	return $thumb->jpeg;
-
-
 
 }
 
@@ -147,8 +192,6 @@ sub writeOMEimage{
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
   	my $script=$self->{OME_JPEG};
 	my $out="";
-	
-	
 	open (JPG, "$script $path $z $t $d $rgb $rgbon|");
   	while (<JPG>) {
 		$out.=$_;
@@ -263,9 +306,9 @@ sub makeWBSNative{
 			return undef;
 		}
 		my ($geomean,$sigma);	
-		my $ref=${$refstats}[$wavenum][$theT];
-            $geomean=${$ref}{geomean};
-     		$sigma=${$ref}{sigma};
+		$geomean=${$refstats}[$wavenum][$theT]{geomean};
+	  	$sigma=${$refstats}[$wavenum][$theT]{sigma};
+
      		if ($sigma==0){
 			return undef;
 		}
@@ -305,18 +348,16 @@ sub getConvertedWBS{
 		my $wavenum=$WBS[$i*3];
   		push(@cWBS,$wavenum);
 		my ($geomean,$sigma);	
-		my $ref=${$refstats}[$wavenum][$theT];
 
-	  	$geomean=${$ref}{geomean};
-	  	$sigma=${$ref}{sigma};
-       
+        	$geomean=${$refstats}[$wavenum][$theT]{geomean};
+	  	$sigma=${$refstats}[$wavenum][$theT]{sigma};
 	  	my $value=$WBS[$i*3+1]+$geomean+$sigma;
 	  	$value=int($value);
     	  	push(@cWBS,$value);
 	  	if ($WBS[$i*3+2]==0){
 		 $WBS[$i*3+2]=0.0001;
 	  	}
-	  	if ($sigma==0){return undef};
+	  	if ($sigma==0){return undef};		# must be changed
 	  	my $B;
    	  	$B=255/($sigma*$WBS[$i*3+2]);
 	  	$B=int($B*10000)/10000;
@@ -329,60 +370,79 @@ sub getConvertedWBS{
 ######################
 
 sub getImageStats{
-	my ($image)=@_;
-	my @s = $image->XYZ_info;
-	#my @stats=();
-	my $stats;
-	foreach (@s) {
-		my %a=(
-		"min"		=>$_->min(),
-		"max"		=>$_->max(),
-		"mean"	=>$_->mean(),
-		"geomean"	=>$_->geomean(),
-		"sigma"	=>$_->sigma()
-		);
-		$stats->[$_->theW()][$_->theT()] = \%a;
-	}
-	return $stats;
+	my ($factory,$image)=@_;
+  # new version
+  my $pixels = $image->DefaultPixels();
+  my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
+		or die "Stack statistics must be installed for this viewer to work!\n";
+	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput",
+		program_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Program 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::Analysis::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_analysis_id => $pixels->analysis()->id() )
+		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->analysis()->id();
+
+	my @mins   = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMinimum", $image ) );
+	my @maxes  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMaximum", $image ) );
+	my @means  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackMean", $image ) );
+	my @gmeans = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackGeometricMean", $image ) );
+	my @sigma  = grep( $_->analysis()->id() eq $stackStatsAnalysisID,
+		$factory->findAttributes( "StackSigma", $image ) );
+
+	my $sh; # stats hash
+	foreach( @mins ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
+	foreach( @maxes ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
+	foreach( @means ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
+	foreach( @gmeans ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
+	foreach( @sigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+
+ 
+ 
+ 
+
+	return $sh;
 }
 
 ########################
 sub getImageWavelengths{
-	my ($image)=@_;
-	my @w = $image->wavelengths;
-	my @wavelengths;
-	
-	# get this from DB eventually
-	my $FluorWavelength = {
-		FITC   => 528,
-		TR     => 617,
-		GFP    => 528,
-		DAPI   => 457
-	};
-	foreach (@w) {
-   	 	my @h=();
-    	 	my  $em;
-       	my  $fluor;
-       	$fluor =$_->fluor();
-       	if (defined $fluor){
-          	  $em=$FluorWavelength->{$fluor} unless  defined $_->em_wavelength()  and   $_->em_wavelength();
-      	}
-       	$em= $_->wavenumber()+1 unless defined $em and $em; 
-       	push(@h,$_->wavenumber(),$em,$fluor);
-		push (@wavelengths,\@h);
-	}
-	my $wav = [sort {${$b}[1] <=> ${$a}[1]} @wavelengths];   
+	my ($factory,$image)=@_;
 	my @Wavelengths;
-	foreach my $rf (@$wav) {
-    		my @arr=@$rf;
-		my %h=("WaveNum"=>$arr[0]);
-		if (exists $arr[2] and defined $arr[2]){
-			$h{"Label"}=$arr[2];
-		}else{
-			$h{"Label"}=$arr[1];
-		}
+
+	my $pixels = $image->DefaultPixels()
+		or die "Could not a primary set of Pixels for this image\n";
+	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
+		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
+	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
+	die "Image has no channel components for default Pixels!" if( scalar(@channelComponents)==0 );
+	foreach my $cc (@channelComponents) {
+		my $ChannelNum = $cc->Index();
+		my $Label;
+		$Label = $cc->LogicalChannel()->Name()  || 
+		         $cc->LogicalChannel()->Fluor() || 
+		         $cc->LogicalChannel()->EmissionWavelength();
+		my @overlap = grep( $cc->LogicalChannel()->id() eq $_->LogicalChannel()->id(), @channelComponents );
+		$Label .= $cc->Index() if( scalar( @overlap ) > 1 || $Label eq undef );
+
+		my %h=();
+		$h{WaveNum}=$ChannelNum;
+		$h{Label}=$Label;
 		push (@Wavelengths,\%h);
 	}
+
+  
+
 	 return \@Wavelengths;
 }
 
@@ -402,9 +462,6 @@ sub getImageDim{
 	$numW  = $pixels->SizeC;
 	$numT  = $pixels->SizeT,
   	$bpp   = $pixels->BitsPerPixel;
-
-print STDERR "sizeX===".$sizeX."\n";
-print STDERR "sizeY===".$sizeY."\n";
 
 	#$sizeX = $dimensions->size_x();
 	#$sizeY = $dimensions->size_y();
