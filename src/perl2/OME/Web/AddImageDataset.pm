@@ -272,8 +272,7 @@ sub format_list_images{
  my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->group()->group_id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
  my @datasetsImages=$dataset->images();
  my $rep=not_used_images(\@groupImages,\@datasetsImages);	
- if (scalar(@$rep)>0){
-   
+ if (defined $rep) {  
    $checkbox.=print_checkbox($cgi,$rep);
    #format output
    $text.=$cgi->h3("Select images in the list below");
