@@ -46,6 +46,7 @@ use OME::Database::Delegate;
 use base qw(OME::Database::Delegate);
 
 use UNIVERSAL::require;
+use IO::Select;
 
 =head1 NAME
 
@@ -595,5 +596,39 @@ sub addClassToDatabase {
     }
 }
 
+
+sub registerListener {
+my ($self,$dbh,$condition) = @_;
+
+	$dbh->do (qq/LISTEN "$condition"/);
+}
+
+sub waitCondition {
+my ($self,$dbh,$condition,$timeout) = @_;
+
+	my $fd = $dbh->func ('getfd') or
+		die "Unable to get PostgreSQL back-end FD";
+	my $sel = IO::Select->new ($fd);
+	# Block
+	if (defined $timeout) {
+		$sel->can_read ($timeout);
+	} else {
+		$sel->can_read ();
+	}
+	my $notice = $dbh->func ('pg_notifies');
+	return undef unless $notice and $notice->[0] eq $condition;
+	return $condition;
+}
+
+
+sub unregisterListener {
+my ($self,$dbh,$condition) = @_;
+	$dbh->do (qq/UNLISTEN "$condition"/);
+}
+
+sub notifyListeners {
+my ($self,$dbh,$condition) = @_;
+	$dbh->do (qq/NOTIFY "$condition"/);
+}
 
 1;
