@@ -63,13 +63,12 @@ What it returns: 1 or undef
 sub isRedirectNecessary {
 	my $self = shift;
 	my $doNotSetFlag = shift;
-	my $session = $self->Session()
-		or die ref ($self) . " cannot find session via self->Session()";
+	my $session = $self->Session();
 	$self->ReloadHome( undef )
 		unless $doNotSetFlag;
 
 	# put all tests necessary for redirection here.
-	if( (not defined $session->project()) || (not defined $session->dataset()) ) {
+	if( (not defined $session) || (not defined $session->project()) || (not defined $session->dataset()) ) {
 		$self->ReloadHome( 1 )
 			unless $doNotSetFlag;
 		return 1;
