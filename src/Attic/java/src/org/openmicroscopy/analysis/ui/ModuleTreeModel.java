@@ -38,7 +38,7 @@ public class ModuleTreeModel
 {
     protected String  rootNode = "Categories";
     protected List    rootCategories;
-    protected Map     categoryChildren;
+    protected Map     categoryChildren, categoryModules;
     protected List    treeModelListeners = new ArrayList();
 
     public ModuleTreeModel()
@@ -55,6 +55,7 @@ public class ModuleTreeModel
     {
         this.rootCategories = rootCategories;
         categoryChildren = new HashMap();
+        categoryModules = new HashMap();
         fireTreeStructureChanged(rootNode);
     }
 
@@ -88,6 +89,17 @@ public class ModuleTreeModel
         return cached;
     }
 
+    protected List getModuleList(ModuleCategory category)
+    {
+        List  cached = (List) categoryModules.get(category);
+        if (cached == null)
+        {
+            cached = category.getModules();
+            categoryModules.put(category,cached);
+        }
+        return cached;
+    }
+
     public Object getChild(Object parent, int index)
     {
         if (rootCategories == null)
@@ -99,7 +111,11 @@ public class ModuleTreeModel
         } else if (parent instanceof ModuleCategory) {
             ModuleCategory  category = (ModuleCategory) parent;
             List  categoryList = getChildList(category);
-            return categoryList.get(index);
+            List  moduleList = getModuleList(category);
+            if (index >= categoryList.size())
+                return moduleList.get(index-categoryList.size());
+            else
+                return categoryList.get(index);
         } else {
             return null;
         }
@@ -116,7 +132,8 @@ public class ModuleTreeModel
         } else if (parent instanceof ModuleCategory) {
             ModuleCategory  category = (ModuleCategory) parent;
             List  categoryList = getChildList(category);
-            return categoryList.size();
+            List  moduleList = getModuleList(category);
+            return categoryList.size()+moduleList.size();
         } else {
             return 0;
         }
@@ -133,7 +150,12 @@ public class ModuleTreeModel
         } else if (parent instanceof String) {
             ModuleCategory  category = (ModuleCategory) parent;
             List  categoryList = getChildList(category);
-            return categoryList.indexOf(child);
+            List  moduleList = getModuleList(category);
+            int index = categoryList.indexOf(child);
+            if (index >= 0) return index;
+            index = moduleList.indexOf(child);
+            if (index >= 0) return index+categoryList.size();
+            return -1;
         } else {
             return -1;
         }
