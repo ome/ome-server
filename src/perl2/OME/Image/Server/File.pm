@@ -47,6 +47,7 @@ our $VERSION = $OME::VERSION;
 
 use base qw(OME::File);
 
+use Carp;
 use OME::Image::Server;
 
 use constant FILE_ID  => 0;
@@ -301,6 +302,9 @@ sub readData {
     } else {
         $length = $val1;
     }
+
+    Carp::confess "Cannot call readData without a length!"
+      unless defined $length;
 
     # If called in void context, we don't need to read any data, but we
     # should seek past the data we would have read.
