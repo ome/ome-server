@@ -299,7 +299,7 @@ Usage:
 
 =cut
 sub saveThumb {
-    my ($proto, $pixels_attr, $displayOptions) = @_;
+    my ($proto, $pixels_attr, $display_options) = @_;
     my $session = OME::Session->instance();
     my $image = $pixels_attr->image();
     my $pixels_data = $proto->loadPixels( $pixels_attr );
