@@ -172,14 +172,15 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 			s= quad;
 					}
 		else if (size > 3){
-			s = drawBSpline(pts);	
+			//s = drawBSpline(pts);
+			s = drawGeneralBSpline(pts);	
 		}
 		return s;
 	}
 	
 	
-	/*
-	protected GeneralPath drawBSpline(Point2D pts[]) {
+	
+	protected GeneralPath drawGeneralBSpline(Point2D pts[]) {
 		GeneralPath p = new GeneralPath();
 		int n = pts.length;
 		float[] knots = buildKnotArray(n);
@@ -189,11 +190,9 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		
 		dumpPoints(pts);
 		int len = knots.length;
-		float maxKnot = knots[knots.length-1];
-		for (int i =0; i < len; i++) {
-			double t = (double) knots[i];
-		//for (double t = 0; t < n; t+= .2) {
-			System.err.println("point "+i+", t="+t);
+		float maxKnot = knots[len-DEGREE-3];
+		float minKnot = knots[0];
+		for (double t = (double) minKnot; t< maxKnot; t+=.3) {
 		
 			Point2D pt = getSplinePoint(t,knots,pts);
 			if (first) {
@@ -206,6 +205,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 				System.err.println("line to "+pt.getX()+","+pt.getY());
 			}	
 		}
+	//	p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
 		return p;
 	}
 	
@@ -216,23 +216,9 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	}
 	
 	private float[] buildKnotArray(int n) {
-		int size = (n-1)+2*DEGREE;
+		int size = n+2*DEGREE;
 		float[] knots  =new float[size];
 		
-		//low end
-		for (int i = 0; i< DEGREE;i++)  
-			knots[i] =0;
-		
-		for (int i = size-1;  i >= size-DEGREE+1;i--)
-			knots[i]=n;
-		int num = size-1;
-		float interval = num/n;
-		
-		for (int i= DEGREE;  i <= DEGREE+n-1; i++) 
-			knots[i]=(i-DEGREE)*interval;
-			
-		int size = n+2*DEGREE;
-		int[] knots = new int[size];
 		for (int i =0; i < size; i++) {
 			if (i < DEGREE)
 				knots[i]=0;
@@ -257,7 +243,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		System.err.println("point for u ="+u);
 		for (int i = 0; i< n; i++) {
 			double cdb = coxDeBoor(i,DEGREE,u,knots);	
-			System.err.println("cdb  is "+cdb);
+			System.err.println("cdb  of "+i+" is "+cdb);
 			x +=cdb*pts[i].getX();
 			y +=cdb*pts[i].getY();
 		}
@@ -282,28 +268,31 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		if (denom2 !=0) 
 			sum += (knots[k+d+1]-u)/denom2*coxDeBoor(k+1,d-1,u,knots);
 		return sum;
-	} */
+	}
 	
 	protected GeneralPath drawBSpline(Point2D[] pts) {
 		int m = 50, n = pts.length;
 		
-		
+				
 		GeneralPath p = new GeneralPath();
 		p.moveTo((float)pts[0].getX(),(float)pts[0].getY());
 		n = pts.length;
 		for (int i=1; i<n-2; i++) { 
-			getPoints(p,pts[i-1],pts[i],pts[i+1],pts[i+2]);
+			getPoints(p,pts[i-1],pts[i],pts[i+1],pts[i+2]);		 
 		}	
 		p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		return p;
-	} 
+		return p;	
 	
+	}
 	
-	
-  	private void getPoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,Point2D p3) {
+	private void getPoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,
+		Point2D p3) {
+
 		float p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y;
-		float x,y;
-		
+		float x,y,prevX=0,prevY=0;
+			
+		int iter=0;
+				
 		p3x=(float) ((-p0.getX()+3*(p1.getX()-p2.getX())+p3.getX())/6); 
 		p3y=(float) ((-p0.getY()+3*(p1.getY()-p2.getY())+p3.getY())/6);
 			  
@@ -316,9 +305,18 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		for (float t=0; t<=1; t+=0.02) {  
 			x = ((p3x*t+p2x)*t+p1x)*t+p0x;
 			y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-			p.lineTo(x,y);
-		}
-	
+			if (iter == 0) {
+				prevX=x;
+				prevY=y;
+				
+			}
+			else if (iter == 1) {
+				p.quadTo(x,y,prevX,prevY);
+			}
+			else
+				p.lineTo(x,y);
+			iter++;
+		}	
 	}
 	
 	protected void updateBounds() {
