@@ -80,7 +80,7 @@ sub startImage {
     	
     	# PixelsSlice points to the zeroth Channel
 		my $parent = $factory->
-		  newParentAttribute('PixelsSlice',undef,$mex,
+		  newParentAttribute('PixelsSlice',$slice->image(),$mex,
 					   {
 						Parent => $slice->Parent(),
 						StartX => $slice->StartX(),
