@@ -323,16 +323,19 @@ public class Controller  implements LoginResponder {
 	
 	public void buildLibraryFrame() {
 		library = new ChainLibraryFrame(this,connection);
-		System.err.println("finishing chain library frame");
+		//System.err.println("finishing chain library frame");
 		finishInitThread();
 	}
 	
 
 	public synchronized void finishInitThread() {
 		initThreads--;
-		System.err.println("setting # of active threads to "+initThreads);
-		if (initThreads == 0)
+		//System.err.println("setting # of active threads to "+initThreads);
+		if (initThreads == 0) {
 			closeStatusWindow();
+			if (moduleFrame != null)
+				moduleFrame.completeInitialization();
+		}
 	}
 	/**
 	 * Logout of the system - remove all active windows and 
