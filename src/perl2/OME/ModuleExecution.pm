@@ -244,6 +244,29 @@ sub attribute {
     }
 }
 
+package OME::ModuleExecution::SemanticTypeOutput;
+
+use strict;
+our $VERSION = 2.000_000;
+
+use OME::DBObject;
+use OME::SemanticType;
+require OME::Module;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames
+  ({
+    module_execution_id  => 'module_execution',
+    semantic_type_id     => 'formal_input',
+   });
+
+__PACKAGE__->table('semantic_type_outputs');
+__PACKAGE__->sequence('semantic_type_output_seq');
+__PACKAGE__->columns(Primary => qw(semantic_type_output_id));
+__PACKAGE__->columns(Essential => qw(module_execution_id semantic_type_id));
+__PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
+__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
+
 
 1;
 
