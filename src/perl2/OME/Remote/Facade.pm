@@ -120,13 +120,12 @@ sub decode_value {
 package OME::Remote::Facade;
 
 our $SHOW_CALLS = 0;
-our $SHOW_RESULTS = 0;
-our $SHOW_CACHING = 0;
 
 sub createSession {
     my ($proto, $username, $password) = @_;
 
-    print STDERR "$$ createSession $username\n";
+    print STDERR "$$ createSession $username\n"
+      if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($username,$password);
     die "INVALID LOGIN"
@@ -143,7 +142,8 @@ sub createSession {
 sub authenticateSession {
     my ($proto, $sessionKey) = @_;
 
-    print STDERR "$$ authenticateSession $sessionKey\n";
+    print STDERR "$$ authenticateSession $sessionKey\n"
+      if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($sessionKey);
     return 0
@@ -159,7 +159,8 @@ sub authenticateSession {
 sub closeSession {
     my ($proto, $sessionKey) = @_;
 
-    print STDERR "$$ closeSession $sessionKey\n";
+    print STDERR "$$ closeSession $sessionKey\n"
+      if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($sessionKey);
     return 0 unless defined $session;
@@ -175,7 +176,8 @@ sub closeSession {
 
 sub dispatch {
     my ($proto,$sessionKey,$method,@params) = @_;
-    print STDERR "$$ dispatch $sessionKey $method @params\n";
+    print STDERR "$$ dispatch $sessionKey $method @params\n"
+      if $SHOW_CALLS;
 
     my $session = OME::SessionManager->createSession($sessionKey);
     die "STALE SESSION" unless defined $session;
