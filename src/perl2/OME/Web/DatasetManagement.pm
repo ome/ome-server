@@ -38,17 +38,25 @@
 
 package OME::Web::DatasetManagement;
 
+#*********
+#********* INCLUDES
+#*********
+
 use strict;
 use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Validation;
 use OME::Tasks::DatasetManager;
+use OME::Tasks::ImageManager;
 use OME::Web::ImageTable;
 use Carp;
 
 use base qw{ OME::Web };
+
+#*********
+#********* PUBLIC METHODS
+#*********
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Dataset Management";
@@ -61,7 +69,8 @@ sub getPageBody {
 	my $factory = $session->Factory();
 	my $dataset;
 
-	my $d_manager = $self->{datasetManager} = new OME::Tasks::DatasetManager;
+	# Managers;
+	my $d_manager = new OME::Tasks::DatasetManager;
 	my $i_manager = new OME::Tasks::ImageManager;
 	
 	if ($cgi->param('DatasetID')) {
@@ -72,6 +81,7 @@ sub getPageBody {
 	
 	croak "Dataset not specified or Dataset ID not found" unless $dataset;
 
+	# Header
 	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $dataset->name() . ' Properties');
 
 	# Image objects that were selected
@@ -82,33 +92,31 @@ sub getPageBody {
 	
 	# determine action
 	if ($action eq 'save') {
-		if ($cgi->param('name')) {
-			my $new_name = $cgi->param('name');
-			my $new_description = $cgi->param('description') || '';
+		my $new_name = $cgi->param('name');
+		my $new_description = $cgi->param('description') || '';
 
-			if (($new_name ne $dataset->name()) and (not $d_manager->nameExists($new_name))) {
-				$d_manager->change($new_description, $new_name, $dataset->id());
-				$body .= $cgi->p({-class => 'ome_info'}, 
-					'Save of new dataset metadata successful.');
-			} elsif (($new_name eq $dataset->name()) and ($new_description ne $dataset->description())) {
-				$d_manager->change($new_description, $new_name, $dataset->id());
-				$body .= $cgi->p({-class => 'ome_info'}, 
-					'Save of new dataset metadata successful.');
-			} else {
-				$body .= $cgi->p({class => 'ome_error'},
-					"ERROR: Name already in use.");
-			}
-		
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		} else {
-			$body .= $cgi->p({class => 'ome_error'},
-				"ERROR: Name is a required field.");
+		unless ($new_name) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'}, 'ERROR: Name is a required field.');
+		} elsif (($dataset->name() ne $new_name) and ($d_manager->nameExists($new_name))) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: This name is already used, please choose another.'
+			);
+		} else { 
+			# Action
+			$d_manager->change($new_description, $new_name, $dataset->id());
+
+			# Data
+			$body .= $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
 		}
+
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	} elsif ($cgi->param('Add')) {
 		if ($dataset->locked()) {
 			# Data
 			$body .= $cgi->p({class => 'ome_error'},
-				"WARNING: Images not being removed from locked dataset.");
+				"ERROR: Images cannot be added to a locked dataset.");
 		} else {
 			# Action
 			my $image = $factory->findObject("OME::Image", name => $selected[0]);
@@ -138,7 +146,9 @@ sub getPageBody {
 	return ('HTML',$body);
 }
 
-
+#*********
+#********* PRIVATE METHODS
+#*********
 
 sub __printForm {
 	my $self       = shift;

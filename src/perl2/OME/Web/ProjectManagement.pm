@@ -31,7 +31,7 @@
 #-------------------------------------------------------------------------------
 #
 # Original by:    Josiah Johnston <siah@nih.gov>
-# New version:   Chris Allan <callan@blackcat.ca>
+# New version:    Chris Allan <callan@blackcat.ca>
 #
 #-------------------------------------------------------------------------------
 
@@ -47,7 +47,6 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 use CGI;
-use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::DatasetTable;
@@ -115,9 +114,6 @@ sub getPageBody {
 		
 		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-		# this will add a script to reload OME::Home if it's necessary
-		$body .= OME::Web::Validation->ReloadHomeScript();
 	} elsif ($action eq 'Remove') {
 		# Action
 		$p_manager->removeDatasets( {
