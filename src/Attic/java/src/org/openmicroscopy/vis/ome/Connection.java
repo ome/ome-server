@@ -426,14 +426,13 @@ public class Connection {
 	
 	public void getThumbnail(CImage i) {
 		
-		int id = i.getID();
 		try {
 			if (thumbnails != null) {
 			//	System.err.println("calling thumbnails.getThumbnail(id)");
-				getThumbnail(i,id);
+				doGetThumbnail(i);
 			}
 		} catch(Exception e) {
-			System.err.println("exception in grabbing thumbnail "+id);
+			System.err.println("exception in grabbing thumbnail "+i.getID());
 			//e.printStackTrace();
 		}
 	//	System.err.println(" returning from connection.getThumbnail..");
@@ -441,12 +440,16 @@ public class Connection {
 			System.err.println("image is nulll..."); */
 	}
 	
-	public void getThumbnail(final CImage i,final int id) {
+	public void doGetThumbnail(final CImage i) {
 		final SwingWorker worker = new SwingWorker() {
 			BufferedImage image = null;
 			public Object construct() {
 				try {
 				//	System.err.println("trying to get image "+id);
+					// get the default pixels
+				    // and grab the omeis id.
+				    Attribute att = i.getDefaultPixels();
+				    int id = att.getIntElement("ImageServerID");
 					image = thumbnails.getThumbnail(id);
 				}
 				catch (Exception e) {
