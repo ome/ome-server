@@ -155,7 +155,6 @@ my @libraries = (
 		    }
 		    c++;
 		}
-		free (c);
 
 	    return (0);
 	    }
