@@ -62,7 +62,7 @@ public class PLinkSelectionTarget extends PLinkTarget {
 		
 		super.translate(x,y);
 		Point2D pt = getOffset();
-		System.err.println("new offset is "+pt.getX()+","+pt.getY());
+	//	System.err.println("new offset is "+pt.getX()+","+pt.getY());
 		Point2D newPt = new Point2D.Float((float) pt.getX()+PLinkTarget.LINK_TARGET_HALF_SIZE,
 			(float) pt.getY()+PLinkTarget.LINK_TARGET_HALF_SIZE);
 		link.setPoint(index,newPt);
