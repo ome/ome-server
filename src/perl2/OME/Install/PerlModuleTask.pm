@@ -665,14 +665,18 @@ sub execute {
 
 		my $matlab_directory; 
 		
-		
 		# Confirm all flag
 		my $confirm_all;
 	
 		while (1) {
 			if ($environment->get_flag("UPDATE") or $confirm_all) {
 				print "\n";  # Spacing
-	
+				
+				# Change the MATLAB_SRC path always to the current directory
+				# if the dev configuration option is elected
+				$MATLAB->{MATLAB_SRC} = getcwd ()."/src/matlab"
+					if ($MATLAB->{AS_DEV} == 1);
+					
 				# Ask user to confirm his/her original entries
 				print BOLD,"MATLAB Perl API configuration:\n",RESET;
 				print " Install MATLAB Perl API?: ", BOLD, $MATLAB->{INSTALL} ? 'yes':'no', RESET, "\n";
@@ -729,7 +733,7 @@ sub execute {
 			# Configure
 			print "  \\_ Configuring ";
 			$retval = configure_module("src/perl2/OME/Matlab/", $LOGFILE, 
-				{options => $MATLAB->{MATLAB_INST}, user => "$MATLAB->{USER}"});
+				{options => "$MATLAB->{USER} $MATLAB->{MATLAB_INST}"});
 				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Unable to configure module, see $LOGFILE_NAME for details."
