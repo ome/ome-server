@@ -80,10 +80,10 @@ function popupList(x, y, itemList, callback, selection, anchorText,
 
 /*****
 *
-*	setSelection(i)
+*	setSelection(i, noAnimate)
 *
 *****/
-popupList.prototype.setSelection = function(i) {
+popupList.prototype.setSelection = function(i, noAnimate) {
 	if(i<0)
 		i=0;
 	if(i>=this.size)
@@ -92,7 +92,7 @@ popupList.prototype.setSelection = function(i) {
 		i = Math.round(i);
 
 	this.selection = i;
-	this.update();
+	this.update(noAnimate);
 	if( this.callback )
 		this.callback( this.getSelection() );
 }
@@ -100,6 +100,11 @@ popupList.prototype.setSelection = function(i) {
 /*****
 *
 *	setSelectionByValue(val)
+		
+		notes:
+			because this function is only called externally, it will not cause update to animate.
+			update should only animate when opening or closing a popupList, not when the value is
+			externally changed.
 *
 *****/
 popupList.prototype.setSelectionByValue = function(val) {
@@ -110,7 +115,7 @@ popupList.prototype.setSelectionByValue = function(val) {
 			for(var j in this.listIndex)
 				if(this.listIndex[j] == i)
 					break;
-			this.setSelection(j);		
+			this.setSelection(j, true);
 			break;
 		}
 	if(this.itemList[i] == val)
@@ -143,23 +148,32 @@ popupList.prototype.getSelection = function() {
 /*****
 *
 *   update
+*		noAnimate is a boolean flag. when true, it updates the popupList with minimal fanfare.
+*			if the popupList is closed, it will stay closed instead of blinking.
+*			if the popupList is open, it will not blink after moving.
+*			(blinking refers to defaults animation that fades in and out quickly)
 *
 *****/
-popupList.prototype.update = function() {
+popupList.prototype.update = function(noAnimate) {
 	if(!this.nodes.listBox)
 		return;
 
 	// move listBox to position
 	var y = -1 * (this.height * this.selection);
 	var transform = "translate( 0, " + y + " )";
-	this.nodes.listBox.setAttributeNS(null, "transform", transform);
-	
+	this.nodes.listBox.setAttribute("transform", transform);
+
 	if( this.active ) {
-		// turn all boxes on
-		this.anchorOff.beginElement();
-		for(i=0;i<this.size;i++) {
-			this.itemBoxOn[i].beginElement();
-			this.itemBackgroundOn[i].beginElement();
+		// turn anchor off & all boxes on
+		// if noAnimate is true and this isActive, then the list has already been opened
+		//    so we don't have to do anything else
+		if(!noAnimate) {
+			this.anchorOff.beginElement();
+			for(i=0;i<this.size;i++) {
+				this.itemBoxOn[i].beginElement();
+				this.itemBackgroundOn[i].beginElement();
+				this.itemBackgroundAnimOn[i].beginElement();
+			}
 		}
 	}
 	else {
@@ -168,12 +182,22 @@ popupList.prototype.update = function() {
 		for(i=0;i<this.size;i++) {
 			if( i == this.selection ) {
 				this.itemBoxOn[i].beginElement();
-				this.itemBackgroundOff[i].beginElement();
-				this.itemHighlightOff[i].beginElement();
+				if(noAnimate) {
+					this.itemBackgroundOff[i].beginElement();
+					this.itemHighlightOff[i].beginElement();
+				}
+				else {
+					this.itemBackgroundAnimOff[i].beginElement();
+					this.itemHighlightAnimOff[i].beginElement();
+				}
 			}
 			else {
-				this.itemBoxOff[i].beginElementAt( this.itemBoxAnimSpeed );
-				this.itemBackgroundOff[i].beginElement();
+				if(noAnimate)
+					this.itemBoxOff[i].beginElement();
+				else {
+					this.itemBoxOff[i].beginElementAt( this.itemBoxAnimSpeed );
+					this.itemBackgroundAnimOff[i].beginElement();
+				}
 			}
 		}
 	}
@@ -277,8 +301,12 @@ popupList.prototype.buildSVG = function() {
 	this.itemBoxOn = new Array();
 	this.itemBoxOff = new Array();
 	this.itemMouseCatcher = new Array();
+	this.itemHighlightAnimOn = new Array();
+	this.itemHighlightAnimOff = new Array();
 	this.itemHighlightOn = new Array();
 	this.itemHighlightOff = new Array();
+	this.itemBackgroundAnimOn = new Array();
+	this.itemBackgroundAnimOff = new Array();
 	this.itemBackgroundOn = new Array();
 	this.itemBackgroundOff = new Array();
 	for(i=0;i<this.size;i++) {
@@ -301,32 +329,40 @@ popupList.prototype.buildSVG = function() {
 		itemBackground = itemBox.lastChild;
 		switches = findAnimationsInNode( itemBackground );
 		if(switches.length == 2) {
-			itemBackgroundOn = switches.item(0);
-			itemBackgroundOff = switches.item(1);
+			itemBackgroundAnimOn = switches.item(0);
+			itemBackgroundAnimOff = switches.item(1);
 		}
 		else {
 			itemBackground.appendChild( this.textToSVG(this.fadeInText) );
-			itemBackgroundOn = itemBackground.lastChild;
+			itemBackgroundAnimOn = itemBackground.lastChild;
 			itemBackground.appendChild( this.textToSVG(this.fadeOutText) );
-			itemBackgroundOff = itemBackground.lastChild;
+			itemBackgroundAnimOff = itemBackground.lastChild;
 			itemBackground.setAttributeNS( null, "opacity", "0" );
 		}
+		itemBackground.appendChild( this.textToSVG(this.onSwitchText) );
+		itemBackgroundOn = itemBackground.lastChild;
+		itemBackground.appendChild( this.textToSVG(this.offSwitchText) );
+		itemBackgroundOff = itemBackground.lastChild;
 
 		// add Highlight layer and on/off switches
 		itemBox.appendChild( this.textToSVG(this.itemHighlightText) );
 		itemHighlight = itemBox.lastChild;
 		switches = findAnimationsInNode( itemHighlight );
 		if(switches.length == 2) {
-			itemHighlightOn = switches.item(0);
-			itemHighlightOff = switches.item(1);
+			itemHighlightAnimOn = switches.item(0);
+			itemHighlightAnimOff = switches.item(1);
 		}
 		else {
 			itemHighlight.appendChild( this.textToSVG(this.fadeInText) );
-			itemHighlightOn = itemHighlight.lastChild;
+			itemHighlightAnimOn = itemHighlight.lastChild;
 			itemHighlight.appendChild( this.textToSVG(this.fadeOutText) );
-			itemHighlightOff = itemHighlight.lastChild;
+			itemHighlightAnimOff = itemHighlight.lastChild;
 			itemHighlight.setAttributeNS( null, "opacity", "0" );
 		}
+		itemHighlight.appendChild( this.textToSVG(this.onSwitchText) );
+		itemHighlightOn = itemHighlight.lastChild;
+		itemHighlight.appendChild( this.textToSVG(this.offSwitchText) );
+		itemHighlightOff = itemHighlight.lastChild;
 
 		// add text layer
 		itemBox.appendChild( this.itemText[i] );
@@ -342,13 +378,17 @@ popupList.prototype.buildSVG = function() {
 		this.itemBoxOn.push(itemBoxOn);
 		this.itemBoxOff.push(itemBoxOff);
 		this.itemMouseCatcher.push(itemMouseCatcher);
+		this.itemHighlightAnimOn.push(itemHighlightAnimOn);
+		this.itemHighlightAnimOff.push(itemHighlightAnimOff);
 		this.itemHighlightOn.push(itemHighlightOn);
 		this.itemHighlightOff.push(itemHighlightOff);
+		this.itemBackgroundAnimOn.push(itemBackgroundAnimOn);
+		this.itemBackgroundAnimOff.push(itemBackgroundAnimOff);
 		this.itemBackgroundOn.push(itemBackgroundOn);
 		this.itemBackgroundOff.push(itemBackgroundOff);
 	}
 	if(this.size > 0)
-		this.itemBoxAnimSpeed = this.itemBackgroundOff[0].getAttributeNS( null, "dur" );
+		this.itemBoxAnimSpeed = this.itemBackgroundAnimOff[0].getAttributeNS( null, "dur" );
 }
 
 /*****
@@ -375,9 +415,14 @@ popupList.prototype.click = function(e) {
 	// find where the click is
 	for(i=0;i<this.size;i++)
 		if(e.target==this.itemMouseCatcher[i]) break;
-	
+
 	// open the list?
 	if(i==this.selection && this.active == false) {
+		// make this popupList drawn on top of all else in parent node
+		this.nodes.parent.removeChild(this.nodes.root);
+		this.nodes.parent.appendChild(this.nodes.root);
+
+		// do the popup
 		this.active=true;
 		this.update();
 		return;
@@ -401,6 +446,7 @@ popupList.prototype.mouseover = function(e) {
 		if(e.target==this.itemMouseCatcher[i]) break;
 	// ...and highlight the target
 	this.itemHighlightOn[i].beginElement();
+	this.itemHighlightAnimOn[i].beginElement();
 }
 
 /*****
@@ -413,7 +459,7 @@ popupList.prototype.mouseout = function(e) {
 	for(i=0;i<this.size;i++)
 		if(e.target==this.itemMouseCatcher[i]) break;
 	// ...and unhighlight the target
-	this.itemHighlightOff[i].beginElement();
+	this.itemHighlightAnimOff[i].beginElement();
 }
 
 
