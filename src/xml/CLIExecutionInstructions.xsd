@@ -25,6 +25,7 @@
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -36,11 +37,7 @@
 			<xsd:attribute name = "ExecutionPoint" use = "required">
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
-This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
-					
-					
-					
-					
+
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -67,6 +64,7 @@ XML specification of the command line parameters is:
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -80,6 +78,7 @@ XML specification of the command line parameters is:
 			<xsd:documentation>This specifies what and how to write to STDIN.
 
 Not yet supported.
+			
 			
 			
 			
@@ -103,6 +102,7 @@ Not yet supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -116,12 +116,25 @@ Not yet supported.
 			<xsd:documentation>References a particular column in a FormalInput. Used for variable substitution.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalInputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput. It should corrospond to an FormalInputColumnID specified in one of those.
-Referential integrity is not enforced by this schema. Verification against the schema will not detect an error here if you make a typo.
-					</xsd:documentation>
+					<xsd:documentation>References a formal input</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -198,6 +211,7 @@ Currently, only native image pixels are supported.
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -214,6 +228,7 @@ RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
 
 Currently only TIFF is supported.
+					
 					
 					
 					
@@ -285,6 +300,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -294,6 +310,7 @@ e.g. /OME/repository/1-tinyTest.ori
 			<xsd:documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
 
 Not yet supported.
+			
 			
 			
 			
@@ -314,6 +331,7 @@ Not yet supported.
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
+					
 					
 					
 					
@@ -340,6 +358,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 					
 					
 					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -347,6 +366,7 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				<xsd:annotation>
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
 					
 					
 					
@@ -390,10 +410,25 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Use an input value. References an input, does not produce an output.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalInputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal input</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -402,10 +437,25 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 			<xsd:documentation>Iterates a dimension over its entire range. Produces outputs.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalOutputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>AutoIterate causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal output</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -418,10 +468,25 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 				<xsd:element ref = "Start"/>
 				<xsd:element ref = "End"/>
 			</xsd:sequence>
-			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalOutputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>IterateRange causes the handler to produce an output. This output needs to be stored. FormalOutputColumnID references a storage location. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal output</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -435,13 +500,29 @@ Not currently supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalInputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal input</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -455,13 +536,29 @@ Not currently supported.
 			
 			
 			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalInputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalInputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a particular column of a FormalInput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal input</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -470,10 +567,25 @@ Not currently supported.
 			<xsd:documentation>Specifies location to write output. One data chunk that the Output element references may be written to one or more places.</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name = "FormalOutputColumnID" use = "required" type = "xsd:string">
+			<xsd:attribute name = "FormalOutputName" use = "required">
 				<xsd:annotation>
-					<xsd:documentation>References a specific column in a FormalOutput. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
+					<xsd:documentation>References a formal output</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "SemanticElementName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>References a semantic element (ATTRIBUTE_COLUMN in DB lingo).</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
