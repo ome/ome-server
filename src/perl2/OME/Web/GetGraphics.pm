@@ -43,6 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::ImageManager;
+use OME::ViewerPreferences;
 use base qw{ OME::Web };
 
 use Benchmark;
@@ -181,15 +182,16 @@ sub _getJSData {
 	$JSinfo->{ Dims }				= '['.join (',', @$dims).']';
 	# transition to the image server
 	if( $pixels->Repository()->IsLocal() ) {
-		$JSinfo->{ CGI_URL }        = '/cgi-bin/OME_JPEG';
-		$JSinfo->{ CGI_optionStr }  = '&Path='.$path;
+		$JSinfo->{ CGI_URL }        = '"/cgi-bin/OME_JPEG"';
+		$JSinfo->{ CGI_optionStr }  = '"&Path='.$path.'"';
 		$JSinfo->{ use_omeis }     = 'false';
 	} else {
-		$JSinfo->{ CGI_URL }       = $pixels->Repository()->ImageServerURL();
-		$JSinfo->{ CGI_optionStr } = '&Method=Composite&PixelsID='.$pixels->PixelsID();
+		$JSinfo->{ CGI_URL }       = '"'.$pixels->Repository()->ImageServerURL().'"';
+		$JSinfo->{ CGI_optionStr } = '"&Method=Composite&PixelsID='.$pixels->PixelsID().'"';
 		$JSinfo->{ use_omeis }     = 'true';
 	}
-	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
+	$JSinfo->{ SaveDisplayCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
+	$JSinfo->{ SavePrefsCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
 
 	###############
 	# Saved display settings:
@@ -206,7 +208,7 @@ sub _getJSData {
 	if( defined $viewerPreferences ) { 
 		$JSinfo->{ toolBoxScale } = $viewerPreferences->toolbox_scale();
 	} else {
-		$JSinfo->{ toolBoxScale } = 1;
+		$JSinfo->{ toolBoxScale } = OME::ViewerPreferences->DefaultScale();
 	}
 
 	return $JSinfo;
@@ -230,6 +232,7 @@ sub BuildSVGviewer {
 	my $CGI_URL			   = $JSinfo->{ CGI_URL };
 	my $CGI_optionStr	   = $JSinfo->{ CGI_optionStr };
 	my $SaveDisplayCGI_URL = $JSinfo->{ SaveDisplayCGI_URL };
+	my $SavePrefsCGI_URL   = $JSinfo->{ SavePrefsCGI_URL };
 	my $theZ			   = $JSinfo->{ theZ };
 	my $theT			   = $JSinfo->{ theT };
 	my $isRGB			   = $JSinfo->{ isRGB };
@@ -329,8 +332,8 @@ $SVG .= <<ENDSVG;
 			var supplimentaryWindows = new Array();
 			var windowControllers	 = new Array();
 
-			image = new OMEimage($ImageID,Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
-			                     "$SaveDisplayCGI_URL", $CBW, $RGBon, $isRGB, $use_omeis);
+			image = new OMEimage($ImageID,Stats,$Dims,$CGI_URL,$CGI_optionStr, 
+			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, $use_omeis);
 			image.realize( svgDocument.getElementById("image") );
 			
 			var actions = new Array();
@@ -369,12 +372,11 @@ $SVG .= <<ENDSVG;
 			actions['showGreenScale']    = { obj: (greenScale.toolBox), method: 'toggle'};
 			actions['showGreyScale']    = { obj: (greyScale.toolBox), method: 'toggle'};
 
-			viewerPreferences = new ViewerPreferences( );
+			viewerPreferences = new ViewerPreferences( $SavePrefsCGI_URL );
 			viewerPreferences.buildToolBox( toolboxLayer );
 			supplimentaryWindows.push('Preferences');			 
 			windowControllers['Preferences'] = viewerPreferences;
 			setTimeout( "viewerPreferences.toolBox.hide()", 200 );
-
 
 ENDSVG
 
@@ -445,7 +447,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "xyPlaneControls.greyPopupList.setSelectionByValue('"+ 
 				xyPlaneControls.greyPopupList.getItemList()[ CBW[9] ]
 				+"')", 0 );
-			setTimeout( "viewerPreferences.resizeToolboxes("+(toolBoxScale-1)+")", 500);
+			setTimeout( "viewerPreferences.resizeToolboxes("+toolBoxScale+", true)", 500);
 			setTimeout( "xyPlaneControls.redButton.setState(" + (image.isRedOn() ? true : false) + ", true)", 200 );
 			setTimeout( "xyPlaneControls.greenButton.setState(" + (image.isGreenOn() ? true : false) + ", true)", 200 );
 			setTimeout( "xyPlaneControls.blueButton.setState(" + (image.isBlueOn() ? true : false) + ", true)", 200 );
