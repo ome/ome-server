@@ -57,6 +57,7 @@ import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
 import java.util.HashMap;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
@@ -361,8 +362,29 @@ public class Connection {
 		Attribute user = session.getUser();
 		HashMap crit = new HashMap();
 		crit.put("owner_id",user);
-		List projects = factory.findObjects("OME::Dataset",crit);
-		return projects;
+		List datasets = factory.findObjects("OME::Dataset",crit);
+		return datasets;
+	}
+	
+	public void initDatasets(final Controller controller) {
+		
+		final SwingWorker worker = new SwingWorker() {
+			public Object construct() {
+				List ds = getDatasetsForUser();
+				Iterator iter = ds.iterator();
+				while (iter.hasNext()) {
+					CDataset d = (CDataset) iter.next();
+					controller.setStatusLabel("Dataset "+d.getName());
+					d.getImageCount();
+				}
+				return null;
+			}
+			public void finished() {
+				System.err.println("finishing with the datasets");
+				controller.finishInitThread();
+			}
+		};
+		worker.start();
 	}
 	
 	public List getChainExecutions(CChain c) {
