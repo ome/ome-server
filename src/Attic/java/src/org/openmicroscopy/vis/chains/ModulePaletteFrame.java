@@ -44,11 +44,9 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.piccolo.PPaletteCanvas;
 import org.openmicroscopy.vis.ome.Connection;
-//import edu.umd.cs.piccolo.util.PBounds;
-import javax.swing.JFrame;
+import edu.umd.cs.piccolo.PCanvas;
 import javax.swing.BoxLayout;
 import java.awt.Rectangle;
-import java.awt.Container;
 
 /** 
  * <p>Main operational chain for the Chain-building application holds
@@ -59,15 +57,9 @@ import java.awt.Container;
  * @since OME2.0
  */
 
-public class ModulePaletteFrame extends JFrame {
+public class ModulePaletteFrame extends ChainFrameBase {
 
 	
-	private Controller controller;
-	private Container contentPane;
-	
-	public PPaletteCanvas canvas = null;
-	
-
 	
 	private MenuBar menuBar;
 	private ToolBar toolBar;
@@ -77,62 +69,42 @@ public class ModulePaletteFrame extends JFrame {
 	
 	//private ChainFrameBase canvasFrame;
 	
-	public ModulePaletteFrame(Controller controller) {
-		super("OME Chains Palette");
-		setResizable(true);
-		this.controller  = controller;
-		contentPane = getContentPane();
-		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
-		
-		CmdTable cmd = controller.getCmdTable();
-		buildMenuBar(cmd);
-		
-		toolBar = new ToolBar(cmd);
-		contentPane.add(toolBar);
-		
-		canvas = new PPaletteCanvas();
-		getContentPane().add(canvas);
-		setBounds(new Rectangle(10,10,WIDTH,HEIGHT));	
-		//canvas.setBounds(10,10,WIDTH,HEIGHT);
+	public ModulePaletteFrame(Controller controller,Connection connection) {
+		super(controller,connection,"OME Chains Palette");
 		setIconImage(controller.getIcon()); 
+		getCanvas().setConfig(connection,controller);
+		menuBar.setLoginsDisabled(true);
+		toolBar.setLoggedIn(connection.getUserName());
 		show();	
+		getCanvas().scaleToSize();
+	}
+	
+	public Rectangle getInitialBounds() {
+		return new Rectangle(10,10,WIDTH,HEIGHT);
+	}
+	
+	public PCanvas createCanvas(Connection connection) {
+		return new PPaletteCanvas();
+	}
+
+	public PPaletteCanvas getCanvas() {
+		return (PPaletteCanvas) canvas;
 	}
 	
 	private void buildMenuBar(CmdTable cmd) {
 		menuBar = new MenuBar(cmd);
 		setJMenuBar(menuBar);
 	}
-	
-	/**
-     * Called by the Controller object after the connection has 
-	 * completed the database initialization
-     * 
-     * @param v  true if the login was successsful, otherwise false
-     * @param connection the databse connection object.
-	 */
-	public void setLoggedIn(boolean v,Connection connection) {
-		menuBar.setLoginsDisabled(v);
-		if (v == true) {
-			canvas.setConnection(connection);
-			toolBar.setLoggedIn(connection.getUserName());
 
-			/*
-			 * 
-			 * This doesn't quite work. How can I find out how much space the 
-			 * node/layer takes and resize accordingly?
-			 PBounds b = canvas.getBufferedBounds();
-			double canvasRatio = b.getWidth()/b.getHeight();
-			int mywidth = (int) (canvasRatio*HEIGHT);
-
-			setSize(mywidth,HEIGHT+toolBar.getHeight());
-			invalidate(); */
-			canvas.scaleToSize();
-		}
-		else {
-			toolBar.setLoggedOut();
-			canvas.logout();
-			connection = null;
-		}
+	protected void layoutFrame() {
+		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
+		CmdTable cmd = controller.getCmdTable();
+		buildMenuBar(cmd);
+		
+		toolBar = new ToolBar(cmd);
+		contentPane.add(toolBar);
+		
+		contentPane.add(canvas);
 	}
 }
 	
