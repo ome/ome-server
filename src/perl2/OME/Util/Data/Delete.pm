@@ -111,7 +111,7 @@ And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
 Options:
-  -n, --noop        Don't delete anything, just report what would be deleted.
+  -n, --noop        Do not delete anything, just report what would be deleted.
   -d, --delete      Actually delete the MEX(es).  Nothing will happen unless -n or -d is specified.  
   -m, --module      Delete all MEXes for the specified module (ID if numeric, otherwise by name).  
   -f, --keep-files  Keep orphaned OMEIS Files.  
