@@ -369,7 +369,7 @@ my $DumpSoftWorxExtHeader = $OME->binPath.'DumpSoftWorxExHeader';
 my $DumpSoftWorxStats = $OME->binPath.'DumpSoftWorxStats';
 my ($XYZinfo,$XYinfo,$Wavelengths);
 my ($zSection,$waveNum,$timePoint);
-my $datasetPath = $self->{Path}.$self->{Name};
+my $datasetPath = "'".$self->{Path}.$self->{Name}."'";
 print STDERR "SoftWorx.pm:  Importing $datasetPath\n";
 my $command;
 
