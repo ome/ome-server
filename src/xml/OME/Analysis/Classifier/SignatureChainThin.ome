@@ -70,8 +70,8 @@
 			
 		<!-- Chebyshev Fourier arc into Statistics -->
 		<Node
-			NodeID="ChebyshevFourierTransform" 
-			ProgramName="Chebyshev Fourier Transform"/>
+			NodeID="ChebyshevFourierStatistics" 
+			ProgramName="Chebyshev Fourier Statistics"/>
 			
 		<!-- Chebyshev arc into Statistics and Signatures -->
 		<Node
@@ -186,7 +186,7 @@
 		<Link
 			FromNodeID="FrequencySpace->PixelsPlaneSlice"
 			FromOutputName="Pixels Plane Slice"
-			ToNodeID="ChebyshevFourierTransform"
+			ToNodeID="ChebyshevFourierStatistics"
 			ToInputName="Pixels Plane Slice"/>
 			
 		<!-- Chebyshev arc into Statistics -->
