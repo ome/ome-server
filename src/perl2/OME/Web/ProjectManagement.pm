@@ -177,7 +177,7 @@ sub print_form {
 	my $text = $cgi->startform .
 	           $htmlFormat->formChange("project",$project,$user) .
 			   $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
-			   $text .= $self->makeDatasetListings($project) .
+			   $self->makeDatasetListings($project) .
 			   $cgi->endform;
 	
 	return $text;
