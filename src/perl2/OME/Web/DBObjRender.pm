@@ -38,8 +38,9 @@
 package OME::Web::DBObjRender;
 
 use strict;
-use vars qw($VERSION);
 use OME;
+our $VERSION = $OME::VERSION;
+
 use OME::Session;
 use OME::Web;
 
@@ -512,11 +513,14 @@ sub getSearchFields {
 	my %searchFields;
 	my $q = new CGI;
 	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$fieldNames;
+	my $size;
 	foreach my $accessor ( @$fieldNames ) {
 		if( $fieldRefs{ $accessor } ) {
 			$searchFields{ $accessor } = $proto->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor );
 		} else {
-			$searchFields{ $accessor } = $q->textfield( -name => $formal_name."_".$accessor , -size => '5' );
+			if( $accessor eq 'id' ) { $size = 5; }
+			else { $size = 8; }
+			$searchFields{ $accessor } = $q->textfield( -name => $formal_name."_".$accessor , -size => $size );
 		}
 	}
 
@@ -526,7 +530,7 @@ sub getSearchFields {
 
 =head2 getRefSearchField
 
-	# get an html form element that will allow searches to $type
+	# get an html form element that will allow searches to $to_type
 	my $searchField = OME::Web::DBObjRender->getRefSearchField( $from_type, $to_type, $accessor_to_type );
 
 the types may be a DBObject name ("OME::Image"), an Attribute name
@@ -554,7 +558,7 @@ sub getRefSearchField {
 	$searchOn = '.Name' if( $to_package->getColumnType( 'Name' ) );
 
 	my $q = new CGI;
-	return $q->textfield( -name => $from_formal_name."_".$accessor_to_type.$searchOn , -size => '5' );
+	return $q->textfield( -name => $from_formal_name."_".$accessor_to_type.$searchOn , -size => 6 );
 }
 
 =head2 _getSpecializedRenderer
