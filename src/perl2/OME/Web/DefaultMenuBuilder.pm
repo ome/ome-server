@@ -197,8 +197,11 @@ sub __getMenuEntryOfCurrentClass {
 	my $web_instance = $self->__getWebInstance();
 	my $web_class    = $self->__getWebClass();
 	my $q = $web_instance->CGI();
-	
-	my @menu_entries = grep( $_->{web_class} eq $web_class, @MENU );
+
+	my @menu_entries = grep( (
+			defined $_->{web_class} and 
+			$_->{web_class} eq $web_class),
+		@MENU );
 	return $menu_entries[0] if scalar( @menu_entries ) eq 1;
 	
 	foreach my $entry ( @menu_entries ) {
@@ -255,7 +258,7 @@ sub __processElement {
 	# LINK
 	} elsif ($menu_element->{'type'} eq 'link') {
 		# Pick CSS class
-		if ($current_menu_entry eq $menu_element) {
+		if (defined $current_menu_entry and $current_menu_entry eq $menu_element) {
 			$css_class = 'ome_main_menu_link_active';
 		} else {
 			$css_class = 'ome_main_menu_link';
