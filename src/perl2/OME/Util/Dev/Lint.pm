@@ -66,7 +66,7 @@ sub getCommands {
       };
 }
 
-
+sub uc_help { return shift->untangle_chains_help( @_ ); }
 sub untangle_chains_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
