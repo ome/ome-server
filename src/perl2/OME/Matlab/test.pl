@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 # This script makes a connection to the MATLAB Engine and trys to use the MATLAB engine
 # to compute 4x8. If the answer is not 32 something went wrong.
 
@@ -33,15 +33,18 @@
 #
 #-------------------------------------------------------------------------------
 
-#use Matlab;
+use strict;
 use OME::Matlab;
 
 print "Trying to compute 4x8 using MATLAB ...\n";
 my $x = OME::Matlab::Array->newDoubleScalar(4);
 my $engine = OME::Matlab::Engine->open();
 
-die "Test Failed. Perl Matlab API is incorrectly installed. The MATLAB engine does not". 
-	" start." if $engine == undef;
+if (not defined $engine) {
+	print STDERR "Test Failed.\n Perl Matlab API is incorrectly installed.\n".
+				 "The MATLAB engine does not start.\n";
+	exit (-1);
+}
 
 $engine->putVariable('x',$x);
 $engine->eval('y = x .* 8;');
@@ -52,8 +55,13 @@ print "    Order:  ",$y->order(),"\n";
 print "    Dims:   ",join('x',@{$y->dimensions()}),"\n";
 print "    Values: (",join(',',@{$y->getAll()}),")\n";
 
-die "Test Failed. Perl Matlab API is incorrectly installed. MATLAB ran but ".
-	"gave incorrect results." unless
-	( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->dimensions()->[0] eq 1) && ($y->dimensions()->[1] eq 1) && ($y->getAll()->[0] eq 32)  );
-
-print "Test Passed. Perl Matlab API is correctly installed. \n";
+if ( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->dimensions()->[0] eq 1) && ($y->dimensions()->[1] eq 1) && ($y->getAll()->[0] eq 32)  ) {
+	print "Test Passed. Perl Matlab API is correctly installed.\n";
+	$engine->close();
+	exit (1);
+} else {
+	print STDERR "Test Failed.\n Perl Matlab API is incorrectly installed.\n".
+				 "The MATLAB enigne ran but gave incorrect results.";
+	$engine->close();
+	exit (-1);		 
+}
