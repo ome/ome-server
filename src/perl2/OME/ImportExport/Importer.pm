@@ -339,9 +339,13 @@ sub store_image_metadata {
 
     #$name = $href->{'Image.Name'}.".ori";
     #$path = $repository->Field("path");
-    $name = $href->{'Image.Name'};
-    $path = $name . ".ori";
     #$self->{realpath} = $path.$name;
+
+    $name = $href->{'Image.Name'};
+    # DC - This is just a dummy filename; since the real one depends
+    # on the image ID, we can't create it until the image row is in
+    # the database.
+    $path = "dummy.ori";
     $guid = $self->{config}->mac_address;
     
     my $recordData = {'name' => $name,
@@ -360,6 +364,11 @@ sub store_image_metadata {
 	$status = "Can\'t create new image";
 	return $status;
     }
+
+    # Now, create the real filename.
+    $path = $image->id()."-".$name.".ori";
+    $image->path($path);
+    $image->writeObject();
 
     $self->{image} = $image;
     my $imageID = $image->id();
