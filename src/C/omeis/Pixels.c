@@ -207,8 +207,8 @@ int ret;
 			return (-10);
 	}
 		myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
-		myPixels->planeInfos = (planeInfo *) ( (pixHeader *) mmap_info + sizeof(pixHeader));
-		myPixels->stackInfos = (stackInfo *) ( (pixHeader *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+		myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
+		myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
 	}
 
 	
