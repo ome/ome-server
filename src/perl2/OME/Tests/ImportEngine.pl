@@ -5,6 +5,13 @@ use OME::Session;
 use OME::Factory;
 use OME::ImportEngine::ImportEngine;
 
+use Getopt::Long;
+Getopt::Long::Configure("bundling");
+
+my $reuse = '';
+
+GetOptions('reimport|r!' => \$reuse);
+
 my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
 my $factory = $session->Factory();
@@ -14,7 +21,10 @@ if( scalar @ARGV eq 0 ) {
 	exit -1;
 }
 
+my %opts = (session => $session);
+$opts{AllowDuplicates} = 1 if $reuse;
+
 print "Importing @ARGV\n";
 OME::ImportEngine::ImportEngine->
-  importFiles(session => $session,
+  importFiles(%opts,
               \@ARGV);
