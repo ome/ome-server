@@ -371,6 +371,9 @@ sub execute {
 
     # Set our installation home
     $INSTALL_HOME = '/tmp';
+	
+	# Store our IWD so we can get back to it later
+	my $iwd = getcwd;
     
     # chdir into our INSTALL_HOME	
     chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
@@ -457,6 +460,8 @@ sub execute {
 
 		exit(1) unless $y_or_n;
 	}
+
+	chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
 	print "\n";  # Spacing
 
