@@ -768,7 +768,7 @@ sub findObjectsLike {
         # Only add an explicit LIKE operator if the caller didn't
         # specify one on their own.
         $criteria->{$key} = ['LIKE',$criteria->{$key}]
-          if (ref($criteria->{$key}) ne 'ARRAY' and $key ne '__limit' and $key ne '__offset');
+          if (ref($criteria->{$key}) ne 'ARRAY' and $key ne '__limit' and $key ne '__offset' and $key ne '__order');
     }
 
     if (defined $columns_wanted) {
@@ -800,7 +800,7 @@ sub countObjectsLike {
         # Only add an explicit LIKE operator if the caller didn't
         # specify one on their own.
         $criteria->{$key} = ['LIKE',$criteria->{$key}]
-          if (ref($criteria->{$key}) ne 'ARRAY' and $key ne '__limit' and $key ne '__offset');
+          if (ref($criteria->{$key}) ne 'ARRAY' and $key ne '__limit' and $key ne '__offset' and $key ne '__order');
     }
 
     return $self->countObjects($class,$criteria);
