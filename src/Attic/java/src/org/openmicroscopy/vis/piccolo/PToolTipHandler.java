@@ -66,8 +66,8 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 * 
 	 */
 	protected static double 	SCALE_THRESHOLD=0.8;
-	protected static Color BORDER_COLOR = new Color(102,102,153);
-	protected static Color FILL_COLOR = new Color(153,153,204);
+	public static Color BORDER_COLOR = new Color(102,102,153);
+	public static Color FILL_COLOR = new Color(153,153,204);
 	protected PCamera camera;
 	
 	
