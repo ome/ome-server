@@ -93,9 +93,9 @@ sub _takeAction {
 		$self->Session()->commitTransaction();
 	}
 	
-	my @image_ids = $q->param( 'images_to_add' );
-	if( @image_ids ) {
-		OME::Tasks::DatasetManager->addImages( \@image_ids );
+	my $image_ids = $q->param( 'images_to_add' );
+	if( $image_ids ) {
+		OME::Tasks::DatasetManager->addImages( [ split( m',', $image_ids ) ] );
 	}
 }
 
