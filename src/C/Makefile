@@ -111,14 +111,17 @@ cgrayce2:
 omeis2:
 	$(MAKE) -C omeis
 
-# extractBinData and insertBinData added by Josiah 6/6/3
-# I think they could be cleaned up, but I don't know how and don't have time now.
-# If anyone sees this, feel free to clean them up and erase this message.
-extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData -lz -lbz2 -ltiff
+base64.o: base64.c base64.h
+	$(CC) $(CFLAGS) -c base64.c
 
-insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData -lz -lbz2 -ltiff
+b64z_lib.o: b64z_lib.c b64z_lib.h
+	$(CC) $(CFLAGS) -c b64z_lib.c
+
+extractBinData: extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c -o extractBinData -lz -lbz2 -ltiff
+
+insertBinData: insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c  -o insertBinData -lz -lbz2 -ltiff
 
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -o maxIntensity -ltiff -lm
