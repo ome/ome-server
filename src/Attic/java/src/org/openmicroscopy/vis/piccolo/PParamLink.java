@@ -124,17 +124,25 @@ public class PParamLink extends  PLink {
 	
 	protected void setLine() {
 		double theta;
-		reset();
-		moveTo(xstart,ystart);
-		lineTo(xend,yend);
-			
+		super.setLine();
+		
 		if ( start instanceof PFormalInput) {
-			theta = getAngle(xend,yend,xstart,ystart);
-			drawLinkEnd(xstart,ystart,theta);
+			// in this case, we started at the input and drew back to output
+			// arrow should go from point 1-point 0
+			Point2D first = (Point2D) points.get(1);
+			Point2D second = (Point2D) points.get(0);
+			theta = getAngle((float) first.getX(),(float)first.getY(),
+						(float)second.getX(),(float)second.getY());
+	
+			drawLinkEnd((float) second.getX(),(float)second.getY(),theta);
 		}
 		else {
-			theta = getAngle(xstart,ystart,xend,yend);
-			drawLinkEnd(xend,yend,theta);
+			int n = points.size();
+			Point2D first = (Point2D) points.get(n-2);
+			Point2D second = (Point2D) points.get(n-1);
+			theta = getAngle((float) first.getX(),(float)first.getY(),
+					(float)second.getX(),(float)second.getY());
+			drawLinkEnd((float) second.getX(),(float)second.getY(),theta); 
 		}
 	}
 

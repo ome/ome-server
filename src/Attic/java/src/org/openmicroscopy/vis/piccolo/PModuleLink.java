@@ -79,6 +79,8 @@
  	
 	private void setEndPoint() {
 		Point2D point = getEndLinkTarget().getCenter();
+		//System.err.println("setting end point in module link..");
+		//System.err.println("point # ..."+pointCount);
 		setEndCoords((float) point.getX(),(float) point.getY());
 	}
 	
@@ -93,14 +95,24 @@
 		else if (node == end)
 			setEndPoint();
 	}
+	
+	public void setIntermediatePoint(float x,float y) {
+		System.err.println("setting intermediate point in Module Link..");
+		System.err.println("point # "+pointCount+" is "+x+","+y);
+		super.setIntermediatePoint(x,y);
+	}
 		
 	protected void setLine() {
-				
-		reset();
-		moveTo(xstart,ystart);
-		lineTo(xend,yend);
-		double theta = getAngle(xstart,ystart,xend,yend);
-		drawLinkEnd(xend,yend,theta);
+			
+
+		super.setLine();
+		int n = points.size();
+		Point2D start = (Point2D) points.get(n-2);
+		Point2D end = (Point2D) points.get(n-1);
+		
+		double theta = getAngle((float) start.getX(),(float)start.getY(),
+			(float)end.getX(),(float)end.getY());
+		drawLinkEnd((float) end.getX(),(float)end.getY(),theta);
 	}
 	
 	protected PModule getStart() {
