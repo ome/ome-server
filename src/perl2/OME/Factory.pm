@@ -741,7 +741,7 @@ sub findObjectsLike {
         # Only add an explicit LIKE operator if the caller didn't
         # specify one on their own.
         $criteria->{$key} = ['LIKE',$criteria->{$key}]
-          if (ref($criteria->{$key}) ne 'ARRAY');
+          if (ref($criteria->{$key}) ne 'ARRAY' and $key ne '__limit' and $key ne '__offset');
     }
 
     if (defined $columns_wanted) {
