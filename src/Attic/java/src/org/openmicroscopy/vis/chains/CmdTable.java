@@ -45,6 +45,7 @@ package org.openmicroscopy.vis.chains;
 import java.util.Hashtable;
 import java.awt.event.*;
 
+
 /** 
  * <p>Mapping of functionality to code via named strings. Used to separate out
  *  named actions from the code that handles them, thus reducing redundancy in 
@@ -98,6 +99,12 @@ public class CmdTable {
 				controller.saveChain();
 			}
 		});
+		
+		actionMap.put("view results",new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.newViewResults();
+			}
+		});
 	}	
 	
 	/**
@@ -108,4 +115,6 @@ public class CmdTable {
 	public ActionListener lookupActionListener(String key) {
 		return (ActionListener)actionMap.get(key);
 	}
+	
+	
 }
