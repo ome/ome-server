@@ -183,11 +183,11 @@ sub newRow {
     my $granularity = $self->granularity();
     $data->{analysis_id} = $analysis;
     if ($granularity eq 'D') {
-        $data->{dataset_id} = $target->id();
+        $data->{dataset_id} = ref ($target) ? $target->id() : $target;
     } elsif ($granularity eq 'I') {
-        $data->{image_id} = $target->id();
+        $data->{image_id} = ref ($target) ? $target->id() : $target;
     } elsif ($granularity eq 'F') {
-        $data->{feature_id} = $target->id();
+        $data->{feature_id} = ref ($target) ? $target->id() : $target;
     }
     return $self->Session()->Factory()->newObject($pkg,$data);
 }
