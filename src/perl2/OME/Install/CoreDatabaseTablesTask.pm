@@ -215,22 +215,54 @@ sub get_db_version {
 }
 
 sub update_database {
-my $version = shift;
-my $factory = OME::Factory->new();
-my $dbh = $factory->obtainDBH();
-my $delegate = OME::Database::Delegate->getDefaultDelegate();
+    my $version = shift;
+    my $session = OME::Session->bootstrapInstance();
+    my $factory = $session->Factory();
+    my $dbh = $factory->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
-    my @files = glob ("update/$version/pre/*");
-    return (0) unless scalar @files > 0;
-    foreach my $file (@files) {
-        if ($file =~ /\.sql$/) {
-            `psql -f $file ome`;
-        } elsif ($file =~ /\.eval$/) {
-            scalar (eval `cat $file`) or croak "eval of file $file did not return true";
+    while (defined $version) {
+        my @files = glob ("update/$version/pre/*");
+        unless (scalar(@files) > 0) {
+            print "  \\_ ", BOLD, "ERROR", RESET,
+              " Cannot find upgrade scripts for database version $version.\n";
+            return 0;
         }
+
+        print "  \\_ Upgrading database version $version\n";
+        undef $version;
+
+        foreach my $file (@files) {
+            if ($file =~ /^README/) {
+                next;
+            } elsif ($file =~ /\.sql$/) {
+                eval { `psql -f $file ome` };
+
+                if ($@) {
+                    print BOLD, "[FAILURE]", RESET, ".\n";
+                    croak $@;
+                }
+            } elsif ($file =~ /\.eval$/) {
+                my $result = scalar (eval `cat $file`);
+
+                # If there was an error, pass it out
+                if ($@) {
+                    print BOLD, "[FAILURE]", RESET, ".\n";
+                    croak $@;
+                }
+
+                # If the script did not return true, throw an error
+                unless ($result) {
+                    print BOLD, "[FAILURE]", RESET, ".\n";
+                    croak "eval of file $file did not return true";
+                }
+            }
+        }
+
+        $factory->commitTransaction();
     }
-    $factory->commitTransaction();
-    $factory->closeFactory();
+
+    $session->finishBootstrap();
     return (1);
 }
 
@@ -712,10 +744,10 @@ sub execute {
         if ($db_db_version ne $DB_VERSION) {
             print "  Updating to $DB_VERSION.\n";
             $retval = update_database($db_db_version);
-            print BOLD, "[FAILURE]", RESET, ".\n"
+            print "  \\_ ", BOLD, "[FAILURE]", RESET, ".\n"
                 and croak "Unable to update existing database, see $LOGFILE_NAME for details."
                 unless $retval;
-            print BOLD, "[SUCCESS]", RESET, ".\n";
+            print "  \\_ ", BOLD, "[SUCCESS]", RESET, ".\n";
         } else {
             print "  Database is current.\n";
         }
