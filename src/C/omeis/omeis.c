@@ -282,7 +282,7 @@ char **cgivars=param;
 		case M_DELETEPIXELS:
 			if (!ID) return (-1);
 
-			if (! (thePixels = GetPixelsRep (ID,'r',iam_BigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'i',iam_BigEndian)) ) {
 				OMEIS_ReportError (method, "PixelsID", ID, "GetPixelsRep failed.");
 				return (-1);
 			}
