@@ -87,6 +87,12 @@ my $menuText = "DB Detail";
 sub getMenuText {
 	my $self = shift;
 	return $menuText unless ref($self);
+
+	my $specializedDetail;
+	return $specializedDetail->getMenuText( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
+
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
 	return "$common_name Detail";
@@ -99,6 +105,10 @@ sub getMenuText {
 
 sub getPageTitle {
 	my $self = shift;
+	my $specializedDetail;
+	return $specializedDetail->getPageTitle( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
 	my $object = $self->_loadObject();
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
     return "$common_name: ".OME::Web::DBObjRender->getObjectLabel($object);
@@ -107,6 +117,12 @@ sub getPageTitle {
 
 sub getPageBody {
 	my $self = shift;
+
+	my $specializedDetail;
+	return $specializedDetail->getPageBody( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
+
 	my $q = $self->CGI();
 
 	my $object = $self->_loadObject();
@@ -145,23 +161,26 @@ sub getPageBody {
 	);
 
 	$html .= $q->endform();
-		
+
+	$self->_takeAction( );
+
 	return ('HTML', $html);
 }
 
+sub _takeAction { 
+# virtual method
+}
 
 sub _getDBObjDetail {
 	my ($self, $object) = @_;
+
+	my $specializedDetail;
+	return $specializedDetail->_getDBObjDetail( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
+
 	my $q = $self->CGI();
 
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
-
-	my $display_type = "Displaying ".
-		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
-				   $common_name ) :
-			$common_name
-		);
 	my $table_label = $q->font( { -class => 'ome_header_title' },
 		OME::Web::DBObjRender->getObjectLabel($object) );
 
@@ -171,13 +190,14 @@ sub _getDBObjDetail {
 	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames );
 	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
 
-	
+	%record = %{ $self->_overrideRecord( \%record ) };
+
 	$obj_table .= $q->table( { -class => 'ome_table' },
 		$q->caption( $table_label ),
 		$q->Tr(
 			# table descriptor
 			$q->td( { -class => 'ome_td', -align => 'right', -colspan => 2 }, 
-				$q->span( { -class => 'ome_widget' }, $display_type )
+				$self->_tableDescriptor( $object )
 			), 
 		),
 		map(
@@ -192,9 +212,36 @@ sub _getDBObjDetail {
 	return $obj_table;
 }
 
+sub _tableDescriptor {
+	my ($self, $object) = @_;
+	my $q = $self->CGI();
+
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $object );
+
+	my $display_type = "Displaying ".
+		( $ST ?
+			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
+				   $common_name ) :
+			$common_name
+		);
+
+	return $q->span( { -class => 'ome_widget' }, $display_type )
+}
+
+sub _overrideRecord { 
+	my ($self, $record) = @_;
+	return $record;
+}
+
 
 sub _getManyRelations {
 	my ($self, $object) = @_;
+
+	my $specializedDetail;
+	return $specializedDetail->_getManyRelations( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
+
 	my $q = $self->CGI();
 	
 	my @relations;
@@ -237,6 +284,36 @@ sub _loadObject {
 	$self->{__object} = $factory->loadObject( $formal_name, $id )
 		or die "Could not load DBObject $type, id=$id";
 	return $self->{__object};
+}
+
+=head2 __specialize
+
+	my $specializedPackage = $self->__specialize();
+	
+returns a specialized package (if one exists) for displaying a
+DBObject or Attribute in detail.
+returns undef if a specialized prototype does not exist or if it was
+called with with a specialized prototype.
+
+=cut
+
+sub __specialize {
+	my $self = shift;
+	my $object = $self->_loadObject();
+	my ($package_name, $common_name, $formal_name, $ST) = 
+		$self->_loadTypeAndGetInfo( $object );
+
+	# construct specialized package name
+	my $specializedPackage = $formal_name;
+	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
+	$specializedPackage = "OME::Web::DBObjDetail::__".$specializedPackage;
+
+	# obtain package
+	eval( "use $specializedPackage" );
+	return $specializedPackage->new( CGI => $self->CGI() )
+		unless $@ or ref( $self ) eq $specializedPackage;
+
+	return undef;
 }
 
 
