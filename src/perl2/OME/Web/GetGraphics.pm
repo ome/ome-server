@@ -144,6 +144,7 @@ sub _getJSData {
 
 	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
 		or die "Could not retreive Image from ImageID=$ImageID\n";
+	my $pixels = $image->DefaultPixels();
 
 	# get Dimensions from image and make them readable
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path)=$imageManager->getImageDim($image);
@@ -178,11 +179,16 @@ sub _getJSData {
 	$JSinfo->{ Stats }				= $JSstats;
 	$JSinfo->{ channelLabels }		= '{'.join(',',@JSchannelLabels).'}';
 	$JSinfo->{ Dims }				= '['.join (',', @$dims).']';
-	$JSinfo->{ CGI_URL }			= '/cgi-bin/OME_JPEG';
-	$JSinfo->{ CGI_optionStr }		= '&Path='.$path;
-# These next two lines mark the transition to the image server
-#$JSinfo->{ CGI_URL }			= '/cgi-bin/omeis';
-#$JSinfo->{ CGI_optionStr }		= '&Format=JPEG&PixelsID='.$image->DefaultPixels()->PixelsID();
+	# transition to the image server
+	if( $pixels->Repository()->IsLocal() ) {
+		$JSinfo->{ CGI_URL }        = '/cgi-bin/OME_JPEG';
+		$JSinfo->{ CGI_optionStr }  = '&Path='.$path;
+		$JSinfo->{ use_omeis }     = 'false';
+	} else {
+		$JSinfo->{ CGI_URL }       = $pixels->Repository()->ImageServerURL();
+		$JSinfo->{ CGI_optionStr } = '&Method=Composite&PixelsID='.$pixels->PixelsID();
+		$JSinfo->{ use_omeis }     = 'true';
+	}
 	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
 
 	###############
@@ -230,7 +236,8 @@ sub BuildSVGviewer {
 	my $CBW				   = $JSinfo->{ CBW };	# known to the svg viewer as WBW - when the svg viewer was developed, ChannelNumber was called Wavenumber. the svg hasn't been updated to reflect this change in nomenclature.
 	my $RGBon			   = $JSinfo->{ RGBon };
 	my $toolBoxScale	   = $JSinfo->{ toolBoxScale };
-	
+	my $use_omeis          = $JSinfo->{ use_omeis };
+
 	my $overlayData		   = $self->_getJSOverlay();
 	my $centroidData	   = $overlayData->{ centroids };
 	my $featureData		   = $overlayData->{ features };
@@ -323,7 +330,7 @@ $SVG .= <<ENDSVG;
 			var windowControllers	 = new Array();
 
 			image = new OMEimage($ImageID,Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
-			                     "$SaveDisplayCGI_URL", $CBW, $RGBon, $isRGB);
+			                     "$SaveDisplayCGI_URL", $CBW, $RGBon, $isRGB, $use_omeis);
 			image.realize( svgDocument.getElementById("image") );
 			
 			var actions = new Array();
@@ -338,7 +345,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "stats.toolBox.hide()", 200 );
 			supplimentaryWindows.push('Statistics');
 			windowControllers['Statistics'] = stats;
-			
+
 			Scale.setClassData( image, channelLabels );
 			redScale = new Scale('Red', toolboxLayer);
 			blueScale = new Scale('Blue', toolboxLayer);
@@ -445,7 +452,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "xyPlaneControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
 //	this next line loads every plane in the image
 //			setTimeout( "image.prefetchImages()", 0 );
-
+			xyPlaneControls.setImageURL(image.getImageURL());
 		}
 		
 
@@ -456,7 +463,8 @@ $SVG .= <<ENDSVG;
 			xyPlaneControls.zSlider.setValue(theZ);
 			xyPlaneControls.zSlider.setLabel(null, null, (theZ + 1) + "/" + image.getDimZ() );
 			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
-			image.updatePic(theZ,theT);
+			var image_url = image.updatePic(theZ,theT);
+			xyPlaneControls.setImageURL(image_url);
 		}
 
 		// newT has range of 0 to T-1
@@ -466,9 +474,10 @@ $SVG .= <<ENDSVG;
 			xyPlaneControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + image.getDimT() +")" );
 			
 			if( overlayManager) overlayManager.updateIndex( theZ, theT );
-			image.updatePic(theZ,theT);
+			var image_url = image.updatePic(theZ,theT);
 			Scale.updateScaleDisplay(theT);
 			stats.updateStats(theT);
+			xyPlaneControls.setImageURL(image_url);
 		}
 				
 	]]></script>
