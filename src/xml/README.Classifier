@@ -35,6 +35,7 @@ ome import OME/Analysis/Statistics/EdgeStatistics.ome
 ome import OME/Analysis/Statistics/FeatureStatistics.ome
 ome import OME/Analysis/Statistics/HaralickFeatures.ome
 ome import OME/Analysis/Statistics/ZernikeMoments.ome
+ome import OME/Analysis/Statistics/ChebyshevStatistics.ome
 ---
 
 If you want the Signture Chain also import
