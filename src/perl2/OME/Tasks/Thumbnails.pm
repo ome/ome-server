@@ -128,7 +128,8 @@ sub generateOMEimage{
 	}
    	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
 
-    	my $jpg_image=$self->writeOMEimage($theZ,$theT);
+	my $jpg_image=$self->writeOMEimage($theZ,$theT);
+
 	return $jpg_image;
 }
 
@@ -271,7 +272,7 @@ sub writeOMEimage{
 
 sub initialize{
 	my $self=shift;
-	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$RGBon,$CBW)=@_;
+	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon)=@_;
 	$self->{path}=$path;
 	$self->{wavelengths}=$wavelengths;
 	$self->{stats}=$stats;
