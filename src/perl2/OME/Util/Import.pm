@@ -171,10 +171,13 @@ sub import {
 		$task->refresh();
 	
 		my $step = $task->last_step();
-		if ($step != $lastStep) {
+		my $message = $task->message();
+		defined $message or $message = "";
+		
+		if ($step != $lastStep ) {
 			print "  $step/",$task->n_steps(),": [",
 			  $task->state(),"] ",
-			  $task->message(),"\n";
+			  $message,"\n";
 			$lastStep = $step;
 		}
 	
