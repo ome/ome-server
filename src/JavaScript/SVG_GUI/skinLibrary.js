@@ -135,11 +135,23 @@ skinLibrary["blankButtonRadius13Highlight"] =
 '<circle cy="13" r="13" fill="white" stroke="none" opacity="0"/>';
 skinLibrary["blankButtonRadius5Highlight"] =
 '<circle cy="5" r="5" fill="white" stroke="none" opacity="0"/>';
-skinLibrary["triangleRight"] =
+skinLibrary["triangleRightWhite"] =
 '<path d="M 0,4 l 6,-4 l -6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
-skinLibrary["triangleLeft"] =
+skinLibrary["triangleLeftWhite"] =
 '<path d="M 0,4 l -6,-4 l 6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
-skinLibrary["triangleDown"] =
+skinLibrary["triangleDownWhite"] =
 '<path d="M 4,0 l -4,6 l -4,-6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
-skinLibrary["triangleUp"] =
+skinLibrary["triangleUpWhite"] =
 '<path d="M 4,0 l -4,-6 l -4,6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>';
+skinLibrary["triangleRightRed"] =
+'<path d="M 0,4 l 6,-4 l -6,-4 Z" fill="coral" stroke="black" stroke-width="1"/>';
+skinLibrary["triangleLeftRed"] =
+'<path d="M 0,4 l -6,-4 l 6,-4 Z" fill="coral" stroke="black" stroke-width="1"/>';
+skinLibrary["triangleDownRed"] =
+'<path d="M 4,0 l -4,6 l -4,-6 Z" fill="coral" stroke="black" stroke-width="1"/>';
+skinLibrary["triangleUpRed"] =
+'<path d="M 4,0 l -4,-6 l -4,6 Z" fill="coral" stroke="black" stroke-width="1"/>';
+skinLibrary["hiddenButton"] =
+'<circle r="1" fill=black/>';
+skinLibrary["hiddenButtonHighlight"] =
+'<circle r="4" fill="cyan"/>';
