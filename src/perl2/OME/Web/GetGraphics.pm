@@ -60,32 +60,49 @@ OME::Web::GetGraphics
 
 =head2 Dependencies
 
- 
-Inherits from:
-	OME::Web
-Non-OME Modules: (or something system defined)
+=over 4
+
+=item Inherits from
+
+OME::Web
+
+=item Non-OME Modules
+
 	CGI
 	GD
 	Benchmark
-OME Modules
-	OME::Web
-	OME::DBObject
-	OME::Image
-	OME::Graphics::GD::Vectors
-	OME::Graphics::GD::Centroids
-	OME::Graphics::JavaScript
-	OME::Graphics::JavaScript::Layer::Vectors
-	OME::Graphics::JavaScript::Layer::Centroids
-	OME::Graphics::JavaScript::Layer::OMEimage
+
+=item OME Modules
+
+=over 4
+
+=item L<OME::Web|OME::Web>
+
+=item L<OME::DBObject|OME::DBObject>
+
+=item L<OME::Image|OME::Image>
+
+=item L<OME::Graphics::GD::Vectors|OME::Graphics::GD::Vectors>
+
+=item L<OME::Graphics::GD::Centroids|OME::Graphics::GD::Centroids>
+
+=item L<OME::Graphics::JavaScript|OME::Graphics::JavaScript>
+
+=item L<OME::Graphics::JavaScript::Layer::Vectors|OME::Graphics::JavaScript::Layer::Vectors>
+
+=item L<OME::Graphics::JavaScript::Layer::Centroids|OME::Graphics::JavaScript::Layer::Centroids>
+
+=item L<OME::Graphics::JavaScript::Layer::OMEimage|OME::Graphics::JavaScript::Layer::OMEimage>
+
+=back
+
+=back
 
 =head2 Function calls to OME Modules
 
 =over 4
 
-=item OME::Factory
-
- 
-loadObject()
+=item L<OME::Factory.loadObject()|OME::Factory/"loadObject()">
 
 =item OME::Graphics::GD::*
 
@@ -95,56 +112,47 @@ Draw()
 getImage()
 imageType()
 
-=item OME::Graphics::JavaScript
+=item L<OME::Graphics::JavaScript.AddLayer()|OME::Graphics::JavaScript/"AddLayer()">
 
- 
-AddLayer()
-Form()
-new()
+=item L<OME::Graphics::JavaScript.Form()|OME::Graphics::JavaScript/"Form()">
+
+=item L<OME::Graphics::JavaScript.new()|OME::Graphics::JavaScript/"new()">
 
 =item OME::Graphics::JavaScript::Layer::*
 
- 
 new()
 
-=item OME::Session
+=item L<OME::Session.DBH()|OME::Session/"DBH()">
 
- 
-DBH()
+=item L<OME::Web.CGI()|OME::Web/"CGI()">
 
-=item OME::Web
+=item L<OME::Web.Factory()|OME::Web/"Factory()">
 
- 
-CGI()
-Factory()
-new()
-Session()
+=item L<OME::Web.new()|OME::Web/"new()">
 
-=back
+=item L<OME::Web.Session()|OME::Web/"Session()">
 
 =head2 Data references to OME Modules 
 
 =over 4
 
-=item OME::Graphics::JavaScript::Layer
-
- 
-X11Colors
+=item L<OME::Graphics::JavaScript::Layer.X11Colors|OME::Graphics::JavaScript::Layer>
 
 =item OME::Graphics::GD::*
 
- 
 image
 
 =back
 
-=head2 ome database tables accessed
+=head2 OME database tables accessed
 
 attributes_image_xyzwt
 
 =head1 Externally referenced functions
 
-C<new()>, C<createOMEPage()>, C<getPageTitle()>, C<contentType()>
+=over 4
+
+=item
 
 =head2 new()
 
@@ -159,11 +167,13 @@ constructor
 I<$self>
 	$self is a OME::Web::GetGraphics object
 
-=item Overrides function in L<OME::Web/"new()">
+=item Overrides function
+
+L<OME::Web/"new()">
 
 =item Uses functions
 
-L<OME::Web/"new()">
+L<OME::Web.new()|OME::Web/"new()">
 
 =back
 
@@ -195,8 +205,11 @@ contentType, content
 
 	contentType is a string. either "HTML" or "IMAGE"
 	content is either an HTML file or an image object from GD::image
+	HTML files are either a main window or layer controls
 
-=item Overrides function in L<OME::Web/"createOMEPage()">
+=item Overrides function
+
+L<OME::Web/"createOMEPage()">
 
 =item Uses functions
 
@@ -228,9 +241,11 @@ sub createOMEPage {
 	if ( $cgi->url_param('DrawLayersControls') ) {
 		return ('HTML',$self->DrawLayersControls());
 	} elsif ( $cgi->url_param('name') ) {
-		return ('IMAGE',$self->DrawGraphics ());
+		return ('IMAGE',$self->DrawGraphics());
+	} elsif ( $cgi->url_param('SVG') ) {
+		return('SVG', '<SVG/>');
 	} else {
-		return ('HTML',$self->DrawMainWindow ());
+		return ('HTML',$self->DrawMainWindow());
 	}
 }
 
@@ -249,7 +264,9 @@ Displays page title
 
 hard-coded string: "Open Microscopy Environment"
 
-=item Overrides function in L<OME::Web/"getPageTitle()">
+=item Overrides function
+
+L<OME::Web/"getPageTitle()">
 
 =item Uses No functions
 
@@ -275,9 +292,13 @@ returns contentType
 
 I<$self->{contentType}>
 
-=item Overrides function in L<OME::Web/"contentType()">
+=item Overrides function
+
+L<OME::Web/"contentType()">
 
 =item Uses No functions
+
+=back
 
 =back
 
@@ -292,9 +313,9 @@ my $self = shift;
 
 =head1 Internally referenced functions
 
-C<DrawMainWindow()>, C<DrawGraphics()>, C<DrawLayersControls()>, C<getJSgraphics()>
-
 =over 4
+
+=item
 
 =head2 DrawMainWindow()
 
@@ -382,7 +403,7 @@ ENDJS
 
 =item Description
 
-Generates an image object using classes inherited from OME::Graphics::GD
+Generates an overlay image for the layers. It uses classes inherited from OME::Graphics::GD
 
 =item Returns
 
@@ -563,6 +584,8 @@ OME::Web::GetGraphics via serve.pl, eventually calling
 
 =back
 
+=back
+
 =cut
 
 # This gets called when the Image window gets made in order to make the JS objects
@@ -605,7 +628,7 @@ sub getJSgraphics {
                                   }];
     my $layerSpec;
 
-    # Don't bother with the image if we're just draing the layer controls.
+    # Don't bother with the image if we're just drawing the layer controls.
     $image = $self->Factory()->loadObject("OME::Image",$ImageID);
     die "Could not retreive Image from ImageID=$ImageID\n"
     	unless defined $image;
