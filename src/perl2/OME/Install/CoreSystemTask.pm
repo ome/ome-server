@@ -57,25 +57,15 @@ my @core_dirs = (
 	name => "base",
 	path => "/OME",
 	description => "Base OME directory",
+	children => ["xml", "bin", "perl2", "cgi", "repository"]
     },
     {
 	name => "temp_base",
 	path => "/var/tmp/OME",
 	description => "Base temporary directory",
+	children => ["lock", "sessions"]
     }
 );
-
-# Populate children (Base OME directory)
-my @children = ("xml", "bin", "perl2", "cgi", "repository");
-foreach my $child (@children) {
-    push (@{$core_dirs[0]{children}}, $child); 
-}
-
-# Populate children (Base temporary directory)
-@children = ("lock", "sessions");
-foreach my $child (@children) {
-    push (@{$core_dirs[1]{children}}, $child); 
-}
 
 # The HTML directories that need to be copied to the basedir
 my @html_core = ("JavaScript", "html", "images");
