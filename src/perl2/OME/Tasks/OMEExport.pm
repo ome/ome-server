@@ -53,7 +53,6 @@ use OME::ImportExport::SemanticTypeExport;
 #use OME::Tasks::ProgramExport;
 #use OME::Tasks::ChainExport;
 use OME::ImportExport::HierarchyExport;
-use OME::ImportExport::InsertFiles;
 use OME::ImportExport::DataHistoryExport;
 
 sub new {
@@ -118,16 +117,15 @@ sub exportFile {
 # CA_doc is blank except for <OME>. I haven't yet figured out why. 
 # until I figure out why, I'm applying the stylesheet via command line.
 # this is a hack - CLI application of the style sheet
-my $tmpFile = $session->getTemporaryFilename();
-$doc->toFile($tmpFile, 1) 
-	or die "Could not write to temp file ('$tmpFile')\n";
-`xsltproc $style_doc_path $tmpFile > $filename`;
-$CA_doc = $parser->parse_file( $filename )
-	or die "Could not parse file ('$tmpFile')\n";
-$session->finishTemporaryFile( $tmpFile );
-# end hack
-
-	$insert->exportFile( $filename, $CA_doc );
+	my $tmpFile = $session->getTemporaryFilename();
+	$doc->toFile($tmpFile, 1) 
+		or die "Could not write to temp file ('$tmpFile')\n";
+	`xsltproc $style_doc_path $tmpFile > $filename`;
+	my $huge_xml_string = OME::Image::Server->exportOMEFile( $filename );
+	open( XML_OUT, "> $filename" );
+	print XML_OUT $huge_xml_string;
+	close( XML_OUT );
+	$session->finishTemporaryFile( $tmpFile );
 
 }
 
