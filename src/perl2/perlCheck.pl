@@ -197,6 +197,7 @@ my @modules = ({
 	repositoryFile => 'XML-LibXML-Common-0.12.tar.gz'
 	},{
 	Name => 'XML::LibXML',
+	checkVersion => \&XML_LibXML_VersionOK,
 	repositoryFile => 'XML-LibXML-1.53.tar.gz',
 	},{
 	Name => 'XML::LibXSLT',
@@ -291,6 +292,12 @@ my $version = shift;
 sub Class_DBI_VersionOK {
 my $version = shift;
 	return (1) if $version == 0.90;
+	return (0);
+}
+
+sub XML_LibXML_VersionOK {
+my $version = shift;
+	return (1) if $version == 1.56;
 	return (0);
 }
 
