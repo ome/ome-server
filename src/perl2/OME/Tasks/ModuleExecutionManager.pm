@@ -134,7 +134,8 @@ new_feature_tag column, respectively, of the module.
 sub createMEX {
     my $class = shift;
     my ($module,$dependence,$target,$iterator_tag,$new_feature_tag) = @_;
-    my $factory = OME::Session->instance()->Factory();
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
 
     Carp::cluck "Undefined module" unless defined $module;
 
@@ -158,6 +159,7 @@ sub createMEX {
                  new_feature_tag => $new_feature_tag,
                  timestamp       => 'now',
                  status          => 'UNFINISHED',
+                 experimenter    => $session->UserState()->experimenter(),
                 });
 
     return $mex;
