@@ -13,6 +13,9 @@
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
+    <copy todir="${build}">
+       <fileset dir="${src}" excludes="**/*.java"/>
+    </copy>
   </target>
 
   <target name="jni">
@@ -142,6 +145,7 @@
     <jar destfile="${jar}/org.openmicroscopy.vis.chains.jar"
       manifest ="${src}/org/openmicroscopy/vis/chains/chains.manifest">
       <fileset dir="build" includes="org/openmicroscopy/vis/**/*.class"/>
+      <fileset dir="build" includes="org/openmicroscopy/vis/**/*.jpg"/>
     </jar>
 
   </target>
