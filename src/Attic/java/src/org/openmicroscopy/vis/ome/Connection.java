@@ -76,8 +76,8 @@ public class Connection {
 				factory = remote.getFactory();
 				modules  = new ModuleList(factory);
 				controller.completeLogin();
-				// dummy
-				modules.dump();
+				// for debugging only
+				//modules.dump();
 				
 			}
 		};
@@ -88,5 +88,13 @@ public class Connection {
 		Attribute user = session.getUser();
 		return new String(user.getStringElement("FirstName")+" " +
 			user.getStringElement("LastName"));
+	}
+	
+	public RemoteModule getModule(int i) {
+		return modules.getModule(i);
+	}
+	
+	public int moduleCount() {
+		return modules.size();
 	}
 }

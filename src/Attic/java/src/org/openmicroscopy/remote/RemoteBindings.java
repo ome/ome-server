@@ -55,6 +55,20 @@ public class RemoteBindings
      * <code>public</code>, it should not be called directly.  The
      * {@link #RemoteBindings} constructor will ensure that this
      * method is called before returning.</p>
+     * 
+     * <p>The hard-wiring of class names into this procedure does not 
+     * mean that any of these classes cannot be subclassed. To extend one 
+     * of these classes, several steps mus be taken:
+     *  <ul><li>The appropriate class must be declared as a subclass
+     *  of one of these classes (which all subclass {@link RemoteOMEObject}).
+     * <li>In the subclass, the call to the appropriate "OME::ClassName" structure
+     * must be associated with the new class via a call to RemoteObject.addClass()".
+     * This call will override the entry in RemoteObject associating the OME Class
+     * with the superclass of the new class.
+     * <li>A "Class.forName()" call for the new class must be made in some 
+     * appropriate spot. One way to do this would be to extend RemoteBindings. 
+     * Alternatively, this call could be made?
+     *  
      */
 
     public static void loadClasses()

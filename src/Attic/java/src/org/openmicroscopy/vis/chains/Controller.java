@@ -68,7 +68,7 @@ public class Controller implements ApplicationController {
 	}
 	
 	public void completeLogin() {
-		mainFrame.setLoggedIn(true,connection.getUserName());
+		mainFrame.setLoggedIn(true,connection);
 	}
 	
 	public void doLogout() {
