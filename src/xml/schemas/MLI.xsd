@@ -122,6 +122,14 @@ In the future, can be used to establish references.
 						</attribute>
 					</complexType>
 				</element>
+				<element name = "ConstantScalar">
+					<annotation>
+						<documentation>Specifies a constant scalar input.</documentation>
+					</annotation>
+					<complexType>
+						<attribute name = "Value" use = "required" type = "string"/>
+					</complexType>
+				</element>
 			</choice>
 		</complexType>
 	</element>

@@ -83,8 +83,9 @@ sub new {
 	# List of functions in this package make matlab global variables from input execution instructions
 	# Keyed by Tag name of elements under <Input>
 	$self->{ _translate_to_matlab } = {
-		PixelsArray => 'Pixels_to_MatlabArray',
-		Scalar		=> 'Attr_to_MatlabScalar',
+		PixelsArray    => 'Pixels_to_MatlabArray',
+		Scalar         => 'Attr_to_MatlabScalar',
+		ConstantScalar => 'Constant_to_MatlabScalar',
 	};
 	
 	# List of package functions to make ome attributes from output execution instructions
@@ -343,6 +344,29 @@ sub Attr_to_MatlabScalar {
 		'Cannot use scalar for input that has count greater than 1. '.scalar( @$input_attr ).' Inputs found. Error when processing \''.$xmlInstr->toString()."'"
 		if scalar( @$input_attr ) > 1;
 	my $value = $input_attr->[0]->$SEforScalar();
+
+	# Place value into matlab
+	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+	my $array = OME::Matlab::Array->newDoubleScalar($value);
+	$array->makePersistent();
+	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->putVariable($matlab_var_name,$array);
+}
+
+=head2 Constant_to_MatlabScalar
+
+Translate an constant into a matlab scalar
+Uses <ConstantScalar>
+
+=cut
+
+sub Constant_to_MatlabScalar {
+	my ( $self, $xmlInstr ) = @_;
+
+	# get constant value
+	my $value = $xmlInstr->getAttribute( 'Value' );
+	die "Could not find Value in input ".$xmlInstr->toString()
+		if not defined $value;
 
 	# Place value into matlab
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
