@@ -515,7 +515,7 @@ sub store_xyz_info {
         $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
     my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
     
-    open (STDOUT_PIPE,$cmd);
+    open (STDOUT_PIPE,$cmd) || return "Failed to execute '$cmd':\n$!\n";
     while (<STDOUT_PIPE>) {
         chomp;
         my @columns = split (/\t/);
