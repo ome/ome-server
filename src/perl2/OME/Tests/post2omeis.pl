@@ -21,8 +21,26 @@ if( $ARGV[0] =~ m/-p|--postImage/ ) {
 		my $pixels = $image->DefaultPixels();
 		print "\tpixelsID = ".postPixels($pixels)."\n";
 	}
+} elsif( $ARGV[0] =~ m/-A|--convertAllPixels/ ) {
+	my @pixelses = $factory->findAttributes("Pixels", ImageServerID => undef);
+	my $pixels;
+	my $pixelsID;
+	foreach $pixels (@pixelses) {
+		if (not $pixels->ImageServerID()) {
+			print "Porting Pixels ID = ".$pixels->ID();
+			$pixelsID = postPixels($pixels);
+			if (not $pixelsID) {
+				print " *** FAILED !!! *** \n";
+			} else {
+				print " OMEIS ID = $pixelsID\n";
+				$pixels->ImageServerID ($pixelsID);
+				$pixels->storeObject();
+				$factory->commitTransaction();
+			}
+		}
+	}
 } else {
-	print "postImage is the only functionality implemented.\n";
+	print "$ARGV[0] is not implemented.\n";
 }
 
 sub postPixels {
