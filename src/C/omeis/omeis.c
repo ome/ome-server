@@ -1338,6 +1338,7 @@ char **cgivars=param;
 		sscanf (theParam,"%llu",&ID);
 	else if (strcmp (method,"NewPixels") &&
 		strcmp (method,"FileInfo") &&
+		strcmp (method,"FileSHA1") &&
 		strcmp (method,"ReadFile") &&
 		strcmp (method,"GetLocalPath") &&
 		strcmp (method,"UploadFile")) {
@@ -1393,6 +1394,46 @@ char **cgivars=param;
 		fprintf (stdout,"%llu\n",thePixels->ID);
 		freePixelsRep (thePixels);
 	}
+
+    else if (!strcmp(method,"PixelsInfo")) {
+        if (!ID) return (-1);
+
+		if (! (thePixels = GetPixels (ID,'r',1)) ) {
+			if (errno) HTTP_DoError (method,strerror( errno ) );
+			else  HTTP_DoError (method,"Access control error - check error log for details" );
+			return (-1);
+		}
+
+		head = thePixels->head;
+
+		HTTP_ResultType ("text/plain");
+		fprintf(stdout,"Dims=%lu,%lu,%lu,%lu,%lu,%hhu\n",
+                head->dx,head->dy,head->dz,head->dc,head->dt,head->bp);
+        fprintf(stdout,"Finished=%hhu\nSigned=%hhu\nFloat=%hhu\n",
+                head->isFinished,head->isSigned,head->isFloat);
+
+		freePixelsRep (thePixels);
+    }
+
+    else if (!strcmp(method,"PixelsSHA1")) {
+        if (!ID) return (-1);
+
+        /*
+         * FIXME: We should actually calculate a SHA-1 here, rather
+         * than just returning the filename.
+         */
+
+        if (! (thePixels = GetPixels(ID,'r',1))) {
+            if (errno) HTTP_DoError(method,strerror(errno));
+            else HTTP_DoError(method,"Access control error - check log for details");
+            return (-1);
+        }
+
+        HTTP_ResultType("text/plain");
+        fprintf(stdout,"%s\n",thePixels->path_rep);
+
+        freePixelsRep(thePixels);
+    }
 
 	else if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
 		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
@@ -1644,6 +1685,51 @@ char **cgivars=param;
 
 		HTTP_ResultType ("text/plain");
 		fprintf (stdout,"Name=%s\nLength=%lu\n",file_name,(unsigned long)fStat.st_size);
+	}
+
+	else if (! strcmp (method,"FileSHA1") ) {
+		OID fileID;
+		char file_path[256];
+		char file_name[256];
+		FILE *fInfo;
+		struct stat fStat;
+
+		if ( (theParam = get_param (param,"FileID")) )
+			sscanf (theParam,"%llu",&fileID);
+		else {
+			HTTP_DoError (method,"FileID must be specified!");
+			return (-1);
+		}
+
+        /*
+         * FIXME: We should actually calculate a SHA-1 here, rather
+         * than just returning the filename.
+         */
+
+		strcpy (file_path,"Files/");
+		if (! getRepPath (fileID,file_path,0)) {
+			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+			HTTP_DoError (method,error_str);
+			return (-1);
+		}
+		
+		if (stat (file_path, &fStat) < 0) {
+			sprintf (error_str,"Could not get information for FileID=%llu",fileID);
+			HTTP_DoError (method,error_str);
+			return (-1);			
+		}
+		
+		strcat (file_path,".name");
+		strcpy (file_name,"");
+		if ( (fInfo = fopen (file_path,"r")) ) {
+			nIO = fread (file_name,1,255,fInfo);
+			fclose (fInfo);
+			if (nIO) file_name[nIO]=0;
+		}
+
+
+		HTTP_ResultType ("text/plain");
+		fprintf (stdout,"%s\n",file_name);
 	}
 
 	else if (! strcmp (method,"ReadFile") ) {
