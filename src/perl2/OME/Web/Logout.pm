@@ -57,12 +57,10 @@ sub getPageTitle {
 
 sub getPageBody {
     my $self = shift;
-print STDERR "\nLogging out...\n\n";
     $self->Manager()->logout($self->Session());
 	$self->setSessionCookie();
 
-	# this will add a script to reload OME::Home 
-	my $body = "<script>top.location.href = top.location.href;</script>";
+	$self->redirect($self->getURL('OME::Web::Home'));
 
     return ('HTML',$body);
 }

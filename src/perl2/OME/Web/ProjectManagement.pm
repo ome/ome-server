@@ -98,7 +98,8 @@ sub getPageBody {
 		# Error or Action
 		unless ($new_name) {
 			# Error
-			$body .= $cgi->p({-class => 'ome_error'}, 'ERROR: Name is a required field.');
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: Name is a required field.');
 		} elsif (($project->name() ne $new_name) and ($p_manager->nameExists($new_name))) {
 			# Error
 			$body .= $cgi->p({-class => 'ome_error'},
@@ -109,11 +110,9 @@ sub getPageBody {
 			$p_manager->change($new_description, $new_name, $project->id());
 
 			# Data
-			$body .= $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
+			$body .= $cgi->p({-class => 'ome_info'},
+				'Save of new project metadata successful.');
 		}
-		
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	} elsif ($action eq 'Remove') {
 		# Action
 		$p_manager->removeDatasets( {
@@ -122,23 +121,16 @@ sub getPageBody {
 		);
 		
 		# Data
-		$body = $cgi->p({-class => 'ome_info'}, "Removed dataset(s) @selected from the project.");
-
-		# Refresh current frame and/or top frame
-		$body .= "<script>top.location.href = top.location.href;</script>"
-			if (scalar($project->datasets())==0);
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
+		$body = $cgi->p({-class => 'ome_info'},
+			"Removed dataset(s) @selected from the project.");
 	} elsif (defined $cgi->param('Add')) {
 		# Action
 		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
 		$p_manager->addToProject($datasets[0]->id(), $project->id());
 		
 		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Added dataset $selected[0] to the project.");
-
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		
+		$body .= $cgi->p({-class => 'ome_info'},
+			"Added dataset $selected[0] to the project.");
 	} 
 	
 	# print form

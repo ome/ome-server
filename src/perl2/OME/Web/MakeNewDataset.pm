@@ -200,9 +200,6 @@ sub getPageBody {
 			# Info
 			$body .= $cgi->p({-class => 'ome_info'},
 				'Creation of dataset successful.');
-
-			# Reload top-frame
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		}
 	}
 	

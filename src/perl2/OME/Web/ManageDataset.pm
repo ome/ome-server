@@ -89,9 +89,6 @@ sub getPageBody {
 		
 		# Data
 		$body .= $cgi->p({-class => 'ome_info'}, "Removed relation(s) @rel_selected [DatasetID, ProjectID].");
-
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	}
 
 	$body .= $self->displayDatasets($datasetManager);
@@ -112,7 +109,7 @@ sub displayDatasets {
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			options_row => ["Remove from Dataset"],
+			options_row => ["Remove from Project"],
 			relations => 1,
 		},
 		$d_manager->getUserDatasets()

@@ -118,8 +118,6 @@ sub getPageBody {
 			# Data
 			$body .= $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
 		}
-
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	} elsif ($cgi->param('Add')) {
 		if ($dataset->locked()) {
 			# Data
