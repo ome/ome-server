@@ -98,8 +98,9 @@ sub getPageBody {
 
 	   			return ('HTML',$txt) unless (defined $rep);
 				$txt="";
-				$datasetManager->createWithoutImage($cgi->param('newDataset'),$cgi->param('description'));
-
+				#$datasetManager->createWithoutImage($cgi->param('newDataset'),$cgi->param('description'));
+				
+				$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
 				$projectManager->add($cgi->param('addDataset'));
