@@ -61,7 +61,8 @@ $XMLRPC::Constants::DO_NOT_USE_XML_PARSER = 1;
 #*********
 
 # Command line options
-my ($show_calls, $show_results, $show_caching, $verbose, $help, $debug);
+my ($show_calls, $show_results, $show_caching, $verbose, $help, $debug,
+    $foreground);
 
 # Command line defaults
 my $port = 8002;
@@ -86,6 +87,7 @@ Options:
 
   -d, --debug			Do not release the controlling terminal (follow
 				output from the daemon [sets --verbose])
+  -f, --foreground              Same as -d, but does not set --verbose
   -v, --verbose			Verbose output (same as -s,-e,-c)
   -h, --help			This message
 
@@ -111,6 +113,7 @@ GetOptions ("s|show-calls", \$show_calls,	# Show call generation
 	    "n|show-caching", \$show_caching,	# Show server caching
 	    "p|port=s", \$port,			# Listening port
 	    "d|debug", \$debug,			# Debug mode
+            "f|foreground", \$foreground,       # Foreground mode
 	    "v|verbose", \$verbose,		# Verbose operation
 	    "t|transport=s", \$transport,	# Transport
 	    "h|help", \$help			# Show usage
@@ -124,6 +127,7 @@ if ((lc($transport) ne "xmlrpc") && (lc($transport) ne "soap") ) {
 }
 
 if ($debug) { $verbose = 1 }
+if ($foreground) { $debug = 1 }
 if ($verbose) { $show_calls = 1; $show_results = 1; $show_caching = 1; }
 if ($show_calls) { $OME::Remote::Dispatcher::SHOW_CALLS = 1 }
 if ($show_results) { $OME::Remote::Dispatcher::SHOW_RESULTS = 1 } 
