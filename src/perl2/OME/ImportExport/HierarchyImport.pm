@@ -1,19 +1,24 @@
 package OME::Tasks::HierarchyImport;
 
 use strict;
+
+use Carp;
+use Log::Agent;
+
 use XML::LibXML;
-use OME::Tasks::AttributeImport;
+
+use OME::LSID;
+use OME::Tasks::AnalysisEngine;
 
 sub new {
 	my $proto  = shift;
 	my $class  = ref($proto) || $proto;
 	my %params = @_;
-	my $debug = $params{debug} || 0;
 	
-	print STDERR $proto . "->new called with parameters:\n\t" . join( "\n\t", map { $_."=>".$params{$_} } keys %params ) ."\n" 
-		if $debug > 1;
+	logdbg "debug", $proto . "->new called with parameters:\n\t" .
+		join( "\n\t", map { $_."=>".$params{$_} } keys %params );
 	
-	my @requiredParams = ('session','semanticTypes','semanticColumns');
+	my @requiredParams = ('session');
 	
 	foreach (@requiredParams) {
 		die ref ($class) . "->new called without required parameter '$_'"
@@ -22,10 +27,9 @@ sub new {
 
 	my $self = {
 		session         => $params{session},
-		debug           => $params{debug} || 0,
-		semanticTypes   => $params{semanticTypes},
-		semanticColumns => $params{semanticColumns},
 		_parser         => $params{_parser},
+		_docIDs         => {},
+		_docRefs		=> {},
 	};
 	
 	if (!defined $self->{_parser}) {
@@ -38,14 +42,13 @@ sub new {
 		$self->{_parser} = $parser;
 	}
 
-	$self->{references} = {};
+	if (!defined $self->{_lsidResolver}) {
+		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
+	}
 
-	# this is for development only! to be replaced w/ id's from db after linkage happens!
-	$self->{idSeq} = 0;
 
 	bless($self,$class);
-	print STDERR ref ($self) . "->new returning successfully\n" 
-		if $debug > 1;
+	logdbg "debug", ref ($self) . "->new returning successfully";
 	return $self;
 }
 
@@ -62,183 +65,376 @@ sub processDOM {
 
 	my $session = $self->{session};
 	my $factory = $session->Factory();
-	my $debug   = $self->{debug};
+	my $lsid = $self->{_lsidResolver};
 	
 	###########################################################################
+	# These hashes store the IDs we've found so far in the document
+	# The first is keyed by LSID, where the value is the corresponding Database ID.
+	# docIDs->{$LSID} => $DBID # IDs for objects in the document
+	# The second stores unresolved references.  The key is also the LSID of the reference.
+	# The LSID points to an array of objects and fields in those objects that made the reference.
+	# docRefs->{$refLSID} => [{Object=>$object, Field=>$field}]    # IDs for references in the document
 	#
-	# Since all commits should wait till the end, I'm storing reference info
-	# in this here hash. It's keyed by [element name].[element xml id] so keys
-	# are guaranteed to be unique. It's valued by DBID. 
-	# Data is imported from top down, which means we when it's time to resolve
-	# a reference, if it's not in this hash, then something's wrong. We can 
-	# work out something more clever when we start working with document groups
-	# and partial imports.
-	#
-	my %references;
-	#
-	###########################################################################
 
-	my $attributeImporter = OME::Tasks::AttributeImport->
-      new(session         => $self->{session},
-          _parser         => $self->{_parser},
-          semanticTypes   => $self->{semanticTypes},
-          semanticColumns => $self->{semanticColumns},
-          debug           => $self->{debug},
-          references      => \%references
-          );
+	my $docIDs = $self->{_docIDs};
+	my $docRefs = $self->{_docRefs};
+	my ($node,$refNode,$object,$objectID,$refObject,$refID);
 
 
-	###########################################################################
 	# process global custom attributes
-	#
-	$attributeImporter->processDOM($root, 'G');
-	#
-	###########################################################################
+	my @CAs;
+	my ($CA,$CAnode);
+	$CAnode = $root->getChildrenByTagName('CustomAttributes')->[0];
+	@CAs = $CAnode ? grep{ $_->nodeType == 1 } $CAnode->childNodes() : () ;
+	foreach $CA ( @CAs ) {
+		$self->importObject ($CA,'G',undef,undef);
+	}
 
-
-	###########################################################################
-	#
 	# process projects
-	#
-	print STDERR "Processing Projects\n"
-		if $debug;
-	foreach my $projectXML ( @{ $root->getElementsByLocalName('Project') } ) {
+	logdbg "debug", ref ($self)."->processDOM: Processing Projects";
+	foreach $node ( @{ $root->getChildrenByTagName('Project') } ) {
+		$self->importObject ($node,undef,undef,undef);
+	}	
 
-		my $groupXML = $projectXML->getElementsByLocalName('GroupRef')->[0];
-		my $group = $references{ 'Group'.$groupXML->getAttribute('GroupID') };
-		my $experimenterXML = $projectXML->getElementsByLocalName('ExperimenterRef')->[0];
-		my $owner = $references{ 'Experimenter'.$groupXML->getAttribute('ExperimenterID') };
-		
-		my $projectData = {
-			name        => $projectXML->getAttribute( 'Name' ),
-			description => $projectXML->getAttribute( 'Description' ),
-			owner_id    => $owner,
-			group_id    => $group
-		};
-		
-		# Actually make a new project here.
-
-		# Record project ID.
-		my $projectID = $attributeImporter->{idSeq}++;
-		$references{ 'Project'.$projectXML->getAttribute('ID') } = $projectID;
-		
-		# show what we've got
-		print STDERR "Project: ".$projectID."\n\t".join( "\n\t",
-			map( $_." => ".$projectData->{$_}, keys %$projectData ) )."\n"
-			if $debug;
-	}
-	#
-	###########################################################################
-	
-
-	###########################################################################
-	#
 	# process datasets
-	#
-	print STDERR "Processing Datasets\n"
-		if $debug;
-	foreach my $datasetXML ( @{ $root->getElementsByLocalName('Dataset') } ) {
+	logdbg "debug", ref ($self)."->processDOM: Processing Datasets";
+	foreach $node ( @{ $root->getChildrenByTagName('Dataset') } ) {
+		$object = $self->importObject ($node,undef,undef,undef);
+		$objectID = $object->id();
 
-		my $groupXML = $datasetXML->getElementsByLocalName('GroupRef')->[0];
-		my $group = $references{ 'Group'.$groupXML->getAttribute('GroupID') };
-		my $experimenterXML = $datasetXML->getElementsByLocalName('ExperimenterRef')->[0];
-		my $owner = $references{ 'Experimenter'.$groupXML->getAttribute('ExperimenterID') };
+		# make connections between datasets and projects
+		logdbg "debug", ref ($self)."->processDOM: Connecting Datasets to Projects";
+		foreach $refNode ( @{ $node->getChildrenByTagName('ProjectRef') } ) {
+			$refID = $refNode->getAttribute('ID');
+			if (exists $docIDs->{$refID}) {
+				$refObject = $docIDs->{$refID};
+			} else {
+				$refObject = $lsid->getLocalObject ($refID);
+			}
+			logdie ref ($self) . "->processDOM: Could not resolve Project ID '$refID'"
+				unless defined $refObject;
+			$factory->maybeNewObject('OME::Project::DatasetMap',
+				{dataset_id => $objectID, project_id => $refObject->id()}
+			);
+		}
 		
-		my $datasetData = {
-			name        => $datasetXML->getAttribute( 'Name' ),
-			description => $datasetXML->getAttribute( 'Description' ),
-			owner_id    => $owner,
-			group_id    => $group,
-# locked may need to be cast into boolean
-			locked      => $datasetXML->getAttribute( 'Locked' )
-		};
-		
-		# Actually make a new dataset here.
+		# Import Dataset CAs
+		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
+		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
+		foreach $CA ( @CAs ) {
+			$self->importObject ($CA,'D',$objectID,undef);
+		}
+	}	
 
-		# Record dataset ID.
-		my $datasetID = $attributeImporter->{idSeq}++;
-		$references{ 'Dataset'.$datasetXML->getAttribute('ID') } = $datasetID;
-
-		# link this dataset to projects it belongs to
-		my $projectRefsXML = $datasetXML->getElementsByLocalName( 'ProjectRef' );
-		my @projectIDs = map( $references{ 'Project'. $_->getAttribute('ProjectID')}, @$projectRefsXML );
-	
-		
-		# show what we've got
-		print STDERR "Dataset: ".$datasetID."\n\t".join( "\n\t",
-			map( $_." => ".$datasetData->{$_}, keys %$datasetData ) )."\n"
-			if $debug;
-		print STDERR "\tBelongs to projects: ".join( ',', @projectIDs ). "\n"
-			if $debug;
-
-		# process custom attributes in the dataset
-			$attributeImporter->processDOM($datasetXML, 'D', $references{ 'Dataset'.$datasetXML->getAttribute('ID') });
-	}
-	#
-	###########################################################################
-
-
-	###########################################################################
-	#
 	# process images
-	#
-	print STDERR "Processing Images\n"
-		if $debug;
-	foreach my $imageXML ( @{ $root->getElementsByLocalName('Image') } ) {
-
-		my $imageData = {
-			name        => $imageXML->getAttribute( 'Name' ),
-			description => $imageXML->getAttribute( 'Description' ),
-			image_guid  => $imageXML->getAttribute( 'ID' ),
-# might need to do type conversion on CreationDate
-			created     => $imageXML->getAttribute( 'CreationDate' )
-		};
-		
-		# Actually make a new image here.
-
-		# Record image ID.
-		my $imageID = $attributeImporter->{idSeq}++;
-		$references{ 'Image'.$imageXML->getAttribute('ID') } = $imageID;
-
-		# link this image to datasets it belongs to
-		my $datasetRefsXML = $imageXML->getElementsByLocalName( 'DatasetRef' );
-		my @datasetIDs = map( $references{ 'Dataset'. $_->getAttribute('DatasetID')}, @$datasetRefsXML );
+	logdbg "debug", ref ($self)."->processDOM: Processing Images";
+	my ($importDataset,$importAnalysis);
+	foreach my $node ( @{ $root->getChildrenByTagName('Image') } ) {
 	
-		
-		# show what we've got
-		print STDERR "Image: ".$imageID."\n\t".join( "\n\t",
-			map( $_." => ".$imageData->{$_}, keys %$imageData ) )."\n"
-			if $debug;
-		print STDERR "\tBelongs to datasets: ".join( ',', @datasetIDs ). "\n"
-			if $debug;
+		$object = $self->importObject ($node,undef,undef,undef);
+		$objectID = $object->id();
 
-		# process custom attributes in the image
-			$attributeImporter->processDOM($imageXML, 'I', $references{ 'Image'.$imageXML->getAttribute('ID') });
-		
-		# process features
-		foreach my $featureXML (@ {$imageXML->getElementsByLocalName('Feature') }) {
-			$self->processFeature( $featureXML );
+		# make connections between images and datasets
+		logdbg "debug", ref ($self)."->processDOM: Connecting Images to Datasets";
+		foreach $refNode ( @{ $node->getChildrenByTagName('DatasetRef') } ) {
+			$refID = $refNode->getAttribute('ID');
+			if (exists $docIDs->{$refID}) {
+				$refObject = $docIDs->{$refID};
+			} else {
+				$refObject = $lsid->getLocalObject ($refID);
+			}
+			logdie ref ($self) . "->processDOM: Could not resolve Dataset ID '$refID'"
+				unless defined $refObject;
+			$factory->maybeNewObject('OME::Image::DatasetMap',
+				{image_id => $objectID, dataset_id => $refObject->id()}
+			);
+		}
+
+		# These get imported into an import dataset
+		$importDataset = $self->dataset();
+		$factory->maybeNewObject('OME::Image::DatasetMap',
+			{image_id => $objectID, dataset_id => $importDataset->id()}
+		);
+
+		# We need an analysis for these.  This will return the one stored in the object or make a new one.
+		$importAnalysis = $self->analysis();
+
+		# Import Image CAs
+		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
+		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
+		foreach $CA ( @CAs ) {
+			$self->importObject ($CA,'I',$objectID,$importAnalysis);
+		}
+
+		my $image = $object;
+		my $imageID = $image->id();
+		# Import Features
+		# This does a breadth-first traversal of the features sub-tree - non-recursively.
+		logdbg "debug", ref ($self)."->processDOM: Processing Features";
+		my $feature = $node->getChildrenByTagName('Feature' )->[0];
+		my ($parentFeature, $firstFeature);
+		$firstFeature = $feature;
+		while ($feature) {
+			$object = $self->importObject ($feature,undef,$imageID,undef);
+			$object->image($image);
+			$object->parent_feature($parentFeature) if defined $parentFeature;
+
+			$objectID = $object->id();
+
+			# Import Feature CAs
+			$CAnode = $feature->getChildrenByTagName('CustomAttributes')->[0];
+			@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
+			foreach $CA ( @CAs ) {
+				$self->importObject ($CA,'I',$objectID,$importAnalysis);
+			}
+			# Go to the sibling.
+			$feature = $feature->nextSibling ();
+			while ($feature and not $feature->nodeName() eq 'Feature') {$feature = $feature->nextSibling ();}
+			# If we're got all the siblings, set ourselves as the parent,
+			# and go down a level from this level's first feature
+			if (not defined $feature) {
+				$parentFeature = $feature;
+				$feature = $firstFeature->getChildrenByTagName('Feature' )->[0];
+				$firstFeature = $feature;
+			}
 		}
 	}
-	#
-	###########################################################################
-
 	
-} 
-#
-# END sub processDOM
-#
-###############################################################################
+	# Commit everything we've got so far.
+	logdbg "debug", ref ($self)."->processDOM: Committing DBObjects";
+	$self->commitObjects ();
 
-sub processFeature {
+	# Run the engine on the dataset.
+#    my $view = $factory->
+#		findObject("OME::AnalysisView",name => 'Image import analyses');
+#	if (!defined $view) {
+#		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+#		return;
+#	}
+#	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
+#	my $engine = OME::Tasks::AnalysisEngine->new();
+#	eval {
+#		$engine->executeAnalysisView($session,$view,{},$importDataset);
+#	};
+#	
+#	logcarp "$@" if $@;
+	return;
+}
+
+sub analysis () {
+	my $self = shift;
+
+	return $self->{_analysis} if exists $self->{_analysis} and defined $self->{_analysis};
+	my $session = $self->{session};
+
+    my $config = $session->Factory()->loadObject("OME::Configuration", 1);
+
+    my $analysis = $session->Factory()->
+		newObject("OME::Analysis", {
+			dependence => 'I',
+			dataset_id => $self->dataset()->id(),
+			timestamp  => 'now',
+			status     => 'FINISHED',
+			program_id => $config->import_module()->id(),
+		});
+
+    $self->{_analysis} = $analysis;
+    $self->addObject ($analysis);
+    return ($analysis);
+}
+
+
+sub dataset () {
+	my $self = shift;
+
+	return $self->{_dataset} if exists $self->{_dataset} and defined $self->{_dataset};
+	my $session = $self->{session};
+
+    my $dataset = $session->Factory()->
+		newObject("OME::Dataset", {
+			name => 'Dummy XML import dataset',
+			description => '',
+			locked => 'true',
+			owner_id => $session->User()->id(),
+			group_id => undef
+		});
+    $self->{_dataset} = $dataset;
+    $self->addObject ($dataset);
+    return ($dataset);
+}
+
+
+sub commitObjects () {
 	my $self = shift;
 	
-	my $debug = $self->{debug};
-	print STDERR "Pretending to Process a feature.\n"
-			if $debug;
-	# do feature processing. also process custom attributes for that feature
-	# recursively call this function for sub features.
+    $_->writeObject() foreach @{ $self->{_DBObjects} };
+    $self->{_DBObjects} = [];
+
+    $self->{session}->DBH()->commit();
 }
+
+sub addObject ($) {
+	my ($self,$object) = shift;
+	push (@{ $self->{_DBObjects} }, $object) if defined $object;
+}
+
+
+sub importObject ($$$$) {
+	my ($self, $node, $granularity, $parentDBID, $analysis) = @_;
+	return undef unless defined $node;
+
+	my $docIDs     = $self->{_docIDs};
+	my $docRefs    = $self->{_docRefs};
+
+	logdbg "debug", ref ($self)."->importObject:  Importing node ".$node->nodeName ()." type ".$node->nodeType ();
+	
+	my $lsid = $self->{_lsidResolver};
+	my $LSID = $node->getAttribute('ID');
+	my $theObject = $lsid->getLocalObject ($LSID);
+	if (defined $theObject) {
+		$docIDs->{$LSID} = $theObject->id();
+		logdbg "debug", ref ($self)."->importObject:  Object ID '$LSID' exists in DB!";
+		return $theObject;
+	}
+
+	logdbg "debug", ref ($self)."->importObject:  Building new Object ID.";
+	$parentDBID = undef if $granularity eq 'G';
+	$analysis = undef if $granularity eq 'G' or $granularity eq 'D';
+
+	my $session	   = $self->{session};
+	my $factory	   = $session->Factory();
+
+	# It is fatal for an object ID to be non-unique
+	logdie ref ($self) . "->importObject: Attempt to import an attribute with duplicate ID '$LSID'"
+		if exists $docIDs->{$LSID};
+	$docIDs->{$LSID} = undef;
+
+	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node);
+
+	# Process references in this object.
+	# If the reference was to an object already read from the document, resolve it.
+	# If not, check if its already in the DB
+	# If not, store the object for later resolution in a local hash.
+	my %unresolvedRefs;
+	my $theObject;
+	my ($objField,$theRef);
+	while ( ($objField,$theRef) = each %$refCols ) {
+		if (exists $docIDs->{$theRef}) {
+			$objectData->{$objField} = $docIDs->{$theRef};
+		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
+			$objectData->{$objField} = $theObject->id();
+		} else {
+			$objectData->{$objField} = undef;
+			$unresolvedRefs{$objField} = $theRef
+		}
+	}
+	$theObject = undef;
+
+	# Make the object.
+	if ($isAttribute) {
+		$theObject = $factory->newAttribute($objectType,$parentDBID,$analysis,$objectData);
+	} else {
+		$theObject = $factory->newObject($objectType,$objectData);
+	}
+
+	# Set the Object's DBID in the global docID hash
+	my $objID = $theObject->id();
+	$docIDs->{$LSID} = $objID;
+
+	# Add the unresolved references for this object from the local unresolvedRefs hash to the global docRefs hash
+	while ( ($objField, $theRef) = each %unresolvedRefs ) {
+		push (@{ $docRefs->{$theRef} }, {Object=>$theObject, Field=>$objField});
+	}
+
+	# If this object resolves some references, resolve them.
+	if (exists $docRefs->{$LSID}) {
+		foreach (@{ $docRefs->{$LSID} }) {
+			$objField = $_->{Field};
+			$_->{Object}->$objField ($objID);
+		}
+		delete $docRefs->{$LSID};
+	}
+
+    $self->addObject ($theObject);
+	return ($theObject);
+}
+
+
+
+
+sub getObjectTypeInfo ($) {
+	my ($self,$node) = @_;
+	return undef unless defined $node;
+
+	my ($objectType,$isAttribute,$objectData,$refCols) = ('',0,{},{});
+
+	$objectType = $node->nodeName();
+
+	if ($objectType eq 'Project') {
+		$objectType = 'OME::Project';
+		$objectData = {
+			name        => $node->getAttribute( 'Name' ),
+			description => $node->getAttribute( 'Description' ),
+			owner_id    => $node->getAttribute( 'Experimenter' ),
+			group_id    => $node->getAttribute( 'Group' )
+		};
+		$refCols = {
+			owner_id => $objectData->{owner_id},
+			group_id => $objectData->{group_id}
+		};
+
+	} elsif ($objectType eq 'Dataset') {
+		$objectType = 'OME::Dataset';
+		$objectData = {
+			name        => $node->getAttribute( 'Name' ),
+			description => $node->getAttribute( 'Description' ),
+			owner_id    => $node->getAttribute( 'Experimenter' ),
+			group_id    => $node->getAttribute( 'Group' ),
+# locked may need to be cast into boolean
+			locked      => lc ($node->getAttribute( 'Locked' )) eq 'true' ? '1':'0'
+		};
+		$refCols = {
+			owner_id => $objectData->{owner_id},
+			group_id => $objectData->{group_id}
+		};
+
+	} elsif ($objectType eq 'Image') {
+		$objectType = 'OME::Image';
+		$objectData = {
+			name        => $node->getAttribute( 'Name' ),
+			description => $node->getAttribute( 'Description' ),
+# might need to do type conversion on CreationDate
+			created     => $node->getAttribute( 'CreationDate' )
+		};
+		$refCols = {};
+
+	} elsif ($objectType eq 'Feature') {
+		$objectType = 'OME::Feature';
+		$objectData = {
+			name        => $node->getAttribute( 'Name' ),
+			description => $node->getAttribute( 'Tag' ),
+		};
+		$refCols = {};
+
+	} else {
+		my $session	   = $self->{session};
+		my $factory	   = $session->Factory();
+		my $attrType = $factory->findObject("OME::AttributeType",name => $objectType)
+			|| logdie ref ($self) . "->getObjectTypeInfo: Attempt to import an undefined attribute type: $objectType";
+		my @attrColumns = $attrType->attribute_columns();
+		my ($attrCol,$attrColName);
+		foreach $attrCol (@attrColumns) {
+			$attrColName = $attrCol->name();
+			$objectData->{$attrColName} => $node->getAttribute($attrColName);
+			if ($attrCol->data_column()->sql_type() eq 'reference') {
+				$refCols->{$attrColName} = $objectData->{$attrColName};
+			}
+		}
+		$isAttribute = 1;
+	}
+	return ($objectType,$isAttribute,$objectData,$refCols);
+}
+
 
 
 =pod
