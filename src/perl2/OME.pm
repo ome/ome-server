@@ -40,9 +40,12 @@ use strict;
 use OME;
 our $VERSION = 2.001_000;
 
-########################################### main pod documentation begin ##
-# Below is the stub of documentation for your module. You better edit it!
+use Config;
+my $THREADS_AVAILABLE = 0;
 
+BEGIN {
+    $THREADS_AVAILABLE = $Config{useithreads} && $ENV{OME_USE_THREADS};
+}
 
 =head1 NAME
 
@@ -69,7 +72,10 @@ Analysis engine
 
 =head1 AUTHORS
 
-Ilya Goldberg (igg@nih.gov), Doug Creager (dcreager@alum.mit.edu), Brian Hughes (bshughes@mit.edu), Josiah Johnston (siah@nih.gov), Andrea Falconi (a.falconi@dundee.ac.uk), Jean-Marie Burel (j.burel@dundee.ac.uk), Chris Allan (callan@blackcat.ca)
+Ilya Goldberg (igg@nih.gov), Doug Creager (dcreager@alum.mit.edu),
+Brian Hughes (bshughes@mit.edu), Josiah Johnston (siah@nih.gov),
+Andrea Falconi (a.falconi@dundee.ac.uk), Jean-Marie Burel
+(j.burel@dundee.ac.uk), Chris Allan (callan@blackcat.ca)
 
 http://openmicroscopy.org/
 
@@ -87,8 +93,8 @@ LICENSE file included with this module.
 
 =cut
 
-############################################# main pod documentation end ##
 
-1; #this line is important and will help the module return a true value
+1;
+
 __END__
 
