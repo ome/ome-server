@@ -69,7 +69,7 @@ use UNIVERSAL::require;
 use OME::Database::Delegate;
 
 use base qw(Class::Data::Inheritable);
-use fields qw(__id __fields __changeFields);
+use fields qw(__id __fields __changedFields);
 
 # The columns known about each class.
 # __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
@@ -509,7 +509,12 @@ sub addColumn {
                     if (@_) {
                         $self->{__changedFields}->{$table}->{$column}++;
                         my $datum = shift;
-                        $datum = $datum->id() if ref($datum);
+
+                        die "Illegal Boolean column value '$datum'"
+                          unless $datum =~ /^f(alse)?$|^t(rue)?$|^[01]$/i;
+
+                        $datum = 'true' if $datum eq  '1';
+                        $datum = 'false' if $datum eq '0';
                         $value = $self->{__fields}->{$table}->{$column} = $datum;
                     } else {
                         $value = $self->{__fields}->{$table}->{$column};
