@@ -511,8 +511,9 @@ sub search {
 		$accessorMethod   = $q->param( 'accessor_method' );
  		$objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
  			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
- 		$typeToAccessFrom->getColumnType( $accessorMethod )
- 			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
+# getColumnType doesn't report on valid but as yet uninferred relations, so I'm disabling this error check for now.
+# 		ref( $objectToAccessFrom )->getColumnType( $accessorMethod )
+# 			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
  		my $countAccessor = "count_".$accessorMethod;
  		$object_count = $objectToAccessFrom->$countAccessor( %searchParams );
  	} else {
