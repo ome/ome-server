@@ -83,6 +83,7 @@ sub new {
 		'OME::Module', 
 		'OME::AnalysisChain', 
 		'OME::AnalysisChainExecution',
+		'@Category',
 		'@CategoryGroup'
 	];
 
