@@ -56,7 +56,7 @@ OME::Tasks::AEFacade
 
 
 use strict ;
-use OME::Analysis::AnalysisEngine;
+use OME::Analysis::Engine;
 use OME::Tasks::ChainManager;
 
 #####################################################
@@ -80,7 +80,7 @@ sub executeView{
 	my %user_inputs=();
 	my @attributes=();
 	my $message;
-	my $engine = OME::Analysis::AnalysisEngine->new();
+	my $engine = OME::Analysis::Engine->new();
 	my $cmanager = OME::Tasks::ChainManager->new($session);
 	my $factory = $self->{session}->Factory();
 	my $view=$factory->findObject("OME::AnalysisChain",

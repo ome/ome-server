@@ -45,7 +45,7 @@ placeholder modules
 =head1 SYNOPSIS
 
 This class is instantiated automatically by the analyis engine
-(specifically, by OME::Analysis::AnalysisEngine).  To use it, set the
+(specifically, by OME::Analysis::Engine).  To use it, set the
 ModuleType attribute of a module's XML description to
 C<OME::Analysis::Handlers::NoopHandler>.
 
