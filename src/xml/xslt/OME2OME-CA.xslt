@@ -31,7 +31,7 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  Ilya G. Goldberg <igg@nig.gov>
+# Written by:  Ilya G. Goldberg <igg@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
@@ -114,6 +114,12 @@
 				<xsl:value-of select = "OME:GroupRef/@ID"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "OME:ProjectRef" mode = "CopyRefs"/>
+
+			<xsl:if test = "OME:CustomAttributes/*">
+				<xsl:element name = "CustomAttributes">
+					<xsl:copy-of select = "OME:CustomAttributes/*"/>
+				</xsl:element>
+			</xsl:if>
 		</xsl:element>
 	</xsl:template>
 	<!-- Image and the required Dimensions Image attribute -->
