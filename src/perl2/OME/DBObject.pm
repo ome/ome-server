@@ -75,6 +75,9 @@ use fields qw(__id __fields __changedFields);
 # __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
 __PACKAGE__->mk_classdata('__columns');
 
+# The pseudo-columns known about each class.
+__PACKAGE__->mk_classdata('__pseudo_columns');
+
 # The locations known about each class.
 # __locations()->{$table}->{$column} = \@aliases
 __PACKAGE__->mk_classdata('__locations');
@@ -240,6 +243,7 @@ sub newClass {
 
     $class->__classDefined(1);
     $class->__columns({});
+    $class->__pseudo_columns({});
     $class->__locations({});
     $class->__defaultTable(undef);
     $class->__tables({});
@@ -670,6 +674,32 @@ sub addColumn {
     return;
 }
 
+=head2 addPseudoColumn
+
+=cut
+
+sub addPseudoColumn {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+    die "Already a column named $alias"
+      if defined $class->getColumnType($alias);
+
+    my $pseudo_type = shift;
+
+    if ($pseudo_type =~ /(has-one|has-many|many-to-many)/o) {
+        my $pseudo_class = shift;
+        die "Malformed class name $pseudo_class"
+          unless __isClassName($pseudo_class)
+              || __isSTReference($pseudo_class);
+
+        $class->__pseudo_columns()->{$alias} = [$pseudo_type,$pseudo_class];
+    } else {
+        die "Unknown pseudo-column type $pseudo_type";
+    }
+}
+
 =head2 getColumnDef
 
 	my $column_def = $class->getColumnDef($alias);
@@ -714,6 +744,16 @@ sub getColumns {
     return keys %{ $class->__columns()};
 }
 
+=head2 getPseudoColumns
+
+=cut
+
+sub getPseudoColumns {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    return keys %{$class->__pseudo_columns()};
+}
+
 =head2 getColumnType
 
 	my $column_type = $class->getColumnType($alias);
@@ -743,9 +783,27 @@ sub getColumnType {
         return "has-many";
     } elsif ( exists $class->__manyToMany()->{$alias}) {
         return "many-to-many";
+    } elsif (exists $class->__pseudo_columns()->{$alias}) {
+        return "pseudo-column";
     } else {
         return undef;
     }
+}
+
+=haed2 getPseudoColumnType
+
+=cut
+
+sub getPseudoColumnType {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+    my $pseudos = $class->__pseudo_columns();
+    die "$alias is not a pseudo-column"
+      unless exists $pseudos->{$alias};
+
+    return @{$pseudos->{$alias}};
 }
 
 =head2 getFormalName

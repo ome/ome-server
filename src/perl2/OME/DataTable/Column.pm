@@ -94,6 +94,32 @@ __PACKAGE__->addColumn(sql_type => 'sql_type',
 __PACKAGE__->addColumn(reference_type => 'reference_type',
                        {SQLType => 'varchar(64)'});
 
+__PACKAGE__->addPseudoColumn('reference_semantic_type',
+                             'has-one','OME::SemanticType');
+
+sub reference_semantic_type {
+    my $self = shift;
+    if (@_) {
+        my $type = shift;
+        if (defined $type) {
+            die "Expects a semantic type object"
+              unless UNIVERSAL::isa($type,'OME::SemanticType');
+            $self->reference_type($type->name());
+        } else {
+            $self->reference_type(undef);
+        }
+    } else {
+        my $type_name = $self->reference_type();
+        return undef unless defined $type_name;
+        my $factory = OME::Session->instance()->Factory();
+        my $type = $factory->
+          findObject('OME::SemanticType',name => $type_name);
+        die "Type $type_name does not exist"
+          unless defined $type;
+        return $type;
+    }
+}
+
 =head1 METHODS (C<DataTable::Column>)
 
 The following methods are available to C<DataTable::Column> in addition to

@@ -163,6 +163,11 @@ sub __genericDTO {
         my $type = $object->getColumnType($column);
         next unless defined $type;
 
+        if ($type eq 'pseudo-column') {
+            my @pseudo = $object->getPseudoColumnType($column);
+            $type = $pseudo[0];
+        }
+
         # If this is an attribute reference, load the appropriate
         # ST class
         $object->__activateSTColumn($column);

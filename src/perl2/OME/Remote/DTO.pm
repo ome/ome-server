@@ -114,6 +114,7 @@ sub __makeHash ($$$) {
     my @defined_columns = $object->getColumns();
     push @defined_columns, keys %{$object->getHasMany()};
     push @defined_columns, keys %{$object->getManyToMany()};
+    push @defined_columns, $object->getPseudoColumns();
 
     foreach my $object_name (@defined_columns) {
         my $type = $object->getColumnType($object_name);
