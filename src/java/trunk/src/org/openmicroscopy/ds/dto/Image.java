@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Fri Sep 24 12:23:43 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -81,9 +81,9 @@ public interface Image
     /** Criteria field name: <code>#datasets</code> or <code>datasets</code> */
     public int countDatasets();
 
-    /** Criteria field name: <code>features</code> */
+    /** Criteria field name: <code>all_features</code> */
     public List getFeatures();
-    /** Criteria field name: <code>#features</code> or <code>features</code> */
+    /** Criteria field name: <code>#all_features</code> or <code>all_features</code> */
     public int countFeatures();
 
 }

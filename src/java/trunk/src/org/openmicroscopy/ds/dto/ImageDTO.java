@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:09 2004
+ * Created by dcreager via omejava on Fri Sep 24 12:23:43 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -96,9 +96,9 @@ public class ImageDTO
     { return countListElement("datasets"); }
 
     public List getFeatures()
-    { return (List) getObjectElement("features"); }
+    { return (List) getObjectElement("all_features"); }
     public int countFeatures()
-    { return countListElement("features"); }
+    { return countListElement("all_features"); }
 
     public void setMap(Map elements)
     {
@@ -106,7 +106,7 @@ public class ImageDTO
         parseChildElement("owner",ExperimenterDTO.class);
         parseChildElement("default_pixels",PixelsDTO.class);
         parseListElement("datasets",DatasetDTO.class);
-        parseListElement("features",FeatureDTO.class);
+        parseListElement("all_features",FeatureDTO.class);
     }
 
 }

@@ -52,6 +52,6 @@
                        Inserted      => ['String'],
                        DefaultPixels => ['Pixels','default_pixels'],
                        Datasets      => ['List:Dataset'],
-                       Features      => ['List:Feature'],
+                       Features      => ['List:Feature','all_features'],
                       ],
                      );
