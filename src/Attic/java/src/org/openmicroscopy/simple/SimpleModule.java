@@ -123,7 +123,7 @@ public class SimpleModule
     public FormalInput addInput(int           id,
                                 String        name,
                                 String        description,
-                                AttributeType attributeType)
+                                SemanticType attributeType)
     {
         FormalInput input;
 
@@ -146,7 +146,7 @@ public class SimpleModule
     public FormalOutput addOutput(int           id,
                                   String        name,
                                   String        description,
-                                  AttributeType attributeType,
+                                  SemanticType attributeType,
                                   String        featureTag)
     {
         FormalOutput output;
@@ -180,14 +180,14 @@ public class SimpleModule
         implements Module.FormalParameter
     {
         protected String         parameterName, parameterDescription;
-        protected AttributeType  attributeType;
+        protected SemanticType  attributeType;
         
         private SimpleFormalParameter() { super(); }
         
         private SimpleFormalParameter(int           id,
                                       String        parameterName,
                                       String        parameterDescription,
-                                      AttributeType attributeType)
+                                      SemanticType attributeType)
         {
             super(id);
             this.parameterName = parameterName;
@@ -207,9 +207,9 @@ public class SimpleModule
         public void setParameterDescription(String parameterDescription)
         { this.parameterDescription = parameterDescription; }
 
-        public AttributeType getAttributeType()
+        public SemanticType getSemanticType()
         { return attributeType; }
-        public void setAttributeType(AttributeType attributeType)
+        public void setSemanticType(SemanticType attributeType)
         { this.attributeType = attributeType; }
 
         public boolean getOptional() { return false; }
@@ -229,7 +229,7 @@ public class SimpleModule
         public SimpleFormalInput(int           id,
                                  String        name,
                                  String        description,
-                                 AttributeType attributeType)
+                                 SemanticType attributeType)
         {
             super(id,name,description,attributeType);
         }
@@ -253,7 +253,7 @@ public class SimpleModule
         public SimpleFormalOutput(int           id,
                                   String        name,
                                   String        description,
-                                  AttributeType attributeType,
+                                  SemanticType attributeType,
                                   String        featureTag)
         {
             super(id,name,description,attributeType);

@@ -116,10 +116,10 @@ public class RemoteDataTable
         public void setSQLType(String sqlType)
         { setStringElement("sql_type",sqlType); }
 
-        public AttributeType getReferenceType()
-        { return (AttributeType) getRemoteElement(RemoteAttributeType.class,
+        public SemanticType getReferenceType()
+        { return (SemanticType) getRemoteElement(RemoteSemanticType.class,
                                                   "reference_type"); }
-        public void setReferenceType(AttributeType referenceType)
+        public void setReferenceType(SemanticType referenceType)
         { setRemoteElement("reference_type",referenceType); }
     }
 }

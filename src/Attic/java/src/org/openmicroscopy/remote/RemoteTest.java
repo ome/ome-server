@@ -67,11 +67,11 @@ public class RemoteTest
         System.out.println(owner.getStringElement("FirstName"));
 
         {
-            List  typeList = factory.findObjects("OME::AttributeType",null);
+            List  typeList = factory.findObjects("OME::SemanticType",null);
             Iterator i = typeList.iterator();
             while (i.hasNext())
             {
-                AttributeType type = (AttributeType) i.next();
+                SemanticType type = (SemanticType) i.next();
                 System.out.println(type.getName());
             }
         }

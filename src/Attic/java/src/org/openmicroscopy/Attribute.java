@@ -28,7 +28,7 @@ package org.openmicroscopy;
  * output by the execution of analysis modules.</p>
  *
  * <p>Each attribute has a single semantic type, which is represented
- * by an instance of {@link AttributeType}.  Based on the semantic
+ * by an instance of {@link SemanticType}.  Based on the semantic
  * type's granularity, the attribute will be a property of (or,
  * equivalently, has a target of) a dataset, image, or feature, or it
  * will be a global attribute (and have a target of
@@ -37,12 +37,12 @@ package org.openmicroscopy;
  * <p>Most attributes will be generated computationally as the result
  * of an analysis module.  The analysis (and by extension, module)
  * which generated the attribute can be retrieved with the {@link
- * #getAnalysis()} method.</p>
+ * #getModuleExecution()} method.</p>
  *
  * @author Douglas Creager
  * @version 2.0
  * @since OME2.0
- * @see AttributeType
+ * @see SemanticType
  */
 
 public interface Attribute
@@ -70,7 +70,7 @@ public interface Attribute
      * Returns the semantic type of this attribute.
      * @return the semantic type of this attribute.
      */
-    public AttributeType getAttributeType();
+    public SemanticType getSemanticType();
 
     /**
      * Returns the target of this attribute, regardless of the
@@ -112,7 +112,7 @@ public interface Attribute
      * <code>null</code>.
      * @return the analysis that genreated this attribute.
      */
-    public Analysis getAnalysis();
+    public ModuleExecution getModuleExecution();
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -121,7 +121,7 @@ public interface Attribute
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    public void verifyAttributeType(AttributeType type);
+    public void verifySemanticType(SemanticType type);
 
     /**
      * Ensures that this attribute has the given semantic type.  If
@@ -132,7 +132,7 @@ public interface Attribute
      * @throws ClassCastException if this attribute is not of semantic
      * type <code>type</code>
      */
-    public void verifyAttributeType(String typeName);
+    public void verifySemanticType(String typeName);
 
     /**
      * Returns the value of one of the attribute's elements as a

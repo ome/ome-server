@@ -54,7 +54,7 @@ public class PlaygroundController
                 public void mouseClicked(MouseEvent e)
                 {
                     if (!e.isConsumed())
-                        unselectAttributeType();
+                        unselectSemanticType();
                 }
             });
     }
@@ -95,7 +95,7 @@ public class PlaygroundController
     {
         if (statusEmpty)
         {
-            AttributeType type = param.getAttributeType();
+            SemanticType type = param.getSemanticType();
             String typeName = (type == null)? "<Untyped>": type.getName();
             displayStatusText(param.getModule().getName()+"."+
                               param.getParameterName()+" : "+
@@ -122,11 +122,11 @@ public class PlaygroundController
         }
     }
 
-    public void selectAttributeType(Module.FormalParameter param, 
+    public void selectSemanticType(Module.FormalParameter param, 
                                     ChainNodeWidget widget,
                                     boolean input)
     {
-        AttributeType  type = param.getAttributeType();
+        SemanticType  type = param.getSemanticType();
         String         typeName = (type == null)? "<Untyped>": type.getName();
         Chain.Node     node = widget.getChainNode();
 
@@ -174,11 +174,11 @@ public class PlaygroundController
             if (lastInput == input)
             {
                 String  msg = input? "input": "output";
-                unselectAttributeType("Cannot connect an "+msg+
+                unselectSemanticType("Cannot connect an "+msg+
                                       " to another "+msg+".");
-            } else if (!param.getAttributeType().
-                       equals(lastSelectedParam.getAttributeType())) {
-                unselectAttributeType("Mismatched types.");
+            } else if (!param.getSemanticType().
+                       equals(lastSelectedParam.getSemanticType())) {
+                unselectSemanticType("Mismatched types.");
             } else {
                 boolean  linkedAlready = false;
                 Module.FormalParameter  fromParam, toParam;
@@ -199,7 +199,7 @@ public class PlaygroundController
 
                 if (fromNode.equals(toNode))
                 {
-                    unselectAttributeType("Cannot link a node to itself!");
+                    unselectSemanticType("Cannot link a node to itself!");
                 } else {
                     Chain  chain = playgroundPane.getChain();
                     List   linksList = playgroundPane.getLinks();
@@ -222,7 +222,7 @@ public class PlaygroundController
 
                     if (linkedAlready)
                     {
-                        unselectAttributeType("Already linked!");
+                        unselectSemanticType("Already linked!");
                     } else {
                         //chain.addLink(-1,
                         //              fromNode,
@@ -230,19 +230,19 @@ public class PlaygroundController
                         //              toNode,
                         //              (Module.FormalInput) toParam);
                         playgroundPane.repaint();
-                        unselectAttributeType("Link created");
+                        unselectSemanticType("Link created");
                     }
                 }
             }
         }
     }
 
-    public void unselectAttributeType()
+    public void unselectSemanticType()
     {
-        unselectAttributeType(" ");
+        unselectSemanticType(" ");
     }
 
-    public void unselectAttributeType(String msg)
+    public void unselectSemanticType(String msg)
     {
         if (lastSelectedParam != null)
         {

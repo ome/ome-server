@@ -126,7 +126,7 @@ public class SimpleDataTable
         public void setSQLType(String sqlType)
         { this.sqlType = sqlType; }
 
-        public AttributeType getReferenceType() { return null; }
-        public void setReferenceType(AttributeType type) {}
+        public SemanticType getReferenceType() { return null; }
+        public void setReferenceType(SemanticType type) {}
     }
 }

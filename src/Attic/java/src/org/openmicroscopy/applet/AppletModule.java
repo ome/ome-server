@@ -49,9 +49,9 @@ public class AppletModule
             String name = ap.getStringParameter(inputParam+"/Name",false);
             String description = ap.getStringParameter(inputParam+"/Description",
                                                        true);
-            AttributeType  atype = (AttributeType)
-                ap.getObjectParameter("AttributeType",
-                                      inputParam+"/AttributeType",
+            SemanticType  atype = (SemanticType)
+                ap.getObjectParameter("SemanticType",
+                                      inputParam+"/SemanticType",
                                       false);
 
             inputs[i] = addInput(id,name,description,atype);
@@ -66,9 +66,9 @@ public class AppletModule
             String name = ap.getStringParameter(outputParam+"/Name",false);
             String description = ap.getStringParameter(outputParam+"/Description",
                                                        true);
-            AttributeType  atype = (AttributeType)
-                ap.getObjectParameter("AttributeType",
-                                      outputParam+"/AttributeType",
+            SemanticType  atype = (SemanticType)
+                ap.getObjectParameter("SemanticType",
+                                      outputParam+"/SemanticType",
                                       false);
             String featureTag = ap.getStringParameter(outputParam+"/FeatureTag",
                                                       true);

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.applet.AppletAttributeType
+ * org.openmicroscopy.applet.AppletSemanticType
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -24,10 +24,10 @@ package org.openmicroscopy.applet;
 import org.openmicroscopy.*;
 import org.openmicroscopy.simple.*;
 
-public class AppletAttributeType
-    extends SimpleAttributeType
+public class AppletSemanticType
+    extends SimpleSemanticType
 {
-    public AppletAttributeType(AppletParameters ap, String param)
+    public AppletSemanticType(AppletParameters ap, String param)
     {
         super();
 
@@ -51,7 +51,7 @@ public class AppletAttributeType
         }
 
         int numColumns = ap.getIntParameter(param+"/Columns",false);
-        AttributeType.Column  columns[] = new AttributeType.Column[numColumns];
+        SemanticType.Element  columns[] = new SemanticType.Element[numColumns];
         for (int i = 0; i < numColumns; i++)
         {
             String colParam = param+"/Column"+i;
@@ -64,11 +64,11 @@ public class AppletAttributeType
                                       colParam+"/DataColumn",
                                       false);
 
-            columns[i] = addColumn(id,name,description,dColumn);
+            columns[i] = addElement(id,name,description,dColumn);
         }
 
-        ap.saveObject("AttributeType",param,this);
+        ap.saveObject("SemanticType",param,this);
         for (int i = 0; i < numColumns; i++)
-            ap.saveObject("AttributeType/Column",param+"/Column"+i,columns[i]);
+            ap.saveObject("SemanticType/Column",param+"/Column"+i,columns[i]);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.simple.SimpleAttributeType
+ * org.openmicroscopy.simple.SimpleSemanticType
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -27,30 +27,30 @@ import java.util.Iterator;
 
 import org.openmicroscopy.*;
 
-public class SimpleAttributeType
+public class SimpleSemanticType
     extends SimpleObject
-    implements AttributeType
+    implements SemanticType
 {
     protected String  name, description;
     protected int     granularity;
-    protected List    columns;
+    protected List    elements;
 
-    public SimpleAttributeType() 
+    public SimpleSemanticType() 
     {
         super();
-        this.columns = new ArrayList();
+        this.elements = new ArrayList();
     }
 
-    public SimpleAttributeType(int    id,
-                               String name,
-                               String description,
-                               int    granularity)
+    public SimpleSemanticType(int    id,
+                              String name,
+                              String description,
+                              int    granularity)
     {
         super(id);
         this.name = name;
         this.description = description;
         this.granularity = granularity;
-        this.columns = new ArrayList();
+        this.elements = new ArrayList();
     }
 
     public String getName()
@@ -68,59 +68,59 @@ public class SimpleAttributeType
     public void setGranularity(int granularity)
     { this.granularity = granularity; }
 
-    public int getNumColumns()
-    { return columns.size(); }
-    public Column getColumn(int index)
-    { return (Column) columns.get(index); }
-    public Iterator iterateColumns()
-    { return columns.iterator(); }
-    public List getColumns() { return columns; }
+    public int getNumElements()
+    { return elements.size(); }
+    public Element getElement(int index)
+    { return (Element) elements.get(index); }
+    public Iterator iterateElements()
+    { return elements.iterator(); }
+    public List getElements() { return elements; }
 
-    public Column addColumn(int              id,
-                            String           columnName,
-                            String           columnDescription,
-                            DataTable.Column dataColumn)
+    public Element addElement(int              id,
+                              String           elementName,
+                              String           elementDescription,
+                              DataTable.Column dataColumn)
     {
-        Column column;
+        Element element;
 
-        columns.add(column = new SimpleColumn(id,
-                                              columnName,
-                                              columnDescription,
-                                              dataColumn));
-        return column;
+        elements.add(element = new SimpleElement(id,
+                                                 elementName,
+                                                 elementDescription,
+                                                 dataColumn));
+        return element;
     }
 
-    public class SimpleColumn
+    public class SimpleElement
         extends SimpleObject
-        implements AttributeType.Column
+        implements SemanticType.Element
     {
-        protected String            columnName, columnDescription;
+        protected String            elementName, elementDescription;
         protected DataTable.Column  dataColumn;
 
-        public SimpleColumn() { super(); }
+        public SimpleElement() { super(); }
 
-        public SimpleColumn(int              id,
-                            String           columnName,
-                            String           columnDescription,
-                            DataTable.Column dataColumn)
+        public SimpleElement(int              id,
+                             String           elementName,
+                             String           elementDescription,
+                             DataTable.Column dataColumn)
         {
             super(id);
-            this.columnName = columnName;
-            this.columnDescription = columnDescription;
+            this.elementName = elementName;
+            this.elementDescription = elementDescription;
             this.dataColumn = dataColumn;
         }
 
-        public AttributeType getAttributeType() { return SimpleAttributeType.this; }
+        public SemanticType getSemanticType() { return SimpleSemanticType.this; }
 
-        public String getColumnName()
-        { return columnName; }
-        public void setColumnName(String columnName)
-        { this.columnName = columnName; }
+        public String getElementName()
+        { return elementName; }
+        public void setElementName(String elementName)
+        { this.elementName = elementName; }
 
-        public String getColumnDescription()
-        { return columnDescription; }
-        public void setColumnDescription(String columnDescription)
-        { this.columnDescription = columnDescription; }
+        public String getElementDescription()
+        { return elementDescription; }
+        public void setElementDescription(String elementDescription)
+        { this.elementDescription = elementDescription; }
 
         public DataTable.Column getDataColumn()
         { return dataColumn; }

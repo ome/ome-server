@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.remote.RemoteAttributeType
+ * org.openmicroscopy.remote.RemoteSemanticType
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -26,21 +26,21 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class RemoteAttributeType
+public class RemoteSemanticType
     extends RemoteOMEObject
-    implements AttributeType
+    implements SemanticType
 {
     static
     {
-        RemoteObject.addClass("OME::AttributeType",
-                              RemoteAttributeType.class);
-        RemoteObject.addClass("OME::AttributeType::Column",
-                              RemoteAttributeType.Column.class);
+        RemoteObject.addClass("OME::SemanticType",
+                              RemoteSemanticType.class);
+        RemoteObject.addClass("OME::SemanticType::Element",
+                              RemoteSemanticType.Element.class);
     }
 
 
-    public RemoteAttributeType() { super(); }
-    public RemoteAttributeType(String reference) { super(reference); }
+    public RemoteSemanticType() { super(); }
+    public RemoteSemanticType(String reference) { super(reference); }
 
     public String getName()
     { return getStringElement("name"); }
@@ -80,38 +80,38 @@ public class RemoteAttributeType
             throw new IllegalArgumentException("Got a bad dependence");
     }
 
-    public List getColumns()
-    { return getRemoteListElement(Column.class,"attribute_columns"); }
+    public List getElements()
+    { return getRemoteListElement(Element.class,"semantic_elements"); }
 
-    public Iterator iterateColumns()
+    public Iterator iterateElements()
     {
         RemoteIterator i = (RemoteIterator)
             getRemoteElement(RemoteIterator.class,
-                             "iterate_attribute_columns");
-        i.setClass(Column.class);
+                             "iterate_semantic_elements");
+        i.setClass(Element.class);
         return i;
     }
 
-    public static class Column
+    public static class Element
         extends RemoteOMEObject
-        implements AttributeType.Column
+        implements SemanticType.Element
     {
-        public Column() { super(); }
-        public Column(String reference) { super(reference); }
+        public Element() { super(); }
+        public Element(String reference) { super(reference); }
 
-        public AttributeType getAttributeType()
-        { return (AttributeType)
-              getRemoteElement(RemoteAttributeType.Column.class,
-                               "attribute_column"); }
+        public SemanticType getSemanticType()
+        { return (SemanticType)
+              getRemoteElement(RemoteSemanticType.Element.class,
+                               "semantic_element"); }
 
-        public String getColumnName()
+        public String getElementName()
         { return getStringElement("name"); }
-        public void setColumnName(String columnName)
-        { setStringElement("name",columnName); }
+        public void setElementName(String elementName)
+        { setStringElement("name",elementName); }
 
-        public String getColumnDescription()
+        public String getElementDescription()
         { return getStringElement("description"); }
-        public void setColumnDescription(String description)
+        public void setElementDescription(String description)
         { setStringElement("description",description); }
 
         public DataTable.Column getDataColumn()

@@ -40,17 +40,17 @@ public class RemoteAttribute
     public Session getSession()
     { return (Session) getRemoteElement(RemoteSession.class,"Session"); }
 
-    public AttributeType getAttributeType()
-    { return (AttributeType)
-            getRemoteElement(RemoteAttributeType.class,"attribute_type"); }
+    public SemanticType getSemanticType()
+    { return (SemanticType)
+            getRemoteElement(RemoteSemanticType.class,"attribute_type"); }
 
-    public Analysis getAnalysis()
-    { return (Analysis)
-            getRemoteElement(RemoteAnalysis.class,"analysis"); }
+    public ModuleExecution getModuleExecution()
+    { return (ModuleExecution)
+            getRemoteElement(RemoteModuleExecution.class,"analysis"); }
 
     public OMEObject getTarget()
     {
-        AttributeType type = getAttributeType();
+        SemanticType type = getSemanticType();
         int granularity = type.getGranularity();
         Class remoteClass = null;
         if (granularity == Granularity.GLOBAL)
@@ -74,12 +74,12 @@ public class RemoteAttribute
     public Feature getFeature()
     { return (Feature) getTarget(); }
 
-    public void verifyAttributeType(AttributeType type)
-    { verifyAttributeType(type.getName()); }
+    public void verifySemanticType(SemanticType type)
+    { verifySemanticType(type.getName()); }
 
-    public void verifyAttributeType(String typeName)
+    public void verifySemanticType(String typeName)
     {
-        AttributeType myType = getAttributeType();
+        SemanticType myType = getSemanticType();
         if (!myType.getName().equals(typeName))
             throw new ClassCastException(this+" is not of type "+typeName);
     }

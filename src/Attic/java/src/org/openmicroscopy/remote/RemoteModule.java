@@ -32,10 +32,10 @@ public class RemoteModule
 {
     static
     {
-        RemoteObject.addClass("OME::Program",RemoteModule.class);
-        RemoteObject.addClass("OME::Program::FormalInput",
+        RemoteObject.addClass("OME::Module",RemoteModule.class);
+        RemoteObject.addClass("OME::Module::FormalInput",
                               RemoteModule.FormalInput.class);
-        RemoteObject.addClass("OME::Program::FormalOutput",
+        RemoteObject.addClass("OME::Module::FormalOutput",
                               RemoteModule.FormalOutput.class);
     }
 
@@ -43,9 +43,9 @@ public class RemoteModule
     public RemoteModule(String reference) { super(reference); }
 
     public String getName()
-    { return getStringElement("program_name"); }
+    { return getStringElement("name"); }
     public void setName(String name)
-    { setStringElement("program_name",name); }
+    { setStringElement("name",name); }
 
     public String getDescription()
     { return getStringElement("description"); }
@@ -105,15 +105,17 @@ public class RemoteModule
     }
 
     public List getAnalyses()
-    { return getRemoteListElement(RemoteAnalysis.class,"analyses"); }
+    { return getRemoteListElement(RemoteModuleExecution.class,"analyses"); }
     public Iterator iterateAnalyses()
     {
         RemoteIterator i = (RemoteIterator)
             getRemoteElement(RemoteIterator.class,
                              "iterate_analyses");
-        i.setClass(RemoteAnalysis.class);
+        i.setClass(RemoteModuleExecution.class);
         return i;
     }
+
+    public String toString() { return getName(); }
 
     public static class FormalParameter
         extends RemoteOMEObject
@@ -137,10 +139,10 @@ public class RemoteModule
         public void setParameterDescription(String description)
         { setStringElement("description",description); }
 
-        public AttributeType getAttributeType()
-        { return (AttributeType) 
-              getRemoteElement(RemoteAttributeType.class,"attribute_type"); }
-        public void setAttributeType(AttributeType attributeType)
+        public SemanticType getSemanticType()
+        { return (SemanticType) 
+              getRemoteElement(RemoteSemanticType.class,"attribute_type"); }
+        public void setSemanticType(SemanticType attributeType)
         { setRemoteElement("attribute_type",attributeType); }
 
         public boolean getOptional()

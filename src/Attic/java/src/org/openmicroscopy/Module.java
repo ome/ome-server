@@ -71,8 +71,8 @@ public interface Module
         public String getParameterDescription();
         public void setParameterDescription(String parameterDescription);
 
-        public AttributeType getAttributeType();
-        public void setAttributeType(AttributeType attributeType);
+        public SemanticType getSemanticType();
+        public void setSemanticType(SemanticType attributeType);
 
         public boolean getOptional();
         public void setOptional(boolean optional);

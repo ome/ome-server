@@ -111,9 +111,9 @@ public class ChainBuilderApplet
         for (int i = 0; i < numDataTables; i++)
             new AppletDataTable(ap,"DataTable"+i);
 
-        int numAttributeTypes = ap.getIntParameter("AttributeTypes",false);
-        for (int i = 0; i < numAttributeTypes; i++)
-            new AppletAttributeType(ap,"AttributeType"+i);
+        int numSemanticTypes = ap.getIntParameter("SemanticTypes",false);
+        for (int i = 0; i < numSemanticTypes; i++)
+            new AppletSemanticType(ap,"SemanticType"+i);
 
         int numModules = ap.getIntParameter("Modules",false);
         for (int i = 0; i < numModules; i++)

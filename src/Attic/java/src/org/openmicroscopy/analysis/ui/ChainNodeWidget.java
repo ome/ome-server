@@ -124,7 +124,7 @@ public class ChainNodeWidget
             {
                 if (e.getClickCount() == 1)
                 {
-                    controller.selectAttributeType(param,
+                    controller.selectSemanticType(param,
                                                    ChainNodeWidget.this,
                                                    input);
                     e.consume();
@@ -277,26 +277,26 @@ public class ChainNodeWidget
         italicLabel((JLabel) labels.get(param));
     }
 
-    public void highlightInputsByType(AttributeType type)
+    public void highlightInputsByType(SemanticType type)
     {
         for (int i = 0; i < inputLabels.length; i++)
         {
             Module.FormalParameter param =
                 (Module.FormalParameter) parameters.get(inputLabels[i]);
 
-            if ((param != null) && param.getAttributeType().equals(type))
+            if ((param != null) && param.getSemanticType().equals(type))
                 highlightLabel(inputLabels[i]);
         }
     }
 
-    public void highlightOutputsByType(AttributeType type)
+    public void highlightOutputsByType(SemanticType type)
     {
         for (int i = 0; i < outputLabels.length; i++)
         {
             Module.FormalParameter param =
                 (Module.FormalParameter) parameters.get(outputLabels[i]);
 
-            if ((param != null) && param.getAttributeType().equals(type))
+            if ((param != null) && param.getSemanticType().equals(type))
                 highlightLabel(outputLabels[i]);
         }
     }

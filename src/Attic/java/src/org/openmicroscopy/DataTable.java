@@ -37,12 +37,12 @@ import java.util.Iterator;
  * <p>The actual mapping between semantic types and data tables occurs
  * as a link between semantic type columns and data table columns.
  * This link can be accessed via the {@link
- * AttributeType.Column#getDataColumn} method.</p>
+ * SemanticType.Element#getDataColumn} method.</p>
  *
  * @author Douglas Creager
  * @version 2.0
  * @since OME2.0
- * @see AttributeType
+ * @see SemanticType
  */
 
 public interface DataTable
@@ -114,7 +114,7 @@ public interface DataTable
      * @author Douglas Creager
      * @version 2.0
      * @since OME2.0
-     * @see AttributeType.Column
+     * @see SemanticType.Element
      */
 
     public interface Column
@@ -168,12 +168,12 @@ public interface DataTable
          * unspecified.
          * @return the semantic type of a reference element.
          */
-        public AttributeType getReferenceType();
+        public SemanticType getReferenceType();
 
         /**
          * Sets the semantic type of a reference element.
          * @param sqlType the semantic type of a reference element.
          */
-        public void setReferenceType(AttributeType sqlType);
+        public void setReferenceType(SemanticType sqlType);
     }
 }
