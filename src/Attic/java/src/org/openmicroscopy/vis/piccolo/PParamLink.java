@@ -155,7 +155,11 @@ public class PParamLink extends  PLink {
 	public void remove() {
 		super.remove();
 		if (linkLayer != null)
-			linkLayer.removeLink(this);
+			linkLayer.removeModuleLinks(this);
+		clearLinks();
+	}
+		
+	public void clearLinks() {
 		start.clearLinkedTo(end);
 		end.clearLinkedTo(start);
 	}
