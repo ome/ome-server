@@ -119,7 +119,6 @@ sub __parseInstructions {
         $references{$reference->getAttribute('Location')} = 1;
         print "   Ref $reference\n";
     }
-    $self->{__references} = \%references;
 
     my $execute_at =
       $root->getAttribute('ExecutionPoint');
@@ -130,15 +129,63 @@ sub __parseInstructions {
       $root->getElementsByLocalName('Inputs')->[0]->
       getElementsByLocalName('Input');
     my @inputs;
-    push @inputs, $_->getAttribute('Name') foreach @input_tags;
+	# parse input execution instructions
+    foreach my $input_tag (@input_tags) {
+    	push @inputs, $input_tag->getAttribute('Name') || $input_tag->getAttribute('Value') || 
+    		die "Either Name or Value must be specified for an input to a matlab function. Input tag looks like: \n".$input_tag->toString()."\n";
+    	# store execution instructions for this input
+    	$self->{__inputInstructions}->{$input_tag->getAttribute('Name')}->{xml} = $input_tag
+    		if $input_tag->getAttribute('Name');
+		# flag an input as being a literal string
+		$self->{__inputInstructions}->{$input_tag->getAttribute('Value')}->{literalString} = 1;
+    	# parse the 'loadPixelsPlane' command
+		if( $input_tag->getAttribute('loadPixelsPlane') =~ /^(true|t)$/i ) {
+			die "Name must be specified if loadPixelsPlane is specified. Input tag looks like: \n".$input_tag->toString()."\n"
+				unless $input_tag->getAttribute('Name');
+			$self->{__inputInstructions}->{$input_tag->getAttribute('Name')}->{loadPixelsPlane} = 1;
+			$references{$input_tag->getAttribute('Name').".Repository"} = 1
+				if( not exists $references{$input_tag->getAttribute('Name').".Repository"} );
+		}
+    }
     $self->{__matlabInputs} = \@inputs;
     print "   Inputs @inputs\n";
 
+	# set $self->{__references} down here because a Repository reference may have been added as a result of the 'loadPixelsPlane' instruction
+    $self->{__references} = \%references;
+
+	
     my @output_tags =
       $root->getElementsByLocalName('Outputs')->[0]->
       getElementsByLocalName('Output');
     my @outputs;
-    push @outputs, $_->getAttribute('Name') foreach @output_tags;
+	# parse output execution instructions
+    foreach my $output_tag (@output_tags) {
+    	# if Name is not specified, this output is to be ignored
+    	if( $output_tag->getAttribute('Name') ) {
+    		push @outputs, $output_tag->getAttribute('Name');
+    	} else {
+    		push @outputs, "junk";
+    	}
+    	# store execution instructions for this output
+    	$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{xml} = $output_tag;
+		# set flag for basic/advanced parsing
+		$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{basicParsing} = 1
+			if( $output_tag->attributes()->length() eq 1 and $output_tag->childNodes()->size() eq 0 );
+		my @element_tags = $output_tag->getElementsByLocalName('Element');
+		# set semantic element aliasing
+		$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{elementAliases}->{$_->getAttribute('MatlabField')} =
+			$_->getAttribute('Name') 
+			foreach ( grep( defined $_->getAttribute('MatlabField'), @element_tags) );
+		$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{elementAliasing} = 1
+			if( exists $self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{elementAliases} );
+		# set semantic element access by array index (rather than field in a structure).
+		$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{orderedArrayIndexes}->{$_->getAttribute('OrderedArrayIndex') - 1} =
+			$_->getAttribute('Name') 
+			foreach ( grep( defined $_->getAttribute('OrderedArrayIndex'), @element_tags) );
+		# set outputIsOrderedArray flag
+		$self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{outputIsOrderedArray} = 1
+			if( exists $self->{__outputInstructions}->{$output_tag->getAttribute('Name')}->{orderedArrayIndexes} );
+    }
     $self->{__matlabOutputs} = \@outputs;
     print "   Outputs @outputs\n";
 }
@@ -302,7 +349,20 @@ sub __execute {
     my $location = $self->{_location};
 
     my $inputs = $self->{__matlabInputs};
-    my @params = map { "ome_$_" } @$inputs;
+    # ome_loadPixelsPlane will crash if its input has an arity greater than 1.
+    # since we have *NO* use cases that has a FI of ST Pixels or PixelsPlane that accepts a 
+    # count > 1, this is not a problem yet.
+	my @params;
+	foreach( @$inputs ) {
+print STDERR "processing __matlab input $_\n";
+		if( exists $self->{__inputInstructions}->{$_}->{loadPixelsPlane} ) {
+			push @params, "ome_loadPixelsPlane( ome_$_ )";
+		} elsif( exists $self->{__inputInstructions}->{$_}->{literalString} ) {
+			push @params, "$_";
+		} else {
+			push @params, "ome_$_";
+		}
+	}
     my $input_cmd = "(".join(',',@params).")";
 
     my $outputs = $self->{__matlabOutputs};
@@ -322,6 +382,7 @@ sub __execute {
 
     # Parse the outputs
     foreach my $output (@$outputs) {
+    	next if $output eq 'junk';
         my $formal_output = $self->getFormalOutput($output);
         my $semantic_type = $formal_output->semantic_type();
 
@@ -330,41 +391,72 @@ sub __execute {
         #print "Output $output - $array\n";
         #printarray($array);
 
+#$self->{__outputInstructions}->{$output}->{xml}
+#$self->{__outputInstructions}->{$output}->{basicParsing} = 1
+#$self->{__outputInstructions}->{$output}->{elementAliases}->{$_->getAttribute('MatlabField')} =
+#	$_->getAttribute('Name') 
+#$self->{__outputInstructions}->{$output}->{orderedArrayIndexes}->{$_->getAttribute('AccessByArrayIndex')} =
+#	$_->getAttribute('Name') 
+#$self->{__outputInstructions}->{$output}->{outputIsOrderedArray}
         if (defined $array) {
+        	my $outputIsStruct = ( $self->{__outputInstructions}->{$output}->{outputIsOrderedArray} ? undef : 1 );
             die "Outputs should be a structure!"
-              if (!$array->is_struct());
+              if (!$array->is_struct() && $outputIsStruct );
             my $length = $array->n();
-            my $num_fields = $array->getNumFields();
             my @field_names;
-            push @field_names, $array->getFieldName($_)
-              foreach (0..$num_fields-1);
+            my $num_fields;
+           	if ( $outputIsStruct ) {
+				$num_fields = $array->getNumFields();
+				push @field_names, $array->getFieldName($_)
+				  foreach (0..$num_fields-1);
+			}
 
+			my %data_hash;
             foreach my $attr_idx (0..$length-1) {
-                my %data_hash;
-
-                foreach my $field_idx (0..$num_fields-1) {
-                    my $field_name = $field_names[$field_idx];
-                    my $varray = $array->getField($attr_idx,$field_idx);
-                    $varray->makePersistent();
-                    #printarray($varray);
-                    my $value;
-                    if ($varray->is_char()) {
-                        $value = $varray->getString();
-                    } elsif ($varray->is_numeric() || $varray->is_logical()) {
-                        $value = $varray->get(0,0);
-                    } else {
-                        my $class = $varray->class_name();
-                        die "Can't handle outputs of Matlab type $class";
-                    }
-
-                    # Don't put primary key ID's into the hash
-                    next if $field_name eq "id";
-
-                    $data_hash{$field_name} = $value;
-                }
-
-                my $attribute = $self->newAttributes($semantic_type,\%data_hash);
+                
+				# output is in a structure.
+				if( $outputIsStruct ) {
+					%data_hash = ();
+					foreach my $field_idx (0..$num_fields-1) {
+						my $field_name = $field_names[$field_idx];
+						my $varray = $array->getField($attr_idx,$field_idx);
+						$varray->makePersistent();
+						#printarray($varray);
+						my $value;
+						if ($varray->is_char()) {
+							$value = $varray->getString();
+						} elsif ($varray->is_numeric() || $varray->is_logical()) {
+							$value = $varray->get(0,0);
+						} else {
+							my $class = $varray->class_name();
+							die "Can't handle outputs of Matlab type $class";
+						}
+	
+						# Don't put primary key ID's into the hash
+						next if $field_name eq "id";
+	
+						# if element Aliasing is being used and this element has an alias
+						if( exists $self->{__outputInstructions}->{$output}->{elementAliasing} and
+							exists $self->{__outputInstructions}->{$output}->{elementAliases}->{$field_name} ) {
+							$data_hash{
+								$self->{__outputInstructions}->{$output}->{elementAliases}->{$field_name}
+							} = $value;
+						} else {
+							$data_hash{$field_name} = $value;
+						}
+					}
+					print "data hash:\n\t".join( "\n\t", map( $_." => ".$data_hash{$_}, keys %data_hash ) )."\n\n";
+	                my $attribute = $self->newAttributes($semantic_type,\%data_hash);
+				} 
+				# output is not in a structure, it is in an ordered array
+				else {
+					$data_hash{
+						$self->{__outputInstructions}->{$output}->{orderedArrayIndexes}->{$attr_idx}
+					} = $array->get(0,$attr_idx);
+				}
             }
+            my $attribute = $self->newAttributes($semantic_type,\%data_hash)
+				if( not $outputIsStruct );
         }
     }
 
