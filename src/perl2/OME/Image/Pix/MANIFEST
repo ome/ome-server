@@ -3,6 +3,9 @@ MANIFEST
 Makefile.PL
 Pix.pm
 Pix.xs
-test.pl
+t/test.t
+t/tinyTest.d3d.dv
+t/tinyTest-LE.raw
+t/tinyTest-BE.raw
 libpix.c
 libpix.h

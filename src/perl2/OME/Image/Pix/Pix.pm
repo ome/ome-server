@@ -29,7 +29,6 @@ bootstrap OME::Image::Pix $VERSION;
 
 1;
 __END__
-# Below is stub documentation for your module. You better edit it!
 
 =head1 NAME
 
@@ -83,6 +82,27 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   # $pix8 = ($pix16 - $offset) * $scale;
   # if $pix8 is outside of the range 0-255, it is clipped.
   my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theW,$theT,'testTIFF8.tiff',$scale,$offset);
+
+  # Convert a plane of pixels to an 8 bit per pixel TIFF file
+  # $pix8 = ($pix16 - $offset) * $scale;
+  # if $pix8 is outside of the range 0-255, it is clipped.
+  my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theW,$theT,'testTIFF8.tiff',$scale,$offset);
+  
+  # Set an arbitrary file for conversion to OME format - $bigEndian is 1 for big endian files, 0 otherwise
+  # byte swapping will be accomplished automatically.  This function returns 1 if the file could be opened, 0 otherwise.
+  $pix->setConvertFile ('somePixelFile',$bytesPerPixel,$bigEndian)
+  # All of the convert methods return the number of pixels converted.
+  # $offset is the offset in the file where the read begins.
+  # Convert a row, sets of rows of pixels, a plane and an XYZ stack from the file to the OME format file
+  $nPix = $pix->convertRow ($offset,$theY,$theZ,$theW,$theT);
+  $nPix = $pix->convertRows ($offset,$nRows,$theY,$theZ,$theW,$theT);
+  $nPix = $pix->convertPlane ($offset,$theZ,$theW,$theT);
+  $nPix = $pix->convertStack ($offset,$theW,$theT);
+  # Call this when you are finished with the source file.
+  # This will be called automatically only when perl garbage collects the $pix object.
+  $pix->convertFinish();
+
+
 
 
 =head1 DESCRIPTION

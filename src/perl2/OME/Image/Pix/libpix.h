@@ -19,12 +19,23 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-/* This returns a 5-dimensional array of unsigned integers */
+
+typedef struct
+{
+	char  path[256];	/* Path to the input file for conversion */
+	FILE *fp; /* This will be NULL if closed */
+	int bp; /* bytes per pixel in the input file */
+	char swapBytes; /* true if file's endian-ness doesn't match the machine's */
+} convertFile;
+
 typedef struct
 {
 	char  path[256];	/* Path to the repository-format file */
 	int  dx,dy,dz,dt,dw,bp; /* Image dimensions bp is bytes per pixel */
+	convertFile inFile;
 } Pix;
+
+
 
 Pix *NewPix      (char* path, int dx, int dy, int dz, int dw, int dt, int bp);
 
@@ -48,6 +59,15 @@ size_t SetROI (Pix *pPix, char *thePix,
 
 size_t Plane2TIFF (Pix *pPix, int theZ, int theW, int theT, char *path);
 size_t Plane2TIFF8 (Pix *pPix, int theZ, int theW, int theT, char *path, double scale, double offset);
+
+int setConvertFile (Pix *pPix, char *inPath, int bp, int bigEndian);
+size_t convertRow (Pix *pPix, size_t offset, int theY, int theZ, int theW, int theT);
+size_t convertRows (Pix *pPix, size_t offset, int nRows, int theY, int theZ, int theW, int theT);
+size_t convertPlane (Pix *pPix, size_t offset, int theZ, int theW, int theT);
+size_t convertStack (Pix *pPix, size_t offset, int theW, int theT);
+void convertFinish (Pix *pPix);
+
+
 
 /* PRIVATE methods */
 FILE *GetPixFileUpdate (Pix *pPix);

@@ -144,6 +144,25 @@ SetPixels (pPix,thePix)
 	char *thePix
 
 size_t
+SetRow (pPix,thePix,theY,theZ,theW,theT)
+	OME::Image::Pix pPix
+	char *thePix
+	int theY
+	int theZ
+	int theW
+	int theT
+
+size_t
+SetRows (pPix,thePix,nRows,theY,theZ,theW,theT)
+	OME::Image::Pix pPix
+	char *thePix
+	int nRows
+	int theY
+	int theZ
+	int theW
+	int theT
+
+size_t
 SetPlane (pPix,thePix,theZ,theW,theT)
 	OME::Image::Pix pPix
 	char *thePix
@@ -191,3 +210,48 @@ SetROI (pPix,thePix,x0,y0,z0,w0,t0,x1,y1,z1,w1,t1)
 	int z1
 	int w1
 	int t1
+
+int
+setConvertFile (pPix,inPath,bp,bigEndian)
+	OME::Image::Pix pPix
+	char *inPath
+	int bp
+	int bigEndian
+
+size_t
+convertRow (pPix,offset,theY,theZ,theW,theT)
+	OME::Image::Pix pPix
+	size_t offset
+	int theY
+	int theZ
+	int theW
+	int theT
+
+size_t
+convertRows (pPix,offset,nRows,theY,theZ,theW,theT)
+	OME::Image::Pix pPix
+	size_t offset
+	int nRows
+	int theY
+	int theZ
+	int theW
+	int theT
+
+size_t
+convertPlane (pPix,offset,theZ,theW,theT)
+	OME::Image::Pix pPix
+	size_t offset
+	int theZ
+	int theW
+	int theT
+
+size_t
+convertStack (pPix,offset,theW,theT)
+	OME::Image::Pix pPix
+	size_t offset
+	int theW
+	int theT
+	
+void
+convertFinish (pPix)
+	OME::Image::Pix pPix

@@ -33,12 +33,15 @@ Pix *NewPix      (char* path,
 	pPix->dw = dw;
 	pPix->dt = dt;
 	pPix->bp = bp;
+	pPix->inFile.fp = NULL;
+	strcpy (pPix->inFile.path,"");
 
 	return pPix;
 }
 
 void FreePix  (Pix *pPix)
 {
+	convertFinish (pPix);
 	free (pPix);
 }
 
@@ -444,6 +447,105 @@ size_t nIn;
 
 
 
+size_t SetRow (Pix *pPix, char *thePix, int theY, int theZ, int theW, int theT)
+{
+size_t nPix;
+int dx = pPix->dx;
+int dy = pPix->dy;
+int dz = pPix->dz;
+int dw = pPix->dw;
+int dt = pPix->dt;
+int bp = pPix->bp;
+FILE *fp;
+size_t nOut;
+
+	if (theY >= dy || theY < 0 ||
+		theZ >= dz || theZ < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
+		fprintf (stderr,"Pix->SetRow:  Row selection out of range.\n");
+		return (NULL);
+	}
+
+	nPix = dx;
+
+	fp = GetPixFileUpdate (pPix);
+	if (!fp) {
+		fprintf (stderr,"Pix->SetRow:  Could not open '%s' for writing.\n",pPix->path);
+		return (NULL);
+	}
+
+	if (fseek (fp, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, SEEK_SET)) {
+		fprintf (stderr,"Pix->SetRow:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
+			0,theY,theZ,theW,theT,pPix->path);
+		fclose (fp);
+		return (NULL);
+	}
+
+	nOut = fwrite (thePix,bp,nPix,fp);
+	if (nOut < nPix) {
+		fprintf (stderr,"Pix->SetRow:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
+			0,theY,theZ,theW,theT,pPix->path,nPix,nOut);
+		fclose (fp);
+		return (nOut);
+	}
+
+	fclose (fp);
+	return (nOut);
+}  
+
+
+
+size_t SetRows (Pix *pPix, char *thePix, int nRows, int theY, int theZ, int theW, int theT)
+{
+size_t nPix;
+int dx = pPix->dx;
+int dy = pPix->dy;
+int dz = pPix->dz;
+int dw = pPix->dw;
+int dt = pPix->dt;
+int bp = pPix->bp;
+FILE *fp;
+size_t nOut;
+
+	if (nRows + theY >  dy || nRows < 0 ||
+		theY         >= dy || theY  < 0 ||
+		theZ         >= dz || theZ  < 0 ||
+		theW         >= dw || theW  < 0 ||
+		theT         >= dt || theT  < 0 ) {
+		fprintf (stderr,"Pix->SetRows:  Row selection out of range.\n");
+		return (NULL);
+	}
+
+	nPix = dx*nRows;
+
+	fp = GetPixFileUpdate (pPix);
+	if (!fp) {
+		fprintf (stderr,"Pix->SetRows:  Could not open '%s' for writing.\n",pPix->path);
+		return (NULL);
+	}
+
+	if (fseek (fp, ((((theT*dw) + theW)*dz + theZ)*dy + theY)*dx*bp, SEEK_SET)) {
+		fprintf (stderr,"Pix->SetRows:  Could not seek to (%d,%d,%d,%d,%d) in file %s.\n",
+			0,theY,theZ,theW,theT,pPix->path);
+		fclose (fp);
+		return (NULL);
+	}
+
+	nOut = fwrite (thePix,bp,nPix,fp);
+	if (nOut < nPix) {
+		fprintf (stderr,"Pix->SetRows:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
+			0,theY,theZ,theW,theT,pPix->path,nPix,nOut);
+		fclose (fp);
+		return (nOut);
+	}
+
+	fclose (fp);
+	return (nOut);
+}  
+
+
+
 size_t SetPlane (Pix *pPix, char *thePix, int theZ, int theW, int theT)
 {
 size_t nPix;
@@ -456,9 +558,9 @@ int bp = pPix->bp;
 FILE *fp;
 size_t nOut;
 
-	if (theZ >= pPix->dz || theZ < 0 ||
-		theW >= pPix->dw || theW < 0 ||
-		theT >= pPix->dt || theT < 0 ) {
+	if (theZ >= dz || theZ < 0 ||
+		theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->SetPlane:  Plane selection out of range.\n");
 		return (NULL);
 	}
@@ -480,7 +582,7 @@ size_t nOut;
 
 	nOut = fwrite (thePix,bp,nPix,fp);
 	if (nOut < nPix) {
-		fprintf (stderr,"Pix->SetPlane:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
+		fprintf (stderr,"Pix->SetPlane:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
 			0,0,theZ,theW,theT,pPix->path,nPix,nOut);
 		fclose (fp);
 		return (nOut);
@@ -504,8 +606,8 @@ int bp = pPix->bp;
 FILE *fp;
 size_t nOut;
 
-	if (theW >= pPix->dw || theW < 0 ||
-		theT >= pPix->dt || theT < 0 ) {
+	if (theW >= dw || theW < 0 ||
+		theT >= dt || theT < 0 ) {
 		fprintf (stderr,"Pix->SetStack:  Plane selection out of range.\n");
 		return (NULL);
 	}
@@ -527,7 +629,7 @@ size_t nOut;
 
 	nOut = fwrite (thePix,bp,nPix,fp);
 	if (nOut < nPix) {
-		fprintf (stderr,"Pix->SetStack:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
+		fprintf (stderr,"Pix->SetStack:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to write %d pixels, actually wrote %d\n",
 			0,0,0,theW,theT,pPix->path,nPix,nOut);
 		fclose (fp);
 		return (nOut);
@@ -620,3 +722,297 @@ size_t nOut;
 	fclose (fp);
 	return (nOut);
 }
+
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+setConvertFile calls convertFinish, then re-sets internal inFile specification.
+	returns true if successfull.
+
+Variable explanation:
+	pPix is pPix object in question. Can be old or new.
+	inPath is path to file that will soon be converted
+	bp is bytes per pixel of the file to convert
+	bigEndian is a boolean. 1 if file's pixels are big endian, else 0
+*/
+int setConvertFile (Pix *pPix, char *inPath, int bp, int fileBigEndian)
+{
+
+	convertFinish (pPix);
+
+	strncpy (pPix->inFile.path,inPath,255);
+	pPix->inFile.fp = fopen (pPix->inFile.path,"r");
+	if (!pPix->inFile.fp) {
+		fprintf (stderr,"Pix->setConvertFile:  Could not open '%s' for reading.\n",pPix->inFile.path);
+		return (NULL);
+	}
+	if ( pPix->bp > 1 && ((bigEndian() && !fileBigEndian) || (!bigEndian() && fileBigEndian)) )
+		pPix->inFile.swapBytes = 1;
+	else
+		pPix->inFile.swapBytes = 0;
+
+	pPix->inFile.bp = bp;
+
+	return (1);
+}
+
+
+
+void byteSwap2 (char *theBuf, size_t length)
+{
+#ifdef __linux__
+    /* Use glibc hardware-accelerated swap */
+    unsigned short *uptr = (unsigned short *)theBuf;
+    int i;
+    
+    for(i=0; i<length; i++, uptr++)
+    {
+        *uptr = bswap_16(*uptr);
+    }
+#else
+	char holder;
+	char *maxBuf = theBuf+(length*2);
+	
+	while (theBuf < maxBuf)
+	{
+		holder = *theBuf++;
+		*(theBuf-1) = *theBuf;
+		*theBuf++ = holder;
+	}
+#endif
+}
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+* Returns true if our machine is bigEndian.
+*/
+int bigEndian()
+{
+    static int init = 1;
+    static int endian_value;
+    char *p;
+
+    p = (char*)&init;
+    return endian_value = p[0]?0:1;
+}
+
+
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+Notes:
+  convert methods check if inFile is set, seek infile to offset, 
+  then read the number of bytes specified by inFile's bpp and the method parameters, 
+  do any endian-flipping, and write the result to the repository file.  
+*/
+size_t convertRow (Pix *pPix, size_t offset, int theY, int theZ, int theW, int theT) 
+{
+size_t nPix = pPix->dx, nIO;
+FILE *fp = pPix->inFile.fp;
+char *theBuf;
+int bp = pPix->bp;
+
+	if (!fp) {
+		fprintf (stderr,"Pix->convertRow:  file '%s' not open for reading.\n",pPix->inFile.path);
+		return (NULL);
+	}
+
+	if (fseek (fp, offset, SEEK_SET ) ) {
+		fprintf (stderr,"Pix->convertRow:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		return (NULL);
+	}
+
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->convertRow:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+
+	nIO = fread (theBuf,bp,nPix,fp);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertRow:  Could not read enough pixels from %s.\n",pPix->inFile.path);
+		free (theBuf);
+		return (NULL);
+	}
+	
+	/* flip bytes */
+	if(pPix->inFile.swapBytes)
+		byteSwap2( theBuf, nPix );
+	
+	nIO = SetRow (pPix, theBuf, theY, theZ, theW, theT);
+	free (theBuf);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertRow:  Could not write enough pixels to %s.\n",pPix->path);
+		return (NULL);
+	}
+	
+	return (nIO);
+}
+
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+*/
+size_t convertRows (Pix *pPix, size_t offset, int nRows, int theY, int theZ, int theW, int theT)
+{
+size_t nPix = (pPix->dx)*nRows, nIO;
+FILE *fp = pPix->inFile.fp;
+char *theBuf;
+int bp = pPix->inFile.bp;
+
+	if (!fp) {
+		fprintf (stderr,"Pix->convertRows:  file '%s' not open for reading.\n",pPix->inFile.path);
+		return (NULL);
+	}
+	
+	if (fseek (fp, offset, SEEK_SET ) ) {
+		fprintf (stderr,"Pix->convertRows:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		return (NULL);
+	}
+
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->convertRows:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+
+	nIO = fread (theBuf,bp,nPix,fp);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertRows:  Could not read enough pixels from %s.\n",pPix->inFile.path);
+		free (theBuf);
+		return (NULL);
+	}
+
+	/* flip bytes */
+	if(pPix->inFile.swapBytes)
+		byteSwap2( theBuf, nPix );
+	
+	nIO = SetRows (pPix, theBuf, nRows, theY, theZ, theW, theT);
+	free (theBuf);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertRows:  Could not write enough pixels to %s.\n",pPix->path);
+		return (NULL);
+	}
+	
+	return (nIO);
+}
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+*/
+size_t convertPlane (Pix *pPix, size_t offset, int theZ, int theW, int theT)
+{
+size_t nPix = (pPix->dx)*(pPix->dy), nIO;
+FILE *fp = pPix->inFile.fp;
+char *theBuf;
+int bp = pPix->inFile.bp;
+
+	if (!fp) {
+		fprintf (stderr,"Pix->convertPlane:  file '%s' not open for reading.\n",pPix->inFile.path);
+		return (NULL);
+	}
+	
+	if (fseek (fp, offset, SEEK_SET ) ) {
+		fprintf (stderr,"Pix->convertPlane:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		return (NULL);
+	}
+
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->convertPlane:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+
+	nIO = fread (theBuf,bp,nPix,fp);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertPlane:  Could not read enough pixels from %s.\n",pPix->inFile.path);
+		free (theBuf);
+		return (NULL);
+	}
+
+	/* flip bytes */
+	if(pPix->inFile.swapBytes)
+		byteSwap2( theBuf, nPix );
+	
+	nIO = SetPlane (pPix, theBuf, theZ, theW, theT);
+	free (theBuf);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertPlane:  Could not write enough pixels to %s.\n",pPix->path);
+		return (NULL);
+	}
+	
+	return (nIO);
+}
+
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+*/
+size_t convertStack (Pix *pPix, size_t offset, int theW, int theT)
+{
+size_t nPix = (pPix->dx)*(pPix->dy)*(pPix->dz), nIO;
+FILE *fp = pPix->inFile.fp;
+char *theBuf;
+int bp = pPix->inFile.bp;
+
+	if (!fp) {
+		fprintf (stderr,"Pix->convertStack:  file '%s' not open for reading.\n",pPix->inFile.path);
+		return (NULL);
+	}
+	
+	if (fseek (fp, offset, SEEK_SET ) ) {
+		fprintf (stderr,"Pix->convertStack:  could not seek to %d in file '%s'.\n",offset, pPix->inFile.path);
+		return (NULL);
+	}
+
+	theBuf = malloc (nPix * bp);
+	if (!theBuf) {
+		fprintf (stderr,"Pix->convertStack:  Could not allocate buffer.\n");
+		return (NULL);
+	}
+
+	nIO = fread (theBuf,bp,nPix,fp);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertStack:  Could not read enough pixels from %s.\n",pPix->inFile.path);
+		free (theBuf);
+		return (NULL);
+	}
+
+	/* flip bytes */
+	if(pPix->inFile.swapBytes)
+		byteSwap2( theBuf, nPix );
+	
+	nIO = SetStack (pPix, theBuf, theW, theT);
+	free (theBuf);
+	if (nIO != nPix) {
+		fprintf (stderr,"Pix->convertStack:  Could not write enough pixels to %s.\n",pPix->path);
+		return (NULL);
+	}
+	
+	return (nIO);
+}
+
+
+
+/*
+Josiah Johnston <siah@nih.gov>
+convertFinish closes inFile & sets pix->inFile to NULL.
+    Behave properly if inFile is already NULL.
+*/
+void convertFinish (Pix *pPix)
+{
+
+	if (pPix->inFile.fp) {
+		fclose (pPix->inFile.fp);
+		pPix->inFile.fp = NULL;
+	}
+	
+	strcpy (pPix->inFile.path,"");
+}
+
