@@ -44,7 +44,6 @@ use Carp;
 
 # OME Includes
 use OME::Tasks::Thumbnails;
-use OME::SessionManager;
 use OME;
 
 # OME Defines
@@ -63,10 +62,16 @@ sub serve {
 	my $self = shift;
 	my $cgi=$self->CGI();
 	my $id= $cgi->url_param('ImageID');
-	my $sid=$cgi->url_param('sid');
-	my $s_manager=new OME::SessionManager; 
+	
+	# XXX This is our *only* form of access control to the session object
+	if ($self->{RequireLogin}) {
+		if (!$self->ensureLogin()) {
+			$self->getLogin();
+			return;
+		}
+	}
 
-	my $session=$s_manager->createSession($sid);
+	my $session=$self->Session();
 	my $factory=$session->Factory();
 	my $generator= new OME::Tasks::Thumbnails($session);
 	my $image=$factory->loadObject("OME::Image",$id);
