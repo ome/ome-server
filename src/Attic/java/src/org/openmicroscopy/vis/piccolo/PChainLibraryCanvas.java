@@ -51,6 +51,7 @@ import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.Chains;
 import org.openmicroscopy.vis.ome.Modules;
 import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.vis.ome.NodeInfo;
 import org.openmicroscopy.Chain;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Chain.Link;
@@ -60,6 +61,9 @@ import org.openmicroscopy.Module.FormalOutput;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Collection;
+import java.awt.Font;
+
 
 
 /** 
@@ -75,6 +79,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 	
 	private static float VGAP=20f;
 	private static float HGAP=10f;
+	private static Font nameFont = new Font("Helvetica",Font.BOLD,18);
 	private Connection connection=null;
 	private int modCount;
 	private PLayer layer;
@@ -90,6 +95,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 	private Modules modules;
 	
 	private HashMap nodes;
+	
 	
 	public PChainLibraryCanvas(Connection c) {
 		super();
@@ -129,22 +135,29 @@ public class PChainLibraryCanvas extends PCanvas  {
 		nodes = new HashMap();
 		
 		PText name = new PText(chain.getName());
+		name.setFont(nameFont);
 		layer.addChild(name);
 		name.setOffset(x,y);
+		name.setScale(2);
 		chainHeight += name.getBounds().getHeight()+VGAP;
 		y += VGAP+name.getBounds().getHeight();
 		
-		List nodes = chain.getNodes();
+		//note here that we iterate over the nodeInfo objects. of 
+		// the chain info, not the nodes of the underlying chains
+		Collection nodes = info.getNodes();
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
-			Node n = (Node) iter.next();
-			drawNode(n);
+			NodeInfo ni = (NodeInfo) iter.next();
+			drawNode(ni.getNode());
 		}
-		
+
+		// however, we can 		
 		List links = chain.getLinks();
 		iter = links.iterator();
 		while (iter.hasNext()) {
-			Link link = (Link) iter.next();
+			Object obj = iter.next();
+			System.err.println("trying to cast to link.."+obj.getClass().getName());
+			Link link = (Link) obj;
 			drawLink(link);
 		}
 		
