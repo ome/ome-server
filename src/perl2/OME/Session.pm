@@ -151,7 +151,7 @@ use Log::Agent;
 
 #use Benchmark::Timer;
 
-__PACKAGE__->mk_ro_accessors(qw(Factory DBH UserState ApacheSession SessionKey Configuration));
+__PACKAGE__->mk_ro_accessors(qw(Factory UserState ApacheSession SessionKey Configuration));
 
 our $__soleInstance = undef;
 
@@ -181,6 +181,7 @@ my $__newInstance = sub {
     my $class = ref($proto) || $proto;
     my $userState = shift
       or die "Session cannot be initialized without a user state";
+	my $factory = shift;
 
     die "User State parameter is not of class OME::UserState"
       unless (ref($userState) eq "OME::UserState") ;
@@ -188,7 +189,8 @@ my $__newInstance = sub {
     my $self = $class->SUPER::new();
 
     $self->{UserState} = $userState;
-    $self->{Factory} = OME::Factory->new();
+    $factory = OME::Factory->new() unless defined $factory;
+    $self->{Factory} = $factory;
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     $self->{Repository} = undef; # we'll define that later in findRepository()
 
@@ -280,6 +282,7 @@ ever call the single-parameter version of this method.
 sub instance {
 	my $proto = shift;
 	my $userState = shift;
+	my $factory = shift;
 
     if (defined $userState) {
         # We are trying to create a session, as opposed to just
@@ -296,7 +299,7 @@ sub instance {
             # This is the first time we've tried to create a session in
             # this Perl process.
 
-            $__soleInstance = $__newInstance->($proto,$userState);
+            $__soleInstance = $__newInstance->($proto,$userState,$factory);
         }
 
         die "Could not create session"
@@ -319,7 +322,6 @@ sub __salvageSession {
 
 sub __destroySession {
     my $self = shift;
-
     return unless defined $self;
 
 	# This ensures a fresh transaction.
@@ -390,9 +392,6 @@ sub forgetInstance {
     }
 }
 
-# Accessors
-# ---------
-sub DBH { carp "Noo!!!!!"; return shift->{Factory}->obtainDBH(); }
 
 =head2 commitTransaction
 
