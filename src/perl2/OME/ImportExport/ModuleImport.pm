@@ -106,6 +106,7 @@ sub processDOM {
 	my $session = shift;
 	my $root    = shift;
 	my $factory = $session->Factory();
+	my @commitOnSuccessfulImport;
 
 my @modules = $root->getElementsByTagName( "AnalysisModule" );
 foreach my $module (@modules) {
@@ -133,7 +134,7 @@ foreach my $module (@modules) {
 	};
 	my $program = $factory->newObject("OME::Program",$data)
 		or die "Could not create OME::Program object\n";
-	$program->writeObject() if $commitNow;
+	push(@commitOnSuccessfulImport, $program);
 	#
 	#
 	##################################################
@@ -157,7 +158,7 @@ foreach my $module (@modules) {
 				};
 				$newTable = $factory->newObject( "OME::DataType", $data )
 					or die "Could not create OME::DataType\n";
-				$newTable->writeObject() if $commitNow;
+				push(@commitOnSuccessfulImport, $newTable);
 # In the future, the following test will not be necessary because every table a module
 # can access will have a corrosponding entry in the Datatypes table. We have
 # just checked for an entry and found none. For now, this rule may not be universally true.
@@ -202,6 +203,7 @@ foreach my $module (@modules) {
 			#
 			my $dbLocation = $formalInput->getElementsByTagName( "DBLocation" )->[0];
 			my $DataTypeColumn = makeDataTypeColumn($session, $dbLocation, { %table_xmlID_object});
+			push(@commitOnSuccessfulImport, $DataTypeColumn);
 			#
 			##########################################
 			
@@ -225,7 +227,7 @@ foreach my $module (@modules) {
 				};
 				$lookupTable = $factory->newObject( "OME::LookupTable", $data )
 					or die "Could not make OME::LookupTable object\n";
-				$lookupTable->writeObject() if $commitNow;
+				push(@commitOnSuccessfulImport, $lookupTable);
 				#
 				#####################################
 
@@ -242,7 +244,7 @@ foreach my $module (@modules) {
 					};
 					my $lookupEntry = $factory->newObject( "OME::LookupTable::Entry", $data )
 						or die "Could not make OME::LookupTable::Entry object\n";
-					$lookupEntry->writeObject() if $commitNow;
+					push(@commitOnSuccessfulImport, $lookupEntry);
 				}
 				#
 				######################################
@@ -267,7 +269,7 @@ foreach my $module (@modules) {
 			};
 			my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
 				or die "Could not make OME::Program::FormalInput object\n";
-			$newFormalInput->writeObject() if $commitNow;
+			push(@commitOnSuccessfulImport, $newFormalInput);
 			#
 			#
 			##########################################
@@ -296,6 +298,7 @@ foreach my $module (@modules) {
 			#
 			my $dbLocation = $formalOutput->getElementsByTagName( "DBLocation" )->[0];
 			my $DataTypeColumn = makeDataTypeColumn($session, $dbLocation, { %table_xmlID_object});
+			push(@commitOnSuccessfulImport, $DataTypeColumn);
 			#
 			##########################################
 
@@ -312,7 +315,7 @@ foreach my $module (@modules) {
 			};
 			my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
 				or die "Could not make OME::Program::FormalOutput object\n";
-			$newFormalOutput->writeObject() if $commitNow;
+			push(@commitOnSuccessfulImport, $newFormalOutput);
 			#
 			##########################################
 
@@ -371,14 +374,16 @@ foreach my $module (@modules) {
 		
 		# save executionInstructions to DB
 		$program->execution_instructions( $executionInstruction->toString() );
-		$program->writeObject() if $commitNow;
 	}
 	#
 	#
 	##################################################
 
 	# commit this module. It's been successfully imported
-	$program->writeObject();   # *hopefully* reliably commits all DBObjects
+	foreach my $DBObjectInstance (@commitOnSuccessfulImport) {
+		$DBObjectInstance->writeObject;
+	} # commits all DBObjects
+
 	$session->DBH()->commit(); # new tables & columns written w/ this handle
 
 } # END foreach my $module( @modules )
@@ -439,7 +444,6 @@ sub makeDataTypeColumn {
 			$sth->execute()
 				or die "Unable to create column ".$DataTypeColumn->column_name()." in table ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name();
 		}
-		$DataTypeColumn->writeObject() if $commitNow;
 	} else {
 		$DataTypeColumn = $cols[0];
 	}
