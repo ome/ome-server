@@ -57,8 +57,8 @@ use OME::Analysis::Engine::DataPaths;
 use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
 
-our $DEBUG = 1;
-sub __debug { print STDERR @_,"\n" if $DEBUG; }
+use Time::HiRes qw(gettimeofday tv_interval);
+use Log::Agent;
 
 =head2 checkInputs
 
@@ -333,7 +333,7 @@ sub getPredecessorMEX {
     my $factory = OME::Session->instance()->Factory();
 
     if (defined $self->{user_inputs}->{$to_input->id()}) {
-        __debug "  getPredecessorMEX(",$to_input->name(),")";
+        logdbg "debug", "  getPredecessorMEX(",$to_input->name(),")";
 
         my $granularity = $to_input->semantic_type()->granularity();
         my $to_dependence = ($granularity eq 'F')? 'I': $granularity;
@@ -341,11 +341,11 @@ sub getPredecessorMEX {
         my $input_mexes = $self->{user_inputs}->{$to_input->id()};
         my @target_mexes;
         foreach my $input_mex (@$input_mexes) {
-            __debug "    Checking MEX ",$input_mex->id();
-            __debug "      $to_dependence ",$input_mex->dependence();
+            logdbg "debug", "    Checking MEX ",$input_mex->id();
+            logdbg "debug", "      $to_dependence ",$input_mex->dependence();
             next unless ($input_mex->dependence() eq $to_dependence);
 
-            __debug "      **GOOD!"
+            logdbg "debug", "      **GOOD!"
               if ($to_dependence eq 'G')
               || ($to_dependence eq 'D' &&
                   $input_mex->dataset()->id() == $to_target->id())
@@ -381,10 +381,10 @@ sub getPredecessorMEX {
 
     my $target_column;
 
-    __debug "  getPredecessorMEX(",$link->id(),")";
+    logdbg "debug", "  getPredecessorMEX(",$link->id(),")";
 
-    __debug "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name();
-    __debug "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name();
+    logdbg "debug", "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name();
+    logdbg "debug", "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name();
 
     if ($from_dependence eq 'G') {
         push @from_targets, undef;
@@ -464,7 +464,7 @@ sub getUniversalExecution {
     my $target_id = (defined $target)? $target->id(): 0;
     my $factory = OME::Session->instance()->Factory();
 
-    __debug("  getUniversalExecution(",$node->module->name(),",$target_id)");
+    logdbg ("debug", "  getUniversalExecution(",$node->module->name(),",$target_id)");
 
     my %criteria = (
                     "module_execution.module" => $node->module(),
@@ -506,13 +506,13 @@ sub executeNodeWithTarget {
     my $target_id = (defined $target)? $target->id(): 0;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
-
-    __debug("  executeNodeWithTarget(",$node->module->name(),",$target_id)");
+    
+    logdbg ("debug", "  executeNodeWithTarget(",$node->module->name(),",$target_id)");
 
     # First see if there is a universal execution for this node.  If
     # there is, then we have nothing to do for this node.
-
-    return if defined $self->getUniversalExecution($node,$target);
+	my $nex = $self->getUniversalExecution($node,$target);
+    return $nex if defined $nex;
 
     my $module = $node->module();
     my $dependence = $self->{dependences}->{$node->id()};
@@ -554,7 +554,7 @@ sub executeNodeWithTarget {
     # then we've found a MEX which is eligible for attribute reuse.
 
     if ($self->{flags}->{ReuseResults}) {
-        __debug("  Looking for $input_tag");
+        logdbg ("debug", "  Looking for $input_tag");
         my $past_mex = $factory->
           findObject("OME::ModuleExecution",
                      {
@@ -564,32 +564,32 @@ sub executeNodeWithTarget {
                      });
         if (defined $past_mex) {
             # Reuse the results
-            __debug("  Match! ",$past_mex->id()," ",$past_mex->module()->name());
+            logdbg ("debug", "  Match! ",$past_mex->id()," ",$past_mex->module()->name());
 
             # Delete the newly created MEX (by rolling back the
             # transaction)
             $session->rollbackTransaction();
 
             # Create a node execution for this node and the matching MEX
-            my $nex = OME::Tasks::ModuleExecutionManager->
+            $nex = OME::Tasks::ModuleExecutionManager->
               createNEX($past_mex,$self->{chain_execution},$node);
             $session->commitTransaction();
 
-            return;
+            return $nex;
         }
     }
 
     # Create a node execution for this node and the new MEX
-    my $nex = OME::Tasks::ModuleExecutionManager->
+    $nex = OME::Tasks::ModuleExecutionManager->
       createNEX($mex,$self->{chain_execution},$node);
     $session->commitTransaction();
 
     # Execute the module
     my $executor = $self->{executor};
-    __debug("  Executing!");
+    logdbg ("debug", "  Executing!");
     $executor->executeModule($mex,$dependence,$target);
 
-    return;
+    return $nex;
 }
 
 =head2 isNodeReady
@@ -606,7 +606,7 @@ sub isNodeReady {
     my ($node,$target) = @_;
     my $target_id = (defined $target)? $target->id(): 0;
 
-    __debug("  isNodeReady(",$node->module->name(),",$target_id)");
+    logdbg ("debug", "  isNodeReady(",$node->module->name(),",$target_id)");
 
   INPUT:
     foreach my $formal_input ($node->module()->inputs()) {
@@ -690,11 +690,11 @@ sub executeChain {
     # that an unlocked view has not had paths calculated, whereas
     # a locked one has.
     if (!$chain->locked()) {
-        __debug("  Chain has not been locked yet");
+        logdbg ("debug", "  Chain has not been locked yet");
 
         OME::Analysis::Engine::DataPaths->createDataPaths($chain);
 
-        __debug("  Locking the chain");
+        logdbg ("debug", "  Locking the chain");
         $chain->locked('true');
         $chain->storeObject();
     }
@@ -730,14 +730,12 @@ sub executeChain {
 	my $count_steps = 0;
 	foreach my $node (@nodes) {
 		my $dependence = $self->{dependences}->{$node->id()};
-		my @targets;
-
+		
 		if ($dependence eq 'G') {
-			$count_steps += 0;
+			$count_steps += 1;
 		} elsif ($dependence eq 'D') {
 			$count_steps += 1;
 		} elsif ($dependence eq 'I') {
-			print STDERR "count_steps = $count_steps \n";
 			my @imgs = $dataset->images();
 			$count_steps += scalar(@imgs);
 		}
@@ -746,7 +744,6 @@ sub executeChain {
 	my $task = OME::Tasks::NotificationManager->
 		new("Executing `".$chain->name()."`", $count_steps);
 	$task->setMessage('Start Execution of Analysis Chain');
-	$task->step();
     $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
     my $continue = 1;
@@ -756,7 +753,7 @@ sub executeChain {
     while ($continue) {
         $continue = 0;
         $round++;
-        __debug("Round $round...");
+        logdbg ("debug", "Round $round...");
 
       NODE:
         foreach my $node (@nodes) {
@@ -785,10 +782,15 @@ sub executeChain {
 
                 # Node's ready, let's execute
                 $task->step();
-				$task->setMessage('Executing `'.$node->module->name()."`");
-                $self->executeNodeWithTarget($node,$target);
-
+                $task->setMessage('Executing `'.$node->module->name()."`");
+			
+				my $start_time = [gettimeofday()];
+                my $nex = $self->executeNodeWithTarget($node,$target);
+				my $mex = $nex->module_execution();
+				$mex->attribute_sort_time(tv_interval($start_time));
+				
                 # Mark some state and keep going
+			    $mex->storeObject();
                 $session->commitTransaction();
                 $self->{started_nodes}->{$node->id()}->{$target_id} = 1;
                 $continue = 1;
