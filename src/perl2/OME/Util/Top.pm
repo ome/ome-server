@@ -69,13 +69,14 @@ sub top_help {
     print <<"USAGE";
 OME Command-Line Commander, version $OME::VERSION_STRING
 
-Usage:  
-    ome top
-This prints out detailed information about OME Tasks that are executing or finished 
-execution.
+ome top
+
+This utility prints out detailed information about OME Tasks that are executing 
+or finished execution.
 
 Options:
-     -w , --wait  optional parameter signaling how many seconds to wait between updating	 
+
+  -w , --wait optional flag specifying how many seconds to wait before updating
 USAGE
     CORE::exit(1);
 }

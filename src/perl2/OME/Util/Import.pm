@@ -55,23 +55,21 @@ Getopt::Long::Configure("bundling");
 
 sub import_help {
     print <<"USAGE";
+OME Command-Line Commander, version $OME::VERSION_STRING
 
-ImportEngine.pl [options] [list of files]
+ome import [options] [list of files]
 
-Imports some proprietary image files into an OME database, and runs
-the import analysis chain against those images.
+This utility Imports files defining proprietary images or OME objects into an 
+OME database, and runs the import analysis chain against them.
 
 Options:
-
-  -p  Use this to specify the project name. This is only needed if you are importing
-      images.
       
-  -d  Use this to specify the dataset name. If you are importing images, you must 
-  	  specify a dataset. If you are importing OME Semantic Type Definitions, 
-  	  Analysis Modules, or Chains this parameter is optional.
+  -d  Use this to specify the dataset name. If you are importing images, you 
+      must specify a dataset. If you are importing OME Semantic Type 
+      Definitions, Analysis Modules, or Chains this parameter is unnecessary.
       
   -r  Reimports images which are already in the database.  This should
-      only be used for testing purposes. This functionality is impotent for OME
+      only be used for testing purposes. This flag is ignored for OME
       XML files.
       
   -h  Print this help message.
