@@ -5,3 +5,4 @@ blib/
 .bs$
 pm_to_blib
 MANIFEST.bak
+.DS_Store
