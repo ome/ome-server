@@ -1442,7 +1442,6 @@ long  *sLongP;
 float *floatP;
 register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 int i;
-int do_hist = 1;
 
 	if (!myPixels) return (0);
 	if (!myPixels->stackInfos) return (0);
@@ -1481,17 +1480,17 @@ int do_hist = 1;
 		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *sCharP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sCharP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sCharP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
-			
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 1 && !head->isSigned) {
 		uCharP = (unsigned char *) thePix;
 		
@@ -1513,19 +1512,19 @@ int do_hist = 1;
 
 		uCharP = (unsigned char *) thePix;
 		
-		
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *uCharP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uCharP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uCharP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 2 && head->isSigned) {
 		sShrtP = (short *) thePix;
 		
@@ -1549,16 +1548,17 @@ int do_hist = 1;
 		sShrtP = (short *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *sShrtP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sShrtP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sShrtP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 2 && !head->isSigned) {
 		uShrtP = (unsigned short *) thePix;
 		
@@ -1581,16 +1581,17 @@ int do_hist = 1;
 		uShrtP = (unsigned short *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *uShrtP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uShrtP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uShrtP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
 		sLongP = (long *) thePix;
 		
@@ -1614,16 +1615,17 @@ int do_hist = 1;
 		sLongP = (long *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *sLongP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sLongP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *sLongP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
 		uLongP = (unsigned long *) thePix;
 		
@@ -1646,16 +1648,17 @@ int do_hist = 1;
 		uLongP = (unsigned long *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *uLongP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uLongP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *uLongP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	} else if (head->bp == 4 && head->isFloat) {
 		floatP = (float *) thePix;
 		
@@ -1679,16 +1682,17 @@ int do_hist = 1;
 		floatP = (float *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
 		if (max-min <= 0){
-			do_hist = 0;
 			myPlaneInfo.hist[NUM_BINS/2] = nPix;
-		}
-		
-		for (i=0;i<nPix;i++) {
-			theVal = (float) *floatP++;
-			if (do_hist)
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *floatP++;
+				sum_log_i +=  log (theVal+logOffset);
+			}
+		} else		
+			for (i=0;i<nPix;i++) {
+				theVal = (float) *floatP++;
 				myPlaneInfo.hist[(int) (((theVal-min)/(max-min))*(NUM_BINS-1))]++;
-			sum_log_i +=  log (theVal+logOffset);
-		}
+				sum_log_i +=  log (theVal+logOffset);
+			}
 	}
 	
 	myPlaneInfo.sum_xi    = sum_xi;
