@@ -55,13 +55,19 @@
 	</tr>
 </table>
 <TMPL_IF NAME=categories_used>
-<font class="ome_relation_title">
-	Partition thumbnails by CategoryGroup: 
-</font>
-<TMPL_VAR NAME=categories_used><br>
+	<font class="ome_relation_title">To cluster thumbnails by Category, select a CategoryGroup.</font>
+	<TMPL_VAR NAME=categories_used><br>
+	Can't find what you want in that list? You may want to 
+		<a href="javascript: selectOne( '\@CategoryGroup', 'selected_cg' );">Search</a>
+		or
+		<a href="javascript: creationPopup( '\@CategoryGroup', 'selected_cg' );">Create</a>
+	a new one.
+	<input type="hidden" name="selected_cg"><br>
+<hr>
 </TMPL_IF>
-<TMPL_IF NAME=selected_category_group>
-	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group>.</font><br>
+<TMPL_IF NAME=selected_category_group_ref>
+	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group_ref>.</font>
+	To add a Category click on <TMPL_VAR NAME=selected_category_group_ref> and refresh this page when you are done.<br>
 	<span class='ome_quiet'>Clicking a thumbnail will:
 	<input type="radio" name="thumb_click_opens" value='viewer'>Open the Image Viewer
 	<input type="radio" name="thumb_click_opens" value='image_detail' >Show Image Metadata

@@ -78,33 +78,46 @@ sub getPageBody {
 	
 	# Gather Category Groups used in this dataset & make a popup list from them
 	my %image_ids = map{ $_->id => undef } $dataset->images();
+	my %unique_cg_hash;
 	if( %image_ids ) {
 		my @classifications = $factory->
 			findObjects( '@Classification',
 			image_id => ['in', [ keys %image_ids ] ]
 		);
-		my %unique_cg_hash = map
+		%unique_cg_hash = map
 			{ $_->Category->CategoryGroup->id => $_->Category->CategoryGroup }
 			@classifications;
-		my @cg_list = sort{ $a->Name cmp $b->Name } values %unique_cg_hash ;
-		$tmpl_data{ categories_used } = (
+	}
+	# If the user selected another CG with the Search or Create link,
+	# then include that in the drop down list of CGs
+	my $cg_id = $q->param( 'selected_cg' );
+	if( ( defined $cg_id ) && 
+	    ( $cg_id ne '' ) &&
+		( not exists $unique_cg_hash{ $cg_id } ) ) {
+		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
+			or die "Couldn't load CategoryGroup id='$cg_id'";
+		$unique_cg_hash{ $cg_id } = $cg;
+	}
+	$cg_id = $q->param( 'group_images_by_cg' )
+		unless $cg_id;
+	my @cg_list = sort{ $a->Name cmp $b->Name } values %unique_cg_hash ;
+	# actually make the popup list
+	$tmpl_data{ categories_used } = (
 		@cg_list ?
 		$q->popup_menu(
 			-name     => 'group_images_by_cg',
 			'-values' => ['', map( $_->id, @cg_list) ],
-			-default  => ( $q->param( 'group_images_by_cg' ) || '' ),
+			-default  => ( $cg_id || '' ),
+			-override => 1,
 			-labels   => { 
-				'' => "Don't partition",
+				'' => "(no selection)",
 				( map { $_->id => $_->Name } @cg_list )
 			},
 			-onChange => "javascript: document.forms[0].submit();"
-		) :
-		'(No images in this dataset have been classified)'
-		);
-	}
+		) : '(No CategoryGroups are used by this Dataset)'
+	);
 
 	# Use selected CategoryGroup (if there is one) to group images.
-	my $cg_id = $q->param( 'group_images_by_cg' );
 	if( $cg_id && $cg_id ne '' ) {
 		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
 			or die "Couldn't load CategoryGroup ID=$cg_id";
@@ -128,12 +141,12 @@ sub getPageBody {
 				push( @{ $image_classifications{ $classification->Category->id } }, $image );
 			}
 		}
-		# look for "can't display classification" flag
+		# %image_classifications works as a "can't display classification" flag.
+		# If 'selected_category_group' isn't set, the template will
+		# revert to a big list of images. So only set it if we can
+		# handle this category group.
 		if( %image_classifications ) {
-			# If 'selected_category_group' isn't set, the template will
-			# revert to a big list of images. So only set it if we can
-			# handle this category group.
-			$tmpl_data{ selected_category_group } = $self->Renderer()->render( $cg, 'ref' );
+			$tmpl_data{ selected_category_group_ref } = $self->Renderer()->render( $cg, 'ref' );
 			my @category_list = sort( { $a->Name cmp $b->Name } $cg->CategoryList() );
 			$tmpl_data{ available_categories } = $q->popup_menu(
 				-name     => 'category_to_classify_with',
@@ -156,7 +169,7 @@ sub getPageBody {
 				{ $a->name cmp $b->name }
 				@{ $image_classifications{ 0 } || [] }
 			);
-			push( @{ $tmpl_data{ CategoryList } }, {
+			unshift( @{ $tmpl_data{ CategoryList } }, {
 				CategoryRef => 'Unclassified',
 				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
 			} );
