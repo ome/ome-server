@@ -31,7 +31,7 @@ use IO::File;
 
 use OME::Image::Pix;
 
-use fields qw(_fileOpen _fileHandle Pix _attributes);
+use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
 __PACKAGE__->AccessorNames({
     instrument_id   => 'instrument',
@@ -50,7 +50,10 @@ __PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 __PACKAGE__->hasa('OME::Repository' => qw(repository_id));
 __PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
+__PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
+__PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
 
+	
 
 sub _init {
     my $class = shift;
@@ -59,34 +62,32 @@ sub _init {
     $self->{_fileOpen} = 0;
     $self->{_fileHandle} = undef;
     $self->{Pix} = undef;
-    $self->{_attributes} = undef;
+    $self->{_dimensions} = undef;
     return $self;
 }
 
 sub Pix {
     my $self = shift;
     return ($self->{Pix}) if defined $self->{Pix};
-    my $attributes = $self->ImageAttributes();
+    my $dimensions = $self->Dimensions();
     $self->{Pix} = new OME::Image::Pix (
         $self->getFullPath(),
-        $attributes->size_x(),$attributes->size_y(),$attributes->size_z(),
-        $attributes->num_waves(),$attributes->num_times(),
-        $attributes->bits_per_pixel()/8
+        $dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+        $dimensions->num_waves(),$dimensions->num_times(),
+        $dimensions->bits_per_pixel()/8
     ) || die ref($self)."->Pix:  Could not instantiate OME::Image::Pix object\n";
     return ($self->{Pix});
 }
 
-sub ImageAttributes {
+sub Dimensions {
     my $self = shift;
-    return ($self->{_attributes}) if defined $self->{_attributes};
+    return ($self->{_dimensions}) if defined $self->{_dimensions};
     
-    my @attributes = $self->Factory()->findObjects("OME::Image::Attributes",
-                                                   "image_id",
-                                                   $self->id());
+    my @dimensions = OME::Image::Dimensions->search (image_id => $self->id());
     
-    die "Image has multiple attribute entries" if (scalar(@attributes) > 1);
-    $self->{_attributes} = $attributes[0];
-    return $self->{_attributes};
+    die "Image has multiple dimension entries" if (scalar(@dimensions) > 1);
+    $self->{_dimensions} = $dimensions[0];
+    return $self->{_dimensions};
 }
 
 sub getFullPath {
@@ -141,7 +142,7 @@ sub GetPixelArray {
 }
 
 
-package OME::Image::Attributes;
+package OME::Image::Dimensions;
 
 use strict;
 our $VERSION = '1.0';
@@ -150,22 +151,22 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
+    attribute_id => 'attribute',
     image_id     => 'image'
 });
 
-__PACKAGE__->table('attributes_image_xyzwt');
+__PACKAGE__->table('image_dimensions');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(size_x size_y size_z 
+__PACKAGE__->columns(Essential => qw(image_id size_x size_y size_z 
 				     num_waves num_times 
 				     bits_per_pixel));
 __PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
 				  wave_increment time_increment)); 
-__PACKAGE__->hasa('OME::Image' => qw(image_id));
 
 
 
-package OME::Image::WavelengthInfo;
+package OME::Image::Wavelengths;
 
 use strict;
 our $VERSION = '1.0';
@@ -186,7 +187,7 @@ __PACKAGE__->columns(Essential => qw(image_id wavenumber
 				     nd_filter fluor));
 
 
-package OME::Image::XYZImageInfo;
+package OME::Image::XYZInfo;
 
 use strict;
 our $VERSION = '1.0';
