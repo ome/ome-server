@@ -8,19 +8,20 @@ my $image;
 while( $image = $image_iterator->next() ) {
 	my @display_options_list = $factory->findObjects( '@DisplayOptions', image => $image, module_execution => undef );
 	foreach my $display_options ( @display_options_list ) {
-		my $stats = OME::Tasks::ImageManager->getImageStats( $image, $display_options->Pixels() );
+	    my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $display_options->Pixels() );
+		my $stats = $pixels_data->getStackStatistics();
 		my $theT = ($display_options->TStart + $display_options->TStop ) /2;
 		my $updateThumbNail = undef;
 		foreach my $dc ( $display_options->RedChannel(), $display_options->GreenChannel(), $display_options->BlueChannel(), $display_options->GreyChannel(),  ) {
 			my $theC = $dc->ChannelNumber();
-			if( $dc->WhiteLevel() > $stats->[ $theC ][ $theT ]->{ max } ) {
+			if( $dc->WhiteLevel() > $stats->{ $theC }{ $theT }{ Maximum } ) {
 				$updateThumbNail = 1;
-				$dc->WhiteLevel( $stats->[ $theC ][ $theT ]->{ max } );
+				$dc->WhiteLevel( $stats->{ $theC }{ $theT }{ Maximum } );
 				$dc->storeObject();
 			}
-			if( $dc->BlackLevel() < $stats->[ $theC ][ $theT ]->{ min } ) {
+			if( $dc->BlackLevel() < $stats->{ $theC }{ $theT }{ Minimum } ) {
 				$updateThumbNail = 1;
-				$dc->BlackLevel( $stats->[ $theC ][ $theT ]->{ min } );
+				$dc->BlackLevel( $stats->{ $theC }{ $theT }{ Minimum } );
 				$dc->storeObject();
 			}
 		}
