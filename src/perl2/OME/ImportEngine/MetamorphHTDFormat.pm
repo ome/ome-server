@@ -423,6 +423,13 @@ sub importGroup {
             last FILENAME;
         }
 
+        if (not ($thisBitsPerPixel == 8 || $thisBitsPerPixel == 16) ) {
+            print STDERR "Bits per bixel must be 8 or 16.  Got $thisBitsPerPixel.\n";
+            $image_invalid = 1;
+            close TIFF;
+            last FILENAME;
+        }
+
         if ($pixels_created) {
             # Verify that this TIFF is the same size as all of the others.
 
@@ -472,25 +479,8 @@ sub importGroup {
             close TIFF;
             last FILENAME;
         }
-
-        my $theY = 0;
-
-        while (@$strip_offsets) {
-            #print STDERR "  0,$theY,0,$theC,0\n";
-            my $offset = shift(@$strip_offsets);
-            my $length = shift(@$strip_lengths);
-            seek(TIFF,$offset,0);
-            read(TIFF,$buf,$length);
-            my $count = Repacker::repack($buf,$length,$bitsPerPixel/8,
-                                         $ifd->{__Endian} == LITTLE_ENDIAN,
-                                         $our_endian == LITTLE_ENDIAN);
-
-            $pix->SetRows($buf,$rows_per_strip,$theY,0,$theC,0);
-
-            $theY += $rows_per_strip;
-        }
-
         close TIFF;
+#        $pix->TIFF2Plane ($filename,0,$theC,0);
     }
 
     if ($image_invalid && $pixels_created) {
