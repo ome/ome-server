@@ -41,7 +41,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use IPC::Open2;
+use IPC::Run;
 
 use OME::Analysis::Handler;
 use XML::LibXML;
@@ -181,6 +181,8 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	my $tree = $parser->parse_string( $executionInstructions );
 	my $root = $tree->getDocumentElement();
 	
+	my @elements;
+
 	
 	#####################################################################
 	#
@@ -372,14 +374,20 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	#
 	my $runAgain;
 	my $cmdXML      = $root->getElementsByTagNameNS( $CLIns, "CommandLine" )->[0];
-	my @cmdElements = $cmdXML->getElementsByTagNameNS( $CLIns, "InputSubString" )
+	my @cmdParameters = $cmdXML->getElementsByTagNameNS( $CLIns, "Parameter" )
 		if defined $cmdXML;
+	my @paramElements;
 	my @planes = $cmdXML->getElementsByTagNameNS( $CLIns, "XYPlane" )
 		if defined $cmdXML;
 	print STDERR "\n" if $debug eq 2;
 	print STDERR "----------------------\n" if $debug eq 2;
 	print STDERR "      Executing\n" if $debug eq 2;
 	print STDERR "----------------------\n" if $debug eq 2;
+	#
+	my $inputStream = '';
+	my $outputStream = '';
+	my $errorStream = '';
+	my @command;
 	do { # loop is needed for plane iteration.
 		$runAgain         = undef;
 		my $cmdLineString = ' ';
@@ -400,12 +408,17 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#
 		# Construct Command Line String
 		#
+		push (@command, $module->location());
+		my $paramString;
 		print STDERR "Constructing Command Line String\n" if $debug eq 2;
-		foreach my $subString(@cmdElements) {
-			$cmdLineString .= resolveSubString( $subString );
+		foreach my $parameter (@cmdParameters) {
+			$paramString = '';
+			@paramElements = $parameter->getElementsByTagNameNS( $CLIns, "InputSubString" );
+			foreach my $subString(@paramElements) {
+				$paramString .= resolveSubString( $subString );
+			}
+			push (@command, $paramString);
 		}
-		my $executeString = $module->location() . $cmdLineString;
-		print STDERR "Execution string is:\n$executeString\n" if $debug;
 		#
 		#
 		#################################################################
@@ -413,40 +426,53 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#####################################################################
 		#   
 		# Actually execute
+		#  N.B.(IGG): We collect inputs into a scalar then call IPC::Run::run and collect output and error into seperate scalars.
+		#  This is not a true pipe, in other words, and neither are modules run in pseudo-ttys.
 		#
-			open2(*OUT, *IN, $executeString);
-			
+		print STDERR "Execution string is:\n @command\n" if $debug;
+
+						
 			#################################################################
 			#
 			# Write to STDIN of program
 			#
-			print STDERR "Writing to Program's STDIN.\n" if $debug eq 2;
- 			my @stdinXML = $root->getElementsByLocalName( "STDIN" ); 
+ 			my @stdinXML = $root->getElementsByTagNameNS( $CLIns, "STDIN" ); 
 			if( @stdinXML ) {
-				my @inputRecordsXML = $stdinXML[0]->getElementsByLocalName( "InputRecord" );
+				print STDERR "Writing to Program's STDIN.\n" if $debug eq 2;
+				my @inputRecordsXML = $stdinXML[0]->getElementsByTagNameNS( $CLIns, "InputRecord" );
 				foreach my $inputRecordXML( @inputRecordsXML ) {
 					#construct input record
-					my $delimitedRecordXML = [$inputRecordXML->getElementsByLocalName("DelimitedRecord")]->[0];
-					my @inputsXML = $delimitedRecordXML->getElementsByLocalName( "Input" );
-					my @indexesXML = $inputRecordXML->getElementsByLocalName( "Index" );
+					my $delimitedRecordXML = [$inputRecordXML->getElementsByTagNameNS( $CLIns,"DelimitedRecord")]->[0];
+					my @inputsXML = $delimitedRecordXML->getElementsByTagNameNS( $CLIns, "Input" );
+					my @indexesXML = $inputRecordXML->getElementsByTagNameNS( $CLIns, "Index" );
 
+					
 					my %recordHash;
 					my %knownFormalInputs;
 					
 					# process each formal input in the record block, & join them on indexes
 					foreach my $inputXML( @inputsXML ) {
 						my @indexLookup;
-						my $FI = $inputXML->getAttribute('FormalInputName');
+
+						my $location = $inputXML->getAttribute('Location')
+							or die "Location attribute not specified in Input element!\n";
+						@elements = split (/\./,$location);
+						my $FI = shift (@elements);
 						
 						# have we seen this formal input before?
 						next if exists $knownFormalInputs{$FI};
 						$knownFormalInputs{$FI} = undef;
 						
+						# Collect the Location attributes for the Index Input elements who's ST matches the FI.
 						foreach my $indexXML (@indexesXML ) {
-							my @matchingInput = grep( 
-								$_->getAttribute('FormalInputName') eq $FI,
-								$indexXML->getElementsByLocalName("Input"));
-							push( @indexLookup, $matchingInput[0]->getAttribute( 'SemanticElementName' ) );
+							foreach ($indexXML->getElementsByTagNameNS( $CLIns,"Input")) {
+								@elements = split ( /\./,$_->getAttribute('Location'));
+								if ($elements[0] eq $FI) {
+									shift (@elements);
+									push( @indexLookup, join ('()->',@elements) );
+									last;
+								}
+							}
 						}
 						
 						# make hash entry for each instance of this formal input
@@ -455,11 +481,12 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							#my $d = $input->getDataHash();
 							my @keys = ();
 							foreach my $se ( @indexLookup ) {
-								# FIXME: implement dereferencing
-								#$se =~ s/\./\(\)->/g;
-								my $val = $input->$se();
+								my $val;
+								# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
+								eval('$val = $input->'.$se.'()');
 								
-								die "Could not find SE '$se' belonging to ST '".$input->semantic_type()->name()."'. The <InputRecord> this stuff was pulled from is\n".$inputRecordXML->toString()."\n"
+								die "Could not find SE '$se' belonging to ST '".$input->semantic_type()->name().
+									"'. Error: $@. The <InputRecord> was:\n".$inputRecordXML->toString()."\n"
 									unless defined $val;
 								push( @keys, $val );
 							}
@@ -476,12 +503,11 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					foreach my $index( sort keys %recordHash ) {
 						my @recordEntries;
 						foreach my $inputXML( @inputsXML ) {
-							my $FI = $inputXML->getAttribute('FormalInputName');
-							my $se = $inputXML->getAttribute('SemanticElementName');
-							# FIXME: implement dereferencing
-							#$se =~ s/\./\(\)->/g;
-							my $r = $recordHash{ $index }->{ $FI }->$se();
-							die "_getField( $se ) returned undef. This was most likely caused by a misspelling of the semantic element '$se' in '".$inputXML->toString()."'.\n"
+							@elements = split ( /\./,$inputXML->getAttribute('Location'));
+							my $FI = shift (@elements);
+							my $r;
+							eval ('$r = $recordHash{ $index }->{ $FI }->'.join ('()->',@elements).'()');
+							die "$FI->".join ('()->',@elements)."() returned undef. This was most likely caused by a misspelling of the semantic element in '".$inputXML->toString()."'.\n"
 								unless defined $r;
 							push( @recordEntries, $r );
 						}
@@ -489,21 +515,24 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 						push( @recordBlock, $record );
 					}
 					my $recordDelimiter = $delimitedRecordXML->getAttribute( 'RecordDelimiter' ) || "\n";
-					print IN join( $recordDelimiter, @recordBlock );
-					print STDERR "Record block is:\n".join( $recordDelimiter, @recordBlock ) if $debug > 2;
+					$inputStream .= join( $recordDelimiter, @recordBlock );
+					print STDERR "Record block is:\n".join( $recordDelimiter, @recordBlock ) if $debug eq 2;
 				}
 			}
-			close(IN);
 			#
 			#
 			#################################################################
+			# OK, now that we have the inputs, we actually run the module.
+			$outputStream='';
+			IPC::Run::run (
+				\@command,
+				\$inputStream,
+				\$outputStream,
+				\$errorStream
+			) or die "module returned non-zero exit status: $?\n$errorStream" ;
+			# Forward the error text to our STDERR if there was any.
+			print STDERR "module exited normally, but gave the following error output\n".$errorStream if length $errorStream > 0;
 
-			# collect output
-			my $outputStream='';
-			while( <OUT> ) {
-				$outputStream .= $_;
-			}
-			close(OUT);
 		#
 		#####################################################################
 			
@@ -530,15 +559,15 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			# Input request
 			#
 			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
-				my $se = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('SemanticElementName');
-				$se =~ s/\./\(\)->/g;
-				my $str = '$inputs{'.
-						$subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('FormalInputName').
-					'}->[0]->'.$se.'()';
+				my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
+					or die "Location attribute not specified in Input element!\n";
+				my @elements = split (/\./,$location);
+				my $ST = shift (@elements);
+				my $str = '$inputs{$ST}->[0]->'.join ('()->',@elements).'()';
 				my $val;
 				# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
-				eval('$val ='. $str)
-					or die "Could not resolve input call '$str'\n";
+				eval('$val ='. $str);
+				die "Could not resolve input call '$str':$@\n" unless defined $val;
 				
 				$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
 					if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
@@ -616,8 +645,9 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				my $indexXML = $plane->getElementsByTagNameNS( $CLIns, $index )->[0];
 				
 				foreach my $outputTo ($indexXML->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
-					my $semanticElementName = $outputTo->getAttribute( "SemanticElementName" );
-					my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
+					@elements = split (/\./,$outputTo->getAttribute( "Location" ) );
+					my $formalOutputName = $elements[0];
+					my $semanticElementName = $elements[1];
 					$outputs{ $formalOutputName }->{$semanticElementName} = 
 					${ $planeIndexes->{ $planeID }->{ $index } };
 					print STDERR "\tStored index $index, value ".
@@ -696,23 +726,30 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			my $repeatCount = $outputRecord->getAttribute( "RepeatCount" );
 			my $terminateAt = $outputRecord->getAttribute( "TerminateAt" );
 			my $pat = $outputRecord->getElementsByTagNameNS( $CLIns, "pat" )->[0]->getFirstChild->getData();
+			my $patRE = qr/$pat/;
 			my @outputs = $outputRecord->getElementsByTagNameNS( $CLIns, "Output" );
 
-			while( keepGoing($repeatCount, $terminateAt, $outputStream) and ($outputStream =~ s/$pat// )) {
-				$repeatCount-- if defined $repeatCount;
-				my @outputRecord;
-				foreach my $output(@outputs) {
-					foreach my $outputTo ($output->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
-						# This use of eval is not a security hole. ExecutionInstructions has been validated against XML schema.
-						# XML schema dictates AccessBy attribute must be an integer.
-						# ...but I'm paranoid, so I'm going to check anyway
-						my $accessBy               = $output->getAttribute( "AccessBy" );
-						die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_module}->name()." are corrupted. Alert system admin!" 
-							if( $accessBy =~ m/\D/ );
-						my $formalOutputColumnName = $outputTo->getAttribute( "SemanticElementName" );
-						my $formalOutputName       = $outputTo->getAttribute( "FormalOutputName" );
-						my $cmd                    = '$outputs{ $formalOutputName }->{$formalOutputColumnName} = $' . $accessBy . ';';
-						eval $cmd;
+
+			while( keepGoing($repeatCount, $terminateAt, $outputStream)) {
+				print STDERR "$outputStream\n" if $debug eq 2;
+				if ($outputStream =~ s/$patRE//) {
+					print STDERR "Pattern Match\n" if $debug eq 2;
+					$repeatCount-- if defined $repeatCount;
+					my @outputRecord;
+					foreach my $output(@outputs) {
+						foreach my $outputTo ($output->getElementsByTagNameNS( $CLIns, "OutputTo" ) ) {
+							# This use of eval is not a security hole. ExecutionInstructions has been validated against XML schema.
+							# XML schema dictates AccessBy attribute must be an integer.
+							# ...but I'm paranoid, so I'm going to check anyway
+							my $accessBy = $output->getAttribute( "AccessBy" );
+							die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_module}->name()." are corrupted. Alert system admin!" 
+								if( $accessBy =~ m/\D/ );
+							@elements = split (/\./,$outputTo->getAttribute( "Location" ) );
+							my $formalOutputName = $elements[0];
+							my $formalOutputColumnName = $elements[1];
+							my $cmd                    = '$outputs{ $formalOutputName }->{$formalOutputColumnName} = $' . $accessBy . ';';
+							eval $cmd;	
+						}
 					}
 				}
 
