@@ -68,6 +68,7 @@ public class XmlRpcCaller
         {
             xmlrpc = createClient(url);
             XmlRpc.setKeepAlive(false);
+            XmlRpc.setDebug(false);
         } catch (Exception e) {
             xmlrpc = null;
             System.err.println(e);
