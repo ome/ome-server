@@ -294,9 +294,9 @@ my $numSelections;
 #			}
 		} elsif ($@) {
 			$OME->UpdateProgress (Error => $@);
-			ReportDocStatus ('<B><font color=\"#FF0000\">Error!</font></B>'."  $datasetName is corrupt!<BR>");
+			ReportDocStatus ('<B><font color=\"#FF0000\">Error!</font></B>'."  '$datasetName' is corrupt!<BR>");
 		} else {
-			ReportDocStatus ("$datasetName:  <B>Ignored</B> - file type not supprted.<BR>");
+			ReportDocStatus ("'$datasetName':  <B>Ignored</B> - file type not supprted.<BR>");
 		}
 	}
 	ReportDocStatus ("Total: <B>".scalar @datasetIDs."</B> Datasets imported.<BR>");
