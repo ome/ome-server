@@ -177,6 +177,43 @@ sub connectToDatabase {
     return $dbh;
 }
 
+# after these methods are implemented and used, the boolean hack in
+# DBObject->addcolumn should be taken out
+=head2 datatypeNeedsTranslation
+
+	if( $delegate->datatypeNeedsTranslation($SQLType) ) {
+		# do something
+	}
+
+Determine if translation method calls are needed.
+
+Used by EITHER DBObject's addColumn method to cache results in column
+definition OR methods that call delegate translation methods.
+
+=cut
+
+=head2 translateDatatypesToDB
+
+	$datum = $delegate->translateDatatypesToDB($SQLType, $datum);
+
+This method converts data types from perl to the database. Boolean
+values of 0 or 1 in perl will be translated to 't' or 'f' for database
+writes. Timestamps may also need conversions.
+
+Used in DBObject __make*SQL methods
+
+=cut
+
+=head2 translateDatatypesFromDB
+
+	$datum = $delegate->translateDatatypesFromDB( $SQLType, $datum );
+
+Inverse of translateDatatypesToDB.
+
+Used in DBObject __fillInstance method
+
+=cut
+
 =head2 getNextSequenceValue
 
 	my $id = $delegate->getNextSequenceValue($dbh,$sequence);
