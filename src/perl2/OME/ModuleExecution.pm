@@ -90,7 +90,6 @@ __PACKAGE__->columns(Timing => qw(timestamp status total_time
 __PACKAGE__->hasa('OME::Module' => qw(module_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->has_many('inputs','OME::ModuleExecution::ActualInput' => qw(module_execution_id));
-#__PACKAGE__->has_many('outputs','OME::ModuleExecution::ActualOutput' => qw(module_execution_id));
 
 =head1 METHODS (C<module_execution>)
 
@@ -244,29 +243,6 @@ sub attribute {
 	return $attribute;
     }
 }
-
-
-# package OME::ModuleExecution::ActualOutput;
-
-# use strict;
-# our $VERSION = '1.0';
-
-# use OME::DBObject;
-# require OME::Module;
-# use base qw(OME::DBObject);
-
-# __PACKAGE__->AccessorNames({
-#     module_execution_id      => 'module_execution',
-#     formal_output_id => 'formal_output'
-#     });
-
-# __PACKAGE__->table('actual_outputs');
-# __PACKAGE__->sequence('actual_output_seq');
-# __PACKAGE__->columns(Primary => qw(actual_output_id));
-# __PACKAGE__->columns(Essential => qw(module_execution_id formal_output_id));
-# __PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
-# __PACKAGE__->hasa('OME::Module::FormalOutput' => qw(formal_output_id));
-
 
 
 1;
