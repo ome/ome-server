@@ -172,7 +172,7 @@ my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a na
 	# This gets the latest threshold for the test image.
 		$threshold = $OME->DBIhandle->selectrow_array (
 			'SELECT threshold FROM threshold,analyses WHERE threshold.analysis_id=analyses.analysis_id '.
-			' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID.' ORDER BY analysis_id DESC LIMIT 1');
+			' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID.' ORDER BY threshold.analysis_id DESC LIMIT 1');
 # This is the traditional way of getting computed 'Features'.
 # We did a direct query because it seems a little faster, though by how much wasn't determined recently.
 # We should probably eventually go back to doing things this way because its more general + robust.

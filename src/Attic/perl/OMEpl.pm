@@ -164,6 +164,9 @@ my ($pack,$file,$line,$sub);
 
 	CORE::die($message) if $isEval;
 	($pack,$file,$line,$sub) = caller 0;
+	my $location = "at $file line $line"; 
+	$message .= " $location." unless $message=~/$location/;
+
 	if (defined $self) {
 		my $session = $self->Session;
 		my $analysis;
@@ -187,8 +190,6 @@ my ($pack,$file,$line,$sub);
 		$message .= "\nCould not store session status - OME object is undefined.\n";
 	}
 
-	my $location = "at $file line $line"; 
-	$message .= " $location." unless $message=~/$location/;
 
 	$htmlMessage = $message;
     $htmlMessage=~s/&/&amp;/g;
