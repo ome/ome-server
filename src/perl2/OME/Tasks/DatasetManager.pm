@@ -215,10 +215,11 @@ sub addImages{
 
 	if (scalar(@$ref)>0){
 	  foreach  (@$ref){
-		$self->addToDataset($dataset->dataset_id(),$_);
+		$self->addToDataset($dataset->id(),$_);
 	  }
 	  $session->dataset($dataset);
-	  $session->writeObject();
+	  $session->storeObject();
+          $session->commitTransaction();
 	  return 1;
 	}else{
 	  return undef;
