@@ -36,6 +36,12 @@ var svgns = "http://www.w3.org/2000/svg";
 *****/
 ViewerPreferences.VERSION = .2;
 ViewerPreferences.ScaleSliderWidth = 50;
+ViewerPreferences.toolboxApperance = {
+	x: 250,
+	y: 250,
+	width: 165,
+	height: 55
+};
 
 /********************************************************************************************/
 /********************************************************************************************/
@@ -47,19 +53,13 @@ ViewerPreferences.ScaleSliderWidth = 50;
 	ViewerPreferences
 		constructor
 *****/
-function ViewerPreferences( a ) {
-	this.init( a );
+function ViewerPreferences( SavePrefsCGI_URL ) {
+	this.init( SavePrefsCGI_URL );
 }
 
 ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 	var displayContent = this.buildDisplay();
-	var bbox = displayContent.getBBox();
-	var width = bbox.width + 2 * toolBox.prototype.padding+ 20;
-// hack alert!! '+ 20'
-	var height = bbox.height + 2 * toolBox.prototype.padding+ 20;
-	this.toolBox = new toolBox(
-		255, 250, width, height
-	);
+	this.toolBox = new toolBox( ViewerPreferences.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
 	this.toolBox.setLabel(10,12,"Viewer Preferences");
 	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
@@ -78,27 +78,15 @@ ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 
 	// set up GUI
 	this.toolBoxSizeSlider = new Slider(
-		110,0,ViewerPreferences.ScaleSliderWidth,0,
+		90,0,ViewerPreferences.ScaleSliderWidth,0,
 		{ obj: this, method: 'resizeToolboxes' }
 	);
 	this.toolBoxSizeSlider.setLabel(-95,3,"Resize toolbox:");
-	this.applyChangesToSelfButton = new button(
-		0, 25, 
-		{ obj: this, method: 'resizeSelf' },
-		'<g transform="translate(90,0)">'+
-		'	<rect x="-90" width="180" height="18" fill="lightslategray"/>'+
-		'	<text y="2" dominant-baseline="hanging" text-anchor="middle">Apply changes to this toolbox</text>'+
-		'	<rect x="-90" width="180" height="18" opacity="0"/>'+
-		'</g>',
-		null,
-		'<g transform="translate(90,0)">'+
-		'	<rect x="-90" width="180" height="18" fill="aquamarine"/>'+
-		'	<text y="2" dominant-baseline="hanging" text-anchor="middle">Apply changes to this toolbox</text>'+
-		'	<rect x="-90" width="180" height="18" opacity="0"/>'+
-		'</g>'
-	);
+	this.toolBoxSizeSlider.realize( this.displayContent );
+	this.toolBoxSizeSlider.setMinmax(1,2);
+
 	this.saveChangesButton = new button(
-		40, 55, 
+		30, 20, 
 		{ obj: this, method: 'savePreferences' },
 		'<g transform="translate(50,0)">'+
 		'	<rect x="-50" width="100" height="18" fill="lightslategray"/>'+
@@ -112,9 +100,6 @@ ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 		'	<rect x="-50" width="100" height="18" opacity="0"/>'+
 		'</g>'
 	);
-
-	this.toolBoxSizeSlider.realize( this.displayContent );
-	this.applyChangesToSelfButton.realize( this.displayContent );
 	this.saveChangesButton.realize( this.displayContent );
 	
 	var translate = 'translate( '+ toolBox.prototype.padding + ', ' + toolBox.prototype.padding + ')';
@@ -131,38 +116,42 @@ ViewerPreferences.prototype.setWindowControllers = function(windowControllers) {
                             Private Functions
 ********************************************************************************************/
 
-ViewerPreferences.prototype.init = function(imageControlToolbox) {
+ViewerPreferences.prototype.init = function(SavePrefsCGI_URL) {
 	this.initialized         = true;
+	this.SavePrefsCGI_URL  = SavePrefsCGI_URL;
 };
 
 ViewerPreferences.prototype.resizeToolboxes = function( scale, applyToAll ) {
+	this.scale = scale;
 	this.toolBoxSizeSlider.setValue(scale);
 	for( i in this.windowControllers ) {
 		if( applyToAll || this.windowControllers[i].toolBox != this.toolBox ) {
-			this.windowControllers[i].toolBox.setScale(1 + scale/ViewerPreferences.ScaleSliderWidth );
+			this.windowControllers[i].toolBox.setScale( this.scale );
 		}
 	}
 };
 
 
 ViewerPreferences.prototype.resizeSelf = function() {
-	scale = 1 + this.toolBoxSizeSlider.getValue()/ViewerPreferences.ScaleSliderWidth;
-	this.toolBox.setScale(scale);
+	var scale = 1 + this.toolBoxSizeSlider.getValue()/ViewerPreferences.ScaleSliderWidth;
+	this.toolBox.setScale(this.scale);
 };
 
 
 ViewerPreferences.prototype.savePreferences = function(  ) {
+	this.resizeSelf();
 	var tmpImg;
 	tmpImg = svgDocument.createElementNS(svgns,"image");
 	tmpImg.setAttribute("width",0);
 	tmpImg.setAttribute("height",0);
 	// The purpose of unique is to bypass any image caching
-	var unique  = Math.random();
-	var imageURL = SaveDisplayCGI_URL + 
-		'&toolBoxScale=' + controlToolBox.getScale() +
+	var d = new Date();
+	var unique  = d.getDate() + d.getMonth() + d.getYear() + d.getHours() + d.getMinutes() + d.getSeconds();
+	var imageURL = this.SavePrefsCGI_URL + 
+		'&toolBoxScale=' + this.scale +
 		"&Unique=" + unique;
 	tmpImg.setAttributeNS(xlinkns, "xlink:href",imageURL);
 
-	this.controlsRoot.appendChild(tmpImg);
-	this.controlsRoot.removeChild(tmpImg);
+	this.displayContent.appendChild(tmpImg);
+	this.displayContent.removeChild(tmpImg);
 };
