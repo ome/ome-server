@@ -42,8 +42,8 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.vis.ome.events.ChainSelectionEvent;
-import org.openmicroscopy.vis.ome.events.ChainSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
+import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.Controller;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -136,12 +136,16 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		PNode n = e.getPickedNode();
 		if (n instanceof PChainBox) { 
 			PChainBox cb = (PChainBox) n;
+			cb.setSelected(true);
 			selectedChain=cb.getChain();
+			// this will cause dataset selection to change,
+			// which should cause other chains to be cleared.
 			fireSelectionEvent();
 			
 		}
 		else if (n instanceof PModule) {
 			PChainBox cb = (PChainBox) n.getParent();
+			cb.setSelected(true);
 			selectedChain = cb.getChain();
 			fireSelectionEvent(); 
 		}
