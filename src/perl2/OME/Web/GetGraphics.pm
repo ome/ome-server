@@ -248,6 +248,16 @@ ENDHTML
 }
 
 
+sub getImage {
+	my $self = shift;
+	#FIXME: local caching of $image in $self->{image} ?
+	my $cgi     = $self->CGI();
+    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
+	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
+		or die "Could not retreive Image from ImageID=$ImageID\n";
+	return $image;
+}
+
 sub SVGgetDataJS {
 	my $self    = shift;
 	my $cgi     = $self->CGI();
@@ -428,6 +438,10 @@ my $CBW                = $JSinfo->{ CBW };	# known to the svg viewer as WBW - wh
 my $RGBon              = $JSinfo->{ RGBon };
 my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 
+my $r                  = $self->getOverlayJS();
+my $overlayHash        = $r->[0];
+my $centroidData       = $r->[1];
+
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
@@ -469,7 +483,11 @@ my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/overlayManager.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/overlay.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/centroid.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/ViewerPreferences.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
@@ -493,7 +511,7 @@ $SVG .= <<ENDSVG;
 		var image;
 		var scale;
 		var stats;
-		var overlay;
+		var overlayManager;
 		var viewerPreferences;
 		
 	// constants & references
@@ -755,8 +773,14 @@ $SVG .= <<ENDSVG;
 			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
 			scale.updateScale(theT);
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
-			overlay = new Overlay();
-			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
+			var overlayBox  = svgDocument.getElementById("overlays");
+			centroids = new CentroidOverlay( $centroidData );
+			overlayBox.appendChild( centroids.makeOverlay() );
+
+			overlayManager = new OverlayManager( overlayBox, turnLayerOnOff, switchOverlay, showAllZs, showAllTs );
+			overlayManager.addLayer( "Spots", centroids );
+
+			multiToolBox.addPane( overlayManager.makeControls(), "Overlay");
 			viewerPreferences = new ViewerPreferences( resizeToolBox, resizeMultiToolBox, savePreferences );
 			multiToolBox.addPane( viewerPreferences.buildSVG(), "Preferences");
 			// finish setup & make controller
@@ -804,6 +828,8 @@ $SVG .= <<ENDSVG;
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
 			setTimeout( "loadButton.setState(false)", 0 );
+			setTimeout( "switchOverlay(0)", 0 );
+			setTimeout( "turnLayerOnOff(true)", 0 );
 			zSlider.setValue(theZ/Z*100,true);
 			tSlider.setValue(theT/T*100,true);
 
@@ -816,6 +842,22 @@ $SVG .= <<'ENDSVG';
         
 		
 	// these functions connect GUI with backend
+		function showAllZs( val ) {
+			overlayManager._showAllZs( val );	
+		}
+
+		function showAllTs( val ) {
+			overlayManager._showAllTs( val );	
+		}
+	
+		function switchOverlay( item ) {
+			overlayManager._switchOverlay( item );	
+		}
+	
+		function turnLayerOnOff( val ) {
+			overlayManager._turnLayerOnOff(val);
+		}
+	
 		function savePreferences() {
 			var tmpImg;
 			tmpImg = svgDocument.createElementNS(svgns,"image");
@@ -857,6 +899,7 @@ $SVG .= <<'ENDSVG';
 			zSlider.setLabel(null, null, (data + 1) + "/" + Z );
 			theZ=data;
 			
+			overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 		}
 		function zUp() {
@@ -890,6 +933,7 @@ $SVG .= <<'ENDSVG';
 			tSlider.setValue(sliderVal);
 			tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
 			
+			overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 			scale.updateScale(theT);
 			stats.updateStats(theT);
@@ -1072,6 +1116,84 @@ ENDSVG
 ;
 
 	return $SVG;
+}
+
+sub getOverlayJS {
+	my $self = shift;
+	my $image = $self->getImage();
+	my $pixels = $image->DefaultPixels();
+	
+	my $factory = $self->Session()->Factory();
+	
+	my $spots = $self->getSpots( $pixels );
+	
+	my $layersJS;
+	my %layers;
+	my $centroidDataJS;
+	my %centroidData;
+	foreach my $spot( @$spots ) {
+		my @locations = $factory->findAttributes( "Location", $spot )
+			or die "this spot (".$spot->id.") has no location\n";
+		die "this spot (".$spot->id.")has multiple locations" if @locations > 1;
+		my $location = $locations[0];
+		my ($theX, $theY, $theZ) = map( sprintf( "%i", $_ + 0.5 ), ( $location->TheX, $location->TheY, $location->TheZ ) );
+		my @timepoints = $factory->findAttributes( "Timepoint", $spot )
+			or die "this spot (".$spot->id.") has no Timepoint\n";
+		die "this spot (".$spot->id.")has multiple Timepoint" if @timepoints > 1;
+		my $theT = $timepoints[0]->TheT();
+		my @signals = $factory->findAttributes( "Signal", $spot )
+			or die "this spot (".$spot->id.") has no signal\n";
+		die "this spot (".$spot->id.")has multiple signal" if @signals > 1;
+		my $signal = $signals[0];
+		my $theC = $signal->TheC();
+		$layers{$theZ}->{$theT} .= 
+			'<circle r="5" stroke="blue" fill="none" cx="'.$theX.'" cy="'.$theY.'" theZ="'.$theZ.'" theT="'.$theT.'" theC="'.$theC.'"/>';
+		push ( @{ $centroidData{$theZ}->{$theT} }, "{ theX: $theX, theY: $theY, theC: $theC }" );
+	}
+
+	my @zs;
+	foreach my $z( keys %layers ) {
+		push @zs, " $z: { ".join( ',', map( $_.': \'<g>'.$layers{$z}->{$_}.'</g>\'', keys % {$layers{$z}} ) ).' }';
+	}
+	$layersJS = '{ '.join( ',', @zs ).' }';
+	
+	
+	@zs = ();
+	foreach my $z( keys %centroidData ) {
+		my @ts;
+		foreach my $t ( keys %{ $centroidData{$z} } ) {
+			push @ts, " $t: [ ".join( ',', @{ $centroidData{$z}->{$t} } ).' ]';
+		}
+		push( @zs, " $z: { ".join( ',', @ts ).' }' );
+	}
+	$centroidDataJS = '{ '.join( ',', @zs ).' }';
+	
+	return [ $layersJS, $centroidDataJS ];
+
+}
+
+sub getSpots {
+	my $self = shift;
+	my $image = $self->getImage();
+	my $pixels = $image->DefaultPixels();
+	my $factory = $self->Session()->Factory();
+	
+	my $stackStats = $factory->findObject( "OME::Module", name => 'Find spots' )
+		or die "module 'Find spots' not found \n";
+	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
+		module_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Module 'Find spots'.\n";
+	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_module_execution_id => $pixels->module_execution()->id() )
+		or die "'Find spots' has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
+
+	my @spots = $factory->findObjects( "OME::Feature", image_id => $image->id(), tag => 'SPOT' );
+	
+	return \@spots;
+	
 }
 
 1;
