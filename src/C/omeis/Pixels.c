@@ -1466,7 +1466,8 @@ int i;
 			}
 		}
 
-		logOffset = min > 0 ? 0 : 1.0;
+		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
+		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
 
 		sCharP = thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1518,7 +1519,8 @@ int i;
 			}
 		}
 
-		logOffset = min > 0 ? 0 : 1.0;
+		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
+		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
 
 		sShrtP = (short *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1570,7 +1572,8 @@ int i;
 			}
 		}
 
-		logOffset = min > 0 ? 0 : 1.0;
+		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
+		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
 
 		sLongP = (long *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
