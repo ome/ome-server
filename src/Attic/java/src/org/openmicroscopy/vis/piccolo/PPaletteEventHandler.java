@@ -136,12 +136,12 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		System.err.println("entering "+node);
+	//	System.err.println("entering "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
-			System.err.println("entered a formal parameter "+param.getName());
+	//		System.err.println("entered a formal parameter "+param.getName());
 			if (lastEntered != null) {
-				System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
+	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
 				lastEntered.setParamsHighlighted(false);
 			}
 			param.setParamsHighlighted(true);
@@ -151,8 +151,8 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		}
 		else if (node instanceof PParameterNode) {
 			if (lastEntered != null) {
-				System.err.println("entered parameter node ");
-				System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
+	//			System.err.println("entered parameter node ");
+	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
 				lastEntered.setParamsHighlighted(false);
 			}
 			e.setHandled(true);

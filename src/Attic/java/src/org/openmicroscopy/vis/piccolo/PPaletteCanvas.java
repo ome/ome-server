@@ -165,7 +165,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		newRow();
 		float bottom = y;
 		decorateCategory(top,bottom,categoryWidth);
-		System.err.println("bottom y is "+y);
+	//	System.err.println("bottom y is "+y);
 	}
 	
 	private void displayModulesByCategory(ModuleCategory cat) {
