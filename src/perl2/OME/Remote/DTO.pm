@@ -99,40 +99,65 @@ sub __makeHash ($$$) {
     }
 
     my $dto = {};
+    my %columns;
     foreach my $column (@$columns) {
         my ($dto_name,$object_name);
 
         if (ref($column) eq 'ARRAY') {
-            ($dto_name,$object_name) = @$column;
+            my ($dto_name,$object_name) = @$column;
+            $columns{$object_name} = $dto_name;
         } else {
-            $dto_name = $column;
-            $object_name = $column;
+            $columns{$column} = $column;
         }
+    }
 
-        if ($object_name =~ /^\#(\w+)$/) {
-            my $real_name = $1;
+    my @defined_columns = $object->getColumns();
 
-            my $type = $object->getColumnType($real_name);
-            # __makeHash will have already ensured that each column exists
+    foreach my $object_name (@defined_columns) {
+        my $type = $object->getColumnType($object_name);
+        #print STDERR "   --- $object_name $type";
 
-            if ($type =~ m/(has-many|many-to-many)/o) {
-                my $counter = "count_${real_name}";
-                $dto->{$column} = $object->$counter();
-            } else {
-                die "Cannot count a column which is not has-many: $column";
+        if ($type =~ m/(has-many|many-to-many)/o) {
+            # The user asked for a count of this column
+            if (exists $columns{"#".$object_name} ||
+                exists $columns{":all:"}) {
+                #print STDERR ", adding count";
+                my $dto_name = $columns{"#".$object_name};
+                $dto_name = "#".$object_name unless defined $dto_name;
+                my $counter = "count_${object_name}";
+                $dto->{$dto_name} = $object->$counter();
+                delete $columns{"#".$object_name};
             }
-        } else {
-            my $type = $object->getColumnType($object_name);
-            die "Unknown column $object_name"
-              unless defined $type;
 
-            if ($type =~ m/(has-many|many-to-many)/o) {
+            # The user asked for this column
+            if (exists $columns{$object_name} ||
+                exists $columns{":all:"}) {
+                #print STDERR ", adding list";
+                my $dto_name = $columns{$object_name};
+                $dto_name = $object_name unless defined $dto_name;
                 my @results = $object->$object_name();
                 $dto->{$dto_name} = \@results;
-            } else {
+                delete $columns{$object_name};
+            }
+        } else {
+            if (exists $columns{$object_name} ||
+                exists $columns{":all:"}) {
+                #print STDERR ", adding";
+                my $dto_name = $columns{$object_name};
+                $dto_name = $object_name unless defined $dto_name;
                 $dto->{$dto_name} = $object->$object_name();
+                delete $columns{$object_name};
             }
         }
+        #print STDERR "\n";
+    }
+
+    delete $columns{":all:"};
+    delete $columns{"id"};
+
+    if (scalar(keys %columns) > 0) {
+        my ($object_name,$dummy) = each %columns;
+        die "Unknown column $object_name";
     }
 
     return $dto;

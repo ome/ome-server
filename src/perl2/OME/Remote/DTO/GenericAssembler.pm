@@ -151,16 +151,17 @@ sub __genericDTO {
 
     my $columns = $fields_wanted->{$prefix};
     die "Fields not specified for '$prefix' element"
-      unless (defined $columns) && (ref($columns) eq 'ARRAY');
+      unless (defined $columns)
+          && (ref($columns) eq 'ARRAY');
     my $dto = __makeHash($object,undef,$columns);
     return $dto unless defined $dto;
 
-    foreach my $column (@$columns) {
-        print STDERR "  $column ",ref($dto->{$column}),"\n"
+    foreach my $column (keys %$dto) {
+        print STDERR "  '$column' '",ref($dto->{$column}),"'\n"
           if $SHOW_ASSEMBLY;
 
         my $type = $object->getColumnType($column);
-        # __makeHash will have already ensured that each column exists
+        next unless defined $type;
 
         # If this is an attribute reference, load the appropriate
         # ST class
@@ -168,11 +169,17 @@ sub __genericDTO {
 
         if ($type eq 'has-one') {
             my $ref_object = $dto->{$column};
-            $dto->{$column} = __genericDTO("${prefix}.${column}",
+            my $next_prefix = "${prefix}.${column}";
+            $fields_wanted->{$next_prefix} = ['id']
+              unless defined $fields_wanted->{$next_prefix};
+            $dto->{$column} = __genericDTO($next_prefix,
                                            $ref_object,$fields_wanted);
         } elsif ($type =~ m/(has-many|many-to-many)/o ) {
+            my $next_prefix = "${prefix}.${column}";
+            $fields_wanted->{$next_prefix} = ['id']
+              unless defined $fields_wanted->{$next_prefix};
             foreach my $ref_object (@{$dto->{$column}}) {
-                $ref_object = __genericDTO("${prefix}.${column}",
+                $ref_object = __genericDTO($next_prefix,
                                            $ref_object,$fields_wanted);
             }
         }
@@ -183,8 +190,8 @@ sub __genericDTO {
       if (UNIVERSAL::can($object,"id"));
 
     # Every attribute had better have its semantic type.  If the user
-    # doesn't specify what part of the semantic type, they get the ID
-    # and name.
+    # doesn't specify what part of the semantic type, they get the ID,
+    # name and granularity.
 
     if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass")) {
         my $st_prefix = "${prefix}.semantic_type";
