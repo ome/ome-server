@@ -663,12 +663,6 @@ sub executeChain {
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
-	my @nodes = $chain->nodes();
-	my $task = OME::Tasks::NotificationManager->
-		new("Executing `".$chain->name()."`", scalar(@nodes));
-	$task->step();
-	$task->setMessage('Start Execution of Analysis Chain');
-	
     # ReuseResults flag has a default value
     $flags{ReuseResults} = 1
       unless exists $flags{ReuseResults};
@@ -728,6 +722,32 @@ sub executeChain {
     $self->{chain_execution} = $chex;
 
     $session->commitTransaction();
+
+
+	my @nodes = $chain->nodes();
+		
+	# predict how many steps executing the analysis chain will require
+	my $count_steps = 0;
+	foreach my $node (@nodes) {
+		my $dependence = $self->{dependences}->{$node->id()};
+		my @targets;
+
+		if ($dependence eq 'G') {
+			$count_steps += 0;
+		} elsif ($dependence eq 'D') {
+			$count_steps += 1;
+		} elsif ($dependence eq 'I') {
+			print STDERR "count_steps = $count_steps \n";
+			my @imgs = $dataset->images();
+			$count_steps += scalar(@imgs);
+		}
+	}
+        
+	my $task = OME::Tasks::NotificationManager->
+		new("Executing `".$chain->name()."`", $count_steps);
+	$task->setMessage('Start Execution of Analysis Chain');
+	$task->step();
+    $SIG{INT} = sub { $task->died('User Interrupt');CORE::exit; };
 
     my $continue = 1;
     my $round = 0;
