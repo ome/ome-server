@@ -514,7 +514,7 @@ my $HTML='';
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
 <title>OME Dataset Viewer</title>
-	<frameset rows="70,*" border="0">
+	<frameset rows="80,*" border="0">
 		<frame name="controls" src="serve.pl?Page=OME::Web::GetGraphics&DrawDatasetControl=1&DatasetID=$DatasetID">
 		<frame name="viewer" src="">
 	</frameset>
@@ -558,15 +558,17 @@ sub DrawDatasetControl {
 	my $DatasetID = $cgi->url_param('DatasetID') || die "\nDataset id not supplied to GetGraphics.pm ";
 	my $Dataset = $self->Session()->Factory()->loadObject("OME::Dataset",$DatasetID) || die "\nInvalide dataset id provided to GetGraphics.pm\n";
 	my $imageMaps = $Dataset->image_links();
-	my ($imageMap, @ImageIDs, $JSimageIDs, $HTML);
+	my ($imageMap, @ImageIDs, $JSimageIDs, %ImagePaths, $JS_SetImagePathArray, $HTML);
 	my $numImages = 0;
 	my $datasetName = $Dataset->name();
 	
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
 		push (@ImageIDs, $imageMap->image()->image_id());
+		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->path();
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
+	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
 	
 
 	$self->{contentType} = 'text/html';
@@ -578,14 +580,17 @@ sub DrawDatasetControl {
 <script language="JavaScript">
 <!--
 
-
-var imageIDs = $JSimageIDs;
+var imageIDs   = $JSimageIDs;
+var imagePaths = new Array();
+$JS_SetImagePathArray
 var currentIndex;
-var imageTextBox;
+var imageNumTextBox;
+var imageInfoTextBox;
 
 // have to initialize pointer variables after document loads
 function init() {
-	imageTextBox = document.forms[0].num;
+	imageNumTextBox  = document.forms[0].num;
+	imageInfoTextBox = document.forms[0].ImageInfo;
 	currentIndex = 0;
 }
 
@@ -619,7 +624,7 @@ function isInteger(data) {
 
 function changeImage(i) {
 	if( !isInteger(i) ) {
-		imageTextBox.value = currentIndex+1;
+		imageNumTextBox.value = currentIndex+1;
 		return;
 	}
 	i--;
@@ -633,22 +638,25 @@ function changeImage(i) {
 }
 
 function update() {
-	imageTextBox.value = currentIndex+1;
+	imageNumTextBox.value  = currentIndex+1;
+	imageInfoTextBox.value = imagePaths[ imageIDs[currentIndex] ];
 	parent.viewer.location.href = "serve.pl?Page=OME::Web::GetGraphics&ImageID=" + imageIDs[currentIndex];
 }
 
--->
+//-->
 </script>
 </head>
 <body onload="init(); update();">
-<center>
 <form onsubmit="return false;">
+<table width="100%"><tr><td align="left">
 	<input type="button" name="prev" value="<" onclick="previousImage()">
 	<input type="text" name="num" size="5" onchange="changeImage(parseInt(this.value))" maxlength="5">
 	<input type="button" name="next" value=">" onclick="nextImage()">
+</td><td align="right">
+	Image Path: <input type="text" name="ImageInfo" size="40" disabled>
+</td></tr></table>
 </form>
 Displaying dataset "$datasetName". It contains $numImages images.
-</center>
 </html>
 ENDHTML
 
