@@ -24,7 +24,6 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME;
 use OME::Web::Validation;
 use base qw{ OME::Web };
 
