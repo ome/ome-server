@@ -43,6 +43,7 @@ $VERSION = 2.000_000;
 use CGI;
 use OME::DBObject;
 use Log::Agent;                    # another more complex example
+use OME::Tasks::NotificationManager;
 require Log::Agent::Driver::File;  # logging made to file
 logconfig(
 	-driver    => Log::Agent::Driver::File->make(
