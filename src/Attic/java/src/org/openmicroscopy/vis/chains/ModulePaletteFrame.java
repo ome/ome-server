@@ -72,10 +72,10 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	
 	
 	private MenuBar menuBar;
-	private ToolBar toolBar;
+	//private ToolBar toolBar;
 	
 	public static int X=10;
-	public static int Y=10;
+	public static int Y=100;
 	public static int HEIGHT=400;
 	public static int WIDTH=400;
 	
@@ -97,7 +97,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		getCanvas().setConfig(connection,controller);
 		layoutFrame();
 		menuBar.setLoginsDisabled(true);
-		toolBar.setLoggedIn(connection.getUserName());
+	//	toolBar.setLoggedIn(connection.getUserName());
 		show();	
 		getCanvas().scaleToSize();
 	}
@@ -143,9 +143,9 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		CmdTable cmd = controller.getCmdTable();
 		buildMenuBar(cmd);
 		
-		toolBar = new ToolBar(cmd);
-		contentPane.add(toolBar,BorderLayout.NORTH);
-		//contentPane.add(toolBar);
+		//toolBar = new ToolBar(cmd);
+		//contentPane.add(toolBar,BorderLayout.NORTH);
+		
 		 
 		tree = new JTree(getCanvas().getModuleTreeNode());
 		tree.setRootVisible(false);
@@ -172,8 +172,8 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	}
 	
 	public void setNewChainEnabled(boolean v) {
-		if (toolBar != null)
-			toolBar.setNewChainEnabled(v);
+		//if (toolBar != null)
+		//	toolBar.setNewChainEnabled(v);
 	}
 	
 	/**
