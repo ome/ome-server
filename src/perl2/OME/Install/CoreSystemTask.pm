@@ -58,7 +58,7 @@ my @core_dirs = (
 	name => "base",
 	path => "/OME",
 	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository"]
+	children => ["xml", "bin", "perl2", "cgi", "repository", "conf"]
     },
     {
 	name => "temp_base",
@@ -84,6 +84,9 @@ my $OME_GROUP = "ome";
 my $OME_UID;
 my $OME_GID;
 
+# Global Apache user
+my $APACHE_USER;
+
 #*********
 #********* LOCAL SUBROUTINES
 #*********
@@ -104,25 +107,29 @@ sub fix_ownership {
 }
 
 sub get_apache_user {
-    my $username = "";
+    my $username = shift;  # A user specified default if we have one
 
-    # Grab our Apache user from the password file
-    open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
-    while (<PW_FILE>) {
-	chomp;
-	$username = (split ":")[0];
-	if ($username =~ /httpd|apache|www-data|www/) {
-	    last;
+    unless ($username) {
+	$username = "";
+
+	# Grab our Apache user from the password file
+	open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+	while (<PW_FILE>) {
+	    chomp;
+	    $username = (split ":")[0];
+	    if ($username =~ /httpd|apache|www-data|www/) {
+		last;
+	    }
 	}
     }
 
     close (PW_FILE);
 
     # It's possible we've got multiple instances of these users in the password
-    # file so lets confirm things or in the circumstance that the user is of a
+    # file so lets confirm things. By the same token, if that the user is of a
     # different name, ask for it.
     while (1) {
-	confirm_default ("What is the Unix username that Apache runs under ?", $username);
+	$username = confirm_default ("What is the Unix username that Apache runs under ?", $username);
 	getpwnam ($username)
 	    or (print "User \"$username\" does not exist, try again.\n" and next);
 
@@ -150,27 +157,46 @@ sub execute {
     print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
     umask (0002);
 
-    # Confirm and/or update all our installation dirs
-    foreach my $directory (@core_dirs) {
-	$directory->{path} = confirm_path ($directory->{description}, $directory->{path});
-    }
+    while (1) {
+	# Confirm and/or update all our installation dirs
+	foreach my $directory (@core_dirs) {
+	   $directory->{path} = confirm_path ($directory->{description}, $directory->{path});
+	}
 
-    # Make sure the rest of the installation knows where the core directories are
-    $environment->base_dir($$OME_BASE_DIR);
-    $environment->tmp_dir($$OME_TMP_DIR);
+	# Make sure the rest of the installation knows where the core directories are
+	$environment->base_dir($$OME_BASE_DIR);
+	$environment->tmp_dir($$OME_TMP_DIR);
     
-    # Confirm and/or update our group information
-    $OME_GROUP = confirm_default ("The group which OME should be run under", $OME_GROUP);
+	# Confirm and/or update our group information
+	$OME_GROUP = confirm_default ("The group which OME should be run under", $OME_GROUP);
 
-    # Confirm and/or update our user information
-    $OME_USER = confirm_default ("The user which OME should be run under", $OME_USER);
+	# Confirm and/or update our user information
+	$OME_USER = confirm_default ("The user which OME should be run under", $OME_USER);
 
-    # Get and/or update our apache user information
-    my $APACHE_USER = get_apache_user ();
+	# Get and/or update our apache user information
+	$APACHE_USER = get_apache_user ($APACHE_USER);
 
-    # Make sure the rest of the installation knows who the apache and ome users are
-    $environment->user($OME_USER);
-    $environment->apache_user($APACHE_USER);
+	# Make sure the rest of the installation knows who the apache and ome users are
+	$environment->user($OME_USER);
+	$environment->apache_user($APACHE_USER);
+
+	print "\n";  # Spacing
+
+	# Ask user to confirm his/her entries
+	foreach my $directory (@core_dirs) {
+	    print "$directory->{description}: $directory->{path}\n";
+	}
+	
+	print "OME groupname: $OME_GROUP\n";
+	print "OME Unix username: $OME_USER\n";
+	print "Apache Unix username: $APACHE_USER\n";
+
+	print "\n";  # Spacing
+
+	y_or_n ("Are these values correct ?") and last or next;
+
+	print "\n";  # Spacing
+    }
 
     print "\nBuilding the core system\n";
 
