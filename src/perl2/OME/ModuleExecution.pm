@@ -40,7 +40,7 @@ __PACKAGE__->columns(Timing => qw(timestamp status));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->has_many('inputs','OME::Analysis::ActualInput' => qw(analysis_id));
-__PACKAGE__->has_many('outputs','OME::Analysis::ActualOutput' => qw(analysis_id));
+#__PACKAGE__->has_many('outputs','OME::Analysis::ActualOutput' => qw(analysis_id));
 
 
 

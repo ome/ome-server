@@ -901,7 +901,7 @@ sub findModuleHandler {
         $paramString .= "i ";
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'I');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
@@ -946,7 +946,7 @@ sub findModuleHandler {
         $paramString .= "f ";
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'F');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
@@ -1040,7 +1040,7 @@ sub findModuleHandler {
         $past_paramString .= "i ";
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'I');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
@@ -1081,7 +1081,7 @@ sub findModuleHandler {
         $past_paramString .= "f ";
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'F');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";

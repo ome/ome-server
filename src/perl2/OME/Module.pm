@@ -127,9 +127,9 @@ __PACKAGE__->columns(Other => qw(description));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
 
-__PACKAGE__->has_many('actual_outputs','OME::Analysis::ActualOutput' =>
-		      qw(formal_output_id));
-                     
+#__PACKAGE__->has_many('actual_outputs','OME::Analysis::ActualOutput' =>
+#		      qw(formal_output_id));
+
 __PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
 
 sub findByProgramAndName {
