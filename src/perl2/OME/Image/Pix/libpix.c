@@ -518,7 +518,7 @@ tsize_t scanline;
 	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &tiffWidth);
 	if (tiffHeight != pPix->dy || tiffWidth != pPix->dx) {
 		fprintf (stderr,"Pix->TIFF2Plane:  Tiff file dimensions (%d x %d) don't match OME Image dimensions (%d x %d).\n",
-			tiffWidth,tiffHeight,pPix->dx,pPix->dy);
+			tiffWidth,tiffHeight,(int)pPix->dx,(int)pPix->dy);
 		TIFFClose (tiff);
 		return (0);
 	}
