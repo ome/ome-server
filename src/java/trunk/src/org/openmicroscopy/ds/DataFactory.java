@@ -72,6 +72,7 @@ public class DataFactory
     extends AbstractService
 {
     protected InstantiatingCaller icaller = null;
+    protected Instantiator  instantiator = null;
 
     private List markedForUpdate = new ArrayList();
 
@@ -130,6 +131,7 @@ public class DataFactory
         super.initializeService(services);
         icaller = (InstantiatingCaller)
             services.getService(InstantiatingCaller.class);
+        instantiator = icaller.getInstantiator();
     }
 
     /**
@@ -463,105 +465,43 @@ public class DataFactory
         return dto;
     }
 
-    public Attribute createNew(SemanticType semanticType)
+    private Map semanticTypes = new HashMap();
+
+    private SemanticType getUsefulSemanticType(String semanticTypeName)
     {
-        return createNew(semanticType.getName());
+        if (semanticTypes.containsKey(semanticTypeName))
+        {
+            return (SemanticType) semanticTypes.get(semanticTypeName);
+        } else {
+            Criteria crit = new Criteria();
+            crit.addFilter("name",semanticTypeName);
+            crit.addWantedField("name");
+            crit.addWantedField("granularity");
+            SemanticType st = (SemanticType)
+                retrieve(SemanticType.class,crit);
+            semanticTypes.put(semanticTypeName,st);
+            return st;
+        }
     }
 
-    public Attribute createNew(String semanticType)
+    public Attribute createNew(SemanticType semanticType)
     {
-        MappedDTO dto = icaller.getInstantiator().
-            instantiateDTO(semanticType,new HashMap());
+        String name = semanticType.getName();
+        AttributeDTO dto = (AttributeDTO) icaller.getInstantiator().
+            instantiateDTO(name,new HashMap());
+        dto.getMap().put("semantic_type",semanticType);
         dto.setNew(true);
         return (Attribute) dto;
     }
 
-    /**
-     * <p>Creates a serialized {@link Map} of the format expected by
-     * the <code>updateObject</code> and <code>updateObjects</code>
-     * remote server methods.  The <code>newIDs</code> parameter is
-     * used to store all of the new objects (i.e., not in the database
-     * yet) which had been serialized previously for this remote
-     * method call.  It is used to ensure that any object references
-     * in the data object refer to existent objects.</p>
-     *
-     * @param dto the data object to serialize
-     * @param newIDs a {@link Map} linking new-ID values to data
-     * objects
-     * @return a serialized {@link Map} suitable to be sent to the
-     * XML-RPC layer
-     */
-    private Map serializeForUpdate(MappedDTO dto, Map newIDs)
+    public Attribute createNew(String semanticTypeName)
     {
-        Map serialized = new HashMap();
-
-        Map elements = dto.getMap();
-        Iterator keys = elements.keySet().iterator();
-
-        // Create a Map of the format expected by the updateObject
-        // method
-
-        while (keys.hasNext())
-        {
-            Object key = keys.next();
-            Object element = elements.get(key);
-
-            if (element == null)
-            {
-                // Null values can be saved
-
-                serialized.put(key,element);
-            } else if (element instanceof MappedDTO) {
-                // References are turned into primary key ID's.  If
-                // the referent object is new, then it must have a
-                // new-ID specified in the newIDs map in order to be
-                // serialized.  If it doesn't, throw an error.
-
-                MappedDTO child = (MappedDTO) element;
-                if (child.isNew())
-                {
-                    Object id;
-                    if (newIDs != null &&
-                        (id = newIDs.get(child)) != null)
-                    {
-                        serialized.put(key,id);
-                    } else {
-                        throw new DataException("Referent object in "+key+" field is new, and has not been assigned a new-ID");
-                    }
-                } else {
-                    serialized.put(key,
-                                   "REF:"+
-                                   child.getDTOTypeName()+":"+
-                                   child.getMap().get("id"));
-                }
-            } else if (element instanceof List) {
-                // Skip List elements
-            } else if (element instanceof Map) {
-                // Skip Map elements
-            } else {
-                // Store anything else as is
-                serialized.put(key,element);
-            }
-        }
-
-        // If the object being saved is new, make sure that its "id"
-        // field signifies it as such.
-
-        if (dto.isNew())
-        {
-            if (newIDs == null)
-            {
-                serialized.put("id","NEW:1");
-            } else {
-                Object id = newIDs.get(dto);
-                if (id == null)
-                    throw new DataException("Fatal error -- new object has not been assigned an ID yet");
-                else
-                    serialized.put("id",id);
-            }
-        }
-
-        return serialized;
+        AttributeDTO dto = (AttributeDTO) icaller.getInstantiator().
+            instantiateDTO(semanticTypeName,new HashMap());
+        SemanticType st = getUsefulSemanticType(semanticTypeName);
+        dto.getMap().put("semantic_type",st);
+        dto.setNew(true);
+        return (Attribute) dto;
     }
 
     /**
@@ -619,7 +559,7 @@ public class DataFactory
         // Serialize the DTO
 
         MappedDTO dto = (MappedDTO) object;
-        Map serialized = serializeForUpdate(dto,null);
+        Map serialized = instantiator.serializeForUpdate(dto,null);
 
         // Make the remote call
 
@@ -745,7 +685,7 @@ public class DataFactory
         {
             MappedDTO dto = (MappedDTO) iter.next();
             serialized.add(dto.getDTOTypeName());
-            serialized.add(serializeForUpdate(dto,newIDs));
+            serialized.add(instantiator.serializeForUpdate(dto,newIDs));
         }
 
         // Make the remote call
