@@ -145,7 +145,7 @@ sub getTable {
 	my $factory = $self->Session()->Factory();
 	my $q = $self->CGI();
 	my $table_data;
-	
+
 	$self->{allow_search} = 0 if( @datasets );
 	if( $self->{allow_search} ) {
 		push @{ $options->{options_row} }, "Search";
@@ -159,7 +159,7 @@ sub getTable {
 			filters => $options->{filters},
 			filter_object => 'OME::Dataset'
 		}
-	) unless (@datasets or caller ne ref($self));
+	) unless (@datasets or caller ne 'OME::Web::Table');
 
 	my @column_headers = qw(ID Status Name Owner Group Description);
 
