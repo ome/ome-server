@@ -154,7 +154,7 @@ sub getRef {
 	return $specializedRenderer->_getRef( $obj, $format )
 		if( $specializedRenderer and $specializedRenderer->can('_getRef') );
 	
-	my $q = new CGI;
+	my $q = $self->CGI();
 	for( $format ) {
 		if( /^html$/ ) {
 			my ($package_name, $common_name, $formal_name, $ST) =
@@ -508,7 +508,7 @@ sub renderData {
 	}
 
 	# default rendering
-	my $q = new CGI;
+	my $q = $self->CGI();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	my $id   = $obj->id();
@@ -668,7 +668,7 @@ sub getFieldTitles {
 	# make titles by prettifying the aliases. Add links to Semantic
 	# Element documentation as available.
 	my %titles;
-	my $q = new CGI;
+	my $q = $self->CGI();
 	my $factory = OME::Web->Session()->Factory();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
@@ -906,7 +906,7 @@ and $mode - OR - undef if no matching template can be found
 
 sub _findTemplate {
 	my ( $self, $obj, $mode ) = @_;
-	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
+	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
 	my $tmpl_path = $formal_name; 
