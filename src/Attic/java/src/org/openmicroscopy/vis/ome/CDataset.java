@@ -114,7 +114,12 @@ public class CDataset extends RemoteDataset implements Comparable{
 	public int compareTo(Object o) {
 		if (o instanceof CDataset) {
 			CDataset d2 = (CDataset) o;
-			return getID()-d2.getID();
+			//return getID()-d2.getID();
+			int diff = getImageCount()-d2.getImageCount();
+			if (diff != 0)
+				return diff;
+			else 
+				return getID()-d2.getID();
 		}
 		else
 			return -1;
