@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ImagePanel
+ * org.openmicroscopy.imageviewer.ui.ImagePanel
  *
  *------------------------------------------------------------------------------
  *
@@ -49,7 +49,7 @@ import javax.swing.*;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImagePanel extends JPanel
                         implements ImageWidget

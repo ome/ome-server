@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ImageInformation
+ * org.openmicroscopy.imageviewer.data.ImageInformation
  *
  *------------------------------------------------------------------------------
  *
@@ -46,7 +46,7 @@ import org.openmicroscopy.remote.*;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImageInformation
 {
@@ -78,9 +78,12 @@ public class ImageInformation
     this.pixelsAttribute = pixels.getPixelsAttribute();
     this.dataSource = dataSource;
     
+    Map imageSourceMap = new HashMap();
+    imageSourceMap.put("target",imageSource);
+    
     // extract the channel/wavelength information for this image.
     List channelComponents = dataSource.findAttributes("PixelChannelComponent",
-                                                       imageSource);
+                                                       imageSourceMap);
                                                        
     final int pixelsID = pixelsAttribute.getID();
     
@@ -136,14 +139,13 @@ public class ImageInformation
                                                          actualInputConstraints);
                             
     final int stackAnalysisID = actualInput.getModuleExecution().getID();
-                                               
     
-    List stackMins = dataSource.findAttributes("StackMinimum",imageSource);
-    List stackMaxes = dataSource.findAttributes("StackMaximum",imageSource);
-    List stackMeans = dataSource.findAttributes("StackMean",imageSource);
-    List stackSigmas = dataSource.findAttributes("StackSigma",imageSource);
-    List stackGeomeans = dataSource.findAttributes("StackGeometricMean",imageSource);
-    List stackGeosigmas = dataSource.findAttributes("StackGeometricSigma",imageSource);
+    List stackMins = dataSource.findAttributes("StackMinimum",imageSourceMap);
+    List stackMaxes = dataSource.findAttributes("StackMaximum",imageSourceMap);
+    List stackMeans = dataSource.findAttributes("StackMean",imageSourceMap);
+    List stackSigmas = dataSource.findAttributes("StackSigma",imageSourceMap);
+    List stackGeomeans = dataSource.findAttributes("StackGeometricMean",imageSourceMap);
+    List stackGeosigmas = dataSource.findAttributes("StackGeometricSigma",imageSourceMap);
     
     GrepOperator stackIDOperator = new GrepOperator() {
       public boolean eval(Object o)

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.Wavelength
+ * org.openmicroscopy.imageviewer.data.Wavelength
  *
  *------------------------------------------------------------------------------
  *
@@ -40,7 +40,7 @@ package org.openmicroscopy.imageviewer.data;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class Wavelength
 {

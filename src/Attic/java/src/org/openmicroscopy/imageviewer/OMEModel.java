@@ -53,7 +53,7 @@ import org.openmicroscopy.remote.*;
  * OME system.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class OMEModel
 {
@@ -195,6 +195,11 @@ public class OMEModel
     
     // else
     RemoteImage image = (RemoteImage)imageList.get(index);
+    // why does this break?
+    /*
+    Map imageMap = new HashMap();
+    imageMap.put("target",image);
+    */
     List pixelList = factory.findAttributes("Pixels",image);
     
     // no associated images

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ChannelBlackScaleData
+ * org.openmicroscopy.imageviewer.data.ChannelBlackScaleData
  *
  *------------------------------------------------------------------------------
  *
@@ -52,8 +52,8 @@ package org.openmicroscopy.imageviewer.data;
  * the RGBImageConverter.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
- * @see org.openmicroscopy.imageviewer.RGBImageConverter
+ * @version $Revision$ $Date$
+ * @see org.openmicroscopy.imageviewer.data.RGBImageConverter
  */
 public class ChannelBlackScaleData
 {

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ImageControlPanel
+ * org.openmicroscopy.imageviewer.ui.ImageControlPanel
  *
  *------------------------------------------------------------------------------
  *
@@ -48,7 +48,7 @@ import org.openmicroscopy.imageviewer.data.ImageInformation;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImageControlPanel extends JPanel
                                implements OMEImageFilterWidget

@@ -59,7 +59,7 @@ import javax.imageio.ImageIO;
  * occur is not defined, but this should work *mostly* around it.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImageCache
 {

@@ -42,8 +42,11 @@ import java.util.*;
 
 
 /**
+ * A static class that emulates the syntax and behavior of certain Perl
+ * list-context functions, such as grep and map.
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class Filter
 {

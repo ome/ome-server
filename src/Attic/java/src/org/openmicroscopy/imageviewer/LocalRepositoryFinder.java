@@ -53,7 +53,7 @@ import org.openmicroscopy.remote.*;
  * image pixels.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public final class LocalRepositoryFinder
 {

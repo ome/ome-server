@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ListWidget
+ * org.openmicroscopy.imageviewer.ui.ListWidget
  *
  *------------------------------------------------------------------------------
  *
@@ -43,7 +43,7 @@ import java.util.List;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public interface ListWidget extends UIWidget
 {

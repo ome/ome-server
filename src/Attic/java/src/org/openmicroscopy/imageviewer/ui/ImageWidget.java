@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ImageWidget
+ * org.openmicroscopy.imageviewer.ui.ImageWidget
  *
  *------------------------------------------------------------------------------
  *
@@ -42,7 +42,7 @@ import java.awt.image.BufferedImage;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public interface ImageWidget
 {

@@ -45,7 +45,7 @@ import java.util.Comparator;
  * Sorts images by ID.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImageRecordComparator implements Comparator
 {

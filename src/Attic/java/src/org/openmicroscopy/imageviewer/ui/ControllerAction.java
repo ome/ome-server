@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ControllerAction
+ * org.openmicroscopy.imageviewer.ui.ControllerAction
  *
  *------------------------------------------------------------------------------
  *
@@ -50,7 +50,7 @@ import javax.swing.KeyStroke;
  * mapping.
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public abstract class ControllerAction
   extends AbstractAction

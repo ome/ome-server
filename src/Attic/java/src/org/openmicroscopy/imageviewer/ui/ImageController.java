@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.ImageController
+ * org.openmicroscopy.imageviewer.ui.ImageController
  *
  *------------------------------------------------------------------------------
  *
@@ -56,7 +56,7 @@ import org.openmicroscopy.imageviewer.OMEModel;
  * and then invoking one of the setWidget methods.5
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class ImageController
 {

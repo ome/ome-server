@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.imageviewer.RGBImageConverter
+ * org.openmicroscopy.imageviewer.data.RGBImageConverter
  *
  *------------------------------------------------------------------------------
  *
@@ -46,11 +46,10 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 
 import org.openmicroscopy.*;
-import org.openmicroscopy.imageviewer.data.*;
 
 /**
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
- * @version $ Revision: $ $ Date: $
+ * @version $Revision$ $Date$
  */
 public class RGBImageConverter
 {
