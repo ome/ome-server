@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Tue Feb 22 14:49:41 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -59,5 +59,9 @@ public interface ActualInput
     /** Criteria field name: <code>input_module_execution</code> */
     public ModuleExecution getInputMEX();
     public void setInputMEX(ModuleExecution value);
+
+    /** Criteria field name: <code>formal_output</code> */
+    public FormalOutput getFormalOutput();
+    public void setFormalOutput(FormalOutput value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by hochheiserha via omejava on Tue Feb 22 14:49:41 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -71,12 +71,18 @@ public class ActualInputDTO
     public void setInputMEX(ModuleExecution value)
     { setElement("input_module_execution",value); }
 
+    public FormalOutput getFormalOutput()
+    { return (FormalOutput) getObjectElement("formal_output"); }
+    public void setFormalOutput(FormalOutput value)
+    { setElement("formal_output",value); }
+
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("module_execution",ModuleExecutionDTO.class);
         parseChildElement("formal_input",FormalInputDTO.class);
         parseChildElement("input_module_execution",ModuleExecutionDTO.class);
+        parseChildElement("formal_output",FormalOutputDTO.class);
     }
 
 }
