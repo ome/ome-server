@@ -260,7 +260,7 @@ sub eof {
 	my $self = shift;
 	$self->__loadInfo(); # does nothing if info is already loaded
 	
-	return 1 if ($self->[CURSOR] >= $self->[LENGTH]);
+	return 1 if ($self->[CURSOR] >= $self->[LENGTH]-1);
 	return 0;
 }
 
