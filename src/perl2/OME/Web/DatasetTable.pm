@@ -83,13 +83,13 @@ sub __search_row {
 	my @owners = $factory->findAttributes( "Experimenter" );
 	my %owner_names = map{ $_->id() => $_->FirstName().' '.$_->LastName() } @owners;
 	my $owner_order = [ '', sort( { $owner_names{$a} cmp $owner_names{$b} } keys( %owner_names ) ) ];
-	$owner_names{''} = "Select an Owner";
+	$owner_names{''} = 'All';
 
 	# Group list
 	my @groups = $factory->findAttributes( "Group" );
 	my %group_names = map{ $_->id() => $_->Name() } @groups;
 	my $group_order = [ '', sort( { $group_names{$a} cmp $group_names{$b} } keys( %group_names ) ) ];
-	$group_names{''} = "Select a Group";
+	$group_names{''} = 'All';
 	
 	my $rows = [
 		$q->textfield( -name => 'id', -default => $filters->{id} || undef, -size => 5 ),
@@ -133,9 +133,9 @@ sub new {
 }
 
 {
-	my $menu_text = 'N/A';
+	my $menu_text = 'Datasets';
 
-	sub getMenuText { return }
+	sub getMenuText { return $menu_text; }
 }
 
 sub getTable {

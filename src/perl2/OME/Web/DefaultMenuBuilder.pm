@@ -85,17 +85,17 @@ my @MENU = (
 		text => 'Browse',
 	},
 	{
-		web_class => 'OME::Web::ManageProject',
+		web_class => 'OME::Web::ProjectTable',
 		type => 'link',
 		text => undef,
 	},
 	{
-		web_class => 'OME::Web::ManageDataset',
+		web_class => 'OME::Web::DatasetTable',
 		type => 'link',
 		text => undef,
 	},
 	{
-		web_class => 'OME::Web::ManageImage',
+		web_class => 'OME::Web::ImageTable',
 		type => 'link',
 		text => undef,
 	},
