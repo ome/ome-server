@@ -3,6 +3,9 @@
 		<!-- TMPL_IF NAME=_more_info_url -->
 			<tr>
 				<td class="ome_td" align="right">
+					<!-- TMPL_IF NAME=_pager_text -->
+						<!-- TMPL_VAR NAME=_pager_text --> |
+					<!-- /TMPL_IF -->
 					<a href="<!-- TMPL_VAR NAME=_more_info_url -->">More info...</a>
 				</td>
 			</tr>
