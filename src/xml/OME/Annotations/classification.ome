@@ -64,34 +64,34 @@
 
   <SemanticType
 	Name = "CategoryGroup"
-	AppliesTo = "D">
+	AppliesTo = "G">
     <Description>A set of mutually exclusive categories.</Description>
     <Element
 	Name = "Name"
-	DBLocation = "CATEGORY_GROUP.NAME"
+	DBLocation = "CATEGORY_GROUPS.NAME"
 	DataType = "string" />
     <Element
 	Name = "Description"
-	DBLocation = "CATEGORY_GROUP.DESCRIPTION"
+	DBLocation = "CATEGORY_GROUPS.DESCRIPTION"
 	DataType = "string" />
   </SemanticType>
 
   <SemanticType
 	Name = "Category"
-	AppliesTo = "D">
+	AppliesTo = "G">
     <Description>A category within some set.</Description>
     <Element
        Name = "Name"
-       DBLocation = "CATEGORY.NAME"
+       DBLocation = "CATEGORIES.NAME"
        DataType = "string" />
     <Element
        Name = "CategoryGroup"
-       DBLocation = "CATEGORY.CATEGORY_GROUP"
+       DBLocation = "CATEGORIES.CATEGORY_GROUP"
        DataType = "reference"
        RefersTo = "CategoryGroup" />
     <Element
        Name = "Description"
-       DBLocation = "CATEGORY.DESCRIPTION"
+       DBLocation = "CATEGORIES.DESCRIPTION"
        DataType = "string" />
   </SemanticType>
 
