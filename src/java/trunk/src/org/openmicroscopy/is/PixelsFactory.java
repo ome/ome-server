@@ -36,6 +36,9 @@
 
 package org.openmicroscopy.is;
 
+//AF - import for tmp hack, to be removed.
+import java.io.InputStream;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -428,6 +431,17 @@ public class PixelsFactory
         ImageServer is = activatePixels(pixels);
         return is.getStack(pixels.getImageServerID().longValue(),theC,theT,bigEndian);
     }
+
+//AF - tmp hacked version, *don't* code against it!
+    public InputStream getStackStream(Pixels pixels,
+                           int theC, int theT,
+                           boolean bigEndian)
+        throws ImageServerException
+    {
+        HttpImageServer is = (HttpImageServer) activatePixels(pixels);
+	return is.getStackStream(pixels.getImageServerID().longValue(),theC,theT,bigEndian);  
+    }
+
 
     /**
      * <p>This method returns a pixel array of the specified plane.

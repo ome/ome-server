@@ -42,6 +42,10 @@
 
 package org.openmicroscopy.is;
 
+//AF - import for tmp hack, to be removed.
+import java.io.InputStream; 
+
+
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
@@ -485,6 +489,32 @@ public class HttpImageServer
         } finally {
             finishCall(post);
         }        
+    }
+
+//AF - tmp hacked version, *don't* code against it!
+    public InputStream getStackStream(long pixelsID,
+                           int theC, int theT,
+                           boolean bigEndian)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","GetStack");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("theC",Integer.toString(theC));
+            post.addParameter("theT",Integer.toString(theT));
+            post.addParameter("BigEndian",bigEndian? "1": "0");
+            executeCall(post);
+
+            return post.getResponseBodyAsStream();
+		} catch (IOException ioe) {
+			throw new ImageServerException("IO Exception: "+ioe);
+        } 
+	//The caller will have to close the stream explicitely, this should
+	//release the connection as well b/c of the auto-close mechanism used
+	//in HttpMethodBase.readResponseBody(HttpConnection) line 2103.
+	//REQUIRES FURTHER INVESTIGATION.        
     }
 
     public byte[] getPlane(long pixelsID,
