@@ -142,6 +142,7 @@ __PACKAGE__->manyToMany('datasets',
                         'OME::Image::DatasetMap','image','dataset');
 
 __PACKAGE__->hasMany('all_features','OME::Feature' => 'image');
+__PACKAGE__->hasMany('module_executions','OME::ModuleExecution' => 'image');
 
 =head2 experimenter
 
