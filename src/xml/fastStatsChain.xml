@@ -1,0 +1,23 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<AnalysisChains xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+	<AnalysisChain Name = "Fast Stack Stats" Locked = "false">
+		<Nodes>
+			<Node NodeID = "Import" ProgramName = "Importer"/>
+			<Node NodeID = "PlaneSums" ProgramName = "Plane statistics and sums"/>
+			<Node NodeID = "StackStats" ProgramName = "Fast Stack statistics"/>
+		</Nodes>
+		<Links>
+			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="PlaneSums" ToInputName="Pixels"/>
+			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="StackStats" ToInputName="Pixels"/>
+
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane minima" ToNodeID="StackStats" ToInputName="PlaneMinimum"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane maxima" ToNodeID="StackStats" ToInputName="PlaneMaximum"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum i" ToNodeID="StackStats" ToInputName="PlaneSum_i"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum i^2" ToNodeID="StackStats" ToInputName="PlaneSum_i2"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum log(i)" ToNodeID="StackStats" ToInputName="PlaneSum_log_i"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum Xi" ToNodeID="StackStats" ToInputName="PlaneSum_Xi"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum Yi" ToNodeID="StackStats" ToInputName="PlaneSum_Yi"/>
+			<Link FromNodeID="PlaneSums" FromOutputName="Plane sum Zi" ToNodeID="StackStats" ToInputName="PlaneSum_Zi"/>
+		</Links>
+	</AnalysisChain>
+</AnalysisChains>
