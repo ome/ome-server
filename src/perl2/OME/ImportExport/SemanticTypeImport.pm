@@ -536,10 +536,6 @@ sub processDOM {
         }
 
         $semanticTypes->{ $newAttrType->name() } = $newAttrType;
-
-        # Force this attribute type to regenerate its Perl
-        # package.  (So that the new columns become visible)
-        $newAttrType->requireAttributeTypePackage(1);
     }
     #
     # END "Make AttributeTypes"

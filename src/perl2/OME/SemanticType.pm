@@ -157,10 +157,10 @@ sub getAttributeTypePackage {
 }
 
 sub requireAttributeTypePackage {
-    my ($self,$force) = @_;
+    my ($self) = @_;
     my $pkg = $self->getAttributeTypePackage();
     return $pkg
-      if (!$force) && (exists $self->_attributeTypePackages()->{$pkg});
+      if (exists $self->_attributeTypePackages()->{$pkg});
     logdbg "debug", "Loading attribute type package $pkg";
 
     logcroak "Malformed class name $pkg"
@@ -200,7 +200,7 @@ sub requireAttributeTypePackage {
         my $data_table = $data_column->data_table();
         my $table_name = $data_table->table_name();
         $any_table = $table_name unless defined $any_table; 
-        $data_table->requireDataTablePackage($force);
+        $data_table->requireDataTablePackage();
 
         # It doesn't matter if we add the primary key more than once
         # per table, DBObject can deal.
