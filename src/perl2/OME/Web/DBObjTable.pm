@@ -110,10 +110,12 @@ sub getPageBody {
 	
 	if( $q->param( "Type" ) ) {
 		if( $q->param( "Format" ) and $q->param( "Format" ) eq 'txt' ) {
-			return ('TXT', 
-				$self->getTextTable( {
-				})
-			);
+			my ($title,$table) = $self->getTextTable();
+			$self->contentType('text/tab-separated-values');
+			return ('FILE', {
+				downloadFilename => $title.'.tsv',
+				content          => $table,
+			});
 		} else {
 			return ('HTML', 
 				$self->getTable( {
@@ -124,10 +126,12 @@ sub getPageBody {
 		}
 	} elsif( $q->param( "Types" ) ) {
 		if( $q->param( "Format" ) eq 'txt' ) {
-			return ('TXT', 
-				$self->getJoinTextTable( {
-				})
-			);	
+			my ($title,$table) = $self->getJoinTextTable();
+			$self->contentType('text/tab-separated-values');
+			return ('FILE', {
+				downloadFilename => $title.'.tsv',
+				content          => $table,
+			});	
 		} else {
 			return ('HTML', 
 				$self->getJoinTable( {
@@ -228,7 +232,7 @@ sub getTable {
 			);
 		$table_cells .= 
 			$q->td( { -class => 'ome_td' }, 
-				[ map( $record->{$_}, @fieldNames ) ] 
+				[ map( defined $record->{$_} ? $record->{$_} : '', @fieldNames ) ] 
 			);
 		push( @table_data, $table_cells );
 	}
@@ -404,7 +408,7 @@ sub getJoinTable {
 		my $order_by = $fieldNames[ 0 ];
 		if( $q->param( $field_name_of_orderBy ) && $q->param( $field_name_of_orderBy ) ne '' ) {
 			$order_by = $q->param( $field_name_of_orderBy );
-			@records = sort( { $a->{ $order_by } cmp $b->{ $order_by } } @records );
+			@records = sort( { $a->{ $order_by } <=> $b->{ $order_by } } @records );
 		}
 
 		# translate to html
@@ -412,7 +416,7 @@ sub getJoinTable {
 		foreach my $record ( @records ) {
 			my $table_cells = 
 				$q->td( { -class => 'ome_td' }, 
-					[ map( $record->{$_}, @fieldNames ) ] 
+					[ map( defined $record->{$_} ? $record->{$_} : '', @fieldNames ) ] 
 				);
 			push( @table_data, $table_cells );
 		}
@@ -500,12 +504,14 @@ sub getJoinTextTable {
 
 	# build tables
 	my @tables;
+	my @titles;
+	
 	$options->{delimiter} = "\t" unless $options->{delimiter};
 	foreach my $j_group ( values( %joined_groups ) ) {
 		my @records = values( %{ $j_group->{records} } );
 		my @fieldNames = @{ $j_group->{ field_names } };
 		my %labels = %{ $j_group->{ field_labels } };
-#		my $title = "Displaying ".join( ', ', @{ $j_group->{ titles } } );
+		push (@titles,join( '-', @{ $j_group->{ titles } } ) );
 		
 		# column labels
 		my @columnLabels = map( $labels{ $_ }, @fieldNames );
@@ -515,13 +521,13 @@ sub getJoinTextTable {
 	
 		# table data
 		foreach my $record ( @records ) {
-			$table .= join( $options->{delimiter}, map( $record->{$_}, @fieldNames ) )."\n";
+			$table .= join( $options->{delimiter}, map( defined $record->{$_} ? $record->{$_} : '', @fieldNames ) )."\n";
 		}
 		
 		push( @tables, $table );
 	}
 	
-	return @tables;
+	return ( join (':',@titles), join ("\n",@tables)."\n" );
 }
 
 =head2 getTextTable
@@ -529,13 +535,13 @@ sub getJoinTextTable {
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
 
 	# make a table from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
-	my $textTable      = $tableMaker->getTextTable( \%options );
+	my ($title,$textTable) = $tableMaker->getTextTable( \%options );
 
 	# or use search options to make a table
-	my $textTable      = $tableMaker->getTextTable( \%options, $type, \%search_options );
+	my ($title,$textTable) = $tableMaker->getTextTable( \%options, $type, \%search_options );
 
 	# or use a list of objects to make a table
-	my $textTable      = $tableMaker->getTextTable( \%options, $type, \@obj_array );
+	my ($title,$textTable) = $tableMaker->getTextTable( \%options, $type, \@obj_array );
 
 If a search key is 'accessor', the objects retrieved will be from a
 DBObject accessor method. The value for the 'accessor' search key is
@@ -566,22 +572,21 @@ sub getTextTable {
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
 	my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames );
+	my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, {text => 1});
 
 	# column headers
 	my @columnHeaders = map( $labels{ $_ }, @fieldNames );
 	
 	# Build the table
-	my $table = 
-		$title."\n".
-		join( $options->{delimiter}, @columnHeaders )."\n";
+	my $table = join( $options->{delimiter}, @columnHeaders )."\n";
 
 	# table data
 	foreach my $record ( @records ) {
-		$table .= join( $options->{delimiter}, map( $record->{$_}, @fieldNames ) )."\n";
+		$table .= join( $options->{delimiter}, map( defined $record->{$_} ? $record->{$_} : '', @fieldNames ) )."\n";
 	}
+	$table .= "\n";
 	
-	return $table;
+	return ($title,$table);
 }
 
 =head2 getList
@@ -671,23 +676,35 @@ sub __getJoinedGroups {
 			my ( $objects, $object_count, $minimalParams ) = __load_objects( $self->Session()->Factory(), $formal_name, \%searchParams );
 			while( my( $param, $value ) = each %$minimalParams ) {
 				next if $param eq 'Type';
-				$self->{__params}->{ $param } = ( ref($value) ? join( ',', @$value ) : $value );
+				$self->{__params}->{ $param } = $value;
 			}
 			my $title = ( $q->param( "Title_$type" ) or $common_name);
 			push( @$entries, {
 				title   => $title,
 				type    => $formal_name,
-				objects => $objects
+				objects => $objects,
+				search  => {%searchParams}
 			});
 		}
 	} else {
-		my @types;
+		my %types;
 		foreach my $entry ( @$entries ) {
 			my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $entry->{ type } );
-			push( @types, $formal_name );
-			$self->{__params}->{$formal_name.'_id'} = join( ',',  map( $_->id, @{ $entry->{ objects } } ));
+			if (exists $entry->{ search }) {
+				my %searchParams = %{$entry->{ search }};
+				while ( my ($search_key,$search_val) = each (%searchParams) ) {
+					$self->{__params}->{$formal_name.'.'.$search_key} = $search_val;
+				}
+				( $entry->{ objects }, undef, undef ) = __load_objects( $self->Session()->Factory(), $formal_name, \%searchParams );
+				$types{$formal_name} = undef;
+			} else {
+				push (@{$types{$formal_name}},  @{ $entry->{ objects } } );
+			}
 		}
-		$self->{__params}->{Types} = join( ',', @types );
+		while (my ($formal_name,$objects) = each (%types)) {
+			$self->{__params}->{$formal_name.'.id'} = join (',', map($_->id, @$objects) ) if $objects;
+		}
+		$self->{__params}->{Types} = join( ',', keys (%types) );
 	}
 
 	foreach my $entry ( @$entries ) {
@@ -703,7 +720,7 @@ sub __getJoinedGroups {
 		@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 			if exists $options->{excludeFields};
 		my %labels     = $self->Renderer()->getFieldTitles( $formal_name, \@fieldNames, 'txt' );
-		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames );
+		my @records    = $self->Renderer()->renderData( $objects, \@fieldNames, {text => 1} );
 
 		# Determine what known indexes this record contains.
 		my @index_fields = sort( grep( exists( $standard_index_fields{$_} ), @fieldNames ) );
@@ -836,7 +853,7 @@ sub __parseParams {
 	} else {
 		$self->{__params} = { 
 			Type               => $formal_name,
-			$formal_name.'_id' => join( ',', map( $_->id, @objects ) )
+			$formal_name.'.id' => join( ',', map( $_->id, @objects ) )
 		} if $package_name->getColumnType( 'id' );
 		$object_count = scalar( @objects );
 		@objects = splice( @objects, $searchParams{ __offset }, $searchParams{ __limit } )
@@ -919,23 +936,43 @@ sub __getActionButton {
 		);
 }
 
+# CGI params come in two flavors.  One for joined tables, one for a single-type table.
+# In a single-type table, cgi parameters correspond to elements in the base type (the Type param).
+# In a joined table, each type's search elements are constructed from the formal name of the type
+# followed by a dot followed by that type's element name.
+# i.e. @Location.TheX=123.5
+# The type parameter is required when getting search_params for multi-type tables.
 sub __get_CGI_search_params {
 	my ( $q, $type ) = @_;
-
-	# collect search params
-	my @search_names = $q->param( 'search_names' );
 	my %searchParams;
-	foreach my $key (@search_names) {
-		next unless ( $q->param( $key ) && $q->param( $key ) ne '');
-		$searchParams{ $key } = $q->param( $key );
-		# split the newkey into a list if it contains commas and was populated 2 lines above
-		if( exists $searchParams{ $key } and $searchParams{ $key } =~ m/,/) {
-			if( $key ne 'accessor' ) {
-				$searchParams{ $key } = [ 'in', [ split( m/,/, $searchParams{ $key } ) ] ];
+
+	if ($q->param ('Types')) {
+		die "object type must be specified in __get_CGI_search_params for multi-type tables"
+			unless defined $type;
+	} else {
+		$type = $q->param ('Type');
+	}
+
+	my @params = $q->param();
+	my $param;
+	foreach $param (@params) {
+		next if $param eq 'Type' or $param eq 'Types';
+		next if $param eq 'Format' or $param eq 'Page';
+		my $value = $q->param ($param);
+		if (index ($param,$type) == 0) {
+			$param = substr ($param, length($type)+1);
+		} else {
+			undef $param;
+		}
+		if ($value =~ m/,/) {
+			if ($param eq 'accessor' ) {
+				$value = [ split( m/,/, $value ) ];
 			} else {
-				$searchParams{ $key } = [ split( m/,/, $searchParams{ $key } ) ];
+				$value = [ 'in', [ split( m/,/, $value ) ] ];
 			}
 		}
+
+		$searchParams{$param} = $value if $param;
 	}
 	
 	return %searchParams;
@@ -977,10 +1014,23 @@ sub __load_objects {
 			( $orderBy ? ( __order => $orderBy ) : () )
 		);
 		$object_count = $factory->countObjectsLike( $formal_name, %$searchParams );
-		$minimalParams = { 
-			Type               => $formal_name,
-			( map{ $formal_name."_".$_ => $searchParams->{ $_ } } keys %$searchParams )
-		};
+		$minimalParams->{Type} = $formal_name;
+		my ($key,$value);
+		while ( ($key,$value) = each (%$searchParams) ) {
+			if (ref ($value) eq 'ARRAY') {
+				if ( ref ($value->[0]) ) {
+					$value = join ( ',', map ($_->id() , @$value) );
+					$key .= '_id';
+				} else {
+					$value = join ( ',', @$value );
+				}
+			} elsif ( ref ($value) ) {
+				$key .= '_id';
+				$value = $value->id();
+			}
+			$key = $formal_name.'.'.$key;
+			$minimalParams->{$key} = $value;
+		}
 	}
 	
 	return ( \@objects, $object_count, $minimalParams );
