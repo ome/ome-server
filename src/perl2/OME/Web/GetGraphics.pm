@@ -426,7 +426,6 @@ my $self      = shift;
 my $cgi       = $self->CGI();
 my $SVG;
 
-
 my $JSinfo = $self->SVGgetDataJS();
 
 my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
@@ -444,7 +443,9 @@ my $CBW                = $JSinfo->{ CBW };	# known to the svg viewer as WBW - wh
 my $RGBon              = $JSinfo->{ RGBon };
 my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 
-my $centroidData       = $self->getOverlayJS();
+my $overlayData        = $self->getOverlayJS();
+my $centroidData       = $overlayData->{ centroids };
+my $featureData        = $overlayData->{ features };
 
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
@@ -487,6 +488,10 @@ my $centroidData       = $self->getOverlayJS();
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/imageControls.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/featureInfo.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/overlayManager.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/overlay.js" />
@@ -503,11 +508,7 @@ ENDSVG
 $SVG .= <<ENDSVG;
 	// GUI components
 		var controlsToolBox, multiToolBox;
-		var zSlider, tSlider;
-		var redPopupList, bluePopupList, greenPopupList, bwPopupList;
-		var scalePopupList, panePopupList;
-		var RGBpopupListBox, BWpopupListBox;
-		var redButton, blueButton, greenButton, RGB_BWbutton;
+		var panePopupList;
 		var infoButton;
 		var azap = new AntiZoomAndPan();
 
@@ -517,6 +518,8 @@ $SVG .= <<ENDSVG;
 		var stats;
 		var overlayManager;
 		var viewerPreferences;
+		var imageControls;
+		var featureInfo;
 		
 	// constants & references
 		var Wavelengths        = $Wavelengths;
@@ -553,225 +556,51 @@ $SVG .= <<ENDSVG;
 				skinLibrary["hideControl"],
 				skinLibrary["GUIbox"]
 			);
-			controlToolBox.setLabel(90,12,"Primary Controls")
+ 			controlToolBox.setLabel(90,12,"Image Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
 			
+			
+		// realize the GUI elements in the appropriate containers
+            var controls  = svgDocument.getElementById("controls");
+            controlToolBox.realize(controls);
+            
+			imageControls = new ImageControls(  );
+			var functions = new Array();
+			functions['zSlider']   = updateTheZ;
+			functions['zUp']       = zUp;
+			functions['zDown']     = zDown;
+			functions['zAnimUp']   = zAnimUp;
+			functions['zAnimDown'] = zAnimDown;
+			functions['tSlider']   = updateTheT;
+			functions['tUp']       = tUp;
+			functions['tDown']     = tDown;
+			functions['tAnimUp']   = tAnimUp;
+			functions['tAnimDown'] = tAnimDown;
+			functions['updateR']   = updateRedChannel;
+			functions['updateG']   = updateGreenChannel;
+			functions['updateB']   = updateBlueChannel;
+			functions['updateBW']  = updateBWChannel;
+			functions['OnOffR']    = turnRedOnOff;
+			functions['OnOffG']    = turnGreenOnOff;
+			functions['OnOffB']    = turnBlueOnOff;
+			functions['Save']      = saveImageSettings;
+			functions['preload']   = loadAllImages;
+			functions['RGB2BW']    = switchRGB_BW;
+			functions['showScale'] = showScale;
+            controlToolBox.getGUIbox().appendChild( imageControls.buildControls( functions ) );
+            
+            
+            
+			// toolbox to house all other interfaces
 			multiToolBox = new multipaneToolBox(
 				55, 265, 200, 100,
 				skinLibrary["menuBar17"],
 				skinLibrary["XhideControl"],
 				skinLibrary["tallGUIbox"]
 			);
-			
-			zSlider = new Slider(
-				30, 120, 100, -90,
-				updateTheZ,
-				skinLibrary["zSliderBody"],
-				skinLibrary["zSliderThumb"]
-			);
-			zSlider.setLabel(0,-102,"");
-			zSlider.getLabel().setAttribute( "fill", "white" );
-			zSlider.getLabel().setAttribute( "text-anchor", "middle" );
-
-			tSlider = new Slider(
-				60, 30, 100, 0,
-				updateTheT
-			);
-			tSlider.setLabel(60,-13,"");
-			tSlider.getLabel().setAttribute( "fill", "white" );
-
-			// wavelength to channel popupLists
-			redPopupList = new popupList(
-				-50, 0, fluors, updateRedWavelength, 1,
-				skinLibrary["redAnchorText"],
-				skinLibrary["redItemBackgroundText"],
-				skinLibrary["redItemHighlightText"]
-			);
-
-			greenPopupList = new popupList(
-				0, 0, fluors, updateGreenWavelength, 0,
-				skinLibrary["greenAnchorText"],
-				skinLibrary["greenItemBackgroundText"],
-				skinLibrary["greenItemHighlightText"]
-			);
-
-			bluePopupList = new popupList(
-				50, 0, fluors, updateBlueWavelength, 0,
-				skinLibrary["blueAnchorText"],
-				skinLibrary["blueItemBackgroundText"],
-				skinLibrary["blueItemHighlightText"]
-			);
-			
-			bwPopupList = new popupList(
-				0, 0, fluors, updateBWWavelength
-			);
-			
-			// set up channel on/off buttons
-			redButton = new button( 
-				Math.round(redPopupList.x + redPopupList.width/2), -13, turnRedOnOff,
-				skinLibrary["redButtonOn"],
-				skinLibrary["redButtonOff"],
-				skinLibrary["blankButtonRadius5Highlight"]
-			);
-			greenButton = new button( 
-				Math.round(greenPopupList.x + greenPopupList.width/2), -13, turnGreenOnOff,
-				skinLibrary["greenButtonOn"],
-				skinLibrary["greenButtonOff"],
-				skinLibrary["blankButtonRadius5Highlight"]
-			);
-			blueButton = new button(
-				Math.round(bluePopupList.x + bluePopupList.width/2), -13, turnBlueOnOff,
-				skinLibrary["blueButtonOn"],
-				skinLibrary["blueButtonOff"],
-				skinLibrary["blankButtonRadius5Highlight"]
-			);
-			
-			// save button
-			saveButton = new button(
-				85, 130, saveImage,
-				'<text fill="black" text-anchor="end">Save</text>',
-				null,
-				'<text fill="white" text-anchor="end">Save</text>'
-			);
-			loadButton = new button(
-				85, 140, loadAllImages,
-				'<text fill="black" text-anchor="end">Load All</text>',
-				null,
-				'<text fill="white" text-anchor="end">Load All</text>'
-			);
-			
-
-			// set up RGB to grayscale button
-			RGB_BWbutton = new button(
-				110, 115, switchRGB_BW,
-				skinLibrary["RGB_BWButtonOn"],
-				skinLibrary["RGB_BWButtonOff"],
-				skinLibrary["blankButtonRadius13Highlight"]
-			);
-			
-			// buttons to access panes
-			statsButton = new button(
-				190, 110, showStats,
-				'<text fill="black" text-anchor="end">Stats</text>',
-				null,
-				'<text fill="white" text-anchor="end">Stats</text>'
-			);
-			scaleButton = new button(
-				190, 120, showScale,
-				'<text fill="black" text-anchor="end">Scale</text>',
-				null,
-				'<text fill="white" text-anchor="end">Scale</text>'
-			);
-			overlayButton = new button(
-				190, 130, showOverlay,
-				'<text fill="black" text-anchor="end">Overlay</text>',
-				null,
-				'<text fill="white" text-anchor="end">Overlay</text>'
-			);
-			settingsButton = new button(
-				190, 140, showPreferences,
-				'<text fill="black" text-anchor="end">Preferences</text>',
-				null,
-				'<text fill="white" text-anchor="end">Preferences</text>'
-			);
-				
-		
-			// z & t increment buttons
-			tUpButton = new button(
-				182, 25, tUp,
-				skinLibrary["triangleRightWhite"]
-			);
-			tDownButton = new button(
-				178, 25, tDown,
-				skinLibrary["triangleLeftWhite"]
-			);
-			zUpButton = new button(
-				15, 106, zUp,
-				skinLibrary["triangleUpWhite"]
-			);
-			zDownButton = new button(
-				15, 110, zDown,
-				skinLibrary["triangleDownWhite"]
-			);
-				
-			// z & t animation buttons
-			tAnimUpButton = new button(
-				182, 35, tAnimUp,
-				skinLibrary["triangleRightRed"],
-				null,
-				skinLibrary["triangleRightWhite"]
-			);
-			tAnimDownButton = new button(
-				178, 35, tAnimDown,
-				skinLibrary["triangleLeftRed"],
-				null,
-				skinLibrary["triangleLeftWhite"]
-			);
-			zAnimUpButton = new button(
-				15, 86, zAnimUp,
-				skinLibrary["triangleUpRed"],
-				null,
-				skinLibrary["triangleUpWhite"]
-			);
-			zAnimDownButton = new button(
-				15, 90, zAnimDown,
-				skinLibrary["triangleDownRed"],
-				null,
-				skinLibrary["triangleDownWhite"]
-			);
-			
-		// realize the GUI elements in the appropriate containers
-            var controls  = svgDocument.getElementById("controls");
-            controlToolBox.realize(controls);
-            
-            // Z & T controls
-			zSlider.realize(controlToolBox.getGUIbox());
-			tSlider.realize(controlToolBox.getGUIbox());
-			tUpButton.realize(controlToolBox.getGUIbox());
-			tDownButton.realize(controlToolBox.getGUIbox());
-			zUpButton.realize(controlToolBox.getGUIbox());
-			zDownButton.realize(controlToolBox.getGUIbox());
-			tAnimUpButton.realize(controlToolBox.getGUIbox());
-			tAnimDownButton.realize(controlToolBox.getGUIbox());
-			zAnimUpButton.realize(controlToolBox.getGUIbox());
-			zAnimDownButton.realize(controlToolBox.getGUIbox());
-
-			loadButton.realize(controlToolBox.getGUIbox());
-
-			// RGB & BW switcheroo
-			RGB_BWbutton.realize(controlToolBox.getGUIbox());
-			
-			// Save button
-			saveButton.realize(controlToolBox.getGUIbox());
-
-			// RGB channel controls
-			RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
-			RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
-			controlToolBox.getGUIbox().appendChild( RGBpopupListBox );
-			redButton.realize( RGBpopupListBox );
-			greenButton.realize( RGBpopupListBox );
-			blueButton.realize( RGBpopupListBox );
-			redPopupList.realize( RGBpopupListBox );
-			greenPopupList.realize( RGBpopupListBox );
-			bluePopupList.realize( RGBpopupListBox );
-
-			// Grayscale controls
-			BWpopupListBox = svgDocument.createElementNS( svgns, "g" );
-			BWpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
-			BWpopupListBox.setAttribute( "display", "none" );
-			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
-			bwPopupList.realize( BWpopupListBox );
-
-			statsButton.realize( controlToolBox.getGUIbox() );
-			scaleButton.realize( controlToolBox.getGUIbox() );
-			overlayButton.realize( controlToolBox.getGUIbox() );
-			settingsButton.realize( controlToolBox.getGUIbox() );
-
-			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
 
 			// set up panes in the multi toolbox
-// These panes to come from DB eventually?
 			stats = new Statistics( Stats, fluors, updateStatsWave );
 			multiToolBox.addPane( stats.buildSVG(), "Stats" );
 			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
@@ -780,8 +609,9 @@ $SVG .= <<ENDSVG;
 
 ENDSVG
 
+#################
+# insert centroid data
 if( $centroidData ) {
-print STDERR "centroid data is $centroidData\n\n";
 $SVG .= <<ENDSVG;
 			var overlayBox  = svgDocument.getElementById("overlays");
 			centroids = new CentroidOverlay( $centroidData );
@@ -795,6 +625,8 @@ $SVG .= <<ENDSVG;
 ENDSVG
 }
 
+#################
+# static text
 $SVG .= <<ENDSVG;
 			viewerPreferences = new ViewerPreferences( resizeToolBox, resizeMultiToolBox, savePreferences );
 			multiToolBox.addPane( viewerPreferences.buildSVG(), "Preferences");
@@ -815,36 +647,49 @@ $SVG .= <<ENDSVG;
 			multiToolBox.nodes.GUIboxContainer.setAttribute( "onmouseover", 'multiToolBox.drawGUITop()' );
 			multiToolBox.getMenuBar().setAttribute( "onmouseover", 'multiToolBox.drawMenuTop()' );
 
+ENDSVG
 
+#################
+# insert feature data
+if( $featureData ) {
+$SVG .= <<ENDSVG;
+			// Feature Information
+			featureInfo = new FeatureInfo( $featureData );
+			featureInfo.buildToolBox( controls );
+
+ENDSVG
+}
+
+$SVG .= <<ENDSVG;
 			azap.appendNode(controls);
 			mouseTrap = svgDocument.getElementById("mouseTrap");
 			azap.appendNode(mouseTrap); 
 
 			// Set up display. These values come from DB eventually.
 			var WBS = image.getWBS();
-			setTimeout( "redPopupList.setSelectionByValue('"+ 
-				redPopupList.getItemList()[ WBS[0] ]
+			setTimeout( "imageControls.redPopupList.setSelectionByValue('"+ 
+				imageControls.redPopupList.getItemList()[ WBS[0] ]
 				+"')", 0 );
-			setTimeout( "greenPopupList.setSelectionByValue('"+ 
-				greenPopupList.getItemList()[ WBS[3] ]
+			setTimeout( "imageControls.greenPopupList.setSelectionByValue('"+ 
+				imageControls.greenPopupList.getItemList()[ WBS[3] ]
 				+"')", 0 );
-			setTimeout( "bluePopupList.setSelectionByValue('"+ 
-				bluePopupList.getItemList()[ WBS[6] ]
+			setTimeout( "imageControls.bluePopupList.setSelectionByValue('"+ 
+				imageControls.bluePopupList.getItemList()[ WBS[6] ]
 				+"')", 0 );
-			setTimeout( "bwPopupList.setSelectionByValue('"+ 
-				bwPopupList.getItemList()[ WBS[9] ]
+			setTimeout( "imageControls.bwPopupList.setSelectionByValue('"+ 
+				imageControls.bwPopupList.getItemList()[ WBS[9] ]
 				+"')", 0 );
 			var RGBon = image.getRGBon(); 
 			setTimeout( "resizeToolBox(50 * ("+toolBoxScale+" - 1 ) )", 0);
 			setTimeout( "multiToolBox.hide()", 0);
 			setTimeout( "resizeMultiToolBox()", 500);
-			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
-			setTimeout( "loadButton.setState(false)", 0 );
-			zSlider.setValue(theZ/Z*100,true);
-			tSlider.setValue(theT/T*100,true);
+			setTimeout( "imageControls.redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "imageControls.greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "imageControls.blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "imageControls.RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
+			setTimeout( "imageControls.loadButton.setState(false)", 0 );
+			imageControls.zSlider.setValue(theZ/Z*100,true);
+			imageControls.tSlider.setValue(theT/T*100,true);
 
 		}
 		
@@ -853,7 +698,6 @@ ENDSVG
 # more static stuff
 $SVG .= <<'ENDSVG';
         
-		
 	// these functions connect GUI with backend
 		function showAllZs( val ) {
 			overlayManager._showAllZs( val );	
@@ -896,7 +740,7 @@ $SVG .= <<'ENDSVG';
 		}
 
 		
-		function saveImage() {
+		function saveImageSettings() {
 			image.saveState();
 		}
 	
@@ -905,11 +749,17 @@ $SVG .= <<'ENDSVG';
 			image.setPreload(false);
 		}
 	
+		// newZ has range of 0 to Z-1
+		function setTheZ( newZ ) {
+			if( Z > 1 )
+				updateTheZ( newZ / (Z-1) *100 );
+		}
+		// this accepts a percentage (0-100)
 		function updateTheZ(data) {
 			data=Math.round(data/100*(Z-1));
 			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
-			zSlider.setValue(sliderVal);
-			zSlider.setLabel(null, null, (data + 1) + "/" + Z );
+			imageControls.zSlider.setValue(sliderVal);
+			imageControls.zSlider.setLabel(null, null, (data + 1) + "/" + Z );
 			theZ=data;
 			
 			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
@@ -939,12 +789,17 @@ $SVG .= <<'ENDSVG';
 			}
 		}
 
+		// newT has range of 0 to Z-1
+		function setTheT( newT ) {
+			if( T > 1 ) 
+				updateTheT( newT / (T-1) *100 );
+		}
+		// this accepts a percentage (0-100)
 		function updateTheT(data) {
-			if(data<0) data=0;
 			theT=Math.round(data/100*(T-1));
 			var sliderVal = ( T==1 ? 0 : Math.round(theT/(T-1)*100) );
-			tSlider.setValue(sliderVal);
-			tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
+			imageControls.tSlider.setValue(sliderVal);
+			imageControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
 			
 			if( overlayManager) overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
@@ -975,16 +830,16 @@ $SVG .= <<'ENDSVG';
 		}
 
 		// popupLists controlling channels
-		function updateRedWavelength(item) {
+		function updateRedChannel(item) {
 			scale.updateWBS('R', item);
 		}
-		function updateGreenWavelength(item) {
+		function updateGreenChannel(item) {
 			scale.updateWBS('G', item);
 		}
-		function updateBlueWavelength(item) {
+		function updateBlueChannel(item) {
 			scale.updateWBS('B', item);
 		}
-		function updateBWWavelength(item) {
+		function updateBWChannel(item) {
 			scale.updateWBS('Gray', item);
 			stats.changeWavenumber( item );
 		}
@@ -1013,12 +868,12 @@ $SVG .= <<'ENDSVG';
 		function switchRGB_BW(val) {
 			//	decide which way to flip
 			if(val) {	// val == true means mode = RGB
-				BWpopupListBox.setAttribute( "display", "none" );
-				RGBpopupListBox.setAttribute( "display", "inline" );
+				imageControls.BWpopupListBox.setAttribute( "display", "none" );
+				imageControls.RGBpopupListBox.setAttribute( "display", "inline" );
 			}
 			else {	// mode = BW
-				BWpopupListBox.setAttribute( "display", "inline" );
-				RGBpopupListBox.setAttribute( "display", "none" );
+				imageControls.BWpopupListBox.setAttribute( "display", "inline" );
+				imageControls.RGBpopupListBox.setAttribute( "display", "none" );
 			}
 			image.setDisplayRGB_BW(val);
 		}
@@ -1144,79 +999,48 @@ sub getOverlayJS {
 	
 	my $factory = $self->Session()->Factory();
 	
-	my $spots;
-	eval {
-		$spots = $self->getSpots( $pixels );
-	};
-	return undef if( $@ );
-	
-	my $layersJS;
-	my %layers;
-	my $centroidDataJS;
-	my %centroidData;
-	foreach my $spot( @$spots ) {
-		my @locations = $factory->findAttributes( "Location", $spot )
-			or die "this spot (".$spot->id.") has no location\n";
-		die "this spot (".$spot->id.")has multiple locations" if @locations > 1;
-		my $location = $locations[0];
-		my ($theX, $theY, $theZ) = map( sprintf( "%i", $_ + 0.5 ), ( $location->TheX, $location->TheY, $location->TheZ ) );
-		my @timepoints = $factory->findAttributes( "Timepoint", $spot )
-			or die "this spot (".$spot->id.") has no Timepoint\n";
-		die "this spot (".$spot->id.")has multiple Timepoint" if @timepoints > 1;
-		my $theT = $timepoints[0]->TheT();
-		my @signals = $factory->findAttributes( "Signal", $spot )
-			or die "this spot (".$spot->id.") has no signal\n";
-		die "this spot (".$spot->id.")has multiple signal" if @signals > 1;
-		my $signal = $signals[0];
-		my $theC = $signal->TheC();
-		$layers{$theZ}->{$theT} .= 
-			'<circle r="5" stroke="blue" fill="none" cx="'.$theX.'" cy="'.$theY.'" theZ="'.$theZ.'" theT="'.$theT.'" theC="'.$theC.'"/>';
-		push ( @{ $centroidData{$theZ}->{$theT} }, "{ theX: $theX, theY: $theY, theC: $theC }" );
-	}
-
-	my @zs;
-	foreach my $z( keys %layers ) {
-		push @zs, " $z: { ".join( ',', map( $_.': \'<g>'.$layers{$z}->{$_}.'</g>\'', keys % {$layers{$z}} ) ).' }';
-	}
-	$layersJS = '{ '.join( ',', @zs ).' }';
-	
-	
-	@zs = ();
-	foreach my $z( keys %centroidData ) {
-		my @ts;
-		foreach my $t ( keys %{ $centroidData{$z} } ) {
-			push @ts, " $t: [ ".join( ',', @{ $centroidData{$z}->{$t} } ).' ]';
-		}
-		push( @zs, " $z: { ".join( ',', @ts ).' }' );
-	}
-	$centroidDataJS = '{ '.join( ',', @zs ).' }';
-	
-	return $centroidDataJS;
-
-}
-
-sub getSpots {
-	my $self = shift;
-	my $image = $self->getImage();
-	my $pixels = $image->DefaultPixels();
-	my $factory = $self->Session()->Factory();
-	
-	my $stackStats = $factory->findObject( "OME::Module", name => 'Find spots' )
-		or die "module 'Find spots' not found \n";
-	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput", 
-		module_id => $stackStats->id(),
-		name       => 'Pixels' )
-		or die "Cannot find 'Pixels' formal input for Module 'Find spots'.\n";
-	my $actualInput = $factory->findObject( "OME::ModuleExecution::ActualInput",
-		formal_input_id   => $pixelsFI->id(),
-		input_module_execution_id => $pixels->module_execution()->id() )
-		or die "'Find spots' has not been run on the Pixels to be displayed.\n";
-	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
-
 	my @spots = $factory->findObjects( "OME::Feature", image_id => $image->id(), tag => 'SPOT' );
+
+	my $centroidDataJS;
+	my @centroidData;
+	my %moduleExecutions;
+	my %features;
+	my @featureData;
+	my $featureDataJS;
+	my @locations;
 	
-	return \@spots;
+	push @locations, $factory->findAttributes( "Location", $_ ) 
+		foreach ( @spots );
 	
+	foreach my $location( @locations ) { 
+
+		my ($theX, $theY, $theZ) = map( sprintf( "%i", $_ + 0.5 ), ( $location->TheX, $location->TheY, $location->TheZ ) );
+
+		my $moduleExecution = $location->module_execution();
+		my $feature = $location->feature();
+		$moduleExecutions{ $moduleExecution } = undef 
+			unless exists $moduleExecutions{ $moduleExecution };
+		$features{ $feature->id() } = $feature
+			unless exists $features{ $feature->id() };
+
+		my @timepoints = $factory->findAttributes( "Timepoint", $feature )
+			or die "this spot (".$feature->id.") has no Timepoint\n";
+		die "this spot (".$feature->id.")has multiple Timepoint" if @timepoints > 1;
+		my $theT = $timepoints[0]->TheT();
+		push ( @centroidData, 
+			"{ theX: $theX, theY: $theY, theZ: $theZ, theT: $theT, moduleExecutionID: ".$moduleExecution->id().", featureID: ".$feature->id()." }" );
+	}
+
+	foreach my $feature( values %features ) {
+		my ( $id, $tag, $name ) = ($feature->id(), $feature->tag(), $feature->name() );
+		push ( @featureData, "{ ID: '$id', Tag: '$tag', Name: '$name' }" );
+	}
+	
+	$featureDataJS  = '['.join( ',', @featureData ).']';
+	$centroidDataJS = '['.join( ',', @centroidData ).']';
+	
+	return { centroids => $centroidDataJS, features => $featureDataJS };
+
 }
 
 1;
