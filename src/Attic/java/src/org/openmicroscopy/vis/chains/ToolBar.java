@@ -43,9 +43,12 @@
 package org.openmicroscopy.vis.chains;
 
 import javax.swing.Box;
-import javax.swing.JToolBar;
+import javax.swing.JFrame;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
 import java.awt.Dimension;
 
 /** 
@@ -56,33 +59,55 @@ import java.awt.Dimension;
  * @version 2.1
  * @since OME2.1
  */
-public class ToolBar extends JToolBar{
+public class ToolBar extends JFrame{
 	
 	protected JLabel statusLabel;
+	protected JPanel panel;
 	
 	protected CmdTable cmd;
 	protected JButton newChainButton;
+	
+	protected JButton viewResultsButton;
 	
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
 	 */
 	public ToolBar(CmdTable cmd) {
-		super();
+		super("OME Chains: Menu Bar");
 		this.cmd=cmd;
 		
-		add(Box.createRigidArea(new Dimension(5,0)));
+		JToolBar toolbar = new JToolBar();
 		
+		toolbar.add(Box.createRigidArea(new Dimension(5,0)));
+		toolbar.setFloatable(false);
 		newChainButton = new JButton("New Chain");
 		newChainButton.addActionListener(cmd.lookupActionListener("new chain"));
 		newChainButton.setEnabled(false);
-		add(newChainButton);
-		add(Box.createHorizontalGlue());
+		toolbar.add(newChainButton);
 		
+		toolbar.add(Box.createRigidArea(new Dimension(5,0)));
+		
+		viewResultsButton = new JButton("View Results");
+		viewResultsButton.
+			addActionListener(cmd.lookupActionListener("view results"));
+		viewResultsButton.setEnabled(false);
+		toolbar.add(viewResultsButton);
+		
+		toolbar.add(Box.createHorizontalGlue());
+		toolbar.add(Box.createRigidArea(new Dimension(40,0)));
 		statusLabel = new JLabel();
-		add(statusLabel);
+		statusLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		statusLabel.setMinimumSize(new Dimension(150,30));
+		statusLabel.setPreferredSize(new Dimension(150,30));
+		toolbar.add(statusLabel);
 		
-		add(Box.createRigidArea(new Dimension(5,0)));
+		toolbar.add(Box.createRigidArea(new Dimension(30,0)));
+		getContentPane().add(toolbar);
+		pack();
+		show();
+	
+		setResizable(false);
 		
 	}
 	
@@ -97,7 +122,8 @@ public class ToolBar extends JToolBar{
 	 * Set the state of the New chain button
 	 * @param v true if button should be enabled. else false.
 	 */
-	public void setNewChainEnabled(boolean v) {
+	public void setEnabled(boolean v) {
 		newChainButton.setEnabled(v);
+		viewResultsButton.setEnabled(v);
 	}
 }
