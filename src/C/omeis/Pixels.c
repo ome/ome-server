@@ -49,7 +49,6 @@
 
 #include <tiffio.h>
 
-#include "repository.h"
 #include "Pixels.h"
 #include "File.h"
 
