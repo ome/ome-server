@@ -481,7 +481,8 @@ addPrototype("OME::Module::Category","modules",
 
 addPrototype("OME::Module","name",['$'],['$']);
 addPrototype("OME::Module","description",['$'],['$']);
-addPrototype("OME::Module","category",['$'],['$']);
+addPrototype("OME::Module","category",
+             ['OME::Module::Category'],['OME::Module::Category']);
 addPrototype("OME::Module","module_type",['$'],['$']);
 addPrototype("OME::Module","location",['$'],['$']);
 addPrototype("OME::Module","default_iterator",['$'],['$']);
@@ -493,9 +494,9 @@ addPrototype("OME::Module","inputs",[],['OME::Factory::Iterator'],
 addPrototype("OME::Module","outputs",[],['OME::Module::FormalOutput','*']);
 addPrototype("OME::Module","outputs",[],['OME::Factory::Iterator'],
              publishedName => "iterate_outputs");
-addPrototype("OME::Module","analyses",[],['OME::ModuleExecution','*']);
-addPrototype("OME::Module","analyses",[],['OME::Factory::Iterator'],
-             publishedName => "iterate_analyses");
+addPrototype("OME::Module","module_executions",[],['OME::ModuleExecution','*']);
+addPrototype("OME::Module","module_executions",[],['OME::Factory::Iterator'],
+             publishedName => "iterate_module_executions");
 
 addPrototype("OME::Module::FormalInput","name",['$'],['$']);
 addPrototype("OME::Module::FormalInput","description",['$'],['$']);
