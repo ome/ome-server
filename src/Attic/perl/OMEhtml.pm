@@ -79,6 +79,8 @@ sub new {
 	align => 'LEFT'
 	};
 
+    $self->{OMEbgcolor} = '#CCCC99';
+
     bless($self,$class);
     return $self;
 }
@@ -244,12 +246,72 @@ sub tableLine {
 
     my $params = {colspan => $width};
     if (defined $height) {
-	$params->{height} => $height;
+	$params->{height} = $height;
     }
 
     return $CGI->Tr($self->{tableHeaderRowDefaults},
 		    $CGI->td(combine($self->{tableHeaderDefaults},$params),
 			     $self->spacer(1,1))) . "\n";
+}
+
+
+# CreateOMEPage(page title, body html)
+# ------------------------
+
+sub CreateOMEPage {
+    my $self  = shift;
+    my $CGI   = $self->{CGI};
+    my $title = shift;
+    my $body  = shift;
+
+    my ($left,$center,$right,$html);
+
+    $html = "";
+
+    $left = $CGI->td($CGI->img({src    => '/images/AnimalCell.aa.jpg.png',
+				width  => 105,
+				height => 77,
+				border => 0,
+				alt    => 'Cell in mitosis'}));
+    $center = $CGI->td($CGI->font(combine($self->{fontDefaults},
+					  {size => '+2'}),
+				  $CGI->b('OME')).
+		       "<br>Top navbar");
+
+    $html .= $CGI->Tr({align  => 'CENTER',
+		       valign => 'MIDDLE'},
+		      $left,
+		      $center);
+
+    my $bodyCell;
+    
+    # add some padding
+    $bodyCell = $CGI->table({cellspacing => 8, cellpadding => 0, border => 0, width => '100%'},
+			    $CGI->Tr($CGI->td($body)));
+    $bodyCell = $CGI->td({width => '100%',
+			     align => 'LEFT'},
+			    $bodyCell);
+
+    $left = $CGI->td("Sidebar<hr>Dataset info?<hr>Previously run<br>analyses?");
+
+    $html .= $CGI->Tr({align  => 'CENTER',
+		       valign => 'TOP'},
+		      $left,
+		      $bodyCell);
+
+    $html = $CGI->table({cellspacing => 0,
+			 cellpadding => 0,
+			 border      => 0,
+			 width       => '100%'},
+			$html);
+
+    my $head = $CGI->start_html({title => $title,
+				 bgcolor => $self->{OMEbgcolor},
+				 text => 'BLACK'});
+    my $tail = $CGI->end_html;
+
+    #print STDERR $head . $html . $tail;
+    return $head . $html . $tail;
 }
 
 

@@ -35,8 +35,8 @@
 
 use strict;
 
-use CGIBook::Error;
-use Math::Cephes qw(:all);
+#use CGIBook::Error;
+#use Math::Cephes qw(:all);
 use OMEpl;
 
 use vars qw ($OME $programName @spot @spindle);

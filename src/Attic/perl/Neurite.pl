@@ -35,7 +35,7 @@ $executable = '/usr/local/bin/matlab -nosplash -nodisplay -nojvm';
 if ($OME->gotBrowser) {
 	print_form ();
 	Do_Analysis () if ($OME->cgi->param('Execute'));
-	print $OME->cgi->end_html;
+        print $OME->cgi->end_html;
 } else {
 	Do_Analysis();
 }
@@ -47,6 +47,13 @@ undef $OME;
 #####################################
 
 sub print_form {
+    my $cgi = $OME->cgi;
+    my ($form, $section, $control, $subcontrol);
+
+    old_print_form();
+}
+
+sub old_print_form {
 my $cgi = $OME->cgi;
 my ($row,@tableRows);
 

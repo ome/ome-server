@@ -26,6 +26,15 @@ $VERSION = '1.20';
 use OMEpl;
 
 
+my %Fields = (ID          => ['PROGRAMS','PROGRAM_ID',   'REFERENCE','PRIMARY KEY'],
+	      Name        => ['PROGRAMS','PROGRAM_NAME', 'STRING'],
+	      Description => ['PROGRAMS','DESCRIPTION',  'STRING'],
+	      PerlClass   => ['PROGRAMS','PERL_CLASS',   'STRING'],
+	      Category    => ['PROGRAMS','CATEGORY',     'STRING'],
+	      InputTable  => ['PROGRAMS','INPUT_TABLE',  'STRING','TABLE NAME']
+	      );
+
+
 # new()
 # ----
 # Returns a new instance of this object.
@@ -33,11 +42,20 @@ use OMEpl;
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;    # allow to be invoked as a class or instance method
+    my $data = shift;
 
     my $self = {
-	OME         => new OMEpl,
-	programName => undef
+	OME             => new OMEpl,
+	programName     => undef,
+	_OME_DB_STATUS_ => 'DIRTY',
+	_OME_FIELDS_    => \%Fields
     };
+
+    if (defined $data) {
+	foreach $key (keys %$data) {
+	    $self{$key} = $data{$key};
+	}
+    }
 
     bless($self,$class);
     return $self;
