@@ -531,6 +531,8 @@ sub finishPixels {
 
     close HEADER;
 
+    $self->[PIX]->pixFinish();
+
     return;
 }
 
