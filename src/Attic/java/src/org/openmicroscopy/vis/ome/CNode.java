@@ -39,18 +39,31 @@
  
  package org.openmicroscopy.vis.ome;
  
- import org.openmicroscopy.remote.RemoteChain;
+ import org.openmicroscopy.remote.RemoteChain.Node;
+ import org.openmicroscopy.remote.RemoteChain.Link;
  import org.openmicroscopy.remote.RemoteObjectCache;
+ import org.openmicroscopy.remote.RemoteSession;
+ import java.util.List;
+ import java.util.Vector;
+ import java.util.Iterator;
+ import java.util.HashSet;
  
- public class CNode extends RemoteChain.Node {
+ public class CNode extends Node {
 	
+	private Vector succs = null;
+	protected HashSet layoutLinks = new HashSet();
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain::Node",CNode.class);
 	}
 	private int layer = -1;
 	
  	public CNode() {
- 		super();
+ 		super(); 
+ 	}
+ 	
+ 	public CNode(RemoteSession session,String reference) {
+ 		super(session,reference);
+ 	
  	}
  	
 	public void setLayer(int layer) {
@@ -64,5 +77,50 @@
 	public boolean hasLayer() {
 		return (!(layer == -1));
 	} 
+	
+	private void buildSuccessors() {
+	
+		succs = new Vector();
+		List outputs = getOutputLinks();
+		Iterator iter = outputs.iterator();
+		
+		while (iter.hasNext()) {
+			Link link = (Link)iter.next();
+			CNode node = (CNode) link.getToNode();
+			succs.add(node);
+			//	add a layout link?
+			buildLayoutLink(link);
+		}
+	}
+	
+	public List getSuccessors() {
+		if (succs == null)
+			buildSuccessors();
+		return succs;
+	}
+	
+	public void removeLayoutLink(Link link) {
+		if (layoutLinks != null)
+			layoutLinks.remove(link);
+	}
+	
+	public void addLayoutLink(Link link) {
+		layoutLinks.add(link);
+	}
+	
+	public Iterator layoutLinkIterator() {
+		return layoutLinks.iterator();
+	}
+	
+	private void buildLayoutLink(Link link) {
+		CNode from = (CNode) link.getFromNode();
+		CNode to = (CNode) link.getToNode();
+		CLayoutLink layoutLink = new CLayoutLink(from,to);
+		layoutLinks.add(layoutLink);
+	}
+	
+	public void setLayoutLinks(Vector links) {
+		layoutLinks = new HashSet(links);
+	}
  }
  
