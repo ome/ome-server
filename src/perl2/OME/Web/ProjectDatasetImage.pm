@@ -61,7 +61,9 @@ sub getPageBody {
 		$session->dataset($dataset);
 		$session->writeObject();
 		$body.="Dataset Created";
-		$body .= OME::Web::Validation->ReloadHomeScript();
+		#$body .= OME::Web::Validation->ReloadHomeScript();
+		$body .= "<script>top.location.href = top.location.href;</script>";
+
        	$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	 }			
 

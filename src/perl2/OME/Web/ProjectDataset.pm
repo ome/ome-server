@@ -76,13 +76,15 @@ sub getPageBody {
 				 $session->dissociateObject('dataset');
 		 	  	 $session->writeObject();
 			  	 $body .="No dataset defined for your current project.Please define a dataset."; #if not refresh
-			 	 $body .= OME::Web::Validation->ReloadHomeScript();
+			 	 $body .= "<script>top.location.href = top.location.href;</script>";
+				 $body .= "<script>top.title.location.href = top.title.location.href;</script>";
+
+				#$body .= OME::Web::Validation->ReloadHomeScript();
 			   }else{
 				$session->dataset($datasets[0]);
 			      $session->writeObject();
 		         }
-			      $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
+			    $body .= "<script>top.title.location.href = top.title.location.href;</script>";
 			}
 			$body.=$self->print_form();
 		
@@ -117,6 +119,9 @@ sub getPageBody {
       elsif( defined $cgi->param('addDataset') ) {
 
 	#if( defined $cgi->param('addDataset') ) {
+		my $currentdataset=$session->dataset();
+		my $reload=undef;
+		$reload=1 if (defined $currentdataset);
 		my $dataset = $project->addDatasetID( $cgi->param('addDatasetID') )
 			or die ref $self." died when trying to add dataset (".$cgi->param('addDatasetID');
 		$session->dataset($dataset);
@@ -124,12 +129,18 @@ sub getPageBody {
 		$project->writeObject();
 		
 		$body .= "Dataset '".$dataset->name()."' successfully added to this project and set to current dataset.<br>";
-		# this will add a script to reload OME::Home if it's necessary
-		#$body .= OME::Web::Validation->ReloadHomeScript();
+		
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+            if (defined $reload){
+	         $body .= OME::Web::Validation->ReloadHomeScript();
+	      }else{
+		  $body .= "<script>top.location.href = top.location.href;</script>";
+		}
 		$body .= $self->print_form();
 
 		# update titlebar
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		
+
 	}else{
 
 	# display datasets that user owns 
