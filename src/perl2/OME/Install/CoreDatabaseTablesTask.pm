@@ -373,7 +373,6 @@ sub load_xml_core {
     my ($session, $logfile) = @_;
     my @core_xml;
 
-	system("id");
     my $omeImport = OME::Tasks::OMEImport->
 	new(
 	    session => $session,
