@@ -77,7 +77,8 @@ public class OMEModel
   
   /**
    * Initializes the remote bindings and data structures necessary for this
-   * model to function correctly.
+   * model to function correctly.  Creates a OMEModel with its own
+   * RemoteBindings.
    */
   public OMEModel()
   {
@@ -89,12 +90,21 @@ public class OMEModel
     {
       throw new RuntimeException("WARNING: Remote Bindings not working.");
     }
-    imageList = new ArrayList();
     loggedIn = false;
-    
-    imageSlicesCache = ImageCache.getInstance();
-    imagePixelsCache = new HashMap();
-    imageInfoCache = new HashMap();
+    init();
+  }
+  
+  public OMEModel(RemoteBindings exBindings)
+  {
+    if(exBindings != null)
+    {
+      bindings = exBindings;
+    }
+    // start throwing exceptions if you screw up
+    session = bindings.getSession();
+    factory = bindings.getFactory();
+    loggedIn = true;
+    init();
   }
   
   /**
@@ -159,6 +169,14 @@ public class OMEModel
         throw new OMEException("Cannot log out: " + e.getMessage());
       }
     }
+  }
+  
+  private void init()
+  {
+    imageList = new ArrayList();
+    imageSlicesCache = ImageCache.getInstance();
+    imagePixelsCache = new HashMap();
+    imageInfoCache = new HashMap();
   }
   
   /**
@@ -240,6 +258,46 @@ public class OMEModel
     loadedInfo = info;
     converter = new RGBImageConverter(loadedPixels,loadedInfo);
   }
+  
+  public void loadImageObject(Image image)
+  {
+    // check cache for remote pixels reference already, return
+      //if(imagePixelsCache.containsKey(intObj))
+      //{
+      //loadedImage = (Image)imageList.get(index);
+      //loadedPixels = (ImagePixels)imagePixelsCache.get(intObj);
+      //loadedInfo = (ImageInformation)imageInfoCache.get(intObj);
+      //converter = new RGBImageConverter(loadedPixels,loadedInfo);
+      //return;
+      // }
+
+    // else, get pixels & image info
+
+    List pixelList = factory.findAttributes("Pixels",image);
+
+    // no associated images
+    if(pixelList == null || pixelList.size() == 0)
+    {
+      return;
+    }
+    Attribute pixelsAttribute = (Attribute)pixelList.get(0);
+    Attribute repository = pixelsAttribute.getAttributeElement("Repository");
+    LocalRepositoryFinder.findAndStore(repository);
+    ImagePixels pixels = image.getPixels(pixelsAttribute);
+    ImageInformation info = new ImageInformation(image,pixels,factory);
+
+    //if(pixels != null)
+    //{
+    //  imagePixelsCache.put(intObj,pixels);
+    //  imageInfoCache.put(intObj,info);
+    //}
+
+    loadedImage = image;
+    loadedPixels = pixels;
+    loadedInfo = info;
+    converter = new RGBImageConverter(loadedPixels,loadedInfo);
+  }
+
   
   /**
    * Return the information (channels, z levels, timeslices) about the

@@ -47,6 +47,9 @@ import java.util.List;
 import org.openmicroscopy.imageviewer.OMEException;
 import org.openmicroscopy.imageviewer.OMEModel;
 
+import org.openmicroscopy.remote.*;
+import org.openmicroscopy.*;
+
 /**
  * Controls the actions in the image viewer and regulates interaction between
  * the view and the data model.  This controller is detached from a particular
@@ -76,6 +79,12 @@ public class ImageController
     dataModel = new OMEModel();
   }
   
+  // alternate singleton constructor w/remote bindings
+  private ImageController(RemoteBindings bindings)
+  {
+    dataModel = new OMEModel(bindings);
+  }
+  
   /**
    * Returns the instance of the controller, so that widgets can subscribe and
    * publish events.  ImageController is a singleton class, so only one such
@@ -88,6 +97,15 @@ public class ImageController
     if(controller == null)
     {
       controller = new ImageController();
+    }
+    return controller;
+  }
+  
+  public static ImageController getInstance(RemoteBindings bindings)
+  {
+    if(controller == null)
+    {
+      controller = new ImageController(bindings);
     }
     return controller;
   }
@@ -201,10 +219,10 @@ public class ImageController
     {
       // really dumb data (should be the same as SVG image viewer)
       // TODO: get viewer preferences somehow
-      imageWidget.displayImage(dataModel.getImageSlice(13,0,1,0,0,true,true,false));
+      imageWidget.displayImage(dataModel.getImageSlice(0,0,1,0,0,true,true,false));
       if(imageFilterWidget != null)
       {
-        imageFilterWidget.loadDefaults(13,0,1,0,0,true,true,false);
+        imageFilterWidget.loadDefaults(0,0,1,0,0,true,true,false);
       }
     }
     catch(OMEException oe)
@@ -212,6 +230,42 @@ public class ImageController
       showError(oe.getMessage());
     }
   }
+  
+  // load an image object
+  public void doLoadImageObject(Image img) 
+  {
+    if(img == null)
+    {
+      return;
+    }
+    
+    dataModel.loadImageObject(img); 
+    if(imageWidget == null)
+    {
+      return;
+    }
+    if(imageFilterWidget != null)
+    {
+      imageFilterWidget.updatePossibleValues(dataModel.getImageInformation());
+    }
+    try
+    {
+      // really dumb data (should be the same as SVG image viewer)
+      // TODO: get viewer preferences somehow
+      //imageWidget.displayImage(dataModel.getImageSlice(13,0,1,0,0,true,true,false));
+      imageWidget.displayImage(dataModel.getImageSlice(0,0,0,0,0,true,false,false));
+      if(imageFilterWidget != null)
+      {
+        //imageFilterWidget.loadDefaults(13,0,1,0,0,true,true,false);
+        imageFilterWidget.loadDefaults(0,0,1,0,0,true,true,false);
+      }
+    }
+    catch(OMEException oe)
+    {
+      showError(oe.getMessage());
+    }
+  }
+
   
   // load all available images internal action
   protected void doLoadImages()
