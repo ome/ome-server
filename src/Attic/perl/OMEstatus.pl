@@ -68,8 +68,7 @@ my $userSessions = $OME->GetUserSessions();
 				$analysis->{AverageTimePerDataset} ? $analysis->{AverageTimePerDataset} : '',
 				$analysis->{Error} ? $analysis->{Error} : '',
 				$analysis->{Status} eq 'Executing' ? $cgi->submit (-name=>'Abort-'.$PID,-value=>'Abort') : 
-					($analysis->{Status} eq 'Error' or $analysis->{Status} eq 'Aborted' or $analysis->{Status} eq 'DIED') ? 
-						$cgi->submit (-name=>'Clear-'.$PID,-value=>'Clear') : ''
+						$cgi->submit (-name=>'Clear-'.$PID,-value=>'Clear')
 			]));
 		}
 		$OME->Session ($session);
