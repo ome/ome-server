@@ -109,13 +109,13 @@ cgrayce2:
 # I think they could be cleaned up, but I don't know how and don't have time now.
 # If anyone sees this, feel free to clean them up and erase this message.
 extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData -lz -lbz2 -ltiff
 
 insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData -lz -lbz2 -ltiff
 
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
-	$(CC) $(CFLAGS) $(LIBPATHS) -ltiff maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -o maxIntensity
+	$(CC) $(CFLAGS) $(LIBPATHS) maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -o maxIntensity -ltiff -lm
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
