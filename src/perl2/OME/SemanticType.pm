@@ -257,6 +257,7 @@ use OME;
         }
     }
 
+    $pkg->addColumn(module_execution_id => "${any_table}.module_execution_id");
     $pkg->addColumn(module_execution => "${any_table}.module_execution_id",
                     'OME::ModuleExecution',
                     {
@@ -411,152 +412,59 @@ sub __createNewAttribute {
 
     my $target_id = defined $target_column?
       $data_hash->{$target_column}: undef;
-    my $target;
 
     if (ref($target_id)) {
-        $target = $target_id;
-        $target_id = $target->id();
-    } else {
-        $target = $factory->loadObject($granularityClasses{$granularity},
-                                       $target_id)
-          if defined $target_column;
+        $target_id = $target_id->id();
     }
+
+    my %criteria;
+
+    $criteria{module_execution_id} =
+      $module_execution->id()
+      if defined $module_execution;
+    $criteria{$target_column} = $target_id
+      if defined $target_column;
 
     my @elements = $semantic_type->semantic_elements();
     foreach my $element (@elements) {
-        my $data_column = $element->data_column();
-        my $data_column_id = $data_column->id();
-        my $data_table = $data_column->data_table();
-        my $data_table_id = $data_table->id();
+        my $data_column_id = $element->data_column_id();
 
         my @overlaps = $factory->
           findObjects("OME::SemanticType::Element",
                       data_column_id => $data_column_id);
         my $overlap = scalar(@overlaps) > 1;
 
-        $tables{$data_table_id} = $data_table;
-        $columns{$data_table_id}->{$data_column_id} = $data_column;
-        $elements{$data_table_id}->{$data_column_id} = $element;
-        $table_criteria{$data_table_id}->{$data_column->column_name()} =
+        $criteria{$element->name()} =
           $overlap? $data_hash->{$element->name()}: undef;
-
-        $table_criteria{$data_table_id}->{module_execution_id} =
-          $module_execution->id()
-          if defined $module_execution;
-        $table_criteria{$data_table_id}->{$target_column} = $target_id
-          if defined $target_column;
     }
 
-    my %reusable_attribute_ids;
-    my $first_table = 1;
+    my $matching_attribute = $factory->
+      findAttribute($semantic_type,\%criteria);
 
-    foreach my $data_table_id (keys %tables) {
-        my $data_table = $tables{$data_table_id};
-        my $data_table_pkg = $data_table->requireDataTablePackage();
-
-        # We've already built up the search criteria for this table,
-        # so just fire it into findObjects.
-
-        my $criteria = $table_criteria{$data_table_id};
-
-        #print STDERR $data_table->table_name(),":\n  ";
-        #print STDERR join("\n  ",
-        #                  map { $_ . " => '" . 
-        #                          (defined $criteria->{$_}? $criteria->{$_}: 
-        #                            'undef') . "'" }
-        #                  keys %$criteria), "\n";
-
-        my @matching_rows = $factory->findObjects($data_table_pkg,%$criteria);
-
-        #print STDERR "  *** Found ",scalar(@matching_rows),"\n";
-
-        # If this is the first table we've checked, then the new set
-        # should be equal to the results from findObjects.  Otherwise,
-        # it should be the intersecting of the results and the previous
-        # set.
-
-        if ($first_table) {
-            $reusable_attribute_ids{$_->id()} = undef foreach @matching_rows;
-            $first_table = 0;
-        } else {
-            my %matching;
-            $matching{$_->id()} = undef foreach @matching_rows;
-            foreach (keys %reusable_attribute_ids) {
-                delete $reusable_attribute_ids{$_}
-                  unless exists $matching{$_};
-            }
-        }
-    }
-
-    my @reusable_attribute_ids = keys %reusable_attribute_ids;
     my $new_attribute;
 
-    if (scalar(@reusable_attribute_ids) > 0) {
+    if (defined $matching_attribute) {
         # We found a reusable set of rows.  Arbitrarily choose the
         # first ID in the list.
 
-        my $attribute_id = $reusable_attribute_ids[0];
-        my %rows;
+        $new_attribute = $matching_attribute;
+        #print "Found attribute $new_attribute\n";
 
-        foreach my $data_table_id (keys %tables) {
-            my $data_table = $tables{$data_table_id};
-            my $data_table_pkg = $data_table->requireDataTablePackage();
-
-            my $columns = $columns{$data_table_id};
-            my $row = $factory->loadObject($data_table_pkg,$attribute_id);
-
-            foreach my $data_column_id (keys %$columns) {
-                my $data_column = $columns{$data_table_id}->{$data_column_id};
-                my $element = $elements{$data_table_id}->{$data_column_id};
-                my $column_name = $data_column->column_name();
-                $column_name = lc($column_name);
-                $row->$column_name($data_hash->{$element->name()});
-            }
-
-            $row->storeObject();
-            $rows{$data_table_id} = $row;
+        foreach my $element_name (keys %$data_hash) {
+            $new_attribute->$element_name($data_hash->{$element_name});
         }
-
-        $new_attribute = $semantic_type->__newAttribute($target,
-                                                        $attribute_id,
-                                                        \%rows);
+        $new_attribute->storeObject();
     } else {
         # We did not find a reusable set of rows.
 
-        my $attribute_id;
-        my %rows;
+        # Factory will add the target on its own
+        delete $data_hash->{$target_column} if defined $target_column;
 
-        foreach my $data_table_id (keys %tables) {
-            my $data_table = $tables{$data_table_id};
-            my $data_table_pkg = $data_table->requireDataTablePackage();
-
-            my $columns = $columns{$data_table_id};
-            my $row_hash = {};
-
-            foreach my $data_column_id (keys %$columns) {
-                my $data_column = $columns{$data_table_id}->{$data_column_id};
-                my $element = $elements{$data_table_id}->{$data_column_id};
-                my $column_name = $data_column->column_name();
-
-                $row_hash->{$column_name} = $data_hash->{$element->name()};
-            }
-
-            $row_hash->{attribute_id} = $attribute_id
-              if (defined $attribute_id);
-
-            my $data_row = $data_table->newRow($module_execution,
-                                               $target,
-                                               $row_hash);
-
-            $attribute_id = $data_row->id()
-              if (!defined $attribute_id);
-
-            $rows{$data_table_id} = $data_row;
-        }
-
-        $new_attribute = $semantic_type->__newAttribute($target,
-                                                        $attribute_id,
-                                                        \%rows);
+        $new_attribute = $factory->newAttribute($semantic_type,
+                                                $target_id,
+                                                $module_execution,
+                                                $data_hash);
+        #print "New attribute $new_attribute\n";
     }
 
     return $new_attribute;
