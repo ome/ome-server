@@ -64,7 +64,9 @@ import java.awt.event.MouseEvent;
  * (1) General panning of the scenegraph. (2) Dragging of the ModuleNodes
  * for positioning purposes. (3) Highlighting potential link targets upon
  * mouse over of a module input/output. (4) Click-drag interaction to support
- * linkage between inputs and outputs.<p>
+ * linkage between inputs and outputs. (5) Zooming of the canvas. (6) Dragging 
+ * internal points of a link, in order to change the actual path taken by the 
+ * link.
  * 
  * In some cases we might prefer to do this via several small handlers. 
  * However, complexity and communication requirements make it better to do this 
@@ -73,54 +75,128 @@ import java.awt.event.MouseEvent;
  * in a click-drag interaction.<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PChainEventHandler extends  PPanEventHandler {
 	
+	/**
+	 * This handler can be viewed as a state machine, with differing
+	 * behavior dependent on the current state. 
+	 */
+	/**
+	 * The user is currently not in a state that involves creation of a link 
+	 * between two sets of paramters or two sets of modules.
+	 */
 	private static final int NOT_LINKING=1;
+	/**
+	 * The user is creating a link between two parameters.
+	 */
 	private static final int LINKING_PARAMS=2;
+	
+	/**
+	 * The user is creating links between all matching parameters on two 
+	 * modules.
+	 */
 	private static final int LINKING_MODULES=3;
+	
+	/** 
+	 * The user is cancelling a link creation that is in process.
+	 * 
+	 */
 	private static final int LINKING_CANCELLATION=4;
+	
+	/**
+	 * The user is modifying an internal point in a link.
+	 */
 	private static final int LINK_CHANGING_POINT=5;
 
 	
+	/**
+	 * The distance between links when multiple links between two modules
+	 * are created.
+	 */
 	private static final int SPACING=6;
+	
+	/**
+	 * Initially, the user is NOT_LINKING
+	 */
 	private int linkState = NOT_LINKING;
 	
-	// Store the last module parameter that we were in.
+	/**
+	 * The last parameter node and last module node that we entered
+	 */
 	private PFormalParameter lastParameterEntered;
 	private PModule lastModuleEntered;
 	
+	/**
+	 * The {@link PLinkSelectionTarget} that was selected to start the 
+	 * process of modifying an internal point of a {@link PLink}
+	 */
 	private PLinkSelectionTarget selectionTarget;
+	
+	/** 
+	 * The {@link PLayer} holding the links.
+	 */
 	private PLinkLayer linkLayer;
 	
-	
+	/**
+	 * The start of the a link in progress
+	 */
 	private Point2D.Float linkStart = new Point2D.Float();
 	
+	/**
+	 * The origin of a link that is being created
+	 */
 	private PFormalParameter linkOrigin;
 	
-	// The link I just clicked on to select
+	/**
+	 * The link that the user just clicked on to select
+	 */ 
 	private PLink selectedLink = null;
 	
-	
-	// the link that I'm creating
+	/**
+	 * The link that is currently being created
+	 */
 	private PParamLink link;
 	
-	// the list of links I'm creating
+	/**
+	 * When multiple links are being created, a list of the links in progress
+	 */
 	private Vector links = new Vector();
 	
+	/**
+	 * The currently selected module
+	 */
 	private PModule selectedModule;
+	
+	/**
+	 * The parameters that are part of a link between modules.
+	 */
 	private Collection activeModuleLinkParams;
 	
+	/**
+	 * True if linkage betwen modules started from the formal inputs from one
+	 * of the modules.
+	 */
 	private boolean moduleLinksStartedAsInputs = false;
 	
+	/**
+	 * A filter for the mouse events of interest
+	 */
 	protected int allButtonMask = MouseEvent.BUTTON1_MASK |
 					MouseEvent.BUTTON2_MASK | MouseEvent.BUTTON3_MASK;
 	
+	/**
+	 * The {@link PCanvas} of interest
+	 */
 	private PChainCanvas canvas;
 	
+	/**
+	 * This flag is set to be true immediately after a popup menu event, and
+	 * is cleared immediately after that
+	 */
 	private boolean postPopup= false;
 	
 	
@@ -138,9 +214,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	/**
-	 * If the drag event occurs on a module node, translate it. Otherwise,
-	 * we follow default drag handling.
-	 * 
+	 * There are three cases for handling drag events:
+	 * 1. If the drag event occurs on a module node, translate it. 
+	 * 2. If we are modifying a link, and the drag event is on a {@link
+	 *     PLinkSelectionTarget}, translate that target
+	 * 3. If we're not on a {@link PFormalParameter}, call super.drag() and 
+	 * 	   set the event to be handled.
+	 * Otherwise, pass on the event.
 	 */
 	protected void drag(PInputEvent e) {
 		PNode node = e.getPickedNode();
@@ -170,12 +250,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	/**
-	 * If we've entered a parameter node, store it as the "lastParameterEntered",
-	 * and call setParamsHighlight() to light up the potential link
-	 * targets. However, we only do this when we're not dragging. If we're
-	 * already dragging, don't change the set of highlighted parameters.<p> 
+	 * If we've entered a parameter node, store it as the 
+	 * "lastParameterEntered", to track the last parameter that the mouse 
+	 * was in. If the handler's state is NOT_LINKING, this is a generic mouse
+	 * over, so turn off all of the highlights for the module for that paraemter
+	 * (this is needed to avoid leaving anything on from previous state),
+	 * and turn on the highlighting for this parameter.
 	 * 
-	 * Otherwise, clear lastParameterEntered and do the default.
+	 * If we've entered a module andstate is NOT_LINKING, set the highlights
+	 * for the module to be true
+	 * 
+	 * In general, we leave highlighting on while linking, in order to maintain
+	 * the cues that the highlighting provides.
+	 * 
+	 * Otherwise, call the superclas shandler. 
+	 
 	 * 
 	 */
 	public void mouseEntered(PInputEvent e) {
@@ -184,7 +273,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 		if (node instanceof PFormalParameter) {
 			lastParameterEntered = (PFormalParameter) node;
 			//System.err.println("mouse entered last entered.."+
-			//	lastParameterEntered.getName());
 			if (linkState == NOT_LINKING) {
 				PModule mod = lastParameterEntered.getPModule();
 				mod.setParamsHighlighted(false);
@@ -210,6 +298,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	/**
 	 * When we leave a node, we clear "lastParameterEntered" and 
 	 * turn off any highlighting.
+	 * 
+	 * As always, leave highlighting on if a link is being created. 
 	 */
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
@@ -235,13 +325,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 	
 	
-	
+	/**
+	 * mouseDragged() behavior is equivalent to mouseMoved() behavior.
+	 */
 	public void mouseDragged(PInputEvent e) {
 	//	System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
 		mouseMoved(e);
 		super.mouseDragged(e);
 	}
 	
+	/**
+	 * Two behaviors if the mouse is moved:
+	 * 1) if the state is linking parameters, add a point to the link in progress
+	 * 2) if the state is LINKING_MODULES, add a point to all of the links that 
+	 * 		are in progress.
+	 */
 	public void mouseMoved(PInputEvent e) {
 		Point2D pos = e.getPosition();
 		//System.err.println("mouse move on canvas..."+pos.getX()+","+pos.getY());
@@ -259,9 +357,19 @@ public class PChainEventHandler extends  PPanEventHandler {
 
 	}
 	
+	/**
+	 * Cases for mouse clicks:
+	 * 
+	 * 1) if the state is somethiung other than NOT_LINKING, ignore the event,
+	 *  	possibly resetting state to NOT_LINKING
+	 * 2) If {@link postPopup} is true, this click is the "residue" of a popup 
+	 * 		mouse click. In this case, clear the flag and ignore the event.
+	 * 3) Otherwise, zoom in one of three ways:
+	 * 	a) If the shift key is down, center the canvas contents in the window
+	 *  b) If the control key is down, or it's a right click, zoom out
+	 *  c) Otherwise zoom in.
+	 */
 	public void mouseClicked(PInputEvent e) {
-		
-		
 		// we only scale if we're not drawing a link.
 		if (linkState != NOT_LINKING) {
 			if (linkState == LINKING_CANCELLATION)
@@ -276,7 +384,6 @@ public class PChainEventHandler extends  PPanEventHandler {
 			return;
 		}
 		
-		System.err.println("running a mouse clicked event");
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		if (! (node instanceof PCamera))
@@ -297,6 +404,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}  
 	} 
 	
+	/***
+	 * Adjust the magnification around the point of the {@link PInputEvent}.
+	 * @param scale how much to zoom
+	 * @param e the event leading to the zoom
+	 */
 	private void zoom(double scale,PInputEvent e) {
 		PCamera camera=canvas.getCamera();
 		double curScale = camera.getScale();
@@ -307,10 +419,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 	}
 
 	
+	/***
+	 * Several cases of what to do when we have a mouse pressed event
+	 * 1) If it's a popup event, handle it and return
+	 * 2) Clear out selectedLink, selectedModule, and selctionTarget if they
+	 * 	are not null.
+	 * 3) Call special purpose handlers based on the type of node set
+	 * 4) Call handlers based on the current state. 
+	 * 
+	 * Thus, in the general case, two handlers may be callsed - one for the 
+	 * type of node, and another for the current state
+	 */
 	public void mousePressed(PInputEvent e) {
 		
 		if (e.isPopupTrigger()) {
-			System.err.println("mouse pressed..");
+			//System.err.println("mouse pressed..");
 			evaluatePopup(e);
 			return;
 		}
@@ -354,6 +477,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 			linkState = NOT_LINKING;
 	}
 	
+	/**
+	 * If the press is on a link, and I'm not already in the process of 
+	 * changing a link, make this link the newly selected link
+	 * @param node
+	 */
 	private void mousePressedLink(PNode node) {
 		if (linkState != LINK_CHANGING_POINT) {
 			selectedLink = (PLink) node;
@@ -362,11 +490,21 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 	}
 	
+	/**
+	 * If the mouse event is on a module, set it to be selected and add
+	 * handles.
+	 * @param node
+	 */
 	private void mousePressedModule(PNode node) {
 		selectedModule = (PModule) node;
 		selectedModule.addHandles();
 	}
 	
+	/**
+	 * If the press is on a {@link PLinkSelectionTarget}, set the selection
+	 * target and set the associated link to be selected.
+	 * @param node the node that was pressed
+	 */
 	private void mousePressedSelectionTarget(PNode node) {
 		System.err.println("pressing on selection target..");
 		selectionTarget = (PLinkSelectionTarget) node;
@@ -374,9 +512,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkState = LINK_CHANGING_POINT;
 	}
 	
+	/** 
+	 * If the mouse was pressed while parameters were being linked, there are 
+	 * three possibilities:
+	 * 	1) if the press was  double click, the link should be cancelled.
+	 *  2) if the mouse press occurred on the canvas, add a point to the link.
+	 *  3) If the mouse is in a formal parameters, finish the link.
+	 * @param node the link that for the pressed event
+	 * @param e the pressed event
+	 */
 	private void mousePressedLinkingParams(PNode node,PInputEvent e) {
 		if (e.getClickCount() ==2) {
-			System.err.println("double clicking to cancel link");
 			cancelParamLink();
 			linkState = LINKING_CANCELLATION;
 		}
@@ -389,6 +535,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 		e.setHandled(true);
 	}
 	
+	/**
+	 * If the mouse is presed while modules are being linked,
+	 * Start by checking the number of clicks. If there are two, 
+	 * finish the links if the target node is either a formal parameter or a 
+	 * module.
+	 * Otherwise, if the click is on the {@link PCamera}, add a point to each
+	 * of the links that are in progress.
+	 * 
+	 * @param node the target of the mouse press
+	 * @param e the mouse press event
+	 */
 	private void mousePressedLinkingModules(PNode node,PInputEvent e) {
 		int count = e.getClickCount();
 		
@@ -420,6 +577,20 @@ public class PChainEventHandler extends  PPanEventHandler {
 		e.setHandled(true);
 	}
 	
+	/**
+	 * If the mouse is pressed while the state is NOT_LINKING, adjust 
+	 * the highlights if needed, and start a link if appropriate. 
+	 * If the target is a module and the user double-clicked, start module 
+	 * links. These are the links that go between all possible inputs and 
+	 * outputs for a pair of modules.
+	 * 
+	 * 
+	 * Otherwise, if the target is a {@link PLinkSelectionTarget}, set 
+	 * the state to be LINK_CHANGING_POINT.
+	 * 
+	 * @param node
+	 * @param e
+	 */
 	private void mousePressedNotLinking(PNode node,PInputEvent e) {
 		if (node instanceof PFormalParameter) {
 			if (lastParameterEntered == null) 
@@ -438,6 +609,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 		e.setHandled(true);
 	}
 	
+	/**
+	 * If the mouse is pressed while the point is being changed, clear the 
+	 * currently selected link if appropriate.
+	 *  
+	 * @param node
+	 * @param e
+	 */
 	private void mousePressedChangingPoint(PNode node,PInputEvent e) {
 		if (node instanceof PCamera)  {
 			System.err.println("clearing link selection target...");
@@ -451,10 +629,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 		e.setHandled(true);
 	}
 	
+	/***
+	 * Start a new link between parameters
+	 * @param param the origin of the new link
+	 */
  	private void startParamLink(PFormalParameter param) {
 		//System.err.println("mouse pressing and starting link");
 		linkOrigin = param;
-		linkOrigin.decorateAsLinkStart(true);
 		link = new PParamLink();
 		linkLayer.addChild(link);
 		link.setStartParam(linkOrigin);
@@ -462,12 +643,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkState = LINKING_PARAMS;			
  	}
 		
-	// this link ends at lastParameterEntered
+	/**
+	 * End the link curently in process at the link denoted by
+	 * {@link lastParameterEntered}.
+	 *
+	 */
 	private void finishParamLink() {
 		if (lastParameterEntered.isLinkable() == true) {
 			//System.err.println("finishing link");
 			link.setEndParam(lastParameterEntered);
 			link.setPickable(true);
+			// add the {@link PModuleLink} between the modules
 			linkLayer.completeLink(link);
 			cleanUpParamLink();
 		}
@@ -478,6 +664,10 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkState = NOT_LINKING;
 	}
 	
+	/**
+	 * Cancel a lnk between parameters
+	 *
+	 */
 	private void cancelParamLink() {
 		//System.err.println("canceling link");
 		link.removeFromParent();
@@ -485,13 +675,25 @@ public class PChainEventHandler extends  PPanEventHandler {
 		cleanUpParamLink();
 	}
 	
+	/***
+	 * Final cleanup of a parameter link. Called after {@link finishParamLink()}
+	 * and {@link cancelParamLink()}
+	 * 
+	 *
+	 */
 	private void cleanUpParamLink() {
 		linkOrigin.setParamsHighlighted(false);
-		linkOrigin.decorateAsLinkStart(false);
 		linkOrigin = null;
 		lastParameterEntered = null;
 	}
 	
+	/**
+	 * Start all of the links between two modules. Identify which side the event
+	 * was on (input and output), get the list of parameters associated with
+	 * the start event, set moduleLinksStartedAsInputs to be true if appropriate,
+	 * adn call {@link startModuleLinks}
+ 	 * @param e the mouse event that starts the links.
+	 */
 	private void startModuleLinks(PInputEvent e) {
 
 		Point2D pos = e.getPosition();
@@ -511,28 +713,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkState = LINKING_MODULES; 
 	}
 	
-	public void mouseReleased(PInputEvent e) {
-		if (e.isPopupTrigger()) {
-			System.err.println("mouse released");
-			evaluatePopup(e);
-		}
-	}
-	
-	private void evaluatePopup(PInputEvent e) {
-		System.err.println("popup event"+e);
-		double scaleFactor = 1/PConstants.SCALE_FACTOR;
-		zoom(scaleFactor,e);
-		e.setHandled(true);
-		postPopup=true;
-	}
-	
+	/**
+	 * To start module links for a list of parameters, iterate over the list, 
+	 * creating a new PParamLink for each, and taking care of other bookkeeping
+	 * @param params
+	 */
 	private void startModuleLinks(Collection params) {
 		activeModuleLinkParams = params;
 	
 		Iterator iter = params.iterator();
 		while (iter.hasNext()) {
 			PFormalParameter param = (PFormalParameter) iter.next();
-			param.decorateAsLinkStart(true);
 			PParamLink link = new PParamLink();
 			linkLayer.addChild(link);
 			link.setStartParam(param);
@@ -541,6 +732,11 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 	}
 	
+	/** 
+	 * to finis the links between modules, get the corresponding parameters for 
+	 * the current module, and call finishModuleLinks on that list.
+	 * @param mod
+	 */
 	public void finishModuleLinks(PModule mod) {
 		Collection c;
 		
@@ -554,6 +750,12 @@ public class PChainEventHandler extends  PPanEventHandler {
 		linkState = NOT_LINKING;
 	}
 	
+	/**
+	 * Iterate through the list of end parameters and finish off each of the 
+	 * links
+	 * 
+	 * @param targets the end points of the links in progress.
+	 */
 	public void finishModuleLinks(Collection targets) {
 		// ok, for each thing in the initial params, finish 
 		//this link against targets
@@ -564,6 +766,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 	}	
 	
+	/**
+	 * To finish a module link, find the items in the target list that has the
+	 * right semnatic type and complete the link. If there is no match, 
+	 * remove the link
+	 * @param link the link to be completed
+	 * @param targets the list of potential endpoints
+	 */
 	public void finishAModuleLink(PParamLink link,Collection targets) {
 		PFormalParameter start = link.getStartParam();
 		SemanticType startType = start.getSemanticType();
@@ -579,20 +788,18 @@ public class PChainEventHandler extends  PPanEventHandler {
 				link.setPickable(true);
 				linkLayer.completeLink(link);
 				start.setParamsHighlighted(false);
-				start.decorateAsLinkStart(false);
 				return;
 			}
 		}
 		// no matches. remove it.
 		start.setParamsHighlighted(false);
-		start.decorateAsLinkStart(false);
 		link.removeFromParent();
 	}
 	
-	
-	
-	
-	
+	/**
+	 * Cancel a set of module links in progress
+	 *
+	 */
 	public void cancelModuleLinks() {
 		//System.err.println("cancelling module links...");
 		Iterator iter = links.iterator();
@@ -604,16 +811,49 @@ public class PChainEventHandler extends  PPanEventHandler {
 		cleanUpModuleLink();
 	}
 	
+	/**
+	 * Bookkeeping clean-up after module links are finished or cancelled
+	 *
+	 */
 	public void cleanUpModuleLink() {
 		Iterator iter = activeModuleLinkParams.iterator();
 		while (iter.hasNext()) {
 			PFormalParameter origin = (PFormalParameter) iter.next();
 			origin.setParamsHighlighted(false);
-			origin.decorateAsLinkStart(false);
 		}
 		links = new Vector();
 	}
 	
+	/** 
+	 * A mouse-released event might indicate a popup event
+	 */
+	public void mouseReleased(PInputEvent e) {
+		if (e.isPopupTrigger()) {
+			System.err.println("mouse released");
+			evaluatePopup(e);
+		}
+	}
+	
+	/**
+	 * When a popup event occurs, call {@link zoom()} to zoom out one step.
+	 * Also, set the {@link postPopup} flag to be true. This is needed to make 
+	 * sure that any mouse clicks that also get executed do not get processed:
+	 * they are artifactual and should be ignored.
+	 *  
+	 * @param e
+	 */
+	private void evaluatePopup(PInputEvent e) {
+		//System.err.println("popup event"+e);
+		double scaleFactor = 1/PConstants.SCALE_FACTOR;
+		zoom(scaleFactor,e);
+		e.setHandled(true);
+		postPopup=true;
+	}
+	
+	/** 
+	 * If the user presses back-space or delete, delete the selected module 
+	 * and/or link.
+	 */
 	public void keyPressed(PInputEvent e) {
 		//System.err.println("a key was pressed ");
 		int key = e.getKeyCode();

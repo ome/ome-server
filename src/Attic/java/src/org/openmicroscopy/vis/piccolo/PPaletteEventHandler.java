@@ -49,22 +49,32 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Point2D;
+
 
 /** 
- * An event handler for the PPaletteCanvas. Generally works like 
- * a pan event handler, but can tell the canvas which item we're on.
+ * An event handler for the {@link PPaletteCanvas}. Generally works like 
+ * a {@link PPanEventHandler, but can tell the canvas which item we're on.
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PPaletteEventHandler extends  PPanEventHandler {
 	
+	/**
+	 * The Canvas for which we are handling events
+	 */
 	private PPaletteCanvas canvas;
+	
+	/**
+	 * The lat module node that was entered
+	 */
 	private PModule lastEntered;
 	
+	/**
+	 * A Mask to select for left button events
+	 */
 	protected int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
 	
@@ -75,6 +85,13 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		this.canvas = canvas;		
 	}
 	
+	/**
+	 * When the mouse is pressed on a {@link PModule} or 
+	 * {@link PFormalParameter}, tell the {@link PPaletteCanvas} to 
+	 * note the associated {@link PModule} as being selected. This sets
+	 * the stage for drag from the canvas. 
+	 * 
+	 */
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (node instanceof PModule || node instanceof PFormalParameter) {
@@ -91,33 +108,26 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		}
 	}
 	
+	/**
+	 * If the mouse is clicked on a buffered node (either a 
+	 * {@link PCategoryBox}, or a {@link PModule}, zoom to center it.
+	 * If the mouse is clicked on the layer or on the {@link PCamera},
+	 * zoom to center the entire canvas
+	 */
 	public void mouseClicked(PInputEvent e) {
-		Point2D pos = e.getPosition();
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
-	/*	System.err.println("clicked on palette..");
-		System.err.println("# of clicks was "+e.getClickCount());
-		System.err.println("node was "+node); */
-		if (mask == MouseEvent.BUTTON1_MASK &&
-			e.getClickCount() == 1) {
+		
+		if (mask == MouseEvent.BUTTON1_MASK && e.getClickCount() == 1) {
+			
 			if (node instanceof PBufferedNode) {
-				PBufferedNode cBox = (PBufferedNode) node;
-				//System.err.println("zooming into .."+cBox);
-				if (cBox instanceof PModule) {
-					PModule mod = (PModule)cBox;
-					//System.err.println("...."+mod.getModule().getName());
-				}
+				PBufferedNode cBox = (PBufferedNode) node;				
 				PBounds b = cBox.getBufferedBounds();
-				
-				/*System.err.println("bounds are ..."+b.getX()+","+b.getY()+
-					", width="+b.getWidth()+", height="+b.getHeight());*/
 				PCamera camera = canvas.getCamera();
-				// animate
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true); 
 			}
 			else if (node instanceof PCamera || node == canvas.getLayer()) {
-				//System.err.println("zooming to camera");
 				PBounds b = canvas.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
@@ -126,11 +136,13 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			else
 				super.mouseClicked(e);
 		}
-		else
+		else 
 			super.mouseClicked(e);
 	}
 	
-	
+	/**
+	 * Clear the selection of the current when the mouse is released. 
+	 */
 	public void mouseReleased(PInputEvent e) {
 		canvas.setSelected(null);
 		super.mouseReleased(e);
@@ -140,34 +152,40 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		 e.setHandled(true);
 	} 
 	
+	/**
+	 * When the mouse enters a PFormalParameter or a PModule, set corresponding
+	 * items to be highlighted, according to the following rule:
+	 * 		1) If necessary, Clear anything that had been highlighted 
+	 * 				previously
+	 * 		2) If the node that is entered is a formal parameter, set its
+	 * 				corresponding parameters(parameters it can ink to)
+	 * 				to be highlighted, along with all of the module widgets 
+	 * 				for the containing module. 
+	 * 		3)  if It is a module widget, set all outputs and inputs (from
+	 * 				other modules) that might be linked to this module 
+	 * 				to be highlighted. Also set all instances of this module
+	 * 				to be highlighted.
+	 * 
+	 */
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
-	//	System.err.println("entering "+node);
+	
+		if (lastEntered != null) {
+			lastEntered.setParamsHighlighted(false);
+		}
+	
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
-	//		System.err.println("entered a formal parameter "+param.getName());
-			if (lastEntered != null) {
-	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
-				lastEntered.setParamsHighlighted(false);
-			}
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
 			e.setHandled(true);
 		}
-		else if (node instanceof PParameterNode) {
-			if (lastEntered != null) {
-	//			System.err.println("entered parameter node ");
-	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
-				lastEntered.setParamsHighlighted(false);
-			}
-			e.setHandled(true);
-		}
+		
 		else if (node instanceof PModule) {
 			PModule pmod = (PModule) node;
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
-			//System.err.println("saving last module entered: "+pmod.getModule().getName());
 			lastEntered = pmod;
 		}
 		else {
@@ -175,14 +193,18 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		}
 	}
 	
+
 	/**
-	 * When we leave a node, we clear "lastParameterEntered" and 
-	 * turn off any highlighting.
+	 * When the mouse exits a node, set all of the modules and/or 
+	 * parameters that correspond to no longer be selected. Note that leaving a 
+	 * {@link PFormalParameter} might immediately and directly lead to
+	 * entering a {@link PModule}, so a {@link mouseEntered()} call 
+	 * might immediately follow.
+	 * 
 	 */
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 
-		//System.err.println("exiting"+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(false);

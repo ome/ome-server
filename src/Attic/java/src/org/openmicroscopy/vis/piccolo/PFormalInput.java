@@ -42,21 +42,21 @@ import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.vis.ome.Connection;
 import edu.umd.cs.piccolo.util.PBounds;
-import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
 
 /**
- * Nodes for displaying module inputs<p>
+ * Nodes for displaying Formal Inputs to OME Modules
  * 
  * @author Harry Hochheiser
- * @version 0.1
+ * @version 2.1
  * @since OME2.0
  */
-
-
 public class PFormalInput extends PFormalParameter {
 	
+	/**
+	 * Layout for the type onde
+	 */
 	public static final int TYPE_NODE_HORIZ_OFFSET = 0;
 	
 	public PFormalInput(PModule node,FormalParameter param, 
@@ -72,8 +72,7 @@ public class PFormalInput extends PFormalParameter {
 		if (typeNode != null)
 			typeNode.setOffset(TYPE_NODE_HORIZ_OFFSET,
 				PFormalParameter.TYPE_NODE_VERTICAL_OFFSET);	
-		// create locator
-		locator = new PParameterLocator(this,SwingConstants.WEST);
+	
 		addTarget();
 		updateBounds();
 	}
@@ -99,14 +98,21 @@ public class PFormalInput extends PFormalParameter {
 		return connection.getOutputs(type);
 	}
 	
-	// any given input can only be connected to one output 
-	// (can't have values coming to an input from multiple places)
-	// so, return true if there are any items in the list.
+	/**
+	 * 
+	 * any given input can only be connected to one output 
+	 * (can't have values coming to an input from multiple places).
+	 *
+	 * @return true if this parameter is linked to anything at all. 
+	 */
 	public boolean isLinkedTo(PFormalParameter param) {
 		return (linkedTo.size() > 0);
 	}
 	
-	// an input can only be an origin if there's noting linked to it.
+	/**
+	 * An input can only be an origin if there's noting linked to it.
+	 * @return true if this paramter can be the origin of a new link. 
+	 */ 
 	public boolean canBeLinkOrigin() {
 		return (linkedTo.size() == 0);
 	}

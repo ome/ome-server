@@ -71,7 +71,7 @@ import java.util.TreeSet;
 
 
 /** 
- * A Piccolo widget for a module. This widget will consist of a 
+ * A Piccolo widget for an OME analysis  module. This widget will consist of a 
  * rounded rectangle, which is a border. This node will have two children:
  * a node with the name of the Module, and a second child which will itself
  * have multiple children - one for each input and output of the module. These 
@@ -85,7 +85,10 @@ import java.util.TreeSet;
 
 public class PModule extends PPath implements PBufferedNode {
 	
-	// Some static constants for convenience.
+	/*
+	 * 
+	 * Some static constants for convenience.
+	 */
 	
 	private static final float DEFAULT_WIDTH=80;
 	private static final float DEFAULT_HEIGHT=50;
@@ -98,7 +101,9 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_MAG=1;
 	private static final float ZOOM_MAG=2;
 	
-	
+	/**
+	 * Deffault colors and strokes
+	 */
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
 	
@@ -106,30 +111,60 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
 
 	
-	// the Rectangle with the bounds of the enclosing border
+	/**
+	 *  The Rectangle with the bounds of the enclosing border
+	 */
 	private RoundRectangle2D rect;
 	
-	// The node contiaining the module name
+	/**
+	 * The node contiaining the module name
+	 */
 	private PText name;
-	// and a version for semantic zooming
+	
+	/**
+	 * A version of the module name suitable for semantic zooming
+	 */
 	private PText zoomName;
 	 
+	/**
+	 * Dimensions of the PModule
+	 */
 	private float height;
 	private float width=0;
 	
+	/**
+	 * The Width of the name node.
+	 */
 	private float nameWidth=0;
 	
-	// The node that will contain nodes for each of the formal parameters
+	/**
+	 *  The node that will contain nodes for each of the formal parameters
+	 */
 	private PParameterNode labelNodes;
 	
+	/**
+	 * A node that holds the square rectangle {@link PLinkTarget}s associated
+	 * with each of the inputs and outputs.
+	 * 
+	 */
 	private PNode linkTargets;
 	
+	/**
+	 * The {@Plink LinkTarget}s for the modules as a whole
+	 */
 	private PLinkTarget inputLinkTarget;
 	private PLinkTarget outputLinkTarget;
 	
-	// the chain node to which this module belongs
+	/**
+	 * Each {@link PModule} corresponds to a node in a chain, if it is part of
+	 * an analysis chain
+	 */
 	private Node node=null;
 	
+	/**
+	 * The OME object corresponding to the analysis module that this object
+	 * represents
+	 */
 	private CModule module;
 	
 	public PModule() {
@@ -142,11 +177,8 @@ public class PModule extends PPath implements PBufferedNode {
 	 
 	/**
 	 * The main constructor 
-	 * @param canvas The canvas that this module will be displayed on. 
-	 * 		Eventually, this might be expanded to account for multiple canvases.
+	 * @param connection - the connection to the OME database
 	 * @param module The OME Module being represented
-	 * @param x Initial x coordinate (global)
-	 * @param y Initial y coordinate
 	 */
 	public PModule(Connection connection,CModule module) {
 		super();
@@ -165,15 +197,18 @@ public class PModule extends PPath implements PBufferedNode {
 		addChild(name);
 		
 		name.setOffset(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET);
-		
 		PBounds nameBounds = name.getGlobalFullBounds();
+		
 		// calculate starting height for parameters.
 		height = NAME_LABEL_OFFSET+((float) nameBounds.getHeight());
 	
+		// build the node for the link targets
 		linkTargets = new PNode();
 		addChild(linkTargets);	
+		
 		float linkTargetHeight = height;
 		
+		// add the input link target
 		inputLinkTarget = new PLinkTarget();
 		linkTargets.addChild(inputLinkTarget);
 		inputLinkTarget.setOffset(-PLinkTarget.LINK_TARGET_HALF_SIZE,height);
@@ -204,7 +239,7 @@ public class PModule extends PPath implements PBufferedNode {
 			linkTargetHeight);
 	
 		
-		//zoomname.
+		// set up the magnified version of the module name
 		zoomName = new PText(module.getName());
 		zoomName.setFont(NAME_FONT);
 		zoomName.setPickable(false);
@@ -216,8 +251,6 @@ public class PModule extends PPath implements PBufferedNode {
 			 zwidth,zheight));
 		addChild(zoomName);
 		zoomName.setVisible(false);
-		
-		
 	}
 	
 	/** 
@@ -235,7 +268,6 @@ public class PModule extends PPath implements PBufferedNode {
 	 */
 	private void addParameterLabels(CModule module,Connection connection) {
 		
-//		System.err.println("building a PModule for "+module.getName());
 		List inputs = module.getInputs();
 		List outputs = module.getOutputs();
 		int inSize = inputs.size();
@@ -249,8 +281,10 @@ public class PModule extends PPath implements PBufferedNode {
 		FormalParameter param;
 		PFormalInput inp;
 		PFormalOutput outp;
-		//PFormalInput ins[] = new PFormalInput [inSize];
-		//PFormalOutput outs[] = new PFormalOutput [outSize];
+		
+		// Store them in {@link TreeSet} objects, so things will be sorted,
+		// based on the id numbers of the semantic types of the associated 
+		// parameters   See PFormalParameter for details
 		TreeSet inSet  = new TreeSet();
 		TreeSet outSet= new TreeSet();
 		
@@ -259,7 +293,6 @@ public class PModule extends PPath implements PBufferedNode {
 		float maxOutputWidth =0;
 		
 		// for each row.
-	//	System.err.println("module name is "+module.getName());
 		for (int i = 0; i < rows; i++) {
 			if (i < inSize) {
 				// as long as I have more inputs, create them, 
@@ -271,12 +304,6 @@ public class PModule extends PPath implements PBufferedNode {
 				inSet.add(inp);
 				if (inp.getLabelWidth() > maxInputWidth)
 					maxInputWidth = inp.getLabelWidth();
-				/*ins[i]= new PFormalInput(this,param,connection);
-				labelNodes.addChild(ins[i]);
-				if (ins[i].getLabelWidth() > maxInputWidth)
-					maxInputWidth = ins[i].getLabelWidth();
-				*/
-				
 			}
 			if (i < outSize) {
 				param = (FormalParameter) outputs.get(i);
@@ -285,10 +312,6 @@ public class PModule extends PPath implements PBufferedNode {
 				outSet.add(outp);
 				if (outp.getLabelWidth() > maxOutputWidth)
 					maxOutputWidth = outp.getLabelWidth();
-				/*outs[i]= new PFormalOutput(this,param,connection);
-				labelNodes.addChild(outs[i]);
-								if (outs[i].getLabelWidth() > maxOutputWidth)
-									maxOutputWidth = outs[i].getLabelWidth();*/
 			}
 		}
 		
@@ -305,9 +328,7 @@ public class PModule extends PPath implements PBufferedNode {
 		//height of first one
 		height+=NAME_SPACING;
 		float rowHeight=0;
-		
-		
-	 		
+			 		
 	 	Object[] ins = inSet.toArray();
 	 	Object[] outs = outSet.toArray();
 	
@@ -324,8 +345,6 @@ public class PModule extends PPath implements PBufferedNode {
 				// we want to right-justify these. So, 
 				// find difference bwtween the maximum output width
 				// and the width of this one.
-				//float rightJustifyGap = maxOutputWidth-
-				//	((float) outs[i].getFullBoundsReference().getWidth());
 				outp = (PFormalOutput) outs[i];
 				float rightJustifyGap = maxOutputWidth-
 					outp.getLabelWidth();
@@ -334,14 +353,16 @@ public class PModule extends PPath implements PBufferedNode {
 				rowHeight = (float) outp.getFullBoundsReference().getHeight();
 			}
 			// advance to next row in height.
-			height += rowHeight; // was +PARAMETER_SPACING;, but now
-					// we're adding that spacing into the height of each row.
+			height += rowHeight; 
 		}
 	}
 	
 	/**
 	 * Paint the node in the given context. This method does some 
-	 * simple semantic zooming.
+	 * simple semantic zooming. If the scale factor is below the threshold - 
+	 * the user has zoomed out - don't show the individual parameters and the 
+	 * link targets - just show the larger module name. Otherwise, 
+	 * show all of the details.
 	 * 
 	 */
 	public void paint(PPaintContext aPaintContext) {
@@ -364,6 +385,10 @@ public class PModule extends PPath implements PBufferedNode {
 		super.paint(aPaintContext);
 	} 
 	
+	/**
+	 * Set the color of the module if it is highlighted.
+	 * @param v true if the module is highlighted, else false
+	 */
 	public void setHighlighted(boolean v) {
 		if (v == true)
 			setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
@@ -372,6 +397,12 @@ public class PModule extends PPath implements PBufferedNode {
 		repaint();
 	}
 	
+	/**
+	 * Set the color indiciating that the module can be linked to from 
+	 * the selected module
+	 * @param v true if this module can be linked to from the current selection.
+	 * 
+	 */
 	public void setLinkableHighlighted(boolean v) {
 		if (v == true)
 			setStrokePaint(PConstants.HIGHLIGHT_COLOR);
@@ -379,12 +410,22 @@ public class PModule extends PPath implements PBufferedNode {
 			setStrokePaint(DEFAULT_COLOR);
 		repaint();
 	}
+	
+	/**
+	 * 
+	 * @return the OME Module associated with this graphical display
+	 */
 	public Module getModule() {
 		return module;
 	}
 	
 	
-	
+	/**
+	 * to remove a {@link PModule}, remove all of its links,
+	 * remove this widget from the list of widgets for the corresponding OME 
+	 * Module, and remove this widget from the scenegraph
+	 *
+	 */
 	public void remove() {
 		// iterate over children of labelNodes
 		Iterator iter = labelNodes.getChildrenIterator();
@@ -425,9 +466,9 @@ public class PModule extends PPath implements PBufferedNode {
 	}
 	
 	/**
-	 * translate - call super class and then update state changes.
-	 * 
-	 **/
+	 * translate - call super class and then notify all who are interested 
+	 * in receiving events from this node.
+	 */
 	
 	public void translate(double dx,double dy) {
 		super.translate(dx,dy);
@@ -438,6 +479,12 @@ public class PModule extends PPath implements PBufferedNode {
 		setModulesHighlighted(v);
 		setParamsHighlighted(v);
 	}
+	
+	/**
+	 * Set all of the {@link PModule} objects with the same OME {@link Module} 
+	 * as this one to have the same highlighted state.
+	 * @param v true if the modules should be highlighted, else false
+	 */
 	public void setModulesHighlighted(boolean v) {
 		
 		PModule m;
@@ -452,6 +499,10 @@ public class PModule extends PPath implements PBufferedNode {
 		}
 	}
 	
+	/***
+	 * Set the parameters associated with this module to be highlighted.
+	 * @param v true if the parameters should be highlighted, else false
+	 */
 	public void setParamsHighlighted(boolean v) {
 
 		Iterator iter = labelNodes.getChildrenIterator();
@@ -471,7 +522,6 @@ public class PModule extends PPath implements PBufferedNode {
 	}
 	
 	// handles
-	
 	public void addHandles() {
 		addChild(new PModuleHandles(PBoundsLocator.createNorthEastLocator(this)));
 		addChild(new PModuleHandles(PBoundsLocator.createNorthWestLocator(this)));
@@ -490,15 +540,31 @@ public class PModule extends PPath implements PBufferedNode {
 		removeChildren(handles);
 	}
 	
+	/**
+	 * @param out The object wrapping an OME {@link FormalOutput} for this 
+	 * 	module
+	 * @return The {@link PFormalOutput} node for that {@link FormalOutput} 
+	 */
 	public PFormalOutput getFormalOutputNode(FormalOutput out) {
 		return (PFormalOutput) getMatchingParameterNode(PFormalOutput.class,out);
 	}
 	
-	
+	/**
+	 * @param in The object wrapping an OME {@link FormalInput} for this 
+	 * 	module
+	 * @return The {@link PFormalInput} node for that {@link FormalInput} 
+	 */
 	public PFormalInput getFormalInputNode(FormalInput in) {
 	 	return (PFormalInput) getMatchingParameterNode(PFormalInput.class,in);
 	}	
 	
+	/**
+	 * 
+	 * @param clazz The class ({@link PFormalOutput} or {@link PFormalInput} 
+	 * 		desired
+	 * @param target The {@link FormalParameter} object to be mached
+	 * @return The corresponding {@link PFormalParmeter}
+	 */
 	private PFormalParameter getMatchingParameterNode(final Class clazz,
 		FormalParameter target) {
 		
@@ -516,7 +582,7 @@ public class PModule extends PPath implements PBufferedNode {
 					return p;
 			}
 		}
-		// should never reach her.
+		// should never reach here
 		return null;
 	}
 
@@ -528,6 +594,13 @@ public class PModule extends PPath implements PBufferedNode {
 		return outputLinkTarget;
 	}
 	
+	/**
+	 * A position is no the input side if it's to the left of the horizontal
+	 * midpoint. Used to determine which side the user clicked on when creating 
+	 * bulk links between modules
+	 * @param pos A location on the module.
+	 * @return True if thhe location is on the left half, else false
+	 */
 	public boolean isOnInputSide(Point2D pos) {
 		boolean res = false;
 		globalToLocal(pos);
@@ -539,6 +612,12 @@ public class PModule extends PPath implements PBufferedNode {
 		return res;
 	}
 	
+	/**
+	 * 
+	 * @return a sorted list of all of the input parameters that don't already
+	 * have incoming links. These parameters are identified via
+	 * 	a {@link PNodeFilter}
+	 */
 	public TreeSet getInputParameters() {
 		PNodeFilter inputFilter = new PNodeFilter() {
 			public boolean accept(PNode aNode) {
@@ -557,6 +636,11 @@ public class PModule extends PPath implements PBufferedNode {
 		return new TreeSet(labelNodes.getAllNodes(inputFilter,null));
 	}
 	
+	/**
+	 * 
+	 * @return a sorted list of all of the output parameters. These parameters 
+	 * are identified via a {@link PNodeFilter}
+	 */
 	public TreeSet getOutputParameters() {
 		PNodeFilter outputFilter = new PNodeFilter() {
 			public boolean accept(PNode aNode) {

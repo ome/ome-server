@@ -41,7 +41,6 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalParameter;
@@ -52,7 +51,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Iterator;
-//import java.awt.Graphics2D;
+
 import java.awt.geom.Point2D;
 
 
@@ -64,52 +63,87 @@ import java.awt.geom.Point2D;
  * selected parameter.<p>
  * 
  * Generally, there will be two subclasses of this class - one for inputs
- * and one for outputs.<p>
+ * and one for outputs - in other words, {@link PFormalInputs} and 
+ * {@link PformalOutputs}.
  * 
  * It's likely that this will become a more complicated widget as the 
  * application evolves.<p>
  * 
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
+ *  
  */
 
 
 public abstract class PFormalParameter extends PNode implements 
 	PNodeEventListener, Comparable {
 	
-	public static final Color NORMAL_COLOR = Color.black;
-
-	
+	/**
+	 * Some generic display parameters
+	 */
+	public static final Color NORMAL_COLOR = Color.black;	
 	public static final int TYPE_NODE_VERTICAL_OFFSET=12;
 	public static final float TYPE_NODE_DEFAULT_SCALE=0.5f;
+	
+	/**
+	 * The OME FormalParameter object that the node represents.
+	 */
 	protected FormalParameter param;
+	
+	/**
+	 * Connection to the OME database
+	 */
 	protected Connection connection = null;
+	
+	/**
+	 * The module containing this parameter
+	 */
 	protected PModule node;
+	
+	/**
+	 * A list of {@link PFormalParameter} object that this one is linked to
+	 */
 	protected  Vector linkedTo = new Vector();
+	
+	/**
+	 * A list of {@link PLinks} involving this parameter
+	 */
 	protected Vector links = new Vector();
 	 
-	
-	
-	// We assume a model that has Modules in a box, with inputs on
-	// the left and outputs on the right. Thus, for inputs, the locator
-	// will be on the west, and outputs will have the locator on the east.
-	
-	protected PParameterLocator locator;
+	 /**
+	  * True if a link to this parameter can be added
+	  */
 	protected boolean linkable;
 	
+	/**
+	 * The name of the parameter
+	 */
 	protected PText textNode;
 	
-	// a node for the semantic type.
+	/**
+	 * The semantic type of the parameter
+	 */
 	protected PText typeNode;
 	
-	private boolean isLinkStart;
+	/**
+	 * The {@link PLinkTarget} associated with this parameter
+	 */
 	protected PLinkTarget target;
 	
+	/**
+	 * A node containing the textual labels for the name 
+	 * and semantic type
+	 */
 	protected PNode labelNode;
 	
-	
+	/**
+	 * 
+	 * @param node The PModule containing this parameter
+	 * @param param The OME Formal Parameter
+	 * @param connection the database connection
+	 */
 	public PFormalParameter(PModule node,FormalParameter param,
 			Connection connection) {
 		super();
@@ -128,7 +162,7 @@ public abstract class PFormalParameter extends PNode implements
 		labelNode.addChild(textNode);
 		
 		
-		
+		// add a semantic type label only if the type is not null
 		SemanticType type = param.getSemanticType();
 		if (type != null) {
 			typeNode = new PText(type.getName());
@@ -137,37 +171,37 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode.setPaint(NORMAL_COLOR);
 			typeNode.setFont(PConstants.NAME_FONT);
 		}						
+		
+		// this formal parameter will listen to any changes that happen to
+		// the node.
 		node.addNodeEventListener(this);
 		
 		
 	}
-	
+
+	/**
+	 * Add a {@link PLinkTarget}
+	 *
+	 */	
 	protected void addTarget() {
-		PBounds b = labelNode.getFullBoundsReference();
-		//Point2D point = new Point2D.Float();
-		//getLocator().locatePoint(point);
-		//float y = (float) point.getY()+CIRC_BUFFER;
-		//float x = (float) point.getX()-CIRC_HALF_SIZE;
-		//float x = (float) b.getX()-CIRC_SIZE-7;
-		//float y = (float) b.getY()+CIRC_BUFFER;
 		target = new PLinkTarget();
 		addChild(target);
 		target.setPickable(false);
-		setCirclePosition();
+		setTargetPosition();
 	}
 	
-	protected void setCirclePosition() {
+	protected void setTargetPosition() {
 		PBounds b = labelNode.getFullBoundsReference();
-		//Point2D point = new Point2D.Float();
-		//getLocator().locatePoint(point);
-		//float y = (float) point.getY()+CIRC_BUFFER;
-		//float x = (float) point.getX()-CIRC_HALF_SIZE;
 		float x = getLinkTargetX();
 		float y = (float) b.getY()+PLinkTarget.LINK_TARGET_BUFFER;
 		target.setOffset(x,y);
 	}
 	
-	
+	/**
+	 * For inputs, the target is to the left of the text node.
+	 * For outptuts, it is on the right. 
+	 * @return The x-coordinate of the link target.
+	 */
 	protected abstract float getLinkTargetX();
 	
 	public String getName() {
@@ -188,7 +222,7 @@ public abstract class PFormalParameter extends PNode implements
 	 * (input vs. output) corresponds appropriately to that of the current 
 	 * selection. Inputs can only link to outputs, and vice-versa.<p>
 	 * 
-	 * @param v
+	 * @param v true if the parameter is linkable.
 	 */
 	public void setLinkable(boolean v) {
 		linkable = v;
@@ -218,11 +252,6 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	
-	public PParameterLocator getLocator() {
-		return locator;
-	}
-	
-	
 	/**
 	 * Get a list of parameters that have the same semantic type
 	 * as this one, but in the opposite position. If this is an input(output),
@@ -234,7 +263,8 @@ public abstract class PFormalParameter extends PNode implements
 	public abstract ArrayList getCorresponding();
 
 	/**
-	 * some event handling code
+	 * Notify objects that are interested in case of changes to the appropriate 
+	 * node
 	 */
 	public void nodeChanged(PNodeEvent e) {
 		
@@ -268,13 +298,23 @@ public abstract class PFormalParameter extends PNode implements
 		}
 	}
 
-	
+	/**
+	 * Update the state when this paramter is linked to another - 
+	 *  add the other parameter, and the {@link PLink} to the appropriate 
+	 *  lists, and indicate that the {@link PLinkTarget} is linked 
+	 * @param param
+	 * @param link
+	 */
 	public void setLinkedTo(PFormalParameter param,PParamLink link) {
 		linkedTo.add(param);
 		target.setLinked(true);
 		links.add(link);
 	}
 	
+	/**
+	 * Inverse of {@link setLinkedTo()}
+	 * @param param
+	 */
 	public void clearLinkedTo(PFormalParameter param) {
 		linkedTo.remove(param);
 		if (linkedTo.isEmpty())
@@ -282,23 +322,17 @@ public abstract class PFormalParameter extends PNode implements
 		target.setSelected(false);
 	}
 	
+	/**
+	 * This parameter is linked to another if the other is in this
+	 * parameter's list of parameters that it is linked to
+	 * @param param
+	 * @return true if this parameter is linked to param, else false.
+	 */
 	public boolean isLinkedTo(PFormalParameter param) {
 		return (linkedTo.indexOf(param)!=-1);
  	}
  	
- 	public void decorateAsLinkStart(boolean v) {
- 		isLinkStart = v;
- 		repaint();
- 	}
  	
- 	public void paint(PPaintContext aPaintContext) {
- 		super.paint(aPaintContext);
- 		/*if (isLinkStart) {
- 			Graphics2D g = aPaintContext.getGraphics();
-			g.setPaint(PConstants.HIGHLIGHT_COLOR);
-			g.draw(textNode.getBounds());
- 		}*/
- 	}
  	
  	public void removeLinks() {
  		PParamLink link;
@@ -313,8 +347,9 @@ public abstract class PFormalParameter extends PNode implements
  	
 	/** 
 	 * To highlight link targets for a given PFormalParameter, get
-	 * the list of "corresponding" ModuleParameters, and set each of those 
-	 * to be linkable<p>
+	 * the list of "corresponding" ModuleParameters (ie, inputs if this is 
+	 * an output, and outputs if this is the input) of the same type, 
+	 * and set each of those to be linkable<p>
 	 *
 	 * @param v
 	 */
@@ -326,7 +361,7 @@ public abstract class PFormalParameter extends PNode implements
 		if (list == null)
 			return;
 		
-		//System.err.println("got the corresponding inputs for a parameter..");
+		
 	 	Module source = getModule();
 		
 		PFormalParameter p;
@@ -346,7 +381,10 @@ public abstract class PFormalParameter extends PNode implements
 		}
 	}
 
-	
+	/**
+	 * Set the bounds to include the {@link PLinkTarget}
+	 *
+	 */
 	public void updateBounds() {
 		PBounds b = labelNode.getFullBounds();
 		b.add(target.getFullBounds());
@@ -354,7 +392,10 @@ public abstract class PFormalParameter extends PNode implements
 			b.getHeight()+PModule.PARAMETER_SPACING)); 
 	}
 
-	// by default, a parameter can be the origin of a link.	
+	/**
+	 * 
+	 * By default, a parameter can be the origin of a link.	
+	 */
 	public boolean canBeLinkOrigin() {
 		return true;
 	}
@@ -376,6 +417,11 @@ public abstract class PFormalParameter extends PNode implements
 		return target;
 	}
 	
+	/**
+	 * {@link PFormalParameter} instances are placed on a {@link PModule}
+	 * ordered by semantic type ID. This procedure implementes the 
+	 * {@link Comparable} interface, so we can do the necessary sorting.  
+	 */
 	public int compareTo(Object o) {
 		if (!(o instanceof PFormalParameter))
 			return -1;

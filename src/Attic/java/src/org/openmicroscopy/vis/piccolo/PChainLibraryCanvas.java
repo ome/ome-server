@@ -64,38 +64,81 @@ import java.awt.dnd.DragGestureEvent;
 
 
 /** 
- * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
+ * A {@link PCanvas} to hold a library of analysis chains 
  *
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PChainLibraryCanvas extends PCanvas implements DragGestureListener {
 	
+	/***
+	 * Vertical space betwen chains
+	 * 
+	 */
 	private static float VGAP=20f;
+	
+	/** 
+	 * Horizonal space betwen chains
+	 * 
+	 */
 	private static float HGAP=40f;
+	
+	/** 
+	 * Typeface for the name of the chain
+	 */
 	private static Font nameFont = new Font("Helvetica",Font.BOLD,18);
+	
+	/**
+	 * Connection to the OME Database
+	 */
 	private Connection connection=null;
-	private int modCount;
+	
+	/**
+	 * Scengraph layer for the canvas.
+	 */
 	private PLayer layer;
 	
+	/**
+	 * Initial vertical position
+	 */
 	private float y=VGAP;
+	
+	/** 
+	 * Initial horizontal position
+	 */
 	private float x=0;
+	
+	/**
+	 * Height of the current row
+	 */
 	private float rowHeight =0;
 	
+	/**
+	 * A scenegraph layer holding links
+	 */
 	private PLinkLayer linkLayer;
 	
-	private float chainHeight= 0;
-	private float chainWidth = 0;
-	
-	
-	
+	/**
+	 * The ID of the current chain
+	 */
 	private int selectedChainID;
+	
+	/**
+	 * True if a Chain is currently selected
+	 */
 	private boolean chainSelected;
 	
+	/** 
+	 * Listener for drag events
+	 */
 	private DragSourceAdapter dragListener;
+	
+	/**
+	 * Source for drag events
+	 */
 	private DragSource dragSource;
 
 	public PChainLibraryCanvas(Connection c) {
@@ -106,15 +149,23 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		
+		// make sure that rendering is always high quality
+		
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		
+		// install custom event handler
+		
 		removeInputEventListener(getZoomEventHandler());
 		removeInputEventListener(getPanEventHandler());
 		addInputEventListener(new PChainLibraryEventHandler(this)); 
+		
+		// set up link layer
 		linkLayer.setPickable(false);
 		linkLayer.moveToFront();
 		
+		// initialize data transfer
 		dragListener = new DragSourceAdapter() {
 				public void dragExit(DragSourceEvent dse) {
 				}
@@ -122,22 +173,22 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		dragSource = new DragSource();
 		dragSource.createDefaultDragGestureRecognizer(this,
 			DnDConstants.ACTION_COPY,this);
+			
+		// setup tool tips.
 		PCamera camera = getCamera();
 		camera.addInputEventListener(new PPaletteToolTipHandler(camera));
-		populate();		
-		
-	}
 	
-	private void populate() {
-
-	
+		// the current chain
 		CChain chain;
 
-		Chains chains = connection.getChains();
-		
+		// Get the chains in the database, along with an iterator
+		Chains chains = connection.getChains();		
 		Iterator iter = chains.iterator();
 		
 		int num = chains.size();
+		
+		// The display should be roughly square, 
+		// in terms of the number of rows vs. # of columns
 		int rowSize = (int) Math.floor(Math.sqrt(num));
 		
 		int count=0;
@@ -147,6 +198,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 			drawChain(chain);
 			count++;
 			if (count == rowSize) {
+				// move on to next row.
 				count = 0;
 				x = 0;
 				y+= rowHeight+VGAP;
@@ -156,10 +208,15 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
 	}
 	
+	/**
+	 * Draw a chain on the canvas. The chain is drawn at the current values
+	 * of x and y.
+	 * @param chain
+	 */
 	public  void drawChain(CChain chain) {
 		
 		
-		//connection.setStatusLabel("Chain.."+chain.getName());
+		// draw the chain name
 		PText name = new PText(chain.getName());
 		name.setFont(nameFont);
 		name.setPickable(false);
@@ -167,25 +224,48 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		name.setOffset(x+HGAP,y);
 		name.setScale(2);
 		
+		// setup the chain widget
 		PChain p = new PChain(connection,chain,layer,linkLayer,x+HGAP*2,y);
  		
+ 		//draw a box around it.
  		decorateChain(chain.getID(),x,y,p.getHeight()+VGAP,p.getWidth());
+ 		
+ 		// set the row height if this is taller than others in the row.
 		if (p.getHeight()+VGAP>rowHeight)
 			rowHeight = p.getHeight()+VGAP;
+		
+		//advance the horizontal position
 		x+= p.getWidth()+HGAP;
 	}
 	
-	public void decorateChain(int id,float left,float top,float height,float width) {
+	/**
+	 * Draw a box of the appropriate size to go around the chain, at the 
+	 * appropriate position.
+	 * @param id
+	 * @param left
+	 * @param top
+	 * @param height
+	 * @param width
+	 */
+	private void decorateChain(int id,float left,float top,float height,float width) {
 		PChainBox box = new PChainBox(id,left,top,width,height);
 		layer.addChild(box);
 		box.moveToBack();
 	}
 	
 	
+	/**
+	 * Animate the view to center on the  contents of this canvas.
+	 *
+	 */
 	public void scaleToSize() {
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	}
-	
+
+	/**
+	 * 
+	 * @return canvas bounds with appropriate buffers for centering
+	 */	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
 		return new PBounds(b.getX()-PConstants.BORDER,
@@ -212,11 +292,17 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		return chainSelected;
 	}
 	
+	/**
+	 * Start a drag event for copying a chain to the chain canvas, 
+	 * with a bit of a hack. Packaged up the ID of the chain as an integer
+	 * and send it along.
+	 * 
+	 * @see PPaletteCanvas
+	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
 		if (chainSelected == true) {
 			Integer id = new Integer(selectedChainID);
 			ChainSelection c = new ChainSelection(id);
-			//System.err.println("dragging.chain.. chain selection."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
 		}
 	}

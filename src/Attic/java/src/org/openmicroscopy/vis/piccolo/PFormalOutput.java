@@ -42,17 +42,16 @@ import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.vis.ome.Connection; 
 import org.openmicroscopy.SemanticType;
 import edu.umd.cs.piccolo.util.PBounds;
-import javax.swing.SwingConstants;
 import java.util.ArrayList;
 
 
 
 /** 
- * Nodes for displaying module outputs.<p>
+ * Nodes for displaying Formal Outputs
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PFormalOutput extends PFormalParameter {
@@ -62,12 +61,14 @@ public class PFormalOutput extends PFormalParameter {
 		super(node,param,connection);
 		if (param.getSemanticType() != null)
 			connection.addOutput(param.getSemanticType(),this);
-		locator = new PParameterLocator(this,SwingConstants.EAST);
 		addTarget();
 		updateBounds();  
 	}
 		
-		
+	/**
+	 * Overrides call in {@link PNode} to right-align
+	 * the text node and the type node
+	 */	
 	protected void layoutChildren() {
 		if (typeNode != null) {
 			//set type node offset. 
@@ -89,7 +90,7 @@ public class PFormalOutput extends PFormalParameter {
 				typeNode.setOffset(0,TYPE_NODE_VERTICAL_OFFSET);
 			}
 		}
-		setCirclePosition();
+		setTargetPosition();
 		updateBounds();
 	}
 	
@@ -112,11 +113,16 @@ public class PFormalOutput extends PFormalParameter {
 		return connection.getInputs(type);
  	}
  	
+ 	/**
+ 	 * An output is linked to another parameter if  there is a direct link
+ 	 * or, if param (an input) has anthing coming in
+ 	 * 
+ 	 * @param the second parameter 
+ 	 * @return true if this parameter is linked to param
+ 	 */
  	public boolean isLinkedTo(PFormalParameter param) {
- 		// i'm an output. so, I'm linked to param if
- 		// 1) there is a direct link
+ 		
  		boolean link = super.isLinkedTo(param);
- 		// 2) or, param (an input) has anthing coming in
  		boolean inputLinked = param.isLinkedTo(this);
  		return (link || inputLinked);
  	}

@@ -43,12 +43,30 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 
+
+/** 
+ *
+ * An event handler for tooltips on the {@link PPaletteCanvas} and the
+ * {@link PChainLibraryCanvas}
+ *  
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PPaletteToolTipHandler extends PToolTipHandler {
 	
 	public PPaletteToolTipHandler(PCamera camera) {
 		super(camera);
 	}
 	
+	/**
+	 * The toolTip String is either the name of the module that the mouse
+	 * is on, or it is null. If the scale is too large 
+	 * (exceeding {@link PToolTipHandler.SCALE_THRESHOLD),
+	 * no tooltip is shown
+	 * 
+	 * @param event the input event that leads to the change.
+	 */
 	public void setToolTipString(PInputEvent event) {
 			PNode n = event.getInputManager().getMouseOver().getPickedNode();
 			double scale = camera.getViewScale();

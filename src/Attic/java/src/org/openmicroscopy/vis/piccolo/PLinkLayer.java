@@ -45,7 +45,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 /** 
- * A Layer specifically designed to hold PLink objects - both PParamLinks and 
+ * A {@link PLayer} specifically designed to hold PLink objects - both PParamLinks and 
  * PModuleLinks. This layer also handles the transition between showing only
  * PModuleLinks and showing the underlying PParamLinks
  * 
@@ -57,9 +57,14 @@ import java.util.Vector;
 
 public class PLinkLayer extends PLayer {
 	
-	// a node to hold all PParamLinks.
+	/**
+	 * A node to hold all PParamLinks.
+	 */ 
 	private PNode params;
-	// a node to hold all modules;
+	
+	/**
+	 * A node to hold all modules;
+	 */ 
 	private PNode modules;
 	
 	public PLinkLayer() {
@@ -70,17 +75,38 @@ public class PLinkLayer extends PLayer {
 		addChild(modules);
 	}
 	
+	
+	/**
+	 * When a {@link PParamLink} is added to this layer, give the 
+	 * link a pointer back to this layer.
+	 * 
+	 * @param link
+	 */
 	// addChild() is called when the link starts.
 	public void addChild(PParamLink link) {
 		params.addChild(link);
 		link.setLinkLayer(this);
 	}
 	
+	/**
+	 * 
+	 * @return An iterator for the {@link PParamLink} objects held in this 
+	 * layer.
+	 * 
+	 */
 	public Iterator linkIterator() {
 		return params.getChildrenIterator();
 	}
 	
-	// completeLink is used to set up the link between modules.
+	/**
+	 * When a link between two parameters is completed, we need to make sure 
+	 * that thare is also a direct link between the two modules involved. 
+	 * If there is no such link, create a new {@link PModuleLink} for the 
+	 * two modules and add it to the modules layer.
+	 * 
+	 * @param link a newly-completed {@link PParamLink}
+	 * @return The link between the two modules involved in link
+	 */
 	public PModuleLink completeLink(PParamLink link) {
 		PFormalOutput output = link.getOutput();
 		PFormalInput input = link.getInput();
@@ -97,6 +123,11 @@ public class PLinkLayer extends PLayer {
 		return lnk;
 	}
 	
+	/**
+	 * Semantic zooming - if magnification is below a certain threshold, 
+	 * make the module links visible and the paramter links invisible. 
+	 * Otherwise, take the opposite approach.
+	 */
 	protected void paint(PPaintContext aPaintContext) {
 		double scale = aPaintContext.getScale();
 		if (scale < PConstants.SCALE_THRESHOLD) {
@@ -110,7 +141,13 @@ public class PLinkLayer extends PLayer {
 	}
 	
 	
-	
+	/**
+	 * When a link between parameters is removed, we might need to
+	 * remove the link between the associated modules. However, we do this
+	 * only if we don't already have another existing link between the two
+	 * modules - in that case, we need to keep the link between the modules.
+	 * @param link
+	 */
 	public void removeModuleLinks(PParamLink link) {
 		PModule start = link.getOutput().getPModule();
 		PModule end = link.getInput().getPModule();
@@ -137,7 +174,11 @@ public class PLinkLayer extends PLayer {
 		removeModuleLink(start,end);
 	}
 	
-	
+	/**
+	 * Do the job of removing the link between modules.
+	 * @param start
+	 * @param end
+	 */
 	private void removeModuleLink(PModule start,PModule end) {
 		
 		PModuleLink lnk = findModuleLink(start,end);
@@ -145,6 +186,12 @@ public class PLinkLayer extends PLayer {
 			modules.removeChild(lnk);
 	}
 	
+	/**
+	 * 
+	 * @param start The module at the start of a link
+	 * @param end   The module at the end of a link
+	 * @return the {@link PModuleLink linking thhe two modules
+	 */
 	private PModuleLink findModuleLink(PModule start,PModule end) {
 		PModuleLink lnk = null;
 		
@@ -162,6 +209,11 @@ public class PLinkLayer extends PLayer {
 		return null;
 	}
 	
+	/**
+	 * When a direct link between modules is removed, remove 
+	 * all {@link PParamLink} instances between those two modules.
+	 * @param link
+	 */
 	public void removeParamLinks(PModuleLink link) {
 		PModule start = link.getStart();
 		PModule end= link.getEnd();
@@ -177,9 +229,10 @@ public class PLinkLayer extends PLayer {
 				// if it's a link betweenn our two places, kill it.
 				// but we don't call lnk.remove(), as this would do bad 
 				// recursive things, as it would try to remove the
-				// associated modules.. 
-				// actually, the recursive call might work, but
-				// inefficiently. this will be quicker
+				// associated modules, which would call this proocedure.
+				// It's not clear whether or not these calls are sufficiently
+				// re-entrant to handle the recursion, so this approac
+				// is a bit safer.
 				if (s == start && e == end) {
 					toRemove.add(lnk);
 					lnk.clearLinks();
@@ -188,5 +241,4 @@ public class PLinkLayer extends PLayer {
 		}
 		params.removeChildren(toRemove);
 	}
-				
 }

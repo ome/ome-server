@@ -44,14 +44,13 @@ import  java.awt.AWTEvent;
 
 
 /** 
- * An event that indicates some change in a node. For now, this event 
- * will not carry much information - it will simply indicate that something
- * has happened. 
+ * An event that indicates some change in a node, generaly a {@link PModule}. 
+ * Does not carry much information, other than a link to the node that changed
+ * to generate the event.
  *
- * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PNodeEvent extends AWTEvent {

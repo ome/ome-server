@@ -44,7 +44,9 @@ import java.awt.Color;
 import java.awt.geom.Point2D;
  
 /** 
- * A Piccolo widget for a linkable target
+ * A Piccolo widget for a linkable target. These targets are found on the 
+ * edges of {@llink PFormalParameter} nodes, indicating where users should 
+ * click to end {@link PLink} nodes
  * 
  * @author Harry Hochheiser
  * @version 0.1
@@ -53,14 +55,29 @@ import java.awt.geom.Point2D;
 
 public class PLinkTarget extends PPath {
 	
+	/**
+	 * The color the target will have by default
+	 */
 	public static final Color LINK_TARGET_COLOR = new Color(0,225,0);
+	
+	/**
+	 * A darker shade of green is used once there is something linked 
+	 * to this target
+	 * 
+	 */
 	public static final Color LINK_TARGET_LINKED_COLOR = new Color(0,105,0);
+	
+	/**
+	 * When the target is selected, its color changes to white.
+	 * 
+	 */
 	public static final Color LINK_TARGET_SELECTED_COLOR = Color.WHITE;
  	public static final float LINK_TARGET_SIZE=10;
  	public static final float LINK_TARGET_HALF_SIZE=LINK_TARGET_SIZE/2;
  	public static final float  LINK_TARGET_BUFFER=3;
  	
  	private Color currentColor;
+ 	
  	public PLinkTarget() {
  		super();
  		setPathToRectangle(0,0,LINK_TARGET_SIZE,LINK_TARGET_SIZE);
@@ -76,6 +93,12 @@ public class PLinkTarget extends PPath {
 		return result;
  	}
  	
+ 	/**
+ 	 * The target switches color when selected, reverting back to the unlinked
+ 	 * color when not selected
+ 	 * 
+ 	 * @param v true if the link has been selected
+ 	 */
  	public void setSelected(boolean v) {
  		if (v == true) 
  			setPaint(LINK_TARGET_SELECTED_COLOR);
@@ -84,6 +107,12 @@ public class PLinkTarget extends PPath {
  		repaint();
  	}
  	
+ 	/**
+ 	 * When something is attached to this target, the default color becomes
+ 	 * LINK_TARGET_LINKED_COLOR
+ 	 * 
+ 	 * @param v true if something has been linked to this target, else false
+ 	 */
  	public void setLinked(boolean v) {
  		if (v == true)
  			currentColor = LINK_TARGET_LINKED_COLOR;

@@ -71,7 +71,7 @@ import java.util.List;
 import java.util.Iterator;
 
 /** 
- * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
+ * A {@link PCanvas} for building chains
  *
  * 
  * @author Harry Hochheiser
@@ -81,19 +81,46 @@ import java.util.Iterator;
 
 public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
+	/**
+	 * The initial magnification of the  canvas
+	 */
 	private static float INIT_SCALE=0.6f;
+	
+	/**
+	 * Database connection 
+	 */
 	private Connection connection=null;
-	private int modCount;
+	
+	/**
+	 * The layer for the canvas 
+	 */
 	private PLayer layer;
 	
-	private float x,y;
 	
+	/**
+	 * The layer for the links. Links are stored in a different layer because 
+	 * they must be drawn last if they are to avoid being obscured by modules. 
+	 */
 	private PLinkLayer linkLayer;
+	
+	/**
+	 * The event handler for this canvas
+	 */
 	private PChainEventHandler handler;
+	
+	/**
+	 * DataTransfer bookkeeping
+	 */
 	private DropTarget dropTarget = null;
 	
+	/**
+	 * The frame contaiing this canvas
+	 */
 	private ChainFrame frame;
 	
+	/**
+	 * A pointer to the canvas with the chain library
+	 */
 	private PChainLibraryCanvas libraryCanvas;
 	
 	public PChainCanvas(Connection c) {
@@ -101,23 +128,33 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		this.connection  = c;
 		layer = getLayer();
 		
-	
+		// set rendering details.
+		
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setBackground(PConstants.CANVAS_BACKGROUND_COLOR);
 		
+		// remove handlers
 		removeInputEventListener(getZoomEventHandler());
+		
+		// set up link layer
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		linkLayer.moveToFront();
+		
+		// event handler
 		handler = new PChainEventHandler(this,linkLayer);
 		addInputEventListener(handler);
+		
+		// data transfer support
 		dropTarget = new DropTarget(this,this);
 		
-
+		// set magnification
 		final PCamera camera = getCamera();
 	    getCamera().setViewScale(INIT_SCALE);
+	    
+	    // setup tool tips.
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
 		
 		
@@ -134,52 +171,54 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	}
 	
 
-	
+	/**
+	 * Start a DataTransfer event disable the {@link PChainEventHandler} while
+	 * doing the transfer
+	 */
 	public void dragEnter(DropTargetDragEvent e) {
-		//System.err.println("drag enter canvas");
 		removeInputEventListener(handler);
 		e.acceptDrag (DnDConstants.ACTION_MOVE);
 	
 	}
 	
+	/**
+	 * Accept a drop event. Create a chain if a chain was dropped,
+	 * or a module if a module was dropped. Reinstate the event handler
+	 */
 	public void drop(DropTargetDropEvent e) {
 		try {
 			Transferable transferable =  e.getTransferable();
-		//	System.err.println("got a drop on canvavs "+transferable);
 			if (transferable.isDataFlavorSupported(ModuleFlavor.moduleFlavor)) { 
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				String i = (String)transferable.getTransferData(
 						ModuleFlavor.moduleFlavor);
-		//		System.err.println("just dropped module "+i+" onto chain canvas.");
 				e.getDropTargetContext().dropComplete(true);
 				int id = Integer.parseInt(i);
 				CModule mod = connection.getModule(id);
-		//		System.err.println("module is "+mod.getName());
 				Point2D loc = e.getLocation();
 				createDroppedModule(mod,loc);
 				addInputEventListener(handler);
 			}
-			else if (transferable.isDataFlavorSupported(ChainFlavor.chainFlavor)) {
+			else if (transferable.
+					isDataFlavorSupported(ChainFlavor.chainFlavor)) {
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				Integer i = (Integer)transferable.
 					getTransferData(ChainFlavor.chainFlavor);
 				e.getDropTargetContext().dropComplete(true);
 				int id = i.intValue();
-		//		System.err.println("dropping chain id "+id);
 				Point2D loc = e.getLocation();
 				CChain chain = connection.getChain(id);
 				createDroppedChain(chain,loc);
-				addInputEventListener(handler);
-				
+				addInputEventListener(handler);			
 			} 
 		}
 		catch(Exception exc ) {
-		//	System.err.println("drop failed");
 			exc.printStackTrace();
 			clearDrop(e);
 		}
 	}
 
+	
 	public void clearDrop(DropTargetDropEvent e) {
 		e.rejectDrop();
 		addInputEventListener(handler);
@@ -195,15 +234,17 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	public void dropActionChanged(DropTargetDragEvent e) {
 	}
 	
-	
+	/**
+	 * Create a dropped module
+	 * @param mod the module to create
+	 * @param location the poitn of drop.
+	 */
 	private void createDroppedModule(CModule mod,Point2D location) {
-		// create the PModule
 		
-	//	System.err.println("creating new dropped module at "+
-	//		location.getX()+","+ location.getY());
+		// determine the corect point
 		getCamera().localToView(location);
-	//	System.err.println("view coords are "+location.getX()+","+
-	//		location.getY());
+		
+		//create the layer
 		PModule mNode = new PModule(connection,mod,
 			(float) location.getX(), (float) location.getY());
 		mod.addModuleWidget(mNode);
@@ -215,6 +256,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setSaveEnabled(true);
 	}
 	
+	/**
+	 * Create a dropped chain
+	 * @param chain
+	 * @param location
+	 */
 	public void createDroppedChain(CChain chain,Point2D location) {
 		getCamera().localToView(location);
 		float x = (float) location.getX();
@@ -223,6 +269,10 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setSaveEnabled(true);
 	}
 	
+	/**
+	 * Logout of OME
+	 *
+	 */
 	public void logout() {
 		List children = layer.getChildrenReference();
 		Object childObjects[] = children.toArray();
@@ -240,6 +290,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 			frame.setSaveEnabled(v);
 	}
 	
+	/**
+	 * The save status is ture (enabled) if there are any {@link PModule}
+	 * objects on the {@link PChainCanvas}
+	 *
+	 */
 	public void updateSaveStatus() {
 		boolean res  = false;
 		Iterator  iter = layer.getChildrenIterator();
@@ -253,6 +308,13 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setSaveEnabled(res);
 	}	
 	
+	/**
+	 * To save a chain, ask the manager to create it,
+	 * add the nodes and links, commit the transaction, and 
+	 * updaet the library. 
+	 * @param name
+	 * @param desc
+	 */
 	public void save(String name,String desc) {	
 		ChainManager manager = connection.getChainManager();
 		CChain chain  =  (CChain)manager.createChain(name,desc);
@@ -276,6 +338,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		libraryCanvas.scaleToSize();
 	}
 	
+	/**
+	 * Add the modules currently on the canvas to the chain being created.
+	 * @param manager
+	 * @param chain
+	 */
 	private void addNodes(ChainManager manager,CChain chain) {
 		PNode node;
 		PModule mod;
@@ -294,11 +361,16 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		}
 	}
 	
+	/**
+	 * Add the links to the chain by iterating over the links in the {@link 
+	 * linkLayer}
+	 * @param manager
+	 * @param chain
+	 */
 	private void addLinks(ChainManager manager,CChain chain) {
 		PNode node;
 		PParamLink link;
-		
-	//	System.err.println("adding links");
+
 		Iterator iter = linkLayer.linkIterator();
 		while (iter.hasNext()) {
 			node = (PNode) iter.next();
@@ -317,7 +389,6 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 				//to node
 				Node toNode = input.getPModule().getNode();
 				// add it.
-	//			System.err.println("adding link...");
 				manager.addLink(chain,fromNode,fromOutput,toNode,toInput);
 			}
 		}

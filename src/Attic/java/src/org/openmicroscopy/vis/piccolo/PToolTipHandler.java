@@ -49,20 +49,29 @@ import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Font;
 
-/**
- * A handler for toolips. This borrows heavily from the tooltip example
- * in the piccolo distribution.
- */
 
+/** 
+ *
+ * An event handler for tooltips. Borrows heavily from the code
+ * in the Piccolo example files. 
+ *  
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public abstract class PToolTipHandler extends PBasicInputEventHandler {
 
+	/**
+	 * if the scale exceeds SCALE_THRESHOLD, the tooltip might be distracting,
+	 *  as the object is already large. Therefore, we don't show it.
+	 * 
+	 */
 	protected static double 	SCALE_THRESHOLD=0.8;
 	protected static Color BORDER_COLOR = new Color(102,102,153);
 	protected static Color FILL_COLOR = new Color(153,153,204);
 	protected PCamera camera;
 	
-	// I should probably look up the default look and feel and use it's system
-	// font here, but whatever...
+	
 	
 	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
@@ -71,6 +80,10 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	
 	protected boolean displayed = false;
 
+	/**
+	 * Initializes the tool tip handler
+	 * @param camera the camera that will display the tooltip
+	 */
 	PToolTipHandler(PCamera camera) {
 		this.camera = camera;
 		tooltip = new PPath();
@@ -82,15 +95,30 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	}
 	
 	
-	
+	/**
+	 * update the tooltip when the mouse is moved
+	 * 
+	 
+	 */
 	public void mouseMoved(PInputEvent event) {
 		updateToolTip(event);
 	}
 	
+	/**
+	 * also update when the mouse is dragged
+	 *
+	 * * @param event the mouse event 
+	 */
 	public void mouseDragged(PInputEvent event) {
 		updateToolTip(event);
 	}
 		
+	/**
+	 * Update the tooltip text and position it, with an
+	 * offset appropraite for the display.
+	 * 
+	 * @param event the input event leading to the update. 
+	 */
 	public void updateToolTip(PInputEvent event) {
 		setToolTipString(event);
 			
@@ -104,8 +132,20 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 		tooltip.setOffset(p.getX() + 8, p.getY() - 8);
 	}
 	
+	/**
+	 * Called when the tool tip must be updated, this procedure generally
+	 * chooses the appropriate text and then calls {@link setToolTipString}
+	 * 
+	 * @param event the input event leading to the change
+	 */
 	public abstract void  setToolTipString(PInputEvent event);
 	
+	/**
+	 * Set the tool tip text - if the new string is null,
+	 * remove the node from the camera's scenegraph. Otherwise,
+	 * set the text and adjust the position
+	 * @param s
+	 */
 	public void setToolTipText(String s) {
 		if (s.compareTo("") ==0) {
 			if (displayed == true)

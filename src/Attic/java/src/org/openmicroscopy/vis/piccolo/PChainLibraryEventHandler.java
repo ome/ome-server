@@ -54,8 +54,8 @@ import java.awt.event.MouseEvent;
  * a pan event handler, but can tell the canvas which item we're on.
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
@@ -73,6 +73,15 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		//setAutopan(false);
 	}
 	
+	/**
+	 * When we click on the {@link PChainLibraryCanvas}, there are two 
+	 * possibilities:
+	 * 	1) we clicked on the camera. In that case, zoom to center 
+	 * 		the contents of the canvas
+	 *  2) We clicked on a {@link PBufferedNode}. More specifically, 
+	 * 	    a {@link PModule} or a {@link PChainBox}. In this case, zoom
+	 * 		to center te node.
+	 */
 	public void mouseClicked(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
@@ -99,6 +108,10 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			super.mouseClicked(e);
 	}
 	
+	/**
+	 * When the user presses the mouse on a {@link PChainBox}, tell the
+	 * {@link PChainLibraryCanvas} which chain has been selected.
+	 */
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (node instanceof PChainBox) {
@@ -109,36 +122,48 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			super.mousePressed(e);
 	}
 	
+	/**
+	 * When the mouse is released, tell the canvas that there is no longer
+	 * a selected chain.
+	 */
 	public void mouseReleased(PInputEvent e) {
 		canvas.clearChainSelected();
 	}
 	
+	/**
+	 * When the mouse enters a PFormalParameter or a PModule, set corresponding
+	 * items to be highlighted, according to the following rule:
+	 * 		1) If necessary, Clear anything that had been highlighted 
+	 * 				previously
+	 * 		2) If the node that is entered is a formal parameter, set its
+	 * 				corresponding parameters(parameters it can ink to)
+	 * 				to be highlighted, along with all of the module widgets 
+	 * 				for the containing module. 
+	 * 		3)  if It is a module widget, set all outputs and inputs (from
+	 * 				other modules) that might be linked to this module 
+	 * 				to be highlighted. Also set all instances of this module
+	 * 				to be highlighted.
+	 * 
+	 */
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		//	System.err.println("entering "+node);
+		
+		// clear anything that was previously highlighted
+		if (lastEntered != null)
+			lastEntered.setParamsHighlighted(false);
+			
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
-			if (lastEntered != null) {
-				lastEntered.setParamsHighlighted(false);
-			}
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
-			e.setHandled(true);
-		}
-		else if (node instanceof PParameterNode) {
-			if (lastEntered != null) {
-	//			System.err.println("entered parameter node ");
-	//			System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
-				lastEntered.setParamsHighlighted(false);
-			}
 			e.setHandled(true);
 		}
 		else if (node instanceof PModule) {
 			PModule pmod = (PModule) node;
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
-			//System.err.println("saving last module entered: "+pmod.getModule().getName());
 			lastEntered = pmod;
 		}
 		else {
@@ -146,6 +171,14 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		}
 	}
 	
+	/**
+	 * When the mouse exits a node, set all of the modules and/or 
+	 * parameters that correspond to no longer be selected. Note that leaving a 
+	 * {@link PFormalParameter} might immediately and directly lead to
+	 * entering a {@link PModule}, so a {@link mouseEntered()} call 
+	 * might immediately follow.
+	 * 
+	 */
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 

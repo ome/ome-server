@@ -52,30 +52,75 @@ import org.openmicroscopy.Module.FormalOutput;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Vector;
-import edu.umd.cs.piccolo.util.PBounds;
 
+/** 
+ * A class for the rendering of a {@link CChain} from OME. Note that this 
+ * is not a node in itself - it is simply a convenience class that holds 
+ * the logic for rendering the components of a chain
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PChain {
 
-
+	/**
+	 * The Chain to be rendered
+	 */
 	private CChain chain;
+	/*
+	 * The Height of the chain
+	 */
 	private float chainHeight = 0;
+	
+	/** 
+	 * The number of nodes in the layer with the most nodes.
+	 */
 	private int maxLayerSize = 0;
+	
+	/**
+	 * The {@link Layering} describing the layout for this chain
+	 */
 	private Layering layering;
 	
-
+	/**
+	 * Horizontal and verical gaps between layers and nodes (respectively)
+	 */
 	private static float HGAP=150f;
 	private static float VGAP=50f;
+	
+	/**
+	 * A vertical offset of curve components, chosen to improve aesthetics
+	 */
 	private static float CURVE_OFFSET=100f;
+	
+	/** 
+	 * The width of the current layer
+	 */ 
 	private float layerWidth;
 	
+	/**
+	 * Some parameters of the stateo f the display
+	 */
 	private float x=HGAP;
 	private float y = 0;
 	private float top=0;
 	private float xInit;
 	
-	
+	/**
+	 *A record of which nodes are in which layers
+	 */
 	private NodeLayers nodeLayers;
 	
+	/**
+	 * 
+	 * @param connection the database connection
+	 * @param chain		the chain to be drawn
+	 * @param layer 	the {@link PLayer} for the modules
+	 * @param linkLayer the {@link PLayer} for the links
+	 * @param x			horizontal for upper-left corner
+	 * @param y			vertical for upper-left corner
+	 */
 	public PChain(Connection connection,CChain chain, PLayer layer,
 			PLinkLayer linkLayer,float x,float y) {
 		
@@ -91,9 +136,19 @@ public class PChain {
 		drawNodes(connection,layer);
 		layoutNodes();
 		drawLinks(linkLayer);	
+		//clear it out so it can be garbage-collected
+		nodeLayers = null;
 	}
 	
-	public void drawNodes(Connection connection,PLayer layer) {
+	/**
+	 * To draw the nodes, start at the highest numbered layer and continue 
+	 * until we hit layer zero. Keep track of the height of thhe tallest layer
+	 * The nodes in each layer will go into the {@link NodeLayers} object,
+	 * which will contain the highest # layer first, etc.
+	 * @param connection
+	 * @param layer
+	 */
+	private void drawNodes(Connection connection,PLayer layer) {
 		
 		int layers = layering.getLayerCount(); 
 		nodeLayers = new NodeLayers(layers);
@@ -108,7 +163,14 @@ public class PChain {
 		}
 	}
 	
-	public Vector drawLayer(Connection connection,PLayer layer,
+	/**
+	 * To draw a layer, draw each of the nodes 
+	 * @param connection
+	 * @param layer
+	 * @param layerNumber
+	 * @return a list containing the nodes in the layer
+	 */
+	private Vector drawLayer(Connection connection,PLayer layer,
 						int layerNumber) {
 		
 		Vector v = new Vector();
@@ -128,7 +190,18 @@ public class PChain {
 		return v;
 	}
 	
-	
+	/**
+	 * Draw a node. If the node is a dummy layout node (instance of {@link
+	 * CLayoutNode}, make it a {@link PLayoutModule}, but don't add it to
+	 * the scenegraph. Otherwise, create a {@link PModule}, and add it. In 
+	 * any case, return it so it gets included in the list of nodes for the 
+	 * layer
+	 * 
+	 * @param connection
+	 * @param node
+	 * @param layer
+	 * @return
+	 */
 	private Object drawNode(Connection connection,CNode node,PLayer layer) {
 		
 		PModule mNode = null;
@@ -146,6 +219,13 @@ public class PChain {
 		return mNode;
 	}
 	
+	/**
+	 * To layout the nodes, start with the nodes in the first layer.
+	 * Lay them out at the appropriate horizonal coordinate, move to the right
+	 * by the width of the layer, and continue. Note the horizontal mid-point
+	 * of each layer.
+	 *
+	 */
 	private void layoutNodes() {
 		int layerCount = layering.getLayerCount();
 		for (int i = 0; i < layerCount; i++) {
@@ -160,6 +240,17 @@ public class PChain {
 		}
 	}
 	
+	/**
+	 * To layout a layer, find the difference between the height of the layer
+	 * and the height of the tallest layer. Lay the nodes in the layer out in 
+	 * a manner that divides that difference into spaces betwen the nodes. 
+	 * 
+	 * Track the width of the widest module in the layer. This is where 
+	 * it's useful to have {@link PLayoutModule} as a subclass of {@link
+	 * PModule} - no special case-handling is required here.
+	 * 
+	 * @param v
+	 */
 	private void layoutLayer(Vector v) {
 		int size = v.size();
 		
@@ -180,6 +271,12 @@ public class PChain {
 		}		
 	}
 	
+	/**
+	 * The height of a layer is just the sum of all of the modules in that
+	 * layer, plus some spacing between each.
+	 * @param v a layer
+	 * @return the height of the layer
+	 */
 	private float getLayerHeight(Vector v) {
 		float total = 0;
 		Iterator iter = v.iterator();
@@ -191,6 +288,11 @@ public class PChain {
 		return total;
 	}
 	
+	/**
+	 * Draw the links in the chain 
+	 * 
+	 * @param linkLayer the {@link PLayer} to add the links to
+	 */
 	public void drawLinks(PLinkLayer linkLayer) {
 		List links = chain.getLinks();
 		Iterator iter = links.iterator();
@@ -201,6 +303,18 @@ public class PChain {
 	}
 	
 	
+	/**
+	 * To draw a link, we find the {@link CNode}s for the endpoints, 
+	 * the {@llink PModule} for those nodes, and then the correspponding
+	 * {@link PFormalParameter} instances.
+	 * 
+	 * We then create instances of {@link PParmLink} as needed, create the 
+	 * module link between the two layers, and then adjust
+	 * links that connect nodes in non-adjacent layers.
+	 *  
+	 * @param link the link to draw
+	 * @param linkLayer the parent node
+	 */
 	private void drawLink(CLink link,PLinkLayer linkLayer) {
 		CNode from = (CNode) link.getFromNode();
 		CNode to = (CNode) link.getToNode();
@@ -211,12 +325,8 @@ public class PChain {
 		if (fromPMod == null || toPMod ==null) 
 				return;
 			
-		
-		
 		FormalInput input = link.getToInput();
 		FormalOutput output = link.getFromOutput();
-		
-		PBounds b = toPMod.getGlobalFullBounds();
 		
 		
 		PFormalInput inputPNode = toPMod.getFormalInputNode(input);
@@ -226,22 +336,44 @@ public class PChain {
 		if (inputPNode != null && outputPNode != null) {
 			PParamLink newLinkNode = new PParamLink(inputPNode,outputPNode);
 			linkLayer.addChild(newLinkNode);
+			// create the module link between the two modules
 			PModuleLink modLink = linkLayer.completeLink(newLinkNode);
 			if (from.getLayer() > (to.getLayer()+1))
 				adjustLink(link,from,to,newLinkNode,modLink);
 		} 	
 	}
 	
+	/**
+	 * To adjust a link, add points for every layer between the layer of the 
+	 * source and the layer of the destination. Thus, if the source is in layer 
+	 * n, and the destination is in p, we adjust the link at n-1, n-2..p+1
+	 * @param clink
+	 * @param from
+	 * @param to
+	 * @param link
+	 * @param modLink
+	 */
 	private void adjustLink(CLink clink,CNode from,CNode to,PParamLink link,
 			PModuleLink modLink) {
 		// remember, layer numbers go down as we get to leaves
+		// j is the index of where in the PLink the new point is added.
+		// the first new point goes at j=1, then j=2, etc
 		for (int i = from.getLayer()-1, j = 1; i > to.getLayer();i--,j++) {
 			adjustLink(clink,from,to,link,modLink,i,j);
 		}
 	}
 	
-	// i is the position in the layering (n...0), whereas j is the 
-	// index of the new point to be added.
+	/**  
+	 * Adjust a specific point on the links
+	 * @param clink
+	 * @param from
+	 * @param to
+	 * @param link
+	 * @param modLink
+	 * @param i i is the position in the layering (n...0)
+	 * @param j index of the new point to be added. (1 for the first point,
+	 * 	then 2, etc.
+	 */
 	private void adjustLink(CLink clink,CNode from,CNode to,
 			PParamLink link, PModuleLink modLink,int i, int j) {
 		
@@ -267,6 +399,13 @@ public class PChain {
 		return x-xInit;
 	}
 	
+	/**
+	 * A convenience class that tracks the nodes in each layer,
+	 * and the x position of each layer
+	 * @author Harry Hochheiser
+	 * @version 2.1
+	 * @since 	OME2.1
+	 */
 	class NodeLayers {
 		private Vector nodeLayers;
 		private Vector layerXPositions;

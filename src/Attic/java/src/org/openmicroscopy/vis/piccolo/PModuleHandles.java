@@ -43,19 +43,30 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolox.handles.PBoundsHandle;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
  
- /**
-  * Extend PBoundsHandle by making instalEventHandlers() do nothing,
-  * effectively eliminating the handlers for the handles.
-  * 
-  */
  
+/** 
+ * Selection handles for {@link PModule} objects. This revised type of handle
+ * is needed to override the behavior of the default {@link PBoundsHandles}, 
+ * which includes a variety of handlers that we don't want in this context.
+ * So, we override the code for configuring event handlers, making it do 
+ * do nothing. The result is a handle that works for selection only.
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
  public class PModuleHandles extends PBoundsHandle {
  	
  	public PModuleHandles(PBoundsLocator locator) {
  		super(locator);
  	}
  
- 	//intentionally do nothing, to override handles in PBoundsHandle.	
+ 	/**
+ 	 * To override the event handler from {@link PBoundsHandles}, we simply
+ 	 * modify the installation routin to install nothing. As a result, any 
+ 	 * handling of events must now be done at a higher-level - perhaps on the 
+ 	 * node in question, or on the canvas containing the node.
+ 	 */	
  	protected void installHandleEventHandlers() {
  	}
  }

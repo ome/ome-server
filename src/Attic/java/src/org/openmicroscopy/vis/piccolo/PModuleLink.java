@@ -43,14 +43,36 @@
  import edu.umd.cs.piccolo.util.PBounds; 
  
  
- 
+/** 
+ * A Piccolo node for links between between {@link PModule} objects. These 
+ * links are shown when the magnification level is too low to show the 
+ * individual links between parameters. Thus, this class of link is used for
+ * semantic zooming.
+ *
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */ 
  public class PModuleLink extends PLink {
  	
+ 	/**
+ 	 * The {@link PModule}s that are the start and end of this link. Unlike
+ 	 * {@link PLink}, objects of this class always have start being the output
+ 	 * and end being the input
+ 	 */
  	private PModule start;
+ 	
  	private PModule end;
  	
  
- 	
+ 	/**
+ 	 * Create the node in the appropriate layer, and establish listeners:
+ 	 * this link wants to hear from events at either end
+ 	 * @param layer
+ 	 * @param start
+ 	 * @param end
+ 	 */
  	public PModuleLink(PLinkLayer layer,PModule start,PModule end) {
  		super();
  		setLinkLayer(layer);
@@ -62,6 +84,7 @@
  		setStartPoint();
  		setEndPoint();
  	}
+ 	
  	
  	public PLinkTarget getStartLinkTarget() {
  		return start.getOutputLinkTarget();
@@ -83,6 +106,13 @@
 			(float) point.getY());
 	}
 	
+	/**
+	 * When this object gets a node changed event, call {@link setStartPoint()}
+	 * or {@link setEndPoint}. The calls will look at the location of the 
+	 * appropriate {@link PLinkTarget}. Since the {@PModule} has changed,
+	 * the {@link PLinkTarget} will have changed, and therefore the 
+	 * points will be updated as needed.
+	 */
 	public void nodeChanged(PNodeEvent e) {
 		PNode node = e.getNode();
 		if (!(node instanceof PModule))
@@ -95,20 +125,16 @@
 			setEndPoint();
 	}
 	
-	public void setIntermediatePoint(float x,float y) {
-		System.err.println("setting intermediate point in Module Link..");
-		System.err.println("point # "+pointCount+" is "+x+","+y);
-		super.setIntermediatePoint(x,y);
-	}
-		
+	
+	/**
+	 * Draw the end of the link at the appropriate point. Since the end of the 
+	 * link is always the side that goes to an input, we just draw the link 
+	 * end at the last point in the list. 
+	 */	
 	protected void setLine() {
 			
 		int n = points.size();
-		Point2D start = (Point2D) points.get(n-2);
 		Point2D end = (Point2D) points.get(n-1);
-		
-	//	double theta = getAngle((float) start.getX(),(float)start.getY(),
-	//		(float)end.getX(),(float)end.getY());
 		drawLinkEnd((float) end.getX(),(float)end.getY());
 	}
 	
@@ -120,6 +146,9 @@
 		return end;
 	}
 	
+	/**
+	 * Remove this link from the targets and from the {@link PLinkLayer}
+	 */
 	public void remove() {
 		super.remove();
 		getStartLinkTarget().setSelected(false);

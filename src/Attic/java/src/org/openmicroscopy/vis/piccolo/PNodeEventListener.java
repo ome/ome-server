@@ -43,11 +43,11 @@ import  java.util.EventListener;
 
 
 /** 
- * An interface for listeners to node events
+ * An interface for listeners to {@link PNodeEvent} events.
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public interface PNodeEventListener extends EventListener {

@@ -72,12 +72,6 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	 */
 	public static final BasicStroke LINK_STROKE=
 		new BasicStroke(1,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND);
-
-	/**
-	 * an instance of {@link Point2D} for convenience
-	 */
-	Point2D point = new Point2D.Float();
-	
 	
 	/**
 	 * Default and higlight colors

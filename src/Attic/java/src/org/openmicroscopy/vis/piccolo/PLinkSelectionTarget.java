@@ -39,10 +39,26 @@
 package org.openmicroscopy.vis.piccolo;
 import java.awt.geom.Point2D;
 
+/** 
+ * A Piccolo widget indicating a control point for a selected {@link PLink}
+ * 
+ * @author Harry Hochheiser
+ * @version 0.1
+ * @since OME2.0
+ */
 public class PLinkSelectionTarget extends PLinkTarget {
 	
+	/**
+	 * The {@link PLink} in question
+	 */
 	private PLink link;
+	
+	/**
+	 * The index of this point in the {@link PLink}, from 0 to n-1 (inclusive),
+	 * where n is the number of control points.
+	 */
 	private int index;
+	
 	
 	public PLinkSelectionTarget(PLink link,int index) {
 		super();
@@ -58,12 +74,21 @@ public class PLinkSelectionTarget extends PLinkTarget {
 		return index;
 	}
 	
+	/**
+	 * When the selection is translated, the {@link PLink} containing this 
+	 * control point is updated ton coontain the new control point. 
+	 * The {@link PLink} is also redrawn
+	 * 
+	 * param x   the new coordinates of the control point 
+	 * param y
+	 */
 	public void translate(double x,double y) {
 		
 		super.translate(x,y);
 		Point2D pt = getOffset();
 	//	System.err.println("new offset is "+pt.getX()+","+pt.getY());
-		Point2D newPt = new Point2D.Float((float) pt.getX()+PLinkTarget.LINK_TARGET_HALF_SIZE,
+		Point2D newPt = new Point2D.Float((float) pt.getX()+
+			PLinkTarget.LINK_TARGET_HALF_SIZE,
 			(float) pt.getY()+PLinkTarget.LINK_TARGET_HALF_SIZE);
 		link.setPoint(index,newPt);
 		link.setLine();

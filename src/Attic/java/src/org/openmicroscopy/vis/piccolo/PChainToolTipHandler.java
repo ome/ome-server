@@ -43,12 +43,27 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 
+/** 
+ *
+ * An event handler for tooltips on the {@link PChainCanvas}.
+ *  
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PChainToolTipHandler extends PToolTipHandler {
 	
 	public PChainToolTipHandler(PCamera camera) {
 		super(camera);
 	}
 	
+	/**
+	 * The text of the tooltip is either the name of a module,
+	 * the name of a parameter, or (if the mouse goes over a link) the name
+	 * of the parameters at the ends of a link.
+	 * 
+	 * @param event the event that caused the update of the tool tip 
+	 */
 	public void setToolTipString(PInputEvent event) {
 		PNode n = event.getInputManager().getMouseOver().getPickedNode();
 		double scale = camera.getViewScale();

@@ -43,16 +43,17 @@
 package org.openmicroscopy.vis.piccolo;
 
 
-import edu.umd.cs.piccolo.util.PPaintContext;
 
 /** 
  * A subclass of PModule, used to contain bounds in terms of an x,y 
  * position and a height. this is never added to a scenegraph or drawn -
- * instead, it is just used to hold some space
+ * instead, it is just used to hold some space during layouts of chains.
+ * For convenience, it is helpful that its an instance of PModule
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
+ * @see PChain
  */
 
 public class PLayoutModule extends PModule {
@@ -80,10 +81,7 @@ public class PLayoutModule extends PModule {
 	public double getY() {
 		return y+DUMMY_HEIGHT;
 	}
-	// just to be safe, make sure this never paints
-	public void paint(PPaintContext aPaintContext) {
 	
-	}
 	
 	public double getHeight() {
 		return  DUMMY_HEIGHT;

@@ -47,13 +47,17 @@ import edu.umd.cs.piccolo.PNode;
 /** 
  *
  * This is a convenience class that essentially serves as a type-checking aide,
- * insuring that children of a certain node are all of a given type.
+ * insuring that children of a certain node are all instnaces of 
+ * {@link PFormalParameter}. This is used in {@link PModule} to define a 
+ * node that is the parent of all of the {@link PFormalParamater} nodes, and to
+ * simplify related event processing. 
  *  
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
+ * @see PPaletteEventHandler
+ * @see PChainLibraryEventHandler
  */
-
 public class PParameterNode extends PNode {
 	
 

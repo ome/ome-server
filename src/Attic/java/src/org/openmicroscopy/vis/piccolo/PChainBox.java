@@ -39,8 +39,20 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+/** 
+ * A subclass of {@link PCategoryBox} that is used to provide a colored 
+ * background for {@link PChain} widgets in the {@link PChainLibraryCannvas}
+ * 
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PChainBox extends PCategoryBox {
 	
+	/**
+	 * The ID of the chain being stored
+	 */
 	private int chainID=0;
 	
 	public PChainBox(int id, float x, float y,float w,float h) {
@@ -48,6 +60,10 @@ public class PChainBox extends PCategoryBox {
 		chainID = id;
 	}	
 	
+	/**
+	 * 
+	 * @return the ID of the chain stored in the box
+	 */
 	public int getChainID() {
 		return chainID;
 	}

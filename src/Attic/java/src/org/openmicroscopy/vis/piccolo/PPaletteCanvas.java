@@ -71,7 +71,7 @@ import java.awt.dnd.DragGestureEvent;
 
 
 /** 
- * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
+ * The {@link PCanvas} that holds the module palette 
  *
  * 
  * @author Harry Hochheiser
@@ -81,37 +81,51 @@ import java.awt.dnd.DragGestureEvent;
 
 public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
+	/**
+	 * Typeface for category names
+	 */
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,24);
 	
-	
+	/**
+	 * Some screen layout parameters
+	 */
 	private static final float HGAP=30f;
 	private static final float TOP=20f;
 	private static final float LEFT=20f;
-	
-	// arbitrary extent for drawing things -we force it all into a 100x100
-	// square. Later, we'll scale this to fit the window, whatever the
-	// actual window size may be.
-	private static final float CANVAS_EXTENT =100f;
-	
-	
-	
-	private DragSourceAdapter dragListener;
-	private DragSource dragSource;
-
 	private float VGAP=10f;
 	private float NAME_INSET=20;
 	
+	/**
+	 * Support for data transfer - dragging modules onto a {@link PChainCanvas}
+	 */
+	private DragSourceAdapter dragListener;
+	private DragSource dragSource;
 	
+	/**
+	 * The database connection
+	 */
 	private Connection connection;
+	
+	/** 
+	 * The Modules in the database
+	 */
 	private Modules modules;
 
-	
+	/**
+	 * The canvas scenegraph layer
+	 */
 	private PLayer layer;
 
+	/** 
+	 * The currently active {@link PModule}
+	 */
 	private PModule selected;
+
 		
 	public PPaletteCanvas() {
 		super();
+		
+		// set up rendering, colors, and event listeners
 		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
@@ -120,6 +134,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		removeInputEventListener(getZoomEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));
 		layer = getLayer();
+		
+		// configure data transfer
 		dragListener = new DragSourceAdapter() {
 			public void dragExit(DragSourceEvent dse) {
 			}
@@ -128,21 +144,20 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		dragSource.createDefaultDragGestureRecognizer(this,
 				DnDConstants.ACTION_COPY,this);
 
+		// set up tooltips.
 		final PCamera camera = getCamera();
-	       
 		camera.addInputEventListener(new PPaletteToolTipHandler(camera));
-		
-		
 	}
 	
 	/** 
 	 * Populate the Canvas with nodes for each of the modules. 
  	 * This procedure is called when the Connection object has completed
  	 * loading the module information from the database.<p>
- 	 * 
- 	 
+ 	 * Arrange the categorized modules first, followed by the uncategorized.
+ 	 * For the categorized modules, recurse as needed to handle subcategories
  	 * 
   	 * @param connection The connection to the database.
+  	 * @param controller The application controller
   	 *  
  	 */
 	public void setConfig(Connection connection,Controller controller) {
@@ -155,47 +170,49 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		while (iter.hasNext()) {
 			ModuleCategory cat = (ModuleCategory) iter.next();
 			controller.setStatusLabel("Arranging Modules.."+cat.getName());
-			//System.err.println(" Arranging modules in category..."+cat.getName());
+			
 			displayModulesByCategory(layer,cat);			
 		}
-		// do uncategorized.
 		
-	
+		// do uncategorized.
 		PCategoryBox  box = decorateCategory(layer);
 		displayCategoryName(box,"Uncategorized");
 		controller.setStatusLabel("Arranging Modules.. Uncategorized");
 		iter = modules.uncategorizedModuleIterator();
 		
-		//System.err.println("arranging uncategorized modules");
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
 		} 
 		
+		// arrange the uncategorized modules
 		arrangeChildren(box);
 		
-		//System.err.pr("arranging children of top layer ");
+		// arrange all of the categories
 		arrangeChildren(layer);
-		PBounds b = new PBounds();
-		b = layer.getUnionOfChildrenBounds(b);
-		//System.err.pr("layer bounds are "+b.getWidth()+","+b.getHeight());
 		
-		layer.setBounds(b);
 	}
 	
 	/*
 	 * Add the modules that are children of this category, 
-	 * recursively display the modules in subcategories, and call
-	 * arrangeChildren() to layout the results.
+	 * and recursively display the modules in subcategories, all the while 
+	 * doing no layout on the results. After all of the modules in the category
+	 * are displayed, call {@link arrangeChildren()} to layout the results.
+	 * 
+	 * @param parent the parent node that will old all of the modules
+	 * @param cat the {@link ModuleCategory} that the nodes fit in.
+	 * 
 	 */
 	private void displayModulesByCategory(PNode parent,ModuleCategory cat) {
 		// display all modules for this category
 		List mods = cat.getModules();
 		Iterator iter  = mods.iterator();
-		
+
+		//decorate the category with a box.		
 		PCategoryBox box = decorateCategory(parent);
 		displayCategoryName(box,cat.getName());
-		//System.err.println("displaying category..."+cat.getName());
+
+		// display the module in the box.
 		while (iter.hasNext()) {
 			CModule mod = (CModule) iter.next();
 			displayModule(box,mod);
@@ -209,10 +226,15 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			displayModulesByCategory(box,child);
 						
 		}
-	
+		// arrnange everything.
 		arrangeChildren(box);
 	}
 	
+	/**
+	 * Draw the box around the category
+	 * @param parent the parent {@link PNode} that will hold this category box
+	 * @return a new box that will go around the items in a category
+	 */
 	private PCategoryBox decorateCategory(PNode parent) {
 		
 		PCategoryBox box = new PCategoryBox();
@@ -223,6 +245,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		return box;
 	}
 	
+	/**
+	 * Display the name of the category in a {@link PCategoryBox}
+	 * @param box
+	 * @param name
+	 */
 	private void displayCategoryName(PCategoryBox box,String name) {
 		if (name.compareTo("") !=0) {// if there is a name
 		//System.err.println("next category at "+VGAP); //was y
@@ -240,8 +267,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 
 	/** 
 	 * Create a node for each module, add it to the canvas,
-	 * update position of each one, and track maximum width - for
-	 * layout of subsequent columns.<p>
+	 * and update the list of widgets for that module.
 	 * 
 	 * @param box    The parent of this module
 	 * @param module The module to be displayed.
@@ -277,7 +303,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		float maxWidth =0;
 		Object obj=null;
 		PBounds b;
-			
+		
+		// if the node is a categorybox, skip over the label	
 		if (node instanceof PCategoryBox) {
 			PCategoryBox catBox = (PCategoryBox) node;
 			y += catBox.getLabelHeight()+VGAP;
@@ -299,42 +326,33 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			//add the next element in the list to a vector
 			box = (PBufferedNode) obj;
 			curStrip.add(box);
-			//System.err.println("adding box...");
-			// place the items in the current strip.
 			
-			Point2D pt = placeChildren(node,curStrip,y);
+			// place the items in the current strip.
+			Point2D pt = placeChildren(curStrip,y);
 			
 			
 		
 			// find out how high and wide the strip is.
-			
-			float ytemp = (float)pt.getY()+VGAP;// was y+(float)..
-			//System.err.println("children placed. y is "+y+", ytemp is "+ytemp);
-			//System.err.println("height is "+height);  
-			if (ytemp-y > height) {// was -TOP
-				height = ytemp-y; // height of whole thing  - was TOP
-				//System.err.println("setting height to "+height);
+			float ytemp = (float)pt.getY()+VGAP;  
+			if (ytemp-y > height) {
+				height = ytemp-y; 
 			}
 			if (pt.getX() > width)
 				width = (float)pt.getX();
+			// calculate the aspect ratio
 			newAspectRatio = calcAspectRatio(width,height);
-			//System.err.println("new aspect ratio is "+newAspectRatio);
-			// if we've increased the aspect ratio, that's no good.
 			
-			if (curStrip.size()>1 && newAspectRatio > stripAspectRatio) {
-				//System.err.println("increased aspect ratio. Backing out...");
-				
+			// if we've increased the aspect ratio, that's no good.
+			if (curStrip.size()>1 && newAspectRatio > stripAspectRatio) {	
 				// remove the last item from the strip.
 				curStrip.remove(box);
-				// do rest of strip without box
-				pt = placeChildren(node,curStrip,y);
+				// do rest of strip without that last box
+				pt = placeChildren(curStrip,y);
 				//create a new strip and add curent box to it.
 				curStrip.clear();
 				// move onto the next line.
 				y= (float)pt.getY()+VGAP;
-				/*if (pt.getX() > width) {
-					width = (float) pt.getX();
-				}*/
+				
 				width =0;
 			}	
 			else { // it fits. move on.
@@ -344,19 +362,25 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		}
 		if (curStrip.size() > 0) {
 			// place what's left over
-			placeChildren(node,curStrip,y);
+			placeChildren(curStrip,y);
 		}
 		if (node instanceof PCategoryBox) {
 			// adjust the size of the category box
 			b = new PBounds();
 			b = node.getUnionOfChildrenBounds(b);
-			//System.err.println("finished with children. width is "+b.getWidth()
-			//	+", height is "+b.getHeight());
 			((PCategoryBox) node).setExtent(b.getWidth()+2*HGAP,b.getHeight()+4*VGAP);
 		}
 	} 
 	
-	private Point2D placeChildren(PNode parent,Vector v,float y) {
+	/**
+	 * Place the nodes in a list in a row
+	 * @param parent the parent node
+	 * @param v a vector containing the nodes to place
+	 * @param y the y-coordinate for the upper-left corner of each node.
+	 * @return a point that contains the width of the row and 
+	 * 		the y coordinate of the bottom of the row
+	 */
+	private Point2D placeChildren(Vector v,float y) {
 		float x = LEFT+HGAP;
 		PBufferedNode node;
 		Iterator iter = v.iterator();
@@ -367,28 +391,31 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		// iterate through, placing nodes as need be.	
 		while (iter.hasNext()) {
 			node = (PBufferedNode) iter.next();
-		//	System.err.println("placing something at "+x+","+y);
-			//System.err.println("placing "+node);
-			//System.err.println("at x="+x+", y="+y);
 			node.setOffset(x,y);
 		
 			PBounds b = ((PNode) node).getBounds();
-			//System.err.println("child height is "+childHeight);
 			childHeight = (float) b.getHeight();
 			childWidth = (float) b.getWidth();
 		
 			x += childWidth+HGAP;
+			// track the height of the row
 			if (childHeight > maxHeight)
 				maxHeight = childHeight;
 		} 
-		//System.err.println("max height is "+maxHeight);
+		
+		// return a point that indicates how wide the row is and the 
+		// y-coordinate of the bottom.
 		return new Point2D.Float(x-(LEFT+HGAP),y+maxHeight);
 	}
 	
-
+	/**
+	 * 
+	 * @param width
+	 * @param height
+	 * @return the aspect ratio: the larger of width/height and height/width
+	 */
 	private double calcAspectRatio(float width,float height) {
-		//System.err.println("calculating aspect ratio");
-		//System.err.println("widht is "+width+", height is "+height);
+
 		if (width > height) 
 			return (double) width/height;
 		else
@@ -423,15 +450,16 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * needed to do the drag and drop. The receiver of the drop can unpackage it
 	 * and identfy the module via the connection object.
 	 * 
-	 * @see java.awt.dnd.DragGestureListener#dragGestureRecognized(java.awt.dnd.DragGestureEvent)
+	 * @see java.awt.dnd.DragGestureListener#
+	 * 	dragGestureRecognized(java.awt.dnd.DragGestureEvent)
 	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
 		if (selected != null) {
 			selected.setModulesHighlighted(false);
 			int id = selected.getModule().getID();
 			ModuleSelection text = new ModuleSelection(id);
-		//	System.err.println("dragging.module set module selection.."+id);
-			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
+			dragSource.startDrag(event,DragSource.DefaultMoveDrop,
+					text,dragListener);
 		}
 	}
 }

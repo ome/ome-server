@@ -45,33 +45,75 @@ package org.openmicroscopy.vis.piccolo;
 import java.awt.Font;
 import java.awt.Color;
 
+/** 
+ *
+ * Somce constant values used throughout the piccolo code in the chain-
+ * building app. 
+ *  
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PConstants {
 
-	// for a buffered node, we want to get its bounds with some empty space
-	// on each side.  this value gives the amount of buffer space.
+	/**
+	 * For a buffered node, we want to get its bounds with some empty space
+	 * on each side.  this value gives the amount of buffer space.
+	 */
 	public static final int BORDER=80;	
 	
-	// magnification at which point we should do our semantic zooming.
+	
+	/**
+	 * Magnification threshold for sematic zooming. When magnification decreases
+	 * past this point, zoom-out to lower-level of detail, and vice-versa.
+	 */ 
 	public static final double SCALE_THRESHOLD=0.5;
 	
-	// time for animation delay
+	/**
+	 * Animation delay when scaling a node to center in the canvas. 
+	 */
 	public static final int ANIMATION_DELAY=500;
 	
-	// text font
+	/**
+	 * The {@link Font} used for the name of a Formal Parameter 
+	 */
 	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
 	
-	// scale multiplier for chains and library
+	/**
+	 * Scaling multipliers for events that scale a canvas gradually - as 
+	 * opposed to events that scale to a particular node. 
+	 */
 	public static final double SCALE_FACTOR=1.2;
 	
+	/**
+	 * The standard background color for Piccolo Canvases
+	 */
 	public static final Color CANVAS_BACKGROUND_COLOR = new Color(100,100,100);
 	
+	
+	/**
+	 * The color used to identify items that can be linked to the current item.
+	 */
 	public static final Color HIGHLIGHT_COLOR = new Color(154,51,155); 
+	
+	/** 
+	 * The color that can be used to identify items that are the same type 
+	 * (ie., {@link PModule}s corresponding to the same module) as the current
+	 * selection 
+	 */
 	public static final Color SELECTED_HIGHLIGHT_COLOR = new Color(51,204,255);
 	
+	/** 
+	 * Positional offsets for a category name in a {@link PCategoryBox} in a 
+	 * {@link PPaletteCanvas}
+	 *
+	 */
 	public static final double CATEGORY_LABEL_OFFSET_X=40;
 	public static final double CATEGORY_LABEL_OFFSET_Y=20;
 	
-	// size of a link bulb.
+	/**
+	 * Size parameters for the circle at the end of a {@link PLink}
+	 */
 	public static final float LINK_BULB_SIZE=8;
 	public static final float LINK_BULB_RADIUS = LINK_BULB_SIZE/2;
 	

@@ -45,7 +45,14 @@ import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Rectangle2D;
 import java.awt.Color;
 
-
+/** 
+ * A subclass of {@link PPath} that is used to provide a colored background
+ * to various widgets in the Chain builder
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class PCategoryBox extends PPath implements PBufferedNode {
 	
 	private static final Color CATEGORY_COLOR= new Color(204,204,255,100);
@@ -66,6 +73,14 @@ public class PCategoryBox extends PPath implements PBufferedNode {
 		setPaint(CATEGORY_COLOR);
 	}
 	
+	/**
+	 * The bounds of a category box include a space of {@link PConstants.BORDER}
+	 * around the box in all four directions. This buffer is needed for 
+	 * appropriate scaling: using these bounds, we can zoom to center the node 
+	 * without having it occupy the whole canvas.
+	 * 
+	 * @return the bounds of the box with the appropriate spacing buffer.
+	 */
 	public PBounds getBufferedBounds() {
 		PBounds b = getFullBoundsReference();
 		return new PBounds(b.getX()-PConstants.BORDER,
@@ -74,12 +89,21 @@ public class PCategoryBox extends PPath implements PBufferedNode {
 			b.getHeight()+2*PConstants.BORDER);
 	}
 	
+	/**
+	 * Set the size of the box
+	 * @param width the new width
+	 * @param height the new height
+	 */
 	public void setExtent(double width,double height) {
 		PBounds b = getFullBoundsReference();
 		reset();
 		setPathTo(new PBounds(b.getX(),b.getY(),width,height));
 	}
 	
+	/**
+	 * Add a node containing a textual label
+	 * @param label
+	 */
 	public void addLabel(PText label) {
 		addChild(label);
 		this.label = label;

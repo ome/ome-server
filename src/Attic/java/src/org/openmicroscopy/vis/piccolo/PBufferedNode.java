@@ -42,13 +42,14 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.util.PBounds;
 
 /** 
- * a node that can give us a "buffered bounds" - a bound with whitespace
- * in all directions 
- *
+ * A type of node that can give us a "buffered bounds" - a bound with a buffer 
+ * around it in all directions. This is useful for zooming: if we use a 
+ * buffered bounds, we can center the object in a canvas while still leaving 
+ * some space between the edges of the node and the edges of the canvas. 
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 
