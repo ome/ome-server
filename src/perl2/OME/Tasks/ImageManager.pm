@@ -346,8 +346,9 @@ sub createThumbnail{
 #	image = image object
 
 sub getImageDim{
-	my ($self,$image)=@_ ;
-	my $pixels = $image->DefaultPixels();
+	my ($self,$image,$pixels)=@_ ;
+	$pixels = $image->DefaultPixels()
+		unless $pixels;
 	my $path=$image->getFullPath($pixels);
 
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
@@ -368,11 +369,12 @@ sub getImageDim{
 #	image = image object
 
 sub getImageStats{
-	my ($self,$image)=@_;
+	my ($self,$image,$pixels)=@_ ;
+	$pixels = $image->DefaultPixels()
+		unless $pixels;
   	# new version
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
-  	my $pixels = $image->DefaultPixels();
   	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
 	my $pixelsFI = $factory->findObject( "OME::Module::FormalInput",
@@ -385,28 +387,38 @@ sub getImageStats{
 		or die "Fast Stack Statistics has not been run on the Pixels to be displayed.\n";
 	my $stackStatsAnalysisID = $actualInput->module_execution()->id();
 
-	my @mins   = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackMinimum", $image ) );
-	my @maxes  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackMaximum", $image ) );
-	my @means  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackMean", $image ) );
-	my @gmeans = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackGeometricMean", $image ) );
-	my @geosigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID,
-		$factory->findAttributes( "StackGeometricSigma", $image ) );
-	
+	my @mins = $factory->findAttributes( "StackMinimum", {
+		image            => $image, 
+		module_execution => $stackStatsAnalysisID
+	} );
+	my @maxes = $factory->findAttributes( "StackMaximum", {
+		image            => $image, 
+		module_execution => $stackStatsAnalysisID
+	} );
+	my @means = $factory->findAttributes( "StackMean", {
+		image            => $image, 
+		module_execution => $stackStatsAnalysisID
+	} );
+	my @gmeans = $factory->findAttributes( "StackGeometricMean", {
+		image            => $image, 
+		module_execution => $stackStatsAnalysisID
+	} );
+	my @geosigmas = $factory->findAttributes( "StackGeometricSigma", {
+		image            => $image, 
+		module_execution => $stackStatsAnalysisID
+	} );
+
 	my $sh; # stats hash
-	foreach( @mins ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
-	foreach( @maxes ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum(); }
-	foreach( @means ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean(); }
-	foreach( @gmeans ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
-	foreach( @geosigma ) {
-		$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma(); }
+	$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum()
+		foreach( @mins );
+	$sh->[ $_->TheC() ][ $_->TheT() ]->{max} = $_->Maximum()
+		foreach( @maxes );
+	$sh->[ $_->TheC() ][ $_->TheT() ]->{mean} = $_->Mean()
+		foreach( @means );
+	$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean()
+		foreach( @gmeans );
+	$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma()
+		foreach( @geosigmas );
 	return $sh;
 }
 
@@ -418,17 +430,17 @@ sub getImageStats{
 
 
 sub getImageWavelengths{
-	my ($self,$image)=@_;
+	my ($self,$image,$pixels)=@_ ;
+	$pixels = $image->DefaultPixels()
+		unless $pixels;
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
 
 	my @Wavelengths;
-	my $pixels = $image->DefaultPixels()
-		or die "Could not a primary set of Pixels for this image\n";
-	my @ccs = $factory->findAttributes( "PixelChannelComponent", $image )
-		or die "Image has no PixelChannelComponent attributes! Cannot display!\n";
-	my @channelComponents = grep{ $_->Pixels()->id() eq $pixels->id() } @ccs;
-	die "Image has no channel components for default Pixels!" if( scalar(@channelComponents)==0 );
+	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", {
+		image  => $image,
+		Pixels => $pixels } )
+		or die "Cannot find PixelChannelComponent's for image (id=".$image->id()."), pixels (id=".$pixels->id().")\n";
 	foreach my $cc (@channelComponents) {
 		my $ChannelNum = $cc->Index();
 		my $Label;
@@ -454,11 +466,15 @@ sub getImageWavelengths{
 ####################
 
 sub getDisplayOptions{
-	my ($self,$image)=@_;
+	my ($self,$image,$pixels)=@_ ;
+	$pixels = $image->DefaultPixels()
+		unless $pixels;
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	my ($theZ,$theT,$isRGB,@cbw,@rgbOn);
-	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', {
+		image => $image,
+		Pixels => $pixels } )]->[0];
 	my %h =();
 	if (defined $displayOptions){
 		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
