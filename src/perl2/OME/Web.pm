@@ -333,8 +333,8 @@ sub sendFile {
 	$downloadFilename = $params->{downloadFilename}
 		if exists $params->{downloadFilename};
 
-	my $headers = $self->headers();
-	$headers->{'Content-Disposition'} = qq{attachment; filename="$downloadFilename"}
+	my $headers;
+	$headers->{'-attachment'} = $downloadFilename
 		if defined $downloadFilename;
 	$headers->{'-type'} = $self->contentType();
 	print $self->CGI()->header(%$headers);
