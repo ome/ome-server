@@ -443,14 +443,24 @@ sub new {
     my $dbFlags = shift;
     my $class = ref($proto) || $proto;
 
+    my ($datasource,$user,$password);
+
+    $datasource = $dbFlags->{DataSource} ?
+        $dbFlags->{DataSource} : OME::DBConnection->DataSource();
+    $user = $dbFlags->{DBUser} ?
+        $dbFlags->{DBUser} : OME::DBConnection->DBUser();
+    $password = $dbFlags->{DBPassword} ?
+        $dbFlags->{DBPassword} : OME::DBConnection->DBPassword();
+
+    delete $dbFlags->{DataSource};
+    delete $dbFlags->{DBUser};
+    delete $dbFlags->{DBPassword};
+    
     my $delegate = OME::Database::Delegate->getDefaultDelegate()
-			or croak "Could not get default DB delegate";
+            or croak "Could not get default DB delegate";
 
     my $dbh = $delegate->
-      connectToDatabase(OME::DBConnection->DataSource(),
-                        OME::DBConnection->DBUser(),
-                        OME::DBConnection->DBPassword(),
-                        $dbFlags);
+      connectToDatabase($datasource,$user,$password,$dbFlags);
     confess "Cannot create database handle"
       unless defined $dbh;
 
