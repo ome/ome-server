@@ -58,25 +58,52 @@ import java.util.ArrayList;
  */
 public class PDatasetImagesNode extends PNode  {
 
+	/**
+	 * Threshold below which we'll show the icon instead of the actual thumbnails.
+	 */
 	private static final double SCALE_THRESHOLD=.75;
 		
+	/**
+	 * Parent node for thumbnails
+	 */
 	private PNode imagesNode = new PNode();
+	
+	/**
+	 * An image that will take the place of thumbnails as we zoom out
+	 */
 	private PImage thumbnailNode = null;
+	
+	/**
+	 * flag indicating when we are selected.
+	 */
 	private boolean selected = false;
 	
+	/**
+	 * the halo
+	 */
 	private PThumbnailSelectionHalo zoomHalo = new PThumbnailSelectionHalo();
 	
 	
+	/**
+	 * A list of sizes of the rows
+	 */
 	private ArrayList rowSzs = new ArrayList();
 	
+	/**
+	 * The row and column of the highlighted thumbnail
+	 */
 	private int highlightRow;
 	private int highlightColumn;
 	
+	/**
+	 * a cache of highlighted thumbnail, to avoid re-highlighting
+	 */
 	private PThumbnail currentHighlight;
 	
+	/**
+	 * The event handler for the canvas that this node is on
+	 */
 	private PBrowserEventHandler handler;
-	
-	private int maxLevel;
 	
 	public PDatasetImagesNode() {
 		super();	
@@ -91,20 +118,37 @@ public class PDatasetImagesNode extends PNode  {
 		this.handler = handler;
 	}
 	
+	/**
+	 * Add a thumbnail
+	 * @param thumb
+	 */
 	public void addImage(PThumbnail thumb) {
 		imagesNode.addChild(thumb);
 	}
 	
+	/**
+	 * Add the size of a new row
+	 */
 	public void setRowCount(int row,int sz) {
 		rowSzs.add(row,new Integer(sz));
 	}
 	
+	/**
+	 * Iterator for all of the thumbnails
+	 */
 	public Iterator getImageIterator() {
 		return imagesNode.getChildrenIterator();
 	}
 	
 	
-	public void completeImages(double width,double height) {
+	/**
+	 * When all of the thumbnails for the dataset have been added, 
+	 * create an icon image add add it to this node.
+	 * 
+	 * @param width
+	 * @param height
+	 */
+	public void completeImages() {
 		PBounds b = imagesNode.getGlobalFullBounds();
 		if (b.getWidth() > 0 && b.getHeight() > 0 &&
 			imagesNode.getChildrenCount() > 200) {
@@ -116,11 +160,14 @@ public class PDatasetImagesNode extends PNode  {
 	}
 	
 	
-	
-//	public void setScale(double scale) {
-//		super.setScale(scale);
-//	}
-	
+	/**
+	 * If there is no icon node, this node is selected, or we're zoomed in
+	 * to a scale greater than SCALE_THRESHOLD, hide the icon image and show 
+	 * individual thumbnails.
+	 * 
+	 * Otherwise, show the icon image.
+	 *
+	 */
 	public void paint(PPaintContext aPaintContext) {
 		
 		if (thumbnailNode == null || selected == true || 
@@ -149,6 +196,12 @@ public class PDatasetImagesNode extends PNode  {
 		selected = v;
 	}
 	
+	/**
+	 * Turn the highlight on or off for a thumbnail at a given zoom level
+	 * @param thumb the thumbnail to be highlighted (or not)
+	 * @param v true if highlight on, else false
+	 * @param level the zoom level
+	 */
 	public void highlightThumbnail(PThumbnail thumb,boolean v,int level) {
 		int count = imagesNode.getChildrenCount();		
 		int radius = getRadius(level);
@@ -160,13 +213,22 @@ public class PDatasetImagesNode extends PNode  {
 			currentHighlight = null;
 		}
 		else  if (thumb != currentHighlight) {
+			// only do this if I'm not already highlighted
 			doHighlightThumbnail(thumb,radius);
 			zoomHalo.show();
 			currentHighlight = thumb;
 		}
 	}
 	
-	public int getRadius(int level) {
+	/**
+	 * For zoom level i, the radius of the halo'd region will be 
+	 * side/2^(level+2), where side=sqrt(# of thumbnails). This provides
+	 * a roughly exponential decrease in the size of the halo with each zoom-in
+	 *  
+	 * @param level
+	 * @return the radius for the halo at that level
+	 */
+	private int getRadius(int level) {
 		int count = imagesNode.getChildrenCount();
 		// find the number of items on each side
 		double side = Math.sqrt(count);
@@ -174,15 +236,25 @@ public class PDatasetImagesNode extends PNode  {
 		return (int) Math.floor(side/denom);
 	}
 	
+	/** 
+	 * To highlight a thumbail, get the bounds, make them local,
+	 * and update the halo path
+	 */
 	private void doHighlightThumbnail(PThumbnail thumb,int radius) {
 		// get index
 		PBounds b  = getHaloBounds(thumb,radius);
 		
-		globalToLocal(b);
 		zoomHalo.setPathTo(b);
 	}
 	
 	
+	/**
+	 * To get the halo bounds, find the index of the node and build 
+	 * highlight bounds around it
+	 * @param thumb
+	 * @param radius
+	 * @return bounds of the highlight of the given radius around thumb
+	 */
 	private PBounds getHaloBounds(PThumbnail thumb,int radius) {
 		int index = imagesNode.indexOfChild(thumb);
 		PBounds b = getHighlight(index,radius);
@@ -190,11 +262,24 @@ public class PDatasetImagesNode extends PNode  {
 		return b;
 	}
 	
+	/**
+	 * A shortcut to get the size of a row
+	 * @param i a row index
+	 * @return # of items in row i.
+	 */
 	private int getRowSize(int i) {
 		Integer v = (Integer) rowSzs.get(i);
 		return v.intValue();
 	}
 	
+	/**
+	 * To build the highlight, iterate over the range implied by the radius
+	 * and add everythin in that region
+	 * 
+	 * @param index
+	 * @param radius
+	 * @return halo bounds around item index of the given radius
+	 */
 	private PBounds getHighlight(int index,int radius) {
 		calculatePosition(index);
 		PBounds b = new PBounds();
@@ -215,21 +300,37 @@ public class PDatasetImagesNode extends PNode  {
 		return b;
 	}
 	
+	/**
+	 * Find the row and column of the item being highlighted. 
+	 * 
+	 * @param index
+	 */
 	private void calculatePosition(int index) {
 		int curRowSize;
 		int curRow = 0;
 
-		
+		// since rows may be of different sizes, this isn't just simple
+		// array indexing. iterate over rows until I find the index i'm looking
+		// for 
 		curRowSize =getRowSize(curRow);
 		while (index >= curRowSize && curRow < rowSzs.size()) {
 			index -= curRowSize;
 			curRow++;
 			curRowSize = getRowSize(curRow);
 		}
+		
+		// set these vars to hold my current position
 		highlightRow = curRow;
 		highlightColumn = index; // whatever is left over is column
 	}
-	
+
+	/**
+	 * To add a position to the highlight, make sure the position is not out of
+	 * bounds and then add it.
+	 * @param b
+	 * @param row
+	 * @param col
+	 */	
 	private void addToHighlight(PBounds b,int row,int col) {
 		if (row <0 || row >= rowSzs.size())
 			return;
@@ -239,10 +340,15 @@ public class PDatasetImagesNode extends PNode  {
 			return;
 		int index = getThumbIndex(row,col);
 		PThumbnail thumb = (PThumbnail) imagesNode.getChild(index);
-		PBounds tBounds = thumb.getGlobalFullBounds();
+		PBounds tBounds = thumb.getFullBoundsReference();
 		b.add(tBounds);
 	}
 	
+	/**
+	 * More or less the inverse of the 
+	 * {@link #calculatePosition calculatePosition} call. find the position of 
+	 * the item at row, col in the node's children
+	 */
 	private int getThumbIndex(int row,int col) {
 		int index = 0;
 		for (int i = 0; i < row; i++) {
@@ -252,40 +358,45 @@ public class PDatasetImagesNode extends PNode  {
 		return index+col;
 	}
 	
-	public boolean hasVisibleHalo() {
-		return zoomHalo.getVisible();
-	}
-	
-
-	public PThumbnailSelectionHalo getHalo() {
-		return zoomHalo;
-	}
-	
+	/**
+	 * Zoom in to a thumbnail at a given level
+	 * @param thumb
+	 * @param level
+	 * @return return the new level
+	 */
 	public int zoomInToHalo(PThumbnail thumb, int level) {
-		 double newRadius = getRadius(level+1);
-		/* if (getRadius(level) <1) { // didn't work when I also checked if next is >1
-		 	handler.animateToBufferedNode(thumb);
-		 }
-		 else {*/
-	     	calcZoomInHalo(thumb,level);
-		 	handler.animateToNode(zoomHalo);
-		//}
-	     // zoomIn
-	     
-	     int newLevel = level;
-	     if (newRadius >=0) 
-	     	newLevel++;
-	     return newLevel;	
+		
+		// find the new radius
+		double newRadius = getRadius(level+1);
+		
+		// calculate the current halo
+	    calcZoomInHalo(thumb,level);
+	    
+	    //zoom to it.
+		handler.animateToNode(zoomHalo);
+		 
+		// update the level, maxing out if the radius is >=0
+	    int newLevel = level;
+	    if (newRadius >=0) 
+	    	newLevel++;
+	    return newLevel;	
 	 }
 	
+	/**
+	 * Zoom out from a thumbnail at a given level
+	 * @param thumb
+	 * @param level
+	 * @return the new level
+	 */
 	public int zoomOutOfHalo(PThumbnail thumb, int level) {
+		// if level is zero, do nothing
 		if (level == 0)
 			return level;
 		if (level <= 1) {
 			// go to top level.
-			PBufferedNode b = thumb.getBufferedParentNode();
-			// zoom to this.
-			handler.animateToBufferedNode(b);
+			PBufferedObject b = thumb.getBufferedParentNode();
+			// zoom to the dataset
+			handler.animateToBufferedObject(b);
 		}
 		else {
 			// go up by two
@@ -295,14 +406,18 @@ public class PDatasetImagesNode extends PNode  {
 			//and zoom in by one. net effect - zoom out oune
 			handler.animateToNode(zoomHalo);
 		}
+		// adjust level
 		level--;
 		if (level < 0)
 			level = 0;
 		return level;		
 	}
 	
-	// when zooming out, I don't want a highlight unless radius > 1
-	public void calcZoomOutHalo(PThumbnail thumb, int level) {
+	/**
+	 * Find the halo for zooming out. Don't do anything if radius is zero:
+	 * there's no need. 
+	 */
+	private void calcZoomOutHalo(PThumbnail thumb, int level) {
 		int radius = getRadius(level);
 		if (radius > 0) {
 			zoomHalo.hide();
@@ -310,7 +425,10 @@ public class PDatasetImagesNode extends PNode  {
 		}
 	}
 	
-	public void calcZoomInHalo(PThumbnail thumb,int level) {
+	/**
+	 * Find the halo for zooming in.
+	 */
+	private void calcZoomInHalo(PThumbnail thumb,int level) {
 		int radius = getRadius(level);
 		zoomHalo.hide();
 		doHighlightThumbnail(thumb,radius);
