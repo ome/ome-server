@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:33:22 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */

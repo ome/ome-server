@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,40 +53,40 @@ public class TrajectoryEntryDTO
     public String getDTOTypeName() { return "@TrajectoryEntry"; }
     public Class getDTOType() { return TrajectoryEntry.class; }
 
-    public Trajectory getTrajectory()
-    { return (Trajectory) getObjectElement("Trajectory"); }
-    public void setTrajectory(Trajectory value)
-    { setElement("Trajectory",value); }
-
-    public Integer getOrder()
-    { return getIntegerElement("Order"); }
-    public void setOrder(Integer value)
-    { setElement("Order",value); }
-
-    public Float getDeltaX()
-    { return getFloatElement("DeltaX"); }
-    public void setDeltaX(Float value)
-    { setElement("DeltaX",value); }
-
-    public Float getDeltaY()
-    { return getFloatElement("DeltaY"); }
-    public void setDeltaY(Float value)
-    { setElement("DeltaY",value); }
-
-    public Float getDeltaZ()
-    { return getFloatElement("DeltaZ"); }
-    public void setDeltaZ(Float value)
-    { setElement("DeltaZ",value); }
+    public Float getVelocity()
+    { return getFloatElement("Velocity"); }
+    public void setVelocity(Float value)
+    { setElement("Velocity",value); }
 
     public Float getDistance()
     { return getFloatElement("Distance"); }
     public void setDistance(Float value)
     { setElement("Distance",value); }
 
-    public Float getVelocity()
-    { return getFloatElement("Velocity"); }
-    public void setVelocity(Float value)
-    { setElement("Velocity",value); }
+    public Float getDeltaZ()
+    { return getFloatElement("DeltaZ"); }
+    public void setDeltaZ(Float value)
+    { setElement("DeltaZ",value); }
+
+    public Float getDeltaY()
+    { return getFloatElement("DeltaY"); }
+    public void setDeltaY(Float value)
+    { setElement("DeltaY",value); }
+
+    public Float getDeltaX()
+    { return getFloatElement("DeltaX"); }
+    public void setDeltaX(Float value)
+    { setElement("DeltaX",value); }
+
+    public Integer getOrder()
+    { return getIntegerElement("Order"); }
+    public void setOrder(Integer value)
+    { setElement("Order",value); }
+
+    public Trajectory getTrajectory()
+    { return (Trajectory) getObjectElement("Trajectory"); }
+    public void setTrajectory(Trajectory value)
+    { setElement("Trajectory",value); }
 
     public void setMap(Map elements)
     {

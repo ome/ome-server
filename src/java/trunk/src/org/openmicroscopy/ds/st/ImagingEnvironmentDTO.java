@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class ImagingEnvironmentDTO
     public String getDTOTypeName() { return "@ImagingEnvironment"; }
     public Class getDTOType() { return ImagingEnvironment.class; }
 
-    public Float getTemperature()
-    { return getFloatElement("Temperature"); }
-    public void setTemperature(Float value)
-    { setElement("Temperature",value); }
-
-    public Float getAirPressure()
-    { return getFloatElement("AirPressure"); }
-    public void setAirPressure(Float value)
-    { setElement("AirPressure",value); }
+    public Float getCO2Percent()
+    { return getFloatElement("CO2Percent"); }
+    public void setCO2Percent(Float value)
+    { setElement("CO2Percent",value); }
 
     public Float getHumidity()
     { return getFloatElement("Humidity"); }
     public void setHumidity(Float value)
     { setElement("Humidity",value); }
 
-    public Float getCO2Percent()
-    { return getFloatElement("CO2Percent"); }
-    public void setCO2Percent(Float value)
-    { setElement("CO2Percent",value); }
+    public Float getAirPressure()
+    { return getFloatElement("AirPressure"); }
+    public void setAirPressure(Float value)
+    { setElement("AirPressure",value); }
+
+    public Float getTemperature()
+    { return getFloatElement("Temperature"); }
+    public void setTemperature(Float value)
+    { setElement("Temperature",value); }
 
 
 }

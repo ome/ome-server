@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,32 +46,32 @@ import java.util.Map;
 public interface TrajectoryEntry
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Trajectory</code> */
-    public Trajectory getTrajectory();
-    public void setTrajectory(Trajectory value);
-
-    /** Criteria field name: <code>Order</code> */
-    public Integer getOrder();
-    public void setOrder(Integer value);
-
-    /** Criteria field name: <code>DeltaX</code> */
-    public Float getDeltaX();
-    public void setDeltaX(Float value);
-
-    /** Criteria field name: <code>DeltaY</code> */
-    public Float getDeltaY();
-    public void setDeltaY(Float value);
-
-    /** Criteria field name: <code>DeltaZ</code> */
-    public Float getDeltaZ();
-    public void setDeltaZ(Float value);
+    /** Criteria field name: <code>Velocity</code> */
+    public Float getVelocity();
+    public void setVelocity(Float value);
 
     /** Criteria field name: <code>Distance</code> */
     public Float getDistance();
     public void setDistance(Float value);
 
-    /** Criteria field name: <code>Velocity</code> */
-    public Float getVelocity();
-    public void setVelocity(Float value);
+    /** Criteria field name: <code>DeltaZ</code> */
+    public Float getDeltaZ();
+    public void setDeltaZ(Float value);
+
+    /** Criteria field name: <code>DeltaY</code> */
+    public Float getDeltaY();
+    public void setDeltaY(Float value);
+
+    /** Criteria field name: <code>DeltaX</code> */
+    public Float getDeltaX();
+    public void setDeltaX(Float value);
+
+    /** Criteria field name: <code>Order</code> */
+    public Integer getOrder();
+    public void setOrder(Integer value);
+
+    /** Criteria field name: <code>Trajectory</code> */
+    public Trajectory getTrajectory();
+    public void setTrajectory(Trajectory value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,40 +46,40 @@ import java.util.Map;
 public interface DisplayChannel
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>ChannelNumber</code> */
-    public Integer getChannelNumber();
-    public void setChannelNumber(Integer value);
-
-    /** Criteria field name: <code>BlackLevel</code> */
-    public Double getBlackLevel();
-    public void setBlackLevel(Double value);
+    /** Criteria field name: <code>Gamma</code> */
+    public Float getGamma();
+    public void setGamma(Float value);
 
     /** Criteria field name: <code>WhiteLevel</code> */
     public Double getWhiteLevel();
     public void setWhiteLevel(Double value);
 
-    /** Criteria field name: <code>Gamma</code> */
-    public Float getGamma();
-    public void setGamma(Float value);
+    /** Criteria field name: <code>BlackLevel</code> */
+    public Double getBlackLevel();
+    public void setBlackLevel(Double value);
 
-    /** Criteria field name: <code>DisplayOptionsesByBlueChannel</code> */
-    public List getDisplayOptionsesByBlueChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByBlueChannel</code> or <code>DisplayOptionsesByBlueChannel</code> */
-    public int countDisplayOptionsesByBlueChannel();
+    /** Criteria field name: <code>ChannelNumber</code> */
+    public Integer getChannelNumber();
+    public void setChannelNumber(Integer value);
 
-    /** Criteria field name: <code>DisplayOptionsesByGreenChannel</code> */
-    public List getDisplayOptionsesByGreenChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByGreenChannel</code> or <code>DisplayOptionsesByGreenChannel</code> */
-    public int countDisplayOptionsesByGreenChannel();
+    /** Criteria field name: <code>DisplayOptionsListByBlueChannel</code> */
+    public List getDisplayOptionsListByBlueChannel();
+    /** Criteria field name: <code>#DisplayOptionsListByBlueChannel</code> or <code>DisplayOptionsListByBlueChannel</code> */
+    public int countDisplayOptionsListByBlueChannel();
 
-    /** Criteria field name: <code>DisplayOptionsesByGreyChannel</code> */
-    public List getDisplayOptionsesByGreyChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByGreyChannel</code> or <code>DisplayOptionsesByGreyChannel</code> */
-    public int countDisplayOptionsesByGreyChannel();
+    /** Criteria field name: <code>DisplayOptionsListByGreenChannel</code> */
+    public List getDisplayOptionsListByGreenChannel();
+    /** Criteria field name: <code>#DisplayOptionsListByGreenChannel</code> or <code>DisplayOptionsListByGreenChannel</code> */
+    public int countDisplayOptionsListByGreenChannel();
 
-    /** Criteria field name: <code>DisplayOptionsesByRedChannel</code> */
-    public List getDisplayOptionsesByRedChannel();
-    /** Criteria field name: <code>#DisplayOptionsesByRedChannel</code> or <code>DisplayOptionsesByRedChannel</code> */
-    public int countDisplayOptionsesByRedChannel();
+    /** Criteria field name: <code>DisplayOptionsListByGreyChannel</code> */
+    public List getDisplayOptionsListByGreyChannel();
+    /** Criteria field name: <code>#DisplayOptionsListByGreyChannel</code> or <code>DisplayOptionsListByGreyChannel</code> */
+    public int countDisplayOptionsListByGreyChannel();
+
+    /** Criteria field name: <code>DisplayOptionsListByRedChannel</code> */
+    public List getDisplayOptionsListByRedChannel();
+    /** Criteria field name: <code>#DisplayOptionsListByRedChannel</code> or <code>DisplayOptionsListByRedChannel</code> */
+    public int countDisplayOptionsListByRedChannel();
 
 }

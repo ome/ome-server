@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,56 +45,56 @@ import java.util.Map;
 public interface Extent
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>MinX</code> */
-    public Integer getMinX();
-    public void setMinX(Integer value);
-
-    /** Criteria field name: <code>MinY</code> */
-    public Integer getMinY();
-    public void setMinY(Integer value);
-
-    /** Criteria field name: <code>MinZ</code> */
-    public Integer getMinZ();
-    public void setMinZ(Integer value);
-
-    /** Criteria field name: <code>MaxX</code> */
-    public Integer getMaxX();
-    public void setMaxX(Integer value);
-
-    /** Criteria field name: <code>MaxY</code> */
-    public Integer getMaxY();
-    public void setMaxY(Integer value);
-
-    /** Criteria field name: <code>MaxZ</code> */
-    public Integer getMaxZ();
-    public void setMaxZ(Integer value);
-
-    /** Criteria field name: <code>SigmaX</code> */
-    public Integer getSigmaX();
-    public void setSigmaX(Integer value);
-
-    /** Criteria field name: <code>SigmaY</code> */
-    public Integer getSigmaY();
-    public void setSigmaY(Integer value);
-
-    /** Criteria field name: <code>SigmaZ</code> */
-    public Integer getSigmaZ();
-    public void setSigmaZ(Integer value);
-
-    /** Criteria field name: <code>Volume</code> */
-    public Integer getVolume();
-    public void setVolume(Integer value);
-
-    /** Criteria field name: <code>SurfaceArea</code> */
-    public Float getSurfaceArea();
-    public void setSurfaceArea(Float value);
+    /** Criteria field name: <code>FormFactor</code> */
+    public Float getFormFactor();
+    public void setFormFactor(Float value);
 
     /** Criteria field name: <code>Perimeter</code> */
     public Float getPerimeter();
     public void setPerimeter(Float value);
 
-    /** Criteria field name: <code>FormFactor</code> */
-    public Float getFormFactor();
-    public void setFormFactor(Float value);
+    /** Criteria field name: <code>SurfaceArea</code> */
+    public Float getSurfaceArea();
+    public void setSurfaceArea(Float value);
+
+    /** Criteria field name: <code>Volume</code> */
+    public Integer getVolume();
+    public void setVolume(Integer value);
+
+    /** Criteria field name: <code>SigmaZ</code> */
+    public Integer getSigmaZ();
+    public void setSigmaZ(Integer value);
+
+    /** Criteria field name: <code>SigmaY</code> */
+    public Integer getSigmaY();
+    public void setSigmaY(Integer value);
+
+    /** Criteria field name: <code>SigmaX</code> */
+    public Integer getSigmaX();
+    public void setSigmaX(Integer value);
+
+    /** Criteria field name: <code>MaxZ</code> */
+    public Integer getMaxZ();
+    public void setMaxZ(Integer value);
+
+    /** Criteria field name: <code>MaxY</code> */
+    public Integer getMaxY();
+    public void setMaxY(Integer value);
+
+    /** Criteria field name: <code>MaxX</code> */
+    public Integer getMaxX();
+    public void setMaxX(Integer value);
+
+    /** Criteria field name: <code>MinZ</code> */
+    public Integer getMinZ();
+    public void setMinZ(Integer value);
+
+    /** Criteria field name: <code>MinY</code> */
+    public Integer getMinY();
+    public void setMinY(Integer value);
+
+    /** Criteria field name: <code>MinX</code> */
+    public Integer getMinX();
+    public void setMinX(Integer value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,30 +53,30 @@ public class EmissionFilterDTO
     public String getDTOTypeName() { return "@EmissionFilter"; }
     public Class getDTOType() { return EmissionFilter.class; }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
-
-    public String getModel()
-    { return getStringElement("Model"); }
-    public void setModel(String value)
-    { setElement("Model",value); }
-
-    public String getLotNumber()
-    { return getStringElement("LotNumber"); }
-    public void setLotNumber(String value)
-    { setElement("LotNumber",value); }
+    public Filter getFilter()
+    { return (Filter) getObjectElement("Filter"); }
+    public void setFilter(Filter value)
+    { setElement("Filter",value); }
 
     public String getType()
     { return getStringElement("Type"); }
     public void setType(String value)
     { setElement("Type",value); }
 
-    public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
-    public void setFilter(Filter value)
-    { setElement("Filter",value); }
+    public String getLotNumber()
+    { return getStringElement("LotNumber"); }
+    public void setLotNumber(String value)
+    { setElement("LotNumber",value); }
+
+    public String getModel()
+    { return getStringElement("Model"); }
+    public void setModel(String value)
+    { setElement("Model",value); }
+
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
 
     public void setMap(Map elements)
     {

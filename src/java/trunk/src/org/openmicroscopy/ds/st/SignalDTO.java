@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,55 +52,55 @@ public class SignalDTO
     public String getDTOTypeName() { return "@Signal"; }
     public Class getDTOType() { return Signal.class; }
 
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
-
-    public Float getCentroidX()
-    { return getFloatElement("CentroidX"); }
-    public void setCentroidX(Float value)
-    { setElement("CentroidX",value); }
-
-    public Float getCentroidY()
-    { return getFloatElement("CentroidY"); }
-    public void setCentroidY(Float value)
-    { setElement("CentroidY",value); }
-
-    public Float getCentroidZ()
-    { return getFloatElement("CentroidZ"); }
-    public void setCentroidZ(Float value)
-    { setElement("CentroidZ",value); }
-
-    public Float getIntegral()
-    { return getFloatElement("Integral"); }
-    public void setIntegral(Float value)
-    { setElement("Integral",value); }
-
-    public Float getMean()
-    { return getFloatElement("Mean"); }
-    public void setMean(Float value)
-    { setElement("Mean",value); }
-
-    public Float getGeometricMean()
-    { return getFloatElement("GeometricMean"); }
-    public void setGeometricMean(Float value)
-    { setElement("GeometricMean",value); }
-
-    public Float getSigma()
-    { return getFloatElement("Sigma"); }
-    public void setSigma(Float value)
-    { setElement("Sigma",value); }
+    public Float getBackground()
+    { return getFloatElement("Background"); }
+    public void setBackground(Float value)
+    { setElement("Background",value); }
 
     public Float getGeometricSigma()
     { return getFloatElement("GeometricSigma"); }
     public void setGeometricSigma(Float value)
     { setElement("GeometricSigma",value); }
 
-    public Float getBackground()
-    { return getFloatElement("Background"); }
-    public void setBackground(Float value)
-    { setElement("Background",value); }
+    public Float getSigma()
+    { return getFloatElement("Sigma"); }
+    public void setSigma(Float value)
+    { setElement("Sigma",value); }
+
+    public Float getGeometricMean()
+    { return getFloatElement("GeometricMean"); }
+    public void setGeometricMean(Float value)
+    { setElement("GeometricMean",value); }
+
+    public Float getMean()
+    { return getFloatElement("Mean"); }
+    public void setMean(Float value)
+    { setElement("Mean",value); }
+
+    public Float getIntegral()
+    { return getFloatElement("Integral"); }
+    public void setIntegral(Float value)
+    { setElement("Integral",value); }
+
+    public Float getCentroidZ()
+    { return getFloatElement("CentroidZ"); }
+    public void setCentroidZ(Float value)
+    { setElement("CentroidZ",value); }
+
+    public Float getCentroidY()
+    { return getFloatElement("CentroidY"); }
+    public void setCentroidY(Float value)
+    { setElement("CentroidY",value); }
+
+    public Float getCentroidX()
+    { return getFloatElement("CentroidX"); }
+    public void setCentroidX(Float value)
+    { setElement("CentroidX",value); }
+
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
 
 }

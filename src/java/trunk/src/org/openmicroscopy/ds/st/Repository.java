@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -49,36 +49,36 @@ import java.util.Map;
 public interface Repository
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Local</code> */
-    public Boolean isLocal();
-    public void setLocal(Boolean value);
+    /** Criteria field name: <code>ImageServerURL</code> */
+    public String getImageServerURL();
+    public void setImageServerURL(String value);
 
     /** Criteria field name: <code>Path</code> */
     public String getPath();
     public void setPath(String value);
 
-    /** Criteria field name: <code>ImageServerURL</code> */
-    public String getImageServerURL();
-    public void setImageServerURL(String value);
+    /** Criteria field name: <code>Local</code> */
+    public Boolean isLocal();
+    public void setLocal(Boolean value);
 
-    /** Criteria field name: <code>OTFs</code> */
-    public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
-    public int countOTFs();
+    /** Criteria field name: <code>OTFList</code> */
+    public List getOTFList();
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    public int countOTFList();
 
-    /** Criteria field name: <code>OriginalFiles</code> */
-    public List getOriginalFiles();
-    /** Criteria field name: <code>#OriginalFiles</code> or <code>OriginalFiles</code> */
-    public int countOriginalFiles();
+    /** Criteria field name: <code>OriginalFileList</code> */
+    public List getOriginalFileList();
+    /** Criteria field name: <code>#OriginalFileList</code> or <code>OriginalFileList</code> */
+    public int countOriginalFileList();
 
-    /** Criteria field name: <code>Pixelses</code> */
-    public List getPixelses();
-    /** Criteria field name: <code>#Pixelses</code> or <code>Pixelses</code> */
-    public int countPixelses();
+    /** Criteria field name: <code>PixelsList</code> */
+    public List getPixelsList();
+    /** Criteria field name: <code>#PixelsList</code> or <code>PixelsList</code> */
+    public int countPixelsList();
 
-    /** Criteria field name: <code>Thumbnails</code> */
-    public List getThumbnails();
-    /** Criteria field name: <code>#Thumbnails</code> or <code>Thumbnails</code> */
-    public int countThumbnails();
+    /** Criteria field name: <code>ThumbnailList</code> */
+    public List getThumbnailList();
+    /** Criteria field name: <code>#ThumbnailList</code> or <code>ThumbnailList</code> */
+    public int countThumbnailList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,26 +48,26 @@ import java.util.Map;
 public interface Plate
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>Screen</code> */
+    public Screen getScreen();
+    public void setScreen(Screen value);
 
     /** Criteria field name: <code>ExternalReference</code> */
     public String getExternalReference();
     public void setExternalReference(String value);
 
-    /** Criteria field name: <code>Screen</code> */
-    public Screen getScreen();
-    public void setScreen(Screen value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
-    /** Criteria field name: <code>ImagePlates</code> */
-    public List getImagePlates();
-    /** Criteria field name: <code>#ImagePlates</code> or <code>ImagePlates</code> */
-    public int countImagePlates();
+    /** Criteria field name: <code>ImagePlateList</code> */
+    public List getImagePlateList();
+    /** Criteria field name: <code>#ImagePlateList</code> or <code>ImagePlateList</code> */
+    public int countImagePlateList();
 
-    /** Criteria field name: <code>PlateScreens</code> */
-    public List getPlateScreens();
-    /** Criteria field name: <code>#PlateScreens</code> or <code>PlateScreens</code> */
-    public int countPlateScreens();
+    /** Criteria field name: <code>PlateScreenList</code> */
+    public List getPlateScreenList();
+    /** Criteria field name: <code>#PlateScreenList</code> or <code>PlateScreenList</code> */
+    public int countPlateScreenList();
 
 }

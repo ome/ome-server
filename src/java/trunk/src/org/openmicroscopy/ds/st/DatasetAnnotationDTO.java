@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Jul  6 12:40:26 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,25 +53,25 @@ public class DatasetAnnotationDTO
     public String getDTOTypeName() { return "@DatasetAnnotation"; }
     public Class getDTOType() { return DatasetAnnotation.class; }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
-
-    public String getContent()
-    { return getStringElement("Content"); }
-    public void setContent(String value)
-    { setElement("Content",value); }
+    public Boolean isValid()
+    { return getBooleanElement("Valid"); }
+    public void setValid(Boolean value)
+    { setElement("Valid",value); }
 
     public Long getTimestamp()
     { return getLongElement("Timestamp"); }
     public void setTimestamp(Long value)
     { setElement("Timestamp",value); }
 
-    public Boolean isValid()
-    { return getBooleanElement("Valid"); }
-    public void setValid(Boolean value)
-    { setElement("Valid",value); }
+    public String getContent()
+    { return getStringElement("Content"); }
+    public void setContent(String value)
+    { setElement("Content",value); }
+
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("Experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
 
     public void setMap(Map elements)
     {

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,21 +54,21 @@ public class ImageInstrumentDTO
     public String getDTOTypeName() { return "@ImageInstrument"; }
     public Class getDTOType() { return ImageInstrument.class; }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
-
     public Objective getObjective()
     { return (Objective) getObjectElement("Objective"); }
     public void setObjective(Objective value)
     { setElement("Objective",value); }
 
+    public Instrument getInstrument()
+    { return (Instrument) getObjectElement("Instrument"); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
+
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Instrument",InstrumentDTO.class);
         parseChildElement("Objective",ObjectiveDTO.class);
+        parseChildElement("Instrument",InstrumentDTO.class);
     }
 
 }

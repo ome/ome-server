@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,38 +48,38 @@ import java.util.Map;
 public interface Objective
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Manufacturer</code> */
-    public String getManufacturer();
-    public void setManufacturer(String value);
-
-    /** Criteria field name: <code>Model</code> */
-    public String getModel();
-    public void setModel(String value);
-
-    /** Criteria field name: <code>SerialNumber</code> */
-    public String getSerialNumber();
-    public void setSerialNumber(String value);
-
-    /** Criteria field name: <code>LensNA</code> */
-    public Float getLensNA();
-    public void setLensNA(Float value);
+    /** Criteria field name: <code>Instrument</code> */
+    public Instrument getInstrument();
+    public void setInstrument(Instrument value);
 
     /** Criteria field name: <code>Magnification</code> */
     public Float getMagnification();
     public void setMagnification(Float value);
 
-    /** Criteria field name: <code>Instrument</code> */
-    public Instrument getInstrument();
-    public void setInstrument(Instrument value);
+    /** Criteria field name: <code>LensNA</code> */
+    public Float getLensNA();
+    public void setLensNA(Float value);
 
-    /** Criteria field name: <code>ImageInstruments</code> */
-    public List getImageInstruments();
-    /** Criteria field name: <code>#ImageInstruments</code> or <code>ImageInstruments</code> */
-    public int countImageInstruments();
+    /** Criteria field name: <code>SerialNumber</code> */
+    public String getSerialNumber();
+    public void setSerialNumber(String value);
 
-    /** Criteria field name: <code>OTFs</code> */
-    public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
-    public int countOTFs();
+    /** Criteria field name: <code>Model</code> */
+    public String getModel();
+    public void setModel(String value);
+
+    /** Criteria field name: <code>Manufacturer</code> */
+    public String getManufacturer();
+    public void setManufacturer(String value);
+
+    /** Criteria field name: <code>ImageInstrumentList</code> */
+    public List getImageInstrumentList();
+    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentList</code> */
+    public int countImageInstrumentList();
+
+    /** Criteria field name: <code>OTFList</code> */
+    public List getOTFList();
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    public int countOTFList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,20 +45,20 @@ import java.util.Map;
 public interface Bounds
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>X</code> */
-    public Integer getX();
-    public void setX(Integer value);
-
-    /** Criteria field name: <code>Y</code> */
-    public Integer getY();
-    public void setY(Integer value);
+    /** Criteria field name: <code>Height</code> */
+    public Integer getHeight();
+    public void setHeight(Integer value);
 
     /** Criteria field name: <code>Width</code> */
     public Integer getWidth();
     public void setWidth(Integer value);
 
-    /** Criteria field name: <code>Height</code> */
-    public Integer getHeight();
-    public void setHeight(Integer value);
+    /** Criteria field name: <code>Y</code> */
+    public Integer getY();
+    public void setY(Integer value);
+
+    /** Criteria field name: <code>X</code> */
+    public Integer getX();
+    public void setX(Integer value);
 
 }

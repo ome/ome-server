@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,16 +45,16 @@ import java.util.Map;
 public interface StackMaximum
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>TheC</code> */
-    public Integer getTheC();
-    public void setTheC(Integer value);
+    /** Criteria field name: <code>Maximum</code> */
+    public Integer getMaximum();
+    public void setMaximum(Integer value);
 
     /** Criteria field name: <code>TheT</code> */
     public Integer getTheT();
     public void setTheT(Integer value);
 
-    /** Criteria field name: <code>Maximum</code> */
-    public Integer getMaximum();
-    public void setMaximum(Integer value);
+    /** Criteria field name: <code>TheC</code> */
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
 }

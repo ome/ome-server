@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class StageLabelDTO
     public String getDTOTypeName() { return "@StageLabel"; }
     public Class getDTOType() { return StageLabel.class; }
 
-    public String getName()
-    { return getStringElement("Name"); }
-    public void setName(String value)
-    { setElement("Name",value); }
-
-    public Float getX()
-    { return getFloatElement("X"); }
-    public void setX(Float value)
-    { setElement("X",value); }
+    public Float getZ()
+    { return getFloatElement("Z"); }
+    public void setZ(Float value)
+    { setElement("Z",value); }
 
     public Float getY()
     { return getFloatElement("Y"); }
     public void setY(Float value)
     { setElement("Y",value); }
 
-    public Float getZ()
-    { return getFloatElement("Z"); }
-    public void setZ(Float value)
-    { setElement("Z",value); }
+    public Float getX()
+    { return getFloatElement("X"); }
+    public void setX(Float value)
+    { setElement("X",value); }
+
+    public String getName()
+    { return getStringElement("Name"); }
+    public void setName(String value)
+    { setElement("Name",value); }
 
 
 }

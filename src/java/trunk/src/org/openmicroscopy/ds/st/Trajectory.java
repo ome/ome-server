@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,21 +46,21 @@ import java.util.Map;
 public interface Trajectory
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>AverageVelocity</code> */
+    public Float getAverageVelocity();
+    public void setAverageVelocity(Float value);
 
     /** Criteria field name: <code>TotalDistance</code> */
     public Float getTotalDistance();
     public void setTotalDistance(Float value);
 
-    /** Criteria field name: <code>AverageVelocity</code> */
-    public Float getAverageVelocity();
-    public void setAverageVelocity(Float value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
-    /** Criteria field name: <code>TrajectoryEntries</code> */
-    public List getTrajectoryEntries();
-    /** Criteria field name: <code>#TrajectoryEntries</code> or <code>TrajectoryEntries</code> */
-    public int countTrajectoryEntries();
+    /** Criteria field name: <code>TrajectoryEntryList</code> */
+    public List getTrajectoryEntryList();
+    /** Criteria field name: <code>#TrajectoryEntryList</code> or <code>TrajectoryEntryList</code> */
+    public int countTrajectoryEntryList();
 
 }

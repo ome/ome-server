@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,35 +52,35 @@ public class FindSpotsInputsDTO
     public String getDTOTypeName() { return "@FindSpotsInputs"; }
     public Class getDTOType() { return FindSpotsInputs.class; }
 
-    public Integer getTimeStart()
-    { return getIntegerElement("TimeStart"); }
-    public void setTimeStart(Integer value)
-    { setElement("TimeStart",value); }
-
-    public Integer getTimeStop()
-    { return getIntegerElement("TimeStop"); }
-    public void setTimeStop(Integer value)
-    { setElement("TimeStop",value); }
-
-    public Integer getChannel()
-    { return getIntegerElement("Channel"); }
-    public void setChannel(Integer value)
-    { setElement("Channel",value); }
-
-    public Float getMinimumSpotVolume()
-    { return getFloatElement("MinimumSpotVolume"); }
-    public void setMinimumSpotVolume(Float value)
-    { setElement("MinimumSpotVolume",value); }
+    public Float getThresholdValue()
+    { return getFloatElement("ThresholdValue"); }
+    public void setThresholdValue(Float value)
+    { setElement("ThresholdValue",value); }
 
     public String getThresholdType()
     { return getStringElement("ThresholdType"); }
     public void setThresholdType(String value)
     { setElement("ThresholdType",value); }
 
-    public Float getThresholdValue()
-    { return getFloatElement("ThresholdValue"); }
-    public void setThresholdValue(Float value)
-    { setElement("ThresholdValue",value); }
+    public Float getMinimumSpotVolume()
+    { return getFloatElement("MinimumSpotVolume"); }
+    public void setMinimumSpotVolume(Float value)
+    { setElement("MinimumSpotVolume",value); }
+
+    public Integer getChannel()
+    { return getIntegerElement("Channel"); }
+    public void setChannel(Integer value)
+    { setElement("Channel",value); }
+
+    public Integer getTimeStop()
+    { return getIntegerElement("TimeStop"); }
+    public void setTimeStop(Integer value)
+    { setElement("TimeStop",value); }
+
+    public Integer getTimeStart()
+    { return getIntegerElement("TimeStart"); }
+    public void setTimeStart(Integer value)
+    { setElement("TimeStart",value); }
 
 
 }

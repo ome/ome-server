@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,20 +45,20 @@ import java.util.Map;
 public interface StageLabel
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
-
-    /** Criteria field name: <code>X</code> */
-    public Float getX();
-    public void setX(Float value);
+    /** Criteria field name: <code>Z</code> */
+    public Float getZ();
+    public void setZ(Float value);
 
     /** Criteria field name: <code>Y</code> */
     public Float getY();
     public void setY(Float value);
 
-    /** Criteria field name: <code>Z</code> */
-    public Float getZ();
-    public void setZ(Float value);
+    /** Criteria field name: <code>X</code> */
+    public Float getX();
+    public void setX(Float value);
+
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
 }

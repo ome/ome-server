@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,20 +53,20 @@ public class ImagePlateDTO
     public String getDTOTypeName() { return "@ImagePlate"; }
     public Class getDTOType() { return ImagePlate.class; }
 
-    public Plate getPlate()
-    { return (Plate) getObjectElement("Plate"); }
-    public void setPlate(Plate value)
-    { setElement("Plate",value); }
+    public String getWell()
+    { return getStringElement("Well"); }
+    public void setWell(String value)
+    { setElement("Well",value); }
 
     public Integer getSample()
     { return getIntegerElement("Sample"); }
     public void setSample(Integer value)
     { setElement("Sample",value); }
 
-    public String getWell()
-    { return getStringElement("Well"); }
-    public void setWell(String value)
-    { setElement("Well",value); }
+    public Plate getPlate()
+    { return (Plate) getObjectElement("Plate"); }
+    public void setPlate(Plate value)
+    { setElement("Plate",value); }
 
     public void setMap(Map elements)
     {

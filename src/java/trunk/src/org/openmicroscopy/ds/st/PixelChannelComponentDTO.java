@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,31 +54,31 @@ public class PixelChannelComponentDTO
     public String getDTOTypeName() { return "@PixelChannelComponent"; }
     public Class getDTOType() { return PixelChannelComponent.class; }
 
-    public Pixels getPixels()
-    { return (Pixels) getObjectElement("Pixels"); }
-    public void setPixels(Pixels value)
-    { setElement("Pixels",value); }
-
-    public Integer getIndex()
-    { return getIntegerElement("Index"); }
-    public void setIndex(Integer value)
-    { setElement("Index",value); }
+    public LogicalChannel getLogicalChannel()
+    { return (LogicalChannel) getObjectElement("LogicalChannel"); }
+    public void setLogicalChannel(LogicalChannel value)
+    { setElement("LogicalChannel",value); }
 
     public String getColorDomain()
     { return getStringElement("ColorDomain"); }
     public void setColorDomain(String value)
     { setElement("ColorDomain",value); }
 
-    public LogicalChannel getLogicalChannel()
-    { return (LogicalChannel) getObjectElement("LogicalChannel"); }
-    public void setLogicalChannel(LogicalChannel value)
-    { setElement("LogicalChannel",value); }
+    public Integer getIndex()
+    { return getIntegerElement("Index"); }
+    public void setIndex(Integer value)
+    { setElement("Index",value); }
+
+    public Pixels getPixels()
+    { return (Pixels) getObjectElement("Pixels"); }
+    public void setPixels(Pixels value)
+    { setElement("Pixels",value); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Pixels",PixelsDTO.class);
         parseChildElement("LogicalChannel",LogicalChannelDTO.class);
+        parseChildElement("Pixels",PixelsDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -56,48 +56,48 @@ public class RepositoryDTO
     public String getDTOTypeName() { return "@Repository"; }
     public Class getDTOType() { return Repository.class; }
 
-    public Boolean isLocal()
-    { return getBooleanElement("Local"); }
-    public void setLocal(Boolean value)
-    { setElement("Local",value); }
+    public String getImageServerURL()
+    { return getStringElement("ImageServerURL"); }
+    public void setImageServerURL(String value)
+    { setElement("ImageServerURL",value); }
 
     public String getPath()
     { return getStringElement("Path"); }
     public void setPath(String value)
     { setElement("Path",value); }
 
-    public String getImageServerURL()
-    { return getStringElement("ImageServerURL"); }
-    public void setImageServerURL(String value)
-    { setElement("ImageServerURL",value); }
+    public Boolean isLocal()
+    { return getBooleanElement("Local"); }
+    public void setLocal(Boolean value)
+    { setElement("Local",value); }
 
-    public List getOTFs()
-    { return (List) getObjectElement("OTFs"); }
-    public int countOTFs()
-    { return countListElement("OTFs"); }
+    public List getOTFList()
+    { return (List) getObjectElement("OTFList"); }
+    public int countOTFList()
+    { return countListElement("OTFList"); }
 
-    public List getOriginalFiles()
-    { return (List) getObjectElement("OriginalFiles"); }
-    public int countOriginalFiles()
-    { return countListElement("OriginalFiles"); }
+    public List getOriginalFileList()
+    { return (List) getObjectElement("OriginalFileList"); }
+    public int countOriginalFileList()
+    { return countListElement("OriginalFileList"); }
 
-    public List getPixelses()
-    { return (List) getObjectElement("Pixelses"); }
-    public int countPixelses()
-    { return countListElement("Pixelses"); }
+    public List getPixelsList()
+    { return (List) getObjectElement("PixelsList"); }
+    public int countPixelsList()
+    { return countListElement("PixelsList"); }
 
-    public List getThumbnails()
-    { return (List) getObjectElement("Thumbnails"); }
-    public int countThumbnails()
-    { return countListElement("Thumbnails"); }
+    public List getThumbnailList()
+    { return (List) getObjectElement("ThumbnailList"); }
+    public int countThumbnailList()
+    { return countListElement("ThumbnailList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("OTFs",OTFDTO.class);
-        parseListElement("OriginalFiles",OriginalFileDTO.class);
-        parseListElement("Pixelses",PixelsDTO.class);
-        parseListElement("Thumbnails",ThumbnailDTO.class);
+        parseListElement("OTFList",OTFDTO.class);
+        parseListElement("OriginalFileList",OriginalFileDTO.class);
+        parseListElement("PixelsList",PixelsDTO.class);
+        parseListElement("ThumbnailList",ThumbnailDTO.class);
     }
 
 }

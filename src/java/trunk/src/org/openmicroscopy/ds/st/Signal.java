@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -45,44 +45,44 @@ import java.util.Map;
 public interface Signal
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>TheC</code> */
-    public Integer getTheC();
-    public void setTheC(Integer value);
-
-    /** Criteria field name: <code>CentroidX</code> */
-    public Float getCentroidX();
-    public void setCentroidX(Float value);
-
-    /** Criteria field name: <code>CentroidY</code> */
-    public Float getCentroidY();
-    public void setCentroidY(Float value);
-
-    /** Criteria field name: <code>CentroidZ</code> */
-    public Float getCentroidZ();
-    public void setCentroidZ(Float value);
-
-    /** Criteria field name: <code>Integral</code> */
-    public Float getIntegral();
-    public void setIntegral(Float value);
-
-    /** Criteria field name: <code>Mean</code> */
-    public Float getMean();
-    public void setMean(Float value);
-
-    /** Criteria field name: <code>GeometricMean</code> */
-    public Float getGeometricMean();
-    public void setGeometricMean(Float value);
-
-    /** Criteria field name: <code>Sigma</code> */
-    public Float getSigma();
-    public void setSigma(Float value);
+    /** Criteria field name: <code>Background</code> */
+    public Float getBackground();
+    public void setBackground(Float value);
 
     /** Criteria field name: <code>GeometricSigma</code> */
     public Float getGeometricSigma();
     public void setGeometricSigma(Float value);
 
-    /** Criteria field name: <code>Background</code> */
-    public Float getBackground();
-    public void setBackground(Float value);
+    /** Criteria field name: <code>Sigma</code> */
+    public Float getSigma();
+    public void setSigma(Float value);
+
+    /** Criteria field name: <code>GeometricMean</code> */
+    public Float getGeometricMean();
+    public void setGeometricMean(Float value);
+
+    /** Criteria field name: <code>Mean</code> */
+    public Float getMean();
+    public void setMean(Float value);
+
+    /** Criteria field name: <code>Integral</code> */
+    public Float getIntegral();
+    public void setIntegral(Float value);
+
+    /** Criteria field name: <code>CentroidZ</code> */
+    public Float getCentroidZ();
+    public void setCentroidZ(Float value);
+
+    /** Criteria field name: <code>CentroidY</code> */
+    public Float getCentroidY();
+    public void setCentroidY(Float value);
+
+    /** Criteria field name: <code>CentroidX</code> */
+    public Float getCentroidX();
+    public void setCentroidX(Float value);
+
+    /** Criteria field name: <code>TheC</code> */
+    public Integer getTheC();
+    public void setTheC(Integer value);
 
 }

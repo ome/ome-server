@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class PlaneSum_YiDTO
     public String getDTOTypeName() { return "@PlaneSum_Yi"; }
     public Class getDTOType() { return PlaneSum_Yi.class; }
 
-    public Integer getTheZ()
-    { return getIntegerElement("TheZ"); }
-    public void setTheZ(Integer value)
-    { setElement("TheZ",value); }
-
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
+    public Float getSum_Yi()
+    { return getFloatElement("Sum_Yi"); }
+    public void setSum_Yi(Float value)
+    { setElement("Sum_Yi",value); }
 
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
 
-    public Float getSum_Yi()
-    { return getFloatElement("Sum_Yi"); }
-    public void setSum_Yi(Float value)
-    { setElement("Sum_Yi",value); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
+
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
 
 
 }

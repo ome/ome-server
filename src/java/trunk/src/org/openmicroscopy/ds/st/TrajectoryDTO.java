@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,30 +53,30 @@ public class TrajectoryDTO
     public String getDTOTypeName() { return "@Trajectory"; }
     public Class getDTOType() { return Trajectory.class; }
 
-    public String getName()
-    { return getStringElement("Name"); }
-    public void setName(String value)
-    { setElement("Name",value); }
+    public Float getAverageVelocity()
+    { return getFloatElement("AverageVelocity"); }
+    public void setAverageVelocity(Float value)
+    { setElement("AverageVelocity",value); }
 
     public Float getTotalDistance()
     { return getFloatElement("TotalDistance"); }
     public void setTotalDistance(Float value)
     { setElement("TotalDistance",value); }
 
-    public Float getAverageVelocity()
-    { return getFloatElement("AverageVelocity"); }
-    public void setAverageVelocity(Float value)
-    { setElement("AverageVelocity",value); }
+    public String getName()
+    { return getStringElement("Name"); }
+    public void setName(String value)
+    { setElement("Name",value); }
 
-    public List getTrajectoryEntries()
-    { return (List) getObjectElement("TrajectoryEntries"); }
-    public int countTrajectoryEntries()
-    { return countListElement("TrajectoryEntries"); }
+    public List getTrajectoryEntryList()
+    { return (List) getObjectElement("TrajectoryEntryList"); }
+    public int countTrajectoryEntryList()
+    { return countListElement("TrajectoryEntryList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("TrajectoryEntries",TrajectoryEntryDTO.class);
+        parseListElement("TrajectoryEntryList",TrajectoryEntryDTO.class);
     }
 
 }

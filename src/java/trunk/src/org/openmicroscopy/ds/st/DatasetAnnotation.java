@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Jul  6 12:40:26 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,20 +46,20 @@ import java.util.Map;
 public interface DatasetAnnotation
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Experimenter</code> */
-    public Experimenter getExperimenter();
-    public void setExperimenter(Experimenter value);
-
-    /** Criteria field name: <code>Content</code> */
-    public String getContent();
-    public void setContent(String value);
+    /** Criteria field name: <code>Valid</code> */
+    public Boolean isValid();
+    public void setValid(Boolean value);
 
     /** Criteria field name: <code>Timestamp</code> */
     public Long getTimestamp();
     public void setTimestamp(Long value);
 
-    /** Criteria field name: <code>Valid</code> */
-    public Boolean isValid();
-    public void setValid(Boolean value);
+    /** Criteria field name: <code>Content</code> */
+    public String getContent();
+    public void setContent(String value);
+
+    /** Criteria field name: <code>Experimenter</code> */
+    public Experimenter getExperimenter();
+    public void setExperimenter(Experimenter value);
 
 }

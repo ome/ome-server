@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,56 +54,56 @@ public class DetectorDTO
     public String getDTOTypeName() { return "@Detector"; }
     public Class getDTOType() { return Detector.class; }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
-
-    public String getModel()
-    { return getStringElement("Model"); }
-    public void setModel(String value)
-    { setElement("Model",value); }
-
-    public String getSerialNumber()
-    { return getStringElement("SerialNumber"); }
-    public void setSerialNumber(String value)
-    { setElement("SerialNumber",value); }
-
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
-
-    public Float getGain()
-    { return getFloatElement("Gain"); }
-    public void setGain(Float value)
-    { setElement("Gain",value); }
-
-    public Float getVoltage()
-    { return getFloatElement("Voltage"); }
-    public void setVoltage(Float value)
-    { setElement("Voltage",value); }
+    public Instrument getInstrument()
+    { return (Instrument) getObjectElement("Instrument"); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
 
     public Float getOffset()
     { return getFloatElement("Offset"); }
     public void setOffset(Float value)
     { setElement("Offset",value); }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
+    public Float getVoltage()
+    { return getFloatElement("Voltage"); }
+    public void setVoltage(Float value)
+    { setElement("Voltage",value); }
 
-    public List getLogicalChannels()
-    { return (List) getObjectElement("LogicalChannels"); }
-    public int countLogicalChannels()
-    { return countListElement("LogicalChannels"); }
+    public Float getGain()
+    { return getFloatElement("Gain"); }
+    public void setGain(Float value)
+    { setElement("Gain",value); }
+
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
+
+    public String getSerialNumber()
+    { return getStringElement("SerialNumber"); }
+    public void setSerialNumber(String value)
+    { setElement("SerialNumber",value); }
+
+    public String getModel()
+    { return getStringElement("Model"); }
+    public void setModel(String value)
+    { setElement("Model",value); }
+
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
+
+    public List getLogicalChannelList()
+    { return (List) getObjectElement("LogicalChannelList"); }
+    public int countLogicalChannelList()
+    { return countListElement("LogicalChannelList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("LogicalChannels",LogicalChannelDTO.class);
+        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -58,65 +58,65 @@ public class InstrumentDTO
     public String getDTOTypeName() { return "@Instrument"; }
     public Class getDTOType() { return Instrument.class; }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
-
-    public String getModel()
-    { return getStringElement("Model"); }
-    public void setModel(String value)
-    { setElement("Model",value); }
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
 
     public String getSerialNumber()
     { return getStringElement("SerialNumber"); }
     public void setSerialNumber(String value)
     { setElement("SerialNumber",value); }
 
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
+    public String getModel()
+    { return getStringElement("Model"); }
+    public void setModel(String value)
+    { setElement("Model",value); }
 
-    public List getDetectors()
-    { return (List) getObjectElement("Detectors"); }
-    public int countDetectors()
-    { return countListElement("Detectors"); }
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
 
-    public List getFilters()
-    { return (List) getObjectElement("Filters"); }
-    public int countFilters()
-    { return countListElement("Filters"); }
+    public List getDetectorList()
+    { return (List) getObjectElement("DetectorList"); }
+    public int countDetectorList()
+    { return countListElement("DetectorList"); }
 
-    public List getImageInstruments()
-    { return (List) getObjectElement("ImageInstruments"); }
-    public int countImageInstruments()
-    { return countListElement("ImageInstruments"); }
+    public List getFilterList()
+    { return (List) getObjectElement("FilterList"); }
+    public int countFilterList()
+    { return countListElement("FilterList"); }
 
-    public List getLightSources()
-    { return (List) getObjectElement("LightSources"); }
-    public int countLightSources()
-    { return countListElement("LightSources"); }
+    public List getImageInstrumentList()
+    { return (List) getObjectElement("ImageInstrumentList"); }
+    public int countImageInstrumentList()
+    { return countListElement("ImageInstrumentList"); }
 
-    public List getOTFs()
-    { return (List) getObjectElement("OTFs"); }
-    public int countOTFs()
-    { return countListElement("OTFs"); }
+    public List getLightSourceList()
+    { return (List) getObjectElement("LightSourceList"); }
+    public int countLightSourceList()
+    { return countListElement("LightSourceList"); }
 
-    public List getObjectives()
-    { return (List) getObjectElement("Objectives"); }
-    public int countObjectives()
-    { return countListElement("Objectives"); }
+    public List getOTFList()
+    { return (List) getObjectElement("OTFList"); }
+    public int countOTFList()
+    { return countListElement("OTFList"); }
+
+    public List getObjectiveList()
+    { return (List) getObjectElement("ObjectiveList"); }
+    public int countObjectiveList()
+    { return countListElement("ObjectiveList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("Detectors",DetectorDTO.class);
-        parseListElement("Filters",FilterDTO.class);
-        parseListElement("ImageInstruments",ImageInstrumentDTO.class);
-        parseListElement("LightSources",LightSourceDTO.class);
-        parseListElement("OTFs",OTFDTO.class);
-        parseListElement("Objectives",ObjectiveDTO.class);
+        parseListElement("DetectorList",DetectorDTO.class);
+        parseListElement("FilterList",FilterDTO.class);
+        parseListElement("ImageInstrumentList",ImageInstrumentDTO.class);
+        parseListElement("LightSourceList",LightSourceDTO.class);
+        parseListElement("OTFList",OTFDTO.class);
+        parseListElement("ObjectiveList",ObjectiveDTO.class);
     }
 
 }

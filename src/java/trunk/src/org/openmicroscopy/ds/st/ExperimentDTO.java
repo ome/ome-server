@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,31 +54,31 @@ public class ExperimentDTO
     public String getDTOTypeName() { return "@Experiment"; }
     public Class getDTOType() { return Experiment.class; }
 
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("Experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
 
     public String getDescription()
     { return getStringElement("Description"); }
     public void setDescription(String value)
     { setElement("Description",value); }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
 
-    public List getImageExperiments()
-    { return (List) getObjectElement("ImageExperiments"); }
-    public int countImageExperiments()
-    { return countListElement("ImageExperiments"); }
+    public List getImageExperimentList()
+    { return (List) getObjectElement("ImageExperimentList"); }
+    public int countImageExperimentList()
+    { return countListElement("ImageExperimentList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Experimenter",ExperimenterDTO.class);
-        parseListElement("ImageExperiments",ImageExperimentDTO.class);
+        parseListElement("ImageExperimentList",ImageExperimentDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,16 +46,16 @@ import java.util.Map;
 public interface Thumbnail
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>MimeType</code> */
-    public String getMimeType();
-    public void setMimeType(String value);
+    /** Criteria field name: <code>Path</code> */
+    public String getPath();
+    public void setPath(String value);
 
     /** Criteria field name: <code>Repository</code> */
     public Repository getRepository();
     public void setRepository(Repository value);
 
-    /** Criteria field name: <code>Path</code> */
-    public String getPath();
-    public void setPath(String value);
+    /** Criteria field name: <code>MimeType</code> */
+    public String getMimeType();
+    public void setMimeType(String value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,21 +54,21 @@ public class PlateScreenDTO
     public String getDTOTypeName() { return "@PlateScreen"; }
     public Class getDTOType() { return PlateScreen.class; }
 
-    public Plate getPlate()
-    { return (Plate) getObjectElement("Plate"); }
-    public void setPlate(Plate value)
-    { setElement("Plate",value); }
-
     public Screen getScreen()
     { return (Screen) getObjectElement("Screen"); }
     public void setScreen(Screen value)
     { setElement("Screen",value); }
 
+    public Plate getPlate()
+    { return (Plate) getObjectElement("Plate"); }
+    public void setPlate(Plate value)
+    { setElement("Plate",value); }
+
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Plate",PlateDTO.class);
         parseChildElement("Screen",ScreenDTO.class);
+        parseChildElement("Plate",PlateDTO.class);
     }
 
 }

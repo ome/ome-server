@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -57,64 +57,64 @@ public class OTFDTO
     public String getDTOTypeName() { return "@OTF"; }
     public Class getDTOType() { return OTF.class; }
 
-    public Objective getObjective()
-    { return (Objective) getObjectElement("Objective"); }
-    public void setObjective(Objective value)
-    { setElement("Objective",value); }
-
-    public Filter getFilter()
-    { return (Filter) getObjectElement("Filter"); }
-    public void setFilter(Filter value)
-    { setElement("Filter",value); }
-
-    public Integer getSizeX()
-    { return getIntegerElement("SizeX"); }
-    public void setSizeX(Integer value)
-    { setElement("SizeX",value); }
-
-    public Integer getSizeY()
-    { return getIntegerElement("SizeY"); }
-    public void setSizeY(Integer value)
-    { setElement("SizeY",value); }
-
-    public String getPixelType()
-    { return getStringElement("PixelType"); }
-    public void setPixelType(String value)
-    { setElement("PixelType",value); }
-
-    public Repository getRepository()
-    { return (Repository) getObjectElement("Repository"); }
-    public void setRepository(Repository value)
-    { setElement("Repository",value); }
-
-    public String getPath()
-    { return getStringElement("Path"); }
-    public void setPath(String value)
-    { setElement("Path",value); }
+    public Instrument getInstrument()
+    { return (Instrument) getObjectElement("Instrument"); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
 
     public Boolean isOpticalAxisAverage()
     { return getBooleanElement("OpticalAxisAverage"); }
     public void setOpticalAxisAverage(Boolean value)
     { setElement("OpticalAxisAverage",value); }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
+    public String getPath()
+    { return getStringElement("Path"); }
+    public void setPath(String value)
+    { setElement("Path",value); }
 
-    public List getLogicalChannels()
-    { return (List) getObjectElement("LogicalChannels"); }
-    public int countLogicalChannels()
-    { return countListElement("LogicalChannels"); }
+    public Repository getRepository()
+    { return (Repository) getObjectElement("Repository"); }
+    public void setRepository(Repository value)
+    { setElement("Repository",value); }
+
+    public String getPixelType()
+    { return getStringElement("PixelType"); }
+    public void setPixelType(String value)
+    { setElement("PixelType",value); }
+
+    public Integer getSizeY()
+    { return getIntegerElement("SizeY"); }
+    public void setSizeY(Integer value)
+    { setElement("SizeY",value); }
+
+    public Integer getSizeX()
+    { return getIntegerElement("SizeX"); }
+    public void setSizeX(Integer value)
+    { setElement("SizeX",value); }
+
+    public Filter getFilter()
+    { return (Filter) getObjectElement("Filter"); }
+    public void setFilter(Filter value)
+    { setElement("Filter",value); }
+
+    public Objective getObjective()
+    { return (Objective) getObjectElement("Objective"); }
+    public void setObjective(Objective value)
+    { setElement("Objective",value); }
+
+    public List getLogicalChannelList()
+    { return (List) getObjectElement("LogicalChannelList"); }
+    public int countLogicalChannelList()
+    { return countListElement("LogicalChannelList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Objective",ObjectiveDTO.class);
-        parseChildElement("Filter",FilterDTO.class);
-        parseChildElement("Repository",RepositoryDTO.class);
         parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("LogicalChannels",LogicalChannelDTO.class);
+        parseChildElement("Repository",RepositoryDTO.class);
+        parseChildElement("Filter",FilterDTO.class);
+        parseChildElement("Objective",ObjectiveDTO.class);
+        parseListElement("LogicalChannelList",LogicalChannelDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -47,20 +47,20 @@ import java.util.Map;
 public interface PixelChannelComponent
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Pixels</code> */
-    public Pixels getPixels();
-    public void setPixels(Pixels value);
-
-    /** Criteria field name: <code>Index</code> */
-    public Integer getIndex();
-    public void setIndex(Integer value);
+    /** Criteria field name: <code>LogicalChannel</code> */
+    public LogicalChannel getLogicalChannel();
+    public void setLogicalChannel(LogicalChannel value);
 
     /** Criteria field name: <code>ColorDomain</code> */
     public String getColorDomain();
     public void setColorDomain(String value);
 
-    /** Criteria field name: <code>LogicalChannel</code> */
-    public LogicalChannel getLogicalChannel();
-    public void setLogicalChannel(LogicalChannel value);
+    /** Criteria field name: <code>Index</code> */
+    public Integer getIndex();
+    public void setIndex(Integer value);
+
+    /** Criteria field name: <code>Pixels</code> */
+    public Pixels getPixels();
+    public void setPixels(Pixels value);
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -56,34 +56,34 @@ public interface Filter
     public Instrument getInstrument();
     public void setInstrument(Instrument value);
 
-    /** Criteria field name: <code>Dichroics</code> */
-    public List getDichroics();
-    /** Criteria field name: <code>#Dichroics</code> or <code>Dichroics</code> */
-    public int countDichroics();
+    /** Criteria field name: <code>DichroicList</code> */
+    public List getDichroicList();
+    /** Criteria field name: <code>#DichroicList</code> or <code>DichroicList</code> */
+    public int countDichroicList();
 
-    /** Criteria field name: <code>EmissionFilters</code> */
-    public List getEmissionFilters();
-    /** Criteria field name: <code>#EmissionFilters</code> or <code>EmissionFilters</code> */
-    public int countEmissionFilters();
+    /** Criteria field name: <code>EmissionFilterList</code> */
+    public List getEmissionFilterList();
+    /** Criteria field name: <code>#EmissionFilterList</code> or <code>EmissionFilterList</code> */
+    public int countEmissionFilterList();
 
-    /** Criteria field name: <code>ExcitationFilters</code> */
-    public List getExcitationFilters();
-    /** Criteria field name: <code>#ExcitationFilters</code> or <code>ExcitationFilters</code> */
-    public int countExcitationFilters();
+    /** Criteria field name: <code>ExcitationFilterList</code> */
+    public List getExcitationFilterList();
+    /** Criteria field name: <code>#ExcitationFilterList</code> or <code>ExcitationFilterList</code> */
+    public int countExcitationFilterList();
 
-    /** Criteria field name: <code>FilterSets</code> */
-    public List getFilterSets();
-    /** Criteria field name: <code>#FilterSets</code> or <code>FilterSets</code> */
-    public int countFilterSets();
+    /** Criteria field name: <code>FilterSetList</code> */
+    public List getFilterSetList();
+    /** Criteria field name: <code>#FilterSetList</code> or <code>FilterSetList</code> */
+    public int countFilterSetList();
 
-    /** Criteria field name: <code>LogicalChannels</code> */
-    public List getLogicalChannels();
-    /** Criteria field name: <code>#LogicalChannels</code> or <code>LogicalChannels</code> */
-    public int countLogicalChannels();
+    /** Criteria field name: <code>LogicalChannelList</code> */
+    public List getLogicalChannelList();
+    /** Criteria field name: <code>#LogicalChannelList</code> or <code>LogicalChannelList</code> */
+    public int countLogicalChannelList();
 
-    /** Criteria field name: <code>OTFs</code> */
-    public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
-    public int countOTFs();
+    /** Criteria field name: <code>OTFList</code> */
+    public List getOTFList();
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    public int countOTFList();
 
 }

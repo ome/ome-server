@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,20 +52,20 @@ public class StackGeometricMeanDTO
     public String getDTOTypeName() { return "@StackGeometricMean"; }
     public Class getDTOType() { return StackGeometricMean.class; }
 
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
+    public Float getGeometricMean()
+    { return getFloatElement("GeometricMean"); }
+    public void setGeometricMean(Float value)
+    { setElement("GeometricMean",value); }
 
     public Integer getTheT()
     { return getIntegerElement("TheT"); }
     public void setTheT(Integer value)
     { setElement("TheT",value); }
 
-    public Float getGeometricMean()
-    { return getFloatElement("GeometricMean"); }
-    public void setGeometricMean(Float value)
-    { setElement("GeometricMean",value); }
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
 
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -55,52 +55,52 @@ public class ObjectiveDTO
     public String getDTOTypeName() { return "@Objective"; }
     public Class getDTOType() { return Objective.class; }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
-
-    public String getModel()
-    { return getStringElement("Model"); }
-    public void setModel(String value)
-    { setElement("Model",value); }
-
-    public String getSerialNumber()
-    { return getStringElement("SerialNumber"); }
-    public void setSerialNumber(String value)
-    { setElement("SerialNumber",value); }
-
-    public Float getLensNA()
-    { return getFloatElement("LensNA"); }
-    public void setLensNA(Float value)
-    { setElement("LensNA",value); }
+    public Instrument getInstrument()
+    { return (Instrument) getObjectElement("Instrument"); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
 
     public Float getMagnification()
     { return getFloatElement("Magnification"); }
     public void setMagnification(Float value)
     { setElement("Magnification",value); }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
+    public Float getLensNA()
+    { return getFloatElement("LensNA"); }
+    public void setLensNA(Float value)
+    { setElement("LensNA",value); }
 
-    public List getImageInstruments()
-    { return (List) getObjectElement("ImageInstruments"); }
-    public int countImageInstruments()
-    { return countListElement("ImageInstruments"); }
+    public String getSerialNumber()
+    { return getStringElement("SerialNumber"); }
+    public void setSerialNumber(String value)
+    { setElement("SerialNumber",value); }
 
-    public List getOTFs()
-    { return (List) getObjectElement("OTFs"); }
-    public int countOTFs()
-    { return countListElement("OTFs"); }
+    public String getModel()
+    { return getStringElement("Model"); }
+    public void setModel(String value)
+    { setElement("Model",value); }
+
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
+
+    public List getImageInstrumentList()
+    { return (List) getObjectElement("ImageInstrumentList"); }
+    public int countImageInstrumentList()
+    { return countListElement("ImageInstrumentList"); }
+
+    public List getOTFList()
+    { return (List) getObjectElement("OTFList"); }
+    public int countOTFList()
+    { return countListElement("OTFList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("ImageInstruments",ImageInstrumentDTO.class);
-        parseListElement("OTFs",OTFDTO.class);
+        parseListElement("ImageInstrumentList",ImageInstrumentDTO.class);
+        parseListElement("OTFList",OTFDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,20 +53,20 @@ public class ArcDTO
     public String getDTOTypeName() { return "@Arc"; }
     public Class getDTOType() { return Arc.class; }
 
-    public String getType()
-    { return getStringElement("Type"); }
-    public void setType(String value)
-    { setElement("Type",value); }
+    public LightSource getLightSource()
+    { return (LightSource) getObjectElement("LightSource"); }
+    public void setLightSource(LightSource value)
+    { setElement("LightSource",value); }
 
     public Float getPower()
     { return getFloatElement("Power"); }
     public void setPower(Float value)
     { setElement("Power",value); }
 
-    public LightSource getLightSource()
-    { return (LightSource) getObjectElement("LightSource"); }
-    public void setLightSource(LightSource value)
-    { setElement("LightSource",value); }
+    public String getType()
+    { return getStringElement("Type"); }
+    public void setType(String value)
+    { setElement("Type",value); }
 
     public void setMap(Map elements)
     {

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Mon Aug 23 11:24:39 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -43,6 +43,7 @@ import org.openmicroscopy.ds.st.Experiment;
 import org.openmicroscopy.ds.st.ExperimenterGroup;
 import org.openmicroscopy.ds.st.Group;
 import org.openmicroscopy.ds.st.ImageAnnotation;
+import org.openmicroscopy.ds.st.RenderingSettings;
 import org.openmicroscopy.ds.dto.AttributeDTO;
 import java.util.List;
 import java.util.Map;
@@ -57,76 +58,82 @@ public class ExperimenterDTO
     public String getDTOTypeName() { return "@Experimenter"; }
     public Class getDTOType() { return Experimenter.class; }
 
-    public String getFirstName()
-    { return getStringElement("FirstName"); }
-    public void setFirstName(String value)
-    { setElement("FirstName",value); }
-
-    public String getLastName()
-    { return getStringElement("LastName"); }
-    public void setLastName(String value)
-    { setElement("LastName",value); }
-
-    public String getEmail()
-    { return getStringElement("Email"); }
-    public void setEmail(String value)
-    { setElement("Email",value); }
-
-    public String getInstitution()
-    { return getStringElement("Institution"); }
-    public void setInstitution(String value)
-    { setElement("Institution",value); }
+    public Group getGroup()
+    { return (Group) getObjectElement("Group"); }
+    public void setGroup(Group value)
+    { setElement("Group",value); }
 
     public String getDataDirectory()
     { return getStringElement("DataDirectory"); }
     public void setDataDirectory(String value)
     { setElement("DataDirectory",value); }
 
-    public Group getGroup()
-    { return (Group) getObjectElement("Group"); }
-    public void setGroup(Group value)
-    { setElement("Group",value); }
+    public String getInstitution()
+    { return getStringElement("Institution"); }
+    public void setInstitution(String value)
+    { setElement("Institution",value); }
 
-    public List getDatasetAnnotations()
-    { return (List) getObjectElement("DatasetAnnotations"); }
-    public int countDatasetAnnotations()
-    { return countListElement("DatasetAnnotations"); }
+    public String getEmail()
+    { return getStringElement("Email"); }
+    public void setEmail(String value)
+    { setElement("Email",value); }
 
-    public List getExperiments()
-    { return (List) getObjectElement("Experiments"); }
-    public int countExperiments()
-    { return countListElement("Experiments"); }
+    public String getLastName()
+    { return getStringElement("LastName"); }
+    public void setLastName(String value)
+    { setElement("LastName",value); }
 
-    public List getExperimenterGroups()
-    { return (List) getObjectElement("ExperimenterGroups"); }
-    public int countExperimenterGroups()
-    { return countListElement("ExperimenterGroups"); }
+    public String getFirstName()
+    { return getStringElement("FirstName"); }
+    public void setFirstName(String value)
+    { setElement("FirstName",value); }
 
-    public List getGroupsByContact()
-    { return (List) getObjectElement("GroupsByContact"); }
-    public int countGroupsByContact()
-    { return countListElement("GroupsByContact"); }
+    public List getDatasetAnnotationList()
+    { return (List) getObjectElement("DatasetAnnotationList"); }
+    public int countDatasetAnnotationList()
+    { return countListElement("DatasetAnnotationList"); }
 
-    public List getGroupsByLeader()
-    { return (List) getObjectElement("GroupsByLeader"); }
-    public int countGroupsByLeader()
-    { return countListElement("GroupsByLeader"); }
+    public List getExperimentList()
+    { return (List) getObjectElement("ExperimentList"); }
+    public int countExperimentList()
+    { return countListElement("ExperimentList"); }
 
-    public List getImageAnnotations()
-    { return (List) getObjectElement("ImageAnnotations"); }
-    public int countImageAnnotations()
-    { return countListElement("ImageAnnotations"); }
+    public List getExperimenterGroupList()
+    { return (List) getObjectElement("ExperimenterGroupList"); }
+    public int countExperimenterGroupList()
+    { return countListElement("ExperimenterGroupList"); }
+
+    public List getGroupListByContact()
+    { return (List) getObjectElement("GroupListByContact"); }
+    public int countGroupListByContact()
+    { return countListElement("GroupListByContact"); }
+
+    public List getGroupListByLeader()
+    { return (List) getObjectElement("GroupListByLeader"); }
+    public int countGroupListByLeader()
+    { return countListElement("GroupListByLeader"); }
+
+    public List getImageAnnotationList()
+    { return (List) getObjectElement("ImageAnnotationList"); }
+    public int countImageAnnotationList()
+    { return countListElement("ImageAnnotationList"); }
+
+    public List getRenderingSettingsList()
+    { return (List) getObjectElement("RenderingSettingsList"); }
+    public int countRenderingSettingsList()
+    { return countListElement("RenderingSettingsList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Group",GroupDTO.class);
-        parseListElement("DatasetAnnotations",DatasetAnnotationDTO.class);
-        parseListElement("Experiments",ExperimentDTO.class);
-        parseListElement("ExperimenterGroups",ExperimenterGroupDTO.class);
-        parseListElement("GroupsByContact",GroupDTO.class);
-        parseListElement("GroupsByLeader",GroupDTO.class);
-        parseListElement("ImageAnnotations",ImageAnnotationDTO.class);
+        parseListElement("DatasetAnnotationList",DatasetAnnotationDTO.class);
+        parseListElement("ExperimentList",ExperimentDTO.class);
+        parseListElement("ExperimenterGroupList",ExperimenterGroupDTO.class);
+        parseListElement("GroupListByContact",GroupDTO.class);
+        parseListElement("GroupListByLeader",GroupDTO.class);
+        parseListElement("ImageAnnotationList",ImageAnnotationDTO.class);
+        parseListElement("RenderingSettingsList",RenderingSettingsDTO.class);
     }
 
 }

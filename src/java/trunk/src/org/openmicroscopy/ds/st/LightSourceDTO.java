@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -57,66 +57,66 @@ public class LightSourceDTO
     public String getDTOTypeName() { return "@LightSource"; }
     public Class getDTOType() { return LightSource.class; }
 
-    public String getManufacturer()
-    { return getStringElement("Manufacturer"); }
-    public void setManufacturer(String value)
-    { setElement("Manufacturer",value); }
-
-    public String getModel()
-    { return getStringElement("Model"); }
-    public void setModel(String value)
-    { setElement("Model",value); }
+    public Instrument getInstrument()
+    { return (Instrument) getObjectElement("Instrument"); }
+    public void setInstrument(Instrument value)
+    { setElement("Instrument",value); }
 
     public String getSerialNumber()
     { return getStringElement("SerialNumber"); }
     public void setSerialNumber(String value)
     { setElement("SerialNumber",value); }
 
-    public Instrument getInstrument()
-    { return (Instrument) getObjectElement("Instrument"); }
-    public void setInstrument(Instrument value)
-    { setElement("Instrument",value); }
+    public String getModel()
+    { return getStringElement("Model"); }
+    public void setModel(String value)
+    { setElement("Model",value); }
 
-    public List getArcs()
-    { return (List) getObjectElement("Arcs"); }
-    public int countArcs()
-    { return countListElement("Arcs"); }
+    public String getManufacturer()
+    { return getStringElement("Manufacturer"); }
+    public void setManufacturer(String value)
+    { setElement("Manufacturer",value); }
 
-    public List getFilaments()
-    { return (List) getObjectElement("Filaments"); }
-    public int countFilaments()
-    { return countListElement("Filaments"); }
+    public List getArcList()
+    { return (List) getObjectElement("ArcList"); }
+    public int countArcList()
+    { return countListElement("ArcList"); }
 
-    public List getLasersByLightSource()
-    { return (List) getObjectElement("LasersByLightSource"); }
-    public int countLasersByLightSource()
-    { return countListElement("LasersByLightSource"); }
+    public List getFilamentList()
+    { return (List) getObjectElement("FilamentList"); }
+    public int countFilamentList()
+    { return countListElement("FilamentList"); }
 
-    public List getLasersByPump()
-    { return (List) getObjectElement("LasersByPump"); }
-    public int countLasersByPump()
-    { return countListElement("LasersByPump"); }
+    public List getLaserListByLightSource()
+    { return (List) getObjectElement("LaserListByLightSource"); }
+    public int countLaserListByLightSource()
+    { return countListElement("LaserListByLightSource"); }
 
-    public List getLogicalChannelsByAuxLightSource()
-    { return (List) getObjectElement("LogicalChannelsByAuxLightSource"); }
-    public int countLogicalChannelsByAuxLightSource()
-    { return countListElement("LogicalChannelsByAuxLightSource"); }
+    public List getLaserListByPump()
+    { return (List) getObjectElement("LaserListByPump"); }
+    public int countLaserListByPump()
+    { return countListElement("LaserListByPump"); }
 
-    public List getLogicalChannelsByLightSource()
-    { return (List) getObjectElement("LogicalChannelsByLightSource"); }
-    public int countLogicalChannelsByLightSource()
-    { return countListElement("LogicalChannelsByLightSource"); }
+    public List getLogicalChannelListByAuxLightSource()
+    { return (List) getObjectElement("LogicalChannelListByAuxLightSource"); }
+    public int countLogicalChannelListByAuxLightSource()
+    { return countListElement("LogicalChannelListByAuxLightSource"); }
+
+    public List getLogicalChannelListByLightSource()
+    { return (List) getObjectElement("LogicalChannelListByLightSource"); }
+    public int countLogicalChannelListByLightSource()
+    { return countListElement("LogicalChannelListByLightSource"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("Instrument",InstrumentDTO.class);
-        parseListElement("Arcs",ArcDTO.class);
-        parseListElement("Filaments",FilamentDTO.class);
-        parseListElement("LasersByLightSource",LaserDTO.class);
-        parseListElement("LasersByPump",LaserDTO.class);
-        parseListElement("LogicalChannelsByAuxLightSource",LogicalChannelDTO.class);
-        parseListElement("LogicalChannelsByLightSource",LogicalChannelDTO.class);
+        parseListElement("ArcList",ArcDTO.class);
+        parseListElement("FilamentList",FilamentDTO.class);
+        parseListElement("LaserListByLightSource",LaserDTO.class);
+        parseListElement("LaserListByPump",LaserDTO.class);
+        parseListElement("LogicalChannelListByAuxLightSource",LogicalChannelDTO.class);
+        parseListElement("LogicalChannelListByLightSource",LogicalChannelDTO.class);
     }
 
 }

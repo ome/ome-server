@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -50,101 +50,101 @@ import java.util.Map;
 public interface LogicalChannel
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
-
-    /** Criteria field name: <code>SamplesPerPixel</code> */
-    public Integer getSamplesPerPixel();
-    public void setSamplesPerPixel(Integer value);
-
-    /** Criteria field name: <code>Filter</code> */
-    public Filter getFilter();
-    public void setFilter(Filter value);
-
-    /** Criteria field name: <code>LightSource</code> */
-    public LightSource getLightSource();
-    public void setLightSource(LightSource value);
-
-    /** Criteria field name: <code>LightAttenuation</code> */
-    public Float getLightAttenuation();
-    public void setLightAttenuation(Float value);
-
-    /** Criteria field name: <code>LightWavelength</code> */
-    public Integer getLightWavelength();
-    public void setLightWavelength(Integer value);
-
-    /** Criteria field name: <code>OTF</code> */
-    public OTF getOTF();
-    public void setOTF(OTF value);
-
-    /** Criteria field name: <code>Detector</code> */
-    public Detector getDetector();
-    public void setDetector(Detector value);
-
-    /** Criteria field name: <code>DetectorOffset</code> */
-    public Float getDetectorOffset();
-    public void setDetectorOffset(Float value);
-
-    /** Criteria field name: <code>DetectorGain</code> */
-    public Float getDetectorGain();
-    public void setDetectorGain(Float value);
-
-    /** Criteria field name: <code>IlluminationType</code> */
-    public String getIlluminationType();
-    public void setIlluminationType(String value);
-
-    /** Criteria field name: <code>PinholeSize</code> */
-    public Integer getPinholeSize();
-    public void setPinholeSize(Integer value);
-
-    /** Criteria field name: <code>PhotometricInterpretation</code> */
-    public String getPhotometricInterpretation();
-    public void setPhotometricInterpretation(String value);
-
-    /** Criteria field name: <code>Mode</code> */
-    public String getMode();
-    public void setMode(String value);
-
-    /** Criteria field name: <code>ContrastMethod</code> */
-    public String getContrastMethod();
-    public void setContrastMethod(String value);
-
-    /** Criteria field name: <code>AuxLightSource</code> */
-    public LightSource getAuxLightSource();
-    public void setAuxLightSource(LightSource value);
-
-    /** Criteria field name: <code>AuxLightAttenuation</code> */
-    public Float getAuxLightAttenuation();
-    public void setAuxLightAttenuation(Float value);
-
-    /** Criteria field name: <code>AuxTechnique</code> */
-    public String getAuxTechnique();
-    public void setAuxTechnique(String value);
-
-    /** Criteria field name: <code>AuxLightWavelength</code> */
-    public Integer getAuxLightWavelength();
-    public void setAuxLightWavelength(Integer value);
-
-    /** Criteria field name: <code>ExcitationWavelength</code> */
-    public Integer getExcitationWavelength();
-    public void setExcitationWavelength(Integer value);
-
-    /** Criteria field name: <code>EmissionWavelength</code> */
-    public Integer getEmissionWavelength();
-    public void setEmissionWavelength(Integer value);
+    /** Criteria field name: <code>NDFilter</code> */
+    public Float getNDFilter();
+    public void setNDFilter(Float value);
 
     /** Criteria field name: <code>Fluor</code> */
     public String getFluor();
     public void setFluor(String value);
 
-    /** Criteria field name: <code>NDFilter</code> */
-    public Float getNDFilter();
-    public void setNDFilter(Float value);
+    /** Criteria field name: <code>EmissionWavelength</code> */
+    public Integer getEmissionWavelength();
+    public void setEmissionWavelength(Integer value);
 
-    /** Criteria field name: <code>PixelChannelComponents</code> */
-    public List getPixelChannelComponents();
-    /** Criteria field name: <code>#PixelChannelComponents</code> or <code>PixelChannelComponents</code> */
-    public int countPixelChannelComponents();
+    /** Criteria field name: <code>ExcitationWavelength</code> */
+    public Integer getExcitationWavelength();
+    public void setExcitationWavelength(Integer value);
+
+    /** Criteria field name: <code>AuxLightWavelength</code> */
+    public Integer getAuxLightWavelength();
+    public void setAuxLightWavelength(Integer value);
+
+    /** Criteria field name: <code>AuxTechnique</code> */
+    public String getAuxTechnique();
+    public void setAuxTechnique(String value);
+
+    /** Criteria field name: <code>AuxLightAttenuation</code> */
+    public Float getAuxLightAttenuation();
+    public void setAuxLightAttenuation(Float value);
+
+    /** Criteria field name: <code>AuxLightSource</code> */
+    public LightSource getAuxLightSource();
+    public void setAuxLightSource(LightSource value);
+
+    /** Criteria field name: <code>ContrastMethod</code> */
+    public String getContrastMethod();
+    public void setContrastMethod(String value);
+
+    /** Criteria field name: <code>Mode</code> */
+    public String getMode();
+    public void setMode(String value);
+
+    /** Criteria field name: <code>PhotometricInterpretation</code> */
+    public String getPhotometricInterpretation();
+    public void setPhotometricInterpretation(String value);
+
+    /** Criteria field name: <code>PinholeSize</code> */
+    public Integer getPinholeSize();
+    public void setPinholeSize(Integer value);
+
+    /** Criteria field name: <code>IlluminationType</code> */
+    public String getIlluminationType();
+    public void setIlluminationType(String value);
+
+    /** Criteria field name: <code>DetectorGain</code> */
+    public Float getDetectorGain();
+    public void setDetectorGain(Float value);
+
+    /** Criteria field name: <code>DetectorOffset</code> */
+    public Float getDetectorOffset();
+    public void setDetectorOffset(Float value);
+
+    /** Criteria field name: <code>Detector</code> */
+    public Detector getDetector();
+    public void setDetector(Detector value);
+
+    /** Criteria field name: <code>OTF</code> */
+    public OTF getOTF();
+    public void setOTF(OTF value);
+
+    /** Criteria field name: <code>LightWavelength</code> */
+    public Integer getLightWavelength();
+    public void setLightWavelength(Integer value);
+
+    /** Criteria field name: <code>LightAttenuation</code> */
+    public Float getLightAttenuation();
+    public void setLightAttenuation(Float value);
+
+    /** Criteria field name: <code>LightSource</code> */
+    public LightSource getLightSource();
+    public void setLightSource(LightSource value);
+
+    /** Criteria field name: <code>Filter</code> */
+    public Filter getFilter();
+    public void setFilter(Filter value);
+
+    /** Criteria field name: <code>SamplesPerPixel</code> */
+    public Integer getSamplesPerPixel();
+    public void setSamplesPerPixel(Integer value);
+
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
+
+    /** Criteria field name: <code>PixelChannelComponentList</code> */
+    public List getPixelChannelComponentList();
+    /** Criteria field name: <code>#PixelChannelComponentList</code> or <code>PixelChannelComponentList</code> */
+    public int countPixelChannelComponentList();
 
 }

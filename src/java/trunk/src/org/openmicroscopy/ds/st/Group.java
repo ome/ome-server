@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -48,31 +48,31 @@ import java.util.Map;
 public interface Group
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Name</code> */
-    public String getName();
-    public void setName(String value);
+    /** Criteria field name: <code>Contact</code> */
+    public Experimenter getContact();
+    public void setContact(Experimenter value);
 
     /** Criteria field name: <code>Leader</code> */
     public Experimenter getLeader();
     public void setLeader(Experimenter value);
 
-    /** Criteria field name: <code>Contact</code> */
-    public Experimenter getContact();
-    public void setContact(Experimenter value);
+    /** Criteria field name: <code>Name</code> */
+    public String getName();
+    public void setName(String value);
 
-    /** Criteria field name: <code>Experimenters</code> */
-    public List getExperimenters();
-    /** Criteria field name: <code>#Experimenters</code> or <code>Experimenters</code> */
-    public int countExperimenters();
+    /** Criteria field name: <code>ExperimenterList</code> */
+    public List getExperimenterList();
+    /** Criteria field name: <code>#ExperimenterList</code> or <code>ExperimenterList</code> */
+    public int countExperimenterList();
 
-    /** Criteria field name: <code>ExperimenterGroups</code> */
-    public List getExperimenterGroups();
-    /** Criteria field name: <code>#ExperimenterGroups</code> or <code>ExperimenterGroups</code> */
-    public int countExperimenterGroups();
+    /** Criteria field name: <code>ExperimenterGroupList</code> */
+    public List getExperimenterGroupList();
+    /** Criteria field name: <code>#ExperimenterGroupList</code> or <code>ExperimenterGroupList</code> */
+    public int countExperimenterGroupList();
 
-    /** Criteria field name: <code>ImageGroups</code> */
-    public List getImageGroups();
-    /** Criteria field name: <code>#ImageGroups</code> or <code>ImageGroups</code> */
-    public int countImageGroups();
+    /** Criteria field name: <code>ImageGroupList</code> */
+    public List getImageGroupList();
+    /** Criteria field name: <code>#ImageGroupList</code> or <code>ImageGroupList</code> */
+    public int countImageGroupList();
 
 }

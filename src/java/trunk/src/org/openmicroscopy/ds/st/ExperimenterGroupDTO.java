@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,21 +54,21 @@ public class ExperimenterGroupDTO
     public String getDTOTypeName() { return "@ExperimenterGroup"; }
     public Class getDTOType() { return ExperimenterGroup.class; }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
-
     public Group getGroup()
     { return (Group) getObjectElement("Group"); }
     public void setGroup(Group value)
     { setElement("Group",value); }
 
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("Experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
+
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseChildElement("Experimenter",ExperimenterDTO.class);
         parseChildElement("Group",GroupDTO.class);
+        parseChildElement("Experimenter",ExperimenterDTO.class);
     }
 
 }

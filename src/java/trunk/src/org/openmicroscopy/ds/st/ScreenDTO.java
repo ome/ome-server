@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:14 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -54,36 +54,36 @@ public class ScreenDTO
     public String getDTOTypeName() { return "@Screen"; }
     public Class getDTOType() { return Screen.class; }
 
-    public String getName()
-    { return getStringElement("Name"); }
-    public void setName(String value)
-    { setElement("Name",value); }
+    public String getExternalReference()
+    { return getStringElement("ExternalReference"); }
+    public void setExternalReference(String value)
+    { setElement("ExternalReference",value); }
 
     public String getDescription()
     { return getStringElement("Description"); }
     public void setDescription(String value)
     { setElement("Description",value); }
 
-    public String getExternalReference()
-    { return getStringElement("ExternalReference"); }
-    public void setExternalReference(String value)
-    { setElement("ExternalReference",value); }
+    public String getName()
+    { return getStringElement("Name"); }
+    public void setName(String value)
+    { setElement("Name",value); }
 
-    public List getPlates()
-    { return (List) getObjectElement("Plates"); }
-    public int countPlates()
-    { return countListElement("Plates"); }
+    public List getPlateList()
+    { return (List) getObjectElement("PlateList"); }
+    public int countPlateList()
+    { return countListElement("PlateList"); }
 
-    public List getPlateScreens()
-    { return (List) getObjectElement("PlateScreens"); }
-    public int countPlateScreens()
-    { return countListElement("PlateScreens"); }
+    public List getPlateScreenList()
+    { return (List) getObjectElement("PlateScreenList"); }
+    public int countPlateScreenList()
+    { return countListElement("PlateScreenList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("Plates",PlateDTO.class);
-        parseListElement("PlateScreens",PlateScreenDTO.class);
+        parseListElement("PlateList",PlateDTO.class);
+        parseListElement("PlateScreenList",PlateScreenDTO.class);
     }
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -51,50 +51,50 @@ import java.util.Map;
 public interface Instrument
     extends DataInterface, Attribute
 {
-    /** Criteria field name: <code>Manufacturer</code> */
-    public String getManufacturer();
-    public void setManufacturer(String value);
-
-    /** Criteria field name: <code>Model</code> */
-    public String getModel();
-    public void setModel(String value);
+    /** Criteria field name: <code>Type</code> */
+    public String getType();
+    public void setType(String value);
 
     /** Criteria field name: <code>SerialNumber</code> */
     public String getSerialNumber();
     public void setSerialNumber(String value);
 
-    /** Criteria field name: <code>Type</code> */
-    public String getType();
-    public void setType(String value);
+    /** Criteria field name: <code>Model</code> */
+    public String getModel();
+    public void setModel(String value);
 
-    /** Criteria field name: <code>Detectors</code> */
-    public List getDetectors();
-    /** Criteria field name: <code>#Detectors</code> or <code>Detectors</code> */
-    public int countDetectors();
+    /** Criteria field name: <code>Manufacturer</code> */
+    public String getManufacturer();
+    public void setManufacturer(String value);
 
-    /** Criteria field name: <code>Filters</code> */
-    public List getFilters();
-    /** Criteria field name: <code>#Filters</code> or <code>Filters</code> */
-    public int countFilters();
+    /** Criteria field name: <code>DetectorList</code> */
+    public List getDetectorList();
+    /** Criteria field name: <code>#DetectorList</code> or <code>DetectorList</code> */
+    public int countDetectorList();
 
-    /** Criteria field name: <code>ImageInstruments</code> */
-    public List getImageInstruments();
-    /** Criteria field name: <code>#ImageInstruments</code> or <code>ImageInstruments</code> */
-    public int countImageInstruments();
+    /** Criteria field name: <code>FilterList</code> */
+    public List getFilterList();
+    /** Criteria field name: <code>#FilterList</code> or <code>FilterList</code> */
+    public int countFilterList();
 
-    /** Criteria field name: <code>LightSources</code> */
-    public List getLightSources();
-    /** Criteria field name: <code>#LightSources</code> or <code>LightSources</code> */
-    public int countLightSources();
+    /** Criteria field name: <code>ImageInstrumentList</code> */
+    public List getImageInstrumentList();
+    /** Criteria field name: <code>#ImageInstrumentList</code> or <code>ImageInstrumentList</code> */
+    public int countImageInstrumentList();
 
-    /** Criteria field name: <code>OTFs</code> */
-    public List getOTFs();
-    /** Criteria field name: <code>#OTFs</code> or <code>OTFs</code> */
-    public int countOTFs();
+    /** Criteria field name: <code>LightSourceList</code> */
+    public List getLightSourceList();
+    /** Criteria field name: <code>#LightSourceList</code> or <code>LightSourceList</code> */
+    public int countLightSourceList();
 
-    /** Criteria field name: <code>Objectives</code> */
-    public List getObjectives();
-    /** Criteria field name: <code>#Objectives</code> or <code>Objectives</code> */
-    public int countObjectives();
+    /** Criteria field name: <code>OTFList</code> */
+    public List getOTFList();
+    /** Criteria field name: <code>#OTFList</code> or <code>OTFList</code> */
+    public int countOTFList();
+
+    /** Criteria field name: <code>ObjectiveList</code> */
+    public List getObjectiveList();
+    /** Criteria field name: <code>#ObjectiveList</code> or <code>ObjectiveList</code> */
+    public int countObjectiveList();
 
 }

@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:16 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,25 +52,25 @@ public class BoundsDTO
     public String getDTOTypeName() { return "@Bounds"; }
     public Class getDTOType() { return Bounds.class; }
 
-    public Integer getX()
-    { return getIntegerElement("X"); }
-    public void setX(Integer value)
-    { setElement("X",value); }
-
-    public Integer getY()
-    { return getIntegerElement("Y"); }
-    public void setY(Integer value)
-    { setElement("Y",value); }
+    public Integer getHeight()
+    { return getIntegerElement("Height"); }
+    public void setHeight(Integer value)
+    { setElement("Height",value); }
 
     public Integer getWidth()
     { return getIntegerElement("Width"); }
     public void setWidth(Integer value)
     { setElement("Width",value); }
 
-    public Integer getHeight()
-    { return getIntegerElement("Height"); }
-    public void setHeight(Integer value)
-    { setElement("Height",value); }
+    public Integer getY()
+    { return getIntegerElement("Y"); }
+    public void setY(Integer value)
+    { setElement("Y",value); }
+
+    public Integer getX()
+    { return getIntegerElement("X"); }
+    public void setX(Integer value)
+    { setElement("X",value); }
 
 
 }

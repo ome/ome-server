@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,53 +53,53 @@ public class DisplayChannelDTO
     public String getDTOTypeName() { return "@DisplayChannel"; }
     public Class getDTOType() { return DisplayChannel.class; }
 
-    public Integer getChannelNumber()
-    { return getIntegerElement("ChannelNumber"); }
-    public void setChannelNumber(Integer value)
-    { setElement("ChannelNumber",value); }
-
-    public Double getBlackLevel()
-    { return getDoubleElement("BlackLevel"); }
-    public void setBlackLevel(Double value)
-    { setElement("BlackLevel",value); }
+    public Float getGamma()
+    { return getFloatElement("Gamma"); }
+    public void setGamma(Float value)
+    { setElement("Gamma",value); }
 
     public Double getWhiteLevel()
     { return getDoubleElement("WhiteLevel"); }
     public void setWhiteLevel(Double value)
     { setElement("WhiteLevel",value); }
 
-    public Float getGamma()
-    { return getFloatElement("Gamma"); }
-    public void setGamma(Float value)
-    { setElement("Gamma",value); }
+    public Double getBlackLevel()
+    { return getDoubleElement("BlackLevel"); }
+    public void setBlackLevel(Double value)
+    { setElement("BlackLevel",value); }
 
-    public List getDisplayOptionsesByBlueChannel()
-    { return (List) getObjectElement("DisplayOptionsesByBlueChannel"); }
-    public int countDisplayOptionsesByBlueChannel()
-    { return countListElement("DisplayOptionsesByBlueChannel"); }
+    public Integer getChannelNumber()
+    { return getIntegerElement("ChannelNumber"); }
+    public void setChannelNumber(Integer value)
+    { setElement("ChannelNumber",value); }
 
-    public List getDisplayOptionsesByGreenChannel()
-    { return (List) getObjectElement("DisplayOptionsesByGreenChannel"); }
-    public int countDisplayOptionsesByGreenChannel()
-    { return countListElement("DisplayOptionsesByGreenChannel"); }
+    public List getDisplayOptionsListByBlueChannel()
+    { return (List) getObjectElement("DisplayOptionsListByBlueChannel"); }
+    public int countDisplayOptionsListByBlueChannel()
+    { return countListElement("DisplayOptionsListByBlueChannel"); }
 
-    public List getDisplayOptionsesByGreyChannel()
-    { return (List) getObjectElement("DisplayOptionsesByGreyChannel"); }
-    public int countDisplayOptionsesByGreyChannel()
-    { return countListElement("DisplayOptionsesByGreyChannel"); }
+    public List getDisplayOptionsListByGreenChannel()
+    { return (List) getObjectElement("DisplayOptionsListByGreenChannel"); }
+    public int countDisplayOptionsListByGreenChannel()
+    { return countListElement("DisplayOptionsListByGreenChannel"); }
 
-    public List getDisplayOptionsesByRedChannel()
-    { return (List) getObjectElement("DisplayOptionsesByRedChannel"); }
-    public int countDisplayOptionsesByRedChannel()
-    { return countListElement("DisplayOptionsesByRedChannel"); }
+    public List getDisplayOptionsListByGreyChannel()
+    { return (List) getObjectElement("DisplayOptionsListByGreyChannel"); }
+    public int countDisplayOptionsListByGreyChannel()
+    { return countListElement("DisplayOptionsListByGreyChannel"); }
+
+    public List getDisplayOptionsListByRedChannel()
+    { return (List) getObjectElement("DisplayOptionsListByRedChannel"); }
+    public int countDisplayOptionsListByRedChannel()
+    { return countListElement("DisplayOptionsListByRedChannel"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("DisplayOptionsesByBlueChannel",DisplayOptionsDTO.class);
-        parseListElement("DisplayOptionsesByGreenChannel",DisplayOptionsDTO.class);
-        parseListElement("DisplayOptionsesByGreyChannel",DisplayOptionsDTO.class);
-        parseListElement("DisplayOptionsesByRedChannel",DisplayOptionsDTO.class);
+        parseListElement("DisplayOptionsListByBlueChannel",DisplayOptionsDTO.class);
+        parseListElement("DisplayOptionsListByGreenChannel",DisplayOptionsDTO.class);
+        parseListElement("DisplayOptionsListByGreyChannel",DisplayOptionsDTO.class);
+        parseListElement("DisplayOptionsListByRedChannel",DisplayOptionsDTO.class);
     }
 
 }

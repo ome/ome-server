@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -63,15 +63,15 @@ public class CategoryGroupDTO
     public void setName(String value)
     { setElement("Name",value); }
 
-    public List getCategories()
-    { return (List) getObjectElement("Categories"); }
-    public int countCategories()
-    { return countListElement("Categories"); }
+    public List getCategoryList()
+    { return (List) getObjectElement("CategoryList"); }
+    public int countCategoryList()
+    { return countListElement("CategoryList"); }
 
     public void setMap(Map elements)
     {
         super.setMap(elements);
-        parseListElement("Categories",CategoryDTO.class);
+        parseListElement("CategoryList",CategoryDTO.class);
     }
 
 }

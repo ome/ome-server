@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Feb 24 17:23:15 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -52,30 +52,30 @@ public class DimensionsDTO
     public String getDTOTypeName() { return "@Dimensions"; }
     public Class getDTOType() { return Dimensions.class; }
 
-    public Float getPixelSizeX()
-    { return getFloatElement("PixelSizeX"); }
-    public void setPixelSizeX(Float value)
-    { setElement("PixelSizeX",value); }
-
-    public Float getPixelSizeY()
-    { return getFloatElement("PixelSizeY"); }
-    public void setPixelSizeY(Float value)
-    { setElement("PixelSizeY",value); }
-
-    public Float getPixelSizeZ()
-    { return getFloatElement("PixelSizeZ"); }
-    public void setPixelSizeZ(Float value)
-    { setElement("PixelSizeZ",value); }
+    public Float getPixelSizeT()
+    { return getFloatElement("PixelSizeT"); }
+    public void setPixelSizeT(Float value)
+    { setElement("PixelSizeT",value); }
 
     public Float getPixelSizeC()
     { return getFloatElement("PixelSizeC"); }
     public void setPixelSizeC(Float value)
     { setElement("PixelSizeC",value); }
 
-    public Float getPixelSizeT()
-    { return getFloatElement("PixelSizeT"); }
-    public void setPixelSizeT(Float value)
-    { setElement("PixelSizeT",value); }
+    public Float getPixelSizeZ()
+    { return getFloatElement("PixelSizeZ"); }
+    public void setPixelSizeZ(Float value)
+    { setElement("PixelSizeZ",value); }
+
+    public Float getPixelSizeY()
+    { return getFloatElement("PixelSizeY"); }
+    public void setPixelSizeY(Float value)
+    { setElement("PixelSizeY",value); }
+
+    public Float getPixelSizeX()
+    { return getFloatElement("PixelSizeX"); }
+    public void setPixelSizeX(Float value)
+    { setElement("PixelSizeX",value); }
 
 
 }

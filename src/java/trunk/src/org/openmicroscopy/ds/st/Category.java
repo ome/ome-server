@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
+ * Created by callan via omejava on Fri Dec 17 12:37:15 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -59,9 +59,9 @@ public interface Category
     public String getName();
     public void setName(String value);
 
-    /** Criteria field name: <code>Classifications</code> */
-    public List getClassifications();
-    /** Criteria field name: <code>#Classifications</code> or <code>Classifications</code> */
-    public int countClassifications();
+    /** Criteria field name: <code>ClassificationList</code> */
+    public List getClassificationList();
+    /** Criteria field name: <code>#ClassificationList</code> or <code>ClassificationList</code> */
+    public int countClassificationList();
 
 }
