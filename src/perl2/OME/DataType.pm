@@ -95,10 +95,10 @@ sub requireAttributePackage {
     my $type = $self->attribute_type();
     my $accessors = {};
     if ($type eq 'D') {
-	$pkg->hasa(OME::Dataset => qw(dataset_id));
+	$pkg->hasa('OME::Dataset' => qw(dataset_id));
 	$accessors->{dataset_id} = 'dataset';
     } elsif ($type eq 'I') {
-	$pkg->hasa(OME::Image => qw(image_id));
+	$pkg->hasa('OME::Image' => qw(image_id));
 	$accessors->{image_id} = 'image';
     } elsif ($type eq 'F') {
 	#$pkg->hasa(OME::Feature => qw(feature_id));
