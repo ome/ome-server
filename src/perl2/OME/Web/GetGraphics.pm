@@ -505,11 +505,18 @@ $SVG .= <<ENDSVG;
 			
 			// save button
 			saveButton = new button(
-				85, 132, saveImage,
+				85, 130, saveImage,
 				'<text fill="black" text-anchor="end">Save</text>',
 				null,
 				'<text fill="white" text-anchor="end">Save</text>'
 			);
+			loadButton = new button(
+				85, 140, loadAllImages,
+				'<text fill="black" text-anchor="end">Load All</text>',
+				null,
+				'<text fill="white" text-anchor="end">Load All</text>'
+			);
+			
 
 			// set up RGB to grayscale button
 			RGB_BWbutton = new button(
@@ -588,13 +595,6 @@ $SVG .= <<ENDSVG;
 				skinLibrary["triangleDownRed"],
 				null,
 				skinLibrary["triangleDownWhite"]
-			);
-			
-			loadButton = new button(
-				5, 5, loadAllImages,
-				skinLibrary["hiddenButton"],
-				null,
-				skinLibrary["hiddenButtonHighlight"]
 			);
 			
 		// realize the GUI elements in the appropriate containers
@@ -745,14 +745,15 @@ $SVG .= <<'ENDSVG';
 		}
 	
 		function loadAllImages(val) {
-			image.setPreload(val);
+			image.setPreload(true);
+			image.setPreload(false);
 		}
 	
 		function updateTheZ(data) {
 			data=Math.round(data/100*(Z-1));
 			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
 			zSlider.setValue(sliderVal);
-			zSlider.setLabel(null, null, data + "/" + (Z-1) );
+			zSlider.setLabel(null, null, (data + 1) + "/" + Z );
 			theZ=data;
 			
 			image.updatePic(theZ,theT);
@@ -786,7 +787,7 @@ $SVG .= <<'ENDSVG';
 			theT=Math.round(data/100*(T-1));
 			var sliderVal = ( T==1 ? 0 : Math.round(theT/(T-1)*100) );
 			tSlider.setValue(sliderVal);
-			tSlider.setLabel(null, null, "time (" + theT + "/" + (T-1) +")" );
+			tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
 			
 			image.updatePic(theZ,theT);
 			scale.updateScale(theT);
