@@ -158,7 +158,7 @@ use base qw(OME::DBObject);
 
 
 __PACKAGE__->AccessorNames({
-    data_table_id => 'data_tableb'
+    data_table_id => 'data_table'
     });
 
 __PACKAGE__->table('data_columns');
