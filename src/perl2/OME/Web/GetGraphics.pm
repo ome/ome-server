@@ -65,7 +65,9 @@ It is part of the web UI and can be accessed with any internet browser that has 
 It is controlled by url parameters of ImageID,
 	http://localhost/perl2/serve.pl?Page=GetGraphics&ImageID=57
 or by Pixels Attribute ID.
-http://localhost/perl2/serve.pl?Page=GetGraphics&PixelsID=48
+http://localhost/perl2/serve.pl?Page=OME::Web::GetGraphics&PixelsID=48
+Optionally, a MEX ID can be provided to display overlays
+http://localhost/perl2/serve.pl?Page=OME::Web::GetGraphics&PixelsID=48&MEX_ID=123
 
 =head1 Author
 
@@ -103,6 +105,10 @@ sub FrameImageViewer {
 	my $PixelsID  = $pixels->id();
 	my $nombre    = $image->name();
 	
+	my $MEX_ID = $cgi->url_param('MEX_ID');
+	my $param = "&BuildSVGviewer=1&PixelsID=$PixelsID";
+	$param .= $MEX_ID ? "&MEX_ID=$MEX_ID" : '';
+
 	$self->contentType('text/html');
 	# Embedding in frames instead of object allows Mozilla > v1 to run it.
 	$HTML .= <<ENDHTML;
@@ -151,7 +157,7 @@ sub FrameImageViewer {
 
 	    if (hasSVGSupport == true) {
 		// Send user to URL which will display SVG images
-;	    	document.write( '<frameset rows="*"><frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&PixelsID=$PixelsID"></frameset>' );
+	    	document.write( '<frameset rows="*"><frame src="serve.pl?Page=OME::Web::GetGraphics$param"></frameset>' );
 	    } else {
 		// Send user to URL which will display other graphics
 	    	document.write( 'You Need an SVG plugin to use this viewer. You can get one for free from Adobe: <a href="http://www.adobe.com/svg/viewer/install/main.html">http://www.adobe.com/svg/viewer/install/main.html</a>');
@@ -508,39 +514,36 @@ ENDSVG
 sub _getJSOverlay {
 	my $self = shift;
 	my ($image,$pixels) = $self->getImageAndPixels();
-	
+	my $cgi = $self->CGI();
+	my $MEX_ID = $cgi->url_param('MEX_ID');
+	return ( {centroids => undef, features => undef} ) unless $MEX_ID;
+
 	my $factory = $self->Session()->Factory();
 	
-	my @spots = $factory->findObjects( "OME::Feature", image_id => $image->id(), tag => 'SPOT' );
+	my $iterator = $factory->findObjects( '@Location', {module_execution_id => $MEX_ID} );
 
 	my $centroidDataJS;
 	my @centroidData;
-	my %moduleExecutions;
 	my %features;
 	my @featureData;
 	my $featureDataJS;
-	my @locations;
-	
-	push @locations, $factory->findAttributes( "Location", $_ ) 
-		foreach ( @spots );
-	
-	foreach my $location( @locations ) { 
+	my $location;
+		
+	while ( $location = $iterator->next() ) { 
 
-		my ($theX, $theY, $theZ) = map( sprintf( "%i", $_ + 0.5 ), ( $location->TheX, $location->TheY, $location->TheZ ) );
+#		my ($theX, $theY, $theZ) = map( sprintf( "%i", $_ + 0.5 ), ( $location->TheX, $location->TheY, $location->TheZ ) );
+		my ($theX, $theY, $theZ) = ($location->TheX(), $location->TheY(), sprintf( "%i", $location->TheZ() + 0.5) );
 
 		my $moduleExecution = $location->module_execution();
 		my $feature = $location->feature();
-		$moduleExecutions{ $moduleExecution } = undef 
-			unless exists $moduleExecutions{ $moduleExecution };
-		$features{ $feature->id() } = $feature
-			unless exists $features{ $feature->id() };
+		my $featureID = $feature->id();
+		$features{ $feature->id() } = $feature;
 
-		my @timepoints = $factory->findAttributes( "Timepoint", $feature )
-			or die "this spot (".$feature->id.") has no Timepoint\n";
-		die "this spot (".$feature->id.")has multiple Timepoint" if @timepoints > 1;
-		my $theT = $timepoints[0]->TheT();
+		my $timepoint = $factory->findAttribute( "Timepoint", $feature )
+			or die "this spot ($featureID) has no Timepoint\n";
+		my $theT = $timepoint->TheT();
 		push ( @centroidData, 
-			"{ theX: $theX, theY: $theY, theZ: $theZ, theT: $theT, moduleExecutionID: ".$moduleExecution->id().", featureID: ".$feature->id()." }" );
+			"{ theX: $theX, theY: $theY, theZ: $theZ, theT: $theT, moduleExecutionID: $MEX_ID, featureID: $featureID }" );
 	}
 
 	foreach my $feature( values %features ) {
