@@ -42,8 +42,8 @@
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChain;
 import org.openmicroscopy.remote.RemoteSession;
+import org.openmicroscopy.ChainExecution;
 import org.openmicroscopy.vis.chains.SelectionState;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -90,12 +90,12 @@ public class CChain extends RemoteChain  {
 	public void loadExecutions(Connection connection) {
 		chainExecutions = connection.getChainExecutions(this);
 		Iterator iter = chainExecutions.iterator();
-		CChainExecution exec;
+		ChainExecution exec;
 		CDataset ds;
 		Vector v;
 		
 		while (iter.hasNext()) {
-			exec = (CChainExecution) iter.next();
+			exec = (ChainExecution) iter.next();
 			ds = (CDataset) exec.getDataset();
 			Object obj = datasetExecutions.get(ds);
 			if (obj == null)  // no list
@@ -105,6 +105,13 @@ public class CChain extends RemoteChain  {
 			v.add(exec);
 			datasetExecutions.put(ds,v);
 		}
+	}
+	
+	public boolean hasAnyExecutions() {
+		if (chainExecutions == null) 
+			return false;
+		else
+			return (chainExecutions.size() >0);
 	}
 	
 	
@@ -528,9 +535,11 @@ public class CChain extends RemoteChain  {
 		//it's got an execution that's active if it's got any executions.
 		boolean noSelections = (datasets == null || datasets.size() ==0)
 			 && selected == null;
-		if (noSelections == true && chainExecutions.size()>0) {
-			return true;
-		}
+
+		// if nothing is selected, I have an execution if i have any exeuctions
+		if (noSelections == true)
+			return (datasetExecutions.size() > 0);
+	
 		
 		// two possibilites: 
 		// 1) selected is not null. Then I must have an entry for it.
