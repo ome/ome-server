@@ -26,6 +26,8 @@ import org.apache.axis.client.Service;
 import javax.xml.namespace.QName;
 import java.net.URL;
 
+import java.util.*;
+
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 import org.apache.log4j.BasicConfigurator;
@@ -41,6 +43,7 @@ public class SoapTest
     {
         try
         {
+            System.err.println("*** "+method);
             logger.info("Setting operation name");
             call.setOperationName(new QName("OME/Remote/Dispatcher",
                                             method));
@@ -49,6 +52,7 @@ public class SoapTest
 
             logger.info("Printing return value");
             System.out.println(retval);
+            System.out.println(retval.getClass());
 
             return retval;
         } catch (Exception e) {
@@ -76,16 +80,29 @@ public class SoapTest
 
             logger.info("Setting endpoint address");
             call.setTargetEndpointAddress(url);
-     
+
+            Map map = new HashMap();
+            map.put("A",new Integer(1));
+            map.put("B",new Integer(2));
+            map.put("C",new Integer(3));
+
+            Object version = invoke("versionInfo",new Object[] {map});
+            /*
             Object session = invoke("createSession",new Object[] {"dcreager"," "});
             Object factory = invoke("dispatch",
                                     new Object[] {session,session,"Factory"});
             Object program = invoke("dispatch",
                                     new Object[] {session,factory,
                                                   "loadObject",
-                                                  "OME::Program",
+                                                  "OME::Project",
                                                   new Integer(1)});
+            Object name = invoke("dispatch",
+                                 new Object[] {session,program,"name"});
+            invoke("dispatch",
+                   new Object[] {session,program,"name","Test"});
+            invoke("dispatch",new Object[] {session,program,"writeObject"});
             invoke("closeSession",new Object[] {session});
+            */
         } catch (Exception e) {
             System.err.println(e.toString());
         }
