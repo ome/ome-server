@@ -21,9 +21,8 @@
 
 package org.openmicroscopy.analysis.ui;
 
-import java.util.SortedSet;
-import java.util.SortedMap;
-import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,7 +37,8 @@ public class ModuleTreeModel
     implements TreeModel
 {
     protected String  rootNode = "Categories";
-    protected List    categories;
+    protected List    rootCategories;
+    protected Map     categoryChildren;
     protected List    treeModelListeners = new ArrayList();
 
     public ModuleTreeModel()
@@ -48,10 +48,14 @@ public class ModuleTreeModel
 
     public void updateCategories()
     {
-        SortedMap  categoryMap = CategorizedModules.getCategories();
-        Set        keys = categoryMap.keySet();
+        updateCategories(null);
+    }
 
-        categories = new ArrayList(keys);
+    public void updateCategories(List rootCategories)
+    {
+        this.rootCategories = rootCategories;
+        categoryChildren = new HashMap();
+        fireTreeStructureChanged(rootNode);
     }
 
     /**
@@ -73,15 +77,28 @@ public class ModuleTreeModel
         treeModelListeners.add(l);
     }
 
+    protected List getChildList(ModuleCategory category)
+    {
+        List  cached = (List) categoryChildren.get(category);
+        if (cached == null)
+        {
+            cached = category.getChildren();
+            categoryChildren.put(category,cached);
+        }
+        return cached;
+    }
+
     public Object getChild(Object parent, int index)
     {
+        if (rootCategories == null)
+            return null;
+
         if (parent == rootNode)
         {
-            return categories.get(index);
-        } else if (parent instanceof String) {
-            // SOOO SLOW
-            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
-            List      categoryList = new ArrayList(categorySet);
+            return rootCategories.get(index);
+        } else if (parent instanceof ModuleCategory) {
+            ModuleCategory  category = (ModuleCategory) parent;
+            List  categoryList = getChildList(category);
             return categoryList.get(index);
         } else {
             return null;
@@ -90,13 +107,15 @@ public class ModuleTreeModel
 
     public int getChildCount(Object parent)
     {
+        if (rootCategories == null)
+            return 0;
+
         if (parent == rootNode)
         {
-            return categories.size();
-        } else if (parent instanceof String) {
-            // SOOO SLOW
-            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
-            List      categoryList = new ArrayList(categorySet);
+            return rootCategories.size();
+        } else if (parent instanceof ModuleCategory) {
+            ModuleCategory  category = (ModuleCategory) parent;
+            List  categoryList = getChildList(category);
             return categoryList.size();
         } else {
             return 0;
@@ -105,13 +124,15 @@ public class ModuleTreeModel
 
     public int getIndexOfChild(Object parent, Object child)
     {
+        if (rootCategories == null)
+            return -1;
+
         if (parent == rootNode)
         {
-            return categories.indexOf(child);
+            return rootCategories.indexOf(child);
         } else if (parent instanceof String) {
-            // SOOO SLOW
-            SortedSet categorySet = (SortedSet) CategorizedModules.getCategories().get(parent);
-            List      categoryList = new ArrayList(categorySet);
+            ModuleCategory  category = (ModuleCategory) parent;
+            List  categoryList = getChildList(category);
             return categoryList.indexOf(child);
         } else {
             return -1;
