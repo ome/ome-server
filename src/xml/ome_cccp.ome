@@ -1,0 +1,67 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<AnalysisModule Category = "Image comparison" ModuleName = "Cross Correlation" ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
+	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification."
+	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/AnalysisModule.xsd">
+	<Declaration>
+		<Table AttributeType = "I" TableName = "XY_CROSS_CORRELATION" 
+			Description = "Cross correlation values for a plane">
+			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer"/>
+			<Column ColumnID = "theT" ColumnName = "THE_T" SQL_DataType = "integer"/>
+			<Column ColumnID = "CC" ColumnName = "CROSS_CORRELATION" SQL_DataType = "float" Description = "Cross Correlation"/>
+		</Table>
+		<Table AttributeType = "I" TableName = "WAVENUMBER" 
+			Description = "Wavenumbers">
+			<Column ColumnID = "Wavenumber.theW" ColumnName = "THE_W" SQL_DataType = "integer"/>
+		</Table>
+		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
+		<FormalOutput Name = "XYPlaneCrossCorrelation" Description = "Cross Correlation for an XY plane">
+			<FormalOutputColumn FormalOutputColumnID = "theZ" ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Description = "Cross Correlation Value"/>
+		</FormalOutput>
+		<FormalInput Name = "Wavelength1" Description = "" UserDefined = "true">
+			<FormalInputColumn FormalInputColumnID = "wave1" ColumnID = "Wavenumber.theW"/>
+		</FormalInput>
+		<FormalInput Name = "Wavelength2" Description = "" UserDefined = "true">
+			<FormalInputColumn FormalInputColumnID = "wave2" ColumnID = "Wavenumber.theW"/>
+		</FormalInput>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false"
+		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/CLIExecutionInstructions.xsd">
+		<CommandLine><XYPlaneFilePath XYPlaneFilePathID = "Plane 1" Format = "TIFF">
+			<PlaneIndex>
+				<theZ>
+					<AutoIterate FormalOutputColumnID = "theZ"/>
+				</theZ>
+				<theW>
+					<UseValue FormalInputColumnID = "wave1"/>
+				</theW>
+				<theT>
+					<AutoIterate FormalOutputColumnID = "theT"/>
+				</theT>
+			</PlaneIndex>
+		</XYPlaneFilePath> <XYPlaneFilePath Format = "TIFF">
+			<PlaneIndex>
+				<theZ>
+					<Match XYPlaneFilePathID = "Plane 1"/>
+				</theZ>
+				<theW>
+					<UseValue FormalInputColumnID = "wave2"/>
+				</theW>
+				<theT>
+					<Match XYPlaneFilePathID = "Plane 1"/>
+				</theT>
+			</PlaneIndex>
+		</XYPlaneFilePath></CommandLine>
+		<STDOUT>
+			<OutputRecord>
+				<pat>^(\d+\.?\d*|\.\d+)</pat>
+				<Output AccessBy = "1">
+					<OutputTo FormalOutputColumnID = "CC"/>
+				</Output>
+			</OutputRecord>
+		</STDOUT>
+	</ExecutionInstructions>
+</AnalysisModule>
