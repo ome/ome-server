@@ -277,11 +277,12 @@ int FinishFile (FileRep *myFile) {
 		}
 		munmap (myFile->file_buf, myFile->size_rep);
 		myFile->file_buf = NULL;
+		myFile->is_mmapped = 0;
 	}	
 
 	if (myFile->fd_rep >=0 ) {
-		close (myFile->fd_rep);
 		lockRepFile (myFile->fd_rep,'u',0LL,0LL);
+		close (myFile->fd_rep);
 		myFile->fd_rep = -1;
 	}
 
