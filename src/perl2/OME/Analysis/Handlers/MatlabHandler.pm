@@ -309,6 +309,12 @@ sub Pixels_to_MatlabArray {
 	# this one-liner fills an array from the temp file
 	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
 
+	# Convert array datatype if requested
+	# FIXME: does this datatype conversion taint $matlab_pixels ?
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name)");
+	}
+	
 	# Cleanup
 	$session->finishTemporaryFile($filename);
 }
@@ -324,9 +330,10 @@ sub Attr_to_MatlabScalar {
 	my ( $self, $xmlInstr ) = @_;
 
 	# get input value
-	my $input_location = $xmlInstr->getAttribute( 'InputLocation' );
+	my $input_location = $xmlInstr->getAttribute( 'InputLocation' )
+		or die "Could not find InputLocation in input ".$xmlInstr->toString();
 	my ( $formal_input_name, $SEforScalar ) = split( /\./, $input_location )
-		or die "input_location '$input_location' could not be parsed.";
+		or die "InputLocation '$input_location' could not be parsed. Problem processing input ".$xmlInstr->toString();
 	my $input_attr = $self->getCurrentInputAttributes( $formal_input_name );
 
 	# ActualArity is needed to cope with optional inputs.
@@ -394,6 +401,11 @@ sub MatlabArray_to_Pixels {
 	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
 		or die "Could not find formal output referenced from ".$xmlInstr->toString();
 	
+	# Convert array datatype if requested
+	if( my $convertToDatatype = $xmlInstr->getAttribute( 'ConvertToDatatype' ) ) {
+		$self->{__engine}->eval("$matlab_var_name = $convertToDatatype($matlab_var_name)");
+	}
+	
 	# Get array's dimensions.
 	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name)");
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
@@ -411,7 +423,7 @@ sub MatlabArray_to_Pixels {
 	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{ $type };
 	
 	# Make Pixels
-	my ($pixels_data, $pixels_attr) = OME::Tasks::PixelsManager->createPixels(
+	my @pixels_params = (
 		$self->getCurrentImage(), 
 		$self->getModuleExecution(),
 		{
@@ -421,8 +433,12 @@ sub MatlabArray_to_Pixels {
 			SizeC		 => $sizeC,
 			SizeT		 => $sizeT,
 			PixelType	 => $pixelType
-		},
-		( $formal_output->semantic_type->name ne 'Pixels' ? 1 : undef )
+		}
+	);
+	my ($pixels_data, $pixels_attr) = ( 
+		$formal_output->semantic_type->name eq 'Pixels' ?
+		OME::Tasks::PixelsManager->createPixels( @pixels_params ) :
+		OME::Tasks::PixelsManager->createParentalPixels( @pixels_params )
 	);
 	
 	# Shovel data into image server via tmp file
@@ -436,11 +452,12 @@ sub MatlabArray_to_Pixels {
 	OME::Tasks::PixelsManager->saveThumb($pixels_attr);
 	
 	# Deal with subclassing. This code has both hardcoded and implicit 
-	# dependencies on the structure of STs that subclass Pixels. It assumes that
-	# PixelsSlice is the only subclass of Pixels that has additional data fields,
-	# and that every other ST that inherits (directy or indirectly) will only
-	# have a Parent field. If a PixelsSlice is part of the inheritence chain,
-	# its limits will be set the extent of the image.
+	# dependencies on the structure of STs that subclass Pixels. It
+	# implicitly  assumes that  PixelsSlice is the only subclass of
+	# Pixels that has additional data fields,  and that every other ST
+	# that inherits (directy or indirectly) will only  have a Parent
+	# field. If a PixelsSlice is part of the inheritence chain,  its
+	# limits will be set the extent of the image.
 	my $current_ST = $formal_output->semantic_type();
 	my $last_attribute;
 	# traverse the inheritence path from the bottom up.
@@ -465,14 +482,16 @@ sub MatlabArray_to_Pixels {
 				Parent => $pixels_attr
 			} );
 		} else {
-			# All the other Pixels derivatives only have a Parent SE, and we haven't
-			# made the parent yet. Thus, the data hash is empty.
+			# Every other Pixels derivatives has only one SE (Parent), and we 
+			# won't make the parent till the next round. Thus, the data hash is
+			# empty.
 			push( @factory_params, { } );
 		}
 		
-		# if last attribute is defined, then we're making a parent attribute
+		# if we've already created an attribute, then we're in the process of
+		# making the ancestory tree.
 		if( $last_attribute ) {	$new_attr = $factory->newParentAttribute( @factory_params ); } 
-		# otherwise, we're making the function output.
+		# otherwise, we're making the actual module output.
 		else { $new_attr = $factory->newAttribute( @factory_params ); } 
 		
 		# Now that we have made a new attribute, use it to satisfy the Parent
@@ -487,10 +506,8 @@ sub MatlabArray_to_Pixels {
 		# Take the next step up the ancestry chain
 		my $parent_element = $factory->findObject( 
 			'OME::SemanticType::Element', 
-			{
-				semantic_type => $current_ST,
-				name          => 'Parent'
-			} ) or die "Could not find a parent for ST ".$current_ST->name()." when trying to construct Pixels Parental outputs.";
+			{ semantic_type => $current_ST, name => 'Parent' } 
+		) or die "Could not find a parent for ST ".$current_ST->name()." when trying to construct Pixels Parental outputs.";
 		$current_ST = $factory->findObject(
 			'OME::SemanticType',
 			{ name => $parent_element->data_column()->reference_type() }
@@ -745,7 +762,7 @@ sub _inputVarName {
 	my ($self, $xml_instruction ) = @_;
 	return $self->{ __inputVariableNames }->{ $xml_instruction->toString() }
 		if exists $self->{ __inputVariableNames }->{ $xml_instruction->toString() };
-	my $name = 'ome_input'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
+	my $name = 'ome_input_'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
 	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
 		if( $xml_instruction->getAttribute( 'ID' ) );
 	$self->{ __inputVariableNames }->{ $xml_instruction->toString() } = $name;
