@@ -401,7 +401,9 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 				or die "Could not find formal input referenced by element ".$input->tagName()." with FormalInputName ". $input->getAttribute( "FormalInputName");
 			my $semanticType   = $formalInput->attribute_type();
 
-			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $input->getAttribute( "SemanticElementName" ) )
+			my $sen = $input->getAttribute( "SemanticElementName" );
+			$sen =~ s/^(.*?)\..*$/$1/;
+			my $semanticElement = $factory->findObject( "OME::AttributeType::Column", attribute_type_id => $semanticType->id(), name => $sen )
 				or die "Could not find semantic column referenced by element ".$input->tagName()." with SemanticElementName ".$input->getAttribute( "SemanticElementName" );
 		
 			# Create attributes FormalInputID and SemanticElementID to store FORMAL_INPUT_ID and ATTRIBUTE_COLUMN_ID.
