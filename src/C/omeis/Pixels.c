@@ -55,6 +55,7 @@
 
 #include "Pixels.h"
 #include "File.h"
+#include "update.h"
 
 /* Private prototypes */
 static void
@@ -63,6 +64,7 @@ static int
 openConvertFile (PixelsRep *myPixels, char rorw);
 static void
 closeConvertFile (PixelsRep *myPixels);
+int FinishStats (PixelsRep *myPixels, char force);
 
 
 
@@ -132,17 +134,145 @@ char *sha1DBfile="Pixels/sha1DB.idx";
 
 
 /*
-  This opens the repository file used by PixelsRep for reading or writing.
-  rorw may be set to 'w' (write), 'r' (read), 'i' (info), or 'n' (new file).
+  The following functions deal with opening for reading or writing the header 
+  and repository files used by PixelsRep
+
+  openPixelsFile -> opens header (calls openHeaderFile) and repository.  
+  		rorw may be set to 'w' (write), 'r' (read), 'i' (info), or 'n' (new file).
+  openHeaderFile -> this function opens the Header file. If the header file is 
+                    of the same version as OMEIS then it is uneventful. if, 
+					however, the header file is of a previous version, updateFile 
+					is called to update the file.
+  updateHeaderFile -> this function updates the Header file to new specifications
 */
-static
-int openPixelsFile (PixelsRep *myPixels, char rorw) {
-void *mmap_info=NULL,*mmap_rep=NULL;
+static int updateHeaderFile (PixelsRep *myPixels, int fromVers)
+{
+void *mmap_info=NULL;
+int mmap_flags=PROT_READ|PROT_WRITE;
+int ret=0; /* variable stores the pixel files original version */
+int nPlanes, nStacks;
+pixHeader* head;
+size_t new_size;
+int vers;
+int i;
+int t,c,z;
+planeInfo* planeInfoP;
+	
+	/*  figure out from the old header how many planes and stacks there are
+		to predict the size of the new header */
+	head = myPixels->head;
+	nPlanes = head->dz * head->dc * head->dt;
+	nStacks = head->dc * head->dt;
+	vers = head->vers;
+	
+	new_size = sizeof(pixHeader) + sizeof(planeInfo) * nPlanes + 
+			sizeof(stackInfo) * nStacks;
+
+	/* close read only file and open it again with exclusive write access*/
+	munmap (myPixels->head, myPixels->size_info);
+	close(myPixels->fd_info);
+	myPixels->size_info = new_size;
+	lockRepFile (myPixels->fd_info,'w',0LL,sizeof (pixHeader));
+	chmod (myPixels->path_info,0600);
+	myPixels->fd_info = open (myPixels->path_info, O_EXCL|O_RDWR, 0600);
+
+
+	/* expand the header file so the new header will fit and then mmap */
+	lseek(myPixels->fd_info, myPixels->size_info,SEEK_SET);
+	if (write(myPixels->fd_info, &ret, 1) < 1){
+		fprintf(stderr, "During update, header file resize failed\n");
+		close(myPixels->fd_info);
+		return (-2);
+	}
+	lseek(myPixels->fd_info, 0LL, SEEK_SET);
+	if ((mmap_info = mmap (NULL, myPixels->size_info, mmap_flags, MAP_SHARED, 
+							myPixels->fd_info, 0LL)) == (void *) -1)
+		return (-3);
+	myPixels->is_mmapped = 1;
+		chmod (myPixels->path_conv,0400);
+	/* try to update based on version */
+	switch(vers){
+		case 1:
+fprintf(stderr, "Upgrade from vers 1 doesn't work\n");
+		/*
+			myPixels->head = update_header_v1( (pixHeader_v1 *) mmap_info );
+			
+			myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
+			myPixels->planeInfos = update_planeInfos_v1( (planeInfo_v2 *) (mmap_info + sizeof(pixHeader_v1)), 
+								head->dz * head->dc * head->dt);
+			myPixels->stackInfos = update_stackInfos_v1( (stackInfo_v2 *) 
+			(mmap_info + sizeof(pixHeader_v1) + (sizeof (planeInfo_v1) * head->dz * head->dc * head->dt)), 
+			head->dc * head->dt);
+		*/
+			
+			if (ret == 0) ret = 1;
+		case 2:
+			/* the pixHeader struct did not change from vers 2 to vers 3 */
+			myPixels->head = head = (pixHeader *) mmap_info;
+			myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
+		
+			/* upgrade the plane and stack stats and hists if they were computed */
+			if (head->isFinished == 1){
+				/* prepare memory */
+				myPixels->planeInfos = (planeInfo *) malloc(sizeof(planeInfo) * nPlanes);
+				myPixels->stackInfos = (stackInfo *) malloc(sizeof(stackInfo) * nStacks);
+			
+				/* update plane and stack infos in memory*/
+				update_planeInfos_v2 ( (planeInfo_v2 *) ((u_int8_t *) mmap_info + sizeof(pixHeader)),
+										myPixels->planeInfos, nPlanes);
+				update_stackInfos_v2 ( (stackInfo_v2 *) ((u_int8_t *) mmap_info + sizeof(pixHeader) + 
+										sizeof (planeInfo_v2) * nPlanes),
+										myPixels->stackInfos, nStacks);									
+				/* copy from memory into the file*/
+				// memcpy((u_int8_t *) (mmap_info), myPixels->head, sizeof(pixHeader));
+				memcpy((u_int8_t *) (mmap_info + sizeof(pixHeader)), myPixels->planeInfos, sizeof(planeInfo)*nPlanes);
+				memcpy((u_int8_t *) (mmap_info + sizeof(pixHeader) + sizeof (planeInfo) * nPlanes), 
+				myPixels->stackInfos, sizeof(stackInfo)*nStacks);
+	
+				/* memory rewiring */
+				free (myPixels->planeInfos);
+				free (myPixels->stackInfos);
+				myPixels->planeInfos = (planeInfo*) ( (u_int8_t *) mmap_info + sizeof(pixHeader) );
+				myPixels->stackInfos = (stackInfo*) ( (u_int8_t *) mmap_info + sizeof(pixHeader) + sizeof (planeInfo) * nPlanes );
+			}
+			
+			/* put the stamp of approval */
+			head->vers = (u_int8_t) 3;
+			if (ret == 0) ret = 2;
+			break;
+		case 3:
+			/* if the header is in vers 3 already we are lucky */
+			/* N.B: this could be because another process updated this file while this process waited  */
+			/*      for an exclusive read/write lock */
+			myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
+			myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
+			myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader) +
+								   (sizeof (planeInfo) * head->dz * head->dc * head->dt));
+			if (ret == 0) ret = 3;
+			break;
+				
+		default:
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Incompatible file type.\n");
+			return (-10);
+			break;
+	}
+	lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+	chmod (myPixels->path_info,0400);
+	return ret;
+}
+
+
+/* returns the orginal version number of the pixel header file */
+/* N.B: during this function call the pixel header file is updated to the newest verison, if appropriate*/
+static int openHeaderFile (PixelsRep *myPixels, char rorw)
+{
+void *mmap_info=NULL;
 pixHeader *head;
 struct stat fStat;
 int open_flags=0, mmap_flags=0;
-int ret;
-	
+int ret=3 /* variable stores the pixel files original version */;
+
 	if (rorw == 'r' || rorw == 'i') {
 		open_flags = O_RDONLY;
 		mmap_flags = PROT_READ;
@@ -150,15 +280,17 @@ int ret;
 		open_flags = O_RDWR;
 		mmap_flags = PROT_READ|PROT_WRITE;
 	}
-
+	
 	/* open the info file (header) */
 	if (myPixels->fd_info < 0)
 		if ( (myPixels->fd_info = open (myPixels->path_info, open_flags, 0600)) < 0)
 				return (-2);
-
+	
 	if (rorw != 'n') {
 	/* wait until we can get a read lock on the header */
-		lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader));
+		if (lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader)) < 0){
+			fprintf(stderr, "lockRepFile failed at openHeaderFile\n");
+		}
 	} else {
 	/*
 	  If the Pixels file needs recovering, we're going to hang all subsequent requests
@@ -182,9 +314,11 @@ int ret;
 	/* mmap the header */
 	if ((mmap_info = mmap (NULL, myPixels->size_info, mmap_flags, MAP_SHARED, myPixels->fd_info, 0LL)) == (void *) -1)
 		return (-3);
+
+
 	myPixels->head = head = (pixHeader *) mmap_info;
 	myPixels->is_mmapped = 1;
-				
+	
 	if (!head->isFinished && rorw == 'r') {
 			sprintf (myPixels->error_str+strlen(myPixels->error_str),
 				"Attempt to read a write-only file\n");
@@ -206,23 +340,58 @@ int ret;
 				return (-8);
 			myPixels->size_rep = fStat.st_size;
 		}
-	} else {
+		return ret;
+	}
+	
 	/* check the signature and version if they're in the file */
 	if (head->mySig != OME_IS_PIXL_SIG ||
-		head->vers  != OME_IS_PIXL_VER) {
+		head->vers  != OME_IS_PIXL_VER){
+			
+		/* release the read lock for the file, we will need to upgrade to write */
+		lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+		if ( (ret=updateHeaderFile(myPixels, head->vers)) < 0){	
 				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Incompatible file type. Run 'update' on your Pixels files.\n");
+				"Incompatible file type. Update fail failed.\n");
 			return (-10);
+		}
+		/* all write updates were done to the file */
+		lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader));
+		return ret;	
 	}
-		myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
-		myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
-		myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+	/* if we get here we are opening an already updated pixels header file */
+	myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
+	myPixels->planeInfos = (planeInfo *) ( (u_int8_t *) mmap_info + sizeof(pixHeader));
+	myPixels->stackInfos = (stackInfo *) ( (u_int8_t *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+
+	return (ret);	
+}
+
+
+int openPixelsFile (PixelsRep *myPixels, char rorw) {
+void *mmap_rep=NULL;
+pixHeader *head;
+struct stat fStat;
+int open_flags=0, mmap_flags=0;
+int ret;
+int pixel_file_vers;
+
+	if (rorw == 'r' || rorw == 'i') {
+		open_flags = O_RDONLY;
+		mmap_flags = PROT_READ;
+	} else if (rorw == 'w' || rorw == 'n') {
+		open_flags = O_RDWR;
+		mmap_flags = PROT_READ|PROT_WRITE;
+	}
+	
+	if ( (pixel_file_vers = openHeaderFile(myPixels, rorw)) < 0){
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Unable to open Header File \n");
+		return (-1);
 	}
 
-	
-	
 	/* open and mmap the repository file unless we're just getting info */
-	if (rorw != 'i') {
+	/* for pixel files of version 1 and 2 the statistics need to be recomputed so the pixels must be loaded */
+	if (rorw != 'i' || pixel_file_vers == 1 || pixel_file_vers == 2) {
 		if (myPixels->fd_rep < 0) {
 			if ( (myPixels->fd_rep = openRepFile (myPixels->path_rep, open_flags)) < 0) {
 				/* If we ran recoverPixels successfully, we're done.
@@ -247,13 +416,24 @@ int ret;
 			return (-4);
 		myPixels->pixels = mmap_rep;
 	} else {
-	/* just getting info, so no rep file for you. */
+		/* just getting info, so no rep file for you. */
 		myPixels->pixels = mmap_rep = NULL;
 	}
-
+	
+	/* compute statistics if appropriate */
+	if (pixel_file_vers == 1 || pixel_file_vers == 2){
+			/* we might need to recompute the statistics after an update */	
+			lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+		if (FinishStats (myPixels, (char) 0) < 0){
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Unable to compute statistics while updating pixel file\n");
+			return (-1);
+		}
+	}
 	lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
 	return (1);
 }
+
 
 static int
 openConvertFile (PixelsRep *myPixels, char rorw) {
@@ -302,7 +482,6 @@ size_t nRec=0, nIO=0;
 char done = 0;
 
 	memset(&conv0Rec, 0, sizeof(convertFileRec));
-
 
 	if ( !openConvertFile (myPixels, 'r') ) {
 		sprintf (myPixels->error_str+strlen(myPixels->error_str),
@@ -598,7 +777,6 @@ PixelsRep *myPixels;
 size_t size;
 int result;
 
-
 	if (! (myPixels = newPixelsRep (0LL)) ) {
 		perror ("BAH!");
 		return (NULL);
@@ -614,9 +792,10 @@ int result;
 		return (NULL);
 	}
 
-	size = sizeof (pixHeader);
+	size  = sizeof (pixHeader);
 	size += sizeof (planeInfo) * dz * dc * dt;
 	size += sizeof (stackInfo) * dc * dt;
+
 	myPixels->size_info = size;
 	myPixels->fd_info = newRepFile (myPixels->ID, myPixels->path_info, size, "info");
 	if (myPixels->fd_info < 0) {
@@ -625,24 +804,24 @@ int result;
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
-	
-	
+
 	size = dx * dy * dz * dc * dt * bp;
 	myPixels->size_rep = size;
 
 	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, size, NULL);
+
 	if (myPixels->fd_rep < 0) {
 		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_rep);
 		perror (error);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
-
+	
 	if ( (result = openPixelsFile (myPixels, 'n')) < 0) {
+		fprintf(stderr, "FAILED \n");
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
-
 	head = myPixels->head;
 	head->dx = dx;
 	head->dy = dy;
@@ -659,7 +838,7 @@ int result;
 	  So we must assign them here.
 	*/
 	myPixels->planeInfos = (planeInfo *) ( (char *)head + sizeof(pixHeader));
-	myPixels->stackInfos = (stackInfo *) ( (char *)head + (sizeof (planeInfo) * dz * dc * dt)  + sizeof(pixHeader) );
+	myPixels->stackInfos = (stackInfo *) ( (char *)head + sizeof(pixHeader) + (sizeof (planeInfo) * dz * dc * dt));
 
 	/* release the lock created by newRepFile */
 	lockRepFile (myPixels->fd_rep,'u',0LL,0LL);
@@ -1215,7 +1394,7 @@ int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, ome_coord z, ome_coo
 pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
 size_t file_off,plane_offset;
-
+	
 	if (!myPixels) return (0);
 	if (!myPixels->planeInfos) return (0);
 	if (!CheckCoords (myPixels,0,0,z,c,t)) return (0);
@@ -1229,12 +1408,12 @@ size_t file_off,plane_offset;
 			"Could't get file lock\n");
 		return (0);
 	}
+
 	if (rorw == 'w')
 		memcpy (myPixels->planeInfos+plane_offset, theInfo, nBytes);
 	else
 		memcpy (theInfo, myPixels->planeInfos+plane_offset, nBytes);
 	lockRepFile (myPixels->fd_info,'u',file_off,nBytes);
-	
 	return (1);
 }
 
@@ -1258,18 +1437,16 @@ size_t file_off,stack_offset;
 	else
 		memcpy (theInfo, myPixels->stackInfos+stack_offset, nBytes);
 	lockRepFile (myPixels->fd_info,'u',file_off,nBytes);
-	
+
 	return (1);
 }
 
 
 /*
   This is the plane statistics calculator.  It does not check if the statistics
-  are OK before doing it's job, so calling this will allways result in a new
+  are OK before doing it's job, so calling this will all ways result in a new
   statistics calculation.
 */
-
-static
 int DoPlaneStats (PixelsRep *myPixels, ome_coord z, ome_coord c, ome_coord t) {
 planeInfo myPlaneInfo;
 pixHeader *head;
@@ -1285,7 +1462,7 @@ short *sShrtP;
 long  *sLongP;
 float *floatP;
 register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
-
+int i;
 
 	if (!myPixels) return (0);
 	if (!myPixels->stackInfos) return (0);
@@ -1298,9 +1475,11 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 	pix_off = GetOffset (myPixels, 0, 0, z, c, t);
 	
 	thePix = ((char *)myPixels->pixels) + pix_off;
-
-	if (head->bp == 1 && head->isSigned) {
+	memset (&myPlaneInfo, 0, sizeof(planeInfo));
+if (head->bp == 1 && head->isSigned) {
 		sCharP = thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *sCharP++;
@@ -1314,8 +1493,17 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+		sCharP = thePix;
+		/* compute the plane histogram */
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *sCharP++;	
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	} else if (head->bp == 1 && !head->isSigned) {
 		uCharP = (unsigned char *) thePix;
+
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *uCharP++;
@@ -1329,8 +1517,18 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+
+		uCharP = (unsigned char *) thePix;
+		/* compute the plane histogram */
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *uCharP++;	
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	} else if (head->bp == 2 && head->isSigned) {
 		sShrtP = (short *) thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *sShrtP++;
@@ -1344,8 +1542,19 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+
+		sShrtP = (short *) thePix;		
+		/* compute the stack histogram */
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *sShrtP++;		
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
+	
 	} else if (head->bp == 2 && !head->isSigned) {
 		uShrtP = (unsigned short *) thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *uShrtP++;
@@ -1359,8 +1568,19 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+		
+		uShrtP = (unsigned short *) thePix;
+		/* compute the stack histogram */
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *uShrtP++;	
+
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
 		sLongP = (long *) thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *sLongP++;
@@ -1374,8 +1594,18 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+		
+		/* compute the stack histogram */
+		sLongP = (long *) thePix;
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *sLongP++;		
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
 		uLongP = (unsigned long *) thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *uLongP++;
@@ -1389,8 +1619,18 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+		
+		/* compute the stack histogram */
+		uLongP = (unsigned long *) thePix;
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *uLongP++;		
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	} else if (head->bp == 4 && head->isFloat) {
 		floatP = (float *) thePix;
+		
+		/* compute plane statistics */
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *floatP++;
@@ -1404,9 +1644,15 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 				if (theVal > max) max = theVal;
 			}
 		}
+		
+		floatP = (float *) thePix;
+		/* compute the stack histogram */
+		for (i=0;i<nPix;i++) {
+			theVal = (float) *floatP++;		
+			/* normalize theVal to (0,1) and discretize it into NUM_BINS pieces */
+			myPlaneInfo.hist[(int) (((theVal+min)/(min+max))*(NUM_BINS-1))]++;
+		}
 	}
-	
-	memset (&myPlaneInfo, 0, sizeof(planeInfo));
 	
 	myPlaneInfo.sum_xi    = sum_xi;
 	myPlaneInfo.sum_yi    = sum_yi;
@@ -1434,7 +1680,7 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 	myPlaneInfo.centroid_y = sum_yi / sum_i;
 	
 	myPlaneInfo.stats_OK = 1;
-	return (DoPlaneInfoIO (myPixels, &myPlaneInfo, z, c, t, 'w') );
+	return ( DoPlaneInfoIO (myPixels, &myPlaneInfo, z, c, t, 'w'));
 }
 
 
@@ -1443,7 +1689,6 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
   are OK, and if not checks if each plane statistics is OK, calling
   DoPlaneStats if it isn't.
 */
-static
 int DoStackStats (PixelsRep *myPixels, ome_coord c, ome_coord t) {
 stackInfo myStackInfo;
 pixHeader *head;
@@ -1453,6 +1698,7 @@ stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 size_t plane_offset,stack_offset;
 register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0,nPix;
+int i;
 
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
@@ -1465,6 +1711,7 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 	if (stackInfoP->stats_OK) return (1);
 	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (0);
 
+	memset (&myStackInfo, 0, sizeof(stackInfo));
 	for (z = 0; z < dz; z++) {
 		if (! planeInfoP->stats_OK)
 			DoPlaneStats (myPixels, z, c, t);
@@ -1476,11 +1723,13 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 		sum_log_i += planeInfoP->sum_log_i;
 		if (planeInfoP->min < min) min = planeInfoP->min;
 		if (planeInfoP->max > max) max = planeInfoP->max;
+		
+		/* sum the plane histogram vectors to get the stack vector */
+		for (i = 0; i<NUM_BINS; i++)
+			myStackInfo.hist[i] += planeInfoP->hist[i];
 		planeInfoP++;
 	}
 	nPix = head->dx*head->dy*dz;
-
-	memset (&myStackInfo, 0, sizeof(stackInfo));
 
 	myStackInfo.sum_xi    = sum_xi;
 	myStackInfo.sum_yi    = sum_yi;
@@ -1512,39 +1761,43 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 	return (DoStackInfoIO (myPixels, &myStackInfo, c, t, 'w') );
 }
 
-
-
-
 /*
   This makes sure all the statistics are calculated.  It accept a force parameter, which makes
   it calculate the statistics regardless of the value of stats_OK.
+  
+  It also computes the stack and plane histograms.
 */
-
-static
 int FinishStats (PixelsRep *myPixels, char force) {
 	ome_dim  dc, dz, dt;
 	ome_coord z, c, t;
 	pixHeader *head;
 	stackInfo *stackInfoP;
 	planeInfo *planeInfoP;
-
-
+	int i,j;
+	
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
 	if (! (stackInfoP = myPixels->stackInfos) ) return (0);
 	if (! (planeInfoP = myPixels->planeInfos) ) return (0);
+		
 	dz = head->dz;
 	dc = head->dc;
 	dt = head->dt;
 	for (t = 0; t < dt; t++) {
 		for (c = 0; c < dc; c++) {
-			if (force) stackInfoP->stats_OK = 0;
-			for (z = 0; z < dz; z++) {
-				if (force) planeInfoP->stats_OK = 0;
-				if (! planeInfoP->stats_OK)
-					if (!DoPlaneStats (myPixels, z, c, t)) return (0);
+			if (force) 
+				stackInfoP->stats_OK = 0;
+
+			for (z = 0; z < dz; z++) {				
+				if (force)
+					planeInfoP->stats_OK = 0;
+				if (!planeInfoP->stats_OK)
+					/* lets fondle the planeInfoP data */
+					if (!DoPlaneStats (myPixels, z, c, t))
+						return 0;
 				planeInfoP++;
 			}
+			
 			if (!DoStackStats (myPixels, c, t)) return (0);
 			stackInfoP++;
 		}
@@ -1759,11 +2012,13 @@ convertFileRec convRec;
 FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
 TIFF *tiff = NULL;
-tdata_t buf;
+tdata_t read_buf;
+uint16* write_buf;
 tstrip_t strip;
 uint32 width = 0;
 uint32 height = 0;
-uint16 chans = 0, bpp, pc;
+uint16 chans = 0,pc;
+uint16 read_bitspp, write_bytespp;
 tsize_t stripSize;
 char doSwap;
 
@@ -1775,7 +2030,7 @@ char doSwap;
 				(unsigned long long)myPixels->ID);
 		return (0);
 	}
-
+	
 	bp = head->bp;
 
 	if (!CheckCoords (myPixels, 0, 0, theZ, theC, theT)){
@@ -1797,6 +2052,7 @@ char doSwap;
 
 	/* Wait for a read lock */
 	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);	
+	
     if (! (tiff = TIFFFdOpen(myFile->fd_rep, myFile->path_rep, "r")) ) {
 		sprintf (myPixels->error_str+strlen(myPixels->error_str),
 			"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.\n",
@@ -1804,7 +2060,6 @@ char doSwap;
 			(unsigned long long)myFile->ID);
     	return (0);
     }
-
     if (TIFFSetDirectory(tiff, (tdir_t)tiffDir) != 1) {
 		sprintf (myPixels->error_str+strlen(myPixels->error_str),
 			"ConvertTIFF (PixelsID=%llu). Couldn't set TIFF directory to %lu.\n",(unsigned long long)myPixels->ID,tiffDir);
@@ -1815,12 +2070,18 @@ char doSwap;
 	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
 	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
 	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &chans);
-	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bpp);
+	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &read_bitspp);
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
 
-	bpp /= 8;
-
-	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || chans > 1 || bpp != (uint16)(head->bp) ||
+	/* convert bits per pixel to bytes per pixel */
+	if (read_bitspp <= 8)
+		write_bytespp = 1;
+	else if (read_bitspp > 8 && read_bitspp <= 16)
+		write_bytespp = 2;
+	else 
+		write_bytespp = 4;
+		
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || chans > 1 || write_bytespp != (uint16)(head->bp) ||
 		pc != PLANARCONFIG_CONTIG ) {
 			int nc=0;
 			
@@ -1829,32 +2090,64 @@ char doSwap;
 				(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
 			nc += sprintf (myPixels->error_str+nc,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
 			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
-			nc += sprintf (myPixels->error_str+nc,"\tBytes per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp,(int)bpp);
+			nc += sprintf (myPixels->error_str+nc,"\tBits per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp*8,(int)read_bitspp);
 			nc += sprintf (myPixels->error_str+nc,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
 			return (0);
 	}
 
-	if (! (buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
+	if (! (read_buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
 		sprintf (myPixels->error_str+strlen(myPixels->error_str),
 			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff));
 		TIFFClose(tiff);
 		return (0);
 	}
 
-	myPixels->IO_buf = buf;
+	/* allocate a write buffer if neccessary */
+	if (read_bitspp%8 != 0)
+		if (! (write_buf = (uint16*) malloc(TIFFStripSize(tiff)*8/read_bitspp * write_bytespp)) ) {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary bit-unpacking, buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
+		_TIFFfree(read_buf);
+		TIFFClose(tiff);
+		return (0);
+	}
+	
 	myPixels->IO_buf_off = 0;
 	doSwap = myPixels->doSwap;
 	myPixels->doSwap = 0;
-	for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
-		stripSize = TIFFReadEncodedStrip(tiff, strip, buf, (tsize_t) -1);
-		nPix = stripSize / bpp;
+		
+	/* do we need to do bit unpacking or not */
+	if (read_bitspp % 8 == 0){
+		myPixels->IO_buf = read_buf;
+		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (8*stripSize) / read_bitspp;
+		
 		myPixels->IO_buf_off = 0;
 		nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 		pix_offset += stripSize;
 		nIO += nOut;
+		}
+	} else {
+		myPixels->IO_buf = write_buf;
+		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (stripSize*8) / read_bitspp;
+			
+			/* unpack bits to write_buf from read_buf*/
+			unpackBits((uint8*) read_buf, read_bitspp, write_buf, write_bytespp, nPix);
+			
+			myPixels->IO_buf_off = 0;
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+				
+			pix_offset += nPix*write_bytespp;
+			nIO += nOut;
+		}
 	}
+	
 	myPixels->doSwap = doSwap;
-	_TIFFfree(buf);
+	free(write_buf);
+	_TIFFfree(read_buf);
 	TIFFClose(tiff);
 
 	if (writeRec) {
@@ -1874,11 +2167,51 @@ char doSwap;
 			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));
 		}
 	}
-
 	return (nIO);
 }
 
-
+/* warning. this function is a mine field. contact me (Tom) if you are thinking of changing it*/
+static void
+unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength)
+{
+	int i,j;
+	uint16 r_byte1;
+	uint16 r_byte2;
+	uint16 r_byte3;
+	uint16* w_byte1;
+	uint16* w_byte2;
+	uint16 mask1 = 0x00F0;
+	uint16 mask2 = 0x000F;
+	
+	w_byte1 = malloc(sizeof(uint8) * write_bytespp);
+	w_byte2 = malloc(sizeof(uint8) * write_bytespp);
+	
+	if (read_bitspp != 12){
+		fprintf(stderr,"HALT! un_pack_bits in Pixels.c was incorrectly called. Currently read_bitspp can only equal 12 \n");
+		return;
+	}
+	
+	for (i=0,j=0; (j+1) < nlength; i+=3,j+=2) {
+		r_byte1 = (uint16) *( (uint8*) read_buf + sizeof(uint8)*i );
+		r_byte2 = (uint16) *( (uint8*) read_buf + sizeof(uint8)*(i+1) );
+		r_byte3 = (uint16) *( (uint8*) read_buf + sizeof(uint8)*(i+2) );
+		
+//		fprintf(stderr, "r_byte1 = %x, r_byte2 = %x, r_byte3 = %x\n", r_byte1,r_byte2,r_byte3);
+		
+		*w_byte1 =  (uint16) ( (r_byte1<<4) + ((r_byte2 & mask1)>>4) );
+		*w_byte2 =  (uint16) ( ((r_byte2 & mask2) << 8) + r_byte3 );
+		
+		memcpy ( (uint16*) (write_buf + sizeof(uint8)*write_bytespp*j),     w_byte1, sizeof(uint16) );
+		memcpy ( (uint16*) (write_buf + sizeof(uint8)*write_bytespp*(j+1)), w_byte2, sizeof(uint16) );
+		
+//		fprintf(stderr, "w_byte1 = %x, w_byte2 = %x\n", (uint16) *w_byte1, (uint16) *w_byte2);		
+//		fprintf(stderr, "w_byte1 = %d, w_byte2 = %d\n", (uint16) *w_byte1, (uint16) *w_byte2);
+	}
+	
+	free (w_byte1);
+	free (w_byte2);
+}
+	
 /*
   GetArchive (PixelsRep myPixels)
   Collects all the files that were used to generate the Pixels (if any)

@@ -90,6 +90,7 @@ dispatch (char **param)
 	FILE *file;
 	char file_path[MAXPATHLEN],file_path2[MAXPATHLEN];
 	unsigned long tiffDir=0;
+	int i;
 	
 	/* Co-ordinates */
 	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
@@ -115,6 +116,12 @@ char **cgivars=param;
 	}
 	
 	m_val = get_method_by_name(method);
+	/* Trap for inputed method name strings that don't correspond to implemented methods */
+	if (m_val == 0){
+			HTTP_DoError (method,"Method %s doesnt' exist", method);
+			return (-1);
+	}
+	
 	/* END (method operations) */
 
 	/* ID requirements */
@@ -274,7 +281,7 @@ char **cgivars=param;
 
 			freePixelsRep (thePixels);
 			break;
-		case M_GETPLANESTATS:
+		case M_GETPLANESSTATS:
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
@@ -307,12 +314,49 @@ char **cgivars=param;
 							 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
 							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi
 						);
+	
 						planeInfoP++;
 					}
 
 			freePixelsRep (thePixels);
 
 			break;
+		case M_GETPLANESHIST:
+			if (!ID) return (-1);
+		
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			if (! (planeInfoP = thePixels->planeInfos) ) {
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
+				return (-1);
+			}
+
+			head = thePixels->head;
+
+			dz = head->dz;
+			dc = head->dc;
+			dt = head->dt;
+			HTTP_ResultType ("text/plain");
+			for (t = 0; t < dt; t++)
+				for (c = 0; c < dc; c++)
+					for (z = 0; z < dz; z++) {
+						fprintf(stdout,"%lu\t%lu\t%lu\t", c,t,z);
+						for (i = 0; i < NUM_BINS; i++)
+							fprintf(stdout,"%lu\t", planeInfoP->hist[i]);
+						fprintf(stdout,"\n");
+						planeInfoP++;
+					}
+
+			freePixelsRep (thePixels);
+			break;
+			
 		case M_GETSTACKSTATS:
 			if (!ID) return (-1);
 		
@@ -345,6 +389,42 @@ char **cgivars=param;
 						 stackInfoP->sum_i, stackInfoP->sum_i2, stackInfoP->sum_log_i,
 						 stackInfoP->sum_xi, stackInfoP->sum_yi, stackInfoP->sum_zi
 					);
+					stackInfoP++;
+				}
+
+			freePixelsRep (thePixels);
+
+			break;
+		case M_GETSTACKHIST:
+		if (!ID) return (-1);
+		
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			if (! (stackInfoP = thePixels->stackInfos) ) {
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
+				return (-1);
+			}
+
+			head = thePixels->head;
+
+			dz = head->dz;
+			dc = head->dc;
+			dt = head->dt;
+			HTTP_ResultType ("text/plain");
+			
+			for (t = 0; t < dt; t++)
+				for (c = 0; c < dc; c++) {
+					fprintf(stdout,"%lu\t%lu\t", c,t);
+					for (i = 0; i < NUM_BINS; i++)
+						fprintf(stdout,"%lu\t", stackInfoP->hist[i]);
+					fprintf(stdout,"\n");
 					stackInfoP++;
 				}
 
@@ -467,9 +547,9 @@ char **cgivars=param;
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
-				freeFileRep (theFile);
 				HTTP_DoError (method,"Could not get info for FileID=%llu!",
 					(unsigned long long)fileID);
+				freeFileRep (theFile);
 				return (-1);
 			}
 
@@ -515,9 +595,9 @@ char **cgivars=param;
 
 			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
 				if (GetFileInfo (theFile) < 0) {
-					freeFileRep (theFile);
 					HTTP_DoError (method,"Could not get info for FileID=%llu!",
 						(unsigned long long)fileID);
+					freeFileRep (theFile);
 					return (-1);
 				}
 				fprintf (stdout,"Content-Disposition: attachment; filename=\"%s\"\r\n",theFile->file_info.name);
@@ -675,52 +755,55 @@ char **cgivars=param;
 
 			if (m_val == M_CONVERTSTACK) {
 				if (theC < 0 || theT < 0) {
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
+					freePixelsRep (thePixels);
 					return (-1);
 				}
 				nPix = head->dx*head->dy*head->dz;
 				if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+					freePixelsRep (thePixels);
 					return (-1);
 				}
 				offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 			} else if (m_val == M_CONVERTPLANE || m_val == M_CONVERTTIFF) {
 				if (theZ < 0 || theC < 0 || theT < 0) {
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
+					freePixelsRep (thePixels);
 					return (-1);
 				}
+				
 				nPix = head->dx*head->dy;
 				if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+					freePixelsRep (thePixels);
 					return (-1);
 				}
+
 				offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
+
 			} else if (m_val == M_CONVERTROWS) {
 				long nRows=1;
 
 				if ( (theParam = get_param (param,"nRows")) )
 					sscanf (theParam,"%ld",&nRows);
 				if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+					freePixelsRep (thePixels);
 					return (-1);
 				}
 
 				nPix = nRows*head->dy;
 				if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
 						theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+					freePixelsRep (thePixels);
 					return (-1);
 				}
 				if (theY+nRows-1 >= head->dy) {
-					freePixelsRep (thePixels);
 					HTTP_DoError (method,"theY + nRows (%d + %ld = %ld) must be less than dY (%d).",
 						theY,nRows,theY+nRows,head->dy);
+					freePixelsRep (thePixels);
 					return (-1);
 				}
 				offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
@@ -744,6 +827,20 @@ char **cgivars=param;
 				freeFileRep   (theFile);
 				return (-1);
 			} else {
+			
+				/* compute the Pixel's statistics as appropriate */
+				switch (m_val) {
+					case M_CONVERT:
+						FinishStats (thePixels, 0);
+						break;
+					case M_CONVERTSTACK:
+						DoStackStats (thePixels, theC, theT);
+						break;
+					case M_CONVERTPLANE:
+					case M_CONVERTTIFF:
+						DoPlaneStats (thePixels, theZ, theC, theT);
+						break; 
+				}
 				freePixelsRep (thePixels);
 				freeFileRep   (theFile);
 				HTTP_ResultType ("text/plain");
@@ -829,27 +926,27 @@ char **cgivars=param;
 			offset = 0;
 		} else if (strstr (method,"Stack")) {
 			if (theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			nPix = head->dx*head->dy*head->dz;
 			if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
 		} else if (strstr (method,"Plane")) {
 			if (theZ < 0 || theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			nPix = head->dx*head->dy;
 			if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
@@ -858,20 +955,20 @@ char **cgivars=param;
 			if ( (theParam = get_param (param,"nRows")) )
 				sscanf (theParam,"%ld",&nRows);
 			if (theY < 0 || theZ < 0 || theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
 					theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			if (!CheckCoords (thePixels, 0, theY+nRows-1, theZ, theC, theT)){
-				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Number of rows (%d) and theY (%d) exceed maximum Y (%d).",
 					nRows,theY,head->dy-1);
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 			

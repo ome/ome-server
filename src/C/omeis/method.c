@@ -69,7 +69,8 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "Plane") == 0) return M_PLANE;
 	if (strcmp(m_name, "SetPlane") == 0) return M_SETPLANE;
 	if (strcmp(m_name, "GetPlane") == 0) return M_GETPLANE;
-	if (strcmp(m_name, "GetPlaneStats") == 0) return M_GETPLANESTATS;
+	if (strcmp(m_name, "GetPlaneStats") == 0) return M_GETPLANESSTATS;
+	if (strcmp(m_name, "GetPlaneHist") == 0) return M_GETPLANESHIST;
 	if (strcmp(m_name, "ConvertPlane") == 0) return M_CONVERTPLANE;
 	if (strcmp(m_name, "ConvertTIFF") == 0) return M_CONVERTTIFF;
 	
@@ -78,6 +79,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "SetStack") == 0) return M_SETSTACK;
 	if (strcmp(m_name, "GetStack") == 0) return M_GETSTACK;
 	if (strcmp(m_name, "GetStackStats") == 0) return M_GETSTACKSTATS;
+	if (strcmp(m_name, "GetStackHist") == 0) return M_GETSTACKHIST;
 	if (strcmp(m_name, "ConvertStack") == 0) return M_CONVERTSTACK;
 
 	/* ROI comparisions */
@@ -99,7 +101,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "GetThumb") == 0) return M_GETTHUMB;
 	if (strcmp(m_name, "IsOMExml") == 0) return M_ISOMEXML;
 
-	fprintf(stderr, "Unknown method '%s'.\n", m_name);
+	/* fprintf(stderr, "Unknown method '%s'.\n", m_name); */
 	return 0;  /* Unknown method */
 }
 

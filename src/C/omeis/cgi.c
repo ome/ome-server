@@ -169,9 +169,10 @@ void unescape_url(char *url)
 			j+= 2;
 		}
 	}
-
+	
 	url[i] = '\0';
 }
+
 
 /** Read the CGI input and place all name/val pairs into list.		  **/
 /** Returns list containing name1, value1, name2, value2, ... , NULL  **/
@@ -373,7 +374,7 @@ char **getCLIvars(int argc, char **argv)
 	char **cgivars;
 	char *eqpos;
 
-	if ( argc < 2 || getenv("REQUEST_METHOD") ) return (NULL);
+	if (argc < 2) return (NULL);
 	/** Then, from the list of pairs, extract the names and values **/
 	
 	cgivars = (char **) malloc((argc*2+1)*sizeof(char **));
