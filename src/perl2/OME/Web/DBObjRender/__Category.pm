@@ -74,12 +74,18 @@ sub _renderData {
 		foreach my $request ( @{ $field_requests->{ 'Images' } } ) {
 			my $request_string = $request->{ 'request_string' };
 			my @images = OME::Tasks::CategoryManager->getImagesInCategory( $obj );
+			my $cut_off;
+			if( $request->{ limit_count } ) {
+				$cut_off = scalar( @images ) - $request->{ limit_count };
+				@images = splice( @images, 0, $request->{ limit_count } )
+					if( $cut_off > 0 );
+			}
 			my $render_mode = ( $request->{ render } or 'ref_list' );
 			$record{ $request_string } = $self->Renderer()->renderArray( 
 				\@images, 
 				$render_mode, 
 				{ type => 'OME::Image' }
-			);
+			).( ( $cut_off > 0 ) ? '...' : '' );
 		}
 	}
 	
