@@ -138,7 +138,6 @@ OME::DBObject->Caching(0);
 sub new{
 	my $class=shift;
 	my $self={};
-	$self->{session}=shift;	
 	bless($self,$class);
    	return $self;
 
@@ -151,7 +150,7 @@ sub new{
 
 sub delete{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my ($id)=@_;
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
 	
@@ -168,7 +167,7 @@ sub delete{
 # 	
 sub getAllImages {
 	my $self = shift;
-	my $factory = $self->Session()->Factory();
+	my $factory = $self->__Session()->Factory();
 
 	return $factory->findObjects("OME::Image");
 };
@@ -178,9 +177,9 @@ sub getAllImages {
 #
 sub getUserImages {
 	my ($self, $experimenter) = shift;
-	my $factory = $self->Session()->Factory();
+	my $factory = $self->__Session()->Factory();
 
-	$experimenter = $self->Session()->User() unless defined $experimenter;
+	$experimenter = $self->__Session()->User() unless defined $experimenter;
 
 	return $factory->findObjects("OME::Image", experimenter_id => $experimenter->id());
 }
@@ -195,7 +194,7 @@ sub getUserImages {
 
 sub listMatching{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my ($ref,$used,$datasetID)=@_;
 	my $result;
 	my @gpImages=();
@@ -232,7 +231,7 @@ sub listMatching{
 sub listImages{
 	my $self=shift;
 	my ($userID,$projectID)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my @listImages=();
 	my @projects=();
 	if (defined $userID){
@@ -271,7 +270,7 @@ sub listImages{
 
 sub load{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->__Session();;
 	my ($imageID)=@_;
 	my $image=$session->Factory()->loadObject("OME::Image",$imageID);
 	return $image;
@@ -288,7 +287,7 @@ sub load{
 sub manage{
 	my $self=shift;
 	my ($ref)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my ($result,$projects)=notMyProject($session,$ref);
 	my ($gpImages,$userImages)=usedDatasetImage($session,$result,$projects);
    	return ($gpImages,$userImages);
@@ -300,7 +299,7 @@ sub manage{
 #	ref = ref hash key:imageid value:ref array with dataset_id 
 sub remove{
 	my $self=shift;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my ($ref)=@_;
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
 	my $result;
@@ -324,7 +323,7 @@ sub remove{
 sub createThumbnail{
 	my $self=shift;
 	my ($ref)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	my $generator= new OME::Tasks::Thumbnails($session);
 	my %listThumbnails=();
@@ -371,7 +370,7 @@ sub getImageDim{
 sub getImageStats{
 	my ($self,$image)=@_;
   	# new version
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my $factory=$session->Factory();
   	my $pixels = $image->DefaultPixels();
   	my $stackStats = $factory->findObject( "OME::Module", name => 'Fast Stack statistics' )
@@ -420,7 +419,7 @@ sub getImageStats{
 
 sub getImageWavelengths{
 	my ($self,$image)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my $factory=$session->Factory();
 
 	my @Wavelengths;
@@ -456,7 +455,7 @@ sub getImageWavelengths{
 
 sub getDisplayOptions{
 	my ($self,$image)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	my ($theZ,$theT,$isRGB,@cbw,@rgbOn);
 	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
@@ -714,7 +713,7 @@ sub usedDatasetImage{
 	return (\%gpImages,\%userImages);
 }
 
-sub Session { return OME::Session->instance() }
+sub __Session { return OME::Session->instance() }
 
 sub do_delete{
 	my ($table,$condition,$db)=@_;
