@@ -185,16 +185,6 @@ sub _getJSData {
 	}
 	$JSinfo->{ Stats } = '['.join( ',', @ar1 ).']';
 
-	#######################
-	# Compile Image Info
-	my @imgInfo = (
-		"name: '".$image->name()."'",
-		'id: '  .$image->id(),
-		"'primary pixels id': ".$image->DefaultPixels()->id(),
-		"owner: '".$image->experimenter()->FirstName().' '.$image->experimenter()->LastName()."'"
-	);
-	$JSinfo->{ ImageInfo } = '{'.join( ', ', @imgInfo ).'}';
-
 
 	#######################
 	# Pixel list
@@ -202,28 +192,25 @@ sub _getJSData {
 	$JSinfo->{ PixelList } = '['.join( ', ', map( $_->id(), @pixelList ) ).']';
 		
 	###############
-	# transition to the image server
-	if( $pixels->Repository()->IsLocal() ) {
-		$JSinfo->{ CGI_URL }        = '"/cgi-bin/OME_JPEG"';
-		$JSinfo->{ CGI_optionStr }  = '"&Path='.$path.'"';
-		$JSinfo->{ use_omeis }     = 'false';
-	} else {
-		$JSinfo->{ CGI_URL }       = '"'.$pixels->Repository()->ImageServerURL().'"';
-		$JSinfo->{ CGI_optionStr } = '""';
-		$JSinfo->{ ImageServerID } = $pixels->ImageServerID();
-		$JSinfo->{ use_omeis }     = 'true';
-	}
+	# image server stuff
+	$JSinfo->{ ImageServerURL } = '"'.$pixels->Repository()->ImageServerURL().'"';
+	$JSinfo->{ ImageServerID }  = $pixels->ImageServerID();
 
 	###############
 	# additional URLs of CGIs
 	$JSinfo->{ SaveDisplayCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
 	$JSinfo->{ SavePrefsCGI_URL } = '"/perl2/serve.pl?Page=OME::Web::SaveViewerSettings"';
+	$JSinfo->{ PlaneURLs } = '{'.join( ', ', 
+		'imageInfo: "'.$self->getObjDetailURL( $image ).'"',
+		'stats: "'.$self->getObjDetailURL( $imageManager->getImageStatsMEX( $pixels ) ).'"', 
+	).'}';
 
 	###############
 	# Saved display settings:
 	my $displayOptions = $imageManager->getDisplayOptions($image);
 	$JSinfo->{ theZ }  = sprintf( "%d", $displayOptions->{theZ} );
 	$JSinfo->{ theT }  = sprintf( "%d", $displayOptions->{theT});
+print STDERR "the t is ".$JSinfo->{ theT }."\n\n";
 	$JSinfo->{ isRGB } = $displayOptions->{isRGB};
 	$JSinfo->{ CBW }   = '[' . join( ',', @{$displayOptions->{CBW}} ) . ']';
 	$JSinfo->{ RGBon } = '[' . join(",",@{$displayOptions->{RGBon}}) . ']';
@@ -254,22 +241,20 @@ sub BuildSVGviewer {
 	my $imageID            = $JSinfo->{ imageID };
 	my $pixelsID           = $JSinfo->{ pixelsID };
 	my $imageServerID      = $JSinfo->{ ImageServerID };
-	my $imageInfo          = $JSinfo->{ ImageInfo };
 	my $pixelList          = $JSinfo->{ PixelList };
 	my $Stats              = $JSinfo->{ Stats };
 	my $channelLabels      = $JSinfo->{ channelLabels };
 	my $Dims               = $JSinfo->{ Dims };
-	my $CGI_URL            = $JSinfo->{ CGI_URL };
-	my $CGI_optionStr      = $JSinfo->{ CGI_optionStr };
+	my $ImageServerURL     = $JSinfo->{ ImageServerURL };
 	my $SaveDisplayCGI_URL = $JSinfo->{ SaveDisplayCGI_URL };
 	my $SavePrefsCGI_URL   = $JSinfo->{ SavePrefsCGI_URL };
+	my $planeURLs          = $JSinfo->{ PlaneURLs };
 	my $theZ               = $JSinfo->{ theZ };
 	my $theT               = $JSinfo->{ theT };
 	my $isRGB              = $JSinfo->{ isRGB };
 	my $CBW                = $JSinfo->{ CBW };
 	my $RGBon              = $JSinfo->{ RGBon };
 	my $toolBoxScale       = $JSinfo->{ toolBoxScale };
-	my $use_omeis          = $JSinfo->{ use_omeis };
 
 	my $overlayData        = $self->_getJSOverlay();
 	my $centroidData       = $overlayData->{ centroids };
@@ -316,10 +301,6 @@ sub BuildSVGviewer {
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/OMEimage.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
-			xlink:href="/JavaScript/SVGviewer/ImageInfo.js" />
-	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
-			xlink:href="/JavaScript/SVGviewer/scale.js" />
-	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/xyPlaneControls.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/featureInfo.js" />
@@ -333,6 +314,8 @@ sub BuildSVGviewer {
 			xlink:href="/JavaScript/SVGviewer/ViewerPreferences.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/stats.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/Channels.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 ENDSVG
 
@@ -343,12 +326,12 @@ $SVG .= <<ENDSVG;
 
 		// visualization & logic objects
 		var image;
-		var redScale, blueScale, greenScale, greyScale;
 		var stats;
 		var overlayManager;
 		var viewerPreferences;
 		var xyPlaneControls;
 		var featureInfo;
+		var channels;
 		
 		// theZ & theT are current values of z & t
 		var theZ = $theZ;
@@ -361,59 +344,28 @@ $SVG .= <<ENDSVG;
 			var channelLabels        = $channelLabels;
 			var Stats			     = $Stats;
 			var toolBoxScale	     = $toolBoxScale;
-			var supplimentaryWindows = new Array();
 			var windowControllers	 = new Array();
 
-			image = new OMEimage($imageID,$pixelsID,Stats,$Dims,$CGI_URL,$CGI_optionStr, 
-			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, $use_omeis,
-			                     $imageServerID);
+			image = new OMEimage($imageID,$pixelsID,Stats,$Dims,$ImageServerURL,
+			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB,
+			                     $imageServerID, $theZ, $theT);
 			image.realize( svgDocument.getElementById("image") );
-			
-			var actions = new Array();
-			actions['zSlider']    = setTheZ;
-			actions['tSlider']    = setTheT;
 			
 			// set up windows
 			var toolboxLayer  = svgDocument.getElementById("toolboxLayer");
 
-			stats = new Statistics( Stats, channelLabels );
+			stats = new Statistics( Stats, channelLabels, image );
 			stats.buildToolBox( toolboxLayer );
 			setTimeout( "stats.toolBox.hide()", 200 );
-			supplimentaryWindows.push('Statistics');
 			windowControllers['Statistics'] = stats;
 
-			imgInfo = new ImageInfo( $imageInfo, $pixelList );
-			imgInfo.buildToolBox( toolboxLayer );
-			setTimeout( "imgInfo.toolBox.hide()", 200 );
-			supplimentaryWindows.push('Image Info');
-			windowControllers['Image Info'] = imgInfo;
-
-			Scale.setClassData( image, channelLabels );
-			redScale = new Scale('Red', toolboxLayer);
-			blueScale = new Scale('Blue', toolboxLayer);
-			greenScale = new Scale('Green', toolboxLayer);
-			greyScale = new Scale('Grey', toolboxLayer);
-			windowControllers['RedScale'] = redScale;
-			windowControllers['BlueScale'] = blueScale;
-			windowControllers['GreenScale'] = greenScale;
-			windowControllers['GreyScale'] = greyScale;
-			Scale.updateScaleDisplay(theT);
-			setTimeout( "redScale.toolBox.hide()", 200 );
-			setTimeout( "greenScale.toolBox.hide()", 200 );
-			setTimeout( "blueScale.toolBox.hide()", 200 );
-			setTimeout( "greyScale.toolBox.hide()", 200 );
-			actions['setRedLogicalChannel']    = { obj: redScale, method: 'setLogicalChannel'};
-			actions['setBlueLogicalChannel']    = { obj: blueScale, method: 'setLogicalChannel'};
-			actions['setGreenLogicalChannel']    = { obj: greenScale, method: 'setLogicalChannel'};
-			actions['setGreyLogicalChannel'] = { obj: greyScale, method: 'setLogicalChannel'};;
-			actions['showRedScale']    = { obj: (redScale.toolBox), method: 'toggle'};
-			actions['showBlueScale']    = { obj: (blueScale.toolBox), method: 'toggle'};
-			actions['showGreenScale']    = { obj: (greenScale.toolBox), method: 'toggle'};
-			actions['showGreyScale']    = { obj: (greyScale.toolBox), method: 'toggle'};
+			channels = new Channels( image, channelLabels );
+			channels.build_toolbox( toolboxLayer );
+			setTimeout( "channels.toolBox.hide()", 500 );
+			windowControllers['Channels'] = channels;
 
 			viewerPreferences = new ViewerPreferences( $SavePrefsCGI_URL );
 			viewerPreferences.buildToolBox( toolboxLayer );
-			supplimentaryWindows.push('Preferences');			 
 			windowControllers['Preferences'] = viewerPreferences;
 			setTimeout( "viewerPreferences.toolBox.hide()", 200 );
 
@@ -426,11 +378,10 @@ $SVG .= <<ENDSVG;
 			var overlayBox  = svgDocument.getElementById("overlays");
 			centroids = new CentroidOverlay( $centroidData );
 			overlayBox.appendChild( centroids.makeOverlay() );
-			overlayManager = new OverlayManager( overlayBox );
+			overlayManager = new OverlayManager( image, overlayBox );
 			overlayManager.addLayer( "Spots", centroids );
 
 			overlayManager.buildToolBox( toolboxLayer );
-			supplimentaryWindows.push('Overlay');			 
 			windowControllers['Overlay'] = overlayManager;
 			setTimeout( "overlayManager.switchOverlay(0)", 200 );
 			setTimeout( "overlayManager.turnLayerOnOff(false)", 200 );
@@ -446,7 +397,6 @@ $SVG .= <<ENDSVG;
 			featureInfo = new FeatureInfo( $featureData );
 			featureInfo.buildToolBox( toolboxLayer );
 			setTimeout( "featureInfo.toolBox.hide()", 200 );
-			supplimentaryWindows.push('Features');
 			windowControllers['Features'] = featureInfo;
 
 ENDSVG
@@ -455,71 +405,25 @@ ENDSVG
 
 $SVG .= <<ENDSVG;
 
-			xyPlaneControls = new XYPlaneControls( actions, supplimentaryWindows,channelLabels, image );
+			xyPlaneControls = new XYPlaneControls( $planeURLs, image, stats, viewerPreferences, overlayManager );
 			xyPlaneControls.buildToolBox( toolboxLayer );
 			windowControllers['xyPlaneControls'] = xyPlaneControls;
 
-			xyPlaneControls.setWindowControllers( windowControllers );
 			viewerPreferences.setWindowControllers( windowControllers );
-
-			redScale.tieLogicalChannelPopupList( xyPlaneControls.redPopupList );
-			blueScale.tieLogicalChannelPopupList( xyPlaneControls.bluePopupList );
-			greenScale.tieLogicalChannelPopupList( xyPlaneControls.greenPopupList );
-			greyScale.tieLogicalChannelPopupList( xyPlaneControls.greyPopupList );
-			greyScale.tieLogicalChannelPopupList( stats.logicalChannelPopupList, false );
 
 			// finish setup & make controller
 			azap.appendNode(toolboxLayer);
 			mouseTrap = svgDocument.getElementById("mouseTrap");
 			azap.appendNode(mouseTrap); 
 
-			image.registerTrigger( 'updatePic', xyPlaneControls, 'updatePlaneURL' );
+			image.registerListener( 'updatePic', xyPlaneControls, 'updatePlaneURL' );
 
-			var CBW = image.getCBW();
-			setTimeout( "xyPlaneControls.redPopupList.setSelectionByValue('"+ 
-				xyPlaneControls.redPopupList.getItemList()[ CBW[0] ]
-				+"')", 0 );
-			setTimeout( "xyPlaneControls.greenPopupList.setSelectionByValue('"+ 
-				xyPlaneControls.greenPopupList.getItemList()[ CBW[3] ]
-				+"')", 0 );
-			setTimeout( "xyPlaneControls.bluePopupList.setSelectionByValue('"+ 
-				xyPlaneControls.bluePopupList.getItemList()[ CBW[6] ]
-				+"')", 0 );
-			setTimeout( "xyPlaneControls.greyPopupList.setSelectionByValue('"+ 
-				xyPlaneControls.greyPopupList.getItemList()[ CBW[9] ]
-				+"')", 0 );
 			setTimeout( "viewerPreferences.resizeToolboxes("+toolBoxScale+", true)", 500);
-			setTimeout( "xyPlaneControls.redButton.setState(" + (image.isRedOn() ? true : false) + ", true)", 200 );
-			setTimeout( "xyPlaneControls.greenButton.setState(" + (image.isGreenOn() ? true : false) + ", true)", 200 );
-			setTimeout( "xyPlaneControls.blueButton.setState(" + (image.isBlueOn() ? true : false) + ", true)", 200 );
-			setTimeout( "xyPlaneControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
+			setTimeout( "channels.sync()", 200 );
+			setTimeout( "xyPlaneControls.sync()", 200 );
 //	this next line loads every plane in the image
 //			setTimeout( "image.prefetchImages()", 0 );
 		}
-		
-
-	// these methods glue widgets to doing stuff
-		// newZ has range of 0 to Z-1
-		function setTheZ( newZ ) {
-			theZ = Math.round(newZ);
-			xyPlaneControls.zSlider.setValue(theZ);
-			xyPlaneControls.zSlider.setLabel(null, null, (theZ + 1) + "/" + image.getDimZ() );
-			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
-			image.updatePic(theZ,theT);
-		}
-
-		// newT has range of 0 to T-1
-		function setTheT( newT ) {
-			theT = Math.round(newT);
-			xyPlaneControls.tSlider.setValue(theT);
-			xyPlaneControls.tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + image.getDimT() +")" );
-			
-			if( overlayManager) overlayManager.updateIndex( theZ, theT );
-			image.updatePic(theZ,theT);
-			Scale.updateScaleDisplay(theT);
-			stats.updateStats(theT);
-		}
-				
 	]]></script>
 	<g id="mouseTrap">
 		<!-- The mouse only registers over elements. This rect prevents
