@@ -44,11 +44,11 @@
  *
  */
 
-GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics';
-ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement';
-DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement';
-InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject';
-InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset';
+GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics&Popup=1';
+ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement&Popup=1';
+DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement&Popup=1';
+InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject&Popup=1';
+InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset&Popup=1';
 
 /*
  *
