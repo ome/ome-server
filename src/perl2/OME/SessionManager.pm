@@ -329,11 +329,11 @@ sub getApacheSession {
     # Check for a stale session key.  If its stale, delete it and return undef.
     if (defined $sessionKey) {
     	my $sessionAge = POSIX::difftime(time(),$tiedApacheSession{timestamp});
-		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is ".$sessionAge / 60." minutes old";
+		logdbg "debug", "getApacheSession: timestamp = ".$tiedApacheSession{timestamp}.".  Session is ".($sessionAge / 60)." minutes old";
 		if ($sessionAge > $APACHE_SESSION_LIFETIME) {
 			logdbg "debug", "Deleting session";
 			tied (%tiedApacheSession)->delete();
-			print STDERR "Session is ".$sessionAge/60." minutes long - expired.\n";
+			print STDERR "Session is ".($sessionAge/60)." minutes long - expired.\n";
 			return undef;
 		}
     }
