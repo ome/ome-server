@@ -21,9 +21,9 @@
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 		var redPopupList, bluePopupList, greenPopupList;
 		var azap = new AntiZoomAndPan();
+		// wavelengths will be used to make items in the popupLists
 		var wavelengths = new Array( "100nm", "200nm", "300nm", "400nm");
-		// Array to pass to popupList that it will use to make its items can be a
-		// hash or a more typical array.
+		// popupList will accept hashes as well as typical arrays.
 		wavelengths['lastElement'] = "500nm";
 
 		function init(e) {
@@ -46,10 +46,7 @@
 			greenPopupList.getLabel().setAttributeNS( null, "fill", "green");
 
 			bluePopupList = new popupList(
-				145, 50, wavelengths, showBlueWavelength, null,
-				svgDocument.getElementById("blueAnchorText").firstChild.data,
-				svgDocument.getElementById("blueItemBackgroundText").firstChild.data,
-				svgDocument.getElementById("blueItemHighlightText").firstChild.data
+				145, 50, wavelengths, showBlueWavelength
 			);
 			bluePopupList.setLabel(2, -5, "blue");
 			bluePopupList.getLabel().setAttributeNS( null, "fill", "blue");
@@ -60,11 +57,12 @@
 			greenPopupList.realize(controls);
 			bluePopupList.realize(controls);
 
-			setTimeout("redPopupList.setSelection(1)",0);
-			setTimeout("greenPopupList.setSelection(2)",0);
-			setTimeout("bluePopupList.setSelection(3)",0);
+			setTimeout("redPopupList.setSelection(1,true)",0);
+			setTimeout("greenPopupList.setSelection(2,true)",0);
+			setTimeout("bluePopupList.setSelection(3,true)",0);
 
 			azap.appendNode(controls);
+			
 	   }
 
 		function showRedWavelength(item) {
@@ -87,13 +85,8 @@
 			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 	]]></text>
 	<text id="redItemBackgroundText"><![CDATA[
-		<rect x="-2" width="{$width + 4}" height="0" fill="rgb(255,70,70)"
-			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-			<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-			<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-		</rect>
+		<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)"
+			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 	]]></text>
 	<text id="redItemHighlightText"><![CDATA[
 		<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,100,100)"
@@ -104,39 +97,14 @@
 			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 	]]></text>
 	<text id="greenItemBackgroundText"><![CDATA[
-		<rect x="-2" width="{$width + 4}" height="0" fill="mediumseagreen"
-			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-			<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-			<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-		</rect>
+		<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen"
+			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 	]]></text>
 	<text id="greenItemHighlightText"><![CDATA[
 		<rect x="-2" width="{$width + 4}" height="{$height}" fill="lime"
 			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
 	]]></text>
-	<text id="blueAnchorText"><![CDATA[
-		<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue"
-			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-	]]></text>
-	<text id="blueItemBackgroundText"><![CDATA[
-		<rect x="-2" width="{$width + 4}" height="0" fill="cornflowerblue"
-			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-			<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-			<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-				fill="freeze" begin="indefinite"/>
-		</rect>
-	]]></text>
-	<text id="blueItemHighlightText"><![CDATA[
-		<rect x="-2" width="{$width + 4}" height="{$height}" fill="aqua"
-			rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-	]]></text>
 	</defs>
-	<g id="controls">
-
-	</g>
 	<g id="labels" transform="translate(23, 120)">
 		<rect x="-3" y="-3" width="190" height="45" fill="none" stroke-width="1"
 			stroke="black"/>
@@ -144,4 +112,5 @@
 		<text id="greenWavelength" y="2em" fill="green"> </text>
 		<text id="blueWavelength" y="3em" fill="blue"> </text>
 	</g>
+	<g id="controls"/>
 </svg>
