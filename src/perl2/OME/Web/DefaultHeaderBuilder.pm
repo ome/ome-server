@@ -50,6 +50,7 @@ use Carp;
 # OME Modules
 use OME;
 use OME::Task;
+use OME::Web;
 use OME::Tasks::NotificationManager;
 
 #*********
@@ -58,8 +59,8 @@ use OME::Tasks::NotificationManager;
 
 $VERSION = $OME::VERSION;
 
-my $PM_LOCATION   = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Project';
-my $DM_LOCATION   = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::Dataset';
+my $PM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Project';
+my $DM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Dataset';
 my $HOME_LOCATION = 'serve.pl?Page=OME::Web::Home';
 
 #*********
@@ -93,36 +94,33 @@ sub getPageHeader {
 	my $full_name = $session->User->FirstName . ' ' . $session->User->LastName;
 
 	# Data
-	my ($recent_project_name, $recent_dataset_name,
-	    $recent_project_id,   $recent_dataset_id);
+	my ($project_links, $dataset_links );
 
 		# Recent project
 	if (my $obj = $session->project()) {
-		$recent_project_id   = $obj->id();
-		$recent_project_name = $obj->name();
+		$project_links = 
+			$q->span({class => 'ome_quiet'}, 'Most recent project: ') .
+			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
+			' ' .  # Spacing
+ 			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
 	} else {
-		$recent_project_id = $recent_project_name = 'N/A';
+		$project_links = 
+			$q->span({class => 'ome_quiet'}, 'No recent project. ') .
+			$q->a({href => $PM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
 	
 		# Recent dataset
 	if (my $obj = $session->dataset()) {
-		$recent_dataset_id   = $obj->id();
-		$recent_dataset_name = $obj->name();
+		$dataset_links = 
+			$q->span({class => 'ome_quiet'}, 'Most recent dataset: ') .
+			$q->a({href => OME::Web->getObjDetailURL( $obj ), class => 'ome_quiet'}, $obj->name()) .
+			' ' .  # Spacing
+ 			$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $obj->id() .');'}, '(Popup)');
 	} else {
-		$recent_dataset_id = $recent_dataset_name = 'N/A';
+		$dataset_links = 
+			$q->span({class => 'ome_quiet'}, 'No recent dataset. ') .
+			$q->a({href => $DM_CREATE, class => 'ome_quiet'}, 'create new');
 	}
-
-	# Recent project/dataset links
-	my $recent_links =
-		$q->span({class => 'ome_quiet'}, 'Most recent project: ') .
-		$q->a({href => $PM_LOCATION . '&ID=' . $recent_project_id, class => 'ome_quiet'}, $recent_project_name) .
-		' ' .  # Spacing
-		$q->a({class => 'ome_popup', href => 'javascript:openInfoProject(' . $recent_project_id .');'}, '(Popup)') .
-		$q->br() .
-		$q->span({class => 'ome_quiet'}, 'Most recent dataset: ') .
-		$q->a({href => $DM_LOCATION . '&ID=' . $recent_dataset_id, class => 'ome_quiet'}, $recent_dataset_name) .
-		' ' .  # Spacing
-		$q->a({class => 'ome_popup', href => 'javascript:openInfoDataset(' . $recent_dataset_id .');'}, '(Popup)');
 
 
 	# Logo image link
@@ -171,7 +169,9 @@ sub getPageHeader {
 						style => 'font-weight: bold;'
 					}, 'Welcome ' . $full_name),
 				$q->br(),
-				$recent_links,
+				$project_links,
+				$q->br(),
+				$dataset_links,
 			)
 		)
 	);
