@@ -84,6 +84,14 @@ XYPlaneControls.prototype.setWindowControllers = function( windowControllers ) {
 	this.windowControllers = windowControllers;
 };
 
+XYPlaneControls.prototype.setImageURL = function ( imageURL ) {
+	if( this.openImgLink ) {
+		this.openImgLink.setAttributeNS( xlinkns, 'href', imageURL);
+	}
+};
+
+
+
 XYPlaneControls.prototype.buildDisplay = function(  ) {
 
 	this.displayContent = Util.createElementSVG( "g" );
@@ -252,20 +260,32 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	
 	// save button
 	this.saveButton = new button(
-		85, 130, 
+		85, 120, 
 		this.actions['Save'],
 		'<text fill="black" text-anchor="end">Save</text>',
 		null,
 		'<text fill="white" text-anchor="end">Save</text>'
 	);
 	this.loadButton = new button(
-		85, 140, 
+		85, 130, 
 		this.actions['preload'],
 		'<text fill="black" text-anchor="end">Prefetch</text>',
 		null,
 		'<text fill="white" text-anchor="end">Prefetch</text>'
 	);
-	
+	this.openImgLink = Util.createElementSVG( 'a', {
+		target:          'plane_window'
+	});
+	this.openImgLink.setAttributeNS( xlinkns, 'href', '');
+	this.openImgButton = new button(
+		85, 140, 		
+		null,
+		'<text fill="black" text-anchor="end">View Image</text>',
+		null,
+		'<text fill="white" text-anchor="end">View Image</text>'
+	);
+	this.openImgButton.realize( this.openImgLink );
+	this.displayContent.appendChild( this.openImgLink );
 
 	// RGB to grayscale button
 	this.RGB_BWbutton = new button(
