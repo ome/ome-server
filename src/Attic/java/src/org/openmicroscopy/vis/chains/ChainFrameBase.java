@@ -42,59 +42,56 @@
 
 package org.openmicroscopy.vis.chains;
 
-import java.awt.Rectangle;
+
 import javax.swing.JFrame;
 import javax.swing.WindowConstants;
 import java.awt.Container;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowAdapter;
+import java.awt.Rectangle;
+import edu.umd.cs.piccolo.PCanvas;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.piccolo.PChainCanvas;
+
 
 /** 
- * <p>Main operational chain for the Chain-building application holds
- * toolbar and the chain canvas.<p>
+ * <p>Main operational frame  for the Chain-building application.<p>
  * 
  * @author Harry Hochheiser
  * @version 0.1
  * @since OME2.0
  */
 
-public class ChainFrameBase extends JFrame {
+public abstract class ChainFrameBase extends JFrame {
 	
 	private final Controller controller;
 	private Container contentPane;
-	private PChainCanvas canvas;
+	protected PCanvas canvas;
 	
 	private MenuBar menuBar;
 	private ToolBar toolBar;
 	
 	private ModulePaletteFrame paletteFrame;
 	
-	public ChainFrameBase(Controller controller,Connection connection,int i) {
-		super("OME Chains: "+i);
+	public ChainFrameBase(Controller controller,Connection connection,
+		String title){
+		super(title);
 		setResizable(true);
 		
 		this.controller = controller;
 		
 		contentPane = getContentPane();
 		// create a chain canvas and add it to this frame.
-		canvas = new PChainCanvas(connection);
+		canvas = createCanvas(connection);
 		contentPane.add(canvas);
 		
-		setBounds(new Rectangle(710,10,700,700));
+		setBounds(getInitialBounds());
 		show();		
-		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e) {
-				ChainFrameBase c = (ChainFrameBase) e.getWindow();
-				Controller control = c.getController();
-				control.disposeChainCanvas(c);
-			}
-		});
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);	
 	}
 
 	public Controller getController() {
 			return controller;
 	}
+	
+	public abstract PCanvas createCanvas(Connection connection);
+	
+	public abstract Rectangle getInitialBounds();
 }
