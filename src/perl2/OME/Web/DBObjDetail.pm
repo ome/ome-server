@@ -30,12 +30,24 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    Josiah Johnston
+# Written by:    Josiah Johnston <siah@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
 
 package OME::Web::ObjectDetail;
+
+=pod
+
+=head1 NAME
+
+OME::Web::ObjectDetail - Show detailed information on an object
+
+=head1 DESCRIPTION
+
+Displays detailed information on any DBObject or attribute.
+
+=cut
 
 #*********
 #********* INCLUDES
@@ -130,5 +142,11 @@ sub _getTypeName {
 	( $type =~ s/OME::// and $type =~ s/::/ /g );
 	return $type;
 }
+
+=head1 Author
+
+Josiah Johnston <siah@nih.gov>
+
+=cut
 
 1;
