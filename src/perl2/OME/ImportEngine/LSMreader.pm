@@ -283,34 +283,27 @@ sub readPrivateTags
 	$xref->{ 'Image.NumWaves' } = $data[1];
 	$xref->{ 'Image.NumTimes' } = $data[2];
 	
-	$template = "F";
+	$template = "d";
 	
 	# Pixel sizes start 40 bytes away from valueOffset
 	$file -> setCurrentPosition( $valueOffset + 40 );
-	$buffer = $file -> readData(8);
+	$buffer = $file -> readData(8);	
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	if (($data[0] * 1000000) >= 0)
-	{
-		$xref->{ 'Image.PixelSizeX' } = ($data[0] * 1000000); # convert meters to microns
-	}
+	$xref->{ 'Image.PixelSizeX' } = ($data[0] * 1000000); # convert meters to microns
 	
 	$buffer = $file -> readData(8);
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	if (($data[0] * 1000000) >= 0)
-	{
-		$xref->{ 'Image.PixelSizeY' } = ($data[0] * 1000000); # convert meters to microns
-	}
-	
-	$buffer = $file -> readData(8);
+	$xref->{ 'Image.PixelSizeY' } = ($data[0] * 1000000); # convert meters to microns
+	#print "PixelSizeY is ", $xref->{ 'Image.PixelSizeY' }, "\n";
+
+	$buffer = $file -> readData(8);	
 	$buffer = swapper($buffer, $endian);
 	@data = unpack($template, $buffer);
-	if (($data[0] * 1000000) >= 0)
-	{
-		$xref->{ 'Image.PixelSizeZ' } = ($data[0] * 1000000); # convert meters to microns
-	}
-	
+	$xref->{ 'Image.PixelSizeZ' } = ($data[0] * 1000000); # convert meters to microns
+	#print "PixelSizeZ is ", $xref->{ 'Image.PixelSizeZ' }, "\n";
+
 	$template = ($endian == 0) ? "Vx12Vx4Vx70V" : "Nx12Vx4Nx70N";
 	$file -> setCurrentPosition( $valueOffset + 108 );
 	$buffer = $file -> readData(102);
@@ -348,10 +341,27 @@ sub swapper
 {
 	my ($buffer, $endian) = @_;
 	my $cpu_big_endian = getCPUBigEndian();
+	
 	if ( ($endian == 0 && $cpu_big_endian == 1) || ($endian == 1 && $cpu_big_endian == 0) )
 	{
-		$buffer =~ s/(.)(.)(.)(.)(.)(.)(.)(.)/$8$7$6$5$4$3$2$1/;
+		my $pos = 7;
+		my $template = "H2H2H2H2H2H2H2H2";
+		
+		# Grab the 8 bytes of the buffer in hexadecimal and put them in @data, 1 byte per element
+		my @data = unpack($template, $buffer);
+		
+		# Reverse the elements in @data (element 8 will now be 1, element 7 will be 2, etc.)
+		@data = reverse(@data);
+		$buffer = "";
+
+		# Rebuild the buffer using the newly ordered bytes
+		foreach my $byte (@data)
+		{
+			$buffer .= $byte;
+		}
 	}
+	# Pack the buffer into a single hexadecimal number
+	$buffer = pack("H16", $buffer);
 	return $buffer;
 }
 
@@ -372,7 +382,7 @@ sub getCPUBigEndian
 	}
 	else
 	{
-		die "Could not compute this computer's endianness!\n";
+		die "Could not compute this machine's endianness!\n";
 	}
 }
 
@@ -396,7 +406,7 @@ sub getParams
 sub dumpHash
 {
 	my %hash = @_;
-	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n";
+	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n\n";
 }
 
 # returns a string representing an array dump. Usage:
@@ -404,7 +414,7 @@ sub dumpHash
 sub dumpArray
 {
 	my @array = @_;
-	return "\t".join("\n\t", @array)."\n";
+	return "\t".join("\n\t", @array)."\n\n";
 }
 
 1;
