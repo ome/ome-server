@@ -1,0 +1,345 @@
+www.image1.com/ftp/support/stack/STK.doc
+
+MetaMorph Stack (STK) Image File Format
+(Last updated July 6, 1999)
+
+The MetaMorph Stack (STK) file format is derived from the TIFF format.
+Only the differences between STK and TIFF files are documented here. For
+TIFF information, please consult the TIFF 6.0 Specification, which is
+available online from Adobe in their Technical Notes for Developers
+Section
+(http://www.adobe.com/supportservice/devrelations/PDFS/TN/TIFF6.pdf); you
+will need an Adobe Acrobat Viewer to read it, also freely available from
+Adobe.
+
+Please read the "Suggested Method for Reading STK Files" section at the
+end of this document for tips on how to read in these files.
+Definitions
+Date	= Julian date (days since 1/1/4713 B.C.) See section "Julian Date
+Format" below for more information.
+Time	= Milliseconds since midnight
+SHORT	= 16-bit (2-byte) unsigned integer.
+LONG	= 32-bit (4-byte) unsigned integer.
+RATIONAL = Two LONGs: the first represents the numerator of a fraction;
+the second, the denominator.
+Image File Header
+STK files must have the Intel ("little-endian") byte order (least
+significant byte to most significant byte, for both 16-bit and 32-bit
+integers.)
+Standard Tags
+The following TIFF tags require special handling in STK files:
+ImageDescription
+Tag	= 270 (10E.H)
+Type	= ASCII
+
+Used to store the plane annotations. There is one NULL-terminated string
+for each plane in the stack.
+StripOffsets
+The strips for all the planes of the stack are stored contiguously at this
+location. The following pseudocode fragment shows how to find the offset
+of a specified plane planeNum.
+	LONG	planeOffset = planeNum *
+		(stripOffsets[stripsPerImage - 1] +
+		stripByteCounts[stripsPerImage - 1] - stripOffsets[0]);
+Note that the planeOffset must be added to the stripOffset[0] to find the
+image data for the specific plane in the file.
+Compression
+STK files support TIFF compression scheme 5 (LZW). If you plan to support
+this compression scheme in your own code, please note the following
+paragraph from the TIFF 6.0 specification (approved by the Unisys
+Corporation):
+"The LZW compression method is said to be the subject of United States
+patent number 4,558,302 and corresponding foreign patents owned by the
+Unisys Corporation. Software and hardware developers may be required to
+license this patent in order to develop and market products using the TIFF
+LZW compression option. Unisys has agreed that developers may obtain such
+a license on reasonable, non-discriminatory terms and conditions. Further
+information can be obtained from: Welch Licensing Department, Office of
+the General Counsel, M/S C1SW19, Unisys Corporation, Blue Bell,
+Pennsylvania, 19424."
+Universal Imaging is licensed to use TIFF LZW compression in its products,
+but this license does not extend to third parties that support the STK
+format in their products. Each product must be licensed from Unisys
+separately.
+Predictor
+By default, MetaMorph uses a horizontal differencing predictor on
+LZW-compressed stacks. See Section 14 of the TIFF 6.0 specification for
+details.
+Custom Tags
+STK files use the following private tags assigned to Universal Imaging by
+Adobe:  This is in screening .TIFs
+UIC1Tag
+Tag	= 33628 (835C.H)
+Type	= LONG (or RATIONAL)
+N	= Number of tags
+
+If this tag exists and is of type LONG, then at the indicated offset there
+is a series of N pairs consisting of an ID code of size LONG and a
+variable-sized (ID-dependent) block of data. The possible tags and their
+values are defined in the "Tag ID Codes" section below. These values are
+used internally by the Meta Imaging Series applications, and may not be
+useful to other applications. To replicate the behavior of MetaMorph, this
+table should be read and its values stored after the table indicated by
+UIC4Tag is read.
+
+If the type of this tag is RATIONAL, it indicates a stack file created by
+an obsolete (pre-2.5) version of MetaMorph. At the indicated offset, there
+is a table of 2*N LONG values indicating for each plane in order: Z
+distance (numerator), Z distance (denominator). STK files should not be
+written using this tag because future versions of Meta Imaging Series may
+not support it.
+
+UIC2Tag
+Tag	= 33629 (835D.H)
+Type	= RATIONAL
+N	= Number of planes
+
+The presence of this tag indicates that the file is a MetaMorph Stack. The
+stack consists of N images of size ImageWidth * ImageLength (*
+SamplesPerPixel for RGB images). At the indicated offset, there is a table
+of 6*N LONG values indicating for each plane in order: Z distance
+(numerator), Z distance (denominator), creation date, creation time,
+modification date, modification time.
+
+UIC3Tag
+Tag	= 33630 (835E.H)
+Type	= RATIONAL
+N	= Number of planes
+
+A table of 2*N LONG values indicating for each plane in order: wavelength
+(numerator), wavelength (denominator).
+
+UIC4Tag
+Tag	= 33631 (835F.H)
+Type	= LONG
+N	= Number of planes
+
+At the indicated offset, there is a series of pairs consisting of an ID
+code of size SHORT and a variable-sized (ID-dependent) block of data.
+Pairs should be read until an ID of 0 is encountered. The possible tags
+and their values are defined in the "Tag ID Codes" section below. The
+"AutoScale" tag never appears in this table (because its ID is used to
+terminate the table.)
+
+These values are used internally by the Meta Imaging Series applications,
+and may not be useful to other applications. It is not required that this
+tag be included when a stack file is saved.
+
+To replicate the behavior of MetaMorph, this table should be read and its
+values stored before the table indicated by UIC1Tag is read.
+
+Tag ID codes
+The ID codes currently defined are:
+These are pairs of longs.  The tag's N referes to the number of pairs.
+ID	Name	Data (size is LONG except where noted)
+0	AutoScale	If non-zero, automatic 16-bit to 8-bit scaling is
+enabled for this image. (Applies only to 16-bit images.)
+1	MinScale	Minimum scaling value. (Applies only to 16-bit
+images.)
+2	MaxScale	Maximum scaling value. (Applies only to 16-bit
+images.)
+3	SpatialCalibration	Spatial calibration state. (0 = off,
+non-zero = on.)
+4	XCalibration	Offset of a pair of LONG values containing the
+numerator and denominator of the X spatial calibration value. These should
+be divided to produce a floating-point (double) value.
+5	YCalibration	Offset of a pair of LONG values containing the
+numerator and denominator of the Y spatial calibration value. These should
+be divided to produce a floating-point (double) value.
+6	CalibrationUnits	Offset of a LONG containing the length of
+the spatial calibration units string (e.g. "microns"), followed by that
+many bytes of string data.
+7	Name	Offset of a LONG containing the length of the image window
+name string, followed by that many bytes of string data.
+8	ThreshState	Threshold state. (0 = off, 1 = inside, 2 =
+outside)
+9	ThreshStateRed	Red threshold value (unsigned.)
+11	ThreshStateGreen	Green threshold value (unsigned.)
+12	ThreshStateBlue	Blue threshold value (unsigned.)
+13	ThreshStateLo	Low threshold value (unsigned.)
+14	ThreshStateHi	High threshold value (unsigned.)
+15	Zoom	Zoom factor of display (%)
+16	CreateTime	Offset of image creation time expressed as a LONG
+representing the date followed by a LONG representing the time.
+17	LastSavedTime	Offset of image modification time expressed as a
+LONG representing the date followed by a LONG representing the time.
+18	currentBuffer	Number of the currently active plane.
+19	grayFit	Used internally by MetaMorph.
+20	grayPointCount	Used internally by MetaMorph.
+21	grayX	Offset of a pair of LONG values containing the numerator
+and denominator of the X gray calibration value. These should be divided
+to produce a floating-point (double) value.
+22	grayY	Offset of a pair of LONG values containing the numerator
+and denominator of the Y gray calibration value. These should be divided
+to produce a floating-point (double) value.
+23	grayMin	Offset of a pair of LONG values containing the numerator
+and denominator of the minimum gray calibration value. These should be
+divided to produce a floating-point (double) value.
+24	grayMax	Offset of a pair of LONG values containing the numerator
+and denominator of the maximum gray calibration value. These should be
+divided to produce a floating-point (double) value.
+25	grayUnitName	Offset of a LONG containing the length of the gray
+calibration units string, followed by that many bytes of string data.
+26	StandardLUT	Lookup table state: 0=monochrome, 1=pseudocolor,
+2=Red, 3=Green, 4=Blue, 5=user-defined. Generally values other than
+"user-defined" are only useful to MetaMorph.
+27	wavelength	Wavelength of current plane (see currentBuffer.)
+28	StagePosition	Offset of a table of 4*N LONG values indicating
+for each plane in order: stage X position (numerator), stage X position
+(denominator), stage Y position (numerator), stage Y position
+(denominator).
+29	CameraChipOffset	Offset of a table of 4*N LONG values
+indicating for each plane in order: camera chip X offset (numerator),
+camera chip X offset (denominator), camera chip Y offset (numerator),
+camera chip Y offset (denominator).
+30	OverlayMask	Used internally by MetaMorph.
+31	OverlayCompress	Used internally by MetaMorph.
+32	Overlay	Used internally by MetaMorph.
+33	SpecialOverlayMask	Used internally by MetaMorph.
+34	SpecialOverlayCompress	Used internally by MetaMorph.
+35	SpecialOverlay	Used internally by MetaMorph.
+36	ImageProperty	Used to store user-defined data.
+37	StageLabel	Offset of a table of N entries; each a LONG
+containing the length of the stage label string for each plane, followed
+by that many bytes of string data.
+38	AutoScaleLoInfo	Offset of a pair of LONG values containing the
+numerator and denominator of the darkest gray level for the scaled image.
+These should be divided to produce a floating-point (double) value. (This
+applies only to the display of 16-bit images.)
+39	AutoScaleHiInfo	Offset of a pair of LONG values containing the
+numerator and denominator of the brightest gray level for the scaled
+image. These should be divided to produce a floating-point (double) value.
+(This applies only to the display of 16-bit images.)
+40	AbsoluteZ	Offset of a table of 2*N LONG values indicating
+for each plane in order: absolute Z position (numerator), absolute Z
+position (denominator).
+41	AbsoluteZValid	Offset of a table of N LONG values indicating for
+each plane in order whether the absolute Z position value is valid. (A
+non-zero value indicates validity.)
+42	Gamma	Offset of a LONG containing the Gamma value for monochrome
+images. (Corresponds to field in MetaMorphs "Adjust Digital Contrast"
+dialog.
+43	GammaRed	Offset of a LONG containing the Gamma value for
+red channel of 24-bit images. (Corresponds to field in MetaMorphs "Adjust
+Digital Contrast" dialog.
+44	GammaGreen	Offset of a LONG containing the Gamma value for
+green channel of 24-bit images. (Corresponds to field in MetaMorphs
+"Adjust Digital Contrast" dialog.
+45	GammaBlue	Offset of a LONG containing the Gamma value for
+blue channel of 24-bit images. (Corresponds to field in MetaMorphs "Adjust
+Digital Contrast" dialog.
+
+Julian Date Format
+Here are the C++ functions that the Meta Imaging Series applications use
+to convert between Julian day numbers and the day/month/year format:
+
+void JulianToYMD(unsigned long julian, unsigned short& year, unsigned
+char& month, unsigned char& day)
+{
+	long	a, b, c, d, e, alpha;
+	long	z = julian + 1;
+
+	// dealing with Gregorian calendar reform
+	if (z < 2299161L) {
+		a = z;
+	} else {
+		alpha = (long) ((z - 1867216.25) / 36524.25);
+		a = z + 1 + alpha - alpha / 4;
+	}
+
+	b = ( a > 1721423L ? a + 1524 : a + 1158 );
+	c = (long) ((b - 122.1) / 365.25);
+	d = (long) (365.25 * c);
+	e = (long) ((b - d) / 30.6001);
+
+	day = (unsigned char)(b - d - (long)(30.6001 * e));
+	month = (unsigned char)((e < 13.5) ? e - 1 : e - 13);
+    year = (short)((month > 2.5 ) ? (c - 4716) : c - 4715);
+}
+
+unsigned long YMDToJulian(unsigned short year, unsigned char month,
+unsigned char day)
+{
+	short	a, b = 0;
+	short	work_year = year;
+	short	work_month = month;
+	short	work_day = day;
+
+	// correct for negative year
+	if (work_year < 0) {
+		work_year++;
+	}
+
+	if (work_month <= 2) {
+		work_year--;
+		work_month += (short)12;
+	}
+
+	// deal with Gregorian calendar
+	if (work_year*10000. + work_month*100. + work_day >= 15821015.)	{
+		a = (short)(work_year/100.);
+		b = (short)(2 - a + a/4);
+	}
+
+	return	(long) (365.25*work_year) +
+		   	(long) (30.6001 * (work_month+1)) +
+			work_day + 1720994L + b;
+}
+
+For more information about this method of numbering days, the best
+explanation we've found is "Peter Meyer's Julian Day Numbers"
+(http://www.magnet.ch/serendipity/hermetic/cal_stud/jdn.htm).
+Suggested Method for Reading STK Files
+We suggest opening the file, reading through the file for tags, and
+building a table in memory that consists of a structure for each tag
+found.  Each structure should contain the tag number, the tag count
+(referred to as "N" in the descriptions of the custom UIC tags), the tag
+value, and an offset to the tags data area.
+
+Using this method, you can look back through your array of tags after you
+have scanned through the whole file, and see if you have a UIC2Tag, which
+indicates that the file is a STK file.  The count (N) of the UIC2Tag will
+tell you how many planes there are in the STK file.  You can then allocate
+your data structures that hold all of the per-plane data, such as the z
+distance, timestamps, annotations, and other parameters.  You can also use
+the standard TIFF width, height, and depth tags to allocate space for the
+image data.
+
+Read the data block pointed to by UIC2Tags offset to fill in the Z
+distance and timestamps.  The Z distance is the spacing between a plane
+and its neighbor, and typically will be a value like "1" indicating 1
+micron spacing between planes.
+
+Read the data block pointed to by UIC3Tags offset to get the wavelength
+for each plane.
+
+Read the data block pointed to by UIC4Tags offset to get data for the
+stack, where the data can be different for each plane of the stack.  This
+data block contains pairs of IDs and pointers to the IDs values.  The last
+pair has a "0" as the ID, which is when you know to stop reading for IDs.
+Currently, the only IDs you will find in this block are 28 (Stage
+Position), 29 (Camera Chip Offset), 37 (Stage Label), 40 (Absolute Z) and
+41 (Absolute Z Valid).  All of the other pieces of info will be in
+UIC1Tags data block.
+
+Read the data block pointed to by UIC1Tags offset to get data for the
+stack, where the data is a single value that applies to all of the planes
+of the stack.  You may find any of the IDs in here with the exception of
+IDs 28, 29, 37, 40, and 41.  The Count (N) field will tell you the number
+of IDs that will be found within this tag.
+
+A very important note about reading stack files:  There is some redundancy
+between the data in UIC1Tag (that applies to the entire stack) and the
+per-plane data that is found in UIC2Tag and UIC3Tag.  You should ignore
+the values in UIC1Tag and use the values in UIC2Tag and UIC3Tag.  For
+example, consider the wavelength field.  You may find an ID called
+"wavelength" (ID = 27) in the UIC1Tag data block.  This is the wavelength
+for the plane that was the current plane when the stack was saved.  But
+you can get all the wavelengths for all of the individual planes by
+reading UIC3Tag, which contains a table of wavelengths for each plane.  So
+you can ignore the wavelength ID in the UIC1Tag block.  This also applies
+to the creation and modification times that are per-plane in UIC2Tag but
+only represent the current plane in UIC1Tag.
+
+Note:  In UIC1Tag, the Tag ID codes are contained in a LONG, whereas in
+UIC4Tag, the Tag ID codes are contained in a SHORT.
