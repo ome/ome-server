@@ -722,14 +722,16 @@ sub findModuleHandler {
         }
     }
 
-    # Returns the correct ANALYSIS entry for the current node.  Takes
+    # Returns the correct ANALYSIS entry for the given node.  Takes
     # into account the dataset-dependence of the node; if it is a
     # per-image node, it finds the ANALYSIS entry for the current
     # image.
     sub __getAnalysis {
         my ($nodeID) = @_;
 
-        if ($dependence{$nodeID} eq 'D') {
+        if ($dependence{$nodeID} eq 'G') {
+            return $global_analysis{$nodeID};
+        } elsif ($dependence{$nodeID} eq 'D') {
             return $perdataset_analysis{$nodeID};
         } else {
             return $perimage_analysis{$nodeID}->{$curr_imageID};
@@ -1710,7 +1712,8 @@ sub findModuleHandler {
         my ($input_link,$prefix,$sql_method,$extra_input,$no_load) = @_;
 
         my $formal_input = $input_link->to_input();
-        my $attr_type_name = $formal_input->attribute_type()->name();
+        my $attr_type = $formal_input->attribute_type();
+        my $attr_type_name = $attr_type->name();
 
         my $formal_output = $input_link->from_output();
         my $pred_node = $input_link->from_node();
@@ -1723,16 +1726,17 @@ sub findModuleHandler {
         }
 
 
-        my @attribute_list;
+        my %attribute_list;
         if ($no_load) {
-            push @attribute_list, $_->[0]
-                while ($_ = $sth->fetch());
+            $attribute_list{$_->[0]} = $_->[0]
+              while ($_ = $sth->fetch());
         } else {
-            push @attribute_list, $factory->
-                loadAttribute($attr_type_name,
-                              $_->[0])
-                    while ($_ = $sth->fetch());
+            $attribute_list{$_->[0]} = 
+              $factory->loadAttribute($attr_type,$_->[0])
+              while ($_ = $sth->fetch());
         }
+
+        my @attribute_list = values %attribute_list;
 
         __debug($prefix.$formal_input->name()." (".
           scalar(@attribute_list).")");

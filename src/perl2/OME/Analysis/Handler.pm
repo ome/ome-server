@@ -53,7 +53,7 @@ use OME::DataTable;
 use OME::AttributeType;
 use Benchmark qw(timediff timesum timestr);
 
-use fields qw(_location _session _node
+use fields qw(_location _session _node _output_types _untyped_output
               _program _formal_inputs _formal_outputs _analysis
               _current_dataset _current_image _current_feature
               _global_inputs _dataset_inputs _image_inputs _feature_inputs
@@ -97,11 +97,25 @@ sub new {
     $self->{_formal_inputs} = $inputs;
     $self->{_global_outputs_allowed} = $globalOutputsAllowed;
 
-    my $outputs = {};
+    my %outputs;
+    my %types;
+    my $untyped_output;
     foreach my $formal_output ($program->outputs()) {
-        $outputs->{$formal_output->name()} = $formal_output;
+        $outputs{$formal_output->name()} = $formal_output;
+        my $attribute_type = $formal_output->attribute_type();
+        if (!defined $attribute_type) {
+            die "Cannot have two untyped outputs!"
+              if defined $untyped_output;
+            $untyped_output = $formal_output;
+        } else {
+            die "Cannot have two outputs of the same type!"
+              if exists $types{$attribute_type->id()};
+            $types{$attribute_type->id()} = $formal_output;
+        }
     }
-    $self->{_formal_outputs} = $outputs;
+    $self->{_formal_outputs} = \%outputs;
+    $self->{_output_types} = \%types;
+    $self->{_untyped_output} = $untyped_output;
 
     bless $self, $class;
     return $self;
@@ -302,7 +316,12 @@ sub newFeature {
 =head2 newAttributes
 
 	my $attribute = $handler->
-	    newAttributes($self,[$output_name,$data]...);
+	    newAttributes($self,[$attribute_type,$data]...);
+
+	# or
+
+	my $attribute = $handler->
+	    newAttributes($self,[$formal_output_name,$data]...);
 
 Creates a set of new attributes as outputs of the current module.  The
 formal output and attribute data is specified for each attribute to be
@@ -330,7 +349,7 @@ not, an error is raised and no attributes are created.
 =cut
 
 sub newAttributes {
-    my ($self,%attribute_info) = @_;
+    my ($self,@attribute_info) = @_;
 
     my $t0 = new Benchmark;
 
@@ -357,15 +376,42 @@ sub newAttributes {
        'F' => 'feature_id'
       );
 
-    foreach my $formal_output_name (keys %attribute_info) {
-        my $formal_output = $self->{_formal_outputs}->{$formal_output_name};
-        my $attribute_type = $formal_output->attribute_type();
-        my $granularity = $attribute_type->granularity();
-        my $data_hash = $attribute_info{$formal_output_name};
+    my $output_types = $self->{_output_types};
+    my $i;
+    my $length = scalar(@attribute_info);
 
-        $formal_outputs{$attribute_type->id()} = $formal_output;
+    for ($i = 0; $i < $length; $i += 2) {
+        my $key = $attribute_info[$i];
+        my $data_hash = $attribute_info[$i+1];
+        my ($attribute_type,$formal_output,$formal_output_name);
+
+        if (!ref($key)) {
+            # This is a string, treat it as a formal input name.
+            $formal_output_name = $key;
+            $formal_output = $self->{_formal_outputs}->{$formal_output_name};
+            $attribute_type = $formal_output->attribute_type();
+        } elsif (UNIVERSAL::isa($key,"OME::AttributeType")) {
+            # This is an attribute type
+            $attribute_type = $key;
+
+            $formal_output =
+              (exists $output_types->{$attribute_type->id()})?
+                $output_types->{$attribute_type->id()}:
+                  $self->{_untyped_output};
+
+            die "Cannot find a formal output for semantic type ".
+              $attribute_type->name()
+                unless defined $formal_output;
+
+            $formal_output_name = $formal_output->name();
+        } else {
+            # We don't know how to handle this
+            die "Illegal argument; must be formal input name or attribute type";
+        }
 
         __debug("  $formal_output_name");
+        $formal_outputs{$attribute_type->id()} = $formal_output;
+        my $granularity = $attribute_type->granularity();
 
         if ($granularity eq 'G') {
             die "This module is not allowed to create global attributes"
@@ -459,7 +505,10 @@ sub __checkParameters {
     foreach my $param_name (keys %{$self->{$inputOrOutput}}) {
         my $param = $self->{$inputOrOutput}->{$param_name};
         my $attribute_type = $param->attribute_type();
-        next if $attribute_type->granularity() ne $granularity;
+        # We don't check untyped outputs.  They can be anything.
+        next if
+          (!defined $attribute_type)
+          || $attribute_type->granularity() ne $granularity;
         my $optional = $param->optional();
         my $list = $param->list();
         my $values = $params->{$param_name};
@@ -478,6 +527,8 @@ sub __checkParameters {
 =head2 Module interface methods
 
 	$handler->startAnalysis($analysis);
+	$handler->globalInputs($global_input_hash);
+	$handler->precalculateGlobal();
 	$handler->startDataset($dataset);
 	$handler->datasetInputs($dataset_input_hash);
 	$handler->precalculateDataset();
@@ -495,13 +546,16 @@ sub __checkParameters {
 	$handler->postcalculateDataset();
 	my $dataset_output_hash = $handler->collectDatasetOutputs();
 	$handler->finishDataset();
+	$handler->postcalculateGlobal();
+	my $global_output_hash = $handler->collectGlobalOutputs();
 
 These are the methods defined by the Module interface.  Handler
-subclasses should override the precalculateDataset, precalculateImage,
-calculateFeature, postcalculateImage, and postcalculateDataset methods
-to delegate to the module in question.  The other methods maintain the
-internal state of the Handler superclass, and should not be
-overridden.  Subclasses can use the accessors and methods described
+subclasses should override the precalculateGlobal,
+precalculateDataset, precalculateImage, calculateFeature,
+postcalculateImage, postcalculateDataset, and postcalculateGlobal
+methods to delegate to the module in question.  The other methods
+maintain the internal state of the Handler superclass, and should not
+be overridden.  Subclasses can use the accessors and methods described
 above to access the current state of the module and to create outputs
 as it progresses through these interface methods.
 

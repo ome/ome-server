@@ -329,8 +329,14 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 		#
 		# make OME::FormalOutput object
 		#
-		die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$formalOutputXML->getAttribute( 'SemanticTypeName' )."\n"
-			unless exists $semanticTypes->{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) };
+        my $semanticTypeName = $formalOutputXML->getAttribute('SemanticTypeName');
+        my $semanticType = undef;
+        # Null semantic types are now allowed for formal outputs
+        if (defined $semanticTypeName) {
+            die "When processing Formal Output (name=".$formalOutputXML->getAttribute( 'Name' )."), could not find Semantic type referenced by ".$semanticTypeName."\n"
+              unless exists $semanticTypes->{ $semanticTypeName };
+            $semanticType = $semanticTypes->{ $semanticTypeName };
+        }
 		my ($optional, $list, $count);
 		$count = $formalOutputXML->getAttribute( 'Count' );
 		if( $count ) {
@@ -344,7 +350,7 @@ foreach my $moduleXML ($root->getElementsByLocalName( "AnalysisModule" )) {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
 			description        => $formalOutputXML->getAttribute( 'Description' ),
 			program_id         => $newProgram,
-			attribute_type_id  => $semanticTypes->{ $formalOutputXML->getAttribute( 'SemanticTypeName' ) },
+			attribute_type_id  => $semanticType,
 			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' ),
 			optional           => $optional,
 			list               => $list
