@@ -490,40 +490,43 @@ sub execute {
 
     chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
 
-    print_header ("Core Perl Module Setup");
+    # Only if we're not just running a Perl check
+    unless ($environment->flag ("PERL_CHECK")) {
+	print_header ("Core Perl Module Setup");
     
-    print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
+	print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
 
-    my $retval = 0;
+	my $retval = 0;
 
-    print "Installing modules\n";
+	print "Installing modules\n";
 
-    # Configure
-    print "  \\_ Configuring ";
-    $retval = configure_module ("src/perl2/", $LOGFILE);
+	# Configure
+	print "  \\_ Configuring ";
+	$retval = configure_module ("src/perl2/", $LOGFILE);
     
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to configure module, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and croak "Unable to configure module, see $LOGFILE_NAME for details."
+	    unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
 
-    # Compile
-    print "  \\_ Compiling ";
-    $retval = compile_module ("src/perl2/", $LOGFILE);
+	# Compile
+	print "  \\_ Compiling ";
+	$retval = compile_module ("src/perl2/", $LOGFILE);
     
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to compile module, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and croak "Unable to compile module, see $LOGFILE_NAME for details."
+	    unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
 
-    # Install
-    print "  \\_ Installing ";
-    $retval = install_module ("src/perl2", $LOGFILE);
+	# Install
+	print "  \\_ Installing ";
+	$retval = install_module ("src/perl2", $LOGFILE);
 
-    print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to install module, see $LOGFILE_NAME for details."
-        unless $retval;
-    print BOLD, "[SUCCESS]", RESET, ".\n";
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and croak "Unable to install module, see $LOGFILE_NAME for details."
+	    unless $retval;
+	print BOLD, "[SUCCESS]", RESET, ".\n";
+    }
 
     return 1;
 }
@@ -534,3 +537,5 @@ sub rollback {
     # Stub for the moment.
     return 1;
 }
+
+1;
