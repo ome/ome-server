@@ -36,7 +36,7 @@ if ($pageClass) {
 	eval "use $pageClass";
 	if ($@) {
 		print STDERR "Error loading package - $@\n";
-		print $CGI->header(-type => 'text/html',-status => "404 Error loading package - $pageClass");
+		print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
 		print "Error loading package - $@\n";
 		exit;
 	}
@@ -44,12 +44,14 @@ if ($pageClass) {
 	eval {
             if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
                 print STDERR "Package $pageClass does not inherit from OME::Web\n";
-                print $CGI->header(-type => 'text/html',-status => "500 Package $pageClass does not inherit from OME::Web");
+                print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
+                print "Package $pageClass does not inherit from OME::Web";
             } else {
 		$page = $pageClass->new(CGI => $CGI);
 		if (!$page) {
                     print STDERR "Error calling package constructor -\n";
-                    print $CGI->header(-type => 'text/html',-status => "500 Error calling package constructor -\n");
+                    print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
+                    print "Error calling package constructor -\n";
 		} else {
                     $page->serve();
 		}
