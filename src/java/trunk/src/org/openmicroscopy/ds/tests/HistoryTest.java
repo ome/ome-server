@@ -184,10 +184,10 @@ public class HistoryTest {
 		c.addWantedField("inputs","input_module_execution");
 		c.addWantedField("inputs.input_module_execution","id");
 		
-		c.addWantedField("actual_outputs");
-		c.addWantedField("actual_outputs","id");
-		c.addWantedField("actual_outputs","module_execution");
-		c.addWantedField("actual_outputs.module_execution","id");
+		c.addWantedField("consumed_outputs");
+		c.addWantedField("consumed_outputs","id");
+		c.addWantedField("consumed_outputs","module_execution");
+		c.addWantedField("consumed_outputs.module_execution","id");
 		
 		c.addWantedField("chain_executions");
 		c.addWantedField("chain_executions","id");
@@ -229,8 +229,8 @@ public class HistoryTest {
 			System.err.println(inp.getID()+", "+inp.getInputMEX().getID());
 		}
 		
-		System.err.println("outpu count... "+mex.countActualOutputs());
-		List outputs = mex.getActualOutputs();
+		System.err.println("output count... "+mex.countConsumedOutputs());
+		List outputs = mex.getConsumedOutputs();
 		iter = outputs.iterator();
 		while (iter.hasNext()) {
 			ActualInput outp = (ActualInput) iter.next();
