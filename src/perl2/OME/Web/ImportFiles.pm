@@ -429,7 +429,6 @@ sub __getImportBody {
 
 	# CGI data
 	my $new_or_existing = $q->param('new_or_existing');
-	my $d_name = $q->param('name') || $q->param('existing_dataset');
 	my $d_description = $q->param('description');
 	my @import_q = $q->param('import_queue');
 
@@ -474,6 +473,13 @@ sub __getImportBody {
 
 	# DATASET stuff
 	if ($new_or_existing eq 'new') {
+		my $d_name = $q->param('name');
+
+		unless ($d_name) {
+			$body = $q->span({class => 'ome_error'}, 'You must specify a name for the dataset. Press the BACK button on your browser to try again.');
+			return $body;  # Return with failure.
+		}
+
 		my $info = $q->span({class => 'ome_info'},
 			"Creating new dataset: '$d_name' ... ");
 
@@ -486,6 +492,8 @@ sub __getImportBody {
 			return $body . $q->p($info);  # Return with failure
 		}
 	} elsif ($new_or_existing eq 'existing') {
+		my $d_name = $q->param('existing_dataset');
+
 		unless($import_d = $factory->findObject("OME::Dataset", name => $d_name)) {
 			$body .= $q->p({class => 'ome_error'},
 				"Unable to find dataset with name '$d_name'");
@@ -519,7 +527,7 @@ sub __getImportBody {
 	my $images = OME::Tasks::ImageTasks::importFiles(@import_q);
 	my @image_ids;
 
-	if (scalar(@$images) < 1) {
+	if (scalar(@$images) <= 1) {
 		$body .= $q->p({class => 'ome_error'}, 'Import failed!');
 		return $body;  # Return with failure
 	} else {
