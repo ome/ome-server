@@ -37,50 +37,58 @@
  */
  
  package org.openmicroscopy.vis.ome;
+
  
-import org.openmicroscopy.remote.RemoteChain.Link;
-import org.openmicroscopy.Chain.Node;
  /*
 	* This is mostly a placeholder that will allow me to distinguish between
 	* real nodes in a graph (CNode objects) and dummy nodes that will
 	* be created to aid in drawing. 
 	*/
 
- public class CLayoutLink  {
+ public class CLayoutLink {
 	
 	private CNode toNode;
 	private CNode fromNode;
+	
+	// the actual graph link that this dummy link is really part of.
+	private CLink semanticLink;
 	
 	public CLayoutLink() {
 		super();
 	}
 	
-	public CLayoutLink(CNode fromNode,CNode toNode) {
+	public CLayoutLink(CLink semanticLink,CNode fromNode,CNode toNode) {
+		this.semanticLink = (CLink) semanticLink;
 		this.fromNode = fromNode;
 		this.toNode = toNode;
 	}
 	
-	public CLayoutLink(Link link) {
+	public CLayoutLink(CLink link) {
 		this.fromNode = (CNode) link.getFromNode();
 		this.toNode = (CNode) link.getToNode();
+		this.semanticLink = (CLink) link;
 	}
  	
-	public Node getToNode() {
+ 	public CLink getSemanticLink() {
+ 		return semanticLink;
+ 	}
+ 	
+	public CNode getToNode() {
 		return toNode;
 	}
 	
-	public Node getFromNode() {
+	public CNode getFromNode() {
 		return fromNode;
 	}
 	
 	// we want this to throw an exception if we're ever setting it
 	// to anything that can't be cast to be a CNode.
-	public void setToNode(Node node) {
-		toNode = (CNode) node;
+	public void setToNode(CNode node) {
+		toNode =  node;
 	}
 	
-	public void setFromNode(Node node) {
-		fromNode = (CNode) node;
+	public void setFromNode(CNode node) {
+		fromNode = node;
 	}
 }
 
