@@ -50,7 +50,7 @@ OME::Tasks::Thumbnails - produces thumbnails using GD
 =head1 SYNOPSIS
 
 	use OME::Tasks::Thumbnails;
-	my $generator=new OME::Tasks::Thumbnails($session);
+	my $generator=new OME::Tasks::Thumbnails();
 	my $out=$generator->generateOMEimage($image);
 	# print output
 	binmode STDOUT;
@@ -80,7 +80,6 @@ sub new{
 	my $self={};
 	$self->{size}=50;
 	$self->{OME_JPEG}="OME_JPEG";
-	$self->{session}=shift;
 	bless($self,$class);
    	return $self;
 
@@ -93,7 +92,7 @@ sub new{
 sub generateOMEimage{
 	my $self=shift;
 	my ($imageID,$Z_param,$T_param)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session() or die "Unable to retrieve session object.";
 	my $factory=$session->Factory();
 	my $imageManager=OME::Tasks::ImageManager->new($session);
 	my ($theZ,$theT);
@@ -139,7 +138,7 @@ sub generateOMEimage{
 sub generateOMEimages{
 
 	my ($self,$imageID)=@_;
-	my $session=$self->{session};
+	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	my $imageManager=OME::Tasks::ImageManager->new($session);
 	my $image=$factory->loadObject("OME::Image",$imageID);
@@ -251,8 +250,8 @@ sub writeOMEimage{
 	my $rgb="RGB=".join(",",@$cCBW);
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
 
-	my $factory=$self->{session}->Factory();
-	my $configuration =$self->{session}->Configuration();
+	my $factory=$self->__Session()->Factory();
+	my $configuration =$self->__Session()->Configuration();
 	my $bin_dir=$configuration->bin_dir;
   	my $script=$bin_dir."/".$self->{OME_JPEG};
 	my $out="";
@@ -407,6 +406,7 @@ sub getConvertedCBW{
 	return \@cCBW;
 }
 
+sub __Session { OME::Session->instance() };
 
 
 
