@@ -347,7 +347,7 @@ sub formatImage {
 	    my $wvhref = {};
 	    # N.B. If TIFFReader leaves more than 1 pair of key/value,
 	    # the following must be expanded.
-	    $key = @$wref->[0]->[0]->[0];  # copy, in proper order, XYinfo
+	    $key = @$wref->[0]->[0]->[0];  # copy, in proper order, Waveleninfo
 	    $val = @$wref->[0]->[0]->[1];  #    left by TIFFreader
 	    $wvhref->{'WavelengthInfo.'.$key} = $val;  # copy
 	    push @$wv_aref, $wvhref;
@@ -498,7 +498,9 @@ sub parseImageDescription {
 	if ($k =~ /ImageDescription/) {
 	    $buf = $self->{$k};
 	    foreach $subfld (@useful_desc_fields) {
+		#print "$subfld: \n";
 		while ($buf =~ m/$subfld (.*)/g) {
+		    #print "$1 ";
 		    my @val = ($1);
 		    $ky = $xml_image_from_desc{$subfld};
 		    $elem = $desc_fields_to_top_level_element{$subfld};
@@ -519,6 +521,7 @@ sub parseImageDescription {
 			$xml_hash->{$elem.$ky} = $val[0];
 		    }
 		}
+		#print "\n";
 	    }
 	    push @$wref, ['WaveNumber', $image_plane];   
 
