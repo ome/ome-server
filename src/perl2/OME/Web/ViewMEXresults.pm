@@ -115,13 +115,31 @@ sub display_MEX{
 		or die "This is a NULL module MEX. This implementation only supports display of not NULL module MEX.";
 	
 	my @Input_list = $MEX->inputs();
+	my @FI_list = $module->inputs();
 	my @FO_list = $module->outputs();
 
 	my $html;
-	$html .= "<center><h2>Displaying Module EXecution (MEX) results.</h2></center>";
+	$html .= "<a name='top'><center><h2>Displaying Module EXecution (MEX) results.</h2>";
 	# module info block
-	$html .= "<b>Module name: </b> ".$module->name()."<br>";
 	$html .= "<b>MEX ID: </b> ".$MEX_ID."<br>";
+	$html .= $cgi->start_table({-border => 1, -cellspacing => 4, -cellpadding => 5});
+	$html .= $cgi->Tr({-align => 'center', -valign => 'middle'},
+		$cgi->td( { -colspan => 2 },
+			$cgi->b( $module->name() ) ));
+	$html .= $cgi->Tr({ -valign => 'middle' },
+		$cgi->td( $cgi->b( 'Formal Inputs' ) ),
+		$cgi->td( $cgi->b( 'Formal Outputs' ) ),
+			);
+	$html .= $cgi->TR(  
+		$cgi->td( {-align => 'left'},
+			join( '<br>', map( '<a href="#Input_'.$_->name().'">'.$_->name().'</a>',@FI_list))
+		 ),
+		$cgi->td( {-align => 'right'},
+			join( '<br>', map( '<a href="#Output_'.$_->name().'">'.$_->name().'</a>',@FO_list))
+		),
+	);			
+	$html .= $cgi->end_table;
+	$html .= '</center>';
 # add link to as yet unwritten ViewModule page
 
 	################################
@@ -137,7 +155,8 @@ sub display_MEX{
 		my @SE_list = $ST->semantic_elements();
 		my @attr_list = $factory->findAttributes( $ST, module_execution => $input->input_module_execution() );
 
-# add anchor
+	 	$html .= "<a name='Input_".$FI->name()."'>"; 
+	 	$html .= "<a href='top'>Top</a><br>"; 
 		$html .= "<b>Formal Input: </b>".$FI->name()."<br>";
 		$html .= "<b>Semantic Type: </b>".$ST->name()."<br>";
 		$html .= "<b>Source Module Name (MEX_ID): </b>";
@@ -176,7 +195,8 @@ sub display_MEX{
 		my @SE_list = $ST->semantic_elements();
 		my @attr_list = $factory->findAttributes( $ST, module_execution => $MEX );
 
-# add anchor
+	 	$html .= "<a name='Output_".$FO->name()."'>"; 
+	 	$html .= "<a href='top'>Top</a><br>"; 
 		$html .= "<b>Formal Output: </b>".$FO->name()."<br>";
 		$html .= "<b>Semantic Type: </b>".$ST->name()."<br>";
 # add link to as yet unwritten ViewST page
