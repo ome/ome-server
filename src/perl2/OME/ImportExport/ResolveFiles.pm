@@ -244,7 +244,7 @@ sub importFile() {
 	foreach (@newdirs) {
 		die "Couldn't remove directory $_: $!\n" unless rmdir ($_);
 	}
-$doc->toFile( 'foo' );		
+
 	return $doc;
 }
 #
