@@ -479,8 +479,10 @@ ENDHTML
 sub BuildSVGviewer {
 	# A server link needs to be made to src/JavaScript/ for the SVG JavaScript references to function
 my $self = shift;
+my $cgi   = $self->CGI();
 my $SVG;
 
+=pod;
 my $JSgraphics = $self->SVGgetJS();
 my $OMEimage = $JSgraphics->{layers}->[0];
 my $Wavelengths = $OMEimage->JS_Wavelengths();
@@ -494,6 +496,20 @@ my $image = $self->Factory()->loadObject("OME::Image",$ImageID);
 my $Path = $image->getFullPath();
 my $CGI_URL = '/cgi-bin/OME_JPEG';
 my $CGI_optionStr  = '&Path='.$Path;
+=cut
+
+my $JSinfo = $self->SVGgetDataJS();
+
+my $ImageID       = $JSinfo->{ ImageID };
+my $Stats         = $JSinfo->{ Stats };
+my $Wavelengths   = $JSinfo->{ Wavelengths };
+my $Dims          = $JSinfo->{ Dims };
+my $CGI_URL       = $JSinfo->{ CGI_URL };
+my $CGI_optionStr = $JSinfo->{ CGI_optionStr };
+my $theZ          = $JSinfo->{ theZ };
+my $theT          = $JSinfo->{ theT };
+
+
 
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
@@ -561,23 +577,22 @@ $SVG .= <<ENDSVG;
 		var overlay;
 		
 	// constants & references
-		// Z and T are dims of z and t
-		var Z = $pDims->[2];
-		var T = $pDims->[4];
 		var Wavelengths = $Wavelengths;
-		var Stats = $Stats;
-		var fluors = new Array();
+		var Stats       = $Stats;
+		var Dims        = $Dims;
+		// Z and T are dims of z and t
+		var Z           = Dims[2];
+		var T           = Dims[4];
+		var fluors      = new Array();
 		
 	// global variables
 		// theZ & theT are current values of z & t
-// these should be set from DB
-		var theZ = Math.floor(Z/2), theT=0;
-
+		var theZ = $theZ;
+		var theT = $theT;
 
 		function init(e) {
 			if ( window.svgDocument == null )
 				svgDocument = e.ownerDocument;
-				
 		// initialize back end
 			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
 			image.realize( svgDocument.getElementById("image") );
@@ -585,8 +600,7 @@ $SVG .= <<ENDSVG;
 
 			// setup fluors used in this image
 			for(i in Wavelengths)
-				fluors[Wavelengths[i]['WaveNum']] = Wavelengths[i]['Fluor'];
-
+				fluors[Wavelengths[i]['WaveNum']] = Wavelengths[i]['Label'];
 		// initialize frontend
 			controlToolBox = new toolBox(
 				50, 30, 200, 150,
@@ -694,25 +708,58 @@ $SVG .= <<ENDSVG;
 				'<text fill="white" text-anchor="end">Overlay</text>'
 			);
 				
-			
+		
 			// z & t increment buttons
 			tUpButton = new button(
-				182, 30, tUp,
-				skinLibrary["triangleRight"]
-			)
+				182, 25, tUp,
+				skinLibrary["triangleRightWhite"]
+			);
 			tDownButton = new button(
-				178, 30, tDown,
-				skinLibrary["triangleLeft"]
-			)
+				178, 25, tDown,
+				skinLibrary["triangleLeftWhite"]
+			);
 			zUpButton = new button(
 				15, 106, zUp,
-				skinLibrary["triangleUp"]
-			)
+				skinLibrary["triangleUpWhite"]
+			);
 			zDownButton = new button(
 				15, 110, zDown,
-				skinLibrary["triangleDown"]
-			)
+				skinLibrary["triangleDownWhite"]
+			);
 				
+			// z & t animation buttons
+			tAnimUpButton = new button(
+				182, 35, tAnimUp,
+				skinLibrary["triangleRightRed"],
+				null,
+				skinLibrary["triangleRightWhite"]
+			);
+			tAnimDownButton = new button(
+				178, 35, tAnimDown,
+				skinLibrary["triangleLeftRed"],
+				null,
+				skinLibrary["triangleLeftWhite"]
+			);
+			zAnimUpButton = new button(
+				15, 86, zAnimUp,
+				skinLibrary["triangleUpRed"],
+				null,
+				skinLibrary["triangleUpWhite"]
+			);
+			zAnimDownButton = new button(
+				15, 90, zAnimDown,
+				skinLibrary["triangleDownRed"],
+				null,
+				skinLibrary["triangleDownWhite"]
+			);
+			
+			loadButton = new button(
+				5, 5, loadAllImages,
+				skinLibrary["hiddenButton"],
+				null,
+				skinLibrary["hiddenButtonHighlight"]
+			);
+			
 		// realize the GUI elements in the appropriate containers
             var controls  = svgDocument.getElementById("controls");
             controlToolBox.realize(controls);
@@ -724,6 +771,12 @@ $SVG .= <<ENDSVG;
 			tDownButton.realize(controlToolBox.getGUIbox());
 			zUpButton.realize(controlToolBox.getGUIbox());
 			zDownButton.realize(controlToolBox.getGUIbox());
+			tAnimUpButton.realize(controlToolBox.getGUIbox());
+			tAnimDownButton.realize(controlToolBox.getGUIbox());
+			zAnimUpButton.realize(controlToolBox.getGUIbox());
+			zAnimDownButton.realize(controlToolBox.getGUIbox());
+
+			loadButton.realize(controlToolBox.getGUIbox());
 
 			// RGB & BW switcheroo
 			RGB_BWbutton.realize(controlToolBox.getGUIbox());
@@ -762,7 +815,6 @@ $SVG .= <<ENDSVG;
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			overlay = new Overlay();
 			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
-
 			// finish setup & make controller
 			multiToolBox.closeOnMinimize(true);
 			panePopupList = new popupList(
@@ -792,11 +844,9 @@ $SVG .= <<ENDSVG;
 			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "RGB_BWbutton.setState(true)", 0 );
+			setTimeout( "loadButton.setState(false)", 0 );
 			zSlider.setValue(theZ/Z*100,true);
 			tSlider.setValue(theT/T*100,true);
-
-//			image.setPreload(1);
-
 		}
 		
 ENDSVG
@@ -806,6 +856,10 @@ $SVG .= <<'ENDSVG';
         
 		
 	// these functions connect GUI with backend
+		function loadAllImages(val) {
+			image.setPreload(val);
+		}
+	
 		function updateTheZ(data) {
 			data=Math.round(data/100*(Z-1));
 			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
@@ -819,11 +873,20 @@ $SVG .= <<'ENDSVG';
 			var data = (theZ< Z-1 ? theZ + 1 : theZ)
 			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
 			updateTheZ(sliderVal);
+		
 		}
 		function zDown() {
 			var data = (theZ> 0 ? theZ - 1 : theZ)
 			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
 			updateTheZ(sliderVal);
+		}
+		function zAnimUp() {
+			for(i=theZ;i<Z;i++)
+				setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (i-theZ)*100);
+		}
+		function zAnimDown() {
+			for(i=theZ;i>=0;i--)
+				setTimeout("updateTheZ(" + (i/(Z-1)) + "*100)", (theZ-i)*100);
 		}
 
 		function updateTheT(data) {
@@ -845,6 +908,14 @@ $SVG .= <<'ENDSVG';
 			var data = (theT> 0 ? theT -1 : theT)
 			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
 			updateTheT(sliderVal);
+		}
+		function tAnimUp() {
+			for(i=theT;i<T;i++)
+				setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (i-theT)*100);
+		}
+		function tAnimDown() {
+			for(i=theT;i>=0;i--)
+				setTimeout("updateTheT(" + (i/(T-1)) + "*100)", (theT-i)*100);
 		}
 
 		// popupLists controlling channels
@@ -992,66 +1063,120 @@ ENDSVG
 	return $SVG;
 }
 
-# this is for use during development only! it's fucking ugly!
-sub SVGgetJS {
-	my $self = shift;
+=pod
 
-    my $cgi   = $self->CGI();
+=head2 SVGgetDataJS()
+
+=over 4
+
+=item Description
+
+Gathers data for BuildSVGviewer & formats it for use in JavaScript.
+
+=item Returns
+
+A hash of data, JavaScript formatted.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Web/"CGI()">
+
+=item CGI->url_param()
+
+=item L<OME::Web/"Factory()">
+
+=item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
+
+=item L<OME::Image/"Dimensions()">
+
+=item L<OME::Image/"wavelengths">
+
+=item L<OME::Image/"XYZ_info">
+
+=back
+
+=item Accesses external data
+
+=back
+
+=cut
+
+sub SVGgetDataJS {
+	my $self = shift;
+	my $cgi   = $self->CGI();
+	my $JSinfo = {};
 
     my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
     $self->{ImageID} = $ImageID;
 
-    my $layer;
-    my $image;
+	$JSinfo->{ ImagedID } = $ImageID;
+	$self->{ImageID} = $JSinfo->{ImageID};
 
-    my $OMEimage =
-                  {
-                      JStype   => 'OMEimage',
-                      LayerCGI => '../cgi-bin/OME_JPEG',
-                      SQL      => undef,
-                      Options  => 'name=Image234&allZ=0&allT=0&isRGB=1'
-                  };
+	my $image;
 
-    # Don't bother with the image if we're just drawing the layer controls.
-    $image = $self->Factory()->loadObject("OME::Image",$ImageID);
-    die "Could not retreive Image from ImageID=$ImageID\n"
-    	unless defined $image;
-    print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
-    my $dimensions = $image->Dimensions();
-	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
-        $dimensions->num_waves(),$dimensions->num_times(),
-        $dimensions->bits_per_pixel());
-	$bpp /= 8;
-#	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-#	my $SQL = <<ENDSQL;
-#	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
-#ENDSQL
-#
-#	my $DBH = $self->Session()->DBH();
-#	my $sth = $DBH->prepare ($SQL);
-#	$sth->execute($ImageID);
-#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
-#	$bpp /= 8;
+	$image = $self->Factory()->loadObject("OME::Image",$ImageID);
+	die "Could not retreive Image from ImageID=$ImageID\n"
+		unless defined $image;
 
-# Set theZ and theT to defaults unless they are in the CGI url_param.
-    my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? sprintf "%d",$sizeZ / 2 : 0 );
-    my $theT = $cgi->url_param('theT') || 0;
+	# get Dimensions from image and make them readable
+	my $dims = [ $image->Dimensions()->size_x(),
+	             $image->Dimensions()->size_y(),
+	             $image->Dimensions()->size_z(),
+	             $image->Dimensions()->num_waves(),
+	             $image->Dimensions()->num_times(),
+	             $image->Dimensions()->bits_per_pixel()/8
+	            ];
+	
+	# get wavelengths from image and make them JavaScript readable
+	my @w = $image->wavelengths;
+	my @wavelengths;
+	
+# get this from DB eventually
+	my $FluorWavelength = {
+		FITC   => 528,
+		TR     => 617,
+		GFP    => 528,
+		DAPI   => 457
+	};
+	foreach (@w) {
+		push @wavelengths, [$_->wavenumber(), $_->em_wavelength(), $_->fluor()];
+	}
+	# construct em_wavelength from fluor if possible, otherwise make sure it's filled in w/ something
+	foreach (@wavelengths) {
+		$_->[1] = $FluorWavelength->{$_->[2]} unless defined $_->[1] and $_->[1];
+		$_->[1] = $_->[0]+1 unless defined $_->[1] and $_->[1];
+	}
+	my $wav = [sort {$b->[1] <=> $a->[1]} @wavelengths];
+	my @JSwavelengths;
+	foreach (@$wav) {
+		push @JSwavelengths, '{WaveNum:'.$_->[0].',Label:"'.(exists $_->[2] and defined $_->[2] ? $_->[2] : $_->[1]).'"}';
+	}
 
-    my $JSgraphics = new OME::Graphics::JavaScript (
-                                                    theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID,
-                                                    Dims=>[$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp]);
+	# get stats from image & make them JavaScript readable
+	my @s = $image->XYZ_info;
+	my ($stats, @JS_Stats_Waves, $JSstats);
+	foreach (@s) {
+		$stats->[$_->wavenumber()][$_->timepoint()] = 
+			"{ min:".$_->min().", max:".$_->max().", mean:".$_->mean().", geomean:".$_->geomean().",sigma:".$_->sigma()."}";
+	}
+	for (my $i=0;$i<scalar (@$stats);$i++) {
+		push (@JS_Stats_Waves,'['.join (',',@{$stats->[$i]}).']');
+	}
+	$JSstats = '['.join (',',@JS_Stats_Waves).']';
+	
+	$JSinfo->{ ImageID }       = $ImageID;
+	$JSinfo->{ Stats }         = $JSstats;
+	$JSinfo->{ Wavelengths }   = '['.join(',',@JSwavelengths).']';
+	$JSinfo->{ pDims }         = $dims;
+	$JSinfo->{ Dims }          = '['.join (',', @$dims).']';
+	$JSinfo->{ CGI_URL }       = '/cgi-bin/OME_JPEG';
+	$JSinfo->{ CGI_optionStr } = '&Path='.$image->getFullPath();
+	$JSinfo->{ theZ }          = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
+	$JSinfo->{ theT }          = $cgi->url_param('theT') || 0;
 
-# Add the layers
-    $layer = eval 'new OME::Graphics::JavaScript::Layer::'.$OMEimage->{JStype}.'(%$OMEimage)';
-    if ($@ || !defined $layer) {
-        print STDERR "Error loading package - $@\n";
-        die "Error loading package - $@\n";
-    } else {
-        $JSgraphics->AddLayer ($layer);
-    }
-
-    return $JSgraphics;
+	return $JSinfo;
 }
 
 
@@ -1213,15 +1338,6 @@ an object of type L<OME::Graphics::JavaScript>
 
 =item L<OME::Factory/"loadObject()">	(via OME::Session, OME::Factory)
 
-=item L<OME::Web/"Session()">
-
-=item L<OME::Session/"DBH()">
-
-=item DBI->prepare()
-
-	$sth->execute()
-	$sth->fetchrow_array()
-
 =item L<OME::Graphics::JavaScript/"new()">
 
 =item L<OME::Graphics::JavaScript/"AddLayer()">
@@ -1300,14 +1416,6 @@ sub getJSgraphics {
         $dimensions->num_waves(),$dimensions->num_times(),
         $dimensions->bits_per_pixel());
 
-#	my $SQL = <<ENDSQL;
-#	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
-#ENDSQL
-#
-#	my $DBH = $self->Session()->DBH();
-#	my $sth = $DBH->prepare ($SQL);
-#	$sth->execute($ImageID);
-#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
 	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
