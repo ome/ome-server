@@ -53,6 +53,20 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 					<xsd:documentation>Tied to DB. Table FORMAL_INPUTS Column DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name = "AttributeTypeName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>A Formal Input element maps to two objects: a FormalInput object and an AttributeType object. This specifies the name of the AttributeType object. This is mandatory because it is used to look for existing attribute types.
+
+Tied to DB. ATTRIBUTE_COLUMNS.NAME
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "FormalOutput">
@@ -95,6 +109,20 @@ Processed before storage to DB
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
+			<xsd:attribute name = "AttributeTypeName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>A Formal Output element maps to two objects: a FormalOutput object and an AttributeType object. This specifies the name of the AttributeType object. This is mandatory because it is used to look for existing attribute types.
+
+Tied to DB. ATTRIBUTE_COLUMNS.NAME
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "Table">
@@ -108,7 +136,7 @@ Maps to table DATATYPES during module import.
 			<xsd:sequence>
 				<xsd:element ref = "Column" maxOccurs = "unbounded"/>
 			</xsd:sequence>
-			<xsd:attribute name = "AttributeType" use = "required">
+			<xsd:attribute name = "Granularity" use = "required">
 				<xsd:annotation>
 					<xsd:documentation>This specifies if this table is an attribute of Dataset, Image, or Feature.
 
@@ -223,7 +251,7 @@ In any case, use AnalysisModule to define an interface and Program to store inst
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref = "AnalysisModule" maxOccurs = "unbounded"/>
-				<xsd:element ref = "Program" maxOccurs = "unbounded"/>
+				<xsd:element ref = "Program" minOccurs = "0" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
@@ -305,7 +333,7 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 			<xsd:attribute name = "ProgramID" use = "required" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a Program Element. It should corrospond to a ProgramID specified in a Program Element.
-Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+Referential integrity is not enforced by this schema. That is, verification against the schema will not detect an error here if you make a typo.
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -356,14 +384,19 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 			</xsd:sequence>
 			<xsd:attribute name = "ProgramID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Referenced by AnalysisModule elements. Accordingly, each FormalOutput needs to be unique. This is not enforced in the schema, so watch your back.
+					<xsd:documentation>Referenced by AnalysisModule elements. Accordingly, each FormalOutput needs to be unique. Schema verification does not check for this. Verification against the schema will not detect an error here if you make a typo.
+
 					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "Name">
 				<xsd:annotation>
-					<xsd:documentation>Program name. Does not have to be the name of the program's file.</xsd:documentation>
+					<xsd:documentation>Program name.
+
+Tied to DB. PROGRAMS.PROGRAM_NAME
+					
+					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:string">
@@ -371,7 +404,11 @@ Tied to DB. PROGRAMS.NEW_FEATURE_TAG
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "Version" type = "xsd:string"/>
+			<xsd:attribute name = "Version" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Currently unused</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "BinaryFile">
@@ -459,14 +496,16 @@ Specifies the packaging and/or compression format of the Installation file.
 		<xsd:complexType>
 			<xsd:attribute name = "FormalOutputColumnID" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used by other elements to reference this element.</xsd:documentation>
+					<xsd:documentation>Used by other elements to reference this element. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "ColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>References a Column element.
+					<xsd:documentation>References a Column element. Verification against the schema will not detect an error here if you make a typo.
 
 Tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
+					
+					
 					
 					
 					
@@ -478,13 +517,23 @@ Tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
 					<xsd:documentation>Tied to DB. ATTRIBUTE_COLUMNS.DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name = "Name" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>Tied to DB. Table ATTRIBUTE_COLUMNS.NAME</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "Column">
 		<xsd:complexType>
 			<xsd:attribute name = "ColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Referenced in the XML spec by formal inputs and outputs. </xsd:documentation>
+					<xsd:documentation>Referenced in the XML spec by formal inputs and outputs. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "ColumnName" use = "required" type = "xsd:string">
@@ -492,9 +541,6 @@ Tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
 					<xsd:documentation>Specifies a column Name in the database.
 
 Tied to database. DATA_COLUMNS.COLUMN_NAME
-					
-					
-					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -529,14 +575,16 @@ Not all SQL datatypes are supported currently.
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputColumnID" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used by other elements to reference this element.</xsd:documentation>
+					<xsd:documentation>Used by other elements to reference this element. Verification against the schema will not detect an error here if you make a typo.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "ColumnID" use = "required" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>References a Column element.
 
-Tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
+Loosely tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
+					
+					
 					
 					
 					
@@ -547,6 +595,16 @@ Tied to DB. ATTRIBUTE_COLUMNS.DATA_COLUMN_ID
 				<xsd:annotation>
 					<xsd:documentation>Tied to DB. ATTRIBUTE_COLUMNS.DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "Name" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>Tied to DB. Table ATTRIBUTE_COLUMNS.NAME</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "64"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
