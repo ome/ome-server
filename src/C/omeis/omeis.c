@@ -1718,6 +1718,7 @@ dispatch (char **param)
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0;
 	off_t offset=0;
+	off_t file_offset=0;
 	char error_str[256];
 	unsigned char isLocalFile;
 	unsigned char file_md[OME_DIGEST_LENGTH];
@@ -2177,7 +2178,7 @@ char **cgivars=param;
 			}
 
 			if ( (theParam = get_param (param,"Offset")) )
-				sscanf (theParam,"%lu",offset);
+				sscanf (theParam,"%lld",&file_offset);
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
@@ -2222,7 +2223,7 @@ char **cgivars=param;
 			if (m_val == M_CONVERTTIFF)
 				nIO = ConvertTIFF (thePixels, fileID, theZ, theC, theT);
 			else
-				nIO = ConvertFile (thePixels, fileID, offset, offset, nPix);
+				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix);
 			if (nIO < nPix) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
