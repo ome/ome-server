@@ -11,10 +11,11 @@ void BSUtilsSwapHeader(char *cTheHeader);
 void BSUtilsSwap4Byte(char *cBufPtr, int iNtimes);
 
 
-
+/*
 #if defined(__linux__)
 #include <byteswap.h>
 #endif
+*/
 
 
 /* ------------------------------------------------------------------ */
@@ -76,8 +77,8 @@ void BSUtilsSwapHeader(char *cTheHeader)
 /* ------------------------------------------------------------------ */
 void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes)
 {
+/* Use glibc hardware-accelerated swap
 #ifdef __linux__
-    /* Use glibc hardware-accelerated swap */
     unsigned short *uptr = (unsigned short *)cBufPtr;
     int i;
     
@@ -86,6 +87,7 @@ void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes)
         *uptr = bswap_16(*uptr);
     }
 #else
+*/
 	char holder;
 	int  i;
 	
@@ -95,7 +97,9 @@ void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes)
 		cBufPtr[i]   = cBufPtr[i+1];
 		cBufPtr[i+1] = holder;
 	}
+/*
 #endif
+*/
 }
 
 /* ------------------------------------------------------------------ */
@@ -106,8 +110,8 @@ void BSUtilsSwap2Byte(char *cBufPtr, int iNtimes)
 /* ------------------------------------------------------------------ */
 void BSUtilsSwap4Byte(char *cBufPtr, int iNtimes)
 {
+/* Use glibc hardware-accelerated swap
 #ifdef __linux__
-    /* Use glibc hardware-accelerated swap */
     unsigned long *lptr = (unsigned long *)cBufPtr;
     int i;
     
@@ -116,6 +120,7 @@ void BSUtilsSwap4Byte(char *cBufPtr, int iNtimes)
         *lptr = bswap_32(*lptr);
     }
 #else
+*/
 	char holder;
 	int  i;
 	
@@ -129,6 +134,8 @@ void BSUtilsSwap4Byte(char *cBufPtr, int iNtimes)
 		cBufPtr[i+1] = cBufPtr[i+2];
 		cBufPtr[i+2] = holder;
 	}
+/*
 #endif
+*/
 }
 
