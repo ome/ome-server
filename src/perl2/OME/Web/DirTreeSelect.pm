@@ -75,6 +75,7 @@ sub getPageBody {
 				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
 				$session->dataset($dataset);
 			} elsif ($radioSelect eq 'addExistDataset') {
+# is this the Right Way to do this operation?
 				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
 				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
 			}
