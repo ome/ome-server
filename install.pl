@@ -147,7 +147,7 @@ if ($ENV{OME_DEBUG}) {
 my $checks_to_run;
 
 # Command line defaults
-my $env_file = '/OME/conf/environment.store';
+my $env_file = ( -e '/OME/conf/environment.store' ? '/OME/conf/environment.store' : undef );
 
 # Command line options
 my ($update, $perl_check, $lib_check, $check_all, $usage, $install);
@@ -168,7 +168,7 @@ usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
-restore_env ($env_file);
+restore_env ($env_file) if $env_file;
 
 if ($update) {
 
