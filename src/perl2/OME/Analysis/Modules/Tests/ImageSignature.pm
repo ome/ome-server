@@ -70,11 +70,11 @@ sub execute {
     my $pixelses = OME::Tasks::ModuleExecutionManager->
       getAttributesForMEX($input_mex,$formal_input->semantic_type());
 
-    $self->newAttributesWithTargets('Signature',
-                                    {
-                                     Value  => $_->id(),
-                                     target => $mex->image(),
-                                    })
+    $self->newAttributes('Signature',
+                         {
+                          Value  => $_->id(),
+                          target => $mex->image(),
+                         })
       foreach @$pixelses;
 }
 

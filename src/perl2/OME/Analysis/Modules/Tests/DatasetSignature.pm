@@ -81,11 +81,11 @@ sub execute {
           if scalar(@$signatures) > 0;
     }
 
-    $self->newAttributesWithTargets('Signature',
-                                    {
-                                     Value  => $avg,
-                                     target => $mex->dataset(),
-                                    });
+    $self->newAttributes('Signature',
+                         {
+                          Value  => $avg,
+                          target => $mex->dataset(),
+                         });
 }
 
 1;

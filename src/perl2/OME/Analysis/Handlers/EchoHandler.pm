@@ -52,12 +52,12 @@ sub executeGlobal {
     print STDERR "      MEX ",$mex->id()," (",$module->name(),")\n";
 
     print STDERR "      Global inputs:\n";
-    my $inputs = $self->getFormalInputsByGranularity('G');
-    if (scalar(@$inputs) == 0) {
+    my @inputs = $self->getFormalInputsByGranularity('G');
+    if (scalar(@inputs) == 0) {
         print STDERR "        none\n";
     } else {
-        foreach my $input (@$inputs) {
-            my $vals = $self->getGlobalInputs($input->name());
+        foreach my $input (@inputs) {
+            my $vals = $self->getCurrentInputAttributes($input->name());
             print "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
                 print "          ",join(',',map { $_->id() } @$vals),"\n";
@@ -67,17 +67,17 @@ sub executeGlobal {
 }
 
 sub startDataset {
-    my ($self) = @_;
-    $self->SUPER::startDataset();
+    my ($self,$dataset) = @_;
+    $self->SUPER::startDataset($dataset);
     print STDERR "    startDataset\n";
 
     print STDERR "      Dataset inputs:\n";
-    my $inputs = $self->getFormalInputsByGranularity('D');
-    if (scalar(@$inputs) == 0) {
+    my @inputs = $self->getFormalInputsByGranularity('D');
+    if (scalar(@inputs) == 0) {
         print STDERR "        none\n";
     } else {
-        foreach my $input (@$inputs) {
-            my $vals = $self->getDatasetInputs($input->name());
+        foreach my $input (@inputs) {
+            my $vals = $self->getCurrentInputAttributes($input->name());
             print "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
                 print "          ",join(',',map { $_->id() } @$vals),"\n";
@@ -87,17 +87,17 @@ sub startDataset {
 }
 
 sub startImage {
-    my ($self) = @_;
-    $self->SUPER::startImage();
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
     print STDERR "    startImage\n";
 
     print STDERR "      Image inputs:\n";
-    my $inputs = $self->getFormalInputsByGranularity('I');
-    if (scalar(@$inputs) == 0) {
+    my @inputs = $self->getFormalInputsByGranularity('I');
+    if (scalar(@inputs) == 0) {
         print STDERR "        none\n";
     } else {
-        foreach my $input (@$inputs) {
-            my $vals = $self->getImageInputs($input->name());
+        foreach my $input (@inputs) {
+            my $vals = $self->getCurrentInputAttributes($input->name());
             print "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
                 print "          ",join(',',map { $_->id() } @$vals),"\n";
@@ -107,17 +107,17 @@ sub startImage {
 }
 
 sub startFeature {
-    my ($self) = @_;
-    $self->SUPER::startFeature();
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
     print STDERR "    startFeature\n";
 
     print STDERR "      Feature inputs:\n";
-    my $inputs = $self->getFormalInputsByGranularity('F');
-    if (scalar(@$inputs) == 0) {
+    my @inputs = $self->getFormalInputsByGranularity('F');
+    if (scalar(@inputs) == 0) {
         print STDERR "        none\n";
     } else {
-        foreach my $input (@$inputs) {
-            my $vals = $self->getFeatureInputs($input->name());
+        foreach my $input (@inputs) {
+            my $vals = $self->getCurrentInputAttributes($input->name());
             print "        ",$input->name()," - ",scalar(@$vals),"\n";
             if (scalar(@$vals) < 10) {
                 print "          ",join(',',map { $_->id() } @$vals),"\n";
@@ -128,20 +128,20 @@ sub startFeature {
 
 sub finishFeature {
     my ($self) = @_;
-    $self->SUPER::finishFeature();
     print STDERR "    finishFeature\n";
+    $self->SUPER::finishFeature();
 }
 
 sub finishImage {
     my ($self) = @_;
-    $self->SUPER::finishImage();
     print STDERR "    finishImage\n";
+    $self->SUPER::finishImage();
 }
 
 sub finishDataset {
     my ($self) = @_;
-    $self->SUPER::finishDataset();
     print STDERR "    finishDataset\n";
+    $self->SUPER::finishDataset();
 }
 
 1;
