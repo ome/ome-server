@@ -715,11 +715,11 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			} else if( strcmp( attrs[i], "SizeT" ) == 0 ) {
 				state->pixelInfo->T = atoi( attrs[i+1] );
 			} else if( strcmp( attrs[i], "DimensionOrder" ) == 0 ) {
-				state->pixelInfo->dimOrder = (char *) malloc( strlen(attrs[i+1]) + 1 );
+				state->pixelInfo->dimOrder = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
 				if( !(state->pixelInfo->dimOrder) ) mem_error("");
 				strcpy( state->pixelInfo->dimOrder, attrs[i+1] );
 			} else if( strcmp( attrs[i], "PixelType" ) == 0 ) {
-				state->pixelInfo->pixelType = (char *) malloc( strlen(attrs[i+1]) + 1 );
+				state->pixelInfo->pixelType = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
 				if( !(state->pixelInfo->pixelType) ) mem_error("");
 				strcpy( state->pixelInfo->pixelType, attrs[i+1] );
 			} else if( strcmp( attrs[i], "BigEndian" ) == 0 ) {
