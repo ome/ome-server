@@ -98,7 +98,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_SPACING=15.0f;
 	public static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
-	private static final float NAME_MAG=1;
+    private static final float NAME_MAG=1;
 	private static final float ZOOM_MAG=2;
 	
 	/**
@@ -191,6 +191,7 @@ public class PModule extends PPath implements PBufferedNode {
 		
 		// create the name and position it.
 		name = new PText(module.getName());
+		
 		name.setFont(NAME_FONT);
 		name.setPickable(false);
 		name.setScale(NAME_MAG);
@@ -238,18 +239,48 @@ public class PModule extends PPath implements PBufferedNode {
 		outputLinkTarget.setOffset(width-PLinkTarget.LINK_TARGET_HALF_SIZE,
 			linkTargetHeight);
 	
-		
+		buildMagnifiedLabel();
+	}
+	
+	private void buildMagnifiedLabel() {
 		// set up the magnified version of the module name
 		zoomName = new PText(module.getName());
 		zoomName.setFont(NAME_FONT);
 		zoomName.setPickable(false);
-		zoomName.setConstrainWidthToTextWidth(false);
-		zoomName.setScale(ZOOM_MAG);
-		double zwidth = (width-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
-		double zheight = (height-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
+		zoomName.setConstrainWidthToTextWidth(false); 
+		
+		double zwidth;
+		double zheight;
+		float scale = ZOOM_MAG;
+		zoomName.setScale(scale);
+		addChild(zoomName);	
+		
+		zwidth = (width-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
+		zheight = (height-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
+		
+		
+	
 		zoomName.setBounds(new PBounds(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET,
-			 zwidth,zheight));
-		addChild(zoomName);
+				zwidth,zheight));
+		float zoomHeight = (float) zoomName.getHeight();
+		float zoomWidth = (float) zoomName.getWidth();
+		
+		// scale the text to fit in the box.
+		
+		float heightScale=1.0f;
+		float widthScale=1.0f;
+		if (zoomHeight >= zheight) 
+			heightScale = (float)(zheight/zoomHeight);
+		if (zoomWidth >= zwidth) 
+			widthScale = (float)(zwidth/zoomWidth);
+		if (widthScale < heightScale)
+			scale = widthScale;
+		else
+			scale = heightScale;
+		zoomName.scale(scale);
+		
+		
+	
 		zoomName.setVisible(false);
 	}
 	
@@ -327,18 +358,20 @@ public class PModule extends PPath implements PBufferedNode {
 		
 		//height of first one
 		height+=NAME_SPACING;
-		float rowHeight=0;
+		float inHeight = 0;
+		float outHeight=0;
 			 		
 	 	Object[] ins = inSet.toArray();
 	 	Object[] outs = outSet.toArray();
 	
 		// place things at appropriate x,y.
 		for (int i =0; i < rows; i++) {
+			inHeight = outHeight =0;
 			// get ith input 
 			if (i <inSize) {
 				inp = (PFormalInput) ins[i];
 				inp.setOffset(NAME_LABEL_OFFSET,height);
-				rowHeight = (float) inp.getFullBoundsReference().getHeight();	
+				inHeight = (float) inp.getFullBoundsReference().getHeight();	
 			}
 			// get ith output
 			if (i < outSize) {
@@ -350,10 +383,12 @@ public class PModule extends PPath implements PBufferedNode {
 					outp.getLabelWidth();
 				// and then move right by that amount.
 				outp.setOffset(outputColumnX+rightJustifyGap,height);
-				rowHeight = (float) outp.getFullBoundsReference().getHeight();
+				outHeight = (float) outp.getFullBoundsReference().getHeight();
 			}
-			// advance to next row in height.
-			height += rowHeight; 
+			if (inHeight > outHeight )
+				height +=inHeight;
+			else
+				height+=outHeight; 
 		}
 	}
 	
