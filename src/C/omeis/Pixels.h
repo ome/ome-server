@@ -40,6 +40,7 @@
 #include <sys/types.h>
 #include "digest.h"
 #include "repository.h"
+#include "sha1DB.h"
 
 
 /* ----------- */
@@ -97,8 +98,10 @@ typedef struct
 	char  path_ID[256];  /* Path to the ID file */
 	char  path_rep[256];  /* Path to the repository-format file */
 	char  path_info[256]; /* Path to the info header */
+	char  path_DB[256];    /* Path to the sha1 DB */
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
+	DB    *DB;      /* sha1 DB returned from sha1DB_open() (as returned by dbopen()) */
 	size_t size_rep;
 	size_t size_info;
 	FILE *IO_stream;   /* One of these two should be set for reading/writing */
@@ -164,7 +167,7 @@ setPixelPlane (PixelsRep * thePixels,
 			   int theC,
 			   int theT);
 
-int
+OID
 FinishPixels (PixelsRep * myPixels,
 		      char force);
 

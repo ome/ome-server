@@ -235,6 +235,7 @@ char **cgivars=param;
 		case M_FINISHPIXELS:
 			force = 0;
 			result = 0;
+			OID resultID;
 
 			if (!ID) return (-1);
 			if ( (theParam = get_param (param,"Force")) )
@@ -246,16 +247,16 @@ char **cgivars=param;
 				return (-1);
 			}
 	
-			result = FinishPixels (thePixels,force);
+			resultID = FinishPixels (thePixels,force);
 			freePixelsRep (thePixels);
 		
-			if ( result < 0) {
-				if (errno) HTTP_DoError (method,"Result=%d, Message=%s",result,strerror( errno ) );
-				else HTTP_DoError (method,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
+			if ( resultID == 0) {
+				if (errno) HTTP_DoError (method,"Message=%s",result,strerror( errno ) );
+				else HTTP_DoError (method,"Message=%s",result,"Access control error - check error log for details" );
 				return (-1);
 			} else {
 				HTTP_ResultType ("text/plain");
-				fprintf (stdout,"%llu\n",ID);
+				fprintf (stdout,"%llu\n",resultID);
 			}
 
 			break;

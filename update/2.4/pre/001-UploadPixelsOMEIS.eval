@@ -87,7 +87,7 @@ sub postPixels {
 		OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() )
 	);
 	OME::Image::Server->convert( $pixelsID, $fileID, 0 );
-	OME::Image::Server->finishPixels( $pixelsID );
+	$pixelsID = OME::Image::Server->finishPixels( $pixelsID );
 	OME::Image::Server->deleteFile ($fileID);
 	return $pixelsID;
 }

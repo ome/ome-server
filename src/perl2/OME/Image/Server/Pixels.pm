@@ -563,7 +563,9 @@ methods can be called.
 
 sub finishPixels {
     my $self = shift;
-    OME::Image::Server->finishPixels($self->[PIXELS_ID]);
+    my $ID = OME::Image::Server->finishPixels($self->[PIXELS_ID]);
+    $self->[PIXELS_ID] = $ID;
+    return ($ID);
 }
 
 =head2 getTemporaryLocalPixels

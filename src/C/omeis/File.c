@@ -261,14 +261,14 @@ OID existOID;
 	/* Get SHA1 */
 	if ( get_md_from_buffer (myFile->file_buf, myFile->size_rep, myFile->file_info.sha1) < 0 ) {
 		DeleteFile (myFile);
-		return (-1);
+		return (0);
 	}
 	
 	/* Open the DB file if necessary */
 	if (! myFile->DB)
 		if (! (myFile->DB = sha1DB_open (myFile->path_DB)) ) {
 			DeleteFile (myFile);
-			return (-2);
+			return (0);
 		}
 
 	/* Check if SHA1 exists */
@@ -281,12 +281,12 @@ OID existOID;
 
 	if ( (myFile->fd_info = open (myFile->path_info, O_RDWR, 0600)) < 0) {
 		DeleteFile (myFile);
-		return (-3);
+		return (0);
 	}
 
 	if ( write (myFile->fd_info,(void *)&(myFile->file_info),sizeof(FileInfo)) != sizeof(FileInfo) ) {
 		DeleteFile (myFile);
-		return (-4);
+		return (0);
 	}
 
 	close (myFile->fd_info);
@@ -295,7 +295,7 @@ OID existOID;
 	if (myFile->is_mmapped) {
 		if (msync (myFile->file_buf , myFile->size_rep , MS_SYNC) != 0) {
 			DeleteFile (myFile);
-			return (-5);
+			return (0);
 		}
 		munmap (myFile->file_buf, myFile->size_rep);
 		myFile->file_buf = NULL;
@@ -313,7 +313,7 @@ OID existOID;
 		sha1DB_close (myFile->DB);
 		myFile->DB = NULL;
 		DeleteFile (myFile);
-		return (-6);
+		return (0);
 	}
 
 	/* Close the DB (and release the exclusive lock) */

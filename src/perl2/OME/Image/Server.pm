@@ -1467,9 +1467,10 @@ sub finishPixels {
     my ($pixelsID) = @_;
     my $result = $proto->__callOMEIS(Method   => 'FinishPixels',
                                      PixelsID => $pixelsID);
+    chomp ($result);
     die "Error finishing pixels"
-      unless defined $result && $result == $pixelsID;
-    return;
+      unless $result;
+    return $result;
 }
 
 =head2 getPlaneStatistics

@@ -63,7 +63,7 @@ digest.o: digest.c digest.h
 method.o: method.c method.h
 	$(CC) $(CFLAGS) -c method.c
 
-composite.o: composite.c composite.h
+composite.o: composite.c composite.h omeis.h Pixels.h File.h digest.h repository.h sha1DB.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c composite.c
 
 cgi.o: cgi.c cgi.h
@@ -72,13 +72,13 @@ cgi.o: cgi.c cgi.h
 repository.o: repository.c repository.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c repository.c
 
-Pixels.o: Pixels.c Pixels.h
+Pixels.o: Pixels.c Pixels.h File.h digest.h repository.h sha1DB.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c Pixels.c
 
-File.o: File.c File.h
+File.o: File.c File.h digest.h repository.h sha1DB.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c File.c
 
-sha1DB.o: sha1DB.c sha1DB.h
+sha1DB.o: sha1DB.c sha1DB.h repository.h digest.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c sha1DB.c
 
 xmlBinaryResolution.o: xmlBinaryResolution.c xmlBinaryResolution.h Pixels.h digest.h ../base64.h ../b64z_lib.h

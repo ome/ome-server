@@ -389,6 +389,8 @@ sub readWritePixels {
     my $status = "";
 
     $self->{pix}->convertPlaneFromTIFF($fih,0,$theC,0);
+	OME::Tasks::PixelsManager->finishPixels ($self->{pix},$self->{pixels});
+
     $self->{pix}->finishPixels();
     doSliceCallback($callback);
 

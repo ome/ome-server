@@ -267,7 +267,7 @@ and sets the thumbnail.
 sub finishPixels {
     my ($proto, $pixels_data, $pixels_attr) = @_;
 
-	$pixels_data->finishPixels();
+	$pixels_attr->ImageServerID ($pixels_data->finishPixels());
 	$pixels_attr->FileSHA1( $pixels_data->getSHA1() );
 	$proto->saveThumb( $pixels_attr );
 	$pixels_attr->storeObject();

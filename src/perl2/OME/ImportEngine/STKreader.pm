@@ -482,7 +482,7 @@ sub readWritePixels {
 	}
     }
 
-    $pix->finishPixels();
+	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
 
     return $status;
 }

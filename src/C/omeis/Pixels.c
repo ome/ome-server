@@ -52,6 +52,11 @@
 #include "Pixels.h"
 #include "File.h"
 
+
+void DeletePixels (PixelsRep *myPixels);
+
+
+
 /*
   PixelRep keeps track of everything having to do with pixel i/o to the repository.
 */
@@ -83,6 +88,7 @@ PixelsRep *newPixelsRep (OID ID)
 PixelsRep *myPixels;
 char *root="Pixels/";
 char *pixIDfile="Pixels/lastPix";
+char *sha1DBfile="Pixels/sha1DB.idx";
 
 	if (! (myPixels =  (PixelsRep *)malloc (sizeof (PixelsRep)))  )
 		return (NULL);
@@ -91,6 +97,7 @@ char *pixIDfile="Pixels/lastPix";
 	strcpy (myPixels->path_rep,root);
 	strcpy (myPixels->path_info,root);
 	strcpy (myPixels->path_ID,pixIDfile);
+	strcpy (myPixels->path_DB,sha1DBfile);
 
 	/* file descriptors reset to -1 */
 	myPixels->fd_rep = -1;
@@ -327,7 +334,7 @@ int result;
 
 
 	if ( (result = openPixelsFile (myPixels,rorw)) < 0) {
-		fprintf (stderr,"Could not open pixels file. Result=%d\n",result);
+		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n",ID,result);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -1086,34 +1093,95 @@ int FinishStats (PixelsRep *myPixels, char force) {
 	return (1);
 }
 
-int FinishPixels (PixelsRep *myPixels, char force) {
 
-	if (!myPixels) return (-1);
+void DeletePixels (PixelsRep *myPixels) {
+	if (!myPixels->is_mmapped) {
+		if (myPixels->planeInfos) free (myPixels->planeInfos);
+		if (myPixels->stackInfos) free (myPixels->stackInfos);
+		if (myPixels->head) free (myPixels->head);
+		if (myPixels->pixels) free (myPixels->pixels);
+	} else {
+		munmap (myPixels->head, myPixels->size_info);
+		munmap (myPixels->pixels, myPixels->size_rep);
+	}
+	myPixels->is_mmapped = 0;
+	myPixels->planeInfos = NULL;
+	myPixels->stackInfos = NULL;
+	myPixels->head = NULL;
+	myPixels->pixels = NULL;
+	
+
+	if (myPixels->fd_info >=0 ) close (myPixels->fd_info);
+	if (myPixels->path_info) {
+		chmod (myPixels->path_info,0600);
+		unlink (myPixels->path_info);
+	}
+	myPixels->fd_info = -1;
+
+	if (myPixels->fd_rep >=0 ) close (myPixels->fd_rep);
+	if (myPixels->path_rep) {
+		chmod (myPixels->path_rep,0600);
+		unlink (myPixels->path_rep);
+	}
+	myPixels->fd_rep = -1;
+
+}
+
+OID FinishPixels (PixelsRep *myPixels, char force) {
+OID existOID;
+
+	if (!myPixels) return (0);
 
 	/* wait until we can get a write lock on the whole file */
 	lockRepFile (myPixels->fd_rep,'w',0LL,0LL);
 	
 	/* Make sure all the stats are up to date */
-	if (!FinishStats (myPixels,force)) return (-3);
+	if (!FinishStats (myPixels,force)) return (0);
 
 	/* Get the SHA1 message digest */
 	if (get_md_from_fd (myPixels->fd_rep, myPixels->head->sha1) < 0) {
 		fprintf(stderr, "Unable to retrieve SHA1.");
-		return(-4);
+		return(0);
+	}
+
+	/* Open the DB file if necessary */
+	if (! myPixels->DB)
+		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
+			return(0);
+		}
+
+	/* Check if SHA1 exists */
+	if ( (existOID = sha1DB_get (myPixels->DB, myPixels->head->sha1)) ) {
+		sha1DB_close (myPixels->DB);
+		myPixels->DB = NULL;
+		DeletePixels (myPixels);
+		return (existOID);
 	}
 
 	myPixels->head->isFinished = 1;
 
 	if (myPixels->is_mmapped) {
-		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (-5);
+		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (0);
 
-		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-6);
+		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (0);
 	}
 	
+
+	/* put the SHA1 in the DB */
+	if ( sha1DB_put (myPixels->DB, myPixels->head->sha1, myPixels->ID) ) {
+		sha1DB_close (myPixels->DB);
+		myPixels->DB = NULL;
+		return (0);
+	}
+
+	/* Close the DB (and release the exclusive lock) */
+	sha1DB_close (myPixels->DB);
+	myPixels->DB = NULL;
+
 	fchmod (myPixels->fd_rep,0400);
 	fchmod (myPixels->fd_info,0400);
 
-	return (0);
+	return (myPixels->ID);
 }
 
 

@@ -519,8 +519,7 @@ sub importGroup {
 	doSliceCallback($callback);
 
     }
-
-    $pix->finishPixels();
+	OME::Tasks::PixelsManager->finishPixels ($pix,$pixels);
 
     if ($image_invalid && $pixels_created) {
         # If there was an error, make sure to remove the repository file

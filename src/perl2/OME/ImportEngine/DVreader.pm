@@ -499,7 +499,8 @@ sub readPixels {
             }
         }
     }
-    $pix->finishPixels();
+    
+	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
     #print STDERR "   DVreader end read loop: ".localtime."\n";
 
     if ($status eq "") {
