@@ -154,7 +154,7 @@ public class PDataset extends PGenericBox {
 			y-=maxHeight;
 		
 		y +=maxHeight; // move y ahead. to next row.
-		
+		x=HGAP;
 		// adjust width
 		maxRowWidth -= HGAP; // leave off the last horizontal space 
 		if (maxRowWidth < nameLabel.getWidth())
@@ -207,5 +207,13 @@ public class PDataset extends PGenericBox {
 	 */
 	public CDataset getDataset() {
 		return dataset;
+	}
+	
+	public PBounds getBufferedBounds() {
+		PBounds b = getFullBoundsReference();
+		return new PBounds(b.getX()-PConstants.SMALL_BORDER,
+			b.getY()-PConstants.SMALL_BORDER,
+			b.getWidth()+2*PConstants.SMALL_BORDER,
+			b.getHeight()+2*PConstants.SMALL_BORDER);
 	}
 }
