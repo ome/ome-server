@@ -41,7 +41,7 @@
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
 <AnalysisModule Category = "Wavelength comparison" ModuleName = "Cross Correlation" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
+	ModuleType = "OME::Analysis::Handlers::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
 	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification."
 	ID="urn:lsid:openmicroscopy.org:Module:10">
 	<Declaration>

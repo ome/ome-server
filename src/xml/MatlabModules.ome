@@ -62,7 +62,7 @@
     <AnalysisModule
        ModuleName="Plane statistics (Matlab)"
        Category="Statistics"
-       ModuleType="OME::Analysis::MatlabHandler"
+       ModuleType="OME::Analysis::Handlers::MatlabHandler"
        ProgramID="ome_planeStatistics"
        ID="urn:lsid:openmicroscopy.org:Module:8">
       <Description>Calculate pixel statistics for each XY plane.</Description>

@@ -146,7 +146,7 @@
 
 <AnalysisModule ModuleName = "Area Statistics" 
     Category="Signature Extraction"
-	ModuleType = "OME::Analysis::MatlabHandler"
+	ModuleType = "OME::Analysis::Handlers::MatlabHandler"
 	ProgramID = "ome_AreaStat" >
 	<Description>Converts the PixelPlane to a binary image and computes 3 area statistics - Number of Area elements (blobs), histogram of Area (out of 10 bins), and average area size.</Description>
 	<Declaration>

@@ -184,7 +184,7 @@
 
   <AnalysisModule 
      ModuleName="Find spots" 
-     ModuleType="OME::Analysis::FindSpotsHandler"
+     ModuleType="OME::Analysis::Modules::Tracking::FindSpots"
      ProgramID="/OME/bin/findSpots/findSpotsOME"
      Category="Tracking"
      NewFeatureName="SPOT"
@@ -215,7 +215,7 @@
 
   <AnalysisModule
      ModuleName="Track spots" 
-     ModuleType="OME::Analysis::TrackSpotsHandler"
+     ModuleType="OME::Analysis::Modules::Tracking::TrackSpots"
      ProgramID=""
      Category="Tracking"
      FeatureIterator="SPOT"

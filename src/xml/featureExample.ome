@@ -84,11 +84,11 @@
 
 <AnalysisModule
     ModuleName="Find cells"
-    ModuleType="OME::Analysis::FindBounds"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
     ProgramID=""
     Category="Testing"
     NewFeatureName="CELL"
-    ID="urn:lsid:openmicroscopy.org:Module:4">
+    ID="urn:lsid:openmicroscopy.org:Module:24">
   <Description>Find cells</Description>
 
   <Declaration>
@@ -101,12 +101,12 @@
 
 <AnalysisModule
     ModuleName="Find mito"
-    ModuleType="OME::Analysis::FindBounds"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
     ProgramID=""
     Category="Testing"
     FeatureIterator="CELL"
     NewFeatureName="MITOCHONDRIA"
-    ID="urn:lsid:openmicroscopy.org:Module:5">
+    ID="urn:lsid:openmicroscopy.org:Module:25">
   <Description>Find mito</Description>
 
   <Declaration>
@@ -122,12 +122,12 @@
 
 <AnalysisModule
     ModuleName="Find golgi"
-    ModuleType="OME::Analysis::FindBounds"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
     ProgramID=""
     Category="Testing"
     FeatureIterator="CELL"
     NewFeatureName="GOLGI"
-    ID="urn:lsid:openmicroscopy.org:Module:6">
+    ID="urn:lsid:openmicroscopy.org:Module:26">
   <Description>Find golgi</Description>
 
   <Declaration>
@@ -143,11 +143,11 @@
 
 <AnalysisModule
     ModuleName="Find ratio"
-    ModuleType="OME::Analysis::FindRatio"
+    ModuleType="OME::Analysis::Modules::Tests::FindRatio"
     ProgramID=""
     Category="Testing"
     FeatureIterator="CELL"
-    ID="urn:lsid:openmicroscopy.org:Module:7">
+    ID="urn:lsid:openmicroscopy.org:Module:27">
   <Description>Find ratio</Description>
 
   <Declaration>

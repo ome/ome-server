@@ -155,7 +155,7 @@
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule ModuleName = "Fast Stack statistics" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_fastStats"
+	ModuleType = "OME::Analysis::Handlers::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_fastStats"
 	ID="urn:lsid:openmicroscopy.org:Module:3">
 	<Description>Calculate pixel statistics for each XYZ Stack.</Description>
 	<Declaration>
