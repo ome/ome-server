@@ -141,8 +141,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		else if (node instanceof PThumbnail) {
 			System.err.println("popup on thumbnail...");
 			PThumbnail pt = (PThumbnail) node;
-			
-			zoomOut(pt);
+			zoomLevel = pt.zoomOutOfHalo(zoomLevel);
 			
 		}
 		else {
@@ -180,9 +179,8 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			} else if (node instanceof PThumbnail) {
 				PThumbnail thumb = (PThumbnail)node;
 				System.err.println("zooming in to thumbnail");
-				zoomToHalo(thumb);
-				zoomLevel++;
-				System.err.println("new zoom level is "+zoomLevel);
+				zoomLevel = thumb.zoomInToHalo(zoomLevel);
+				//System.err.println("new zoom level is "+zoomLevel);
 			}
 			else 
 				super.mouseClicked(e);	

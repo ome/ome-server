@@ -39,7 +39,6 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PImage;
-import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.util.Iterator;
@@ -75,12 +74,19 @@ public class PDatasetImagesNode extends PNode  {
 	
 	private PThumbnail currentHighlight;
 	
+	private PBrowserEventHandler handler;
+	
 	public PDatasetImagesNode() {
 		super();	
 		addChild(imagesNode);
 		addChild(zoomHalo);
 		zoomHalo.moveToFront();
 		setPickable(true);
+	}
+	
+	
+	public void setHandler(PBrowserEventHandler handler) {
+		this.handler = handler;
 	}
 	
 	public void addImage(PThumbnail thumb) {
@@ -142,8 +148,8 @@ public class PDatasetImagesNode extends PNode  {
 	public void highlightThumbnail(PThumbnail thumb,boolean v,int level) {
 		System.err.println("calling highlight thumbnail..."+thumb);
 		System.err.println(" v is "+v+", level "+level);
-		int count = imagesNode.getChildrenCount();
-		int radius = getRadius(level,count);
+		int count = imagesNode.getChildrenCount();		
+		int radius = (int) Math.floor(getRadius(level));
 		int size = radius*radius;
 		
 		System.err.println("count is "+count+", radius is "+radius);
@@ -158,12 +164,12 @@ public class PDatasetImagesNode extends PNode  {
 		}
 	}
 	
-	public int getRadius(int level, int count) {
+	public double getRadius(int level) {
+		int count = imagesNode.getChildrenCount();
 		// find the number of items on each side
 		double side = Math.sqrt(count);
 		double denom = Math.pow(2,level+2);
-		int radius = (int) Math.floor(side/denom);
-		return radius;
+		return side/denom;
 	}
 	
 	private void doHighlightThumbnail(PThumbnail thumb,int radius) {
@@ -246,15 +252,67 @@ public class PDatasetImagesNode extends PNode  {
 		return zoomHalo.getVisible();
 	}
 	
-	public void zoomToHalo(PCamera camera) {
-		if (!hasVisibleHalo())
-			return;
-		camera.animateViewToCenterBounds(zoomHalo.getGlobalFullBounds(),true,
-			PConstants.ANIMATION_DELAY);
-		zoomHalo.hide();
-	}
-	
+
 	public PThumbnailSelectionHalo getHalo() {
 		return zoomHalo;
 	}
+	
+	public int zoomInToHalo(PThumbnail thumb, int level) {
+		 System.err.println("zooming in .. level is "+level);
+		 System.err.println("radius is..."+getRadius(level));
+		 double newRadius = getRadius(level+1);
+		 System.err.println("next radius is "+newRadius);
+		 if (newRadius <1 && getRadius(level) >1) {
+		 	handler.animateToBufferedNode(thumb);
+		 }
+		 else {
+	     	calcZoomHalo(thumb,level);
+		 	handler.animateToNode(zoomHalo);
+		 }
+	     // zoomIn
+	     
+	     System.err.println("new radius is "+newRadius);
+	     int newLevel = level;
+	     if (newRadius >=1)
+	     	newLevel++;
+	     System.err.println("new level is "+newLevel);
+	     return newLevel;	
+	   }
+	
+	public int zoomOutOfHalo(PThumbnail thumb, int level) {
+		if (level == 0)
+			return level;
+		System.err.println("zooming out.. level is "+level);
+		System.err.println("radius is "+getRadius(level));	
+		if (level <= 1) {
+			// go to top level.
+			PBufferedNode b = thumb.getBufferedParentNode();
+			// zoom to this.
+			handler.animateToBufferedNode(b);
+		}
+		else if (getRadius(level) <= 1) {
+			// innermost, go out by one
+			calcZoomHalo(thumb,level-1);
+			handler.animateToNode(zoomHalo);
+			
+		} else {
+			// go down by two
+			int upperLevel = level-2;
+			calcZoomHalo(thumb,upperLevel);
+			
+			//and zoom in by one. net effect - zoom out oune
+			handler.animateToNode(zoomHalo);
+		}
+		level--;
+		if (level < 0)
+			level = 0;
+		calcZoomHalo(thumb,level);
+		return level;		
+	}
+	
+	public void calcZoomHalo(PThumbnail thumb, int level) {
+		int radius = (int) Math.floor(getRadius(level));
+		doHighlightThumbnail(thumb,radius);		
+	}
+	
 }
