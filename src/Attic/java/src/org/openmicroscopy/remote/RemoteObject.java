@@ -67,7 +67,7 @@ public class RemoteObject
     /**
      * The delegate used to make remote procedure calls.
      */
-    protected static RemoteCaller caller = null;
+    protected RemoteCaller caller = null;
 
     /**
      * The {@link Session} that created this object.
@@ -75,13 +75,19 @@ public class RemoteObject
     protected RemoteSession session = null;
 	
     /**
-     * Sets the delegate used to make remote procedure calls.
-     * Currently only one implementation of {@link RemoteCaller} is
-     * provided -- {@link XmlRpcCaller}.
+     * Returns the delegate used by this object to make remote
+     * procedure calls.
+     */
+    public RemoteCaller getRemoteCaller() { return caller; }
+
+    /**
+     * Sets the delegate used by this object to make remote procedure
+     * calls.  Currently only one implementation of {@link
+     * RemoteCaller} is provided -- {@link XmlRpcCaller}.
      * @param caller the RPC delegate to use
      */
-    public static void setRemoteCaller(RemoteCaller caller)
-    { RemoteObject.caller = caller; }
+    public void setRemoteCaller(RemoteCaller caller)
+    { this.caller = caller; }
 
     /**
      * The remote object reference that this <code>RemoteObject</code>
@@ -106,6 +112,7 @@ public class RemoteObject
     {
         this.reference = reference;
         this.session = session;
+        this.caller = (session == null)? null: session.getRemoteCaller();
     }
 
     /**
@@ -135,7 +142,7 @@ public class RemoteObject
     protected void finalize()
     {
         //System.err.println("finalize "+getClass()+"."+reference);
-        if (caller != null)
+        if ((caller != null) && (session.isActive()))
             caller.freeObject(this);
     }
 
@@ -153,7 +160,10 @@ public class RemoteObject
      * @param reference this object's session
      */
     public void setRemoteSession(RemoteSession session)
-    { this.session = session; }
+    {
+        this.session = session;
+        this.caller = (session == null)? null: session.getRemoteCaller();
+    }
 
     /**
      * Returns this object's remote reference.
