@@ -280,7 +280,6 @@ public class PDataset extends PGenericBox {
 	
 	public void revertWidth() {
 		width = prevWidth;
-		System.err.println("width is "+width);
 	}
 	
 	public void clearWidths() {
