@@ -69,21 +69,68 @@ import org.openmicroscopy.ds.dto.AttributeDTO;
  */
 
 public class DataFactory
-    extends AbstractManager
+    extends AbstractService
 {
+    protected InstantiatingCaller icaller = null;
+
+    private List markedForUpdate = new ArrayList();
+
+    private static class EqualsWrapper
+    {
+        private DataInterface ref;
+
+        private EqualsWrapper(DataInterface ref)
+        {
+            super();
+            this.ref = ref;
+        }
+
+        public boolean equals(Object o)
+        {
+            if (o instanceof EqualsWrapper)
+            {
+                EqualsWrapper ew = (EqualsWrapper) o;
+                return ref == ew.ref;
+            } else {
+                return ref == o;
+            }
+        }
+    }
+
+    public DataFactory()
+    {
+        super();
+    }
+
     /**
      * Creates a new <code>DataFactory</code> which communicates with
      * a data server using the specified {@link RemoteCaller}.  This
      * {@link RemoteCaller} is first wrapped in an instance of {@link
      * InstantiatingCaller}.
      */
-    public DataFactory(RemoteCaller caller) { super(caller); }
+    public DataFactory(RemoteCaller caller)
+    {
+        super();
+        initializeService(RemoteServices.getInstance(caller));
+    }
 
     /**
      * Creates a new <code>DataFactory</code> which communicates with
      * a data server using the specified {@link InstantiatingCaller}.
      */
-    public DataFactory(InstantiatingCaller caller) { super(caller); }
+    public DataFactory(InstantiatingCaller caller)
+    {
+        super();
+        initializeService(RemoteServices.
+                          getInstance(caller.getRemoteCaller()));
+    }
+
+    public void initializeService(RemoteServices services)
+    {
+        super.initializeService(services);
+        icaller = (InstantiatingCaller)
+            services.getService(InstantiatingCaller.class);
+    }
 
     /**
      * Creates a criteria {@link Map} in the format expected by the
@@ -123,9 +170,9 @@ public class DataFactory
     {
         Map fields = fieldSpec.getFieldsWanted();
         return (UserState)
-            caller.dispatch(UserState.class,
-                            "getUserState",
-                            new Object[] { fields });
+            icaller.dispatch(UserState.class,
+                             "getUserState",
+                             new Object[] { fields });
     }
 
     /**
@@ -148,7 +195,7 @@ public class DataFactory
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
-        Integer result = getRemoteCaller().
+        Integer result = caller.
             dispatchInteger("countObjects",
                             new Object[] {
                                 remoteType,
@@ -198,7 +245,7 @@ public class DataFactory
     public int count(String semanticType, Criteria criteria)
     {
         Map crit = createCriteriaMap(criteria);
-        Integer result = getRemoteCaller().
+        Integer result = caller.
             dispatchInteger("countObjects",
                             new Object[] {
                                 "@"+semanticType,
@@ -233,13 +280,13 @@ public class DataFactory
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map fields = fieldSpec.getFieldsWanted();
-        return caller.dispatch(targetClass,
-                               "loadObject",
-                               new Object[] {
-                                   remoteType,
-                                   new Integer(id),
-                                   fields
-                               });
+        return icaller.dispatch(targetClass,
+                                "loadObject",
+                                new Object[] {
+                                    remoteType,
+                                    new Integer(id),
+                                    fields
+                                });
     }
 
     /**
@@ -299,13 +346,13 @@ public class DataFactory
                           FieldsSpecification fieldSpec)
     {
         Map fields = fieldSpec.getFieldsWanted();
-        return caller.dispatch(semanticType,
-                               "loadObject",
-                               new Object[] {
-                                   "@"+semanticType,
-                                   new Integer(id),
-                                   fields
-                               });
+        return icaller.dispatch(semanticType,
+                                "loadObject",
+                                new Object[] {
+                                    "@"+semanticType,
+                                    new Integer(id),
+                                    fields
+                                });
     }
 
     /**
@@ -332,9 +379,9 @@ public class DataFactory
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-        return caller.dispatch(targetClass,
-                               "retrieveObject",
-                               new Object[] {remoteType,crit,fields});
+        return icaller.dispatch(targetClass,
+                                "retrieveObject",
+                                new Object[] {remoteType,crit,fields});
     }
 
     public Attribute retrieve(SemanticType semanticType, Criteria criteria)
@@ -346,13 +393,13 @@ public class DataFactory
     {
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-        return caller.dispatch(semanticType,
-                               "retrieveObject",
-                               new Object[] {
-                                   "@"+semanticType,
-                                   crit,
-                                   fields
-                               });
+        return icaller.dispatch(semanticType,
+                                "retrieveObject",
+                                new Object[] {
+                                    "@"+semanticType,
+                                    crit,
+                                    fields
+                                });
     }
 
     /**
@@ -378,9 +425,9 @@ public class DataFactory
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-        return caller.dispatchList(targetClass,
-                                   "retrieveObjects",
-                                   new Object[] {remoteType,crit,fields});
+        return icaller.dispatchList(targetClass,
+                                    "retrieveObjects",
+                                    new Object[] {remoteType,crit,fields});
     }
 
     public List retrieveList(SemanticType semanticType, Criteria criteria)
@@ -392,13 +439,13 @@ public class DataFactory
     {
         Map crit = createCriteriaMap(criteria);
         Map fields = criteria.getFieldsWanted();
-        return caller.dispatchList(semanticType,
-                                   "retrieveObjects",
-                                   new Object[] {
-                                       "@"+semanticType,
-                                       crit,
-                                       fields
-                                   });
+        return icaller.dispatchList(semanticType,
+                                    "retrieveObjects",
+                                    new Object[] {
+                                        "@"+semanticType,
+                                        crit,
+                                        fields
+                                    });
     }
 
     /**
@@ -410,7 +457,7 @@ public class DataFactory
      */
     public DataInterface createNew(Class targetClass)
     {
-        MappedDTO dto = caller.getInstantiator().
+        MappedDTO dto = icaller.getInstantiator().
             instantiateDTO(targetClass,new HashMap());
         dto.setNew(true);
         return dto;
@@ -423,7 +470,7 @@ public class DataFactory
 
     public Attribute createNew(String semanticType)
     {
-        MappedDTO dto = caller.getInstantiator().
+        MappedDTO dto = icaller.getInstantiator().
             instantiateDTO(semanticType,new HashMap());
         dto.setNew(true);
         return (Attribute) dto;
@@ -577,7 +624,7 @@ public class DataFactory
         // Make the remote call
 
         String remoteType = object.getDTOTypeName();
-        Object result = getRemoteCaller().
+        Object result = caller.
             dispatch("updateObject",new Object[] { remoteType,serialized });
 
         // If this was a new object, we should have gotten back a
@@ -703,7 +750,7 @@ public class DataFactory
 
         // Make the remote call
 
-        Object result = getRemoteCaller().
+        Object result = caller.
             dispatch("updateObjects",new Object[] { serialized });
 
         // We should get back a map of the primary key ID's for each
@@ -737,5 +784,24 @@ public class DataFactory
             newObject.setNew(false);
             newObject.getMap().put("id",realID);
         }
+    }
+
+    public void markForUpdate(DataInterface object)
+    {
+        if (!markedForUpdate.contains(object))
+            markedForUpdate.add(new EqualsWrapper(object));
+    }
+
+    public void updateMarked()
+    {
+        for (int i = 0; i < markedForUpdate.size(); i++)
+        {
+            EqualsWrapper ew = (EqualsWrapper) markedForUpdate.get(i);
+            markedForUpdate.set(i,ew.ref);
+        }
+
+        updateList(markedForUpdate);
+
+        markedForUpdate.clear();
     }
 }
