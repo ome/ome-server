@@ -129,7 +129,10 @@ sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->{user}; }
-# accessor works fine from subclasses using $self. Mutator doesn't work except via OME::Web
+# __Session accessor works fine from subclasses using $self.
+# __Session mutator doesn't alter OME::Web's data unless accessed via OME::Web
+# So we have this Session accessor/mutator method that can be used from anywhere to read
+# 	and write OME::Web's __Session data.
 sub Session { my $self = shift; if( scalar (@_) > 0 ) { return OME::Web->__Session( shift ); } return $self->__Session(); }
 
 # redirectURL
@@ -233,6 +236,7 @@ sub serve {
 	my $cookies = [values %{$self->{_cookies}}];
 	my %headers;
 	$headers {'-cookie'} = $cookies if scalar @$cookies;
+	$headers {'-expires'} = '-1d';
 
 	print $self->CGI()->header(-type => $self->contentType(),%headers);
 
@@ -353,6 +357,8 @@ sub getPageTitle {
 #	   - everything worked well, but instead of a page body, the user
 #		 should be redirected (usually in the case of processing form
 #		 input)
+#
+#	'IMAGE' and 'SVG' are also valid results. 
 
 
 sub getPageBody {
@@ -543,6 +549,5 @@ sub tableLine {
 			$CGI->td(combine($self->{tableHeaderDefaults},$params),
 				 $self->spacer(1,1))) . "\n";
 }
-
 
 1;
