@@ -64,6 +64,12 @@ static int
 openConvertFile (PixelsRep *myPixels, char rorw);
 static void
 closeConvertFile (PixelsRep *myPixels);
+static void
+unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength);
+static void 
+extractRGBChannels(uint8* read_buf, int nPix, int chan, uint8* write_buf);
+
+/* public prototypes */
 int FinishStats (PixelsRep *myPixels, char force);
 
 
@@ -1017,7 +1023,6 @@ char *IO_buf;
 unsigned char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
-
 	if (!myPixels) return (0);
 	if (! (head = myPixels->head) ) return (0);
 	if (! (pixels = myPixels->pixels) ) return (0);
@@ -2013,15 +2018,16 @@ FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
 TIFF *tiff = NULL;
 tdata_t read_buf;
-uint16* write_buf;
+uint16* write_buf_unpack; /* tmp write buffer for unpacking bits */
+uint8*  write_buf_rgb;    /* tmp write buffer for extracting rgb */
 tstrip_t strip;
 uint32 width = 0;
 uint32 height = 0;
-uint16 chans = 0,pc;
+uint16 chans = 0,pc,is_rgb;
 uint16 read_bitspp, write_bytespp;
 tsize_t stripSize;
 char doSwap;
-
+		
 	if (!myFile || !myPixels) return (0);
 
 	if (! (head = myPixels->head) ) {
@@ -2039,8 +2045,6 @@ char doSwap;
 			(unsigned long long)myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
 		return (0);
 	}
-	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-	
 	if (myFile->fd_rep < 0) {
 		if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
 			sprintf (myPixels->error_str+strlen(myPixels->error_str),
@@ -2072,7 +2076,8 @@ char doSwap;
 	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &chans);
 	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &read_bitspp);
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
-
+	TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &is_rgb);  
+	
 	/* convert bits per pixel to bytes per pixel */
 	if (read_bitspp <= 8)
 		write_bytespp = 1;
@@ -2080,8 +2085,9 @@ char doSwap;
 		write_bytespp = 2;
 	else 
 		write_bytespp = 4;
-		
-	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || chans > 1 || write_bytespp != (uint16)(head->bp) ||
+	
+	/* sanity check */
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (chans > 1 && is_rgb !=PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
 		pc != PLANARCONFIG_CONTIG ) {
 			int nc=0;
 			
@@ -2089,22 +2095,22 @@ char doSwap;
 			nc += sprintf (myPixels->error_str+nc,"ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.\n",
 				(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
 			nc += sprintf (myPixels->error_str+nc,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
-			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
+			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)head->dc,(int)chans);
 			nc += sprintf (myPixels->error_str+nc,"\tBits per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp*8,(int)read_bitspp);
 			nc += sprintf (myPixels->error_str+nc,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
 			return (0);
 	}
-
+	
+	/* allocate read and write buffer if neccessary */
 	if (! (read_buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
 		sprintf (myPixels->error_str+strlen(myPixels->error_str),
 			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff));
 		TIFFClose(tiff);
 		return (0);
 	}
-
-	/* allocate a write buffer if neccessary */
+	
 	if (read_bitspp%8 != 0)
-		if (! (write_buf = (uint16*) malloc(TIFFStripSize(tiff)*8/read_bitspp * write_bytespp)) ) {
+		if (! (write_buf_unpack = (uint16*) malloc(TIFFStripSize(tiff)*8/read_bitspp * write_bytespp)) ) {
 			sprintf (myPixels->error_str+strlen(myPixels->error_str),
 			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary bit-unpacking, buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
 		_TIFFfree(read_buf);
@@ -2112,44 +2118,84 @@ char doSwap;
 		return (0);
 	}
 	
+	if (is_rgb == PHOTOMETRIC_RGB)
+		if (! (write_buf_rgb = (uint8*) malloc(TIFFStripSize(tiff)/3) )) {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF temporary channel buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp);
+		_TIFFfree(read_buf);
+		TIFFClose(tiff);
+		return (0);
+	}
 	myPixels->IO_buf_off = 0;
 	doSwap = myPixels->doSwap;
 	myPixels->doSwap = 0;
+	
+	/* is this an rgb image ? */
+	if (is_rgb == PHOTOMETRIC_RGB){
+		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
+		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
+		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
+		myPixels->IO_buf = write_buf_rgb;
+		pix_offset = 0;
 		
-	/* do we need to do bit unpacking or not */
-	if (read_bitspp % 8 == 0){
-		myPixels->IO_buf = read_buf;
 		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (8*stripSize) / read_bitspp;
-		
-		myPixels->IO_buf_off = 0;
-		nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-		pix_offset += stripSize;
-		nIO += nOut;
-		}
-	} else {
-		myPixels->IO_buf = write_buf;
-		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
-			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
-			nPix = (stripSize*8) / read_bitspp;
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);
+			nPix = (8*stripSize) / read_bitspp / 3;
 			
-			/* unpack bits to write_buf from read_buf*/
-			unpackBits((uint8*) read_buf, read_bitspp, write_buf, write_bytespp, nPix);
+			/* write the red, green, and blue parts of the pixel into different channels*/
+			myPixels->IO_buf_off = 0;
+			extractRGBChannels(read_buf, nPix, 2, write_buf_rgb); 
+			nOut = DoPixelIO (myPixels, red_offset   + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
-				
+			extractRGBChannels(read_buf, nPix, 1, write_buf_rgb);
+			nOut = DoPixelIO (myPixels, green_offset + pix_offset, nPix, 'w');
+			
+			myPixels->IO_buf_off = 0;
+			extractRGBChannels(read_buf, nPix, 0, write_buf_rgb);
+			nOut = DoPixelIO (myPixels, blue_offset  + pix_offset, nPix, 'w');
+			
 			pix_offset += nPix*write_bytespp;
 			nIO += nOut;
 		}
+		free(write_buf_rgb); 
+
+	/* do we need to do bit unpacking or not ? */
+	} else if (read_bitspp % 8 == 0){
+		myPixels->IO_buf = read_buf;
+		myPixels->IO_buf_off = 0;
+		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (8*stripSize) / read_bitspp;
+			myPixels->IO_buf_off = 0;
+			
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += stripSize;
+			nIO += nOut;
+		}	
+	} else {
+		myPixels->IO_buf = write_buf_unpack;
+		myPixels->IO_buf_off = 0;
+		pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+		for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);		
+			nPix = (stripSize*8) / read_bitspp;
+			myPixels->IO_buf_off = 0;
+			
+			/* unpack bits to write_buf from read_buf*/
+			unpackBits((uint8*) read_buf, read_bitspp, write_buf_unpack, write_bytespp, nPix);
+			
+			nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+			pix_offset += nPix*write_bytespp;
+			nIO += nOut;
+		}
+		free(write_buf_unpack);
 	}
 	
 	myPixels->doSwap = doSwap;
-	free(write_buf);
 	_TIFFfree(read_buf);
 	TIFFClose(tiff);
-
 	if (writeRec) {
 		memset(&convRec, 0, sizeof(convertFileRec));
 		convRec.FileID              = (u_int8_t)  myFile->ID;
@@ -2167,6 +2213,7 @@ char doSwap;
 			write (myPixels->fd_conv, (const void *)&convRec, sizeof (convertFileRec));
 		}
 	}
+	
 	return (nIO);
 }
 
@@ -2211,7 +2258,17 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 	free (w_byte1);
 	free (w_byte2);
 }
-	
+/*
+	This function extracts every third element of the read_buf and writes it to
+	the write_buf. If chan=0 Red, if chan=1 Green, and if chan=2 Blue values are
+	extracted.
+*/
+void extractRGBChannels(uint8* read_buf, int nPix, int chan, uint8* write_buf_rgb)
+{
+int i;
+	for (i=0; i<nPix; i++)
+		write_buf_rgb[i] = read_buf[chan+3*i];
+}
 /*
   GetArchive (PixelsRep myPixels)
   Collects all the files that were used to generate the Pixels (if any)
@@ -2221,4 +2278,3 @@ int GetArchive (PixelsRep myPixels, char *format) {
 	return (0);
 }
 */
-
