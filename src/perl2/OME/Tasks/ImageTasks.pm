@@ -94,46 +94,33 @@ sub addImagesToDataset ($$$) {
 }
 
 
-=head2 importFiles($repository, \%options, @filenames)
-or importFiles(\%options, @filenames)
-or importFiles(@filenames)
+=head2 importFiles
 
-currently recognized options are {AllowDuplicates => 0|1}
+	my $image_list = importFiles($dataset, \@filenames, \%options);
 
-Imports the selected files into OME. 
-Returns 
+images described by @filenames will be imported into $dataset
+%options is optional. currently recognized options are {AllowDuplicates => 0|1}
+
+Imports the selected files into OME and executes the import analysis chain on them.
+Returns a reference to an array of images imported.
 
 =cut
 sub importFiles {
-	my ($param1, $param2, @filenames) = @_;
-	my $options;
+	my ($dataset, $filenames, $options) = @_;
 	my $session = OME::Session->instance();
 	my $factory = $session->Factory();
 	my $repository = $session->findRepository(); # make sure there is one, and its activated.
 
-	if( ref( $param1 ) eq 'HASH' ) {
-		unshift( @filenames, $param2);
-		$options = $param1;
-	} elsif( not ref($param1) ) {
-		unshift( @filenames, $param2) if defined $param2; # don't bother adding an undef
-		unshift( @filenames, $param1) if defined $param1; # don't bother adding an undef
-		$options = {};
-	}
-
 	my @files;
 	push( @files, OME::Image::Server::File->upload($_) )
-		foreach ( @filenames );
-	# FIXME: split @files into two groups: xml files & proprietary
-
-	$options->{AllowDuplicates} = 1;
+		foreach ( @$filenames );
 	
-	my $chain = $factory->findObject('OME::AnalysisChain', name => 'Image server stats');
-
 	my $importer = OME::ImportEngine::ImportEngine->new(%$options);
-	my ($dataset,$global_mex) = $importer->startImport();
-	my $image_list = $importer->importFiles( \@files );
+	$importer->startImport();
+	my $image_list = $importer->importFiles( $dataset, \@files );
 	$importer->finishImport();
 	
+	my $chain = $session->Configuration()->import_chain();
 	OME::Analysis::Engine->executeChain($chain,$dataset,{});
 
 	logdbg "debug", "Successfully imported images:";
