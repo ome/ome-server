@@ -347,12 +347,34 @@ sub store_image_metadata {
 	return $status;
     }
 
+    my $dataset = $session->Factory()->
+        newObject("OME::Dataset",
+                  {
+                   name => 'Dummy import dataset',
+                   description => '',
+                   locked => 'true',
+                   owner_id => $session->User()->id(),
+                   group_id => undef
+                  });
+    $self->{dummy_dataset} = $dataset;
+
+    my $analysis = $session->Factory()->
+      newObject("OME::Analysis",
+                {
+                 dependence => 'I',
+                 dataset_id => $dataset->id(),
+                 timestamp  => 'now',
+                 status     => 'FINISHED',
+                 program_id => $self->{config}->import_module()->id(),
+                });
+    $self->{analysis} = $analysis;
+
     # Now, create the real filename.
 
     my $qual_name = $image->id()."-".$name.".ori";
 
     my $pixels = $session->Factory()->
-      newAttribute("Pixels",$image,
+      newAttribute("Pixels",$image,$analysis,
                    {
                     Repository => $repository->id(),
                     Path       => $qual_name,
@@ -386,7 +408,7 @@ sub store_image_attributes {
 		   'SizeT' => $href->{'Image.NumTimes'},
 		   'BitsPerPixel' => $href->{'Image.BitsPerPixel'}};
     my $attributes = $session->Factory()->
-	newAttribute("Dimensions",$image,$recordData);
+	newAttribute("Dimensions",$image,$self->{analysis},$recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
@@ -455,7 +477,7 @@ sub store_wavelength_info {
 	    $wave->{'WavelengthInfo.NDfilter'} = undef;
 	}
     my $logical = $session->Factory()->
-      newAttribute("LogicalChannel",$image,
+      newAttribute("LogicalChannel",$image,$self->{analysis},
                    {
                     ExWave   => $wave->{'WavelengthInfo.ExWave'},
                     EmWave   => $wave->{'WavelengthInfo.ExWave'},
@@ -465,7 +487,7 @@ sub store_wavelength_info {
                    });
 
     my $component = $session->Factory()->
-      newAttribute("ChannelComponent",$image,
+      newAttribute("ChannelComponent",$image,$self->{analysis},
                    {
                     Index          => $wave->{'WavelengthInfo.WaveNumber'},
                     LogicalChannel => $logical->id(),
@@ -497,25 +519,16 @@ sub store_xyz_info {
     # Right now this creates one new dataset for each image loaded in.
     # This is a horrible idea, and should be changed.
     my $image = $self->{'image'};
-    my $dataset = $factory->
-        newObject("OME::Dataset",
-                  {
-                   name => 'Dummy import dataset',
-                   description => '',
-                   locked => 'true',
-                   owner_id => $session->User()->id(),
-                   group_id => undef
-                  });
     my $image_map = $factory->
         newObject("OME::Image::DatasetMap",
                   {
                    image => $image,
-                   dataset => $dataset
+                   dataset => $self->{dummy_dataset}
                   });
 
     my $engine = OME::Tasks::AnalysisEngine->new();
     eval {
-        $engine->executeAnalysisView($session,$view,{},$dataset);
+        $engine->executeAnalysisView($session,$view,{},$self->{dummy_dataset});
     };
     return $@? $@ : "";
 }
