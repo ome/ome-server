@@ -67,9 +67,9 @@
 #include <stdlib.h>
 #include <zlib.h>
 #include <bzlib.h>
-#include "b64z_lib.h"
+#include <string.h>
 #include "base64.h"
-#include "string.h"
+#include "b64z_lib.h"
 
 #define SIZEOF_BUF 1032 /* needs to be multiple of 3 && 4 */
 #define BLOCK_SIZE_100K 9
