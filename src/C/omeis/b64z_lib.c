@@ -107,111 +107,183 @@ void b64z_mem_error (void) {
 *		returns the length of the decoded buffer
 */
 /* decodes base64 data from 'strm->next_in' to 'to' & updates strm variables
-/ len is the length of 'to'
+/ len is the length of 'to'. There may be a newline (carraige return
+/ and/or line feed) every 76 characters that will need to be ignored. 
 */
-unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned int len ) {
-	unsigned int extracted = 0;
-	int t; /* size needed to complete a buffered partial block */
-	int r; /* partial block remainder */
-	long rc; /* return code */
-	unsigned char tmp_buf[4];
-	
+unsigned int _b64z_b64decode(  b64z_stream *strm, unsigned char* to, unsigned int avail_out_len ) {
+	const char b64string[] =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	unsigned char *working_block = NULL;
+	int partial_block_counter; /* size needed to complete a buffered partial block */
+	unsigned char in_byte;
+	unsigned char out_byte;
+	char *b64_char;
+	int padding = 0;
+	unsigned char *top = to; /* to pointer; the current write position on the to buffer */
+	unsigned char padding_buf[3]; /* buffer to extract blocks that end with padding 
+	                        that may or may not fit in the output buffer */
+	char *top_backup = NULL; /* backup the write position when using the buffer above */
+
 	/* deal with buffered input of partial blocks. 
 	 *   strm->state->b64_buf will either be empty or contain a partial block
-	 *   a partial block is an incomplete portion of a 4 byte base 64 block */
+	 *   a partial block is the beginning substring of a 4 byte base 64 block */
 	if( strm->state->b64_buf[0] != 0 ) {
-		t = 4 - strlen( strm->state->b64_buf );  /* size needed to complete block */
-		if( strm->avail_in >= t ) {
-			memcpy( strm->state->b64_buf + strlen( strm->state->b64_buf ), strm->next_in, t );
-			strm->next_in  += t;
-			strm->total_in += t;
-			strm->avail_in -= t;
-			
-			if( len >= 3 ) {
-				rc = base64_decode( to, strm->state->b64_buf, 4 );
-				if( rc < 0 ) {
+		partial_block_counter = 4 - strlen( strm->state->b64_buf );  /* size needed to complete block */
+		if( strm->avail_in >= partial_block_counter ) {
+			memcpy( strm->state->b64_buf + strlen( strm->state->b64_buf ), strm->next_in, partial_block_counter );
+			strm->next_in  += partial_block_counter;
+			strm->total_in += partial_block_counter;
+			strm->avail_in -= partial_block_counter;
+			working_block = strm->state->b64_buf;
+			/* probably unecessary, paranoid error checking */
+			if( working_block[0] == '\n' ) {
 #ifndef NO_VERBIAGE
-					fprintf( stderr, "Error! could not decode the base64 string!\n" );
+				fprintf( stderr, "Error! could not decode the base64 string! Unexpected newline found in partial block.\n" );
 #endif
-					exit(-1);
-				}
-				extracted = (unsigned int) rc;
-				to  += extracted;
-				len -= extracted;
-				strm->state->b64_buf[0] = 0;
-			} 
-			/* less than 3 bytes are available in 'to'.
-			 *   determine if the decoded string can fit into 'to'. */
-			else if (strm->state->b64_buf[3] == '=') { 
-				extracted = base64_decode( tmp_buf, strm->state->b64_buf, 4 );
-				if( extracted <= len ) {
-					memcpy( to, tmp_buf, extracted );
-					strm->state->b64_buf[0] = 0;
-					return extracted;
-				}
-				return 0;
-			} else {
-				return 0;
+				exit(-1);
 			}
-		} else {
-			t = strm->avail_in;
-			strncpy( strm->state->b64_buf + strlen( strm->state->b64_buf ), strm->next_in, t );
-			strm->next_in  += t;
-			strm->total_in += t;
-			strm->avail_in -= t;
-			return 0;
 		}
+	} else {
+		working_block = strm->next_in;
 	}
 
-	/* Decode the largest whole block buffer amount possible. */
-	if( len > strm->avail_in / 4 * 3 )
-		len = strm->avail_in / 4 * 3;
-	r = len % 3;
-	len -= r;
-	rc = base64_decode( to, strm->next_in, len * 4 / 3);
-	if( rc < 0 ) {
-#ifndef NO_VERBIAGE
-		fprintf( stderr, "Error! could not decode the base64 string!\n" );
-#endif
-		exit(-1);
-	}
-	extracted += (unsigned int) rc;
-	to += rc;
-	strm->next_in  += rc * 4 / 3;
-	strm->avail_in -= rc * 4 / 3;
-	strm->total_in += rc * 4 / 3;
+	/* keep going as long as there's a block of input available j
+	   and there's room in the output buffer. */
+	while( strm->avail_in >= 4 ) {
+		/* 76 long line rule means the 77th character may be a newline.
+		   That newline will be guaranteed to begin a working block 
+		   (77 % 4 = 1), so if there's a new line at the beginning of a
+		   working block, skip ahead by 1. In conclusion, this lazy
+		   implementation will allow new lines on any block boundary. */
+		if( working_block[0] == '\n' ) { 
+			working_block++;
+			(strm->next_in)++;
+			(strm->total_in)++;
+			(strm->avail_in)--;
+			if( strm->avail_in < 4 ) break;
+		}
+		
+		/* Sometimes the output buffer is exactly the length needed to
+		   store the unencoded data, and the encoded data has padding.
+		   If the input buffer ends with one or two padding characters
+		   '=', it's size will be two or one bytes respectively. The
+		   implementation below expects the output buffer to be at least
+		   3 bytes, even if only one or two bytes are needed. It ends up
+		   being easier to decode these blocks into a 3 byte buffer then
+		   copy it over into the output block. */
+		if( avail_out_len < 3 ) {
+			if( ( working_block[2] == '=' && avail_out_len >= 1 ) ||
+		        ( working_block[3] == '=' && avail_out_len == 2 ) ) {
+				top_backup = top;
+				top = padding_buf;
+			} else { /* we're out of room to decode */
+				break;
+			}
+		}
+		
+		/* Decode this working block */
 
-	/* If there is one block left in the input stream that ends with padding 
-	 *   AND there is some room left in the output stream, 
-	 *   THEN see if the decoded string will fit */
-	if( strm->avail_in == 4 && strm->next_in[3] == '=' && r > 0 ) {
-		rc = base64_decode( tmp_buf, strm->next_in, 4 );
-		if( rc < 0 ) {
+		in_byte = working_block[0];
+		if (!(b64_char = memchr(b64string, in_byte, 64))) {
 #ifndef NO_VERBIAGE
-			fprintf( stderr, "Error! could not decode the base64 string!\n" );
+			fprintf( stderr, "Error! Illegal character %c found in the the base64 string!\n", in_byte );
 #endif
 			exit(-1);
-		} else if( rc <= r ) {
-			memcpy( to, tmp_buf, rc );
-			strm->next_in  += rc * 4 / 3;
-			strm->avail_in -= rc * 4 / 3;
-			strm->total_in += rc * 4 / 3;
-			extracted += rc;
-			return extracted;
+		}
+		in_byte = (b64_char - b64string);
+		out_byte = in_byte << 2;		/* 1111 1100 */
+
+		in_byte = working_block[1];
+		if (!(b64_char = memchr(b64string, in_byte, 64))) {
+#ifndef NO_VERBIAGE
+			fprintf( stderr, "Error! Illegal character %c found in the the base64 string!\n", in_byte );
+#endif
+			exit(-1);
+		}
+		in_byte = b64_char - b64string;
+		out_byte |= in_byte >> 4;		/* 0000 0011 */
+		*top++ = out_byte;
+
+		out_byte = in_byte << 4;		/* 1111 0000 */
+		if ((in_byte = working_block[2]) == '=') { in_byte = 0; padding++; }
+		else { /* get decoding index from the b64string decoding string */
+			padding = 0;
+			if (!(b64_char = memchr(b64string, in_byte, 64))) {
+#ifndef NO_VERBIAGE
+				fprintf( stderr, "Error! Illegal character %c found in the the base64 string!\n", in_byte );
+#endif
+				exit(-1);
+			}
+
+			in_byte = b64_char - b64string;
+		}
+		out_byte |= in_byte >> 2;		/* 0000 1111 */
+		*top++ = out_byte;
+
+		out_byte = in_byte << 6;		/* 1100 0000 */
+		if ((in_byte = working_block[3]) == '=') { in_byte = 0; padding++; }
+		else { /* get decoding index from the b64string decoding string */
+			padding = 0;
+			if (!(b64_char = memchr(b64string, in_byte, 64))) {
+#ifndef NO_VERBIAGE
+				fprintf( stderr, "Error! Illegal character %c found in the the base64 string!\n", in_byte );
+#endif
+				exit(-1);
+			}
+			in_byte = b64_char - b64string;
+		}
+		out_byte |= in_byte;			/* 0011 1111 */
+		*top++ = out_byte;
+		
+		/* update working_block and increment input counters.
+		   special case: working_block points to the partial block. */
+		if( working_block == strm->state->b64_buf ) {
+			working_block = strm->next_in;
+			strm->state->b64_buf[0] = 0;
+		} else {
+			working_block += 4;
+			strm->next_in += 4;
+			strm->total_in += 4;
+			strm->avail_in -= 4;
+		}
+		
+		/* increment output counters. 
+		   finalize in special case of final padded block */
+		avail_out_len -= 3 - padding;
+		if( top_backup ) {
+			memcpy( top_backup, padding_buf, 3 - padding );
+			top = top_backup + 3 - padding;
+			return top - to;
+		}
+		
+		/* error if padding was encountered before the end of the stream */
+		if( padding && (strm->avail_in > 0 ) ) {
+#ifndef NO_VERBIAGE
+			fprintf( stderr, "Error! Padding character(s) found before end of base64 input stream.\n" );
+#endif
+			exit(-1);
 		}
 	}
-	else 
+
+	/* Stupid 76 length lines */
+	if( strm->next_in[0] == '\n' ) {
+		(strm->next_in)++;
+		(strm->total_in)++;
+		(strm->avail_in)--;
+	}
+
 	/* if there is a partial block of input sitting around, suck it up */
 	if( strm->avail_in < 4 && strm->avail_in > 0 ) { 
-		strncpy( strm->state->b64_buf, strm->next_in, strm->avail_in );
+		memcpy( strm->state->b64_buf, strm->next_in, strm->avail_in );
 		strm->state->b64_buf[strm->avail_in] = 0;
 		strm->next_in  += strm->avail_in;
 		strm->total_in += strm->avail_in;
 		strm->avail_in  = 0;
 	}
 
-
-	return extracted;
+	/* return the length of the decoded stream. */
+	return top - to - padding;
+	
 }
 /*
 *	END 'decode base64'
