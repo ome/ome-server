@@ -31,8 +31,8 @@
  *
  * Written by:    Chris Allan <callan@blackcat.ca>
  * 
- * Ported from original functions written by Jean-Marie Burel
- *                                           <j.burel@dundee.ac.uk>
+ * Ported from original functions written by: Jean-Marie Burel
+ *                                            <j.burel@dundee.ac.uk>
  *
  *------------------------------------------------------------------------------
  */
@@ -45,9 +45,10 @@
  */
 
 GetGraphicsPage = '/perl2/serve.pl?Page=OME::Web::GetGraphics';
-GetInfoPage     = '/perl2/serve.pl?Page=OME::Web::GetInfo';
-InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::InfoProject';
-InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::InfoDataset';
+ProjectInfoPage = '/perl2/serve.pl?Page=OME::Web::ProjectManagement';
+DatasetInfoPage = '/perl2/serve.pl?Page=OME::Web::DatasetManagement';
+InfoProjectPage = '/perl2/serve.pl?Page=OME::Web::ManageProject';
+InfoDatasetPage = '/perl2/serve.pl?Page=OME::Web::ManageDataset';
 
 /*
  *
@@ -61,7 +62,7 @@ function openExistingDataset (group_id) {
 	window.open(
 		InfoDatasetPage + '&UsergpID=' + group_id,
 		'ExistingDataset',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
 
@@ -71,32 +72,32 @@ function openExistingProject (group_id) {
 	window.open(
 		InfoProjectPage + '&UsergpID=' + group_id,
 		'ExistingProject',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
 
 // openInfoDataset()
 
 function openInfoDataset (dataset_id) {
-	window.open(GetInfoPage + '&DatasetID=' + dataset_id,
+	window.open(DatasetInfoPage + '&DatasetID=' + dataset_id,
 		'InfoDataset',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
 
 // openInfoProject()
 
 function openInfoProject (project_id) {
-	window.open(GetInfoPage + '&ProjectID=' + project_id,
+	window.open(ProjectInfoPage + '&ProjectID=' + project_id,
 		'InfoProject',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
 
 // openInfoDatasetImport()
 
 function openInfoDatasetImport (dataset_id) {
-	window.open(GetInfoPage + '&DatasetID=' + dataset_id,
+	window.open(DatasetInfoPage + '&DatasetID=' + dataset_id,
 		'InfoDatasetImport',
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500'
 	);
