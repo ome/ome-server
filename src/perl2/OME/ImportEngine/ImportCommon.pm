@@ -72,7 +72,7 @@ use OME;
 use base qw(Exporter);
 
 
-our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo doSliceCallback);
+our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeChannelInfoRGB __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo doSliceCallback);
 
 use vars qw($VERSION);
 use OME;
@@ -105,6 +105,8 @@ channel may have measures for excitation wavelength, emission wavelength,
 flourescense, and filter. Each channel is assigned a number starting at 0,
 corresponding to the sequence in which the channels were illuminated.
 
+Each physical channel becomes a single logical channel.
+
 The routine takes as input the session, the number of channels being 
 recorded, and an array containg <channel> number of hashes of each 
 channel's measurements. This routine writes this channel information 
@@ -124,41 +126,81 @@ sub __storeChannelInfo {
     my $image = $self->{image};
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
-
-    my $channel;
-    for (my $w = 0; $w < $numWaves; $w++) {
-	$channel = $channelData[$w];
-	# Clean up hash if it's empty or has incorrect number
-	if ($channel->{chnlNumber} ne $w) {
-	    $channel->{chnlNumber} = $w;
-	    $channel->{ExWave} = undef;
-	    $channel->{EmWave} = undef;
-	    $channel->{Fluor} = undef;
-	    $channel->{NDfilter} = undef;
-
+      
+    foreach my $channel (@channelData){
+		my $logical = $session->Factory()->
+			newAttribute("LogicalChannel",$image,$module_execution,
+				 {
+					 ExcitationWavelength      => $channel->{'ExWave'},
+					 EmissionWavelength        => $channel->{'EmWave'},
+					 Fluor                     => $channel->{'Fluor'},
+					 NDFilter                  => $channel->{'NDfilter'},
+					 PhotometricInterpretation => 'monochrome',
+				 });
+		
+		my $component = $session->Factory()->
+			newAttribute("PixelChannelComponent",$image,$module_execution,
+				 {
+					 Pixels         => $self->{pixels}->id(),
+					 Index          => $channel->{chnlNumber},
+					 LogicalChannel => $logical->id(),
+				 });
 	}
-	my $logical = $session->Factory()->
-	    newAttribute("LogicalChannel",$image,$module_execution,
-			 {
-			     ExcitationWavelength   => $channel->{'ExWave'},
-			     EmissionWavelength   => $channel->{'EmWave'},
-			     Fluor    => $channel->{'Fluor'},
-			     NDFilter => $channel->{'NDfilter'},
-			     PhotometricInterpretation => 'monochrome',
-			 });
-	
-	my $component = $session->Factory()->
-	    newAttribute("PixelChannelComponent",$image,$module_execution,
-			 {
-			     Pixels         => $self->{pixels}->id(),
-			     Index          => $w,
-			     LogicalChannel => $logical->id(),
-			 });
-    }
 
 }
 
+=head2 B<__storeChannelInfoRGB>
 
+    $self->__storeChannelInfoRGB($session, $numWaves, @channelInfo);
+
+Stores metadata about each channel (wavelength) in the image. Each
+channel may have measures for excitation wavelength, emission wavelength,
+flourescense, and filter. Each channel is assigned a number starting at 0,
+corresponding to the sequence in which the channels were illuminated.
+
+All physical channels correspond to a single logical channel.
+
+The routine takes as input the session, the number of channels being 
+recorded, and an array containg <channel> number of hashes of each 
+channel's measurements. This routine writes this channel information 
+metadata to the database.
+
+Each channel info hash is keyed thusly:
+     chnlNumber
+     ExWave
+     EmWave
+     Flour
+     NDfilter
+
+=cut
+
+sub __storeChannelInfoRGB {
+    my ($self, $session, $numWaves, @channelData) = @_;
+    my $image = $self->{image};
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
+      
+ 	my $logical = $session->Factory()->
+		newAttribute("LogicalChannel",$image,$module_execution,
+			 {
+				 ExcitationWavelength      => $channelData[0]->{'ExWave'},
+				 EmissionWavelength        => $channelData[0]->{'EmWave'},
+				 Fluor                     => $channelData[0]->{'Fluor'},
+				 NDFilter                  => $channelData[0]->{'NDfilter'},
+				 PhotometricInterpretation => 'RGB',
+			 });
+				 
+    foreach my $channel (@channelData){
+		my $component = $session->Factory()->
+			newAttribute("PixelChannelComponent",$image,$module_execution,
+				 {
+					 Pixels         => $self->{pixels}->id(),
+					 Index          => $channel->{chnlNumber},
+					 LogicalChannel => $logical->id(),
+				 });
+	}
+
+}
 =head2 B<__storeOneFileInfo>
 
    __storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
