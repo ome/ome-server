@@ -49,6 +49,150 @@ use base qw(OME::Analysis::DefaultLoopHandler);
 
 use fields qw(_outputHandle);
 
+#####################################################################
+#   
+# resolveLocation
+#	a helper function to return a scalar given a 'Location' xml attribute
+#
+sub resolveLocation {
+	my $location = shift;
+	my $inputs = shift;
+	my @elements = split (/\./,$location);
+	my $FI = shift (@elements);
+
+	die "Attempting to access a formal input ($FI) that does not exist.\n"
+		unless $$inputs{$FI};
+	# so far, all 'Location' attributes are in elements that reference
+	# a FI of arity 1.
+	return $$inputs{$FI}->[0] if( scalar( @elements ) eq 0 );
+	my $str = '$inputs{$FI}->[0]->' . join ('()->',@elements) . '()';
+	my $val;
+	# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
+	eval('$val ='. $str);
+	die "Could not resolve input call '$str' from location '$location':\n$@\n"
+		unless defined $val;
+
+	return $val;
+}
+#
+#####################################################################
+
+#####################################################################
+#   
+# resolveSubString
+#	a helper function to return a scalar given a <InputSubString>
+#	this is the place to add code to handle new types of SubStrings
+#
+sub resolveSubString {
+	my $subString = shift;
+	my $inputs = shift;
+	my $CLIns = shift;
+	my $session = shift;
+	my $planeIndexes = shift;
+	my $imagePix = shift;
+	my $dims = shift;
+	my $tmpFileFullPathHash = shift;
+	my $tmpFileRelativePathHash = shift;
+			
+		#############################################################
+		#
+		# plain text - no processing required
+		#		
+	if( $subString->getElementsByTagNameNS( $CLIns, 'RawText' ) ) {
+		return $subString->getElementsByTagNameNS( $CLIns, 'RawText' )->[0]->getFirstChild->getData;
+		#
+		#############################################################
+		#
+		# Input request
+		#
+	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
+		my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
+			or die "Location attribute not specified in Input element!\n";
+		# replace this stuff with a single call to resolveLocation
+		my @elements = split (/\./,$location);
+		my $FI = shift (@elements);
+		my $str = '$$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
+		my $val;
+		# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
+		eval('$val ='. $str);
+		die "Could not resolve input call '$str':$@\n" unless defined $val;
+				
+		$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
+			if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
+		$val *= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy')
+			if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy');
+		return $val;
+		#
+		#############################################################
+		#
+		# Generate a plane - currently only TIFFs are supported
+		#		
+	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'XYPlane' ) ) {
+		my $planeXML = $subString->getElementsByTagNameNS( $CLIns, 'XYPlane' )->[0];
+		my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
+		my $planePath = $session->getTemporaryFilename('CLIHandler','TIFF')
+			or die "Could not get temporary file to write image plane.";
+		my $planeInfo = 'format='.$planeXML->getAttribute( 'Format' ).
+			' theZ = '.${ $planeIndexes->{ $planeID }->{theZ} }.
+			' theW = '.${ $planeIndexes->{ $planeID }->{theW} }.
+			' theT = '.${ $planeIndexes->{ $planeID }->{theT} }.
+			' Path = '.$planePath;
+		my $pixelsWritten;
+		if( $planeXML->getAttribute( 'BPP' ) eq 8 ) {
+			$pixelsWritten = $imagePix->Plane2TIFF8( 
+			${ $planeIndexes->{ $planeID }->{theZ} },
+			${ $planeIndexes->{ $planeID }->{theW} },
+			${ $planeIndexes->{ $planeID }->{theT} },
+			$planePath,
+			1, # scale
+			0  # offset
+			);
+		} else {
+			$pixelsWritten = $imagePix->Plane2TIFF( 
+			${ $planeIndexes->{ $planeID }->{theZ} },
+			${ $planeIndexes->{ $planeID }->{theW} },
+			${ $planeIndexes->{ $planeID }->{theT} },
+			$planePath );
+		}
+		my $nPix = $$dims{'x'}*$$dims{'y'};
+		die "Wrong number of pixels written to file. $pixelsWritten of $nPix pixels written"
+		unless ( $pixelsWritten == $nPix);
+		return $planePath;
+		#
+		#############################################################
+		#
+		# Request for a temp file
+		#		
+	} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
+		my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
+		my $tmpFilePath;
+		my $tmpFileRelativePath;
+		if( $tmpFile->getAttribute( "Repository" ) ) {
+			my $repository  = resolveLocation($tmpFile->getAttribute( "Repository" ), $inputs);
+#			my $repository  = $inputs{ $tmpFile->getAttribute( "Repository" ) }->[0];
+			die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
+				if( not defined $repository );
+			$tmpFileRelativePath = $session->getTemporaryFilenameRepository( 
+				repository => $repository,
+				progName   => 'CLIHandler',
+				extension  => 'ori' );
+			$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
+			} else {
+				$tmpFilePath = $session->getTemporaryFilename( 
+					'CLIHandler','' );
+			}
+				
+			$$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
+			$$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
+			return $tmpFilePath;
+		#
+		#
+		#############################################################
+	}
+}
+#
+#####################################################################
+
 sub new {
     my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
     my $class = ref($proto) || $proto;
@@ -378,7 +522,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	my @cmdParameters = $cmdXML->getElementsByTagNameNS( $CLIns, "Parameter" )
 		if defined $cmdXML;
 	my @paramElements;
-	my @planes = $cmdXML->getElementsByTagNameNS( $CLIns, "XYPlane" )
+	@planes = $cmdXML->getElementsByTagNameNS( $CLIns, "XYPlane" )
 		if defined $cmdXML;
 	print STDERR "\n" if $debug eq 2;
 	print STDERR "----------------------\n" if $debug eq 2;
@@ -415,8 +559,18 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		foreach my $parameter (@cmdParameters) {
 			$paramString = '';
 			@paramElements = $parameter->getElementsByTagNameNS( $CLIns, "InputSubString" );
-			foreach my $subString(@paramElements) {
-				$paramString .= resolveSubString( $subString );
+			foreach my $subString (@paramElements) {
+				$paramString .= resolveSubString(
+					$subString,
+					\%inputs,
+					$CLIns,
+					$session,
+					$planeIndexes,
+					$imagePix,
+					%dims,
+					\%tmpFileFullPathHash,
+					\%tmpFileRelativePathHash,
+				);
 			}
 			push (@command, $paramString);
 		}
@@ -543,139 +697,9 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	
 	
-		#####################################################################
-		#   
-		# resolveLocation
-		#	a helper function to return a scalar given a 'Location' xml attribute
-		#
-		sub resolveLocation {
-			my $location = shift;
-			my @elements = split (/\./,$location);
-			my $FI = shift (@elements);
-			die "Attempting to access a formal input ($FI) that does not exist.\n"
-				unless $inputs{$FI};
-			# so far, all 'Location' attributes are in elements that reference
-			# a FI of arity 1.
-			return $inputs{$FI}->[0] if( scalar( @elements ) eq 0 );
-			my $str = '$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
-			my $val;
-			# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
-			eval('$val ='. $str);
-			die "Could not resolve input call '$str' from location '$location':\n$@\n" unless defined $val;
-			return $val;
-		}
-		#
-		#####################################################################
 
 
 	
-		#####################################################################
-		#   
-		# resolveSubString
-		#	a helper function to return a scalar given a <InputSubString>
-		#	this is the place to add code to handle new types of SubStrings
-		#
-		sub resolveSubString {
-			my $subString = shift;
-			
-			#############################################################
-			#
-			# plain text - no processing required
-			#		
-			if( $subString->getElementsByTagNameNS( $CLIns, 'RawText' ) ) {
-				return $subString->getElementsByTagNameNS( $CLIns, 'RawText' )->[0]->getFirstChild->getData;
-			#
-			#############################################################
-			#
-			# Input request
-			#
-			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
-				my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
-					or die "Location attribute not specified in Input element!\n";
-				# replace this stuff with a single call to resolveLocation
-				my @elements = split (/\./,$location);
-				my $FI = shift (@elements);
-				my $str = '$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
-				my $val;
-				# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
-				eval('$val ='. $str);
-				die "Could not resolve input call '$str':$@\n" unless defined $val;
-				
-				$val /= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy')
-					if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('DivideBy');
-				$val *= $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy')
-					if defined $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('MultiplyBy');
-				return $val;
-			#
-			#############################################################
-			#
-			# Generate a plane - currently only TIFFs are supported
-			#		
-			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'XYPlane' ) ) {
-				my $planeXML = $subString->getElementsByTagNameNS( $CLIns, 'XYPlane' )->[0];
-				my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
-				my $planePath = $session->getTemporaryFilename('CLIHandler','TIFF')
-					or die "Could not get temporary file to write image plane.";
-				my $planeInfo = 'format='.$planeXML->getAttribute( 'Format' ).
-					' theZ = '.${ $planeIndexes->{ $planeID }->{theZ} }.
-					' theW = '.${ $planeIndexes->{ $planeID }->{theW} }.
-					' theT = '.${ $planeIndexes->{ $planeID }->{theT} }.
-					' Path = '.$planePath;
-				my $pixelsWritten;
-				if( $planeXML->getAttribute( 'BPP' ) eq 8 ) {
-					$pixelsWritten = $imagePix->Plane2TIFF8( 
-						${ $planeIndexes->{ $planeID }->{theZ} },
-						${ $planeIndexes->{ $planeID }->{theW} },
-						${ $planeIndexes->{ $planeID }->{theT} },
-						$planePath,
-						1, # scale
-						0  # offset
-					);
-				} else {
-					$pixelsWritten = $imagePix->Plane2TIFF( 
-						${ $planeIndexes->{ $planeID }->{theZ} },
-						${ $planeIndexes->{ $planeID }->{theW} },
-						${ $planeIndexes->{ $planeID }->{theT} },
-						$planePath );
-				}
-				my $nPix = $dims{'x'}*$dims{'y'};
-				die "Wrong number of pixels written to file. $pixelsWritten of $nPix pixels written"
-					unless ( $pixelsWritten == $nPix);
-				return $planePath;
-			#
-			#############################################################
-			#
-			# Request for a temp file
-			#		
-			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
-				my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
-				my $tmpFilePath;
-				my $tmpFileRelativePath;
-				if( $tmpFile->getAttribute( "Repository" ) ) {
-					my $repository  = resolveLocation( $tmpFile->getAttribute( "Repository" ) );
-#					my $repository  = $inputs{ $tmpFile->getAttribute( "Repository" ) }->[0];
-					die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
-						if( not defined $repository );
-					$tmpFileRelativePath = $session->getTemporaryFilenameRepository( 
-						repository => $repository,
-						progName   => 'CLIHandler',
-						extension  => 'ori' );
-					$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
-				} else {
-					$tmpFilePath = $session->getTemporaryFilename( 
-						'CLIHandler','' );
-				}
-				
-				$tmpFileFullPathHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
-				$tmpFileRelativePathHash{ $tmpFile->getAttribute('FileID') } = $tmpFileRelativePath;
-				return $tmpFilePath;
-			#
-			#
-			#############################################################
-			}
-		}
-		#
-		#####################################################################
 			
 
 
@@ -883,7 +907,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
 						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
 					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation( $se->getAttribute("Location") )
+						resolveLocation($se->getAttribute("Location"), %inputs)
 						if( $se );
 				}
 			}
@@ -895,7 +919,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
 						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
 					$outputs{ $formalOutputName }->{$SEName} =
-						resolveLocation( $se->getAttribute("Location") )
+						resolveLocation($se->getAttribute("Location"), %inputs)
 						if( $se );
 				}
 			}
