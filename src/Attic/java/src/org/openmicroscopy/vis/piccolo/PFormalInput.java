@@ -84,4 +84,11 @@ public class PFormalInput extends PFormalParameter {
 		
 		return connection.getOutputs(type);
 	}
+	
+	// any given input can only be connected to one output 
+	// (can't have values coming to an input from multiple places)
+	// so, return true if there are any items in the list.
+	public boolean isLinkedTo(PFormalParameter param) {
+		return (linkedTo.size() > 0);
+	}
 }

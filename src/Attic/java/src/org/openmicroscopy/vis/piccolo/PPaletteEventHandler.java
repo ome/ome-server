@@ -58,24 +58,48 @@ import edu.umd.cs.piccolo.PNode;
 public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	private PPaletteCanvas canvas;
+	private boolean selected = false;
 	
 	public PPaletteEventHandler(PPaletteCanvas canvas) {
 		super();
 		this.canvas = canvas;		
 	}
 	
-	public void mouseEntered(PInputEvent e) {
+	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
-		if (node instanceof PModule) {
-			PModule p = (PModule) node;
+		if (node instanceof PModule || node instanceof PFormalParameter) {
+			PModule p;
+			if (node instanceof PFormalParameter)
+				p = ((PFormalParameter) node).getPModule();
+			else
+			 	p = (PModule) node;
 			canvas.setSelected(p.getModule());
-			// do something
+			selected = true;
+			System.err.println("pressed a mouse and selected a module");
 		}
-		else
+		else {
+			System.err.println("pressed mouse and cleared module selected");
+			selected = false;
 			canvas.setSelected(null);
+			super.mousePressed(e);
+		}
 	}
 	
-	public void mouseExited(PInputEvent e) {
+	
+	public void mouseReleased(PInputEvent e) {
+		System.err.println("released mouse and cleared module selected");
+		selected = false;
 		canvas.setSelected(null);
+		super.mouseReleased(e);
 	}
+	
+	public void mouseDragged(PInputEvent e) {
+		//	don't pan if we've got something selected.
+		 System.err.println("mouse dragged..in palette handler.");
+		 if (selected == false) {
+			 System.err.println("no selection..");
+			 super.mouseDragged(e);
+		 }
+		 e.setHandled(true);
+	} 
  }

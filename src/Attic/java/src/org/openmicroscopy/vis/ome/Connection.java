@@ -51,6 +51,7 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 
 /** 
@@ -140,14 +141,18 @@ public class Connection {
 	 * @param i
 	 * @return
 	 */
+	
+	public Iterator getModuleIterator() {
+		return modules.iterator();
+	}
+	
 	public ModuleInfo getModuleInfo(int i) {
-		return modules.getModuleInfo(i);
+		return modules.getModuleInfo(i);	
 	}
 	
-	public int moduleCount() {
-		return modules.size();
+	public void setModuleInfo(int i,ModuleInfo info) {
+		modules.setModuleInfo(i,info);
 	}
-	
 	/**
 	 * The inputs and outputs lists are hashes of lists, keyed by
 	 * SemanticType. The entries in those lists are PFormalParameter 
@@ -172,11 +177,13 @@ public class Connection {
 		//Integer id = new Integer(type.getID());
 		// as the key, as each call for a given integer value 
 		// will give a different object.
+		// the ints should work and have worked in other circumstances.
+		// i think there's a weird database problem here.
 		String idstring = Integer.toString(type.getID());
-		
-		// get the list, create a new list if there's no entry
+				// get the list, create a new list if there's no entry
 		// for the key.
 		Object map = hash.get(idstring);
+		//Object map  = hash.get(id);
 		if (map == null) 
 			list = new ArrayList();
 		else 
@@ -184,6 +191,7 @@ public class Connection {
 			
 		// add the parameter to the list and put it back in the hash.
 		list.add(param);
+		//hash.put(id,list);
 		hash.put(idstring,list);	
 	}
 	
@@ -209,6 +217,9 @@ public class Connection {
 		//Integer id = new Integer(type.getID());
 		String idstring = Integer.toString(type.getID());
 		Object obj = hash.get(idstring);
+		//Object obj = hash.get(id);
 		return (ArrayList) obj;
 	}
+	
+	
 }

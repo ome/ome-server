@@ -102,8 +102,8 @@ public class PLink extends  PPath implements PNodeEventListener {
 	public void setEndParam(PFormalParameter end) {
 		this.end = end;
 		if (start != null) {
-			end.setLinkedTo(start);  
-			start.setLinkedTo(end);
+			end.setLinkedTo(start,this);  
+			start.setLinkedTo(end,this);
 		}
 		end.addNodeEventListener(this);
 		setEndPoint();
@@ -169,7 +169,8 @@ public class PLink extends  PPath implements PNodeEventListener {
 			setEndPoint(); // setLine() call is implied.
 	}		
 	
-	public void clearConnections() {
+	public void remove() {
+		removeFromParent();
 		start.clearLinkedTo(end);
 		end.clearLinkedTo(start);
 	}
@@ -186,4 +187,5 @@ public class PLink extends  PPath implements PNodeEventListener {
 		}
 		repaint();
 	}
+	
 }

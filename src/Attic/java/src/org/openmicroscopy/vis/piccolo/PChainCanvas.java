@@ -45,7 +45,17 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.vis.ome.Connection;
-
+import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.remote.RemoteModule;
+import java.awt.dnd.DropTargetListener;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DnDConstants;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.geom.Point2D;
 
 /** 
  * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
@@ -56,7 +66,7 @@ import org.openmicroscopy.vis.ome.Connection;
  * @since OME2.0
  */
 
-public class PChainCanvas extends PCanvas{
+public class PChainCanvas extends PCanvas implements DropTargetListener {
 	
 	private Connection connection=null;
 	private int modCount;
@@ -65,6 +75,8 @@ public class PChainCanvas extends PCanvas{
 	private float x,y;
 	
 	private PLayer linkLayer;
+	private PChainEventHandler handler;
+	private DropTarget dropTarget = null;
 	
 	public PChainCanvas() {
 		super();
@@ -74,10 +86,80 @@ public class PChainCanvas extends PCanvas{
 		linkLayer = new PLayer();
 		getCamera().addLayer(linkLayer);
 		linkLayer.moveToFront();
-		addInputEventListener(new PChainEventHandler(this,linkLayer));
+		handler = new PChainEventHandler(this,linkLayer);
+		addInputEventListener(handler);
+		dropTarget = new DropTarget(this,this);
 	}
 	
 	public  void setConnection(Connection connection) { 
 		this.connection = connection;
 	}	
+	
+	
+	public void dragEnter(DropTargetDragEvent e) {
+		System.err.println("drag enter canvas");
+		removeInputEventListener(handler);
+		e.acceptDrag (DnDConstants.ACTION_MOVE);
+	
+	}
+	
+	public void drop(DropTargetDropEvent e) {
+		try {
+			Transferable transferable =  e.getTransferable();
+			System.err.println("got a drop on canvas");
+			if (transferable.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+				e.acceptDrop(DnDConstants.ACTION_MOVE);
+				String s = (String)transferable.getTransferData(
+					DataFlavor.stringFlavor);
+				System.err.println("just dropped "+s+" onto chain canvas.");
+				e.getDropTargetContext().dropComplete(true);
+				int id = Integer.parseInt(s);
+				ModuleInfo mInfo = connection.getModuleInfo(id);
+				System.err.println("module is "+mInfo.getModule().getName());
+				Point2D loc = e.getLocation();
+				createDroppedModule(mInfo,loc);
+				addInputEventListener(handler);
+			}
+			else {
+				System.err.println("string flavor not supported");
+				clearDrop(e);
+			}
+		}
+		catch(Exception exc ) {
+			System.err.println("drop failed");
+			exc.printStackTrace();
+			clearDrop(e);
+		}
+	}
+
+	public void clearDrop(DropTargetDropEvent e) {
+		e.rejectDrop();
+		addInputEventListener(handler);
+	}
+
+
+	public void dragExit(DropTargetEvent e) {
+	}
+	
+	public void dragOver(DropTargetDragEvent e) {
+	}
+	
+	public void dropActionChanged(DropTargetDragEvent e) {
+	}
+	
+	
+	private void createDroppedModule(ModuleInfo info,Point2D location) {
+		// create the PModule
+		
+		RemoteModule module = info.getModule();
+		PModule mNode = new PModule(connection,module,
+			(float) location.getX(), (float) location.getY());
+		info.addModuleWidget(mNode);
+		
+		// add it to layer.
+		layer.addChild(mNode);
+		
+		// put the module info back into the connection
+		connection.setModuleInfo(module.getID(),info);
+	}
 }

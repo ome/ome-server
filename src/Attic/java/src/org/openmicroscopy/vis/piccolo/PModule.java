@@ -101,10 +101,16 @@ public class PModule extends PPath {
 	private PText name;
 	 
 	private float height;
-	private float width;
+	private float width=0;
+	
+	private float nameWidth=0;
 	
 	// The node that will contain nodes for each of the formal parameters
 	private PNode labelNodes;
+	
+	PFormalInput ins[];
+	PFormalOutput outs[];
+	
 	
 	/**
 	 * The main constructor 
@@ -131,7 +137,7 @@ public class PModule extends PPath {
 		// calculate starting height for parameters.
 		height = NAME_LABEL_OFFSET+((float) name.getBounds().getHeight());
 		
-		width = (float) name.getBounds().getWidth();
+		nameWidth = (float) name.getBounds().getWidth();
 		
 		// do the individual parameter labels.
 		addParameterLabels(connection);  
@@ -176,8 +182,8 @@ public class PModule extends PPath {
 		int 	rows = inSize > outSize? inSize: outSize;
 		
 		FormalParameter param;
-		PFormalInput  inTexts[] = new PFormalInput [inSize];
-		PFormalOutput  outTexts[] = new PFormalOutput [outSize];
+		ins = new PFormalInput [inSize];
+		outs = new PFormalOutput [outSize];
 		
 		// get input nodes and find max input width
 		float maxInputWidth =0;
@@ -190,27 +196,30 @@ public class PModule extends PPath {
 				// add them to label nodes, 
 				// and store max width
 				param = (FormalParameter) inputs.get(i);
-				inTexts[i]= new PFormalInput(this,param,connection);
-				labelNodes.addChild(inTexts[i]);
-				if (inTexts[i].getFullBoundsReference().getWidth() > maxInputWidth)
-					maxInputWidth = (float) inTexts[i].getFullBoundsReference().getWidth();
+				ins[i]= new PFormalInput(this,param,connection);
+				labelNodes.addChild(ins[i]);
+				if (ins[i].getFullBoundsReference().getWidth() > maxInputWidth)
+					maxInputWidth = (float) ins[i].getFullBoundsReference().getWidth();
 			}
 			if (i < outSize) {
 				// do the same for outputs.
 				param = (FormalParameter) outputs.get(i);
-				outTexts[i]= new PFormalOutput(this,param,connection);
-				labelNodes.addChild(outTexts[i]);
-				if (outTexts[i].getFullBoundsReference().getWidth() > maxOutputWidth)
-					maxOutputWidth = (float) outTexts[i].getFullBoundsReference().getWidth();
+				outs[i]= new PFormalOutput(this,param,connection);
+				labelNodes.addChild(outs[i]);
+				if (outs[i].getFullBoundsReference().getWidth() > maxOutputWidth)
+					maxOutputWidth = (float) outs[i].getFullBoundsReference().getWidth();
 			}
 			
 		}
 		
 		// find maximum width of the whole thing.
 		width = maxInputWidth+maxOutputWidth+HORIZONTAL_GAP;
+		if (nameWidth > width)
+			width = nameWidth;
 		
 		// find horizontal starting point of the output parameters.
-		float outputColumnX=NAME_LABEL_OFFSET+maxInputWidth+HORIZONTAL_GAP;
+		//float outputColumnX=NAME_LABEL_OFFSET+maxInputWidth+HORIZONTAL_GAP;
+		float outputColumnX = width-maxOutputWidth;
 		
 		
 		//height of first one
@@ -221,8 +230,8 @@ public class PModule extends PPath {
 		for (int i =0; i < rows; i++) {
 			// get ith input 
 			if (i <inSize) {
-				inTexts[i].setOffset(NAME_LABEL_OFFSET,height);
-				rowHeight = (float) inTexts[i].getFullBoundsReference().getHeight();	
+				ins[i].setOffset(NAME_LABEL_OFFSET,height);
+				rowHeight = (float) ins[i].getFullBoundsReference().getHeight();	
 			}
 			// get ith output
 			if (i < outSize) {
@@ -230,10 +239,10 @@ public class PModule extends PPath {
 				// find difference bwtween the maximum output width
 				// and the width of this one.
 				float rightJustifyGap = maxOutputWidth-
-					((float) outTexts[i].getFullBoundsReference().getWidth());
+					((float) outs[i].getFullBoundsReference().getWidth());
 				// and then move right by that amount.
-				outTexts[i].setOffset(outputColumnX+rightJustifyGap,height);
-				rowHeight = (float) outTexts[i].getFullBoundsReference().getHeight();
+				outs[i].setOffset(outputColumnX+rightJustifyGap,height);
+				rowHeight = (float) outs[i].getFullBoundsReference().getHeight();
 			}
 			// advance to next row in height.
 			height += rowHeight+PARAMETER_SPACING;
@@ -259,6 +268,15 @@ public class PModule extends PPath {
 	public RemoteModule getModule() {
 		return module;
 	}
+	
+	public void remove() {
+		removeFromParent();
+		for (int i = 0; i < ins.length; i++)
+			ins[i].removeLinks();
+		for (int i = 0; i < outs.length; i++)
+			outs[i].removeLinks();
+	}
+	
 	
 	/***
 	 * Some code for managing listeners and events
@@ -294,4 +312,5 @@ public class PModule extends PPath {
 		super.translate(dx,dy);
 		fireStateChanged();
 	}
+	
 }

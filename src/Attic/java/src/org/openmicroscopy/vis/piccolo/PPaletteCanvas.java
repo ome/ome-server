@@ -44,9 +44,11 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
+import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.remote.RemoteModule;
+import java.util.Iterator;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.dnd.DragSourceEvent;
 import java.awt.dnd.DragGestureListener;
@@ -72,13 +74,14 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private static final float GAP=30f;
 	private static final float TOP=20f;
-	private float maxWidth = 0f;
 	private static final int BORDER=20;
 	
 	private DragSourceAdapter dragListener;
 	private DragSource dragSource;
 
 	private float x,y;
+	private float maxWidth = 0f;
+	private float maxHeight = 0;
 	
 	private PLayer layer;
 	
@@ -87,6 +90,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	public PPaletteCanvas(Connection connection) {
 		super();	
 		removeInputEventListener(getPanEventHandler());
+		addInputEventListener(new PPaletteEventHandler(this));
 		layer = getLayer();
 		this.connection = connection;
 		// this draglistener doesn't do anything, but is needed to 
@@ -114,20 +118,30 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	
 	private void populate() {
 		
-		int modCount = connection.moduleCount();
-		
 		x = 0;
 		y = TOP;
-		for (int i = 0; i < modCount; i++ ) {
+		
+		int i =0;
+		Iterator iter = connection.getModuleIterator();
+		while (iter.hasNext()) {
+			ModuleInfo info = (ModuleInfo) iter.next();
+			displayModule(info);
+			i++;
 			if ((i % 5) == 0) { // at the start of a new column 
 				x += 100+maxWidth;
 				y = TOP;
 				maxWidth =0;
 			}
-			displayModule(connection.getModuleInfo(i));
 		}
 		System.err.println("final height is "+y);
-		getCamera().animateViewToIncludeBounds(layer.getFullBoundsReference(),0);
+		//getCamera().animateViewToIncludeBounds(layer.getFullBoundsReference(),0);
+	}
+	
+	public void scaleToCenter(double scale) {
+		PBounds b = layer.getFullBoundsReference();
+		System.err.println("scaling to "+scale);
+		getCamera().scaleView(scale);
+		
 	}
 
 	/** 
@@ -148,6 +162,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		float nodeWidth = (float) mNode.getBounds().getWidth();
 		if (nodeWidth > maxWidth)
 			maxWidth=nodeWidth;
+		if (y > maxHeight)
+			maxHeight = y;
 	}
 	
 	public int getPaletteWidth() {
@@ -155,7 +171,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	}
 	
 	public int getPaletteHeight() {
-		return (int) y+BORDER;
+		return (int) maxHeight+BORDER;
 	}
 	
 	public void setSelected(RemoteModule module) {
@@ -176,6 +192,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			int id = selected.getID();
 			String s = Integer.toString(id);
 			StringSelection text = new StringSelection(s);
+			System.err.println("dragging..."+s);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
 	}

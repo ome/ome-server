@@ -75,4 +75,13 @@ public class PFormalOutput extends PFormalParameter {
 			return null;
 		return connection.getInputs(type);
  	}
+ 	
+ 	public boolean isLinkedTo(PFormalParameter param) {
+ 		// i'm an output. so, I'm linked to param if
+ 		// 1) there is a direct link
+ 		boolean link = super.isLinkedTo(param);
+ 		// 2) or, param (an input) has anthing coming in
+ 		boolean inputLinked = param.isLinkedTo(this);
+ 		return (link || inputLinked);
+ 	}
 }

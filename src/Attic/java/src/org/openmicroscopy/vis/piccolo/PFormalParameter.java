@@ -48,6 +48,7 @@ import javax.swing.event.EventListenerList;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.Iterator;
 import java.awt.Graphics2D;
 
 /** 
@@ -80,7 +81,8 @@ public abstract class PFormalParameter extends PNode implements
 	protected FormalParameter param;
 	protected Connection connection = null;
 	protected PModule node;
-	private  Vector linkedTo = new Vector(); 
+	protected  Vector linkedTo = new Vector();
+	protected Vector links = new Vector(); 
 	
 	
 	// We assume a model that has Modules in a box, with inputs on
@@ -123,6 +125,10 @@ public abstract class PFormalParameter extends PNode implements
 	
 	public String getName() {
 		return param.getParameterName();
+	}
+	
+	public PModule getPModule() {
+		return node;
 	}
 	
 	/**
@@ -206,8 +212,9 @@ public abstract class PFormalParameter extends PNode implements
 		return node;
 	}
 	
-	public void setLinkedTo(PFormalParameter param) {
+	public void setLinkedTo(PFormalParameter param,PLink link) {
 		linkedTo.add(param);
+		links.add(link);
 	}
 	
 	public void clearLinkedTo(PFormalParameter param) {
@@ -230,5 +237,16 @@ public abstract class PFormalParameter extends PNode implements
 			g.setPaint(HIGHLIGHT_COLOR);
 			g.draw(textNode.getBounds());
  		}
+ 	}
+ 	
+ 	public void removeLinks() {
+ 		PLink link;
+ 		Iterator iter = links.iterator();
+ 		while (iter.hasNext()) {
+ 			link = (PLink)iter.next();
+ 			link.remove();
+ 		}
+ 		links = new Vector();
+ 		linkedTo = new Vector();
  	}
 }

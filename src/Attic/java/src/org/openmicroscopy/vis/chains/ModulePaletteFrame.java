@@ -60,6 +60,9 @@ public class ModulePaletteFrame extends JFrame {
 
 	public PPaletteCanvas canvas = null;
 	
+	public static int HEIGHT=600;
+	public static int WIDTH=600;
+	
 	public ModulePaletteFrame(Connection connection) {
 		super("OME Module Palette");
 		
@@ -70,8 +73,9 @@ public class ModulePaletteFrame extends JFrame {
 		System.err.println("width is "+w);
 		int h = canvas.getPaletteHeight();
 		System.err.println("heightis "+h);
-		setBounds(new Rectangle(710,10,canvas.getPaletteWidth(),
-				canvas.getPaletteHeight()));
+		double scale = ((double) HEIGHT)/((double) h);
+		canvas.scaleToCenter(scale);
+		setBounds(new Rectangle(710,10,WIDTH,HEIGHT));
 		show();	
 	}
 	

@@ -24,9 +24,10 @@
  
 package org.openmicroscopy.vis.ome;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Collection;
 import org.openmicroscopy.Factory;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.remote.RemoteModule;
@@ -41,7 +42,7 @@ import org.openmicroscopy.remote.RemoteModule.FormalParameter;
  * @since OME2.0
  */
 
-public class Modules extends ArrayList {
+public class Modules extends HashMap {
 	
 	public Modules(Factory factory) {
 	
@@ -54,10 +55,18 @@ public class Modules extends ArrayList {
 		while (iter.hasNext()) {
 			RemoteModule mod = (RemoteModule) iter.next();
 			populateModule(mod);
-			add(new ModuleInfo(mod));
+			Integer id = new Integer(mod.getID());
+			put(id,new ModuleInfo(mod));
 		}
 	}
 	
+	
+	public Iterator iterator() {
+		
+		Collection c = values();
+		return c.iterator();
+		
+	}
 	public void dump() {
 		Iterator iter = iterator();
 		while (iter.hasNext()) {
@@ -117,7 +126,16 @@ public class Modules extends ArrayList {
 				semType.getName();
 		}
 	}
-		
+	
+	public ModuleInfo getModuleInfo(int i) {
+		return (ModuleInfo) get(new Integer(i));
+	}
+	
+	public void setModuleInfo(int i,ModuleInfo info) {
+		Integer id = new Integer(i);
+		remove(id);
+		put(id,info);	
+	}
 	/**
 	 * Utility procedures for dumping a module and its contents to stderr.<p>
 	 * 
@@ -154,17 +172,4 @@ public class Modules extends ArrayList {
 		}
 	}
 	
-	/**
-	 * Convenience call to access individual modules.<p>
-	 * 
-	 * @param i 
-	 * @return the ith module, or null.
-	 */
-	public ModuleInfo getModuleInfo(int i) {
-		try {
-			return (ModuleInfo) get(i);
-		} catch (IndexOutOfBoundsException e) {
-			return null;
-		}
-	}
 }

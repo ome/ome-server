@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolox.handles.PBoundsHandle;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.util.Iterator;
@@ -90,9 +91,12 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private PFormalParameter linkOrigin;
 	
 	private PLink selectedLink = null;
+	private PModule selectedModule;
+
 	
 	public PChainEventHandler(PChainCanvas canvas,PLayer linkLayer) {
 		super();
+		setAutopan(false);
 		this.linkLayer = linkLayer;
 		PInputEventFilter filter =getEventFilter();
 		filter.setAcceptsKeyPressed(true);
@@ -109,15 +113,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 	protected void drag(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		
+		System.err.println("PChainEventHandler.drag()");
 		// module nodes simply get translated.
+		System.err.println("in chain handler drag");
 		if (node instanceof PModule) {
+			System.err.println("translating a node");
 			PModule mn = (PModule) node;
 			Dimension2D delta = e.getDeltaRelativeTo(node);
 			node.translate(delta.getWidth(),delta.getHeight());
 			e.setHandled(true);
 		}
 		else if (!(node instanceof PFormalParameter)){
-			// otherwise default handling, if it's not a parameter node.
 			super.drag(e);
 			e.setHandled(true);
 		}
@@ -168,6 +174,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseDragged(PInputEvent e) {
+		System.err.println("CHAIN HANDLER:got a drag event in chain canvas");
 		mouseMoved(e);
 		super.mouseDragged(e);	
 	}
@@ -184,9 +191,14 @@ public class PChainEventHandler extends  PPanEventHandler {
 		
 		System.err.println("mouse pressed on "+node);
 		
-		if (!(node instanceof PLink) && selectedLink != null) {
+		// clear off what was selected.
+		if (selectedLink != null) {
 			selectedLink.setSelected(false);
 			selectedLink = null;
+		}
+		if (selectedModule != null) {
+			PBoundsHandle.removeBoundsHandlesFrom(selectedModule);
+			selectedModule = null;
 		}
 		
 		if (node instanceof PFormalParameter && linkState == NOT_LINKING) {
@@ -199,12 +211,12 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 		else if (node instanceof PLink) {
 			System.err.println("pressed on link");
-			if (selectedLink != null) {
-				selectedLink.setSelected(false);
-				selectedLink = null;
-			}
 			selectedLink = (PLink) node;
 			selectedLink.setSelected(true);	
+		}
+		else if (node instanceof PModule) {
+			selectedModule = (PModule) node;
+			PBoundsHandle.addBoundsHandlesTo(selectedModule);
 		}
 		else if (linkState != NOT_LINKING) {
 			if (e.getClickCount() ==2)
@@ -299,12 +311,17 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	public void keyPressed(PInputEvent e) {
 		System.err.println("a key was pressed ");
-		if (selectedLink != null && e.getKeyCode() ==KeyEvent.VK_DELETE) {
-			selectedLink.removeFromParent();
-			// clear who it's linked to
-			selectedLink.clearConnections();
+		if (e.getKeyCode() != KeyEvent.VK_DELETE)
+			return;
+			
+		if (selectedLink != null) {
+			selectedLink.remove();
 			selectedLink = null;
 		}
+		else if (selectedModule != null) {
+			selectedModule.remove();
+			selectedModule = null;
+		}
 	}
-
+	
 }
