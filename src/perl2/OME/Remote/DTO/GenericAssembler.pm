@@ -170,7 +170,7 @@ sub __genericDTO {
             my $ref_object = $dto->{$column};
             $dto->{$column} = __genericDTO("${prefix}.${column}",
                                            $ref_object,$fields_wanted);
-        } elsif ($type eq 'has-many') {
+        } elsif ($type =~ m/(has-many|many-to-many)/o ) {
             foreach my $ref_object (@{$dto->{$column}}) {
                 $ref_object = __genericDTO("${prefix}.${column}",
                                            $ref_object,$fields_wanted);

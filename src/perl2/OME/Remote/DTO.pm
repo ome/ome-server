@@ -115,7 +115,7 @@ sub __makeHash ($$$) {
             my $type = $object->getColumnType($real_name);
             # __makeHash will have already ensured that each column exists
 
-            if ($type eq 'has-many') {
+            if ($type =~ m/(has-many|many-to-many)/o) {
                 my $counter = "count_${real_name}";
                 $dto->{$column} = $object->$counter();
             } else {
@@ -126,7 +126,7 @@ sub __makeHash ($$$) {
             die "Unknown column $object_name"
               unless defined $type;
 
-            if ($type eq 'has-many') {
+            if ($type =~ m/(has-many|many-to-many)/o) {
                 my @results = $object->$object_name();
                 $dto->{$dto_name} = \@results;
             } else {
