@@ -1,5 +1,11 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<xsl:transform xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0" xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd" xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
+<xsl:transform
+	xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0"
+	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
+	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
+	xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 	<xsl:template match = "OME:OME">
 		<xsl:element name = "OME" namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 			<xsl:attribute name = "xsi:schemaLocation">
