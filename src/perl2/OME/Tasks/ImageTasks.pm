@@ -161,6 +161,7 @@ sub exportFiles {
 	push @image_list, $$argref[$i];
 	}
 
+	# FIXME:
 	# Need to determine how to locate repository for given image IDs\
 	# when we go to more than 1 repository.
 	my $repository = findRepository($session, 0);
