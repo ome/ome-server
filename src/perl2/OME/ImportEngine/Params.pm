@@ -125,7 +125,7 @@ our @EXPORT = qw( endian host_endian oname obuffer fref offset xml_hash image_ty
 sub new {
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
-    my $xref = shift;
+    my $xref = shift || {};
     my $self = {};
     bless $self, $class;
 

@@ -86,7 +86,6 @@ package OME::ImportEngine::TIFFreader;
 use Class::Struct;
 use strict;
 use File::Basename;
-use Carp;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
@@ -96,6 +95,8 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 
+use Carp;
+use Data::Dumper;
 =head2 Patterns Defining Groups
 
 All the files in a TIFF file group will have the same filename pattern. 
@@ -129,19 +130,20 @@ have created the session and the module_execution.
 
 
 sub new {
-
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
 
-    my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
+	my $self = $class->SUPER::new(@_);
+	   $self->{'super'} = $self;
 
-    bless $self, $class;
-    $self->{super} = $self->SUPER::new();
+	# FIXME: Yes, that's a cyclical reference. The class/object semantics here
+	# are horrid. Storing a reference to the superclass in the attribute of the
+	# child? Why exactly? No idea.
+	#
+	# -Chris <callan@blackcat.ca>
 
-    my %paramHash;
-    $self->{params} = new OME::ImportEngine::Params(\%paramHash);
+    $self->{params} = new OME::ImportEngine::Params;
+
     return $self;
 }
 
@@ -177,7 +179,7 @@ sub getGroups {
     
     # Group files with recognized patterns together
     # Sort them by channels, z's, then timepoints
-    my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
+    my ($groups, $infoHash) = $self->__getRegexGroups($fref);
 
     foreach my $name ( keys (%$groups) ) {
     	next unless defined($name);
@@ -185,10 +187,15 @@ sub getGroups {
     	my $maxZ = $infoHash->{ $name }->{ maxZ };
 		my $maxT = $infoHash->{ $name }->{ maxT };
 		my $maxC = $infoHash->{ $name }->{ maxC };
-
-		for (my $t = 0; $t <= $maxT; $t++) {
-    		for (my $z = 0; $z <= $maxZ; $z++) {
-    			for (my $c = 0; $c <= $maxC; $c++) {
+	
+		# XXX: The semantics here are strange, previously this was "<=" but the
+		# attribute names start with "max." I'm not sure *exactly* what was
+		# intended but "<" seems to be correct. [Bug #328]
+		#
+		# -Chris <callan@blackcat.ca>
+		for (my $t = 0; $t < $maxT; $t++) {
+    		for (my $z = 0; $z < $maxZ; $z++) {
+    			for (my $c = 0; $c < $maxC; $c++) {
     				my $file = $groups->{ $name }[$z][$t][$c];
     				next unless ( defined($file) );
     				
@@ -201,7 +208,12 @@ sub getGroups {
     				$xref->{ $file }->{ 'Image.NumWaves' } = $maxC;
     				
     				# delete the file from the hash, so it's not processed by other importers
-    				delete $fref->{ $file };
+					# ---
+					# Not sure how the deletion semantics were supposed to work, but this
+					# hash is keyed off of filenames. [Bug #328]
+					#
+					# -Chris <callan@blackcat.ca>
+					delete $fref->{ $file->getFilename() };
     			}
     		}
     	}
@@ -217,7 +229,7 @@ sub getGroups {
     	next unless (defined(verifyTiff($file)));
     	
     	my $filename = $file->getFilename();
-    	my $basename = ($self -> {super}) -> __nameOnly( $filename );
+    	my $basename = $self->__nameOnly($filename);
     	
     	push (@groupList, $file);
     	push (@groupList, $basename);
@@ -279,7 +291,7 @@ database transactions.
 sub importGroup {
     my ($self, $groupList, $callback) = @_;
 
-    my $session = ($self->{super})->Session();
+    my $session = $self->Session();
     my $factory = $session->Factory();
     
     my $file = $$groupList[0];
@@ -307,7 +319,7 @@ sub importGroup {
 	}
 	
 	my $basename = pop @$groupList;
-	my $image = ($self->{super})->__newImage($basename);
+	my $image = $self->__newImage($basename);
 	$self->{image} = $image;
 
 	# pack together & store info in input file
@@ -320,8 +332,7 @@ sub importGroup {
 				  0, $xref->{ $file }->{'Image.NumTimes'}-1,
 				  "TIFF");
 
-	my ($pixels, $pix) = 
-	($self->{super})->__createRepositoryFile($image, 
+	my ($pixels, $pix) = $self->__createRepositoryFile($image, 
 						 $xref->{ $file }->{'Image.SizeX'},
 						 $xref->{ $file }->{'Image.SizeY'},
 						 $xref->{ $file }->{'Image.SizeZ'},
@@ -365,16 +376,22 @@ sub importGroup {
 						$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
 					};
 					
-					push @channelInfo, {chnlNumber => $c,
-						ExWave     => undef,
-						EmWave     => undef,
-						Fluor      => undef,
-						NDfilter   => undef};
-							
 					die "convertPlaneFromTIFF failed: $@\n" if $@;
 					doSliceCallback($callback);
 				}
 			}
+		}
+
+		# Only create a channel info for each *channel* not for each and every TIFF
+		# that we import. [Bug #346]
+		#
+		# -Chris <callan@blackcat.ca>
+		for (my $c = 0; $c < $maxC; $c++) {
+			push @channelInfo, {chnlNumber => $c,
+			                    ExWave     => undef,
+			                    EmWave     => undef,
+			                    Fluor      => undef,
+			                    NDfilter   => undef};
 		}
 	}
 	OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
