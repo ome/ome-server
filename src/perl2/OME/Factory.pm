@@ -501,7 +501,7 @@ sub loadAttribute {
     die "Cannot find attribute type $semantic_type"
         unless defined $type;
 
-    return $type->loadAttribute($id);
+    return $type->__loadAttribute($id);
 }
 
 
