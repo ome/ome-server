@@ -2092,8 +2092,8 @@ char **getcgivars(void)
 	paircount = 0;
 	nvpair = strtok(cgiinput,"&");
 	
-	while( nvpair){
-		pairlist[paircount++] = strdup(nvpair);
+	while (nvpair){
+		pairlist[paircount++] = strcpy ((malloc(sizeof(char *) * (strlen(nvpair) + 1))), nvpair);
 		
 		if( !(paircount%256) ){
 			pairlist = (char **) realloc(pairlist,(paircount+256)*sizeof(char **));
@@ -2111,11 +2111,11 @@ char **getcgivars(void)
 		
 		if( (eqpos = strchr(pairlist[i],'=')) ){
 			*eqpos = '\0';
-			cgivars[i*2+1] = strdup(eqpos+1);
+			cgivars[i*2+1] = strcpy(malloc(sizeof(char *) * (strlen(eqpos + 1) + 1)), eqpos + 1);
 		}else{
-			cgivars[i*2+1] = strdup("");
+			cgivars[i*2+1] = strcpy(malloc(sizeof(char *) * (strlen("") + 1)), "");
 		}
-		cgivars[i*2] = strdup(pairlist[i]);
+		cgivars[i*2] = strcpy(malloc(sizeof(char *) * strlen(pairlist[i] + 1)), pairlist[i]);
 
 		if(url_encoded) {
 			unescape_url(cgivars[i*2]);
@@ -2156,12 +2156,12 @@ char **getCLIvars(int argc, char **argv)
 		
 		if( (eqpos = strchr(argv[i],'=')) ){
 			*eqpos = '\0';
-			cgivars[i*2+1] = strdup(eqpos+1);
+			cgivars[i*2+1] = strcpy(malloc(sizeof(char *) * (strlen(eqpos + 1) + 1)), eqpos + 1);
 		}else{
-			cgivars[i*2+1] = strdup("");
+			cgivars[i*2+1] = strcpy(malloc(sizeof(char *) * (strlen("") + 1)), "");
 		}
 		
-		cgivars[i*2] = strdup(argv[i]);
+		cgivars[i*2] = strcpy(malloc(sizeof(char *) * (strlen(argv[i]) + 1)), argv[i]);
 	}
 	
 	cgivars[argc*2] = 0 ;	 /* terminate the list with NULL */
