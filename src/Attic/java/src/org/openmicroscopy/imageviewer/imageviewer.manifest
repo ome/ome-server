@@ -1,0 +1,2 @@
+Main-Class: org.openmicroscopy.client.Imageviewer
+Class-Path: org.openmicroscopy.jar org.openmicroscopy.remote.jar org.openmicroscopy.image.jar
