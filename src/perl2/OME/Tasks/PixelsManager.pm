@@ -129,7 +129,7 @@ sub createOriginalFileAttribute {
         my $repository = $factory->
           findAttribute('Repository',
                         {
-                         IsLocal        => 0,
+                         IsLocal        => 'f',
                          ImageServerURL => $server_path,
                         });
         die "Cannot find a repository entry for the active image server"
@@ -212,7 +212,7 @@ sub findLocalRepository {
     my $repository = $factory->
       findAttribute('Repository',
                     {
-                     IsLocal => 1,
+                     IsLocal => 't',
                     });
     die "Are there really no repositories in the system?  Why not?"
       unless defined $repository;
@@ -231,12 +231,13 @@ sub localCreatePixels {
     my $path = $repository->Path();
 
     # Find a unique filename for the new pixels
-    my $nonce = time();
-    my $filename = "${nonce}-$$.ori";
+    my $time = time();
+    my $nonce = 0;
+    my $filename = "${time}-${nonce}-$$.ori";
     my $pathname = File::Spec->catfile($path,$filename);
     while (-e $filename) {
         $nonce++;
-        $filename = "${nonce}-$$.ori";
+        $filename = "${time}-${nonce}-$$.ori";
         $pathname = File::Spec->catfile($path,$filename);
     }
 
