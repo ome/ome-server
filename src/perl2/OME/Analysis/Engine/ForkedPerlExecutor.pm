@@ -61,6 +61,7 @@ my %executor_processes_out;
 my %executor_processes;
 
 use POSIX ":sys_wait_h";
+$SIG{CHLD} = sub { return; };
 
 sub new {
     my $proto = shift;
@@ -202,8 +203,8 @@ sub reapProcesses {
     my @processes_reaped;
 
     foreach my $pid (keys %$process_list) {
-        my $pid = waitpid($pid,WNOHANG);
-        if ($pid > 0) {
+        my $result_pid = waitpid($pid,WNOHANG);
+        if ($result_pid > 0) {
             delete $process_list->{$pid};
             $executor_processes_out{$self}--;
             push @processes_reaped, $pid;
