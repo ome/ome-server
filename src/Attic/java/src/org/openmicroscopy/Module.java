@@ -25,10 +25,8 @@ import java.util.List;
 import java.util.Iterator;
 
 public interface Module
-    extends Comparable
+    extends OMEObject
 {
-    public int getID();
-
     public String getName();
     public void setName(String name);
 
@@ -50,35 +48,22 @@ public interface Module
     public String getNewFeatureTag();
     public void setNewFeatureTag(String newFeatureTag);
 
+    public String getExecutionInstructions();
+    public void setExecutionInstructions(String executionInstructions);
 
-    public int getNumInputs();
-    public FormalInput getInput(int index);
-    public Iterator getInputIterator();
     public List getInputs();
+    public Iterator iterateInputs();
 
-    public FormalInput addInput(int           id,
-                                String        name,
-                                String        description,
-                                AttributeType attributeType);
-
-
-    public int getNumOutputs();
-    public FormalOutput getOutput(int index);
-    public Iterator getOutputIterator();
     public List getOutputs();
+    public Iterator iterateOutputs();
 
-    public FormalOutput addOutput(int           id,
-                                  String        name,
-                                  String        description,
-                                  AttributeType attributeType,
-                                  String        featureTag);
-
+    public List getAnalyses();
+    public Iterator iterateAnalyses();
 
     public interface FormalParameter
+        extends OMEObject
     {
         public Module getModule();
-
-        public int getID();
 
         public String getParameterName();
         public void setParameterName(String parameterName);
@@ -88,12 +73,22 @@ public interface Module
 
         public AttributeType getAttributeType();
         public void setAttributeType(AttributeType attributeType);
+
+        public boolean getOptional();
+        public void setOptional(boolean optional);
+
+        public boolean getList();
+        public void setList(boolean list);
     }
         
 
     public interface FormalInput extends FormalParameter
     {
-        //protected Something lookupTable;
+        public LookupTable getLookupTable();
+        public void setLookupTable(LookupTable table);
+
+        public boolean getUserDefined();
+        public void setUserDefined(boolean userDefined);
     }
 
 

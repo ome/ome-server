@@ -28,23 +28,21 @@ import java.util.Iterator;
 import org.openmicroscopy.*;
 
 public class SimpleLookupTable
+    extends SimpleObject
     implements LookupTable
 {
-    protected int     id;
     protected String  name, description;
     protected List    entries;
 
-    public SimpleLookupTable() {}
+    public SimpleLookupTable() { super(); }
 
     public SimpleLookupTable(int id, String name, String description)
     {
-        this.id = id;
+        super(id);
         this.name = name;
         this.description = description;
         this.entries = new ArrayList();
     }
-
-    public int getID() { return id; }
 
     public String getName() 
     { return name; }
@@ -61,7 +59,7 @@ public class SimpleLookupTable
     { return entries.size(); }
     public Entry getEntry(int index)
     { return (Entry) entries.get(index); }
-    public Iterator getEntryIterator()
+    public Iterator iterateEntries()
     { return entries.iterator(); }
     public List getEntries() { return entries; }
 
@@ -75,23 +73,21 @@ public class SimpleLookupTable
 
 
     public class SimpleEntry
-        implements LookupTable.Entry
+        extends SimpleObject
+        implements LookupTable.Entry, Comparable
     {
-        protected int     id;
         protected String  value, label;
 
-        public SimpleEntry() {}
+        public SimpleEntry() { super(); }
 
         public SimpleEntry(int id, String value, String label)
         {
-            this.id = id;
+            super(id);
             this.value = value;
             this.label = label;
         }
 
         public LookupTable getLookupTable() { return SimpleLookupTable.this; }
-
-        public int getID() { return id; }
 
         public String getValue() 
         { return value; }

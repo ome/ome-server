@@ -124,12 +124,13 @@ public class ChainBuilderApplet
         chain = new AppletChain(ap,chainName);
         controller = new PlaygroundController();
         playgroundPane = new PlaygroundPane(chain);
-        widgets = new ChainNodeWidget[chain.getNumNodes()];
+        java.util.List nodes = chain.getNodes();
+        widgets = new ChainNodeWidget[nodes.size()];
         for (int i = 0; i < widgets.length; i++)
         {
             int x = ap.getIntParameter(chainName+"/Node"+i+"/X",false);
             int y = ap.getIntParameter(chainName+"/Node"+i+"/Y",false);
-            widgets[i] = new ChainNodeWidget(chain.getNode(i),controller);
+            widgets[i] = new ChainNodeWidget((Chain.Node) nodes.get(i),controller);
             playgroundPane.addNodeWidget(widgets[i],x,y);
         }
 

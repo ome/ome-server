@@ -27,4 +27,6 @@ public interface RemoteCaller
     public Object dispatch(Object target, String method);
     public Object dispatch(Object target, String method, Object[] params);
     public Object dispatch(Object target, String method, Object param1);
+    public void freeObject(RemoteObject target);
+    public void freeObject(String targetRef);
 }

@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Factory
+ * org.openmicroscopy.Feature
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -21,19 +21,24 @@
 
 package org.openmicroscopy;
 
-import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
 
-public interface Factory
+public interface Feature
+    extends OMEObject
 {
-    public OMEObject newObject(String className, Map data);
-    public OMEObject loadObject(String className, int id);
-    public boolean objectExists(String className, Map criteria);
-    public OMEObject findObject(String className, Map criteria);
-    public List findObjects(String className, Map criteria);
-    public Iterator iterateObjects(String className, Map criteria);
-    public OMEObject findObjectLike(String className, Map criteria);
-    public List findObjectsLike(String className, Map criteria);
-    public Iterator iterateObjectsLike(String className, Map criteria);
+    public String getName();
+    public void setName(String name);
+
+    public String getTag();
+    public void setTag(String tag);
+
+    public Image getImage();
+    public void setImage(Image image);
+
+    public Feature getParentFeature();
+    public void setParentFeature(Feature parentFeature);
+
+    public List getChildren();
+    public Iterator iterateChildren();
 }

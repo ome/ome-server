@@ -47,23 +47,29 @@ public class XmlRpcCaller
 
     public void login(String username, String password)
     {
-        if (sessionReference == null)
+        synchronized(vparams)
         {
-            vparams.addElement(username);
-            vparams.addElement(password);
-            sessionReference = invoke("createSession").toString();
-            session = new RemoteSession(sessionReference);
+            if (sessionReference == null)
+            {
+                vparams.addElement(username);
+                vparams.addElement(password);
+                sessionReference = invoke("createSession").toString();
+                session = new RemoteSession(sessionReference);
+            }
         }
     }
 
     public void logout()
     {
-        if (sessionReference != null)
+        synchronized(vparams)
         {
-            vparams.addElement(sessionReference);
-            invoke("closeSession");
-            sessionReference = null;
-            session = null;
+            if (sessionReference != null)
+            {
+                vparams.addElement(sessionReference);
+                invoke("closeSession");
+                sessionReference = null;
+                session = null;
+            }
         }
     }
 
@@ -80,27 +86,30 @@ public class XmlRpcCaller
             vparams.clear();
             return retval;
         } catch (Exception e) {
-            return null;
+            throw new RemoteException(e.getMessage());
         }
     }
 
     public Object invoke(String method, Object[] params)
     {
-        if (sessionReference == null)
-            throw new IllegalArgumentException("Have not logged in");
-
-        vparams.addElement(sessionReference);
-        if (params != null)
+        synchronized(vparams)
         {
-            for (int i = 0; i < params.length; i++)
-                vparams.addElement(params[i]);
+            if (sessionReference == null)
+                throw new IllegalArgumentException("Have not logged in");
+
+            vparams.addElement(sessionReference);
+            if (params != null)
+            {
+                for (int i = 0; i < params.length; i++)
+                    vparams.addElement(params[i]);
+            }
+            return invoke(method);
         }
-        return invoke(method);
     }
 
     public Object dispatch(Object target, String method)
     {
-        return dispatch(target,method,null);
+        return dispatch(target,method,(Object[]) null);
     }
 
     public Object dispatch(Object target, String method, 
@@ -111,22 +120,55 @@ public class XmlRpcCaller
 
     public Object dispatch(Object target, String method, Object[] params)
     {
-        if (sessionReference == null)
-            throw new IllegalArgumentException("Have not logged in");
-
-        vparams.addElement(sessionReference);
-        vparams.addElement(target.toString());
-        vparams.addElement(method);
-        if (params != null)
+        synchronized(vparams)
         {
-            for (int i = 0; i < params.length; i++)
+            if (sessionReference == null)
+                throw new IllegalArgumentException("Have not logged in");
+
+            vparams.addElement(sessionReference);
+            vparams.addElement(target.toString());
+            vparams.addElement(method);
+            if (params != null)
             {
-                if (params[i] instanceof RemoteObject)
-                    vparams.addElement(params[i].toString());
-                else
-                    vparams.addElement(params[i]);
+                for (int i = 0; i < params.length; i++)
+                {
+                    if (params[i] instanceof RemoteObject)
+                        vparams.addElement(params[i].toString());
+                    else if (params[i] instanceof List)
+                        vparams.addElement(new Vector((List) params[i]));
+                    else if (params[i] instanceof Map)
+                        vparams.addElement(new Hashtable((Map) params[i]));
+                    else
+                        vparams.addElement(params[i]);
+                }
             }
+            return invoke("dispatch");
         }
-        return invoke("dispatch");
+    }
+
+    public void freeObject(RemoteObject target)
+    {
+        synchronized(vparams)
+        {
+            if (sessionReference == null)
+                throw new IllegalArgumentException("Have not logged in");
+
+            vparams.addElement(sessionReference);
+            vparams.addElement(target.toString());
+            invoke("freeObject");
+        }
+    }
+
+    public void freeObject(String targetReference)
+    {
+        synchronized(vparams)
+        {
+            if (sessionReference == null)
+                throw new IllegalArgumentException("Have not logged in");
+
+            vparams.addElement(sessionReference);
+            vparams.addElement(targetReference);
+            invoke("freeObject");
+        }
     }
 }

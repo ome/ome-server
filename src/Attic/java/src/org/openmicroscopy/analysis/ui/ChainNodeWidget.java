@@ -167,8 +167,11 @@ public class ChainNodeWidget
         labelPanel = new JPanel(new GridLayout(0,2,0,0));
         labelPanel.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 
-        int  numInputs = module.getNumInputs();
-        int  numOutputs = module.getNumOutputs();
+        java.util.List inputs = module.getInputs();
+        java.util.List outputs = module.getOutputs();
+
+        int  numInputs = inputs.size();
+        int  numOutputs = outputs.size();
         int  max = (numInputs > numOutputs)? numInputs: numOutputs;
 
         inputLabels = new JLabel[numInputs];
@@ -191,7 +194,7 @@ public class ChainNodeWidget
 
             if (i < numInputs)
             {
-                param = module.getInput(i);
+                param = (Module.FormalParameter) inputs.get(i);
                 lbl0 = (inputLabels[i] = new JLabel(param.getParameterName(),
                                                     SwingConstants.LEFT));
                 parameters.put(lbl0,param);
@@ -206,7 +209,7 @@ public class ChainNodeWidget
 
             if (i < numOutputs)
             {
-                param = module.getOutput(i);
+                param = (Module.FormalParameter) outputs.get(i);
                 lbl0 = (outputLabels[i] = new JLabel(param.getParameterName(),
                                                      SwingConstants.RIGHT));
                 parameters.put(lbl0,param);

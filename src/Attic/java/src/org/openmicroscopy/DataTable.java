@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.Iterator;
 
 public interface DataTable
+    extends OMEObject
 {
-    public int getID();
-
     public String getTableName();
     public void setTableName(String tableName);
 
@@ -37,21 +36,13 @@ public interface DataTable
     public int getGranularity();
     public void setGranularity(int granularity);
 
-    public int getNumColumns();
-    public Column getColumn(int index);
-    public Iterator getColumnIterator();
     public List getColumns();
-
-    public Column addColumn(int    id,
-                            String columnName,
-                            String columnDescription,
-                            String sqlType);
+    public Iterator iterateColumns();
 
     public interface Column
+        extends OMEObject
     {
         public DataTable getDataTable();
-
-        public int getID();
 
         public String getColumnName();
         public void setColumnName(String columnName);
@@ -61,5 +52,8 @@ public interface DataTable
 
         public String getSQLType();
         public void setSQLType(String sqlType);
+
+        public AttributeType getReferenceType();
+        public void setReferenceType(AttributeType sqlType);
     }
 }

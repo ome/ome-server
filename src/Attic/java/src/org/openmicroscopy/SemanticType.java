@@ -25,9 +25,8 @@ import java.util.List;
 import java.util.Iterator;
 
 public interface AttributeType
+    extends OMEObject
 {
-    public int getID();
-
     public String getName();
     public void setName(String name);
 
@@ -37,21 +36,13 @@ public interface AttributeType
     public int getGranularity();
     public void setGranularity(int granularity);
 
-    public int getNumColumns();
-    public Column getColumn(int index);
-    public Iterator getColumnIterator();
     public List getColumns();
-
-    public Column addColumn(int              id,
-                            String           columnName,
-                            String           columnDescription,
-                            DataTable.Column dataColumn);
+    public Iterator iterateColumns();
 
     public interface Column
+        extends OMEObject
     {
         public AttributeType getAttributeType();
-
-        public int getID();
 
         public String getColumnName();
         public void setColumnName(String columnName);

@@ -25,30 +25,21 @@ import java.util.List;
 import java.util.Iterator;
 
 public interface LookupTable
+    extends OMEObject
 {
-    public int getID();
-
     public String getName();
     public void setName(String name);
 
     public String getDescription();
     public void setDescription(String description);
 
-
-    public int getNumEntries();
-    public Entry getEntry(int index);
-    public Iterator getEntryIterator();
     public List getEntries();
-
-    public Entry addEntry(int id,String value,String label);
-
+    public Iterator iterateEntries();
 
     public interface Entry
-        extends Comparable
+        extends OMEObject
     {
         public LookupTable getLookupTable();
-
-        public int getID();
 
         public String getValue();
         public void setValue(String value);

@@ -28,15 +28,16 @@ import java.util.Iterator;
 import org.openmicroscopy.*;
 
 public class SimpleModule
-    implements Module
+    extends SimpleObject
+    implements Module, Comparable
 {
-    protected int     id;
     protected List    inputs, outputs;
     protected String  name, description, location, moduleType;
     protected String  category, defaultIterator, newFeatureTag;
 
     public SimpleModule()
     {
+        super();
         this.inputs = new ArrayList();
         this.outputs = new ArrayList();
     }
@@ -50,7 +51,7 @@ public class SimpleModule
                         String defaultIterator,
                         String newFeatureTag)
     {
-        this.id = id;
+        super(id);
         this.name = name;
         this.description = description;
         this.location = location;
@@ -64,8 +65,6 @@ public class SimpleModule
         CategorizedModules.addModule(this);
     }
 
-    public int getID() { return id; }
-
     public String getName() 
     { return name; }
     public void setName(String name)
@@ -75,6 +74,9 @@ public class SimpleModule
     { return description; }
     public void setDescription(String description) 
     { this.description = description; }
+
+    public String getExecutionInstructions() { return null; }
+    public void setExecutionInstructions(String instr) {}
 
     public String getLocation() 
     { return location; }
@@ -114,7 +116,7 @@ public class SimpleModule
     { return inputs.size(); }
     public FormalInput getInput(int index)
     { return (FormalInput) inputs.get(index); }
-    public Iterator getInputIterator()
+    public Iterator iterateInputs()
     { return inputs.iterator(); }
     public List getInputs() { return inputs; }
 
@@ -137,7 +139,7 @@ public class SimpleModule
     { return outputs.size(); }
     public FormalOutput getOutput(int index)
     { return (FormalOutput) outputs.get(index); }
-    public Iterator getOutputIterator()
+    public Iterator iterateOutputs()
     { return outputs.iterator(); }
     public List getOutputs() { return outputs; }
 
@@ -157,6 +159,8 @@ public class SimpleModule
         return output;
     }
 
+    public List getAnalyses() { return null; }
+    public Iterator iterateAnalyses() { return null; }
 
     public String toString()
     {
@@ -172,22 +176,20 @@ public class SimpleModule
 
 
     public class SimpleFormalParameter
+        extends SimpleObject
         implements Module.FormalParameter
     {
-        protected int            id;
         protected String         parameterName, parameterDescription;
         protected AttributeType  attributeType;
         
-        private SimpleFormalParameter()
-        {
-        }
+        private SimpleFormalParameter() { super(); }
         
         private SimpleFormalParameter(int           id,
                                       String        parameterName,
                                       String        parameterDescription,
                                       AttributeType attributeType)
         {
-            this.id = id;
+            super(id);
             this.parameterName = parameterName;
             this.parameterDescription = parameterDescription;
             this.attributeType = attributeType;
@@ -195,8 +197,6 @@ public class SimpleModule
 
         public Module getModule() { return SimpleModule.this; }
 
-        public int getID() { return id; }
-        
         public String getParameterName()
         { return parameterName; }
         public void setParameterName(String parameterName)
@@ -211,6 +211,12 @@ public class SimpleModule
         { return attributeType; }
         public void setAttributeType(AttributeType attributeType)
         { this.attributeType = attributeType; }
+
+        public boolean getOptional() { return false; }
+        public void setOptional(boolean optional) {}
+
+        public boolean getList() { return false; }
+        public void setList(boolean list) {}
     }
         
 
@@ -218,8 +224,6 @@ public class SimpleModule
         extends SimpleFormalParameter
         implements Module.FormalInput
     {
-        //protected Something lookupTable;
-
         public SimpleFormalInput() { super(); }
 
         public SimpleFormalInput(int           id,
@@ -229,6 +233,12 @@ public class SimpleModule
         {
             super(id,name,description,attributeType);
         }
+
+        public LookupTable getLookupTable() { return null; }
+        public void setLookupTable(LookupTable table) {}
+
+        public boolean getUserDefined() { return false; }
+        public void setUserDefined(boolean ud) {}
     }
 
 

@@ -28,15 +28,16 @@ import java.util.Iterator;
 import org.openmicroscopy.*;
 
 public class SimpleAttributeType
+    extends SimpleObject
     implements AttributeType
 {
-    protected int     id;
     protected String  name, description;
     protected int     granularity;
     protected List    columns;
 
     public SimpleAttributeType() 
     {
+        super();
         this.columns = new ArrayList();
     }
 
@@ -45,14 +46,12 @@ public class SimpleAttributeType
                                String description,
                                int    granularity)
     {
-        this.id = id;
+        super(id);
         this.name = name;
         this.description = description;
         this.granularity = granularity;
         this.columns = new ArrayList();
     }
-
-    public int getID() { return id; }
 
     public String getName()
     { return name; }
@@ -73,7 +72,7 @@ public class SimpleAttributeType
     { return columns.size(); }
     public Column getColumn(int index)
     { return (Column) columns.get(index); }
-    public Iterator getColumnIterator()
+    public Iterator iterateColumns()
     { return columns.iterator(); }
     public List getColumns() { return columns; }
 
@@ -92,28 +91,26 @@ public class SimpleAttributeType
     }
 
     public class SimpleColumn
+        extends SimpleObject
         implements AttributeType.Column
     {
-        protected int               id;
         protected String            columnName, columnDescription;
         protected DataTable.Column  dataColumn;
 
-        public SimpleColumn() {}
+        public SimpleColumn() { super(); }
 
         public SimpleColumn(int              id,
                             String           columnName,
                             String           columnDescription,
                             DataTable.Column dataColumn)
         {
-            this.id = id;
+            super(id);
             this.columnName = columnName;
             this.columnDescription = columnDescription;
             this.dataColumn = dataColumn;
         }
 
         public AttributeType getAttributeType() { return SimpleAttributeType.this; }
-
-        public int getID() { return id; }
 
         public String getColumnName()
         { return columnName; }

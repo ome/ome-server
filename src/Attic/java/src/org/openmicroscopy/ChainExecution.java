@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Factory
+ * org.openmicroscopy.ChainExecution
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -21,19 +21,36 @@
 
 package org.openmicroscopy;
 
-import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
 
-public interface Factory
+public interface ChainExecution
+    extends OMEObject
 {
-    public OMEObject newObject(String className, Map data);
-    public OMEObject loadObject(String className, int id);
-    public boolean objectExists(String className, Map criteria);
-    public OMEObject findObject(String className, Map criteria);
-    public List findObjects(String className, Map criteria);
-    public Iterator iterateObjects(String className, Map criteria);
-    public OMEObject findObjectLike(String className, Map criteria);
-    public List findObjectsLike(String className, Map criteria);
-    public Iterator iterateObjectsLike(String className, Map criteria);
+    public String getTimestamp();
+    public void setTimestamp(String timestamp);
+
+    public Chain getChain();
+    public void setChain(Chain chain);
+
+    public Dataset getDataset();
+    public void setDataset(Dataset dataset);
+
+    public Attribute getExperimenter();
+    public void setExperimenter(Attribute experimenter);
+
+    public List getNodes();
+    public Iterator iterateNodes();
+
+    public interface Node
+        extends OMEObject
+    {
+        public ChainExecution getChainExecution();
+
+        public Chain.Node getChainNode();
+        public void setChainNode(Chain.Node node);
+
+        public Analysis getAnalysis();
+        public void setAnalysis(Analysis analysis);
+    }
 }

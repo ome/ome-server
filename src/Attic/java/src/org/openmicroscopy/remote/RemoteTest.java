@@ -24,6 +24,7 @@ package org.openmicroscopy.remote;
 import org.openmicroscopy.*;
 
 import java.net.URL;
+import java.util.*;
 
 public class RemoteTest
 {
@@ -33,7 +34,8 @@ public class RemoteTest
         {
             Class.forName("org.openmicroscopy.remote.RemoteSession");
             Class.forName("org.openmicroscopy.remote.RemoteFactory");
-            Class.forName("org.openmicroscopy.remote.RemoteExperimenter");
+            Class.forName("org.openmicroscopy.remote.RemoteAttributeType");
+            Class.forName("org.openmicroscopy.remote.RemoteDataTable");
         } catch (Exception e) {
             System.err.println(e);
             System.exit(0);
@@ -58,10 +60,26 @@ public class RemoteTest
 
         Session  session = xmlRpcCaller.getSession();
         Factory  factory = session.getFactory();
-        Experimenter experimenter = 
-            (Experimenter) factory.loadObject("OME::Experimenter",1);
-        System.out.println(experimenter.getID()+" "+
-                           experimenter.getFirstName()+" "+
-                           experimenter.getLastName());
+
+        {
+            List  typeList = factory.findObjects("OME::AttributeType",null);
+            Iterator i = typeList.iterator();
+            while (i.hasNext())
+            {
+                AttributeType type = (AttributeType) i.next();
+                System.out.println(type.getName());
+            }
+        }
+
+        {
+            Iterator i = factory.iterateObjects("OME::DataTable",null);
+            while (i.hasNext())
+            {
+                DataTable table = (DataTable) i.next();
+                System.out.println(table.getTableName());
+            }
+        }
+
+        xmlRpcCaller.logout();
     }
 }

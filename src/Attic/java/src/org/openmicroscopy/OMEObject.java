@@ -23,4 +23,7 @@ package org.openmicroscopy;
 
 public interface OMEObject
 {
+    public int getID();
+    public void writeObject();
+    public Session getSession();
 }

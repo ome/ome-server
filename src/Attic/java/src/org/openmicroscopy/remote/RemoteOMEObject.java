@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Factory
+ * org.openmicroscopy.remote.RemoteObject
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -19,21 +19,27 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy;
+package org.openmicroscopy.remote;
 
-import java.util.Map;
-import java.util.List;
-import java.util.Iterator;
+import org.openmicroscopy.OMEObject;
+import org.openmicroscopy.Session;
 
-public interface Factory
+public class RemoteOMEObject
+    extends RemoteObject
+    implements OMEObject
 {
-    public OMEObject newObject(String className, Map data);
-    public OMEObject loadObject(String className, int id);
-    public boolean objectExists(String className, Map criteria);
-    public OMEObject findObject(String className, Map criteria);
-    public List findObjects(String className, Map criteria);
-    public Iterator iterateObjects(String className, Map criteria);
-    public OMEObject findObjectLike(String className, Map criteria);
-    public List findObjectsLike(String className, Map criteria);
-    public Iterator iterateObjectsLike(String className, Map criteria);
+    static { RemoteObject.addClass("OME::DBObject",RemoteOMEObject.class); }
+
+    public RemoteOMEObject() { super(); }
+    public RemoteOMEObject(String reference) { super(reference); }
+
+    public int getID()
+    { return getIntElement("id"); }
+
+    public void writeObject() 
+    { caller.dispatch(this,"writeObject"); }
+
+    public Session getSession()
+    { return (Session) getRemoteElement(RemoteSession.class,"Session"); }
+
 }

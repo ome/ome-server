@@ -24,11 +24,14 @@ package org.openmicroscopy;
 public interface Session
     extends OMEObject
 {
-    public int getID();
-
     public Factory getFactory();
 
-    public Experimenter getExperimenter();
-    public void setExperimenter(Experimenter experimenter);
+    public Attribute getUser();
+
+    public Project getProject();
+    public void setProject(Project project);
+
+    public Dataset getDataset();
+    public void setDataset(Dataset dataset);
 
 }

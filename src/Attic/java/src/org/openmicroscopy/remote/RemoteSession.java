@@ -23,27 +23,41 @@ package org.openmicroscopy.remote;
 
 import org.openmicroscopy.Session;
 import org.openmicroscopy.Factory;
-import org.openmicroscopy.Experimenter;
+import org.openmicroscopy.Project;
+import org.openmicroscopy.Dataset;
+import org.openmicroscopy.Attribute;
 
 public class RemoteSession
-    extends RemoteObject
+    extends RemoteOMEObject
     implements Session
 {
     static { RemoteObject.addClass("OME::Session",RemoteSession.class); }
 
+    protected void finalize()
+    {
+        // RemoteObject will automatically call the freeObject method
+        // in the remote server when the object is garbage collected.
+        // This should not happen for Sessions, so we override
+        // finalize to do nothing.
+    }
+
     public RemoteSession() { super(); }
     public RemoteSession(String reference) { super(reference); }
 
-    public int getID()
-    { return ((Integer) caller.dispatch(this,"id")).intValue(); }
-
     public Factory getFactory()
-    { return new RemoteFactory(caller.dispatch(this,"Factory").toString()); }
+    { return (Factory) getRemoteElement(RemoteFactory.class,"Factory"); }
 
-    public Experimenter getExperimenter()
-    { return new RemoteExperimenter(caller.
-                                    dispatch(this,"experimenter").toString()); }
-    public void setExperimenter(Experimenter experimenter)
-    { caller.dispatch(this,"experimenter",experimenter); }
+    public Attribute getUser()
+    { return (Attribute) getRemoteElement(RemoteAttribute.class,"User"); }
+
+    public Project getProject()
+    { return (Project) getRemoteElement(RemoteProject.class,"project"); }
+    public void setProject(Project project)
+    { caller.dispatch(this,"project",project); }
+
+    public Dataset getDataset()
+    { return (Dataset) getRemoteElement(RemoteDataset.class,"dataset"); }
+    public void setDataset(Dataset dataset)
+    { caller.dispatch(this,"dataset",dataset); }
 
 }

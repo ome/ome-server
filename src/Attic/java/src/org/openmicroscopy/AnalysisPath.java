@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Factory
+ * org.openmicroscopy.AnalysisPath
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -21,19 +21,30 @@
 
 package org.openmicroscopy;
 
-import java.util.Map;
 import java.util.List;
 import java.util.Iterator;
 
-public interface Factory
+public interface AnalysisPath
+    extends OMEObject
 {
-    public OMEObject newObject(String className, Map data);
-    public OMEObject loadObject(String className, int id);
-    public boolean objectExists(String className, Map criteria);
-    public OMEObject findObject(String className, Map criteria);
-    public List findObjects(String className, Map criteria);
-    public Iterator iterateObjects(String className, Map criteria);
-    public OMEObject findObjectLike(String className, Map criteria);
-    public List findObjectsLike(String className, Map criteria);
-    public Iterator iterateObjectsLike(String className, Map criteria);
+    public int getPathLength();
+    public void setPathLength(int length);
+
+    public Chain getChain();
+    public void setChain(Chain chain);
+
+    public List getPathNodes();
+    public Iterator iteratePathNodes();
+
+    public interface Node
+        extends OMEObject
+    {
+        public int getPathOrder();
+        public void setPathOrder(int order);
+
+        public AnalysisPath getAnalysisPath();
+
+        public Chain.Node getChainNode();
+        public void setChainNode(Chain.Node node);
+    }
 }

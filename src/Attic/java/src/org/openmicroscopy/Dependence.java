@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.Factory
+ * org.openmicroscopy.Dependence
  *
  * Copyright (C) 2002 Open Microscopy Environment, MIT
  * Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -21,19 +21,9 @@
 
 package org.openmicroscopy;
 
-import java.util.Map;
-import java.util.List;
-import java.util.Iterator;
-
-public interface Factory
+public interface Dependence
 {
-    public OMEObject newObject(String className, Map data);
-    public OMEObject loadObject(String className, int id);
-    public boolean objectExists(String className, Map criteria);
-    public OMEObject findObject(String className, Map criteria);
-    public List findObjects(String className, Map criteria);
-    public Iterator iterateObjects(String className, Map criteria);
-    public OMEObject findObjectLike(String className, Map criteria);
-    public List findObjectsLike(String className, Map criteria);
-    public Iterator iterateObjectsLike(String className, Map criteria);
+    public static final int GLOBAL  = 0;
+    public static final int DATASET = 1;
+    public static final int IMAGE   = 2;
 }

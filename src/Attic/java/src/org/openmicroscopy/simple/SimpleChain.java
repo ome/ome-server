@@ -28,36 +28,35 @@ import java.util.Iterator;
 import org.openmicroscopy.*;
 
 public class SimpleChain
+    extends SimpleObject
     implements Chain
 {
-    protected int      id;
-    protected String   owner;  // will change to an Owner class eventually
+    //protected String   owner;
     protected String   name;
     protected boolean  locked;
     protected List     nodes, links;
 
     public SimpleChain()
     {
+        super();
         this.nodes = new ArrayList();
         this.links = new ArrayList();
     }
 
     public SimpleChain(int id, String owner, String name, boolean locked)
     {
-        this.id = id;
-        this.owner = owner;
+        super(id);
+        //this.owner = owner;
         this.name = name;
         this.locked = locked;
         this.nodes = new ArrayList();
         this.links = new ArrayList();
     }
 
-    public int getID() { return id; }
-
-    public String getOwner() 
-    { return owner; }
-    public void setOwner(String owner)
-    { this.owner = owner; }
+    public Attribute getOwner() 
+    { return null; }
+    public void setOwner(Attribute owner)
+    {  }
 
     public String getName() 
     { return name; }
@@ -74,7 +73,7 @@ public class SimpleChain
     { return nodes.size(); }
     public Node getNode(int index)
     { return (Node) nodes.get(index); }
-    public Iterator getNodeIterator()
+    public Iterator iterateNodes()
     { return nodes.iterator(); }
     public List getNodes() { return nodes; }
 
@@ -94,7 +93,7 @@ public class SimpleChain
     { return links.size(); }
     public Link getLink(int index)
     { return (Link) links.get(index); }
-    public Iterator getLinkIterator()
+    public Iterator iterateLinks()
     { return links.iterator(); }
     public List getLinks() { return links; }
 
@@ -110,30 +109,30 @@ public class SimpleChain
         return link;
     }
 
+    public List getPaths() { return null; }
+    public Iterator iteratePaths() { return null; }
     
     public class SimpleNode
+        extends SimpleObject
         implements Chain.Node
     {
-        protected int     id;
         protected Module  module;
         protected String  iteratorTag, newFeatureTag;
 
-        public SimpleNode() {}
+        public SimpleNode() { super(); }
 
         public SimpleNode(int    id,
                           Module module,
                           String iteratorTag,
                           String newFeatureTag)
         {
-            this.id = id;
+            super(id);
             this.module = module;
             this.iteratorTag = iteratorTag;
             this.newFeatureTag = newFeatureTag;
         }
 
         public Chain getChain() { return SimpleChain.this; }
-
-        public int getID() { return id; }
 
         public Module getModule() 
         { return module; }
@@ -149,19 +148,25 @@ public class SimpleChain
         { return newFeatureTag; }
         public void setNewFeatureTag(String newFeatureTag)
         { this.newFeatureTag = newFeatureTag; }
+
+        public List getInputLinks() { return null; }
+        public Iterator iterateInputLinks() { return null; }
+
+        public List getOutputLinks() { return null; }
+        public Iterator iterateOutputLinks() { return null; }
     }
 
 
     public class SimpleLink
+        extends SimpleObject
         implements Chain.Link
     {
-        protected int                  id;
         protected Node                 fromNode;
         protected Module.FormalOutput  fromOutput;
         protected Node                 toNode;
         protected Module.FormalInput   toInput;
 
-        public SimpleLink() {}
+        public SimpleLink() { super(); }
 
         public SimpleLink(int                 id,
                           Node                fromNode,
@@ -169,7 +174,7 @@ public class SimpleChain
                           Node                toNode,
                           Module.FormalInput  toInput)
         {
-            this.id = id;
+            super(id);
             this.fromNode = fromNode;
             this.fromOutput = fromOutput;
             this.toNode = toNode;
@@ -177,8 +182,6 @@ public class SimpleChain
         }
 
         public Chain getChain() { return SimpleChain.this; }
-
-        public int getID() { return id; }
 
         public Node getFromNode() 
         { return fromNode; }

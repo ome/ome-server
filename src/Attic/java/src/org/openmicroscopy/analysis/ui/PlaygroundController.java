@@ -200,7 +200,7 @@ public class PlaygroundController
                 } else {
                     Chain  chain = playgroundPane.getChain();
 
-                    Iterator  links = chain.getLinkIterator();
+                    Iterator  links = chain.iterateLinks();
                     while (links.hasNext())
                     {
                         Chain.Link  link = (Chain.Link) links.next();
@@ -220,11 +220,11 @@ public class PlaygroundController
                     {
                         unselectAttributeType("Already linked!");
                     } else {
-                        chain.addLink(-1,
-                                      fromNode,
-                                      (Module.FormalOutput) fromParam,
-                                      toNode,
-                                      (Module.FormalInput) toParam);
+                        //chain.addLink(-1,
+                        //              fromNode,
+                        //              (Module.FormalOutput) fromParam,
+                        //              toNode,
+                        //              (Module.FormalInput) toParam);
                         playgroundPane.repaint();
                         unselectAttributeType("Link created");
                     }

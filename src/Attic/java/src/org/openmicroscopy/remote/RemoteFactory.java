@@ -24,43 +24,122 @@ package org.openmicroscopy.remote;
 import org.openmicroscopy.Factory;
 import org.openmicroscopy.OMEObject;
 
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class RemoteFactory
     extends RemoteObject
     implements Factory
 {
     static { RemoteObject.addClass("OME::Factory",RemoteFactory.class); }
 
+    protected void finalize()
+    {
+        // RemoteObject will automatically call the freeObject method
+        // in the remote server when the object is garbage collected.
+        // This should not happen for Factories, so we override
+        // finalize to do nothing.
+    }
+
     public RemoteFactory() { super(); }
     public RemoteFactory(String reference) { super(reference); }
 
+    public OMEObject newObject(String className, Map data)
+    {
+        String newRef = caller.dispatch(this,"newObject",
+                                        new Object[] { className,data })
+            .toString();
+        return (OMEObject) instantiate(getClass(className),reference);
+    }
+
     public OMEObject loadObject(String className, int id)
     {
-        Class clazz = RemoteObject.getClass(className);
         String newRef = caller.dispatch(this,"loadObject",
                                         new Object[] { className, 
                                                        new Integer(id) })
             .toString();
-
-        System.err.println(clazz+" "+newRef);
-
-        if ((clazz != null) && (newRef != null))
-        {
-            RemoteObject newObj = null;
-            try
-            {
-                newObj = (RemoteObject) clazz.newInstance();
-            } catch (InstantiationException e) {
-                System.err.println(e);
-                return null;
-            } catch (IllegalAccessException e) {
-                System.err.println(e);
-                return null;
-            }
-            newObj.setReference(newRef);
-            System.err.println(newObj);
-            return newObj;
-        } else {
-            return null;
-        }
+        return (OMEObject) instantiate(getClass(className),newRef);
     }
+
+    public boolean objectExists(String className, Map criteria)
+    {
+        return ((Boolean) caller.dispatch(this,"objectExists",
+                                          (criteria == null)?
+                                          new Object[] { className }:
+                                          new Object[] { className,criteria }))
+            .booleanValue();
+    }
+
+    public OMEObject findObject(String className, Map criteria)
+    {
+        String newRef = caller.dispatch(this,"findObject",
+                                        (criteria == null)?
+                                        new Object[] { className }:
+                                        new Object[] { className,criteria })
+            .toString();
+        return (OMEObject) instantiate(getClass(className),newRef);
+    }
+
+    public List findObjects(String className, Map criteria)
+    {
+        List refList = (List) caller.dispatch(this,"findObjects",
+                                              (criteria == null)?
+                                              new Object[] { className }:
+                                              new Object[] { className,criteria });
+        List objList = new ArrayList();
+        Iterator i = refList.iterator();
+        while (i.hasNext())
+            objList.add(instantiate(getClass(className),(String) i.next()));
+        return objList;
+    }
+
+    public Iterator iterateObjects(String className, Map criteria)
+    {
+        RemoteIterator i = (RemoteIterator) RemoteObject.
+            instantiate(RemoteIterator.class,
+                        caller.dispatch(this,"iterateObjects",
+                                        (criteria == null)?
+                                        new Object[] { className }:
+                                        new Object[] { className,criteria }));
+        i.setClass(getClass(className));
+        return i;
+    }
+
+    public OMEObject findObjectLike(String className, Map criteria)
+    {
+        String newRef = caller.dispatch(this,"findObjectLike",
+                                        (criteria == null)?
+                                        new Object[] { className }:
+                                        new Object[] { className,criteria })
+            .toString();
+        return (OMEObject) instantiate(getClass(className),newRef);
+    }
+
+    public List findObjectsLike(String className, Map criteria)
+    {
+        List refList = (List) caller.dispatch(this,"findObjectsLike",
+                                              (criteria == null)?
+                                              new Object[] { className }:
+                                              new Object[] { className,criteria });
+        List objList = new ArrayList();
+        Iterator i = refList.iterator();
+        while (i.hasNext())
+            objList.add(instantiate(getClass(className),(String) i.next()));
+        return objList;
+    }
+
+    public Iterator iterateObjectsLike(String className, Map criteria)
+    {
+        RemoteIterator i = (RemoteIterator) RemoteObject.
+            instantiate(RemoteIterator.class,
+                        caller.dispatch(this,"iterateObjectsLike",
+                                        (criteria == null)?
+                                        new Object[] { className }:
+                                        new Object[] { className,criteria }));
+        i.setClass(getClass(className));
+        return i;
+    }
+
 }

@@ -28,15 +28,16 @@ import java.util.Iterator;
 import org.openmicroscopy.*;
 
 public class SimpleDataTable
+    extends SimpleObject
     implements DataTable
 {
-    protected int     id;
     protected String  tableName, description;
     protected int     granularity;
     protected List    columns;
 
     public SimpleDataTable() 
     {
+        super();
         this.columns = new ArrayList();
     }
 
@@ -45,15 +46,13 @@ public class SimpleDataTable
                            String description,
                            int    granularity)
     {
-        this.id = id;
+        super(id);
         this.tableName = tableName;
         this.description = description;
         this.granularity = granularity;
         this.columns = new ArrayList();
     }
 
-    public int getID() { return id; }
-        
     public String getTableName()
     { return tableName; }
     public void setTableName(String tableName)
@@ -73,7 +72,7 @@ public class SimpleDataTable
     { return columns.size(); }
     public Column getColumn(int index)
     { return (Column) columns.get(index); }
-    public Iterator getColumnIterator()
+    public Iterator iterateColumns()
     { return columns.iterator(); }
     public List getColumns() { return columns; }
 
@@ -92,27 +91,25 @@ public class SimpleDataTable
     }
 
     public class SimpleColumn
+        extends SimpleObject
         implements DataTable.Column
     {
-        protected int    id;
         protected String columnName, columnDescription, sqlType;
 
-        public SimpleColumn() {}
+        public SimpleColumn() { super(); }
 
         public SimpleColumn(int    id,
                             String columnName,
                             String columnDescription,
                             String sqlType)
         {
-            this.id = id;
+            super(id);
             this.columnName = columnName;
             this.columnDescription = columnDescription;
             this.sqlType = sqlType;
         }
 
         public DataTable getDataTable() { return SimpleDataTable.this; }
-
-        public int getID() { return id; }
 
         public String getColumnName()
         { return columnName; }
@@ -128,5 +125,8 @@ public class SimpleDataTable
         { return sqlType; }
         public void setSQLType(String sqlType)
         { this.sqlType = sqlType; }
+
+        public AttributeType getReferenceType() { return null; }
+        public void setReferenceType(AttributeType type) {}
     }
 }

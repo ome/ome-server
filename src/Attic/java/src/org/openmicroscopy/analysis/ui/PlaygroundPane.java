@@ -74,7 +74,7 @@ public class PlaygroundPane
             super.paintChildren(g);
 
             Graphics2D g2 = (Graphics2D) g;
-            Iterator   i = chain.getLinkIterator();
+            Iterator   i = chain.iterateLinks();
 
             g2.setPaint(Color.black);
 

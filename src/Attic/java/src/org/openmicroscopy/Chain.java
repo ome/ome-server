@@ -25,11 +25,10 @@ import java.util.List;
 import java.util.Iterator;
 
 public interface Chain
+    extends OMEObject
 {
-    public int getID();
-
-    public String getOwner();
-    public void setOwner(String owner);
+    public Attribute getOwner();
+    public void setOwner(Attribute owner);
 
     public String getName();
     public void setName(String name);
@@ -37,35 +36,19 @@ public interface Chain
     public boolean getLocked();
     public void setLocked(boolean locked);
 
-
-    public int getNumNodes();
-    public Node getNode(int index);
-    public Iterator getNodeIterator();
     public List getNodes();
+    public Iterator iterateNodes();
 
-    public Node addNode(int    id,
-                        Module module,
-                        String iteratorTag,
-                        String newFeatureTag);
-
-
-    public int getNumLinks();
-    public Link getLink(int index);
-    public Iterator getLinkIterator();
     public List getLinks();
+    public Iterator iterateLinks();
 
-    public Link addLink(int                 id,
-                        Node                fromNode,
-                        Module.FormalOutput fromOutput,
-                        Node                toNode,
-                        Module.FormalInput  toInput);
-
+    public List getPaths();
+    public Iterator iteratePaths();
     
     public interface Node
+        extends OMEObject
     {
         public Chain getChain();
-
-        public int getID();
 
         public Module getModule(); 
         public void setModule(Module module);
@@ -75,14 +58,19 @@ public interface Chain
 
         public String getNewFeatureTag();
         public void setNewFeatureTag(String newFeatureTag);
+
+        public List getInputLinks();
+        public Iterator iterateInputLinks();
+
+        public List getOutputLinks();
+        public Iterator iterateOutputLinks();
     }
 
 
     public interface Link
+        extends OMEObject
     {
         public Chain getChain();
-
-        public int getID();
 
         public Node getFromNode(); 
         public void setFromNode(Node fromNode);
