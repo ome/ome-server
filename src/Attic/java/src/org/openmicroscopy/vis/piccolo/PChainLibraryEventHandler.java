@@ -135,7 +135,8 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 		}
 		else if (node instanceof PChainBox) {
 			PChainBox box = (PChainBox) node;
-			canvas.setSelectedChainID(box.getChainID());
+			//canvas.setSelectedChainID(box.getChainID());
+			canvas.setSelectedChain(box.getChain());
 		}
 		else
 			super.mousePressed(e);

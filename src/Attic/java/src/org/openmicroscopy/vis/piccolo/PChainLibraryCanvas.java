@@ -121,10 +121,11 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	 */
 	private PLinkLayer linkLayer;
 	
+	
 	/**
-	 * The ID of the current chain
+	 * The currently selected chain
 	 */
-	private int selectedChainID;
+	private CChain selectedChain;
 	
 	/**
 	 * True if a Chain is currently selected
@@ -295,16 +296,13 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 			b.getY()-PConstants.BORDER,b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER); 
 	}
+
 	
-	public void setSelectedChainID(int id) {
-		selectedChainID=id;
-		//System.err.println("selected chain "+id);
+	public void setSelectedChain(CChain chain) {
+		selectedChain = chain;
 		chainSelected = true;
 	}
 	
-	public int getSelectedChainID() {
-		return selectedChainID;
-	}
 	
 	public void clearChainSelected() {
 		//System.err.println("clear chain selection");
@@ -324,7 +322,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
 		if (chainSelected == true) {
-			Integer id = new Integer(selectedChainID);
+			Integer id = new Integer(selectedChain.getID());
 			ChainSelection c = new ChainSelection(id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
 		}
