@@ -357,12 +357,16 @@ sub getDisplayOptions {
 
 	# set up red shift channel ordering
 	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", {
-		Pixels => $pixels_attr } )
-		or die "Cannot find PixelChannelComponent's for pixels (id=".$pixels_attr->id().")\n";
-	@channelComponents = sort 
-		{ $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+	Pixels => $pixels_attr } );
+	if( @channelComponents ) {
+		@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() }
 		@channelComponents;
-	@channelOrder = map( $_->Index(), @channelComponents );
+		@channelOrder = map( $_->Index(), @channelComponents );
+	
+	# There's no basis to do redshift ordering. This pixels is lacking channelComponents, which probably means it was computationally derived.
+	} else {
+		@channelOrder = (0..($pixels_attr->SizeC - 1));
+	}
 
 	# Red Channel
 	$displayData{RedChannelOn} = 1;
@@ -410,7 +414,7 @@ sub getDisplayOptions {
 	$displayData{ BlueChannel } = $displayChannel;
 
 	# Make DisplayOptions
-	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData );
+	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData )  or die "Couldn't make a new DisplayOptions";
 	return $displayOptions;
 }
 
