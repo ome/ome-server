@@ -8,9 +8,17 @@
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
 	<element name = "External">
 		<annotation>
-			<documentation>Describes a file location.</documentation>
+			<documentation>Describes a file location.  Can optionally specify an Offset and a ReadLength, both in bytes.
+The SHA1 digest of the file is required.  If the file is compressed, the SHA1 digest is of the compressed file.
+			</documentation>
 		</annotation>
 		<complexType>
+			<attribute name = "href" use = "required" type = "anyURI">
+				<annotation>
+					<documentation>file location</documentation>
+				</annotation>
+			</attribute>
+			<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
 			<attribute name = "Compression">
 				<annotation>
 					<documentation>Only necessary if file is compressed.</documentation>
@@ -22,16 +30,15 @@
 					</restriction>
 				</simpleType>
 			</attribute>
-			<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
-			<attribute name = "Offset" type = "integer"/>
-			<attribute name = "href" use = "required" type = "anyURI">
-				<annotation>
-					<documentation>file location</documentation>
-				</annotation>
-			</attribute>
+			<attribute name = "Offset" type = "positiveInteger"/>
+			<attribute name = "ReadLength" type = "positiveInteger"/>
 		</complexType>
 	</element>
-	<element name = "BinData" type = "base64Binary"/>
+	<element name = "BinData" type = "base64Binary">
+		<annotation>
+			<documentation>The contents of this element are base64-encoded.  These are not CDATA sections, just a base64 stream.</documentation>
+		</annotation>
+	</element>
 	<element name = "BinaryFile">
 		<annotation>
 			<documentation>Describes a binary file.</documentation>
