@@ -42,6 +42,9 @@ use File::Spec;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Cwd;
+use Text::Wrap;
+use Time::localtime;
+use Time::Local;
 
 # Packages that should have been installed by now
 use HTTP::Request::Common;
@@ -59,11 +62,14 @@ use base qw(OME::Install::InstallationTask);
 
 # Things we grab from the environment
 our $OME_BASE_DIR;
+our $OMEIS_BASE_DIR;
 our $APACHE_USER;
 our $APACHE_UID;
 our $OME_GROUP;
 our $OME_GID;
 
+# $APACHE comes from the install environment.
+# $APACHE_CONF_DEF is the default configuration (when there isn't one in the environment)
 our $APACHE;
 our $APACHE_CONF_DEF = {
 	DO_CONF  => 1,
@@ -72,6 +78,7 @@ our $APACHE_CONF_DEF = {
 	OMEDS    => 1,
 	WEB      => undef, # This gets set to DocumentRoot if its undef and DO_CONF is true.
 	CGI_BIN  => undef,
+	OMEIS_UP => 'midnight', # values are now, midnight and manual
 	HUP      => 1,
 };
 
@@ -79,6 +86,7 @@ our $APACHE_CONF_DEF = {
 our $APACHE_WEB_INCLUDE;
 our $APACHE_OMEIS_INCLUDE;
 our $APACHE_OMEDS_INCLUDE;
+our $APACHE_OMEIS_UPDATE_REQUIRED = 0;
 
 # Global logfile filehandle and name
 our $LOGFILE_NAME = "ApacheConfigTask.log";
@@ -346,6 +354,93 @@ sub omeis_test {
 
 }
 
+
+sub need_omeis_update {
+
+	my $need_update = 0;
+	my $pixels_update=1;
+	my $files_update=1;
+
+	my $old_UID = $EUID;
+	# Be the apache user.
+	$EUID = $APACHE_UID;
+
+	if ( open(VERS, "src/C/omeis/updateOMEIS -q |") ) {
+ 	   while (<VERS>) {
+ 	       $pixels_update = 0 if /^Pixels/;
+ 	       $files_update  = 0 if /^Files/;
+		}
+		close VERS;
+	} else {
+		$need_update = 1;
+	}
+
+	# Go back to the old UID.
+	$EUID = $old_UID;
+
+	return ($pixels_update or $files_update or $need_update);
+
+}
+
+sub update_omeis {
+my $sleep;
+
+	if ($APACHE->{OMEIS_UP} eq 'now') {
+		$sleep = 0;
+	} elsif ($APACHE->{OMEIS_UP} eq 'manual') {
+		return;
+	} elsif ($APACHE->{OMEIS_UP} eq 'midnight') {
+		my $timeAt  = timelocal( 0,0,0,localtime->mday()+1,localtime->mon(),localtime->year() );
+		my $timeNow = timelocal(localtime->sec(),localtime->min(),localtime->hour(),localtime->mday(),localtime->mon(),localtime->year() );
+		$sleep = $timeAt-$timeNow;
+	} else {
+		$sleep = $APACHE->{OMEIS_UP};
+		$APACHE->{OMEIS_UP} = 'midnight';
+	}
+	
+	print $LOGFILE "Forking child to exec (sleep $sleep ; $OME_BASE_DIR/bin/updateOMEIS -s)\n";
+	
+
+	my $pid = fork();
+	
+	if ($pid) { # parent
+		print $LOGFILE "Child PID=$pid\n";
+		return ($pid);
+	} elsif ($pid == 0) { # child
+		$EUID = $APACHE_UID;
+		print $LOGFILE "Can't drop privileges.  UID=$EUID\n" 
+			and die "Can't drop privileges.  UID=$EUID" 
+			unless $EUID == $APACHE_UID; 
+
+		exec ("(sleep $sleep ; $OME_BASE_DIR/bin/updateOMEIS -s)")
+			or print $LOGFILE "Can't drop privileges.  UID=$EUID\n"
+			and die "Can't drop privileges.  UID=$EUID\n";
+		# NOTREACHED
+	} else {
+		print $LOGFILE "Can't fork\n"
+		 and die "Can't fork";
+	}
+}
+
+sub confirm_omeis_sched {
+    my $def_time_str = POSIX::strftime ( "%Y-%m-%d %H:%M", (0,0,0,localtime->mday()+1,localtime->mon(),localtime->year()) );
+	my $uInput = confirm_default ('Update omeis on :', $def_time_str);
+	my ($year,$mon,$mday,$hour,$min) = ($1,$2,$3,$4,$5) if $uInput =~ /(\d+)-(\d+)-(\d+)\s+(\d+):(\d+)/;
+	$mon--;
+	my $timeAt  = timelocal(0,$min,$hour,$mday,$mon,$year);
+	my $timeNow = timelocal(localtime->sec(),localtime->min(),localtime->hour(),localtime->mday(),localtime->mon(),localtime->year() );
+	
+	return (0) if $timeAt-$timeNow < 60;
+	return  ($timeAt-$timeNow);
+}
+
+sub get_omeis_sched_str {
+	return 'now' if $APACHE->{OMEIS_UP} eq 'now';
+	return 'midnight' if $APACHE->{OMEIS_UP} eq 'midnight';
+	return 'manual' if $APACHE->{OMEIS_UP} eq 'manual';
+	return ( scalar (CORE::localtime (time()+$APACHE->{OMEIS_UP})) );
+}
+
 sub fix_ome_conf {
 	my $OME_CONF_DIR = shift;
 	my $OME_DIST_BASE = getcwd;
@@ -590,6 +685,7 @@ sub execute {
   
 	# Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
+    $OMEIS_BASE_DIR = $environment->omeis_base_dir() or croak "Could not get OMEIS base directory\n";
     $OME_BASE_DIR = $environment->base_dir() or croak "Could not get base installation environment\n";
 	$APACHE_USER  = $environment->apache_user() or croak "Apache user is not set!\n";
     $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
@@ -612,6 +708,15 @@ sub execute {
     print_header ("Apache Setup");
     
     print "(All verbose information logged in $OME_TMP_DIR/install/$LOGFILE_NAME)\n\n";
+	
+	# Task blurb
+	my $blurb = <<BLURB;
+OME Apache web server configuration is a critical part of your OME install. OME's web interface, remote clients and image server all use this infrastructure to communicate. If you are unsure of a particular question, please choose the default as that will be more than adequate for most people.
+BLURB
+
+	print wrap("", "", $blurb);
+	
+	print "\n";  # Spacing
 
     # Get our logfile and open it for writing
     open ($LOGFILE, ">", "$OME_TMP_DIR/install/$LOGFILE_NAME")
@@ -631,6 +736,11 @@ sub execute {
 		$APACHE->{CGI_BIN} = $apache_info->{cgi_bin} unless defined $APACHE->{CGI_BIN} and $APACHE->{CGI_BIN};
 	}
 
+		
+	# Wether or not we need to update omeis:
+	$APACHE_OMEIS_UPDATE_REQUIRED = need_omeis_update();
+	$APACHE->{OMEIS_UP} = $APACHE_CONF_DEF->{OMEIS_UP} unless defined $APACHE->{OMEIS_UP};
+
 	# Confirm all flag
 	my $confirm_all;
 
@@ -641,16 +751,23 @@ sub execute {
 			# Ask user to confirm his/her original entries
 	
 			print BOLD,"Apache configuration:\n",RESET;
-			print "       Configure Apache?: ", BOLD, $APACHE->{DO_CONF}  ?'yes':'no', RESET, "\n";
-			print " Developer configuration: ", BOLD, $APACHE->{DEV_CONF} ?'yes':'no', RESET, "\n";
-			print "         Server restart?: ", BOLD, $APACHE->{HUP}      ?'yes':'no', RESET, "\n";
+			print      "        Configure Apache?: ", BOLD, $APACHE->{DO_CONF}  ?'yes':'no', RESET, "\n";
+			print      "  Developer configuration: ", BOLD, $APACHE->{DEV_CONF} ?'yes':'no', RESET, "\n";
+			print      "          Server restart?: ", BOLD, $APACHE->{HUP}      ?'yes':'no', RESET, "\n";
 			print BOLD,"Install OME servers:\n",RESET;
-			print "          Images (omeis): ", BOLD, $APACHE->{OMEIS}    ?'yes':'no', RESET, "\n";
-			print "            Data (omeds): ", BOLD, $APACHE->{OMEDS}    ?'yes':'no', RESET, "\n";
-			print "                     Web: ", BOLD, $APACHE->{WEB}      ?'yes':'no', RESET, "\n";
+			print      "           Images (omeis): ", BOLD, $APACHE->{OMEIS}    ?'yes':'no', RESET, "\n";
+			print      "             Data (omeds): ", BOLD, $APACHE->{OMEDS}    ?'yes':'no', RESET, "\n";
+			print      "                      Web: ", BOLD, $APACHE->{WEB}      ?'yes':'no', RESET, "\n";
 			print BOLD,"Apache directories:\n",RESET if $APACHE->{WEB} or $APACHE->{OMEIS};
-			print "           DocumentRoot: ", BOLD, $APACHE->{WEB}, RESET, "\n" if $APACHE->{WEB};
-			print "                cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
+			print      "             DocumentRoot: ", BOLD, $APACHE->{WEB}, RESET, "\n" if $APACHE->{WEB};
+			print      "                  cgi-bin: ", BOLD, $APACHE->{CGI_BIN}, RESET, "\n" if $APACHE->{OMEIS};
+			if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
+				print BOLD,"OMEIS Update:\n",RESET;
+				print "           execute update: ", BOLD, get_omeis_sched_str() , RESET, "\n"
+					if $APACHE->{OMEIS_UP} ne 'manual';
+				print "          update manually: ", BOLD, "sudo -u $APACHE_USER $OME_BASE_DIR/bin/updateOMEIS\n", RESET
+					if $APACHE->{OMEIS_UP} eq 'manual';
+			}
 			print "\n";  # Spacing
 
 			y_or_n ("Are these values correct ?",'y') and last;
@@ -699,6 +816,18 @@ sub execute {
 				$APACHE->{CGI_BIN} = confirm_path ('Apache cgi-bin directory :', $cgi_bin);
 			}
 			$APACHE->{OMEIS} = 1;
+			if ($APACHE_OMEIS_UPDATE_REQUIRED) {
+				if (y_or_n("Update OMEIS manually ?",'n')) {
+					$APACHE->{OMEIS_UP} = 'manual';
+				} else {
+					if (y_or_n("Schedule OMEIS update for later ?",'y')) {
+						$APACHE->{OMEIS_UP} = confirm_omeis_sched();
+						$APACHE->{OMEIS_UP} = 'now' unless $APACHE->{OMEIS_UP};						
+					} else {
+						$APACHE->{OMEIS_UP} = 'now';
+					}
+				}
+			}
 		} else {
 			$APACHE->{OMEIS} = 0;
 		}
@@ -734,16 +863,23 @@ sub execute {
 
 	# Put what we have in the log file
 	print $LOGFILE "Apache configuration:\n";
-	print $LOGFILE "       Configure Apache?: ", $APACHE->{DO_CONF}  ?'yes':'no', "\n";
-	print $LOGFILE " Developer configuration: ", $APACHE->{DEV_CONF} ?'yes':'no', "\n";
-	print $LOGFILE "         Server restart?: ", $APACHE->{HUP}      ?'yes':'no', "\n";
+	print $LOGFILE "        Configure Apache?: ", $APACHE->{DO_CONF}  ?'yes':'no', "\n";
+	print $LOGFILE "  Developer configuration: ", $APACHE->{DEV_CONF} ?'yes':'no', "\n";
+	print $LOGFILE "          Server restart?: ", $APACHE->{HUP}      ?'yes':'no', "\n";
 	print $LOGFILE "Install OME servers:\n";
-	print $LOGFILE "          Images (omeis): ", $APACHE->{OMEIS}    ?'yes':'no', "\n";
-	print $LOGFILE "            Data (omeds): ", $APACHE->{OMEDS}    ?'yes':'no', "\n";
-	print $LOGFILE "                     Web: ", $APACHE->{WEB}      ?'yes':'no', "\n";
+	print $LOGFILE "           Images (omeis): ", $APACHE->{OMEIS}    ?'yes':'no', "\n";
+	print $LOGFILE "             Data (omeds): ", $APACHE->{OMEDS}    ?'yes':'no', "\n";
+	print $LOGFILE "                      Web: ", $APACHE->{WEB}      ?'yes':'no', "\n";
 	print $LOGFILE "Apache directories:\n";
-	print $LOGFILE "           DocumentRoot: ", $APACHE->{WEB}, "\n";
-	print $LOGFILE "                cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
+	print $LOGFILE "             DocumentRoot: ", $APACHE->{WEB}, "\n";
+	print $LOGFILE "                  cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
+	if ($APACHE->{OMEIS} and $APACHE_OMEIS_UPDATE_REQUIRED) {
+		print $LOGFILE "OMEIS Update:\n";
+		print $LOGFILE "           execute update:", get_omeis_sched_str() , "\n"
+			if $APACHE->{OMEIS_UP} ne 'manual';
+		print $LOGFILE "          update manually:", "sudo -u $APACHE_USER $OME_BASE_DIR/bin/updateOMEIS\n"
+			if $APACHE->{OMEIS_UP} eq 'manual';
+	}
 
 	
 	# Return unless we're configuring apache
@@ -822,6 +958,9 @@ sub execute {
 			croak "Could not chown $dest:\n$!\n";
 		$APACHE_OMEIS_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.omeis$is_dev.conf";
 		print $LOGFILE "Set APACHE_OMEIS_INCLUDE to $APACHE_OMEIS_INCLUDE\n";
+		print $LOGFILE "Forking a process to upgrade OMEIS\n";
+		# The child will fork off and the parent returns immediately.
+		update_omeis () if $APACHE_OMEIS_UPDATE_REQUIRED;
 	} else {
 		$APACHE_OMEIS_INCLUDE = '';
 		print $LOGFILE "Not installing OMEIS\n";
@@ -903,6 +1042,9 @@ sub execute {
 	#********
 	httpd_test ();
 	
+	print BOLD, "Don't forget to update omeis by executing\n> $OME_BASE_DIR/bin/updateOMEIS\nAt your earliest convenience !!!", RESET
+		if $APACHE->{OMEIS} and $APACHE->{OMEIS_UP} eq 'manual' and $APACHE_OMEIS_UPDATE_REQUIRED;
+
 	# Set a proper umask
 	print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
 	umask (0002);
