@@ -315,6 +315,7 @@ sub getOMESession {
                      host            => $host
                     });
         logdbg "debug", "getOMESession: created new userState";
+        $bootstrap_factory->commitTransaction();
     } else {
         $userState->last_access('now');
         $userState->host($host);
