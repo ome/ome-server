@@ -32,7 +32,9 @@
 
 #-------------------------------------------------------------------------------
 #
-# Written by:    
+# Written by:    Chris Allan <callan@blackcat.ca>
+#                Douglas Creager <dcreager@alum.mit.edu>
+#                Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
 
