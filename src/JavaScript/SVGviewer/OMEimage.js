@@ -27,14 +27,12 @@ Copyright (C) 2003 Open Microscopy Environment
 
 *****/
 
-svgns = "http://www.w3.org/2000/svg";
-xlinkns  = "http://www.w3.org/1999/xlink";
+var svgns = "http://www.w3.org/2000/svg";
+var xlinkns  = "http://www.w3.org/1999/xlink";
 
-OMEimage.VERSION = .2;
-
-/********************************************************************************************/
-/*                                 Public Functions */
-/********************************************************************************************/
+/********************************************************************************************
+                                 Public Functions
+********************************************************************************************/
 
 /************************** Setup Functions ***********************************/
 
@@ -46,7 +44,7 @@ OMEimage.VERSION = .2;
 			Stats is a 2d array of hashes. The array is indexed by [channel index][t].
 				Hash keys must contain geomean and geosigma  ( sigma).
 			Dims is a 6 member array representing dimensions of the 5d image. Members are:
-				X,Y,Z,W,T,bpp
+				X,Y,Z,C,T,bpp
 				bpp is bits per pixel
 			CGI_URL is the url to call to generate a 2d image
 			CGI_optionStr will be added to the options passed to the CGI
@@ -56,39 +54,23 @@ OMEimage.VERSION = .2;
 
 *****/
 function OMEimage( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
-	SaveDisplayCGI_URL, CBW, RGBon, isRGB ) {
-
-	this.init(imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
-		SaveDisplayCGI_URL, CBW, RGBon, isRGB );
-		
+                   SaveDisplayCGI_URL, CBW, RGBon, isRGB ) {
+	this.init( imageID, Stats, Dims, CGI_URL, CGI_optionStr, 
+	           SaveDisplayCGI_URL, CBW, RGBon, isRGB );
 }
 
 /*****
-
 	realize(SVGparentNode)
-		
-	comprehensively tested
-
+		initialize the graphical objects into SVGparentNode
 *****/
-
 OMEimage.prototype.realize = function(SVGparentNode) {
-	if(SVGparentNode == null)
-		alert("OMEimage.realize() was passed a null parameter.");
-	else {
-		this.SVGparentNode = SVGparentNode;
-		this.buildSVG();
-	}
+	this.SVGparentNode = SVGparentNode;
+	this.buildSVG();
 }
 
-/********************* Functions for Interactivity & Utilities ****************************/
-
 /*****
-
 	saveState()
 		calls a CGI to save current view settings for this image to the DB
-
-	untested
-
 *****/
 OMEimage.prototype.saveState = function() {
 	var tmpImg;
@@ -112,14 +94,10 @@ OMEimage.prototype.saveState = function() {
 
 
 /*****
-
 	updatePic(theZ, theT)
 		updates the displayed picture
 		returns null if unsuccesful for any reason
 		returns the SVG image node if successful
-		
-	tested
-
 *****/
 OMEimage.prototype.updatePic = function(theZ, theT) {
 	if(this.Dims == null) return null;
@@ -143,42 +121,10 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 };
 
 
-OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
-	// color or RGB?
-	var colorStr;
-	var CBS = this.getCBS(theT);
-	if( this.inColor == 1 )
-		colorStr = "&RGB=" + CBS.slice(0,9).join(',');
-	else
-		colorStr = "&Gray=" + CBS.slice(9,12).join(',');
-	
-	// Dims is an associative array. join won't work on it.
-	var d=new Array();
-	for(i in this.Dims) d.push(this.Dims[i]);
-	
-	var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
-		theT + '&Dims=' + d.join(',') + colorStr + "&RGBon=" + this.RGBon +
-		'&'+this.CGI_optionStr;
-	
-	this.SVGimages[theZ][theT] = createElementSVG( 'image', {
-		width: this.Dims['X'],
-		height: this.Dims['Y'],
-		display: (invisible ? 'none' : 'inline')
-	});
-	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",imageURL);
-	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.SVGimages[theZ][theT];
-};
-
-
-/************************** Set Functions ***********************************/
-
 /*****
-
 	setCBW(CBW)
 		returns 1 if CBW is accepted
 		returns 0 if CBW is rejected
-
 *****/
 OMEimage.prototype.setCBW = function(CBW) {
 	// check new CBW for change
@@ -317,7 +263,7 @@ OMEimage.prototype.getCBS = function(theT) {
 	}
 	
 	return CBS;
-}
+};
 
 
 /*****
@@ -326,19 +272,28 @@ OMEimage.prototype.getCBS = function(theT) {
 *****/
 OMEimage.prototype.isInColor = function() {
 	return this.inColor;
-}
+};
 
+OMEimage.prototype.getDimX = function() {
+	return this.Dims['X'];
+};
+OMEimage.prototype.getDimY = function() {
+	return this.Dims['Y'];
+};
+OMEimage.prototype.getDimZ = function() {
+	return this.Dims['Z'];
+};
+OMEimage.prototype.getDimC = function() {
+	return this.Dims['C'];
+};
+OMEimage.prototype.getDimT = function() {
+	return this.Dims['T'];
+};
 
 /********************************************************************************************/
 /*                                 Private Functions */
 /********************************************************************************************/
 
-/*****
-
-	init
-		see constructor for information on parameters
-		
-*****/
 OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionStr,
 	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB ) {
 	this.initialized        = true;
@@ -352,7 +307,7 @@ OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionSt
 	this.Dims['X']          = Dims[0];
 	this.Dims['Y']          = Dims[1];
 	this.Dims['Z']          = Dims[2];
-	this.Dims['W']          = Dims[3];
+	this.Dims['C']          = Dims[3];
 	this.Dims['T']          = Dims[4];
 	this.Dims['bpp']        = Dims[5];
 	this.CBW = default_CBW;
@@ -373,14 +328,12 @@ OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionSt
 		}
 	}
 
-			
 }
 
-/*****
 
+/*****
 	buildSVG()
 		Creates SVG elements and all that junk
-
 *****/
 OMEimage.prototype.buildSVG = function() {
 	// make image container
@@ -392,13 +345,73 @@ OMEimage.prototype.buildSVG = function() {
 
 }
 
-/*****
+OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
+	// color or RGB?
+	var colorStr;
+	var CBS = this.getCBS(theT);
+	if( this.inColor == 1 )
+		colorStr = "&RGB=" + CBS.slice(0,9).join(',');
+	else
+		colorStr = "&Gray=" + CBS.slice(9,12).join(',');
+	
+	// Dims is an associative array. join won't work on it.
+	var d=new Array();
+	for(i in this.Dims) d.push(this.Dims[i]);
+	
+	var imageURL = this.CGI_URL + '?ImageID=' + this.imageID + '&theZ=' + theZ + '&theT=' + 
+		theT + '&Dims=' + d.join(',') + colorStr + "&RGBon=" + this.RGBon +
+		'&'+this.CGI_optionStr;
 
+	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
+		width: this.Dims['X'],
+		height: this.Dims['Y'],
+		display: (invisible ? 'none' : 'inline')
+	});
+	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",imageURL);
+	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
+	return this.SVGimages[theZ][theT];
+};
+
+/*
+this function is the transition to omeis
+OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
+	// color or RGB?
+	var colorStr = '';
+	if( this.inColor == 1 ) {
+		if( this.isRedOn() ) { 
+			colorStr += '&RedChannel=' + this.CBW.slice(0,3).join(',') + ',0';
+		}
+		if( this.isGreenOn() ) {
+			colorStr += '&GreenChannel=' + this.CBW.slice(3,6).join(',') + ',0';
+		}
+		if( this.isBlueOn() ) {
+			colorStr += '&BlueChannel=' + this.CBW.slice(6,9).join(',') + ',0';
+		}
+	} else {
+		colorStr = "&GrayChannel=" + CBS.slice(9,12).join(',') + ',0';
+	}
+	
+	var imageURL = this.CGI_URL + '?theZ=' + theZ + '&theT=' + 
+		theT + colorStr + this.CGI_optionStr;
+
+	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
+		width: this.Dims['X'],
+		height: this.Dims['Y'],
+		display: (invisible ? 'none' : 'inline')
+	});
+	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",imageURL);
+	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
+	return this.SVGimages[theZ][theT];
+};
+*/
+
+
+
+
+/*****
 	loadAllPics()
 		preloads the pics
-		
 *****/
-
 OMEimage.prototype.loadAllPics = function() {
 	for(var theZ=0;theZ<this.Dims['Z'];theZ++) {
 		for(var theT=0;theT<this.Dims['T'];theT++) {
@@ -411,12 +424,9 @@ OMEimage.prototype.loadAllPics = function() {
 
 
 /*****
-
 	wipe()
 		erases all cached images and redraws current image
-		
 *****/
-
 OMEimage.prototype.wipe = function() {
 	// erase all images from image array.
 	for(i in this.SVGimages)
