@@ -196,6 +196,15 @@ Slider.prototype.setPosition = function(position, call_callback) {
 	if (call_callback && this.callback) this.callback(value);
 };
 
+/*****
+*
+*	getValue
+*
+*****/
+Slider.prototype.getValue = function() {
+	return this.value;
+};
+
 
 /*****
 *
