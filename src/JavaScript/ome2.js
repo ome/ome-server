@@ -83,7 +83,7 @@ function openRelationships (o_type, r_type, oid) {
 	window.open(
 		RelationshipPage + '&o_type=' + o_type + '&r_type=' + r_type + '&oid=' + oid,
 		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 600'
 	);
 }
 
