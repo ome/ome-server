@@ -125,12 +125,12 @@ public class DataFactory
             dto.setMap(result);
             return dto;
         } catch (ClassCastException e) {
-            throw new RemoteException(dtoClass+" is not a MappedDTO subclass");
+            throw new RemoteServerErrorException(dtoClass+" is not a MappedDTO subclass");
         } catch (InstantiationException e) {
-            throw new RemoteException("Could not create DTO instance: "+
+            throw new RemoteServerErrorException("Could not create DTO instance: "+
                                       e.getMessage());
         } catch (IllegalAccessException e) {
-            throw new RemoteException("Could not create DTO instance: "+
+            throw new RemoteServerErrorException("Could not create DTO instance: "+
                                       e.getMessage());
         }
     }
@@ -140,8 +140,8 @@ public class DataFactory
      * of the specified DTO class.  The list is modified in place,
      * with the maps being replaced with their corresponding DTO
      * instances.  If the list contains any objects which are not
-     * {@link Map}s, a {@link RemoteException} is thrown.  The
-     * instantiation of each map is performed by the {@link
+     * {@link Map}s, a {@link RemoteServerErrorException} is thrown.
+     * The instantiation of each map is performed by the {@link
      * #instantiateDTO} method.
      *
      * @param dtoClass the DTO class to instantiate
@@ -161,7 +161,7 @@ public class DataFactory
                 list.set(i,dto);
             }
         } catch (ClassCastException e) {
-            throw new RemoteException("Remote result can only contain Maps");
+            throw new RemoteServerErrorException("Remote result can only contain Maps");
         }
     }
 
@@ -185,7 +185,7 @@ public class DataFactory
             Map map = (Map) result;
             return (UserState) instantiateDTO(dtoClass,map);
         } else
-            throw new RemoteException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
     }
 
     /**
@@ -213,7 +213,7 @@ public class DataFactory
         if (result instanceof Integer)
             return ((Integer) result).intValue();
         else
-            throw new RemoteException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
     }
 
     /**
@@ -254,7 +254,7 @@ public class DataFactory
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
         } else {
-            throw new RemoteException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
         }
     }
 
@@ -293,7 +293,7 @@ public class DataFactory
             Map map = (Map) result;
             return instantiateDTO(dtoClass,map);
         } else {
-            throw new RemoteException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
         }
     }
 
@@ -332,7 +332,7 @@ public class DataFactory
             instantiateDTOList(dtoClass,list);
             return list;
         } else {
-            throw new RemoteException("Invalid result type "+result.getClass());
+            throw new RemoteServerErrorException("Invalid result type "+result.getClass());
         }
     }
 
@@ -347,7 +347,95 @@ public class DataFactory
     {
         Class dtoClass = RemoteTypes.getDTOClass(targetClass);
         Map emptyMap = new HashMap();
-        return instantiateDTO(dtoClass,emptyMap);
+        MappedDTO dto = instantiateDTO(dtoClass,emptyMap);
+        dto.setNew(true);
+        return dto;
+    }
+
+    /**
+     * <p>Creates a serialized {@link Map} of the format expected by
+     * the <code>updateObject</code> and <code>updateObjects</code>
+     * remote server methods.  The <code>newIDs</code> parameter is
+     * used to store all of the new objects (i.e., not in the database
+     * yet) which had been serialized previously for this remote
+     * method call.  It is used to ensure that any object references
+     * in the data object refer to existent objects.</p>
+     *
+     * @param dto the data object to serialize
+     * @param newIDs a {@link Map} linking new-ID values to data
+     * objects
+     * @return a serialized {@link Map} suitable to be sent to the
+     * XML-RPC layer
+     */
+    private Map serializeForUpdate(MappedDTO dto, Map newIDs)
+    {
+        Map serialized = new HashMap();
+
+        Map elements = dto.getMap();
+        Iterator keys = elements.keySet().iterator();
+
+        // Create a Map of the format expected by the updateObject
+        // method
+
+        while (keys.hasNext())
+        {
+            Object key = keys.next();
+            Object element = elements.get(key);
+
+            if (element == null)
+            {
+                // Null values can be saved
+
+                serialized.put(key,element);
+            } else if (element instanceof MappedDTO) {
+                // References are turned into primary key ID's.  If
+                // the referent object is new, then it must have a
+                // new-ID specified in the newIDs map in order to be
+                // serialized.  If it doesn't, throw an error.
+
+                MappedDTO child = (MappedDTO) element;
+                if (child.isNew())
+                {
+                    Object id;
+                    if (newIDs != null &&
+                        (id = newIDs.get(child)) != null)
+                    {
+                        serialized.put(key,id);
+                    } else {
+                        throw new DataException("Referent object in "+key+" field is new, and has not been assigned a new-ID");
+                    }
+                } else {
+                    serialized.put(key,
+                                   "REF:"+
+                                   child.getDTOTypeName()+":"+
+                                   child.getMap().get("id"));
+                }
+            } else if (element instanceof List) {
+                // Skip List elements
+            } else {
+                // Store anything else in there
+                serialized.put(key,element);
+            }
+        }
+
+        // If the object being saved is new, make sure that its "id"
+        // field signifies it as such.
+
+        if (dto.isNew())
+        {
+            if (newIDs == null)
+            {
+                serialized.put("id","NEW:1");
+            } else {
+                Object id = newIDs.get(dto);
+                if (id == null)
+                    throw new DataException("Fatal error -- new object has not been assigned an ID yet");
+                else
+                    serialized.put("id",id);
+            }
+        }
+
+        return serialized;
     }
 
     /**
@@ -368,10 +456,16 @@ public class DataFactory
      * ProjectManager}, {@link DatasetManager}, or {@link
      * ImageManager} classes.</p>
      *
+     * <p>New objects which are being saved to the database for the
+     * first time will have their ID field (<code>id</code>) filled in
+     * with the object's new primary key.</p>
+     *
      * <p>Note that this is not a deep update.  If any of the DTO's
      * fields are references to another DTO, then the reference is
-     * updated.  If the referent DTO has also been modified or is new,
-     * <i>it is not saved</i>.</p>
+     * updated.  The referent DTO must already be in the database, and
+     * have a valid primary key ID.  If it is a new object, it must
+     * have been saved previously.  If the referent DTO has been
+     * modified, <i>it is not saved</i>.</p>
      *
      * <p>After the object is saved to the database, the database
      * transaction is committed.  If multiple objects needs to be
@@ -381,37 +475,184 @@ public class DataFactory
      * @throws IllegalArgumentException if the object was not created
      * by the {@link #createNew}, {@link #retrieve}, or {@link
      * #retrieveList} method
+     * @throws DataException if the object contains a reference to a
+     * DTO which is new (i.e., which has not been stored in the
+     * database yet), or to a DTO which does not contain its primary
+     * key value
      */
     public void update(DataInterface object)
     {
         if (object == null)
             return;
 
+        // Verify that this is a MappedDTO
+
         if (!(object instanceof MappedDTO))
-            throw new IllegalArgumentException("That DTO was not created by createNew or retrieve");
+            throw new IllegalArgumentException("That DTO was not created by createNew, retrieve, or retrieveList");
+
+        // Serialize the DTO
+
+        MappedDTO dto = (MappedDTO) object;
+        Map serialized = serializeForUpdate(dto,null);
+
+        // Make the remote call
 
         String remoteType = object.getDTOTypeName();
+        Object result = caller.dispatch("updateObject",remoteType,serialized);
 
-        Map serialized = new HashMap();
-        Map elements = ((MappedDTO) object).getMap();
-        Iterator keys = elements.keySet().iterator();
-        while (keys.hasNext())
+        // If this was a new object, we should have gotten back a
+        // primary key ID
+
+        int realID = -1;
+
+        if (result == null)
         {
-            Object key = keys.next();
-            Object element = elements.get(key);
+        } else if (result instanceof Number) {
+            realID = ((Number) result).intValue();
+        } else if (result instanceof String) {
+            realID = Integer.parseInt((String) result);
+        } else {
+            throw new RemoteServerErrorException("Server returned an invalid type "+result.getClass());
+        }
 
-            if (element == null)
-            {
-            }
+        // If the object was new, save the ID that was returned from
+        // the remote server
+
+        if (dto.isNew())
+        {
+            if (realID < 0)
+                throw new RemoteServerErrorException("Server did not return an ID for the new object");
+
+            dto.setNew(false);
+            dto.getMap().put("id",new Integer(realID));
         }
     }
 
     /**
-     * <b>Coming soon</b>: Sends a list of DTO's back to the data
-     * server to be stored in the database.
+     * <p>Sends a list of DTO's back to the data server to be saved.
+     * Each DTO must have been instantiated by the {@link #createNew},
+     * {@link #retrieve}, or {@link #retrieveList} methods.  If not,
+     * an {@link IllegalArgumentException} is thrown.  If a DTO was
+     * created by {@link #createNew}, then the update will cause a
+     * database <code>INSERT</code>; otherwise it will cause a
+     * database <code>UPDATE</code>.</p>
+     *
+     * <p>The DTO objects do not have to ability for their {@link
+     * List} accessor to be modified, so those has-many relationships
+     * cannot be modified by this method.  One-to-many relationships
+     * can be modified by editing and updating the DTO on the inverse
+     * side of the relationship.  Many-to-many relationships must be
+     * updated by one of the specialized methods in the {@link
+     * ProjectManager}, {@link DatasetManager}, or {@link
+     * ImageManager} classes.</p>
+     *
+     * <p>New objects which are being saved to the database for the
+     * first time will have their ID field (<code>id</code>) filled in
+     * with the object's new primary key.</p>
+     *
+     * <p>Note that this is not a deep update.  If any of the DTO's
+     * fields are references to another DTO, then the reference is
+     * updated.  The referent DTO must already be in the database, and
+     * have a valid primary key ID.  If it is a new object, it must
+     * have been saved previously.  If the referent DTO has been
+     * modified, <i>it is not saved</i>.</p>
+     *
+     * <p>The objects are saved in the order that they appear in the
+     * list.  This has implications on the restrictions of the
+     * previous paragraph.  New objects can appear as a reference in a
+     * DTO, as long as the new object appears in before the referring
+     * DTO in this method's <code>list</code> parameter.</p>
+     *
+     * <p>After the objects are saved to the database, the database
+     * transaction is committed.</p>
+     *
+     * @param list a list of data objects to save to the database
+     * @throws IllegalArgumentException if any object was not created
+     * by the {@link #createNew}, {@link #retrieve}, or {@link
+     * #retrieveList} method
+     * @throws DataException if the object contains a reference to a
+     * DTO which is new (i.e., which has not been stored in the
+     * database yet), or to a DTO which does not contain its primary
+     * key value
      */
     public void updateList(List list)
     {
-        //String remoteType = RemoteTypes.getRemoteType(targetClass);
+        if (list == null)
+            return;
+
+        List serialized = new ArrayList(list.size()*2);
+        Iterator iter;
+
+        Map newIDs = new HashMap();
+        int nextNew = 1;
+
+        // First we must go through verify that each object is a
+        // MappedDTO and assign new-IDs to each of the new objects in
+        // the list.
+
+        iter = list.iterator();
+        while (iter.hasNext())
+        {
+            Object object = iter.next();
+
+            // Verify that this is a DTO that we know how to save
+            if (!(object instanceof MappedDTO))
+                throw new IllegalArgumentException("That DTO was not created by createNew, retrieve, or retrieveList");
+
+            MappedDTO dto = (MappedDTO) object;
+            if (dto.isNew())
+            {
+                int newID = nextNew++;
+                System.err.println("New object "+dto.getClass().getName()+" "+newID);
+                newIDs.put(dto,"NEW:"+newID);
+            }
+        }
+
+        // Now we go through and serialize the DTO's.  We can't do
+        // this in one pass because we have to know all of the
+        // new-ID's before we can serialize anything.
+
+        iter = list.iterator();
+        while (iter.hasNext())
+        {
+            MappedDTO dto = (MappedDTO) iter.next();
+            serialized.add(dto.getDTOTypeName());
+            serialized.add(serializeForUpdate(dto,newIDs));
+        }
+
+        // Make the remote call
+
+        Object result = caller.dispatch("updateObjects",serialized);
+
+        // We should get back a map of the primary key ID's for each
+        // of the objects which was new.
+
+        Map realIDs;
+
+        if (result == null)
+        {
+            realIDs = new HashMap();
+        } else if (result instanceof Map) {
+            realIDs = (Map) result;
+        } else {
+            throw new RemoteServerErrorException("Server returned an invalid type "+result.getClass());
+        }
+
+        // Go through each of the new objects, and populate it with
+        // its actual primary key ID.
+
+        iter = newIDs.keySet().iterator();
+        while (iter.hasNext())
+        {
+            MappedDTO newObject = (MappedDTO) iter.next();
+            String newID = (String) newIDs.get(newObject);
+            Object realID = realIDs.get(newID);
+
+            if (realID == null)
+                throw new RemoteServerErrorException("Server did not return an ID for the new object "+newID);
+
+            newObject.setNew(false);
+            newObject.getMap().put("id",realID);
+        }
     }
 }
