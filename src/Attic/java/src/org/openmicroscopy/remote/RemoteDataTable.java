@@ -24,6 +24,8 @@ package org.openmicroscopy.remote;
 import org.openmicroscopy.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class RemoteDataTable
@@ -98,7 +100,7 @@ public class RemoteDataTable
         public Column(String reference) { super(reference); }
 
         public DataTable getDataTable()
-        { return (DataTable) getRemoteElement(RemoteDataTable.Column.class,
+        { return (DataTable) getRemoteElement(RemoteDataTable.class,
                                               "data_table"); }
 
         public String getColumnName()
@@ -117,8 +119,25 @@ public class RemoteDataTable
         { setStringElement("sql_type",sqlType); }
 
         public SemanticType getReferenceType()
-        { return (SemanticType) getRemoteElement(RemoteSemanticType.class,
-                                                  "reference_type"); }
+        {
+            // Holy crap I can't believe I have to do this
+            Object cached = getCachedElement("reference_type");
+            if (cached instanceof String)
+            {
+                String typeName = (String) cached;
+                Factory factory = getSession().getFactory();
+                Map criteria = new HashMap();
+                criteria.put("name",typeName);
+                SemanticType type = (SemanticType) 
+                    factory.findObject("OME::SemanticType",criteria);
+                elementCache.put("reference_type",type);
+                return type;
+            } else if (cached instanceof SemanticType) {
+                return (SemanticType) cached;
+            } else {
+                throw new RemoteException("I don't know what happened");
+            }
+        }
         public void setReferenceType(SemanticType referenceType)
         { setRemoteElement("reference_type",referenceType); }
     }
