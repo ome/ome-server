@@ -726,10 +726,18 @@ sub hasMany {
                                          $foreign_key_alias => $self->{__id});
         };
 
+        my $counter = sub {
+            my $self = shift;
+            my $factory = $self->Session()->Factory();
+            return $factory->countObjects($foreign_key_class,
+                                          $foreign_key_alias => $self->{__id});
+        };
+
         $has_manys->{$alias} = undef;
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
+        *{"$class\::count_$alias"} = $counter;
     }
 }
 
@@ -823,10 +831,18 @@ sub manyToMany {
             }
         };
 
+        my $counter = sub {
+            my $self = shift;
+            my $factory = $self->Session()->Factory();
+            return $factory->countObjects($map_class,
+                                          $map_alias => $self->{__id});
+        };
+
         $has_manys->{$alias} = undef;
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
+        *{"$class\::count_$alias"} = $counter;
     }
 }
 
