@@ -124,6 +124,7 @@ public abstract class PFormalParameter extends PNode implements
 		
 		textNode = new PText(param.getParameterName());
 		textNode.setFont(PConstants.NAME_FONT);
+		textNode.setPaint(NORMAL_COLOR);
 		labelNode.addChild(textNode);
 		
 		
@@ -133,6 +134,7 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode = new PText(type.getName());
 			labelNode.addChild(typeNode);
 			typeNode.setScale(TYPE_NODE_DEFAULT_SCALE);
+			typeNode.setPaint(NORMAL_COLOR);
 			typeNode.setFont(PConstants.NAME_FONT);
 		}						
 		node.addNodeEventListener(this);
