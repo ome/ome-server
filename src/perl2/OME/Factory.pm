@@ -431,6 +431,7 @@ use DBI;
 use Carp qw(cluck croak);
 
 use UNIVERSAL::require;
+use Log::Agent;
 
 use fields qw(__handlesAvailable __allHandles);
 
@@ -756,6 +757,7 @@ sub newObject {
     __checkClass($class);
     $class->require();
 
+#logdbg "debug", ref($self)."->newObject( $class, { ".join(', ', map{$_.' => '.$data->{$_}} keys %$data)." } )";
     my $object;
     eval {
         $object = $class->__createNewInstance($self->{__ourDBH},$data);
@@ -854,7 +856,22 @@ sub newAttribute {
     $data->{module_execution} = $module_execution
       if defined $module_execution;
 
-    return $self->newObject($pkg,$data);
+    my $attr = $self->newObject($pkg,$data);
+
+	# Add the SEMANTIC_TYPE_OUTPUT entry
+	#     if there is a mex defined and
+	#        there is neither a module defined for this mex nor 
+	#                         a formal output of this type
+	$self->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
+		module_execution => $module_execution,
+		semantic_type    => $type,
+	}) if (defined $module_execution and
+		  ( not $module_execution->module() or
+			not $self->findObject("OME::Module::FormalOutput",
+					module        => $module_execution->module,
+					semantic_type => $type ) ) );
+
+	return $attr;
 }
 
 package OME::Factory::Iterator;
