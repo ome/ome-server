@@ -46,6 +46,8 @@ OME::Web::DBObjDBObjCreate::OME_Project
 implements _create. sets experimenter to current user, and group to current
 user's primary group
 
+implements _defaultObj, returning the most recently viewed project in the session
+
 =cut
 
 use strict;
@@ -75,6 +77,10 @@ sub _create {
 	return( 'REDIRECT', $self->getObjDetailURL( $project ) );
 }
 
+sub _defaultObj {
+	my $self = shift;
+	return $self->Session()->project();
+}
 
 =head1 Author
 

@@ -46,6 +46,8 @@ OME::Web::DBObjDBObjCreate::OME_Dataset
 implements _create. sets experimenter to current user, group to current
 user's primary group, and associates the new dataset with the current project.
 
+implements _defaultObj, returning the most recently viewed dataset in the session
+
 =cut
 
 use strict;
@@ -79,6 +81,10 @@ sub _create {
 	return( 'REDIRECT', $self->getObjDetailURL( $dataset ) );
 }
 
+sub _defaultObj {
+	my $self = shift;
+	return $self->Session()->dataset();
+}
 
 =head1 Author
 
