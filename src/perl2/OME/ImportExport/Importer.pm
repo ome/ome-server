@@ -46,7 +46,6 @@ use strict;
 use OME::ImportExport::Import_reader;
 use Carp;
 use File::Basename;
-use Sort::Array;
 use vars qw($VERSION);
 $VERSION = '1.0';
 
@@ -70,6 +69,8 @@ sub new {
     $self->{session} = $session;
 
     sort_and_group($image_file_list_ref, \@fn_groups);
+    #my @in_files = @$image_file_list_ref;
+    #sort_and_group(\@in_files, \@fn_groups);
     $self->{fn_groups} = \@fn_groups;
 
     bless $self,$class;
@@ -207,20 +208,28 @@ sub get_base_name {
 
 
 
-# Routine sorts the passed list of filenames,discards duplicates, and
+# Routine sorts the passed list of filenames, discards duplicates, and
 # calls groupnames() to assemble the filenames into sibs (sibling groups).
 
 sub sort_and_group {
     my $fns = shift;
     my $out_fns =shift;
     my @cleansed;
-    
-# First cleanse data by sorting input and eliminating duplicates
-    @cleansed = Sort::Array::Discard_Duplicates(
-						sorting      => 'ascending',
-						empty_fields => 'delete',
-						data         => $fns
-						);
+
+# First cleanse data by sorting input and eliminating duplicates & empty lines
+#  This code derived from Michael Diekmann's Sort::Array module.
+    # Remove duplicates
+    my %seen = ();
+    my @unique = grep { ! $seen{$_}++ } @$fns;
+
+    @unique = sort { $a cmp $b } @unique;
+
+    # Remove all empties
+    foreach (@unique) {
+	push(@_, $_) if $_;
+    }
+    @cleansed = @_;
+
     @cleansed = reverse @cleansed;
     
 # Now break filenames into sets
@@ -529,6 +538,7 @@ sub store_image_files_xyzwt {
     my $imageID = $image->image_id();
     print "new image id = $imageID\n";
     my $status = "";
+    my $xyzwt;
     my $file;
     my $sth;
     my ($z, $w, $t);
@@ -545,14 +555,38 @@ sub store_image_files_xyzwt {
 	chomp;
 	$sh =~ m/^.+= +([a-fA-F0-9]*)$/;
 	$sha1 = $1;
+	close (STDOUT_PIPE);
 	
 	$endian = $href->{'Image_files_xyzwt.Endian'};
-	$endian = ($endian eq "big") ? "TRUE" : "FALSE";
-	$sth = $session->DBH()->prepare (
-					 'INSERT INTO image_files_xyzwt (image_id, file_sha1, bigendian, path, host, url, x_start, x_stop, y_start, y_stop, z_start, z_stop, w_start, w_stop, t_start, t_stop) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-	
-	$sth->execute($imageID, $sha1, $endian, $file, "", "", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	$endian = ($endian eq "big") ? 't' : 'f' ;
+	my $data = {'image_id' => $imageID,
+			  'file_sha1' => $sha1,
+			  'bigendian' => $endian,
+			  'path' => $file,
+			  'host' => "",
+			  'url' => "",
+			  'x_start' => 0,
+			  'x_stop' => 0,
+			  'y_start' => 0,
+			  'y_stop' => 0,
+			  'z_start' => 0,
+			  'z_stop' => 0,
+			  'w_start' => 0,
+			  'w_stop' => 0,
+			  't_start' => 0,
+			  't_stop' => 0};
+
+	$xyzwt = $session->Factory->newObject("OME::Image::ImageFilesXYZWT", $data);
+	if (!defined $xyzwt) {
+	    $status = "Can\'t create new image_files_xyzwt";
+	}
+	else {
+	    #$xyzwt->path($file);
+	    $xyzwt->commit();
+	}
     }
+    $self->{'xyzwt'} = $xyzwt;
+    return $status;
 }    
 
 
