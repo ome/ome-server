@@ -1,4 +1,4 @@
-<table class="ome_table">
+<table class="ome_table" align="center">
 	<caption>
 		<font class="ome_header_title"><!-- TMPL_VAR NAME='_title' --></font> 
 	</caption>
@@ -9,8 +9,13 @@
 	</tr>
 	<!-- /TMPL_LOOP -->
 </table>
-<br>
-<!-- TMPL_LOOP NAME="_relations" -->
-	<font class="ome_relation_title"><!-- TMPL_VAR NAME="name" --></font>
-	<!-- TMPL_VAR NAME="!tiled_list" --><br>
-<!-- /TMPL_LOOP -->
+<table>
+	<tr>
+		<!-- TMPL_LOOP NAME="_relations" -->
+			<td valign="top">
+				<font class="ome_relation_title"><!-- TMPL_VAR NAME="name" --></font>
+				<!-- TMPL_VAR NAME="!ref_list" -->
+			</td>
+		<!-- /TMPL_LOOP -->
+	</tr>
+</table>
