@@ -1,4 +1,4 @@
-# OME/Intall/IntallationTask.pm
+# OME/Install/IntallationTask.pm
 
 # Copyright (C) 2003 Open Microscopy Environment
 # Author:
@@ -38,4 +38,7 @@ sub execute {
 sub rollback {
     return undef;
 }
+
+
+1;
 
