@@ -90,7 +90,6 @@ public class PChainLabelText extends PRemoteObjectLabelText {
 	public  void doSelection() {
 		SelectionState selectionState = SelectionState.getState();
 		System.err.println("dataset ..+ is being selected.."+chain.getName());
-		//selectionState.setSelectedChain(chain);
 		CDataset dataset = getDataset();
 		selectionState.setSelected(chain,dataset);
 	}
