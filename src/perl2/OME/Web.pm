@@ -201,7 +201,7 @@ my $sessionKey = shift;
 my $cgi = $self->CGI();
 
 	if (defined $sessionKey) {
-print STDERR "\nSetting cookie: $sessionKey\n";
+#print STDERR "\nSetting cookie: $sessionKey\n";
 		$self->{_cookies}->{'SESSION_KEY'} =
 			$cgi->cookie( -name	   => 'SESSION_KEY',
 						  -value   => $sessionKey,
@@ -209,7 +209,7 @@ print STDERR "\nSetting cookie: $sessionKey\n";
 						  -expires => '+30m'
 						  );
 	} else {
-print STDERR "\nLogging out - resetting cookie\n";
+#print STDERR "\nLogging out - resetting cookie\n";
 		$self->{_cookies}->{'SESSION_KEY'} =
 			$cgi->cookie( -name	   => 'SESSION_KEY',
 						  -value   => '',
@@ -789,9 +789,8 @@ sub _loadTypeAndGetInfo {
 	# DBObject: load info and package
 	} else {
 		$package_name = $formal_name;
-		eval( "use $package_name" ) ;
-		die "Error loading package $package_name. Error msg is:\n$@"
-			if $@;
+		$package_name->require()
+			or die "Error loading package $package_name.";
 		$common_name = $package_name;
 		$common_name =~ s/OME:://;
 		$common_name =~ s/::/ /g;
