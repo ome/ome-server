@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME
+   xmlns=
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+   xmlns:xsi=
+   "http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:AML=
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+   xmlns:STD=
+   "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+   xsi:schemaLocation = 
+   "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+  <!-- New semantic types -->
+  <SemanticType 
+     Name="Timepoint" AppliesTo="F">
+    <Description>Specifies a single timepoint that this feature belongs to</Description>
+    <Element Name="TheT" DBLocation="TIMEPOINT.THE_T" DataType="integer"/>
+  </SemanticType>
+
+  <SemanticType Name="Threshold" AppliesTo="F">
+    <Element Name="Threshold" DBLocation="THRESHOLD.THRESHOLD" DataType="integer"/>
+  </SemanticType>
+
+  <SemanticType
+     Name="Location" AppliesTo="F">
+    <Description>Specifies a feature's 3D spatial location, in pixels</Description>
+    <Element Name="TheX" DBLocation="LOCATION.X" DataType="float"/>
+    <Element Name="TheY" DBLocation="LOCATION.Y" DataType="float"/>
+    <Element Name="TheZ" DBLocation="LOCATION.Z" DataType="float"/>
+  </SemanticType>
+
+  <SemanticType
+     Name="Extent" AppliesTo="F">
+    <Description>Specifies information about the shape of a feature</Description>
+    <Element Name="MinX" DBLocation="EXTENT.MIN_X" DataType="integer"/>
+    <Element Name="MinY" DBLocation="EXTENT.MIN_Y" DataType="integer"/>
+    <Element Name="MinZ" DBLocation="EXTENT.MIN_Z" DataType="integer"/>
+    <Element Name="MaxX" DBLocation="EXTENT.MAX_X" DataType="integer"/>
+    <Element Name="MaxY" DBLocation="EXTENT.MAX_Y" DataType="integer"/>
+    <Element Name="MaxZ" DBLocation="EXTENT.MAX_Z" DataType="integer"/>
+    <Element Name="SigmaX" DBLocation="EXTENT.SIGMA_X" DataType="integer"/>
+    <Element Name="SigmaY" DBLocation="EXTENT.SIGMA_Y" DataType="integer"/>
+    <Element Name="SigmaZ" DBLocation="EXTENT.SIGMA_Z" DataType="integer"/>
+    <Element Name="Volume" DBLocation="EXTENT.VOLUME" DataType="integer"/>
+    <Element Name="SurfaceArea" DBLocation="EXTENT.SURFACE_AREA" DataType="float">
+    	<Description>For 2D spots, this includes fenestrations</Description>
+    </Element>
+    <Element Name="Perimeter" DBLocation="EXTENT.PERIMETER" DataType="float">
+    	<Description>Outside perimeter; does not include inside perimeters in fenestrated spots</Description>
+    </Element>
+    <Element Name="FormFactor" DBLocation="EXTENT.FORM_FACTOR" DataType="float">
+    	<Description>3D: surface area/volume; 2D: perimeter/surface area; 1.0=circle or sphere</Description>
+    </Element>
+  </SemanticType>
+
+  <SemanticType
+     Name="Signal" AppliesTo="F">
+    <Description>Spectral information about a feature</Description>
+    <Element Name="TheC" DBLocation="SIGNAL.THE_C" DataType="integer"/>
+    <Element Name="CentroidX" DBLocation="SIGNAL.CENTROID_X" DataType="float"/>
+    <Element Name="CentroidY" DBLocation="SIGNAL.CENTROID_Y" DataType="float"/>
+    <Element Name="CentroidZ" DBLocation="SIGNAL.CENTROID_Z" DataType="float"/>
+    <Element Name="Integral" DBLocation="SIGNAL.INTEGRAL" DataType="float"/>
+    <Element Name="Mean" DBLocation="SIGNAL.MEAN" DataType="float"/>
+    <Element Name="GeometricMean" DBLocation="SIGNAL.GEOMEAN" DataType="float"/>
+    <Element Name="Sigma" DBLocation="SIGNAL.SIGMA" DataType="float"/>
+    <Element Name="GeometricSigma" DBLocation="SIGNAL.GEOSIGMA" DataType="float"/>
+    <Element Name="Background" DBLocation="SIGNAL.BACKGROUND" DataType="float"/>
+  </SemanticType>
+
+  <SemanticType
+     Name="Trajectory" AppliesTo="F">
+    <Element Name="Name" DBLocation="TRAJECTORY.NAME" DataType="string"/>
+    <Element Name="TotalDistance" DBLocation="TRAJECTORY.TOTAL_DISTANCE"
+             DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="AverageVelocity" DBLocation="TRAJECTORY.AVERAGE_VELOCITY"
+             DataType="float">
+    	<Description>In microns/second</Description>
+    </Element>
+  </SemanticType>
+
+  <SemanticType
+     Name="TrajectoryEntry" AppliesTo="F">
+    <Element Name="Trajectory" DBLocation="TRAJECTORY_ENTRY.TRAJECTORY"
+             DataType="reference" RefersTo="Trajectory"/>
+    <Element Name="Order" DBLocation="TRAJECTORY_ENTRY.ENTRY_ORDER" DataType="integer"/>
+    <Element Name="DeltaX" DBLocation="TRAJECTORY_ENTRY.DELTA_X" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="DeltaY" DBLocation="TRAJECTORY_ENTRY.DELTA_Y" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="DeltaZ" DBLocation="TRAJECTORY_ENTRY.DELTA_Z" DataType="float">
+    	<Description>In pixels</Description>
+    </Element>
+    <Element Name="Distance" DBLocation="TRAJECTORY_ENTRY.DISTANCE" DataType="float">
+    	<Description>In microns</Description>
+    </Element>
+    <Element Name="Velocity" DBLocation="TRAJECTORY_ENTRY.VELOCITY" DataType="float">
+    	<Description>In microns/second</Description>
+    </Element>
+  </SemanticType>
+
+  <SemanticType
+     Name="FindSpotsInputs" AppliesTo="G">
+    <Element Name="TimeStart"
+             DBLocation="FIND_SPOTS_INPUTS.TIME_START"
+             DataType="integer"/>
+    <Element Name="TimeStop"
+             DBLocation="FIND_SPOTS_INPUTS.TIME_STOP"
+             DataType="integer"/>
+    <Element Name="Channel"
+             DBLocation="FIND_SPOTS_INPUTS.CHANNEL"
+             DataType="integer"/>
+    <Element Name="MinimumSpotVolume"
+             DBLocation="FIND_SPOTS_INPUTS.MIN_VOLUME"
+             DataType="float"/>
+    <Element Name="ThresholdType"
+             DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_TYPE"
+             DataType="string"/>
+    <Element Name="ThresholdValue"
+             DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_VALUE"
+             DataType="float"/>
+  </SemanticType>
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+   xmlns=
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation = 
+   "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+
+  <AnalysisModule 
+     ModuleName="Find spots" 
+     ModuleType="OME::Analysis::Modules::Tracking::FindSpots"
+     ProgramID="/OME/bin/findSpots/findSpotsOME"
+     Category="Tracking"
+     NewFeatureName="SPOT"
+     ID="urn:lsid:openmicroscopy.org:Module:11">
+    <Declaration>
+      <FormalInput Name="Parameters"
+                   SemanticTypeName="FindSpotsInputs" Count="!"/>
+      <FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+      <FormalInput Name="Stack means" SemanticTypeName="StackMean" Count="+"/>
+      <FormalInput Name="Stack geomeans" SemanticTypeName="StackGeometricMean"
+                   Count="+"/>
+      <FormalInput Name="Stack sigmas" SemanticTypeName="StackSigma" Count="+"/>
+      <FormalInput Name="Stack minima" SemanticTypeName="StackMinimum" Count="+"/>
+      <FormalInput Name="Stack maxima" SemanticTypeName="StackMaximum" Count="+"/>
+	<FormalInput Name="Stack geosigmas" SemanticTypeName="StackGeometricSigma" Count="+"/>
+      <FormalOutput Name="Timepoint" SemanticTypeName="Timepoint"
+                    Count="?" IBelongTo="[Feature]"/>
+      <FormalOutput Name="Threshold" SemanticTypeName="Threshold"
+                    Count="?" IBelongTo="[Feature]"/>
+      <FormalOutput Name="Location" SemanticTypeName="Location"
+                    Count="?" IBelongTo="[Feature]"/>
+      <FormalOutput Name="Extent" SemanticTypeName="Extent"
+                    Count="?" IBelongTo="[Feature]"/>
+      <FormalOutput Name="Signals" SemanticTypeName="Signal"
+                    Count="*" IBelongTo="[Feature]"/>
+    </Declaration>
+  </AnalysisModule>
+
+  <AnalysisModule
+     ModuleName="Track spots" 
+     ModuleType="OME::Analysis::Modules::Tracking::TrackSpots"
+     ProgramID=""
+     Category="Tracking"
+     FeatureIterator="SPOT"
+     NewFeatureName="[Root:TRAJECTORY]"
+     ID="urn:lsid:openmicroscopy.org:Module:12">
+
+    <Declaration>
+      <FormalInput Name="Location" SemanticTypeName="Location" Count="!"/>
+      <FormalInput Name="Timepoint" SemanticTypeName="Timepoint" Count="!"/>
+      <FormalInput Name="Dimensions" SemanticTypeName="Dimensions" Count="?"/>
+      <FormalOutput Name="Trajectory" SemanticTypeName="Trajectory"
+                    Count="?" IBelongTo="[Feature]"/>
+      <FormalOutput Name="Entries" SemanticTypeName="TrajectoryEntry"
+                    Count="*" IBelongTo="[Iterator]"/>
+    </Declaration>
+  </AnalysisModule>
+  <Category Path="Tracking">
+  	<Description>Modules for tracking objects in an image</Description>
+  </Category>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>
