@@ -77,7 +77,7 @@
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Gradient"/></Output>
+			  <Output><PixelsArray FormalOutput="Gradient" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>

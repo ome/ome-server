@@ -42,5 +42,3 @@ iprocW = filter2(W, inPixels);
 % Calculate the magnitude and direction of the gradient
 outPixels(:,:,:,1,:) = sqrt(iprocN.^2 + iprocW.^2);
 outPixels(:,:,:,2,:) = atan2(iprocN, iprocW);
-
-outPixels = single(outPixels);
