@@ -21,8 +21,53 @@
 package OME::Web::Helper::HTMLFormat;
 
 use strict;
-use CGI;
+
+
 our $VERSION = '1.0';
+
+=head 1 NAME
+
+OME::Web::Helper::HTMLFormat - HTML code used for WebInterface
+
+=head 1 SYNOPSIS
+
+	use OME::Web::Helper::HTMLFormat;
+	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
+	
+
+=head 1 DESCRIPTION
+
+The OME::Web::Helper::HTMLFormat provides a list of methods to write HTML code
+
+=head1 METHODS (ALPHABETICAL ORDER)
+
+=head2 buttonControl
+=head2 datasetList
+=head2 datasetListInProject
+=head2 dropDownTable
+=head2 formatDataset
+=head2 formatImage
+=head2 formatProject
+=head2 formChange
+=head2 formCreate
+=head2 formLogin
+=head2 formSearch
+=head2 imageInDataset
+=head2 listImages
+=head2 manager
+=head2 projectList
+=head2 searchResults
+=head2 titleBar
+
+
+=cut
+
+
+
+
+
+
+
 
 sub new{
 	my $class=shift;
@@ -53,6 +98,14 @@ sub new{
 }
 
 ##############
+# Parameters:
+#	object= dataset/image object
+#	userID= current user ID
+#	user = owner
+#	bool = for delete button 
+#	type= dataset/image
+# Return: html code table with button(s)
+
 sub buttonControl{
 	my $self=shift;
 	my ($object,$userID,$user,$bool,$type)=@_;
@@ -88,6 +141,10 @@ sub buttonControl{
 
 
 #######################
+# Parameters:
+#	ref= ref hash dataset object 
+# Return: html code table object name + id + viewButton
+
 sub datasetList{
 	my $self=shift;
 	my ($ref)=@_;
@@ -116,6 +173,10 @@ sub datasetList{
 
 
 ############################
+# Parameters:
+#	ref= ref array of dataset object to format
+# Return: html code table list Name, locked +button (select,Remove)
+
 sub datasetListInProject{
 	my $self=shift;
 	my ($ref)=@_;
@@ -156,7 +217,7 @@ sub datasetListInProject{
 
 
 
-##################
+
 sub dropDownTable{
 	my $self=shift;
 	my ($name,$ref,$switch,$switchValue)=@_;
@@ -174,7 +235,14 @@ sub dropDownTable{
 }
 
 
-##########################################
+#####################
+# Parameters:
+#	dataset= dataset object
+#	bool = if defined format current dataset
+# 	address = if defined format user info
+#	user = user object if address defined
+#	view= format view button if defined
+# Return: html code format dataset
 sub formatDataset{
 	my $self=shift;
 	my ($dataset,$bool,$address,$view,$user)=@_;
@@ -182,6 +250,7 @@ sub formatDataset{
 	if (!defined $bool){
 	$html .= "<h3>Your current dataset is:</h3>" ;
 	}
+
 	$html .= "<P><NOBR><B>Name:</B> ".$dataset->name()."</NOBR><BR>" ;
 	$html .= "<NOBR><B>ID:</B> ".$dataset->dataset_id()."</NOBR><BR>" ;
 	$html .= "<B>Description:</B> ".$dataset->description()."<BR>" ;
@@ -200,6 +269,10 @@ sub formatDataset{
 
 
 ################
+# Parameters:
+#	image = image object
+# Return: html code format image
+
 sub formatImage{
 	my $self=shift;
 	my ($image)=@_;
@@ -212,6 +285,11 @@ sub formatImage{
 
 
 #################
+# Parameters:
+#	project = project object
+#	bool = if defined format current project
+# Return: html code format project
+
 sub formatProject{
 	my $self=shift;
 	my ($project,$bool)=@_;
@@ -226,7 +304,14 @@ sub formatProject{
  	return $html ;
 
 }
+
 ##############
+# Parameters:
+#	type= dataset/project
+#	object= object to format
+#	user = owner 
+# Return: html code format change done
+
 sub formChange{
 	my $self=shift;
 	my ($type,$object,$user)=@_;
@@ -299,7 +384,12 @@ sub formChange{
 
 
 ################
-
+# Parameters:
+#	type = dataset/project
+#	userID= userId
+#	ref= if dataset, display list of images to add (createWithExisting images)
+# Return: html code
+ 
 sub formCreate{
 	my $self=shift;
 	my ($type,$usergpID,$ref)=@_;
@@ -363,6 +453,9 @@ sub formCreate{
 
 
 ##############################
+# Parameters:
+#	invalid= if defined, try to log again
+# Return: html code login form
 
 sub formLogin{
 	my $self=shift;
@@ -405,6 +498,9 @@ sub formLogin{
 
 
 ##################
+# Parameters:
+#	name= Projects/Datasets/Images
+# Return: html code search form
 
 sub formSearch{
 	my $self=shift;
@@ -442,6 +538,12 @@ sub formSearch{
 }
 
 ####################
+# Parameters:
+#	ref = ref array of images to display
+#	border = if defined, table with border
+#	search = if defined, other way to access the info
+# Return: html code
+
 sub imageInDataset{
 	my $self=shift;
 	my ($ref,$border,$search)=@_;
@@ -479,6 +581,11 @@ sub imageInDataset{
 }
 
 ##############
+# Parameters:
+#	ref = ref hash to write CheckBox
+#	name = button submit name
+#	value = button submit value
+# Return: html code (table)
 
 sub listImages{
 	my $self=shift;
@@ -500,6 +607,14 @@ sub listImages{
 
 
 #################
+# Parameters:
+#	ref =
+# 	nameButton = name submit button
+#	valueButton = name submit button
+
+#	type = dataset/image
+# Return: html code
+
 sub manager{
 	my $self=shift;
 	my ($ref,$nameButton,$valueButton,$type)=@_;
@@ -548,6 +663,11 @@ sub manager{
 }
 
 ########################
+# Parameters:
+#	ref = ref array of project object
+#	bool= if defined Delete column added
+# Return: html code table
+
 sub projectList{
 	my $self=shift;
 	my ($ref,$bool)=@_;
@@ -586,6 +706,13 @@ sub projectList{
 
 
 ####################
+# Paramaters:
+#	ref = ref array of object
+#	userID = current userID
+#	name = Dataset(s)/Project(s)
+#	type = project/dataset
+#	refSelect =ref hash if dataset
+# Return: html code table
 
 sub searchResults{
 	my $self=shift;
@@ -635,6 +762,12 @@ sub searchResults{
 
 
 #############
+# Parameters:
+#	experimenter = experimenter object
+#	project = project object
+#	dataset = dataset object
+# Return: html code
+
 sub titleBar{
 	my $self=shift;
 	my ($experimenter,$project,$dataset)=@_;
@@ -907,6 +1040,17 @@ sub writeCheckBoxImage{
 	return $html;
 }
 
+
+=head1 AUTHOR
+
+JMarie Burel (jburel@dundee.ac.uk)
+
+=head1 SEE ALSO
+
+L<OME::Web::Helper::JScriptFormat|OME::Web::Helper::JScriptFormat>,
+
+
+=cut
 
 
 1;

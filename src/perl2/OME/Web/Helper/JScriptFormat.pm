@@ -20,6 +20,35 @@
 
 package OME::Web::Helper::JScriptFormat;
 
+our $VERSION = '1.0';
+
+=head 1 NAME
+
+OME::Web::Helper::JScriptFormat - HTML code used for WebInterface
+
+=head 1 SYNOPSIS
+
+	use OME::Web::Helper::JScriptFormat;
+	my $htmlFormat=new OME::Web::Helper::JScriptFormat;
+
+
+=head 1 DESCRIPTION
+
+The OME::Web::Helper::JScriptFormat provides a list of methods to write javascript functions
+
+=head1 METHODS (ALPHABETICAL ORDER)
+
+=head2 closeButton
+=head2 openExistingDataset
+=head2 openExistingProject
+=head2 openInfoDataset
+=head2 openInfoProject
+=head2 popUpImage
+=head2 popUpDataset
+
+=cut
+
+
 use strict;
 our $VERSION = '1.0';
 
@@ -35,68 +64,6 @@ sub new{
    	return $self;
 }
 
-
-
-
-sub popUpImage{
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openPopUpImage","ImageViewer",$self->{GetGraphics},"ImageID");
-	return $text;
-}
-
-######################
-
-
-sub popUpDataset{
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openPopUpDataset","DatasetViewer",$self->{GetGraphics},"DatasetID");
-	return $text;
-}
-
-########################
-
-sub openInfoProject{
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openInfoProject","InfoProject",$self->{GetInfo},"ProjectID");
-	return $text;
-
-}
-
-##########################
-
-sub openInfoDataset{
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openInfoDataset","InfoDataset",$self->{GetInfo},"DatasetID");
-	return $text;
-
-}
-
-
-##################
-
-sub openExistingProject{
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openExistingProject","ExistingProject",$self->{InfoProject},"UsergpID");
-	return $text;
-}
-
-################
-
-sub openExistingDataset{
-
-	my $self=shift;
-	my $text;
-	$text=writeFunction("openExistingDataset","ExistingDataset",$self->{InfoDataset},"UsergpID");
-	return $text;
-
-}
-
-
 ##############
 sub closeButton{
 my $text.=<<END;
@@ -105,9 +72,60 @@ my $text.=<<END;
 	value="Close window">
 END
 return $text;
-
-
 }
+
+
+################
+sub openExistingDataset{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openExistingDataset","ExistingDataset",$self->{InfoDataset},"UsergpID");
+	return $text;
+}
+
+##################
+sub openExistingProject{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openExistingProject","ExistingProject",$self->{InfoProject},"UsergpID");
+	return $text;
+}
+
+##########################
+sub openInfoDataset{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openInfoDataset","InfoDataset",$self->{GetInfo},"DatasetID");
+	return $text;
+}
+
+
+########################
+sub openInfoProject{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openInfoProject","InfoProject",$self->{GetInfo},"ProjectID");
+	return $text;
+}
+
+
+######################
+sub popUpDataset{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openPopUpDataset","DatasetViewer",$self->{GetGraphics},"DatasetID");
+	return $text;
+}
+
+#####################
+sub popUpImage{
+	my $self=shift;
+	my $text;
+	$text=writeFunction("openPopUpImage","ImageViewer",$self->{GetGraphics},"ImageID");
+	return $text;
+}
+
+
 
 ####################
 # PRIVATE METHODS
