@@ -73,6 +73,7 @@ __PACKAGE__->addColumn(analysis_chain => 'analysis_chain_id',
                        'OME::AnalysisChain',
                        {
                         SQLType => 'integer',
+                        NotNull => 1,
                         Indexed => 1,
                         ForeignKey => 'analysis_chains',
                        });
@@ -173,7 +174,6 @@ __PACKAGE__->addColumn(analysis_chain_execution => 'analysis_chain_execution_id'
                        'OME::AnalysisChainExecution',
                        {
                         SQLType => 'integer',
-                        NotNull => 1,
                         Indexed => 1,
                         ForeignKey => 'analysis_chain_executions',
                        });
@@ -182,7 +182,6 @@ __PACKAGE__->addColumn(analysis_chain_node => 'analysis_chain_node_id',
                        'OME::AnalysisChain::Node',
                        {
                         SQLType => 'integer',
-                        NotNull => 1,
                         Indexed => 1,
                         ForeignKey => 'analysis_chain_nodes',
                        });
