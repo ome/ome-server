@@ -65,6 +65,7 @@ OME/Web/GetGraphics.pm
 OME/Web/Home.pm
 OME/Web/Login.pm
 OME/Web/Logout.pm
+OME/Web/TitleBar.pm
 README
 serve.pl
 t/Analysis.t

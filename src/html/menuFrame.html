@@ -755,7 +755,7 @@ function setMode(theMode, callerWin) {
 	smCallerWin = (theBrowser.code == 'NS') ? callerWin : self;
 	var okToGo = true;
 	var currentMode = getMode();
-alert("new Mode = "+theMode+". current Mode = "+currentMode);
+//alert("new Mode = "+theMode+". current Mode = "+currentMode);
 	if (theMode != currentMode) {
 		if (currentMode == 'Floating') {
 			if (smSetCookie(theMode)) {self.close();}
