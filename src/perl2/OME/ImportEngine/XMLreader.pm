@@ -103,8 +103,7 @@ sub importGroup {
 	
 	doSliceCallback($callback);
 	
-	return (\@images) if scalar @images;
-	return undef;
+	return (\@images);
 }
 
 sub getSHA1 {
