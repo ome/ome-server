@@ -531,36 +531,55 @@ my $CGI_optionStr  = '&Path='.$Path;
 	<!--            Backend classes         -->
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/OMEimage.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/scale.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 ENDSVG
 
 # dynamic initialization of JS objects goes here:
 $SVG .= <<ENDSVG;
-        var controlsToolBox, multiToolBox;
+	// GUI components
+		var controlsToolBox, multiToolBox;
 		var zSlider, tSlider;
+		var blackSlider, whiteSlider;
 		var redPopupList, bluePopupList, greenPopupList, bwPopupList;
-		var panePopupList;
+		var scalePopupList, panePopupList;
 		var RGBpopupListBox, BWpopupListBox;
 		var redButton, blueButton, greenButton, RGB_BWbutton;
-        var azap = new AntiZoomAndPan();
-        var image;
-        var Z = $pDims->[2];
-        var T = $pDims->[4];
-        var Wavelengths = $Wavelengths;
-        var theZ;
-        var theT;
+		var azap = new AntiZoomAndPan();
 
+	// backend components
+		var image;
+		var scale;
+		
+	// constants & references
+		// Z and T are dims of z and t
+		var Z = $pDims->[2];
+		var T = $pDims->[4];
+		var scaleWidth = 180;
+		var Wavelengths = $Wavelengths;
+		var Stats = $Stats;
 		var fluors = new Array();
+		
+	// global variables
+		// theZ & theT are current values of z & t
+		var theZ, theT;
+
 
         function init(e) {
             if ( window.svgDocument == null )
                 svgDocument = e.ownerDocument;
 
+		// initialize back end
+			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
+			image.realize( svgDocument.getElementById("image") );
+// need to add query for RGBon for image.setRGBon			
+
 			// setup fluors used in this image
 			for(i in Wavelengths)
-				fluors.push(Wavelengths[i]['Fluor']); 
+				fluors[Wavelengths[i]['WaveNum']] = Wavelengths[i]['Fluor'];
 
-			// set up control toolbox
+		// initialize frontend
 			controlToolBox = new toolBox(
 				50, 30, 200, 150,
 				svgDocument.getElementById("menuBar").firstChild.data,
@@ -574,28 +593,30 @@ $SVG .= <<ENDSVG;
 				55, 265, 200, 100,
 				svgDocument.getElementById("menuBar").firstChild.data,
 				svgDocument.getElementById("hideControl").firstChild.data,
-				"<g/>"
+				'<g>' +
+				'	<rect width="{\$width}" height="1000" fill="none" stroke="black"	stroke-width="2"/>'+
+				'	<rect width="{\$width}" height="1000" fill="ghostwhite" opacity="0.5"/>' +
+				'</g>'
 			);
 			
-			// set up z and t cross section selector sliders
 			zSlider = new Slider(
 				30, 120, 100, -90,
-				updateZLabel,
+				updateTheZ,
 				svgDocument.getElementById("zSliderBody").firstChild.data,
 				svgDocument.getElementById("zSliderThumb").firstChild.data
 			);
-			zSlider.setLabel(0,-102,"(12)");
+			zSlider.setLabel(0,-102,"");
 			zSlider.getLabel().setAttribute( "fill", "white" );
 			zSlider.getLabel().setAttribute( "text-anchor", "middle" );
 
 			tSlider = new Slider(
 				60, 30, 100, 0,
-				updateTLabel
+				updateTheT
 			);
-			tSlider.setLabel(60,-13,"time (0/"+T+")");
+			tSlider.setLabel(60,-13,"");
 			tSlider.getLabel().setAttribute( "fill", "white" );
 
-			// set up wavelength to RGB channel popupLists
+			// wavelength to channel popupLists
 			redPopupList = new popupList(
 				-50, 0, fluors, updateRedWavelength, 1,
 				svgDocument.getElementById("redAnchorText").firstChild.data,
@@ -667,7 +688,7 @@ $SVG .= <<ENDSVG;
 				svgDocument.getElementById("triangleDown").firstChild.data
 			)
 				
-			// realize the GUI elements in the appropriate containers
+		// realize the GUI elements in the appropriate containers
             var controls  = svgDocument.getElementById("controls");
             controlToolBox.realize(controls);
             
@@ -700,54 +721,127 @@ $SVG .= <<ENDSVG;
 			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
 			bwPopupList.realize( BWpopupListBox );
 			
+			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
 			//	These panes to come from DB eventually
+			scale = new Scale(image, updateBlackLevel, updateWhiteLevel);
+			multiToolBox.addPane( scale.buildSVG(), "Scale");
 			multiToolBox.addPaneText(
 				svgDocument.getElementById("info").firstChild.data, "Info" );
-			multiToolBox.addPane( null, "Scale");
 			multiToolBox.addPane( null, "Other");
 			// set up multiToolBox pane control popupList
 			panePopupList = new popupList(
 				0, 0, multiToolBox.getPaneIndexes(), updatePane );
-
 			panePopupList.realize( multiToolBox.getMenuBar() );
 
 
             azap.appendNode(controls); 
             
-            // initialize back end
-			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
-			image.realize( svgDocument.getElementById("image") );
-			
 			// Set up display. These values should come from DB eventually.
 			setTimeout( "redPopupList.setSelection(0)", 0 );
 			setTimeout( "greenPopupList.setSelection(1)", 0 );
 			setTimeout( "bluePopupList.setSelection(1)", 0 );
 			setTimeout( "bwPopupList.setSelection(0)", 0 );
 			setTimeout( "panePopupList.setSelection(0)", 0 );
-			setTimeout( "redButton.setState(true)", 0 );
-			setTimeout( "greenButton.setState(false)", 0 );
-			setTimeout( "blueButton.setState(true)", 0 );
+			var RGBon = image.getRGBon(); 
+			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
+			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "RGB_BWbutton.setState(true)", 0 );
 
 			zSlider.setValue(50,true);	// 50% of z range
 			tSlider.setValue(0,true);	// 0% of t range
 
-//			image.setPreload(1);
+//			image.setPreload(1);//*/
+		}
+	
+/*	// Scale stuff	
+		function buildScalePane() {
+			var root = svgDocument.createElementNS(svgns, "g");
+		
+			blackSlider = new Slider( 
+				10, 60, scaleWidth, 0, 
+				updateBlackLevel,
+				'<rect width="'+scaleWidth+'" height="10" opacity="0"/>',
+				'<rect x="-2" width="4" height="10" fill="black"/>'
+			);
+			whiteSlider = new Slider( 
+				10, 70, scaleWidth, 0, 
+				updateWhiteLevel,
+				'<rect width="'+scaleWidth+'" height="10" opacity="0"/>',
+				'<rect x="-2" width="4" height="10" fill="white"/>'
+			);
+			scalePopupList = new popupList(
+				10, 90, fluors, null
+			);
+		
+			root.appendChild( whiteSlider.textToSVG(
+				'<g transform="translate(10,70)">' +
+				'	<line x2="'+ scaleWidth +'" stroke-width="2" stroke="blue"/>' +
+				'	<line id="geomeanTick" y1="-10" y2="10" stroke-width="2" stroke="blue"/>' +
+				'</g>'
+			));
+			
+			root.appendChild( whiteSlider.textToSVG(
+				'<text x="20" y="2em">Black level: </text>' ));
+			blackLabel = root.lastChild;
+			root.appendChild( whiteSlider.textToSVG(
+				'<text x="20" y="3em">White level: </text>' ));
+			whiteLabel = root.lastChild;
+			root.appendChild( whiteSlider.textToSVG(
+				'<text x="20" y="4em">Scale: </text>' ));
+			scaleLabel = root.lastChild;
+		
+			blackSlider.realize( root );
+			whiteSlider.realize( root );
+			scalePopupList.realize( root );
+			
+			return root;
+		}
+		// updateScale should be called when time or scale wavelength is changed
+		// tick marks and calculated length of scale bar are dependent on those things
+		function updateScale(t) {
+			if(blackSlider == null || whiteSlider == null) return null;
+			var wavenum = wavePopupList.getSelection();
+			var min = Stats[wavenum][theT]['min'];
+			var max = Stats[wavenum][theT]['max'];
+			var sigma = Stats[wavenum][theT]['sigma'];
+			var geomeanX = (Stats[wavenum][theT]['geomean'] - min) / (max - min) * scaleWidth;
+			svgDocument.getElementById("geomeanTick").setAttribute("transform", "translate("+geomeanX+",0)");
+			// set B&W sliderVals to correct positions
+		}*/
+
+		function updateBlackLevel(val) {
+		scale.blackLabel.firstChild.data = "Black level: " + val;
+			// make val in bounds
+			// set val to in bounds
+			// update black bar
+			// set scale.BS
+			// call scale.updateWBS
+		}
+	
+		function updateWhiteLevel(val) {
+		scale.whiteLabel.firstChild.data = "White level: " +val;
+			// make val in bounds
+			// set val to in bounds
+			// update white bar
+			// convert val to native WBS
+			// set scale.BS
+			// call scale.updateWBS
+		}
 
 ENDSVG
 
 # more static stuff
 $SVG .= <<'ENDSVG';
         
-        }
 		
-		// reflect changes made to sliders controlling z and t cross-sections
-		function updateZLabel(data) {
+	// these functions connect GUI with backend
+		function updateTheZ(data) {
 			data=Math.round(data/100*(Z-1));
 			var sliderVal = (Z==1 ? 0 : Math.round(data/(Z-1)*100) );
 			zSlider.setValue(sliderVal);
-			zSlider.setLabel(null, null, data + "/" + Z );
+			zSlider.setLabel(null, null, data + "/" + (Z-1) );
 			theZ=data;
 			
 			image.updatePic(theZ,theT);
@@ -755,31 +849,31 @@ $SVG .= <<'ENDSVG';
 		function zUp() {
 			var data = (theZ< Z-1 ? theZ + 1 : theZ)
 			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
-			updateZLabel(sliderVal);
+			updateTheZ(sliderVal);
 		}
 		function zDown() {
 			var data = (theZ> 0 ? theZ - 1 : theZ)
 			var sliderVal = ( Z==1 ? 0 : Math.round( data/(Z-1)*100 ) );
-			updateZLabel(sliderVal);
+			updateTheZ(sliderVal);
 		}
 
-		function updateTLabel(data) {
+		function updateTheT(data) {
 			theT=Math.round(data/100*(T-1));
 			var sliderVal = ( T==1 ? 0 : Math.round(theT/(T-1)*100) );
 			tSlider.setValue(sliderVal);
-			tSlider.setLabel(null, null, "time (" + theT + "/" + T +")" );
+			tSlider.setLabel(null, null, "time (" + theT + "/" + (T-1) +")" );
 			
 			image.updatePic(theZ,theT);
 		}
 		function tUp() {
 			var data = (theT< T-1 ? theT+1 : theT)
 			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
-			updateTLabel(sliderVal);
+			updateTheT(sliderVal);
 		}
 		function tDown() {
 			var data = (theT> 0 ? theT -1 : theT)
 			var sliderVal = ( T==1 ? 0 : Math.round( data/(T-1)*100 ) );
-			updateTLabel(sliderVal);
+			updateTheT(sliderVal);
 		}
 
 		// reflect changes made to popupLists controlling wavelength to RGB channels
@@ -834,6 +928,7 @@ $SVG .= <<'ENDSVG';
 			}
 			image.setDisplayRGB_BW(val);
 		}
+		
     ]]></script>
 	<defs>
 		<text id="menuBar"><![CDATA[
@@ -984,8 +1079,6 @@ $SVG .= <<'ENDSVG';
 		]]></text>
 		<text id="info"><![CDATA[
 			<g>
-				<rect width="200" height="50" fill="none" stroke="black"	stroke-width="2"/>
-				<rect width="200" height="50" fill="ghostwhite" opacity="0.5"/>
 				<text y="1em">Information:</text>
 				<text id="info1" x="30" y="2em"> </text>
 				<text id="info2" x="30" y="3em"> </text>
