@@ -37,8 +37,11 @@ use warnings;
 use Carp;
 use English;
 use Cwd;
+use Sys::Hostname;
+use MIME::Base64;
 use Term::ANSIColor qw(:constants);
 use File::Basename;
+use File::Spec::Functions qw(rel2abs);
 
 use OME::Install::Util;
 use OME::Install::Environment;
@@ -48,6 +51,8 @@ use base qw(OME::Install::InstallationTask);
 # Packages needed from OME for the bootstrap
 use OME::Database::Delegate;
 use OME::Factory;
+use OME::SessionManager;
+use OME::Tasks::OMEImport;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -248,7 +253,7 @@ sub load_schema {
 	print BOLD, "[FAILURE]", RESET, ".\n"
 	    and print $logfile "ERROR LOADING CLASS \"$instantiate_class\" -- OUTPUT: \"$@\"\n"
 	    and croak "Error loading class \"$instantiate_class\", see CoreDatabaseTablesTask.log for details."
-        unless not $@;
+        if $@;
 
 
 	print BOLD, "[SUCCESS]", RESET, ".\n"
@@ -268,8 +273,8 @@ sub create_experimenter {
 
     my $first_name = question ("First name: ");
     my $last_name = question ("Last name: ");
-    my $username = confirm_default ("Username: ", substr ($first_name, 0, 1).$last_name);  
-    my $e_mail = question ("E-mail address: ");
+    my $username = confirm_default ("Username", lc (substr ($first_name, 0, 1).$last_name));  
+    my $e_mail = confirm_default ("E-mail address", $username.'@'.hostname ());
     my $data_dir = question ("Default data directory: ");
     
     if (not -d $data_dir) {
@@ -285,7 +290,7 @@ sub create_experimenter {
     my $experimenter = $factory->
 	newObject('OME::SemanticType::BootstrapExperimenter',
             {
-             OMEName       => $first_name." ".$last_name,
+             OMEName       => $username,
              FirstName     => $first_name,
              LastName      => $last_name,
              Email         => $e_mail,
@@ -296,9 +301,200 @@ sub create_experimenter {
     $factory->commitTransaction();
     $factory->releaseDBH($dbh);
 
+    return ($username, $password);
+}
+
+sub init_configuration {
+    my $session = shift;
+    my $factory = $session->Factory();
+
+    print_header "Initializing configuration";
+
+    my $lsid_authority = confirm_default ("LSID Authority", hostname ());
+
+    # The DB instance uniquely identifies this specific DB instance on this machine
+    # Can only make one per second - sorry.
+    # There are two punctuation characters in base64: '/' and '+' (no '=' here b/c of trunctation)
+    # substitute '/' with something safer - '_'.
+    my $db_instance = substr (encode_base64(pack ('N',time()),''),0,6);
+    $db_instance =~ s/\//_/g;
+
+    # The MAC address local to the system (the first one)
+    # This is portable since it's using OME::Install::Util, if you're having trouble with this
+    # configuration variable take a look there (src/perl2/OME/Install/Util.pm).
+    my $mac = get_mac ();
+
+    my $configuration = $factory->
+	newObject("OME::Configuration",
+            {
+             __id             => 1,
+             mac_address      => $mac,
+             db_instance      => $db_instance,
+             lsid_authority   => $lsid_authority,
+             tmp_dir          => $OME_TMP_DIR,
+             xml_dir          => $OME_BASE_DIR."/xml",
+             bin_dir          => $OME_BASE_DIR."/bin",
+             import_formats   => $IMPORT_FORMATS,
+             ome_root         => $OME_BASE_DIR
+            });
+
+    $session->commitTransaction();
+
+
     return 1;
 }
 
+sub load_xml_core {
+    my ($session, $logfile) = @_;
+    my @core_xml;
+
+    my $omeImport = OME::Tasks::OMEImport->
+	new(
+	    session => $session,
+	    #debug => $ENV{OME_IMPORT_DEBUG},
+	    debug => 1,
+	);
+
+    # get list of files
+    open (CORE_XML, "<", "src/SQL/CoreXML" )
+	or croak "Could not open file \"src/SQL/CoreXML\". $!";
+
+    while (<CORE_XML>) { 
+	chomp;
+
+	# Put the ABS paths in the array
+	$_ = rel2abs ("src/xml/$_");
+	push (@core_xml, $_) if /^[^#]/;
+    }
+
+    close (CORE_XML);
+
+    print "Importing core XML\n";
+
+    # Import each XML file
+    foreach my $filename (@core_xml) {
+	print "  \\__ $filename ";
+	eval {
+	    $omeImport->importFile($filename,
+		    NoDuplicates           => 1,
+		    IgnoreAlterTableErrors => 1);
+	};
+
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
+	    and croak "Error loading XML file \"$filename\", see CoreDatabaseTablesTask.log for details."
+	if $@;
+
+	print BOLD, "[SUCCESS]", RESET, ".\n"
+	    and print $logfile "SUCCESS LOADING XML FILE \"$filename\"\n";
+    }
+
+    $session->commitTransaction();
+
+    return $session;
+}
+
+sub commit_experimenter {
+    my $session = shift;
+    my $factory = $session->Factory();
+
+    print "Committing our first experimenter\n";
+
+    # Replace the instance of BootstrapExperimenter with the equivalent
+    # instance of the Experimenter semantic type.
+    my $experimenter = ($factory->
+	findAttributes("Experimenter", undef))[0]
+    or croak "Could not load Experimenter semantic types.";
+
+
+    print "  \\__ Adding group\n";
+    my $group = $factory->
+    newAttribute("Group",undef,undef,
+               {
+                Name    => 'OME',
+                Leader  => $experimenter->id(),
+                Contact => $experimenter->id()
+               });
+
+    print "  \\__ Adding experimenter to group\n";
+    $experimenter->Group($group->id());
+    $experimenter->storeObject();
+
+    print "  \\__ Creating repository object\n";
+    my $repository = $factory->
+    newAttribute("Repository",undef,undef,
+               {
+                Path => $OME_BASE_DIR."/repository"
+               });
+
+    $session->commitTransaction();
+
+    return 1;
+}
+
+sub load_analysis_core {
+    my ($session, $logfile) = @_;
+    my @chains;
+
+    print "Loading core analysis chains\n";
+
+    # get list of files
+    open( CORE_CHAINS, "<", "src/SQL/CoreChains" )
+	or die "Could not open file 'CoreChains'";
+
+    while(<CORE_CHAINS>) {
+	chomp;
+	
+	# Put the ABS paths in the array
+	$_ = rel2abs ("src/xml/$_");
+	push (@chains, $_) if /^[^#]/;
+    }
+
+    close (CORE_CHAINS);
+
+    my $chainImport = OME::ImportExport::ChainImport->
+	new(session => $session);
+
+    foreach my $filename (@chains) {
+	print "  \\__ $filename ";
+    
+	eval {
+	    $chainImport->importFile($filename, NoDuplicates => 1);
+	};
+
+	print BOLD, "[FAILURE]", RESET, ".\n"
+	    and print $logfile "ERROR LOADING XML FILE \"$filename\" -- OUTPUT: \"$@\"\n"
+	    and croak "Error loading XML file \"$filename\", see CoreDatabaseTablesTask.log for details."
+	if $@;
+
+	print BOLD, "[SUCCESS]", RESET, ".\n"
+	    and print $logfile "SUCCESS LOADING XML FILE \"$filename\"\n";
+    }
+
+    $session->commitTransaction();
+
+    return 1;
+}
+
+print "Finding image import module and chain.\n";
+
+=head1
+# There should be only one of each of these.  If there's more than
+# one, we don't care which.  (Maybe we should throw an error instead?)
+
+my $importModule = $factory->
+  findObject("OME::Module",name => 'Importer');
+$configuration->import_module($importModule);
+
+my $importChain = $factory->
+  findObject("OME::AnalysisChain",name => 'Image import analyses');
+$configuration->import_chain($importChain);
+
+$configuration->storeObject();
+$session->commitTransaction();
+
+}
+=cut
 
 #*********
 #********* START OF CODE
@@ -350,7 +546,25 @@ sub execute {
     # Create our database
     create_database ("DEBIAN") or croak "Unable to create database!";
     load_schema ($LOGFILE) or croak "Unable to load the schema, see CoreDatabaseTablesTask.log for details.";
-    create_experimenter () or croak "Unable to create an initial experimenter.";
+    my ($username, $password) = create_experimenter () or croak "Unable to create an initial experimenter.";
+    
+    # Login to OME and get our session
+    my $manager = OME::SessionManager->new();
+    my $session = $manager->createSession($username,$password);
+
+    init_configuration ($session) or croak "Unable to initialize the configuration object.";
+
+    #*********
+    #********* Finalize the DB
+    #*********
+
+    print_header "Finalizing Database";
+    load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see CoreDatabaseTablesTask.log for details.";
+    commit_experimenter ($session) or croak "Unable to load commit experimenter.";
+    load_analysis_core ($session, $LOGFILE)
+	or croak "Unable to load analysis core, see CoreDatabaseTablesTask.log for details.";
+    
+    $manager->logout($session);
 
     # Back to UID 0
     $EUID = 0;
@@ -364,6 +578,5 @@ sub rollback {
 
     return 1;
 }
-
 
 1;
