@@ -119,6 +119,15 @@ sub new {
 	return $self;
 }
 
+sub DESTROY {
+	my $self = shift;
+
+	# need to destroy this reference so garbage collection can work.
+    $self->{Factory} = undef;
+	$self->SUPER::DESTROY if $self->can("SUPER::DESTROY");
+
+}
+
 =head2 import_module
 
 accessor/mutator for the import_module configuration variable.  This methods sets/gets
