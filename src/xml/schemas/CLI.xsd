@@ -42,7 +42,6 @@
 			</annotation>
 		</attribute>
 	</attributeGroup>
-
 	<element name = "ExecutionInstructions">
 		<annotation>
 			<documentation>Tied to DB. Table PROGRAMS Column EXECUTION
@@ -61,11 +60,13 @@
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
-						<enumeration value = "precalculateDataset"/>
-						<enumeration value = "precalculateImage"/>
-						<enumeration value = "calculateFeature"/>
-						<enumeration value = "postcalculateImage"/>
-						<enumeration value = "postcalculateDataset"/>
+						<enumeration value = "executeGlobal"/>
+						<enumeration value = "startDataset"/>
+						<enumeration value = "startImage"/>
+						<enumeration value = "startFeature"/>
+						<enumeration value = "finishFeature"/>
+						<enumeration value = "finishImage"/>
+						<enumeration value = "finishDataset"/>
 					</restriction>
 				</simpleType>
 			</attribute>

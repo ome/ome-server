@@ -220,7 +220,7 @@
 		<FormalOutput Name = "Sum Zi" SemanticTypeName = "PlaneSum_Zi" Count="+"/>
 		<FormalOutput Name = "Geosigma" SemanticTypeName = "PlaneGeometricSigma" Count="+"/>
 	</Declaration>
-    <ExecutionInstructions xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ExecutionPoint="precalculateImage" MakesNewFeature="false" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
+    <ExecutionInstructions xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ExecutionPoint="startImage" MakesNewFeature="false" xsi:schemaLocation="     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd     http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
 		<CommandLine>
 			<Parameter>
 				<InputSubString>

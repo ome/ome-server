@@ -42,15 +42,16 @@
 	xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
 <AnalysisModule Category = "Wavelength comparison" ModuleName = "Cross Correlation" 
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
-	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification.">
+	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification."
+	ID="urn:lsid:openmicroscopy.org:Module:10">
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels"/>
-		<FormalInput Name = "ChannelNumber 1" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
-		<FormalInput Name = "ChannelNumber 2" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
+		<FormalInput Name = "ChannelNumber 1" SemanticTypeName = "ChannelIndex" Description = "" UserDefined = "true"/>
+		<FormalInput Name = "ChannelNumber 2" SemanticTypeName = "ChannelIndex" Description = "" UserDefined = "true"/>
 		<FormalOutput Name = "XYPlaneCrossCorrelation" SemanticTypeName = "XYPlaneCrossCorrelation" 
 			Description = "Cross Correlation for an XY plane"/>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+	<ExecutionInstructions ExecutionPoint = "startImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
@@ -108,9 +109,12 @@
 	http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
 	  http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-	<SemanticType Name="ChannelNumber" AppliesTo="I" Description="A Channel Index">
-        <Element Name="theW" DBLocation="CHANNELNUMBER.THE_W" DataType="integer"/>
+	<SemanticType Name="ChannelIndex" AppliesTo="I">
+		<Description>Specifies a single channel in a Pixels attribute.</Description>
+        <Element Name="theC" DBLocation="CHANNEL_INDEX.THE_C" DataType="integer"/>
+        <Element Name="Pixels" DBLocation="CHANNEL_INDEX.PIXELS" DataType="reference" RefersTo = "Pixels"/>
 	</SemanticType>
+
 	<SemanticType Name="XYPlaneCrossCorrelation" AppliesTo="F" Description="Cross Correlation for an XY plane">
         <Element Name="theZ" DBLocation="XY_CROSS_CORRELATION.THE_Z"			 DataType="integer"
 			Description = "Z coordinate describing the XY Plane"/>

@@ -85,7 +85,7 @@
            Name="Centroid" SemanticTypeName="PlaneCentroid" Count="+"/>
       </Declaration>
 
-      <ExecutionInstructions ExecutionPoint="precalculateImage"
+      <ExecutionInstructions ExecutionPoint="startImage"
 		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">

@@ -125,7 +125,7 @@ Repository can't be used as an input at the moment. So I'll use the reference fr
 		<FormalInput Name = "ChannelIndex" SemanticTypeName = "ChannelIndex" Count = "!"/>
 		<FormalOutput Name = "PixelsPlane" SemanticTypeName = "PixelsPlane" Count="!"/>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
+	<ExecutionInstructions ExecutionPoint = "startImage" MakesNewFeature = "false" 
 		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
