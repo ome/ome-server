@@ -213,8 +213,8 @@ sub getGroups {
                 while (1) {    #    now find all similarly named files
                     if ($fn = shift @inlist) {
                         $file = $fref->{$fn};
-                        $bn = basename($fn);
-                        if ($bn =~ m/$subpattern/i) {
+                        my $bn2 = basename($fn);
+                        if ($bn2 =~ m/$subpattern/i) {
                             push @grp, $file;
                             delete $fref->{$fn};
                             $matched++;
