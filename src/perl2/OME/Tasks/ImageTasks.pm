@@ -119,6 +119,18 @@ sub importFiles {
 	carp "No files to import"
 	unless scalar @$fn_groups > 0;
 
+#!!!!!!!!!!!!!
+# HACK
+my $dbh = $session->DBH();
+my $sth = $dbh->prepare( "SELECT IMAGE_ID FROM IMAGES" );
+$sth->execute();
+my %existingImages;
+while( $ar = $sth->fetchrow_arrayref ) {
+	$existingImages{$ar->[0]} = 1;
+}
+# END_HACK
+#!!!!!!!!!!!!!
+
 	foreach $image_group_ref (@$fn_groups) {
 		$importer->import_image($dataset, $image_group_ref);
 		if ($importer->{did_import}) {
@@ -128,6 +140,96 @@ sub importFiles {
 			$status = "Failed to import at least one image";
 		}
 	}
+
+###############################################################################
+#  !!!!!!!!!           HACK            !!!!!!!!!
+#
+# PURPOSE: fill out XYZ_IMAGE_INFO table
+#
+$dbh = $session->DBH();
+$sth = $dbh->prepare( "SELECT IMAGE_ID FROM IMAGES" );
+$sth->execute();
+my @newImages;
+while( $ar = $sth->fetchrow_arrayref ) {
+	push(@newImages, $ar->[0])
+		unless( exists $existingImages{$ar->[0]} );
+}
+
+# make appropriate entries so DB won't complain about connections
+my $factory = $session->Factory();
+my $program = $factory->findObject("OME::Program", program_name=>'dev/null');
+if( not defined $program) {
+	$program = $factory->newObject( "OME::Program",
+		{program_name     => '/dev/null',
+		category         => 'hack',
+		module_type      => 'hack',
+		location         => '/dev/null'}
+	) or die "could not make OME::Program object as part of hack\n";
+	$program->writeObject();
+}
+my $attr = $factory->findObject( "OME::AttributeType", name => 'hack' );
+if( not defined $attr ) {
+	$attr = $factory->newObject( "OME::AttributeType",
+{		name        => 'hack',
+		granularity => 'I',
+	}) or die "could not make OME::AttributeType object as part of hack\n";		
+	$attr->writeObject();
+}
+my $formalOutput = $factory->findObject( "OME::Program::FormalOutput", program_id => $program->id() );
+if( not defined $formalOutput) {
+	$formalOutput = $factory->newObject( "OME::Program::FormalOutput",
+{		name               => 'hack',
+		program_id         => $program,
+		attribute_type_id  => $attr,
+	}) or die "could not make OME::Program::FormalOutput object as part of hack\n";
+	$formalOutput->writeObject();
+}
+my $analysis = $factory->findObject( "OME::Analysis", program_id => $program->id() );
+if( not defined $analysis) {
+	$analysis = $factory->newObject( "OME::Analysis",
+{		program_id => $program,
+		dependence => 'I',
+		dataset_id => 1
+	}) or die "could not make OME::Analysis object as part of hack";
+	$analysis->writeObject();
+}
+my $actual_output = $factory->findObject( "OME::Analysis::ActualOutput", ANALYSIS_ID => $analysis->id() );
+if( not defined $actual_output) {
+	$actual_output = $factory->newObject( "OME::Analysis::ActualOutput",
+{		analysis_id => $analysis,
+		formal_output_id => $formalOutput
+	}) or die "could not make OME::Analysis::ActualOutput object as part of hack";
+	$actual_output->writeObject();
+}
+
+foreach my $imageID(@newImages) {
+	my $cmdBase = "/OME/bin/OME_Image_XYZ_stats ";
+	my $image = $factory->loadObject( "OME::Image", $imageID );
+    my $dims = $image->Dimensions();
+    my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
+        ",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times().
+        ",".$dims->bits_per_pixel()/8;
+	my $cmd = $cmdBase .' Path=/OME/repository/' . $image->path() . ' '.$dimString;
+	my $out = `$cmd`
+		or die "could not open\n$cmd\n";
+#	open $out, $cmd
+#		or die "could not open\n$cmd\n";
+	$out =~ s/^.*?\n//;
+	while( $out =~ s/^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n// ) {
+		$sth = $dbh->prepare( "INSERT INTO xyz_image_info 
+			(actual_output_id , image_id , wavenumber , timepoint , min , max , mean , geomean , sigma , centroid_x , centroid_y , centroid_z , the_w , the_t )
+			values ( ".$actual_output->id().", ".$image->id().", $1, $2, $3, $4, $5, $6, $7, $8, $9, $10 )" )
+			or die "could not prepare statement to write into xyz_image_info";
+		$sth->execute();
+	}
+#	close $out;
+$session->DBH()->commit();	
+}	
+
+#
+# END_HACK
+#
+###############################################################################
 
 	# could test here - if either any or all imports failed,
 	# don't write dataset record to db.
