@@ -248,6 +248,7 @@ my %MDTO_CLASSES = (
                     String  => 'String',
                     float   => 'Float',
                     double  => 'Double',
+                    short   => 'Short',
                     int     => 'Integer',
                     long    => 'Long',
                    );
@@ -257,6 +258,7 @@ my %MDTO_ACCESSORS = (
                       String  => 'getStringElement',
                       float   => 'getFloatElement',
                       double  => 'getDoubleElement',
+                      short   => 'getShortElement',
                       int     => 'getIntegerElement',
                       long    => 'getLongElement',
                      );

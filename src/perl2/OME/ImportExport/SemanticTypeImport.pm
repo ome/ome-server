@@ -118,7 +118,9 @@ sub processDOM {
 
     my %dataTypeConversion = (
                               # XMLType  => SQL_Type
+                              bigint   => 'bigint',
                               integer  => 'integer',
+                              smallint => 'smallint',
                               double   => 'double precision',
                               float    => 'real',
                               boolean  => 'boolean',

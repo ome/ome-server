@@ -201,11 +201,13 @@ sub openHandle ($$) {
 }
 
 my %JAVA_TYPES = (
-                  boolean => 'boolean',
-                  string  => 'String',
-                  float   => 'float',
-                  double  => 'double',
-                  integer => 'int',
+                  boolean  => 'boolean',
+                  string   => 'String',
+                  float    => 'float',
+                  double   => 'double',
+                  smallint => 'short',
+                  integer  => 'int',
+                  bigint   => 'long',
                  );
 
 sub writeOneSemanticElement ($$) {
