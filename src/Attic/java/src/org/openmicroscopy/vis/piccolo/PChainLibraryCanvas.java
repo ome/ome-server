@@ -283,11 +283,9 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
-		System.err.println("canvas get selectionEvent");
 		SelectionState state = e.getSelectionState();
 		CChain chain = state.getSelectedChain();
 		if (chain != null) {
-			System.err.println("selecting chain on canvas.."+chain.getName());
 			PChainBox cb = findChainBox(chain);
 			if (cb != null)
 				zoomToChain(cb);
