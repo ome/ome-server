@@ -123,6 +123,8 @@ sub classifyImage {
 		'module_execution.experimenter' => $session->User(),
 	} ) ) {
 		return $category if $classification->Valid();
+		# Mimic Shoola behavior by remarking this classification as valid 
+		# if the user is changing their mind for the second time.
 		$classification->Valid( 1 );
 		$classification->storeObject();
 		$session->commitTransaction();
@@ -132,8 +134,9 @@ sub classifyImage {
 	my ( $mex, $attrs ) = OME::Tasks::AnnotationManager->
 		annotateImage( $image, 'Classification', 
 		{ 
-			Category => $category,
-			Valid   => 1
+			Category   => $category,
+			Valid      => 1,
+			Confidence => 1
 		}
 		);
 	return $attrs->[0];
