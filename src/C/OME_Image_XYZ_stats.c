@@ -85,7 +85,7 @@ int main (int argc, char **argv)
 	if (isCGI)
 		fprintf (stdout,"Content-type: text/plain\n\n");
 
-	fprintf (stdout,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\GeoSigma\n");
+	fprintf (stdout,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\tGeoSigma\n");
 	/* This dumps stuff directly on stdout */
 	Get_Image_Stats (path, dims);
 
@@ -278,7 +278,7 @@ void usage(int argc, char **argv)
 	fprintf (stderr,
 		"%s Path=/path/to/file Dims=X,Y,Z,W,T,BytesPerPix\n",argv[0]);
 	fprintf (stderr,"The column headings will be first line on standard out:\n");
-	fprintf (stderr,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\GeoSigma\n");
+	fprintf (stderr,"Wave\tTime\tMin\tMax\tMean\tGeoMean\tSigma\tCentroid_x\tCentroid_y\tCentroid_z\tGeoSigma\n");
 }
 
 
