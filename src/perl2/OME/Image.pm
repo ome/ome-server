@@ -153,7 +153,9 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('attributes_image_xyzwt');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(size_x size_y size_z num_waves num_times bits_per_pixel));
+__PACKAGE__->columns(Essential => qw(size_x size_y size_z 
+				     num_waves num_times 
+				     bits_per_pixel));
 __PACKAGE__->hasa(OME::Image => qw(image_id));
 
 
