@@ -2,7 +2,7 @@
 *
 *	insertBinData.c
 *	
-*	Originally written: 
+*	Originally written: ~ May 18, 2003
 *	Standard licence blurb:
 
  Copyright (C) 2003 Open Microscopy Environment, MIT
@@ -94,7 +94,7 @@
 const char *pixelTypes[] = { "bit", "int8", "int16", "int32", "Uint8", "Uint16", "Uint32", "float", "double", "complex", "double-complex", NULL };
 const int bitsPerPixel[] = {  1,      8,     16,      32,      8,       16,       32,       32,      64,       64,        128            , NULL };
 
-/* This is a stack to store information about an element. It keeps track of
+/* This is a stack to store information about an XML element. It keeps track of
 / whether an element has content or is empty AND
 / whether the opening tag of the element is open (e.g. "<foo" is open, 
 / "<foo>" and "<foo/>" are not). It is used for every element except BinData.
@@ -356,8 +356,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 
 		
 		/* set up encoding stream */
-		if( !compression ) /* default compression */
-			strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
+		if( !compression ) /* if compression isn't specified, default to none. This attribute really should be set by the perl controller that calls this program. */
+			strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
 		else if( strcmp(compression, "bzip2") == 0 )
 			strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
 		else if( strcmp(compression, "none") == 0 )

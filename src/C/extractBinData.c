@@ -362,8 +362,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		}
 
 		/* set up decoding stream */
-		if( ! (state->binDataInfo->compression ) ) /* default compression */
-			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
+		if( ! (state->binDataInfo->compression ) ) /* if the compression isn't specified, it defaults to 'none' */
+			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
 		else if( strcmp(state->binDataInfo->compression, "bzip2") == 0 )
 			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
 		else if( strcmp(state->binDataInfo->compression, "none") == 0 )
