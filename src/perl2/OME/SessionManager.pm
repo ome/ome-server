@@ -78,6 +78,7 @@ sub createSession {
     }
 
     $self->storeApacheSession($session);
+    $session->Session($session);
     return $session;
 }
 
