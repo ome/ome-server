@@ -68,7 +68,7 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	 * @return a PChainLibraryCanvas
 	 */
 	public PCanvas createCanvas() {
-		return new PChainLibraryCanvas(connection);
+		return new PChainLibraryCanvas(controller,connection);
 	}
 	
 	public Rectangle getInitialBounds() {
