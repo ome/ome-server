@@ -276,7 +276,8 @@ sub processDOM {
 		findObject("OME::AnalysisChain",name => 'Image import analyses');
 	
 	if (!defined $view or !defined $importAnalysis) {
-		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
+		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses..."
+			if !defined $view;
 		return $self->{_DBObjects};
 	}
 	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
