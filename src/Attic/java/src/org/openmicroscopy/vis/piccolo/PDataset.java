@@ -39,7 +39,6 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CImage;
 
@@ -65,6 +64,7 @@ public class PDataset extends PGenericBox {
 	
 	private static float VGAP=10;
 	private static float HGAP=5;
+	private static float FUDGE=5;
 
 	private double x=HGAP;
 	private double y=VGAP;
@@ -73,15 +73,14 @@ public class PDataset extends PGenericBox {
 	
 	private double LABEL_SCALE=.4;
 	
-	public PDataset(CDataset dataset,Connection connection,
-				SelectionState selectionState) {
+	public PDataset(CDataset dataset,Connection connection) {
 		super();
 		this.dataset = dataset;
 		this.connection = connection;
-		layoutImages(selectionState);
+		layoutImages();
 	}
 
-	private void layoutImages(SelectionState selectionState) {
+	private void layoutImages() {
 		
 		//	draw label
 		//System.err.println("laying out dataset "+dataset.getName());
@@ -154,7 +153,7 @@ public class PDataset extends PGenericBox {
 		if (x== HGAP)
 			y-=maxHeight;
 		
-		y +=maxHeight-VGAP; // move y ahead. to next row.
+		y +=maxHeight; // move y ahead. to next row.
 		
 		// adjust width
 		maxRowWidth -= HGAP; // leave off the last horizontal space 
@@ -171,10 +170,12 @@ public class PDataset extends PGenericBox {
 			chainLabel.setScale(LABEL_SCALE);
 			addChild(chainLabel);
 			PBounds clbounds = chainLabel.getGlobalFullBounds();
-			//y+=clbounds.getHeight()+VGAP;
 			double chainWidth = maxRowWidth - (clbounds.getWidth()+2*HGAP);
 			PChainLabels chainLabels = new
-				PChainLabels(chains,chainWidth,selectionState);
+				PChainLabels(chains,chainWidth);
+			// adjust for differentials in scale.
+			double ratio =   PChainLabelText.LABEL_SCALE/LABEL_SCALE;
+			y += (1-ratio)*clbounds.getHeight()-FUDGE;
 			chainLabels.setOffset(x+clbounds.getWidth()+2*HGAP,y);
 			addChild(chainLabels);
 			PBounds b2 =chainLabels.getGlobalFullBounds();
