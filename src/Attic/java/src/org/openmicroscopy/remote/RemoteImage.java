@@ -120,13 +120,20 @@ public class RemoteImage
 
     public ImagePixels getPixels(Attribute pixels, Attribute dimensions)
     {
-        Object o = caller.dispatch("OME::Image","GetPix",
-                                   new Object[] { pixels, dimensions });
-        if (o == null) return null;
-        RemoteImagePixels pix = (RemoteImagePixels)
-            instantiate(RemoteImagePixels.class,(String) o);
-        pix.setDimensions(dimensions);
-        return pix;
+        Attribute repository = pixels.getAttributeElement("Repository");
+        if (LocalImagePixels.isRepositoryLocal(repository))
+        {
+            LocalImagePixels pix = new LocalImagePixels(pixels,dimensions);
+            return pix;
+        } else {
+            Object o = caller.dispatch("OME::Image","GetPix",
+                                       new Object[] { pixels, dimensions });
+            if (o == null) return null;
+            RemoteImagePixels pix = (RemoteImagePixels)
+                instantiate(RemoteImagePixels.class,(String) o);
+            pix.setDimensions(dimensions);
+            return pix;
+        }
     }
 
     static class DatasetLink
