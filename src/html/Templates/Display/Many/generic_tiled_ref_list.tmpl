@@ -1,0 +1,19 @@
+<!-- TMPL_IF NAME=_tile_loop -->
+	<table class="ome_table">
+		<!-- TMPL_IF NAME=_more_info_url -->
+			<tr>
+				<td class="ome_td" align="right">
+					<a href="<!-- TMPL_VAR NAME=_more_info_url -->">More info...</a>
+				</td>
+		<!-- /TMPL_IF -->
+		<!-- TMPL_LOOP NAME=_tile_loop -->
+			<tr>
+				<!-- TMPL_LOOP NAME=_obj_loop!5 -->
+					<td class="ome_td" valign="top"><!-- TMPL_VAR NAME=_ref --></td>
+				<!-- /TMPL_LOOP -->
+			</tr>
+		<!-- /TMPL_LOOP -->
+	</table>
+<!-- TMPL_ELSE -->
+<b>(none)</b>
+<!-- /TMPL_IF -->

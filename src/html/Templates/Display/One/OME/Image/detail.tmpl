@@ -1,0 +1,64 @@
+<table width="100%">
+	<caption>
+		<font class="ome_header_title"><!-- TMPL_VAR NAME='_title' --></font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<table width="50">
+				<tr>
+					<td width="50" valign="top">
+						<a title="View this image" href="javascript: openPopUpImage(<!-- TMPL_VAR NAME=_id -->;);"> <img src="<!-- TMPL_VAR NAME=thumb_url -->;"> </a> 
+					</td>
+					<td align="left" valign="top">
+						<nobr>
+							Id: <!-- TMPL_VAR Name='id' -->,
+						</nobr>
+						<nobr>
+							Owner: <!-- TMPL_VAR NAME=owner -->,
+						</nobr>
+						<nobr>
+							Group: <!-- TMPL_VAR NAME=group -->,
+						</nobr>
+						<nobr>
+							Created: <!-- TMPL_VAR NAME=created -->,
+						</nobr>
+						<nobr>
+							Inserted: <!-- TMPL_VAR NAME=inserted -->,
+						</nobr>
+						<nobr>
+							Original File: <!-- TMPL_VAR NAME=original_file -->
+						</nobr>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						Description:<br>
+						<textarea name="description" rows="5" cols="60"><!-- TMPL_VAR NAME='description' --></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td align='right' colspan='2'>
+						<table cellpadding="3" class="ome_table">
+							<tr>
+								<td style="background-color: #D1D7DC">
+									<a href="javascript: document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a> 
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td align="right" valign="top">
+			<font class="ome_relation_title">Datasets:</font>
+				<!-- TMPL_VAR NAME=datasets!ref_list --><br>
+			<font class="ome_relation_title">Module Executions:</font>
+				<!-- TMPL_VAR NAME=module_executions!ref_list -->
+		</td>
+	</tr>
+</table>
+<br>
+<font class="ome_relation_title">Pixel Sets:</font>
+	<!-- TMPL_VAR NAME=pixels!tiled_ref_list -->
+<font class="ome_relation_title">Features:</font>
+	<!-- TMPL_VAR NAME=all_features!tiled_list -->

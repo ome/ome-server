@@ -1,0 +1,18 @@
+<!-- TMPL_IF NAME=_obj_loop -->
+	<table class="ome_table">
+		<!-- TMPL_IF NAME=_more_info_url -->
+			<tr>
+				<td class="ome_td" align="right">
+					<a href="<!-- TMPL_VAR NAME=_more_info_url -->">More info...</a>
+				</td>
+			</tr>
+		<!-- /TMPL_IF -->
+		<!-- TMPL_LOOP NAME=_obj_loop -->
+			<tr>
+				<td class="ome_td"><!-- TMPL_VAR NAME=_ref --></td>
+			</tr>
+		<!-- /TMPL_LOOP -->
+	</table>
+<!-- TMPL_ELSE -->
+<b>(none)</b>
+<!-- /TMPL_IF -->

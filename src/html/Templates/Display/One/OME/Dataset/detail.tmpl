@@ -1,0 +1,57 @@
+<table width="100%">
+	<caption>
+		<font class="ome_header_title"><!-- TMPL_VAR NAME='_title' --></font> 
+	</caption>
+	<tr>
+		<td valign="top">
+			<table>
+				<tr>
+					<td align="left">
+						<nobr>
+							Id: <!-- TMPL_VAR Name='id' -->,
+						</nobr>
+						<nobr>
+							Owner: <!-- TMPL_VAR NAME=owner -->,
+						</nobr>
+						<nobr>
+							Group: <!-- TMPL_VAR NAME=group -->,
+						</nobr>
+						<nobr>
+							Locked: <!-- TMPL_VAR NAME=locked -->,
+						</nobr>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Name: <INPUT TYPE="text" NAME="name" VALUE="<!-- TMPL_VAR NAME=name -->" SIZE=40>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Description:<br>
+						<textarea name="description" rows="5" cols="50"><!-- TMPL_VAR NAME='description' --></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td align='right'>
+						 <table cellpadding="3" class="ome_table">
+							<tr>
+								<td style="background-color: #D1D7DC">
+									<a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a> | <a href="javascript:openRelationships('OME::Dataset', 'OME::Image', <!-- TMPL_VAR Name='id' -->);" class="ome_widget">Add/Remove Images</a>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td align="right" valign="top">
+			<font class="ome_relation_title">Projects:</font>
+				<!-- TMPL_VAR NAME=projects!ref_list --><br>
+			<font class="ome_relation_title">Module Executions:</font>
+				<!-- TMPL_VAR NAME=module_executions!list -->
+		</td>
+	</tr>
+</table>
+<font class="ome_relation_title">Images:</font>
+	<!-- TMPL_VAR NAME=images!tiled_list -->

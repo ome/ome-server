@@ -1,0 +1,28 @@
+<TABLE>
+<TR>
+	<TD COLSPAN="2">
+		<!-- TMPL_VAR NAME=name -->
+	</TD>
+</TR>
+<TR>
+	<TD WIDTH="50">
+		<A TITLE="View this image" HREF="javascript: openPopUpImage(<!-- TMPL_VAR NAME=_id -->);">
+			<IMG SRC="<!-- TMPL_VAR NAME=thumb_url -->">
+		</A>
+	</TD>
+	<TD ALIGN="left">
+		<!-- TMPL_VAR NAME=owner -->
+		<BR>
+		<!-- TMPL_VAR NAME=group -->
+		<BR>
+		<!-- TMPL_VAR NAME=created -->
+	</TD>
+</TR>
+<TR>
+	<TD COLSPAN="2">
+		<!-- TMPL_VAR NAME=description -->
+		<BR>
+		<!-- TMPL_VAR NAME=module_executions!popup -->
+	</TD>
+</TR>
+</TABLE>

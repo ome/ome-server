@@ -1,0 +1,6 @@
+<SELECT NAME="" ONCHANGE="javascript: if( this.value != '' ) { document.location='serve.pl?Page=OME::Web::DBObjDetail&Type=<!-- TMPL_VAR NAME=_formal_name -->&ID='+this.value; }">
+	<OPTION  VALUE=""><!-- TMPL_VAR NAME=_common_name -->
+	<!-- TMPL_LOOP NAME=_obj_loop -->
+		<OPTION  VALUE="<!-- TMPL_VAR NAME=_id -->"><!-- TMPL_VAR NAME=_name -->
+	<!-- /TMPL_LOOP -->
+</SELECT>
