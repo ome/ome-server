@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 #
 # Copyright (C) 2003 Open Microscopy Environment
-#       Massachusetts Institute of Technology,
+#       Massachusetts Institue of Technology,
 #       National Institutes of Health,
 #       University of Dundee
 #
@@ -68,22 +68,40 @@ sub getPageBody {
 		$h{Channel}=$cgi->param('Channel'); 
 		$h{ThresholdType}=$cgi->param('ThresholdType');
 		$h{ThresholdValue}=$cgi->param('ThresholdValue');
+		
+		#if (($h{ThresholdValue}<0.6) and ($h{ThresholdType} eq 'RelativeToGeometricMean')){
+
+		#	$body.="<b>The ThresholdValue must be > 0.6 if the type is the GeometricMean.</b><br>";
+		#	$body.=print_form($cgi); 
+		#	return ('HTML',$body);
+
+		#}
+
+
 		##################################
 		if ($cgi->param('startTime') eq 'Begining'){
-			$h{TimeStart}="";
+			#$h{TimeStart}="";
+			$h{TimeStart}=0;
+
 		}else{
 			$h{TimeStart}=$cgi->param('Start');
 		}
 		if ($cgi->param('stopTime') eq 'End'){
-			$h{TimeStop}="";
+			#$h{TimeStop}="";
+			$h{TimeStop}=0;
+
 		}else{
 			$h{TimeStop}=$cgi->param('Stop');
 		}
 
 		my $attributeType="FindSpotsInputs";
 		my $facade= OME::Tasks::AEFacade->new($session);
-		$facade->executeView($session->dataset(),"Find and track spots","Parameters","Find spots",\%h,$attributeType);
-	 
+		my ($rep,$message)=$facade->executeView($session->dataset(),"Find and track spots","Parameters","Find spots",\%h,$attributeType);
+	 	if (not defined $rep){
+			$body.="<b>".$message."</b>";
+			return ('HTML',$body);
+
+		}
 	
 	}else{
 		my @ref=$session->dataset()->images();
@@ -170,7 +188,7 @@ sub print_form{
 	@tableColumns = ();
 
 	$tableColumns[0] = $cgi->th ('ThresholdValue');
-	$tableColumns[1] = $cgi->textfield(-name=>'ThresholdValue',-size=>4,default=>'4.5');
+	$tableColumns[1] = $cgi->textfield(-name=>'ThresholdValue',-size=>4,default=>'1.5');
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();
