@@ -100,7 +100,7 @@ sub getRefToObject {
 			my $id   = $obj->id();
 			my $name = $obj->name();
 			my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-			my $ref = "<a href='#' onClick='openPopUpImage($id); return false'><img src='$thumbURL'></a><br>".
+			my $ref = "<a href='javascript: openPopUpImage($id);'><img src='$thumbURL'></a><br>".
 			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id'>$name</a>";
 			return $ref;
 		}
