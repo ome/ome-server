@@ -1118,7 +1118,7 @@ sub getPublishedCols {
 	__PACKAGE__->getAccessorReferenceType($alias);
 
 Returns the package name of the object that will be returned by the alias method.
-If the alias returns a scalar, this method will return undef.
+If the alias returns a scalar or if the alias is unknown, this method will return undef.
 
 =cut
 
@@ -1138,7 +1138,7 @@ sub getAccessorReferenceType {
 	} elsif( $accessorType =~ m/^(has-one|normal)$/o ) {
 		$returnedClass = $class->getColumnDef( $alias )->[2];
 	} else {
-		die "$alias has unknown accessor type ('$accessorType') or is not known";
+		return undef;
 	}
 	# if it's an attribute, return the package name
 	if( $returnedClass =~ /^@/ ) {
