@@ -44,7 +44,6 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
-//import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.Module.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
@@ -53,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Iterator;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
+
 
 /** 
  * Nodes for displaying module inputs and outputs. Currently, all
@@ -78,7 +79,8 @@ public abstract class PFormalParameter extends PNode implements
 	PNodeEventListener{
 	
 	public static final Color NORMAL_COLOR = Color.black;
-	public  static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
+	public static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
+
 	
 	public static final int TYPE_NODE_VERTICAL_OFFSET=12;
 	public static final float TYPE_NODE_DEFAULT_SCALE=0.5f;
@@ -86,7 +88,8 @@ public abstract class PFormalParameter extends PNode implements
 	protected Connection connection = null;
 	protected PModule node;
 	protected  Vector linkedTo = new Vector();
-	protected Vector links = new Vector(); 
+	protected Vector links = new Vector();
+	 
 	
 	
 	// We assume a model that has Modules in a box, with inputs on
@@ -102,6 +105,9 @@ public abstract class PFormalParameter extends PNode implements
 	protected PText typeNode;
 	
 	private boolean isLinkStart;
+	protected PLinkTarget circle;
+	
+	protected PNode labelNode;
 	
 	
 	public PFormalParameter(PModule node,FormalParameter param,
@@ -112,17 +118,52 @@ public abstract class PFormalParameter extends PNode implements
 		this.param = param;
 		this.node = node;
 		
-		textNode = new PText(param.getParameterName());
-		addChild(textNode);
 		setChildrenPickable(false);
+		labelNode = new PNode();
+		addChild(labelNode);
+		
+		textNode = new PText(param.getParameterName());
+		labelNode.addChild(textNode);
+		
+		
+		
 		SemanticType type = param.getSemanticType();
 		if (type != null) {
 			typeNode = new PText(type.getName());
-			addChild(typeNode);
+			labelNode.addChild(typeNode);
 			typeNode.setScale(TYPE_NODE_DEFAULT_SCALE);
 		}						
 		node.addNodeEventListener(this);
+		
+		
 	}
+	
+	protected void addCircle() {
+		PBounds b = labelNode.getFullBoundsReference();
+		//Point2D point = new Point2D.Float();
+		//getLocator().locatePoint(point);
+		//float y = (float) point.getY()+CIRC_BUFFER;
+		//float x = (float) point.getX()-CIRC_HALF_SIZE;
+		//float x = (float) b.getX()-CIRC_SIZE-7;
+		//float y = (float) b.getY()+CIRC_BUFFER;
+		circle = new PLinkTarget();
+		addChild(circle);
+		setCirclePosition();
+	}
+	
+	protected void setCirclePosition() {
+		PBounds b = labelNode.getFullBoundsReference();
+		//Point2D point = new Point2D.Float();
+		//getLocator().locatePoint(point);
+		//float y = (float) point.getY()+CIRC_BUFFER;
+		//float x = (float) point.getX()-CIRC_HALF_SIZE;
+		float x = getLinkTargetX();
+		float y = (float) b.getY()+PLinkTarget.CIRC_BUFFER;
+		circle.setOffset(x,y);
+	}
+	
+	
+	protected abstract float getLinkTargetX();
 	
 	public String getName() {
 		return param.getParameterName();
@@ -154,6 +195,7 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode.setPaint(NORMAL_COLOR);
 			textNode.setPaint(NORMAL_COLOR);
 		}
+		getPModule().setHighlighted(v);
 		repaint();
 	}
 	
@@ -297,12 +339,27 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	public void updateBounds() {
-		PBounds b = textNode.getFullBounds();
-		if (typeNode !=null) {
-			PBounds typeBounds = typeNode.getFullBounds();
-			b.add(typeBounds);
-		}
-		setBounds(new PBounds(b.getX(),b.getY(),b.getWidth(),
+		PBounds b = labelNode.getFullBounds();
+		b.add(circle.getFullBounds());
+ 		setBounds(new PBounds(b.getX(),b.getY(),b.getWidth(),
 			b.getHeight()+PModule.PARAMETER_SPACING)); 
+	}
+
+	// by default, a parameter can be the origin of a link.	
+	public boolean canBeLinkOrigin() {
+		return true;
+	}
+	
+	public float getLabelWidth() {
+		return (float) labelNode.getFullBoundsReference().getWidth();	
+	}
+	
+	public Point2D getCircleCenter() {
+		PBounds b = circle.getFullBoundsReference();
+		float x = (float) (b.getX()+b.getWidth()/2);
+		float y = (float) (b.getY()+b.getHeight()/2);
+		Point2D.Float result = new Point2D.Float(x,y);
+		localToGlobal(result);
+		return result;
 	}
 }
