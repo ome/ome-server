@@ -3,7 +3,9 @@
 #include "XSUB.h"
 
 #include "matrix.h"
+#include "engine.h"
 typedef mxArray* OME__Matlab__Array;
+typedef Engine*  OME__Matlab__Engine;
 
 MODULE = OME::Matlab	PACKAGE = OME::Matlab
 
@@ -21,11 +23,130 @@ __mxCOMPLEX()
         OUTPUT:
                 RETVAL
 
+mxClassID
+__mxUNKNOWN_CLASS()
+        CODE:
+                RETVAL = mxUNKNOWN_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxCELL_CLASS()
+        CODE:
+                RETVAL = mxCELL_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxSTRUCT_CLASS()
+        CODE:
+                RETVAL = mxSTRUCT_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxOBJECT_CLASS()
+        CODE:
+                RETVAL = mxOBJECT_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxCHAR_CLASS()
+        CODE:
+                RETVAL = mxCHAR_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxLOGICAL_CLASS()
+        CODE:
+                RETVAL = mxLOGICAL_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxDOUBLE_CLASS()
+        CODE:
+                RETVAL = mxDOUBLE_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxSINGLE_CLASS()
+        CODE:
+                RETVAL = mxSINGLE_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxINT8_CLASS()
+        CODE:
+                RETVAL = mxINT8_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxUINT8_CLASS()
+        CODE:
+                RETVAL = mxUINT8_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxINT16_CLASS()
+        CODE:
+                RETVAL = mxINT16_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxUINT16_CLASS()
+        CODE:
+                RETVAL = mxUINT16_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxINT32_CLASS()
+        CODE:
+                RETVAL = mxINT32_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxUINT32_CLASS()
+        CODE:
+                RETVAL = mxUINT32_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxINT64_CLASS()
+        CODE:
+                RETVAL = mxINT64_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxUINT64_CLASS()
+        CODE:
+                RETVAL = mxUINT64_CLASS;
+        OUTPUT:
+                RETVAL
+
+mxClassID
+__mxFUNCTION_CLASS()
+        CODE:
+                RETVAL = mxFUNCTION_CLASS;
+        OUTPUT:
+                RETVAL
+
 MODULE = OME::Matlab	PACKAGE = OME::Matlab::Array
 
 OME::Matlab::Array
 newDoubleScalar(package,value)
-        char *package = NO_INIT;
+        const char *package = NO_INIT;
         double value
         CODE:
                 RETVAL = mxCreateDoubleScalar(value);
@@ -34,7 +155,7 @@ newDoubleScalar(package,value)
 
 OME::Matlab::Array
 newLogicalScalar(package,value)
-        char *package = NO_INIT;
+        const char *package = NO_INIT;
         mxLogical value
         CODE:
                 RETVAL = mxCreateLogicalScalar(value);
@@ -43,7 +164,7 @@ newLogicalScalar(package,value)
 
 OME::Matlab::Array
 newDoubleMatrix(package,m,n,complexity=mxREAL)
-        char *package = NO_INIT;
+        const char *package = NO_INIT;
         int m
         int n
         mxComplexity complexity
@@ -54,7 +175,7 @@ newDoubleMatrix(package,m,n,complexity=mxREAL)
 
 OME::Matlab::Array
 newLogicalMatrix(package,m,n)
-        char *package = NO_INIT;
+        const char *package = NO_INIT;
         int m
         int n
         CODE:
@@ -63,19 +184,92 @@ newLogicalMatrix(package,m,n)
                 RETVAL
 
 OME::Matlab::Array
+newNumericMatrix(package,m,n,classID=mxDOUBLE_CLASS,complexity=mxREAL)
+        const char *package = NO_INIT;
+        int m
+        int n
+        mxClassID classID
+        mxComplexity complexity
+        CODE:
+                RETVAL = mxCreateNumericMatrix(m,n,classID,complexity);
+        OUTPUT:
+                RETVAL
+
+OME::Matlab::Array
+newStructMatrix(package,m,n,field_names_ref)
+        const char *package = NO_INIT;
+        int m
+        int n
+        SV * field_names_ref
+        INIT:
+                AV      *field_names;
+                int     i, numfields;
+                const char  **fields;
+                SV      **aval;
+                STRLEN  field_len;
+
+                if (!SvROK(field_names_ref))
+                {
+                    croak("newStructMatrix expects a reference for $fieldNames");
+                }
+
+                if (SvTYPE(SvRV(field_names_ref)) != SVt_PVAV)
+                {
+                    croak("newStructMatrix expects an array ref for $fieldNames");
+                }
+
+                field_names = (AV *) SvRV(field_names_ref);
+                numfields = av_len(field_names)+1;
+        CODE:
+                fields = mxCalloc(numfields,sizeof(char *));
+                for (i = 0; i < numfields; i++)
+                {
+                    aval = av_fetch(field_names,i,0);
+                    if (aval != NULL)
+                    {
+                        fields[i] = SvPV(*aval,field_len);
+                    }
+                }
+                RETVAL = mxCreateStructMatrix(m,n,numfields,fields);
+                mxFree(fields);
+        OUTPUT:
+                RETVAL
+
+
+OME::Matlab::Array
 newLogicalArray(package,...)
-        char *package = NO_INIT;
+        const char *package = NO_INIT;
         INIT:
                 int * dims;
                 int numdims, i;
         CODE:
                 if (items <= 1)
-                    XSRETURN_UNDEF;
+                    croak("newLogicalArray expects a list of dimensions");
                 numdims = items-1;
                 dims = mxCalloc(numdims,sizeof(int));
                 for (i = 0; i < numdims; i++)
                     dims[i] = (int) SvIV(ST(i+1));
                 RETVAL = mxCreateLogicalArray(numdims,dims);
+                mxFree(dims);
+        OUTPUT:
+                RETVAL
+
+OME::Matlab::Array
+newNumericArray(package,classID,complexity,...)
+        const char *package = NO_INIT;
+        mxClassID classID
+        mxComplexity complexity
+        INIT:
+                int * dims;
+                int numdims, i;
+        CODE:
+                if (items <= 3)
+                    croak("newNumericArray expects a list of dimensions");
+                numdims = items-3;
+                dims = mxCalloc(numdims,sizeof(int));
+                for (i = 0; i < numdims; i++)
+                    dims[i] = (int) SvIV(ST(i+3));
+                RETVAL = mxCreateNumericArray(numdims,dims,classID,complexity);
                 mxFree(dims);
         OUTPUT:
                 RETVAL
@@ -87,6 +281,22 @@ DESTROY(pArray)
                 printf("OME::Matlab::Array::DESTROY\n");
                 mxDestroyArray(pArray);
         OUTPUT:
+
+mxClassID
+class(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxGetClassID(pArray);
+        OUTPUT:
+                RETVAL
+
+const char *
+class_name(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxGetClassName(pArray);
+        OUTPUT:
+                RETVAL
 
 int
 order(pArray)
@@ -132,6 +342,134 @@ n(pArray)
         OUTPUT:
                 RETVAL
 
+bool
+is_cell(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsCell(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_char(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsChar(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_complex(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsComplex(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_double(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsDouble(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_empty(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsEmpty(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_int8(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsInt8(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_int16(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsInt16(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_int32(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsInt32(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_logical(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsLogical(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_numeric(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsNumeric(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_single(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsSingle(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_sparse(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsSparse(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_struct(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsStruct(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_uint8(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsUint8(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_uint16(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsUint16(pArray);
+        OUTPUT:
+                RETVAL
+
+bool
+is_uint32(pArray)
+        OME::Matlab::Array pArray
+        CODE:
+                RETVAL = mxIsUint32(pArray);
+        OUTPUT:
+                RETVAL
+
 double
 get(pArray,...)
         OME::Matlab::Array pArray
@@ -142,8 +480,7 @@ get(pArray,...)
         CODE:
                 if (items < 2)
                 {
-                    printf("not enough params\n");
-                    XSRETURN_UNDEF;
+                    croak("get expects a list of subscripts");
                 }
 
                 /* Make sure that there are as many subscripts as
@@ -152,8 +489,7 @@ get(pArray,...)
                 numdims = mxGetNumberOfDimensions(pArray);
                 if (numsubs != numdims)
                 {
-                    printf("numsubs != numdims\n");
-                    XSRETURN_UNDEF;
+                    croak("get: number of subscripts doesn't match number of dimensions");
                 }
 
                 subs = mxCalloc(numsubs,sizeof(int));
@@ -167,6 +503,9 @@ get(pArray,...)
 
                 switch (cid)
                 {
+                    case mxLOGICAL_CLASS:
+                        RETVAL = ((mxLogical *) pr)[index];
+                        break;
                     case mxINT8_CLASS:
                         RETVAL = ((signed char *) pr)[index];
                         break;
@@ -192,8 +531,7 @@ get(pArray,...)
                         RETVAL = ((double *) pr)[index];
                         break;
                     default:
-                        printf("unknown class\n");
-                        XSRETURN_UNDEF;
+                        croak("cannot call set on a non-numeric/non-logical array");
                         break;
                 }
         OUTPUT:
@@ -210,8 +548,7 @@ set(pArray,...)
 
                 if (items < 3)
                 {
-                    printf("not enough params\n");
-                    XSRETURN_UNDEF;
+                    croak("set expects a list of subscripts");
                 }
 
                 /* Make sure that there are as many subscripts as
@@ -220,8 +557,7 @@ set(pArray,...)
                 numdims = mxGetNumberOfDimensions(pArray);
                 if (numsubs != numdims)
                 {
-                    printf("numsubs != numdims\n");
-                    XSRETURN_UNDEF;
+                    croak("set: number of subscripts doesn't match number of dimensions");
                 }
         CODE:
                 subs = mxCalloc(numsubs,sizeof(int));
@@ -237,6 +573,8 @@ set(pArray,...)
 
                 switch (cid)
                 {
+                    case mxLOGICAL_CLASS:
+                        ((mxLogical *) pr)[index] = (mxLogical) value;
                     case mxINT8_CLASS:
                         ((signed char *) pr)[index] = (signed char) value;
                         break;
@@ -262,8 +600,7 @@ set(pArray,...)
                         ((double *) pr)[index] = (double) value;
                         break;
                     default:
-                        printf("unknown class\n");
-                        XSRETURN_UNDEF;
+                        croak("cannot call set on a non-numeric/non-logical array");
                         break;
                 }
         OUTPUT:
@@ -287,6 +624,9 @@ getAll(pArray)
                 {
                     switch (cid)
                     {
+                        case mxLOGICAL_CLASS:
+                            av_push(values,newSViv(*((mxLogical *) pr)++));
+                            break;
                         case mxINT8_CLASS:
                             av_push(values,newSViv(*((signed char *) pr)++));
                             break;
@@ -312,8 +652,7 @@ getAll(pArray)
                             av_push(values,newSVnv(*((double *) pr)++));
                             break;
                         default:
-                            printf("unknown class\n");
-                            XSRETURN_UNDEF;
+                            croak("cannot call getAll on a non-numeric/non-logical array");
                             break;
                     }
                 }
@@ -355,6 +694,24 @@ setAll(pArray,valueref)
                 cid = mxGetClassID(pArray);
                 switch (cid)
                 {
+                    case mxLOGICAL_CLASS:
+                    {
+                        mxLogical * pr;
+                        SV** aval;
+
+                        pr = (mxLogical *) mxGetData(pArray);
+                        for (i = 0; i < n; i++)
+                        {
+                            aval = av_fetch(values,i,0);
+                            if (aval != NULL)
+                            {
+                                *pr = (mxLogical) SvTRUE(*aval);
+                            }
+                            pr++;
+                        }
+
+                        break;
+                    }
                     case mxINT8_CLASS:
                     {
                         signed char * pr;
@@ -500,8 +857,55 @@ setAll(pArray,valueref)
                         break;
                     }
                     default:
-                        printf("unknown class\n");
-                        XSRETURN_UNDEF;
+                        croak("cannot call setAll on a non-numeric/non-logical array");
                         break;
                 }
         OUTPUT:
+
+MODULE = OME::Matlab	PACKAGE = OME::Matlab::Engine
+
+OME::Matlab::Engine
+open(package,startcmd=NULL)
+        const char *package = NO_INIT;
+        const char *startcmd
+        CODE:
+            RETVAL = engOpen(startcmd);
+            engOutputBuffer(RETVAL,NULL,0);
+        OUTPUT:
+            RETVAL
+
+int
+close(pEngine)
+        OME::Matlab::Engine pEngine;
+        CODE:
+            RETVAL = engClose(pEngine);
+        OUTPUT:
+            RETVAL
+
+OME::Matlab::Array
+getVariable(pEngine,varname)
+        OME::Matlab::Engine pEngine;
+        const char *varname;
+        CODE:
+            RETVAL = engGetVariable(pEngine,varname);
+        OUTPUT:
+            RETVAL
+
+int
+putVariable(pEngine,varname,pArray)
+        OME::Matlab::Engine pEngine;
+        const char *varname;
+        OME::Matlab::Array pArray;
+        CODE:
+            RETVAL = engPutVariable(pEngine,varname,pArray);
+        OUTPUT:
+            RETVAL
+
+int
+eval(pEngine,matlab_code)
+        OME::Matlab::Engine pEngine;
+        const char *matlab_code;
+        CODE:
+            RETVAL = engEvalString(pEngine,matlab_code);
+        OUTPUT:
+            RETVAL
