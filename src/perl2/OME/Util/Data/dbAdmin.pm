@@ -70,6 +70,7 @@ sub getCommands {
        'connection'  => 'connection',
        'restore'     => 'restore',
        'delete'      => ['OME::Util::Delete'],
+       'chown'       => 'chown',
       };
 }
 
@@ -89,6 +90,7 @@ Available OME database related commands are:
     restore     Restore OME data from an .tar.bz2 archive.
     delete      Delete things in the OME DB.
     connection  Configure database connection.
+    chown       Change ownership of objects in the DB.
 CMDS
 }
 
@@ -546,6 +548,111 @@ Options:
         port number to use for connection.
      -c, --class 
         Delegate class to use for connection (default OME::Database::PostgresDelegate).
+CMDS
+}
+
+sub chown {
+    my ($self, $commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    my $session = $self->getSession();
+    my $factory = $session->Factory();
+	
+	# Parse our command line options
+	my ($group_in,$user_in,$projects,$datasets,$images);
+	GetOptions('g|group=s' => \$group_in,
+						 'u|user=s'  => \$user_in,
+						 'p|project' => \$projects,
+						 'd|dataset' => \$datasets,
+						 'i|image'   => \$images,
+	);
+	
+	my ($user,$group);
+	
+    if ($group_in) {
+        $group = $self->__getObject('OME::SemanticType::BootstrapGroup',$group_in);
+        die "Unable to find Group $group_in\n" unless $group;
+    }
+    
+    if ($user_in) {
+        $user = $self->__getObject('OME::SemanticType::BootstrapExperimenter',$user_in);
+        die "Unable to find Experimenter $user_in\n" unless $user;
+    }
+	
+    my @objects = @ARGV;
+    my ($object_type,$object_in,$object);
+    $object_type = 'OME::Project' if $projects;
+    $object_type = 'OME::Dataset' if $datasets;
+    $object_type = 'OME::Image' if $images;
+    
+    foreach $object_in (@objects) {
+        $object = $self->__getObject ($object_type,$object_in);
+        if ($object) {
+            $object->owner ($user) if $user_in;
+            $object->group ($group) if $group_in;
+            $object->storeObject();
+            print "Changing ownership of $object_in\n";
+        } else {
+            print STDERR "$object_type $object_in not found\n";
+        }
+    }
+
+    eval {
+        $session->commitTransaction();
+    };
+
+    if ($@) {
+        print "Error committing transaction.  Database was not modified!:\n$@\n";
+        exit 1;
+    } else {
+        print "Changes saved.\n";
+    }
+    
+}
+
+
+sub __getObject {
+    my $self = shift;
+    my ($type,$obj_in) = @_;
+    my $object;
+    my $session = $self->getSession();
+    my $factory = $session->Factory();
+    my $field = 'name';
+    $field = 'OMEName' if $type =~ /Experimenter$/;
+
+    if ($obj_in =~ /^[0-9]+$/) {
+        # Object was specified by ID
+        $object = $factory->loadObject($type,$obj_in);
+    } else {
+        $object = $factory->findObject($type,{$field => $obj_in });
+    }
+    return $object;
+}
+
+
+sub chown_help {
+    my ($self,$commands) = @_;
+    my $script = $self->scriptName();
+    my $command_name = $self->commandName($commands);
+    
+    $self->printHeader();
+    print <<"CMDS";
+Usage:
+    $script $command_name [<options>] [<project <ID|name>> | <dataset <ID|name>> | <image <ID|name>>]...
+
+Change user and group ownership.
+
+Options:
+     -g, --group (<group ID> | <group name>)
+     	Specify group to change ownership to
+     -u, --user (<user ID> | <username>)
+     	Specify user to change ownership to
+     -p, --project
+        Parameters are project IDs or names
+     -d, --dataset
+        Parameters are dataset IDs or names
+     -i, --image
+        Parameters are dataset IDs or names
 CMDS
 }
 
