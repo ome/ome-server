@@ -121,6 +121,13 @@ public class RemoteObject
     public void refresh() { elementCache.clear(); }
 
     /**
+     * Sets the element cache.  This is used primarily by the {@link
+     * RemoteFactory#populateList} method.
+     * @param cache the new element cache
+     */
+    public void setElementCache(Map cache) { this.elementCache = cache; }
+
+    /**
      * Removes the object from the remote server cache when the
      * garbage collector determines that this object is no longer in
      * scope.
