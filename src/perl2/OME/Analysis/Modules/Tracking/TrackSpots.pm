@@ -142,7 +142,7 @@ sub finishImage {
                                  AverageVelocity => undef,
                                 })->[0];
                 $trajectories{$trajectory->id()}->{trajectory} = $trajectory;
-                $trajectories{$trajectory->id()}->{attribute} = $tAttr->[0];
+                $trajectories{$trajectory->id()}->{attribute} = $tAttr;
                 $trajectories{$trajectory->id()}->{minX} = $phys->{X};
                 $trajectories{$trajectory->id()}->{minY} = $phys->{Y};
                 $trajectories{$trajectory->id()}->{minZ} = $phys->{Z};
