@@ -43,11 +43,14 @@ sub getPageBody {
 	my $projectManager=new OME::Tasks::ProjectManager($session);
 	my $datasetManager= new OME::Tasks::DatasetManager($session);
 	my $htmlFormat=new OME::Web::Helper::HTMLFormat;
-
+       
 	my $body = "";
 	# figure out what to do: switch & print form or just print?
 	if( $cgi->param('Switch')) {
 		  $projectManager->switch($cgi->param('newProject'));
+		   $self->Session()->project()
+		   or die ref ($self) . " cannot find session via self->Session()->project()";
+
 		  my @datasets=$session->project()->datasets();
 		  $body.=$htmlFormat->formatProject($session->project());
 		  if (scalar (@datasets)>0){
@@ -79,7 +82,8 @@ sub getPageBody {
 sub print_form {
 	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
 	my $text ="";
-	my $ref=$projectManager->list();
+	my $ref=$projectManager->listMatching();
+
      	$text	.=$htmlFormat->formatProject($session->project()) if (defined $session->project());
 	if (scalar (@$ref) > 0){
 		my %projectList = map { $_->project_id() => $_->name()} @$ref;

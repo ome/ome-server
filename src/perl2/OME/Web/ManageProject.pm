@@ -104,7 +104,7 @@ sub print_form {
 
 	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
 	my $text ="";
-	my $ref=$projectManager->list();
+	my $ref=$projectManager->listMatching();
 	$text.="Please define a project first.<br>"; 
 	return $text if (scalar(@$ref)==0);
 	$text="";

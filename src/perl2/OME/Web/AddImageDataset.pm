@@ -162,7 +162,7 @@ sub format_list_images{
  	my ($session,$imageManager,$htmlFormat,$cgi)=@_;
 	my $text="";
  	my $checkbox="";
- 	my $rep=$imageManager->listNotUsed();
+ 	my $rep=$imageManager->listMatching($session->User()->Group()->id(),1);
 	if (!defined $rep){
 	  my $html="";
 	  $html="<br><b> All images used </b>";

@@ -110,9 +110,10 @@ sub format_form{
 sub format_output{
 	my ($ref,$datasetManager,$htmlFormat,$cgi)=@_;
       my $text="";
-      my $h=$datasetManager->listAll();
+      my $array=$datasetManager->listMatching();
+	my %h = map { $_->dataset_id() => $_->name() } @$array;
 	$text.=$cgi->startform;
-	$text.=$htmlFormat->searchResults($ref,undef,"Dataset(s)","dataset",$h);
+	$text.=$htmlFormat->searchResults($ref,undef,"Dataset(s)","dataset",\%h);
       $text.=$cgi->endform;
 
 	return $text;

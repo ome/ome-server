@@ -62,19 +62,21 @@ sub getPageBody {
 #------------------
 
 sub print_form {
-   my ($session,$datasetManager,$htmlFormat,$cgi)= @_;
-   my $text="";
-   my $dataset = $session->dataset();
-   my $ref=$datasetManager->listAll();
-   if (defined $dataset){
-    $text.=$htmlFormat->formatDataset($dataset);
-   }else{
-    $text.="<h3>No current dataset</h3>";
-   }
-   $text .= $cgi->startform;
-   $text .=$htmlFormat->dropDownTable("newDataset",$ref,"Switch","Switch dataset");
-   $text .= $cgi->endform;
-   return $text;
+	my ($session,$datasetManager,$htmlFormat,$cgi)= @_;
+	my $text="";
+	my $dataset = $session->dataset();
+	my $ref=$datasetManager->listMatching();
+	my %h = map { $_->dataset_id() => $_->name() } @$ref;
+
+	if (defined $dataset){
+	 $text.=$htmlFormat->formatDataset($dataset);
+	}else{
+    	 $text.="<h3>No current dataset</h3>";
+   	}
+   	$text .= $cgi->startform;
+   	$text .=$htmlFormat->dropDownTable("newDataset",\%h,"Switch","Switch dataset");
+   	$text .= $cgi->endform;
+   	return $text;
 	
 }
 

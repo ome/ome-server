@@ -141,8 +141,8 @@ sub projectNotDefined {
 		if( defined $session->project() );
 	
       my $usergpID=$user->Group()->id();
-	my $projects=$projectManager->listGroup($usergpID);
-	my $ownProjects=$projectManager->list();
+	my $projects=$projectManager->listMatching($usergpID);
+	my $ownProjects=$projectManager->listMatching();
 
 
 
@@ -200,9 +200,9 @@ sub datasetNotDefined {
 	#}
 
 	my $usergpID=$user->Group()->id();
-	my $datasets=$datasetManager->listGroup($usergpID);
+	my $datasets=$datasetManager->listMatching($usergpID);
       
-      my $images =$imageManager->listGroup($usergpID);
+      my $images =$imageManager->listMatching($usergpID);
 
 
 

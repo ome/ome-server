@@ -54,7 +54,7 @@ sub getPageBody{
   }
   if (defined $usergpID){
     $body.=$jscriptFormat->popUpDataset();
-    my $projects=$projectManager->listGroup($usergpID);
+    my $projects=$projectManager->listMatching($usergpID);
     if (scalar(@$projects)>0){
    	 $body.="<h3>Description</h3>";
     	 foreach (@$projects){

@@ -59,9 +59,9 @@ sub getPageBody {
      if ($cgi->param('create')){
          my $datasetName=cleaning($cgi->param('name'));
          my @addImages=$cgi->param('ListImage');
-	   return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetName;
+	   return ('HTML',$htmlFormat->noNameMessage("dataset")) unless $datasetName;
 	   my $rep=$datasetManager->exist($datasetName);
-         return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless (defined $rep);
+         return ('HTML',$htmlFormat->existMessage("dataset")) unless (defined $rep);
 	   return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@addImages)>0;
 	   my $result=$datasetManager->create($cgi->param('name'), $cgi->param('description'),\@addImages); 
 	 if (defined $result){
@@ -84,7 +84,7 @@ sub getPageBody {
 sub print_form {
 	my ($usergpID,$imageManager,$htmlFormat,$cgi)=@_;
 	my $text="";
-	my $images=$imageManager->listGroup();
+	my $images=$imageManager->listMatching($usergpID);
  	if (scalar(@$images)>0){
 	   my %list=map { $_->image_id() => $_} @$images;
          $text.=$cgi->startform;
