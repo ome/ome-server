@@ -73,8 +73,6 @@ public class PDatasetImagesNode extends PNode  {
 	private int highlightRow;
 	private int highlightColumn;
 	
-	private boolean canShowHalo = true;
-	
 	private PThumbnail currentHighlight;
 	
 	public PDatasetImagesNode() {
@@ -141,24 +139,41 @@ public class PDatasetImagesNode extends PNode  {
 		selected = v;
 	}
 	
-	public void highlightThumbnail(PThumbnail thumb,boolean v) {
-		if (v == false || imagesNode.getChildrenCount() <= 
-			PThumbnailSelectionHalo.HALO_SIZE || canShowHalo == false) {
+	public void highlightThumbnail(PThumbnail thumb,boolean v,int level) {
+		System.err.println("calling highlight thumbnail..."+thumb);
+		System.err.println(" v is "+v+", level "+level);
+		int count = imagesNode.getChildrenCount();
+		int radius = getRadius(level,count);
+		int size = radius*radius;
+		
+		System.err.println("count is "+count+", radius is "+radius);
+		if (v == false || count < size || radius <1) { 
 			zoomHalo.hide();
 			currentHighlight = null;
 		}
-		else  if (thumb != currentHighlight) {
-			doHighlightThumbnail(thumb);
+		else  { //if (thumb != currentHighlight) {
+			System.err.println("doing halo @ level "+level);
+			doHighlightThumbnail(thumb,radius);
 			currentHighlight = thumb;
 		}
 	}
 	
-	private void doHighlightThumbnail(PThumbnail thumb) {
+	public int getRadius(int level, int count) {
+		// find the number of items on each side
+		double side = Math.sqrt(count);
+		double denom = Math.pow(2,level+2);
+		int radius = (int) Math.floor(side/denom);
+		return radius;
+	}
+	
+	private void doHighlightThumbnail(PThumbnail thumb,int radius) {
 		// get index
-		int index = imagesNode.indexOfChild(thumb);
 		
-		PBounds b = setHighlight(index);
+		int index = imagesNode.indexOfChild(thumb);
+		PBounds b = getHighlight(index,radius);
+		System.err.println("global bounds are "+b);
 		globalToLocal(b);
+		System.err.println("local bounds are "+b);
 		zoomHalo.setPathTo(b);
 	}
 	
@@ -167,16 +182,16 @@ public class PDatasetImagesNode extends PNode  {
 		return v.intValue();
 	}
 	
-	private PBounds setHighlight(int index) {
+	private PBounds getHighlight(int index,int radius) {
 		calculatePosition(index);
 		PBounds b = new PBounds();
 		
 		//	build up bounds of zoomhalo
-		int lowRow = highlightRow-PThumbnailSelectionHalo.HALO_RADIUS;
-		int highRow = highlightRow+PThumbnailSelectionHalo.HALO_RADIUS;
+		int lowRow = highlightRow-radius;
+		int highRow = highlightRow+radius;
 		
-		int lowCol = highlightColumn-PThumbnailSelectionHalo.HALO_RADIUS;
-		int highCol = highlightColumn+PThumbnailSelectionHalo.HALO_RADIUS;
+		int lowCol = highlightColumn-radius;
+		int highCol = highlightColumn+radius;
 		
 		for (int i = lowRow; i<=highRow; i++) {
 			for (int j = lowCol; j <= highCol; j++) {
@@ -237,10 +252,9 @@ public class PDatasetImagesNode extends PNode  {
 		camera.animateViewToCenterBounds(zoomHalo.getGlobalFullBounds(),true,
 			PConstants.ANIMATION_DELAY);
 		zoomHalo.hide();
-		canShowHalo = false;
 	}
 	
-	public void enableHalo() {
-		canShowHalo = true;
+	public PThumbnailSelectionHalo getHalo() {
+		return zoomHalo;
 	}
 }

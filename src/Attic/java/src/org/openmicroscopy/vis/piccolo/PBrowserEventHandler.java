@@ -44,7 +44,6 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.chains.SelectionState;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.PCanvas;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -67,6 +66,9 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
 	private PBrowserCanvas canvas;
 	
+	//a counter indicating how far in I have zoomed.
+	private int zoomLevel = 0;
+	
 	public PBrowserEventHandler(PBrowserCanvas canvas) {
 		super(canvas);
 		this.canvas = canvas;	
@@ -74,7 +76,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode n = e.getPickedNode();
-		System.err.println("browser event mouse entered "+n);
+		//System.err.println("browser event mouse entered "+n);
 		if (n instanceof PSelectableText) {
 			((PSelectableText) n).setHighlighted(true);
 			if (n instanceof PChainLabelText) {
@@ -86,14 +88,17 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			canvas.clearExecutionList();
 			if (n instanceof PThumbnail)  {
 				PThumbnail pt = (PThumbnail) n;
-				pt.setHighlightedWithHalo(true);
+				//System.err.println("enterd thumb. zoom is "+zoomLevel);
+				pt.setHighlightedWithHalo(true,zoomLevel);
 			}
 			else if (n instanceof PDataset) {
 				PDataset dn = (PDataset) n;
 				dn.rollover();	
 			}
 			else if (!(n instanceof PThumbnailSelectionHalo))  {// entering anything else means setting selected datset is null
-				SelectionState.getState().setRolloverDataset(null);	 
+				//System.err.println("entereing non-halo - zoom is "+zoomLevel);
+				SelectionState.getState().setRolloverDataset(null);
+				zoomLevel = 0;	 
 			}
 		}
 		e.setHandled(true);
@@ -101,10 +106,11 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	
 	public void mouseExited(PInputEvent e) {
 		PNode n = e.getPickedNode();
-		System.err.println("browser event exited.."+n);
+		//System.err.println("browser event exited.."+n);
 		if (n instanceof PThumbnail) {
 			PThumbnail pt = (PThumbnail) n;
-			pt.setHighlightedWithHalo(false);
+			//System.err.println("clearing halo...zoom is "+zoomLevel);
+			pt.setHighlightedWithHalo(false,zoomLevel);
 		}
 		else if (n instanceof PSelectableText) {
 			((PSelectableText)n).setHighlighted(false);
@@ -126,31 +132,23 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 	public void handlePopup(PInputEvent e) {
 		postPopup = true;
 		PNode node = e.getPickedNode();
-		System.err.println("popup..."+node);
 		if (node instanceof PDataset) {
-			System.err.println("popup on dataset...");
+			System.err.println("popup on dataset clearing zoom to  0");
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
-			((PDataset) node).enableHalo();
+			zoomLevel = 0;
 		}
 		else if (node instanceof PThumbnail) {
 			System.err.println("popup on thumbnail...");
 			PThumbnail pt = (PThumbnail) node;
-			PDatasetImagesNode pin = pt.getDatasetImagesNode();
-			pt.setHighlightedWithHalo(true);
-			if (pin != null) {
-				pin.enableHalo();
-				System.err.println("zooming to halo..");
-				pin.zoomToHalo(((PCanvas) canvas).getCamera());	
-			}
-			else {
-				System.err.println("no datasetimagesnode...");
-				PBufferedNode bn = pt.getBufferedParentNode();
-				animateToBufferedNode(bn);
-			}
+			
+			zoomOut(pt);
+			
 		}
-		else
+		else {
+			System.err.println("default popup...");
 			super.handlePopup(e);
+		}
 	}
 	public void mouseClicked(PInputEvent e) {
 		// left button.
@@ -168,6 +166,7 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				//System.err.println("zooming in on dataset");
 				PDataset d = (PDataset) node;
 				selectionState.setSelectedDataset(d.getDataset());
+				zoomLevel = 0;
 				animateToNode(d);
 			}
 
@@ -175,23 +174,15 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				//placeholder
 			}
 			else if (isBackgroundClick(node)) {
-				System.err.println("clicking on layer or camera..");
+				//System.err.println("clicking on layer or camera..");
 				selectionState.setSelectedDataset(null);
-			}
-			else if (node instanceof PThumbnailSelectionHalo) {
-				System.err.println("..clicked on halo...");
-				super.mouseClicked(e);
+				zoomLevel =0;
 			} else if (node instanceof PThumbnail) {
 				PThumbnail thumb = (PThumbnail)node;
-				if (thumb.isZoomable())
-					super.mouseClicked(e);
-				else { // zoom to halo?
-					System.err.println("zooming in to halo?");
-		
-					PDatasetImagesNode pin = thumb.getDatasetImagesNode();
-					if (pin != null)
-						pin.zoomToHalo(((PCanvas) canvas).getCamera());
-				}
+				System.err.println("zooming in to thumbnail");
+				zoomToHalo(thumb);
+				zoomLevel++;
+				System.err.println("new zoom level is "+zoomLevel);
 			}
 			else 
 				super.mouseClicked(e);	
@@ -199,4 +190,34 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		e.setHandled(true);
 	}
 	
+	private void zoomToHalo(PThumbnail pt) {
+		
+		PDatasetImagesNode pin = pt.getDatasetImagesNode();
+		
+		if (pin == null) 
+			return;
+		
+		if (pin.hasVisibleHalo() ==false)
+			animateToNode(pt);
+		else
+			animateToNode(pin.getHalo());
+	}
+	
+	private void zoomOut(PThumbnail pt) {
+	
+		if (zoomLevel <= 0) 
+			return;
+		
+		zoomLevel--;
+		System.err.println("changing level to "+zoomLevel);
+		if (zoomLevel ==  0) {
+			PBufferedNode b = pt.getBufferedParentNode();
+			animateToBufferedNode(b);
+		}
+		else { 
+			System.err.println("going to new halo...");
+			pt.setHighlightedWithHalo(true,zoomLevel);
+			zoomToHalo(pt);
+		}
+	}
 }
