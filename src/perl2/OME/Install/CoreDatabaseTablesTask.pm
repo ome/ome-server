@@ -523,8 +523,10 @@ sub make_repository {
 
 	print "\n";  # Spacing
 
+	my $hostname = hostname();
+
 	# FIXME Make this a little more verbose, probably needs some explanation.
-	my $repository_url = confirm_default ("What is the URL to the OMEIS CGI ?", 'http://10.1.1.1/cgi-bin/omeis');
+	my $repository_url = confirm_default ("What is the URL to the OMEIS CGI ?", "http://$hostname/cgi-bin/omeis");
     my $repository = $factory->
 	newObject('OME::SemanticType::BootstrapRepository',
 	        {
