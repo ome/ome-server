@@ -46,7 +46,7 @@ into OME
 
 	use OME::ImportEngine::ImportEngine;
 	my $importer = OME::ImportEngine::ImportEngine->new(%flags);
-	my $images = $importer->importImages(\@filenames);
+	my $images = $importer->importFiles(\@filenames);
 
 =head1 DESCRIPTION
 
