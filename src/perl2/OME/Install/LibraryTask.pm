@@ -277,10 +277,10 @@ sub check_library {
     return 1 unless exists $library->{valid_versions};
 
     foreach my $valid_version (@{$library->{valid_versions}}) {
-	my $eval = 'if ("$library->{version}" '.$valid_version.') { $retval = 1 }';
+		my $eval = 'if ("$library->{version}" '.$valid_version.') { $retval = 1 }';
 
-	eval $eval;
-	last if $retval;
+		eval $eval;
+		last if $retval;
     }
 
     return $retval ? 1 : 0;
@@ -369,22 +369,8 @@ sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
 
-    # Set our globals
-    $OME_BASE_DIR = $environment->base_dir()
-	or croak "Unable to retrieve OME_BASE_DIR!";
-    $OME_TMP_DIR = $environment->tmp_dir()
-	or croak "Unable to retrieve OME_TMP_DIR!";
-    $OME_USER = $environment->user()
-	or croak "Unable to retrieve OME_USER!";
-    
-    # Store our IWD so we can get back to it later
-    my $iwd = getcwd;
-
-    # Retrieve some user info from the password database
-    $OME_UID = getpwnam($OME_USER) or croak "Failure retrieving user id for \"$OME_USER\", $!";
-
     # Set our installation home
-    $INSTALL_HOME = $OME_TMP_DIR."/install";
+    $INSTALL_HOME = '/tmp';
     
     # chdir into our INSTALL_HOME	
     chdir ($INSTALL_HOME) or croak "Unable to chdir to \"$INSTALL_HOME\", $!";
@@ -395,7 +381,10 @@ sub execute {
 
     # Get our logfile and open it for reading
     open ($LOGFILE, ">", "$INSTALL_HOME/$LOGFILE_NAME")
-	or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
+		or croak "Unable to open logfile \"$INSTALL_HOME/$LOGFILE_NAME\". $!";
+		
+	# Bad library flag
+	my $bad_libraries;
 
     #*********
     #********* Check each module (exceptions then version)
@@ -403,111 +392,73 @@ sub execute {
 
     print "Checking libraries\n";
     foreach my $library (@libraries) {
-	print "  \\_ $library->{name}";
+		print "  \\_ $library->{name}";
 
-	my @error;
+		my @error;
 
-	# Pre-install
-	&{$library->{pre_install}}($library) if exists $library->{pre_install};
+		# Pre-install
+		&{$library->{pre_install}}($library) if exists $library->{pre_install};
 
-	# Exceptions
-	if (exists $library->{exception} and &{$library->{exception}}) {
-	    print BOLD, " [OK]", RESET, ".\n";
-	    next;
-	}
+		# Exceptions
+		if (exists $library->{exception} and &{$library->{exception}}) {
+	    	print BOLD, " [OK]", RESET, ".\n";
+	    	next;
+		}
 
-	# If getting the library version requires a subroutine execute it
-	if (ref ($library->{get_library_version}) eq 'CODE') {
-	    $library->{version} = &{$library->{get_library_version}};
-	} else {
-	    # We need to compile some source in order to get our library version
-	    my $binary = "$INSTALL_HOME/$library->{name}_check";
-	    my $source_file = $binary.".c";
-	    my $CC = "gcc";
+		# If getting the library version requires a subroutine execute it
+		if (ref ($library->{get_library_version}) eq 'CODE') {
+	    	$library->{version} = &{$library->{get_library_version}};
+		} else {
+	    	# We need to compile some source in order to get our library version
+	    	my $binary = "$INSTALL_HOME/$library->{name}_check";
+	    	my $source_file = $binary.".c";
+	    	my $CC = "gcc";
 
-	    open (my $CHECK_C, ">", $source_file)
-			or croak "Unable to create version check source file for \"$library->{name}\" $!";
-		print $CHECK_C ($library->{get_library_version}, "\n"); 
-	    close ($CHECK_C);
+	    	open (my $CHECK_C, ">", $source_file)
+				or croak "Unable to create version check source file for \"$library->{name}\" $!";
+			print $CHECK_C ($library->{get_library_version}, "\n"); 
+	    	close ($CHECK_C);
 
-	    $CC = whereis ("compiler") unless which ("$CC");
-		@error = `$CC $source_file -o $binary 2>&1`;
+	    	$CC = whereis ("compiler") unless which ("$CC");
+			@error = `$CC $source_file -o $binary 2>&1`;
 
-	    if ($? == 0) {
-		$library->{version} = `$binary 2>&1`;
+	    	if ($? == 0) {
+				$library->{version} = `$binary 2>&1`;
 	    
-		croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}" if $?;
-	    }
+				croak "Woah! Failure to execute the check function for $library->{name}, $library->{version}"
+					if $?;
+	    	}
+		}
+
+		if (not $library->{version}) {
+	    	# Log the error returned by get_library_version ()
+	    	print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || @error, "\"\n\n";
+
+	    	print BOLD, " [NOT INSTALLED]", RESET;
+
+			$library->{version} = 'N/A';
+			
+			$bad_libraries = 1;
+		}
+
+		if (! check_library($library)) {
+			print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
+			next;
+		} else {
+			print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
+			print STDERR "\nUnsupported version \($library->{version}\) of \"$library->{name}\".\n\n";
+
+			$bad_libraries = 1;
+		}
 	}
 
-	if (not $library->{version}) {
-	    # Log the error returned by get_library_version ()
-	    print $LOGFILE "ERRORS LOADING LIBRARY \"$library->{name}\" -- OUTPUT: \"", $@ || @error, "\"\n\n";
+	if ($bad_libraries) {
+		my $y_or_n = y_or_n ("One or more libraries is not installed or is of an unsupported version. Please read the installation notes for your platform in /doc (INSTALL.FreeBSD for example) for a detailed list of OME's library dependencies and locations to get packages if available. \n\nIf you, for example, have installed all these specific dependencies beforehand these checks may fail due to a lack of development files and you may wish to continue anyway. \n\nWould you like to continue ?");
 
-	    print BOLD, " [NOT INSTALLED]", RESET;
-
-		print STDERR "\n\nPlease install \"$library->{name}\" and re-run install.pl\n";
-		exit(1);
+		exit(1) unless $y_or_n;
 	}
-
-	if (check_library($library)) {
-	    print " $library->{version} ", BOLD, "[OK]", RESET, ".\n";
-	    next;
-	} else {
-	    print " $library->{version} ", BOLD, "[UNSUPPORTED]", RESET, ".\n";
-
-		print STDERR "\n\nUnsupported version \($library->{version}\) of \"$library->{name}\", \"$library->{valid_versions}\" required.\n";
-		exit(1);
-	}
-    }
-    
-    #*********
-    #********* Return to our initial working directory and then install OME's C binaries
-    #*********
-
-    chdir ($iwd) or croak "Unable to return to our initial working directory \"$iwd\", $!";
-
-    # Unless we're just doing the LIB_CHECK sanity check
-    unless ($environment->flag ("LIB_CHECK")) {
-	print_header ("Core Binary Setup");
-    
-	print "(All verbose information logged in $INSTALL_HOME/$LOGFILE_NAME)\n\n";
-
-	my $retval = 0;
-
-	print "Installing core binaries\n";
-
-	# XXX: Unneeded at the moment
-	# Configure
-	# print "  \\_ Configuring ";
-	# $retval = configure_module ("src/C/", $LOGFILE);
-	# 
-	#print BOLD, "[FAILURE]", RESET, ".\n"
-	#    and croak "Unable to configure module, see $LOGFILE_NAME for details."
-	#    unless $retval;
-	#print BOLD, "[SUCCESS]", RESET, ".\n";
-
-	# Compile
-	print "  \\_ Compiling ";
-	$retval = compile_module ("src/C/", $LOGFILE);
-    
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and croak "Unable to compile OME core binaries, see $LOGFILE_NAME for details."
-	    unless $retval;
-	print BOLD, "[SUCCESS]", RESET, ".\n";
-
-	# Install
-	print "  \\_ Installing ";
-	$retval = install_module ("src/C/", $LOGFILE);
-
-	print BOLD, "[FAILURE]", RESET, ".\n"
-	    and croak "Unable to install OME core binaries, see $LOGFILE_NAME for details."
-	    unless $retval;
-	print BOLD, "[SUCCESS]", RESET, ".\n";
-
 
 	print "\n";  # Spacing
-    }
 
     return 1;
 }
