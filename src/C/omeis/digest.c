@@ -48,7 +48,7 @@ get_md (int fd, unsigned char * md_value)
 	const EVP_MD *md;  /* Message digest */
 	ssize_t rlen;      /* Read length */
 	unsigned char buf[MD_BUFSIZE];
-	int md_len;
+	unsigned int md_len;
 
 	/* Sanity check (FATAL) */
 	if (fd < 0 || md_value == NULL)
