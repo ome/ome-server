@@ -77,75 +77,74 @@ sub startImage {
 
     my ($image) = @_;
     my $pixelses = $self->getCurrentInputAttributes('Pixels');
-
-    die "Pixels input must be a singleton"
-      unless scalar(@$pixelses) == 1;
-
-    my $pixels_attr = $pixelses->[0];
-    my $pix = OME::Tasks::PixelsManager->serverLoadPixels($pixels_attr);
-
-    # The serverLoadPixels call will have activated the Pixels's
-    # repository, so that calls to the OME::Image::Server class will
-    # be routed to the correct image server.
-
-    # The image server will have already calculated the statistics, so
-    # we'll just load them in from the image server, and write them to
-    # the database.
-
-    my $stats = OME::Image::Server->
-      getStackStatistics($pixels_attr->ImageServerID());
-
-    foreach my $c (keys %$stats) {
-        foreach my $t (keys %{$stats->{$c}}) {
-            my $sstat = $stats->{$c}{$t};
-
-            $self->newAttributes('Minima',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  Minimum => int($sstat->{Minimum}),
-                                 },
-                                 'Maxima',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  Maximum => int($sstat->{Maximum}),
-                                 },
-                                 'Mean',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  Mean => $sstat->{Mean},
-                                 },
-                                 'Geomean',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  GeometricMean => $sstat->{Geomean},
-                                 },
-                                 'Sigma',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  Sigma => $sstat->{Sigma},
-                                 },
-                                 'Geosigma',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  GeometricSigma => $sstat->{Geosigma},
-                                 },
-                                 'Centroid',
-                                 {
-                                  TheC => $c,
-                                  TheT => $t,
-                                  X    => $sstat->{CentroidX},
-                                  Y    => $sstat->{CentroidY},
-                                  Z    => $sstat->{CentroidZ},
-                                 },
-                                );
-        }
-    }
+    
+    foreach my $pixels_attr (@$pixelses) {
+		
+		my $pix = OME::Tasks::PixelsManager->serverLoadPixels($pixels_attr);
+	
+		# The serverLoadPixels call will have activated the Pixels's
+		# repository, so that calls to the OME::Image::Server class will
+		# be routed to the correct image server.
+	
+		# The image server will have already calculated the statistics, so
+		# we'll just load them in from the image server, and write them to
+		# the database.
+	
+		my $stats = OME::Image::Server->
+		  getStackStatistics($pixels_attr->ImageServerID());
+	
+		foreach my $c (keys %$stats) {
+			foreach my $t (keys %{$stats->{$c}}) {
+				my $sstat = $stats->{$c}{$t};
+	
+				$self->newAttributes('Minima',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  Minimum => int($sstat->{Minimum}),
+									 },
+									 'Maxima',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  Maximum => int($sstat->{Maximum}),
+									 },
+									 'Mean',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  Mean => $sstat->{Mean},
+									 },
+									 'Geomean',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  GeometricMean => $sstat->{Geomean},
+									 },
+									 'Sigma',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  Sigma => $sstat->{Sigma},
+									 },
+									 'Geosigma',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  GeometricSigma => $sstat->{Geosigma},
+									 },
+									 'Centroid',
+									 {
+									  TheC => $c,
+									  TheT => $t,
+									  X    => $sstat->{CentroidX},
+									  Y    => $sstat->{CentroidY},
+									  Z    => $sstat->{CentroidZ},
+									 },
+									);
+			}
+		}
+	}
 }
 
 

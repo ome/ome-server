@@ -77,125 +77,123 @@ sub startImage {
 
     my ($image) = @_;
     my $pixelses = $self->getCurrentInputAttributes('Pixels');
-
-    die "Pixels input must be a singleton"
-      unless scalar(@$pixelses) == 1;
-
-    my $pixels_attr = $pixelses->[0];
-    my $pix = OME::Tasks::PixelsManager->serverLoadPixels($pixels_attr);
-
-    # The serverLoadPixels call will have activated the Pixels's
-    # repository, so that calls to the OME::Image::Server class will
-    # be routed to the correct image server.
-
-    # The image server will have already calculated the statistics, so
-    # we'll just load them in from the image server, and write them to
-    # the database.
-
-    my $stats = OME::Image::Server->
-      getPlaneStatistics($pixels_attr->ImageServerID());
-
-    foreach my $z (keys %$stats) {
-        foreach my $c (keys %{$stats->{$z}}) {
-            foreach my $t (keys %{$stats->{$z}{$c}}) {
-                my $pstat = $stats->{$z}{$c}{$t};
-
-                $self->newAttributes('Minima',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Minimum => int($pstat->{Minimum}),
-                                     },
-                                     'Maxima',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Maximum => int($pstat->{Maximum}),
-                                     },
-                                     'Mean',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Mean => $pstat->{Mean},
-                                     },
-                                     'Geomean',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      GeometricMean => $pstat->{Geomean},
-                                     },
-                                     'Sigma',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sigma => $pstat->{Sigma},
-                                     },
-                                     'Geosigma',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      GeometricSigma => $pstat->{Geosigma},
-                                     },
-                                     'Centroid',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      X    => $pstat->{CentroidX},
-                                      Y    => $pstat->{CentroidY},
-                                     },
-                                     'Sum i',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_i => $pstat->{SumI},
-                                     },
-                                     'Sum i^2',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_i2 => $pstat->{SumI2},
-                                     },
-                                     'Sum log(i)',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_log_i => $pstat->{SumLogI},
-                                     },
-                                     'Sum Xi',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_Xi => $pstat->{SumXI},
-                                     },
-                                     'Sum Yi',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_Yi => $pstat->{SumYI},
-                                     },
-                                     'Sum Zi',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      Sum_Zi => $pstat->{SumZI},
-                                     },
-                                    );
-            }
-        }
-    }
+    
+    foreach my $pixels_attr (@$pixelses) {
+		my $pix = OME::Tasks::PixelsManager->serverLoadPixels($pixels_attr);
+	
+		# The serverLoadPixels call will have activated the Pixels's
+		# repository, so that calls to the OME::Image::Server class will
+		# be routed to the correct image server.
+	
+		# The image server will have already calculated the statistics, so
+		# we'll just load them in from the image server, and write them to
+		# the database.
+	
+		my $stats = OME::Image::Server->
+		  getPlaneStatistics($pixels_attr->ImageServerID());
+	
+		foreach my $z (keys %$stats) {
+			foreach my $c (keys %{$stats->{$z}}) {
+				foreach my $t (keys %{$stats->{$z}{$c}}) {
+					my $pstat = $stats->{$z}{$c}{$t};
+	
+					$self->newAttributes('Minima',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Minimum => int($pstat->{Minimum}),
+										 },
+										 'Maxima',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Maximum => int($pstat->{Maximum}),
+										 },
+										 'Mean',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Mean => $pstat->{Mean},
+										 },
+										 'Geomean',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  GeometricMean => $pstat->{Geomean},
+										 },
+										 'Sigma',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sigma => $pstat->{Sigma},
+										 },
+										 'Geosigma',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  GeometricSigma => $pstat->{Geosigma},
+										 },
+										 'Centroid',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  X    => $pstat->{CentroidX},
+										  Y    => $pstat->{CentroidY},
+										 },
+										 'Sum i',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_i => $pstat->{SumI},
+										 },
+										 'Sum i^2',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_i2 => $pstat->{SumI2},
+										 },
+										 'Sum log(i)',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_log_i => $pstat->{SumLogI},
+										 },
+										 'Sum Xi',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_Xi => $pstat->{SumXI},
+										 },
+										 'Sum Yi',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_Yi => $pstat->{SumYI},
+										 },
+										 'Sum Zi',
+										 {
+										  TheZ => $z,
+										  TheC => $c,
+										  TheT => $t,
+										  Sum_Zi => $pstat->{SumZI},
+										 },
+										);
+				}
+			}
+		}
+	}
 }
 
 
