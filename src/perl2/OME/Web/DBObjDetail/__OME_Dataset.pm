@@ -113,7 +113,7 @@ sub getObjDetail {
 	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
 	%record = %{ $self->_overrideRecord( \%record ) };
 
-	my $detail .= $q->table( { -width => '100%' },
+	my $detail .= $q->table( 
 		$q->Tr( [
 			$q->td( { -align => 'left' },
 				$title 
