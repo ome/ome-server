@@ -46,7 +46,6 @@ import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
-import org.openmicroscopy.vis.util.SwingWorker;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
@@ -55,10 +54,13 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.HashMap;
+import java.util.Vector;
 import java.util.Collection;
+//import java.awt.event.ComponentAdapter;
+//import java.awt.event.ComponentEvent;
 
 /** 
- * A {@link PCanvas} for viewing images in a dataset
+ * A {@link PCanvas} for viewing images in a dataset 
  *
  * 
  * @author Harry Hochheiser
@@ -67,7 +69,7 @@ import java.util.Collection;
  */
 
 public class PBrowserCanvas extends PCanvas implements PBufferedObject, 
-		SelectionEventListener  {
+		SelectionEventListener {
 	
 	/**
 	 * The initial magnification of the  canvas
@@ -100,6 +102,13 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private PExecutionList executionList;
 	
+	private double totalArea = 0;
+	private double scaleFactor;
+	private double screenArea;
+	private Vector strips;
+	private double screenHeight = 0;
+	private double screenWidth =0;
+	
 	public PBrowserCanvas(Connection c) {
 		super();
 		this.connection  = c;
@@ -127,68 +136,208 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	
 		allDatasets = connection.getDatasetsForUser();
+		
+	
 	}
 	
 	
-	public void drawImages(CDataset d) {
-		
-		if (d== null)
-			return;
-		PDataset node;	
-		////System.err.println("drawing images for dataset "+d.getName());
-		
+	
+	
+	public double getArea(CDataset d) {
+		if (d == null) 
+			return 0;
+		PDataset node;
 		Object o = datasetWidgets.get(d);
 		if (o != null) {
 			node = (PDataset) o;
 		}
 		else {
-			//System.err.println("creating new widget");
+			////System.err.println("creating new widget");
 			node = new PDataset(d,connection);
 			datasetWidgets.put(d,node);
 		}
-		layer.addChild(node);
-		node.setOffset(x,y);
-		double height = node.getGlobalFullBounds().getHeight()+VGAP;
-		if (height > maxHeight)
-			maxHeight = height;	
-		x+= node.getGlobalFullBounds().getWidth()+VGAP;
+		if (node == null)
+			return 0;
+		node.clearWidths();
+	//	node.calcArea();
+		return node.getContentsArea();
 	}
 		
-	public void displayDatasets() {
+	
+	
+	public void displayDatasets(final boolean v) {
+		if (v== true)
+			arrangeDisplay();
+		doLayout(v);
+		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
+				PConstants.ANIMATION_DELAY);
+	
+	}
+	
+	// the guts of the dataset display thread
+	private void arrangeDisplay() {
+		if (datasets == null)
+			return;
+		//System.err.println("browser canvas. displaying datasets.");
+		//System.err.println("width is "+getWidth()+", height is"+getHeight());
+		layer.removeAllChildren();
+		totalArea = 0;
+		Iterator iter = datasets.iterator();
 		
-		final SwingWorker worker = new SwingWorker() {
-			
-			public Object construct() {
-				layer.removeAllChildren();
-				Iterator iter = datasets.iterator();
-				x = HGAP;
-				y= 0;
-				maxHeight = 0;
+		while (iter.hasNext()) {
+			CDataset d = (CDataset) iter.next();
+			double area = getArea(d);
+			//System.err.println("dataset "+d.getID()+", area is "+area);
+			totalArea += area;
+		}
+		
+		//System.err.println("total area is "+totalArea);
+		screenHeight = getHeight();
+		screenWidth = getWidth();
+		screenArea = screenHeight*screenWidth;
+		//System.err.println("screen area is "+screenArea);
+		
+		scaleFactor = screenArea/totalArea;
+		//System.err.println("scale factor is "+scaleFactor);
+		strips = doTreeMap();
+		// now, do the calculations
+	}
+
+	private void doLayout(boolean layoutDatasets) {
+		layer.setScale(1.0);
+		//System.err.println("in doLayout..");
+		x = HGAP;
+		y = 0;
+		Iterator iter = strips.iterator();
+		double maxHeight = 0;
+		while (iter.hasNext()) {
+			Vector strip = (Vector)iter.next();
+			Iterator iter2 = strip.iterator();
+			maxHeight = 0;
+			while (iter2.hasNext()) {
+				PDataset node = (PDataset) iter2.next();
 				
-				int count = datasets.size();
-				int rowSz = (int) Math.sqrt(count);
-				int i = 0;
-				while (iter.hasNext()) {
-					CDataset d = (CDataset) iter.next();
-					////System.err.println("browser displaying dataset "+d.getName());
-					drawImages(d);
-					if (i++ >= rowSz) {
-						x=HGAP;
-						y+=maxHeight;
-						i=0;
-					}
+				if (layoutDatasets == true) {
+	//				System.err.println("laying out "+node.getDataset().getName());
+					node.setOffset(0,0);
+					node.layoutImages();
 				}
-				return null;	
+				
+				if (datasets.contains(node.getDataset())) {
+					//System.err.println("laying out node "+node);
+					//System.err.println(" at "+x+","+ y);
+					node.setOffset(x,y);
+					layer.addChild(node);
+					x+= node.getGlobalFullBounds().getWidth()+HGAP;
+					double height = node.getGlobalFullBounds().getHeight()+VGAP;
+					if (height > maxHeight)
+						maxHeight = height;
+				}
+				else {
+					// not showing this node. remove it.
+					// this way, it's not included in bounds.
+					if (node.getParent() == layer)
+						layer.removeChild(node);
+				}	 
 			}
-			
-			public void finished() {
-				////System.err.println("animating browser to center");
-			getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
-					PConstants.ANIMATION_DELAY);
-			}
-		};
-		worker.start();
+			x =HGAP;
+			y +=maxHeight;
+		}
 	}
+	
+	private double oldAspectRatio =0;
+	private double newAspectRatio = 0;
+
+	private Vector doTreeMap() {
+	
+		//System.err.println("do treemap. dataset size is "+datasets.size());
+		oldAspectRatio = 0;
+		newAspectRatio = 0;
+		Vector strips = new Vector();
+		Vector strip = new Vector();
+		
+		Iterator iter = datasets.iterator();
+		CDataset d = null;
+		
+		PDataset node=null;
+		
+		while (iter.hasNext())  {
+			d = (CDataset) iter.next();
+			//System.err.println("placing dataset "+d.getName()+" in treemap");
+			node = (PDataset) datasetWidgets.get(d);
+		
+			
+			// ok, do something with what is next.
+			strip.add(node);
+		
+			// calc,update stats.
+			getTreemapStripHeight(strip);
+			
+			//System.err.println("new aspect ratio is "+newAspectRatio);
+			//System.err.println("old was..."+oldAspectRatio);
+		
+			
+			if (strip.size()>1 &&  newAspectRatio > oldAspectRatio) {
+				// move it to next strip.
+				//System.err.println("moving to  anew strip...");
+				strip.remove(node);
+				Iterator iter2 = strip.iterator();
+				while (iter2.hasNext()) {
+					PDataset ds = (PDataset) iter2.next();
+					ds.revertWidth();
+				}
+				strips.add(strip);
+				strip = new Vector();
+				newAspectRatio = oldAspectRatio = 0;
+				strip.add(node);
+				getTreemapStripHeight(strip);
+			}
+			// otherwise, keep what I've calculated.
+				oldAspectRatio = newAspectRatio;
+		}
+		strips.add(strip);
+		return strips;
+	}
+	
+	private void  getTreemapStripHeight(Vector strip) {
+		// get height
+		//System.err.println("===getting treemap strip====");
+		
+		double stripArea =0;
+		Iterator iter = strip.iterator();
+		while (iter.hasNext()) {
+			PDataset node = (PDataset) iter.next();
+			double area = node.getContentsArea()*scaleFactor;
+			//System.err.println("node scaled area is "+area);
+			stripArea += area;
+		}
+		
+		double ratio = stripArea/screenArea;
+		double height = ratio * getHeight();
+		//System.err.println(" strip area is "+stripArea);
+		//System.err.println(" total area is "+screenArea);
+		//System.err.println("ratio is "+ratio +" , height is "+height);
+		// get width of each and update ratios;
+		double width;
+		int i =0;
+		newAspectRatio = 0;
+		iter = strip.iterator();
+		while (iter.hasNext()) {
+			PDataset node = (PDataset) iter.next();
+			double area  =node.getContentsArea()*scaleFactor;
+			width = area/height;
+			//System.err.println("dataset  scaled area is "+area);
+			//System.err.println("width is "+width);
+			node.setWidth(width);
+			if (width > height) 
+				newAspectRatio += width/height;
+			else 
+				newAspectRatio += height/width;
+			i++;
+		}
+		newAspectRatio = newAspectRatio/i;
+	}
+	
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
@@ -199,9 +348,19 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	
+	
 	public void displayAllDatasets() {
 		datasets= new TreeSet(connection.getDatasetsForUser());
-		displayDatasets();
+		displayDatasets(true);
+		
+		// after initial display
+		// revise when resized
+     	/*addComponentListener(
+				new ComponentAdapter() {
+					public void componentResized(ComponentEvent e) {
+						displayDatasets(true);
+					}
+				});*/
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -210,7 +369,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		CDataset selected = state.getSelectedDataset();
 		
 		if (selected != null) {
-			System.err.println("browser canvas. selected.. "+selected.getName());
+			//System.err.println("browser canvas. selected.. "+selected.getName());
 			datasets = new TreeSet();
 			datasets.add(selected);
 		}
@@ -220,7 +379,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			else
 				datasets = new TreeSet(allDatasets);
 		}	
-		displayDatasets();
+		displayDatasets(false);
 	}
 		
 	public void clearExecutionList() {

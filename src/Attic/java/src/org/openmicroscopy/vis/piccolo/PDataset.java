@@ -69,85 +69,134 @@ public class PDataset extends PGenericBox {
 	private double x=HGAP;
 	private double y=VGAP;
 	private float maxHeight = 0;
+	private float maxWidth=0;
 	private PText nameLabel;
-	
+	private PText chainLabel;
+	private PChainLabels chainLabels;
 	private double LABEL_SCALE=.4;
+	
+	private double area = 0;
+
+	private double prevWidth;
+	private double width;
+	
 	
 	public PDataset(CDataset dataset,Connection connection) {
 		super();
 		this.dataset = dataset;
 		this.connection = connection;
-		layoutImages();
+		calcArea();
 	}
 
-	private void layoutImages() {
-		
+	private void calcArea() {
+		removeAllChildren();
+		x=HGAP;
+		y=VGAP;
 		//	draw label
 		//System.err.println("laying out dataset "+dataset.getName());
 		 nameLabel = new PText(dataset.getLabel());
+		  
 		 addChild(nameLabel);
+		 PBounds b = nameLabel.getBounds();//nameLabel.getGlobalFullBounds();
+		 area += b.getWidth()*b.getHeight();
+		 //System.err.println(" label area is "+area);
 		 int sz = dataset.getImageCount();
 
 		if (sz > 20) {
-			System.err.println("too many ..images..");
+			//System.err.println("too many ..images..");
 			displayDatasetSizeText(sz);
 			return;
 		}
+		
 		Collection images = dataset.getCachedImages(connection);
 		Iterator iter = images.iterator();
 		maxHeight = 0;
-		float maxWidth = 0;
+		maxWidth = 0;
 		//Vector nodes = new Vector();
 		
 		nameLabel.setOffset(x,y);
 		y+= nameLabel.getHeight()+VGAP;
-		float height=0;
-		float width =0;
+		//System.err.println("after name label y is "+y);
+		float imHeight=0;
+		float imWidth =0;
 		//draw them
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
 			PThumbnail thumb = new PThumbnail(image);
 			addChild(thumb);
-			height  = (float) thumb.getGlobalFullBounds().getHeight();
-			width = (float) thumb.getGlobalFullBounds().getWidth();
+			imHeight  = (float) thumb.getGlobalFullBounds().getHeight();
+			imWidth = (float) thumb.getGlobalFullBounds().getWidth();
 		
-			if (height > maxHeight) 
-				maxHeight = height;
-			if (width > maxWidth) 
-				maxWidth = width;
+			if (imHeight > maxHeight)
+				maxHeight = imHeight;
 		}
 		
-	//	System.err.println("laying out images. width is "+maxWidth);
+		//	System.err.println("laying out images. width is "+maxWidth);
 	
 		// space them
 		maxHeight += VGAP;
-		maxWidth+= HGAP;
-
-		iter = getChildrenIterator();
-		int rowSz= (int) Math.sqrt(getChildrenCount());
 		
-		int i =0;
-		double maxRowWidth=0;
+		iter = getChildrenIterator();
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if (obj instanceof PThumbnail) {
+				PThumbnail p = (PThumbnail) obj;
+			    b = p.getGlobalFullBounds();
+				//System.err.println("max height is "+maxHeight);
+				//System.err.println("width is "+b.getWidth());
+				double imagearea = (b.getWidth()+HGAP)*maxHeight;
+				//System.err.println("image area is "+imagearea);
+				area += imagearea;
+			}
+		}
+		
+		Collection chains = dataset.getChains(connection);
+		
+		if (chains.size() > 0) {
+			chainLabel =new PText("Executions: ");
+			chainLabel.setFont(PConstants.LABEL_FONT);
+			chainLabel.setPickable(false);
+			chainLabel.setScale(LABEL_SCALE);
+			addChild(chainLabel);
+			b = chainLabel.getGlobalFullBounds();
+			double clarea =(b.getWidth()+HGAP)*(b.getHeight()+VGAP);
+			//System.err.println("chain label area is "+clarea);
+			area += clarea;
+			
+			chainLabels = new PChainLabels(chains);
+			addChild(chainLabels);
+			//System.err.println("chain labels area is "+chainLabels.getArea());
+			area += chainLabels.getArea();
+		}
+			
+	}
+	public void layoutImages() {
+		x=HGAP;
+		y=VGAP+ nameLabel.getHeight()+VGAP;
+		Iterator iter;
+	
+		iter = getChildrenIterator();
+		//System.err.println("laying out images. width is "+width);
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (!(obj instanceof PThumbnail))
 				continue;
 			
-			//PThumbnail thumb = (PThumbnail) iter.next();
 			PThumbnail thumb = (PThumbnail) obj;
 		
-			thumb.setOffset(x,y);
-			x += maxWidth;
-			if (x > maxRowWidth)
-				maxRowWidth = x; 
-			if (i++ >= rowSz) {
-				// if we're at the end of the row by count and it's longer
-				// than previous rows (don't want to stop a row
-				// if it's got lots of narrow ones..
-				y += maxHeight; 
+			//System.err.println("placing thumbnail at "+x+","+y);
+			double thumbWidth = thumb.getGlobalFullBounds().getWidth()+HGAP;
+			//System.err.println("x is "+x+", thumbwidth "+thumbWidth);
+			//System.err.println("y is "+y+", max height is "+maxHeight);
+			if (x+thumbWidth  < width) {
+				thumb.setOffset(x,y);
+			}
+			else { 
+				y += maxHeight;
 				x = HGAP;
-				i = 0;	
-			}						
+				thumb.setOffset(x,y);
+			}
+		 	x+= thumbWidth;
 		}	
 		// roll back y if we were just about to start a new row
 		if (x== HGAP)
@@ -156,39 +205,37 @@ public class PDataset extends PGenericBox {
 		y +=maxHeight; // move y ahead. to next row.
 		x=HGAP;
 		// adjust width
-		maxRowWidth -= HGAP; // leave off the last horizontal space 
-		if (maxRowWidth < nameLabel.getWidth())
-			maxRowWidth = nameLabel.getWidth();
 		// insert chains, if any.
 		Collection chains = dataset.getChains(connection);
 		
+		double fullWidth=0;
 		if (chains.size() > 0) {
-			PText chainLabel =new PText("Executions: ");
-			chainLabel.setFont(PConstants.LABEL_FONT);
 			chainLabel.setOffset(x+HGAP,y);
-			chainLabel.setPickable(false);
-			chainLabel.setScale(LABEL_SCALE);
-			addChild(chainLabel);
 			PBounds clbounds = chainLabel.getGlobalFullBounds();
-			double chainWidth = maxRowWidth - (clbounds.getWidth()+2*HGAP);
-			PChainLabels chainLabels = new
-				PChainLabels(chains,chainWidth);
+			
 			// adjust for differentials in scale.
 			double ratio =   PChainLabelText.LABEL_SCALE/LABEL_SCALE;
 			y += (1-ratio)*clbounds.getHeight()-FUDGE;
+			chainLabels.layout(width);
 			chainLabels.setOffset(x+clbounds.getWidth()+2*HGAP,y);
-			addChild(chainLabels);
+			
 			PBounds b2 =chainLabels.getGlobalFullBounds();
 			y+= b2.getHeight()+VGAP;
-			if (maxRowWidth < clbounds.getWidth()+2*HGAP+b2.getWidth())
-				maxRowWidth = clbounds.getWidth()+2*HGAP+b2.getWidth();
+			fullWidth =  b2.getX()+b2.getWidth()+VGAP;
+			if (fullWidth > width)
+				width = fullWidth;
 		}
 		
-		height =(float)y-VGAP;
+		float height =(float)y-VGAP;
 		
-	
-		setExtent(maxRowWidth+PConstants.SMALL_BORDER,
+		//System.err.println("width of dataset is "+width);
+		//System.err.println("height is "+height);
+		setExtent(width+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER);
+	}
+	
+	public double getContentsArea() {
+		return area;
 	}
 	
 	private void displayDatasetSizeText(int size) {
@@ -215,5 +262,33 @@ public class PDataset extends PGenericBox {
 			b.getY()-PConstants.SMALL_BORDER,
 			b.getWidth()+2*PConstants.SMALL_BORDER,
 			b.getHeight()+2*PConstants.SMALL_BORDER);
+	}
+	/**
+	 * @return Returns the prevWidth.
+	 */
+	public double getPrevWidth() {
+		return prevWidth;
+	}
+
+	/**
+	 * @return Returns the width.
+	 */
+	public double getWidth() {
+		return width;
+	}
+	/**
+	 * @param width The width to set.
+	 */
+	public void setWidth(double width) {
+		prevWidth = this.width;
+		this.width = width;
+	}
+	
+	public void revertWidth() {
+		width = prevWidth;
+	}
+	
+	public void clearWidths() {
+		width = prevWidth = 0;
 	}
 }
