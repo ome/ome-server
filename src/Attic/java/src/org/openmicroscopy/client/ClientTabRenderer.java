@@ -128,8 +128,8 @@ class dsTabRenderer extends ClientTabRenderer implements ListCellRenderer {
 	super(ourClient, Accessor);
 	setOpaque(true);
 	folderIcon= null;
-	URL iconURL = getClass().getResource("Open24.gif");
-	System.err.println("  icon resource: "+iconURL);
+	ClassLoader cload = this.getClass().getClassLoader();
+	URL iconURL = cload.getResource("org/openmicroscopy/client/Open24.gif");
 	if (iconURL != null) {
 	    folderIcon = new ImageIcon(iconURL, "a dataset");
 	}
