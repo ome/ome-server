@@ -109,7 +109,7 @@ sub processDOM {
 	
 	my $historyXML = $root->getElementsByTagNameNS($NAMESPACE,'DataHistory')->[0]; 
 	return undef unless defined $historyXML;
-	my %mexHash ;
+	my %newMEXhash;
 	# Import MEX and outputs
 	foreach my $mexXML ( @{ $historyXML->getElementsByTagNameNS($NAMESPACE,'ModuleExecution') } ){
 		logdbg "debug", ref($self)."->processDOM processing MEX ".$mexXML->getAttribute('ID');
@@ -117,7 +117,7 @@ sub processDOM {
 		
 		# MEX
 		my $mex = $LSIDresolver->getLocalObject( $mexXML->getAttribute( 'ID' ));
-		next if $mex;
+		next if ($mex);
 		my $dataset_lsid = $mexXML->getAttribute( 'DatasetID' );
 		my $dataset = $objectLookup->{ $dataset_lsid } || $LSIDresolver->getObject( $dataset_lsid )
 			or die "couldn't resolve dataset lsid $dataset_lsid\n";
@@ -161,14 +161,14 @@ sub processDOM {
 			}
 		}
 		
-		$mexHash{ $mexXML->getAttribute( 'ID' ) } = $mex;
+		$newMEXhash{ $mexXML->getAttribute( 'ID' ) } = $mex;
 		
 	}
 	
 	# Import Inputs after MEXs have been imported
 	foreach my $mexXML ( @{ $historyXML->getElementsByTagNameNS($NAMESPACE,'ModuleExecution') } ) {
-		my $mex = $mexHash{ $mexXML->getAttribute( 'ID' ) }
-			or die "a Hash element disappeared. This makes no sense.";
+		my $mex = $newMEXhash{ $mexXML->getAttribute( 'ID' ) }
+			or next;
 		
 		# Actual Inputs
 		foreach my $inputXML ($mexXML->getElementsByTagNameNS($NAMESPACE,'Input') ) {
