@@ -84,7 +84,7 @@ public class Chains {
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
 			Object obj = iter.next();
-			System.err.println("trying to get a node from a chain.."+obj.getClass().getName());
+			//System.err.println("trying to get a node from a chain.."+obj.getClass().getName());
 			Node n = (Node) obj;
 			cInfo.addNode(n);
 		}
