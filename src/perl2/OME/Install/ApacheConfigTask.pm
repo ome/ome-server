@@ -1064,7 +1064,7 @@ sub mod_perl_script {
 	return <<'SCRIPT_END';
 #!/usr/bin/perl -w
 use strict;
-print "Content-Type: text/plain\015\012\015\012";
+print "Content-Type: text/plain\n\n";
 
 my ($key,$value);
 while ( ($key, $value) = each %ENV)
