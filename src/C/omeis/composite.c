@@ -210,7 +210,7 @@ Mapping m;
 	/*
 	  The following is pretty much straight out of zoom_main.c
 	*/
-	if (ome_win.x0==PIC_UNDEFINED) pic_get_window(ome_pic, (Window_box *)&ome_win);
+	if (ome_win.x0==PIC_UNDEFINED) pic_get_window(ome_pic, (Window *)&ome_win);
 	/*
 	 * nx and ny uninitialized at this point
 	 */
