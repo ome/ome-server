@@ -435,7 +435,7 @@ sub loadAttribute {
         $attribute_type:
         $self->findObject("OME::AttributeType",
                           name => $attribute_type);
-    die "Cannot find attribute type $attribute_type_name"
+    die "Cannot find attribute type $attribute_type"
         unless defined $type;
 
     return $type->loadAttribute($id);
@@ -537,7 +537,7 @@ sub newAttribute {
         $attribute_type:
         $self->findObject("OME::AttributeType",
                           name => $attribute_type);
-    die "Cannot find attribute type $attribute_type_name"
+    die "Cannot find attribute type $attribute_type"
         unless defined $type;
     return $type->newAttribute($target, $rows);
 }
