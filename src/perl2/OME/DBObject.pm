@@ -246,6 +246,11 @@ sub _set_columns {
     $class->SUPER::_set_columns(@_);
 }
 
+sub delete {
+    print STDERR "*** Class::DBI::delete disabled\n";
+    return;
+}
+
 
 # Accessors
 # ---------
