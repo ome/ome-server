@@ -33,7 +33,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('experimenters');
 __PACKAGE__->sequence('experimenter_seq');
 __PACKAGE__->columns(Primary => qw(experimenter_id));
-__PACKAGE__->columns(Essential => qw(ome_name firstname lastname email));
+__PACKAGE__->columns(Essential => qw(ome_name firstname lastname email data_dir));
 __PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 
