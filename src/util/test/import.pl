@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 use Expect;
 
-my $timeout = 120;
+my $timeout = 1800;
+my $time_limit_reached;
 
 print "Importing images.  Command line:\n$0 ";
 print "'$_'" foreach @ARGV;
@@ -15,12 +16,13 @@ my $exp = Expect->spawn('ome', 'import', @ARGV)
 $exp->expect($timeout,
 	[ qr/Username.+/ => sub { my $exp = shift;
 		$exp->send("$user\n");
-		$exp->exp_continue(); } ],
+		exp_continue; } ],
 	[ qr/Password.+/ => sub { my $exp = shift;
 		$exp->send("$pass\n");
-		$exp->exp_continue(); } ],
-	[ qr/Exiting.+/ => sub { my $exp = shift;
-		$exp->soft_close(); } ],
+		exp_continue; } ],
+	[ timeout => sub { my $exp = shift;
+		print "Timeout of $timeout seconds expired\n";
+		$time_limit_reached = 1; } ],
+
 );
 
-$exp->hard_close();
