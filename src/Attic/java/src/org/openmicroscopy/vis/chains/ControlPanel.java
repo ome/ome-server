@@ -88,6 +88,8 @@ public class ControlPanel extends JFrame  {
 	private Vector projects;
 	
 	private PProjectSelectionCanvas projCanvas = null;
+	
+	private JSplitPane split = null;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
@@ -107,7 +109,7 @@ public class ControlPanel extends JFrame  {
 		getProjects(connection);
 		if (projects.size() > 0) {
 			//add project list right here.
-			projCanvas =  new PProjectSelectionCanvas(projects);
+			projCanvas =  new PProjectSelectionCanvas(this,projects);
 			//content.add(projCanvas);
 		}
 		System.err.println("tool bar width is "+toolBar.getWidth());
@@ -118,7 +120,7 @@ public class ControlPanel extends JFrame  {
 		if (projCanvas == null)
 			content.add(browser);
 		else {
-			JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+			split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 				projCanvas,browser);
 				
 			split.setOneTouchExpandable(true);
@@ -132,6 +134,7 @@ public class ControlPanel extends JFrame  {
 		if (projCanvas != null) 
 			projCanvas.layoutLabels();// projlist, dataset list
 	}
+
 
 
 	public void completeInitialization() {
@@ -171,6 +174,11 @@ public class ControlPanel extends JFrame  {
 	
 		
 		return tool;
+	}
+	
+	public void setDividerLocation(int h) {
+		if (split != null)
+			split.setDividerLocation(h);
 	}
 	
 	
