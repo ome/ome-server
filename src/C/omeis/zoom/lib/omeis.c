@@ -49,13 +49,13 @@ picomeis_get_name(void *p)
 static void
 picomeis_clear(void *vp, Pixel1 pv)
 {
-  /* hmm... ignore? */
+	fprintf(stderr, "picomeis_clear() is not implemented.\n");
 }
 
 static void
 picomeis_clear_rgba(void *vp, Pixel1 r, Pixel1 g, Pixel1 b, Pixel1 a)
 {
-  /* hmm... ignore? */
+	fprintf(stderr, "picomeis_clear_rgba() is not implemented.\n");
 }
 
 static void

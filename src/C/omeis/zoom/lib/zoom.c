@@ -415,10 +415,10 @@ int overlap;
     short *ymap;		/* order of dst y coords that avoids feedback */
     char *linewritten;		/* has scanline y been written? (debugging) */
 
-    ALLOC(abuf, Pixel1, a->nx);
-    ALLOC(bbuf, Pixel1, b->nx);
-    ALLOC(xmap, Pixel1 *, b->nx);
-    ALLOC(ymap, short, b->ny);
+    ALLOC_ZERO(abuf, Pixel1, a->nx);
+    ALLOC_ZERO(bbuf, Pixel1, b->nx);
+    ALLOC_ZERO(xmap, Pixel1 *, b->nx);
+    ALLOC_ZERO(ymap, short, b->ny);
     ALLOC_ZERO(linewritten, char, MAX(a->y1, b->y1)+1);
 
     /* if overlapping src & dst, find magic y ordering that avoids feedback */
@@ -467,10 +467,10 @@ int overlap;
     short *ymap;		/* order of dst y coords that avoids feedback */
     char *linewritten;		/* has scanline y been written? (debugging) */
 
-    ALLOC(abuf, Pixel1_rgba, a->nx);
-    ALLOC(bbuf, Pixel1_rgba, b->nx);
-    ALLOC(xmap, Pixel1_rgba *, b->nx);
-    ALLOC(ymap, short, b->ny);
+    ALLOC_ZERO(abuf, Pixel1_rgba, a->nx);
+    ALLOC_ZERO(bbuf, Pixel1_rgba, b->nx);
+    ALLOC_ZERO(xmap, Pixel1_rgba *, b->nx);
+    ALLOC_ZERO(ymap, short, b->ny);
     ALLOC_ZERO(linewritten, char, MAX(a->y1, b->y1)+1);
 
     /* if overlapping src & dst, find magic y ordering that avoids feedback */
@@ -541,17 +541,17 @@ Filtpar *ax, *ay;	/* extra x and y filter parameters */
     nchan = pic_get_nchan(apic)==1 ? PIXEL_MONO : PIXEL_RGB;
     scanline_alloc(&abbuf, PIXEL1|nchan, MAX(a->nx, b->nx));
     scanline_alloc(&accum, PIXEL4|nchan, b->nx);
-    ALLOC(linebuf, Scanline, ay->wid);
+    ALLOC_ZERO(linebuf, Scanline, ay->wid);
     /* construct circular buffer of ay->wid intermediate scanlines */
     for (ayf=0; ayf<ay->wid; ayf++) {
 	scanline_alloc(&linebuf[ayf], PIXEL2|nchan, b->nx);
 	linebuf[ayf].y = -1;		/* mark scanline as unread */
     }
 
-    ALLOC(ymap, short, b->ny);
-    ALLOC(xweights, Weighttab, b->nx);
-    ALLOC(xweightbuf, short, b->nx*ax->wid);
-    ALLOC(yweight.weight, short, ay->wid);
+    ALLOC_ZERO(ymap, short, b->ny);
+    ALLOC_ZERO(xweights, Weighttab, b->nx);
+    ALLOC_ZERO(xweightbuf, short, b->nx*ax->wid);
+    ALLOC_ZERO(yweight.weight, short, ay->wid);
     ALLOC_ZERO(linewritten, char, MAX(a->y1, b->y1)+1);
 
     /* do source and dest windows overlap? */
@@ -653,17 +653,17 @@ Filtpar *ax, *ay;	/* extra x and y filter parameters */
     nchan = pic_get_nchan(apic)==1 ? PIXEL_MONO : PIXEL_RGB;
     scanline_alloc(&bbuf, PIXEL1|nchan, b->nx);
     scanline_alloc(&accum, PIXEL4|nchan, a->nx);
-    ALLOC(linebuf, Scanline, ay->wid);
+    ALLOC_ZERO(linebuf, Scanline, ay->wid);
     /* construct circular buffer of ay->wid intermediate scanlines */
     for (ayf=0; ayf<ay->wid; ayf++) {
 	scanline_alloc(&linebuf[ayf], PIXEL1|nchan, a->nx);
 	linebuf[ayf].y = -1;		/* mark scanline as unread */
     }
 
-    ALLOC(ymap, short, b->ny);
-    ALLOC(xweights, Weighttab, b->nx);
-    ALLOC(xweightbuf, short, b->nx*ax->wid);
-    ALLOC(yweight.weight, short, ay->wid);
+    ALLOC_ZERO(ymap, short, b->ny);
+    ALLOC_ZERO(xweights, Weighttab, b->nx);
+    ALLOC_ZERO(xweightbuf, short, b->nx*ax->wid);
+    ALLOC_ZERO(yweight.weight, short, ay->wid);
     ALLOC_ZERO(linewritten, char, MAX(a->y1, b->y1)+1);
 
     /* do source and dest windows overlap? */
