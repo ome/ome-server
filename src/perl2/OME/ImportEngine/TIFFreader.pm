@@ -346,13 +346,6 @@ sub importGroup {
 
 	# pack together & store info in input file
 	my @finfo;
-	$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-				  0, $xref->{ $file }->{'Image.SizeX'}-1,
-				  0, $xref->{ $file }->{'Image.SizeY'}-1,
-				  0, $xref->{ $file }->{'Image.SizeZ'}-1,
-				  0, $xref->{ $file }->{'Image.NumWaves'}-1,
-				  0, $xref->{ $file }->{'Image.NumTimes'}-1,
-				  "TIFF");
 
 	my ($pixels, $pix) = $self->__createRepositoryFile($image, 
 						 $xref->{ $file }->{'Image.SizeX'},
@@ -384,6 +377,14 @@ sub importGroup {
 					Fluor      => undef,
 					NDfilter   => undef};
 			}
+			
+			$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+				  0, $xref->{ $file }->{'Image.SizeX'}-1,
+				  0, $xref->{ $file }->{'Image.SizeY'}-1,
+				  0, $xref->{ $file }->{'Image.SizeZ'}-1,
+				  0, $xref->{ $file }->{'Image.NumWaves'}-1,
+				  0, $xref->{ $file }->{'Image.NumTimes'}-1,
+				  "TIFF");
 		}
 
 	# This isn't RGB, so import it normally.  The files are processed in this way because
@@ -400,6 +401,13 @@ sub importGroup {
 					
 					die "convertPlaneFromTIFF failed: $@\n" if $@;
 					doSliceCallback($callback);
+					$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+								  0, $xref->{ $file }->{'Image.SizeX'}-1,
+								  0, $xref->{ $file }->{'Image.SizeY'}-1,
+								  0, $xref->{ $file }->{'Image.SizeZ'}-1,
+								  0, $xref->{ $file }->{'Image.NumWaves'}-1,
+								  0, $xref->{ $file }->{'Image.NumTimes'}-1,
+								  "TIFF");
 				}
 			}
 		}

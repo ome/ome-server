@@ -151,6 +151,7 @@ sub getGroups {
 			
 			# The other keys of this hash give access to the actual
 			# sub-patterns matched by the RE:
+			print STDERR "Z string is ".$group->[$z][0][0]->{Z}."\n";
 			# $zString = $group->[$z][$c][$t]->{Z};
 			# $cString = $group->[$z][$c][$t]->{C};
 			# $tString = $group->[$z][$c][$t]->{T};
@@ -291,16 +292,6 @@ sub importGroup {
     					 
     my $image = ($self->{super})->__newImage($basename);
     $self->{image} = $image;
-    
-    # pack together & store info the input file
-    my @finfo; 
-    $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-			      0, $xref->{'Image.SizeX'}-1,
-			      0, $xref->{'Image.SizeY'}-1,
-			      0, $xref->{'Image.SizeZ'}-1,
-			      0, $xref->{'Image.NumWaves'}-1,
-			      0, $xref->{'Image.NumTimes'}-1,
-                  "DICOM");
                   
 	my ($pixels, $pix) = 
 	($self->{super})->__createRepositoryFile($image, 
@@ -318,10 +309,21 @@ sub importGroup {
     my $offset;
     my ($i,$t,$z);
 	my ($sizeX, $sizeY, $sizeT, $isSigned, $new_transfer_syntax);
+    my @finfo; 	  # pack together & store info the input file
+
 	for ($z = 0; $z < $xref->{'Image.SizeZ'}; $z++) {
 		$file = shift( @$groupList );
 		
-		# read DICOM tags of new file
+		# store file info 
+		$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+					  0, $xref->{'Image.SizeX'}-1,
+					  0, $xref->{'Image.SizeY'}-1,
+					  0, $xref->{'Image.SizeZ'}-1,
+					  0, $xref->{'Image.NumWaves'}-1,
+					  0, $xref->{'Image.NumTimes'}-1,
+					  "DICOM");
+                  
+        # read DICOM tags of new file
 		$dicom_tags->fill($file,$debug) unless $z == 0;
 		
 		$sizeX = $dicom_tags->value('Columns');
