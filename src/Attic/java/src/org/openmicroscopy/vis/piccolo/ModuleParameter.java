@@ -40,12 +40,14 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.awt.Graphics2D;
 
 /** 
  * Nodes for displaying module inputs and outputs. Currently, all
@@ -67,7 +69,7 @@ import java.util.Vector;
  */
 
 
-public abstract class ModuleParameter extends PText implements 
+public abstract class ModuleParameter extends PNode implements 
 	NodeEventListener{
 	
 	protected static final Color NORMAL_COLOR = Color.black;
@@ -79,6 +81,7 @@ public abstract class ModuleParameter extends PText implements
 	protected ModuleNode node;
 	private  Vector linkedTo = new Vector(); 
 	
+	
 	// We assume a model that has Modules in a box, with inputs on
 	// the left and outputs on the right. Thus, for inputs, the locator
 	// will be on the west, and outputs will have the locator on the east.
@@ -86,22 +89,31 @@ public abstract class ModuleParameter extends PText implements
 	protected ParameterLocator locator;
 	protected boolean linkable;
 	
+	private PText textNode;
+	
+	private boolean isLinkStart;
+	
 	public ModuleParameter() {
 		super();
 	}
 	
-	public ModuleParameter(String s) {
-		super(s);
-	}
-	
 	public ModuleParameter(FormalParameter param) {
-		super(param.getParameterName());
+		super();
+		textNode = new PText(param.getParameterName());
+		addChild(textNode);
+		setChildrenPickable(false);
+		setBounds(textNode.getFullBounds());
+		//super(param.getParameterName());
 		this.param = param;
 	}
 	
 	public ModuleParameter(ModuleNode node,FormalParameter param,
 			ChainCanvas canvas) {
-		super(param.getParameterName());
+		textNode = new PText(param.getParameterName());
+		addChild(textNode);
+		setChildrenPickable(false);
+		setBounds(textNode.getFullBounds());			
+		//super(param.getParameterName());
 		this.canvas = canvas;
 		this.param = param;
 		this.node = node;
@@ -123,9 +135,9 @@ public abstract class ModuleParameter extends PText implements
 	public void setLinkable(boolean v) {
 		linkable = v;
 		if (v == true)
-			setPaint(HIGHLIGHT_COLOR);
+			textNode.setPaint(HIGHLIGHT_COLOR);
 		else
-			setPaint(NORMAL_COLOR);
+			textNode.setPaint(NORMAL_COLOR);
 		repaint();
 	}
 	
@@ -206,5 +218,19 @@ public abstract class ModuleParameter extends PText implements
 	
 	public boolean isLinkedTo(ModuleParameter param) {
 		return (linkedTo.indexOf(param)!=-1);
+ 	}
+ 	
+ 	public void decorateAsLinkStart(boolean v) {
+ 		isLinkStart = v;
+ 		repaint();
+ 	}
+ 	
+ 	public void paint(PPaintContext aPaintContext) {
+ 		super.paint(aPaintContext);
+ 		if (isLinkStart) {
+ 			Graphics2D g = aPaintContext.getGraphics();
+			g.setPaint(HIGHLIGHT_COLOR);
+			g.draw(textNode.getBounds());
+ 		}
  	}
 }

@@ -191,16 +191,16 @@ public class ModuleNode extends PPath {
 				param = (FormalParameter) inputs.get(i);
 				inTexts[i]= new ModuleInput(this,param,canvas);
 				labelNodes.addChild(inTexts[i]);
-				if (inTexts[i].getBounds().getWidth() > maxInputWidth)
-					maxInputWidth = (float) inTexts[i].getBounds().getWidth();
+				if (inTexts[i].getFullBoundsReference().getWidth() > maxInputWidth)
+					maxInputWidth = (float) inTexts[i].getFullBoundsReference().getWidth();
 			}
 			if (i < outSize) {
 				// do the same for outputs.
 				param = (FormalParameter) outputs.get(i);
 				outTexts[i]= new ModuleOutput(this,param,canvas);
 				labelNodes.addChild(outTexts[i]);
-				if (outTexts[i].getBounds().getWidth() > maxOutputWidth)
-					maxOutputWidth = (float) outTexts[i].getBounds().getWidth();
+				if (outTexts[i].getFullBoundsReference().getWidth() > maxOutputWidth)
+					maxOutputWidth = (float) outTexts[i].getFullBoundsReference().getWidth();
 			}
 			
 		}
@@ -221,7 +221,7 @@ public class ModuleNode extends PPath {
 			// get ith input 
 			if (i <inSize) {
 				inTexts[i].setOffset(NAME_LABEL_OFFSET,height);
-				rowHeight = (float) inTexts[i].getBounds().getHeight();	
+				rowHeight = (float) inTexts[i].getFullBoundsReference().getHeight();	
 			}
 			// get ith output
 			if (i < outSize) {
@@ -229,10 +229,10 @@ public class ModuleNode extends PPath {
 				// find difference bwtween the maximum output width
 				// and the width of this one.
 				float rightJustifyGap = maxOutputWidth-
-					((float) outTexts[i].getBounds().getWidth());
+					((float) outTexts[i].getFullBoundsReference().getWidth());
 				// and then move right by that amount.
 				outTexts[i].setOffset(outputColumnX+rightJustifyGap,height);
-				rowHeight = (float) outTexts[i].getBounds().getHeight();
+				rowHeight = (float) outTexts[i].getFullBoundsReference().getHeight();
 			}
 			// advance to next row in height.
 			height += rowHeight+PARAMETER_SPACING;

@@ -77,7 +77,7 @@ public class RemoteModuleCategory
     { setRemoteElement("parent_category",parentCategory); }
 
     public List getChildren()
-    { return getRemoteListElement(RemoteModuleCategory.class,"children"); }
+    { return getCachedRemoteListElement(RemoteModuleCategory.class,"children"); }
     public Iterator iterateChildren()
     {
         RemoteIterator i = (RemoteIterator)
