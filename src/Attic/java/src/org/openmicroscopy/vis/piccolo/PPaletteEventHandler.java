@@ -71,6 +71,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public PPaletteEventHandler(PPaletteCanvas canvas) {
 		super();
 		setEventFilter(new PInputEventFilter());
+		setAutopan(false);
 		this.canvas = canvas;		
 	}
 	
