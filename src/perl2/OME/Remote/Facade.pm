@@ -53,10 +53,14 @@ OME::Remote::Facade - implementation of the Remote Framework interface
 =cut
 
 BEGIN {
-    @FACADES = qw(OME::Remote::Facades::GenericFacade
+    @FACADES = qw(
+                  OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
                   OME::Remote::Facades::ProjectFacade
-                  OME::Remote::Facades::ImportFacade);
+                  OME::Remote::Facades::DatasetFacade
+                  OME::Remote::Facades::ImportFacade
+                  OME::Remote::Facades::ModuleExecutionFacade
+                 );
     foreach my $facade (@FACADES) { $facade->require() }
 
     # Fix the XML-RPC server fault constants -- the XML-RPC spec says
@@ -178,6 +182,7 @@ sub dispatch {
 
     my $eval_error = $@;
 
+    $session->commitTransaction() unless $eval_error;
     $session->deleteInstance(1);
     OME::DBObject->clearAllCaches();
 
@@ -188,7 +193,7 @@ sub dispatch {
     die "Could not find a facade which implements $method"
       unless $executed;
 
-    # Otherwise, return the result.
+    # Otherwise, commit the session's transaction and return the result.
 
     return @result;
 }
