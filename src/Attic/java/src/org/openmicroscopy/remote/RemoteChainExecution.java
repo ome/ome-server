@@ -32,9 +32,9 @@ public class RemoteChainExecution
 {
     static
     {
-        RemoteObject.addClass("OME::ChainExecution",
+        RemoteObject.addClass("OME::AnalysisChainExecution",
                               RemoteChainExecution.class);
-        RemoteObject.addClass("OME::AnalysisExecution::NodeExecution",
+        RemoteObject.addClass("OME::AnalysisChainExecution::NodeExecution",
                               RemoteChainExecution.Node.class);
     }
 
@@ -90,10 +90,10 @@ public class RemoteChainExecution
         public void setChainNode(Chain.Node chainNode)
         { setRemoteElement("analysis_view_node",chainNode); }
 
-        public Analysis getAnalysis()
-        { return (Analysis)
-              getRemoteElement(RemoteAnalysis.class,"analysis"); }
-        public void setAnalysis(Analysis analysis)
+        public ModuleExecution getModuleExecution()
+        { return (ModuleExecution)
+              getRemoteElement(RemoteModuleExecution.class,"analysis"); }
+        public void setModuleExecution(ModuleExecution analysis)
         { setRemoteElement("analysis",analysis); }
 
     }
