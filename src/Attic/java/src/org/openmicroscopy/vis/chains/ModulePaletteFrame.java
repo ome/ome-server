@@ -82,6 +82,11 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	private JSplitPane splitPane;
 	
 	private JTree tree; 
+	
+	/** 
+	 * A flag to prevent re-entrant UI event calls on the JTRee
+	 */
+	private boolean lockTreeChange = false;
 
 	
 	public ModulePaletteFrame(Controller controller,Connection connection) {
@@ -176,6 +181,10 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	 */
 	public void valueChanged(TreeSelectionEvent e) {
 		
+		// If this change is occurring because a
+		if (lockTreeChange == true)
+			return;
+			
 		ModuleTreeNode node = 
 			(ModuleTreeNode) tree.getLastSelectedPathComponent();
 		if (node == null) 
@@ -193,7 +202,6 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	}
 	
 	public void setTreeSelection(CModule mod) {
-		System.err.println("setting tree selection..."+mod.getID());
 		int rowCount = tree.getRowCount();
 		for (int i =0; i < rowCount; i++) {
 			TreePath path = tree.getPathForRow(i);
@@ -202,7 +210,10 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 				ModuleTreeNode modNode = (ModuleTreeNode) obj;
 				//if (modNode.isLeaf() && modNode.getID() == mod.getID())  {
 				if (modNode.getObject() == mod) {
+					// We don't want the valueChanged call to get executed here.
+					lockTreeChange= true;
 					tree.setSelectionPath(path);
+					lockTreeChange = false;
 					return;
 				}
 			}
