@@ -283,7 +283,9 @@ sub render {
 				$relation_render_mode => $self->renderArray( 
 					[ $obj, $method ], 
 					substr( $relation_render_mode, 1 ), 
-					{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ) }
+					{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
+					  type => $obj->getAccessorReferenceType( $method )->getFormalName()
+					}
 				)
 			} );
 		}
@@ -326,10 +328,12 @@ sub renderArray {
 		$objs = \@relation_objects
 	}
 	
-	# use generic template
-	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
-	my $tmpl = HTML::Template->new( filename => 'generic_'.$mode.'.tmpl',
-                                    path     => $tmpl_dir);
+	# try to load custom template
+	my $tmpl_path = $self->_findTemplate( $options->{type}, $mode );
+	# use generic if there is no custom
+	$tmpl_path = $self->Session()->Configuration()->ome_root().'/html/Templates/'.'generic_'.$mode.'.tmpl'
+		unless $tmpl_path;
+	my $tmpl = HTML::Template->new( filename => $tmpl_path );
 	my %tmpl_data;
 
 	if( $objs && scalar( @$objs ) > 0 ) {
@@ -538,7 +542,9 @@ sub renderData {
 			$record{ $field } = $self->renderArray( 
 				[$obj, $method], 
 				$render_mode, 
-				{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ) }
+				{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
+				  type => $obj->getAccessorReferenceType( $method )->getFormalName()
+				}
 			);
 
 		# populate mode render requests
@@ -894,12 +900,12 @@ sub _findTemplate {
 	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
 	my ($package_name, $common_name, $formal_name, $ST) =
 		$self->_loadTypeAndGetInfo( $obj );
-	my $summary_tmpl = $formal_name; 
-	$summary_tmpl =~ s/@//g; 
-	$summary_tmpl =~ s/::/_/g; 
-	$summary_tmpl .= "_".$mode.".tmpl";
-	$summary_tmpl = $tmpl_dir.'/'.$summary_tmpl;
-	return $summary_tmpl if -e $summary_tmpl;
+	my $tmpl_path = $formal_name; 
+	$tmpl_path =~ s/@//g; 
+	$tmpl_path =~ s/::/_/g; 
+	$tmpl_path .= "_".$mode.".tmpl";
+	$tmpl_path = $tmpl_dir.'/'.$tmpl_path;
+	return $tmpl_path if -e $tmpl_path;
 	return undef;
 }
 
