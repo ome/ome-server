@@ -1,8 +1,8 @@
-CVS/
-Makefile$
-blib/
-.o$
-.bs$
-pm_to_blib
-MANIFEST.bak
-.DS_Store
+\bCVS\b
+^MANIFEST\.
+^Makefile$
+^blib/
+\.o$
+\.bs$
+^pm_to_blib$
+\.DS_Store
