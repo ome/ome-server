@@ -279,7 +279,7 @@ public interface ChainManager
      * @param toNode the destination node of the link
      * @param toInput the destination input of the link
      */
-    public void remoteLink(Chain       chain,
+    public void removeLink(Chain       chain,
                            Chain.Node  fromNode,
                            String      fromOutput,
                            Chain.Node  toNode,
