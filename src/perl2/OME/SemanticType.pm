@@ -50,6 +50,7 @@ OME::DataTable create data classes for each attribute table.
 use strict;
 our $VERSION = '1.0';
 
+use Carp;
 use Log::Agent;
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -144,7 +145,7 @@ sub newAttribute {
 
 
 sub __debug {
-    logdbg "debug", @_;
+    #logdbg "debug", @_;
 }
 
 
@@ -163,7 +164,7 @@ sub newAttributes {
     # Merge the attribute data hashes into hashes for each data table.
     # Also, mark which data tables belong to each attribute.
 
-    __debug("\nMerging attributes\n");
+    __debug("Merging attributes");
 
     my %granularityColumns =
       (
@@ -183,7 +184,7 @@ sub newAttributes {
         my $granularity = $attribute_type->granularity();
         my $granularityColumn = $granularityColumns{$granularity};
 
-        __debug("  ".$attribute_type->name()." (".scalar(@attribute_columns)." columns)\n");
+        __debug("  ".$attribute_type->name()." (".scalar(@attribute_columns)." columns)");
 
         # Follow each attribute column to its location in the
         # database.  Mark some information about that data table, and
@@ -226,7 +227,7 @@ sub newAttributes {
                 my $new_target = $data_hash->{$granularityColumn};
                 if (exists $targets{$table_name}) {
                     my $old_target = $targets{$table_name};
-                    die "Targets clash"
+                    croak "Targets clash"
                       if ($new_target ne $old_target);
                 }
                 $targets{$table_name} = $new_target;
@@ -235,7 +236,7 @@ sub newAttributes {
             # Pull out the datum from the attribute hash.
             my $new_data = $data_hash->{$attribute_column_name};
 
-            __debug(" = $new_data");
+            __debug("      = $new_data");
 
             # If we've already filled in this column in the data table
             # hash, ensure it doesn't clash with this new piece of
@@ -243,12 +244,10 @@ sub newAttributes {
 
             if (exists $data{$table_name}->{$column_name}) {
                 my $old_data = $data{$table_name}->{$column_name};
-                __debug(" ?= $old_data ");
-                die "Attribute values clash"
+                __debug("      ?= $old_data");
+                croak "Attribute values clash"
                     if ($new_data ne $old_data);
             }
-
-            __debug("\n");
 
             # Store the datum into the data table hash.
             $data{$table_name}->{$column_name} = $new_data;
@@ -260,13 +259,13 @@ sub newAttributes {
 
     my %data_rows;
 
-    __debug("Creating data rows\n");
+    __debug("Creating data rows");
 
     foreach my $table_name (keys %data_tables) {
         my $data_table = $data_tables{$table_name};
         my $granularity = $granularities{$table_name};
 
-        __debug("  Table $table_name\n");
+        __debug("  Table $table_name");
 
         #foreach my $column_name (sort keys %$data) {
         #    __debug("    $column_name = ".$data->{$column_name}."\n");

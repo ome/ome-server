@@ -264,7 +264,7 @@ sub getOMESession {
 #
 # logout
 # ------
-sub logout () {
+sub logout {
     my $self = shift;
     my $session = shift;
     return undef unless defined $session;

@@ -21,6 +21,87 @@
 package OME::Remote::Dispatcher;
 our $VERSION = '1.00';
 
+=head1 NAME
+
+OME::Remote::Dispatcher - the OME Remote Access dispatcher
+
+=head1 OME::Remote::Dispatcher
+
+The OME::Remote::Dispatcher object is responsible for translating
+received RPC calls into the appropriate Perl API calls.  All method
+calls are executed in the context of an OME session.  All objects
+created by the Perl methods are serialized into the RPC messages as
+object references; the objects themselves are kept in a cache on the
+server side.  This has two benefits: First, the objects maintain their
+integrity even in the absence of object-oriented method call support
+in the RPC protocol (i.e, XML-RPC).  Second, this enforces object
+encapsulation across the RPC channel, adding a small extra layer of
+security.  Malevolent and/or buggy user code cannot create and modify
+objects to trick the Remote Access server into doing something that it
+shouldn't; Remote Access clients only have access to Perl objects
+explicitly created by the methods of the Perl API.
+
+=head1 PUBLISHED METHODS
+
+(NOTE: In the following descriptions, the method prototypes are
+presented in their Perl syntax.  However, they will usually be called
+via an RPC protocol.  The parameters and return values will be
+consistent across protocol.)
+
+The following methods are published by OME::Remote::Dispatcher:
+
+=head2 versionInfo
+
+	my $info = OME::Remote::Dispatcher->versionInfo();
+
+Returns some useful information about the OME Remote Accesss server,
+including the version of the underlying OME API.  This method can be
+used by remote clients to verify that there is a working Remote Access
+server at an RPC URL before attempting to create a session.
+
+=head2 createSession
+
+	my $session = OME::Remote::Dispatcher->
+	    createSession($username, $password);
+
+Logs into OME with the given username and password, and returns an
+OME::Session object which can be used with the dispatch method to make
+further OME API calls.
+
+=head2 closeSession
+
+	OME::Remote::Dispatcher->closeSession($session);
+
+Ends an OME session.  Currently this method I<must> be called in order
+for the Remote Access server to clean out the object cache of the
+objects created by this session.  If a client fails to call this
+method, the server will quickly leak memory.
+
+(NOTE: This is, of course, going to change in the future, most likely
+by having the server check every so often and automatically close any
+sessions which are open and have not been recently used.)
+
+=head2 dispatch
+
+	OME::Remote::Dispatcher->($session,$object,$methodName,@params);
+
+The workhouse of the Remote Access dispatcher.  Has the same effect as
+calling
+
+	$object->$methodName(@params);
+
+from a Perl interpreter which has logged in with $session.  The method
+must be listed in %OME::Remote::Prototypes::prototypes in order for
+the dispatcher to properly delegate the method call.  Type-checking is
+performed on both the input parameters and return values; if either do
+not match the prototype, and RPC fault is returned.  If any of the
+parameters/return values are of an object type, they are encoded into
+or decoded from, respectively, a string reference which can be passed
+across the RPC channel.  The object and its reference are stored in a
+cache, so that it can be referred to in later dispatch calls.
+
+=cut
+
 use strict;
 
 use OME::SessionManager;
@@ -297,5 +378,16 @@ sub verifyParameterList {
     return 1;
 }
 
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=head2 SEE ALSO
+
+L<OME::Remote||OME::Remote>,
+L<OME::Remote::Prototypes|OME::Remote::Prototypes>
+
+=cut
 
 1;

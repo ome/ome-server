@@ -101,7 +101,7 @@ sub new {
 }
 
 sub __debug {
-    logdbg "info", @_;
+    #logdbg "info", @_;
 }
 
 =head2 Session and Factory
@@ -348,7 +348,7 @@ sub newAttributes {
 
         $formal_outputs{$attribute_type->id()} = $formal_output;
 
-        __debug("  $formal_output_name\n");
+        __debug("  $formal_output_name");
 
         if ($granularity eq 'D') {
             $data_hash->{dataset_id} = $self->{_current_dataset};
@@ -374,7 +374,7 @@ sub newAttributes {
                 my $last_new = $self->{_last_new_feature};
                 $target = $last_new->parent_feature() if (defined $last_new);
             } else {
-                die "Invalid feature tag for new feature attribute: $feature_tag\n";
+                die "Invalid feature tag for new feature attribute: $feature_tag";
             }
 
             # Every feature attribute must refer to a some feature.
@@ -564,8 +564,8 @@ sub finishDataset {
     $self->{_dataset_inputs} = undef;
     $self->{_dataset_outputs} = undef;
 
-    print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
-        if exists $self->{_timing};
+    #print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
+    #    if exists $self->{_timing};
 }
 
 

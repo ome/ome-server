@@ -26,6 +26,7 @@ use Ima::DBI;
 use Class::Accessor;
 use OME::SessionManager;
 use OME::DBConnection;
+use Log::Agent;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
