@@ -59,20 +59,25 @@ use OME::Tasks::ImageManager;
 use OME::Tasks::ModuleExecutionManager;
 use base qw(OME::Web::DBObjRender);
 
-# Class data
-__PACKAGE__->_fieldLabels( {
-});
-__PACKAGE__->_fieldNames( [
-	'id',
-	'name',
-	'description',
-	'owner',
-	'group',
-	'locked',
-] ) ;
-__PACKAGE__->_allFieldNames( [
-	@{__PACKAGE__->_fieldNames() },
-] ) ;
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _summaryFields } = [
+		'name',
+		'description',
+		'owner',
+		'group',
+	];
+	$self->{ _allFields } = [
+		'id',
+		@{ $self->{ _summaryFields } },
+		'locked',
+	];
+	
+	return $self;
+}
 
 =head1 Author
 
