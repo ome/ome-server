@@ -603,21 +603,26 @@ my ($self,$dbh,$condition) = @_;
 	$dbh->do (qq/LISTEN "$condition"/);
 }
 
-sub waitCondition {
-my ($self,$dbh,$condition,$timeout) = @_;
+sub waitNotifies {
+my ($self,$dbh,$timeout) = @_;
+my @notices;
 
 	my $fd = $dbh->func ('getfd') or
 		die "Unable to get PostgreSQL back-end FD";
 	my $sel = IO::Select->new ($fd);
-	# Block
+	# Block until something happens
 	if (defined $timeout) {
 		$sel->can_read ($timeout);
 	} else {
 		$sel->can_read ();
 	}
-	my $notice = $dbh->func ('pg_notifies');
-	return undef unless $notice and $notice->[0] eq $condition;
-	return $condition;
+	my $notify = 1;
+	while ($notify) {
+		$notify = $dbh->func ('pg_notifies');
+		push (@notices,$notify->[0]) if $notify;
+	}
+	return undef unless scalar @notices;
+	return \@notices;
 }
 
 

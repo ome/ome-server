@@ -288,19 +288,25 @@ sub registerListener {
 }
 
 
-=head2 waitCondition
+=head2 waitNotifies
 
-	$delegate->waitCondition($dbh,$condition,$timeout);
+	$delegate->waitNotifies($dbh,$timeout);
 
-This method should block until the specified condition occurs or the
-timeout is reached.  $timeout is in seconds and can be fractional.
+This method should block until $timeout (in fractional seconds) or forever if undef.
+The method returns a reference to an array containing all of the events that occured
+or undef if nothing hapened.  Event listeners are registered with registerListener and
+un-registered with unregisterListener.  Event names are arbitrary strings.
+
+There is no guarantee that all notifications will be picked up by this method.  It should
+return from a block if any registered event happened on any handle.  It is up to the caller
+to determine what actually happened (and in what sequence if that's important) by using
+tables in the DB.
 
 =cut
 
-sub waitCondition {
-    die "OME::Database::Delegate->waitCondition is abstract";
+sub waitNotifies {
+    die "OME::Database::Delegate->waitNotifies is abstract";
 }
-
 
 
 =head2 unregisterListener
@@ -322,6 +328,11 @@ sub unregisterListener {
 	$delegate->notifyListeners($dbh,$condition);
 
 Sends an asynchronous notification to all listeners of the specified condition.
+
+Note that the whole point of the four methods above is to allow inter-process
+communication between processes connected to a common database - by any means.
+Implementation must take into account that any data base handle can send a notification
+to any other database handle connected to the same DB.
 
 =cut
 
