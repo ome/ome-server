@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 use ExtUtils::MakeMaker;
 use Cwd qw(cwd abs_path);
+use English;
 
 	my $pwd = abs_path(cwd()) || die "Can't figure out your cwd!";
 
@@ -10,7 +11,19 @@ use Cwd qw(cwd abs_path);
 		print "You can remove all previous versions of OME with the following command:\n";
 		print "perl Makefile.PL uninstall\n";
 		print "--------------------------\n";
-	
+		
+		# the OME/Matlab directory is a problem child because it's C code in a directory of
+		# perl code. We have to go inside and do a make clean. Otherwise all the .o files 
+		# left over from a previous installation cause this installation to fail
+		my $iwd = cwd();
+		print "Performing `make clean` in directory $iwd/OME/Matlab\n";
+		chdir ($iwd.'/OME/Matlab');
+		my $iEUID = $EUID;
+		$EUID = 0;
+		system('make clean');
+		$EUID = $iEUID; 
+		chdir ($iwd);
+		
 		WriteMakefile(
 			NAME         => 'OME',
 			VERSION_FROM => 'OME.pm', # finds $VERSION
