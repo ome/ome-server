@@ -51,13 +51,13 @@ sub new {
     my ($proto, %params) = @_;
     my $class = ref($proto) || $proto;
 
-    my @fieldsILike = qw(session _parser debug);
+    my @fieldsILike = qw(session _parser);
 
     my $self;
 
     @$self{@fieldsILike} = @params{@fieldsILike};
 
-    logdie "I need a session"
+    logdie $class."->new needs a session"
       unless exists $self->{session} &&
              UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -108,7 +108,6 @@ Changes to tables and columns are made on that handle, but shouldn't be committe
 =cut
 sub processDOM {
     my ($self, $root, %flags) = @_;
-    my $debug   = $self->{debug};
     my $session = $self->{session};
     my $factory = $session->Factory();
     my $delegate = OME::Database::Delegate->getDefaultDelegate();
