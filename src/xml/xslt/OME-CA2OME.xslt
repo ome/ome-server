@@ -5,7 +5,7 @@
 	xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalyisModule.xsd"
+	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
 	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
 
