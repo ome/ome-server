@@ -1017,16 +1017,22 @@ sub SVGgetJS {
     die "Could not retreive Image from ImageID=$ImageID\n"
     	unless defined $image;
     print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
+    my $dimensions = $image->Dimensions();
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	my $SQL = <<ENDSQL;
-	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
-ENDSQL
-
-	my $DBH = $self->Session()->DBH();
-	my $sth = $DBH->prepare ($SQL);
-	$sth->execute($ImageID);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
+	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+        $dimensions->num_waves(),$dimensions->num_times(),
+        $dimensions->bits_per_pixel());
 	$bpp /= 8;
+#	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
+#	my $SQL = <<ENDSQL;
+#	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
+#ENDSQL
+#
+#	my $DBH = $self->Session()->DBH();
+#	my $sth = $DBH->prepare ($SQL);
+#	$sth->execute($ImageID);
+#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
+#	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
     my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? sprintf "%d",$sizeZ / 2 : 0 );
@@ -1288,16 +1294,20 @@ sub getJSgraphics {
     die "Could not retreive Image from ImageID=$ImageID\n"
     	unless defined $image;
     print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
-#    my $attributes = $image->ImageAttributes();
+    my $dimensions = $image->Dimensions();
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	my $SQL = <<ENDSQL;
-	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
-ENDSQL
+	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+        $dimensions->num_waves(),$dimensions->num_times(),
+        $dimensions->bits_per_pixel());
 
-	my $DBH = $self->Session()->DBH();
-	my $sth = $DBH->prepare ($SQL);
-	$sth->execute($ImageID);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
+#	my $SQL = <<ENDSQL;
+#	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
+#ENDSQL
+#
+#	my $DBH = $self->Session()->DBH();
+#	my $sth = $DBH->prepare ($SQL);
+#	$sth->execute($ImageID);
+#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
 	$bpp /= 8;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
