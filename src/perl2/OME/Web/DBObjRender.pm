@@ -637,7 +637,7 @@ sub getFields {
 	return ( sort __numerical_lexical grep( $_ ne 'target', @cols));
 	
 }
-
+ 
 # This helper function does modified alphanumerical sorting so that, 
 # for example, Bin10 comes  AFTER Bin2. Written by Tom Macura.
 sub __numerical_lexical {
@@ -659,7 +659,8 @@ sub __numerical_lexical {
 	}
 	
 	# one of the strings is ultimately empty
-	return 0 if ($aa eq '');
+	return 0 if ($aa eq '' and $bb eq '');
+	return -1 if ($aa eq '');
 	return 1;
 }
 
