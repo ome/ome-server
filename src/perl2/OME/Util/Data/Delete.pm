@@ -55,7 +55,9 @@ our $IMAGE_IMPORT_MODULE_ID;
 our @IMAGE_STs;
 our @DATASET_STs;
 our %DELETED_ATTRS;
+our $RECURSION_LEVEL;
 our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
+our %ACS_DELETED_NODES;
 
 sub getCommands {
     return
@@ -115,6 +117,8 @@ sub DeleteMEX {
 
 	undef %DELETED_ATTRS;
 	undef %DELETED_MEXES;
+	undef %ACS_DELETED_NODES;
+	$RECURSION_LEVEL=0;
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
@@ -123,7 +127,7 @@ sub DeleteMEX {
 	if (scalar(@ARGV) <= 0) {
 		$self->MEX_help();
 	}
-
+	
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
 	$FACTORY = $session->Factory();
@@ -155,7 +159,10 @@ my $self = shift;
 my $mex = shift;
 my $delete = shift;
 
-	return if exists $DELETED_MEXES{$mex->id};
+	return if exists $DELETED_MEXES{$mex->id()};
+	$RECURSION_LEVEL++;
+	my $recurs_indent='';
+	for (1..$RECURSION_LEVEL) { $recurs_indent .= '  ' }
 
 	my $input;
 	my @actual_inputs = $FACTORY->
@@ -167,7 +174,7 @@ my $delete = shift;
 		$self->delete_mex ($input->module_execution(),$delete);
 	}
 
-	print "vvv MEX ",$mex->id(),": ",$mex->module()->name(),"\n";
+	print $recurs_indent,"++MEX ",$mex->id(),": ",$mex->module()->name(),"\n";
 	
 	# Gather up the typed an untyped outputs
 	my @outputs = $mex->module()->outputs();
@@ -177,9 +184,9 @@ my $delete = shift;
 	foreach my $output (@outputs) {
 		my $ST = $output->semantic_type();
 		next unless $ST; # Skip the untyped output itself
-		my $o_name = "*** Untyped ***" unless UNIVERSAL::can ($output,'name');
-		$o_name = $output->name() unless $o_name;
-		print "    Output = ",$o_name," (",$ST->name(),")\n";
+		my $o_name;
+		$o_name =  UNIVERSAL::can ($output,'name') ? $output->name() : '*** Untyped **';
+		print $recurs_indent,"  Output = ",$o_name," (",$ST->name(),")\n";
 
 		# Get the output's attributes
 		my $attributes = OME::Tasks::ModuleExecutionManager->
@@ -206,12 +213,12 @@ my $delete = shift;
 					next unless $ref_MEX;
 					$self->delete_mex ($ref_MEX,$delete) unless $ref_MEX->id() == $mex->id();
 				}
-				print "            Reference Attribute ",$ref_attr->id()," (",$ref_attr->semantic_type()->name(),")\n";
+				print $recurs_indent,"      Reference Attribute ",$ref_attr->id()," (",$ref_attr->semantic_type()->name(),")\n";
 				$ref_attr->deleteObject() if $delete;
 				$DELETED_ATTRS{$ref_attr->id()} = 1;
 			}
 			
-			print "        Attribute = ",$attr->id(),"\n";
+			print $recurs_indent,"    Attribute = ",$attr->id(),"\n";
 			$attr->deleteObject() if $delete;
 			$DELETED_ATTRS{$attr->id()} = 1;
 		}
@@ -219,7 +226,7 @@ my $delete = shift;
 	
 	# Delete any untyped outputs
 	foreach my $output (@untyped_outputs) {
-		print "    Untyped output ",$output->id(),"\n";
+		print $recurs_indent,"  Untyped output ",$output->id(),"\n";
 		$output->deleteObject() if $delete;
 	}
 	
@@ -227,24 +234,38 @@ my $delete = shift;
 	my @node_executions = $FACTORY->
 		findObjects("OME::AnalysisChainExecution::NodeExecution",
 			{
-			module_execution => $mex,
+			module_execution_id => $mex->id(),
 			});
 	foreach my $nodex (@node_executions) {
-		print "    Node execution ",$nodex->id(),"\n";
+		print $recurs_indent,"  Node execution ",$nodex->id(),"\n";
+		$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{$nodex->id()} = 1;
 		$nodex->deleteObject() if $delete;
 	}
 	
-	# Delete AnalysisChainExecutions that are no longer valid.
-
 	# Delete the actual_inputs that used this mex as an input module
 	foreach $input (@actual_inputs) {
-		print "    Actual input ",$input->id(),"\n";
+		print $recurs_indent,"  Actual input ",$input->id(),"\n";
 		$input->deleteObject() if $delete;
 	}
 	
 	# If the MEX is an $IMAGE_IMPORT_MEX, delete the image
 	if ($mex->module->id() == $IMAGE_IMPORT_MODULE_ID) {
-		print "    Image ",$mex->image()->id()," ",$mex->image()->name(),"\n";
+		my $image = $mex->image();
+		print $recurs_indent,"  Image ",$image->id()," ",$image->name(),"\n";
+
+		# First, delete all MEXes that have this image as the target.
+		my @image_mexes = $FACTORY->
+			findObjects("OME::ModuleExecution",
+				{
+				image_id => $image->id(),
+				});
+		foreach my $image_mex (@image_mexes) {
+			next if $image_mex->id() == $mex->id();
+			print $recurs_indent,"  Image MEX ",$image_mex->id(),"\n";
+			$self->delete_mex ($image_mex,$delete);
+		}
+		
+		# Next, delete any left-over image attributes that don't have this image as the target.
 		my $image_attrs = $self->get_image_attributes ($mex->image());
 		foreach my $img_attr (@$image_attrs) {
 			next if exists $DELETED_ATTRS{$img_attr->id()};
@@ -254,33 +275,68 @@ my $delete = shift;
 				next unless $img_MEX;
 				$self->delete_mex ($img_MEX,$delete) unless $img_MEX->id() == $mex->id();
 			}
-			print "        Image Attribute ",$img_attr->id()," (",$img_attr->semantic_type()->name(),")\n";
+			print $recurs_indent,"    Image Attribute ",$img_attr->id()," (",$img_attr->semantic_type()->name(),")\n";
 			$img_attr->deleteObject() if $delete;
 			$DELETED_ATTRS{$img_attr->id()} = 1;
 		}
 		
-		# And, since we're at it, we have to delete the image from the OME::Image::DatasetMap
+		# Since we're at it, we have to delete the image from the OME::Image::DatasetMap
 		my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",{ image_id => $mex->image()->id()});
 		my @datasets;
 		foreach my $dataset_link (@dataset_links) {
-			print "        Dataset Link ",$dataset_link->id()," (",$dataset_link->dataset()->name(),", ID=",$dataset_link->dataset()->id(),")\n";
+			print $recurs_indent,"    Dataset Link to ",$dataset_link->dataset()->name(),", ID=",$dataset_link->dataset()->id(),"\n";
 			push (@datasets,$dataset_link->dataset());
 			$dataset_link->deleteObject() if $delete;
 		}
 		
-		# We have to delete locked datasets where we deleted this image.
+		# We have to delete all mexes that have this dataset as their target.
 		foreach my $dataset (@datasets) {
-			next unless $dataset->locked();
-			print "------- WARNING: Locked Dataset ",$dataset->name()," (ID=",$dataset->id(),") is losing this image.  DATABASE CORRUPTION !!! AAAAAHHHHH!!!!\n";
+			# Find all dataset mexes for this dataset
+			my @dataset_mexes = $FACTORY->
+				findObjects("OME::ModuleExecution",
+					{
+					dataset_id => $dataset->id(),
+					});
+			foreach my $dataset_mex (@dataset_mexes) {
+				next if $dataset_mex->id() == $mex->id();
+				print $recurs_indent,"      Dataset MEX ",$dataset_mex->id(),"\n";
+				$self->delete_mex ($dataset_mex,$delete);
+			}
+			
+			# Since there are no dataset mexes for this dataset, unlock it.
+			print $recurs_indent,"    Unlocking Dataset ",$dataset->name(),", ID=",$dataset->id(),"\n";
+			$dataset->locked(0);
 		}
 		
 		$mex->image()->deleteObject() if $delete;
 	}
 
 	# Delete the MEX
-	print "^^^ MEX ",$mex->id(),"\n";
+	print $recurs_indent,"--MEX ",$mex->id(),": ",$mex->module()->name(),"\n";
 	$mex->deleteObject() if $delete;
 	$DELETED_MEXES{$mex->id} = 1;
+	$RECURSION_LEVEL--;
+	if ($RECURSION_LEVEL == 0) {
+		my ($ACE_ID,$del_nodes);
+		while ( ($ACE_ID,$del_nodes) = each (%ACS_DELETED_NODES) ) {
+			my @ACE_nodes = $FACTORY->
+				findObjects("OME::AnalysisChainExecution::NodeExecution",
+					{
+					analysis_chain_execution_id => $ACE_ID,
+					});
+			foreach my $ACE_node (@ACE_nodes) {
+				$del_nodes->{$ACE_node->id()}++
+			}
+			# Delete the AC_Execution iff all $del_nodes == 2
+			my $del_ACE = $ACE_nodes[0]->analysis_chain_execution();
+			foreach (values %$del_nodes) {undef $del_ACE and last if $_ != 2;}
+			if ($del_ACE) {
+				print $recurs_indent,"  Analysis Chain Execution ",$del_ACE->id(),", ",$del_ACE->analysis_chain()->name()," (Chain ID=",$del_ACE->analysis_chain()->id(),")\n";
+				$del_ACE->deleteObject() if $delete;
+			}
+			
+		}
+	}
 }
 
 
@@ -335,11 +391,7 @@ my @ref_attrs;
 			push (@ref_attrs , @attrs);
 		}
 	}
-	
-	foreach my $ref_attr (@ref_attrs) {
-		print "        Reference Attribute ",$ref_attr->id(),"\n";
-	}
-	
+
 	return \@ref_attrs;
 }
 
