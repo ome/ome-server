@@ -41,10 +41,16 @@ our $VERSION = $OME::VERSION;
 
 use strict;
 
+use constant NULL_REFERENCE => ">>OBJ:NULL";
+
 require Exporter;
 use base qw(Exporter);
 our @EXPORT = qw(addPrototype findPrototype
-                 verifyInputPrototype verifyOutputPrototype);
+                 verifyInputPrototype verifyOutputPrototype
+                 NULL_REFERENCE);
+our @EXPORT_OK = qw(addPrototype findPrototype
+                    verifyInputPrototype verifyOutputPrototype
+                    NULL_REFERENCE);
 
 use Carp;
 
@@ -328,6 +334,8 @@ addPrototype("OME::SemanticType::Superclass","_getTarget",
              [],["OME::ModuleExecution"],
              publishedName => "target");
 
+addPrototype("OME::Session","commitTransaction",[],[]);
+addPrototype("OME::Session","rollbackTransaction",[],[]);
 addPrototype("OME::Session","User",[],['OME::SemanticType::Superclass']);
 addPrototype("OME::Session","Factory",[],['OME::Factory']);
 addPrototype("OME::Session","project",['OME::Project'],['OME::Project']);
@@ -336,6 +344,10 @@ addPrototype("OME::Session","dataset",['OME::Dataset'],['OME::Dataset']);
 addPrototype("OME::Factory","newObject",['$','%'],['OME::DBObject']);
 addPrototype("OME::Factory","maybeNewObject",['$','%'],['OME::DBObject']);
 addPrototype("OME::Factory","loadObject",['$','$'],['OME::DBObject']);
+
+# These prototypes follow the original Factory method specs -- the
+# criteria must be passed directly in the parameter list.
+
 addPrototype("OME::Factory","objectExists",['$','*'],['$']);
 addPrototype("OME::Factory","findObject",['$','*'],['OME::DBObject']);
 addPrototype("OME::Factory","findObjects",['$','*'],['OME::DBObject','*']);
@@ -345,8 +357,43 @@ addPrototype("OME::Factory","findObjectLike",['$','*'],['OME::DBObject']);
 addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::DBObject','*']);
 addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::Factory::Iterator'],
              publishedName => "iterateObjectsLike");
+
+# These prototypes expect the criteria to be encoded as a
+# hash/structure; they are passed to OME::Factory as a hash ref.  They
+# are published under different names so as not to conflict with the
+# previous methods.
+
+addPrototype("OME::Factory","objectExists",['$','%'],['$'],
+             publishedName => 'objectExistsByCriteriaHash');
+addPrototype("OME::Factory","findObject",['$','%'],['OME::DBObject'],
+             publishedName => 'findObjectByCriteriaHash');
+addPrototype("OME::Factory","findObjects",['$','%'],['OME::DBObject','*'],
+             publishedName => 'findObjectsByCriteriaHash');
+addPrototype("OME::Factory","findObjects",['$','%'],['OME::Factory::Iterator'],
+             publishedName => "iterateObjectsByCriteriaHash");
+addPrototype("OME::Factory","findObjectLike",['$','%'],['OME::DBObject'],
+             publishedName => 'findObjectLikeByCriteriaHash');
+addPrototype("OME::Factory","findObjectsLike",['$','%'],['OME::DBObject','*'],
+             publishedName => 'findObjectsLikeByCriteriaHash');
+addPrototype("OME::Factory","findObjectsLike",['$','%'],['OME::Factory::Iterator'],
+             publishedName => "iterateObjectsLikeByCriteriaHash");
+
+# This is the original findAttributes method, which only allows you to
+# search by target.
+
 addPrototype("OME::Factory","findAttributes",
              ['$','OME::DBObject'],['OME::SemanticType::Superclass','*']);
+
+# This is the new findAttributes method, which accepts arbitrary
+# criteria.
+
+addPrototype("OME::Factory","findAttributes",
+             ['$','%'],['OME::SemanticType::Superclass','*'],
+             publishedName => 'findAttributesByCriteriaHash');
+addPrototype("OME::Factory","findAttributes",
+             ['$','%'],['OME::Factory::Iterator'],
+             publishedName => 'iterateAttributesByCriteriaHash');
+
 addPrototype("OME::Factory","newAttribute",
              ['$','OME::DBObject','OME::ModuleExecution','%'],
              ['OME::SemanticType::Superclass']);
@@ -761,7 +808,7 @@ sub __verifyOneValue {
 
     if ($type eq '$') {
         # Function expects a single scalar
-        return !$ref;
+        return (!$ref);
     }
 
     if ($type eq '$$') {
@@ -784,22 +831,23 @@ sub __verifyOneValue {
         # Function expects a hash reference
         return 0 if  $ref ne "HASH";
 
-        print "   Checking hash\n";
+        #print "   Checking hash\n";
 
         # Check the values of the hash -- if any is an object, use this
         # method recursively to turn it into an object reference.
-        foreach my $value (values %$param) {
-            print "   $value =>";
+        foreach my $key (keys %$param) {
+            my $value = $param->{$key};
+            #print "   $key = $value =>";
             if (ref($value) eq 'ARRAY') {
                 # Possibly handle recursive data structures in the future
             } elsif (ref($value) eq 'HASH') {
                 # Possibly handle recursive data structures in the future
             } elsif (ref($value)) {
-                my $good = __verifyOneValue($which,$value,'UNIVERSAL',
+                my $good = __verifyOneValue($which,$param->{$key},'UNIVERSAL',
                                             $subroutine,@subInputs);
                 return 0 unless $good;
             }
-            print " $value\n";
+            #print " ",$param->{$key},"\n";
         }
 
         return 1;

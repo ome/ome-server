@@ -76,6 +76,16 @@ public class RemoteSession
         this.objectCache = new RemoteObjectCache(this);
     }
 
+    public void commitTransaction()
+    {
+        caller.dispatch(this,"commitTransaction");
+    }
+
+    public void rollbackTransaction()
+    {
+        caller.dispatch(this,"rollbackTransaction");
+    }
+
     public RemoteSession getRemoteSession() { return this; }
  //   public void setRemoteSession(RemoteSession session) {}
 

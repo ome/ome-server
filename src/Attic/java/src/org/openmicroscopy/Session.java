@@ -45,6 +45,9 @@ package org.openmicroscopy;
 public interface Session
     extends OMEObject
 {
+    public void commitTransaction();
+    public void rollbackTransaction();
+
     public Factory getFactory();
 
     public Attribute getUser();
