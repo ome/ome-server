@@ -52,22 +52,44 @@ Provides custom behavior for rendering an Experimenter Attribute
 =cut
 
 use strict;
-use vars qw($VERSION);
 use OME;
+our $VERSION = $OME::VERSION;
+
 use OME::Session;
 use base qw(OME::Web::DBObjRender);
 
 =head2 getObjectLabel
 
-id. FirstName LastName
+FirstName LastName
 
 =cut
 
 sub getObjectLabel {
-	my ($proto,$obj,$format, $doNotSpecialize) = @_;
+	my ($proto,$obj,$format) = @_;
 
 	return $obj->FirstName." ".$obj->LastName;
 }
+
+=head2 renderSingle
+
+make email address a link in html format
+
+=cut
+
+sub renderSingle {
+	my ($proto,$obj,$format,$fieldnames) = @_;
+	my $q       = new CGI;
+	my $record  = $proto->SUPER::renderSingle($obj,$format,$fieldnames);
+
+	if( grep( m/^Email$/, @$fieldnames) and $format eq 'html' ) {
+		my $emailURL = 'mailto:'.$obj->Email();
+		$record->{ 'Email' } = $q->a( { -href => $emailURL }, $obj->Email() );
+	}
+	
+	return %$record if wantarray;
+	return $record;
+}
+
 
 =head2 getRefSearchField
 
