@@ -97,11 +97,12 @@ dispatch (char **param)
 	/* Dimensions */
 	ome_dim sizeX = -1, sizeY = -1;
 
+/*
 char **cgivars=param;
 	while (*cgivars) {
-		fprintf (stderr,"%s=",*cgivars);cgivars++;fprintf (stderr,"%s ",*cgivars);cgivars++;
+		fprintf (stderr,"[%s]",*cgivars);cgivars++;fprintf (stderr," = [%s]\n",*cgivars);cgivars++;
 	}
-	fprintf(stderr, "\n");
+*/
 
 	/* XXX: char * method should be able to disappear at some point */
 	char *method;
