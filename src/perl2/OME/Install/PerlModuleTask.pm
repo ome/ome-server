@@ -133,6 +133,9 @@ my @modules = (
 	name => 'Log::Agent',
 	repository_file => "$REPOSITORY/Log-Agent-0.208.tar.gz"
     },{
+    name => 'Time::HiRes',
+    repository_file => "$REPOSITORY/Time-HiRes-1.65.tar.gz"
+    },{
 	# XXX DEPRECATED
 	#name => 'Tie::IxHash',
 	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
