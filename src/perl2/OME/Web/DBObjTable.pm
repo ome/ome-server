@@ -131,7 +131,7 @@ sub getPageBody {
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
 
 	# make a table from CGI parameters 'Type' and search params. CGI
-	# search parameters shoulf follow the format $type.'_'.$searchKey
+	# search parameters should follow the format $type.'_'.$searchKey
 	my $table      = $tableMaker->getTable( \%options );
 
 	# or use search options to make a table
@@ -245,7 +245,13 @@ sub getTable {
 	$html = $q->startform( { -name => $form_name })
 		unless $options->{ embedded_in_form };
 	$html .=
-		$q->table( { -class => 'ome_table', width => $options->{width} },
+		$q->table( {
+				-class => 'ome_table',
+				-width => $options->{width},
+				-cellpadding => '4',
+				-cellspacing => '1',
+				-border => '0',
+			},
 			# Table title
 			$q->caption( $title ),
 			$q->Tr( [
