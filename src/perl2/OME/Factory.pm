@@ -641,6 +641,16 @@ sub newObject {
     return $@? undef: $object;
 }
 
+sub maybeNewObject {
+    my ($self, $class, $data) = @_;
+
+    my $object = $self->findObject($class,$data);
+    return $object if defined $object;
+
+    $object = $self->newObject($class,$data);
+    return $object;
+}
+
 sub findAttributes {
     my ($self,$semantic_type,@criteria) = @_;
 
