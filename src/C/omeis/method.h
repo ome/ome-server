@@ -59,6 +59,7 @@ get_method_by_name(char * m_name);
 	/* STACK METHODS */
 #define M_STACK         12
 #define M_SETSTACK      13
+
 #define M_GETSTACK      14
 
 	/* ROI METHODS */
@@ -75,4 +76,8 @@ get_method_by_name(char * m_name);
 #define M_GETLOCALPATH  21
 #define M_CONVERT       22
 #define M_IMPORTOMEFILE 23
+#define M_CONVERTSTACK  24
+#define M_CONVERTPLANE  25
+#define M_CONVERTTIFF   26
+#define M_CONVERTROWS   27
 
