@@ -60,9 +60,10 @@ get_method_by_name(char * m_name);
 #define M_PLANE         20
 #define M_SETPLANE      21
 #define M_GETPLANE      22
-#define M_GETPLANESTATS 23
+#define M_GETPLANESSTATS 23
 #define M_CONVERTPLANE  24
 #define M_CONVERTTIFF   25
+#define M_GETPLANESHIST 26  
 
 	/* STACK METHODS */
 #define M_STACK         30
@@ -70,6 +71,7 @@ get_method_by_name(char * m_name);
 #define M_GETSTACK      32
 #define M_GETSTACKSTATS 33
 #define M_CONVERTSTACK  34
+#define M_GETSTACKHIST  35 
 
 	/* ROI METHODS */
 #define M_SETROI        40

@@ -49,8 +49,11 @@
 /* ----------- */
 
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
-#define OME_IS_PIXL_VER 2  /* Version 2 */
-
+#define OME_IS_PIXL_VER 3   /* Version 3. Change from version 2 to version 3: */
+							/* histogram computation added breaking binary compatibility */
+#define NUM_BINS 128 /* NUM_BINS is the number of bins used in binning the image histogram */
+                     /* N.B: Modifying value breaks binary compatibility */
+                     
 /* -------- */
 /* Typedefs */
 /* -------- */
@@ -67,6 +70,7 @@ typedef struct
 	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
 	float min, max, mean, geomean, sigma, geosigma;
 	float centroid_x, centroid_y;
+	u_int32_t hist[NUM_BINS];
 	u_int8_t reserved[7]; /* reserved buffer (64 bytes total) */
 } planeInfo;
 
@@ -77,9 +81,9 @@ typedef struct
 	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
 	float min, max, mean, geomean, sigma, geosigma;
 	float centroid_x, centroid_y, centroid_z;
+	u_int32_t hist[NUM_BINS];
 	u_int8_t reserved[67]; /* reserved buffer (128 bytes total) */
 } stackInfo;
-
 
 typedef struct {
 	u_int32_t mySig;
