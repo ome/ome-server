@@ -69,10 +69,10 @@ sub addDataset {
 
 	return undef unless defined $dataset;
 	my $factory=$self->Session()->Factory();
-	my $pdMap = $factory->findObject("OME::Project::DatasetMap",{
+	my $pdMap = $factory->findObject("OME::Project::DatasetMap",
 		 dataset_id => $dataset->ID(),
 		 project_id => $self->ID()
-	});
+	);
 	
 
 	#my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
@@ -132,10 +132,10 @@ sub doesDatasetBelong {
 	my $dataset = shift;
 	my $factory=$self->Session()->Factory();
 	return undef unless defined $dataset;
-	my @datasets =$factory->findObjects("OME::Project::DatasetMap",{
+	my @datasets =$factory->findObjects("OME::Project::DatasetMap",
 				 dataset_id => $dataset->ID(), 
 				 project_id => $self->ID()
-				});
+				);
 
 
 
