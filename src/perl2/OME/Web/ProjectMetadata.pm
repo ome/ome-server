@@ -21,52 +21,41 @@
 package OME::Web::ProjectMetadata;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
-@ISA = ("OME::Web");
+use OME::Web::Validation;
+use base qw{ OME::Web };
 
 sub getPageTitle {
 	return "Open Microscopy Environment - Project Metadata";
 }
+
+# FIXME: Add some method of doing error check on Forms. Obvious choices are javascript or func in this package.
 
 sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
+	my $project = $session->project()
+		or die "Project is not defined for the session.\n";
 
 	# figure out what to do: save & print info or just print?
 	if( $cgi->param('Save')) {
+# FIXME: Some validation is needed here
+		my $reloadTitleBar = ($project->name() eq $cgi->param('name') ? undef : 1);
+		# change stuff.
+		$project->name( $cgi->param('name') );
+		$project->description( $cgi->param('description') );
 
-		my $project = $session->project();
-		if (!defined $project) {
-			# we got problems
-			$body .= "Problem: There is not a current project defined in session.<br>";
-# possible bug: the link in the line below is intended to reload the root window (OME::Home)
-# it will not do it in all conditions. When a better solution is found, implement the new
-# solution everywhere this current solution is used.
-			$body .= "Solution: Define a project. Clicking <a href=\"javascript: top.location.href = top.location.href\">here</a> should take you where you need to go.";
-		}
-		else {
-# FIXME: Better validation is needed
-			if(not ($session->User()->experimenter_id() eq $project->owner()->experimenter_id()) ) {
-				$body .= "You do not have permission to modify this.";
-				return ('HTML',$body);
-			}
-		
-			my $reloadTitleBar = ($project->name() eq $cgi->param('name') ? undef : 1);
-			# change stuff.
-			$project->name( $cgi->param('name') );
-			$project->description( $cgi->param('description') );
-
-			$project->writeObject();
-			$body .= "Save successful<br>";
-			# javascript to reload titlebar
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>"
-				if defined $reloadTitleBar;
-		}
+		$project->writeObject();
+		$body .= "Save successful<br>";
+		# javascript to reload titlebar
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+			if $reloadTitleBar;
+		# this will add a script to reload OME::Home if it's necessary
+		$body .= OME::Web::Validation->ReloadHomeScript();
 	}
 	# print info & form
 	$body .= $self->print_form();
@@ -81,8 +70,8 @@ sub print_form {
 	
 	my $text = '';
 
-	$text .= "\n".$cgi->startform;
-	$text .= "<CENTER>\n	".$cgi->submit (-name=>'Save',-value=>'Save Changes')."\n</CENTER>\n";
+	$text .= $cgi->startform;
+	$text .= "<CENTER>".$cgi->submit (-name=>'Save',-value=>'Save Changes')."</CENTER>";
 
 	$text .= 
 		$cgi->table(
@@ -93,7 +82,7 @@ sub print_form {
 					$project->project_id() ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
-					'Name:' ),
+					'*Name:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textfield(-name=>'name', -size=>32, -default=>$project->name()) ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
@@ -105,7 +94,7 @@ sub print_form {
 				$cgi->td( { -align=>'LEFT' },
 					'Owner:' ),
 				$cgi->td( { -align=>'LEFT' },
-					$project->owner()->firstname()." ".$project->owner()->lastname()." <a href='mailto:".$project->owner()->email()."'>".$project->owner()->email()."</a>" ) ),
+					$project->owner()->firstname()." ".$project->owner()->lastname()." (<a href='mailto:".$project->owner()->email()."'>".$project->owner()->email()."</a>)" ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
 					'Group:' ),
@@ -113,7 +102,8 @@ sub print_form {
 					$project->group()->name() ) )
 		);
 			
-	$text .= $cgi->endform."\n";
+	$text .= $cgi->endform;
+	$text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
 	return $text;
 }
 
