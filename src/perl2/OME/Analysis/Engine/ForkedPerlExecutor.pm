@@ -82,23 +82,9 @@ sub new {
 }
 
 sub executeModule {
-    my ($self,$session,$chain_execution,$module,$node,
-        $dependence,$target,$inputs) = @_;
-
-    # Create the new ModuleExecution before the fork, so that we can
-    # return it from this method.
-    my $module_execution = $session->Factory()->
-      newObject("OME::ModuleExecution",
-                {
-                 module    => $module,
-                 dependence => $dependence,
-                 dataset    => $chain_execution->dataset(),
-                 timestamp  => 'now',
-                 status     => 'RUNNING'
-                });
-
-    die "Could not create module execution"
-      unless defined $module_execution;
+    my ($self,$mex,$dependence,$target) = @_;
+    my $session = OME::Session->instance();
+    my $module = $mex->module();
 
     # Fork off the child process
 
@@ -107,9 +93,9 @@ sub executeModule {
 
     if (!defined $pid) {
         # Fork failed, record as such in the ModuleExecution and return
-        $module_execution->status('ERROR');
-        $module_execution->error_message('Could not fork a new process');
-        return $module_execution;
+        $mex->status('ERROR');
+        $mex->error_message('Could not fork a new process');
+        return;
     } elsif ($pid) {
         # Parent process
 
@@ -138,7 +124,7 @@ sub executeModule {
         $executor_processes_out{$self}++;
         $executor_processes{$self}->{$pid} = 1;
         print STDERR "    **** Forked child $pid\n";
-        return $module_execution;
+        return;
     } else {
         # Child process
 
@@ -154,20 +140,12 @@ sub executeModule {
               $target->id():
               $target;
 
-        # Change the values of this hash ref from ModuleExecutions to
-        # ID's.
-        $inputs->{$_} = $inputs->{$_}->id() foreach keys %$inputs;
-
         # Execute the module in this child process
         $self->childProcess($$,
                             $session->SessionKey(),
-                            $module_execution->id(),
-                            $chain_execution->id(),
-                            $module->id(),
-                            $node->id(),
+                            $mex->id(),
                             $dependence,
-                            $target_id,
-                            $inputs);
+                            $target_id);
 
         #kill 'USR1', $parent_pid;
 
@@ -184,9 +162,8 @@ sub executeModule {
 
 sub childProcess {
     my ($self,$pid,
-        $session_key,$module_execution_id,$chain_execution_id,
-        $module_id,$node_id,
-        $dependence,$target_id,$inputs) = @_;
+        $session_key,$mex_id,
+        $dependence,$target_id) = @_;
 
     # Create a new session
     my $manager = OME::SessionManager->new();
@@ -194,30 +171,19 @@ sub childProcess {
     my $factory = $session->Factory();
 
     # Load in all of the parameters to executeModule
-    my $module_execution = $factory->
-      loadObject("OME::ModuleExecution",$module_execution_id);
-    my $chain_execution = $factory->
-      loadObject("OME::AnalysisChainExecution",$chain_execution_id);
-    my $module = $factory->
-      loadObject("OME::Module",$module_id);
-    my $node = $factory->
-      loadObject("OME::AnalysisChain::Node",$node_id);
+    my $mex = $factory->loadObject("OME::ModuleExecution",$mex_id);
+    my $module = $mex->module();
 
-    # This will only need to be loaded if the module is
-    # dataset-dependent.  If it's global, $target will be undef.  If
-    # it's image-dependent, it will be an array ref of image ID's.
+    # This will only need to be loaded if the module is not globally
+    # dependent.
     my $target;
-    if ($dependence eq 'D') {
+    if ($dependence eq 'I') {
+        $target = $factory->loadObject("OME::Image",$target_id);
+    } elsif ($dependence eq 'D') {
         $target = $factory->loadObject("OME::Dataset",$target_id);
     } else {
         $target = $target_id;
     }
-
-    # The $inputs hash ref should have ID's for its keys, but the
-    # values should be ModuleExecution objects.
-    $inputs->{$_} = $factory->
-      loadObject("OME::ModuleExecution",$inputs->{$_})
-      foreach keys %$inputs;
 
 
     # Create an instance of the module's Handler.
@@ -229,16 +195,15 @@ sub childProcess {
       unless $handler_class =~ /^\w+(\:\:\w+)*$/;
     $handler_class->require();
     print STDERR "    **** $pid - new handler $handler_class\n";
-    my $handler = $handler_class->new($location,$session,
-                                      $chain_execution,$module,$node);
+    my $handler = $handler_class->new($mex);
 
     # And try to execute it.
 
     eval {
         print STDERR "    **** $pid - startAnalysis\n";
-        $handler->startAnalysis($module_execution);
+        $handler->startAnalysis();
         print STDERR "    **** $pid - execute\n";
-        $handler->execute($dependence,$target,$inputs);
+        $handler->execute($dependence,$target);
         print STDERR "    **** $pid - finishAnalysis\n";
         $handler->finishAnalysis();
     };
@@ -248,16 +213,16 @@ sub childProcess {
 
     if ($@) {
         print STDERR "    **** $pid - Error - $@\n";
-        $module_execution->status('ERROR');
-        $module_execution->error_message($@);
+        $mex->status('ERROR');
+        $mex->error_message($@);
         print STDERR "      Error during execution: $@\n";
     } else {
         print STDERR "    **** $pid - Success\n";
-        $module_execution->status('FINISHED');
+        $mex->status('FINISHED');
     }
 
     # Store the new module execution and commit the changes.
-    $module_execution->storeObject();
+    $mex->storeObject();
     $session->commitTransaction();
 }
 

@@ -51,6 +51,8 @@ our $VERSION = $OME::VERSION;
 use Carp;
 use UNIVERSAL::require;
 
+use OME::Session;
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -62,8 +64,9 @@ sub new {
 }
 
 sub executeModule {
-    my ($self,$session,$chain_execution,$module,$node,
-        $dependence,$target,$inputs) = @_;
+    my ($self,$mex,$dependence,$target) = @_;
+    my $session = OME::Session->instance();
+    my $module = $mex->module();
 
     my $handler_class = $module->module_type();
     my $location = $module->location();
@@ -71,36 +74,23 @@ sub executeModule {
     croak "Malformed class name $handler_class"
       unless $handler_class =~ /^\w+(\:\:\w+)*$/;
     $handler_class->require();
-    my $handler = $handler_class->new($location,$session,
-                                      $chain_execution,$module,$node);
-
-    my $module_execution = $session->Factory()->
-      newObject("OME::ModuleExecution",
-                {
-                 module    => $module,
-                 dependence => $dependence,
-                 dataset    => $chain_execution->dataset(),
-                 timestamp  => 'now',
-                 status     => 'RUNNING'
-                });
+    my $handler = $handler_class->new($mex);
 
     eval {
-        $handler->startAnalysis($module_execution);
-        $handler->execute($dependence,$target,$inputs);
+        $handler->startAnalysis();
+        $handler->execute($dependence,$target);
         $handler->finishAnalysis();
     };
 
     if ($@) {
-        $module_execution->status('ERROR');
-        $module_execution->error_message($@);
+        $mex->status('ERROR');
+        $mex->error_message($@);
         print STDERR "      Error during execution: $@\n";
     } else {
-        $module_execution->status('FINISHED');
+        $mex->status('FINISHED');
     }
 
-    $module_execution->storeObject();
-
-    return $module_execution;
+    $mex->storeObject();
 }
 
 

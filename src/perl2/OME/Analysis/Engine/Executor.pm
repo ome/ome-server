@@ -59,6 +59,31 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use OME::Session;
+use UNIVERSAL::require;
+
+=head1 CLASS METHOD
+
+=head2 getDefaultExecutor
+
+	my $executor = OME::Analysis::Engine::Executor->
+	    getDefaultExecutor();
+
+Returns the default executor.
+
+=cut
+
+sub getDefaultExecutor {
+    my $class = shift;
+    if ($ENV{OME_THREADED}) {
+        OME::Analysis::Engine::ForkedPerlExecutor->require();
+        return OME::Analysis::Engine::ForkedPerlExecutor->new();
+    } else {
+        OME::Analysis::Engine::UnthreadedPerlExecutor->require();
+        return OME::Analysis::Engine::UnthreadedPerlExecutor->new();
+    }
+}
+
 =head1 INTERFACE METHODS
 
 The following methods must be defined by classes implementing the
@@ -67,22 +92,26 @@ Executor interface.
 =head2 executeModule
 
 	my $module_execution = $executor->
-	  executeModule($session,$module,$node,
-	                $dependence,$target,
-	                \%inputs);
+	  executeModule($module_execution,
+	                $dependence,$target);
 
-Executes the given analysis module.  The node representing that module
-in the chain is given by the $node parameter.  The %inputs hash
-specifies which module executions provide input to the module.  Each
-key of the hash is the integer ID's of one of the module's formal
-inputs; the value is the OME::ModuleExecution object that provides
-values for that input.
+Executes the given analysis module.  The node execution representing
+this execution is given by the $node_execution parameter.  From this
+node execution, you can retrieve the chain execution, module
+execution, chain, node, and module.
+
+The inputs to the module can be accessed via the ACTUAL_INPUTS table.
+This table will specify which module executions provide values for
+each formal input in the module.  The getAttributesForMEX method in
+OME::Tasks::ModuleExecutionManager can then be used to get the actual
+list of attributes which are the input values.
 
 The values of the $dependence and $target parameters are based on the
 dependence of the module.  If the module is dataset-dependent,
 $dependence will equal 'D' and $target will be an OME::Dataset object;
 if it is image-dependent, $dependence will equal 'I' and $target will
-be an array reference of OME::Image primary key ID's.
+be an OME::Image object.  If the module is globally dependent,
+$dependence will equal 'G' and $target will be undefined.
 
 The engine will perform the appropriate result-reuse checks before
 calling this method; if it is called, then no results were eligible
@@ -92,13 +121,12 @@ Single-threaded Executors should execute the module completely, and
 return once it is finished or has died with an error.  Multi-threaded
 Executors should spawn whathever threads, processes, external
 programs, etc., which are needed to execute the module, but should not
-block until completion.
+block before completion.
 
 =cut
 
 sub executeModule {
-    my ($self,$session,$chain_execution,$module,$node,
-        $dependence,$target,$inputs) = @_;
+    my ($self,$module_execution,$dependence,$target) = @_;
     die "OME::Analysis::Engine::Executor->executeModule is abstract";
 }
 
