@@ -35,11 +35,21 @@
 
 	xmlBinaryResolution.c
 	
-	Intent: Resolve binary data, both embedded and referenced, from an ome file.
+	Intent: Resolve binary data, both embedded and referenced, from an ome xml file.
+	
+	Maintence notes:
+	The interesting part of this code is three functions:
+		OME_StartElement, 
+		OME_Characters,
+		OME_EndElement
+	The parser moves sequentially through the document and calls these
+	functions when it hits the beginning of an element, characters
+	inside an element, and the end of an element. Sensitivity to certain
+	elements and their relative positions is encoded here.
+		
 
 	Libraries: This program uses libxml2's SAX library. SAX is a stream based
 	xml parser, so memory usage DOES NOT inflate when file size inflates. 
-	YOU MUST INSTALL libxml2 BEFORE THIS WILL COMPILE.
 	It also uses zlib and bzip2 compression libraries.
 
 ******************************************************************************/
@@ -53,20 +63,23 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "xmlBinaryResolution.h"
-//#include "fopen.h"
 #include "../base64.h"
 #include "../b64z_lib.h"
 #include "Pixels.h"
+#include "digest.h"
+#include "cgi.h"
 
 /******************************************************************************
 *
 *	Data structures & Constants
 *
 ******************************************************************************/
+/* Names of elements this code is sensitive to */
 #define BinDataLocal "BinData"
 #define BinFileLocal "BinFile"
 #define PixelLocal "Pixels"
 #define ImageLocal "Image"
+
 #define CompressionAttr "Compression"
 #define BinNS "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 #define SIZEOF_FILE_OUT_BUF 1048576
@@ -151,11 +164,11 @@ typedef struct {
 ******************************************************************************/
 
 /* SAX callbacks: */
-static void xmlBinaryResolutionStartDocument(ParserState *state );
-static void xmlBinaryResolutionEndDocument( ParserState *state );
-static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs);
-static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *name);
-static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch, int len);
+static void OME_StartDocument(ParserState *state );
+static void OME_EndDocument( ParserState *state );
+static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs);
+static void OME_EndElement(ParserState *state, const xmlChar *name);
+static void OME_Characters(ParserState *state, const xmlChar *ch, int len);
 static void BinDataWarning( ParserState *state, const char *msg );
 static void BinDataError( ParserState *state, const char *msg );
 static void BinDataFatalError( ParserState *state, const char *msg ) ;
@@ -200,12 +213,12 @@ int parse_xml_file(const char *filename) {
 		0, /* elementDecl */
 		0, /* unparsedEntityDecl */
 		0, /* setDocumentLocator */
-		(startDocumentSAXFunc)xmlBinaryResolutionStartDocument, /* startDocument */
-		(endDocumentSAXFunc)xmlBinaryResolutionEndDocument, /* endDocument */
-		(startElementSAXFunc)xmlBinaryResolutionStartElement, /* startElement */
-		(endElementSAXFunc)xmlBinaryResolutionEndElement, /* endElement */
+		(startDocumentSAXFunc)OME_StartDocument, /* startDocument */
+		(endDocumentSAXFunc)OME_EndDocument, /* endDocument */
+		(startElementSAXFunc)OME_StartElement, /* startElement */
+		(endElementSAXFunc)OME_EndElement, /* endElement */
 		0, /* reference */
-		(charactersSAXFunc)xmlBinaryResolutionCharacters, /* characters */
+		(charactersSAXFunc)OME_Characters, /* characters */
 		0, /* ignorableWhitespace */
 		0, /* processingInstruction */
 		0, /* comment */
@@ -256,7 +269,7 @@ int increment_plane_indexes( int* a, int* b, int* c, int aMax, int bMax, int cMa
 *
 ******************************************************************************/
 
-static void xmlBinaryResolutionStartDocument(ParserState *state) {
+static void OME_StartDocument(ParserState *state) {
 
 	state->state	               = PARSER_START;
 	state->nOutputFiles            = 0;
@@ -269,12 +282,12 @@ static void xmlBinaryResolutionStartDocument(ParserState *state) {
 	
 }
 
-static void xmlBinaryResolutionEndDocument( ParserState *state ) {
+static void OME_EndDocument( ParserState *state ) {
 	free( state->binDataInfo );
 }
 
 
-static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
+static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
 	char *localName;
 	StructElementInfo* elementInfo;
 	int i, pipeThisElementThrough;
@@ -282,7 +295,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 	pipeThisElementThrough = 1;
 
 	/* mark that the last open element has content, namely this element */
-	if( state->elementInfo != NULL ) {
+	if( state->elementInfo != NULL && state->state != IN_PIXELS && state->state != IN_BINDATA_UNDER_PIXELS) {
 		state->elementInfo->hasContent = 1;
 		if( state->elementInfo->tagOpen == 1 ) {
 			fprintf( stdout, ">" );
@@ -298,6 +311,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 	* element.
 	* I think http://cvs.gnome.org/lxr/source/gnorpm/find/search.c might have
 	* some code that will do it.
+	*
 	* Find the local name of the element: strip the prefix if one exists.
 	*/
 	localName = strchr( name, ':' );
@@ -580,18 +594,21 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		print_element( name, attrs );
 		
 		/* print BinFile's FileID */
-		if( strcmp( BinFileLocal, localName ) == 0 )
+		if( strcmp( BinFileLocal, localName ) == 0 ) {
 			fprintf( stdout, "ID = \"%llu\" ", state->BinFileInfo.FileID );
+		} else if( strcmp( PixelLocal, localName ) == 0 ) {
+			fprintf( stdout, "ImageServerID = \"%llu\" ", state->pixelInfo->pixWriter->ID );
+		}
 	}
 	/*
 	**************************************************************************/
 
 
-} /* END xmlBinaryResolutionStartElement */
+} /* END OME_StartElement */
 
 
 
-static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *name) {
+static void OME_EndElement(ParserState *state, const xmlChar *name) {
 	/* We're at the end of an element. If the element had content, then we
 	/ need to print "</[elementName]>". If the element did not have 
 	/ content, then we need to print "/>". I'm using a stack to keep track
@@ -626,8 +643,7 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 		state->binDataInfo->BinDataOut = NULL;
 
 /* omeis transition: replace href with file id 
-		if( state->pixelInfo->hitBinData == 1 )
-			fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, state->pixelInfo->outputPath );
+		fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, state->pixelInfo->outputPath );
 */
 		break;
 
@@ -739,10 +755,15 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 	 case IN_PIXELS:
 		state->state = PARSER_START;
 
-	 	/* print the <External> element if we extracted <BinData>s */
-		if( state->pixelInfo->hitBinData == 1 )
-			fprintf( stdout, "<External xmlns=\"%s\" href=\"%llu\" SHA1=\"\"/>", BinNS, state->pixelInfo->pixWriter->ID );
-
+		/* set SHA1 attribute  */
+		if (get_md_from_fd (state->pixelInfo->pixWriter->fd_rep, state->pixelInfo->pixWriter->head->sha1) < 0) {
+			fprintf(stderr, "Unable to retrieve SHA1.");
+			assert(0);
+		}
+		fprintf( stdout,  " FileSHA1 = \"" );
+		print_md( state->pixelInfo->pixWriter->head->sha1 );
+		fprintf( stdout,  "\"" );
+		
 		/* close pixelsRep object & clean it up */
 		FinishPixels( state->pixelInfo->pixWriter, 0 );
 
@@ -757,7 +778,6 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 	 	/* DO NOT "break;" Go on to default action of stack cleanup and
 	 	/ element closure.
 	 	*/
-
 
 	 default:
 		/* Stack maintence */
@@ -774,23 +794,23 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 	}
 	
 
-} /* END xmlBinaryResolutionEndElement */
+} /* END OME_EndElement */
 
 
 
-static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch, int len) {
+static void OME_Characters(ParserState *state, const xmlChar *ch, int len) {
 	unsigned char * buf;
 	int rC;
 	size_t outLen, writtenOut;
 	
 	
-	/* The tag begun by xmlBinaryResolutionStartElement might be open. If so, we 
+	/* The tag begun by OME_StartElement might be open. If so, we 
 	/ need to close it so we can print the character contents of this element.
 	*/
-	if( state->elementInfo != NULL ) {
+	if( state->elementInfo != NULL && state->state != IN_PIXELS && state->state != IN_BINDATA_UNDER_PIXELS) {
 		state->elementInfo->hasContent = 1;
 		if( state->elementInfo->tagOpen == 1 ) {
-			fprintf( stdout, ">" );
+			fprintf( stdout, ">",state->state );
 			state->elementInfo->tagOpen = 0;
 		}
 	}
@@ -800,6 +820,8 @@ static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch,
 	*/
 	switch( state->state ) {
 	 case IN_PIXELS:
+	 	/* only <BinData> and white space lives in <Pixels>. Neither should be printed */
+	 	break;
 	 case PARSER_START:
 		fwrite( ch, 1, len, stdout );
 		fflush( stdout );
