@@ -25,9 +25,19 @@ tar -zxvf libxslt-1.0.32.tar.gz ; cd libxslt-1.0.32.tar.gz
 ./configure
 make ; sudo make install
 
+* Install libtiff:
+curl -O http://openmicroscopy.org/packages/source/tiff-v3.5.7-OSX-LZW.tar.gz
+tar -zxvf tiff-v3.5.7-OSX-LZW.tar.gz ; cd tiff-v3.5.7-OSX-LZW
+./configure
+make ; sudo make install
+
 * Download and Install fink (http://fink.sourceforge.net/)
 * Use fink to install gd:
+sudo apt-get install libpng
+sudo apt-get install libjpeg
+sudo apt-get install freetype
 sudo apt-get install gd
+
 * Install PostgreSQL:
 Create a user on your system with the unix name 'postgres'.
 Download this:
