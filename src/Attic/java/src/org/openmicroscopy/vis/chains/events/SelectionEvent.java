@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener
+ * org.openmicroscopy.vis.chains.events.SelectionEvent
  *
  *------------------------------------------------------------------------------
  *
@@ -39,18 +39,26 @@
 
 
 package org.openmicroscopy.vis.chains.events;
-import  java.util.EventListener;
-
+import org.openmicroscopy.vis.chains.SelectionState;
+import  java.util.EventObject;
 
 /** 
- * An interface for listeners to {@link DatasetSelectionEvent} events.
- * 
+ * An superclass for several classes of selection events
+ *
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
 
-public interface DatasetSelectionEventListener extends EventListener {
-
-	public 	void datasetSelectionChanged(DatasetSelectionEvent e);
+public class SelectionEvent extends EventObject {
+	
+	// store state so this event always has a source that is non-null
+	public SelectionEvent(SelectionState state) {
+		super(state);
+		
+	}
+	
+	public SelectionState getSelectionState() {
+		return (SelectionState) getSource();
+	}
 }

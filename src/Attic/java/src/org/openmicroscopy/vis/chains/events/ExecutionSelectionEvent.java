@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener
+ * org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent
  *
  *------------------------------------------------------------------------------
  *
@@ -39,18 +39,32 @@
 
 
 package org.openmicroscopy.vis.chains.events;
-import  java.util.EventListener;
-
+import org.openmicroscopy.vis.ome.CChainExecution;
+import org.openmicroscopy.vis.chains.SelectionState;
 
 /** 
- * An interface for listeners to {@link DatasetSelectionEvent} events.
- * 
+ * An event that indicates that a chain execution has been selected or deselected
+ *
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
 
-public interface DatasetSelectionEventListener extends EventListener {
+public class ExecutionSelectionEvent extends SelectionEvent {
+	
+	public static final int SELECTED = 1;
+	public static final int DESELECTED=2;
+	
+	private CChainExecution execution=null;
 
-	public 	void datasetSelectionChanged(DatasetSelectionEvent e);
+	// store state so this event always has a source that is non-null	
+	public ExecutionSelectionEvent(SelectionState state,
+			CChainExecution execution) {
+		super(state);
+		this.execution = execution;
+	}
+	
+	public CChainExecution getSelectedExecution() {
+		return execution;
+	} 		
 }

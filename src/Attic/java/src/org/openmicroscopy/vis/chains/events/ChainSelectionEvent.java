@@ -39,8 +39,9 @@
 
 
 package org.openmicroscopy.vis.chains.events;
+import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.CChain;
-import  java.util.EventObject;
+
 
 
 /** 
@@ -51,7 +52,7 @@ import  java.util.EventObject;
  * @since OME2.1
  */
 
-public class ChainSelectionEvent extends EventObject {
+public class ChainSelectionEvent extends SelectionEvent {
 	
 	public static final int SELECTED = 1;
 	public static final int DESELECTED=2;
@@ -59,8 +60,9 @@ public class ChainSelectionEvent extends EventObject {
 	private CChain chain=null;
 	private int status=0;
 	
-	public ChainSelectionEvent(CChain chain,int status) {
-		super(chain);
+	// store state so this event always has a source that is non-null
+	public ChainSelectionEvent(SelectionState state,CChain chain,int status) {
+		super(state);
 		this.chain = chain;
 		this.status = status;
 	}

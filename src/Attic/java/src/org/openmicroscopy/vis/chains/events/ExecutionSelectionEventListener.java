@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener
+ * org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener
  *
  *------------------------------------------------------------------------------
  *
@@ -43,14 +43,14 @@ import  java.util.EventListener;
 
 
 /** 
- * An interface for listeners to {@link DatasetSelectionEvent} events.
+ * An interface for listeners to {@link ExecutionSelectionEvent} events.
  * 
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
 
-public interface DatasetSelectionEventListener extends EventListener {
+public interface ExecutionSelectionEventListener extends EventListener {
 
-	public 	void datasetSelectionChanged(DatasetSelectionEvent e);
+	public 	void executionSelectionChanged(ExecutionSelectionEvent e);
 }

@@ -40,7 +40,7 @@
 
 package org.openmicroscopy.vis.chains.events;
 import org.openmicroscopy.vis.ome.CDataset;
-import  java.util.EventObject;
+import org.openmicroscopy.vis.chains.SelectionState;
 import java.util.Collection;
 
 /** 
@@ -51,12 +51,14 @@ import java.util.Collection;
  * @since OME2.1
  */
 
-public class DatasetSelectionEvent extends EventObject {
+public class DatasetSelectionEvent extends SelectionEvent {
 	private Collection datasets;
 	private CDataset selected;
 	
-	public DatasetSelectionEvent(Collection datasets,CDataset selected) {
-		super(datasets);
+	// store state so this event always has a source that is non-null
+	public DatasetSelectionEvent(SelectionState state,
+		 Collection datasets,CDataset selected) {
+		super(state);
 		this.datasets = datasets;
 		this.selected = selected;
 	}
@@ -67,5 +69,5 @@ public class DatasetSelectionEvent extends EventObject {
 	
 	public CDataset getSelectedDataset() {
 		return selected;
-	}		
+	}			
 }

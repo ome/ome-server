@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener
+ * org.openmicroscopy.vis.chains.events.ProjectSelectionEvent
  *
  *------------------------------------------------------------------------------
  *
@@ -39,18 +39,39 @@
 
 
 package org.openmicroscopy.vis.chains.events;
-import  java.util.EventListener;
-
+import org.openmicroscopy.vis.ome.CProject;
+import org.openmicroscopy.vis.chains.SelectionState;
+import java.util.Collection;
 
 /** 
- * An interface for listeners to {@link DatasetSelectionEvent} events.
- * 
+ * An event that indicates that a dataset has been selected or deselected
+ *
  * @author Harry Hochheiser
  * @version 2.1
  * @since OME2.1
  */
 
-public interface DatasetSelectionEventListener extends EventListener {
+public class ProjectSelectionEvent extends SelectionEvent {
+	
+	public static final int SELECTED = 1;
+	public static final int DESELECTED=2;
+	
+	private Collection active;
+	private CProject project=null;
 
-	public 	void datasetSelectionChanged(DatasetSelectionEvent e);
+	// store state so this event always has a source that is non-null	
+	public ProjectSelectionEvent(SelectionState state,
+			Collection active,CProject selected) {
+		super(state);
+		this.project = selected;
+		this.active = active;
+	}
+	
+	public Collection getProjects() {
+		return active;
+		
+	}
+	public CProject getSelectedProject() {
+		return project;
+	} 		
 }
