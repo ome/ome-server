@@ -473,7 +473,11 @@ sub getUserDatasetCount {
 sub newDataset{
 	my $self=shift;
 	my ($name,$description,$ownerID,$groupID,$projectID)=@_;
-	my $factory = $self->Session()->Factory();
+	my $session = $self->Session();
+	my $factory = $session->Factory();
+	$ownerID = $session->experimenter_id() unless $ownerID;
+	$groupID = $session->experimenter()->Group()->id() unless $groupID;
+
       my $dataset=$factory->newObject("OME::Dataset",{
 		name        => $name,
 		description => $description,
