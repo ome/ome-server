@@ -128,11 +128,10 @@ sub importChild ($$$$) {
     my $factory = $session->Factory();
     print STDERR "  Factory $factory\n";
 
-    my $repository = OME::Tasks::PixelsManager->
-      findServerRepository();
+    my $repository = $session->findRemoteRepository();
     print STDERR "  Repository $repository\n";
 
-    OME::Tasks::PixelsManager->activateRepository($repository);
+    $session->activateRepository($repository);
 
     my @files;
     foreach my $id (@$fileIDs) {

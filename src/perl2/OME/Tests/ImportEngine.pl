@@ -57,7 +57,7 @@ if ($help || scalar(@ARGV) <= 0) {
     usage();
 }
 
-my $repository = $factory->findAttribute('Repository');
+my $repository = $session->findRepository();
 
 my %opts = (session => $session);
 $opts{AllowDuplicates} = 1 if $reuse;
@@ -74,7 +74,6 @@ if ($repository->IsLocal()) {
 } else {
     $OME::Image::Server::SHOW_CALLS = 1 if $verbose > 0;
     $OME::Image::Server::SHOW_READS = 1 if $verbose > 1;
-    OME::Tasks::PixelsManager->activateRepository($repository);
     print "Uploading original files to image server\n";
     foreach my $filename (@ARGV) {
         my $file;
