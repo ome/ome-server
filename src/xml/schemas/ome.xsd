@@ -6,45 +6,21 @@
 	 xmlns:xs = "http://www.w3.org/2001/XMLSchema"
 	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
+	 xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	 version = "FC"
 	 elementFormDefault = "qualified">
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"/>
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"/>
+	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"/>
 	<xs:annotation>
 		<xs:documentation>
 			Open Microscopy Environment
 			OME XML Schema 1.0 FC
 			Author:  Ilya G. Goldberg
-			Copyright 2002,2003 OME. All rights reserved.
+			Copyright 2002 - 2004 OME. All rights reserved.
 		</xs:documentation>
 	</xs:annotation>
-	<xs:attributeGroup name = "ChannelScaleType">
-		<xs:attribute name = "ChannelNumber" use = "required" type = "xs:integer">
-			<xs:annotation>
-				<xs:documentation>Specifies the channel number in the pixel dump.  Channels are numbered from 0.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute name = "BlackLevel" use = "required" type = "xs:integer">
-			<xs:annotation>
-				<xs:documentation>The black level is used to scale pixel values to an 8 bit colorspace for display. For example, a 16 bit pixel value must be downscaled to fit an 8 bit display. 
-Any pixel value below the black value will be set to the minimum value of the scale range (0). 
-Because the file schema offers support for non-integer pixel types, this is stored as a floating point number to offer maximum generality. Specifying a decimal value for an integer pixel type is ill defined.
-Valid range of values for black level is less than the white level and within the data range for the pixel type.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute name = "WhiteLevel" use = "required" type = "xs:integer">
-			<xs:annotation>
-				<xs:documentation>The white level is used  to scale pixel values to an 8 bit colorspace for display. For example, a 16 bit pixel value must be downscaled to fit an 8 bit display. 
-Any pixel value above the white value will be set to the maximum value of the scale range (255). 
-Because the file schema offers support for non-integer pixel types, this is stored as a floating point number to offer maximum generality. Specifying a decimal value for an integer pixel type is ill defined.
-The valid range for white level is greater than the black level and within the data range for the pixel type.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute name = "Gamma" type = "xs:float"/>
-	</xs:attributeGroup>
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
@@ -66,7 +42,7 @@ The valid range for white level is greater than the black level and within the d
 				The OME element is a container for all information objects acessible by OME.  These information objects include descriptions of the imaging experiments
 				and the people who perform them, descriptions of the microscope, the resulting images and how they were acquired, the analyses performed on those images,
 				and the analysis results themselves.
-				An OME file may contain any or all of this information, and this information may be distributed among several OME documents.
+				An OME file may contain any or all of this information.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
@@ -82,7 +58,7 @@ The valid range for white level is greater than the black level and within the d
 				<xs:element ref = "Image" minOccurs = "0" maxOccurs = "unbounded"/>
 				<xs:element ref = "STD:SemanticTypeDefinitions" minOccurs = "0"/>
 				<xs:element ref = "AML:AnalysisModuleLibrary" minOccurs = "0"/>
-				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
+				<xs:element ref = "CA:CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -121,7 +97,7 @@ The valid range for white level is greater than the black level and within the d
 				<xs:element ref = "PlateRef" minOccurs = "0"/>
 				<xs:element ref = "Pixels" maxOccurs = "unbounded"/>
 				<xs:element ref = "Feature" minOccurs = "0" maxOccurs = "unbounded"/>
-				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
+				<xs:element ref = "CA:CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 			<xs:attribute name = "ID" use = "required" type = "ImageID"/>
 			<xs:attribute name = "Name" use = "required" type = "xs:string"/>
@@ -437,7 +413,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 			</xs:attribute>
 		</xs:complexType>
 	</xs:element>
-	<xs:element name = "RedChannel">
+	<xs:element name = "RedChannel" type = "ChannelSpecType">
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the red channel of an RGB image.
@@ -445,12 +421,8 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
 			</xs:documentation>
 		</xs:annotation>
-		<xs:complexType>
-			<xs:attributeGroup ref = "ChannelScaleType"/>
-			<xs:attribute name = "isOn" use = "required" type = "xs:boolean"/>
-		</xs:complexType>
 	</xs:element>
-	<xs:element name = "GreenChannel">
+	<xs:element name = "GreenChannel" type = "ChannelSpecType">
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the green channel of an RGB image.
@@ -458,12 +430,8 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
 			</xs:documentation>
 		</xs:annotation>
-		<xs:complexType>
-			<xs:attributeGroup ref = "ChannelScaleType"/>
-			<xs:attribute name = "isOn" use = "required" type = "xs:boolean"/>
-		</xs:complexType>
 	</xs:element>
-	<xs:element name = "BlueChannel">
+	<xs:element name = "BlueChannel" type = "ChannelSpecType">
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for the blue channel of an RGB image.
@@ -471,31 +439,30 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
 			</xs:documentation>
 		</xs:annotation>
-		<xs:complexType>
-			<xs:attributeGroup ref = "ChannelScaleType"/>
-			<xs:attribute name = "isOn" use = "required" type = "xs:boolean"/>
-		</xs:complexType>
 	</xs:element>
 	<xs:element name = "GreyChannel">
 		<xs:annotation>
 			<xs:documentation>
 				The wave number, black level, white level and optional gamma for a greyscale image.
-				The GreyChannel element may contain an optional ColorMap attribute, which can be set to ''
-				Pixel values between BlackLevel and WhiteLevel will be assigned values 0-255, respectively.  
+				The GreyChannel element may contain an optional ColorMap attribute, which can be set to 'Greyscale', 'Spectrum' or 'Blackbody'
+				Pixel values between BlackLevel and WhiteLevel will be assigned values 0-255, inclusive.  
 				Values below BlackLevel or above WhiteLevel will be assigned 0 and 255 respectively.
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
-			<xs:attributeGroup ref = "ChannelScaleType"/>
-			<xs:attribute name = "ColorMap" default = "Greyscale">
-				<xs:simpleType>
-					<xs:restriction base = "xs:string">
-						<xs:enumeration value = "Greyscale"/>
-						<xs:enumeration value = "Spectrum"/>
-						<xs:enumeration value = "Blackbody"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>
+			<xs:complexContent>
+				<xs:extension base = "ChannelSpecType">
+					<xs:attribute name = "ColorMap" default = "Greyscale">
+						<xs:simpleType>
+							<xs:restriction base = "xs:string">
+								<xs:enumeration value = "Greyscale"/>
+								<xs:enumeration value = "Spectrum"/>
+								<xs:enumeration value = "Blackbody"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+				</xs:extension>
+			</xs:complexContent>
 		</xs:complexType>
 	</xs:element>
 	<xs:element name = "Projection">
@@ -1294,7 +1261,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 				<xs:element ref = "ExperimenterRef" minOccurs = "0"/>
 				<xs:element ref = "GroupRef" minOccurs = "0"/>
 				<xs:element ref = "ProjectRef" minOccurs = "0" maxOccurs = "unbounded"/>
-				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
+				<xs:element ref = "CA:CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 			<xs:attribute name = "Name" use = "required" type = "xs:string"/>
 			<xs:attribute name = "ID" use = "required" type = "DatasetID"/>
@@ -1312,18 +1279,6 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		<xs:complexType>
 			<xs:attribute name = "ID" use = "required" type = "DatasetID"/>
 		</xs:complexType>
-	</xs:element>
-	<xs:element name = "CustomAttributes">
-		<xs:annotation>
-			<xs:documentation>
-				Any custom image attributes belong here. Definitions for these attributes belong in 
-				SemanticTypeDefinitions. The format of attributes is the Name of the SemanticType is
-				the tag name. The elements are stored as attributes if they are not strings or as subelements if they are. 
-				Here is an example of an attribute stored under &lt;CustomAttributes>.
-				Semantic Type 'foo' has two elements: 'bar', and 'label'. bar is an integer, 'label' is a string.
-				This should be stored as &lt;foo bar="1">&lt;label>bob&lt;/label>&lt;/foo>
-			</xs:documentation>
-		</xs:annotation>
 	</xs:element>
 	<xs:element name = "ImagingEnvironment">
 		<xs:annotation>
@@ -1366,7 +1321,7 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref = "Feature" minOccurs = "0" maxOccurs = "unbounded"/>
-				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
+				<xs:element ref = "CA:CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 			<xs:attribute name = "Tag" use = "required" type = "xs:string"/>
 			<xs:attribute name = "Name" type = "xs:string"/>
@@ -1571,4 +1526,31 @@ is not specified, then the FIRST &lt;Pixels> element under &lt;Image> will be as
 			</xs:complexContent>
 		</xs:complexType>
 	</xs:element>
+	<xs:complexType name = "ChannelSpecType">
+		<xs:attribute name = "ChannelNumber" use = "required" type = "xs:integer">
+			<xs:annotation>
+				<xs:documentation>Specifies the channel number in the pixel dump.  Channels are numbered from 0.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name = "BlackLevel" use = "required" type = "xs:float">
+			<xs:annotation>
+				<xs:documentation>The black level is used to scale pixel values to an 8 bit colorspace for display. For example, a 16 bit pixel value must be downscaled to fit an 8 bit display. 
+Any pixel value below the black value will be set to the minimum value of the scale range (0). 
+Because the file schema offers support for non-integer pixel types, this is stored as a floating point number to offer maximum generality. Specifying a decimal value for an integer pixel type is ill defined.
+Valid range of values for black level is less than the white level and within the data range for the pixel type.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name = "WhiteLevel" use = "required" type = "xs:float">
+			<xs:annotation>
+				<xs:documentation>The white level is used  to scale pixel values to an 8 bit colorspace for display. For example, a 16 bit pixel value must be downscaled to fit an 8 bit display. 
+Any pixel value above the white value will be set to the maximum value of the scale range (255). 
+Because the file schema offers support for non-integer pixel types, this is stored as a floating point number to offer maximum generality. Specifying a decimal value for an integer pixel type is ill defined.
+The valid range for white level is greater than the black level and within the data range for the pixel type.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name = "Gamma" type = "xs:float"/>
+		<xs:attribute name = "isOn" type = "xs:boolean"/>
+	</xs:complexType>
 </xs:schema>
