@@ -83,6 +83,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	private Connection connection=null;
 	
 	
+	
 	/**
 	 * The layer for the canvas. 
 	 */
@@ -169,7 +170,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			arrangeDisplay(datasets);
 		doLayout(datasets,v);
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
-				PConstants.ANIMATION_DELAY);
+						PConstants.ANIMATION_DELAY);
 	
 	}
 	
@@ -266,7 +267,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		while (iter.hasNext())  {
 			d = (CDataset) iter.next();
 			node = (PDataset) datasetWidgets.get(d);
-		
+			
 			
 			strip.add(node);
 		
@@ -375,9 +376,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	
 	public void displayAllDatasets() {
+		
 		TreeSet datasets= new TreeSet(connection.getDatasetsForUser());
 		displayDatasets(datasets,true);
-	
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -423,14 +424,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private void updateProjectDatasetSelection(SelectionState state) {
 		CDataset selected = state.getSelectedDataset();
-		TreeSet datasets;
-		if (state.getSelectedProject() != null)
-			//highlightDatasetsForProject(null);
-			highlightDatasets(null);
 		
+		TreeSet datasets;
+		if (state.getSelectedProject() != null) 
+			highlightDatasets(null);
+	
 		if (selected != null) {
-			datasets = new TreeSet();
-			datasets.add(selected);
+			PDataset d = selected.getNode();
+			// zoom in to this dataset.
+			getCamera().animateViewToCenterBounds(d.getBufferedBounds(),true,
+					PConstants.ANIMATION_DELAY);
+			
 		}
 		else {
 			Collection selections = state.getActiveDatasets();
@@ -440,8 +444,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			else {
 				datasets = new TreeSet(allDatasets);
 			}
+			displayDatasets(datasets,false);
 		}	
-		displayDatasets(datasets,false);
+		
 	}
 
 	public int getEventMask() {
@@ -507,14 +512,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 	
 	public void highlightDataset(CDataset rolled) {
+		
 		if (lastRolledOver != null) { 
-			lastRolledOver.setHighlighted(false);
+			System.err.println("clearing . highlight for.."+lastRolledOver.getDataset().getName());
+			lastRolledOver.setSelected(false);
 			lastRolledOver = null;
 		}
 		
 		if (rolled != null) {	
+			System.err.println("calling highlight dataset..."+rolled.getName());	
 			lastRolledOver = rolled.getNode();
-			lastRolledOver.setHighlighted(true);
+			lastRolledOver.setSelected(true);
 		}		
 	}
  }
