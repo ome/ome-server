@@ -288,12 +288,6 @@ sub importFiles {
 	# At this juncture, we know how many files we're going to ignore
 	# due to unknown formats
 	$self->{nUnknown} = scalar (keys %files);
-	
-	# No point in keeping around ignored files
-	foreach (values %files) {
-        __debug("Deleting ".$_->getFilename()."\n");
-		$_->delete();
-	}
 
     my @images;
 
@@ -398,6 +392,18 @@ sub importFiles {
 	push( @{ $self->{_images} }, @images );
 	$self->{nImageFiles} = $self->{_image_files} ? scalar (keys (%{$self->{_image_files}})) : 0 ;
 	
+	# We're going to delete all ignored files that have no corresponding original_file attribute
+	my $file;
+	foreach $file (values %files) {
+        my $old_file = $factory->
+            findAttribute("OriginalFile",
+                FileID => $file->getFileID());
+        unless ($old_file) {
+            __debug("Deleting ".$file->getFilename()."\n");
+		    $file->delete();
+		}
+	}
+
     $self->finishImport() if $called_as_class;
 
     return \@images;

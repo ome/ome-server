@@ -225,12 +225,11 @@ sub getGroups {
         my $file = $fref->{$key};
 
         $file->open('r');
-
         my $tags = readTiffIFD($file);
         $file->close();
 
         my $uic2 = UIC2;
-        next if (!defined($tags->{$uic2}));
+        next unless exists $tags->{$uic2};
 
         my $t_arr = $tags->{$uic2};
         my $t_hash = $$t_arr[0];

@@ -149,6 +149,7 @@ use constant TAGS =>
    'SMinSampleValue' => 340,
    'SMaxSampleValue' => 341,
    'TransferRange' => 342,
+   'JPEGTables' => 347,
    'JPEGProc' => 512,
    'JPEGInterchangeFormat' => 513,
    'JPEGInterchangeFormat' => 514,
@@ -205,13 +206,15 @@ sub readTiffIFD ($) {
 
     ($endian, $offset) = __verifyTiff($file);
     return undef unless defined($endian);
-    my %ifd;
-    $ifd{__Endian} = $endian;
 
+    my @IFDs;
     # Read in each IFD
 
     while ($offset > 0) {
         eval {
+            my %ifd;
+            $ifd{__Endian} = $endian;
+
             $file->setCurrentPosition($offset,0);
 
             # Read the number of tags in this IFD
@@ -263,20 +266,27 @@ sub readTiffIFD ($) {
                                               $value_offset, $endian);
                     }
                 } else {
-                    return undef
-                      if ($tag_type != TAG_BYTE &&
-                          $tag_type != TAG_ASCII &&
-                          $tag_type != TAG_SHORT &&
-                          $tag_type != TAG_LONG &&
-                          $tag_type != TAG_RATIONAL);
-
-                    @values = getTagValue($file, $tag_type, $value_count,
+                    if ($tag_type == TAG_BYTE    ||
+                          $tag_type == TAG_ASCII ||
+                          $tag_type == TAG_SHORT ||
+                          $tag_type == TAG_LONG  ||
+                          $tag_type == TAG_RATIONAL) {
+                                @values = getTagValue($file, $tag_type, $value_count,
                                           $value_offset, $endian);
-                    push @{$ifd{$tag_id}}, @values;
+                                push @{$ifd{$tag_id}}, @values;
+                          } else {
+                                push @{$ifd{$tag_id}},
+                                  {'tag_id' => $tag_id,
+                                   'tag_type' => $tag_type,
+                                   'value_count' => $value_count,
+                                   'value_offset' => $value_offset,
+                                   'current_offset' => $file->getCurrentPosition()};
+                                   }
                 }
                 $tag_count--;
             }
 
+            push (@IFDs,\%ifd);
             # Read the offset to the next IFD.
             $buf = $file->readData(4);
             $offset = unpack(_X->[$endian],$buf);
@@ -288,7 +298,11 @@ sub readTiffIFD ($) {
         }
     }
 
-    return \%ifd;
+    if (wantarray) {
+        return (@IFDs);
+    } else {
+        return ($IFDs[0]);
+    }
 }
 
 

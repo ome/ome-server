@@ -331,14 +331,14 @@ sub importGroup {
 	}
 	
     $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp)*$chansImg;
-    
+
     my $image = ($self->{super})->__newImage($ofn);
     $self->{image} = $image;
     
     my $zs = ($xref->{'Image.SizeZ'} > 0)    ? $xref->{'Image.SizeZ'}    : 1;
     my $cs = ($xref->{'Image.NumWaves'} > 0) ? $xref->{'Image.NumWaves'} : 1;
     my $ts = ($xref->{'Image.NumTimes'} > 0) ? $xref->{'Image.NumTimes'} : 1;
-    
+
     my ($pixels, $pix) = ($self->{super})->__createRepositoryFile($image, 
 						 					$xref->{'Image.SizeX'},
 						 					$xref->{'Image.SizeY'},
