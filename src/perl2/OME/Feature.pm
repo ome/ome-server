@@ -38,7 +38,7 @@ of an image.  The features of an image form a tree, with the image
 itself at the root.  (Features right below the image in the tree will
 have C<undef> for their parent feature link.)  Features also have a
 tag, which allow similar kinds of features (cells, nuclei, etc.) to be
-grouped for module_execution.
+grouped for analysis.
 
 =cut
 
