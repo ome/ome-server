@@ -105,6 +105,7 @@ images described by @filenames will be imported into $dataset
 $dataset is optional. It is completely unnecessary for ome files that do
 	not contain images. When left unspecified, an Import Dataset will be
 	automatically created iff images are returned by the ImportEngine.
+If $dataset is unspecified, replace it with undef.
 %options is optional. currently recognized options are {AllowDuplicates => 0|1}
 
 Imports the selected files into OME and executes the import analysis chain on them.
