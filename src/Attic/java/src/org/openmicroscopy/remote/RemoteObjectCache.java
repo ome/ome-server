@@ -43,6 +43,8 @@
 package org.openmicroscopy.remote;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.*;
@@ -280,17 +282,44 @@ public class RemoteObjectCache
             // is no longer valid.
             try
             {
-                newObj = (RemoteObject) clazz.newInstance();
+                // Before, we were instantiating the object via the
+                // no-argument constructor, and then filling in the
+                // session and reference via mutator calls.  However,
+                // this meant that the constructors could not access
+                // any of the object's state, since the appropriate
+                // remote calls could not be synthesized without the
+                // reference.  Now, we instantiate via the
+                // two-argument constructor, which allows these remote
+                // calls to be made.
+
+                Constructor  cons = clazz.getConstructor(new Class[]
+                    {
+                        RemoteSession.class,
+                        String.class
+                    });
+
+                newObj = (RemoteObject) cons.newInstance(new Object[]
+                    {
+                        session,
+                        reference
+                    });
+            } catch (NoSuchMethodException e) {
+                System.err.println(e);
+                return null;
             } catch (InstantiationException e) {
                 System.err.println(e);
                 return null;
             } catch (IllegalAccessException e) {
                 System.err.println(e);
                 return null;
+            } catch (IllegalArgumentException e) {
+                System.err.println(e);
+                return null;
+            } catch (InvocationTargetException e) {
+                System.err.println(e);
+                return null;
             }
 
-            newObj.setReference(reference);
-            newObj.setRemoteSession(session);
             objectCache.put(reference,new WeakReference(newObj));
 
             if (TRACE_CACHE)
