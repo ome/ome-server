@@ -278,17 +278,12 @@ sub render {
 		foreach my $relation( @$relations ) {
 			my( $title, $method, $relation_type ) = @$relation;
 
-			# set up url to additional info
-			my $more_info_url = $self->pageURL( "OME::Web::DBObjTable", {
-				Type => $relation_type,
-				$relation_type.'_accessor' => join( ',', $obj->getFormalName(), $obj->id(), $method )
-			} );
 			push( @relations_data, { 
 				name => $title, 
 				$relation_render_mode => $self->renderArray( 
 					[ $obj, $method ], 
 					substr( $relation_render_mode, 1 ), 
-					{ _more_info_url => $more_info_url }
+					{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ) }
 				)
 			} );
 		}
@@ -540,20 +535,11 @@ sub renderData {
 		# populate has many aliases
 		} elsif( $field =~ m/^(.+)!(.+)$/ ) {
 			my ($method, $render_mode) = ($1, $2);
-# FIXME: clean up this hack!
-			my $returnedClass;
-			my $accessorType = $obj->getColumnType( $method );
-			if( $accessorType eq 'has-many' ) {
-				 $returnedClass = $obj->__hasManys()->{$method}->[0];
-			} elsif( $accessorType eq 'many-to-many' ) {
-				 $returnedClass = $obj->__manyToMany()->{$method}->[0];
-			}
-			my $url = $self->pageURL( "OME::Web::DBObjTable", { 
-					Type => $returnedClass,
-					$returnedClass.'_accessor' => join( ',', $formal_name, $id, $method )
-				} );
-			my $options = { _more_info_url => $url };
-			$record{ $field } = $self->renderArray( [$obj, $method], $render_mode, $options );
+			$record{ $field } = $self->renderArray( 
+				[$obj, $method], 
+				$render_mode, 
+				{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ) }
+			);
 
 		# populate mode render requests
 		} elsif( $field =~ m/^!(.+)$/ ) {
@@ -567,13 +553,15 @@ sub renderData {
 				$record{ $field } = $self->getRef( $record{ $field }, $format, $options );
 			} else {
 				my $type = $obj->getColumnSQLType( $field );
-				my %booleanConvert = ( 0 => 'False', 1 => 'True' );
-				$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
-					if $type eq 'timestamp';
-				$record{ $field } = $booleanConvert{ $record{ $field } }
-					if $type eq 'boolean';
-				$record{ $field } = $self->_trim( $record{ $field }, $options )
-					if( $type =~ m/^varchar|text/ ); 
+				if( $type ) {
+					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
+					$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
+						if $type eq 'timestamp';
+					$record{ $field } = $booleanConvert{ $record{ $field } }
+						if $type eq 'boolean';
+					$record{ $field } = $self->_trim( $record{ $field }, $options )
+						if( $type =~ m/^varchar|text/ ); 
+				}
 			}
 		}
 	}
@@ -773,34 +761,33 @@ returns a hash { field_name => form_input, ... }
 
 sub getSearchFields {
 	my ($self, $type, $field_names, $defaults) = @_;
+	my ($form_fields, $search_names);
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	return $specializedRenderer->getSearchFields( $type, $field_names )
+	($form_fields, $search_names) = $specializedRenderer->getSearchFields( $type, $field_names )
 		if( $specializedRenderer );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
 
-	my %searchFields;
-	my $q = new CGI;
+	my $q = $self->CGI();
 	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$field_names;
-	my $size;
-	foreach my $accessor ( @$field_names ) {
-		if( $fieldRefs{ $accessor } ) {
-			$searchFields{ $accessor } = $self->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor, $defaults->{ $accessor } );
+	foreach my $field ( @$field_names ) {
+		next if exists $form_fields->{ $field };
+		if( $fieldRefs{ $field } ) {
+			( $form_fields->{ $field }, $search_names->{ $field } ) = 
+				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
 		} else {
-			if( $accessor eq 'id' ) { $size = 5; }
-			else { $size = 8; }
-			$searchFields{ $accessor } = $q->textfield( 
-				-name    => $formal_name."_".$accessor , 
-				-size    => $size, 
-				-default => $defaults->{ $accessor } 
+			$form_fields->{ $field } = $q->textfield( 
+				-name    => $field , 
+				-size    => 17, 
+				-default => $defaults->{ $field } 
 			);
+			$search_names->{ $field } = $field;
 		}
 	}
 
-	return %searchFields if wantarray;
-	return \%searchFields;
+	return ( $form_fields, $search_names );
 }
 
 =head2 getRefSearchField
@@ -831,8 +818,11 @@ sub getRefSearchField {
 	$searchOn = '.name' if( $to_package->getColumnType( 'name' ) );
 	$searchOn = '.Name' if( $to_package->getColumnType( 'Name' ) );
 
-	my $q = new CGI;
-	return $q->textfield( -name => $from_formal_name."_".$accessor_to_type.$searchOn , -size => 6 );
+	my $q = $self->CGI();
+	return ( 
+		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 6 ),
+		$accessor_to_type.$searchOn
+	);
 }
 
 =head2 _getSpecializedRenderer
@@ -892,7 +882,8 @@ sub _trim {
 	return $str unless(
 		( ref( $options ) eq 'HASH' ) and
 		exists $options->{ max_text_length } and
-		$options->{ max_text_length } and
+		defined $options->{ max_text_length } and
+		defined $str and 
 		( length( $str ) > $options->{ max_text_length } )
 	);
 	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
