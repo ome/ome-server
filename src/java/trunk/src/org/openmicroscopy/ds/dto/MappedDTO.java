@@ -65,11 +65,12 @@ import java.util.HashMap;
  * sublist into the appropriate DTO's.</p>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * @version 2.2
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
-public class MappedDTO
+public abstract class MappedDTO
+    implements DataInterface
 {
     /**
      * This is the {@link Map} used to back the DTO.  All of the data
@@ -98,6 +99,75 @@ public class MappedDTO
     {
         super();
         setMap(elements);
+    }
+
+    /**
+     * Returns the name of the data type this object represents.
+     */
+    public abstract String getDTOTypeName();
+
+    /**
+     * Returns the interface class of the data type this object
+     * represents.
+     */
+    public abstract Class getDTOType();
+
+    /**
+     * Returns a String representation of this DTO.
+     */
+    public String toString()
+    {
+        String result = getDTOTypeName();
+        if (elements.containsKey("id"))
+            result = "["+result+":"+elements.get("id").toString()+"]";
+        else
+            result = "["+result+":unknown ID]";
+
+        return result;
+    }
+
+    /**
+     * Compares to DTO's for equality.  Two DTO's are equal if they
+     * have the same object type and primary key ID.  If a DTO did not
+     * have its primary key ID loaded, it is considered unequal to
+     * every other DTO.
+     */
+    public boolean equals(Object o)
+    {
+        if (o instanceof MappedDTO)
+            return equals((MappedDTO) o);
+        else
+            return false;
+    }
+
+    /**
+     * Compares to DTO's for equality.  Two DTO's are equal if they
+     * have the same object type and primary key ID.  If a DTO did not
+     * have its primary key ID loaded, it is considered unequal to
+     * every other DTO.
+     */
+    public boolean equals(MappedDTO o)
+    {
+        if (!getDTOTypeName().equals(o.getDTOTypeName()))
+            return false;
+
+        if (!elements.containsKey("id"))
+            return false;
+
+        if (!o.elements.containsKey("id"))
+            return false;
+
+        return elements.get("id").equals(o.elements.get("id"));
+    }
+
+    /**
+     * Returns a hash code for this DTO.  The hash code is constructed
+     * by returning the hash code of the object's {@link #toString}
+     * representation.
+     */
+    public int hashCode()
+    {
+        return toString().hashCode();
     }
 
     /**
