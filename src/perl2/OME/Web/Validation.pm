@@ -181,7 +181,7 @@ sub datasetNotDefined {
 		return $text;
 	}
 	
-	my @datasets = OME::Dataset->search( group_id => $user->group()->group_id());
+	@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());
 	my @images   = OME::Image->search( group_id => $user->group()->group_id());
 	
 	$text .= "<p>There is not a dataset defined for your session. <li>Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to create a new dataset by importing images. ";
