@@ -232,23 +232,23 @@ XYPlaneControls.prototype.buildDisplay = function(  ) {
 	this.redScaleButton = new button(
 		Math.round(this.redPopupList.x + this.redPopupList.width/2), 25,
 		this.actions['showRedScale'],
-		'<text fill="maroon" text-anchor="middle">Scale</text>',
+		'<text fill="black" text-anchor="middle">Scale</text>',
 		null,
-		'<text fill="black" text-anchor="middle">Scale</text>'
+		'<text fill="white" text-anchor="middle">Scale</text>'
 	);
 	this.greenScaleButton = new button(
 		Math.round(this.greenPopupList.x + this.greenPopupList.width/2), 25,
 		this.actions['showGreenScale'],
-		'<text fill="darkgreen" text-anchor="middle">Scale</text>',
+		'<text fill="black" text-anchor="middle">Scale</text>',
 		null,
-		'<text fill="black" text-anchor="middle">Scale</text>'
+		'<text fill="white" text-anchor="middle">Scale</text>'
 	);
 	this.blueScaleButton = new button(
 		Math.round(this.bluePopupList.x + this.bluePopupList.width/2), 25,
 		this.actions['showBlueScale'],
-		'<text fill="midnightblue" text-anchor="middle">Scale</text>',
+		'<text fill="black" text-anchor="middle">Scale</text>',
 		null,
-		'<text fill="black" text-anchor="middle">Scale</text>'
+		'<text fill="white" text-anchor="middle">Scale</text>'
 	);
 	this.greyScaleButton = new button(
 		Math.round(this.greyPopupList.x + this.greyPopupList.width/2), 25,
