@@ -49,6 +49,7 @@ import javax.swing.BoxLayout;
 import java.awt.Rectangle;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+import java.awt.event.WindowFocusListener;
 
 
 
@@ -61,7 +62,7 @@ import java.awt.event.WindowAdapter;
  * @since OME2.1
  */
 
-public class ResultFrame extends ChainFrameBase {
+public class ResultFrame extends ChainFrameBase implements WindowFocusListener {
 	
 	PChainLibraryCanvas libraryCanvas;
 	
@@ -80,6 +81,8 @@ public class ResultFrame extends ChainFrameBase {
 		PResultCanvas resultCanvas = (PResultCanvas) canvas;
 		resultCanvas.setFrame(this);
 		resultCanvas.setLibraryCanvas(libraryCanvas);
+		resultCanvas.setSelectionState(controller.getControlPanel().
+			getSelectionState());
 	
 
 		addWindowListener(new WindowAdapter() {
@@ -94,7 +97,7 @@ public class ResultFrame extends ChainFrameBase {
 				control.setCurrentResults(c);
 			}
 		});
-	
+		addWindowFocusListener(this);
 		
 	}
 	
@@ -116,7 +119,7 @@ public class ResultFrame extends ChainFrameBase {
 	 */
 	protected void layoutFrame() {
 		contentPane.setLayout(new BoxLayout(contentPane,BoxLayout.Y_AXIS));
-		toolbar = new ResultToolBar(this,controller.getCmdTable(),connection);
+		toolbar = new ResultToolBar(this,controller,connection);
 		contentPane.add(toolbar);	
 		contentPane.add(canvas);
 	}
@@ -130,4 +133,10 @@ public class ResultFrame extends ChainFrameBase {
 		((PResultCanvas) canvas).setExecution(exec);
 	}
 
+	public void windowGainedFocus(WindowEvent e) {
+		((PResultCanvas) canvas).gainedFocus();
+	}
+	
+	public void windowLostFocus(WindowEvent e) {
+	}
 }
