@@ -137,7 +137,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		
 		// remove handlers
 		removeInputEventListener(getZoomEventHandler());
-		
+		removeInputEventListener(getPanEventHandler());
 		// set up link layer
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
