@@ -1,0 +1,164 @@
+=head1 NAME
+
+OME Modules - Table of Contents
+
+=head1 List of Modules
+
+=head2 Database access
+
+    OME::DBConnection
+    OME::Factory
+    OME::DBObject
+    OME::Configuration
+
+    OME::Project
+    OME::Dataset
+    OME::Feature
+    OME::Image
+
+    OME::LookupTable
+        OME::LookupTable::Entry
+    OME::DataTable
+        OME::DataTable::Column
+    OME::AttributeType
+        OME::AttributeType::Column
+    OME::Program
+        OME::Program::FormalInput
+        OME::Program::FormalOutput
+    OME::Analysis
+        OME::Analysis::ActualInput
+    OME::AnalysisView
+        OME::AnalysisView::Node
+        OME::AnalysisView::Link
+    OME::AnalysisExecution
+        OME::AnalysisExecution::NodeExecution
+    OME::AnalysisPath
+        OME::AnalysisPath::Map
+
+=over
+
+=item Deprecated
+
+    OME::Experimenter
+    OME::Group
+    OME::Instrument
+    OME::Repository
+
+=back
+
+=head2 Session management
+
+    OME::SessionManager
+    OME::Session
+
+=head2 Analysis engine
+
+    OME::Analysis::CLIHandler
+    OME::Analysis::FindBounds
+    OME::Analysis::FindRatio
+    OME::Analysis::FindSpotsHandler
+    OME::Analysis::Handler
+    OME::Analysis::StopgapCLIHandler
+    OME::Analysis::TestCounts
+    OME::Analysis::TestStatistics
+    OME::Analysis::NoopHandler
+    OME::Tasks::AnalysisEngine
+
+=head2 OME XML file format
+
+    OME::Tasks::OMEImport
+    OME::Tasks::SemanticTypeImport
+    OME::Tasks::ProgramImport
+    OME::Tasks::ChainImport
+    OME::Tasks::HierarchyImport
+    OME::Tasks::AttributeImport
+
+=head2 Proprietary image format importers
+
+    OME::ImportExport::Importer
+    OME::ImportExport::Exporter
+    OME::ImportExport::Import_reader
+    OME::ImportExport::Export_writer
+    OME::ImportExport::FileUtils
+    OME::ImportExport::Repacker
+    OME::ImportExport::Params
+    OME::ImportExport::PixWrapper
+    OME::ImportExport::DVreader
+    OME::ImportExport::STKreader
+    OME::ImportExport::TIFFreader
+    OME::ImportExport::TIFFwriter
+
+=head2 Workflow layer
+
+    OME::Tasks::ImageTasks
+
+=head2 OME Remote Framework
+
+    OME::Remote::Dispatcher
+    OME::Remote::Prototypes
+
+=head2 Web-based user interface
+
+    OME::Web
+    OME::Web::DatasetMetadata
+    OME::Web::DirTree
+    OME::Web::DirTreeSelect
+    OME::Web::GetGraphics
+    OME::Web::Home
+    OME::Web::Login
+    OME::Web::Logout
+    OME::Web::MakeNewProject
+    OME::Web::ProjectDataset
+    OME::Web::ProjectManager
+    OME::Web::ProjectMetadata
+    OME::Web::ProjectSwitch
+    OME::Web::TitleBar
+    OME::Web::Validation
+    OME::Web::DatasetComponents
+    OME::Web::DatasetInProjects
+    OME::Web::DatasetManager
+    OME::Web::DatasetSearch
+    OME::Web::DatasetSwitch
+    OME::Web::GetInfo
+    OME::Web::ImageManager
+    OME::Web::ImageSearch
+    OME::Web::ProjectDatasetImage
+    OME::Web::ProjectSearch
+    OME::Web::Viewer
+    OME::Web::SaveViewerSettings
+    OME::Web::AddImageDataset
+    OME::Web::InfoDataset
+    OME::Web::InfoProject
+
+=head2 SVG image viewer
+
+    OME::Graphics
+    OME::Graphics::GD::Centroids
+    OME::Graphics::GD::Vectors
+    OME::Graphics::GD
+    OME::Graphics::IM::Vectors
+    OME::Graphics::JavaScript
+    OME::Graphics::JavaScript::Layer::Centroids
+    OME::Graphics::JavaScript::Layer::OMEimage
+    OME::Graphics::JavaScript::Layer::Vectors
+    OME::Graphics::JavaScript::Layer
+
+=begin comment
+
+    OME::Image::Pix::Pix
+    OME::Session::Attributes
+    OME::Tasks::ModuleTasks
+    OME::Tests::AnalysisEngine::ShowImageAttributes
+    OME::Research::AnalyseText
+    OME::Research::SearchEngine
+    OME::Research::SetStatement
+    OME::SetDB
+    OME::DisplaySettings
+    OME::ViewerPreferences
+
+=end comment
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
