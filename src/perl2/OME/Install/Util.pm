@@ -753,6 +753,8 @@ sub which {
         $path[$#path] = "";
     }
 
+	push (@path,'/usr/sbin');
+
     if ("$prog" =~ '/' && -x "$prog" && -f "$prog") {
         return $prog;
     } else {
