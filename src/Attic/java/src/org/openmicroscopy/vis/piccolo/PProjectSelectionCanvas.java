@@ -64,7 +64,8 @@ import java.awt.event.ActionEvent;
  * @version 2.1
  * @since OME2.1
  */
-public class PProjectSelectionCanvas extends PCanvas {
+public class PProjectSelectionCanvas extends PCanvas 
+	implements SelectionEventListener{
 	
 	private static final int HEIGHT=50;
 	private static final int MAXHEIGHT=150;
@@ -84,14 +85,16 @@ public class PProjectSelectionCanvas extends PCanvas {
 		setMaximumSize(new Dimension(MAXWIDTH,MAXHEIGHT));
 		removeInputEventListener(getPanEventHandler());
 		removeInputEventListener(getZoomEventHandler());
+		addInputEventListener(new ProjectLabelEventHandler());
 		populate(projects);
+		SelectionState.getState().addSelectionEventListener(this);
 	}
 
 	private void populate(Collection projects) {
 		Iterator iter = projects.iterator();
 		while (iter.hasNext()) {
 			Project p = (Project) iter.next();
-			ProjectLabel pl = new ProjectLabel(p);
+			ProjectLabel pl = new ProjectLabel(p,this);
             // build node
 			layer.addChild(pl);
 			//position
@@ -127,13 +130,19 @@ public class PProjectSelectionCanvas extends PCanvas {
 			
 			x+=columnWidth+HGAP;
 		}
-		
+		scaleToFit(0);
+	}
+	
+	public void scaleToFit(int delay) {
 		PBounds b = layer.getFullBounds();
-
-		
 		System.err.println("bounds are "+b);
-		getCamera().animateViewToCenterBounds(b,true,0);
+		getCamera().animateViewToCenterBounds(b,true,delay);
 		getCamera().setViewScale(0.9);
+	}
+	
+	public void selectionChanged(SelectionEvent e) {
+		if (e.getSelectionState().getSelectedProject() == null) 
+			scaleToFit(PConstants.ANIMATION_DELAY);
 	}
 			
 }
@@ -149,15 +158,18 @@ class ProjectLabel extends PText implements SelectionEventListener {
 	
 	private double previousScale =NORMAL_SCALE;
 	private Paint previousPaint;
-	ProjectLabel(Project project) {
+	PProjectSelectionCanvas canvas;
+	
+	ProjectLabel(Project project,PProjectSelectionCanvas canvas) {
 		super();
 		this.project = project;
+		this.canvas = canvas;
 		setText(project.getName());
 		setFont(PConstants.TOOLTIP_FONT);
 		// initially
 	//	setScale(SELECTED_SCALE);
 		SelectionState.getState().addSelectionEventListener(this);
-		addInputEventListener(new ProjectLabelEventHandler());
+		
 	}
 	
 	public Project getProject() {
@@ -177,6 +189,10 @@ class ProjectLabel extends PText implements SelectionEventListener {
 	public void setSelected() {
 		setScale(SELECTED_SCALE);
 		setPaint(PConstants.PROJECT_SELECTED_COLOR);
+		// zoom layer.
+		PLayer layer = (PLayer) getParent();
+		layer.getCamera(0).animateViewToCenterBounds(getGlobalFullBounds(),true,
+			PConstants.ANIMATION_DELAY);
 	}
 	
 	public void setRollover(boolean v) {
@@ -189,10 +205,10 @@ class ProjectLabel extends PText implements SelectionEventListener {
 				setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
 			}
 		}
-		else {
+		/*else {
 			setScale(previousScale);
 			setPaint(previousPaint);
-		}
+		}*/
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -220,13 +236,17 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	}
 	
 	public void mouseEntered(PInputEvent e) {
-		ProjectLabel pl = (ProjectLabel) e.getPickedNode();
-		SelectionState.getState().setRolloverProject(pl.getProject());
+		if (e.getPickedNode() instanceof ProjectLabel) {
+			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			SelectionState.getState().setRolloverProject(pl.getProject());
+		}
 	}
 	
 	public void mouseExited(PInputEvent e) {
-		ProjectLabel pl = (ProjectLabel) e.getPickedNode();
-		SelectionState.getState().setRolloverProject(null);
+		if (e.getPickedNode() instanceof ProjectLabel) {
+			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			SelectionState.getState().setRolloverProject(null);
+		}
 	}
 	
 	public void mouseClicked(PInputEvent e) {
@@ -248,8 +268,10 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	}
 	
 	public void doMouseClicked(PInputEvent e) {
-		ProjectLabel pl = (ProjectLabel) e.getPickedNode();
-		SelectionState.getState().setSelectedProject(pl.getProject());
+		if (e.getPickedNode() instanceof ProjectLabel) {
+			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			SelectionState.getState().setSelectedProject(pl.getProject());
+		}
 	}
 	
     public void doMouseDoubleClicked(PInputEvent e) {
