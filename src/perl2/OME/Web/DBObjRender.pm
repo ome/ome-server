@@ -754,23 +754,27 @@ sub getRelations {
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
+	my ($form_fields, $search_paths) = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
 @field_names is used to populate the returned hash.
 %default_search_values is also optional. If given, it is used to populate the search form fields.
 
-returns a hash { field_name => form_input, ... }
+$form_fields is a hash reference of html form inputs { field_name => form_input, ... }
+$search_paths is also a hash reference keyed by field names. It's values
+are search paths. In most cases the search path will be the same as
+the field name. For reference fields, the path will specify a field in the referent. 
+For example, a reference field named 'dataset' would have a search path 'dataset.name'
 
 =cut
 
 sub getSearchFields {
 	my ($self, $type, $field_names, $defaults) = @_;
-	my ($form_fields, $search_names);
+	my ($form_fields, $search_paths);
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	($form_fields, $search_names) = $specializedRenderer->_getSearchFields( $type, $field_names, $defaults )
+	($form_fields, $search_paths) = $specializedRenderer->_getSearchFields( $type, $field_names, $defaults )
 		if( $specializedRenderer );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
@@ -781,7 +785,7 @@ sub getSearchFields {
 	foreach my $field ( @$field_names ) {
 		next if exists $form_fields->{ $field };
 		if( $fieldRefs{ $field } ) {
-			( $form_fields->{ $field }, $search_names->{ $field } ) = 
+			( $form_fields->{ $field }, $search_paths->{ $field } ) = 
 				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
 		} else {
 			$q->param( $field, $defaults->{ $field }  ) 
@@ -791,11 +795,11 @@ sub getSearchFields {
 				-size    => 17, 
 				-default => $defaults->{ $field } 
 			);
-			$search_names->{ $field } = $field;
+			$search_paths->{ $field } = $field;
 		}
 	}
 
-	return ( $form_fields, $search_names );
+	return ( $form_fields, $search_paths );
 }
 
 =head2 _getSearchFields
