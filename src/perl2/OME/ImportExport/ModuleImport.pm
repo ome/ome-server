@@ -688,7 +688,6 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		if $debug > 1;
 	my @executionInstructions = 
 		$moduleXML->getElementsByTagName( "ExecutionInstructions" );
-	my $executionInstructionXML;
 	
 	# XML schema & DBdesign currently allow at most one execution point per module
 	if(scalar(@executionInstructions) == 1) {
@@ -696,7 +695,7 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		# CLI Handler specific execution Instructions
 		#
-		$executionInstructionXML = $executionInstructions[0];
+		my $executionInstructionXML = $executionInstructions[0];
 
 		#######################################################################
 		#
@@ -824,8 +823,9 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		#
 		#######################################################################
 
-		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions.\n"
+		print STDERR ref ($self) . "->processDOM: finished processing ExecutionInstructions. Writing them to DBObject Program\n"
 			if $debug > 1;
+		$newProgram->execution_instructions( $executionInstructionXML->toString() );
 	}
 	#
 	#
@@ -847,15 +847,6 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 	}                             # commits all DBObjects
 	print STDERR ref ($self) . "->processDOM: finished committing DBObjects\n"
 		if $debug > 2;
-
-	if( defined $executionInstructionXML ) {
-		print STDERR ref ($self) . "->processDOM: about to save executionInstructions to DBObject Program\n"
-			if $debug > 2;
-		$newProgram->execution_instructions( $executionInstructionXML->toString() );
-		$newProgram->writeObject();
-		print STDERR ref ($self) . "->processDOM: successfully saved executionInstructions to DBObject Program\n"
-			if $debug > 2;
-	}
 
 	print STDERR ref ($self) . "->processDOM: committing changes to tables and columns\n"
 		if $debug > 2;
