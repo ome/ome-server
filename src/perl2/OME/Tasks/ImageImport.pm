@@ -88,7 +88,9 @@ sub importImages {
 
     my $importer = OME::ImportEngine::ImportEngine->new((session => $session,
 						  AllowDuplicates => 1));
+    $importer->startImport();
     my $image_ref = $importer->importFiles(\@files);
+    $importer->finishImport();
 
     my $dsMgr = new OME::Tasks::DatasetManager;
     $dsMgr->addImages($image_ref);

@@ -174,25 +174,11 @@ whereas C<AllowDuplicates> is optional).
 
 =cut
 
-sub importFiles {
+sub startImport {
     my $self = shift;
-    my $files;
-
-    # Allows this to be called as a class method.
-    if (!ref($self)) {
-        $files = pop;
-        $self = $self->new(@_);
-    } else {
-        $files = shift;
-    }
 
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
-
-    my %files;
-    foreach my $file (@$files) {
-        $files{$file->getFilename()} = $file;
-    }
 
     # Create the new dummy dataset.
 
@@ -211,6 +197,37 @@ sub importFiles {
     OME::Tasks::ImportManager->startImport();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
+
+    $self->{_dataset} = $dataset;
+
+    return ($dataset,$files_mex);
+}
+
+sub importFiles {
+    my $self = shift;
+    my $files;
+
+    my $called_as_class = 0;
+
+    # Allows this to be called as a class method.
+    if (!ref($self)) {
+        $files = pop;
+        $self = $self->new(@_);
+        $self->startImport();
+        $called_as_class = 1;
+    } else {
+        $files = shift;
+    }
+
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+    my $dataset = $self->{_dataset};
+    my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+
+    my %files;
+    foreach my $file (@$files) {
+        $files{$file->getFilename()} = $file;
+    }
 
     # Find the formats that are known to the system.
 
@@ -348,6 +365,18 @@ sub importFiles {
 
     #print STDERR "\n";
 
+    $self->finishImport() if $called_as_class;
+
+    return \@images;
+}
+
+sub finishImport {
+    my $self = shift;
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+    my $dataset = $self->{_dataset};
+    my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+
     # Wrap up things in the database.
 
     $files_mex->status('FINISHED');
@@ -357,7 +386,7 @@ sub importFiles {
 
     $session->commitTransaction();
 
-    return \@images;
+    return;
 }
 
 =head1 IMPLEMENTATION OF C<importFiles>

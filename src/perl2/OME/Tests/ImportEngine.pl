@@ -42,7 +42,12 @@ if ($repository->IsLocal()) {
     OME::Tasks::PixelsManager->activateRepository($repository);
     print "Uploading original files to image server\n";
     foreach my $filename (@ARGV) {
-        my $file = OME::Image::Server::File->upload($filename);
+        my $file;
+        if ($filename =~ /^\:([0-9]+)$/) {
+            $file = OME::Image::Server::File->new($1);
+        } else {
+            $file = OME::Image::Server::File->upload($filename);
+        }
         push @files, $file;
         print "  $filename\n    ",$file->getFileID(),", size ",$file->getLength(),"\n";
     }
