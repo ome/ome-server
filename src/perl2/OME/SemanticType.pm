@@ -190,12 +190,6 @@ sub requireAttributeTypePackage {
                           'has-one','OME::SemanticType');
 
 
-    # Any one of the tables that this type is stored in; doesn't
-    # matter which.
-    my $any_table;
-
-    #print STDERR "********\n";
-
     my @semantic_elements = $self->semantic_elements();
     foreach my $semantic_element (@semantic_elements) {
         my $name = $semantic_element->name();
@@ -207,13 +201,11 @@ sub requireAttributeTypePackage {
         my $table_name = $data_table->table_name();
         $data_table->requireDataTablePackage($force);
 
-        $any_table = $table_name unless defined $any_table;
-
         # It doesn't matter if we add the primary key more than once
         # per table, DBObject can deal.
         $pkg->addPrimaryKey("${table_name}.attribute_id");
 
-        #print STDERR $self->name(),".$name $sql_type\n";
+        #logdbg "debug", $self->name(),".$name $sql_type\n";
 
         if ($type eq 'reference') {
             # We've got a reference to another semantic type.  In most
