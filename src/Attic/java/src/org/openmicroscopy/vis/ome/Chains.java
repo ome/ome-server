@@ -44,7 +44,6 @@
  import java.util.Iterator;
  import java.util.Collection;
  import org.openmicroscopy.Chain;
- import org.openmicroscopy.Chain.Node;
  import org.openmicroscopy.Factory;
 /** 
  * <p>A class to handle the chains in the OME database
@@ -62,7 +61,6 @@ public class Chains {
 		
 		Chain c;
 		Integer id;
-		ChainInfo cInfo;
 		
 		List  cs= factory.findObjects("OME::AnalysisChain",null);
 		Iterator iter = cs.iterator();
@@ -71,30 +69,28 @@ public class Chains {
 			c = (Chain) iter.next();
 			System.err.println("Chain: "+c.getName());
 			worker.setStatusLabel("Chain.."+c.getName());
-			cInfo  = new ChainInfo(c);
-			populateChain(cInfo);
+			populateChain(c);
 			id = new Integer(c.getID());
-			chains.put(id,cInfo);
+			chains.put(id,c);
 		}
 	}
 	
-	private void populateChain(ChainInfo cInfo) {
+	private void populateChain(Chain c) {
 
-		Chain c = cInfo.getChain();
+		
 		List nodes = c.getNodes();
-		Iterator iter = nodes.iterator();
+		/*Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			//System.err.println("trying to get a node from a chain.."+obj.getClass().getName());
-			Node n = (Node) obj;
+			CNode n = (CNode) obj;
 			cInfo.addNode(n);
-		}
+		} */
 	}
 	
-	public void addChain(ChainInfo info) {
-		Chain c = info.getChain();
+	public void addChain(Chain c) {
 		Integer id = new Integer(c.getID());
-		chains.put(id,info);
+		chains.put(id,c);
 	}
 	
 	public Iterator iterator() {
@@ -102,7 +98,7 @@ public class Chains {
 		return values.iterator();
 	}
 	
-	public ChainInfo getChainInfo(int i) {
-		return (ChainInfo) chains.get(new Integer(i));
+	public Chain getChain(int i) {
+		return (Chain) chains.get(new Integer(i));
 	}
 }

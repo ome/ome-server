@@ -40,7 +40,6 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.PLayer;
-import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.CNode; // was NodeInfo
 import org.openmicroscopy.vis.ome.ModuleInfo;
 import org.openmicroscopy.vis.ome.Connection;
@@ -58,7 +57,7 @@ import java.util.Iterator;
 
 public class PChain {
 
-	private ChainInfo info;
+
 	private Chain chain;
 	private HashMap nodes = new HashMap(); 
 	private float chainHeight = 0;
@@ -71,15 +70,15 @@ public class PChain {
 	private float xInit;
 	
 	
-	public PChain(Connection connection,ChainInfo info, PLayer layer,
+	public PChain(Connection connection,Chain chain, PLayer layer,
 			PLinkLayer linkLayer,float x,float y) {
 		
-		this.info = info;
-		chain = info.getChain();
+		
+		this.chain = chain;
 		this.x = x;
 		xInit = x;
 		
-		Collection chainNodes = info.getNodes();
+		Collection chainNodes = chain.getNodes();
 		Iterator iter = chainNodes.iterator();	
 		while (iter.hasNext()) {
 			//NodeInfo ni = (NodeInfo) iter.next();

@@ -53,7 +53,6 @@ import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.chains.ChainFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ModuleInfo;
-import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.CNode;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.Module.FormalInput;
@@ -163,8 +162,8 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 				int id = i.intValue();
 				System.err.println("dropping chain id "+id);
 				Point2D loc = e.getLocation();
-				ChainInfo cInfo = connection.getChainInfo(id);
-				createDroppedChain(cInfo,loc);
+				Chain chain = connection.getChain(id);
+				createDroppedChain(chain,loc);
 				addInputEventListener(handler);
 				
 			} 
@@ -213,11 +212,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		setSaveEnabled(true);
 	}
 	
-	public void createDroppedChain(ChainInfo info,Point2D location) {
+	public void createDroppedChain(Chain chain,Point2D location) {
 		getCamera().localToView(location);
 		float x = (float) location.getX();
 		float y = (float) location.getY();
-		PChain p = new PChain(connection,info,layer,linkLayer,x,y);
+		PChain p = new PChain(connection,chain,layer,linkLayer,x,y);
 		setSaveEnabled(true);
 	}
 	
@@ -254,10 +253,9 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	public void save(String name,String desc) {	
 		ChainManager manager = connection.getChainManager();
 		Chain chain  = manager.createChain(name,desc);
-		ChainInfo info = new ChainInfo(chain);
 		
 		//populate chains
-		addNodes(manager,chain,info);
+		addNodes(manager,chain);
 		
 		// links
 		addLinks(manager,chain);
@@ -267,14 +265,14 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		
 		// create a chain info and add to chains
 		
-		connection.addChain(info);
+		connection.addChain(chain);
 		
 		// add this to the library
-		libraryCanvas.drawChain(info);
+		libraryCanvas.drawChain(chain);
 		libraryCanvas.scaleToSize();
 	}
 	
-	private void addNodes(ChainManager manager,Chain chain,ChainInfo info) {
+	private void addNodes(ChainManager manager,Chain chain) {
 		PNode node;
 		PModule mod;
 		CNode chainNode;
@@ -287,7 +285,6 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 				mod = (PModule) node;
 				chainNode =  (CNode) manager.addNode(chain,mod.getModule());
 			 	mod.setNode(chainNode);
-			 	info.addNode(chainNode);
 			}
 		}
 	}

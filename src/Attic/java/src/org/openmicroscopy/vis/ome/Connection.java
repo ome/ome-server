@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.ome;
 
 import org.openmicroscopy.remote.*;
 import org.openmicroscopy.*;
+import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
 import org.openmicroscopy.vis.piccolo.PFormalOutput;
@@ -106,6 +107,8 @@ public class Connection {
 		worker.start();
 	}
 	
+	
+	
 	public void setSession(Session session) {
 		this.session = session;
 	}
@@ -156,12 +159,12 @@ public class Connection {
 		modules.setModuleInfo(i,info);
 	}
 	
-	public ChainInfo getChainInfo(int i) {
-		return chains.getChainInfo(i);
+	public Chain getChain(int i) {
+		return chains.getChain(i);
 	}
 	
-	public void addChain(ChainInfo info) {
-		chains.addChain(info);
+	public void addChain(Chain c) {
+		chains.addChain(c);
 	}
 	
 	/**
@@ -228,5 +231,11 @@ public class Connection {
 		return (ArrayList) obj;
 	}
 	
+	public void commitTransaction() {
+		session.commitTransaction();
+	}
 	
+	public ChainManager getChainManager() {
+		return session.getChainManager();
+	}
 }

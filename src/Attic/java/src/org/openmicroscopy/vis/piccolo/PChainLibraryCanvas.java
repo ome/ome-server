@@ -48,7 +48,7 @@ import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.ChainInfo;
+//import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.Chains;
 import org.openmicroscopy.Chain;
 import org.openmicroscopy.vis.dnd.ChainSelection;
@@ -125,7 +125,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	private void populate() {
 
 	
-		ChainInfo info;
+		Chain chain;
 
 		Chains chains = connection.getChains();
 		
@@ -133,17 +133,17 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
 		// draw each of them.
 		while (iter.hasNext()) {
-			info = (ChainInfo) iter.next();
-			drawChain(info);
+			chain = (Chain) iter.next();
+			drawChain(chain);
 		}
 		
 	}
 	
-	public  void drawChain(ChainInfo info) {
+	public  void drawChain(Chain chain) {
 		// draw the modules 
 		chainHeight = 0;
 		chainWidth = 0;
-		Chain chain = info.getChain();
+		
 		
 		
 		PText name = new PText(chain.getName());
@@ -156,7 +156,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		chainHeight += name.getBounds().getHeight()+VGAP;
 		y += VGAP+name.getBounds().getHeight();
 		
-		PChain p = new PChain(connection,info,layer,linkLayer,0,y);
+		PChain p = new PChain(connection,chain,layer,linkLayer,0,y);
 		
  		y += p.getHeight()+VGAP;
  		decorateChain(chain.getID(),top,y,p.getWidth());
