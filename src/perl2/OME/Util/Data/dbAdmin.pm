@@ -451,27 +451,36 @@ sub connection {
 		  "Call $script $command_name with the -f flag to specify it. " if (not -e $env_file);
 	
 	# Parse our command line options
-	my ($db,$user,$host,$port,$class);
+	my ($db,$user,$pass,$host,$port,$class);
 	GetOptions('d|database=s' => \$db,
 						 'u|user=s'     => \$user,
 						 'h|host=s'     => \$host,
 						 'p|port=i'     => \$port,
+#						 'P|pass=s'     => \$pass,
 						 'c|class=s'    => \$class,
 	);
 	
 	# Get the environment and defaults
 	my $environment = initialize OME::Install::Environment;
 	my $defaultDBconf = {
-		Delegate => $class ? $class : 'OME::Database::PostgresDelegate',
-		User     => $user,
+		Delegate => 'OME::Database::PostgresDelegate',
+		User     => undef,
 		Password => undef,
-		Host     => $host,
-		Port     => $port,
-		Name     => $db ? $db : 'ome',
+		Host     => undef,
+		Port     => undef,
+		Name     => 'ome',
 	};
 	
 	my $dbConf = $environment->DB_conf();
 	$dbConf = $defaultDBconf unless $dbConf;
+
+	$dbConf->{Delegate} = $class if $class;
+	$dbConf->{User}     = $user  if $user;
+	$dbConf->{Password} = $pass  if $pass;
+	$dbConf->{Host}     = $host  if $host;
+	$dbConf->{Port}     = $port  if $port;
+	$dbConf->{Name}     = $db    if $db;
+	
     my $confirm_all;
 
     while (1) {
