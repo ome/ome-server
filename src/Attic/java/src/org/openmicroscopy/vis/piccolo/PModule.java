@@ -132,6 +132,9 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	private CModule module;
 	
+	public PModule() {
+	}
+	
 	public PModule(Connection connection,CModule module,float x,float y) {
 		this(connection,module);
 		setOffset(x,y);
@@ -566,5 +569,13 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	public Node getNode() {
 		return node;
+	}
+	
+	public double getX() {
+		return getFullBounds().getX();
+	}
+	
+	public double getY() {
+		return getFullBounds().getY();
 	}
 }
