@@ -326,6 +326,9 @@ sub __callOMEIS {
 
     my $session = OME::Session->instance();
 
+	$params{SessionKey} = $session->SessionKey()
+		unless exists $params{SessionKey};
+
     if ($local_server) {
         # If there is a File or Pixels parameter, pull it out of the
         # %params hash, and save the filename.  We also calculate the
