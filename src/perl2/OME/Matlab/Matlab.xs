@@ -1006,3 +1006,14 @@ eval(pEngine,matlab_code)
             RETVAL = engEvalString(pEngine,matlab_code);
         OUTPUT:
             RETVAL
+
+int
+setOutputBuffer(pEngine, pBuffer, bufferSize)
+		OME::Matlab::Engine pEngine;
+		char* pBuffer;
+		int bufferSize;
+		CODE:
+			RETVAL = engOutputBuffer(pEngine, pBuffer, bufferSize);
+		OUTPUT:
+			RETVAL
+			
