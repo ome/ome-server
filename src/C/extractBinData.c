@@ -56,10 +56,12 @@
 	produce the proper flags to pass to the compiler. The one line compilation
 	command is:
 
-		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 \
+		-ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c \
+		b64z_lib.c -o extractBinData
 
 
-*****************************************************************************/
+******************************************************************************/
 
 
 #include <libxml/parser.h>
@@ -76,7 +78,7 @@
 *
 *	Data structures & Constants
 *
-*****************************************************************************/
+******************************************************************************/
 #define BinDataLocal "BinData"
 #define PixelLocal "Pixels"
 #define CompressionAttr "Compression"
@@ -85,24 +87,25 @@
 const char *pixelTypes[] = { "bit", "int8", "int16", "int32", "Uint8", "Uint16", "Uint32", "float", "double", "complex", "double-complex", NULL };
 const int bitsPerPixel[] = {  1,      8,     16,      32,      8,       16,       32,       32,      64,       64,        128            , 0 };
 
-// This is a stack to store information about an element. It keeps track of
-// whether an element has content or is empty AND
-// whether the opening tag of the element is open (e.g. "<foo" is open, 
-// "<foo>" and "<foo/>" are not). It is used for every element except BinData.
+/* This is a stack to store information about an element. It keeps track of
+/ whether an element has content or is empty AND
+/ whether the opening tag of the element is open (e.g. "<foo" is open, 
+/ "<foo>" and "<foo/>" are not). It is used for every element except BinData.
+*/
 typedef struct _elementInfo {
 	int hasContent;
 	int tagOpen;
 	struct _elementInfo *prev;
 } StructElementInfo;
 
-// <BinData> stuff
+/* <BinData> stuff */
 typedef struct {
 	FILE *BinDataOut;
 	char *compression;
 	b64z_stream *strm;
 } BinDataInfo;
 
-// Possible states
+/* Possible states */
 typedef enum {
 	PARSER_START,
 	IN_BINDATA,
@@ -110,17 +113,17 @@ typedef enum {
 	IN_BINDATA_UNDER_PIXELS,
 } PossibleParserStates;
 
-// <Pixels> info
+/* <Pixels> info */
 typedef struct {
-	// dimensions of pixel array. C is channels. bpp is "bits per pixel"
+	/* dimensions of pixel array. C is channels. bpp is "bits per pixel" */
 	int X,Y,Z,C,T,bpp;
-	// indexes to store current plane
+	/* indexes to store current plane */
 	int theZ, theC, theT;
 	int bigEndian;
 	char *dimOrder;
-	// pixelType is not strictly needed. maybe it will come in handy in a later incarnation of this code
+	/* pixelType is not strictly needed. maybe it will come in handy in a later incarnation of this code */
 	char *pixelType;
-	// outputPath stores the path the coallated <BinData>s will reside.
+	/* outputPath stores the path the coallated <BinData>s will reside. */
 	char *outputPath;
 	int hitBinData;
 	unsigned char *binDataBuf;
@@ -128,7 +131,7 @@ typedef struct {
 	Pix *pixWriter;
 } PixelInfo;
 
-// Contains all the information about the parser's state
+/* Contains all the information about the parser's state */
 typedef struct {
 	PossibleParserStates state;
 	int nOutputFiles;
@@ -141,36 +144,36 @@ typedef struct {
 *
 *	Functions Declarations:
 *
-*****************************************************************************/
+******************************************************************************/
 
-// SAX callbacks:
-static void extractBinDataStartDocument(ParserState *);
-static void extractBinDataEndDocument( ParserState * );
-static void extractBinDataCharacters(ParserState *, const xmlChar *, int );
-static void extractBinDataStartElement(ParserState *, const xmlChar *, const xmlChar **);
-static void extractBinDataEndElement(ParserState *, const xmlChar *);
-static void BinDataWarning( ParserState *, const char * );
-static void BinDataError( ParserState *, const char * );
-static void BinDataFatalError( ParserState *, const char * );
+/* SAX callbacks: */
+static void extractBinDataStartDocument(ParserState *state );
+static void extractBinDataEndDocument( ParserState *state );
+static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs);
+static void extractBinDataEndElement(ParserState *state, const xmlChar *name);
+static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int len);
+static void BinDataWarning( ParserState *state, const char *msg );
+static void BinDataError( ParserState *state, const char *msg );
+static void BinDataFatalError( ParserState *state, const char *msg );
 
-// Utility functions:
-int parse_xml_file(const char *);
-void print_element(const xmlChar *, const xmlChar **);
-int increment_plane_indexes( int *, int *, int *, int, int, int);
+/* Utility functions: */
+int parse_xml_file(const char *filename);
+void print_element(const xmlChar *name, const xmlChar **attrs);
+int increment_plane_indexes( int* a, int* b, int* c, int aMax, int bMax, int cMax );
 void mem_error( char*msg );
 
 /******************************************************************************
 *
 *	main & global data
 *
-*****************************************************************************/
+******************************************************************************/
 char *dirPath;
 char *pixelDirPath;
 
 int main(int ARGC, char **ARGV) {
 	char *filePath;
 	
-	// program called with improper usage. print usage message.
+	/* program called with improper usage. print usage message. */
 	if( ARGC != 4 ) {
 		fprintf( stdout, "Usage is:\n\t./extractBinData [pixel scratch directory] [scratch directory] [OME XML document to process]\n" );
 		fprintf( stdout, "\n\n\t[pixel scratch directory] is an absolute path to a directory to output pixel files in repository format. For good performance, that scratch space should be on the same file system as the repository. This program will NOT clean up after itself, so clean its sandbox after use.\n\t[scratch directory]: Files extracted from <BinData>s not belonging to <Pixels> will be written here. This also needs to be an absolute path.\n" );
@@ -192,14 +195,15 @@ int main(int ARGC, char **ARGV) {
 *
 *	Utility Functions:
 *
-*****************************************************************************/
+******************************************************************************/
 
 
 int parse_xml_file(const char *filename) {
     ParserState my_state;
-    // The source of xmlSAXHandler and all the function prefixes I'm using are
-    // in <libxml/parser.h> Use `xml2-config --cflags` to find the location of
-    // that file.
+    /* The source of xmlSAXHandler and all the function prefixes I'm using are
+    / in <libxml/parser.h> Use `xml2-config --cflags` to find the location of
+    / that file.
+    */
 	xmlSAXHandler extractBinDataSAXParser = {
 		0, /* internalSubset */
 		0, /* isStandalone */
@@ -238,7 +242,7 @@ void print_element(const xmlChar *name, const xmlChar **attrs) {
 	
 	fprintf( stdout, "<%s ", name );
 	if( attrs != NULL ) {
-		// print the attributes.
+		/* print the attributes. */
 		for( i=0;attrs[i] != NULL;i+=2 ) {
 			fprintf( stdout, "%s = \"%s\" ", attrs[i], attrs[i+1] );
 		}
@@ -268,7 +272,7 @@ void mem_error( char*msg ) {
 *
 *	SAX callback functions
 *
-*****************************************************************************/
+******************************************************************************/
 
 static void extractBinDataStartDocument(ParserState *state) {
 
@@ -293,12 +297,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	int i, freeLocalName;
 	StructElementInfo* elementInfo;
 
-	/* Unused variables
-	int pathLength;
-	size_t bufferSize;
-	*/
-
-	// mark that the last open element has content, namely this element
+	/* mark that the last open element has content, namely this element */
 	if( state->elementInfo != NULL ) {
 		state->elementInfo->hasContent = 1;
 		if( state->elementInfo->tagOpen == 1 ) {
@@ -328,7 +327,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		freeLocalName = 1;
 	}
 	/*
-	*************************************************************************/
+	**************************************************************************/
 
 	
 
@@ -339,26 +338,21 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	*/
 	if( strcmp( BinDataLocal, localName ) == 0 ) {
 
-		// take note of compression
+		/* take note of compression */
 		state->binDataInfo->compression = NULL;
 		if( attrs != NULL ) {
 			for( i=0; attrs[i] != NULL; i+=2) {
 				if( strcmp( attrs[i], CompressionAttr ) == 0 ) {
-//					if( strcmp(attrs[i+1], "none") == 0 ) {
-//						state->binDataInfo->compression = NULL;
-//					} else {
-						state->binDataInfo->compression = (char *) malloc( strlen(attrs[i+1]) + 1);
-						if( !(state->binDataInfo->compression) ) mem_error("");
-						strcpy( state->binDataInfo->compression, attrs[i+1] );
-//					}
+					state->binDataInfo->compression = (char *) malloc( strlen(attrs[i+1]) + 1);
+					if( !(state->binDataInfo->compression) ) mem_error("");
+					strcpy( state->binDataInfo->compression, attrs[i+1] );
 					break;
 				}
 			}
 		}
 
-		// set up decoding stream
+		/* set up decoding stream */
 		if( ! (state->binDataInfo->compression ) ) /* no compression */
-//			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, none );
 			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
 		else if( strcmp(state->binDataInfo->compression, "bzip2") == 0 )
 			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, bzip2 );
@@ -368,7 +362,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			state->binDataInfo->strm = b64z_new_stream( NULL, 0,  NULL, 0, zlib );
 		b64z_decode_init ( state->binDataInfo->strm );
 
-		// This <BinData> is under <Pixels>
+		/* This <BinData> is under <Pixels> */
 		if( state->state == IN_PIXELS ) {
 			state->state = IN_BINDATA_UNDER_PIXELS;
 			state->pixelInfo->hitBinData = 1;
@@ -377,15 +371,16 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			state->binDataInfo->strm->next_out  = state->pixelInfo->binDataBuf;
 		} 
 
-		// This <BinData> is not under <Pixels>
-		// 	It needs to be piped to a file & replaced with an <External>
-		// 	This data needs to be converted from base64 & possibly
-		// 	decompressed. 
+		/* This <BinData> is not under <Pixels>
+		/ 	It needs to be piped to a file & replaced with an <External>
+		/ 	This data needs to be converted from base64 & possibly
+		/ 	decompressed. 
+		*/
 		else {
 			state->state      = IN_BINDATA;
 			state->nOutputFiles++;
 			
-			// open the output file for the BinData contents
+			/* open the output file for the BinData contents */
 			binDataOutPath = (char *) malloc( 
 				strlen( dirPath ) + 
 				strlen( "/" ) +
@@ -400,14 +395,14 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 				exit(-1);
 			}
 	
-			// convert BinData to External
+			/* convert BinData to External */
 			fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, binDataOutPath );
 			
 			free( binDataOutPath );
 		}
 	}
 	/*
-	*************************************************************************/
+	**************************************************************************/
 
 
 
@@ -433,10 +428,10 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	*/
 	else if( strcmp( PixelLocal, localName ) == 0 ) {
 
-		// set state
+		/* set state */
 		state->state            = IN_PIXELS;
 
-		// Stack maintence. Necessary for closing tags properly.
+		/* Stack maintence. Necessary for closing tags properly. */
 		elementInfo             = (StructElementInfo *) malloc( sizeof(StructElementInfo) );
 		if( !elementInfo ) mem_error("");
 		elementInfo->hasContent = 0;
@@ -450,7 +445,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		*
 		*
 		*/
-		// data extraction
+		/* data extraction */
 		state->pixelInfo = (PixelInfo *) malloc( sizeof( PixelInfo ) );
 		if( !(state->pixelInfo) ) mem_error("");
 		if(attrs == NULL) {
@@ -487,7 +482,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			}
 		}
 		
-		// error check: verify we have all needed attributes
+		/* error check: verify we have all needed attributes */
 		if( state->pixelInfo->X == 0 || state->pixelInfo->Y == 0 ||
 		    state->pixelInfo->Z == 0 || state->pixelInfo->C == 0 ||
 		    state->pixelInfo->T == 0 || state->pixelInfo->dimOrder == NULL ||
@@ -496,7 +491,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			exit(-1);
 		}
 		
-		// look up bpp for this pixel type
+		/* look up bpp for this pixel type */
 		state->pixelInfo->bpp = 0;
 		for( i=0; pixelTypes[i] != NULL; i++ ) {
 			if( strcmp( state->pixelInfo->pixelType, pixelTypes[i] ) == 0 ) {
@@ -508,8 +503,9 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			fprintf( stderr, "Error! unknown PixelType (%s)\n", state->pixelInfo->pixelType );
 		}
 		
-		// I don't know how to deal with binary images for now, so I'm going
-		// to barf if the pixelType is "bit"
+		/* I don't know how to deal with binary images for now, so I'm going
+		/ to barf if the pixelType is "bit"
+		*/
 		if( strcmp( state->pixelInfo->pixelType, "bit" ) == 0 ) {
 			fprintf( stderr, "Error! pixelType 'bit' is not supported yet!\n" );
 			exit(-1);
@@ -518,7 +514,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		/*
 		* END "Extract data from xml attributes."
 		*
-		*********************************************************************/
+		**********************************************************************/
 		
 		/**********************************************************************
 		*
@@ -528,12 +524,11 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		* 	contains <External>s.
 		*
 		*/
-		// initialize variables
+		/* initialize variables */
 		state->pixelInfo->theZ = state->pixelInfo->theC = state->pixelInfo->theT = 0;
 		state->pixelInfo->hitBinData = 0;
 		
-		// 2do
-		// initialize libpix object - DON'T FORGET BIG ENDIAN!
+		/* initialize libpix object - DON'T FORGET BIG ENDIAN! */
 		state->nOutputFiles++;
 		state->pixelInfo->outputPath = (char *) malloc( 
 			strlen( pixelDirPath ) + 
@@ -559,15 +554,15 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		/*
 		* END "Initialization for <BinData> processing."
 		*
-		*********************************************************************/
+		**********************************************************************/
 
-		// print out <Pixels>
+		/* print out <Pixels> */
 		print_element( name, attrs );
 	}
 	/*
 	*	END "Pixels"
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 
@@ -576,7 +571,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 	* This isn't a <BinData> or <Pixels>, pipe it through.
 	*/
 	else {
-		// Stack maintence. Necessary for closing tags properly.
+		/* Stack maintence. Necessary for closing tags properly. */
 		elementInfo             = (StructElementInfo *) malloc( sizeof(StructElementInfo) );
 		if( !(elementInfo) ) mem_error("");
 		elementInfo->hasContent = 0;
@@ -587,23 +582,24 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		print_element( name, attrs );
 	}
 	/*
-	*************************************************************************/
+	**************************************************************************/
 
 	if( freeLocalName == 1 ) 
 		free( localName );
 
-} // END extractBinDataStartElement
+} /* END extractBinDataStartElement */
 
 
 
 static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
-	// We're at the end of an element. If the element had content, then we
-	// need to print "</[elementName]>". If the element did not have 
-	// content, then we need to print "/>". I'm using a stack to keep track
-	// of element's content, so I gotta check the stack and do stack 
-	// maintence.
-	// Iff we are ending a BinData section, then we don't have to touch the
-	// stack.
+	/* We're at the end of an element. If the element had content, then we
+	/ need to print "</[elementName]>". If the element did not have 
+	/ content, then we need to print "/>". I'm using a stack to keep track
+	/ of element's content, so I gotta check the stack and do stack 
+	/ maintence.
+	/ Iff we are ending a BinData section, then we don't have to touch the
+	/ stack.
+	*/
 	StructElementInfo *elementInfo;
 
 	switch( state->state ) {
@@ -618,7 +614,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	 case IN_BINDATA:
 		state->state = PARSER_START;
 		
-		//cleanup
+		/* cleanup */
 		b64z_decode_end ( state->binDataInfo->strm );
 		free( state->binDataInfo->strm );
 		state->binDataInfo->strm = NULL;
@@ -633,7 +629,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	/*
 	* END 'Process <BinData>'
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 
@@ -645,7 +641,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	  case IN_BINDATA_UNDER_PIXELS:
 		state->state = IN_PIXELS;
 		
-		// Endian check
+		/* Endian check */
 		if( state->pixelInfo->bigEndian != bigEndian() )
 			switch( state->pixelInfo->bpp ) {
 			 case 8:
@@ -662,9 +658,13 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 			 case 128:
 				byteSwap16( state->pixelInfo->binDataBuf, (size_t)state->pixelInfo->X * (size_t)state->pixelInfo->Y );
 				break;
+			 default:
+				fprintf( stderr, "Error! invalid bpp specified in <Pixels>!\n" );
+				exit(-1);
+				break;
 			}
 
-		// output buffered BinData through libpix
+		/* output buffered BinData through libpix */
 		SetPlane( 
 			state->pixelInfo->pixWriter, 
 			state->pixelInfo->binDataBuf, 
@@ -672,7 +672,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 			state->pixelInfo->theC, 
 			state->pixelInfo->theT );
 
-	 	// logic to increment indexes based on dimOrder
+	 	/* logic to increment indexes based on dimOrder */
 	 	if( strcmp( state->pixelInfo->dimOrder, "XYZCT" ) == 0 ) {
 			increment_plane_indexes( 
 				&( state->pixelInfo->theZ ), 
@@ -730,7 +730,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 		}
 				
 
-		// cleanup
+		/* cleanup */
 		b64z_decode_end( state->binDataInfo->strm );
 		free( state->binDataInfo->strm );
 		state->binDataInfo->strm = NULL;
@@ -742,20 +742,20 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 	/*
 	* END 'Process <BinData> inside of <Pixels>'
 	*
-	*************************************************************************/
+	**************************************************************************/
 
 
 	 case IN_PIXELS:
 		state->state = PARSER_START;
 
-	 	// print the <External> element if we extracted <BinData>s
+	 	/* print the <External> element if we extracted <BinData>s */
 		if( state->pixelInfo->hitBinData == 1 )
 			fprintf( stdout, "<External xmlns=\"%s\" href=\"%s\" SHA1=\"\"/>", BinNS, state->pixelInfo->outputPath );
 
-		// close libpix object, clean it up
+		/* close libpix object, clean it up */
 		FreePix( state->pixelInfo->pixWriter );
 
-	 	// cleanup
+	 	/* cleanup */
 		free( state->pixelInfo->binDataBuf );
 		free( state->pixelInfo->dimOrder );
 		free( state->pixelInfo->pixelType );
@@ -763,13 +763,13 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 		free( state->pixelInfo );
 		state->pixelInfo = NULL;
 
-	 	// DO NOT "break;" Go on to default action of stack cleanup and
-	 	// element closure.
-
+	 	/* DO NOT "break;" Go on to default action of stack cleanup and
+	 	/ element closure.
+	 	*/
 
 
 	 default:
-		// Stack maintence
+		/* Stack maintence */
 		if( state->elementInfo != NULL ) {
 			elementInfo = state->elementInfo;
 			state->elementInfo = elementInfo->prev;
@@ -782,7 +782,7 @@ static void extractBinDataEndElement(ParserState *state, const xmlChar *name) {
 		}
 	}
 	
-} // END extractBinDataEndElement
+} /* END extractBinDataEndElement */
 
 
 
@@ -792,8 +792,9 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 	size_t outLen;
 	
 	
-	// The tag begun by extractBinDataStartElement might be open. If so, we 
-	// need to close it so we can print the character contents of this element.
+	/* The tag begun by extractBinDataStartElement might be open. If so, we 
+	/ need to close it so we can print the character contents of this element.
+	*/
 	if( state->elementInfo != NULL ) {
 		state->elementInfo->hasContent = 1;
 		if( state->elementInfo->tagOpen == 1 ) {
@@ -802,8 +803,9 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 		}
 	}
 
-	// The character data needs to be streamed out. 
-	// This switch directs the flow.
+	/* The character data needs to be streamed out. 
+	/ This switch directs the flow.
+	*/
 	switch( state->state ) {
 	 case IN_PIXELS:
 	 case PARSER_START:
@@ -822,7 +824,7 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 	 	
 	 	do {
 		 	rC = b64z_decode( state->binDataInfo->strm );
-			//write out to file & reset output buffers
+			/* write out to file & reset output buffers */
 			outLen = SIZEOF_FILE_OUT_BUF - state->binDataInfo->strm->avail_out;
 			if( fwrite( buf, 1, outLen, state->binDataInfo->BinDataOut ) != outLen ) {
 				fprintf( stderr, "Error! Could not write full output to file!\n" );
@@ -849,7 +851,9 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 		} while( rC != B64Z_STREAM_END );
 		
 		break;
-	} // switch( state->state )
+	  default: /* default should never get used */
+		break;
+	} /* switch( state->state ) */
 }
 
 /******************************************************************************
@@ -864,7 +868,7 @@ static void extractBinDataCharacters(ParserState *state, const xmlChar *ch, int 
 *	has an example that uses glib logging functions, but I couldn't figure out
 *	how to adapt that code.
 *
-*****************************************************************************/
+******************************************************************************/
 static void BinDataWarning( ParserState *state, const char *msg ) {
 	fprintf( stderr, "The SAX parser reports this warning message:\n%s", msg );
 }
