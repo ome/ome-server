@@ -36,8 +36,10 @@ Util.xlinkns  = "http://www.w3.org/1999/xlink";
 
 Util.createElementSVG = function( name, attr_list ) {
 	var new_element = svgDocument.createElementNS(Util.svgns, name);
-	for( var attr in attr_list ) {
-		new_element.setAttribute( attr, attr_list[attr] );
+	if( attr_list ) {
+		for( var attr in attr_list ) {
+			new_element.setAttribute( attr, attr_list[attr] );
+		}
 	}
 	return new_element;
 };
