@@ -44,12 +44,20 @@ use OME::Session;
 use OME::Web;
 use CGI;
 use Log::Agent;
+use Carp;
+use Carp qw(cluck);
+use HTML::Template;
 
-use base qw(Class::Data::Inheritable);
+use base qw(OME::Web);
 
-__PACKAGE__->mk_classdata('_fieldLabels');
-__PACKAGE__->mk_classdata('_fieldNames');
-__PACKAGE__->mk_classdata('_allFieldNames');
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	my %params = @_;
+		
+	return $self;
+}
 
 =pod
 
@@ -67,9 +75,7 @@ Important!! Subclasses should not be accessed directly. All Rendering
 should go through DBObjRendering. Specialization is completely
 transparent.
 
-Subclasses follow the naming convention implemented in _getSpecializedRenderer.
-Subclasses are expected to override one or more of the functions
-getFieldNames, getAllFieldNames, getFieldTypes, getFieldLabels, getSearchFields, getRefToObject, renderSingle
+Subclasses must follow the naming convention implemented in _getSpecializedRenderer.
 
 All methods work with Object Prototypes, SemanticTypes, attributes, and dbobject instances.
 If using with a Semantic Type, prefix the ST name with '@' (i.e. '@Pixels').
@@ -82,327 +88,46 @@ references to arrays and hashes.
 
 	use OME::Web::DBObjRender;
 
-	# get field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $type );
-
-	# get all field names for a DBObject  ( field_name, ... )
-	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $type );
-
-	# get field types { field_name => field_type, ... }
-	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes( $type );
-
-	# get field labels { field_name => field_label, ... }
-	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type );
-
-	# get search form elements keyed by field names (html only) { field_name => search_field, ... }
-	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type );
-
-	# get an html reference to this object "<a href=...>"
-	my $renderedRef = OME::Web::DBObjRender->getRefToObject( $object, 'html' );
-
-	# render object data to html format ( { field_name => rendered_field, ... }, ... )
-	my @records = OME::Web::DBObjRender->render( \@objects, 'html' );
- 	# or txt format
- 	my @records = OME::Web::DBObjRender->render( \@objects, 'txt' );
-
-	# obtain a specialized rendering class
-	my $specializedRenderer = ( OME::Web::DBObjRender->_getSpecializedRenderer($type) || OME::Web::DBObjRender )
-
+# FIXME: add examples
 
 =head1 Methods
 
-=head2 getFieldNames
+=head2 getName
 
-	my @fieldNames = OME::Web::DBObjRender->getFieldNames($type);
-
-$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
-
-Returns an ordered list of the most relevant field names for the
-specified object or object type.
-i.e. for OME::Image, the system insert time stamp will not be returned with this
-call.
-
-Useful for constructing an object summary.
-
-=cut
-
-sub getFieldNames {
-	my ($proto,$type) = @_;
-	
-	my $specializedRenderer;
-	return $specializedRenderer->getFieldNames( $type )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    $proto eq __PACKAGE__);
-
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
-	
-	# We don't need no target
-	my $fieldNames = ( 
-		$proto->_fieldNames() or
-		['id', sort( grep( $_ ne 'target', $package_name->getPublishedCols()) ) ] 
-	);
-	return @$fieldNames if wantarray;
-	return $fieldNames;
-}
-
-=head2 getAllFieldNames
-
-	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames($type);
-
-$type can be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-
-Returns an ordered list of all relevant field names for the specified object or object type.
-e.g. For OME::Image, this will include all time stamps but will exclude id accessors.
-
-Useful for a detailed object representation.
-
-=cut
-
-sub getAllFieldNames { 
-	my ( $proto, $type ) = @_;
-
-	my $specializedRenderer;
-	return $specializedRenderer->getAllFieldNames( $type )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    $proto eq __PACKAGE__);
-
-	my $fieldNames = (
-		$proto->_allFieldNames() or
-		$proto->getFieldNames($type)
-	);
-	
-	return @$fieldNames if wantarray;
-	return $fieldNames;
-}
-
-=head2 getFieldTypes
-
-	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes($type, \@fieldNames);
-
-$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance of either
-$fieldNames is optional. It is used to populate the returned hash. Default is the list returned by getFieldNames.
-
-returns a hash { field_name => field_type }
-field_type is the reference type the field will return. it is equivalent to ref( $instance_of_type->$field_name )
-
-=cut
-
-sub getFieldTypes {
-	my ($proto,$type,$fieldNames,$doNotSpecialize) = @_;
-
-	my $specializedRenderer;
-	return $specializedRenderer->getFieldTypes( $type,$fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    $proto eq __PACKAGE__);
-
-	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
-	my %fieldTypes = map{ $_ => $package_name->getAccessorReferenceType($_) } @$fieldNames;
-
-	return %fieldTypes if wantarray;
-	return \%fieldTypes;
-}
-
-
-=head2 getFieldLabels
-
-	my %fieldLabels = OME::Web::DBObjRender->getFieldLabels( $type, \@fieldNames, $format );
-	
-$type can be a DBObject name ("OME::Image"), an Attribute name
-("@Pixels"), or an instance of either
-@fieldNames is optional. It is used to populate the returned hash.
-Default is the list returned by getFieldNames.
-$format may be 'txt' or 'html'. it is also optional (defaults to 'txt').
-
-returns a hash { field_name => field_Label }
-
-=cut
-
-sub getFieldLabels {
-	my ($proto,$type,$fieldNames,$format) = @_;
-	
-	my $specializedRenderer;
-	return $specializedRenderer->getFieldLabels( $type,$fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    $proto eq __PACKAGE__);
-	
-	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
-	$format = 'txt' unless $format;
-
-	# make labels by prettifying the aliases. Add links to Semantic
-	# Element documentation as available.
-	my %labels;
-	my $q = new CGI;
-	my $factory = OME::Web->Session()->Factory();
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
-	
-	# _fieldLabels is class data that allows specialized renderers to overide a subset of labels
-	my $pkg_labels = $proto->_fieldLabels();
-	foreach( @$fieldNames ) {
-		my ($alias,$label) = ($_,$_);
-		$label =~ s/_/ /g;
-		if( $format eq 'txt' ) {
-			$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
-		} else {
-			$labels{$alias} = ( $pkg_labels->{$alias} or ucfirst($label) );
-			if( $ST ) {
-				my $SE = $factory->findObject( 
-					'OME::SemanticType::Element', 
-					semantic_type => $ST,
-					name          => $alias
-				);
-				$labels{$alias} = $q->a(
-					{ href => "serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType::Element&ID=".$SE->id() },
-					$labels{$alias} )
-					if $SE;
-			}
-		}
-	};
-	return %labels if wantarray;
-	return \%labels;
-}
-
-
-=head2 render
-
-	my @records = OME::Web::DBObjRender->render( \@objects, $format, \@fieldNames );
-
-@objects is an array of instances of a DBObject or a Semantic Type.
-$format is either 'html' or 'txt'
-
-Render object data suitable for display in $format. Current supported
-formats are 'html' and 'txt'.
-Returns an array of hashes of the form { field_name => rendered_field, ... }
-Each hash will contain an _id key with the record's id.
-
-$fieldNames is optional. It is used to populate the returned hash.
-Default is the list returned by getFieldNames.
-
-This relies on renderSingle for actual rendering, so subclasses do not
-need to implement this.
-
-=cut
-
-sub render {
-	my ($proto,$objects,$format,$fieldnames) = @_;
-
-	return $proto->renderSingle( $objects, $format,$fieldnames )
-		unless ref( $objects ) eq 'ARRAY';
-
-	my @records;
-	foreach ( @$objects ) {
-		my $record = $proto->renderSingle( $_, $format, $fieldnames );
-		push( @records, $record );
-	}
-	return @records if wantarray;
-	return \@records;
-}
-
-
-=head2 renderSingle
-
-	my %record = OME::Web::DBObjRender->renderSingle( $object, $format, \@fieldNames );
-
-$fieldNames is optional. It is used to populate the returned hash.
-Default is the list returned by getFieldNames.
-
-same as render, but works with an individual instance instead of arrays.
-
-=cut
-
-sub renderSingle {
-	my ($proto,$obj,$format,$fieldnames) = @_;
-	my ( %record, $specializedRenderer );
-	
-	# specialize
-	if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-	    $proto eq __PACKAGE__) {
-		%record = $specializedRenderer->renderSingle( $obj, $format, $fieldnames );
-	# general case
-	} else {
-		my $q = new CGI;
-		my ($package_name, $common_name, $formal_name, $ST) =
-			OME::Web->_loadTypeAndGetInfo( $obj );
-		$fieldnames = $proto->getFieldNames( $obj ) unless $fieldnames;
-		my $id   = $obj->id();
-		foreach my $field( @$fieldnames ) {
-			if( ($field eq 'id' or $field eq 'name' ) and $format eq 'html' ) {
-				$record{ $field } = $q->a( 
-					{ 
-						href  => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
-						title => "Detailed info about this $common_name",
-						class => 'ome_detail'
-					},
-					$obj->$field
-				);
-			} else {
-				$record{ $field } = $obj->$field;
-				if( ref( $record{ $field } ) ) {
-					$record{ $field } = OME::Web::DBObjRender->getRefToObject( $record{ $field }, $format );
-				} else {
-					my $type = $obj->getColumnSQLType( $field );
-					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
-					$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
-						if $type eq 'timestamp';
-					$record{ $field } = $booleanConvert{ $record{ $field } }
-						if $type eq 'boolean';
-				}
-			}
-		}
-	}
-
-	# magic id field
-	$record{ _id } = $obj->id();
-	
-	return %record if wantarray;
-	return \%record;
-}
-
-=head2 getObjectLabels
-
-	my $object_labels = OME::Web::DBObjRender->getObjectLabels( \@objects  );
-
-The plural of getObjectLabel. Should not be overriden.
-
-=cut
-
-sub getObjectLabels {
-	my ($proto,$objs) = @_;
-	my @labels = map( $proto->getObjectLabel( $_ ), @$objs );
-	return @labels if wantarray;
-	return \@labels;
-}
-
-=head2 getObjectLabel
-
-	my $object_label = OME::Web::DBObjRender->getObjectLabel( $object );
+	my $object_name = OME::Web::DBObjRender->getName( $object, $options );
 
 Gets a name for this object. Subclasses may override this method.
 If a 'name' or a 'Name' method exists for this object, it will be returned.
 Otherwise, 'id' will be returned.
+By default, the name returned will be a maximum of 23 characters long. This is enforced by
+truncation and concatenation of '...'. This length may be overridden by specifying a
+'max_text_length' option. A 0 or undefined value results in no truncation. A
+'max_text_length' of 3 or less will result in irregular behavior.
+
+Subclasses must implement 'max_text_length'. 
 
 =cut
 
-sub getObjectLabel {
-	my ($proto,$obj) = @_;
+sub getName {
+	my ($self, $obj, $options) = @_;
 
-	my $specializedRenderer;
-	return $specializedRenderer->getObjectLabel( $obj )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    $proto eq __PACKAGE__);
+	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
+	return $specializedRenderer->getName( $obj )
+		if( $specializedRenderer );
 
-	return $obj->name() if( $obj->getColumnType( 'name' ) );
-	return $obj->Name() if( $obj->getColumnType( 'Name' ) );
-	return $obj->id();
+	$options->{ max_text_length } = 23 unless exists $options->{ max_text_length };
+	my $name;
+	$name = $obj->name() if( $obj->getColumnType( 'name' ) );
+	$name = $obj->Name() if( $obj->getColumnType( 'Name' ) );
+	$name = $obj->id() unless $name;
+	$name = $self->_trim( $name, $options );
+	
+	return $name;
 }
 
-=head2 getObjectTitle
+=head2 getTitle
 
-	my $title = OME::Web::DBObjRender->getObjectTitle( $object, $format );
+	my $title = OME::Web::DBObjRender->getTitle( $object, $format );
 
 Gets a title for this object. Subclasses may override this method.
 If a 'name' or a 'Name' method exists for this object, it will be returned.
@@ -410,49 +135,36 @@ Otherwise, '[Common name] [id] (from [Source Module Name])' will be returned.
 
 =cut
 
-sub getObjectTitle {
-	my ($proto,$obj, $format) = @_;
+sub getTitle {
+	my ($self, $obj, $format) = @_;
 
-	my $specializedRenderer;
-	return $specializedRenderer->getObjectTitle( $obj, $format )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj, $format ) and
-		    $proto eq __PACKAGE__);
+	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
+	return $specializedRenderer->getTitle( $obj, $format )
+		if( $specializedRenderer );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $obj );
 	my $q = new CGI;
 	my $prefix = ( ( $ST and ($format eq 'html') ) ? 
-		$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },$common_name) : 
+		$q->a( { 
+			href  => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id(),
+			title => 'Semantic Type Documentation'
+		},$common_name) : 
 		$common_name
 	);
-	my $label = $proto->getObjectLabel( $obj );
+	my $name = $self->getName( $obj, { max_text_length => undef } );
 
-	return "$prefix: $label".
+	return "$prefix: $name".
 		( ( $ST and $obj->module_execution() and $obj->module_execution()->module() ) ?
-			' from '.__PACKAGE__->getRefToObject( $obj->module_execution(), $format ) :
+			' from '.__PACKAGE__->getRef( $obj->module_execution(), $format ) :
 			''
 		);
 
 }
 
-=head2 getRefsToObject
+=head2 getRef
 
-	my $object_refs = OME::Web::DBObjRender->getRefsToObject( \@objects, $format  );
-
-The plural of getRefToObject. Should not be overriden.
-
-=cut
-
-sub getRefsToObject {
-	my ($proto,$objs, $format) = @_;
-	my @refs = map( $proto->getRefToObject( $_, $format ), @$objs );
-	return @refs if wantarray;
-	return \@refs;
-}
-
-=head2 getRefToObject
-
-	my $formated_ref = OME::Web::DBObjRender->getRefToObject( $object, $format );
+	my $formated_ref = OME::Web::DBObjRender->getRef( $object, $format );
 
 $object is an instance of a DBObject or an Attribute.
 $format is either 'html' or 'txt'
@@ -464,12 +176,12 @@ detailed display of the object.
 
 =cut
 
-sub getRefToObject {
-	my ($proto,$obj,$format) = @_;
-	my $specializedRenderer;
-	return $specializedRenderer->getRefToObject( $obj, $format )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    $proto eq __PACKAGE__);
+sub getRef {
+	my ($self, $obj, $format, $options) = @_;
+
+	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
+	return $specializedRenderer->getRef( $obj, $format )
+		if( $specializedRenderer );
 	
 	my $q = new CGI;
 	for( $format ) {
@@ -477,94 +189,498 @@ sub getRefToObject {
 			my ($package_name, $common_name, $formal_name, $ST) =
 				OME::Web->_loadTypeAndGetInfo( $obj );
 			my $id = $obj->id();
-			my $label = $proto->getObjectLabel( $obj );
+			my $name = $self->getName( $obj, $options );
 			return  $q->a( 
 				{ 
 					href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
 					title => "Detailed info about this $common_name",
 					class => 'ome_detail'
 				},
-				$label
+				$name
 			);
 		}
-		return $proto->getObjectLabel( $obj );
+		return $self->getName( $obj );
 	}
 }
 
-=head2 getObjSummary
+=head2 render
 
-	my $obj_summary = OME::Web::DBObjRender->getObjSummary( $object );
+	my $obj_summary = OME::Web::DBObjRender->render( $object, $mode );
 
 $object is an instance of a DBObject or an Attribute.
+$mode is 'summary' or 'detail'
 
-returns a summary of the object formatted for html. 
+returns an html rendering of the object. 
+
+This method looks for templates (read up on HTML::Template) in the html/Templates
+directory that match the object and mode. If no template is found, then 
+generic templates are used instead.
+
+The naming convention for templates is:
+	for an 'OME::Image' DBObject and 'summary' mode, OME_Image_summary.tmpl
+	for a 'Pixels' Attribute in 'detail' mode, Pixels_detail.tmpl
+
+If a specialized template is found, the parameter list is extracted, and renderData() is
+called to populate it. Variables not defined by DBObject methods (or STD elements) may be
+populated by the _renderData() method of specialized subclasses. See 'thumb_url' in
+OME_Image_summary.tmpl and OME::Web::DBObjRender::__OME_Image::_renderData() for an example of
+this.
 
 =cut
 
-sub getObjSummary {
-	my ($proto,$obj) = @_;
-	my $specializedRenderer;
-	return $specializedRenderer->getObjSummary( $obj )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    $proto eq __PACKAGE__);
-	return $proto->getRefToObject( $obj, 'html' );
+sub render {
+	my ($self, $obj, $mode) = @_;
+	my ($tmpl, %tmpl_data);
+
+	# look for custom template
+	my $summary_tmpl = $self->_findTemplate( $obj, $mode );
+	if( $summary_tmpl ) {
+		$tmpl = HTML::Template->new( filename => $summary_tmpl );
+		# load template variable requests
+		my @fields = grep( !m'^_relations$', $tmpl->param() );
+		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
+	} else {
+
+		# use generic template
+		my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
+		$tmpl = HTML::Template->new( filename => 'generic_'.$mode.'.tmpl',
+										path     => $tmpl_dir);
+	
+		# load object data
+		my @fields = $self->getFields( $obj, $mode );
+		my %data = $self->renderData( $obj, \@fields, 'html', $mode );
+		my @name_values;
+		push @name_values, { name => $_, value => $data{ $_ } }
+			foreach @fields;
+		
+		# load template variable requests
+		@fields = grep( !m'^name_value_pairs$|^_relations$', $tmpl->param() );
+		%tmpl_data = $self->renderData( $obj, \@fields, 'html', $mode );
+		$tmpl_data{ name_value_pairs } = \@name_values;
+	}
+
+	# load magic fields
+	# _relations = iterate over the object's relations
+	if( $tmpl->query( name => '_relations' ) ) {
+		my ($relations, $names) = $self->getRelations( $obj, $mode );
+		my @relations_data;
+		foreach my $relation( @$relations ) {
+			my $name = shift @$names;
+# FIXME: clean up paging logic here! in fact, clean up this whole hack
+			my $tableMaker = $self->Tablemaker();
+			my ( $objects, $options, $title, $formal_name ) =
+				$tableMaker->__parseParams( @$relation );
+			my $_options = {
+				more_info_url => ( 
+					$tableMaker->pageURL( "OME::Web::DBObjTable", $tableMaker->{__params} ) or
+					$options->{ URLtoMoreInfo }
+				)
+			};
+			push( @relations_data, { 
+				name => $name, 
+				'!tiled_list' => $self->renderArray( \@$objects, 'tiled_list', $_options ) 
+			} );
+		}
+		$tmpl_data{ _relations } = \@relations_data;
+	}
+
+	# populate template
+	$tmpl->param( %tmpl_data );
+	return $tmpl->output();
 }
 
-=head2 getRelationAccessors
+sub renderArray {
+	my ($self, $objs, $mode, $options) = @_;
+	$options = {} unless $options; # don't have to do undef error checks this way
+	
+	# use generic template
+	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
+	my $tmpl = HTML::Template->new( filename => 'generic_'.$mode.'.tmpl',
+                                    path     => $tmpl_dir);
+	my %tmpl_data;
 
-	my $relationsAccessors = OME::Web::DBObjRender->getRelationAccessors( $object );
+	if( $objs && scalar( @$objs ) > 0 ) {
+		my ($package_name, $common_name, $formal_name, $ST) =
+			$self->_loadTypeAndGetInfo( $objs->[0] );
+		
+		# populate magic fields
+		if( $tmpl->query( name => '_more_info_url' ) ) {
+			$tmpl_data{ _more_info_url } = $options->{more_info_url};
+		}
+		if( $tmpl->query( name => '_paging_text' ) ) {
+			$tmpl_data{ _paging_text } = $options->{_paging_text};
+		}
+		if( $tmpl->query( name => '_formal_name' ) ) {
+			$tmpl_data{ _formal_name } = $formal_name;
+		}
+		if( $tmpl->query( name => '_common_name' ) ) {
+			$tmpl_data{ _common_name } = $common_name;
+		}
+	
+		# populate loops that tile objects
+		if( $tmpl->query( name => '_tile_loop' ) ) {
+			# find out about the object loop.
+			my @innards = $tmpl->query( loop => '_tile_loop' );
+			( my $obj_loop_command = $innards[0] ) =~ m/^_obj_loop!(\d+)/;
+			my $n_tiles = $1;
+			my @obj_fields = $tmpl->query( loop => ['_tile_loop', $obj_loop_command] );
+			my @tile_data;
+			while( @$objs ) {
+				# grab the next bunch of objects
+				my @objs2tile = splice( @$objs, 0, $n_tiles );
+				# render their data
+				my @objs_data = $self->renderData( \@objs2tile, \@obj_fields, 'html', $mode );
+				# pad the data block to match the other rows. Now we have a 'tile'
+				if( scalar( @tile_data ) ) {
+					push( @objs_data, {} ) for( 1..( $n_tiles - scalar( @objs2tile ) ) );
+				}
+				# push the 'tile' on the stack of tiles
+				push( @tile_data, { $obj_loop_command => \@objs_data } );
+			}
+			$tmpl_data{ _tile_loop } = \@tile_data;
+		}
+		
+		# populate loops around objects
+		if( $tmpl->query( name => '_obj_loop' ) ) {
+			# populate the fields inside the loop
+			my @obj_fields = $tmpl->query( loop => '_obj_loop' );
+			$tmpl_data{ _obj_loop } = [ $self->renderData( \@$objs, \@obj_fields, 'html', $mode ) ];
+					
+		}
+	}
 
-$object is an instance of a DBObject or an Attribute.
+	# populate template
+	$tmpl->param( %tmpl_data );
+	return $tmpl->output();
+}
 
-get an object's has many relations. This may include relations not
-defined with DBObject methods.
+=head2 renderData
 
-$relationsAccessors is an iterator. see OME::Web::DBObjRender::RelationIterator.
+	# plural
+	my @records = OME::Web::DBObjRender->renderData( \@objects, \@field_names, $format, $mode );
+	# singular
+	my %record = OME::Web::DBObjRender->renderData( $object, \@field_names, $format, $mode );
+
+@objects is an array of instances of a DBObject or a Semantic Type.
+$field_names is used to populate the returned hash.
+$format is either 'html' or 'txt'
+$mode is either 'summary' or 'detail'
+
+When called in plural context, returns an array of hashes.
+When called in singular context, returns a single hash.
+The hashes will be of the form { field_name => rendered_field, ... }
+
+Special field names:
+	_id: will be populated solely with the id, regardless of format or mode
+	_title: will be populated with whatever is returned by getTitle( $object, $format ) 
 
 =cut
 
-sub getRelationAccessors {
-	my ($proto,$obj) = @_;
-	my $specializedRenderer;
-	return $specializedRenderer->getRelationAccessors( $obj )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
-		    $proto eq __PACKAGE__);
+sub renderData {
+	my ($self, $obj, $field_names, $format, $mode, $options) = @_;
+	my ( %record, $specializedRenderer );
+	$options = {} unless $options; # makes things easier
+	
+	# handle plural calling style
+	if( ref( $obj ) eq 'ARRAY' ) {
+		my @records;
+		push( @records, { $self->renderData( $_, $field_names, $format, $mode, $options) } )
+			foreach @$obj;
+		return @records;
+	}
+	
+	# specialized rendering
+	$specializedRenderer = $self->_getSpecializedRenderer( $obj );
+	%record = $specializedRenderer->_renderData( $obj, $field_names, $format, $mode, $options )
+		if $specializedRenderer;
 
-	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
-		$proto->__gather_PublishedManyRefs( $obj ) );
+	# set mode-based behavior
+	if( $mode eq 'summary' ) {
+		$options->{ max_text_length } = 71 unless exists $options->{ max_text_length };
+	}
 
-	return $iterator;
+	# default rendering
+	my $q = new CGI;
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $obj );
+	my $id   = $obj->id();
+	foreach my $field( @$field_names ) {
+		# don't override specialized renderings
+		next if exists $record{ $field };
+		
+		# _id = plain text id
+		if( $field eq '_id' ) {
+			$record{ _id } = $obj->id();
+		
+		# _title = object title
+		} elsif( $field eq '_title' ) {
+			$record{ _title } = $self->getTitle( $obj, $format );
+		
+		# _name = object name
+		} elsif( $field eq '_name' ) {
+			$record{ _name } = $self->getName( $obj, $options );
+					
+		# _ref = reference to object
+		} elsif( $field eq '_ref' ) {
+			$record{ _ref } = $self->getRef( $obj, $format, $options );
+					
+		# make name and id into links for html summary views
+		} elsif( ( $field eq 'id' || $field eq 'name' ) &&
+		         ( $format eq 'html' && $mode eq 'summary' ) ) {
+			$record{ $field } = $q->a( 
+				{ 
+					href  => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
+					title => "Detailed info about this $common_name",
+					class => 'ome_detail'
+				},
+				$obj->$field
+			);
+		
+		# populate has many aliases
+		} elsif( $field =~ m/^(.+)!(.+)$/ ) {
+			my ($method, $render_mode) = ($1, $2);
+# FIXME: add paging logic here! FIX these hacks too!
+			my @list = $obj->$method();
+			my $returnedClass;
+			my $accessorType = $obj->getColumnType( $method );
+			if( $accessorType eq 'has-many' ) {
+				 $returnedClass = $obj->__hasManys()->{$method}->[0];
+			} elsif( $accessorType eq 'many-to-many' ) {
+				 $returnedClass = $obj->__manyToMany()->{$method}->[0];
+			}
+			my $url = $self->pageURL( "OME::Web::DBObjTable", { 
+					Type => $returnedClass,
+					$returnedClass.'_accessor' => join( ',', $formal_name, $id, $method )
+				} );
+			my $options = { more_info_url => $url };
+			$record{ $field } = $self->renderArray( \@list, $render_mode, $options );
+
+		# populate mode render requests
+		} elsif( $field =~ m/^!(.+)$/ ) {
+			my $render_mode = $1;
+			$record{ $field } = $self->render( $obj, $render_mode );
+		
+		# populate all other fields
+		} else {
+			$record{ $field } = $obj->$field;
+			if( ref( $record{ $field } ) ) {
+				$record{ $field } = $self->getRef( $record{ $field }, $format, $options );
+			} else {
+				my $type = $obj->getColumnSQLType( $field );
+				my %booleanConvert = ( 0 => 'False', 1 => 'True' );
+				$record{ $field } =~ s/^([^:]+(:\d+){2}).*$/$1/
+					if $type eq 'timestamp';
+				$record{ $field } = $booleanConvert{ $record{ $field } }
+					if $type eq 'boolean';
+				$record{ $field } = $self->_trim( $record{ $field }, $options )
+					if( $type =~ m/^varchar|text/ ); 
+			}
+		}
+	}
+	
+	return %record;
 }
 
-sub __gather_PublishedManyRefs {
-	my ($proto,$obj) = @_;
 
+=head2 _renderData
+
+	%partial_record = $specializedRenderer->_renderData( $obj, $format, $field_names, $options );
+
+Virtual method. Subclasses should override this if to do custom rendering of certain fields
+or to implement fields not implemented in DBObject. Examples of this are:
+	Experimenter's email turned to active link if format is html
+	Image having an 'Original File' field.
+
+Subclasses need only populate fields in the record they are overriding. i.e. Image does NOT
+need to populate the 'name' field.
+
+=cut
+
+sub _renderData{ return (); }
+
+=head2 getFields
+
+	my @fields = OME::Web::DBObjRender->getFields( $type, $mode );
+
+$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance
+of either
+$mode may be 'summary' or 'all'.
+
+Returns an ordered list of field names for the specified object type and mode.
+
+This method should not be overridden.
+
+=cut
+
+sub getFields {
+	my ($self, $type, $mode) = @_;
+	my $specializedRenderer = ( $self->_getSpecializedRenderer( $type ) or {} );
+
+	# use subclass data for summary mode
+	if( $mode eq 'summary' and $specializedRenderer->{ _summaryFields }) {
+		return @{ $specializedRenderer->{ _summaryFields } };
+
+	# use subclass data for all mode
+	} elsif ( $mode eq 'all' and $specializedRenderer->{ _allFields }) {
+		return @{ $specializedRenderer->{ _allFields } };
+	}
+
+	# autopopulate fields insensitive to mode
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $type );
+	# We don't need no target
+	return ( 'id', sort( grep( $_ ne 'target', $package_name->getPublishedCols()) ) );
+}
+
+=head2 getFieldTypes
+
+	my %fieldTypes = OME::Web::DBObjRender->getFieldTypes($type, \@field_names);
+
+$type can be a DBObject name ("OME::Image"), an Attribute name ("@Pixels"), or an instance
+of either.
+$field_names is used to populate the returned hash.
+
+returns a hash { field_name => field_type }
+field_type is the reference type the field will return. it is equivalent to ref(
+$instance_of_type->$field_name )
+
+=cut
+
+sub getFieldTypes {
+	my ($self,$type,$field_names,$doNotSpecialize) = @_;
+
+	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
+	return $specializedRenderer->getFieldTypes( $type,$field_names )
+		if( $specializedRenderer );
+
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
+	my %fieldTypes = map{ $_ => $package_name->getAccessorReferenceType($_) } @$field_names;
+
+	return %fieldTypes if wantarray;
+	return \%fieldTypes;
+}
+
+
+=head2 getFieldTitles
+
+	my %fieldTitles = OME::Web::DBObjRender->getFieldTitles( $type, \@field_names, $format );
+
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+@field_names is used to populate the returned hash.
+$format may be 'txt' or 'html'. it is also optional (defaults to 'txt').
+
+returns a hash { field_name => title }
+
+=cut
+
+sub getFieldTitles {
+	my ($self,$type,$field_names,$format) = @_;
+	
+	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
+	return $specializedRenderer->getFieldTitles( $type, $field_names, $format )
+		if( $specializedRenderer );
+	
+	$format = 'txt' unless $format;
+
+	# make titles by prettifying the aliases. Add links to Semantic
+	# Element documentation as available.
+	my %titles;
+	my $q = new CGI;
+	my $factory = OME::Web->Session()->Factory();
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $type );
+	
+	# _fieldTitles allows specialized renderers to overide titles
+	my $pkg_titles = $self->{ _fieldTitles };
+	foreach( @$field_names ) {
+		my ($alias,$title) = ($_,$_);
+		$title =~ s/_/ /g;
+		if( $format eq 'txt' ) {
+			$titles{$alias} = ( $pkg_titles->{$alias} or ucfirst($title) );
+		} else {
+			$titles{$alias} = ( $pkg_titles->{$alias} or ucfirst($title) );
+			if( $ST ) {
+				my $SE = $factory->findObject( 
+					'OME::SemanticType::Element', 
+					semantic_type => $ST,
+					name          => $alias
+				);
+				$titles{$alias} = $q->a(
+					{ 
+						href => "serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType::Element&ID=".$SE->id(), 
+						title => 'Documentation on '.$SE->name()
+					},
+					$titles{$alias}
+				) if $SE;
+			}
+		}
+	};
+	return %titles;
+}
+
+
+=head2 getRelations
+
+	my ($relations, $names) = OME::Web::DBObjRender->getRelations( $object );
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
+	foreach( @$relations ) {
+		$table_hash{ shift @$names } = $tableMaker->getTable( @$_ );
+		...
+	}
+
+$object is an instance of a DBObject or an Attribute.
+$relations is an array reference. For convenienve, its members are formatted for DBObjTable
+getTable and getList methods. That is, 
+[
+	{ title => $title },
+	$relation_accessors->{ $method },
+	( { accessor => [ $formal_name, $obj->id, $method ] } OR
+	  /@objects )
+]
+$names is an array reference. It holds the names of the relations. Each name will be
+composed of alphanumeric characters, underscores, and dashes.
+
+This method gets an object's has many relations. This may include relations that are
+convenient but to avoid redundancy in the DB, have not defined with DBObject methods. (i.e.
+Module Execution's inputs and outputs)
+
+=cut
+
+sub getRelations {
+	my ($self, $obj) = @_;
+
+	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
+	return $specializedRenderer->getRelations( $obj )
+		if( $specializedRenderer );
+
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+	my ( @relations, @names );
 	my $relation_accessors = $obj->getPublishedManyRefs();
-	my @methods = sort( keys %$relation_accessors );
-	my @objects = map( \$obj, @methods );
-	my @names = @methods;
-	my @titles;
-	foreach my $method (@methods ) {
+	foreach my $method ( sort( keys %$relation_accessors ) ) {
 		(my $title = $method) =~ s/_/ /g;
 		$title = ucfirst( $title );
-		push @titles, $title;
+		push( @relations, [
+			{ title => $title },
+			$relation_accessors->{ $method },
+			{ accessor => [ $formal_name, $obj->id, $method ] }
+		] );
+		push @names, $method;
 	}
-	my @params         = map( (), @methods );
-	my @call_as_scalar = map( 0, @methods );
-	my @return_type    = map{ $relation_accessors->{ $_ } } @methods;
-
-	return( \@objects, \@methods, \@params, \@return_type, \@names, \@titles, \@call_as_scalar );
+	
+	return (\@relations, \@names);
 }
 
 =head2 getSearchFields
 
 	# get html form elements keyed by field names 
-	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, \@fieldNames, \%default_search_values );
+	my %searchFields = OME::Web::DBObjRender->getSearchFields( $type, \@field_names, \%default_search_values );
 
 $type can be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
-@fieldNames is optional. It is used to populate the returned hash.
-Default is the list returned by getFieldNames.
+@field_names is used to populate the returned hash.
 %default_search_values is also optional. If given, it is used to populate the search form fields.
 
 returns a hash { field_name => form_input, ... }
@@ -572,24 +688,22 @@ returns a hash { field_name => form_input, ... }
 =cut
 
 sub getSearchFields {
-	my ($proto,$type, $fieldNames, $defaults) = @_;
+	my ($self, $type, $field_names, $defaults) = @_;
 	
-	my $specializedRenderer;
-	return $specializedRenderer->getSearchFields( $type, $fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
-		    $proto eq __PACKAGE__);
+	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
+	return $specializedRenderer->getSearchFields( $type, $field_names )
+		if( $specializedRenderer );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
-	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 
 	my %searchFields;
 	my $q = new CGI;
-	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$fieldNames;
+	my %fieldRefs = map{ $_ => $package_name->getAccessorReferenceType( $_ ) } @$field_names;
 	my $size;
-	foreach my $accessor ( @$fieldNames ) {
+	foreach my $accessor ( @$field_names ) {
 		if( $fieldRefs{ $accessor } ) {
-			$searchFields{ $accessor } = $proto->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor, $defaults->{ $accessor } );
+			$searchFields{ $accessor } = $self->getRefSearchField( $formal_name, $fieldRefs{ $accessor }, $accessor, $defaults->{ $accessor } );
 		} else {
 			if( $accessor eq 'id' ) { $size = 5; }
 			else { $size = 8; }
@@ -621,12 +735,11 @@ returns a form input
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	my ($self, $from_type, $to_type, $accessor_to_type) = @_;
 	
-	my $specializedRenderer;
+	my $specializedRenderer = $self->_getSpecializedRenderer( $to_type );
 	return $specializedRenderer->getRefSearchField( $from_type, $to_type, $accessor_to_type )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $to_type ) and
-		    $proto ne $to_type);
+		if( $specializedRenderer );
 
 	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
 	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
@@ -652,277 +765,66 @@ called with with a specialized prototype.
 =cut
 
 sub _getSpecializedRenderer {
-	my ($proto,$type) = @_;
+	my ($self,$type) = @_;
 	
 	# get DBObject prototype or ST name from instance
 	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $type );
+		$self->_loadTypeAndGetInfo( $type );
 	
 	# construct specialized package name
 	my $specializedPackage = $formal_name;
 	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
 	$specializedPackage = "OME::Web::DBObjRender::__".$specializedPackage;
 
-	# obtain package
-	eval( "use $specializedPackage" );
-	return $specializedPackage
-		unless $@ or $proto eq $specializedPackage;
+	return undef if( ref( $self ) eq $specializedPackage );
+	# return cached renderer
+	return $self->{ $specializedPackage } if $self->{ $specializedPackage };
 
+	# load specialized package
+	eval( "use $specializedPackage" );
+	unless( $@ ) {
+		$self->{ $specializedPackage } = $specializedPackage->new( CGI => $self->CGI() );
+		return $self->{ $specializedPackage };
+	}
+	
+	# couldn't load the special package? return undef
 	return undef;
 }
 
-package OME::Web::DBObjRender::RelationIterator;
+=head2 _trim
 
-=head1 NAME
+	$string = $self->_trim( $string, $options );
 
-OME::Web::DBObjRender::RelationIterator - Allows iteration over an object's relations
-
-=head1 DESCRIPTION
-
-Used by OME::Web::DBObjRender->getRelationAccessors() to store relation
-accessor info. Honestly, it seems a big complication. I added it to deal
-with collecting attributes from OME::Tasks::ModuleExecutionManager for
-the OME::Web::DBObjRender::__OME_ModuleExecution_ActualInput and
-OME::Web::DBObjRender::__OME_ModuleExecution_SemanticTypeOutput
-subclasses. Those have sense been effectively hidden, but all this
-infrastructure built for them works fine.
-
-It allows relations to an object to be defined in terms of an arbitrary
-object, method to be called on the object, and parameter list to pass
-into the method.
-
-=head1 SYNOPSIS
-
-	my $relationsIterator = OME::Web::DBObjRender->getRelationAccessors( $object ); 
-	if( $relationsIterator->first() ) { do {
-		if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
-			my ( $from_type, $from_id, $from_accessor) = @{ $relationsIterator->getDBObjType_ID_and_Accessor() };
-			# do something
-		} else {
-			my $type = $relationsIterator->return_type();
-			my $objects = $relationsIterator->getList();
-			my $relation_name = $relationsIterator->name();
-			# do something
-		}
-	} while( $relationsIterator->next() ); }
-
-
-=head1 METHODS
-
-=head2 new
-
-	my $iterator = !->new( 
-		\@objects,
-		\@methods,
-		\@params,
-		\@return_type,
-		\@names,
-		\@titles,
-		\@call_as_scalar );
-
-	# this works too.
-	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
-		$proto->__gather_PublishedManyRefs( $obj ) );
-
-all these arrays need to be synced w/ each other (i.e. the first element
-of the object array will be used with the first element method of the
-method array, params array, ...). obviously, each array needs to have
-identical length.
-
-@objects contains references to objects methods will be called on.
-
-@methods contains method names to call on objects.
-
-@params is an array of arrays. It's fine to have its elements to undef.
-
-@return_type contains the formal name of the list of DBObjects or Attributes
-that will be returned by the method
-
-@names contains the name of each relationship. It should not include spaces.
-
-@titles contains the title of each relationship
-
-@call_as_scalar elements should be set to 1 for those methods that
-return an array reference and set to 0 for methods that return an array.
-It determines if the method should be called in array context.
+Package utility for trimming strings. 
+if $options->{ max_text_length } exists, is defined, and is non-zero,
+then the returned string will be trimmed to that length 
+	(original string is truncated and '...' is appended)
 
 =cut
 
-sub new {
-	my $proto = shift;
-	my $class = ref( $proto ) || $proto;
-	
-	my ($objects, $methods, $params, $return_type, $names, $titles, $call_as_scalar) = @_;
-	
-	my $self = {
-		__objects     => $objects,
-		__methods     => $methods,
-		__params      => $params,
-		__return_type => $return_type,
-		__names       => $names,
-		__titles      => $titles,
-		__call_as_scalar => $call_as_scalar,
-		__count       => 0,
-		__length      => scalar( @$objects )
-	};
-	
-	bless $self, $class;
-	return $self;
-}
+sub _trim { 
+	my( $self, $str, $options ) = @_;
 
-=head2 next
-
-	$relationsIterator->next()
-
-increments the iterator to the next relation. returns undef at the last
-relation
-
-=cut
-
-sub next {
-	my $self = shift;
-	return undef
-		if( ($self->{__count} + 1) >= $self->{__length} );
-	$self->{__count}++;
-	return $self;
-}
-
-=head2 first
-
-	$relationsIterator->first()
-
-sets the iterator to the first relation
-
-=cut
-
-sub first {
-	my $self = shift;
-	return undef
-		if( $self->{__length} eq 0 );
-	$self->{__count} = 0;
-	return $self;
-}
-
-=head2 name
-
-	$relationsIterator->name()
-
-returns the name of the current relation
-
-=cut
-
-sub name {
-	my $self = shift;
-	return $self->{__names}->[ $self->{__count} ];
-}
-
-=head2 title
-
-	$relationsIterator->title()
-
-returns the title of the current relation
-
-=cut
-
-sub title {
-	my $self = shift;
-	return $self->{__titles}->[ $self->{__count} ];
-}
-
-=head2 return_type
-
-	$relationsIterator->return_type()
-
-returns the formal name of the OME type the current relation will return
-
-=cut
-
-sub return_type {
-	my $self = shift;
-	return $self->{__return_type}->[ $self->{__count} ];
-}
-
-=head2 getRenderParams
-
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-
-	my $rendering = $tableMaker->getList( $iter->getRenderParams() );
-	#	or
-	my $rendering = $tableMaker->getTable( $iter->getRenderParams() );
-	#	or
-	my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
-	$options->{ Length } = 7;
-	...
-	
-returns a 3 member array that feeds directly into OME::Web::DBObjTable methods.
-
-if the current relation is a method call on a DBObject that requires no
-parameters, $renderInstrs will be the type's formal name, id, and
-accessor. otherwise, $renderInstrs will be a list of objects.
-
-=cut
-
-sub getRenderParams {
-	my $self = shift;
-	my $params = $self->getDBObjType_ID_and_Accessor();
-	return (
-		{ title => $self->title() },
-		$self->return_type(),
-		( $params ? 
-			{ accessor => $params } :
-			$self->getList()
-		)
-	)
-}
-
-=head2 getList
-
-	$relationsIterator->getList()
-
-returns a list of objects for the current relation
-
-=cut
-
-sub getList {
-	my $self = shift;
-	my $object = ${ $self->{__objects}->[ $self->{__count} ] };
-	my $method = $self->{__methods}->[ $self->{__count} ];
-	my $params = ($self->{__params }->[ $self->{__count} ] or []);
-	my @list;
-	if ( $self->{__call_as_scalar}->[ $self->{__count} ] ) {
-		my $list = $object->$method( @$params );
-		@list = @$list;
-	} else {
-		@list = $object->$method( @$params );
-	}
-	return \@list;
-}
-
-=head2 getDBObjType_ID_and_Accessor
-
-	if( $relationsIterator->getDBObjType_ID_and_Accessor() ) {
-		my ( $from_type, $from_id, $from_accessor) =
-			@{ $relationsIterator->getDBObjType_ID_and_Accessor() };
-		# do something
-	}
-
-if the current relation is a method call on a DBObject that requires no
-parameters, this method will return the type's formal name, id, and
-accessor. otherwise, returns undef.
-
-=cut
-
-sub getDBObjType_ID_and_Accessor {
-	my $self = shift;
-	my $object = ${ $self->{__objects}->[ $self->{__count} ] };
-	my $method = $self->{__methods}->[ $self->{__count} ];
-	my $params = (
-		( $self->{__params } and $self->{__params }->[ $self->{__count} ] ) ?
-		$self->{__params }->[ $self->{__count} ] :
-		[]
+	return $str unless(
+		( ref( $options ) eq 'HASH' ) and
+		exists $options->{ max_text_length } and
+		$options->{ max_text_length } and
+		( length( $str ) > $options->{ max_text_length } )
 	);
-	return [ $object->getFormalName(), $object->id(), $method ]
-		if( $object->isa( "OME::DBObject" ) and scalar( @$params ) eq 0 );
+	return substr( $str, 0, $options->{ max_text_length } - 3 ).'...';
+}
+
+sub _findTemplate {
+	my ( $self, $obj, $mode ) = @_;
+	my $tmpl_dir = $self->Session()->Configuration()->ome_root().'/html/Templates/';
+	my ($package_name, $common_name, $formal_name, $ST) =
+		$self->_loadTypeAndGetInfo( $obj );
+	my $summary_tmpl = $formal_name; 
+	$summary_tmpl =~ s/@//g; 
+	$summary_tmpl =~ s/::/_/g; 
+	$summary_tmpl .= "_".$mode.".tmpl";
+	$summary_tmpl = $tmpl_dir.'/'.$summary_tmpl;
+	return $summary_tmpl if -e $summary_tmpl;
 	return undef;
 }
 
