@@ -25,16 +25,16 @@ sub createWithPassword {
     return undef unless defined $dbpass;
     return undef if (crypt($password,$dbpass) ne $dbpass);
 
-    my $self->{factory} = OME::Factory->new($self);
-
-    $self = {
+    my $self = {
 	manager  => $manager,
 	username => $username,
 	userID   => $experimenterID,
 	user     => undef
     };
     bless $self,$class;
-    
+
+    $self->{factory} = OME::Factory->new($self);
+
     return $self;
 }
 

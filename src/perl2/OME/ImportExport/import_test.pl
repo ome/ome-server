@@ -81,6 +81,7 @@ sub retriever {
     #my $d5 = scalar(@{$aref->[0][0][0][0]});
     print "\n$d1 $d2 $d3 $d4\n'";
     print $aref->[0][0][0][0] . "'\n";
+    print length($aref->[0][0][0][0]) . "\n";
     
     print "\n\n\n";
 }

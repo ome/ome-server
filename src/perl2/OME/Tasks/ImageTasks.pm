@@ -64,8 +64,37 @@ sub importFiles {
         open $handle, ">" . $repository->Field("path") . $path or
             die "Error creating repository file";
 
-        #for (my 
+        # Assume array ref is 4-dimensional, 5th (ie, X) dimension
+        # being a packed string of 16-bit integers.
+        for (my $t = 0; $t < $href->{Image.NumTimes}; $t++)
+            for (my $w = 0; $w < $href->{Image.NumTimes}; $w++)
+                for (my $z = 0; $z < $href->{Image.NumTimes}; $z++)
+                    for (my $y = 0; $y < $href->{Image.NumTimes}; $y++)
+                    {
+                        print $handle $aref->[$t][$w][$z][$y];
+                    }
+
+        close $handle;
+
+        $image->writeObject();
+        $session->DBH()->commit();
     };
 
     my $importer = OME::ImportExport::Importer->new($filenames,$project,$lambda);
+}
+
+
+# findRepository(session,pixel array)
+# -----------------------------------
+# For now we assume that there is only one repository, with an ID of 0.
+
+my $onlyRepository;
+
+sub findRepository {
+    return $onlyRepository if defined $onlyRepository;
+    
+    my ($session, $aref) = @_;
+    $onlyRepository = $session->Factory()->loadObject("OME::Repository",0);
+    return $onlyRepository if defined $onlyRepository;
+    die "Cannot find repository #0.";
 }
