@@ -43,6 +43,7 @@
 package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.Project;
 import org.openmicroscopy.Dataset;
 import java.util.List;
@@ -75,7 +76,6 @@ public class ControlPanel extends JFrame implements ActionListener {
 	protected JLabel statusLabel;
 	protected JPanel panel;
 	
-	protected CmdTable cmd;
 	protected JButton newChainButton;
 	
 	protected JButton viewResultsButton;
@@ -89,21 +89,22 @@ public class ControlPanel extends JFrame implements ActionListener {
 	
 	private Connection connection;
 	
+	private Controller controller;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
 	 */
-	public ControlPanel(CmdTable cmd,Connection connection) {
+	public ControlPanel(Controller controller,Connection connection) {
 		super("OME Chains: Menu Bar");
-		this.cmd=cmd;
 		this.connection=connection;
+		this.controller = controller;
 		
 		Container content = getContentPane();
 		content.setLayout(new BorderLayout());
 		
 		JPanel topPanel = new JPanel();
 		
-		topPanel.setLayout(new GridLayout(0,2,5,5));
+		topPanel.setLayout(new GridLayout(0,2,10,10));
 		
 		JLabel userLabel = new JLabel("OME User:");
 		topPanel.add(userLabel);
@@ -139,7 +140,8 @@ public class ControlPanel extends JFrame implements ActionListener {
 		
 		// control butons
 		newChainButton = new JButton("New Chain");
-		newChainButton.addActionListener(cmd.lookupActionListener("new chain"));
+		newChainButton.addActionListener(
+			controller.getCmdTable().lookupActionListener("new chain"));
 		newChainButton.setEnabled(false);
 		topPanel.add(newChainButton);
 		
@@ -147,7 +149,8 @@ public class ControlPanel extends JFrame implements ActionListener {
 		
 		viewResultsButton = new JButton("View Results");
 		viewResultsButton.
-			addActionListener(cmd.lookupActionListener("view results"));
+			addActionListener(
+				controller.getCmdTable().lookupActionListener("view results"));
 		viewResultsButton.setEnabled(false);
 		topPanel.add(viewResultsButton);
 		
@@ -158,7 +161,7 @@ public class ControlPanel extends JFrame implements ActionListener {
 		logoutPanel.setLayout(new FlowLayout(FlowLayout.RIGHT,0,5));
 		JButton logout = new JButton("Logout");
 		logoutPanel.add(logout);
-		logout.addActionListener(cmd.lookupActionListener("logout"));
+		logout.addActionListener(controller.getCmdTable().lookupActionListener("logout"));
 		content.add(logoutPanel,BorderLayout.SOUTH);
 		
 		pack();
@@ -213,10 +216,17 @@ public class ControlPanel extends JFrame implements ActionListener {
 		a = datasets.toArray(a);
 		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
 		datasetList.setModel(model);
+		curDataset = (Dataset) a[0];
+		updateDatasetChoice(curDataset);
 	}
 	
 	public void updateDatasetChoice(Object item) {
-	}	
+		
+		System.err.println("getting execution list");
+		curDataset = (Dataset) item;
+		// update the list of executions
+		connection.getDatasetExecutionChains(curDataset);	
+	}
 }
 
 class ProjectRenderer  extends JLabel implements ListCellRenderer {
