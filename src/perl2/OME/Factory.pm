@@ -417,7 +417,7 @@ sub obtainDBH {
       unless defined $dbh;
     push @{$self->{__allHandles}}, $dbh;
 
-    #carp "--- Creating DBH #".scalar(@{$self->{__allHandles}});
+    #carp "--- $$ Creating DBH #".scalar(@{$self->{__allHandles}});
 
     return $dbh;
 }
@@ -437,6 +437,7 @@ sub releaseDBH {
 
 sub __disconnectAll {
     my ($self) = @_;
+    #carp "--- $$ Disconnecting handles\n";
     defined $_ && $_->disconnect() foreach @{$self->{__allHandles}};
     $self->{__allHandles} = [];
     $self->{__handlesAvailable} = [];
@@ -548,21 +549,16 @@ sub findObjects {
     $class->require();
 
     my $dbh = $self->obtainDBH();
-    my ($sql,$ids_available) =
+    my ($sql,$ids_available,$values) =
       $class->__makeSelectSQL($columns_wanted,$criteria);
     my $sth = $dbh->prepare($sql);
-    my @values = values %$criteria;
-    map {
-        $_ = $_->[1] if ref($_) eq 'ARRAY';
-        $_ = $_->id() if UNIVERSAL::isa($_,"OME::DBObject");
-    } @values;
 
     if (wantarray) {
         # __makeSelectSQL should have created the where clause in
         # keys-order, which will be the same order that values returns.
         my @result;
         eval {
-            $sth->execute(@values);
+            $sth->execute(@$values);
 
             push @result, $_
               while $_ = $class->__newInstance($session,$sth,
@@ -575,7 +571,7 @@ sub findObjects {
         # looking for a scalar
         my $iterator = OME::Factory::Iterator->
           new($session,$self,$class,$dbh,$sth,
-              \@values,$ids_available,$columns_wanted);
+              $values,$ids_available,$columns_wanted);
         return $iterator;
     }
 }
