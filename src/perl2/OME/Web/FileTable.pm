@@ -129,9 +129,6 @@ sub getTable {
 
 	my @column_headers = qw(- Filename Date Size);
 
-	# Parent page link
-	my $parent_pagelink = $options->{parent_pagelink};
-	
 	# Parent directory
 	my $parent_dir;
 

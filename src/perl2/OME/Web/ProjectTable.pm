@@ -199,6 +199,10 @@ sub getTable {
 		(scalar(@column_headers) + 1)
 	);
 
+	my $start_form   = $q->startform({-name => 'datatable'}) || '' unless $options->{parent_form};
+	my $end_form     = $q->endform() unless $options->{parent_form};
+	my $action_field = $q->hidden({-name => 'action', -default => ''}) unless $options->{parent_form};
+
 	# Populate and return our table
 	my $table = $q->table( {
 			-class => 'ome_table',
@@ -207,12 +211,12 @@ sub getTable {
 			-border => '0',
 			-width => '100%',
 		},
-		$q->startform({-name => 'datatable'}),
+		$start_form || '',
 		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
 		( $self->{allow_search} ? $self->__search_row( $options ) : '' ),
-		$q->hidden({-name => 'action', -default => ''}),
+		$action_field || '',
 		$table_data,
-		$q->endform()
+		$end_form || ''
 	);
 
 	return $table . $options_table;

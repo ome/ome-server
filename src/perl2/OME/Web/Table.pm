@@ -49,6 +49,7 @@ use CGI;
 use Carp;
 use Data::Dumper;
 use Log::Agent;
+use UNIVERSAL::require;
 
 # OME Modules
 use OME;
@@ -225,6 +226,29 @@ sub __getOptionsTable {
 
 sub getPageTitle {
     return "Open Microscopy Environment - Data Table"; 
+}
+
+{
+	# Table registry to hold linkage for generic table class dispatch
+	my $t_registry = {
+		'OME::Dataset' => 'OME::Web::DatasetTable',
+		'OME::Project' => 'OME::Web::ProjectTable',
+		'OME::Image'   => 'OME::Web::ImageTable',
+	};
+
+	sub getTable {
+		my ($self, $options, @objects) = @_;
+
+		return unless @objects;
+
+		my $t_class = $t_registry->{ref($objects[0])}
+			or croak "Unable to find mapping class for object '", ref($objects[0]), "'";
+
+		$t_class->require();
+		my $t_generator = new $t_class;
+
+		return $t_generator->getTable($options, @objects);
+	}
 }
 
 sub getPageBody {

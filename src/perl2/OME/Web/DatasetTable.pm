@@ -219,6 +219,10 @@ sub getTable {
 		$options->{options_row},
 		(scalar(@column_headers) + 1)
 	);
+
+	my $start_form   = $q->startform({-name => 'datatable'}) || '' unless $options->{parent_form};
+	my $end_form     = $q->endform() unless $options->{parent_form};
+	my $action_field = $q->hidden({-name => 'action', -default => ''}) unless $options->{parent_form};
 	
 	# Populate and return our table
 	my $table = $q->table( {
@@ -228,12 +232,13 @@ sub getTable {
 			-border => '0',
 			-width => '100%',
 		},
-		$q->startform({-name => 'datatable'}),
+		$start_form || '',
 		$q->th({-class => 'ome_td'}, [@column_headers]),  # Space for the checkbox field
 		( $self->{allow_search} ? $self->__search_row( $options ) : '' ),
 		$table_data,
+		$action_field || '',
 		$q->hidden({-name => 'action', -default => ''}),
-		$q->endform()
+		$end_form || ''
 	);
 
 	return $table . $options_table;
