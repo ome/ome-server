@@ -1,3 +1,4 @@
+#!/usr/bin/perl
 use ExtUtils::MakeMaker;
 use Cwd qw(cwd abs_path);
 
