@@ -139,6 +139,8 @@ __PACKAGE__->addColumn(error_message => 'error_message',
                        {SQLType => 'text'});
 __PACKAGE__->hasMany('inputs','OME::ModuleExecution::ActualInput' =>
                      'module_execution');
+__PACKAGE__->hasMany('untypedOutputs','OME::ModuleExecution::SemanticTypeOutput' =>
+                     'module_execution');
 
 =head1 METHODS (C<module_execution>)
 
