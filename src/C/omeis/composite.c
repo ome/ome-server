@@ -42,6 +42,8 @@
 #include <zoom.h>
 #include "composite.h"
 
+int DoCompositeZoom (CompositeSpec *myComposite, char **param);
+
 
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
 char *theParam;
