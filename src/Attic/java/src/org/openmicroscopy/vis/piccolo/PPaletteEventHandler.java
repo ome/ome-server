@@ -63,6 +63,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	private PPaletteCanvas canvas;
 	private boolean selected = false;
+	private PModule lastEntered;
 	
 	protected int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
@@ -126,25 +127,41 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	public void mouseDragged(PInputEvent e) {
 		//	don't pan if we've got something selected.
-		 if (selected == false) {
+		/* if (selected == false) {
 			 super.mouseDragged(e);
-		 }
+		 } */
 		 e.setHandled(true);
 	} 
 	
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
+		System.err.println("entering "+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
+			System.err.println("entered a formal parameter "+param.getName());
+			if (lastEntered != null) {
+				System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
+				lastEntered.setParamsHighlighted(false);
+			}
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
 			e.setHandled(true);
 		}
+		else if (node instanceof PParameterNode) {
+			if (lastEntered != null) {
+				System.err.println("entered parameter node ");
+				System.err.println("clearing highlights for parameters of "+lastEntered.getModule().getName());
+				lastEntered.setParamsHighlighted(false);
+			}
+			e.setHandled(true);
+		}
 		else if (node instanceof PModule) {
 			PModule pmod = (PModule) node;
-			pmod.setModulesHighlighted(true);
+			pmod.setAllHighlights(true);
 			e.setHandled(true);
+			System.err.println("saving last module entered: "+pmod.getModule().getName());
+			lastEntered = pmod;
 		}
 		else {
 			super.mouseEntered(e);
@@ -158,17 +175,22 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public void mouseExited(PInputEvent e) {
 		PNode node = e.getPickedNode();
 
+		System.err.println("exiting"+node);
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(false);
 			PModule pmod = param.getPModule();
-			pmod.setModulesHighlighted(false);
+			pmod.setAllHighlights(false);
 			e.setHandled(true);			
+		}
+		else if (node instanceof PParameterNode) {
+			System.err.println("exited parameter node");
 		}
 		else if (node instanceof PModule) {
 			PModule pmod = (PModule) node;
-			pmod.setModulesHighlighted(false);
+			pmod.setAllHighlights(false);
 			e.setHandled(true);
+			lastEntered = null;
 		}
 		else
 			super.mouseExited(e);
