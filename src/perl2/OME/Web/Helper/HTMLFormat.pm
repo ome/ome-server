@@ -48,11 +48,14 @@ The OME::Web::Helper::HTMLFormat provides a list of methods to write HTML code
 =head2 formatDataset
 =head2 formatImage
 =head2 formatProject
+=head2 formatThumbnail
 =head2 formChange
 =head2 formCreate
+=head2 formExport
 =head2 formImport
 =head2 formLogin
 =head2 formSearch
+=head2 gallery
 =head2 imageInDataset
 =head2 listImages
 =head2 manager
@@ -114,23 +117,26 @@ sub buttonControl{
 	my $rows="";
 	my $html="";	
 	my $typ=lc($type);
-	my ($function,$id,$select,$delete);
+	my ($view,$function,$id,$select,$delete);
 	$select=undef;
+	$view=undef;
+	my %h=();
 	if ($typ eq "dataset"){
 		$function="openPopUpDataset";
 		$id=$object->dataset_id();
 		$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and !defined $bool);
 		$select=buttonInput("submit",$id,"Select");
+		$view=buttonPopUp($id,"View",$function);
+		$h{1}={content=>$view,attribute=>$self->{cellLeft}},
+
+
 	}else{
 		$function="openPopUpImage";
 		$id=$object->image_id();
 		$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and defined $bool);
 	}
 	
-	my $view=buttonPopUp($id,"View",$function);	
-	my %h=(
-	1=>{ content=>$view,attribute=>$self->{cellLeft}},
-	);
+		
 	$h{2}={ content=>$select,attribute=>$self->{cellLeft} } if (defined $select);
 	$h{3}={ content=>$delete,attribute=>$self->{cellLeft} } if (defined $delete);
 	$rows.=addRow(\%h);
@@ -224,7 +230,7 @@ sub dropDownTable{
 	my $self=shift;
 	my ($name,$ref,$switch,$switchValue)=@_;
 	my $html="";
-  my $rows="";
+  	my $rows="";
 	my %b=("name"=>$name);			# for select Tag
 	my $submit="";
 	my %h=();
@@ -325,6 +331,31 @@ sub formatProject{
 
 }
 
+####################
+# Parameters:
+#	imageName
+#	imageID
+sub formatThumbnail{
+	my $self=shift;
+	my ($object)=@_;
+	my $imageName=$object->name();
+	my $imageID=$object->image_id();
+	my $rows="";
+	my $html="";
+	my $name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$imageName."</a>";
+	my $imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imageID." align=\"bottom\" border=0></a>";
+	my %h=(
+	1=>{ content=>$imageTag, attribute=>$self->{cellLeft}}
+	);
+	$rows.=addRow(\%h);
+	my %ha=(
+	1=>{ content=>$name, attribute=>$self->{cellCenter}},
+	);
+	$rows.=addRow(\%ha);
+	$html.=writeTable($rows);
+	return $html;
+
+}
 ##############
 # Parameters:
 #	type= dataset/project
@@ -339,6 +370,7 @@ sub formChange{
 	my $rows="";
 	my $text="";
 	my $textarea="";
+
 	my $typ=lc($type);
 	my ($id,$name,$description,$owner,$group);
 	my $lock=undef;
@@ -471,6 +503,74 @@ sub formCreate{
 }
 
 
+##################
+sub formFindSpots{
+	my $self=shift;
+	my ($submitName,$submitValue)=@_;
+	my $html="";
+	my $rows="";
+	return $html;
+
+}
+#############
+# Parameters
+#	No
+sub formExport{
+	my $self=shift;
+	my $html="";
+	my $rows="";
+	my %h=(
+	1 =>{name =>'All', text=> 'All '},
+	2 =>{name => 'User', text => 'User'},
+	3 =>{name => 'Project', text => 'Project'},
+	4 =>{name => 'Dataset', text => 'Dataset'},
+	5 =>{name => 'Images', text => 'Images'},
+	6 =>{name => 'Features', text => 'Features'},
+	);
+	my %ha=(
+	1 =>{name =>'yes', text=> 'Yes'},
+	2 =>{name =>'no', text=> 'No'},
+	);
+	my $radioSTD= $self->radioButton(\%ha,1,"exportSTD");
+	my $radioButton= $self->radioButton(\%h,1,"type");
+	my $text="";
+	$text .="Name ";
+	$text .=buttonInput("text","file name",undef,25);
+	my $button =buttonInput("submit","export","Export");
+	$html.="Do you want to export to a file? If yes, please indicate a file's name.<br>";
+	my $txt="";
+	foreach (@$radioSTD){
+		$txt.=$_." ";
+	}
+
+	my %a=();
+	$a{1}={ content=>$text, attribute=>$self->{cellLeft}};
+	$rows.=addRow(\%a);
+	$html.=writeTable($rows);
+	$html.="Do you want to export STDs?<br>";
+
+	$a{1}={ content=>$txt, attribute=>$self->{cellLeft}};
+	$rows="";
+	$rows.=addRow(\%a);
+	$html.=writeTable($rows,\%a);
+	$rows="";
+	$html.="<br>";
+	$txt="";
+	foreach (@$radioButton){
+		$txt.=$_." ";
+	}
+	$a{1}={ content=>$txt, attribute=>$self->{cellLeft}};
+	$rows.=addRow(\%a);
+	$a{1}={ content=>$button, attribute=>$self->{cellLeft}};
+	$rows.=addRow(\%a);
+
+	$html.=writeTable($rows);
+
+
+	return $html;
+
+}
+
 #####################
 # Parameters:
 #	datasetName= default value
@@ -485,6 +585,7 @@ sub formImport{
 	my ($datasetName,$dropDownTable,$radio,$nameSubmit,$valueSubmit)=@_;
 	my $rows="";
 	my $html="";
+  	my @rad=@$radio;
 	my $submit=buttonInput("submit",$nameSubmit,$valueSubmit);
 	my $text=buttonInput("text","newDataset",$datasetName,32);
 
@@ -494,7 +595,7 @@ sub formImport{
 	"cellspacing" =>4,
 	"cellpadding"=>0,
 	);
-	my $txt="<nobr>@$radio[0]</nobr>";
+	my $txt="<nobr>".$rad[0]."</nobr>";
 	my %a=(
 	1 =>{ content=>$txt, attribute=>$self->{cellLeft}},
 	2=> { content=>$text, attribute=>$self->{cellLeft}},
@@ -507,11 +608,54 @@ sub formImport{
 	$rows.=addRow(\%b);
 	$html.=$submit."<BLOCKQUOTE>";
 	$html.=writeTable($rows,\%c);
-	$html.=@$radio[1]."<br>".$dropDownTable;
+	$html.=$rad[1]."<br>".$dropDownTable;
 	$html.="</BLOCKQUOTE>";
 	return $html;
 
 }
+
+#####################
+# Parameters:
+#	nameSubmit = name submit button
+#	valueSubmit = value sbmit button
+# Return: html code table
+
+sub formImportFile{
+	my $self=shift;
+	my ($nameSubmit,$valueSubmit)=@_;
+	my $rows="";
+	my $html="";
+	my $text="";
+	my $button="";
+	my (%a,%b);
+	%a=(
+	"border"	=>0,
+	"cellspacing" =>4,
+	"cellpadding"=>0,
+	) ;
+	%b=(
+	"colspan" => 2,
+	);
+
+	$html .="<h3>Import XML file </h3>";
+	$html .="<p>Please enter a name</p>";
+	$text .="<b>Name: </b>";
+	$text .=buttonInput("text","name",undef,25);
+	$button .=buttonInput("submit",$nameSubmit,$valueSubmit);
+	my %h=(
+	1=>{ content=>$text, attribute=>$self->{cellCenter}},
+	);
+	my %ha=(
+	1=>{ content=>$button, attribute=>\%b},
+	);
+	$rows.=addRow(\%h);
+	$rows.=addRow(\%ha);
+	$html.=writeTable($rows,\%a);
+	return $html;
+
+}
+
+
 ##############################
 # Parameters:
 #	invalid= if defined, try to log again
@@ -556,7 +700,6 @@ sub formLogin{
 
 }
 
-
 ##################
 # Parameters:
 #	name= Projects/Datasets/Images
@@ -598,6 +741,40 @@ sub formSearch{
 }
 
 ####################
+# Parameters
+# 	ref =ref array with html to format
+
+sub gallery{
+	my $self=shift;
+	my ($ref)=@_;
+	my $html="";
+	my $rows="";
+	my $count=0;
+	my %h=();
+
+	foreach (@$ref){
+	 	if ($count<8){
+		  $h{$count}={content=>$_, attribute=>$self->{cellCenter}};
+		  $count++;
+		}else{
+		  $rows.=addRow(\%h);
+		  %h=();
+		  $count=0;
+		  $h{$count}={content=>$_, attribute=>$self->{cellCenter}};
+		}
+	}
+	my $size=0;
+	foreach (keys %h){
+		$size++;
+	}
+	if ($size>0){
+	   $rows.=addRow(\%h);
+	}
+	$html.=writeTable($rows);
+	return $html;
+
+}
+####################
 # Parameters:
 #	ref = ref array of images to display
 #	border = if defined, table with border
@@ -609,6 +786,7 @@ sub imageInDataset{
 	my ($ref,$border,$search)=@_;
 	my $rows="";
 	my $html="";
+
 	my %H=(
 	1	=> { content=>"<b>Name</b>",attribute=>$self->{cellLeft}},
 	2	=>{ content=>"<b>ID</b>",attribute=>$self->{cellLeft}},
@@ -624,7 +802,9 @@ sub imageInDataset{
 			$name=$k->name();
 			$id=$k->image_id();
 		}
-		$view=buttonPopUp($id,"View","openPopUpImage");
+		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$id." align=\"bottom\" border=0></a>";
+
+		#$view=buttonPopUp($id,"View","openPopUpImage");
 	   	my %h=(
 		1 =>	{ content=>$name,	attribute=>$self->{cellLeft}},
 		2 => 	{ content=>$id, attribute=>$self->{cellLeft}},
@@ -904,14 +1084,16 @@ sub radioButton{
 	my $self=shift;
 	my ($ref,$defaultRadio,$name)=@_;
 	my @list=();
-	foreach my $k (sort {$a <=> $b}  keys %$ref){
+	#foreach my $k (sort {$a <=> $b}  keys %$ref){
+	 foreach my $k (sort {$a <=> $b} keys %$ref){
+
 		my $button="";
 		if ($k==$defaultRadio){
-		      $button.=buttonInput("radio",$name,${$ref}{$k}{name},undef,"checked");
+		      $button.=buttonInput("radio",$name,${$ref}{$k}->{name},undef,"checked");
 		}else{
-			$button.=buttonInput("radio",$name,${$ref}{$k}{name});
+			$button.=buttonInput("radio",$name,${$ref}{$k}->{name});
 		}
-		$button.=${$ref}{$k}{text};
+		$button.=${$ref}{$k}->{text};
 		push(@list,$button);
 	}
 	
@@ -958,12 +1140,13 @@ sub writeDropDow{
 	my ($ref,$refTag)=@_;
 	my $html="";
 	$html.=openTag("select",$refTag);
-	foreach (keys %$ref){		# id=>name
+  	my %h=%$ref;
+	foreach (keys %h){		# id=>name
 		my %a=(
 			"value"=>$_
 			);
 		$html.=openTag("option",\%a);
-		$html.=${$ref}{$_};
+		$html.=$h{$_};
 		$html.=closeTag("option");
 	}
 	$html.=closeTag("select");
@@ -1106,7 +1289,9 @@ sub writeCheckBoxImage{
 	my $html="";
 	foreach my $i (keys %$ref){
 	 	my $val="";
-		my $view=buttonPopUp($i,"View","openPopUpImage");
+		my $view="<a href=\"#\" onClick=\"return openPopUpImage($i)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$i." align=\"bottom\" border=0></a>";
+
+		#my $view=buttonPopUp($i,"View","openPopUpImage");
 		$val.=$view."&nbsp;&nbsp;";
 	 	$val.=buttonInput("checkbox","ListImage",$i);
 	 	$val.=${$ref}{$i}->name();

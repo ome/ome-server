@@ -20,7 +20,6 @@
 
 package OME::Web::Helper::JScriptFormat;
 
-our $VERSION = '1.0';
 
 =head 1 NAME
 
