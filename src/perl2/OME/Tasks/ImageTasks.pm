@@ -21,10 +21,12 @@
 package OME::Tasks::ImageTasks;
 
 use OME::Session;
+use OME::Dataset;
 use OME::Image;
 use OME::ImportExport::Importer;
 use OME::ImportExport::Exporter;
 use IO::File;
+use Carp;
 
 
 # addImagesToDataset(dataset, images)
@@ -99,168 +101,76 @@ sub removeWeirdCharacters {
 # the given project.
 
 sub importFiles {
-    my ($session,$project,$filenames) = @_;
+    my ($session,$project,$dsname,$filenames) = @_;
+    my $importer;
+    my $fn_groups;
+    my $sth;
+    my $status = "Failed import";
 
-    return unless
+    return $status  unless
         (defined $session) &&
         (defined $project) &&
+	(defined $dsname)     &&
         (defined $filenames);
 
-    my @images;
+    $status = "";
+    my $projectUser = $session->User();
+    my $projectGroup = $projectUser->group();
+    my $data = {name => $dsname,
+		locked => 'false',
+		owner_id => $projectUser,
+		group_id => $projectGroup
+		};
 
-    my $lambda = sub {
-        my ($href, $aref) = @_;
-
-        if (removeWeirdCharacters($href)) {
-            warn "Weird characters in the metadata hash!  Did the import work properly?";
-        }
-        
-        # determine which repository the new image should be placed in
-        my $repository = findRepository($session,$aref);
-        #my $created = $href->{'Image.CreationDate'};
-        #$created = "now" unless $created;
-        my $created = "now";   # until we figure out the date formatting issue
-
-        my $imageData = {
-            name => 'n/a',
-            description => $href->{'Image.Description'},
-            experimenter => $session->User(),
-            created => $created,
-            inserted => 'now',
-            repository => $repository,
-            path => 'n/a'
-            };
-
-        my $image = $session->Factory->newObject("OME::Image",$imageData);
-
-        my $attributeData = {
-            size_x => $href->{'Image.SizeX'},
-            size_y => $href->{'Image.SizeY'},
-            size_z => $href->{'Image.SizeZ'},
-            num_waves => $href->{'Image.NumWaves'},
-            num_times => $href->{'Image.NumTimes'},
-            bits_per_pixel => 16,
-            image => $image
-            };
-
-        my $attributes = $session->Factory->newObject("OME::Image::Attributes",$attributeData);
-
-        my $imageID = $image->id();
-        print STDERR "Created new image #" . $imageID . "\n";
-        my $name = $href->{'Image.Name'};
-        $name = "Image" . $imageID unless $name;
-        my $path = $imageID.".orf";
-
-        $image->name($name);
-        $image->path($path);
-
-        $image->commit();
-        $image->dbi_commit();
-            
-        my $handle = new IO::File;
-        my $realpath = ">".$image->getFullPath();
-        #print STDERR "$realpath\n";
-        #print STDERR "$repository\n";
-        open $handle, $realpath or die "Error creating repository file";
-
-        # Assume array ref is 4-dimensional, 5th (ie, X) dimension
-        # being a packed string of 16-bit integers.
-        for (my $t = 0; $t < $href->{'Image.NumTimes'}; $t++)
-        {
-            for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++)
-            {
-                for (my $z = 0; $z < $href->{'Image.SizeZ'}; $z++)
-                {
-                    for (my $y = 0; $y < $href->{'Image.SizeY'}; $y++)
-                    {
-                        print $handle $aref->[$t][$w][$z][$y];
-                    }
-                }
-            }
-        }
-
-        close $handle;
-
-        print STDERR "\n";
-
-	# IGG 10/06/02:  Put in a direct INSERT to deal with WavelengthInfo - until we get our API stabilized.
-	# The DB needs to be consistent with regards to image_wavelengths, xy_image_info, and xyz_image_info.
-	# These three tables need to be populated consistently with how many dimentions there are in the image.
-	# I'm leaning towards forcing all the relevant tuples to exist in the DB, even if all columns are NULL.
-	# We can do it with a rule in the DB so that an image can't be commited unless those tables have exactly
-	# the right number  tuples to satisfy all of the dimensions in the image.
-	# At the very least, if any tuples exist in these tables for a given image, all tuples must exist - All or nothing.
-	# It would make things cleaner in many cases if they all exist anyway.
-	#
-	# Anyway, we need to make sure there is a WavelengthInfo array, that it has all the WaveNumber fields necessary,
-	# and that its in the right order.
-	# Also, we're only doing image_wavelengths for now.
-    #  image_id | wavenumber | ex_wavelength | em_wavelength | nd_filter | fluor
-
-        my @WavelengthInfo = ({});
-        my $wave;
-        my $sth = $session->DBH()->prepare ('INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)');
-        if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
-            # Make sure its sorted on WaveNumber.
-            @WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
-        }
-
-        for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++) {
-            $wave = $WavelengthInfo[$w];
-            # Clear out the hash if WaveNumber doesn't match $w - something's screwed up.
-            # We also do this if there was no WavelengthInfo to begin with.
-            # FIXME:  If WaveNumber doesn't match $w at any point, there's probably a more serious problem that should result in a roll-back of this import.
-            if ($wave->{'WavelengthInfo.WaveNumber'} ne $w) {
-                $wave->{'WavelengthInfo.WaveNumber'} = $w;
-                $wave->{'WavelengthInfo.ExWave'} = undef;
-                $wave->{'WavelengthInfo.EmWave'} = undef;
-                $wave->{'WavelengthInfo.Fluor'} = undef;
-                $wave->{'WavelengthInfo.NDfilter'} = undef;
-            }
-            $sth->execute($imageID,
-                $wave->{'WavelengthInfo.WaveNumber'},
-                $wave->{'WavelengthInfo.ExWave'},
-                $wave->{'WavelengthInfo.EmWave'},
-                $wave->{'WavelengthInfo.Fluor'},
-                $wave->{'WavelengthInfo.NDfilter'}
-            );
-        }
-
-
-	# IGG 10/07/02:  Run an external program to get image statistics, and stuff them into the DB.
-    # The external program is called OME_Image_XYZ_stats, and hopefully lives in /OME/bin.
-    # The table we're filling up is xyz_image_info:
-    # image_id | wavenumber | timepoint | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
-    # The program output is tab-delimited columns like so:
-    # Wave    Time    Min     Max     Mean    GeoMean Sigma   Centroid_x      Centroid_y      Centroid_z
-    # The first line contains the column headings.
-
-    $sth = $session->DBH()->prepare (
-        'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
-    my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
-        $href->{'Image.NumWaves'},$href->{'Image.NumTimes'},$attributes->bits_per_pixel()/8)
-    );
-    my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
-    
-    open (STDOUT_PIPE,$cmd);
-    while (<STDOUT_PIPE>) {
-        chomp;
-        my @columns = split (/\t/);
-        foreach (@columns) {
-            # trim leading and trailing white space and set to undef unless column looks like a C float
-            $_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
-        }
-        next unless defined $columns[0];
-
-        $sth->execute($imageID,@columns);
+    # Iterate thru all datasets w/ same name (if any)
+    my $dsets = OME::Dataset->search(name => $dsname);
+    my $found = 0;
+    my $ds;
+    while (my $dset = $dsets->next) {
+	# See if dataset's owner is us
+	if ($dset->owner()->{experimenter_id} == $projectUser->{experimenter_id}) {
+	    $found = 1;
+	    $ds = $dset;
+	    last;
+	}
+    }
+    # if found dataset w/ same name & owner, reuse it. Else, create new dataset.
+    if ($found) {
+	if ($ds->locked()) {
+	    $status = "Requested dataset $dsname locked - can\'t add more images";
+	    return $status;
+	}
+    } else {
+	$ds = $session->Factory->newObject("OME::Dataset", $data);
     }
 
-        
-    $session->DBH()->commit();
+    $importer = OME::ImportExport::Importer->new($filenames, $session);
+    $fn_groups = $importer->{fn_groups};
+    carp "No files to import"
+	unless scalar @$fn_groups > 0;
 
-    };
+    foreach $image_group_ref (@$fn_groups) {
+	$importer->import_image($ds, $image_group_ref);
+	if ($importer->{did_import}) {
+	    $session->DBH()->commit();
+	}
+	else {
+	    $status = "Failed to import at least one image";
+	}
+    }
 
-    my $importer = OME::ImportExport::Importer->new($filenames,$lambda);
+    # could test here - if either any or all imports failed,
+    # don't write dataset record to db.
+    $ds->writeObject();
+
+    # update project_datasets_map
+    $project->Field("datasets", $ds);
+    $project->writeObject();
+
+
+    return $status;
+
+
 }
 
 
