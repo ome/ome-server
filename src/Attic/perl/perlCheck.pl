@@ -8,6 +8,10 @@ use File::Spec;
 
 my $moduleRepository = 'http://openmicroscopy.org/packages/perl';
 my $DEFAULT_badTestsFatal = 0;
+my $installCommand = 'make install';
+
+$installCommand = 'sudo make install'
+    if (lc($ARGV[0]) eq 'sudo');
 
 $ENV{PATH} .= ':/usr/local/bin';
 
@@ -271,7 +275,7 @@ my @configFlags = (
 	die "Compilation errors - script aborted.\n" if system ('make');
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
 	print "\nInstalling...\n";
-	die "Install errors - script aborted.\n" if system ('make install');
+	die "Install errors - script aborted.\n" if system ($installCommand);
 	if ($^O eq 'darwin') {
 		print "\nFixing library links...\n";
 		die "Install errors - couldn't fix library links:\n$@.\n"
@@ -294,7 +298,7 @@ my $error;
 
 	die "Couldn't execute configure script.\n" if system ('./configure') != 0;
 	die "Compilation errors - script aborted.\n" if system ('make') != 0;
-	die "Install errors - script aborted.\n" if system ('make install') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
 	my $libXMLVersion = `xml2-config --version`;
 	chomp ($libXMLVersion);
 
@@ -466,6 +470,6 @@ my $error;
 		}
 	}
 	
-	die "Install errors - script aborted.\n" if system ('make install') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
 	chdir '..';
 }
