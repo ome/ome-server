@@ -1,5 +1,11 @@
+<TMPL_IF NAME="size_warning">
+	<h2><font color="red">Warning! The exported file will probably be 
+	greater than <i><TMPL_VAR NAME="size_warning"></i>. The backend has been
+	known to run out of RAM and lock up when exporting very large files.
+	We advise you to split your images into more files if possible.</font></h2>	
+</TMPL_IF>
 <h2>Export Images to OME XML</h2>
-File Name:<input type="text" id="filename" name="filename" size="30"><br>
+File Name:<input type="text" id="filename" name="filename" size="30"> Estimated size > <b><TMPL_VAR NAME="file_size"></b><br>
 <a href="javascript:selectMany('OME::Image', 'images_to_export');">Select Images to export</a>
 <button type="submit" id="action" name="action" value="Export">Export</button>
 <a href='javascript: document.forms[0].elements["images_to_export"].value = ""; document.forms[0].submit();' "title='Clear Images'/>Reset Image selection</a>

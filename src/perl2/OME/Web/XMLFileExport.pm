@@ -45,7 +45,7 @@ use CGI;
 use OME::Web::DBObjTable;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Tasks::ImageManager;
-
+use OME::Tasks::PixelsManager;
 
 use base qw(OME::Web);
 
@@ -68,11 +68,25 @@ sub getPageBody {
 
 	my $action = $cgi->param('action');
 	my $image_ids = $cgi->param('images_to_export');
-	my @images = map( $factory->loadObject( 'OME::Image', $_ ), split( m',', $image_ids ) );
-
-	my $body;# = $cgi->p({class => 'ome_title', align => 'center'}, 'Export images to an XML file');
+	my @images;
+	my $body;
+	my $approximate_file_size;
+	foreach my $image_id ( split( m',', $image_ids ) ) {
+		my $image = $factory->loadObject( 'OME::Image', $image_id )
+			or die "Couldn't load image id='$image_id'";
+		push @images, $image;
+		foreach my $pixels ( $image->pixels() ) {
+			my ($bytesPerPixel, $isSigned, $isFloat) = 
+				OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() );
+			# size = bytesPerPixel * NumPixels * typical compression of 2/3's
+			$approximate_file_size += $bytesPerPixel * $pixels->SizeX * $pixels->SizeY *
+				$pixels->SizeZ * $pixels->SizeC * $pixels->SizeT * 2 / 3;
+		}
+	}
+	$approximate_file_size /= 1048576;
+	$approximate_file_size = sprintf( '%.2f MB', $approximate_file_size);
 	
-	if ($action eq 'Export'){
+	if ( 0 && $action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
 			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
 
@@ -103,8 +117,12 @@ sub getPageBody {
 	$self->contentType('text/html');
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
 	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
-	$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass' ) )
-		if( @images );
+	if( @images ) {
+		$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass', { type => 'OME::Image' } ) );
+		$tmpl->param( file_size       => $approximate_file_size );
+		$tmpl->param( size_warning    => $approximate_file_size )
+			if( $approximate_file_size >= 500 );
+	}
 	$body .= 
 		$cgi->startform( -action => $self->pageURL( 'OME::Web::XMLFileExport' ) ).
 		$tmpl->output().
