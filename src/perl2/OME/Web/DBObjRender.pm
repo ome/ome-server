@@ -119,8 +119,8 @@ sub getName {
 	my ($self, $obj, $options) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->getName( $obj )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getName( $obj )
+		if( $specializedRenderer and $specializedRenderer->can('_getName') );
 
 	$options->{ max_text_length } = 23 unless exists $options->{ max_text_length };
 	my $name;
@@ -146,8 +146,8 @@ sub getTitle {
 	my ($self, $obj, $format) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->getTitle( $obj, $format )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getTitle( $obj, $format )
+		if( $specializedRenderer and $specializedRenderer->can('_getTitle') );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $obj );
@@ -585,7 +585,7 @@ or to implement fields not implemented in DBObject. Examples of this are:
 	Experimenter's email turned to active link if format is html
 	Image having an 'Original File' field.
 
-Subclasses need only populate fields in the record they are overriding. i.e. Image does NOT
+Subclasses need only populate fields they are overriding. i.e. Image does NOT
 need to populate the 'name' field.
 
 =cut
@@ -644,8 +644,8 @@ sub getFieldTypes {
 	my ($self,$type,$field_names,$doNotSpecialize) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	return $specializedRenderer->getFieldTypes( $type,$field_names )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getFieldTypes( $type,$field_names )
+		if( $specializedRenderer and $specializedRenderer->can('_getFieldTypes') );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $type );
@@ -673,8 +673,8 @@ sub getFieldTitles {
 	my ($self,$type,$field_names,$format) = @_;
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	return $specializedRenderer->getFieldTitles( $type, $field_names, $format )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getFieldTitles( $type, $field_names, $format )
+		if( $specializedRenderer and $specializedRenderer->can( '_getFieldTitles') );
 	
 	$format = 'txt' unless $format;
 
@@ -731,8 +731,8 @@ sub getRelations {
 	my ($self, $obj) = @_;
 
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->getRelations( $obj )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getRelations( $obj )
+		if( $specializedRenderer and $specializedRenderer->can('_getRelations') );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
 		OME::Web->_loadTypeAndGetInfo( $obj );
@@ -770,7 +770,7 @@ sub getSearchFields {
 	my ($form_fields, $search_names);
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $type );
-	($form_fields, $search_names) = $specializedRenderer->getSearchFields( $type, $field_names )
+	($form_fields, $search_names) = $specializedRenderer->_getSearchFields( $type, $field_names, $defaults )
 		if( $specializedRenderer );
 
 	my ($package_name, $common_name, $formal_name, $ST) =
@@ -784,6 +784,8 @@ sub getSearchFields {
 			( $form_fields->{ $field }, $search_names->{ $field } ) = 
 				$self->getRefSearchField( $formal_name, $fieldRefs{ $field }, $field, $defaults->{ $field } );
 		} else {
+			$q->param( $field, $defaults->{ $field }  ) 
+				unless defined $q->param( $field );
 			$form_fields->{ $field } = $q->textfield( 
 				-name    => $field , 
 				-size    => 17, 
@@ -795,6 +797,19 @@ sub getSearchFields {
 
 	return ( $form_fields, $search_names );
 }
+
+=head2 _getSearchFields
+
+	%partial_search_fields = 
+		$specializedRenderer->_getSearchFields( $type, $field_names, $defaults );
+
+Virtual method. Subclasses should override this if to do custom rendering of search fields.
+
+Subclasses need only populate fields they are overriding.
+
+=cut
+
+sub _getSearchFields{ return (); }
 
 =head2 getRefSearchField
 
@@ -812,11 +827,11 @@ returns a form input
 =cut
 
 sub getRefSearchField {
-	my ($self, $from_type, $to_type, $accessor_to_type) = @_;
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	my $specializedRenderer = $self->_getSpecializedRenderer( $to_type );
-	return $specializedRenderer->getRefSearchField( $from_type, $to_type, $accessor_to_type )
-		if( $specializedRenderer );
+	return $specializedRenderer->_getRefSearchField( $from_type, $to_type, $accessor_to_type, $default )
+		if( $specializedRenderer and $specializedRenderer->can('_getRefSearchField') );
 
 	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
 	my ($to_package) = OME::Web->_loadTypeAndGetInfo( $to_type );
@@ -825,11 +840,15 @@ sub getRefSearchField {
 	$searchOn = '.Name' if( $to_package->getColumnType( 'Name' ) );
 
 	my $q = $self->CGI();
+	$q->param( $accessor_to_type.$searchOn, $default  ) 
+		unless defined $q->param($accessor_to_type.$searchOn );
 	return ( 
-		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 6 ),
+		$q->textfield( -name => $accessor_to_type.$searchOn , -size => 17 ),
 		$accessor_to_type.$searchOn
 	);
 }
+
+
 
 =head2 _getSpecializedRenderer
 
