@@ -79,12 +79,12 @@
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
-		<FormalOutput Name = "Plane minima" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
-		<FormalOutput Name = "Plane maxima" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
-		<FormalOutput Name = "Plane means" SemanticTypeName = "PlaneMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Plane geomeans" SemanticTypeName = "PlaneGeometricMean" Description = "" Count="+"/>
-		<FormalOutput Name = "Plane sigmas" SemanticTypeName = "PlaneSigma" Description = "" Count="+"/>
-		<FormalOutput Name = "Plane centroids" SemanticTypeName = "PlaneCentroid" Description = "" Count="+"/>
+		<FormalOutput Name = "Minima" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
+		<FormalOutput Name = "Maxima" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
+		<FormalOutput Name = "Mean" SemanticTypeName = "PlaneMean" Description = "" Count="+"/>
+		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Description = "" Count="+"/>
+		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Description = "" Count="+"/>
+		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Description = "" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
@@ -94,46 +94,46 @@
 				<RawText>Path=</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "Repository.Path"/>
+				<Input Location = "Pixels.Repository.Path"/>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "Path"/>
+				<Input Location = "Pixels.Path"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText> Dims=</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeX"/>
+				<Input Location = "Pixels.SizeX"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeY"/>
+				<Input Location = "Pixels.SizeY"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeZ"/>
+				<Input Location = "Pixels.SizeZ"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeC"/>
+				<Input Location = "Pixels.SizeC"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeT"/>
+				<Input Location = "Pixels.SizeT"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "BitsPerPixel" DivideBy = "8"/>
+				<Input Location = "Pixels.BitsPerPixel" DivideBy = "8"/>
 			</InputSubString>
 		</CommandLine>
 		<STDOUT>
@@ -144,49 +144,49 @@
 			<OutputRecord>
 				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane minima"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane maxima"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane means"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane geomeans"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane sigmas"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane centroids"/>
+					<OutputTo Location = "Minima.TheC" />
+					<OutputTo Location = "Maxima.TheC" />
+					<OutputTo Location = "Mean.TheC" />
+					<OutputTo Location = "Geomean.TheC" />
+					<OutputTo Location = "Sigma.TheC" />
+					<OutputTo Location = "Centroid.TheC" />
 				</Output>
 				<Output AccessBy = "2">
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane minima"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane maxima"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane means"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane geomeans"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane sigmas"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane centroids"/>
+					<OutputTo Location = "Minima.TheT" />
+					<OutputTo Location = "Maxima.TheT" />
+					<OutputTo Location = "Mean.TheT" />
+					<OutputTo Location = "Geomean.TheT" />
+					<OutputTo Location = "Sigma.TheT" />
+					<OutputTo Location = "Centroid.TheT" />
 				</Output>
 				<Output AccessBy = "3">
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane minima"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane maxima"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane means"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane geomeans"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane sigmas"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane centroids"/>
+					<OutputTo Location = "Minima.TheZ" />
+					<OutputTo Location = "Maxima.TheZ" />
+					<OutputTo Location = "Mean.TheZ" />
+					<OutputTo Location = "Geomean.TheZ" />
+					<OutputTo Location = "Sigma.TheZ" />
+					<OutputTo Location = "Centroid.TheZ" />
 				</Output>
 				<Output AccessBy = "4">
-					<OutputTo SemanticElementName = "Minimum" FormalOutputName = "Plane minima"/>
+					<OutputTo Location = "Minima.Minimum" />
 				</Output>
 				<Output AccessBy = "5">
-					<OutputTo SemanticElementName = "Maximum" FormalOutputName = "Plane maxima"/>
+					<OutputTo Location = "Maxima.Maximum" />
 				</Output>
 				<Output AccessBy = "6">
-					<OutputTo SemanticElementName = "Mean" FormalOutputName = "Plane means"/>
+					<OutputTo Location = "Mean.Mean" />
 				</Output>
 				<Output AccessBy = "7">
-					<OutputTo SemanticElementName = "GeometricMean" FormalOutputName = "Plane geomeans"/>
+					<OutputTo Location = "Geomean.GeometricMean" />
 				</Output>
 				<Output AccessBy = "8">
-					<OutputTo SemanticElementName = "Sigma" FormalOutputName = "Plane sigmas"/>
+					<OutputTo Location = "Sigma.Sigma" />
 				</Output>
 				<Output AccessBy = "9">
-					<OutputTo SemanticElementName = "X" FormalOutputName = "Plane centroids"/>
+					<OutputTo Location = "Centroid.X" />
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo SemanticElementName = "Y" FormalOutputName = "Plane centroids"/>
+					<OutputTo Location = "Centroid.Y" />
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->

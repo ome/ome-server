@@ -6,6 +6,7 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/ome_cccp" 
 	Description = "Calculate integrated correlation between pixel values across wavelengths. Produced from XML specification.">
 	<Declaration>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels"/>
 		<FormalInput Name = "ChannelNumber 1" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
 		<FormalInput Name = "ChannelNumber 2" SemanticTypeName = "ChannelNumber" Description = "" UserDefined = "true"/>
 		<FormalOutput Name = "XYPlaneCrossCorrelation" SemanticTypeName = "XYPlaneCrossCorrelation" 
@@ -16,19 +17,19 @@
 		xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/CLIExecutionInstructions.xsd">
 		<CommandLine>
 			<InputSubString>
-				<XYPlane XYPlaneID = "Plane1" Format = "TIFF">
+				<XYPlane XYPlaneID = "Plane1" Format = "TIFF" FormalInputPixels = "Pixels" >
 					<theZ>
 						<AutoIterate>
-							<OutputTo SemanticElementName = "theZ" FormalOutputName = "XYPlaneCrossCorrelation"/>
+							<OutputTo Location = "XYPlaneCrossCorrelation.theZ"/>
 						</AutoIterate>
 					</theZ>
 					<theT>
 						<AutoIterate>
-							<OutputTo SemanticElementName = "theT" FormalOutputName = "XYPlaneCrossCorrelation"/>
+							<OutputTo Location = "XYPlaneCrossCorrelation.theT"/>
 						</AutoIterate>
 					</theT>
 					<theW>
-						<UseValue SemanticElementName = "theW" FormalInputName = "ChannelNumber 1"/>
+						<UseValue Location = "ChannelNumber 1.theW"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -36,7 +37,7 @@
 				<RawText> </RawText>
 			</InputSubString>
 			<InputSubString>
-				<XYPlane Format = "TIFF">
+				<XYPlane Format = "TIFF" FormalInputPixels = "Pixels" >
 					<theZ>
 						<Match XYPlaneID = "Plane1"/>
 					</theZ>
@@ -44,7 +45,7 @@
 						<Match XYPlaneID = "Plane1"/>
 					</theT>
 					<theW>
-						<UseValue SemanticElementName = "theW" FormalInputName = "ChannelNumber 2"/>
+						<UseValue Location = "ChannelNumber 2.theW"/>
 					</theW>
 				</XYPlane>
 			</InputSubString>
@@ -53,7 +54,7 @@
 			<OutputRecord>
 				<pat>^(\d+\.?\d*|\.\d+)</pat>
 				<Output AccessBy = "1">
-					<OutputTo SemanticElementName = "CC" FormalOutputName = "XYPlaneCrossCorrelation"/>
+					<OutputTo Location = "XYPlaneCrossCorrelation.CC"/>
 				</Output>
 			</OutputRecord>
 		</STDOUT>
@@ -79,6 +80,61 @@
         <Element Name="CC"   DBLocation="XY_CROSS_CORRELATION.CROSS_CORRELATION" DataType="float"
 			Description = "Cross Correlation Coefficient"/>
 	</SemanticType>
+
+	<SemanticType
+		Name= "Pixels"
+		AppliesTo = "I"
+		Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
+	
+		<Element
+			Name= "SizeX"
+			DBLocation = "IMAGE_PIXELS.SIZE_X"
+			DataType = "integer"
+			Description="Number of pixels on the X axis."/>
+		<Element
+			Name= "SizeY"
+			DBLocation = "IMAGE_PIXELS.SIZE_Y"
+			DataType = "integer"
+			Description="Number of pixels on the Y axis."/>
+		<Element
+			Name= "SizeZ"
+			DBLocation = "IMAGE_PIXELS.SIZE_Z"
+			DataType = "integer"
+			Description="Number of pixels on the Z axis."/>
+		<Element
+			Name= "SizeC"
+			DBLocation = "IMAGE_PIXELS.SIZE_C"
+			DataType = "integer"
+			Description="Number of channel components in all logical channels."/>
+		<Element
+			Name= "SizeT"
+			DBLocation = "IMAGE_PIXELS.SIZE_T"
+			DataType = "integer"
+			Description="Number of time points"/>
+		<Element
+			Name= "BitsPerPixel"
+			DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
+			DataType = "integer"/>
+		<Element
+			Name= "PixelType"
+			DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+			DataType = "string"/>
+		<Element
+			Name= "FileSHA1"
+			DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+			DataType = "string"/>
+		<Element
+			Name= "Repository"
+			DBLocation = "IMAGE_PIXELS.REPOSITORY"
+			DataType = "reference"
+			RefersTo = "Repository"/>
+		<Element
+			Name= "Path"
+			DBLocation = "IMAGE_PIXELS.PATH"
+			DataType = "string"/>
+	</SemanticType>
+
+
 </STD:SemanticTypeDefinitions>
 
 </AnalysisModuleLibrary>
