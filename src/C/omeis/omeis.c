@@ -1583,22 +1583,26 @@ int GetArchive (PixelsRep myPixels, char *format) {
 	return (0);
 }
 
-static
 void HTTP_DoError (char *method,char *errMsg) {
 /*
 403 Forbidden Authorization failure
 500 Server Error 
 */
-	fprintf (stdout,"Status: 500 %s\r\n",errMsg);
-	fprintf (stdout,"Content-Type: text/plain\r\n\r\n");
-	fprintf (stdout,"Error calling %s: %s\n", method, errMsg);
-	fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
+	if (getenv("REQUEST_METHOD")) {
+		fprintf (stdout,"Status: 500 %s\r\n",errMsg);
+		fprintf (stdout,"Content-Type: text/plain\r\n\r\n");
+		fprintf (stdout,"Error calling %s: %s\n", method, errMsg);
+		fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
+	} else {
+		fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
+	}
 }
 
-static
 void HTTP_ResultType (char *mimeType) {
 
-	fprintf (stdout,"Content-Type: %s\r\n\r\n",mimeType);
+	if (getenv("REQUEST_METHOD")) {
+		fprintf (stdout,"Content-Type: %s\r\n\r\n",mimeType);
+	}
 }
 
 static
@@ -2263,7 +2267,7 @@ void usage (int argc,char **argv) {
 }
 
 int main (int argc,char **argv) {
-short isCGI=0;
+char isCGI=0;
 char **in_params;
 
 	if (chdir (OMEIS_ROOT)) {
