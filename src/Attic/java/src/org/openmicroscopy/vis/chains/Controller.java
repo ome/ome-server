@@ -309,11 +309,12 @@ public class Controller  implements LoginResponder {
 		// initialize the count at the start so I don't have a problem 
 		// if one finishes before the next one gets  to start.
 		initThreads = 3;
+		// connection is one thread
 		connection.initDatasets(this);
 		controlPanel  = new ControlPanel(this,connection);
-		// 2 threads
+		// module palette is anothe thread
 		moduleFrame = new ModulePaletteFrame(this,connection);
-		// 3 threads
+		// and chain layout is third.
 		connection.layoutChains();
 
 		
@@ -333,9 +334,7 @@ public class Controller  implements LoginResponder {
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
 			setStatusLabel("Dataset Browser layout..");
-			controlPanel.completeInitialization();
-			controlPanel.setLoggedIn(connection.getUserName());
-			controlPanel.setEnabled(true);
+			controlPanel.completeInitialization(connection.getUserName());
 			closeStatusWindow();
 		}
 	}
