@@ -44,7 +44,7 @@ our $VERSION = $OME::VERSION;
 use Carp;
 use Config;
 use IO::File;
-use OME::ImportEngine::Params;
+use OME::ImportEngine::ImportCommon qw(doSliceCallback);
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
 use OME::ImportExport::Repacker::Repacker;
@@ -60,24 +60,6 @@ use constant ALPHABET => [split(//,'ABCDEFGHIJKLMNOPQRSTUVWXYZ')];
 # Used to look for image files based on the HTD filename
 use constant SUFFIXES => ['.TIF','.tif','.TIf','.TiF',
                           '.tIF','.Tif','.tIf','.tiF'];
-
-
-sub new {
-
-    my $invoker = shift;
-    my $class = ref($invoker) || $invoker;   # called from class or instance
-
-    my $self = {};
-    my $session = shift;
-    my $module_execution = shift;
-
-    bless $self, $class;
-    $self->{super} = $self->SUPER::new($session, $module_execution);
-
-    my %paramHash;
-    $self->{params} = new OME::ImportEngine::Params(\%paramHash);
-    return $self;
-}
 
 
 # From "Mastering Regular Expressions"
