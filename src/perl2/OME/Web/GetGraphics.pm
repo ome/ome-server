@@ -364,9 +364,9 @@ $SVG .= <<ENDSVG;
 			actions['tDown']      = tDown;
 			actions['tAnimUp']    = tAnimUp;
 			actions['tAnimDown']  = tAnimDown;
-			actions['OnOffR']     = turnRedOnOff;
-			actions['OnOffG']     = turnGreenOnOff;
-			actions['OnOffB']     = turnBlueOnOff;
+			actions['OnOffR']     = { obj: image, method: 'setRedOn' };
+			actions['OnOffG']     = { obj: image, method: 'setGreenOn' };
+			actions['OnOffB']     = { obj: image, method: 'setBlueOn' };
 			actions['Save']       = { obj: image, method: 'saveState' };
 			actions['preload']    = { obj: image, method: 'prefetchImages' };
 			actions['RGB2BW']     = switchRGB_BW;
@@ -473,12 +473,11 @@ $SVG .= <<ENDSVG;
 			setTimeout( "imageControls.greyPopupList.setSelectionByValue('"+ 
 				imageControls.greyPopupList.getItemList()[ CBW[9] ]
 				+"')", 0 );
-			var RGBon = image.getRGBon(); 
 			setTimeout( "viewerPreferences.resizeToolboxes("+(toolBoxScale-1)+")", 500);
-			setTimeout( "imageControls.redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "imageControls.greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "imageControls.blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
-			setTimeout( "imageControls.RGB_BWbutton.setState("+image.isInColor()+")", 0 );
+			setTimeout( "imageControls.redButton.setState(" + (image.isRedOn() ? true : false) + ", true)", 200 );
+			setTimeout( "imageControls.greenButton.setState(" + (image.isGreenOn() ? true : false) + ", true)", 200 );
+			setTimeout( "imageControls.blueButton.setState(" + (image.isBlueOn() ? true : false) + ", true)", 200 );
+			setTimeout( "imageControls.RGB_BWbutton.setState("+image.isInColor()+", true)", 200 );
 //	this next line loads every plane in the image
 //			setTimeout( "image.prefetchImages()", 0 );
 			zVal = ( Z == 1 ? 0 : theZ/(Z-1)*100 );
@@ -576,22 +575,6 @@ $SVG .= <<ENDSVG;
 			stats.changeWavenumber( item );
 		}
 		
-		// buttons controlling visibility of display channels
-		function turnRedOnOff(val) {
-			RGBon = image.getRGBon();
-			RGBon[0] = (val ? 1 : 0);
-			image.setRGBon(RGBon);
-		}
-		function turnGreenOnOff(val) {
-			RGBon = image.getRGBon();
-			RGBon[1] = (val ? 1 : 0);
-			image.setRGBon(RGBon);
-		}
-		function turnBlueOnOff(val) {
-			RGBon = image.getRGBon();
-			RGBon[2] = (val ? 1 : 0);
-			image.setRGBon(RGBon);
-		}
 		function switchRGB_BW(val) {
 			//	decide which way to flip
 			if(val) {	// val == true means mode = RGB
