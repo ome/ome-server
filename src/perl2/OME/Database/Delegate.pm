@@ -173,6 +173,7 @@ sub connectToDatabase {
                            OME::DBConnection->DBUser(),
                            OME::DBConnection->DBPassword(),
                            { RaiseError => 1, AutoCommit => 0 });
+    $dbh->{InactiveDestroy} = 1;
     return $dbh;
 }
 
