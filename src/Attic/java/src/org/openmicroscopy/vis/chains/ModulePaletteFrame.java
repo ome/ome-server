@@ -75,9 +75,9 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	private MenuBar menuBar;
 	
 	public static int X=10;
-	public static int Y=250;
-	public static int HEIGHT=400;
-	public static int WIDTH=400;
+	public static int Y=450;
+	public static int HEIGHT=100;
+	public static int WIDTH=100;
 	
 	private JSplitPane splitPane;
 	
@@ -99,7 +99,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		menuBar.setLoginsDisabled(true);
 
 		show();	
-		getCanvas().scaleToSize();
+	
 	}
 	
 	/**
@@ -125,6 +125,32 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		return (PPaletteCanvas) canvas;
 	}
 	
+	public void completeInitialization() {
+	
+		ModuleTreeNode node = getCanvas().getModuleTreeNode();
+		
+		JScrollPane treePanel = null;
+		
+		if (node != null) {
+			tree = new JTree(node);
+			tree.setRootVisible(false);
+			tree.setEditable(false);
+			tree.setExpandsSelectedPaths(true);
+			tree.getSelectionModel().
+				setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+			tree.addTreeSelectionListener(this);
+			treePanel = new JScrollPane(tree);
+			treePanel.setMinimumSize(new Dimension(100,HEIGHT));
+			treePanel.setPreferredSize(new Dimension(100,HEIGHT));
+			splitPane.setLeftComponent(treePanel);
+			splitPane.setDividerLocation(0);
+			splitPane.setOneTouchExpandable(true);
+			splitPane.setResizeWeight(0.25);
+		}
+		getCanvas().scaleToSize();
+		
+	}
+	
 	/**
 	 * Build a menu bar based on  a {@link CmdTable}
 	 * @param cmd hash associating tags with actions
@@ -146,27 +172,16 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 		//toolBar = new ControlPanel(cmd);
 		//contentPane.add(toolBar,BorderLayout.NORTH);
 		
-		 
-		tree = new JTree(getCanvas().getModuleTreeNode());
-		tree.setRootVisible(false);
-		tree.setEditable(false);
-		tree.setExpandsSelectedPaths(true);
-		tree.getSelectionModel().
-			setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		tree.addTreeSelectionListener(this);
-		JScrollPane treePanel = new JScrollPane(tree);
+		
 		
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-						true,treePanel,canvas);
-		treePanel.setMinimumSize(new Dimension(100,HEIGHT));
-		treePanel.setPreferredSize(new Dimension(100,HEIGHT));
+						true,null,canvas);
 		
 		canvas.setMinimumSize(new Dimension(WIDTH,HEIGHT));
 		canvas.setPreferredSize(new Dimension(WIDTH,HEIGHT));
 		splitPane.setPreferredSize(new Dimension(WIDTH+100,HEIGHT)); 
-		splitPane.setDividerLocation(0);
-		splitPane.setOneTouchExpandable(true);
-		splitPane.setResizeWeight(0.25);
+	
+	
 		contentPane.add(splitPane,BorderLayout.CENTER);
 		pack();
 	}
@@ -189,7 +204,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 			getCanvas().highlightModule((CModule)node.getObject());
 		}
 		else if (node.getObject() instanceof ModuleCategory) {
-			System.err.println("clicked on a category");
+			//System.err.println("clicked on a category");
 			ModuleCategory mc = (ModuleCategory) node.getObject();
 			getCanvas().highlightCategory(mc.getName());
 			
