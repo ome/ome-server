@@ -36,4 +36,10 @@ public interface Factory
     public OMEObject findObjectLike(String className, Map criteria);
     public List findObjectsLike(String className, Map criteria);
     public Iterator iterateObjectsLike(String className, Map criteria);
+    public Attribute newAttribute(String typeName,
+                                  OMEObject target,
+                                  Analysis analysis,
+                                  Map data);
+    public Attribute loadAttribute(String typeName, int id);
+    public List findAttributes(String typeName, OMEObject target);
 }

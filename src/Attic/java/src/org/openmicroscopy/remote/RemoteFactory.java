@@ -22,6 +22,8 @@
 package org.openmicroscopy.remote;
 
 import org.openmicroscopy.Factory;
+import org.openmicroscopy.Analysis;
+import org.openmicroscopy.Attribute;
 import org.openmicroscopy.OMEObject;
 
 import java.util.Map;
@@ -48,18 +50,21 @@ public class RemoteFactory
 
     public OMEObject newObject(String className, Map data)
     {
-        String newRef = caller.dispatch(this,"newObject",
-                                        new Object[] { className,data })
-            .toString();
+        String newRef = (String) caller.dispatch(this,"newObject",
+                                                 new Object[] {
+                                                     className,
+                                                     data
+                                                 });
         return (OMEObject) instantiate(getClass(className),reference);
     }
 
     public OMEObject loadObject(String className, int id)
     {
-        String newRef = caller.dispatch(this,"loadObject",
-                                        new Object[] { className, 
-                                                       new Integer(id) })
-            .toString();
+        String newRef = (String) caller.dispatch(this,"loadObject",
+                                                 new Object[] { 
+                                                     className, 
+                                                     new Integer(id) 
+                                                 });
         return (OMEObject) instantiate(getClass(className),newRef);
     }
 
@@ -105,9 +110,13 @@ public class RemoteFactory
         List refList = (List) caller.dispatch(this,"findObjects",
                                               fixCriteria(className,criteria));
         List objList = new ArrayList();
-        Iterator i = refList.iterator();
-        while (i.hasNext())
-            objList.add(instantiate(getClass(className),(String) i.next()));
+        if (refList != null)
+        {
+            Iterator i = refList.iterator();
+            while (i.hasNext())
+                objList.add(instantiate(getClass(className),
+                                        (String) i.next()));
+        }
         return objList;
     }
 
@@ -134,9 +143,13 @@ public class RemoteFactory
         List refList = (List) caller.dispatch(this,"findObjectsLike",
                                               fixCriteria(className,criteria));
         List objList = new ArrayList();
-        Iterator i = refList.iterator();
-        while (i.hasNext())
-            objList.add(instantiate(getClass(className),(String) i.next()));
+        if (refList != null)
+        {
+            Iterator i = refList.iterator();
+            while (i.hasNext())
+                objList.add(instantiate(getClass(className),
+                                        (String) i.next()));
+        }
         return objList;
     }
 
@@ -148,6 +161,55 @@ public class RemoteFactory
                                         fixCriteria(className,criteria)));
         i.setClass(getClass(className));
         return i;
+    }
+
+    public Attribute newAttribute(String typeName,
+                                  OMEObject target,
+                                  Analysis analysis,
+                                  Map data)
+    {
+        String newRef = (String) caller.dispatch(this,"newAttribute",
+                                                 new Object[] {
+                                                     typeName,
+                                                     target,
+                                                     analysis,
+                                                     data
+                                                 });
+        if (newRef == null)
+            return null;
+        else
+            return (Attribute) instantiate(RemoteAttribute.class,reference);
+    }
+
+    public Attribute loadAttribute(String className, int id)
+    {
+        String newRef = (String) caller.dispatch(this,"loadAttribute",
+                                                 new Object[] {
+                                                     className, 
+                                                     new Integer(id)
+                                                 });
+        if (newRef == null)
+            return null;
+        else
+            return (Attribute) instantiate(RemoteAttribute.class,newRef);
+    }
+
+    public List findAttributes(String typeName, OMEObject target)
+    {
+        List refList = (List) caller.dispatch(this,"findAttributes",
+                                              new Object[] {
+                                                  typeName,
+                                                  target
+                                              });
+        List objList = new ArrayList();
+        if (refList != null)
+        {
+            Iterator i = refList.iterator();
+            while (i.hasNext())
+                objList.add(instantiate(RemoteAttribute.class,
+                                        (String) i.next()));
+        }
+        return objList;
     }
 
 }
