@@ -90,14 +90,13 @@
 <TMPL_IF NAME=selected_category_group_ref>
 	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group_ref>.</font>
 	To add a Category click on <TMPL_VAR NAME=selected_category_group_ref> and refresh this page when you are done.<br>
-	<span class='ome_quiet'>Clicking a thumbnail will:
-	<input type="radio" name="thumb_click_opens" value='viewer'>Open the Image Viewer
-	<input type="radio" name="thumb_click_opens" value='image_detail' >Show Image Metadata
+	<span class='ome_quiet'>Click the upper left quadrant of a thumbnail for image info. <br> Click elsewhere to:
+	<input type="radio" name="thumb_click_opens" value='viewer' checked>Open Image Viewer
 	<input type="hidden" name="declassifyImage">
-	<input type="radio" name="thumb_click_opens" value='declassify' >Declassify the Image
+	<input type="radio" name="thumb_click_opens" value='declassify' >Declassify Image
 	<TMPL_IF NAME=available_categories>
 		<input type="hidden" name="classifyImage">
-		<input type="radio" name="thumb_click_opens" value='classify' >Classify the Image as: <TMPL_VAR NAME=available_categories>
+		<input type="radio" name="thumb_click_opens" value='classify' >Classify Image as: <TMPL_VAR NAME=available_categories>
 	</TMPL_IF>
 	</span><br>
 	<table>
@@ -109,6 +108,8 @@
 	<font class="ome_relation_title">Images:</font>
 	<TMPL_VAR NAME=images/render-ref_mass>
 </TMPL_IF><br>
+<hr>
+
 <font class="ome_relation_title">Module Executions:</font>
 	<TMPL_VAR NAME=module_executions/render-tiled_list><br>
 <font class="ome_relation_title">Chain Executions:</font>
