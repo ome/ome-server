@@ -356,7 +356,9 @@ sub getFormalInput {
 
     die "getFormalInput: node does not belong to chain!"
       unless
-        $node->analysis_view()->id() ne $chain->id();
+       #$node->analysis_view()->id() ne $chain->analysis_view_id();
+	  $node->analysis_view()->id() eq $chain->id();
+	  
 
     my $program = $node->program();
     return $factory->
