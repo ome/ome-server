@@ -142,4 +142,18 @@ public interface Dataset
      * @return an {@link Iterator} of {@link Image Images}
      */
     public Iterator iterateImages();
+
+    /**
+     * Inserts image into dataset.
+     * @param Image The image to insert
+     * @return Image the inserted image or null
+     */
+    public void addImage(Image im);
+
+    /**
+     * Imports files into images
+     * @param Filelist List of files to import
+     * @return 
+     */
+    public void importImages(String inFiles);
 }
