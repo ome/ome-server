@@ -189,6 +189,8 @@ my %os_specific = (
 	},
 
 	# XXX: This is about the only thing that's easier in OS X, and *much* easier it is, a single command.
+	#      In addition, it's semi-intelligent, the -merge NetInfo flag won't add a user to a group if he/she
+	#      is already a member.
 	add_user_to_group => sub {
 	    my ($user, $group) = @_;
 	    
@@ -279,7 +281,7 @@ my %os_specific = (
 	    my $group = shift;
 
 	    return system ("/usr/sbin/pw groupadd $group") == 0 ? 1 : 0;
-	}
+	},
 
 	# XXX: See the linux implementation of add_user_to_group () for more details.
 	add_user_to_group => sub {
