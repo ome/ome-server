@@ -10,6 +10,7 @@
 /OME/Import/ImportModule.ome
 /OME/Import/ImageServerStatistics.ome
 /OME/Import/FilenamePattern.ome
+/OME/Import/MetamorphFilenamePattern.ome
 /OME/Annotations/AnnotationModule.ome
 /OME/Annotations/annotations.ome
 /OME/Annotations/classification.ome
