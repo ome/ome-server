@@ -289,6 +289,8 @@ use strict;
 my %remoteReferences;
 my %remoteObjects;
 
+use constant NULL_REFERENCE => ">>OBJ:NULL";
+
 sub saveObject {
     my ($sessionKey,$reference,$object) = @_;
 
@@ -317,6 +319,8 @@ sub getObject {
     my ($sessionKey,$reference) = @_;
 
     $reference = xmlEscape('P',$reference);
+    return undef if ($reference eq NULL_REFERENCE);
+
     my $object = $remoteObjects{$sessionKey}->{$reference};
     die "That object ($reference) does not exist"
       unless defined $object;
@@ -391,12 +395,12 @@ sub inputMarshaller {
     eval {
         $object = getObject($sessionKey,$param);
     };
-    return undef if $@;
+    return 0 if $@;
 
     # First result  - object to test for inheritance
     # Second result - value to place into parameter list given to Perl
     #                 method
-    return ($object,$object);
+    return (1,$object,$object);
 }
 
 sub outputMarshaller {
@@ -415,7 +419,7 @@ sub outputMarshaller {
     # First result  - object to test for inheritance
     # Second result - value to place into parameter list sent over RPC
     #                 channel
-    return ($param,$reference);
+    return (1,$param,$reference);
 }
 
 

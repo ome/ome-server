@@ -722,14 +722,14 @@ sub __verifyOneValue {
     } else {
         # Call the helper subroutine.
         return 0 unless defined $subroutine;
-        my ($object,$replacement) = $subroutine->($param,@subInputs);
+        my ($good,$object,$replacement) = $subroutine->($param,@subInputs);
 
-        # If the subroutine flags an error (by returing undef), then
+        # If the subroutine flags an error (by returing 0), then
         # the parameter doesn't match.
-        return 0 unless defined $object;
+        return 0 unless $good;
 
         # Check the inheritance of the object.
-        my $good = UNIVERSAL::isa($object,$type);
+        $good = (!defined $object) || UNIVERSAL::isa($object,$type);
         #print STDERR "  vone $good\n";
 
         # Replace the object in the parameter list, if necessary.
