@@ -92,6 +92,8 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use Carp;
+
 use OME::DBObject;
 use base qw(OME::DBObject);
 
@@ -127,9 +129,7 @@ __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 sub datasets {
 	my $self = shift;
 	my $factory = $self->Session()->Factory();
-	my @projectDatasets = $factory->findObjects("OME::Project::DatasetMap",
-				 project_id => $self->ID()
-				);
+	my @projectDatasets = $self->dataset_links();
 	my @datasets;
 	foreach (@projectDatasets) {
 		push (@datasets,$factory->loadObject ('OME::Dataset',$_->dataset_id()) );
@@ -165,11 +165,15 @@ sub group {
 }
 
 sub unlockedDatasets {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 	my $self = shift;
 	return grep {not $_->locked()} $self->datasets();
 }
 
 sub addDataset {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 	my $self = shift;
 	my $dataset = shift;
 
@@ -203,6 +207,8 @@ sub addDataset {
 }
 
 sub addDatasetID {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 	
 	my $self = shift;
 	my $datasetID = shift;
@@ -214,26 +220,36 @@ sub addDatasetID {
 
 # stub for future development
 sub deleteDataset {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 
 }
 
 # stub for future development
 sub deleteDatasetID {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 
 }
 
 # stub for future development
 sub removeDataset {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 
 }
 
 # stub for future development
 sub removeDatasetID {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 
 }
 
 # returns 1 if this project contains the dataset, else returns undef
 sub doesDatasetBelong {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 	my $self = shift;
 	my $dataset = shift;
 	my $factory=$self->Session()->Factory();
@@ -252,13 +268,18 @@ sub doesDatasetBelong {
 
 # extension of doesDatasetBelong
 sub doesDatasetBelongID {
+    carp "DEPRECATED! Please use the ProjectManager";
+
 	my $self = shift;
 	my $datasetID = shift;
 	my $dataset = $self->Session()->Factory()->loadObject("OME::Dataset",$datasetID);
 	return $self->doesDatasetBelong($dataset);
 }
 
+
 sub newDataset {
+    carp "DEPRECATED! Please use the ProjectManager";
+
     my $self = shift;
     my $datasetName = shift;
     my $datasetDescription = shift if @_ > 0;
