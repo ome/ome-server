@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.PChainBox
+ * org.openmicroscopy.vis.piccolo.PDatasetLabels
  *
  *------------------------------------------------------------------------------
  *
@@ -38,14 +38,13 @@
  */
 
 package org.openmicroscopy.vis.piccolo;
-
-import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.chains.SelectionState;
-import edu.umd.cs.piccolo.PNode;
-
-import edu.umd.cs.piccolo.util.PBounds;
-import java.util.Iterator;
 import java.util.Collection;
+
+import org.openmicroscopy.remote.RemoteObject;
+import org.openmicroscopy.vis.chains.SelectionState;
+import org.openmicroscopy.vis.ome.CDataset;
+
+import edu.umd.cs.piccolo.PNode;
 
 
 /** 
@@ -57,40 +56,20 @@ import java.util.Collection;
  * @since OME2.1
  */
 
-public class PDatasetLabels extends PNode {
+public class PDatasetLabels extends PRemoteObjectLabels {
 	
-	private double x =0;
-	private double y =0;
-	private double HGAP=40;
-	private double VGAP=20;
-	private double width=0;
-	
+	private static final double VGAP=20;
 	public PDatasetLabels(Collection datasets,double width,
 			SelectionState selectionState) {
-		super();
-		this.width = width;
-		Iterator iter = datasets.iterator();
-		CDataset ds;
+		super(datasets,width,selectionState);
+	}
 		
-		while (iter.hasNext()) {
-			ds = (CDataset) iter.next();
-			buildLabel(ds,selectionState);
-		}
+	protected PNode getNode(RemoteObject ro,SelectionState selectionState) {
+		return new PDatasetLabelText((CDataset) ro,selectionState);
 	}
 	
-	private void buildLabel(CDataset ds,SelectionState selectionState) {
-		PDatasetLabelText p = new PDatasetLabelText(ds,selectionState);
-	
-		addChild(p);
-		PBounds b = p.getGlobalFullBounds();
-		double labelWidth = b.getWidth();
-		if (x+labelWidth > width) {
-			x =0;
-			y+=b.getHeight()+VGAP;
-		}
-		
-		p.setOffset(x,y);
-		x += labelWidth+HGAP;
+	protected double getVerticalGap() {
+		return VGAP;
 	}
 }
 
