@@ -186,7 +186,6 @@ public class RemoteBindings
             {
                 xmlRpcCaller = new XmlRpcCaller(url);
                 xmlRpcCaller.login(username,password);
-                RemoteObject.setRemoteCaller(xmlRpcCaller);
 
                 remoteCaller = xmlRpcCaller;
                 session = xmlRpcCaller.getSession();
