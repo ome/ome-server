@@ -678,6 +678,12 @@ sub findAttributes {
     return $self->findObjects($pkg,@criteria);
 }
 
+sub findAttribute {
+    my ($self, $semantic_type, @criteria) = @_;
+    my $objects = $self->findAttributes($semantic_type,@criteria);
+    return $objects? $objects->next(): undef;
+}
+
 sub newAttribute {
     my ($self, $semantic_type, $target, $module_execution, $data) = @_;
 
