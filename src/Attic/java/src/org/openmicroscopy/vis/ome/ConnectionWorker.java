@@ -134,10 +134,7 @@ public class ConnectionWorker extends SwingWorker {
 	 * the connection initailization, or to indicate an error.
 	 */
 	public void finished() {
-		if (remote != null && session != null && factory != null) {
-			controller.closeStatusWindow();
-		}
-		else 
+		if (remote == null || session == null || factory == null) 
 			JOptionPane.showMessageDialog(controller.getMainFrame(),
 					"The login was not completed successfully.\nYour username and/or password may be incorrect, or there may be network problems. \n\nPlease try again.",
 				"Login Difficulties",JOptionPane.ERROR_MESSAGE);
