@@ -91,13 +91,9 @@ our $VERSION = $OME::VERSION;
 sub new{
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
-print STDERR "1\n";
 	my $self={};
-print STDERR "1\n";
 	$self->{session}=shift;
-print STDERR "1\n";
 	bless($self,$class);
-print STDERR "1\n";
    	return $self;
 
 
