@@ -104,14 +104,7 @@ sub _takeAction {
 	if( $image_id_to_declassify ) {
 		my $image = $factory->loadObject( 'OME::Image', $image_id_to_declassify )
 			or die "Couldn't load image (id=$image_id_to_declassify)";
-		my $classification = $factory->findObject( 
-			'@Classification', 
-			Category => $obj,
-			image    => $image
-		) or die "Couldn't find a classification for this category & image";
-		$classification->Valid( 0 );
-		$classification->storeObject();
-		$session->commitTransaction();
+		OME::Tasks::CategoryManager->declassifyImage( $image, $obj );
 		$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' )."<br>";
 	}
 	
