@@ -201,29 +201,27 @@
 	<xsl:template match = "OME:Image/OME:Thumbnail">
 		<xsl:apply-templates select = "." mode = "Element2Attributes"/>
 	</xsl:template>
-	<!-- ChannelComponent -->
+	<!-- PixelChannelComponent -->
 	<xsl:template match = "OME:ChannelInfo/OME:ChannelComponent">
-		<xsl:element name = "ChannelComponent">
+		<xsl:element name = "PixelChannelComponent">
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "generate-id()"/>
+			</xsl:attribute>
+			<xsl:attribute name = "Pixels">
+				<xsl:value-of select = "@Pixels"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Index">
 				<xsl:value-of select = "@Index"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "@ColorDomain" mode = "OptionalAttribute"/>
-			<xsl:apply-templates select = "." mode = "MakeRefs">
-				<xsl:with-param name = "Name">LogicalChannel</xsl:with-param>
-				<xsl:with-param name = "ID">
-					<xsl:value-of select = "generate-id(..)"/>
-				</xsl:with-param>
-			</xsl:apply-templates>
+			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- ChannelInfo -->
 	<xsl:template match = "OME:Image/OME:ChannelInfo">
 		<xsl:element name = "LogicalChannel">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "generate-id()"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
