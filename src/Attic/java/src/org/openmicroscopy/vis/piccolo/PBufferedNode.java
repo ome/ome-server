@@ -41,7 +41,7 @@ package org.openmicroscopy.vis.piccolo;
 
 
 /** 
- * A Buffered canvas that can be  placed somewhere explicitly 
+ * A Buffered node 
  * 
  * @author Harry Hochheiser
  * @version 2.1
