@@ -39,12 +39,10 @@
 
 package org.openmicroscopy.vis.piccolo;
 import java.util.Collection;
-
-import org.openmicroscopy.remote.RemoteObject;
 import org.openmicroscopy.vis.ome.CChain;
-
 import edu.umd.cs.piccolo.PNode;
-
+import edu.umd.cs.piccolo.util.PBounds;
+import java.util.Iterator;
 
 /** 
  * A parent node for labels that hold dataset names.
@@ -55,21 +53,55 @@ import edu.umd.cs.piccolo.PNode;
  * @since OME2.1
  */
 
-public class PChainLabels extends PRemoteObjectLabels {
+public class PChainLabels extends PNode {
 	
 	private static final double VGAP =5;
+	private static final double HGAP=40;
+	private double area = 0;
 	
-	public PChainLabels(Collection datasets,double width) {
-		super(datasets,width);
+	public PChainLabels(Collection datasets) {
+		super();
+		Iterator iter = datasets.iterator();
+		CChain c;
+		while (iter.hasNext()) {
+			c = (CChain) iter.next();
+			buildLabel(c);
+		}
 	}
 		
-	protected PNode getNode(RemoteObject ro) {
-		return new PChainLabelText((CChain) ro);
+	private void buildLabel(CChain c) {
+		PNode node  = new PChainLabelText(c);
+		addChild(node);
+		PBounds b = node.getGlobalFullBounds();
+		area += (b.getWidth()+HGAP)*(b.getHeight()+VGAP);
 	}
 	
-	protected double getVerticalGap() {
-		return VGAP;
+	public double getArea() {
+		return area;
 	}
+	
+	public void layout(double width) {
+		double x =0;
+		double y = 0;
+		double labelWidth;
+		Iterator iter = getChildrenIterator();
+		while (iter.hasNext()) {
+			Object obj = iter.next();
+			if (obj instanceof PChainLabelText) {
+				// layout.
+				PChainLabelText p = (PChainLabelText) obj;
+				PBounds b = p.getGlobalFullBounds();
+				labelWidth = b.getWidth();
+				if (x+labelWidth > width && x > 0) {
+					x = 0;
+					y += b.getHeight()+VGAP;
+				}
+				p.setOffset(x,y);
+				x +=labelWidth+HGAP;
+			}
+		}
+	}
+	
 }
 
 
