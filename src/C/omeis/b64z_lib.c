@@ -1058,7 +1058,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 	*
 	*/
 	  case bzip2:
-		if( BZ2_bzDecompressEnd( strm->state->bzip_stream ) != BZ_OK ) {
+		if( BZ2_bzCompressEnd( strm->state->bzip_stream ) != BZ_OK ) {
 #ifndef NO_VERBIAGE
 			fprintf( stderr, "Error! bzip2 returned an error message when calling BZ2_bzDecompressEnd\n" );
 #endif
@@ -1078,7 +1078,7 @@ int b64z_encode_end( b64z_stream* strm ) {
 	*
 	*/
 	  case zlib:
-		if( inflateEnd( strm->state->zlib_stream ) != Z_OK ) {
+		if( deflateEnd( strm->state->zlib_stream ) != Z_OK ) {
 #ifndef NO_VERBIAGE
 			fprintf( stderr, "Error! zlib gave an error message when calling inflateEnd\nmessage is:\n%s\nend of message\n", strm->state->zlib_stream->msg );
 #endif
