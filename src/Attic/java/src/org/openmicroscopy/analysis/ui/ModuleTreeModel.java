@@ -56,7 +56,7 @@ public class ModuleTreeModel
 
     /**
      * The only event raised by this model is TreeStructureChanged with the
-     * root as path, i.e. the whole tree has changed.
+     * root as path, i.e., the whole tree has changed.
      */
     protected void fireTreeStructureChanged(Object oldRoot)
     {
