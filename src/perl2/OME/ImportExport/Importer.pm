@@ -230,9 +230,12 @@ sub sort_and_group {
 
     @unique = sort { $a cmp $b } @unique;
 
-    # Remove all empties
+    # Remove all empties, and all directories
     foreach (@unique) {
-	push(@_, $_) if $_;
+	if ($_) {
+	    stat($_);
+	    push(@_, $_) if (! -d _);
+	}
     }
     @cleansed = @_;
 
