@@ -125,7 +125,7 @@
               <li><i>&lt;CVS_LOCAL&gt;/OME/src/perl2</i> to <i>&lt;OME_DEPLOY&gt;/perl</i></li>
             </ul>
             <p>Obviously, you have to replace <i>&lt;CVS_LOCAL&gt;</i> and <i>&lt;OME_DEPLOY&gt;</i> 
-              with the actual directories. Now, move the <i>OME_JPEG</i> executable 
+              with the actual directories. Now, copy the <i>OME_JPEG</i> executable 
               from <i>&lt;CVS_LOCAL&gt;/OME/src/C</i> to <i>&lt;OME_DEPLOY&gt;/cgi</i>.</p>
             <p>All the above can be done by issuing the following commands (assuming 
               you are in CVS_LOCAL and that OME_DEPLOY is <i>/OME</i>):</p>
@@ -134,8 +134,10 @@
               cp -r /OME/images /OME/images<br>
               cp -r /OME/src/perl2 /OME/perl<br>
               mkdir /OME/cgi<br>
-              mv /OME/src/C/OME_JPEG /OME/cgi/OME_JPEG</code></p>
-          </TD>
+              cp /OME/src/C/OME_JPEG /OME/cgi/OME_JPEG</code></p>
+			  Notice that CVS_LOCAL contains some <i>CVS</i> subdirectories. These 
+            need not be copied as well. The above commands will uselessly copy 
+            them too.</TD>
           <TD width="3%">&nbsp;</TD>
           <TD class="sideTxt" valign="top" width="15%">File system</TD>
         </TR>
@@ -221,7 +223,7 @@
               block in the configuration file. </p>
             <p>When you&#146;re finished editing the configuration file, make 
               sure the syntax is correct by typing:</p>
-            <p><code>sudo apachectl config</code></p>
+            <p><code>sudo apachectl configtest</code></p>
             <p>Then, don&#146;t forget to restart Apache:</p>
             <p><code>sudo apachectl restart</code></p>
           </TD>

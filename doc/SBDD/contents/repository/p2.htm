@@ -107,105 +107,21 @@
           <TD class="szNorm" width="82%"> 
             <P>The whole OME source code and other related artifacts can be freely 
               downloaded (refer to <a href="../dependencies/p3.htm">Section III-3</a> 
-              for licensing issues) from the CVS repository located at <a href="http://sourceforge.net/" target="SF">SourceForge</a>. 
-              To do so, you will need a CVS client. This is normally provided 
-              under Linux, however you can get one from <a href="http://www.cvshome.org/" target="CVSHOME">http://www.cvshome.org/</a>.<br>
-              Before you start downloading from CVS, make a new directory and 
-              move there. Then, type the following at the command line prompt:</P>
-            <p><code><nobr>cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/ome 
-              login </nobr></code></p>
-            <p>When prompted for a password for anonymous, simply press the enter 
-              key. Then, type:</p>
-            <p><code><nobr>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/ome 
-              co OME</nobr></code></p>
-            <p>The above will download the whole OME module in the current directory. 
-              What you get is the latest version of the files on CVS.</p>
-          </TD>
+              for licensing issues) in the form of a compressed tar achive. This 
+              is just a convenience bundle of the CVS repository that the OME 
+              developers are working on.</P>
+            <P>To download, point your Web browser to <a href="http://cvs.openmicroscopy.org.uk/" target="OME_SF">http://cvs.openmicroscopy.org.uk/</a>. 
+              You will be presented with a list of bunldles. For each supported 
+              platform, we provided two bundles: one contains a stable version 
+              of the code and the other is a snapshot of the code currently under 
+              CVS. These snapshots are updated nightly every day. </P>
+            </TD>
           <TD width="3%">&nbsp;</TD>
           <TD class="sideTxt" valign="top" width="15%">Downloading the most recent 
             files </TD>
         </TR>
         <TR> 
           <TD colspan="3" height="10">&nbsp; </TD>
-        </TR>
-      </TABLE>
-      <TABLE width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
-        <TR> 
-          <TD colspan="3" height="40">&nbsp;</TD>
-        </TR>
-        <TR> 
-          <TD class="szNorm" width="82%"> 
-            <p>However, if you're not interested in contributing to the OME development 
-              by writing code or testing the latest developed software, and you 
-              only want to build and deploy the build that this document refers 
-              to, you must type the following instead: </p>
-            <p><code><nobr>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/ome 
-              co -r &lt;build_id&gt; OME</nobr></code></p>
-            <p>where <code>&lt;build_id&gt;</code> is the one reported on the 
-              <a href="../../index.htm">cover page</a> of this document. This 
-              will download the source code from CVS that was tagged as <code>build_id</code>. 
-              <br>
-              For example, assuming the Document ID you find on the cover page 
-              is <code>build-2003022819</code>, then type:</p>
-            <p><code><nobr>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/ome 
-              co -r build-2003022819 OME</nobr></code></p>
-            <p>Notice that a normal check out (that is, you don't specify <code>-r</code> 
-              and <code>build_id</code>) would download the latest version of 
-              the source code, which might not be the same as the tagged version 
-              which this document refers to.</p>
-          </TD>
-          <TD width="3%">&nbsp;</TD>
-          <TD class="sideTxt" valign="top" width="15%">Retrieving a tagged build</TD>
-        </TR>
-        <TR> 
-          <TD colspan="3" height="10">&nbsp;</TD>
-        </TR>
-      </TABLE>
-      <TABLE width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
-        <TR> 
-          <TD colspan="3" height="40">&nbsp;</TD>
-        </TR>
-        <TR> 
-          <TD class="szNorm" width="82%">If you retrieved this document by checking 
-            out the latest version on CVS (without specifying <code>-r</code> 
-            and <code>build_id</code>), then you got the SBDD that refers to the 
-            latest tagged build.</TD>
-          <TD width="3%">&nbsp;</TD>
-          <TD class="sideTxt" valign="top" width="15%">Latest build</TD>
-        </TR>
-        <TR> 
-          <TD colspan="3" height="10">&nbsp;</TD>
-        </TR>
-      </TABLE>
-      <TABLE width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
-        <TR> 
-          <TD colspan="3" height="40">&nbsp;</TD>
-        </TR>
-        <TR> 
-          <TD class="szNorm" width="82%">If you want to build and deploy a previous 
-            build, then you should first take a look at the Tags History and see 
-            what the previous builds are. If you have already downloaded the latest 
-            OME root module from CVS, then go to the <i>OME/doc/TagsHistory</i> 
-            directory. Every entry is a text file that has the same name as the 
-            build it refers to and explains why that build was noteworthy to the 
-            developers. <br>
-            If you don&#146;t have the latest OME root module, you could retrieve 
-            it as explained above and then browse the TagsHistory directory. However, 
-            it may be more convenient to browse this directory directly on the 
-            CVS repository through its Web interface. To do so, just point your 
-            Web browser to: 
-            <p><a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ome/OME/doc/TagsHistory/" target="TH_WCVS"><nobr>http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/ome/OME/doc/TagsHistory/</nobr></a></p>
-            <p>When you have decided on which build, retrieve the relative OME 
-              root module as explained above. We recommend that you go through 
-              the relative SBDD, as dependencies and instructions may vary from 
-              build to build.<br>
-            </p>
-          </TD>
-          <TD width="3%">&nbsp;</TD>
-          <TD class="sideTxt" valign="top" width="15%">Retrieving a previous build</TD>
-        </TR>
-        <TR> 
-          <TD colspan="3" height="10">&nbsp;</TD>
         </TR>
       </TABLE>
       <!-- End of Page Contents -->
