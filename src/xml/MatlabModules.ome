@@ -113,6 +113,39 @@
       </ExecutionInstructions>
     </AnalysisModule>
 
+	<AnalysisModule
+       ModuleName="Matlab Pixels Test"
+       Category="Statistics"
+       ModuleType="OME::Analysis::Handlers::MatlabHandler"
+       ProgramID="ome_pixelsTest"
+       ID="urn:lsid:openmicroscopy.org:Module:70">
+      <Description>Transposes the image matrix.</Description>
+      <Declaration>
+        <FormalInput
+           Name="inPixels" SemanticTypeName="Pixels" Count="!"/>
+        <FormalOutput
+           Name="outPixels" SemanticTypeName="Pixels" Count="!"/>
+      </Declaration>
+
+      <ExecutionInstructions ExecutionPoint="startImage"
+		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+        <!-- specifies which of the references in the actual inputs
+             needed to be populated -->
+
+        <!-- specifies the order that the Matlab function expects the
+             formal inputs -->
+        <Inputs>
+          <Input Name="inPixels"/>
+        </Inputs>
+
+        <!-- specifies the order of the formal outputs -->
+        <Outputs>
+          <Output Name="ouPixels"/>
+        </Outputs>
+      </ExecutionInstructions>
+    </AnalysisModule>
   </AML:AnalysisModuleLibrary>
 
 </OME>
