@@ -77,7 +77,7 @@ our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
 our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
 
 # Database version
-our $DB_VERSION = "2.4";
+our $DB_VERSION = "2.5";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -516,6 +516,7 @@ sub update_configuration {
     return 1;
 }
 
+# N.B.:  This is used by the 2.4 -> 2.5 update script.
 sub make_repository {
 	my $session = shift;
 	my $factory = $session->Factory();
