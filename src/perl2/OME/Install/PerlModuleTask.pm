@@ -368,6 +368,44 @@ my @modules = (
 	},
 	valid_versions => ['ge "1.56"']
     },{
+	name => 'XML::Parser',
+	repository_file => "$REPOSITORY/XML-Parser-2.34.tar.gz",
+	get_module_version => sub {
+	    my $version;
+	    my $eval = 'use XML::Parser; $version = $XML::Parser::VERSION;';
+
+	    eval($eval);
+
+	    return $version ? $version : undef;
+	}
+    },{
+	name => 'SOAP::Lite',
+	repository_file => "$REPOSITORY/SOAP-Lite-0.60.tar.gz",
+	get_module_version => sub {
+	    my $version;
+	    my $eval = 'use SOAP::Lite; $version = $SOAP::Lite::VERSION;';
+
+	    eval($eval);
+
+	    return $version ? $version : undef;
+	},
+	configure_module => sub {
+	    # Since SOAP::Lite has an interactive configure script we need to
+	    # implement a custom configure_module () subroutine that allows
+	    # for an interactive install
+
+	    my ($path, $logfile) = @_;
+	    my $iwd = getcwd;  # Initial working directory
+
+	    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
+
+	    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
+	    system ("perl Makefile.PL --noprompt --HTTP-Apache --HTTP-Daemon --noMAILTO-Client --noHTTP-FCGI --noMQ --noJABBER --noMIMEParser 2>&1");
+	    chdir ($iwd) or croak "Unable to chdir back into \"$iwd\", $!";
+
+	    return 1;
+	}
+    },{
 	name => 'XML::LibXSLT',
 	repository_file => "$REPOSITORY/XML-LibXSLT-1.53.tar.gz",
     }
