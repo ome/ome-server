@@ -56,10 +56,11 @@ use constant DEFAULT_CHEX_SPEC =>
   {
    '.' => ['id','module','inputs','predecessors','timestamp'],
    'module' => ['id','name'],
-   'predecessors' => ['id'],
    'inputs' =>
        ['id','input_module_execution','module_execution','formal_input',
        'formal_output'],
+   'inputs.input_module_execution' =>  ['id'],
+   'inputs.module_execution' => ['id'],
    'inputs.formal_input' =>
        ['id','name','semantic_type'],
    'inputs.formal_input.semantic_type' =>
