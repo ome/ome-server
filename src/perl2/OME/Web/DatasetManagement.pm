@@ -47,6 +47,7 @@ use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
 use OME::Web::Helper::JScriptFormat;
+use OME::Web::Table;
 
 use base qw{ OME::Web };
 
@@ -114,29 +115,96 @@ sub print_form {
 	$text .= "<center><h2>Dataset ".$dataset->name()." properties</h2></center>";
 	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
 	$text .= "<center><h2>Images</h2></center>";
-	$text .= $self->makeImageListings();
+	$text .= $self->makeImageListings($dataset);
 	$text .= $cgi->endform;
 	
 	return $text;
 }
 
-sub makeImageListings{
-	my $self = shift;
+sub makeImageListings {
+	my ($self, $dataset) = @_;
+	my $t_generator = new OME::Web::Table;
+	my $cgi = $self->CGI();;
+	my $factory = $self->Session()->Factory();
+	
+	# Grab the ID of each of our images that's in the project
+	my $in_project;
+	foreach ($dataset->images()) { push (@$in_project, $_->id()) }
 
-	my $session    = $self->Session();
-	my $htmlFormat = $self->{htmlFormat};
-	my @images     = $session->dataset()->images();
+	print STDERR "**** Dataset contains @$in_project\n";
+	
+	# Gen our "Images in Project" table
+	my $html = $t_generator->getTable( {
+			type => 'images',
+			filters => [ ["id", ['in', $in_project] ] ],
+			options_row => ["Remove"],
+		}
+	);
 
-	my $text;
+	my @additional_images;
 
-	if( scalar @images > 0 ) {
-		$text .= "<h3>The current dataset contains the image".(scalar @images == 1 ? '' : 's')." listed below.</h3>";
-		$text .= $htmlFormat->imageInDataset(\@images,1);
-	} else {
-		$text .= '<h3>The current dataset contains no images.</h3>';
+	# Only display the datasets that aren't in the project
+	foreach my $image ($factory->findObjects("OME::Image")) {
+		my $add_this_id = 1;
+		foreach my $id_in_project (@$in_project) {
+			if ($dataset->id() == $id_in_project) {
+				$add_this_id = 0;
+			};
+		}
+		push(@additional_images, $dataset->name()) if $add_this_id;
 	}
 
-	return $text;
+	# Add a null to the beginning
+	unshift(@additional_images, 'None');
+
+	# Add dataset table
+	$html .= $cgi->p .
+	         $cgi->table( {
+					 -class => 'ome_table',
+					 -align => 'center',
+					 -cellspacing => 1,
+					 -cellpadding => 4
+				 },
+				 $cgi->Tr({-bgcolor => '#006699'},
+					 $cgi->startform(),
+					 $cgi->td(
+						 '&nbsp',
+						 $cgi->span("Add dataset: "),
+						 $cgi->popup_menu( {
+								 -name => 'selected',
+								 -values => [@additional_images],
+								 -default => $additional_images[0]
+							 }
+						 ),
+						 '&nbsp',
+						 $cgi->submit({-name => 'Add', -value => 'Add'}),
+						 '&nbsp'
+					 ),
+					 $cgi->endform()
+				 )
+			 );
+
+
+	return $html;
 }
+
+#sub makeImageListings{
+#	my $self = shift;
+#
+#	my $session    = $self->Session();
+#	my $htmlFormat = $self->{htmlFormat};
+#	my @images     = $session->dataset()->images();
+#
+#	my $text;
+#
+#	if( scalar @images > 0 ) {
+#		$text .= "<h3>The current dataset contains the image".(scalar @images == 1 ? '' : 's')." listed below.</h3>";
+#		$text .= $htmlFormat->imageInDataset(\@images,1);
+#	} else {
+#		$text .= '<h3>The current dataset contains no images.</h3>';
+#	}
+#
+#	return $text;
+#}
 
 1;
