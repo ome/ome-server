@@ -77,6 +77,34 @@ sub addDatasetsToProject {
     return;
 }
 
+sub addDatasetToProjects {
+    my ($proto,$project_ids,$dataset_id) = @_;
+
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+    my @projects;
+    $project_ids = [$project_ids] unless ref($project_ids);
+    foreach my $project_id (@$project_ids) {
+        my $project = $factory->loadObject('OME::Project',$project_id);
+        die "Project does not exist" unless defined $project;
+        push @projects, $project;
+    }
+
+    my $dataset = $factory->loadObject('OME::Dataset',$dataset_id);
+    die "Dataset does not exist" unless defined $dataset;
+
+    foreach my $project (@projects) {
+        $factory->maybeNewObject('OME::Project::DatasetMap',
+                                 {
+                                  project => $project,
+                                  dataset => $dataset,
+                                 });
+    }
+
+    return;
+}
+
 sub removeDatasetsFromProject {
     my ($proto,$project_id,$dataset_ids) = @_;
 
