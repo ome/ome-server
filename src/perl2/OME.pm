@@ -17,7 +17,7 @@ the insividual classes:
 =head1 AUTHOR
 
 	Ilya Goldberg, Doug Creager, Brian Hughes, Josiah Johnston
-	igg@nih,gov, dcreager@alum.mit.edu, bshughes@alum.mit.edu, siah@nih.gov
+	igg@nih,gov, dcreager@alum.mit.edu, bshughes@mit.edu, siah@nih.gov
 	http://openmicroscopy.org
 
 =head1 COPYRIGHT
