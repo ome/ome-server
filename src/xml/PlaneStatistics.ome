@@ -34,9 +34,6 @@
 # Written by:  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-
-
 <OME
   xmlns=
     "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
@@ -80,6 +77,12 @@
       <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
       <Element Name="Sigma" DBLocation="PLANE_STATISTICS.SIGMA" DataType="float"/>
     </SemanticType>
+	<SemanticType Name="PlaneGeometricSigma" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricSigma" DBLocation="PLANE_STATISTICS.GEOSIGMA" DataType="float"/>
+    </SemanticType>
     <SemanticType Name="PlaneMinimum" AppliesTo="I">
       <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
       <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
@@ -122,6 +125,7 @@
 		<FormalOutput Name = "Geomean" SemanticTypeName = "PlaneGeometricMean" Count="+"/>
 		<FormalOutput Name = "Sigma" SemanticTypeName = "PlaneSigma" Count="+"/>
 		<FormalOutput Name = "Centroid" SemanticTypeName = "PlaneCentroid" Count="+"/>
+		<FormalOutput Name = "Geosigma" SemanticTypeName = "PlaneGeometricSigma" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
@@ -180,7 +184,7 @@
 			</OutputRecord>
 			<!-- That eats a line. The first line of the output is column headers -->
 			<OutputRecord>
-				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
 					<OutputTo Location = "Minima.TheC" />
 					<OutputTo Location = "Maxima.TheC" />
@@ -188,6 +192,7 @@
 					<OutputTo Location = "Geomean.TheC" />
 					<OutputTo Location = "Sigma.TheC" />
 					<OutputTo Location = "Centroid.TheC" />
+					<OutputTo Location = "Geosigma.TheC" />
 				</Output>
 				<Output AccessBy = "2">
 					<OutputTo Location = "Minima.TheT" />
@@ -196,6 +201,7 @@
 					<OutputTo Location = "Geomean.TheT" />
 					<OutputTo Location = "Sigma.TheT" />
 					<OutputTo Location = "Centroid.TheT" />
+					<OutputTo Location = "Geosigma.TheT" />
 				</Output>
 				<Output AccessBy = "3">
 					<OutputTo Location = "Minima.TheZ" />
@@ -204,6 +210,7 @@
 					<OutputTo Location = "Geomean.TheZ" />
 					<OutputTo Location = "Sigma.TheZ" />
 					<OutputTo Location = "Centroid.TheZ" />
+					<OutputTo Location = "Geosigma.TheZ" />
 				</Output>
 				<Output AccessBy = "4">
 					<OutputTo Location = "Minima.Minimum" />
@@ -225,6 +232,9 @@
 				</Output>
 				<Output AccessBy = "10">
 					<OutputTo Location = "Centroid.Y" />
+				</Output>
+				<Output AccessBy = "11">
+					<OutputTo Location = "Geosigma.GeometricSigma" />
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->

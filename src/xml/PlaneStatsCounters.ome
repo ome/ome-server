@@ -34,9 +34,6 @@
 # Written by:  
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-
-
-
 <OME
   xmlns=
     "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
@@ -79,6 +76,12 @@
       <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
       <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
       <Element Name="Sigma" DBLocation="PLANE_STATISTICS.SIGMA" DataType="float"/>
+    </SemanticType>
+   <SemanticType Name="PlaneGeometricSigma" AppliesTo="I">
+      <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
+      <Element Name="TheC" DBLocation="PLANE_STATISTICS.THE_C" DataType="integer"/>
+      <Element Name="TheT" DBLocation="PLANE_STATISTICS.THE_T" DataType="integer"/>
+      <Element Name="GeometricSigma" DBLocation="PLANE_STATISTICS.GEOSIGMA" DataType="float"/>
     </SemanticType>
     <SemanticType Name="PlaneMinimum" AppliesTo="I">
       <Element Name="TheZ" DBLocation="PLANE_STATISTICS.THE_Z" DataType="integer"/>
@@ -220,6 +223,7 @@
 		<FormalOutput Name = "Sum Xi" SemanticTypeName = "PlaneSum_Xi" Count="+"/>
 		<FormalOutput Name = "Sum Yi" SemanticTypeName = "PlaneSum_Yi" Count="+"/>
 		<FormalOutput Name = "Sum Zi" SemanticTypeName = "PlaneSum_Zi" Count="+"/>
+		<FormalOutput Name = "Geosigma" SemanticTypeName = "PlaneGeometricSigma" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
@@ -278,7 +282,7 @@
 			</OutputRecord>
 			<!-- That eats a line. The first line of the output is column headers -->
 			<OutputRecord>
-				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
 					<OutputTo Location = "Minima.TheC"/>
 					<OutputTo Location = "Maxima.TheC"/>
@@ -292,6 +296,7 @@
 					<OutputTo Location = "Sum Xi.TheC"/>
 					<OutputTo Location = "Sum Yi.TheC"/>
 					<OutputTo Location = "Sum Zi.TheC"/>
+					<OutputTo Location = "Geosigma.TheC"/>
 				</Output>
 				<Output AccessBy = "2">
 					<OutputTo Location = "Minima.TheT"/>
@@ -306,6 +311,7 @@
 					<OutputTo Location = "Sum Xi.TheT"/>
 					<OutputTo Location = "Sum Yi.TheT"/>
 					<OutputTo Location = "Sum Zi.TheT"/>
+					<OutputTo Location = "Geosigma.TheT"/>
 				</Output>
 				<Output AccessBy = "3">
 					<OutputTo Location = "Minima.TheZ"/>
@@ -320,6 +326,7 @@
 					<OutputTo Location = "Sum Xi.TheZ"/>
 					<OutputTo Location = "Sum Yi.TheZ"/>
 					<OutputTo Location = "Sum Zi.TheZ"/>
+					<OutputTo Location = "Geosigma.TheZ"/>
 				</Output>
 				<Output AccessBy = "4">
 					<OutputTo Location = "Minima.Minimum"/>
@@ -360,17 +367,17 @@
 				<Output AccessBy = "16">
 					<OutputTo Location = "Sum Zi.Sum_Zi"/>
 				</Output>
+				<Output AccessBy = "17">
+					<OutputTo Location = "Geosigma.GeometricSigma"/>
+				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
-
     <Category Path="Statistics">
       <Description>Modules for calculating Pixel Statistics</Description>
     </Category>
-
-
 </AML:AnalysisModuleLibrary>
 
 </OME>
