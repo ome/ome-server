@@ -233,9 +233,18 @@ sub addImageID{
  # my $image = OME::Image->retrieve($imageID);	
   return $self->addImage($image);
 
+}
 
+sub importImages {
+  my $self = shift;
+  my $file = shift;
+  my $imp = OME::Tasks::ImageImport->new($self->Session());
+  $imp->importImages(($file));
+  return $file;
 
 }
+
+
 1;
 
 __END__
