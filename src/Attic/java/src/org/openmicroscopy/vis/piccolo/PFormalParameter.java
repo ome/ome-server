@@ -264,13 +264,14 @@ public abstract class PFormalParameter extends PNode implements
 	}
 
 	
-	public void setLinkedTo(PFormalParameter param,PLink link) {
+	public void setLinkedTo(PFormalParameter param,PParamLink link) {
 		linkedTo.add(param);
 		links.add(link);
 	}
 	
 	public void clearLinkedTo(PFormalParameter param) {
 		linkedTo.remove(param);
+		circle.setSelected(false);
 	}
 	
 	public boolean isLinkedTo(PFormalParameter param) {
@@ -292,10 +293,10 @@ public abstract class PFormalParameter extends PNode implements
  	}
  	
  	public void removeLinks() {
- 		PLink link;
+ 		PParamLink link;
  		Iterator iter = links.iterator();
  		while (iter.hasNext()) {
- 			link = (PLink)iter.next();
+ 			link = (PParamLink)iter.next();
  			link.remove();
  		}
  		links = new Vector();
@@ -337,6 +338,7 @@ public abstract class PFormalParameter extends PNode implements
 				p.setLinkable(v);		
 		}
 	}
+
 	
 	public void updateBounds() {
 		PBounds b = labelNode.getFullBounds();
@@ -354,12 +356,16 @@ public abstract class PFormalParameter extends PNode implements
 		return (float) labelNode.getFullBoundsReference().getWidth();	
 	}
 	
-	public Point2D getCircleCenter() {
+	public Point2D getLinkCenter() {
 		PBounds b = circle.getFullBoundsReference();
 		float x = (float) (b.getX()+b.getWidth()/2);
 		float y = (float) (b.getY()+b.getHeight()/2);
 		Point2D.Float result = new Point2D.Float(x,y);
 		localToGlobal(result);
 		return result;
+	}
+	
+	public PLinkTarget getLinkTarget() {
+		return circle;
 	}
 }
