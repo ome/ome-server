@@ -59,42 +59,6 @@
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-    <SemanticType Name="PixelsPlane" AppliesTo="I">
-			<Description>Stores two dimensional Pixel Data, including the extent of each dimension.</Description>
-			<Element
-				Name= "SizeX"
-				DBLocation = "IMAGE_PIXELS.SIZE_X"
-				DataType = "integer">
-				<Description>Number of pixels on the X axis.</Description>
-			</Element>
-			<Element
-				Name= "SizeY"
-				DBLocation = "IMAGE_PIXELS.SIZE_Y"
-				DataType = "integer">
-				<Description>Number of pixels on the Y axis.</Description>
-			</Element>
-			<Element
-				Name= "PixelType"
-				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
-				DataType = "string"/>
-			<Element
-				Name= "FileSHA1"
-				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
-				DataType = "string"/>
-			<Element
-				Name= "BitsPerPixel"
-				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
-				DataType = "integer"/>
-			<Element
-				Name= "Repository"
-				DBLocation = "IMAGE_PIXELS.REPOSITORY"
-				DataType = "reference"
-				RefersTo = "Repository"/>
-			<Element
-				Name= "Path"
-				DBLocation = "IMAGE_PIXELS.PATH"
-				DataType = "string"/>
-    </SemanticType>
 	<SemanticType Name="ChannelIndex" AppliesTo="I">
 		<Description>Specifies a single channel in a Pixels attribute.</Description>
         <Element Name="theC" DBLocation="CHANNEL_INDEX.THE_C" DataType="integer"/>
@@ -117,13 +81,8 @@
 	ID="urn:lsid:openmicroscopy.org:Module:9">
 	<Description>Calculate pixel statistics for each XY plane.</Description>
 	<Declaration>
-<!--
-Because Free Inputs are currently cloned and Repository has a unique constraint on path,
-Repository can't be used as an input at the moment. So I'll use the reference from Pixels.+
-		<FormalInput Name = "RepositoryForPixelPlane" SemanticTypeName = "Repository" Count = "!"/>
--->
 		<FormalInput Name = "ChannelIndex" SemanticTypeName = "ChannelIndex" Count = "!"/>
-		<FormalOutput Name = "PixelsPlane" SemanticTypeName = "PixelsPlane" Count="!"/>
+		<FormalOutput Name = "PixelsPlane" SemanticTypeName = "Pixels" Count="!"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "startImage" MakesNewFeature = "false" 
 		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
@@ -143,7 +102,7 @@ Repository can't be used as an input at the moment. So I'll use the reference fr
 					<RawText>OutPath=</RawText>
 				</InputSubString>
 				<InputSubString>
-					<TempFile FileID="PlanePath" Repository="ChannelIndex.Pixels.Repository"/>
+					<TempFile FileID="PlanePath"/>
 				</InputSubString>
 			</Parameter>
 			<Parameter>
@@ -193,19 +152,21 @@ Repository can't be used as an input at the moment. So I'll use the reference fr
 				</InputSubString>
 			</Parameter>
 		</CommandLine>
-		<PixelOutput type="PixelsPlane" FormalOutput="PixelsPlane">
+		<PixelOutput FormalOutput="PixelsPlane">
 			<SizeX Location = "ChannelIndex.Pixels.SizeX"/>
 			<SizeY Location = "ChannelIndex.Pixels.SizeY"/>
+			<SizeZ Value = "1"/>
+			<SizeC Value = "1"/>
+			<SizeT Value = "1"/>
 			<PixelType Location = "ChannelIndex.Pixels.PixelType"/>
 			<BitsPerPixel Location = "ChannelIndex.Pixels.BitsPerPixel"/>
-			<Repository Location = "ChannelIndex.Pixels.Repository"/>
 			<Path FileID = "PlanePath"/>
 		</PixelOutput>
 	</ExecutionInstructions>
 </AnalysisModule>
 
     <Category Path="Plane Conversion">
-      <Description>Modules for converting a 5d Pixels attribute to a 2d PixelsPlane attribute</Description>
+      <Description>Modules for converting 5d Pixels to 2d Pixel Planes</Description>
     </Category>
 
 </AML:AnalysisModuleLibrary>
