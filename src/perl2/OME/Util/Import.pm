@@ -43,7 +43,7 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Carp;
-use Getopt::Long;
+use File::Glob ':glob';
 
 use OME::SessionManager;
 use OME::Session;
@@ -109,7 +109,12 @@ sub import {
 	GetOptions('reimport|r!' => \$reuse,
                'help|h' => \$help,
                'd=s' => \$datasetName);
-    my @file_names = @ARGV;
+    my @file_names;
+    foreach my $filename (@ARGV) {
+    	push (@file_names,$filename)
+    		if -f $filename and -r $filename and -s $filename;
+    	push (@file_names,bsd_glob("$filename/*")) if -d $filename and -r $filename;
+    }
     
     import_help() if $help;
 
