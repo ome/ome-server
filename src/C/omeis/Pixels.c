@@ -650,10 +650,6 @@ int i;
 					myPixels->path_rep, strerror( errno ), (unsigned long long)convRec.spec.file.nPix, (unsigned long long)nIO);
 				break;
 			}
-		} else {
-			OMEIS_DoError ("Error recovering PixelsID=%llu.  In .convert file, found FileID=0",
-				(unsigned long long)myPixels->ID);
-			break;
 		}
 	}
 
