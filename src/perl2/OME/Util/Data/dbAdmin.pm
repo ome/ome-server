@@ -337,7 +337,6 @@ sub restore {
 	# access permissions in current directory
 	move("$iwd/omeDB_backup","/tmp/omeDB_backup") or croak "ERROR: Could not copy omeDB_backup to /tmp";
 	
-	euid (scalar(getpwnam $postgress_user));
 	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." ome'");
 	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." -d ome /tmp/omeDB_backup'");
