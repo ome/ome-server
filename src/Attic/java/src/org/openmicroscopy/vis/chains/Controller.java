@@ -327,7 +327,7 @@ public class Controller  implements LoginResponder {
 	}
 	
 
-	public synchronized void finishInitThread() {
+	public void finishInitThread() {
 		initThreads--;
 		if (initThreads == 0) {
 			
