@@ -22,7 +22,7 @@ package OME::Web::FindSpots;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+$VERSION = '1.0';
 use CGI;
 use OME::Web::Helper::JScriptFormat;
 use OME::Web::Helper::HTMLFormat;
@@ -47,11 +47,21 @@ sub getPageBody {
 	if ($cgi->param('Execute')){
 		my %h=();
 		$h{MinimumSpotVolume}=$cgi->param('MinSpotVolume');
-		$h{Channel}=$cgi->param('Channel'); ;
-		$h{TimeStart}=$cgi->param('TimeStart');
-		$h{TimeStop}=$cgi->param('TimeStop');
+		$h{Channel}=$cgi->param('Channel'); 
 		$h{ThresholdType}=$cgi->param('ThresholdType');
 		$h{ThresholdValue}=$cgi->param('ThresholdValue');
+		##################################
+		if ($cgi->param('startTime') eq 'Begining'){
+			$h{TimeStart}="";
+		}else{
+			$h{TimeStart}=$cgi->param('Start');
+		}
+		if ($cgi->param('stopTime') eq 'End'){
+			$h{TimeStop}="";
+		}else{
+			$h{TimeStop}=$cgi->param('Stop');
+		}
+
 		my $attributeType="FindSpotsInputs";
 		my $facade= OME::Tasks::AEFacade->new($session);
 		$facade->executeView($session->dataset(),"Find and track spots","Parameters","Find spots",\%h,$attributeType);
@@ -60,13 +70,11 @@ sub getPageBody {
 	}else{
 		my @ref=$session->dataset()->images();
 	
-		my @result=();
-		foreach my $object (@ref){
-			my $text=$HTMLFormat->formatThumbnail($object);
-			push(@result,$text);
-		}
-	
 		$body.= "<b>Selected dataset: </b>".$session->dataset()->name()."<br>";
+		if (scalar(@ref)==0){
+			$body.="The selected dataset contains no images";
+			return ('HTML',$body);
+		}
 		$body.=print_form($cgi); 
 	}
 	return ('HTML',$body);
@@ -84,26 +92,49 @@ sub print_form{
 	my @tableColumns=();
 	my @radioGrp=();
 	
-	# The user supplies the TIME_START, TIME_STOP (begining to end, or number to end or begining to number)
-	# The WAVELEGTH.  This is a popup containing the wavelegths in the dataset(s),
-	# The THRESHOLD.  This is either a number or relative to the mean or to the geometric mean.
-	# Minimum spot volume - a number
-	# Intensity weight - default 0.
+	##################################
+	#$tableColumns[0]=$cgi->th('Time');
+	#$tableColumns[1]='<b>From:</b>'.$cgi->textfield(-name=>'TimeStart',-size=>4);
+	#@tableColumns = $cgi->td (\@tableColumns);
+	#push (@tableRows,@tableColumns);
+	#@tableColumns = ();
+	#$tableColumns[0]=$cgi->td(' ');
+	#$tableColumns[1]='<b>To:</b>'.$cgi->textfield(-name=>'TimeStop',-size=>4);
+	#@tableColumns = $cgi->td (\@tableColumns);
+	#push (@tableRows,@tableColumns);
+	#@tableColumns = ();
+	###################################
 
-	$tableColumns[0]=$cgi->th('Time');
-	$tableColumns[1]='<b>From:</b>'.$cgi->textfield(-name=>'TimeStart',-size=>4);
+	$tableColumns[0]=$cgi->th('Time: From/to');
+	#$tableColumns[1]='<b>From:</b>';
+	@radioGrp = $cgi->radio_group(-name=>'startTime',
+			-values=>['Begining','timePoint'],-default=>'Begining',-nolabels=>1);
+	$tableColumns[1] = $radioGrp[0]."Begining ".$radioGrp[1]."Timepoint".$cgi->textfield(-name=>'Start',-size=>4);
 
+	#$tableColumns[2] = $radioGrp[1]."Timepoint".$cgi->textfield(-name=>'Start',-size=>4);
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();
 
 	$tableColumns[0]=$cgi->td(' ');
-	$tableColumns[1]='<b>To:</b>'.$cgi->textfield(-name=>'TimeStop',-size=>4);
+	#$tableColumns[1]='<b>To:</b>';
+	@radioGrp = $cgi->radio_group(-name=>'stopTime',
+			-values=>['End','timePoint'],-default=>'End',-nolabels=>1);
+	$tableColumns[1] = $radioGrp[0]."End  ".$radioGrp[1]."Timepoint".$cgi->textfield(-name=>'Stop',-size=>4);
+	#$tableColumns[2] = $radioGrp[1]."Timepoint".$cgi->textfield(-name=>'Stop',-size=>4);
 	@tableColumns = $cgi->td (\@tableColumns);
 	push (@tableRows,@tableColumns);
 	@tableColumns = ();
 
 
+
+
+
+
+
+
+
+	
 	# channel
 	$tableColumns[0] = $cgi->th ('Channel');
 	$tableColumns[1] = $cgi->textfield(-name=>'Channel',-size=>4,default=>'0');
