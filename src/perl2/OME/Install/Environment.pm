@@ -26,6 +26,7 @@ use strict;
 use File::Copy;
 use File::Spec;
 use Carp;
+use OME::Install::Terminal;
 
 # Internal platform IDs.
 use constant UNKNOWN => 0;
@@ -43,84 +44,104 @@ my $platform = 0;
 # The singleton instance.
 my $soleInstance = undef;
 
-
 # This array contains platform-specific info and routine implementations.
 # It is indexed with the platform IDs.
-# The platform-specific comprises just the OS family and name. The only specific
-# routine implementation is getMAC. If, in future, we'll have more
-# platform-specific stuff, then we can refactor the array entries into classes
-# that extend this Environment class.
 my @os_specific = ();
 
 # Undetected platform.
-$os_specific[UNKNOWN] = { family => "UNKNOWN", name => "UNKNOWN" };
-$os_specific[UNKNOWN] = { getMAC =>
-    sub {
-        return "";
+$os_specific[UNKNOWN] = (
+    {
+	family => "UNKNOWN",
+	name => "UNKNOWN",
+	getMAC => sub { return ""; }
     }
-};
+);
 
 # Linux-specific stuff.
-$os_specific[LINUX] = { family => "Linux", name => "UNKNOWN",
-                            distribution => "" };
-$os_specific[LINUX] = { getMAC =>
-    sub {
-        my @ifinfo = `/sbin/ifconfig eth0`;
-        my $macAddr = $ifinfo[0];
-        ($macAddr) = ($macAddr =~ /^.*HWaddr\s(.*[^\s])\s/);
-        chomp($macAddr);
-        return $macAddr;
+$os_specific[LINUX] = (
+    {
+	family => "Linux",
+	name => "UNKNOWN",
+	distribution => "",
+	getMAC => sub {
+	    my @ifinfo = `/sbin/ifconfig eth0`;
+	    my $macAddr = $ifinfo[0];
+	    ($macAddr) = ($macAddr =~ /^.*HWaddr\s(.*[^\s])\s/);
+	    chomp($macAddr);
+
+	    return $macAddr;
+	}
+	adduser => sub {
+	    return undef;
+	    #my @out = `/usr/sbin/useradd -d /tmp -s /bin/false`;
+	}
     }
-};
+);
 
 # Darwin-specific stuff.
-$os_specific[DARWIN] = { family => "Darwin", name => "UNKNOWN" };
-$os_specific[DARWIN] = { getMAC =>
-    sub {
-        my @ifinfo = `/sbin/ifconfig`;
-	@ifinfo = grep(/ether/, @ifinfo);
-	chomp($ifinfo[0]);
-	my ($macAddr) = ($ifinfo[0] =~ /^.*ether\s(.*[^\s]).*/);
-        chomp($macAddr);
-        return $macAddr;
+$os_specific[DARWIN] = (
+    {
+	family => "Darwin",
+	name => "UNKNOWN",
+	getMAC => sub {
+	    my @ifinfo = `/sbin/ifconfig`;
+	    @ifinfo = grep(/ether/, @ifinfo);
+	    chomp($ifinfo[0]);s /bin/false
+	    my ($macAddr) = ($ifinfo[0] =~ /^.*ether\s(.*[^\s]).*/);
+	    chomp($macAddr);
+
+	    return $macAddr;
+	}
     }
-};
+);
 
 # HPUX-specific stuff.
-$os_specific[HPUX] = { family => "HPUX", name => "UNKNOWN" };
-$os_specific[HPUX] = { getMAC =>
-    sub {
-        my @ifinfo = `lanscan`;
-        my $macAddr = $ifinfo[2];
-        $macAddr =~ s/^.*0x([0-9A-F]+).*$/$1/;
-        chomp($macAddr);
-        return $macAddr;
+$os_specific[HPUX] = (
+    {
+	family => "HPUX",
+	name => "UNKNOWN", 
+	getMAC => sub {
+	    my @ifinfo = `lanscan`;
+	    my $macAddr = $ifinfo[2];
+	    $macAddr =~ s/^.*0x([0-9A-F]+).*$/$1/;
+	    chomp($macAddr);
+
+	    return $macAddr;
+	}
     }
-};
+);
 
 # Solaris-specific stuff.
-$os_specific[SOLARIS] = { family => "Solaris", name => "UNKNOWN" };
-$os_specific[SOLARIS] = { getMAC =>
-    sub {
-        my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
-        $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
-        chomp($macAddr);
-        return $macAddr;
+$os_specific[SOLARIS] = (
+    {
+	family => "Solaris",
+	name => "UNKNOWN",
+	getMAC => sub {
+	    my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
+	    $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
+	    chomp($macAddr);
+
+	    return $macAddr;
+	}
     }
-};
+);
 
 # FreeBSD-specific stuff.
-$os_specific[FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
-$os_specific[FREEBSD] = { getMAC =>
-    sub {
-        my @buf = `dmesg`;
-	@buf = grep(/Ethernet address/, @buf);
-	chomp($buf[0]);
-	my ($macAddr) = ($buf[0] =~ /^.*address\s(.*[^\s]).*/);
-        chomp($macAddr);
-        return $macAddr;
+$os_specific[FREEBSD] = (
+    {
+	family => "FreeBSD",
+	name => "UNKNOWN",
+	getMAC => sub {
+	    my @buf = `dmesg`;
+	    @buf = grep(/Ethernet address/, @buf);
+	    chomp($buf[0]);
+	    my ($macAddr) = ($buf[0] =~ /^.*address\s(.*[^\s]).*/);
+	    chomp($macAddr);
+
+	    return $macAddr;
+	}
     }
-};
+);
 
 
 # Private constructor.
@@ -326,32 +347,45 @@ sub deleteTree {
 }
 
 sub apacheUser {
-    my $apacheUser;
+    my $user;
 
     # Grab our Apache user from the password file
     open (PW_FILE, "<", "/etc/passwd") or croak ("Couldn't open /etc/passwd ", $!, ".\n");
     while (<PW_FILE>) {
 	chomp;
-	$apacheUser = (split ":")[0];
-	if ($apacheUser =~ /httpd|apache|www-data|www/) {
+	$user = (split ":")[0];
+	if ($user =~ /httpd|apache|www-data|www/) {
 	    close (PW_FILE);
-	    return $apacheUser;
+	    return $user;
 	}
     }
 
     # We couldn't get the username from the password file so lets ask for it
-    while (not $apacheUser) {
-	$apacheUser = question ("Could not determine Apache user.\nWhat is the unix name that Apache runs under ?: ");
-	if (not getpwname($apacheUser)) {
-	    print "Invalid user \"$apacheUser\"!.";
-	    $apacheUser = undef;
+    while (not $user) {
+	$user = question ("Could not determine Apache user.\nWhat is the unix name that Apache runs under ?: ");
+	if (not getpwname($user)) {
+	    print "Invalid user \"$user\"!.";
+	    $user = undef;
 	}
     }
 
     close (PW_FILE);
 
-    return $apacheUser;
+    return $user;
 }
 
+sub OMEUser {
+    my $self = shift;
 
+    if (! $self->{user}) {
+	$self->{user} = confirm_default ("What username do you want OME to run under ?", "ome");
+	if (not getpwnam($self->{user})) {
+	    print "User does not exist, adding \"$self->{user}\".";
+	    my $adduser = $os_specific[$platform]->{adduser};
+	    $self->{user} = &$adduser ();
+	}
+    }
+    
+    return $self->{user};
+}
 1;
