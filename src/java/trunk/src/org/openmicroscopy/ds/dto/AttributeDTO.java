@@ -75,7 +75,7 @@ public class AttributeDTO
     public AttributeDTO() { super(); }
     public AttributeDTO(Map elements) { super(elements); }
 
-    protected void setMap(Map elements)
+    public void setMap(Map elements)
     {
         super.setMap(elements);
         parseChildElement("dataset",DatasetDTO.class);

@@ -103,7 +103,7 @@ public class MappedDTO
     /**
      * Returns the backing map for this instance.
      */
-    protected Map getMap() { return elements; }
+    public Map getMap() { return elements; }
 
     /**
      * Establishes a new backing map for this instance.  The previous
@@ -113,7 +113,7 @@ public class MappedDTO
      * children objects, this method should be overridden to call
      * {@link #parseListElement} to parse that list into Java objects.)
      */
-    protected void setMap(Map elements) { this.elements = elements; }
+    public void setMap(Map elements) { this.elements = elements; }
 
     /**
      * Helper method for parsing an element which is a child object.
@@ -455,6 +455,33 @@ public class MappedDTO
     protected void setElement(String key, Object value)
     {
         elements.put(key,value);
+    }
+
+    /**
+     * Returns the number of items for the given key, which must be a
+     * {@link List} key.  If the key itself was loaded, the count is
+     * retrieved directly from the List via the <code>size</code>
+     * method.  If not, a <code>#[key]</code> key is searched for,
+     * which should contain the count (allowing the count to be
+     * retrieved from the database without reading the entire list).
+     * If neither exists, a {@link DataException} is thrown.
+     *
+     * @param key the List element of the backing map to retrieve
+     * @return the number of objects in the list
+     * @throws DataException if the specified key does not exist in
+     * the backing map
+     */
+    protected int countListElement(String key)
+    {
+        if (elements.containsKey(key))
+        {
+            List list = (List) elements.get(key);
+            return list.size();
+        } else if (elements.containsKey("#"+key)) {
+            return getIntElement("#"+key);
+        } else {
+            throw new DataException("The "+key+" field was not loaded");
+        }
     }
 
 }
