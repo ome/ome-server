@@ -76,7 +76,7 @@ Usage:
 	    $script $command_name <analysis chain id> <dataset id> [<options>]
 Options:
 
-known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n";
+known flags are: ReuseResults, DebugDefault, DebugTiming, Cached. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n
 USAGE
     CORE::exit(1);
 }
@@ -84,13 +84,15 @@ USAGE
 sub handleCommand {
 	my ($self,$help,$supercommands) = @_;
 	if ($help) {
-		execute_help();
+		$self->execute_help($supercommands);
 	} else {
-		execute();
+		$self->execute();
 	}
 }
 
 sub execute {
+my $self = shift;
+
 	print "\nOME Test Case - Execute Analysis Chain\n";
 	print "----------------------------\n";
 	
