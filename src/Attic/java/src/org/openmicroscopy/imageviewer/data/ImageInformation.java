@@ -45,6 +45,10 @@ import org.openmicroscopy.imageviewer.util.*;
 import org.openmicroscopy.remote.*;
 
 /**
+ * Contains basic information about a 5D image, including number of Z levels,
+ * number of timeframes, channels, bits per pixel, and color normalization
+ * statistics.  (May rely too much on the OME::Remote factory methods, though.)
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * @version $Revision$ $Date$
  */
@@ -69,6 +73,16 @@ public class ImageInformation
   
   protected Map cbsMap;
   
+  /**
+   * Constructs an image information class based on the 5D image source, and the
+   * individual set of pixels desired in that image.  Needs Factory to query
+   * the database about statistics.  (this might not be a good thing)
+   * 
+   * @param imageSource The image to store information about.
+   * @param pixels The pixel source of the image.
+   * @param dataSource The factory used to access the OME database.  Is there
+   *                   a better way to do this?
+   */
   public ImageInformation(Image imageSource,
                           ImagePixels pixels,
                           Factory dataSource)
@@ -87,6 +101,8 @@ public class ImageInformation
                                                        
     final int pixelsID = pixelsAttribute.getID();
     
+    // this taken straight out of the SVG viewer code
+    // might be a faster/better/less OME-call-intensive way to do it
     channelComponents = Filter.grep(channelComponents,new GrepOperator() {
       public boolean eval(Object o)
       {
@@ -106,7 +122,7 @@ public class ImageInformation
     CBS = ChannelBlackScaleData.getDefaultChannelScale(channelInfo);
     cbsMap = new HashMap();
     
-    // hopefully this shit doesn't break right here
+    // hopefully this doesn't break right here
     
     
     // extract the proper stack statistics for this image,
@@ -140,6 +156,7 @@ public class ImageInformation
                             
     final int stackAnalysisID = actualInput.getModuleExecution().getID();
     
+    // retrieve statistics
     List stackMins = dataSource.findAttributes("StackMinimum",imageSourceMap);
     List stackMaxes = dataSource.findAttributes("StackMaximum",imageSourceMap);
     List stackMeans = dataSource.findAttributes("StackMean",imageSourceMap);
@@ -186,6 +203,7 @@ public class ImageInformation
       }
     }
     
+    // populate internal data structures
     for(Iterator iter = usableMins.iterator(); iter.hasNext();)
     {
       Attribute stackMin = (Attribute)iter.next();
@@ -235,71 +253,147 @@ public class ImageInformation
     }
   }
   
+  /**
+   * Get the width (extent) of the image in pixels.
+   * 
+   * @return The image width.
+   */
   public int getDimX()
   {
     return sizeX;
   }
   
+  /**
+   * Get the height of the image in pixels.
+   * @return The image height.
+   */
   public int getDimY()
   {
     return sizeY;
   }
   
+  /**
+   * Get the depth of the image in levels.
+   * @return The image depth.
+   */
   public int getDimZ()
   {
     return sizeZ;
   }
   
+  /**
+   * Get the number of channels encapsulated in the image.
+   * @return The number of channels
+   */
   public int getDimC()
   {
     return sizeC;
   }
   
+  /**
+   * Get the number of time frames in the image.
+   * @return The number of frames.
+   */
   public int getDimT()
   {
     return sizeT;
   }
   
+  /**
+   * Get the number of bits per pixel (grayscale, unchanged by conversion)
+   * @return The number of bits per pixel.
+   */
   public int getBitsPerPixel()
   {
     return bitsPerPixel;
   }
   
+  /**
+   * Gets the stack minimum value of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack minimum.
+   */
   public int getStackMin(int c, int t)
   {
     return stackStats[c][t].getMin();
   }
   
+  /**
+   * Gets the stack maximum value of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack maximum.
+   */
   public int getStackMax(int c, int t)
   {
     return stackStats[c][t].getMax();
   }
   
+  /**
+   * Gets the stack arithmetic mean brightness value of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack mean.
+   */
   public float getStackMean(int c, int t)
   {
     return stackStats[c][t].getMean();
   }
   
+  /**
+   * Gets the stack arithmetic brightness sigma value of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack sigma.
+   */
   public float getStackSigma(int c, int t)
   {
     return stackStats[c][t].getSigma(); 
   }
   
+  /**
+   * Gets the stack geometric mean brightness value of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack geomean.
+   */
   public float getStackGeoMean(int c, int t)
   {
     return stackStats[c][t].getGeoMean();
   }
   
+  /**
+   * Gets the stack geometric brightness sigma of the specified XYZ slice.
+   * 
+   * @param c The desired channel.
+   * @param t The desired timeframe.
+   * @return The stack geometric sigma.
+   */
   public float getStackGeoSigma(int c, int t)
   {
     return stackStats[c][t].getGeoSigma();
   }
   
+  /**
+   * Gets the number of logical channels.
+   * @return The number of channels.
+   */
   public int numChannels()
   {
     return channelInfo.length;
   }
   
+  /**
+   * Gets the wavelength information associated with the specified channel.
+   * @param i The channel to analyze.
+   * @return Wavelength information for that channel.
+   */
   public Wavelength getChannelInfo(int i)
   {
     return channelInfo[i];
