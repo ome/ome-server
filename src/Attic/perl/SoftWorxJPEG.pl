@@ -35,7 +35,6 @@ if ($cgi->url_param('JPEG')) {
 } else {
 	DrawForm ($datasetID);
 }
-$OME->Finish();
 
 
 sub DrawForm {
@@ -400,6 +399,7 @@ $datasetJS
 	my $JPEG_URL = $cgi->self_url.';JPEG=1;baslkdas=12,234,234';
 	print qq (<img name='theImage' src="$JPEG_URL" align="right">);
 	print $cgi->end_html();
+	$OME->Finish();
 }
 
 # MakeJSdataset
