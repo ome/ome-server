@@ -441,7 +441,7 @@ public class Connection {
 	}
 	
 	public void doGetThumbnail(final CImage i) {
-		final SwingWorker worker = new SwingWorker() {
+		final SwingWorker worker = new SwingWorker() { 
 			BufferedImage image = null;
 			public Object construct() {
 				try {
@@ -451,18 +451,19 @@ public class Connection {
 				    Attribute att = i.getDefaultPixels();
 				    int id = att.getIntElement("ImageServerID");
 					image = thumbnails.getThumbnail(id);
+					i.setImageData(image);
 				}
 				catch (Exception e) {
 					e.printStackTrace();
 				}
 				return image;
-			}
+			} 
 			
 			public void finished() {
-				i.setImageData(image);
+				
 			}
 		};
-		worker.start();
+		worker.start(); 
 	}
 	
 	public List getCategories(CImage image) {
