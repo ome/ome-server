@@ -309,6 +309,11 @@ sub execute {
 	chmod (0755,"$cgiBin/OME_JPEG") or croak "Could not chmod $cgiBin/OME_JPEG:\n$!\n";
 	chown ($APACHE_UID,$OME_GID,"$cgiBin/OME_JPEG") or croak "Could not chown $cgiBin/OME_JPEG:\n$!\n";
     
+	my $OMEIS = 'src/C/omeis/omeis';
+	copy ($OMEIS,$cgiBin) or croak "Could not copy $OMEIS to $cgiBin:\n$!\n";
+	chmod (0755,"$cgiBin/omeis") or croak "Could not chmod $cgiBin/omeis:\n$!\n";
+	chown ($APACHE_UID,$OME_GID,"$cgiBin/omeis") or croak "Could not chown $cgiBin/omeis:\n$!\n";
+    
     
     #********
     #******** Copy index.html?
