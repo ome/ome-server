@@ -73,6 +73,22 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 Delete Image from database
 
+=head2 getAllImages ()
+
+	my @images = $imageManager->getAllImages();
+
+Get all the images in the database.
+
+=head2 getUserImages ($experimenter)
+
+	my @user_images = $imageManager->getUserImages();
+	my @other_user_images = $imageManager->getUserImages(
+		$other_experimenter
+	);
+
+Get all the images related to an experimenter.
+
+Note: The method uses the Session's experimenter as a filter if none is specified.
 
 =head2 listMatching ($ref,$used,$datasetID)
 datasetID (optional) if not defined dataset=current dataset
@@ -145,6 +161,28 @@ sub delete{
 	#return $rep;
 	return $result;
 	
+}
+
+#################
+# Parameters: (void)
+# 	
+sub getAllImages {
+	my $self = shift;
+	my $factory = $self->Session()->Factory();
+
+	return $factory->findObjects("OME::Image");
+};
+
+#################
+# Parameters: (experimenter object)
+#
+sub getUserImages {
+	my ($self, $experimenter) = shift;
+	my $factory = $self->Session()->Factory();
+
+	$experimenter = $self->Session()->User() unless defined $experimenter;
+
+	return $factory->findObjects("OME::Image", experimenter_id => $experimenter->id());
 }
 
 
@@ -639,6 +677,7 @@ sub usedDatasetImage{
 	return (\%gpImages,\%userImages);
 }
 
+sub Session { return OME::Session->instance() }
 
 sub do_delete{
 	my ($table,$condition,$db)=@_;

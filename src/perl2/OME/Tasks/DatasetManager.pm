@@ -134,15 +134,32 @@ Note: The method adds the dataset to the active project ($session->project()) if
 
 Delete a dataset and update OME session if the dataset is the current dataset. If the user doesn't have another dataset, set the current dataset to undefined, otherwise set the first (arbitrary in the dataset list) dataset to the current dataset.
 
-=head2 exist ($name)
+=head2 getAllDatasets ()
 
-	if ($datasetManager->exist('My unique name')) {
+	my @datasets = $datasetManager->getAllDatasets();
+
+Get all the datasets in the database.
+
+=head2 getUserDatasets ($experimenter)
+
+	my @user_datasets = $datasetManager->getUserDatasets();
+	my @other_user_datasets = $datasetManager->getUserDatasets(
+		$other_experimenter
+	);
+
+Get all the datasets related to an experimenter.
+
+Note: The method uses the Session's experimenter as a filter if none is specified.
+
+=head2 nameExists ($name)
+
+	if ($datasetManager->nameExists('My unique name')) {
 		...
 	} else {
 		...
 	}
 
-Returns successful (1) or unsuccessful (undef) based on the dataset name being in the DB.
+Returns successful (1) or unsuccessful (0) based on the dataset name being in the DB.
 
 =head2 imageNotIn ($array_ref,$datasetID)
 
@@ -362,6 +379,29 @@ sub create{
 	return $dataset;
 
 }
+
+#################
+# Parameters: (void)
+# 	
+sub getAllDatasets {
+	my $self = shift;
+	my $factory = $self->Session()->Factory();
+
+	return $factory->findObjects("OME::Dataset");
+};
+
+#################
+# Parameters: (experimenter object)
+#
+sub getUserDatasets {
+	my ($self, $experimenter) = shift;
+	my $factory = $self->Session()->Factory();
+
+	$experimenter = $self->Session()->User() unless defined $experimenter;
+
+	return $factory->findObjects("OME::Dataset", owner_id => $experimenter->id());
+}
+
 ################
 # Paramaters
 #	name= 
@@ -458,14 +498,14 @@ sub delete{
 #################
 # Parameters:
 #	name = project's name
-# Return: 1 or undef
+# Return: 1 or 0
 
-sub exist{
+sub nameExists{
 	my $self=shift;
 	my $session=$self->Session();
 	my ($name)=@_;
 	my @list=$session->Factory()->findObjects("OME::Dataset",'name'=>$name);
-	return scalar(@list)==0?1:undef;
+	return scalar(@list) > 0 ? 1 : 0;
 
 
 }

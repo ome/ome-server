@@ -107,9 +107,26 @@ Delete a project and update OME session if the project is the current project.
 
 Note: If the user doesn't have another project, the current active project and dataset are set to undefined. Otherwise the first arbitrary project and/or dataset are set to active.
 
-=head2 exist ($name)
+=head2 getAllProjects ()
 
-	if ($projectManager->exist("A really good project name") {
+	my @projects = $projectManager->getAllProjects();
+
+	Get all the projects in the database.
+
+=head2 getUserProjects ($experimenter)
+
+	my @user_projects = $projectManager->getUserProjects();
+	my @other_user_projects = $projectManager->getUserProjects(
+		$other_experimenter
+	);
+
+	Get all the projects owned by a given user.
+
+Note: By default this method uses the Session's experimenter as a filter.
+
+=head2 nameExists ($name)
+
+	if ($projectManager->nameExists("A really good project name") {
 		...
 
 	} else {
@@ -119,7 +136,7 @@ Note: If the user doesn't have another project, the current active project and d
 
 Check if a given project name already exists in the database.
 
-Returns successful (1) or unsuccessful (undef) in matching.
+Returns successful (1) or unsuccessful (0) in matching.
 
 =head2 listMatching ($userID,$array_ref)
 	
@@ -209,6 +226,27 @@ sub add{
 }
 
 
+#################
+# Parameters: (void)
+# 	
+sub getAllProjects {
+	my $self = shift;
+	my $factory = $self->Session()->Factory();
+
+	return $factory->findObjects("OME::Project");
+};
+
+#################
+# Parameters: (experimenter object)
+#
+sub getUserProjects {
+	my ($self, $experimenter) = shift;
+	my $factory = $self->Session()->Factory();
+
+	$experimenter = $self->Session()->User() unless defined $experimenter;
+
+	return $factory->findObjects("OME::Project", owner_id => $experimenter->id());
+}
 
 #################
 # Parameters
@@ -339,15 +377,15 @@ sub delete{
 
 ################
 # Parameters:
-#	name = project's name
-# Return: 1 or undef
+# name = project's name
+# Return: 1 or 0
 
-sub exist{
+sub nameExists {
 	my $self=shift;
 	my $session=$self->Session();
 	my ($name)=@_;
 	my @list=$session->Factory()->findObjects("OME::Project",'name'=>$name);
-	return scalar(@list)==0?1:undef;
+	return scalar(@list) > 0 ? 1 : 0;
 }
 
 
