@@ -87,9 +87,9 @@ sub confirm_path {
 }
 
 sub confirm_default {
-    my ($text, $default) = @_; 
+    my ($text, $default) = @_;
 
-    print "$text ", BOLD, "[$default]", RESET, ": ";
+    print "$text ", BOLD, $default ? "[$default]" : "[undefined]", RESET, ": ";
     my $input = ReadLine 0;
     chomp $input;
     ($input = $default) unless length $input;
