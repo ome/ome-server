@@ -1,4 +1,3 @@
-
 /*
  * org.openmicroscopy.vis.piccolo.PDatasetLabelText
  *
@@ -31,10 +30,10 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
-import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import org.openmicroscopy.vis.ome.CDataset;
-import edu.umd.cs.piccolo.nodes.PText;
-import java.awt.Color;
+import org.openmicroscopy.vis.ome.CChain;
+import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.PLayer;
 import java.util.Collection;
 
 /** 
@@ -45,49 +44,35 @@ import java.util.Collection;
  * @version 2.1
  * @since OME2.1
  */
-public class PDatasetLabelText extends PText  implements SelectionEventListener{
+public class PDatasetLabelText extends PRemoteObjectLabelText { 
 	
-	private static final Color ACTIVE_COLOR= new Color(100,0,100,255);
-	private static final Color SELECTED_COLOR = new Color(175,0,175,255);
-	private static final Color BASE_COLOR = Color.BLACK;
-	
-	
-	private boolean active = false;
-	private boolean selected = false;
-	private Color curColor;
-	private SelectionState selectionState;
+
 	private CDataset dataset;
 	
-	public PDatasetLabelText(CDataset ds,SelectionState selectionState) {
-		super(ds.getLabel());
+	private PExecutionList executionList;
+	
+	public PDatasetLabelText(CDataset ds) {
+		super();
+		buildString(PConstants.ITEM_LABEL_SCALE,ds.getLabel());
 		this.dataset = ds;
-		this.selectionState = selectionState;
+		SelectionState selectionState = SelectionState.getState();
+		
 		if (selectionState != null) 
 			selectionState.addSelectionEventListener(this);
-		setScale(PConstants.ITEM_LABEL_SCALE);
-		setFont(PConstants.LABEL_FONT);
 		setColor();
 	}
 	
-	public void setActive(boolean v) {
-		active = v;
+	public CDataset getDataset() {
+		return dataset;
 	}
 	
-	public void setSelected(boolean v) {
-		selected =v;
-	}
-	
-	private void setColor() {
-		if (active == true) 
-			curColor = ACTIVE_COLOR;
-		else if (selected == true)
-			curColor = SELECTED_COLOR;
-		else
-			curColor = BASE_COLOR;
-		setPaint(curColor);
-	}
 	
 	public void selectionChanged(SelectionEvent e) {
+		System.err.println("selection event in dataset label");
+		SelectionState selectionState = e.getSelectionState();
+		System.err.println("dataset is "+dataset.getID());
+		if (selectionState.getSelectedDataset() != null) 
+			System.err.println("selected is "+selectionState.getSelectedDataset().getID());
 		Collection sets = selectionState.getActiveDatasets();
 		if (selectionState.getSelectedDataset() == dataset) {
 			setActive(false);
@@ -105,7 +90,54 @@ public class PDatasetLabelText extends PText  implements SelectionEventListener{
 	} 
 	
 	public  void doSelection() {
+		SelectionState selectionState = SelectionState.getState();
 		System.err.println("dataset ..+ is being selected.."+dataset.getName());
 		selectionState.setSelectedDataset(dataset);
+	}
+	
+	// try to find the chain box that this is in.
+	
+	private PChainBox getChainBox() {
+		PNode parent = getParent();
+		if (parent == null) {
+			System.err.println("parent is null..");
+			return null;
+		}
+		// parent should be pdatasetLabels
+		if (!(parent instanceof PDatasetLabels)) {
+			System.err.println("parent is not pdatasetlabels.."+parent);
+			return null;
+		}
+		
+		PDatasetLabels labels  = (PDatasetLabels) parent;
+		
+		parent = labels.getParent();
+		if (parent == null) {
+			System.err.println("grandparent is null..");
+			return null;
+		}
+		if (!(parent instanceof PLayer)) {
+			System.err.println("parent is not a layer..."+parent);
+			return null;
+		}
+		
+		parent = parent.getParent();
+		if (parent == null) 
+			return null;
+		if (!(parent instanceof PChainBox))
+			return null;
+		return (PChainBox) parent;
+		
+	}
+	
+	public PExecutionList getExecutionList() {
+		if (executionList == null) {
+			CDataset dataset = getDataset();
+			PChainBox cb = getChainBox();
+			CChain chain = cb.getChain();
+			executionList = 
+				new PExecutionList(dataset,chain,PConstants.ITEM_LABEL_SCALE);
+		}
+		return executionList;
 	}
 }
