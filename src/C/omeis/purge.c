@@ -83,9 +83,9 @@ int theArg;
 	if (theArg < argc) {
 		while (theArg < argc) {
 			if (strrchr(argv[theArg],'/')) {
-				sscanf (strrchr(argv[theArg],'/')+1,"%llu",&((unsigned long long)theID));
+				theID = strtoull(strrchr(argv[theArg],'/')+1, NULL, 10);
 			} else {
-				sscanf (argv[theArg],"%llu",&((unsigned long long)theID));
+				theID = strtoull(argv[theArg], NULL, 10);
 			}
 			if (theID != 0) PurgePixels (theID);
 			theArg++;

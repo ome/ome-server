@@ -448,7 +448,7 @@ int theArg;
 	theArg = 2;
 	if (theArg < argc) {
 		while (theArg < argc) {
-			sscanf (argv[theArg],"%llu",&((unsigned long long)theID));
+			theID = strtoull(argv[theArg], NULL, 10);
 			if (theID != 0) fix_header (theID);
 			theArg++;
 		}
