@@ -72,6 +72,13 @@ public class CChain extends RemoteChain  {
 	 */
 	private Layering layering  = new Layering();
 	
+	/**
+	 * A flag indicating whether or not this chain has any executions for 
+	 * the current dataset
+	 *
+	 */
+	private boolean executedInCurrentDataset = false;
+	
 	public CChain() {
 		super();
 	}
@@ -79,6 +86,7 @@ public class CChain extends RemoteChain  {
 	public CChain(RemoteSession session,String reference) {
 		super(session,reference);
 	}
+	
 	
 	
 	public void layout() {
@@ -595,4 +603,18 @@ public class CChain extends RemoteChain  {
 			v.setElementAt(node,n);
 		}
 	}
+	/**
+	 * @return true if this chain has an execution in the current dataset
+	 */
+	public boolean hasExecutionsInCurrentDataset() {
+		return executedInCurrentDataset;
+	}
+
+	/**
+	 * @param b true if this chain has an execution in this dataset
+	 */
+	public void setExecutedInCurrentDataset(boolean b) {
+		executedInCurrentDataset = b;
+	}
+
  }
