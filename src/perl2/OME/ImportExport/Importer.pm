@@ -538,7 +538,7 @@ sub store_xyz_info {
                   });
 
     if (!defined $view) {
-        carp "The image import module_execution chain is not defined.  Skipping predefined analyses...";
+        carp "The image import analysis chain is not defined.  Skipping predefined analyses...";
         return "";
     }
 
