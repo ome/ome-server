@@ -68,7 +68,6 @@ public abstract class ChainFrameBase extends JFrame {
 	protected PCanvas canvas;
 	
 	private MenuBar menuBar;
-	private ToolBar toolBar;
 	
 	public ChainFrameBase(Controller controller,Connection connection,
 		String title){
