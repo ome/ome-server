@@ -58,58 +58,23 @@
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-    <SemanticType Name="PlaneHistNumBins" AppliesTo="I">
-      <Element Name="TheZ"     DBLocation="PLANE_HIST_INFO.THE_Z"     DataType="integer"/>
-      <Element Name="TheC"     DBLocation="PLANE_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="PLANE_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="NumBins"  DBLocation="PLANE_HIST_INFO.NUM_BINS"  DataType="integer"/>
-	</SemanticType>
-	
-	<SemanticType Name="PlaneHistLowBound" AppliesTo="I">
-      <Element Name="TheZ"     DBLocation="PLANE_HIST_INFO.THE_Z"     DataType="integer"/>
-      <Element Name="TheC"     DBLocation="PLANE_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="PLANE_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="LowBound" DBLocation="PLANE_HIST_INFO.LOW_BOUND" DataType="float"/>
-	</SemanticType>
-	
-	<SemanticType Name="PlaneHistUppBound" AppliesTo="I">
-      <Element Name="TheZ"     DBLocation="PLANE_HIST_INFO.THE_Z"     DataType="integer"/>
-      <Element Name="TheC"     DBLocation="PLANE_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="PLANE_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="UppBound" DBLocation="PLANE_HIST_INFO.UPP_BOUND" DataType="float"/>
+    <SemanticType Name="PlaneHistogram" AppliesTo="I">
+      <Element Name="TheZ"     DBLocation="PLANE_HIST.THE_Z"     DataType="integer"/>
+      <Element Name="TheC"     DBLocation="PLANE_HIST.THE_C"     DataType="integer"/>
+      <Element Name="TheT"     DBLocation="PLANE_HIST.THE_T"     DataType="integer"/>
+      <Element Name="NumBins"  DBLocation="PLANE_HIST.NUM_BINS"  DataType="integer"/>
+      <Element Name="LowBound" DBLocation="PLANE_HIST.LOW_BOUND" DataType="float"/>
+      <Element Name="UppBound" DBLocation="PLANE_HIST.UPP_BOUND" DataType="float"/>
+      <Element Name="Bins"     DBLocation="PLANE_HIST.BINS" DataType="string"/>
     </SemanticType>
     
-    <SemanticType Name="PlaneHistBins" AppliesTo="I">
-      <Element Name="TheZ"     DBLocation="PLANE_HIST_BINS.THE_Z"     DataType="integer"/>
-      <Element Name="TheC"     DBLocation="PLANE_HIST_BINS.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="PLANE_HIST_BINS.THE_T"     DataType="integer"/>
-      <Element Name="BinIndex" DBLocation="PLANE_HIST_BINS.BIN_INDEX" DataType="integer"/>
-      <Element Name="BinCount" DBLocation="PLANE_HIST_BINS.BIN_COUNT" DataType="integer"/>
-    </SemanticType>
-	
-    <SemanticType Name="StackHistNumBins" AppliesTo="I">
-      <Element Name="TheC"     DBLocation="STACK_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="STACK_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="NumBins"  DBLocation="STACK_HIST_INFO.NUM_BINS"  DataType="integer"/>
-	</SemanticType>
-	
-	<SemanticType Name="StackHistLowBound" AppliesTo="I">
-      <Element Name="TheC"     DBLocation="STACK_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="STACK_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="LowBound" DBLocation="STACK_HIST_INFO.LOW_BOUND" DataType="float"/>
-	</SemanticType>
-	
-	<SemanticType Name="StackHistUppBound" AppliesTo="I">
-      <Element Name="TheC"     DBLocation="STACK_HIST_INFO.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="STACK_HIST_INFO.THE_T"     DataType="integer"/>
-      <Element Name="UppBound" DBLocation="STACK_HIST_INFO.UPP_BOUND" DataType="float"/>
-    </SemanticType>
-    
-    <SemanticType Name="StackHistBins" AppliesTo="I">
-      <Element Name="TheC"     DBLocation="STACK_HIST_BINS.THE_C"     DataType="integer"/>
-      <Element Name="TheT"     DBLocation="STACK_HIST_BINS.THE_T"     DataType="integer"/>
-      <Element Name="BinIndex" DBLocation="STACK_HIST_BINS.BIN_INDEX" DataType="integer"/>
-      <Element Name="BinCount" DBLocation="STACK_HIST_BINS.BIN_COUNT" DataType="integer"/>
+     <SemanticType Name="StackHistogram" AppliesTo="I">
+      <Element Name="TheC"     DBLocation="STACK_HIST.THE_C"     DataType="integer"/>
+      <Element Name="TheT"     DBLocation="STACK_HIST.THE_T"     DataType="integer"/>
+      <Element Name="NumBins"  DBLocation="STACK_HIST.NUM_BINS"  DataType="integer"/>
+      <Element Name="LowBound" DBLocation="STACK_HIST.LOW_BOUND" DataType="float"/>
+      <Element Name="UppBound" DBLocation="STACK_HIST.UPP_BOUND" DataType="float"/>
+      <Element Name="Bins"     DBLocation="STACK_HIST.BINS" DataType="string"/>
     </SemanticType>
     
 </STD:SemanticTypeDefinitions>
@@ -133,10 +98,7 @@
 
 	<Declaration>
 	  <FormalInput  Name="Pixels"            SemanticTypeName="Pixels"            Count="!"/>
-	  <FormalOutput Name="PlaneHistNumBins"  SemanticTypeName="PlaneHistNumBins"  Count="+"/>
-	  <FormalOutput Name="PlaneHistLowBound" SemanticTypeName="PlaneHistLowBound" Count="+"/>
-	  <FormalOutput Name="PlaneHistUppBound" SemanticTypeName="PlaneHistUppBound" Count="+"/>
-	  <FormalOutput Name="PlaneHistBins"     SemanticTypeName="PlaneHistBins"     Count="+"/>
+	  <FormalOutput Name="PlaneHistogram"    SemanticTypeName="PlaneHistogram"    Count="+"/>
 	</Declaration>
   </AnalysisModule>
   
@@ -152,11 +114,8 @@
     </Description>
 
 	<Declaration>
-	  <FormalInput  Name="Pixels"            SemanticTypeName="Pixels"            Count="!"/>
-	  <FormalOutput Name="StackHistNumBins"  SemanticTypeName="StackHistNumBins"  Count="+"/>
-	  <FormalOutput Name="StackHistLowBound" SemanticTypeName="StackHistLowBound" Count="+"/>
-	  <FormalOutput Name="StackHistUppBound" SemanticTypeName="StackHistUppBound" Count="+"/>
-	  <FormalOutput Name="StackHistBins"     SemanticTypeName="StackHistBins"     Count="+"/>
+	  <FormalInput  Name="Pixels"         SemanticTypeName="Pixels"         Count="!"/>
+	  <FormalOutput Name="StackHistogram" SemanticTypeName="StackHistogram" Count="+"/>
 	</Declaration>
   </AnalysisModule>
   
