@@ -24,17 +24,12 @@
  *------------------------------------------------------------------------------
  */
 
-
-
-
 /*------------------------------------------------------------------------------
  *
  * Written by:	Josiah Johnston <siah@nih.gov>    
  * 
  *------------------------------------------------------------------------------
  */
-
-
 
 /******************************************************************************
 
@@ -47,8 +42,6 @@
 	YOU MUST INSTALL libxml2 BEFORE THIS WILL COMPILE.
 	It also uses zlib and bzip2 compression libraries.
 
-	Behavior: 
-
 ******************************************************************************/
 
 
@@ -60,7 +53,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "xmlBinaryResolution.h"
-#include "fopen.h"
+//#include "fopen.h"
+#include "../base64.h"
+#include "../b64z_lib.h"
+#include "Pixels.h"
 
 /******************************************************************************
 *
@@ -78,6 +74,75 @@ const char *pixelTypes[]            = { "int8", "int16", "int32", "Uint8", "Uint
 const unsigned char bytesPerPixel[] = {   1,     2,       4,       1,       2,        4,        4,      0 };
 const char typeIsSigned[]           = {   1,     1,       1,       0,       0,        0,        1,      0 };
 const char typeIsFloat[]            = {   0,     0,       0,       0,       0,        0,        1,      0 };
+
+/* This is a stack to keep track of
+/ whether an element has content or is empty AND
+/ whether the opening tag of the element is open (e.g. "<foo" is open, 
+/ "<foo>" and "<foo/>" are not). It is used for every element except BinData.
+*/
+typedef struct _elementInfo {
+	int hasContent;
+	int tagOpen;
+	struct _elementInfo *prev;
+} StructElementInfo;
+
+/* <BinData> stuff */
+typedef struct {
+/* omeis transition: fd instead of fp */
+	FILE *BinDataOut;
+	char *compression;
+	b64z_stream *strm;
+} BinDataInfo;
+
+/* Possible states */
+typedef enum {
+	PARSER_START,
+	IN_BINDATA,
+	IN_PIXELS,
+	IN_BINFILE,
+	IN_BINDATA_UNDER_PIXELS,
+	IN_BINDATA_UNDER_BINFILE,
+} PossibleParserStates;
+
+/* <Pixels> info */
+typedef struct {
+	/* dimensions of pixel array. C is channels. */
+	int X,Y,Z,C,T;
+	/* bytes per pixel */
+	unsigned char bpp;
+	char isSigned, isFloat;
+	/* indexes to store current plane */
+	int theZ, theC, theT;
+	int bigEndian;
+	char *dimOrder;
+	/* pixelType is not used, but maybe it will come in handy in a later incarnation of this code */
+	char *pixelType;
+	int hitBinData;
+	unsigned char *binDataBuf;
+	unsigned int planeSize;
+	PixelsRep *pixWriter;
+} PixelInfo;
+
+
+/* <BinFile> info */
+typedef struct {
+	OID FileID;
+	off_t size;
+	char name[65];
+	int fd;
+	/* sh_mmap gets memory mapped to the file on disk */
+	unsigned char *sh_mmap;
+} BinFileInfo;
+
+/* Contains all the information about the parser's state */
+typedef struct {
+	PossibleParserStates state;
+	int nOutputFiles;
+	PixelInfo *pixelInfo;
+	BinFileInfo BinFileInfo;
+	StructElementInfo* elementInfo;
+	BinDataInfo *binDataInfo;
+} ParserState;
 
 /******************************************************************************
 *
@@ -337,7 +402,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		assert( state->pixelInfo != NULL);
 		if(attrs == NULL) {
 			fprintf( stderr, "Error! Pixels element has no attributes!\n" );
-			exit(-1);
+			assert( attrs != NULL);
 		}
 		state->pixelInfo->X = 0;
 		state->pixelInfo->Y = 0;
@@ -379,7 +444,11 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		    state->pixelInfo->T == 0 || state->pixelInfo->dimOrder == NULL ||
 		    state->pixelInfo->pixelType == NULL || state->pixelInfo->bigEndian == -1 ) {
 			fprintf( stderr, "Error! Pixels element does not have all required attributes!\n" );
-			exit(-1);
+			assert( state->pixelInfo->X != 0 && state->pixelInfo->Y != 0 &&
+			        state->pixelInfo->Z != 0 && state->pixelInfo->C != 0 &&
+		            state->pixelInfo->T != 0 && state->pixelInfo->dimOrder != NULL &&
+		            state->pixelInfo->pixelType != NULL && state->pixelInfo->bigEndian != -1
+			);
 		}
 		
 		/* look up info for this pixel type */
@@ -393,7 +462,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		}
 		if( pixelTypes[i] == NULL ) {
 			fprintf( stderr, "Error! unknown or unsupported PixelType (%s)\n", state->pixelInfo->pixelType );
-			exit(-1);
+			assert( pixelTypes[i] != NULL);
 		}
 		
 		/*
@@ -426,7 +495,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 			state->pixelInfo->isFloat );
 		if ( state->pixelInfo->pixWriter == NULL ) {
 			fprintf( stderr, "Error! NewPixels returned NULL!\n" );
-			exit(-1);
+			assert ( state->pixelInfo->pixWriter != NULL );
 		}
 		
 
@@ -457,7 +526,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		/* Extract data from xml attributes. */
 		if(attrs == NULL) {
 			fprintf( stderr, "Error! BinFile element has no attributes!\n" );
-			exit(-1);
+			assert(-1);
 		}
 		state->BinFileInfo.size = 0;
 		*(state->BinFileInfo.name) = 0;
@@ -473,7 +542,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 /*		state->BinFileInfo.fd = NewFile (&( state->BinFileInfo.ID ),state->BinFileInfo.name,state->BinFileInfo.size);
 		if (state->BinFileInfo.fd < 0) {
 			fprintf( stderr, "Couldn't get a repository file.");
-			exit(-1);
+			assert(state->BinFileInfo.fd >= 0);
 		}
 		state->nOutputFiles++;
 */
@@ -591,7 +660,7 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 			state->pixelInfo->theT );
 		if( (unsigned int) nPix * state->pixelInfo->bpp != state->pixelInfo->planeSize ) {
 			fprintf( stderr, "Error! tried to write a plane. expected to write %u bytes, actually wrote %u bytes!\n", state->pixelInfo->planeSize, (unsigned int) nPix );
-			exit(-1);
+			assert((unsigned int) nPix * state->pixelInfo->bpp == state->pixelInfo->planeSize);
 		}
 
 	 	/* logic to increment indexes based on dimOrder */
@@ -753,7 +822,7 @@ static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch,
 			writtenOut = fwrite( buf, 1, outLen, state->binDataInfo->BinDataOut );
 			if( writtenOut != outLen ) {
 				fprintf( stderr, "Error! Could not write full output to file! Wrote %u, expected %u.\n", (unsigned int) writtenOut, (unsigned int) outLen );
-				exit(-1);
+				assert(writtenOut == outLen);
 			}
 	
 			state->binDataInfo->strm->avail_out = SIZEOF_FILE_OUT_BUF;
@@ -771,7 +840,7 @@ static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch,
 		 	rC = b64z_decode( state->binDataInfo->strm );
 		 	if( state->binDataInfo->strm->avail_out == 0 && rC != B64Z_STREAM_END ) {
 		 		fprintf( stderr, "Error! Uncompressed contents of a <BinData> under <Pixels> are larger than the size of a plane.\n" );
-		 		exit(-1);
+		 		assert(state->binDataInfo->strm->avail_out != 0 || rC == B64Z_STREAM_END);
 		 	}
 		} while( rC != B64Z_STREAM_END );
 		
