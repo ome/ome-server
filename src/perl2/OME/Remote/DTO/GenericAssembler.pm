@@ -84,6 +84,30 @@ arbitrary DTO's from internal DBObjects
 
 =cut
 
+sub getDataClass {
+    my ($proto,$object_type) = @_;
+
+    my $class;
+    if ($object_type =~ /^\@(\w+)$/) {
+        my $st_name = $1;
+        my $factory = OME::Session->instance()->Factory();
+        my $type = $factory->
+          findObject('OME::SemanticType',name => $st_name);
+        die "Unknown semantic type $st_name"
+          unless defined $type;
+        $class = $type->requireAttributeTypePackage();
+        die "Error loading semantic type package for $st_name"
+          unless defined $class;
+    } else {
+        $class = $DATA_CLASSES{$object_type};
+        die "Unknown object type $object_type"
+          unless defined $class;
+    }
+
+    OME::Factory->__checkClass($class);
+    return $class;
+}
+
 sub __massageFieldsWanted ($) {
     my $fields_wanted = shift;
 
@@ -154,6 +178,22 @@ sub __genericDTO {
         }
     }
 
+    # Every object had better have its ID.
+    $dto->{id} = $object->id()
+      if (UNIVERSAL::can($object,"id"));
+
+    # Every attribute had better have its semantic type.  If the user
+    # doesn't specify what part of the semantic type, they get the ID
+    # and name.
+
+    if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass")) {
+        my $st_prefix = "${prefix}.semantic_type";
+        my $st = $object->semantic_type();
+        $fields_wanted->{$st_prefix} = ['id','name']
+          unless defined $fields_wanted->{$st_prefix};
+        $dto->{semantic_type} = __genericDTO($st_prefix,$st,$fields_wanted);
+    }
+
     print STDERR "/$prefix\n"
       if $SHOW_ASSEMBLY;
 
@@ -200,7 +240,13 @@ sub __updateDTO {
         # object into $id_hash, so that it can be found by other
         # objects being saved in this method call.
 
-        my $object = $factory->newObject($class_name,$serialized);
+        my $object;
+        if (UNIVERSAL::isa($data_class,"OME::SemanticType::Superclass")) {
+            my $type = $data_class->semantic_type();
+            $object = $factory->newAttribute($type,$serialized);
+        } else {
+            $object = $factory->newObject($class_name,$serialized);
+        }
         $id_hash->{$id} = $object;
         return ($id,$object->id());
     } else {
@@ -210,7 +256,13 @@ sub __updateDTO {
         # respective mutator method to set its new value.  Finally,
         # we call storeObject to perform the update.
 
-        my $object = $factory->loadObject($class_name,$id);
+        my $object;
+        if (UNIVERSAL::isa($data_class,"OME::SemanticType::Superclass")) {
+            my $type = $data_class->semantic_type();
+            $object = $factory->loadAttribute($type,$id);
+        } else {
+            $object = $factory->loadObject($class_name,$id);
+        }
         die "Cannot update nonexisting object $class_name $id"
           unless defined $object;
         foreach my $key (keys %$serialized) {
@@ -224,10 +276,9 @@ sub __updateDTO {
 sub updateDTO {
     my ($proto,$object_type,$serialized) = @_;
 
-    my $class_name = $DATA_CLASSES{$object_type};
-    die "Unknown object type" unless defined $class_name;
+    my $data_class = $proto->getDataClass($object_type);
 
-    my @result = __updateDTO($class_name,$serialized,{});
+    my @result = __updateDTO($data_class,$serialized,{});
     OME::Session->instance()->commitTransaction();
 
     return $result[1];
@@ -239,10 +290,9 @@ sub updateDTOList {
     my $id_hash = {};
     my @result;
     while (my ($object_type,$serialized) = splice(@$list,0,2)) {
-        my $class_name = $DATA_CLASSES{$object_type};
-        die "Unknown object type" unless defined $class_name;
+        my $data_class = $proto->getDataClass($object_type);
 
-        push @result, __updateDTO($class_name,$serialized,$id_hash);
+        push @result, __updateDTO($data_class,$serialized,$id_hash);
     }
 
     OME::Session->instance()->commitTransaction();

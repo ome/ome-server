@@ -54,10 +54,8 @@ retrieving arbitrary DBObjects and Attributes
 sub countObjects {
     my ($proto,$object_type,$criteria) = @_;
 
-    my $class_name = $DATA_CLASSES{$object_type};
-    die "Unknown object type" unless defined $class_name;
-
-    OME::Factory->__checkClass($class_name);
+    my $class_name = OME::Remote::DTO::GenericAssembler->
+      getDataClass($object_type);
     my $factory = OME::Session->instance()->Factory();
 
     die "Criteria must be a hash, not $criteria"
@@ -69,10 +67,8 @@ sub countObjects {
 sub loadObject {
     my ($proto,$object_type,$id,$fields_wanted) = @_;
 
-    my $class_name = $DATA_CLASSES{$object_type};
-    die "Unknown object type" unless defined $class_name;
-
-    OME::Factory->__checkClass($class_name);
+    my $class_name = OME::Remote::DTO::GenericAssembler->
+      getDataClass($object_type);
     my $factory = OME::Session->instance()->Factory();
 
     die "Fields wanted must be a hash, not $fields_wanted"
@@ -88,10 +84,8 @@ sub loadObject {
 sub retrieveObject {
     my ($proto,$object_type,$criteria,$fields_wanted) = @_;
 
-    my $class_name = $DATA_CLASSES{$object_type};
-    die "Unknown object type" unless defined $class_name;
-
-    OME::Factory->__checkClass($class_name);
+    my $class_name = OME::Remote::DTO::GenericAssembler->
+      getDataClass($object_type);
     my $factory = OME::Session->instance()->Factory();
 
     die "Criteria must be a hash, not $criteria"
@@ -110,9 +104,8 @@ sub retrieveObject {
 sub retrieveObjects {
     my ($proto,$object_type,$criteria,$fields_wanted) = @_;
 
-    my $class_name = $DATA_CLASSES{$object_type};
-    die "Unknown object type" unless defined $class_name;
-
+    my $class_name = OME::Remote::DTO::GenericAssembler->
+      getDataClass($object_type);
     OME::Factory->__checkClass($class_name);
     my $factory = OME::Session->instance()->Factory();
 
@@ -132,7 +125,6 @@ sub retrieveObjects {
 sub updateObject {
     my ($proto,$object_type,$serialized) = @_;
 
-    OME::Factory->__checkClass($class_name);
     my $factory = OME::Session->instance()->Factory();
 
     die "Serialized object must be a hash, not $serialized"
