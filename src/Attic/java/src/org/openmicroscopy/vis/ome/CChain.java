@@ -70,17 +70,17 @@ import java.util.List;
 	
 	
 	public void layout() {
-		System.err.println("Laying out..."+getName());
+		//System.err.println("Laying out..."+getName());
 		initNodes();
-		System.err.println("nodes initialized");
+		//System.err.println("nodes initialized");
 		layerNodes();
-		System.err.println("nodes layered");
+		//System.err.println("nodes layered");
 		makeProper();
-		System.err.println("GRAPHS HAVE BEEN MADE PROPER");
-		dumpLayers();
+		//System.err.println("GRAPHS HAVE BEEN MADE PROPER");
+		//dumpLayers();
 		reduceCrossings();
-		System.err.println("CROSSINGS REDUCED");
-		dumpLayers(); 
+		//System.err.println("CROSSINGS REDUCED");
+		//dumpLayers(); 
 	}
 	
 	
@@ -91,8 +91,8 @@ import java.util.List;
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
 			CNode node = (CNode) iter.next();
-			System.err.println("building link lists for "+node);
-			System.err.println(" ..."+node.getModule().getName());
+	//		System.err.println("building link lists for "+node);
+	//		System.err.println(" ..."+node.getModule().getName());
 			node.buildLinkLists();
 		}
 	}
@@ -126,9 +126,9 @@ import java.util.List;
 				if (node.hasLayer())
 					continue;
 				
-				System.err.println("finding successors for "+
-					node.getModule().getName());	
-				System.err.println("...."+node);
+	//			System.err.println("finding successors for "+
+	//				node.getModule().getName());	
+			//	System.err.println("...."+node);
 				Collection succs = node.getSuccessors();	
 						
 					
@@ -170,14 +170,14 @@ import java.util.List;
 		// for top (source) level and every level except for the last 2
 		// (any outlinks from level 1 already go to only level 0, by
 		// definition.
-		System.err.println("# of layers is "+count);
+	//	System.err.println("# of layers is "+count);
 		for (int i = count-1; i>1; i--)
 			makeProperLayer(i);
 	}
 	
 	private void makeProperLayer(int i) {
 		CNode node;
-		System.err.println("working on layer "+i);
+	//	System.err.println("working on layer "+i);
 		Vector layer = (Vector) layers.get(i);
 		Iterator iter = layer.iterator();
 		while (iter.hasNext()) {

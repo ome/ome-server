@@ -43,7 +43,6 @@
  import org.openmicroscopy.remote.RemoteChain.Link;
  import org.openmicroscopy.remote.RemoteObjectCache;
  import org.openmicroscopy.remote.RemoteSession;
-
  import java.util.Collection;
  import java.util.HashSet;
  import java.util.Iterator;
@@ -95,16 +94,15 @@
 	// so, have a separate call
 	
 	public void buildLinkLists() {
-		System.err.println("building lists for "+getModule().getName());
+	//	System.err.println("building lists for "+getModule().getName());
 		buildSuccessors();
-		System.err.println("# of succs iis "+succLinks.size());
+	//	System.err.println("# of succs iis "+succLinks.size());
 		buildPredecessors();
 	}
 	private void buildSuccessors() {
 	
 		Collection outputs = getOutputLinks();
 		Iterator iter = outputs.iterator();
-		
 		while (iter.hasNext()) {
 			Link link = (Link)iter.next();
 			CNode node = (CNode) link.getToNode();
