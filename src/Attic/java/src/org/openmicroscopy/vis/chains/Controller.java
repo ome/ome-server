@@ -315,9 +315,7 @@ public class Controller  implements LoginResponder {
 		// module palette is anothe thread
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		// and chain layout is third.
-		connection.layoutChains();
-
-		
+		connection.layoutChains();		
 	}
 	
 	public void buildLibraryFrame() {
@@ -329,16 +327,15 @@ public class Controller  implements LoginResponder {
 
 	public void finishInitThread() {
 		initThreads--;
-		if (initThreads == 0) {
-			
+		if (initThreads == 0) { 
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
-			setStatusLabel("Dataset Browser layout..");
 			System.err.println("dataset browser layed out.");
 			controlPanel.completeInitialization(connection.getUserName());
 			closeStatusWindow();
 		}
 	}
+	
 	/**
 	 * Logout of the system - remove all active windows and 
 	 * present the login dialog.
