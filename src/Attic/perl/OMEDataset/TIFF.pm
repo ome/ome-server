@@ -262,8 +262,8 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
-	die "Could not determine the width of the image.\n" unless exists $self->{SizeX} and $self->{SizeX};
-	die "Could not determine the height of the image.\n" unless exists $self->{SizeY} and $self->{SizeY};
+	die "Could not determine the width of $datasetPath.\n" unless exists $self->{SizeX} and $self->{SizeX};
+	die "Could not determine the height of $datasetPath.\n" unless exists $self->{SizeY} and $self->{SizeY};
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
@@ -289,6 +289,7 @@ my @columns;
 	close (STDOUT_PIPE);
 	
 	$self->{_OME_DB_STATUS_} = 'DIRTY';
+	unlink ($tempFileNameErr);
 	return $self;
 }
 

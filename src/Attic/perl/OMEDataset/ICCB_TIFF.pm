@@ -297,7 +297,7 @@ my $command;
 my ($attribute,$value);
 my @columns;
 
-	my $tempFileNameErr = $OME->GetTempName ('TIFFimport','err') or die "Couldn't get a name for a temporary file $!\n";
+	my $tempFileNameErr = $OME->GetTempName ('ICCB_TIFFimport','err') or die "Couldn't get a name for a temporary file: $!\n";
 
 # This will get the dimentions, etc of the dataset.
 # The output of this program is one attribute per line (attribute name \t attribute value).
@@ -315,8 +315,8 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
-	die "Could not determine the width of the image.\n" unless exists $self->{SizeX} and $self->{SizeX};
-	die "Could not determine the height of the image.\n" unless exists $self->{SizeY} and $self->{SizeY};
+	die "Could not determine the width of $datasetPath.\n" unless exists $self->{SizeX} and $self->{SizeX};
+	die "Could not determine the height of $datasetPath.\n" unless exists $self->{SizeY} and $self->{SizeY};
 
 
 # This will calculate statistics about TIFF files, and output two lines -
@@ -343,6 +343,8 @@ my @columns;
 	close (STDOUT_PIPE);
 	
 	$self->{_OME_DB_STATUS_} = 'DIRTY';
+	unlink ($tempFileNameErr);
+
 	return $self;
 }
 
