@@ -8,7 +8,7 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames(
     {
-        group_id => group
+        group_id => 'group'
     });
 
 __PACKAGE__->table('experimenters');
