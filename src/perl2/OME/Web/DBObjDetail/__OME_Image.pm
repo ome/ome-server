@@ -45,7 +45,7 @@ OME::Web::DBObjDetail::__OME_Image - Show detailed information on an Image
 
 =head1 DESCRIPTION
 
-Displays detailed information on any DBObject or attribute.
+Displays detailed information about an Image
 
 =cut
 
@@ -54,11 +54,12 @@ Displays detailed information on any DBObject or attribute.
 #*********
 
 use strict;
-use vars qw($VERSION);
+use OME;
+our $VERSION = $OME::VERSION;
+
 use CGI;
 use Log::Agent;
 
-use OME;
 use OME::Web::DBObjRender;
 use OME::Web::DBObjTable;
 
