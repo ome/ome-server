@@ -663,6 +663,12 @@ sub executeChain {
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
+	my @nodes = $chain->nodes();
+	my $task = OME::Tasks::NotificationManager->
+		new("Executing `".$chain->name()."`", scalar(@nodes));
+	$task->step();
+	$task->setMessage('Start Execution of Analysis Chain');
+	
     # ReuseResults flag has a default value
     $flags{ReuseResults} = 1
       unless exists $flags{ReuseResults};
@@ -725,8 +731,7 @@ sub executeChain {
 
     my $continue = 1;
     my $round = 0;
-    my @nodes = $chain->nodes();
-
+    
   ROUND:
     while ($continue) {
         $continue = 0;
@@ -759,6 +764,8 @@ sub executeChain {
                   unless $self->isNodeReady($node,$target);
 
                 # Node's ready, let's execute
+                $task->step();
+				$task->setMessage('Executing `'.$node->module->name()."`");
                 $self->executeNodeWithTarget($node,$target);
 
                 # Mark some state and keep going
@@ -785,6 +792,8 @@ sub executeChain {
             $continue = $executor->modulesExecuting();
         }
     }
+    $task->setMessage("");
+    $task->finish();
     return $self->{chain_execution};
 }
 
