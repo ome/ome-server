@@ -114,8 +114,9 @@ our @image_core = ("images");
 our @config_core = ("conf");
 
 # Base and temp dir references
-our $OME_BASE_DIR = \$core_dirs[0]->{path};
-our $OME_TMP_DIR = \$core_dirs[2]->{path};
+our $OME_BASE_DIR   = \$core_dirs[0]->{path};
+our $OMEIS_BASE_DIR = \$core_dirs[1]->{path};
+our $OME_TMP_DIR    = \$core_dirs[2]->{path};
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -203,12 +204,13 @@ sub execute {
     print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
     umask (0002);
 
-	$$OME_BASE_DIR = $environment->base_dir()      if $environment->base_dir() ;
-	$$OME_TMP_DIR  = $environment->tmp_dir()       if $environment->tmp_dir() ;
-	$OME_USER      = $environment->user()          if $environment->user() ;
-	$APACHE_USER   = $environment->apache_user()   if $environment->apache_user() ;
-	$POSTGRES_USER = $environment->postgres_user() if $environment->postgres_user() ;
-	$ADMIN_USER    = $environment->admin_user()    if $environment->admin_user() ;
+	$$OME_BASE_DIR   = $environment->base_dir()       if $environment->base_dir() ;
+	$$OMEIS_BASE_DIR = $environment->omeis_base_dir() if $environment->omeis_base_dir();
+	$$OME_TMP_DIR    = $environment->tmp_dir()        if $environment->tmp_dir() ;
+	$OME_USER        = $environment->user()           if $environment->user() ;
+	$APACHE_USER     = $environment->apache_user()    if $environment->apache_user() ;
+	$POSTGRES_USER   = $environment->postgres_user()  if $environment->postgres_user() ;
+	$ADMIN_USER      = $environment->admin_user()     if $environment->admin_user() ;
 
 	# Confirm all flag
 	my $confirm_all;
@@ -279,15 +281,15 @@ sub execute {
 		$environment->postgres_user($POSTGRES_USER);
 		$environment->admin_user($ADMIN_USER);
 
+    	# Make sure the rest of the installation knows where the core directories are
+    	$environment->base_dir($$OME_BASE_DIR);
+    	$environment->tmp_dir($$OME_TMP_DIR);
+		$environment->omeis_base_dir($$OMEIS_BASE_DIR);
+
 		$confirm_all = 1;
 
 		print "\n";  # Spacing
     }
-
-    # Make sure the rest of the installation knows where the core directories are
-    $environment->base_dir($$OME_BASE_DIR);
-    $environment->tmp_dir($$OME_TMP_DIR);
-    $ENV{OME_ROOT} = $$OME_BASE_DIR;
 
     print "\nBuilding the core system\n";
 
@@ -487,7 +489,7 @@ sub execute {
 
     # Configure
     print "  \\_ Configuring ";
-    $retval = configure_module ("src/C/omeis", $LOGFILE);
+    $retval = configure_module ("src/C/omeis", $LOGFILE, "--with-omeis-root=$$OMEIS_BASE_DIR");
      
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to configure module, see $LOGFILE_NAME for details."

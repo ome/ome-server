@@ -133,6 +133,19 @@ sub base_dir {
     return;
 }
 
+sub omeis_base_dir {
+    my ($self, $omeis_base_dir) = @_;
+
+    if ($omeis_base_dir) {
+	$self->{omeis_base_dir} = $omeis_base_dir;
+    } else {
+	return $self->{omeis_base_dir} unless not exists $self->{omeis_base_dir};
+    }
+
+    return;
+}
+
+
 sub tmp_dir {
     my ($self, $temp_dir) = @_;
 

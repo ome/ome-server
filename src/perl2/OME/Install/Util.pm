@@ -649,7 +649,7 @@ sub unpack_archive {
 }
 
 sub configure_module {
-    my ($path, $logfile) = @_;
+    my ($path, $logfile, @options) = @_;
     my $iwd = getcwd ();  # Initial working directory
     
     # Expand our relative path to an absolute one
@@ -659,38 +659,42 @@ sub configure_module {
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-	# IGG 12/12/03:  Doing a make realclean in case there's old stuff hidden away in there
-	# was getting occasional mysterious errors with OME's modules when re-installing.
-	# Not sure why, but they seemed to be related to 'use' statements for other OME modules
-	# BTW, we're just going to ignore anything that goes wrong here.
-    `make realclean 2>&1`;
-
 	my @output;
 
 	if (-e 'Makefile.PL') {
+		# IGG 12/12/03:  Doing a make realclean in case there's old stuff hidden away in there
+		# was getting occasional mysterious errors with OME's modules when re-installing.
+		# Not sure why, but they seemed to be related to 'use' statements for other OME modules
+		# BTW, we're just going to ignore anything that goes wrong here.
+    	`make realclean 2>&1`;
+
 		print $logfile "USING PERL CONFIGURE SCRIPT -- \"Makefile.pl\"\n\n";
-    	@output = `perl Makefile.PL 2>&1`;
+    	@output = `perl Makefile.PL @options 2>&1`;
 	} elsif (-e 'configure') {
 		print $logfile "USING C CONFIGURE SCRIPT -- \"configure\"\n\n";
-		@output = `./configure 2>&1`;
+
+		`make clean 2>&1`;
+		@output = `./configure @options 2>&1`;
 	} elsif (-e 'autogen.sh') {
 		print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- \"autogen.sh\"\n\n";
-		@output = `./autogen.sh 2>&1`;
+		
+		`make clean 2>&1`;
+		@output = `./autogen.sh @options 2>&1`;
 	} else {
 		print $logfile "UNABLE TO LOCATE SUITABLE CONFIGURE SCRIPT\n\n";
 	}
 
-    if ($? == 0) {
-	print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
+	if ($? == 0) {
+		print $logfile "SUCCESS CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
 
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
+	}
+
+	print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
 	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
-    }
 
-    print $logfile "FAILURE CONFIGURING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-
-    return 0;
+	return 0;
 }
 
 sub configure_library {
