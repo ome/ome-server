@@ -203,12 +203,12 @@ int ret;
 	if (head->mySig != OME_IS_PIXL_SIG ||
 		head->vers  != OME_IS_PIXL_VER) {
 				sprintf (myPixels->error_str+strlen(myPixels->error_str),
-					"Incompatible file type\n");
+					"Incompatible file type. Run 'update' on your Pixels files.\n");
 			return (-10);
 	}
 		myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
-		myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
-		myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
+		myPixels->planeInfos = (planeInfo *) ( (pixHeader *) mmap_info + sizeof(pixHeader));
+		myPixels->stackInfos = (stackInfo *) ( (pixHeader *) mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
 	}
 
 	
@@ -614,7 +614,8 @@ int result;
 
 
 	if ( (result = openPixelsFile (myPixels,rorw)) < 0) {
-		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n",(unsigned long long)ID,result);
+		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n%s", \
+				(unsigned long long) ID,result, myPixels->error_str);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -1600,7 +1601,7 @@ char isBigEndian=1,bp;
 		return (0);
 	}
 
-	myPixels->IO_buf = myFile->file_buf+file_offset;
+	myPixels->IO_buf = (u_int8_t *) myFile->file_buf + file_offset;
 	myPixels->IO_buf_off = 0;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
