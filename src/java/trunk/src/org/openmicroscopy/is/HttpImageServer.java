@@ -45,10 +45,14 @@ package org.openmicroscopy.is;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.util.StringTokenizer;
+import java.awt.Image;
+import javax.imageio.ImageIO;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.MultipartPostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
@@ -74,12 +78,6 @@ public class HttpImageServer
     private String  url;
 
     /**
-     * The HTTP method object used to formulate an image server call
-     * and parse its response.
-     */
-    private MultipartPostMethod  post;
-
-    /**
      * The HTTP client object used to connect to the image server.
      */
     private HttpClient  client;
@@ -102,7 +100,6 @@ public class HttpImageServer
     {
         this.url = url;
         this.client = createHttpClient();
-        this.post = null;
     }
 
     /**
@@ -112,7 +109,9 @@ public class HttpImageServer
      */
     protected HttpClient createHttpClient()
     {
-        HttpClient client = new HttpClient();
+        MultiThreadedHttpConnectionManager cm =
+            new MultiThreadedHttpConnectionManager();
+        HttpClient client = new HttpClient(cm);
         client.setConnectionTimeout(10000);
         return client;
     }
@@ -128,12 +127,12 @@ public class HttpImageServer
         return post;
     }
 
-    private void startCall()
+    private MultipartPostMethod startCall()
     {
-        post = createPostMethod();
+        return createPostMethod();
     }
 
-    private void executeCall()
+    private void executeCall(MultipartPostMethod post)
         throws ImageServerException
     {
         int status = 0;
@@ -152,10 +151,9 @@ public class HttpImageServer
         }
     }
 
-    private void finishCall()
+    private void finishCall(MultipartPostMethod post)
     {
         post.releaseConnection();
-        post = null;
     }
 
     /**
@@ -278,32 +276,32 @@ public class HttpImageServer
             sizeT+","+
             bytesPerPixel;
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","NewPixels");
             post.addParameter("Dims",dims);
             post.addParameter("IsSigned",isSigned? "1": "0");
             post.addParameter("IsFloat",isFloat? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return Long.parseLong(post.getResponseBodyAsString().trim());
         } catch (NumberFormatException e) {
             throw new ImageServerException("Illegal response: Invalid pixels ID");
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public PixelsFileFormat getPixelsInfo(long pixelsID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","PixelsInfo");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             String result = post.getResponseBodyAsString();
             StringTokenizer token = new StringTokenizer(result,
@@ -328,51 +326,51 @@ public class HttpImageServer
                                         isSigned == 1,
                                         isFloat == 1);
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public String getPixelsSHA1(long pixelsID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","PixelsSHA1");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBodyAsString().trim();
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public String getPixelsServerPath(long pixelsID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetLocalPath");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBodyAsString().trim();
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public boolean isPixelsFinished(long pixelsID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","PixelsInfo");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             String result = post.getResponseBodyAsString();
             StringTokenizer token = new StringTokenizer(result,
@@ -394,7 +392,7 @@ public class HttpImageServer
 
             return (isFinished == 1);
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -402,17 +400,17 @@ public class HttpImageServer
                             boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetPixels");
             post.addParameter("PixelsID",Long.toString(pixelsID));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBody();
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -421,7 +419,7 @@ public class HttpImageServer
                            boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetStack");
@@ -429,11 +427,11 @@ public class HttpImageServer
             post.addParameter("theC",Integer.toString(theC));
             post.addParameter("theT",Integer.toString(theT));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBody();
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -442,7 +440,7 @@ public class HttpImageServer
                            boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetPlane");
@@ -451,11 +449,11 @@ public class HttpImageServer
             post.addParameter("theC",Integer.toString(theC));
             post.addParameter("theT",Integer.toString(theT));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBody();
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -469,25 +467,25 @@ public class HttpImageServer
             x0+","+y0+","+z0+","+c0+","+t0+","+
             x1+","+y1+","+z1+","+c1+","+t1;
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetROI");
             post.addParameter("PixelsID",Long.toString(pixelsID));
             post.addParameter("ROI",roi);
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBody();
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
     public void setPixels(long pixelsID, byte[] buf, boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetPixels");
@@ -496,29 +494,29 @@ public class HttpImageServer
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addPart(new FilePart("Pixels",
                                       new ByteArrayPartSource("pixels",buf)));
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
     public void setPixels(long pixelsID, File file, boolean bigEndian)
         throws ImageServerException, FileNotFoundException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetPixels");
             post.addParameter("PixelsID",Long.toString(pixelsID));
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addParameter("Pixels",file);
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -527,7 +525,7 @@ public class HttpImageServer
                          byte[] buf, boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetStack");
@@ -538,11 +536,11 @@ public class HttpImageServer
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addPart(new FilePart("Pixels",
                                       new ByteArrayPartSource("pixels",buf)));
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -551,7 +549,7 @@ public class HttpImageServer
                          File file, boolean bigEndian)
         throws ImageServerException, FileNotFoundException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetStack");
@@ -560,11 +558,11 @@ public class HttpImageServer
             post.addParameter("theT",Integer.toString(theT));
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addParameter("Pixels",file);
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -573,7 +571,7 @@ public class HttpImageServer
                          byte[] buf, boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetPlane");
@@ -585,11 +583,11 @@ public class HttpImageServer
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addPart(new FilePart("Pixels",
                                       new ByteArrayPartSource("pixels",buf)));
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -598,7 +596,7 @@ public class HttpImageServer
                          File file, boolean bigEndian)
         throws ImageServerException, FileNotFoundException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetPlane");
@@ -608,11 +606,11 @@ public class HttpImageServer
             post.addParameter("theT",Integer.toString(theT));
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addParameter("Pixels",file);
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -626,7 +624,7 @@ public class HttpImageServer
             x0+","+y0+","+z0+","+c0+","+t0+","+
             x1+","+y1+","+z1+","+c1+","+t1;
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetROI");
@@ -636,11 +634,11 @@ public class HttpImageServer
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addPart(new FilePart("Pixels",
                                       new ByteArrayPartSource("pixels",buf)));
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
@@ -654,7 +652,7 @@ public class HttpImageServer
             x0+","+y0+","+z0+","+c0+","+t0+","+
             x1+","+y1+","+z1+","+c1+","+t1;
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","SetROI");
@@ -662,57 +660,80 @@ public class HttpImageServer
             post.addParameter("ROI",roi);
             post.addParameter("BigEndian",bigEndian? "1": "0");
             post.addParameter("Pixels",file);
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
     public void finishPixels(long pixelsID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","FinishPixels");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             return;
         } finally {
-            finishCall();
+            finishCall(post);
         }        
+    }
+
+    public Image getThumbnail(long pixelsID)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","GetThumb");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            executeCall(post);
+
+            byte[]  imageBuf = post.getResponseBody();
+            ByteArrayInputStream  is = new ByteArrayInputStream(imageBuf);
+            try
+            {
+                return ImageIO.read(is);
+            } catch (IOException e) {
+                throw new ImageServerException("Cannot read byte array stream?");
+            }
+        } finally {
+            finishCall(post);
+        }
     }
 
     public long uploadFile(File file)
         throws ImageServerException, FileNotFoundException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","UploadFile");
             post.addParameter("File",file);
-            executeCall();
+            executeCall(post);
 
             return Long.parseLong(post.getResponseBodyAsString().trim());
         } catch (NumberFormatException e) {
             throw new ImageServerException("Illegal response: Invalid file ID");
         } finally {
-            finishCall();
+            finishCall(post);
         }        
     }
 
     public FileInfo getFileInfo(long fileID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","FileInfo");
             post.addParameter("FileID",Long.toString(fileID));
-            executeCall();
+            executeCall(post);
  
             String result = post.getResponseBodyAsString();
             StringTokenizer token = new StringTokenizer(result,
@@ -731,39 +752,39 @@ public class HttpImageServer
 
             return new FileInfo(name,length);
        } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public String getFileSHA1(long fileID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","FileSHA1");
             post.addParameter("FileID",Long.toString(fileID));
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBodyAsString().trim();
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
     public String getFileServerPath(long fileID)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetLocalPath");
             post.addParameter("FileID",Long.toString(fileID));
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBodyAsString().trim();
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -772,18 +793,18 @@ public class HttpImageServer
                                          final int  length)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","ReadFile");
             post.addParameter("FileID",Long.toString(fileID));
             post.addParameter("Offset",Long.toString(offset));
             post.addParameter("Length",Integer.toString(length));
-            executeCall();
+            executeCall(post);
 
             return post.getResponseBody();
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -793,7 +814,7 @@ public class HttpImageServer
                              final boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","ConvertStack");
@@ -803,11 +824,11 @@ public class HttpImageServer
             post.addParameter("FileID",Long.toString(fileID));
             post.addParameter("Offset",Long.toString(offset));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return Long.parseLong(post.getResponseBodyAsString().trim());
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -817,7 +838,7 @@ public class HttpImageServer
                              final boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","ConvertPlane");
@@ -828,11 +849,11 @@ public class HttpImageServer
             post.addParameter("FileID",Long.toString(fileID));
             post.addParameter("Offset",Long.toString(offset));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return Long.parseLong(post.getResponseBodyAsString().trim());
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -843,7 +864,7 @@ public class HttpImageServer
                             final boolean bigEndian)
         throws ImageServerException
     {
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","ConvertRows");
@@ -856,11 +877,11 @@ public class HttpImageServer
             post.addParameter("FileID",Long.toString(fileID));
             post.addParameter("Offset",Long.toString(offset));
             post.addParameter("BigEndian",bigEndian? "1": "0");
-            executeCall();
+            executeCall(post);
 
             return Long.parseLong(post.getResponseBodyAsString().trim());
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -872,12 +893,12 @@ public class HttpImageServer
         int sizeC = pff.getSizeC();
         int sizeT = pff.getSizeT();
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetPlaneStats");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             double[][][]
                 minimum = new double[sizeZ][sizeC][sizeT],
@@ -936,7 +957,7 @@ public class HttpImageServer
                                        sumYI,
                                        sumZI);
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
@@ -947,12 +968,12 @@ public class HttpImageServer
         int sizeC = pff.getSizeC();
         int sizeT = pff.getSizeT();
 
-        startCall();
+        MultipartPostMethod post = startCall();
         try
         {
             post.addParameter("Method","GetStackStats");
             post.addParameter("PixelsID",Long.toString(pixelsID));
-            executeCall();
+            executeCall(post);
 
             double[][]
                 minimum = new double[sizeC][sizeT],
@@ -1014,7 +1035,7 @@ public class HttpImageServer
                                        sumYI,
                                        sumZI);
         } finally {
-            finishCall();
+            finishCall(post);
         }
     }
 
