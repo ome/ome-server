@@ -24,15 +24,15 @@
       <Link FromNodeID="Importer" FromOutputName="Dimensions"
             ToNodeID="Track" ToInputName="Dimensions"/>
 
-      <Link FromNodeID="Stack" FromOutputName="Stack minima"
+      <Link FromNodeID="Stack" FromOutputName="Minima"
             ToNodeID="Find" ToInputName="Stack minima"/>
-      <Link FromNodeID="Stack" FromOutputName="Stack maxima"
+      <Link FromNodeID="Stack" FromOutputName="Maxima"
             ToNodeID="Find" ToInputName="Stack maxima"/>
-      <Link FromNodeID="Stack" FromOutputName="Stack means"
+      <Link FromNodeID="Stack" FromOutputName="Mean"
             ToNodeID="Find" ToInputName="Stack means"/>
-      <Link FromNodeID="Stack" FromOutputName="Stack geomeans"
+      <Link FromNodeID="Stack" FromOutputName="Geomean"
             ToNodeID="Find" ToInputName="Stack geomeans"/>
-      <Link FromNodeID="Stack" FromOutputName="Stack sigmas"
+      <Link FromNodeID="Stack" FromOutputName="Sigma"
             ToNodeID="Find" ToInputName="Stack sigmas"/>
 
       <Link FromNodeID="Find" FromOutputName="Location"
