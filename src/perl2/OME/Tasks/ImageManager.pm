@@ -153,15 +153,10 @@ sub new{
 
 =head2 deleteCurrentImageAnnotation
 
-	my $imageAnnotation = OME::Tasks::ImageManager->
-	    deleteCurrentImageAnnotation( $image );
+	OME::Tasks::ImageManager->deleteCurrentImageAnnotation( $image );
 
-This will look for the most recent ImageAnnotation created by 
-the current user that is marked Valid.
-Failing to that, it will look for the most recent ImageAnnotation
-created by anyone that is marked Valid.
-
-If no Valid ImageAnnotations are found, an undef will be returned.
+This tries to get an annotation from getCurrentImageAnnotation()
+If it gets one that belongs to the current user, it will mark it invalid.
 
 =cut
 
@@ -169,7 +164,8 @@ sub deleteCurrentImageAnnotation {
 	my ($class, $image) = @_;
 	my $session = OME::Session->instance();
 	my $annotation = $class->getCurrentImageAnnotation( $image );
-	if( ( defined $annotation->module_execution() ) && 
+	if( ( defined $annotation ) &&
+	    ( defined $annotation->module_execution() ) && 
 	    ( $annotation->module_execution()->experimenter->id eq
 	      $session->User->id ) ) {
 		$annotation->Valid( 0 );
