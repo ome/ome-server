@@ -388,7 +388,7 @@ sub forgetInstance {
         if (defined $__soleInstance->{Factory}) {
             # DO NOT DISCONNECT!  THIS IS THE RESPONSIBILITY OF THE PARENT
             # PROCESS!!!
-            $__soleInstance->{Factory}->{__ourDBH} = undef;
+            $__soleInstance->{Factory}->forget();
             $__soleInstance->{Factory} = undef;
         }
         $__soleInstance = undef;
