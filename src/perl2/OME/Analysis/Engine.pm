@@ -58,7 +58,7 @@ use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
 
 our $DEBUG = 1;
-sub __debug { print STDERR @_ if $DEBUG; }
+sub __debug { print STDERR @_,"\n" if $DEBUG; }
 
 =head2 checkInputs
 
@@ -163,12 +163,9 @@ sub checkInputs {
                       unless UNIVERSAL::isa($input_mex,'OME::ModuleExecution');
                 }
             } else {
-                # TODO: Support non-specified user inputs.  We would
-                # just assume that the user wants to specify an input
-                # of "nothing".
-
-                die "Cannot execute chain -- unspecified free input ".
-                  $formal_input->name()." in module ".$module->name();
+                # Non-specified user inputs are now allowed.  They are
+                # just treated as null arrays.
+                $self->{user_inputs}->{$inputID} = [];
             }
         }
     }
@@ -336,7 +333,7 @@ sub getPredecessorMEX {
     my $factory = OME::Session->instance()->Factory();
 
     if (defined $self->{user_inputs}->{$to_input->id()}) {
-        __debug "  getPredecessorMEX(",$to_input->name(),")\n";
+        __debug "  getPredecessorMEX(",$to_input->name(),")";
 
         my $granularity = $to_input->semantic_type()->granularity();
         my $to_dependence = ($granularity eq 'F')? 'I': $granularity;
@@ -344,11 +341,11 @@ sub getPredecessorMEX {
         my $input_mexes = $self->{user_inputs}->{$to_input->id()};
         my @target_mexes;
         foreach my $input_mex (@$input_mexes) {
-            __debug "    Checking MEX ",$input_mex->id(),"\n";
-            __debug "      $to_dependence ",$input_mex->dependence(),"\n";
+            __debug "    Checking MEX ",$input_mex->id();
+            __debug "      $to_dependence ",$input_mex->dependence();
             next unless ($input_mex->dependence() eq $to_dependence);
 
-            __debug "      **GOOD!\n"
+            __debug "      **GOOD!"
               if ($to_dependence eq 'G')
               || ($to_dependence eq 'D' &&
                   $input_mex->dataset()->id() == $to_target->id())
@@ -384,10 +381,10 @@ sub getPredecessorMEX {
 
     my $target_column;
 
-    __debug "  getPredecessorMEX(",$link->id(),")\n";
+    __debug "  getPredecessorMEX(",$link->id(),")";
 
-    __debug "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name(),"\n";
-    __debug "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name(),"\n";
+    __debug "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name();
+    __debug "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name();
 
     if ($from_dependence eq 'G') {
         push @from_targets, undef;
