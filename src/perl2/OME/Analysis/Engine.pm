@@ -196,6 +196,7 @@ sub calculateDependences {
 
     my %dependences;
     my @nodes_to_check = @{OME::Tasks::ChainManager->getRootNodes($chain)};
+    my $any_dataset_dependences = 0;
 
   NODE:
     while (my $node = shift(@nodes_to_check)) {
@@ -239,6 +240,7 @@ sub calculateDependences {
                           module => $node->module(),
                           'semantic_type.granularity' => 'D',
                          })) {
+            $any_dataset_dependences = 1;
             $dependences{$node->id()} = 'D';
             next NODE;
         }
@@ -249,6 +251,7 @@ sub calculateDependences {
                           module => $node->module(),
                           'semantic_type.granularity' => 'D',
                          })) {
+            $any_dataset_dependences = 1;
             $dependences{$node->id()} = 'D';
             next NODE;
         }
@@ -267,6 +270,7 @@ sub calculateDependences {
                 my $input_mexes = $self->{user_inputs}->{$formal_input->id()};
                 foreach my $input_mex (@$input_mexes) {
                     if ($input_mex->dependence() eq 'D') {
+                        $any_dataset_dependences = 1;
                         $dependences{$node->id()} = 'D';
                         next NODE;
                     }
@@ -283,6 +287,7 @@ sub calculateDependences {
                 if (!defined $dependences{$from_node->id()}) {
                     $unknown_predecessor = 1;
                 } elsif ($dependences{$from_node->id()} eq 'D') {
+                    $any_dataset_dependences = 1;
                     $dependences{$node->id()} = 'D';
                     next NODE;
                 }
@@ -305,6 +310,7 @@ sub calculateDependences {
     }
 
     $self->{dependences} = \%dependences;
+    $self->{any_dataset_dependences} = $any_dataset_dependences;
 }
 
 =head2 getPredecessorMEX
@@ -675,10 +681,6 @@ sub executeChain {
     # Validate the chain
     $self->checkInputs();
 
-    # Lock the dataset
-    $dataset->locked('true');
-    $dataset->storeObject();
-
     # Load in the appropriate executor
     my $executor = OME::Analysis::Engine::Executor->
       getDefaultExecutor();
@@ -700,6 +702,17 @@ sub executeChain {
     }
 
     $self->calculateDependences();
+
+    # If there are any modules which have dataset dependence, then we
+    # need to lock the dataset.  (So that the dataset outputs remain
+    # valid.)  If there are not any dataset-dependent MEX's in this
+    # chain, we don't need to lock the dataset.
+
+    if ($self->{any_dataset_dependences}) {
+        # Lock the dataset
+        $dataset->locked('true');
+        $dataset->storeObject();
+    }
 
     my $chex = $factory->
       newObject("OME::AnalysisChainExecution",
