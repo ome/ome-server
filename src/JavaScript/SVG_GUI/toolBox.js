@@ -145,15 +145,18 @@ toolBox.prototype.buildSVG = function() {
 	
 	// Add toolBox components and keep track of them.
 	var GUIboxContainer = svgDocument.createElementNS(svgns, "g");
-	var GUIboxBorder = svgDocument.createElementNS(svgns, "svg");
-	GUIboxBorder.setAttributeNS( null, "width", this.width );
-	GUIboxBorder.setAttributeNS( null, "height", this.height );
-	GUIboxBorder.appendChild( this.textToSVG(this.GUIboxText) );
-	GUIboxContainer.appendChild( GUIboxBorder );
+	var GUIboxClip = svgDocument.createElementNS(svgns, "svg");
+	var GUIboxNoClip = svgDocument.createElementNS(svgns, "g");
+	GUIboxClip.setAttributeNS( null, "width", this.width );
+	GUIboxClip.setAttributeNS( null, "height", this.height );
+	GUIboxClip.appendChild( this.textToSVG(this.GUIboxText) );
+	GUIboxContainer.appendChild( GUIboxClip );
+	GUIboxContainer.appendChild( GUIboxNoClip );
 	box.appendChild( GUIboxContainer );
-	this.nodes.GUIbox = GUIboxBorder.lastChild;
+	this.nodes.GUIbox = GUIboxClip.lastChild;
 	this.nodes.GUIboxContainer = GUIboxContainer;
-	this.nodes.GUIboxBorder = GUIboxBorder;
+	this.nodes.GUIboxClip = GUIboxClip;
+	this.nodes.GUIboxNoClip = GUIboxNoClip;
 
 	// create menuBar. I'm putting stuff in it, so I'm making sure it has a g
 	// for a root node.
@@ -229,6 +232,15 @@ toolBox.prototype.getGUIbox = function(){
 
 /*****
 *
+*   getGUIboxNoClip
+*
+*****/
+toolBox.prototype.getGUIboxNoClip = function(){
+	return this.nodes.GUIboxNoClip;
+}
+
+/*****
+*
 *	getMenuBar
 *
 *****/
@@ -258,6 +270,42 @@ toolBox.prototype.setLabel = function(x, y, content) {
 }
 
 /****************   Visual functions   *******************/
+
+/*****
+*
+*	drawMenuTop
+*
+*	purpose:
+*		Force the menuBar to be rendered on top of other components.
+*		This will have no visible affect if there is no overlap. It can
+*		be used with expanding menus in the menubar if they create overlap.
+*
+*****/
+toolBox.prototype.drawMenuTop = function() {
+	if(this.nodes.root.lastChild != this.nodes.menuBar ) {
+		this.nodes.root.removeChild( this.nodes.menuBar );
+		this.nodes.root.appendChild( this.nodes.menuBar );
+	}
+}
+
+/*****
+*
+*	drawGUITop
+*
+*	purpose:
+*		Force the GUIboxContainer (clip & noClip) to be rendered on top of 
+*		other components.
+*		This will have no visible affect if there is no overlap. It can
+*		be used with expanding menus that create overlap.
+*
+*****/
+toolBox.prototype.drawGUITop = function() {
+	if(this.nodes.root.lastChild != this.nodes.GUIboxContainer ) {
+		this.nodes.root.removeChild( this.nodes.GUIboxContainer );
+		this.nodes.root.appendChild( this.nodes.GUIboxContainer );
+	}
+}
+
 
 /*****
 *
