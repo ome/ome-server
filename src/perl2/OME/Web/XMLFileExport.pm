@@ -84,9 +84,9 @@ sub getPageBody {
 		}
 	}
 	$approximate_file_size /= 1048576;
-	$approximate_file_size = sprintf( '%.2f MB', $approximate_file_size);
+	$approximate_file_size = sprintf( '%.2f', $approximate_file_size);
 	
-	if ( 0 && $action eq 'Export'){
+	if ( $action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
 			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
 
@@ -119,8 +119,8 @@ sub getPageBody {
 	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
 	if( @images ) {
 		$tmpl->param( selected_images => $self->Renderer()->renderArray( \@images, 'ref_mass', { type => 'OME::Image' } ) );
-		$tmpl->param( file_size       => $approximate_file_size );
-		$tmpl->param( size_warning    => $approximate_file_size )
+		$tmpl->param( file_size       => $approximate_file_size.' MB' );
+		$tmpl->param( size_warning    => $approximate_file_size.' MB' )
 			if( $approximate_file_size >= 500 );
 	}
 	$body .= 
