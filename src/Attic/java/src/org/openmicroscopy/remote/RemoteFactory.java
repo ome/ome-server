@@ -48,6 +48,7 @@ import org.openmicroscopy.Attribute;
 import org.openmicroscopy.OMEObject;
 
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -57,6 +58,8 @@ public class RemoteFactory
     implements Factory
 {
     static { RemoteObjectCache.addClass("OME::Factory",RemoteFactory.class); }
+
+    private Map populatedLists = new WeakHashMap();
 
     protected void finalize()
     {
@@ -275,33 +278,42 @@ public class RemoteFactory
         return i;
     }
 
-    public void populateList(List list)
-    {
-        Object result = caller.dispatch("OME::DBObject","populate_list",list);
+    public void populateList(List list) { populateList(list,true); }
 
-        if (result instanceof List)
+    public void populateList(List list, boolean force)
+    {
+        if (force || !populatedLists.containsKey(list))
         {
-            List resultList = (List) result;
-            if (list.size() != resultList.size())
+            Object result = caller.dispatch("OME::DBObject","populate_list",list);
+
+            if (result instanceof List)
             {
-                System.err.println("Return list not of same length!");
-            } else {
-                for (int i = 0; i < list.size(); i++) 
+                List resultList = (List) result;
+                if (list.size() != resultList.size())
                 {
-                    Object obj = list.get(i);
-                    Object cache = resultList.get(i);
-                    if (!(obj instanceof RemoteOMEObject))
+                    System.err.println("Return list not of same length!");
+                } else {
+                    for (int i = 0; i < list.size(); i++) 
                     {
-                        System.err.println("Input not a RemoteOMEObject");
-                    } else if (!(cache instanceof Map)) {
-                        System.err.println("Output not a Map");
-                    } else {
-                        ((RemoteOMEObject) obj).setElementCache((Map) cache);
+                        Object obj = list.get(i);
+                        Object cache = resultList.get(i);
+                        if (!(obj instanceof RemoteOMEObject))
+                        {
+                            System.err.println("Input not a RemoteOMEObject");
+                        } else if (!(cache instanceof Map)) {
+                            System.err.println("Output not a Map");
+                        } else {
+                            RemoteOMEObject robj = (RemoteOMEObject) obj;
+                            robj.setElementCache((Map) cache);
+                            robj.setPopulated(true);
+                        }
                     }
+
+                    populatedLists.put(list,null);
                 }
+            } else {
+                System.err.println("Unknown result type: "+result.getClass());
             }
-        } else {
-            System.err.println("Unknown result type: "+result.getClass());
         }
     }
 }

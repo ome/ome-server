@@ -332,4 +332,14 @@ public interface Factory
      */
 
     public void populateList(List list);
+
+    /**
+     * Retrieves all of the data for each object in the {@link List},
+     * in a single call.
+     * @param list a list of objects to populate
+     * @param force if <code>false</code>, the {@link List} is only
+     * populated if it hasn't been populated before.
+     */
+
+    public void populateList(List list, boolean force);
 }
