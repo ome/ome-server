@@ -143,6 +143,8 @@ __PACKAGE__->addColumn(error_message => 'error_message',
                        {SQLType => 'text'});
 __PACKAGE__->hasMany('inputs','OME::ModuleExecution::ActualInput' =>
                      'module_execution');
+__PACKAGE__->hasMany('consumed_outputs','OME::ModuleExecution::ActualInput' =>
+                     'input_module_execution');
 __PACKAGE__->hasMany('untypedOutputs','OME::ModuleExecution::SemanticTypeOutput' =>
                      'module_execution');
 __PACKAGE__->hasMany('parentalOutputs','OME::ModuleExecution::ParentalOutput' =>
@@ -164,8 +166,6 @@ __PACKAGE__->addPseudoColumn('successors','has-many',
 __PACKAGE__->addPseudoColumn('chain_executions','has-many',
 			     'OME::AnalysisChainExecution');
 
-__PACKAGE__->addPseudoColumn('actual_outputs','has-many',
-			     'OME::ModuleExecution::ActualInput');
 
 
 =head1 METHODS (C<module_execution>)
@@ -283,15 +283,8 @@ sub predecessors {
     my $mex = $self->ID();
 
     my $factory = $self->Session()->Factory();
-    
-    my @inputs = $self->inputs();
-
-    my @preds;
-    my %h;
-    @preds = map { $_->input_module_execution()} @inputs;
-
-    my @outputarray =  grep( ( ($h{$_->ID()}++ == 0) || 0 ), @preds); 
-    return @outputarray;
+    return $factory->findObjects('OME::ModuleExecution',
+				 { 'consumed_outputs.module_execution_id' => $mex });
 }
 
 sub successors { 
@@ -299,17 +292,10 @@ sub successors {
     my $mex = $self->ID();
 
     my $factory = $self->Session()->Factory();
-    
 
-    # find actual inputs where input_module_execution_id is mex->id
-    my @outputs = $factory->findObjects('OME::ModuleExecution::ActualInput',
-				       { input_module_execution_id =>
-					     $mex});
+    return $factory->findObjects('OME::ModuleExecution',
+				{ 'consumed_outputs.input_module_execution_id' => $mex});
 
-    my @succs = map {$_->module_execution()} @outputs;
-    my %h;
-    my @uniqs = grep ( (($h{$_->ID()}++ == 0) || 0), @succs);
-    return @uniqs;
 }
 
 sub chain_executions {
@@ -318,42 +304,11 @@ sub chain_executions {
 
     my $factory = $self->Session()->Factory();
     
-    # find node executions corresponding to this mex.
-    my @nexes = 
-	$factory->findObjects('OME::AnalysisChainExecution::NodeExecution',
-		       { module_execution_id => $mex});
-
-    # find chain executions that correspond
-    my @chexes = map {$_->analysis_chain_execution()} @nexes;
-    # find those things in the list that aren't null. some nexes
-    # will have no chexes.
-    @chexes = grep (($_), @chexes); 
-
-    # if we've found nothing, give up.
-    if (scalar(@chexes) == 0) {
-	return @chexes;
-    }
-    my %h;
-    my @uniqs;
-    @uniqs = grep ( (($h{$_->ID()}++ == 0) || 0), @chexes);
-    return @uniqs;
+    return $factory->findObjects('OME::AnalysisChainExecution', 
+				 {
+				 'node_executions.module_execution_id'
+				     => $mex});
 }
-
-
-sub actual_outputs {
-    
-    my $self = shift;
-    my $mex = $self->ID();
-
-    my $factory = $self->Session()->Factory();
-    
-    # find node executions corresponding to this mex.
-    my @outputs = $factory->findObjects('OME::ModuleExecution::ActualInput',
-				       { input_module_execution_id =>
-					     $mex});
-    return @outputs;
-}
-
 
 
 1;
