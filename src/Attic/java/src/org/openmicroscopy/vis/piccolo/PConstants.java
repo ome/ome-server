@@ -49,7 +49,7 @@ public class PConstants {
 
 	// for a buffered node, we want to get its bounds with some empty space
 	// on each side.  this value gives the amount of buffer space.
-	public static final int BORDER=20;	
+	public static final int BORDER=40;	
 	
 	// magnification at which point we should do our semantic zooming.
 	public static final double SCALE_THRESHOLD=0.5;
