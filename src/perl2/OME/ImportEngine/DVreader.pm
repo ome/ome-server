@@ -596,7 +596,6 @@ sub readUIHdr {
 			$fmt =~ s/^(.)$/$1$len/;
 			$val = unpack($fmt, $buf);
 			$self->{$k} = $val;
-			print STDERR "Packed '$val' into self->{'$k'} with '$fmt' format string.\n";
     	}
     # Put relevant pieces of metadata into xml_elements for later DB storage
     foreach $k (keys %xml_image_entries) {
