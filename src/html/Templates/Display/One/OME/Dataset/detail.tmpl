@@ -61,10 +61,16 @@
 <TMPL_VAR NAME=categories_used><br>
 </TMPL_IF>
 <TMPL_IF NAME=selected_category_group>
-	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group>.</font>
-	<span class='ome_quiet'>Clicking a thumbnail will open:
-	<input type="radio" name="thumb_click_opens" value='viewer' checked>Image Viewer
-	<input type="radio" name="thumb_click_opens" value='image_detail' >Image Detail
+	<font class="ome_relation_title">Images are arranged by <TMPL_VAR NAME=selected_category_group>.</font><br>
+	<span class='ome_quiet'>Clicking a thumbnail will:
+	<input type="radio" name="thumb_click_opens" value='viewer'>Open the Image Viewer
+	<input type="radio" name="thumb_click_opens" value='image_detail' >Show Image Metadata
+	<input type="hidden" name="declassifyImage">
+	<input type="radio" name="thumb_click_opens" value='declassify' >Declassify the Image
+	<TMPL_IF NAME=available_categories>
+		<input type="hidden" name="classifyImage">
+		<input type="radio" name="thumb_click_opens" value='classify' >Classify the Image as: <TMPL_VAR NAME=available_categories>
+	</TMPL_IF>
 	</span><br>
 	<table>
 	<TMPL_LOOP NAME=CategoryList>
