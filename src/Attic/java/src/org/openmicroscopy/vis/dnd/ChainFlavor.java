@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.piccolo.ModuleFlavor
+ * org.openmicroscopy.vis.piccolo.ChainFlavor
  *
  *------------------------------------------------------------------------------
  *
