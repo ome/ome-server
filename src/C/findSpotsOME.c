@@ -3721,7 +3721,6 @@ fflush (stderr);
 */
 	while (theSpotList->nextTimePointList != NULL)
 		{
-
 		theSpot = theSpotList;
 	
 	/*
@@ -3751,9 +3750,10 @@ fflush (stderr);
 				theSpotNextTime = theSpotNextTime->next;
 				} /* find nearest neighbor */
 
-			if (theSpot->nextTimePoint != NULL)
+			if (theSpot->nextTimePoint != NULL) {
 				theSpot->nextTimePoint->trajID = theSpot->trajID;
-			Calculate_Spot_Vector (theSpot);
+				Calculate_Spot_Vector (theSpot);
+				}
 			theSpot = theSpot->next;
 			} /* This timepoint's list of spots */
 
