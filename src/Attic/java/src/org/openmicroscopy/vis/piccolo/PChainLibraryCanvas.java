@@ -144,7 +144,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		chainWidth = 0;
 		
 		
-		
+		connection.setStatusLabel("Chain.."+chain.getName());
 		PText name = new PText(chain.getName());
 		name.setFont(nameFont);
 		name.setPickable(false);
@@ -176,7 +176,8 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
+		return new PBounds(b.getX()-PConstants.BORDER,
+			b.getY()-PConstants.BORDER,b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER); 
 	}
 	
