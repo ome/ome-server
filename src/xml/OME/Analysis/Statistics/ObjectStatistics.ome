@@ -53,7 +53,7 @@
 				DataType="integer"/>
 		</SemanticType>
 		
-		<SemanticType Name="FeatureCentriod" AppliesTo="I">
+		<SemanticType Name="FeatureCentroid" AppliesTo="I">
 			<Description>Centroid of the image's features.</Description>
 			 <Element
 				Name="X"
@@ -239,10 +239,10 @@
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 		   ModuleName="Feature Statistics"
-		   Category="Signature"
+		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="FeatureStatistics"
-		   ID="urn:lsid:openmicroscopy.org:Module:91">
+		   ID="urn:lsid:openmicroscopy.org:Module:7701">
 		  <Description>
 		   This module computes statistics about the contiguous regions of the image 
 		   (features). It is passed in a binary image such that non-zero pixel intensities 

@@ -109,24 +109,24 @@
 		<SemanticType Name="EdgeDirecMean" AppliesTo="I">
 			<Description>Mean edge direction.</Description>
 			 <Element
-				Name="DirMean"
-				DBLocation="EDGE_STATISTICS.DIR_MEAN"
+				Name="DirecMean"
+				DBLocation="EDGE_STATISTICS.DIREC_MEAN"
 				DataType="float"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeDirecMedian" AppliesTo="I">
 			<Description>Median edge direction.</Description>
 			 <Element
-				Name="DirMedian"
-				DBLocation="EDGE_STATISTICS.DIR_MEDIAN"
+				Name="DirecMedian"
+				DBLocation="EDGE_STATISTICS.DIREC_MEDIAN"
 				DataType="float"/>
 		</SemanticType>
 		
 		<SemanticType Name="EdgeDirecVar" AppliesTo="I">
 			<Description>Variance of edge directions.</Description>
 			 <Element
-				Name="DirVar"
-				DBLocation="EDGE_STATISTICS.DIR_VAR"
+				Name="DirecVar"
+				DBLocation="EDGE_STATISTICS.DIREC_VAR"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -134,46 +134,46 @@
 			<Description>Histogram of edge directions binned into uniform bins.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN3"
 				DataType="integer"/>
 			<Element
 				Name="Bin4"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN4"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN4"
 				DataType="integer"/>
 			<Element
 				Name="Bin5"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN5"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN5"
 				DataType="integer"/>
 			<Element
 				Name="Bin6"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN6"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN6"
 				DataType="integer"/>
 			<Element
 				Name="Bin7"
-				DBLocation="EDGE_STATISTICS.DIR_HIST_BIN7"
+				DBLocation="EDGE_STATISTICS.DIREC_HIST_BIN7"
 				DataType="integer"/>
 		</SemanticType>
 		
 		<!-- These statistics are meant to describe the differences between bins of histogram at
 			 angle and angle+PI. In general, objects have an equal number of pixels at an angle
 			 and angle+PI -->
-		<SemanticType Name="EdgeDiffDirecMean" AppliesTo="I">
-			<Description>Mean of the difference in direction histogram.</Description>
+		<SemanticType Name="EdgeDirecHomo" AppliesTo="I">
+			<Description>fill this in later</Description>
 			 <Element
-				Name="DirMean"
-				DBLocation="EDGE_STATISTICS.DIR_MEAN"
+				Name="DirecHomo"
+				DBLocation="EDGE_STATISTICS.DIREC_HOMO"
 				DataType="float"/>
 		</SemanticType>
 	
@@ -182,19 +182,19 @@
 			angle and angle+PI.</Description>
 			<Element
 				Name="Bin0"
-				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN0"
+				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN0"
 				DataType="integer"/>
 			<Element
 				Name="Bin1"
-				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN1"
+				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN1"
 				DataType="integer"/>
 			<Element
 				Name="Bin2"
-				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN2"
+				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN2"
 				DataType="integer"/>
 			<Element
 				Name="Bin3"
-				DBLocation="EDGE_STATISTICS.DIF_DIR_HIST_BIN3"
+				DBLocation="EDGE_STATISTICS.DIF_DIREC_HIST_BIN3"
 				DataType="integer"/>
 		</SemanticType>
 	</SemanticTypeDefinitions>	
@@ -202,10 +202,10 @@
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 		   ModuleName="Edge Statistics"
-		   Category="Signature"
+		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="EdgeStatistics"
-		   ID="urn:lsid:openmicroscopy.org:Module:92">
+		   ID="urn:lsid:openmicroscopy.org:Module:7700">
 		  <Description>
 		   This module computes statistics about the image's edge magnitudes and directions.
 		  </Description>

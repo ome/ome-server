@@ -210,7 +210,7 @@
 			and nature of gray level transitions.
 		  </Description>
 		  <Declaration>
-			<FormalInput    Name="Pixels"            SemanticTypeName="Pixels"                   Count="!"/>
+			<FormalInput    Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice"        Count="!"/>
 			<FormalInput    Name="Texture Direction" SemanticTypeName="HaralickTextureDirection" Count="!"/>
 			<FormalInput    Name="Texture Distance"  SemanticTypeName="HaralickTextureDistance"  Count="!"/>	
 			

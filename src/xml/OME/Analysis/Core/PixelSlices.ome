@@ -81,7 +81,7 @@
 			 DBLocation="PIXELS_SLICE.END_T"
 			 DataType="integer"/>
 		  <Element 
-			 Name="Pixels"
+			 Name="Parent"
 			 DBLocation="PIXELS_SLICE.PIXELS"
 			 DataType="reference"
 			 RefersTo = "Pixels"/>

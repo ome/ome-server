@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+  
+<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+  <AnalysisChain Name="Signature Chain" Locked="false">
+    <Nodes>
+    	<!-- Slicing Trunk -->
+		<Node NodeID="Files"              ProgramName="Original files"/>
+		<Node NodeID="Import"             ProgramName="Image import"/>
+		<Node NodeID="CreatePixelsSlices" ProgramName="Create pixels slices"/>
+		<Node NodeID="CreatePlaneSlices"  ProgramName="Create plane slices"/>
+		
+		<!-- Direct arc into Statistics -->
+		<Node NodeID="HaralickFeatures" ProgramName="Haralick Features"/>
+		<Node NodeID="ZernikeMoments"   ProgramName="Zernike Moments"/>
+		
+		<!-- Gradient arc into Edge Statistics -->
+		<Node NodeID="Gradient"       ProgramName="Gradient"/>
+		<Node NodeID="EdgeStatistics" ProgramName="Edge Statistics"/>
+		
+		<!-- Binary Mask arc into Statistics -->
+		<Node NodeID="PixelsPlaneSlice->PixelsSlice" ProgramName="PixelsPlaneSlice -> PixelsSlice"/>
+		<Node NodeID="OtsusMethod"       ProgramName="Otsu's Method"/>
+		<Node NodeID="GlobalThreshold"   ProgramName="Global Threshold"/>
+		<Node NodeID="FeatureStatistics" ProgramName="Feature Statistics"/>
+		
+		<!-- Fourier arc into Statistics -->
+		<Node NodeID="FourierTransform" ProgramName="Fourier Transform"/>
+		<Node NodeID="FrequencySpace->PixelsPlaneSlice" ProgramName="FrequencySpace -> PixelsPlaneSlice"/>
+		
+		<!-- Wavelet arc into Statistics -->
+		<Node NodeID="WaveletTransform" ProgramName="Wavelet Transform"/>
+		<Node
+			NodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			ProgramName="WaveletCoefficientsLevel1 -> PixelsPlaneSlice"/>
+		<Node
+			NodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			ProgramName="WaveletCoefficientsLevel2 -> PixelsPlaneSlice"/>
+			
+		<!-- Chebyshev Fourier arc into Statistics -->
+		<Node
+			NodeID="ChebyshevFourierTransform" 
+			ProgramName="Chebyshev Fourier Transform"/>
+		<Node
+			NodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
+			ProgramName="ChebyshevFourierCoefficientMatrix -> PixelsPlaneSlice"/>
+			
+		<!-- Chebyshev arc into Statistics and Signatures -->
+		<Node
+			NodeID="ChebyshevTransform" 
+			ProgramName="Chebyshev Transform"/>
+		<Node
+			NodeID="ChebyshevTransform_signature" 
+			ProgramName="Chebyshev Transform"/>
+		<Node
+			NodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			ProgramName="ChebyshevCoefficientMatrix -> PixelsPlaneSlice"/>
+	</Nodes>
+    <Links>
+    	<!-- Slicing Trunk-->
+		<Link
+			FromNodeID="Files" 
+			FromOutputName="Files"
+			ToNodeID="Import"
+			ToInputName="Files"/>
+		<Link
+			FromNodeID="Import"
+			FromOutputName="Pixels"
+			ToNodeID="CreatePixelsSlices"
+			ToInputName="Pixels"/>
+		<Link
+			FromNodeID="CreatePixelsSlices"
+			FromOutputName="Slices"
+			ToNodeID="CreatePlaneSlices"
+			ToInputName="Slices"/>
+		
+		<!-- Direct arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>			
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="ZernikeMoments"
+			ToInputName="Pixels Plane Slice"/>
+		
+		<!-- Gradient arc into Edge Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="Gradient"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="Gradient"
+			FromOutputName="Gradient"
+			ToNodeID="EdgeStatistics"
+			ToInputName="Gradient"/>
+			
+		<!-- Binary Mask arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="PixelsPlaneSlice->PixelsSlice"
+			ToInputName="Plane slices"/>
+		<Link
+			FromNodeID="PixelsPlaneSlice->PixelsSlice"
+			FromOutputName="Slices"
+			ToNodeID="OtsusMethod"
+			ToInputName="Pixels Slice"/>
+		<Link
+			FromNodeID="OtsusMethod"
+			FromOutputName="Threshold Level"
+			ToNodeID="GlobalThreshold"
+			ToInputName="Threshold Level"/>
+		<Link
+			FromNodeID="PixelsPlaneSlice->PixelsSlice"
+			FromOutputName="Slices"
+			ToNodeID="GlobalThreshold"
+			ToInputName="Pixels Slice"/>
+		<Link
+			FromNodeID="GlobalThreshold"
+			FromOutputName="Binary Mask"
+			ToNodeID="FeatureStatistics"
+			ToInputName="Binary Mask"/>
+			
+		<!-- Fourier arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="FourierTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link 
+			FromNodeID="FourierTransform"
+			FromOutputName="Frequency Space"
+			ToNodeID="FrequencySpace->PixelsPlaneSlice"
+			ToInputName="Frequency Space"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>
+			
+		<!-- Wavelet arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="WaveletTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="WaveletTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletTransform"
+			FromOutputName="Wavelet Coefficients Level 1"
+			ToNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			ToInputName="Wavelet Coefficients Level 1"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel1->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="WaveletTransform"
+			FromOutputName="Wavelet Coefficients Level 2"
+			ToNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			ToInputName="Wavelet Coefficients Level 2"/>
+		<Link
+			FromNodeID="WaveletCoefficientsLevel2->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>
+			
+		<!-- Chebyshev Fourier arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="ChebyshevFourierTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="ChebyshevFourierTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="ChebyshevFourierTransform"
+			FromOutputName="Chebyshev Fourier Coefficient Matrix"
+			ToNodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
+			ToInputName="Chebyshev Fourier Coefficient Matrix"/>
+		<Link
+			FromNodeID="ChebyshevFourierCoefficientMatrix->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>
+			
+		<!-- Chebyshev arc into Statistics -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="ChebyshevTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="ChebyshevTransform"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="ChebyshevTransform"
+			FromOutputName="Chebyshev Coefficient Matrix"
+			ToNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			ToInputName="Chebyshev Coefficient Matrix"/>
+		<Link
+			FromNodeID="ChebyshevCoefficientMatrix->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="HaralickFeatures"
+			ToInputName="Pixels Plane Slice"/>
+			
+		<!-- Chebyshev arc into Signatures -->
+		<Link
+			FromNodeID="CreatePlaneSlices"
+			FromOutputName="Plane slices" 
+			ToNodeID="ChebyshevTransform_signature"
+			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice"
+			ToNodeID="ChebyshevTransform_signature"
+			ToInputName="Pixels Plane Slice"/>
+		</Links>
+  </AnalysisChain>
+</AnalysisChains>
+

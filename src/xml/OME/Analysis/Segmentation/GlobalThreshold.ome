@@ -39,22 +39,22 @@
 			and white pixels. The ThresholdLevel must be a floating point precision number 
 			between 0 and 1.
 			</Description>
-			<Element 
-				Name="ThresholdLevel" 
-				DBLocation="IMAGE_THRESHOLD.THRESHOLD_LEVEL"  
+			<Element
+				Name="ThresholdLevel"
+				DBLocation="IMAGE_THRESHOLD.THRESHOLD_LEVEL"
 				DataType="float"/>
 		</SemanticType>
 		
-		<SemanticType Name="BinaryMask" AppliesTo="G">
-			<Description>  After Global Thresholding, the resulting Pixels are binary. The 
+		<SemanticType Name="BinaryMask" AppliesTo="I">
+			<Description> After Global Thresholding, the resulting Pixels are binary. The 
 			high bit represents the foreground.
 			</Description>
 			<Element 
-				Name="Direction" 
-				DBLocation="IMAGE_THRESHOLD.BINARY_MASK"  
+				Name="Parent"
+				DBLocation="IMAGE_THRESHOLD.BINARY_MASK"
 				DataType = "reference"
-				RefersTo = "PixelChannelComponent"/>
-			</SemanticType>
+				RefersTo = "PixelsSlice"/>
+		</SemanticType>
 	</SemanticTypeDefinitions>	
 
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
@@ -63,20 +63,24 @@
 		   Category="Segmentation"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="GlobalThreshold"
-		   ID="urn:lsid:openmicroscopy.org:Module:81">
+		   ID="urn:lsid:openmicroscopy.org:Module:7600">
 		  <Description>
 			This module produces binary images from intensity images by normalizing the image's
 			pixel intensities to the [0,1] range and thresholding at the user-specified level.
 		  </Description>
 		  <Declaration>
-			<FormalInput  Name="Pixels"           SemanticTypeName="Pixels" Count="!"/>
-			<FormalInput  Name="Channel Index"    SemanticTypeName="ChannelIndex"   Count="!"/>
-			<FormalInput  Name="Threshold Level"  SemanticTypeName="ThresholdLevel" Count="!"/>
-			
-			<FormalOutput Name="Binary Mask"      SemanticTypeName="BinaryMask" Count="!"/>	
-			<FormalOutput Name="BinaryPixels"     SemanticTypeName="Pixels"                Count="!"/>
-			<FormalOutput Name="LogicalChannel"   SemanticTypeName="LogicalChannel"        Count="!"/>
-			<FormalOutput Name="ChannelComponent" SemanticTypeName="PixelChannelComponent" Count="+"/>
+			<FormalInput
+				Name="Pixels Slice"
+				SemanticTypeName="PixelsSlice"
+				Count="!"/>
+			<FormalInput
+				Name="Threshold Level"
+				SemanticTypeName="ThresholdLevel"
+				Count="!"/>
+			<FormalOutput
+				Name="Binary Mask"
+				SemanticTypeName="BinaryMask"
+				Count="!"/>
 		   </Declaration>
 		
 		  <ExecutionInstructions ExecutionPoint="startImage"

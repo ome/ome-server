@@ -39,13 +39,13 @@
 		   Category="Filters"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="BandPassFilter"
-		   ID="urn:lsid:openmicroscopy.org:Module:72">
-		  <Description>Returns a band passed version of the image. </Description>
+		   ID="urn:lsid:openmicroscopy.org:Module:7401">
+		  <Description>Returns a band passed version of the image.</Description>
 		  <Declaration>
 			<FormalInput
-			   Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+			   Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice" Count="!"/>
 			<FormalOutput
-			   Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+			   Name="Pixels Plane Slice" SemanticTypeName="PixelsPlaneSlice" Count="!"/>
 		  </Declaration>
 	
 		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">

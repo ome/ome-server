@@ -1,0 +1,38 @@
+The Classifier encompasses over 25 modules and STs that are spewed over 15
+files.
+
+To keep things sane I am imposing a policy of giving out LSIDs:
+
+All LSIDs from 7000 - 8000 are mine. 
+
+src/xml/OME/Analysis              7...
+src/xml/OME/Analysis/Core         71..
+src/xml/OME/Analysis/Findspots    ....
+src/xml/OME/Analysis/Classifier   72..
+src/xml/OME/Analysis/Filters      74..
+src/xml/OME/Analysis/Maths        75..
+src/xml/OME/Analysis/Segmentation 76..
+src/xml/OME/Analysis/Statistics   77..
+src/xml/OME/Analysis/Transforms   78..
+
+Below is the order the files should be imported into OME
+cut below this line and put it into a tmp file called "sushi_mushi"
+[lappy-toppy:OME/src/xml] tmacur1% bash < sushi_mushi
+to import everything 
+-----
+ome import OME/Analysis/Core/PixelIndicies.ome
+ome import OME/Analysis/Core/PixelSlices.ome
+ome import OME/Analysis/Core/PixelSliceModules.ome
+ome import OME/Analysis/Filters/HighPassFilter.ome
+ome import OME/Analysis/Filters/BandPassFilter.ome
+ome import OME/Analysis/Maths/Gradient.ome
+ome import OME/Analysis/Segmentation/GlobalThreshold.ome
+ome import OME/Analysis/Segmentation/OtsuGlobalThreshold.ome
+ome import OME/Analysis/Transforms/ChebyshevFourierTransform.ome
+ome import OME/Analysis/Transforms/ChebyshevTransform.ome
+ome import OME/Analysis/Transforms/FourierTransform.ome
+ome import OME/Analysis/Transforms/WaveletSignatures.ome
+ome import OME/Analysis/Statistics/EdgeStatistics.ome
+ome import OME/Analysis/Statistics/FeatureStatistics.ome
+ome import OME/Analysis/Statistics/HaralickFeatures.ome
+ome import OME/Analysis/Statistics/ZernikeMoments.ome

@@ -51,7 +51,7 @@
 	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 		<AnalysisModule
 		   ModuleName="Gradient"
-		   Category="Maths"
+		   Category="Maths. "
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
 		   ProgramID="Gradient"
 		   ID="urn:lsid:openmicroscopy.org:Module:7501">

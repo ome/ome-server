@@ -40,10 +40,10 @@
 
     <AnalysisModule
        ModuleName="Create pixels slices"
-       Category="Pixel slices.Slicers"
+       Category="Pixel Slices.Slicers"
        ModuleType="OME::Analysis::Modules::Slicers::Pixels"
 	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2010">
+       ID="urn:lsid:openmicroscopy.org:Module:7100">
 
       <Description>
         Creates a PixelsSlice to represent the entire range of the
@@ -85,10 +85,10 @@
 
     <AnalysisModule
        ModuleName="Create channel slices"
-       Category="Pixel slices.Slicers"
+       Category="Pixel Slices.Slicers"
        ModuleType="OME::Analysis::Modules::Slicers::Channels"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2011">
+       ID="urn:lsid:openmicroscopy.org:Module:7101">
 
       <Description>
         Slices an existing PixelsSlice into separate slices for each
@@ -135,10 +135,10 @@
 
     <AnalysisModule
        ModuleName="Create timepoint slices"
-       Category="Pixel slices.Slicers"
+       Category="Pixel Slices.Slicers"
        ModuleType="OME::Analysis::Modules::Slicers::Timepoints"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2012">
+       ID="urn:lsid:openmicroscopy.org:Module:7102">
 
       <Description>
         Slices an existing PixelsSlice into separate slices for each
@@ -186,10 +186,10 @@
 
     <AnalysisModule
        ModuleName="Create stack slices"
-       Category="Pixel slices.Slicers"
+       Category="Pixel Slices.Slicers"
        ModuleType="OME::Analysis::Modules::Slicers::Stacks"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2013">
+       ID="urn:lsid:openmicroscopy.org:Module:7103">
 
       <Description>
         Slices an existing PixelsSlice into separate slices for each
@@ -235,10 +235,10 @@
 
     <AnalysisModule
        ModuleName="Create plane slices"
-       Category="Pixel slices.Slicers"
+       Category="Pixel Slices.Slicers"
        ModuleType="OME::Analysis::Modules::Slicers::Planes"
        ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2014">
+       ID="urn:lsid:openmicroscopy.org:Module:7104">
 
       <Description>
         Slices an existing PixelsSlice into separate slices for each
@@ -283,13 +283,12 @@
     </AnalysisModule>
 
     <!-- Typecaster modules for all of the slice types -->
-
     <AnalysisModule
        ModuleName="PixelsChannelSlice -&gt; PixelsSlice"
-       Category="Typecasts.PixelsChannelSlice"
+       Category="Pixel Slices.Typecasts"
        ModuleType="OME::Analysis::Modules::PPM::Typecast"
 	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2015">
+       ID="urn:lsid:openmicroscopy.org:Module:7105">
 
       <Description>
         Allows a PixelsChannelSlice attribute to be used as a
@@ -311,10 +310,10 @@
 
     <AnalysisModule
        ModuleName="PixelsTimeSlice -&gt; PixelsSlice"
-       Category="Typecasts.PixelsTimeSlice"
+       Category="Pixel Slices.Typecasts"
        ModuleType="OME::Analysis::Modules::PPM::Typecast"
 	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2016">
+       ID="urn:lsid:openmicroscopy.org:Module:7106">
 
       <Description>
         Allows a PixelsTimeSlice attribute to be used as a
@@ -336,10 +335,10 @@
 
     <AnalysisModule
        ModuleName="PixelsStackSlice -&gt; PixelsSlice"
-       Category="Typecasts.PixelsStackSlice"
+       Category="Pixel Slices.Typecasts"
        ModuleType="OME::Analysis::Modules::PPM::Typecast"
 	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2017">
+       ID="urn:lsid:openmicroscopy.org:Module:7107">
 
       <Description>
         Allows a PixelsStackSlice attribute to be used as a
@@ -361,10 +360,10 @@
 
     <AnalysisModule
        ModuleName="PixelsPlaneSlice -&gt; PixelsSlice"
-       Category="Typecasts.PixelsPlaneSlice"
+       Category="Pixel Slices.Typecasts"
        ModuleType="OME::Analysis::Modules::PPM::Typecast"
 	   ProgramID=""
-       ID="urn:lsid:openmicroscopy.org:Module:2018">
+       ID="urn:lsid:openmicroscopy.org:Module:7108">
 
       <Description>
         Allows a PixelsPlaneSlice attribute to be used as a
