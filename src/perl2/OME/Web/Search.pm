@@ -93,12 +93,18 @@ sub new {
 		{ mode => 'tiled_ref_list', mode_title => 'Names' },
 	];
 	
-	# _controller_registry is experimental.
-	$self->{ _controller_registry } = {
-		add_images => {
-			label      => 'Add Images to Current Dataset',
-			controller => 'OME::Tasks::DatasetManager',
-			method     => 'addImages'
+	# _action_registry is experimental.
+	$self->{ _action_registry } = {
+		'OME::Image' => {
+			'Add Images to this Dataset' => {
+				controller => 'OME::Tasks::DatasetManager',
+				method     => 'addImages',
+			},
+#			{
+#				label      => 'Export Images',
+#				controller => '',
+#				method     => ''
+#			}
 		}
 	};
 	
@@ -132,9 +138,51 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;	
 	my $q    = $self->CGI();
+	my $type = $q->param( 'Type' );
+	my $html;
+
+	# Perform an action if the user just clicked one
+	if( exists $self->{ _action_registry }->{ $type } &&
+	    $q->param( 'action' ) &&
+	    exists $self->{ _action_registry }->{ $type }->{ $q->param( 'action' ) } ) {
+		
+		my $action_entry = $self->{ _action_registry }->{ $type }->{ $q->param( 'action' ) };
+		my $controller   = $action_entry->{ controller };
+		eval( "use $controller" );
+		die "Error loading $controller\n$@\n" if $@;
+		
+		my $method       = $action_entry->{ method };
+		my @selection    = $q->param( 'selected_objects' );
+		# weed out blank selections
+		@selection = grep( $_ && $_ ne '', @selection );
+		# convert LSIDs into objs.
+		my $resolver = new OME::Tasks::LSIDManager();
+		@selection = map( $resolver->getObject($_), @selection );
+		$controller->$method( \@selection );
+
+		# close this window after action is complete if it's a popup
+		# if the action messed up, then the code should have died by now.
+		if( $q->param( 'Popup' ) || $q->url_param( 'Popup' )) {
+			$html = <<END_HTML;
+<script language="Javascript" type="text/javascript">
+	window.opener.location.href = window.opener.location.href;
+	window.close();
+</script>
+END_HTML
+			return( 'HTML', $html );
+		}
+		
+		$html = $q->p( 'action succeeded' );
+
+#		This code would complete the action by posting to another page
+# 		$html = 
+# 			$q->startform( { -action => $self->pageURL( $action_entry->{ postTo } ) } ).
+# 			$q->hidden( $action_entry->{ param }, $q->param( 'selected_objects' ) ).
+# 			$q->endform();
+# 		return( 'POST_FORM', $html );
+	}
 
 	# load Types to search on	
-	my $type = $q->param( 'Type' );
 	my $types_data = $self->{ _published_search_types };
 	foreach( @$types_data ) {
 		$_->{ selected } = 'selected'
@@ -149,7 +197,7 @@ sub getPageBody {
 	}
 	my %tmpl_data = ( types_loop => $types_data, modes_loop => $display_modes_data,  );
 	
-	my $html = $q->startform();
+	$html = $q->startform();
 	
 	# If a type is selected, write in the search fields.
 	# Also search if search fields are ready.
@@ -216,8 +264,25 @@ sub getPageBody {
 		
 		# Get Objects & Render them
 		my ($objects, $paging_text ) = $self->search();
+		my $allow_action = ( $q->param( 'allow_action' ) or $q->url_param( 'allow_action' ) );
 		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
-			{ _pager_text => $paging_text, type => $type } );
+			{ _pager_text => $paging_text, type => $type, 
+				( $allow_action ?
+					( draw_checkboxes => 1 ) :
+					()
+				)
+			} );
+
+		# Make action buttons if any are requested
+		if( $allow_action ) {
+			die "Action ".$allow_action." does not exist for $type in registry"
+				unless exists $self->{ _action_registry }->{ $type }->{ $allow_action };
+			$tmpl_data{actions} .= 
+				$q->submit( { 
+					-name => 'action',
+					-value => $allow_action,
+				} );
+		}
 
 		# Reset fields if the search type was just switched.
  		unless( !$search_type || $type eq $search_type ) {
@@ -225,7 +290,7 @@ sub getPageBody {
  			$q->param( '__offset', '' );
  			$q->param( 'search_type', $type );
  		}
-
+ 		
 		# gotta have hidden fields
 		$html .= "\n".
 			# tell the form what search fields are on it and what type they are for.
@@ -235,7 +300,9 @@ sub getPageBody {
 			$q->hidden( -name => '__order' ).
 			$q->hidden( -name => '__offset' ).
 			$q->hidden( -name => 'last_order_by' ).
-			$q->hidden( -name => 'action' );
+			$q->hidden( -name => 'page_action' ).
+			# This is used to retain selected objects across pages.
+			$q->hidden( -name => 'selected_objects' );
 		
 	}
 	
@@ -305,7 +372,7 @@ sub search {
 
 	# Turn pages
 	my $currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } );
-	my $action = $q->param( 'action' ) ;
+	my $action = $q->param( 'page_action' ) ;
 	if( $action ) {
 		if( $action eq 'FirstPage' ) {
 			$searchParams{ __offset } = 0;
@@ -355,14 +422,14 @@ sub search {
 		if( $numPages > 1 ) {
 			$pagingText .= $q->a( {
 					-title => "First Page",
-					-href => "javascript: document.forms[0].action.value='FirstPage'; document.forms[0].submit();",
+					-href => "javascript: document.forms[0].page_action.value='FirstPage'; document.forms[0].submit();",
 					}, 
 					'<<',
 				).' '
 				if ( $currentPage > 1 and $numPages > 2 );
 			$pagingText .= $q->a( {
 					-title => "Previous Page",
-					-href => "javascript: document.forms[0].action.value='PrevPage'; document.forms[0].submit();",
+					-href => "javascript: document.forms[0].page_action.value='PrevPage'; document.forms[0].submit();",
 					}, 
 					'<'
 				)." "
@@ -370,14 +437,14 @@ sub search {
 			$pagingText .= sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= "\n".$q->a( {
 					-title => "Next Page",
-					-href  => "javascript: document.forms[0].action.value='NextPage'; document.forms[0].submit();",
+					-href  => "javascript: document.forms[0].page_action.value='NextPage'; document.forms[0].submit();",
 					}, 
 					'>'
 				)." "
 				if $currentPage < $numPages;
 			$pagingText .= "\n".$q->a( {
 					-title => "Last Page",
-					-href  => "javascript: document.forms[0].action.value='LastPage'; document.forms[0].submit();",
+					-href  => "javascript: document.forms[0].page_action.value='LastPage'; document.forms[0].submit();",
 					}, 
 					'>>'
 				)
