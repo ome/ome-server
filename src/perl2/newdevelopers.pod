@@ -1,0 +1,606 @@
+=head1 A Newbies guide to OME
+
+Harry Hochheiser
+
+28 july 2003 hsh@nih.gov
+
+=head2 1. Introduction
+
+OME is a complex software project, containing over 500 files
+totalling almost 150,000 lines of code. Obviously, understanding a
+system of this magnitude is not a trivial undertaking.  These notes
+are based on one developer's attempts to understand the
+system. Hopefully, they will provide some guidelines that might be
+useful for others who hope to muck around with OME.
+
+Standard disclaimers apply: this document is not conclusive or
+exhaustive. Furthermore, it will probably be out-of-date relative to
+the code by the time you read it. The point here is not to document
+every last line of code in the system.  Instead, this document will
+provide pointers that may help readers get oriented and understand
+where in the system they need to dig to find specific answers to
+their questions.
+
+
+=head2 2. Overall Structure
+
+At it's heart, OME is a relatively straightforward client-server
+system. On the server end, a database manages all of the information
+that OME has about images, users, projects, datasets, analyses,
+analysis results, etc. 
+
+Most developers (and almost all users) will not interact with the
+database directly. OME contains two client interfaces that
+developers can use to access the database:
+
+1) Perl code: the libraries found in ./src/OME/src/perl2/OME contain
+   APIs for accessing the libraries. 
+
+2) XMLRPC: The Perl libraries also provide an implementation of an
+   XMLRPC interface that can be used to make remote calls to the
+   database. 
+
+More about these APIs and their usage below.
+
+
+=head2 3. Database
+
+The OME databse contains information about projects, datasets,
+images, users, groups, and all of the other entities involved in the
+OME data stream.
+
+The default DBMS is Postgres - www.postgresql.org. Eventually, Oracle
+may be supported as well. Postgres users can use the "psql" command
+line utility to interactively issue queries to the
+database. The default name for the OME database is - not surprisingly
+- "ome", so "psql ome" will enter the database. Much of the OME
+code depends upon the database structure, so you should be extremely
+careful about making any changes to the database. As a general rule,
+it's best to limit direct access to the database to "select" queries.
+
+=over
+
+=item 3.1 Definition of the database
+
+The database and initial tables are created by the bootstrapOME.pl
+file from the ./src/SQL directory. This script reads in database
+configuration information from two sources: the "0x0*.sql" files in
+that same directory, and the ".ome" files in the "./src/xml"
+directory.
+
+The "0x0*.sql" files in the sql directory define base
+tables. 000-DataTypes.sql, and 000-OMECore.sql define tables that are
+at the core of the OME data model. 010-Analysis.sql defines the
+structures needed for management of image analysis modules, chains,
+and links (see below). 020-ImageAttributes.sql is obsolete and has
+been replaced by XML files, as has most of 030-FeatureAttributes.sql
+(except for the definitions of the "FEATURES"
+table). 050-AnalysisTests.sql is also obsolete. 
+
+The "*.ome" files in ./src/xml contain definitions of semantic types
+(see 3.3 below) that populate the database and describe the data
+structure, along with other initialization code. Specifically:
+
+    OMECoreTypes.OME contains definitions of the semantic types.   
+    featureExample.ome defines example analyses for finding features in cells.
+    PlaneStatistics.ome defines semantic types and modules for calculating statistics on planes in images.
+    StatckStatistics contains similar definitions for image stacks.
+    ImportModules.ome is a dummy definition for a module that would import images.
+    spotModules.ome defines semantic types and modules for finding spots.
+
+The OME database is very "meta" - in addition to the actual data
+about images, projects, etc., the database contains numerous tables
+that describe the contents of the database. This might feel some
+somewhat confusing in its self-referentiality, but it's a powerful
+design.  More on this below.
+
+Hopefully, this document will help clear up some of the
+confusion. However, pleaes keep in mind that this document will be
+out-of-date by the time you see it, so please refer to the code or
+other (hopefully automatically updated) documentation for details.
+
+
+=item 3.2 Core Types & Concepts
+
+The core types are those that are assumed to be part of the OME data.
+This includes experimenters, groups, projects, datasets, images,
+sessions, and others. 
+
+Projects, Datasets, Images, and Features, are the many units of work
+in OME. A project is a generic container for some user-defined body
+of work. A dataset is a collection of images that is subject to some
+analysis. A project may contain multiple datasets and each dataset
+may be found in multiple projects ( a "many-to-many"
+relationshiip). The application of analysis tools to images leads to
+the generation of "features", which are computationally-derived
+attributes of images. Features are stored in their own table in the
+database.
+
+User interaction with OME is built around a sessions model - each
+user has an active session, which stores the state of their
+interactions. The session is saved in the database when the user
+logs out, and reloaded upon login. Session information is stored in
+the ome_sessions table.
+
+
+=item 3.3. Semantic Types, Semantic Elements, Data Tables, and Data Columns
+
+The concept of "semantic type" plays a key role in OME. A semantic
+type is essentially a "struct" or "class" data element as implemented
+in the database. The table "semantic_types" contains the structures
+that are needed to define much of the data in the database.  Semantic
+types are linked to semantic elements, which are the components that
+the semantic types are composed of. The two tables are linked by the
+semantic_type_id key. 
+
+Semantic types have four levels of granularity:
+
+	 Global ('G') :  Apply to entire database
+	 Dataset ('D'):  Specific to a given datasets
+	 Image ('I'):	 Specific to a given image
+	 Feature ('F'):  Specific to a feature
+
+An example might help make this abstract discussion somewhat more
+clear. 
+
+If we look at semantic_type #8, we get the following output:
+
+ 
+ome=# select * from semantic_types where semantic_type_id=8;
+ semantic_type_id |    name    | granularity | description 
+------------------+------------+-------------+-------------
+                8 | Experiment | G           | 
+ (1 row)
+
+This tells us that "Experiment" is a global semantic type, with id #
+`8.
+
+Looking at the elements associated with Expieriment, we see the
+following:
+
+ 
+ome=# select * from semantic_elements where semantic_type_id=8;
+ semantic_element_id | semantic_type_id |     name     | data_column_id | description 
+---------------------+------------------+--------------+----------------+-------------
+                  23 |                8 | Experimenter |             23 | 
+                  22 |                8 | Description  |             22 | 
+                  21 |                8 | Type         |             21 | 
+(3 rows)
+
+Thus, the "Experiment" type has three elements - experimenter,
+descriptor, and type.
+
+The "data_column_id" column in the semantic_elements table plays a
+key role in the translation between the abstract definitions of these
+semantic types and their implementation in the
+database. Specifically, data_column_id is a reference to an entry in
+the data_columns_table. This entry describes the instantiation of the
+element in the database. 
+
+Following up on our example, the entry for data_column_id=23 is as
+follows:
+
+ 
+ome=# select * from data_columns where data_column_id=23;
+ data_column_id | data_table_id | column_name  | description | sql_type  | reference_type 
+----------------+---------------+--------------+-------------+-----------+----------------
+             23 |             8 | EXPERIMENTER |             | reference | Experimenter
+(1 row)
+
+Thus, in the database, the semantic_element field with ID 23 is
+implemented as a reference to the table "experimenter" - a foreign
+key.
+
+Note the data_table_id field in the data_columns table. This field
+points to the entries in the data_tables that implements the semantic
+type.  Thus, if we find all of the columns in data_columns with
+data_table_id=8, we see the three semantic elements for this semantic
+type:
+
+ 
+ome=# select * from data_columns where data_table_id=8;
+ data_column_id | data_table_id | column_name  | description | sql_type  | reference_type 
+----------------+---------------+--------------+-------------+-----------+----------------
+             23 |             8 | EXPERIMENTER |             | reference | Experimenter
+             22 |             8 | DESCRIPTION  |             | string    | 
+             21 |             8 | TYPE         |             | string    | 
+(3 rows)
+
+Finally, if we look at the entry in data_tables where
+data_table_id=8, we see:
+
+
+ data_table_id | granularity | table_name  | description 
+---------------+-------------+-------------+-------------
+             8 | G           | EXPERIMENTS | 
+(1 row)
+
+
+The entries in the data_columns and data_tables are sufficient to
+generate the tables that store the actual data:
+
+ 
+ome=# select * from experiments;
+ attribute_id | module_execution_id | type | description | experimenter 
+--------------+---------------------+------+-------------+--------------
+(0 rows)
+
+Each table has an attribute_id fields (essentially, a unique id # for
+each entry in that table), a module_execution_id (more about that
+later), and all of the fields defined in the associated data_columns.
+
+This is a fairly powerful and flexible structure: these tables
+provide all of the information needed to construct the database
+schema that is used to store the "real" OME data. This is what we
+mean when we say that the database is very meta. 
+
+A closer look at this structure reveals some potentially troubling
+parallels: semantic_types and data_tables, look very similar, as  do
+semantic_elements and data_columns. Is this duplication necessary? 
+
+This question can be answered by noting that the parallels are not
+exact. Semantic types and semantic elements define the abstract model
+of the data, while the data_columns and tables define one particular
+realization of those abstract types. The data_column_id in the
+semantic_elements table defines the link between this abstract model
+and its concrete realization.  
+
+This separation allows us to move away from a strictly one-to-one
+mapping between semantic types and data tables. For example, the
+semantic types "PlaneMean" and "PlaneGeometricMean all refer back to
+entries in the table "PLANE_STATISTICS".
+
+
+=item 3.6 Analysis: Modules, Chain, Nodes, and Links.
+
+Automated image analysis is a significant part of why we bother with
+OME. The use of analytic software to extract information from images
+is an active area of ongoing research. In many cases, these analyses
+feed upon each other - the output of one being the input of the
+next. Construction of useful sequences of analyses may be an
+important outcome of work with OME. Thus, as you might expect, the
+OME database contains a rich body of information about analysis
+programs and their utilization.
+
+The basic unit of analysis in OME is a module. Modules are
+categorized by hierarchical categories (stored in the
+"module_cateogires" table). Modules also have types, which refer to
+Perl claases that implement the OME::Analysis::Handler interfaces,
+and locations - which can be filenames for command-line executables
+or Perl classes. The "execution_instructions" column contains an XML
+fragment that defines how the module is to be invoked. Modules can
+iterate over features in images - the module's "default_iterator"
+specifies how this is done. Finally, the module's "new_feature_tag"
+defines a tag that will be assigned to any new features created by
+the module.
+
+For modules that are command-line executables, the CLI.xsd schema
+defines a template for specifying the structure of the inputs and
+outputs. Instances of this schema will be the contents on the
+execution_instructions column.
+
+The inputs and outputs of analysis modules are defined in the
+"formal_inputs" and "formal_outputs" tables, which specify a series
+of semantic_types that are inputs and outputs for each module. Each
+entry in these tables refers back to the semantic_types table. Formal
+inputs may be restricted to come from a small set or list of values
+-in this case, the values are given by entries in the "lookup_tables"
+table.
+
+Analysis modules are connected into DAGs via analysis chains, in the
+"analysis_chains" table. An analysis chain contains a number of
+nodes ("analysis_chain_nodes"), each of which specifies a module that
+might have its iterator and new feature tag overridden. The
+analysis_chain_links table specified links in the analysis chain, in
+terms of "from" and "to" nodes, along with output of the "from" node
+and input of the "to" node. Of course, links must be sensible - the
+semantic types of the "from" outputs and the "to" inputs must match,
+and the nodes must be members of the same analysis chain.
+
+Analysis_paths are specific paths through analysis chains. They are
+defined by entries in the "analysis_paths" and analysis_path_maps
+tables, which create paths and specify their contents, respectively.
+
+To make this more concrete, lets look at analysis chain #1: 
+ 
+ome=# select * from analysis_chains where analysis_chain_id=1;
+ analysis_chain_id | owner |         name          | description | locked 
+-------------------+-------+-----------------------+-------------+--------
+                 1 |     1 | Image import analyses |             | t
+(1 row)
+
+This chain has three nodes, corresponding to modules 5,6, and 7.
+ 
+ome=# select analysis_chain_node_id, module_id from analysis_chain_nodes where analysis_chain_id=1;
+ analysis_chain_node_id | module_id 
+------------------------+-----------
+                      3 |         7
+                      2 |         5
+                      1 |         6
+(3 rows)
+
+
+There are two links in this chain - one from node 3 to node 2, and
+another from node 3 to node 1.
+ 
+ome=# select analysis_chain_link_id, from_node,to_node from analysis_chain_links where analysis_chain_id=1;
+ analysis_chain_link_id | from_node | to_node 
+------------------------+-----------+---------
+                      2 |         3 |       2
+                      1 |         3 |       1
+(2 rows)
+
+Thus, this chain is a DAG, starting from node 3 and progressing to
+either node 2 or node 1. This structure is made explicit in the
+analyis_paths and analysis_path_maps tables. The analysis_paths
+tables tells us that there are two paths of length 2 for this chain:
+
+ 
+ome=# select * from analysis_paths where analysis_chain_id=1;
+ path_id | path_length | analysis_chain_id 
+---------+-------------+-------------------
+       1 |           2 |                 1
+       2 |           2 |                 1
+(2 rows)
+
+The analysis_path_map table tells us that the first element of the
+first path is 3 and the second element of that path is 1. Similarly,
+the first element of the second path is 3 and the second element is 2.
+
+ 
+ome=# select * from analysis_path_map;
+ path_id | path_order | analysis_chain_node_id 
+---------+------------+------------------------
+       1 |          0 |                      3
+       1 |          1 |                      1
+       2 |          0 |                      3
+       2 |          1 |                      2
+(4 rows)
+
+The OME database tracks the exections of the modules and chains. The
+"module_executions" table contains an entry for each "run' of a
+module against a dataset. "Actual_inputs" tracks the inputs used for
+each run,  and "semantic_type_outputs" tracks the results of the
+run. "Analysis_chain_executions" and "analysis_node_executions" track
+the instances of chains and individual nodes.
+
+The structures of the analysis_chains, modules, etc. are
+re-capitulated in XML schema for in AnalysisModule.xsd. This schema
+also includes stubs for features that are not yet implemented. For
+example, the "Program" element will eventually describe installation
+packages and scripts.
+
+The "CoreChains" file in the ./src/SQL directory specifies three
+analysis chains that are loaded by the OME bootstrap script. These
+chains are all specified as instances of the AnalysisChains.xsd
+schema, and are found in the ./src/xml directory. 
+
+Code for a variety of analysis programs can be found in the ./src/C directory.
+
+=back
+
+=head2 4. APIs
+
+As described above, there are two main APIs for interacting with an
+OME database: Perl APIs and XMLRPC.
+
+The Perl APIs are generally used directly by CGI scripts residing on a
+web server. These CGIs would presumably be built to support
+applications that let users interact with OME via a web browser. For
+example, the OME distribution provides a menu-based system, built on
+the Joust menu tool. This application can be found at
+http://localhost/perl2/serve.pl?Page=OME::Web::Login on a server
+running OME. 
+
+The other API uses XMLRPC to support remote procedure calls that
+execute code against the database.
+
+These two APIs are actually quite similar. Essentially, the XMLRPC
+API is simply a wrapper around the base Perl code. This section will
+introduce some of the important sessions, and then describe
+particular details for each of the APIs. The discussion will focus on
+XMLRPC, as that is presumably the mechanism that will be more widely
+used to build client applications.
+
+=over
+
+=item 4.1 Concepts
+
+=over
+
+=item 4.1.2 Sessions
+
+The "session" is the main unit of user interaction with OME. Storing
+information such as the experimenter id, hostname, times of inital
+and most recent access, the session essentially provides a record of
+a user's interactions.
+
+When a user logs into OME, they initially provide a user name and
+password. This gets used to create a session, which is then stored as
+a session file in /var/tmp/OME/sessions, using the
+Apache::Session::File package. In the future, this file is read to
+retrieve the parameters of the user's session. See SessionManager.pm
+for details. 
+
+
+=item 4.1.3 Factories
+
+A factory is the object that interacts directly with the OME
+database. Implemented in Factory.pm, factories contain code for
+creating objects, loading objects, finding objects that meet more or
+less specified criteria, etc.  Each factory is associated with a
+session. 
+
+Like many of the other Perl modules, Factory.pm is self-documenting
+in a .pod format. Type "perldoc Factory.pm" for more details.
+
+=back
+
+=item 4.2 Perl
+
+Example code for using the Perl APIs to build a web application
+around OME can be found in the ./src/perl2/OME/Web directory and its
+subdirectories. Login.pm is the login screen, Home.pm is the main
+page that is displayed upon login, etc. Home.pm loads a Joust
+(http://www.ivanpeters.com) configuration file
+(./src/JavaScript/UseWithJoust.js) to build a joust menu. This menu
+contains links to modules in the ./src/perl2/OME/Web hierarchy that
+perform the requested tasks. For example, DatasetSwitch.pm is used to
+switch datasets, and Viewer.pm brings up an image viewer.
+
+The ./ome/OME/src/perl2/OME directory contains Perl classes for most
+of the Core OME data types (as defined in 000-OMECore.sql).
+Generally, these objects are derived from the OME::DBObject class. As
+with other modules, these files are self-documenting with "perldoc".
+
+
+=item 4.3 XMLRPC
+
+As implied by the acronym, XMLRPC is an xml-based mechanism for
+supporting remote procedure calls. In this model, an client program
+bundles up a procedure call and a set of arguments in an XML
+document, and sends the document off to an XML server. The XML server
+executes the procedure call and bundles the return values in a second
+blob of XML, which is returned to the client for processing. 
+
+HTTP is used for XMLRPC communication, but at a level that will 
+generally be invisible to OME developers. 
+
+=over
+
+=item 4.3.1 XMLRPC Server
+
+XMLRPC requests are handled by a daemon executing on the OME
+server. The StandaloneServer.pl script (as found in
+./src/perl2/OME/Remote) provides a basic instance of such a
+server. This program can be invoked by typing
+"perl StandaloneServer.pl -t XMLRPC". The default port is 8002,
+alternatives can be specified with the "-p <port number>"
+flag. Finally, the "-d" option keeps the server from forking and
+prints debug output on the console.
+
+A note on ports: some operating systemms (Mac OS X in particular)
+hold ports for several minutes after programs terminate. If you need
+to kill an instance of the server, it's often best to start the next
+instance with a fresh port. 
+
+StandaloneServer.pl is a simple wrapper which uses the
+XMLRPC::Transport::HTTP::Daemon code to dispatch calls to a
+OME::Remote::Dispatcher. OME::Remote::Dispatcher handles the calls
+from the XMLRPC clients. Specifically, the dispatcher finds the
+appropriate classes for a given procedure call, verifies the inputs,
+executes the method, and packages the results appropriately.
+
+OME::Remote::Dispatcher relies upon OME::Remote::Prototypes to define
+the methods that can be accessed via XMLRPC. The Prototypes file
+contains a number of calls to addPrototype. Each of these calls
+specifies a class, a method, and formats for input and output. Only
+those methods that are mentioned in the prototype file can be
+executed via XMLRPC calls.
+
+
+=item 4.3.2 XMLRPC Client
+
+OME currently contains an example XMLRPC client. This client, and the
+supporting libraries that it uses, are all written in Java. The
+client is not very interesting in itself - it simply provides a GUI
+browser for semantic types, semantic elements, and modules - but it
+provides a model of how to write an XMLRPC-based OME Client.
+
+The XMLRPC client is built on the org.apache.xmlrpc.XmlRpc,
+org.apache.xmlrpc.XmlRpcClient, and
+org.apache.xmlrpc.XmlRpcClientLite packages, available at
+http://xml.apache.org. These packages provide the low-level handling
+of XMLRPC.
+
+As currently distributed, the OME package does not include all of the
+jar files for these libraries. Furthermore, the appropriate class
+paths must be manually established - speak to the OME developers for
+help.
+
+The alligator application - org.openmicroscopy.alligator.Alligator -
+is the client GUI application. The code in Alligator provides an
+overview of what is needed to communicate with OME via XMLRPC. The
+support libraries found in org.openmicroscopy and
+org.openmicroscopy.remote manage the OME objects and related
+functionality. These packages have somewhat parallel structure:
+org.openmicroscopy defines interfaces that are implemented by classes
+in org.openmicroscopy.remote. This cleanly allows for the possibility of
+non-remote implemenations of these interfaces. All of the database
+objects in the remote package are subclasses of the RemoteOMEObject
+class, which is a subclass of RemoteObject. Together, these base classes
+provide support for OME objects that are derived from a remote database.
+
+The first interaction with OME can be seen in the Alligator login code
+(in Controller.java) , which creates a RemoteBindings object and uses
+it to login to the OME Server, thus creating a session and a
+factory. This is done using the URL specified in the login dialog,
+which should correspond to an invocation of the StandaloneServer. To
+execute a login, the RemoteBindings object does creates an
+XmlRpcCaller, which wraps an XmlRpcClientLite (from the apache XML
+libraries) object and handles the execution of XMLRPC calls.   
+
+Note that the login procedure in Alligator does not take advantage of
+the stored sessions as implemented in the Perl code.  There are two
+reasons for this: the Dispatcher does not expose a method for
+creating sessions based on a stored session cookie, and the client
+code does not have the libraries for handling this form of login (the
+Java analogs of the Perl Apache::Session packages).
+
+
+After login, the controller object calls the database to populate GUI
+widgets with the semantic types and modules found in the
+database. The remainder of this section will focus on the semantic
+types - the modules are similar.
+
+The list of semantic types is udpated by setting the table model for
+a JTable to contain a list of objects as returned by the XMLRPC
+server.  This list is retrieved by caling
+SemanticTypeTableModel.update(factory) with the factory for the
+current session. Note that this code is wrapped in external threads
+so as to avoid interference with the GUI-building thread.
+
+The update method is used to find all of the SemanticTypes in the
+factory ("factory.findObjects("OME::SemanticType",null)). To find
+these objects, the factory sends a "findObjects" message to the
+XmlRpcCaller,  with a set of criteria indicating that objects of type
+"OME::SemanticType" are desired. The result of this call is a list of
+objects, which are instantiated as SemanticTypes, using the mapping
+in the RemoteObject static Hash "classes". Thus, as we see in
+RemoteSemanticTypes.java, all objects of type "OME::SemanticType" are
+instantiated as RemoteSemanticType objects. The names of these
+semantic type objects are then used to populate the list of remote
+types (see getValueAt() in ThreadedTypeTableModel.java and
+getValueAtFromList() in SemanticTypeTableModel.java) 
+
+When one of the items in the table is selected (double clicked), the
+controller displays the details of this semantic type and its
+elements in a new frame (SematicTypeFrame). The elements are
+retrieved by calling "getElements()" on the remote semantic
+type. This procedure leads to another XMLRPC call, which calls for
+"smeantic_elements" to be executed as the method against the selected
+semantic type. As before, the result is a list of objects, which are
+then intantiated as Elements (defined in RemoteSemanticType).
+
+=back
+
+=back
+
+=head2 5. Exporting and Importing: XML Schemas
+
+OME provides XML schemas that can be used to describe data in a
+format suitable for importing into or exporting from OME databases.
+The ome.xsd and CA.xsd schmeas (found in ./src/xml/schemas), provide
+two alternative views of data. Ome.xsd schema provides a nested
+view, while ca.xsd provides a "flattened" view of the same data. 
+The XSLT files OME-CA2OME.xslt and OME2OME-CA.xslt (in the
+./src/xml/xslt directory) can be used to translate between the two
+formats. 
+
+The file ./src/perl2/OME/Tests/ExportSession.pl contains an example
+of how the OME::Tasks::OmeExport package can be used to export the
+contents of an OME session.
+
+
+
+=cut
