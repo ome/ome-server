@@ -95,8 +95,8 @@ sub addImagesToDataset ($$$) {
 
 
 =head2 importFiles($repository, \%options, @filenames)
-or importFiles(\%options, $@filenames)
-or importFiles($@filenames)
+or importFiles(\%options, @filenames)
+or importFiles(@filenames)
 
 currently recognized options are {AllowDuplicates => 0|1}
 
