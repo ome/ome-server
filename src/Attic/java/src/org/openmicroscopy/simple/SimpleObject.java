@@ -59,6 +59,7 @@ public class SimpleObject
 
     public int getID() { return id; }
     public void writeObject() {}
+    public void storeObject() {}
     public void refresh() {}
     public void populate() {}
     public Session getSession()
