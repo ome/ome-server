@@ -951,7 +951,7 @@ Douglas Creager (dcreager@alum.mit.edu)
 
 =head1 SEE ALSO
 
-L<OME::Tasks::AnalysisEngine|OME::Tasks::AnalysisEngine>
+L<OME::Analysis::AnalysisEngine|OME::Analysis::AnalysisEngine>
 
 =cut
 
