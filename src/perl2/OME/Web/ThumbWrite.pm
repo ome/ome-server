@@ -21,10 +21,11 @@
 package OME::Web::ThumbWrite;
 use strict;
 use vars qw($VERSION);
-$VERSION = 2.000_000;
+$VERSION = '1.0';
 use CGI;
 use base qw(OME::Web);
 use OME::Tasks::Thumbnails;
+
 
 sub new {
     my $proto = shift;
@@ -46,9 +47,22 @@ sub serve {
 	my $generator= new OME::Tasks::Thumbnails($session);
 	my $image=$factory->loadObject("OME::Image",$id);
 	my $out=$generator->generateOMEimage($image);
-	my $thumbnail=$generator->generateOMEthumbnail($out);
 	print $self->CGI()->header(-type =>"image/jpeg");
-	print $thumbnail;
+
+	if (not defined $out){
+		# $out = read img
+  		my $no_img="../../images/no_img.jpeg";
+		open(IM, "< $no_img") || die ("Error reading file, ",$no_img," ",$!);
+		while(<IM>){
+			print $_;
+		};
+		close(IM);		
+	}else{
+		my $thumbnail=$generator->generateOMEthumbnail($out);
+		print $thumbnail;
+	}
+
+
 }
 
 
