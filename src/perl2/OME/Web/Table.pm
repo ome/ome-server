@@ -51,7 +51,6 @@ use Data::Dumper;
 
 # OME Modules
 use OME;
-use OME::ModuleExecution;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -63,67 +62,6 @@ use base qw(OME::Web);
 #*********
 #********* PRIVATE METHODS
 #*********
-
-sub __MEXTable {
-    my $self = shift;
-    my $options = shift;
-                                                                                                          
-    # Method variables
-    my $factory = $self->Session()->Factory();
-    my $q = $self->CGI();
-    my $table_data;
-    my @mexes = $self->__filterObjects( {
-			filter_object => 'OME::ModuleExecution',
-			filters => $options->{filters},
-		}
-	);
-
-    my @column_headers = qw(ID Timestamp Status Module Dataset Dependence);
-                                                                                                          
-    # Generate our table data
-    foreach my $mex (@mexes) {
-        my $id = $mex->id();
-        my $checkbox = $q->checkbox(-name => 'selected', -value => $id, -label => '');
-        my $status = $mex->status();
-		my $module = $factory->loadObject("OME::Module", $mex->module_id());
-		my $module_name = $module ? $module->name() : " - ";
-		my $timestamp = $mex->timestamp();
-		my $dataset = $factory->loadObject("OME::Dataset", $mex->dataset_id());
-		my $dataset_name = $dataset ? $dataset->name() : " - ";
-                                                                                                          
-        $table_data .= $q->Tr({-class => 'ome_td'},
-            $q->td({-align => 'center'}, [
-                $checkbox,
-                $id,
-				$timestamp,
-				$q->a({-href => "/perl2/serve.pl?Page=OME::Web::ViewMEXresults&MEX_ID=$id"}, $status),
-				$module_name,
-				$dataset_name,
-				"",
-                ]
-            )
-        );
-    }
-    # Get options row
-	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
-
-    # Populate and return our table
-    my $table = $q->table( {
-            -class => 'ome_table',
-            -cellpadding => '4',
-            -cellspacing => '1',
-            -border => '0',
-            -width => '100%',
-        },
-		$q->startform(),
-        $q->Tr($q->th({-class => 'ome_td'}, ["Select", @column_headers])),
-        $table_data,
-		$options_row || '',
-		$q->endform()
-    );
-                                                                                                          
-    return $table;
-}
 
 sub __getDisplayLinks {
 	my $self = shift;

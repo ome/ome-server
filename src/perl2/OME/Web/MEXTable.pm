@@ -1,5 +1,5 @@
-# OME/Web/ImageTable.pm
-# HTML table generation class for inclusion or general use. It supports Images.
+# OME/Web/MEXTable.pm
+# HTML table generation class for inclusion or general use. It supports MEXes.
 
 #-------------------------------------------------------------------------------
 #
@@ -36,7 +36,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::ImageTable;
+package OME::Web::MEXTable;
 
 #*********
 #********* INCLUDES
@@ -50,7 +50,7 @@ use Data::Dumper;
 
 # OME Modules
 use OME;
-use OME::Image;
+use OME::ModuleExecution;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -71,7 +71,7 @@ sub __getColumnAliases {
 }
 
 # Table header macro
-sub __genericTableHeader { shift->SUPER::__genericTableHeader("Images"); }
+sub __genericTableHeader { shift->SUPER::__genericTableHeader("MEXes"); }
 
 #*********
 #********* PUBLIC METHODS
@@ -80,99 +80,72 @@ sub __genericTableHeader { shift->SUPER::__genericTableHeader("Images"); }
 sub getTable {
 	my ($self, $options, @images) = @_;
 
-	# Method variables
-	my $factory = $self->Session()->Factory();
-	my $q = $self->CGI();
-	my $table_data;
 
-	unless (@images) {
-		@images = $self->__filterObjects( {
-				filters => $options->{filters},
-				filter_object => 'OME::Image'
-			}
-		);
-	}
-	
-	my @column_headers = qw(ID Name Preview Owner Group Description);
+    # Method variables
+    my $factory = $self->Session()->Factory();
+    my $q = $self->CGI();
+    my $table_data;
+    my @mexes = $self->__filterObjects( {
+			filter_object => 'OME::ModuleExecution',
+			filters => $options->{filters},
+		}
+	);
 
-	# If we're showing relations
-	if ($options->{relations}) { push(@column_headers, 'Datasets Related') }
-	
+    my @column_headers = qw(ID Timestamp Status Module Dataset Dependence);
+
 	# If we're showing select checkboxes
 	if ($options->{select_column}) { unshift(@column_headers, 'Select') }
 
-	# Generate our table data
-	foreach my $image (@images) {
-		my $id = $image->id();
-		my $checkbox;	
-		
+    # Generate our table data
+    foreach my $mex (@mexes) {
+        my $id = $mex->id();
+		my $checkbox;
+
 		if ($options->{select_column}) {
 			$checkbox = $q->td({-align => 'center'},
 				$q->checkbox(-name => 'selected', -value => $id, -label => '')
 			);
 		}
 
-		my $name = $image->name();
-		my $thumbnail = $q->img( {
-				-align => 'bottom',
-				-border => '0',
-				-src => "/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$id",
-				-alt => 'N/A'
-			}
-		);
-		my $experimenter = $factory->loadAttribute("Experimenter", $image->experimenter_id());
-		my $owner = $experimenter->FirstName() . " " . $experimenter->LastName();
-		my $group = $image->group() ? $image->group()->Name() : " - ";
-		my $description = $image->description() ? $image->description() : " - ";
-		my $relations;
-
-		# Get our relationship checkboxes
-		if ($options->{relations}) {
-			my @dataset_relations = $image->datasets();
-
-			# Remove dummy import datasets
-			for (my $c = 0; $c < scalar(@dataset_relations); $c++) {
-				if ($dataset_relations[$c]->name() eq 'Dummy import dataset') {
-					splice (@dataset_relations, $c, 1);
-				}
-			}
-			$relations = $self->__getRelationTD(@dataset_relations);
-		}
-
-		$table_data .= $q->Tr({-class => 'ome_td'},
-			$checkbox || '',
-			$q->td({-align => 'center'}, [
-				$id,
-				$name,
-				$q->a({-href => "javascript:openPopUpImage($id);"}, $thumbnail),
-				$owner,
-				$group,
-				$description,
-				],
-			),
-			$relations || '',
-		);
-	}
-
+        my $status = $mex->status();
+		my $module = $factory->loadObject("OME::Module", $mex->module_id());
+		my $module_name = $module ? $module->name() : " - ";
+		my $timestamp = $mex->timestamp();
+		my $dataset = $factory->loadObject("OME::Dataset", $mex->dataset_id());
+		my $dataset_name = $dataset ? $dataset->name() : " - ";
+                                                                                                          
+        $table_data .= $q->Tr({-class => 'ome_td'},
+				$checkbox || '',
+            $q->td({-align => 'center'}, [
+                $id,
+				$timestamp,
+				$q->a({-href => "/perl2/serve.pl?Page=OME::Web::ViewMEXresults&MEX_ID=$id"}, $status),
+				$module_name,
+				$dataset_name,
+				"",
+                ]
+            )
+        );
+    }
     # Get options row
 	my $options_row = $self->__getOptionsTR($options->{options_row}, (scalar(@column_headers) + 1));
 
-	# Populate and return our table
-	my $table = $q->table( {
-			-class => 'ome_table',
-			-cellpadding => '4',
-			-cellspacing => '1',
-			-border => '0',
-			-width => '100%',
-		},
+    # Populate and return our table
+    my $table = $q->table( {
+            -class => 'ome_table',
+            -cellpadding => '4',
+            -cellspacing => '1',
+            -border => '0',
+            -width => '100%',
+        },
 		$q->startform(),
-		$q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
-		$table_data,
+        $q->Tr($q->th({-class => 'ome_td'}, [@column_headers])),
+        $table_data,
 		$options_row || '',
 		$q->endform()
-	);
-
-	return $table;
+    );
+                                                                                                          
+    return $table;
 }
 
 

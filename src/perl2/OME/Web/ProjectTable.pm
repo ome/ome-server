@@ -79,7 +79,6 @@ sub __genericTableHeader { shift->SUPER::__genericTableHeader("Projects"); }
 
 sub getTable {
 	my ($self, $options, @projects) = @_;
-	my $p_manager = new OME::Tasks::ProjectManager;
 
 	# Method variables
 	my $factory = $self->Session()->Factory();
