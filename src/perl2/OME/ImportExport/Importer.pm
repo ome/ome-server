@@ -503,7 +503,7 @@ sub store_xyz_info {
     $sth = $session->DBH()->prepare (
         'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
-        $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, $href->{'Image.BitsPerPixel'}));
+        $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
     my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
     
     open (STDOUT_PIPE,$cmd);
