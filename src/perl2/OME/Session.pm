@@ -66,7 +66,7 @@ This object is created by L<C<OME::SessionManager>|OME::SessionManager>
 depending on the method by which OME is used - Web browser (L<C<OME::Web>|OME::Web>), L<C<OME::Remote>|OME::Remote> client or command-line tool.
 The session object maintains the user's state regardless of the client used for access.
 A user's session never expires.  A session key (a string token) is exchanged between the client and the server
-to refer to a session object.  This token is very short lived, and must be periodically refreshed.
+to refer to a session object.  This token is short lived, and must be periodically refreshed.
 
 =cut
 
@@ -142,6 +142,11 @@ Returns the session's L<C<OME::SessionManager>|OME::SessionManager> object.
 =head2 Configuration
 
 Returns the session's L<C<OME::Configuration>|OME::Configuration> object.
+
+=head2 SessionKey
+
+Returns the session's SessionKey - a string token that can be used to recover
+the session object (using L<C<OME::SessionManager>|OME::SessionManager>) for a short period of time.
 
 =head2 User
 

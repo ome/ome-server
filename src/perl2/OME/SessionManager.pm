@@ -34,6 +34,35 @@
 #
 #-------------------------------------------------------------------------------
 
+=head1 NAME
+
+OME::SessionManager - Get an L<C<OME::Session>|OME::Session> object.
+
+=head1 SYNOPSIS
+
+	use OME::SessionManager;
+	use OME::Session;
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	my $sessionKey = $session->SessionKey();
+	$manager->logout($session);
+
+	my $session = $manager->createSession($sessionKey);
+	$manager->logout($session);
+
+	my $session = OME::SessionManager->TTYlogin();
+	$manager->logout($session);
+
+=head1 DESCRIPTION
+
+This class is used to get an initial OME::Session object.
+There are several authentication methods implemented including username/password,
+a string token (SessionKey) and a TTY login from the command line.  The SessionKey
+token is used for short-term persistance between a client and the OME server.
+
+=cut
+
 
 # Ilya's add
 # JM 14-03
@@ -50,7 +79,6 @@ use Log::Agent;
 use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
-use OME::DBConnection;
 use OME::Factory;
 use OME::Configuration;
 use Term::ReadKey;
@@ -67,6 +95,10 @@ SQL
 # The lifetime of server-side session keys in seconds
 our $APACHE_SESSION_LIFETIME = 1800;  # 30 minutes
 
+=head1 METHODS
+
+=cut
+
 # new
 # ---
 
@@ -81,6 +113,16 @@ sub new {
 
 # createSession
 # -------------
+
+=head2 createSession
+
+	$manager->createSession ($username,$password);
+	$manager->createSession ($sessionKey);
+
+This method will attempt a connection to the DB using $username/$password or $sessionKey,
+and return an L<C<OME::Session>|OME::Session> object if successful.
+
+=cut
 
 sub createSession {
     my $self = shift;
@@ -106,11 +148,20 @@ sub createSession {
 
 # TTYlogin
 # --------
+
+=head2 TTYlogin
+
+	$manager->TTYlogin ();
+
+This method will attempt to get login information from the user using a terminal interface.
+If successfull, it will cache the SessionKey in the user's ~/.omelogin file.
+
+=cut
+
 sub TTYlogin {
     my $homeDir = $ENV{"HOME"} || ".";
     my $loginFile = "$homeDir/.omelogin";
 
-    my $manager = OME::SessionManager->new();
     my $session;
 
     my $loginFound = open LOGINFILE, "< $loginFile";
@@ -118,7 +169,7 @@ sub TTYlogin {
     if ($loginFound) {
         my $key = <LOGINFILE>;
         chomp($key);
-        $session = $manager->createSession($key);
+        $session = OME::SessionManager->createSession($key);
         close LOGINFILE;
 
         if (!defined $session) {
@@ -282,6 +333,15 @@ sub getOMESession {
 #
 # logout
 # ------
+
+=head2 logout
+
+	$manager->logout ($session);
+
+Unregisters the $session from this $manager.
+
+=cut
+
 sub logout {
     my $self = shift;
     my $session = shift;
@@ -289,6 +349,7 @@ sub logout {
     logdbg "debug", ref($self)."->logout: logging out";
     $self->deleteApacheSession ($session->{ApacheSession});
     delete $session->{ApacheSession};
+    delete $session->{SessionKey};
     $session->closeSession();
 }
 
