@@ -109,15 +109,29 @@ sub __makeHash ($$$) {
             $object_name = $column;
         }
 
-        my $type = $object->getColumnType($object_name);
-        die "Unknown column $object_name"
-          unless defined $type;
+        if ($object_name =~ /^\#(\w+)$/) {
+            my $real_name = $1;
 
-        if ($type eq 'has-many') {
-            my @results = $object->$object_name();
-            $dto->{$dto_name} = \@results;
+            my $type = $object->getColumnType($real_name);
+            # __makeHash will have already ensured that each column exists
+
+            if ($type eq 'has-many') {
+                my $counter = "count_${real_name}";
+                $dto->{$column} = $object->$counter();
+            } else {
+                die "Cannot count a column which is not has-many: $column";
+            }
         } else {
-            $dto->{$dto_name} = $object->$object_name();
+            my $type = $object->getColumnType($object_name);
+            die "Unknown column $object_name"
+              unless defined $type;
+
+            if ($type eq 'has-many') {
+                my @results = $object->$object_name();
+                $dto->{$dto_name} = \@results;
+            } else {
+                $dto->{$dto_name} = $object->$object_name();
+            }
         }
     }
 
