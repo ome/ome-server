@@ -47,7 +47,6 @@ import org.openmicroscopy.Factory;
 import org.openmicroscopy.Session;
 import org.openmicroscopy.Attribute;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.piccolo.PFormalParameter;
 import org.openmicroscopy.vis.piccolo.PFormalInput;
@@ -55,14 +54,10 @@ import org.openmicroscopy.vis.piccolo.PFormalOutput;
 import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.vis.util.SwingWorker;
 import org.openmicroscopy.SemanticType;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
 import java.util.Hashtable;
-import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Iterator;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 import java.net.URL;
@@ -79,7 +74,7 @@ import java.awt.Image;
  * @since OME2.1
  */
 
-public class Connection implements DatasetSelectionEventListener {
+public class Connection {
 	
 	private RemoteBindings remote=null;
 	private Session session;
@@ -370,44 +365,17 @@ public class Connection implements DatasetSelectionEventListener {
 		return projects;
 	}
 	
-	private void setDataset(CDataset d) {
-		if (d!= null) {
-			HashMap crit = new HashMap();
-			crit.put("dataset",d);
-			chainExecutions = factory.findObjects("OME::AnalysisChainExecution",crit);
-			HashSet result = new HashSet();
-			Iterator iter = chainExecutions.iterator();
-			while (iter.hasNext()) {
-				CChainExecution ex = (CChainExecution) iter.next();
-				CChain chain = (CChain) ex.getChain();
-				// don't set it to be executed unless it's true.
-				result.add(chain);
-			}
-			chains.setExecutedChains(result);
-		}
-		else
-			chains.clearExecutedChains();
+	public List getChainExecutions(CChain c) {
+		if (c == null)
+			return null;
+			
+		HashMap crit = new HashMap();
+		crit.put("analysis_chain",c);
+		List execs  = factory.findObjects("OME::AnalysisChainExecution",crit);
+		return execs;
 	}
 	
-	public void clearDatasets() {
-		chains.clearExecutedChains();
-	}
-	
-	public List getDatasetExecutions(CChain chain) {
-		ArrayList res = new ArrayList();
-		Iterator iter = chainExecutions.iterator();
-		while (iter.hasNext()) {
-			CChainExecution exec = (CChainExecution) iter.next();
-			if (chain == exec.getChain())
-				res.add(exec);
-		}
-		return res;
-	}
-	
-	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		if (e.isSelected())
-			setDataset(e.getDataset());
-	}
+
 	
 	public void getThumbnail(CImage i) {
 		
