@@ -23,19 +23,54 @@ package org.openmicroscopy.analysis.ui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
+import java.net.*;
 import javax.swing.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.openmicroscopy.*;
 import org.openmicroscopy.analysis.*;
+import org.openmicroscopy.remote.RemoteBindings;
 
 public class Test
     extends JFrame
 {
+    private static RemoteBindings bindings;
+
     public static void main(String[] args)
     {
         String chain;
 
-        chain = (args.length > 0)? args[0]: "IMAGE_IMPORT";
+        if (args.length < 2) 
+        {
+            System.err.println("Usage:  Test [XML-RPC URL] [Chain name]");
+            System.exit(2);
+        }
+
+        String urlString = args[0];
+        bindings = null;
+
+        BufferedReader in =
+            new BufferedReader(new InputStreamReader(System.in));
+
+        try
+        {
+            System.out.print("Username? ");
+            String username = in.readLine();
+        
+            System.out.print("Password? ");
+            String password = in.readLine();
+
+            bindings = new RemoteBindings();
+            bindings.loginXMLRPC(urlString,username,password);
+        } catch (Exception e) {
+            System.err.println(e);
+            System.exit(1);
+        }
+
+        chain = args[1];
 
         Test  test = new Test(chain);
         test.setVisible(true);
@@ -44,7 +79,7 @@ public class Test
     protected PlaygroundPane        playgroundPane;
     protected PlaygroundController  controller;
    
-    protected Test(String chain)
+    protected Test(String chainName)
     {
         super("Analysis Engine");
 
@@ -57,6 +92,7 @@ public class Test
             {
                 public void windowClosing(WindowEvent e)
                 {
+                    bindings.logoutXMLRPC();
                     System.exit(0);
                 }
             });
@@ -64,6 +100,7 @@ public class Test
         JPanel p1;
         controller = new PlaygroundController();
 
+/*
         if (chain.equalsIgnoreCase("IMAGE_IMPORT"))
         {
             playgroundPane = new PlaygroundPane(TestInstances.imageImportChain);
@@ -95,6 +132,21 @@ public class Test
                 new ChainNodeWidget(TestInstances.testFindSpots_findSpots,
                                     controller),
                 350,150);
+        }
+*/
+        Factory factory = bindings.getFactory();
+        Map criteria = new HashMap();
+        criteria.put("name",chainName);
+        Chain chain = (Chain) factory.findObject("OME::AnalysisView",criteria);
+        playgroundPane = new PlaygroundPane(chain);
+        int x = 50;
+        Iterator i = chain.iterateNodes();
+        while (i.hasNext())
+        {
+            playgroundPane.addNodeWidget(
+                new ChainNodeWidget((Chain.Node) i.next(),controller),
+                x,50);
+            x += 200;
         }
 
         controller.setPlaygroundPane(playgroundPane);

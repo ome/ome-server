@@ -27,6 +27,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.openmicroscopy.*;
 
@@ -35,6 +37,7 @@ public class ChainNodeWidget
 {
     protected Chain.Node  node;
     protected JLabel      lblName, lblDescription, inputLabels[], outputLabels[];
+    protected List        inputIDs, outputIDs;
     protected JPanel      labelPanel;
     protected Map         parameters, labels;
 
@@ -176,6 +179,8 @@ public class ChainNodeWidget
 
         inputLabels = new JLabel[numInputs];
         outputLabels = new JLabel[numOutputs];
+        inputIDs = new ArrayList();
+        outputIDs = new ArrayList();
 
         Font font = lbl0.getFont();
         unhighlightedFont = font.deriveFont(Font.PLAIN);
@@ -197,6 +202,7 @@ public class ChainNodeWidget
                 param = (Module.FormalParameter) inputs.get(i);
                 lbl0 = (inputLabels[i] = new JLabel(param.getParameterName(),
                                                     SwingConstants.LEFT));
+                inputIDs.add(new Integer(param.getID()));
                 parameters.put(lbl0,param);
                 labels.put(param,lbl0);
                 lbl0.addMouseListener(inputListener);
@@ -212,6 +218,7 @@ public class ChainNodeWidget
                 param = (Module.FormalParameter) outputs.get(i);
                 lbl0 = (outputLabels[i] = new JLabel(param.getParameterName(),
                                                      SwingConstants.RIGHT));
+                outputIDs.add(new Integer(param.getID()));
                 parameters.put(lbl0,param);
                 labels.put(param,lbl0);
                 lbl0.addMouseListener(outputListener);
@@ -306,7 +313,8 @@ public class ChainNodeWidget
     {
         int index;
 
-        index = input.getModule().getInputs().indexOf(input);
+        //index = input.getModule().getInputs().indexOf(input);
+        index = inputIDs.indexOf(new Integer(input.getID()));
         if ((index < 0) || (index >= inputLabels.length))
             throw new ArrayIndexOutOfBoundsException("getInputNubLocation");
 
@@ -335,7 +343,8 @@ public class ChainNodeWidget
     {
         int index;
 
-        index = output.getModule().getOutputs().indexOf(output);
+        //index = output.getModule().getOutputs().indexOf(output);
+        index = outputIDs.indexOf(new Integer(output.getID()));
         if ((index < 0) || (index >= outputLabels.length))
             throw new ArrayIndexOutOfBoundsException("getOutputNubLocation");
 

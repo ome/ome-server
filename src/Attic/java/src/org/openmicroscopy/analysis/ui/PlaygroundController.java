@@ -95,9 +95,11 @@ public class PlaygroundController
     {
         if (statusEmpty)
         {
+            AttributeType type = param.getAttributeType();
+            String typeName = (type == null)? "<Untyped>": type.getName();
             displayStatusText(param.getModule().getName()+"."+
                               param.getParameterName()+" : "+
-                              param.getAttributeType().getName());
+                              typeName);
             //Iterator i = nodeWidgets.iterator();
             //while (i.hasNext())
             //    ((ChainNodeWidget) i.next()).highlightLabel(param);
@@ -125,6 +127,7 @@ public class PlaygroundController
                                     boolean input)
     {
         AttributeType  type = param.getAttributeType();
+        String         typeName = (type == null)? "<Untyped>": type.getName();
         Chain.Node     node = widget.getChainNode();
 
         if (lastParameter != null)
@@ -136,7 +139,7 @@ public class PlaygroundController
             if (input)
             {
                 displayStatusText("Adding link ("+
-                                  type.getName()+
+                                  typeName+
                                   ") - *** to "+
                                   param.getModule().getName()+"."+
                                   param.getParameterName());
@@ -149,7 +152,7 @@ public class PlaygroundController
                 widget.italicLabel(param);
             } else {
                 displayStatusText("Adding link ("+
-                                  type.getName()+
+                                  typeName+
                                   ") - "+
                                   param.getModule().getName()+"."+
                                   param.getParameterName()+" to ***");
@@ -199,8 +202,9 @@ public class PlaygroundController
                     unselectAttributeType("Cannot link a node to itself!");
                 } else {
                     Chain  chain = playgroundPane.getChain();
+                    List   linksList = playgroundPane.getLinks();
 
-                    Iterator  links = chain.iterateLinks();
+                    Iterator  links = linksList.iterator();
                     while (links.hasNext())
                     {
                         Chain.Link  link = (Chain.Link) links.next();

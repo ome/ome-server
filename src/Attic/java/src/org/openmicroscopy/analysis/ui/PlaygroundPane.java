@@ -26,6 +26,7 @@ import java.awt.event.*;
 import java.awt.geom.*;
 import javax.swing.*;
 import java.util.*;
+import java.util.List;
 
 import org.openmicroscopy.*;
 
@@ -44,6 +45,7 @@ public class PlaygroundPane
 
     protected Chain           chain;
     protected Map             instanceWidgets;
+    protected List            links;
     protected WidgetListener  widgetListener;
 
     protected class ResizingDesktopPane
@@ -74,7 +76,7 @@ public class PlaygroundPane
             super.paintChildren(g);
 
             Graphics2D g2 = (Graphics2D) g;
-            Iterator   i = chain.iterateLinks();
+            Iterator   i = links.iterator();
 
             g2.setPaint(Color.black);
 
@@ -86,10 +88,8 @@ public class PlaygroundPane
             {
                 Chain.Link  link = (Chain.Link) i.next();
 
-                //System.err.println("*** "+link);
-
-                ChainNodeWidget  fromWidget = (ChainNodeWidget) instanceWidgets.get(link.getFromNode());
-                ChainNodeWidget  toWidget = (ChainNodeWidget) instanceWidgets.get(link.getToNode());
+                ChainNodeWidget  fromWidget = (ChainNodeWidget) instanceWidgets.get(new Integer(link.getFromNode().getID()));
+                ChainNodeWidget  toWidget = (ChainNodeWidget) instanceWidgets.get(new Integer(link.getToNode().getID()));
 
                 if ((fromWidget == null) || (toWidget == null))
                 {
@@ -149,6 +149,7 @@ public class PlaygroundPane
 
         this.chain = chain;
         this.instanceWidgets = new HashMap();
+        this.links = chain.getLinks();
 
         playground = new ResizingDesktopPane();
         playground.setOpaque(false);
@@ -164,6 +165,7 @@ public class PlaygroundPane
     }
 
     public Chain getChain() { return chain; }
+    public List getLinks() { return links; }
 
     private class WidgetListener
         implements ComponentListener
@@ -192,7 +194,7 @@ public class PlaygroundPane
 
         cnWidget.addComponentListener(widgetListener);
         playground.add(cnWidget);
-        instanceWidgets.put(node,cnWidget);
+        instanceWidgets.put(new Integer(node.getID()),cnWidget);
         cnWidget.setLocation(new Point(x,y));
         cnWidget.setSize(cnWidget.getPreferredSize());
         cnWidget.unhighlightAllLabels();
