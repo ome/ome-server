@@ -91,19 +91,19 @@ error, at which point shiftQueue returns.
 The method used to assign a job to a worker is called pressWorker().  If the
 worker returns an error response, the worker's last_used is updated to 'now()'
 so that it goes to the back of the line.  The worker call is partially
-blocking:  The worker blocks until it can establish a remote session, and
-gather all of its required parameters without error.  The worker then sends a
-response (200 OK) before proceeding to actually execute the module.
+blocking:  The worker blocks until it can establish a remote session, 
+gather all of its required parameters without error, and change its own status
+on the back-end to 'BUSY'.  The worker then sends a response (200 OK) before 
+proceeding to actually execute the module.
 
-The Job specification for a worker includes a DataSource, SessionKey, and
-WorkerID parameter.  The worker establishes an OME::Session on the supplied
-DataSource using the supplied SessionKey, registers the actual module execution
-as a cleanup task, marks its status (using the WorkerID) as 'BUSY', and returns
-an OK response.  The cleanup task executes the module and then sends the DB all
-the notices (using NotificationManager->notify()) specified in the Notices
-parameter.  There are two kinds of Notices set up by the SimpleWorkerExecutor:
-One that includes a unique ID string for that executor instance, and one that
-is generic (The notices are 'WorkerIdleUniqueID' and 'WorkerIdle').
+The worker's delayed (post-responce) module execution is accomplished by 
+registering a cleanup task in the Apache request processing stack.  This is done
+through the OME API OME::Fork->doLater() call.  The cleanup task executes the 
+module and then sends the DB all the notices  specified in the Notices parameter
+using OME::Tasks::NotificationManager->notify().  There are two kinds of Notices
+set up by the SimpleWorkerExecutor:  One that includes a unique ID string for 
+that executor instance, and one that is generic 
+(The notices are 'WorkerIdleUniqueID' and 'WorkerIdle').
 
 Worker nodes can be used by any back-end, so steps are taken to ensure than no
 more than the specified maximum number of workers are ever running on the same
