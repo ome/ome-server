@@ -37,7 +37,9 @@
 						 <table cellpadding="3" class="ome_table">
 							<tr>
 								<td style="background-color: #D1D7DC">
-									<a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a> | <a href="javascript:openRelationships('OME::Dataset', 'OME::Image', <!-- TMPL_VAR Name='id' -->);" class="ome_widget">Add/Remove Images</a>
+<a href="javascript:document.forms[0].action.value='SaveChanges'; document.forms[0].submit();" class="ome_widget">Save Changes</a>
+|
+<a href="javascript:addImagesToDataset();" class="ome_widget">Add Images</a>
 								</td>
 							</tr>
 						</table>
