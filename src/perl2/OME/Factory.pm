@@ -666,6 +666,40 @@ sub findObjects {
     }
 }
 
+sub countObjects {
+    my ($self, $class, @criteria) = @_;
+
+    my $criteria;
+
+    # Let's accept a hash ref for the criteria, too.
+    if (ref($criteria[0]) eq 'HASH') {
+        $criteria = $criteria[0];
+    } else {
+        # Return undef if the criteria are not well-formed.
+        return undef
+          unless (scalar(@criteria) >= 0) && ((scalar(@criteria) % 2) == 0);
+        $criteria = {@criteria};
+    }
+
+    __checkClass($class);
+    $class->require();
+
+    my ($sql,$ids_available,$values) =
+      $class->__makeSelectSQL('COUNT',$criteria);
+    my $sth = $self->{__ourDBH}->prepare($sql);
+
+    # __makeSelectSQL should have created the where clause in
+    # keys-order, which will be the same order that values returns.
+    my $result = 0;
+    eval {
+        $sth->execute(@$values);
+        $result = $sth->fetch()->[0];
+    };
+    die $@ if $@;
+
+    return $result;
+}
+
 sub objectExistsLike {
     my ($self, $class, @criteria) = @_;
     return defined $self->findObjectLike($class,@criteria);
@@ -765,6 +799,33 @@ sub findAttributes {
     my $pkg = $type->requireAttributeTypePackage();
 
     return $self->findObjects($pkg,@criteria);
+}
+
+sub countAttributes {
+    my ($self,$semantic_type,@criteria) = @_;
+
+    return undef unless defined $semantic_type;
+
+    if (scalar(@criteria) == 1 && (ref($criteria[0]) ne 'HASH')) {
+        # Old prototype - only a target is passed in
+        if (defined $criteria[0]) {
+            @criteria = ( target => $criteria[0] );
+        } else {
+            @criteria = ();
+        }
+    }
+
+    my $type =
+      ref($semantic_type) eq "OME::SemanticType"?
+        $semantic_type:
+        $self->findObject("OME::SemanticType",
+                          name => $semantic_type);
+    die "Cannot find attribute type $semantic_type"
+      unless defined $type;
+
+    my $pkg = $type->requireAttributeTypePackage();
+
+    return $self->countObjects($pkg,@criteria);
 }
 
 sub findAttribute {

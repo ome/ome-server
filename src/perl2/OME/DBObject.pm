@@ -1168,10 +1168,6 @@ sub __makeSelectSQL {
 
     my ($columns_wanted,$criteria) = @_;
 
-    if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
-        $columns_wanted = [keys %{$class->__columns()}];
-    }
-
     # These three variables will correspond to the four sections of
     # the SELECT statement: the list of columns, the list of tables,
     # the WHERE clause, and the ORDER BY clause.
@@ -1184,21 +1180,33 @@ sub __makeSelectSQL {
     my @order_by;
 
     my $columns = $class->__columns();
+    my $count_only = 0;
 
     # Add each requested column to the @columns_needed array.  The
     # contents of this array are valid DB locations, so we build this
     # as necessary from the contents of the __columns array.  This
     # loop also populates the %tables_used hash.
-    foreach my $column_alias (@$columns_wanted) {
-        my $column = $columns->{$column_alias};
-        confess "Column $column_alias does not exist"
-          unless defined $column;
 
-        push @columns_needed, $column->[0].".".$column->[1];
+    if ((!defined $columns_wanted) || (ref($columns_wanted) eq 'ARRAY')) {
+        # If the wanted columns aren't specified, get them all.
+        if ((!defined $columns_wanted) || (scalar(@$columns_wanted) <= 0)) {
+            $columns_wanted = [keys %{$class->__columns()}];
+        }
 
-        # We are just using the keys of this hash, so the value is
-        # unimportant.
-        $tables_used{$column->[0]} = undef;
+        foreach my $column_alias (@$columns_wanted) {
+            my $column = $columns->{$column_alias};
+            confess "Column $column_alias does not exist"
+              unless defined $column;
+
+            push @columns_needed, $column->[0].".".$column->[1];
+
+            # We are just using the keys of this hash, so the value is
+            # unimportant.
+            $tables_used{$column->[0]} = undef;
+        }
+    } elsif ($columns_wanted eq 'COUNT') {
+        $count_only = 1;
+        %tables_used = (%{$class->__tables()});
     }
 
     # Set to one if any of the criteria refers to the primary key,
@@ -1213,6 +1221,9 @@ sub __makeSelectSQL {
     # tables we join with.  (We can't just use the foreign table name,
     # because each table might occur in the query more than once.)
     my $foreign_key_number = 0;
+
+    # Any LIMIT or OFFSET clause found in the criteria
+    my ($limit,$offset);
 
     # Look through the criteria, if there are any.  Add the criteria
     # entries to the WHERE clause list, and also make sure that the
@@ -1234,6 +1245,24 @@ sub __makeSelectSQL {
             $id_order = 1 if $location eq 'id';
             push @order_by, $location;
         }
+
+        # Parse any LIMIT or OFFSET clause
+
+        if (exists $criteria->{__limit}) {
+            $limit = $criteria->{__limit};
+            delete $criteria->{__limit};
+            die "Invalid LIMIT clause $limit -- must be an integer"
+              unless $limit =~ /^\d+$/;
+        }
+
+        if (exists $criteria->{__offset}) {
+            $offset = $criteria->{__offset};
+            delete $criteria->{__offset};
+            die "Invalid OFFSET clause $offset -- must be an integer"
+              unless $offset =~ /^\d+$/;
+        }
+
+        # Parse the remaining criteria
 
         foreach my $column_alias (keys %$criteria) {
             my $location = $class->
@@ -1329,17 +1358,42 @@ sub __makeSelectSQL {
         map { $_ = $first_key if $_ eq 'id' } @order_by;
     }
 
-    my $sql = "select ". join(", ",@columns_needed). " from ".
-      join(", ",
-           keys(%tables_used),
-           @foreign_tables
-          );
+    my $sql;
+
+    if ($count_only) {
+        $sql = "select count(*) from ".
+          join(", ",
+               keys(%tables_used),
+               @foreign_tables
+              );
+    } else {
+        $sql = "select ". join(", ",@columns_needed). " from ".
+          join(", ",
+               keys(%tables_used),
+               @foreign_tables
+              );
+    }
 
     $sql .= " where ". join(" and ",@join_clauses)
       if scalar(@join_clauses) > 0;
 
-    $sql .= " order by ". join(", ",@order_by)
-      if scalar(@order_by) > 0;
+    # The ORDER BY, LIMIT, and OFFSET clauses are not added if we're
+    # only retrieving a count.
+
+    if (!$count_only) {
+        $sql .= " order by ". join(", ",@order_by)
+          if scalar(@order_by) > 0;
+
+        if (defined $limit) {
+            $sql .= " limit ?";
+            push @values, $limit;
+        }
+
+        if (defined $offset) {
+            $sql .= " offset ?";
+            push @values, $offset;
+        }
+    }
 
     print STDERR "\n$sql\n" if $SHOW_SQL;
     print STDERR join(',',@values),"\n" if $SHOW_SQL;
