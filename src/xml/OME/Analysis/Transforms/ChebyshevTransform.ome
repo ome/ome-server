@@ -87,7 +87,7 @@
 			  <Input><Scalar InputLocation="Max degree of Chebyshev Polynomials.MaxDegree"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Chebyshev Coefficient Matrix" ConvertToDataType="single"/></Output>
+			  <Output><PixelsArray FormalOutput="Chebyshev Coefficient Matrix" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>

@@ -233,7 +233,7 @@
 		
 	     <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-				<Input><PixelsArray FormalInput="Gradient"/></Input>
+				<Input><PixelsArray FormalInput="Gradient" ConvertToDatatype="double"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
 				<Output><Scalar OutputLocation="Edge Area.EdgeArea"/></Output>
@@ -243,42 +243,40 @@
 				<Output><Scalar OutputLocation="Magnitude Variance.MagVar"/></Output>
 				<Output><Vector DecodeWith="Magnitude Histogram"/></Output>
 				
-				<Output><Scalar OutputLocation="Direction Mean.FeatureDistMin"/></Output>
-				<Output><Scalar OutputLocation="Direction Median.FeatureDistMax"/></Output>
-				<Output><Scalar OutputLocation="Direction Variance.FeatureDistMean"/></Output>
+				<Output><Scalar OutputLocation="Direction Mean.DirecMean"/></Output>
+				<Output><Scalar OutputLocation="Direction Median.DirecMedian"/></Output>
+				<Output><Scalar OutputLocation="Direction Variance.DirecVar"/></Output>
 				<Output><Vector DecodeWith="Direction Histogram"/></Output>
 				
-				<Output><Scalar OutputLocation="Direction Homogeneity.FeatureDistMean"/></Output>
+				<Output><Scalar OutputLocation="Direction Homogeneity.DirecHomo"/></Output>
 				<Output><Vector DecodeWith="Diff Direction Histogram"/></Output>
 			</FunctionOutputs>
 			
 			<VectorDecoder ID="Magnitude Histogram">
-				<Element Index="1"  OutputLocation="EdgeMagHist.Bin0"/>
-				<Element Index="2"  OutputLocation="EdgeMagHist.Bin1"/>
-				<Element Index="3"  OutputLocation="EdgeMagHist.Bin2"/>
-				<Element Index="4"  OutputLocation="EdgeMagHist.Bin3"/>
-				<Element Index="5"  OutputLocation="EdgeMagHist.Bin4"/>
-				<Element Index="6"  OutputLocation="EdgeMagHist.Bin5"/>
-				<Element Index="7"  OutputLocation="EdgeMagHist.Bin6"/>
-				<Element Index="8"  OutputLocation="EdgeMagHist.Bin7"/>
+				<Element Index="1" OutputLocation="Magnitude Histogram.Bin0"/>
+				<Element Index="2" OutputLocation="Magnitude Histogram.Bin1"/>
+				<Element Index="3" OutputLocation="Magnitude Histogram.Bin2"/>
+				<Element Index="4" OutputLocation="Magnitude Histogram.Bin3"/>
+				<Element Index="5" OutputLocation="Magnitude Histogram.Bin4"/>
+				<Element Index="6" OutputLocation="Magnitude Histogram.Bin5"/>
+				<Element Index="7" OutputLocation="Magnitude Histogram.Bin6"/>
+				<Element Index="8" OutputLocation="Magnitude Histogram.Bin7"/>
 			</VectorDecoder>
-			<VectorDecoder ID="Dist Hist">
-				<Element Index="1"  OutputLocation="FeatureDistHist.Bin0"/>
-				<Element Index="2"  OutputLocation="FeatureDistHist.Bin1"/>
-				<Element Index="3"  OutputLocation="FeatureDistHist.Bin2"/>
-				<Element Index="4"  OutputLocation="FeatureDistHist.Bin3"/>
-				<Element Index="5"  OutputLocation="FeatureDistHist.Bin4"/>
-				<Element Index="6"  OutputLocation="FeatureDistHist.Bin5"/>
-				<Element Index="7"  OutputLocation="FeatureDistHist.Bin6"/>
-				<Element Index="8"  OutputLocation="FeatureDistHist.Bin7"/>
-				<Element Index="9"  OutputLocation="FeatureDistHist.Bin8"/>
-				<Element Index="10" OutputLocation="FeatureDistHist.Bin9"/>
+			<VectorDecoder ID="Direction Hist">
+				<Element Index="1" OutputLocation="Direction Histogram.Bin0"/>
+				<Element Index="2" OutputLocation="Direction Histogram.Bin1"/>
+				<Element Index="3" OutputLocation="Direction Histogram.Bin2"/>
+				<Element Index="4" OutputLocation="Direction Histogram.Bin3"/>
+				<Element Index="5" OutputLocation="Direction Histogram.Bin4"/>
+				<Element Index="6" OutputLocation="Direction Histogram.Bin5"/>
+				<Element Index="7" OutputLocation="Direction Histogram.Bin6"/>
+				<Element Index="8" OutputLocation="Direction Histogram.Bin7"/>
 			</VectorDecoder>
 			<VectorDecoder ID="Diff Direction Histogram">
-				<Element Index="1"  OutputLocation="EdgeDiffDirecHist.Bin0"/>
-				<Element Index="2"  OutputLocation="EdgeDiffDirecHist.Bin1"/>
-				<Element Index="3"  OutputLocation="EdgeDiffDirecHist.Bin2"/>
-				<Element Index="4"  OutputLocation="EdgeDiffDirecHist.Bin3"/>
+				<Element Index="1" OutputLocation="Diff Direction Histogram.Bin0"/>
+				<Element Index="2" OutputLocation="Diff Direction Histogram.Bin1"/>
+				<Element Index="3" OutputLocation="Diff Direction Histogram.Bin2"/>
+				<Element Index="4" OutputLocation="Diff Direction Histogram.Bin3"/>
 			</VectorDecoder>	
 		  </ExecutionInstructions>
 		</AnalysisModule>

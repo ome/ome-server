@@ -87,7 +87,7 @@
 			  <Input><Scalar InputLocation="Max degree of Zernike Polynomials.MaxDegree"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Zernike Moments"/></Output>
+			  <Output><PixelsArray FormalOutput="Zernike Moments" ConvertToDatatype="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>

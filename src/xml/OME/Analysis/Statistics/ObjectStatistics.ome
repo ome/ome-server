@@ -58,11 +58,11 @@
 			 <Element
 				Name="X"
 				DBLocation="FEATURE_STATISTICS2.CENTROID_X"
-				DataType="integer"/>
+				DataType="float"/>
 			 <Element
 				Name="Y"
 				DBLocation="FEATURE_STATISTICS2.CENTROID_Y"
-				DataType="integer"/>
+				DataType="float"/>
 		</SemanticType>
 		
 		<!-- Feature Area Descriptors -->
@@ -93,7 +93,7 @@
 		<SemanticType Name="FeatureAreaMedian" AppliesTo="I">
 			<Description>Median area of the features. In pixels.</Description>
 			<Element
-				Name="FeatureAreaMean"
+				Name="FeatureAreaMedian"
 				DBLocation="FEATURE_STATISTICS7.AREA_MEDIAN"
 				DataType="float"/>
 		</SemanticType> 
@@ -295,32 +295,32 @@
 			</FunctionOutputs>
 			
 			<VectorDecoder ID="Centroid">
-				<Element Index="1" OutputLocation="FeatureCentroid.X"/>
-				<Element Index="2" OutputLocation="FeatureCentroid.Y"/>
+				<Element Index="1" OutputLocation="Centroid.X"/>
+				<Element Index="2" OutputLocation="Centroid.Y"/>
 			</VectorDecoder>
 			<VectorDecoder ID="Area Hist">
-				<Element Index="1"  OutputLocation="FeatureAreaHist.Bin0"/>
-				<Element Index="2"  OutputLocation="FeatureAreaHist.Bin1"/>
-				<Element Index="3"  OutputLocation="FeatureAreaHist.Bin2"/>
-				<Element Index="4"  OutputLocation="FeatureAreaHist.Bin3"/>
-				<Element Index="5"  OutputLocation="FeatureAreaHist.Bin4"/>
-				<Element Index="6"  OutputLocation="FeatureAreaHist.Bin5"/>
-				<Element Index="7"  OutputLocation="FeatureAreaHist.Bin6"/>
-				<Element Index="8"  OutputLocation="FeatureAreaHist.Bin7"/>
-				<Element Index="9"  OutputLocation="FeatureAreaHist.Bin8"/>
-				<Element Index="10" OutputLocation="FeatureAreaHist.Bin9"/>
+				<Element Index="1"  OutputLocation="Area Hist.Bin0"/>
+				<Element Index="2"  OutputLocation="Area Hist.Bin1"/>
+				<Element Index="3"  OutputLocation="Area Hist.Bin2"/>
+				<Element Index="4"  OutputLocation="Area Hist.Bin3"/>
+				<Element Index="5"  OutputLocation="Area Hist.Bin4"/>
+				<Element Index="6"  OutputLocation="Area Hist.Bin5"/>
+				<Element Index="7"  OutputLocation="Area Hist.Bin6"/>
+				<Element Index="8"  OutputLocation="Area Hist.Bin7"/>
+				<Element Index="9"  OutputLocation="Area Hist.Bin8"/>
+				<Element Index="10" OutputLocation="Area Hist.Bin9"/>
 			</VectorDecoder>
 			<VectorDecoder ID="Dist Hist">
-				<Element Index="1"  OutputLocation="FeatureDistHist.Bin0"/>
-				<Element Index="2"  OutputLocation="FeatureDistHist.Bin1"/>
-				<Element Index="3"  OutputLocation="FeatureDistHist.Bin2"/>
-				<Element Index="4"  OutputLocation="FeatureDistHist.Bin3"/>
-				<Element Index="5"  OutputLocation="FeatureDistHist.Bin4"/>
-				<Element Index="6"  OutputLocation="FeatureDistHist.Bin5"/>
-				<Element Index="7"  OutputLocation="FeatureDistHist.Bin6"/>
-				<Element Index="8"  OutputLocation="FeatureDistHist.Bin7"/>
-				<Element Index="9"  OutputLocation="FeatureDistHist.Bin8"/>
-				<Element Index="10" OutputLocation="FeatureDistHist.Bin9"/>
+				<Element Index="1"  OutputLocation="Dist Hist.Bin0"/>
+				<Element Index="2"  OutputLocation="Dist Hist.Bin1"/>
+				<Element Index="3"  OutputLocation="Dist Hist.Bin2"/>
+				<Element Index="4"  OutputLocation="Dist Hist.Bin3"/>
+				<Element Index="5"  OutputLocation="Dist Hist.Bin4"/>
+				<Element Index="6"  OutputLocation="Dist Hist.Bin5"/>
+				<Element Index="7"  OutputLocation="Dist Hist.Bin6"/>
+				<Element Index="8"  OutputLocation="Dist Hist.Bin7"/>
+				<Element Index="9"  OutputLocation="Dist Hist.Bin8"/>
+				<Element Index="10" OutputLocation="Dist Hist.Bin9"/>
 			</VectorDecoder>
 		  </ExecutionInstructions>
 		</AnalysisModule>

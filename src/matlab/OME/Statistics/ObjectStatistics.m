@@ -41,7 +41,7 @@ NUM_BINS = 10;
 
 % Calculate number of contiguous regions in the image
 features = bwlabel(im2bw(BinaryMask));
-Count = max(features);
+Count = max(max(features))
 
 % Calculate Euler number
 global_stats = imfeature(double(im2bw(BinaryMask)), 'EulerNumber', 'Centroid');
@@ -65,8 +65,8 @@ AreaHist   = hist(featuresAreas, NUM_BINS);
 % and image's centroid.
 featuresCentroid = [imfeature(features,'Centroid')];
 featuresCentroid = [featuresCentroid.Centroid];
-featuresCentroidX = featuresCentroid(1:2:end) - Centroid(1);
-featuresCentroidY = featuresCentroid(2:2:end) - Centroid(2);
+featuresCentroidX = featuresCentroid(1:2:end) - double(Centroid(1));
+featuresCentroidY = featuresCentroid(2:2:end) - double(Centroid(2));
 featuresCentroidDist = sqrt(featuresCentroidX.*featuresCentroidX + ...
 							featuresCentroidY.*featuresCentroidY);
 

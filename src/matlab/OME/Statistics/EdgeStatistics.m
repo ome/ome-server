@@ -40,13 +40,16 @@
 
 % This module computes statistics about the image's edge magnitudes and directions. 
 %
-function [EdgeArea, MagMean, MagMeadian, MagVar, MagHist, ...
+function [EdgeArea, MagMean, MagMedian, MagVar, MagHist, ...
 		  DirecMean, DirecMedian, DirecVar, DirecHist, ...
-		  DirecHomogeneity, DiffDirecHist] = EdgeStatistics(GradientMag,GradientDirec)
+		  DirecHomogeneity, DiffDirecHist] = EdgeStatistics(Gradient)
 
 % How many bins the histograms have
 NUM_BINS = 8;
 NUM_BINS_HALF = 4;
+
+GradientMag = Gradient(:,:,1);
+GradientDirec = Gradient(:,:,1);
 
 % Calculate number of image pixels that are edge pixels
 EdgeArea = sum(sum(im2bw( uint8(GradientMag) )));
@@ -69,7 +72,7 @@ DirecHist   = hist(DirecVec, NUM_BINS);
 % Histogram created by computing differences amongst histogram bins at angle and angle+pi
 DiffDirecHist = abs( DirecHist(1:NUM_BINS_HALF)-DirecHist(NUM_BINS_HALF+1:end) );
 DiffDirecHist = DiffDirecHist ./ (DirecHist(1:NUM_BINS_HALF)+DirecHist(NUM_BINS_HALF+1:end));
-
+ 
 % The fraction of edge pixels that are in the first two bins of the histogram measure
 % edge homogeneity
 DirecHomogeneity = sum(DirecVec(1:2))/sum(DirecVec);

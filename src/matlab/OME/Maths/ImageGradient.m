@@ -33,6 +33,9 @@
 %
 function [outPixels] = Gradient(inPixels)
 
+% its only a plane
+inPixels = inPixels(:,:);
+
 % Calculation of the gradient from two orthogonal directions
 N = [1 1 1 ; 0 0 0 ; -1 -1 -1];
 W = [1 0 -1; 1 0 -1; 1 0 -1];
@@ -40,5 +43,5 @@ iprocN = filter2(N, inPixels);
 iprocW = filter2(W, inPixels);
 
 % Calculate the magnitude and direction of the gradient
-outPixels(:,:,:,1,:) = sqrt(iprocN.^2 + iprocW.^2);
-outPixels(:,:,:,2,:) = atan2(iprocN, iprocW);
+outPixels(:,:,1) = sqrt(iprocN.^2 + iprocW.^2);
+outPixels(:,:,2) = atan2(iprocN, iprocW);
