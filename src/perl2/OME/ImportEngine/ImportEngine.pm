@@ -54,7 +54,7 @@ use Log::Agent;
 use base qw(Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('DefaultFormats');
-__PACKAGE__->DefaultFormats(['OME::ImportEngine::AbstractFormat']);
+__PACKAGE__->DefaultFormats(['OME::ImportEngine::MetamorphHTDFormat']);
 
 use fields qw(_flags);
 
@@ -196,6 +196,8 @@ sub importFiles {
                  module_id  => $importer_module->id(),
                 });
 
+    $session->commitTransaction();
+
     # Find the formats that are known to the system.
     # FIXME:  This will change to a more robust system in the near future.
 
@@ -211,14 +213,17 @@ sub importFiles {
           unless $format_class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $format_class";
 
-        my $format = $format_class->new($module_execution);
-        $formats{$format} = $format;
+        my $format = $format_class->new($session,$module_execution);
+        $formats{$format_class} = $format;
 
-        $groups{$format} = $format->getGroups($filenames);
+        $groups{$format_class} = $format->getGroups($filenames);
     }
 
     # Loop through the formats once again, allowing each to import the
     # groups that it found.
+
+    # You know, come to think of it, we don't really need this to be two
+    # separate loops.  An interesting thought.  --DC
 
     my @images;
 
@@ -228,6 +233,7 @@ sub importFiles {
         my $groups = $groups{$format_class};
       GROUP:
         foreach my $group (@$groups) {
+            #print STDERR ".";
             # First check to see if this group has been imported yet.
             my $sha1 = $format->getSHA1($group);
             my $old_file = $factory->
@@ -247,6 +253,11 @@ sub importFiles {
             # This hasn't been imported yet, so slurp it in.
             my $image = $format->importGroup($group);
 
+            if (!defined $image) {
+                $session->rollbackTransaction();
+                next GROUP;
+            }
+
             # Add the new image to the dummy dataset.
             $factory->newObject("OME::Image::DatasetMap",
                                 {
@@ -254,9 +265,13 @@ sub importFiles {
                                  dataset_id => $dataset->id(),
                                 });
 
+            $session->commitTransaction();
+
             push @images, $image;
         }
     }
+
+    #print STDERR "\n";
 
     # Wrap up things in the database.
 
