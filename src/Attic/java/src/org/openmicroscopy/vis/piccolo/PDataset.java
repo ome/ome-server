@@ -304,4 +304,9 @@ public class PDataset extends PGenericBox {
 	public void rollover() {
 		SelectionState.getState().setRolloverDataset(dataset);
 	}
+	
+	public void setHandler(PBrowserEventHandler handler) {
+		if (images != null)
+			images.setHandler(handler);
+	}
 }
