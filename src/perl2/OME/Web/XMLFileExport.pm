@@ -110,62 +110,8 @@ sub getPageBody {
 		$tmpl->output().
 		$cgi->hidden( -name => 'images_to_export' ).
 		$cgi->endform();		
-#	return $html;
-
-#	$body .= $self->__printForm();
 
 	return ('HTML',$body);
 }
-
-
-################
-sub __printForm {
-	my $self = shift;
-	my $session = $self->Session();
-	my $q = $self->CGI();
-
-
-	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	my $tmpl = HTML::Template->new( filename => 'XMLFileExport.tmpl', path => $tmpl_dir );
-#	$tmpl->param( %tmpl_data );
-	my $html = 
-		$q->startform( -action => $self->pageURL( 'OME::Web::XMLFileExport' ) ).
-		$tmpl->output().
-		$q->hidden( -name => 'images_to_export' ).
-		$q->endform();		
-	return $html;
-
-
-	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
-
-	my $html = $tableMaker->getTable(  
-		{
-			title         => 'Export images to an XML file',
-			actions       => ['Export'],
-			select_column => 1,
-			select_name   => 'selected',
-			noTxtDownload => 1
-		}, 
-		"OME::Image", 
-		{ accessor => [ 'OME::Dataset', $session->dataset()->id(), 'images' ] }
-	);
-
-	return $html;
-}
-
-
-
-
-sub cleaning{
- my ($string)=@_;
- chomp($string);
- $string=~ s/^\s*(.*\S)\s*/$1/;
- return $string;
-
-}
-
-
-
-
 
 1;
