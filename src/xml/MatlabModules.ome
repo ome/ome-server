@@ -51,7 +51,6 @@
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-
   <AML:AnalysisModuleLibrary
      xmlns=
      "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
@@ -84,11 +83,29 @@
         <FormalOutput
            Name="Centroid" SemanticTypeName="PlaneCentroid" Count="+"/>
       </Declaration>
-      <ExecutionInstructions>
-        <Execute At="precalculateImage"/>
+
+      <ExecutionInstructions ExecutionPoint="precalculateImage">
+        <!-- specifies which of the references in the actual inputs
+             needed to be populated -->
         <ReferencesNeeded>
           <Reference Name="Pixels.Repository"/>
         </ReferencesNeeded>
+
+        <!-- specifies the order that the Matlab function expects the
+             formal inputs -->
+        <Inputs>
+          <Input Name="Pixels"/>
+        </Inputs>
+
+        <!-- specifies the order of the formal outputs -->
+        <Outputs>
+          <Output Name="Minima"/>
+          <Output Name="Maxima"/>
+          <Output Name="Mean"/>
+          <Output Name="Sigma"/>
+          <Output Name="Geomean"/>
+          <Output Name="Centroid"/>
+        </Outputs>
       </ExecutionInstructions>
     </AnalysisModule>
 
