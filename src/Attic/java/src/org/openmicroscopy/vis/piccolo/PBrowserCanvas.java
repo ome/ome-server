@@ -59,8 +59,6 @@ import java.util.TreeSet;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.Collection;
-//import java.awt.event.ComponentAdapter;
-//import java.awt.event.ComponentEvent;
 
 /** 
  * A {@link PCanvas} for viewing images in a dataset 
@@ -136,7 +134,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			// setup tool tips.
 		final PCamera camera = getCamera();
 		camera.addInputEventListener(new PImageToolTipHandler(camera));
-	//	getCamera().setViewScale(INIT_SCALE);
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	
 		allDatasets = connection.getDatasetsForUser();
@@ -147,7 +144,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	
 	
-	public double getArea(CDataset d) {
+	private  double getArea(CDataset d) {
 		if (d == null) 
 			return 0;
 		PDataset node;
@@ -163,7 +160,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		if (node == null)
 			return 0;
 		node.clearWidths();
-	//	node.calcArea();
 		return node.getContentsArea();
 	}
 		
@@ -184,8 +180,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		layer.removeAllChildren();
 		if (datasets == null)
 			return;
-		//System.err.println("browser canvas. displaying datasets.");
-		//System.err.println("width is "+getWidth()+", height is"+getHeight());
 		
 		totalArea = 0;
 		Iterator iter = datasets.iterator();
@@ -193,27 +187,21 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		while (iter.hasNext()) {
 			CDataset d = (CDataset) iter.next();
 			double area = getArea(d);
-			//System.err.println("dataset "+d.getID()+", area is "+area);
 			totalArea += area;
 		}
 		
-		//System.err.println("total area is "+totalArea);
 		screenHeight = getHeight();
 		screenWidth = getWidth();
 		screenArea = screenHeight*screenWidth;
-		//System.err.println("screen area is "+screenArea);
 		
 		scaleFactor = screenArea/totalArea;
-		//System.err.println("scale factor is "+scaleFactor);
 		strips = doTreeMap(datasets);
-		// now, do the calculations
 	}
 
 	private void doLayout(Collection datasets,boolean layoutDatasets) {
 		if (datasets == null)
 			return;
 		layer.setScale(1.0);
-		System.err.println("in doLayout..");
 		x = HGAP;
 		y = 0;
 		Iterator iter = strips.iterator();
@@ -226,14 +214,11 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				PDataset node = (PDataset) iter2.next();
 				
 				if (layoutDatasets == true) {
-	//				System.err.println("laying out "+node.getDataset().getName());
 					node.setOffset(0,0);
 					node.layoutImages();
 				}
 				
 				if (datasets.contains(node.getDataset())) {
-					//System.err.println("laying out node "+node);
-					//System.err.println(" at "+x+","+ y);
 					node.setOffset(x,y);
 					layer.addChild(node);
 					x+= node.getGlobalFullBounds().getWidth();
@@ -258,7 +243,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 
 	private Vector doTreeMap(Collection datasets) {
 	
-		//System.err.println("do treemap. dataset size is "+datasets.size());
 		oldAspectRatio = 0;
 		newAspectRatio = 0;
 		Vector strips = new Vector();
@@ -271,23 +255,18 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		while (iter.hasNext())  {
 			d = (CDataset) iter.next();
-			//System.err.println("placing dataset "+d.getName()+" in treemap");
 			node = (PDataset) datasetWidgets.get(d);
 		
 			
-			// ok, do something with what is next.
 			strip.add(node);
 		
 			// calc,update stats.
 			getTreemapStripHeight(strip);
 			
-			//System.err.println("new aspect ratio is "+newAspectRatio);
-			//System.err.println("old was..."+oldAspectRatio);
 		
 			
 			if (strip.size()>1 &&  newAspectRatio > oldAspectRatio) {
 				// move it to next strip.
-				//System.err.println("moving to  anew strip...");
 				strip.remove(node);
 				Iterator iter2 = strip.iterator();
 				while (iter2.hasNext()) {
@@ -309,22 +288,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private void  getTreemapStripHeight(Vector strip) {
 		// get height
-		//System.err.println("===getting treemap strip====");
 		
 		double stripArea =0;
 		Iterator iter = strip.iterator();
 		while (iter.hasNext()) {
 			PDataset node = (PDataset) iter.next();
 			double area = node.getContentsArea()*scaleFactor;
-			//System.err.println("node scaled area is "+area);
 			stripArea += area;
 		}
 		
 		double ratio = stripArea/screenArea;
 		double height = ratio * getHeight();
-		//System.err.println(" strip area is "+stripArea);
-		//System.err.println(" total area is "+screenArea);
-		//System.err.println("ratio is "+ratio +" , height is "+height);
 		// get width of each and update ratios;
 		double width;
 		int i =0;
@@ -334,8 +308,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			PDataset node = (PDataset) iter.next();
 			double area  =node.getContentsArea()*scaleFactor;
 			width = area/height;
-			//System.err.println("dataset  scaled area is "+area);
-			//System.err.println("width is "+width);
 			node.setWidth(width);
 			if (width > height) 
 				newAspectRatio += width/height;
@@ -360,15 +332,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	public void displayAllDatasets() {
 		TreeSet datasets= new TreeSet(connection.getDatasetsForUser());
 		displayDatasets(datasets,true);
-		
-		// after initial display
-		// revise when resized
-     	/*addComponentListener(
-				new ComponentAdapter() {
-					public void componentResized(ComponentEvent e) {
-						displayDatasets(true);
-					}
-				});*/
+	
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -379,8 +343,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			CProject rollover = state.getRolloverProject();
 			if (rollover != null)
 				sets = rollover.getDatasetSet();
-			//if (rollover != state.getSelectedProject() || rollover == null)
-			//highlightDatasetsForProject(rollover);
 			highlightDatasets(sets);
 		}
 		else if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_DATASET)) {
@@ -401,7 +363,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			sets = state.getExecutedDatasets();
 			TreeSet datasets;
 			if (sets != null) {
-				System.err.println("# of datasets..."+sets.size());
 				datasets = new TreeSet(sets);
 			}
 			else
@@ -410,7 +371,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}
 		else if (e.isEventOfType(SelectionEvent.SET_SELECTED_PROJECT)
 			|| e.isEventOfType(SelectionEvent.SET_SELECTED_DATASET)) {
-			System.err.println("browser canvas selected dataset/project");
 			updateProjectDatasetSelection(state);	
 		}
 	  
@@ -482,8 +442,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				else
 					dNode.setHighlighted(false);
 			}
-			else 
-				System.err.println("browser canvas. child was "+obj);
 		}
 	}
 	
@@ -500,8 +458,6 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				else
 					dNode.setHighlighted(false);
 			}
-			else 
-				System.err.println("browser canvas. child was "+obj);
 		}
 	}
 	
