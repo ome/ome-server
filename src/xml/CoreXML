@@ -14,7 +14,6 @@
 /OME/Annotations/AnnotationModule.ome
 /OME/Annotations/annotations.ome
 /OME/Annotations/classification.ome
-/OME/Analysis/Core/PixelIndicies.ome
 /OME/Analysis/FindSpots/spotModules.ome
 /OME/Tests/EchoModule.ome
 /OME/Tests/datasetExample.ome
