@@ -183,7 +183,7 @@ public abstract class ImageServer
      * <code>get*</code> methods can be called to retrieve the
      * pixels.</p>
      *
-     * @param pixelsFileFormat the format of the new pixels file
+     * @param format the format of the new pixels file
      * @return the pixel ID of the new pixels file
      * @throws ImageServerException if there was an error connecting
      * to the image server or creating the pixels file
@@ -680,7 +680,7 @@ public abstract class ImageServer
      * @throws ImageServerException if there was an error contacting
      * the image server or if the file ID does not exist
      */
-    public abstract String getFileSHA1(long FileID)
+    public abstract String getFileSHA1(long fileID)
         throws ImageServerException;
 
     /**

@@ -96,7 +96,7 @@ public class FileInfo
 
     /**
      * Sets the original filename of the uploaded file.
-     * @param name the original filename of the uploaded file.
+     * @param originalName the original filename of the uploaded file.
      */
     public void setOriginalName(String originalName)
     { this.originalName = originalName; }
