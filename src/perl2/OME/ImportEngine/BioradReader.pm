@@ -114,7 +114,8 @@ sub getGroups
     	$file->open('r');
 		if ($file->getLength() > BIORAD_HEADER_LENGTH)
 		{
-			push (@prelimOutlist, $file) if getEndian($file) ne "";
+			# getEndian also checks for whether or not the file is Biorad (see getEndian)
+			push (@prelimOutlist, $file) if getEndian($file) ne ""; 
 		}
 		$file->close();
     }
@@ -226,7 +227,7 @@ sub importGroup
 		$params->fref($file);
   		$params->oname($basename);
   		
-  		my $pixelType = $xref -> { 'PixelType' }; #bps
+  		my $pixelType = $xref -> { 'PixelType' };
 		my $sizeX = $xref -> { 'SizeX' }; # rows
 		my $sizeY = $xref -> { 'SizeY' }; # cols
 		my $sizeZ = $xref -> { 'SizeZ' }; # sections
@@ -290,6 +291,7 @@ sub importGroup
     		return $image;
     	}
     	
+    	# Different behavior for a single file
     	else
     	{
     		$image = ($self -> {super}) -> __newImage($filename);
@@ -302,9 +304,9 @@ sub importGroup
     		my $image_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
 			my $factory = $session->Factory();
 			$factory->newAttribute( 'Dimensions', $image, $image_mex, {
-				PixelSizeX => $xref->{ 'Image.PixelSizeX' },
-				PixelSizeY => $xref->{ 'Image.PixelSizeY' },
-				PixelSizeZ => $xref->{ 'Image.PixelSizeZ' },
+				PixelSizeX => $xref->{ 'PixelSizeX' },
+				PixelSizeY => $xref->{ 'PixelSizeY' },
+				PixelSizeZ => $xref->{ 'PixelSizeZ' },
 				}
 			) or die "Couldn't make Dimensions attribute";
 
@@ -400,8 +402,6 @@ sub readMultiFilePixels
 	$offset = BIORAD_HEADER_LENGTH;
 	
 	my $theT = 0; #this assumes that each file represents a different time
-	
-	# this dies when you iterate to the second file
 	foreach my $file( @$fileList )
 	{
 		$file -> open('r');
@@ -737,6 +737,8 @@ sub interpretNotesData
 			}
 		}
 	}
+	
+	# Time course axis?
 	
 	return $imageTable;
 }
