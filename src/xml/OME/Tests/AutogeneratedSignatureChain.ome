@@ -53,6 +53,8 @@
       <Node NodeID="Haralick Features (Angle 135) 6" ProgramName="Haralick Features (Angle 135)"/>
       <Node NodeID="Haralick Features (Angle 0)" ProgramName="Haralick Features (Angle 0)"/>
       <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
+      <Node NodeID="Zernike Moments 1" ProgramName="Zernike Moments"/>
+      
       <Node NodeID="PixelsPlaneSlice -&gt; PixelsSlice" ProgramName="PixelsPlaneSlice -&gt; PixelsSlice"/>
       <Node NodeID="Global Threshold" ProgramName="Global Threshold"/>
       <Node NodeID="Feature Statistics" ProgramName="Feature Statistics"/>
@@ -220,7 +222,8 @@
 
       <Link FromNodeID="Chebyshev Statistics"   FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher (7204)" ToInputName="ChebyshevCoefficientHistogram 1"/>
       <Link FromNodeID="Chebyshev Statistics 1" FromOutputName="Chebyshev Coefficient Histogram" ToNodeID="Signature Stitcher (7204)" ToInputName="ChebyshevCoefficientHistogram 2"/>
-      
+       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Zernike Moments 1" ToInputName="Pixels Plane Slice"/>
+
       <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Sum Average" ToNodeID="Signature Stitcher (7204)" ToInputName="CoOcMat_SumAverage 25"/>
       <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Second Measure of Correlation" ToNodeID="Signature Stitcher (7204)" ToInputName="CoOcMat_SecondMeasureOfCorrelation 25"/>
       <Link FromNodeID="Haralick Features (Angle 135) 1" FromOutputName="Angular Second Moment" ToNodeID="Signature Stitcher (7204)" ToInputName="CoOcMat_AngularSecondMoment 25"/>
@@ -490,6 +493,7 @@
       <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Maximal Correlation Coefficient" ToNodeID="Signature Stitcher (7204)" ToInputName="CoOcMat_MaximalCorrelationCoefficient 32"/>
       <Link FromNodeID="Haralick Features (Angle 0)" FromOutputName="Sum Entropy" ToNodeID="Signature Stitcher (7204)" ToInputName="CoOcMat_SumEntropy 32"/>
       <Link FromNodeID="Zernike Moments" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher (7204)" ToInputName="ZernikeMoments"/>
+      <Link FromNodeID="Zernike Moments 1" FromOutputName="Zernike Moments" ToNodeID="Signature Stitcher (7204)" ToInputName="ZernikeMoments 1"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Otsu's Method" ToInputName="Pixels Slice"/>
       <Link FromNodeID="PixelsPlaneSlice -&gt; PixelsSlice" FromOutputName="Slices" ToNodeID="Global Threshold" ToInputName="Pixels Slice"/>
       <Link FromNodeID="Global Threshold" FromOutputName="Binary Mask" ToNodeID="Feature Statistics" ToInputName="Binary Mask"/>

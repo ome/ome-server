@@ -428,6 +428,7 @@ describes the image. This stitching is very handy for classifiers.
         <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 31" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
         <FormalInput Name="CoOcMat_SecondMeasureOfCorrelation 32" SemanticTypeName="CoOcMat_SecondMeasureOfCorrelation" Count="!"/>
         <FormalInput Name="ZernikeMoments" SemanticTypeName="ZernikeMoments" Count="!"/>
+        <FormalInput Name="ZernikeMoments 1" SemanticTypeName="ZernikeMoments" Count="!"/>
         <FormalInput Name="EdgeMagMean" SemanticTypeName="EdgeMagMean" Count="!"/>
         <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 1" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>
         <FormalInput Name="CoOcMat_MaximalCorrelationCoefficient 2" SemanticTypeName="CoOcMat_MaximalCorrelationCoefficient" Count="!"/>

@@ -48,8 +48,10 @@
       <Node NodeID="Otsu's Method" ProgramName="Otsu's Method"/>
       <Node NodeID="Gradient" ProgramName="Gradient"/>
       <Node NodeID="Edge Statistics" ProgramName="Edge Statistics"/>
-      <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
       
+      <Node NodeID="Zernike Moments" ProgramName="Zernike Moments"/>
+      <Node NodeID="Zernike Moments 1" ProgramName="Zernike Moments"/>
+
       <Node NodeID="Chebyshev Fourier Statistics"   ProgramName="Chebyshev Fourier Statistics"/>
       <Node NodeID="Chebyshev Fourier Statistics 1" ProgramName="Chebyshev Fourier Statistics"/>
 
@@ -112,7 +114,7 @@
       <Link FromNodeID="Original files" FromOutputName="Files" ToNodeID="Image import" ToInputName="Files"/>
       <Link FromNodeID="Image import" FromOutputName="Pixels" ToNodeID="Create pixels slices" ToInputName="Pixels"/>
       <Link FromNodeID="Create pixels slices" FromOutputName="Slices" ToNodeID="Create plane slices" ToInputName="Slices"/>
-      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Zernike Moments" ToInputName="Pixels Plane Slice"/>
+     
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Gradient" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="PixelsPlaneSlice -&gt; PixelsSlice" ToInputName="Plane slices"/>
       <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Fourier Transform" ToInputName="Pixels Plane Slice"/>
@@ -132,6 +134,9 @@
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Wavelet Transform 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Statistics 1" ToInputName="Pixels Plane Slice"/>
       <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Chebyshev Transform 1" ToInputName="Pixels Plane Slice"/>
+      
+      <Link FromNodeID="Create plane slices" FromOutputName="Plane slices" ToNodeID="Zernike Moments" ToInputName="Pixels Plane Slice"/>
+      <Link FromNodeID="FrequencySpace -&gt; PixelsPlaneSlice" FromOutputName="Pixels Plane Slice" ToNodeID="Zernike Moments 1" ToInputName="Pixels Plane Slice"/>
       
       <Link FromNodeID="Chebyshev Transform 1" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice" ToInputName="Chebyshev Coefficient Matrix"/>
       <Link FromNodeID="Chebyshev Transform" FromOutputName="Chebyshev Coefficient Matrix" ToNodeID="ChebyshevCoefficientMatrix -&gt; PixelsPlaneSlice 1" ToInputName="Chebyshev Coefficient Matrix"/>

@@ -169,6 +169,11 @@
 			FromOutputName="Pixels Plane Slice"
 			ToNodeID="HaralickFeatures"
 			ToInputName="Pixels Plane Slice"/>
+		<Link
+			FromNodeID="FrequencySpace->PixelsPlaneSlice"
+			FromOutputName="Pixels Plane Slice" 
+			ToNodeID="ZernikeMoments"
+			ToInputName="Pixels Plane Slice"/>
 			
 		<!-- Wavelet arc into Statistics -->
 		<Link
