@@ -78,7 +78,6 @@ my $DefaultAnalysisPage = "OMErunfindSpots.pl";
 my $OMEhomePage         = "OMEanalyze.pl";
 my $ViewDatasetsPage = "OMEDatasetView.pl";
 
-my $cookieLifetime = "+1h";
 my $sessionLifetime = "3600";
 
 my $DefaultDataSource =   "dbi:Pg:dbname=ome";
@@ -333,7 +332,7 @@ sub initialize ()
 		$self->{sessionKey} = $cgi->url_param ('Session') unless defined $self->{sessionKey};
 	print STDERR "initialize:  Retreived OMEsessionKey cookie=",$self->{sessionKey},"\n";
 		$self->{referer} = $cgi->cookie ('OMEreferer') unless defined $self->{referer};
-#	print STDERR "initialize:  Retreived OMEreferer cookie=",$self->{referer},"\n";
+	print STDERR "initialize:  Retreived OMEreferer cookie=",$self->{referer},"\n";
 
 
 	# Calling VerifySession with an invalid or undefined session is fatal.  We don't want to give up yet if we're in a browser.
@@ -341,7 +340,11 @@ sub initialize ()
 			eval {$self->VerifySession ();};
 			undef $self->{sessionKey} if $@;
 #			$self->{errorMessage} = $@;
-			print STDERR "initialize:  Session verified.\n" if defined $self->{sessionKey};
+			print STDERR "initialize:  Session verified with sessionKey.\n" if defined $self->{sessionKey};
+		} elsif (defined $self->{user}) {
+			eval {$self->Connect ();};
+			undef $self->{user} if $@;
+			print STDERR "initialize:  Session verified with user/pass.\n" if defined $self->{sessionKey};
 		}
 
 	# If the above didn't work, or we didn't have a sessionKey in the first place, try logging in.
@@ -374,7 +377,7 @@ sub initialize ()
 #		$self->SetReferer();
 #	}
 # If we are back to the referer, then clear it.
-	if ($self->gotBrowser() and $self->{referer} and $self->{referer} eq $cgi->url() ) {
+	if ($self->gotBrowser() and $self->{referer} and $self->{referer} eq $cgi->url(-relative=>1) ) {
 		$self->{referer} = undef;
 	}
 
@@ -394,9 +397,14 @@ sub VerifySession {
 my $self = shift;
 my $sessionKey = $self->{sessionKey};
 	die "Need a valid session ID for access." unless defined $sessionKey and $sessionKey;
-my $session = $self->Session();
+print STDERR "VerifySession:  Retreiving sessionKey=",$sessionKey," from Apache::Session::File\n";
 
-	print STDERR "VerifySession:  Retreiving sessionKey=",$sessionKey," from Apache::Session::File\n";
+# FIXME:  This should be done in a daemon.
+	CleanupSessions();
+
+
+	my $session = $self->Session();
+
 # FIXME:  This is kind of messy:
 #	if ( ($self->inWebServer() and ($session{remoteAddr} ne $ENV{REMOTE_ADDR} ) ) or
 #		(not $self->inWebServer() and ($session{remoteAddr} ne "127.0.0.1" )) ){
@@ -411,6 +419,7 @@ my $session = $self->Session();
 	$self->{password} = $session->{password};
 	$self->{sessionID} = $session->{sessionID};
 	$self->{sessionKey} = $session->{_session_id};
+#	$session->{lastAccess} = time;
 #	print STDERR "VerifySession:  Retreived sessionKey=",$sessionKey,"  User =",$self->{user}," Session ID=",$self->{sessionID},"\n";
 #	print STDERR "VerifySession:  Calling Connect\n";
 	$self->{sessionKey} = $self->Connect();
@@ -464,8 +473,6 @@ sub Connect {
 print STDERR "Connect:  SessionKey = ".$self->{sessionKey}.".  Calling SetSID\n";
 	$self->SetSID();
 
-# FIXME:  This should be done in a daemon.
-	CleanupSessions();
 	print STDERR "Connect:  Finished.  Initiating transactions\n";
 	$dbHandle->{AutoCommit} = 0;
 	return ($self->{sessionKey});
@@ -522,17 +529,19 @@ my $sessionKey = $_;
 my %session;
 
 return unless defined $sessionKey;
+return unless -f $sessionKey;
 my $created = (stat($sessionKey))[8];
 return unless defined $created;
 my $age = time - $created;
+print STDERR "session '$sessionKey', is $age old.\n";
 return unless $age > $sessionLifetime;
-#print STDERR "trying to delete session '$sessionKey'\n";
 		eval {tie %session, 'Apache::Session::File', $sessionKey, {
 				Directory => $tempDirectory.'sessions',
 				LockDirectory   => $tempDirectory.'lock'
 			};
 			tied(%session)->delete unless ($@);
 		};
+print STDERR "Delete unsucessfull because of: $@\n";
 }
 
 sub GetUserSessions {
@@ -577,7 +586,10 @@ sub Login ()
 
 		if ($self->gotBrowser())
 		{
-			$self->SetReferer() unless defined $self->{referer} and $self->{referer};
+		# Where do we set the referer to?
+		# If the referer was specified as a parameter, then we go there.
+		# If the referer was specified in a cookie, then we ignore it, and return to where we are now.
+			$self->SetReferer() unless defined $self->{referer} and $self->{referer} and $self->{referer} ne $cgi->cookie ('OMEreferer');
 			$self->Redirect(-location=>$self->{OMEloginURL}, -target=>'_top');
 		}
 		elsif (not $self->inWebServer ()) # Read connection parameters out of the user's OMErc file (~/.OMErc).
@@ -690,7 +702,7 @@ sub SetSID ()
 }
 
 
-sub Redirect()
+sub Redirect_old()
 {
 my $self = shift;
 my %params = @_;
@@ -703,11 +715,40 @@ my %params = @_;
 
 }
 
+sub Redirect {
+my $self = shift;
+return unless $self->gotBrowser;
+my %params = @_;
+my $URL = $params{-location};
+
+	$self->SetReferer() unless defined $self->{referer} and $self->{referer};
+	print $self->CGIheader (-type=>'text/html');
+	print qq {
+		<script language="JavaScript">
+			<!--
+				location = "$URL";
+			//-->
+		</script>
+		};
+	exit (0);
+	
+}
+
+
 sub ReturnHome()
 {
 my $self = shift;
 
 	self->Redirect(-location=>$self->{OMEhomePageURL});
+}
+
+sub SetReferer ()
+{
+	my $self = shift;
+#	$self->{referer} = $self->{OMEhomePageURL};
+#	$self->{referer} = $self->{cgi}->url(-relative=>1);
+	$self->{referer} = $self->{cgi}->self_url;
+	print STDERR "SetReferer:  setting self->{referer} to <",$self->{referer},">\n";
 }
 
 sub Return_to_referer_old()
@@ -733,16 +774,17 @@ sub Return_to_referer {
 my $self = shift;
 
 	return unless $self->gotBrowser;
+	$self->{referer} = $self->{OMEhomePageURL} unless defined $self->{referer} and $self->{referer};
+	my $URL = $self->{referer};
 	print $self->CGIheader (-type=>'text/html');
-	print $self->cgi->start_html();
-	my $URL = $self->{OMEhomePageURL};
 	print qq {
 		<script language="JavaScript">
 			<!--
-				top.location = "$URL";
+				location = "$URL";
 			//-->
 		</script>
-		}	
+		};
+	exit (0);
 }
 
 
@@ -2543,12 +2585,6 @@ my $viewName = shift;
 }
 
 
-sub SetReferer ()
-{
-	my $self = shift;
-	$self->{referer} = $self->{OMEhomePageURL};
-	print STDERR "SetReferer:  setting self->{referer} to <",$self->{referer},">\n";
-}
 
 
 sub CGIheader ()
@@ -2754,7 +2790,7 @@ sub SIDcookie {
 	my $self = shift;
 	if ($self->gotBrowser()) {
 		return $self->{cgi}->cookie (-name=>'OMEsessionKey',
-			-value=>$self->{sessionKey},-expires=>$cookieLifetime,,-path=>'/');
+			-value=>$self->{sessionKey},-path=>'/');
 	} else {
 		return undef;
 	}
@@ -2768,7 +2804,7 @@ sub RefererCookie {
 	if (! $self->gotBrowser()) { return undef; }
 
 	if ($self->{referer}) {
-		$cookie = $self->{cgi}->cookie (-name=>'OMEreferer',-value=>$self->{referer},-expires=>$cookieLifetime,,-path=>'/');
+		$cookie = $self->{cgi}->cookie (-name=>'OMEreferer',-value=>$self->{referer},-path=>'/');
 	}
 	else {
 		$cookie = $self->{cgi}->cookie (-name=>'OMEreferer',-value=>"",-expires=>'-1d',-path=>'/');
