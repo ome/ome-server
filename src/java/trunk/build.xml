@@ -1,7 +1,9 @@
 <project name="OME-JAVA" default="compile" basedir=".">
   <property name="src" value="src"/>
+  <property name="dtosrc" value="src"/>
   <property name="build" value="build"/>
   <property name="lib"  value="lib"/>
+  <property name="tests"  value="tests"/>
   <property name="docs" value="docs"/>
   <property name="apidocs" value="docs/api"/>
   <property name="privapidocs" value="docs/privapi"/>
@@ -10,17 +12,22 @@
   <property name="debug" value="yes"/>
   <property name="debuglevel" value="lines,vars,source"/>
 
+  <property name="distversion" value="ome-java-2.2-rc1"/>
+  <property name="srcdistfile" value="${distversion}-src.tar.gz"/>
+  <property name="bindistfile" value="${distversion}.tar.gz"/>
+  <property name="apidistfile" value="${distversion}-api.tar.gz"/>
+
   <target name="init">
     <tstamp/>
+  </target>
+
+  <target name="compile" depends="init">
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
     <copy todir="${build}">
        <fileset dir="${src}" excludes="**/*.java"/>
     </copy>
 
-  </target>
-
-  <target name="compile" depends="init">
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}"
 	       destdir="${build}"
@@ -68,18 +75,6 @@
     </javadoc>
   </target>
 
-  <target name="dist" depends="compile,apidocs">
-    <delete file="${distzip}" quiet="true"/>
-    <zip zipfile="${distzip}">
-      <fileset dir="." includes="${build}/**/*"/>
-      <fileset dir="." includes="${src}/**/*"/>
-      <fileset dir="." includes="${jnisrc}/**/*"/>
-      <fileset dir="." includes="${docs}/**/*"/>
-      <fileset dir="." includes="build.xml"/>
-    </zip>
-    <copy file="${distzip}" tofile="${DSTAMP}-${distzip}"/>
-  </target>
-
   <target name="jar" depends="compile">
     <mkdir dir="${jar}"/>
 
@@ -94,9 +89,62 @@
 
   </target>
 
+  <target name="srcdist" depends="init">
+    <delete file="${srcdistfile}" quiet="true"/>
+    <tar tarfile="${srcdistfile}"
+         compression="gzip">
+      <tarfileset dir="."
+                  prefix="${distversion}"
+                  preserveLeadingSlashes="false">
+        <include name="build.xml"/>
+        <include name="README"/>
+        <include name="INSTALL"/>
+        <include name="LICENSE"/>
+        <include name="${src}/**/*"/>
+        <include name="${dtosrc}/**/*"/>
+        <include name="${tests}/**/*"/>
+        <include name="${lib}/**/*"/>
+      </tarfileset>
+    </tar>
+    <copy file="${srcdistfile}" tofile="${DSTAMP}-${srcdistfile}"/>
+  </target>
+
+  <target name="bindist" depends="init,jar">
+    <delete file="${bindistfile}" quiet="true"/>
+    <tar tarfile="${bindistfile}"
+         compression="gzip">
+      <tarfileset dir="."
+                  prefix="${distversion}"
+                  preserveLeadingSlashes="false">
+        <include name="README"/>
+        <include name="INSTALL"/>
+        <include name="LICENSE"/>
+        <include name="${jar}/**/*"/>
+      </tarfileset>
+    </tar>
+    <copy file="${bindistfile}" tofile="${DSTAMP}-${bindistfile}"/>
+  </target>
+
+  <target name="apidist" depends="init,apidocs">
+    <delete file="${apidistfile}" quiet="true"/>
+    <tar tarfile="${apidistfile}"
+         compression="gzip">
+      <tarfileset dir="."
+                  prefix="${distversion}"
+                  preserveLeadingSlashes="false">
+        <include name="README"/>
+        <include name="INSTALL"/>
+        <include name="LICENSE"/>
+        <include name="${apidocs}/**/*"/>
+      </tarfileset>
+    </tar>
+    <copy file="${apidistfile}" tofile="${DSTAMP}-${apidistfile}"/>
+  </target>
+
   <target name="clean">
     <!-- Delete the ${build} and ${dist} directory trees -->
     <delete dir="${build}"/>
+    <delete dir="${jar}"/>
     <delete dir="${apidocs}"/>
     <delete dir="${privapidocs}"/>
     <delete file="${distzip}" quiet="true"/>
