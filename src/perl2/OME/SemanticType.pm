@@ -136,14 +136,15 @@ sub requireAttributeTypePackage {
 
     no strict 'refs';
     if ($type eq 'D') {
-        *{$pkg."::dataset"} = \&{$pkg."::_getTarget"};
+        *{$pkg."::dataset"} = sub { return shift->_getTarget(); };
         addPrototype($pkg,"dataset",[],['OME::Dataset'],force => 1);
     } elsif ($type eq 'I') {
-        *{$pkg."::image"}   = \&{$pkg."::_getTarget"};
+        *{$pkg."::image"}   = sub { return shift->_getTarget(); };
         addPrototype($pkg,"image",[],['OME::Image'],force => 1);
     } elsif ($type eq 'F') {
-        *{$pkg."::feature"} = \&{$pkg."::_getTarget"};
+        *{$pkg."::feature"} = sub { return shift->_getTarget(); };
         addPrototype($pkg,"feature",[],['OME::Feature'],force => 1);
+        print STDERR "  $pkg\::feature\n";
     } elsif ($type eq 'G') {
         # No global column
     }
