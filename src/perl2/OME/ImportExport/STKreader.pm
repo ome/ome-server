@@ -182,8 +182,11 @@ sub formatImage {
     my $gparent = $parent->{parent};
     my $xml_hash = $gparent->Image_reader::xml_hash;
     my $row_size = $parent->{row_size};
-    my $offsets = $parent->{offsets};
-    my $bytecounts = $parent->{bytecounts};
+    my $offsets_arr = $parent->{offsets};
+    my ($offs_arr, $bytes_arr);
+    my $offsets;
+    my $bytecounts_arr = $parent->{bytecounts};
+    my $bytecounts;
     my $xyzwt = $parent->{obuffer};
     my (@xy_arr, @xyz, @xyzw);
     my $start_offset;
@@ -202,9 +205,11 @@ sub formatImage {
     my $maxT = $xml_hash->{'Image.NumTimes'};
     my @args;
 
-    $start_offset = $$offsets[0];  # begining of image data
-    $end_offset = $$offsets[$#$offsets];         # start of last strip
-    $end_offset += $$bytecounts[$#$bytecounts];  # end of last strip
+    $offs_arr = @$offsets_arr[0];
+    $start_offset = $$offs_arr[0];  # begining of image data
+    $end_offset = $$offs_arr[$#$offs_arr];         # start of last strip
+    $bytes_arr = @$bytecounts_arr[0];
+    $end_offset += $$bytes_arr[$#$bytes_arr];  # end of last strip
     $plane_size = $end_offset - $start_offset;
     $num_rows = $plane_size/$row_size;
 
@@ -257,8 +262,8 @@ sub formatImage {
     my $xy_aref = [];
     my $key;
     my $val;
-    my $xref    =  $xml_hash->{'XYinfo.'};   # ref to array built by TIFFreader
-    my $wref    =  $xml_hash->{'WavelengthInfo.'}; # another array from TIFFreader
+    my $xref    =  $xml_hash->{'XYinfoPlane.'};   # ref to array built by TIFFreader
+    my $wref    =  $xml_hash->{'WavelengthInfoPlane.'}; # another array from TIFFreader
     my ($znum, $wnum, $tnum) = (1, 1, 1);
 
     # Extract out & store the per plane data (XYinfo & WaveLength)
@@ -304,6 +309,8 @@ sub formatImage {
     # overwrite info at key 'XYinfo.'
     $xml_hash->{'XYinfo.'} = $xy_aref;
     $xml_hash->{'WavelengthInfo.'} = $w_aref;
+    delete $xml_hash->{'XYinfoPlane.'};
+    delete $xml_hash->{'WavelengthInfoPlane.'};
 
     return $status;
 }
@@ -546,6 +553,7 @@ sub do_uic2 {
     my ($numZs, $numTs);
     my %uic2;
 
+    $xml_hash->{'Image.ImageType'} = "STK";  # UIC2 tag marks this as STK format
     $self->{NumStacks} = $num_planes;     # Number of planes in this stack
 
     # read in a 6-tuple set of values for each of the $num_planes planes in the stack
