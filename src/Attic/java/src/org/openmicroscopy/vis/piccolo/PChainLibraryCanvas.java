@@ -75,13 +75,15 @@ import java.awt.dnd.DragGestureEvent;
 public class PChainLibraryCanvas extends PCanvas implements DragGestureListener {
 	
 	private static float VGAP=20f;
-	private static float HGAP=10f;
+	private static float HGAP=40f;
 	private static Font nameFont = new Font("Helvetica",Font.BOLD,18);
 	private Connection connection=null;
 	private int modCount;
 	private PLayer layer;
 	
 	private float y=VGAP;
+	private float x=0;
+	private float rowHeight =0;
 	
 	private PLinkLayer linkLayer;
 	
@@ -134,41 +136,46 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		
 		Iterator iter = chains.iterator();
 		
+		int num = chains.size();
+		int rowSize = (int) Math.floor(Math.sqrt(num));
+		
+		int count=0;
 		// draw each of them.
 		while (iter.hasNext()) {
 			chain = (CChain) iter.next();
 			drawChain(chain);
+			count++;
+			if (count == rowSize) {
+				count = 0;
+				x = 0;
+				y+= rowHeight+VGAP;
+				rowHeight = 0;
+			}
 		}
 		
 	}
 	
 	public  void drawChain(CChain chain) {
-		// draw the modules 
-		chainHeight = 0;
-		chainWidth = 0;
 		
 		
-		connection.setStatusLabel("Chain.."+chain.getName());
+		//connection.setStatusLabel("Chain.."+chain.getName());
 		PText name = new PText(chain.getName());
 		name.setFont(nameFont);
 		name.setPickable(false);
 		layer.addChild(name);
-		name.setOffset(HGAP,y);
+		name.setOffset(x+HGAP,y);
 		name.setScale(2);
-		float top=y;
-		chainHeight += name.getBounds().getHeight()+VGAP;
-		y += VGAP+name.getBounds().getHeight();
 		
-		PChain p = new PChain(connection,chain,layer,linkLayer,HGAP*2,y);
-		
- 		y += p.getHeight()+VGAP;
- 		decorateChain(chain.getID(),top,y,p.getWidth());
-		y += VGAP;
+		PChain p = new PChain(connection,chain,layer,linkLayer,x+HGAP*2,y);
+ 		
+ 		decorateChain(chain.getID(),x,y,p.getHeight()+VGAP,p.getWidth());
+		if (p.getHeight()+VGAP>rowHeight)
+			rowHeight = p.getHeight()+VGAP;
+		x+= p.getWidth()+HGAP;
 	}
 	
-	public void decorateChain(int id,float top,float bottom,float width) {
-		float height = bottom-top;
-		PChainBox box = new PChainBox(id,HGAP,top,width,height);
+	public void decorateChain(int id,float left,float top,float height,float width) {
+		PChainBox box = new PChainBox(id,left,top,width,height);
 		layer.addChild(box);
 		box.moveToBack();
 	}
