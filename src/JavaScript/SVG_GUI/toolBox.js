@@ -96,7 +96,7 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *		x,y = x,y of upper left corner of toolbox
 *		width = width of toolbox
 *		height = height of GUIbox
-*       The last three parameters are optional. They allow the user to control
+*       The rest of the parameters are optional. They allow the user to control
 *       the appearance of the toolBox. width of menuBar and GUIbox should be
 *		{$width} wide. GUIbox should be "{$height}" tall.
 *		hideControl needs to have animations. The first animation will be
@@ -104,8 +104,8 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *		If you do not specify animations for GUIbox, it will fade in and out.
 *		If you specify animations for GUIbox they will be called in the same
 *		fashion	as hideControl's.
-*		GUIbox may have elements placed inside it. Use a g or something similar
-*		for the root node if you plan on doing that.
+*		GUIbox may have elements placed inside it. Use a g for the root node 
+*       if you plan on doing that.
 *
 *****/
 function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip) {
@@ -120,6 +120,16 @@ function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText, noclip
 *****/
 toolBox.prototype.init = function( x, y, width, height, menuBarText,
 		hideControlText, GUIboxText, noclip) {
+	if( x.constructor != Number ) {
+		y = x['y'];
+		width = x['width'];
+		height = x['height']; 
+		menuBarText = x['menuBarText']; 
+		hideControlText = x['hideControlText']; 
+		GUIboxText = x['GUIboxText']; 
+		noclip = x['noclip']; 
+		x = x['x'];
+	}
 	// call superclass method
 	toolBox.superclass.init.call(this,x,y);
 	
@@ -130,9 +140,9 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 	this.noclip = noclip;
 	
 	// allow user defined custimization of apperance
-	if( menuBarText != null ) this.menuBarText = menuBarText;
-	if( hideControlText != null ) this.hideControlText = hideControlText;
-	if( GUIboxText != null ) this.GUIboxText = GUIboxText;
+	if( menuBarText ) this.menuBarText = menuBarText;
+	if( hideControlText ) this.hideControlText = hideControlText;
+	if( GUIboxText ) this.GUIboxText = GUIboxText;
 }
 
 /*****
