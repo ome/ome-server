@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<STD:SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		
+		<SemanticType Name="ImageTestSignature" AppliesTo="I">
+			<Element Name="Value" DBLocation="IMAGE_TEST_SIGNATURE.SIGNATURE" DataType="float"/>
+		</SemanticType>
+	
+		<SemanticType Name="ImageTestSignatureTwo" AppliesTo="I">
+			<Element Name="Foo"  DBLocation="IMAGE_TEST_SIGNATURE_TWO.FOO" DataType="double"/>
+			<Element Name="Bar"  DBLocation="IMAGE_TEST_SIGNATURE_TWO.BAR" DataType="integer"/>
+		</SemanticType>
+	
+	</STD:SemanticTypeDefinitions>
+
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+		<AnalysisModule ModuleName="Image signature test" ProgramID="" ModuleType="OME::Analysis::Modules::Tests::ImageSignature" Category="Testing" ID="urn:lsid:openmicroscopy.org:Module:111">
+			<Description>Image signature Test. Spits out a test signature.</Description>	
+			<Declaration>
+				<FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+				<FormalOutput Name="Signature" SemanticTypeName="ImageTestSignature" Count="!"/>
+			</Declaration>
+		</AnalysisModule>
+	  
+		<AnalysisModule ModuleName="Image signature test Two" ProgramID="" ModuleType="OME::Analysis::Modules::Tests::FauxSignature" Category="Testing" ID="urn:lsid:openmicroscopy.org:Module:114">
+			<Description>Another image signature test.</Description>
+			<Declaration>
+				<FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+				<FormalOutput Name="Signature" SemanticTypeName="ImageTestSignatureTwo" Count="!"/>
+			</Declaration>
+		</AnalysisModule>
+	  
+		<AnalysisModule ModuleName="Faux Filter" Category="Tests" ProgramID="" ModuleType="OME::Analysis::Modules::PassThrough" ID="urn:lsid:openmicroscopy.org:Module:3222">
+			<Description>Pretends to be a filter. Really does nothing.</Description>
+			<Declaration>
+				<FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+				<FormalOutput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+			</Declaration>
+		</AnalysisModule>
+
+	</AML:AnalysisModuleLibrary>
+</OME>

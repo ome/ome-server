@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+	
+	<SemanticType Name="SignatureVectorEntry" AppliesTo="I">
+	  <Description>A single image signature. A signature describes
+	  something about the image. i.e. number of blobs, whether the
+	  texture is rough or smooth, etc.</Description>
+      <Element Name="Value"  DBLocation="SIGNATURE.VALUE" DataType="double"/>
+      <Element Name="Legend"  DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
+    </SemanticType>
+    
+	<SemanticType Name="SignatureVectorLegend" AppliesTo="D">
+	  <Description>Describes the data derivation of a position in a
+	  signature vector. I (Josiah) have been thinking about this having
+	  global granularity. This isn't feasible ATM because modules that
+	  accept non global inputs are not allowed to produce global
+	  outputs.</Description>
+      <Element Name="VectorPosition"  DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
+      	<Description>Will be in the range of 1 to N, where N is the
+      	number of vector positions.</Description>
+      </Element>
+      <Element Name="FormalInput"  DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
+      	<Description>The name of the formal input assigned to this
+      	vector position. The function of this is to describe the data
+      	history. The data history can be accurately derived because
+      	the chain will have been locked by the time this is
+      	produced.</Description>
+      </Element>
+      <Element Name="SemanticElement"  DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
+      	<Description>The name of the semantic element of the formal
+      	input assigned to this vector position.</Description>
+      </Element>
+    </SemanticType>
+    
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Signature Stitcher 0" 
+    Category="Tests"
+	ModuleType = "OME::Analysis::Modules::Classification::SignatureStitcher"
+	ProgramID = "" 
+    ID="urn:lsid:openmicroscopy.org:Module:221">
+	<Description>Test example of making a signature vector for
+	classification. Inputs must have an arity of 1. Inputs with constant
+	arity that can be ordered should also work, but that's not work
+	implementing this now.</Description>
+	<Declaration>
+		<FormalInput Name="ImageTestSignature" SemanticTypeName="ImageTestSignature" Count="!"/>
+		<FormalInput Name="ImageTestSignature_2" SemanticTypeName="ImageTestSignature" Count="!"/>
+		<FormalInput Name="ImageTestSignatureTwo" SemanticTypeName="ImageTestSignatureTwo" Count="!"/>
+
+		<FormalOutput Name = "SignatureVector" SemanticTypeName = "SignatureVectorEntry"  Count="+"/>
+		<FormalOutput Name = "VectorLegend"    SemanticTypeName = "SignatureVectorLegend" Count="+"/>
+	</Declaration>
+</AnalysisModule>
+
+</AML:AnalysisModuleLibrary>
+</OME>
