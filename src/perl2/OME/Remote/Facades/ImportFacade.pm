@@ -84,7 +84,7 @@ sub startImport {
     # Fork off the child process
 
     my $parent_pid = $$;
-    my $pid = fork;
+    my $pid = OME::Fork->fork();
 
     if (!defined $pid) {
         # Fork failed, record as such in the ModuleExecution and return
@@ -94,7 +94,6 @@ sub startImport {
         # Parent process
 
         print STDERR "Parent\n";
-        OME::Tasks::ImportManager->forgetImport();
 
         # TODO:  Define a better Import DTO, encode it, and return it.
         return $files_mex->id();
@@ -105,8 +104,6 @@ sub startImport {
 
         # Start a new session so we loose our controling terminal
         POSIX::setsid () or die "Can't start a new session. $!";
-
-        OME::Session->forgetInstance();
 
 # I believe this line can replace OME::Remote::Facades::ImportFacade::Child::importChild
 # Is that possible? If not, then it can replace the innards of importChild
@@ -137,7 +134,7 @@ sub importChild ($$$$) {
     my ($sessionKey,$importer,$dataset,$fileIDs) = @_;
     print STDERR "Child\n";
 
-    my $session = OME::SessionManager->createSession($sessionKey);
+    my $session = OME::Session->instance();
     print STDERR "  Session $session\n";
 
     my $factory = $session->Factory();
