@@ -90,6 +90,7 @@ use IO::File;
 
 use OME::Image::Pix;
 use OME::Feature;
+use OME::Image::Server;
 
 use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
@@ -294,6 +295,11 @@ sub getFullPath {
     my $path = $pixels->Path();
 
     return $repository->Path() . $path;
+
+#	This assumes the Image server is mounted on a shared drive at '/OME/OMEIS'
+#	It also awaits Pixel attributes to store image server id's
+#OME::Image::Server->useLocalServer() ;
+#return '/OME/OMEIS/' . OME::Image::Server->getLocalPath( $pixels->imageServerID() );
 }
 
 # for now, a very simple implementation
