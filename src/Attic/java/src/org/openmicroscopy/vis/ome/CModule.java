@@ -42,8 +42,10 @@
 import org.openmicroscopy.remote.RemoteModule;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
+import org.openmicroscopy.vis.chains.ModulePaletteFrame;
 import org.openmicroscopy.vis.piccolo.PModule;
 import java.util.ArrayList;
+import java.io.Serializable;
 
 /** 
  * <p>A {@link RemoteModule} subclass used to hold information about modules 
@@ -53,7 +55,7 @@ import java.util.ArrayList;
  * @version 2.1
  * @since OME2.1
  */
-public class CModule extends RemoteModule {
+public class CModule extends RemoteModule implements Serializable{
 	
 	static {
 		RemoteObjectCache.addClass("OME::Module",CModule.class);
@@ -67,6 +69,12 @@ public class CModule extends RemoteModule {
 	 *  
 	 */
 	private ArrayList pModules = new ArrayList();
+	
+	/**
+	 * The palette frame in the current application
+	 *
+	 */
+	private ModulePaletteFrame palette;
 	
 	public CModule() {
 		super();
@@ -117,6 +125,15 @@ public class CModule extends RemoteModule {
 			m.setHighlighted(v);
 			m.setParamsHighlighted(v);
 		}
+		if (palette != null) {
+			if (v == true)
+				palette.setTreeSelection(this);
+			else
+				palette.clearTreeSelection();
+		}
 	}
-
+	
+	public void setFrame(ModulePaletteFrame palette) {
+		this.palette = palette;
+	}
 }
