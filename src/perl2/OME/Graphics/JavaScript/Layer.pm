@@ -142,8 +142,75 @@ function $JStype (CGI_URL,name,optionsStr) {
 
 ENDJSOBJECT
 
+# initial draft of pod added by Josiah Johnston, siah@nih.gov
+=pod
 
+=head1 Layer.pm
 
+=head1 Package information
+
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+
+=head2 Description
+
+Tools for constructing and manipulating a javascript object, Layer, which serves to control
+a layer in the html viewer. Currently it is used in conjuction with 
+
+=head2 Path
+
+src/perl2/OME/Graphics/JavaScript/Layer.pm
+
+=head2 Package name
+
+OME::Graphics::JavaScript::Layer
+
+=head2 Dependencies
+
+none
+
+=head2 Function calls to OME Modules
+
+none
+
+=head2 Data references to OME Modules
+
+none
+
+=head1 Externally referenced functions
+
+C<new()>, C<Window()>, C<JSinstance()>, C<HTMLdiv()>, C<X11Colors()>
+
+X<new()>
+
+=head2 new()
+
+=over 4
+
+=item Description
+
+constructor
+
+=item Parameters
+
+B<optional>
+	allZ, allT, name, LayerCGI, Options
+
+	allZ and allT are integers acting as booleans
+	name is a string. it will be the name of this layer in the html version.
+	LayerCGI is the URL of the CGI associated with this layer
+	Options is a list of options in the format: optA=valA&optB=valB&...
+
+=item Returns
+
+I<$self>
+
+=item Uses functions
+
+L<ParseOptions()>
+
+=back
+
+=cut
 
 
 # new
@@ -200,24 +267,32 @@ sub new {
 	return $self;
 }
 
+=pod
 
-sub ParseOptions () {
-my $self = shift;
-my $optionsStr = shift;
-my @options = split ('&',$optionsStr);
-my ($option,$value);
+X<Window()>
 
-	$self->{OptionsString} = $optionsStr;
-	foreach (@options) {
-		($option,$value) = split ('=',$_);
-		# URL-unescape the value
-		# use this to escape: =~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
-		$value =~ tr/+/ /;       # pluses become spaces
-		$value =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
-		$self->{$option} = $value;
-	}
-}
+=head2 Window()
 
+=over 4
+
+=item Description
+
+Sets the ObjectRef parameter. ObjectRef is used in html and javascript as the root object
+to use when applying modifications.
+
+=item Parameters
+
+I<$window>, a text string containing the name of the window to use as a root object.
+
+=item Returns
+
+nothing
+
+=item Uses no functions
+
+=back
+
+=cut
 
 #
 sub Window {
@@ -225,6 +300,32 @@ my $self = shift;
 my $window = shift;
 $self->{ObjectRef} = $window ? $window.'.'.$self->{name} : $self->{name};
 }
+
+=pod
+
+X<JSinstance()>
+
+=head2 JSinstance()
+
+=over 4
+
+=item Description
+
+Makes a javascript command to instantiate the layer object in javascript.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A line of javascript
+
+=item Uses no functions
+
+=back
+
+=cut
 
 sub JSinstance {
 my $self = shift;
@@ -239,6 +340,32 @@ my $JSoptions = $self->{OptionsString};
 var $objName = new $JStype ("$LayerCGI","$objName","$JSoptions");
 ENDJS
 }
+
+=pod
+
+X<HTMLdiv()>
+
+=head2 HTMLdiv()
+
+=over 4
+
+=item Description
+
+Makes an HTML div tag for this layer.
+
+=item Parameters
+
+I<$params>: A text string to set as the style attribute of the DIV tag
+
+=item Returns
+
+An HTML snippet
+
+=item Uses no functions
+
+=back
+
+=cut
 
 sub HTMLdiv {
 my $self = shift;
@@ -257,69 +384,31 @@ my $imgSrc = "";
 ENDJS
 }
 
-sub Form_allZ {
-my $self = shift;
-my $name = $self->{name}."allZ";
-my $objName = $self->{name};
-my $objRef = $self->{ObjectRef};
-my $checked = '';
+=pod
 
-	$checked = 'CHECKED' if ($self->{allZ});
+X<X11Colors()>
 
-	return <<ENDFORM;
-		<INPUT TYPE="checkbox" NAME="$name" $checked VALUE="$name" onclick = "$objRef.SetAllZ(this.checked);">
-		All Z</INPUT>
-ENDFORM
-}
+=head2 X11Colors()
 
-sub Form_allT {
-my $self = shift;
-my $name = $self->{name}."allT";
-my $objName = $self->{name};
-my $objRef = $self->{ObjectRef};
-my $checked = '';
+=over 4
 
-	$checked = 'CHECKED' if ($self->{allT});
+=item Description
 
-	return <<ENDFORM;
-		<INPUT TYPE="checkbox" NAME="$name" $checked VALUE="$name" onclick = "$objRef.SetAllT(this.checked);">
-		All T</INPUT>
-ENDFORM
-}
+Contains a hash table called X11ColorDefs of color names and associated RGB values.
 
-sub Form_visible {
-my $self = shift;
-my $name = $self->{name}."Visible";
-my $objName = $self->{name};
-my $objRef = $self->{ObjectRef};
+=item Parameters
 
-	
-	return <<ENDFORM;
-	<INPUT TYPE="checkbox" NAME="$name" CHECKED VALUE="$name" onclick = "$objRef.SetVisible(this.checked);"/>
-ENDFORM
-}
+none
 
+=item Returns
 
-sub Form_color {
-my $self = shift;
-my $name = $self->{name}."Color";
-my $objName = $self->{name};
-my $objRef = $self->{ObjectRef};
-my $color = $self->{color};
-my $colors = $self->X11Colors();
-my $JS = "\tColor:<SELECT NAME=\"$name\" onchange=\"$objRef.SetColor(this.options[this.selectedIndex].text);\">\n";
+A reference to a hash table containing color names and associated RGB values.
 
-	
-	foreach (sort (keys %$colors)) {
-		$JS .= '		<option value="['.join (',',@{$colors->{$_}}).']"';
-		$JS .= ' selected' if $_ eq $color;
-		$JS .= '>'.$_."</option>\n";
-	}
-	
-	$JS .= "\t</SELECT>\n";
+=item Uses no functions
 
-	return $JS;
-}
+=back
+
+=cut
 
 sub X11Colors {
 my $X11ColorDefs = {
@@ -468,5 +557,230 @@ my $X11ColorDefs = {
 	return $X11ColorDefs;
 }
 
-1;
+=pod
 
+=head1 Functions intended to be internally referenced
+
+C<Form_allZ()>, C<Form_allT()>, C<Form_visible>,  C<Form_color>, C<ParseOptions>
+
+X<Form_allZ()>
+
+=head2 Form_allZ()
+
+=over 4
+
+=item Description
+
+Makes an HTML checkbox to control the javascript function SetAllZ() in the
+javascript object Layer.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML checkbox
+
+=item Uses no functions
+
+=back
+
+=cut
+
+sub Form_allZ {
+my $self = shift;
+my $name = $self->{name}."allZ";
+my $objName = $self->{name};
+my $objRef = $self->{ObjectRef};
+my $checked = '';
+
+	$checked = 'CHECKED' if ($self->{allZ});
+
+	return <<ENDFORM;
+		<INPUT TYPE="checkbox" NAME="$name" $checked VALUE="$name" onclick = "$objRef.SetAllZ(this.checked);">
+		All Z</INPUT>
+ENDFORM
+}
+
+=pod
+
+X<Form_allT()>
+
+=head2 Form_allT()
+
+=over 4
+
+=item Description
+
+Makes an HTML checkbox to control the javascript function SetAllT() in the
+javascript object Layer.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML checkbox
+
+=item Uses no functions
+
+=back
+
+=cut
+
+sub Form_allT {
+my $self = shift;
+my $name = $self->{name}."allT";
+my $objName = $self->{name};
+my $objRef = $self->{ObjectRef};
+my $checked = '';
+
+	$checked = 'CHECKED' if ($self->{allT});
+
+	return <<ENDFORM;
+		<INPUT TYPE="checkbox" NAME="$name" $checked VALUE="$name" onclick = "$objRef.SetAllT(this.checked);">
+		All T</INPUT>
+ENDFORM
+}
+
+=pod
+
+X<Form_visible()>
+
+=head2 Form_visible()
+
+=over 4
+
+=item Description
+
+Makes an HTML checkbox to control the javascript function SetVisible() in the
+javascript object Layer. This controls the visibility of the html layer specified in
+I<{ObjectRef}>.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML checkbox
+
+=item Uses no functions
+
+=back
+
+=cut
+
+sub Form_visible {
+my $self = shift;
+my $name = $self->{name}."Visible";
+my $objName = $self->{name};
+my $objRef = $self->{ObjectRef};
+
+	
+	return <<ENDFORM;
+	<INPUT TYPE="checkbox" NAME="$name" CHECKED VALUE="$name" onclick = "$objRef.SetVisible(this.checked);"/>
+ENDFORM
+}
+
+=pod
+
+X<Form_color()>
+
+=head2 Form_color()
+
+=over 4
+
+=item Description
+
+Makes an HTML select element (e.g. comboBox) to control the javascript function SetColor() in some
+javascript objects that inherit from Layer. This javascript function sets the color of the reference
+layer. NOTE: If a perl subclass uses this function, its associated javascript object must have a
+SetColor() function.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML select element full of color names that reports back to 
+
+=item Uses functions
+
+X11Colors()
+
+=back
+
+=cut
+
+sub Form_color {
+my $self = shift;
+my $name = $self->{name}."Color";
+my $objName = $self->{name};
+my $objRef = $self->{ObjectRef};
+my $color = $self->{color};
+my $colors = $self->X11Colors();
+my $JS = "\tColor:<SELECT NAME=\"$name\" onchange=\"$objRef.SetColor(this.options[this.selectedIndex].text);\">\n";
+
+	
+	foreach (sort (keys %$colors)) {
+		$JS .= '		<option value="['.join (',',@{$colors->{$_}}).']"';
+		$JS .= ' selected' if $_ eq $color;
+		$JS .= '>'.$_."</option>\n";
+	}
+	
+	$JS .= "\t</SELECT>\n";
+
+	return $JS;
+}
+
+=pod
+
+X<ParseOptions()>
+
+=head2 ParseOptions()
+
+=over 4
+
+=item Description
+
+Takes a URL style parameter list and parses it, making new variables in I<$self> for each element.
+
+=item Parameters
+
+optionsStr
+
+optionsStr is a URL style parameter list. (i.e. optA=valA&optB=valB&optC=valC... )
+
+=item Returns
+
+nothing
+
+=item Uses No functions
+
+=back
+
+=cut
+
+sub ParseOptions () {
+my $self = shift;
+my $optionsStr = shift;
+my @options = split ('&',$optionsStr);
+my ($option,$value);
+
+	$self->{OptionsString} = $optionsStr;
+	foreach (@options) {
+		($option,$value) = split ('=',$_);
+		# URL-unescape the value
+		# use this to escape: =~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
+		$value =~ tr/+/ /;       # pluses become spaces
+		$value =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
+		$self->{$option} = $value;
+	}
+}
+
+
+1;
