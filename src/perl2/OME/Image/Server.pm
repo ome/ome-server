@@ -712,9 +712,9 @@ sub getROI {
 
 This method sends an entire array of pixels for the given pixels ID.
 The pixels are specified by an external file, which should be a raw
-pixel dump.  The endian-ness of the pixels in this file should be
-specified; if no value is given for the $bigEndian parameter, network
-order (big-endian) is assumed.
+pixel dump, or as a reference to the pixel data.  The endian-ness of
+the pixels should be specified; if no value is given for the
+$bigEndian parameter, network order (big-endian) is assumed.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
@@ -746,9 +746,10 @@ sub setPixels {
 This method sends an array of pixels for a single stack of the given
 pixels ID.  The stack is specified by its C and T coordinates, which
 have 0-based indices.  The pixels are specified by an external file,
-which should be a raw pixel dump.  The endian-ness of the pixels in
-this file should be specified; if no value is given for the $bigEndian
-parameter, network order (big-endian) is assumed.
+which should be a raw pixel dump, or as a reference to the binary
+pixel data.  The endian-ness of the pixels should be specified; if no
+value is given for the $bigEndian parameter, network order
+(big-endian) is assumed.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
@@ -782,9 +783,10 @@ sub setStack {
 This method sends an array of pixels for a single plane of the given
 pixels ID.  The plane is specified by its Z, C and T coordinates,
 which have 0-based indices.  The pixels are specified by an external
-file, which should be a raw pixel dump.  The endian-ness of the pixels
-in this file should be specified; if no value is given for the
-$bigEndian parameter, network order (big-endian) is assumed.
+file, which should be a raw pixel dump, or as a reference to the pixel
+data.  The endian-ness of the pixels should be specified; if no value
+is given for the $bigEndian parameter, network order (big-endian) is
+assumed.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
@@ -827,9 +829,9 @@ region boundaries must be well formed.  (Each coordinate must be
 within the range of valid values for that dimension, and each "0"
 coordinate must be less than or equal to the respective "1"
 coordinate.)  The pixels are specified by an external file, which
-should be a raw pixel dump.  The endian-ness of the pixels in this
-file should be specified; if no value is given for the $bigEndian
-parameter, network order (big-endian) is assumed.
+should be a raw pixel dump, or as a reference to the pixel data.  The
+endian-ness of the pixels should be specified; if no value is given
+for the $bigEndian parameter, network order (big-endian) is assumed.
 
 If the specified pixel file isn't in write-only mode on the image
 server, an error will be thrown.
@@ -918,13 +920,18 @@ sub getFileSHA1 {
     return $result;
 }
 
-=head2 get_IS_PixelsPath
+=head2 getPixelsServerPath
 
-	my $path = OME::Image::Server->get_IS_PixelsPath($pixelsID);
+	my $path = OME::Image::Server->getPixelsServerPath($pixelsID);
+
+Returns the image server's local path to the pixels file referred to
+by the specified pixels ID.  If the image server happens to be running
+on the same machine, you can directly open this file for reading.  If
+not, this is only useful for informational purposes.
 
 =cut
 
-sub get_IS_PixelsPath {
+sub getPixelsServerPath {
     my $proto = shift;
     my ($pixelsID) = @_;
 
@@ -935,13 +942,18 @@ sub get_IS_PixelsPath {
     return $result;
 }
 
-=head2 get_IS_FilePath
+=head2 getFileServerPath
 
-	my $path = OME::Image::Server->get_IS_FilePath($fileID);
+	my $path = OME::Image::Server->getFileServerPath($fileID);
+
+Returns the image server's local path to the file referred to by the
+specified file ID.  If the image server happens to be running on the
+same machine, you can directly open this file for reading.  If not,
+this is only useful for informational purposes.
 
 =cut
 
-sub get_IS_FilePath {
+sub getFileServerPath {
     my $proto = shift;
     my ($fileID) = @_;
 
