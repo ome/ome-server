@@ -68,50 +68,6 @@ The session object maintains the user's state regardless of the client used for 
 A user's session never expires.  A session key (a string token) is exchanged between the client and the server
 to refer to a session object.  This token is short lived, and must be periodically refreshed.
 
-=cut
-
-use OME;
-our $VERSION = $OME::VERSION;
-
-use strict;
-
-use Carp; 
-use OME::UserState;
-use base qw(Class::Accessor);
-use POSIX;
-
-#use Benchmark::Timer;
-
-#use fields qw(Factory Manager DBH UserState ApacheSession SessionKey Configuration);
-__PACKAGE__->mk_ro_accessors(qw(Factory Manager DBH UserState ApacheSession SessionKey Configuration));
-
-# transparant interface to UserState
-sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
-sub host { return shift->{UserState}->host(@_); }
-sub project_id { return shift->{UserState}->project_id(@_); }
-sub project { return shift->{UserState}->project(@_); }
-sub dataset_id { return shift->{UserState}->dataset_id(@_); }
-sub dataset { return shift->{UserState}->dataset(@_); }
-sub module_execution_id { return shift->{UserState}->module_execution_id(@_); }
-sub module_execution { return shift->{UserState}->module_execution(@_); }
-sub image_view { return shift->{UserState}->image_view(@_); }
-sub feature_view { return shift->{UserState}->feature_view(@_); }
-sub last_access { return shift->{UserState}->last_access(@_); }
-sub started { return shift->{UserState}->started(@_); }
-sub storeObject { return shift->{UserState}->storeObject(@_); }
-sub writeObject { return shift->{UserState}->writeObject(@_); }
-
-
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-
-    my $self = $class->SUPER::new();
-    
-    return $self;
-
-}
-
 =head1 METHODS
 
 The following methods are available in addition to those defined by
@@ -120,10 +76,6 @@ L<OME::DBObject>.
 =head2 Factory
 
 Returns the session's L<C<OME::Factory>|OME::Factory> object.
-
-=head2 Manager
-
-Returns the session's L<C<OME::SessionManager>|OME::SessionManager> object.
 
 =head2 Configuration
 
@@ -150,26 +102,108 @@ Returns the session's L<C<OME::Project>|OME::Project> object.
 
 	$session->closeSession();
 
-This method breaks any circular dependencies when logging out.
-This is normally called by L<C<OME::SessionManager>|OME::SessionManager>C<-E<gt>logout()>;
+This does cleanup. Specifically, it breaks any circular dependencies when logging out.
+This method should not be called directly, rather use L<C<OME::SessionManager>|OME::SessionManager>C<-E<gt>logout()>.
 
 =cut
 
+use OME;
+our $VERSION = $OME::VERSION;
+
+use strict;
+
+use Carp; 
+use OME::UserState;
+use OME::DBObject;
+use base qw(Class::Accessor);
+use POSIX;
+
+#use Benchmark::Timer;
+
+__PACKAGE__->mk_ro_accessors(qw(Factory DBH UserState ApacheSession SessionKey Configuration));
+
+our $__session;
+
+# transparant interface to UserState
+sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
+sub host { return shift->{UserState}->host(@_); }
+sub project_id { return shift->{UserState}->project_id(@_); }
+sub project { return shift->{UserState}->project(@_); }
+sub dataset_id { return shift->{UserState}->dataset_id(@_); }
+sub dataset { return shift->{UserState}->dataset(@_); }
+sub module_execution_id { return shift->{UserState}->module_execution_id(@_); }
+sub module_execution { return shift->{UserState}->module_execution(@_); }
+sub image_view { return shift->{UserState}->image_view(@_); }
+sub feature_view { return shift->{UserState}->feature_view(@_); }
+sub last_access { return shift->{UserState}->last_access(@_); }
+sub started { return shift->{UserState}->started(@_); }
+sub storeObject { return shift->{UserState}->storeObject(@_); }
+sub writeObject { return shift->{UserState}->writeObject(@_); }
+
+
+sub new {
+	our $__session;
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $userState = shift
+    	or die "Session cannot be initialized without a user state";
+    die "User State parameter is not of class OME::UserState"
+    	unless ( ref($userState) eq "OME::UserState") ;
+
+	# Same user wants a session. Give them the previously defined one if possible.
+	return $__session 
+		if ( defined $__session and $__session->UserState()->id() eq $userState->id() );
+
+	# A different user has logged in. Clean the old session up, salvaging reuseable resources
+	# in the process.
+	return $__session->_salvageSession( $userState ) 
+		if ( defined $__session and $__session->UserState()->id() ne $userState->id() );
+
+    my $self = $class->SUPER::new();
+    
+    $self->{UserState} = $userState; 
+    $self->{Factory} = OME::Factory->new($self);
+    $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
+    
+    $__session = $self;
+    
+    return $self;
+
+}
+
+sub _salvageSession {
+	my $self = shift;
+	$self->{UserState}->{__session} = undef;
+
+	$self->{UserState} = shift;
+    $self->{Factory}->swapSessions( $self );
+    
+    # This make safe process could be made more efficient by setting the
+    # {__session} field of every DBObject under $self->{Configuration}.
+    $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
+
+	OME::DBObject->clearAllCaches();
+
+	return $self;
+}
+
 sub closeSession {
     my ($self) = @_;
+    # class variable __session
+	our $__session;
 
     # When we log out, break any circular links between the Session
     # and other objects, to allow them all to get garbage-collected.
+    # Also, make call to factory to shutdown and free db handles.
 	$self->{Factory}->closeFactory();
 	$self->{UserState}->{__session} = undef;
-    $self->{Manager} = undef;
+	$__session = undef;
 }
 
 
 # Accessors
 # ---------
 sub DBH { carp "Noo!!!!!"; return shift->{Factory}->obtainDBH(); }
-#sub DBH { my $self = shift; return $self->{Manager}->DBH(); }
 sub User {
     my $self = shift;
     return $self->Factory()->loadAttribute("Experimenter",
