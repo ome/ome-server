@@ -169,7 +169,7 @@ sub exportNode {
 	my $DOM = $self->doc();
 
 	# Get a unique name for this node
-	my $nodeName = $self->getNodeName ($node->module());
+	my $nodeName = $self->getNodeName ($node);
 	my $nodeElement = $DOM->createElement('Node');
 	$nodeElement->setAttribute('NodeID', $nodeName );
 	$nodeElement->setAttribute('ProgramName', $node->module()->name());
@@ -184,7 +184,7 @@ sub exportNode {
 		my $linkElement = $DOM->createElement('Link');
 		$linkElement->setAttribute('FromNodeID', $nodeName );
 		$linkElement->setAttribute('FromOutputName', $link->from_output()->name());
-		$linkElement->setAttribute('ToNodeID', $self->getNodeName ($link->to_node()->module()) );
+		$linkElement->setAttribute('ToNodeID', $self->getNodeName ($link->to_node()) );
 		$linkElement->setAttribute('ToInputName', $link->to_input()->name());
 	
 		# Attach the Link element to the Links element
@@ -247,12 +247,14 @@ sub exportChain {
 
 
 sub getNodeName {
-	my ($self,$module) = @_;
+	my ($self,$node) = @_;
+	my $module = $node->module();
+	my $nodeID = $node->id();
 	my $moduleID = $module->id();
 	my $nodeName = $module->name();
 	
-	return $self->{_NodeNames}->{$moduleID}
-		if exists $self->{_NodeNames}->{$moduleID};
+	return $self->{_NodeNames}->{$nodeID}
+		if exists $self->{_NodeNames}->{$nodeID};
 
 #	$nodeName =~ s/\s([a-z])/\u$1/g if $nodeName =~ /\s([a-z])/;
 #	$nodeName =~ s/\s->\s/To/g if $nodeName =~ /\s->\s/;
@@ -265,12 +267,11 @@ sub getNodeName {
 
 	if (exists $self->{_ModuleIDs}->{$nodeName}) {
 		my $i=1;
-		$i++ while exists $self->{_ModuleIDs}->{$nodeName."_$i"};
-#		$nodeName .= "_$i";
+		$i++ while exists $self->{_ModuleIDs}->{$nodeName." $i"};
 		$nodeName .= " $i";
 	}
 	$self->{_ModuleIDs}->{$nodeName} = $moduleID;
-	$self->{_NodeNames}->{$moduleID} = $nodeName;
+	$self->{_NodeNames}->{$nodeID} = $nodeName;
 	return $nodeName;
 }
 
