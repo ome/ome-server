@@ -28,8 +28,6 @@
 *          Attempting to unhide the GUIbox while it it hiding causes
 *       it to turn invisible. It can be made visible by hiding and unhiding 
 *       it again.
-*     Author: Josiah Johnston
-*     email: johnstonjo@grc.nia.nih.gov
 *
 *****/
 
@@ -49,9 +47,8 @@ toolBox.superclass = Widget.prototype;
 *   Class variables
 *
 *****/
-toolBox.VERSION = .2;
-
-toolBox.prototype.padding = 10;
+toolBox.padding = 10;
+toolBox.prototype.padding = toolBox.padding;
 
 
 toolBox.prototype.menuBarText = 
