@@ -318,7 +318,6 @@ sub getApacheInfo {
 	# Parse each of the files included from the root apache conf file
 	while (1) {
 		my $path;
-		my $i = 0;
 
 		# Find a path we haven't searched yet
 		for (my $i = 0; $i < $include_set->get_size(); $i++) {
@@ -587,7 +586,8 @@ sub rollback {
 
 1;
 
-# Blessed array reference to ease containership matching
+# Blessed array reference to ease containership handling and other goodness
+# required for the Apache conf file recursive searches.
 #
 # $include_set = [ [ELEMENT, EXAMINED_FLAG], ... ]
 #
