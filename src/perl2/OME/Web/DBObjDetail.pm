@@ -155,13 +155,12 @@ Overridable
 
 sub getPageBody {
 	my $self = shift;
-
-	$self->_takeAction( );
+	my $html = ( $self->_takeAction( ) || '' );
 
 	my $q = $self->CGI();
 	my $object = $self->_loadObject();
 	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
-	my $html = $q->startform( { -name => $self->{ form_name } } ).
+	$html .= $q->startform( { -name => $self->{ form_name } } ).
 	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''}).
