@@ -140,7 +140,6 @@ OME Modules - Table of Contents
 
 unsorted:
 	OME::Factory::Iterator
-	OME::Image::Wavelengths
 	OME::Image::LogicalChannel
 	OME::Image::ImageFilesXYZWT
 	OME::Image::DatasetMap
