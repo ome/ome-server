@@ -2,9 +2,14 @@
 <TMPL_IF NAME=/type>
 <table cellpadding="3" cellspacing="1" class="ome_table" width="100%">
 	<TMPL_LOOP NAME=/field_loop/exclude-module_execution,target>
-		<tr bgcolor="#FFFFFF"><td valign="top">
-			<TMPL_VAR NAME=/name>: <TMPL_VAR NAME=/field_input>
-		</td></tr>
+		<tr bgcolor="#FFFFFF">
+			<td valign="top">
+				<TMPL_VAR NAME=/name>:
+			</td>
+			<td valign="top">
+				<TMPL_VAR NAME=/field_input>
+			</td>
+		</tr>
 	</TMPL_LOOP>
 </table>
 <table cellpadding="3" cellspacing="0" width="100%"><tr bgcolor="#E0E0E0">
