@@ -45,7 +45,7 @@ import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.geom.Rectangle2D;
 import java.awt.Graphics2D;
-import java.awt.Paint;
+
 import java.awt.Color;
 
 /** 
@@ -80,7 +80,6 @@ public class PGenericBox extends PNode implements PBufferedNode {
 	private double w;
 	private double h;
 	
-	private Paint paint=null;
 	
 	
 	private Rectangle2D rects[] = {
@@ -162,8 +161,8 @@ public class PGenericBox extends PNode implements PBufferedNode {
 			g.draw(rects[i]);
 		}
 		
-		if (paint != null) {
-			g.setPaint(paint);
+		if (getPaint() != null) {
+			g.setPaint(getPaint());
 			g.fill(rects[rects.length-1]);
 		}
 	}
@@ -205,12 +204,7 @@ public class PGenericBox extends PNode implements PBufferedNode {
 	public double getArea() {
 		return area;
 	}
-	
-	public void setPaint(Paint aPaint) {
-		paint = aPaint;
-	}
-	
-	
+		
 	public void setHighlighted(boolean v) {
 		if (v == true) 
 			colors = HIGHLIGHT_COLORS;
