@@ -34,6 +34,8 @@ sub ID {
     return $self->{_fieldValues}->{id};
 }
 
+sub Factory { my $self = shift; return $self->{_factory}; }
+sub Session { my $self = shift; return $self->{_factory}->Session(); }
 sub DBH { my $self = shift; return $self->{_factory}->DBH(); }
 
 
@@ -228,7 +230,7 @@ sub writeObject {
 	}
     }
 
-    $dbh->commit;
+    #$dbh->commit;
     $self->{_dirty} = 0;
     return 1;
 }
