@@ -40,7 +40,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.openmicroscopy.remote.RemoteObject;
-import org.openmicroscopy.vis.chains.SelectionState;
+
 
 
 import edu.umd.cs.piccolo.PNode;
@@ -67,8 +67,7 @@ public abstract class PRemoteObjectLabels extends PNode {
 	
 	private double width=0;
 	
-	public PRemoteObjectLabels(Collection items,double width,
-			SelectionState selectionState) {
+	public PRemoteObjectLabels(Collection items,double width) {
 		super();
 		this.width = width;
 		Iterator iter = items.iterator();
@@ -77,12 +76,12 @@ public abstract class PRemoteObjectLabels extends PNode {
 		while (iter.hasNext()) {
 			//ds = (CDataset) iter.next();
 			ro = (RemoteObject) iter.next();
-			buildLabel(ro,selectionState);
+			buildLabel(ro);
 		}
 	}
 	
-	private void buildLabel(RemoteObject ro,SelectionState selectionState) {
-		PNode p = getNode(ro,selectionState);
+	private void buildLabel(RemoteObject ro) {
+		PNode p = getNode(ro);
 	
 		addChild(p);
 		PBounds b = p.getGlobalFullBounds();
@@ -101,8 +100,7 @@ public abstract class PRemoteObjectLabels extends PNode {
 		x += labelWidth+HGAP;
 	}
 	
-	protected  abstract PNode getNode(RemoteObject ro,
-			SelectionState selectionState);
+	protected  abstract PNode getNode(RemoteObject ro);
 	
 	protected abstract double getVerticalGap();
 }

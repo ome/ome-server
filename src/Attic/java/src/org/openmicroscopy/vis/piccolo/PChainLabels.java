@@ -41,7 +41,6 @@ package org.openmicroscopy.vis.piccolo;
 import java.util.Collection;
 
 import org.openmicroscopy.remote.RemoteObject;
-import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.CChain;
 
 import edu.umd.cs.piccolo.PNode;
@@ -60,13 +59,12 @@ public class PChainLabels extends PRemoteObjectLabels {
 	
 	private static final double VGAP =5;
 	
-	public PChainLabels(Collection datasets,double width,
-			SelectionState selectionState) {
-		super(datasets,width,selectionState);
+	public PChainLabels(Collection datasets,double width) {
+		super(datasets,width);
 	}
 		
-	protected PNode getNode(RemoteObject ro,SelectionState selectionState) {
-		return new PChainLabelText((CChain) ro,selectionState);
+	protected PNode getNode(RemoteObject ro) {
+		return new PChainLabelText((CChain) ro);
 	}
 	
 	protected double getVerticalGap() {
