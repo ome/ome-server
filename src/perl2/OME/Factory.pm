@@ -56,6 +56,7 @@ OME::Factory - database access class
 	                                  });
 	my @images = $factory->findObjects("OME::Image",
 	                                   name => "Image 4");
+	my @Pixels = $factory->findObjects('@Pixels', PixelType => 'uint16' );
 
 =head1 DESCRIPTION
 
@@ -94,6 +95,10 @@ L<OME::SemanticType|OME::SemanticType> modules for more details.)
 Methods such as newAttribute and loadAttribute operate on these
 user-defined semantic types, and identify the specific OME::DBObject
 subclass by the semantic type.
+Methods such as findObject and loadObject may also be used for
+SemanticTypes if $className is a Semantic Type name prefixed by '@'
+('@Pixels') or an instance of OME::SemanticType. This strategy works for
+all Object method except newObject.
 
 =head1 OBTAINING A FACTORY
 
@@ -604,7 +609,8 @@ sub loadAttribute {
 
 sub objectExists {
     my ($self, $class, @criteria) = @_;
-    return defined $self->findObject($class,@criteria);
+    return 1 if( $self->countObjects($class,@criteria) gt 0 );
+    return undef;
 }
 
 sub findObject {
@@ -618,6 +624,13 @@ sub findObjects {
 
     # If the caller is not looking for a value, don't do anything.
     return undef unless defined wantarray;
+
+	# If the class is a ST, use findAttributes
+	return $self->findAttributes( $class, @criteria )
+		if( ( $class ne "OME::SemanticType" and 
+		      UNIVERSAL::isa( $class, "OME::SemanticType" ) ) );
+	return $self->findAttributes( substr( $class, 1 ), @criteria )
+		if( substr( $class, 0, 1 ) eq '@' );
 
     my $columns_wanted;
 
@@ -669,6 +682,13 @@ sub findObjects {
 
 sub countObjects {
     my ($self, $class, @criteria) = @_;
+
+	# If the class is a ST, use findAttributes
+	return $self->countAttributes( $class, @criteria )
+		if( ( $class ne "OME::SemanticType" and 
+		      UNIVERSAL::isa( $class, "OME::SemanticType" ) ) );
+	return $self->countAttributes( substr( $class, 1 ), @criteria )
+		if( substr( $class, 0, 1 ) eq '@' );
 
     my $criteria;
 
