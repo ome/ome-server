@@ -129,7 +129,7 @@ public class ImageInformation
     // this might be done the hard way (I dunno)
     
     Map moduleConstraints = new HashMap();
-    moduleConstraints.put("name","Stack statistics");
+    moduleConstraints.put("name","Fast Stack statistics");
     
     Module stackModule = (Module)dataSource.findObject("OME::Module",
                                                        moduleConstraints);
