@@ -108,7 +108,7 @@ sub getPageBody {
 
 			my $errorMessage = '';
 			if ($session->dataset()) {
-			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
+			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $session->dataset(), \@paths);
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
 			}
