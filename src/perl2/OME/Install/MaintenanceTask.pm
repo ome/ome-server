@@ -371,7 +371,7 @@ BLURB
 				$MAINT_CONF->{t_purge}  = undef;
 			}
 		}
-	
+		$confirm_all = 1;
 
 	}
 
