@@ -187,7 +187,6 @@ sub processDOM {
 					formal_input_id           => $fi->id(),
 					input_module_execution_id => $input_mex,
 				});
-			push( @objects2store, $actual_input );
 		}
 		
 		
