@@ -205,7 +205,8 @@ public class Controller implements ApplicationController {
 		mainFrame.setLoggedIn(false,connection);
 		removeCanvasFrames();
 		// remove library
-		library.dispose();
+		if (library !=null)
+			library.dispose();
 		chainCanvasCount = 0;
 	}
 	
