@@ -227,6 +227,7 @@ char nullByte=0;
 		case 2:
 			/* N.B: If header is vers 2 we need to recompute the statistics to compute the histogram bins */	
 		case 3:
+			myPixels->head = head = (pixHeader *) mmap_info;
 			/* N.B: If header is vers 3 we need to recompute the histogram bins */	
 			if (head->isFinished == 1) {
 				myPixels->planeInfos = (planeInfo*) ( (u_int8_t *) mmap_info + sizeof(pixHeader) );
