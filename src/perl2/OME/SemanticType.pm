@@ -186,6 +186,9 @@ sub requireAttributeTypePackage {
     $pkg->_attribute_type($self);
     $pkg->newClass();
     $pkg->setSequence('attribute_seq');
+    $pkg->addPseudoColumn('semantic_type',
+                          'has-one','OME::SemanticType');
+
 
     # Any one of the tables that this type is stored in; doesn't
     # matter which.
