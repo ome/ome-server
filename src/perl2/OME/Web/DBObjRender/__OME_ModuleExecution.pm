@@ -116,9 +116,8 @@ returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp
 sub getName {
 	my ($proto, $obj, $options) = @_;
 
-	if( !$options or not exists $options->{max_text_length} ) {
-		$options->{max_text_length} = 33;
-	}
+	$options->{max_text_length} = 33
+		unless exists $options->{max_text_length};
 
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
