@@ -34,7 +34,7 @@ if ($ENV{OME_DEBUG} > 0) {
 
 my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
-#$session->DBH()->trace(3);
+#$session->Factory()->obtainDBH()->trace(3);
 my $OMEImporter = OME::Tasks::OMEImport->new( session => $session, debug => 1 );
 
 foreach my $path (@ARGV) {
