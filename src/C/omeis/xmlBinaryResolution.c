@@ -896,16 +896,26 @@ static void OME_Characters(ParserState *state, const xmlChar *ch, int len) {
 *	how to adapt that code.
 *
 ******************************************************************************/
-static void BinDataWarning( ParserState *state, const char *msg ) {
+static void BinDataWarning( ParserState *state, const char *msg )
+{
 	fprintf( stderr, "The SAX parser reports this warning message:\n%s\nParser is in state: %i\n", msg, state->state );
 }
-static void BinDataError( ParserState *state, const char *msg ) {
+
+/* Compiler attribute prototype */
+void BinDataError( ParserState *state, const char *msg ) __attribute__ ((noreturn));
+
+void BinDataError( ParserState *state, const char *msg )
+{
 	fprintf( stderr, "Terminating program. The SAX parser reports this error message:\n%s\nParser is in state: %i\n", msg, state->state );
-	assert( 0 );
+	exit(-1);
 }
-static void BinDataFatalError( ParserState *state, const char *msg ) {
+
+/* Compiler Attribute prototype */
+void BinDataFatalError( ParserState *state, const char *msg ) __attribute__ ((noreturn));
+
+void BinDataFatalError( ParserState *state, const char *msg )
+{
 	fprintf( stderr, "Terminating program. The SAX parser reports this *FATAL* error message:\n%s\nParser is in state: %i\n", msg, state->state );
-	assert( 0 );
-	return;
+	exit(-1);
 }
 
