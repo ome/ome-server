@@ -40,6 +40,7 @@ use Carp;
 use Cwd;
 use File::Copy;
 use File::Basename;
+use File::Spec;
 
 require Exporter;
 
@@ -61,6 +62,7 @@ our @EXPORT = qw(add_user
 		 test_module
 		 install_module
 		 which
+		 get_mac
 		 );
 
 # Distribution detection
@@ -80,7 +82,7 @@ my %os_specific = (
 	name => "UNKNOWN",
 	distribution => "",
 
-	getMAC => sub {
+	get_mac => sub {
 	    my @ifinfo = `/sbin/ifconfig eth0`;
 	    my $macAddr = $ifinfo[0];
 	    ($macAddr) = ($macAddr =~ /^.*HWaddr\s(.*[^\s])\s/);
@@ -107,7 +109,7 @@ my %os_specific = (
 	family => "Darwin",
 	name => "UNKNOWN",
 
-	getMAC => sub {
+	get_mac => sub {
 	    my @ifinfo = `/sbin/ifconfig`;
 	    @ifinfo = grep(/ether/, @ifinfo);
 	    chomp($ifinfo[0]);
@@ -164,7 +166,7 @@ my %os_specific = (
     hpux => {
 	family => "HPUX",
 	name => "UNKNOWN", 
-	getMAC => sub {
+	get_mac => sub {
 	    my @ifinfo = `lanscan`;
 	    my $macAddr = $ifinfo[2];
 	    $macAddr =~ s/^.*0x([0-9A-F]+).*$/$1/;
@@ -194,7 +196,7 @@ my %os_specific = (
     solaris => {
 	family => "Solaris",
 	name => "UNKNOWN",
-	getMAC => sub {
+	get_mac => sub {
 	    my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
 	    $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
 	    chomp($macAddr);
@@ -220,7 +222,7 @@ my %os_specific = (
     freebsd => {
 	family => "FreeBSD",
 	name => "UNKNOWN",
-	getMAC => sub {
+	get_mac => sub {
 	    my @buf = `dmesg`;
 	    @buf = grep(/Ethernet address/, @buf);
 	    chomp($buf[0]);
@@ -313,6 +315,13 @@ sub add_group {
 
     return &$add_group($group);
 }
+
+sub get_mac {
+    my $get_mac = $os_specific{$OSNAME}->{get_mac};
+
+    return &$get_mac;
+}
+
 # Recursively copies all files and directories contained in a given origin
 # directory to the specified destination directory.
 #
