@@ -40,9 +40,12 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.chains.ControlPanel;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.util.PBounds;
-import edu.umd.cs.piccolo.util.PPaintContext;
+//import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.Color;
 import java.awt.BasicStroke;
 
@@ -56,7 +59,8 @@ import java.awt.BasicStroke;
  * @version 2.1
  * @since OME2.1
  */
-public class PChainBox extends PCategoryBox {
+public class PChainBox extends PCategoryBox implements 
+	DatasetSelectionEventListener{
 	
 	/**
 	 * The color for display of the lock icon
@@ -78,10 +82,11 @@ public class PChainBox extends PCategoryBox {
 	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
 	private static final Color VIEWABLE_COLOR =Color.BLUE;	
 	
-	public PChainBox(CChain chain, float x, float y) {
+	public PChainBox(ControlPanel controlPanel,CChain chain, float x, float y) {
 		super(x,y);
 		this.chain = chain;
 		chainID = chain.getID();
+		controlPanel.addDatasetSelectionEventListener(this);
 	}
 	
 	/**
@@ -122,7 +127,7 @@ public class PChainBox extends PCategoryBox {
 		addChild(lock);
 	}
 	
-	public void paint(PPaintContext aPaintContext)  {
+	/*public void paint(PPaintContext aPaintContext)  {
 		if (chain.hasExecutionsInCurrentDataset() == true) {
 			setStroke(VIEWABLE_STROKE);
 			setStrokePaint(VIEWABLE_COLOR);
@@ -132,5 +137,18 @@ public class PChainBox extends PCategoryBox {
 			setStrokePaint(null);
 		}
 		super.paint(aPaintContext);
+	}*/
+	
+	public void datasetSelectionChanged(DatasetSelectionEvent e) {
+		if (chain.hasExecutionsInDatasets(e.getDatasets(),
+			e.getSelectedDataset())) {
+			setStroke(VIEWABLE_STROKE);
+			setStrokePaint(VIEWABLE_COLOR);
+		}
+		else {
+			setStroke(null);
+			setStrokePaint(null);	
+		}
+		repaint();
 	}
 }
