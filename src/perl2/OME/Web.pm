@@ -270,6 +270,11 @@ sub serve {
 	if ($result eq 'HTML' && defined $content) {
 		print $self->CGI()->header(%{$headers});
 		print $content;
+	} elsif ($result eq 'TXT' && defined $content) {
+		$self->contentType('text/plain');
+		$headers->{-type} = $self->contentType();
+		print $self->CGI()->header(%{$headers});
+		print $content;
 	} elsif ($result eq 'IMAGE' && defined $content) {
 		print $self->CGI()->header(%{$headers});
 		print $content;
