@@ -90,7 +90,7 @@ public class PlaygroundPane
 
                 ChainNodeWidget  fromWidget = (ChainNodeWidget) instanceWidgets.get(new Integer(link.getFromNode().getID()));
                 ChainNodeWidget  toWidget = (ChainNodeWidget) instanceWidgets.get(new Integer(link.getToNode().getID()));
-
+		
                 if ((fromWidget == null) || (toWidget == null))
                 {
                     System.err.println("Parameter link for a node that has no widget.");
@@ -122,7 +122,7 @@ public class PlaygroundPane
                 double  xT = x2-(ARROW_WIDTH*2);
                 double  xS = x1+(ARROW_WIDTH);
 
-                /*            
+                /*           
                               g2.draw(new Line2D.Double(x1,y1,xM,y1));
                               g2.draw(new Line2D.Double(xM,y1,xM,y2));
                               g2.draw(new Line2D.Double(xM,y2,x2,y2));
@@ -135,9 +135,9 @@ public class PlaygroundPane
                 g2.draw(new Line2D.Double(x1,y1,xS,y1));
                 g2.draw(new Line2D.Double(xT+1,y2,x2-1,y2));
 
-                g2.transform(AffineTransform.getTranslateInstance(toPoint.x,toPoint.y));
-                g2.fill(ARROWHEAD);
-                g2.setTransform(defaultTransform);
+		g2.transform(AffineTransform.getTranslateInstance(toPoint.x,toPoint.y));
+		g2.fill(ARROWHEAD);
+		g2.setTransform(defaultTransform); 
             }
 
         }

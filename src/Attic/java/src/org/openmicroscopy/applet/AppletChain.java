@@ -51,7 +51,6 @@ public class AppletChain
                                                        true);
             String newFeatureTag = ap.getStringParameter(nodeParam+"/NewFeatureTag",
                                                          true);
-
             nodes[i] = addNode(id,module,iteratorTag,newFeatureTag);
         }
 

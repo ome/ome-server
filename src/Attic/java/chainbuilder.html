@@ -103,26 +103,35 @@
 <param name="Module1/Category" value="Statistics">
 <param name="Module1/Location" value="/OME/bin/OME_Image_XYZ_stats">
 <param name="Module1/ModuleType" value="OME::Analysis::CLIHandler">
-<param name="Module1/FormalInputs" value="0">
+<param name="Module1/FormalInputs" value="2">
+<param name="Module1/FormalInput0/Name" value="Minima">
+<param name="Module1/FormalInput0/SemanticType" value="SemanticType0">
+<param name="Module1/FormalInput1/Name" value="Centroids">
+<param name="Module1/FormalInput1/SemanticType" value="SemanticType1">
 <param name="Module1/FormalOutputs" value="2">
 <param name="Module1/FormalOutput0/Name" value="Minima">
 <param name="Module1/FormalOutput0/SemanticType" value="SemanticType2">
 <param name="Module1/FormalOutput1/Name" value="Centroids">
 <param name="Module1/FormalOutput1/SemanticType" value="SemanticType3">
 
+<param name="Chain" value="ImportChain">
+
 <param name="ImportChain/Name" value="Test chain">
 <param name="ImportChain/Locked" value="false">
 <param name="ImportChain/Nodes" value="2">
+<param name="ImportChain/Node0/ID" value="0">
 <param name="ImportChain/Node0/Module" value="Module0">
 <param name="ImportChain/Node0/X" value="50">
 <param name="ImportChain/Node0/Y" value="150">
+<param name="ImportChain/Node1/ID" value="1">
 <param name="ImportChain/Node1/Module" value="Module1">
 <param name="ImportChain/Node1/X" value="50">
 <param name="ImportChain/Node1/Y" value="350">
-<param name="ImportChain/Links" value="0">
-
-<param name="Chain" value="ImportChain">
-
+<param name="ImportChain/Links" value="1">
+<param name="ImportChain/Link0/FromNode" value="0">
+<param name="ImportChain/Link0/FromOutput" value="Module0/FormalOutput0">
+<param name="ImportChain/Link0/ToNode" value="1">
+<param name="ImportChain/Link0/ToInput" value="Module1/FormalInput0">
 </applet>
 
 </body>
