@@ -45,36 +45,66 @@
 
     <Nodes>
 	  <Node NodeID = "Files" ProgramName = "Original files"/>
-	  <Node NodeID = "Importer" ProgramName = "Image import"/>
-      <Node NodeID="Stack" ProgramName="Stack statistics"/>
+	  <Node NodeID = "Import" ProgramName = "Image import"/>
+	  <Node NodeID = "PlaneSums" ProgramName = "Plane statistics and sums"/>
+	  <Node NodeID = "StackStats" ProgramName = "Fast Stack statistics"/>
       <Node NodeID="Find" ProgramName="Find spots"/>
       <Node NodeID="Track" ProgramName="Track spots"/>
     </Nodes>
 
     <Links>
       <Link FromNodeID="Files" FromOutputName="Files"
-            ToNodeID="Importer" ToInputName="Files"/>
+            ToNodeID="Import" ToInputName="Files"/>
 
-      <Link FromNodeID="Importer" FromOutputName="Pixels"
-            ToNodeID="Stack" ToInputName="Pixels"/>
+	  <Link
+         FromNodeID="Import" FromOutputName="Pixels"
+         ToNodeID="PlaneSums" ToInputName="Pixels"/>
+	  <Link
+         FromNodeID="Import" FromOutputName="Pixels"
+         ToNodeID="StackStats" ToInputName="Pixels"/>
 
-      <Link FromNodeID="Importer" FromOutputName="Pixels"
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Minima"
+         ToNodeID="StackStats" ToInputName="PlaneMinimum"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Maxima"
+         ToNodeID="StackStats" ToInputName="PlaneMaximum"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum i"
+         ToNodeID="StackStats" ToInputName="PlaneSum_i"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum i^2"
+         ToNodeID="StackStats" ToInputName="PlaneSum_i2"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum log(i)"
+         ToNodeID="StackStats" ToInputName="PlaneSum_log_i"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum Xi"
+         ToNodeID="StackStats" ToInputName="PlaneSum_Xi"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum Yi"
+         ToNodeID="StackStats" ToInputName="PlaneSum_Yi"/>
+	  <Link
+         FromNodeID="PlaneSums" FromOutputName="Sum Zi"
+         ToNodeID="StackStats" ToInputName="PlaneSum_Zi"/>
+
+      <Link FromNodeID="Import" FromOutputName="Pixels"
             ToNodeID="Find" ToInputName="Pixels"/>
 
-      <Link FromNodeID="Importer" FromOutputName="Dimensions"
+      <Link FromNodeID="Import" FromOutputName="Dimensions"
             ToNodeID="Track" ToInputName="Dimensions"/>
 
-      <Link FromNodeID="Stack" FromOutputName="Minima"
+      <Link FromNodeID="StackStats" FromOutputName="Minima"
             ToNodeID="Find" ToInputName="Stack minima"/>
-      <Link FromNodeID="Stack" FromOutputName="Maxima"
+      <Link FromNodeID="StackStats" FromOutputName="Maxima"
             ToNodeID="Find" ToInputName="Stack maxima"/>
-      <Link FromNodeID="Stack" FromOutputName="Mean"
+      <Link FromNodeID="StackStats" FromOutputName="Mean"
             ToNodeID="Find" ToInputName="Stack means"/>
-      <Link FromNodeID="Stack" FromOutputName="Geomean"
+      <Link FromNodeID="StackStats" FromOutputName="Geomean"
             ToNodeID="Find" ToInputName="Stack geomeans"/>
-      <Link FromNodeID="Stack" FromOutputName="Sigma"
+      <Link FromNodeID="StackStats" FromOutputName="Sigma"
             ToNodeID="Find" ToInputName="Stack sigmas"/>
-	 <Link FromNodeID="Stack" FromOutputName="Geosigma"
+	 <Link FromNodeID="StackStats" FromOutputName="Geosigma"
             ToNodeID="Find" ToInputName="Stack geosigmas"/>
       <Link FromNodeID="Find" FromOutputName="Location"
             ToNodeID="Track" ToInputName="Location"/>
