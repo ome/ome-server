@@ -134,10 +134,20 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			((PDataset) node).enableHalo();
 		}
 		else if (node instanceof PThumbnail) {
-			animateToNode(node);
-			PDatasetImagesNode pin = ((PThumbnail) node).getDatasetImagesNode();
-			if (pin != null) 
+			System.err.println("popup on thumbnail...");
+			PThumbnail pt = (PThumbnail) node;
+			PDatasetImagesNode pin = pt.getDatasetImagesNode();
+			pt.setHighlightedWithHalo(true);
+			if (pin != null) {
 				pin.enableHalo();
+				System.err.println("zooming to halo..");
+				pin.zoomToHalo(((PCanvas) canvas).getCamera());	
+			}
+			else {
+				System.err.println("no datasetimagesnode...");
+				PBufferedNode bn = pt.getBufferedParentNode();
+				animateToBufferedNode(bn);
+			}
 		}
 		else
 			super.handlePopup(e);
@@ -167,6 +177,10 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			else if (isBackgroundClick(node)) {
 				System.err.println("clicking on layer or camera..");
 				selectionState.setSelectedDataset(null);
+			}
+			else if (node instanceof PThumbnailSelectionHalo) {
+				System.err.println("..clicked on halo...");
+				super.mouseClicked(e);
 			} else if (node instanceof PThumbnail) {
 				PThumbnail thumb = (PThumbnail)node;
 				if (thumb.isZoomable())
@@ -184,4 +198,5 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		}
 		e.setHandled(true);
 	}
+	
 }
