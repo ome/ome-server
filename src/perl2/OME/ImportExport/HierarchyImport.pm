@@ -277,6 +277,7 @@ sub processDOM {
 # Modified DC 08/12/2003 to only normalize the "name" portion of the
 # filename, not the id or punctuation.  (It was turned 5-abc.ori into
 # 5_abc_ori -- not ideal.)
+# Modified by IGG 09/26/03 to use rename instead of system (mv...).
 			if( $CA->tagName() eq 'Pixels' ) {
 				# Get the Repository object from the LSID
 				my $repository = $lsid->getLocalObject ($CA->getAttribute('Repository'))
@@ -286,8 +287,9 @@ sub processDOM {
 				my $normalized_name = $object->name();
 				$normalized_name =~ s/[^a-zA-Z0-9]/_/g;
 				my $newPath = $imgAttr->id().'-'.$normalized_name.'.ori';
-				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
-				system( $cmd ) eq 0 or die "Could not rename a repository file!\ncommand was '$cmd'\n";
+				rename ($object->getFullPath($imgAttr),$imgAttr->Repository()->Path().'/'.$newPath)
+					or die "Could not rename repository file ".$object->getFullPath($imgAttr).
+					" to ".$imgAttr->Repository()->Path().'/'.$newPath."\n$!\n";
 				$imgAttr->Path( $newPath );
 			}
 		}

@@ -175,8 +175,8 @@ sub importFile() {
 					my $externalXML = @{ $pixelsXML->getElementsByTagNameNS( $BinNS, "External" ) }[0];
 					my $href = $externalXML->getAttribute( "href" );
 					my $sha1 = getSha1( $href );
-					system( "mv $href ". $repository->Path().$sha1 ) eq 0
-						or die "Could not move pixel file to repository.\n";
+					rename ($href,$repository->Path().$sha1)
+						or die "Could not move Pixels file ($href) to repository file (".$repository->Path().$sha1.")\n$!\n";
 	
 					$href = $sha1;
 					$pixelsXML->setAttribute( "Path", $href );
