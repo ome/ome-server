@@ -38,6 +38,7 @@ use warnings;
 use English;
 use Carp;
 use File::Copy;
+use File::Basename;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Cwd;
@@ -388,14 +389,10 @@ sub execute {
 		foreach my $child (@{$directory->{children}}) {
 	    	$child = $directory->{path} . "/" . $child;
 	    	unless (-d $child) {
-				# There's no need to be UID 0 for these creations
-				$EUID = $OME_UID;
-
 				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
 				mkdir $child or croak "Unable to create directory \"$child\": $!";
-
-				# Back to UID 0 we go
-				$EUID = 0;
+				fix_ownership($OME_USER, $child)
+					or croak "Failure setting permissions on \"$child\" $!";
 	    	}
 		}
     }
@@ -408,16 +405,13 @@ sub execute {
 
     print "Copying stylesheets\n";
     my @files = glob ("src/xml/xslt/*.xslt");
-    # There's no need to be UID 0 for these creations
-    $EUID = $OME_UID;
 
     foreach my $file (@files) {
 		print "  \\_ $file\n";
 		copy ($file, $$OME_BASE_DIR."/xml/") or croak ("Couldn't copy file ", $file, ". ", $!, ".\n");
+		fix_ownership($OME_USER, $$OME_BASE_DIR."/xml/".basename($file))
+			or croak 'Failure setting permissions on "'.$$OME_BASE_DIR."/xml/".$file."\" $!";
     }
-
-    # Back to UID 0 we go
-    $EUID = 0;
     
     print "\n";  # Spacing
     
@@ -425,19 +419,16 @@ sub execute {
     #******** Copy our HTML/Image core directories from the source tree
     #********
 
-    # There's no need to be UID 0 for these creations
-    $EUID = $OME_UID;
-
     print "Copying IMAGE directories\n";
     	foreach my $directory (@image_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
     }
     
 	print "Copying CONFIG directories\n";
     	foreach my $directory (@config_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
     }
 
     print "Copying HTML directories\n";
@@ -448,13 +439,10 @@ sub execute {
 
     foreach my $directory (@html_core) {
 		print "  \\_ $directory\n";
-		copy_tree ("$directory", "$$OME_BASE_DIR");
+		copy_tree ("$directory", "$$OME_BASE_DIR",undef,$OME_USER);
     }
 
     chdir ($iwd) or croak "Unable to chdir back to \"$iwd\". $!";
-    
-    # Back to UID 0 we go
-    $EUID = 0;
 
     print "\n";  # Spacing
 
