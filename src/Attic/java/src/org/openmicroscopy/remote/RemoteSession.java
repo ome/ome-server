@@ -53,11 +53,11 @@ public class RemoteSession
     public Project getProject()
     { return (Project) getRemoteElement(RemoteProject.class,"project"); }
     public void setProject(Project project)
-    { caller.dispatch(this,"project",project); }
+    { setRemoteElement("project",project); }
 
     public Dataset getDataset()
     { return (Dataset) getRemoteElement(RemoteDataset.class,"dataset"); }
     public void setDataset(Dataset dataset)
-    { caller.dispatch(this,"dataset",dataset); }
+    { setRemoteElement("dataset",dataset); }
 
 }
