@@ -5,13 +5,12 @@
 	xmlns:CA = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd">
+	xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd">
 	<xsl:template match = "CA:OME">
 		<xsl:element name = "OME">
 			<xsl:attribute name = "xsi:schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "CA:DocumentGroup"/>
 			<xsl:apply-templates select = "CA:Project"/>
 			<xsl:apply-templates select = "CA:Dataset"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Experiment"/>
@@ -23,28 +22,7 @@
 			<xsl:apply-templates select = "CA:Image"/>
 		</xsl:element>
 	</xsl:template>
-	<!--
-		DocumentGroup 
-		This is merely a copy, but without messing with the namespace attribute.
-	-->
-	<xsl:template match = "CA:DocumentGroup">
-		<xsl:element name = "DocumentGroup">
-			<xsl:apply-templates select = "CA:Include"/>
-		</xsl:element>
-	</xsl:template>
-	<xsl:template match = "CA:Include">
-		<xsl:element name = "Include">
-			<xsl:attribute name = "DocumentID">
-				<xsl:value-of select = "@DocumentID"/>
-			</xsl:attribute>
-			<xsl:attribute name = "href">
-				<xsl:value-of select = "@href"/>
-			</xsl:attribute>
-			<xsl:attribute name = "SHA1">
-				<xsl:value-of select = "@SHA1"/>
-			</xsl:attribute>
-		</xsl:element>
-	</xsl:template>
+
 	<!-- This is a general template for the Description elements -->
 	<xsl:template match = "@Description">
 		<xsl:if test = "string-length(.) > 0">
@@ -53,7 +31,9 @@
 			</xsl:element>
 		</xsl:if>
 	</xsl:template>
-	<!-- This is a general template for attributes that become optional elements (check for string length of the attribute value) -->
+
+	<!-- This is a general template for attributes that become optional elements
+		(check for string length of the attribute value) -->
 	<xsl:template match = "@*" mode = "Attribute2OptionalElement">
 		<xsl:if test = "string-length(.) > 0">
 			<xsl:element name = "{name()}">
@@ -61,7 +41,9 @@
 			</xsl:element>
 		</xsl:if>
 	</xsl:template>
-	<!-- This is a general template for attributes that become optional attributes (check for string length of the attribute value) -->
+
+	<!-- This is a general template for attributes that become optional attributes
+		(check for string length of the attribute value) -->
 	<xsl:template match = "@*" mode = "Attribute2OptionalAttribute">
 		<xsl:if test = "string-length(.) > 0">
 			<xsl:attribute name = "{name()}">
@@ -69,25 +51,22 @@
 			</xsl:attribute>
 		</xsl:if>
 	</xsl:template>
+
 	<!-- General template for making a reference -->
 	<xsl:template match = "CA:Ref" mode = "MakeOMEref">
 		<xsl:param name = "RefName" select = "concat(string(@Name),'Ref')"/>
-		<xsl:param name = "RefIDName" select = "concat(string(@Name),'ID')"/>
+		<xsl:param name = "RefIDName">ID</xsl:param>
 		<xsl:element name = "{$RefName}">
-			<xsl:if test = "@DocID">
-				<xsl:attribute name = "DocumentID">
-					<xsl:value-of select = "@DocID"/>
-				</xsl:attribute>
-			</xsl:if>
 			<xsl:attribute name = "{$RefIDName}">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
+
 	<!-- Specific sections of the OME Schema -->
 	<xsl:template match = "CA:Project">
 		<xsl:element name = "Project">
-			<xsl:attribute name = "ProjectID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
@@ -99,7 +78,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:Dataset">
 		<xsl:element name = "Dataset">
-			<xsl:attribute name = "DatasetID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
@@ -114,12 +93,12 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Image">
-		<xsl:variable name = "ImageID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "Image">
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:attribute name = "ImageID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "SizeX">
@@ -167,7 +146,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:Experiment">
 		<xsl:element name = "Experiment">
-			<xsl:attribute name = "ExperimentID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Type">
@@ -178,9 +157,9 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Plate">
-		<xsl:variable name = "PlateID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "Plate">
-			<xsl:attribute name = "PlateID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
@@ -191,12 +170,12 @@
 					<xsl:value-of select = "@ExternalReference"/>
 				</xsl:attribute>
 			</xsl:if>
-			<xsl:apply-templates select = "../CA:PlateScreen/CA:Ref [@Name='Screen'] [../CA:Ref/@ID=$PlateID]" mode = "MakeOMEref"/>
+			<xsl:apply-templates select = "../CA:PlateScreen/CA:Ref [@Name='Screen'] [../CA:Ref/@ID=$ID]" mode = "MakeOMEref"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Screen">
 		<xsl:element name = "Screen">
-			<xsl:attribute name = "ScreenID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
@@ -211,9 +190,9 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Experimenter">
-		<xsl:variable name = "ExperimenterID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "Experimenter">
-			<xsl:attribute name = "ExperimenterID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:element name = "FirstName">
@@ -231,12 +210,12 @@
 			<xsl:element name = "OMEName">
 				<xsl:value-of select = "@OMEName"/>
 			</xsl:element>
-			<xsl:apply-templates select = "../CA:ExperimenterGroup/CA:Ref [@Name='Group'] [../CA:Ref/@ID=$ExperimenterID]" mode = "MakeOMEref"/>
+			<xsl:apply-templates select = "../CA:ExperimenterGroup/CA:Ref [@Name='Group'] [../CA:Ref/@ID=$ID]" mode = "MakeOMEref"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Group">
 		<xsl:element name = "Group">
-			<xsl:attribute name = "GroupID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
@@ -247,7 +226,7 @@
 					<xsl:text>Leader</xsl:text>
 				</xsl:with-param>
 				<xsl:with-param name = "RefIDName">
-					<xsl:text>ExperimenterID</xsl:text>
+					<xsl:text>ID</xsl:text>
 				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "CA:Ref [@Name='Contact']" mode = "MakeOMEref">
@@ -255,16 +234,16 @@
 					<xsl:text>Contact</xsl:text>
 				</xsl:with-param>
 				<xsl:with-param name = "RefIDName">
-					<xsl:text>ExperimenterID</xsl:text>
+					<xsl:text>ID</xsl:text>
 				</xsl:with-param>
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Instrument">
-		<xsl:variable name = "InstrumentID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "Instrument">
-			<xsl:attribute name = "InstrumentID">
-				<xsl:value-of select = "$InstrumentID"/>
+			<xsl:attribute name = "ID">
+				<xsl:value-of select = "$ID"/>
 			</xsl:attribute>
 			<xsl:element name = "Microscope">
 				<xsl:attribute name = "Manufacturer">
@@ -280,18 +259,18 @@
 					<xsl:value-of select = "@Type"/>
 				</xsl:attribute>
 			</xsl:element>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:LightSource [CA:Ref/@ID=$InstrumentID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Detector [CA:Ref/@ID=$InstrumentID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Objective [CA:Ref/@ID=$InstrumentID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Filter [CA:Ref/@ID=$InstrumentID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:OpticalTransferFunction [CA:Ref/@ID=$InstrumentID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:LightSource [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Detector [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Objective [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Filter [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:OpticalTransferFunction [CA:Ref/@ID=$ID]"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:LightSource">
-		<xsl:variable name = "LightSourceID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "LightSource">
-			<xsl:attribute name = "LightSourceID">
-				<xsl:value-of select = "$LightSourceID"/>
+			<xsl:attribute name = "ID">
+				<xsl:value-of select = "$ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
 				<xsl:value-of select = "@Manufacturer"/>
@@ -302,9 +281,9 @@
 			<xsl:attribute name = "SerialNumber">
 				<xsl:value-of select = "@SerialNumber"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Laser [CA:Ref/@ID=$LightSourceID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Filament [CA:Ref/@ID=$LightSourceID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Arc [CA:Ref/@ID=$LightSourceID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Laser [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Filament [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Arc [CA:Ref/@ID=$ID]"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Laser">
@@ -325,7 +304,7 @@
 					<xsl:text>Pump</xsl:text>
 				</xsl:with-param>
 				<xsl:with-param name = "RefIDName">
-					<xsl:text>LightSourceID</xsl:text>
+					<xsl:text>ID</xsl:text>
 				</xsl:with-param>
 			</xsl:apply-templates>
 		</xsl:element>
@@ -348,7 +327,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:Detector">
 		<xsl:element name = "Detector">
-			<xsl:attribute name = "DetectorID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Type">
@@ -370,7 +349,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:Objective">
 		<xsl:element name = "Objective">
-			<xsl:attribute name = "ObjectiveID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
@@ -387,15 +366,15 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:Filter">
-		<xsl:variable name = "FilterID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "Filter">
-			<xsl:attribute name = "FilterID">
-				<xsl:value-of select = "$FilterID"/>
+			<xsl:attribute name = "ID">
+				<xsl:value-of select = "$ID"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:FilterSet [CA:Ref/@ID=$FilterID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:ExcitationFilter [CA:Ref/@ID=$FilterID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:EmissionFilter [CA:Ref/@ID=$FilterID]"/>
-			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Dichroic [CA:Ref/@ID=$FilterID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:FilterSet [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:ExcitationFilter [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:EmissionFilter [CA:Ref/@ID=$ID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:CustomAttributes/CA:Dichroic [CA:Ref/@ID=$ID]"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:FilterSet">
@@ -454,7 +433,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:OpticalTransferFunction">
 		<xsl:element name = "OTF">
-			<xsl:attribute name = "OTFID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "PixelType">
@@ -491,15 +470,12 @@
 	</xsl:template>
 	<xsl:template match = "CA:ImageInstrument">
 		<xsl:element name = "InstrumentRef">
-			<xsl:if test = "CA:Ref/@DocID">
-				<xsl:attribute name = "DocumentID">
-					<xsl:value-of select = "CA:Ref/@DocID"/>
-				</xsl:attribute>
-			</xsl:if>
-			<xsl:attribute name = "InstrumentID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "CA:Ref/@ID [../@Name='Instrument']"/>
 			</xsl:attribute>
-			<xsl:attribute name = "ObjectiveID">
+		</xsl:element>
+		<xsl:element name = "ObjectiveRef">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "CA:Ref/@ID [../@Name='Objective']"/>
 			</xsl:attribute>
 		</xsl:element>
@@ -515,7 +491,7 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:LogicalChannel">
-		<xsl:variable name = "LogicalChannelID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "ChannelInfo">
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
@@ -535,13 +511,13 @@
 			<xsl:apply-templates select = "CA:Ref [@Name='LightSource']" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "CA:Ref [@Name='AuxLightSource']" mode = "MakeOMEref">
 				<xsl:with-param name = "RefIDName">
-					<xsl:text>LightSourceID</xsl:text>
+					<xsl:text>ID</xsl:text>
 				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "CA:Ref [@Name='OTF']" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "CA:Ref [@Name='Detector']" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "CA:Ref [@Name='Filter']" mode = "MakeOMEref"/>
-			<xsl:apply-templates select = "/CA:OME/CA:Image/CA:CustomAttributes/CA:ChannelComponent [CA:Ref/@ID=$LogicalChannelID]"/>
+			<xsl:apply-templates select = "/CA:OME/CA:Image/CA:CustomAttributes/CA:ChannelComponent [CA:Ref/@ID=$ID]"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:ChannelComponent">
@@ -552,7 +528,7 @@
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:DisplayOptions">
-		<xsl:variable name = "DisplayOptionsID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "DisplayOptions">
 			<xsl:attribute name = "Zoom">
 				<xsl:value-of select = "@Zoom"/>
@@ -589,13 +565,13 @@
 					</xsl:if>
 				</xsl:element>
 			</xsl:if>
-			<xsl:apply-templates select = "../CA:DisplayROI [CA:Ref/@ID=$DisplayOptionsID]"/>
+			<xsl:apply-templates select = "../CA:DisplayROI [CA:Ref/@ID=$ID]"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:DisplayOptions/CA:Ref" mode="MakeDisplayChannel">
-		<xsl:variable name = "DisplayChannelID" select = "@ID"/>
+		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:element name = "{@Name}">
-			<xsl:apply-templates select = "../../CA:DisplayChannel/@* [../@ID=$DisplayChannelID] [name() != 'ID']"/>
+			<xsl:apply-templates select = "../../CA:DisplayChannel/@* [../@ID=$ID] [name() != 'ID']"/>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:DisplayChannel/@*">
@@ -649,12 +625,7 @@
 	</xsl:template>
 	<xsl:template match = "CA:ImagePlate">
 		<xsl:element name = "PlateRef">
-			<xsl:if test = "CA:Ref/@DocID">
-				<xsl:attribute name = "DocumentID">
-					<xsl:value-of select = "CA:Ref/@DocID"/>
-				</xsl:attribute>
-			</xsl:if>
-			<xsl:attribute name = "PlateID">
+			<xsl:attribute name = "ID">
 				<xsl:value-of select = "CA:Ref/@ID [../@Name='Plate']"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Well">
