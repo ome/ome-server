@@ -141,7 +141,7 @@ sub new {
 		$self->{_doc} = $doc;
 	}
 	
-	$self->{_LSIDresolver} = OME::Tasks::LSIDManager->new( session => $self->{session} );
+	$self->{_LSIDresolver} = OME::Tasks::LSIDManager->new();
 
 	return bless $self, $class;
 }

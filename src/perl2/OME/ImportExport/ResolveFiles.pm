@@ -117,7 +117,7 @@ sub importFile() {
 	my $session       = $self->{session};
 	my $factory       = $session->Factory();
 	my $parser        = $self->{_parser};
-	my $LSIDresolver  = OME::Tasks::LSIDManager->new( session => $session );
+	my $LSIDresolver  = OME::Tasks::LSIDManager->new();
 
 	# storage
 	my @cdataFiles;

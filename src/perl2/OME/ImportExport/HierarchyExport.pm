@@ -113,7 +113,7 @@ sub new {
 	}
 	
 	if (!defined $self->{_lsidResolver}) {
-		$self->{_lsidResolver} = new OME::Tasks::LSIDManager (session => $self->{session});
+		$self->{_lsidResolver} = OME::Tasks::LSIDManager->new();
 	}
 
 	$self->{_GlobalCAs} = {};

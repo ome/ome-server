@@ -226,7 +226,7 @@ sub processDOM {
 	my $debug   = $self->{debug};
 	my $session = $self->{session};
 	my $factory = $session->Factory();
-	my $lsidManager = OME::Tasks::LSIDManager->new( session => $session );
+	my $lsidManager = OME::Tasks::LSIDManager->new();
 
 	my @commitOnSuccessfulImport;
 	my @newPrograms;

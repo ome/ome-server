@@ -46,7 +46,7 @@ OME::Tasks::LSIDManager - Generate LSIDs for OME objects
 =head1 SYNOPSIS
 
 	# Get a new or existing LSID for the given object
-	my $resolver = new OME::Tasks::LSIDManager (session => $session);
+	my $resolver = new OME::Tasks::LSIDManager ();
 	my $LSID = $resolver->getLSID ($object);
 	my $object = $resolver->getObject ($LSID);
 	my $object = $resolver->getLocalObject ($LSID);
@@ -61,6 +61,7 @@ use strict;
 use Carp;
 use Log::Agent;
 use OME::LSID;
+use OME::Session;
 
 our $AUTHORITY;
 our $DB_INSTANCE;
@@ -69,9 +70,9 @@ our $DB_INSTANCE;
 
 =head2 new
 
-	my $resolver = new OME::Tasks::LSIDManager (session => $session);
+	my $resolver = new OME::Tasks::LSIDManager ();
 
-This makes a new LSID resolver.  The session parameter is required.
+This makes a new LSID resolver.
 
 =cut
 
@@ -79,11 +80,8 @@ sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session);
-
 	my $self;
-
-	@$self{@fieldsILike} = @params{@fieldsILike};
+	$self->{session} = OME::Session->instance();
 
 	if (not defined $AUTHORITY or not defined $DB_INSTANCE) {
     	my $config = OME::Session->instance()->Configuration() or
