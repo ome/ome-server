@@ -99,7 +99,7 @@ AddLayer()
 Form()
 new()
 
-=item OME::Graphics::JavaScript::Layber::*
+=item OME::Graphics::JavaScript::Layer::*
 
  
 new()
