@@ -46,6 +46,7 @@ use OME::Web::Validation;
 use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
+use OME::Web::Table;
 
 use base qw{ OME::Web };
 
@@ -57,27 +58,20 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
-	my $project = $session->project()
+	my $factory = $session->Factory();
+	$self->{htmlFormat} = new OME::Web::Helper::HTMLFormat;
+
+	my $project = $self->Session()->project()
 		or die "Project is not defined for the session.\n";
-	my $projectManager      = new OME::Tasks::ProjectManager($session);
-	$self->{projectManager} = $projectManager;
-	my $datasetManager      = new OME::Tasks::DatasetManager($session);
-	$self->{datasetManager} = $datasetManager;
-	$self->{htmlFormat}     = new OME::Web::Helper::HTMLFormat;
-	my $htmlFormat          = $self->{htmlFormat};
-	my $factory             = $session->Factory();
+	my $projectManager = new OME::Tasks::ProjectManager($session);
+	my $datasetManager = new OME::Tasks::DatasetManager($session);
+
 	my $body = "";
 	
-	# check for validity of session
-	if( not defined $project ) {
-		$body .= "<script>top.location.href = top.location.href;</script>";
-		return ("HTML",$body);
-	}
-
-	# revArgs is a hash of value => name pairs for the parameters
-	# Select and Remove buttons are named by datasetID and valued by operation
-	# In short, this is necessary to detect a Select or Remove action.
 	my %revArgs = map { $cgi->param($_) => $_ } $cgi->param();
+
+	# Dataset objects that were selected
+	my @selected = $cgi->param('selected');
 
 	# determine action
 	if( $cgi->param('save')) {
@@ -98,28 +92,60 @@ sub getPageBody {
 		if $reloadTitleBar;
 		# this will add a script to reload OME::Home if it's necessary
 		$body .= OME::Web::Validation->ReloadHomeScript();
-	} elsif( exists $revArgs{Remove} ) {
-		my %h=();
-		my @a=($session->project()->id());
+	} elsif ($cgi->param('Remove')) {
+		# Action
+		foreach (@selected) {
+			$datasetManager->remove( {
+					$_ => [$project->id()]
+				}
+			)
+		}
 		
-		$h{$revArgs{Remove}} = \@a;
-		$datasetManager->remove(\%h);		 
-		my @datasets = $session->project()->datasets();
+		# Data
+		$body = $cgi->p({-class => 'ome_info'}, "Removed dataset(s) @selected from the project.");
 
+		# Refresh current frame and/or top frame
 		$body .= "<script>top.location.href = top.location.href;</script>"
-			if (scalar(@datasets)==0);
+			if (scalar($project->datasets())==0);
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
+	} elsif ($cgi->param('Delete')) {
+		# Action
+		foreach (@selected) { $datasetManager->delete($_) }
+		
+		# Data
+		$body = $cgi->p({-class => 'ome_info'}, "Deleted dataset(s) @selected from OME.");
+
+		# Refresh current frame and/or top frame
+		$body .= "<script>top.location.href = top.location.href;</script>"
+			if (scalar($project->datasets())==0);
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
 	}
-	elsif ( exists $revArgs{Select} ) {
-		$datasetManager->switch($revArgs{Select});
-		$body .= "Operation successful. Current dataset is: <b>".$session->dataset()->name()."</b><br>";
+
+	elsif ($cgi->param('Select')) {
+		# Warning
+		if (scalar(@selected) > 1) {
+			$body .= $cgi->p({class => 'ome_error'}, 
+				"WARNING: Multiple datasets chosen, selecting first choice ID $selected[0].");
+		}
+		
+		# Action
+		$datasetManager->switch($selected[0]);
+		
+		# Data
+		$body .= $cgi->p({-class => 'ome_info'}, "Selected dataset $selected[0] from the project.");
+
+		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	}
-	# do we need to add a dataset to the project?
-	elsif( defined $cgi->param('addDataset') ) {
+	elsif (defined $cgi->param('Add')) {
+		# Action
+		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
+		$projectManager->add($datasets[0]->id());
+		
+		# Data
+		$body .= $cgi->p({-class => 'ome_info'}, "Added dataset $selected[0] to the project.");
 
-		$projectManager->add($cgi->param('addDatasetID'));
-		$body .= "Dataset <b>".$session->dataset()->name()."</b> successfully added to this project and set to current dataset.<br>";
+		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		
 	} 
@@ -146,49 +172,79 @@ sub print_form {
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= "<center><h2>Project ".$project->name()." Properties</h2></center>";
+	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, $project->name() . " Properties");
 	$text .= $htmlFormat->formChange("project",$project,$user);
-	$text .= "<center><h2>Datasets</h2></center>";
-	$text .= $self->makeDatasetListings();
+	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets");
+	$text .= $self->makeDatasetListings($project);
 	$text .= $cgi->endform;
 	
 	return $text;
 }
 
-sub makeDatasetListings{
-	my $self = shift;
-
-	my $session = $self->Session();
-	my $cgi     = $self->CGI();
-	my $text="";
-	my @control;
-  my @datasets=$session->project()->datasets();
-	my $name=$session->project()->name();
-	my $datasetManager = $self->{datasetManager};
-	my @a=($session->User()->Group()->id());
- 
-
-  if (scalar(@datasets)>0){
-		$text .= "The current Project <b>".$name."</b> contains these datasets.<br><br>";
-		$text.=$self->{htmlFormat}->datasetListInProject(\@datasets);
-	}else{
-		$text.="The current project <b>".$name."</b> doesn't contain a dataset. <br><br>";
-
-	}
-	my $refhash=$datasetManager->notBelongToProject(\@a);
-
-	foreach (keys %$refhash){
-	  push(@control,$_);
-	}
-
-	if (scalar(@control)>0){
+sub makeDatasetListings {
+	my ($self, $project) = @_;
+	my $t_generator = new OME::Web::Table;
+	my $cgi = $self->CGI();;
+	my $factory = $self->Session()->Factory();
 	
-	 $text.="<p>To add an existing dataset to the current project, choose from the list below.</p>";
-	 $text.=$self->{htmlFormat}->dropDownTable("addDatasetID",$refhash,"addDataset","add a Dataset");
+	# Grab the ID of each of our datasets that's in the project
+	my $in_project;
+	foreach ($project->datasets()) { push (@$in_project, $_->id()) }
+	
+	# Gen our "Datasets in Project" table
+	my $html = $t_generator->getTable( {
+			type => 'dataset',
+			filters => [ ["id", ['in', $in_project] ] ],
+			options_row => ["Select", "Remove", "Delete"],
+		}
+	);
+
+	my @additional_datasets;
+
+	# Only display the datasets that aren't in the project
+	foreach my $dataset ($factory->findObjects("OME::Dataset")) {
+		my $add_this_id = 1;
+		foreach my $id_in_project (@$in_project) {
+			if (($dataset->id() == $id_in_project) or ($dataset->name() eq 'Dummy import dataset')) {
+				# Dummy import datasets... joy.
+				$add_this_id = 0;
+			};
+		}
+		push(@additional_datasets, $dataset->name()) if $add_this_id;
 	}
 
-	return $text;
+	# Add a null to the beginning
+	unshift(@additional_datasets, 'None');
 
+	# Add dataset table
+	$html .= $cgi->p .
+	         $cgi->table( {
+					 -class => 'ome_table',
+					 -align => 'center',
+					 -cellspacing => 1,
+					 -cellpadding => 4
+				 },
+				 $cgi->Tr({-bgcolor => '#006699'},
+					 $cgi->startform(),
+					 $cgi->td(
+						 '&nbsp',
+						 $cgi->span("Add dataset: "),
+						 $cgi->popup_menu( {
+								 -name => 'selected',
+								 -values => [@additional_datasets],
+								 -default => $additional_datasets[0]
+							 }
+						 ),
+						 '&nbsp',
+						 $cgi->submit({-name => 'Add', -value => 'Add'}),
+						 '&nbsp'
+					 ),
+					 $cgi->endform()
+				 )
+			 );
+
+
+	return $html;
 }
 
 1;

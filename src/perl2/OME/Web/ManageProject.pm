@@ -47,6 +47,7 @@ use OME::Tasks::ProjectManager;
 use OME::Tasks::DatasetManager;
 use OME::Web::Helper::HTMLFormat;
 use OME::Web::Helper::JScriptFormat;
+use OME::Web::Table;
 
 
 use base qw{ OME::Web };
@@ -69,29 +70,50 @@ sub getPageBody {
 	my $body = "";
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
-	 $body .= $jscriptFormat->openInfoProject();
+
+	my @selected = $cgi->param('selected');
+
+	$body .= $jscriptFormat->openInfoProject();
+
 	if (exists $revArgs{Select}){
+		# Data
+		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
 
-	    $projectManager->switch($revArgs{Select});
-	    my @datasets=$session->project()->datasets();
-
-	    $body.=$htmlFormat->formatProject($session->project());
-	    if (scalar (@datasets)>0){
-		 $body.=format_datasetList($htmlFormat,$session->dataset()->name(),\@datasets,$cgi);	
-	    }else{
-		 $body.="No Dataset associated to this project. Please define a dataset.";
-	    }
-	    $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-	}elsif (exists $revArgs{Delete}){
-		$projectManager->delete($revArgs{Delete});
-		if (defined $session->project()){
-		  $body.=print_form($session,$projectManager,$htmlFormat,$cgi);
-		}else{
-		  $body .= "<script>top.location.href = top.location.href;</script>";
+		# Warning
+		if (scalar(@selected) > 1) {
+			$body .= $cgi->p({class => 'ome_error'}, 
+				"WARNING: Multiple projects chosen, selecting first choice ID $selected[0].");
 		}
+		
+		# Action
+		$projectManager->switch($selected[0]);
+		
+		$body .= $cgi->p({-class => 'ome_info'}, "Selected project $selected[0]."); 
+
+		# Data
+		$body .= $self->print_form();
+		
+		# Top frame refresh
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}elsif ($cgi->param('execute')){
+	} elsif (exists $revArgs{Delete}){
+		# Data
+		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
+		$body .= $cgi->p({-class => 'ome_info'}, "Deleted project(s) @selected"); 
+
+		# Action
+		foreach (@selected) { $projectManager->delete($_) };
+
+		# Data
+		if ($session->project()) {  # We didn't delete our only project right ? :)
+			$body .= $self->print_form();
+		} else {
+			# Main frame refresh
+			$body .= "<script>top.location.href = top.location.href;</script>";
+		}
+
+		# Top frame refresh
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+	} elsif ($cgi->param('execute')){
 	   $datasetManager->switch($cgi->param('newdataset'));
 
 	   my @datasets=$session->project()->datasets();
@@ -100,8 +122,9 @@ sub getPageBody {
 	   $body.=$formatdata;
 	   $body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		
-	}else{
-	   $body .= print_form($session,$projectManager,$htmlFormat,$cgi);
+	} else {
+		$body .= $cgi->p({class => 'ome_title'}, 'My projects');
+		$body .= $self->print_form();
 	}
     return ('HTML',$body);
 }
@@ -114,23 +137,22 @@ sub getPageBody {
 
 
 #####################
-# PRIVATE METHODS	  #
+# PRIVATE METHODS	#
 #####################
 
 sub print_form {
+	my $self = shift;
+	my $t_generator = new OME::Web::Table;
 
-	my ($session,$projectManager,$htmlFormat,$cgi)=@_;
-	my $text ="";
-	my $ref=$projectManager->listMatching($session->User()->id());
-	$text.="Please define a project first.<br>"; 
-	return $text if (scalar(@$ref)==0);
-	$text="";
-	$text .="<h3>You own these projects:</h3>";
-	$text .= $cgi->startform;
-	$text.=$htmlFormat->projectList($ref,1);
-	$text.=$cgi->endform;
-	return $text;
+	my $html = $t_generator->getTable( {
+			type => 'project',
+			filter_field => 'owner_id',
+			filter_string => $self->Session()->User()->id(),
+			options_row => ["Select", "Delete"],
+		}
+	);
 
+	return $html;
 }
 
 
