@@ -37,7 +37,7 @@ sub new {
 
     my $self = $class->SUPER::new($location,$session,$program,$node);
 
-    $self->{_options} = "0 gmean4.5s 10 -db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
+    $self->{_options} = "-db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
 
     bless $self,$class;
     return $self;
@@ -51,7 +51,85 @@ sub precalculateImage {
     my $path = $image->getFullPath( $pixels );
     my $location = $self->{_location};
     my $options = $self->{_options};
-    my $cmdLine = "$location $path $options";
+
+    my $params = $self->getGlobalInputs("Parameters")->[0];
+    my $paramopts = " ";
+
+    my $channel = $params->Channel();
+    if (defined $channel) {
+        if ($channel >= 0 && $channel < $pixels->SizeC()) {
+            my $v = sprintf("%d",$channel);
+            $paramopts .= "$v ";
+        } else {
+            die "Illegal channel input: $channel";
+        }
+    } else {
+        $paramopts .= "0 ";
+    }
+
+    my $threshtype = $params->ThresholdType();
+    my $threshvalue = $params->ThresholdValue();
+    if ($threshtype eq 'Absolute') {
+        my $v = sprintf("%d",$threshvalue);
+        $paramopts .= "$v ";
+    } elsif ($threshtype eq 'RelativeToMean') {
+        my $v = sprintf("%.2f",$threshvalue);
+        $paramopts .= "mean${v}s ";
+    } elsif ($threshtype eq 'RelativeToGeometricMean') {
+        my $v = sprintf("%.2f",$threshvalue);
+        $paramopts .= "gmean${v}s ";
+    } elsif ($threshtype eq 'MaximumEntropy') {
+        $paramopts .= "me ";
+    } elsif ($threshtype eq 'Kittler') {
+        $paramopts .= "kittler ";
+    } elsif ($threshtype eq 'MomentPreservation') {
+        $paramopts .= "moment ";
+    } elsif ($threshtype eq 'Otsu') {
+        $paramopts .= "otsu ";
+    } elsif (!defined $threshtype) {
+        $paramopts .= "gmean4.5s ";
+    } else {
+        die "Illegal threshold type: $threshtype";
+    }
+
+    my $minVol = $params->MinimumSpotVolume();
+    if (defined $minVol) {
+        my $v = sprintf("%d",$minVol);
+        $paramopts .= "$v ";
+    } else {
+        $paramopts .= "10 ";
+    }
+
+    my $timeStart = $params->TimeStart();
+    my $timeStop = $params->TimeStop();
+
+    if (defined $timeStart || defined $timeStop) {
+        my $timeopt = "-time ";
+
+        if (defined $timeStart) {
+            if ($timeStart >= 0 && $timeStart < $pixels->SizeT()) {
+                my $v = sprintf("%d",$timeStart);
+                $timeopt .= "$v";
+            } else {
+                die "Illegal start time: $timeStart";
+            }
+        }
+
+        $timeopt .= "-";
+
+        if (defined $timeStop) {
+            if ($timeStop >= 0 && $timeStop < $pixels->SizeT()) {
+                my $v = sprintf("%d",$timeStop);
+                $timeopt .= "$v";
+            } else {
+                die "Illegal stop time: $timeStop";
+            }
+        }
+
+        $paramopts .= "$timeopt ";
+    }
+
+    my $cmdLine = "$location $path $paramopts $options";
 
     my ($input, $output, $error, $pid);
     my $session = $self->Session();
@@ -64,7 +142,7 @@ sub precalculateImage {
     $error = new IO::File;
     open $input, "> $inputFile";
 
-    print STDERR "      $location $path $options\n";
+    print STDERR "      $cmdLine\n";
 
     $self->{_inputHandle} = $input;
     $self->{_outputHandle} = $output;
