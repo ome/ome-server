@@ -31,77 +31,278 @@
 # Written by:  Tom Macura <tmacura@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
-<OME
-  xmlns=
-    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
-  xmlns:xsi=
-    "http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:AML=
-    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
-  xmlns:STD=
-    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
-  xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
-    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
-      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
-    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
-      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+<OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
+	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+		
+		<!-- Matlab Test Output STs -->
+		<SemanticType Name="StringTest" AppliesTo="I">
+			<Element 
+				Name="StringTest" 
+				DBLocation="MATLAB_TEST_0.STRING_TEST"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="BooleanTest" AppliesTo="I">
+			<Element 
+				Name="BooleanTest" 
+				DBLocation="MATLAB_TEST_1.BOOLEAN_TEST"  
+				DataType="boolean"/>
+		</SemanticType>
+		<SemanticType Name="DoubleTest" AppliesTo="I">
+			<Element 
+				Name="DoubleTest" 
+				DBLocation="MATLAB_TEST_2.DOUBLE_TEST"  
+				DataType="double"/>
+		</SemanticType>
+		<SemanticType Name="SingleTest" AppliesTo="I">
+			<Element 
+				Name="SingleTest" 
+				DBLocation="MATLAB_TEST_3.SINGLE_TEST"  
+				DataType="float"/>
+		</SemanticType>
+		<SemanticType Name="SmallIntTest" AppliesTo="I">
+			<Element 
+				Name="SmallIntTest" 
+				DBLocation="MATLAB_TEST_4.SMALL_INT_TEST"  
+				DataType="smallint"/>
+		</SemanticType>
+		<SemanticType Name="IntegerTest" AppliesTo="I">
+			<Element 
+				Name="IntegerTest" 
+				DBLocation="MATLAB_TEST_5.INTEGER_TEST"  
+				DataType="integer"/>
+		</SemanticType>
+		<SemanticType Name="BigIntTest" AppliesTo="I">
+			<Element 
+				Name="BigIntTest" 
+				DBLocation="MATLAB_TEST_6.BIG_INT_TEST"  
+				DataType="bigint"/>
+		</SemanticType>
+		<SemanticType Name="VectorTest1" AppliesTo="I">
+			<Element 
+				Name="Element1" 
+				DBLocation="MATLAB_TEST_7.ELEMENT_1"  
+				DataType="double"/>
+			<Element 
+				Name="Element2" 
+				DBLocation="MATLAB_TEST_7.ELEMENT_2"  
+				DataType="double"/>
+			<Element 
+				Name="Element3" 
+				DBLocation="MATLAB_TEST_7.ELEMENT_3"  
+				DataType="double"/>				
+		</SemanticType>
+		<SemanticType Name="VectorTest2_a" AppliesTo="I">
+			<Element 
+				Name="Element1" 
+				DBLocation="MATLAB_TEST_8.ELEMENT_1"  
+				DataType="integer"/>
+		</SemanticType>
+		<SemanticType Name="VectorTest2_b" AppliesTo="I">
+			<Element 
+				Name="Element1" 
+				DBLocation="MATLAB_TEST_9.ELEMENT_1"  
+				DataType="float"/>
+		</SemanticType>
+		<SemanticType Name="VectorTest2_c" AppliesTo="I">
+			<Element 
+				Name="Element1" 
+				DBLocation="MATLAB_TEST_10.ELEMENT_1"  
+				DataType="double"/>
+		</SemanticType>
+		
+		<!-- Matlab Test Input STs -->
+		<SemanticType Name="StringTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_11.STRING_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		
+		<SemanticType Name="BooleanTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_12.BOOLEAN_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="DoubleTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_13.DOUBLE_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="SingleTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_14.SINGLE_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="SmallIntTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_15.SMALL_INT_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="IntegerTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_16.INTEGER_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		<SemanticType Name="BigIntTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_17.BIG_INT_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		
+		<SemanticType Name="ConvertTest" AppliesTo="I">
+			<Element 
+				Name="ConvertTest"     
+				DBLocation="MATLAB_TEST_18.CONVERT_TEST"  
+				DataType="integer"/>
+		</SemanticType>		
+		<SemanticType Name="ConvertTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_19.CONVERT_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+		
+		<SemanticType Name="PixelTest_class" AppliesTo="I">
+			<Element 
+				Name="Class" 
+				DBLocation="MATLAB_TEST_20.PIXEL_TEST_CLASS"  
+				DataType="string"/>
+		</SemanticType>
+	</SemanticTypeDefinitions>
 
-  <AML:AnalysisModuleLibrary
-     xmlns=
-     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:schemaLocation=
-     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
-      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-
-	<AnalysisModule
-       ModuleName="Matlab Pixels Test"
-       Category="Statistics"
-       ModuleType="OME::Analysis::Handlers::MatlabHandler"
-       ProgramID="ome_pixelsTest"
-       ID="urn:lsid:openmicroscopy.org:Module:70">
-      <Description>Transposes the image matrix.</Description>
-      <Declaration>
-        <FormalInput
-           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
-        <FormalOutput
-           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
-      </Declaration>
-
-      <ExecutionInstructions ExecutionPoint="startImage"
-		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-        <!-- specifies which of the references in the actual inputs
-             needed to be populated -->
-
-        <!-- specifies the order that the Matlab function expects the
-             formal inputs -->
-        <Inputs>
-          <Input Name="Pixels"/>
-        </Inputs>
-
-        <!-- specifies the order of the formal outputs -->
-        <Outputs>
-          <Output Name="Pixels"/>
-        </Outputs>
-      </ExecutionInstructions>
-    </AnalysisModule>
-  </AML:AnalysisModuleLibrary>
+	<AML:AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+		<AnalysisModule
+		   ModuleName="Matlab Test Output"
+		   Category="Test"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="MatlabTestOutput"
+		   ID="urn:lsid:openmicroscopy.org:Module:9999">
+		  <Description>
+		   This module tests the Matlab Handler in all ways imaginable.
+		  </Description>
+		  <Declaration>
+			<FormalOutput Name="String Test"    SemanticTypeName="StringTest"   Count="!"/>
+			<FormalOutput Name="Boolean Test"   SemanticTypeName="BooleanTest"  Count="!"/>	
+			<FormalOutput Name="Double Test"    SemanticTypeName="DoubleTest"   Count="!"/>
+			<FormalOutput Name="Single Test"    SemanticTypeName="SingleTest"   Count="!"/>
+			<FormalOutput Name="Small Int Test" SemanticTypeName="SmallIntTest" Count="!"/>	
+			<FormalOutput Name="Integer Test"   SemanticTypeName="IntegerTest"  Count="!"/>	
+			<FormalOutput Name="Big Int Test"   SemanticTypeName="BigIntTest"   Count="!"/>
+			
+			<FormalOutput Name="Vector Test 1"   SemanticTypeName="VectorTest1"   Count="!"/>	
+			<FormalOutput Name="Vector Test 2_a" SemanticTypeName="VectorTest2_a" Count="!"/>
+			<FormalOutput Name="Vector Test 2_b" SemanticTypeName="VectorTest2_b" Count="!"/>
+			<FormalOutput Name="Vector Test 2_c" SemanticTypeName="VectorTest2_c" Count="!"/>
+			
+			<FormalOutput Name="Pixel Test"      SemanticTypeName="Pixels" Count="!"/>
+			
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionOutputs>
+				<Output><Scalar OutputLocation="String Test.StringTest" /></Output>
+				<Output><Scalar OutputLocation="Boolean Test.BooleanTest"   ConvertToDatatype="logical" /></Output>
+				<Output><Scalar OutputLocation="Double Test.DoubleTest"/></Output>
+				<Output><Scalar OutputLocation="Single Test.SingleTest"     ConvertToDatatype="single"  /></Output>
+				<Output><Scalar OutputLocation="Small Int Test.SmallIntTest"/></Output>
+				<Output><Scalar OutputLocation="Integer Test.IntegerTest"/></Output>
+				<Output><Scalar OutputLocation="Big Int Test.BigIntTest"/></Output>
+				<Output><Vector DecodeWith="Vector Test 1"/></Output>
+				<Output><Vector DecodeWith="Vector Test 2"/></Output>
+				<Output><PixelsArray FormalOutput="Pixel Test"/></Output>
+			<!--	<Output><Struct DecodeWith="Circle Struct"/></Output> -->
+			</FunctionOutputs>
+			
+			<VectorDecoder ID="Vector Test 1">
+				<Element Index="1" OutputLocation="Vector Test 1.Element1"/>
+				<Element Index="2" OutputLocation="Vector Test 1.Element2"/>
+				<Element Index="3" OutputLocation="Vector Test 1.Element3"/>
+			</VectorDecoder>
+			<VectorDecoder ID="Vector Test 2">
+				<Element Index="1" OutputLocation="Vector Test 2_a.Element1" ConvertToDatatype="int32"/>
+				<Element Index="2" OutputLocation="Vector Test 2_b.Element1" ConvertToDatatype="single"/>
+				<Element Index="3" OutputLocation="Vector Test 2_c.Element1"/>
+			</VectorDecoder>
+		<!--	<StructDecoder ID="Circle">
+				<Element Field="X"      OutputLocation="Center.X"/>
+				<Element Field="Y"      OutputLocation="Center.Y"/>
+				<Element Field="Radius" OutputLocation="Radius"/>
+			</StructDecoder> -->
+		  </ExecutionInstructions>
+		</AnalysisModule>
+		
+		<AnalysisModule
+		   ModuleName="Matlab Test Input"
+		   Category="Test"
+		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
+		   ProgramID="MatlabTestInput"
+		   ID="urn:lsid:openmicroscopy.org:Module:9998">
+		  <Description>
+		   This module tests the Matlab Handler in all ways imaginable.
+		  </Description>
+		  <Declaration>
+			<FormalInput Name="String Test"    SemanticTypeName="StringTest"   Count="!"/>	
+			<FormalInput Name="Boolean Test"   SemanticTypeName="BooleanTest"  Count="!"/>	
+			<FormalInput Name="Double Test"    SemanticTypeName="DoubleTest"   Count="!"/>
+			<FormalInput Name="Single Test"    SemanticTypeName="SingleTest"   Count="!"/>
+			<FormalInput Name="Small Int Test" SemanticTypeName="SmallIntTest" Count="!"/>	
+			<FormalInput Name="Integer Test"   SemanticTypeName="IntegerTest"  Count="!"/>	
+			<FormalInput Name="Big Int Test"   SemanticTypeName="BigIntTest"   Count="!"/>
+			<FormalInput Name="Pixel Test"     SemanticTypeName="Pixels"       Count="!"/>
+			
+			<FormalOutput Name="String Test Class"    SemanticTypeName="StringTest_class"   Count="!"/>	
+			<FormalOutput Name="Boolean Test Class"   SemanticTypeName="BooleanTest_class"  Count="!"/>	
+			<FormalOutput Name="Double Test Class"    SemanticTypeName="DoubleTest_class"   Count="!"/>
+			<FormalOutput Name="Single Test Class"    SemanticTypeName="SingleTest_class"   Count="!"/>
+			<FormalOutput Name="Small Int Test Class" SemanticTypeName="SmallIntTest_class" Count="!"/>	
+			<FormalOutput Name="Integer Test Class"   SemanticTypeName="IntegerTest_class"  Count="!"/>	
+			<FormalOutput Name="Big Int Test Class"   SemanticTypeName="BigIntTest_class"   Count="!"/>
+			<FormalOutput Name="Convert Test Class"   SemanticTypeName="ConvertTest_class"  Count="!"/>
+			<FormalOutput Name="Pixel Test Class"     SemanticTypeName="PixelTest_class"    Count="!"/>
+		  </Declaration>
+		
+		  <ExecutionInstructions ExecutionGranularity="I" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+				<Input><Scalar InputLocation="String Test.StringTest"/></Input>
+				<Input><Scalar InputLocation="Boolean Test.BooleanTest"/></Input>
+				<Input><Scalar InputLocation="Double Test.DoubleTest"/></Input>
+				<Input><Scalar InputLocation="Single Test.SingleTest"/></Input>
+				<Input><Scalar InputLocation="Small Int Test.SmallIntTest"/></Input>
+				<Input><Scalar InputLocation="Integer Test.IntegerTest"/></Input>
+				<Input><Scalar InputLocation="Big Int Test.BigIntTest"/></Input> 
+				<!-- for convert test class -->
+				<Input><Scalar InputLocation="Single Test.SingleTest" ConvertToDatatype="int32"/></Input>
+				<Input><PixelsArray FormalInput="Pixel Test"/></Input>
+			</FunctionInputs>
+			
+			<FunctionOutputs>
+				<Output><Scalar OutputLocation="String Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Boolean Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Double Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Single Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Small Int Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Integer Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Big Int Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Convert Test Class.Class"/></Output>
+				<Output><Scalar OutputLocation="Pixel Test Class.Class"/></Output>
+			</FunctionOutputs>
+		  </ExecutionInstructions>
+		</AnalysisModule>
+		
+	</AML:AnalysisModuleLibrary>
+	
+	<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+	  <AnalysisChain Name="Matlab Test Chain" Locked="false">
+		<Nodes>
+			  <Node NodeID = "Matlab Test"  ProgramName = "Matlab Test"/>
+		</Nodes>
+		<Links></Links>
+	  </AnalysisChain>
+	</AnalysisChains>
 </OME>
-  
-<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
-  <AnalysisChain Name="Matlab test chain" Locked="false">
-    <Nodes>
-          <Node NodeID = "Files"  ProgramName = "Original files"/>
-          <Node NodeID = "Import" ProgramName = "Image import"/>
-          <Node NodeID = "Test"   ProgramName="Matlab Pixels Test"/>
-    </Nodes>
-    <Links>
-      <Link FromNodeID="Files"  FromOutputName="Files"  ToNodeID="Import" ToInputName="Files"/>
-      <Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Test"   ToInputName="Pixels"/>
-    </Links>
-  </AnalysisChain>
-</AnalysisChains>

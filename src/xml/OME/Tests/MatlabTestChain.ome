@@ -1,0 +1,26 @@
+<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+  <AnalysisChain Name="Matlab Test Chain" Locked="false">
+	<Nodes>
+		  <Node NodeID = "Matlab Test Output"  ProgramName = "Matlab Test Output"/>
+		  <Node NodeID = "Matlab Test Input"   ProgramName = "Matlab Test Input"/>
+	</Nodes>
+	<Links>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="String Test"
+                ToNodeID="Matlab Test Input"     ToInputName="String Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Boolean Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Boolean Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Double Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Double Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Single Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Single Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Small Int Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Small Int Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Integer Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Integer Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Big Int Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Big Int Test"/>
+		<Link FromNodeID="Matlab Test Output" FromOutputName="Pixel Test"
+                ToNodeID="Matlab Test Input"     ToInputName="Pixel Test"/>
+    </Links>
+  </AnalysisChain>
+</AnalysisChains>
