@@ -76,6 +76,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	// Store the last module parameter that we were in.
 	private PFormalParameter lastParameterEntered;
+	private PModule lastModuleEntered;
 	private PLayer linkLayer;
 	
 	private PLink link;
@@ -143,15 +144,20 @@ public class PChainEventHandler extends  PPanEventHandler {
 		//	System.err.println("mouse entered last entered.."+
 			//	lastParameterEntered.getName());
 			if (linkState == NOT_LINKING) {
-				lastParameterEntered.setParamsHighlighted(true);
 				PModule mod = lastParameterEntered.getPModule();
+				mod.setParamsHighlighted(false);
+				// must turn on params for this parameter _after_
+				// we turn off all params for the module, 
+				// or else turnning off params for the module
+				// will undo what had just bee turned on.
+				lastParameterEntered.setParamsHighlighted(true);
 				mod.setModulesHighlighted(true);	
 			}
 			e.setHandled(true);
 		}
 		else if (node instanceof PModule) {
 			PModule mod = (PModule) node;
-			mod.setModulesHighlighted(true);
+			mod.setAllHighlights(true);
 			e.setHandled(true);
 		}
 		else {
@@ -172,13 +178,13 @@ public class PChainEventHandler extends  PPanEventHandler {
 			if (linkState == NOT_LINKING) {	
 				param.setParamsHighlighted(false);
 				PModule mod = param.getPModule();
-				mod.setModulesHighlighted(false);
+				mod.setAllHighlights(false);
 			}			
 			e.setHandled(true);
 		}
 		else if (node instanceof PModule) {
 			PModule mod = (PModule) node;
-			mod.setModulesHighlighted(false);
+			mod.setAllHighlights(false);
 			e.setHandled(true);
 		}
 		else
