@@ -61,12 +61,13 @@ package org.openmicroscopy.ds.dto;
  * #getModuleExecution()} method.</p>
  *
  * @author Douglas Creager
- * @version 2.0
+ * @version 2.0 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.0
  * @see SemanticType
  */
 
 public interface Attribute
+    extends DataInterface
 {
     /**
      * Returns the attribute's primary key ID.
