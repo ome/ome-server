@@ -53,4 +53,6 @@ import  java.util.EventListener;
 public interface SelectionEventListener extends EventListener {
 
 	public 	void selectionChanged(SelectionEvent e);
+
+	public int getEventMask();
 }

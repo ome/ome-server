@@ -48,8 +48,9 @@ import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.ChainExecution;
 import org.openmicroscopy.Project;
-import javax.swing.event.EventListenerList;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 /** 
  * Centralized repository for state of current user selection in GUI. Tracks
@@ -72,7 +73,7 @@ public class SelectionState {
 	private Collection activeProjects = null;
 	
 	// listener lists
-	private EventListenerList selectionListeners = new EventListenerList();
+	private ArrayList selectionListeners = new ArrayList();
 	
 	
 	// singleton
@@ -89,13 +90,14 @@ public class SelectionState {
 	}
 	
 	// executions
-	public ChainExecution getCurrentExecution() {
+	public ChainExecution getSelectedExecution() {
 		return currentExecution;
 	}
 	
-	public  void setCurrentExecution(ChainExecution exec) {
+	public  void setSelectedExecution(ChainExecution exec) {
 		currentExecution = exec;
-		fireSelectionEvent();
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_SELECTED_EXECUTION));
 	}
 	
 	
@@ -134,7 +136,9 @@ public class SelectionState {
 			} else if (currentProject == null)
 				activeProjects = currentDataset.getProjects();
 		}
-		fireSelectionEvent();	
+
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_CHAIN));	
 	}
 	
 	public CChain getSelectedChain() {
@@ -144,7 +148,7 @@ public class SelectionState {
 	// PROJECT
 	
 	
-	public void setSelectedProject(Project current) {
+	public synchronized void setSelectedProject(Project current) {
 		
 		currentProject = current;
 		
@@ -162,7 +166,8 @@ public class SelectionState {
 				activeProjects =null;
 			}
 		}
-		fireSelectionEvent();
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_PROJECT));
 	}
 	
 
@@ -182,7 +187,9 @@ public class SelectionState {
 	
 	public void setRolloverProject(Project p) {
 		rolloverProject =p;
-		fireSelectionEvent();
+		System.err.println("rollover...."+SelectionEvent.SET_ROLLOVER_PROJECT);
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_ROLLOVER_PROJECT));
 	}
 	
 	public Project getRolloverProject() {
@@ -193,7 +200,8 @@ public class SelectionState {
 	
 	public void setSelectedDataset(CDataset current) {
 		doSetSelectedDataset(current);
-		fireSelectionEvent();
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_PROJECT));
 	}
 	
 	private void doSetSelectedDataset(CDataset current) {
@@ -221,14 +229,14 @@ public class SelectionState {
     		activeDatasets =null;
     	
     	}
-	   	//chains with executions are selected.
-		fireSelectionEvent();
+	   	
 	}
 	
 	public void setSelected(CChain chain,CDataset dataset) {
 		doSetSelectedDataset(dataset);
 		currentChain = chain;
-		fireSelectionEvent();
+		fireSelectionEvent(
+			new SelectionEvent(this,SelectionEvent.SET_CHAIN));
 	}
 
 	public CDataset getSelectedDataset() {
@@ -241,25 +249,25 @@ public class SelectionState {
  	
  	// 	selections
 	
- 	public void addSelectionEventListener(SelectionEventListener listener) {
-		 selectionListeners.add(SelectionEventListener.class,
-			 listener);
+ 	public synchronized void addSelectionEventListener(SelectionEventListener listener) {
+		 selectionListeners.add(listener);
  	}
 
- 	public void removeSelectionEventListener(SelectionEventListener listener) {
-		 selectionListeners.remove(SelectionEventListener.class,
-			 listener);
+ 	public synchronized void removeSelectionEventListener(SelectionEventListener listener) {
+		 selectionListeners.remove(listener);
 	}
 
- 	private void fireSelectionEvent() {
-		 SelectionEvent e = new SelectionEvent(this);
-	 	Object[] listeners=selectionListeners.getListenerList();
-	 	for (int i = listeners.length-2; i >=0; i-=2) {
-			 if (listeners[i] == SelectionEventListener.class) {
-				 ((SelectionEventListener) listeners[i+1]).
-					selectionChanged(e);
-		 	}
-	 	}
+ 	private synchronized void fireSelectionEvent(SelectionEvent e) {
+		Iterator iter = selectionListeners.iterator();
+		while (iter.hasNext()) {
+			SelectionEventListener listener = (SelectionEventListener)
+				iter.next();
+			int mask = listener.getEventMask() & e.getMask();
+			// only send the event if it contains something that the
+			// listener is interested in (overlap != 0) 
+			if ((mask & e.getMask()) !=0 )
+				listener.selectionChanged(e);
+		}
  	}
 }
 

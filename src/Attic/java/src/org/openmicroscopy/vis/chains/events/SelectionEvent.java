@@ -52,13 +52,39 @@ import  java.util.EventObject;
 
 public class SelectionEvent extends EventObject {
 	
-	// store state so this event always has a source that is non-null
-	public SelectionEvent(SelectionState state) {
-		super(state);
+	public static final int SET_SELECTED_EXECUTION =1;
+	public static final int SET_SELECTED_CHAIN =   1 << 1;
+	public static final int SET_SELECTED_PROJECT = 1 <<2;
+	public static final int SET_ROLLOVER_PROJECT = 1 <<3;
+	public static final int SET_SELECTED_DATASET = 1<<4;
+	public static final int SET_ACTIVE_PROJECTS = 1 <<5;
+	public static final int SET_ACTIVE_DATASETS= 1<<6;
+	
+	public static final int SET_PROJECT =
+			SET_ACTIVE_DATASETS | SET_SELECTED_DATASET | SET_ACTIVE_PROJECTS |
+			SET_SELECTED_PROJECT;
+	public static final int SET_CHAIN = SET_PROJECT | SET_SELECTED_CHAIN;
 		
+		
+	
+		
+	private int mask =0;
+	// store state so this event always has a source that is non-null
+	
+	public SelectionEvent(SelectionState state) {
+		super(state);	
+	}
+	
+	public SelectionEvent(SelectionState state,int mask) {
+		super(state);
+		this.mask = mask;	
 	}
 	
 	public SelectionState getSelectionState() {
 		return (SelectionState) getSource();
+	}
+	
+	public int getMask() {
+		return mask;
 	}
 }
