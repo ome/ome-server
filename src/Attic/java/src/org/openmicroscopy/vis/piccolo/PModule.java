@@ -47,6 +47,7 @@ import org.openmicroscopy.vis.ome.ModuleInfo;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PPaintContext;
+import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
 import java.awt.geom.RoundRectangle2D;
@@ -72,7 +73,7 @@ import java.util.ArrayList;
  * @since OME2.0
  */
 
-public class PModule extends PPath {
+public class PModule extends PPath implements PBufferedNode {
 	
 	// Some static constants for convenience.
 	
@@ -84,7 +85,7 @@ public class PModule extends PPath {
 	private static final float NAME_SPACING=15.0f;
 	private static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
-	private static final float SCALE_THRESHOLD=0.5f;
+	private static final float SCALE_THRESHOLD=1.0f;
 	
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
@@ -92,7 +93,7 @@ public class PModule extends PPath {
 	
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(3.0f); 
 	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
-
+ 
 	private ModuleInfo info;
 	
 	// the Rectangle with the bounds of the enclosing border
@@ -100,6 +101,8 @@ public class PModule extends PPath {
 	
 	// The node contiaining the module name
 	private PText name;
+	// and a version for semantic zooming
+	private PText zoomName;
 	 
 	private float height;
 	private float width=0;
@@ -134,7 +137,7 @@ public class PModule extends PPath {
 		name = new PText(module.getName());
 		name.setFont(NAME_FONT);
 		addChild(name);
-		name.setPickable(false);
+		
 		name.setOffset(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET);
 		
 		// calculate starting height for parameters.
@@ -153,11 +156,29 @@ public class PModule extends PPath {
 		rect = 
 			new RoundRectangle2D.Float(0f,0f,width,height,
 					DEFAULT_ARC_WIDTH,DEFAULT_ARC_HEIGHT);
+					
 		setPathTo(rect);
 		setPaint(DEFAULT_FILL);
 		setStrokePaint(DEFAULT_COLOR);
 		setStroke(DEFAULT_STROKE);
+		
+		//zoomname.
+		zoomName = new PText(module.getName());
+		zoomName.setFont(NAME_FONT);
+		zoomName.setPickable(false);
+		zoomName.setConstrainWidthToTextWidth(false);
+		zoomName.setScale(2);
+		double zwidth = (width-2*NAME_LABEL_OFFSET)/2;
+		double zheight = (height-2*NAME_LABEL_OFFSET)/2;
+		zoomName.setBounds(new PBounds(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET,
+			 zwidth,zheight));
+		addChild(zoomName);
+		zoomName.setVisible(false);
+		 
+		 
 		setOffset(x,y);
+		
+		
 	}
 	
 	/** 
@@ -261,10 +282,16 @@ public class PModule extends PPath {
 	public void paint(PPaintContext aPaintContext) {
 		double s = aPaintContext.getScale();
 	
-		if (s < SCALE_THRESHOLD)
+		if (s < SCALE_THRESHOLD) {
 			labelNodes.setVisible(false);
-		else
+			name.setVisible(false);
+			zoomName.setVisible(true);
+		}
+		else {
+			name.setVisible(true);
 			labelNodes.setVisible(true);
+			zoomName.setVisible(false);
+		} 
 		super.paint(aPaintContext);
 	} 
 	
@@ -353,4 +380,12 @@ public class PModule extends PPath {
 			m.setHighlighted(v);
 		}
 	}	
+
+	public PBounds getBufferedBounds() {
+		PBounds b = getFullBoundsReference();
+		return new PBounds(b.getX()-PConstants.BORDER,
+			b.getY()-PConstants.BORDER,
+			b.getWidth()+2*PConstants.BORDER,
+			b.getHeight()+2*PConstants.BORDER);
+	}
 }
