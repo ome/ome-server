@@ -176,10 +176,8 @@ sub format_image{
 	my $owner=$factory->loadAttribute("Experimenter",$ownerID);
 	$summary.=$htmlFormat->formatImage($image);
 	my $imID=$image->id();
-	my $sid = $self->Session()->SessionKey();
 
-
-	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imID&sid=$sid align=\"bottom\" border=0></a>";
+	my $thumbnail="<a href=\"#\" onClick=\"return openPopUpImage($imID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=$imID align=\"bottom\" border=0></a>";
 	$summary.=$thumbnail;
 	$summary.=$htmlFormat->buttonControl($image,$userID,$owner,$bool,"image");
 	return $summary;
