@@ -333,10 +333,13 @@ sub getDisplayOptions {
     my $factory = $session->Factory();
     my $theT    = 0;
 
+	# Try to load display options
 	my $displayOptions    = $factory->findAttribute( 'DisplayOptions', {
 		Pixels => $pixels_attr } );
 	return $displayOptions if $displayOptions;
 	
+	
+	# None were found. Make default
     my $image   = $pixels_attr->image();
     my $pixels_data = $proto->loadPixels( $pixels_attr );
 	my %displayData = (
@@ -357,22 +360,25 @@ sub getDisplayOptions {
 	$displayData{RedChannelOn} = 1;
 	$channelIndex = 0;
 	$displayChannelData{ ChannelNumber } = $channelIndex;
-	$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
-	$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+	$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+	$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
 	$displayChannelData{ Gamma } = 1.0;
 	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	$displayData{ RedChannel } = $displayChannel;
 
 	# Gray Channel
 	$displayData{ GreyChannel } = $displayChannel;
+	if( $pixels_attr->SizeC == 1 ) {
+		$displayData{ DisplayRGB } = 0;
+	}
 	
 	# Green Channel
 	if( $pixels_attr->SizeC > 1 ) {
 		$displayData{GreenChannelOn} = 1;
 		$channelIndex = 1;
 		$displayChannelData{ ChannelNumber } = $channelIndex;
-		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
-		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
 		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
@@ -386,8 +392,8 @@ sub getDisplayOptions {
 		$displayData{BlueChannelOn} = 1;
 		$channelIndex = 2;
 		$displayChannelData{ ChannelNumber } = $channelIndex;
-		$displayChannelData{ BlackLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean};
-		$displayChannelData{ WhiteLevel } = $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma};
+		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
 		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
