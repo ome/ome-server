@@ -61,13 +61,7 @@ use base qw(OME::Web::RenderData);
 # Class data
 my %_fieldLabels = (
 	'id'             => "ID",
-	'name'           => "Name", 
 	'default_pixels' => "Default Pixels", 
-	'description'    => "Description", 
-	'owner'          => "Owner",
-	'group'          => "Group",
-	'created'        => "Created",
-	'inserted'       => "Inserted",
 	'image_guid'     => "GUID"
 );
 my @_fieldNames = ('id', 'default_pixels', 'name', 'description', 'owner', 'group', 'created');
@@ -75,29 +69,43 @@ my @_allFieldNames = (@_fieldNames, 'inserted', 'image_guid');
 
 
 =head2 getFieldNames
+
 Overrides default behavior, uses class data to return labels
+
 =cut
+
 sub getFieldNames { return @_fieldNames if wantarray; return \@_fieldNames; }
 
 =head2 getAllFieldNames
+
 Overrides default behavior, uses class data to return labels
+
 =cut
+
 sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
 
 =head2 getFieldLabels
+
 Overrides default behavior, uses class data to return labels
+
 =cut
+
 sub getFieldLabels {
 	my ($proto,$type,$fieldNames) = @_;
 	$fieldNames = $proto->getFieldNames() unless $fieldNames;
-	my %fieldLabels = map{ $_ => $_fieldLabels{$_} } @$fieldNames;
+	my %fieldLabels = $proto->SUPER::getFieldLabels( $type, $fieldNames, 1 );
+	( exists $_fieldLabels{$_} and $fieldLabels{ $_ } = $_fieldLabels{$_} )
+		foreach( @$fieldNames );
 	return %fieldLabels if wantarray;
 	return \%fieldLabels;
 }
 
 =head2 getRefToObject
+
 Overrides default behavior, html format uses a thumbnail for the link.
+
 =cut
+
 sub getRefToObject {
 	my ($proto,$obj,$format) = @_;
 	
