@@ -185,9 +185,7 @@ sub useRemoteServer {
     die "Could not create a URI for the remote image server"
       unless defined($url) && UNIVERSAL::isa($url,"URI");
 
-    print STDERR ref($url)," $url\n";
-
-    print STDERR "Remote server\n";
+    print STDERR "Using Remote server\n";
     $local_server = 0;
     $server_path = $url;
 }
@@ -499,7 +497,7 @@ sub newPixels {
 	    $bytesPerPixel,$isSigned,$isFloat) =
 	    OME::Image::Server->getPixelsInfo($pixelsID);
 
-Returns the properties of a previously uploaded pixels file.
+Returns the properties of a previously created pixels file.
 
 =cut
 
@@ -1012,12 +1010,14 @@ sub readFile {
             # Calculate the bounds of a cache block, centered on the
             # requested region.  Ensure that is does not go past the end of
             # the file.
+            use integer;
             my $extra = CACHE_SIZE-$length;
             my $real_offset = $offset-($extra/2);
             $real_offset = 0 if $real_offset < 0;
             my $real_end = $real_offset+CACHE_SIZE;
             $real_end = $file_size if $real_end > $file_size;
             my $real_size = $real_end-$real_offset;
+            no integer;
 
             my $data = $proto->__callOMEIS(Method => 'ReadFile',
                                            FileID => $fileID,
