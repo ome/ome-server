@@ -351,7 +351,7 @@ sub convertStack {
     my $fileID = $file->getFileID();
     my $pixelsID = $self->[PIXELS_ID];
     OME::Image::Server->convertStack($pixelsID,$c,$t,
-                                     $file,$offset,$bigEndian);
+                                     $fileID,$offset,$bigEndian);
 }
 
 =head2 convertPlane
@@ -385,7 +385,26 @@ sub convertPlane {
     my $fileID = $file->getFileID();
     my $pixelsID = $self->[PIXELS_ID];
     OME::Image::Server->convertPlane($pixelsID,$z,$c,$t,
-                                     $file,$offset,$bigEndian);
+                                     $fileID,$offset,$bigEndian);
+}
+
+=head2 convertPlaneFromTIFF
+
+	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t);
+
+Fills in a plane in the pixels file from another file, which is
+assumed to be in the TIFF format.  The TIFF is assumed to contain
+exactly one plane of pixels.
+
+=cut
+
+sub convertPlaneFromTIFF {
+    my ($self,$tiffFile,$z,$c,$t) = @_;
+    die "Can only convert TIFF's which are on the image server"
+      unless UNIVERSAL::isa($tiffFile,"OME::Image::Server::File");
+    my $fileID = $tiffFile->getFileID();
+    my $pixelsID = $self->[PIXELS_ID];
+    OME::Image::Server->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID);
 }
 
 =head2 convertRows
@@ -424,7 +443,7 @@ sub convertRows {
     my $fileID = $file->getFileID();
     my $pixelsID = $self->[PIXELS_ID];
     OME::Image::Server->convertRows($pixelsID,$y,$numRows,$z,$c,$t,
-                                    $file,$offset,$bigEndian);
+                                    $fileID,$offset,$bigEndian);
 }
 
 =head2 finishPixels
