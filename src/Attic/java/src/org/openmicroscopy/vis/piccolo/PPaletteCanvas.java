@@ -239,7 +239,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		//decorate the category with a box.		
 		PCategoryBox box = decorateCategory(parent);
 		displayCategoryName(box,cat.getName());
-		ModuleTreeNode catNode = new ModuleTreeNode(cat.getName(),cat.getID());
+		ModuleTreeNode catNode = new ModuleTreeNode(cat); // was .getName(),cat.getID());
 		treeParent.add(catNode);
 
 		// display the module in the box.
@@ -311,7 +311,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		box.addChild(mNode);
 		mNode.setOffset(0,0);
 		
-		ModuleTreeNode modNode = new ModuleTreeNode(mod.getName(),mod.getID());
+		ModuleTreeNode modNode = new ModuleTreeNode(mod); // was .getName(),mod.getID());
 		catNode.add(modNode);
 	}	
 
@@ -323,8 +323,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 	 * Highlight a module, based on an event from the module {@link JTree}
 	 * @param id the module id
 	 */
-	public void highlightModule(int id) {
-		handler.highlightModules(modules.getModule(id));	
+	public void highlightModule(CModule module) {
+		handler.highlightModules(module); // was modules.getModule(id);modules.getModule(module));	
 	}
 	
 	public void unhighlightModules() {
