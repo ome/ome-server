@@ -195,7 +195,6 @@ sub get_db_version {
     my $dbh;
     my $sql;
     my $retval;
-    my $createlang = "createlang";
 
     print "Checking database\n";
 
@@ -326,6 +325,11 @@ sub create_database {
     my $retval;
     my $createlang = "createlang";
 
+    # Set the PGSQL lang
+    $retval = which ("$createlang");
+    $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
+	$createlang = $retval;
+
     print "Creating database\n";
 
     $dbh = DBI->connect("dbi:Pg:dbname=template1")
@@ -354,11 +358,6 @@ sub create_database {
     }) or croak $dbh->errstr();
 
     $dbh->disconnect();
-
-    # Set the PGSQL lang
-    $retval = which ("$createlang");
-   
-    $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
 	# Make this process euid root, and execute these things as the postgres user.
 	# It is often not enough to set euid - the actual UID has to be something
