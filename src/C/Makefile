@@ -9,7 +9,7 @@ DB_LIBS = -lpq
 MATH_LIBS = -lm
 LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
 DEFINES = -DDEBUG
-COMPILER_FLAGS = -Wall -g
+COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O2
 MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
@@ -100,10 +100,10 @@ cgrayce2:
 # I think they could be cleaned up, but I don't know how and don't have time now.
 # If anyone sees this, feel free to clean them up and erase this message.
 extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+	gcc $(CFLAGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
 
 insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
+	gcc $(CFALGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
