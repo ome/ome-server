@@ -136,51 +136,7 @@ sub importFile() {
 		
 		# 2do
 		# resolve external links
-=pod
-# this is old code that needs to be reworked. the downloader part mostly works, so i didn't want to scrap the whole thing
-		my @externalsXML = $root->getElementsByTagNameNS( $BinNS, "External" );
-		my $extCount = 0;
-		foreach my $externalXML (@externalsXML ) {
-			if( $externalXML->getAttribute( "SHA1" ) ) {
-				# Save external reference to local file
-				# This code nabbed from perlCheck.pl
-				my $localPath = $tmpDir."/".$extCount++.".ext";
-				my $href = $externalXML->getAttribute( "href" );
-				my $wget = 'curl';
-				my $error = `$wget -V 2>&1 1>/dev/null`;
-				if (not $error) {
-					print "\nDownloading $href using $wget...\n";
-					$error = system ("$wget --output $localPath -O $href 2>&1 1>/dev/null");
-				} else {
-					$wget = 'wget';
-					$error = `$wget -V 2>&1 1>/dev/null`;
-					if (not $error) {
-						print "\nDownloading $href using $wget...\n";
-						$error = system ("$wget -nv $href 2>&1 1>/dev/null -O $localPath");
-					}
-				}
-				die "Couldn't download $href" if $error != 0;
-				
-				# check calculated SHA1 against stated SHA1
-				my $statedSha1 = $externalXML->getAttribute( "SHA1" );
-				my $sha1 = getSha1( $localPath );
-				die "SHA1 (a digital signature) for the file specified in this element:\n".
-					$externalXML->toString()." does not match with the SHA1 calculated from that file.\n".
-					"Stated SHA1:     ".$statedSha1."\n".
-					"Calculated SHA1: ".$sha1."\n"
-					unless $sha1 eq $statedSha1;
-				
-				# update <External>'s href to the local file.
-				$externalXML->setAttribute( "href", $localPath );
-			} else {
-			# Handle <External>'s that used to be <BinData>'s
-				my $originalPath = $externalXML->getAttribute( "href" );
-				$externalXML->setAttribute( "href", $fileInfo{$originalPath}->{path} );
-				$externalXML->setAttribute( "SHA1", $fileInfo{$originalPath}->{sha1} );
-			}
-		}
-=cut
-		#
+
 		#######################################################################
 		# Process the Pixels:
 		# rewrite <Pixels> to ST format
