@@ -80,6 +80,9 @@ public class CompositingSettings
     private static final String[] LEVEL_BASES =
     { "fixed","mean","geomean" };
 
+    private static final float MIN_PGI = -4.0F;
+    private static final float MAX_PGI =  4.0F;
+
     /**
      * The index of the Z-slice to view.
      */
@@ -239,6 +242,35 @@ public class CompositingSettings
         super();
         this.theZ = theZ;
         this.theT = theT;
+    }
+
+    public static CompositingSettings
+    createDefaultPGISettings(int sizeZ, int sizeC, int sizeT)
+    {
+        if (sizeZ <= 0)
+            throw new IllegalArgumentException("Z size must be positive");
+        if (sizeC <= 0)
+            throw new IllegalArgumentException("C size must be positive");
+        if (sizeT <= 0)
+            throw new IllegalArgumentException("T size must be positive");
+
+        CompositingSettings cs = new CompositingSettings(sizeZ/2,sizeT/2);
+
+        cs.setLevelBasis(GEOMETRIC_MEAN);
+
+        if (sizeC == 1)
+        {
+            cs.activateGrayChannel(0,MIN_PGI,MAX_PGI,1.0F);
+        } else {
+            if (sizeC > 0)
+                cs.activateRedChannel(0,MIN_PGI,MAX_PGI,1.0F);
+            if (sizeC > 1)
+                cs.activateGreenChannel(0,MIN_PGI,MAX_PGI,1.0F);
+            if (sizeC > 2)
+                cs.activateBlueChannel(0,MIN_PGI,MAX_PGI,1.0F);
+        }
+
+        return cs;
     }
 
     /**
