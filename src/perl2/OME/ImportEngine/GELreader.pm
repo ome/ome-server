@@ -200,7 +200,6 @@ sub getGroups {
     my $self = shift;
     my $fref = shift;
     my $nmlen = scalar(keys %$fref);
-    my @inlist = @$fref;
     my @outlist;
 
     foreach my $key (keys %$fref) {
@@ -268,8 +267,15 @@ sub importGroup {
     $file->open('r');
 
     my $tags = readTiffIFD($file);
-    return undef
-	unless defined($tags);
+    if (!defined($tags)) {
+	$file->close();
+	return undef;
+    }
+
+    my $filename = $file->getFilename();
+    my $crtime = OME::ImportEngine::ImportCommon::__getFileSQLTimestamp($filename);
+
+    my $base = ($self->{super})->__nameOnly($filename);
 
     ($offsets_arr, $bytesize_arr) = getStrips($tags);
 
@@ -278,7 +284,7 @@ sub importGroup {
     $params->image_bytecounts($bytesize_arr);
     
     $params->fref($file);
-    $params->oname($file->getFilename());
+    $params->oname($filename);
     $params->endian($tags->{__Endian});
     my $xref = $params->{xml_hash};
     $xref->{'RowsPerStrip'} = $tags->{TAGS->{RowsPerStrip}}->[0];
@@ -312,7 +318,7 @@ sub importGroup {
 		unless ($status eq "");
 	}
 
-        $image = ($self->{super})->__newImage($file->getFilename());
+        $image = ($self->{super})->__newImage($base,$crtime);
 	$self->{image} = $image;
 
 
