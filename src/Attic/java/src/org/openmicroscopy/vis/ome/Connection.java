@@ -355,8 +355,13 @@ public class Connection {
 		Attribute user = session.getUser();
 		HashMap crit = new HashMap();
 		crit.put("owner_id",user);
-		List projects = factory.findObjects("OME::Project",crit);
-		return projects;
+		List projects = factory.findObjects("OME::Project",crit); 
+		Iterator iter = projects.iterator();
+		while (iter.hasNext()) {	
+			CProject p = (CProject) iter.next();
+			p.loadDatasets();
+		}
+		return projects;  
 	}
 	
 	public Collection getDatasetsForUser() {
