@@ -42,8 +42,13 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.events.ChainSelectionEvent;
+import org.openmicroscopy.vis.ome.events.ChainSelectionEventListener;
+import org.openmicroscopy.vis.ome.CChain;
+import org.openmicroscopy.vis.chains.Controller;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
+import javax.swing.event.EventListenerList;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -55,70 +60,49 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PChainLibraryEventHandler extends  PModuleZoomEventHandler {
+public class PChainLibraryEventHandler extends  PGenericZoomEventHandler {
 
 	private PChainLibraryCanvas canvas;
 	
 	private int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
 	private PModule lastEntered;
+
+	private EventListenerList chainListeners = new EventListenerList();
 	
+	private CChain selectedChain;
+			
 	/**
 	 * A flag indicating that the previous event was a popup
 	 * 
 	 */
 	private static boolean postPopup = false;
 	
-	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
+	public PChainLibraryEventHandler(PChainLibraryCanvas canvas,
+		Controller controller) {
 		super(canvas);
-		this.canvas = canvas;	
+		this.canvas = canvas;
+		this.addChainSelectionEventListener(controller.getControlPanel());	
 	}
 	
-	/**
-	 * When we click on the {@link PChainLibraryCanvas}, there are four 
-	 * possibilities:
-	 *  1) The post popup flag is set. In this case, the event is in artifact
-	 * 		and should be ignored.
-	 * 	2) we clicked on the camera. In that case, zoom to center 
-	 * 		the contents of the canvas
-	 *  3) We clicked on a {@link PBufferedNode}. More specifically, 
-	 * 	    a {@link PModule} or a {@link PChainBox}. In this case, zoom
-	 * 		to center the node.
-	 *  4) We right clicked or control-clicked. Handle this like a popup. 
-	 */
-	/*public void mouseClicked(PInputEvent e) {
-		
-		if (postPopup == true) {
-			postPopup = false;
-			e.setHandled(true);
-			return;
+	
+	public void mouseClicked(PInputEvent e) {
+		super.mouseClicked(e);
+		PNode n = e.getPickedNode();
+		if (n instanceof PChainBox) { 
+			PChainBox cb = (PChainBox) n;
+			selectedChain=cb.getChain();
+			fireSelectionEvent();
+			
 		}
-		PNode node = e.getPickedNode();
-		int mask = e.getModifiers() & allButtonMask;
-		if (mask == MouseEvent.BUTTON1_MASK &&
-			e.getClickCount() == 1) {
-			if (node instanceof PBufferedNode) {
-				PBufferedNode cBox = (PBufferedNode) node;
-				PBounds b = cBox.getBufferedBounds();
-				PCamera camera = canvas.getCamera();
-				// animate
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-				e.setHandled(true); 
-			}
-			else if (node instanceof PCamera) {
-				PBounds b = canvas.getBufferedBounds();
-				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-				e.setHandled(true);
-			}
-			else
-				super.mouseClicked(e);
+		else if (n instanceof PModule) {
+			PChainBox cb = (PChainBox) n.getParent();
+			selectedChain = cb.getChain();
+			fireSelectionEvent(); 
 		}
-		else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK) ==1)
-			handlePopup(e);
-		else
-			super.mouseClicked(e);
-	} */
+		else 
+			fireDeselectionEvent();
+	} 
 	
 	/**
 	 * When the user presses the mouse on a {@link PChainBox}, tell the
@@ -149,4 +133,43 @@ public class PChainLibraryEventHandler extends  PModuleZoomEventHandler {
 			canvas.clearChainSelected();
 	}
 	
+	
+	
+	public void fireSelectionEvent() {
+		ChainSelectionEvent chainEvent = new 
+			ChainSelectionEvent(selectedChain,ChainSelectionEvent.SELECTED);
+		fireChainSelectionEvent(chainEvent);
+	}
+	
+	public void fireDeselectionEvent() {
+		if (selectedChain == null) 
+			return;
+		ChainSelectionEvent chainEvent = new 
+			ChainSelectionEvent(selectedChain,ChainSelectionEvent.DESELECTED);
+		fireChainSelectionEvent(chainEvent);
+		selectedChain = null;
+	}
+	
+		
+	public void addChainSelectionEventListener(ChainSelectionEventListener
+			listener) {
+		chainListeners.add(ChainSelectionEventListener.class,
+				listener);
+	}
+	
+		public void removeChainSelectionEventListener(ChainSelectionEventListener
+			listener) {
+				chainListeners.remove(ChainSelectionEventListener.class,
+					listener);
+		}
+	
+		public void fireChainSelectionEvent(ChainSelectionEvent e) {
+			Object[] listeners=chainListeners.getListenerList();
+			for (int i = listeners.length-2; i >=0; i-=2) {
+				if (listeners[i] == ChainSelectionEventListener.class) {
+					((ChainSelectionEventListener) listeners[i+1]).
+						chainSelectionChanged(e);
+				}
+			}
+		}
 }
