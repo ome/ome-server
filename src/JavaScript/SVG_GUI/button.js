@@ -70,11 +70,16 @@ button.prototype.fadeOutText =
 			onText = svg tags to overwrite default 'on' apperance
 			offText = svg tags to overwrite default 'off' apperance
 			highlightText = svg tags to overwrite default highlight
+		Button notes:
+			If onText if specified and offText isn't, then the button will
+			not change appearance.
 		Animation notes:
 			onText and offText can (optionally) include animations to 
 			override the default animation of fading in and out. The 
 			first animation should turn	it on, the second should turn it off.
 			offText should initially be in it's "off" state.
+			Animations will only be used if there is both an on and an off
+			button.
 
 	tested
 
@@ -96,16 +101,20 @@ function button(x, y, callback, onText, offText, highlightText) {
 button.prototype.setState = function(val) {
 	if(val) {
 		this.isOn = true;
-		if(this.nodes.on) {
+		// have we been initialized? does on have an animation?
+		if(this.nodes.on && this.onAnimOn) {
 			this.onAnimOn.beginElement();
-			this.offAnimOff.beginElement();
+			if(this.offAnimOff)
+				this.offAnimOff.beginElement();
 		}
 	}
 	else {
 		this.isOn = false;
-		if(this.nodes.on) {
+		// have we been initialized? does on have an animation?
+		if(this.nodes.on && this.onAnimOff) {
 			this.onAnimOff.beginElement();
-			this.offAnimOn.beginElement();
+			if(this.offAnimOn)
+				this.offAnimOn.beginElement();
 		}
 	}
 	if(this.callback)
@@ -121,7 +130,7 @@ button.prototype.setState = function(val) {
 	
 *****/
 button.prototype.setHighlight = function(val) {
-	if(val)
+	if(val && this.highlightText != null)
 		this.HIGHLIGHT_OFF = false;
 	else
 		this.HIGHLIGHT_OFF = true;
@@ -168,11 +177,15 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 	// override default appearances
 	if(onText != null)
 		this.onText = onText;
+
 	if(offText != null)
 		this.offText = offText;
+	else if( onText!=null )
+		this.offText = null;
+
 	if(highlightText != null)
 		this.highlightText = highlightText;
-	else if( onText!=null || offText!=null )
+	else if( onText!=null )
 		this.highlightText = null;
 }
 
@@ -194,38 +207,44 @@ button.prototype.buildSVG = function() {
 	this.nodes.root = root;
 	this.nodes.parent.appendChild(root);
 
-	// create off appearance
-	root.appendChild( this.textToSVG(this.offText) );
-	this.nodes.off = root.lastChild;
-	switches = findAnimationsInNode( this.nodes.off );
-	if(switches.length == 2) {
-		this.offAnimOn = switches.item(0);
-		this.offAnimOff = switches.item(1);
-	}
-	else {
-		this.nodes.off.appendChild( this.textToSVG(this.fadeInText) );
-		this.offAnimOn = this.nodes.off.lastChild;
-		this.nodes.off.appendChild( this.textToSVG(this.fadeOutText) );
-		this.offAnimOff = this.nodes.off.lastChild;
+	// create off appearance. It goes on the bottom.
+	if(this.offText) {
+		root.appendChild( this.textToSVG(this.offText) );
+		this.nodes.off = root.lastChild;
+		switches = findAnimationsInNode( this.nodes.off );
+		if(switches.length == 2) {
+			this.offAnimOn = switches.item(0);
+			this.offAnimOff = switches.item(1);
+		}
+		else {
+			this.nodes.off.appendChild( this.textToSVG(this.fadeInText) );
+			this.offAnimOn = this.nodes.off.lastChild;
+			this.nodes.off.appendChild( this.textToSVG(this.fadeOutText) );
+			this.offAnimOff = this.nodes.off.lastChild;
+		}
 	}
 
-	// create on appearance
+	// create on appearance. It goes in the middle.
 	root.appendChild( this.textToSVG(this.onText) );
 	this.nodes.on = root.lastChild;
-	switches = findAnimationsInNode( this.nodes.on );
-	if(switches.length == 2) {
-		this.onAnimOn = switches.item(0);
-		this.onAnimOff = switches.item(1);
-	}
-	else {
-		this.nodes.on.appendChild( this.textToSVG(this.fadeInText) );
-		this.onAnimOn = this.nodes.on.lastChild;
-		this.nodes.on.appendChild( this.textToSVG(this.fadeOutText) );
-		this.onAnimOff = this.nodes.on.lastChild;
+	// we only need animations if there is also an off apperance
+	if(this.offText) {
+		switches = findAnimationsInNode( this.nodes.on );
+		if(switches.length == 2) {
+			this.onAnimOn = switches.item(0);
+			this.onAnimOff = switches.item(1);
+		}
+		else {
+			this.nodes.on.appendChild( this.textToSVG(this.fadeInText) );
+			this.onAnimOn = this.nodes.on.lastChild;
+			this.nodes.on.appendChild( this.textToSVG(this.fadeOutText) );
+			this.onAnimOff = this.nodes.on.lastChild;
+		}
 	}
 
-	// create highlight
+	// create highlight. It goes on top.
 	if(this.highlightText) {
+		this.HIGHLIGHT_OFF = false;
 		root.appendChild( this.textToSVG(this.highlightText) );
 		this.nodes.highlight = root.lastChild;
 		this.nodes.highlight.appendChild( this.textToSVG(this.onSwitchText) );
@@ -234,6 +253,8 @@ button.prototype.buildSVG = function() {
 		this.highlightAnimOff = this.nodes.highlight.lastChild;
 		this.nodes.highlight.setAttribute("opacity",0);
 	}
+	else
+		this.HIGHLIGHT_OFF = true;
 	
 }
 
@@ -252,7 +273,8 @@ button.prototype.addEventListeners = function() {
 	}
 	else {
 		this.nodes.on.addEventListener("click", this, false);
-		this.nodes.off.addEventListener("click", this, false);
+		if(this.offText)
+			this.nodes.off.addEventListener("click", this, false);
 	}
 }
 
