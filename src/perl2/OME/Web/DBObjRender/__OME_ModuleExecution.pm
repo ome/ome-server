@@ -109,15 +109,12 @@ sub _renderData {
 
 =head2 _getName
 
-returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp 
+returns module name & abbreviated timestamp 
 
 =cut
 
 sub _getName {
 	my ($proto, $obj, $options) = @_;
-
-	$options->{max_text_length} = 33
-		unless exists $options->{max_text_length};
 
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)/
@@ -139,12 +136,16 @@ sub _getName {
 			12 => 'Dec'
 		);
 		my $name = $obj->module()->name();
-		unless( not defined $options->{max_text_length} ) {
+		# don't add the date if there is not plenth of room for it and the name
+		if( exists $options->{max_text_length} && $options->{max_text_length} < 30 ) {
+			my $len = $options->{max_text_length};
+			$name =~ s/^(.{$len})....*$/$1\.\.\./;
+			return $name;
+		} elsif( exists $options->{max_text_length} ) {
 			my $len = $options->{max_text_length} - 23;
 			$name =~ s/^(.{$len})....*$/$1\.\.\./;
 		}
-		my $short_year = substr( $yr, 2 );
-		return $name." ".$month_abbr{ $mo }." $dy, $short_year $hr:$min";
+		return $name." ".$month_abbr{$mo}." $dy, $yr $hr:$min";
 	}
 
 	return $obj->id();
