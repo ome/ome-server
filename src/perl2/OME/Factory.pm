@@ -653,7 +653,10 @@ sub findObjectsLike {
     }
 
     foreach my $key (keys %$criteria) {
-        $criteria->{$key} = ['LIKE',$criteria->{$key}];
+        # Only add an explicit LIKE operator if the caller didn't
+        # specify one on their own.
+        $criteria->{$key} = ['LIKE',$criteria->{$key}]
+          if (ref($criteria->{$key}) ne 'ARRAY');
     }
 
     if (defined $columns_wanted) {
