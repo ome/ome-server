@@ -1,7 +1,13 @@
 
 package OME;
 use strict;
-our $VERSION = '2.0'
+our $VERSION = '2.0';
+
+use base qw(Class::Data::Inheritable);
+# currently the 'Session' class variable is set by OME::SessionManager and erased by OME::Web::Logout
+# Web, DBobject, and Factory access it in their Session accessor methods
+__PACKAGE__->mk_classdata('Session');
+
 
 ########################################### main pod documentation begin ##
 # Below is the stub of documentation for your module. You better edit it!
