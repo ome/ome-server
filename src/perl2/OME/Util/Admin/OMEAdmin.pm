@@ -41,7 +41,7 @@ use base qw(OME::Util::Commands);
 
 use OME::Util::UserAdmin;
 use OME::Util::GroupAdmin;
-
+use OME::Util::dbAdmin;
 sub getCommands {
     return
       {
