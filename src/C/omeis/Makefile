@@ -12,7 +12,7 @@ endif
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
-CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-format-attribute -Wmissing-noreturn -Wundef -Wendif-labels -std=c99
+CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-format-attribute -Wmissing-noreturn -Wundef -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
 OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
 
