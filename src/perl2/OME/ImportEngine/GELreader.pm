@@ -77,7 +77,6 @@ use File::Basename;
 use Log::Agent;
 use Carp;
 use OME::ImportEngine::Params;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
 use OME::ImportExport::Repacker::Repacker;
 use base qw(OME::ImportEngine::AbstractFormat);
@@ -345,9 +344,9 @@ sub importGroup {
     $file->close();
 
     if ($status eq "") {
-	$self->__storeInputFileInfo($session, \@finfo);
+	$self->__storeInputFileInfo(\@finfo);
 	# Store info about each input channel (wavelength).
-	storeChannelInfo($self, $session);
+	$self->storeChannelInfo();
     } else {
 	die "$status";
     }
@@ -356,7 +355,7 @@ sub importGroup {
     $instrInfo[0] = $fileunits;
     $instrInfo[1] = $manufacturer;
     $self->__storeInstrumemtInfo($image, @instrInfo);
-	$self-> __storeDisplayOptions ($session);
+	$self->__storeDisplayOptions();
     return $image;
 
 }
@@ -551,7 +550,7 @@ sub getManu {
 }
 
 sub storeChannelInfo {
-    my ($self, $session) = @_;
+    my ($self) = @_;
     my @channelInfo;
     # Store info about each input channel (wavelength)
     push @channelInfo, {chnlNumber => 0,
@@ -559,12 +558,13 @@ sub storeChannelInfo {
 			EmWave     => undef,
 			Fluor      => undef,
 			NDfilter   => undef};
-    $self->__storeChannelInfo($session, 1, @channelInfo);
+    $self->__storeChannelInfo(1, @channelInfo);
 }
 
 
 sub getSHA1 {
-    return(getCommonSHA1(@_));
+	my $self = shift;
+    return $self->__getFileSHA1(@_);
 }
 
 

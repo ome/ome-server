@@ -481,6 +481,8 @@ sub __verifyTiff {
     # first IFD.
 
     eval {
+		return undef
+			if $file->getLength() < 8;
         $file->setCurrentPosition(0,0);
         $buf = $file->readData(8);
         @buf = unpack('CCvV',$buf);

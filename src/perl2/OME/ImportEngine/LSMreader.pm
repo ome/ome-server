@@ -39,7 +39,6 @@ package OME::ImportEngine::LSMreader;
 use strict;
 use OME;
 our $VERSION = $OME::VERSION;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
 use OME::Tasks::PixelsManager;
@@ -194,7 +193,7 @@ sub importGroup
     }
     
     # Now, write the metadata
-    writeMetadata($session, $params, $image);
+    $self->writeMetadata($params, $image);
     
     # pack together & store info in input file
     my @finfo;
@@ -230,17 +229,17 @@ sub importGroup
     	for ($t = 0; $t < $maxT; $t++) {
 			for ($z = 0; $z < $maxZ; $z++) {
 				$pix->convertPlane($file,$offset,$z,$c,$t,$params->endian == 1);
-				doSliceCallback($callback);
+				$self->doSliceCallback($callback);
 				$offset += $jump;
 			}
 		}
     }
 
     OME::Tasks::PixelsManager -> finishPixels( $pix, $self->{pixels} );
-	$self-> __storeDisplayOptions ($session);
+	$self->__storeDisplayOptions();
 
     if ($status eq "") {
-		$self->__storeInputFileInfo($session, \@finfo);
+		$self->__storeInputFileInfo(\@finfo);
 		return $image;
     } else {
 		($self->{super})->__destroyRepositoryFile($pixels, $pix);
@@ -304,14 +303,14 @@ sub readPrivateTags
 }
 
 # Writes the metadata that was extracted from the image
-# Usage: writeMetadata( $session, $params, $image );
+# Usage: $self->writeMetadata( $params, $image );
 sub writeMetadata
 {
-	my ($session, $params, $image) = @_;
+	my ($self, $params, $image) = @_;
 	my $xref = $params->{ xml_hash };
 	
 	my $image_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
-	my $factory = $session->Factory();
+	my $factory = $self->Session->Factory();
 	$factory->newAttribute( 'Dimensions', $image, $image_mex, {
 			PixelSizeX => $xref->{ 'Image.PixelSizeX' },
 			PixelSizeY => $xref->{ 'Image.PixelSizeY' },

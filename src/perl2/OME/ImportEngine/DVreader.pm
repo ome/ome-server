@@ -77,7 +77,6 @@ use OME::Image::Pix;
 use OME::Tasks::PixelsManager;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportExport::Repacker::Repacker;
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
@@ -356,8 +355,8 @@ sub importGroup {
 
     $file->close();
 
-    storeMetadata($self, $session, $params);
-	$self-> __storeDisplayOptions ($session);
+    $self->storeMetadata($params);
+	$self->__storeDisplayOptions();
     return $image;
 
 }
@@ -488,7 +487,7 @@ sub readPixels {
                                        $big_endian);
                 };
                 return $@ if $@;
-		doSliceCallback($callback);
+		$self->doSliceCallback($callback);
             }
         }
     }
@@ -506,19 +505,19 @@ sub readPixels {
 
 
 sub storeMetadata {
-    my ($self, $session, $params) = @_;
+    my ($self, $params) = @_;
 
     # store channel (wavelength) metadata
-    storeChannelInfo($self, $session, $params);
+    $self->storeChannelInfo($params);
 
     # run post-import analysis (statistics)
-    #doImportAnalysis($self, $params);
+    #$self->doImportAnalysis($params);
 
     # store info about the input files
-    storeInputFileInfo($self, $session);
+    $self->storeInputFileInfo();
 
     # store input file dimension info
-    storeInputPixelDimension($self, $session, $params);
+    $self->storeInputPixelDimension($params);
 
 }
 
@@ -526,7 +525,7 @@ sub storeMetadata {
 # Make array of per wavelength info.
 # Feed it to helper routine to be put in DB
 sub storeChannelInfo {
-    my ($self, $session, $params) = @_;
+    my ($self, $params) = @_;
     my $xml_hash = $params->xml_hash();
     my @channelInfo;
     my $numWaves = $self->{NumWaves};
@@ -540,28 +539,28 @@ sub storeChannelInfo {
 			    NDfilter   => undef};
     }
 
-    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
+    $self->__storeChannelInfo($numWaves, @channelInfo);
 }
 
 
 # Make array of info on input files. Feed it to helper
 # routine to be put in DB tbl for image files XYZWT.
 sub storeInputFileInfo {
-    my ($self, $session) = @_;
+    my ($self) = @_;
 
     push my @finfo, $self->{in_files};
-    $self->__storeInputFileInfo($session, \@finfo);
+    $self->__storeInputFileInfo(\@finfo);
 }
 
 # Make an array of input file's pizel size. Feed it to helper
 # routine to be put in image file pixel dimension DB table.
 sub storeInputPixelDimension {
-    my ($self, $session, $params) = @_;
+    my ($self, $params) = @_;
     my $xml_hash = $params->xml_hash();
     my $pixelInfo = [$xml_hash->{'Image.PixelSizeX'},
 		       $xml_hash->{'Image.PixelSizeY'},
 		       $xml_hash->{'Image.PixelSizeZ'}];
-    $self->__storePixelDimensionInfo($session, $pixelInfo);
+    $self->__storePixelDimensionInfo($pixelInfo);
 }
 
 

@@ -88,7 +88,6 @@ use strict;
 use File::Basename;
 use Log::Agent;
 use OME::ImportEngine::Params;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
 use base qw(OME::ImportEngine::AbstractFormat);
 
@@ -373,7 +372,7 @@ sub importGroup {
 				$pix->convertPlaneFromTIFF($file, 0, 0, 0);
 			};
 			die "RGB convertPlaneFromTIFF failed: $@\n" if $@;
-			doSliceCallback($callback);
+			$self->doSliceCallback($callback);
 			for (my $i = 0; $i < 3; $i++) {
 				push @channelInfo, {chnlNumber => $i,
 					ExWave     => undef,
@@ -404,7 +403,7 @@ sub importGroup {
 					};
 					
 					die "convertPlaneFromTIFF failed: $@\n" if $@;
-					doSliceCallback($callback);
+					$self->doSliceCallback($callback);
 					$xref->{ $file }->{'Image.SizeX'} = $sizeX;
 					$xref->{ $file }->{'Image.SizeY'} = $sizeY;
 					$xref->{ $file }->{'Data.BitsPerPixel'} = $bpp;
@@ -433,15 +432,15 @@ sub importGroup {
 	}
 	OME::Tasks::PixelsManager->finishPixels( $pix, $pixels );
 	
-	$self->__storeInputFileInfo($session,\@finfo);
+	$self->__storeInputFileInfo(\@finfo);
 	
 	# Store info about each input channel (wavelength)
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
-		$self-> __storeChannelInfoRGB ($session, scalar(@$groupList)*3, @channelInfo);
-		$self-> __storeDisplayOptions ($session, {min => 0, max => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1});
+		$self->__storeChannelInfoRGB(scalar(@$groupList)*3, @channelInfo);
+		$self->__storeDisplayOptions ({min => 0, max => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1});
 	} else {
-		$self-> __storeChannelInfo ($session, scalar(@$groupList), @channelInfo);
-		$self-> __storeDisplayOptions ($session);
+		$self->__storeChannelInfo (scalar(@$groupList), @channelInfo);
+		$self->__storeDisplayOptions ();
 	}
 	return $image;
 }

@@ -66,7 +66,6 @@ our $VERSION = $OME::VERSION;
 use OME::Tasks::ImportManager;
 use OME::Tasks::PixelsManager;
 
-use fields qw(_session _module_execution);
 use File::Basename;
 use Log::Agent;
 
@@ -510,6 +509,349 @@ sub __touchOriginalFile {
       createOriginalFileAttribute($file,$format,$file_mex);
 }
 
+=head2 __storeChannelInfo
+
+    $self->__storeChannelInfo($numWaves, @channelInfo);
+
+Stores metadata about each channel (wavelength) in the image. Each
+channel may have measures for excitation wavelength, emission wavelength,
+flourescense, and filter. Each channel is assigned a number starting at 0,
+corresponding to the sequence in which the channels were illuminated.
+
+Each physical channel becomes a single logical channel.
+
+The routine takes as input the number of channels being 
+recorded, and an array containg <channel> number of hashes of each 
+channel's measurements. This routine writes this channel information 
+metadata to the database.
+
+Each channel info hash is keyed thusly:
+     chnlNumber
+     ExWave
+     EmWave
+     Flour
+     NDfilter
+
+=cut
+
+sub __storeChannelInfo {
+    my ($self, $numWaves, @channelData) = @_;
+    # FIXME:  This has GOT to go...
+    my $image = $self->{image};
+    my $pixels = $self->{pixels};
+    my $factory = $self->Session()->Factory();
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
+      
+    foreach my $channel (@channelData){
+		my $logical = $factory->
+			newAttribute("LogicalChannel",$image,$module_execution,
+				 {
+					 ExcitationWavelength      => $channel->{'ExWave'},
+					 EmissionWavelength        => $channel->{'EmWave'},
+					 Fluor                     => $channel->{'Fluor'},
+					 NDFilter                  => $channel->{'NDfilter'},
+					 PhotometricInterpretation => 'monochrome',
+				 });
+		
+		my $component = $factory->
+			newAttribute("PixelChannelComponent",$image,$module_execution,
+				 {
+					 Pixels         => $pixels->id(),
+					 Index          => $channel->{chnlNumber},
+					 LogicalChannel => $logical->id(),
+				 });
+	}
+
+}
+
+
+=head2 __storeChannelInfoRGB
+
+    $self->__storeChannelInfoRGB($numWaves, @channelInfo);
+
+Stores metadata about an RGB composite channel.  The channelInfo array
+should contain the three RGB channels, which will be stored as channel
+components of a single logical channel.
+
+Each channel info hash is keyed thusly:
+     chnlNumber
+     ExWave
+     EmWave
+     Flour
+     NDfilter
+This channel info is pulled from the first channel in the array and used to
+define the single logical channel.  The chnlNumber is used from each of the 3
+channels to store the channel component index (index into Pixels).
+
+=cut
+
+sub __storeChannelInfoRGB {
+    my ($self, $numWaves, @channelData) = @_;
+    # FIXME:  This has GOT to go...
+	my $pixels = $self->{pixels};
+	my $image = $self->{image};
+    my $factory = $self->Session()->Factory();
+
+    my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
+      
+ 	my $logical = $factory->
+		newAttribute("LogicalChannel",$image,$module_execution,
+			 {
+				 ExcitationWavelength      => $channelData[0]->{'ExWave'},
+				 EmissionWavelength        => $channelData[0]->{'EmWave'},
+				 Fluor                     => $channelData[0]->{'Fluor'},
+				 NDFilter                  => $channelData[0]->{'NDfilter'},
+				 PhotometricInterpretation => 'RGB',
+			 });
+				 
+    foreach my $channel (@channelData){
+		my $component = $factory->
+			newAttribute("PixelChannelComponent",$image,$module_execution,
+				 {
+					 Pixels         => $pixels->id(),
+					 Index          => $channel->{chnlNumber},
+					 LogicalChannel => $logical->id(),
+				 });
+	}
+
+}
+
+=head2 __storeDisplayOptions
+
+    $self->__storeDisplayOptions($numWaves, @channelInfo);
+
+Stores metadata about an RGB composite channel.  The channelInfo array
+should contain the three RGB channels, which will be stored as channel
+components of a single logical channel.
+
+Each channel info hash is keyed thusly:
+     chnlNumber
+     ExWave
+     EmWave
+     Flour
+     NDfilter
+This channel info is pulled from the first channel in the array and used to
+define the single logical channel.  The chnlNumber is used from each of the 3
+channels to store the channel component index (index into Pixels).
+
+=cut
+
+
+sub __storeDisplayOptions {
+	my ($self, $opts) = @_;
+    # FIXME:  This has GOT to go...
+	my $pixels = $self->{pixels};
+	my $image = $self->{image};
+	
+	my ($min, $max);
+	if (defined $opts) {
+	    croak ("min/max/center hashref required.") unless ref($opts) eq 'HASH';
+		$min    = $opts->{min}    if exists ($opts->{min});
+		$max    = $opts->{max}    if exists ($opts->{max});
+	}
+	
+	my $factory = $self->Session()->Factory();
+	    
+	my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
+      
+	my $pixels_data = OME::Tasks::PixelsManager->loadPixels($pixels);
+	my $pixels_attr = $pixels;
+	my $theT=0;
+	my %displayData = (
+		Pixels => $pixels->id(),
+		ZStart => sprintf( "%d", $pixels->SizeZ() / 2 ),
+		ZStop  => sprintf( "%d", $pixels->SizeZ() / 2 ),
+		TStart => 0,
+		TStop  => 0,
+		DisplayRGB => 1,
+		ColorMap   => 'RGB',
+	);
+	
+	# set display channels
+	my (%displayChannelData, $channelIndex, @channelOrder);
+	my $statsHash = $pixels_data->getStackStatistics();
+
+	 # set up red shift channel ordering 
+	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", 
+							{ Pixels => $pixels_attr } ); 
+	
+	if( @channelComponents ) { 
+			no warnings "uninitialized";
+			@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+			@channelComponents;
+			@channelOrder = map( $_->Index(), @channelComponents ); 
+	# There's no basis to do redshift ordering. This pixels is lacking channelComponents, which probably means it was computationally derived. 
+	} else { 
+		@channelOrder = (0..($pixels_attr->SizeC - 1)); 
+	} 
+
+	# Red Channel
+	$displayData{RedChannelOn} = 1;
+	$channelIndex = $channelOrder[0];
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	if (not defined $max or not defined $min) {
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+	} else {
+		$displayChannelData{BlackLevel} = $min;
+		$displayChannelData{WhiteLevel} = $max;
+	}
+	$displayChannelData{ Gamma } = 1.0;
+	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	$displayData{ RedChannel } = $displayChannel;
+
+	# Gray Channel
+	$displayData{ GreyChannel } = $displayChannel;
+	if( $pixels_attr->SizeC == 1 ) {
+		$displayData{ DisplayRGB } = 0;
+	}
+	
+	# Green Channel
+	if( $pixels_attr->SizeC > 1 ) {
+		$displayData{GreenChannelOn} = 1;
+		$channelIndex = $channelOrder[1];
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		if (not defined $max or not defined $min) {
+			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		} else {
+			$displayChannelData{BlackLevel} = $min;
+			$displayChannelData{WhiteLevel} = $max;
+		}
+		$displayChannelData{ Gamma } = 1.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	} else {
+		$displayData{GreenChannelOn} = 0;
+	}
+	$displayData{ GreenChannel } = $displayChannel;
+
+
+	# Blue Channel
+	if( $pixels_attr->SizeC > 2 ) {
+		$displayData{BlueChannelOn} = 1;
+		$channelIndex = $channelOrder[2];
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		if (not defined $max or not defined $min) {
+			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		} else {
+			$displayChannelData{BlackLevel} = $min;
+			$displayChannelData{WhiteLevel} = $max;
+		}
+		$displayChannelData{ Gamma } = 1.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	} else {
+		$displayData{BlueChannelOn} = 0;
+	}
+	$displayData{ BlueChannel } = $displayChannel;
+
+	# Make DisplayOptions
+	$factory->newAttribute( "DisplayOptions", $image, $module_execution, \%displayData )
+		or die "Couldn't make a new DisplayOptions";
+}
+
+
+sub __defaultBlackWhiteLevels {
+	my ( $statsHash, $channelIndex, $theT ) = @_;
+	my ( $blackLevel, $whiteLevel );
+	
+	$blackLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+	$blackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum}
+		if $blackLevel < $statsHash->{ $channelIndex }{ $theT }->{Minimum};
+	$whiteLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+	$whiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum}
+		if $whiteLevel > $statsHash->{ $channelIndex }{ $theT }->{Maximum};
+	return ( $blackLevel, $whiteLevel );
+}
+
+
+=head2 __storeOneFileInfo
+
+   __storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
+		      $st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
+		      $st_t, $end_z, $fileformat)
+
+Helper method for recording input file information.
+Packs the passed metadata about one input file into the info_array
+that is passed by reference. 
+
+=cut
+
+sub __storeOneFileInfo {
+    my ($self, $info_aref, $fn, $params, $image, $st_x, $end_x,
+	$st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
+	$st_t, $end_t,$format) = @_;
+
+
+    push @$info_aref, { file => $fn,
+                        path => $fn->getFilename(),
+		      bigendian => ($params->{endian} eq "big"),
+		      image_id => $image->id(),
+		      x_start => $st_x,
+		      x_stop => $end_x,
+		      y_start => $st_y,
+		      y_stop => $end_y,
+		      z_start => $st_z,
+		      z_stop => $end_z,
+		      w_start => $st_c,
+		      w_stop => $end_c,
+		      t_start => $st_t,
+		      t_stop => $end_t,
+              format => $format};
+}
+
+
+=head2 __storeInputFileInfo
+
+    __storeInputFileInfo(\@infoArray)
+
+Stores metadata about each input file that contributed pixels to the
+OME image. The $self hash has an array of hashes that contain all the
+input file information - one hash per input file. This routine writes
+this input file metadata to the database.
+
+=cut
+
+sub __storeInputFileInfo {
+    my ($self,$inarr) = @_;
+
+    foreach my $file_info (@$inarr) {
+        my $file_attr = $self->{super}->
+          __touchOriginalFile($file_info->{file},
+                              $file_info->{format});
+        OME::Tasks::ImportManager->
+            markImageFiles($file_info->{image_id},$file_attr);
+    }
+
+}
+
+
+=head2 __storePixelDimensionInfo
+
+    __storePixelDimensionInfo(\@pixelInfo)
+
+Stores metadata about the size of the input pixel. The dimensions are
+passed in via an array, which may be partially empty.
+
+=cut
+
+sub __storePixelDimensionInfo {
+    my ($self, $pixarr) = @_;
+
+    my $image = $self->{image};
+    my $factory = $self->Session()->Factory();
+    $factory->newAttribute("Dimensions",$image,$self->{module_execution},
+			   {PixelSizeX => $pixarr->[0],
+			    PixelSizeY => $pixarr->[1],
+			    PixelSizeZ => $pixarr->[2]});
+}
+    
+
+
+
 =head2 __storeInstrumemtInfo
 
         $self->storeInstrumemtInfo($image,$model, $manufacturer, $orientation, $sn);
@@ -524,8 +866,7 @@ creation of an image composed from input images taken by different instruments.
 
 sub __storeInstrumemtInfo {
     my ($self,$image,$model,$manufacturer,$orientation,$serialnum) = @_;
-    my $session = $self->Session();
-    my $factory = $session->Factory();
+    my $factory = $self->Session()->Factory();
     my $img_mex = OME::Tasks::ImportManager->getImageImportMEX($image);
 
     $factory->newAttribute("Instrument", undef, $img_mex,
@@ -536,6 +877,70 @@ sub __storeInstrumemtInfo {
 			       Type => $orientation,
 			   });
 }
+
+
+=head2 __getFileSQLTimestamp
+
+    __getSQLTimestamp($filename)
+
+Returns the GMT last modification time of $filename formated in a form 
+acceptable to Postgres as a timestamp. Currently, this routine outputs 
+the string Mnth-dd-yyyy hh:mm:ss GMT enclosed in single quotes. For instance,
+'Jan-28-2004 19:23:05 GMT'
+
+=cut
+
+# TODO:  make sure timestamp string is in vanilla SQL form
+
+sub __getFileSQLTimestamp {
+    my ($self,$filename) = @_;
+    my $sb = stat($filename);
+    my @crtimes = split " ", scalar gmtime $sb->mtime;
+    my $crtime = "\'".$crtimes[1]."-".$crtimes[2]."-".$crtimes[4]." ".$crtimes[3]." GMT\'";
+
+    return $crtime;
+}
+
+
+=head2 B<__getNowTime>
+
+    __getNowTime()
+
+Returns the current GMT time formated in a form acceptable to Postgres as 
+a timestamp. Currently, this routine outputs the string Mnth-dd-yyyy 
+hh:mm:ss GMT enclosed in single quotes. For instance, 
+'Jan-28-2004 19:23:05 GMT'
+
+=cut
+
+sub __getNowTime {
+	my $self = shift;
+    my @now = split " ", scalar gmtime;
+    my $now = "\'".$now[1]."-".$now[2]."-".$now[4]." ".$now[3]." GMT\'";
+
+    return $now;
+}
+
+
+
+
+=head2 doSliceCallback
+
+         doSliceCallback(\&callback)
+
+Routine to call a passed callback routine after successfully
+importing a slice. If there is an input argument, treat it as
+a function reference to the callback routine, and call it.
+
+=cut
+
+sub doSliceCallback {
+    my ($self,$sliceCallback) = @_;
+    if ($sliceCallback) {
+	$sliceCallback->();
+    }
+}
+
 
 
 =head2 __removeFiles
@@ -615,8 +1020,7 @@ sub __createRepositoryFile {
     $isSigned ||= 0;
     $isFloat ||= 0;
 
-    my $session = $self->Session();
-    my $factory = $session->Factory();
+    my $factory = $self->Session()->Factory();
     my $module_execution = OME::Tasks::ImportManager->
       getImageImportMEX($image);
     my $bytesPerPixel = $self->__bitsPerPixel2bytesPerPixel($bitsPerPixel);

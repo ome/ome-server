@@ -72,7 +72,6 @@ package OME::ImportEngine::STKreader;
 use strict;
 use Carp;
 
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::TIFFUtils;
 
@@ -409,16 +408,16 @@ sub importGroup {
 			for ($z = 0; $z < $maxZ; $z++) {
 				my $offset = $start_offset + ($z+$c*$maxZ+$t*$maxZ*$maxC) * $plane_size;
 				$pix->convertPlane($file,$offset,$z,$c,$t,$params->endian == BIG_ENDIAN);
-				doSliceCallback($callback);
+				$self->doSliceCallback($callback);
 			}
 		}
     }
 
 	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
 
-	$self->__storeInputFileInfo ($session, \@finfo);
-	$self->__storeChannelInfo ($session);
-	$self->__storeDisplayOptions ($session);
+	$self->__storeInputFileInfo(\@finfo);
+	$self->__storeChannelInfo();
+	$self->__storeDisplayOptions();
 
 	return $image;
 }
@@ -750,27 +749,6 @@ sub get_rational {
 	} else {
 		$$rat = $val1/$val2;
 	}
-}
-
-# Store channel (wavelength) info
-sub storeChannelInfo {
-    my $self = shift;
-    my $session = shift;
-    my $params = $self->{params};
-    my $xref = $params->{xml_hash};
-    my $numWaves = $xref->{'Image.NumWaves'};
-    my $u3 = $self->{uic3};
-    my @channelInfo;
-
-    for (my $i = 0; $i < $numWaves; $i++) {
-	push @channelInfo, {chnlNumber => $i,
-			    ExWave     => undef,
-			    EmWave     => $u3->{$i},
-			    Fluor      => undef,
-			    NDfilter   => undef};
-    }
-
-    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
 }
 
 sub getSHA1 {

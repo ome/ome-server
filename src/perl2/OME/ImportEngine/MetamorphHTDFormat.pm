@@ -44,7 +44,6 @@ our $VERSION = $OME::VERSION;
 use Carp;
 use Config;
 use IO::File;
-use OME::ImportEngine::ImportCommon qw(doSliceCallback);
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::TIFFUtils;
 use OME::ImportExport::Repacker::Repacker;
@@ -396,6 +395,7 @@ sub importGroup {
     my $our_endian = OME->BIG_ENDIAN()? BIG_ENDIAN: LITTLE_ENDIAN;
 
     my $image = $self->__newImage($image_name);
+    $self->{image} = $image;
 
     # Touch the HTD file
     my $htd_attr = $self->
@@ -536,10 +536,11 @@ sub importGroup {
                         Index          => $theC,
                         LogicalChannel => $logical,
                        });
-	doSliceCallback($callback);
+	$self->doSliceCallback($callback);
 
     }
 	OME::Tasks::PixelsManager->finishPixels ($pix,$pixels);
+	$self->{pixels} = $pixels;
 
     if ($image_invalid && $pixels_created) {
         # If there was an error, make sure to remove the repository file
@@ -594,7 +595,7 @@ sub importGroup {
                     Well   => $address,
                    });
 	
-	$self-> __storeDisplayOptions ($session);
+	$self->__storeDisplayOptions();
 	return $image;
 
 }

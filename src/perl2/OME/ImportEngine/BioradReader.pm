@@ -38,7 +38,6 @@ package OME::ImportEngine::BioradReader;
 
 use strict;
 use OME;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
 use OME::Tasks::PixelsManager;
@@ -286,9 +285,9 @@ sub importGroup
 				die $status;
     		}
     		
-			$self -> {image} = $image;
-    		$self -> __storeInputFileInfo( $session, \@finfo );
-			$self -> __storeDisplayOptions ($session);
+			$self->{image} = $image;
+    		$self->__storeInputFileInfo(\@finfo );
+			$self->__storeDisplayOptions();
     		return $image;
     	}
     	
@@ -333,9 +332,9 @@ sub importGroup
 				($self -> {super}) -> __destroyRepositoryFile($pixels, $pix);
 				die $status;
     		}
-			$self -> {image} = $image;
-    		$self -> __storeInputFileInfo( $session, \@finfo );
-			$self -> __storeDisplayOptions ($session);
+			$self->{image} = $image;
+    		$self->__storeInputFileInfo(\@finfo );
+			$self->__storeDisplayOptions();
     		return $image;
     	}
     }
@@ -376,7 +375,7 @@ sub readSingleFilePixels
            	                      $bigEndian);
            	   	};
            	   	return $@ if $@;
-				doSliceCallback($callback);
+				$self->doSliceCallback($callback);
 				$offset += $zJump; # jump to the next plane
        		}
     	}
@@ -419,7 +418,7 @@ sub readMultiFilePixels
            	                      $bigEndian);
            	   	};
            	   	return $@ if $@;
-				doSliceCallback($callback);
+				$self->doSliceCallback($callback);
 				$offset += $zJump; # jump to the next plane
        		}
     	}

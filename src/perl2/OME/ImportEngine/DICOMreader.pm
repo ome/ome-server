@@ -67,7 +67,6 @@ use strict;
 use Carp;
 
 use OME::ImportEngine::DICOM;
-use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::Params;
 
 use base qw(OME::ImportEngine::AbstractFormat);
@@ -199,6 +198,8 @@ sub getGroups {
 sub isDICOM {
     my ($self, $file) = @_;
 	$file->open('r');
+	return undef
+		if $file->getLength() < 132;
 	$file->setCurrentPosition(128,0);
 	my $buf = $file->readData(4);
 	$file->close();
@@ -362,17 +363,17 @@ sub importGroup {
     	for ($i = 0, $t = 0; $t < $xref->{'Image.NumTimes'}; $i++, $t++) {
 			$offset = $dicom_tags->value('PixelData') + $t*$plane_size;
 			$pix->convertPlane($file,$offset,$z,0,$t,$params->endian);
-			doSliceCallback($callback);
+			$self->doSliceCallback($callback);
 		}
 	    $file->close();
     }
 
 	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
 	
-	$self->__storeInputFileInfo ($session, \@finfo);
+	$self->__storeInputFileInfo(\@finfo);
 	
 	# Store info about each input channel (wavelength).
-	$self->__storeChannelInfo ($session);
+	$self->__storeChannelInfo();
 	
 	# Set display options
 	my $windowCenter = $dicom_tags->value('WindowCenter');
@@ -383,33 +384,13 @@ sub importGroup {
 	}
 	
 	if (not defined $windowCenter or not defined $windowWidth) {
-		$self->__storeDisplayOptions ($session);
+		$self->__storeDisplayOptions();
 	} else {
-		$self->__storeDisplayOptions ($session,
+		$self->__storeDisplayOptions(
 			{min => $windowCenter - $windowWidth/2 - $rescaleIntercept, 
 			 max => $windowCenter + $windowWidth/2 - $rescaleIntercept });
 	}
 	return $image;
-}
-
-# Store channel (wavelength) info
-sub storeChannelInfo {
-    my $self = shift;
-    my $session = shift;
-    my $params = $self->{params};
-    my $xref = $params->{xml_hash};
-    my $numWaves = $xref->{'Image.NumWaves'};
-    my @channelInfo;
-
-    for (my $i = 0; $i < $numWaves; $i++) {
-	push @channelInfo, {chnlNumber => $i,
-			    ExWave     => undef,
-			    EmWave     => undef,
-			    Fluor      => undef,
-			    NDfilter   => undef};
-    }
-
-    $self->__storeChannelInfo($session, $numWaves, @channelInfo);
 }
 
 sub getSHA1 {
