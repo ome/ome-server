@@ -726,18 +726,26 @@ char **cgivars=param;
 				offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
 			}
 
+			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
+				HTTP_DoError (method,"Could not open FileID=%llu!",
+					(unsigned long long)fileID);
+				return (-1);
+			}
+
 			if (m_val == M_CONVERTTIFF)
-				nIO = ConvertTIFF (thePixels, fileID, theZ, theC, theT, tiffDir, 1);
+				nIO = ConvertTIFF (thePixels, theFile, theZ, theC, theT, tiffDir, 1);
 			else
-				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix, 1);
+				nIO = ConvertFile (thePixels, theFile, file_offset, offset, nPix, 1);
 			if (nIO != nPix) {
 				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
+				freeFileRep   (theFile);
 				return (-1);
 			} else {
 				freePixelsRep (thePixels);
+				freeFileRep   (theFile);
 				HTTP_ResultType ("text/plain");
 				fprintf (stdout,"%ld\n", (long) nIO);
 			}

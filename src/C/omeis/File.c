@@ -63,7 +63,7 @@ void freeFileRep (FileRep *myFile)
 	}
 	
 	if (myFile->fd_info >=0 ) close (myFile->fd_info);
-	if (myFile->fd_rep >=0 ) close (myFile->fd_rep);
+	if (myFile->fd_rep >=0 )  close (myFile->fd_rep);
 	free (myFile);
 }
 
@@ -217,7 +217,7 @@ OID existOID;
 FileRep *NewFile (char *filename, size_t size)
 {
 FileRep *myFile;
-char error[256];
+char error[OMEIS_ERROR_SIZE];
 
 	if ( size > UINT_MAX || size == 0) return NULL;  /* Bad mojo for mmap */
 
@@ -267,7 +267,7 @@ char error[256];
 	}
 	
 	if (filename)
-		strncpy (myFile->file_info.name,filename,255);
+		strncpy (myFile->file_info.name,filename,OMEIS_PATH_SIZE-1);
 	else
 		strcpy (myFile->file_info.name,"");
 

@@ -41,6 +41,7 @@
 #include "digest.h"
 #include "repository.h"
 #include "sha1DB.h"
+#include "File.h"
 
 
 /* ----------- */
@@ -95,12 +96,14 @@ typedef struct {
 typedef struct
 {
 	OID ID;
-	char  path_ID[256];  /* Path to the ID file */
-	char  path_rep[256];  /* Path to the repository-format file */
-	char  path_info[256]; /* Path to the info header */
-	char  path_DB[256];    /* Path to the sha1 DB */
+	char  path_ID[OMEIS_PATH_SIZE];  /* Path to the ID file */
+	char  path_rep[OMEIS_PATH_SIZE];  /* Path to the repository-format file */
+	char  path_info[OMEIS_PATH_SIZE]; /* Path to the info header */
+	char  path_conv[OMEIS_PATH_SIZE]; /* Path to the info header */
+	char  path_DB[OMEIS_PATH_SIZE];    /* Path to the sha1 DB */
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
+	int   fd_conv;  /* This will be < 0 when closed */
 	DB    *DB;      /* sha1 DB returned from sha1DB_open() (as returned by dbopen()) */
 	size_t size_rep;
 	size_t size_info;
@@ -111,7 +114,7 @@ typedef struct
 	char doSwap;
 	size_t num_pixels;
 	size_t num_write;  /* number of pixels written */
-	char error_str[256];
+	char error_str[OMEIS_ERROR_SIZE];
 	char is_mmapped;
 	/* The rest is just like in the file */
 	pixHeader *head;
@@ -242,7 +245,7 @@ DoROI (PixelsRep *myPixels,
 size_t
 ConvertTIFF (
 	PixelsRep *myPixels,
-	OID fileID,
+	FileRep   *myFile,
 	ome_coord theZ,
 	ome_coord theC,
 	ome_coord theT,
@@ -252,11 +255,11 @@ ConvertTIFF (
 size_t
 ConvertFile (
 	PixelsRep *myPixels,
-	OID fileID,
-	size_t file_offset,
-	size_t pix_offset,
-	size_t nPix,
-	char writeRec);
+	FileRep   *myFile,
+	size_t     file_offset,
+	size_t     pix_offset,
+	size_t     nPix,
+	char       writeRec);
 
 
 

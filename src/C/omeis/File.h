@@ -47,15 +47,15 @@
 
 typedef struct {
 	char sha1[OME_DIGEST_LENGTH];
-	char name[256];
+	char name[OMEIS_PATH_SIZE];
 } FileInfo;
 
 typedef struct {
 	OID ID;
-	char path_ID[256];
-	char path_rep[256];
-	char path_info[256];
-	char path_DB[256];
+	char path_ID[OMEIS_PATH_SIZE];
+	char path_rep[OMEIS_PATH_SIZE];
+	char path_info[OMEIS_PATH_SIZE];
+	char path_DB[OMEIS_PATH_SIZE];
 	int  fd_rep;
 	int  fd_info;
 	DB *DB;

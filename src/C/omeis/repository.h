@@ -54,6 +54,8 @@ typedef u_int64_t OID;
 /* -------- */
 /*  This is the standard size of an IO buffer */
 #define OMEIS_IO_BUF_SIZE 8192
+#define OMEIS_PATH_SIZE    256
+#define OMEIS_ERROR_SIZE   256
 
 /* ------------------- */
 /* External Prototypes */
