@@ -19,75 +19,75 @@ CC = gcc
 all: $(TARGETS)
 
 zernike : dataset.h dataset.c dataset.o zernike.c zernike.h BSUtils.o zernike.o
-	$(CC) ${CFLAGS} -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+	$(CC) $(CFLAGS) -o zernike zernike.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
 zernike2 : dataset.h dataset.c dataset.o zernike2.c zernike.h BSUtils.o zernike2.o
-	$(CC) ${CFLAGS} -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
+	$(CC) $(CFLAGS) -o zernike2 zernike2.o dataset.o BSUtils.o readTiffData.o $(MATH_LIBS) -ltiff
 
 trackSpotsOMEwrpr : $(OBJECTS) trackSpotsOMEwrpr.o
-	$(CC) ${CFLAGS} -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
+	$(CC) $(CFLAGS) -o trackSpotsOMEwrpr trackSpotsOMEwrpr.o $(LIBS)
 
 findSpotsOMEwrpr : $(OBJECTS) findSpotsOMEwrpr.o
-	$(CC) ${CFLAGS} -o findSpotsOMEwrpr findSpotsOMEwrpr.o $(LIBS)
+	$(CC) $(CFLAGS) -o findSpotsOMEwrpr findSpotsOMEwrpr.o $(LIBS)
 
 OMEimportDVfile : $(OBJECTS) OMEimportDVfile.o
-	$(CC) ${CFLAGS} -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
+	$(CC) $(CFLAGS) -o OMEimportDVfile OMEimportDVfile.o $(LIBS)
 
 trackSpotsDB :  BSUtils.o trackSpotsDB.o
-	$(CC) ${CFLAGS} -o trackSpotsDB trackSpotsDB.o $(LIBS)
+	$(CC) $(CFLAGS) -o trackSpotsDB trackSpotsDB.o $(LIBS)
 
 findSpotsDB : findSpotsDB.o
-	$(CC) $(DEFINES) ${CFLAGS} findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
+	$(CC) $(DEFINES) $(CFLAGS) findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
 
 findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
-	$(CC) $(DEFINES) ${CFLAGS} findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
+	$(CC) $(DEFINES) $(CFLAGS) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
 
 #makemesh: makemesh.o iolib/argarray.o iolib/failio.o iolib/repository.o
 #	$(CC) $(DEFINES) $+ -o $@
 
 BinarizeGlobal : BinarizeGlobal.o readTiffData.o BSUtils.o
-	$(CC) $(DEFINES) ${CFLAGS} BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
+	$(CC) $(DEFINES) $(CFLAGS) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
 
 SoftWorxSlice : SoftWorxSlice.o BSUtils.o
-	$(CC) $(DEFINES) ${CFLAGS} SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
 
 DumpSoftWorxHeader : DumpSoftWorxHeader.o BSUtils.o
-	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
 
 DumpSoftWorxExHeader : DumpSoftWorxExHeader.o BSUtils.o
-	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
 
 DumpSoftWorxStats : DumpSoftWorxStats.o BSUtils.o
-	$(CC) $(DEFINES) ${CFLAGS} DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
 
 DumpTIFFheader : DumpTIFFheader.o
-	$(CC) $(DEFINES) ${CFLAGS} DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
+	$(CC) $(DEFINES) $(CFLAGS) DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
 
 DumpTIFFstats : DumpTIFFstats.o readTiffData.o
-	$(CC) $(DEFINES) ${CFLAGS} DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
+	$(CC) $(DEFINES) $(CFLAGS) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
 
 OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
-	$(CC) $(DEFINES) ${CFLAGS} OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
 
 OME_Image_XY_stats : OME_Image_XY_stats.o
-	$(CC) $(DEFINES) ${CFLAGS} OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
+	$(CC) $(DEFINES) $(CFLAGS) OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
 
 #DumpTIFF : DumpTIFF.o
 #	$(CC) $(DEFINES) DumpTIFF.o -o DumpTIFF ${MATH_LIBS} -ltiff
 
 spawnSpots : $(OBJECTS) spawnSpots.o
-	$(CC) ${CFLAGS} -o spawnSpots spawnSpots.o $(LIBS)
+	$(CC) $(CFLAGS) -o spawnSpots spawnSpots.o $(LIBS)
 
 testFoo : $(OBJECTS) testFoo.o
-	$(CC) ${CFLAGS} -o testFoo testFoo.o $(LIBS)
+	$(CC) $(CFLAGS) -o testFoo testFoo.o $(LIBS)
 
 DumpDV: DumpDV.o  BSUtils.o
-	$(CC) ${CFLAGS} -o DumpDV DumpDV.o BSUtils.o
+	$(CC) $(CFLAGS) -o DumpDV DumpDV.o BSUtils.o
 
 SetDVwave: SetDVwave.o  BSUtils.o
-	$(CC) ${CFLAGS} -o SetDVwave SetDVwave.o BSUtils.o
+	$(CC) $(CFLAGS) -o SetDVwave SetDVwave.o BSUtils.o
 
 OME_JPEG: OME_JPEG.c
-	$(CC) ${CFLAGS} -o OME_JPEG OME_JPEG.c -ljpeg
+	$(CC) $(CFLAGS) -o OME_JPEG OME_JPEG.c -ljpeg
 
 $(OME_LIB): $(OBJECTS)
 	ar cr $@ $(OBJECTS)
