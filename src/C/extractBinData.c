@@ -51,7 +51,7 @@
 	path. The namespace, "BinNS" is a #defined constant. Look in the define 
 	section below to see what it will evaluate to.
 	If the Compression attribute is not specified in <BinData>, it is assumed 
-	to use zlib compression.
+	to use no compression.
 
 	Compilation notes: Use the xml2-config utility to find the location of the
 	libxml2 libraries. The flags --libs and --cflags cause xml2-config to 

@@ -51,7 +51,7 @@
 		</Pixels>
 	If the Compression attribute is specified in <External>, then that 
 	Compression will be used by the <BinData>(s) that replaces it. If 
-	Compression is not specified, the default behavior is to use zlib 
+	Compression is not specified, the default behavior is to use no 
 	compression.
 	The namespace, "BinNS" is a #defined constant. Look in the define 
 	section below to see what it will evaluate to.
@@ -434,8 +434,8 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 				b64z_encode_init ( strm );
 				strm->next_in  = bin;
 				strm->avail_in = state->pixelInfo->X * state->pixelInfo->Y * ( state->pixelInfo->bpp / 8 );
-				if( compression == NULL )
-					fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"bzip2\">", BinNS );
+				if( compression == NULL ) /* default compression */
+					fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"none\">", BinNS );
 				else
 					fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"%s\">", BinNS, compression );
 				do {
@@ -564,7 +564,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 			
 			/* print <BinData> */
 			if( !compression ) /* default compression */
-				fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"zlib\" >", BinNS );
+				fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"none\" >", BinNS );
 			else
 				fprintf( stdout, "<BinData xmlns=\"%s\" Compression=\"%s\" >", BinNS, compression );
 			
