@@ -115,7 +115,9 @@ i.e. for OME::Image, the system insert time stamp will not be returned with this
 call.
 
 Useful for constructing an object summary.
+
 =cut
+
 sub getFieldNames {
 	my ($proto,$type, $doNotSpecialize) = @_;
 	
@@ -142,7 +144,9 @@ Returns an ordered list of all relevant field names for the specified object or 
 e.g. For OME::Image, this will include all time stamps but will exclude id accessors.
 
 Useful for a detailed object representation.
+
 =cut
+
 sub getAllFieldNames { 
 	my ( $proto, $type, $doNotSpecialize ) = @_;
 	
@@ -163,7 +167,9 @@ $fieldNames is optional. It is used to populate the returned hash. Default is th
 
 returns a hash { field_name => field_type }
 field_type is the reference type the field will return. it is equivalent to ref( $instance_of_type->$field_name )
+
 =cut
+
 sub getFieldTypes {
 	my ($proto,$type,$fieldNames,$doNotSpecialize) = @_;
 
@@ -182,6 +188,7 @@ sub getFieldTypes {
 
 
 =head2 getFieldLabels
+
 	my %fieldLabels = OME::Web::RenderData->getFieldLabels( $type, \@fieldNames );
 	
 $type can be a DBObject name ("OME::Image"), an Attribute name
@@ -190,7 +197,9 @@ $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
 
 returns a hash { field_name => field_Label }
+
 =cut
+
 sub getFieldLabels {
 	my ($proto,$type,$fieldNames, $doNotSpecialize) = @_;
 	
@@ -214,6 +223,7 @@ sub getFieldLabels {
 
 
 =head2 render
+
 	my @records = OME::Web::RenderData->render( \@objects, $format, \@fieldNames );
 
 @objects is an array of instances of a DBObject or a Semantic Type.
@@ -229,7 +239,9 @@ Default is the list returned by getFieldNames.
 
 This relies on renderSingle for actual rendering, so subclasses do not
 need to implement this.
+
 =cut
+
 sub render {
 	my ($proto,$objects,$format,$fieldnames, $doNotSpecialize) = @_;
 
@@ -247,13 +259,16 @@ sub render {
 
 
 =head2 renderSingle
+
 	my %record = OME::Web::RenderData->renderSingle( $object, $format, \@fieldNames );
 
 $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
 
 same as render, but works with an individual instance instead of arrays.
+
 =cut
+
 sub renderSingle {
 	my ($proto,$obj,$format,$fieldNames, $doNotSpecialize) = @_;
 
@@ -286,6 +301,7 @@ sub renderSingle {
 
 
 =head2 getRefToObject
+
 	my $formated_ref = OME::Web::RenderData->getRefToObject( $object, $format );
 
 $object is an instance of a DBObject or an Attribute.
@@ -295,7 +311,9 @@ This method returns a text reference.
 For 'txt' format, it will be an id number. 
 For 'html' format, it will be an '<a href=...' that links to a
 detailed display of the object.
+
 =cut
+
 sub getRefToObject {
 	my ($proto,$obj,$format, $doNotSpecialize) = @_;
 	my $specializedRenderer;
@@ -331,7 +349,9 @@ $fieldNames is optional. It is used to populate the returned hash.
 Default is the list returned by getFieldNames.
 
 returns a hash { field_name => search_field, ... }
+
 =cut
+
 sub getSearchFields {
 	my ($proto,$type, $fieldNames, $doNotSpecialize) = @_;
 	
@@ -361,7 +381,9 @@ returns a specialized prototype (if one exists) for rendering a
 particular type of data.
 returns undef if a specialized prototype does not exist or if it was
 called with with a specialized prototype.
+
 =cut
+
 sub _getSpecializedRenderer {
 	my ($proto,$specialization) = @_;
 	
@@ -390,7 +412,9 @@ $type can be a DBObject name ("OME::Image"), an Attribute name
 
 This holds the magic to return the DBObject prototype from whatever
 $type happens to be. It also loads the DBObject so methods can be called on it.
+
 =cut
+
 sub _getProto {
 	my ($proto, $type) = @_;
 
@@ -428,7 +452,9 @@ $type can be a DBObject name ("OME::Image"), an Attribute DBObject
 
 Returns either the DBObject prototype or @AttrName from whatever
 $type happens to be.
+
 =cut
+
 sub _getType {
 	my ($proto, $type) = @_;
 
