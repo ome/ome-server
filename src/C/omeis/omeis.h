@@ -84,8 +84,8 @@ typedef struct
 	char  path_info[256]; /* Path to the info header */
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
-	off_t size_rep;
-	off_t size_info;
+	size_t size_rep;
+	size_t size_info;
 	FILE *IO_stream;   /* One of these two should be set for reading/writing */
 	void *IO_buf;
 	unsigned long IO_buf_off; /* This keeps track of where we're writing in IO_buf */
@@ -111,28 +111,38 @@ typedef struct {
 } convertFileRec;
 
 
+/* ------------------- */
+/* External Prototypes */
+/* ------------------- */
 
-/*  CGI/CLI prototypes */
-char *get_param (char **cgivars, char *param);
-int inList(char **cgivars, char *str);
-char x2c(char *what);
-void unescape_url(char *url);
-char **getcgivars(void);
-char **getCLIvars(int argc, char **argv);
-int bigEndian(void);
-void byteSwap (unsigned char *theBuf, size_t length, char bp);
-PixelsRep *NewPixels (
-	unsigned long dx,
-	unsigned long dy,
-	unsigned long dz,
-	unsigned long dc,
-	unsigned long dt,
-	unsigned char bp, /* bp is bytes per pixel */
-	char isSigned,
-	char isFloat
-);
-int FinishPixels (PixelsRep *myPixels, char force);
-size_t setPixelPlane (PixelsRep *thePixels, void *buf , int theZ, int theC, int theT );
+void
+byteSwap (unsigned char * theBuf,
+		  size_t length,
+		  char bp);
 
-#endif
+size_t
+setPixelPlane (PixelsRep * thePixels,
+		       void * buf,
+			   int theZ,
+			   int theC,
+			   int theT);
 
+int
+FinishPixels (PixelsRep * myPixels,
+		      char force);
+
+int
+bigEndian (void);
+
+PixelsRep *
+NewPixels (unsigned long dx,
+		   unsigned long dy,
+		   unsigned long dz,
+		   unsigned long dc,
+		   unsigned long dt,
+		   unsigned char bp, /* bp is bytes per pixel */
+		   char isSigned,
+		   char isFloat);
+
+
+#endif /* omeis_h */
