@@ -1,10 +1,27 @@
 /*****
 
 	skinLibrary.js
-		external file dependencies: none
-		
-		Author: Josiah Johnston
-		email: siah@nih.gov
+	
+	Copyright (C) 2002 Open Microscopy Environment
+	Author: Josiah Johnston <siah@nih.gov>
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	
+	Written by: Josiah Johnston <siah@nih.gov>
+	
 	
 *****/
 
@@ -26,6 +43,39 @@ skinLibrary["hideControl"] =
 '		<animate attributeName="ry" from="2" to="5" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '	</ellipse>' +
 '</g>';
+skinLibrary["redGUIboxBG"] =
+'<g>' +
+'	<linearGradient id="redLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
+'		<stop offset="5%" stop-color="red" />' +
+'		<stop offset="95%" stop-color="white" />' + 
+'	</linearGradient>' +
+'	<rect width="{$width}" height="{$height}" fill="url(#redLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["blueGUIboxBG"] =
+'<g>' +
+'	<linearGradient id="blueLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
+'		<stop offset="5%" stop-color="blue" />' +
+'		<stop offset="95%" stop-color="white" />' + 
+'	</linearGradient>' +
+'	<rect width="{$width}" height="{$height}" fill="url(#blueLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["greenGUIboxBG"] =
+'<g>' +
+'	<linearGradient id="greenLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
+'		<stop offset="5%" stop-color="green" />' +
+'		<stop offset="95%" stop-color="white" />' + 
+'	</linearGradient>' +
+'	<rect width="{$width}" height="{$height}" fill="url(#greenLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["greyGUIboxBG"] =
+'<g>' +
+'	<linearGradient id="greyLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
+'		<stop offset="5%" stop-color="grey" />' +
+'		<stop offset="95%" stop-color="white" />' + 
+'	</linearGradient>' +
+'	<rect width="{$width}" height="{$height}" fill="url(#greyLinearGradient)" opacity="0.7"/>' +
+'</g>';
+
 skinLibrary["GUIbox"] =
 '<g style="font-size:10;">' +
 '	<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">' +
@@ -33,7 +83,7 @@ skinLibrary["GUIbox"] =
 '		<stop offset="95%" stop-color="palegreen" />' +
 '	</linearGradient>' +
 '	<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.7"/>' +
-'	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="3" opacity="1"/>' +
+'	<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="1" opacity="1"/>' +
 '	<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '	<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>' +
 '</g>';
@@ -90,23 +140,28 @@ skinLibrary["zSliderThumb"] =
 '	</rect>' +
 '</g>';
 skinLibrary["redAnchorText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="rgb(255,70,70)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["redItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)"	rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
+'<rect width="{$width}" height="{$height}" fill="rgb(255,70,70)"	rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["redItemHighlightText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,130,130)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="rgb(255,130,130)" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["greenAnchorText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["greenItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
+'<rect width="{$width}" height="{$height}" fill="mediumseagreen" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["greenItemHighlightText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="lime" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="lime" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["blueAnchorText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
 skinLibrary["blueItemBackgroundText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
+'<rect width="{$width}" height="{$height}" fill="cornflowerblue" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">';
 skinLibrary["blueItemHighlightText"] =
-'<rect x="-2" width="{$width + 4}" height="{$height}" fill="aqua" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+'<rect width="{$width}" height="{$height}" fill="aqua" rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>';
+skinLibrary["transparentBox"] =
+'<rect width="{$width}" height="{$height}" opacity="0"/>';
+skinLibrary["whiteTranslucentBox"] =
+'<rect width="{$width}" height="{$height}" fill="white" opacity="0.5"/>';
+
 skinLibrary["redButtonOn"] =
 '<circle cy="5" r="5" fill="pink" stroke="black" stroke-width="1"/>';
 skinLibrary["redButtonOff"] =
