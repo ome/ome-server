@@ -23,7 +23,6 @@ package OME::Dataset;
 use strict;
 our $VERSION = '1.0';
 
-use OME::DBObject;
 use OME::Image;
 use OME::Project;
 use base qw(OME::DBObject);
@@ -46,6 +45,10 @@ __PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->make_filter('search3' =>
 			 '%s = ? and %s = ? and %s = ?');
 
+sub projects {
+my $self = shift;
+	return map $_->project(), $self->project_links();
+}
 
 
 1;
