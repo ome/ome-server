@@ -205,7 +205,8 @@ sub formatImage {
     my $remainder = "";
     my $bps;
     my $endian;
-    my $xy = $parent->obuffer;
+    my (@xy, @xyz, @xyzw, @xyzwt);
+    my $obuf = $parent->obuffer;
     my ($ifmt, $ofmt);
     my $irow;
     my @orow;
@@ -247,6 +248,7 @@ sub formatImage {
 	my $xy_aref = [];
 	my $xref    =  $xml_hash->{'XYinfo.'};   # ref to array built by TIFFreader
 
+	# place image pixels into 5D array
 	while (@$offsets) {
 	    $start_offset = pop(@$offsets);
 	    $strip_size = pop(@$bytecounts);
@@ -264,13 +266,19 @@ sub formatImage {
 		$irow = substr($buf, $buf_offset, $row_size);
 		@orow = unpack($ifmt, $irow);
 		$rowbuf = pack($ofmt, @orow);
-		push @$xy, $rowbuf;
+		push @xy, $rowbuf;
 		#print $foh $rowbuf;
 		$buf_offset += $row_size;
 	    }
 	    $remainder = substr($buf, $buf_offset, $strip_size); # save any leftover
 	    
 	}
+	# For now, at least, we don't handle > 1 Z or T dimension
+	@xyz = \@xy;
+	@xyzw = \@xyz;
+	push (@xyzwt, \@xyzw);
+	push (@$obuf, \@xyzwt);
+
 	# This next op. done to make output array in same format
 	# as STKreader
 	# Now make the XYinfo elements from previously stored info
