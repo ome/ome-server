@@ -66,8 +66,17 @@ sub startImport {
     # global import MEX among other things).
 
     my $importer = OME::ImportEngine::ImportEngine->new();
-    my ($dataset,$files_mex) = $importer->startImport();
+    my $files_mex = $importer->startImport();
     my $session_key = OME::Session->instance()->SessionKey();
+    my $dataset = $factory->
+      newObject("OME::Dataset",
+                {
+                 name => "ImportSet",
+                 description => "Images imported by OME::Remote::Facades::ImportFacade",
+                 locked => 0,
+                 owner_id => $session->experimenter_id(),
+                });
+
 
     # Fork off the child process
 
@@ -96,6 +105,9 @@ sub startImport {
 
         OME::Session->forgetInstance();
 
+# I believe this line can replace OME::Remote::Facades::ImportFacade::Child::importChild
+# Is that possible? If not, then it can replace the innards of importChild
+#OME::Tasks::ImageTasks::importFiles($dataset, \@file_names, \%opts);
         eval {
             OME::Remote::Facades::ImportFacade::Child::importChild
                 ($session_key,$importer,$dataset,$fileIDs);
@@ -140,7 +152,7 @@ sub importChild ($$$$) {
     }
 
     print STDERR "  Importing\n";
-    $importer->importFiles(\@files);
+    $importer->importFiles($dataset, \@files);
     $importer->finishImport();
 
     print STDERR "  Executing chain\n";
