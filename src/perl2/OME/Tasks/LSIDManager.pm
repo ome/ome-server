@@ -85,12 +85,8 @@ sub new {
 
 	@$self{@fieldsILike} = @params{@fieldsILike};
 
-	logdie $class."->new needs a session"
-	  unless exists $self->{session} &&
-			 UNIVERSAL::isa($self->{session},'OME::Session');
-
 	if (not defined $AUTHORITY or not defined $DB_INSTANCE) {
-    	my $config = $self->{session}->Configuration() or
+    	my $config = OME::Session->instance()->Configuration() or
     		logdie $class.'->new():  Could not get Configuration';
     	$AUTHORITY = $config->lsid_authority();
     	$DB_INSTANCE = $config->db_instance();
@@ -126,11 +122,13 @@ my ($self,$object) = @_;
 			$type = 'Module';
 		} elsif ($ref eq 'OME::ModuleExecution') {
 			$type = 'ModuleExecution';
+		} elsif ($ref eq 'OME::SemanticType') {
+			$type = 'SemanticType';
 		}
 	
 	return undef unless defined $type;
 	
-	my @lsid_list = $self->{session}->Factory()->findObjects ( "OME::LSID", {
+	my @lsid_list = OME::Session->instance()->Factory()->findObjects ( "OME::LSID", {
 		object_id => $object->id(),
 		namespace => $type });
 	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
@@ -158,7 +156,7 @@ my ($self,$object,$LSIDstring) = @_;
 	return undef unless $self->checkLSID( $LSIDstring );
 
 	my (undef, undef, undef, $type, undef, undef ) = split( /:/, $LSIDstring );
-	my $lsid = $self->{session}->Factory()->newObject( "OME::LSID", { 
+	my $lsid = OME::Session->instance()->Factory()->newObject( "OME::LSID", { 
 		lsid      => $LSIDstring,
 		object_id => $object->id(),
 		namespace => $type } );
@@ -216,11 +214,12 @@ This returns a localy stored OME object with the given $LSID, or undef if there 
 sub getLocalObject () {
 	my $self = shift;
 	my $lsid = $self->checkLSID (shift) || return undef;
+    my $factory = OME::Session->instance()->Factory();
 
 	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
 	
 # FIXME:  This should return a locally stored object even if its got a different authority.
-	my $lsid_map = $self->{session}->Factory()->findObject('OME::LSID', lsid => $lsid );
+	my $lsid_map = $factory->findObject('OME::LSID', lsid => $lsid );
 	unless ($lsid_map) {
 		return undef unless defined $authority and $authority eq $AUTHORITY;
 		return undef unless defined $dbInstance and $dbInstance eq $DB_INSTANCE;
@@ -229,19 +228,21 @@ sub getLocalObject () {
 	}
 
 	if ($namespace eq 'Project') {
-		return $self->{session}->Factory()->loadObject('OME::Project', $localID);
+		return $factory->loadObject('OME::Project', $localID);
 	} elsif ($namespace eq 'Dataset') {
-		return $self->{session}->Factory()->loadObject('OME::Dataset', $localID);
+		return $factory->loadObject('OME::Dataset', $localID);
 	} elsif ($namespace eq 'Image') {
-		return $self->{session}->Factory()->loadObject('OME::Image', $localID);
+		return $factory->loadObject('OME::Image', $localID);
 	} elsif ($namespace eq 'Feature') {
-		return $self->{session}->Factory()->loadObject('OME::Feature', $localID);
+		return $factory->loadObject('OME::Feature', $localID);
 	} elsif ($namespace eq 'Module') {
-		return $self->{session}->Factory()->loadObject('OME::Module', $localID);
+		return $factory->loadObject('OME::Module', $localID);
 	} elsif ($namespace eq 'ModuleExecution') {
-		return $self->{session}->Factory()->loadObject('OME::ModuleExecution', $localID);
+		return $factory->loadObject('OME::ModuleExecution', $localID);
+	} elsif ($namespace eq 'SemanticType') {
+		return $factory->loadObject('OME::SemanticType', $localID);
 	} else {
-		return $self->{session}->Factory()->loadAttribute($namespace, $localID);
+		return $factory->loadAttribute($namespace, $localID);
 	}
 }
 
@@ -257,7 +258,8 @@ sub getLocalID () {
 	my $self = shift;
 	my $lsid = $self->checkLSID (shift) || return undef;
 
-	my $lsid_map = $self->{session}->Factory()->findObject('OME::LSID', lsid => $lsid );
+	my $lsid_map = OME::Session->instance()->Factory()->
+      findObject('OME::LSID', lsid => $lsid );
 	return undef unless $lsid_map;
 	return $lsid_map->object_id();
 }
