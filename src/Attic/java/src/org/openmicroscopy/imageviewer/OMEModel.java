@@ -75,6 +75,10 @@ public class OMEModel
   // not cached in order to flush memory on image switch
   private RGBImageConverter converter;
   
+  /**
+   * Initializes the remote bindings and data structures necessary for this
+   * model to function correctly.
+   */
   public OMEModel()
   {
     try
@@ -157,6 +161,14 @@ public class OMEModel
     }
   }
   
+  /**
+   * Loads all the image records present in the database (this might not be
+   * the smartest thing to do, but it's the dummy thing to do), regardless of
+   * dataset or project.  Yeah, this is kinda bad.  But if I refined it, then
+   * I'd be *completely* duplicating the functionality of some other projects,
+   * so... it'll be dumb for now.
+   *
+   */
   public void loadImageRecords()
   {
     if(!loggedIn)
@@ -177,6 +189,12 @@ public class OMEModel
     Collections.sort(imageList,new ImageRecordComparator());
   }
   
+  /**
+   * Loads the 5D image with the specified (DB) image ID into the model.
+   * All subsequent accessor calls will refer to the currently loaded image.
+   * 
+   * @param index The ID of the image to load.
+   */
   public void loadImage(int index)
   {
     if(!loggedIn || index < 0 || index >= imageList.size())
@@ -184,6 +202,8 @@ public class OMEModel
       return;
     }
     Integer intObj = new Integer(index);
+    
+    // check cache for remote pixels reference already, return
     if(imagePixelsCache.containsKey(intObj))
     {
       loadedImage = (Image)imageList.get(index);
@@ -193,13 +213,9 @@ public class OMEModel
       return;
     }
     
-    // else
+    // else, make remote call
     RemoteImage image = (RemoteImage)imageList.get(index);
-    // why does this break?
-    /*
-    Map imageMap = new HashMap();
-    imageMap.put("target",image);
-    */
+
     List pixelList = factory.findAttributes("Pixels",image);
     
     // no associated images
@@ -225,11 +241,31 @@ public class OMEModel
     converter = new RGBImageConverter(loadedPixels,loadedInfo);
   }
   
+  /**
+   * Return the information (channels, z levels, timeslices) about the
+   * currently loaded 5D image.
+   * 
+   * @return
+   */
   public ImageInformation getImageInformation()
   {
     return loadedInfo;
   }
   
+  /**
+   * Get a 2D slice of the 5D image using the given parameters.
+   * 
+   * @param z The z-parameter of the slice to capture.
+   * @param t The time frame of the slice to capture.
+   * @param cRed Which channel to use for red flitering.
+   * @param cGreen Which channel to use for green filtering.
+   * @param cBlue Which channel to use for blue filtering.
+   * @param rOn Whether or not to use the red filter.
+   * @param gOn Whether or not to use the green filter.
+   * @param bOn Whether or not to use the blue filter.
+   * @return A 2D projection of the 5D image based on channels, z, and t.
+   * @throws OMEException If the image cannot be read (remotely or from disk)
+   */
   public BufferedImage getImageSlice(int z, int t, int cRed, int cGreen,
                                      int cBlue, boolean rOn,
                                      boolean gOn, boolean bOn)
@@ -242,16 +278,17 @@ public class OMEModel
       return null;
     }
     
+    // check cache status
     int imageStatus =
       imageSlicesCache.getImageStatus(loadedImage.getName(),
                                       loadedPixels.getPixelsAttribute().getID(),
                                       z, t, cRed, cGreen, cBlue,
                                       rOn, gOn, bOn);
-                                      
+    
+    // load if in cache                                
     if(imageStatus == ImageCache.IN_MEMORY ||
        imageStatus == ImageCache.WRITTEN_TO_DISK)
     {
-      System.err.println("cache hit");
       try
       {
         BufferedImage cachedImage =
@@ -274,7 +311,7 @@ public class OMEModel
       return null;
     }
     
-    // not loaded yet
+    // not loaded yet; acquire RGB from converter & cache
     try
     {
       BufferedImage convertedImage = converter.getRGBImage(z,cRed,cGreen,cBlue,t,
@@ -292,11 +329,21 @@ public class OMEModel
     }
   }
 
+  /**
+   * Returns a list of 5D image data records.
+   * 
+   * @return See above.
+   */
   public List getImageRecords()
   {
     return Collections.unmodifiableList(imageList);
   }
   
+  /**
+   * Returns a list of 5D image names.
+   * 
+   * @return See above.
+   */
   public List getImageNames()
   {
     List imageNames = Filter.map(imageList, new MapOperator() {
@@ -310,6 +357,14 @@ public class OMEModel
     return Collections.unmodifiableList(imageNames);
   }
 
+  /**
+   * Returns a list of (integer-valued) keys to the images, corresponding to
+   * the IDs of the images.
+   * 
+   * This might not be the best thing, but we'll see.
+   * 
+   * @return A list of Integer keys.
+   */
   public List getImageKeys()
   {
     List imageKeys = Filter.map(imageList, new MapOperator() {

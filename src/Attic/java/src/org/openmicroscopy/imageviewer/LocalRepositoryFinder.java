@@ -63,7 +63,7 @@ public final class LocalRepositoryFinder
    * Stores a record of this repository in LocalImagePixels if an OME
    * repository is local.  (May need to search for an appropriate image too, later)
    * 
-   * @param repository The repository record to look for
+   * @param repository The repository record to look for.
    * @return True if the repository is local, false if it is not.
    */
   public static boolean findAndStore(Attribute repository)
@@ -80,13 +80,17 @@ public final class LocalRepositoryFinder
     {
       // gotta get this element
       String path = repository.getStringElement("Path");
-      System.err.println("looking for repository at " + path);
+      
+      // check the file path
       File file = new File(path);
       if(file.exists() && file.isDirectory())
       {
+        // first test in module will return true after this.
         LocalImagePixels.addRepositoryPath(repository,file);
         return true;
       }
+      
+      // cache negative response so we don't have to ask again if not
       else
       {
         notLocalRepositories.add(new Integer(repository.getID()));
