@@ -90,12 +90,16 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
+		_nullAnalysisSTs=> {
+			},
+			
 	};
 
 	if (!defined $self->{_lsidResolver}) {
 		$self->{_lsidResolver} = new OME::LSID (session => $self->{session});
 	}
 
+	
 
 	bless($self,$class);
 	logdbg "debug", ref ($self) . "->new returning successfully";
@@ -252,9 +256,10 @@ sub processDOM {
 	# Run the engine on the dataset.
     my $view = $factory->
 		findObject("OME::AnalysisView",name => 'Image import analyses');
-	if (!defined $view) {
+	
+	if (!defined $view or !defined $importAnalysis) {
 		logcarp "The image import analysis chain is not defined.  Skipping predefined analyses...";
-		return;
+		return $self->{_DBObjects};
 	}
 	logdbg "debug", ref ($self)."->processDOM: Running Analysis tasks";
 	my $engine = OME::Tasks::AnalysisEngine->new();
@@ -380,6 +385,7 @@ sub importObject ($$$$) {
 
 	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node,$parentDBID);
 	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
+	$analysis = undef if exists $self->{_nullAnalysisSTs}->{$objectType};
 
 	# Process references in this object.
 	# If the reference was to an object already read from the document, resolve it.
