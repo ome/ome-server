@@ -561,7 +561,16 @@ sub renderData {
 					
 			# populate field requests
 			} else {
+# Magic to force load of the inferred relation accessor. It's kind of a hack.
+# The problem is, getColumnType won't report the columnType for inferred 
+# relations until they have either been explicitly inferred or used. I'm 
+# reluctant to change that behavior without working through all the 
+# ramifications. So for now, I'll use this hack. To use an inferred relation
+# in a template, you must mark it as inferred. e.g. <TMPL_VAR NAME=CategoryList/inferred_relation>
+$obj->$field if exists $request->{ inferred_relation };
 				my $type = $obj->getColumnType( $field );
+				# Avoid "Use of uninitialized value in string eq" message.
+				next if( not defined $type );
 				
 				# data fields
 				if( $type eq 'normal' ) {
@@ -583,9 +592,7 @@ sub renderData {
 				}
 	
 				# *many reference accessor
-				if( $type eq "has-many" || $type eq 'many-to-many' || exists $request->{ inferred_relation }) {
-# Magic to force load of the inferred relation accessor. It's kind of a hack.
-$obj->$field if exists $request->{ inferred_relation };
+				if( $type eq "has-many" || $type eq 'many-to-many' ) {
 					# ref_list if no field specified in command
 					my $render_mode = ( $request->{ render } or 'ref_list' );
 					$record{ $request_string } = $self->renderArray( 
