@@ -191,14 +191,14 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>
-		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = ""/>
-		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = ""/>
-		<FormalOutput Name = "Stack minimum"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack"/>
-		<FormalOutput Name = "Stack maximum"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack"/>
-		<FormalOutput Name = "Stack mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack"/>
-		<FormalOutput Name = "Stack geomean"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack"/>
-		<FormalOutput Name = "Stack sigma"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack"/>
-		<FormalOutput Name = "Stack centroid" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack"/>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
+		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = "" Count="!"/>
+		<FormalOutput Name = "Stack minima"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack maxima"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack means"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack geomeans"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack sigmas"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Stack centroids" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
@@ -255,44 +255,44 @@
 			<OutputRecord>
 				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack minimum"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack maximum"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack mean"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack geomean"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack sigma"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack centroid"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack minima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack maxima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack means"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack geomeans"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack sigmas"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack centroids"/>
 				</Output>
 				<Output AccessBy = "2">
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack minimum"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack maximum"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack mean"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack geomean"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack sigma"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack centroid"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack minima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack maxima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack means"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack geomeans"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack sigmas"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack centroids"/>
 				</Output>
 				<Output AccessBy = "3">
-					<OutputTo SemanticElementName = "Minimum"       FormalOutputName = "Stack minimum"/>
+					<OutputTo SemanticElementName = "Minimum"       FormalOutputName = "Stack minima"/>
 				</Output>
 				<Output AccessBy = "4">
-					<OutputTo SemanticElementName = "Maximum"       FormalOutputName = "Stack maximum"/>
+					<OutputTo SemanticElementName = "Maximum"       FormalOutputName = "Stack maxima"/>
 				</Output>
 				<Output AccessBy = "5">
-					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack mean"/>
+					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack means"/>
 				</Output>
 				<Output AccessBy = "6">
-					<OutputTo SemanticElementName = "GeometricMean"   FormalOutputName = "Stack geomean"/>
+					<OutputTo SemanticElementName = "GeometricMean"   FormalOutputName = "Stack geomeans"/>
 				</Output>
 				<Output AccessBy = "7">
-					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigma"/>
+					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigmas"/>
 				</Output>
 				<Output AccessBy = "8">
-					<OutputTo SemanticElementName = "X" FormalOutputName = "Stack centroid"/>
+					<OutputTo SemanticElementName = "X" FormalOutputName = "Stack centroids"/>
 				</Output>
 				<Output AccessBy = "9">
-					<OutputTo SemanticElementName = "Y" FormalOutputName = "Stack centroid"/>
+					<OutputTo SemanticElementName = "Y" FormalOutputName = "Stack centroids"/>
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo SemanticElementName = "Z" FormalOutputName = "Stack centroid"/>
+					<OutputTo SemanticElementName = "Z" FormalOutputName = "Stack centroids"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->

@@ -196,14 +196,14 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
-		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = ""/>
-		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = ""/>
-		<FormalOutput Name = "Plane minimum" SemanticTypeName = "PlaneMinimum" Description = ""/>
-		<FormalOutput Name = "Plane maximum" SemanticTypeName = "PlaneMaximum" Description = ""/>
-		<FormalOutput Name = "Plane mean" SemanticTypeName = "PlaneMean" Description = ""/>
-		<FormalOutput Name = "Plane geomean" SemanticTypeName = "PlaneGeometricMean" Description = ""/>
-		<FormalOutput Name = "Plane sigma" SemanticTypeName = "PlaneSigma" Description = ""/>
-		<FormalOutput Name = "Plane centroid" SemanticTypeName = "PlaneCentroid" Description = ""/>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = "" Count="!"/>
+		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = "" Count="!"/>
+		<FormalOutput Name = "Plane minima" SemanticTypeName = "PlaneMinimum" Description = "" Count="+"/>
+		<FormalOutput Name = "Plane maxima" SemanticTypeName = "PlaneMaximum" Description = "" Count="+"/>
+		<FormalOutput Name = "Plane means" SemanticTypeName = "PlaneMean" Description = "" Count="+"/>
+		<FormalOutput Name = "Plane geomeans" SemanticTypeName = "PlaneGeometricMean" Description = "" Count="+"/>
+		<FormalOutput Name = "Plane sigmas" SemanticTypeName = "PlaneSigma" Description = "" Count="+"/>
+		<FormalOutput Name = "Plane centroids" SemanticTypeName = "PlaneCentroid" Description = "" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
@@ -260,49 +260,49 @@
 			<OutputRecord>
 				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane minimum"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane maximum"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane mean"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane geomean"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane sigma"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane centroid"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane minima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane maxima"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane means"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane geomeans"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane sigmas"/>
+					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Plane centroids"/>
 				</Output>
 				<Output AccessBy = "2">
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane minimum"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane maximum"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane mean"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane geomean"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane sigma"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane centroid"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane minima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane maxima"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane means"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane geomeans"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane sigmas"/>
+					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Plane centroids"/>
 				</Output>
 				<Output AccessBy = "3">
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane minimum"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane maximum"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane mean"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane geomean"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane sigma"/>
-					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane centroid"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane minima"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane maxima"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane means"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane geomeans"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane sigmas"/>
+					<OutputTo SemanticElementName = "TheZ" FormalOutputName = "Plane centroids"/>
 				</Output>
 				<Output AccessBy = "4">
-					<OutputTo SemanticElementName = "Minimum" FormalOutputName = "Plane minimum"/>
+					<OutputTo SemanticElementName = "Minimum" FormalOutputName = "Plane minima"/>
 				</Output>
 				<Output AccessBy = "5">
-					<OutputTo SemanticElementName = "Maximum" FormalOutputName = "Plane maximum"/>
+					<OutputTo SemanticElementName = "Maximum" FormalOutputName = "Plane maxima"/>
 				</Output>
 				<Output AccessBy = "6">
-					<OutputTo SemanticElementName = "Mean" FormalOutputName = "Plane mean"/>
+					<OutputTo SemanticElementName = "Mean" FormalOutputName = "Plane means"/>
 				</Output>
 				<Output AccessBy = "7">
-					<OutputTo SemanticElementName = "GeometricMean" FormalOutputName = "Plane geomean"/>
+					<OutputTo SemanticElementName = "GeometricMean" FormalOutputName = "Plane geomeans"/>
 				</Output>
 				<Output AccessBy = "8">
-					<OutputTo SemanticElementName = "Sigma" FormalOutputName = "Plane sigma"/>
+					<OutputTo SemanticElementName = "Sigma" FormalOutputName = "Plane sigmas"/>
 				</Output>
 				<Output AccessBy = "9">
-					<OutputTo SemanticElementName = "X" FormalOutputName = "Plane centroid"/>
+					<OutputTo SemanticElementName = "X" FormalOutputName = "Plane centroids"/>
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo SemanticElementName = "Y" FormalOutputName = "Plane centroid"/>
+					<OutputTo SemanticElementName = "Y" FormalOutputName = "Plane centroids"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
