@@ -528,13 +528,6 @@ char **cgivars=param;
 				OMEIS_ReportError (method, "FileID", fileID,"Could not get aliases");
 				return (-1);
 			}
-			
-			if (stat (theFile->path_rep, &fStat) < 0) {
-				OMEIS_ReportError (method, "FileID", fileID,"Could not get size of file");
-				freeFileRep (theFile);
-				return (-1);			
-			}
-			theFile->size_rep = fStat.st_size;
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info.name,(unsigned long)theFile->size_rep);

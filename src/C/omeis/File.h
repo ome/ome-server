@@ -45,12 +45,14 @@
 /* ----------- */
 
 #define OME_IS_FILE_SIG 0x46494C45 /* FILE in ASCII */
-#define OME_IS_FILE_VER 2
+#define OME_IS_FILE_VER 3
 /* Version log:
   1 -> 2 (igg@nih.gov):
   	Added mySig, vers, isAlias and nAliases to FileInfo.
   	N.B.:  Version 1 infos are detected by virtue of their fixed known size:
   		OME_DIGEST_LENGTH + OMEIS_PATH_SIZE.
+  2 -> 3 (igg@nih.gov):
+  	Added size to header in order to maintain the file size for compressed files
 */
 
 
@@ -64,9 +66,20 @@ typedef struct {
 	OID ID;
 	char sha1[OME_DIGEST_LENGTH];
 	char name[OMEIS_PATH_SIZE];
+	u_int64_t size;
 	OID isAlias;
 	u_int32_t nAliases;
 } FileInfo;
+
+typedef struct {
+	u_int32_t mySig;
+	u_int8_t vers;
+	OID ID;
+	char sha1[OME_DIGEST_LENGTH];
+	char name[OMEIS_PATH_SIZE];
+	OID isAlias;
+	u_int32_t nAliases;
+} FileInfo_v2;
 
 typedef struct {
 	OID ID;

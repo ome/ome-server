@@ -143,7 +143,7 @@ struct stat fStat;
 		freeFileRep (myFile);
 		return (NULL);			
 	}
-	myFile->size_rep = fStat.st_size;
+	myFile->size_rep = myFile->file_info.size = fStat.st_size;
 
     if (length == 0)
         length = myFile->size_rep;
@@ -454,6 +454,7 @@ char error[OMEIS_ERROR_SIZE];
 	myInfo->mySig    = OME_IS_FILE_SIG;
 	myInfo->vers     = OME_IS_FILE_VER;
 	myInfo->ID       = myFile->ID;
+	myInfo->size     = size;
 	if (filename)
 		strncpy (myInfo->name,filename,OMEIS_PATH_SIZE-1);
 	if ( write (myFile->fd_info,(void *)myInfo,sizeof(FileInfo)) != sizeof(FileInfo) ) {
@@ -473,9 +474,12 @@ char error[OMEIS_ERROR_SIZE];
 
 int update_file_info (FileRep *myFile) {
 FileInfo *myInfo = &(myFile->file_info);
+FileInfo_v2 myV1Info;
 struct stat fStat;
 u_int32_t mySig;
 u_int8_t vers=0;
+u_int32_t alias, nAliases;
+FileAlias *aliases,*myAlias;
 
 /*
   N.B.:  File opening and locking happens outside of this func!
@@ -506,20 +510,91 @@ u_int8_t vers=0;
 			myInfo->mySig    = OME_IS_FILE_SIG;
 			myInfo->vers     = OME_IS_FILE_VER;
 			myInfo->ID       = myFile->ID;
+			
+			/* open the rep file to make sure its inflated */
+			if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+				OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+				return (0);
+			}
+
+			/* Get the size */
+			if (stat (myFile->path_rep, &fStat) < 0) {
+				OMEIS_DoError ("Could not stat repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+				return (0);			
+			}
+			myFile->size_rep = myInfo->size = fStat.st_size;
+
 			myInfo->isAlias  = 0;
 			myInfo->nAliases = 0;
+		break;
+		
+		case 2:
+			if ( read (myFile->fd_info,(void *)&(myV1Info),sizeof(myV1Info)) != sizeof(myV1Info) ) 
+				return (0);
+
+			/* open the rep file to make sure its inflated */
+			if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+				OMEIS_DoError ("Could not open repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+				return (0);
+			}
+			
+			/* Get the size */
+			if (stat (myFile->path_rep, &fStat) < 0) {
+				OMEIS_DoError ("Could not stat repository file (FileID = %llu: %s", (unsigned long long)myInfo->ID,strerror( errno ));
+				return (0);			
+			}
+			myInfo->mySig    = OME_IS_FILE_SIG;
+			myInfo->vers     = OME_IS_FILE_VER;
+			myInfo->ID       = myV1Info.ID;
+			memcpy (myInfo->name,myV1Info.name,OMEIS_PATH_SIZE);
+			memcpy (myInfo->sha1,myV1Info.sha1,OME_DIGEST_LENGTH);
+			myFile->size_rep = myInfo->size = fStat.st_size;
+			myInfo->isAlias  = myV1Info.isAlias;
+			myInfo->nAliases = myV1Info.nAliases;
+			nAliases = myInfo->nAliases;
+			/* Read the aliases if any */
+			if (nAliases > 0) {
+
+				/* Get enough memory for all of the aliases */
+				if ( ! (myAlias = aliases = (FileAlias *)malloc (nAliases * sizeof (FileAlias))) ) {
+					return (0);
+				}
+
+				/* read them in */
+				for (alias = 0; alias < nAliases; alias++) {
+					if ( read (myFile->fd_info,(void *)myAlias,sizeof(FileAlias)) != sizeof(FileAlias) ) {
+						free (aliases);
+						close (myFile->fd_info);
+						myFile->fd_info = -1;
+						return (0);
+					}
+					myAlias++;
+				}
+				myFile->aliases = aliases;
+			}			
 		break;
 		
 		case OME_IS_FILE_VER:
 			if ( read (myFile->fd_info,(void *)myInfo,sizeof(FileInfo)) != sizeof(FileInfo) )
 				return (0);
+			GetFileAliases (myFile);
 		break;
 	}
 	
+	/* Rewind to the beginning and write everything out */
 	lseek(myFile->fd_info, (off_t)0, SEEK_SET);
 	if ( write (myFile->fd_info,(void *)myInfo,sizeof(FileInfo)) != sizeof(FileInfo) ) {
 		return (0);
 	}
+	
+	myAlias = myFile->aliases;
+	for (alias = 0; alias < myInfo->nAliases; alias++) {
+		if ( write (myFile->fd_info,(void *)myAlias,sizeof(FileAlias)) != sizeof(FileAlias) ) {
+			return (0);
+		}
+		myAlias++;
+	}
+	
 	
 	return (1);
 }
@@ -529,6 +604,7 @@ int GetFileInfo (FileRep *myFile) {
 u_int32_t mySig;
 u_int8_t vers=0;
 struct stat fStat;
+int status;
 
 	/* Do nothing if version and signature are set */
 	if ( myFile->file_info.mySig == OME_IS_FILE_SIG && myFile->file_info.vers == OME_IS_FILE_VER)
@@ -594,8 +670,8 @@ struct stat fStat;
 		  At this point, another process could have already fixed this file,
 		  So update_file_info will determine the version again on its own.
 		*/
-		if (! update_file_info (myFile)) {
-			OMEIS_DoError ("Error updating info version for FileID=%llu: %s.",
+		if ( (status = update_file_info (myFile)) < 1) {
+			OMEIS_DoError ("Error %d updating info version for FileID=%llu: %s.",status,
 				(unsigned long long)myFile->ID,strerror (errno));
 			return (-8);
 		}
@@ -609,6 +685,8 @@ struct stat fStat;
 		close (myFile->fd_info);
 		myFile->fd_info = -1;
 	}
+	
+	myFile->size_rep = myFile->file_info.size;
 
 	return (1);
 }
