@@ -108,38 +108,40 @@ my @libraries = ( {
     }, {
 		name => 'libtiff',
 		# XXX Unfortunately, this only works with new libtiff's... *sigh*
+		# We need tiff >= 3.5.7 to be able to check for LZW support at runtime
+		# So, this will just fail horribly on libtiffs that don't even let you do this much.
+		get_library_version => q(
+		 	#include "tiffvers.h"
+				/* Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
+				 * src/gaimrc.c -- parse_line()
+				 * Thanks to ChipX86 for the great idea, this version stub rocks.
+			 */
+		 	int main () {
+				char * c;
+					c = (char *) calloc (strlen (TIFFLIB_VERSION_STR) + 1, sizeof(char));
+					strcpy (c, TIFFLIB_VERSION_STR);
+		                                                                        
+					while (*c != '\n') {
+			   			if ((*c == '.') || ((*c >= 48) && (*c <= 57))) {
+							printf ("%c", *c);
+			   			}
+			   		c++;
+					}
+		
+				return (0);
+				}
+			),
 		#get_library_version => q(
-		# 	#include "tiffvers.h"
-		#		/* Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
-		#		 * src/gaimrc.c -- parse_line()
-		#		 * Thanks to ChipX86 for the great idea, this version stub rocks.
+		#	#include "tiff.h"
+		#	/* For the moment, with backwards compatability in mind we can't do
+		#	 * anything better than check if the lib is installed and working.
 		#	 */
-		# 	int main () {
-		#		char * c;
-		#			c = (char *) calloc (strlen (TIFFLIB_VERSION_STR) + 1, sizeof(char));
-		#			strcpy (c, TIFFLIB_VERSION_STR);
-		#                                                                        
-		#			while (*c != '\n') {
-		#	   			if ((*c == '.') || ((*c >= 48) && (*c <= 57))) {
-		#					printf ("%c", *c);
-		#	   			}
-		#	   		c++;
-		#			}
+		#	int main () {
+		#		printf ("%s", "N/A");
 		#
 		#		return (0);
-		#		}
-		#	),
-		get_library_version => q(
-			#include "tiff.h"
-			/* For the moment, with backwards compatability in mind we can't do
-			 * anything better than check if the lib is installed and working.
-			 */
-			int main () {
-				printf ("%s", "N/A");
-
-				return (0);
-			}
-		),
+		#	}
+		#),
 		configure_library => sub {
 			# Since libtiff has an interactive configure script we need to
 	    	# implement a custom configure_library () subroutine that allows
