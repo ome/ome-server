@@ -383,8 +383,52 @@ clause:
 	dataset.name => 'Foo'
 
 inserts a JOIN clause into the query.  This allows you to follow
-foreign-key links in the objects in your search criteria.  Currently,
-it is only possible to follow has-one foreign keys.
+references in the objects in your search criteria.  Inferred references are
+supported as well as declared has-one and has-many relationships.  Other examples:
+
+	my @images = $factory->findObjects( 'OME::Image', {
+		'dataset_links.dataset.name' => 'Worms',
+	});
+
+will find all images that belong to a dataset named 'Worms'.
+
+	my @images = $factory->findObjects( 'OME::Image', {
+		'ClassificationList.Category.Name' => 'Day 1',
+	});
+
+will find all images that have a Classification ST who's Category Name is 'Day 1'.
+The ClassificationList is an inferred has-many relationship between Classification and OME::Image.
+The Classification ST has a Category reference, so this is an explicit has-one relationship.
+
+	my @CGs = $factory->findObjects( '@CategoryGroup', {
+			'CategoryList.ClassificationList.image.dataset_links.dataset_id' => $datasetID,
+			__distinct => 'id',
+		});
+
+will find all CategoryGroups used in a dataset with id $datasetID.  Note the path necessary
+to get from an image attribute to a dataset.  Without the __distinct in the criteria, we would
+get one CategoryGroup per image in this dataset.
+
+	my @datasets = $factory->findObjects ('OME::Dataset', {
+			'image_links.image.ClassificationList.Category.CategoryGroup.Name' => 'Worm Age',
+			__distinct => 'id',
+		});
+
+conversely, this will find all datasets with images classified with any category in the
+'Worm Age' category group.  Somewhat unintuitively, without the __distinct criterium, one
+dataset will be returned for each image thus classified.
+
+	my @classifications = $factory->findObjects( '@Classification', {
+			'image.dataset_links.dataset.name' => 'Worms',
+		});
+
+This will return all classifications for all images in the dataset named 'Worms'.
+
+	__distinct => ['id','name']
+	__distinct => 'id'
+	
+The distinct criterium will ensure that the specified fields of the base class are unique
+in the set of objects returned.
 
 	__order => ['id','name']
 
