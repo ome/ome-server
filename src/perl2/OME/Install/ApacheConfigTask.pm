@@ -298,6 +298,7 @@ sub execute {
 	croak "Apache httpd.conf does not have a cgi-bin directory" if not $cgiBin;
 	my $OME_JPEG = 'src/C/OME_JPEG';
 	copy ($OME_JPEG,$cgiBin) or croak "Could not copy $OME_JPEG to $cgiBin:\n$!\n";
+	chmod (0755,"$cgiBin/OME_JPEG");
 
     
     
