@@ -96,6 +96,7 @@ sub importFiles {
         $image->Field("sizeT",$href->{'Image.NumTimes'});
         $image->Field("bitsPerPixel",16);
 
+
         my $path = $imageID.".orf";
         $image->Field("path",$path);
 
@@ -126,7 +127,51 @@ sub importFiles {
         print STDERR "\n";
 
         $image->writeObject();
+
+	# IGG 10/06/02:  Put in a direct INSERT to deal with WavelengthInfo - until we get our API stabilized.
+	# The DB needs to be consistent with regards to image_wavelengths, xy_image_info, and xyz_image_info.
+	# These three tables need to be populated consistently with how many dimentions there are in the image.
+	# I'm leaning towards forcing all the relevant tuples to exist in the DB, even if all columns are NULL.
+	# We can do it with a rule in the DB so that an image can't be commited unless those tables have exactly
+	# the right number  tuples to satisfy all of the dimensions in the image.
+	# At the very least, if any tuples exist in these tables for a given image, all tuples must exist - All or nothing.
+	# It would make things cleaner in many cases if they all exist anyway.
+	#
+	# Anyway, we need to make sure there is a WavelengthInfo array, that it has all the WaveNumber fields necessary,
+	# and that its in the right order.
+	# Also, we're only doing image_wavelengths for now.
+    #  image_id | wavenumber | ex_wavelength | em_wavelength | nd_filter | fluor
+
+	    my @WavelengthInfo = ({});
+	    my $wave;
+	    my $sth = $session->DBH()->prepare ("INSERT INTO image_wavelengths (image_id,wavenumber,ex_wavelength,em_wavelength,fluor,nd_filter) VALUES (?,?,?,?,?,?)");
+	    if (exists $href->{'WavelengthInfo.'} and ref($href->{'WavelengthInfo.'}) eq "ARRAY") {
+	        # Make sure its sorted on WaveNumber.
+        	@WavelengthInfo = sort {$a->{'WavelengthInfo.WaveNumber'} <=> $b->{'WavelengthInfo.WaveNumber'}} @{$href->{'WavelengthInfo.'}};
+	    }
+
+	    for (my $w = 0; $w < $href->{'Image.NumWaves'}; $w++) {
+	        $wave = $WavelengthInfo[$w];
+	        # Clear out the hash if WaveNumber doesn't match $w - something's screwed up.
+	        # We also do this if there was no WavelengthInfo to begin with.
+	        # FIXME:  If WaveNumber doesn't match $w at any point, there's probably a more serious problem that should result in a roll-back of this import.
+	        if ($wave->{'WavelengthInfo.WaveNumber'} ne $w) {
+                $wave->{'WavelengthInfo.WaveNumber'} = $w;
+                $wave->{'WavelengthInfo.ExWave'} = undef;
+                $wave->{'WavelengthInfo.EmWave'} = undef;
+                $wave->{'WavelengthInfo.Fluor'} = undef;
+                $wave->{'WavelengthInfo.NDfilter'} = undef;
+            }
+	        $sth->execute($imageID,
+	            $wave->{'WavelengthInfo.WaveNumber'},
+	            $wave->{'WavelengthInfo.ExWave'},
+	            $wave->{'WavelengthInfo.EmWave'},
+	            $wave->{'WavelengthInfo.Fluor'},
+	            $wave->{'WavelengthInfo.NDfilter'}
+	        );
+	    }
         $session->DBH()->commit();
+
     };
 
     my $importer = OME::ImportExport::Importer->new($filenames,$lambda);
