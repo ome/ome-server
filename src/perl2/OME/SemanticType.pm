@@ -315,6 +315,12 @@ END_DEF
                          ForeignKey => 'datasets',
                         });
         addPrototype($pkg,"dataset",[],['OME::Dataset'],force => 1);
+        $pkg->addACL ( {
+        	user => 'acl.owner_id',
+        	group => 'acl.group_id',
+        	froms   => ['datasets acl'],
+        	wheres  => ["acl.dataset_id = ${any_table}.dataset_id"],
+        	});
     } elsif ($type eq 'I') {
         $pkg->addColumn(['image_id','target_id'] => "${any_table}.image_id");
         $pkg->addColumn(['image','target'] => "${any_table}.image_id",
@@ -326,6 +332,12 @@ END_DEF
                          ForeignKey => 'images',
                         });
         addPrototype($pkg,"image",[],['OME::Image'],force => 1);
+        $pkg->addACL ({
+        	user    => 'acl.experimenter_id',
+        	group   => 'acl.group_id',
+        	froms   => ['images acl'],
+        	wheres  => ["acl.image_id = ${any_table}.image_id"],
+        	});
     } elsif ($type eq 'F') {
         $pkg->addColumn(['feature_id','target_id'] => "${any_table}.feature_id");
         $pkg->addColumn(['feature','target'] => "${any_table}.feature_id",
@@ -337,6 +349,12 @@ END_DEF
                          ForeignKey => 'features',
                         });
         addPrototype($pkg,"feature",[],['OME::Feature'],force => 1);
+        $pkg->addACL ( {
+        	user => 'acl.experimenter_id',
+        	group => 'acl.group_id',
+        	froms   => ['images acl','features acl2'],
+        	wheres  => ['acl2.image_id = acl.image_id',"acl2.feature_id = ${any_table}.feature_id"],
+        	});
     } elsif ($type eq 'G') {
         # No global column - create dummy target and target_id methods
         # which always return undef.
