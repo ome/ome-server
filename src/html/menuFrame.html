@@ -959,13 +959,13 @@ function initialise() {
 
 	//Project
 	level2ID = theMenu.addChild(level1ID, "Folder", "Project", "", "Project commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Projects List", "/perl2/serve.pl?Page=OME::Web::ProjectManager", "Change other user's read/write permissions");
+	level3ID = theMenu.addChild(level2ID, "Document", "Projects List", "/perl2/serve.pl?Page=OME::Web::ManageProject", "Change other user's read/write permissions");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ProjectSearch", "Search through all projects");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Make new project", "/perl2/serve.pl?Page=OME::Web::MakeNewProject", "Make a new project");
 	
 	//Dataset
 	level2ID = theMenu.addChild(level1ID, "Folder", "Dataset", "", "Dataset commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Datasets List", "/perl2/serve.pl?Page=OME::Web::DatasetManager", "Change other user's read/write permissions");
+	level3ID = theMenu.addChild(level2ID, "Document", "Datasets List", "/perl2/serve.pl?Page=OME::Web::ManageDataset", "Change other user's read/write permissions");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::DatasetSearch", "Search through all datasets");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Make Dataset/Import images", "/JavaScript/DirTree/index.htm", "Link to Image:Make Dataset");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Make Dataset/Existing images", "/perl2/serve.pl?Page=OME::Web::ProjectDatasetImage", "Link to Image:Make Dataset");
@@ -973,7 +973,7 @@ function initialise() {
 
 	//Image
 	level2ID = theMenu.addChild(level1ID, "Folder", "Image", "", "Image commands");
-	level3ID = theMenu.addChild(level2ID, "Document", "Manage my Images", "/perl2/serve.pl?Page=OME::Web::ImageManager", "Change other user's read/write permissions");
+	level3ID = theMenu.addChild(level2ID, "Document", "Manage my Images", "/perl2/serve.pl?Page=OME::Web::ManageImage", "Change other user's read/write permissions");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Search", "/perl2/serve.pl?Page=OME::Web::ImageSearch", "Search through all images");
 	level3ID = theMenu.addEntry (level3ID, "Document", "Add Images/Existing dataset", "/perl2/serve.pl?Page=OME::Web::AddImageDataset", "Add images in Existing dataset");
 
