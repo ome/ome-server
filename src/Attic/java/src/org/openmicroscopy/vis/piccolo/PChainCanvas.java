@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.managers.ChainManager;
 import org.openmicroscopy.vis.chains.ChainFrame;
@@ -101,6 +102,9 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		layer = getLayer();
 		
 	
+		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		removeInputEventListener(getZoomEventHandler());
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);

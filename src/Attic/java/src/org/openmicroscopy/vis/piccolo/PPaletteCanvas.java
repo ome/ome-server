@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.ModuleCategory;
 import org.openmicroscopy.vis.ome.Connection;
@@ -110,6 +111,9 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		
 	public PPaletteCanvas() {
 		super();
+		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		removeInputEventListener(getPanEventHandler());
 		removeInputEventListener(getZoomEventHandler());
 		addInputEventListener(new PPaletteEventHandler(this));

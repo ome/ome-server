@@ -46,6 +46,7 @@ import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.PCamera;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.Chains;
@@ -102,6 +103,9 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
 		
+		setDefaultRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setInteractingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
+		setAnimatingRenderQuality(PPaintContext.HIGH_QUALITY_RENDERING);
 		removeInputEventListener(getZoomEventHandler());
 		removeInputEventListener(getPanEventHandler());
 		addInputEventListener(new PChainLibraryEventHandler(this)); 
