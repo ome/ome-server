@@ -42,11 +42,8 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -58,7 +55,7 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
+public class PChainLibraryEventHandler extends  PModuleZoomEventHandler {
 
 	private PChainLibraryCanvas canvas;
 	
@@ -73,7 +70,7 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	private static boolean postPopup = false;
 	
 	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
-		super();
+		super(canvas);
 		this.canvas = canvas;	
 	}
 	
@@ -89,7 +86,7 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 	 * 		to center the node.
 	 *  4) We right clicked or control-clicked. Handle this like a popup. 
 	 */
-	public void mouseClicked(PInputEvent e) {
+	/*public void mouseClicked(PInputEvent e) {
 		
 		if (postPopup == true) {
 			postPopup = false;
@@ -121,7 +118,7 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			handlePopup(e);
 		else
 			super.mouseClicked(e);
-	}
+	} */
 	
 	/**
 	 * When the user presses the mouse on a {@link PChainBox}, tell the
@@ -138,8 +135,6 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			//canvas.setSelectedChainID(box.getChainID());
 			canvas.setSelectedChain(box.getChain());
 		}
-		else
-			super.mousePressed(e);
 	}
 	
 	/**
@@ -154,99 +149,4 @@ public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
 			canvas.clearChainSelected();
 	}
 	
-	/**
-	 * When the mouse enters a PFormalParameter or a PModule, set corresponding
-	 * items to be highlighted, according to the following rule:
-	 * 		1) If necessary, Clear anything that had been highlighted 
-	 * 				previously
-	 * 		2) If the node that is entered is a formal parameter, set its
-	 * 				corresponding parameters(parameters it can ink to)
-	 * 				to be highlighted, along with all of the module widgets 
-	 * 				for the containing module. 
-	 * 		3)  if It is a module widget, set all outputs and inputs (from
-	 * 				other modules) that might be linked to this module 
-	 * 				to be highlighted. Also set all instances of this module
-	 * 				to be highlighted.
-	 * 
-	 */
-	public void mouseEntered(PInputEvent e) {
-		PNode node = e.getPickedNode();
-		//	System.err.println("entering "+node);
-		
-		// clear anything that was previously highlighted
-		if (lastEntered != null)
-			lastEntered.setParamsHighlighted(false);
-			
-		if (node instanceof PFormalParameter) {
-			PFormalParameter param = (PFormalParameter) node;
-			param.setParamsHighlighted(true);
-			PModule pmod = param.getPModule();
-			pmod.setModulesHighlighted(true);
-			e.setHandled(true);
-		}
-		else if (node instanceof PModule) {
-			PModule pmod = (PModule) node;
-			pmod.setAllHighlights(true);
-			e.setHandled(true);
-			lastEntered = pmod;
-		}
-		else {
-			super.mouseEntered(e);
-		}
-	}
-	
-	/**
-	 * When the mouse exits a node, set all of the modules and/or 
-	 * parameters that correspond to no longer be selected. Note that leaving a 
-	 * {@link PFormalParameter} might immediately and directly lead to
-	 * entering a {@link PModule}, so a {@link mouseEntered()} call 
-	 * might immediately follow.
-	 * 
-	 */
-	public void mouseExited(PInputEvent e) {
-		PNode node = e.getPickedNode();
-
-		//System.err.println("exiting"+node);
-		if (node instanceof PFormalParameter) {
-			PFormalParameter param = (PFormalParameter) node;
-			param.setParamsHighlighted(false);
-			PModule pmod = param.getPModule();
-			pmod.setAllHighlights(false);
-			e.setHandled(true);			
-		}
-		else if (node instanceof PModule) {
-			PModule pmod = (PModule) node;
-			pmod.setAllHighlights(false);
-			e.setHandled(true);
-			lastEntered = null;
-		}
-		else
-			super.mouseExited(e);
-	}
-	
-	/**
-	 * To handle a popup, look at the parent of the node that the event was 
-	 * on. If that parent is a bufferend node, zoom to center it.
-	 * Or, if the parent is the camera, zoom to center it.
-	 * Or, if the event was on the camera, zoom to center it.
-	 */
-	private void handlePopup(PInputEvent e) {
-		postPopup = true;
-		PNode node = e.getPickedNode();
-		PNode p = node.getParent();
-			
-		if (p instanceof PBufferedNode) {
-			PBufferedNode bn=(PBufferedNode) p;
-			PBounds b = bn.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
-		} else if (p instanceof PCamera || p == canvas.getLayer() ||
-			node instanceof PCamera || node == canvas.getLayer()) {
-			PBounds b = canvas.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-		}
-		e.setHandled(true);	 
-	}
-	 
 }

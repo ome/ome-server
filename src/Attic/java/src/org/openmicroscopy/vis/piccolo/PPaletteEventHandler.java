@@ -43,13 +43,10 @@
 package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CModule;
-import edu.umd.cs.piccolo.event.PPanEventHandler;
-import edu.umd.cs.piccolo.event.PInputEvent;
-import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
-import edu.umd.cs.piccolo.PCamera;
-import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.event.PInputEvent;
 import java.awt.event.MouseEvent;
+
 
 
 /** 
@@ -61,7 +58,7 @@ import java.awt.event.MouseEvent;
  * @since OME2.1
  */
 
-public class PPaletteEventHandler extends  PPanEventHandler {
+public class PPaletteEventHandler extends  PModuleZoomEventHandler {
 	
 	/**
 	 * The Canvas for which we are handling events
@@ -90,9 +87,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	private CModule lastModule;
 	
 	public PPaletteEventHandler(PPaletteCanvas canvas) {
-		super();
-		setEventFilter(new PInputEventFilter());
-		setAutopan(false);
+		super(canvas);
 		this.canvas = canvas;		
 	}
 	
@@ -104,7 +99,7 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	 * 
 	 */
 	public void mousePressed(PInputEvent e) {
-		
+	
 		if (e.isPopupTrigger()) {
 			handlePopup(e);
 			return;
@@ -115,60 +110,16 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			if (node instanceof PFormalParameter)
 				p = ((PFormalParameter) node).getPModule();
 			else
-			 	p = (PModule) node;
+				p = (PModule) node;
 			canvas.setSelected(p);
 		}
 		else {
 			canvas.setSelected(null);
 			super.mousePressed(e);
 		}
-	}
+	} 
 	
-
-	/**
-	 * If the mouse is clicked on a buffered node (either a 
-	 * {@link PCategoryBox}, or a {@link PModule}, zoom to center it.
-	 * If the mouse is clicked on the layer or on the {@link PCamera},
-	 * zoom to center the entire canvas.
-	 * 
-	 * If we right click, zoom out to the parent of where we clicked.
-	 */
-	public void mouseClicked(PInputEvent e) {
-		PNode node = e.getPickedNode();
-		int mask = e.getModifiers() & allButtonMask;
-		
-		if (postPopup == true) {
-			postPopup = false;
-			e.setHandled(true);
-			return;
-		}
-		if (mask == MouseEvent.BUTTON1_MASK && e.getClickCount() == 1) {
-		
-			if (e.isControlDown()) {
-				handlePopup(e);	
-			}
-			else if (node instanceof PBufferedNode) {
-				PBufferedNode cBox = (PBufferedNode) node;				
-				PBounds b = cBox.getBufferedBounds();
-				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-				e.setHandled(true); 
-			}
-			else if (node instanceof PCamera || node == canvas.getLayer()) {
-				PBounds b = canvas.getBufferedBounds();
-				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-				e.setHandled(true);
-			}
-			else
-				super.mouseClicked(e);
-		} 
-		else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1) {
-			handlePopup(e);
-		}
-		else
-			super.mouseClicked(e);
-	}
+	
 	
 	/**
 	 * Clear the selection of the current when the mouse is released. 
@@ -184,106 +135,8 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		}
 	}
 	
-	public void mouseDragged(PInputEvent e) {
-		 e.setHandled(true);
-	} 
-	
-	/**
-	 * When the mouse enters a PFormalParameter or a PModule, set corresponding
-	 * items to be highlighted, according to the following rule:
-	 * 		1) If necessary, Clear anything that had been highlighted 
-	 * 				previously
-	 * 		2) If the node that is entered is a formal parameter, set its
-	 * 				corresponding parameters(parameters it can ink to)
-	 * 				to be highlighted, along with all of the module widgets 
-	 * 				for the containing module. 
-	 * 		3)  if It is a module widget, set all outputs and inputs (from
-	 * 				other modules) that might be linked to this module 
-	 * 				to be highlighted. Also set all instances of this module
-	 * 				to be highlighted.
-	 * 
-	 */
-	public void mouseEntered(PInputEvent e) {
-		PNode node = e.getPickedNode();
-		
-		unhighlightModules();
-		if (node instanceof PFormalParameter) {
-			PFormalParameter param = (PFormalParameter) node;
-			param.setParamsHighlighted(true);
-			PModule pmod = param.getPModule();
-			pmod.setModulesHighlighted(true);
-			//canvas.setTreeSelection((CModule)pmod.getModule());
-			e.setHandled(true);
-		}
-		
-		else if (node instanceof PModule) {
-			PModule pmod = (PModule) node;
-			pmod.setAllHighlights(true);
-			e.setHandled(true);
-			lastEntered = pmod;
-			//canvas.setTreeSelection((CModule)pmod.getModule());
-		}
-		else {
-			super.mouseEntered(e);
-		}
-	}
-	
-
-	/**
-	 * When the mouse exits a node, set all of the modules and/or 
-	 * parameters that correspond to no longer be selected. Note that leaving a 
-	 * {@link PFormalParameter} might immediately and directly lead to
-	 * entering a {@link PModule}, so a {@link mouseEntered()} call 
-	 * might immediately follow.
-	 * 
-	 */
-	public void mouseExited(PInputEvent e) {
-		PNode node = e.getPickedNode();
-
-		if (node instanceof PFormalParameter) {
-			PFormalParameter param = (PFormalParameter) node;
-			param.setParamsHighlighted(false);
-			PModule pmod = param.getPModule();
-			pmod.setAllHighlights(false);
-			e.setHandled(true);			
-		}
-		else if (node instanceof PModule) {
-			PModule pmod = (PModule) node;
-			pmod.setAllHighlights(false);
-			e.setHandled(true);
-			lastEntered = null;
-		}
-		else
-			super.mouseExited(e);
-	}
-	
-	/***
-	 * Zoom out to the parent of the current node when we get a popup
-	 */
-	private void handlePopup(PInputEvent e) {
-		System.err.println("handling a popup on palette");
-		postPopup = true;
-		PNode node = e.getPickedNode();
-		PNode p = node.getParent();
-		System.err.println("parent of node clicked on "+p);
-		if (p instanceof PBufferedNode) {
-			PBufferedNode bn=(PBufferedNode) p;
-			PBounds b = bn.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
-		} else if (p instanceof PCamera || p == canvas.getLayer() ||
-					node instanceof PCamera || node == canvas.getLayer()) {
-			PBounds b = canvas.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-		}
-		e.setHandled(true);
-	}
-	
-	public void unhighlightModules() {
-		if (lastEntered != null) {
-			lastEntered.setParamsHighlighted(false);
-		}
+	protected void unhighlightModules() {
+		super.unhighlightModules();
 		if (lastModule != null) {
 			lastModule.setModulesHighlighted(false);	
 			lastEntered = null;
