@@ -133,7 +133,6 @@ sub importFiles {
     my $files_mex = $importer->startImport();
 
 	eval {
-
             my @files;
 
             foreach my $filename (@$filenames) {
@@ -175,7 +174,6 @@ sub importFiles {
 				$task->setMessage('Executing import chain');
 				my $chain = $session->Configuration()->import_chain();
 				if (defined $chain) {
-					$OME::Analysis::Engine::DEBUG = 0;
 					OME::Analysis::Engine->executeChain($chain,$dataset,{});
 				}
 			} else {
@@ -205,6 +203,7 @@ sub importFiles {
 
             logwarn "Could not close task - $@" if $@;
         }
+	return $importer->{_images};
 }
 
 
