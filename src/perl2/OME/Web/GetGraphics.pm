@@ -105,12 +105,58 @@ sub FrameImageViewer {
 	$self->contentType('text/html');
 	# Embedding in frames instead of object allows Mozilla > v1 to run it.
 	$HTML .= <<ENDHTML;
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
 <html>
+<head>
 <title>$nombre</title>
-	<frameset rows="*">
-		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&PixelsID=$PixelsID">
-	</frameset>
+	<!-- Check if browsers have SVG support and record if we need to use
+	     VBScript detection method if the number of MIME types is 0. -->
+	<script language="JavaScript1.1" type="text/javascript">
+	    // Variable to keep track of user's SVG support
+	    var hasSVGSupport = false;
+
+	    // Variable to indicate whether we need to use VBScript method to
+	    // detect SVG support
+	    var useVBMethod = false;
+
+	    // Internet Explorer returns 0 as the number of MIME types,
+	    // so this code will not be executed by it. This is our indication
+	    // to use VBScript to detect SVG support.
+	    if (navigator.mimeTypes != null
+		 && navigator.mimeTypes.length > 0) {
+	    	if (navigator.mimeTypes["image/svg-xml"] != null) {
+		    hasSVGSupport = true;
+		}
+	    } else {
+		useVBMethod = true;
+	    }
+
+	</script>
+
+	<!-- Visual Basic Script to detect support of Adobe SVG plugin. This
+	     code is not run on browsers which report they have MIME types, and
+	     it is also not run by browsers which do not have VBScript support.
+	 -->
+	<script language="VBScript" type="text/vbscript">
+		On Error Resume Next
+		If useVBMethod = true Then
+			hasSVGSupport = IsObject(CreateObject("Adobe.SVGCtl"))
+		End If
+	</script>
+
+	<!-- Send user to appropriate URL based on their SVG support -->
+	<script language="JavaScript1.1" type="text/javascript">
+
+	    if (hasSVGSupport == true) {
+		// Send user to URL which will display SVG images
+;	    	document.write( '<frameset rows="*"><frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&PixelsID=$PixelsID"></frameset>' );
+	    } else {
+		// Send user to URL which will display other graphics
+	    	document.write( 'You Need an SVG plugin to use this viewer. You can get one for free from Adobe: <a href="http://www.adobe.com/svg/viewer/install/main.html">http://www.adobe.com/svg/viewer/install/main.html</a>');
+	    }
+	</script>
+</head>
 </html>
 ENDHTML
 
