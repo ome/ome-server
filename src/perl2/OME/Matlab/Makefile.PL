@@ -117,7 +117,7 @@ sub MY::test {
 	my $str = shift->SUPER::test(@_);
 	if ($matlab_arch eq "mac") {
 		print "Adding DYLD_LIBRARY_PATH to Make Test ...\n"
-			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=/Applications/MATLAB6p5/extern/lib/mac#m;
+			if $str =~ s#PERL_DL_NONLAZY=1#PERL_DL_NONLAZY=1 DYLD_LIBRARY_PATH=$matlab_lib#m;
 	}
 	return $str;
 }
