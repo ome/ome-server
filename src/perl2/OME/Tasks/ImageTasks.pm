@@ -3,19 +3,19 @@
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
-#    This library is free software; you can redistribute it and/or
-#    modify it under the terms of the GNU Lesser General Public
-#    License as published by the Free Software Foundation; either
-#    version 2.1 of the License, or (at your option) any later version.
+#	 This library is free software; you can redistribute it and/or
+#	 modify it under the terms of the GNU Lesser General Public
+#	 License as published by the Free Software Foundation; either
+#	 version 2.1 of the License, or (at your option) any later version.
 #
-#    This library is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#    Lesser General Public License for more details.
+#	 This library is distributed in the hope that it will be useful,
+#	 but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#	 Lesser General Public License for more details.
 #
-#    You should have received a copy of the GNU Lesser General Public
-#    License along with this library; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#	 You should have received a copy of the GNU Lesser General Public
+#	 License along with this library; if not, write to the Free Software
+#	 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
 package OME::Tasks::ImageTasks;
@@ -37,37 +37,37 @@ use Carp;
 # array of DBObjects.
 
 sub __addOneImageToDataset ($$$) {
-    my ($factory, $dataset, $image) = @_;
+	my ($factory, $dataset, $image) = @_;
 
-    eval {
+	eval {
 	my $link = $factory->newObject("OME::Image::DatasetMap",
-				       {image   => $image,
+					   {image	=> $image,
 					dataset => $dataset});
-    }
-    
-    # This should be a better error check - right now we
-    # assume that any error represents an attempt to create a
-    # duplicate map entry, which we silently ignore.
+	}
+	
+	# This should be a better error check - right now we
+	# assume that any error represents an attempt to create a
+	# duplicate map entry, which we silently ignore.
 }
 
 sub addImagesToDataset ($$$) {
-    my ($factory, $dataset, $images) = @_;
+	my ($factory, $dataset, $images) = @_;
 
-    if (ref($images) eq 'ARRAY') {
+	if (ref($images) eq 'ARRAY') {
 	# We have an array of image objects
 
-        foreach my $image (@$images) {
-	    __addOneImageToDataset($factory,$dataset,$image);
+		foreach my $image (@$images) {
+		__addOneImageToDataset($factory,$dataset,$image);
 	}
-    } else {
+	} else {
 	# We should have an iterator
 	
 	while (my $image = $images->next()) {
-	    __addOneImageToDataset($factory,$dataset,$image);
+		__addOneImageToDataset($factory,$dataset,$image);
 	}
-    }
+	}
 
-    $factory->dbi_commit();
+	$factory->dbi_commit();
 }
 
 
@@ -78,122 +78,63 @@ sub addImagesToDataset ($$$) {
 # a null character in the input string will do).
 
 sub removeWeirdCharacters {
-    my $hash = shift;
-    my $anyRemoved = 0;
+	my $hash = shift;
+	my $anyRemoved = 0;
 
-    foreach my $key (keys(%$hash)) {
-        my $value = $hash->{$key};
-        if (!ref($value)) {
-            my $replaced = ($value =~ s/[\x00]//g);
-            $hash->{$key} = $value;
-            print STDERR "   $key $replaced\n";
-            $anyRemoved = $replaced if $replaced;
-        }
-    }
+	foreach my $key (keys(%$hash)) {
+		my $value = $hash->{$key};
+		if (!ref($value)) {
+			my $replaced = ($value =~ s/[\x00]//g);
+			$hash->{$key} = $value;
+			print STDERR "	 $key $replaced\n";
+			$anyRemoved = $replaced if $replaced;
+		}
+	}
 
-    return $anyRemoved;
+	return $anyRemoved;
 }
 
 
 # importFiles(session,project,filenames)
 # --------------------------------------
-# Imports the selected files into OME.  The session is used to
+# Imports the selected files into OME.	The session is used to
 # interact with the database, and all of the images are assigned to
 # the given project.
 
 sub importFiles {
-    my ($session,$project,$dsname,$filenames) = @_;
-    my $importer;
-    my $fn_groups;
-    my $sth;
-    my $status = "Failed import";
+	my ($session,$dataset,$filenames) = @_;
+	my $importer;
+	my $fn_groups;
+	my $status = "Failed import";
 
-    return $status  unless
-        (defined $session) &&
-        (defined $project) &&
-	(defined $dsname)     &&
-        (defined $filenames);
+	return $status	unless
+		(defined $session) &&
+		(defined $dataset)	  &&
+		(defined $filenames);
 
-    $status = "";
-    my $projectUser = $session->User();
-    my $projectGroup = $projectUser->group();
-    my $data = {name => $dsname,
-		locked => 'false',
-		owner_id => $projectUser,
-		group_id => $projectGroup
-		};
+	$status = "";
 
-    # Iterate thru all datasets w/ same name (if any)
-    my $dsets = OME::Dataset->search(name => $dsname);
-    my $found = 0;
-    my $ds;
-    while (my $dset = $dsets->next) {
-	# See if dataset's owner is us
-	if ($dset->owner()->{experimenter_id} == $projectUser->{experimenter_id}) {
-	    $found = 1;
-	    $ds = $dset;
-	    last;
-	}
-    }
-    # if found dataset w/ same name & owner, reuse it. Else, create new dataset.
-    if ($found) {
-	if ($ds->locked()) {
-	    $status = "Requested dataset $dsname locked - can\'t add more images";
-	    return $status;
-	}
-    } else {
-	$ds = $session->Factory->newObject("OME::Dataset", $data);
-    }
-
-    # see if a project/dataset map entry (row) already exists
-    # for this project & this dataset. If not, create it.
-    my $pid = $project->id();
-    my $dsid = $ds->id();
-    #my $pdMap = OME::Project::DatasetMap->project_and_dataset($pid, $dsid);
-    my $pdMaps = OME::Project::DatasetMap->search(dataset_id => $dsid);
-    $found = 0;
-    while (my $pdMap = $pdMaps->next) {
-	if ($pdMap->project_id()->{project_id} == $pid) {
-	    $found = 1;
-	    last;
-	}
-    }
-
-    if ($found == 0) {
-	$data = {project_id => $project,
-		 dataset_id => $ds};
-	$pdMap = $session->Factory->newObject("OME::Project::DatasetMap", $data);
-	if (! $pdMap) {
-	    $status = "Failed to create Project<->Dataset map entry";
-	    return $status;
-	}
-    }
-
-    $importer = OME::ImportExport::Importer->new($filenames, $session);
-    $fn_groups = $importer->{fn_groups};
-    carp "No files to import"
+	$importer = OME::ImportExport::Importer->new($filenames, $session);
+	$fn_groups = $importer->{fn_groups};
+	carp "No files to import"
 	unless scalar @$fn_groups > 0;
 
-    foreach $image_group_ref (@$fn_groups) {
-	$importer->import_image($ds, $image_group_ref);
-	if ($importer->{did_import}) {
-	    $session->DBH()->commit();
+	foreach $image_group_ref (@$fn_groups) {
+		$importer->import_image($dataset, $image_group_ref);
+		if ($importer->{did_import}) {
+			$session->DBH()->commit();
+		}
+		else {
+			$status = "Failed to import at least one image";
+		}
 	}
-	else {
-	    $status = "Failed to import at least one image";
-	}
-    }
 
-    # could test here - if either any or all imports failed,
-    # don't write dataset record to db.
-    $ds->writeObject();
-
-    # update project_datasets_map
-    #$project->Field("datasets", $ds);
-    $project->writeObject();
+	# could test here - if either any or all imports failed,
+	# don't write dataset record to db.
+	$dataset->writeObject();
 
 
-    return $status;
+	return $status;
 
 
 }
@@ -206,25 +147,25 @@ sub importFiles {
 
 
 sub exportFiles {
-    my ($i, $sz, $type);
-    my $image_list;
-    my ($session, $argref) = @_;
+	my ($i, $sz, $type);
+	my $image_list;
+	my ($session, $argref) = @_;
 
-    return unless
-        (defined $session) &&
-        (defined $argref);
+	return unless
+		(defined $session) &&
+		(defined $argref);
 
-    $type = $$argref[0];
-    $sz = scalar(@$argref);
-    for ($i = 1; $i < $sz; $i++) {
+	$type = $$argref[0];
+	$sz = scalar(@$argref);
+	for ($i = 1; $i < $sz; $i++) {
 	push @image_list, $$argref[$i];
-    }
+	}
 
-    # Need to determine how to locate repository for given image IDs\
-    # when we go to more than 1 repository.
-    my $repository = findRepository($session, 0);
+	# Need to determine how to locate repository for given image IDs\
+	# when we go to more than 1 repository.
+	my $repository = findRepository($session, 0);
 
-    my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
+	my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
 
 }
 
@@ -240,12 +181,12 @@ sub exportFiles {
 my $onlyRepository;
 
 sub findRepository {
-    return $onlyRepository if defined $onlyRepository;
-    
-    my ($session, $aref) = @_;
-    $onlyRepository = $session->Factory()->loadObject("OME::Repository",1);
-    return $onlyRepository if defined $onlyRepository;
-    die "Cannot find repository #1.";
+	return $onlyRepository if defined $onlyRepository;
+	
+	my ($session, $aref) = @_;
+	$onlyRepository = $session->Factory()->loadObject("OME::Repository",1);
+	return $onlyRepository if defined $onlyRepository;
+	die "Cannot find repository #1.";
 }
 
 
