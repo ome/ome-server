@@ -134,6 +134,7 @@ our %xml_image_entries = (NumCol => 'SizeX',
                           NumRows => 'SizeY',
                           NumWaves =>'NumWaves',
                           NumTimes => 'NumTimes',
+			  lensnum  => 'LensID',
                           mx       => 'PixelSizeX',
                           my       => 'PixelSizeY',
                           mz       => 'PixelSizeZ'
@@ -284,7 +285,6 @@ sub formatImage {
 		    @obuf = unpack($ifmt, $ibuf);
 		    $rowbuf = pack($ofmt, @obuf);
 		    push @xy, $rowbuf;
-		    #print $foh  $ibuf;              # write to repository file
 		    $offset += $row_size;
 		}
 		push @xyz, \@xy;
