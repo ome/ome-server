@@ -55,6 +55,7 @@ use OME::ImportExport::HierarchyImport;
 use OME::ImportExport::DataHistoryImport;
 use OME::ImportExport::ResolveFiles;
 use OME::Image::Server::File;
+use OME::Tasks::PixelsManager;
 
 sub new {
     my ($proto, %params) = @_;
