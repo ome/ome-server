@@ -322,6 +322,21 @@ sub renderSingle {
 	return \%record;
 }
 
+=head2 getObjectLabels
+
+	my $object_labels = OME::Web::DBObjRender->getObjectLabels( \@objects  );
+
+The plural of getObjectLabel. Should not be overriden.
+
+=cut
+
+sub getObjectLabels {
+	my ($proto,$objs) = @_;
+	my @labels = map( $proto->getObjectLabel( $_ ), @$objs );
+	return @labels if wantarray;
+	return \@labels;
+}
+
 =head2 getObjectLabel
 
 	my $object_label = OME::Web::DBObjRender->getObjectLabel( $object  );
@@ -343,6 +358,21 @@ sub getObjectLabel {
 	return $obj->name() if( $obj->getColumnType( 'name' ) );
 	return $obj->Name() if( $obj->getColumnType( 'Name' ) );
 	return $obj->id();
+}
+
+=head2 getRefsToObject
+
+	my $object_refs = OME::Web::DBObjRender->getRefsToObject( \@objects, $format  );
+
+The plural of getRefToObject. Should not be overriden.
+
+=cut
+
+sub getRefsToObject {
+	my ($proto,$objs, $format) = @_;
+	my @refs = map( $proto->getRefToObject( $_, $format ), @$objs );
+	return @refs if wantarray;
+	return \@refs;
 }
 
 =head2 getRefToObject
