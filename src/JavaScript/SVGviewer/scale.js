@@ -241,8 +241,8 @@ Scale.prototype.init = function(image, updateBlack, updateWhite, waveChange) {
 			}
 		if(!BSflag) {
 		// values weren't in image.WBS, set to default
-			this.BS[ image.WBS[j*3] ]['B'] = 0;
-			this.BS[ image.WBS[j*3] ]['S'] = 4;
+			this.BS[ image.Wavelengths[i]['WaveNum'] ]['B'] = 0;
+			this.BS[ image.Wavelengths[i]['WaveNum'] ]['S'] = 4;
 		}
 	}
 	this.image = image;
