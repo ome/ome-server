@@ -957,4 +957,61 @@ sub close {
     return;
 }
 
+package OME::Factory::LinkIterator;
+use OME;
+our $VERSION = $OME::VERSION;
+
+use strict;
+
+use Carp;
+
+use fields qw(__iterator __method __params);
+
+sub new {
+    my $proto = shift;
+    my $pclass = ref($proto) || $proto;
+
+    my $iterator = shift;
+    my $method = shift;
+    my @params = @_;
+
+    my $self = {
+                __iterator => $iterator,
+                __method   => $method,
+                __params   => \@params,
+               };
+
+    return bless $self, $pclass;
+}
+
+sub first {
+    my $self = shift;
+    my $result = $self->{__iterator}->first();
+    return undef unless defined $result;
+
+    my $method = $self->{__method};
+    my $params = $self->{__params};
+    return $result->$method(@$params);
+}
+
+sub next {
+    my $self = shift;
+    my $result = $self->{__iterator}->next();
+    return undef unless defined $result;
+
+    my $method = $self->{__method};
+    my $params = $self->{__params};
+    return $result->$method(@$params);
+}
+
+sub finish {
+    my $self = shift;
+    $self->{__iterator}->finish();
+}
+
+sub close {
+    my $self = shift;
+    $self->{__iterator}->close();
+}
+
 1;

@@ -88,8 +88,14 @@ __PACKAGE__->addColumn(locked => 'locked',
                         NotNull => 1,
                         Default => 'false',
                        });
-__PACKAGE__->hasMany('image_links','OME::Image::DatasetMap' => 'dataset');
-__PACKAGE__->hasMany('project_links','OME::Project::DatasetMap' => 'dataset');
+
+__PACKAGE__->hasMany('image_links','OME::Image::DatasetMap','dataset');
+__PACKAGE__->manyToMany('images',
+                        'OME::Image::DatasetMap','dataset','image');
+
+__PACKAGE__->hasMany('project_links','OME::Project::DatasetMap','dataset');
+__PACKAGE__->manyToMany('projects',
+                        'OME::Project::DatasetMap','dataset','project');
 
 =head1 METHODS (C<Dataset>)
 
@@ -180,16 +186,6 @@ sub group {
     }
 }
 
-sub projects {
-	my $self = shift;
-	return map $_->project(), $self->project_links();
-}
-
-sub images{
-  	my $self = shift;
-	return map $_->image(), $self->image_links();
-
-}
 # Added 18-03
 sub addImage{
   my $self=shift;

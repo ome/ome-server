@@ -120,23 +120,10 @@ __PACKAGE__->addColumn('group_id' => 'group_id',
 __PACKAGE__->addColumn(description => 'description',{SQLType => 'text'});
 __PACKAGE__->addColumn(view => 'view',{SQLType => 'varchar(64)'});
 
-# Has-manys don't do anything yet, but this is what they'd look like.
 __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
+__PACKAGE__->manyToMany('datasets',
+                        'OME::Project::DatasetMap','project','dataset');
 
-
-# Added by IGG to restore the datasets() method.
-# FIXME:  Please remove when hasMany gets supported.
-sub datasets {
-	my $self = shift;
-	my $factory = $self->Session()->Factory();
-	my @projectDatasets = $self->dataset_links();
-	my @datasets;
-	foreach (@projectDatasets) {
-		push (@datasets,$factory->loadObject ('OME::Dataset',$_->dataset_id()) );
-	} 
-	return @datasets;
-	
-}
 
 sub owner {
     my $self = shift;

@@ -132,6 +132,9 @@ __PACKAGE__->addColumn(inserted => 'inserted',
 __PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
 
 __PACKAGE__->hasMany('dataset_links','OME::Image::DatasetMap' => 'image');
+__PACKAGE__->manyToMany('datasets',
+                        'OME::Image::DatasetMap','image','dataset');
+
 __PACKAGE__->hasMany('all_features','OME::Feature' => 'image');
 
 =head2 experimenter
@@ -195,10 +198,7 @@ returns all datasets that the image belongs to
 
 =cut
 
-sub datasets {
-	my $self = shift;
-	return map $_->dataset(), $self->dataset_links();
-}
+# datasets method defined by previous manyToMany call
 
 =head2 GetPix
 

@@ -90,6 +90,10 @@ __PACKAGE__->mk_classdata('__tables');
 # __primaryKeys()->{$table} = $column
 __PACKAGE__->mk_classdata('__primaryKeys');
 
+# A list of the has-many accessors which have been defined, stored as a
+# hash-set (contents in keys, "undef" in values)
+__PACKAGE__->mk_classdata('__hasManys');
+
 # The sequence used to get new primary key ID's
 __PACKAGE__->mk_classdata('__sequence');
 
@@ -232,6 +236,7 @@ sub newClass {
     $class->__defaultTable(undef);
     $class->__tables({});
     $class->__primaryKeys({});
+    $class->__hasManys({});
     $class->__sequence(undef);
 
     return;
@@ -466,6 +471,9 @@ sub addColumn {
     #print "Adding $table.$column to $class\n";
 
     foreach my $alias (@$aliases) {
+        die "Already a column named $alias"
+          if defined $class->getColumnType($alias);
+
         # Create an entry in __columns
         $class->__columns()->{$alias} = [$table,$column,
                                          $foreign_key_class,
@@ -557,7 +565,7 @@ sub addColumn {
 
 =head2 getColumn
 
-	my $column_def = __PACKAGE__->getColumn($alias);
+	my $column_def = $class->getColumn($alias);
 
 Returns the definition of the logical column with the specified alias.
 This is mostly for internal purposes, and is used to generate the
@@ -583,6 +591,34 @@ sub getColumn {
     my $alias = shift;
 
     return $class->__columns()->{$alias};
+}
+
+=head2 getColumnType
+
+	my $column_type = $class->getColumnType($alias);
+
+Returns the type of the logical column with the specified alias.  If
+the column exists, the type will be one of three values -- "normal",
+"has-one", or "has-many".  If the column does not exist, the method
+returns undef.
+
+=cut
+
+sub getColumnType {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+
+    if (defined $class->__columns()->{$alias}) {
+        return defined $class->__columns()->{$alias}->[2]?
+          "has-one":
+          "normal";
+    } elsif (exists $class->__hasManys()->{$alias}) {
+        return "has-many";
+    } else {
+        return undef;
+    }
 }
 
 =head2 hasMany
@@ -631,7 +667,12 @@ sub hasMany {
 
     #print "Adding has-many from $foreign_key_alias in $foreign_key_class to $class\n";
 
+    my $has_manys = $class->__hasManys();
+
     foreach my $alias (@$aliases) {
+        die "Already an alias named $alias"
+          if defined $class->getColumnType($alias);
+
         # Create an accessor/mutator
         my $accessor = sub {
             my $self = shift;
@@ -639,6 +680,105 @@ sub hasMany {
             return $factory->findObjects($foreign_key_class,
                                          $foreign_key_alias => $self->{__id});
         };
+
+        $has_manys->{$alias} = undef;
+
+        no strict 'refs';
+        *{"$class\::$alias"} = $accessor;
+    }
+}
+
+=head2 manyToMany
+
+	__PACKAGE__->manyToMany($aliases,$map_class,$map_alias,$map_linker);
+
+Defines a many-to-many relationship for this subclass.  This is
+basically the same thing as a has-many relationship (defined by the
+C<hasMany> method), with an additional linking table.  The linking
+table still must be defined as its own DBObject subclass, but once
+that is done, this method can be used to provide accessors which
+transparently use the mapping table.
+
+For instance, projects and datasets have a many-to-many relationship,
+involving the C<OME::Project>, C<OME::Dataset>, and
+C<OME::Project::DatasetMap> classes.  In C<OME::Project>,
+
+	__PACKAGE__->manyToMany('datasets',
+	                        'OME::Project::DatasetMap',
+	                        'project','dataset');
+
+causes a C<datasets> accessor to be created (first parameter), which
+loads in all of the C<OME::Project::DatasetMap> instances (second
+parameter) pointing to the current project (via its C<project> alias,
+third parameter).  Instead of returning those
+C<OME::Project::DatasetMap> instances, though, the C<dataset> accessor
+(fourth parameter) is called on each, and the results of those
+accessor calls are returned.
+
+As with all other list-retrieval accessors, if the many-to-many
+accessor is called in scalar context, an iterator is returned instead
+of a list.
+
+Note that manyToMany columns cannot be present in data hashes, either
+for creation or searching.
+
+=cut
+
+sub manyToMany {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my ($aliases, $map_class, $map_alias, $map_linker_alias) = @_;
+
+    # $aliases can be specified either as an array ref, or as a single
+    # scalar.  If it's a scalar, wrap it in an array ref to make the
+    # later code simpler.
+    $aliases = [$aliases] if !ref $aliases;
+
+    # Verify that the foreign key class is specified and valid.
+    if (defined $map_class) {
+        die "Malformed class name $map_class"
+          unless $map_class =~ /^\w+(\:\:\w+)*$/;
+    } else {
+        die "manyToMany called without a mapping class";
+    }
+
+    my $has_manys = $class->__hasManys();
+
+    foreach my $alias (@$aliases) {
+        die "Already an alias named $alias"
+          if defined $class->getColumnType($alias);
+
+        # Create an accessor/mutator
+        my $accessor = sub {
+            return unless defined wantarray;
+
+            my $self = shift;
+            my $factory = $self->Session()->Factory();
+
+            if (wantarray) {
+                my @links = $factory->
+                  findObjects($map_class,
+                              $map_alias => $self->{__id});
+
+                foreach my $link (@links) {
+                    $link = $link->$map_linker_alias();
+                }
+
+                return @links;
+            } else {
+                my $links = $factory->
+                  findObjects($map_class,
+                              $map_alias => $self->{__id});
+
+                my $iterator = OME::Factory::LinkIterator->
+                  new($links,$map_linker_alias);
+
+                return $iterator;
+            }
+        };
+
+        $has_manys->{$alias} = undef;
 
         no strict 'refs';
         *{"$class\::$alias"} = $accessor;
