@@ -157,6 +157,18 @@ sub user {
     return;
 }
 
+sub group {
+    my ($self, $group) = @_;
+
+    if ($group) {
+	$self->{group} = $group;
+    } else {
+	return $self->{group} unless not exists $self->{group};
+    }
+
+    return;
+}
+
 sub apache_user {
     my ($self, $user) = @_;
 
