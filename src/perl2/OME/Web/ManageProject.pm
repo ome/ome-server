@@ -78,22 +78,6 @@ sub getPageBody {
 	# Action field propagation
 	my $action = $cgi->param('action') || '';
 
-	if ($action eq 'Switch To') {
-		# Warning
-		if (scalar(@selected) > 1) {
-			$body .= $cgi->p({class => 'ome_error'}, 
-				"WARNING: Multiple projects chosen, selecting first choice ID $selected[0].");
-		}
-		
-		# Action
-		$projectManager->switch($selected[0]);
-		
-		$body .= $cgi->p({-class => 'ome_info'}, "Selected project $selected[0]."); 
-
-		# Top frame refresh
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}
-	
 	$body .= $self->print_form($projectManager);
 
     return ('HTML',$body);
@@ -107,10 +91,7 @@ sub print_form {
 	my ($self, $p_manager) = @_;
 	my $t_generator = new OME::Web::ProjectTable;
 
-	my $html = $t_generator->getTable( {
-			options_row => ["Switch To"],
-			select_column => 1,
-		},
+	my $html = $t_generator->getTable({},
 		$p_manager->getUserProjects()
 	);
 

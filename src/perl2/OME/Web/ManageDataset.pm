@@ -76,22 +76,7 @@ sub getPageBody {
 	# The project relations that were selected
 	my @rel_selected = $cgi->param('rel_selected');
 
-	if ($action eq 'Switch To'){
-		# Warning
-		if (scalar(@selected) > 1) {
-			$body .= $cgi->p({class => 'ome_error'}, 
-				"WARNING: Multiple datasets chosen, selecting first choice ID $selected[0].");
-		}
-
-		# Action
-		$datasetManager->switch($selected[0]);
-
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Selected dataset $selected[0].");
-		
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	} elsif ($action eq 'Remove'){
+	if ($action eq 'Remove'){
 		# Action
 		my $to_remove = {};
 
@@ -127,9 +112,8 @@ sub displayDatasets {
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			options_row => ["Switch To", "Remove"],
+			options_row => ["Remove from Dataset"],
 			relations => 1,
-			select_column => 1,
 		},
 		$d_manager->getUserDatasets()
 	);

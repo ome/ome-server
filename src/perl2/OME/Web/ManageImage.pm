@@ -123,10 +123,12 @@ sub printImages {
 	my $t_generator = new OME::Web::ImageTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
-	
+	my $d_name = $self->Session()->dataset()->name();
+
 	# Gen our images table
 	my $html = $t_generator->getTable( {
-			options_row => ["Remove from Dataset"],
+			options_row => ["Add to '$d_name'", 'Remove from Dataset'],
+			select_column => 1,
 			relations => 1,
 		},
 		$i_manager->getUserImages()
