@@ -65,6 +65,7 @@ our $VERSION = $OME::VERSION;
 
 use OME::Tasks::ImportManager;
 use OME::Tasks::PixelsManager;
+use OME::ImportEngine::ImportCommon;
 
 use fields qw(_session _module_execution);
 use File::Basename;
@@ -225,7 +226,7 @@ that are known before the import are recorded in the new image.
 =cut
 
 sub __newImage {
-    my ($self, $fn) = @_;
+    my ($self, $fn, $creation_time) = @_;
 
     my $session = $self->Session();
     my $guid = $session->Configuration()->mac_address();
@@ -233,6 +234,7 @@ sub __newImage {
     my $experimenter_id = $session->User()->id();
     my $user_group = $session->User()->Group();
     my $group_id = defined $user_group? $user_group->id(): undef;
+    my $nowtime  = OME::ImportEngine::ImportCommon::__getNowTime();
 
 
     my $recordData = {'name' => $fn,
@@ -240,8 +242,8 @@ sub __newImage {
 		      'description' => "",
 		      'experimenter_id' => $experimenter_id,
 		      'group_id' => $group_id,
-			  'created' => "now",
-		      'inserted' => "now",
+		      'created' => $creation_time,
+		      'inserted' => $nowtime,
               };
 
     my $image = $session->Factory->newObject("OME::Image", $recordData);
