@@ -1,264 +1,504 @@
 /*****
 
 	scale.js
-		external file dependencies: widget.js, slider.js, button.js, popupList.js, skinLibrary.js
-		
-		Author: Josiah Johnston
-		email: siah@nih.gov
+
+Copyright (C) 2003 Open Microscopy Environment
+		Massachusetts Institute of Technology,
+		National Institutes of Health,
+		University of Dundee
+
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
 	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
+	Written by: Josiah Johnston <siah@nih.gov>
+	
+				
 *****/
 
 var svgns = "http://www.w3.org/2000/svg";
 
 /*****
 
-	class variables
+	class constants
 	
 *****/
-Scale.VERSION = 0.1;
-Scale.prototype.scaleWidth = 180;
+Scale.VERSION = 0.2;
+Scale.scaleWidth = 180;
+Scale.defaultChannel = 0;
+Scale.displayChannelBGs = { 
+	Red:   skinLibrary['redGUIboxBG'],
+	Blue:  skinLibrary['blueGUIboxBG'],
+	Green: skinLibrary['greenGUIboxBG'],
+	Grey:  skinLibrary['greyGUIboxBG']
+};
+Scale.CBWmap = { 
+	Red: 0,
+	Green: 3,
+	Blue: 6,
+	Grey: 9
+};
 
-/********************************************************************************************/
-/********************************************************************************************/
-/*************************** Functions open to the world ************************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                 Public Functions 
+
+	Developer notes:
+		This class is set up to have exactly 4 instances (one for each
+		display channel) that share class data. Each instance has a
+		toolBox. Initialization is:
+			Scale.setClassData( image );
+			redScale = new Scale('Red', toolboxLayer);
+			blueScale = new Scale('Blue', toolboxLayer);
+			greenScale = new Scale('Green', toolboxLayer);
+			greyScale = new Scale('Grey', toolboxLayer);
+				
+
+********************************************************************************************/
 
 /*****
-
-	constructor
-		image = OMEimage
-		updateBlack = function for black slider to call
-		updateWhite = function for white slider to call
-		waveChagne = function for wave popuplist to call
-		
-	tested
-
+	Scale (constructor)
+		displayChannelLabel = Red, Green, Blue, or Grey
+		toolboxLayer = layer to render toolbox in
 *****/
-function Scale(image, updateBlack, updateWhite, waveChange) {
-	if(image.Dims != null)
-		this.init(image, updateBlack, updateWhite, waveChange)
-	else
-		alert("Bad parameters or image not initialized. Class creation of Scale.js failed");
+
+function Scale(displayChannelLabel, toolboxLayer) {
+	if(Scale.initialized &&
+	   Scale.displayChannelBGs[displayChannelLabel] ) {
+		this.init(displayChannelLabel, toolboxLayer);
+		Scale.displayChannels[ displayChannelLabel ] = this;
+	} else {
+		alert("Scale.setClassData has not been called!");
+	}
 }
 
+
 /*****
+	setLogicalChannel
+		logicalChannelIndex
 	
-	buildSVG
-	
-	returns:
-		SVG chunk describing Scale pane
-		
-	tested
-		
+	change the logical channel mapped to this display channel
 *****/
-Scale.prototype.buildSVG = function() {
-	// has initialization occured?
-	if(this.image == null) 
+Scale.prototype.setLogicalChannel = function(logicalChannelIndex) {
+	if(!(this.initialized)) { return null; }
+	var CBW = Scale.image.getCBW();
+	CBW[this.CBWmap] = logicalChannelIndex;
+	Scale.image.setCBW(CBW);
+	
+	var itemList = this.logicalChannelPopupList.getItemList();
+	this.logicalChannelPopupList.setSelectionByValue( itemList[logicalChannelIndex], true);
+	if( this.tiedLogicalChannelPopupList ) {
+		itemList = this.tiedLogicalChannelPopupList.getItemList();
+		this.tiedLogicalChannelPopupList.setSelectionByValue( itemList[logicalChannelIndex], true);
+	}
+	this.updateScaleDisplay();
+};
+
+
+/*****
+
+	updateScaleDisplay (class method)
+		uses global var 'theT'
+	
+	Update scale bar for all display channels.
+	
+*****/
+Scale.updateScaleDisplay = function() {
+	if(!Scale.initialized) {
 		return null;
-// set up references & constants
-	this.fluors = new Array();
-	for(var i in this.image.Wavelengths)
-		this.fluors[this.image.Wavelengths[i]['WaveNum']] = this.image.Wavelengths[i]['Label'];
+	}
 
-// build SVG
-	this.root = svgDocument.createElementNS(svgns, "g");
+	for( var i in Scale.displayChannels ) {
+		Scale.displayChannels[ i ].updateScaleDisplay();
+	}
+};
 
-	// set up GUI
-	this.blackSlider = new Slider( 
-		10, 70, this.scaleWidth, 0, 
-		this.updateBlack,
-		'<rect width="'+this.scaleWidth+'" height="10" opacity="0"/>',
-		'<rect x="-2" width="4" height="10" fill="black"/>'
-	);
-	this.whiteSlider = new Slider( 
-		10, 80, this.scaleWidth, 0, 
-		this.updateWhite,
-		'<rect width="'+this.scaleWidth+'" height="10" opacity="0"/>',
-		'<rect x="-2" width="4" height="10" fill="white"/>'
-	);
-	this.wavePopupList = new popupList(
-		10, 100, this.fluors, this.waveChange, null,
-		skinLibrary["popupListAnchorLightslategray"],
-		skinLibrary["popupListBackgroundLightskyblue"],
-		skinLibrary["popupListHighlightAquamarine"]
-	);
-	
-	// build background
-	this.root.appendChild( this.whiteSlider.textToSVG(
-'<g transform="translate(10,80)">\
-	<line x2="'+ this.scaleWidth +'" stroke-width="2" stroke="midnightblue"/>\
-	<line y1="-10" y2="10" stroke-width="2" stroke="midnightblue"/>\
-</g>'
-	));
-	this.geomeanTick = this.root.lastChild.lastChild;
-	this.root.lastChild.appendChild( this.whiteSlider.textToSVG(
-		'<rect y="-10" width="0" height="10" fill="black" opacity="0.3"/>'
-	));
-	this.blackBar = this.root.lastChild.lastChild;
-	this.root.lastChild.appendChild( this.whiteSlider.textToSVG(
-		'<rect width="0" height="10" fill="white" opacity="0.3"/>'
-	));
-	this.whiteBar = this.root.lastChild.lastChild;
-	
-	// build displays
-	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="20" y="2em">Black level: </text>'));
-	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="40" y="3em"> </text>'));
-	this.blackLabel = this.root.lastChild;
-	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="20" y="4em">White level: </text>'));
-	this.root.appendChild( this.whiteSlider.textToSVG(
-		'<text x="40" y="5em"> </text>'));
-	this.whiteLabel = this.root.lastChild;
 
-	this.blackSlider.realize( this.root );
-	this.whiteSlider.realize( this.root );
-	this.wavePopupList.realize( this.root );
+
+Scale.prototype.updateBlackLevel = function( val ) {
+	if(Math.round(val) == this.blackBar.getAttribute("width")) { return; }
 	
-	return this.root;
-}
+	var c = this.logicalChannelPopupList.getSelection();
+
+	if(val >= this.whiteSlider.getValue()) {
+		val = this.whiteSlider.getValue() - 0.00001;
+	}
+	Scale.BW[c]['B'] = this.inverseCalcScalePos( val );
+	Scale.updateCBW();
+
+	// update display
+	this.blackSlider.setValue(val);
+	this.blackLabel.firstChild.data = Scale.BW[c]['B'];
+	this.blackBar.setAttribute("width", Math.round(val) );
+
+	return Scale.BW[c]['B'];
+};
+
+
+Scale.prototype.updateWhiteLevel = function( val ) {
+	if(Math.round(val) == this.whiteBar.getAttribute("x")) { return; }
+	
+	var c = this.logicalChannelPopupList.getSelection();
+
+	if(val <= this.blackSlider.getValue()) {
+		val = this.blackSlider.getValue() + 0.00001;
+	}
+	Scale.BW[c]['W'] = this.inverseCalcScalePos( val );
+	Scale.updateCBW();
+
+	// update display
+	this.whiteSlider.setValue(val);
+	this.whiteLabel.firstChild.data = Scale.BW[c]['W'];
+	this.whiteBar.setAttribute("width", Scale.scaleWidth - Math.round(val) );
+	this.whiteBar.setAttribute("x", Math.round(val) );
+
+	return Scale.BW[c]['W'];
+};
+
+
 
 /*****
 
-	updateScale
-		t = theT
+	updateScaleDisplay (instance method)
+		uses global var 'theT'
 	
-	purpose:
-		Update scale based on info particular to W & T. Specifically, move
-		geomean tick mark, update positions of sliders
-
-	tested
+	Update scale bar to match a stack's info. Specifically, move tick 
+	marks & update labels.
 	
 *****/
+Scale.prototype.updateScaleDisplay = function() {
+	if(!this.initialized) {
+		return null;
+	}
 
-Scale.prototype.updateScale = function(t) {
-	// has buildSVG been called?
-	if(this.root == null) return null;
-	// verify params 
-	if(t != null && t>=0 && t<this.Dims['T'])
-		this.theT = t;
-	
 	// construct variables
-	var wavenum = this.wavePopupList.getSelection();
-	var min = this.Stats[wavenum][this.theT]['min'];
-	var max = this.Stats[wavenum][this.theT]['max'];
-	var range = max-min;
-	//var sigma = this.Stats[wavenum][this.theT]['sigma'];
-	var geosigma = this.Stats[wavenum][this.theT]['geosigma'];
-	this.geomeanX = (this.Stats[wavenum][this.theT]['geomean'] - min) / range * this.scaleWidth;
+	var c = this.logicalChannelPopupList.getSelection();
+	var min = Scale.Stats[c][theT]['min'];
+	var max = Scale.Stats[c][theT]['max'];
 
-	// move geomeanTick
-	this.geomeanTick.setAttribute("transform", "translate("+this.geomeanX+",0)");
-	// set B&W sliderVals to correct positions
-	var wSliderVal = (this.getCWhiteLevel(wavenum, this.theT) - min)/range * this.scaleWidth;
-	wSliderVal = Math.round(wSliderVal*100)/100;
-	this.whiteSlider.setValue(wSliderVal, true);
-	var bSliderVal = (this.getCBlackLevel(wavenum, this.theT) - min)/range * this.scaleWidth;
-	bSliderVal = Math.round(bSliderVal*100)/100;
-	this.blackSlider.setValue(bSliderVal, true);
-}
-
-/*****
+	var minSliderPos = this.calcScalePos( min );
+	var maxSliderPos = this.calcScalePos( max );
 	
-	updateWBS
-		channel = R|G|B|Gray
-		wavenum
-		
-		If both channel and wavenum are specified, the WBS will be updated to make
-		that channel display that wavelength.
-	
-	purpose:
-		update image.WBS
+	// set stack ticks & labels
+	this.stackMinLabel.setAttribute( 'transform', 'translate('+ minSliderPos+',0)' );
+	this.stackMinTick.setAttribute( 'transform', 'translate('+minSliderPos+',0)' );
+	this.stackMaxTick.setAttribute( 'transform', 'translate('+maxSliderPos+',0)' );
+	this.stackMaxLabel.setAttribute( 'transform', 'translate('+maxSliderPos+',0)' );
+	this.stackMinLabel.firstChild.data = min;
+	this.stackMaxLabel.firstChild.data = max;
+	this.globalMinLabel.firstChild.data = Scale.global_Min[c];
+	this.globalMaxLabel.firstChild.data = Scale.global_Max[c];
+};
 
-*****/
-Scale.prototype.updateWBS = function( channel, wavenum) {
-	if(scale.image == null) return null;
-	var channelMap = new Array();
-	channelMap['R'] = 0;
-	channelMap['G'] = 3;
-	channelMap['B'] = 6;
-	channelMap['Gray'] = 9;
-	var WBS = this.image.getWBS();
+
+
+
+
+Scale.setClassData = function(image) {
+	Scale.initialized = true;
+	Scale.displayChannels = new Array();
+	Scale.image = image;
+	Scale.Dims = image.Dims;
+	Scale.Stats = image.Stats;
+	// BW = Blacklevel & Whitelevel. Array indexed by channel number that stores Black level and Scale.
+	Scale.BW = new Array();
+	// set BW according to values from image.getCBW()
+	var imageCBW = image.getCBW();
+	Scale.channelLabels = new Array();
+	for(var i in image.Wavelengths) {
+		Scale.BW[image.Wavelengths[i]['WaveNum']] = new Array();
+		Scale.channelLabels[image.Wavelengths[i]['WaveNum']] = '[ ' + image.Wavelengths[i]['Label'] + ' ]';
+		// are values in image's CBW?
+		for(var j=0;j<4;j++) {
+			if(imageCBW[j*3] == image.Wavelengths[i]['WaveNum']) {
+				Scale.BW[ imageCBW[j*3] ]['B'] = imageCBW[j*3+1];
+				Scale.BW[ imageCBW[j*3] ]['W'] = imageCBW[j*3+2];
+			}
+		}
+	}
+	Scale.global_Min = new Array();
+	Scale.global_Max = new Array();
+	for(var c in Scale.Stats) {
+		Scale.global_Min[c] = Scale.Stats[c][0]['min'];
+		Scale.global_Max[c] = Scale.Stats[c][0]['max'];
+		for( var t in Scale.Stats[c] ) {
+			Scale.global_Min[c] = Math.min(Scale.Stats[c][t]['min'], Scale.global_Min[c]);
+			Scale.global_Max[c] = Math.max(Scale.Stats[c][t]['max'], Scale.global_Max[c]);
+		}
+	}
+
+};
+
+Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList) {
+	this.tiedLogicalChannelPopupList = logicalChannelPopupList;
+};
+
+/********************************************************************************************/
+/*                                 Private Functions */
+/********************************************************************************************/
+
+
+Scale.updateCBW = function() {
+	if(!(this.initialized)) { return null; }
+
+	var CBW = Scale.image.getCBW();
 	var changed = false;
 
-	if(channel != null && wavenum != null)
-		if(channelMap[channel] != null) {
-			WBS[channelMap[channel]] = wavenum;
+	for(var i=0;i<4;i++) {
+		var _ci = CBW[i*3];
+		if(CBW[i*3+1] != Scale.BW[_ci]['B']) {
 			changed = true;
+			CBW[i*3+1] = Scale.BW[_ci]['B'];
 		}
-
-	for(i=0;i<4;i++) {
-		var wavenum = WBS[i*3];
-		if(WBS[i*3+1] != this.BS[wavenum]['B']) {
+		if(CBW[i*3+2] != Scale.BW[_ci]['W']) {
 			changed = true;
-			WBS[i*3+1] = this.BS[wavenum]['B'];
-		}
-		if(WBS[i*3+2] != this.BS[wavenum]['S']) {
-			changed = true;
-			WBS[i*3+2] = this.BS[wavenum]['S'];
+			CBW[i*3+2] = Scale.BW[_ci]['W'];
 		}
 	}
 	if(changed) {
-		this.image.setWBS(WBS);
-	// If we are in B/W mode, then update this.wavePopupList to match
-		if( channel == 'Gray' ) {
-			v = this.wavePopupList.getItemList();
-			this.wavePopupList.setSelectionByValue( v[wavenum], true);
-		}
+		Scale.image.setCBW(CBW);
 	}
-}
+};
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
 
-/*****
 
-	init
-		image = OMEimage
-
-	tested
-
-*****/
-
-Scale.prototype.init = function(image, updateBlack, updateWhite, waveChange) {
-	this.Dims = image.Dims;
-	this.Stats = image.Stats;
-	this.BS = new Array();
-	// set BS according to values from image.WBS or defaults
-	for(var i in image.Wavelengths) {
-		this.BS[image.Wavelengths[i]['WaveNum']] = new Array();
-		var BSflag = false;
-		// are values in image.WBS?
-		for(var j=0;j<4;j++)
-			if(image.WBS[j*3] == image.Wavelengths[i]['WaveNum']) {
-				this.BS[ image.WBS[j*3] ]['B'] = image.WBS[j*3+1];
-				this.BS[ image.WBS[j*3] ]['S'] = image.WBS[j*3+2];
-				BSflag = true;
-			}
-		if(!BSflag) {
-		// values weren't in image.WBS, set to default
-			this.BS[ image.Wavelengths[i]['WaveNum'] ]['B'] = 0;
-			this.BS[ image.Wavelengths[i]['WaveNum'] ]['S'] = 4;
-		}
+Scale.prototype.buildToolBox = function( ) {
+	if( !this.initialized ) {
+		return null;
 	}
-	this.image = image;
-	this.theT = (this.image.oldT == null ? 0 : this.image.oldT);
-	this.updateBlack = updateBlack;
-	this.updateWhite = updateWhite;
-	this.waveChange = waveChange;
-}
+	var displayContent = this.buildDisplay();
+	var bbox = displayContent.getBBox();
+	var width = bbox.width + 2 * toolBox.prototype.padding;
+	var height = bbox.height + 2 * toolBox.prototype.padding;
+	this.toolBox = new toolBox(
+		255, 250, width, height, 
+		null,                                             // menu bar skin
+		skinLibrary["XhideControl"],                      // hide control skin
+		Scale.displayChannelBGs[this.displayChannelLabel] // background skin
+	);
+	this.logicalChannelPopupList = new popupList(
+		90, 0, Scale.channelLabels, 
+		{ method: 'setLogicalChannel', obj: this },
+		0,
+		skinLibrary["transparentBox"],
+		null, 
+		skinLibrary["whiteTranslucentBox"]
+	);
+	this.toolBox.closeOnMinimize( true );
+	this.toolBox.setLabel( 4,12,this.displayChannelLabel+" Scale");
+	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
+	this.toolBox.realize( this.toolboxLayer );
+	this.logicalChannelPopupList.realize( this.toolBox.getMenuBar() );
+	this.displayPane = this.toolBox.getGUIbox();
+	this.displayPane.appendChild( displayContent );
+	
+};
 
-Scale.prototype.getCWhiteLevel = function(w, t) {
-	//return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['S'];
-	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['geosigma'] * this.BS[w]['S'];
-}
 
-Scale.prototype.getCBlackLevel = function(w, t) {
-	//return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['B'];
-	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['geosigma'] * this.BS[w]['B'];
-}
+Scale.prototype.buildDisplay = function() {
+	if(!this.initialized) {
+		return null;
+	}
+
+	// set up references & constants
+	var channelIndex        = Scale.defaultChannel;
+	var blackLevel          = Math.round(Scale.BW[channelIndex]['B']);
+	var whiteLevel          = Math.round(Scale.BW[channelIndex]['W']);
+	var blackSliderPosition = this.calcScalePos( blackLevel );
+	var whiteSliderPosition = this.calcScalePos( whiteLevel );
+	if( blackSliderPosition < 0 ) { blackSliderPosition = 0; }
+	if( whiteSliderPosition > Scale.scaleWidth ) { whiteSliderPosition = Scale.scaleWidth; }
+
+
+// build SVG
+	this.displayContent =  createElementSVG( 'g' );
+
+	// set up GUI
+	this.blackSlider = new Slider( 
+		0, 70, Scale.scaleWidth, 0, 
+		{ method: 'updateBlackLevel', obj: this },
+		'<rect width="'+Scale.scaleWidth+'" height="10" opacity="0"/>',
+		'<rect x="-2" width="4" height="10" fill="black"/>',
+		blackSliderPosition
+	);
+	this.whiteSlider = new Slider( 
+		0, 60, Scale.scaleWidth, 0, 
+		{ method: 'updateWhiteLevel', obj: this },
+		'<rect width="'+Scale.scaleWidth+'" height="10" opacity="0"/>',
+		'<rect x="-2" width="4" height="10" fill="white"/>',
+		whiteSliderPosition
+	);
+		
+	// build slider background
+	this.backgroundLayer = createElementSVG( 'g', {
+		transform: 'translate(0,70)'
+	});
+	this.backgroundLayer.appendChild( 
+		createElementSVG( 'line', {
+			x2: (Scale.scaleWidth),
+			'stroke-width': 2,
+			stroke: "midnightblue"
+		})
+	);
+	// global minimum tick
+	this.backgroundLayer.appendChild( 
+		createElementSVG( 'line', { 
+			y2: 10, 
+			'stroke-width': 2, 
+			stroke: "midnightblue" 
+		}) 
+	);
+	// global minimum label
+	this.globalMinLabel = createTextSVG( Scale.global_Min[channelIndex], { 
+		'text-anchor': 'middle', 
+		y: 10, 
+		'dominant-baseline': 'hanging'
+	});
+	this.backgroundLayer.appendChild( this.globalMinLabel );
+	// global maximum tick
+	this.backgroundLayer.appendChild( 
+		createElementSVG( 'line', {
+			x1: Scale.scaleWidth, 
+			x2: Scale.scaleWidth, 
+			y2: 10, 
+			'stroke-width': 2, 
+			stroke: "midnightblue" 
+		}) 
+	);
+	// global maximum label
+	this.globalMaxLabel = createTextSVG( Scale.global_Max[channelIndex], { 
+		'text-anchor': 'middle', 
+		x: Scale.scaleWidth, 
+		y: 10, 
+		'dominant-baseline': 'hanging'
+	});
+	this.backgroundLayer.appendChild( this.globalMaxLabel );
+	// global label
+	this.backgroundLayer.appendChild( 
+		createTextSVG( 'min <-- GLOBAL --> max', { 
+			'text-anchor': 'middle', 
+			x: (Scale.scaleWidth/2), 
+			y: 10, 
+			'dominant-baseline': 'hanging',
+			fill: 'darkslategrey',
+			opacity: 0.5
+		}) 
+	);
+	// stack label
+	this.backgroundLayer.appendChild( 
+		createTextSVG( 'min <-- STACK --> max', { 
+			'text-anchor': 'middle', 
+			x: (Scale.scaleWidth/2), 
+			y: -2, 
+			fill: 'darkslategrey',
+			opacity: 0.5
+		}) 
+	);
+	// stack min/max ticks & labels
+	this.stackMinTick = createElementSVG( 'line', { 
+		y1: -12, 
+		y2: 0, 
+		'stroke-width': 2, 
+		stroke: "midnightblue" 
+	});
+	this.stackMinLabel = createTextSVG( '', { 
+		'text-anchor': 'middle', 
+		y: -14
+	});
+	this.stackMaxTick = createElementSVG( 'line', {
+		y1: -12, 
+		y2: 0, 
+		'stroke-width': 2, 
+		stroke: "midnightblue" 
+	});
+	this.stackMaxLabel = createTextSVG( '', { 
+		'text-anchor': 'middle', 
+		y: -14
+	});
+	this.backgroundLayer.appendChild( this.stackMinTick );
+	this.backgroundLayer.appendChild( this.stackMinLabel );
+	this.backgroundLayer.appendChild( this.stackMaxTick );
+	this.backgroundLayer.appendChild( this.stackMaxLabel );
+
+	this.blackBar = createElementSVG( 'rect', {
+		y: 0,
+		width: blackSliderPosition,
+		height: 10,
+		fill: 'black',
+		opacity: 0.3
+	});
+	this.backgroundLayer.appendChild( this.blackBar );
+	this.whiteBar = createElementSVG( 'rect', {
+		x: whiteSliderPosition,
+		y: -10,
+		width: ( Scale.scaleWidth - whiteSliderPosition ),
+		height: 10,
+		fill: 'white',
+		opacity: 0.3
+	});
+	this.backgroundLayer.appendChild( this.whiteBar );
+	this.displayContent.appendChild( this.backgroundLayer );
+
+	// build displays
+	this.blackLabel = createTextSVG( blackLevel, { x: Scale.scaleWidth, y: '1em', 'text-anchor': 'end' });
+	this.whiteLabel = createTextSVG( whiteLevel, { x: Scale.scaleWidth, y: '2em', 'text-anchor': 'end' });
+	this.displayContent.appendChild( this.blackLabel );
+	this.displayContent.appendChild( this.whiteLabel );
+	this.displayContent.appendChild( createTextSVG( 'Black level: ', { x: 10, y: '1em' }));
+	this.displayContent.appendChild( createTextSVG( 'White level: ', { x: 10, y: '2em' }));
+
+	this.blackSlider.realize( this.displayContent );
+	this.whiteSlider.realize( this.displayContent );
+	
+	var translate = 'translate( '+ toolBox.prototype.padding + ', ' + toolBox.prototype.padding + ')';
+	this.displayContent.setAttribute( 'transform', translate );
+
+	return this.displayContent;
+};
+
+
+
+Scale.prototype.calcScalePos = function( x ) {
+	if( !(Scale.initialized) ) { return 0; }
+	var c;
+	if( this.logicalChannelPopupList ) {
+		c = this.logicalChannelPopupList.getSelection();
+	} else { 
+		c = Scale.defaultChannel;
+	}
+	return Math.round( (x - Scale.global_Min[c])/(Scale.global_Max[c] - Scale.global_Min[c]) * Scale.scaleWidth );
+};
+
+
+
+Scale.prototype.inverseCalcScalePos = function( x ) {
+	if( !(Scale.initialized) ) { return 0; }
+	var c;
+	if( this.logicalChannelPopupList ) {
+		c = this.logicalChannelPopupList.getSelection();
+	} else { 
+		c = Scale.defaultChannel;
+	}
+	return Math.round( x/(Scale.scaleWidth)*(Scale.global_Max[c] - Scale.global_Min[c]) + Scale.global_Min[c] );
+};
+
+
+Scale.prototype.init = function(displayChannelLabel,toolboxLayer) {
+	this.initialized = true;
+	this.displayChannelLabel = displayChannelLabel;
+	this.toolboxLayer = toolboxLayer;
+	this.CBWmap = Scale.CBWmap[ displayChannelLabel ];
+	this.buildToolBox();
+};
+
