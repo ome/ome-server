@@ -29,17 +29,19 @@ our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';
 use Carp;
 use Log::Agent;
 use XML::LibXML;
+use XML::LibXSLT;
 
 use OME::Tasks::SemanticTypeExport;
 #use OME::Tasks::ProgramExport;
 #use OME::Tasks::ChainExport;
 use OME::Tasks::HierarchyExport;
+use OME::Tasks::InsertFiles;
 
 sub new {
 	my ($proto, %params) = @_;
 	my $class = ref($proto) || $proto;
 
-	my @fieldsILike = qw(session _doc);
+	my @fieldsILike = qw(session _doc _parser);
 
 	my $self;
 
@@ -60,6 +62,16 @@ sub new {
 		$self->{_doc} = $doc;
 	}
 
+    if (!defined $self->{_parser}) {
+        my $parser = XML::LibXML->new();
+        die "Cannot create XML parser"
+          unless defined $parser;
+
+        $parser->validation(exists $params{ValidateXML}?
+                            $params{ValidateXML}: 0);
+        $self->{_parser} = $parser;
+    }
+
 	return bless $self, $class;
 }
 
@@ -69,15 +81,48 @@ sub exportFile {
 	my $doc = $self->doc();
 	logdie ref ($self)."->exportFile:  Need a filename parameter to export a file."
 		unless defined $filename;
-	$doc->setCompression(7);
-	logdie ref ($self)."->exportFile:  File could not be written."
-		unless $doc->toFile($filename, 1); 
+		
+	my $session = $self->{session};
+	my $parser  = $self->{_parser};
+	my $insert = OME::Tasks::InsertFiles->new( session => $session, parser => $parser );
+
+ 	# Apply Stylesheet
+ 	my $xslt = XML::LibXSLT->new();
+ 	my $style_doc_path = $session->Configuration()->xml_dir() . "/OME-CA2OME.xslt";
+ 	my $style_doc = $parser->parse_file( $style_doc_path );
+	my $stylesheet = $xslt->parse_stylesheet($style_doc);
+	my $CA_doc = $stylesheet->transform($doc);
+
+# this is a debugging tool. actual output of the file is delegated to OME::Tasks::InsertFile->exportFile
+#$CA_doc->toFile($filename.'.fucked', 1); 
+# end debugging tool
+
+#	REMOVE THIS HACK WHEN $stylesheet->transform($doc); PRODUCES SOMETHING USEFUL 
+# CA_doc is blank except for <OME>. I haven't yet figured out why. 
+# until I figure out why, I'm applying the stylesheet via command line.
+# this is a hack - CLI application of the style sheet
+my $tmpFile = $session->getTemporaryFilename();
+$doc->toFile($tmpFile, 1) 
+	or die "Could not write to temp file ('$tmpFile')\n";
+`xsltproc $style_doc_path $tmpFile > $filename`;
+$CA_doc = $parser->parse_file( $filename )
+	or die "Could not parse file ('$tmpFile')\n";
+print STDERR $tmpFile;
+unlink $tmpFile 
+	or die "Could not unlink tmp file ('$tmpFile')\n";
+# end hack
+
+	$insert->exportFile( "$filename", $CA_doc );
+
 }
 
-sub exportXML {
-	my ($self, %flags) = @_;
-	return ($self->doc()->toString(1)); 
-}
+# this method commented out by Josiah, June 17, 2003
+# because: cannot currently apply stylesheet to loaded DOM w/o first writing it to file (no biggie)
+#	&& insertBinData (C prog using SAX parser) has to read info from file. we need to find other methods for dealing w/ this stuff or think heavily before publishing this method
+#sub exportXML {
+#	my ($self, %flags) = @_;
+#	return ($self->doc()->toString(1)); 
+#}
 
 sub doc {
 	my $self = shift;
