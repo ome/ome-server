@@ -47,7 +47,6 @@ import org.openmicroscopy.vis.chains.events.SelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.util.PBounds;
-import java.awt.Color;
 import java.util.Collection;
 
 
@@ -79,10 +78,6 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	private CChain chain;
 	
-	private static final Color SELECTED_COLOR = new Color(30,60,255,100); 
-
-	private static final Color EXECUTED_COLOR = new Color(55,105,155,100);
-	
 	
 	private static final float VGAP=10;
 	private static final float HGAP=20;
@@ -98,7 +93,6 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	private PLayer chainLayer;
 	private PLinkLayer PLinkLayer;
 	
-	private Color baseColor;
 	
 	public PChainBox(Connection connection,CChain chain) {
 		super();
@@ -107,14 +101,6 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 		SelectionState selectionState = SelectionState.getState();
 		selectionState.addSelectionEventListener(this);
 		
-		// base Color is EXECUTED_COLOR if there are any executions at all
-		// or PGenericBox.CATEGORY_COLOR, otherwise.
-		if (chain.hasAnyExecutions()) 
-			baseColor = EXECUTED_COLOR;
-		else 
-			baseColor = PConstants.CATEGORY_COLOR;
-		boolean selected = chain.hasExecutionsInSelectedDatasets(selectionState);
-		setSelected(selected);
 		
 		chainLayer = new PLayer();
 		addChild(chainLayer);
@@ -224,7 +210,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 		PBounds b = getFullBoundsReference();
 		PText locked = new PText("Locked");
 		locked.setFont(PConstants.LABEL_FONT);
-		locked.setPaint(Color.RED);
+		locked.setPaint(PConstants.LOCKED_COLOR);
 		locked.setScale(2);
 		chainLayer.addChild(locked);
 		PBounds lockedBounds = locked.getGlobalFullBounds();
@@ -235,21 +221,31 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	public void setSelected(boolean v) {
 		if (v == true)
-			setPaint(SELECTED_COLOR);
+			setPaint(PConstants.EXECUTED_COLOR);
 		else
-			setPaint(baseColor);
+			setPaint(null);
 		repaint();
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
 		SelectionState selectionState = e.getSelectionState();
-		boolean selected = 
-			chain.hasExecutionsInSelectedDatasets(selectionState);
-		setSelected(selected);
+		if (e.isEventOfType(SelectionEvent.SET_ROLLOVER_CHAIN)) {
+			System.err.println("chain box got rollover chain event");
+			boolean selected = selectionState.getRolloverChain() == chain; 
+			setHighlighted(selected);
+			
+		}
+		else {
+			Collection activeDatasets = selectionState.getActiveDatasets();
+			boolean selected = 
+				chain.hasExecutionsInSelectedDatasets(activeDatasets);
+			setSelected(selected);
+		}
 	}
 	
 	public int getEventMask() {
-		return SelectionEvent.SET_ACTIVE_DATASETS |
-			SelectionEvent.SET_SELECTED_DATASET;
+		return SelectionEvent.SET_SELECTED_DATASET |
+			SelectionEvent.SET_SELECTED_PROJECT |
+			SelectionEvent.SET_ROLLOVER_CHAIN;
 	}
 }
