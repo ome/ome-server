@@ -67,13 +67,16 @@ public class PChain {
 	private static float HGAP=10f;
 	
 	private float x=HGAP;
+	private float xInit;
 	
 	
 	public PChain(Connection connection,ChainInfo info, PLayer layer,
-			PLinkLayer linkLayer,float y) {
+			PLinkLayer linkLayer,float x,float y) {
 		
 		this.info = info;
 		chain = info.getChain();
+		this.x = x;
+		xInit = x;
 		
 		Collection chainNodes = info.getNodes();
 		Iterator iter = chainNodes.iterator();	
@@ -140,7 +143,7 @@ public class PChain {
 	}
 	
 	public float getWidth() {
-		return x;
+		return x-xInit;
 	}
 }
 
