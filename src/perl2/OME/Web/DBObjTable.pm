@@ -1,4 +1,4 @@
-# OME/Web/NewTable.pm
+# OME/Web/DBObjTable.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,13 +35,13 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Web::NewTable;
+package OME::Web::DBObjTable;
 
 =pod
 
 =head1 NAME
 
-OME::Web::NewTable
+OME::Web::DBObjTable
 
 =head1 DESCRIPTION
 
@@ -59,7 +59,7 @@ use CGI;
 use Log::Agent;
 
 use OME;
-use OME::Web::RenderData;
+use OME::Web::DBObjRender;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -82,9 +82,16 @@ sub new {
 	return $self;
 }
 
-sub getMenuBuilder { return undef }  # No menu
+{
 
-sub getHeaderBuilder { return undef }  # No header
+my $menuText = "DB Browse";
+sub getMenuText {
+	return $menuText;
+}
+}
+#sub getMenuBuilder { return undef }  # No menu
+
+#sub getHeaderBuilder { return undef }  # No header
 
 sub getPageTitle {
 	my $self = shift;
@@ -108,7 +115,7 @@ sub getPageBody {
 =head2 getTable
 
 # make a table
-	my $tableMaker = OME::Web::NewTable->new( CGI => $cgi );
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $cgi );
 	# make a table from CGI parameters 'Type' and search params with the format $type.'_'.$searchKey
 	my $table      = $tableMaker->getTable( \%table_options );
 	# or use search options to make a table (not tested, but might work ;)
@@ -189,7 +196,7 @@ sub getTable {
 	my $table_type  =
 		"This is a ".
 		( $ST ?
-			$q->a( { href => 'serve.pl?Page=OME::Web::ObjectDetail&Type=OME::SemanticType&ID='.$ST->id() },
+			$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },
 				   $common_name ) :
 			$common_name
 		).
@@ -218,10 +225,10 @@ sub getTable {
 	}
 
 	#
-	my @fieldNames = OME::Web::RenderData->getFieldNames( $formal_name );
-	my %labels     = OME::Web::RenderData->getFieldLabels( $formal_name, \@fieldNames );
-	my %searches   = OME::Web::RenderData->getSearchFields( $formal_name, \@fieldNames );
-	my @records    = OME::Web::RenderData->render( \@objects, 'html', \@fieldNames );
+	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
+	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames );
+	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
+	my @records    = OME::Web::DBObjRender->render( \@objects, 'html', \@fieldNames );
 	
 	# table data
 	my @table_data;
