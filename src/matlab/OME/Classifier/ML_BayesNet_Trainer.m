@@ -56,8 +56,6 @@ discData = uint8(discData);
 % build the Bayes Net (BNET)                                    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 discData = discData(sigs_used,:);
-size(discWalls)
-sigs_used
 
 [rows cols] = size(discData);
 for i=1:length(sigs_used)

@@ -127,12 +127,7 @@ while ~done
 		fprintf(1, 'Signature: %03d -- Cum. Score: %f\n', sigs_left(i), score(i));
 	end
 
-    [temp_score, temp_place] = max(score)
-    sigs_used
-    sigs_used_ind
-    sigs_used_col
-    sigs_left
-    ind_score
+    [temp_score, temp_place] = max(score);
     
     % add signature if it improves cumulative score
     if temp_score > big_score                                      
