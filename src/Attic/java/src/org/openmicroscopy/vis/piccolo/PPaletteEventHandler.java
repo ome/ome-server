@@ -46,6 +46,8 @@ import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -94,14 +96,24 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	public void mouseClicked(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
-		if (node instanceof PCategoryBox && mask == MouseEvent.BUTTON1_MASK) {
-			System.err.println("clicked on a category box");
-			e.setHandled(true); 
-		}
-		else if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) ==
-					MouseEvent.BUTTON3_MASK) {
-			System.err.println("shift clicked somewhere");
-			e.setHandled(true);
+		if (mask == MouseEvent.BUTTON1_MASK &&
+			e.getClickCount() == 2) {
+			if (node instanceof PBufferedNode) {
+				PBufferedNode cBox = (PBufferedNode) node;
+				PBounds b = cBox.getBufferedBounds();
+				PCamera camera = canvas.getCamera();
+				// animate
+				camera.animateViewToCenterBounds(b,true,500);
+				e.setHandled(true); 
+			}
+			else if (node instanceof PCamera) {
+				PBounds b = canvas.getBufferedBounds();
+				PCamera camera = canvas.getCamera();
+				camera.animateViewToCenterBounds(b,true,500);
+				e.setHandled(true);
+			}
+			else
+				super.mouseClicked(e);
 		}
 		else
 			super.mouseClicked(e);
