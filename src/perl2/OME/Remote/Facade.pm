@@ -56,10 +56,12 @@ BEGIN {
     @FACADES = qw(
                   OME::Remote::Facades::GenericFacade
                   OME::Remote::Facades::SessionFacade
+                  OME::Remote::Facades::ConfigFacade
                   OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::DatasetFacade
                   OME::Remote::Facades::ImportFacade
                   OME::Remote::Facades::ModuleExecutionFacade
+                  OME::Remote::Facades::AnalysisFacade
                  );
     foreach my $facade (@FACADES) { $facade->require() }
 

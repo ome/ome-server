@@ -1,3 +1,4 @@
+
 # OME/Remote/Facades/ModuleExecutionFacade.pm
 
 #-------------------------------------------------------------------------------
@@ -59,6 +60,23 @@ use constant DEFAULT_MEX_SPEC =>
    'module' => ['id','name'],
   };
 
+use constant DEFAULT_ACTUAL_INPUT_SPEC =>
+  {
+   '.' => ['id','module_execution','formal_input','input_module_execution'],
+   'module_execution' => ['id'],
+   'formal_input' => ['id'],
+   'input_module_execution' => ['id'],
+  };
+
+use constant DEFAULT_NEX_SPEC =>
+  {
+   '.' => ['id','analysis_chain_node','module_execution',
+           'analysis_chain_execution'],
+   'analysis_chain_node' => ['id'],
+   'module_execution' => ['id'],
+   'analysis_chain_execution' => ['id'],
+  };
+
 sub createMEX {
     my ($proto,$module_id,$dependence,$target_id,
         $iterator_tag,$new_feature_tag,$spec) = @_;
@@ -96,14 +114,6 @@ sub createMEX {
     return $dto;
 }
 
-use constant DEFAULT_ACTUAL_INPUT_SPEC =>
-  {
-   '.' => ['id','module_execution','formal_input','input_module_execution'],
-   'module_execution' => ['id'],
-   'formal_input' => ['id'],
-   'input_module_execution' => ['id'],
-  };
-
 sub addActualInput {
     my ($proto,$output_mex_id,$input_mex_id,$formal_input_id,$spec) = @_;
 
@@ -132,6 +142,38 @@ sub addActualInput {
       addActualInput($output_mex,$input_mex,$formal_input);
     my $dto = OME::Remote::DTO::GenericAssembler->
       makeDTO($actual_input,$spec);
+
+    return $dto;
+}
+
+sub createNEX {
+    my ($proto,$mex_id,$chex_id,$node_id,$spec) = @_;
+
+    $spec = DEFAULT_NEX_SPEC
+      unless defined $spec && ref($spec) eq 'HASH';
+
+    my $session = OME::Session->instance();
+    my $factory = $session->Factory();
+
+    my $mex = $factory->loadObject('OME::ModuleExecution',$mex_id);
+    die "MEX $mex_id doesn't exist" unless defined $mex;
+
+    my $chex;
+    if (defined $chex_id) {
+        $chex = $factory->loadObject('OME::AnalysisChainExecution',$chex_id);
+        die "CHEX $chex_id doesn't exist" unless defined $chex;
+    }
+
+    my $node;
+    if (defined $node_id) {
+        $node = $factory->loadObject('OME::AnalysisChain::Node',$node_id);
+        die "Node $node_id doesn't exist" unless defined $node;
+    }
+
+    my $nex = OME::Tasks::ModuleExecutionManager->
+      createNEX($mex,$chex,$node);
+    my $dto = OME::Remote::DTO::GenericAssembler->
+      makeDTO($nex,$spec);
 
     return $dto;
 }
