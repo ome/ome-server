@@ -77,6 +77,7 @@ dispatch (char **param)
 	int isSigned,isFloat;
 	int numInts,numX,numY,numZ,numC,numT,numB;
 	int force,result;
+	int fd;
 	unsigned long z,dz,c,dc,t,dt;
 	planeInfo *planeInfoP;
 	stackInfo *stackInfoP;
@@ -539,7 +540,13 @@ char **cgivars=param;
 				return (-1);
 			}
 	
-			
+		/* This is just to make sure the file is inflated first */
+			if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
+				HTTP_DoError (method,"Could not open FileID=%llu: %s",
+					(unsigned long long)fileID, strerror (errno));
+				return (-1);
+			}
+			close (fd);
 			HTTP_ResultType ("text/xml");
 			parse_xml_file( file_path );
 
