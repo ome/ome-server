@@ -116,24 +116,23 @@ my %os_specific = (
 	},
 	
 	get_user_gids => sub {
-	    my ($user, $group) = @_;
+	    my $user = shift;
 	    my @groups;
 
 	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
 
 	    # Search the group file for groups that the user is in
 	    while (<GR_FILE>) {
-		chomp;
-		my ($group_name, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
-		my @members = split (/,/, $member_string) if $member_string or undef;
-
-		if (@members) {
-		    foreach my $member (@members) {
-			push (@groups, $group_name) if $user eq $member;
-		    }
-		}
+			chomp;
+			my ($gid, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
+			my @members = split (/,/, $member_string) if $member_string;
+	
+			foreach (@members) {
+				push (@groups, $gid) if $user eq $_;
+			}
 	    }
 	    close (GR_FILE);
+	    return @groups;
 	},
 
 	# XXX: In order to add a user to a group in Linux without modifying the /etc/group file by hand
@@ -233,7 +232,7 @@ my %os_specific = (
 	    @gids = `nireport / /groups gid users`;
 	    foreach (@gids) {
 	    	my ($gid,$user_names) = split (/\s+/,$_);
-	    	my @users = split (/,/,$user_names) if $user_names =~ /,/;
+	    	my @users = split (/,/,$user_names) if $user_names;
 	    	foreach (@users) {
 	    		push (@groups,$gid) if $_ eq $user;
 	    	}
@@ -358,24 +357,23 @@ my %os_specific = (
 	},
 	
 	get_user_gids => sub {
-	    my ($user, $group) = @_;
+	    my $user = shift;
 	    my @groups;
 
 	    open (GR_FILE, "/etc/group") or croak "Unable to open /etc/group. $!";
 
 	    # Search the group file for groups that the user is in
 	    while (<GR_FILE>) {
-		chomp;
-		my ($group_name, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
-		my @members = split (/,/, $member_string) if $member_string or undef;
-
-		if (@members) {
-		    foreach my $member (@members) {
-			push (@groups, $group_name) if $user eq $member;
-		    }
-		}
+			chomp;
+			my ($gid, $member_string) = (split (/:/, $_))[2,3];  # ($groupname, $password, $gid, $members)
+			my @members = split (/,/, $member_string) if $member_string;
+	
+			foreach (@members) {
+				push (@groups, $gid) if $user eq $_;
+			}
 	    }
 	    close (GR_FILE);
+	    return @groups;
 	},
 
 	# XXX: See the linux implementation of add_user_to_group () for more details.

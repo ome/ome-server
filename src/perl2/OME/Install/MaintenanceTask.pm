@@ -295,7 +295,7 @@ BLURB
 	
 			print BOLD,"Maintenance tasks:\n",RESET;
 			print "     Install the OME admin utility?: ", BOLD, $MAINT_CONF->{omeadmin} ? 'yes':'no', RESET, "\n";
-			print "                     Install ome to: ", BOLD, "[", $MAINT_CONF->{omeadmin_path},"]", RESET, "\n" if $MAINT_CONF->{omeadmin};
+			print "     Install admin utility 'ome' in: ", BOLD, "[", $MAINT_CONF->{omeadmin_path},"]", RESET, "\n" if $MAINT_CONF->{omeadmin};
 			print "Install periodic maintenance tasks?: ", BOLD, $MAINT_CONF->{do_it}     ? 'yes':'no', RESET, "\n";
 			print "           Database vacuum/analyze?: ", $MAINT_CONF->{t_vacuum}  ? "Daily at ".BOLD.$MAINT_CONF->{t_vacuum}.RESET  :BOLD.'no'.RESET,"\n";
 			print "              Compress OMEIS Files?: ", ($MAINT_CONF->{file_comp} and $MAINT_CONF->{t_compress}) ? "Daily at ".BOLD.$MAINT_CONF->{t_compress}.RESET:BOLD.'no'.RESET,"\n";
