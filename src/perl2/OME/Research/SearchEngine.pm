@@ -67,10 +67,18 @@ sub searchEngine{
   my $condition;
   if (defined $cd){
    # ILike: Postgres ! not used
+    my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
     $condition=$cd->Prepare_Request_Like(\%h,$sepvalue);
-    $results=&_do_Request($self,$condition);	
+    $results=&_do_Request($self,$condition,$db);
+    $db->Off();	
   }
-  return $results;
+  # because of import process
+  my @list=();
+  foreach (@$results){
+	push(@list,$_) unless  ($_->{name} eq "Dummy import dataset");
+  }
+  return \@list;
+  #return $results;
 }
 
 
@@ -81,13 +89,13 @@ sub searchEngine{
 
 sub _do_Request{
  my $self=shift;
- my ($condition)=@_;
+ my ($condition,$db)=@_;
  my $type=$self->{type};
  chomp($type);
  return undef unless $type;
  my $selectedcolumns;
  my $result;
- my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
+ 
  # no selected columns 	modify ?
  $selectedcolumns=$self->{selectedcol};
  if (defined $db){
