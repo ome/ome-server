@@ -112,6 +112,7 @@ Imports the selected files into OME and executes the import analysis chain on th
 Returns a reference to an array of images imported.
 
 =cut
+
 sub importFiles {
 	my ($dataset, $filenames, $options, $task) = @_;
 
@@ -125,6 +126,7 @@ sub importFiles {
 		$task->setMessage('Starting import');
 	}
 
+	$task->setPID($$);
     my $importer = OME::ImportEngine::ImportEngine->new(%$options);
     my $session = OME::Session->instance();
 
