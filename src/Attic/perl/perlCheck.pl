@@ -1,5 +1,10 @@
 #!/usr/bin/perl -w
 use strict;
+use Config;
+use Cwd;
+my $cwd = getcwd;
+my $libDir = $Config{installprivlib};
+
 
 my $moduleRepository = 'http://ome1-sorger.mit.edu/packages/perl';
 my $badTestsFatal = 0;
@@ -10,45 +15,64 @@ $ENV{PATH} .= ':/usr/local/bin';
 my @modules = ({
 	Name => 'DBI',
 	repositoryFile => 'DBI-1.19.tar.gz',
-	checkVersion => \&DBI_VersionOK,
-	loadOrder => 0
+	checkVersion => \&DBI_VersionOK
 	},{
 	Name => 'Digest::MD5',
-	repositoryFile => 'Digest-MD5-2.13.tar.gz',
-	loadOrder => 1
+	repositoryFile => 'Digest-MD5-2.13.tar.gz'
 	},{
 	Name => 'MD5',
-	repositoryFile => 'MD5-2.02.tar.gz',
-	loadOrder => 2
+	repositoryFile => 'MD5-2.02.tar.gz'
 	},{
 	Name => 'MIME::Base64',
-	repositoryFile => 'MIME-Base64-2.12.tar.gz',
-	loadOrder => 3
+	repositoryFile => 'MIME-Base64-2.12.tar.gz'
 	},{
 	Name => 'Storable',
-	repositoryFile => 'Storable-1.0.13.tar.gz',
-	loadOrder => 4
+	repositoryFile => 'Storable-1.0.13.tar.gz'
 	},{
 	Name => 'Apache::Session',
-	repositoryFile => 'Apache-Session-1.54.tar.gz',
-	loadOrder => 5
+	repositoryFile => 'Apache-Session-1.54.tar.gz'
 	},{
 	Name => 'Log::Agent',
-	repositoryFile => 'Log-Agent-0.208.tar.gz',
-	loadOrder => 6
+	repositoryFile => 'Log-Agent-0.208.tar.gz'
+	},{
+	Name => 'Tie::IxHash',
+	repositoryFile => 'Tie-IxHash-1.21.tar.gz'
 	},{
 	Name => 'DBD::Pg',
 	repositoryFile => 'DBD-Pg-0.95.tar.gz',
 	checkVersion => \&DBD_Pg_VersionOK,
-	installModule => \&DBD_Pg_Install,
-	loadOrder => 7
+	installModule => \&DBD_Pg_Install
+	},{
+	Name => 'Image::Magick',
+	repositoryFile => 'ImageMagick-5.3.6.tar.gz',
+	installModule => \&ImageMagickInstall
 	}
 );
 
-# Da 'main' loop:
+#####################
+# Da 'main' program:
+
+# If we're running on darwin, make sure we have some additional libraries.
+if ($^O eq 'darwin') {
+}
+
+# loop through the perl modules and install them.
 foreach (@modules) {
 	CheckModule ($_);
 }
+
+# Make symlinks between the private perl module directory and OME modules:
+# Where to install private libs: $Config{installprivlib}
+my @OMEmodules = ('OMEpl.pm','OMEDataset.pm','OMEDataset','OMEfeature.pm','OMEwebLogin.pm');
+foreach (@OMEmodules) {
+	if (-e $libDir.'/'.$_) {
+		unlink ("$libDir/$_") or die "Could't delete '$libDir/$_': $!\n";
+	}
+	symlink ("$cwd/$_", "$libDir/$_") or die "Could't make a symbolic link to '$cwd/$_' from '$libDir/$_':  $!";
+}
+######################
+
+
 
 
 #  Version checks:
@@ -90,6 +114,27 @@ my $error;
 	
 	InstallModule ($module);
 }
+
+
+sub ImageMagickInstall {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $installDir;
+	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
+my $error;
+
+	print "Installing $installTarBall\n";
+	die "Couldn't unpack $installTarBall.\n" if system ("tar -zxvf $installTarBall");
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Couldn't execute configure script\n" if system ('./configure --enable-shared --enable-lzw --prefix=/usr');
+	die "Compilation errors - script aborted.\n" if system ('make');
+#	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
+	die "Install errors - script aborted.\n" if system ('make install');
+	chdir '..';
+
+}
+
 
 
 # Should not have to modify below here when specifying new modules
