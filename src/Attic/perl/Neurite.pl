@@ -27,8 +27,7 @@ $OME = new OMEpl;
 
 
 $programName = "Neurite";
-#$executable = 'matlab -nosplash -nodisplay -nojvm';
-$executable = 'cat /Users/igg/OME-scratch/neurite.out';
+$executable = 'matlab -nosplash -nodisplay -nojvm';
 
 
 
