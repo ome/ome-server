@@ -21,8 +21,6 @@
 package OME::Tasks::ProjectManager;
 
 
-
-
 our $VERSION = '1.0';
 
 
@@ -79,10 +77,13 @@ otherwise set the first (arbitrary in the project list) project (+ dataset) to t
 Check if the project's name already exists (in DB).
 Return: 1 or undef
 
-=head2 listMatching (userID)
+=head2 listMatching (userID,ref)
+$ref=ref array  list group_id (optional)
+userId=user_id (optional)
 
-List projects owned by a given user if no parameter
-List projects in a given Research group if userId parameter
+List projects  if no parameter
+List projects of a given user if  userId parameter
+list project in Research group(s)
 
 Return: ref array of project objects 
 
@@ -222,18 +223,28 @@ sub exist{
 }
 
 ###############
-# Parameters: no
+# Parameters: 
+#	userID Optional
+#	$ref=ref array  list group_id (optional)
 # Return: ref array of project objects owned by a given user.
 
 sub listMatching{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($userID)=@_;
+	my ($userID,$ref)=@_;
 	my @projects=();
 	if (defined $userID){
-	   @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$userID);
+		@projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id());
+
 	}else{
-	   @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
+		if (defined $ref){
+			foreach (@$ref){
+			   push(@projects,$session->Factory()->findObjects("OME::Project",'group_id'=>$_));
+			}
+		
+		}else{
+			 @projects=$session->Factory()->findObjects("OME::Project");
+		}
 	}
 	return \@projects;
 }

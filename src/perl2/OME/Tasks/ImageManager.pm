@@ -56,17 +56,21 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 Delete Image from database
 
 
-=head2 listMatching ($usergpID,$used)
+=head2 listMatching ($ref,$used)
+
+ref=ref array  list group_id (optional)
+
 Images in Research group
-if bool defined, images in Research group not already used by project
+if used defined, images in Research group not already used by project
 
 
-=head2 listGroup
+=head2 listGroup (deprecated)
 
 Check images associated to a given Research group
 Return: ref array with image objects
 
-=head2 listNotUsed
+=head2 listNotUsed (deprecated)
+
 
 Compare images in the current dataset and ones available in the Research group
 return list of images not used.
@@ -78,6 +82,8 @@ Load image object
 Return: image object
 
 =head2 manage
+ref =ref array list of group_id
+
 Informations to manage images
 Return: ref hash (GroupImagesInfo,UserImagesInfo)
 
@@ -132,22 +138,30 @@ sub delete{
 
 #########################
 # Parameters:
-#	used if defined check images used and the ones in Research group
+#	ref=ref array  list group_id (optional)
+#	used = if defined check images used and the ones in Research group
 # Return: ref array of image objects
 
 sub listMatching{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($usergpID,$used)=@_;
+	my ($ref,$used)=@_;
 	my $result;
+	my @gpImages=();
+	if (defined $ref){
+		foreach (@$ref){
+		push(@gpImages,$session->Factory()->findObjects("OME::Image", 'group_id' =>$_));
+
+		}
+	}else{
+  	  @gpImages = $session->Factory()->findObjects("OME::Image");
+	}
+
 	if (defined $used){
-		
-	   my @gpImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>$usergpID);
 	   my @usedImages=$session->dataset()->images();
 	   $result=notUsedImages(\@gpImages,\@usedImages);
 	}else{
-	   my @images = $session->Factory()->findObjects("OME::Image", 'group_id' =>$usergpID);
-	   $result=\@images;
+	   $result=\@gpImages;
 	}
 	return $result;
 }
@@ -200,14 +214,15 @@ sub load{
 
 
 ###############
-# Parameters: no
+# Parameters: 
+#	ref=ref array  list group_id (optional)
 # Return: ref hash (group images info,user images info)
 
 sub manage{
 	my $self=shift;
+	my ($ref)=@_;
 	my $session=$self->{session};
-	my ($result,$projects)=notMyProject($session);
-	#return undef unless (defined $result);
+	my ($result,$projects)=notMyProject($session,$ref);
 	my ($gpImages,$userImages)=usedDatasetImage($session,$result,$projects);
 	return ($gpImages,$userImages);
 	
@@ -262,9 +277,17 @@ sub deleteInMap{
 }
 
 sub notMyProject{
-	my ($session)=@_;
-	my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $session->User()->Group()->id());
- 	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
+	my ($session,$ref)=@_;
+	my @groupProjects=();
+	if (defined $ref){
+		foreach (@$ref){
+			@groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $_);
+		}
+ 	}else{
+		@groupProjects=$session->Factory()->findObjects("OME::Project");
+
+	}
+	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
 	my $result=notUsed(\@groupProjects,\@myProjects);
 	return ($result,\@myProjects);
 }

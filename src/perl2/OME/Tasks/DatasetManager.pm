@@ -75,12 +75,15 @@ otherwise set the first (arbitrary in the dataset list) dataset to the current d
 Check if the dataset's name already exists (in DB).
 Return: 1 or undef
 
-=head2 imageNotIn
+=head2 imageNotIn($ref)
+ref (optional) ref array: list of group_id
 
 Check images not used in the current dataset
 
 
-=head2 listMatching ($usergpID)
+=head2 listMatching ($userID,$ref)
+if userID defined: check dataset owned by a given user
+$ref optional: ref array list of group_id
 
 =head2 listAll (deprecated)
 
@@ -104,7 +107,9 @@ Return: dataset object
 
 Lock/Unlock a dataset
 
-=head2 manage
+=head2 manage ($ref)
+ref (optional) ref array list of group_id
+
 
 Check dataset used in others project (in a research group)
 and the one used by a given user
@@ -114,9 +119,10 @@ Return:	ref hash share,use
 		share: dataset used in others projects
 		use: info on dataset + project used by a given user.
 
-=head2 notBelongToProject
+=head2 notBelongToProject ($ref)
+ref (optional) ref array list of group_id
 
-Check dataset belonging to a research group.
+Check dataset belonging to research groups if specified.
 If current project has no dataset, return ref hash of all datasets in Research group
 if current project has dataset(s), return ref hash of datasets not already used 
  
@@ -127,7 +133,9 @@ Return: ref hash
 remove datasets from project
 parameters: ref hash: key=dataset_id; value=ref array of associated projects.
 
-=head2 share
+=head2 share ($ref)
+ref (optional) ref array list of group_id
+
 
 Check datasets owned by the current user
 if they are used by others.
@@ -144,9 +152,6 @@ Return : ref hash (share,use)
 Switch dataset 
 
 =cut
-
-
-
 
 
 
@@ -298,13 +303,23 @@ sub exist{
 }
 
 ################
-# Parameters: no
+# Parameters: 
+#	$ref=ref array  list group_id (optional)
 # Return: ref array of images not used in the current dataset
 
 sub imageNotIn{
 	my $self=shift;
 	my $session=$self->{session};
-	my @groupImages=$session->Factory()->findObjects("OME::Image", 'group_id' =>  $session->User()->Group()->id() );
+	my ($ref)=@_;
+	my @groupImages=();
+	if (defined $ref){
+	  foreach (@$ref){
+		push(@groupImages,$session->Factory()->findObjects("OME::Image",'group_id' => $_));
+	  }
+      }else{
+		@groupImages=$session->Factory()->findObjects("OME::Image");
+	}
+
 	my @datasetsImages=$session->dataset()->images();
 	my $rep=notUsedImages(\@groupImages,\@datasetsImages);	
 	return $rep;
@@ -313,25 +328,41 @@ sub imageNotIn{
 
 ###################
 # Parameters:
-#	userID= user id
+#	userID = user id
+#	$ref=ref array  list group_id (optional)
 # Return: ref array of dataset objects 
 
 sub listMatching{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($usergpID)=@_;
+	my ($userID,$ref)=@_;
 	my @list=();
 	my $ref;
-	if (defined $usergpID){
-	   my @datasets=$session->Factory()->findObjects("OME::Dataset",'group_id'=>$usergpID);
-	   $ref=\@datasets;
 
-	 }else{
-	   my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
-	   foreach (@projects){
-	     push(@list,$_->datasets());
+	if (defined $userID){
+		my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$userID);
+	   	foreach (@projects){
+	        push(@list,$_->datasets());
+	     }
+	     $ref=checkDuplicate(\@list);
+	}else{
+	    my @datasets=();
+	    my @keep;
+	    if (defined $ref){
+		foreach (@$ref){
+		      push(@datasets,$session->Factory()->findObjects("OME::Dataset",'group_id'=>$_));
+	      }
+		    $ref=\@datasets;
+
+	   }else{
+ 		   @datasets=$session->Factory()->findObjects("OME::Dataset");
+		    $ref=\@datasets;
 	   }
-	   $ref=checkDuplicate(\@list);
+	   # for necessary now
+	   foreach (@datasets){
+		push(@keep,$_) unless ($_->name() eq "Dummy import dataset");
+	   }
+	   $ref=\@keep;
 	}
 	return $ref;
 }
@@ -408,7 +439,8 @@ sub lockUnlock{
 }
 
 ###############
-# Parameters: no
+# Parameters: 
+#	ref=ref array  list group_id (optional)
 # Return:	ref hash share,use
 #		count:number of keys in use
 #		share: dataset used in others projects
@@ -417,22 +449,32 @@ sub lockUnlock{
 sub manage{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($result,$projects)=notMyProject($session);
+	my ($ref)=@_;
+	my ($result,$projects)=notMyProject($session,$ref);
 	my ($share,$use,$count)=usedDatasets($session,$result,$projects);
 	return ($share,$use,$count);  
 }
 
 
 #################
-# Parameters: no
+# Parameters: 
+#	$ref=ref array  list group_id (optional)
 # Return: ref hash
 
 sub notBelongToProject{
 	my $self=shift;
+	my ($ref)=@_;
 	my $session=$self->{session};
 	my $project=$session->project();
 	my @projectDatasets=$project->datasets();
-	my @groupDatasets = $session->Factory()->findObjects("OME::Dataset", 'group_id' =>$session->User()->Group()->id() ) ; 
+	my @groupDatasets=();
+	if (defined $ref){
+	   foreach (@$ref){
+	     push(@groupDatasets,$session->Factory()->findObjects("OME::Dataset",'group_id' =>$_));
+	   }
+	}else{
+	   @groupDatasets = $session->Factory()->findObjects("OME::Dataset") ; 
+	}
 	my %datasetList=();
 	my %listGeneral=();
 	# remove empty datasets 
@@ -490,17 +532,19 @@ sub remove{
 
 
 ################################
-# Parameters: no
+# Parameters: 
+# 	$ref=ref array  list group_id (optional)
 # Return : ref hash (share,use)
 #		count:number of keys in share
 #		count: nb keys in use
 #		share: datasets owned by a given user but used by other
-#		use: datasets user owns ONLY used by user.
+#		use: 	 datasets user owns: ONLY used by user.
 
 sub share{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($result)=notMyProject($session);
+	my ($ref)=@_;
+	my ($result)=notMyProject($session,$ref);
 	my ($share,$own,$count,$countown)=shareDatasets($session,$result);
 	return ($share,$own,$count,$countown);
 }
@@ -567,10 +611,18 @@ sub deleteInMap{
       return (defined $result)?1:undef;
 }
 
+##########
 sub notMyProject{
-	my ($session)=@_;
-	my @groupProjects=$session->Factory()->findObjects("OME::Project",'group_id'=> $session->User()->Group()->id());
- 	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
+	my ($session,$ref)=@_;
+	my @groupProjects=();
+	if (defined $ref){
+		foreach (@$ref){
+			push(@groupProjects,$session->Factory()->findObjects("OME::Project",'group_id'=>$_));
+		}
+ 	}else{
+	      @groupProjects=$session->Factory()->findObjects("OME::Project");
+ 	}
+	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
 	my $result=notUsed(\@groupProjects,\@myProjects);
 	return ($result,\@myProjects);
 }
