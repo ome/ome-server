@@ -62,7 +62,6 @@ import java.awt.event.MouseEvent;
 public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	private PPaletteCanvas canvas;
-	private boolean selected = false;
 	private PModule lastEntered;
 	
 	protected int allButtonMask = MouseEvent.BUTTON1_MASK;
@@ -84,10 +83,8 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			else
 			 	p = (PModule) node;
 			canvas.setSelected(p);
-			selected = true;
 		}
 		else {
-			selected = false;
 			canvas.setSelected(null);
 			super.mousePressed(e);
 		}
@@ -121,16 +118,11 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	
 	
 	public void mouseReleased(PInputEvent e) {
-		selected = false;
 		canvas.setSelected(null);
 		super.mouseReleased(e);
 	}
 	
 	public void mouseDragged(PInputEvent e) {
-		//	don't pan if we've got something selected.
-		/* if (selected == false) {
-			 super.mouseDragged(e);
-		 } */
 		 e.setHandled(true);
 	} 
 	

@@ -61,6 +61,9 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	protected static Color FILL_COLOR = new Color(153,153,204);
 	protected PCamera camera;
 	
+	// I should probably look up the default look and feel and use it's system
+	// font here, but whatever...
+	
 	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
 	protected PPath tooltip;

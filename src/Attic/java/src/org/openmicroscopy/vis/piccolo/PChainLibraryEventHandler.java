@@ -1,0 +1,115 @@
+/*
+ * org.openmicroscopy.vis.piccolo.PChainLibraryEventHandler
+ *
+ *------------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2003 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *------------------------------------------------------------------------------
+ */
+
+
+
+
+/*------------------------------------------------------------------------------
+ *
+ * Written by:    Harry Hochheiser <hsh@nih.gov>
+ *
+ *------------------------------------------------------------------------------
+ */
+
+
+
+
+package org.openmicroscopy.vis.piccolo;
+
+import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.util.PBounds;
+import java.awt.event.MouseEvent;
+
+/** 
+ * An event handler for the PChainLibraryCanvas. Generally works like 
+ * a pan event handler, but can tell the canvas which item we're on.
+ * 
+ * @author Harry Hochheiser
+ * @version 0.1
+ * @since OME2.0
+ */
+
+public class PChainLibraryEventHandler extends  PBasicInputEventHandler {
+
+	private PChainLibraryCanvas canvas;
+	
+	private int allButtonMask = MouseEvent.BUTTON1_MASK;
+	
+	
+	public PChainLibraryEventHandler(PChainLibraryCanvas canvas) {
+		super();
+		this.canvas = canvas;	
+		//setEventFilter(new PInputEventFilter());
+		//setAutopan(false);
+	}
+	
+	public void mouseClicked(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		int mask = e.getModifiers() & allButtonMask;
+		if (mask == MouseEvent.BUTTON1_MASK &&
+			e.getClickCount() == 2) {
+			if (node instanceof PBufferedNode) {
+				PBufferedNode cBox = (PBufferedNode) node;
+				PBounds b = cBox.getBufferedBounds();
+				PCamera camera = canvas.getCamera();
+				// animate
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+				e.setHandled(true); 
+			}
+			else if (node instanceof PCamera) {
+				PBounds b = canvas.getBufferedBounds();
+				PCamera camera = canvas.getCamera();
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+				e.setHandled(true);
+			}
+			else
+				super.mouseClicked(e);
+		}
+		else
+			super.mouseClicked(e);
+	}
+	
+	public void mousePressed(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		if (node instanceof PChainBox) {
+			PChainBox box = (PChainBox) node;
+			canvas.setSelectedChainID(box.getChainID());
+		}
+		else
+			super.mousePressed(e);
+	}
+	
+	public void mouseReleased(PInputEvent e) {
+		canvas.clearChainSelected();
+	}
+	
+}
