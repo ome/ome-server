@@ -54,6 +54,7 @@ use OME::Database::Delegate;
 use OME::Factory;
 use OME::SessionManager;
 use OME::Tasks::OMEImport;
+use OME::Tasks::SemanticTypeManager;
 
 #*********
 #********* GLOBALS AND DEFINES
