@@ -61,6 +61,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Comparator;
+import java.util.TreeSet;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 import java.net.URL;
@@ -357,19 +359,31 @@ public class Connection {
 		return projects;
 	}
 	
-	public List getDatasetsForUser() {
+	public Collection getDatasetsForUser() {
 		Attribute user = session.getUser();
 		HashMap crit = new HashMap();
 		crit.put("owner_id",user);
 		List datasets = factory.findObjects("OME::Dataset",crit);
-		return datasets;
+		Comparator comp = new Comparator () {
+			public int compare(Object o1,Object o2) {
+				CDataset d1 = (CDataset) o1;
+				CDataset d2 = (CDataset) o2;
+				return d1.getID()-d2.getID();
+			}
+			public boolean equals(Object o) {
+				return false;
+			}
+		};
+		TreeSet t = new TreeSet(comp);
+		t.addAll(datasets);
+		return t;
 	}
 	
 	public void initDatasets(final Controller controller) {
 		
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
-				List ds = getDatasetsForUser();
+				Collection ds = getDatasetsForUser();
 				Iterator iter = ds.iterator();
 				while (iter.hasNext()) {
 					CDataset d = (CDataset) iter.next();
