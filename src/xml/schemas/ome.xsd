@@ -4,9 +4,11 @@
 	 targetNamespace = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd"
 	 xmlns:xs = "http://www.w3.org/2001/XMLSchema"
 	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	 version = "RC5"
 	 elementFormDefault = "qualified">
 	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"/>
+	<xs:import namespace = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"/>
 	<xs:annotation>
 		<xs:documentation>
 			Open Microscopy Environment
@@ -43,6 +45,7 @@
 				<xs:element ref = "Instrument" minOccurs = "0" maxOccurs = "unbounded"/>
 				<xs:element ref = "Image" maxOccurs = "unbounded"/>
 				<xs:element ref = "STD:SemanticTypeDefinitions" minOccurs = "0"/>
+				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
@@ -80,11 +83,12 @@
 				<xs:element ref = "Thumbnail" minOccurs = "0"/>
 				<xs:element ref = "ChannelInfo" minOccurs = "0" maxOccurs = "unbounded"/>
 				<xs:element ref = "DisplayOptions" minOccurs = "0"/>
-				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
 				<xs:element ref = "StageLabel" minOccurs = "0"/>
 				<xs:element ref = "PlateInfo" minOccurs = "0"/>
 				<xs:element ref = "Data"/>
 				<xs:element ref = "LogicalChannel" minOccurs = "0"/>
+				<xs:element ref = "Feature" minOccurs = "0" maxOccurs = "unbounded"/>
+				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 			<xs:attribute name = "GUID" type = "Hex40"/>
 			<xs:attribute name = "ImageType" use = "required" type = "xs:string"/>
@@ -122,8 +126,8 @@
 		</xs:annotation>
 		<xs:complexType>
 			<xs:choice>
-				<xs:element ref = "External"/>
-				<xs:element ref = "BinData"/>
+				<xs:element ref = "Bin:External"/>
+				<xs:element ref = "Bin:BinData"/>
 			</xs:choice>
 			<xs:attribute name = "DimensionOrder" use = "required">
 				<xs:simpleType>
@@ -152,41 +156,6 @@
 			</xs:attribute>
 			<xs:attribute name = "BigEndian" use = "required" type = "xs:boolean"/>
 		</xs:complexType>
-	</xs:element>
-	<xs:element name = "External">
-		<xs:annotation>
-			<xs:documentation>
-				If an external file is used, this tag must be specified with the required href attribute.
-				The file pointed to is a raw binary pixel dump.
-				The Offset attribute specifies the number of bytes after the start of the file where the dump begins.
-				The SHA1 attribute is a digest (openssl sha1) of the file pointed to by href.
-				Compression may be set to 'gzip' or 'bzip2'.
-				If the external file is compressed, and the Compression attribute is set,
-				the SHA1 and href attribute refer to the compressed file.
-				The file must contain enough pixels to satisfy the dimension extents and bits per pixel specified in Image.
-				If it does not, the Image is invalid.
-			</xs:documentation>
-		</xs:annotation>
-		<xs:complexType>
-			<xs:attribute name = "href" use = "required" type = "xs:anyURI"/>
-			<xs:attribute name = "Offset" type = "xs:integer"/>
-			<xs:attribute name = "SHA1" use = "required" type = "Hex40"/>
-			<xs:attribute name = "Compression">
-				<xs:simpleType>
-					<xs:restriction base = "xs:string">
-						<xs:enumeration value = "gzip"/>
-						<xs:enumeration value = "bzip2"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>
-		</xs:complexType>
-	</xs:element>
-	<xs:element name = "BinData" type = "xs:base64Binary">
-		<xs:annotation>
-			<xs:documentation>
-				Pixel data stored within the OME XML document is stored in this element using base64 encoding.
-			</xs:documentation>
-		</xs:annotation>
 	</xs:element>
 	<xs:element name = "Experiment">
 		<xs:annotation>
@@ -1059,8 +1028,8 @@ The optional Description element may contain free text to further describe the e
 		</xs:annotation>
 		<xs:complexType>
 			<xs:choice>
-				<xs:element ref = "External"/>
-				<xs:element ref = "BinData"/>
+				<xs:element ref = "Bin:External"/>
+				<xs:element ref = "Bin:BinData"/>
 			</xs:choice>
 			<xs:attribute name = "OTFID" use = "required" type = "xs:positiveInteger"/>
 			<xs:attribute name = "ObjectiveID" use = "required" type = "xs:positiveInteger"/>
@@ -1246,6 +1215,7 @@ This can be null if a channel maps to a logical channel but is not included in t
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref = "Feature" minOccurs = "0" maxOccurs = "unbounded"/>
+				<xs:element ref = "CustomAttributes" minOccurs = "0"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
