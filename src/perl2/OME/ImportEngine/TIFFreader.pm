@@ -225,7 +225,11 @@ sub getGroups {
                         last;
                     }
                 }
-		push @grp, $outname;
+		if ($matched > 1) {
+		    push @grp, $outname;
+		} else {
+		    push @grp, $bn;
+		}
                 push @outlist, \@grp;
 		last;
             }
