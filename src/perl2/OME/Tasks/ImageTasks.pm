@@ -164,7 +164,7 @@ sub importFiles {
     $ds->writeObject();
 
     # update project_datasets_map
-    $project->Field("datasets", $ds);
+    #$project->Field("datasets", $ds);
     $project->writeObject();
 
 
