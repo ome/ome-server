@@ -134,10 +134,7 @@ public class DataAccess {
 	HashMap criteria = new HashMap();
 
 	criteria.put("name", name);
-	System.err.println("  looking up dataset "+criteria.toString());
 	return (org.openmicroscopy.Dataset)Lookup("OME::Dataset", criteria);
-	//List l = bindings.getFactory().findObjects("OME::Dataset", criteria);
-	//return (org.openmicroscopy.Dataset)(l.get(0));
     }
 
     /**
@@ -176,7 +173,6 @@ public class DataAccess {
 	HashMap criteria = new HashMap();
 
 	criteria.put("name", name);
-	System.err.println("  looking up image "+criteria.toString());
 	return (org.openmicroscopy.Image)Lookup("OME::Image", criteria);
     }
 
@@ -193,7 +189,6 @@ public class DataAccess {
 	HashMap criteria = new HashMap();
 
 	criteria.put("name", name);
-	System.err.println("  looking up image "+criteria.toString());
 	return (org.openmicroscopy.Chain)Lookup("OME::AnalysisChain", criteria);
     }
 
@@ -242,10 +237,6 @@ public class DataAccess {
      *   May return null.
      */
     public List LookupSet(String what, HashMap criteria) {
-	System.err.println("lookup what: "+what);
-	if (criteria != null) {
-	    System.err.println("criteria: "+criteria.toString());
-	} else { System.err.println("null criteria"); }
 	return(bindings.getFactory().findObjects(what, criteria));
     }
 
@@ -259,10 +250,6 @@ public class DataAccess {
      */
     public Iterator IterateSet(String what, HashMap criteria) {
 	Iterator i = null;
-	System.err.println("iterate what: "+what);
-	if (criteria != null) {
-	    System.err.println("criteria: "+criteria.toString());
-	}
 	try {
 	    i = bindings.getFactory().iterateObjects(what, criteria);
 	}
