@@ -46,7 +46,6 @@ import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.CLayoutNode;
 import org.openmicroscopy.Chain.Link;
-import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Module.FormalInput;
 import org.openmicroscopy.Module.FormalOutput;
 import java.util.HashMap;
@@ -90,7 +89,7 @@ public class PChain {
 		xInit = x;
 		
 		top =y;
-		System.err.println("building chain for "+chain.getName());
+		//System.err.println("building chain for "+chain.getName());
 		
 		drawNodes(connection,layer);
 		layoutNodes();
@@ -100,9 +99,9 @@ public class PChain {
 	public void drawNodes(Connection connection,PLayer layer) {
 		int layers = chain.getLayerCount();
 		
-		System.err.println("drawing layers.."+layers);
+		//System.err.println("drawing layers.."+layers);
 		for (int i=layers-1; i >=0; i--) {
-			System.err.println("drawing layer "+i);
+			//System.err.println("drawing layer "+i);
 			Vector v = drawLayer(connection,layer,i);
 			// first element in nodelayers will be leftmost layer, etc.
 			nodeLayers.add(v);
@@ -116,13 +115,13 @@ public class PChain {
 						int layerNumber) {
 		
 		Vector v = new Vector();
-		System.err.println("layer # "+layerNumber);
+		//System.err.println("layer # "+layerNumber);
 		int layerSize = chain.getLayerSize(layerNumber);
 		if (layerSize > maxLayerSize) 
 			maxLayerSize = layerSize;
 		
 		for (int i =0; i < layerSize; i++) {
-			System.err.println("..., node "+i);
+			//System.err.println("..., node "+i);
 			CNode node = chain.getLayerNode(layerNumber,i);
 			//somehow draw it, and advance x as need be.
 			Object obj = drawNode(connection,node,layer);
@@ -142,9 +141,9 @@ public class PChain {
 			result = dummy;
 		}
 		else {
-			System.err.println("drawing node "+node);
+			//System.err.println("drawing node "+node);
 			CModule mod = (CModule) node.getModule();
-			System.err.println("module is "+mod.getName());
+			//System.err.println("module is "+mod.getName());
 
 			PModule mNode = new PModule(connection,mod);
 			mod.addModuleWidget(mNode);
@@ -160,7 +159,7 @@ public class PChain {
 	private void layoutNodes() {
 		int layerCount = nodeLayers.size();
 		for (int i = 0; i < layerCount; i++) {
-			System.err.println("laying out layer "+i);
+			//System.err.println("laying out layer "+i);
 			Vector v = (Vector) nodeLayers.get(i);
 			layerWidth = 0;
 			layoutLayer(v);
@@ -173,30 +172,30 @@ public class PChain {
 		
 		// iterate out to find height
 		float height = getLayerHeight(v);
-		System.err.println("layer height is "+height);
+		//System.err.println("layer height is "+height);
 		
-		System.err.println("chain height is "+chainHeight);
+		//System.err.println("chain height is "+chainHeight);
 		float remainder = chainHeight - height;
-		System.err.println(" blank space is " +remainder);
+		//System.err.println(" blank space is " +remainder);
 		float delta = remainder/(size+1);
-		System.err.println("inter-item blank space is "+delta);
+		//System.err.println("inter-item blank space is "+delta);
 		Iterator iter = v.iterator();
 		y = top+VGAP;
-		System.err.println("top is "+y);
+		//System.err.println("top is "+y);
 		while (iter.hasNext()) {
 			y +=delta;
-			System.err.println("putting object at "+y);
+			//System.err.println("putting object at "+y);
 			Object obj = iter.next();
 			if (obj instanceof PModule) {
 				PModule mod = (PModule) obj;
-				System.err.println("module "+mod.getModule().getName());
+				//System.err.println("module "+mod.getModule().getName());
 				mod.setOffset(x,y);
 				y+= (float) mod.getBounds().getHeight()+VGAP;
 				if (mod.getBounds().getWidth() > layerWidth)
 					layerWidth = (float) mod.getBounds().getWidth();
 			}		
 			else {
-				System.err.println(" dummy node");
+				//System.err.println(" dummy node");
 				y+=DUMMY_HEIGHT+VGAP;
 				if (layerWidth < DUMMY_WIDTH)
 					layerWidth = DUMMY_WIDTH;
@@ -230,8 +229,8 @@ public class PChain {
 	
 	
 	private void drawLink(Link link,PLinkLayer linkLayer) {
-		Node from = link.getFromNode();
-		Node to = link.getToNode();
+		CNode from = (CNode) link.getFromNode();
+		CNode to = (CNode) link.getToNode();
 
 		PModule fromPMod = (PModule) nodes.get(from);
 		PModule toPMod = (PModule) nodes.get(to);
@@ -243,12 +242,12 @@ public class PChain {
 		
 		FormalInput input = link.getToInput();
 		FormalOutput output = link.getFromOutput();
-		System.err.println("from module "+fromPMod.getModule().getName());
-		System.err.println("to module " +toPMod.getModule().getName());
+		//System.err.println("from module "+fromPMod.getModule().getName());
+		//System.err.println("to module " +toPMod.getModule().getName());
 		
 		PBounds b = toPMod.getGlobalFullBounds();
-		System.err.println(" to module is  at "+b.getX()+","+b.getY());
-		System.err.println("  width="+b.getWidth()+","+b.getHeight());
+		//System.err.println(" to module is  at "+b.getX()+","+b.getY());
+		//System.err.println("  width="+b.getWidth()+","+b.getHeight());
 		
 		/*	System.err.println("input id is "+input.getID());
 			System.err.println("output id is "+output.getID()); */
@@ -261,7 +260,26 @@ public class PChain {
 			PParamLink newLinkNode = new PParamLink(inputPNode,outputPNode);
 			linkLayer.addChild(newLinkNode);
 			linkLayer.completeLink(newLinkNode);
+			if (from.getLayer() > (to.getLayer()+1))
+				adjustLink(from,to,newLinkNode);
 		} 	
+	}
+	
+	private void adjustLink(CNode from,CNode to,PParamLink link) {
+		System.err.println("adjusting link from "+from.getModule().getName()+
+			", layer="+from.getLayer());
+		System.err.println(" to .."+to.getModule().getName()+", layer "+to.getLayer());
+		// remember, layer numbers go down as we get to leaves
+		for (int i = from.getLayer()-1; i > to.getLayer();i--) {
+			adjustLink(from,to,link,i);
+		}
+	}
+	
+	private void adjustLink(CNode from,CNode to,PParamLink link, int i) {
+		System.err.println("adjust link at point "+i);
+		// find x coordinate
+		// find y coordinate.
+		
 	}
 	
 	public float getHeight() { 
