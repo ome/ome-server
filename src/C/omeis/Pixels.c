@@ -579,8 +579,15 @@ float scale, blk;
 	if (!myPixels) return;
 	if (! (head = myPixels->head) ) return;
 	if (! (bp = head->bp) ) return;
-	if (! chSpec->isOn ) return;
-	if (! buf ) return;
+	if (! buf || !nPix) return;
+	if (! chSpec->isOn ) {
+		if (jump ==1) buf = memset(buf, 0, nPix);
+		else while (nPix--) {
+			*buf = 0;
+			buf += jump;
+		}
+		return;
+	}
 
 	nBytes = nPix*bp;
 
