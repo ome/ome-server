@@ -81,6 +81,7 @@ sub import_image {
     my $basenm;
     my $image_file;
     my $import_reader;
+    my ($is_dupl, $first_sha1);
     my $status;
     my $read_status;
     my @image_buf;
@@ -105,8 +106,9 @@ sub import_image {
 
     # unless the stealth switch "--dupl" is present, don't allow importing
     # an image file more than once
+    ($is_dupl, $first_sha1) = is_duplicate($self, $image_file);
     if ($switch !~ /^--dupl/) {
-	if (is_duplicate($self, $image_file)) {
+	if ($is_dupl) {
 	    carp "\nThe source image $image_file has already been imported into OME.";
 	    return "";
 	}
@@ -121,7 +123,7 @@ sub import_image {
 	    carp $read_status;
 	}
 	else {
-	    $status = store_image($self, \%xml_elements, \@image_buf, $image_group_ref);
+	    $status = store_image($self, \%xml_elements, \@image_buf, $image_group_ref, $first_sha1);
 	    if ($status eq "") {
 		$self->{did_import} = 1;
 		print STDERR "did import\n";
@@ -139,9 +141,10 @@ sub import_image {
 # Store image's metadata in the OME db, and the image data in the repository
 sub store_image {
     my $self = shift;
-    my $href = shift;  # reference to metadata hash;
-    my $aref = shift;          # reference to pixel array
-    my $image_group_ref = shift;
+    my $href = shift;             # reference to metadata hash;
+    my $aref = shift;             # reference to pixel array
+    my $image_group_ref = shift;  # ref to group of imported files
+    my $first_sha1 = shift;       # sha1 digest of 1st file in group
     my $session = $self->{session};
     my $status = "";
     my $image;
@@ -179,7 +182,7 @@ sub store_image {
 	$status = store_xyz_info($self, $session, $href);
 	last unless $status eq "";
 
-	$status = store_image_files_xyzwt($self, $session, $href, $image_group_ref);
+	$status = store_image_files_xyzwt($self, $session, $href, $image_group_ref, $first_sha1);
 	last unless $status eq "";
 
 	$status = map_image_to_dataset($self);
@@ -560,7 +563,7 @@ sub store_xyz_info {
 
 # store info about each file that was a component of this image
 sub store_image_files_xyzwt {
-    my ($self, $session, $href, $image_group_ref) = @_;
+    my ($self, $session, $href, $image_group_ref, $first_sha1) = @_;
     my $image = $self->{'image'};
     my $imageID = $image->image_id();
     print STDERR "new image id = $imageID\n";
@@ -575,7 +578,8 @@ sub store_image_files_xyzwt {
 	my $endian;
 	my @col;
 
-	$sha1 = getSha1($file);
+	$sha1 = $first_sha1 ? $first_sha1 : getSha1($file);
+	$first_sha1 = 0;
 	
 	$endian = $href->{'Image_files_xyzwt.Endian'};
 	$endian = ($endian eq "big") ? 't' : 'f' ;
@@ -648,6 +652,7 @@ sub getSha1 {
 
 
 # Check if input file has already been processed 
+# Always return the digest (sha1) since it's so expensive to calculate
 sub is_duplicate {
     my $self = shift;
     my $infile = shift;
@@ -658,9 +663,9 @@ sub is_duplicate {
     my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
 				    file_sha1 => $sha1);
     if (defined $view) {
-	return 1;
+	return (1, $sha1);
     } else {
-	return 0;
+	return (0, $sha1);
     }
 }
 
