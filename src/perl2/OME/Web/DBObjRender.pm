@@ -392,6 +392,41 @@ sub getObjectLabel {
 	return $obj->id();
 }
 
+=head2 getObjectTitle
+
+	my $title = OME::Web::DBObjRender->getObjectTitle( $object, $format );
+
+Gets a title for this object. Subclasses may override this method.
+If a 'name' or a 'Name' method exists for this object, it will be returned.
+Otherwise, '[Common name] [id] (from [Source Module Name])' will be returned.
+
+=cut
+
+sub getObjectTitle {
+	my ($proto,$obj, $format) = @_;
+
+	my $specializedRenderer;
+	return $specializedRenderer->getObjectTitle( $obj, $format )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj, $format ) and
+		    $proto eq __PACKAGE__);
+
+	my ($package_name, $common_name, $formal_name, $ST) =
+		OME::Web->_loadTypeAndGetInfo( $obj );
+	my $q = new CGI;
+	my $prefix = ( ( $ST and ($format eq 'html') ) ? 
+		$q->a( { href => 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::SemanticType&ID='.$ST->id() },$common_name) : 
+		$common_name
+	);
+	my $label = $proto->getObjectLabel( $obj );
+
+	return "$prefix: $label".
+		( ( $ST and $obj->module_execution() and $obj->module_execution()->module() ) ?
+			' from '.__PACKAGE__->getRefToObject( $obj->module_execution(), $format ) :
+			''
+		);
+
+}
+
 =head2 getRefsToObject
 
 	my $object_refs = OME::Web::DBObjRender->getRefsToObject( \@objects, $format  );
@@ -430,10 +465,6 @@ sub getRefToObject {
 	
 	my $q = new CGI;
 	for( $format ) {
-		if( /^txt$/ ) {
-			return $obj->id();
-		}
-		# FIXME
 		if( /^html$/ ) {
 			my ($package_name, $common_name, $formal_name, $ST) =
 				OME::Web->_loadTypeAndGetInfo( $obj );
@@ -444,6 +475,7 @@ sub getRefToObject {
 				$label
 			);
 		}
+		return $proto->getObjectLabel( $obj, $format );
 	}
 }
 
@@ -479,18 +511,18 @@ sub __gather_PublishedManyRefs {
 	my $relation_accessors = $obj->getPublishedManyRefs();
 	my @methods = sort( keys %$relation_accessors );
 	my @objects = map( \$obj, @methods );
-	my @names;
+	my @names = @methods;
+	my @titles;
 	foreach my $method (@methods ) {
-		(my $name = $method) =~ s/_/ /g;
-		$name = ucfirst( $name );
-		push @names, $name;
+		(my $title = $method) =~ s/_/ /g;
+		$title = ucfirst( $title );
+		push @titles, $title;
 	}
-	@names             = sort( @names );
 	my @params         = map( (), @methods );
 	my @call_as_scalar = map( 0, @methods );
 	my @return_type    = map{ $relation_accessors->{ $_ } } @methods;
 
-	return( \@objects, \@methods, \@params, \@return_type, \@names, \@call_as_scalar );
+	return( \@objects, \@methods, \@params, \@return_type, \@names, \@titles, \@call_as_scalar );
 }
 
 =head2 getSearchFields
@@ -643,12 +675,13 @@ into the method.
 
 =head2 new
 
-	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
+	my $iterator = !->new( 
 		\@objects,
 		\@methods,
 		\@params,
 		\@return_type,
 		\@names,
+		\@titles,
 		\@call_as_scalar );
 
 	# this works too.
@@ -671,6 +704,8 @@ that will be returned by the method
 
 @names contains the name of each relationship
 
+@titles contains the title of each relationship
+
 @call_as_scalar elements should be set to 1 for those methods that
 return an array reference and set to 0 for methods that return an array.
 It determines if the method should be called in array context.
@@ -681,7 +716,7 @@ sub new {
 	my $proto = shift;
 	my $class = ref( $proto ) || $proto;
 	
-	my ($objects, $methods, $params, $return_type, $names, $call_as_scalar) = @_;
+	my ($objects, $methods, $params, $return_type, $names, $titles, $call_as_scalar) = @_;
 	
 	my $self = {
 		__objects     => $objects,
@@ -689,6 +724,7 @@ sub new {
 		__params      => $params,
 		__return_type => $return_type,
 		__names       => $names,
+		__titles      => $titles,
 		__call_as_scalar => $call_as_scalar,
 		__count       => 0,
 		__length      => scalar( @$objects )
@@ -742,6 +778,19 @@ returns the name of the current relation
 sub name {
 	my $self = shift;
 	return $self->{__names}->[ $self->{__count} ];
+}
+
+=head2 title
+
+	$relationsIterator->title()
+
+returns the title of the current relation
+
+=cut
+
+sub title {
+	my $self = shift;
+	return $self->{__titles}->[ $self->{__count} ];
 }
 
 =head2 return_type
