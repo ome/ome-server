@@ -60,7 +60,7 @@ sub new {
 	return bless $self, $class;
 }
 
-sub getLSID () {
+sub getLSID ($) {
 my ($self,$object) = @_;
 	my $type;
 	my $ref = ref ($object);
@@ -81,15 +81,30 @@ my ($self,$object) = @_;
 	return "urn:lsid:$AUTHORITY:$type:".$object->id();
 }
 
-sub getObject () {
+sub getObject ($) {
 my ($self,$lsid) = @_;
+	return $self->getLocalObject ($lsid) || $self->getRemoteObject ($lsid);
+}
 
+sub checkLSID ($) {
+my ($self,$lsid) = @_;
 	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
-	return $self->getRemoteObject ($lsid) unless defined $authority and $authority eq $AUTHORITY;
+	return undef unless defined $authority;
 	return undef unless defined $urn and $urn eq 'urn';
 	return undef unless defined $urnType and $urnType eq 'lsid';
 	return undef unless defined $localID;
+	return $lsid;
+}
+
+sub getLocalObject () {
+	my $self = shift;
+	my $lsid = $self->checkLSID (shift) || return undef;
+
+	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
 	
+# FIXME:  This should return a locally stored object even if its got a different authority.
+	return undef unless defined $authority and $authority eq $AUTHORITY;
+
 	if ($namespace eq 'Project') {
 		return $self->Session()->Factory()->loadObject('OME::Project', $localID);
 	} elsif ($namespace eq 'Dataset') {
@@ -104,7 +119,12 @@ my ($self,$lsid) = @_;
 }
 
 # FIXME:  This could use a little implementation.
-sub getRemoteObject () {
+sub getRemoteObject ($) {
 my ($self,$lsid) = @_;
+	my $self = shift;
+	my $lsid = checkLSID (shift) || return undef;
+
+	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
+
 	return undef;
 }
