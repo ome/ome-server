@@ -133,19 +133,28 @@ my $cgi = $OME->cgi;
 	my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a name for a temporary file $!\n";
 	open (TMCP_IN,"> $tempFileName") or die "Could not open temporary file '$tempFileName' for writing $!\n";
 
+	my $numDatasets=0;
+
 	foreach $image (@$images)
 	{
-#	print STDERR "TMCP:  Dataset=$image->{Name}.\n";
-		$key = $image->{BaseName}.$image->{ChemPlate}.
-			$image->{Well}.$image->{Sample};
+		$key = $image->{RasterID};
 		if (not exists $datasets{$key}) {
-#	print STDERR "TMCP:  Dataset Group $key - raster ID = ".$image->{RasterID}."\n";
-			$datasets{$key} = $image->GetWavelengthDatasets;
+			$datasets{$key} = $image->GetWavelengthDatasets();
+			$numDatasets++;
 		}
 	}
 
 
-	my $numDatasets=0;
+#
+# The number of datasets selected doesn't reflect the number of analyses we're going to perform,
+# so update the session info so that the right number is displayed in the status.
+# Update session info
+	my $session = $OME->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{NumSelectedDatasets} = $numDatasets;
+	$OME->Session($session);
+
+
 	my @orderedDatasets;
 
 	while ( ($key,$datasetArray) = each %datasets) {
@@ -179,7 +188,6 @@ my $cgi = $OME->cgi;
 			$weight = 0 unless defined $weight;
 
 			print TMCP_IN $tiff0,"\t",$tiff1,"\t",$weight,"\n";
-			$numDatasets++;
 			push (@orderedDatasets,$datasetArray);
 		} else {
 			$datasets{$key} = undef;
@@ -206,7 +214,9 @@ my $cgi = $OME->cgi;
 			push (@TMCPs,undef);
 			$numTMCPs++;
 		} else {
-			$TMCP = Math::BigFloat->new($TMCP_in);
+			$TMCP = $TMCP_in;
+		# Trim leading and trailing whitespace, set $TMCP to undef if not like a C float.
+			$TMCP =~ s/^\s+//;$TMCP =~ s/\s+$//;$TMCP = undef unless ($TMCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
 		print STDERR "TMCP:  $_\nTMCP[$numTMCPs]:$TMCP\n";
 			if (defined $TMCP and $TMCP) {
 				push (@TMCPs,"$TMCP");
