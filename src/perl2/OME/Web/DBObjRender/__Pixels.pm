@@ -60,10 +60,6 @@ use OME::Tasks::PixelsManager;
 use base qw(OME::Web::DBObjRender);
 
 # Class data - override default behavior
-__PACKAGE__->_fieldLabels( {
-	'id'               => "ID",
-	'module_execution' => "MEX"
-});
 __PACKAGE__->_fieldNames( [
 	'id',
 	'SizeX',
