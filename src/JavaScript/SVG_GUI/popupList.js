@@ -67,35 +67,41 @@ popupList.prototype.transformText =
 '	fill="freeze" begin="indefinite"/>';
 
 /*****
-*
-*   constructor
-*     variable explanations:
-*       x, y = obvious
-*       itemList = array of strings to insert into the list
-*       callback = function to call when a item is selected by the user
-*     The rest of these variables are optional.
-*       selection = item number (numbering starts at 0) to select initially
-*       anchorText = svg tags to overwrite default background of minimized popupList
-*       itemBackgroundText = svg tags to overwrite default background of list elements
-*       itemHighlightText = svg tags to overwrite default highlight of list elements
-*		textStyle = array holding attribute name, value pairs to apply to menu text
-*
+
+	popupList ..the constructor
+		x, y = obvious
+		itemList = array of strings to insert into the list
+	The rest of these variables are optional.
+		callback = function to call when a item is selected by the user
+		selection = item number (numbering starts at 0) to select initially
+		anchorText = svg tags to overwrite default background of minimized popupList
+		itemBackgroundText = svg tags to overwrite default background of list elements
+		itemHighlightText = svg tags to overwrite default highlight of list elements
+		textStyle = array holding attribute name, value pairs to apply to menu text.
+			Constructor is sensitive to text-anchor attribute, and will position text
+			appropriately.
+	An alternate calling style is:
+		var newPopupList = popupList( {
+			x: 10,
+			y: 10,
+			itemList: [ 'a', 'b', 'c' ],
+			textStyle: [ 'text-anchor', 'end' ]
+		});
+	When using this style, parameters may be given in any order. 
+
 *****/
 function popupList(x, y, itemList, callback, selection, anchorText, 
 	itemBackgroundText, itemHighlightText, textStyle) {
-	if(arguments.length >= 3)
-		this.init(x, y, itemList, callback, selection, anchorText,
-			itemBackgroundText, itemHighlightText, textStyle);
+	this.init(x, y, itemList, callback, selection, anchorText,
+		itemBackgroundText, itemHighlightText, textStyle);
 }
 
 
 /*****
-
 	setSelection
 		i = new selection
 		noAnimate = boolean. determines whether change will be animated
 		noCallback = boolean. determines whether a callback will be issued
-
 *****/
 popupList.prototype.setSelection = function(i, noAnimate, noCallback) {
 	if(i<0)
@@ -121,14 +127,12 @@ popupList.prototype.issueCallback = function(value) {
 };
 
 /*****
-
 	setSelectionByValue(val)
 		
 	notes:
 		because this function is only called externally, it will not cause update to animate.
 		update should only animate when opening or closing a popupList, not when the value is
 		externally changed.
-
 *****/
 popupList.prototype.setSelectionByValue = function(val, noCallback) {
 	var index = this.getIndexFromValue(val);
@@ -154,11 +158,11 @@ popupList.prototype.getSelection = function() {
 	return this.listIndex[this.selection];
 };
 
-/*
+/******
 	getIndexFromValue
 		val: value to look up index for
 	returns internal index corresponding to a value in the popup list
-*/
+******/
 popupList.prototype.getIndexFromValue = function( val ) {
 	for(var i in this.itemList) {
 		if(this.itemList[i] == val) {
@@ -177,13 +181,13 @@ popupList.prototype.getSelectionName = function() {
 	return this.itemList[ this.getSelection() ];
 };
 
-/*
+/******
 	makeCellIntoLink
 		index: index to cell
 		attrs: associative array of attr_name: attr_value to add to link
 	will make a cell into a href link.
 	returns the DOM representation of the created link
-*/
+******/
 popupList.prototype.makeCellIntoLink = function( index, attrs ) {
 	if( ! this.itemBox[ index ] ) { 
 		alert('invalid index passed to popupList.prototype.makeCellIntoLink'); 
@@ -262,6 +266,17 @@ popupList.prototype.update = function(noAnimate) {
 *****/
 popupList.prototype.init = function(x, y, itemList, callback, selection,
 	anchorText, itemBackgroundText, itemHighlightText, textStyle) {
+	if( x.constructor != Number ) {
+		y                  = x['y'];
+		itemList           = x['itemList'];
+		callback           = x['callback']; 
+		selection          = x['selection']; 
+		anchorText         = x['anchorText']; 
+		itemBackgroundText = x['itemBackgroundText']; 
+		itemHighlightText  = x['itemHighlightText']; 
+		textStyle          = x['textStyle']; 
+		x                  = x['x'];
+	}
 
 	// call superclass initialization
 	popupList.superclass.init.call(this, x, y);
@@ -315,7 +330,7 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 		if( align == 'center' )
 			this.itemText[i].setAttribute( "x", Math.round(this.width/2) );
 		else if ( align == 'right' )
-			this.itemText[i].setAttribute( "x", width );
+			this.itemText[i].setAttribute( "x", (this.width - this.padding) );
 		else if ( align == 'left' )
 			this.itemText[i].setAttribute( "x", this.padding );
 		this.itemText[i].setAttribute( "y", Math.round(this.padding/2) );
