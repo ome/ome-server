@@ -45,7 +45,8 @@ OME::Web::DBObjDetail::__OME_Dataset
 
 =head1 DESCRIPTION
 
-Displays detailed information about a Dataset
+sets Session->dataset to the dataset displayed
+implements _takeAction to allow changes to name and description
 
 =cut
 
@@ -90,39 +91,6 @@ sub _takeAction {
 		$object->storeObject();
 		$self->Session()->commitTransaction();
 	}
-}
-
-
-=head2 doLayout
-
-shift layout around
-
-=cut
-
-sub doLayout {
-	my ($self,$objDetail, $relationLists, $relationTables) = @_;
-	my $q = $self->CGI();
-
-	my $html = 
-		$q->table( { -width => '100%', -cellpadding => 5 },
-			$q->Tr( 
-				$q->td( { -width => '50%', -valign => 'top'}, 
-					$objDetail.
-					$relationLists->{projects}.
-					$relationLists->{module_executions}
-				),
-				
-				$q->td( { -width => '25%', -valign => 'top' }, 
-					$relationLists->{images} 
-				)
-			),
-		).
-		$relationTables->{projects}.
-		$relationTables->{images}.
-		$relationTables->{module_executions};
-		
-	
-	return $html;
 }
 
 
