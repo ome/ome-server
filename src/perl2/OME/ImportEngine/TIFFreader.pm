@@ -96,6 +96,7 @@ use vars qw($VERSION);
 use OME;
 $VERSION = $OME::VERSION;
 
+use constant WHITE_IS_ZERO => 0;
 
 =head2 Patterns Defining Groups
 
@@ -310,8 +311,6 @@ sub importGroup {
     $params->xml_hash->{'Image.NumTimes'} = 0;
     $params->xml_hash->{'Image.NumWaves'} = scalar(@$grp);
 
-    my $fn = $grp->[0];
-
     my $image = ($self->{super})->__newImage($ofn);
     $self->{image} = $image;
     
@@ -403,7 +402,9 @@ sub readWritePixels {
 	my $cnt = Repacker::repack($buf, $sz, $bps,
 				   $endian eq "little",
 				   $params->{host_endian} eq "little");
-    
+	if ($tags->{TAGS->{PhotometricInterpretation}}->[0] == WHITE_IS_ZERO) {
+	    my $cnt2 = Repacker::invert($buf, $sz, $bps);
+	}
 	my $nPixOut = $self->{pix}->SetRows($buf, $rows_per_strip, 
 					    $theY, 0, $theC, 0);
 	if ($self->{plane_size}/$params->byte_size != $nPixOut) {
