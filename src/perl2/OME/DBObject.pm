@@ -1570,13 +1570,15 @@ sub __makeSelectSQL {
           if scalar(@order_by) > 0;
 
         if (defined $limit) {
-            $sql .= " limit ?";
-            push @values, $limit;
+            die "Illegal limit value $limit"
+              unless $limit =~ /^\d+$/;
+            $sql .= " limit $limit";
         }
 
         if (defined $offset) {
-            $sql .= " offset ?";
-            push @values, $offset;
+            die "Illegal offset value $offset"
+              unless $offset =~ /^\d+$/;
+            $sql .= " offset $offset";
         }
     }
 
