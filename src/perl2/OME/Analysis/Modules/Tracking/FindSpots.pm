@@ -24,9 +24,9 @@ use strict;
 our $VERSION = '1.0';
 
 use IO::File;
-use OME::Analysis::CLIHandler;
+use OME::Analysis::Handler;
 
-use base qw(OME::Analysis::CLIHandler);
+use base qw(OME::Analysis::Handler);
 
 use fields qw(_options _inputHandle _outputHandle _errorHandle
 	      _inputFile _outputFile _errorFile _cmdLine);
@@ -74,17 +74,20 @@ sub precalculateImage {
     $self->{_currentImage} = $image;
     $self->{_cmdLine} = $cmdLine;
 
-    my $dims = $image->Dimensions();
-    my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
-	",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times();
+    #my $dims = $image->Dimensions();
+    #my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
+    #",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times();
+    my $dims = $self->getImageInputs("Dimensions")->[0];
+    my $dimString = "Dims=".$dims->SizeX().",".$dims->SizeY().
+	",".$dims->SizeZ().",".$dims->SizeC().",".$dims->SizeT();
 
     print $input "$dimString\nWaveStats=\n";
 
-    my $mean_list = $self->getImageInputs('Stack mean');
-    my $geomean_list = $self->getImageInputs('Stack geomean');
-    my $sigma_list = $self->getImageInputs('Stack sigma');
-    my $min_list = $self->getImageInputs('Stack minimum');
-    my $max_list = $self->getImageInputs('Stack maximum');
+    my $mean_list = $self->getImageInputs('Stack means');
+    my $geomean_list = $self->getImageInputs('Stack geomeans');
+    my $sigma_list = $self->getImageInputs('Stack sigmas');
+    my $min_list = $self->getImageInputs('Stack minima');
+    my $max_list = $self->getImageInputs('Stack maxima');
 
     die "Bad input lists"
         if (scalar(@$mean_list) != scalar(@$geomean_list))
@@ -95,15 +98,15 @@ sub precalculateImage {
 
     my %wave_stats;
 
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Mean} = $_->MEAN()
+    $wave_stats{$_->TheT()}->{$_->TheC()}->{Mean} = $_->Mean()
         foreach @$mean_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Geomean} = $_->GEOMEAN()
+    $wave_stats{$_->TheT()}->{$_->TheC()}->{Geomean} = $_->GeometricMean()
         foreach @$geomean_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Sigma} = $_->SIGMA()
+    $wave_stats{$_->TheT()}->{$_->TheC()}->{Sigma} = $_->Sigma()
         foreach @$sigma_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Min} = $_->MINIMUM()
+    $wave_stats{$_->TheT()}->{$_->TheC()}->{Min} = $_->Minimum()
         foreach @$min_list;
-    $wave_stats{$_->TIMEPOINT()}->{$_->WAVENUMBER()}->{Max} = $_->MAXIMUM()
+    $wave_stats{$_->TheT()}->{$_->TheC()}->{Max} = $_->Maximum()
         foreach @$max_list;
 
     foreach my $time (sort {$a <=> $b} (keys %wave_stats)) {
@@ -184,23 +187,23 @@ sub calculateFeature {
 	    my $header = $headers[$i++];
 	    $datum = undef if ($datum eq 'inf');
 	    if ($header eq "t") {
-		$timepointData->{TIMEPOINT} = $datum;
+		$timepointData->{TheT} = $datum;
 	    } elsif ($header eq "Thresh.") {
-		$thresholdData->{THRESHOLD} = $datum;
+		$thresholdData->{Threshold} = $datum;
 	    } elsif ($header eq "mean X") {
-		$locationData->{X} = $datum;
+		$locationData->{TheX} = $datum;
 	    } elsif ($header eq "mean Y") {
-		$locationData->{Y} = $datum;
+		$locationData->{TheY} = $datum;
 	    } elsif ($header eq "mean Z") {
-		$locationData->{Z} = $datum;
+		$locationData->{TheZ} = $datum;
 	    } elsif ($header eq "volume") {
-		$extentData->{VOLUME} = $datum;
+		$extentData->{Volume} = $datum;
 	    } elsif ($header eq "Surf. Area") {
-		$extentData->{SURFACE_AREA} = $datum;
+		$extentData->{SurfaceArea} = $datum;
 	    } elsif ($header eq "perimiter") {
-		$extentData->{PERIMETER} = $datum;
+		$extentData->{Perimeter} = $datum;
 	    } elsif ($header eq "Form Factor") {
-		$extentData->{FORM_FACTOR} = $datum;
+		$extentData->{FormFactor_} = $datum;
 	    } elsif ($header =~ /$wavelength_rex/) {
 		my $c1 = $1;
 		my $wavelength = $2;
@@ -209,7 +212,7 @@ sub calculateFeature {
 		my $signalData;
 		if (!exists $signalData{$wavelength}) {
 		    $signalData = {
-			WAVELENGTH => $wavelength
+			TheC => $wavelength
 			};
                     $signalData{$wavelength} = $signalData;
 		} else {
@@ -217,17 +220,17 @@ sub calculateFeature {
 		}
 
 		if (($c1 eq "c") && ($c2 eq "X")) {
-		    $signalData->{CENTROID_X} = $datum;
+		    $signalData->{CentroidX} = $datum;
 		} elsif (($c1 eq "c") && ($c2 eq "Y")) {
-		    $signalData->{CENTROID_Y} = $datum;
+		    $signalData->{CentroidY} = $datum;
 		} elsif (($c1 eq "c") && ($c2 eq "Z")) {
-		    $signalData->{CENTROID_Z} = $datum;
+		    $signalData->{CentroidZ} = $datum;
 		} elsif ($c1 eq "i") {
-		    $signalData->{INTEGRAL} = $datum;
+		    $signalData->{Integral} = $datum;
 		} elsif ($c1 eq "m") {
-		    $signalData->{MEAN} = $datum;
+		    $signalData->{Mean} = $datum;
 		} elsif ($c1 eq "g") {
-		    $signalData->{GEOMEAN} = $datum;
+		    $signalData->{GeometricMean} = $datum;
 		}
 	    } else {
 		#print STDERR "?";
