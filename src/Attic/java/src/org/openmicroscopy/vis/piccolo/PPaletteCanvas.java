@@ -82,7 +82,8 @@ import java.awt.dnd.DragGestureEvent;
  * @since OME2.0
  */
 
-public class PPaletteCanvas extends PCanvas implements DragGestureListener {
+public class PPaletteCanvas extends PCanvas implements DragGestureListener,
+	PBufferedObject {
 	
 	/**
 	 * Typeface for category names

@@ -72,7 +72,8 @@ import java.awt.dnd.DragGestureEvent;
  * @since OME2.1
  */
 
-public class PChainLibraryCanvas extends PCanvas implements DragGestureListener {
+public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
+  	PBufferedObject {
 	
 	/***
 	 * Vertical space betwen chains
