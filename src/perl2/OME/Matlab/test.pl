@@ -1,20 +1,59 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
+#!/usr/bin/perl
+# This script makes a connection to the MATLAB Engine and trys to use the MATLAB engine
+# to compute 4x8. If the answer is not 32 something went wrong.
 
-######################### We start with some black magic to print on failure.
+#-------------------------------------------------------------------------------
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#-------------------------------------------------------------------------------
 
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
+#-------------------------------------------------------------------------------
+#
+# Written by:    Tom Macura <tmacura@nih.gov>
+#
+#-------------------------------------------------------------------------------
 
-BEGIN { $| = 1; print "1..1\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Matlab;
-$loaded = 1;
-print "ok 1\n";
+#use Matlab;
+use OME::Matlab;
 
-######################### End of black magic.
+print "Trying to compute 4x8 using MATLAB ...\n";
+my $x = OME::Matlab::Array->newDoubleScalar(4);
+my $engine = OME::Matlab::Engine->open();
 
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
+die "Test Failed. Perl Matlab API is incorrectly installed. The MATLAB engine does not". 
+	" start." if $engine == undef;
 
+$engine->putVariable('x',$x);
+$engine->eval('y = x .* 8;');
+my $y = $engine->getVariable('y');
+print "Perl: $y\n";
+print "    Class:  ",$y->class_name(),"\n";
+print "    Order:  ",$y->order(),"\n";
+print "    Dims:   ",join('x',@{$y->dimensions()}),"\n";
+print "    Values: (",join(',',@{$y->getAll()}),")\n";
+
+die "Test Failed. Perl Matlab API is incorrectly installed. MATLAB ran but ".
+	"gave incorrect results." unless
+	( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->dimensions()->[0] eq 1) && ($y->dimensions()->[1] eq 1) && ($y->getAll()->[0] eq 32)  );
+
+print "Test Passed. Perl Matlab API is correctly installed. \n";
