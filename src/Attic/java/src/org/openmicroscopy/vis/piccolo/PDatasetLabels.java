@@ -41,7 +41,6 @@ package org.openmicroscopy.vis.piccolo;
 import java.util.Collection;
 
 import org.openmicroscopy.remote.RemoteObject;
-import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.CDataset;
 
 import edu.umd.cs.piccolo.PNode;
@@ -59,13 +58,12 @@ import edu.umd.cs.piccolo.PNode;
 public class PDatasetLabels extends PRemoteObjectLabels {
 	
 	private static final double VGAP=20;
-	public PDatasetLabels(Collection datasets,double width,
-			SelectionState selectionState) {
-		super(datasets,width,selectionState);
+	public PDatasetLabels(Collection datasets,double width) {
+		super(datasets,width);
 	}
 		
-	protected PNode getNode(RemoteObject ro,SelectionState selectionState) {
-		return new PDatasetLabelText((CDataset) ro,selectionState);
+	protected PNode getNode(RemoteObject ro) {
+		return new PDatasetLabelText((CDataset) ro);
 	}
 	
 	protected double getVerticalGap() {
