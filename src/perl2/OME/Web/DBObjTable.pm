@@ -265,6 +265,8 @@ sub getTable {
 	# Build the table
 	$html = $q->startform( { -name => $form_name })
 		unless $options->{ embedded_in_form };
+	$html .= $q->a( { name => $options->{ anchor } }, ' ' )
+		if exists $options->{ anchor };
 	$html .=
 		$q->table( {
 				-class => 'ome_table',
@@ -554,8 +556,11 @@ recognized %options are:
 	embedded_in_form => $form_name
 	title            => 'table_title'
 	width            => 'table_width'
+	URLtoMoreInfo    => $href
 
-a Length of 0 or less is considered to be 'no limit'. an undef Length is assumed to be the default Length of 10.
+a Length of 0 or less is considered to be 'no limit'. an undef Length is assumed to be the
+default Length of 10.
+URLtoMoreInfo defaults to a table view of the same data. the link 'More details' will reference this.
 
 =cut
 
@@ -566,15 +571,17 @@ sub getList {
 		$self->__parseParams( @_ );
 	my $form_name    = $self->{form_name};
 	my $pagingText   = $self->{pagingText};
+	$options->{ URLtoMoreInfo } = $self->pageURL( "OME::Web::DBObjTable", $self->{__params} )
+		unless exists $options->{ URLtoMoreInfo };
+	
 	
 	# build table
 	my $html;
-	
 	my @object_refs = OME::Web::DBObjRender->getRefsToObject( $objects, 'html'  );
-	
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
-		
+	
+	
 	$html = $q->startform( { -name => $form_name })
 		unless $options->{ embedded_in_form };
 	$html .=
@@ -586,7 +593,7 @@ sub getList {
 				$q->td( { -class => 'ome_td', -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
 						( $allowPaging ? '<nobr>'.$pagingText.'</nobr>' : ()),
-						$q->a( { href => $self->pageURL( "OME::Web::DBObjTable", $self->{__params} ) }, "More details" )
+						$q->a( { href => $options->{ URLtoMoreInfo } }, "More details" )
 					) ) )
 				), 
 				# Table data
