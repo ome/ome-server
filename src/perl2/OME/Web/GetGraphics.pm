@@ -107,14 +107,14 @@ sub FrameImageViewer {
 	my $ImageID	  = $cgi->url_param("ImageID");
 	my $HTML='';
 	my $image     = $self->Session()->Factory()->loadObject("OME::Image", $ImageID);
-	my $nobre     = $image->name();
+	my $nombre    = $image->name();
 	
 	$self->contentType('text/html');
 	# Embedding in frames instead of object allows Mozilla > v1 to run it.
 	$HTML .= <<ENDHTML;
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
-<title>$nobre</title>
+<title>$nombre</title>
 	<frameset rows="*">
 		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">
 	</frameset>
