@@ -214,6 +214,10 @@ sub fix_cron_scripts {
 			croak "Can't open $file for writing: $!";
 		print FILE $config;
 		close (FILE);
+		chmod (0775,$file) or
+			print $LOGFILE "Could not chmod $script_path: $!\n" and
+			croak "Could not chmod $script_path: $!";
+
 	}
 	return (1);
 }
