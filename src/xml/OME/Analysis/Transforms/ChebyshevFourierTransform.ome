@@ -72,7 +72,7 @@
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Chebyshev Fourier Coefficient Matrix"/></Output>
+			  <Output><PixelsArray FormalOutput="Chebyshev Fourier Coefficient Matrix" ConvertToDataType="single"/></Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>

@@ -88,8 +88,16 @@
 			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><PixelsArray FormalOutput="Wavelet Coefficients Level 1"/></Output>
-			  <Output><PixelsArray FormalOutput="Wavelet Coefficients Level 2"/></Output>
+			  <Output>
+			  	<PixelsArray
+			  		FormalOutput="Wavelet Coefficients Level 1"
+			  		ConvertToDatatype="single"/>
+			  </Output>
+			  <Output>
+			  	<PixelsArray
+			  		FormalOutput="Wavelet Coefficients Level 2"
+			  		ConvertToDatatype="single"/>
+			  </Output>
 			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
