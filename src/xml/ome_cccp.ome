@@ -20,41 +20,35 @@
 			<FormalOutputColumn FormalOutputColumnID = "theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 			<FormalOutputColumn FormalOutputColumnID = "CC" ColumnID = "CC" Description = "Cross Correlation Value"/>
 		</FormalOutput>
-		<FormalInput Name = "Wavelength1" Description = "" UserDefined = "true">
+		<FormalInput Name = "Wavenumber1" Description = "" UserDefined = "true">
 			<FormalInputColumn FormalInputColumnID = "wave1" ColumnID = "Wavenumber.theW"/>
 		</FormalInput>
-		<FormalInput Name = "Wavelength2" Description = "" UserDefined = "true">
+		<FormalInput Name = "Wavenumber2" Description = "" UserDefined = "true">
 			<FormalInputColumn FormalInputColumnID = "wave2" ColumnID = "Wavenumber.theW"/>
 		</FormalInput>
 	</Declaration>
-	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false"
-		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
-		xsi:schemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/CLIExecutionInstructions.xsd">
-		<CommandLine><XYPlaneFilePath XYPlaneFilePathID = "Plane 1" Format = "TIFF">
-			<PlaneIndex>
-				<theZ>
-					<AutoIterate FormalOutputColumnID = "theZ"/>
-				</theZ>
-				<theW>
-					<UseValue FormalInputColumnID = "wave1"/>
-				</theW>
-				<theT>
-					<AutoIterate FormalOutputColumnID = "theT"/>
-				</theT>
-			</PlaneIndex>
-		</XYPlaneFilePath> <XYPlaneFilePath Format = "TIFF">
-			<PlaneIndex>
-				<theZ>
-					<Match XYPlaneFilePathID = "Plane 1"/>
-				</theZ>
-				<theW>
-					<UseValue FormalInputColumnID = "wave2"/>
-				</theW>
-				<theT>
-					<Match XYPlaneFilePathID = "Plane 1"/>
-				</theT>
-			</PlaneIndex>
-		</XYPlaneFilePath></CommandLine>
+	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false">
+		<CommandLine><XYPlane XYPlaneID = "1" Format = "TIFF">
+			<theZ>
+				<AutoIterate FormalOutputColumnID = "theZ"/>
+			</theZ>
+			<theW>
+				<UseValue FormalInputColumnID = "wave1"/>
+			</theW>
+			<theT>
+				<AutoIterate FormalOutputColumnID = "theT"/>
+			</theT>
+		</XYPlane> <XYPlane XYPlaneID="2" Format = "TIFF">
+			<theZ>
+				<Match XYPlaneID = "1"/>
+			</theZ>
+			<theW>
+				<UseValue FormalInputColumnID = "wave2"/>
+			</theW>
+			<theT>
+				<Match XYPlaneID = "1"/>
+			</theT>
+		</XYPlane></CommandLine>
 		<STDOUT>
 			<OutputRecord>
 				<pat>^(\d+\.?\d*|\.\d+)</pat>
