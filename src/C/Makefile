@@ -3,7 +3,7 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		cgrayce2 extractBinData insertBinData maxIntensity
+		cgrayce2 omeis2 extractBinData insertBinData maxIntensity
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql -I/usr/local/include -I/sw/include
 DB_LIBS = -lpq
 MATH_LIBS = -lm
@@ -11,7 +11,6 @@ LIBPATHS = -L. -L/usr/local/lib -L/sw/lib
 LIBS = $(DB_LIBS) $(MATH_LIBS)  $(LIBPATHS) -lOME 
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
-MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
 CFLAGS = $(DEFINES) $(LIBPATHS) $(DB_INCLUDES) $(COMPILER_FLAGS)
@@ -105,6 +104,9 @@ $(OME_LIB): $(OBJECTS)
 cgrayce2:
 	$(MAKE) -C cgrayce
 
+omeis2:
+	$(MAKE) -C omeis
+
 # extractBinData and insertBinData added by Josiah 6/6/3
 # I think they could be cleaned up, but I don't know how and don't have time now.
 # If anyone sees this, feel free to clean them up and erase this message.
@@ -129,6 +131,7 @@ clean :
 	rm -f *.o
 	rm -f $(TARGETS)	
 	$(MAKE) -C cgrayce clean
+	$(MAKE) -C omeis clean
 
 install:
 	install -d /OME
@@ -156,4 +159,5 @@ install:
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install
+	$(MAKE) -C omeis install
 
