@@ -23,6 +23,7 @@ use OME::SessionManager;
 use OME::AnalysisView;
 use OME::Dataset;
 use OME::Tasks::AnalysisEngine;
+use OME::Tasks::ChainManager;
 use Term::ReadKey;
 
 # I really hate those "method clash" warnings, especially since these
@@ -65,7 +66,53 @@ foreach my $flag_string (@ARGV) {
     }
 }
 
-$engine->executeAnalysisView($session,$view,{},$dataset);
+OME::DBObject->Caching(1) if $ENV{'OME_CACHE'};
+
+# Retrieve user inputs
+
+my $cmanager = OME::Tasks::ChainManager->new($session);
+
+my $user_input_list = $cmanager->getUserInputs($view);
+
+print "User inputs:\n";
+
+my %user_inputs;
+
+foreach my $user_input (@$user_input_list) {
+    my ($node,$program,$formal_input,$attribute_type) = @$user_input;
+    print "\n",$program->program_name(),".",$formal_input->name(),":\n";
+
+    my $count = 0;
+    my @columns = $attribute_type->attribute_columns();
+    my @attributes;
+
+  LIST_LOOP:
+    while (1) {
+        $count++;
+        print "  Attribute #$count\n";
+        my $data_hash = {};
+
+        foreach my $column (@columns) {
+            my $column_name = $column->name();
+
+            print "    ",$column_name,": ";
+            my $value = <STDIN>;
+            chomp($value);
+            last LIST_LOOP if ($value eq '\d');
+            $value = undef if ($value eq '');
+            $value = '' if ($value eq '\0');
+            $data_hash->{$column_name} = $value;
+        }
+
+        my $attribute = $factory->
+          newAttribute($attribute_type,undef,undef,$data_hash);
+        push @attributes,$attribute;
+    }
+
+    $user_inputs{$node->id()}->{$formal_input->id()} = \@attributes;
+}
+
+$engine->executeAnalysisView($session,$view,\%user_inputs,$dataset);
 
 my $cache = OME::DBObject->__cache();
 my $numClasses = scalar(keys %$cache);
