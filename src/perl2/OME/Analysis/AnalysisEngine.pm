@@ -505,7 +505,7 @@ sub findModuleHandler {
         }
     }
 
-    # Builds the data paths for an module_execution chain.  Simultaneous
+    # Builds the data paths for an analysis chain.  Simultaneously
     # verifies that the graph is acyclic.
     sub __buildDataPaths {
         __debug("  Building data paths");
@@ -624,7 +624,7 @@ sub findModuleHandler {
     # per-image node, it finds the module_execution entry for the current
     # image.
     sub __getAnalysis {
-        my ($nodeID) = @_;
+        my ($nodeID,$all_images) = @_;
 
 		# Dependence is calculated before analysis hashes are filled out.
 		# This line prevents error msg: Use of uninitialized value in string eq at OME/Analysis/AnalysisEngine.pm line 629.
@@ -635,7 +635,9 @@ sub findModuleHandler {
         } elsif ($dependence{$nodeID} eq 'D') {
             return $perdataset_analysis{$nodeID};
         } else {
-            return $perimage_analysis{$nodeID}->{$curr_imageID};
+            return ($all_images)?
+              $perimage_analysis{$nodeID}:
+              $perimage_analysis{$nodeID}->{$curr_imageID};
         }
     }
 
@@ -1144,7 +1146,7 @@ sub findModuleHandler {
 
             if (defined $input_link) {
                 $pred_node = $input_link->from_node();
-                $pred_analysis = __getAnalysis($pred_node->id());
+                $pred_analysis = __getAnalysis($pred_node->id(),1);
             } else {
                 $pred_analysis =
                   $user_input_analyses{$nodeID}->{$inputID};
