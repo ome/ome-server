@@ -1,0 +1,27 @@
+    my $factory = OME::Factory->new();
+    my $dbh = $factory->obtainDBH();
+    my $delegate = OME::Database::Delegate->getDefaultDelegate();
+	OME::Configuration::Variable->require();
+	eval {
+	    $delegate->addClassToDatabase($dbh,'OME::Configuration::Variable');
+	};
+    my ($mac,$db_instance,$lsid_authority,$tmp_dir,$xml_dir,$bin_dir,$repository_dir,$ome_root) = $dbh->selectrow_array(q{
+    	SELECT mac_address,db_instance,lsid_authority,tmp_dir,xml_dir,bin_dir,repository_dir,ome_root
+    	FROM configuration_old});
+	$dbh->do ('DROP TABLE configuration_old');
+    my $configuration = OME::Configuration->new ($factory,
+            {
+             mac_address      => $mac,
+             db_instance      => $db_instance,
+             db_version       => $DB_VERSION,
+             lsid_authority   => $lsid_authority,
+             tmp_dir          => $tmp_dir,
+             xml_dir          => $xml_dir,
+             bin_dir          => $bin_dir,
+             import_formats   => $IMPORT_FORMATS,
+             ome_root         => $ome_root
+            });
+    $factory->commitTransaction();
+    $factory->closeFactory();
+	1;
+
