@@ -438,9 +438,7 @@ my $CBW                = $JSinfo->{ CBW };	# known to the svg viewer as WBW - wh
 my $RGBon              = $JSinfo->{ RGBon };
 my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 
-my $r                  = $self->getOverlayJS();
-my $overlayHash        = $r->[0];
-my $centroidData       = $r->[1];
+my $centroidData       = $self->getOverlayJS();
 
 	$self->{contentType} = "image/svg+xml";
 	$SVG = <<'ENDSVG';
@@ -773,14 +771,25 @@ $SVG .= <<ENDSVG;
 			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
 			scale.updateScale(theT);
 			multiToolBox.addPane( scale.buildSVG(), "Scale");
+
+ENDSVG
+
+if( $centroidData ) {
+print STDERR "centroid data is $centroidData\n\n";
+$SVG .= <<ENDSVG;
 			var overlayBox  = svgDocument.getElementById("overlays");
 			centroids = new CentroidOverlay( $centroidData );
 			overlayBox.appendChild( centroids.makeOverlay() );
-
 			overlayManager = new OverlayManager( overlayBox, turnLayerOnOff, switchOverlay, showAllZs, showAllTs );
 			overlayManager.addLayer( "Spots", centroids );
 
 			multiToolBox.addPane( overlayManager.makeControls(), "Overlay");
+			setTimeout( "switchOverlay(0)", 200 );
+			setTimeout( "turnLayerOnOff(true)", 200 );
+ENDSVG
+}
+
+$SVG .= <<ENDSVG;
 			viewerPreferences = new ViewerPreferences( resizeToolBox, resizeMultiToolBox, savePreferences );
 			multiToolBox.addPane( viewerPreferences.buildSVG(), "Preferences");
 			// finish setup & make controller
@@ -828,8 +837,6 @@ $SVG .= <<ENDSVG;
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
 			setTimeout( "loadButton.setState(false)", 0 );
-			setTimeout( "switchOverlay(0)", 0 );
-			setTimeout( "turnLayerOnOff(true)", 0 );
 			zSlider.setValue(theZ/Z*100,true);
 			tSlider.setValue(theT/T*100,true);
 
@@ -899,7 +906,7 @@ $SVG .= <<'ENDSVG';
 			zSlider.setLabel(null, null, (data + 1) + "/" + Z );
 			theZ=data;
 			
-			overlayManager.updateIndex( theZ, theT );
+			if( overlayManager ) overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 		}
 		function zUp() {
@@ -933,7 +940,7 @@ $SVG .= <<'ENDSVG';
 			tSlider.setValue(sliderVal);
 			tSlider.setLabel(null, null, "time (" + (theT+1) + "/" + T +")" );
 			
-			overlayManager.updateIndex( theZ, theT );
+			if( overlayManager) overlayManager.updateIndex( theZ, theT );
 			image.updatePic(theZ,theT);
 			scale.updateScale(theT);
 			stats.updateStats(theT);
@@ -1125,7 +1132,11 @@ sub getOverlayJS {
 	
 	my $factory = $self->Session()->Factory();
 	
-	my $spots = $self->getSpots( $pixels );
+	my $spots;
+	eval {
+		$spots = $self->getSpots( $pixels );
+	};
+	return undef if( $@ );
 	
 	my $layersJS;
 	my %layers;
@@ -1168,7 +1179,7 @@ sub getOverlayJS {
 	}
 	$centroidDataJS = '{ '.join( ',', @zs ).' }';
 	
-	return [ $layersJS, $centroidDataJS ];
+	return $centroidDataJS;
 
 }
 
