@@ -54,7 +54,9 @@ print "\nOME Test Case - Execute view\n";
 print "----------------------------\n";
 
 if (scalar(@ARGV) < 2) {
-    print "Usage:  ExecuteView <view id> <dataset id> <flags>\n\n";
+    print "Usage:  ExecuteView <view id> <dataset id> <flags>\n";
+    print "known flags are: ReuseResults, DebugDefault, DebugTiming. Flag usage is [flag]=[0 or 1] (i.e. ReuseResults=0)\n\n";
+
     exit -1;
 }
 
