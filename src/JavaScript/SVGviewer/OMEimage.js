@@ -375,7 +375,7 @@ OMEimage.prototype.loadPlaneNoOMEIS = function(theZ, theT, invisible) {
 	});
 	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href",this.imageURL);
 	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return imageURL;
+	return this.imageURL;
 };
 
 // this function is the transition to omeis
