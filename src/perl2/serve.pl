@@ -42,26 +42,29 @@ if ($pageClass) {
 	}
 
 	eval {
-            if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
-                print STDERR "Package $pageClass does not inherit from OME::Web\n";
-                print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
-                print "Package $pageClass does not inherit from OME::Web";
-            } else {
-		$page = $pageClass->new(CGI => $CGI);
-		if (!$page) {
-                    print STDERR "Error calling package constructor -\n";
-                    print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
-                    print "Error calling package constructor -\n";
+		if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
+			print STDERR "Package $pageClass does not inherit from OME::Web\n";
+			print $CGI->header(-type => 'text/html',-status => "500 Internal Error");
+			print "Package $pageClass does not inherit from OME::Web";
 		} else {
-                    $page->serve();
+			$page = $pageClass->new(CGI => $CGI);
+			if (!$page) {
+						print STDERR "Error calling package constructor -\n";
+						print $CGI->header(-type => 'text/html',-status => "500 Internal Error" );
+						print "Error calling package constructor -\n";
+			} else {
+						$page->serve();
+			}
 		}
-            }
 	};
 	
 	if ($@) {
 		print $CGI->header(-type => 'text/html');
-		print "<pre>Error serving $pageClass:\n$@</pre>";
-		print STDERR "Error serving $pageClass:\n$@\n";
+		print "<pre>Error serving $pageClass.\n";
+		print "Error message is\n$@\n" if $@ ne '';
+		print "</pre>";
+		print STDERR "Error serving $pageClass.\n";
+		print STDERR "Error message is\n$@\n" if $@ ne '';
 	}
 } else {
 	print STDERR "Class not specified\n";
