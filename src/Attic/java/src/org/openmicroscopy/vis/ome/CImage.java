@@ -42,7 +42,7 @@ import org.openmicroscopy.remote.RemoteImage;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.vis.piccolo.PThumbnail;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.util.Vector;
 import java.util.Iterator;
 
@@ -63,9 +63,10 @@ public class CImage extends RemoteImage {
 		RemoteObjectCache.addClass("OME::Image",CImage.class);
 	}
 	
-	private Image imageData;
+	private BufferedImage imageData;
 	private Vector thumbnails = new Vector();
 	
+	private boolean loading = false;
 	public CImage() {
 		super();
 	}
@@ -79,13 +80,14 @@ public class CImage extends RemoteImage {
 		int id = getID();
 		//System.err.println("getting image data for image "+id);
 		//imageData = connection.getThumbnail(id);
-		if (imageData == null) {
-		//	System.err.println("retrieving...");
+		if (imageData == null && loading  == false) {
+		//	System.err.println("retrieving..image "+id);
 			connection.getThumbnail(this);
+			loading = true;
 		}	
 	}
 	
-	public void setImageData(Image i) {
+	public void setImageData(BufferedImage i) {
 		//System.err.println("getting image data for image "+getID());
 		imageData = i;
 		if (thumbnails.size() >0) { 
@@ -99,10 +101,18 @@ public class CImage extends RemoteImage {
 	}
 	
 	public void addThumbnail(PThumbnail thumb) {
-		thumbnails.add(thumb);
+		
+		// if the image has completed already, let this thumbnail know.
+		// without this, we have a race condition - what if setImageData()
+		// completes before some PThumbnail gets itself on the notification 
+		// list?
+		if (imageData != null)
+			thumb.notifyImageComplete();
+		else
+			thumbnails.add(thumb);
 	}
 	
-	public Image getImageData() {
+	public BufferedImage getImageData() {
 		/*System.err.println("getting image data from CImage"+getID());
 		if (imageData == null) {
 			System.err.println("it's null..");
