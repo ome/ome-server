@@ -83,6 +83,7 @@ use English '-no_match_vars';
 use URI;
 use HTTP::Request::Common;
 use LWP::UserAgent;
+use Log::Agent;
 
 our $SHOW_CALLS = 0;
 our $SHOW_READS = 0;
@@ -423,12 +424,10 @@ sub __callOMEIS {
             push @params, $stdin_param, [$stdin_filename];
         }
 
-
         my $request =
           POST($server_path,
                Content_Type => 'form-data',
                Content      => \@params);
-
         if ($SHOW_CALLS) {
             print STDERR "Calling remote OMEIS: $server_path\n";
             print STDERR "  Params: \n";
@@ -516,6 +515,26 @@ sub getPixelsInfo {
       unless $result =~ PIXELS_INFO_REGEXP;
     return ($1,$2,$3,$4,$5,$6,$7,$8);
 }
+
+=head2 importOMEfile
+
+	my $xmlString = OME::Image::Server->ImportOMEfile($fileID);
+
+Begins the import of an ome file by extracting binary Pixel data and
+returning the resultant document.
+
+=cut
+
+sub importOMEfile {
+    my $proto = shift;
+    my ($fileID) = @_;
+
+    my $xmlString = $proto->__callOMEIS(Method   => 'ImportOMEfile',
+                                     FileID   => $fileID);
+    die "Error retrieving xml stream" unless defined $xmlString;
+    return $xmlString;
+}
+
 
 =head2 getPixelSHA1
 
@@ -957,7 +976,6 @@ sub getFileInfo {
 sub getFileSHA1 {
     my $proto = shift;
     my ($fileID) = @_;
-
     my $result = $proto->__callOMEIS(Method => 'FileSHA1',
                                      FileID => $fileID);
     die "Error retrieving file SHA-1" unless defined $result;
