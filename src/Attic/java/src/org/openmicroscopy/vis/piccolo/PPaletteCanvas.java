@@ -407,8 +407,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 		float y =TOP;
 		Vector curStrip = new Vector();
 		PBufferedNode box;
-		double stripAspectRatio = 0;
-		double newAspectRatio = 0;
+		//double stripAspectRatio = 0;
+		//double newAspectRatio = 0;
 		float x = LEFT+HGAP;
 		float maxHeight = 0;
 		float maxWidth =0;
@@ -453,13 +453,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 			if (pt.getX() > width)
 				width = (float)pt.getX();
 			// calculate the aspect ratio
-			newAspectRatio = calcAspectRatio(width,height);
+		//	newAspectRatio = calcAspectRatio(width,height);
 			//System.err.println("new aspect ratio is "+newAspectRatio);
 			//System.err.println("old was "+stripAspectRatio);
-			
 			// if we've increased the aspect ratio, that's no good.
-			if (curStrip.size()>childrenCountRoot 
-				&& newAspectRatio > stripAspectRatio) {	
+			if (curStrip.size()>childrenCountRoot )  {  
 				// remove the last item from the strip.
 				curStrip.remove(box);
 				// do rest of strip without that last box
@@ -472,7 +470,7 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 				width =0;
 			}	
 			else { // it fits. move on.
-				stripAspectRatio = newAspectRatio;
+		//		stripAspectRatio = newAspectRatio;
 				obj = null;
 			}
 		}
