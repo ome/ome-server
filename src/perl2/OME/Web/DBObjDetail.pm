@@ -194,7 +194,7 @@ sub _getManyRelations {
 	my @relations;
 
 	# print tables for has many relations
-	my $manyRefs = $object->getPublishedManyRefs(); 
+	my $manyRefs = OME::Web::DBObjRender->getRelationAccessors( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	foreach my $accessor (keys %$manyRefs ) {
 		my $type = $manyRefs->{ $accessor };
