@@ -243,23 +243,23 @@ sub writePreamble ($$) {
 JAVA
 }
 
+my %MDTO_CLASSES = (
+                    boolean => 'Boolean',
+                    String  => 'String',
+                    float   => 'Float',
+                    double  => 'Double',
+                    int     => 'Integer',
+                    long    => 'Long',
+                   );
+
 my %MDTO_ACCESSORS = (
                       boolean => 'getBooleanElement',
                       String  => 'getStringElement',
                       float   => 'getFloatElement',
                       double  => 'getDoubleElement',
-                      int     => 'getIntElement',
+                      int     => 'getIntegerElement',
                       long    => 'getLongElement',
                      );
-
-my %MDTO_VALUES = (
-                   boolean => 'new Boolean(value)',
-                   String  => 'value',
-                   float   => 'new Float(value)',
-                   double  => 'new Double(value)',
-                   int     => 'new Integer(value)',
-                   long    => 'new Long(value)',
-                  );
 
 sub writeOneAccessor ($$$$$) {
     my ($int_fh,$dto_fh,$map_code,$field_name,$field_desc) = @_;
@@ -272,7 +272,11 @@ sub writeOneAccessor ($$$$$) {
     my $prefix = $java_type eq 'boolean'? 'is': 'get';
     my $accessor;
     my $value;
-    if ($java_type =~ /^List\:(.*)$/) {
+    if ($field_name eq 'ID') {
+        $java_type = "int";
+        $accessor = "getIntElement";
+        $value = "new Integer(value)";
+    } elsif ($java_type =~ /^List\:(.*)$/) {
         my $list_type = $1;
         $java_type = "List";
         $accessor = "(List) getObjectElement";
@@ -281,9 +285,10 @@ sub writeOneAccessor ($$$$$) {
         $$map_code .= <<"JAVA";
         parseListElement("${element_name}",${list_type}DTO.class);
 JAVA
-    } elsif (exists $MDTO_ACCESSORS{$java_type}) {
+    } elsif (exists $MDTO_CLASSES{$java_type}) {
         $accessor = $MDTO_ACCESSORS{$java_type};
-        $value = $MDTO_VALUES{$java_type};
+        $value = "value";
+        $java_type = $MDTO_CLASSES{$java_type};
     } else {
         $accessor = "(${java_type}) getObjectElement";
         $value = "value";
@@ -314,7 +319,7 @@ JAVA
 JAVA
     } else {
     print $int_fh <<"JAVA";
-    /** Criteria field name: <code>#${element_name}</code> */
+    /** Criteria field name: <code>#${element_name}</code> or <code>${element_name}</code> */
     public int count${field_name}();
 JAVA
 
