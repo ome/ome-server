@@ -81,6 +81,12 @@ sub printElement {
     }
 }
 
+=head2 processDOM( $root, %flags )
+
+Note: You must call commit on the DBH attached to this object's session after calling processDOM.
+Changes to tables and columns are made on that handle, but shouldn't be committed here.
+
+=cut
 sub processDOM {
     my ($self, $root, %flags) = @_;
     my $debug   = $self->{debug};
@@ -350,7 +356,7 @@ sub processDOM {
                     $dbh->commit();
                     logdbg "debug", "\n  *** Ignoring error $@\n\n";
                 } else {
-                    logdie "Unable to create table ".$newTable->table_name()."\n";
+                    logdie "Unable to create table ".$newTable->table_name().". Error message was:\n$@\n";
                 }
             }
 
@@ -690,7 +696,6 @@ sub processDOM {
     ###############################################################################
 
     $_->storeObject() foreach @commitOnSuccessfulImport;
-    $session->DBH()->commit();
     @commitOnSuccessfulImport = ();
 
     $self->{semanticTypes} = $semanticTypes;
