@@ -40,9 +40,10 @@
 
 
 
-package org.openmicroscopy;
+package org.openmicroscopy.managers;
 
 import org.openmicroscopy.*;
+import java.util.List;
 
 /**
  * Provides useful methods for creating and modifying analysis chains
