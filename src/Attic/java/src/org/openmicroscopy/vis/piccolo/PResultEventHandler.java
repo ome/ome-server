@@ -48,7 +48,7 @@ import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
-
+import edu.umd.cs.piccolo.PLayer;
 import org.openmicroscopy.Image;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.Attribute;
@@ -286,8 +286,17 @@ public class PResultEventHandler extends  PPanEventHandler {
 		System.err.println("handling popup...");
 		postPopup = true;
 		PNode node = e.getPickedNode();
+		System.err.println("on node..."+node);
 		PNode p = node.getParent();
-		if (p instanceof PBufferedNode) {
+		System.err.println("paraent is ..."+p);
+		if (p instanceof PLayer && p.getParent() instanceof PChainLayer) {
+			PChainLayer cl = (PChainLayer) p.getParent();
+			PBounds b = cl.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
+		}
+		else if (p instanceof PBufferedNode) {
+			System.err.println("zooming on parent...");
 			PBufferedNode bn=(PBufferedNode) p;
 			PBounds b = bn.getBufferedBounds();
 			PCamera camera = canvas.getCamera();
