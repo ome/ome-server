@@ -106,14 +106,18 @@ USAGE
 }
 
 sub semantic_types {
-    my ($help,$output_directory);
+    my ($help,$output_directory,$username,$password);
     GetOptions('help|h|?' => \$help,
-               'output-directory|d=s' => \$output_directory)
+               'output-directory|d=s' => \$output_directory,
+               'username|u=s' => \$username,
+               'password|p=s' => \$password)
       or semantic_type_usage();
 
     semantic_type_usage() if $help || !@ARGV;
 
-    my $session = OME::SessionManager->TTYlogin();
+    my $session = (defined $username && defined $password)?
+      OME::SessionManager->createSession($username,$password):
+      OME::SessionManager->TTYlogin();
     my $factory = $session->Factory();
 
     my @types;
