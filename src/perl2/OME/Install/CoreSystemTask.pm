@@ -366,7 +366,6 @@ CROAK
 			${$directory->{owner}},
 			${$directory->{group}},
 		);
-		my @stat = stat ($path);
 
 		print "  \\_ Checking directory ", BOLD, "\"$path\"", RESET, ".\n";
 
@@ -376,6 +375,7 @@ CROAK
 			print "  \\_   Creating directory\n";
 			mkpath($path, 0, $mode);  # Internal croak
 		}
+		my @stat = stat ($path);
 
 		# Fix ownership non-recursively
 		unless ($stat[4] == getpwnam ($owner) and $stat[5] == getgrnam ($group)) {
@@ -394,7 +394,7 @@ CROAK
 		foreach my $child (@{$directory->{children}}) {
 	    	$child = $path . "/" . $child;
 			print "  \\_   Checking child ", BOLD, "\"$child\"", RESET, ".\n";
-	    	@stat = stat ($child);
+
 			# Recursion for children is on by default, but can be over-ridden
 			# in the parent.
 	    	my $recurse = exists $directory->{recurse} ? $directory->{recurse} : 1 ;
@@ -402,7 +402,9 @@ CROAK
 				print "  \\_     Creating directory\n";
 				mkpath($child, 0, $mode);  # Internal croak
 			}
-			
+
+	    	@stat = stat ($child);
+	    	
 			# Fix ownership
 			unless ($stat[4] == getpwnam ($owner) and $stat[5] == getgrnam ($group) ) {
 				print "  \\_     Setting ownership to ", BOLD, $owner,':',$group,RESET,
