@@ -80,7 +80,7 @@ The name of the semantic element of the formal
 
   </SemanticTypeDefinitions>
   <AnalysisModuleLibrary xmlns="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
-    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:7204" ModuleName="Signature Stitcher (7204)" ProgramID="">
+    <AnalysisModule ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher" Category="Classifier" ID="urn:lsid:openmicroscopy.org:Module:9997" ModuleName="Signature Stitcher (7204)" ProgramID="">
       <Description>
 Combines outputs from "signature modules" into a single vector that
 describes the image. This stitching is very handy for classifiers.
