@@ -88,7 +88,7 @@ public class PConstants {
 	/**
 	 * The standard background color for Piccolo Canvases
 	 */
-	public static final Color CANVAS_BACKGROUND_COLOR = new Color(100,100,100);
+	public static final Color CANVAS_BACKGROUND_COLOR = Color.WHITE;
 	
 	
 	/**
