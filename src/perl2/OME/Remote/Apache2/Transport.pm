@@ -86,3 +86,5 @@ sub configure {
 }
                                                                                 
 { sub handle; *handle = \&handler } # just create alias
+
+1;
