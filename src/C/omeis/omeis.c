@@ -1701,18 +1701,32 @@ unsigned long nIO;
 convertFileRec convFileRec;
 FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
-char isBigEndian=1;
+char isBigEndian=1,bp;
 
 	if (!fileID || !myPixels) return (0);
-	if (! (head = myPixels->head) ) return (0);
+	if (! (head = myPixels->head) ) {
+		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Pixels header is not set.",myPixels->ID);
+		return (0);
+	}
+	bp = head->bp;
 
 	if ( !(myFile = GetFileRep (fileID)) ) {
+		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Could not acess file ID=%llu",myPixels->ID,fileID);
+		return (0);
+	}
+
+	if ( myFile->size_rep < file_offset + (nPix*bp)) {
+		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)",
+			myPixels->ID,(unsigned long long)fileID, (unsigned long)(myFile->size_rep), (unsigned long)file_offset,
+			(unsigned long)nPix, (unsigned long)(nPix*bp));
 		return (0);
 	}
 
 	myPixels->IO_buf = myFile->file_buf + file_offset;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
+		sprintf (myPixels->error_str,"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",
+			nIO, nPix);
 		freeFileRep (myFile);
 		return (nIO);
 	}
@@ -1758,19 +1772,26 @@ tsize_t stripSize;
 	if (!fileID || !myPixels) return (0);
 	
 	if (! (myFile = newFileRep (fileID))) {
-		fprintf (stderr,"Could not get a File object.\n");
+		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Could not acess file ID=%llu",myPixels->ID,fileID);
 		return (0);
 	}
 
-	if (! (head = myPixels->head) ) return (0);
-	bp = head->bp;
-	if (!CheckCoords (myPixels,0,0,theZ, theC, theT)) return (0);
-	if (! (head = myPixels->head) ) return (0);
+	if (! (head = myPixels->head) ) {
+		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Pixels header is not set.",myPixels->ID);
+		return (0);
+	}
 
-	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+	bp = head->bp;
+
+	if ( (pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT)) < 0) {
+		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)",
+			myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
+		return (0);
+	}
 	
     if (! (tiff = TIFFOpen(myFile->path_rep, "r")) ) {
-		fprintf (stderr,"ConvertTIFF:  Couldn't open TIFF file.\n");
+		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.",myPixels->ID,
+			fileID);
     	return (0);
     }
     
@@ -1784,17 +1805,19 @@ tsize_t stripSize;
 
 	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || chans > 1 || bpp != (uint16)(head->bp) ||
 		pc != PLANARCONFIG_CONTIG ) {
+			int nc=0;
+			
 			TIFFClose(tiff);
-			fprintf (stderr,"ConvertTIFF:  TIFF <-> Pixels mismatch.\n");
-			fprintf (stderr,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
-			fprintf (stderr,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
-			fprintf (stderr,"\tBytes per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp,(int)bpp);
-			fprintf (stderr,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
+			nc += sprintf (myPixels->error_str+nc,"ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.\n",myPixels->ID,fileID);
+			nc += sprintf (myPixels->error_str+nc,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
+			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
+			nc += sprintf (myPixels->error_str+nc,"\tBytes per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp,(int)bpp);
+			nc += sprintf (myPixels->error_str+nc,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
 			return (0);
 	}
 
 	if (! (buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
-		fprintf (stderr,"ConvertTIFF:  Couldn't allocate strip buffer.\n");
+		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.",myPixels->ID,TIFFStripSize(tiff));
 		return (0);
 	}
 
@@ -1973,14 +1996,27 @@ char **cgivars=param;
 			}
 			numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numC,&numT,&numB);
 			if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numC < 1 || numT < 1 || numB < 1) {
-				HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB");
+				HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB.  All positive integers.");
 				return (-1);
 			}
 
-			if ( (theParam = get_param (param,"IsSigned")) )
-				sscanf (theParam,"%d",&isSigned);
-			if ( (theParam = get_param (param,"IsFloat")) )
-				sscanf (theParam,"%d",&isFloat);
+			if ( (theParam = get_lc_param (param,"IsSigned")) ) {
+				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) isSigned=1;
+			}
+
+			if ( (theParam = get_lc_param (param,"IsFloat")) ) {
+				if (!strcmp (theParam,"1") || !strcmp (theParam,"true") ) isFloat=1;
+			}
+			
+			if ( !(numB == 1 || numB == 2 || numB == 4) ) {
+				HTTP_DoError (method,"Bytes per pixel must be 1, 2 or 4, not %d", numB);
+				return (-1);
+			}
+			
+			if ( numB != 4 && isFloat ) {
+				HTTP_DoError (method,"Bytes per pixel must be 4 for floating-point pixels, not %d", numB);
+				return (-1);
+			}
 
 			if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
 				HTTP_DoError (method,strerror( errno ) );
@@ -2355,6 +2391,7 @@ char **cgivars=param;
 				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix);
 			if (nIO < nPix) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
 				return (-1);
