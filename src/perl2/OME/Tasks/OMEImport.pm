@@ -126,6 +126,8 @@ sub importFile {
         $xyzwt = $session->Factory->
           newAttribute("OriginalFile",undef,$mex,
                        {SHA1 => $sha1, Path => $filename, Format => 'OME XML'});
+        $mex->status('FINISHED');
+        $mex->storeObject();
     }
 
     # Commit the transaction to the DB.

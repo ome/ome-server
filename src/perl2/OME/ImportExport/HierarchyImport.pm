@@ -526,6 +526,12 @@ sub importObject ($$$$) {
 			unless defined $lsid->checkLSID($theRef);
 	}
 	$self->addObject ($theObject, $LSID);
+
+    if (defined $module_execution) {
+        $module_execution->status('FINISHED');
+        $module_execution->storeObject();
+    }
+
 	return ($theObject);
 }
 
