@@ -79,7 +79,7 @@ public class RemoteDataset
 
     public List getProjects()
     {
-        List linkList = getRemoteListElement("OME::Project::DatasetLink",
+        List linkList = getRemoteListElement("OME::Project::DatasetMap",
                                              "project_links");
         List projectList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -96,7 +96,7 @@ public class RemoteDataset
         final RemoteIterator i = (RemoteIterator) 
             getRemoteElement("OME::Factory::Iterator",
                              "iterate_project_links");
-        i.setClass("OME::Project::DatasetLink");
+        i.setClass("OME::Project::DatasetMap");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
@@ -112,7 +112,7 @@ public class RemoteDataset
 
     public List getImages()
     {
-        List linkList = getRemoteListElement("OME::Image::DatasetLink",
+        List linkList = getRemoteListElement("OME::Image::DatasetMap",
                                              "image_links");
         List imageList = new ArrayList();
         Iterator i = linkList.iterator();
@@ -129,7 +129,7 @@ public class RemoteDataset
         final RemoteIterator i = (RemoteIterator) 
             getRemoteElement("OME::Factory::Iterator",
                              "iterate_image_links");
-        i.setClass("OME::Image::DatasetLink");
+        i.setClass("OME::Image::DatasetMap");
         return new Iterator()
             {
                 public boolean hasNext() { return i.hasNext(); }
