@@ -76,7 +76,7 @@ our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
 our $IMPORT_FORMATS = "OME::ImportEngine::MetamorphHTDFormat OME::ImportEngine::DVreader OME::ImportEngine::STKreader OME::ImportEngine::TIFFreader";
 
 # Database version
-our $DB_VERSION = "2.2";
+our $DB_VERSION = "2.3";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
@@ -221,6 +221,7 @@ my $dbh = $factory->obtainDBH();
 my $delegate = OME::Database::Delegate->getDefaultDelegate();
 
     my @files = glob ("update/$version/pre/*");
+    return (0) unless scalar @files > 0;
     foreach my $file (@files) {
         if ($file =~ /\.sql$/) {
             `psql -f $file ome`;
