@@ -22,6 +22,7 @@
 package org.openmicroscopy.analysis.ui;
 
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.*;
 import javax.swing.*;
 import java.util.*;
@@ -39,17 +40,11 @@ public class PlaygroundPane
                 new int[] {0,ARROW_HEIGHT,-ARROW_HEIGHT},
                 3);
 
-    protected JPanel        datasetTab;
-    protected JPanel        toolsTab;
-    protected JPanel        playgroundPane;
-    protected JTabbedPane   tabbedPane;
-    protected JTree         analysesTree;
-    protected JTree         imagesTree;
-    protected JTree         toolsTree;
     protected JDesktopPane  playground;
 
-    protected Chain  chain;
-    protected Map           instanceWidgets;
+    protected Chain           chain;
+    protected Map             instanceWidgets;
+    protected WidgetListener  widgetListener;
 
     public PlaygroundPane(Chain chain)
     {
@@ -58,60 +53,27 @@ public class PlaygroundPane
         this.chain = chain;
         this.instanceWidgets = new HashMap();
 
-	JPanel p1;
-
-	datasetTab = new JPanel(new GridLayout(0,1));
-
-	p1 = new JPanel(new BorderLayout());
-	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-	p1.add(new JLabel("Analyses",SwingConstants.CENTER),BorderLayout.NORTH);
-	analysesTree = new JTree(new String[] {"Current Analysis","Previous Analysis 1","Previous Analysis 2"});
-	analysesTree.setBorder(BorderFactory.createLoweredBevelBorder());
-	p1.add(analysesTree,BorderLayout.CENTER);
-	datasetTab.add(p1);
-	
-	p1 = new JPanel(new BorderLayout());
-	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-	p1.add(new JLabel("Images",SwingConstants.CENTER),BorderLayout.NORTH);
-	imagesTree = new JTree(new String[] {"Image 1","Image 2","Image 3","Image 4"});
-	imagesTree.setBorder(BorderFactory.createLoweredBevelBorder());
-	p1.add(imagesTree,BorderLayout.CENTER);
-	datasetTab.add(p1);
-	
-	toolsTab = new JPanel(new GridLayout(0,1));
-	
-	p1 = new JPanel(new BorderLayout());
-	p1.setBorder(BorderFactory.createEmptyBorder(2,2,2,2));
-	p1.add(new JLabel("Tools",SwingConstants.CENTER),BorderLayout.NORTH);
-	toolsTree = new JTree(new String[] {"Test 1","Test 2"});
-	toolsTree.setBorder(BorderFactory.createLoweredBevelBorder());
-	p1.add(toolsTree,BorderLayout.CENTER);
-	toolsTab.add(p1);
-	
-	tabbedPane = new JTabbedPane(SwingConstants.TOP);
-	tabbedPane.addTab("Dataset",datasetTab);
-	tabbedPane.addTab("Tools",toolsTab);
-	tabbedPane.setPreferredSize(new Dimension(150,10));
-	tabbedPane.setBorder(BorderFactory.createCompoundBorder(
-	    BorderFactory.createRaisedBevelBorder(),
-	    BorderFactory.createEmptyBorder(2,2,2,2)));
-
-	playgroundPane = new JPanel(new BorderLayout());
-
 	playground = new JDesktopPane();
         playground.setOpaque(false);
-	playgroundPane.add(playground,BorderLayout.CENTER);
-        playgroundPane.setOpaque(false);
+	add(playground,BorderLayout.CENTER);
+        setOpaque(false);
 
-        JSplitPane  split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                           false,
-                                           tabbedPane,
-                                           playgroundPane);
- 	//add(tabbedPane,BorderLayout.WEST);
-	//add(playgroundPane,BorderLayout.CENTER);
-        add(split,BorderLayout.CENTER);
+        widgetListener = new WidgetListener();
     }
 
+    private class WidgetListener
+        implements ComponentListener
+    {
+        private void updatePlayground()
+        {
+            PlaygroundPane.this.repaint();
+        }
+
+        public void componentHidden(ComponentEvent e) { updatePlayground(); }
+        public void componentMoved(ComponentEvent e) { updatePlayground(); }
+        public void componentResized(ComponentEvent e) { updatePlayground(); }
+        public void componentShown(ComponentEvent e) { updatePlayground(); }
+    }
 
     public void addNodeWidget(ChainNodeWidget cnWidget, int x, int y)
     {
@@ -124,6 +86,7 @@ public class PlaygroundPane
             playground.remove(oldWidget);
         }
 
+        cnWidget.addComponentListener(widgetListener);
 	playground.add(cnWidget);
         instanceWidgets.put(node,cnWidget);
 	cnWidget.setLocation(new Point(x,y));
@@ -139,7 +102,8 @@ public class PlaygroundPane
 
         g2.setPaint(Color.black);
 
-        Point playgroundLocation = playgroundPane.getLocation();
+        //Point playgroundLocation = playgroundPane.getLocation();
+        Point playgroundLocation = new Point(0,0);
         AffineTransform  defaultTransform = g2.getTransform();
 
         while (i.hasNext())
