@@ -66,7 +66,7 @@ my $userSessions = $OME->GetUserSessions();
 				$analysis->{LastCompletedDatasetID} ? $analysis->{LastCompletedDatasetID} : '',
 				$analysis->{LastCompletedDatasetTime} ? $time - $analysis->{LastCompletedDatasetTime}: '',
 				$analysis->{AverageTimePerDataset} ? $analysis->{AverageTimePerDataset} : '',
-				$analysis->{Error} ? $analysis->{Error} : '',
+				$analysis->{Error} ? "<font size=-1>$analysis->{Error}</font>" : '',
 				$analysis->{Status} eq 'Executing' ? $cgi->submit (-name=>'Abort-'.$PID,-value=>'Abort') : 
 						$cgi->submit (-name=>'Clear-'.$PID,-value=>'Clear')
 			]));
