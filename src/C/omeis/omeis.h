@@ -119,11 +119,23 @@ typedef struct
 } PixelsRep;
 
 typedef struct {
-	OID FileID;
-	char isBigEndian;
+	ome_coord theZ, theC, theT;
+} tiffConvertSpec;
+
+typedef struct {
 	unsigned long file_offset;
 	unsigned long pix_offset;
 	unsigned long nPix;
+} fileConvertSpec;
+
+typedef struct {
+	OID FileID;
+	char isBigEndian;
+	char isTIFF;
+	union {
+		tiffConvertSpec tiff;
+		fileConvertSpec file;
+	} spec;
 } convertFileRec;
 
 typedef enum {

@@ -47,6 +47,9 @@
 #include <math.h>
 #include <float.h>
 
+#include <tiffio.h>
+
+
 #include "omeis.h"
 #include "digest.h"
 #include "composite.h"
@@ -579,6 +582,9 @@ CheckCoords (PixelsRep * myPixels,
 	return (1);
 }
 
+/*
+  Note that this is a byte offset - not a pixel offset.
+*/
 off_t GetOffset (PixelsRep *myPixels, ome_coord theX, ome_coord theY, ome_coord theZ, ome_coord theC, ome_coord theT) {
 pixHeader *head;
 
@@ -660,7 +666,11 @@ unsigned char *maxBuf = theBuf+(length*bp);
 
 
 
-/* This reads the pixels at offset and writes nPix pixels to IO_stream or IO_mem */
+/*
+  This reads the pixels at offset and writes nPix pixels to IO_stream or IO_mem
+  Note that the offset parameter is a byte offset from (GetOffset),
+  but the number returned is the number of pixels (not bytes).
+*/
 static
 size_t DoPixelIO (PixelsRep *myPixels, off_t offset, size_t nPix, char rorw) {
 size_t nIO=0;
@@ -827,7 +837,7 @@ off_t stack_offset;
 	}
 	
 	
-	chSpec->scale = (chSpec->white - chSpec->black) / 255.0;
+	chSpec->scale =  255.0 / (chSpec->white - chSpec->black);
 
 	chSpec->isFixed = 1;
 }
@@ -1561,9 +1571,9 @@ char isBigEndian=1;
 	if ( (myPixels->doSwap && bigEndian()) || (!myPixels->doSwap && !bigEndian()) ) isBigEndian = 0;
 	convFileRec.FileID      = fileID;
 	convFileRec.isBigEndian = isBigEndian;
-	convFileRec.file_offset = file_offset;
-	convFileRec.pix_offset  = pix_offset;
-	convFileRec.nPix        = nPix;
+	convFileRec.spec.file.file_offset = file_offset;
+	convFileRec.spec.file.pix_offset  = pix_offset;
+	convFileRec.spec.file.nPix        = nPix;
 
 	sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
 	if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
@@ -1573,6 +1583,95 @@ char isBigEndian=1;
 
 	munmap (sh_mmap, nPix*bp);
 	close (fd);
+	return (nIO);
+}
+
+static
+size_t ConvertTIFF (PixelsRep *myPixels, OID fileID, ome_coord theZ, ome_coord theC, ome_coord theT) {
+pixHeader *head;
+char file_path[MAXPATHLEN],bp;
+unsigned long nIO, nOut;
+off_t pix_offset;
+size_t nPix;
+convertFileRec convFileRec;
+FILE *convFileInfo;
+char convFileInfoPth[MAXPATHLEN];
+TIFF *tiff = NULL;
+tdata_t buf;
+tstrip_t strip;
+uint32 width = 0;
+uint32 height = 0;
+uint16 chans = 0, bpp, pc;
+tsize_t stripSize;
+
+	strcpy (file_path,"Files/");
+
+	if (!fileID || !myPixels) return (0);
+	
+	if (! getRepPath (fileID,file_path,0)) {
+		return (0);
+	}
+
+	if (! (head = myPixels->head) ) return (0);
+	bp = head->bp;
+	if (!CheckCoords (myPixels,0,0,theZ, theC, theT)) return (0);
+	if (! (head = myPixels->head) ) return (0);
+
+	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+	
+    if (! (tiff = TIFFOpen(file_path, "r")) ) {
+		fprintf (stderr,"ConvertTIFF:  Couldn't open TIFF file.\n");
+    	return (0);
+    }
+    
+	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
+	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
+	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &chans);
+	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bpp);
+	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
+
+	bpp /= 8;
+	if (width != head->dx || height != head->dy || chans > 1 || bpp != head->bp ||
+		pc != PLANARCONFIG_CONTIG ) {
+			TIFFClose(tiff);
+			fprintf (stderr,"ConvertTIFF:  TIFF <-> Pixels mismatch.\n");
+			fprintf (stderr,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
+			fprintf (stderr,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
+			fprintf (stderr,"\tBytes per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp,(int)bpp);
+			fprintf (stderr,"\tPlanar Config:     Pixels (%d) TIFF (%d)\n",(int)PLANARCONFIG_CONTIG,(int)pc);
+			return (0);
+	}
+
+	if (! (buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
+		fprintf (stderr,"ConvertTIFF:  Couldn't allocate strip buffer.\n");
+		return (0);
+	}
+
+	convFileRec.FileID         = fileID;
+	convFileRec.isTIFF         = 1;
+	convFileRec.spec.tiff.theZ = theZ;
+	convFileRec.spec.tiff.theC = theC;
+	convFileRec.spec.tiff.theT = theT;
+
+	myPixels->IO_buf = buf;
+	myPixels->IO_buf_off = 0;
+	for (strip = 0; strip < TIFFNumberOfStrips(tiff); strip++) {
+		stripSize = TIFFReadEncodedStrip(tiff, strip, buf, (tsize_t) -1);
+		nPix = stripSize / bpp;
+		myPixels->IO_buf_off = 0;
+		nOut = DoPixelIO (myPixels, pix_offset, nPix, 'w');
+		pix_offset += stripSize;
+		nIO += nOut;
+	}
+	_TIFFfree(buf);
+	TIFFClose(tiff);
+
+	sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
+	if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
+		fwrite (&convFileRec , sizeof (convertFileRec) , 1 , convFileInfo );
+		fclose (convFileInfo);
+	}
+
 	return (nIO);
 }
 
@@ -2120,8 +2219,11 @@ char **cgivars=param;
 				offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
 			}
 
-
-			if ( (nIO = ConvertFile (thePixels, fileID, offset, offset, nPix) ) < nPix) {
+			if (m_val == M_CONVERTTIFF)
+				nIO = ConvertTIFF (thePixels, fileID, theZ, theC, theT);
+			else
+				nIO = ConvertFile (thePixels, fileID, offset, offset, nPix);
+			if (nIO < nPix) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
