@@ -1,11 +1,12 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
-	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
-	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification."
+<AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
+<AnalysisModule Category = "Statistics" ModuleName = "XY Plane statistics - XML" 
+	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" 
+	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
-		<Table AttributeType = "I" TableName = "XY_IMAGE_INFO" 
+		<Table Granularity = "I" TableName = "XY_IMAGE_INFO" 
 			Description = "General image XY slice attributes. Produced from XML.">
 			<Column ColumnID = "theZ" ColumnName = "THE_Z" SQL_DataType = "integer" Description = "Specifies Z spatial dimension"/>
 			<Column ColumnID = "theW" ColumnName = "THE_W" SQL_DataType = "integer" Description = "Specifies Wavelength"/>
@@ -19,47 +20,47 @@
 			<Column ColumnID = "Centroid_Y" ColumnName = "CENTROID_Y" SQL_DataType = "float" Description = "Y cooridinate of plane centroid calculated by intensity"/>
 		</Table>
 		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
-		<FormalOutput Name = "XYPlaneMin" Description = "Minimum pixel intensity in an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theZ" ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMin.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneMin" AttributeTypeName = "XYPlaneMin" Description = "Minimum pixel intensity in an XY plane">
+			<FormalOutputColumn Name = "Min" FormalOutputColumnID = "XYPlaneMin.Min" ColumnID = "Min" Description = "Minimum pixel intensity"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneMin.theZ" ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneMin.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneMin.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneMax" Description = "Maximum pixel intensity in an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMax.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneMax" AttributeTypeName = "XYPlaneMax" Description = "Maximum pixel intensity in an XY plane">
+			<FormalOutputColumn Name = "Max" FormalOutputColumnID = "XYPlaneMax.Max" ColumnID = "Max" Description = "Maximum pixel intensity"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneMax.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneMax.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneMax.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneMean" Description = "Mean of pixel intensities in an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneMean" AttributeTypeName = "XYPlaneMean" Description = "Mean of pixel intensities in an XY plane">
+			<FormalOutputColumn Name = "Mean" FormalOutputColumnID = "XYPlaneMean.Mean" ColumnID = "Mean" Description = "Mean of pixel intensities"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneGeoMean" Description = "Geometric mean of pixel intensities in an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneGeoMean" AttributeTypeName = "XYPlaneGeoMean" Description = "Geometric mean of pixel intensities in an XY plane">
+			<FormalOutputColumn Name = "Geomean" FormalOutputColumnID = "XYPlaneGeoMean.Geomean" ColumnID = "Geomean" Description = "Geometric mean of pixel intensities"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneGeoMean.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneGeoMean.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneGeoMean.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneSigma" Description = "Standard deviation of pixel intensities in an XY plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneSigma" AttributeTypeName = "XYPlaneSigma" Description = "Standard deviation of pixel intensities in an XY plane">
+			<FormalOutputColumn Name = "Sigma" FormalOutputColumnID = "XYPlaneSigma.Sigma" ColumnID = "Sigma" Description = "Standard Deviation of pixel intensities"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneSigma.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneCentroid_X" Description = "x, in pixels, of center of intensity for the plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.Centroid_X" ColumnID = "Centroid_X" Description = "x, in pixels, of center of intensity"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneCentroid_X" AttributeTypeName = "XYPlaneCentroid_X" Description = "x, in pixels, of center of intensity for the plane">
+			<FormalOutputColumn Name = "Centroid_X" FormalOutputColumnID = "XYPlaneCentroid_X.Centroid_X" ColumnID = "Centroid_X" Description = "x, in pixels, of center of intensity"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneCentroid_X.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneCentroid_X.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneCentroid_X.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
-		<FormalOutput Name = "XYPlaneCentroid_Y" Description = "y, in pixels, of center of intensity for the plane">
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.Centroid_Y" ColumnID = "Centroid_Y" Description = "y, in pixels, of center of intensity"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
-			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		<FormalOutput Name = "XYPlaneCentroid_Y" AttributeTypeName = "XYPlaneCentroid_Y" Description = "y, in pixels, of center of intensity for the plane">
+			<FormalOutputColumn Name = "Centroid_Y" FormalOutputColumnID = "XYPlaneCentroid_Y.Centroid_Y" ColumnID = "Centroid_Y" Description = "y, in pixels, of center of intensity"/>
+			<FormalOutputColumn Name = "theZ" FormalOutputColumnID = "XYPlaneCentroid_Y.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn Name = "theW" FormalOutputColumnID = "XYPlaneCentroid_Y.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn Name = "theT" FormalOutputColumnID = "XYPlaneCentroid_Y.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
@@ -163,3 +164,4 @@
 		</STDOUT>
 	</ExecutionInstructions>
 </AnalysisModule>
+</AnalysisModuleLibrary>
