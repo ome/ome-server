@@ -28,6 +28,7 @@ use Class::Accessor;
 use Class::Data::Inheritable;
 use Apache::Session::File;
 use OME::DBConnection;
+use Term::ReadKey;
 
 use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
@@ -76,6 +77,36 @@ sub createSession {
 
     $self->storeApacheSession($session);
     return $session;
+}
+
+
+# TTYlogin
+# --------
+sub TTYlogin {
+	print "Please login to OME:\n";
+	
+	print "Username? ";
+	ReadMode(1);
+	my $username = ReadLine(0);
+	chomp($username);
+	
+	print "Password? ";
+	ReadMode(2);
+	my $password = ReadLine(0);
+	chomp($password);
+	print "\n";
+	ReadMode(1);
+	
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+	
+	if (!defined $session) {
+		print "That username/password does not seem to be valid.\nBye.\n\n";
+		exit -1;
+	}
+	
+	print "Great, you're in.\n\n";
+	return $session;
 }
 
 
