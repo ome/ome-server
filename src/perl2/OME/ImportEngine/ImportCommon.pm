@@ -66,6 +66,7 @@ package OME::ImportEngine::ImportCommon;
 use strict;
 use Carp;
 
+use File::stat;
 use Exporter;
 use OME;
 use base qw(Exporter);
@@ -162,7 +163,7 @@ sub __storeChannelInfo {
 
    __storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
 		      $st_y, $end_y, $st_z, $end_z, $st_c, $end_c,
-		      $st_t, $end_z)
+		      $st_t, $end_z, $fileformat)
 
 Helper method for recording input file information.
 Packs the passed metadata about one input file into the info_array
@@ -239,6 +240,51 @@ sub __storePixelDimensionInfo {
 			    PixelSizeZ => $pixarr->[2]});
 }
     
+
+
+=head2 B<__getFileSQLTimestamp>
+
+    __getSQLTimestamp($filename)
+
+Returns the GMT last modification time of $filename formated in a form 
+acceptable to Postgres as a timestamp. Currently, this routine outputs 
+the string Mnth-dd-yyyy hh:mm:ss GMT enclosed in single quotes. For instance,
+'Jan-28-2004 19:23:05 GMT'
+
+=cut
+
+# TODO:  make sure timestamp string is in vanilla SQL form
+
+sub __getFileSQLTimestamp {
+    my $filename = shift;
+    my $sb = stat($filename);
+    my @crtimes = split " ", scalar gmtime $sb->mtime;
+    my $crtime = "\'".$crtimes[1]."-".$crtimes[2]."-".$crtimes[4]." ".$crtimes[3]." GMT\'";
+
+    return $crtime;
+}
+
+
+=head2 B<__getNowTime>
+
+    __getNowTime()
+
+Returns the current GMT time formated in a form acceptable to Postgres as 
+a timestamp. Currently, this routine outputs the string Mnth-dd-yyyy 
+hh:mm:ss GMT enclosed in single quotes. For instance, 
+'Jan-28-2004 19:23:05 GMT'
+
+=cut
+
+sub __getNowTime {
+    my @now = split " ", scalar gmtime;
+    my $now = "\'".$now[1]."-".$now[2]."-".$now[4]." ".$now[3]." GMT\'";
+
+    return $now;
+}
+
+
+
 
 =head1 Author
 
