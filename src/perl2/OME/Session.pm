@@ -515,10 +515,10 @@ sub finishTemporaryFile {
 
     if (-f $filename) {
 		logdbg "debug", "Found\n";
-        eval { unlink $filename; };
-		logdbg "debug", "Sweet '$@' '$!'\n";
-        warn "Error removing temp file/directory $filename: $@" if $@;
-        warn "Error removing temp file/directory $filename: $!" if $!;
+        unless (unlink $filename) {
+            warn "Error removing temp file/directory $filename: $@" if $@;
+            warn "Error removing temp file/directory $filename: $!" if $!;
+        }
     } elsif (-d $filename) {
         eval { rmtree($filename,0,1); };
         warn "Error removing temp file/directory $filename: $@" if $@;

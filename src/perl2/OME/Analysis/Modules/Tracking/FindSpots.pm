@@ -360,6 +360,11 @@ sub finishImage {
     close $self->{_outputHandle};
     close $self->{_errorHandle};
 
+    my $session = OME::Session->instance();
+    $session->finishTemporaryFile($self->{_inputFile});
+    $session->finishTemporaryFile($self->{_outputFile});
+    $session->finishTemporaryFile($self->{_errorFile});
+
     $self->SUPER::finishImage();
 }
 

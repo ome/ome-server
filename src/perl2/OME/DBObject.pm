@@ -1203,11 +1203,14 @@ sub getAccessorReferenceType {
 		 $returnedClass = $class->__manyToMany()->{$alias}->[0];
 	} elsif( $accessorType =~ m/^(has-one|normal)$/o ) {
 		$returnedClass = $class->getColumnDef( $alias )->[2];
+    } elsif ($accessorType eq 'pseudo-column') {
+        $returnedClass = $class->__pseudo_columns()->{$alias}->[1];
 	} else {
 		return undef;
 	}
+
 	# if it's an attribute, return the package name
-	if( $returnedClass =~ /^@/ ) {
+    if (defined $returnedClass && $returnedClass =~ /^@/) {
 		my $st_name = substr($returnedClass,1);
 		my $factory = $class->Session()->Factory();
 		my $ST = $factory->findObject("OME::SemanticType",name => $st_name);
@@ -2304,10 +2307,14 @@ sub __createNewInstance {
     }
 
     foreach my $alias (keys %$data_hash) {
+        next if $alias eq "__id";
+
         my $entry = $columns->{$alias};
         my $table = $entry->[0];
         my $column = $entry->[1];
-        $fields{$table}->{$column} = $data_hash->{$alias};
+        if (defined $table && defined $column) {
+            $fields{$table}->{$column} = $data_hash->{$alias};
+        }
         #print "$table $column = $alias\n";
     }
 
