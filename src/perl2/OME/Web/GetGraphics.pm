@@ -41,7 +41,7 @@ use Benchmark;
 
 =head1 Package information
 
-L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
 
 =head2 Description
 
@@ -60,11 +60,11 @@ OME::Web::GetGraphics
  
 Inherits from:
 	OME::Web
-Non-OME-Modules: (or something system defined)
+Non-OME Modules: (or something system defined)
 	CGI
 	GD
 	Benchmark
-OME-Modules
+OME Modules
 	OME::Web
 	OME::DBObject
 	OME::Image
@@ -74,6 +74,66 @@ OME-Modules
 	OME::Graphics::JavaScript::Layer::Vectors
 	OME::Graphics::JavaScript::Layer::Centroids
 	OME::Graphics::JavaScript::Layer::OMEimage
+
+=head2 Function calls to OME Modules
+
+=over 4
+
+=item OME::Factory
+
+ 
+loadObject()
+
+=item OME::Graphics::GD::*
+
+ 
+new()
+Draw()
+getImage()
+imageType()
+
+=item OME::Graphics::JavaScript
+
+ 
+AddLayer()
+Form()
+new()
+
+=item OME::Graphics::JavaScript::Layber::*
+
+ 
+new()
+
+=item OME::Session
+
+ 
+DBH()
+
+=item OME::Web
+
+ 
+CGI()
+Factory()
+new()
+Session()
+
+=back
+
+=head2 Data references to OME Modules 
+
+=over 4
+
+=item OME::Graphics::JavaScript::Layer
+
+ 
+X11Colors
+
+=item OME::Graphics::GD::*
+
+ 
+image
+
+=back
 
 =head1 Externally referenced functions
 
