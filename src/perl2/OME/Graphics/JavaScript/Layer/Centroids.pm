@@ -35,6 +35,82 @@ $JStype.prototype = new Layer;
 
 ENDJSOBJECT
 ;
+
+# initial draft of pod added by Josiah Johnston, siah@nih.gov
+=pod
+
+=head1 Centroids.pm
+
+=head1 Package information
+
+L<"Description">, L<"Path">, L<"Package name">, L<"Dependencies">, L<"Function calls to OME Modules">, L<"Data references to OME Modules">
+
+=head2 Description
+
+A specialized subclass of L<OME::Graphics::JavaScript::Layer> that handles centroid overlays. 
+
+=head2 Path
+
+src/perl2/OME/Graphics/JavaScript/Layer/Centroids.pm
+
+=head2 Package name
+
+OME::Graphics::JavaScript::Layer::Centroids
+
+=head2 Dependencies
+
+B<inherits from>
+	L<OME::Graphics::JavaScript::Layer>
+
+=head2 Function calls to OME Modules
+
+=over 4
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_visible()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_allZ()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_allT()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_color()">
+
+=back
+
+=head2 Data references to OME Modules
+
+none
+
+=head1 Externally referenced Functions
+
+L<"new()">, L<"JSinstance()">, L<"Form()">
+
+=head2 new()
+
+=over 4
+
+=item Description
+
+constructor
+
+=item Parameters
+
+In addition to parameters specified in L<OME::Graphics::JavaScript::Layer>, Centroids takes
+an optional I<color> parameter. This specifies the color the centroids will be drawn in.
+
+=item Returns
+
+I<$self>
+
+=item Overrides function L<OME::Graphics::JavaScript::Layer/"new()">
+
+=item Uses functions
+
+L<OME::Graphics::JavaScript::Layer/"new()">
+
+=back
+
+=cut
+
 # new
 # ---
 
@@ -63,6 +139,32 @@ sub new {
 	return $self;
 }
 
+=pod
+
+=head2 JSinstance()
+
+=over 4
+
+=item Description
+
+Makes a javascript command to instantiate the javascript object Centroids.
+
+=item Parameters
+
+none
+
+=item Returns
+
+A line of javascript.
+
+=item Overrides function L<OME::Graphics::JavaScript::Layer/"JSinstance()">
+
+=item Uses NO functions
+
+=back
+
+=cut
+
 
 
 sub JSinstance {
@@ -81,6 +183,43 @@ ENDJS
 ;
 }
 
+=pod
+
+=head2 Form()
+
+=over 4
+
+=item Description
+
+Makes html form elements to control the javascript object associated with this layer.
+The form elements are inside of table rows.
+
+=item Parameters
+
+none
+
+=item Returns
+
+An HTML snippet.
+
+=item Uses functions
+
+=over 4
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_visible()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_allZ()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_allT()">
+
+=item L<OME::Graphics::JavaScript::Layer/"Form_color()">
+
+=back
+
+=back
+
+=cut
+
 
 #
 sub Form {
@@ -93,4 +232,3 @@ my $self = shift;
 }
 
 1;
-
