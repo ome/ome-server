@@ -169,12 +169,22 @@ sub import {
 	$task->setPID($$);
 	$task->step();
 	$task->setMessage('Starting import');
+
+
+
 	my $pid = OME::Fork->fork();
 
 	if (!defined $pid) {
 		die "Could not fork off process to perform the import";
 	} elsif ($pid) {
 		# Parent process
+		$SIG{INT}=sub {
+			print "Caught SIGINT - killing child ($pid) and myself ($$)\n";
+			kill 9,$pid;
+			CORE::exit;
+		};
+
+
 		my $lastStep = -1;
 		my $status = $task->state();
 		while ($status eq 'IN PROGRESS') {
@@ -214,4 +224,9 @@ sub import {
 		POSIX::setsid() or die "Can't start a new session. $!";
 		OME::Tasks::ImageTasks::importFiles ($dataset, \@file_names, \%opts, $task);
 	}
+}
+
+sub END {
+
+	print "Exiting...\n";
 }
