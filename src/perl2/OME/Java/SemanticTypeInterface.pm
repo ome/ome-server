@@ -1,4 +1,4 @@
-# OME/Analysis/Engine.pm
+# OME/Java/SemanticTypeInterface.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -47,13 +47,20 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use File::Spec;
+use File::Path;
+use IO::Handle;
+use IO::File;
+
 use OME::Session;
 use OME::SemanticType;
+use OME::LSID;
+use OME::Tasks::LSIDManager;
 
 =head1 SYNOPSIS
 
 	OME::Java::SemanticTypeInterface->
-	    writeInterface(\@semantic_types,%options);
+	    writeInterfaces(\@semantic_types,%options);
 
 =head1 DESCRIPTION
 
@@ -76,7 +83,9 @@ hypercapitalized (e.g., Name, Address, PhoneNumber).  Since this is
 the same convention for Java class names, the interface will be named
 C<org.openmicroscopy.st.I<[semantic type name]>>.  It also allows the
 method names to be formed trivially by prepending "get", "set", or
-"is" as appropriate.
+"is" as appropriate.  If the element is of boolean type, any leading
+"Is" is stripped from the name (to prevent accessors named, for
+instance, "isIsLocal").
 
 =head2 Semantic type conflicts
 
@@ -117,21 +126,23 @@ inaccessible from the Java code.
 =back
 
 Luckily, the XML representation of a semantic type has an LSID, which
-is guaranteed to be unique.  Therefore, the writeInterface method will
-create additional Java interfaces for each LSID.  An ST's LSID has the
-form
+is guaranteed to be unique.  Therefore, the writeInterfaces method
+will create additional Java interfaces for each LSID.  An ST's LSID
+has the form
 
-	urn:lsid:[LSID authority]:SemanticType:[number]
+	urn:lsid:[LSID authority]:SemanticType:[number]:[db instance]
 
 The LSID authority looks like a hostname, and has the same function as
 a package name in Java -- it just defines a namespace.  The number is
 supposed to be a positive integer unique within the purview of the
-LSID authority.  Given this, each LSID corresponds to a unique Java
+LSID authority.  The database instance is an alphanumeric string that
+is supposed to be unique between different OME installations on the
+same computer.  Given this, each LSID corresponds to a unique Java
 fully-qualified name (FQN):
 
-	org.openmicroscopy.st.lsid.[LSID authority].LSID[number]
+	org.openmicroscopy.st.lsid.[LSID authority].db[db instance].LSID[number]
 
-Therefore, the writeInterface method will create two interfaces for
+Therefore, the writeInterfaces method will create two interfaces for
 each semantic type -- one for its LSID (which declares no methods),
 and one for the type itself (which declares methods for its elements,
 as described above).  The semantic type interface is declared to be a
@@ -151,7 +162,206 @@ For instance, you can verify that an attribute is an instance of the
 core Repository semantic type (and not a different type which happens
 to also be named "Repository") with the following code:
 
+	import org.openmicroscopy.st.Repository;
+	import org.openmicroscopy.st.lsid.openmicroscopy.org.LSID1;
+
+	[ snip ]
+
+	Repository repository = (Repository) factory.
+	    loadAttribute(Repository.class,1);
+
+	if (!repostory instanceof LSID1)
+	    throw new Exception("Conflicting semantic types!");
+
 =cut
+
+my %options;
+my $username = getpwuid($<);
+my $now;
+
+sub openHandle ($$) {
+    my ($subdir,$filename) = @_;
+    my $fh;
+
+    if (exists $options{OutputDirectory}) {
+        my $outdir = $options{OutputDirectory};
+        my $fulldir = File::Spec->catdir($outdir,$subdir);
+        mkpath($fulldir);
+        my $path = File::Spec->catfile($fulldir,$filename);
+        $fh = IO::File->new($path,'w');
+    } else {
+        $fh = IO::Handle->new_from_fd('STDOUT','a');
+        my $path = File::Spec->catfile($subdir,$filename);
+        print $fh "\n*****\n$path\n\n";
+    }
+
+    return $fh;
+}
+
+sub writePreamble ($$) {
+    my ($fh,$classname) = @_;
+
+    print $fh <<"JAVA";
+/*
+ * $classname
+ *
+ *------------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2003 Open Microscopy Environment
+ *      Massachusetts Institute of Technology,
+ *      National Institutes of Health,
+ *      University of Dundee
+ *
+ *
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *------------------------------------------------------------------------------
+ */
+
+/*------------------------------------------------------------------------------
+ *
+ * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
+ * Created by $username via omejava on $now
+ *
+ *------------------------------------------------------------------------------
+ */
+
+JAVA
+}
+
+my %JAVA_TYPES = (
+                  boolean => 'boolean',
+                  string  => 'String',
+                  float   => 'float',
+                  double  => 'double',
+                  integer => 'int',
+                 );
+
+sub writeOneSemanticElement ($$) {
+    my ($fh,$element) = @_;
+
+    my $element_name = $element->name();
+    my $data_column = $element->data_column();
+    my $sql_type = $data_column->sql_type();
+
+    my $prefix = $sql_type eq 'boolean'? 'is': 'get';
+    my $java_type;
+    if ($sql_type eq 'reference') {
+        $java_type = $data_column->reference_type();
+    } else {
+        $java_type = $JAVA_TYPES{$sql_type};
+    }
+
+    $element_name =~ s/^Is// if $sql_type eq 'boolean';
+
+    print $fh <<"JAVA";
+    public ${java_type} ${prefix}${element_name}();
+    public void set${element_name}(${java_type} value);
+
+JAVA
+}
+
+sub writeOneSemanticType ($) {
+    my ($type) = @_;
+
+    # Generate the package, class, and file names for the type interface
+    my $type_name = $type->name();
+    my $type_classname = $type_name;
+    $type_classname =~ s/\W/_/g;
+    my $type_fqclassname = "org.openmicroscopy.st.${type_classname}";
+    my $type_filename = "${type_classname}.java";
+
+    # Generate the package, class, and file names for the LSID interface
+    my $lsid_string = OME::Tasks::LSIDManager->getLSID($type);
+    my $lsid = OME::LSID->parseLSID($lsid_string);
+    my $lsid_classname = "LSID".$lsid->{local_id};
+    my $authority = lc($lsid->{authority});
+    $authority =~ s/[^\w\.]/_/g;
+    my $lsid_pkg = "org.openmicroscopy.st.lsid.${authority}.db".
+      $lsid->{db_instance};
+    my $lsid_dir = $lsid_pkg;
+    $lsid_dir =~ s:\.:/:g;
+    my $lsid_fqclassname = "$lsid_pkg.${lsid_classname}";
+    my $lsid_filename = "${lsid_classname}.java";
+
+    # Output the type interface
+
+    my $fh = openHandle("org/openmicroscopy/st",$type_filename);
+    writePreamble($fh,$type_fqclassname);
+    print $fh "package org.openmicroscopy.st;\n\n";
+
+    # Look for reference elements, and if there are any, output import
+    # clauses to include their semantic type interfaces.
+
+    my $any_reftypes = 0;
+
+    foreach my $element ($type->semantic_elements()) {
+        next if $element->data_column()->sql_type() ne 'reference';
+        $any_reftypes = 1;
+        my $reftype = $element->data_column()->reference_type();
+        print $fh "import org.openmicroscopy.st.${reftype};\n";
+    }
+    print $fh "\n" if $any_reftypes;
+
+    print $fh <<"JAVA";
+public interface ${type_classname}
+    extends ${lsid_fqclassname}
+{
+JAVA
+
+    foreach my $element ($type->semantic_elements()) {
+        writeOneSemanticElement($fh,$element);
+    }
+
+    print $fh <<"JAVA";
+}
+JAVA
+    $fh->close();
+
+    $fh = openHandle($lsid_dir,$lsid_filename);
+    writePreamble($fh,$lsid_fqclassname);
+
+    print $fh <<"JAVA";
+package ${lsid_pkg};
+
+public interface ${lsid_classname} { }
+JAVA
+
+    $fh->close();
+}
+
+sub writeInterfaces {
+    my $proto = shift;
+
+    my $semantic_types;
+    my $param = shift;
+    if (!ref($param)) {
+        $semantic_types = [$param];
+    } elsif (ref($param) eq 'ARRAY') {
+        $semantic_types = $param;
+    } else {
+        die "writeInterfaces expects a semantic type or arrayref of semantic types";
+    }
+
+    $now = localtime();
+    %options = @_;
+    OME::Tasks::LSIDManager->new();
+
+    writeOneSemanticType($_) foreach @$semantic_types;
+}
 
 1;
 
