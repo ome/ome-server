@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99
+CFLAGS=-g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 -pedantic
 OBJS=
 LIBS=-lm
 
