@@ -74,4 +74,5 @@ get_method_by_name(char * m_name);
 	/* OTHER/UTILITY METHODS */
 #define M_GETLOCALPATH  21
 #define M_CONVERT       22
+#define M_IMPORTOMEFILE 23
 

@@ -80,6 +80,7 @@ get_method_by_name(char * m_name)
 	/* Utility/other comparisons */
 	if (strcmp(m_name, "GetLocalPath") == 0) return M_GETLOCALPATH;
 	if (strcmp(m_name, "Convert") == 0) return M_CONVERT;
+	if (strcmp(m_name, "ImportOMEfile") == 0) return M_IMPORTOMEFILE;
 
 	fprintf(stderr, "Unknown method '%s'.\n", m_name);
 	return 0;  /* Unknown method */
