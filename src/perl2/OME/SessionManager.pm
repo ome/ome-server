@@ -277,7 +277,8 @@ sub getOMESession {
         ($experimenterID,$dbpass) =
           $dbh->selectrow_array(FIND_USER_SQL,{},$username);
     };
-    $bootstrap_factory->releaseDBH($dbh);
+# We're not supposed to release the Factory's DBH.  Only ones we get from Factory->newDBH
+#   $bootstrap_factory->releaseDBH($dbh);
 
     return undef if $@;
 
@@ -291,14 +292,18 @@ sub getOMESession {
     return undef unless defined $dbpass and defined $experimenterID;
     return undef if (crypt($password,$dbpass) ne $dbpass);
 
+
+    my $host;
+   	if (exists $ENV{'REMOTE_HOST'} ) {
+   		$host = $ENV{'REMOTE_HOST'};
+	} else {
+		$host = $ENV{'HOST'};
+	}
+
     logdbg "debug", "getOMESession: looking for userState, experimenter_id=$experimenterID";
     my $userState = $bootstrap_factory->
       findObject('OME::UserState',experimenter_id => $experimenterID);
-    logdbg "debug", "getOMESession: found ".(defined $userState)." userState(s)";
-
-# FIXME:  This should probably be a remote host.
-    my $host = `hostname`;
-    chomp ($host);
+    logdbg "debug", "getOMESession: found existing userState(s)" if defined $userState;
 
     if (!defined $userState) {
         $userState = $bootstrap_factory->
@@ -318,7 +323,7 @@ sub getOMESession {
     logdie ref($self)."->getOMESession:  Could not create userState object"
       unless defined $userState;
 
-    my $session = OME::Session->new($userState);
+    my $session = OME::Session->new($userState,$bootstrap_factory);
     
     $userState->{__session} = $session;
 
