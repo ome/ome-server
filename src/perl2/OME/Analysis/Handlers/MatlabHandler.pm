@@ -632,7 +632,10 @@ sub MatlabVector_to_Attrs {
 #		}
 		# See: "Hackaround for XS variable hidden uniqueness." in MatlabScalar_to_Attr()
 		my $index = $element->getAttribute( 'Index' )
-			or die "Index attribute not specified in ".$element->toString();
+			or die "Index attribute not specified in ".$element->toString();	
+    die "Vector index is out of bounds. Index is $index, and vector length is "
+			.scalar( @$values ).". Error when processing ".$element->toString() 
+			unless $index <= scalar( @$values ); 
 		my $value = $values->[ $index - 1 ];
 		$vectorData{ $formal_output_name }->{ $SE_name } = "$value";
 	}
