@@ -178,10 +178,13 @@ sub processDOM {
 			$refID = $refNode->getAttribute('ID');
 			if (exists $docIDs->{$refID}) {
 				$refObjectID = $docIDs->{$refID};
-			} else {
-				$refObject = $lsid->getLocalObject ($refID);
-				$refObjectID = $refObject ? $refObject->id() : undef
 			}
+#			else {
+#				$refObject = $lsid->getLocalObject ($refID);
+#				$refObjectID = $refObject ? $refObject->id() : undef
+#			}
+# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
+#
 			logdie ref ($self) . "->processDOM: Could not resolve Project ID '$refID'"
 				unless defined $refObjectID;
 			$self->addObject ($factory->maybeNewObject('OME::Project::DatasetMap',
@@ -210,11 +213,14 @@ sub processDOM {
 		foreach $refNode ( @{ $node->getChildrenByTagName('DatasetRef') } ) {
 			$refID = $refNode->getAttribute('ID');
 			if (exists $docIDs->{$refID}) {
-				$refObject = $docIDs->{$refID};
-			} else {
-				$refObject = $lsid->getLocalObject ($refID);
-				$refObjectID = $refObject ? $refObject->id() : undef
+				$refObjectID = $docIDs->{$refID};
 			}
+#			else {
+#				$refObject = $lsid->getLocalObject ($refID);
+#				$refObjectID = $refObject ? $refObject->id() : undef
+#			}
+# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
+#
 			logdie ref ($self) . "->processDOM: Could not resolve Dataset ID '$refID'"
 				unless defined $refObjectID;
 			$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
@@ -223,7 +229,8 @@ sub processDOM {
 		}
 
 		# These get imported into an import dataset
-		$importDataset = $self->dataset();
+		$importDataset = $self->dataset()
+			or die "Could not make an import dataset! ";
 		$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
 			{image_id => $objectID, dataset_id => $importDataset->id()}
 		));
@@ -238,15 +245,21 @@ sub processDOM {
 			my $imgAttr = $self->importObject ($CA,'I',$objectID,$importAnalysis);
 # This is a hack to rename the pixels repository file to the standard naming convention
 # added by josiah Friday 13, June, 2003
+# Modified by IGG 06/27/03 to also assign the proper repository ID to the pixels.
 			if( $CA->tagName() eq 'Pixels' ) {
+				# Get the Repository object from the LSID
+				my $repository = $lsid->getLocalObject ($CA->getAttribute('Repository'))
+					or die "A repository was not assigned for Pixels ID: '".$CA->getAttribute('ID')."'!\n";
+				# Assign the pixels to the proper repository
+				$imgAttr->Repository ($repository);
 				my $newPath = $imgAttr->id().'-'.$object->name().'.ori';
 				$newPath =~ s/[^a-zA-Z0-9]/_/g;
 				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
 				system( $cmd ) eq 0 or die "Could not rename a repository file!\ncommand was '$cmd'\n";
-				$imgAttr->Path( $newPath );					
+				$imgAttr->Path( $newPath );
 			}
-# end of hack
 		}
+# end of hack
 
 		my $image = $object;
 		my $imageID = $image->id();
@@ -268,11 +281,12 @@ sub processDOM {
 	}
 	logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
 	my $engine = OME::Analysis::AnalysisEngine->new();
-	eval {
+
+#	eval {
 		$engine->executeAnalysisView($session,$view,{},$importDataset);
-	};
+#	};
 	
-	logcarp "$@" if $@;
+#	logcarp "$@" if $@;
 	return $self->{_DBObjects};
 }
 
@@ -352,7 +366,7 @@ sub addObject ($) {
 	my ($self,$object) = @_;
 	push (@{ $self->{_DBObjects} }, $object) if defined $object;
 	logdbg "debug", ref ($self)."->addObject: added object #".scalar (@{ $self->{_DBObjects} })." '".ref($object).
-		"' for later commit.";
+		"' ID = ".$object->id()." for later commit.";
 }
 
 
@@ -368,14 +382,15 @@ sub importObject ($$$$) {
 	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
-	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
-	$theObject = $lsid->getLocalObject ($LSID);
-	if (defined $theObject) {
-		$docIDs->{$LSID} = $theObject->id();
-		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
-		return $theObject;
-	}
-
+#	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
+#	$theObject = $lsid->getLocalObject ($LSID);
+#	if (defined $theObject) {
+#		$docIDs->{$LSID} = $theObject->id();
+#		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+#		return $theObject;
+#	}
+# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
+#
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 	$parentDBID = undef if $granularity eq 'G';
 	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
@@ -403,10 +418,12 @@ sub importObject ($$$$) {
 			$objectData->{$objField} = $docIDs->{$theRef};
 			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
 				$objectData->{$objField}." in document.";
-		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
-			$objectData->{$objField} = $theObject->id();
-			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
-				$objectData->{$objField}." in DB.";
+#		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
+#			$objectData->{$objField} = $theObject->id();
+#			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+#				$objectData->{$objField}." in DB.";
+# FIXME (IGG):  We cannot merge attributes for objects that we import - so we create new ones each time.
+#
 		} else {
 			$objectData->{$objField} = undef;
 			$unresolvedRefs{$objField} = $theRef;
@@ -418,7 +435,7 @@ sub importObject ($$$$) {
 
 	# Make the object.
 	if ($isAttribute) {
-		logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.".
+		logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.\n\t".
 			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newAttribute($objectType,$parentDBID,$module_execution,$objectData);
 	} else {
