@@ -136,6 +136,8 @@ sub __genericTableFooter {
 	return $table;
 }
 
+# FIXME: parse incoming search parameters to allow multiple search criteria and operators
+#	afterwards, make a help page explaining the search syntax
 sub __filterObjects {
 	my $self = shift;
 	my $options = shift;
