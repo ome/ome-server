@@ -72,7 +72,7 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	}
 	
 	public Rectangle getInitialBounds() {
-		return new Rectangle(10,550,400,400);
+		return new Rectangle(410,10,400,400);
 	}
 	
 	protected void layoutFrame() {
