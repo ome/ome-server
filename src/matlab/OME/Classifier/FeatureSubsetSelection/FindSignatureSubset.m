@@ -29,11 +29,13 @@
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ...
-			FindSignatureSubset (discData, discWalls, test_samples, iterations)
+			FindSignatureSubset (discData, discWalls, fmetric, test_samples, iterations)
 
 % INPUT NEEDED      
 %   'discData'      - your discretized data
 %   'discWalls'     - cell array with bin wall locations
+%   'fmetric'       - function handle to metric that estimates classifier
+%                     performance based on confusion matrix
 %   'test_samples'  - how many test-images per class (optional)
 %   'iterations'    - how many runs with random test images (optional)
 % OUTPUT GIVEN
@@ -71,11 +73,11 @@ function [sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = ..
 % Lawrence David - 2003.  lad2002@columbia.edu
 % Tom Macura - 2005. tm289@cam.ac.uk               Modified for inclusion in OME
 
-if (nargin < 3) 
+if (nargin < 4) 
 	test_samples = -1;
 end
 
-if (nargin < 4)
+if (nargin < 5)
 	iterations = -1;
 end
 
@@ -101,7 +103,7 @@ length_sigs_left = length(sigs_left)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:length(sigs_left)
 	conf_mat = n_fold_validate(sigs_left(i), discData, discWalls, test_samples, iterations);
-	ind_score(i) = ConfusionMatrixScore(conf_mat);
+	ind_score(i) = fmetric(conf_mat);
 	fprintf(1, 'Signature: %03d -- Score: %f\n', sigs_left(i), ind_score(i));
 end
 
@@ -123,7 +125,7 @@ while ~done
 	% find signature with largest impact on cumulative score
 	for i = 1:length(sigs_left)
         conf_mat{i} = n_fold_validate([sigs_used sigs_left(i)], discData, discWalls, test_samples, iterations);
-		score(i) = ConfusionMatrixScore(conf_mat{i});
+		score(i) = fmetric(conf_mat{i});
 		fprintf(1, 'Signature: %03d -- Cum. Score: %f\n', sigs_left(i), score(i));
 	end
 

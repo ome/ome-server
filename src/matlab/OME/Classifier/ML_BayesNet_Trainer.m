@@ -50,7 +50,7 @@ discData = uint8(discData);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % find optimal subset of signatures                             %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = FindSignatureSubset(discData, discWalls);
+[sigs_used, sigs_used_ind, sigs_used_col, sigs_excluded, conf_mat] = FindSignatureSubset(discData, discWalls, @ConfusionMatrixScore);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % build the Bayes Net (BNET)                                    %
