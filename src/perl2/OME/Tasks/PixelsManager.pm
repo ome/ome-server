@@ -321,11 +321,18 @@ sub saveThumb {
 	# retrieve the URL for the thumbnail of the specified pixels attribute
 	my $thumbnailURL = OME::Tasks::PixelsManager->getThumbURL($pixels);
 
+	# retrieve the URL for the thumbnail of the specified pixels id
+	my $thumbnailURL = OME::Tasks::PixelsManager->getThumbURL($pixelsID);
+
 =cut
 sub getThumbURL{
 	my $self    = shift;
 	my $session = OME::Session->instance();
 	my $pixels  = shift;
+	# load from id unless it's already loaded.
+	( $pixels = $session->Factory()->loadAttribute( "Pixels", $pixels )
+		or die "Couldn't load Pixels ID = $pixels" )
+		unless ref( $pixels );
 	my $rep     = $pixels->Repository();
 	return undef if($rep->IsLocal());
 	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
