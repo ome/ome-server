@@ -133,22 +133,26 @@ public class PParamLink extends  PLink {
 		//double theta;
 		Point2D first;
 		Point2D second;
-		
-		if ( start instanceof PFormalInput) {
-			// in this case, we started at the input and drew back to output
-		//	System.err.println("went from end to start");
-			first = (Point2D) points.get(1);
-			second = (Point2D) points.get(0);	
+		try {
+	
+			if ( start instanceof PFormalInput) {
+				// in this case, we started at the input and drew back to output
+			//	System.err.println("went from end to start");
+				first = (Point2D) points.get(1);
+				second = (Point2D) points.get(0);	
+			}
+			else {
+				int n = points.size();
+				first = (Point2D) points.get(n-2);
+				second = (Point2D) points.get(n-1);
+			}
+			//theta = getAngle((float) first.getX(),(float)first.getY(),
+			//					(float)second.getX(),(float)second.getY());
+			//System.err.println("ending link at "+second.getX()+","+second.getY());
+			drawLinkEnd((float) second.getX(),(float)second.getY());
 		}
-		else {
-			int n = points.size();
-			first = (Point2D) points.get(n-2);
-			second = (Point2D) points.get(n-1);
+		catch(Exception e) {
 		}
-		//theta = getAngle((float) first.getX(),(float)first.getY(),
-		//					(float)second.getX(),(float)second.getY());
-		//System.err.println("ending link at "+second.getX()+","+second.getY());
-		drawLinkEnd((float) second.getX(),(float)second.getY());
 	}
 
 
