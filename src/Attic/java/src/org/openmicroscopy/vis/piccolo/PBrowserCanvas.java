@@ -41,18 +41,18 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.Connection;
+import org.openmicroscopy.vis.ome.CDataset;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import org.openmicroscopy.vis.chains.BrowserFrame;
-import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.ome.CImage;
-import java.util.List;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.TreeSet;
+
 
 /** 
  * A {@link PCanvas} for viewing images in a dataset
@@ -63,7 +63,8 @@ import java.util.Vector;
  * @since OME2.0
  */
 
-public class PBrowserCanvas extends PCanvas implements PBufferedObject {
+public class PBrowserCanvas extends PCanvas implements PBufferedObject,
+	DatasetSelectionEventListener {
 	
 	/**
 	 * The initial magnification of the  canvas
@@ -81,16 +82,16 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject {
 	 */
 	private PLayer layer;
 	
-	
-	/**
-	 * The frame contaiing this canvas
-	 */
-	private BrowserFrame frame;
-	
+		
 	
 	private static float VGAP=10;
-	private static float HGAP=10;
+	private static float HGAP=5;
+
+	private double x,y;
+	private double maxHeight = 0;
 	
+	private TreeSet datasets = new TreeSet();
+		
 	public PBrowserCanvas(Connection c) {
 		super();
 		this.connection  = c;
@@ -116,62 +117,47 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject {
 		camera.addInputEventListener(new PImageToolTipHandler(camera));
 		getCamera().setViewScale(INIT_SCALE);
 	    
-		drawImages();
 	
 	}
 	
-	public void setFrame(BrowserFrame frame) {
-		this.frame = frame;
+	
+	public void drawImages(CDataset d) {
+		
+		
+		if (d== null)
+			return;
+		PDataset node;	
+		System.err.println("drawing images for dataset "+d.getName());
+		System.err.println("creating new widget");
+		node = new PDataset(d,connection);
+		layer.addChild(node);
+		node.setOffset(x,y);
+		double height = node.getGlobalFullBounds().getHeight()+VGAP;
+		if (height > maxHeight)
+			maxHeight = height;	
+		x+= node.getGlobalFullBounds().getWidth()+VGAP;
 	}
-	
-	
-	private void drawImages() {
-		double x = HGAP;
-		double y = 0;
-		System.err.println("drawing iamges...");
-		CDataset curDataset = connection.getDataset();
-		List images = curDataset.getCachedImages();
-		Iterator iter = images.iterator();	
-		float maxHeight = 0;
-		float maxWidth =0;
-		Vector nodes = new Vector();
 		
-		//draw them
-		while (iter.hasNext()) {
-			CImage image = (CImage) iter.next();
-			System.err.println("drawing image "+image.getID());
-			PThumbnail thumb = new PThumbnail(image);
-			layer.addChild(thumb);
-			float height  = (float) thumb.getGlobalFullBounds().getHeight();
-			float width = (float) thumb.getGlobalFullBounds().getWidth();
-			
-			if (height > maxHeight) 
-				maxHeight = height;
-			if (width > maxWidth) 
-				maxWidth = width;
-			nodes.add(thumb);
-		}
+	public void displayDatasets() {
+		layer.removeAllChildren();
+		Iterator iter = datasets.iterator();
+		x = HGAP;
+		y= 0;
+		maxHeight = 0;
 		
-		// space them
-		maxHeight += VGAP;
-		maxWidth+= HGAP;
-		iter = nodes.iterator();
-		int rowSz = (int) Math.sqrt(nodes.size());
-		int i =0;
+		int count = datasets.size();
+		int rowSz = (int) Math.sqrt(count);
+		int i = 0;
 		while (iter.hasNext()) {
-			PThumbnail thumb = (PThumbnail) iter.next();
-			thumb.setOffset(x,y);
+			CDataset d = (CDataset) iter.next();
+			drawImages(d);
 			if (i++ >= rowSz) {
-				y += maxHeight; 
-				x = HGAP;
-				i = 0;
+				x=HGAP;
+				y+=maxHeight;
+				i=0;
 			}
-			else 
-				x+= maxWidth;
 		}
 	}
-		
-	
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
@@ -179,5 +165,17 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject {
 			b.getY()-PConstants.SMALL_BORDER,
 			b.getWidth()+2*PConstants.SMALL_BORDER,
 			b.getHeight()+2*PConstants.SMALL_BORDER); 
+	}
+	
+	public void datasetSelectionChanged(DatasetSelectionEvent e) {
+		CDataset dataset = e.getDataset();
+		if (e.isSelected() == true) {
+			System.err.println("dataset "+dataset.getName()+" is selected");
+			datasets.add(dataset);
+		}
+		else {
+			datasets.remove(dataset);
+			System.err.println("dataset "+dataset.getName()+" is not selected");
+		}
 	}
  }
