@@ -46,7 +46,15 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm confirm_path print_header question confirm_default y_or_n whereis);
+our @EXPORT = qw(confirm
+		 confirm_path
+		 print_header
+		 question
+		 confirm_default
+		 get_password
+		 y_or_n
+		 whereis
+		 );
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -129,8 +137,46 @@ sub whereis {
 	my $input = ReadLine 0;
 	chomp $input;
 	if (lc($input) eq 'q') { return 0 }
-	which ($input) and return $input or print "Unable to locate \"$input\", try again.\n" and next;
+	which ($input) and return $input or print "Unable to locate binary \"$input\", try again.\n" and next;
     }
+}
+
+sub get_password {
+    my ($text, $min_len) = @_;
+    my $input;
+
+    # Lets not choke if someone doesn't pass this parameter
+    $min_len = 0 unless $min_len;
+
+    ReadMode(2);
+
+    while (1) {
+	print "$text";
+	$input = ReadLine 0;
+	chomp($input);
+	
+	print "\n";  # Spacing
+
+	print "Verify: ";
+	my $input2 = ReadLine(0);
+	chomp($input2);
+
+	print "\n";  # Spacing
+
+	if (length ($input) < $min_len ) {
+	    print "Password must be at least 6 characters long.\n" and next;
+	} elsif ($input ne $input2) {
+	    print "Passwords do not match. Please re-enter.\n" and next;
+	}
+
+	last;
+    }
+
+    my $salt = join('',('.','/',0..9,'A'..'Z','a'..'z')[rand 64, rand 64]);
+    my $crypt = crypt($input,$salt);
+
+    ReadMode(1);
+    return ($input, $crypt);
 }
 
 
