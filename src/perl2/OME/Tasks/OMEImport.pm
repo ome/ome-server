@@ -50,6 +50,7 @@ use OME::ImportExport::SemanticTypeImport;
 use OME::ImportExport::ModuleImport;
 use OME::ImportExport::ChainImport;
 use OME::ImportExport::HierarchyImport;
+use OME::ImportExport::DataHistoryImport;
 use OME::ImportExport::ResolveFiles;
 
 sub new {
@@ -62,7 +63,7 @@ sub new {
 
     @$self{@fieldsILike} = @params{@fieldsILike};
 
-    die "I need a session"
+    die $class."->new needs a session"
       unless exists $self->{session} &&
              UNIVERSAL::isa($self->{session},'OME::Session');
 
@@ -179,10 +180,33 @@ sub processDOM {
       new(session         => $self->{session},
           _parser         => $self->{_parser},
           semanticTypes   => $semanticTypes,
-          semanticColumns => $semanticColumns,
-          debug           => $self->{debug});
+          semanticColumns => $semanticColumns);
 
-    $hierarchyImporter->processDOM($root);
+    my ($importedObjects, $importDataset ) = $hierarchyImporter->processDOM($root);
+
+    # Parse the data History
+
+    my $historyImporter = OME::ImportExport::DataHistoryImport->
+      new(session         => $self->{session},
+          _parser         => $self->{_parser},
+          objects         => $importedObjects);
+
+    $historyImporter->processDOM($root);
+
+	# Run the engine on the imported dataset.
+	if( $importDataset ) {
+		my $chain = $self->{session}->factory->
+			findObject("OME::AnalysisChain",name => 'Image import analyses');
+		
+		if (!defined $chain) {
+			logcarp "The image import analysis chain is not defined.  Skipping predefined analyses..."
+				if !defined $chain;
+		} else {
+			logdbg "debug", ref ($self)."->processDOM: Running module_execution tasks";
+			my $engine = OME::Analysis::AnalysisEngine->new();
+			$engine->executeAnalysisView($self->{session},$chain,{},$importDataset);
+		}
+	}
 
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
