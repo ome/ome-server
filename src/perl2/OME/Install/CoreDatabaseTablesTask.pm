@@ -101,7 +101,7 @@ our $IMPORT_FORMATS = join (' ',qw/
 /);
 
 # Database version
-our $DB_VERSION = "2.11";
+our $DB_VERSION = "2.12";
 
 # $coreClasses = ([$package_to_require,$class_to_instantiate], ... )
 
