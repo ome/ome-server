@@ -30,13 +30,15 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by callan via omejava on Wed Jan 12 16:51:20 2005
  *
  *------------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.ds.dto;
 
+import org.openmicroscopy.ds.st.Experimenter;
+import org.openmicroscopy.ds.st.ExperimenterDTO;
 import org.openmicroscopy.ds.dto.MappedDTO;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +77,11 @@ public class ModuleExecutionDTO
     { return (Dataset) getObjectElement("dataset"); }
     public void setDataset(Dataset value)
     { setElement("dataset",value); }
+
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("experimenter",value); }
 
     public Image getImage()
     { return (Image) getObjectElement("image"); }
@@ -126,6 +133,7 @@ public class ModuleExecutionDTO
         super.setMap(elements);
         parseChildElement("module",ModuleDTO.class);
         parseChildElement("dataset",DatasetDTO.class);
+        parseChildElement("experimenter",ExperimenterDTO.class);
         parseChildElement("image",ImageDTO.class);
         parseListElement("inputs",ActualInputDTO.class);
     }

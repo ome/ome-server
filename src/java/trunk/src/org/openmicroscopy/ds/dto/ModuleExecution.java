@@ -30,13 +30,15 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by callan via omejava on Fri Dec 17 12:53:45 2004
+ * Created by callan via omejava on Wed Jan 12 16:51:20 2005
  *
  *------------------------------------------------------------------------------
  */
 
 package org.openmicroscopy.ds.dto;
 
+import org.openmicroscopy.ds.st.Experimenter;
+import org.openmicroscopy.ds.st.ExperimenterDTO;
 import org.openmicroscopy.ds.dto.DataInterface;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +65,10 @@ public interface ModuleExecution
     /** Criteria field name: <code>dataset</code> */
     public Dataset getDataset();
     public void setDataset(Dataset value);
+
+    /** Criteria field name: <code>experimenter</code> */
+    public Experimenter getExperimenter();
+    public void setExperimenter(Experimenter value);
 
     /** Criteria field name: <code>image</code> */
     public Image getImage();

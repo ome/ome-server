@@ -37,7 +37,8 @@
 
                       ImportPackages =>
                       {
-                       # None needed
+                       'org.openmicroscopy.ds.st' =>
+                       ['Experimenter','ExperimenterDTO'],
                       },
 
                       Fields  =>
@@ -47,6 +48,7 @@
                        Virtual       => ['boolean','virtual_mex'],
                        Dependence    => ['String'],
                        Dataset       => ['Dataset'],
+                       Experimenter  => ['Experimenter'],
                        Image         => ['Image'],
                        IteratorTag   => ['String','iterator_tag',],
                        NewFeatureTag => ['String','new_feature_tag'],
