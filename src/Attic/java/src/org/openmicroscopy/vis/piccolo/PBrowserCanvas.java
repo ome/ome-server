@@ -43,8 +43,9 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.util.SwingWorker;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
@@ -148,28 +149,39 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	}
 		
 	public void displayDatasets() {
-		layer.removeAllChildren();
-		Iterator iter = datasets.iterator();
-		x = HGAP;
-		y= 0;
-		maxHeight = 0;
 		
-		int count = datasets.size();
-		int rowSz = (int) Math.sqrt(count);
-		int i = 0;
-		while (iter.hasNext()) {
-			CDataset d = (CDataset) iter.next();
-			////System.err.println("browser displaying dataset "+d.getName());
-			drawImages(d);
-			if (i++ >= rowSz) {
-				x=HGAP;
-				y+=maxHeight;
-				i=0;
+		final SwingWorker worker = new SwingWorker() {
+			
+			public Object construct() {
+				layer.removeAllChildren();
+				Iterator iter = datasets.iterator();
+				x = HGAP;
+				y= 0;
+				maxHeight = 0;
+				
+				int count = datasets.size();
+				int rowSz = (int) Math.sqrt(count);
+				int i = 0;
+				while (iter.hasNext()) {
+					CDataset d = (CDataset) iter.next();
+					////System.err.println("browser displaying dataset "+d.getName());
+					drawImages(d);
+					if (i++ >= rowSz) {
+						x=HGAP;
+						y+=maxHeight;
+						i=0;
+					}
+				}
+				return null;	
 			}
-		}
-		////System.err.println("animating browser to center");
-		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
-				PConstants.ANIMATION_DELAY);
+			
+			public void finished() {
+				////System.err.println("animating browser to center");
+			getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
+					PConstants.ANIMATION_DELAY);
+			}
+		};
+		worker.start();
 	}
 	
 	public PBounds getBufferedBounds() {
