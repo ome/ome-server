@@ -1,4 +1,4 @@
-# OME/Tasks/ProgramImport.pm
+# OME/ImportExport/ModuleImport.pm
 
 # Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Josiah Johnston <siah@nih.gov>
@@ -17,58 +17,22 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-package OME::Tasks::ProgramImport;
-
-
-
-
-
-
-
-
-
-
-
-
-# WARNING!!! The name of this class will soon change to OME::ImportExport::ModuleImport 
-# 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+package OME::ImportExport::ModuleImport;
 
 use XML::LibXML;
 use strict;
 
 =head1 NAME
 
-OME::Tasks::ProgramImport - Import an Analysis Module XML specification.
-
-WARNING!!! The name of this class will soon change to OME::ImportExport::ModuleImport 
-warning added by josiah <siah@nih.gov> Friday, June 27, 2003
+OME::ImportExport::ModuleImport - Import an Analysis Module XML specification.
 
 =head1 SYNOPSIS
 
-	use OME::Tasks::ProgramImport;
+	use OME::ImportExport::ModuleImport;
 	use OME::SessionManager;
 	
 	my $session       = OME::SessionManager->TTYlogin();
-	my $programImport = OME::Tasks::ProgramImport->new( 
+	my $programImport = OME::ImportExport::ModuleImport->new( 
 		session => $session,
 		debug   => 0
 	);
