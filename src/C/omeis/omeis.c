@@ -1074,8 +1074,37 @@ int result;
 	return (0);
 }
 
+/*
+ * openInputFile(char *filename, unsigned char isLocalFile)
+ * closeInputFile(FILE *infile, unsigned char isLocalFile)
+ *
+ * These functions allow the UploadFile and Set* methods to accept the
+ * input data from a file in the local filesystem instead of from
+ * STDIN.  This will only be useful if the image server is being called
+ * via the command line (and not as a CGI script) from client code
+ * running on the same machine.
+ */
 
+FILE *openInputFile(char *filename, unsigned char isLocalFile) {
+    FILE *infile;
 
+    if (isLocalFile) {
+        if (!(infile = fopen(filename,"r"))) {
+            fprintf(stderr,"Could not open local input file %s",filename);
+            return NULL;
+        }
+    } else {
+        infile = stdin;
+    }
+
+    return infile;
+}
+
+void closeInputFile(FILE *infile, unsigned char isLocalFile) {
+    if (isLocalFile) {
+        fclose(infile);
+    }
+}
 
 /*
   UploadFile (char *filename, off_t size)
@@ -1084,13 +1113,14 @@ int result;
   Reads stdin, writing to the file.
   returns file OID.
 */
-OID UploadFile (char *filename, off_t size) {
+OID UploadFile (char *filename, off_t size, unsigned char isLocalFile) {
 char path[256];
 char *filesIDfile="Files/lastFileID";
 OID ID;
 int fd;
 size_t nIO;
 char *sh_mmap;
+FILE *infile;
 
 	strcpy (path,"Files/");
 	ID = nextID(filesIDfile);
@@ -1118,12 +1148,18 @@ char *sh_mmap;
 		return (-1);
 	}
 
-	nIO = fread (sh_mmap,1,size,stdin);
-	if (nIO != size) {
-		fprintf (stderr,"Could finish writing uploaded file %s (Path=%s, ID=%llu).  Wrote %lu, expected %lu\n",
-			filename,path,ID,(unsigned long)nIO,(unsigned long)size);
-		ID = -1;
-	}
+    infile = openInputFile(filename,isLocalFile);
+
+    if (infile) {
+        nIO = fread (sh_mmap,1,size,infile);
+        if (nIO != size) {
+            fprintf (stderr,"Could finish writing uploaded file %s (Path=%s, ID=%llu).  Wrote %lu, expected %lu\n",
+                     filename,path,ID,(unsigned long)nIO,(unsigned long)size);
+            ID = -1;
+        }
+
+        closeInputFile(infile,isLocalFile);
+    }
 
 	/* release the lock created by newRepFile */
 	lockRepFile (fd,'u',0,0);
@@ -1239,6 +1275,7 @@ OID ID=0;
 int theZ=-1,theC=-1,theT=-1;
 off_t offset=0;
 char error_str[256];
+unsigned char isLocalFile;
 
 /*
 char **cgivars=param;
@@ -1262,6 +1299,11 @@ char **cgivars=param;
 			HTTP_DoError (method,"pixelsID Parameter missing");
 			return (-1);
 	}
+
+    if ((theParam = get_param(param,"IsLocalFile")))
+        sscanf(theParam,"%hhu",&isLocalFile);
+    else
+        isLocalFile = 0;
 
 	if ( (theParam = get_param (param,"theZ")) )
 		sscanf (theParam,"%d",&theZ);
@@ -1311,8 +1353,15 @@ char **cgivars=param;
 		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
 		! strcmp (method,"SetStack") || !strcmp (method,"GetStack")) {
 		if (!ID) return (-1);
-		if (strstr (method,"Set")) rorw = 'w';
-		else rorw = 'r';
+
+        char *filename = NULL;
+
+		if (strstr (method,"Set")) {
+            rorw = 'w';
+            if (!(filename = get_param(param,"Pixels"))) {
+                HTTP_DoError(method,"No pixels filename specified");
+            }
+		} else rorw = 'r';
 
 		if (! (thePixels = GetPixels (ID,rorw,bigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
@@ -1343,7 +1392,7 @@ char **cgivars=param;
 		}
 
 		if (rorw == 'w')
-			thePixels->IO_stream = stdin;
+			thePixels->IO_stream = openInputFile(filename,isLocalFile);
 		else {
 			thePixels->IO_stream = stdout;
 			HTTP_ResultType ("application/octet-stream");
@@ -1356,6 +1405,7 @@ char **cgivars=param;
 		*/
 		nIO = DoPixelIO (thePixels, offset, nPix, rorw);
 		if (rorw == 'w') {
+            closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%d\n", nIO);
 		}
@@ -1366,10 +1416,15 @@ char **cgivars=param;
 	else if (! strcmp (method,"SetROI") || !strcmp (method,"GetROI") ) {
 		char *ROI;
 		int numInts,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
+        char *filename;
 
 		if (!ID) return (-1);
-		if (!strcmp (method,"SetROI")) rorw = 'w';
-		else rorw = 'r';
+		if (!strcmp (method,"SetROI")) {
+            rorw = 'w';
+            if (!(filename = get_param(param,"Pixels"))) {
+                HTTP_DoError(method,"No pixels filename specified");
+            }
+		} else rorw = 'r';
 
 		if (! (ROI = get_param (param,"ROI")) ) {
 			HTTP_DoError (method,"ROI Parameter missing");
@@ -1388,13 +1443,14 @@ char **cgivars=param;
 		}
 
 		if (rorw == 'w')
-			thePixels->IO_stream = stdin;
+			thePixels->IO_stream = openInputFile(filename,isLocalFile);
 		else {
 			thePixels->IO_stream = stdout;
 			HTTP_ResultType ("application/octet-stream");
 		}
 		nIO = DoROI (thePixels,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1, rorw);
 		if (rorw == 'w') {
+            closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%d\n",nIO);
 		}
@@ -1460,14 +1516,13 @@ char **cgivars=param;
 
 	else if (! strcmp (method,"UploadFile") ) {
 		unsigned long uploadSize=0;
-
 		if ( (theParam = get_param (param,"UploadSize")) )
 			sscanf (theParam,"%lu",&uploadSize);
 		else {
 			HTTP_DoError (method,"UploadSize must be specified!");
 			return (-1);
 		}
-		if ( (ID = UploadFile (get_param (param,"File"),uploadSize) ) <= 0) {
+		if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) <= 0) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
