@@ -1,0 +1,15 @@
+/* Default theme for OME Version 2+ */
+
+body {
+	background-color: #CCCC99;
+}
+
+/* General font families for common tags */
+font,th,td,p { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 12px; }
+
+/* Some generic style definitions */
+.ome_title { font-size: 14px; font-weight: bold; }
+
+.ome_error { color: red; }
+
+.ome_table { border: 1px #000000 solid; }
