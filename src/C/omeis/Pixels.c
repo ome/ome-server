@@ -68,7 +68,7 @@ closeConvertFile (PixelsRep *myPixels);
 static int
 unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp, int nlength);
 static void 
-extractRGBChannels(uint8* read_buf, int nPix, int chan, uint8* write_buf);
+extractRGBChannels(uint8* read_buf, int nPix, int chan, int samples_per_pixel, uint8* write_buf);
 
 
 
@@ -2100,7 +2100,7 @@ uint8*  write_buf_rgb;    /* tmp write buffer for extracting rgb */
 tstrip_t strip;
 uint32 width = 0;
 uint32 height = 0;
-uint16 chans = 0,pc,is_rgb;
+uint16 samples_per_pixel = 0,pc,is_rgb;
 uint16 read_bitspp, write_bytespp;
 tsize_t stripSize;
 char doSwap;
@@ -2146,7 +2146,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
     
 	TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
 	TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
-	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &chans);
+	TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &samples_per_pixel);
 	TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &read_bitspp);
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
 	TIFFGetField(tiff, TIFFTAG_PHOTOMETRIC, &is_rgb);  
@@ -2160,7 +2160,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		write_bytespp = 4;
 		
 	/* sanity check */
-	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (chans > 1 && is_rgb != PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || (samples_per_pixel > 1 && is_rgb != PHOTOMETRIC_RGB) || write_bytespp != (uint16)(head->bp) ||
 		(is_rgb != PHOTOMETRIC_RGB && pc != PLANARCONFIG_CONTIG ) ){
 			int nc=0;
 			
@@ -2168,7 +2168,7 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.",
 				(unsigned long long)myPixels->ID,(unsigned long long)myFile->ID);
 			OMEIS_DoError ("\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
-			OMEIS_DoError ("\tSamples per pixel: Pixels (%d) TIFF (%d)",(int)1,(int)chans);
+			OMEIS_DoError ("\tSamples per pixel: Pixels (%d) TIFF (%d)",(int)1,(int)samples_per_pixel);
 			OMEIS_DoError ("\tBits per sample:   Pixels (%d) TIFF (%d)",(int)head->bp*8,(int)read_bitspp);
 			OMEIS_DoError ("\tPlanar Config:     Pixels (%d) TIFF (%d)",(int)PLANARCONFIG_CONTIG,(int)pc);
 			return (0);
@@ -2204,6 +2204,11 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 	
 	/* is this an rgb image with packed channels */
 	if (is_rgb == PHOTOMETRIC_RGB && pc == PLANARCONFIG_CONTIG){
+		/* check channels */
+		if (samples_per_pixel < 3) {
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Not enough samples (%d) per pixel in RGB image.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp, samples_per_pixel);
+		}
+
 		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
 		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
 		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
@@ -2212,19 +2217,19 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		
 		for (strip = 0; strip<TIFFNumberOfStrips(tiff) && nIO<(head->dx)*(head->dy); strip++) {
 			stripSize = TIFFReadEncodedStrip(tiff, strip, read_buf, (tsize_t) -1);
-			nPix = (8*stripSize) / read_bitspp / 3;
+			nPix = (8*stripSize) / read_bitspp / samples_per_pixel;
 			
 			/* write the red, green, and blue parts of the pixel into different channels*/
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 0, write_buf_rgb); 
+			extractRGBChannels(read_buf, nPix, 0, samples_per_pixel, write_buf_rgb); 
 			nOut = DoPixelIO (myPixels, red_offset   + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 1, write_buf_rgb);
+			extractRGBChannels(read_buf, nPix, 1, samples_per_pixel, write_buf_rgb);
 			nOut = DoPixelIO (myPixels, green_offset + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 2, write_buf_rgb);
+			extractRGBChannels(read_buf, nPix, 2, samples_per_pixel, write_buf_rgb);
 			nOut = DoPixelIO (myPixels, blue_offset  + pix_offset, nPix, 'w');
 			
 			pix_offset += nPix*write_bytespp;
@@ -2237,7 +2242,12 @@ int numPixPerStrip, numStrips; 	/* predict how many TiffStrips need to be read *
 		int red_nOut = 0;
 		int green_nOut = 0;
 		int blue_nOut = 0;
-
+		
+		/* check channels */
+		if (samples_per_pixel < 3) {
+			OMEIS_DoError ("ConvertTIFF (PixelsID=%llu):  Not enough samples (%d) per pixel in RGB image.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff)*8/read_bitspp * write_bytespp, samples_per_pixel);
+		} 
+		
 		size_t red_offset   = GetOffset (myPixels, 0, 0, theZ, 0, theT);
 		size_t green_offset = GetOffset (myPixels, 0, 0, theZ, 1, theT);
 		size_t blue_offset  = GetOffset (myPixels, 0, 0, theZ, 2, theT);
@@ -2389,13 +2399,13 @@ unpackBits (void* read_buf, int read_bitspp, void* write_buf, int write_bytespp,
 /*
 	This function extracts every third element of the read_buf and writes it to
 	the write_buf. If chan=0 Red, if chan=1 Green, and if chan=2 Blue values are
-	extracted.
+	extracted. samples_per_pixel is usually set to 3. 
 */
-void extractRGBChannels(uint8* read_buf, int nPix, int chan, uint8* write_buf_rgb)
+void extractRGBChannels(uint8* read_buf, int nPix, int chan, int samples_per_pixel, uint8* write_buf_rgb)
 {
 int i;
 	for (i=0; i<nPix; i++)
-		write_buf_rgb[i] = read_buf[chan+3*i];
+		write_buf_rgb[i] = read_buf[chan+(samples_per_pixel)*i];
 }
 /*
   GetArchive (PixelsRep myPixels)
