@@ -88,7 +88,7 @@ sub getPageBody {
 			if (scalar @list > 1) {
 				$downloadFilename = $session->dataset()->name();
 			} else {
-				$downloadFilename = @list[0]->name();
+				$downloadFilename = $list[0]->name();
 			}
 			$downloadFilename .= '.ome';
 
