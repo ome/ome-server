@@ -919,6 +919,8 @@ my $URL = $params{-location};
 			//-->
 		</script>
 		};
+	$self->{dbHandle}->disconnect if (defined $self->{dbHandle});
+	undef $self->{dbHandle};
 	exit (0);
 	
 }
@@ -997,6 +999,8 @@ my $self = shift;
 			//-->
 		</script>
 		};
+	$self->{dbHandle}->disconnect if (defined $self->{dbHandle});
+	undef $self->{dbHandle};
 	exit (0);
 }
 
