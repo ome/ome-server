@@ -1644,7 +1644,7 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&fileID);
 
 			if (ID) {
-				if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
+				if (! (thePixels = GetPixels (ID,'i',bigEndian)) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
