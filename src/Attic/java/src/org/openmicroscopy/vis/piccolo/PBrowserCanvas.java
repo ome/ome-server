@@ -165,7 +165,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 	
 	
-	public void displayDatasets(Collection datasets,final boolean v) {
+	private void displayDatasets(Collection datasets,final boolean v) {
 		if (v== true)
 			arrangeDisplay(datasets);
 		doLayout(datasets,v);
@@ -191,18 +191,18 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			//System.err.println("dataset "+d.getName()+" area is "+area);
 			totalArea += area;
 		}
-		System.err.println("total area is "+totalArea);
+		//System.err.println("total area is "+totalArea);
 		
 		screenHeight = getHeight();
 		screenWidth = getWidth();
 		screenArea = screenHeight*screenWidth;
 		
 		scaleFactor = Math.sqrt(screenArea/totalArea);
-		System.err.println("scale factor is" +scaleFactor);
+		//System.err.println("scale factor is" +scaleFactor);
 		screenHeight /= scaleFactor;
 		screenWidth /= scaleFactor;
-		System.err.println("scaled height is "+screenHeight);
-		System.err.println("scaeld width is "+screenWidth);
+		//System.err.println("scaled height is "+screenHeight);
+		//System.err.println("scaeld width is "+screenWidth);
 		strips = doTreeMap(datasets);
 	}
 
@@ -263,7 +263,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		
 		PDataset node=null;
 		
-		System.err.println("***** DOING TREEMAP ****");
+		//System.err.println("***** DOING TREEMAP ****");
 		while (iter.hasNext())  {
 			d = (CDataset) iter.next();
 			node = (PDataset) datasetWidgets.get(d);
@@ -274,24 +274,24 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			// calc,update stats.
 			getTreemapStripHeight(strip);
 			
-			System.err.println("STRIP: new aspect ratio is "+newAspectRatio);
-			System.err.println(" old aspect ratio is "+oldAspectRatio);
+			//System.err.println("STRIP: new aspect ratio is "+newAspectRatio);
+			//System.err.println(" old aspect ratio is "+oldAspectRatio);
 			if (strip.size()>1 &&  newAspectRatio > oldAspectRatio) {
 				// move it to next strip.
 				System.err.println("-------");
 				System.err.println("moving on to next strip");
 				strip.remove(node);
-				System.err.println("strip heiight is "+stripHeight);
-				System.err.println("reverting to "+oldHeight);
+				//System.err.println("strip heiight is "+stripHeight);
+				//System.err.println("reverting to "+oldHeight);
 				Iterator iter2 = strip.iterator();
 				while (iter2.hasNext()) {
 					PDataset ds = (PDataset) iter2.next();
 					ds.revertWidth();
 					ds.setHeight(oldHeight);
-					System.err.println("dataset .."+ds.getDataset().getName()+", width is "+ds.getWidth());
-					System.err.println("# of things in dataset..."+ds.getContentsArea());
+					//System.err.println("dataset .."+ds.getDataset().getName()+", width is "+ds.getWidth());
+					//System.err.println("# of things in dataset..."+ds.getContentsArea());
 					double ratio  = ds.getContentsArea()/totalArea;
-					System.err.println("ratio of stuff ..."+ratio);
+					//System.err.println("ratio of stuff ..."+ratio);
 				}
 				strips.add(strip);
 				strip = new Vector();
@@ -302,9 +302,9 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			}
 			// otherwise, keep what I've calculated.
 				oldAspectRatio = newAspectRatio;
-			System.err.println("-------");
+			//System.err.println("-------");
 		}
-		System.err.println("last strip height is "+stripHeight);
+		//System.err.println("last strip height is "+stripHeight);
 		// set height of nodes in last strip
 		iter = strip.iterator();
 		while (iter.hasNext()) {
@@ -333,19 +333,19 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		Iterator iter = strip.iterator();
 		while (iter.hasNext()) {
 			PDataset node = (PDataset) iter.next();
-			System.err.println("dataset .."+node.getDataset().getName()+" area "	
-				+node.getContentsArea());
+			//System.err.println("dataset .."+node.getDataset().getName()+" area "	
+			//	+node.getContentsArea());
 			double area = node.getContentsArea();
 			stripArea += area;
 		}
 		
-		System.err.println("strip area is "+stripArea);
+		//System.err.println("strip area is "+stripArea);
 		
 		//double ratio = stripArea/screenWidth;
 		oldHeight = stripHeight;
 		//stripHeight = Math.ceil(ratio * screenHeight); // was getHeight());
 		stripHeight = stripArea/screenWidth;
-		System.err.println("strip height is "+stripHeight);
+		//System.err.println("strip height is "+stripHeight);
 		// get width of each and update ratios;
 		double width;
 		int i =0;
@@ -428,15 +428,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		TreeSet datasets;
 		if (state.getSelectedProject() != null) 
 			highlightDatasets(null);
-	
-		if (selected != null) {
-			PDataset d = selected.getNode();
-			// zoom in to this dataset.
-			getCamera().animateViewToCenterBounds(d.getBufferedBounds(),true,
-					PConstants.ANIMATION_DELAY);
-			
-		}
-		else {
+		if (selected == null){
 			Collection selections = state.getActiveDatasets();
 			if (selections != null && selections.size() > 0) {
 				datasets = new TreeSet(selections);
@@ -478,24 +470,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		executionList.setOffset(b.getX(),b.getY()+b.getHeight());
 	}
 	
-	public void highlightDatasetsForProject(CProject p) {
-		
-		Iterator iter = layer.getChildrenIterator();
-		while (iter.hasNext()) {
-			Object obj = iter.next();
-			if (obj instanceof PDataset) {
-				PDataset dNode = (PDataset) obj;
-				CDataset d = dNode.getDataset();
-				if (p != null && p.hasDataset(d)) {
-					dNode.setHighlighted(true);
-				}
-				else
-					dNode.setHighlighted(false);
-			}
-		}
-	}
 	
-	public void highlightDatasets(Collection c) {
+	private void highlightDatasets(Collection c) {
 		Iterator iter = layer.getChildrenIterator();
 		while (iter.hasNext()) {
 			Object obj = iter.next();
@@ -511,16 +487,21 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}
 	}
 	
-	public void highlightDataset(CDataset rolled) {
+	private void highlightDataset(CDataset rolled) {
+		
+		if (rolled == null && lastRolledOver == null)
+			return;
 		
 		if (lastRolledOver != null) { 
-			System.err.println("clearing . highlight for.."+lastRolledOver.getDataset().getName());
+			if (rolled == lastRolledOver.getDataset())
+				return;
+			//System.err.println("clearing . highlight for.."+lastRolledOver.getDataset().getName());
 			lastRolledOver.setSelected(false);
 			lastRolledOver = null;
 		}
 		
 		if (rolled != null) {	
-			System.err.println("calling highlight dataset..."+rolled.getName());	
+			//System.err.println("calling highlight dataset..."+rolled.getName());	
 			lastRolledOver = rolled.getNode();
 			lastRolledOver.setSelected(true);
 		}		
