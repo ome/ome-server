@@ -60,7 +60,11 @@ use OME;
 our $VERSION = $OME::VERSION;
 
 use OME::Session;
+use OME::Install::Environment;
 use UNIVERSAL::require;
+
+use constant ENV_FILE        => '/etc/ome-install.store';
+OME::Install::Environment::restore_from (ENV_FILE);
 
 =head1 CLASS METHOD
 
@@ -75,16 +79,29 @@ Returns the default executor.
 
 sub getDefaultExecutor {
     my $class = shift;
+    my $environment = initialize OME::Install::Environment;
+    my $worker_conf = $environment->worker_conf();
+   		
+    # Shell Environment Variables over-ride OME environment file variables
     if ($ENV{OME_THREADED}) {
         OME::Analysis::Engine::ForkedPerlExecutor->require();
         return OME::Analysis::Engine::ForkedPerlExecutor->new();
     } elsif ($ENV{OME_DISTRIBUTED}) {
         OME::Analysis::Engine::SimpleWorkerExecutor->require();
         return OME::Analysis::Engine::SimpleWorkerExecutor->new();
-    } else {
-        OME::Analysis::Engine::UnthreadedPerlExecutor->require();
-        return OME::Analysis::Engine::UnthreadedPerlExecutor->new();
+    } 
+    
+    if ($worker_conf->{ExecutorThreaded}) {
+		OME::Analysis::Engine::ForkedPerlExecutor->require();
+        return OME::Analysis::Engine::ForkedPerlExecutor->new();
+    } elsif ($worker_conf->{ExecutorDistributed}) {
+        OME::Analysis::Engine::SimpleWorkerExecutor->require();
+        return OME::Analysis::Engine::SimpleWorkerExecutor->new();
     }
+
+	# if all fails, do this
+	OME::Analysis::Engine::UnthreadedPerlExecutor->require();
+	return OME::Analysis::Engine::UnthreadedPerlExecutor->new();
 }
 
 =head1 INTERFACE METHODS
