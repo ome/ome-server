@@ -87,6 +87,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	MouseListener, SelectionEventListener {
 	
 	protected JLabel statusLabel;
+	
 	protected JPanel panel;
 	
 	protected JButton newChainButton;
@@ -212,16 +213,18 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		show();
 	
 		
-		setResizable(false);
+		//setResizable(false);
 
+	}
+
+
+	public void completeInitialization() {
 		browser.displayAllDatasets();	
 		SelectionState selectionState = SelectionState.getState();
 
 		selectionState.addSelectionEventListener(this);		
 		selectionState.addSelectionEventListener(browser);
 	}
-
-
 	
 	private JToolBar buildToolBar() {
 		JToolBar tool = new JToolBar();
@@ -495,4 +498,6 @@ class DatasetRenderer  extends JPanel implements ListCellRenderer {
 						 
 			return this;
 	}
+	
+	
 }
