@@ -37,6 +37,8 @@
 #ifndef omeis_h
 #define omeis_h
 
+#include <sys/types.h>
+
 /* typedef unsigned long long OID; */
 typedef u_int64_t OID;
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
