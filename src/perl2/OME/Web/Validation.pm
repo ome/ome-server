@@ -63,7 +63,8 @@ What it returns: 1 or undef
 sub isRedirectNecessary {
 	my $self = shift;
 	my $doNotSetFlag = shift;
-	my $session = OME::Web->Session();
+	my $session = OME::Web->Session()
+		or die ref ($self) . " cannot find session via OME::Web->Session()";
 	__PACKAGE__->ReloadHome( undef )
 		unless $doNotSetFlag;
 
