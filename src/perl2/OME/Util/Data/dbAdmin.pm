@@ -46,6 +46,7 @@ use Getopt::Long;
 use File::Copy;
 use File::Glob ':glob'; # for bsd_glob
 use File::Path; # for rmtree
+use File::stat;
 use Term::ANSIColor qw(:constants);
 
 use OME::SessionManager;
@@ -97,7 +98,7 @@ sub backup {
     my $command_name = $self->commandName($commands);
     
 	# Default env file location 
-	my $env_file = "/etc/ome-install.store";
+	my $env_file;
 	my $quick=0;
 	my $backup_file="";
 	my $result;
@@ -109,14 +110,16 @@ sub backup {
 					    );
 	exit(1) unless $result;
 	
-	if (@ARGV) {
+	if (scalar @ARGV) {
 		$backup_file = $ARGV[0];
 	}
 	
 	# idiot nets
 	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
 	croak "Environment file '$env_file' does not exist.\n".
-		  "Call $script $command_name backup with the -f flag to specify it. " if (not -e $env_file);
+		  "Call $script $command_name backup with the -f flag to specify it. " 
+		  if (defined($env_file) and not -e $env_file);
+		  
 	if ($backup_file eq "") {
 		$backup_file = confirm_default("Backup to archive",cwd()."/ome_backup.tar.bz2");
 	}
@@ -124,7 +127,7 @@ sub backup {
 	$backup_file  =~ s/\.tar//; $backup_file  =~ s/\.bz2//;
 	
 	# find all the neccessary programs we will run
-	my @progs = ('tar', 'pg_dump', 'touch', 'bzip2');
+	my @progs = ('tar', 'pg_dump', 'touch');
 	my %prog_path;
 	
 	foreach my $prog (@progs) {
@@ -136,8 +139,7 @@ sub backup {
 	}
 
 	# open the enviroment to get info about the OME installation
-	my $environment = initialize OME::Install::Environment;
-	$environment = OME::Install::Environment::restore_from($env_file);
+	my $environment = OME::Install::Environment->initialize($env_file);
 	
 	my $postgress_user = $environment->postgres_user();
 	my $base_dir = $environment->base_dir();
@@ -170,28 +172,41 @@ sub backup {
 	                 # This is the most flexible format that allows reordering 
 	                 # of data. Its compressed by default.
 	
-	print STDERR "su $postgress_user -c '".$prog_path{'pg_dump'}." $flags $dbName > /tmp/omeDB_backup \n'";
-	system("su $postgress_user -c '".$prog_path{'pg_dump'}." $flags $dbName > /tmp/omeDB_backup'");	
- 	move ("/tmp/omeDB_backup", "./omeDB_backup") or die "Couldn't move /tmp/omeDB_backup" ;
- 	
+	print STDERR "su $postgress_user -c '".$prog_path{'pg_dump'}." $flags $dbName > /tmp/omeDB_backup'\n";
+
+	# backup database and watch output from pg_dump
+	foreach (`su $postgress_user -c '$prog_path{'pg_dump'} $flags $dbName > /tmp/omeDB_backup' 2>&1`) {
+		print STDERR "\nDatabase Backup Failed: $_" and die if $_ =~ /pg_dump/ or $_ =~ /ERROR/ or $_ =~ /FATAL/;
+	}
+	
+	# check the size of omeDB_backup
+	if (stat("/tmp/omeDB_backup")->size < 1024) {
+		print STDERR "\nDatabase Backup Failed: /tmp/omeDB_backup is less than 1024 bytes in size \n";
+		die;
+	}
+	
 	# log version of backup
-	open (FILEOUT, "> OMEmaint");
+	open (FILEOUT, "> OMEmaint") or die "Couldn't open OMEmaint for writing\n";
 	print FILEOUT "version=$dbAdmin_version\n";
 	close (FILEOUT);
 	
 	# OMEIS
 	if (not $quick) {
 	    print "    \\_ Backing up OMEIS from $omeis_base_dir \n";
-		system ($prog_path{'tar'}." --bzip2 -c OMEmaint omeDB_backup --directory $omeis_base_dir Files Pixels -f $backup_file.tar.bz2");
+		foreach (`$prog_path{'tar'} --bzip2 -c OMEmaint --directory /tmp/ omeDB_backup --directory $omeis_base_dir Files Pixels -f $backup_file.tar.bz2 2>&1`) {
+			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
+		}
 		print "    \\_ Compressing archive \n";
 	} else {
 		print "    \\_ Compressing archive \n";
-		system ($prog_path{'tar'}." --bzip2 -c OMEmaint omeDB_backup -f $backup_file.tar.bz2");
+		foreach (`$prog_path{'tar'} --bzip2 -c OMEmaint --directory /tmp/ omeDB_backup -f $backup_file.tar.bz2 2>&1`) {
+			print STDERR "\nCouldn't create tar archive: $_" and die if $_ =~ /tar/ or $_ =~ /ERROR/ or $_ =~ /FATAL/;
+		}
 	}
 	
 	# clean up any residual files
-	unlink("OMEmaint");
-	unlink("omeDB_backup");
+	unlink("OMEmaint") or die "Couldn't remove OMEmaint during cleanup\n";
+	unlink("/tmp/omeDB_backup") or die "Couldn't remove /tmp/omeDB_backup during cleanup\n";
 }
 
 sub backup_help {
@@ -222,7 +237,7 @@ sub restore {
     my $command_name = $self->commandName($commands);
     
 	# Default env file location 
-	my $env_file = "/etc/ome-install.store";
+	my $env_file;
 	
 	my $quick=0;
 	my $restore_file="";
@@ -235,14 +250,15 @@ sub restore {
 					    );
 	exit(1) unless $result;
 	
-	if (@ARGV) {
+	if (scalar @ARGV) {
 		$restore_file = $ARGV[0];
 	}
 	
 	# idiot nets
 	croak "You must run $script $command_name with uid=0 (root). " if (euid() ne 0);
 	croak "Environment file '$env_file' does not exist.\n".
-		  "Call $script $command_name with the -f flag to specify it. " if (not -e $env_file);
+		  "Call $script $command_name with the -f flag to specify it. "
+		  if (defined($env_file) and not -e $env_file);
 
 	if ($restore_file eq "") {
 		$restore_file = confirm_default("Restore from archive",cwd()."/ome_backup.tar.bz2");
@@ -255,16 +271,15 @@ sub restore {
 	my %prog_path;
 	
 	foreach my $prog (@progs) {
-		if (my $path = which($prog)){
+		if (my $path = which($prog)) {
 			$prog_path{$prog} = $path;
 		} else {
 			croak "The program $prog could not be found.";
 		}
 	}
-
+	
 	# open the enviroment to get info about the OME installation
-	my $environment = initialize OME::Install::Environment;
-	$environment = OME::Install::Environment::restore_from($env_file);
+	my $environment = OME::Install::Environment->initialize($env_file);
 	
 	my $postgress_user = $environment->postgres_user();
 	my $base_dir = $environment->base_dir();
@@ -279,26 +294,30 @@ sub restore {
 
 	# open OMEmaint version
 	print "    \\_ Checking archive version \n";
-	system ($prog_path{'tar'}. " --bzip2 --preserve-permissions --same-owner -x OMEmaint -f $restore_file.tar.bz2");
-	
-	open (FILEIN, "< OMEmaint");
+	foreach (`$prog_path{'tar'} --bzip2 -x OMEmaint -f $restore_file.tar.bz2 2>&1`) {
+		print STDERR "\nCouldn't extract OMEmaint from tar archive: $_" and die 
+		if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
+	}
+		
+	open (FILEIN, "< OMEmaint") or die "couldn't open OMEmaint\n";
 	<FILEIN> =~ m/version=(.*$)/;
 	close (FILEIN);
-	if ($1 ne $dbAdmin_version){
+	if ($1 ne $dbAdmin_version) {
 		croak "$restore_file.tar.bz2 is not compatible with this version of $0"; 
 	}
 	close (FILEIN);
-	unlink "OMEmaint";
+	unlink "OMEmaint" or die "couldn't remove OMEmaint";
 	
 	# OMEIS
 	my $semaphore;
 	my $iwd = getcwd();
     
     # check if the OMEIS data was ever archived
-    my @outputs = `$prog_path{'tar'} --bzip2 -t Files Pixels -f $restore_file.tar.bz2 2>&1`;
     my $success = 1;
-	foreach (@outputs) {
-		$success = 0 if $_ =~ /Error/;
+	foreach (`$prog_path{'tar'} --bzip2 -t Files Pixels -f $restore_file.tar.bz2 2>&1`) {
+		$success = 0 if $_=~ /tar/ or $_ =~ /Error/;
+		# this is not a catastrophic error condition. It only means that OMEIS's
+		# folders Files and Pixels aren't included in the archive
 	}
 	
 	if (not $quick and $success) {
@@ -308,25 +327,28 @@ sub restore {
 	   		  		"$omeis_base_dir. Continue ?")) {
 				$semaphore = 1;
 				
-				# the  $omeis_base_dir directory itself should not be deleted - it should only be emptied. 
+				# the  $omeis_base_dir directory itself should not be deleted - it should only be emptied.
+				# this is to cover cases where $omeis_base_dir is a hand made symbolic link
 				foreach (bsd_glob("$omeis_base_dir/*")) {
-	   		  		rmtree($_);
+	   		  		rmtree($_) or die "Could not clean out $_ from $omeis_base_dir";
 	   		  	}
 	   		} else {
 	   			$semaphore = 0;
 			}	     	
 	    } else {
 	    	# need to make the omeis_base_dir
-	    	mkdir ($omeis_base_dir);
+	    	mkdir ($omeis_base_dir) or 
+	    	die "Could not create new OMEIS directory $omeis_base_dir";
 	    }
 	    
 	    # expand the tar file directly into the OMEIS directory
 	    if ($semaphore eq 1) {
-			chdir ($omeis_base_dir);    
-			print "    \\_ Restoring OMEIS from $omeis_base_dir \n";
-			system ($prog_path{'tar'}. " --bzip2 --preserve-permissions --same-owner -x Files Pixels -f $restore_file.tar.bz2");
-			chdir ($iwd);
-	    }
+			print "    \\_ Restoring OMEIS to $omeis_base_dir from archive\n";
+			foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory $omeis_base_dir -x Files Pixels -f $restore_file.tar.bz2`) {
+				print STDERR "\nCouldn't extract OMEIS's Files and Pixels from tar archive: $_" 
+				and die if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
+			}
+		}
 	}
 	
 	# restoring ome db 
@@ -342,7 +364,7 @@ sub restore {
     $dropdb_path = $prog_path{'dropdb'};
 
 	if (defined($db_version)) {
-		if (y_or_n ("Database ome was found and it will be overwritten. Continue ?")) {
+		if (y_or_n ("Database ome (version $db_version) was found and it will be overwritten. Continue ?")) {
 			$dropdb = 1;
 		}
 
@@ -367,16 +389,17 @@ sub restore {
 		
 		if ($dropdb == 0) {
 			# user doesn't want to overwrite database, so we cleanup and exit
-			unlink("$iwd/omeDB_backup");
+			unlink("$iwd/omeDB_backup") or die "Couldn't remove temporary $iwd/omeDB_backup";
 			return;
 		}
 	}
 	
 	# need to extract omeDB_backup in /tmp since postgress might not have
 	# access permissions in current directory
-	system ($prog_path{'tar'}. " --bzip2 --preserve-permissions --same-owner --directory /tmp -x omeDB_backup -f $restore_file.tar.bz2");
-	
-	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
+	foreach (`$prog_path{'tar'} --bzip2 --preserve-permissions --same-owner --directory /tmp -x omeDB_backup -f $restore_file.tar.bz2`) {
+		print STDERR "\nCouldn't extract omeDB_backup from tar archive: $_" and die 
+		if $_ =~ /tar/ or $_ =~ /error/ or $_ =~ /FATAL/;
+	}
 	
 	my $dbConf = $environment->DB_conf();
 	my $dbName = 'ome';
@@ -387,9 +410,10 @@ sub restore {
 	$flags .= '-p '.$dbConf->{Port}.' ' if $dbConf->{Port};
 	$flags .= '-U '.$dbConf->{User}.' ' if $dbConf->{User};
 	
+print STDERR "su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'\n"; 	
 print STDERR "su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'\n";
 print STDERR "su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'\n";
-
+	system ("su $postgress_user -c '".$prog_path{'createuser'}." --adduser --createdb  ome'");
 	system ("su $postgress_user -c '".$prog_path{'createdb'}." $flags -T template0 $dbName'");
 	system ("su $postgress_user -c '".$prog_path{'pg_restore'}." $flags -d $dbName --use-set-session-authorization /tmp/omeDB_backup'");
 }
@@ -487,14 +511,8 @@ sub connection {
         $confirm_all = 1;
     }
 
-
-
-$environment->DB_conf($dbConf);
-$environment->store_to ();
-	
-
-
-
+	$environment->DB_conf($dbConf);
+	$environment->store_to ();
 }
 
 sub connection_help {
