@@ -48,8 +48,6 @@ OME/ImportExport/import_test.pl
 OME/Instrument.pm
 OME/LookupTable.pm
 OME/Program.pm
-OME/Program/CalculateImageStatistics.pm
-OME/Program/Definition.pm
 OME/Project.pm
 OME/Repository.pm
 OME/Session.pm
