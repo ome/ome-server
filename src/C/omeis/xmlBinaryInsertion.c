@@ -64,8 +64,8 @@
 #include <errno.h>
 
 #include "xmlBinaryInsertion.h"
-#include "../base64.h"
-#include "../b64z_lib.h"
+#include "base64.h"
+#include "b64z_lib.h"
 #include "Pixels.h"
 #include "cgi.h"
 

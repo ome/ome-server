@@ -69,8 +69,8 @@
 #include <errno.h>
 
 #include "xmlBinaryResolution.h"
-#include "../base64.h"
-#include "../b64z_lib.h"
+#include "base64.h"
+#include "b64z_lib.h"
 #include "Pixels.h"
 #include "digest.h"
 #include "cgi.h"
