@@ -152,6 +152,53 @@ public class ProjectManager
     }
 
     /**
+     * Adds a {@link Dataset} to a {@link List} of {@link Project}s.
+     * No error is thrown if the dataset already belongs to any of the
+     * projects.
+     */
+    public void addDatasetToProjects(List projects, Dataset dataset)
+    {
+        if (projects == null)
+            throw new IllegalArgumentException("Project cannot be null");
+        if (dataset == null)
+            throw new IllegalArgumentException("Datasets cannot be null");
+
+        List list = new ArrayList(projects.size());
+        Iterator it = projects.iterator();
+        while (it.hasNext())
+        {
+            Object o = it.next();
+            if (o instanceof Project)
+                list.add(new Integer(((Project) o).getID()));
+            else
+                throw new IllegalArgumentException("List must contain Projects");
+        }
+ 
+        caller.dispatch("addDatasetToProjects",
+                        new Object[] {
+                            list,
+                            new Integer(dataset.getID())
+                        });
+    }
+
+    /**
+     * Adds a {@link Dataset} to a {@link List} of {@link Project}s.
+     * No error is thrown if the dataset already belongs to any of the
+     * projects.
+     */
+    public void addDatasetToProjects(List projectIDs, int datasetID)
+    {
+        if (projectIDs == null)
+            throw new IllegalArgumentException("Project IDs cannot be null");
+
+        caller.dispatch("addDatasetToProjects",
+                        new Object[] {
+                            projectIDs,
+                            new Integer(datasetID),
+                        });
+    }
+
+    /**
      * Removes a {@link Dataset} from a {@link Project}.  If the
      * dataset doesn't belongs to that project, nothing happens.
      */
