@@ -206,14 +206,9 @@ sub import {
 	$opts{AllowDuplicates} = 1 if $reuse;
 	
 	print "Importing files\n";
-    my $task = OME::Tasks::NotificationManager->
-      new('Importing images',3+scalar(@file_names));
-	$task->setPID($$);
-	$task->step();
-	$task->setMessage('Starting import');
 
 	# don't use forkedimportFiles so users can always control c
-	OME::Tasks::ImageTasks::forkedImportFiles
+	my $task = OME::Tasks::ImageTasks::forkedImportFiles
 	  ($dataset, \@file_names, \%opts);
 	
 	my $lastStep = -1;
