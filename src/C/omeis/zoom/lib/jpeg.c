@@ -3,6 +3,12 @@
 #include <string.h>
 #include <jpeglib.h>
 
+
+#ifndef OMEIS_JPEG_QUALITY
+#define OMEIS_JPEG_QUALITY 80
+#endif
+
+
 struct tagJpeg {
   struct jpeg_error_mgr jerr;
   char *name;
@@ -51,7 +57,7 @@ jpeg_open(const char *filename, const char *mode)
       jpeg->out.err = jpeg_std_error(&jpeg->jerr);
       jpeg_create_compress(&jpeg->out);
       jpeg_stdio_dest(&jpeg->out, jpeg->file);
-      jpeg->out.in_color_space = JCS_RGB;
+      jpeg->out.in_color_space = JCS_RGB;	
     }
   }
 
@@ -177,6 +183,10 @@ write_init(Jpeg *jpeg)
   jpeg_set_defaults(&jpeg->out);
   jpeg->row = (*jpeg->out.mem->alloc_sarray)((j_common_ptr) &jpeg->out,
 					   JPOOL_IMAGE, jpeg->row_stride, 1);
+	/* Now you can set any non-default parameters you wish to. */
+  fprintf(stderr, "Quality: %d\n",OMEIS_JPEG_QUALITY);
+  jpeg_set_quality(&jpeg->out, OMEIS_JPEG_QUALITY, TRUE);
+
   jpeg_start_compress(&jpeg->out, TRUE);
 
   return 1;
