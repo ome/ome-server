@@ -1,0 +1,18 @@
+<a title="<!-- TMPL_VAR NAME=/name -->" href="<!-- TMPL_VAR NAME=/obj_detail_url -->" class="ome_detail">
+	<!-- TMPL_VAR NAME=/name/max_text_length-25 -->
+</a>
+<!-- This gets Search.pm to include module in the search fields.
+	<!-- TMPL_VAR NAME=module -->
+-->
+<!-- TMPL_IF NAME=image/render-ref -->
+	<br>ran against <!-- TMPL_VAR NAME=image/render-ref --><br>
+<!-- TMPL_ELSE -->
+	<!-- TMPL_IF NAME=dataset/render-ref -->
+		<br>ran against <!-- TMPL_VAR NAME=dataset/render-ref --><br>
+	<!-- TMPL_ELSE -->
+		(<!-- TMPL_VAR NAME=id -->) ran<br>
+	<!-- /TMPL_IF -->
+<!-- /TMPL_IF -->
+on <!-- TMPL_VAR NAME=timestamp --><br>
+by <!-- TMPL_VAR NAME=experimenter -->.<br>
+Its status is <!-- TMPL_VAR NAME=status -->.

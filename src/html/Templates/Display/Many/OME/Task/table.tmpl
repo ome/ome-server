@@ -1,0 +1,34 @@
+<table class="ome_table" border="0" cellspacing="1" cellpadding="4" width>
+	<caption>Tasks</caption>
+	<tr>
+		<td align="right" class="ome_td" colspan="8">
+			<a class="ome_widget" title="Update" href="javascript: document.forms[0].action.value='Update'; document.forms[0].submit();">Update</a> | 
+			<a class="ome_widget" title="Clear Selected" href="javascript: document.forms[0].action.value='Clear Selected'; document.forms[0].submit();">Clear Selected</a> | 
+			<a class="ome_widget" title="Clear All" href="javascript: document.forms[0].action.value='Clear All'; document.forms[0].submit();">Clear All</a>
+		</td>
+	</tr>
+	<tr>
+		<td class="ome_td">Select</td>
+		<td class="ome_td">Task</td>
+		<td class="ome_td">Status</td>
+		<td class="ome_td">Message</td>
+		<td class="ome_td">Error</td>
+		<td class="ome_td">Last step</td>
+		<td class="ome_td">N steps</td>
+		<td class="ome_td">PID</td>
+	</tr>
+	<!-- TMPL_LOOP NAME=/obj_loop -->
+	<tr>
+		<td align="center" class="ome_td">
+			<input type="checkbox" name="selected" value="<!-- TMPL_VAR NAME=id -->" />
+		</td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=name --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=state --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=message --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=error --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=last_step --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=n_steps --></td>
+		<td class="ome_td"><!-- TMPL_VAR NAME=process_id --></td>
+	</tr>
+	<!-- /TMPL_LOOP -->
+</table>
