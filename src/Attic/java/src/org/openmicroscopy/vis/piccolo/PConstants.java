@@ -163,6 +163,8 @@ public class PConstants {
     public static final Color BORDER_OUTER = new Color(191,191,191);
 	public static final Color BORDER_MIDDLE = new Color(212,212,212);
 	public static final Color BORDER_INNER =  new Color(233,233,233);
+	
+	public static final Color HALO_COLOR = Color.BLACK;
 	/** 
 	 * Positional offsets for a category name in a {@link PCategoryBox} in a 
 	 * {@link PPaletteCanvas}
