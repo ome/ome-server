@@ -487,33 +487,49 @@ sub getApacheBin {
 	            || which ('apache')
 	            || which ('apache2')
 	            || whereis ('httpd')
-	            || croak "Unable to locate httpd binary";
-	croak "Unable to execute httpd binary ($httpdBin)" unless -x $httpdBin;
+	            || (print $LOGFILE "Unable to locate httpd binary\n" and
+	            	croak "Unable to locate httpd binary");
+	print $LOGFILE "Unable to execute httpd binary ($httpdBin)\n" and
+		croak "Unable to execute httpd binary ($httpdBin)" unless -x $httpdBin;
+	print $LOGFILE "Apache binary: $httpdBin\n";
+
 	$apache_info->{bin} = $httpdBin;
 
 	$apache_info->{apachectl} = which ('apachectl')
 	                            || which ('apache2ctl')
 	                            || whereis ("apachectl")
-	                            || croak "Unable to locate apachectl binary";
+	                            || (print $LOGFILE "Unable to locate apachectl binary\n" and
+	                            	croak "Unable to locate apachectl binary");
+	print $LOGFILE "apachectl binary: ".$apache_info->{apachectl}."\n";
 
 	# Get the location of httpd.conf from the compiled-in options to httpd
 	$httpdConf = `$httpdBin -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`;
 	chomp $httpdConf;
+	
 
 	$httpdRoot = `$httpdBin -V | grep HTTPD_ROOT | cut -d '"' -f 2`;
 	chomp $httpdRoot;
 	$apache_info->{root} = $httpdRoot;
-	
+	print $LOGFILE "Unable to find httpd root\n" and
+		croak "Unable to find httpd root" unless $httpdRoot;
+	print $LOGFILE "httpd root: $httpdRoot\n";
+
 	$httpdVers = `$httpdBin -V | grep 'Server version'`;
 	$httpdVers = $1 if $httpdVers =~ /:\s*Apache\/(\d)/;
 	croak "Could not determine Apache version\n" unless defined $httpdVers;
 	$apache_info->{version} = $httpdVers;
+	print $LOGFILE "Unable to determine httpd version\n" and
+		croak "Unable to determine httpd version" unless $httpdVers;
+	print $LOGFILE "httpd version: $httpdVers\n";
 
 	if (not File::Spec->file_name_is_absolute ($httpdConf) ) {
 		$httpdConf = File::Spec->catfile ($httpdRoot,$httpdConf);
 		$httpdConf = File::Spec->canonpath( $httpdConf ); 
 	}
 	$apache_info->{conf} = $httpdConf;
+	print $LOGFILE "Unable to read httpd conf($httpdConf)\n" and
+		croak "Unable to read httpd conf ($httpdConf)" unless -r $httpdConf;
+	print $LOGFILE "httpd conf: $httpdConf\n";
 
 	return $apache_info;
 }
