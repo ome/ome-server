@@ -51,6 +51,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.openmicroscopy.ds.RemoteCaller;
+import org.openmicroscopy.ds.DataException;
 import org.openmicroscopy.ds.st.Pixels;
 import org.openmicroscopy.ds.st.Repository;
 
@@ -107,14 +108,19 @@ public class PixelsFactory
      */
 
     private ImageServer activateRepository(Repository rep)
+        throws ImageServerException
     {
         Integer id = new Integer(rep.getID());
         ImageServer is = (ImageServer) imageServers.get(id);
 
         if (is == null)
         {
-            is = ImageServer.getHTTPImageServer(rep.getImageServerURL(),
-                                                remoteCaller.getSessionKey());
+            String url = rep.getImageServerURL();
+            if (url == null || url.equals(""))
+                throw new ImageServerException("Repository contains a null image server URL");
+
+            is = ImageServer.
+                getHTTPImageServer(url,remoteCaller.getSessionKey());
             imageServers.put(id,is);
         }
 
@@ -127,9 +133,19 @@ public class PixelsFactory
      */
 
     private ImageServer activatePixels(Pixels pix)
+        throws ImageServerException
     {
-        Repository rep = pix.getRepository();
-        return activateRepository(rep);
+        try
+        {
+            Number pixelsID = pix.getPixelsID();
+            if (pixelsID == null)
+                throw new ImageServerException("Pixels contains a null pixels ID");
+
+            Repository rep = pix.getRepository();
+            return activateRepository(rep);
+        } catch (DataException e) {
+            throw new ImageServerException("Pixels did not contain enough connection information to connect to image server");
+        }
     }
 
     /**
@@ -227,7 +243,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPixelsInfo(pixels.getPixelsID());
+        return is.getPixelsInfo(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -241,7 +257,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPixelsSHA1(pixels.getPixelsID());
+        return is.getPixelsSHA1(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -256,7 +272,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPixelsServerPath(pixels.getPixelsID());
+        return is.getPixelsServerPath(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -272,7 +288,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.isPixelsFinished(pixels.getPixelsID());
+        return is.isPixelsFinished(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -299,7 +315,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPixels(pixels.getPixelsID(),bigEndian);
+        return is.getPixels(pixels.getPixelsID().longValue(),bigEndian);
     }
 
     /**
@@ -331,7 +347,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getStack(pixels.getPixelsID(),theC,theT,bigEndian);
+        return is.getStack(pixels.getPixelsID().longValue(),theC,theT,bigEndian);
     }
 
     /**
@@ -362,7 +378,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPlane(pixels.getPixelsID(),theZ,theC,theT,bigEndian);
+        return is.getPlane(pixels.getPixelsID().longValue(),theZ,theC,theT,bigEndian);
     }
 
     /**
@@ -393,7 +409,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getROI(pixels.getPixelsID(),
+        return is.getROI(pixels.getPixelsID().longValue(),
                          x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,
                          bigEndian);
     }
@@ -421,7 +437,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.setPixels(pixels.getPixelsID(),buf,bigEndian);
+        is.setPixels(pixels.getPixelsID().longValue(),buf,bigEndian);
     }
 
     /**
@@ -449,7 +465,7 @@ public class PixelsFactory
         throws ImageServerException, FileNotFoundException
     {
         ImageServer is = activatePixels(pixels);
-        is.setPixels(pixels.getPixelsID(),file,bigEndian);
+        is.setPixels(pixels.getPixelsID().longValue(),file,bigEndian);
     }
 
     /**
@@ -478,7 +494,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.setStack(pixels.getPixelsID(),theC,theT,buf,bigEndian);
+        is.setStack(pixels.getPixelsID().longValue(),theC,theT,buf,bigEndian);
     }
 
     /**
@@ -509,7 +525,7 @@ public class PixelsFactory
         throws ImageServerException, FileNotFoundException
     {
         ImageServer is = activatePixels(pixels);
-        is.setStack(pixels.getPixelsID(),theC,theT,file,bigEndian);
+        is.setStack(pixels.getPixelsID().longValue(),theC,theT,file,bigEndian);
     }
 
     /**
@@ -539,7 +555,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.setPlane(pixels.getPixelsID(),theZ,theC,theT,buf,bigEndian);
+        is.setPlane(pixels.getPixelsID().longValue(),theZ,theC,theT,buf,bigEndian);
     }
 
     /**
@@ -571,7 +587,7 @@ public class PixelsFactory
         throws ImageServerException, FileNotFoundException
     {
         ImageServer is = activatePixels(pixels);
-        is.setPlane(pixels.getPixelsID(),theZ,theC,theT,file,bigEndian);
+        is.setPlane(pixels.getPixelsID().longValue(),theZ,theC,theT,file,bigEndian);
     }
 
     /**
@@ -599,7 +615,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.setROI(pixels.getPixelsID(),
+        is.setROI(pixels.getPixelsID().longValue(),
                   x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,
                   buf,bigEndian);
     }
@@ -631,7 +647,7 @@ public class PixelsFactory
         throws ImageServerException, FileNotFoundException
     {
         ImageServer is = activatePixels(pixels);
-        is.setROI(pixels.getPixelsID(),
+        is.setROI(pixels.getPixelsID().longValue(),
                   x0,y0,z0,c0,t0,x1,y1,z1,c1,t1,
                   file,bigEndian);
     }
@@ -657,7 +673,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.finishPixels(pixels.getPixelsID());
+        is.finishPixels(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -670,7 +686,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getPlaneStatistics(pixels.getPixelsID());
+        return is.getPlaneStatistics(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -683,7 +699,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getStackStatistics(pixels.getPixelsID());
+        return is.getStackStatistics(pixels.getPixelsID().longValue());
     }
 
     /**
@@ -701,7 +717,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getComposite(pixels.getPixelsID(),settings);
+        return is.getComposite(pixels.getPixelsID().longValue(),settings);
     }
 
 
@@ -719,7 +735,7 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        is.setThumbnail(pixels.getPixelsID(),settings);
+        is.setThumbnail(pixels.getPixelsID().longValue(),settings);
     }
 
     /**
@@ -733,6 +749,6 @@ public class PixelsFactory
         throws ImageServerException
     {
         ImageServer is = activatePixels(pixels);
-        return is.getThumbnail(pixels.getPixelsID());
+        return is.getThumbnail(pixels.getPixelsID().longValue());
     }
 }
