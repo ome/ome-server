@@ -43,12 +43,26 @@ import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
 import java.util.Vector;
  
- public class CLink extends Link {
+/** 
+ * <p>A {@link Link} subclass used to hold information about links in the chain
+ * builder.<p>
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
+public class CLink extends Link {
 	
 	
-     static {
+    static {
      	RemoteObjectCache.addClass("OME::AnalysisChain::Link",CLink.class);
      }
+	
+	/*
+	 * A list of nodes that might include internal CLayoutNodes. This list is 
+	 * needed to reconstruct the multiple points in a link that might be needed
+	 * when doing an automated layout.
+	 */
 	private Vector nodes = new Vector();
 	
 	public CLink() {
@@ -60,11 +74,20 @@ import java.util.Vector;
 		super(session,reference);
 		init();
 	}
+	/**
+	 * A link has at least two nodes -the beginning and the end
+	 *
+	 */
 	private void init() {
 		nodes.add(getFromNode());
 		nodes.add(getToNode());
 	}
 	
+	/**
+	 * Insert a node into the Link
+	 * @param prior the new node should be inserted immediately after this node
+	 * @param newNode the node to be inserted.
+	 */
 	public void addIntermediate(CNode prior,CNode newNode) {
 		int index = nodes.indexOf(prior);	
 		nodes.insertElementAt(newNode,index+1);

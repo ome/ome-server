@@ -45,12 +45,27 @@ import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.vis.piccolo.PModule;
 import java.util.ArrayList;
 
- public class CModule extends RemoteModule {
+/** 
+ * <p>A {@link RemoteModule} subclass used to hold information about modules 
+ * in the chain builder.<p>
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
+public class CModule extends RemoteModule {
 	
 	static {
 		RemoteObjectCache.addClass("OME::Module",CModule.class);
 	}
 	
+	/**
+	 * A CModule keeps a list of all of the {@link PModules} that instantiate 
+	 * it. ?This list is needed for coordinated highlighting on mouse events:
+	 * when one {@link PModule} for a {@link CModule} is selected, this list
+	 * is used to make sure that all are highlighted.
+	 *  
+	 */
 	private ArrayList pModules = new ArrayList();
 	
 	public CModule() {
@@ -61,14 +76,27 @@ import java.util.ArrayList;
 		super(session,reference);
 	}
 	
+	/**
+	 * Add a widget to the list
+	 * @param pMod the widget to be added
+	 */
 	public void addModuleWidget(PModule pMod) {
 		pModules.add(pMod);
 	}
 	
+	/**
+	 * 
+	 * @return the list of {@link PModule} widgets
+	 */
 	public ArrayList getModuleWidgets() {
 		return pModules;
 	}
 	
+	/**
+	 * Remove a widget from the list
+	 * 
+	 * @param mod the widget to be removed
+	 */
 	public void removeModuleWidget(PModule mod) {
 		pModules.remove(mod);
 	}

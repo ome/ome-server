@@ -47,15 +47,39 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
  
- 
- public class CNode extends Node {
+
+/** 
+ * <p>A subclass of {@link RemoteChain.Node} that contains additional 
+ * state needed for chain layout
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
+
+public class CNode extends Node {
 	
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain::Node",CNode.class);
 	}
+	
+	/**Chains are laid out according to a layered algorithm for digraphs. 
+	 * (see Di Battista, Eades, Tamassia, and Tollis, _Graph_Drawing_ 
+	 * Chapter 9). Layer indicates the depth in the chain, with 0 being leaf 
+	 * nodes and n-1 being source nodes (nodes with no predecessors).
+	 */
 	private int layer = -1;
+	
+	/**
+	 * The chain layout algorithm assigns an ordering to each node in a layer.
+	 * This field stores the node's position in its layer
+	 */
 	private double posInLayer = 0.0;
 	
+	/**
+	 * Store the successors and predecessors, along with appropriate links
+	 * in Hashes.
+	 */
 	protected HashSet succLinks = new HashSet();
 	protected HashSet predLinks = new HashSet();
 	protected HashSet succs  = new HashSet();
@@ -69,39 +93,72 @@ import java.util.Iterator;
  	
  	public CNode(RemoteSession session,String reference) {
  		super(session,reference);
- 		//buildLinkLists();
  	}
  	
+ 	/**
+ 	 * 
+ 	 * This call sets the layer for the node
+ 	 * @param layer the new layer
+ 	 */
 	public void setLayer(int layer) {
 		this.layer = layer;
 	}
 	
+	/**
+	 * 
+	 * @return the layer that this node is in
+	 */
 	public int getLayer() {
 		return layer;
 	}
 	
+	/**
+	 * A node has a layer assigned if its layer is not -1
+	 * @return true if the node has a layer, else false
+	 */
 	public boolean hasLayer() {
 		return (!(layer == -1));
 	} 
 	
+	/**
+	 * Set the position of the node in its layer
+	 * @param p the new position
+	 */
 	public void setPosInLayer(double p) {
 		posInLayer = p;
 	}
 	
+	/**
+	 *
+	 * @return the position of the node in the layer
+	 */
 	public double getPosInLayer() {
 		return posInLayer;
 	}
 	
-	// we can't call "buildsuccessors" in the constructor. Doesn't work.
-	// so, have a separate call
+	/**
+	 * Construct the lists of predcessors and successors. 
+	 * The implementation of the remote framework requires that this call not 
+	 * be made in the constructor.
+	 *
+	 */
 	
 	public void buildLinkLists() {
-		//System.err.println("building lists for "+getModule().getName());
 		buildSuccessors();
-		//System.err.println("# of succs iis "+succLinks.size());
 		buildPredecessors();
-		//System.err.println("# of preds iis "+predLinks.size());
 	}
+	
+	/**
+	 * To get the list of successors, iterate over the output links, 
+	 * looking at the destination node of each. If that node is not already 
+	 * in the list of successors, add it, create a {@link CLayoutLink}, 
+	 * and add that to the list of successor links, and to the list of 
+	 * predecessor links for the destination node.
+	 * 
+	 * This gurantees that the resulting structure will only have 1 link 
+	 * between any two nodes, even if the original graph has several such links 
+	 *
+	 */
 	private void buildSuccessors() {
 	
 		Collection outputs = getOutputLinks();
@@ -123,6 +180,10 @@ import java.util.Iterator;
 		return succs;
 	}
 	
+	/**
+	 * Analogous to buildSuccessors
+	 *
+	 */
 	private void buildPredecessors() {
 		Collection inputs = getInputLinks();
 		Iterator iter = inputs.iterator();
@@ -142,6 +203,10 @@ import java.util.Iterator;
 		return preds;
 	}
 	
+	/**
+	 * Remove a successor link
+	 * @param link the link to be removed
+	 */
 	public void removeSuccLink(CLayoutLink link) {
 		if (succLinks != null) {
 			succLinks.remove(link);
@@ -149,6 +214,10 @@ import java.util.Iterator;
 		}
 	}
 	
+	/**
+	 * Add a successor link
+	 * @param link the link to be added
+	 */
 	public void addSuccLink(CLayoutLink link) {
 		CNode node = (CNode) link.getToNode();
 		if (!succs.contains(node)) {
@@ -168,7 +237,10 @@ import java.util.Iterator;
 	}
 	
 	
-	
+	/**
+	 * Remove a predecessor link
+	 * @param link the link to be removed
+	 */	
 	public void removePredLink(CLayoutLink link) {
 		if (predLinks != null) {
 			predLinks.remove(link);
@@ -176,6 +248,10 @@ import java.util.Iterator;
 		}
 	}
 	
+	/**
+	 * Add a predecessor link
+	 * @param link the link to be added
+	 */
 	public void addPredLink(CLayoutLink link) {
 		CNode node = (CNode) link.getFromNode();
 		if (!preds.contains(node)) {
@@ -188,10 +264,18 @@ import java.util.Iterator;
 		return predLinks.iterator();
 	}
 	
+	/**
+	 * Set the widget corresponding to this node
+	 * @param mod
+	 */
 	public void setPModule(PModule mod) {
 		displayModule = mod;
 	}
 	
+	/**
+	 * 
+	 * @return the widget corresponding to this node
+	 */
 	public PModule getPModule() {
 		return displayModule;
 	}

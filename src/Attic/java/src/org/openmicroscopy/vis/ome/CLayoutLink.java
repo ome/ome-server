@@ -39,18 +39,27 @@
  package org.openmicroscopy.vis.ome;
 
  
- /*
-	* This is mostly a placeholder that will allow me to distinguish between
-	* real nodes in a graph (CNode objects) and dummy nodes that will
-	* be created to aid in drawing. 
-	*/
 
+/** 
+ * A placeholder class that is used during GraphLayout as the direct node-node 
+ * components that get combined to build a {@link  CLink} object that can be 
+ * stored directly in the database. During layout, these links connect either 
+ * {@link CNode} objects or {@link CLayoutNode} dummy nodes. Unlike {@link CLink} 
+ * objects, these objects can only connect adjacent layers in the graph. Once 
+ * the graph is laid out, CLayoutLink objects are no longer needed.
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
  public class CLayoutLink {
 	
 	private CNode toNode;
 	private CNode fromNode;
 	
-	// the actual graph link that this dummy link is really part of.
+	/**
+	 * the actual graph link that this dummy link is really part of.
+	 */ 
 	private CLink semanticLink;
 	
 	public CLayoutLink() {

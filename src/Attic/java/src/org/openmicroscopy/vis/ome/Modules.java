@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.ArrayList;
-import org.openmicroscopy.Factory;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.Module;
 import org.openmicroscopy.remote.RemoteModule.FormalParameter;
@@ -55,8 +54,8 @@ import org.openmicroscopy.vis.chains.Controller;
  * <p>A class to handle the modules in the OME database
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class Modules {
@@ -64,18 +63,24 @@ public class Modules {
 	
 	private HashMap byId = new HashMap();
 
-	// all of the modules that don't have categories
+	/**
+	 * all of the modules that don't have categories
+	 */
 	private ArrayList uncategorizedModules = new ArrayList();
 	
+	/**
+	 * The root categories in the database
+	 */
 	private ArrayList rootCategories = new ArrayList();
 		
-	public Modules(Controller  controller,Factory factory) {
+	public Modules(Controller  controller,Connection connection) {
 		Module mod;
 		Integer id;
 		ModuleCategory cat;
 		
 		// Get all of the modules that are avialable.
-		List mods = factory.findObjects("OME::Module",null);
+		List mods = connection.loadModules();
+		
 		
 		// populate each of them.
 		Iterator iter = mods.iterator();
@@ -92,11 +97,11 @@ public class Modules {
 			}
 		}
 		
-		List cats = factory.findObjects("OME::Module::Category",null);
+		// load the categories
+		List cats = connection.loadCategories();
 		iter = cats.iterator();
 		while (iter.hasNext()) {
 			cat = (ModuleCategory) iter.next();
-			//connection.setStatusLabel("Category... "+cat.getName());
 			controller.setStatusLabel("Module.."+cat.getName());
 			if (cat.getParentCategory() == null) {
 				rootCategories.add(cat);
@@ -107,7 +112,10 @@ public class Modules {
 		
 	}
 	
-	
+	/**
+	 * 
+	 * @return an iterator over the list of modules
+	 */
 	public Iterator iterator() {
 		
 		Collection c = byId.values();
@@ -115,14 +123,26 @@ public class Modules {
 		
 	}
 	
+	/**
+	 * 
+	 * @return an iterator specifically returning uncategorized modules
+	 */
 	public Iterator uncategorizedModuleIterator() {
 		return uncategorizedModules.iterator();
 	}
 	
+	/**
+	 * 
+	 * @return an iterator over all root categories
+	 */
 	public Iterator rootCategoryIterator() {
 		return rootCategories.iterator();
 	}
 	
+	/**
+	 * A debug dump of a module
+	 *
+	 */
 	public void dump() {
 		Iterator iter = iterator();
 		while (iter.hasNext()) {
@@ -132,58 +152,25 @@ public class Modules {
 	}
 	
 	/**
-	 * Access individual fields of a module. By default, accessing each of 
-	 * these fields requires an XMLRPC call to the OME Server. By performing 
+	 * Access individual fields of a module.  By performing 
 	 * each of these calls and ignoring the results, we can lump all of the 
 	 * database overhead together in one place, thus removing the possibility
 	 * of repeated delays due to database latencies.<p>
-	 * 
-	 * This code may need to be revisited when OME server and client-side 
-	 * caching are reworked.<p>
 	 * 
 	 * @param mod The module to be populated.
 	 */
 	private void populateModule(Module mod) {
 				
 		mod.populate();
-		//System.err.println("Loading Module..."+mod.getName());
-		// get inputs & outputs?
 		List params = mod.getInputs();
-		//populateParameters(params);
 		params = mod.getOutputs();
-		//populateParameters(params);
 	}
 	
 	/**
-	 * Populating the list of parameters - formal inputs or outputs. Deprecated.
-	 * Calling this procedure leads to some bugs, without any obvious gain. 
-	 * This call will hopefully soon be replaced by a call that caches the 
-	 * whole list.
-	 * <p> 
-	 * 
-	 * @param params parameter list to be populated.
+	 * Get a module by ID
+	 * @param i the ID of the desired module
+	 * @return the module
 	 */
-	private void populateParameters(List params) {
-		FormalParameter param;
-		
-		Iterator iter = params.iterator();
-		while (iter.hasNext()) {
-			Object obj = iter.next();
-		//	System.err.println("parameter object is "+obj);
-			param = (FormalParameter) obj;
-		//	System.err.println("Parameter: "+param.getParameterName());
-			param.getList();
-			param.getOptional();
-			SemanticType semType = param.getSemanticType();
-			//System.err.println("semantic type is "+semType);
-			if (semType != null &&
-				semType.toString().compareTo(">>OBJ:NULL") !=0 )
-				semType.getName();
-		//	else 
-		//		System.err.println("got a null semantic type");
-		}
-	}
-	
 	public CModule getModule(int i) {
 		return (CModule) byId.get(new Integer(i));
 	}

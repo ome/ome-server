@@ -48,7 +48,15 @@ import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
 
- public class CChain extends RemoteChain {
+/** 
+ * <p>A subclass of {@link RemoteChain} that contains additional 
+ * state needed for chain layout
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
+public class CChain extends RemoteChain {
 	
 	static {
 		RemoteObjectCache.addClass("OME::AnalysisChain",CChain.class);
@@ -57,6 +65,10 @@ import java.util.List;
 	private static final int CROSSING_ITERATIONS=5;
 	private static final double DELTA=0.1;
 	private boolean orderChanged = false;
+	
+	/** 
+	 * A subsidiary object used to encapsulate information about the layering
+	 */
 	private Layering layering  = new Layering();
 	
 	public CChain() {
@@ -69,32 +81,28 @@ import java.util.List;
 	
 	
 	public void layout() {
-	//	System.err.println("Laying out..."+getName());
 		initNodes();
-	//	System.err.println("nodes initialized");
 		layerNodes();
-	//	System.err.println("nodes layered");
 		makeProper();
-	//	System.err.println("GRAPHS HAVE BEEN MADE PROPER");
-		//dumpLayers();
 		reduceCrossings();
-		//System.err.println("CROSSINGS REDUCED");
-		//dumpLayers(); 
 	}
 	
 	
-	// this is an ugly thing to have to do, but we have to - can't call
-	// buildLinkLists in the constructor for each node...
+	/**
+	 * Initalize each of the {@link CNode}s in the chain. This is an ugly 
+	 * thing to have to do, but we have to - can't call
+	 * buildLinkLists in the constructor for each node...
+	 * 
+	 */
 	private void initNodes() {
 		List nodes = getNodes();
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
 			CNode node = (CNode) iter.next();
-	//		System.err.println("building link lists for "+node);
-	//		System.err.println(" ..."+node.getModule().getName());
 			node.buildLinkLists();
 		}
 	}
+	
 	/** 
 	* some code for computing a layered graph layout of this chain.
 	* Builds on chapter 9  of Graph Drawing (di Battista, et al.),
@@ -103,9 +111,13 @@ import java.util.List;
 	* 	http://www.cs.hut.fi/Research/Matrix/	      	   	
 	*/
 	
-	//layers is a vector of vectors. The first entry (@ index 0) is level 0,
-	//etc. Level 0 is the base - the sinks. Level(size-1) is the top level -
-	// the sources
+	/**
+	 * Assigns layers to each of the nodes by finding the longest path to each 
+	 * node. Essentially goes through until it finds things that don't have any 
+	 * successors that don't have layers, assigns them to the current layer, 
+	 * continues until all nodes have been checked, and then moves onto the next
+	 * layer
+	 */
 	private void layerNodes() {
 		List nodes = getNodes();
 		int numAssigned = 0, currentLayer = 0;
@@ -155,8 +167,11 @@ import java.util.List;
 	}
 	
 	
-	// make the layout proper - insert additional nodes on paths 
-	// that skip  levels .. ie., paths between levels l_i and l_j where j>i+1...
+	/**
+	 *  make the layout proper - insert additional nodes on paths 
+	 *  that skip  levels .. ie., paths between levels l_i and l_j where j>i+1.
+	 * 
+	 */
 	private void makeProper() {
 		int count = layering.getLayerCount();
 		// for top (source) level and every level except for the last 2
@@ -166,6 +181,10 @@ import java.util.List;
 			makeProperLayer(i);
 	}
 	
+	/**
+	 * Make a layer proper by examining each of the nodes in the layer
+	 * @param i the layer to make proper
+	 */
 	private void makeProperLayer(int i) {
 		CNode node;
 		//	System.err.println("working on layer "+i);
@@ -179,6 +198,14 @@ import java.util.List;
 		catch (Exception e) { }
 	}
 	
+	/**
+	 * Make a node in a layer proper, by making all of its links proper and 
+	 * giving it a new set of successor links.
+	 * 
+	 * @param node the node to make proper
+	 * @param i the layer for that node
+	 * 
+	 */
 	private void makeProperNode(CNode node,int i) {
 		HashSet newLinks = new HashSet();
 		Iterator iter = node.succLinkIterator();
@@ -195,6 +222,19 @@ import java.util.List;
 		node.setSuccLinks(newLinks);
 	}
 	
+	/**
+	 * Make a given link proper If the link does not got to the next layer,
+	 * create a new dummy node. this node will be on level i-i and will go 
+	 * between node and its original destination.
+	 * Note that if the link between the dummy node and the original destination
+	 * is not itself proper, this will be fixed when level i-1 is made proper,
+	 * potentially by creating a nother dummy node.
+	 * 
+	 * @param node the origin of the link
+	 * @param link the link to make proper
+	 * @param i the layer of the original node
+	 * @param newLinks the new successors of that node.
+	 */
 	private void makeProperLink(CNode node,CLayoutLink link,int i,
 		HashSet newLinks) {
 		// we know node is at i.
@@ -244,7 +284,15 @@ import java.util.List;
 		}
 	}
 	
+	/** 
+	 * Reduce the crossings in the graph by iterating the layers, first
+	 * going forwards and then backwards, repeating this up to 
+	 * CROSSING_ITERATIONS times, and stopping if a given iteration does 
+	 * not permute the nodes in the layer. 
+	 *
+	 */
 	private void reduceCrossings() {
+		
 		// first entry in layers is bottom layer (1 or zero)
 		
 		assignPosFromLayer(0);
@@ -253,11 +301,7 @@ import java.util.List;
 		for (int i =0;  i < CROSSING_ITERATIONS; i++) {
 			orderChanged = false;
 			
-			// reduce successor crossings
-			/*while (iter.hasNext()) { 11/10/03 hsh
-				Vector layer = (Vector) iter.next();
-				crossingReduction(layer,false);
-			}*/
+			
 			for (count = 1; count < layering.getLayerCount(); count++) {
 				crossingReduction(count,false);
 			}
@@ -275,6 +319,16 @@ import java.util.List;
 		}
 	}
 	
+	/**
+	 * To reduce the crossings between two layers, uterate over the nodes in 
+	 *  one layer. Calculate the barycenter of the nodes in the other layer,
+	 * and assign the node the position equal to that barycenter.
+	 * Then, sort the layer by position and assign positions to each node.
+	 *  
+	 * @param layerNumber the source layer to be adjusted
+	 * @param pred true if layerNumber should be adjusted 
+	 * 	relative to predecessors, false if successors should be used.
+	 */
 	private void crossingReduction(int layerNumber,boolean pred) {
 		try {
 			// Iterator iter = layer.iterator(); 11/10/03 hsh
@@ -304,6 +358,12 @@ import java.util.List;
 		}
 	}
 	
+	/**
+	 * The barycenter of the list of adjacent nodes is just the average of their
+	 * positions
+	 * @param adjs
+	 * @return the barycenter of the adjacent nodes
+	 */
 	private double calcBaryCenter(Collection adjs) {
 		double center=0.0;
 		int deg = adjs.size();
@@ -318,6 +378,10 @@ import java.util.List;
 	}
 	
 	
+	/**
+	 * Sort the nodes in a layer, by position
+	 * @param layerNumber the layer to be sorted.
+	 */
 	private void sortLayerByPos(int layerNumber) {
 		try {
 			int n = layering.getLayerSize(layerNumber);
@@ -339,6 +403,11 @@ import java.util.List;
 		}
 	}
 	
+	/**
+	 * Assign positions to each node based on their position in the  sorted 
+	 * 	ordering
+	 * @param layerNumber the layer in question
+	 */
 	private void assignPosFromLayer(int layerNumber) {
 		Iterator iter = layering.layerIterator(layerNumber);
 		double pos = 0.0;
@@ -356,12 +425,19 @@ import java.util.List;
 		}
 	}
 	
+	/**
+	 * 
+	 * @return the object containing the layering for the Chain
+	 */
 	public Layering getLayering() {
 		return layering;
 	}
 	
 	
-	// stub code...
+	/**
+	 * Debug code to print the layers.
+	 *
+	 */
 	private void dumpLayers() {
 		System.err.println("Chain is "+getName());
 		int count = layering.getLayerCount();
@@ -386,22 +462,41 @@ import java.util.List;
 	}
  
 
+	/**
+	 * An auxiliary class to hold layering information
+	 * 
+	 * @author Harry Hochheiser
+ 	 * @version 2.1
+ 	 * @since OME2.1
+ 	 */
 	public class Layering {
-		// the vector that holds the abstract nodes
+		/**
+		 *  the vector that holds layers. Each layer will be a vector
+		 */
 		private Vector layers = new Vector();
 	
-		// vector that holds the piccolo instatations of the nodes
-		private Vector nodes = new Vector();
+		
 		// and a vector for their x positions
-		private Vector xpositions = new Vector();
+		
 		
 		Layering() {
 		}
 	
+		/**
+		 * Add a new layer to the end of the layering
+		 * @param layer the set of nodes in the new layer
+		 */
 		private void addLayer(Vector layer) {
 			layers.addElement(layer);		
 		}
 	
+		/**
+		 * Add a node to a layer in the layering. If the layer
+		 * doesn't exist, add it.
+		 * 
+		 * @param layerNumber the layer to which the node will be added.
+		 * @param node the node to add
+		 */
 		public void addToLayer(int layerNumber,CNode node) {
 			if (layerNumber > layers.size()-1) { // if we haven't created this layer yet
 				for (int i = layers.size(); i <= layerNumber; i++) {
@@ -413,10 +508,19 @@ import java.util.List;
 			v.add(node);
 		}
 	
+		/**
+		 * 
+		 * @return the number of layers
+		 */
 		public int getLayerCount() {
 			return layers.size();
 		}
 
+		/** 
+		 * 
+		 * @param i a layer number
+		 * @return layer number {@link i}, or null if that layer does not exist
+		 */
 		private Vector getLayer(int i) {
 			if (i < layers.size()) {
 				Vector v = (Vector) layers.elementAt(i);
@@ -426,20 +530,42 @@ import java.util.List;
 				return null;
 		}
 	
+		/**
+		 *
+		 * @param i a layer number
+		 * @return the iterator for that layer
+		 */
 		public Iterator layerIterator(int i) {
 			return getLayer(i).iterator();
 		}
 	
+		/**
+		 * 
+		 * @param layerNumber a layer number
+		 * @return the number of nodes in layer {@link layerNumber}
+		 */
 		public int getLayerSize(int layerNumber) {
 			return getLayer(layerNumber).size();
 		}
 	
+		/**
+		 * 
+		 * @param layerNumber a layer number 
+		 * @param n a node index
+		 * @return the {@link n}th node from layer {@link layerNumber}
+		 */
 		public CNode getNode(int layerNumber,int n) {
 			Vector v = getLayer(layerNumber);
 			CNode node = (CNode) v.elementAt(n);
 			return node;
 		}
 	
+		/**
+		 * Set the node in  a layer
+		 * @param layerNumber the  layer number
+		 * @param n position in the layer
+		 * @param node node to place in thhe given layer
+		 */
 		public void setNode(int layerNumber,int n,CNode node) {
 			Vector v = getLayer(layerNumber);
 			v.setElementAt(node,n);

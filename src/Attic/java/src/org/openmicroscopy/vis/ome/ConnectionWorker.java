@@ -43,6 +43,14 @@ import org.openmicroscopy.*;
 import org.openmicroscopy.vis.util.SwingWorker;
 import javax.swing.JOptionPane;
 
+/** 
+ * <p>A {@link SwingWorker} subclass used to connect to the database and 
+ * populate appropriate structures.<p>
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
 public class ConnectionWorker extends SwingWorker {
 	
 	private Controller controller;
@@ -71,7 +79,12 @@ public class ConnectionWorker extends SwingWorker {
 	}
 		
 	
-	
+	/**
+	 * The workhorse procedure. Loads the {@link RemoteBinding}, initializes the 
+	 * subclasses from the remote framework, logs in, loads Modules, loads 
+	 * Chains, and completes the setup
+	 * 
+	 */
 	public Object construct() {
 		try {
 			//	XmlRpcCaller.TRACE_CALLS=true;
@@ -85,10 +98,10 @@ public class ConnectionWorker extends SwingWorker {
 					session = remote.getSession();
 					factory = remote.getFactory();
 					if (remote != null && session != null && factory != null) {
-						modules  = new Modules(controller,factory);
-						chains = new Chains(controller,factory);
 						connection.setSession(session);
 						connection.setFactory(factory);
+						modules  = new Modules(controller,connection);
+						chains = new Chains(controller,connection);
 						connection.setModules(modules);
 						connection.setChains(chains);
 						controller.completeWindows(); 
@@ -102,7 +115,10 @@ public class ConnectionWorker extends SwingWorker {
 			return remote;
 	}
 	
-	
+	/**
+	 * Called after the {@link construct()} call finishes, either to complete 
+	 * the connection initailization, or to indicate an error.
+	 */
 	public void finished() {
 		if (remote != null && session != null && factory != null) {
 			controller.closeStatusWindow();

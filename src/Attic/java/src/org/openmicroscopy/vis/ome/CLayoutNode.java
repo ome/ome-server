@@ -41,12 +41,15 @@
  
  import org.openmicroscopy.remote.RemoteSession;
  
- /*
-  * This is mostly a placeholder that will allow me to distinguish between
-  * real nodes in a graph (CNode objects) and dummy nodes that will
-  * be created to aid in drawing. 
-  */
-
+ 
+/** 
+ * A placeholder subclass of {@link CNode} that can be added on a link 
+ * and then identified (by instanceof) as a node strictly used for layout.
+ * 
+ * @author Harry Hochheiser
+ * @version 2.1
+ * @since OME2.1
+ */
  public class CLayoutNode extends CNode {
 	
 	

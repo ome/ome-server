@@ -52,17 +52,18 @@ import org.openmicroscopy.vis.chains.Controller;
 import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 
 
 
 /** 
- * <p>A wrapper class to handle discussion with the OME Database.<p>
+ * <p>A wrapper class that handles discussion with the OME Database.<p>
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public class Connection {
@@ -80,7 +81,8 @@ public class Connection {
 	 // map entry for the given type will give a list of labels of 
 	 // outputs(inputs) it can link to.
 	 //
-	 // This is a bit clunky. If OME java types were more easily subclassed, 
+	 // This is a bit clunky. It might make more sense to subclass 
+	 // RemoteSemanticTypes 
 	 // it might make more sense to have these lists in subclasses of 
 	 // RemoteSemanticType. Oh well.
     
@@ -92,13 +94,16 @@ public class Connection {
 		
  	private final ConnectionWorker worker;
 	/***
-	 * Creates a new connection to the database via XMLRPC. If successful, gets 
+	 * Creates a {@link ConnectionWorker} that will build a new connection to 
+	 * the database via XMLRPC. If successful, the ConnectionWorker will return 
 	 * session and factory objects that are used to access data in the database.
-	 * This class should be a wrapper around all interactions with OME, insulating
-	 * all visualization code from OME code.
+	 * This class should be a wrapper around all direct interactions with OME, 
+	 * insulating visualization code from OME code. Specifically, no objects 
+	 * outside of this class should need to know about {@link Factory} and 
+	 * {@link Session} objects
 	 * 
-	 * @param controller The chains controller, which will be notified (via procedure call)
-	 * 		when login is complete.
+	 * @param controller The chains controller, which will be notified 
+	 * 		(via procedure call) when login is complete.
 	 * @param URL		 
 	 * @param userName
 	 * @param passWord
@@ -139,36 +144,54 @@ public class Connection {
 			user.getStringElement("LastName"));
 	}
 	
+	/**
+	 * 
+	 * @return The {@link Modules} object containing the modules for this session
+	 */
 	public Modules getModules() {
 		return modules;
 	}
 	
+	/**
+	 * 
+	 * @return the {@link Chains} object containing the cains for this session
+	 */
 	public Chains getChains() {
 		return chains;
 	}
 	
 	
-	public void layoutChains() {
-		chains.layout();
-	}
 	/**
-	 * Shortcut interface to allow users to get access to modules
-	 * without going through the Modules object. <p>
-	 * 
-	 * @param i
-	 * @return
+	 * Layout the chains in the current session
+	 *
 	 */
-
-
+	public void layoutChains() {
+		if (chains != null)
+		 	chains.layout();
+	}
 	
+	/**
+	 * Retrieve a module
+	 * @param id a module id
+	 * @return the {@link CModule} with the given ID
+	 */
 	public CModule getModule(int id) {
 		return modules.getModule(id);
 	}
 	
+	/**
+	 * Retrieve a chain
+	 * @param i the chain id
+	 * @return The {@link CChain} with the given id
+	 */
 	public CChain getChain(int i) {
 		return chains.getChain(i);
 	}
 	
+	/**
+	 * Add a chain
+	 * @param c The chain to be added
+	 */
 	public void addChain(CChain c) {
 		chains.addChain(c);
 	}
@@ -237,11 +260,43 @@ public class Connection {
 		return (ArrayList) obj;
 	}
 	
+	/**
+	 * Tell the server to finalize the active database transaction
+	 *
+	 */
 	public void commitTransaction() {
 		session.commitTransaction();
 	}
 	
+	/**
+	 * 
+	 * @return a {@link ChainManager} for the given session
+	 */
 	public ChainManager getChainManager() {
 		return session.getChainManager();
+	}
+	
+	/**
+	 * 
+	 * @return a list of modules from the database
+	 */
+	public List loadModules() {
+		return factory.findObjects("OME::Module",null);
+	}
+	
+	/**
+	 * 
+	 * @return a list of the module categories in the database
+	 */
+	public List loadCategories() {
+		return factory.findObjects("OME::Module::Category",null);
+	}
+	
+	/**
+	 * 
+	 * @return a list of the Chains in the database
+	 */
+	public List loadChains() {
+		return factory.findObjects("OME::AnalysisChain",null);
 	}
 }

@@ -44,13 +44,13 @@
  import java.util.List;
  import java.util.Iterator;
  import java.util.Collection;
- import org.openmicroscopy.Factory;
+ 
 /** 
  * <p>A class to handle the chains in the OME database
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 1.1
+ * @since OME2.1
  */
 
 public class Chains {
@@ -58,13 +58,13 @@ public class Chains {
 	private TreeMap chains = new TreeMap();
 	private Controller controller;
 	
-	public Chains(Controller controller,Factory factory) {
+	public Chains(Controller controller,Connection connection) {
 		
 		this.controller = controller;
 		CChain c;
 		Integer id;
 		
-		List  cs= factory.findObjects("OME::AnalysisChain",null);
+		List  cs= connection.loadChains();
 		Iterator iter = cs.iterator();
 		
 		while (iter.hasNext()) {
@@ -75,6 +75,10 @@ public class Chains {
 		}
 	}
 	
+	/**
+	 * layout each of the {@link CChain} objects in the list
+	 *
+	 */
 	public void layout() {
 		CChain c;
 		
@@ -87,6 +91,10 @@ public class Chains {
 		}
 	}
 	
+	/**
+	 * Add a chain to the list
+	 * @param c the chain to be added
+	 */
 	public void addChain(CChain c) {
 		Integer id = new Integer(c.getID());
 		chains.put(id,c);
@@ -97,10 +105,19 @@ public class Chains {
 		return values.iterator();
 	}
 	
+	/**
+	 * Get a chain by ID
+	 * @param i the ID of the desired chain
+	 * @return the chain
+	 */
 	public CChain getChain(int i) {
 		return (CChain) chains.get(new Integer(i));
 	}
 	
+	/**
+	 *
+	 * @return the number of chains in the list.
+	 */
 	public int size() {
 		return chains.size();
 	}
