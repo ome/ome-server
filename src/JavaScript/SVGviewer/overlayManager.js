@@ -1,7 +1,6 @@
 /*****
 
 	overlayManager.js
-		external file dependencies: widget.js, button.js, popupList.js
 		
 	Copyright (C) 2002 Open Microscopy Environment
 	Author: Josiah Johnston <siah@nih.gov>
