@@ -101,7 +101,7 @@
 			<Bin:External Compression = "bzip2" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456" href = "OTF123.otf"/>
 		</OTF>
 	</Instrument>
-	<Image Name = "P1W1S1" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" ID = "urn:lsid:foo.bar.com:Image:123456" SizeX = "20" SizeY = "20" SizeZ = "5" NumChannels = "1" NumTimes = "6">
+	<Image Name = "P1W1S1" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" ID = "urn:lsid:foo.bar.com:Image:123456">
 		<CreationDate>1988-04-07T18:39:09</CreationDate>
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 		<Description>This is an Image</Description>
@@ -112,7 +112,7 @@
 		<ObjectiveRef ID = "urn:lsid:foo.bar.com:Objective:123456"/>
 		<ImagingEnvironment Temperature = ".1" AirPressure = ".1" Humidity = ".2" CO2Percent = ".3"/>
 		<Thumbnail href = "http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype = "image/jpeg"/>
-		<ChannelInfo ID="urn:lsid:foo.bar.com:LogicalChannel:123456" Name = "Channel 1" IlluminationType="Epifluorescence" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
+		<ChannelInfo ID="urn:lsid:foo.bar.com:LogicalChannel:123456" Name = "Ch 1" IlluminationType="Epifluorescence" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
 			<LightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123123"/>
 			<AuxLightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123456" Technique = "Photobleaching"/>
 			<OTFRef ID = "urn:lsid:foo.bar.com:OTF:123456"/>
