@@ -591,14 +591,18 @@ and returning the resultant document.
 
 sub exportOMEFile {
     my $proto = shift;
-    my ($filename, $encodeAsBigEndian) = @_;
+    my ($filename, $encodeAsBigEndian, $to_filename) = @_;
     my $huge_xml_string = $proto->__callOMEIS(Method => 'ExportOMEfile',
                                      File   => $filename,
                                      (defined $encodeAsBigEndian ?
                                      	( BigEndian => $encodeAsBigEndian ) :
                                      	()
-                                     ));
-    die "Error uploading file" unless defined $huge_xml_string;
+                                     ),
+                                     (defined $to_filename ?
+                                     	( __file => $to_filename ) :
+                                     	()
+                                     )
+								 );
     return $huge_xml_string;
 }
 
