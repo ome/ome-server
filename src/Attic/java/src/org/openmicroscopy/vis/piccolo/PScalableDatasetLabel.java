@@ -54,7 +54,7 @@ import java.awt.geom.Rectangle2D;
  * @since OME2.1
  */
 
-public class PScalableDatasetLabel extends PText implements PBrowserNodeWithToolTip {
+public class PScalableDatasetLabel extends PNode implements PBrowserNodeWithToolTip {
 
 	private static final int NUM_CHARS=20;
 	public static final double FULL_WIDTH=100;
@@ -86,7 +86,7 @@ public class PScalableDatasetLabel extends PText implements PBrowserNodeWithTool
 			text = Integer.toString(dataset.getID())+". "+shortName;
 			text += ": "+Integer.toString(dataset.getImageCount())+" images";
 			res = new PText(text);	
-			//System.err.println("label: "+text+" width "+res.getWidth());	
+		//	System.err.println("label: "+text+" width "+res.getWidth());	
 		} while (res.getWidth() > width && length >= 0);
 		if (res.getWidth() > width) {
 			//cut of "images" and just reurn number.
