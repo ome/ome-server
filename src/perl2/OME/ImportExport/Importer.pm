@@ -109,17 +109,17 @@ sub import_image {
     else {
 	$read_status = $import_reader->readFile;
 	if ($read_status ne "") {
-	    print "Carping: ";
+	    print STDERR "Carping: ";
 	    carp $read_status;
 	}
 	else {
 	    $status = store_image($self, \%xml_elements, \@image_buf, $image_group_ref);
 	    if ($status eq "") {
 		$self->{did_import} = 1;
-		print "did import\n";
+		print STDERR "did import\n";
 	    }
 	    else {
-		print "failed import: $status\n";
+		print STDERR "failed import: $status\n";
 	    }
 	}
     }
@@ -436,9 +436,8 @@ sub store_image_pixels {
     close $handle;
 
     $cmd = 'openssl sha1 '. $realpath .' |';
-    open (STDOUT_PIPE,$cmd);
-    $sh = <STDOUT_PIPE>;
-    chomp;
+    open (STDOUT_PIPE,$cmd) || die("can't open $cmd\n");
+    chomp ($sh = <STDOUT_PIPE>);
     $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
     $sha1 = $1;
 
@@ -529,16 +528,14 @@ sub store_xyz_info {
     my $omeBase = $self->{config}->ome_root;
     my $status = "";
     my $sth;
-
     $sth = $session->DBH()->prepare (
         'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
         $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
     my $cmd = $omeBase.'/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
-    
     open (STDOUT_PIPE,$cmd) || return "Failed to execute '$cmd':\n$!\n";
     while (<STDOUT_PIPE>) {
-        chomp;
+        chomp $_;
         my @columns = split (/\t/);
         foreach (@columns) {
             # trim leading and trailing white space and set to undef unless column looks like a C float
@@ -548,7 +545,8 @@ sub store_xyz_info {
 
         $sth->execute($imageID,@columns);
     }
-
+    
+	return $status;
 }
 
 
@@ -557,7 +555,7 @@ sub store_image_files_xyzwt {
     my ($self, $session, $href, $image_group_ref) = @_;
     my $image = $self->{'image'};
     my $imageID = $image->image_id();
-    print "new image id = $imageID\n";
+    print STDERR "new image id = $imageID\n";
     my $status = "";
     my $xyzwt;
     my $file;
@@ -572,8 +570,7 @@ sub store_image_files_xyzwt {
 
 	my $cmd = 'openssl sha1 '. $file .' |';
 	open (STDOUT_PIPE,$cmd);
-	$sh = <STDOUT_PIPE>;
-	chomp;
+	chomp ($sh = <STDOUT_PIPE>);
 	$sh =~ m/^.+= +([a-fA-F0-9]*)$/;
 	$sha1 = $1;
 	close (STDOUT_PIPE);
@@ -616,7 +613,7 @@ sub map_image_to_dataset {
     my $image = $self->{image};
     my $ds = $self->{dataset};
     my $session = $self->{session};
-    my $status;
+    my $status = '';
     my $data = {'image_id'   => $image->{image_id},
 		'dataset_id' => $ds->{dataset_id}};
     
