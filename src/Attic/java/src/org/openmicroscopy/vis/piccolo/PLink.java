@@ -41,10 +41,12 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.PNode;
 import java.lang.Math;
 import java.awt.BasicStroke;
 import java.awt.geom.Point2D;
 import java.awt.Color;
+import java.util.ArrayList;
 
 
 
@@ -74,27 +76,28 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	public static final float END_BULB=12;
 	public static final float END_BULB_RADIUS = END_BULB/2;
 	
-	
-		
-	// xs and ys for line
-	protected float xstart,ystart;
-	protected float xend,yend;
-	
 
-	protected PPath arrow;
 	
+	protected ArrayList points  = new ArrayList();
+	protected PPath arrow;
+
+	protected int pointCount = 0;	
 	// nodes used for selection indicators
 	protected PPath select1;
 	protected PPath select2;
 
     // the link layer that we're part of.
 	protected PLinkLayer  linkLayer = null;
+	
+	private PNode targets = new PNode();
 		
 	public PLink() {		
 		super();
 		setStroke(LINK_STROKE);
-		setPaint(DEFAULT_COLOR);
+		setStrokePaint(DEFAULT_COLOR);
 		buildArrow();
+		addChild(targets);
+		targets.setVisible(false);
 	}
 		
 	
@@ -114,29 +117,56 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	
 	public void setStartCoords(float x,float y) {
-		xstart = x;
-		ystart = y;
+
+		setPoint(0,new Point2D.Float(x,y));
+		if (pointCount == 0)
+			pointCount =1;
 	}
 
+	public void setIntermediatePoint(float x,float y) {
+		setPoint(pointCount++,new Point2D.Float(x,y)); 
+		setEndCoords(x,y);
+	}
+	
 	public void setEndCoords(float x,float y) {
-		xend = x;
-		yend = y;
+		setPoint(pointCount,new Point2D.Float(x,y));
 		setLine();
 	}
 	
-	protected abstract void setLine();
+	public void setPoint(int index,Point2D pt) {
+		//System.err.println("setting point # "+index+", # of points is "+points.size());
+		if (points.size() <= index) {
+			points.add(index,pt);
+		}
+		else
+			points.set(index,pt);
+	}
+	
+	protected void setLine() {
+		Point2D dummy[] = new Point2D[0];
+		Point2D pts[] = (Point2D []) points.toArray(dummy);
+		setPathToPolyline(pts);	
+	}
 
 	protected double getAngle(float xs,float ys,float xe,float ye) {
-		double arctan = (double) (ye-ys)/(xe-xs);
-		double angle = Math.atan(arctan);
-		if (xe < xs)
-			angle += Math.PI;
+		double angle = 0;
+		double arctan = 0;
+		
+		if (xe !=xs) {
+			arctan = (double) (ye-ys)/(xe-xs);
+			angle = Math.atan(arctan);
+			if (xe < xs)
+				angle += Math.PI;
+		}
 		return angle;
 	}
 	
 	protected void drawLinkEnd(float x,float y,double theta) {
+	//	System.err.println("setting arrow to be at "+x+","+y+", theta="+theta);
 		arrow.setRotation(theta);
-		arrow.setOffset(x,y); 
+		arrow.setOffset(x,y);  
+		invalidateFullBounds(); 
+		repaint();
 	}
 	
 	
@@ -155,7 +185,19 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		PLinkTarget endTarget = getEndLinkTarget();
 		startTarget.setSelected(v);
 		endTarget.setSelected(v);
-		
+		targets.removeAllChildren();
+		if (v == true) { // set up children 
+			targets.setVisible(true);
+			int count =  points.size();
+			for (int i = 1; i < count-1; i++) {
+				PLinkSelectionTarget t = new PLinkSelectionTarget(this,i);
+				targets.addChild(t);
+				Point2D pt = (Point2D) points.get(i);
+				t.setOffset((float)pt.getX()-PLinkTarget.LINK_TARGET_HALF_SIZE,
+					(float)pt.getY()-PLinkTarget.LINK_TARGET_HALF_SIZE);
+				t.setSelected(v);
+			}
+		}
 		repaint();
 	}
 	
