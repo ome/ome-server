@@ -1821,6 +1821,7 @@ sub __makeSelectSQL {
 
     my $columns = $class->__columns();
     my $count_only = 0;
+    my $location;
 
     # Add each requested column to the @columns_needed array.  The
     # contents of this array are valid DB locations, so we build this
@@ -1877,7 +1878,7 @@ sub __makeSelectSQL {
         $order_by = [$order_by] unless ref($order_by);
 
         foreach my $column_alias (@$order_by) {
-            my $location = $class->
+            $location = $class->
               __getQueryLocation(\$foreign_key_number,
                                  \@foreign_tables,\%foreign_aliases,
                                  \@join_clauses,\%tables_used,
@@ -1905,7 +1906,7 @@ sub __makeSelectSQL {
         # Parse the remaining criteria
 
         foreach my $column_alias (keys %$criteria) {
-            my $location = $class->
+            $location = $class->
               __getQueryLocation(\$foreign_key_number,
                                  \@foreign_tables,\%foreign_aliases,
                                  \@join_clauses,\%tables_used,
