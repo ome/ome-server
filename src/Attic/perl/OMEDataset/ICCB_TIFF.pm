@@ -302,7 +302,7 @@ my @columns;
 # This will get the dimentions, etc of the dataset.
 # The output of this program is one attribute per line (attribute name \t attribute value).
 # Conveniently, the attribute names match the Object's field names so me don't need a map.
-	$command = "$DumpTIFFheader $datasetPath 2> $tempFileNameErr |";
+	$command = "$DumpTIFFheader '$datasetPath' 2> $tempFileNameErr |";
 	open (STDOUT_PIPE,$command) or die "Could not execute '$command'.\n";
 	while (<STDOUT_PIPE>) {
 		chomp;
@@ -331,7 +331,7 @@ my @columns;
 # The sum XI, sum YI, sum I and sum I^2 can be used for calculating statistics for a stack of TIFFs.
 # This Import function ignores these values, because this class is for a single-plane dataset.
 # The file will actually be read at this point, and an error reported if its corrupt.
-	$command = "$DumpTIFFstats $datasetPath 2>> $tempFileNameErr |";
+	$command = "$DumpTIFFstats '$datasetPath' 2>> $tempFileNameErr |";
 	open (STDOUT_PIPE,$command) or die "Error executing '$command'\n".`cat $tempFileNameErr`;
 	@columns = split ('\t', <STDOUT_PIPE>);
 	while (<STDOUT_PIPE>) {
