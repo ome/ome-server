@@ -127,7 +127,7 @@ if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	echo "------------" ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
 	# Kill all the PIDs listed in the tasks table
-	PID=`su -l $OME_ADMIN -c "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
+	PID=`su -l $OME_ADMIN -qtc "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
 	kill $PID ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
