@@ -5,13 +5,13 @@
 	 xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
 	 xmlns:CLI = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"
 	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
-	 xmlns:MLI = "http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd"
+	 xmlns:MLI = "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd"
 	 xmlns:xsd = "http://www.w3.org/2001/XMLSchema"
 	 version = "RC1"
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd"/>
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"/>
-	<import namespace = "http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd"/>
+	<import namespace = "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
 	<!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
