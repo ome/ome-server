@@ -135,7 +135,7 @@ USAGE
 #*********
 
 use Log::Agent;
-if ($ENV{OME_DEBUG} > 0) {	
+if ($ENV{OME_DEBUG}) {	
 	logconfig(
 		-prefix      => "$0",
 		-level    => 'debug'
