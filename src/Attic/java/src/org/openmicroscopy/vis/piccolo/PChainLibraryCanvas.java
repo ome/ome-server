@@ -318,8 +318,7 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	 * @see PPaletteCanvas
 	 */
 	public void dragGestureRecognized(DragGestureEvent event) {
-		if (isChainSelected() &&  
-			selectedChain.hasExecutionsInCurrentDataset()) {
+		if (isChainSelected()) {
 			Integer id = new Integer(selectedChain.getID());
 			ChainSelection c = new ChainSelection(id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
