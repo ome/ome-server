@@ -14,22 +14,7 @@
 			<xsd:element ref = "sizeX" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeY" minOccurs = "0" maxOccurs = "unbounded"/>
 			<xsd:element ref = "sizeZ" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "BPP" minOccurs = "0" maxOccurs = "unbounded"/>
-		</xsd:choice>
-	</xsd:group>
-	<xsd:group name = "outputRecordModel">
-		<xsd:choice>
-			<xsd:element ref = "Output" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "XYPlaneFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "XYPlaneFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "RawImageFile" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "RawImageFilePath" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeT" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeW" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeX" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeY" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "sizeZ" minOccurs = "0" maxOccurs = "unbounded"/>
-			<xsd:element ref = "BPP" minOccurs = "0" maxOccurs = "unbounded"/>
+			<xsd:element ref = "BitsPerPixel" minOccurs = "0" maxOccurs = "unbounded"/>
 		</xsd:choice>
 	</xsd:group>
 	<xsd:element name = "Declaration">
@@ -38,25 +23,33 @@
 Formal Inputs are optional because input requirements may be specified by guaranteed image attributes. For example, OME_Image_XYZ_stats requires a path to the OME repository file, and Dimensions.
 These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &lt;sizeT>, and &lt;sizeW>.
 			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref = "FormalInput" minOccurs = "0" maxOccurs = "unbounded"/>
-				<xsd:element ref = "FormalOutput" maxOccurs = "unbounded"/>
+				<xsd:element ref = "FormalOutput" minOccurs = "0" maxOccurs = "unbounded"/>
+				<xsd:element ref = "TableDefinition" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 	<xsd:element name = "FormalInput" abstract = "true">
 		<xsd:annotation>
 			<xsd:documentation>Specifies an input requirement for a module. Image dimensions and image file locations (repository or other format) should not be specified with this. Image dimensions are intrisic to an image. They do not represent a special requirement. Image file locations and contents are specified by other elements. Specifically, RawImageFile, RawImageFilePath, XYPlaneFile, and XYPlaneFilePath.
-
+			
+			
+			
+			
 			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "Datatype"/>
+				<xsd:element ref = "DBLocation"/>
 				<xsd:element ref = "LookupTable" minOccurs = "0"/>
 			</xsd:sequence>
 			<xsd:attribute name = "Name" use = "required">
@@ -69,17 +62,17 @@ These are given by &lt;RawImageFilePath>, &lt;sizeX>, &lt;sizeY>, &lt;sizeZ>, &l
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "UserDefined" default = "F" type = "xsd:boolean">
+			<xsd:attribute name = "UserDefined" default = "false" type = "xsd:boolean">
 				<xsd:annotation>
 					<xsd:documentation>OME interprets this as a recommendation rather than a requirement.
 
 Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
+					
+					
+					
+					
+					
 					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used for reference purposes in for Command Line programs. Accordingly, each FormalInput needs a unique ID. This is not enforced in the schema, so watch your back.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name = "Description" type = "xsd:string">
@@ -87,14 +80,9 @@ Tied to DB. Table FORMAL_INPUTS Column USER_DEFINED
 					<xsd:documentation>Tied to DB. Table FORMAL_INPUTS Column DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name = "Column_SQL" type = "Column_Type_SQL">
+			<xsd:attribute name = "FormalInputID" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Don't mess with this unless you know what you are doing.
-If it is necessary to generate a table and/or column in the Database, it will be necessary to tell the database a datatype. This value should be in SQL format.
-					
-					
-					
-					</xsd:documentation>
+					<xsd:documentation>Referenced by elements such as Input, theZ, theT, etc. to map formal inputs to actual inputs. These elements are used by STDIN, CommandLine, and other elements under ExecutionInstructions.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -105,7 +93,7 @@ If it is necessary to generate a table and/or column in the Database, it will be
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "Datatype"/>
+				<xsd:element ref = "DBLocation"/>
 			</xsd:sequence>
 			<xsd:attribute name = "Name" use = "required">
 				<xsd:annotation>
@@ -117,36 +105,45 @@ If it is necessary to generate a table and/or column in the Database, it will be
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "FormalOutputID" use = "required" type = "xsd:string">
-				<xsd:annotation>
-					<xsd:documentation>Used for reference purposes in Command Line programs. Accordingly, each FormalOutput needs to be unique. This is not enforced in the schema, so watch your back.
-
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
 			<xsd:attribute name = "Description" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Tied to DB. Table FORMAL_OUTPUTS Column DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name = "Column_SQL" type = "Column_Type_SQL">
+			<xsd:attribute name = "IBelongTo">
 				<xsd:annotation>
-					<xsd:documentation>Don't mess with this unless you know what you are doing.
-If it is necessary to generate a table and/or column in the Database, it will be necessary to tell the database a datatype. This value should be in SQL format.
-					
+					<xsd:documentation>Concerning MakeNewFeature attribute of ExecutionInstructions, if a new feature type is made, then there are two possible places a formal output attribute can be stored: It can be stored as an attribute of the FeatureIterator, or it can be stored as an attribute of the new Feature.
+This tag is supposed to specify which. Can be left blank if module does not make new iterator.
+
+Tied to DB. Table FORMAL_OUTPUTS Column FEATURE_TAG
+Processed before storage to DB
 					
 					
 					</xsd:documentation>
 				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "[Feature]"/>
+						<xsd:enumeration value = "[Iterator]"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "FormalOutputID" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Referenced by the element Output to map formal outputs to actual outputs. Output is used by STDOUT and other elements under ExecutionInstructions.</xsd:documentation>
+				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "Datatype">
+	<xsd:element name = "TableDefinition">
 		<xsd:annotation>
-			<xsd:documentation>Defines a location in the database by either table or column &amp; table.</xsd:documentation>
+			<xsd:documentation>Declares a table in the DB.
+Maps to table DATATYPES during module import.
+
+			
+			
+			
+			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:attribute name = "AttributeType" use = "required">
@@ -154,6 +151,8 @@ If it is necessary to generate a table and/or column in the Database, it will be
 					<xsd:documentation>This may be D, I, or F. These represent Dataset, Image, and Feature, respectively. In deciding which of these to use, refer to the table and column to which this datatype maps.
 
 Tied to DB. Table DATATYPES Column ATTRIBUTE_TYPE
+				
+					
 					
 					
 					
@@ -178,38 +177,14 @@ Tied to DB. Table DATATYPES Column ATTRIBUTE_TYPE
 					</xsd:restriction>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name = "ColumnName">
-				<xsd:annotation>
-					<xsd:documentation>If specified, the datatype will map to a specific column in a table (i.e. a cell). If not specified, the datatype will map across all columns of a table (i.e. a row).
-
-Tied to DB. Table DATATYPE_COLUMNS Column COLUMN_NAME
-					</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "256"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
-			<xsd:attribute name = "ReferenceType">
-				<xsd:annotation>
-					<xsd:documentation>Stub for future development. Don't bother with it unless you know more about it.
-
-Tied to DB. Table DATATYPE_COLUMNS Column REFERENCE_TYPE
-					
-					
-					
-					</xsd:documentation>
-				</xsd:annotation>
-				<xsd:simpleType>
-					<xsd:restriction base = "xsd:string">
-						<xsd:maxLength value = "256"/>
-					</xsd:restriction>
-				</xsd:simpleType>
-			</xsd:attribute>
 			<xsd:attribute name = "Description" type = "xsd:string">
 				<xsd:annotation>
 					<xsd:documentation>Tied to DB. Table DATATYPES Column DESCRIPTION</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "TableID" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Referenced by TableID attribute of DBLocation element.</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -220,7 +195,7 @@ Tied to DB. Table DATATYPE_COLUMNS Column REFERENCE_TYPE
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element ref = "LookupTableEntries" maxOccurs = "unbounded"/>
+				<xsd:element ref = "LookupTableEntry" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 			<xsd:attribute name = "Name" use = "required">
 				<xsd:annotation>
@@ -239,7 +214,7 @@ Tied to DB. Table DATATYPE_COLUMNS Column REFERENCE_TYPE
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "LookupTableEntries">
+	<xsd:element name = "LookupTableEntry">
 		<xsd:complexType>
 			<xsd:attribute name = "Value" use = "required">
 				<xsd:annotation>
@@ -289,6 +264,11 @@ The outputs are completely different. You need to specify an interface for each 
 Or pretend you have a powerful program that can do 10 unrelated tasks, each of which outputs an image. While the outputs are the same type and format, they represent 10 completely different things. In this case, it might make sense to define 10 corrosponding AnalysisModule to represent the 10 logical functions.
 
 In any case, use AnalysisModule to define an interface and Program to store installation software for a program.
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -306,6 +286,11 @@ The schema does not check the need for this against ModuleType, so it may not re
 The location does not yet exist in the DB. The contents of this element (in XML format) will be stored in the DB.
 
 Tied to DB. Table PROGRAMS Column EXECUTION
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -320,6 +305,8 @@ Tied to DB. Table PROGRAMS Column EXECUTION
 				<xsd:annotation>
 					<xsd:documentation>Assigns a execution point for the analysis.
 This needs to be mulled over again after Doug finalizes analysis engine &amp; use scenarios for modules dealing with datasets, images, &amp; features are constructed.
+					
+					
 					
 					
 					
@@ -346,7 +333,11 @@ XML specification of the command line parameters is:
 &lt;CommandLine>
 	Path=&lt;PlaneFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>
 &lt;/CommandLine>
-
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType mixed = "true">
@@ -358,7 +349,11 @@ XML specification of the command line parameters is:
 	<xsd:element name = "STDIN">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to write content the analysis module will read from STDIN.
-
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -370,7 +365,11 @@ XML specification of the command line parameters is:
 	<xsd:element name = "STDOUT">
 		<xsd:annotation>
 			<xsd:documentation>This specifies what and how to read content the analysis module prints to STDOUT.
-
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -383,7 +382,11 @@ XML specification of the command line parameters is:
 		<xsd:annotation>
 			<xsd:documentation>If the analysis module reads input from a file, this is the place to describe the format of the file so it can automatically be generated.
 There is not currently a use scenario for this, so it is not supported. If you have a module that needs to read input from a text file, contact OME developers.
-
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -396,6 +399,8 @@ There is not currently a use scenario for this, so it is not supported. If you h
 					
 					
 					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -405,7 +410,11 @@ There is not currently a use scenario for this, so it is not supported. If you h
 		<xsd:annotation>
 			<xsd:documentation>If the analysis module reads output from a file, this is the place to describe the format of the file so it can automatically read into the DB.
 There is not currently a use scenario for this, so it is not supported. If you have a module that needs to read input from a text file, contact OME developers.
-
+			
+			
+			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
@@ -422,8 +431,13 @@ There is not currently a use scenario for this, so it is not supported. If you h
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+					<xsd:documentation>Used to reference a InputDatatypeColumn Element. It should corrospond to an InputID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -436,11 +450,19 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 		<xsd:complexType>
 			<xsd:attribute name = "FormalOutputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalOutput Element. It should corrospond to a FormalOutputID specified in a FormalOutput Element.
+					<xsd:documentation>Used to reference a FormalOutput Element. It should corrospond to an FormalOutputID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
 					
 					
+					
+					
+					
 					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "AccessBy" use = "required" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Describes how to access information extracted using a regular expression. Examples are $1, $2, ...</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
@@ -462,6 +484,8 @@ Tied to DB. Table PROGRAMS Column PROGRAM_NAME
 					
 					
 					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -475,7 +499,8 @@ Tied to DB. Table PROGRAMS Column PROGRAM_NAME
 					<xsd:documentation>Stub for future development. Don't bother with it unless you know more about it.
 
 Tied to DB. Table PROGRAMS Column CATEGORY
-
+					
+					
 					
 					
 					
@@ -495,6 +520,8 @@ Tied to DB. Table PROGRAMS Column VISUAL_DESIGN
 					
 					
 					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -503,7 +530,7 @@ Tied to DB. Table PROGRAMS Column VISUAL_DESIGN
 					<xsd:documentation>Tied to DB. Table PROGRAMS Column DESCRIPTION</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name = "isStreamAlgorithm" default = "F" type = "xsd:boolean">
+			<xsd:attribute name = "isStreamAlgorithm" default = "false" type = "xsd:boolean">
 				<xsd:annotation>
 					<xsd:documentation>This is a stub for future development. The database location doesn't even exist yet.
 
@@ -517,6 +544,11 @@ Example of an algorithms that is not a stream algorithm is:
 If a module is a stream algorithm, it can function across the x, y, z, and time dimensions.
 
 Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -525,6 +557,10 @@ Tied to DB. Table PROGRAMS Column IS_STREAM_ALGORITHM
 					<xsd:documentation>As more handlers, are added, this part of the schema needs to be changed
 
 Tied to DB. Table PROGRAMS Column MODULE_TYPE
+					
+					
+					
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -539,8 +575,48 @@ Tied to DB. Table PROGRAMS Column MODULE_TYPE
 				<xsd:annotation>
 					<xsd:documentation>Used to reference a Program Element. It should corrospond to a ProgramID specified in a Program Element.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "FeatureIterator">
+				<xsd:annotation>
+					<xsd:documentation>If the module iterates over a feature, specify the iterator here. It will reference a feature via the TAG column of the FEATURES table.
+An example of a module that does not iterate over a feature is Find Cells. It examines one image at a time, hence it iterates over an image, not a feature. It produces zero or more features (Çell) per image. These Cell features belong to an image.
+This module would not get a FeatureIterator attribute.
+An example of a module that iterates over a feature is Find Golgi. It examines one CELL at a time. A cell is a feature, hence the module iterates over features, not images or datasets. It produces zero or more Golgi features per Cell feature. These Golgi features belong to a Cell feature.
+This module would get a FeatureIterator attribute of "CELL".
+
+Tied to DB. Table PROGRAMS Column DEFAULT_ITERATOR
+					
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "128"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "NewFeatureName">
+				<xsd:annotation>
+					<xsd:documentation>If this module makes new features, then the new Feature's name needs to be specified here.
+If the module does not make new features, do not specify a value for this attribute.
+
+Tied to DB. Table PROGRAMS Column NEW_FEATURE_TAG
+					
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "128"/>
+					</xsd:restriction>
+				</xsd:simpleType>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
@@ -557,6 +633,11 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 				<xsd:annotation>
 					<xsd:documentation>Referenced by AnalysisModule elements. Accordingly, each FormalOutput needs to be unique. This is not enforced in the schema, so watch your back.
 
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -622,28 +703,17 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 			<xsd:length value = "20"/>
 		</xsd:restriction>
 	</xsd:simpleType>
-	<xsd:simpleType name = "Column_Type_SQL">
-		<xsd:annotation>
-			<xsd:documentation>Don't mess with this unless you know what you are doing.
-
-ex.
-VARCHAR(256) NOT NULL
-or
-TEXT
-
-			
-			
-			
-			</xsd:documentation>
-		</xsd:annotation>
-		<xsd:restriction base = "xsd:string"/>
-	</xsd:simpleType>
 	<xsd:element name = "theZ">
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+					<xsd:documentation>Used to reference a InputDatatypeColumn Element. It should corrospond to an InputID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -653,8 +723,13 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+					<xsd:documentation>Used to reference a InputDatatypeColumn Element. It should corrospond to an InputID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -664,8 +739,13 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 		<xsd:complexType>
 			<xsd:attribute name = "FormalInputID" use = "required" type = "xsd:string">
 				<xsd:annotation>
-					<xsd:documentation>Used to reference a FormalInput Element. It should corrospond to a FormalInputID specified in a FormalInput Element.
+					<xsd:documentation>Used to reference a InputDatatypeColumn Element. It should corrospond to an InputID specified in one of those.
 Referential integrity is not enforced by this schema. That is, if you make a typo here, the error won't be detected until this module is installed.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -697,6 +777,10 @@ Referential integrity is not enforced by this schema. That is, if you make a typ
 					<xsd:documentation>Specifies the expected format of the plane.
 RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
+					
+					
+					
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -734,7 +818,11 @@ TIFF corrosponds to TIFF files.
 				<xsd:annotation>
 					<xsd:documentation>Specifies the expected format of the plane.
 RAW corrosponds to OME repository format of pixel dump.
-TIFF corrosponds to TIFF files.
+TIFF corrosponds to TIFF format
+					
+					
+					
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -784,6 +872,8 @@ e.g. /OME/repository/1-tinyTest.ori
 			
 			
 			
+			
+			
 			</xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
@@ -807,6 +897,10 @@ e.g. /OME/repository/1-tinyTest.ori
 					<xsd:documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
 
 					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -818,12 +912,17 @@ e.g. /OME/repository/1-tinyTest.ori
 		</xsd:annotation>
 		<xsd:complexType mixed = "true">
 			<xsd:sequence>
-				<xsd:group ref = "outputRecordModel"/>
+				<xsd:element ref = "re"/>
+				<xsd:element ref = "Output" minOccurs = "0" maxOccurs = "unbounded"/>
 			</xsd:sequence>
 			<xsd:attribute name = "RepeatCount" type = "xsd:positiveInteger">
 				<xsd:annotation>
 					<xsd:documentation>RepeatCount specifies how many times to read a record. If it is not specified, reading will continue until it reaches the end of the output stream.
 If used in conjuction with TerminateAt, reading will stop after RepeatCount or TerminateAt, whichever comes first.
+					
+					
+					
+					
 					
 					</xsd:documentation>
 				</xsd:annotation>
@@ -833,14 +932,18 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 					<xsd:documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
 					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
-	<xsd:element name = "BPP">
+	<xsd:element name = "BitsPerPixel">
 		<xsd:annotation>
-			<xsd:documentation>Used for variable substitution. This is substituted for bytes per pixel. </xsd:documentation>
+			<xsd:documentation>Used for variable substitution. This is substituted for bits per pixel. </xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType/>
 	</xsd:element>
@@ -867,9 +970,87 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 					<xsd:documentation>This is a stub for future development. Don't bother with it unless you know more about it.
 
 Specifies the packaging and/or compression format of the Installation file.
+					
+					
+					
+					
+					
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "DBLocation">
+		<xsd:annotation>
+			<xsd:documentation>Describes a location in the database by table and column.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name = "ColumnName" use = "required">
+				<xsd:annotation>
+					<xsd:documentation>Tied to DB. Table DATATYPE_COLUMNS Column COLUMN_NAME
+				
+					
+					
+					
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "256"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "Description" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>Tied to DB. Table DATATYPE_COLUMNS Column DESCRIPTION</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name = "SQL_DataType">
+				<xsd:annotation>
+					<xsd:documentation>Don't mess with this unless you know what you are doing.
+If it is necessary to generate a table and/or column in the Database, it will be necessary to tell the database a datatype. Not all SQL datatypes are supported currently.
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "integer"/>
+						<xsd:enumeration value = "double"/>
+						<xsd:enumeration value = "float"/>
+						<xsd:enumeration value = "boolean"/>
+						<xsd:enumeration value = "string"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "ReferenceType">
+				<xsd:annotation>
+					<xsd:documentation>Stub for future development. Don't bother with it unless you know more about it.
+
+Tied to DB. Table DATATYPE_COLUMNS Column REFERENCE_TYPE
+				
+					
+					
+					
+					
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:restriction base = "xsd:string">
+						<xsd:maxLength value = "256"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name = "TableID" type = "xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>References TableID attribute of TableDefinition element</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	<xsd:element name = "re" type = "xsd:string">
+		<xsd:annotation>
+			<xsd:documentation>Contains a regular expression.</xsd:documentation>
+		</xsd:annotation>
 	</xsd:element>
 </xsd:schema>
