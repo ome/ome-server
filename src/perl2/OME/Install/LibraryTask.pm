@@ -124,7 +124,6 @@ my @libraries = (
 	    #include "bzlib.h"
 	    int main () {
 		printf ("%s", "N/A");
-		foo
 		return (0);
 	    }
 	),
@@ -139,7 +138,7 @@ my @libraries = (
 	repository_file => "$REPOSITORY/bzip2-1.0.2.tar.gz",
 	#installModule => \&bzlibInstall,
     },{
-	name => 'tiff',
+	name => 'libtiff',
 	get_library_version =>
 	# Semi-ganked from GAIM (http://gaim.sourceforge.net/) cvs rc line parser
 	# src/gaimrc.c -- parse_line ()
@@ -268,10 +267,6 @@ sub install {
         and croak "Unable to compile library, see LibraryTask.log for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
-
-    ### TEMPORARY
-    return 1;
-    ### TEMPORARY
 
     # Install
     print "    \\_ Installing ";
