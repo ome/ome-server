@@ -101,8 +101,8 @@ sub getRefToObject {
 			my $source_module; $source_module = $obj->module_execution()->module()->name()
 				if $obj->module_execution() and $obj->module_execution()->module();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			my $ref = "<a href='#' onClick='openPopUpPixels($id); return false'><img src='$thumbURL'></a><br>".
-			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id'>Pixels from $source_module</a>";
+			my $ref = "<a href='javascript: openPopUpPixels($id); return false' title='View this image'><img src='$thumbURL'></a><br>".
+			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute'>Pixels info</a>";
 			return $ref;
 		}
 	}
