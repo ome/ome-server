@@ -163,9 +163,11 @@ public class PResultEventHandler extends  PPanEventHandler {
 			Module mod = modNode.getModule();
 			System.err.println("Module name is "+mod.getName());
 			CChainExecution exec = canvas.getChainExecution();
-			List results = exec.getResults(mod,output);
-			if (results.size() > 0)
-				dumpOutputs(results);
+			if (exec != null) {
+				List results = exec.getResults(mod,output);
+				if (results.size() > 0)
+					dumpOutputs(results);
+			}
 			e.setHandled(true);
 		}
 		super.mousePressed(e);
