@@ -23,13 +23,15 @@ package org.openmicroscopy.remote;
 
 import java.net.URL;
 import java.util.*;
+import org.apache.xmlrpc.XmlRpc;
 import org.apache.xmlrpc.XmlRpcClient;
+import org.apache.xmlrpc.XmlRpcClientLite;
 import org.openmicroscopy.Session;
 
 public class XmlRpcCaller
     implements RemoteCaller
 {
-    private XmlRpcClient  xmlrpc;
+    private XmlRpcClientLite  xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionReference = null;
     private Session       session = null;
@@ -38,7 +40,8 @@ public class XmlRpcCaller
     {
         try
         {
-            xmlrpc = new XmlRpcClient(url);
+            xmlrpc = new XmlRpcClientLite(url);
+            XmlRpc.setKeepAlive(false);
         } catch (Exception e) {
             xmlrpc = null;
             System.err.println(e);
@@ -87,11 +90,12 @@ public class XmlRpcCaller
             try
             {
                 Object retval = xmlrpc.execute(method,vparams);
-                vparams.clear();
                 return retval;
             } catch (Exception e) {
                 //System.err.println("execute exception: "+e.getMessage());
                 throw new RemoteException(e.getMessage());
+            } finally {
+                vparams.clear();
             }
         }
     }
