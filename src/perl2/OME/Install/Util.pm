@@ -68,7 +68,6 @@ our @EXPORT = qw(
 		configure_library
 		compile_module
 		test_module
-		test_module_as_user
 		install_module
 		normalize_path
 		path_in_tree
@@ -842,8 +841,15 @@ sub unpack_archive {
 }
 
 sub configure_module {
-    my ($path, $logfile, @options) = @_;
+    my ($path, $logfile, $options) = @_;
     my $iwd = getcwd ();  # Initial working directory
+    
+    my (@user, @cl_options);
+    if (defined $options) {
+	    croak ("command-line module/user hashref required.") unless ref($options) eq 'HASH';
+    	@user       = "$options->{user}"    if exists ($options->{user});
+    	@cl_options = "$options->{options}" if exists ($options->{options});
+    }
     
     # Expand our relative path to an absolute one
     $path = rel2abs ($path);
@@ -862,17 +868,20 @@ sub configure_module {
     	`make realclean 2>&1`;
 
 		print $logfile "USING PERL CONFIGURE SCRIPT -- \"Makefile.pl\"\n\n";
-    	@output = `perl Makefile.PL @options 2>&1`;
+    	@output = `sudo -u @user perl Makefile.PL @cl_options 2>&1`     if (scalar @user);
+    	@output = `perl Makefile.PL @cl_options 2>&1`               unless (scalar @user);
 	} elsif (-e 'configure') {
 		print $logfile "USING C CONFIGURE SCRIPT -- \"configure\"\n\n";
 
 		`make clean 2>&1`;
-		@output = `./configure @options 2>&1`;
+		@output = `sudo -u @user ./configure @cl_options 2>&1`     if (scalar @user);
+		@output = `./configure @cl_options 2>&1`               unless (scalar @user);
 	} elsif (-e 'autogen.sh') {
 		print $logfile "USING C CONFIGURE/AUTOCONF/AUTOMAKE SCRIPT -- \"autogen.sh\"\n\n";
 		
 		`make clean 2>&1`;
-		@output = `./autogen.sh @options 2>&1`;
+		@output = `sudo -u @user ./autogen.sh @cl_options 2>&1`    if (scalar @user);
+		@output = `./autogen.sh @cl_options 2>&1`              unless (scalar @user);
 	} else {
 		print $logfile "UNABLE TO LOCATE SUITABLE CONFIGURE SCRIPT\n\n";
 	}
@@ -889,7 +898,6 @@ sub configure_module {
 
 	return 0;
 }
-
 sub configure_library {
     my ($path, $logfile) = @_;
     my $iwd = getcwd ();  # Initial working directory
@@ -943,34 +951,15 @@ sub compile_module {
 }
 
 sub test_module {
-    my ($path, $logfile) = @_;
+    my ($path, $logfile, $options) = @_;
     my $iwd = getcwd ();  # Initial working directory
     
-    # Expand our relative path to an absolute one
-    $path = rel2abs ($path);
-    
-    $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
-
-    chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-
-    my @output = `make test 2>&1`;
-
-    if ($? == 0) {
-	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
+    my (@user, @cl_options);
+    if (defined $options) {
+	    croak ("command-line module/user hashref required.") unless ref($options) eq 'HASH';
+    	@user       = "$options->{user}"    if exists ($options->{user});
+    	@cl_options = "$options->{options}" if exists ($options->{options});
     }
-
-    print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-    chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-
-    return 0;
-}
-
-sub test_module_as_user {
-    my ($path, $logfile, @user_name) = @_;
-    my $iwd = getcwd ();  # Initial working directory
     
     # Expand our relative path to an absolute one
     $path = rel2abs ($path);
@@ -979,13 +968,16 @@ sub test_module_as_user {
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
 
-    my @output = `sudo -u @user_name make test 2>&1`;
-
+    my @output;
+    
+    @output = `sudo -u @user make test 2>&1`  if (scalar @user);
+    @output = `make test 2>&1`            unless (scalar @user);
+    
     if ($? == 0) {
-	print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
-
-	chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
-	return 1;
+		print $logfile "SUCCESS TESTING MODULE -- OUTPUT: \"@output\"\n\n";
+	
+		chdir ($iwd) or croak "Unable to return to \"$iwd\". $!";
+		return 1;
     }
 
     print $logfile "FAILURE TESTING MODULE -- OUTPUT: \"@output\"\n\n";

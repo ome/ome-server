@@ -723,7 +723,9 @@ sub execute {
 			
 			# Configure
 			print "  \\_ Configuring ";
-			$retval = configure_module ("src/perl2/OME/Matlab/", $LOGFILE, "$MATLAB->{MATLAB_INST}");
+			$retval = configure_module("src/perl2/OME/Matlab/", $LOGFILE, 
+				{options => $MATLAB->{MATLAB_INST}, user => "$MATLAB->{USER}"});
+				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Unable to configure module, see $LOGFILE_NAME for details."
 				unless $retval;
@@ -740,8 +742,9 @@ sub execute {
 	
 			# Testing
 			print "  \\_ Testing ";
-			$retval = test_module_as_user ("src/perl2/OME/Matlab/", $LOGFILE, "$MATLAB->{USER}");
-	
+			$retval = test_module ("src/perl2/OME/Matlab/", $LOGFILE, 
+				{user =>"$MATLAB->{USER}"});
+				
 			print BOLD, "[FAILURE]", RESET, ".\n"
 				and croak "Tests failed, see $LOGFILE_NAME for details."
 				unless $retval;
@@ -749,6 +752,7 @@ sub execute {
 			
 			# Install
 			print "  \\_ Installing ";
+			euid(0);
 			$retval = install_module ("src/perl2/OME/Matlab/", $LOGFILE);
 	
 			print BOLD, "[FAILURE]", RESET, ".\n"

@@ -509,7 +509,7 @@ CROAK
 
     # Configure
     print "  \\_ Configuring ";
-    $retval = configure_module ("src/C/omeis", $LOGFILE, "--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR");
+    $retval = configure_module ("src/C/omeis", $LOGFILE, {options => "--prefix=$$OME_BASE_DIR --with-omeis-root=$$OMEIS_BASE_DIR"});
      
     print BOLD, "[FAILURE]", RESET, ".\n"
         and croak "Unable to configure module, see $LOGFILE_NAME for details."
