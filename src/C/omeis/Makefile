@@ -14,7 +14,7 @@ endif
 # August 2003 GCC for -pedantic
 CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-noreturn -Wundef -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_LIB)
-INCS   = $(FINK_INCLUDE) -I..
+INCS   = $(FINK_INCLUDE) 
 OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.o ../b64z_lib.o
 
 ifndef OME_ROOT
