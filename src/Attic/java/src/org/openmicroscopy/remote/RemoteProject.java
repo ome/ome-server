@@ -81,7 +81,7 @@ public class RemoteProject
     public List getDatasets()
     {
         List linkList = getRemoteListElement("OME::Project::DatasetMap",
-					     "dataset_links");
+                                             "dataset_links");
         List datasetList = new ArrayList();
         Iterator i = linkList.iterator();
         while (i.hasNext())
@@ -109,12 +109,6 @@ public class RemoteProject
                 }
             };
     }
-
-    public void addDataset(Dataset ds) {
-	setRemoteElement("addDataset", ds);
-	return;
-    }
-
 
     static class DatasetLink
         extends RemoteOMEObject
