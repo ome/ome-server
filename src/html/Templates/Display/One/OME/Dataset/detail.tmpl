@@ -63,6 +63,11 @@
 						<textarea name="annotation" rows="5" cols="60"><TMPL_VAR NAME='current_annotation'></textarea>
 					</td>
 				</tr>
+				<tr>
+					<td colspan='2'>
+						<a href="javascript: annotateDataset( <TMPL_VAR Name='id'>, document.forms[0].annotateWithST.value);">Create</a> a custom annotation of <TMPL_VAR NAME='annotationSTs'>
+					</td>
+				</tr>
 			</table>
 		</td>
 		<td align="right" valign="top">
