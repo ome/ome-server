@@ -18,18 +18,18 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::AttributeType;
+package OME::SemanticType;
 
 =head1 NAME
 
-OME::AttributeType - data object representing attribute types
+OME::SemanticType - data object representing attribute types
 
 =head1 SYNOPSIS
 
-	use OME::AttributeType;
+	use OME::SemanticType;
 
 	# Load object via primary key
-	my $atype = $factory->loadObject("OME::AttributeType",1);
+	my $atype = $factory->loadObject("OME::SemanticType",1);
 
 	# Ensure that instance package is created
 	my $pkg = $atype->requireAttributeTypePackage();
@@ -39,8 +39,8 @@ OME::AttributeType - data object representing attribute types
 
 =head1 DESCRIPTION
 
-OME::AttributeType serves two purposes.  First, it functoins just like
-any other OME DBObject, representing rows from the ATTRIBUTE_TYPES
+OME::SemanticType serves two purposes.  First, it functoins just like
+any other OME DBObject, representing rows from the semantic_types
 table in the OME database.  More importantly, though, it serves as the
 means of creating data classes for each attribute type, similar to how
 OME::DataTable create data classes for each attribute table.
@@ -66,13 +66,13 @@ __PACKAGE__->mk_classdata('_createTime');
 __PACKAGE__->mk_classdata('_attributeTypePackages');
 __PACKAGE__->_attributeTypePackages({});
 
-__PACKAGE__->table('attribute_types');
-__PACKAGE__->sequence('attribute_type_seq');
-__PACKAGE__->columns(Primary => qw(attribute_type_id));
+__PACKAGE__->table('semantic_types');
+__PACKAGE__->sequence('semantic_type_seq');
+__PACKAGE__->columns(Primary => qw(semantic_type_id));
 __PACKAGE__->columns(Essential => qw(name granularity description));
-__PACKAGE__->has_many('attribute_columns',
-                      'OME::AttributeType::Column' => qw(attribute_type_id),
-                      {sort => 'attribute_column_id'});
+__PACKAGE__->has_many('semantic_elements',
+                      'OME::SemanticType::Column' => qw(semantic_type_id),
+                      {sort => 'semantic_element_id'});
 
 #__PACKAGE__->add_trigger(after_create => \&requireAttributeTypePackage);
 #__PACKAGE__->add_trigger(select => \&requireAttributeTypePackage);
@@ -105,13 +105,13 @@ Returns or sets the description of this semantic type.
 Returns or sets the granularity of this semantic type.  Will be either
 'G', 'D', 'I', or 'F'.
 
-=head2 attribute_columns
+=head2 semantic_elements
 
-	my @columns = $type->attribute_columns();
-	my $column_iterator = $type->attribute_columns();
+	my @columns = $type->semantic_elements();
+	my $column_iterator = $type->semantic_elements();
 
 Returns or iterates, depending on context, a list of all of the
-C<Columns> associated with this analysis.
+C<Columns> associated with this module_execution.
 
 =cut
 
@@ -119,7 +119,7 @@ sub getAttributeTypePackage {
     my $self = shift;
     my $table = $self->name();
     $table =~ s/[^\w\d]/_/g;
-    return "OME::AttributeType::__$table";
+    return "OME::SemanticType::__$table";
 }
 
 sub requireAttributeTypePackage {
@@ -138,18 +138,18 @@ sub requireAttributeTypePackage {
 	use strict;
 	our $VERSION = '1.0';
 
-	use OME::AttributeType;
-	use base qw(OME::AttributeType::Superclass);
+	use OME::SemanticType;
+	use base qw(OME::SemanticType::Superclass);
     };
 
     eval $def;
 
     $pkg->_attribute_type($self);
 
-    my $attribute_columns = $self->attribute_columns();
+    my $semantic_elements = $self->semantic_elements();
     no strict 'refs';
-    while (my $attribute_column = $attribute_columns->next()) {
-        my $name = $attribute_column->name();
+    while (my $semantic_element = $semantic_elements->next()) {
+        my $name = $semantic_element->name();
 
         # Add an accessor/mutator to the semantic instance class.
         *{$pkg."::".$name} = sub {
@@ -158,12 +158,12 @@ sub requireAttributeTypePackage {
         };
 
         # Make this method visible via the Remote Framework
-        my $data_column = $attribute_column->data_column();
+        my $data_column = $semantic_element->data_column();
         my $sql_type = $data_column->sql_type();
         if ($sql_type eq 'reference') {
             addPrototype($pkg,$name,
-                         ['OME::AttributeType::Superclass'],
-                         ['OME::AttributeType::Superclass'],
+                         ['OME::SemanticType::Superclass'],
+                         ['OME::SemanticType::Superclass'],
                          force => 1);
         } else {
             addPrototype($pkg,$name,['$'],['$'],force => 1);
@@ -199,7 +199,7 @@ sub dataTables {
 
     my %tables;
 
-    foreach my $attr_column ($self->attribute_columns()) {
+    foreach my $attr_column ($self->semantic_elements()) {
         my $data_table = $attr_column->data_column()->data_table();
         $tables{$data_table->id()} = $data_table;
     }
@@ -287,13 +287,14 @@ sub __addTiming {
 sub __getSeconds {
     my ($self,$name) = @_;
     my $t = $self->$name();
+    return 0 unless defined $t;
     print STDERR "***** ",$t," ",join(',',@$t),"\n";
     return $t->[0];
 }
 
 
 sub newAttributes {
-    my ($self,$session,$analysis,@attribute_info) = @_;
+    my ($self,$session,$module_execution,@attribute_info) = @_;
 
     my $t0 = new Benchmark;
 
@@ -319,23 +320,23 @@ sub newAttributes {
        'F' => 'feature_id'
       );
 
-    my ($attribute_type, $data_hash);
+    my ($semantic_type, $data_hash);
     my ($i, $length);
     my $factory = $session->Factory();
 
     $length = scalar(@attribute_info);
 
     for ($i = 0; $i < $length; $i += 2) {
-        $attribute_type = $attribute_info[$i];
+        $semantic_type = $attribute_info[$i];
         $data_hash = $attribute_info[$i+1];
 
-        #$factory = $attribute_type->Session()->Factory()
+        #$factory = $semantic_type->Session()->Factory()
         #  if !defined $factory;
-        my @attribute_columns = $attribute_type->attribute_columns();
-        my $granularity = $attribute_type->granularity();
+        my @semantic_elements = $semantic_type->semantic_elements();
+        my $granularity = $semantic_type->granularity();
         my $granularityColumn = $granularityColumns{$granularity};
 
-        __debug("  ".$attribute_type->name()." (".scalar(@attribute_columns)." columns)");
+        __debug("  ".$semantic_type->name()." (".scalar(@semantic_elements)." columns)");
 
         # Follow each attribute column to its location in the
         # database.  Mark some information about that data table, and
@@ -346,21 +347,21 @@ sub newAttributes {
         # attribute writes to is of the same granularity as the
         # attribute itself.
 
-        foreach my $column (@attribute_columns) {
+        foreach my $column (@semantic_elements) {
             my $data_column = $column->data_column();
             my $column_name = $data_column->column_name();
             my $data_table = $data_column->data_table();
             my $table_name = $data_table->table_name();
             my $data_granularity = $data_table->granularity();
-            my $attribute_column_name = $column->name();
+            my $semantic_element_name = $column->name();
 
             die "Attribute granularity and data table granularity don't match!"
                 if ($granularity ne $data_granularity);
 
-            __debug("    $attribute_column_name -> ${table_name}.$column_name");
+            __debug("    $semantic_element_name -> ${table_name}.$column_name");
 
-            # Mark that $attribute_type resides in $table_name.
-            $attribute_tables{$attribute_type->id()}->{$table_name} = 1;
+            # Mark that $semantic_type resides in $table_name.
+            $attribute_tables{$semantic_type->id()}->{$table_name} = 1;
 
             # Save the data table for later.
             $data_tables{$table_name} = $data_table;
@@ -385,7 +386,7 @@ sub newAttributes {
             }
 
             # Pull out the datum from the attribute hash.
-            my $new_data = $data_hash->{$attribute_column_name};
+            my $new_data = $data_hash->{$semantic_element_name};
 
             #__debug("      = $new_data");
 
@@ -432,7 +433,7 @@ sub newAttributes {
         $data{$table_name}->{attribute_id} = $id
           if (defined $id);
 
-        my $data_row = $data_table->newRow($analysis,
+        my $data_row = $data_table->newRow($module_execution,
                                            $targets{$table_name},
                                            $data{$table_name});
 
@@ -455,13 +456,13 @@ sub newAttributes {
     __debug("Creating attributes");
 
     for ($i = 0; $i < $length; $i += 2) {
-        $attribute_type = $attribute_info[$i];
+        $semantic_type = $attribute_info[$i];
         $data_hash = $attribute_info[$i+1];
 
-        my $attribute_tables = $attribute_tables{$attribute_type->id()};
+        my $attribute_tables = $attribute_tables{$semantic_type->id()};
         my $rows = {};
         my $target;
-        my $granularity = $attribute_type->granularity();
+        my $granularity = $semantic_type->granularity();
 
         # Collect all of the data rows needed for this attribute.
 
@@ -475,7 +476,7 @@ sub newAttributes {
         # a logical view into the database, it does not create any new
         # entries in the database itself.)
 
-        my $attribute = $attribute_type->newAttribute($target,
+        my $attribute = $semantic_type->newAttribute($target,
                                                       $id,$rows);
 
         push @attributes, $attribute;
@@ -493,11 +494,11 @@ sub newAttributes {
 }
 
 
-package OME::AttributeType::Column;
+package OME::SemanticType::Column;
 
 =head1 NAME
 
-OME::AttributeType::Column
+OME::SemanticType::Column
 
 =head1 DESCRIPTION
 
@@ -505,7 +506,7 @@ This C<AttributeType.Column> interface represents one element of a
 semantic type.  The storage type of the element can be accessed via
 the element's data column:
 
-	my $data_column = $attribute_column->data_column();
+	my $data_column = $semantic_element->data_column();
 	my $sql_type = $data_column->sql_type();
 
 =cut
@@ -519,15 +520,15 @@ use base qw(OME::DBObject);
 
 
 __PACKAGE__->AccessorNames({
-    attribute_type_id => 'attribute_type',
+    semantic_type_id => 'semantic_type',
     data_column_id    => 'data_column'
     });
 
-__PACKAGE__->table('attribute_columns');
-__PACKAGE__->sequence('attribute_column_seq');
-__PACKAGE__->columns(Primary => qw(attribute_column_id));
-__PACKAGE__->columns(Essential => qw(attribute_type_id name data_column_id description));
-__PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
+__PACKAGE__->table('semantic_elements');
+__PACKAGE__->sequence('semantic_element_seq');
+__PACKAGE__->columns(Primary => qw(semantic_element_id));
+__PACKAGE__->columns(Essential => qw(semantic_type_id name data_column_id description));
+__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
 __PACKAGE__->hasa('OME::DataTable::Column' => qw(data_column_id));
 
 =head1 METHODS
@@ -549,10 +550,10 @@ Returns or sets the name of this semantic element.
 
 Returns or sets the description of this semantic element.
 
-=head2 attribute_type
+=head2 semantic_type
 
-	my $attribute_type = $type->attribute_type();
-	$type->attribute_type($attribute_type);
+	my $semantic_type = $type->semantic_type();
+	$type->semantic_type($semantic_type);
 
 Returns or sets the attribute type that this semantic element belongs
 to.
@@ -566,7 +567,7 @@ Returns or sets the data column associated with this semantic element.
 
 =cut
 
-package OME::AttributeType::Superclass;
+package OME::SemanticType::Superclass;
 
 use strict;
 our $VERSION = '1.0';
@@ -581,14 +582,14 @@ use fields qw(_data_table_rows _target _analysis _id _session);
 
 =head1 NAME
 
-OME::AttributeType::Superclass
+OME::SemanticType::Superclass
 
 =head1 DESCRIPTION
 
 The C<AttributeType::Superclass> class is the superclass every piece of
 semantically-typed data in OME.  This includes attributes created by
 the user during image import, and any attributes created as output by
-the execution of analysis modules.
+the execution of module_execution modules.
 
 Each attribute has a single semantic type, which is represented by an
 instance of L<AttributeType>.  Based on the semantic type's
@@ -597,7 +598,7 @@ has a target of) a dataset, image, or feature, or it will be a global
 attribute (and have a target of C<undef>.)
 
 Most attributes will be generated computationally as the result of an
-analysis module.  The analysis (and by extension, module) which
+analysis module.  The module_execution (and by extension, module) which
 generated the attribute can be retrieved with the L<getAnalysis()>
 method.
 
@@ -624,12 +625,12 @@ sub new {
     $self->{_id} = $id;
     $self->{_session} = $session;
 
-    my $analysis;
+    my $module_execution;
     foreach my $row (values %$rows) {
-        $analysis = $row->analysis();
-        last if defined $analysis;
+        $module_execution = $row->module_execution();
+        last if defined $module_execution;
     }
-    $self->{_analysis} = $analysis;
+    $self->{_analysis} = $module_execution;
 
     bless $self, $class;
     return $self;
@@ -640,16 +641,16 @@ sub load {
     my $class = ref($proto) || $proto;
 
     my $rows = {};
-    my ($target,$analysis);
+    my ($target,$module_execution);
     my $factory = $session->Factory();
 
-    my $attribute_type = $class->_attribute_type();
-    my $granularity = $attribute_type->granularity();
-    my $attribute_columns = $attribute_type->attribute_columns();
+    my $semantic_type = $class->_attribute_type();
+    my $granularity = $semantic_type->granularity();
+    my $semantic_elements = $semantic_type->semantic_elements();
 	my $found_data_row = 0;
 
-    while (my $attribute_column = $attribute_columns->next()) {
-        my $data_column = $attribute_column->data_column();
+    while (my $semantic_element = $semantic_elements->next()) {
+        my $data_column = $semantic_element->data_column();
         my $data_table = $data_column->data_table();
         my $data_table_pkg = $data_table->requireDataTablePackage();
         my $data_tableID = $data_table->id();
@@ -671,8 +672,8 @@ sub load {
             }
         }
 
-        if (!defined $analysis) {
-            $analysis = $data_row->analysis();
+        if (!defined $module_execution) {
+            $module_execution = $data_row->module_execution();
         }
     }
 
@@ -713,17 +714,17 @@ Returns the primary key ID of the attribute.
 
 Returns the OME session used to create this attribute.
 
-=head2 attribute_type
+=head2 semantic_type
 
-	my $attribute_type = $attribute->attribute_type();
+	my $semantic_type = $attribute->semantic_type();
 
 Returns the semantic type of this attribute.
 
-=head2 analysis
+=head2 module_execution
 
-	my $analysis = $attribute->analysis();
+	my $module_execution = $attribute->module_execution();
 
-Returns the analysis that generated this attribute, or undef if it was
+Returns the module_execution that generated this attribute, or undef if it was
 created directly by the user.
 
 =cut
@@ -731,8 +732,8 @@ created directly by the user.
 sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
-sub attribute_type { return shift->_attribute_type(); }
-sub analysis { return shift->{_analysis}; }
+sub semantic_type { return shift->_attribute_type(); }
+sub module_execution { return shift->{_analysis}; }
 
 =head2 dataset, image, feature
 
@@ -760,7 +761,7 @@ sub _getTarget {
 
 Returns a reference to a hash of all of the semantic elements of the
 attribute and their values.  This hash will not include entries for
-the analysis, target, semantic type, or primary key ID.
+the module_execution, target, semantic type, or primary key ID.
 
 =cut
 
@@ -769,8 +770,8 @@ sub getDataHash {
 
     my %return_hash;
 
-    my $attribute_type = $self->_attribute_type();
-    my @columns = $attribute_type->attribute_columns();
+    my $semantic_type = $self->_attribute_type();
+    my @columns = $semantic_type->semantic_elements();
 
     foreach my $column (@columns) {
         my $column_name = $column->name();
@@ -785,15 +786,15 @@ sub _getField {
     my ($self, $field_name) = @_;
     my $factory = $self->Session()->Factory();
     my $rows = $self->{_data_table_rows};
-    my $attribute_type = $self->_attribute_type();
+    my $semantic_type = $self->_attribute_type();
 
-    my $attribute_column = $factory->
-      findObject("OME::AttributeType::Column",
-                 attribute_type_id => $attribute_type->id(),
+    my $semantic_element = $factory->
+      findObject("OME::SemanticType::Column",
+                 semantic_type_id => $semantic_type->id(),
                  name              => $field_name);
-    return undef unless defined $attribute_column;
+    return undef unless defined $semantic_element;
 
-    my $data_column = $attribute_column->data_column();
+    my $data_column = $semantic_element->data_column();
     my $column_name = lc($data_column->column_name());
     my $data_table = $data_column->data_table();
     my $data_row = $rows->{$data_table->id()};
@@ -811,21 +812,21 @@ sub _setField {
     my ($self, $field_name, $value) = @_;
     my $factory = $self->Session()->Factory();
     my $rows = $self->{_data_table_rows};
-    my $attribute_type = $self->_attribute_type();
+    my $semantic_type = $self->_attribute_type();
 
-    my $attribute_column = $factory->
-      findObject("OME::AttributeType::Column",
-                 attribute_type_id => $attribute_type->id(),
+    my $semantic_element = $factory->
+      findObject("OME::SemanticType::Column",
+                 semantic_type_id => $semantic_type->id(),
                  name              => $field_name);
-    return undef unless defined $attribute_column;
+    return undef unless defined $semantic_element;
 
-    my $data_column = $attribute_column->data_column();
+    my $data_column = $semantic_element->data_column();
     my $column_name = lc($data_column->column_name());
     my $data_table = $data_column->data_table();
     my $data_row = $rows->{$data_table->id()};
 
     if (($data_column->sql_type() eq 'reference') &&
-        UNIVERSAL::isa($value,"OME::AttributeType::Superclass")) {
+        UNIVERSAL::isa($value,"OME::SemanticType::Superclass")) {
         $data_row->$column_name($value->id());
     } else {
         $data_row->$column_name($value);

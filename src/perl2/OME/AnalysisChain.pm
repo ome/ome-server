@@ -19,19 +19,19 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::AnalysisView;
+package OME::AnalysisChain;
 
 =head1 NAME
 
-OME::AnalysisView - an analysis chain
+OME::AnalysisChain - an module_execution chain
 
-OME::AnalysisView::Node - a node in the analysis chain
+OME::AnalysisChain::Node - a node in the module_execution chain
 
-OME::AnalysisView::Link - a link connecting two nodes in the chain
+OME::AnalysisChain::Link - a link connecting two nodes in the chain
 
 =head1 DESCRIPTION
 
-The C<AnalysisView> class represents analysis chains in OME.  Each
+The C<AnalysisView> class represents module_execution chains in OME.  Each
 chain is a directed acyclic graph.  The nodes of the chain represent
 analysis modules that must get executed.  The links of the chain
 connect outputs of one node to inputs of another; they specify the
@@ -48,18 +48,18 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('analysis_views');
-__PACKAGE__->sequence('analysis_view_seq');
-__PACKAGE__->columns(Primary => qw(analysis_view_id));
+__PACKAGE__->table('analysis_chains');
+__PACKAGE__->sequence('analysis_chain_seq');
+__PACKAGE__->columns(Primary => qw(analysis_chain_id));
 __PACKAGE__->columns(Essential => qw(owner name locked));
 __PACKAGE__->columns(Description => qw(description));
 #__PACKAGE__->hasa('OME::Experimenter' => qw(owner));
 __PACKAGE__->has_many('nodes',
-                      'OME::AnalysisView::Node' => qw(analysis_view_id));
+                      'OME::AnalysisChain::Node' => qw(analysis_chain_id));
 __PACKAGE__->has_many('links',
-                      'OME::AnalysisView::Link' => qw(analysis_view_id));
+                      'OME::AnalysisChain::Link' => qw(analysis_chain_id));
 __PACKAGE__->has_many('paths',
-                      'OME::AnalysisPath' => qw(analysis_view_id));
+                      'OME::AnalysisPath' => qw(analysis_chain_id));
 
 =head1 METHODS (C<AnalysisView>)
 
@@ -71,35 +71,35 @@ those defined by L<OME::DBObject>.
 	my $owner = $chain->owner();
 	$chain->owner($owner);
 
-Returns or sets the owner of this analysis chain.
+Returns or sets the owner of this module_execution chain.
 
 =head2 name
 
 	my $name = $chain->name();
 	$chain->name($name);
 
-Returns or sets the name of this analysis chain.
+Returns or sets the name of this module_execution chain.
 
 =head2 locked
 
 	my $locked = $chain->locked();
 	$chain->locked($locked);
 
-Returns or sets whether this analysis chain is locked.
+Returns or sets whether this module_execution chain is locked.
 
 =head2 description
 
 	my $description = $chain->description();
 	$chain->description($description);
 
-Returns or sets the description of this analysis chain.
+Returns or sets the description of this module_execution chain.
 
 =head2 nodes
 
 	my @nodes = $chain->nodes();
 	my $node_iterator = $chain->nodes();
 
-Returns or iterates, depending on context, the nodes in the analysis
+Returns or iterates, depending on context, the nodes in the module_execution
 chain.
 
 =head2 links
@@ -107,7 +107,7 @@ chain.
 	my @links = $chain->links();
 	my $link_iterator = $chain->links();
 
-Returns or iterates, depending on context, the links in the analysis
+Returns or iterates, depending on context, the links in the module_execution
 chain.
 
 =head2 paths
@@ -125,7 +125,7 @@ sub owner {
     if (@_) {
         my $attribute = shift;
         die "Owner must be an Experimenter"
-          unless $attribute->attribute_type()->name() eq "Experimenter";
+          unless $attribute->semantic_type()->name() eq "Experimenter";
         $self->_owner_accessor($attribute->id());
         return undef;
     } else {
@@ -136,7 +136,7 @@ sub owner {
 
 
 
-package OME::AnalysisView::Node;
+package OME::AnalysisChain::Node;
 
 use strict;
 our $VERSION = '1.0';
@@ -145,40 +145,40 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_view_id => 'analysis_view',
-    program_id       => 'program'
+    analysis_chain_id => 'analysis_chain',
+    module_id       => 'module'
     });
 
-__PACKAGE__->table('analysis_view_nodes');
-__PACKAGE__->sequence('analysis_view_nodes_seq');
-__PACKAGE__->columns(Primary => qw(analysis_view_node_id));
-__PACKAGE__->columns(Essential => qw(analysis_view_id program_id
+__PACKAGE__->table('analysis_chain_nodes');
+__PACKAGE__->sequence('analysis_chain_nodes_seq');
+__PACKAGE__->columns(Primary => qw(analysis_chain_node_id));
+__PACKAGE__->columns(Essential => qw(analysis_chain_id module_id
                                      iterator_tag new_feature_tag));
-__PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
-__PACKAGE__->hasa('OME::Program' => qw(program_id));
+__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
+__PACKAGE__->hasa('OME::Module' => qw(module_id));
 __PACKAGE__->has_many('input_links',
-                      'OME::AnalysisView::Link' => qw(to_node));
+                      'OME::AnalysisChain::Link' => qw(to_node));
 __PACKAGE__->has_many('output_links',
-                      'OME::AnalysisView::Link' => qw(from_node));
+                      'OME::AnalysisChain::Link' => qw(from_node));
 
 =head1 METHODS (C<AnalysisView::Node>)
 
 The following methods are available to C<AnalysisView::Node> in
 addition to those defined by L<OME::DBObject>.
 
-=head2 analysis_view
+=head2 analysis_chain
 
-	my $analysis_view = $node->analysis_view();
-	$node->analysis_view($analysis_view);
+	my $analysis_chain = $node->analysis_chain();
+	$node->analysis_chain($analysis_chain);
 
-Returns or sets the analysis chain that this node belongs to.
+Returns or sets the module_execution chain that this node belongs to.
 
-=head2 program
+=head2 module
 
-	my $program = $node->program();
-	$node->program($program);
+	my $module = $node->module();
+	$node->module($module);
 
-Returns or sets the analysis module that this node represents.
+Returns or sets the module_execution module that this node represents.
 
 =head2 iterator_tag
 
@@ -213,7 +213,7 @@ provides output for.
 
 =cut
 
-package OME::AnalysisView::Link;
+package OME::AnalysisChain::Link;
 
 use strict;
 our $VERSION = '1.0';
@@ -222,32 +222,32 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_view_id => 'analysis_view'
+    analysis_chain_id => 'analysis_chain'
     });
 
-__PACKAGE__->table('analysis_view_links');
-__PACKAGE__->sequence('analysis_view_links_seq');
-__PACKAGE__->columns(Primary => qw(analysis_view_link_id));
-__PACKAGE__->columns(Essential => qw(analysis_view_id
+__PACKAGE__->table('analysis_chain_links');
+__PACKAGE__->sequence('analysis_chain_links_seq');
+__PACKAGE__->columns(Primary => qw(analysis_chain_link_id));
+__PACKAGE__->columns(Essential => qw(analysis_chain_id
                                      from_node from_output
                                      to_node to_input));
-__PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
-__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(from_node));
-__PACKAGE__->hasa('OME::Program::FormalOutput' => qw(from_output));
-__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(to_node));
-__PACKAGE__->hasa('OME::Program::FormalInput' => qw(to_input));
+__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
+__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(from_node));
+__PACKAGE__->hasa('OME::Module::FormalOutput' => qw(from_output));
+__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(to_node));
+__PACKAGE__->hasa('OME::Module::FormalInput' => qw(to_input));
 
 =head1 METHODS (C<AnalysisView::Link>)
 
 The following methods are available to C<AnalysisView::Link> in
 addition to those defined by L<OME::DBObject>.
 
-=head2 analysis_view
+=head2 analysis_chain
 
-	my $analysis_view = $link->analysis_view();
-	$link->analysis_view($analysis_view);
+	my $analysis_chain = $link->analysis_chain();
+	$link->analysis_chain($analysis_chain);
 
-Returns the analysis chain that this link belongs to.
+Returns the module_execution chain that this link belongs to.
 
 =head2 from_node
 

@@ -1,4 +1,4 @@
-# OME/Program/Category.pm
+# OME/module/Category.pm
 
 # Copyright (C) 2002-2003 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Program::Category;
+package OME::Module::Category;
 
 use strict;
 our $VERSION = '1.0';
@@ -32,11 +32,11 @@ __PACKAGE__->
                 });
 
 
-__PACKAGE__->table('program_categories');
-__PACKAGE__->sequence('program_category_seq');
+__PACKAGE__->table('module_categories');
+__PACKAGE__->sequence('module_category_seq');
 __PACKAGE__->columns(Primary => qw(category_id));
 __PACKAGE__->columns(Essential => qw(name description parent_category_id));
-__PACKAGE__->hasa('OME::Program::Category' => qw(parent_category_id));
+__PACKAGE__->hasa('OME::Module::Category' => qw(parent_category_id));
 
 
 1;

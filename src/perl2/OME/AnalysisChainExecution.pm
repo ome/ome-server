@@ -18,11 +18,11 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::AnalysisExecution;
+package OME::AnalysisChainExecution;
 
 =head1 NAME
 
-OME::AnalysisExecution - execution of an analysis chain
+OME::AnalysisExecution - execution of an module_execution chain
 
 OME::AnalysisExecution::NodeExecution - execution of one node in an
 analysis chain
@@ -47,34 +47,34 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_view_id => 'analysis_view',
+    analysis_chain_id => 'analysis_chain',
     dataset_id => 'dataset',
 #    experimenter_id => 'experimenter'
     });
 
-__PACKAGE__->table('analysis_executions');
-__PACKAGE__->sequence('analysis_execution_seq');
-__PACKAGE__->columns(Primary => qw(analysis_execution_id));
-__PACKAGE__->columns(Essential => qw(analysis_view_id dataset_id
+__PACKAGE__->table('analysis_chain_executions');
+__PACKAGE__->sequence('analysis_chain_execution_seq');
+__PACKAGE__->columns(Primary => qw(analysis_chain_execution_id));
+__PACKAGE__->columns(Essential => qw(analysis_chain_id dataset_id
 				     experimenter_id timestamp));
-__PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
+__PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 #__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
 __PACKAGE__->has_many('node_executions',
                       'OME::AnalysisExecution::NodeExecution' =>
-                      qw(analysis_execution_id));
+                      qw(analysis_chain_execution_id));
 
 =head1 METHODS (C<AnalysisExecution>)
 
 The following methods are available to C<AnalysisExecution> in
 addition to those defined by L<OME::DBObject>.
 
-=head2 analysis_view
+=head2 analysis_chain
 
-	my $analysis_view = $execution->analysis_view();
-	$execution->analysis_view($analysis_view);
+	my $analysis_chain = $execution->analysis_chain();
+	$execution->analysis_chain($analysis_chain);
 
-Returns or sets the analysis chain which was executed.
+Returns or sets the module_execution chain which was executed.
 
 =head2 dataset
 
@@ -104,7 +104,7 @@ Returns or sets when the execution occurred.
 	my $node_iterator = $execution->node_executions();
 
 Returns or iterates, depending on context, a list of all of the
-C<AnalysisExecution::NodeExecutions> associated with this analysis.
+C<AnalysisExecution::NodeExecutions> associated with this module_execution.
 
 =cut
 
@@ -113,7 +113,7 @@ sub experimenter {
     if (@_) {
         my $attribute = shift;
         die "Owner must be an Experimenter"
-          unless $attribute->attribute_type()->name() eq "Experimenter";
+          unless $attribute->semantic_type()->name() eq "Experimenter";
         $self->experimenter_id($attribute->id());
         return undef;
     } else {
@@ -123,7 +123,7 @@ sub experimenter {
 }
 
 
-package OME::AnalysisExecution::NodeExecution;
+package OME::AnalysisChainExecution::NodeExecution;
 
 use strict;
 our $VERSION = '1.0';
@@ -132,20 +132,20 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_execution_id => 'analysis_execution',
-    analysis_view_node_id => 'analysis_view_node',
-    analysis_id           => 'analysis'
+    analysis_chain_execution_id => 'analysis_chain_execution',
+    analysis_chain_node_id => 'analysis_chain_node',
+    module_execution_id           => 'module_execution'
     });
 
 __PACKAGE__->table('analysis_node_executions');
 __PACKAGE__->sequence('analysis_node_execution_seq');
 __PACKAGE__->columns(Primary => qw(analysis_node_execution_id));
-__PACKAGE__->columns(Essential => qw(analysis_execution_id
-                                     analysis_view_node_id
-                                     analysis_id));
-__PACKAGE__->hasa('OME::AnalysisExecution' => qw(analysis_execution_id));
-__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
-__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+__PACKAGE__->columns(Essential => qw(analysis_chain_execution_id
+                                     analysis_chain_node_id
+                                     module_execution_id));
+__PACKAGE__->hasa('OME::AnalysisChainExecution' => qw(analysis_chain_execution_id));
+__PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(analysis_chain_node_id));
+__PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
 
 =head1 METHODS (C<AnalysisExecution::NodeExecution>)
 
@@ -153,25 +153,25 @@ The following methods are available to
 C<AnalysisExecution::NodeExecution> in addition to those defined by
 L<OME::DBObject>.
 
-=head2 analysis_execution
+=head2 analysis_chain_execution
 
-	my $analysis_execution = $node_execution->analysis_execution();
-	$node_execution->analysis_execution($analysis_execution);
+	my $analysis_chain_execution = $node_execution->analysis_chain_execution();
+	$node_execution->analysis_chain_execution($analysis_chain_execution);
 
-Returns or sets the analysis execution that this node execution
+Returns or sets the module_execution execution that this node execution
 belongs to.
 
-=head2 analysis_view_node
+=head2 analysis_chain_node
 
-	my $analysis_view_node = $node_execution->analysis_view_node();
-	$node_execution->analysis_view_node($analysis_view_node);
+	my $analysis_chain_node = $node_execution->analysis_chain_node();
+	$node_execution->analysis_chain_node($analysis_chain_node);
 
-Returns or sets the analysis chain node that was executed.
+Returns or sets the module_execution chain node that was executed.
 
-=head2 analysis
+=head2 module_execution
 
-	my $analysis = $node_execution->analysis();
-	$node_execution->analysis($analysis);
+	my $module_execution = $node_execution->module_execution();
+	$node_execution->module_execution($module_execution);
 
 Returns or sets the module execution that satisfied this node
 execution.

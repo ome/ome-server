@@ -1,4 +1,4 @@
-# OME/Program.pm
+# OME/module.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -18,7 +18,7 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-package OME::Program;
+package OME::Module;
 
 use strict;
 our $VERSION = '1.0';
@@ -26,46 +26,46 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->table('programs');
-__PACKAGE__->sequence('program_seq');
-__PACKAGE__->columns(Primary => qw(program_id));
-__PACKAGE__->columns(Essential => qw(program_name description category));
+__PACKAGE__->table('modules');
+__PACKAGE__->sequence('module_seq');
+__PACKAGE__->columns(Primary => qw(module_id));
+__PACKAGE__->columns(Essential => qw(name description category));
 __PACKAGE__->columns(Definition => qw(module_type location
                                       default_iterator new_feature_tag
                                       execution_instructions ));
-__PACKAGE__->hasa('OME::Program::Category' => qw(category));
-__PACKAGE__->has_many('inputs','OME::Program::FormalInput' => qw(program_id));
-__PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
-__PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
+__PACKAGE__->hasa('OME::Module::Category' => qw(category));
+__PACKAGE__->has_many('inputs','OME::Module::FormalInput' => qw(module_id));
+__PACKAGE__->has_many('outputs','OME::Module::FormalOutput' => qw(module_id));
+__PACKAGE__->has_many('analyses','OME::ModuleExecution' => qw(module_id));
 
 
 sub findByName {
     my ($class,$name) = @_;
-    my @programs = $class->search(program_name => $name);
-    die "Multiple matching programs" if (scalar(@programs) > 1);
-    return $programs[0];
+    my @modules = $class->search(name => $name);
+    die "Multiple matching modules" if (scalar(@modules) > 1);
+    return $modules[0];
 }
 
 sub findInputByName {
     my ($self, $name) = @_;
-    my $program_id = $self->id();
-    return OME::Program::FormalInput->
-      findByProgramAndName($program_id,
+    my $module_id = $self->id();
+    return OME::Module::FormalInput->
+      findByModuleAndName($module_id,
                            $name);
 }
 
 sub findOutputByName {
     my ($self, $name) = @_;
-    my $program_id = $self->id();
-    return OME::Program::FormalOutput->
-      findByProgramAndName($program_id,
+    my $module_id = $self->id();
+    return OME::Module::FormalOutput->
+      findByModuleAndName($module_id,
                            $name);
 }
 
 
 
 
-package OME::Program::FormalInput;
+package OME::Module::FormalInput;
 
 use strict;
 our $VERSION = '1.0';
@@ -73,39 +73,39 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-require OME::Analysis;
+require OME::ModuleExecution;
 
 __PACKAGE__->AccessorNames({
-    program_id        => 'program',
+    module_id        => 'module',
     lookup_table_id   => 'lookup_table',
-    attribute_type_id => 'attribute_type'
+    semantic_type_id => 'semantic_type'
     });
 
 __PACKAGE__->table('formal_inputs');
 __PACKAGE__->sequence('formal_input_seq');
 __PACKAGE__->columns(Primary => qw(formal_input_id));
-__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id
+__PACKAGE__->columns(Essential => qw(module_id name semantic_type_id
                                      optional list user_defined));
 __PACKAGE__->columns(Other => qw(lookup_table_id description));
-__PACKAGE__->hasa('OME::Program' => qw(program_id));
+__PACKAGE__->hasa('OME::Module' => qw(module_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
-__PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
+__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
 
-__PACKAGE__->has_many('actual_inputs','OME::Analysis::ActualInput' =>
+__PACKAGE__->has_many('actual_inputs','OME::ModuleExecution::ActualInput' =>
 		      qw(formal_input_id));
                      
-__PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
+__PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
 
-sub findByProgramAndName {
-    my ($class, $program_id, $name) = @_;
-    my @inputs = $class->__program_name(program_id => $program_id,
+sub findByModuleAndName {
+    my ($class, $module_id, $name) = @_;
+    my @inputs = $class->__module_name(module_id => $module_id,
 					name       => $name);
     die "Multiple matching inputs" if (scalar(@inputs) > 1);
     return $inputs[0]; 
 }
 
 
-package OME::Program::FormalOutput;
+package OME::Module::FormalOutput;
 
 use strict;
 our $VERSION = '1.0';
@@ -113,30 +113,30 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-require OME::Analysis;
+require OME::ModuleExecution;
 
 __PACKAGE__->AccessorNames({
-    program_id        => 'program',
-    attribute_type_id => 'attribute_type'
+    module_id        => 'module',
+    semantic_type_id => 'semantic_type'
     });
 
 __PACKAGE__->table('formal_outputs');
 __PACKAGE__->sequence('formal_output_seq');
 __PACKAGE__->columns(Primary => qw(formal_output_id));
-__PACKAGE__->columns(Essential => qw(program_id name attribute_type_id
+__PACKAGE__->columns(Essential => qw(module_id name semantic_type_id
                                      feature_tag optional list));
 __PACKAGE__->columns(Other => qw(description));
-__PACKAGE__->hasa('OME::Program' => qw(program_id));
-__PACKAGE__->hasa('OME::AttributeType' => qw(attribute_type_id));
+__PACKAGE__->hasa('OME::Module' => qw(module_id));
+__PACKAGE__->hasa('OME::SemanticType' => qw(semantic_type_id));
 
-#__PACKAGE__->has_many('actual_outputs','OME::Analysis::ActualOutput' =>
+#__PACKAGE__->has_many('actual_outputs','OME::ModuleExecution::ActualOutput' =>
 #		      qw(formal_output_id));
 
-__PACKAGE__->make_filter('__program_name' => 'program_id = ? and name = ?');
+__PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
 
-sub findByProgramAndName {
-    my ($class, $program_id, $name) = @_;
-    my @outputs = $class->__program_name(program_id => $program_id,
+sub findByModuleAndName {
+    my ($class, $module_id, $name) = @_;
+    my @outputs = $class->__module_name(module_id => $module_id,
 					 name       => $name);
     die "Multiple matching outputs" if (scalar(@outputs) > 1);
     return $outputs[0]; 
