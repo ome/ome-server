@@ -1904,13 +1904,20 @@ sub __makeSelectSQL {
         $order_by = [$order_by] unless ref($order_by);
 
         foreach my $column_alias (@$order_by) {
+            my $order = 'ASC';
+            if ($column_alias =~ /^\!/o) {
+                $order = 'DESC';
+                $column_alias = substr($column_alias,1);
+            }
+
             $location = $class->
               __getQueryLocation(\$foreign_key_number,
                                  \@foreign_tables,\%foreign_aliases,
                                  \@join_clauses,\%tables_used,
                                  $column_alias);
             $id_order = 1 if $location eq 'id';
-            push @order_by, $location;
+
+            push @order_by, [$location,$order];
         }
 
         # Parse any LIMIT or OFFSET clause
@@ -1986,7 +1993,7 @@ sub __makeSelectSQL {
                 # If the column is Boolean, 1/0 won't work.
                 foreach my $value (@new_values) {
                     die "Illegal Boolean column value '$value'"
-                      unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/i;
+                      unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/io;
 
                     $value = 'true' if $value eq '1';
                     $value = 'false' if $value eq '0';
@@ -2022,7 +2029,7 @@ sub __makeSelectSQL {
     if ($id_order) {
         die "Cannot order by an ID; none is in the SQL statement!"
           unless defined $first_key;
-        map { $_ = $first_key if $_ eq 'id' } @order_by;
+        map { $_->[0] = $first_key if $_->[0] eq 'id' } @order_by;
     }
 
     my $sql;
@@ -2048,7 +2055,8 @@ sub __makeSelectSQL {
     # only retrieving a count.
 
     if (!$count_only) {
-        $sql .= " order by ". join(", ",@order_by)
+        $sql .= " order by ".
+          join(", ",map { $_->[0]." ".$_->[1] } @order_by)
           if scalar(@order_by) > 0;
 
         if (defined $limit) {
