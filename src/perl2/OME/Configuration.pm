@@ -1,4 +1,4 @@
-# OME/Config.pm
+# OME/Configuration.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -30,6 +30,7 @@ __PACKAGE__->table('configuration');
 __PACKAGE__->columns(Primary => qw(configuration_id));
 __PACKAGE__->columns(All => qw(mac_address db_instance lsid_authority
                                input_dir repository_dir ome_root
+                               tmp_dir xml_dir bin_dir
                                display_settings import_module import_chain));
 __PACKAGE__->hasa('OME::Program' => qw(import_module));
 __PACKAGE__->hasa('OME::AnalysisView' => qw(import_chain));
