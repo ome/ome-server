@@ -45,6 +45,8 @@ use OME::Session;
 use OME::ImportEngine::ImportEngine;
 use OME::Image::Server::File;
 use OME::Tasks::PixelsManager;
+use OME::Tasks::ImportManager;
+use OME::Analysis::Engine;
 
 =head1 NAME
 
@@ -80,7 +82,7 @@ sub startImport {
         # Parent process
 
         print STDERR "Parent\n";
-        $importer->finishImport();
+        OME::Tasks::ImportManager->forgetImport();
 
         # TODO:  Define a better Import DTO, encode it, and return it.
         return $files_mex->id();
@@ -92,6 +94,8 @@ sub startImport {
         # Start a new session so we loose our controling terminal
         POSIX::setsid () or die "Can't start a new session. $!";
 
+        OME::Session->forgetInstance();
+
         eval {
             OME::Remote::Facades::ImportFacade::Child::importChild
                 ($session_key,$importer,$dataset,$fileIDs);
@@ -99,6 +103,7 @@ sub startImport {
 
         print STDERR $@ if $@;
 
+        print STDERR "Exiting....\n";
         CORE::exit(0);
     }
 }
@@ -109,20 +114,15 @@ sub startImport {
 
 package OME::Remote::Facades::ImportFacade::Child;
 
+use Carp;
+
 sub importChild ($$$$) {
-    local $SIG{__DIE__} = sub { print STDERR "*** DIE DIE DIE CHILD $$\n"; };
+    #local $SIG{__DIE__} = sub { print STDERR "*** DIE DIE DIE CHILD $$\n",@_,"\n"; };
 
     my ($sessionKey,$importer,$dataset,$fileIDs) = @_;
     print STDERR "Child\n";
 
-    my $session = OME::Session->instance();
-    if (defined $session) {
-        print STDERR "  Stale session\n";
-        $session->deleteInstance();
-        undef $session;
-    }
-
-    $session = OME::SessionManager->createSession($sessionKey);
+    my $session = OME::SessionManager->createSession($sessionKey);
     print STDERR "  Session $session\n";
 
     my $factory = $session->Factory();
@@ -142,6 +142,13 @@ sub importChild ($$$$) {
     print STDERR "  Importing\n";
     $importer->importFiles(\@files);
     $importer->finishImport();
+
+    print STDERR "  Executing chain\n";
+    my $chain = $session->Configuration()->import_chain();
+    if (defined $chain) {
+        $OME::Analysis::Engine::DEBUG = 0;
+        OME::Analysis::Engine->executeChain($chain,$dataset,{});
+    }
 
     return;
 }
