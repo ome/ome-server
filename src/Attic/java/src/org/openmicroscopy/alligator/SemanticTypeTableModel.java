@@ -21,8 +21,8 @@
 
 package org.openmicroscopy.alligator;
 
-import javax.swing.table.*;
-import java.util.List;
+//import javax.swing.table.*;
+//import java.util.List;
 import org.openmicroscopy.*;
 
 public class SemanticTypeTableModel

@@ -22,11 +22,11 @@
 package org.openmicroscopy.alligator;
 
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.Border;
 import org.openmicroscopy.*;
-import org.openmicroscopy.simple.*;
+//import org.openmicroscopy.simple.*;
 
 public class SemanticTypeFrame
     extends ViewEditFrame

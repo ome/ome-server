@@ -24,7 +24,7 @@ package org.openmicroscopy.alligator;
 import javax.swing.SwingUtilities;
 import javax.swing.table.*;
 import java.util.List;
-import org.openmicroscopy.*;
+//import org.openmicroscopy.*;
 
 /**
  * <p>Several pieces of the UI in OME Alligator use table models to

@@ -23,7 +23,7 @@ package org.openmicroscopy.alligator;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
+//import java.awt.geom.AffineTransform;
 import javax.swing.*;
 import javax.swing.border.*;
 import org.openmicroscopy.*;

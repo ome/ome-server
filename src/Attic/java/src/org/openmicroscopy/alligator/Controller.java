@@ -25,10 +25,10 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.MalformedURLException;
 import javax.swing.*;
-import javax.swing.table.TableModel;
+//import javax.swing.table.TableModel;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
+//import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
 import org.openmicroscopy.*;
@@ -314,7 +314,7 @@ public class Controller
             if (loginDialog.okay)
                 performLogin(loginDialog.jURLField.getText(),
                              loginDialog.jUsernameField.getText(),
-                             loginDialog.jPasswordField.getText());
+                             new String(loginDialog.jPasswordField.getPassword()));
         }
     }
 
