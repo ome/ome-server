@@ -303,6 +303,12 @@ __PACKAGE__->hasa('OME::Image' => qw(image_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 
 
+# Our current caching implements breaks when there is not a single
+# primary key column for the table.  As this is the case for this
+# table, turn off caching (just for this class).
+
+__PACKAGE__->Caching(0);
+
 
 1;
 
