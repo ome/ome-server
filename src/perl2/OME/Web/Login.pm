@@ -78,9 +78,9 @@ sub getPageBody {
             return ('REDIRECT',$self->pageURL('OME::Web::Home'));
 		} else {
 			# login failed, report it
-			return ('HTML', $self->loginForm($q->p({-class => 'error'}, "The username and/or password you entered don't match an experimenter in the system.  Please try again.")));
+			return ('HTML', $self->__loginForm("The username and/or password you entered don't match an experimenter in the system.  Please try again."));
 		}
-    } else { return ('HTML', $self->loginForm()) }
+    } else { return ('HTML', $self->__loginForm()) }
 }
 
 
@@ -89,35 +89,43 @@ sub getPageBody {
 # PRIVATE METHODS
 #----------------
 
-sub loginForm {
+sub __loginForm {
 	my $self = shift;
 	my $error = shift || undef;
 	my $q = $self->CGI();
 
-	my $html = $q->p({-class => 'title'}, "Login") .
-	           ($error or "Please enter your username and password") .
-			   $q->startform .
-			   $q->p .
-			   $q->table(
-				   {
-					   -border => 0,
-				   },
-				   $q->Tr([
-					   $q->td([
-						   $q->b("Username:"),
-						   $q->textfield(-name => 'username', -default => '', -size => 25)
-						   ]),
-					   $q->td([
-						   $q->b("Password:"),
-						   $q->password_field(-name => 'password', -default => '', -size => 25)
-						   ])
-					   ])
-			   ) .
-			   $q->br .
-			   $q->submit(-name => 'execute', -value => 'Login') .
-			   $q->endform;
+	my $table_data = $q->Tr( [
+		$q->td({-align => 'center'}, $q->p({-class => 'ome_title'}, "Welcome to OME")),
+		$q->td({-align => 'center'}, $q->img({-src => '/images/logo.gif'}))
+		]);
 
-	return $html;
+	if ($error) {
+		$table_data .= $q->Tr($q->td($q->p({-class => 'ome_error', -align => 'center'}, $error))); 
+	} else {
+		$table_data .= $q->Tr($q->td($q->p("Please enter your username and password")));
+	}
+
+	my $header_table = $q->table({-border => 0, -align => 'center'}, $table_data);
+
+	my $login_table .= $q->startform .
+	                   $q->table({-border => 0, -align => 'center'},
+						   $q->Tr( [
+							   $q->td({-align => 'right'}, [
+						       $q->b("Username:"),
+						       $q->textfield(-name => 'username', -default => '', -size => 25)
+						       ]),
+					       $q->td({-align => 'right'}, [
+						       $q->b("Password:"),
+						       $q->password_field(-name => 'password', -default => '', -size => 25)
+						       ]),
+					       $q->td({-align => 'center', -colspan => 2}, [
+						       $q->submit(-name => 'execute', -value => 'Login')
+						       ])
+					       ])
+				   ) .
+				   $q->endform;
+
+	return $header_table . $login_table;
 }
 
 1;
