@@ -335,8 +335,7 @@ sub listUsers {
         	$OMEName = '' unless defined $OMEName;
 			$ID = $user->id();
         	$ID = '' unless defined $ID;
-			$GID = $user->Group()->{__id};
-        	$GID = '' unless defined $OMEName;
+			$GID = defined $user->Group() ? $user->Group()->id() : '';
         	$FirstName = $user->FirstName();
         	$FirstName = '' unless defined $FirstName;
         	$LastName = $user->LastName();
