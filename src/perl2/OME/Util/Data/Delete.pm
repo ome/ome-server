@@ -55,6 +55,7 @@ our $IMAGE_IMPORT_MODULE_ID;
 our @IMAGE_STs;
 our @DATASET_STs;
 our %DELETED_ATTRS;
+our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
 
 sub getCommands {
     return
@@ -113,6 +114,7 @@ sub DeleteMEX {
 	my $help;
 
 	undef %DELETED_ATTRS;
+	undef %DELETED_MEXES;
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
@@ -152,6 +154,8 @@ sub delete_mex {
 my $self = shift;
 my $mex = shift;
 my $delete = shift;
+
+	return if exists $DELETED_MEXES{$mex->id};
 
 	my $input;
 	my @actual_inputs = $FACTORY->
@@ -276,6 +280,7 @@ my $delete = shift;
 	# Delete the MEX
 	print "^^^ MEX ",$mex->id(),"\n";
 	$mex->deleteObject() if $delete;
+	$DELETED_MEXES{$mex->id} = 1;
 }
 
 
