@@ -257,7 +257,6 @@ public class PixelsFactory
         pixels.setSizeZ(new Integer(sizeZ));
         pixels.setSizeC(new Integer(sizeC));
         pixels.setSizeT(new Integer(sizeT));
-        pixels.setBitsPerPixel(new Integer(bytesPerPixel/8));
         pixels.setPixelType(PixelTypes.getPixelType(bytesPerPixel,
                                                     isSigned,
                                                     isFloat));
