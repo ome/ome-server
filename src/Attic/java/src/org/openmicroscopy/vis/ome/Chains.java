@@ -39,7 +39,7 @@
  
  package org.openmicroscopy.vis.ome;
  
- import java.util.HashMap;
+ import java.util.TreeMap;
  import java.util.List;
  import java.util.Iterator;
  import java.util.Collection;
@@ -47,7 +47,7 @@
  import org.openmicroscopy.Chain.Node;
  import org.openmicroscopy.Factory;
 /** 
- * <p>A class to handle the modules in the OME database
+ * <p>A class to handle the chains in the OME database
  * 
  * @author Harry Hochheiser
  * @version 0.1
@@ -56,7 +56,7 @@
 
 public class Chains {
 	
-	private HashMap chains = new HashMap();
+	private TreeMap chains = new TreeMap();
 	
 	public Chains(ConnectionWorker worker,Factory factory) {
 		
@@ -89,6 +89,12 @@ public class Chains {
 			Node n = (Node) obj;
 			cInfo.addNode(n);
 		}
+	}
+	
+	public void addChain(ChainInfo info) {
+		Chain c = info.getChain();
+		Integer id = new Integer(c.getID());
+		chains.put(id,info);
 	}
 	
 	public Iterator iterator() {
