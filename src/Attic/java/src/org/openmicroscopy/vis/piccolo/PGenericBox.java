@@ -39,10 +39,13 @@
 
 package org.openmicroscopy.vis.piccolo;
 
-import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PPaintContext;
 import java.awt.geom.Rectangle2D;
+import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.Color;
 
 /** 
@@ -53,12 +56,31 @@ import java.awt.Color;
  * @version 2.1
  * @since OME2.1
  */
-public class PGenericBox extends PPath implements PBufferedNode {
+public class PGenericBox extends PNode implements PBufferedNode {
 	
-	protected static final Color CATEGORY_COLOR= new Color(204,204,255,100);
-	
+	private static final Color BORDER_COLORS[] = {
+			new Color(191,191,191),
+			new Color(212,212,212),
+			new Color(233,233,233),
+	};
+
 	private double area = 0.0;
 	private PText label = null;
+	
+	private double x;
+	private double y;
+	private double w;
+	private double h;
+	
+	private Paint paint=null;
+	
+	
+	private Rectangle2D rects[] = {
+			new Rectangle2D.Double(),
+			new Rectangle2D.Double(),
+			new Rectangle2D.Double(),
+	};
+	
 	public PGenericBox() {
 		this(0,0,0,0);
 	}
@@ -69,9 +91,11 @@ public class PGenericBox extends PPath implements PBufferedNode {
 	
 	public PGenericBox(float x,float y,float w,float h) {
 		super();
-		setPathTo(new Rectangle2D.Float(x,y,w,h));
-		setStrokePaint(null);
-		setPaint(CATEGORY_COLOR);
+		this.x=x;
+		this.y=y;
+		this.w=w;
+		this.h=h;
+		setBounds(x,y,w,h);
 	}
 	
 	/**
@@ -84,10 +108,13 @@ public class PGenericBox extends PPath implements PBufferedNode {
 	 */
 	public PBounds getBufferedBounds() {
 		PBounds b = getFullBoundsReference();
-		return new PBounds(b.getX()-PConstants.BORDER,
-			b.getY()-PConstants.BORDER,
-			b.getWidth()+2*PConstants.BORDER,
-			b.getHeight()+2*PConstants.BORDER);
+		
+		PBounds p=  new PBounds(b.getX()-PConstants.BORDER,
+				b.getY()-PConstants.BORDER,
+				b.getWidth()+2*PConstants.BORDER,
+				b.getHeight()+2*PConstants.BORDER);
+		
+		return p;
 	}
 	
 	/**
@@ -96,9 +123,41 @@ public class PGenericBox extends PPath implements PBufferedNode {
 	 * @param height the new height
 	 */
 	public void setExtent(double width,double height) {
-		PBounds b = getFullBoundsReference();
-		reset();
-		setPathTo(new PBounds(b.getX(),b.getY(),width,height));
+		this.w =  width;
+		this.h = height;
+		setBounds(x,y,w,h);
+	}
+	
+	public boolean setBounds(double x,double y,double w,double h) {
+		double rX = x;
+		double rY=y;
+		double rW =w;
+		double rH =h;
+		for (int i = 0; i <rects.length; i++) {
+			rects[i].setFrame(rX,rY,rW,rH);
+			rX +=PConstants.STROKE_WIDTH;
+			rY+=PConstants.STROKE_WIDTH;
+			rW-=2*PConstants.STROKE_WIDTH;
+			rH-=2*PConstants.STROKE_WIDTH;
+			
+		}		
+		
+		return super.setBounds(x,y,w,h);
+	}
+	
+	public void paint(PPaintContext aPaintContext) {
+		Graphics2D g = (Graphics2D) aPaintContext.getGraphics();
+		
+		g.setStroke(PConstants.BORDER_STROKE);
+		for (int i = 0; i < rects.length;  i++) {
+			g.setPaint(BORDER_COLORS[i]);
+			g.draw(rects[i]);
+		}
+		
+		if (paint != null) {
+			g.setPaint(paint);
+			g.fill(rects[rects.length-1]);
+		}
 	}
 	
 	/**
@@ -121,7 +180,7 @@ public class PGenericBox extends PPath implements PBufferedNode {
 	public int compareTo(Object o) {
 		if (o instanceof PBufferedNode) {
 			PBufferedNode node = (PBufferedNode) o;
-			double myArea = getHeight()*getWidth();
+			double myArea = h*w;
 			PBounds bounds = node.getBufferedBounds();
 			double nodeArea = bounds.getHeight()*bounds.getWidth();
 			int res =(int) (myArea-nodeArea);
@@ -137,5 +196,9 @@ public class PGenericBox extends PPath implements PBufferedNode {
 	
 	public double getArea() {
 		return area;
+	}
+	
+	public void setPaint(Paint aPaint) {
+		paint = aPaint;
 	}
 } 
