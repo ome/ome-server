@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-#
 # This script implements the main user interaction with OME's installation
 # framework (src/perl2/OME/Install/).
  
@@ -36,6 +35,8 @@ use warnings;
 use strict;
 use Getopt::Long;
 require OME::Install::PreInstallTask;
+use lib qw(src/perl2);
+use Carp;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -44,63 +45,17 @@ require OME::Install::PreInstallTask;
 # Tasks
 my @tasks = (
     "OME::Install::CoreSystemTask",
-    "OME::Install::PerlModuleTask"
+    "OME::Install::PerlModuleTask",
+    "OME::Install::LibraryTask",
+    "OME::Install::CoreDatabaseTablesTask"
 );
 
 # Main task queues
 my (@tasks_todo, @tasks_done);
 
-# Command line options
-my ($skipPasswordCheck, $defaultDirectories, $defaultUserDetails, $help, $fast);
-
-#*********
-#********* LOCAL SUBROUTINES
-#*********
-
-# Usage display
-sub usage {
-	my $usage = <<USAGE;
-Bootstrap the OME database, create inital user(s) and do environment setup.
-
-Usage:
-  $0 [options]
-
-Options:
-  -s, --skip-password-check	Skip the password check
-  -d, --default-directories	Run default directory creation (UID 0 is
-  				required as the OME directories are off
-				the root)
-  -n, --default-user-details	Use default user details for the 
-				creation of the initial OME experimenter
-  -f, --fast			Fast operation for developers who know
-  				they want the default OME directory
-				structure, want default user details and
-				want to skip the password check
-  -h, --help			This message
-
-Report bugs to <ome-devel\@mit.edu>.
-USAGE
-
-	print STDERR $usage;
-	exit (0);
-}
-
 #*********
 #********* START OF CODE
 #*********
-
-GetOptions ("s|skip-password-check", \$skipPasswordCheck,	# Skip the PW check
-	    "d|default-directories", \$defaultDirectories,	# Use default OME dirs
-	    "n|default-user-details", \$defaultUserDetails,	# Use default user details
-	    "f|fast", \$fast,					# Fast operation
-	    "h|help", \$help					# Show usage
-	    );
-
-# CLI flag logic
-if ($fast) { $skipPasswordCheck 	= 1;
-	     $defaultDirectories 	= 1;
-	     $defaultUserDetails	= 1; }
-if ($help) { usage() }
 
 # PreInstall
 OME::Install::PreInstallTask::execute();
@@ -108,11 +63,10 @@ OME::Install::PreInstallTask::execute();
 # Run our tasks
 foreach my $task (@tasks) {
     eval "use $task";
-    print "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
     $task .= "::execute()";
-    eval ($task);
+    eval $task;
+    croak "Errors executing task: $@\n" if $@;  # Ditto as above
 }
-
-print "Errors: $@\n";
 
 exit (0);
