@@ -171,7 +171,6 @@ sub readImage {
     my $img_len;
     my $calc_len;
     my ($numsecs, $numflds);
-    my $k;
     my $pix_OK = 0;
     my $seq;
     my $seq_OK = 0;
@@ -234,7 +233,7 @@ sub formatImage {
     my $foh    = $parent->fouf;
     my $xyzwt  = $parent->obuffer;
     my $endian = $parent->endian;
-    my $xml_hash = $parent->Image_reader::xml_hash;
+    my $xml_hash = $parent->xml_hash;
     my @obuf;
     my ($ibuf, $rowbuf);
     my ($i, $j, $k, $row);
@@ -311,10 +310,9 @@ sub readUIHdr {
     my $endian = shift;
     my $offset = shift;
     my $parent = $self->{parent};
-    my $xml_hash = $parent->Image_reader::xml_hash;
+    my $xml_hash = $parent->xml_hash;
     my $i;
     my $len;
-    my $rdlen;
     my $typ;
     my $k;
     my $xel;
@@ -384,14 +382,9 @@ sub readUIExtHdrs {
     my $i;
     my $buf;
     my $val;
-    my $flt;
     my $len;
-    my $rdlen;
     my $curpos;
     my $status;
-    my $ctmp;
-    my ($c0, $c1, $c2, $c3);
-    my @cs;
 
     $status = OME::ImportExport::FileUtils::seek_it($fh, $offset);
     return ($status)
@@ -414,7 +407,7 @@ sub readUIExtHdrs {
 	    last
 		unless ($status eq "");
 	    $val = unpack("f", $buf);
-	    if ($endian ne $parent->Image_reader::host_endian) {
+	    if ($endian ne $parent->host_endian) {
 		$val = $parent->SUPER::flip_float($val);
 	    }
 	    if ($i < 13) {  # only the 1st 13 floats are interesting

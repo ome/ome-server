@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
 # Importer.pm
-# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Copyright (C) 2003 Open Microscopy Environment, MIT
 # Author:  Brian S. Hughes
 #
 #    This library is free software; you can redistribute it and/or
@@ -55,14 +55,8 @@ $VERSION = '1.0';
 
 sub new {
     my @image_buf;
-    my %xml_elements;      # build up DB entries in here keyed by their XML element names
-    my $image_group_ref;
-    my $image_file;
-    my $import_reader;
-    my $read_status;
     my $self = {};
     my @fn_groups;
-
 
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
@@ -95,6 +89,7 @@ sub import_image {
     my $dsr = shift;    # reference to Dataset object;
     my $image_group_ref = shift;
     my $switch = shift; # optional switch passed at end of args
+    $switch ||= "";
 
     $self->{dataset} =$dsr;
     $image_file = $$image_group_ref[0];
@@ -103,27 +98,16 @@ sub import_image {
     $basenm =~ s/\..+?$//;
     $xml_elements{'Image.Name'} = $basenm;
     $import_reader = new OME::ImportExport::Import_reader($image_group_ref, \@image_buf, \%xml_elements);
-    $fn = $import_reader->Image_reader::image_file;
+    $fn = $import_reader->image_file;
     $import_reader->check_type;
 
     $self->{did_import} = 0;
 
-    if ((!$switch) || ($switch !~ /^--dupl/)) {
-	my $sha1 = getSha1($image_file);
-	my $session = $self->{session};
-	my $factory = $session->Factory();
-	my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
-					file_sha1 => $sha1);
-	if (defined $view) {
-	    my $img_name = "";
-	    my $img_id = $view->{image_id};
-	    $view = $factory->findObject("OME::Image", image_id => $img_id);
-	    if (defined $view) {
-		$img_name = $view->{name};
-	    } else {
-		carp "\ncan\'t find image record for image_id: $img_id\n";
-	    }
-	    carp "\nThe source image $image_file has already been imported into OME image $img_name";
+    # unless the stealth switch "--dupl" is present, don't allow importing
+    # an image file more than once
+    if ($switch !~ /^--dupl/) {
+	if (is_duplicate($self, $image_file)) {
+	    carp "\nThe source image $image_file has already been imported into OME.";
 	    return "";
 	}
     }
@@ -134,7 +118,6 @@ sub import_image {
     else {
 	$read_status = $import_reader->readFile;
 	if ($read_status ne "") {
-	    print STDERR "Carping: ";
 	    carp $read_status;
 	}
 	else {
@@ -161,17 +144,13 @@ sub store_image {
     my $image_group_ref = shift;
     my $session = $self->{session};
     my $status = "";
-    my $cleaned;
     my $image;
-    my $imageID;
-    my $group_id;
-    my $realpath;
     my $repository;
     my $attributes;
 
     while (1) {
 	# First, clean the data
-	$cleaned = removeWeirdCharacters($href);
+	removeWeirdCharacters($href);
 
 	# determine which repository the new image should be placed in
 	my $repository = findRepository($session, $aref);
@@ -298,11 +277,8 @@ sub groupnames {
     my $digits = '[1-9]';
     my $fpat1 = '^(\w+_w)([1-9])(.tif+)$';
     my $fpat2 = '^(\w+_w)([1-9])(\w+)(.tif+)$';
-    my $anyothers = '^(.+)$';
     my %fmts;
     my $k;
-    my $i;
-
     
     %fmts = (fpat1 => $fpat1,
              fpat2 => $fpat2,
@@ -344,7 +320,6 @@ sub groupnames {
             }
         }
         if ($matched == 0) {    # filename didn't match any pattern, so stick it on it's own sublist
-            #push @$outfns, \($fn);
             push @$outfns, [$fn];
         }
     }
@@ -581,34 +556,6 @@ sub store_xyz_info {
     return $@? $@ : "";
 }
 
-sub store_xyz_info_old {
-    my ($self, $session, $href) = @_;
-    return "";
-    my $image = $self->{'image'};
-    my $imageID = $image->id();
-    my $omeBase = $self->{config}->ome_root;
-    my $status = "";
-    my $sth;
-    $sth = $session->DBH()->prepare (
-        'INSERT INTO xyz_image_info (image_id,the_w,the_t,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
-    my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
-        $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
-    my $cmd = $omeBase.'/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
-    open (STDOUT_PIPE,$cmd) || return "Failed to execute '$cmd':\n$!\n";
-    while (<STDOUT_PIPE>) {
-        chomp $_;
-        my @columns = split (/\t/);
-        foreach (@columns) {
-            # trim leading and trailing white space and set to undef unless column looks like a C float
-            $_ =~ s/^\s+//;$_ =~ s/\s+$//;$_ = undef unless ($_ =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
-        }
-        next unless defined $columns[0];
-
-        $sth->execute($imageID,@columns);
-    }
-    
-	return $status;
-}
 
 
 # store info about each file that was a component of this image
@@ -699,6 +646,23 @@ sub getSha1 {
     return $sha1;
 }
 
+
+# Check if input file has already been processed 
+sub is_duplicate {
+    my $self = shift;
+    my $infile = shift;
+
+    my $sha1 = getSha1($infile);
+    my $session = $self->{session};
+    my $factory = $session->Factory();
+    my $view = $factory->findObject("OME::Image::ImageFilesXYZWT",
+				    file_sha1 => $sha1);
+    if (defined $view) {
+	return 1;
+    } else {
+	return 0;
+    }
+}
 
 
 # removeWeirdCharacter(hash)

@@ -181,13 +181,11 @@ sub formatImage {
     my $self = shift;;
     my $parent = $self->{parent};
     my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->Image_reader::xml_hash;
+    my $xml_hash = $gparent->xml_hash;
     my $row_size = $parent->{row_size};
     my $offsets_arr = $parent->{offsets};
     my ($offs_arr, $bytes_arr);
-    my $offsets;
     my $bytecounts_arr = $parent->{bytecounts};
-    my $bytecounts;
     my $xyzwt = $parent->{obuffer};
     my (@xy_arr, @xyz, @xyzw);
     my $start_offset;
@@ -201,9 +199,6 @@ sub formatImage {
     my $u2;
     my $dtm = $uic2_ndxs{Cr_dt};
     my %planes;
-    my $maxZ = $xml_hash->{'Image.SizeZ'};
-    my $maxW = $xml_hash->{'Image.NumWaves'};
-    my $maxT = $xml_hash->{'Image.NumTimes'};
     my @args;
 
     $offs_arr = @$offsets_arr[0];
@@ -240,8 +235,11 @@ sub formatImage {
     $status = partition_and_sort($parent, $gparent, \@xy_arr, $start_offset, 0, $plane_num, $plane_size, $num_rows, $u2, \%planes, @indeces);
 
     # now have list of all the XY planes. Arrange them in their 5D order
-    reverse @xy_arr;
+    #reverse @xy_arr;
     my ($t, $w, $z);
+    my $maxZ = $xml_hash->{'Image.SizeZ'};
+    my $maxW = $xml_hash->{'Image.NumWaves'};
+    my $maxT = $xml_hash->{'Image.NumTimes'};
     for ($t = 0; $t < $maxT; $t++) {
 	for ($w = 0; $w < $maxW; $w++) {
 	    for ($z = 0; $z < $maxZ; $z++) {
@@ -540,7 +538,7 @@ sub do_uic2 {
     my $parent = $self->{parent};
     # should inherit this in a less fragile way
     my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->Image_reader::xml_hash;
+    my $xml_hash = $gparent->xml_hash;
     my $status = "";
     my $i;
     my $k;
@@ -572,15 +570,12 @@ sub do_uic2 {
 	# include plane # in hash since it won't necessarily equal the key after sorting
 	$uic2{$i} = [$i, $Z_val, $cdt, $cdate, $ctime, $mdate, $mtime];
 
-	#print "      Plane $i\n";
-	#print "  Z: $Z_val, ";
 	JulianToYMD($cdate);
 	TimeOfDay($ctime);
 	if ($mdate != 0) {
 	    JulianToYMD($mdate);
 	    TimeOfDay($mtime);
 	}
-	#print "\n";
     }
 
     # These values may be modified after processing UIC3 (the wavelength tag)
@@ -591,18 +586,6 @@ sub do_uic2 {
 
 
     $self->{uic2} = \%uic2;  # remember to access this hash after doing a `sort keys`
-
-
-#    foreach $k (sort keys %uic2) {
-#	if ($k =~ /[0-9]/) {
-#	    @arr = $self->{uic2}{$k};
-#	    print "\t";
-#	    for ($i = 0; $i < 7; $i++) {
-#		print "$arr[0][$i]   ";
-#	    }
-#	    print "\n";
-#	}
-#    }
 
     return $status;
 }
@@ -620,7 +603,7 @@ sub do_uic3 {
     my $parent = $self->{parent};
     # should inherit this in a less fragile way
     my $gparent = $parent->{parent};
-    my $xml_hash = $gparent->Image_reader::xml_hash;
+    my $xml_hash = $gparent->xml_hash;
     my $status = "";
     my ($denom, $numer);
     my $W_val;
@@ -628,7 +611,6 @@ sub do_uic3 {
     my $numWs;
     my $buf;
     my $i;
-    my ($k, $fr);
     my $u2;
     my $aref;
     my %uic3;
@@ -661,12 +643,6 @@ sub do_uic3 {
 
     $self->{uic3} = \%uic3;  # remember to access this hash after doing a `sort keys`
 
-    foreach $k (sort keys %uic3) {
-	#print "$self->{uic3}{$k}   ";
-	#print "\t$self->{uic2}{$k}\n";
-    }
-    #print "\n";
-
     return $status;
 }
 
@@ -680,7 +656,6 @@ sub get_value {
     my $status;
     my $buf;
     my $cur_offset;
-    my $fmt;
     my $value;
     my ($val1, $val2, $val3, $val4, $rat);
     my $i;

@@ -64,39 +64,20 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use Config;
 
-struct Image_reader => {
-        image_file => '$',                    # input image file
-        image_group => '$',                   # input image file group
-	host_endian => '$',                   # endain-ness of host machine
-        endian => '$',                        # endian-ness of the image file
-        obuffer => '$',
-        xml_hash => '$',                      # reference to xml_elements hash
-	fref => '$',                          # image file handle
-	fouf => '$',                          # output (repository) file handle
-	offset => '$',                        # offset to start of image metadata
-    # Image DB fields - filled in as we go
-    # These key-values map to the Image table
-	name => '$',                          # image name
-	description => '$',                   # free form text description
-	path => '$',                          # path to image in repository
-	host => '$',                          # host where repository lives
-	url => '$',                           # URL to image
-	instrument_id => '$',                 # ID of scope
-	created => '$',                       # timestamp when created
-	inserted => '$',                      # timestamp when inserted
-	image_type => '$',                    # image type
-	# These key-values map to the Attributes_image_xyzwt table
-	size_x => '$',                        # number pixels per row
-	size_y => '$',                        # number rows
-	size_z => '$',                        # number Z planes
-	num_waves => '$',                     # number wavelengths
-	num_times => '$',                     # number timepoints
-	pixel_size_x => '$',                  # microns/pixel in the X dimension
-	pixel_size_y => '$',                  # microns/pixel in the Y dimension
-	pixel_size_z => '$',                  # microns/pixel in the z dimension
-	wave_increment => '$',                # nm. between wavelengths (?)
-	time_increment => '$'                 # seconds between consequtive scans
-	};
+# $self holds at least these useful fields:
+#struct Image_reader => {
+#        image_file  - input image file
+#        image_group - input image file group
+#	 host_endian - endain-ness of host machine
+#        endian      - endian-ness of the image file
+#        pixel_size  - number of bits/pixel
+#        obuffer     - ref to output buffer
+#        xml_hash    - reference to xml_elements hash
+#	 fref        - image file handle
+#	 fouf        - output (repository) file handle
+#	 offset      - offset to start of image metadata
+#	 image_type  - image type
+#	};
 
 
 my %readers = (DV       => "OME::ImportExport::DVreader",
@@ -109,7 +90,9 @@ my %checkers = (TIFF    => \&checkTIFF,
 sub new {
     my $invoker = shift;
     my $class = ref($invoker) || $invoker;   # called from class or instance
-    #my $image_file = shift;
+    my $self = {};
+    bless $self, $class;
+
     my $image_group = shift;
     my $image_file = $$image_group[0];
     croak "No image file to import"
@@ -119,20 +102,17 @@ sub new {
 
     my $our_endian;
 
-    my $self = Image_reader->new();
-
     # Find out what byte order this machine has
     my $byteorder = $Config{byteorder};
     $our_endian = (($byteorder == 1234) || ($byteorder == 12345678)) ? "little" : "big";
     $self->host_endian($our_endian);
-    $self->{host_endian} = $our_endian;
     $self->image_file($image_file);      # save 1st file for those readers that
     $self->image_group($image_group);   #    don't do groups
     $self->offset(0);
     $self->obuffer($image_buf);
     $self->xml_hash($xml_elements);
 
-    return bless $self, $class;
+    return $self;
 }
 
 
@@ -159,14 +139,15 @@ sub check_type {
     croak "Image::check_type must be called on an actual image"
 	unless ref($self);
 
-    my $ref = ref($self);
-    my $fn = $self->Image_reader::image_file;
-    open IMG, $self->Image_reader::image_file
-	or die "Can't open $self->Image_reader::image_file\n";
+    my $fn = $self->image_file();
+    open IMG, $fn
+	or die "Can't open $fn - $@\n";
     binmode(IMG);
     my $fh = *IMG;
     $self->fref($fh);
 
+    # Run against every type checker until
+    # find a match or no more types to try
     foreach $typ (keys %checkers) {
 	$subref = $checkers{$typ};
 	@check_result = &$subref(\*IMG);
@@ -188,7 +169,7 @@ sub check_type {
     $self->offset($offset);
     $self->image_type($type);
     $self->endian($endian);
-    $xml_ref = $self->Image_reader::xml_hash;
+    $xml_ref = $self->xml_hash();
     $$xml_ref{'Image.ImageType'} = $type;
     $$xml_ref{'Image_files_xyzwt.Endian'} = $endian;
 }
@@ -202,18 +183,18 @@ sub readFile {
     my $readerref;
     my $type_handler;
     my $status;
-    my ($bp, $sz, @szz);
 
     my $self = shift;
-    $self->obuffer($self->Image_reader::obuffer);
     $readerref = $readers{$self->image_type};
     $type_handler = $readerref->new($self);
     {
 	$status = $type_handler->readImage;
 	last unless $status eq "";
+	#my $wrapper = new OME::ImportExport::Wrapper($type_handler);
+
 	$status = $type_handler->formatImage;
 	if ($status eq "") {
-	    my $xml_ref = $self->Image_reader::xml_hash;
+	    my $xml_ref = $self->xml_hash();
 	    $xml_ref->{'Image.BitsPerPixel'} = $self->{'pixel_size'};
 	}
     }
@@ -264,6 +245,14 @@ sub image_type {
 }
 
 
+# Store/retrieve pixel size
+sub pixel_size {
+    my $self = shift;
+    $self->{pixel_size} = shift if @_;
+    return $self->{pixel_size};
+}
+
+
 # Store/retrieve input file reference
 sub fref {
     my $self = shift;
@@ -287,6 +276,21 @@ sub offset {
     return $self->{offset};
 }
 
+
+# Store/retrieve input file group ref
+sub image_group {
+    my $self = shift;
+    $self->{image_group} = shift if @_;
+    return $self->{image_group};
+}
+
+
+# Store/retrieve input file name 
+sub image_file {
+    my $self = shift;
+    $self->{image_file} = shift if @_;
+    return $self->{image_file};
+}
 
 
 

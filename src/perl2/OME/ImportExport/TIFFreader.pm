@@ -185,10 +185,13 @@ sub readImage {
     my $i = 1;
     my $image_file;
     my $self = shift;     # Ourselves
+
     croak "Image::TIFFreader must be called from Import-reader or other class"
 	unless ref($self);
-    my $parent = $self->{'parent'};   # Caller (must be parent) had to pass in its own '$self'
-    my $image_group = $parent->Image_reader::image_group();
+    my $parent = $self->{'parent'};   # Caller had to pass reference
+                                      # to class instance that
+                                      # holds data about this image
+    my $image_group = $parent->image_group();
     my $k;
 
     foreach $k (keys %tag_accumulates) {
@@ -203,8 +206,8 @@ sub readImage {
 	while (defined ($image_file = $$image_group[$i-1])) {
 	    close  $self->fref;
 	    my $last_type = $parent->image_type;
-	    $parent->Image_reader::image_file($image_file);
-	    $parent->check_type;  # opens file & gets offset to IFD & file type
+	    $self->image_file($image_file);
+	    $self->check_type();  # opens file & gets offset to IFD & file type
 	    if ($last_type ne $parent->image_type) {
 		$status = "File $image_file is not of type $last_type";
 		last;
@@ -224,8 +227,7 @@ sub readImage {
 sub formatImage {
     my $self = shift;     # Ourselves
     my $parent = $self->{parent};
-    my $gparent = $parent->{parent};
-    my $xml_hash = $parent->Image_reader::xml_hash;
+    my $xml_hash = $parent->xml_hash;
     my ($fih, $foh);      # File handle of input, output files
     my $buf_offset;
     my $start_offset;
@@ -235,7 +237,7 @@ sub formatImage {
     my $bytecounts;
     my $status;
     my ($strip_size, $row_size);
-    my ($buf, $rowbuf);
+    my $buf;
     my $bps;
     my $endian;
     my (@xy, @xyz, @xyzw, @xyzwt);
@@ -243,14 +245,12 @@ sub formatImage {
     my ($sz, $ndxi, $ndxo, $ch);
     my $irow;
     my $i;
-    my (@orow, @orow2);
-    my (@lstoff, @lstcnt);
 
     $fih = $parent->fref;
     $foh = $parent->fouf;
     $endian = $parent->endian;
     $bps = $self->{'BitsPerSample'};
-    $parent->{'pixel_size'} = $bps;
+    $parent->pixel_size($bps);
     $bps /= 8;  # convert bits to bytes
     $row_size = $self->{ImageWidth} * $bps;               # bytes per row
     ($offsets_arr, $bytecounts_arr) = getStrips($self);
@@ -351,10 +351,8 @@ sub formatImage {
 # Get image strip offsets and bytecounts into passed arrays
 sub getStrips {
     my $self = shift;
-    my $offsets_aref;
-    my $bytecounts_aref;
+    my ($offsets_aref, $bytecounts_aref);
     my (@offs_arr, @counts_arr);
-    my ($offs_arr, $counts_arr);
     my (@lstoff, @lstcnt);
 
     @offs_arr = $self->{'StripOffsets'};        # offsets to start of each TIFF image strip
@@ -374,6 +372,7 @@ sub getStrips {
     return($offsets_aref, $bytecounts_aref);
 } 
 
+
 # Read a Tiff Image File Directory (IFD)
 
 sub readTiffIFD {
@@ -383,15 +382,13 @@ sub readTiffIFD {
     my $fih    = $self->fref;
     my $endian = $parent->endian;
     my $offset = $parent->offset;
-    my $xml_hash = $parent->Image_reader::xml_hash;
+    my $xml_hash = $parent->xml_hash;
     my $xel;
-    my $len;
     my $buf;
     my $cnt;
     my $status;
     my $k;
     my $value;
-    my ($subfld, @val, $ky, $elem);
 
     # For TIFF images, some fields are hardcoded. Variants may overwrite these
     $xml_hash->{'Image.SizeZ'} = 1;
@@ -414,12 +411,6 @@ sub readTiffIFD {
 	}
 	last unless $status eq "";
 
-	#print "Scanning keys:\n";
-	foreach $k (sort keys %$self) {
-	    #print "\t$k: ";
-	    #print "$self->{$k}\n";
-	}
-
 	# read in the offset to next IFD. Offset to 0 mean end of IFDs.
 	$status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 4);
 	last
@@ -429,9 +420,10 @@ sub readTiffIFD {
 
     # Put relevant pieces of metadata into xml_elements for later DB storage
 
+    # Save certain image & data tag values
     # Only do this once per image
     if ($image_plane == 1) {
-    #   The Image top level element
+	# The Image top level element
 	foreach $k (keys %xml_image_entries) {
 	    $xel = $xml_image_entries{$k};
 	    $value = $self->{$k};
@@ -440,11 +432,7 @@ sub readTiffIFD {
 	    }
 	    $xml_hash->{"Image.".$xel} = $value;
 	}
-    }
-
-    # Only do this once per image
-    if ($image_plane == 1) {
-	#   The Data top level element
+	# The Data top level element
 	foreach $k (keys %xml_data_entries) {
 	    $xel = $xml_data_entries{$k};
 	    $value = $self->{$k};
@@ -454,6 +442,7 @@ sub readTiffIFD {
 	    $xml_hash->{"Data.".$xel} = $value;
 	}
     }
+
 
     parseImageDescription($self, $xml_hash, $image_plane);
 
@@ -486,9 +475,7 @@ sub parseImageDescription {
 	if ($k =~ /ImageDescription/) {
 	    $buf = $self->{$k};
 	    foreach $subfld (@useful_desc_fields) {
-		#print "$subfld: \n";
 		while ($buf =~ m/$subfld (.*)/g) {
-		    #print "$1 ";
 		    my @val = ($1);
 		    $ky = $xml_image_from_desc{$subfld};
 		    $elem = $desc_fields_to_top_level_element{$subfld};
@@ -500,16 +487,13 @@ sub parseImageDescription {
 		    if ($elem =~ m/XYinfo|Wavelength/) {
 			if ($elem =~ m/XYinfo/) {
 			    push @$xyref, [$ky, $val[0]];
-			}
-			else {
+			} else {
 			    push @$wref, [$ky, $val[0]];
 			}
-		    }
-		    elsif ($image_plane == 1) {         # Only record once/image
+		    } elsif ($image_plane == 1) {    # Only record once/image
 			$xml_hash->{$elem.$ky} = $val[0];
 		    }
 		}
-		#print "\n";
 	    }
 	    push @$wref, ['WaveNumber', $image_plane];   
 
@@ -550,16 +534,11 @@ sub readTiffTag {
     my ($tag_id, $tag_type, $tag_cnt, $tag_offset);
     my $tag_name;
     my $buf;
-    my $len;
     my $cnt;
-    my $fld_name;
-    my $cmd;
     my $is_list = 0;
     my @vallist;
-    my @revlist;
-    my @tmparr;
     my ($variant_ref, $variant_name);
-    my ($value, $val1, $val2, $quot);
+    my ($value, $val1, $val2);
     my %Type = (1=>'Byte', 2=>'ASCII', 3=>'Short', 4=>'Long', 5=>'Rational');
 
     $status = OME::ImportExport::FileUtils::read_it($fih, \$buf, 12);
@@ -592,7 +571,6 @@ sub readTiffTag {
 	}
 	$tag_name = $Variants{$tag_id}[1];
 	#print "Detected TIFF variant $variant_name: $tag_name\n";
-	#print "\ttype = $Type{$tag_type}, count = $tag_cnt\n";
 
 	# create instance of the variant handler class if not yet created
 	if (!defined $self->{$variant_name}) {
@@ -608,7 +586,6 @@ sub readTiffTag {
 	$status = $variant_handler->readTag($tag_name, $tag_type, $tag_cnt, $tag_offset);
         OME::ImportExport::FileUtils::seek_it($fih, $cur_offset);
 
-	#print "Variant tag reading status: $status\n";
 	return $status;;
     }
 
