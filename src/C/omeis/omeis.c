@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
+#include <ctype.h> 
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -48,6 +49,7 @@
 
 #include "omeis.h"
 #include "digest.h"
+#include "composite.h"
 #include "method.h"
 #include "xmlBinaryResolution.h"
 
@@ -417,7 +419,7 @@ struct stat fStat;
 	}
 
 	myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
-	myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt) );
+	myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
 
 	return (1);
 }
@@ -427,7 +429,7 @@ struct stat fStat;
 /*
   The next section is the external interface for PixelsRep:
   NewPixels - Starts a new pixels file in the repository
-  GetPixels - Gets a pre-existing pixels file by ID
+  GetPixelsRep - Gets a pre-existing pixels file by ID
   FinishPixels - converts a pixels file from write only to read only.
   
 * This call makes a new Repository Pixels file.
@@ -775,6 +777,183 @@ unsigned long written=0;
 }
 
 
+/*
+  These functions deal with re-scaling pixel intensity.
+  The scaling information may be statisticaly based or fixed.
+  fixChannelSpec fixes channel scaling information if specified with a statistical basis.
+*/
+
+void fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec) {
+stackInfo *stackInfoP;
+pixHeader *head;
+off_t stack_offset;
+
+	if (!chSpec) return;
+	if (chSpec->isFixed) return;
+
+	if (!myPixels) return;
+	if (! (head = myPixels->head) ) return;
+	
+	if (chSpec->channel < 0 || chSpec->channel > head->dc) return;
+	if (chSpec->time < 0 || chSpec->time > head->dt) return;
+
+	stack_offset = (chSpec->time*head->dc) + chSpec->channel;
+	if (! (stackInfoP = myPixels->stackInfos) )return;
+	stackInfoP += stack_offset;
+
+	if (! stackInfoP->stats_OK) return;
+
+	if (!chSpec->isOn) {
+		chSpec->scale = 0.0;
+		chSpec->black = chSpec->white = 0;
+		chSpec->gamma = 1.0;
+	} else {
+		switch (chSpec->basis) {
+			case GEOSIGMA_BASIS:
+				chSpec->black = stackInfoP->geomean + (chSpec->black * stackInfoP->geosigma);
+				chSpec->white = stackInfoP->geomean + (chSpec->white * stackInfoP->geosigma);
+			break;
+			case SIGMA_BASIS:
+				chSpec->black = stackInfoP->mean + (chSpec->black * stackInfoP->sigma);
+				chSpec->white = stackInfoP->mean + (chSpec->white * stackInfoP->sigma);
+			break;
+			default:
+			break;
+		}
+
+		if (chSpec->black < stackInfoP->min) chSpec->black = stackInfoP->min;
+		if (chSpec->black > stackInfoP->max) chSpec->black = stackInfoP->max;
+		if (chSpec->white < stackInfoP->min) chSpec->white = stackInfoP->min;
+		if (chSpec->white > stackInfoP->max) chSpec->white = stackInfoP->max;
+		if (chSpec->white < chSpec->black) chSpec->white = chSpec->black;
+	}
+	
+	
+	chSpec->scale = (chSpec->white - chSpec->black) / 255.0;
+
+	chSpec->isFixed = 1;
+}
+
+
+
+/*
+  This reads the pixels at offset, scales them according to chSpec,
+  and writes them to buf.  The omeis pixels are scaled down to unsigned char values.
+  The jump parameter is used to jump to the next pixel in *buf
+  (i.e. 1 for grayscale, 3 for RGB, 4 for RGBA).
+*/
+void ScalePixels (
+	PixelsRep *myPixels, off_t offset, size_t nPix,
+	unsigned char *buf, off_t jump,
+	channelSpecType *chSpec)
+{
+size_t nIO=0, nBytes;
+pixHeader *head;
+unsigned char *thePix, *lastPix;
+unsigned char bp;
+register float theVal;
+float scale;
+
+	if (offset < 0) return;
+	if (!myPixels) return;
+	if (! (head = myPixels->head) ) return;
+	if (! (bp = head->bp) ) return;
+	if (! chSpec->isOn ) return;
+	if (! buf ) return;
+
+	nBytes = nPix*bp;
+
+	thePix = ((char *)myPixels->pixels) + offset;
+	lastPix = thePix + (nPix*bp);
+
+	if (lockRepFile (myPixels->fd_rep,'r',offset,nBytes) < 0) return;
+
+	if (!chSpec->isFixed) fixChannelSpec (myPixels,chSpec);
+	if (!chSpec->isFixed) return;
+
+	scale = chSpec->scale;
+
+	if (head->bp == 1 && head->isSigned) {
+		char blk = (char) chSpec->black, *sCharP = (char *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*sCharP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 1 && !head->isSigned) {
+		unsigned char blk = (unsigned char) chSpec->black, *uCharP = (unsigned char *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*uCharP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 2 && head->isSigned) {
+		short blk = (short) chSpec->black, *sShrtP = (short *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*sShrtP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 2 && !head->isSigned) {
+		unsigned short blk = (unsigned short) chSpec->black, *uShrtP = (unsigned short *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*uShrtP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 4 && head->isSigned && !head->isFloat) {
+		long blk = (long) chSpec->black, *sLongP = (long *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*sLongP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 4 && !head->isSigned && !head->isFloat) {
+		unsigned long blk = (unsigned long) chSpec->black, *uLongP = (unsigned long *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*uLongP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	} else if (head->bp == 4 && head->isFloat) {
+		float blk = (float) chSpec->black, *floatP = (float *)thePix;
+		while (nIO < nPix) {
+			theVal = (float) (*floatP++ - blk);
+			if (theVal < 0) theVal = 0;
+			theVal *= scale;
+			if (theVal > 255) theVal=255;
+			*buf = theVal;
+			buf += jump;
+			nIO++;
+		}
+	}
+	lockRepFile (myPixels->fd_rep,'u',offset,nBytes);
+}
+
 
 /* This is a high level interface to set a pixel plane from a memory buffer. */
 size_t setPixelPlane (PixelsRep *thePixels, void *buf , int theZ, int theC, int theT ) {
@@ -849,23 +1028,23 @@ pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
 off_t file_off,plane_offset;
 
-	if (!myPixels) return (-1);
-	if (!myPixels->planeInfos) return (-1);
-	if (!CheckCoords (myPixels,0,0,z,c,t)) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
+	if (!myPixels) return (0);
+	if (!myPixels->planeInfos) return (0);
+	if (!CheckCoords (myPixels,0,0,z,c,t)) return (0);
+	if (! (head = myPixels->head) ) return (0);
 
 	plane_offset = (((t*head->dc) + c)*head->dz) + z;
 	file_off  = ((char *)myPixels->planeInfos - (char *)myPixels->head) + (plane_offset*nBytes);
 
-	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) {
+	if (lockRepFile (myPixels->fd_info,rorw,file_off,nBytes) < 0) {
 		fprintf (stderr,"Could't get file lock\n");
-		return (-1);
+		return (0);
 	}
 	if (rorw == 'w')
 		memcpy (myPixels->planeInfos+plane_offset, theInfo, nBytes);
 	else
 		memcpy (theInfo, myPixels->planeInfos+plane_offset, nBytes);
-	lockRepFile (myPixels->fd_rep,'u',file_off,nBytes);
+	lockRepFile (myPixels->fd_info,'u',file_off,nBytes);
 	
 	return (1);
 }
@@ -876,20 +1055,20 @@ pixHeader *head;
 size_t nBytes = sizeof (stackInfo);
 off_t file_off,stack_offset;
 
-	if (!myPixels) return (-1);
-	if (!myPixels->stackInfos) return (-1);
-	if (!CheckCoords (myPixels,0,0,0,c,t)) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
+	if (!myPixels) return (0);
+	if (!myPixels->stackInfos) return (0);
+	if (!CheckCoords (myPixels,0,0,0,c,t)) return (0);
+	if (! (head = myPixels->head) ) return (0);
 
 	stack_offset = (t*head->dc) + c;
 	file_off  = ((char *)myPixels->stackInfos - (char *)myPixels->head) + (stack_offset*nBytes);
 
-	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (-1);
+	if (lockRepFile (myPixels->fd_info,rorw,file_off,nBytes) < 0) return (0);
 	if (rorw == 'w')
 		memcpy (myPixels->stackInfos+stack_offset, theInfo, nBytes);
 	else
 		memcpy (theInfo, myPixels->stackInfos+stack_offset, nBytes);
-	lockRepFile (myPixels->fd_rep,'u',file_off,nBytes);
+	lockRepFile (myPixels->fd_info,'u',file_off,nBytes);
 	
 	return (1);
 }
@@ -918,10 +1097,10 @@ float *floatP;
 register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 
 
-	if (!myPixels) return (-1);
-	if (!myPixels->stackInfos) return (-1);
-	if (!CheckCoords (myPixels,0,0,z,c,t)) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
+	if (!myPixels) return (0);
+	if (!myPixels->stackInfos) return (0);
+	if (!CheckCoords (myPixels,0,0,z,c,t)) return (0);
+	if (! (head = myPixels->head) ) return (0);
 
 	dx = head->dx;
 	dy = head->dy;
@@ -1076,22 +1255,22 @@ static
 int DoStackStats (PixelsRep *myPixels, unsigned long c, unsigned long t) {
 stackInfo myStackInfo;
 pixHeader *head;
-unsigned long z, dz, nPix;
+unsigned long z, dz;
 stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 off_t plane_offset,stack_offset;
-register float logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
+register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0,nPix;
 
-	if (!myPixels) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
+	if (!myPixels) return (0);
+	if (! (head = myPixels->head) ) return (0);
 	dz = head->dz;
 
 	plane_offset = ((t*head->dc) + c)*dz;
 	stack_offset = (t*head->dc) + c;
 
-	if (! (stackInfoP = myPixels->stackInfos + stack_offset) ) return (-1);
+	if (! (stackInfoP = myPixels->stackInfos + stack_offset) ) return (0);
 	if (stackInfoP->stats_OK) return (1);
-	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (-1);
+	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (0);
 	
 	for (z = 0; z < dz; z++) {
 		if (! planeInfoP->stats_OK)
@@ -1102,8 +1281,8 @@ register float logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=
 		sum_i     += planeInfoP->sum_i;
 		sum_i2    += planeInfoP->sum_i2;
 		sum_log_i += planeInfoP->sum_log_i;
-		if (min < planeInfoP->min) min = planeInfoP->min;
-		if (max < planeInfoP->max) max = planeInfoP->max;
+		if (planeInfoP->min < min) min = planeInfoP->min;
+		if (planeInfoP->max > max) max = planeInfoP->max;
 		planeInfoP++;
 	}
 	nPix = head->dx*head->dy*dz;
@@ -1154,10 +1333,10 @@ stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 
 
-	if (!myPixels) return (-1);
-	if (! (head = myPixels->head) ) return (-1);
-	if (! (stackInfoP = myPixels->stackInfos) ) return (-1);
-	if (! (planeInfoP = myPixels->planeInfos) ) return (-1);
+	if (!myPixels) return (0);
+	if (! (head = myPixels->head) ) return (0);
+	if (! (stackInfoP = myPixels->stackInfos) ) return (0);
+	if (! (planeInfoP = myPixels->planeInfos) ) return (0);
 	dz = head->dz;
 	dc = head->dc;
 	dt = head->dt;
@@ -1167,11 +1346,11 @@ planeInfo *planeInfoP;
 			for (z = 0; z < dz; z++) {
 				if (force) planeInfoP->stats_OK = 0;
 				if (! planeInfoP->stats_OK)
-					if (!DoPlaneStats (myPixels, z, c, t)) return (-1);
+					if (!DoPlaneStats (myPixels, z, c, t)) return (0);
 				planeInfoP++;
 			}
 			if (! stackInfoP->stats_OK)
-				if (!DoStackStats (myPixels, c, t)) return (-1);
+				if (!DoStackStats (myPixels, c, t)) return (0);
 			stackInfoP++;
 		}
 	return (1);
@@ -1195,7 +1374,7 @@ int FinishPixels (PixelsRep *myPixels, char force) {
 
 		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-5);
 	}
-	
+
 	return (0);
 }
 
@@ -1444,6 +1623,7 @@ dispatch (char **param)
 	int force,result;
 	unsigned long z,dz,c,dc,t,dt;
 	planeInfo *planeInfoP;
+	stackInfo *stackInfoP;
 	unsigned long uploadSize;
 	unsigned long length;
 	OID fileID;
@@ -1456,7 +1636,6 @@ dispatch (char **param)
 	unsigned long file_off;
 
 
-	error_str[0]=0;
 
 /*
 char **cgivars=param;
@@ -1466,8 +1645,10 @@ char **cgivars=param;
 */
 
 	/* XXX: char * method should be able to disappear at some point */
-	char * method;
+	char *method;
 	unsigned int m_val;
+
+	error_str[0]=0;
 
 	if (! (method = get_param (param,"Method")) ) {
 		HTTP_DoError (method,"Method parameter missing");
@@ -1543,7 +1724,7 @@ char **cgivars=param;
 		case M_PIXELSINFO:
         	if (!ID) return (-1);
 
-			if (! (thePixels = GetPixels (ID,'i',1)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1563,7 +1744,7 @@ char **cgivars=param;
 		case M_PIXELSSHA1:
         	if (!ID) return (-1);
 
-        	if (! (thePixels = GetPixels(ID,'r',1))) {
+        	if (! (thePixels = GetPixelsRep(ID,'r',1))) {
 				if (errno) HTTP_DoError(method,strerror(errno));
 				else HTTP_DoError(method,"Access control error - check log for details");
 				
@@ -1621,7 +1802,7 @@ char **cgivars=param;
 		case M_GETPLANESTATS:
 			if (!ID) return (-1);
 		
-			if (! (thePixels = GetPixels (ID,'r',iam_BigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -1651,6 +1832,42 @@ char **cgivars=param;
 						);
 						planeInfoP++;
 					}
+
+			freePixelsRep (thePixels);
+
+			break;
+		case M_GETSTACKSTATS:
+			if (!ID) return (-1);
+		
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			if (! (stackInfoP = thePixels->stackInfos) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			head = thePixels->head;
+
+			dz = head->dz;
+			dc = head->dc;
+			dt = head->dt;
+			HTTP_ResultType ("text/plain");
+
+			for (t = 0; t < dt; t++)
+				for (c = 0; c < dc; c++) {
+					fprintf (stdout,"%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+						 c,t,stackInfoP->min,stackInfoP->max,stackInfoP->mean,stackInfoP->geomean,stackInfoP->sigma,
+						 stackInfoP->centroid_x, stackInfoP->centroid_y,
+						 stackInfoP->sum_i, stackInfoP->sum_i2, stackInfoP->sum_log_i,
+						 stackInfoP->sum_xi, stackInfoP->sum_yi, stackInfoP->sum_zi,stackInfoP->geosigma
+					);
+					stackInfoP++;
+				}
 
 			freePixelsRep (thePixels);
 
@@ -1911,6 +2128,20 @@ char **cgivars=param;
 			}
 
 			break;
+			
+			case M_COMPOSITE:
+				if (theZ < 0 || theT < 0) {
+					HTTP_DoError (method,"Parameters theZ, and theT must be specified for the composite method." );
+					return (-1);
+				}
+				if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
+					if (errno) HTTP_DoError (method,strerror( errno ) );
+					else  HTTP_DoError (method,"Access control error - check error log for details" );
+					return (-1);
+				}
+				
+				DoComposite (thePixels, theZ, theT, param);
+			break;
 	} /* END case (method) */
 
 	/* ----------------------- */
@@ -2090,6 +2321,28 @@ char *get_param (char **cgivars, char *param)
 	for(k=0; cgivars[k]; k += 2){
 		
 		if( !strcmp(cgivars[k],param) ){
+			returnVal = cgivars[k+1];
+			break;
+		}
+	}
+	
+	return returnVal;
+}
+
+
+char *get_lc_param (char **cgivars, char *param)
+{
+	register int k = 0;
+	char *returnVal = 0;
+
+	for(k=0; cgivars[k]; k += 2){
+		
+		if( !strcmp(cgivars[k],param) ){
+			returnVal = cgivars[k+1];
+			while (*returnVal) {
+				*returnVal = tolower (*returnVal);
+				returnVal++;
+			}
 			returnVal = cgivars[k+1];
 			break;
 		}
