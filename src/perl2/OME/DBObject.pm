@@ -517,14 +517,22 @@ sub __isClassName ($) {
 
 sub __isSTReference ($) {
     my $ref = shift;
-    return $ref =~ /^\@\w+$/;
+    return $1 if $ref =~ /^\@(\w+)$/;
+}
+
+sub __isSTPackage ($) {
+    my $ref = shift;
+    return $1 if $ref =~ /^OME::SemanticType::__(\w+)$/;
 }
 
 sub __loadOMEType {
     my ($proto, $ome_type) = @_;
+    my $ST = __isSTPackage ($ome_type);
+    $ome_type = '@'.$ST if $ST;
+
     if( __isClassName( $ome_type ) ) {
 		$ome_type->require()
-			or die "Error loading package $ome_type.";
+			or confess "Error loading package $ome_type.";
 	} elsif( __isSTReference( $ome_type ) ) {
 		my $atype = $proto->getFactory()->findObject("OME::SemanticType", name => substr( $ome_type,1 ) )
 			or confess "could not find Semantic Type $ome_type";
@@ -1879,6 +1887,72 @@ sub __addJoins {
     return ($first_table,$first_key);
 }
 
+
+=head2 __resolveReference
+
+	my ($local_column,$target_table_name,$target_column,$target_class) =
+	   $class->__resolveReference($local_class,$target_alias);
+
+Used by the __addForeignJoin method to resolve aliases that are references.
+References can be direct (has-one) references, indirect or reverse references
+(has-many) or infered references (inferred has-many).
+
+=cut
+
+sub __resolveReference {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+	my ($local_class,$target_alias) = @_;
+
+	$local_class = $proto->__loadOMEType( $local_class );
+	my $local_columns = $local_class->__columns();
+
+	# We need to determine the target table, column and class
+	my ($local_column,$target_table_name,$target_column,$target_class);
+
+	# If the local class has a target_alias column, then we're just dereferncing.
+	if (exists $local_columns->{$target_alias}) {
+		$target_column = $local_columns->{$target_alias};
+		$target_table_name = $target_column->[0];
+		$local_column = $target_column->[1];
+		$target_class = $target_column->[2];
+		my $local_pkeys = $local_class->__primaryKeys();
+		$target_column = $local_pkeys->{$target_table_name} if $local_pkeys;
+
+    # If there's no alias in the local class to $target_alias then
+    # This is a reverse reference.
+	} else {
+		my $foreign_def;
+		if (exists $local_class->__hasManys()->{$target_alias}) {
+			$foreign_def = $local_class->__hasManys()->{$target_alias};
+		} else {
+		# See if its inferred
+			($foreign_def->[0],$foreign_def->[1]) = $local_class->__parseHasManyAccessor ($target_alias);
+			confess "$target_alias cannot be reached from $local_class" unless $foreign_def->[0];
+		}
+		my $foreign_class = $proto->__loadOMEType( $foreign_def->[0] );
+		my $foreign_column = $foreign_class->__columns()->{$foreign_def->[1]};
+		$target_table_name = $foreign_column->[0];
+		$target_column = $foreign_column->[1];
+		$target_class = $foreign_def->[0];
+		$local_column = '.';
+	}
+
+    # if the target class is an ST, then convert it to the @STName convention.
+    if ($target_class) {
+        my $ST = __isSTPackage ( $target_class );
+        $target_class = '@'.$ST if $ST;
+        $target_class = $proto->__loadOMEType( $target_class );
+
+        # If this is an ST column, activate it
+        $target_class->__activateSTColumn($target_alias);
+    }
+
+	return ($local_column,$target_table_name,$target_column,$target_class);
+}
+
+
+
 =head2 __addForeignJoin
 
 	my $result_key = $class->
@@ -1887,15 +1961,16 @@ sub __addJoins {
 
 Used by the __getQueryLocation method to add a foreign-key join clause
 to an SQL statement.  The $aliases parameter should be an array
-reference, and should contain the result of splitting a foreign-key
-alias on periods.  A foreign-key alias allows you to follow an
-arbitrary number of foreign-key fields in a search clause.  All but
-the last alias in the array I<must> be a foreign-key alias.  (The last
-one I<can> be, but does not have to be.)  Further, each foreign-key
-alias must belong to the class pointed to by the previous foreign-key
-in the list.  (The examples provided in the "Search criteria" section
+reference, and should contain the result of splitting a compound
+alias on periods.  A compound alias allows you to follow an
+arbitrary number of references in a search clause.  All but
+the last alias in the array I<must> be a reference alias.  (The last
+one I<can> be, but does not have to be.)  Each reference
+alias can be either an explicit has-many or has-one alias or it can be an
+inferred has-many of the form [MyClass]List (e.g. CategoryList).
+The examples provided in the "Search criteria" section
 of the L<OME::Factory|OME::Factory> documentation should make things
-clearer.)
+clearer.
 
 The $fk_number parameter should be a reference to an integer counter;
 it is used as a nonce to guarantee the uniqueness of any table
@@ -1930,62 +2005,93 @@ sub __addForeignJoin {
     if (scalar(@$aliases) < 1) {
         confess "Cannot create foreign key joins if there aren't any dereferences";
     } elsif (scalar(@$aliases) == 1) {
-        # Base case - no dereferences
+        # Base case - the first alias.
+        # Can be a straight-up alias or a has-many
+        # The duplication of some code in the base case can probably be factored out
         my $alias = $aliases->[0];
 
-        if (!exists $foreign_aliases->{$alias}) {
-            my $columns = $class->__columns();
-            my $column = $columns->{$alias};
-            $foreign_aliases->{$alias} = $column;
+        my ($local_column,$target_table_name,$target_column,$target_class) =
+            $proto->__resolveReference($class,$alias);
+        
+        if ($local_column eq '.') {
+            # A has-many will set locl_column to '.'
+            # We need to determine the table name for this class
+            # And the column name that has its primary key.
+            my $local_table_alias = $class->__defaultTable();
+            my $pKeys = $class->__primaryKeys();
+            $local_table_alias = (keys %$pKeys)[0]
+                unless $local_table_alias;
+            confess "BAH! Class $class does not have a primary key table!"
+                unless $local_table_alias;
+            my $local_column_name = $pKeys->{$local_table_alias};
 
-            # If this is an ST column, load in the ST's package
-            $class->__activateSTColumn($alias);
+            # Set up the target table alias
+            my $number = $$foreign_key_number++;
+            my $target_table_alias = "fkey${number}_${target_table_name}";
+            push @$foreign_tables, "$target_table_name $target_table_alias";
+
+            $foreign_aliases->{$alias} = [$target_table_alias,'.',$target_class];
+
+            push @$join_clauses,
+              "${target_table_alias}.${target_column} = ".
+              "${local_table_alias}.${local_column_name}";
+        } else {
+            $foreign_aliases->{$alias} = [@{$class->__columns()->{$alias}}];
         }
         return $alias;
+
+
     } else {
+        # This a depth-first traversal, so we recurse first to get to the beginning.
         my $target_alias = pop(@$aliases);
         my $local_alias = $class->
           __addForeignJoin($foreign_key_number,$aliases,
                            $foreign_tables,$foreign_aliases,
                            $join_clauses);
+        # Then we go left-to-right through the aliases
         my $full_alias = "${local_alias}.${target_alias}";
 
         if (!exists $foreign_aliases->{$full_alias}) {
-            my $column = $foreign_aliases->{$local_alias};
-            #print STDERR "$column ",join(',',@$column),"\n";
-
+            my $column = $foreign_aliases->{$local_alias}
+                or confess "$local_alias is not a reference -- cannot add a foreign key table";
             confess "$local_alias is not a reference -- cannot add a foreign key table"
               unless defined $column->[2];
+
             my $local_table_alias = $column->[0];
             my $local_column_name = $column->[1];
             my $fkey_class = $column->[2];
 
-			$fkey_class = $proto->__loadOMEType( $fkey_class );
-            my $target_columns = $fkey_class->__columns();
-            my $target_column = $target_columns->{$target_alias};
-            my $target_table_name = $target_column->[0];
-            my $target_column_name = $target_column->[1];
-            my $target_pkeys = $fkey_class->__primaryKeys();
-            confess "Cannot create foreign join -- $fkey_class has no primary key"
-              unless exists $target_pkeys->{$target_table_name};
-            my $target_pkey = $target_pkeys->{$target_table_name};
+            my ($local_column,$target_table_name,$target_column,$target_class) =
+               $proto->__resolveReference($fkey_class,$target_alias);
+
+            if ($local_column_name eq '.') {                
+            # We are at the terminus of a has-many alias, i.e. the reference points to us.
+                if ($local_column eq '.') {
+                # The target alias is another has-many, so we have to get the column that
+                # has our primary key.
+                # Its done in this round-about way so we can recover the primary key used
+                # for the table containing the $local_alias column.
+                    my $local_table_name = $local_table_alias;
+                    $local_table_name =~ s/^fkey\d+_//;
+                    $local_column_name = $fkey_class->__primaryKeys()->{$local_table_name};
+                    $full_alias = $target_alias;
+                } else {
+                # The target alias is one we can reference directly
+                    $foreign_aliases->{$full_alias} = [$local_table_alias,$local_column,$target_class];
+                    return $full_alias;
+                }
+            }
+
+    		confess "Cannot create foreign join -- $class has no primary key"
+                unless $target_column;
+
             my $number = $$foreign_key_number++;
             my $target_table_alias = "fkey${number}_${target_table_name}";
-
             push @$foreign_tables, "$target_table_name $target_table_alias";
-            #print STDERR "$target_table_name $target_table_alias $target_column_name\n";
-
-            # Make a copy of the old column entry, so that we can
-            # replace the table name with its SQL alias.
-            my $new_column = [@$target_column];
-            $new_column->[0] = $target_table_alias;
-            $foreign_aliases->{$full_alias} = $new_column;
-
-            # If this is an ST column, activate it
-            $fkey_class->__activateSTColumn($target_alias);
+            $foreign_aliases->{$full_alias} = [$target_table_alias,$local_column,$target_class];
 
             push @$join_clauses,
-              "${target_table_alias}.${target_pkey} = ".
+              "${target_table_alias}.${target_column} = ".
               "${local_table_alias}.${local_column_name}";
         }
 
@@ -2154,6 +2260,10 @@ no warnings "uninitialized";
 
     # Any LIMIT or OFFSET clause found in the criteria
     my ($limit,$offset);
+    
+    # Any distinct criteria and the columns it applies to
+    my ($distinct,$id_distinct);
+    my @distinct_on;
 
     # Look through the criteria, if there are any.  Add the criteria
     # entries to the WHERE clause list, and also make sure that the
@@ -2183,7 +2293,7 @@ no warnings "uninitialized";
             push @order_by, [$location,$order];
         }
 
-        # Parse any LIMIT or OFFSET clause
+        # Parse any LIMIT OFFSET or DISTINCT clause
 
         if (exists $criteria->{__limit}) {
             $limit = $criteria->{__limit};
@@ -2197,6 +2307,24 @@ no warnings "uninitialized";
             delete $criteria->{__offset};
             die "Invalid OFFSET clause $offset -- must be an integer"
               unless $offset =~ /^\d+$/;
+        }
+
+        if (exists $criteria->{__distinct}) {
+            my $distinct_on = $criteria->{__distinct};
+            delete $criteria->{__distinct};
+            $distinct_on ||= [];
+            $distinct_on = [$distinct_on] unless ref($distinct_on);
+
+            foreach my $column_alias (@$distinct_on) {
+                $location = $class->
+                  __getQueryLocation(\$foreign_key_number,
+                                     \@foreign_tables,\%foreign_aliases,
+                                     \@join_clauses,\%tables_used,
+                                     $column_alias);
+                $id_distinct = 1 if $location eq 'id';
+                
+                push (@distinct_on, $location);
+            }
         }
 
         # Parse the remaining criteria
@@ -2306,6 +2434,12 @@ no warnings "uninitialized";
         map { $_->[0] = $first_key if $_->[0] eq 'id' } @order_by;
     }
 
+    if ($id_distinct) {
+        die "Cannot search for distinct IDs; none is in the SQL statement!"
+          unless defined $first_key;
+        map { $_ = $first_key if $_ eq 'id' } @distinct_on;
+    }
+
     my $sql;
     my $ACL_locs = $class->__ACL_locations();
     my $ACL_vis = $class->Session()->ACL() if OME::Session->hasInstance;
@@ -2323,7 +2457,8 @@ no warnings "uninitialized";
                @foreign_tables
               );
     } else {
-        $sql = "select ". join(", ",@columns_needed). " from ".
+        my $distinct = scalar (@distinct_on) ? 'DISTINCT ON ('.join (',',@distinct_on).')' : '';
+        $sql = "select $distinct ".join(", ",@columns_needed). " from ".
           join(", ",
                keys(%tables_used),
                @foreign_tables
