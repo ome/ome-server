@@ -111,7 +111,8 @@ public class RemoteProject
     }
 
     public void addDataset(Dataset ds) {
-	return(setRemoteElement("addDataset", ds));
+	setRemoteElement("addDataset", ds);
+	return;
     }
 
 
