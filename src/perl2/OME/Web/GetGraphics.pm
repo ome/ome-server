@@ -151,8 +151,9 @@ sub _getJSData {
 	my $imageID   = $image->id();
 	my $pixelsID  = $pixels->id();
 
-	$JSinfo->{ imageID } = $imageID;
-	$JSinfo->{ pixelsID } = $pixelsID;
+	$JSinfo->{ imageID }   = $imageID;
+	$JSinfo->{ imageName } = "'".$image->name()."'";
+	$JSinfo->{ pixelsID }  = $pixelsID;
 
 	#######################
 	# get Dimensions from image and make them readable
@@ -210,7 +211,6 @@ sub _getJSData {
 	my $displayOptions = $imageManager->getDisplayOptions($image);
 	$JSinfo->{ theZ }  = sprintf( "%d", $displayOptions->{theZ} );
 	$JSinfo->{ theT }  = sprintf( "%d", $displayOptions->{theT});
-print STDERR "the t is ".$JSinfo->{ theT }."\n\n";
 	$JSinfo->{ isRGB } = $displayOptions->{isRGB};
 	$JSinfo->{ CBW }   = '[' . join( ',', @{$displayOptions->{CBW}} ) . ']';
 	$JSinfo->{ RGBon } = '[' . join(",",@{$displayOptions->{RGBon}}) . ']';
@@ -239,6 +239,7 @@ sub BuildSVGviewer {
 	my $JSinfo = $self->_getJSData();
 	my $DatasetID          = $cgi->url_param('DatasetID') || 'null';
 	my $imageID            = $JSinfo->{ imageID };
+	my $imageName          = $JSinfo->{ imageName };
 	my $pixelsID           = $JSinfo->{ pixelsID };
 	my $imageServerID      = $JSinfo->{ ImageServerID };
 	my $pixelList          = $JSinfo->{ PixelList };
@@ -346,7 +347,7 @@ $SVG .= <<ENDSVG;
 			var toolBoxScale	     = $toolBoxScale;
 			var windowControllers	 = new Array();
 
-			image = new OMEimage($imageID,$pixelsID,Stats,$Dims,$ImageServerURL,
+			image = new OMEimage($imageID, $imageName, $pixelsID, Stats, $Dims, $ImageServerURL,
 			                     $SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB,
 			                     $imageServerID, $theZ, $theT);
 			image.realize( svgDocument.getElementById("image") );
@@ -364,7 +365,7 @@ $SVG .= <<ENDSVG;
 			setTimeout( "channels.toolBox.hide()", 500 );
 			windowControllers['Channels'] = channels;
 
-			viewerPreferences = new ViewerPreferences( $SavePrefsCGI_URL );
+			viewerPreferences = new ViewerPreferences( $SavePrefsCGI_URL, image );
 			viewerPreferences.buildToolBox( toolboxLayer );
 			windowControllers['Preferences'] = viewerPreferences;
 			setTimeout( "viewerPreferences.toolBox.hide()", 200 );
@@ -408,6 +409,7 @@ $SVG .= <<ENDSVG;
 			xyPlaneControls = new XYPlaneControls( $planeURLs, image, stats, viewerPreferences, overlayManager );
 			xyPlaneControls.buildToolBox( toolboxLayer );
 			windowControllers['xyPlaneControls'] = xyPlaneControls;
+			
 
 			viewerPreferences.setWindowControllers( windowControllers );
 
@@ -418,7 +420,8 @@ $SVG .= <<ENDSVG;
 
 			image.registerListener( 'updatePic', xyPlaneControls, 'updatePlaneURL' );
 
-			setTimeout( "viewerPreferences.resizeToolboxes("+toolBoxScale+", true)", 500);
+			setTimeout( "viewerPreferences.applyScale("+toolBoxScale+", true)", 500);
+//			setTimeout( "image.moveImageLayer( 0, xyPlaneControls.toolBox.getActualHeight() )", 800 );
 			setTimeout( "channels.sync()", 200 );
 			setTimeout( "xyPlaneControls.sync()", 200 );
 //	this next line loads every plane in the image
