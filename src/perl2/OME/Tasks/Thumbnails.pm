@@ -68,8 +68,13 @@ sub new{
 	my $class=shift;
 	my $self={};
 	$self->{size}=50;
-	$self->{OME_JPEG}="/usr/local/apache/cgi-bin/OME_JPEG";
+	$self->{OME_JPEG}="OME_JPEG";
 	$self->{session}=shift;
+
+
+
+
+
 	bless($self,$class);
    	return $self;
 
@@ -96,16 +101,6 @@ sub generateOMEimage{
 	
 	$theZ = $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0 );
 	$theT = $T_param || 0;
-
-	my $displaySettings  = $factory->findObject("OME::DisplaySettings", 'image_id' => $image->id() );
-	if (defined $displaySettings){
-		$theZ	=$displaySettings->theZ() if (not defined $Z_param);
-		$theT	=$displaySettings->theT() if (not defined $T_param);
-		$isRGB= $displaySettings->isRGB();
-		$WBS	= @{ $displaySettings->WBS() };
-		$RGBon= @{ $displaySettings->RGBon() };
-
-	}
 	$isRGB=1;
    	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
 
@@ -136,13 +131,6 @@ sub generateOMEmovie{
 	my $wavelengths=getImageWavelengths($factory,$image);	# ref array
 	my $Z; 
 	$Z= $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0) ;
-	my $displaySettings  = $factory->findObject("OME::DisplaySettings", 'image_id' => $image->id() );
-	if (defined $displaySettings){
-		$Z	=$displaySettings->theZ() if (not defined $Z_param);
-		$isRGB= $displaySettings->isRGB();
-		$WBS	= @{ $displaySettings->WBS() };
-		$RGBon= @{ $displaySettings->RGBon() };
-	}
 	$isRGB=1;
    	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$WBS,$RGBon);
 
@@ -190,7 +178,11 @@ sub writeOMEimage{
   	my $color=$self->getConvertedWBS($theT);
 	my $rgb="RGB=".join(",",@$color);
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
-  	my $script=$self->{OME_JPEG};
+
+	my $factory=$self->{session}->Factory();
+	my $configuration = $factory->loadObject("OME::Configuration", 1);
+	my $bin_dir=$configuration->bin_dir;
+  	my $script=$bin_dir."/".$self->{OME_JPEG};
 	my $out="";
 	open (JPG, "$script $path $z $t $d $rgb $rgbon|");
   	while (<JPG>) {
@@ -252,6 +244,12 @@ sub initialize{
 
 
 
+################################
+
+
+
+
+
 
 ####
 # WBS
@@ -286,43 +284,6 @@ sub makeWBS{
 
 
 
-##################
-#
-#	utility to convert WBS from hard numbers to native format
-#	This and getConvertWBS(theT) are the two functions that do conversion between
-#	native format and hard numbers.
-#	returns WBS in native format if successful
-#	returns undef if unsuccessfull
-
-sub makeWBSNative{
-	my $self=shift;
-	my ($refWBS,$theT)=@_;
-	my @WBS=();
-	@WBS=@$refWBS;
-	my $refstats=$self->{stats};
-	for(my $i=0;$i<4;$i++){
-		my $wavenum=$WBS[$i*3];
-		if ($wavenum<0 || $wavenum>=$self->{W} || $wavenum != int($wavenum)){
-			return undef;
-		}
-		my ($geomean,$sigma);	
-		$geomean=${$refstats}[$wavenum][$theT]{geomean};
-	  	$sigma=${$refstats}[$wavenum][$theT]{sigma};
-
-     		if ($sigma==0){
-			return undef;
-		}
-		my $value=($WBS[$i*3+1]+$geomean)/$sigma;
-		$WBS[$i*3+1]=int($value);
-		if ($WBS[$i*3+2]==0){
-		   $WBS[$i*3+2]=0.0001;
-		}
-		$WBS[$i*3+2]=255/($sigma*$WBS[$i*3+2]);
-		$WBS[$i*3+2]=int($WBS[$i*3+2]);
-	}
-	return \@WBS;
-
-}
 
 
 ############
@@ -366,14 +327,14 @@ sub getConvertedWBS{
 	return \@cWBS;
 }
 
-
 ######################
+# must be merged
 
 sub getImageStats{
 	my ($factory,$image)=@_;
-  # new version
-  my $pixels = $image->DefaultPixels();
-  my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
+  	# new version
+  	my $pixels = $image->DefaultPixels();
+  	my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
 		or die "Stack statistics must be installed for this viewer to work!\n";
 	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput",
 		program_id => $stackStats->id(),
