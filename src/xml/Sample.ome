@@ -8,14 +8,14 @@
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 		<GroupRef ID = "urn:lsid:foo.bar.com:Group:123456"/>
 	</Project>
-	<Dataset Name = "Controls" ID = "urn:lsid:foo.bar.com:Dataset:123456" Locked = "true">
+	<Dataset Name = "Controls" ID = "urn:lsid:foo.bar.com:Dataset:123456" Locked = "false">
 		<Description/>
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 		<GroupRef ID = "urn:lsid:foo.bar.com:Group:123456"/>
 		<ProjectRef ID = "urn:lsid:foo.bar.com:Project:123456"/>
 		<CustomAttributes/>
 	</Dataset>
-	<Experiment Type = "Time-lapse" ID = "foo.bar.com:Experiment:123456">
+	<Experiment Type = "Time-lapse" ID = "urn:lsid:foo.bar.com:Experiment:123456">
 		<Description>This was an experiment.</Description>
 		<ExperimenterRef ID = "urn:lsid:foo.bar.com:Experimenter:123456"/>
 	</Experiment>
@@ -75,8 +75,8 @@
 		<ImagingEnvironment Temperature = ".1" AirPressure = ".1" Humidity = ".2" CO2Percent = ".3"/>
 		<Thumbnail href = "http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype = "image/jpeg"/>
 		<ChannelInfo ID="urn:lsid:foo.bar.com:LogicalChannel:123456" Name = "Channel 1" IlluminationType="Epifluorescence" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
-			<LightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123456"/>
-			<AuxLightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123789" Technique = "Photobleaching"/>
+			<LightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123123"/>
+			<AuxLightSourceRef ID = "urn:lsid:foo.bar.com:LightSource:123456" Technique = "Photobleaching"/>
 			<OTFRef ID = "urn:lsid:foo.bar.com:OTF:123456"/>
 			<DetectorRef ID = "urn:lsid:foo.bar.com:Detector:123456"/>
 			<FilterRef ID = "urn:lsid:foo.bar.com:Filter:123456"/>
@@ -94,7 +94,7 @@
 		<StageLabel Name="Zulu" X="123" Y="456" Z="789"/>
 		<PlateRef ID="urn:lsid:foo.bar.com:Plate:123456" Well="A03" Sample="1"/>
 		<Pixels DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "true"
-			ID = "urn:lsid:foo.bar.com:Pixels:123456" >
+			ID = "urn:lsid:foo.bar.com:Pixels:123456">
 			<Bin:BinData Compression="bzip2">QlpoOTFBWSZTWWPeXjwAACNB/0AAACDf//////////6jptyMdvoEMAEwFjjQ0aNNAaDQAAAAGmIAaNBoaDJk9Q2oVU/E0YqfqeIYjQU8UyYTQAh6mQ0MgBgCMAhiKQANA0A0NDRkA0BoGjRoNA0GQANGhq6+Gws+J5nuQuOQV08AWHocdL7xK7LqxiwJPoXI08VuNbHXTujRic4mSxwHtU4OIYmUapaQR4cZByyRR2BewmRIMmCW48BLWwUZ5jXlyS5aHEbC0ajY8sUohRX1HQBkEsM2jU5WtpbA2vK9dNZRFYosogvjceiAWV4hqm17VWzhinkPclMVMzISVzKZuQtvQkBNrNwhUlK1GaSQFoHPJn7Bkz5sEYHR1WFUhGZomAp3H4Xko4Lcy5XsqBMZdc7hw0qDJNCIdJSlRIw+gLN66jR1pM6mC82U3y9yrEyLHvosPor35qSQ3/YRBahjoCiLh+t/SgEGjJOv4EV+vmPs1HkniDI72bdBBIQUbpy6klQ/SKbDx5SAspXAm8UAH6uH46/LhD+AAAQAE/i7kinChIMe8vHg</Bin:BinData>
 			<Bin:BinData Compression="bzip2">QlpoOTFBWSZTWcC11kcAAGzv//VAAKEgAAkAJCBAF/////////tJLAgsxkKgSAIIoDABSKmFVPZTMqeIxTegCJ6nlMyajQA0ANAD0mmgaYnlPGqEVT2TTATU9TNNJlGQAA0NBkAGmgaAAAANFQAACYAAAmAAAAAmJgAAEbVuJdtjAfagPfdGIHFcGDaQBDJGhcjWksKpjRikvhJWvEGMt8ZQTFnRR1tCzDOdzprW1DHUiQlYJIE7mWT1VWDQOkmJSJtYgDOFAzv0rihqogkQylBdd9NeiC1Co0kYl3nqSBgbDhW1pRsSMCg5WT3zqBS8kcoyxDBUYiYIrZLgxbeQfLM0r5HKe5ERIL4hnQqWjkyFEfZxwNoqdCz7nUwFfCF5oKS6ByKFlsdZ5xVZsJ4W8KTFquKkILthryV4VuuunxyKqEReYtUpDPS0MUp5Y0r+OSZh66TOp6ksCOGBlcV5ECaw/QnlLqsyysOuPFVu4rr5a7on2tGPWyQlyxGUq+zaFbYKUqsEWbI7nzUmcxZd2aj4eYmqnPzzz0wVTUUUmNwmp/AuIh8BmRECIjMiABmQIEZgAjBkDMAzAH0XckU4UJDAtdZH</Bin:BinData>
 			<Bin:BinData Compression="bzip2">QlpoOTFBWSZTWe/hV3kAAFl7//KgDAAmAUBAAkAo/////////1vbTQClApJAsAkBAzABSCYZM0amp4kZomMjSeSemgBAYgyBkMnojAm0Ceo9HikKqe0ZMmBMiMmSaAA0BoyDINAZAAAAAAxUoGQMmmRhNGmhkxAYE0aNMgNNMQYTBBkwFFEzFVzDGI4IyoFGgMnsLNNS5lFFE0/lBDRPCmzBTCaXCp0IFI1I9DJx15FV5h0wErLeovwZRFyrrIiefIZ1JTKhUAQzApTjcMILFtzlAPYWpxgxPTmTAJqqCZR3GaK4H4wokOcowgFYprenjdjcTAY79cLFKOGIVcTrhSAhTNJYKmczSXjWs6Ap0iCHKBI7loICQwmK4Ao7WsG3AcrJMRtJFRpwSYYpwUSoiBzJiQTXpvzRg3LZUUX23TTTVAuO7d68SAfXVlxpwpviGiUbApLEsdxN2ZESYyPJFZI4Zi8OrT9+QN5eLfODxxaMaSgdiLgpFn4BLAF8ofRUDIHODaaHK63fzM87biFYrO5u1a/wgnXWHhvPbUeAYiOcw/3eI7cMd31ISpv0kGRAIo5AEESSCwgQCwgAWEQQSwgSkQQEikCkEgBlF3JFOFCQ7+FXeQ==</Bin:BinData>
