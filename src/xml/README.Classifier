@@ -35,7 +35,7 @@ ome import OME/Analysis/Statistics/HaralickFeatures.ome
 ome import OME/Analysis/Statistics/ZernikeMoments.ome
 ome import OME/Analysis/Statistics/ChebyshevStatistics.ome
 ome import OME/Analysis/Statistics/ChebyshevFourierStatistics.ome
----
-
-If you want the Signture Chain also import
-/OME/Analysis/Classifier/SignatureChain.ome
+ome import OME/Analysis/Classifier/ClassifierStatistics.ome
+ome import OME/Analysis/Classifier/BayesNetTrainer.ome
+ome import OME/Analysis/Classifier/BayesNetClassifier.ome
+-----
