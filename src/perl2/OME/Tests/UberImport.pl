@@ -7,6 +7,9 @@ if( ! $ARGV[0] ) {
 	print "Usage is:\n\t perl UberImport.pl [file1] [file2] ...\n";
 	exit -1;
 }
+#
+# Set OME_DEBUG environment variable to turn on debugging.
+#
 if ($ENV{OME_DEBUG} > 0) {
 #	print 'Debugging output enabled';
 #	logconfig(
