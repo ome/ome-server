@@ -812,8 +812,11 @@ sub _inputVarName {
 	return $self->{ __inputVariableNames }->{ $xml_instruction->toString() }
 		if exists $self->{ __inputVariableNames }->{ $xml_instruction->toString() };
 	my $name = 'ome_input_'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
-	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
-		if( $xml_instruction->getAttribute( 'ID' ) );
+	if( $xml_instruction->getAttribute( 'ID' ) ) {
+		$name .= '_'.$xml_instruction->getAttribute( 'ID' );
+	} else {
+		$name .= '_'.$xml_instruction->tagName();
+	}
 	$self->{ __inputVariableNames }->{ $xml_instruction->toString() } = $name;
 	return $name;
 }
@@ -832,8 +835,11 @@ sub _outputVarName {
 	return $self->{ __outputVariableNames }->{ $xml_instruction->toString() }
 		if exists $self->{ __outputVariableNames }->{ $xml_instruction->toString() };
 	my $name = 'ome_output_'.scalar( keys( %{ $self->{ __outputVariableNames } } ) );
-	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
-		if( $xml_instruction->getAttribute( 'ID' ) );
+	if( $xml_instruction->getAttribute( 'ID' ) ) {
+		$name .= '_'.$xml_instruction->getAttribute( 'ID' );
+	} else {
+		$name .= '_'.$xml_instruction->tagName();
+	}
 	$self->{ __outputVariableNames }->{ $xml_instruction->toString() } = $name;
 	return $name;
 }
