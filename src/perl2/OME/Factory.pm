@@ -423,6 +423,11 @@ sub new {
 sub DBH { my $self = shift; return $self->db_Main(); }
 sub Session { my $self = shift; return $self->{_session}; }
 
+sub __checkClass {
+    logcroak "Malformed class name $class"
+      unless shift =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+}
+
 # loadObject
 # ----------
 
@@ -439,8 +444,7 @@ sub loadObject {
     #    logdbg "debug", "loading  new  $class $id" if $self->{debug};
     #}
 
-    logcroak "Malformed class name $class"
-      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+    __checkClass($class);
     eval "require $class";
     my $object = $class->retrieve($id) or return undef;
     $object->Session($self->Session());
@@ -497,6 +501,7 @@ sub findObjects {
 
     my $session = $self->Session();
 
+    __checkClass($class);
     eval "require $class";
     if (wantarray) {
         # looking for a list
@@ -548,6 +553,7 @@ sub findObjectsLike {
 
     my $session = $self->Session();
 
+    __checkClass($class);
     eval "require $class";
     if (wantarray) {
         # looking for a list
@@ -568,8 +574,7 @@ sub findObjectsLike {
 sub newObject {
     my ($self, $class, $data) = @_;
 
-    logcroak "Malformed class name $class"
-      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+    __checkClass($class);
     eval "require $class";
     my $object = $class->create($data);
     $object->Session($self->Session());
@@ -579,8 +584,7 @@ sub newObject {
 sub maybeNewObject {
     my ($self, $class, $data) = @_;
 
-    logcroak "Malformed class name $class"
-      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+    __checkClass($class);
     eval "require $class";
     my $object = $class->find_or_create($data);
     $object->Session($self->Session());
