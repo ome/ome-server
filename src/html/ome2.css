@@ -22,6 +22,8 @@ a:hover { text-decoration: underline; color: #006699}
 
 .ome_header_title { font-size: 16px; }
 
+.ome_detail_text { font-size: 14px; }
+
 .ome_title { font-size: 14px; font-weight: bold; }
 
 .ome_info { color: blue; } 
