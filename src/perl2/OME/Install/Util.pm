@@ -316,10 +316,10 @@ my %os_specific = (
 #********* LOCAL SUBROUTINES
 #*********
 
-# Returns a hash ref whose keys are the names of the entries in the specified
-# directory and whose values are their absolute paths.
+# Returns an array of files with the filter removed, each value returned is an
+# absolute path.
 #
-# my %contents = scan_dir($dir [, $filter]);
+# my @contents = scan_dir($dir, $filter);
 #
 # $dir      Directory to scan. It must be a valid path either absolute or
 #           relative to the working directory.
@@ -331,35 +331,35 @@ my %os_specific = (
 #
 # Example:
 #
-#   my %contents = scan_dir("../C", sub{ ! /^\.{1,2}$/ });
+#   my @contents = scan_dir("../C", sub{ ! /^\.{1,2}$/ });
 #
 # The above will return the contents of the C directory (contained in the parent
 # directory of the working directory) with the exception of the . and ..
-# entries. Notice that the hash values are absolute paths, even if $dir is
+# entries. Notice that the values are absolute paths, even if $dir is
 # relative.
 #
 
 sub scan_dir {
-    my ($dir,$filter) = @_;
-    my %contents = ();
-    my $item;
-
-    if( ref($filter) ne "CODE" ) {  # not passed or not valid
-        $filter = sub{1};  # no filter
-    }
+    my ($dir, $filter) = @_;
+    my (@files, @contents);
 
     $dir = File::Spec->rel2abs($dir);  # does clean up as well
 
-    opendir(DIR,$dir) or die "Couldn't open directory $dir. $!";
-    while( $item = readdir(DIR) ) {
-        local $_ = $item;
-        if( &$filter ) {
-            $contents{$_} = File::Spec->catfile($dir,$_);  # portable path
-        }
-    }
-    closedir(DIR);
+    opendir(DIR, $dir) or croak "Couldn't open directory $dir $!";
 
-    return \%contents;
+    if( ref($filter) eq "CODE" ) {
+		@files = grep { &$filter } readdir(DIR);
+    } else {
+		@files = readdir(DIR);
+	}
+
+	closedir(DIR);
+
+	foreach (@files) {
+		push(@contents, File::Spec->catfile($dir, $_));
+	}
+			
+	return @contents;
 }
 
 #*********
@@ -421,33 +421,30 @@ sub get_mac {
 #
 
 sub copy_tree {
-    my ($from,$to,$filter) = @_;
+    my ($from, $to, $filter) = @_;
     $from = File::Spec->rel2abs($from);  # does clean up as well
-    $to = File::Spec->rel2abs($to);
+    $to = File::Spec::->catdir(File::Spec->rel2abs($to), basename($from));
 
-    if ( ! -e $to ) {
-	mkdir($to) or die("Couldn't make directory $to. $!.\n");
-    }
+	unless (-d $from) { croak "OME::Install::Util::copy_tree() can only operate on directories" }
 
-    my $paths = scan_dir($from,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
-    my @entries = keys(%$paths);  # just names, no path
+    unless (-e $to) { mkdir($to) or croak "Couldn't make directory $to: $!" }
+
+    my @paths = scan_dir($from,sub{ ! /^\.{1,2}$/ });  #filter . and .. out
 
     if( ref($filter) eq "CODE" ) {  # filter out unwanted files and dirs
-        @entries = grep {local $_=$_; &$filter} @entries;
+        @paths = grep { &$filter } @paths;
     }
 
-    my $x;
-
-    foreach my $item (@entries) {  # if @entries is empty, we return
-        $x = $paths->{$item};  # abs path of current entry
-        if( -f $x ) {
-            copy($x, $to) or die("Couldn't copy file $x. $!.\n");
-        } elsif ( -d $x ) {
-            $x = File::Spec->catdir($to,$item);  # portable path
-            mkdir($x) or die("Couldn't make directory $x. $!.\n");
-            copy_tree(File::Spec->catdir($from,$item),
-                File::Spec->catdir($to,$item),$filter);
-        }
+    foreach my $item (@paths) {  # if @paths is empty, we return
+        if ( -l $item ) {
+			carp "copy_tree() not copying or following symlink $item";
+		} elsif (-f $item) {
+			copy($item, $to) or croak "Couldn't copy file $item: $!";
+        } elsif ( -d $item ) {
+			copy_tree($item, $to, $filter); 
+		} else {
+			carp "copy_tree() not copying device or other filetype $item";
+		}
     }
 
     return;
@@ -482,7 +479,13 @@ sub copy_tree {
 #
 
 sub delete_tree {
+	# FIXME delete_tree() needs to be ported to the new scan_dir() which uses
+	# arrays, not hashrefs.
+	croak ("delete_tree() functionality disabled");
+
+
     my ($base,$filter) = @_;
+
 
     $base = File::Spec->rel2abs($base);  # does clean up as well
     my $paths = scan_dir($base,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
