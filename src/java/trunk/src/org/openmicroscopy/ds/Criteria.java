@@ -50,7 +50,7 @@ import java.util.HashMap;
  * data objects from an OME data server.</p>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 

@@ -49,7 +49,7 @@ import org.openmicroscopy.ds.dto.*;
  * types to be specified by their Remote class names.)</p>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
