@@ -31,7 +31,7 @@
 
 <!--
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Written by:  
+# Written by:  Ilya G. Goldberg <igg@nih.gov>
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
@@ -281,28 +281,12 @@
 	</xsl:template>
 	<xsl:template match = "CA:Image">
 		<xsl:variable name = "ID" select = "@ID"/>
-		<xsl:variable name = "PixID" select = "@DefaultPixels"/>
 		<xsl:element name = "Image">
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
 			<xsl:attribute name = "ID">
 				<xsl:value-of select = "@ID"/>
-			</xsl:attribute>
-			<xsl:attribute name = "SizeX">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Pixels [@ID=$PixID] /@SizeX"/>
-			</xsl:attribute>
-			<xsl:attribute name = "SizeY">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Pixels [@ID=$PixID] /@SizeY"/>
-			</xsl:attribute>
-			<xsl:attribute name = "SizeZ">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Pixels [@ID=$PixID] /@SizeZ"/>
-			</xsl:attribute>
-			<xsl:attribute name = "NumChannels">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Pixels [@ID=$PixID] /@SizeC"/>
-			</xsl:attribute>
-			<xsl:attribute name = "NumTimes">
-				<xsl:value-of select = "CA:CustomAttributes/CA:Pixels [@ID=$PixID] /@SizeT"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeX" mode = "Attribute2OptionalAttribute"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Dimensions/@PixelSizeY" mode = "Attribute2OptionalAttribute"/>
