@@ -47,7 +47,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.ByteArrayInputStream;
 import java.util.StringTokenizer;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -146,6 +146,7 @@ public class HttpImageServer
 
         try
         {
+            post.addParameter("SessionKey",sessionKey);
             status = client.executeMethod(post);
         } catch (IOException e) {
             e.printStackTrace();
@@ -286,9 +287,28 @@ public class HttpImageServer
         }
     }
 
+    /**
+     * Returns whether two image servers refer to the same image
+     * server installation.
+     */
+    public boolean equals(HttpImageServer is)
+    {
+        return
+            url.equals(is.url) &&
+            sessionKey.equals(is.sessionKey);
+    }
+
     // JAVADOC NOTICE:
     // All of these public methods inherit their javadoc documentation
     // from the ImageServer superclass.
+
+    public boolean equals(ImageServer is)
+    {
+        if (is instanceof HttpImageServer)
+            return equals((HttpImageServer) is);
+        else
+            return (is == this);
+    }
 
     public long newPixels(int sizeX,
                           int sizeY,
@@ -700,7 +720,7 @@ public class HttpImageServer
         }        
     }
 
-    public void finishPixels(long pixelsID)
+    public long finishPixels(long pixelsID)
         throws ImageServerException
     {
         MultipartPostMethod post = startCall();
@@ -710,13 +730,13 @@ public class HttpImageServer
             post.addParameter("PixelsID",Long.toString(pixelsID));
             executeCall(post);
 
-            return;
+            return Long.parseLong(post.getResponseBodyAsString().trim());
         } finally {
             finishCall(post);
         }        
     }
 
-    public Image getComposite(long pixelsID, CompositingSettings settings)
+    public BufferedImage getComposite(long pixelsID, CompositingSettings settings)
         throws ImageServerException
     {
         MultipartPostMethod post = startCall();
@@ -759,7 +779,7 @@ public class HttpImageServer
         }
     }
 
-    public Image getThumbnail(long pixelsID)
+    public BufferedImage getThumbnail(long pixelsID)
         throws ImageServerException
     {
         MultipartPostMethod post = startCall();
