@@ -218,7 +218,7 @@ sub getTable {
 				} )
 			)
 			if( $options->{ select_column } );
-		$table_cells = 
+		$table_cells .= 
 			$q->td( { -class => 'ome_td', -align => 'center'},
 				$q->a( {
 					-href    => $record->{ '/obj_detail_url' },
