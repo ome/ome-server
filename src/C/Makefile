@@ -1,4 +1,4 @@
-OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
+OBJECTS = OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
@@ -77,9 +77,6 @@ OME_Image_XY_sums : OME_Image_XY_sums.o
 spawnSpots : $(OBJECTS) spawnSpots.o
 	$(CC) $(CFLAGS) -o spawnSpots spawnSpots.o $(LIBS)
 
-testFoo : $(OBJECTS) testFoo.o
-	$(CC) $(CFLAGS) -o testFoo testFoo.o $(LIBS)
-
 DumpDV: DumpDV.o  BSUtils.o
 	$(CC) $(CFLAGS) -o DumpDV DumpDV.o BSUtils.o
 
@@ -99,11 +96,8 @@ cgrayce2:
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
-
-OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
 trackSpotsOMEwrpr.o : OMEdb.h
-OMEimportDVfile.o : OMEdb.h
 
 .PHONY : clean
 clean :
