@@ -98,7 +98,7 @@ sub new {
 
     $isSigned ||= 0;
     $isFloat ||= 0;
-    $bigEndian ||= 1;
+    $bigEndian = 1 unless defined $bigEndian;
 
     my $self = [undef,$xx,$yy,$zz,$cc,$tt,
                 $bytesPerPixel,0,$isSigned,$isFloat,
@@ -223,7 +223,7 @@ If not specified, it defaults to network order (big-endian).
 
 sub getPixels {
     my ($self,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are write-only" unless $isFinished;
@@ -246,7 +246,7 @@ If not specified, it defaults to network order (big-endian).
 
 sub getStack {
     my ($self,$c,$t,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are write-only" unless $isFinished;
@@ -269,7 +269,7 @@ specified, it defaults to network order (big-endian).
 
 sub getPlane {
     my ($self,$z,$c,$t,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are write-only" unless $isFinished;
@@ -296,7 +296,7 @@ the pixels to be in.  If not specified, it defaults to network order
 sub getROI {
     my ($self,$x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1,
         $destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are write-only" unless $isFinished;
@@ -319,7 +319,7 @@ specified, it defaults to network order (big-endian).
 
 sub setPixels {
     my ($self,$buf,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are read-only" if $isFinished;
@@ -342,7 +342,7 @@ specified, it defaults to network order (big-endian).
 
 sub setStack {
     my ($self,$buf,$c,$t,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are read-only" if $isFinished;
@@ -365,7 +365,7 @@ specified, it defaults to network order (big-endian).
 
 sub setPlane {
     my ($self,$buf,$z,$c,$t,$destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are read-only" if $isFinished;
@@ -393,7 +393,7 @@ sub setROI {
     my ($self,$buf,
         $x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1,
         $destBigEndian) = @_;
-    $destBigEndian ||= 1;
+    $destBigEndian = 1 unless defined $destBigEndian;
     my ($pix,undef,undef,undef,undef,undef,
         $bbp,$isFinished,undef,undef,$srcBigEndian,undef) = @$self;
     die "Pixels are read-only" if $isFinished;
