@@ -744,6 +744,8 @@ public class PChainEventHandler extends  PPanEventHandler
 	 */
 	private void startModuleLinks(PInputEvent e) {
 
+		if (selectedModule == null)
+			return;
 		Point2D pos = e.getPosition();
 		boolean isInput = selectedModule.isOnInputSide(pos);
 		Collection inputs = selectedModule.getInputParameters();
@@ -894,22 +896,18 @@ public class PChainEventHandler extends  PPanEventHandler
 		postPopup=true;
 		PNode n = e.getPickedNode();
 		PNode p = n.getParent();
-		if (p instanceof PBufferedNode) {
-			PBufferedNode bn=(PBufferedNode) p;
-			PBounds b = bn.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
+		if (n instanceof PBufferedNode && (p == canvas.getLayer() 
+				|| p instanceof PChain)) {
+			// if I'm on a module that's not in a chain or not. 
+			// I should zoom to view of whole canvas
+			PBounds b = canvas.getBufferedBounds();
+			PCamera camera =canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);	
 		}
 		else if (p instanceof PCamera || p == canvas.getLayer() ||
 				n instanceof PCamera || n == canvas.getLayer()){
-			PBounds b = canvas.getBufferedBounds();
-			PCamera camera =canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);			
-		}
-		else {
 			double scaleFactor = 1/PConstants.SCALE_FACTOR;
-			zoom(scaleFactor,e);
-			
+			zoom(scaleFactor,e); 	
 		}
 		e.setHandled(true);
 	}
