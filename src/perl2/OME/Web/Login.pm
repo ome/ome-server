@@ -38,7 +38,7 @@ sub new {
 }
 
 sub getPageTitle {
-    return "Open Microscopy Environment";
+    return "Open Microscopy Environment - Login";
 }
 
 sub getPageBody {
