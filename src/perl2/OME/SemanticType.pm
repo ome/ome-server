@@ -168,7 +168,7 @@ sub requireAttributeTypePackage {
 
     $self->_attributeTypePackages()->{$pkg} = 1;
 
-    my $factory = $self->{__session}->Factory();
+    my $factory = $self->Session()->Factory();
 
     # Create the base definition of the semantic instance class.
     my $def = "package $pkg;\n";
@@ -843,7 +843,7 @@ use base qw(OME::DBObject Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('_attribute_type');
 
-use fields qw(_data_table_rows _target _module_execution _id _session);
+use fields qw(_data_table_rows _target _module_execution _id );
 
 =head1 NAME
 
@@ -890,7 +890,6 @@ sub new {
     $self->{_data_table_rows} = $rows;
     $self->{_target} = $target;
     $self->{_id} = $id;
-    $self->{_session} = $session;
 
     my $module_execution;
     foreach my $row (values %$rows) {
