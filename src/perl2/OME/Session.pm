@@ -19,6 +19,34 @@
 
 
 package OME::Session;
+
+=head1 NAME
+
+OME::Session - a user's login session with OME
+
+=head1 SYNOPSIS
+
+	use OME::SessionManager;
+	use OME::Session;
+
+	my $manager = OME::SessionManager->new();
+	my $session = $manager->createSession($username,$password);
+
+	my $factory = $session->Factory();
+
+	# Create and edit several DBObject's via the factory
+	$session->commitTransaction();
+
+	# Create and edit several DBObject's via the factory, but make
+	# a mistake halfway through
+	$session->rollbackTransaction();
+
+=head1 DESCRIPTION
+
+To come.
+
+=cut
+
 our $VERSION = '1.00';
 
 use strict;
@@ -48,6 +76,13 @@ __PACKAGE__->has_a(project_id => 'OME::Project');
 __PACKAGE__->has_a(analysis_id => 'OME::Analysis');
 
 
+=head1 METHODS
+
+The following methods are available in addition to those defined by
+L<OME::DBObject>.
+
+=cut
+
 sub closeSession {
     my ($self) = @_;
 
@@ -70,6 +105,28 @@ sub User {
     return $self->Factory()->loadAttribute("Experimenter",
                                            $self->experimenter_id());
 }
+
+=head2 commitTransaction
+
+	$session->commitTransaction();
+
+Commits the current database transaction.
+
+=head2 rollbackTransaction
+
+	$session->rollbackTransaction();
+
+Rolls back the current database transaction.  Note that this does not
+invalidate any Perl database objects; callers must be careful to not
+use any DBObjects that were created or modified during the aborted
+transaction.
+
+=cut
+
+# We explicitly return to throw away any return values.
+
+sub commitTransaction { shift->dbi_commit(); return; }
+sub rollbackTransaction { shift->dbi_rollback(); return; }
 
 sub getTemporaryFilename {
     my $self = shift;
@@ -150,4 +207,13 @@ sub Configuration {
 }
 
 1;
+
+__END__
+
+=head1 AUTHOR
+
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
+
+=cut
 

@@ -410,6 +410,19 @@ sub Field {
     return $self->$field(@_);
 }
 
+=head2 storeObject
+
+	$dbObject->storeObject();
+
+Writes any unsaved changes to the database.
+
+=cut
+
+# We return explicitly to throw away the return value that
+# Class::DBI->commit might return.
+
+sub storeObject { shift->commit(); return; }
+
 
 =head2 writeObject
 
@@ -417,6 +430,10 @@ sub Field {
 
 This instance methods writes any unsaved changes to the database, and
 then commits the database transaction.
+
+B<NOTE: This method is deprecated.  New code should use the
+OME::DBObject-E<gt>storeObject and OME::Session-E<gt>commitTransaction
+methods.>
 
 =cut
 
