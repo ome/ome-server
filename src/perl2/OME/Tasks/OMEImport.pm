@@ -166,6 +166,10 @@ sub processDOM {
 
     $hierarchyImporter->processDOM($root);
 
+	# commit changes made to database structure by $typeImporter if we made it
+	# this far
+    $self->{session}->DBH()->commit();
+
 }
 
 
