@@ -42,6 +42,7 @@ OME::Image::Server::Pixels - interface for reading files
 =cut
 
 use strict;
+use Log::Agent;
 use OME;
 our $VERSION = $OME::VERSION;
 
@@ -195,6 +196,19 @@ sub getPixels {
       getPixels($self->[PIXELS_ID],$destBigEndian);
 }
 
+=head2 getStackStatistics
+
+	my $hash = $pixels->getStackStatistics();
+
+see also OME::Image::Server->getStackStatistics
+=cut
+
+sub getStackStatistics {
+    my ($self) = @_;
+    return OME::Image::Server->
+      getStackStatistics($self->[PIXELS_ID]);
+}
+
 =head2 getStack
 
 	my $buf = $pixels->getStack($c,$t,$bigEndian);
@@ -320,6 +334,103 @@ sub setROI {
                \$buf,$destBigEndian);
 }
 
+=head2 setThumb
+
+	# set the Thumbnail image from a display options attribute.
+	$pixels->setThumb( $displayOptions );
+	
+	# set the Thumbnail image from data
+	$pixels->setThumb(
+		theT  => $theT,
+		theZ  => $theZ,
+		Red   => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Green => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Blue  => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		Gray  => [$channelIndex, $blackLevel, $whiteLevel, $gamma],
+		LevelBasis => $levelBasis
+	);
+
+Sets an thumbnail image for this Pixels. see also OME::Image::Server->setThumb
+
+=cut
+
+sub setThumb {
+	my $self = shift;
+	my %params = @_;
+	my $displayOptions = shift;
+	if( UNIVERSAL::isa($displayOptions,'OME::SemanticType::Superclass')
+        && $displayOptions->verifyType('DisplayOptions') ) {
+        my %data;
+		$data{PixelsID} = $self->getPixelsID();
+		$data{theZ}     = ($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
+		$data{theT}     = ($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
+		if( $displayOptions->DisplayRGB() ) {
+			if( $displayOptions->RedChannelOn() ) {
+				$data{Red}   = [
+					$displayOptions->RedChannel()->ChannelNumber(),
+					$displayOptions->RedChannel()->BlackLevel(),
+					$displayOptions->RedChannel()->WhiteLevel(),
+					0
+				];
+			}
+			if( $displayOptions->BlueChannelOn() ) {
+				$data{Blue}   = [
+					$displayOptions->BlueChannel()->ChannelNumber(),
+					$displayOptions->BlueChannel()->BlackLevel(),
+					$displayOptions->BlueChannel()->WhiteLevel(),
+					0
+				];
+			}
+			if( $displayOptions->GreenChannelOn() ) {
+				$data{Green}   = [
+					$displayOptions->GreenChannel()->ChannelNumber(),
+					$displayOptions->GreenChannel()->BlackLevel(),
+					$displayOptions->GreenChannel()->WhiteLevel(),
+					0
+				];
+			}
+		} else {
+			$data{Gray}   = [
+				$displayOptions->GreyChannel()->ChannelNumber(),
+				$displayOptions->GreyChannel()->BlackLevel(),
+				$displayOptions->GreyChannel()->WhiteLevel(),
+				0
+			];
+		}
+		OME::Image::Server->setThumb( %data );
+	} else {
+		OME::Image::Server->setThumb( PixelsID => $self->getPixelsID, %params );
+	}
+}
+
+=head2 convert
+
+	$pixels->convert($fileID,$offset,$bigEndian);
+
+Copies pixels from an original file into a new pixels file.  The $file
+parameter should be an instance of the OME::File interface.  
+
+The Pixels in this file are in XYZCT order, which matches the order in
+Pixels files. Otherwise, you would call ConvertRows, ConvertPlane,
+ConvertTIFF or ConvertStack. The optional Offset parameter is used to
+skip headers. It is the number of bytes from the begining of the file to
+begin reading.
+
+The $bigEndian parameter should specify the endian-ness of the pixels
+to be copied out of the $file object.  If it isn't specified, it
+defaults to network order (big-endian).
+
+=cut
+
+sub convert {
+    my ($self,$file,$offset,$bigEndian) = @_;
+    $self->SUPER::convert($file,$offset,$bigEndian)
+      unless UNIVERSAL::isa($file,"OME::Image::Server::File");
+    my $fileID = $file->getFileID();
+    my $pixelsID = $self->[PIXELS_ID];
+    OME::Image::Server->convert($pixelsID,$fileID,$offset,$bigEndian);
+}
+
 =head2 convertStack
 
 	$pixels->convertStack($file,$offset,$c,$t,$bigEndian);
@@ -331,12 +442,6 @@ size, in bytes, of an XYZ stack in this pixels file:
 
 	my $buf = $file->readData($offset,$size);
 	$pixels->setStack($buf,$c,$t,$bigEndian);
-
-This class provides a default implementation which is, in fact, this
-code snippet.  However, cooperative implementations of OME::File and
-OME::Image::Pixels can possibly execute the convertStack method much
-faster.  (For instance, by reducing the necessary amount of data
-transfer.)
 
 The $bigEndian parameter should specify the endian-ness of the pixels
 to be copied out of the $file object.  If it isn't specified, it
