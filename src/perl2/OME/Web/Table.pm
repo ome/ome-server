@@ -59,6 +59,11 @@ use OME::Web::Helper::JScriptFormat;
 $VERSION = $OME::VERSION;
 use base qw(OME::Web);
 
+# Package globals for each Table's data columns
+my @IMAGE_COLUMNS = qw(ID Name Preview Owner Group Description);
+my @DATASET_COLUMNS = qw(ID Status Name Owner Group Description);
+my @PROJECT_COLUMNS = qw(ID Name Owner Group Description);
+
 #*********
 #********* PRIVATE METHODS
 #*********
@@ -71,7 +76,6 @@ sub __datasetTable {
 	my $q = $self->CGI();
 	my $factory = $self->Session()->Factory();
 	my $table_data;
-	my @columns = qw(ID Status Name Owner Group Description);
 	my @datasets = $self->__filterObjects({filter_object => 'OME::Dataset',
 			                               filter_field => $options->{filter_field},
 										   filter_string => $options->{filter_string}});
@@ -99,8 +103,6 @@ sub __datasetTable {
 		}
 	}
 	
-	my $filter_form = $self->__filterForm(@columns);
-
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
@@ -109,9 +111,8 @@ sub __datasetTable {
 			-width => '100%',
 			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@columns]),
-		$table_data,
-		$q->Tr($q->td({-colspan => scalar(@columns), -align => 'center', -bgcolor => '#EFEFEF'}, $filter_form))
+		$q->th({-bgcolor => '#EFEFEF'}, [@DATASET_COLUMNS]),
+		$table_data
 	);
 
 	return $table;
@@ -125,7 +126,6 @@ sub __projectTable {
 	my $factory = $self->Session()->Factory();
 	my $q = $self->CGI();
 	my $table_data;
-	my @columns = qw(ID Name Owner Group Description);
 	my @projects = $self->__filterObjects({filter_object => 'OME::Project',
 			                               filter_field => $options->{filter_field},
 										   filter_string => $options->{filter_string}});
@@ -150,8 +150,6 @@ sub __projectTable {
 		);
 	}
 
-	my $filter_form = $self->__filterForm(@columns);
-	
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
@@ -160,9 +158,8 @@ sub __projectTable {
 			-width => '100%',
 			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@columns]),
-		$table_data,
-		$q->Tr($q->td({-colspan => scalar(@columns), -align => 'center', -bgcolor => '#EFEFEF'}, $filter_form))
+		$q->th({-bgcolor => '#EFEFEF'}, [@PROJECT_COLUMNS]),
+		$table_data
 	);
 
 
@@ -177,7 +174,6 @@ sub __imageTable {
 	my $factory = $self->Session()->Factory();
 	my $q = $self->CGI();
 	my $table_data;
-	my @columns = qw(ID Name Preview Owner Group Description);
 	my @images = $self->__filterObjects({filter_object => 'OME::Image',
 			                             filter_field => $options->{filter_field},
 										 filter_string => $options->{filter_string}});
@@ -210,8 +206,6 @@ sub __imageTable {
 		);
 	}
 
-	my $filter_form = $self->__filterForm(@columns);
-
 	my $table = $q->table( {
 			-class => 'ome_table',
 			-cellpadding => '4',
@@ -220,9 +214,8 @@ sub __imageTable {
 			-width => '100%',
 			-bgcolor => '#000000',
 		},
-		$q->th({-bgcolor => '#EFEFEF'}, [@columns]),
-		$table_data,
-		$q->Tr($q->td({-colspan => scalar(@columns), -align => 'center', -bgcolor => '#EFEFEF'}, $filter_form))
+		$q->th({-bgcolor => '#EFEFEF'}, [@IMAGE_COLUMNS]),
+		$table_data
 	);
 
 
@@ -237,8 +230,8 @@ sub __genericHeader {
 	# Title text
 	my $title = $q->p({-class => 'ome_title'}, $title);
 
-	# "Jump To:" selection box form
-	my $jump_to = $q->startform({-method => 'get',
+	# "Display:" selection box form
+	my $display = $q->startform({-method => 'get',
 			                     -name => 'display',
 								 -action => '/perl2/serve.pl'}) .
 				  "Display: " .
@@ -251,13 +244,13 @@ sub __genericHeader {
 
 	# Packing table for output
 	my $table = $q->table({-border => '0', -width => '100%'},
-		$q->Tr($q->td({-align => 'left'}, $title), $q->td({-align => 'right', -valign => 'bottom'}, $jump_to))
+		$q->Tr($q->td({-align => 'left'}, $title), $q->td({-align => 'right', -valign => 'bottom'}, $display))
 	);
 
 	return $table;
 }
 
-sub __filterForm {
+sub __filterFormTable {
 	my $self = shift;
 	my @columns = @_;
 	my $q = $self->CGI();
@@ -279,7 +272,17 @@ sub __filterForm {
 		        $q->submit({-name => 'data_filter', -value => 'Go'});
 		        $q->endform();
 
-	return $form;
+	my $table = $q->table( {
+			-class => 'ome_table',
+			-cellpadding => '4',
+			-cellspacing => '1',
+			-border => '0',
+			-width => '100%',
+			-bgcolor => '#000000',
+		},
+		$q->td({-align => 'center', -bgcolor => '#EFEFEF'}, $form));
+
+	return $table;
 }
 
 sub __filterObjects {
@@ -316,7 +319,7 @@ sub getPageBody {
     my $self = shift;
     my $q = $self->CGI();
 	my $j_format = new OME::Web::Helper::JScriptFormat;
-	my ($tables, $header);
+	my ($main_table, $header, $filter_table);
 
 	my $type = $q->param('type') || 'projects';  # Projects is the default display
 	my $filter_field = $q->param('filter_field') || '';
@@ -325,18 +328,22 @@ sub getPageBody {
 	# Cleanup so we don't get superfluous propogation
 	$q->delete('filter_field', 'filter_string');
 
+	# Based on the type, gen our page data
 	if (lc($type) eq 'datasets') {
 		$header = $self->__genericHeader("Datasets");
-		$tables = $self->__datasetTable({filter_field => $filter_field,
-			                             filter_string  => $filter_string});
+		$main_table = $self->__datasetTable({filter_field => $filter_field,
+			                                 filter_string  => $filter_string});
+		$filter_table = $self->__filterFormTable(@DATASET_COLUMNS);
 	} elsif (lc($type) eq 'projects') {
 		$header = $self->__genericHeader("Projects");
-		$tables = $self->__projectTable({filter_field => $filter_field,
-			                             filter_string  => $filter_string});
+		$main_table = $self->__projectTable({filter_field => $filter_field,
+			                                 filter_string  => $filter_string});
+		$filter_table = $self->__filterFormTable(@PROJECT_COLUMNS);
 	} elsif (lc($type) eq 'images') {
 		$header = $self->__genericHeader("Images");
-		$tables = $self->__imageTable({filter_field => $filter_field,
-			                           filter_string  => $filter_string});
+		$main_table = $self->__imageTable({filter_field => $filter_field,
+				                           filter_string  => $filter_string});
+		$filter_table = $self->__filterFormTable(@IMAGE_COLUMNS);
 	}
 
 	# XXX Hidden form to store the "Page" parameter for serve.pl
@@ -346,7 +353,7 @@ sub getPageBody {
 	        $j_format->openInfoProject() .
 			$j_format->openInfoDataset() .
 			$j_format->popUpImage() .
-			$header . $tables . $hidden_form);
+			$header . $main_table . $filter_table . $hidden_form);
 }
 
 
