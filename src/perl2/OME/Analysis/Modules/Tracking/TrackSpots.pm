@@ -119,14 +119,14 @@ sub postcalculateImage {
 
     for (my $i = 0; $i < scalar(@timepoints)-1; $i++) {
         my $timepoint = $timepoints[$i];
-        print "\n$timepoint - ";
+        print STDERR "\n$timepoint - ";
 
         # For each spot in a given timepoint
         foreach my $spot (@{$self->{_timepointSpots}->{$timepoint}}) {
             my $trajectory = $self->{_spotTrajectories}->{$spot->id()};
             my $order = $self->{_spotOrders}->{$spot->id()};
             my $phys = $self->{_physicalCoordinates}->{$spot->id()};
-            print $spot->id();
+            print STDERR $spot->id();
 
             if (!defined $trajectory) {
                 # If this spot was not associated with a spot in the
@@ -156,7 +156,7 @@ sub postcalculateImage {
               $distance /
               (($timepoints[$i+1]-$timepoints[$i])*$timeSize);
 
-            print ":",$nextSpot->id()," ";
+            print STDERR ":",$nextSpot->id()," ";
 
             my $spotEntry = $self->
               newAttributesWithTargets("Entries",
