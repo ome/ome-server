@@ -160,6 +160,9 @@ public abstract class MappedDTO
      */
     public boolean equals(MappedDTO o)
     {
+        if (o == this)
+            return true;
+
         if (!getDTOTypeName().equals(o.getDTOTypeName()))
             return false;
 
