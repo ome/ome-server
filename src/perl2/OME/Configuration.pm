@@ -52,18 +52,18 @@ The Configuration object is used to get configuration variables established when
 OME was installed.  In normal use, the variables are read only, and the Configuration
 object is retreived from the L<C<OME::Session>|OME::Session> object.
 
-The constructor is called from an installation script and passes a configuration hash
-along with an L<C<OME::Factory>|OME::Factory> object to the constructor:
+The constructor can be called from an installation script and passed a configuration hash
+along with an L<C<OME::Factory>|OME::Factory> object:
 
 	my $conf = new OME::Configuration ($factory,{var1 => 123, var2 => 'foo'});
 
-If there are already configuration variables in the DB, the hash will be ignored,
-and an L<C<OME::Configuration::Variable>|OME::Configuration::Variable> object will be loaded for each variable.
+If there are already configuration variables in the DB, the hash will be ignored.
+An L<C<OME::Configuration::Variable>|OME::Configuration::Variable> object will be loaded for each variable in the DB.
 If the DB does not contain configuration variables, a new L<C<OME::DBObject>|OME::DBObject> of type
 L<C<OME::Configuration::Variable>|OME::Configuration::Variable> will be made for each key-value pair in the hash,
 and written to the DB.  The names of the L<C<OME::Configuration::Variable>|OME::Configuration::Variable> objects will be made available as
-methods of Configuration, returning the value of the variable when called.  From the example above, $conf->var1()
-will return 123.
+methods of Configuration, returning the value of the variable when called.  From the example above, C<$conf-E<gt>var1()>
+will return I<123>.
 The two mutator methods are described below.
 
 =head1 METHODS
