@@ -89,6 +89,91 @@ sub new {
 	return $self;
 }
 
+=head2 getDBObjDetail
+
+Makes a table with less whitespace.
+
+=cut
+
+sub getObjDetail {
+	my ($self, $object) = @_;
+
+	my $specializedDetail;
+	return $specializedDetail->getObjDetail( )
+		if( $specializedDetail = $self->__specialize( ) and
+		    ref( $self ) eq __PACKAGE__ );
+
+	my $q = $self->CGI();
+
+	my $title = $q->font( { -class => 'ome_header_title' },
+		OME::Web::DBObjRender->getObjectTitle($object, 'html') );
+
+	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
+	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames, 'html' );
+	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
+	%record = %{ $self->_overrideRecord( \%record ) };
+
+	my $detail .= $q->table( { -width => '100%' },
+		$q->Tr( [
+			$q->td( { -align => 'left' },
+				$title 
+			),
+			$q->td( { -align => 'left' },
+				join( ', ', map( 
+					$q->span( $labels{ $_ }.': ' ).$record{ $_ },
+					grep( !m/name|description/, @fieldNames )
+				) )
+			)
+		]
+		),
+		$q->Tr( 
+			$q->td( { -align => 'left'},
+				"Name ".$q->textfield( {
+						-name => 'name',
+						-value => $object->name(),
+						-size => 30,
+					}
+				)
+			),
+		),
+		$q->Tr( 
+			$q->td( { -align => 'left'}, 
+				"Description"
+			)
+		),
+		$q->Tr(
+			$q->td( { -align => 'left' },
+				$q->textarea( {
+					-name => 'description',
+					-value => $object->description(),
+					-rows => 3,
+					-columns => 50,
+				} )
+			)
+		),
+		$q->Tr(
+			$q->td( { -align => 'right'}, $q->table( 
+				{
+					-class => 'ome_table',
+					-cellpadding => 3,
+				},
+				$q->Tr($q->td({style => 'background-color: #D1D7DC'}, 
+					$q->a( {
+						class => 'ome_widget',
+						href => "javascript:document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false;",
+					}, 'Save Changes').' | '.
+					$q->a( {
+						class => 'ome_widget',
+						href => "javascript:openRelationships('OME::Dataset', 'OME::Image', " . $object->id() . ");"
+					}, 'Add/Remove Images')
+				) )
+			) )
+		)
+	);
+	
+	return $detail;
+}
+
 sub _takeAction {
 	my $self = shift;
 	my $object = $self->_loadObject();
@@ -103,17 +188,31 @@ sub _takeAction {
 }
 
 
-sub _tableDescriptor {
-	my ($self, $object) = @_;
-	my $tableDescriptor = $self->SUPER::_tableDescriptor( $object );
+=head2 doLayout
+
+
+=cut
+
+sub doLayout {
+	my ($self,$objDetail, $relations) = @_;
 	my $q = $self->CGI();
-	return $tableDescriptor.' | '.
-		$q->a( {
-			-href => "#",
-			-onClick => "document.forms['".$self->{ form_name }."'].action.value='SaveChanges'; document.forms['".$self->{ form_name }."'].submit(); return false",
-			}, 
-			'Save Changes'
+
+	my $html = 
+		$q->table( { -width => '100%', -cellpadding => 5 },
+			$q->Tr( 
+				$q->td( { -width => '50%', -valign => 'top'}, 
+					$objDetail.
+					$relations->{projects}.
+					$relations->{module_executions}
+				),
+				
+				$q->td( { -width => '25%', -valign => 'top' }, 
+					$relations->{images} 
+				)
+			),
 		);
+	
+	return $html;
 }
 
 sub _overrideRecord {
@@ -137,26 +236,6 @@ sub _overrideRecord {
 	return $record;
 }
 
-sub getFooter { 
-	my $self = shift;
-	my $object = $self->_loadObject();
-	my $q = $self->CGI();
-	# Relationship button
-	return 
-		$q->p() . 
-		$q->table( {
-				-class => 'ome_table',
-				-align => 'center',
-				-cellspacing => 1,
-				-cellpadding => 4,
-			},
-			$q->Tr($q->td({style => 'background-color: #D1D7DC'}, $q->a( {
-				class => 'ome_widget',
-				href => "javascript:openRelationships('OME::Dataset', 'OME::Image', " . $object->id() . ");"
-			}, 'Add/Remove Images'))),
-		);
-}
-			
 =head1 Author
 
 Josiah Johnston <siah@nih.gov>
