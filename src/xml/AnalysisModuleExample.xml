@@ -1,6 +1,6 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <AnalysisModuleLibrary xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/RC3/ome.xsd file:///Users/josiah/OME/SourceForge/OME/src/xml/ome.xsd" xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/AnalysisModule.xsd">
-	<AnalysisModule Category = "Statistics" ModuleName = "Plane statistics" ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" Description = "Calculate pixel statistics for each XY plane. Produced from XML.">
+	<AnalysisModule Category = "Statistics" ModuleName = "Plane statistics - XML" ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XY_stats" Description = "Calculate pixel statistics for each XY plane. Produced from XML.">
 		<Declaration>
 			<FormalOutput Name = "Plane info - Sigma" FormalOutputID = "SIGMA" Description = "Produced from XML">
 					<DBLocation TableID = "xyImageInfo" ColumnName = "SIGMA"
@@ -64,42 +64,38 @@
 		ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/dev/null" 
 		Description = "Produced from XML.">
 		<Declaration>
-			<FormalInput Name = "fee" FormalOutputID = "eenie" Description = "Produced from XML">
-					<DBLocation TableID = "bar" ColumnName = "FEE"
-						Description = "Produced from XML" SQL_DataType = "boolean"/>
+			<FormalInput Name = "Doc" FormalOutputID = "Doc" Description = "Produced from XML">
+					<DBLocation TableID = "bar" ColumnName = "Doc"
+						Description = "Produced from XML" SQL_DataType = "integer"/>
 			</FormalInput>
-			<FormalInput Name = "fi" FormalOutputID = "meenie" Description = "Produced from XML">
-					<DBLocation TableID = "bar" ColumnName = "FI"
+			<FormalInput Name = "sleepy" FormalOutputID = "sleepy" Description = "Produced from XML">
+					<DBLocation TableID = "bar" ColumnName = "sleepy"
 						Description = "Produced from XML" SQL_DataType = "double"/>
 			</FormalInput>
-			<FormalInput Name = "fo" FormalOutputID = "minie" Description = "Produced from XML">
-					<DBLocation TableID = "bar" ColumnName = "FO"
-						Description = "Produced from XML" SQL_DataType = "dateTime"/>
-			</FormalInput>
-			<FormalInput Name = "fum" FormalOutputID = "mo" Description = "Produced from XML">
-					<DBLocation TableID = "bar" ColumnName = "FUM"
-						Description = "Produced from XML" SQL_DataType = "integer"/>
-			</FormalInput>
-			<FormalOutput Name = "eenie" FormalOutputID = "eenie" Description = "Produced from XML">
-					<DBLocation TableID = "baz" ColumnName = "EENIE"
+			<FormalInput Name = "Bashful" FormalOutputID = "Bashful" Description = "Produced from XML">
+					<DBLocation TableID = "bar" ColumnName = "Bashful"
 						Description = "Produced from XML" SQL_DataType = "float"/>
+			</FormalInput>
+			<FormalOutput Name = "happy" FormalOutputID = "happy" Description = "Produced from XML">
+					<DBLocation TableID = "baz" ColumnName = "happy"
+						Description = "Produced from XML" SQL_DataType = "boolean"/>
 			</FormalOutput>
-			<FormalOutput Name = "meenie" FormalOutputID = "meenie" Description = "Produced from XML">
-					<DBLocation TableID = "baz" ColumnName = "MEENIE"
+			<FormalOutput Name = "sneezy" FormalOutputID = "sneezy" Description = "Produced from XML">
+					<DBLocation TableID = "baz" ColumnName = "sneezy"
 						Description = "Produced from XML" SQL_DataType = "string"/>
 			</FormalOutput>
-			<FormalOutput Name = "minie" FormalOutputID = "minie" Description = "Produced from XML">
-					<DBLocation TableID = "baz" ColumnName = "MINIE"
+			<FormalOutput Name = "grumpy" FormalOutputID = "grumpy" Description = "Produced from XML">
+					<DBLocation TableID = "baz" ColumnName = "grumpy"
 						Description = "Produced from XML" SQL_DataType = "dateTime"/>
 			</FormalOutput>
-			<FormalOutput Name = "mo" FormalOutputID = "mo" Description = "Produced from XML">
-					<DBLocation TableID = "baz" ColumnName = "MO"
-						Description = "Produced from XML" SQL_DataType = "integer"/>
+			<FormalOutput Name = "dopey" FormalOutputID = "dopey" Description = "Produced from XML">
+					<DBLocation TableID = "baz" ColumnName = "dopey"
+						Description = "Produced from XML" SQL_DataType = "dateTime"/>
 			</FormalOutput>
-			<TableDefinition TableID = "baz" AttributeType = "D" 
-				TableName = "BAZ" Description = "foo's outputs. Produced from XML."/>
 			<TableDefinition TableID = "bar" AttributeType = "D" 
-				TableName = "BAR" Description = "foo's inputs. Produced from XML."/>
+				TableName = "ITS_OFF_TO_WORK" Description = "foo's outputs. Produced from XML."/>
+			<TableDefinition TableID = "baz" AttributeType = "F" 
+				TableName = "HI_HO" Description = "foo's inputs. Produced from XML."/>
 		</Declaration>
 	</AnalysisModule>
 </AnalysisModuleLibrary>
