@@ -103,6 +103,32 @@ This returns an LSID for the given $object.
 
 sub getLSID ($) {
 my ($self,$object) = @_;
+	my $type = $self->getLSID_type ($object);
+	
+	return undef unless defined $type;
+	
+	my @lsid_list = OME::Session->instance()->Factory()->findObjects ( "OME::LSID", {
+		object_id => $object->id(),
+		namespace => $type });
+	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
+	
+	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id()."-$DB_INSTANCE";
+	
+	$self->setLSID( $object, $LSIDstring );
+	
+	return $LSIDstring;
+}
+
+=head2 getLSID_type
+
+	my $LSID = $resolver->getLSID_type ($object);
+
+This returns the LSID type for the given $object.
+
+=cut
+
+sub getLSID_type ($) {
+my ($self,$object) = @_;
 	my $type;
 	my $ref = ref ($object);
 
@@ -124,18 +150,7 @@ my ($self,$object) = @_;
 			$type = 'SemanticType';
 		}
 	
-	return undef unless defined $type;
-	
-	my @lsid_list = OME::Session->instance()->Factory()->findObjects ( "OME::LSID", {
-		object_id => $object->id(),
-		namespace => $type });
-	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
-	
-	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id()."-$DB_INSTANCE";
-	
-	$self->setLSID( $object, $LSIDstring );
-	
-	return $LSIDstring;
+	return $type;
 }
 
 
@@ -161,6 +176,31 @@ my ($self,$object,$LSIDstring) = @_;
 #	$lsid->storeObject();
 	
 	return $lsid;
+}
+
+
+=head2 deleteLSID
+
+	$resolver->deleteLSID ($LSID);
+
+This deletes the LSID for the given object from DB.
+
+=cut
+
+sub deleteLSID ($$) {
+my ($self,$object) = @_;
+
+	my $type = $self->getLSID_type ($object);
+	
+	return undef unless defined $type;
+	
+	my @lsid_list = OME::Session->instance()->Factory()->findObjects ( "OME::LSID", {
+		object_id => $object->id(),
+		namespace => $type });
+	
+	foreach my $LSID (@lsid_list) {
+		$LSID->deleteObject();
+	}
 }
 
 
@@ -194,6 +234,7 @@ sub checkLSID ($) {
 my ($self,$lsid) = @_;
 	my ($urn,$urnType,$authority,$namespace,$localIDdbInstance) =
       split (/:/,$lsid);
+    return undef unless defined $localIDdbInstance;
     my ($localID,$dbInstance) = split (/-/,$localIDdbInstance);
 	return undef unless defined $authority;
 	return undef unless defined $urn and $urn eq 'urn';
