@@ -108,9 +108,10 @@ sub getPageBody {
         my $input = $cmanager->getFormalInput($chain,$node,'Parameters');
         my $user_inputs = { $input->id() => $mex };
         my $chain_execution;
+        my $reuseResults = $cgi->param( 'DoNotReuseResults' );
         eval {
             $chain_execution = OME::Analysis::Engine->
-                executeChain($chain,$session->dataset(),$user_inputs);
+                executeChain($chain,$session->dataset(),$user_inputs, undef, ReuseResults => $reuseResults );
         };
 
 	 	if ($@) {
