@@ -281,7 +281,7 @@ sub forkedImportAnalysisModules {
 			}
 		}	
 		
-		foreach my $path (@$filenames){
+		foreach my $path (@file_list){
 			$task->setMessage ("Importing $path");
 			$OMEImporter->importFile( $path );
 			$task->step();
