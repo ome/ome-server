@@ -117,7 +117,7 @@ sub importFiles {
 			or die "could not find a remote repository to work with";
 	} elsif( not ref($param1) or not $param1->verifyType('Repository') ) {
 		unshift( @filenames, $param2) if defined $param2; # don't bother adding an undef
-		unshift( @filenames, $param1);
+		unshift( @filenames, $param1) if defined $param1; # don't bother adding an undef
 		$options = {};
 		$repository = $factory->findAttribute('Repository', IsLocal => 0)
 			or die "could not find a remote repository to work with";
