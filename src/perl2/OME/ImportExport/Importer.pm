@@ -29,7 +29,6 @@
 # import_image()
 
 # ---- Private routines ------
-# get_base_name()
 # sort_and_group()
 # groupnames()
 # store_image_metadata()
@@ -40,6 +39,9 @@
 # store_xyz_info()
 # store_image_files_xyzwt()
 # map_image_to_dataset()
+# name_only();
+# check_for_duplicates();
+# getSha1();
 # removeWeirdCharacters()
 
 package OME::ImportExport::Importer;
@@ -77,8 +79,6 @@ sub new {
 
 # Actually import a single image, which may be composed from several files
 sub import_image {
-    my $fn;
-    my $basenm;
     my $image_file;
     my $import_reader;
     my ($is_dupl, $first_sha1);
@@ -94,24 +94,17 @@ sub import_image {
 
     $self->{dataset} =$dsr;
     $image_file = $$image_group_ref[0];
-    $basenm = basename($image_file);
-    # remove filetype extension from filename (assumes '.' delimiter)
-    $basenm =~ s/\..+?$//;
-    $xml_elements{'Image.Name'} = $basenm;
-    $import_reader = new OME::ImportExport::Import_reader($image_group_ref, \@image_buf, \%xml_elements);
-    $fn = $import_reader->image_file;
+    $xml_elements{'Image.Name'} = name_only($image_file);
+    $import_reader = new OME::ImportExport::Import_reader($image_group_ref,
+							  \@image_buf,
+							  \%xml_elements);
     $import_reader->check_type;
-
     $self->{did_import} = 0;
 
-    # unless the stealth switch "--dupl" is present, don't allow importing
-    # an image file more than once
-    ($is_dupl, $first_sha1) = is_duplicate($self, $image_file);
-    if ($switch !~ /^--dupl/) {
-	if ($is_dupl) {
-	    carp "\nThe source image $image_file has already been imported into OME.";
-	    return "";
-	}
+    ($status, $first_sha1) = check_for_duplicates($self, $switch, $image_file);
+    if ($status ne "") {
+	carp $status;
+	return "";
     }
 
     if ($import_reader->image_type eq "Unknown") {
@@ -134,7 +127,6 @@ sub import_image {
 	}
     }
     $import_reader->DESTROY;
-
 }
 
 
@@ -191,7 +183,7 @@ sub store_image {
 	# everything went OK - commit all the DB inserts
 	$image->commit;
         $image->dbi_commit();
-    $self->{pixelsAttr}->writeObject();
+	$self->{pixelsAttr}->writeObject();
 	$attributes->writeObject();
 	$session->DBH()->commit;
 
@@ -201,20 +193,6 @@ sub store_image {
     }
 
     return $status;
-}
-
-
-
-sub get_base_name {
-    my $fullnm = shift;
-    my $fn;
-    my @arr;
-
-    @arr = split('/', $fullnm);  # assume Unix style filename
-    $fn = $arr[$#arr];
-    $fn =~ s/([\w]+).*/$1/;
-
-    return $fn;
 }
 
 
@@ -666,6 +644,32 @@ sub map_image_to_dataset {
 }
 
 
+# extract & return just the filename part of the passed path
+sub name_only {
+    my $basenm = basename($_[0]);
+    # remove filetype extension from filename (assumes '.' delimiter)
+    $basenm =~ s/\..+?$//;
+    return $basenm;
+
+}
+
+
+# Stealth switch '--dupl' allows duplicate inputs. If it's not set, reject
+# input file if it's already been imported.
+sub check_for_duplicates {
+    my ($self, $switch, $image_file) = @_;
+    my ($is_dupl, $sha1) = is_duplicate($self, $image_file);
+    # the stealth switch '--dupl' allows duplicate input files
+    if ($switch !~ /^--dupl/) {
+	if ($is_dupl) {
+	    return "\nThe source image $image_file has already been imported into OME.";
+	}
+    }
+    return ("", $sha1);
+}
+
+
+# get the SHA1 digest of the passed file
 sub getSha1 {
     my $file = shift;
     my $cmd = 'openssl sha1 '. $file .' |';
