@@ -61,8 +61,10 @@ It is part of the web UI and can be accessed with any internet browser that has 
 
 =head1 Access
 
-It is controlled by url parameters of ImageID.
-http://localhost/perl2/serve.pl?Page=GetGraphics&ImageID=57
+It is controlled by url parameters of ImageID,
+	http://localhost/perl2/serve.pl?Page=GetGraphics&ImageID=57
+or by Pixels Attribute ID.
+http://localhost/perl2/serve.pl?Page=GetGraphics&PixelsID=48
 
 =head1 Author
 
@@ -81,21 +83,11 @@ sub new {
 sub createOMEPage {
 	my $self  = shift;
 	my $cgi	  = $self->CGI();
-	my @params = $cgi->url_param();
-
-	# Error trap
-	my $ImageID	  = $cgi->url_param('ImageID');
-	if( not defined $ImageID ) {
-		die (ref $self)."->createOMEpage() needs ImageID as a url parameters.";
-	} else {
-		# this validates the imageID by trying to load it.
-		$self->getImage();
-	}
 
 	# switchboard
 	if ( $cgi->url_param('BuildSVGviewer') ) {
 		return('SVG', $self->BuildSVGviewer());
-	} elsif ( $cgi->url_param('ImageID')) {
+	} else {
 		return('HTML', $self->FrameImageViewer());
 	}
 }
@@ -104,9 +96,10 @@ sub createOMEPage {
 sub FrameImageViewer {
 	my $self	  = shift;
 	my $cgi		  = $self->CGI();
-	my $ImageID	  = $cgi->url_param("ImageID");
 	my $HTML='';
-	my $image     = $self->Session()->Factory()->loadObject("OME::Image", $ImageID);
+	my ($image, $pixels) = $self->getImageAndPixels();
+	my $ImageID   = $image->id();
+	my $PixelsID  = $pixels->id();
 	my $nombre    = $image->name();
 	
 	$self->contentType('text/html');
@@ -116,7 +109,7 @@ sub FrameImageViewer {
 <html>
 <title>$nombre</title>
 	<frameset rows="*">
-		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&ImageID=$ImageID">
+		<frame src="serve.pl?Page=OME::Web::GetGraphics&BuildSVGviewer=1&PixelsID=$PixelsID">
 	</frameset>
 </html>
 ENDHTML
@@ -125,14 +118,25 @@ ENDHTML
 }
 
 
-sub getImage {
+sub getImageAndPixels {
 	my $self = shift;
 	my $cgi	 = $self->CGI();
 	
-	return $self->{image} if exists $self->{image} and defined $self->{image};	
-	$self->{image} = $self->Session()->Factory()->loadObject("OME::Image",$cgi->url_param('ImageID'))
-		or die "Could not retreive Image from ImageID=".$cgi->url_param('ImageID')."\n";
-	return $self->{image};
+	return ( $self->{image}, $self->{pixels} )
+		if $self->{image};
+	
+	if( $cgi->url_param('PixelsID') ) {
+		$self->{pixels} = $self->Session()->Factory()->loadAttribute( 'Pixels', $cgi->url_param('PixelsID') )
+			or die "Could not retreive Pixels attribute from PixelsID (".$cgi->url_param('PixelsID').")";
+		$self->{image} = $self->{pixels}->image();
+	} elsif( $cgi->url_param('ImageID') ) {
+		$self->{image} = $self->Session()->Factory()->loadObject("OME::Image",$cgi->url_param('ImageID'))
+			or die "Could not retreive Image from ImageID (".$cgi->url_param('ImageID').")";
+		$self->{pixels} = $self->{image}->default_pixels();
+	} else {
+		die (ref $self)."->createOMEpage() needs ImageID or PixelsID as a url parameters.";	
+	}
+	return ( $self->{image}, $self->{pixels} );
 }
 
 
@@ -143,21 +147,10 @@ sub _getJSData {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 	my $imageManager = OME::Tasks::ImageManager->new($session); 
-	my $imageID = $cgi->url_param('ImageID');
-	my $pixelsID = $cgi->url_param('PixelsID');
-	my $pixels;
+	my ($image, $pixels) = $self->getImageAndPixels();
+	my $imageID   = $image->id();
+	my $pixelsID  = $pixels->id();
 
-	my $image = $factory->loadObject("OME::Image",$imageID)
-		or die "Could not retreive Image from imageID=$imageID\n";
-	if( $pixelsID ) {
-		$pixels = $factory->loadAttribute( "Pixels", $pixelsID )
-			or die "Pixels (id = $pixelsID) not found";
-		die "Pixels (id = $pixelsID) does not belong to Image (id = $imageID)"
-			unless $pixels->image()->id() eq $image->id();
-	} else {
-		$pixels   = $image->DefaultPixels();
-		$pixelsID = $pixels->id();
-	}
 	$JSinfo->{ imageID } = $imageID;
 	$JSinfo->{ pixelsID } = $pixelsID;
 
@@ -552,8 +545,7 @@ ENDSVG
 
 sub _getJSOverlay {
 	my $self = shift;
-	my $image = $self->getImage();
-	my $pixels = $image->DefaultPixels();
+	my ($image,$pixels) = $self->getImageAndPixels();
 	
 	my $factory = $self->Session()->Factory();
 	
