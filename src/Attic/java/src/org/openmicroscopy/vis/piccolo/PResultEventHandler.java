@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
+import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
@@ -82,7 +83,10 @@ public class PResultEventHandler extends  PPanEventHandler {
 	public PResultEventHandler(PResultCanvas canvas) {
 		super();
 		setAutopan(false);
-		this.canvas = canvas;	
+		this.canvas = canvas;
+		PInputEventFilter filter =getEventFilter();
+		filter.acceptEverything();
+		setEventFilter(filter);	
 	}
 	
 	/**
@@ -105,7 +109,6 @@ public class PResultEventHandler extends  PPanEventHandler {
 			return;
 		}
 		PNode node = e.getPickedNode();
-		System.err.println("result frame clicked on "+node);
 		int mask = e.getModifiers() & allButtonMask;
 		if (mask == MouseEvent.BUTTON1_MASK &&
 			e.getClickCount() == 1) {
@@ -117,7 +120,7 @@ public class PResultEventHandler extends  PPanEventHandler {
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true); 
 			}
-			else if (node instanceof PCamera) {
+			else if (node instanceof PCamera && e.isShiftDown()) {
 				PBounds b = canvas.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
 				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
@@ -128,7 +131,7 @@ public class PResultEventHandler extends  PPanEventHandler {
 		}
 		else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK) ==1)
 			handlePopup(e);
-		else
+		else 
 			super.mouseClicked(e);
 	}
 	
@@ -154,7 +157,7 @@ public class PResultEventHandler extends  PPanEventHandler {
 			System.err.println("Module name is "+mod.getName());
 			CChainExecution exec = canvas.getChainExecution();
 			List results = exec.getResults(mod,output);
-			if (results != null)
+			if (results.size() > 0)
 				dumpOutputs(results);
 			e.setHandled(true);
 		}
@@ -168,8 +171,7 @@ public class PResultEventHandler extends  PPanEventHandler {
 		while (iter.hasNext()) {
 			att = (Attribute) iter.next();
 			SemanticType type = att.getSemanticType();
-			System.err.println(type.getName());	
-			
+			System.err.println(type.getName());
 		}
 	}
 		
@@ -267,6 +269,7 @@ public class PResultEventHandler extends  PPanEventHandler {
 	* Zoom out to the parent of the current node when we get a popup
 	*/
 	protected void handlePopup(PInputEvent e) {
+		System.err.println("handling popup...");
 		postPopup = true;
 		PNode node = e.getPickedNode();
 		PNode p = node.getParent();
