@@ -92,33 +92,32 @@ sub new{
 
 sub generateOMEimage{
 	my $self=shift;
-	my ($image,$Z_param,$T_param)=@_;
+	my ($imageID,$Z_param,$T_param)=@_;
 	my $session=$self->{session};
 	my $factory=$session->Factory();
 	my $imageManager=OME::Tasks::ImageManager->new($session);
 	my ($theZ,$theT);
 	my $CBW=undef;
-  	my $RGBon=undef;
-  	my $isRGB=undef;
+	my $RGBon=undef;
+  	my $isRGB=1;
+	my $image=$factory->loadObject("OME::Image",$imageID);
 	# retrieve image data
-	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path)=$imageManager->getImageDim($image);
+	my ($sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$path)=$imageManager->getImageDim($image);
 
-	my $stats=$imageManager->getImageStats($image);				# ref array
+	my $stats=$imageManager->getImageStats($image);			     	# ref array
 	my $wavelengths=$imageManager->getImageWavelengths($image);		# ref array
   	if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
- 	   ||not defined $numW || not defined $numT || not defined $bpp || not defined $path){
+ 	   ||not defined $numC || not defined $numT || not defined $bpp || not defined $path){
    		return undef;
 
   	}
-   	if (scalar(@$wavelengths) != $numW ||  scalar(@$stats) != $numW){
+   	if (scalar(@$wavelengths) != $numC ||  scalar(@$stats) != $numC){
     		return undef;
    	}
 	$theZ = $Z_param || (defined $sizeZ ? $sizeZ / 2 : 0 );
 	$theT = $T_param || 0;
 
 	my $displayOptions=$imageManager->getDisplayOptions($image);
-	$isRGB=1;
-
 	if (defined $displayOptions){
 				
 		$theZ=${$displayOptions}{theZ} unless defined $Z_param;
@@ -127,16 +126,58 @@ sub generateOMEimage{
 		$CBW=${$displayOptions}{CBW};
 		$RGBon=${$displayOptions}{RGBon};
 	}
-   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$CBW,$RGBon);
+   	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
 
     	my $jpg_image=$self->writeOMEimage($theZ,$theT);
 	return $jpg_image;
 }
 
 
+#######################
 
+sub generateOMEimages{
 
+	my ($self,$imageID)=@_;
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+	my $imageManager=OME::Tasks::ImageManager->new($session);
+	my $image=$factory->loadObject("OME::Image",$imageID);
+	my $CBW=undef;
+	my $RGBon=undef;
+  	my $isRGB=1;
+	my $out;
+	# retrieve image data
+	my ($sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$path)=$imageManager->getImageDim($image);
 
+	my $stats=$imageManager->getImageStats($image);			     	# ref array
+	my $wavelengths=$imageManager->getImageWavelengths($image);		# ref array
+	if (not defined $sizeX || not defined $sizeY || not defined $sizeZ
+  		||not defined $numC || not defined $numT || not defined $bpp || not defined $path){
+   		return undef;
+  
+  	}
+   	if (scalar(@$wavelengths) != $numC ||  scalar(@$stats) != $numC){
+    		return undef;
+   	}
+	my $displayOptions=$imageManager->getDisplayOptions($image);
+
+	if (defined $displayOptions){
+		$isRGB= ${$displayOptions}{isRGB};
+		$CBW=${$displayOptions}{CBW};
+		$RGBon=${$displayOptions}{RGBon};
+	}
+
+	$self->initialize($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$CBW,$RGBon);
+	for (my $theZ=0;$theZ<$sizeZ;$theZ++){
+		for(my $theT=0;$theT<$self->{T};$theT++){
+			#generate image
+			my $jpg=$self->writeOMEimage($theZ,$theT);
+			$out->[$theZ][$theT]=$jpg;		#array
+		}
+	}
+	return $out;
+
+}
 
 #######################
 # Parameters
@@ -167,11 +208,46 @@ sub writeOMEimage{
 	my $z="theZ=".$theZ;
 	my $t="theT=".$theT;
 	my $path="Path=".$self->{path};
-  	my $color=$self->getConvertedCBW($theT);
-	if (not defined $color){
+	my $refstats=$self->{stats};
+  	my $cCBW=$self->getConvertedCBW($theT);
+	if (not defined $cCBW){
 		return undef;
 	}
-	my $rgb="RGB=".join(",",@$color);
+	
+	for (my $i=0;$i<4;$i++){
+		my $wavenum=$cCBW->[$i*3];
+		if ($cCBW->[$i*3+1]<${$refstats}[$wavenum][$theT]{min}){
+			$cCBW->[$i*3+1]=ceil(${$refstats}[$wavenum][$theT]{min});
+		}
+		if ($cCBW->[$i*3+1]>${$refstats}[$wavenum][$theT]{max}){
+			$cCBW->[$i*3+1]=floor(${$refstats}[$wavenum][$theT]{max});
+		}
+		my $whiteLevel=${$refstats}[$wavenum][$theT]{geomean}+$cCBW->[$i*3+2]*${$refstats}[$wavenum][$theT]{geosigma};
+		my $recalculate=undef;
+		if ($whiteLevel<${$refstats}[$wavenum][$theT]{min}){
+			$whiteLevel=${$refstats}[$wavenum][$theT]{min};
+			$recalculate=1;
+		}
+		if ($whiteLevel>${$refstats}[$wavenum][$theT]{max}){
+			$whiteLevel=${$refstats}[$wavenum][$theT]{max};
+			$recalculate=1;
+		}
+		if (defined $recalculate){
+			if ($whiteLevel-${$refstats}[$wavenum][$theT]{geomean}){
+				$whiteLevel=$whiteLevel+0.00001;
+			}
+			$cCBW->[$i*3+2]=255/($whiteLevel-${$refstats}[$wavenum][$theT]{geomean});
+		}
+		
+	}
+
+	if ($self->{inColor}==1){
+	    splice(@$cCBW,-3);	
+	}else{
+	     splice(@$cCBW,0,9);
+	}
+	
+	my $rgb="RGB=".join(",",@$cCBW);
 	my $rgbon="RGBon=".join(",",@{$self->{RGBon}});
 
 	my $factory=$self->{session}->Factory();
@@ -195,14 +271,14 @@ sub writeOMEimage{
 
 sub initialize{
 	my $self=shift;
-	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$isRGB,$RGBon,$CBW)=@_;
+	my ($path,$wavelengths,$stats,$sizeX,$sizeY,$sizeZ,$numC,$numT,$bpp,$isRGB,$RGBon,$CBW)=@_;
 	$self->{path}=$path;
 	$self->{wavelengths}=$wavelengths;
 	$self->{stats}=$stats;
 	$self->{X}=$sizeX;
 	$self->{Y}=$sizeY;
 	$self->{Z}=$sizeZ;
-	$self->{W}=$numW;
+	$self->{W}=$numC;
 	$self->{T}=$numT;
 	$self->{bpp}=$bpp;
 	my @dim=();
@@ -226,7 +302,7 @@ sub initialize{
 	}else{
 		my @rgbon=();
 		for( my $i=0;$i<3;$i++){
-			if ($i<$numW){
+			if ($i<$numC){
 				push(@rgbon,1);
 			}else{
 				push(@rgbon,0);
@@ -256,23 +332,24 @@ sub makeCBW{
 	my @wavelengths=@{$self->{wavelengths}};
 	my $l=scalar(@wavelengths);
 	# red
-	my $ref=$wavelengths[0];
+	my $ref=$wavelengths[0]; 
   	push(@waves,${$ref}{WaveNum});
 
 	# green
 	my $f=floor($l/2);
 	my $refg=$wavelengths[$f];
+
   	push(@waves,${$refg}{WaveNum});
   
 	#blue
 	my $refb=$wavelengths[$l-1];	
-
+	
   	push(@waves,${$refb}{WaveNum});
 	my $tempo=$waves[0];
 	push(@waves,$tempo);
 
 	for(my $i=0;$i<4;$i++){
-		push(@CBW,$waves[$i],0,4);
+		push(@CBW,$waves[$i],0,3.5);		
 	}
 	return \@CBW;		
 }
@@ -312,7 +389,6 @@ sub getConvertedCBW{
 		my $wavenum=$CBW[$i*3];
   		push(@cCBW,$wavenum);
 		my ($geomean,$geosigma);	
-
         	$geomean=${$refstats}[$wavenum][$theT]{geomean};
 	  	$geosigma=${$refstats}[$wavenum][$theT]{geosigma};
 	  	my $value=$CBW[$i*3+1]+$geomean+$geosigma;
