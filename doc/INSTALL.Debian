@@ -1,0 +1,69 @@
+Debian (Unstable) OME INSTALL NOTES
+-----------------------------------
+
+__________
+Postgresql
+
+Debian unstable contains the Postgresql 7.3 release tree which is unsupported by OME. Install Postgres from the Stable tree and put the subsequent packages in a "hold" state as follows:
+
+/etc/apt/sources.list:
+
+deb http://ftp.uk.debian.org/debian stable main contrib non-free
+
+/etc/apt/preferences:
+
+Package: postgresql
+Pin: version stable
+Pin-Priority: 1001
+
+Package: postgresql-client
+Pin: version stable
+Pin-Priority: 1001
+
+Package: postgresql-dev
+Pin: version stable
+Pin-Priority: 1001
+
+Install using the Stable tree:
+
+apt-get -t stable install postgresql postgresql-dev postgresql-client
+
+_______________
+Debian Packages
+libdbi-perl libmd5-perl libmime-base64-perl libapache-session-perl liblog-agent-perl libtie-ixhash-perl libdbd-pg-perl libtest-simple-perl libterm-readkey-perl libcarp-assert-perl libio-stringy-perl libclass-trigger-perl perl-modules libtext-csv-perl libsql-statement-perl libdbd-csv-perl libclass-whitehole-perl libexporter-lite-perl libuniversal-exports-perl libgd-perl perlmagick libxml-namespacesupport-perl libxml-sax-perl libxml2 libxml2-dev libxml-libxml-perl libjpeg62 libjpeg62-dev libtiff3g libtiff3g-dev libclass-data-inheritable-perl libxml-libxml-common-perl libima-dbi-perl libclass-accessor-perl libbz2-dev libxml-libxslt-perl
+
+____
+CPAN
+Sort-Array-0.26.tar.gz
+Class-Fields-0.14.tar.gz
+Date-Simple-2.04.tar.gz
+Class-DBI-0.90.tar.gz
+
+_________
+OME build
+
+perl, C and SQL build (More detailed docs in the SBDD [/doc/SBDD/])
+___________________________
+Apache VirtualHost creation
+
+<VirtualHost *>
+        ServerName necromancer.openmicroscopy.org.uk
+        ServerAdmin webmaster@openmicroscopy.org.uk
+        DocumentRoot /usr/local/OME/src/html
+        Alias /JavaScript/ /usr/local/OME/src/JavaScript/
+        Alias /images/ /usr/local/OME/images/
+        Alias /html/ /usr/local/OME/src/html/
+        <IfModule mod_perl.c>
+                PerlModule Apache::StatINC
+                PerlSetEnv PERL5LIB /usr/local/OME/src/perl2/
+                Alias /perl2/ /usr/local/OME/src/perl2/
+                <Location /perl2>
+                        PerlInitHandler Apache::StatINC
+                        PerlSetVar StatINC_Debug 1
+                        SetHandler perl-script
+                        PerlHandler Apache::Registry
+                        Options +ExecCGI
+                </Location>
+        PerlFreshRestart On
+        </IfModule>
+</VirtualHost>

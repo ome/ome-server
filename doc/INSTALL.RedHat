@@ -1,0 +1,171 @@
+RedHat 8 OME INSTALL NOTES
+--------------------------
+
+* Note: Obviously your favourite RedHat ftp mirror would be prefered (http://www.redhat.com/download/mirror.html)
+__________
+Postgresql
+
+Install Postgres-7.2.3 from the RedHat 8 UPDATES tree:
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/updates/8.0/en/os/i386
+---
+postgresql-7.2.3-5.80.i386.rpm
+postgresql-devel-7.2.3-5.80.i386.rpm
+postgresql-docs-7.2.3-5.80.i386.rpm
+postgresql-perl-7.2.3-5.80.i386.rpm
+postgresql-server-7.2.3-5.80.i386.rpm
+postgresql-contrib-7.2.3-5.80
+postgresql-libs-7.2.3-5.80.i386.rpm
+postgresql-tcl-7.2.3-5.80.i386.rpm
+
+___
+CVS
+
+Install CVS from the RedHat 8 UPDATES tree:
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/updates/8.0/en/os/i386
+---
+cvs-1.11.2-8.i386.rpm
+
+_______________________
+GCC / Development Tools
+
+Install GCC and RedHat development tools from the RedHat 8 RELEASE tree:
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/8.0/en/os/i386/RedHat/RPMS
+---
+gcc-3.2-7.i386.rpm
+binutils-2.13.90.0.2-2.i386.rpm
+cpp-3.2-7.i386.rpm
+glibc-devel-2.2.93-5.i386.rpm
+glibc-kernheaders-2.4-7.20.i386.rpm
+
+_____________
+Extra packages
+
+Install GD, ImageMagick and their pre-requisites from the RedHat 8 either the UPDATES or RELEASE tree:
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/8.0/en/os/i386/RedHat/RPMS
+---
+gd-1.8.4-9.i386.rpm
+gd-devel-1.8.4-9.i386.rpm
+zlib-devel-1.1.4-4.i386.rpm
+libjpeg-devel-6b-21.i386.rpm
+freetype-devel-2.1.2-7.i386.rpm
+XFree86-devel-4.2.0-72.i386.rpm
+libxml2-2.4.23-1.i386.rpm
+ImageMagick-5.4.7-5.i386.rpm
+libxml2-devel-2.4.23-1.i386.rpm
+perl-CPAN-1.61-55.i386.rpm
+gdbm-devel-1.8.0-18.i386.rpm
+libtiff-devel-3.5.7-7.i386.rpm
+bzip2-devel-1.0.2-5.i386.rpm
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/updates/8.0/en/os/i386
+---
+libpng-1.2.2-8.i386.rpm		# *UPGRADE* part of the default install
+libpng-devel-1.2.2-8.i386.rpm
+
+____
+Perl
+
+Install DBI, Term::ReadKey, URI, XML::Parser, HTML::Parser, HTML::Tagset, PerlMagick from the RedHat 8 RELEASE tree:
+
+Repository: ftp://ftp.redhat.com/pub/redhat/linux/8.0/en/os/i386/RedHat/RPMS
+---
+perl-DBI-1.30-1.i386.rpm
+perl-TermReadKey-2.20-2.i386.rpm
+perl-libxml-perl-0.07-25.noarch.rpm
+perl-XML-Parser-2.31-12.i386.rpm
+perl-libwww-perl-5.65-2.noarch.rpm
+perl-URI-1.21-3.noarch.rpm
+perl-HTML-Parser-3.26-14.i386.rpm
+perl-HTML-Tagset-3.03-25.noarch.rpm
+perl-DB_File-1.804-55.i386.rpm
+ImageMagick-perl-5.4.7-5.i386.rpm
+
+Download and install DBD-Pg from CPAN:
+
+http://search.cpan.org/CPAN/authors/id/D/DW/DWHEELER/DBD-Pg-1.22.tar.gz
+
+Install MD5, Apache::Session, Log::Agent, MD5, Sort::Array, Text::CSV_XS, Tie::IxHash, Carp::Assert, Classs::Accessor, Class::Data::Inheritable, Class::Trigger, IO::stringy, SQL::Statement, DBD::CSV, Class::Fields, Class::WhiteHole, Exporter::Lite, UNIVERSAL::exports, Date::Simple, XML::NamespaceSupport, XML::Sax, XML::LibXML, Ima::DBI, Class::DBI using OME supplied PerlCheck:
+
+cd OME/src/perl2/; perl perlCheck.pl
+
+__________________________
+Apache user/group creation
+
+* Note: You'll want to decide what you want for an Apache ServerRoot and use that as the www-data user's home directory or just use /. (ex. /usr/local/apache/htdocs)
+
+Since we're building from source and OME uses the Apache user, a www-data user and group must be created.
+
+/usr/sbin/adduser -u 33 -d "/usr/local/apache/htdocs" -c "World Wide Web Owner" -s "/sbin/nologin" www-data
+
+___________________
+Apache 1.3.x source
+
+Apache2 is at the moment unsupported by OME, as RedHat only provides packages for Apache2, we need to compile Apache-1.3.x from source.
+
+* Note: At the time of this writing Apache-1.3.27 is current.
+* Note: Obviously your favourite Apache ftp mirror would be prefered (http://httpd.apache.org/download.cgi) 
+* Note: This is a source download and extraction *only* the Apache build will be completed by CPAN/mod_perl
+
+Download Apache 1.3.x source code, extract and note the source directory:
+
+http://www.apache.org/dist/httpd/apache_1.3.27.tar.gz
+(ex. /usr/src/apache_1.3.27/src)
+
+Configure and make Apache but *do not* make install until after the Apache bundle (mod_perl) installation.
+
+____
+CPAN
+
+Update the CPAN bundle:
+
+perl -MCPAN -e 'install("Bundle::CPAN")'
+
+Using CPAN install mod_perl::
+
+perl -MCPAN -eshell
+
+cpan> o conf makepl_arg 'DO_HTTPD=1 USE_APACI=1 EVERYTHING=1'
+cpan> install mod_perl
+
+Run "make install" in the Apache source directory (ex. cd /usr/src/apache_1.3.27/; make install)
+
+Using CPAN install the Apache bundle:
+
+perl -MCPAN -e 'install("Bundle::Apache")'
+
+* Note: When prompted you will need to specify the location of the already built mod_perl httpd (ex. /usr/local/apache/bin/httpd)
+
+* Note: When "make install" has completed for Apache you will want to edit the httpd.conf (ex. /usr/local/apache/conf/httpd.conf) and change the "User nobody" and "Group nobody" directives to "User www-data" "Group www-data"
+
+_________
+OME build
+
+perl, C and SQL build (More detailed docs in the SBDD [/doc/SBDD/])
+___________________________
+Apache VirtualHost creation
+
+<VirtualHost *>
+        ServerName necromancer.openmicroscopy.org.uk
+        ServerAdmin webmaster@openmicroscopy.org.uk
+        DocumentRoot /usr/local/OME/src/html
+        Alias /JavaScript/ /usr/local/OME/src/JavaScript/
+        Alias /images/ /usr/local/OME/images/
+        Alias /html/ /usr/local/OME/src/html/
+        <IfModule mod_perl.c>
+                PerlModule Apache::StatINC
+                PerlSetEnv PERL5LIB /usr/local/OME/src/perl2/
+                Alias /perl2/ /usr/local/OME/src/perl2/
+                <Location /perl2>
+                        PerlInitHandler Apache::StatINC
+                        PerlSetVar StatINC_Debug 1
+                        SetHandler perl-script
+                        PerlHandler Apache::Registry
+                        Options +ExecCGI
+                </Location>
+        PerlFreshRestart On
+        </IfModule>
+</VirtualHost>
