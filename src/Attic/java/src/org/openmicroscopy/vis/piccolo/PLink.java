@@ -91,6 +91,16 @@ public class PLink extends  PPath implements PNodeEventListener {
 		setStroke(LINK_STROKE);
 		setPaint(DEFAULT_COLOR);
 	}
+	public PLink(PFormalInput in,PFormalOutput out) {
+		this.start = in;
+		this.end = out;
+		start.addNodeEventListener(this);
+		end.addNodeEventListener(this);
+		start.setLinkedTo(end,this);
+		end.setLinkedTo(start,this);
+		setStartPoint();
+		setEndPoint();
+	}
 	
 	public void setStartParam(PFormalParameter start) {
 	
