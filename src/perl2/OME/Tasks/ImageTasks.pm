@@ -23,6 +23,7 @@ package OME::Tasks::ImageTasks;
 use OME::Session;
 use OME::Image;
 use OME::ImportExport::Importer;
+use OME::ImportExport::Exporter;
 use IO::File;
 
 
@@ -95,7 +96,6 @@ sub importFiles {
         $image->Field("sizeW",$href->{'Image.NumWaves'});
         $image->Field("sizeT",$href->{'Image.NumTimes'});
         $image->Field("bitsPerPixel",16);
-
 
         my $path = $imageID.".orf";
         $image->Field("path",$path);
@@ -207,6 +207,37 @@ sub importFiles {
 
     my $importer = OME::ImportExport::Importer->new($filenames,$lambda);
 }
+
+
+# exportFiles(session,images)
+# --------------------------------------
+# Exports the selected images out of OME.  The session is used to
+# interact with the database.
+
+
+sub exportFiles {
+    my ($i, $sz, $type);
+    my $image_list;
+    my ($session, $argref) = @_;
+
+    return unless
+        (defined $session) &&
+        (defined $argref);
+
+    $type = $$argref[0];
+    $sz = scalar(@$argref);
+    for ($i = 1; $i < $sz; $i++) {
+	push @image_list, $$argref[$i];
+    }
+
+    # Need to determine how to locate repository for given image IDs\
+    # when we go to more than 1 repository.
+    my $repository = findRepository($session, 0);
+
+    my $xporter = OME::ImportExport::Exporter->new($session, $type, \@image_list, $repository);
+
+}
+
 
 
 # findRepository(session,pixel array)
