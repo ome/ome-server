@@ -309,6 +309,7 @@ sub createdMEXduringImport () {
 my ($self, $MEX) = @_;
 my $MEX_ID = ref ($MEX) ? $MEX->id() : $MEX;
 	return undef unless exists $self->{_mexes_used};
+	return undef unless defined $self->{_mexes_used};
 	return (exists $self->{_mexes_used}->{ $MEX_ID } ? 1 : undef);
 }
 
@@ -522,7 +523,7 @@ sub getObjectTypeInfo ($$) {
 		$objectData = {
 			name            => $node->getAttribute( 'Name' ),
 			description     => $node->getAttribute( 'Description' ),
-			created         => $node->getAttribute( 'CreationDate' ),
+			created         => XML2ODBC_timestamp ($node->getAttribute( 'CreationDate' )),
 			inserted        => 'NOW',
 			experimenter_id => $node->getAttribute( 'Experimenter' ),
 			group_id        => $node->getAttribute( 'Group' ),
@@ -562,6 +563,8 @@ sub getObjectTypeInfo ($$) {
 				$refCols->{$attrColName} = $objectData->{$attrColName};
 			} elsif ($sql_type eq 'boolean') {
 				$objectData->{$attrColName} = $objectData->{$attrColName} eq 'true' ? '1' : '0';
+			} elsif ($sql_type eq 'timestamp') {
+				$objectData->{$attrColName} = XML2ODBC_timestamp ($objectData->{$attrColName});
 			}
 		#	logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
 		}
@@ -574,6 +577,22 @@ sub getObjectTypeInfo ($$) {
 		$isAttribute = 1;
 	}
 	return ($objectType,$isAttribute,$objectData,$refCols);
+}
+
+sub XML2ODBC_timestamp () {
+	my $value = shift;
+	my ($date,$time,$timezone);
+	$date = $1 if $value =~ /^(\d\d\d\d-\d\d-\d\d)/;
+	if ($value =~ /(\d\d:\d\d:\d\d(\.\d+)?)(([+-]\d\d?(:\d\d)?)|Z)?$/) {
+		$time = $1;
+		$timezone = $3;
+	}
+	if ($timezone =~ /[+-]\d\d?$/) {
+		$timezone .= ':00';
+	}
+	
+	return $date.' '.$time.$timezone if $date and $time;
+	return "";
 }
 
 
