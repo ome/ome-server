@@ -290,7 +290,11 @@ static void extractBinDataEndDocument( ParserState *state ) {
 
 static void extractBinDataStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
 	char *localName, *binDataOutPath;
-	int i, freeLocalName, pathLength;
+	int i;
+	/* Unused variables
+	int freeLocalName;
+	int pathLength;
+	*/
 	StructElementInfo* elementInfo;
 	size_t bufferSize;
 
@@ -583,7 +587,7 @@ static void extractBinDataStartElement(ParserState *state, const xmlChar *name, 
 		print_element( name, attrs );
 	}
 	/*
-	/*************************************************************************/
+	*************************************************************************/
 
 	if( freeLocalName == 1 ) 
 		free( localName );
