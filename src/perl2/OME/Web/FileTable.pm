@@ -48,7 +48,7 @@ use CGI;
 use Carp;
 use Data::Dumper;
 use File::Spec;
-
+use File::Glob ':glob';
 # OME Modules
 use OME;
 
@@ -106,7 +106,8 @@ sub __getParentDir {
 sub __getItemCount {
 	my ($self, $dir_path) = @_;
 
-	my @items = <$dir_path/*>;
+	
+	my @items = bsd_glob("$dir_path/*");
 
 	return scalar(@items);
 }
@@ -136,8 +137,8 @@ sub getTable {
 			return $q->span({class => 'ome_error'}, "Permission denied for '$paths[0]'\n")
 		}
 		$parent_dir = $self->__getParentDir($paths[0]);
-
-		@paths = <$paths[0]/*>;
+		
+		@paths = bsd_glob("$paths[0]/*");
 	}
 
 	# Directories first, order by name
@@ -162,7 +163,6 @@ sub getTable {
 	foreach my $file_path (@paths) {
 		# Cleanup path and find file name
 		$file_path = File::Spec->canonpath($file_path);
-
 		# Just nix the loop if the path doesn't exist
 		unless (-e $file_path) { next; }
 
