@@ -92,7 +92,9 @@ The following public methods are available.
 
 	my $importer = OME::ImportEngine::ImportEngine->
 	    new(session => $session,
-                [AllowDuplicates => 1]);
+                [AllowDuplicates => 1],
+		[GroupCallback => \&groupCallback],
+		[SliceCallback => \&sliceCallback]);
 
 Creates a new instance of the import engine.  The session parameter is
 mandatory; it specifies, among other things, which OME user is
@@ -112,7 +114,7 @@ sub new {
     my $self = {};
     my %flags = @_;
     $self->{_flags} = \%flags;
-
+    setupRemoteSliceCallback($self->{_flags});
 
     bless $self, $class;
     return $self;
@@ -138,7 +140,7 @@ sub __getFormats {
 
 =head2 importFiles
 
-	my $images = $importer->importFiles($filenames);
+	my $images = $importer->importFiles($files);
 
 Imports a list of image files.  Note that there is no implicit mapping
 between filenames and images; in several image formats, an image is
@@ -146,7 +148,7 @@ split across several files.  The import classes for those formats will
 correctly group the filenames by image, and import the grouped files
 accordingly.
 
-The $filenames parameter is given as an array reference to allow it to
+The $files parameter is given as an array reference to allow it to
 be modified by the import engine.  Any files which are successfully
 imported into some image will be removed from the list.  After the
 call to C<importFiles> returns, none of the files left in the array
@@ -330,18 +332,21 @@ sub importFiles {
             # This hasn't been imported yet, so slurp it in.
             my $image;
             eval {
-                $image = $format->importGroup($group);
+                #$image = $format->importGroup($group, $self->{_flags}->{SliceCallback});
+                $image = $format->importGroup($group, \&localSliceCallback);
             };
 
             if ($@) {
                 logwarn "Error $@ importing image: $format_class $group";
                 $session->rollbackTransaction();
+                doGroupCallback($self->{_flags}, 0);
                 next GROUP;
             }
 
             if (!defined $image) {
                 logwarn "Undefined image: $format_class $group";
                 $session->rollbackTransaction();
+                doGroupCallback($self->{_flags}, 0);
                 next GROUP;
             }
 
@@ -356,6 +361,7 @@ sub importFiles {
               getImageImportMEX($image);
             $image_mex->status('FINISHED');
             $image_mex->storeObject();
+            doGroupCallback($self->{_flags}, 1);
 
             $session->commitTransaction();
 
@@ -388,6 +394,57 @@ sub finishImport {
 
     return;
 }
+
+
+=head2 doGroupCallback
+
+         doGroupCallback(\%flags, $code)
+
+Routine to call a passed callback routine with the results of
+importing a group. If %flags hash has an entry for the key 'GroupCallback',
+use that entry as a reference to the callback routine, passing it the
+$code argument.
+
+=cut
+
+sub doGroupCallback {
+    my $flags = shift;
+    my $code = shift;
+    if (my $grpCallback = $flags->{GroupCallback}) {
+	$grpCallback->($code);
+    }
+}
+
+
+
+=head2 localSliceCallback
+
+         localSliceCallback()
+
+Callback routine passed to individual importers. The importers, if they so
+choose, will call this callback when they finish importing a single slice of
+ann import image. This routine will then call the slice callback routine
+passed in from this module's caller.
+
+=cut
+
+
+my $remoteSliceCallback;
+
+sub localSliceCallback {
+    if ($remoteSliceCallback) {
+	$remoteSliceCallback->();
+    }
+}
+
+
+sub setupRemoteSliceCallback {
+    my $flags = shift;
+    $remoteSliceCallback = $flags->{SliceCallback};
+}
+
+
+
 
 =head1 IMPLEMENTATION OF C<importFiles>
 
