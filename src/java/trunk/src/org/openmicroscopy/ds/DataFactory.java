@@ -308,13 +308,13 @@ public class DataFactory
         }
     }
 
-    public DataInterface load(SemanticType semanticType, int id,
+    public Attribute load(SemanticType semanticType, int id,
                               FieldsSpecification fieldSpec)
     {
         return load(semanticType.getName(),id,fieldSpec);
     }
 
-    public DataInterface load(String semanticType, int id,
+    public Attribute load(String semanticType, int id,
                               FieldsSpecification fieldSpec)
     {
         Map fields = fieldSpec.getFieldsWanted();
@@ -331,7 +331,7 @@ public class DataFactory
         } else if (result instanceof Map) {
             Class dtoClass = getSemanticTypeClass(semanticType);
             Map map = (Map) result;
-            return instantiateDTO(dtoClass,map);
+            return (Attribute) instantiateDTO(dtoClass,map);
         } else {
             throw new RemoteServerErrorException("Invalid result type "+
                                                  result.getClass());
