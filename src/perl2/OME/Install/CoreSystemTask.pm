@@ -58,7 +58,7 @@ our @core_dirs = (
 	name => "base",
 	path => "/OME",
 	description => "Base OME directory",
-	children => ["xml", "bin", "perl2", "cgi", "repository", "conf"]
+	children => ["xml", "bin", "perl2", "cgi", "repository"]
     },
     {
 	name => "temp_base",
@@ -73,6 +73,9 @@ our @html_core = ("JavaScript", "html");
 
 # The image directories that need to be copied to the basedir
 our @image_core = ("images");
+
+# The image directories that need to be copied to the basedir
+our @config_core = ("conf");
 
 # Base and temp dir references
 our $OME_BASE_DIR = \$core_dirs[0]->{path};
@@ -377,6 +380,12 @@ sub execute {
 
     print "Copying IMAGE directories\n";
     	foreach my $directory (@image_core) {
+		print "  \\_ $directory\n";
+		copy_tree ("$directory", "$$OME_BASE_DIR");
+    }
+    
+	print "Copying CONFIG directories\n";
+    	foreach my $directory (@config_core) {
 		print "  \\_ $directory\n";
 		copy_tree ("$directory", "$$OME_BASE_DIR");
     }
