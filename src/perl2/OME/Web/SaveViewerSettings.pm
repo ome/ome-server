@@ -59,7 +59,7 @@ sub getPageBody {
 	my $factory = $session->Factory();
 
 	if( $cgi->param('CBW') ) {
-		my @WBS     = split( ',' , $cgi->param('CBW') );
+		my @CBW     = split( ',' , $cgi->param('CBW') );
 		my @RGBon   = split( ',' , $cgi->param('RGBon') );
 
 		my $isRGB     = $cgi->param('isRGB');
@@ -69,7 +69,7 @@ sub getPageBody {
 		my $pixelsID   = $cgi->param('PixelsID');
 		my $pixels;
 		$pixels = $factory->loadAttribute( "Pixels", $pixelsID ) if( $pixelsID);
-		$self->SaveDisplaySettings( $imageID, \@WBS, \@RGBon, $theT, $theZ, $isRGB, $pixels );
+		$self->SaveDisplaySettings( $imageID, \@CBW, \@RGBon, $theT, $theZ, $isRGB, $pixels );
 	} elsif ($cgi->param('toolBoxScale') ) {
 		my $toolBoxScale = $cgi->param('toolBoxScale');
 
@@ -102,7 +102,7 @@ sub SavePreferences {
 }
 
 sub SaveDisplaySettings {
-	my ($self, $imageID, $WBS, $RGBon, $theT, $theZ, $isRGB, $pixels) = @_;
+	my ($self, $imageID, $CBW, $RGBon, $theT, $theZ, $isRGB, $pixels) = @_;
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 
@@ -113,29 +113,26 @@ sub SaveDisplaySettings {
 	$pixels = $image->DefaultPixels()
 		unless $pixels;
 
-	my $displayOptions = [$factory->findAttributes( 'DisplayOptions', $imageID )];
+	my $displayOptions = $factory->findAttribute( 'DisplayOptions', $imageID );
 	my ( $redChannel, $greenChannel, $blueChannel, $greyChannel );
 
-	if( $displayOptions->[0] ) {
-		die "More than one DisplayOptions attribute found for this image. That is invalid.\n"
-			if( scalar( @$displayOptions ) > 1 );
-		$displayOptions = $displayOptions->[0];
+	if( $displayOptions ) {
 		$redChannel = $displayOptions->RedChannel();
-		$redChannel->ChannelNumber  ( $WBS->[0] );
-		$redChannel->BlackLevel     ( $WBS->[1] );
-		$redChannel->WhiteLevel     ( $WBS->[2] );
+		$redChannel->ChannelNumber  ( $CBW->[0] );
+		$redChannel->BlackLevel     ( $CBW->[1] );
+		$redChannel->WhiteLevel     ( $CBW->[2] );
 		$greenChannel = $displayOptions->GreenChannel();
-		$greenChannel->ChannelNumber( $WBS->[3] );
-		$greenChannel->BlackLevel   ( $WBS->[4] );
-		$greenChannel->WhiteLevel   ( $WBS->[5] );
+		$greenChannel->ChannelNumber( $CBW->[3] );
+		$greenChannel->BlackLevel   ( $CBW->[4] );
+		$greenChannel->WhiteLevel   ( $CBW->[5] );
 		$blueChannel = $displayOptions->BlueChannel();
-		$blueChannel->ChannelNumber ( $WBS->[6] );
-		$blueChannel->BlackLevel    ( $WBS->[7] );
-		$blueChannel->WhiteLevel    ( $WBS->[8] );
+		$blueChannel->ChannelNumber ( $CBW->[6] );
+		$blueChannel->BlackLevel    ( $CBW->[7] );
+		$blueChannel->WhiteLevel    ( $CBW->[8] );
 		$greyChannel = $displayOptions->GreyChannel();
-		$greyChannel->ChannelNumber ( $WBS->[9] );
-		$greyChannel->BlackLevel    ( $WBS->[10] );
-		$greyChannel->WhiteLevel    ( $WBS->[11] );
+		$greyChannel->ChannelNumber ( $CBW->[9] );
+		$greyChannel->BlackLevel    ( $CBW->[10] );
+		$greyChannel->WhiteLevel    ( $CBW->[11] );
 		$displayOptions->RedChannelOn( $RGBon->[0] );
 		$displayOptions->GreenChannelOn( $RGBon->[1] );
 		$displayOptions->BlueChannelOn( $RGBon->[2] );
@@ -145,32 +142,38 @@ sub SaveDisplaySettings {
 		$displayOptions->ZStop($theZ);
 		$displayOptions->DisplayRGB( $isRGB );
 		$displayOptions->Pixels( $pixels );
+
+		$displayOptions->storeObject();
+		$redChannel->storeObject();
+		$greenChannel->storeObject();
+		$blueChannel->storeObject();
+		$greyChannel->storeObject();
 	} else {
 		my $data = {
-			ChannelNumber => $WBS->[0],
-			BlackLevel    => $WBS->[1],
-			WhiteLevel    => $WBS->[2]
+			ChannelNumber => $CBW->[0],
+			BlackLevel    => $CBW->[1],
+			WhiteLevel    => $CBW->[2]
 		};
 		$redChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
 			or die "Could not create new DisplayChannel attribute\n";
 		$data = {
-			ChannelNumber => $WBS->[3],
-			BlackLevel    => $WBS->[4],
-			WhiteLevel    => $WBS->[5]
+			ChannelNumber => $CBW->[3],
+			BlackLevel    => $CBW->[4],
+			WhiteLevel    => $CBW->[5]
 		};
 		$greenChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
 			or die "Could not create new DisplayChannel attribute\n";
 		$data = {
-			ChannelNumber => $WBS->[6],
-			BlackLevel    => $WBS->[7],
-			WhiteLevel    => $WBS->[8]
+			ChannelNumber => $CBW->[6],
+			BlackLevel    => $CBW->[7],
+			WhiteLevel    => $CBW->[8]
 		};
 		$blueChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
 			or die "Could not create new DisplayChannel attribute\n";
 		$data = {
-			ChannelNumber => $WBS->[9],
-			BlackLevel    => $WBS->[10],
-			WhiteLevel    => $WBS->[11]
+			ChannelNumber => $CBW->[9],
+			BlackLevel    => $CBW->[10],
+			WhiteLevel    => $CBW->[11]
 		};
 		$greyChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
 			or die "Could not create new DisplayChannel attribute\n";
@@ -193,11 +196,6 @@ sub SaveDisplaySettings {
 			or die "Could not create new DisplayOptions attribute\n";			
 	}
 	
-	$displayOptions->storeObject();
-	$redChannel->storeObject();
-	$greenChannel->storeObject();
-	$blueChannel->storeObject();
-	$greyChannel->storeObject();
 	$session->commitTransaction();
 
 	return $displayOptions;
