@@ -6,6 +6,7 @@
   <property name="apidocs" value="docs/api"/>
   <property name="privapidocs" value="docs/privapi"/>
   <property name="distzip" value="ome.zip"/>
+  <property name="jar" value="jar"/>
 
   <target name="init">
     <tstamp/>
@@ -53,6 +54,46 @@
       <fileset dir="." includes="build.xml"/>
     </zip>
     <copy file="${distzip}" tofile="${DSTAMP}-${distzip}"/>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${jar}"/>
+
+    <delete file="${jar}/org-openmicroscopy.jar"/>
+    <delete file="${jar}/org-openmicroscopy-analysis.jar"/>
+    <delete file="${jar}/org-openmicroscopy-analysis-ui.jar"/>
+    <delete file="${jar}/org-openmicroscopy-applet.jar"/>
+    <delete file="${jar}/org-openmicroscopy-remote.jar"/>
+    <delete file="${jar}/org-openmicroscopy-simple.jar"/>
+    <delete file="${jar}/org-openmicroscopy-soap.jar"/>
+
+    <jar destfile="${jar}/org-openmicroscopy.jar">
+      <fileset dir="build" includes="org/openmicroscopy/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-analysis.jar">
+      <fileset dir="build" includes="org/openmicroscopy/analysis/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-analysis-ui.jar">
+      <fileset dir="build" includes="org/openmicroscopy/analysis/ui/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-applet.jar">
+      <fileset dir="build" includes="org/openmicroscopy/applet/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-remote.jar">
+      <fileset dir="build" includes="org/openmicroscopy/remote/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-simple.jar">
+      <fileset dir="build" includes="org/openmicroscopy/simple/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-soap.jar">
+      <fileset dir="build" includes="org/openmicroscopy/soap/*.class"/>
+    </jar>
   </target>
 
   <target name="clean">
