@@ -34,6 +34,9 @@
  *------------------------------------------------------------------------------
  */
 
+#ifndef omeis_h
+#define omeis_h
+
 /* typedef unsigned long long OID; */
 typedef u_int64_t OID;
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
@@ -114,3 +117,20 @@ char x2c(char *what);
 void unescape_url(char *url);
 char **getcgivars(void);
 char **getCLIvars(int argc, char **argv);
+int bigEndian(void);
+void byteSwap (unsigned char *theBuf, size_t length, char bp);
+PixelsRep *NewPixels (
+	unsigned long dx,
+	unsigned long dy,
+	unsigned long dz,
+	unsigned long dc,
+	unsigned long dt,
+	unsigned char bp, /* bp is bytes per pixel */
+	char isSigned,
+	char isFloat
+);
+int FinishPixels (PixelsRep *myPixels, char force);
+size_t setPixelPlane (PixelsRep *thePixels, void *buf , int theZ, int theC, int theT );
+
+#endif
+
