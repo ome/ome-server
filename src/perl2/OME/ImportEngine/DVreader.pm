@@ -73,11 +73,9 @@ directly into a separate OME 5D image.
 package OME::ImportEngine::DVreader;
 use strict;
 use Carp;
-use OME::Image::Pix;
 use OME::Tasks::PixelsManager;
 use OME::ImportEngine::AbstractFormat;
 use OME::ImportEngine::Params;
-use OME::ImportExport::Repacker::Repacker;
 use base qw(OME::ImportEngine::AbstractFormat);
 use vars qw($VERSION);
 use OME;

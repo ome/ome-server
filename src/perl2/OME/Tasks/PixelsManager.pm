@@ -51,9 +51,7 @@ use OME::ModuleExecution;
 use Log::Agent;
 use Carp;
 
-use OME::File;
-use OME::Image::Pixels;
-use OME::Image::LocalPixels;
+use OME::Image::Server::File;
 use OME::Image::Server::Pixels;
 
 use File::Spec;
@@ -95,33 +93,9 @@ sub createOriginalFileAttribute {
 
     if (UNIVERSAL::isa($file,'OME::LocalFile')) {
         my $filename = $file->getFilename();
-
-        # See if we've already created an attribute for this file with
-        # the same MEX.
-
-        my $attr = $factory->
-          findAttribute('OriginalFile',
-                        {
-                         module_execution => $mex,
-                         Repository       => undef,
-                         Path             => $filename,
-                        });
-        return $attr if defined $attr;
-
-        # Nope, create a new one.
-
-        $attr = $factory->
-          newAttribute('OriginalFile',undef,$mex,
-                       {
-                        Repository => undef,
-                        Path       => $filename,
-                        FileID     => undef,
-                        SHA1       => $file->getSHA1(),
-                        Format     => $format,
-                       });
-        die "Could not create OriginalFile attribute"
-          unless defined $attr;
-        return $attr;
+        
+        die "Could not create OriginalFile attribute for OME::LocalFile with ".
+            "filename=$filename\n";
     } elsif (UNIVERSAL::isa($file,'OME::Image::Server::File')) {
         my $repository = $session->findRepository();
         my $fileID = $file->getFileID();

@@ -449,15 +449,6 @@ addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
              publishedName => "iterate_all_features");
 addPrototype("OME::Image","DefaultPixels",[],['OME::SemanticType::Superclass'],
              publishedName => 'getDefaultPixels' );
-addPrototype("OME::Image","GetPix",
-             ['OME::SemanticType::Superclass'],
-             ['OME::Image::Pix']);
-
-addPrototype("OME::Image::Pix","GetPixels",[],['$$']);
-addPrototype("OME::Image::Pix","GetPlane",['$','$','$'],['$$']);
-addPrototype("OME::Image::Pix","GetStack",['$','$'],['$$']);
-addPrototype("OME::Image::Pix","GetROI",
-             ['$','$','$','$','$','$','$','$','$','$'],['$$']);
 
 addPrototype("OME::Image::DatasetMap","image",
              ['OME::Image'],['OME::Image']);
