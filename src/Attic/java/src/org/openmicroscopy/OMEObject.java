@@ -81,6 +81,15 @@ public interface OMEObject
      * Saves this object's state to the OME database and commits any
      * active database transaction.
      */
+    public void storeObject();
+
+    /**
+     * Saves this object's state to the OME database and commits any
+     * active database transaction.
+     * @deprecated Use storeObject() to save the state to the
+     * database, and an explicit call to {@link
+     * Session#commitTransaction} to commit the transaction.
+     */
     public void writeObject();
 
     /**

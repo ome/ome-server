@@ -67,6 +67,9 @@ public class RemoteOMEObject
     public int getID()
     { return getIntElement("id"); }
 
+    public void storeObject() 
+    { caller.dispatch(this,"storeObject"); }
+
     public void writeObject() 
     { caller.dispatch(this,"writeObject"); }
 
