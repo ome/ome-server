@@ -1,5 +1,17 @@
-FreeBSD 4.8 OME INSTALL NOTES
------------------------------
+Open Microscopy Environment - Install Notes (Debian)
+----------------------------------------------------
+
+________
+Preamble
+
+This addendum is based on the FreeBSD 4.x ports tree. You may need to search
+for some using "make search". Some packages will change names over time and we
+will attempt to keep this list as update as possible.
+
+	cd /usr/ports && make search name=libxml2
+
+It is recommended that you use the ports tree to install the libraries and Perl
+modules that OME requires. 
 
 __________
 Postgresql
@@ -8,85 +20,47 @@ Build a new kernel or update the configuration from GENERIC as specified by the
 PostgreSQL documentation here:
 
 http://developer.postgresql.org/docs/postgres/kernel-resources.html
-____
-Perl
 
-Install Perl 5.8.0 from the ports tree:
+____________________
+Core Package Install
 
+Install the following from the ports tree:
+
+/usr/ports/www/apache13
 /usr/ports/lang/perl5.8
+/usr/ports/databases/postgresql7
+/usr/ports/databases/postgresql-client
+/usr/ports/databases/postgresql-docs
 
-Update the binary tree to use the ports tree perl:
+_________________
+C Library Install
 
-use.perl ports
+Install the following from the ports tree:
 
-Install DBI,MD5,Apache::Session, Log::Agent, Tie::IxHash, Term::ReadKey, Carp::Assert, Class::Accessor, Class::Data::Inheritable, Class::Trigger, Text::CVS_XS, SQL::Statement, DBD::CSV, Class::WhiteHole, Ima::DBI, Class::DBI, GD, XML::NameSpaceSupport, XML::SAX, XML::LibXML and XML::LibXML::Common from the ports tree:
+/usr/ports/security/openssl
+/usr/ports/graphics/png
+/usr/ports/graphics/tiff
+/usr/ports/graphics/gd
+/usr/ports/textproc/libxml2
+/usr/ports/textproc/libxslt
 
-/usr/ports/security/p5-MD5
+___________________
+Perl Module Install
+
+To install all the OME prerequisites execute the following:
+
 /usr/ports/databases/p5-DBI
 /usr/ports/www/p5-Apache-Session
 /usr/ports/devel/p5-Log-Agent
-/usr/ports/devel/p5-Tie-IxHash
+/usr/ports/databases/p5-DBD-Pg
 /usr/ports/devel/p5-Term-ReadKey
-/usr/ports/devel/p5-Carp-Assert
+/usr/ports/devel/p5-IPC-Run
 /usr/ports/devel/p5-Class-Accessor
-==> /usr/ports/devel/p5-Class-Fields (Dependancy)
+/usr/ports/devel/p5-Exporter-Lite
+/usr/ports/devel/p5-UNIVERSAL-exports
+/usr/ports/net/p5-URI
 /usr/ports/devel/p5-Class-Data-Inheritable
-==> /usr/ports/devel/p5-IO-stringy (Dependancy)
-/usr/ports/devel/p5-Class-Trigger
-/usr/ports/textproc/p5-Text-CSV_XS
-/usr/ports/databases/p5-SQL-Statement
-/usr/ports/databases/p5-DBD-CSV
-/usr/ports/devel/p5-Class-WhiteHole
-/usr/ports/databases/p5-Ima-DBI
-/usr/ports/databases/p5-Class-DBI
-==> /usr/ports/graphics/jpeg (Dependancy)
 /usr/ports/textproc/p5-XML-NamespaceSupport
+/usr/ports/textproc/p5-XML-SAX
 /usr/ports/textproc/p5-XML-LibXML
 /usr/ports/textproc/p5-XML-LibXML-Common
-
-
-Download and install DBD-Pg from CPAN:
-
-http://search.cpan.org/CPAN/authors/id/D/DW/DWHEELER/DBD-Pg-1.22.tar.gz
-
-Install Sort::Array, Exporter::Lite, UNIVERSAL::exports and Date::Simple using OME supplied PerlCheck:
-
-cd OME/src/perl2/; perl perlCheck.pl
-
-_____
-Ports
-
-Install ImageMagick from the ports tree:
-
-/usr/ports/graphics/p5-GD
-/usr/ports/graphics/ImageMagick
-/usr/ports/graphics/tiff
-
-_________
-OME build
-
-perl/C and SQL build
-___________________________
-Apache VirtualHost creation
-
-<VirtualHost *>
-        ServerName necromancer.openmicroscopy.org.uk
-        ServerAdmin webmaster@openmicroscopy.org.uk
-        DocumentRoot /usr/local/OME/src/html
-        Alias /JavaScript/ /usr/local/OME/src/JavaScript/
-        Alias /images/ /usr/local/OME/images/
-        Alias /html/ /usr/local/OME/src/html/
-        <IfModule mod_perl.c>
-                PerlModule Apache::StatINC
-                PerlSetEnv PERL5LIB /usr/local/OME/src/perl2/
-                Alias /perl2/ /usr/local/OME/src/perl2/
-                <Location /perl2>
-                        PerlInitHandler Apache::StatINC
-                        PerlSetVar StatINC_Debug 1
-                        SetHandler perl-script
-                        PerlHandler Apache::Registry
-                        Options +ExecCGI
-                </Location>
-        PerlFreshRestart On
-        </IfModule>
-</VirtualHost>
