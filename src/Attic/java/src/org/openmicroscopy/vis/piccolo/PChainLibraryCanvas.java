@@ -158,7 +158,6 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 		PChain p = new PChain(connection,chain,layer,linkLayer,HGAP*2,y);
 		
  		y += p.getHeight()+VGAP;
- 		System.err.println("chain width is "+p.getWidth());
  		decorateChain(chain.getID(),top,y,p.getWidth());
 		y += VGAP;
 	}
