@@ -205,8 +205,15 @@ sub handleCommand {
     my ($self,$help,$supercommands) = @_;
     my $commands = $self->getCommands();
     $supercommands = [] unless defined $supercommands;
+    
+    # Set $command if the last supercommand matches the only
+    # command in the class.
+    my $command = (keys %$commands)[0]
+        if scalar (keys (%$commands)) == 1 and
+        scalar @$supercommands > 0 and
+        @$supercommands[scalar @$supercommands - 1] eq (keys %$commands)[0];
 
-    my $command = shift @ARGV;
+    $command = shift @ARGV unless $command;
 
     if (!defined $command) {
         # The user did not specify a command, even though one was
