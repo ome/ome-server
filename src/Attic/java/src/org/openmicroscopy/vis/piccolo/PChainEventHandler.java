@@ -84,8 +84,7 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private static final int LINKING_MODULES=3;
 	private static final int LINKING_CANCELLATION=4;
 	private static final int LINK_CHANGING_POINT=5;
-	
-	private static final double SCALE_FACTOR=1.2;
+
 	
 	private static final int SPACING=6;
 	private int linkState = NOT_LINKING;
@@ -281,10 +280,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 			e.setHandled(true);
 		}
 		else { 
-			double scaleFactor  = PConstants.SCALE_FACTOR;	
-			if (mask != MouseEvent.BUTTON1_MASK) {
-			}
-			else {
+			double scaleFactor  = PConstants.SCALE_FACTOR;
+			if (e.isControlDown()) {	
 				scaleFactor = 1/scaleFactor;
 			}
 			double curScale = camera.getScale();
