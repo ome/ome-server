@@ -99,7 +99,7 @@ sub __loginForm {
 
 	my $table_data = $q->Tr( [
 		$q->td({-align => 'center'}, $q->p({-class => 'ome_title'}, "Welcome to OME")),
-		$q->td({-align => 'center'}, $q->img({-src => '/images/logo.gif'}))
+		$q->td({-align => 'center'}, $q->img({-src => '/images/logo-eye.gif'}))
 		]);
 
 	if ($error) {
