@@ -418,6 +418,8 @@ sub importObject ($$$$) {
 	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
+	logdie ref ($self) . "->importObject: Attempt to import an attribute without an ID.\n".$node->toString()
+		unless $LSID;
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
 	$parentDBID = undef if $granularity eq 'G';
