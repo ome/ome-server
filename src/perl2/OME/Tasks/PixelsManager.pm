@@ -219,6 +219,8 @@ Usage
 sub getPixelTypeInfo {
 	my ($proto,$pixelType) = @_;
 	$proto->__populatePixelInfo() unless( %PIXEL_INFO );
+	die "'$pixelType' is not a recognized Pixel type"
+		unless exists $PIXEL_INFO{$pixelType};
 	return @{ $PIXEL_INFO{$pixelType} };
 }
 
@@ -272,6 +274,9 @@ sub finishPixels {
 }
 
 =head2 loadPixels
+
+	# load the pixels data object (see OME::Image::Pixels for interface)
+	my $pixels_data = OME::Tasks::PixelsManager->loadPixels( $pixels_attr );
 
 =cut
 sub loadPixels {
