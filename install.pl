@@ -111,15 +111,16 @@ Usage:
   $0 [options]
 
 Options:
-  -f, --env-file		Location of the stored environment overrides
-				the default of "/OME/conf/environment.store"
-  -c, --perl-check		Just run a Perl module check using the
-				stored environment
-  -l, --lib-check		Just run a library check using the stored
-				environment
-  -i, --install			Default execution
-  -a, --check-all		Run all our sanity checks
-  -h, --help			This message
+  -u, --update      do an update instead of install
+  -f, --env-file    Location of the stored environment overrides
+                    the default of "/OME/conf/environment.store"
+  -c, --perl-check  Just run a Perl module check using the
+                    stored environment
+  -l, --lib-check   Just run a library check using the stored
+                    environment
+  -i, --install     Default execution
+  -a, --check-all   Run all our sanity checks
+  -h, --help        This message
 
 Report bugs to <ome-devel\@mit.edu>.
 USAGE
@@ -133,6 +134,15 @@ USAGE
 #********* START OF CODE
 #*********
 
+use Log::Agent;
+if ($ENV{OME_DEBUG} > 0) {	
+	logconfig(
+		-prefix      => "$0",
+		-level    => 'debug'
+	);
+	print STDERR "Debugging on\n";
+}
+
 # Number of checks to run
 my $checks_to_run;
 
@@ -140,10 +150,11 @@ my $checks_to_run;
 my $env_file = '/OME/conf/environment.store';
 
 # Command line options
-my ($perl_check, $lib_check, $check_all, $usage, $install);
+my ($update, $perl_check, $lib_check, $check_all, $usage, $install);
 
 # Parse our command line options
-GetOptions ("f|env-file=s" => \$env_file,   # Environment file
+GetOptions ("u|update" => \$update,         # update
+            "f|env-file=s" => \$env_file,   # Environment file
             "c|perl-check" => \$perl_check, # Just run the perl module task
 			"l|lib-check" => \$lib_check,   # Just run the library task
 			"a|check-all" => \$check_all,   # Set $perl_check, $lib_check
@@ -157,6 +168,13 @@ usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 usage () if $usage;
 
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
+
+if ($update) {
+    restore_env ($env_file);
+
+    my $environment = initialize OME::Install::Environment;
+    $environment->flag ("UPDATE");
+}
 
 if ($lib_check) {
     restore_env ($env_file);
