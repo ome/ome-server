@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+	<SemanticType Name="AreaStats" AppliesTo="I">
+	  <Description>Stores Zernike Coefficients of Order 2x3</Description>
+      <Element Name="NumBlobs"  DBLocation="AREA_STATS.NUM_BLOBS" DataType="integer">
+        <Description>How many area elements (blobs) there are.</Description>
+      </Element>
+      <Element Name="Histogram1"  DBLocation="AREA_STATS.HISTOGRAM_1" DataType="integer">
+        <Description>histogram of the binary image, bin 1, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram2"  DBLocation="AREA_STATS.HISTOGRAM_2" DataType="integer">
+        <Description>histogram of the binary image, bin 2, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram3"  DBLocation="AREA_STATS.HISTOGRAM_3" DataType="integer">
+        <Description>histogram of the binary image, bin 3, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram4"  DBLocation="AREA_STATS.HISTOGRAM_4" DataType="integer">
+        <Description>histogram of the binary image, bin 4, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram5"  DBLocation="AREA_STATS.HISTOGRAM_5" DataType="integer">
+        <Description>histogram of the binary image, bin 5, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram6"  DBLocation="AREA_STATS.HISTOGRAM_6" DataType="integer">
+        <Description>histogram of the binary image, bin 6, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram7"  DBLocation="AREA_STATS.HISTOGRAM_7" DataType="integer">
+        <Description>histogram of the binary image, bin 7, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram8"  DBLocation="AREA_STATS.HISTOGRAM_8" DataType="integer">
+        <Description>histogram of the binary image, bin 8, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram9"  DBLocation="AREA_STATS.HISTOGRAM_9" DataType="integer">
+        <Description>histogram of the binary image, bin 9, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Histogram10"  DBLocation="AREA_STATS.HISTOGRAM_10" DataType="integer">
+        <Description>histogram of the binary image, bin 10, based on 'blob' size</Description>
+      </Element>
+      <Element Name="Mean"  DBLocation="AREA_STATS.MEAN" DataType="double">
+        <Description>Mean area of the blobs.</Description>
+      </Element>
+    </SemanticType>
+    <SemanticType Name="PixelsPlane" AppliesTo="I">
+			<Description>Stores two dimensional Pixel Data, including the extent of each dimension.</Description>
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_PIXELS.SIZE_X"
+				DataType = "integer">
+				<Description>Number of pixels on the X axis.</Description>
+			</Element>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_PIXELS.SIZE_Y"
+				DataType = "integer">
+				<Description>Number of pixels on the Y axis.</Description>
+			</Element>
+			<Element
+				Name= "PixelType"
+				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "FileSHA1"
+				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+				DataType = "string"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "IMAGE_PIXELS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "IMAGE_PIXELS.PATH"
+				DataType = "string"/>
+    </SemanticType>
+      
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Area Statistics" 
+    Category="Signature Extraction"
+	ModuleType = "OME::Analysis::Handlers::MatlabHandler"
+	ProgramID = "ome_AreaStat" >
+	<Description>Converts the PixelPlane to a binary image and computes 3 area statistics - Number of Area elements (blobs), histogram of Area (out of 10 bins), and average area size.</Description>
+	<Declaration>
+		<FormalInput Name = "PixelsPlane" SemanticTypeName = "PixelsPlane" Count="!"/>
+		<FormalOutput Name = "AreaStats" SemanticTypeName = "AreaStats" Count="!"/>
+	</Declaration>
+      <ExecutionInstructions ExecutionPoint="precalculateImage"
+		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+
+        <!-- specifies the order that the Matlab function expects the
+             formal inputs -->
+        <Inputs>
+          <Input Name="PixelsPlane" loadPixelsPlane="true"/>
+        </Inputs>
+
+        <!-- specifies the order of the formal outputs -->
+        <Outputs>
+          <Output Name="AreaStats"/>
+        </Outputs>
+      </ExecutionInstructions>
+</AnalysisModule>
+
+    <Category Path="Signature Extraction">
+      <Description></Description>
+    </Category>
+
+</AML:AnalysisModuleLibrary>
+</OME>

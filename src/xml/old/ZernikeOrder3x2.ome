@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+	<SemanticType Name="ZernikeCoefficientsOrder3x2" AppliesTo="I">
+	  <Description>Stores Zernike Coefficients of Order 2x3</Description>
+      <Element Name="Index1x1_Abs"  DBLocation="ZERNIKE.INDEX1_1_ABS" DataType="double"/>
+      <Element Name="Index1x1_Real" DBLocation="ZERNIKE.INDEX1_1_REAL" DataType="double"/>
+      <Element Name="Index1x1_Img"  DBLocation="ZERNIKE.INDEX1_1_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+      <Element Name="Index1x2_Abs"  DBLocation="ZERNIKE.INDEX1_2_ABS" DataType="double"/>
+      <Element Name="Index1x2_Real" DBLocation="ZERNIKE.INDEX1_2_REAL" DataType="double"/>
+      <Element Name="Index1x2_Img"  DBLocation="ZERNIKE.INDEX1_2_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+      <Element Name="Index2x1_Abs"  DBLocation="ZERNIKE.INDEX2_1_ABS" DataType="double"/>
+      <Element Name="Index2x1_Real" DBLocation="ZERNIKE.INDEX2_1_REAL" DataType="double"/>
+      <Element Name="Index2x1_Img"  DBLocation="ZERNIKE.INDEX2_1_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+      <Element Name="Index2x2_Abs"  DBLocation="ZERNIKE.INDEX2_2_ABS" DataType="double"/>
+      <Element Name="Index2x2_Real" DBLocation="ZERNIKE.INDEX2_2_REAL" DataType="double"/>
+      <Element Name="Index2x2_Img"  DBLocation="ZERNIKE.INDEX2_2_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+      <Element Name="Index3x1_Abs"  DBLocation="ZERNIKE.INDEX3_1_ABS" DataType="double"/>
+      <Element Name="Index3x1_Real" DBLocation="ZERNIKE.INDEX3_1_REAL" DataType="double"/>
+      <Element Name="Index3x1_Img"  DBLocation="ZERNIKE.INDEX3_1_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+      <Element Name="Index3x2_Abs"  DBLocation="ZERNIKE.INDEX3_2_ABS" DataType="double"/>
+      <Element Name="Index3x2_Real" DBLocation="ZERNIKE.INDEX3_2_REAL" DataType="double"/>
+      <Element Name="Index3x2_Img"  DBLocation="ZERNIKE.INDEX3_2_IMG" DataType="double">
+        <Description>Stores the imaginary portion of the coefficient.</Description>
+      </Element>
+    </SemanticType>
+    <SemanticType Name="PixelsPlane" AppliesTo="I">
+			<Description>Stores two dimensional Pixel Data, including the extent of each dimension.</Description>
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_PIXELS.SIZE_X"
+				DataType = "integer">
+				<Description>Number of pixels on the X axis.</Description>
+			</Element>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_PIXELS.SIZE_Y"
+				DataType = "integer">
+				<Description>Number of pixels on the Y axis.</Description>
+			</Element>
+			<Element
+				Name= "PixelType"
+				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "FileSHA1"
+				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+				DataType = "string"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "IMAGE_PIXELS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "IMAGE_PIXELS.PATH"
+				DataType = "string"/>
+    </SemanticType>
+      
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Zernike Coefficients Order 3x2" 
+    Category="Signature Extraction"
+	ModuleType = "OME::Analysis::Handlers::MatlabHandler"
+	ProgramID = "Zernike"
+	ID="urn:lsid:openmicroscopy.org:Module:13">
+	<Description></Description>
+	<Declaration>
+		<FormalInput Name = "PixelsPlane" SemanticTypeName = "PixelsPlane" Count="!"/>
+		<FormalOutput Name = "Coefficients" SemanticTypeName = "ZernikeCoefficientsOrder3x2" Count="!"/>
+	</Declaration>
+      <ExecutionInstructions ExecutionPoint="startImage"
+		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+
+        <!-- specifies the order that the Matlab function expects the
+             formal inputs -->
+        <Inputs>
+          <Input Name="PixelsPlane" loadPixelsPlane="true"/>
+          <Input Value="2"/>
+          <Input Value="3"/>
+        </Inputs>
+
+        <!-- specifies the order of the formal outputs -->
+        <Outputs>
+          <Output Name="Coefficients"/>
+        </Outputs>
+      </ExecutionInstructions>
+</AnalysisModule>
+
+    <Category Path="Signature Extraction">
+      <Description></Description>
+    </Category>
+
+</AML:AnalysisModuleLibrary>
+</OME>

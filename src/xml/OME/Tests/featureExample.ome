@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+    <SemanticType Name="Bounds" AppliesTo="F">
+      <Description>Bounds of a feature</Description>
+      <Element Name="X" DBLocation="BOUNDS.X" DataType="integer"/>
+      <Element Name="Y" DBLocation="BOUNDS.Y" DataType="integer"/>
+      <Element Name="Width" DBLocation="BOUNDS.WIDTH" DataType="integer"/>
+      <Element Name="Height" DBLocation="BOUNDS.HEIGHT" DataType="integer"/>
+    </SemanticType>
+    <SemanticType Name="Ratio" AppliesTo="F">
+      <Element Name="Ratio" DBLocation="RATIO.RATIO" DataType="float"/>
+    </SemanticType>
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule
+    ModuleName="Find cells"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
+    ProgramID=""
+    Category="Testing"
+    NewFeatureName="CELL"
+    ID="urn:lsid:openmicroscopy.org:Module:24">
+  <Description>Find cells</Description>
+
+  <Declaration>
+    <FormalOutput
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    ModuleName="Find mito"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
+    ProgramID=""
+    Category="Testing"
+    FeatureIterator="CELL"
+    NewFeatureName="MITOCHONDRIA"
+    ID="urn:lsid:openmicroscopy.org:Module:25">
+  <Description>Find mito</Description>
+
+  <Declaration>
+    <FormalInput
+        Name="Input bounds" SemanticTypeName="Bounds"/>
+
+    <FormalOutput
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    ModuleName="Find golgi"
+    ModuleType="OME::Analysis::Modules::Tests::FindBounds"
+    ProgramID=""
+    Category="Testing"
+    FeatureIterator="CELL"
+    NewFeatureName="GOLGI"
+    ID="urn:lsid:openmicroscopy.org:Module:26">
+  <Description>Find golgi</Description>
+
+  <Declaration>
+    <FormalInput
+        Name="Input bounds" SemanticTypeName="Bounds"/>
+
+    <FormalOutput
+        Name="Output bounds" SemanticTypeName="Bounds"
+        IBelongTo="[Feature]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<AnalysisModule
+    ModuleName="Find ratio"
+    ModuleType="OME::Analysis::Modules::Tests::FindRatio"
+    ProgramID=""
+    Category="Testing"
+    FeatureIterator="CELL"
+    ID="urn:lsid:openmicroscopy.org:Module:27">
+  <Description>Find ratio</Description>
+
+  <Declaration>
+    <FormalInput
+        Name="Mito bounds" SemanticTypeName="Bounds"/>
+
+    <FormalInput
+        Name="Golgi bounds" SemanticTypeName="Bounds"/>
+
+    <FormalOutput
+        Name="Golgi-mito ratio" SemanticTypeName="Ratio"
+        IBelongTo="[Iterator]" />
+
+  </Declaration>
+</AnalysisModule>
+
+<Category Path="Testing">
+	<Description>Modules in this category do nothing useful. They merely test the functionality of the system.</Description>
+</Category>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

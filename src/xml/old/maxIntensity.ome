@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Josiah Johnston <siah@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+	<SemanticType Name="ChannelIndex" AppliesTo="I">
+		<Description>Specifies a single channel in a Pixels attribute.</Description>
+        <Element Name="theC" DBLocation="CHANNEL_INDEX.THE_C" DataType="integer"/>
+        <Element Name="Pixels" DBLocation="CHANNEL_INDEX.PIXELS" DataType="reference" RefersTo = "Pixels"/>
+	</SemanticType>
+
+</STD:SemanticTypeDefinitions>
+
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+<AnalysisModule ModuleName = "Maximum Intensity Projection" 
+        Category="Plane Conversion"
+	ModuleType = "OME::Analysis::Handlers::CLIHandler" ProgramID = "/OME/bin/maxIntensity"
+	ID="urn:lsid:openmicroscopy.org:Module:9">
+	<Description>Calculate pixel statistics for each XY plane.</Description>
+	<Declaration>
+		<FormalInput Name = "ChannelIndex" SemanticTypeName = "ChannelIndex" Count = "!"/>
+		<FormalOutput Name = "PixelsPlane" SemanticTypeName = "Pixels" Count="!"/>
+	</Declaration>
+	<ExecutionInstructions ExecutionPoint = "startImage" MakesNewFeature = "false" 
+		xmlns="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd">
+		<CommandLine>
+			<Parameter>
+				<InputSubString>
+					<RawText>InPath=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<PixelsInput Location = "ChannelIndex.Pixels" SubstituteWith = "path"/>
+				</InputSubString>
+			</Parameter>
+			<Parameter>
+				<InputSubString>
+					<RawText>OutPath=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<TempFile FileID="PlanePath"/>
+				</InputSubString>
+			</Parameter>
+			<Parameter>
+				<InputSubString>
+					<RawText>Dims=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.SizeX"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.SizeY"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.SizeZ"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.SizeC"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.SizeT"/>
+				</InputSubString>
+				<InputSubString>
+					<RawText>,</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.Pixels.BitsPerPixel" DivideBy = "8"/>
+				</InputSubString>
+			</Parameter>
+			<Parameter>
+				<InputSubString>
+					<RawText>ProjectionChannel=</RawText>
+				</InputSubString>
+				<InputSubString>
+					<Input Location = "ChannelIndex.theC"/>
+				</InputSubString>
+			</Parameter>
+		</CommandLine>
+		<PixelOutput FormalOutput="PixelsPlane">
+			<SizeX Location = "ChannelIndex.Pixels.SizeX"/>
+			<SizeY Location = "ChannelIndex.Pixels.SizeY"/>
+			<SizeZ Value = "1"/>
+			<SizeC Value = "1"/>
+			<SizeT Value = "1"/>
+			<PixelType Location = "ChannelIndex.Pixels.PixelType"/>
+			<BitsPerPixel Location = "ChannelIndex.Pixels.BitsPerPixel"/>
+			<Path FileID = "PlanePath"/>
+		</PixelOutput>
+	</ExecutionInstructions>
+</AnalysisModule>
+
+    <Category Path="Plane Conversion">
+      <Description>Modules for converting 5d Pixels to 2d Pixel Planes</Description>
+    </Category>
+
+</AML:AnalysisModuleLibrary>
+
+</OME>

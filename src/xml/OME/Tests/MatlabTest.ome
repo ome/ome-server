@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Tom Macura <tmacura@nih.gov>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+<OME
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+  xmlns:xsi=
+    "http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:AML=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+  xmlns:STD=
+    "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+  xsi:schemaLocation = "
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+    http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+      http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+  <AML:AnalysisModuleLibrary
+     xmlns=
+     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation=
+     "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+      http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
+
+	<AnalysisModule
+       ModuleName="Matlab Pixels Test"
+       Category="Statistics"
+       ModuleType="OME::Analysis::Handlers::MatlabHandler"
+       ProgramID="ome_pixelsTest"
+       ID="urn:lsid:openmicroscopy.org:Module:70">
+      <Description>Transposes the image matrix.</Description>
+      <Declaration>
+        <FormalInput
+           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+        <FormalOutput
+           Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+      </Declaration>
+
+      <ExecutionInstructions ExecutionPoint="startImage"
+		xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" 
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
+        <!-- specifies which of the references in the actual inputs
+             needed to be populated -->
+
+        <!-- specifies the order that the Matlab function expects the
+             formal inputs -->
+        <Inputs>
+          <Input Name="Pixels"/>
+        </Inputs>
+
+        <!-- specifies the order of the formal outputs -->
+        <Outputs>
+          <Output Name="Pixels"/>
+        </Outputs>
+      </ExecutionInstructions>
+    </AnalysisModule>
+  </AML:AnalysisModuleLibrary>
+</OME>
+  
+<AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+  <AnalysisChain Name="Matlab test chain" Locked="false">
+    <Nodes>
+          <Node NodeID = "Files"  ProgramName = "Original files"/>
+          <Node NodeID = "Import" ProgramName = "Image import"/>
+          <Node NodeID = "Test"   ProgramName="Matlab Pixels Test"/>
+    </Nodes>
+    <Links>
+      <Link FromNodeID="Files"  FromOutputName="Files"  ToNodeID="Import" ToInputName="Files"/>
+      <Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Test"   ToInputName="Pixels"/>
+    </Links>
+  </AnalysisChain>
+</AnalysisChains>
