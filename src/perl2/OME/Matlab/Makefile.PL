@@ -27,71 +27,126 @@
 #
 #-------------------------------------------------------------------------------
 
-#-------------------------------------------------------------------------------
-#
-# Written by:    Tom Macura <tmacura@nih.gov>
-#
-#-------------------------------------------------------------------------------
-
-use Config;
 use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
-my $matlab_path;
 
-if (scalar(@ARGV) eq 0) {
-	print "Where is MATLAB installed?: ";
+# Make sure we have a matlab executable
+my @extra_paths = glob ("/Applications/MATLAB*/bin");
+push (@extra_paths,glob ("/Applications/matlab*/bin"));
+push (@extra_paths,glob ("/Applications/Matlab*/bin"));
+my $matlab_path = which ('matlab',\@extra_paths);
+
+if (scalar(@ARGV) eq 0 and not $matlab_path) {
+	print "\n\nWhere is Matlab installed?\n";
+	print ">> ";
 	$matlab_path = <STDIN>;
 	chomp($matlab_path);
 } elsif (scalar(@ARGV) eq 1) {
 	$matlab_path = shift(@ARGV);
-	chomp($matlab_path);
-} else {
-	die "Incorrect usage \n";
 }
 
-my $suffix;
-if ($Config{'osname'} eq "darwin") {
-	$os     = "mac";
-	$suffix = "dylib";
-} elsif ($Config{'osname'} eq "linux") {
-	$os     = "glx86";
-	$suffix = "so";
-}
-
-my @libFiles = ("eng", "mat", "mx", "ut", "dl");
-my @matlabInc  = ("$matlab_path/extern/include"); 
-my @matlabLib  = ("$matlab_path/bin/$os", "$matlab_path/sys/os/$os");
-
-my $matlabIncStr = join (" -I", "", @matlabInc);
-my $matlabLibStr = join (" -L", "", @matlabLib);
-my $matlabLibFlags = join (" -l", "", @libFiles);
-
-# verify that all the required matlab library files could be found in one of the library
-# directories
-foreach my $lib (@libFiles) {
-	my $flag = 0;
-	foreach my $path (@matlabLib) {
-		if (-e "$path/lib$lib.$suffix") {
-			$flag =1;
-		}	
-	}
-	if ($flag eq 0) {
-		print STDERR "WARNING: Required MATLAB library lib$lib.$suffix was not found in $matlabLibStr\n";
-	}
-}
+my $path_test = $matlab_path;
+$path_test = "$matlab_path/bin/matlab" unless -x $path_test and -f $path_test;
+$path_test = "$matlab_path/matlab" unless -x $path_test and -f $path_test;
+die "Could not find matlab executable" unless -x $path_test and -f $path_test;
+$matlab_path = $path_test;
 
 print STDERR "Using Matlab located in $matlab_path\n";
-print STDERR "  Include: $matlabIncStr\n";
-print STDERR "  Lib:     $matlabLibStr $matlabLibFlags\n";
+
+# Execute the executable with a -n flag to get the ARCH and MATLAB variables.
+my @matlab_config = `$matlab_path -n`;
+my ($matlab_dir, $matlab_arch);
+foreach (@matlab_config) {
+	$matlab_arch = $1 if $_ =~ /\s+ARCH\s+=\s+(.+)$/;
+	$matlab_dir  = $1 if $_ =~ /\s+MATLAB\s+=\s(.+)$/;
+}
+die "Could not find matlab architecture." unless $matlab_arch;
+die "Could not find matlab home." unless $matlab_dir;
+
+
+# The libs we need are in $matlab_dir/extern/lib/$arch
+# The includes we need are in $matlab_dir/extern/include
+# The mac matlab build needs libdl (dlcompat), although it doesn't really need it
+#  $matlab_dir/sys/os/mac/ (we also need to specify -ldl so that the library gets found
+my $matlab_include = "$matlab_dir/extern/include";
+my $matlab_lib = "-L$matlab_dir/extern/lib/$matlab_arch -lmx -leng -lut -lmat";
+$matlab_lib .= " -L$matlab_dir/sys/os/mac -ldl" if $matlab_arch eq 'mac';
+
+print STDERR "  Include: $matlab_include\n";
+print STDERR "  Lib:     $matlab_lib\n\n";
 
 WriteMakefile(
     'NAME'		    => 'OME::Matlab',
     'VERSION_FROM'	=> '../../OME.pm', # finds $VERSION
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
-    'LIBS'		    => ["-L/usr/local/lib -L/sw/lib $matlabLibStr $matlabLibFlags"], 
+    'LIBS'		    => ["-L/usr/local/lib -L/sw/lib $matlab_lib"], # e.g., '-lm'
     'DEFINE'		=> '', # e.g., '-DHAVE_SOMETHING'
-    'INC'		    => $matlabIncStr, # e.g., '-I/usr/include/other'
+    'INC'		    => "-I$matlab_include", # e.g., '-I/usr/include/other'
     'realclean'     => {FILES => '../blib'},
     'clean'         => {FILES => '../blib'},
 );
+
+
+# Ported from FreeBSD's /usr/bin/which
+#
+# Copyright (c) 1995 Wolfram Schneider <wosch@FreeBSD.org>. Berlin.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+
+# Implements the standard "which" functionality, searching the path for a
+# certain binary.
+#
+# RETURNS	The absolute path to the binary or 0 if nothing is found
+#
+
+sub which {
+    my $prog = shift;
+    my $extra_paths = shift;
+
+    my @path = split(/:/, $ENV{'PATH'});
+    if ($ENV{'PATH'} =~ /:$/) {
+        $#path = $#path + 1;
+        $path[$#path] = "";
+    }
+
+	push (@path,'/usr/sbin');
+	push (@path,@$extra_paths) if $extra_paths;
+
+    if ("$prog" =~ '/' && -x "$prog" && -f "$prog") {
+        return $prog;
+    } else {
+        foreach my $dir (@path) {
+            $dir = "." if !$dir;
+            if (-x "$dir/$prog" && -f "$dir/$prog") {
+                return "$dir/$prog";
+            }
+        }
+    }
+
+    return 0;
+}
+
+# END modified BSD Licensed code
+
+
