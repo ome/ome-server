@@ -143,10 +143,6 @@ static void OME_StartDocument(ParserState *state) {
 	
 }
 
-static void OME_EndDocument( ParserState *state ) {
-}
-
-
 static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
 	char *localName;
 
