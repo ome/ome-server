@@ -35,7 +35,8 @@ function $JStype (CGI_URL,name,Dims,Path,isRGB,WBS,RGBon,optionsStr,Wavelengths,
 	this.RGBon = RGBon;
 	this.options.push ('RGBon');
 
-
+// Stats does not seem to be used. WBS needs to be updated with change to t and 
+// wavelengths. It needs info from Stats to do this.
 	
 	this.setParam = setParam;
 	this.setType  = setType;
@@ -210,7 +211,11 @@ An HTML snippet.
 
 =item L<"RGBon()">
 
+Uses this to find which RGB channels are turned on.
+
 =item L<"MakeWaveMenu()">
+
+Uses this to generate a combo box of wavelengths.
 
 =back
 
@@ -261,7 +266,7 @@ none
 
 A line of javascript.
 
-=item Overrides function in L<OME::Graphics::JavaScript::Layer/"JSinstance()">
+=item Overrides function L<OME::Graphics::JavaScript::Layer/"JSinstance()">
 
 =item Uses functions
 
@@ -273,7 +278,13 @@ A line of javascript.
 
 =item L<"WBS()">
 
+Uses this to get a WBS table to send to the JavaScript function as an initialzation
+parameter.
+
 =item L<"RGBon()">
+
+Uses this to find which RGB channels should be on. It needs this for initialization
+parameters for the JavaScript function.
 
 =back
 
@@ -315,7 +326,7 @@ my $isRGB = $self->{isRGB} ? 'true' : 'false';
 # The WBS array is specified as a comma-separated list in the DB, which becomes a string in our {WBS} field.
 # The JS_WBS represents this as a JS Array.
 # Call the get method to make sure its kickin - we'll refer to it by field later.
-	$self->WBS();
+	$self->WBS();  #this has side affect of calling Wavelengths & Stats. This side affect is used below.
 	$self->RGBon();
 
 
@@ -334,11 +345,12 @@ ENDJS
 
 =item Description
 
-Issues a direct SQL query to get wavelengths and statistics for the image. It uses these results to fill the variables
-I<$self-E<gt>{Wavelengths}> and I<$self-E<gt>{JS_Wavelengths}>.
+Issues a direct SQL query to get wavelengths and statistics for the image. It uses these
+results to fill the variables I<$self-E<gt>{Wavelengths}> and I<$self-E<gt>{JS_Wavelengths}>.
+It will generate emmission wavelength and fluor if one is specified and the other is not.
 
 I<$self-E<gt>{Wavelengths}> is a reference to a list of wavelengths. These wavelengths are a list of wavenumber, 
-emission wavelength, and flour.
+emission wavelength, and fluor.
 I<$self-E<gt>{JS_Wavelengths}> is a string to be interpretted in Javascript. In javascript it is an array of hashtables. It
 contains the same information as I<$self-E<gt>{Wavelengths}>.
 
@@ -358,7 +370,7 @@ See Description above for explanation of this variable.
 
 =item L<OME::Session/"DBH()">
 
-=item DBI->prepare();
+=item DBI->prepare()
 
 =item $sth->execute()
 
@@ -479,7 +491,8 @@ sub JS_Wavelengths {
 
 =item Description
 
-Generates a string representing a javascript three member array of 0|1 specifying which of the three RGB channels are on. 
+Decides what RBG channels should be on.
+This info is stored in a string representing a javascript three member array of 0|1. 
 This is stored in I<$self-E<gt>RGBon>.
 
 =item Parameters
@@ -522,6 +535,12 @@ sub RGBon {
 		for ($i = 0; $i < scalar (@$Wavelengths); $i++) {
 			$color = undef;
 			if (exists $fluorsColors->{$Wavelengths->[$i]->[2]}) {$color = $fluorsColors->{$Wavelengths->[$i]->[2]};}
+			# this is screwy.
+			#	Say at $i=0, $color isn't defined. So red ($RGB[0]) is turned on.
+			#	And at $i=1, $color is defined to be R. So red is turned on again.
+			#   Two wavelengths exist, and one channel is turned on.
+			# It needs to turn on defined colors, then go back over the list
+			# and turn on more channels if necessary.
 			if (not defined $color) {
 				$RGBon[$i] = 1;
 			} else {
@@ -638,7 +657,12 @@ Constructs the WBS array with defaults. This information is stored in I<$self-E<
 
 I<$self-E<gt>{WBS}> is a one dimensional array of 12 elements. Data is stored in four groups of three. Each of the
 four groups represented a channel. The order of the channels is Red, Green, Blue, and Grey. The data in each of
-the groups is wavenumber, black level, and scale. Go somewhere else if you need these explained.
+the groups is wavenumber, black level, and scale. Go somewhere else if you need the function of these explained.
+
+The default black level of a channel is the geomean of the xyz stack selected by the
+channel's wavelength and theT.
+The default scale of a channel is currently 255 / (4*sigma). sigma is the standard
+deviation of the xyz stack.
 
 I<$self-E<gt>{JS_WBS}> contains the same data and structure converted to a string for use in javascript.
 
@@ -658,7 +682,12 @@ see Description above for explanation of this variable.
 
 =item L<"Wavelengths()">
 
+Uses the sorted list of wavenumbers Wavelengths provides. This is used to assign
+waves to RGB channels. 
+
 =item L<"Stats()">
+
+Uses the stat info this provides to generate default black level and scale.
 
 =back
 
@@ -708,7 +737,7 @@ sub WBS {
 	$WBS[10] = sprintf ('%d',$Stats->[$gryWave][$theT]->{geomean});
 
 	# Assign the scale based on the white level, which is set to geomean + 4*sigma
-	# the scale is 255 / white level.
+	# the scale is 255 / 4*sigma.
 	$WBS[ 2] = sprintf ('%.5f',255 / ($Stats->[$redWave][$theT]->{sigma} * 4));
 	$WBS[ 5] = sprintf ('%.5f',255 / ($Stats->[$grnWave][$theT]->{sigma} * 4));
 	$WBS[ 8] = sprintf ('%.5f',255 / ($Stats->[$bluWave][$theT]->{sigma} * 4));
@@ -731,8 +760,9 @@ sub WBS {
 
 =item Description
 
-This generates a html comboBox (AKA SELECT) form control that lists all the wavelengths. Depending on available information,
-wavelengths will be represented by fluors, physical wavelengths, or wavenumbers.
+This generates a html comboBox (AKA SELECT) form control that lists all the wavelengths.
+Depending on available information, wavelengths will be represented by fluors, physical 
+wavelengths, or wavenumbers.
 
 =item Parameters
 
@@ -740,7 +770,8 @@ I<$WBSidx>
 
 valid values of I<$WBSidx> are 0, 3, 6, and 9. Respectively, these will represent the wavenumbers assigned to the
 Red, Green, Blue, and Grey channels by L<"WBS()">. Basically, use the number that corrosponds with the channel the generated
-combo box will control.
+combo box will control. It uses this to find the wave in the combo box that nees to be
+selected.
 
 =item Returns
 
@@ -752,7 +783,12 @@ An HTML SELECT element
 
 =item L<"WBS()">
 
+Uses this to find what wavenumber is assigned to a given channel.
+
 =item L<"Wavelengths()">
+
+Uses this to get a list of the fluors this image has. It uses the fluors (or whatever
+information ends up in that field) as content for the combo box.
 
 =back
 
