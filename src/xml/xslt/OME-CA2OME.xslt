@@ -120,7 +120,8 @@
 				[name() != 'LogicalChannel']
 				[name() != 'DisplayOptions']
 				[name() != 'StageLabel']
-				[name() != 'ImagePlate']"
+				[name() != 'ImagePlate']
+				[name() != 'Pixels']"
 				mode = "pass-through-CAs"/>
 		</xsl:element>
 	</xsl:template>
@@ -310,6 +311,7 @@
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:DisplayOptions"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:StageLabel"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImagePlate"/>
+			<xsl:apply-templates select = "CA:CustomAttributes/CA:Pixels"  mode = "pass-through-CAs"/>
 			<xsl:apply-templates select = "CA:Feature"/>
 			<xsl:apply-templates select = "CA:CustomAttributes" mode = "pass-through-CAs"/>
 		</xsl:element>
