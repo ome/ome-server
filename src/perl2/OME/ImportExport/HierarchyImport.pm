@@ -274,14 +274,18 @@ sub processDOM {
 # This is a hack to rename the pixels repository file to the standard naming convention
 # added by josiah Friday 13, June, 2003
 # Modified by IGG 06/27/03 to also assign the proper repository ID to the pixels.
+# Modified DC 08/12/2003 to only normalize the "name" portion of the
+# filename, not the id or punctuation.  (It was turned 5-abc.ori into
+# 5_abc_ori -- not ideal.)
 			if( $CA->tagName() eq 'Pixels' ) {
 				# Get the Repository object from the LSID
 				my $repository = $lsid->getLocalObject ($CA->getAttribute('Repository'))
 					or die "A repository was not assigned for Pixels ID: '".$CA->getAttribute('ID')."'!\n";
 				# Assign the pixels to the proper repository
 				$imgAttr->Repository ($repository);
-				my $newPath = $imgAttr->id().'-'.$object->name().'.ori';
-				$newPath =~ s/[^a-zA-Z0-9]/_/g;
+                                my $normalized_name = $object->name();
+				$normalized_name =~ s/[^a-zA-Z0-9]/_/g;
+				my $newPath = $imgAttr->id().'-'.$normalized_name.'.ori';
 				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
 				system( $cmd ) eq 0 or die "Could not rename a repository file!\ncommand was '$cmd'\n";
 				$imgAttr->Path( $newPath );
@@ -591,14 +595,12 @@ sub getObjectTypeInfo ($$) {
 			}
 			logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
 		}
-		my $granularity =  $ST->granularity();
-		if ($granularity eq 'D') {
-			$objectData->{dataset_id} = $parentID;
-		} elsif ($granularity eq 'I') {
-			$objectData->{image_id} = $parentID;
-		} elsif ($granularity eq 'F') {
-			$objectData->{feature_id} = $parentID;
-		}
+
+                # (Modified DC - 08/12/2003)  We do not need to set the
+                # target field (dataset_id, image_id, or feature_id), as
+                # this will be set appropriately by the call to
+                # $factory->newAttribute().
+
 		$isAttribute = 1;
 	}
 	return ($objectType,$isAttribute,$objectData,$refCols);
