@@ -259,7 +259,10 @@ sub execute {
 			undef $ADMIN_USER;
 			while (not $ADMIN_USER) {
 				$ADMIN_USER = confirm_default ("Unix user to include in the OME group", $admin_def);
-				undef $ADMIN_USER unless getpwnam($ADMIN_USER);
+				if (not getpwnam($ADMIN_USER)) {
+					print "$ADMIN_USER doesn't exist.  Try again.\n";
+					undef $ADMIN_USER;
+				}
 			}
 		} else {
 			$ADMIN_USER = '';
