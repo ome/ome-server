@@ -31,9 +31,7 @@
 var svgns = "http://www.w3.org/2000/svg";
 
 /*****
-
 	class constants
-	
 *****/
 Scale.VERSION = 0.2;
 Scale.scaleWidth = 180;
@@ -245,9 +243,9 @@ Scale.prototype.tieLogicalChannelPopupList = function(logicalChannelPopupList) {
 	this.tiedLogicalChannelPopupList = logicalChannelPopupList;
 };
 
-/********************************************************************************************/
-/*                                 Private Functions */
-/********************************************************************************************/
+/********************************************************************************************
+                                 Private Functions 
+********************************************************************************************/
 
 
 Scale.updateCBW = function() {
