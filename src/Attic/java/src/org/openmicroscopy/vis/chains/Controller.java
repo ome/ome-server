@@ -78,7 +78,7 @@ public class Controller  implements LoginResponder {
 		"org/openmicroscopy/vis/chains/resources/splash.jpg";
     
     private static final String COPY_STRING =
-    	"Copyright 2003, OME: MIT,NIH, University of Dundee";
+    	"Copyright 2003-2004, OME: MIT,NIH, University of Dundee";
 	private static final int SPLASH_DELAY=5000; // 5 seconds
 	
 	private Font copyFont = new Font("Sans-Serif",Font.BOLD,9);
