@@ -129,9 +129,9 @@ sub getPageTitle {
 sub getPageBody {
 	my $self = shift;	
 	my $q    = $self->CGI();
-	my $type = $q->param( 'Type' );
-	$type = $q->param( 'Locked_Type' ) unless $type;
-	my $html = $q->startform();
+	my $type = $q->param( 'Type' ) || $q->param( 'Locked_Type' );
+#	$type = $q->param( 'Locked_Type' ) unless $type;
+	my $html = $q->startform( -action => $self->pageURL( 'OME::Web::Search' ) );
 	my %tmpl_data;
 
 	# Return results of a select
@@ -209,10 +209,19 @@ END_HTML
 		# accessor mode
 		if( grep( /^accessor$/, @cgi_search_names ) ) {
 			my ( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = split( /,/, $q->param( 'accessor' ) );
-			my $objectTaAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
+			my $objectToAccessFrom = $self->Session()->Factory()->loadObject( $typeToAccessFrom, $idToAccessFrom )
 				or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
-			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->render( $objectTaAccessFrom, 'ref' ).".";
-		
+			$tmpl_data{ accessor_descriptor } = "Showing $common_name(s) associated with ".$render->render( $objectToAccessFrom, 'ref' ).".";
+			# The next four lines are a kludge to get stuff working. It's definitely not good design.
+			# Get an order by, so that paging will work. __sort_field will set the cgi param appropriately.
+			my @fields = $render->getFields( $type, 'summary' );
+			my ($form_fields, $search_paths) = $render->getSearchFields( $type, \@fields );
+			my $order = $self->__sort_field( $search_paths, $search_paths->{ $fields[0] });
+			# These generally come in as url-parameters initially. Make sure they don't get lost.
+			$tmpl_data{ accessor_descriptor } .=
+				$q->hidden( -name => 'Type', -default => $type ).
+				$q->hidden( -name => 'accessor', -default => $q->param( 'accessor' ) ).
+				$q->hidden( -name => 'search_names', -default => $q->param( 'search_names' ) );
 		# search mode
 		} else {
 			my @fields = $render->getFields( $type, 'summary' );
@@ -336,18 +345,18 @@ sub search {
 
 	# load type
 	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-	my ($objectTaAccessFrom, $accessorMethod);
+	my ($objectToAccessFrom, $accessorMethod);
 
 	# count Objects
  	if( $searchParams{ 'accessor' } ) {
  		my ( $typeToAccessFrom, $idToAccessFrom);
  		( $typeToAccessFrom, $idToAccessFrom, $accessorMethod ) = @{ $searchParams{ 'accessor' } };
- 		$objectTaAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
+ 		$objectToAccessFrom = $factory->loadObject( $typeToAccessFrom, $idToAccessFrom )
  			or die "Could not load $typeToAccessFrom, id = $idToAccessFrom";
  		$typeToAccessFrom->getColumnType( $accessorMethod )
  			or die "$accessorMethod is an unknown accessor for $typeToAccessFrom";
  		my $countAccessor = "count_".$accessorMethod;
- 		$object_count = $objectTaAccessFrom->$countAccessor();
+ 		$object_count = $objectToAccessFrom->$countAccessor();
  	} else {
 		$object_count = $factory->countObjectsLike( $formal_name, %searchParams );
 	}
@@ -366,6 +375,14 @@ sub search {
 	}
 
 	# Turn pages
+	( 
+		$searchParams{ __limit } ? 
+		'__limit => '.$searchParams{ __limit }.', ' : 
+		''
+	).( $searchParams{ __offset } ?
+		'__offset => '.$searchParams{ __offset } :
+		''
+	)." )";
 	my $currentPage = int( $searchParams{ __offset } / $searchParams{ __limit } );
 	my $action = $q->param( 'page_action' ) ;
 	if( $action ) {
@@ -392,7 +409,17 @@ sub search {
 	# get objects
 	# Use accessor
  	if( $searchParams{ 'accessor' } ) {
- 		@objects = $objectTaAccessFrom->$accessorMethod(
+ 		logdbg "debug", "Retrieving object from an accessor method:\n\t".
+ 			$objectToAccessFrom->getFormalName()."(id=".$objectToAccessFrom->id.")->".
+ 			"$accessorMethod ( ".( 
+ 				$searchParams{ __limit } ? 
+ 				'__limit => '.$searchParams{ __limit }.', ' : 
+ 				''
+ 			).( $searchParams{ __offset } ?
+ 				'__offset => '.$searchParams{ __offset } :
+ 				''
+ 			)." )";
+ 		@objects = $objectToAccessFrom->$accessorMethod(
  			( $searchParams{ __limit } ? 
  				(__limit => $searchParams{ __limit }) : 
  				()
@@ -404,6 +431,9 @@ sub search {
  		);
  	# use the search parameters
  	} else {
+ 		logdbg "debug", "Retrieving object from search parameters:\n\t".
+ 			"factory->findObjectsLike( $formal_name, ".
+ 			join( ', ', map( $_." => ".$searchParams{ $_ }, keys %searchParams ) )." )";
 		@objects = $factory->findObjectsLike( $formal_name, %searchParams );
 	}
 		
