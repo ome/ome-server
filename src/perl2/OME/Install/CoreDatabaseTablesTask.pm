@@ -713,22 +713,33 @@ sub execute {
     #*********
 
     # Make sure our OME_USER is also a Postgres user
-    print "Creating OME PostgreSQL SUPERUSER ";
+    print "Creating OME PostgreSQL SUPERUSER ($OME_USER)";
     $retval = create_superuser ($OME_USER, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to create PostgreSQL superuser, see $LOGFILE_NAME for details."
+        and croak "Unable to create PostgreSQL superuser '$OME_USER', see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
 
     # Also make sure the Apache Unix user is a Postgres user
-    print "Creating Apache PostgreSQL SUPERUSER ";
+    print "Creating Apache PostgreSQL SUPERUSER ($APACHE_USER)";
     $retval = create_superuser ($APACHE_USER, $LOGFILE);
     
     print BOLD, "[FAILURE]", RESET, ".\n"
-        and croak "Unable to create PostgreSQL superuser, see $LOGFILE_NAME for details."
+        and croak "Unable to create PostgreSQL superuser '$APACHE_USER', see $LOGFILE_NAME for details."
         unless $retval;
     print BOLD, "[SUCCESS]", RESET, ".\n";
+
+    # Also make sure the admin user is a Postgres user
+	if ($ADMIN_USER) {
+		print "Creating Admin PostgreSQL SUPERUSER ($ADMIN_USER)";
+		$retval = create_superuser ($ADMIN_USER, $LOGFILE);
+		
+		print BOLD, "[FAILURE]", RESET, ".\n"
+			and croak "Unable to create PostgreSQL superuser '$ADMIN_USER', see $LOGFILE_NAME for details."
+			unless $retval;
+		print BOLD, "[SUCCESS]", RESET, ".\n";
+	}
 
     # Drop our UID to the OME_USER
     $EUID = $OME_UID;
