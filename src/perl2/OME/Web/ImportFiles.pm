@@ -543,7 +543,7 @@ sub __getImportBody {
 	# IMPORT
 	while ($self->__resolveQueue(\@import_q)) {};
 
-	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_q,{AllowDuplicates => 1});
+	OME::Tasks::ImageTasks::forkedImportFiles($import_d, \@import_q);
 
 	return '';
 }
