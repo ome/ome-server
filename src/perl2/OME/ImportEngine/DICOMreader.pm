@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# OME::ImportEngine::STKreader.pm
+# OME::ImportEngine::DICOMreader.pm
 #
 #-------------------------------------------------------------------------------
 #
@@ -55,9 +55,9 @@ OME::ImportEngine::DICOMreader.pm  -  DICOM format image importer
 This importer class handles images in the DICOM format.
 
 The getGroups() method discovers which files in a set of input files are
-in the DICOM format. DICOM files each contains a 5D image, meaning that 
-each DICOM file is its own group. The importGroup() method will import 
-each single DICOM file into a separate OME 5D image.
+in the DICOM format. DICOM files each contain a 2D or 2D+Time image.
+FIXME: each DICOM file is interpreted as its own group. The importGroup()
+method will import each single DICOM file into a separate OME 5D image.
 
 =cut
 
@@ -123,7 +123,7 @@ This method examines the list of filenames that is passed in by
 reference. Any files on the list that are DICOM files are removed
 from the input list and added to the output list. 
 
-DICOM files can be recognized because it begins with a 128 byte 
+DICOM files can be recognized because they begins with a 128 byte 
 preamble followed by the letters 'D', 'I', 'C', 'M'. 
 
 =cut
@@ -164,8 +164,8 @@ This method imports individual DICOM format files into OME
 reference. This method opens each file in turn, extracts
 its metadata and pixels, and creates a coresponding OME image.
 
-The arrangement of the planes in the DICOM file can, thankfully,
-be guaranted to be in XYZT (no C) format. 
+The arrangement of the pixels in the DICOM file is assumed to be
+in XYT format. We believe this assumption is meritorious.
 
 If all goes well, this method returns a pointer to a freshly created 
 OME::Image. In that case, the caller should commit any outstanding
@@ -189,7 +189,8 @@ sub importGroup {
     
 	# open file and read DICOM tags
 	my $dicom_tags = OME::ImportEngine::DICOM->new(); 
-	$dicom_tags->fill($file);
+	my $debug=1; # make debug true if you want the DICOM's header dumped to screen
+	$dicom_tags->fill($file,$debug);
 	
 	# Use the DICOM tags to populate some info
 	my $bits_stored = $dicom_tags->value('BitsStored');
@@ -236,15 +237,17 @@ sub importGroup {
 	} else {
 	    $xref->{'Image.NumTimes'} = 1;
 	}
-	
+	$xref->{'Image.isSigned'} = $dicom_tags->value('PixelRepresentation');
+		
 	# those idiots are trying to kill us with spaces
-	printf "SizeX=%d SizeY=%d SizeZ=%d SizeT=%d SizeC=%d\n",
+	print "file name is ".$file->getFilename()."\n" if $debug;
+	printf "SizeX=%d SizeY=%d SizeZ=%d SizeT=%d SizeC=%d isSigned=%d\n",
 	$xref->{'Image.SizeX'},
 	$xref->{'Image.SizeY'},
 	$xref->{'Image.SizeZ'},
 	$xref->{'Image.NumTimes'},
-	$xref->{'Image.NumWaves'};
-	print "file name is ".$file->getFilename()."\n";
+	$xref->{'Image.NumWaves'},
+	$xref->{'Image.isSigned'}  if $debug;
 	
 	
 	$xref->{'Image.SizeX'}    =~ s/ //;
@@ -252,8 +255,7 @@ sub importGroup {
 	$xref->{'Image.SizeZ'}    =~ s/ //;
 	$xref->{'Image.NumTimes'} =~ s/ //;
 	$xref->{'Image.NumWaves'} =~ s/ //;
-	
-	print "number of times is ".$xref->{'Image.NumTimes'}."\n";
+	$xref->{'Image.isSigned'} =~ s/ //;
     $xref->{'Data.BitsPerPixel'} = $bits_allocated;
     
     $params->byte_size($xref->{'Data.BitsPerPixel'}/8);
@@ -263,8 +265,8 @@ sub importGroup {
     my $image = ($self->{super})->__newImage($filename);
     $self->{image} = $image;
     
-    # pack together & store info on input file
-    my @finfo;
+    # pack together & store info the input file
+    my @finfo; 
     $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
 			      0, $xref->{'Image.SizeX'}-1,
 			      0, $xref->{'Image.SizeY'}-1,
@@ -272,7 +274,7 @@ sub importGroup {
 			      0, $xref->{'Image.NumWaves'}-1,
 			      0, $xref->{'Image.NumTimes'}-1,
                   "DICOM");
-	
+                  
 	my ($pixels, $pix) = 
 	($self->{super})->__createRepositoryFile($image, 
 						 $xref->{'Image.SizeX'},
@@ -280,10 +282,12 @@ sub importGroup {
 						 $xref->{'Image.SizeZ'},
 						 $xref->{'Image.NumWaves'},
 						 $xref->{'Image.NumTimes'},
-						 $xref->{'Data.BitsPerPixel'});
+						 $xref->{'Data.BitsPerPixel'},
+						 $xref->{'Image.isSigned'},
+						 );
     $self->{pixels} = $pixels;
-   
-    # The planes are in the OME canonical order (hopefully, fingers crossed) - write them out
+    
+    # FIXME this needs fixing to work with the RE ST.
     my ($t, $c, $z);
     my $maxY = $xref->{'Image.SizeY'};
     my $maxZ = $xref->{'Image.SizeZ'};
@@ -292,7 +296,6 @@ sub importGroup {
     my $plane_size = $xref->{'Image.SizeX'} * $xref->{'Image.SizeY'}*$params->byte_size;
     my $offset;
     my $start_offset = $dicom_tags->value('PixelData');
-    print "start_offset is $start_offset\n";
     for (my $i = 0, $t = 0; $t < $maxT; $i++, $t++) {
 		for ($c = 0; $c < $maxC; $c++) {
 			for ($z = 0; $z < $maxZ; $z++) {
@@ -309,6 +312,7 @@ sub importGroup {
     $file->close();
 
 	$self->__storeInputFileInfo($session, \@finfo);
+	
 	# Store info about each input channel (wavelength).
 	storeChannelInfo($self, $session);
 	return $image;

@@ -5,14 +5,16 @@
 # Perl module to read DICOM headers.
 #
 # Modified by Tom Macura (tmacura@nih.gov) to work with OME. 
+# condensed Andrew's DICOM.pm, DICOM_element.pm into one.
 # (1) replace all local file read calls with remote (against OMEIS) file read calls
-# (2) remove functionality we don't need. This includes all DICOM writing functionality
+# (2) remove functionality not need by OME. This includes all DICOM writing functionality
 #     and all GUI, CLI components. Basically whats left is a lean DICOM header reading
 #     utility. The rest is gone.
 # (3) OX value representations handling changed. OX value representations are used
 #     for pixels data and large binary objects. Therefore I only store the file set not
 #     the actual bytes in the perl hash.
-#     This breaks things for JPEG encoded pixels. We don't support that anyway.
+#     This breaks things for JPEG encoded pixels. We don't support JPEG encoded pixel data
+#     anyway.
 package OME::ImportEngine::DICOM;
 
 use strict;
@@ -49,7 +51,7 @@ sub new {
 
 # Fill in hash with header members from given file.
 sub fill {
-	my ($this, $file) = @_; # N.B: file is a OME::File object
+	my ($this, $file, $debug) = @_; # N.B: file is a OME::File object
 	my $buff;
 	my $element;
 	
@@ -66,10 +68,11 @@ sub fill {
 		$element = OME::ImportEngine::DICOM_element->new();
 		$element->fill($file, \%dict) or return 1;
 		
-		$element->print();
+		# uncomment this to see the 
+		$element->print() if $debug;
 		
 		# store the element's references in two hashes
-		# (1) by group and element hex numbers and (2) by fieldname
+		# (1) keyed by group and element hex numbers (2) keyed by fieldname
 		my ($gp, $el, $fn);
 		$gp = $element->{'group'};
 		$el = $element->{'element'};
@@ -83,9 +86,9 @@ sub fill {
 	return 0;
 }
 
-# This is the method you want to use to get DICOM tag values after you
-# read them (via the fill function) from the DICOM file. It can be called
-# either by specifying the group and element numbers, of just by specifying
+# This is the method you want to use to get DICOM tag values after you have
+# read them (via the fill method) from the DICOM file. It can be called
+# either by specifying the group and element numbers, or by specifying
 # the field name
 #
 #	$dicom_tags->fill($file);
@@ -107,8 +110,8 @@ sub value {
   		croak "the parameters are wrong\n";
   	}
   	
-  	return undef unless defined($elem);
-  	return (defined($elem->value())) ? $elem->value() : "";
+  	return undef unless defined $elem;
+  	return (defined $elem->{'value'}) ? $elem->{'value'} : "";
 }
 
 # The DICOM_element package is from 
@@ -194,7 +197,7 @@ sub fill {
 			if ($code eq "FD") { warn "Unsupported VR: FD\n"; last SWITCH; }
 			
 			# For an offset, don't read in the data but store the offset
-			# however, move the file cursor to pretend you read the file
+			# Move the file cursor to pretend you read the bytes from file
 			if ($code eq "OX") { 
 				$value = $file->getCurrentPosition();
 				$file->setCurrentPosition($length-1, 1);
@@ -232,87 +235,87 @@ sub fill {
 # If fieldlength > bytelength, multiple values are read in and stored as 
 # a string representation of an array.
 sub readInt {
-  my ($file, $bytes, $len) = @_;
-  my ($buff, $val, @vals);
-  
-  # Perl little endian decode format for short (v) or int (V).
-  my $format = ($bytes == $SHORT) ? "v" : "V";
-  $len = $bytes unless (defined($len));
-
-  $buff = $file->readData($len) or die;
-  if ($len == $bytes) {
-    $val = unpack($format, $buff);
-  } else {
-    # Multiple values: Create array.
-    for (my $pos = 0; $pos < $len; $pos += 2) {
-      push(@vals, unpack("$format", substr($buff, $pos, 2)));
-    }
-    $val = "[" . join(", ", @vals) . "]";
-  }
-
-  return $val;
+	my ($file, $bytes, $len) = @_;
+	my ($buff, $val, @vals);
+	
+	# Perl little endian decode format for short (v) or int (V).
+	my $format = ($bytes == $SHORT) ? "v" : "V";
+	$len = $bytes unless (defined($len));
+	
+	$buff = $file->readData($len) or die;
+	if ($len == $bytes) {
+		$val = unpack($format, $buff);
+	} else {
+		# Multiple values: Create array.
+		for (my $pos = 0; $pos < $len; $pos += 2) {
+			push(@vals, unpack("$format", substr($buff, $pos, 2)));
+		}
+		$val = "[" . join(", ", @vals) . "]";
+	}
+	
+	return $val;
 }
 
 # Return the Value Field length, and length before Value Field.
 # Implicit VR: Length is 4 byte int.
 # Explicit VR: 2 bytes hold VR, then 2 byte length.
 sub readLength {
-  my ($file) = @_;
-  my ($b0, $b1, $b2, $b3);
-  my ($buff, $vrstr);
-  
-  # Read 4 bytes into b0, b1, b2, b3.
-  $b0 = unpack ("C", $file->readData(1));
-  $b1 = unpack ("C", $file->readData(1));
-  $b2 = unpack ("C", $file->readData(1));
-  $b3 = unpack ("C", $file->readData(1));
-
-  # Temp string to test for explicit VR
-  $vrstr = pack("C", $b0) . pack("C", $b1);
-  
-  # Assume that this is explicit VR if b0 and b1 match a known VR code.
-  # Possibility (prob 26/16384) exists that the two low order field length 
-  # bytes of an implicit VR field will match a VR code.
-
-  # DICOM PS 3.5 Sect 7.1.2: Data Element Structure with Explicit VR
-  # Explicit VRs store VR as text chars in 2 bytes.
-  #
-  # VRs of OB, OW, SQ, UN, UT have VR chars, then 0x0000, then 32 bit VL:
-  # +-----------------------------------------------------------+
-  # |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 |
-  # +----+----+----+----+----+----+----+----+----+----+----+----+
-  # |<Group-->|<Element>|<VR----->|<0x0000->|<Length----------->|<Value->
-  #
-  # Other Explicit VRs have VR chars, then 16 bit VL:
-  # +---------------------------------------+
-  # |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
-  # +----+----+----+----+----+----+----+----+
-  # |<Group-->|<Element>|<VR----->|<Length->|<Value->
-  #
-  # Implicit VRs have no VR field, then 32 bit VL:
-  # +---------------------------------------+
-  # |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
-  # +----+----+----+----+----+----+----+----+
-  # |<Group-->|<Element>|<Length----------->|<Value->
-
-  foreach my $vr (keys %VR) {
-  	if ($vrstr eq $vr) {
-  		# Have a code for an explicit VR: Retrieve VR element
-      	my $ref = $VR{$vr};
-      	my ($name, $bytes, $fixed) = @$ref;
-      	if ($bytes == 0) {
+	my ($file) = @_;
+	my ($b0, $b1, $b2, $b3);
+	my ($buff, $vrstr);
+	
+	# Read 4 bytes into b0, b1, b2, b3.
+	$b0 = unpack ("C", $file->readData(1));
+	$b1 = unpack ("C", $file->readData(1));
+	$b2 = unpack ("C", $file->readData(1));
+	$b3 = unpack ("C", $file->readData(1));
+	
+	# Temp string to test for explicit VR
+	$vrstr = pack("C", $b0) . pack("C", $b1);
+	
+	# Assume that this is explicit VR if b0 and b1 match a known VR code.
+	# Possibility (prob 26/16384) exists that the two low order field length 
+	# bytes of an implicit VR field will match a VR code.
+	
+	# DICOM PS 3.5 Sect 7.1.2: Data Element Structure with Explicit VR
+	# Explicit VRs store VR as text chars in 2 bytes.
+	#
+	# VRs of OB, OW, SQ, UN, UT have VR chars, then 0x0000, then 32 bit VL:
+	# +-----------------------------------------------------------+
+	# |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 | 11 |
+	# +----+----+----+----+----+----+----+----+----+----+----+----+
+	# |<Group-->|<Element>|<VR----->|<0x0000->|<Length----------->|<Value->
+	#
+	# Other Explicit VRs have VR chars, then 16 bit VL:
+	# +---------------------------------------+
+	# |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
+	# +----+----+----+----+----+----+----+----+
+	# |<Group-->|<Element>|<VR----->|<Length->|<Value->
+	#
+	# Implicit VRs have no VR field, then 32 bit VL:
+	# +---------------------------------------+
+	# |  0 |  1 |  2 |  3 |  4 |  5 |  6 |  7 |
+	# +----+----+----+----+----+----+----+----+
+	# |<Group-->|<Element>|<Length----------->|<Value->
+	
+	foreach my $vr (keys %VR) {
+	if ($vrstr eq $vr) {
+		# Have a code for an explicit VR: Retrieve VR element
+		my $ref = $VR{$vr};
+		my ($name, $bytes, $fixed) = @$ref;
+		if ($bytes == 0) {
 			# This is an OB, OW, SQ, UN or UT: 32 bit VL field.
 			# Have seen in some files length 0xffff here...
 			return readInt($file, $INT);
-      	} else {
+		} else {
 			# This is an explicit VR with 16 bit length.
 			return ($b3 << 8) + $b2;
-      	}
-     }
-  }
-
-  # Made it to here: Implicit VR, 32 bit length.
-  return ($b3 << 24) + ($b2 << 16) + ($b1 << 8) + $b0;
+		}
+	 }
+	}
+	
+	# Made it to here: Implicit VR, 32 bit length.
+	return ($b3 << 24) + ($b2 << 16) + ($b1 << 8) + $b0;
 }
 
 # Print formatted representation of element to stdout.
@@ -337,9 +340,4 @@ sub print {
 	}
 }
 
-# return the value of a particular element. This is alled by value() from DICOM package
-sub value {
-  my $this = shift;
-  return $this->{'value'};
-}
 1;
