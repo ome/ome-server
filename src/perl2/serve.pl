@@ -40,16 +40,18 @@ if ($pageClass) {
 	}
 
 	eval {
+            if (!UNIVERSAL::isa($pageClass,"OME::Web")) {
+                print STDERR "Package $pageClass does not inherit from OME::Web\n";
+                print $CGI->header(-type => 'text/html',-status => '404 File not found');
+            } else {
 		$page = $pageClass->new(CGI => $CGI);
 		if (!$page) {
-			print STDERR "Error calling package constructor -\n";
-			print $CGI->header(-type => 'text/html',-status => '404 File not found');
-		} elsif (! (ref($page) =~ /^OME::Web::/) ) {
-			print STDERR "Package ".ref($page)." does not inherit from OME::Web\n";
-			print $CGI->header(-type => 'text/html',-status => '404 File not found');
+                    print STDERR "Error calling package constructor -\n";
+                    print $CGI->header(-type => 'text/html',-status => '404 File not found');
 		} else {
-			$page->serve();
+                    $page->serve();
 		}
+            }
 	};
 	
 	if ($@) {
