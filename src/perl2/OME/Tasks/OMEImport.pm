@@ -47,6 +47,7 @@ use XML::LibXML;
 use XML::LibXSLT;
 
 use OME::Analysis::Engine;
+use OME::Tasks::ImportManager;
 use OME::ImportExport::SemanticTypeImport;
 use OME::ImportExport::ModuleImport;
 use OME::ImportExport::ChainImport;
@@ -97,7 +98,11 @@ sub importFile {
     $sha1 = $1;
     close (STDOUT_PIPE);
 
-	my $xyzwt = $session->Factory->findObject("OME::Image::ImageFilesXYZWT",file_sha1 => $sha1);
+    my $xyzwt;
+    eval {
+        $xyzwt = $session->Factory->
+          findAttribute("OriginalFile",SHA1 => $sha1);
+    };
 	return if defined $xyzwt;
 
     my $resolve = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
@@ -111,14 +116,22 @@ sub importFile {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	my $CA_doc = $stylesheet->transform($doc);
 
+    OME::Tasks::ImportManager->startImport();
+
 	$self->processDOM($CA_doc->getDocumentElement(),%flags);
     
 	# Store the file hash.
-	$xyzwt = $session->Factory->newObject("OME::Image::ImageFilesXYZWT",{file_sha1 => $sha1});
-	$xyzwt->storeObject();
+    my $mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+    if (defined $mex) {
+        $xyzwt = $session->Factory->
+          newAttribute("OriginalFile",undef,$mex,
+                       {SHA1 => $sha1, Path => $filename, Format => 'OME XML'});
+    }
 
     # Commit the transaction to the DB.
     $self->{session}->commitTransaction();
+
+    OME::Tasks::ImportManager->finishImport();
 
 	return;
 }
