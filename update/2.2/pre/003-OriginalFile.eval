@@ -6,29 +6,30 @@ print "     \\_ OriginalFile ";
 
 my $st = $factory->
   findObject("OME::SemanticType",name => 'OriginalFile');
-if ($st) {
-	
-    my $dt = $factory->
-      findObject("OME::DataTable",table_name => 'ORIGINAL_FILES');
-    die "Could not find ORIGINAL_FILES table"
-      unless defined $dt;
-    
-    my ($se,$dc);
-    
-    $dc = OME::Tasks::SemanticTypeManager->
-      addDataColumn($dt,'FILE_ID','integer');
-    $se = OME::Tasks::SemanticTypeManager->
-      addSemanticElement($st,'FileID',$dc);
-    
-    # Force this ST to recreate its DBObject subclass.  (This ensures that
-    # the new elements are accessible by the remaining Perl code.)
-    
-    $st->requireAttributeTypePackage(1);
-    
-    # Have the database delegate add the new columns to the database tables.
-    
-    $delegate->addClassToDatabase($dbh,$dt->getDataTablePackage());
-}
+die "Could not find OriginalFile semantic type"
+  unless defined $st;
+
+my $dt = $factory->
+  findObject("OME::DataTable",table_name => 'ORIGINAL_FILES');
+die "Could not find ORIGINAL_FILES table"
+  unless defined $dt;
+
+my ($se,$dc);
+
+$dc = OME::Tasks::SemanticTypeManager->
+  addDataColumn($dt,'FILE_ID','integer');
+$se = OME::Tasks::SemanticTypeManager->
+  addSemanticElement($st,'FileID',$dc);
+
+# Force this ST to recreate its DBObject subclass.  (This ensures that
+# the new elements are accessible by the remaining Perl code.)
+
+$st->requireAttributeTypePackage(1);
+
+# Have the database delegate add the new columns to the database tables.
+
+$delegate->addClassToDatabase($dbh,$dt->getDataTablePackage());
+
 # Signal success
 
 print BOLD, "[SUCCESS]", RESET, ".\n";
