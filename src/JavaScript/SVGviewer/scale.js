@@ -59,7 +59,7 @@ Scale.prototype.buildSVG = function() {
 // set up references & constants
 	this.fluors = new Array();
 	for(var i in this.image.Wavelengths)
-		this.fluors[this.image.Wavelengths[i]['WaveNum']] = this.image.Wavelengths[i]['Fluor'];
+		this.fluors[this.image.Wavelengths[i]['WaveNum']] = this.image.Wavelengths[i]['Label'];
 
 // build SVG
 	this.root = svgDocument.createElementNS(svgns, "g");
