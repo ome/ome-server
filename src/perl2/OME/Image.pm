@@ -207,6 +207,25 @@ __PACKAGE__->columns(Essential => qw(image_id wavenumber timepoint deltatime
 				     centroid_x centroid_y centroid_z));
 
 
+package OME::Image::ImageFilesXYZWT;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    file_sha1 => 'sha1',
+    });
+
+__PACKAGE__->table('image_files_xyzwt');
+__PACKAGE__->columns(Essential => qw(image_id file_sha1 bigendian
+				     path host url x_start x_stop
+				     y_start y_stop z_start z_stop
+				     w_start w_stop t_start t_stop));
+
+
 package OME::Image::DatasetMap;
 
 use strict;
