@@ -522,7 +522,7 @@ sub store_wavelength_info {
 # The program output is tab-delimited columns like so:
 #    Wave Time Min Max Mean GeoMean Sigma Centroid_x Centroid_y Centroid_z
 # The first line contains the column headings, and is discarded. Table row looks like:
-# image_id | wavenumber | timepoint | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
+# image_id | the_w | the_t | deltatime | min | max | mean | geomean | sigma | centroid_x | centroid_y | centroid_z
 
 sub store_xyz_info {
     my ($self,$session,$href) = @_;
@@ -569,7 +569,7 @@ sub store_xyz_info_old {
     my $status = "";
     my $sth;
     $sth = $session->DBH()->prepare (
-        'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
+        'INSERT INTO xyz_image_info (image_id,the_w,the_t,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
         $href->{'Image.NumWaves'}, $href->{'Image.NumTimes'}, ($href->{'Image.BitsPerPixel'})/8));
     my $cmd = $omeBase.'/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';

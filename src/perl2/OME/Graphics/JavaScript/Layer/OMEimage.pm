@@ -578,7 +578,7 @@ sub RGBon {
 This is a direct SQL query to get wavelengths and statistics for the image. This data is stored in I<$self-E<gt>{Stats}>
 and I<$self-E<gt>{JS_Stats}>.
 
-I<$self-E<gt>{Stats}> is a two dimensional array indexed by [wavenumber][timepoint]. Each element in the array is a hash
+I<$self-E<gt>{Stats}> is a two dimensional array indexed by [theW][theT]. Each element in the array is a hash
 with the keys of: min, max, mean, geomean, and sigma.
 
 I<$self-E<gt>{JS_Stats}> contains the same information and structure. But it is converted into a string for use in javascript.
@@ -633,9 +633,9 @@ sub Stats {
 	my @rowArray;
 	my @stats_js;
 
-#xyz_image_info: image_id | wavenumber | timepoint | min | max | mean | geomean | sigma
+#xyz_image_info: image_id | the_w | the_t | min | max | mean | geomean | sigma
 	$self->{JS_Stats} ="";
-	$sth = $DBH->prepare ("SELECT wavenumber,timepoint,min,max,mean,geomean,sigma FROM xyz_image_info WHERE image_id=?");
+	$sth = $DBH->prepare ("SELECT the_w,the_t,min,max,mean,geomean,sigma FROM xyz_image_info WHERE image_id=?");
 	$sth->execute($self->{Parent}->{ImageID});
 	while ( @rowArray = $sth->fetchrow_array) {
 		$self->{Stats}->[$rowArray[0]][$rowArray[1]] = {
