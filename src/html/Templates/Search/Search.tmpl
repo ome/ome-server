@@ -2,12 +2,7 @@
 	<button type="submit" id="Search" name="Search"><span class="ome_header_title">Search</span></button><br><br>
 <TMPL_UNLESS NAME=Locked_Type>
 	Look for:<br>
-	<select name="Type" onchange="if(this.value != '' ) { document.forms[0].submit(); } return false;">
-		<option value="">Select a Type</option>
-	<TMPL_LOOP NAME=types_loop>
-		<option value="<TMPL_VAR NAME=formal_name>" <TMPL_VAR NAME=selected>><TMPL_VAR NAME=common_name></option>
-	</TMPL_LOOP>
-	</select>
+	<TMPL_VAR NAME=search_types>
 <TMPL_ELSE>
 	Search For: <TMPL_VAR NAME=Locked_Type>
 	<input type="hidden" name="Locked_Type" value="<TMPL_VAR NAME=formal_name>">
