@@ -142,7 +142,7 @@ public class RemoteImage
     }
 
     public Attribute getDefaultPixels() {
-        return getAttributeElement("DefaultPixels");
+        return getAttributeElement("getDefaultPixels");
     }
 
 
