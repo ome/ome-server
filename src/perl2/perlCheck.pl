@@ -198,7 +198,7 @@ my @modules = ({
 	},{
 	Name => 'XML::LibXML',
 	checkVersion => \&XML_LibXML_VersionOK,
-	repositoryFile => 'XML-LibXML-1.53.tar.gz',
+	repositoryFile => 'XML-LibXML-1.56.tar.gz',
 	},{
 	Name => 'XML::LibXSLT',
 	repositoryFile => 'XML-LibXSLT-1.53.tar.gz',
