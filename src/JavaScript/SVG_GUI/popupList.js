@@ -136,6 +136,10 @@ popupList.prototype.getSelection = function() {
 	return this.listIndex[this.selection];
 }
 
+popupList.prototype.getSelectionName = function() {
+	return this.itemList[ this.getSelection() ];
+}
+
 /*****
 *
 *   update
