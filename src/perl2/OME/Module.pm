@@ -39,6 +39,7 @@ __PACKAGE__->has_many('outputs','OME::Module::FormalOutput' => qw(module_id));
 __PACKAGE__->has_many('analyses','OME::ModuleExecution' => qw(module_id));
 
 
+
 package OME::Module::FormalInput;
 
 use strict;
