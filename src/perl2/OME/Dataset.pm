@@ -58,7 +58,6 @@ our $VERSION = $OME::VERSION;
 
 use OME::Image;
 use OME::Project;
-use OME::Tasks::ImageImport;
 use base qw(OME::DBObject);
 
 __PACKAGE__->newClass();
@@ -212,8 +211,7 @@ sub addImageID{
 sub importImages {
   my $self = shift;
   my $file = shift;
-  my $imp = OME::Tasks::ImageImport->new($self->Session());
-  $imp->importImages(($file));
+  OME::Tasks::ImageTasks::importFiles($file);
   return $file;
 
 }
