@@ -129,6 +129,8 @@ sub MY::const_loadlibs {
 	if ($matlab_arch ne "mac") {
 		print "Modifying LD_RUN_PATH...\n"
 			if $str =~ s#^(LD_RUN_PATH.+)$#$1:$matlab_dir/bin/$matlab_arch:$matlab_dir/sys/os/$matlab_arch#m;
+		print "Modifying LD_LIBRARY_PATH...\n";
+		$str = $str."LD_LIBRARY_PATH = $matlab_dir/bin/$matlab_arch:$matlab_dir/sys/os/$matlab_arch";
 	}
 	return $str;
 }
