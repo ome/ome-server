@@ -587,6 +587,13 @@ char **cgivars=param;
 				OMEIS_ReportError (method, "FileID", fileID, "GetFileRep failed.");
 				return (-1);
 			}
+			
+			if (stat (theFile->path_rep, &fStat) < 0) {
+				OMEIS_ReportError (method, "FileID", fileID,"Could not get size of file");
+				freeFileRep (theFile);
+				return (-1);			
+			}
+			theFile->size_rep = fStat.st_size;
 
 			if ( (theParam = get_param (param,"Offset")) ) {
 				sscanf (theParam,"%llu",&scan_off);
@@ -599,8 +606,18 @@ char **cgivars=param;
 			} else {
 				length = (size_t)theFile->size_rep - offset;
 			}
-
-
+					 
+			/* check if the offset is past EOF */
+			if (offset >= theFile->size_rep) {
+				OMEIS_ReportError (method, "FileID", fileID, "Offset is greater than file's length.");
+				return (-1);
+			}
+			
+			/* Check that reading the specified number of bytes will not send us past EOF. 
+			   If so, resize the length so we read as much as possible but no more */
+			if (offset+length >= theFile->size_rep)
+				length = theFile->size_rep - offset;
+		
 			if (offset == 0 && length == theFile->size_rep && getenv("REQUEST_METHOD") ) {
 				if (GetFileInfo (theFile) < 0) {
 					OMEIS_ReportError (method, "FileID", fileID, "GetFileInfo failed.");
