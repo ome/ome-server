@@ -137,6 +137,7 @@ our @core_classes =
    'OME::SemanticType::Element',
    'OME::SemanticType::BootstrapExperimenter',
    'OME::SemanticType::BootstrapGroup',
+   'OME::SemanticType::BootstrapExperimenterGroup',
    'OME::SemanticType::BootstrapRepository',
    'OME::Dataset',
    'OME::Project',
