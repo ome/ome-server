@@ -75,7 +75,7 @@ sub fix_httpd_conf {
 	open(FILEOUT, "> $httpdConf~") or croak "can't open $httpdConf~ for writing: $!\n";
 	while (<FILEIN>) {
 		s/#\s*LoadModule\s+perl_module/LoadModule perl_module/;
-		s/#\s*AddModule\s+mod_perl\.c/LoadModule mod_perl.c/;
+		s/#\s*AddModule\s+mod_perl\.c/AddModule mod_perl.c/;
 		s/Include\s+(\/.*)*\/httpd\.ome(.dev)?\.conf.*\n//;
 		print FILEOUT;
 	};
@@ -84,6 +84,33 @@ sub fix_httpd_conf {
 	close(FILEOUT);
 	move ("$httpdConf~",$httpdConf) or croak "Couldn't write $httpdConf: $!\n";
 	$apache_info->{hasOMEinc} = 1;
+}
+
+sub httpd_conf_OK {
+	my $apache_info = shift;
+
+	my $httpdConf = $apache_info->{conf};
+	my $httpdConfBak = $apache_info->{conf_bak};
+	my $apachectlBin = $apache_info->{apachectl};
+	
+	my @result = `$apachectlBin configtest 2>&1 `;
+	my $error = 1;
+	foreach (@result) {
+		$error = 0 if $_ =~ /Syntax OK/;
+	}
+	return (1) if not $error;
+	
+	# Revert
+	print STDERR "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n";
+	copy ($httpdConfBak,$httpdConf)
+		or croak "Could not copy $httpdConfBak to $httpdConf\n*** Apache configuration could not be restored !!! ***\n";
+	return (0);
+}
+
+sub httpd_restart {
+	my $apache_info = shift;
+	my $apachectlBin = $apache_info->{apachectl};
+	print `$apachectlBin restart`;
 }
 
 sub copy_ome_conf {
@@ -112,13 +139,17 @@ sub copy_ome_conf {
 sub getApacheBin {
 	my $apache_info = {};
 	my $httpdBin;
+	my $apachectlBin;
 
 	# First, get the httpd executable.
 	$httpdBin = which ('httpd');
-   
-    $httpdBin = whereis ("httpd") or croak "Unable to locate httpd binary." unless $httpdBin;
-
+	$httpdBin = whereis ("httpd") or croak "Unable to locate httpd binary." unless $httpdBin;
 	$apache_info->{bin} = $httpdBin;
+	
+	$apachectlBin = which ('apachectl');
+	$httpdBin = whereis ("apachectl") or croak "Unable to locate apachectl binary." unless $apachectlBin;
+	$apache_info->{apachectl} = $apachectlBin;
+	
 	return $apache_info;
 }
 
@@ -229,6 +260,7 @@ sub execute {
     #********
     #******** Attempt to fix httpd.conf
     #********
+    my $apacheBak = $apache_info->{conf_bak};
 	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
 	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf\n" if $apache_info->{mod_perl_off};
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
@@ -237,11 +269,13 @@ sub execute {
 		} else {
 			if ( y_or_n("fix \"$httpdConf\" ?") ) {
 				print "fixing httpd.conf. The current version will be saved in ".$apache_info->{conf_bak}."\n";
-				fix_httpd_conf($apache_info);
+				fix_httpd_conf ($apache_info);
+				httpd_conf_OK ($apache_info);
 			}
 		}
 	}
 
+    
     
     #********
     #******** Copy index.html?
@@ -252,7 +286,15 @@ sub execute {
 		copy ($fromIndex,$toIndex) or croak "Could not copy \"$fromIndex\" to \"$toIndex\":\n$!\n";
 	}
 	
-    print "\n";  # Spacing
+    
+    #********
+    #******** Restart Apache?
+    #********
+	if ( y_or_n("Restart Apache ?") ) {
+		httpd_restart ($apache_info);
+	}
+	
+	print "\n";  # Spacing
 
     return;
 }
