@@ -173,7 +173,7 @@ sub processDOM {
 	my $oldRowGuessing = OME::SemanticType->GuessRows();
 	OME::SemanticType->GuessRows(1);
 
-    OME::Tasks::ImportManager->startImport();
+    my $new_import = OME::Tasks::ImportManager->startImport(1);
 	
 	###########################################################################
 	# These hashes store the IDs we've found so far in the document
@@ -314,7 +314,7 @@ sub processDOM {
 		$self->importFeatures ($imageID, undef, $node);
 	}
 
-    OME::Tasks::ImportManager->finishImport();
+    OME::Tasks::ImportManager->finishImport() if $new_import;
 	
 	# Turn row gessing back to what it was before.
 	OME::SemanticType->GuessRows($oldRowGuessing);
