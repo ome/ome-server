@@ -259,7 +259,7 @@ sub delete {
 
 sub has_a {
 	my ($class, $column, $a_class, %meths) = @_;
-    print STDERR "has_a deprecated\n";
+    #print STDERR "has_a deprecated\n";
     $class->hasa($a_class,$column);
 
 }
@@ -280,7 +280,7 @@ sub hasa {
 
     if ($f_class->isa("OME::DBObject")) {
         my $accessor_name = $class->accessor_name($f_col);
-        print STDERR "$class->hasa $accessor_name\n";
+        #print STDERR "$class->hasa $accessor_name\n";
 
         # Get the accessor method created by Class::DBI.
         my $accessor;
