@@ -145,7 +145,7 @@ sub buttonControl{
 	my %h=();
 	if ($typ eq "dataset"){
 		$function="openPopUpDataset";
-		$id=$object->dataset_id();
+		$id=$object->id();
 		$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and !defined $bool);
 		$select=buttonInput("submit",$id,"Select");
 		$view=buttonPopUp($id,"View",$function);
@@ -154,7 +154,7 @@ sub buttonControl{
 
 	}else{
 		$function="openPopUpImage";
-		$id=$object->image_id();
+		$id=$object->id();
 		#$delete=buttonInput("submit",$id,"Delete") if ($userID==$user->id() and defined $bool);
 	}
 	
@@ -221,8 +221,8 @@ sub datasetListInProject{
 	$rows.=addRow(\%H);
 	foreach (@$ref){
 		my ($select,$remove);
-		$select=buttonInput("submit",$_->dataset_id(),"Select");
-		$remove=buttonInput("submit",$_->dataset_id(),"Remove");
+		$select=buttonInput("submit",$_->id(),"Select");
+		$remove=buttonInput("submit",$_->id(),"Remove");
 	      my $lock;
 		if($_->locked() == 0){
 			$lock="Unlocked";
@@ -300,7 +300,7 @@ sub formatDataset{
 	}
 
 	$html .= "<P><NOBR><B>Name:</B> ".$dataset->name()."</NOBR><BR>" ;
-	$html .= "<NOBR><B>ID:</B> ".$dataset->dataset_id()."</NOBR><BR>" ;
+	$html .= "<NOBR><B>ID:</B> ".$dataset->id()."</NOBR><BR>" ;
 	$html .= "<B>Description:</B> ".$dataset->description()."<BR>" ;
 	$html .= "<NOBR><B>Locked:</B> ".($dataset->locked()?'YES':'NO')."</NOBR><BR>";
 	if (defined $address){
@@ -309,7 +309,7 @@ sub formatDataset{
 	}
 	$html .= "<NOBR><B>Number Images in dataset:</B> ".scalar($dataset->images())."</NOBR></P>" ;
  	if (defined $view){
-	$html.=buttonPopUp($dataset->dataset_id(),"View","openPopUpDataset");
+	$html.=buttonPopUp($dataset->id(),"View","openPopUpDataset");
 
 	}
 	return $html ;
@@ -326,7 +326,7 @@ sub formatImage{
 	my ($image)=@_;
 	my $html="";
 	$html	.= "<P><NOBR><B>Name:</B> ".$image->name()."</NOBR><BR>" ;
-  	$html .= "<B>Image ID:</B> ".$image->image_id()."<BR></P>" ;
+  	$html .= "<B>Image ID:</B> ".$image->id()."<BR></P>" ;
 	return $html;
 }
 
@@ -346,7 +346,7 @@ sub formatProject{
  		$html .= "<h3>Your current project is:</h3>" ;
 	}
  	$html .= "<P><NOBR><B>Name:</B> ".$project->name()."</NOBR><BR>" ;
- 	#$html .= "<NOBR><B>ID:</B> ".$project->project_id()."</NOBR><BR>" ;
+ 	#$html .= "<NOBR><B>ID:</B> ".$project->id()."</NOBR><BR>" ;
  	$html .= "<B>Description:</B> ".$project->description()."<BR>" ;
 	$html.= "<b>Number of Datasets:</b>".scalar($project->datasets())."<br></p>";
  	return $html ;
@@ -361,7 +361,7 @@ sub formatThumbnail{
 	my $self=shift;
 	my ($object)=@_;
 	my $imageName=$object->name();
-	my $imageID=$object->image_id();
+	my $imageID=$object->id();
 	my $rows="";
 	my $html="";
 	my ($name,$imageTag);
@@ -407,7 +407,7 @@ sub formChange{
 	
 	my ($components, $componentCount );
 	if ($typ eq "dataset"){
-		$id=$object->dataset_id();
+		$id=$object->id();
 		if ($object->locked()){
 		  $lock="locked";
 		}else{
@@ -416,7 +416,7 @@ sub formChange{
 		$components = "images";
 		$componentCount = scalar $object->images();
 	}else{
-		$id=$object->project_id();
+		$id=$object->id();
 		$components = "datasets";
 		$componentCount = scalar $object->datasets();
 	}
@@ -860,12 +860,12 @@ sub imageInDataset{
 		my ($name,$id,$view);
 		if (defined $search){
 			$name=$k->{name};
-			$id=$k->{image_id};
+			$id=$k->{id};
 			my ($a,$b)=split(" ",$k->{inserted});
 			$name=$name."<br><b>In</b>:".$a;
 		}else{
 			$name=$k->name();
-			$id=$k->image_id();
+			$id=$k->id();
 		}
 		$view="<a href=\"#\" onClick=\"return openPopUpImage($id)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$id." align=\"bottom\" border=0></a>";
 
@@ -1003,12 +1003,12 @@ sub projectList{
 	$rows.=addRow(\%H);
 	foreach (@$ref){
 		my ($select,$delete,$info);
-		$info=buttonPopUp($_->project_id(),"Info","openInfoProject");
-		$select=buttonInput("submit",$_->project_id(),"Select");
-		$delete=buttonInput("submit",$_->project_id(),"Delete") if (defined $bool);
+		$info=buttonPopUp($_->id(),"Info","openInfoProject");
+		$select=buttonInput("submit",$_->id(),"Select");
+		$delete=buttonInput("submit",$_->id(),"Delete") if (defined $bool);
 		my %h=(
 		1 =>	{ content=>$_->name(),attribute=>$self->{cellLeft}},
-		2 => 	{ content=>$_->project_id(),attribute=>$self->{cellLeft}},
+		2 => 	{ content=>$_->id(),attribute=>$self->{cellLeft}},
 		3 =>  { content=>$select, attribute=>$self->{cellCenter}},
 		4 =>  { content=>$info, attribute=>$self->{cellCenter}},
 		);
@@ -1049,16 +1049,16 @@ sub searchResults{
 	foreach (@$ref){
 		my ($select,$info);
 		if ($typ eq "project"){
-			$info=buttonPopUp($_->{project_id},"Info","openInfoProject");
-			if ($userID==$_->{owner_id}){
-			   $select=buttonInput("submit",$_->{project_id},"Select");
+			$info=buttonPopUp($_->{id},"Info","openInfoProject");
+			if ($userID==$_->{owner}){
+			   $select=buttonInput("submit",$_->{id},"Select");
 			}else{
 			   $select="not allowed";
 			}
 		}else{
-			$info=buttonPopUp($_->{dataset_id},"Info","openInfoDataset");
-			if (exists(${$refSelect}{$_->{dataset_id}})){
-			    $select=buttonInput("submit",$_->{dataset_id},"Select");
+			$info=buttonPopUp($_->{id},"Info","openInfoDataset");
+			if (exists(${$refSelect}{$_->{id}})){
+			    $select=buttonInput("submit",$_->{id},"Select");
 
 			}else{
 			    $select="not allowed";
