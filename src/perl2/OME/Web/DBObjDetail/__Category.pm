@@ -76,7 +76,8 @@ sub _takeAction {
 	if( $image_ids ) {
  		foreach my $image_id ( split( m',', $image_ids ) ) {
  			# Don't add this image if it belongs to another image in this Category Group.
- 			# Don't bother searching if there are no other categories in this group.
+ 			# Don't bother searching if there are no other categories in this group;
+ 			# DBObject can't handle empty lists with the 'in' operator.
  			my @other_classifications = ( scalar ( @other_categories_in_this_group ) > 0 ?
 				$factory->findObjects( '@Classification', {
 					image                           => $image_id,
