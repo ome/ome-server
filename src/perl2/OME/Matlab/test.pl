@@ -58,7 +58,7 @@ print "    Values: (",join(',',@{$y->getAll()}),")\n";
 if ( ($y->class_name() eq "double") && ($y->order() eq  2) && ($y->dimensions()->[0] eq 1) && ($y->dimensions()->[1] eq 1) && ($y->getAll()->[0] eq 32)  ) {
 	print "Test Passed. Perl Matlab API is correctly installed.\n";
 	$engine->close();
-	exit (1);
+	exit (0);
 } else {
 	print STDERR "Test Failed.\n Perl Matlab API is incorrectly installed.\n".
 				 "The MATLAB enigne ran but gave incorrect results.";
