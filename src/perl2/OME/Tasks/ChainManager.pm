@@ -119,7 +119,7 @@ sub createChain {
       newObject("OME::AnalysisChain",
                 {
                  name        => $name,
-                 owner       => $owner->id(),
+                 owner_id    => $owner->id(),
                  locked      => 'f',
                  description => $description,
                 });
@@ -156,7 +156,7 @@ sub cloneChain {
       newObject("OME::AnalysisChain",
                 {
                  name        => $old_chain->name(),
-                 owner       => $owner->id(),
+                 owner_id    => $owner->id(),
                  locked      => 'f',
                  description => $old_chain->description(),
                 });
