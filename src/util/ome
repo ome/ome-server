@@ -35,7 +35,7 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
-use OME::Util::OMEcommander;
+use OME::Util::OMECommander;
 
 sub usage {
     OME::Util::Output->printHeader();
