@@ -79,8 +79,8 @@ public class PProjectSelectionCanvas extends PCanvas
 	
 	private PLayer layer;
 	
-	private int columnWidth =0;
-	private int rowHeight = 0;
+	
+	private int width;
 	
 	public PProjectSelectionCanvas(Collection projects) {
 		super();
@@ -103,43 +103,41 @@ public class PProjectSelectionCanvas extends PCanvas
             // build node
 			layer.addChild(pl);
 			//position
-			PBounds b = pl.getGlobalFullBounds();		
-			if (b.getHeight()* ProjectLabel.SCALE_MULTIPLIER > rowHeight) 
-				rowHeight = (int) (b.getHeight() *ProjectLabel.SCALE_MULTIPLIER);
-			double myWidth = b.getWidth()*ProjectLabel.SCALE_MULTIPLIER;
-			if (myWidth > columnWidth)
-				columnWidth = (int)myWidth;
 		}
 	}
-	
-	public void layout(int width) {
+		
+	public void layoutLabels() {
+		width = getWidth();
 		Rectangle bounds = getBounds();
 		setBounds(new Rectangle((int)bounds.getX(),
 				   (int)bounds.getY(),width,(int)bounds.getHeight()));
 		Iterator iter = layer.getChildrenIterator();
 		double x=0;
 		double y =0;
+		double rowHeight  = 0;
 			
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
 				ProjectLabel pl = (ProjectLabel) obj;
-				//System.errprintln("x is "+x+", column width is "+columnWidth);
-				//System.errprintln("component width is "+width);
 				PBounds b = pl.getGlobalFullBounds();
-				double mywidth = pl.getGlobalFullBounds().getWidth()*
-					ProjectLabel.SCALE_MULTIPLIER;
-				//if (x+columnWidth+HGAP > width) {
+				double mywidth = b.getWidth();
+				
+				
 				if (x+mywidth+HGAP > width-2*HGAP) {
-		
 					y +=rowHeight+HGAP;
 					x =0;
+					rowHeight = 0;
 				}
+				if (b.getHeight() > rowHeight) 
+					rowHeight= b.getHeight();
 				pl.setOffset(x,y);
 				x += mywidth+HGAP;
 				//x += columnWidth+HGAP;
 			}	
 		}
+		PBounds layerBounds = layer.getGlobalFullBounds();
+		setMinimumSize(new Dimension(0,(int)(layerBounds.getHeight()+HGAP)));
 		//scaleToFit(0);
 	}
 	
@@ -210,6 +208,7 @@ public class PProjectSelectionCanvas extends PCanvas
 					pLabel.setUnselected();
 			}
 		}
+		layoutLabels();
 	}
 			
  	public void setRollover(CProject proj) {
@@ -232,6 +231,7 @@ public class PProjectSelectionCanvas extends PCanvas
 					pLabel.setUnselected();
 			}
 		}
+		layoutLabels();
  	}
  	
 	public void setSelectedProject() {
@@ -265,6 +265,7 @@ public class PProjectSelectionCanvas extends PCanvas
 				}
 			}
 		}
+		layoutLabels();
 	} 
 }
 
@@ -290,7 +291,7 @@ class ProjectLabel extends PText  {
 		this.project = project;
 		this.canvas = canvas;
 		setText(project.getName());
-		setFont(PConstants.THUMBNAIL_LABEL_FONT);
+		setFont(PConstants.PROJECT_LABEL_FONT);
 		
 	}
 	
