@@ -1,4 +1,4 @@
-# OME/Analysis/CLIHandler.pm
+# OME/Analysis/Handlers/CLIHandler.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,7 +35,7 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::CLIHandler;
+package OME::Analysis::Handlers::CLIHandler;
 
 use strict;
 use OME;
@@ -43,28 +43,28 @@ our $VERSION = $OME::VERSION;
 
 use IPC::Run;
 
-use OME::Analysis::DefaultLoopHandler;
+use OME::Analysis::Handlers::DefaultLoopHandler;
 use XML::LibXML;
-use base qw(OME::Analysis::DefaultLoopHandler);
+use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
 use fields qw(_outputHandle);
 
 sub new {
-    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
+    my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,
-                                  $chain_execution,$module,$node);
+    my $self = $class->SUPER::new(@_);
 
     bless $self,$class;
     return $self;
 }
 
 
-sub precalculateDataset {
-    my ($self) = @_;
+sub startDataset {
+    my ($self,$dataset) = @_;
+    $self->SUPER::startDataset($dataset);
 
-	my $module                  = $self->{_module};
+	my $module                  = $self->getModule();
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -72,17 +72,21 @@ sub precalculateDataset {
 	my $root                     = $tree->getDocumentElement();
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
-	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'precalculateDataset' ) {
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'startDataset' ) {
 		my @formalInputs          = $module->inputs();
-		my %inputs                = map { $_->name() => $self->getDatasetInputs($_->name()) } @formalInputs;
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
 		$self->_execute(\%inputs);
 	}
 }
 
-sub precalculateImage {
-    my ($self) = @_;
+sub startImage {
+    my ($self,$image) = @_;
+    $self->SUPER::startImage($image);
 
-	my $module                  = $self->{_module};
+	my $module                  = $self->getModule();
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -90,17 +94,21 @@ sub precalculateImage {
 	my $root                     = $tree->getDocumentElement();
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
-	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'precalculateImage' ) {
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'startImage' ) {
 		my @formalInputs          = $module->inputs();
-		my %inputs                = map { $_->name() => $self->getImageInputs($_->name()) } @formalInputs;
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
 		$self->_execute(\%inputs);
 	}
 }
 
-sub calculateFeature {
-    my ($self) = @_;
+sub startFeature {
+    my ($self,$feature) = @_;
+    $self->SUPER::startFeature($feature);
 
-	my $module                  = $self->{_module};
+	my $module                  = $self->getModule();
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -108,18 +116,22 @@ sub calculateFeature {
 	my $root                     = $tree->getDocumentElement();
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
-	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'calculateFeature' ) {
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'startFeature' ) {
 		my @formalInputs          = $module->inputs();
-		my %inputs                = map { $_->name() => $self->getFeatureInputs($_->name()) } @formalInputs;
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
 		$self->_execute(\%inputs);
 	}
 }
 
 
-sub postcalculateImage {
+sub finishFeature {
     my ($self) = @_;
+    $self->SUPER::finishFeature();
 
-	my $module                  = $self->{_module};
+	my $module                  = $self->getModule();
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -127,17 +139,21 @@ sub postcalculateImage {
 	my $root                     = $tree->getDocumentElement();
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
-	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'postcalculateImage' ) {
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'finishFeature' ) {
 		my @formalInputs          = $module->inputs();
-		my %inputs                = map { $_->name() => $self->getImageInputs($_->name()) } @formalInputs;
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
 		$self->_execute(\%inputs);
 	}
 }
 
-sub postcalculateDataset {
+sub finishImage {
     my ($self) = @_;
+    $self->SUPER::finishImage();
 
-	my $module                  = $self->{_module};
+	my $module                  = $self->getModule();
 	my $executionInstructions    = $module->execution_instructions();
 	my $parser                   = XML::LibXML->new();
 	
@@ -145,9 +161,34 @@ sub postcalculateDataset {
 	my $root                     = $tree->getDocumentElement();
 	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
 
-	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'postcalculateDataset' ) {
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'finishImage' ) {
 		my @formalInputs          = $module->inputs();
-		my %inputs                = map { $_->name() => $self->getDatasetInputs($_->name()) } @formalInputs;
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
+		$self->_execute(\%inputs);
+	}
+}
+
+sub finishDataset {
+    my ($self) = @_;
+    $self->SUPER::finishDataset();
+
+	my $module                  = $self->getModule();
+	my $executionInstructions    = $module->execution_instructions();
+	my $parser                   = XML::LibXML->new();
+	
+	my $tree                     = $parser->parse_string( $executionInstructions );
+	my $root                     = $tree->getDocumentElement();
+	my $ExecutionInstructionsXML = $root;#->getElementsByTagName( 'ExecutionInstructions' )->[0];
+
+	if( $ExecutionInstructionsXML->getAttribute( 'ExecutionPoint' ) eq 'finishDataset' ) {
+		my @formalInputs          = $module->inputs();
+		my %inputs;
+        foreach my $input (@formalInputs) {
+            $inputs{$input->name()} = $self->getCurrentInputAttributes($input);
+        }
 		$self->_execute(\%inputs);
 	}
 }
@@ -159,7 +200,7 @@ sub _execute {
 
     my $image  = $self->getCurrentImage();
 
-	my $module                = $self->{_module};
+	my $module                = $self->getModule();
 	my %outputs;
 	my (%tmpFileFullPathHash, %tmpFileRelativePathHash);
 	my $executionInstructions = $module->execution_instructions();
@@ -168,7 +209,7 @@ sub _execute {
 	my $imagePix;
 	my $CLIns = 'http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd';
 my $Pixels;
-eval{ $Pixels = $self->getImageInputs("Pixels")->[0]; };
+eval{ $Pixels = $self->getCurrentInputAttributes("Pixels")->[0]; };
 my %dims = ( 'x'   => $Pixels->SizeX(),
 			 'y'   => $Pixels->SizeY(),
 			 'z'   => $Pixels->SizeZ(),
@@ -416,7 +457,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			$paramString = '';
 			@paramElements = $parameter->getElementsByTagNameNS( $CLIns, "InputSubString" );
 			foreach my $subString (@paramElements) {
-				$paramString .= resolveSubString(
+				$paramString .= $self->resolveSubString(
 					$subString,
 					\%inputs,
 					$CLIns,
@@ -683,7 +724,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 							# XML schema dictates AccessBy attribute must be an integer.
 							# ...but I'm paranoid, so I'm going to check anyway
 							my $accessBy = $output->getAttribute( "AccessBy" );
-							die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->{_module}->name()." are corrupted. Alert system admin!" 
+							die "Attribute AccessBy is not an integer! Execution Instructions in module ".$self->getModule()->name()." are corrupted. Alert system admin!" 
 								if( $accessBy =~ m/\D/ );
 							@elements = split (/\./,$outputTo->getAttribute( "Location" ) );
 							my $formalOutputName = $elements[0];
@@ -889,6 +930,7 @@ sub resolveLocation {
 #	this is the place to add code to handle new types of SubStrings
 #
 sub resolveSubString {
+    my $self = shift;
 	my $subString = shift;
 	my $inputs = shift;
 	my $CLIns = shift;
@@ -916,7 +958,8 @@ sub resolveSubString {
 		# replace this stuff with a single call to resolveLocation
 		my @elements = split (/\./,$location);
 		my $FI = shift (@elements);
-		my $str = '$$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
+        my $input = $self->getCurrentInputAttributes($FI)->[0];
+		my $str = '$input->'.join ('()->',@elements).'()';
 		my $val;
 		# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
 		eval('$val ='. $str);
