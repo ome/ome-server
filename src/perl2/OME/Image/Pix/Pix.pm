@@ -90,17 +90,20 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   
   # Set an arbitrary file for conversion to OME format - $bigEndian is 1 for big endian files, 0 otherwise
   # byte swapping will be accomplished automatically.  This function returns 1 if the file could be opened, 0 otherwise.
-  $pix->setConvertFile ('somePixelFile',$bytesPerPixel,$bigEndian)
+  $pix->setConvertFile ('path/to/somePixelFile',$bytesPerPixel,$bigEndian)
   # All of the convert methods return the number of pixels converted.
-  # $offset is the offset in the file where the read begins.
+  # $offset is the offset in the source file where the read begins.
   # Convert a row, a set of rows, a plane and an XYZ stack from the source file to the OME format file
   $nPix = $pix->convertRow ($offset,$theY,$theZ,$theW,$theT);
   $nPix = $pix->convertRows ($offset,$nRows,$theY,$theZ,$theW,$theT);
   $nPix = $pix->convertPlane ($offset,$theZ,$theW,$theT);
   $nPix = $pix->convertStack ($offset,$theW,$theT);
-  # Call this when you are finished with the source file.
-  # This will be called automatically only when perl garbage collects the $pix object.
+  # Call convertFinish to close the source file when you are finished with it.
+  # This will be called automatically when perl garbage collects the $pix object.
+  # setConvertFile calls this for you, so you can keep calling setConvertFile to incorporate
+  # multiple files into an OME Image, and call this at the end.
   $pix->convertFinish();
+
 
 
 
