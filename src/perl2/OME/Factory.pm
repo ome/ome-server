@@ -962,8 +962,23 @@ sub newAttribute {
 
     my $pkg = $type->requireAttributeTypePackage();
 
-    $data->{target} = $target
-      if defined $target;
+    # If we have specified the target directly as a parameter, then we
+    # should make sure that it is not also specific in the data hash.
+    # (Don't want any "duplicate column" database errors, now, do we?)
+
+    if (defined $target) {
+        delete $data->{target} if defined $data->{target};
+        delete $data->{target_id} if defined $data->{target_id};
+        delete $data->{dataset} if defined $data->{dataset};
+        delete $data->{dataset_id} if defined $data->{dataset_id};
+        delete $data->{image} if defined $data->{image};
+        delete $data->{image_id} if defined $data->{image_id};
+        delete $data->{feature} if defined $data->{feature};
+        delete $data->{feature_id} if defined $data->{feature_id};
+
+        $data->{target} = $target;
+    }
+
     $data->{module_execution} = $module_execution
       if defined $module_execution;
 
