@@ -126,7 +126,11 @@ sub getPageBody {
 
 			my $errorMessage = '';
 			if ($dataset) {
-			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
+				my $datasetManager = new OME::Tasks::DatasetManager;
+			    my $images = OME::Tasks::ImageTasks::importFiles(@paths);
+				my @image_ids = map($_->id(), @$images);
+			   	$datasetManager->addImages( \@image_ids, $dataset->id());
+
 				
 			} else {
 				$errorMessage = "No Dataset to import into.\n";
