@@ -24,3 +24,10 @@ hr	{ height: 0px; border: solid #000000 0px; border-top-width: 1px; }
 .ome_td { background-color: #EFEFEF; }
 
 .ome_action_td { background-color: #006699; }
+
+/* OME Widgets for submit buttons and menu controls (usually grey on grey) */
+a.ome_widget { text-decoration: none; color: #353535; none; font-size: 10px; font-weight: bold; }
+a.ome_widget:hover { text-decoration: none; color: #006699; }
+
+/* Image based links */
+a.ome_imagelink:hover { color: #FF0000; border-width: 2px; }
