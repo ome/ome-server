@@ -110,15 +110,16 @@ sub getRefSearchField {
 	my $experimenter_order = [ '', sort( { $experimenter_names{$a} cmp $experimenter_names{$b} } keys( %experimenter_names ) ) ];
 	$experimenter_names{''} = 'All';
 
-	my $q = new CGI;
-
-	return $q->popup_menu( 
-		-name     => $from_formal_name."_".$accessor_to_type,
-		'-values' => $experimenter_order,
-		-labels	  => \%experimenter_names,
-		-default  => $default
+	my $q = $self->CGI();
+	return (
+		$q->popup_menu( 
+			-name     => $accessor_to_type,
+			'-values' => $experimenter_order,
+			-labels	  => \%experimenter_names,
+			-default  => $default
+		),
+		$accessor_to_type
 	);
-
 }
 
 
