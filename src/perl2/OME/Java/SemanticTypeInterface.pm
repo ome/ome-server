@@ -250,8 +250,24 @@ my %JAVA_TYPES = (
                   integer => 'int',
                  );
 
-sub writeOneSemanticElement ($$) {
-    my ($fh,$element) = @_;
+my %MDTO_ACCESSORS = (
+                      boolean => 'getBooleanElement',
+                      string  => 'getStringElement',
+                      float   => 'getFloatElement',
+                      double  => 'getDoubleElement',
+                      integer => 'getIntElement',
+                     );
+
+my %MDTO_VALUES = (
+                   boolean => 'new Boolean(value)',
+                   string  => 'value',
+                   float   => 'new Float(value)',
+                   double  => 'new Double(value)',
+                   integer => 'new Integer(value)',
+                  );
+
+sub writeOneSemanticElement ($$$$) {
+    my ($int_fh,$dto_fh,$map_code,$element) = @_;
 
     my $element_name = $element->name();
     my $data_column = $element->data_column();
@@ -259,38 +275,70 @@ sub writeOneSemanticElement ($$) {
 
     my $prefix = $sql_type eq 'boolean'? 'is': 'get';
     my $java_type;
+    my $accessor;
+    my $value;
     if ($sql_type eq 'reference') {
         $java_type = $data_column->reference_type();
+        $accessor = "(${java_type}DTO) getObjectElement";
+        $value = "value";
+
+        $$map_code .= <<"JAVA";
+        parseChildElement("${element_name}",${java_type}DTO.class);
+JAVA
     } else {
         $java_type = $JAVA_TYPES{$sql_type};
+        $accessor = $MDTO_ACCESSORS{$sql_type};
+        $value = $MDTO_VALUES{$sql_type};
     }
 
     $element_name =~ s/^Is// if $sql_type eq 'boolean';
 
-    print $fh <<"JAVA";
+    print $int_fh <<"JAVA";
     public ${java_type} ${prefix}${element_name}();
     public void set${element_name}(${java_type} value);
 
 JAVA
+
+    print $dto_fh <<"JAVA";
+    public ${java_type} ${prefix}${element_name}()
+    { return ${accessor}("${element_name}"); }
+
+    public void set${element_name}(${java_type} value)
+    { setElement("${element_name}",${value}); }
+
+JAVA
 }
 
-sub writeOneHasManyType ($$$) {
-    my ($fh,$hasmany_type_name,$element_hash) = @_;
+sub writeOneHasManyType ($$$$$) {
+    my ($int_fh,$dto_fh,$map_code,$hasmany_type_name,$element_hash) = @_;
     my @element_names = sort keys %$element_hash;
 
+    my $accessor_name = $hasmany_type_name;
+
     # Attempt to make the pluralization look somewhat correct
-    $hasmany_type_name =~ s/y$/ies/ or
-    $hasmany_type_name =~ s/s$/ses/ or
-    $hasmany_type_name =~ s/$/s/;
+    $accessor_name =~ s/y$/ies/ or
+    $accessor_name =~ s/s$/ses/ or
+    $accessor_name =~ s/$/s/;
 
     if (scalar(@element_names) == 1) {
         # If there's only one element in the has-many type which points
         # to this type, then we can give the accessor a simple name
         # (get[TypeName]s).
 
-        print $fh <<"JAVA";
-    public List get${hasmany_type_name}();
+        print $int_fh <<"JAVA";
+    public List get${accessor_name}();
 
+JAVA
+
+        print $dto_fh <<"JAVA";
+    public List get${accessor_name}()
+    { return (List) getObjectElement("${accessor_name}"); }
+
+JAVA
+
+        $$map_code .= <<"JAVA";
+        parseListElement("${accessor_name}",
+                         ${hasmany_type_name}DTO.class);
 JAVA
     } else {
         # Otherwise, we have to give the List accessors more complicated
@@ -298,12 +346,22 @@ JAVA
         # distinguished. (get[TypeName]sBy[ElementName])
 
         foreach my $element_name (@element_names) {
-            print $fh <<"JAVA";
-    public List get${hasmany_type_name}By${element_name}();
+            print $int_fh <<"JAVA";
+    public List get${accessor_name}By${element_name}();
+
+JAVA
+
+            print $dto_fh <<"JAVA";
+    public List get${accessor_name}By${element_name}()
+    { return (List) getObjectElement("${accessor_name}By${element_name}"); }
+
+JAVA
+
+            $$map_code .= <<"JAVA";
+        parseListElement("${accessor_name}By${element_name}",
+                         ${hasmany_type_name}DTO.class);
 JAVA
         }
-
-        print $fh "\n";
     }
 }
 
@@ -315,27 +373,37 @@ sub writeOneSemanticType ($) {
     my $type_name = $type->name();
     my $type_classname = $type_name;
     $type_classname =~ s/\W/_/g;
-    my $type_fqclassname = "org.openmicroscopy.st.${type_classname}";
+    my $type_fqclassname = "org.openmicroscopy.shoola.env.data.st.${type_classname}";
     my $type_filename = "${type_classname}.java";
 
-    # Generate the package, class, and file names for the LSID interface
+    # Generate the package, class, and file names for the type interface
+    my $dto_classname = "${type_name}DTO";
+    $type_classname =~ s/\W/_/g;
+    my $dto_fqclassname = "org.openmicroscopy.shoola.env.data.st.${dto_classname}";
+    my $dto_filename = "${dto_classname}.java";
+ 
+   # Generate the package, class, and file names for the LSID interface
     my $lsid_string = OME::Tasks::LSIDManager->getLSID($type);
     my $lsid = OME::LSID->parseLSID($lsid_string);
     my $lsid_classname = "LSID".$lsid->{local_id};
     my $authority = lc($lsid->{authority});
     $authority =~ s/[^\w\.]/_/g;
-    my $lsid_pkg = "org.openmicroscopy.st.lsid.${authority}.db".
+    my $lsid_pkg = "org.openmicroscopy.lsid.${authority}.db".
       $lsid->{db_instance};
     my $lsid_dir = $lsid_pkg;
     $lsid_dir =~ s:\.:/:g;
     my $lsid_fqclassname = "$lsid_pkg.${lsid_classname}";
     my $lsid_filename = "${lsid_classname}.java";
 
-    # Output the type interface
+    # Output the type interface and DTO
 
-    my $fh = openHandle("org/openmicroscopy/st",$type_filename);
-    writePreamble($fh,$type_fqclassname);
-    print $fh "package org.openmicroscopy.st;\n\n";
+    my $int_fh = openHandle("org/openmicroscopy/shoola/env/data/st",$type_filename);
+    writePreamble($int_fh,$type_fqclassname);
+    print $int_fh "package org.openmicroscopy.shoola.env.data.st;\n\n";
+
+    my $dto_fh = openHandle("org/openmicroscopy/shoola/env/data/st",$dto_filename);
+    writePreamble($dto_fh,$dto_fqclassname);
+    print $dto_fh "package org.openmicroscopy.shoola.env.data.st;\n\n";
 
     # Look for reference elements, and if there are any, add them to the
     # list of ST's to import.
@@ -371,42 +439,76 @@ sub writeOneSemanticType ($) {
 
     if (scalar(keys %import_types) > 0) {
         foreach my $type (sort keys %import_types) {
-            print $fh "import org.openmicroscopy.st.${type};\n";
+            print $int_fh "import org.openmicroscopy.shoola.env.data.st.${type};\n";
+            print $dto_fh "import org.openmicroscopy.shoola.env.data.st.${type};\n";
         }
-        print $fh "\n";
     }
 
     # Output the interface specification
 
-    print $fh <<"JAVA";
+    print $int_fh <<"JAVA";
+import org.openmicroscopy.shoola.env.data.dto.Attribute;
+import java.util.List;
+import java.util.Map;
+
 public interface ${type_classname}
-    extends ${lsid_fqclassname}
+    extends Attribute, ${lsid_fqclassname}
 {
+JAVA
+
+    print $dto_fh <<"JAVA";
+import org.openmicroscopy.shoola.env.data.dto.Attribute;
+import org.openmicroscopy.shoola.env.data.dto.AttributeDTO;
+import java.util.List;
+import java.util.Map;
+
+public class ${dto_classname}
+    extends AttributeDTO
+    implements ${type_classname}
+{
+    public ${dto_classname}() { super(); }
+    public ${dto_classname}(Map elements) { super(elements); }
+
 JAVA
 
     # Output an accessor and mutator for each semantic element
 
+    my $map_code = "";
+
     foreach my $element ($type->semantic_elements()) {
-        writeOneSemanticElement($fh,$element);
+        writeOneSemanticElement($int_fh,$dto_fh,\$map_code,$element);
     }
 
     # Output a List accessor for each has-many element
 
     foreach my $hasmany_type_name (sort keys %hasmany_types) {
-        writeOneHasManyType($fh,$hasmany_type_name,
+        writeOneHasManyType($int_fh,$dto_fh,\$map_code,$hasmany_type_name,
                             $hasmany_types{$hasmany_type_name});
     }
 
+    # Output the con
+
     # Output the interface's closing brace
 
-    print $fh <<"JAVA";
+    print $int_fh <<"JAVA";
 }
 JAVA
-    $fh->close();
+
+    print $dto_fh <<"JAVA";
+    protected void setMap(Map elements)
+    {
+        super.setMap(elements);
+$map_code;    }
+
+}
+JAVA
+
+    $int_fh->close();
+    $dto_fh->close();
 
     # Output the entire LSID interface (it's very simple)
 
-    $fh = openHandle($lsid_dir,$lsid_filename);
+    my $fh = openHandle($lsid_dir,$lsid_filename);
     writePreamble($fh,$lsid_fqclassname);
 
     print $fh <<"JAVA";
