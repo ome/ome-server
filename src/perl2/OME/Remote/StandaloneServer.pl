@@ -93,6 +93,10 @@ Options:
   -v, --verbose			Verbose output (same as -s,-e,-c)
   -h, --help			This message
 
+Dispatcher options:
+  -n					Use the new OME::Remote::Facade class for dispatching
+						(for use with org.openmicroscopy.ds Java package)
+
 Transport options:
   -t, --transport <xmlrpc,soap>	Use either an XMLRPC or SOAP transport
 
