@@ -81,7 +81,7 @@ public class MappedDTO
     /**
      * Creates a new <code>MappedDTO</code> without an initialized
      * backing map.  Obviously, the new instance won't be useful until
-     * it is provided with a backing map via the {@link setMap}
+     * it is provided with a backing map via the {@link #setMap}
      * method.
      */
     protected MappedDTO()
@@ -111,7 +111,7 @@ public class MappedDTO
      * method to post-process the backing map, if necessary.  (For
      * instance, if one of the elements in the map is a list of
      * children objects, this method should be overridden to call
-     * {@link parseListElement} to parse that list into Java objects.)
+     * {@link #parseListElement} to parse that list into Java objects.)
      */
     protected void setMap(Map elements) { this.elements = elements; }
 
