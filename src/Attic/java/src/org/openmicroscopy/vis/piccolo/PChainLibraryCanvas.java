@@ -241,6 +241,11 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 	public void scaleToSize() {
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	}
+	
+	public void animateToSize() {
+		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,
+				PConstants.ANIMATION_DELAY);
+	}
 
 	/**
 	 * 
@@ -291,6 +296,10 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener,
 			PChainBox cb = findChainBox(chain);
 			if (cb != null)
 				zoomToChain(cb);
+		}
+		else if (state.getSelectedDataset() == null) {
+			// zoom to root.
+			animateToSize();
 		}
 	}
 	
