@@ -221,7 +221,7 @@ public class PModule extends PPath implements PBufferedNode {
 		setPathTo(rect);
 		setPaint(PConstants.DEFAULT_FILL);
 		setStrokePaint(PConstants.DEFAULT_COLOR);
-		setStroke(PConstants.BORDER_STROKE);
+		setStroke(PConstants.MODULE_STROKE);
 		
 		// add the other target
 		outputLinkTarget = new PLinkTarget();

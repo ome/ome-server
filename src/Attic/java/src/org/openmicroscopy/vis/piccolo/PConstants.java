@@ -182,5 +182,5 @@ public class PConstants {
 	
 	public static final float STROKE_WIDTH=4.0f;
 	public static final BasicStroke BORDER_STROKE = new BasicStroke(STROKE_WIDTH);
-	
+	public static final BasicStroke MODULE_STROKE = new BasicStroke(5);
 }
