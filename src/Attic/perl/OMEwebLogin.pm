@@ -46,7 +46,10 @@ sub Login {
 print STDERR "OMEwebLogin:  Calling Connect.\n";
 		eval {$self->Connect()};
 		$self->{errorMessage} = $@;
-		if (not $@)
+		if (not $self->{errorMessage} and not (exists $self->{sessionKey} and defined $self->{sessionKey} and $self->{sessionKey}) ) {
+			$self->{errorMessage} = 'Failed to connect to the database.  Is the database running?';
+		}
+		if (not $self->{errorMessage})
 		{
 print STDERR "OMEwebLogin:  Connected successfully.\n";
 			return ($self->{sessionKey});

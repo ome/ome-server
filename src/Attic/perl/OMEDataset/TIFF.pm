@@ -250,7 +250,7 @@ my @columns;
 # The output of this program is one attribute per line (attribute name \t attribute value).
 # Conveniently, the attribute names match the Object's field names so me don't need a map.
 	$command = "$DumpTIFFheader $datasetPath 2> $tempFileNameErr |";
-	open (STDOUT_PIPE,$command);
+	open (STDOUT_PIPE,$command) or die "Could not execute '$command'.\n";
 	while (<STDOUT_PIPE>) {
 		chomp;
 		($attribute,$value) = split ('\t',$_);
@@ -262,8 +262,8 @@ my @columns;
 	}
 	close (STDOUT_PIPE);
 
-	return undef unless exists $self->{size_x} and $self->{size_x} and
-		exists $self->{size_y} and $self->{size_y};
+	die "Could not determine the width of the image.\n" unless exists $self->{SizeX} and $self->{SizeX};
+	die "Could not determine the height of the image.\n" unless exists $self->{SizeY} and $self->{SizeY};
 
 # This will calculate statistics about TIFF files, and output two lines -
 # one line with the following column headings, and the next line containing the values.
@@ -272,7 +272,7 @@ my @columns;
 # This Import function ignores these values, because this class is for a single-plane dataset.
 # The file will actually be read at this point, and an error reported if its corrupt.
 	$command = "$DumpTIFFstats $datasetPath 2>> $tempFileNameErr |";
-	open (STDOUT_PIPE,$command);
+	open (STDOUT_PIPE,$command) or die "Could not execute '$command'.\n";
 	@columns = split ('\t', <STDOUT_PIPE>);
 	while (<STDOUT_PIPE>) {
 		chomp;
