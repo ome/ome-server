@@ -121,4 +121,23 @@ public class Chains {
 	public int size() {
 		return chains.size();
 	}
+	
+	/*
+	 * Update the status of each chain to indicate which have executions in
+	 * the current dataset
+	 * 
+	 * @param chain a collection of chains that have executions in the
+	 *   current dataset.
+	 */
+	 public void setExecutedChains(Collection chains) {
+	 	Iterator iter = iterator();
+	 	CChain chain;
+	 	boolean hasExecution;
+	 	
+	 	while (iter.hasNext()) {
+	 		chain = (CChain) iter.next();
+	 		hasExecution = chains.contains(chain);
+	 		chain.setExecutedInCurrentDataset(hasExecution);
+	 	}
+	 }
 }
