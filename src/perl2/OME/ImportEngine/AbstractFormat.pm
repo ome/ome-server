@@ -50,6 +50,7 @@ image format importers
 	my $groups = $format->getGroups($filenames);
 	my $sha1 = $format->getSHA1($group);
 	my $image = $format->importGroup($group);
+	$format->cleanup();
 
 =head1 DESCRIPTION
 
@@ -193,6 +194,20 @@ sub importGroup {
     die "AbstractFormat->importGroup is abstract";
 }
 
+=head2 cleanup
+
+	$format->cleanup();
+
+This method will be called once the import finishes (regardless of
+whether the import was successful).  If any persistent resources need
+to be created during the import process for your format, they can be
+freed in this method.
+
+=cut
+
+sub cleanup {
+}
+
 =head1 HELPER METHODS
 
 The following methods are available to subclasses of AbstractFormat.
@@ -300,7 +315,6 @@ sub __touchOriginalFile {
     return OME::Tasks::PixelsManager->
       createOriginalFileAttribute($file,$format,$file_mex);
 }
-
 
 =head2 __storeInstrumemtInfo
 

@@ -197,6 +197,7 @@ sub startImport {
 	$self->{nImageFiles} = 0;
 	$self->{_image_files} = {};
 	$self->{_images} = [];
+    $self->{_formatInstances} = undef;
 	
     return $files_mex;
 }
@@ -235,6 +236,8 @@ sub importFiles {
     my $formats = $self->__getFormats();
     my %formats;
     my %groups;
+
+    $self->{_formatInstances} = \%formats;
 
     # Instantiate all of the format classes and retrieve the groups for
     # each.
@@ -414,6 +417,14 @@ sub finishImport {
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
+
+    # Let all of the format classes perform their cleanup steps.
+    my $formats = $self->{_formatInstances};
+    foreach my $format_class (keys %$formats) {
+        my $format = $formats->{$format_class};
+        $format->cleanup() if defined $format;
+    }
+    $self->{_formatInstances} = undef;
 
     # Wrap up things in the database.
 	$files_mex->status('FINISHED');
