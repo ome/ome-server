@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by hochheiserha via omejava on Mon Feb 21 16:02:08 2005
+ * Created by hochheiserha via omejava on Wed Mar  9 11:35:54 2005
  *
  *------------------------------------------------------------------------------
  */
@@ -128,6 +128,11 @@ public class ModuleExecutionDTO
     public int countInputs()
     { return countListElement("inputs"); }
 
+    public List getConsumedOutputs()
+    { return (List) getObjectElement("consumed_outputs"); }
+    public int countConsumedOutputs()
+    { return countListElement("consumed_outputs"); }
+
     public List getPredecessors()
     { return (List) getObjectElement("predecessors"); }
     public int countPredecessors()
@@ -143,11 +148,6 @@ public class ModuleExecutionDTO
     public int countChainExecutions()
     { return countListElement("chain_executions"); }
 
-    public List getActualOutputs()
-    { return (List) getObjectElement("actual_outputs"); }
-    public int countActualOutputs()
-    { return countListElement("actual_outputs"); }
-
     public void setMap(Map elements)
     {
         super.setMap(elements);
@@ -156,10 +156,10 @@ public class ModuleExecutionDTO
         parseChildElement("experimenter",ExperimenterDTO.class);
         parseChildElement("image",ImageDTO.class);
         parseListElement("inputs",ActualInputDTO.class);
+        parseListElement("consumed_outputs",ActualInputDTO.class);
         parseListElement("predecessors",ModuleExecutionDTO.class);
         parseListElement("successors",ModuleExecutionDTO.class);
         parseListElement("chain_executions",ChainExecutionDTO.class);
-        parseListElement("actual_outputs",ActualInputDTO.class);
     }
 
 }
