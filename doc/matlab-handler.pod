@@ -1,0 +1,339 @@
+=head1 TITLE
+
+The Matlab Analysis Handler
+
+=head1 Table of Contents
+
+ 1. Introduction
+ 2. Incorporating a Matlab function
+    2.1 Format of the inputs
+    2.2 Format of the outputs
+    2.3 References
+    2.4 The Pixels semantic type
+        ome_readPixelsPlane
+    2.5 Execution points
+    2.6 The XML descriptor
+
+=head1 1. Introduction
+
+The C<OME::Analysis::MatlabHandler> class allows new and existing
+Matlab modules to be incorporated as modules into the OME analysis
+engine.  This document describes how to use the Matlab handler to
+incorporate a Matlab function, and then desrcibes some of the
+technical details of the handler.
+
+=head1 2. Incorporating a Matlab function
+
+OME analysis modules map nicely to Matlab functions.  They take in
+inputs, perform some computation, and produce outputs.  All that the
+Matlab handler is really doing is providing "glue", which is able to
+retrieve the function's inputs from the database, and provide them to
+the Matlab code.
+
+As it stands, though, this glue code is not horribly smart.  It knows
+how to retrieve information from the database, and knows how to create
+Matlab variables which look very much like the attributes that were
+read.  This means that the Matlab functions must take in inputs of
+this form.  Preexisting functions, which take in inputs of a different
+form, cannot directly become analysis modules.  Rather, a Matlab
+wrapper function must be written that transforms the inputs from the
+form that OME provides into the form that the function expects.  This
+will be described in more detail later.
+
+=head2 2.1 Format of the inputs
+
+All metadata in OME is semantically typed.  These semantic types are
+very similar to C<structs> in C, or C<records> in Pascal.  For each
+input to an analysis module, there will be a list of attributes, all
+of the same semantic type.  After reading them from the database, the
+Matlab handler converts these attributes into a Matlab row vector of
+structures.  The structure array will have one field for each semantic
+element of the semantic type.  (For more information on Matlab
+structures, please see the appropriate entry of the Matlab
+documentation tree.)
+
+As an example, let's assume that we are trying to incorporate a Matlab
+function with the following prototype:
+
+	function [avgintensity] = findAverageIntensity(pixel_means)
+
+This function takes in a single input, pixel_means, which is assumed
+to be attributes of the PlaneMean semantic type, which represents the
+average pixel intensity for each plane within an image.  This function
+will find the mean mean intensity -- i.e., the unweighted average of
+these means.
+
+The PlaneMean semantic type defines four semantic elements: TheZ,
+TheC, TheT, and Mean.  The first three elements identify the plane
+that the attribute refers to; the last stores the mean pixel intensity
+of that plane.
+
+This easily translates into a Matlab structure array, with the exact
+same four fields.  Therefore, in Matlab,
+
+	pixel_means(1).Mean
+
+refers to the mean intensity of the first plane in the list.
+
+There is one other field added to each input -- C<id>.  This
+corresponds to the C<ATTRIBUTE_ID> field in the database.  Usually, it
+is not needed in Matlab code.  However, it can be used to determine if
+two Matlab structures are, in fact, representing the same row in the
+database -- the C<id> fields will be equal only if so.
+
+=head2 2.2 Format of the outputs
+
+The Matlab handler expects the output from the function to be
+formatted exactly like the input to the function -- the semantic types
+of the output correspond to Matlab structure arrays.  The array can be
+created by assigning to it just as the input arrays are accessed:
+
+	avgintensity(1).Intensity = 4;
+
+If you know in advance how long the output array is going to be, you
+can pre-allocate it to save a little bit of space:
+
+	means = repmat(struct('TheZ',{},'TheC',{},'TheT',{},'Mean',{}),outsize);
+
+This allocates a structure array of length C<outsize>.  The parameters
+to the C<struct> function make sure that each entry in the output
+array has the appropriate fields.  These should correspond to the
+semantic elements of the means output's semantic type.  Note that this
+pre-allocation step if not necessary -- if you are creating a large
+array of outputs, it can save time, since Matlab won't have to
+reallocate the array each time you add an entry.
+
+Note that unlike the input arrays, the output arrays should not
+contain an C<id> field.
+
+=head2 2.3 References
+
+The fact that attributes can refer to other attributes causes a slight
+problem in the implementation of the Matlab handler.  Since Matlab
+does not provide any pointer-style indirection, the Matlab handler
+must create copies of any attribute reference in the inputs.  In order
+to prevent unnecessarily copying a huge attribute tree into Matlab,
+you must specify in the XML descriptor (described later) which
+references are to be included.  Any that you leave out will not be
+available to the Matlab function.
+
+For instance, the Pixels semantic type contains two elements used to
+locate the repository file containing an image's pixels: Path and
+Repository.  (There are other elements describing the image's
+dimensions, but these are not important here.)  The Repository element
+is a reference to an attribute of the Repository semantic type.  This
+Repository attribute describes the location of the OME repository.
+The Path element of the Pixels attribute specifies where in that
+repository the image file resides.  The full pathname to the pixels
+file is found by concatenating the Path element of the Repository
+attribute with the Path element of the Pixels attribute.
+
+However, in order to be able to access the Repository attribute, you
+must tell the Matlab handler that you intend to use it.  Assuming that
+the input which has a semantic type of Pixels as also named Pixels,
+you must add
+
+	Pixels.Repository
+
+to the list of references.  This will allow you to refer to the
+Repository attribute with the following Matlab code:
+
+	pixels(1).Repository
+
+This entry of the structure array is another structure.  It's format
+is exactly like all of the other structures -- one field per semantic
+element.  Therefore, the path of the repository is stored in
+
+	pixels(1).Repository.Path
+
+whereas the path of the image within the repository is stored in
+
+	pixels(1).Path
+
+It must be repeated that a reference element will only be available to
+the Matlab code if it is specified in the list of references.  As a
+more complicated example, let's consider the ImagePlate, Plate, and
+Screen semantic types.  The Plate and Screen semantic types are global
+-- they do not correspond to any single dataset or image.  Each Screen
+can contain many Plates; this is encoded as a reference from a Plate
+to the Screen it belongs to.  Each image can belong to a Plate -- this
+is encoded as an ImagePlate attribute, which has a reference to the
+Plate attribute the image belongs to.  Therefore, a function which
+calculates something about an image can take in the ImagePlate
+attribute as a parameter (which we will assume is named
+C<ImagePlates>).  If the function needs some of the information about
+the Plate in order to execute properly, it must put
+
+	ImagePlates.Plate
+
+into the list of references.  Further, if it also needs information
+about the entire screen, it must also include
+
+	ImagePlates.Plate.Screen
+
+=head2 2.4 The Pixels semantic type
+
+As just described, the Pixels semantic type is one example of an
+attribute with a reference field.  Further, in order to correctly
+access the pixels of an image, the Repository reference element must
+be passed into Matlab.  This Pixels element will be the most likely
+difference preventing a preexisting Matlab function from be directly
+incorporated as a Matlab function -- most functions that operate on an
+image expect that image's pixels to be passed in as a Matlab matrix of
+pixel values.  In the case of the Matlab handler, however, it is
+passed in as a Pixels attributes.  This attribute only directly
+encodes the image's dimensions, and a filename containing the pixels
+themselves.  This has the advantage of not forcing the handler to read
+in the pixels every time, if the function only needs the dimensions.
+However, it forces a function which actually does need the pixels to
+perform one extra step.
+
+To make this easier, the Matlab handler comes with a couple of helper
+functions that do most of the work for you.
+
+B<FIXME:  Write more helper routines and then document them.>
+
+=head3 ome_readPixelsPlane
+
+	pixels_matrix = ome_readPixelsPlane(pixels_attr,
+	                                    z,c,t,
+	                                    [flat],
+	                                    [nodouble])
+
+This function will read a single 2D plane from the pixels file, and
+will return it as a standard Matlab matrix.  The C<z>, C<c>, and C<t>
+parameters specify which plane you want -- if they are out of range,
+the function will throw an error.
+
+If the C<flat> parameter is unspecified or <false>, the matrix
+returned will be two-dimensional, and will be of size C<[y, x]>.  Note
+the order -- Matlab stores matrices according to their usual
+mathematical definition -- row, then column.  This is the reverse of
+how images are usually stored -- x, then y.
+
+If the C<flat> parameter is true, the matrix returned is
+one-dimensional.  The pixels will be stored into the one-dimensional
+matrix in row-major order.  This is slightly more efficient for the
+cases when the location of a pixel is unimportant.
+
+Most of the math operations in Matlab are only defined on matrices of
+C<doubles>, so this function will, by default, convert the pixels read
+from the file into C<doubles>.  Note that this can increase the memory
+requirement for a plane of pixels by as much as a factor of 8.  If you
+know that the operations you want to perform will work on C<uint8s>,
+C<uint16s>, or C<uint32s>, you can set the C<nodouble> parameter to
+C<true>.  This will, as mentioned, reduce the space requirement, and
+is very slightly more efficient.
+
+=head2 2.5 Execution points
+
+As with the command-line handler, you must specify at which point in
+the analysis loop the Matlab function should be executed.  Basically
+this boils down to a simple question: Should the function be executed
+once per dataset, once per image, or once per feature?  All of the
+inputs will be available at each point, but the they will either be
+repeated or grouped, depending on the granularity of the input, and
+the execution point that you choose.
+
+As an example, let's consider the PlaneMean semantic type, which has
+image granularity.  If you choose an execution point of dataset, your
+function will be called exactly once, and all of the PlaneMeans (for
+all of the images) will be grouped together into a single array.  If
+you choose an execution point of image, your function will be called
+once per image, and each time it is called, you will only have the
+PlaneMeans for that particular image.  If you choose an execution
+point of feature, your function will be called multiple times per
+image -- once per feature in each image.  Since PlaneMean is an image
+semantic type, though, the PlaneMeans for an image will be repeated,
+and you'll get the exactly same array each time the function is called
+for a particular image.
+
+=head2 2.6 The XML descriptor
+
+Before a Matlab function can be used as an analysis module, you must
+write an XML descriptor for it.  It can appear inside of any valid OME
+XML file, but usually, it will be in its own file, with the
+definitions of any new semantic types it needs.  The format of the
+AnalysisModule tag is the same as for all other analysis modules.  As
+an example, this is the beginning of the definition of the Matlab
+version of the standard Plane Statistics module:
+
+	<AnalysisModule
+	   ModuleName="Plane statistics (Matlab)"
+	   Category="Statistics"
+	   ModuleType="OME::Analysis::MatlabHandler"
+	   ProgramID="ome_planeStatistics">
+	  <Description>Calculate pixel statistics for each XY plane.</Description>
+	  <Declaration>
+	    <FormalInput
+	       Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
+	    <FormalOutput
+	       Name="Minima" SemanticTypeName="PlaneMinimum" Count="+"/>
+	    <FormalOutput
+	       Name="Maxima" SemanticTypeName="PlaneMaximum" Count="+"/>
+	    <FormalOutput
+	       Name="Mean" SemanticTypeName="PlaneMean" Count="+"/>
+	    <FormalOutput
+	       Name="Geomean" SemanticTypeName="PlaneGeometricMean" Count="+"/>
+	    <FormalOutput
+	       Name="Geosigma" SemanticTypeName="PlaneGeometricSigma" Count="+"/>
+	    <FormalOutput
+	       Name="Sigma" SemanticTypeName="PlaneSigma" Count="+"/>
+	    <FormalOutput
+	       Name="Centroid" SemanticTypeName="PlaneCentroid" Count="+"/>
+	  </Declaration>
+
+The C<ModuleType> must be C<OME::Analysis::MatlabHandler>.  The
+C<ProgramID> attribute specifies the name of the Matlab function to
+execute.  The C<.m> file for this function, plus any other
+user-defined functions that it needs, should be placed in the
+C</OME/matlab>) directory.  The C<FormalInput> and C<FormalOutput>
+tags are specified just like any other analysis module.
+
+There is also a MatlabHandler-specific C<ExecutionInstructions>
+section.  The remainder of PlaneStatistics's definition is as follows:
+
+	  <ExecutionInstructions ExecutionPoint="precalculateImage">
+	    <!-- specifies which of the references in the actual inputs
+	         needed to be populated -->
+	    <ReferencesNeeded>
+	      <Reference Name="Pixels.Repository"/>
+	    </ReferencesNeeded>
+	
+	    <!-- specifies the order that the Matlab function expects the
+	         formal inputs -->
+	    <Inputs>
+	      <Input Name="Pixels"/>
+	    </Inputs>
+	
+	    <!-- specifies the order of the formal outputs -->
+	    <Outputs>
+	      <Output Name="Minima"/>
+	      <Output Name="Maxima"/>
+	      <Output Name="Mean"/>
+	      <Output Name="Sigma"/>
+	      <Output Name="Geomean"/>
+	      <Output Name="Centroid"/>
+	    </Outputs>
+	  </ExecutionInstructions>
+
+The C<ExecutionPoint> attribute specifies when the function should be
+called, as described in section 2.5.  It should be one of the
+following values: C<precalculateDataset>, C<precalculateImage>,
+C<calculateFeature>, C<postcalculateImage>, or
+C<postcalculateDataset>.
+
+The C<ReferencesNeeded> section specifies which attribute references
+should be made available to the Matlab code, as described in section
+2.3.
+
+The C<Inputs> section specifies how the formal inputs described by the
+analysis module correspond to the order of the inputs to the Matlab
+function.  The order of the outputs is similarly specified by the
+C<Outputs> section.
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=cut
