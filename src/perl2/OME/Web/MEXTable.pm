@@ -113,7 +113,7 @@ sub getTable {
 		my $timestamp = $mex->timestamp();
 		my $dataset = $factory->loadObject("OME::Dataset", $mex->dataset_id());
 		my $dataset_name = $dataset ? $dataset->name() : " - ";
-                                                                                                          
+
         $table_data .= $q->Tr({-class => 'ome_td'},
 				$checkbox || '',
             $q->td({-align => 'center'}, [
@@ -144,7 +144,7 @@ sub getTable {
 		$options_row || '',
 		$q->endform()
     );
-                                                                                                          
+
     return $table;
 }
 

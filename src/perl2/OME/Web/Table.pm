@@ -197,7 +197,7 @@ sub __getOptionsTR {
     foreach (@$options) {
         $option_buttons .= $q->submit({-name => $_, -value => $_}) . '&nbsp';
     }
-                                                                                                          
+
 	# Build our table row and return it
 	if ($option_buttons) {
     	return $q->Tr(
@@ -228,9 +228,6 @@ sub getPageBody {
     my $q = $self->CGI();
 	my ($main_table, $header, $filter_table);
 	
-	my $type = $q->param('type') || 'projects';  # Projects is the default display
-	   $type = lc($type);
-
 	# Make a filterset to pass to getTable()
 	my $filterset;
 	if ($q->param('filter_field') and $q->param('filter_string')) {
@@ -240,26 +237,10 @@ sub getPageBody {
 	# Cleanup so we don't get superfluous propagation
 	$q->delete('filter_field', 'filter_string', 'selected');
 
-	my @options_row = $q->param('options_row');
-
-	# XXX TEMPORARY
-	if ($type =~ /mex/) {
-		my $columns = OME::ModuleExecution->__columns();
-		my @column_aliases = ("id", keys(%$columns));  # Primary keys aren't in the column list
-		$header = $self->__genericTableHeader("MEXes");
-		$main_table = $self->__MEXTable( {
-				filters => $filterset,
-				options_row => [@options_row],
-			}
-		);
-		$filter_table = $self->__genericTableFooter(@column_aliases);
-	}
-	# XXX TEMPORARY
-
 	my @column_aliases = $self->__getColumnAliases();
 	$header = $self->__genericTableHeader();
 	$main_table = $self->getTable( {
-				options_row => [@options_row],
+				options_row => [$q->param('options_row')],
 				relations => $q->param('relations') || 0,
 				filters => $filterset || undef,
 				select_column => 0,
