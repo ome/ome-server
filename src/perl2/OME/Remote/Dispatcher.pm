@@ -351,7 +351,7 @@ use strict;
 my %remoteReferences;
 my %remoteObjects;
 
-use constant NULL_REFERENCE => ">>OBJ:NULL";
+use OME::Remote::Prototypes qw(NULL_REFERENCE);
 
 sub saveObject {
     my ($sessionKey,$reference,$object) = @_;
