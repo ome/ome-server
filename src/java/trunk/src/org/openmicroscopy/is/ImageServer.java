@@ -65,6 +65,12 @@ import java.io.FileNotFoundException;
  * mechanism unusable.</li>
  *
  * </ol>
+ *
+ * @author Douglas Creager (dcreager@alum.mit.edu)
+ * @version 2.2
+ * @since OME2.2
+ *
+ * <p>CVS info: $Id$</p>
  */
 
 public abstract class ImageServer
