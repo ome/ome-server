@@ -515,8 +515,8 @@ sub addColumn {
                         $value = $self->{__fields}->{$table}->{$column};
                     }
 
-                    return 1 if ($value eq 't');
-                    return 0 if ($value eq 'f');
+                    return 1 if ($value =~ /^t(rue)?$/i);
+                    return 0 if ($value =~ /^f(alse)?$/i);
                     return $value;
                 };
             } else {
@@ -1245,6 +1245,8 @@ sub __makeSelectSQL {
             # If the value is an object, assume that it has an id
             # method, and use that in the SQL query.
 
+            my @new_values;
+
             if (ref($criterion) eq 'ARRAY') {
                 $value = $criterion->[1];
                 if (ref($value) eq 'ARRAY') {
@@ -1254,37 +1256,49 @@ sub __makeSelectSQL {
                             push @questions, '?';
                             $arrayval = $arrayval->id()
                               if UNIVERSAL::isa($arrayval,"OME::DBObject");
-                            push @values, $arrayval;
+                            push @new_values, $arrayval;
                         }
                     }
                     $question = '('.join(',',@questions).')';
                 } else {
                     $value = $value->id()
                       if UNIVERSAL::isa($value,"OME::DBObject");
-                    push @values, $value;
+                    push @new_values, $value;
                 }
                 $operation = defined $value? $criterion->[0]: "is";
             } else {
                 $value = $criterion;
                 $value = $value->id()
                   if UNIVERSAL::isa($value,"OME::DBObject");
-                push @values, $value;
+                push @new_values, $value;
                 $operation = defined $value? "=": "is";
             }
 
-            # If the column is a float, = won't work.
             my $sql_type = $columns->{$column_alias}->[3]->{SQLType}
               if exists $columns->{$column_alias};
 
             if ($location eq 'id') {
                 push @join_clauses, [$operation, $question];
                 $id_criteria = 1;
+            } elsif ($sql_type eq 'boolean') {
+                # If the column is Boolean, 1/0 won't work.
+                foreach my $value (@new_values) {
+                    die "Illegal Boolean column value '$value'"
+                      unless $value =~ /^f(alse)?$|^t(rue)?$|^[01]$/i;
+
+                    $value = 'true' if $value eq '1';
+                    $value = 'false' if $value eq '0';
+                }
+                push @join_clauses, "$location $operation $question";
             } elsif ($class->isRealType($sql_type) && $operation eq '=') {
+                # If the column is a float, = won't work.
                 push @join_clauses, "abs($location - $question) < ?";
-                push @values, $EPSILON;
+                push @new_values, $EPSILON;
             } else {
                 push @join_clauses, "$location $operation $question";
             }
+
+            push @values, @new_values;
         }
     }
 
@@ -1388,6 +1402,23 @@ sub __makeInsertSQLs {
         confess "Column $alias does not exist"
           unless defined $column_def;
         my ($table, $column, $foreign_key_class, $sql_options) = @$column_def;
+
+        if (defined $sql_options &&
+            $sql_options->{SQLType} eq 'boolean') {
+
+            # This is a Boolean column, so we need to make sure that
+            # the value is 'true' or 'false', not 1 or 0.
+
+            # FIXME: Eventually, this should move into the
+            # DatabaseDelegate, since this Boolean translation is
+            # Postgres-specific.
+
+            die "Illegal Boolean column value '$datum'"
+              unless $datum =~ /^f(alse)?$|^t(rue)?$|^0$|^1$/i;
+
+            $datum = 'false' if $datum eq '0';
+            $datum = 'true' if $datum eq '1';
+        }
 
         $tables_used{$table} = undef;
         push @{$columns_needed{$table}}, $column;
