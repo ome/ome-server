@@ -86,7 +86,6 @@ dispatch (char **param)
 	struct stat fStat;
 	FILE *file;
 	char file_path[MAXPATHLEN];
-	char buf[4096];
 	unsigned long tiffDir=0;
 	
 	/* Co-ordinates */
@@ -108,7 +107,7 @@ char **cgivars=param;
 
 
 	if (! (method = get_param (param,"Method")) ) {
-		HTTP_DoError (method,"Method parameter missing");
+		HTTP_DoError (method,"%s", "Method parameter missing");
 		return (-1);
 	}
 	
@@ -127,7 +126,7 @@ char **cgivars=param;
 			 m_val != M_IMPORTOMEFILE &&
 			 m_val != M_DELETEFILE &&
 			 m_val != M_GETLOCALPATH) {
-			HTTP_DoError (method,"PixelsID Parameter missing");
+			HTTP_DoError (method,"%s", "PixelsID Parameter missing");
 			return (-1);
 	}
 
@@ -189,7 +188,7 @@ char **cgivars=param;
 			}
 
 			if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
-				HTTP_DoError (method,strerror( errno ) );
+				HTTP_DoError (method, "%s", strerror( errno ) );
 				return (-1);
 			}
 
@@ -202,8 +201,8 @@ char **cgivars=param;
         	if (!ID) return (-1);
 
 			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
+				else  HTTP_DoError (method, "%s", "Access control error - check error log for details" );
 				return (-1);
 			}
 
@@ -226,7 +225,7 @@ char **cgivars=param;
         	if (!ID) return (-1);
 
 			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
@@ -250,7 +249,7 @@ char **cgivars=param;
 				sscanf (theParam,"%d",&force);
 
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
@@ -258,7 +257,7 @@ char **cgivars=param;
 			resultID = FinishPixels (thePixels,force);
 		
 			if ( resultID == 0) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
@@ -274,13 +273,13 @@ char **cgivars=param;
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 
 			if (! (planeInfoP = thePixels->planeInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
@@ -313,13 +312,13 @@ char **cgivars=param;
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 
 			if (! (stackInfoP = thePixels->stackInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
@@ -357,7 +356,7 @@ char **cgivars=param;
 				return (-1);
 			}
 			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) == 0) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			} else {
@@ -376,7 +375,7 @@ char **cgivars=param;
 			
 			if (ID) {
 				if (! (thePixels = GetPixelsRep (ID,'i',bigEndian())) ) {
-					if (errno) HTTP_DoError (method,strerror( errno ) );
+					if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
 				}
@@ -569,7 +568,7 @@ char **cgivars=param;
 			}
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
@@ -623,7 +622,7 @@ char **cgivars=param;
 				}
 				if (theY+nRows-1 >= head->dy) {
 					freePixelsRep (thePixels);
-					HTTP_DoError (method,"theY + nRows (%d + %d = %d) must be less than dY (%d).",
+					HTTP_DoError (method,"theY + nRows (%d + %ld = %ld) must be less than dY (%d).",
 						theY,nRows,theY+nRows,head->dy);
 					return (-1);
 				}
@@ -635,7 +634,7 @@ char **cgivars=param;
 			else
 				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix, 1);
 			if (nIO != nPix) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
@@ -654,7 +653,7 @@ char **cgivars=param;
 				return (-1);
 			}
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 				else HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
@@ -713,7 +712,7 @@ char **cgivars=param;
 		} else rorw = 'r';
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
+			if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 			else HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
 		}
@@ -797,7 +796,7 @@ char **cgivars=param;
 		}
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
+			if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
 			else HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
 		}

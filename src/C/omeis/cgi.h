@@ -53,7 +53,8 @@ char *
 get_lc_param (char **cgivars, char *param);
 
 void
-HTTP_DoError (char *method, char *template, ...);
+HTTP_DoError (char *method, const char *template, ...)
+	__attribute__ ((format (printf, 2, 3)));
 
 void
 HTTP_ResultType (char *mimeType);

@@ -48,7 +48,7 @@
 
 
 
-void HTTP_DoError (char *method, char *template, ...) {
+void HTTP_DoError (char *method, const char *template, ...) {
 va_list ap;
 /*
 403 Forbidden Authorization failure
