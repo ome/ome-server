@@ -48,13 +48,17 @@
 			   Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
 		  </Declaration>
 	
-		  <ExecutionInstructions ExecutionPoint="startImage" xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR1/MLI.xsd">
-			<Inputs>
-			  <Input Name="Pixels"/>
-			</Inputs>
-			<Outputs>
-			  <Output Name="Pixels"/>
-			</Outputs>
+		  <ExecutionInstructions 
+		  	ExecutionGranularity="I" 
+		  	xmlns="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" 
+		  	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+		  	xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
+			<FunctionInputs>
+			  <Input><PixelsInput FormalInput="Pixels" ID="In_Pixels"/></Input>
+			</FunctionInputs>
+			<FunctionOutputs>
+			  <Output><PixelsOutput FormalOutput="Pixels" ID="Out_Pixels"/></Output>
+			</FunctionOutputs>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
