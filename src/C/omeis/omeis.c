@@ -178,22 +178,27 @@ struct flock fl;
 
 
 /*
-  int newRepFile (OID theID, char *path, off_t size) {
+  int newRepFile (OID theID, char *path, off_t size, char *suffix) {
   Make a new repository file of the specified size.  The path parameter is a buffer that will contain the new repository path.
   This function calls getRepPath to get the filepath, making directories then creates a file of the specified size.
   This function returns the file descriptor of the file opened for writing.
-  The path buffer will contain the path.
+  The path buffer will contain the path, including the suffix (if not NULL).
   The file created will be of the specified size, and the entire file will be write-locked.
   If there were errors along the way, this function returns <0.  Check errno for the source of the error.
   N.B.: The path is not cleared, it is appended to what's already in the buffer, allowing for independent root filesystems.
 */
-int newRepFile (OID theID, char *path, off_t size) {
+int newRepFile (OID theID, char *path, off_t size, char *suffix) {
 
 	int fd;
 	unsigned char zero=0;
 
 	if (! getRepPath (theID,path,1)) {
 		return (-1);
+	}
+	
+	if (suffix) {
+		strcat (path,".");
+		strcat (path,suffix);
 	}
 
 	if ( (fd = open (path, O_CREAT|O_EXCL|O_RDWR, 0600)) < 0) {
@@ -247,7 +252,8 @@ void freePixelsRep (PixelsRep *myPixels) {
 		if (myPixels->stackInfos) free (myPixels->stackInfos);
 		if (myPixels->head) free (myPixels->head);
 	} else {
-		munmap (myPixels->head, myPixels->file_size);
+		munmap (myPixels->head, myPixels->size_info);
+		munmap (myPixels->pixels, myPixels->size_rep);
 	}
 
 	if (myPixels->fd_info >=0 ) close (myPixels->fd_info);
@@ -259,8 +265,9 @@ void freePixelsRep (PixelsRep *myPixels) {
 
 /*
   The constructor doesn't do very much other than allocate and initialize memory.
+  If an ID is passed in, it will set the paths to the dependent files, but not open anything.
 */
-PixelsRep *newPixelsRep (void)
+PixelsRep *newPixelsRep (OID ID)
 {
 PixelsRep *myPixels;
 char *root="Pixels/";
@@ -271,11 +278,23 @@ char *pixIDfile="Pixels/lastPix";
 	myPixels = memset(myPixels, 0, sizeof(PixelsRep));
 	
 	strcpy (myPixels->path_rep,root);
+	strcpy (myPixels->path_info,root);
 	strcpy (myPixels->path_ID,pixIDfile);
 
 	/* file descriptors reset to -1 */
 	myPixels->fd_rep = -1;
 	myPixels->fd_info = -1;
+
+	/* If we got an ID, set the paths */
+	if (ID) {
+		if (! getRepPath (ID,myPixels->path_rep,0)) {
+			fprintf (stderr,"Could not get path to pixels file.\n");
+			freePixelsRep (myPixels);
+			return (NULL);
+		}
+		strcpy (myPixels->path_info,myPixels->path_rep);
+		strcat (myPixels->path_info,".info");
+	}
 
 	return (myPixels);
 }
@@ -286,32 +305,55 @@ char *pixIDfile="Pixels/lastPix";
   rorw may be set to 'w' (write), 'r' (read), or 'n' (new file).
 */
 int openPixelsFile (PixelsRep *myPixels, char rorw) {
-char *sh_mmap=NULL;
+char *mmap_info=NULL,*mmap_rep=NULL;
 pixHeader *head;
+struct stat fStat;
 	
 	if (rorw == 'r') {
 		if (myPixels->fd_rep < 0)
 			if ( (myPixels->fd_rep = open (myPixels->path_rep, O_RDONLY, 0600)) < 0)
 				return (-1);
-		if (!myPixels->file_size)
-			myPixels->file_size = lseek (myPixels->fd_rep, 0, SEEK_END );
-		if ( (sh_mmap = (char *)mmap (NULL, myPixels->file_size, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0)) <= 0 ) {
-			return (-1);
+		if (myPixels->fd_info < 0)
+			if ( (myPixels->fd_info = open (myPixels->path_info, O_RDONLY, 0600)) < 0)
+				return (-2);
+		if (!myPixels->size_info) {
+			fstat (myPixels->fd_info , &fStat );
+			myPixels->size_info = fStat.st_size;
 		}
+		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0)) <= 0 )
+			return (-3);
+		if (!myPixels->size_rep) {
+			fstat (myPixels->fd_rep , &fStat );
+			myPixels->size_rep = fStat.st_size;
+		}
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0)) <= 0 )
+			return (-4);
 	}
 
 	if (rorw == 'w' || rorw == 'n') {
 		if (myPixels->fd_rep < 0)
 			if ( (myPixels->fd_rep = open (myPixels->path_rep, O_RDWR, 0600)) < 0)
-				return (-1);
-		if (!myPixels->file_size)
-			myPixels->file_size = lseek (myPixels->fd_rep, 0, SEEK_END );
-		if ( (sh_mmap = (char *)mmap (NULL, myPixels->file_size, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0)) <= 0 ) {
-			return (-1);
+				return (-5);
+		if (myPixels->fd_info < 0)
+			if ( (myPixels->fd_info = open (myPixels->path_info, O_RDWR, 0600)) < 0)
+				return (-6);
+		if (!myPixels->size_info) {
+			fstat (myPixels->fd_info , &fStat );
+			myPixels->size_info = fStat.st_size;
 		}
+		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0)) <= 0 )
+			return (-7);
+		if (!myPixels->size_rep) {
+			if (fstat (myPixels->fd_rep , &fStat) != 0)
+				return (-8);
+			myPixels->size_rep = fStat.st_size;
+		}
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0)) <= 0 )
+			return (-9);
 	}
 
-	myPixels->head = head = (pixHeader *) sh_mmap;
+	myPixels->head = head = (pixHeader *) mmap_info;
+	myPixels->pixels = (void *) mmap_rep;
 	myPixels->is_mmapped = 1;
 				
 	if (rorw == 'n') {
@@ -325,22 +367,21 @@ pixHeader *head;
 	if (head->mySig != OME_IS_PIXL_SIG ||
 		head->vers  != OME_IS_PIXL_VER) {
 			fprintf (stderr,"Incompatible file type\n");
-			return (-1);
+			return (-10);
 	}
 	
 	if (!head->isFinished && rorw == 'r') {
 			fprintf (stderr,"Attempt to read a write-only file\n");
-			return (-1);
+			return (-11);
 	}
 
 	if (head->isFinished && rorw == 'w') {
 			fprintf (stderr,"Attempt to write to a read-only file\n");
-			return (-1);
+			return (-12);
 	}
 
-	myPixels->planeInfos = (planeInfo *) ( sh_mmap + sizeof(pixHeader));
-	myPixels->stackInfos = (stackInfo *) ( sh_mmap + (sizeof (planeInfo) * head->dz * head->dc * head->dt) );
-	myPixels->pixels = (void *) (sh_mmap + head->jump);
+	myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
+	myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt) );
 
 	return (1);
 }
@@ -370,14 +411,14 @@ PixelsRep *NewPixels (
 	char isFloat
 )
 {
-char path[256],error[256];
+char error[256];
 pixHeader *head;
 PixelsRep *myPixels;
 off_t size;
 int result;
 
 
-	if (! (myPixels = newPixelsRep ()) ) {
+	if (! (myPixels = newPixelsRep (NULL)) ) {
 		perror ("BAH!");
 		return (NULL);
 	}
@@ -395,12 +436,22 @@ int result;
 	size = sizeof (pixHeader);
 	size += sizeof (planeInfo) * dz * dc * dt;
 	size += sizeof (stackInfo) * dc * dt;
-	size += dx * dy * dz * dc * dt * bp;
-	myPixels->file_size = size;
+	myPixels->size_info = size;
+	myPixels->fd_info = newRepFile (myPixels->ID, myPixels->path_info, size, "info");
+	if (myPixels->fd_info < 0) {
+		sprintf (error,"Couldn't open repository info file for PixelsID %llu (%s).",myPixels->ID,myPixels->path_info);
+		perror (error);
+		freePixelsRep (myPixels);
+		return (NULL);
+	}
+	
+	
+	size = dx * dy * dz * dc * dt * bp;
+	myPixels->size_rep = size;
 
-	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, size);
+	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, size, NULL);
 	if (myPixels->fd_rep < 0) {
-		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",myPixels->ID,path);
+		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",myPixels->ID,myPixels->path_rep);
 		perror (error);
 		freePixelsRep (myPixels);
 		return (NULL);
@@ -420,8 +471,6 @@ int result;
 	head->bp = bp;
 	head->isSigned = (isSigned ? 1 : 0);
 	head->isFloat  = (isFloat  ? 1 : 0);
-	head->jump = sizeof (planeInfo) * dz * dc * dt;
-	head->jump += sizeof (stackInfo) * dc * dt;
 
 	/* release the lock created by newRepFile */
 	lockRepFile (myPixels->fd_rep,'u',0,0);
@@ -444,18 +493,20 @@ int result;
 
 	if (!ID) return (NULL);
 
-	myPixels = newPixelsRep ();
-	if (! getRepPath (ID,myPixels->path_rep,0)) {
-		freePixelsRep (myPixels);
+	if (! (myPixels = newPixelsRep (ID))) {
+		fprintf (stderr,"Could not get a Pixels object.\n");
 		return (NULL);
 	}
 
+
 	if ( (result = openPixelsFile (myPixels,rorw)) < 0) {
+		fprintf (stderr,"Could not open pixels file. Result=%d\n",result);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
 
 	if (! (head = myPixels->head) ) {
+		fprintf (stderr,"Pixels header is undefined.\n");
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -563,7 +614,7 @@ unsigned long written=0;
 	if (! (bp = head->bp) ) return (-1);
 	
 	nBytes = nPix*bp;
-	file_off = sizeof(pixHeader) + head->jump + offset;
+	file_off = offset;
 	swap_buf = myPixels->swap_buf;
 	chunk_size = 4096 / bp;
 	pix_P = pixels + offset;
@@ -703,7 +754,7 @@ off_t off0, off1;
 
 /*
   This copies theInfo to/from the repository file
-  N.B. (FIXME):  There is no locking taking place here!
+  N.B. (FIXME):  There is no locking taking place in the header!
 */
 
 int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, unsigned long z, unsigned long c, unsigned long t, char rorw) {
@@ -720,7 +771,7 @@ off_t file_off,plane_offset;
 	file_off  = ((char *)myPixels->planeInfos - (char *)myPixels->head) + (plane_offset*nBytes);
 
 	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) {
-		fprintf (stderr,"Could get file lock\n");
+		fprintf (stderr,"Could't get file lock\n");
 		return (-1);
 	}
 	if (rorw == 'w')
@@ -1037,21 +1088,10 @@ planeInfo *planeInfoP;
 
 int FinishPixels (OID ID, char force) {
 PixelsRep *myPixels;
-int result;
 
-	if (!ID) return (-1);
-
-	myPixels = newPixelsRep ();
-	if (! getRepPath (ID,myPixels->path_rep,0)) {
-		freePixelsRep (myPixels);
+	if (! (myPixels = GetPixels (ID, 'w', bigEndian())) ) {
 		return (-1);
 	}
-
-	if ( (result = openPixelsFile (myPixels,'w')) < 0) {
-		freePixelsRep (myPixels);
-		return (-2);
-	}
-
 
 	/* wait until we can get a write lock on the whole file */
 	lockRepFile (myPixels->fd_rep,'w',0,0);
@@ -1063,9 +1103,13 @@ int result;
 	myPixels->head->isFinished = 1;
 
 	if (myPixels->is_mmapped) {
-		if (msync (myPixels->head , myPixels->file_size , MS_SYNC) != 0) {
+		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) {
 			freePixelsRep (myPixels);
 			return (-4);
+		}
+		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) {
+			freePixelsRep (myPixels);
+			return (-5);
 		}
 	}
 	
@@ -1133,7 +1177,7 @@ FILE *infile;
 	}
 
 
-	fd = newRepFile (ID, path, size);
+	fd = newRepFile (ID, path, size, NULL);
 	if (fd < 0) {
 		char error[256];
 		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",ID,path);
@@ -1407,7 +1451,7 @@ char **cgivars=param;
 		if (rorw == 'w') {
             closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%d\n", nIO);
+			fprintf (stdout,"%ld\n", (long) nIO);
 		}
 
 		freePixelsRep (thePixels);
@@ -1416,7 +1460,7 @@ char **cgivars=param;
 	else if (! strcmp (method,"SetROI") || !strcmp (method,"GetROI") ) {
 		char *ROI;
 		int numInts,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
-        char *filename;
+        char *filename=NULL;
 
 		if (!ID) return (-1);
 		if (!strcmp (method,"SetROI")) {
@@ -1452,21 +1496,22 @@ char **cgivars=param;
 		if (rorw == 'w') {
             closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%d\n",nIO);
+			fprintf (stdout,"%ld\n", (long) nIO);
 		}
 		freePixelsRep (thePixels);
 	}
 
 	else if (! strcmp (method,"FinishPixels") ) {
-		int force=0;
+		int force=0, result=0;
 
 		if (!ID) return (-1);
 		if ( (theParam = get_param (param,"Force")) )
 			sscanf (theParam,"%d",&force);
 
-		if (FinishPixels (ID,force) < 0) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
+		if ( (result = FinishPixels (ID,force)) < 0) {
+			if (errno) sprintf (error_str,"Result=%d, Message=%s",result,strerror( errno ) );
+			else sprintf (error_str,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
+			HTTP_DoError (method, error_str);
 			return (-1);
 		} else {
 			HTTP_ResultType ("text/plain");
@@ -1681,7 +1726,7 @@ char **cgivars=param;
 		} else {
 			freePixelsRep (thePixels);
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%d\n",nIO);
+			fprintf (stdout,"%ld\n", (long) nIO);
 		}
 	}
 
@@ -1689,7 +1734,7 @@ char **cgivars=param;
 }
 
 void usage (int argc,char **argv) {
-	fprintf (stderr,"Bad usage, no documentation.  Sorry.\n");
+	fprintf (stderr,"Bad usage.  Missing parameters.\n");
 }
 
 int main (int argc,char **argv) {
@@ -1714,8 +1759,10 @@ const char *myWD = "/OME/OMEIS";
 }
 
 
-/**********************************/
-/* CGI/CLI handling section below */
+/**********************************
+ CGI/CLI handling section below
+ Most of this was cribbed from a web page, whose URL is now lost.
+**********************************/
 
 int inList(char **cgivars, char *str)
 {
