@@ -8,15 +8,45 @@ The distributed AE works using three classes:
 
 To set it up, you will need to do the following:
 
+Setup the Workers
+--------------------------------
+On EACH worker node:
+
+* Install OME (sudo perl install.pl). OMEIS is optional
+
+* Copy src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl into the appropriate
+Apache accessible directory so that you could specify a URL that would execute
+the WorkerCGI.pl as a mod_pelr CGI e.g:
+
+sudo cp src/perl2/OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl /OME/perl2/
+
+* Set the maximum workers the node can host by running 
+src/perl2/OME/Analysis/Engine/install_worker_node.pl as root.
+
+
+Setup the Back End:
+-------------------
+
+* Install OME
+
 * Manually populate the analysis_workers table with url and status (set to
 'IDLE') for each worker on each node.  A node that hosts more than one worker
 needs an entry in this table for every worker it has.  The URL should execute
-OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl
-as a mod_perl CGI
+OME/Analysis/Engine/NonblockingSlaveWorkerCGI.pl as a mod_perl CGI.
 
-* On each worker node, you must set the maximum workers that that node can host
-by running OME/Analysis/Engine/install_worker_node.pl as root.
+e.g:
 
+INSERT INTO analysis_workers(worker_id, status, url) 
+VALUES (1,'IDLE','http://localhost/perl2/NonblockingSlaveWorkerCGI.pl');
+
+* And lastly, the OME::Analysis::Engine::SimpleWorkerExecutor is selected as
+the executor by setting the OME_DISTRIBUTED environment variable.  If that's
+not convenient, you can change how this is done in:
+OME/Analysis/Engine/Executor.pm
+
+
+Additional Setup to Back End to support remote Workers
+-------------------------------------------------
 * This is very temporary, but currently the back-end's data-source is
 hard-coded in OME/Analysis/Engine/SimpleWorkerExecutor.pm:
 use constant DATA_SOURCE     => 'dbi:Pg:dbname=ome;host=localhost';
@@ -32,12 +62,7 @@ authentication from specified IPs is sufficient:
 host       ome         127.0.0.1     255.255.255.255    trust
 replace 127.0.0.1 with the IP address of your worker.
 
-* And lastly, the OME::Analysis::Engine::SimpleWorkerExecutor is selected as
-the executor by setting the OME_DISTRIBUTED environment variable.  If that's
-not convenient, you can change how this is done in:
-OME/Analysis/Engine/Executor.pm
-
-As this gets incorporated into the system more, these steps will gradually
+As distributed analysis gets incorporated into the system more, these steps will gradually
 disappear.
 
 --------------------------
@@ -67,7 +92,7 @@ worker returns an error response, the worker's last_used is updated to 'now()'
 so that it goes to the back of the line.  The worker call is partially
 blocking:  The worker blocks until it can establish a remote session, and
 gather all of its required parameters without error.  The worker then sends a
-responce (200 OK) before proceeding to actually execute the module.
+response (200 OK) before proceeding to actually execute the module.
 
 The Job specification for a worker includes a DataSource, SessionKey, and
 WorkerID parameter.  The worker establishes an OME::Session on the supplied
