@@ -23,7 +23,7 @@ package OME::Web::Helper::HTMLFormat;
 use strict;
 
 
-our $VERSION = 2.000_000;
+our $VERSION = '1.0';
 
 =head 1 NAME
 
@@ -71,9 +71,6 @@ The OME::Web::Helper::HTMLFormat provides a list of methods to write HTML code
 
 
 
-
-
-
 sub new{
 	my $class=shift;
 	my $self={};
@@ -100,7 +97,14 @@ sub new{
 
 	bless($self,$class);
    	return $self;
-}
+};
+
+
+
+
+
+
+
 
 ##############
 # Parameters:
@@ -342,8 +346,9 @@ sub formatThumbnail{
 	my $imageID=$object->image_id();
 	my $rows="";
 	my $html="";
-	my $name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$imageName."</a>";
-	my $imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imageID." align=\"bottom\" border=0></a>";
+	my ($name,$imageTag);
+	$name="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\">".$imageName."</a>";
+	$imageTag="<a href=\"#\" onClick=\"return openPopUpImage($imageID)\"><img src=/perl2/serve.pl?Page=OME::Web::ThumbWrite&ImageID=".$imageID." align=\"bottom\" border=0></a>";
 	my %h=(
 	1=>{ content=>$imageTag, attribute=>$self->{cellLeft}}
 	);
@@ -652,6 +657,7 @@ sub formLogin{
 
 }
 
+#########################
 sub formImportExportXML{
 	my $self=shift;
 	my ($ref,$nameButton,$valueButton)=@_;
@@ -695,11 +701,12 @@ sub formImportExportXML{
 ##################
 # Parameters:
 #	name= Projects/Datasets/Images
+#	type= (optional) if defined search by date
 # Return: html code search form
 
 sub formSearch{
 	my $self=shift;
-	my ($name)=@_;
+	my ($name,$type)=@_;
 	my $html="";
 	my $rows="";
 	my $text="";
@@ -714,18 +721,53 @@ sub formSearch{
 	"colspan" => 2,
 	);
 	$html .="<h3>Search For $name </h3>";
-	$html .="<p>Please enter a data to match</p>";
-	$text .="<b>Name contains </b>";
+	$html .="<p>Please enter a data to match, the date is optional</p>";
+	$text .="<b>Name/Description contains </b>";
 	$text .=buttonInput("text","name",undef,25);
 	$button .=buttonInput("submit","search","Search");
 	my %h=(
 	1=>{ content=>$text, attribute=>$self->{cellCenter}},
 	);
-	my %ha=(
+	$rows.=addRow(\%h);
+
+	if ($type){
+		my $date="Date";
+		my $table="";
+		my $rowTable="";
+		my ($ryear,$rmonth,$rday)=YMD();
+		my %b=("name"=>"year");
+		my $year=writeDropDow($ryear,\%b);
+		%b=("name"=>"month");
+		my $month=writeDropDow($rmonth,\%b);
+		%b=("name"=>"day");
+		my $day=writeDropDow($rday,\%b);
+		my %hdate=(
+			0=>{ content=>"<b>Created</b> (optional):", attribute=>$self->{cellLeft}},
+			1=>{ content=>"<b>year</b>", attribute=>$self->{cellLeft}},
+			2=>{ content=>"<b>month</b>", attribute=>$self->{cellLeft}},
+			3=>{ content=>"<b>day</b>", attribute=>$self->{cellLeft}},
+		);
+		$rowTable.=addRow(\%hdate);
+		%hdate=(
+			0=>{ content=>"", attribute=>$self->{cellLeft}},
+			1=>{ content=>$year, attribute=>$self->{cellLeft}},
+			2=>{ content=>$month, attribute=>$self->{cellLeft}},
+			3=>{ content=>$day, attribute=>$self->{cellLeft}},
+		);
+		$rowTable.=addRow(\%hdate);
+		$table.=writeTable($rowTable);
+		%h=(
+			1=>{ content=>$table, attribute=>$self->{cellLeft}},
+		);
+	$rows.=addRow(\%h);
+
+	}
+	
+	%h=(
 	1=>{ content=>$button, attribute=>\%b},
 	);
 	$rows.=addRow(\%h);
-	$rows.=addRow(\%ha);
+	
 	$html.=writeTable($rows,\%a);
 
 	return $html;
@@ -795,6 +837,8 @@ sub imageInDataset{
 		if (defined $search){
 			$name=$k->{name};
 			$id=$k->{image_id};
+			my ($a,$b)=split(" ",$k->{inserted});
+			$name=$name."<br><b>In</b>:".$a;
 		}else{
 			$name=$k->name();
 			$id=$k->image_id();
@@ -1139,7 +1183,7 @@ sub writeDropDow{
 	my $html="";
 	$html.=openTag("select",$refTag);
   	my %h=%$ref;
-	foreach (keys %h){		# id=>name
+	foreach (sort {$a cmp $b} keys %h){		# id=>name
 		my %a=(
 			"value"=>$_
 			);
@@ -1301,6 +1345,70 @@ sub writeCheckBoxImage{
 	#$html.=join("<br>",@list);
 	return $html;
 }
+
+
+sub YMD{
+
+my %month=(
+""	=>"-",
+"01"	=>"Jan",
+"02"	=>"Feb",
+"03"	=>"Mar",
+"04"	=>"Apr",
+"05"	=>"May",
+"06"	=>"Jun",
+"07"	=>"Jul",
+"08"	=>"Aug",
+"09"	=>"Sep",
+"10"	=>"Oct",
+"11"	=>"Nov",
+"12"	=>"Dec",
+);
+my %day=(
+""	=>"-",
+"01"	=>"01",
+"02"	=>"02",
+"03"	=>"03",
+"04"	=>"04",
+"05"	=>"05",
+"06"	=>"06",
+"07"	=>"07",
+"08"	=>"08",
+"09"	=>"09",
+"10"	=>"10",
+"11"	=>"11",
+"12"	=>"12",
+"13"	=>"13",
+"14"	=>"14",
+"15"	=>"15",
+"16"	=>"16",
+"17"	=>"17",
+"18"	=>"18",
+"19"	=>"19",
+"20"	=>"20",
+"21"	=>"21",
+"22"	=>"22",
+"23"	=>"23",
+"24"	=>"24",
+"25"	=>"25",
+"26"	=>"26",
+"27"	=>"27",
+"28"	=>"28",
+"29"	=>"29",
+"30"	=>"30",
+"31"	=>"31",
+);
+
+my %year=(
+""	=>"-",
+"2003"=>"2003",
+"2002"=>"2002",
+"2001"=>"2001",
+);
+return (\%year,\%month,\%day);
+};
+
+
 
 
 =head1 AUTHOR
