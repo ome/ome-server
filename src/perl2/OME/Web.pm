@@ -791,7 +791,8 @@ sub _loadTypeAndGetInfo {
 	if( $formal_name =~ /^@/ ) {
 		my $session = OME::Session->instance();
 		$common_name = substr( $formal_name, 1 );
-		$ST = $session->Factory->findObject("OME::SemanticType", name => $common_name);
+		$ST = $session->Factory->findObject("OME::SemanticType", name => $common_name)
+			or confess "Could not find a Semantic type with name '$common_name'";
 		$ST->requireAttributeTypePackage()
 			unless ref($type); # unless type is already loaded
 		$package_name = $ST->getAttributeTypePackage();
