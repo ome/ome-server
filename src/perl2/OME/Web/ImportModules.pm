@@ -170,6 +170,19 @@ sub __getImportBody {
 #*********
 
 # Override's OME::Web
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+
+	my $self = $class->SUPER::new(@_);
+	
+	# This is here to fix mod_perl/Apache keep alive dispatch. [Bug #174]
+	$self->{'_headers'} = {'-Connection' => 'Close'};
+
+	return $self;
+}
+
+# Override's OME::Web
 sub getPageTitle {
 	return "Open Microscopy Environment - Import Analysis Modules and Chains";
 } 

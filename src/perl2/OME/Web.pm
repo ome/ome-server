@@ -295,6 +295,8 @@ sub serve {
 	} elsif ($result eq 'FILE' && defined $content && ref($content) eq 'HASH') {
 		$self->sendFile ($content);
 	} elsif ($result eq 'REDIRECT' && defined $content) {
+		# Added here to propagate headers to redirects [Bug #174]
+		print $self->CGI()->header(%{$headers});
 		$self->redirect($content);
 	} else {
 		my $class = ref($self);
