@@ -63,21 +63,39 @@ public class RemoteFactory
         return (OMEObject) instantiate(getClass(className),newRef);
     }
 
+    private Object[] fixCriteria(String className, Map criteria)
+    {
+        if (criteria == null)
+            return new Object[] { className };
+
+        List list = new ArrayList();
+        list.add(className);
+        Iterator iter = criteria.keySet().iterator();
+        while (iter.hasNext())
+        {
+            Object key = iter.next();
+            list.add(key);
+            list.add(criteria.get(key));
+        }
+
+        Object[] result = new Object[list.size()];
+        for (int i = 0; i < result.length; i++)
+            result[i] = list.get(i);
+
+        return result;
+    }
+
     public boolean objectExists(String className, Map criteria)
     {
         return ((Boolean) caller.dispatch(this,"objectExists",
-                                          (criteria == null)?
-                                          new Object[] { className }:
-                                          new Object[] { className,criteria }))
+                                          fixCriteria(className,criteria)))
             .booleanValue();
     }
 
     public OMEObject findObject(String className, Map criteria)
     {
         String newRef = caller.dispatch(this,"findObject",
-                                        (criteria == null)?
-                                        new Object[] { className }:
-                                        new Object[] { className,criteria })
+                                        fixCriteria(className,criteria))
             .toString();
         return (OMEObject) instantiate(getClass(className),newRef);
     }
@@ -85,9 +103,7 @@ public class RemoteFactory
     public List findObjects(String className, Map criteria)
     {
         List refList = (List) caller.dispatch(this,"findObjects",
-                                              (criteria == null)?
-                                              new Object[] { className }:
-                                              new Object[] { className,criteria });
+                                              fixCriteria(className,criteria));
         List objList = new ArrayList();
         Iterator i = refList.iterator();
         while (i.hasNext())
@@ -100,9 +116,7 @@ public class RemoteFactory
         RemoteIterator i = (RemoteIterator) RemoteObject.
             instantiate(RemoteIterator.class,
                         caller.dispatch(this,"iterateObjects",
-                                        (criteria == null)?
-                                        new Object[] { className }:
-                                        new Object[] { className,criteria }));
+                                        fixCriteria(className,criteria)));
         i.setClass(getClass(className));
         return i;
     }
@@ -110,9 +124,7 @@ public class RemoteFactory
     public OMEObject findObjectLike(String className, Map criteria)
     {
         String newRef = caller.dispatch(this,"findObjectLike",
-                                        (criteria == null)?
-                                        new Object[] { className }:
-                                        new Object[] { className,criteria })
+                                        fixCriteria(className,criteria))
             .toString();
         return (OMEObject) instantiate(getClass(className),newRef);
     }
@@ -120,9 +132,7 @@ public class RemoteFactory
     public List findObjectsLike(String className, Map criteria)
     {
         List refList = (List) caller.dispatch(this,"findObjectsLike",
-                                              (criteria == null)?
-                                              new Object[] { className }:
-                                              new Object[] { className,criteria });
+                                              fixCriteria(className,criteria));
         List objList = new ArrayList();
         Iterator i = refList.iterator();
         while (i.hasNext())
@@ -135,9 +145,7 @@ public class RemoteFactory
         RemoteIterator i = (RemoteIterator) RemoteObject.
             instantiate(RemoteIterator.class,
                         caller.dispatch(this,"iterateObjectsLike",
-                                        (criteria == null)?
-                                        new Object[] { className }:
-                                        new Object[] { className,criteria }));
+                                        fixCriteria(className,criteria)));
         i.setClass(getClass(className));
         return i;
     }
