@@ -43,8 +43,8 @@ OME::Tasks::ProjectManager - manage user's projects
 
 =head1 SYNOPSIS
 
-use OME::Tasks::ProjectManager;
-my $projectManager = new OME::Tasks::ProjectManager($session);
+	use OME::Tasks::ProjectManager;
+	my $projectManager = new OME::Tasks::ProjectManager($session);
 
 =head1 DESCRIPTION
 
@@ -63,57 +63,112 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 
 =head1 METHODS (ALPHABETICAL ORDER)
 
+The following methods are available to a "ProjectManager."
+
 =head2 add ($datasetID,$projectID)
 
-projectID = optional if not defined, add dataset to current project
-Add an existing dataset to a project.
+	$projectManager->add($dataset->id(), $project->id());
 
+	$projectManager->add($dataset->id());
 
-=head2 addToProject($datasetID,$projectID)
+Adds the "Dataset" by reference of its ID to the "Project" by reference of its ID. It also makes the dataset active by means of the "Session."
 
-Add dataset_project_map
-extension of addDataset of OME::Project
+Note: The project ID is optional and if it is not defined the dataset is added to the current, active project ($session->Project());
 
 =head2 change ($description,$name,$projectID)
 
-projectId (optional) if not defined modify current project
-Modify name/description of a project.
+	$projectManager->change(
+		"My new description",
+		"My new name",
+		$project->id(),
+	);
+	
+	$projectManager->change(
+		"My new description",
+		"My new name",
+	);
 
-=head2 create ($ref)
+Changes the "Project's" name and/or description by reference of its ID (or the current, active project if unspecified).
 
-Create a new project and update the OME session i.e. current dataset sets to undef.
+=head2 create ($hash_ref)
+
+	$projectManager->create( {
+		name => 'My New Project',
+		description => 'A great new idea!',
+		owner_id => $session->User()->ID(),
+	});
+
+Create a new project and update the OME session; sets the current dataset to undefined.
+
+Note: This method is purely a macro for OME::Factory->newObject().
 
 =head2 delete ($id)
 
-Delete a project, update OME session if the project is the current project.
-If the user doesn't have other project: current project and current dataset set to undef
-otherwise set the first (arbitrary in the project list) project (+ dataset) to the current project.
+	$projectManager->delete($project->id());
+
+Delete a project and update OME session if the project is the current project.
+
+Note: If the user doesn't have another project, the current active project and dataset are set to undefined. Otherwise the first arbitrary project and/or dataset are set to active.
 
 =head2 exist ($name)
 
-Check if the project's name already exists (in DB).
-Return: 1 or undef
+	if ($projectManager->exist("A really good project name") {
+		...
 
-=head2 listMatching (userID,ref)
-$ref=ref array  list group_id (optional)
-userId=user_id (optional)
+	} else {
+		...
+	}
+		
 
-List projects  if no parameter
-List projects of a given user if  userId parameter
-list project in Research group(s)
+Check if a given project name already exists in the database.
 
-Return: ref array of project objects 
+Returns successful (1) or unsuccessful (undef) in matching.
+
+=head2 listMatching ($userID,$array_ref)
+	
+	my $projects = $projectManager->listMatching();
+
+	foreach (@$projects) {
+		...
+	}
+
+Returns a list of all the project objects in the database.
+
+	my $user_projects = $projectManager->listMatching(
+		$session->User()->id(),
+	);
+
+	foreach (@$user_projects) {
+		...
+	}
+
+Returns a list of all the project objects in the database owned by the specified user ID.
+
+	my $related_projects = $projectManager->listMatching(
+		$session->User()->id(),
+		[ $ome_group_a->id(), $ome_group_b->id(), $ome_group_c->id() ],
+	);
+
+	foreach (@$related_projects) {
+		...
+	}
+
+Returns a list of all the project objects in the database owned by the specified user ID or owned by one of the groups specified.
 
 =head2 load ($projectID)
 
-Load a project object 
-Return: project object
+	my $project_a = $projectManager->load( 1 );
+	my $project_b = $projectManager->load( 2 );
+
+Returns a project object.
 
 =head2 switch ($id,$bool)
-Switch project 
+
+	$projectManager->switch(1, 1);
+
+Switches the current active project. If the boolean switch is active other checking will be done on the session in order to preserve dataset integrity.
 
 =cut
-
 
 use strict;
 use OME::SetDB;
@@ -129,8 +184,6 @@ sub new{
 	$self->{session}=shift;
 	bless($self,$class);
    	return $self;
-
-
 }
 
 ###############################
