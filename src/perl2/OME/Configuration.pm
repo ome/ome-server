@@ -28,7 +28,8 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->table('configuration');
 __PACKAGE__->columns(Primary => qw(configuration_id));
-__PACKAGE__->columns(All => qw(mac_address input_dir repository_dir ome_root
+__PACKAGE__->columns(All => qw(mac_address db_instance lsid_authority
+                               input_dir repository_dir ome_root
                                display_settings import_module import_chain));
 __PACKAGE__->hasa('OME::Program' => qw(import_module));
 __PACKAGE__->hasa('OME::AnalysisView' => qw(import_chain));
