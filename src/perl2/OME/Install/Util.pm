@@ -421,7 +421,11 @@ sub get_mac {
 #
 
 sub copy_tree {
-    my ($from, $to, $filter) = @_;
+    my ($from, $to, $filter, $user) = @_;
+    my ($uid, $gid);
+    if (defined $user) {
+		($uid, $gid) = (getpwnam($user))[2,3] or croak "Unable to find user: \"$user\"";
+	}
     $from = File::Spec->rel2abs($from);  # does clean up as well
     $to = File::Spec::->catdir(File::Spec->rel2abs($to), basename($from));
 
@@ -440,8 +444,14 @@ sub copy_tree {
 			carp "copy_tree() not copying or following symlink $item";
 		} elsif (-f $item) {
 			copy($item, $to) or croak "Couldn't copy file $item: $!";
+			if (defined $user) {
+				chown ($uid, $gid, $to) or croak "Unable to change owner of $to, $!";
+			}
         } elsif ( -d $item ) {
-			copy_tree($item, $to, $filter); 
+			copy_tree($item, $to, $filter, $user);
+			if (defined $user) {
+				chown ($uid, $gid, $to) or croak "Unable to change owner of $to, $!";
+			}
 		} else {
 			carp "copy_tree() not copying device or other filetype $item";
 		}
