@@ -133,7 +133,7 @@ my ($self,$object) = @_;
 		namespace => $type });
 	return $lsid_list[0]->lsid() if scalar @lsid_list > 0;
 	
-	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id()."_$DB_INSTANCE";
+	my $LSIDstring = "urn:lsid:$AUTHORITY:$type:".$object->id()."-$DB_INSTANCE";
 	
 	$self->setLSID( $object, $LSIDstring );
 	
