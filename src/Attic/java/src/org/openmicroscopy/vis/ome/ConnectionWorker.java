@@ -101,6 +101,7 @@ public class ConnectionWorker extends SwingWorker {
 						chains = new Chains(controller,connection);
 						connection.setModules(modules);
 						connection.setChains(chains);
+						connection.createThumbnailAgent();
 						controller.completeWindows(); 
 					}
 				}
