@@ -53,6 +53,7 @@ import org.openmicroscopy.SemanticType;
 import java.util.Hashtable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 import javax.swing.JWindow;
 import javax.swing.JLabel;
 
@@ -298,5 +299,13 @@ public class Connection {
 	 */
 	public List loadChains() {
 		return factory.findObjects("OME::AnalysisChain",null);
+	}
+	
+	public List getProjectsForUser() {
+		Attribute user = session.getUser();
+		HashMap crit = new HashMap();
+		crit.put("owner_id",user);
+		List projects = factory.findObjects("OME::Project",crit);
+		return projects;
 	}
 }
