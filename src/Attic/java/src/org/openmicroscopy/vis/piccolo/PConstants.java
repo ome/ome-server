@@ -81,6 +81,7 @@ public class PConstants {
 	 */
 	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
 	
+	public static final Font LABEL_FONT  = new Font("Helvetica",Font.BOLD,18);
 	/**
 	 * Scaling multipliers for events that scale a canvas gradually - as 
 	 * opposed to events that scale to a particular node. 
