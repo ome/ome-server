@@ -43,7 +43,7 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use OME::Tasks::OMEXMLImportExport;
-use OME::Web::Helper::HTMLFormat;
+use OME::Web::ImageTable;
 use OME::Tasks::OMEXMLImportExport;
 use OME::Tasks::ImageManager;
 
@@ -62,68 +62,67 @@ sub getPageTitle {
 }
 
 sub getPageBody {
-	my	$self = shift ;
-	my 	$cgi = $self->CGI() ;
-	my	$session = $self->Session() ;
-	my 	$body = "" ;
-	my 	$htmlformat = new  OME::Web::Helper::HTMLFormat() ;
+	my $self = shift;
+	my $cgi = $self->CGI();
+	my $session = $self->Session();
+
+	my $action = $cgi->param('action');
+	my @selected = $cgi->param('selected');
  
-	if ($cgi->param('export')){
+	my $body = $cgi->p({class => 'ome_title', align => 'center'}, 'Export images to an XML file');
+	
+	if ($action eq 'Export'){
 		my $filename = $session->getTemporaryFilename('XMLFileExport','ome')
 			or die "OME::Web::XMLFileExport could not obtain temporary filename\n";
 
-		my @images=$cgi->param('ListImage');
-		return ('HTML',"<b>No image selected. Please try again </b>") unless scalar(@images)>0;
-
-		my $imageManager= OME::Tasks::ImageManager->new($session);
-		my @list=();
-		foreach (@images){
-			push(@list,$imageManager->load($_));
-		}
-		my $exporter= OME::Tasks::OMEXMLImportExport->new($session);
-		$exporter->exportToXMLFile(\@list,$filename);
+		if (@selected) {
+			my $imageManager= OME::Tasks::ImageManager->new($session);
+			my @list=();
+			foreach (@selected){
+				push(@list,$imageManager->load($_));
+			}
+			my $exporter= OME::Tasks::OMEXMLImportExport->new($session);
+			$exporter->exportToXMLFile(\@list,$filename);
 		
-		my $downloadFilename;
-		if (scalar @list > 1) {
-			$downloadFilename = $session->dataset()->name();
+			my $downloadFilename;
+			if (scalar @list > 1) {
+				$downloadFilename = $session->dataset()->name();
+			} else {
+				$downloadFilename = @list[0]->name();
+			}
+			$downloadFilename .= '.ome';
+
+			$self->contentType('application/ome+xml');
+			return ('FILE',{
+				filename => $filename,
+				temp => 1,
+				downloadFilename => $downloadFilename}) ;
 		} else {
-			$downloadFilename = @list[0]->name();
+			$body .= $cgi->p({class => 'ome_error'}, 'No image(s) selected. Please try again.');
 		}
-		$downloadFilename .= '.ome';
-
-		$self->contentType('application/ome+xml');
-		return ('FILE',{
-			filename => $filename,
-			temp => 1,
-			downloadFilename => $downloadFilename}) ;
-
-	}else{
-		$self->contentType('text/html');
-	 	$body .= print_form($session,$htmlformat,$cgi) ;
 	}
-	return ('HTML',$body) ;
+
+	$self->contentType('text/html');
+	$body .= $self->__printForm();
+
+	return ('HTML',$body);
 }
 
 
 ################
-sub print_form {
-	my  ($session,$htmlFormat,$cgi) = @_ ;
-	my  $html = "" ;
+sub __printForm {
+	my $self = shift;
+	my $session = $self->Session();
+	my $q = $self->CGI();
+	my $t_generator = new OME::Web::ImageTable;
   	my @images=$session->dataset()->images();
-	$html.="<h3>Export images to an XML file</h3>";
 
-	
- 	if (@images){
-		 $html .= $cgi->startform ;
-		 my %list=map {$_->id()=>$_} @images;
-		 $html.=$htmlFormat->listImages(\%list,"export","Export");
-	
+	my $html .= $t_generator->getTable( {
+			select_column => 1,
+			options_row => ['Export'],
+		}, @images);
 
-	}else{
-		$html.="The selected dataset contains no image<br>";
-	}
-
-	return  $html ;
+	return $html;
 }
 
 
