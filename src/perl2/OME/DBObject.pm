@@ -83,6 +83,55 @@ __PACKAGE__->Caching(0);
 __PACKAGE__->__classDefined(0);
 
 
+=head1 METHODS
+
+=head2 useSeparateCache
+
+	$class->useSeparateCache();
+
+Forces instances of $class to be stored in a separate cache.  This is
+not particularly useful without also using the clearCache method.
+Calling this method directly on OME::DBObject is also not useful,
+since it just redeclares the global object cache.  This is a
+irreversible operation over the lifetime of one Perl instance.
+
+NOTE: Calling this method (either on OME::DBObject or a subclass)
+after objects have already been stored in the appropriate cache will
+cause that cache to be cleared.  Calling this method on a subclass for
+the first time, after objects of that class have already been loaded
+from the database, will E<not> cause those objects to be removed from
+the global cache.  It E<will>, however, orphan them, as the caching
+mechanism will no longer look in the global cache for this class.
+
+=cut
+
+sub useSeparateCache {
+    my ($class) = @_;
+    # Create a separate cache for this class.
+    # (Class::Data::Inheritable does most of the work.)
+    $class->__cache({});
+}
+
+=head2 clearCache
+
+	$class->clearCache();
+
+Causes the cache for $class to be emptied.  The objects will be
+eligible for garbage collection, assuming there are no other
+references to them in other code.  Subsequent objects of this class
+will be reloaded from the databases.  If this method is called on
+OME::DBObject, or on a subclass which has not had useSeparateClass
+called on it, then the global cache will be emptied.
+
+=cut
+
+sub clearCache {
+    my ($class) = @_;
+    my $cache = $class->__cache();
+    %$cache = ();
+}
+
+
 sub newClass {
     my $proto = shift;
     my $class = ref($proto) || $proto;
