@@ -82,19 +82,12 @@ sub new {
 
     my ($session) = @_;
 
-    die "ChainManager->new needs a session!"
-      unless
-        defined $session &&
-        UNIVERSAL::isa($session,"OME::Session");
-
-    my $self = {
-                session => $session,
-               };
+    my $self = {};
 
     return bless $self, $class;
 }
 
-sub Session { return shift->{session}; }
+sub Session { return OME::Session->instance(); }
 
 =head2 createChain
 
