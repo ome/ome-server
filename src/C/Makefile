@@ -1,24 +1,18 @@
-OBJECTS = OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
-		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
+		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats \
 		maxIntensity cgrayce2
-DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql
 FINK_INCLUDE = -I/sw/include/
-INCS    = -I/usr/local/include $(FINK_INCLUDE) $(DB_INCLUDES)
-DB_LIBS = -lpq
+INCS    = -I/usr/local/include $(FINK_INCLUDE)
 COMPRESSION_LIBS = -lz -lbz2
-IMAGE_LIBS = -ltiff
 MATH_LIBS = -lm
-LIBPATHS = -L. -L/usr/local/lib -L/sw/lib
-BIN_DATA_LIBS = $(IMAGE_LIBS) $(COMPRESSION_LIBS) $(LIBPATHS) $(INCS)
-LIBS = $(DB_LIBS) $(MATH_LIBS) $(LIBPATHS) -lOME 
+LIBPATHS = -L/usr/local/lib -L/sw/lib
+LIBS = $(MATH_LIBS) $(LIBPATHS)
 DEFINES = -DDEBUG
-COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
-OME_LIB = libOME.a
+COMPILER_FLAGS = -g -Wall -Winline -Wpointer-arith -Wstrict-prototypes -Wshadow -O3
 
-CFLAGS = $(DEFINES) $(LIBPATHS) $(DB_INCLUDES) $(COMPILER_FLAGS)
+CFLAGS = $(DEFINES) $(LIBPATHS) $(COMPILER_FLAGS)
 XML2_CFLAGS = `xml2-config --cflags`
 XML2_LIBS = `xml2-config --libs`
 CC = gcc
@@ -32,63 +26,53 @@ export OME_ROOT
 
 all: $(TARGETS)
 
-findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
-	$(CC) $(CFLAGS) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
+BSUtils.o: BSUtils.c
+	$(CC) $(CFLAGS) -c BSUtils.c
 
-#makemesh: makemesh.o iolib/argarray.o iolib/failio.o iolib/repository.o
-#	$(CC) $(DEFINES) $+ -o $@
+readTiffData.o: readTiffData.c readTIFF.h
+	$(CC) $(CFLAGS) -c readTiffData.c
 
-BinarizeGlobal : BinarizeGlobal.o readTiffData.o BSUtils.o
-	$(CC) $(CFLAGS) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
+findSpotsOME : findSpotsOME.c readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
+	$(CC) $(CFLAGS) findSpotsOME.c readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
 
-SoftWorxSlice : SoftWorxSlice.o BSUtils.o
-	$(CC) $(CFLAGS) SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
+BinarizeGlobal: BinarizeGlobal.c readTIFF.h readTiffData.o BSUtils.o
+	$(CC) $(CFLAGS) readTiffData.o BSUtils.o BinarizeGlobal.c -o BinarizeGlobal ${MATH_LIBS} -ltiff
 
-DumpSoftWorxHeader : DumpSoftWorxHeader.o BSUtils.o
-	$(CC) $(CFLAGS) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
+SoftWorxSlice: SoftWorxSlice.c BSUtils.o
+	$(CC) $(CFLAGS) BSUtils.o SoftWorxSlice.c -o SoftWorxSlice ${MATH_LIBS}
 
-DumpSoftWorxExHeader : DumpSoftWorxExHeader.o BSUtils.o
-	$(CC) $(CFLAGS) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
+DumpSoftWorxHeader: DumpSoftWorxHeader.c BSUtils.o
+	$(CC) $(CFLAGS) BSUtils.o DumpSoftWorxHeader.c -o DumpSoftWorxHeader
 
-DumpSoftWorxStats : DumpSoftWorxStats.o BSUtils.o
-	$(CC) $(CFLAGS) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
+DumpSoftWorxExHeader: DumpSoftWorxExHeader.c BSUtils.o
+	$(CC) $(CFLAGS) DumpSoftWorxExHeader.c BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
 
-DumpTIFFheader : DumpTIFFheader.o
-	$(CC) $(CFLAGS) DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
+DumpSoftWorxStats: DumpSoftWorxStats.c BSUtils.o
+	$(CC) $(CFLAGS) BSUtils.o DumpSoftWorxStats.c -o DumpSoftWorxStats ${MATH_LIBS}
 
-DumpTIFFstats : DumpTIFFstats.o readTiffData.o
-	$(CC) $(CFLAGS) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
+DumpTIFFheader: DumpTIFFheader.c
+	$(CC) $(CFLAGS) DumpTIFFheader.c -o DumpTIFFheader ${MATH_LIBS} -ltiff
 
-OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
-	$(CC) $(CFLAGS) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
+DumpTIFFstats: DumpTIFFstats.c readTiffData.o
+	$(CC) $(CFLAGS) DumpTIFFstats.c readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
 
-OME_Image_XYZ_fastStats : OME_Image_XYZ_fastStats.o
-	$(CC) $(CFLAGS) OME_Image_XYZ_fastStats.o -o OME_Image_XYZ_fastStats ${MATH_LIBS}
+OME_Image_XYZ_stats: OME_Image_XYZ_stats.c
+	$(CC) $(CFLAGS) OME_Image_XYZ_stats.c -o OME_Image_XYZ_stats ${MATH_LIBS}
 
-OME_Image_XY_stats : OME_Image_XY_stats.o
-	$(CC) $(CFLAGS) OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
+OME_Image_XYZ_fastStats: OME_Image_XYZ_fastStats.c
+	$(CC) $(CFLAGS) OME_Image_XYZ_fastStats.c -o OME_Image_XYZ_fastStats ${MATH_LIBS}
 
-OME_Image_XY_sums : OME_Image_XY_sums.o
-	$(CC) $(CFLAGS) OME_Image_XY_sums.o -o OME_Image_XY_sums ${MATH_LIBS}
+OME_Image_XY_stats: OME_Image_XY_stats.c
+	$(CC) $(CFLAGS) OME_Image_XY_stats.c -o OME_Image_XY_stats ${MATH_LIBS}
 
-#DumpTIFF : DumpTIFF.o
-#	$(CC) $(DEFINES) DumpTIFF.o -o DumpTIFF ${MATH_LIBS} -ltiff
+OME_Image_XY_sums: OME_Image_XY_sums.c
+	$(CC) $(CFLAGS) OME_Image_XY_sums.c -o OME_Image_XY_sums ${MATH_LIBS}
 
-spawnSpots : $(OBJECTS) spawnSpots.o
-	$(CC) $(CFLAGS) -o spawnSpots spawnSpots.o $(LIBS)
+DumpDV: DumpDV.c BSUtils.o
+	$(CC) $(CFLAGS) DumpDV.c BSUtils.o -o DumpDV
 
-DumpDV: DumpDV.o  BSUtils.o
-	$(CC) $(CFLAGS) -o DumpDV DumpDV.o BSUtils.o
-
-SetDVwave: SetDVwave.o  BSUtils.o
-	$(CC) $(CFLAGS) -o SetDVwave SetDVwave.o BSUtils.o
-
-OME_JPEG: OME_JPEG.c
-	$(CC) $(CFLAGS) $(FINK_INCLUDE) -o OME_JPEG OME_JPEG.c -ljpeg
-
-$(OME_LIB): $(OBJECTS)
-	ar cr $@ $(OBJECTS)
-	ranlib $@
+SetDVwave: SetDVwave.c BSUtils.o
+	$(CC) $(CFLAGS) SetDVwave.c BSUtils.o -o SetDVwave
 
 cgrayce2:
 	$(MAKE) -C cgrayce
@@ -96,10 +80,6 @@ cgrayce2:
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
-OME_DV.o : OMEdb.h
-trackSpotsOMEwrpr.o : OMEdb.h
-
-.PHONY : clean
 clean :
 	rm -f *.o
 	rm -f $(TARGETS)
