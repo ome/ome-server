@@ -71,11 +71,9 @@ sub new {
 	    }
 	    else {
 		print "Done with import\n";
-		#$import_reader->storeMetadata;
-		#$import_reader->formatImage;
+		&$callback(\%xml_elements, \@image_buf);
 	    }
 	}
-	&$callback(\%xml_elements, \@image_buf);
 	$import_reader->DESTROY;
     }
 }
