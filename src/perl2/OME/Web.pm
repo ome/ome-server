@@ -28,6 +28,7 @@ use OME::SessionManager;
 use Apache::Session::File;
 
 use base qw(Class::Data::Inheritable);
+__PACKAGE__->mk_classdata('Session');
 
 # The OME::Web class serves as the ancestor of all webpages accessed
 # through the OME system.  Functionaly common to all pages of the site
@@ -112,8 +113,6 @@ sub new {
 sub CGI { my $self = shift; return $self->{CGI}; }
 sub DBH { my $self = shift; return $self->{manager}->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
-sub Session { require OME; return OME->Session(); }
-sub Factory { my $self = shift; return $self->Session()->Factory(); }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->{user}; }
 
