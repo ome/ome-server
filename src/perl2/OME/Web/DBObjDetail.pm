@@ -75,9 +75,11 @@ sub getHeaderBuilder { return undef }  # No header
 sub getPageTitle {
 	my $self = shift;
 	my $q    = $self->CGI();
-	my $id   = $q->param( 'id' );
-	
-    return "Object Detail";
+	my $id   = $q->param( 'ID' );
+	my $type = $q->param( 'Type' )
+		or die "Type not specified";
+	$type = _getTypeName( $type );
+    return "$type ($id)";
 }
 
 sub getPageBody {
@@ -87,19 +89,28 @@ sub getPageBody {
 	
 	my $type = $q->param( 'Type' )
 		or die "Type not specified";
-	my $id   = $q->param( 'id' )
+	my $id   = $q->param( 'ID' )
 		or die "ID not specified";
-	my $object = $factory->loadObject( $type, $id )
-		or die "Could not load $type, id=$id";
+	my $object;
+	if( $type =~ s/^@// ) {
+		$object = $factory->loadAttribute( $type, $id )
+			or die "Could not load Attribute $type, id=$id";
+	} else {
+		$object = $factory->loadObject( $type, $id )
+			or die "Could not load DBObject $type, id=$id";
+	}
+
+	my $type_name = _getTypeName($type);
 
 	my $html;
 
 	my @fieldNames = OME::Web::RenderData->getAllFieldNames( $object );
 	my %labels  = OME::Web::RenderData->getFieldLabels( $object, \@fieldNames );
 	my %record  = OME::Web::RenderData->renderSingle( $object, 'html', \@fieldNames );
+
 	
 	$html .= $q->table(
-		$q->caption( $type ),
+		$q->caption( $type_name ),
 		map(
 			$q->Tr( 
 				$q->td( { align => 'left' }, $labels{ $_ } ),
@@ -112,5 +123,12 @@ sub getPageBody {
 	return ('HTML', $html);
 }
 
+
+sub _getTypeName {
+	my $type = shift;
+	$type =~ s/^@// or
+	( $type =~ s/OME::// and $type =~ s/::/ /g );
+	return $type;
+}
 
 1;
