@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Copyright (C) 2003 Open Microscopy Environment
+#       Massachusetts Institue of Technology,
+#       National Institutes of Health,
+#       University of Dundee
+#
+#
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+
+
+
+<!--
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Written by:  Jean-Marie Burel &nbsp;&nbsp;&nbsp;&nbsp;
+#  <a href="mailto:j.burel@dundee.ac.uk">j.burel@dundee.ac.uk</a>
+#  <br>Andrea Falconi &nbsp;&nbsp;&nbsp;&nbsp; <a href="mailto:a.falconi@dundee.ac.uk">
+#  a.falconi@dundee.ac.uk</a>
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+
+<OME
+xmlns= "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
+http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<STD:SemanticTypeDefinitions 
+xmlns=
+"http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
+http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+
+<SemanticType Name="RenderingSettings" AppliesTo="I">
+<Description>
+TEMPORARY FILE; NOT WELL WRITTEN! SHOULD BE REMOVED AS SOON AS THE NEW RENDERING CODE
+IS IMPLEMENTED.
+</Description>
+<Element
+Name="Experimenter"
+DBLocation="RENDERING_SETTINGS.EXPERIMENTER"
+DataType="reference"
+RefersTo="Experimenter"/>
+<Element
+Name = "TheZ"
+DBLocation = "RENDERING_SETTINGS.THE_Z"
+DataType = "integer"/>
+<Element
+Name = "TheT"
+DBLocation = "RENDERING_SETTINGS.THE_T"
+DataType = "integer"/>
+<Element
+Name = "Model"
+DBLocation = "RENDERING_SETTINGS.MODEL"
+DataType = "integer"/>
+<Element
+Name = "Family"
+DBLocation = "RENDERING_SETTINGS.FAMILY"
+DataType = "integer"/>
+<Element
+Name = "Coefficient"
+DBLocation = "RENDERING_SETTINGS.COEFFICIENT"
+DataType = "double"/>
+<Element
+Name = "CdStart"
+DBLocation = "RENDERING_SETTINGS.CD_START"
+DataType = "integer"/>
+<Element
+Name = "CdEnd"
+DBLocation = "RENDERING_SETTINGS.CD_END"
+DataType = "integer"/>
+<Element
+Name = "BitResolution"
+DBLocation = "RENDERING_SETTINGS.BIT_RESOLUTION"
+DataType = "integer"/>
+<Element
+Name = "TheC"
+DBLocation = "RENDERING_SETTINGS.THE_C"
+DataType = "integer"/>
+<Element
+Name = "InputStart"
+DBLocation = "RENDERING_SETTINGS.INPUT_START"
+DataType = "double"/>
+<Element
+Name = "InputEnd"
+DBLocation = "RENDERING_SETTINGS.INPUT_END"
+DataType = "double"/>
+<Element
+Name = "Red"
+DBLocation = "RENDERING_SETTINGS.RED"
+DataType = "integer"/>
+<Element
+Name = "Green"
+DBLocation = "RENDERING_SETTINGS.GREEN"
+DataType = "integer"/>
+<Element
+Name = "Blue"
+DBLocation = "RENDERING_SETTINGS.BLUE"
+DataType = "integer"/>
+<Element
+Name = "Alpha"
+DBLocation = "RENDERING_SETTINGS.ALPHA"
+DataType = "integer"/>
+<Element
+Name = "Active"
+DBLocation = "RENDERING_SETTINGS.ACTIVE"
+DataType = "boolean"/>
+</SemanticType>
+</STD:SemanticTypeDefinitions>
+</OME>
+
+
+
