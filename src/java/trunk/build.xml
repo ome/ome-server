@@ -7,6 +7,8 @@
   <property name="privapidocs" value="docs/privapi"/>
   <property name="jar" value="jar"/>
   <property name="deprecation" value="yes"/>
+  <property name="debug" value="yes"/>
+  <property name="debuglevel" value="lines,vars,source"/>
 
   <target name="init">
     <tstamp/>
@@ -22,7 +24,9 @@
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}"
 	       destdir="${build}"
-           deprecation="${deprecation}">
+           deprecation="${deprecation}"
+           debug="${debug}"
+           debuglevel="${debuglevel}">
       <classpath>
         <fileset dir="${lib}">
           <include name="**/*.jar"/>
