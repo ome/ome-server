@@ -206,27 +206,27 @@ my @libraries = ( {
 		pre_install => sub {
 			my ($library,$logfile) = @_;
 			my @inc_paths = (
-				'/usr/include/db_185.h'           , 'db_185.h',
-				'/usr/local/include/db_185.h'     , 'db_185.h',
-				'/usr/include/db4/db_185.h'       , 'db4/db_185.h',
-				'/usr/local/include/db4/db_185.h' , 'db4/db_185.h',
-				'/usr/include/db3/db_185.h'       , 'db3/db_185.h',
-				'/usr/local/include/db3/db_185.h' , 'db3/db_185.h',
-				'/usr/include/db2/db_185.h'       , 'db2/db_185.h',
-				'/usr/local/include/db2/db_185.h' , 'db2/db_185.h',
-				'/usr/include/db.h'               , 'db.h',
-				'/usr/local/include/db.h'         , 'db.h',
+				'/usr/include/db_185.h'           , '<db_185.h>',
+				'/usr/local/include/db_185.h'     , '<db_185.h>',
+				'/usr/include/db4/db_185.h'       , '<db4/db_185.h>',
+				'/usr/local/include/db4/db_185.h' , '<db4/db_185.h>',
+				'/usr/include/db3/db_185.h'       , '<db3/db_185.h>',
+				'/usr/local/include/db3/db_185.h' , '<db3/db_185.h>',
+				'/usr/include/db2/db_185.h'       , '<db2/db_185.h>',
+				'/usr/local/include/db2/db_185.h' , '<db2/db_185.h>',
+				'/usr/include/db.h'               , '<db.h>',
+				'/usr/local/include/db.h'         , '<db.h>',
 			);
 			my ($path,$include);
 			for (my $i=0; $i < @inc_paths; $i+=2) {
 				$include = $inc_paths[$i+1];
 				last if -e $inc_paths[$i];
 			}
-			$include = 'db_185.h' unless $include;
+			$include = '<db_185.h>' unless $include;
 	    	$logfile = *STDERR unless ref ($logfile) eq 'GLOB';
-	    	print $logfile "libdb_B-Tree:  Using #include<$include> for Berkeley DB\n";
-			$library->{include_h} = $include;
-			$library->{get_library_version} = "#include <$include>\n";
+	    	print $logfile "libdb_B-Tree:  Using #include $include for Berkeley DB\n";
+			$ENV{_BERKELEY_DB_INCLUDE} = $include;
+			$library->{get_library_version} = "#include $include\n";
 			$library->{get_library_version} .= q(
 				int main () {
 				#ifdef DB_VERSION_MAJOR
