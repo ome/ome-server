@@ -52,6 +52,7 @@ import org.openmicroscopy.Module;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.Modules;
 import org.openmicroscopy.vis.ome.ModuleInfo;
+import org.openmicroscopy.vis.dnd.ModuleSelection;
 import java.util.Iterator;
 import java.util.List;
 import java.awt.Font;
@@ -61,7 +62,7 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
-import java.awt.datatransfer.StringSelection;
+
 
 
 
@@ -120,8 +121,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 			}
 		};
 		dragSource = new DragSource();
-				dragSource.createDefaultDragGestureRecognizer(this,
-					DnDConstants.ACTION_MOVE,this);
+		dragSource.createDefaultDragGestureRecognizer(this,
+				DnDConstants.ACTION_COPY,this);
 
 		final PCamera camera = getCamera();
 	       
@@ -294,9 +295,8 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener {
 		if (selected != null) {
 			selected.setModulesHighlighted(false);
 			int id = selected.getModule().getID();
-			String s = Integer.toString(id);
-			StringSelection text = new StringSelection(s);
-			System.err.println("dragging..."+s);
+			ModuleSelection text = new ModuleSelection(id);
+			System.err.println("dragging..."+id);
 			dragSource.startDrag(event,DragSource.DefaultMoveDrop,text,dragListener);
 		}
 	}
