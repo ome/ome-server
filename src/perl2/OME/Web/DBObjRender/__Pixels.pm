@@ -112,6 +112,20 @@ sub getRefToObject {
 	}
 }
 
+=head2 getRefSearchField
+
+No search field to Pixels
+
+=cut
+
+sub getRefSearchField {
+	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	
+	return undef;
+}
+
+
+
 =head1 Author
 
 Josiah Johnston <siah@nih.gov>
