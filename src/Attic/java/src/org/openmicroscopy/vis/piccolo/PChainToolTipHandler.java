@@ -43,7 +43,6 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PNode;
-import java.awt.Font;
 
 
 /** 
@@ -57,7 +56,6 @@ import java.awt.Font;
  */
 public class PChainToolTipHandler extends PPaletteToolTipHandler {
 	
-	protected Font font = new Font("Helvetica",Font.PLAIN,12);
 	
 	public PChainToolTipHandler(PCamera camera) {
 		super(camera);

@@ -48,9 +48,7 @@ public abstract class PRemoteObjectLabelText extends PSelectableText
 	
 	protected static final Color ACTIVE_COLOR= new Color(100,0,100,255);
 	protected static final Color SELECTED_COLOR = new Color(175,0,175,255);
-	protected static final Color BASE_COLOR = Color.BLACK;
-	private static final Color FILL =  Color.LIGHT_GRAY;
-	
+
 	
 	protected boolean active = false;
 	protected boolean selected = false;
@@ -80,7 +78,7 @@ public abstract class PRemoteObjectLabelText extends PSelectableText
 		else if (selected == true)
 			curColor = SELECTED_COLOR;
 		else
-			curColor = BASE_COLOR;
+			curColor = PConstants.DEFAULT_COLOR;
 		setColor(curColor);
 	}
 	

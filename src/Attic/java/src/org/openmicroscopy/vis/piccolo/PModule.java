@@ -50,7 +50,6 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolox.util.PBoundsLocator;
-
 import org.openmicroscopy.vis.ome.CModule;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.Module;
@@ -60,9 +59,6 @@ import org.openmicroscopy.Module.FormalOutput;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.geom.Point2D;
 import javax.swing.event.EventListenerList;
-import java.awt.BasicStroke;
-import java.awt.Font;
-import java.awt.Color;
 import java.util.List;
 import java.lang.Object;
 import java.util.Iterator;
@@ -101,15 +97,9 @@ public class PModule extends PPath implements PBufferedNode {
     private static final float NAME_MAG=1;
 	private static final float ZOOM_MAG=2;
 	
-	/**
-	 * Deffault colors and strokes
-	 */
-	private static final Color DEFAULT_COLOR=Color.black;
-	private static final Color DEFAULT_FILL = Color.lightGray;
+;
 	
-	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(5.0f); 
-	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
-
+	
 	
 	/**
 	 *  The Rectangle with the bounds of the enclosing border
@@ -192,7 +182,7 @@ public class PModule extends PPath implements PBufferedNode {
 		// create the name and position it.
 		name = new PText(module.getName());
 		
-		name.setFont(NAME_FONT);
+		name.setFont(PConstants.NAME_FONT);
 		name.setPickable(false);
 		name.setScale(NAME_MAG);
 		addChild(name);
@@ -212,7 +202,7 @@ public class PModule extends PPath implements PBufferedNode {
 		// add the input link target
 		inputLinkTarget = new PLinkTarget();
 		linkTargets.addChild(inputLinkTarget);
-		inputLinkTarget.setOffset(-PLinkTarget.LINK_TARGET_HALF_SIZE,height);
+		inputLinkTarget.setOffset(-PConstants.LINK_TARGET_HALF_SIZE,height);
 				
 		nameWidth = (float) nameBounds.getWidth();
 		
@@ -220,7 +210,7 @@ public class PModule extends PPath implements PBufferedNode {
 		addParameterLabels(module,connection);  
 		
 		// set width of the whole bounding rectangle
-	    width = NAME_LABEL_OFFSET*2+width-PLinkTarget.LINK_TARGET_HALF_SIZE;
+	    width = NAME_LABEL_OFFSET*2+width-PConstants.LINK_TARGET_HALF_SIZE;
 		
 		// create bounding rectangle, set it to be this node's path,
 		// and finish other parameters.
@@ -229,14 +219,14 @@ public class PModule extends PPath implements PBufferedNode {
 					DEFAULT_ARC_WIDTH,DEFAULT_ARC_HEIGHT);
 					
 		setPathTo(rect);
-		setPaint(DEFAULT_FILL);
-		setStrokePaint(DEFAULT_COLOR);
-		setStroke(DEFAULT_STROKE);
+		setPaint(PConstants.DEFAULT_FILL);
+		setStrokePaint(PConstants.DEFAULT_COLOR);
+		setStroke(PConstants.BORDER_STROKE);
 		
 		// add the other target
 		outputLinkTarget = new PLinkTarget();
 		linkTargets.addChild(outputLinkTarget);
-		outputLinkTarget.setOffset(width-PLinkTarget.LINK_TARGET_HALF_SIZE,
+		outputLinkTarget.setOffset(width-PConstants.LINK_TARGET_HALF_SIZE,
 			linkTargetHeight);
 	
 		buildMagnifiedLabel();
@@ -245,7 +235,7 @@ public class PModule extends PPath implements PBufferedNode {
 	private void buildMagnifiedLabel() {
 		// set up the magnified version of the module name
 		zoomName = new PText(module.getName());
-		zoomName.setFont(NAME_FONT);
+		zoomName.setFont(PConstants.NAME_FONT);
 		zoomName.setPickable(false);
 		zoomName.setConstrainWidthToTextWidth(false); 
 		
@@ -428,7 +418,7 @@ public class PModule extends PPath implements PBufferedNode {
 		if (v == true)
 			setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
 		else
-			setStrokePaint(DEFAULT_COLOR);
+			setStrokePaint(PConstants.DEFAULT_COLOR);
 		repaint();
 	}
 	
@@ -442,7 +432,7 @@ public class PModule extends PPath implements PBufferedNode {
 		if (v == true)
 			setStrokePaint(PConstants.HIGHLIGHT_COLOR);
 		else
-			setStrokePaint(DEFAULT_COLOR);
+			setStrokePaint(PConstants.DEFAULT_COLOR);
 		repaint();
 	}
 	

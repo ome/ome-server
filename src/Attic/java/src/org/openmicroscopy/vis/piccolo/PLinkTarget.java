@@ -58,29 +58,21 @@ public class PLinkTarget extends PPath {
 	/**
 	 * The color the target will have by default
 	 */
-	public static final Color LINK_TARGET_COLOR = new Color(0,225,0);
+	private static final Color LINK_TARGET_COLOR = new Color(0,225,0);
 	
 	/**
 	 * A darker shade of green is used once there is something linked 
 	 * to this target
 	 * 
 	 */
-	public static final Color LINK_TARGET_LINKED_COLOR = new Color(0,105,0);
+	private static final Color LINK_TARGET_LINKED_COLOR = new Color(0,105,0);
 	
-	/**
-	 * When the target is selected, its color changes to white.
-	 * 
-	 */
-	public static final Color LINK_TARGET_SELECTED_COLOR = Color.WHITE;
- 	public static final float LINK_TARGET_SIZE=10;
- 	public static final float LINK_TARGET_HALF_SIZE=LINK_TARGET_SIZE/2;
- 	public static final float  LINK_TARGET_BUFFER=3;
- 	
+	
  	private Color currentColor;
  	
  	public PLinkTarget() {
  		super();
- 		setPathToRectangle(0,0,LINK_TARGET_SIZE,LINK_TARGET_SIZE);
+ 		setPathToRectangle(0,0,PConstants.LINK_TARGET_SIZE,PConstants.LINK_TARGET_SIZE);
  		currentColor = LINK_TARGET_COLOR;
  		setPaint(currentColor);
  	}	
@@ -101,7 +93,7 @@ public class PLinkTarget extends PPath {
  	 */
  	public void setSelected(boolean v) {
  		if (v == true) 
- 			setPaint(LINK_TARGET_SELECTED_COLOR);
+ 			setPaint(PConstants.LINK_HIGHLIGHT_COLOR);
  		else
  			setPaint(currentColor);
  		repaint();

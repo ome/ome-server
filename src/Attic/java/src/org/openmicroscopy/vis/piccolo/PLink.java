@@ -44,9 +44,7 @@ package org.openmicroscopy.vis.piccolo;
 import edu.umd.cs.piccolo.nodes.PPath;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
-import java.awt.BasicStroke;
 import java.awt.geom.Point2D;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.awt.Graphics2D;
 import java.awt.geom.QuadCurve2D;
@@ -67,18 +65,8 @@ import java.awt.geom.Rectangle2D;
 
 public abstract class PLink extends  PPath implements PNodeEventListener {
 	
-	/**
-	 * The stroke to be used for drawing links
-	 */
-	public static final BasicStroke LINK_STROKE=
-		new BasicStroke(1,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND);
 	
-	/**
-	 * Default and higlight colors
-	 */
-	public static final Color DEFAULT_COLOR=Color.black;
-	public static final Color HIGHLIGHT_COLOR=Color.WHITE;
-	
+
 	/**
 	 * 
 	 *  degree for splines.
@@ -119,8 +107,8 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	public PLink() {		
 		super();
-		setStroke(LINK_STROKE);
-		setStrokePaint(DEFAULT_COLOR);
+		setStroke(PConstants.LINK_STROKE);
+		setStrokePaint(PConstants.DEFAULT_COLOR);
 		buildBulb();
 		addChild(targets);
 		targets.setVisible(false);
@@ -135,7 +123,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 		bulb = PPath.createEllipse(0,0,PConstants.LINK_BULB_SIZE,
 			PConstants.LINK_BULB_SIZE);
-		bulb.setPaint(DEFAULT_COLOR);
+		bulb.setPaint(PConstants.DEFAULT_COLOR);
 		addChild(bulb);
 	}
 	
@@ -217,8 +205,8 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	public void paint(PPaintContext aPaintContext) {
 		Graphics2D g = aPaintContext.getGraphics();
 		
-		g.setStroke(LINK_STROKE);
-		g.setPaint(DEFAULT_COLOR);
+		g.setStroke(PConstants.LINK_STROKE);
+		g.setPaint(PConstants.DEFAULT_COLOR);
 		
 		Shape p = getLinkShape();
 		if (p != null)
@@ -303,7 +291,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	protected void updateBounds() {
 		Shape s = getLinkShape();
 		if (s != null) {
-			Rectangle2D b = LINK_STROKE.createStrokedShape(s).getBounds2D();
+			Rectangle2D b = PConstants.LINK_STROKE.createStrokedShape(s).getBounds2D();
 			super.setBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
 		}
 	}
@@ -363,20 +351,20 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		endTarget.setSelected(v);
 		targets.removeAllChildren();
 		if (v == true) { // set up children 
-			bulb.setPaint(HIGHLIGHT_COLOR);
+			bulb.setPaint(PConstants.LINK_HIGHLIGHT_COLOR);
 			targets.setVisible(true);
 			int count =  points.size();
 			for (int i = 1; i < count-1; i++) {
 				PLinkSelectionTarget t = new PLinkSelectionTarget(this,i);
 				targets.addChild(t);
 				Point2D pt = (Point2D) points.get(i);
-				t.setOffset((float)pt.getX()-PLinkTarget.LINK_TARGET_HALF_SIZE,
-					(float)pt.getY()-PLinkTarget.LINK_TARGET_HALF_SIZE);
+				t.setOffset((float)pt.getX()-PConstants.LINK_TARGET_HALF_SIZE,
+					(float)pt.getY()-PConstants.LINK_TARGET_HALF_SIZE);
 				t.setSelected(v);
 			}
 		}
 		else
-			bulb.setPaint(DEFAULT_COLOR);
+			bulb.setPaint(PConstants.DEFAULT_COLOR);
 		repaint();
 	}
 	

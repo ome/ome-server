@@ -79,7 +79,7 @@ public class PFormalInput extends PFormalParameter {
 	
 	protected float getLinkTargetX() {
 		PBounds b = labelNode.getFullBoundsReference();
-		return (float) (b.getX() -PLinkTarget.LINK_TARGET_SIZE);
+		return (float) (b.getX() -PConstants.LINK_TARGET_SIZE);
 	}
 	
 	

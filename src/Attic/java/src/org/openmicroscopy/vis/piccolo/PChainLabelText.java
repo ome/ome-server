@@ -33,7 +33,7 @@ import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.CDataset;
 import edu.umd.cs.piccolo.PNode;
-import java.awt.Color;
+
 
 
 /** 
@@ -47,12 +47,10 @@ import java.awt.Color;
 public class PChainLabelText extends PRemoteObjectLabelText {
 	
 	public static final double LABEL_SCALE=.25;
-	private static final Color BASE_COLOR = Color.BLACK;
 	
 	
 	private boolean active = false;
 	private boolean selected = false;
-	private Color curColor;
 	private CChain chain;
 	
 	private PExecutionList executionList;

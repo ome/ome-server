@@ -62,8 +62,7 @@ import java.util.List;
  */
 public class PPaletteToolTipHandler extends PToolTipHandler {
 	
-	protected Font font = new Font("Helvetica",Font.PLAIN,12);
-	protected Font stfont = new Font("Helvetica",Font.PLAIN,10);
+	protected Font font = PConstants.TOOLTIP_FONT;
 	
 	public PPaletteToolTipHandler(PCamera camera) {
 		super(camera);

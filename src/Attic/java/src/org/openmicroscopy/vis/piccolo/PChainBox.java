@@ -48,8 +48,6 @@ import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.Color;
-import java.awt.BasicStroke;
-import java.awt.Font;
 import java.util.Collection;
 
 
@@ -64,11 +62,7 @@ import java.util.Collection;
  */
 public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
-	/**
-	 * The color for display of the lock icon
-	 */
-	private static final Color LOCK_ICON_COLOR= new Color(255,0,0,100);
-	
+
 	/**
 	 * The size of an orthogonal side of the lock icon
 	 */
@@ -85,13 +79,10 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 	private CChain chain;
 	
-	private static final BasicStroke VIEWABLE_STROKE = new BasicStroke(5);
 	private static final Color SELECTED_COLOR = new Color(30,60,255,100); 
 
 	private static final Color EXECUTED_COLOR = new Color(55,105,155,100);
 	
-	private static final Font LOCKED_FONT = new Font(null,Font.BOLD,18);
-	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,18);
 	
 	private static final float VGAP=10;
 	private static final float HGAP=20;
@@ -121,7 +112,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 		if (chain.hasAnyExecutions()) 
 			baseColor = EXECUTED_COLOR;
 		else 
-			baseColor = PGenericBox.CATEGORY_COLOR;
+			baseColor = PConstants.CATEGORY_COLOR;
 		boolean selected = chain.hasExecutionsInSelectedDatasets(selectionState);
 		setSelected(selected);
 		
@@ -131,7 +122,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	
 		// add name
 		name = new PText(chain.getName());
-		name.setFont(NAME_FONT);
+		name.setFont(PConstants.LABEL_FONT);
 		name.setPickable(false);
 		name.setScale(MAX_NAME_SCALE);
 		chainLayer.addChild(name);
@@ -144,7 +135,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 		
 		// add ower name
 		PText owner = new PText(connection.getOwnerName(chain));
-		owner.setFont(NAME_FONT);
+		owner.setFont(PConstants.LABEL_FONT);
 		owner.setPickable(false);
 	
 		
@@ -232,7 +223,7 @@ public class PChainBox extends PGenericBox implements  SelectionEventListener {
 	private void addLockedIndicator() {
 		PBounds b = getFullBoundsReference();
 		PText locked = new PText("Locked");
-		locked.setFont(LOCKED_FONT);
+		locked.setFont(PConstants.LABEL_FONT);
 		locked.setPaint(Color.RED);
 		locked.setScale(2);
 		chainLayer.addChild(locked);

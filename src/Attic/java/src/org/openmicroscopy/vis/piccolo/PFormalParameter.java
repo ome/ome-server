@@ -47,7 +47,6 @@ import org.openmicroscopy.Module.FormalParameter;
 
 import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Vector;
 import java.util.Iterator;
@@ -83,7 +82,6 @@ public abstract class PFormalParameter extends PNode implements
 	/**
 	 * Some generic display parameters
 	 */
-	public static final Color NORMAL_COLOR = Color.black;	
 	public static final int TYPE_NODE_VERTICAL_OFFSET=12;
 	public static final float TYPE_NODE_DEFAULT_SCALE=0.5f;
 	
@@ -158,7 +156,7 @@ public abstract class PFormalParameter extends PNode implements
 		
 		textNode = new PText(param.getParameterName());
 		textNode.setFont(PConstants.NAME_FONT);
-		textNode.setPaint(NORMAL_COLOR);
+		textNode.setPaint(PConstants.DEFAULT_TEXT_COLOR);
 		labelNode.addChild(textNode);
 		
 		
@@ -168,7 +166,7 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode = new PText(type.getName());
 			labelNode.addChild(typeNode);
 			typeNode.setScale(TYPE_NODE_DEFAULT_SCALE);
-			typeNode.setPaint(NORMAL_COLOR);
+			typeNode.setPaint(PConstants.DEFAULT_TEXT_COLOR);
 			typeNode.setFont(PConstants.NAME_FONT);
 		}						
 		
@@ -193,7 +191,7 @@ public abstract class PFormalParameter extends PNode implements
 	protected void setTargetPosition() {
 		PBounds b = labelNode.getFullBoundsReference();
 		float x = getLinkTargetX();
-		float y = (float) b.getY()+PLinkTarget.LINK_TARGET_BUFFER;
+		float y = (float) b.getY()+PConstants.LINK_TARGET_BUFFER;
 		if (target == null)
 			addTarget();
 		target.setOffset(x,y);
@@ -233,8 +231,8 @@ public abstract class PFormalParameter extends PNode implements
 			textNode.setPaint(PConstants.HIGHLIGHT_COLOR);
 		}
 		else {
-			typeNode.setPaint(NORMAL_COLOR);
-			textNode.setPaint(NORMAL_COLOR);
+			typeNode.setPaint(PConstants.DEFAULT_TEXT_COLOR);
+			textNode.setPaint(PConstants.DEFAULT_TEXT_COLOR);
 		}
 		getPModule().setLinkableHighlighted(v);
 		repaint();

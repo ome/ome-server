@@ -50,8 +50,6 @@ import edu.umd.cs.piccolo.nodes.PPath;
 import org.openmicroscopy.vis.ome.CImage;
 import java.awt.image.BufferedImage;
 import java.awt.Image;
-import java.awt.Font;
-import java.awt.BasicStroke;
 
 /** 
  * A node for displaying a thumbnail of an OME IMAGe
@@ -65,11 +63,7 @@ import java.awt.BasicStroke;
 public class PThumbnail extends PNode implements PBufferedNode {
 
 	private final static String DEFAULT_LABEL="No Thumbnail";
-	private final static Font LABEL_FONT = new Font("HELVETICA",Font.PLAIN,6);
-	private final static Font THUMBNAIL_FONT 
-			= new Font("HELVETICA",Font.PLAIN,8);
-	private final static Font TOOLTIP_FONT 
-			= new Font("HELVETICA",Font.PLAIN,8);
+	
 	private CImage image;	
 	private PImage imageNode=null;
 	private BufferedImage imageData;
@@ -90,7 +84,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		else {
 //			System.err.println("thumbnail for image "+image.getID()+", data not ready");
 			label = new PText(image.getName());
-			label.setFont(LABEL_FONT);
+			label.setFont(PConstants.THUMBNAIL_NAME_FONT);
 			addChild(label);
 		}
 		image.addThumbnail(this);
@@ -178,8 +172,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	private PPath makeHighlight(PImage imageNode) {
 		PBounds b = imageNode.getFullBoundsReference();
 		PPath path = new PPath(b);
-		path.setStroke(new 
-			BasicStroke(3,BasicStroke.CAP_BUTT,BasicStroke.JOIN_ROUND));
+		path.setStroke(PConstants.BORDER_STROKE);
 		path.setStrokePaint(PConstants.SELECTED_HIGHLIGHT_COLOR);
 		return path;
 	}
@@ -193,7 +186,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		n.addChild(imNode);
 		PPath p = new PPath();
 		PText text  = new PText(image.getName());
-		text.setFont(THUMBNAIL_FONT);
+		text.setFont(PConstants.TOOLTIP_FONT);
 		p.addChild(text);
 		p.setBounds(p.getUnionOfChildrenBounds(null));
 		p.setPaint(PToolTipHandler.FILL_COLOR);
@@ -205,7 +198,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	
 	public PNode getTextToolTip() {
 		PText text  = new PText(image.getName());
-		text.setFont(TOOLTIP_FONT);
+		text.setFont(PConstants.TOOLTIP_FONT);
 		return text;
 	}
 }

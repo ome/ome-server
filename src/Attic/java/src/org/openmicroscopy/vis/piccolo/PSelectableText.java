@@ -48,7 +48,6 @@ import java.awt.Color;
 public class PSelectableText extends PNode {
 
 	private ChainExecution exec;
-	private static final Color FILL =  Color.LIGHT_GRAY;
 	private PPath rect;
 	private PText text;
 	
@@ -64,7 +63,7 @@ public class PSelectableText extends PNode {
 		text.setFont(PConstants.LABEL_FONT);
 		PBounds b = text.getGlobalFullBounds();
 		rect = new PPath(b);
-		rect.setPaint(FILL);
+		rect.setPaint(PConstants.DEFAULT_FILL);
 		
 		addChild(text);
 		setScale(scale);
