@@ -127,6 +127,8 @@ public class RemoteObject
                 s.equalsIgnoreCase("1");
         } else if (o instanceof Boolean) {
             return ((Boolean) o).booleanValue();
+        } else if (o instanceof Integer) {
+            return ((Integer) o).intValue() != 0;
         } else if (o == null) {
             return false;
         } else {
