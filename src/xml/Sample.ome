@@ -1,7 +1,11 @@
 <?xml version = "1.0"?>
-<OME xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd file:///Users/josiah/OME/cvs/OME/src/xml/schemas/ome.xsd">
+<OME xmlns = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd" 
+	 xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd"
+	 xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
+	 xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
+	 xsi:schemaLocation = "http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/RC5/ome.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC1/STD.xsd">
 	<DocumentGroup>
-		<Include DocumentID = "string" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456">string</Include>
+		<Include DocumentID = "123" href = "File2.ome" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456">string</Include>
 	</DocumentGroup>
 	<Project Name = "Stress Response Pathway" ProjectID = "123">
 		<ExperimenterRef ExperimenterID = "123"/>
@@ -16,8 +20,7 @@
 	<Experiment Type = "Time-lapse" ExperimentID = "123">
 		<Description>This was an experiment.
 		</Description>
-		<ExperimenterRef ExperimenterID = "123">
-		</ExperimenterRef>
+		<ExperimenterRef ExperimenterID = "123"/>
 	</Experiment>
 	<Plate PlateID = "123" Name = "SRP001" ExternRef = "PID.SRP001">
 		<ScreenRef ScreenID = "123"/>
@@ -25,7 +28,7 @@
 	<Screen ScreenID = "123" Name = "Stress Response Pathway Controls" ExternRef = "SID.SRPC001">
 		<Description/>
 	</Screen>
-	<Experimenter>
+	<Experimenter ExperimenterID = "123">
 		<FirstName>Nicola</FirstName>
 		<LastName>Sacco</LastName>
 		<email>Nicola.Sacco@justice.net</email>
@@ -42,18 +45,11 @@
 		</Contact>
 	</Group>
 	<Instrument InstrumentID = "123">
-		<Microscope Manufacturer = "Olympus" Model = "AxioVert" SerialNumber = "123aasdlfkjhsd12312345"/>
-		<Objective ObjectiveID = "123" Manufacturer = "Olympus" Model = "PLAN-APO" SerialNumber = "anxcoas123">
-			<LensNA>1.4</LensNA>
-			<Magnification>60.0</Magnification>
-		</Objective>
-	</Instrument>
-	<Instrument InstrumentID = "required">
-		<Microscope Orientation = "Upright"/>
+		<Microscope Manufacturer = "Zeiss" Model = "foo" SerialNumber = "bar" Type = "Upright"/>
 		<LightSource LightSourceID = "123" Manufacturer = "Olympus" Model = "Realy Bright Lite" SerialNumber = "123skdjhf1234">
-			<Laser Type = "Mercury Arc" Power = "100"/>
+			<Laser Type = "Semiconductor" Medium = "GaAs"/>
 		</LightSource>
-		<Detector DetectorID = "123" Type = "string" Manufacturer = "Kodak" Model = "Instamatic" SerialNumber = "fnuiprf89uh123498" />
+		<Detector DetectorID = "123" Type = "CCD" Manufacturer = "Kodak" Model = "Instamatic" SerialNumber = "fnuiprf89uh123498" />
 		<Objective ObjectiveID = "456" Manufacturer = "Olympus" Model = "SPlanL" SerialNumber = "456anxcoas123">
 			<LensNA>2.4</LensNA>
 			<Magnification>40.0</Magnification>
@@ -72,7 +68,7 @@
 		<GroupRef GroupID = "123"/>
 		<DatasetRef DatasetID = "123"/>
 		<InstrumentRef InstrumentID = "123" ObjectiveID = "123"/>
-		<ImagingEnvironment Temperature = "9.9e9" AirPressure = "9.9e9" Humidity = "9.9e9" CO2Percent = "9.9e9"/>
+		<ImagingEnvironment Temperature = ".1" AirPressure = ".1" Humidity = ".2" CO2Percent = ".3"/>
 		<Thumbnail href = "http://ome.nia.gov/GetThumbnail?GUID=01234567890ABCDEF0123456789ABCDEF0123456" MIMEtype = "image/jpeg"/>
 		<ChannelInfo Name = "Channel 1" ExWave = "490" EmWave = "528" Fluor = "GFP" NDfilter = "0.0">
 			<LightSourceRef LightSourceID = "123"/>
@@ -81,8 +77,13 @@
 			<FilterRef FilterID = "123"/>
 			<ChannelComponent ChannelComponentNumber = "1"/>
 		</ChannelInfo>
+		<Data DimensionOrder = "XYZCT" PixelType = "int16" BigEndian = "t">
+			<Bin:External href="foo.bar" SHA1 = "01234567890ABCDEF0123456789ABCDEF0123456"/>
+		</Data>
 	</Image>
-	<SemanticTypeDefinitions>
-		<!-- INSERT STD's here! -->
-	</SemanticTypeDefinitions>
+	<!--
+	<STD:SemanticTypeDefinitions>
+		< - - INSERT STD's here - - >
+	</STD:SemanticTypeDefinitions>
+	-->
 </OME>
