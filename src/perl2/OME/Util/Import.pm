@@ -213,8 +213,8 @@ sub import {
 	$task->setMessage('Starting import');
 
 	# don't use forkedimportFiles so users can always control c
-	OME::Tasks::ImageTasks::importFiles
-	  ($dataset, \@file_names, \%opts, $task);
+	OME::Tasks::ImageTasks::forkedImportFiles
+	  ($dataset, \@file_names, \%opts);
 	
 	my $lastStep = -1;
 	my $status = $task->state();
