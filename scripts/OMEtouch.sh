@@ -53,5 +53,9 @@ else
     mkdir /var/tmp/OME/sessions
 fi
 
+APACHECONFIG=`httpd -V | grep SERVER_CONFIG_FILE | cut -d '"' -f 2`
+APACHEUSER=`grep "^User"  $APACHECONFIG | cut -d " " -f 2`
+chown -R $APACHEUSER /var/tmp/OME
+
 
 
