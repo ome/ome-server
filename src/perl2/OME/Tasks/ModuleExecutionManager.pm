@@ -49,7 +49,7 @@ module executions
 	my $actual_input = OME::Tasks::ModuleExecutionManager->
 	    addActualInput($output_mex,$input_mex,$formal_input);
 	my @attributes = OME::Tasks::ModuleExecutionManager->
-	    getAttributesForMEX($mex,[$semantic_type]);
+	    getAttributesForMEX($mex,$semantic_type);
 
 =head1 DESCRIPTION
 
@@ -232,11 +232,17 @@ sub createVirtualMEX {
     my $factory = OME::Session->instance()->Factory();
 
     my %used_mexes;
+    my %types;
+    my %attributes_by_type;
     my ($dependence,$target,$module,$iterator_tag,$new_feature_tag);
 
     foreach my $attribute (@$attributes) {
         my $mex = $attribute->module_execution();
         $used_mexes{$mex->id()} = $mex;
+
+        my $st = $attribute->semantic_type();
+        $types{$st->id()} = $st;
+        push @{$attributes_by_type{$st->id()}}, $attribute;
 
         my $mex_dependence = $mex->dependence();
         die "Cannot create a virtual MEX -- dependence mismatch"
@@ -273,12 +279,36 @@ sub createVirtualMEX {
 
     # At this point, the %used_mexes hash should be populated with all
     # of the MEX's used to create the input attributes.  If there's
-    # only one such MEX, then there is no need to create a virtual MEX.
-    # We should just return the existing MEX.
+    # more than one such MEX, then we definitely need to create a
+    # virtual MEX.  If there's only one, then we only need to create a
+    # virtual MEX if the $attributes list contains a subset of the
+    # attributes created by this MEX.
 
     if (scalar(keys %used_mexes) == 1) {
+        # For now, we'll assume that this mex is okay
         my ($id, $mex) = each %used_mexes;
-        return $mex;
+        my $good = 1;
+
+        # Check each type, and see if the attributes of that type which
+        # we received is the same list as the attributes of that type
+        # created by the MEX.  If so, we're still good.  If not, then
+        # we cannot use this MEX, and need to create a virtual MEX.
+
+      TYPE:
+        foreach my $st_id (keys %types) {
+            my $st = $types{$st_id};
+            my $st_attributes = $attributes_by_type{$st_id};
+
+            my $count = $factory->
+              countAttributes($st,{ module_execution => $mex });
+
+            if ($count != scalar(@$st_attributes)) {
+                $good = 0;
+                last TYPE;
+            }
+        }
+
+        return $mex if $good;
     }
 
     # Otherwise, we need to create the virtual MEX.
@@ -297,6 +327,40 @@ sub createVirtualMEX {
     $mex->virtual_mex(1);
     $mex->status('FINISHED');
     $mex->storeObject();
+
+    # Create any necessary SemanticTypeOutputs
+
+    my $untyped = $factory->
+          findObject('OME::Module::FormalOutput',
+                     {
+                      module        => $module,
+                      semantic_type => undef,
+                     });
+
+    foreach my $st_id (keys %types) {
+        my $st = $types{$st_id};
+        my $formal_output = $factory->
+          findObject('OME::Module::FormalOutput',
+                     {
+                      module => $module,
+                      semantic_type => $st,
+                     });
+
+        # If there's a formal output for this type, that's awesome.
+        next if defined $formal_output;
+
+        # Otherwise, this type needs an untyped output entry.  We'd
+        # damn well better have an untyped output for this module.
+        die "No untyped formal output for this module!"
+          unless defined $untyped;
+
+        $factory->
+          maybeNewObject('OME::ModuleExecution::SemanticTypeOutput',
+                         {
+                          module_execution => $mex,
+                          semantic_type    => $st,
+                         });
+    }
 
     return $mex;
 }
@@ -377,9 +441,11 @@ sub getAttributesForMEX {
         my @maps = $factory->
           findObjects('OME::ModuleExecution::VirtualMEXMap',
                       { module_execution => ['in',\@virtual_mexes] });
+        print STDERR "\n\n**** maps ",scalar(@maps),"\n";
         my @attr_ids = map { $_->attribute_id() } @maps;
+        print STDERR "**** attr ",scalar(@attr_ids),"\n";
 
-        $criteria->{module_execution} = ['in',\@attr_ids];
+        $criteria->{id} = ['in',\@attr_ids];
 
         push @attributes, $factory->
           findAttributes($semantic_type,$criteria);
