@@ -36,11 +36,9 @@ use strict;
 use Getopt::Long;
 use lib qw(src/perl2);
 use Carp;
-use Storable;
 
 # OME Modules
 require OME::Install::PreInstallTask;
-require OME::Install::Environment;
 
 #*********
 #********* GLOBALS AND DEFINES
@@ -135,12 +133,12 @@ my $env_file = '/OME/conf/environment.store';
 my ($perl_check, $lib_check, $check_all, $usage, $install);
 
 # Parse our command line options
-GetOptions ("f|env-file=s" => \$env_file,	# Environment file
-            "c|perl-check" => \$perl_check, 	# Just run the perl module task
-	    "l|lib-check" => \$lib_check,	# Just run the library task
-	    "a|check-all" => \$check_all,	# Set $perl_check, $lib_check
-	    "i|install" => \$install,		# Default (unused at the moment)
-	    "h|help" => \$usage,		# Display help
+GetOptions ("f|env-file=s" => \$env_file,   # Environment file
+            "c|perl-check" => \$perl_check, # Just run the perl module task
+			"l|lib-check" => \$lib_check,   # Just run the library task
+			"a|check-all" => \$check_all,   # Set $perl_check, $lib_check
+			"i|install" => \$install,       # Default (unused at the moment)
+			"h|help" => \$usage,            # Display help
 	    );
 
 usage () if $usage;
@@ -185,8 +183,14 @@ if ($perl_check) {
 run_tasks ();
 
 # Store environment
-my $environment = initialize OME::Install::Environment;
-my $conf_dir = $environment->base_dir () . "/conf";
-$environment->store_to ("$conf_dir/environment.store");
+eval "require Storable; require OME::Install::Environment";
+
+unless ($@) {
+	my $environment = initialize OME::Install::Environment;
+	my $conf_dir = $environment->base_dir () . "/conf";
+	$environment->store_to ("$conf_dir/environment.store");
+} else {
+	carp "Unable to load the Storable module, continuing without a stored OME::Install::Environment!";
+}
 
 exit (0);
