@@ -346,57 +346,66 @@ sub renderArray {
 		unless $tmpl_path;
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
+	my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
 
 	# put together data for template
 	if( $objs && scalar( @$objs ) > 0 ) {
 		my ($package_name, $common_name, $formal_name, $ST) =
 			$self->_loadTypeAndGetInfo( $objs->[0] );
 		
-		# populate magic fields
-		if( $tmpl->query( name => '/more_info_url' ) ) {
-			$tmpl_data{ '/more_info_url' } = $options->{ more_info_url };
-		}
-		if( $tmpl->query( name => '/pager_text' ) ) {
-			$tmpl_data{ '/pager_text' } = $options->{ pager_text };
-		}
-		if( $tmpl->query( name => '/formal_name' ) ) {
-			$tmpl_data{ '/formal_name' } = $formal_name;
-		}
-		if( $tmpl->query( name => '/common_name' ) ) {
-			$tmpl_data{ '/common_name' } = $common_name;
-		}
-	
-		# populate loops that tile objects
-		my @tmp_array = grep( m/^\/tile_loop/, $tmpl->param() );
-		my $tile_loop_command = ( scalar ( @tmp_array ) ? $tmp_array[0] : undef );
-		if( $tile_loop_command ) {
-			# figure out how many tiles per loop
-			$tile_loop_command =~ m/^\/tile_loop\/width-(\d+)/;
-			my $n_tiles = $1;
-			# find out about the object loop.
-			my @obj_fields = $tmpl->query( loop => [$tile_loop_command, '/obj_loop'] );
-			my @tile_data;
-			while( @$objs ) {
-				# grab the next bunch of objects
-				my @objs2tile = splice( @$objs, 0, $n_tiles );
-				# render their data
-				my @objs_data = $self->renderData( \@objs2tile, \@obj_fields, $options );
-				# pad the data block to match the other rows. Now we have a 'tile'
-				if( scalar( @tile_data ) ) {
-					push( @objs_data, {} ) for( 1..( $n_tiles - scalar( @objs2tile ) ) );
+		foreach my $field ( keys %$field_requests ) {
+			foreach my $request ( @{ $field_requests->{ $field } } ) {
+				my $request_string = $request->{ 'request_string' };
+
+				# populate magic fields
+				if( $field eq '/more_info_url' ) {
+					$tmpl_data{ $request_string } = $options->{ more_info_url };
 				}
-				# push the 'tile' on the stack of tiles
-				push( @tile_data, { '/obj_loop' => \@objs_data } );
+				if( $field eq '/pager_text' ) {
+					$tmpl_data{ $request_string } = $options->{ pager_text };
+				}
+				if( $field eq '/formal_name' ) {
+					$tmpl_data{ $request_string } = $formal_name;
+				}
+				if( $field eq '/common_name' ) {
+					$tmpl_data{ $request_string } = $common_name;
+				}
+			
+				# populate loops that tile objects
+				if( $field eq '/tile_loop' ) {
+# my @tmp_array = grep( m/^\/tile_loop/, $tmpl->param() );
+# my $tile_loop_command = ( scalar ( @tmp_array ) ? $tmp_array[0] : undef );
+# if( $tile_loop_command ) {
+# figure out how many tiles per loop
+# $tile_loop_command =~ m/^\/tile_loop\/width-(\d+)/;
+# my $n_tiles = $1;
+					my $n_tiles = $request->{ width };
+					# find out about the object loop.
+					my @obj_fields = $tmpl->query( loop => [$request_string, '/obj_loop'] );
+					my @tile_data;
+					while( @$objs ) {
+						# grab the next bunch of objects
+						my @objs2tile = splice( @$objs, 0, $n_tiles );
+						# render their data
+						my @objs_data = $self->renderData( \@objs2tile, \@obj_fields, $options );
+						# pad the data block to match the other rows. Now we have a 'tile'
+						if( scalar( @tile_data ) ) {
+							push( @objs_data, {} ) for( 1..( $n_tiles - scalar( @objs2tile ) ) );
+						}
+						# push the 'tile' on the stack of tiles
+						push( @tile_data, { '/obj_loop' => \@objs_data } );
+					}
+					$tmpl_data{ $request_string } = \@tile_data;
+				}
+				
+				# populate loops around objects
+				if( $field eq '/obj_loop' ) {
+					# populate the fields inside the loop
+					my @obj_fields = $tmpl->query( loop => $request_string );
+					$tmpl_data{ $request_string } = [ $self->renderData( \@$objs, \@obj_fields, $options ) ];
+							
+				}
 			}
-			$tmpl_data{ $tile_loop_command } = \@tile_data;
-		}
-		
-		# populate loops around objects
-		if( $tmpl->query( name => '/obj_loop' ) ) {
-			# populate the fields inside the loop
-			my @obj_fields = $tmpl->query( loop => '/obj_loop' );
-			$tmpl_data{ '/obj_loop' } = [ $self->renderData( \@$objs, \@obj_fields, $options ) ];
-					
 		}
 	}
 
@@ -498,8 +507,9 @@ sub renderData {
 	# handle plural calling style
 	if( ref( $obj ) eq 'ARRAY' ) {
 		my @records;
-		push( @records, { $self->renderData( $_, $field_requests, $options) } )
-			foreach @$obj;
+		foreach my $object( @$obj ) {
+			push( @records, { $self->renderData( $object, $field_requests, $options) } );
+		}
 		return @records;
 	}
 	

@@ -1,16 +1,11 @@
-<input type="hidden" name="declassifyImage">
 <TMPL_IF NAME=/tile_loop/width-3>
 	<TMPL_VAR NAME=/pager_text>
 	<TMPL_IF NAME=/more_info_url>
 		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
 		<a href="<TMPL_VAR NAME=/more_info_url>">More info on these Categories...</a>
 	</TMPL_IF>
-	Clicking a thumbnail will:
-	<nobr><input type="radio" name="thumb_click_opens" value='viewer' checked>Open the Image Viewer</nobr>
-	<nobr><input type="radio" name="thumb_click_opens" value='image_detail' >Show Image detail</nobr>
-<!--
-	<nobr><input type="radio" name="thumb_click_opens" value='declassify' >Declassify the Image</nobr>
--->
+	<span class='ome_quiet'>Click the upper half of a thumbnail to see image info,
+	click the lower half to open the image viewer.</span>
 	<table class="ome_table">
 		<TMPL_LOOP NAME=/tile_loop/width-3>
 			<tr>

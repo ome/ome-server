@@ -161,7 +161,7 @@ sub getPageBody {
 				push( @{ $tmpl_data{ CategoryList } }, {
 					CategoryRef => $self->Renderer()->render( $category, 'ref' ),
 					images      => $self->Renderer()->renderArray( 
-						\@sorted_images, 'bare_ref_mass', { type => 'OME::Image' } 
+						\@sorted_images, 'bare_ref_mass_no_map', { type => 'OME::Image' } 
 					),
 				} );
 			}

@@ -4,13 +4,14 @@
 		<TMPL_IF NAME=/pager_text>|</TMPL_IF>
 		<a href="<TMPL_VAR NAME=/more_info_url>">More info...</a>
 	</TMPL_IF>
-	<span class='ome_quiet'>Clicking a thumbnail will open:
-<input type="radio" name="thumb_click_opens" value='viewer' checked>Image Viewer
-<input type="radio" name="thumb_click_opens" value='image_detail' >Image Detail
-</span>
+	<span class='ome_quiet'>Click the upper half of a thumbnail to see image info,
+	click the lower half to open the image viewer.</span>
 <br>
 	<TMPL_LOOP NAME=/obj_loop>
-		<TMPL_VAR NAME=/object/render-ref>
+		<TMPL_VAR NAME=/object/render-ref_map>
+	</TMPL_LOOP>
+	<TMPL_LOOP NAME=/obj_loop/loop2>
+		<TMPL_VAR NAME=/object/render-map>
 	</TMPL_LOOP>
 <TMPL_ELSE>
 <b>(none)</b>
