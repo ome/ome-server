@@ -198,7 +198,7 @@ sub createUser {
                 die "Modifying user priviledges is not supported - sorry.";
             }
     } else {
-        my $sql = "CREATE USER $username";
+        my $sql = "CREATE USER \"$username\"";
         $sql .= ' CREATEUSER CREATEDB' if ($isSuperuser);
         $dbh->do($sql);
 		$self->errorStr($dbh->errstr());
