@@ -96,6 +96,7 @@ use Carp;
 use OME::Session;
 use OME::Module;
 use OME::ModuleExecution;
+use OME::ModuleExecution::VirtualMEXMap;
 use OME::SemanticType;
 use OME::AnalysisChainExecution;
 
@@ -454,6 +455,46 @@ sub getAttributesForMEX {
     }
 
     return \@attributes;
+}
+
+=head2 getMEXesForAttribute
+
+	my $mexes = OME::Tasks::ModuleExecutionManager->
+	    getMEXesForAttribute($attribute);
+
+Returns an array reference of the module executions which could have
+created the given attribute.  Any of these module executions could
+have been used for an actual input which contains the given attribute.
+This is mostly used for creating data history entries given a past
+attribute.
+
+=cut
+
+sub getMEXesForAttribute {
+    my $class = shift;
+    my ($attribute) = @_;
+    my $factory = OME::Session->instance()->Factory();
+
+    my @mexes;
+
+    # The trivial case is the MEX which initially created the
+    # attribute.  This MEX is always part of the result.
+
+    push @mexes, $attribute->module_execution();
+
+    # The other results are any virtual MEX's which have this
+    # attribute listed as an output.  This is actually pretty is to
+    # query for.
+
+    my @virtual_mex_maps = $factory->
+      findObjects('OME::ModuleExecution::VirtualMEXMap',
+                  { attribute => $attribute });
+
+    foreach my $map (@virtual_mex_maps) {
+        push @mexes, $map->module_execution();
+    }
+
+    return \@mexes;
 }
 
 =head2 getInputTag
