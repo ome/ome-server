@@ -83,8 +83,8 @@ sub getPageBody {
 			push (@paths,$rootDir.$selection);
 		}
 	}
-	
 	@selections = sort {uc($a) cmp uc($b)} @selections;
+
 
 	if (scalar (@selections) > 0) {
 		if ($cgi->param('Import')) {
@@ -107,16 +107,17 @@ sub getPageBody {
 				$text.=print_form($session,$cgi,$htmlFormat,\@selections);
 				return ('HTML',$text) unless $datasetname;
          			
-        			#name already exists
+ 			  #name already exists
 				my $rep=$datasetManager->exist($datasetname);
 
 				my $txt="";
 				$txt=$htmlFormat->existMessage("dataset");
 				$txt.=print_form($session,$cgi,$htmlFormat,\@selections);
+
+
 	   			return ('HTML',$txt) unless (defined $rep);
 				# must find better solution
 				$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'),$userID,$usergpID,$project->project_id());
-				#$dataset=$datasetManager->create($cgi->param('newDataset'),$cgi->param('description'));
 
 			} elsif ($radioSelect eq 'addExistDataset') {
 				# is this the Right Way to do this operation?
@@ -142,6 +143,7 @@ sub getPageBody {
 				########
 				$body .= "<b>".$errorMessage."</b><br>";
 				$body .= print_form($session,$cgi,$htmlFormat,\@selections);
+
 			} else {
 				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
@@ -188,6 +190,8 @@ sub print_form {
 	my @pathElements = split ('/',$recentSelection);
 	my $n=scalar(@pathElements);
 	my $datasetName = $pathElements[$n-1];
+
+
 	my ($key, $value,$defaultDatasetID);
 	while (($key, $value) = each %datasetHash) {
 		$defaultDatasetID = $key if $value eq $datasetName;
@@ -201,9 +205,13 @@ sub print_form {
 	
 	my %h=(
 	1 =>{name =>'addNewDataset', text=> 'New dataset named: '},
-	2 =>{name => 'addExistDataset', text => 'Add imported images to an unlock existing dataset '},
+	#2 =>{name => 'addExistDataset', text => 'Add imported images to an unlock existing dataset '},
 	);
-	my $dropDowntable= $htmlFormat->dropDownTable("addDataset",\%datasetHash);
+  my $dropDowntable;
+  if  (@datasets >0){
+   $h{2}={name => 'addExistDataset', text => 'Add imported images to an unlock existing dataset '};
+	 $dropDowntable= $htmlFormat->dropDownTable("addDataset",\%datasetHash);
+  }
 	my $radioButton= $htmlFormat->radioButton(\%h,$defaultRadio,"DoDatasetType");
 
 	$text .= $cgi->startform;
