@@ -2,6 +2,4 @@
 OMEIS_BASE=%OMEIS_BASE%
 OME_BIN=%OME_BIN%
 PIX_PURGE=%PIX_PURGE%
-# FIXME: This is commented out for now until the purge pug is fixed.
-# Currently verification will fail and delete the .convert file
-#find $OMEIS_BASE/Pixels -regex '.*/[0123456789]*' -atime +$PIX_PURGE -exec $OME_BIN/purge '{}' \;
+find $OMEIS_BASE/Pixels -regex '.*/[0123456789]*' -atime +$PIX_PURGE -exec $OME_BIN/purge '{}' \;

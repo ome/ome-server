@@ -67,20 +67,18 @@ int theArg;
 	
 	if (argc < 2) {
 		fprintf (stderr,"Purge Pixels files - delete them if they are recoverable from the original File.\n");
-		fprintf (stderr,"Usage:\n%s path [PixelsID] [PixelsID]...\n",argv[0]);
-		fprintf (stderr,"  Where path is the OMEIS root (containing the Pixels directory)\n");
+		fprintf (stderr,"Usage:\n%s [PixelsID] [PixelsID]...\n",argv[0]);
 		fprintf (stderr,"  If no PixelsID parameters are supplied, the entire repository will be purged.\n");
 		exit (-1);
 	}
 
-	if (chdir (argv[1])) {
-		char error[256];
-		sprintf (error,"Could not change working directory to %s",argv[1]);
-		perror (error);
+	if (chdir (OMEIS_ROOT)) {
+		OMEIS_ReportError ("OMEIS purge",NULL,(OID)0,"Could not change working directory to %s",
+			OMEIS_ROOT);
 		exit (-1);
 	}
 	
-	theArg = 2;
+	theArg = 1;
 	if (theArg < argc) {
 		while (theArg < argc) {
 			if (strrchr(argv[theArg],'/')) {
@@ -89,6 +87,7 @@ int theArg;
 				theID = strtoull(argv[theArg], NULL, 10);
 			}
 			if (theID != 0) PurgePixels (theID);
+			if (OMEIS_CheckError()) OMEIS_ReportError ("Purge","PixelsID",theID,"Purge failed");
 			theArg++;
 		}
 	} else {
@@ -97,7 +96,9 @@ int theArg;
 		if (!theID) fprintf (stderr,"Couldn't get the last ID: %s\n",strerror (errno));
 		freePixelsRep (myPixels);
 		while (theID) {
+			OMEIS_ClearError();
 			PurgePixels (theID);
+			OMEIS_ReportError ("Purge","PixelsID",theID,"Purge failed");
 			theID--;
 		}
 	}

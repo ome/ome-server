@@ -265,6 +265,7 @@ ConvertFile (
 	char       writeRec);
 
 
+int FinishStats (PixelsRep *myPixels, char force);
 
 
 
