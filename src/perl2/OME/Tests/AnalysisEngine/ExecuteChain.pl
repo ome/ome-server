@@ -101,31 +101,71 @@ foreach my $user_input (@$user_input_list) {
     my ($node,$module,$formal_input,$semantic_type) = @$user_input;
     print "\n",$module->name(),".",$formal_input->name(),":\n";
 
-    my $count = 0;
+    my $new;
+    while ($new ne 'N' && $new ne 'E') {
+        print "  New or existing? [N]/E  ";
+        $new = <STDIN>;
+        chomp($new);
+        $new = uc($new) || 'N';
+    }
+
     my @columns = $semantic_type->semantic_elements();
     my @attributes;
 
-  LIST_LOOP:
-    while (1) {
-        $count++;
-        print "  Attribute #$count\n";
-        my $data_hash = {};
+    if ($new eq 'N') {
+        my $count = 0;
 
-        foreach my $column (@columns) {
-            my $column_name = $column->name();
+      LIST_LOOP:
+        while (1) {
+            $count++;
+            print "  Attribute #$count\n";
+            my $data_hash = {};
 
-            print "    ",$column_name,": ";
+            foreach my $column (@columns) {
+                my $column_name = $column->name();
+
+                print "    ",$column_name,": ";
+                my $value = <STDIN>;
+                chomp($value);
+                last LIST_LOOP if ($value eq '\d');
+                $value = undef if ($value eq '');
+                $value = '' if ($value eq '\0');
+                $data_hash->{$column_name} = $value;
+            }
+
+            my $attribute = $factory->
+              newAttribute($semantic_type,undef,undef,$data_hash);
+            push @attributes,$attribute;
+        }
+    } else {
+        print "  Type in a list of attribute ID's, separated by spaces.\n";
+        print "  [Enter] by itself will terminate the list.\n";
+
+      LIST_LOOP:
+        while (1) {
+            print "  ? ";
             my $value = <STDIN>;
             chomp($value);
-            last LIST_LOOP if ($value eq '\d');
-            $value = undef if ($value eq '');
-            $value = '' if ($value eq '\0');
-            $data_hash->{$column_name} = $value;
-        }
+            my @ids = split(' ',$value);
+            last LIST_LOOP if scalar(@ids) == 0;
 
-        my $attribute = $factory->
-          newAttribute($semantic_type,undef,undef,$data_hash);
-        push @attributes,$attribute;
+          ID_LOOP:
+            foreach my $id (@ids) {
+                if ($id !~ /^\d+$/) {
+                    print "    $id is not a number.  Skipping.\n";
+                    next ID_LOOP;
+                }
+
+                my $attribute = $factory->loadAttribute($semantic_type,$id);
+                if (!defined $attribute) {
+                    print "    Could not find attribute #$id.  Skipping.\n";
+                    next ID_LOOP;
+                }
+
+                print "    Adding attribute #$id.\n";
+                push @attributes, $attribute;
+            }
+        }
     }
 
     $user_inputs{$node->id()}->{$formal_input->id()} = \@attributes;
