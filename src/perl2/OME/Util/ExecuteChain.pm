@@ -132,7 +132,7 @@ my $self = shift;
 		my ($node,$module,$formal_input,$semantic_type) = @$user_input;
 		print "\n",$module->name(),".",$formal_input->name(),":\n";
 	
-		my $new;
+		my $new = '';
 		while ($new ne 'N' && $new ne 'E') {
 			print "  New or existing? [N]/E  ";
 			$new = <STDIN>;
@@ -168,8 +168,12 @@ my $self = shift;
 				push @data_hashes, $semantic_type, $data_hash;
 			}
 	
-			$mex = OME::Tasks::AnnotationManager->
-			  annotateGlobal(@data_hashes);
+            if (scalar(@data_hashes) > 0) {
+                $mex = OME::Tasks::AnnotationManager->
+                  annotateGlobal(@data_hashes);
+            } else {
+                $mex = undef;
+            }
 		} else {
 			my @attributes;
 	
@@ -202,8 +206,12 @@ my $self = shift;
 				}
 			}
 	
-			$mex = OME::Tasks::ModuleExecutionManager->
-			  createVirtualMEX(\@attributes);
+            if (scalar(@attributes) > 0) {
+                $mex = OME::Tasks::ModuleExecutionManager->
+                  createVirtualMEX(\@attributes);
+            } else {
+                $mex = undef;
+            }
 		}
 	
 		$user_inputs{$formal_input->id()} = $mex;
