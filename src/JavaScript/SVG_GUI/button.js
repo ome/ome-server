@@ -1,17 +1,35 @@
 /*****
 
 button.js
-	external files dependencies: widget.js
+
+
+
+	Copyright (C) 2002 Open Microscopy Environment
+	Author: Josiah Johnston <siah@nih.gov>
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	
+	Written by: Josiah Johnston <siah@nih.gov>
+	
+
 Known bugs:
 	#1. Calling setState shortly after button is drawn will not update
 the button's animations. I believe this is due to viewer implementation.
 	Setting setState to be called after a delay of 0 is an easy way of
 bypassing this bug. i.e. setTimeout( "button1.setState(false)", 0 );
-
-My development vocabulary:
-	untested: the function has not been run
-	tested: the function runs and appears to works as advertised
-	comprehensively tested: i've checked the output and side effects fairly throughly
 
 *****/
 
@@ -24,6 +42,7 @@ svgns = "http://www.w3.org/2000/svg";
 *****/
 
 button.prototype = new Widget();
+button.VERSION = 0.2;
 button.prototype.constructor = button;
 button.superclass = Widget.prototype;
 
@@ -98,7 +117,7 @@ function button(x, y, callback, onText, offText, highlightText) {
 	tested
 
 *****/
-button.prototype.setState = function(val) {
+button.prototype.setState = function(val, noCallBack) {
 	if(val) {
 		this.isOn = true;
 		// have we been initialized? does on have an animation?
@@ -117,46 +136,36 @@ button.prototype.setState = function(val) {
 				this.offAnimOn.beginElement();
 		}
 	}
-	if(this.callback)
-		this.callback(val);
+	if(!noCallBack) { this.issueCallback(val); }
 }
 
-/*****
 
-	setHighlight(val)
-		turns Highlight feature on & off
-	
-	comprehensively tested
-	
-*****/
+button.prototype.issueCallback = function(value) {
+	if( this.callback_obj && this.callback) { 
+		eval( "this.callback_obj."+this.callback+"(value)"); 
+	} else { 
+		if( this.callback) { this.callback(value); } 
+	}
+};
+
+
 button.prototype.setHighlight = function(val) {
 	if(val && this.highlightText != null)
 		this.HIGHLIGHT_OFF = false;
 	else
 		this.HIGHLIGHT_OFF = true;
-}
+};
 
-/*****
-
-	getState()
-		returns true if button is on
-		returns false if button is off
-	
-	comprehensively tested
-
-*****/
 button.prototype.getState = function() {
-	if(isOn)
+	if(this.isOn)
 		return true;
 	else
 		return false;
-}
+};
 
-/********************************************************************************************/
-/********************************************************************************************/
-/************************** Functions without safety nets ***********************************/
-/********************************************************************************************/
-/********************************************************************************************/
+/********************************************************************************************
+                                Private Functions 
+********************************************************************************************/
 
 /*****
 
@@ -170,8 +179,13 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 	// call superclass initialization
 	button.superclass.init.call(this, x, y);
 
-	// set variables
-	this.callback = callback;
+	// record initialization params...
+	if( !callback || isFunction(callback) ) {
+		this.callback = callback;
+	} else {
+		this.callback = callback['method'];
+		this.callback_obj = callback['obj'];
+	}
 	this.isOn = true;
 
 	// override default appearances
