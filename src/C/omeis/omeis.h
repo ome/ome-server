@@ -41,15 +41,6 @@ typedef u_int64_t OID;
 
 typedef struct
 {
-	char  path[256];	/* Path to the input file for conversion */
-	FILE *fp; /* This will be NULL if closed */
-	int fd; /* This will be 0 if closed */
-	int bp; /* bytes per pixel in the input file */
-	char swapBytes; /* true if file's endian-ness doesn't match the machine's */
-} convertFile;
-
-typedef struct
-{
 	char stats_OK;
 	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
 	float min, max, mean, geomean, sigma, geosigma;
@@ -77,7 +68,6 @@ typedef struct {
 	unsigned char isSigned;       /* signed integers or not */
 	unsigned char isFloat;        /* floating point or not */
 	char reserved[31];            /* extra stuff to fill out to 64 bytes */
-	unsigned long jump;           /* bytes to jump to the pixels (leaving room for stack and plane info)*/
 } pixHeader;
 
 typedef struct
@@ -88,6 +78,8 @@ typedef struct
 	char  path_info[256]; /* Path to the info header */
 	int   fd_rep;   /* This will be < 0 when closed */
 	int   fd_info;  /* This will be < 0 when closed */
+	off_t size_rep;
+	off_t size_info;
 	FILE *IO_stream;   /* One of these two should be set for reading/writing */
 	void *IO_buf;
 	unsigned long IO_buf_off; /* This keeps track of where we're writing in IO_buf */
@@ -96,8 +88,6 @@ typedef struct
 	size_t num_pixels;
 	size_t num_write;  /* number of pixels written */
 	char error_str[256];
-	convertFile inFile;
-	off_t file_size;
 	char is_mmapped;
 	/* The rest is just like in the file */
 	pixHeader *head;
