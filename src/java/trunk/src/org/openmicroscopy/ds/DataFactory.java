@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.openmicroscopy.ds.dto.DataInterface;
 import org.openmicroscopy.ds.dto.MappedDTO;
 
 /**
@@ -59,7 +60,7 @@ import org.openmicroscopy.ds.dto.MappedDTO;
  * specify which objects to retrieve.</p>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
- * @version 2.2 <i>(Internal: $Revision$ $Date$)</i>
+ * @version 2.2 <small><i>(Internal: $Revision$ $Date$)</i></small>
  * @since OME2.2
  */
 
@@ -204,7 +205,7 @@ public class DataFactory
      * @param criteria the search criteria to use
      * @return the DTO object matching with the given primary key ID
      */
-    public Object load(Class targetClass, int id, Criteria criteria)
+    public DataInterface load(Class targetClass, int id, Criteria criteria)
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map fields = criteria.getFieldsWanted();
@@ -238,7 +239,7 @@ public class DataFactory
      * @param criteria the search criteria to use
      * @return the DTO object matching the specified criteria
      */
-    public Object retrieve(Class targetClass, Criteria criteria)
+    public DataInterface retrieve(Class targetClass, Criteria criteria)
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map crit = createCriteriaMap(criteria);
@@ -295,7 +296,7 @@ public class DataFactory
      * <b>Coming soon</b>: Sends a DTO back to the data server to be
      * stored in the database.
      */
-    public void update(Class targetClass, Object object)
+    public void update(Class targetClass, DataInterface object)
     {
         String remoteType = RemoteTypes.getRemoteType(targetClass);
     }
