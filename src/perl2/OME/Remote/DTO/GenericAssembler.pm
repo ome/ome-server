@@ -189,7 +189,7 @@ sub __genericDTO {
     if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass")) {
         my $st_prefix = "${prefix}.semantic_type";
         my $st = $object->semantic_type();
-        $fields_wanted->{$st_prefix} = ['id','name']
+        $fields_wanted->{$st_prefix} = ['id','name','granularity']
           unless defined $fields_wanted->{$st_prefix};
         $dto->{semantic_type} = __genericDTO($st_prefix,$st,$fields_wanted);
     }
@@ -241,12 +241,14 @@ sub __updateDTO {
         # objects being saved in this method call.
 
         my $object;
-        if (UNIVERSAL::isa($data_class,"OME::SemanticType::Superclass")) {
-            my $type = $data_class->semantic_type();
-            $object = $factory->newAttribute($type,$serialized);
+        if (UNIVERSAL::isa($class_name,"OME::SemanticType::Superclass")) {
+            my $type = $class_name->semantic_type();
+            $object = $factory->newAttribute($type,undef,undef,$serialized);
         } else {
             $object = $factory->newObject($class_name,$serialized);
         }
+        die "Could not create object $id"
+          unless defined $object;
         $id_hash->{$id} = $object;
         return ($id,$object->id());
     } else {
