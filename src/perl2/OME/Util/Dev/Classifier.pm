@@ -230,7 +230,7 @@ sub compile_sigs {
 	my @categories = $factory->findAttributes( "Category", CategoryGroup => $category_group );
 	my %category_numbers;
 	my $cn = 0;
-	foreach( sort { $a->name cmp $b->name } @categories ) {
+	foreach( sort { $a->Name cmp $b->Name } @categories ) { 
 		$cn++;
 		$category_numbers{ $_->id } = $cn;
 	}
@@ -292,7 +292,7 @@ sub compile_sigs {
 			$sig_array[$sig_entry->Legend->VectorPosition() - 1][$image_number] = 
 				$sig_entry->Value();
 		}
-		$signature_array->setAll( @sig_array );
+		$signature_array->setAll( \@sig_array );
 		$image_number += 1;
 	}
 
