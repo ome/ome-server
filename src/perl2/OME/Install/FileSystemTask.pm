@@ -73,11 +73,13 @@ my @html_core = ("JavaScript", "html", "images");
 my $BASEDIR = \$core_dirs[0]->{path};
 my $TMPDIR = \$core_dirs[1]->{path};
 
+# Global OME user (default) and UID
+my $OMEUSER = "ome"; 
+my $OMEUID;
+
 #*********
 #********* LOCAL SUBROUTINES
 #*********
-
-# NIL
 
 sub fix_ownership {
     my ($user, $dir) = @_;
@@ -100,22 +102,33 @@ sub fix_ownership {
 sub execute {
     # Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
-    print "MAC:", $environment->getMAC(), "\n";
-
-    my $OMEUSER = $environment->OMEUser;
-    #my $OMEUSER = "ome";
-    my $OMEUID = getpwnam($OMEUSER);
 
     print_header ("Filesystem Setup");
 
     # Set a proper umask
-    print "Dropping umask to ", BOLD, "\"0007\"", RESET, ".\n";
+    print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
     umask (0002);
 
     # Confirm and/or update all our installation dirs
     foreach my $directory (@core_dirs) {
 	$directory->{path} = confirm_path ($directory->{description}, $directory->{path});
     }
+
+    # Make sure our OMEUser exists if not create it
+    if (not $environment->OMEUser()) {
+	$OMEUSER = confirm_default ("What username do you want OME to run under ?", $OMEUSER);
+	if (not getpwnam($OMEUSER)) {
+	    print "User does not exist, adding \"$OMEUSER\".\n";
+	    $environment->adduser($OMEUSER, $$BASEDIR)  # adduser ($user, $homedir)
+		or croak "Couldn't add user, \"$OMEUSER\".";
+	}
+	
+	# Make sure it's propagated
+	$environment->OMEUser ($OMEUSER);
+    }
+
+    # Set our $OMEUID global
+    $OMEUID = getpwnam($OMEUSER);
 
     #********
     #******** Build our core directory structure
