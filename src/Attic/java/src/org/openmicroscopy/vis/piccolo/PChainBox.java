@@ -41,8 +41,8 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.chains.ControlPanel;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
+import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
 import edu.umd.cs.piccolo.nodes.PText;
 import edu.umd.cs.piccolo.util.PBounds;
 
@@ -60,7 +60,7 @@ import java.awt.Font;
  * @version 2.1
  * @since OME2.1
  */
-public class PChainBox extends PCategoryBox implements 
+public class PChainBox extends PGenericBox implements 
 	DatasetSelectionEventListener{
 	
 	/**
@@ -150,14 +150,17 @@ public class PChainBox extends PCategoryBox implements
 	
 	
 	public void datasetSelectionChanged(DatasetSelectionEvent e) {
-		if (chain.hasExecutionsInDatasets(e.getDatasets(),
-			e.getSelectedDataset())) {
+		boolean selected = 
+			chain.hasExecutionsInDatasets(e.getDatasets(),
+			e.getSelectedDataset());
+			setSelected(selected);
+	} 
+	
+	public void setSelected(boolean v) {
+		if (v == true)
 			setPaint(EXECUTED_COLOR);
-			
-		}
-		else {
-			setPaint(PCategoryBox.CATEGORY_COLOR);
-		}
+		else
+			setPaint(PGenericBox.CATEGORY_COLOR);
 		repaint();
 	}
 }
