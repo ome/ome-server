@@ -26,37 +26,6 @@
      Name= "Dimensions"
      AppliesTo = "I"
      Description = "Describes the physical size of each dimension of the pixels in an image in microns">
-    
-    <Element
-       Name= "SizeX"
-       DBLocation = "IMAGE_DIMENSIONS.SIZE_X"
-       DataType = "integer"
-       Description="Number of pixels on the X axis."/>
-    <Element
-       Name= "SizeY"
-       DBLocation = "IMAGE_DIMENSIONS.SIZE_Y"
-       DataType = "integer"
-       Description="Number of pixels on the Y axis."/>
-    <Element
-       Name= "SizeZ"
-       DBLocation = "IMAGE_DIMENSIONS.SIZE_Z"
-       DataType = "integer"
-       Description="Number of pixels on the Z axis."/>
-    <Element
-       Name= "SizeC"
-       DBLocation = "IMAGE_DIMENSIONS.SIZE_C"
-       DataType = "integer"
-       Description="Number of channel components in all logical channels."/>
-    <Element
-       Name= "SizeT"
-       DBLocation = "IMAGE_DIMENSIONS.SIZE_T"
-       DataType = "integer"
-       Description="Number of time points"/>
-    <Element
-       Name= "BitsPerPixel"
-       DBLocation = "IMAGE_DIMENSIONS.BITS_PER_PIXEL"
-       DataType = "integer"/>
-
     <Element
        Name= "PixelSizeX"
        DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_X"
@@ -88,7 +57,6 @@
      Name= "Pixels"
      AppliesTo = "I"
      Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
-    <!-- This is commented out for now and moved back into the Image STD until the code catches up with this new setup. 
     <Element
        Name= "SizeX"
        DBLocation = "IMAGE_PIXELS.SIZE_X"
@@ -118,7 +86,6 @@
        Name= "BitsPerPixel"
        DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
        DataType = "integer"/>
-    -->
     <Element
        Name= "PixelType"
        DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
