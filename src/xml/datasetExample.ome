@@ -63,64 +63,6 @@
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
   <SemanticType
-	 Name= "Pixels"
-	 AppliesTo = "I">
-	<Description>Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.</Description>
-		
-	<Element
-	   Name= "SizeX"
-	   DBLocation = "IMAGE_PIXELS.SIZE_X"
-	   DataType = "integer">
-	  <Description>Number of pixels on the X axis.</Description>
-	</Element>
-	<Element
-	   Name= "SizeY"
-	   DBLocation = "IMAGE_PIXELS.SIZE_Y"
-	   DataType = "integer">
-	  <Description>Number of pixels on the Y axis.</Description>
-	</Element>
-	<Element
-	   Name= "SizeZ"
-	   DBLocation = "IMAGE_PIXELS.SIZE_Z"
-	   DataType = "integer">
-	  <Description>Number of pixels on the Z axis.</Description>
-	</Element>
-	<Element
-	   Name= "SizeC"
-	   DBLocation = "IMAGE_PIXELS.SIZE_C"
-	   DataType = "integer">
-	  <Description>Number of channel components in all logical channels.</Description>
-	</Element>
-	<Element
-	   Name= "SizeT"
-	   DBLocation = "IMAGE_PIXELS.SIZE_T"
-	   DataType = "integer">
-	  <Description>Number of time points</Description>
-	</Element>
-	<Element
-	   Name= "BitsPerPixel"
-	   DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
-	   DataType = "integer"/>
-	<Element
-	   Name= "PixelType"
-	   DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
-	   DataType = "string"/>
-	<Element
-	   Name= "FileSHA1"
-	   DBLocation = "IMAGE_PIXELS.FILE_SHA1"
-	   DataType = "string"/>
-	<Element
-	   Name= "Repository"
-	   DBLocation = "IMAGE_PIXELS.REPOSITORY"
-	   DataType = "reference"
-	   RefersTo = "Repository"/>
-	<Element
-	   Name= "Path"
-	   DBLocation = "IMAGE_PIXELS.PATH"
-	   DataType = "string"/>
-  </SemanticType>
-
-  <SemanticType
 	 Name="ImageTestSignature"
 	 AppliesTo="I">
     <Element
