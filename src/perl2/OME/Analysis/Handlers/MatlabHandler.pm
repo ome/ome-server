@@ -589,6 +589,12 @@ sub MatlabScalar_to_Attr {
 	my $formal_output = $self->getFormalOutput( $formal_output_name )
 		or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 
+# FIXME: This sort of verification should happen at module import. A
+# function called "validateExecutionInstructions" should be written 
+# that accepts a module and checks over its execution instructions.
+die "Semantic element ('$SEforScalar') specified in ".$xmlInstr->toString()." is not defined in the semantic type".$formal_output->semantic_type->name
+	unless $factory->findObject( 'OME::SemanticType::Element', semantic_type => $formal_output->semantic_type, name => $SEforScalar );
+
 	# Retrieve value from matlab
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
 	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
