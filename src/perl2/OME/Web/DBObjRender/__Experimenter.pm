@@ -66,8 +66,38 @@ id. FirstName LastName
 sub getObjectLabel {
 	my ($proto,$obj,$format, $doNotSpecialize) = @_;
 
-	return $obj->id().". ".$obj->FirstName." ".$obj->LastName;
+	return $obj->FirstName." ".$obj->LastName;
 }
+
+=head2 getRefSearchField
+
+returns a dropdown list of Experimenter names valued by id.
+
+=cut
+
+sub getRefSearchField {
+	my ($proto, $from_type, $to_type, $accessor_to_type) = @_;
+	
+	my $factory = OME::Session->instance()->Factory();
+	
+	my (undef, undef, $from_formal_name) = OME::Web->_loadTypeAndGetInfo( $from_type );
+
+	# Owner list
+	my @experimenters = $factory->findAttributes( "Experimenter" );
+	my %experimenter_names = map{ $_->id() => $_->FirstName().' '.$_->LastName() } @experimenters;
+	my $experimenter_order = [ '', sort( { $experimenter_names{$a} cmp $experimenter_names{$b} } keys( %experimenter_names ) ) ];
+	$experimenter_names{''} = 'All';
+
+	my $q = new CGI;
+
+	return $q->popup_menu( 
+		-name	=> $from_formal_name."_".$accessor_to_type,
+		'-values' => $experimenter_order,
+		-labels	 => \%experimenter_names
+	);
+
+}
+
 
 =head1 Author
 
