@@ -282,8 +282,6 @@ sub importGroup {
     my ($self, $file, $callback) = @_;
     my $status;
 
-    my $sha1 = $file->getSHA1();
-
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
 
@@ -1037,7 +1035,9 @@ sub storeChannelInfo {
 }
 
 sub getSHA1 {
-    getCommonSHA1(@_);
+    my $self = shift;
+    my $file = shift;
+    return $file->getSHA1();
 }
 
 
