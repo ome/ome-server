@@ -159,15 +159,16 @@ sub _execute {
 
     my $image  = $self->getCurrentImage();
 
-	my $module               = $self->{_module};
+	my $module                = $self->{_module};
 	my %outputs;
+	my %tmpFileHash;
 	my $executionInstructions = $module->execution_instructions();
-	my $debug                 = 0;
+	my $debug                 = 2;
 	my $session               = $self->Session();
 	my $imagePix;
 	my $CLIns = 'http://www.openmicroscopy.org/XMLschemas/CLI/RC1/CLI.xsd';
-
-my $Pixels =  $self->getImageInputs("Pixels")->[0];	
+my $Pixels;
+eval{ $Pixels = $self->getImageInputs("Pixels")->[0]; };
 my %dims = ( 'x'   => $Pixels->SizeX(),
 			 'y'   => $Pixels->SizeY(),
 			 'z'   => $Pixels->SizeZ(),
@@ -184,7 +185,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 	my @elements;
 
-	
 	#####################################################################
 	#
 	# What needs to be done to generalize plane interating from just XY to YZ & XZ
@@ -545,8 +545,35 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	
 		#####################################################################
 		#   
+		# resolveLocation
+		#	a helper function to return a scalar given a 'Location' xml attribute
+		#
+		sub resolveLocation {
+			my $location = shift;
+			my @elements = split (/\./,$location);
+			my $FI = shift (@elements);
+			die "Attempting to access a formal input ($FI) that does not exist.\n"
+				unless $inputs{$FI};
+			# so far, all 'Location' attributes are in elements that reference
+			# a FI of arity 1.
+			return $inputs{$FI}->[0] if( scalar( @elements ) eq 0 );
+			my $str = '$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
+			my $val;
+			# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
+			eval('$val ='. $str);
+			die "Could not resolve input call '$str' from location '$location':\n$@\n" unless defined $val;
+			return $val;
+		}
+		#
+		#####################################################################
+
+
+	
+		#####################################################################
+		#   
 		# resolveSubString
-		#	a helper function
+		#	a helper function to return a scalar given a <InputSubString>
+		#	this is the place to add code to handle new types of SubStrings
 		#
 		sub resolveSubString {
 			my $subString = shift;
@@ -565,9 +592,10 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'Input' ) ) {
 				my $location = $subString->getElementsByTagNameNS( $CLIns, 'Input' )->[0]->getAttribute('Location')
 					or die "Location attribute not specified in Input element!\n";
+				# replace this stuff with a single call to resolveLocation
 				my @elements = split (/\./,$location);
-				my $ST = shift (@elements);
-				my $str = '$inputs{$ST}->[0]->'.join ('()->',@elements).'()';
+				my $FI = shift (@elements);
+				my $str = '$inputs{$FI}->[0]->'.join ('()->',@elements).'()';
 				my $val;
 				# FIXME: potential security hole - <Input>'s SemanticElementName needs better type checking at ProgramImport
 				eval('$val ='. $str);
@@ -586,7 +614,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'XYPlane' ) ) {
 				my $planeXML = $subString->getElementsByTagNameNS( $CLIns, 'XYPlane' )->[0];
 				my $planeID = $planeXML->getAttribute( 'XYPlaneID' );
-				my $planePath = $session->getTemporaryFilename('ome_cccp','TIFF')
+				my $planePath = $session->getTemporaryFilename('CLIHandler','TIFF')
 					or die "Could not get temporary file to write image plane.";
 				my $planeInfo = 'format='.$planeXML->getAttribute( 'Format' ).
 					' theZ = '.${ $planeIndexes->{ $planeID }->{theZ} }.
@@ -615,6 +643,29 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					unless ( $pixelsWritten == $nPix);
 				return $planePath;
 			#
+			#############################################################
+			#
+			# Request for a temp file
+			#		
+			} elsif ($subString->getElementsByTagNameNS( $CLIns, 'TempFile' ) ) {
+				my $tmpFile = $subString->getElementsByTagNameNS( $CLIns, 'TempFile' )->[0];
+				my $tmpFilePath;
+				if( $tmpFile->getAttribute( "Repository" ) ) {
+					my $repository  = resolveLocation( $tmpFile->getAttribute( "Repository" ) );
+#					my $repository  = $inputs{ $tmpFile->getAttribute( "Repository" ) }->[0];
+					die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
+						if( not defined $repository );
+					$tmpFilePath = $session->getTemporaryFilenameRepository( 
+						repository => $repository,
+						progName   => 'CLIHandler',
+						extension  => 'ori' );
+				} else {
+					$tmpFilePath = $session->getTemporaryFilename( 
+						'CLIHandler','' );
+				}
+				
+				$tmpFileHash{ $tmpFile->getAttribute('FileID') } = $tmpFilePath;
+			#
 			#
 			#############################################################
 			}
@@ -625,7 +676,6 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 
 
 
-	
 		#################################################################
 		#
 		# Iterate plane indexes and write iterated indexes as output
@@ -723,8 +773,10 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#   
 		# Process output from STDOUT
 		#
-		my $stdout = $root->getElementsByTagNameNS( $CLIns, "STDOUT" )->[0];
-		my @outputRecords = $stdout->getElementsByTagNameNS( $CLIns, "OutputRecord" );
+		my $stdout; $stdout = $root->getElementsByTagNameNS( $CLIns, "STDOUT" )->[0]
+			if $root->getElementsByTagNameNS( $CLIns, "STDOUT" );
+		my @outputRecords = $stdout->getElementsByTagNameNS( $CLIns, "OutputRecord" )
+			if $stdout;
 		print STDERR "Collecting output from STDOUT\n" if $debug and $stdout;
 		foreach my $outputRecord( @outputRecords) {
 			my $repeatCount = $outputRecord->getAttribute( "RepeatCount" );
@@ -804,6 +856,89 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 		#
 		#################################################################
 	
+
+
+		#################################################################
+		#   
+		# Process Pixel outputs
+		#
+		my @pixelOutputArray = $root->getElementsByTagNameNS( $CLIns, "PixelOutput" );
+		print STDERR "Processing Pixel outputs\n" if $debug and scalar (@pixelOutputArray) > 0;
+		foreach my $pixelOutput( @pixelOutputArray) {
+			my $formalOutputName = $pixelOutput->getAttribute( "FormalOutput" );
+			my $pixelST          = $pixelOutput->getAttribute( "type" );
+
+			# reference bits. this is a hard coded dependency against the STDs for Pixels and PixelsPlane
+			my @pixelPlaneSEs = ( 'SizeX', 'SizeY', 'PixelType', 'BitsPerPixel', 'Repository' );
+			my @pixelSEs = ( @pixelPlaneSEs, 'SizeZ', 'SizeC', 'SizeT' );
+
+			# untested!
+			if( $pixelST eq 'Pixels' ) {
+				# resolve all the consistent semantic elements
+				foreach my $SEName (@pixelSEs) {
+					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
+						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
+					$outputs{ $formalOutputName }->{$SEName} =
+						resolveLocation( $se->getAttribute("Location") )
+						if( $se );
+				}
+			}
+
+
+			if( $pixelST eq 'PixelsPlane' ) {
+				# resolve all the consistent semantic elements
+				foreach my $SEName (@pixelPlaneSEs) {
+					my $se; $se = $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName )->[0]
+						if $pixelOutput->getElementsByTagNameNS( $CLIns, $SEName );
+					$outputs{ $formalOutputName }->{$SEName} =
+						resolveLocation( $se->getAttribute("Location") )
+						if( $se );
+				}
+			}
+			
+			
+			# fill out Path and SHA1 of attribute
+			
+			# To retain the naming convention of the repository files, the file specified
+			# by this path would be renamed to something like PixelPlane-[AttributeID].raw
+			# The problem is, this doesn't have an AttributeID yet. For the moment,
+			# I'm going to leave the name alone. I do not anticipate that this will cause
+			# any problems, but it does violate our naming convention.
+			my $path; $path = $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' )->[0]
+				if $pixelOutput->getElementsByTagNameNS( $CLIns, 'Path' );
+			$outputs{ $formalOutputName }->{'Path'} = $tmpFileHash{ $path->getAttribute( 'FileID' ) }
+				if( $path );
+			
+			# the path may have been filled out by an output of the program.
+			# so attempt to retrieve from the data hash instead of the attribute above.
+			if( $outputs{ $formalOutputName }->{'Path'} ) {
+				my $sha1 = getSha1( $outputs{ $formalOutputName }->{'Path'} );
+				$outputs{ $formalOutputName }->{'FileSHA1'} = $sha1;
+			} else {
+				die "A Path has not been filled out for this <PixelOutput>.";
+			}
+
+
+			#########################################################
+			#   
+			# Write output record
+			#
+			$self->newAttributes(%outputs);
+			if($debug) {
+				print STDERR "Outputs:";
+				foreach my $outputName( keys %outputs) {
+					print STDERR "\n\t$outputName:";
+						foreach my $outputCol ( keys %{$outputs{$outputName}}) {
+							print STDERR "\n\t\t$outputCol: ".$outputs{$outputName}->{$outputCol};
+						}
+				}
+				print STDERR "\n";
+			}
+			#
+			#########################################################
+		}
+		#
+		#################################################################
 	
 	
 	
@@ -814,5 +949,24 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 	#####################################################################
 
 }
+
+
+# usage is: 
+#	my $sha1 = getSha1( $path );
+sub getSha1 {
+    my $file = shift;
+    my $cmd = 'openssl sha1 '. $file .' |';
+    my $sh;
+    my $sha1;
+
+    open (STDOUT_PIPE,$cmd);
+    chomp ($sh = <STDOUT_PIPE>);
+    $sh =~ m/^.+= +([a-fA-F0-9]*)$/;
+    $sha1 = $1;
+    close (STDOUT_PIPE);
+
+    return $sha1;
+}
+
 
 1;
