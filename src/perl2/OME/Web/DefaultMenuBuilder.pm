@@ -73,11 +73,6 @@ my @MENU = (
 		type => 'link',
 		text => undef,
 	},
-	{
-		web_class => 'OME::Web::ImportFiles',
-		type => 'link',
-		text => undef,
-	},
 	# ** Search **
 	{
 		web_class => 'OME::Web::Search',
@@ -108,11 +103,16 @@ my @MENU = (
 		url_param => { Type => 'OME::ModuleExecution' },
 		text => 'Module Executions',
 	},
-	# ** XML **
+	# ** Images **
 	{
 		web_class => undef,
 		type => 'heading',
-		text => 'XML',
+		text => 'Images',
+	},
+	{
+		web_class => 'OME::Web::ImportImages',
+		type => 'link',
+		text => undef,
 	},
 	{
 		web_class => 'OME::Web::XMLFileExport',
@@ -132,6 +132,11 @@ my @MENU = (
 	},
 	{
 		web_class => 'OME::Web::FindSpots',
+		type => 'link',
+		text => undef,
+	},
+	{
+		web_class => 'OME::Web::ImportModules',
 		type => 'link',
 		text => undef,
 	},
