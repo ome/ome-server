@@ -265,6 +265,17 @@ public class CNode extends Node {
 	}
 	
 	/**
+	 * Free the predecessor and other links 
+	 * when we're done with them
+	 */
+	public void cleanupLinkLists() {
+		preds = null;
+		predLinks = null;
+		succs = null;
+		succLinks = null;
+	}
+	
+	/**
 	 * Set the widget corresponding to this node
 	 * @param mod
 	 */
