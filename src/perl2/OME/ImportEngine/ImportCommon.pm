@@ -72,7 +72,16 @@ use OME;
 use base qw(Exporter);
 
 
-our @EXPORT = qw(getCommonSHA1 __storeChannelInfo __storeChannelInfoRGB __storeOneFileInfo __storeInputFileInfo __storePixelDimensionInfo doSliceCallback);
+our @EXPORT = qw(
+		getCommonSHA1
+		__storeChannelInfo
+		__storeChannelInfoRGB
+		__storeDisplayOptions
+		__storeOneFileInfo
+		__storeInputFileInfo
+		__storePixelDimensionInfo
+		doSliceCallback
+		);
 
 use vars qw($VERSION);
 use OME;
@@ -201,6 +210,132 @@ sub __storeChannelInfoRGB {
 	}
 
 }
+
+sub __storeDisplayOptions {
+	my ($self, $session, $opts) = @_;
+	my $image = $self->{image};
+	
+	my ($min, $max);
+	if (defined $opts) {
+	    croak ("min/max/center hashref required.") unless ref($opts) eq 'HASH';
+		$min    = $opts->{min}    if exists ($opts->{min});
+		$max    = $opts->{max}    if exists ($opts->{max});
+	}
+	
+	my $factory = $session->Factory();
+	    
+	my $module_execution = OME::Tasks::ImportManager->
+      getImageImportMEX($image);
+      
+	my $pixels_data = OME::Tasks::PixelsManager->loadPixels($self->{pixels});
+	my $pixels_attr = $self->{pixels};
+	my $theT=0;
+	my %displayData = (
+		Pixels => $self->{pixels}->id(),
+		ZStart => sprintf( "%d", $self->{pixels}->SizeZ() / 2 ),
+		ZStop  => sprintf( "%d", $self->{pixels}->SizeZ() / 2 ),
+		TStart => 0,
+		TStop  => 0,
+		DisplayRGB => 1,
+		ColorMap   => 'RGB',
+	);
+	
+	# set display channels
+	my (%displayChannelData, $channelIndex, @channelOrder);
+	my $statsHash = $pixels_data->getStackStatistics();
+
+	 # set up red shift channel ordering 
+	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", 
+							{ Pixels => $pixels_attr } ); 
+	
+	if( @channelComponents ) { 
+			@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+			@channelComponents;
+			@channelOrder = map( $_->Index(), @channelComponents ); 
+	# There's no basis to do redshift ordering. This pixels is lacking channelComponents, which probably means it was computationally derived. 
+	} else { 
+		@channelOrder = (0..($pixels_attr->SizeC - 1)); 
+	} 
+
+	# Red Channel
+	$displayData{RedChannelOn} = 1;
+	$channelIndex = $channelOrder[0];
+	$displayChannelData{ ChannelNumber } = $channelIndex;
+	if (not defined $max or not defined $min) {
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+	} else {
+		$displayChannelData{BlackLevel} = $min;
+		$displayChannelData{WhiteLevel} = $max;
+	}
+	$displayChannelData{ Gamma } = 1.0;
+	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	$displayData{ RedChannel } = $displayChannel;
+
+	# Gray Channel
+	$displayData{ GreyChannel } = $displayChannel;
+	if( $pixels_attr->SizeC == 1 ) {
+		$displayData{ DisplayRGB } = 0;
+	}
+	
+	# Green Channel
+	if( $pixels_attr->SizeC > 1 ) {
+		$displayData{GreenChannelOn} = 1;
+		$channelIndex = $channelOrder[1];
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		if (not defined $max or not defined $min) {
+			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		} else {
+			$displayChannelData{BlackLevel} = $min;
+			$displayChannelData{WhiteLevel} = $max;
+		}
+		$displayChannelData{ Gamma } = 1.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	} else {
+		$displayData{GreenChannelOn} = 0;
+	}
+	$displayData{ GreenChannel } = $displayChannel;
+
+
+	# Blue Channel
+	if( $pixels_attr->SizeC > 2 ) {
+		$displayData{BlueChannelOn} = 1;
+		$channelIndex = $channelOrder[2];
+		$displayChannelData{ ChannelNumber } = $channelIndex;
+		if (not defined $max or not defined $min) {
+			( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
+		} else {
+			$displayChannelData{BlackLevel} = $min;
+			$displayChannelData{WhiteLevel} = $max;
+		}
+		$displayChannelData{ Gamma } = 1.0;
+		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, $module_execution, \%displayChannelData );
+	} else {
+		$displayData{BlueChannelOn} = 0;
+	}
+	$displayData{ BlueChannel } = $displayChannel;
+
+	# Make DisplayOptions
+	$factory->newAttribute( "DisplayOptions", $image, $module_execution, \%displayData )
+		or die "Couldn't make a new DisplayOptions";
+}
+
+sub __defaultBlackWhiteLevels {
+	my ( $statsHash, $channelIndex, $theT ) = @_;
+	my ( $blackLevel, $whiteLevel );
+	
+	$blackLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+	$blackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum}
+		if $blackLevel < $statsHash->{ $channelIndex }{ $theT }->{Minimum};
+	$whiteLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+	$whiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum}
+		if $whiteLevel > $statsHash->{ $channelIndex }{ $theT }->{Maximum};
+	return ( $blackLevel, $whiteLevel );
+}
+
+
 =head2 B<__storeOneFileInfo>
 
    __storeOneFileInfo($self, $info_aref, $fn, $params, $image, $st_x $end_x,
@@ -347,6 +482,7 @@ sub doSliceCallback {
 	$sliceCallback->();
     }
 }
+
 
 
 

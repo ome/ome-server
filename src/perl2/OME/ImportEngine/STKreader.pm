@@ -302,20 +302,11 @@ sub importGroup {
 	# open file and read TIFF tags or return undef
 	$file->open('r');
 	my $tags = readTiffIFD($file);
-
+	$file->close();
+    
     if (!defined($tags)) {
-		$file->close();
 		return undef;
     }
-    
-    # we don't support compressed TIFFS
-	my $comp = $tags->{TAGS->{'Compression'}}->[0];
-	if ( defined $comp and $comp != 1 ) {
-		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
-		" It shall not be imported.\n";
-		return undef;
-	} 
-	
     
     # use TIFF tags to fill-out info about the img
     my ($offsets_arr, $bytesize_arr) = getStrips($tags);
@@ -424,18 +415,12 @@ sub importGroup {
     }
 
 	OME::Tasks::PixelsManager->finishPixels ($pix,$self->{pixels});
-	
 
-    $file->close();
+	$self->__storeInputFileInfo ($session, \@finfo);
+	$self->__storeChannelInfo ($session);
+	$self->__storeDisplayOptions ($session);
 
-	$self->__storeInputFileInfo($session, \@finfo);
-	# Store info about each input channel (wavelength).
-	storeChannelInfo($self, $session);
 	return $image;
-
-   	# TODO: How do we know nothing bad happened?
-	#	($self->{super})->__destroyRepositoryFile($pixels, $pix);
-	#	die $status;
 }
 
 # The UIC1 tag refers to $cnt ID/value pairs. These will be stored in this instance's 

@@ -160,14 +160,6 @@ sub importGroup
     $params->oname($filename);
     $params->endian($tag0->{__Endian});
     
-	# we don't support compressed TIFFS
-	my $comp = $tag0->{TAGS->{'Compression'}}->[0];
-	if ( defined $comp and $comp != 1 ) {
-		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
-		" It shall not be imported.\n";
-		return undef;
-	} 
-    
     $xref->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
     $xref->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
     $xref->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];    
@@ -233,13 +225,10 @@ sub importGroup
     
     # Since the planes are not arranged in XYZCT order, this pixel writing jumps around
     # the file as necessary.
-    for ($c = 0; $c < $maxC; $c++)
-    {
+    for ($c = 0; $c < $maxC; $c++) {
     	my $offset = $ch_starts[$c];
-    	for ($t = 0; $t < $maxT; $t++)
-		{
-			for ($z = 0; $z < $maxZ; $z++)
-			{
+    	for ($t = 0; $t < $maxT; $t++) {
+			for ($z = 0; $z < $maxZ; $z++) {
 				$pix->convertPlane($file,$offset,$z,$c,$t,$params->endian == 1);
 				doSliceCallback($callback);
 				$offset += $jump;
@@ -248,15 +237,12 @@ sub importGroup
     }
 
     OME::Tasks::PixelsManager -> finishPixels( $pix, $self->{pixels} );
+	$self-> __storeDisplayOptions ($session);
 
-    if ($status eq "")
-    {
+    if ($status eq "") {
 		$self->__storeInputFileInfo($session, \@finfo);
 		return $image;
-    }
-    
-    else
-    {
+    } else {
 		($self->{super})->__destroyRepositoryFile($pixels, $pix);
 		die $status;
     }

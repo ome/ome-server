@@ -47,8 +47,7 @@ use OME::Image::Server;
 use OME::Tasks::OMEImport;
 
 use base qw(OME::ImportEngine::AbstractFormat);
-use OME::ImportEngine::ImportCommon qw(doSliceCallback);
-
+use OME::ImportEngine::ImportCommon qw(doSliceCallback __storeDisplayOptions);
 
 # We call OMEIS to tell us if files are in XML format (IsOMExml)
 # It returns a 0 or a 1.
@@ -95,6 +94,9 @@ sub importGroup {
 	foreach $object (@$objects) {
 		if (UNIVERSAL::isa($object,'OME::Image')) {
 			foreach my $pixels ($object->pixels() ) {
+				$self->{image} = $object;
+				$self->{pixels} = $pixels;
+				$self-> __storeDisplayOptions ($session);
 				OME::Tasks::PixelsManager->saveThumb( $pixels );
 			}
 			OME::Tasks::ImportManager->markImageFiles(

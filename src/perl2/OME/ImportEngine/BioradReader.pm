@@ -289,6 +289,7 @@ sub importGroup
     		}
     		
     		$self -> __storeInputFileInfo( $session, \@finfo );
+			$self -> __storeDisplayOptions ($session);
     		return $image;
     	}
     	
@@ -334,6 +335,7 @@ sub importGroup
 				die $status;
     		}
     		$self -> __storeInputFileInfo( $session, \@finfo );
+			$self -> __storeDisplayOptions ($session);
     		return $image;
     	}
     }
@@ -859,14 +861,6 @@ sub getParams
 {
     my $self = shift;
     return $self->{params};
-}
-
-# returns a string representing a hash dump. Usage:
-# 	dumpHash( %hash )
-sub dumpHash
-{
-	my %hash = @_;
-	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n";
 }
 
 1;

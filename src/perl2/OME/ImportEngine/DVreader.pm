@@ -300,8 +300,8 @@ sub importGroup {
     my $image = ($self->{super})->__newImage($filename);
     $self->{image} = $image;
     if (!defined($image)) {
-	$file->close();
-	die "Failed to open image" ;
+		$file->close();
+		die "Failed to open image" ;
     }
 
     # Softworx records many pieces of metadata in the file header and
@@ -309,8 +309,8 @@ sub importGroup {
     $params->offset(0);
     my $status = readHeaders($self, $params);
     if ($status ne '') {
-	$file->close();
-	die $status ;
+		$file->close();
+		die $status ;
     }
 
     # Create repository file, and fill it in from the input file pixels.
@@ -327,9 +327,9 @@ sub importGroup {
     $self->{pixels} = $pixels;
     $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
-	$file->close();
-	($self->{super})->__destroyRepositoryFile($pixels, $pix);
-	die $status ;
+		$file->close();
+		($self->{super})->__destroyRepositoryFile($pixels, $pix);
+		die $status ;
     }
 
     # pack together info on input file
@@ -354,7 +354,7 @@ sub importGroup {
     $file->close();
 
     storeMetadata($self, $session, $params);
-
+	$self-> __storeDisplayOptions ($session);
     return $image;
 
 }

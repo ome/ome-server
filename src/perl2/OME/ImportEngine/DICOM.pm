@@ -11,8 +11,9 @@
 #     and all GUI, CLI components. Basically whats left is a lean DICOM header reading
 #     utility. The rest is gone.
 # (3) OX value representations handling changed. OX value representations are used
-#     for pixels data and large binary objects. Therefore I only store the file set not
-#     the actual bytes in the perl hash.
+#     for pixels data and large binary objects. Therefore I only store in the perl 
+#     hash the file offset not the actual file bytes.
+#
 #     This breaks things for JPEG encoded pixels. We don't support JPEG encoded pixel data
 #     anyway.
 package OME::ImportEngine::DICOM;

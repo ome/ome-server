@@ -603,7 +603,8 @@ sub importGroup {
                     Sample => $sample_number,
                     Well   => $address,
                    });
-
+	
+	$self-> __storeDisplayOptions ($session);
 	return $image;
 
 }

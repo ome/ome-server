@@ -311,12 +311,27 @@ sub importGroup {
 
     $file->close();
 
-	$self->__storeInputFileInfo($session, \@finfo);
+	$self->__storeInputFileInfo ($session, \@finfo);
 	
 	# Store info about each input channel (wavelength).
-	storeChannelInfo($self, $session);
+	$self->__storeChannelInfo ($session);
+	
+	my $windowCenter = $dicom_tags->value('WindowCenter');
+	my $windowWidth  = $dicom_tags->value('WindowWidth');
+	my $rescaleIntercept = $dicom_tags->value('RescaleIntercept');
+	if (not defined $rescaleIntercept) {
+		$rescaleIntercept = 0;
+	}
+	
+	if (not defined $windowCenter or not defined $windowWidth) {
+		$self->__storeDisplayOptions ($session);
+	} else {
+		$self->__storeDisplayOptions ($session,
+			{min => $windowCenter - $windowWidth/2 - $rescaleIntercept, 
+			 max => $windowCenter + $windowWidth/2 - $rescaleIntercept });
+	}
+	
 	return $image;
-
 }
 
 # Store channel (wavelength) info

@@ -296,14 +296,6 @@ sub importGroup {
     $params->oname($filename);
     $params->endian($tag0->{__Endian});
     
-	# we don't support compressed TIFFS
-	my $comp = $tag0->{TAGS->{'Compression'}}->[0];
-	if ( defined $comp and $comp != 1 ) {
-		print STDERR "WARNING ".$file->getFilename()."'s pixel data is compressed.".
-		" It shall not be imported.\n";
-		return undef;
-	} 
-	
 	$xref->{ $file }->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
 	$xref->{ $file }->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
 	$xref->{ $file }->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];
@@ -360,11 +352,10 @@ sub importGroup {
 					NDfilter   => undef};
 			}
 		}
-	}
 
 	# This isn't RGB, so import it normally.  The files are processed in this way because
 	# of the sorting done in the getGroups method.
-	else {
+	} else {
 		for (my $t = 0; $t < $maxT; $t++) {
 			for (my $z = 0; $z < $maxZ; $z++) {
     			for (my $c = 0; $c < $maxC; $c++) {
@@ -390,13 +381,14 @@ sub importGroup {
 	
 	$self->__storeInputFileInfo($session,\@finfo);
 	
-	#Store info about each input channel (wavelength)
+	# Store info about each input channel (wavelength)
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] eq PHOTOMETRIC->{RGB}) {
-		$self->__storeChannelInfoRGB($session, scalar(@$groupList)*3, @channelInfo);
+		$self-> __storeChannelInfoRGB ($session, scalar(@$groupList)*3, @channelInfo);
+		$self-> __storeDisplayOptions ($session, {min => 0, max => 2**$xref->{ $file }->{'Data.BitsPerPixel'}-1});
 	} else {
-		$self->__storeChannelInfo($session, scalar(@$groupList), @channelInfo);
+		$self-> __storeChannelInfo ($session, scalar(@$groupList), @channelInfo);
+		$self-> __storeDisplayOptions ($session);
 	}
-	
 	return $image;
 }
 
@@ -413,14 +405,6 @@ sub getSHA1 {
 sub cleanup {
 	# clear out the TIFF tag cache
 	OME::ImportEngine::TIFFUtils::cleanup();
-}
-
-# returns a string representing a hash dump. Usage:
-# 	dumpHash( %hash )
-sub dumpHash
-{
-	my %hash = @_;
-	return "\t".join( "\n\t", map ( $_.' -> '.$hash{$_}, keys %hash ) )."\n\n";
 }
 
 =head1 Authors
