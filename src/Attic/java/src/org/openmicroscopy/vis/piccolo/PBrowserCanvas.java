@@ -95,10 +95,13 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private TreeSet datasets;
 	private HashMap datasetWidgets = new HashMap();
+	private SelectionState selectionState;
 		
-	public PBrowserCanvas(Connection c) {
+	public PBrowserCanvas(Connection c,
+				SelectionState selectionState) {
 		super();
 		this.connection  = c;
+		this.selectionState = selectionState;
 		layer = getLayer();
 		
 		
@@ -119,8 +122,8 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			// setup tool tips.
 		final PCamera camera = getCamera();
 		camera.addInputEventListener(new PImageToolTipHandler(camera));
-		getCamera().setViewScale(INIT_SCALE);
-	    
+	//	getCamera().setViewScale(INIT_SCALE);
+		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	
 	}
 	
@@ -138,7 +141,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}
 		else {
 			//System.err.println("creating new widget");
-			node = new PDataset(d,connection);
+			node = new PDataset(d,connection,selectionState);
 			datasetWidgets.put(d,node);
 		}
 		layer.addChild(node);
@@ -215,5 +218,11 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 				datasets = new TreeSet(connection.getDatasetsForUser());
 		}	
 		displayDatasets();
+	}
+	
+	public void setSelectedDataset(CDataset d) {
+		selectionState.removeSelectionEventListener(this);
+		selectionState.setSelectedDataset(d);
+		selectionState.addSelectionEventListener(this);
 	}
  }
