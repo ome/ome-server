@@ -73,17 +73,18 @@ require OME::Analysis;
 
 __PACKAGE__->AccessorNames({
     program_id      => 'program',
-    lookup_table_id => 'lookup_table'
+    lookup_table_id => 'lookup_table',
+    datatype_id     => 'datatype'
     });
 
 __PACKAGE__->table('formal_inputs');
 __PACKAGE__->sequence('formal_input_seq');
 __PACKAGE__->columns(Primary => qw(formal_input_id));
-__PACKAGE__->columns(Essential => qw(program_id name column_type));
+__PACKAGE__->columns(Essential => qw(program_id name datatype_id));
 __PACKAGE__->columns(Other => qw(lookup_table_id));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
-__PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
+__PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
 
 __PACKAGE__->has_many('actual_inputs','OME::Analysis::ActualInput' =>
 		      qw(formal_input_id));
@@ -110,15 +111,16 @@ use base qw(OME::DBObject);
 require OME::Analysis;
 
 __PACKAGE__->AccessorNames({
-    program_id      => 'program'
+    program_id  => 'program',
+    datatype_id => 'datatype'
     });
 
 __PACKAGE__->table('formal_outputs');
 __PACKAGE__->sequence('formal_output_seq');
 __PACKAGE__->columns(Primary => qw(formal_output_id));
-__PACKAGE__->columns(Essential => qw(program_id name column_type));
+__PACKAGE__->columns(Essential => qw(program_id name datatype_id));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
-__PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
+__PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
 
 __PACKAGE__->has_many('actual_outputs','OME::Analysis::ActualOutput' =>
 		      qw(formal_output_id));

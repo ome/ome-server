@@ -28,19 +28,17 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
     program_id => 'program',
-    dataset_id => 'dataset',
-    image_id   => 'image'
+    dataset_id => 'dataset'
     });
 
 __PACKAGE__->table('analyses');
 __PACKAGE__->sequence('analysis_seq');
 __PACKAGE__->columns(Primary => qw(analysis_id));
 __PACKAGE__->columns(Essential => qw(program_id dependence
-				     dataset_id image_id));
+				     dataset_id));
 __PACKAGE__->columns(Timing => qw(timestamp status));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
-__PACKAGE__->hasa('OME::Image' => qw(image_id));
 __PACKAGE__->has_many('inputs','OME::Analysis::ActualInput' => qw(analysis_id));
 __PACKAGE__->has_many('outputs','OME::Analysis::ActualOutput' => qw(analysis_id));
 
@@ -58,16 +56,18 @@ use base qw(OME::DBObject);
 use fields qw(_attribute);
 
 __PACKAGE__->AccessorNames({
-    analysis_id     => 'analysis',
-    formal_input_id => 'formal_input'
+    analysis_id      => 'analysis',
+    formal_input_id  => 'formal_input',
+    actual_output_id => 'actual_output'
     });
 
 __PACKAGE__->table('actual_inputs');
 __PACKAGE__->sequence('actual_input_seq');
 __PACKAGE__->columns(Primary => qw(actual_input_id));
-__PACKAGE__->columns(Essential => qw(attribute_id analysis_id formal_input_id));
+__PACKAGE__->columns(Essential => qw(actual_output_id analysis_id formal_input_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 __PACKAGE__->hasa('OME::Program::FormalInput' => qw(formal_input_id));
+__PACKAGE__->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
 
 
 
@@ -120,41 +120,10 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('actual_outputs');
 __PACKAGE__->sequence('actual_output_seq');
 __PACKAGE__->columns(Primary => qw(actual_output_id));
-__PACKAGE__->columns(Essential => qw(attribute_id analysis_id formal_output_id));
+__PACKAGE__->columns(Essential => qw(analysis_id formal_output_id));
 __PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 __PACKAGE__->hasa('OME::Program::FormalOutput' => qw(formal_output_id));
 
-
-sub attribute {
-    my $self = shift;
-    my $formalOutput = $self->formal_output();
-    my $columnType = $formalOutput->column_type();
-    my $dataType = $columnType->datatype();
-    my $attributePackage = $dataType->getAttributePackage();
-
-    if (@_) {
-       	# We are setting the attribute; make sure it is of the
-	# appropriate data type, and that it has an ID.
-
-	my $result = $self->{_attribute};
-	my $attribute = shift;
-	die "This attribute is not of the correct type."
-	    unless ($attribute->isa($attributePackage));
-	die "This attribute does not have an ID."
-	    unless (defined $attribute->ID());
-	$self->attribute_id($attribute->ID());
-	$self->{_attribute} = $attribute;
-	return $result;
-    } else {
-	my $attribute = $self->{_attribute};
-	if (!defined $attribute) {
-	  $attribute = $self->Factory()->loadObject($attributePackage,
-						    $self->attribute_id());
-	  $self->{_attribute} = $attribute;
-	}
-	return $attribute;
-    }
-}
 
 
 1;

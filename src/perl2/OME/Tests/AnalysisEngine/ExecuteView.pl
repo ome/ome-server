@@ -67,7 +67,8 @@ $factory->Debug(0);
 my $view = $factory->loadObject("OME::AnalysisView",$viewID);
 my $dataset = $factory->loadObject("OME::Dataset",$datasetID);
 
-OME::Tasks::AnalysisEngine::executeAnalysisView($session,$view,{},$dataset);
+my $engine = OME::Tasks::AnalysisEngine->new();
+$engine->executeAnalysisView($session,$view,{},$dataset);
 
 
 1;

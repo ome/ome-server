@@ -31,6 +31,8 @@ __PACKAGE__->sequence('analysis_path_seq');
 __PACKAGE__->columns(Primary => qw(path_id));
 __PACKAGE__->columns(Essential => qw(path_length));
 
+__PACKAGE__->has_many('path_nodes', 'OME::AnalysisPath::Map' => qw(path_id));
+
 
 package OME::AnalysisPath::Map;
 
@@ -41,16 +43,14 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    analysis_execution_id => 'analysis_execution',
-    analysis_id           => 'analysis',
+    analysis_view_node_id => 'analysis_view_node',
     path_id               => 'path'
     });
 
 __PACKAGE__->table('analysis_path_map');
-__PACKAGE__->columns(Essential => qw(path_id path_order analysis_id
-				     analysis_execution_id));
+__PACKAGE__->columns(Essential => qw(path_id path_order
+				     analysis_view_node_id));
 __PACKAGE__->hasa('OME::AnalysisPath' => qw(path_id));
-__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
-__PACKAGE__->hasa('OME::AnalysisExecution' => qw(analysis_execution_id));
+__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
 
 1;

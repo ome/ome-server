@@ -35,8 +35,8 @@ __PACKAGE__->columns(Primary => qw(datatype_id));
 __PACKAGE__->columns(Essential => qw(table_name description attribute_type));
 __PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id));
 
-# These triggers ensure that the appropriate OME::Attribute subclass
-# definition is evaluated when a data type is loaded from the
+# These triggers should ensure that the appropriate OME::Attribute
+# subclass definition is evaluated when a data type is loaded from the
 # database.
 __PACKAGE__->add_trigger(after_create => \&requireAttributePackage);
 __PACKAGE__->add_trigger(select => \&requireAttributePackage);
@@ -85,10 +85,12 @@ sub requireAttributePackage {
     $pkg->columns(Primary => qw(attribute_id));
 
     my $columns = $self->db_columns();
-    my @column_defs;
+    my @column_defs = ('actual_output_id');
     while (my $column = $columns->next()) {
 	push @column_defs, lc($column->column_name());
     }
+
+    $pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
 
     my $type = $self->attribute_type();
     my $accessors = {};
@@ -97,15 +99,14 @@ sub requireAttributePackage {
     } elsif ($type eq 'I') {
 	$pkg->hasa('OME::Image' => qw(image_id));
     } elsif ($type eq 'F') {
-	my $features_type = OME::DataType->findByTable('FEATURES');
-	my $features_pkg = $features_type->requireAttributePackage();
-	$pkg->hasa($features_pkg => qw(feature_id));
+	$pkg->hasa('OME::Feature' => qw(feature_id));
     }
 
     $pkg->columns(Essential => @column_defs);    
 
-    # Make accessors for dataset, image, and feature.
+    # Make accessors for actual output, dataset, image, and feature.
     no strict 'refs';
+    *{$pkg."::actual_output"} = \&{$pkg."::actual_output_id"};
     if ($type eq 'D') {
         *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
     } elsif ($type eq 'I') {

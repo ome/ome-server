@@ -84,6 +84,14 @@ sub loadObject {
     return $object;
 }
 
+sub loadAttribute {
+    my ($self, $attribute_table, $id) = @_;
+
+    my $datatype = OME::DataType->findByTable($attribute_table);
+    my $pkg = $datatype->requireAttributePackage();
+    return $self->loadObject($pkg,$id);
+}
+
 
 # findObjects
 # -----------

@@ -27,7 +27,7 @@ use IO::File;
 
 use base qw(OME::Analysis::Handler);
 
-use fields qw(_outputHandle _currentImage);
+use fields qw(_outputHandle);
 
 sub new {
     my ($proto,$location,$factory,$program) = @_;
@@ -40,165 +40,127 @@ sub new {
 }
 
 
-sub startDataset {
-    my ($self,$dataset) = @_;
-}
-
-
-sub datasetInputs {
-    my ($self,$inputHash) = @_;
-}
-
-
-sub precalculateDataset {
+sub precalculateImage {
     my ($self) = @_;
-}
 
-
-sub startImage {
-    my ($self,$image) = @_;
-
+    my $image = $self->getCurrentImage();
+    
     my $dims = $image->Dimensions();
 
     my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
-	",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times().
-	",".$dims->bits_per_pixel()/8;
+        ",".$dims->size_z().",".$dims->num_waves().",".$dims->num_times().
+        ",".$dims->bits_per_pixel()/8;
 
     my $pathString = "Path=".$image->getFullPath();
 
     my $output = new IO::File;
     my $location = $self->{_location};
     open $output, "$location $pathString $dimString |" or
-	die "Cannot open analysis program";
+        die "Cannot open analysis program";
 
     print STDERR "      $location $pathString $dimString\n";
 
     $self->{_outputHandle} = $output;
-    $self->{_currentImage} = $image;
-}
-
-
-sub imageInputs {
-    my ($self,$inputHash) = @_;
-}
-
-
-sub precalculateImage {
-    my ($self) = @_;
-}
-
-
-sub startFeature {
-    my ($self,$feature) = @_;
-}
-
-
-sub featureInputs {
-    my ($self,$inputHash) = @_;
-}
-
-
-sub calculateFeature {
-    my ($self) = @_;
-}
-
-
-sub collectFeatureOutputs {
-    my ($self) = @_;
-    return {};
-}
-
-
-sub finishFeature {
-    my ($self) = @_;
 }
 
 
 sub postcalculateImage {
     my ($self) = @_;
-}
 
-
-sub collectImageOutputs {
-    my ($self) = @_;
     my $output = $self->{_outputHandle};
     my $program = $self->{_program};
-    my $image = $self->{_currentImage};
+    my $image = $self->getCurrentImage();
     my $factory = $self->{_factory};
 
     my $headerString = <$output>;
     chomp $headerString;
     my @headers = split("\t",$headerString);
 
-    my %outputs;
-    my @outputs = $program->outputs();
-    foreach my $formal_output (@outputs) {
-	#print STDERR "      - ".$formal_output->name()."\n";
-	$outputs{$formal_output->name()} = $formal_output;
-    }
-
     my %imageOutputs;
     my @attributes;
 
+    # The following hack is necessary now that inputs/outputs
+    # are row-based instead of column-based.
+
+    my %xy_hash = (
+        'Wave'       => 'wavenumber',
+        'Time'       => 'timepoint',
+        'Z'          => 'zsection',
+        'Min'        => 'min',
+        'Max'        => 'max',
+        'Mean'       => 'mean',
+        'GeoMean'    => 'geomean',
+        'Sigma'      => 'sigma',
+        );
+
+    my %xyz_hash = (
+        'Wave'       => 'wavenumber',
+        'Time'       => 'timepoint',
+        'Min'        => 'min',
+        'Max'        => 'max',
+        'Mean'       => 'mean',
+        'GeoMean'    => 'geomean',
+        'Sigma'      => 'sigma',
+        'Centroid_x' => 'centroid_x',
+        'Centroid_y' => 'centroid_y',
+        'Centroid_z' => 'centroid_z'
+        );
+
+    my %hashes = (
+                  'Plane statistics' => \%xy_hash,
+                  'Stack statistics' => \%xyz_hash
+                  );
+
+    my %output_names = (
+                        'Plane statistics' => 'Plane info',
+                        'Stack statistics' => 'Stack info'
+                        );
+
+    my $useful_hash = $hashes{$program->program_name()};
+    my $useful_output = $output_names{$program->program_name()};
+
     while (my $input = <$output>) {
-	chomp $input;
-	my @data = split("\t",$input);
-	my $count = 0;
-	my %attributes;
-	foreach my $datum (@data) {
-	    my $output_name = $headers[$count];
-	    #print STDERR "      * $output_name\n";
-	    #print STDERR "      $output_name = '$datum'\n";
-	    my $formal_output = $outputs{$output_name};
-	    my $column_type = $formal_output->column_type();
-	    my $column_name = lc($column_type->column_name());
-	    my $datatype = $column_type->datatype();
-	    my $attribute;
-	    if (exists $attributes{$datatype->id()}) {
-		$attribute = $attributes{$datatype->id()};
-	    } else {
-		my $pkg = $datatype->requireAttributePackage();
-		$attribute = $factory->newObject($pkg,{
-		    image_id => $image->id()
-		    });
-		# so we can find it later
-		$attributes{$datatype->id()} = $attribute;
-		# so we can commit it later
-		push @attributes, $attribute;
-	    }
+        my $attribute_data = {};
+        
+        chomp $input;
+        my @data = split("\t",$input);
+        my $count = 0;
+        my %attributes;
+        foreach my $datum (@data) {
+            my $output_name = $headers[$count];
+            #print STDERR "      * $output_name\n";
+            #print STDERR "      $output_name = '$datum'\n";
+            #my $column_type = $formal_output->column_type();
+            #my $column_name = lc($column_type->column_name());
+            #my $datatype = $formal_output->datatype();
+            my $column_name = $useful_hash->{$output_name};
+            #print STDERR "      $column_name\n";
+            #my $datatype = $column_type->datatype();
+            #my $attribute;
+            #if (exists $attributes{$datatype->id()}) {
+            #    $attribute = $attributes{$datatype->id()};
+            #} else {
+            #    $attribute = $factory->newAttribute($datatype->table_name(),{
+            #        image_id => $image->id()
+            #        });
+            #    # so we can find it later
+            #    $attributes{$datatype->id()} = $attribute;
+            #    # so we can commit it later
+            #    push @attributes, $attribute;
+            #}
 
-	    $attribute->set($column_name,$datum);
-	    push @{$imageOutputs{$formal_output->name()}}, $attribute;
-	    $count++;
-	}
+            $attribute_data->{$column_name} = $datum;
+            $count++;
+        }
+
+        my $attribute = $self->newAttribute($useful_output,$attribute_data);
     }
 
-    foreach my $attribute (@attributes) {
-	$attribute->commit();
-    }
+    #foreach my $attribute (@attributes) {
+    #    $attribute->commit();
+    #}
 
     return \%imageOutputs;
-}
-
-
-sub finishImage {
-    my ($self) = @_;
-}
-
-
-sub postcalculateDataset {
-    my ($self) = @_;
-}
-
-
-sub collectDatasetOutputs {
-    my ($self) = @_;
-    return {};
-}
-
-
-sub finishDataset {
-    my ($self) = @_;
 }
 
 

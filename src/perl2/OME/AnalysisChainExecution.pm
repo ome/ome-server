@@ -40,6 +40,35 @@ __PACKAGE__->columns(Essential => qw(analysis_view_id dataset_id
 __PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+__PACKAGE__->has_many('node_executions',
+                      'OME::AnalysisExecution::NodeExecution' =>
+                      qw(analysis_execution_id));
+
+
+
+package OME::AnalysisExecution::NodeExecution;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    analysis_execution_id => 'analysis_execution',
+    analysis_view_node_id => 'analysis_view_node',
+    analysis_id           => 'analysis'
+    });
+
+__PACKAGE__->table('analysis_node_executions');
+__PACKAGE__->sequence('analysis_node_execution_seq');
+__PACKAGE__->columns(Primary => qw(analysis_node_execution_id));
+__PACKAGE__->columns(Essential => qw(analysis_execution_id
+                                     analysis_view_node_id
+                                     analysis_id));
+__PACKAGE__->hasa('OME::AnalysisExecution' => qw(analysis_execution_id));
+__PACKAGE__->hasa('OME::AnalysisView::Node' => qw(analysis_view_node_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
 
 
 1;

@@ -523,6 +523,7 @@ sub store_wavelength_info {
 
 sub store_xyz_info {
     my ($self, $session, $href) = @_;
+    return "";
     my $image = $self->{'image'};
     my $imageID = $image->id();
     my $omeBase = $self->{config}->ome_root;

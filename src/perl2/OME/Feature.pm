@@ -35,14 +35,16 @@ use OME::Image;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    image_id => 'image'
+    image_id          => 'image',
+    parent_feature_id => 'parent_feature'
     });
 
 __PACKAGE__->table('features');
-__PACKAGE__->sequence('attribute_seq');
-__PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id));
+__PACKAGE__->sequence('feature_seq');
+__PACKAGE__->columns(Primary => qw(feature_id));
+__PACKAGE__->columns(Essential => qw(parent_feature_id image_id tag));
 __PACKAGE__->hasa('OME::Image' => qw(image_id));
+__PACKAGE__->hasa('OME::Feature' => qw(parent_feature_id));
 
 
 
