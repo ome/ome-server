@@ -141,7 +141,7 @@ public class RemoteObject
      */
     protected void finalize()
     {
-        //System.err.println("finalize "+getClass()+"."+reference);
+//        System.err.println("finalize "+getClass()+"."+reference);
         if ((caller != null) && (session.isActive()))
             caller.freeObject(getReference());
     }
