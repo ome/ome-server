@@ -67,10 +67,10 @@ sub run_tasks {
     # Run each task and fill our done stack
     while (my $task = shift @tasks) {
 	eval "require $task";
-	croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+	croak "\n\nErrors loading module: $@\n" if $@;  # Really only for debugging purposes
 	$task .= "::execute()";
 	eval $task;
-	croak "Errors executing task: $@\n" if $@;  # Ditto as above
+	croak "\n\nErrors executing task: $@\n" if $@;  # Ditto as above
 	push (@tasks_done, $task);
     }
 
