@@ -43,7 +43,6 @@ use OME;
 $VERSION = $OME::VERSION;
 
 use OME::DBObject;
-use OME::Web::Helper::HTMLFormat;
 use OME::Analysis::AnalysisEngine;
 use OME::Tasks::ChainManager;
 
@@ -74,19 +73,8 @@ sub getPageBody {
 			or die "Could not execute analysis chain";
 			
 		# display results
-		$body .= "Executed ".$chain->name." successfully.<br><br>";
-		$body .= "<table><tr><td width=50>&nbsp;</td><td>";
-		my %u;
-		foreach my $mex ( map( $_->module_execution, $analysis_chain_execution->node_executions ) ){
-# hack to bypass bug in analysis engine resulting in duplicate mex's in the chain execution
-			next if exists $u{$mex->id}; $u{$mex->id}= undef;
-			
-			$body .= "<a href='serve.pl?Page=OME::Web::ViewMEXresults&MEX_ID=".$mex->id."'>";
-			$body .= $cgi->b($mex->module->name . '(' . $mex->id . ')' );
-			$body .= "</a><br>";
-		}
-		$body .= "</tr></td></table>"
-		
+		return( 'REDIRECT', 'serve.pl?Page=OME::Web::ViewExecutedChain&chain_execution_id='.$analysis_chain_execution->id );
+
 	} else {
 		$body .= $self->printForm();
 	}
@@ -113,17 +101,14 @@ sub printForm {
 	}
 	@chains = @chains_without_free_inputs;
 	
-	my ($values, $labels);
-	foreach ( @chains ) {
-		print STDERR $_."\n";
-		push( @$values, $_->id() );
-		$labels->{ $_->id() } = $_->name();
-	}
+	my $labels;
+	%$labels = map{ $_->id() => $_->name() } @chains;
+	$text .= "<h2>Execute Analysis Chain</h2>";
 	$text .= $cgi->startform;
 	$text .= $cgi->popup_menu( 
 		-name   => 'chain_id',
 		-labels => $labels,
-		-values => $values,
+		-values => [keys %$labels],
 	);
 	$text .= $cgi->submit(
 		-name  => 'executeChain',
