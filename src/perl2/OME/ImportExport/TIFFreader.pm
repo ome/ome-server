@@ -631,6 +631,10 @@ sub readTiffTag {
 	}
 	else {
 	    @fmts = (0,1,0,2,4,8);
+	    if ($tag_type > $#fmts) {
+		$status = "\nBad tag type: $tag_type  " ;
+		return $status;
+	    }
 	    $cnt = $fmts[$tag_type];    # How many bytes to read/value
 	}
 	if ($endian eq "little") {
