@@ -33,6 +33,40 @@
 # Written by:    Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
+=head1 NAME
+
+OME::Configuration::Variable - A DB instance of an OME Configuration variable
+
+=head1 DESCRIPTION
+
+This class is used by L<C<OME::Configuration>|OME::Configuration> to store individual configuration variables,
+and should not be used by itself.  This class inherits from OME::DBObject, and doesn't really do anyting interesting with it.
+The DB table used by this class is CONFIGURATION.  Columns are VAR_ID (primary key), CONFIGURATION_ID (always set to 1)
+NAME (the name of the variable) and VALUE (the value of the variable).  VAR_ID uses the sequence CONFIG_VAR_ID_SEQ.
+
+=head1 METHODS
+
+=head2 var_id
+
+The primary key for the CONFIGURATION table and the object ID for this class.
+
+=head2 configuration_id
+
+The configuration ID.  This should always be 1.
+
+=head2 name
+
+The name of the configuration variable.
+
+=head2 value
+
+The value of the configuration variable.
+
+=head1 AUTHOR
+
+Ilya Goldberg <igg@nih.gov>, Open Microscopy Environment
+
+=cut
 
 
 package OME::Configuration::Variable;
