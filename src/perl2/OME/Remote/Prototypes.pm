@@ -315,6 +315,7 @@ require OME::Factory;
 addPrototype("OME::DBObject","id",['$'],['$']);
 addPrototype("OME::DBObject","writeObject",[],[]);
 addPrototype("OME::DBObject","Session",[],['OME::Session']);
+addPrototype("OME::DBObject","populate",[],['%']);
 
 addPrototype("OME::SemanticType::Superclass","id",['$'],['$']);
 addPrototype("OME::SemanticType::Superclass","writeObject",[],[]);
