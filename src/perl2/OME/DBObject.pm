@@ -27,17 +27,18 @@ use strict;
 use Ima::DBI;
 use Class::Accessor;
 use OME::SessionManager;
-use OME;
+use OME::DBConnection;
 
 use base qw(Class::DBI Class::Accessor Class::Data::Inheritable);
 
 
 __PACKAGE__->mk_classdata('AccessorNames');
+__PACKAGE__->mk_classdata('Session');
 __PACKAGE__->AccessorNames({});
 __PACKAGE__->set_db('Main',
-                  OME::SessionManager->DataSource(),
-                  OME::SessionManager->DBUser(),
-                  OME::SessionManager->DBPassword(), 
+                  OME::DBConnection->DataSource(),
+                  OME::DBConnection->DBUser(),
+                  OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 
 
@@ -58,8 +59,6 @@ sub accessor_name {
     return $names->{$column} if (exists $names->{$column});
     return $column;
 }
-sub Session { return OME->Session(); }
-sub Factory { return OME->Session()->Factory(); }
 sub DBH { my $self = shift; return $self->db_Main(); }
 
 
