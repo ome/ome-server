@@ -36,10 +36,22 @@
 				[name() != 'Experiment']
 				[name() != 'Plate']
 				[name() != 'Screen']
+				[name() != 'PlateScreen']
 				[name() != 'Experimenter']
 				[name() != 'Group']
 				[name() != 'ExperimenterGroup']
 				[name() != 'Repository']
+				[name() != 'OTF']
+				[name() != 'Objective']
+				[name() != 'LightSource']
+				[name() != 'Laser']
+				[name() != 'Filament']
+				[name() != 'Arc']
+				[name() != 'Filter']
+				[name() != 'ExcitationFilter']
+				[name() != 'EmissionFilter']
+				[name() != 'FilterSet']
+				[name() != 'Detector']
 				[name() != 'Instrument']"
 				mode = "pass-through-CAs"/>
 		</xsl:element>
@@ -62,6 +74,8 @@
 				[name() != 'DisplayROI']
 				[name() != 'ImageInstrument']
 				[name() != 'ImageExperiment']
+				[name() != 'ImageExperimenter']
+				[name() != 'ImageGroup']
 				[name() != 'ImagingEnvironment']
 				[name() != 'Thumbnail']
 				[name() != 'LogicalChannel']
@@ -235,10 +249,10 @@
 				</xsl:attribute>
 			</xsl:element>
 			<xsl:apply-templates select = "@Description" mode = "Attribute2OptionalElement"/>
-			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImageExperiment"/>
+			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImageExperiment [string-length(@Experiment) > 0]"/>
 			<xsl:apply-templates select = "@Group"/>
 			<xsl:apply-templates select = "CA:DatasetRef" mode = "MakeOMEref"/>
-			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImageInstrument"/>
+			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImageInstrument [string-length(@Instrument) > 0] [string-length(@Objective) > 0]"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:ImagingEnvironment"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:Thumbnail"/>
 			<xsl:apply-templates select = "CA:CustomAttributes/CA:LogicalChannel"/>
@@ -345,9 +359,7 @@
 			<xsl:element name = "Institution">
 				<xsl:value-of select = "@Institution"/>
 			</xsl:element>
-			<xsl:element name = "OMEName">
-				<xsl:value-of select = "@OMEName"/>
-			</xsl:element>
+			<xsl:apply-templates select = "@Group" mode = "MakeOMEref"/>
 			<xsl:apply-templates select = "../CA:ExperimenterGroup/@Group [../@Experimenter=$ID]" mode = "MakeOMEref"/>
 		</xsl:element>
 	</xsl:template>
