@@ -44,6 +44,7 @@
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns:AML = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"
+	xmlns:DH = "http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 
 	<!-- Pass everything through that doesn't match the defined OME namspace -->
@@ -74,6 +75,7 @@
 			
 			<xsl:apply-templates select = "STD:*"/>
 			<xsl:apply-templates select = "AML:*"/>
+			<xsl:apply-templates select = "DH:*"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- Project -->
@@ -155,26 +157,28 @@
 			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:DatasetRef" mode = "CopyRefs"/>
 			<xsl:element name = "CustomAttributes">
-				<xsl:element name = "Dimensions">
-					<xsl:attribute name = "ID">
-						<xsl:value-of select = "generate-id()"/>
-					</xsl:attribute>
-					<xsl:attribute name = "PixelSizeX">
-						<xsl:value-of select = "@PixelSizeX"/>
-					</xsl:attribute>
-					<xsl:attribute name = "PixelSizeY">
-						<xsl:value-of select = "@PixelSizeY"/>
-					</xsl:attribute>
-					<xsl:attribute name = "PixelSizeZ">
-						<xsl:value-of select = "@PixelSizeZ"/>
-					</xsl:attribute>
-					<xsl:attribute name = "PixelSizeC">
-						<xsl:value-of select = "@WaveIncrement"/>
-					</xsl:attribute>
-					<xsl:attribute name = "PixelSizeT">
-						<xsl:value-of select = "@TimeIncrement"/>
-					</xsl:attribute>
-				</xsl:element>
+				<xsl:if test="@PixelSizeX">			
+					<xsl:element name = "Dimensions">
+						<xsl:attribute name = "ID">
+							<xsl:value-of select = "generate-id()"/>
+						</xsl:attribute>
+						<xsl:attribute name = "PixelSizeX">
+							<xsl:value-of select = "@PixelSizeX"/>
+						</xsl:attribute>
+						<xsl:attribute name = "PixelSizeY">
+							<xsl:value-of select = "@PixelSizeY"/>
+						</xsl:attribute>
+						<xsl:attribute name = "PixelSizeZ">
+							<xsl:value-of select = "@PixelSizeZ"/>
+						</xsl:attribute>
+						<xsl:attribute name = "PixelSizeC">
+							<xsl:value-of select = "@WaveIncrement"/>
+						</xsl:attribute>
+						<xsl:attribute name = "PixelSizeT">
+							<xsl:value-of select = "@TimeIncrement"/>
+						</xsl:attribute>
+					</xsl:element>
+				</xsl:if>				
 				<xsl:apply-templates select = "OME:ExperimentRef"/>
 
 				<xsl:apply-templates select = "OME:InstrumentRef"/>
