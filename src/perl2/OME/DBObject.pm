@@ -394,6 +394,13 @@ sub populate {
     return \%result;
 }
 
+sub populate_list {
+    my ($proto,$list) = @_;
+    my @result;
+    push @result, $_->populate() foreach @$list;
+    return \@result;
+}
+
 sub __getCachedObject {
     my ($proto,$id) = @_;
     my $class = ref($proto) || $proto;
