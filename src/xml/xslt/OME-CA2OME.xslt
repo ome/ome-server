@@ -209,7 +209,7 @@
 		</xsl:variable>
 		<!-- If there is a timezone, add the minutes -->
 		<xsl:variable name = "DateTimeTrailing">
-			<xsl:value-of select = "substring ($DateTime,19)"/>
+			<xsl:value-of select = "substring ($DateTime,20)"/>
 		</xsl:variable>
 
 		<xsl:element name = "{$Name}">
