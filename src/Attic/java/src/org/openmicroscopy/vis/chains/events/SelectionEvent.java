@@ -57,13 +57,12 @@ public class SelectionEvent extends EventObject {
 	public static final int SET_SELECTED_PROJECT = 1 <<2;
 	public static final int SET_ROLLOVER_PROJECT = 1 <<3;
 	public static final int SET_SELECTED_DATASET = 1<<4;
-	public static final int SET_ACTIVE_DATASETS= 1<<6;
-	public static final int SET_ROLLOVER_DATASET= 1<<7;
+	public static final int SET_ROLLOVER_DATASET= 1<<5;
+	public static final int SET_ROLLOVER_CHAIN = 1<<6;
 	
 	public static final int SET_PROJECT =
-			SET_ACTIVE_DATASETS | SET_SELECTED_DATASET | SET_SELECTED_PROJECT;
-	public static final int SET_CHAIN = SET_PROJECT | SET_SELECTED_CHAIN;
-		
+			SET_SELECTED_DATASET | SET_SELECTED_PROJECT;
+	
 		
 	
 		
@@ -85,5 +84,9 @@ public class SelectionEvent extends EventObject {
 	
 	public int getMask() {
 		return mask;
+	}
+	
+	public boolean isEventOfType(int type) {
+		return ((mask & type) == type);
 	}
 }
