@@ -1279,8 +1279,9 @@ sub __makeSelectSQL {
                 $operation = defined $value? "=": "is";
             }
 
-            my $sql_type = $columns->{$column_alias}->[3]->{SQLType}
-              if exists $columns->{$column_alias};
+            my $sql_type = exists $columns->{$column_alias}?
+              $columns->{$column_alias}->[3]->{SQLType}:
+              "";
 
             if ($location eq 'id') {
                 push @join_clauses, [$operation, $question];
