@@ -58,6 +58,7 @@ document.
 use strict;
 use XML::LibXML;
 use OME::Tasks::LSIDManager;
+use Log::Agent;
 
 # package constants
 my $BinNS = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd";
@@ -138,7 +139,7 @@ sub importFile() {
 		# eval because if this is running in bootstrap, there is no Repository
 		# attributes or even a Repository ST
 		eval {
-			my @repositories    = $factory->findAttributes( "Repository" );
+			my @repositories    = $factory->findAttributes( "Repository", IsLocal => 't' );
 			$repository         = $repositories[0];
 			$pixelDir           = $session->getScratchDirRepository(repository => $repository, progName => 'ResolveFiles');
 		};
