@@ -21,11 +21,14 @@
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 		var redPopupList, bluePopupList, greenPopupList;
 		var azap = new AntiZoomAndPan();
-		var wavelengths = new Array( "100nm", "200nm", "300nm", "400nm", "500nm" );
+		var wavelengths = new Array( "100nm", "200nm", "300nm", "400nm");
+		// Array to pass to popupList that it will use to make its items can be a
+		// hash or a more typical array.
+		wavelengths['lastElement'] = "500nm";
 
 		function init(e) {
 			redPopupList = new popupList(
-				35, 50, wavelengths, showRedWavelength, 1,
+				35, 50, wavelengths, showRedWavelength, null,
 				svgDocument.getElementById("redAnchorText").firstChild.data,
 				svgDocument.getElementById("redItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("redItemHighlightText").firstChild.data
@@ -34,7 +37,7 @@
 			redPopupList.getLabel().setAttributeNS( null, "fill", "red");
 			
 			greenPopupList = new popupList(
-				90, 50, wavelengths, showGreenWavelength, 3,
+				90, 50, wavelengths, showGreenWavelength, null,
 				svgDocument.getElementById("greenAnchorText").firstChild.data,
 				svgDocument.getElementById("greenItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("greenItemHighlightText").firstChild.data
@@ -43,7 +46,7 @@
 			greenPopupList.getLabel().setAttributeNS( null, "fill", "green");
 
 			bluePopupList = new popupList(
-				145, 50, wavelengths, showBlueWavelength, 0,
+				145, 50, wavelengths, showBlueWavelength, null,
 				svgDocument.getElementById("blueAnchorText").firstChild.data,
 				svgDocument.getElementById("blueItemBackgroundText").firstChild.data,
 				svgDocument.getElementById("blueItemHighlightText").firstChild.data
@@ -57,20 +60,24 @@
 			greenPopupList.realize(controls);
 			bluePopupList.realize(controls);
 
+			setTimeout("redPopupList.setSelection(1)",0);
+			setTimeout("greenPopupList.setSelection(2)",0);
+			setTimeout("bluePopupList.setSelection(3)",0);
+
 			azap.appendNode(controls);
 	   }
 
 		function showRedWavelength(item) {
 			svgDocument.getElementById("redWavelength").firstChild.data =
-				"Red wavelength is set to " + wavelengths[item];
+				"Red wavelength is set to " + redPopupList.getItemList()[item];
 		}
 		function showGreenWavelength(item) {
 			svgDocument.getElementById("greenWavelength").firstChild.data =
-				"Green wavelength is set to " + wavelengths[item];
+				"Green wavelength is set to " + greenPopupList.getItemList()[item];
 		}
 		function showBlueWavelength(item) {
 			svgDocument.getElementById("blueWavelength").firstChild.data =
-				"Blue wavelength is set to " + wavelengths[item];
+				"Blue wavelength is set to " + bluePopupList.getItemList()[item];
 		}
 
 	]]></script>
@@ -133,8 +140,8 @@
 	<g id="labels" transform="translate(23, 120)">
 		<rect x="-3" y="-3" width="190" height="45" fill="none" stroke-width="1"
 			stroke="black"/>
-		<text id="redWavelength" y="1em" fill="red">Red wavelength is set to 200nm</text>
-		<text id="greenWavelength" y="2em" fill="green">Green wavelength is set to 400nm</text>
-		<text id="blueWavelength" y="3em" fill="blue">Blue wavelength is set to 100nm</text>
+		<text id="redWavelength" y="1em" fill="red"> </text>
+		<text id="greenWavelength" y="2em" fill="green"> </text>
+		<text id="blueWavelength" y="3em" fill="blue"> </text>
 	</g>
 </svg>
