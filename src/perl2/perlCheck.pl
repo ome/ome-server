@@ -341,7 +341,7 @@ my @configFlags = (
 	'--enable-shared',
 	'--without-magick-plus-plus',
 	'--enable-lzw',
-	'--prefix=/usr'
+	'--prefix=/usr/local'
 	);
 my %oldENV;
 
@@ -372,11 +372,11 @@ my %oldENV;
 #	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
 	print "\nInstalling...\n";
 	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
-	if ($^O eq 'darwin') {
-		print "\nFixing library links...\n";
-		die "Install errors - couldn't fix library links:\n$@.\n"
-			if system ('cd /usr/lib;ln -s libMagick.5.0.36.dylib libMagick.5.dylib') != 0;
-		}
+#	if ($^O eq 'darwin') {
+#		print "\nFixing library links...\n";
+#		die "Install errors - couldn't fix library links:\n$@.\n"
+#			if system ('cd /usr/lib;ln -s libMagick.5.0.36.dylib libMagick.5.dylib') != 0;
+#		}
 	chdir '..';
 
 }
