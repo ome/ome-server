@@ -487,7 +487,7 @@ sub localLoadPixels {
 
 sub serverCreatePixels {
     my $proto = shift;
-    my ($repository,$image,$mex,$data_hash) = @_;
+    my ($repository,$image,$mex,$data_hash,$isParentalOutput) = @_;
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
@@ -506,7 +506,7 @@ sub serverCreatePixels {
 	$data_hash->{ Repository }    = $repository;
 	$data_hash->{ ImageServerID } = $pixels->getPixelsID();
     my $attr = $factory->
-      newAttribute('Pixels',$image,$mex,$data_hash);
+      newAttribute('Pixels',$image,$mex,$data_hash,$isParentalOutput);
     return ($pixels,$attr);
 }
 
