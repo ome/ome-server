@@ -80,6 +80,8 @@ use OME::DBObject;
 use base qw(OME::DBObject Class::Accessor);
 use POSIX;
 
+__PACKAGE__->Caching(0);
+
 #use Benchmark::Timer;
 
 use fields qw(Factory Manager DBH ApacheSession SessionKey Configuration);
