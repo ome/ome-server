@@ -634,8 +634,8 @@ $SVG .= <<ENDSVG;
 			setTimeout( "imageControls.blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "imageControls.RGB_BWbutton.setState("+image.getDisplayRGB_BW()+")", 0 );
 			setTimeout( "imageControls.loadButton.setState(false)", 0 );
-			imageControls.zSlider.setValue(theZ/Z*100,true);
-			imageControls.tSlider.setValue(theT/T*100,true);
+			imageControls.zSlider.setValue(theZ/(Z-1)*100,true);
+			imageControls.tSlider.setValue(theT/(T-1)*100,true);
 
 		}
 		
