@@ -38,7 +38,7 @@ require Exporter;
 #*********
 
 our @ISA = qw(Exporter);
-our @EXPORT = qw(confirm confirm_path print_header question);
+our @EXPORT = qw(confirm confirm_path print_header question confirm_default);
 
 #*********
 #********* EXPORTED SUBROUTINES
@@ -82,6 +82,21 @@ sub confirm_path {
     }
 
 }
+
+sub confirm_default {
+    my ($text, $default) = @_; 
+
+    while (1) {
+	print "$text ", BOLD, "[$default]", RESET, ": ";
+	my $input = ReadLine 0;
+	chomp $input;
+	($input = $default) unless $input;
+
+	return $input unless not confirm($input);
+    }
+
+}
+
 
 sub question {
     my $text = shift;
