@@ -128,21 +128,6 @@ sub getPageBody {
 		$body .= "<script>top.location.href = top.location.href;</script>"
 			if (scalar($project->datasets())==0);
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";		
-	} elsif ($action eq 'Switch To') {
-		# Warning
-		if (scalar(@selected) > 1) {
-			$body .= $cgi->p({class => 'ome_error'}, 
-				"WARNING: Multiple datasets chosen, selecting first choice ID $selected[0].");
-		}
-		
-		# Action
-		$d_manager->switch($selected[0]);
-		
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Selected dataset $selected[0] from the project.");
-
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	} elsif (defined $cgi->param('Add')) {
 		# Action
 		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
