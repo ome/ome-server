@@ -210,7 +210,12 @@ public class DataFactory
         String remoteType = RemoteTypes.getRemoteType(targetClass);
         Map fields = criteria.getFieldsWanted();
 
-        Object result = caller.dispatch("loadObject",remoteType,fields);
+        Object result = caller.dispatch("loadObject",
+                                        new Object[] {
+                                            remoteType,
+                                            new Integer(id),
+                                            fields
+                                        });
         if (result instanceof Map)
         {
             Class dtoClass = RemoteTypes.getDTOClass(targetClass);
