@@ -1,7 +1,7 @@
 export DEFINES
 export FINK_INCLUDE
 install:
-	-mkdir include lib bin
+	-install -d include lib bin
 	cd libsys; make install
 	cd libpic; make install
 	cd zoom; make install
