@@ -99,14 +99,18 @@ sub _init {
     return $self;
 }
 
-# Old prototype:
+# Old prototype (DEPRICATED):
 # my $pix = $image->GetPix();
 # New prototype:
 # my $pix = OME::Image->GetPix($pixelAttribute);
 #
 # (Both work) The new prototype allows you to create a Pix object from
 # any pixel attribute.  The old prototype uses the default Pixels associated 
-# with $image, and creates a Pix object from that.
+# with $image, and creates a Pix object from that. The old prototype is
+# depricated. Calls to it should be replaced (minimally) with 
+# my $pix = $image->GetPix( $image->DefaultPixels() );
+# Any code that relies on the image having only one pixels element should get
+# a careful inspection of its logic.
 
 sub GetPix {
     my $self = shift;
