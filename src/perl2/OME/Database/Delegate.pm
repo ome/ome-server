@@ -118,6 +118,23 @@ sub getInstance {
     return $singleton;
 }
 
+=head2 createDatabase
+
+	my $already_exists = $delegate->createDatabase($platform);
+
+Creates the OME database.  This does not create any tables or other
+database objects; it just ensures that the appropriate database
+exists.  If the database already exists, this method should return a
+true value.  If the database did not exists, and was created
+successfully, it should return false.  If the database could not be
+created successfully, it should die with an appropriate error message.
+
+=cut
+
+sub createDatabase {
+    die "OME::Database::Delegate->createDatabase is abstract";
+}
+
 =head2 connectToDatabase
 
 	my $dbh = $delegate->connectToDatabase($datasource,
