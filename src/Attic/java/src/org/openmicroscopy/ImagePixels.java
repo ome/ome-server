@@ -21,12 +21,37 @@
 
 package org.openmicroscopy;
 
+import java.io.IOException;
+
 public interface ImagePixels
 {
     public Attribute getDimensions();
-    public byte[] getPixels();
-    public byte[] getPlane(int z, int c, int t);
-    public byte[] getStack(int c, int t);
+    public byte[] getPixels()
+        throws IOException;
+    public byte[] getPlane(int z, int c, int t)
+        throws IOException;
+    public byte[] getStack(int c, int t)
+        throws IOException;
     public byte[] getROI(int x0, int y0, int z0, int c0, int t0,
-                         int x1, int y1, int z1, int c1, int t1);
+                         int x1, int y1, int z1, int c1, int t1)
+        throws IOException;
+
+    public int getPixelsBufferSize();
+    public int getPlaneBufferSize(int z, int c, int t);
+    public int getStackBufferSize(int c, int t);
+    public int getROIBufferSize(int x0, int y0, int z0, int c0, int t0,
+                                int x1, int y1, int z1, int c1, int t1);
+
+    public void getPixels(byte[] buf)
+        throws IOException;
+    public void getPlane(byte[] buf, int z, int c, int t)
+        throws IOException;
+    public void getStack(byte[] buf, int c, int t)
+        throws IOException;
+    public void getROI(byte[] buf,
+                       int x0, int y0, int z0, int c0, int t0,
+                       int x1, int y1, int z1, int c1, int t1)
+        throws IOException;
+
+    public void finishPixels();
 }
