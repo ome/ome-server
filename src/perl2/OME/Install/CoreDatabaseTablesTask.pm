@@ -140,8 +140,8 @@ sub create_superuser {
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     # Drop our UID to Postgres
-    $EUID = $pg_uid;
-    $UID = $pg_uid;
+#    $EUID = $pg_uid;
+#    $UID = $pg_uid;
 
     # Make sure we can see the Postgres command
     $retval = which ("$createuser");
@@ -149,11 +149,11 @@ sub create_superuser {
     $createuser = whereis ("createuser") or croak "Unable to locate creatuser binary." unless $retval;
 
     # Create the user using the command line tools
-    $output = `$createuser -d -a $username 2>&1`;
+    $output = `su postgres -c "$createuser -d -a $username 2>&1"`;
 
     # Back to UID 0
-    $EUID = 0;
-    $UID = 0;
+#    $EUID = 0;
+#    $UID = 0;
 
     # Log and return success
     if (($output =~ /already exists/) or ($output =~ /^CREATE/)) {
@@ -213,7 +213,7 @@ sub create_database {
     $createlang = whereis ("createlang") or croak "Unable to locate creatlang binary." unless $retval;
 
     print "  \\__ Adding PL-PGSQL language\n";
-    my $CMD_OUT = `$createlang plpgsql ome 2>&1`;
+    my $CMD_OUT = `su postgres -c "$createlang plpgsql ome 2>&1"`;
     die $CMD_OUT if $? != 0;
 
     # Fix our little object ID bug
