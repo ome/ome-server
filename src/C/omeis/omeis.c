@@ -42,7 +42,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <math.h>
 #include <float.h>
 #include "omeis.h"
@@ -74,7 +73,7 @@ OID nextID (char *idFile)
 		return (0);
 	}
 
-	if (read(fd, &pixID, sizeof (OID)) < 0 || pixID == 0xFFFFFFFFFFFFFFFF) {
+	if ((read(fd, &pixID, sizeof (OID)) < 0) || pixID == 0xFFFFFFFFFFFFFFFFULL) {
 		fl.l_type = F_UNLCK;  /* set to unlock same region */
 		fcntl(fd, F_SETLK, &fl);
 		close(fd);
@@ -222,17 +221,6 @@ int newRepFile (OID theID, char *path, off_t size) {
 }
 
 
-void zeroMem (char *mem, size_t size) {
-size_t i;
-
-	for (i=0;i<size;i++) {
-		*mem++ = 0;
-	}
-}
-
-
-
-
 /*
 Josiah Johnston <siah@nih.gov>
 * Returns 1 if the machine executing this code is bigEndian, 0 otherwise.
@@ -272,7 +260,7 @@ void freePixelsRep (PixelsRep *myPixels) {
 /*
   The constructor doesn't do very much other than allocate and initialize memory.
 */
-PixelsRep *newPixelsRep ()
+PixelsRep *newPixelsRep (void)
 {
 PixelsRep *myPixels;
 char *root="Pixels/";
@@ -280,7 +268,7 @@ char *pixIDfile="Pixels/lastPix";
 
 	if (! (myPixels =  (PixelsRep *)malloc (sizeof (PixelsRep)))  )
 		return (NULL);
-	zeroMem ((char *)myPixels,sizeof(PixelsRep));
+	myPixels = memset(myPixels, 0, sizeof(PixelsRep));
 	
 	strcpy (myPixels->path_rep,root);
 	strcpy (myPixels->path_ID,pixIDfile);
@@ -568,11 +556,11 @@ char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
 
-	if (offset < 0) return (NULL);
-	if (!myPixels) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
-	if (! (pixels = myPixels->pixels) ) return (NULL);
-	if (! (bp = head->bp) ) return (NULL);
+	if (offset < 0) return (-1);
+	if (!myPixels) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
+	if (! (pixels = myPixels->pixels) ) return (-1);
+	if (! (bp = head->bp) ) return (-1);
 	
 	nBytes = nPix*bp;
 	file_off = sizeof(pixHeader) + head->jump + offset;
@@ -580,7 +568,7 @@ unsigned long written=0;
 	chunk_size = 4096 / bp;
 	pix_P = pixels + offset;
 
-	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (NULL);
+	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (-1);
 
 	if (myPixels->IO_stream) {
 		if (rorw == 'w') {
@@ -682,12 +670,12 @@ size_t sizeX, nIO_t=0, nIO=0;
 char *pix;
 off_t off0, off1;
 
-	if (!myPixels) return (NULL);
-	if (! (pix = (char *)myPixels->pixels) ) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
-	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (NULL);
-	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (NULL);
-	if (off0 >= off1) return (NULL);
+	if (!myPixels) return (-1);
+	if (! (pix = (char *)myPixels->pixels) ) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
+	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (-1);
+	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (-1);
+	if (off0 >= off1) return (-1);
 	dx = head->dx;
 	dy = head->dy;
 	dz = head->dz;
@@ -723,17 +711,17 @@ pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
 off_t file_off,plane_offset;
 
-	if (!myPixels) return (NULL);
-	if (!myPixels->planeInfos) return (NULL);
-	if (!CheckCoords (myPixels,0,0,z,c,t)) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
+	if (!myPixels) return (-1);
+	if (!myPixels->planeInfos) return (-1);
+	if (!CheckCoords (myPixels,0,0,z,c,t)) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
 
 	plane_offset = (((t*head->dc) + c)*head->dz) + z;
 	file_off  = ((char *)myPixels->planeInfos - (char *)myPixels->head) + (plane_offset*nBytes);
 
 	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) {
 		fprintf (stderr,"Could get file lock\n");
-		return (NULL);
+		return (-1);
 	}
 	if (rorw == 'w')
 		memcpy (myPixels->planeInfos+plane_offset, theInfo, nBytes);
@@ -749,15 +737,15 @@ pixHeader *head;
 size_t nBytes = sizeof (stackInfo);
 off_t file_off,stack_offset;
 
-	if (!myPixels) return (NULL);
-	if (!myPixels->stackInfos) return (NULL);
-	if (!CheckCoords (myPixels,0,0,0,c,t)) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
+	if (!myPixels) return (-1);
+	if (!myPixels->stackInfos) return (-1);
+	if (!CheckCoords (myPixels,0,0,0,c,t)) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
 
 	stack_offset = (t*head->dc) + c;
 	file_off  = ((char *)myPixels->stackInfos - (char *)myPixels->head) + (stack_offset*nBytes);
 
-	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (NULL);
+	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (-1);
 	if (rorw == 'w')
 		memcpy (myPixels->stackInfos+stack_offset, theInfo, nBytes);
 	else
@@ -788,10 +776,10 @@ float *floatP;
 register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 
 
-	if (!myPixels) return (NULL);
-	if (!myPixels->stackInfos) return (NULL);
-	if (!CheckCoords (myPixels,0,0,z,c,t)) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
+	if (!myPixels) return (-1);
+	if (!myPixels->stackInfos) return (-1);
+	if (!CheckCoords (myPixels,0,0,z,c,t)) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
 
 	dx = head->dx;
 	dy = head->dy;
@@ -950,16 +938,16 @@ planeInfo *planeInfoP;
 off_t plane_offset,stack_offset;
 register float logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0;
 
-	if (!myPixels) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
+	if (!myPixels) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
 	dz = head->dz;
 
 	plane_offset = ((t*head->dc) + c)*dz;
 	stack_offset = (t*head->dc) + c;
 
-	if (! (stackInfoP = myPixels->stackInfos + stack_offset) ) return (NULL);
+	if (! (stackInfoP = myPixels->stackInfos + stack_offset) ) return (-1);
 	if (stackInfoP->stats_OK) return (1);
-	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (NULL);
+	if (! (planeInfoP = myPixels->planeInfos + plane_offset) ) return (-1);
 	
 	for (z = 0; z < dz; z++) {
 		if (! planeInfoP->stats_OK)
@@ -1021,10 +1009,10 @@ stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 
 
-	if (!myPixels) return (NULL);
-	if (! (head = myPixels->head) ) return (NULL);
-	if (! (stackInfoP = myPixels->stackInfos) ) return (NULL);
-	if (! (planeInfoP = myPixels->planeInfos) ) return (NULL);
+	if (!myPixels) return (-1);
+	if (! (head = myPixels->head) ) return (-1);
+	if (! (stackInfoP = myPixels->stackInfos) ) return (-1);
+	if (! (planeInfoP = myPixels->planeInfos) ) return (-1);
 	dz = head->dz;
 	dc = head->dc;
 	dt = head->dt;
@@ -1034,11 +1022,11 @@ planeInfo *planeInfoP;
 			for (z = 0; z < dz; z++) {
 				if (force) planeInfoP->stats_OK = 0;
 				if (! planeInfoP->stats_OK)
-					if (!DoPlaneStats (myPixels, z, c, t)) return (NULL);
+					if (!DoPlaneStats (myPixels, z, c, t)) return (-1);
 				planeInfoP++;
 			}
 			if (! stackInfoP->stats_OK)
-				if (!DoStackStats (myPixels, c, t)) return (NULL);
+				if (!DoStackStats (myPixels, c, t)) return (-1);
 			stackInfoP++;
 		}
 	return (1);
@@ -1051,7 +1039,7 @@ int FinishPixels (OID ID, char force) {
 PixelsRep *myPixels;
 int result;
 
-	if (!ID) return (NULL);
+	if (!ID) return (-1);
 
 	myPixels = newPixelsRep ();
 	if (! getRepPath (ID,myPixels->path_rep,0)) {
@@ -1108,10 +1096,10 @@ char *sh_mmap;
 	ID = nextID(filesIDfile);
 	if (ID <= 0 && errno) {
 		perror ("Couldn't get next File ID");
-		return (NULL);
+		return (-1);
 	} else if (ID <= 0){
 		fprintf (stderr,"Happy New Year !!!\n");
-		return (NULL);
+		return (-1);
 	}
 
 
@@ -1120,21 +1108,21 @@ char *sh_mmap;
 		char error[256];
 		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",ID,path);
 		perror (error);
-		return (NULL);
+		return (-1);
 	}
 
 	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) <= 0 ) {
 		close (fd);
 		unlink (path);
 		fprintf (stderr,"Couldn't mmap uploaded file %s (Path=%s, ID=%llu)\n",filename,path,ID);
-		return (NULL);
+		return (-1);
 	}
 
 	nIO = fread (sh_mmap,1,size,stdin);
 	if (nIO != size) {
 		fprintf (stderr,"Could finish writing uploaded file %s (Path=%s, ID=%llu).  Wrote %lu, expected %lu\n",
 			filename,path,ID,(unsigned long)nIO,(unsigned long)size);
-		ID = NULL;
+		ID = -1;
 	}
 
 	/* release the lock created by newRepFile */
@@ -1168,22 +1156,22 @@ char isBigEndian=1;
 
 	strcpy (file_path,"Files/");
 
-	if (!fileID || !myPixels) return (NULL);
+	if (!fileID || !myPixels) return (-1);
 	
 	if (! getRepPath (fileID,file_path,0)) {
-		return (NULL);
+		return (-1);
 	}
 
-	if (! (head = myPixels->head) ) return (NULL);
+	if (! (head = myPixels->head) ) return (-1);
 	bp = head->bp;
 
 
 	if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
-		return (NULL);
+		return (-1);
 	}
 	if ( (sh_mmap = (char *)mmap (NULL, nPix*bp, PROT_READ, MAP_SHARED, fd, file_offset)) <= 0 ) {
 		close (fd);
-		return (NULL);
+		return (-1);
 	}
 
 
@@ -1262,7 +1250,7 @@ char **cgivars=param;
 
 	if (! (method = get_param (param,"Method")) ) {
 		HTTP_DoError (method,"Method parameter missing");
-		return (NULL);
+		return (-1);
 	}
 	
 	if ( (theParam = get_param (param,"PixelsID")) )
@@ -1272,7 +1260,7 @@ char **cgivars=param;
 		strcmp (method,"ReadFile") &&
 		strcmp (method,"UploadFile")) {
 			HTTP_DoError (method,"pixelsID Parameter missing");
-			return (NULL);
+			return (-1);
 	}
 
 	if ( (theParam = get_param (param,"theZ")) )
@@ -1296,12 +1284,12 @@ char **cgivars=param;
 		
 		if (! (dims = get_param (param,"Dims")) ) {
 			HTTP_DoError (method,"Dims Parameter missing");
-			return (NULL);
+			return (-1);
 		}
 		numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numC,&numT,&numB);
 		if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numC < 1 || numT < 1 || numB < 1) {
 			HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB");
-			return (NULL);
+			return (-1);
 		}
 
 		if ( (theParam = get_param (param,"IsSigned")) )
@@ -1311,7 +1299,7 @@ char **cgivars=param;
 
 		if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
 			HTTP_DoError (method,strerror( errno ) );
-			return (NULL);
+			return (-1);
 		}
 
 		HTTP_ResultType ("text/plain");
@@ -1322,14 +1310,14 @@ char **cgivars=param;
 	else if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
 		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
 		! strcmp (method,"SetStack") || !strcmp (method,"GetStack")) {
-		if (!ID) return (NULL);
+		if (!ID) return (-1);
 		if (strstr (method,"Set")) rorw = 'w';
 		else rorw = 'r';
 
 		if (! (thePixels = GetPixels (ID,rorw,bigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		}
 
 		head = thePixels->head;
@@ -1340,7 +1328,7 @@ char **cgivars=param;
 			if (theC < 0 || theT < 0) {
 				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
-				return (NULL);
+				return (-1);
 			}
 			nPix = head->dx*head->dy*head->dz;
 			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
@@ -1348,7 +1336,7 @@ char **cgivars=param;
 			if (theZ < 0 || theC < 0 || theT < 0) {
 				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
-				return (NULL);
+				return (-1);
 			}
 			nPix = head->dx*head->dy;
 			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
@@ -1369,7 +1357,7 @@ char **cgivars=param;
 		nIO = DoPixelIO (thePixels, offset, nPix, rorw);
 		if (rorw == 'w') {
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%lu\n",nIO);
+			fprintf (stdout,"%d\n", nIO);
 		}
 
 		freePixelsRep (thePixels);
@@ -1379,24 +1367,24 @@ char **cgivars=param;
 		char *ROI;
 		int numInts,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
 
-		if (!ID) return (NULL);
+		if (!ID) return (-1);
 		if (!strcmp (method,"SetROI")) rorw = 'w';
 		else rorw = 'r';
 
 		if (! (ROI = get_param (param,"ROI")) ) {
 			HTTP_DoError (method,"ROI Parameter missing");
-			return (NULL);
+			return (-1);
 		}
 		numInts = sscanf (ROI,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&x0,&y0,&z0,&c0,&t0,&x1,&y1,&z1,&c1,&t1);
 		if (numInts < 10) {
 			HTTP_DoError (method,"ROI improperly formed.  Expected x0,y0,z0,c0,t0,x1,y1,z1,c1,t1");
-			return (NULL);
+			return (-1);
 		}
 
 		if (! (thePixels = GetPixels (ID,rorw,bigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		}
 
 		if (rorw == 'w')
@@ -1408,7 +1396,7 @@ char **cgivars=param;
 		nIO = DoROI (thePixels,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1, rorw);
 		if (rorw == 'w') {
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%lu\n",nIO);
+			fprintf (stdout,"%d\n",nIO);
 		}
 		freePixelsRep (thePixels);
 	}
@@ -1416,14 +1404,14 @@ char **cgivars=param;
 	else if (! strcmp (method,"FinishPixels") ) {
 		int force=0;
 
-		if (!ID) return (NULL);
+		if (!ID) return (-1);
 		if ( (theParam = get_param (param,"Force")) )
 			sscanf (theParam,"%d",&force);
 
 		if (FinishPixels (ID,force) < 0) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		} else {
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",ID);
@@ -1434,18 +1422,18 @@ char **cgivars=param;
 		unsigned long z,dz,c,dc,t,dt;
 		planeInfo *planeInfoP;
 
-		if (!ID) return (NULL);
+		if (!ID) return (-1);
 		
 		if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		}
 
 		if (! (planeInfoP = thePixels->planeInfos) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		}
 
 		head = thePixels->head;
@@ -1477,12 +1465,12 @@ char **cgivars=param;
 			sscanf (theParam,"%lu",&uploadSize);
 		else {
 			HTTP_DoError (method,"UploadSize must be specified!");
-			return (NULL);
+			return (-1);
 		}
 		if ( (ID = UploadFile (get_param (param,"File"),uploadSize) ) <= 0) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		} else {
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",ID);
@@ -1500,20 +1488,20 @@ char **cgivars=param;
 			sscanf (theParam,"%llu",&fileID);
 		else {
 			HTTP_DoError (method,"FileID must be specified!");
-			return (NULL);
+			return (-1);
 		}
 
 		strcpy (file_path,"Files/");
 		if (! getRepPath (fileID,file_path,0)) {
 			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
 			HTTP_DoError (method,error_str);
-			return (NULL);
+			return (-1);
 		}
 		
 		if (stat (file_path, &fStat) < 0) {
 			sprintf (error_str,"Could not get information for FileID=%llu",fileID);
 			HTTP_DoError (method,error_str);
-			return (NULL);			
+			return (-1);			
 		}
 		
 		strcat (file_path,".name");
@@ -1540,7 +1528,7 @@ char **cgivars=param;
 			sscanf (theParam,"%llu",&fileID);
 		else {
 			HTTP_DoError (method,"FileID must be specified!");
-			return (NULL);
+			return (-1);
 		}
 
 		if ( (theParam = get_param (param,"Offset")) )
@@ -1552,19 +1540,19 @@ char **cgivars=param;
 		if (! getRepPath (fileID,file_path,0)) {
 			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
 			HTTP_DoError (method,error_str);
-			return (NULL);
+			return (-1);
 		}
 
 		if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
 			sprintf (error_str,"Could not open FileID=%llu",fileID);
 			HTTP_DoError (method,error_str);
-			return (NULL);
+			return (-1);
 		}
 		if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) <= 0 ) {
 			close (fd);
 			sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,offset,length);
 			HTTP_DoError (method,error_str);
-			return (NULL);
+			return (-1);
 		}
 		
 		HTTP_ResultType ("application/octet-stream");
@@ -1581,7 +1569,7 @@ char **cgivars=param;
 			sscanf (theParam,"%llu",&fileID);
 		else {
 			HTTP_DoError (method,"FileID must be specified!");
-			return (NULL);
+			return (-1);
 		}
 
 		if ( (theParam = get_param (param,"Offset")) )
@@ -1590,7 +1578,7 @@ char **cgivars=param;
 		if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (NULL);
+			return (-1);
 		}
 		head = thePixels->head;
 		nPix = head->dx*head->dy*head->dz*head->dc*head->dt;
@@ -1600,7 +1588,7 @@ char **cgivars=param;
 			if (theC < 0 || theT < 0) {
 				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
-				return (NULL);
+				return (-1);
 			}
 			nPix = head->dx*head->dy*head->dz;
 			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
@@ -1608,7 +1596,7 @@ char **cgivars=param;
 			if (theZ < 0 || theC < 0 || theT < 0) {
 				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
-				return (NULL);
+				return (-1);
 			}
 			nPix = head->dx*head->dy;
 			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
@@ -1622,7 +1610,7 @@ char **cgivars=param;
 			if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
 				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
-				return (NULL);
+				return (-1);
 			}
 
 			nPix = nRows*head->dy;
@@ -1634,11 +1622,11 @@ char **cgivars=param;
 			if (errno) HTTP_DoError (method,strerror( errno ) );
 			else  HTTP_DoError (method,"Access control error - check error log for details" );
 			freePixelsRep (thePixels);
-			return (NULL);
+			return (-1);
 		} else {
 			freePixelsRep (thePixels);
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%lu\n",(unsigned long)nIO);
+			fprintf (stdout,"%d\n",nIO);
 		}
 	}
 
@@ -1650,9 +1638,9 @@ void usage (int argc,char **argv) {
 }
 
 int main (int argc,char **argv) {
-char isCGI=0;
-char	**in_params ;
-char *myWD = "/OME/OMEIS";
+short isCGI=0;
+char **in_params ;
+const char *myWD = "/OME/OMEIS";
 
 	chdir (myWD);
 	in_params = getCLIvars(argc,argv) ;
