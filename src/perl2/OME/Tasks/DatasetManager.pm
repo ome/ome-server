@@ -287,23 +287,16 @@ sub addImages{
 #	imageID
 
 sub addToDataset{
-	my $self=shift;
-	my ($datasetID,$imageID)=@_;
-	my $session=$self->Session();
- 	my $factory=$session->Factory();
-  	my $map = $factory->findObject("OME::Image::DatasetMap",
-		 'dataset_id' => $datasetID,
-		 'image_id' => $imageID
-	);
-	if (not defined $map) {
-		$map=$factory->newObject("OME::Image::DatasetMap",{
-			'dataset_id' => $datasetID,
-			'image_id' => $imageID
-
-			} );
-		$map->storeObject();
-		$session->commitTransaction();
-	}
+    my $self=shift;
+    my ($datasetID,$imageID)=@_;
+    my $session=$self->Session();
+    my $factory=$session->Factory();
+    $factory->maybeNewObject("OME::Image::DatasetMap",
+                             {
+                              dataset_id => $datasetID,
+                              image_id   => $imageID,
+                             });
+    $session->commitTransaction();
 }
 #################
 # Parameters

@@ -215,24 +215,24 @@ sub add{
 #	datasetId
 #	projectID
 sub addToProject{
-	my $self=shift;
-	my ($datasetID,$projectID)=@_;
-	my $session=$self->Session();
-	my $factory=$session->Factory();
-	my $dataset	=$factory->loadObject("OME::Dataset",$datasetID);
-	my $map = $factory->findObject("OME::Project::DatasetMap",
-		  'dataset_id' => $datasetID,
-		  'project_id' => $projectID
-	);
-	if (not defined $map) {
-		$map=$factory->newObject("OME::Project::DatasetMap",{
-			project_id => $projectID,
-			dataset_id => $datasetID
-			} );
-		$map->storeObject();
-		$session->commitTransaction();
-	}
-	return $dataset;
+    my $self=shift;
+    my ($datasetID,$projectID)=@_;
+    my $session=$self->Session();
+    my $factory=$session->Factory();
+
+    # maybeNewObject will work regardless of whether the values
+    # are objects or ID's
+
+    $factory->maybeNewObject("OME::Project::DatasetMap",
+                             {
+                              project_id => $projectID,
+                              dataset_id => $datasetID,
+                             });
+    $session->commitTransaction();
+
+    return ref($datasetID)?
+      $datasetID:
+      $factory->loadObject("OME::Dataset",$datasetID);
 }
 
 
