@@ -307,7 +307,6 @@ sub importGroup {
     # Use the 1st file's parameters to get the X, Y, pixel size
     $file = $grp->[0];
     $file->open('r');
-    print STDERR "before readTiffIFD\n";
     my $tags =  readTiffIFD($file);
     $file->close();
     $params->endian($tags->{__Endian});
