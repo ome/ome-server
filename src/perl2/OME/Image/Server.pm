@@ -645,7 +645,9 @@ sub getPixels {
     my %params = (Method   => 'GetPixels',
                   PixelsID => $pixelsID,
                   __file   => $output_file);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -683,7 +685,9 @@ sub getStack {
                   theC     => $theC,
                   theT     => $theT,
                   __file   => $output_file);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -721,7 +725,9 @@ sub getPlane {
                   theC     => $theC,
                   theT     => $theT,
                   __file   => $output_file);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -765,7 +771,9 @@ sub getROI {
                   PixelsID => $pixelsID,
                   ROI      => $ROI,
                   __file   => $output_file);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error retrieving pixels" unless defined $result;
     return $result;
@@ -846,7 +854,9 @@ sub setPixels {
     my %params = (Method   => 'SetPixels',
                   PixelsID => $pixelsID,
                   Pixels   => $filename);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -883,7 +893,9 @@ sub setStack {
                   Pixels   => $filename,
                   theC     => $theC,
                   theT     => $theT);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -921,7 +933,9 @@ sub setPlane {
                   theZ     => $theZ,
                   theC     => $theC,
                   theT     => $theT);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -969,7 +983,9 @@ sub setROI {
                   PixelsID => $pixelsID,
                   Pixels   => $filename,
                   ROI      => $ROI);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error sending pixels" unless defined $result;
     chomp $result;
@@ -1229,7 +1245,9 @@ sub convert {
                   PixelsID => $pixelsID,
                   FileID   => $fileID,
                   Offset   => $offset);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
@@ -1276,7 +1294,9 @@ sub convertStack {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
@@ -1324,7 +1344,9 @@ sub convertPlane {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
@@ -1416,7 +1438,9 @@ sub convertRows {
                   theT     => $theT,
                   FileID   => $fileID,
                   Offset   => $offset);
+    $bigEndian = OME->BIG_ENDIAN() unless defined $bigEndian;
     $params{BigEndian} = $proto->__setBoolean($bigEndian);
+
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
