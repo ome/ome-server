@@ -45,8 +45,11 @@ package org.openmicroscopy.vis.chains;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CProject;
+import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.ome.events.DatasetSelectionEvent;
 import org.openmicroscopy.vis.ome.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.ome.events.ChainSelectionEvent;
+import org.openmicroscopy.vis.ome.events.ChainSelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import java.util.List;
 import java.util.Vector;
@@ -74,6 +77,7 @@ import java.awt.Font;
 import java.util.Iterator;
 import java.util.HashSet;
 
+
 /** 
  * A Control panel for the chain builder visualization
  * @author Harry Hochheiser
@@ -81,7 +85,7 @@ import java.util.HashSet;
  * @since OME2.1
  */
 public class ControlPanel extends JFrame implements ListSelectionListener, 
-	MouseListener {
+	MouseListener, ChainSelectionEventListener {
 	
 	protected JLabel statusLabel;
 	protected JPanel panel;
@@ -98,7 +102,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	protected CDataset curDataset;
 	
 	private Controller controller;
-	private Connection connection;
 	
 	private PBrowserCanvas browser;
 	
@@ -110,9 +113,9 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private EventListenerList datasetListeners  =
 		new EventListenerList();
 		
-	private HashSet selectedDatasets = new HashSet();
-	private HashSet deselectedDatasets;
-	private HashSet newSelectedDatasets;
+	private HashSet activeDatasets;
+	private HashSet activeProjects;
+	
 		
 	/**
 	 * 
@@ -121,7 +124,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public ControlPanel(Controller controller,Connection connection) {
 		super("OME Chains: Menu Bar");
 		this.controller = controller;
-		this.connection = connection;
 		Container content = getContentPane();
 		content.setLayout(new BoxLayout(content,BoxLayout.Y_AXIS));
 		
@@ -148,11 +150,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
  		getProjects(connection);
 		projList = new JList(projects);
 		projList.setAlignmentX(Component.LEFT_ALIGNMENT);
-		projList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		projList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		projList.setVisibleRowCount(-1);
 		projList.setLayoutOrientation(JList.VERTICAL);
 		
-		projList.setCellRenderer(new ProjectRenderer());
+		projList.setCellRenderer(new ProjectRenderer(this));
 		projList.addListSelectionListener(this);
 		JScrollPane projScroller = new JScrollPane(projList);
 		projScroller.setMinimumSize(new Dimension(100,200));
@@ -173,12 +175,12 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		datasetPanel.add(Box.createRigidArea(new Dimension(0,3)));
 		datasetList = new JList(datasets);
 		datasetList.setAlignmentX(Component.LEFT_ALIGNMENT);
-		datasetList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		datasetList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		datasetList.setVisibleRowCount(-1);
 		datasetList.setLayoutOrientation(JList.VERTICAL);
 		datasetList.addListSelectionListener(this);
 		datasetList.addMouseListener(this);
-		datasetList.setCellRenderer(new DatasetRenderer());
+		datasetList.setCellRenderer(new DatasetRenderer(this));
 		JScrollPane datasetScroll = new JScrollPane(datasetList);
 		datasetScroll.setMinimumSize(new Dimension(100,200));
 		datasetScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -206,7 +208,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 		setResizable(false);
 		addDatasetSelectionEventListener(browser);
-		addDatasetSelectionEventListener(connection);
 	}
 	
 	private JToolBar buildToolBar() {
@@ -218,7 +219,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		newChainButton = new JButton("New Chain");
 		newChainButton.addActionListener(
 		 controller.getCmdTable().lookupActionListener("new chain"));
-		newChainButton.setEnabled(false);
+		newChainButton.setEnabled(true);
 		tool.add(newChainButton);
 		
 		tool.add(Box.createRigidArea(new Dimension(10,0)));		
@@ -255,12 +256,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		statusLabel.setText(s);
 	}
 	
-	/**
-	 * Set the state of the New chain button
-	 * @param v true if button should be enabled. else false.
-	 */
-	public void setEnabled(boolean v) {
-		newChainButton.setEnabled(v);
+	public void setViewResultsEnabled(boolean v) {
 		viewResultsButton.setEnabled(v);
 	}
 	
@@ -281,7 +277,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void valueChanged(ListSelectionEvent e) {
 		
+		System.err.println("value changed, event "+e);
 		if (reentrant == true) 
+			return;
+		System.err.println("value changed is being processed");
+		if (e.getValueIsAdjusting() == true) 
 			return;
 		Object obj = e.getSource();
 		if (!(obj instanceof JList)) 
@@ -294,127 +294,114 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			updateProjectChoice(item);
 		else if (list == datasetList) 
 			updateDatasetChoice(item);
-		
 	} 
 		
 	public void  updateProjectChoice(Object item) {
-		deselectedDatasets = new HashSet();
-		newSelectedDatasets = new HashSet();
-		setCurProjectDatasetsActive(false);
+		System.err.println("in update project choice");
+		activeDatasets = new HashSet();
+		activeProjects = new HashSet();
 		
 		curProject = (CProject) item;
-		if (curDataset ==null)
-			clearProjectActiveFlags();
 		
-		setCurProjectDatasetsActive(true);
+		setCurProjectDatasetsActive();
+		if (curProject != null) {
+			activeProjects.add(curProject);
+		}
 			
 		int pos = projects.indexOf(curProject);
 		
 		reentrant =true;
 		projList.setSelectedIndex(pos);
-		if (curDataset!= null && !curDataset.isInCurrentProject()) {
+		if (curDataset!= null && 
+			!curProject.getDatasets().contains(curDataset)) {
 			datasetList.clearSelection();
-			clearProjectActiveFlags();
-			clearCurDataset();
+			curDataset = null;
 		}
+		if (curDataset == null)
+			setViewResultsEnabled(false);
 		reentrant =false;
 		datasetList.repaint();
 		projList.repaint();
-		browser.displayDatasets();
-		connection.clearDatasets();
+
 		fireEvents();
-		selectedDatasets.addAll(newSelectedDatasets);
 	}
 	
 	public void updateDatasetChoice(Object item) {
-		deselectedDatasets = new HashSet();
-		newSelectedDatasets = new HashSet();
+		System.err.println("in update dataset choice");
+		activeDatasets = new HashSet();
+		activeProjects = new HashSet();
 		int pos = -1;
-	
-		if (curDataset != null)
-			curDataset.setProjectsActive(false);
+
 			
-		clearCurDataset();
-		
-		if (item != null)
-			setCurDataset((CDataset) item);
-		
-		if (curDataset != null) {
-			curDataset.setProjectsActive(true);
+		curDataset = null;
+		setViewResultsEnabled(false);
+		if (item != null)  {
+			//setCurDataset((CDataset) item);
+			curDataset = (CDataset) item;
+			activeDatasets.add(curDataset);
+			setViewResultsEnabled(true);
+			setCurDatasetProjectsActive();
 			pos = datasets.indexOf(curDataset);
-			System.err.println("selecting dataset "+curDataset.getName());
 		}
+		
 		
 		reentrant =true;
 		datasetList.setSelectedIndex(pos);
-		if (curProject != null && curProject.isInCurrentDataset()==false) {
+		//if (curProject != null && curProject.isActive()==false) {
+		if (curProject != null &&
+			 !curDataset.getProjects().contains(curProject)) {
 			projList.clearSelection();
-			System.err.println("setting current project to nulll..");
 			curProject = null;
-			clearDatasetActiveFlags();
 		}
+		if (curProject != null)
+			setCurProjectDatasetsActive();
 		reentrant =false;
-		
-		//	update the list of executions
-		//connection.setDataset(curDataset);	
 		
 		datasetList.repaint();
 		projList.repaint();
-		connection.clearDatasets();
 		fireEvents();
-		selectedDatasets.addAll(newSelectedDatasets);
-		browser.displayDatasets();
 	}
 	
-	private void clearDatasetActiveFlags() {
-		Iterator iter = datasets.iterator();
-		CDataset d;
-		while (iter.hasNext()) {
-			d = (CDataset) iter.next();
-			d.setInCurrentProject(false);
-		}
+	public HashSet getActiveDatasets() {
+		return activeDatasets;
 	}
 	
-	private void clearProjectActiveFlags() {
-		Iterator iter = projects.iterator();
-		CProject p;
-		while (iter.hasNext()) {
-			p = (CProject) iter.next();
-			p.setInCurrentDataset(false);
-		}
+	public HashSet getActiveProjects() {
+		return activeProjects;
 	}
 	
-	private void setCurProjectDatasetsActive(boolean b) {
+	public CProject getSelectedProject() {
+		return curProject;
+	}
+	
+	public CDataset getSelectedDataset() {
+		return curDataset;
+	}
+	
+	private void setCurProjectDatasetsActive() {
 		if (curProject == null) 
 			return;
 		List d = curProject.getDatasets();
 		Iterator i = d.iterator();
 		while (i.hasNext()) {
 			CDataset ds = (CDataset) i.next();
-			ds.setInCurrentProject(b);
-			addToSelectedDatasets(ds,b);
+			activeDatasets.add(ds);
 		}
 	}
 	
-	private void addToSelectedDatasets(CDataset ds,boolean b) {
-		if (ds == null) return;
-		
-		if (b ==true) {// add to new selection
-			if (selectedDatasets.contains(ds))
-				return; // don't need to add it if we already have it in the list
-			if (deselectedDatasets.contains(ds))
-				deselectedDatasets.remove(ds);
-			newSelectedDatasets.add(ds);
+	private void setCurDatasetProjectsActive() {
+		if (curDataset == null)
+			return;
+		List p = curDataset.getProjects();
+		Iterator iter = p.iterator();
+		while (iter.hasNext()) {
+			CProject proj = (CProject) iter.next();
+			activeProjects.add(proj);
 		}
-		else {// it's begin deselected
-			if (selectedDatasets.contains(ds))
-				selectedDatasets.remove(ds);
-			if (newSelectedDatasets.contains(ds))
-				newSelectedDatasets.remove(ds);
-			deselectedDatasets.add(ds);
-		}		
-	}
 		
+	}
+	
+	
 	// mouse listener so we can handle double-click to deselect from list. 
 	// this isn't terribly efficient, as the current dataset will get deselected 
 	// and reselected, but anything else is too complicated. 
@@ -426,6 +413,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 				CProject tmp = curProject;
 				reentrant = true;
 				datasetList.clearSelection();
+				curDataset = null;
 				reentrant = false;
 				updateProjectChoice(tmp);
 			}
@@ -464,47 +452,47 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			}
 		}
 	}
-	
-	private void clearCurDataset() {
-
-		if (curDataset!=null) { 
-			addToSelectedDatasets(curDataset,false);
-		}
-		curDataset=null;
-	}
-	
-	private void setCurDataset(CDataset c) {
-		if (curProject != null)
-			setCurProjectDatasetsActive(false);
-		curDataset=c;
-		if (curDataset != null) {
-			addToSelectedDatasets(curDataset,true);
-		}	
-	}
-	
+		
 	private void fireEvents() {
-		fireEvents(deselectedDatasets,false);
-		fireEvents(newSelectedDatasets,true);
+		// if no active datasets, do them all.
+		DatasetSelectionEvent e =
+			 new DatasetSelectionEvent(activeDatasets,curDataset);
+		System.err.println("firing events. curDataset is "+curDataset);
+		fireDatasetSelectionEvent(e);	
 	}
 	
-	private void fireEvents(HashSet set,boolean b) {
-		Iterator iter = set.iterator();
-		while (iter.hasNext()) {
-			CDataset d = (CDataset) iter.next();
-			DatasetSelectionEvent e  = new DatasetSelectionEvent(d,b);
-			fireDatasetSelectionEvent(e);
-		}			
+	// we're going to set the datasets to be those that are
+	// associated with the current chain.
+	public void chainSelectionChanged(ChainSelectionEvent e) {
+		
+		CChain chain = e.getChain();
+				
+		if (e.getStatus() == ChainSelectionEvent.SELECTED) {
+			//change active datasets
+			reentrant = true;
+			datasetList.clearSelection();
+			projList.clearSelection();
+			curDataset = null;
+			reentrant = false;
+			projList.clearSelection();
+			activeProjects =null;
+			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
+		}
+		datasetList.repaint();
+		projList.repaint();
 	}
 	
 }
 
 class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	
-	private Font plainFont = new Font(null,Font.PLAIN,10);
+	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
+	private ControlPanel panel;
 	
-	public ProjectRenderer() {
+	public ProjectRenderer(ControlPanel panel) {
 		setOpaque(true);
+		this.panel = panel;
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setVerticalAlignment(SwingConstants.CENTER);
 	}
@@ -514,10 +502,12 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 				boolean cellHasFocus) {
 			CProject p = (CProject) value;
 			
-			if (p.isInCurrentDataset())
-				setFont(activeFont);
-			else
-				setFont(plainFont);
+			setFont(plainFont);
+			if (panel != null) {
+				HashSet active = panel.getActiveProjects();
+				if (active != null && active.contains(p))
+					setFont(activeFont);
+			}
 			if (isSelected) {
 				setBackground(list.getSelectionBackground());
 				setForeground(list.getSelectionForeground());
@@ -533,29 +523,36 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 
 class DatasetRenderer  extends JLabel implements ListCellRenderer {
 	
-	private Font plainFont = new Font(null,Font.PLAIN,10);
+	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
+	private ControlPanel panel;	
 	
-	public DatasetRenderer() {
+	public DatasetRenderer(ControlPanel panel) {
 		setOpaque(true);
+		this.panel = panel;
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setVerticalAlignment(SwingConstants.CENTER);
+		
 	}
 	
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
+					
 			setFont(plainFont);
 			if (value instanceof CDataset) {
 				CDataset d = (CDataset) value;
 				setText(d.getName());
-				if (d.isInCurrentProject()) {
-					setFont(activeFont);
+				if (panel !=null) {
+					HashSet active = panel.getActiveDatasets();
+					if (active != null && active.contains(d))
+						setFont(activeFont);
 				}
 			}
 			else 
 				setText("None");
 			if (isSelected) {
+				System.err.println("in selected dataset");
 				setBackground(list.getSelectionBackground());
 				setForeground(list.getSelectionForeground());
 				setFont(activeFont);
