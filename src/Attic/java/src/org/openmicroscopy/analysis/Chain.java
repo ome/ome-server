@@ -1,0 +1,182 @@
+/*
+ * org.openmicroscopy.analysis.Chain
+ *
+ * Copyright (C) 2002 Open Microscopy Environment, MIT
+ * Author:  Douglas Creager <dcreager@alum.mit.edu>
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package org.openmicroscopy.analysis;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class Chain
+{
+    protected String   owner;  // will change to an Owner class eventually
+    protected String   name;
+    protected boolean  locked;
+    protected List     nodes, links;
+
+    public Chain()
+    {
+        this.nodes = new ArrayList();
+        this.links = new ArrayList();
+    }
+
+    public Chain(String owner, String name, boolean locked)
+    {
+        this.owner = owner;
+        this.name = name;
+        this.locked = locked;
+        this.nodes = new ArrayList();
+        this.links = new ArrayList();
+    }
+
+    public String getOwner() 
+    { return owner; }
+    public void setOwner(String owner)
+    { this.owner = owner; }
+
+    public String getName() 
+    { return name; }
+    public void setName(String name)
+    { this.name = name; }
+
+    public boolean getLocked() 
+    { return locked; }
+    public void setLocked(boolean locked)
+    { this.locked = locked; }
+
+
+    public int getNumNodes()
+    { return nodes.size(); }
+    public Node getNode(int index)
+    { return (Node) nodes.get(index); }
+    public Iterator getNodeIterator()
+    { return nodes.iterator(); }
+    public List getNodes() { return nodes; }
+
+    public Node addNode(Module module,
+                        String iteratorTag,
+                        String newFeatureTag)
+    {
+        Node node;
+
+        nodes.add(node = new Node(module,iteratorTag,newFeatureTag));
+        return node;
+    }
+
+
+    public int getNumLinks()
+    { return links.size(); }
+    public Link getLink(int index)
+    { return (Link) links.get(index); }
+    public Iterator getLinkIterator()
+    { return links.iterator(); }
+    public List getLinks() { return links; }
+
+    public Link addLink(Node                fromNode,
+                        Module.FormalOutput fromOutput,
+                        Node                toNode,
+                        Module.FormalInput  toInput)
+    {
+        Link link;
+
+        links.add(link = new Link(fromNode,fromOutput,toNode,toInput));
+        return link;
+    }
+
+    
+    public class Node
+    {
+        protected Module  module;
+        protected String  iteratorTag, newFeatureTag;
+
+        public Node() {}
+
+        public Node(Module module,
+                    String iteratorTag,
+                    String newFeatureTag)
+        {
+            this.module = module;
+            this.iteratorTag = iteratorTag;
+            this.newFeatureTag = newFeatureTag;
+        }
+
+        public Chain getChain() { return Chain.this; }
+
+        public Module getModule() 
+        { return module; }
+        public void setModule(Module module)
+        { this.module = module; }
+
+        public String getIteratorTag() 
+        { return iteratorTag; }
+        public void setIteratorTag(String iteratorTag)
+        { this.iteratorTag = iteratorTag; }
+
+        public String getNewFeatureTag() 
+        { return newFeatureTag; }
+        public void setNewFeatureTag(String newFeatureTag)
+        { this.newFeatureTag = newFeatureTag; }
+    }
+
+
+    public class Link
+    {
+        protected Node                 fromNode;
+        protected Module.FormalOutput  fromOutput;
+        protected Node                 toNode;
+        protected Module.FormalInput   toInput;
+
+        public Link() {}
+
+        public Link(Node                fromNode,
+                    Module.FormalOutput fromOutput,
+                    Node                toNode,
+                    Module.FormalInput  toInput)
+        {
+            this.fromNode = fromNode;
+            this.fromOutput = fromOutput;
+            this.toNode = toNode;
+            this.toInput = toInput;
+        }
+
+        public Chain getChain() { return Chain.this; }
+
+        public Node getFromNode() 
+        { return fromNode; }
+        public void setFromNode(Node fromNode)
+        { this.fromNode = fromNode; }
+
+        public Module.FormalOutput getFromOutput() 
+        { return fromOutput; }
+        public void setFromOutput(Module.FormalOutput fromOutput)
+        { this.fromOutput = fromOutput; }
+
+        public Node getToNode() 
+        { return toNode; }
+        public void setToNode(Node toNode)
+        { this.toNode = toNode; }
+
+        public Module.FormalInput getToInput() 
+        { return toInput; }
+        public void setToInput(Module.FormalInput toInput)
+        { this.toInput = toInput; }
+    }
+}
