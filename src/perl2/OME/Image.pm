@@ -45,11 +45,11 @@ __PACKAGE__->sequence('image_seq');
 __PACKAGE__->columns(Primary => qw(image_id));
 __PACKAGE__->columns(Essential => qw(image_guid file_sha1 name path image_type));
 __PACKAGE__->columns(Others => qw(created inserted description));
-__PACKAGE__->hasa(OME::Instrument => qw(instrument_id));
-__PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
-__PACKAGE__->hasa(OME::Repository => qw(repository_id));
-__PACKAGE__->hasa(OME::Group => qw(group_id));
-__PACKAGE__->has_many('dataset_links',OME::Image::DatasetMap => qw(image_id));
+__PACKAGE__->hasa('OME::Instrument' => qw(instrument_id));
+__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+__PACKAGE__->hasa('OME::Repository' => qw(repository_id));
+__PACKAGE__->hasa('OME::Group' => qw(group_id));
+__PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 
 
 sub _init {
@@ -161,7 +161,7 @@ __PACKAGE__->columns(Essential => qw(size_x size_y size_z
 				     bits_per_pixel));
 __PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
 				  wave_increment time_increment)); 
-__PACKAGE__->hasa(OME::Image => qw(image_id));
+__PACKAGE__->hasa('OME::Image' => qw(image_id));
 
 
 
@@ -222,8 +222,8 @@ __PACKAGE__->AccessorNames({
 
 __PACKAGE__->table('image_dataset_map');
 __PACKAGE__->columns(Essential => qw(image_id dataset_id));
-__PACKAGE__->hasa(OME::Image => qw(image_id));
-__PACKAGE__->hasa(OME::Dataset => qw(dataset_id));
+__PACKAGE__->hasa('OME::Image' => qw(image_id));
+__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 
 
 

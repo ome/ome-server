@@ -30,7 +30,7 @@ __PACKAGE__->table('lookup_tables');
 __PACKAGE__->sequence('lookup_table_seq');
 __PACKAGE__->columns(Primary => qw(lookup_table_id));
 __PACKAGE__->columns(Essential => qw(name description));
-__PACKAGE__->has_many('entries',OME::LookupTable::Entry => qw(lookup_table_id));
+__PACKAGE__->has_many('entries','OME::LookupTable::Entry' => qw(lookup_table_id));
 
 
 
@@ -51,6 +51,7 @@ __PACKAGE__->table('lookup_table_entries');
 __PACKAGE__->sequence('lookup_table_entry_seq');
 __PACKAGE__->columns(Primary => qw(lookup_table_entry_id));
 __PACKAGE__->columns(Essential => qw(value label lookup_table_id));
+__PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
 
 
 

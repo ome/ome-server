@@ -36,11 +36,11 @@ __PACKAGE__->table('analyses');
 __PACKAGE__->sequence('analysis_seq');
 __PACKAGE__->columns(Primary => qw(analysis_id));
 __PACKAGE__->columns(Timing => qw(run_start_time run_end_time));
-__PACKAGE__->hasa(OME::Program => qw(program_id));
-__PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
-__PACKAGE__->hasa(OME::Dataset => qw(dataset_id));
-__PACKAGE__->has_many('inputs',OME::Analysis::ActualInput => qw(analysis_id));
-__PACKAGE__->has_many('outputs',OME::Analysis::ActualOutput => qw(analysis_id));
+__PACKAGE__->hasa('OME::Program' => qw(program_id));
+__PACKAGE__->hasa('OME::Experimenter' => qw(experimenter_id));
+__PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
+__PACKAGE__->has_many('inputs','OME::Analysis::ActualInput' => qw(analysis_id));
+__PACKAGE__->has_many('outputs','OME::Analysis::ActualOutput' => qw(analysis_id));
 
 
 #    { $FormalInput => { attribute => $Attribute } }
@@ -74,7 +74,7 @@ sub performAnalysis {
 	    # pull in all of the appropriate outputs.
 	    my $analysis = $param->{analysis};
 	    my $formalOutput = $param->{output};
-	    my $actualOutputs = $analyis->outputs();
+	    my $actualOutputs = $analysis->outputs();
 	    my $outputsByImage = {};
 
 	    while (my $output = $actualOutputs->next()) {
@@ -190,8 +190,8 @@ __PACKAGE__->table('actual_inputs');
 __PACKAGE__->sequence('actual_input_seq');
 __PACKAGE__->columns(Primary => qw(actual_input_id));
 __PACKAGE__->columns(Essential => qw(attribute_id));
-__PACKAGE__->hasa(OME::Analysis => qw(analysis_id));
-__PACKAGE__->hasa(OME::Program::FormalInput => qw(formal_input_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+__PACKAGE__->hasa('OME::Program::FormalInput' => qw(formal_input_id));
 
 
 
@@ -245,8 +245,8 @@ __PACKAGE__->table('actual_outputs');
 __PACKAGE__->sequence('actual_output_seq');
 __PACKAGE__->columns(Primary => qw(actual_output_id));
 __PACKAGE__->columns(Essential => qw(attribute_id));
-__PACKAGE__->hasa(OME::Analysis => qw(analysis_id));
-__PACKAGE__->hasa(OME::Program::FormalOutput => qw(formal_output_id));
+__PACKAGE__->hasa('OME::Analysis' => qw(analysis_id));
+__PACKAGE__->hasa('OME::Program::FormalOutput' => qw(formal_output_id));
 
 
 sub attribute {

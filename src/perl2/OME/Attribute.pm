@@ -32,3 +32,4 @@ use base qw(OME::DBObject);
 # responsible for creating a dynamic subclass of OME::Attribute for
 # each row in the datatypes table.
 
+1;

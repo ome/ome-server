@@ -33,7 +33,7 @@ __PACKAGE__->table('datatypes');
 __PACKAGE__->sequence('datatype_seq');
 __PACKAGE__->columns(Primary => qw(datatype_id));
 __PACKAGE__->columns(Essential => qw(table_name description attribute_type));
-__PACKAGE__->has_many('db_columns',OME::DataType::Column => qw(datatype_id));
+__PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id));
 
 # These triggers ensure that the appropriate OME::Attribute subclass
 # definition is evaluated when a data type is loaded from the
@@ -113,7 +113,7 @@ __PACKAGE__->table('datatype_columns');
 __PACKAGE__->sequence('datatype_column_seq');
 __PACKAGE__->columns(Primary => qw(datatype_column_id));
 __PACKAGE__->columns(Essential => qw(column_name reference_type));
-__PACKAGE__->hasa(OME::DataType => qw(datatype_id));
+__PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
     
 
 1;

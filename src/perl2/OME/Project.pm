@@ -35,9 +35,9 @@ __PACKAGE__->table('projects');
 __PACKAGE__->sequence('project_seq');
 __PACKAGE__->columns(Primary => qw(project_id));
 __PACKAGE__->columns(Essential => qw(name description));
-__PACKAGE__->has_many('datasets',OME::Dataset => qw(project_id));
-__PACKAGE__->hasa(OME::Experimenter => qw(owner_id));
-__PACKAGE__->hasa(OME::Group => qw(group_id));
+#__PACKAGE__->has_many('datasets','OME::Dataset' => qw(project_id));
+__PACKAGE__->hasa('OME::Experimenter' => qw(owner_id));
+__PACKAGE__->hasa('OME::Group' => qw(group_id));
 
 
 1;

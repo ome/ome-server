@@ -31,9 +31,9 @@ __PACKAGE__->sequence('program_seq');
 __PACKAGE__->columns(Primary => qw(program_id));
 __PACKAGE__->columns(Essential => qw(program_name description category));
 __PACKAGE__->columns(Definition => qw(module_type location));
-__PACKAGE__->has_many('inputs',OME::Program::FormalInput => qw(program_id));
-__PACKAGE__->has_many('outputs',OME::Program::FormalOutput => qw(program_id));
-__PACKAGE__->has_many('analyses',OME::Analysis => qw(program_id));
+__PACKAGE__->has_many('inputs','OME::Program::FormalInput' => qw(program_id));
+__PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
+__PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
 
 
 # performAnalysis(parameters,dataset)
@@ -69,12 +69,13 @@ sub performAnalysis {
 package OME::Program::FormalInput;
 
 use strict;
-use $VERSION = '1.0';
+our $VERSION = '1.0';
 
 use OME::DBObject;
+use OME::DataType;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorName({
+__PACKAGE__->AccessorNames({
     program_id      => 'program',
     lookup_table_id => 'lookup_table'
     });
@@ -83,21 +84,21 @@ __PACKAGE__->table('formal_inputs');
 __PACKAGE__->sequence('formal_input_seq');
 __PACKAGE__->columns(Primary => qw(formal_input_id));
 __PACKAGE__->columns(Essential => qw(program_id name column_type));
-__PACKAGE__->hasa(OME::Program => qw(program_id));
-__PACKAGE__->hasa(OME::LookupTable => qw(lookup_table_id));
-__PACKAGE__->hasa(OME::DataType::Column => qw(column_type));
+__PACKAGE__->hasa('OME::Program' => qw(program_id));
+__PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));
+__PACKAGE__->hasa('OME::DataType::Column' => qw(column_type));
                      
 
 
 package OME::Program::FormalOutput;
 
 use strict;
-use $VERSION = '1.0';
+our $VERSION = '1.0';
 
 use OME::DBObject;
 use base qw(OME::DBObject);
 
-__PACKAGE__->AccessorName({
+__PACKAGE__->AccessorNames({
     program_id      => 'program'
     });
 
@@ -105,7 +106,7 @@ __PACKAGE__->table('formal_outputs');
 __PACKAGE__->sequence('formal_output_seq');
 __PACKAGE__->columns(Primary => qw(formal_output_id));
 __PACKAGE__->columns(Essential => qw(program_id name column_type));
-__PACKAGE__->hasa(OME::Program => qw(program_id));
+__PACKAGE__->hasa('OME::Program' => qw(program_id));
                      
 
 
