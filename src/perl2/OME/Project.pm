@@ -72,11 +72,19 @@ __PACKAGE__->hasMany('dataset_links','OME::Project::DatasetMap','project');
 
 
 # Added by IGG to restore the datasets() method.
+# FIXME:  Please remove when hasMany gets supported.
 sub datasets {
 	my $self = shift;
-	return $self->Session()->Factory()->findObjects("OME::Project::DatasetMap",
+	my $factory = $self->Session()->Factory();
+	my @projectDatasets = $factory->findObjects("OME::Project::DatasetMap",
 				 project_id => $self->ID()
 				);
+	my @datasets;
+	foreach (@projectDatasets) {
+		push (@datasets,$factory->loadObject ('OME::Dataset',$_->dataset_id()) );
+	} 
+	return @datasets;
+	
 }
 
 sub unlockedDatasets {
