@@ -50,6 +50,9 @@ use constant WINDOWS => 6;
 # The ID of the platform we're running on (set in initialize ()).
 my $platform = 0;
 
+# Default OME user/group
+my $OMEName = "ome";
+
 # The singleton instance.
 my $soleInstance = undef;
 
@@ -81,10 +84,14 @@ $os_specific[LINUX] = (
 	    return $macAddr;
 	},
 	adduser => sub {
-	    my ($user, $homedir) = @_;
+	    my ($user, $homedir, $group) = @_;
 
-	    my @out = `/usr/sbin/useradd -d $homedir -s /bin/false -c \"Open Microscopy Environment User\" $user`;
-	    return $? ? 0 : 1;
+	    return system("/usr/sbin/useradd -d $homedir -g $group -s /bin/false $user -c \"OME User\"") == 0 ? 1 : 0;
+	},
+	addgroup => sub {
+	    my $group = shift;
+
+	    return system ("/usr/sbin/groupadd $group") == 0 ? 1 : 0;
 	}
     }
 );
@@ -361,7 +368,7 @@ sub apacheUser {
     my $user;
 
     # Grab our Apache user from the password file
-    open (PW_FILE, "<", "/etc/passwd") or croak ("Couldn't open /etc/passwd ", $!, ".\n");
+    open (PW_FILE, "<", "/etc/passwd") or croak ("Couldn't open /etc/passwd ", $!, "\n");
     while (<PW_FILE>) {
 	chomp;
 	$user = (split ":")[0];
@@ -386,19 +393,24 @@ sub apacheUser {
 }
 
 sub OMEUser {
-    my ($self, $user) = @_;
+    my $self = shift;
 
-    if ($user) { $self->{OMEUser} = $user }
-
-    return $self->{OMEUser} or undef;
+    carp "Shouldn't be using this.";
+    return undef;
 }
 
 sub adduser {
-    my ($self, $user, $homedir) = @_;
+    my ($self, $user, $homedir, $group) = @_;
     my $adduser = $os_specific[$platform]->{adduser};
 
-    return &$adduser($user, $homedir);
+    return &$adduser($user, $homedir, $group);
 }
 
+sub addgroup {
+    my ($self, $group) = @_;
+    my $groupadd = $os_specific[$platform]->{addgroup};
+
+    return &$groupadd($group);
+}
 
 1;
