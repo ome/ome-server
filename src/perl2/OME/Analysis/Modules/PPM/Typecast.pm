@@ -130,10 +130,10 @@ sub execute {
 			# check that the Formal Input's Parent has a corresponding 
 			# formal output
 			die "Formal input '".$formal_input->name()."' of module '".
-			    $module->name()." PPM inherits from semantic type '".
+			    $module->name()."' PPM inherits from semantic type '".
 			    $parent->semantic_type()->name(). "' which does not correspond ".
 			   "to the ST of any of the module's formal outputs."
-				if grep(
+				unless grep(
 					$_->semantic_type()->id() eq $parent->semantic_type()->id(),
 					@formal_outputs
 				);
