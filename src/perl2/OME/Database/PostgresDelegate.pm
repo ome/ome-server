@@ -184,6 +184,13 @@ use constant FIND_PRIMARY_KEY_SQL => <<SQL;
      AND indisprimary
 SQL
 
+# $dbh->selectcol_arrayref($sth,$table_oid)
+use constant FIND_TABLE_INDEX_NAMES_SQL => <<SQL;
+  SELECT pg_get_indexdef(indexrelid)
+    FROM pg_index
+   WHERE indrelid = ?
+SQL
+
 sub __collectSQLOptions ($$) {
     my ($columns,$aliases) = @_;
     my ($sql_type,$default,$not_null,$unique,$references,$indexed);
@@ -281,25 +288,60 @@ sub __createIndex {
         $index_sequence_created = 1;
     }
 
-    my $index_name;
-    my $index_good = 0;
-
     my $find_relation = $dbh->prepare_cached(FIND_RELATION_SQL);
+    my $find_index_names = $dbh->prepare_cached(FIND_TABLE_INDEX_NAMES_SQL);
+    
+    my ($reloid)  = $dbh->selectrow_array($find_relation,{},$table);
 
-    until ($index_good) {
-        my $index_number = $self->
-          getNextSequenceValue($dbh,INDEX_SEQUENCE_NAME());
-        $index_name = "OME__INDEX_".$index_number;
-
-        my ($reloid,$relkind) =
-          $dbh->selectrow_array($find_relation,{},$index_name);
-
-        $index_good = !defined $relkind;
+    # Get all indexes for this table/column.
+    my $hasindex = 0;
+    my $indexes = $dbh->selectcol_arrayref ($find_index_names,{},$reloid);
+    my ($ome_idx,$sys_idx);
+    my %extra_indexes;
+    foreach my $index (@$indexes) {
+        if ($index =~ /INDEX\s+(\S+)\s+ON\s+(\S+)[^(]+\(([^)]+)/i) {
+            my ($idx_name,$idx_table,$idx_col) = ($1,$2,$3);
+            if ( lc($idx_table) eq lc($table) and lc($idx_col) eq lc ($column) ) {
+                if ($idx_name =~ /^OME__INDEX_\d+$/i) {
+                    # We're going to drop all but one ome index for this column
+                    $extra_indexes {$idx_name} = $idx_name if $ome_idx or $sys_idx;
+                    $ome_idx = $idx_name unless $ome_idx;
+                } else {
+                    # This is a system index for this column (not one we made explicitly)
+                    # We're going to keep all of these, but if we have at least one, we're
+                    # dropping the ome index
+                    $sys_idx = $idx_name;
+                    $extra_indexes {$ome_idx} = $ome_idx;
+                }
+            }
+        }
     }
+    
+    if (not ($ome_idx or $sys_idx)) {    
+        my $index_name;
+        my $index_good = 0;
 
-    my $sql = "CREATE INDEX $index_name ON $table ($column)";
-    $dbh->do($sql)
-      or die "Could not create index of ${table}.${column}";
+        until ($index_good) {
+            my $index_number = $self->
+              getNextSequenceValue($dbh,INDEX_SEQUENCE_NAME());
+            $index_name = "OME__INDEX_".$index_number;
+    
+            my ($reloid,$relkind) =
+              $dbh->selectrow_array($find_relation,{},$index_name);
+    
+            $index_good = !defined $relkind;
+        }
+    
+        my $sql = "CREATE INDEX $index_name ON $table ($column)";
+        $dbh->do($sql)
+          or die "Could not create index of ${table}.${column}";
+    } else {
+        foreach my $idx_name (keys %extra_indexes) {
+            my $sql = "DROP INDEX $idx_name";
+            $dbh->do($sql)
+              or die "Could not drop index $idx_name of ${table}.${column}";
+        }
+    }
 }
 
 sub addClassToDatabase {
