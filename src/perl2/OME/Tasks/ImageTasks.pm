@@ -42,10 +42,15 @@ use OME::Dataset;
 use OME::Image;
 use OME::ImportExport::Importer;
 use OME::ImportExport::Exporter;
+use OME::Analysis::Engine;
+use OME::ImportEngine::ImportEngine;
+use OME::Tasks::PixelsManager;
+use OME::Image::Server::File;
+
 use OME::Project;
 use IO::File;
 use Carp;
-
+use Log::Agent;
 
 # addImagesToDataset(dataset, images)
 # -----------------------------------
@@ -88,74 +93,47 @@ sub addImagesToDataset ($$$) {
 }
 
 
-# removeWeirdCharacter(hash)
-# --------------------------
-# By weird, I mean the null character currently.  Ensures that the
-# input from an image file won't trash the Postgres DBI driver (which
-# a null character in the input string will do).
+=head2 importFiles($repository, @filenames)
+or importFiles(@filenames)
 
-sub removeWeirdCharacters {
-	my $hash = shift;
-	my $anyRemoved = 0;
+Imports the selected files into OME. 
+Returns 
 
-	foreach my $key (keys(%$hash)) {
-		my $value = $hash->{$key};
-		if (!ref($value)) {
-			my $replaced = ($value =~ s/[\x00]//g);
-			$hash->{$key} = $value;
-			print STDERR "	 $key $replaced\n";
-			$anyRemoved = $replaced if $replaced;
-		}
-	}
-
-	return $anyRemoved;
-}
-
-
-# importFiles(session,project,filenames)
-# --------------------------------------
-# Imports the selected files into OME.	The session is used to
-# interact with the database, and all of the images are assigned to
-# the given project.
-
+=cut
 sub importFiles {
-	my ($session,$dataset,$filenames, $switch) = @_;
-	my $importer;
-	my $fn_groups;
-	my $status = "Failed import";
-
-	return $status	unless
-		(defined $session) &&
-		(defined $dataset)	  &&
-		(defined $filenames);
-
-	$status = "";
-
-	$importer = OME::ImportExport::Importer->new($filenames, $session);
-	$fn_groups = $importer->{fn_groups};
-	carp "No files to import"
-	unless scalar @$fn_groups > 0;
-
-	foreach $image_group_ref (@$fn_groups) {
-		$importer->import_image($dataset, $image_group_ref, $switch);
-		if ($importer->{did_import}) {
-			$session->commitTransaction();
-		}
-		else {
-			$status = "Failed to import at least one image";
-		}
+	my ($repository, @filenames) = @_;
+	my $session = OME::Session->instance();
+	my $factory = $session->Factory();
+	
+	unless( ref($repository) and $repository->verifyType('Repository') ) {
+		unshift( @filenames, $repository);
+		$repository = $factory->findAttribute('Repository', IsLocal => 0)
+			or die "could not find a remote repository to work with";
 	}
 
-	# could test here - if either any or all imports failed,
-	# don't write dataset record to db.
-	$dataset->storeObject();
-    $session->commitTransaction();
+    OME::Tasks::PixelsManager->activateRepository($repository);
+	my @files;
+	push( @files, OME::Image::Server::File->upload($_) )
+		foreach ( @filenames );
+	# FIXME: split @files into two groups: xml files & proprietary
 
-    $importer->finish();
+	my %opts;
+	$opts{AllowDuplicates} = 1;
+	
+	my $chain = $factory->findObject('OME::AnalysisChain', name => 'Image server stats');
 
-	return $status;
+	my $importer = OME::ImportEngine::ImportEngine->new(%opts);
+	my ($dataset,$global_mex) = $importer->startImport();
+	my $image_list = $importer->importFiles( \@files );
+	$importer->finishImport();
+	
+	OME::Analysis::Engine->executeChain($chain,$dataset,{});
 
-
+	logdbg "debug", "\n\nSuccessfully imported images:\n";
+    logdbg "debug", $_->id(),": ",$_->name(),"\n"
+    	foreach (@$image_list);
+    
+    return $image_list;
 }
 
 
