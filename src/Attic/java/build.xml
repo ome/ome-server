@@ -8,6 +8,7 @@
   <property name="privapidocs" value="docs/privapi"/>
   <property name="distzip" value="ome.zip"/>
   <property name="jar" value="jar"/>
+  <property name="deprecation" value="yes"/>
 
   <target name="init">
     <tstamp/>
@@ -28,8 +29,14 @@
   <target name="compile" depends="init">
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}"
-	   classpath="${lib}/piccolo.jar;${lib}/piccolox.jar;${lib}/xmlrpc-1.2-b1.jar" 
-	   destdir="${build}" deprecation="yes"/>
+	       destdir="${build}"
+           deprecation="${deprecation}">
+      <classpath>
+        <fileset dir="${lib}">
+          <include name="**/*.jar"/>
+        </fileset>
+      </classpath>
+    </javac>
   </target>
 
   <target name="apidocs">
