@@ -241,7 +241,7 @@ sub getTable {
 		$end_form || '',
 	);
 
-	return $table . ($options_table || '');
+	return ($options_table || '') . $table . ($options_table || '');
 }
 
 
