@@ -73,6 +73,16 @@ public class SelectionState {
 	// listener lists
 	private EventListenerList selectionListeners = new EventListenerList();
 	
+	
+	// singleton
+	private static SelectionState singletonState=null;
+	
+	public static SelectionState getState() {
+		if (singletonState == null)
+			singletonState = new SelectionState();
+		return singletonState;
+	}
+	
 	public SelectionState() {
 		
 	}
@@ -104,6 +114,7 @@ public class SelectionState {
 			currentProject = null;
 		}
 		else {
+			System.err.println("setting chain to .."+currentChain.getName());
 			activeDatasets = newChain.getDatasetsWithExecutions();
 			activeProjects = null;
 			if (currentDataset!= null) {
@@ -155,6 +166,11 @@ public class SelectionState {
 	// DATASETS
 	
 	public void setSelectedDataset(CDataset current) {
+		doSetSelectedDataset(current);
+		fireSelectionEvent();
+	}
+	
+	private void doSetSelectedDataset(CDataset current) {
 		currentDataset = current;
 		if (currentDataset != null) {
 			activeProjects = currentDataset.getProjects();
@@ -163,6 +179,7 @@ public class SelectionState {
 		}
 	    else {
 	    	activeProjects = null;
+	    	currentChain = null;
 	    	
 	    }
     	if (currentProject!=null) {
@@ -178,6 +195,12 @@ public class SelectionState {
     	
     	}
 	   	//chains with executions are selected.
+		fireSelectionEvent();
+	}
+	
+	public void setSelected(CChain chain,CDataset dataset) {
+		doSetSelectedDataset(dataset);
+		currentChain = chain;
 		fireSelectionEvent();
 	}
 
