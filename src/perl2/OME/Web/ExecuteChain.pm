@@ -73,6 +73,9 @@ sub getPageBody {
 		my $user_input_list = $cmanager->getUserInputs($chain);		
 		return ('HTML', $self->collect_user_inputs( $chain ) ) if ( scalar @$user_input_list );
 		
+		return ('HTML', "Cannot execute without a dataset selected" )
+			unless $session->dataset();
+		
 		# execute chain
 		my $analysis_chain_execution = OME::Analysis::Engine->
           executeChain($chain,$session->dataset,{})
