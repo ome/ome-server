@@ -73,7 +73,7 @@ int DoThumb (OID ID, FILE *thumbnail, ome_dim sizeX, ome_dim sizeY) {
         memset(&composite, 0, sizeof(CompositeSpec));
 
         if (!(composite.thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-            if (errno) HTTP_DoError ("DoThumb",strerror( errno ) );
+            if (errno) HTTP_DoError ("DoThumb", "%s", strerror( errno ) );
             else  HTTP_DoError ("DoThumb","Access control error - check error log for details" );
             return (-1);
         }
@@ -332,7 +332,7 @@ Mapping m;
 	/*
 	  The following is pretty much straight out of zoom_main.c
 	*/
-	if (ome_win.x0==PIC_UNDEFINED) pic_get_window(ome_pic, (Window *)&ome_win);
+	if (ome_win.x0==PIC_UNDEFINED) pic_get_window(ome_pic, (void *)&ome_win);
 	/*
 	 * nx and ny uninitialized at this point
 	 */
