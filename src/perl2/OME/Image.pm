@@ -192,16 +192,16 @@ sub closeFile {
 
 
 # for now, a very simple implementation
-
+# WARNING: USES DEPRICATED LOGIC!
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
  
-    return $self->GetPix->GetROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
+    return $self->GetPix( $self->DefaultPixels() )->GetROI ($xx1,$yy1,$zz1,$ww1,$tt1,$xx2,$yy2,$zz2,$ww2,$tt2)
         || die ref($self)."->GetPixels:  Could not read pixels\n";
 }
 
 # gets the pixels as an multi-dimensional array of ints
-
+# WARNING: USES DEPRICATED LOGIC!
 sub GetPixelArray {
     my ($self,$x1,$x2,$y1,$y2,$z1,$z2,$w1,$w2,$t1,$t2) = @_;
     my $pixels = $self->GetPixels($x1,$x2,$y1,$y2,$z1,$z2,$w1,$w2,$t1,$t2);
