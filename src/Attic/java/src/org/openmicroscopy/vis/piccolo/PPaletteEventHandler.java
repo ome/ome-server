@@ -42,6 +42,7 @@
 
 package org.openmicroscopy.vis.piccolo;
 
+import org.openmicroscopy.vis.ome.CModule;
 import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
@@ -77,6 +78,16 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	 */
 	protected int allButtonMask = MouseEvent.BUTTON1_MASK;
 	
+	/**
+	 * A flag that is set immediately after a popup event
+	 * 
+	 */
+	private boolean postPopup = false;
+
+	/** 
+	 * The last ome module that was highlighted (from the jTree
+	 */
+	private CModule lastModule;
 	
 	public PPaletteEventHandler(PPaletteCanvas canvas) {
 		super();
@@ -93,6 +104,11 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	 * 
 	 */
 	public void mousePressed(PInputEvent e) {
+		
+		if (e.isPopupTrigger()) {
+			handlePopup(e);
+			return;
+		}
 		PNode node = e.getPickedNode();
 		if (node instanceof PModule || node instanceof PFormalParameter) {
 			PModule p;
@@ -108,19 +124,30 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 		}
 	}
 	
+
 	/**
 	 * If the mouse is clicked on a buffered node (either a 
 	 * {@link PCategoryBox}, or a {@link PModule}, zoom to center it.
 	 * If the mouse is clicked on the layer or on the {@link PCamera},
-	 * zoom to center the entire canvas
+	 * zoom to center the entire canvas.
+	 * 
+	 * If we right click, zoom out to the parent of where we clicked.
 	 */
 	public void mouseClicked(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		int mask = e.getModifiers() & allButtonMask;
 		
+		if (postPopup == true) {
+			postPopup = false;
+			e.setHandled(true);
+			return;
+		}
 		if (mask == MouseEvent.BUTTON1_MASK && e.getClickCount() == 1) {
-			
-			if (node instanceof PBufferedNode) {
+		
+			if (e.isControlDown()) {
+				handlePopup(e);	
+			}
+			else if (node instanceof PBufferedNode) {
 				PBufferedNode cBox = (PBufferedNode) node;				
 				PBounds b = cBox.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
@@ -135,8 +162,11 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			}
 			else
 				super.mouseClicked(e);
+		} 
+		else if (e.isControlDown() || (mask & MouseEvent.BUTTON3_MASK)==1) {
+			handlePopup(e);
 		}
-		else 
+		else
 			super.mouseClicked(e);
 	}
 	
@@ -144,8 +174,14 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	 * Clear the selection of the current when the mouse is released. 
 	 */
 	public void mouseReleased(PInputEvent e) {
-		canvas.setSelected(null);
-		super.mouseReleased(e);
+		if (e.isPopupTrigger()) {
+			System.err.println("mouse released");
+			handlePopup(e);
+		}
+		else {
+			canvas.setSelected(null);
+			super.mouseReleased(e);
+		}
 	}
 	
 	public void mouseDragged(PInputEvent e) {
@@ -169,16 +205,14 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 	 */
 	public void mouseEntered(PInputEvent e) {
 		PNode node = e.getPickedNode();
-	
-		if (lastEntered != null) {
-			lastEntered.setParamsHighlighted(false);
-		}
-	
+		
+		unhighlightModules();
 		if (node instanceof PFormalParameter) {
 			PFormalParameter param = (PFormalParameter) node;
 			param.setParamsHighlighted(true);
 			PModule pmod = param.getPModule();
 			pmod.setModulesHighlighted(true);
+			canvas.setTreeSelection((CModule)pmod.getModule());
 			e.setHandled(true);
 		}
 		
@@ -187,8 +221,10 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			pmod.setAllHighlights(true);
 			e.setHandled(true);
 			lastEntered = pmod;
+			canvas.setTreeSelection((CModule)pmod.getModule());
 		}
 		else {
+			canvas.clearTreeSelection();
 			super.mouseEntered(e);
 		}
 	}
@@ -217,8 +253,49 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 			pmod.setAllHighlights(false);
 			e.setHandled(true);
 			lastEntered = null;
+			canvas.clearTreeSelection();
 		}
 		else
 			super.mouseExited(e);
 	}
+	
+	/***
+	 * Zoom out to the parent of the current node when we get a popup
+	 */
+	private void handlePopup(PInputEvent e) {
+		System.err.println("handling a popup on palette");
+		postPopup = true;
+		PNode node = e.getPickedNode();
+		PNode p = node.getParent();
+		System.err.println("parent of node clicked on "+p);
+		if (p instanceof PBufferedNode) {
+			PBufferedNode bn=(PBufferedNode) p;
+			PBounds b = bn.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
+		} else if (p instanceof PCamera || p == canvas.getLayer() ||
+					node instanceof PCamera || node == canvas.getLayer()) {
+			PBounds b = canvas.getBufferedBounds();
+			PCamera camera = canvas.getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+		}
+		e.setHandled(true);
+	}
+	
+	public void unhighlightModules() {
+		if (lastEntered != null) {
+			lastEntered.setParamsHighlighted(false);
+		}
+		if (lastModule != null) {
+			lastModule.setModulesHighlighted(false);	
+			lastEntered = null;
+		}
+	}
+	
+	public void highlightModules(CModule module) {
+		unhighlightModules();
+		lastModule=module;
+		lastModule.setModulesHighlighted(true);
+	}
+	
  }
