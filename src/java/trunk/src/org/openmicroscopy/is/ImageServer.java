@@ -606,7 +606,38 @@ public abstract class ImageServer
         throws ImageServerException;
 
     /**
-     * Returns a thumbnail for the specified image.
+     * Composites a single plane of a multi-channel image into a
+     * grayscale or RGB image, according to the state of the
+     * <code>settings</code> parameter.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param settings a {@link CompositingSettings} object describing
+     * the compositing which should be performed
+     * @return an AWT {@link Image} suitable for display
+     */
+    public abstract Image getComposite(long pixelsID,
+                                       CompositingSettings settings)
+        throws ImageServerException;
+
+    /**
+     * Saves the specified compositing settings as a default.  This
+     * allows the {@link #getThumbnail} method to be used to quickly
+     * retrieve a standard compositing for an image.
+     *
+     * @param pixelsID the pixels ID of a previously created pixels
+     * file
+     * @param settings a {@link CompositingSettings} object describing
+     * the compositing which should be saved
+     */
+    public abstract void setThumbnail(long pixelsID,
+                                      CompositingSettings settings)
+        throws ImageServerException;
+
+    /**
+     * Returns a thumbnail for the specified image.  This thumbnail
+     * must have been previously set by the {@link #setThumbnail}
+     * method.
      *
      * @param pixelsID the pixels ID of a previously created pixels
      * file

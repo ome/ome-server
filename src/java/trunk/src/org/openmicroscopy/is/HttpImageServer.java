@@ -157,6 +157,31 @@ public class HttpImageServer
     }
 
     /**
+     * Helper method -- adds all of the parameters specified by the
+     * given {@link CompositingSettings} to the parameters of the
+     * given HTTP post.
+     */
+    private void addCompositingSettings(MultipartPostMethod post,
+                                        CompositingSettings settings)
+    {
+        post.addParameter("theZ",Integer.toString(settings.getTheZ()));
+        post.addParameter("theT",Integer.toString(settings.getTheT()));
+        post.addParameter("LevelBasis",settings.getLevelBasisSpec());
+
+        if (settings.isResized())
+            post.addParameter("Size",settings.getSizeSpec());
+
+        if (settings.isGrayChannelOn())
+            post.addParameter("GrayChannel",settings.getGrayChannelSpec());
+        if (settings.isRedChannelOn())
+            post.addParameter("RedChannel",settings.getRedChannelSpec());
+        if (settings.isGreenChannelOn())
+            post.addParameter("GreenChannel",settings.getGreenChannelSpec());
+        if (settings.isBlueChannelOn())
+            post.addParameter("BlueChannel",settings.getBlueChannelSpec());
+    }
+
+    /**
      * Helper method -- ensures that the next token from the specified
      * {@link StringTokenizer} has the desired value.
      *
@@ -682,6 +707,49 @@ public class HttpImageServer
         } finally {
             finishCall(post);
         }        
+    }
+
+    public Image getComposite(long pixelsID, CompositingSettings settings)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","Composite");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("Format","JPEG");
+            addCompositingSettings(post,settings);
+            executeCall(post);
+
+            byte[]  imageBuf = post.getResponseBody();
+            ByteArrayInputStream  is = new ByteArrayInputStream(imageBuf);
+            try
+            {
+                return ImageIO.read(is);
+            } catch (IOException e) {
+                throw new ImageServerException("Cannot read byte array stream?");
+            }
+        } finally {
+            finishCall(post);
+        }
+    }
+
+    public void setThumbnail(long pixelsID, CompositingSettings settings)
+        throws ImageServerException
+    {
+        MultipartPostMethod post = startCall();
+        try
+        {
+            post.addParameter("Method","Composite");
+            post.addParameter("PixelsID",Long.toString(pixelsID));
+            post.addParameter("SetThumb","1");
+            addCompositingSettings(post,settings);
+            executeCall(post);
+
+            return;
+        } finally {
+            finishCall(post);
+        }
     }
 
     public Image getThumbnail(long pixelsID)
