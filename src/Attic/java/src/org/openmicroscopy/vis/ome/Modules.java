@@ -90,11 +90,12 @@ public class Modules extends HashMap {
 	 */
 	private void populateModule(RemoteModule mod) {
 				
-		mod.getName();
+		mod.populate();
 		System.err.println("Loading Module..."+mod.getName());
+		/*mod.getName();
 		mod.getDescription();
 		mod.getLocation();
-		mod.getNewFeatureTag();
+		mod.getNewFeatureTag(); */  
 		// get inputs & outputs?
 		List params = mod.getInputs();
 		//System.err.println("...Inputs...");
@@ -117,13 +118,19 @@ public class Modules extends HashMap {
 		
 		Iterator iter = params.iterator();
 		while (iter.hasNext()) {
-			param = (FormalParameter) iter.next();
-			//System.err.println("Parameter: "+param.getParameterName());
+			Object obj = iter.next();
+		//	System.err.println("parameter object is "+obj);
+			param = (FormalParameter) obj;
+		//	System.err.println("Parameter: "+param.getParameterName());
 			param.getList();
 			param.getOptional();
 			SemanticType semType = param.getSemanticType();
-			if (semType != null)
+		//	System.err.println("semantic type is "+semType);
+			if (semType != null &&
+				semType.toString().compareTo(">>OBJ:NULL") !=0 )
 				semType.getName();
+		//	else 
+		//		System.err.println("got a null semantic type");
 		}
 	}
 	

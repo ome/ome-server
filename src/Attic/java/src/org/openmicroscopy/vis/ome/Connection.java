@@ -104,7 +104,7 @@ public class Connection {
 		final SwingWorker worker = new SwingWorker() {
 			public Object construct() {
 				try {
-					XmlRpcCaller.TRACE_CALLS=true;
+				//	XmlRpcCaller.TRACE_CALLS=true;
 					remote = new RemoteBindings();
 					remote.loginXMLRPC(URL,userName,passWord);
 				} catch (Exception e) {
@@ -119,6 +119,7 @@ public class Connection {
 					factory = remote.getFactory();
 					// this reads in all of the modules in the database
 					// similar additional calls might end up here.
+					System.err.println("factory is "+factory);
 					modules  = new Modules(factory);
 					controller.completeLogin();
 					// for debugging only
@@ -163,28 +164,26 @@ public class Connection {
 	 * @param in
 	 */
 	public void addInput(SemanticType type,PFormalInput in) {
+	//	System.err.println("adding inputs");
 		addToHash(type,in,inputs);	
 	}
 	
 	public void addOutput(SemanticType type,PFormalOutput out) {
+		//System.err.println("adding outputs");
 		addToHash(type,out,outputs);
 	}
 	
 	private void addToHash(SemanticType type,PFormalParameter param,
 					Hashtable hash) {
 		ArrayList list;
-		// hash things based on the string rep. of the type id.
-		// can't do 
-		//Integer id = new Integer(type.getID());
-		// as the key, as each call for a given integer value 
-		// will give a different object.
-		// the ints should work and have worked in other circumstances.
-		// i think there's a weird database problem here.
-		String idstring = Integer.toString(type.getID());
-				// get the list, create a new list if there's no entry
-		// for the key.
-		Object map = hash.get(idstring);
-		//Object map  = hash.get(id);
+		
+		if (type == null || type.toString().compareTo(">>OBJ:NULL") == 0) {
+	//		System.err.println("semantic type is null"); 
+			return;
+		} 
+		Integer id = new Integer(type.getID());
+		
+		Object map  = hash.get(id);
 		if (map == null) 
 			list = new ArrayList();
 		else 
@@ -192,8 +191,8 @@ public class Connection {
 			
 		// add the parameter to the list and put it back in the hash.
 		list.add(param);
-		//hash.put(id,list);
-		hash.put(idstring,list);	
+		hash.put(id,list);
+			
 	}
 	
 	/** 
@@ -215,10 +214,8 @@ public class Connection {
 	}
 	
 	private ArrayList getHashedList(SemanticType type,Hashtable hash) {
-		//Integer id = new Integer(type.getID());
-		String idstring = Integer.toString(type.getID());
-		Object obj = hash.get(idstring);
-		//Object obj = hash.get(id);
+		Integer id = new Integer(type.getID());
+		Object obj = hash.get(id);
 		return (ArrayList) obj;
 	}
 	

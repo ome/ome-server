@@ -37,6 +37,11 @@ package org.openmicroscopy.vis.ome;
 
 public interface ApplicationController {
 
+
+	public void doLogin();
+	
+	public void doLogout();
+	
 	/**
 	 * <p>Callback for when login is complete
 	 * 
@@ -57,4 +62,6 @@ public interface ApplicationController {
      * @since OME2.0
      */
 	public void cancelLogin();
+	
+	public void updateDatabase();
 }

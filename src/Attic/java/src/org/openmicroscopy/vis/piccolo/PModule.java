@@ -294,6 +294,7 @@ public class PModule extends PPath {
 			p = (PFormalParameter) iter.next();
 			p.removeLinks();
 		}
+		info.removeModuleWidget(this);
 		removeFromParent();
 	}
 	

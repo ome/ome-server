@@ -159,6 +159,10 @@ public abstract class PFormalParameter extends PNode implements
 	}
 	
 	
+	public FormalParameter getParameter() {
+		return param;
+	}
+	
 	public SemanticType getSemanticType() {
 		return param.getSemanticType();
 	}

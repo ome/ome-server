@@ -69,4 +69,8 @@ public class ModuleInfo {
 	public ArrayList getModuleWidgets() {
 		return pModules;
 	}
+	
+	public void removeModuleWidget(PModule mod) {
+		pModules.remove(mod);
+	}
 }

@@ -105,14 +105,19 @@ public class CanvasFrame extends JFrame {
 	 */
 	public void setLoggedIn(boolean v,Connection connection) {
 		menuBar.setLoginsDisabled(v);
-		if (v == false)
-			toolBar.clearStatus();
-		else {
+		if (v == true) {
 			canvas.setConnection(connection);
 			toolBar.setUserName(connection.getUserName());
 			// create a pallete, show it on the screen, make it visible.
 			paletteFrame = new ModulePaletteFrame(connection);
+			paletteFrame.setJMenuBar(menuBar);
 		}
-		//update toolbar text here.?
+		else {
+			canvas.logout();
+			paletteFrame.dispose();
+			paletteFrame = null;
+			connection = null;
+			toolBar.clearStatus();
+		}
 	}
 }

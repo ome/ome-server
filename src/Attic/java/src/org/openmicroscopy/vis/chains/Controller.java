@@ -99,7 +99,7 @@ public class Controller implements ApplicationController {
 	public void doLogout() {
 		System.err.println("logout...");
 		updateDatabase();
-		mainFrame.setLoggedIn(false,null);
+		mainFrame.setLoggedIn(false,connection);
 	}
 	
 	public void quit() {
@@ -111,7 +111,7 @@ public class Controller implements ApplicationController {
 	 * the database is updated before the program exits.
 	 *
 	 */
-	private void updateDatabase() {
+	public void updateDatabase() {
 	}
 	
 }

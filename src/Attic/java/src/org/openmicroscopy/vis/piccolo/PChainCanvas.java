@@ -56,6 +56,7 @@ import java.awt.dnd.DnDConstants;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
+import java.util.List;
 
 /** 
  * Extends PCanvas to provide functionality necessary for a piccolo canvas.<p> 
@@ -167,4 +168,15 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		RemoteModule module = info.getModule();
 		connection.setModuleInfo(module.getID(),info);
 	}
+	
+	public void logout() {
+		List children = layer.getChildrenReference();
+		Object childObjects[] = children.toArray();
+		
+		PModule mod;
+		for (int i =0; i < childObjects.length; i++) {
+			mod = (PModule) childObjects[i];
+			mod.remove();
+		}
+	}		
 }
