@@ -3,14 +3,15 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
-		cgrayce2 omeis2 extractBinData insertBinData maxIntensity
-DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql -I/usr/local/include -I/sw/include
+		extractBinData insertBinData maxIntensity cgrayce2 omeis2
+DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql
+INCS    = -I/usr/local/include -I/sw/include $(DB_INCLUDES)
 DB_LIBS = -lpq
 COMPRESSION_LIBS = -lz -lbz2
 IMAGE_LIBS = -ltiff
 MATH_LIBS = -lm
 LIBPATHS = -L. -L/usr/local/lib -L/sw/lib
-BIN_DATA_LIBS = $(IMAGE_LIBS) $(COMPRESSION_LIBS) $(LIBPATHS)
+BIN_DATA_LIBS = $(IMAGE_LIBS) $(COMPRESSION_LIBS) $(LIBPATHS) $(INCS)
 LIBS = $(DB_LIBS) $(MATH_LIBS) $(LIBPATHS) -lOME 
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
@@ -111,15 +112,6 @@ $(OME_LIB): $(OBJECTS)
 cgrayce2:
 	$(MAKE) -C cgrayce
 
-omeis2:
-	$(MAKE) -C omeis
-
-base64.o: base64.c base64.h
-	$(CC) $(CFLAGS) -c base64.c
-
-b64z_lib.o: b64z_lib.c b64z_lib.h
-	$(CC) $(CFLAGS) -c b64z_lib.c
-
 extractBinData: extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -o extractBinData extractBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix.c $(BIN_DATA_LIBS)
 
@@ -129,10 +121,18 @@ insertBinData: insertBinData.c base64.o b64z_lib.o ../perl2/OME/Image/Pix/libpix
 maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/Pix/libpix.h
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
+omeis2:
+	$(MAKE) -C omeis
+
+
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
 trackSpotsOMEwrpr.o : OMEdb.h
 OMEimportDVfile.o : OMEdb.h
+base64.o: base64.c base64.h
+	$(CC) $(CFLAGS) -c base64.c $(INCS)
+b64z_lib.o: b64z_lib.c b64z_lib.h
+	$(CC) $(CFLAGS) -c b64z_lib.c $(INCS)
 
 
 
