@@ -1934,10 +1934,10 @@ char **cgivars=param;
 				for (c = 0; c < dc; c++)
 					for (z = 0; z < dz; z++) {
 						fprintf (stdout,"%lu\t%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
-							 c,t,z,planeInfoP->min,planeInfoP->max,planeInfoP->mean,planeInfoP->geomean,planeInfoP->sigma,
+							 c,t,z,planeInfoP->min,planeInfoP->max,planeInfoP->mean,planeInfoP->sigma,planeInfoP->geomean,planeInfoP->geosigma,
 							 planeInfoP->centroid_x, planeInfoP->centroid_y,
 							 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
-							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi,planeInfoP->geosigma
+							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi
 						);
 						planeInfoP++;
 					}
@@ -1969,11 +1969,11 @@ char **cgivars=param;
 
 			for (t = 0; t < dt; t++)
 				for (c = 0; c < dc; c++) {
-					fprintf (stdout,"%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
-						 c,t,stackInfoP->min,stackInfoP->max,stackInfoP->mean,stackInfoP->geomean,stackInfoP->sigma,
-						 stackInfoP->centroid_x, stackInfoP->centroid_y,
+					fprintf (stdout,"%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+						 c,t,stackInfoP->min,stackInfoP->max,stackInfoP->mean,stackInfoP->sigma,stackInfoP->geomean,stackInfoP->geosigma,
+						 stackInfoP->centroid_x, stackInfoP->centroid_y, stackInfoP->centroid_z,
 						 stackInfoP->sum_i, stackInfoP->sum_i2, stackInfoP->sum_log_i,
-						 stackInfoP->sum_xi, stackInfoP->sum_yi, stackInfoP->sum_zi,stackInfoP->geosigma
+						 stackInfoP->sum_xi, stackInfoP->sum_yi, stackInfoP->sum_zi
 					);
 					stackInfoP++;
 				}
