@@ -156,6 +156,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
 		if (e.isPopupTrigger()) {
+			System.err.println("popup on press");
 			handlePopup(e);
 		}
 		else if (node instanceof PChainBox) {
@@ -171,6 +172,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	 */
 	public void mouseReleased(PInputEvent e) {
 		if (e.isPopupTrigger()) {
+			System.err.println("popup on release");
 			handlePopup(e);
 		}
 		else
