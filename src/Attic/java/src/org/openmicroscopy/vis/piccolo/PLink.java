@@ -388,10 +388,10 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		
 		p3x = (float)(3*p1.getX()-p0.getX()-3*p2.getX()+p3.getX());
 		p3y = (float)(3*p1.getY()-p0.getY()-3*p2.getY()+p3.getY());
+				
 		for (float t=0; t<=1; t+=0.02) {  
 			x = ((p3x*t+p2x)*t+p1x)*t+p0x;
 			y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-			//System.err.println("bezier point "+x+","+y);
 			if (first == true) {
 				p.moveTo(x,y);
 				first = false;
@@ -404,9 +404,6 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		Shape s = getLinkShape();
 		if (s != null) {
 			Rectangle2D b = LINK_STROKE.createStrokedShape(s).getBounds2D();
-			//System.err.println("updating bounds of curve..");
-			//System.err.println(b.getX()+","+b.getY()+", width="+b.getWidth()
-			//	+", height = "+b.getHeight());
 			super.setBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
 		}
 	}
@@ -417,7 +414,13 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	}
 	
 	public boolean intersects(Rectangle2D aBounds) {
-		return getLinkShape().intersects(aBounds);
+		
+		PNode parent = getParent();
+		parent = parent.getParent();
+		if (parent.intersects(aBounds))
+			return false;
+		else 
+			return getLinkShape().intersects(aBounds);
 	}
 		
  	
