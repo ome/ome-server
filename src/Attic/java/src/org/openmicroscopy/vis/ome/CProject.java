@@ -41,9 +41,7 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.RemoteProject;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
-import java.util.List;
-import java.util.Iterator;
- 
+
 /** 
  * <p>A {@link Project} subclass used to hold information about projects
  * in the chain builder.<p>
@@ -55,7 +53,6 @@ import java.util.Iterator;
 public class CProject extends RemoteProject {
 	
 	
-	private boolean inCurrentDataset = false;
 	
 	static {
 		RemoteObjectCache.addClass("OME::Project",CProject.class);
@@ -70,22 +67,5 @@ public class CProject extends RemoteProject {
 	}
 	
 	
-	public boolean isInCurrentDataset() {
-		return inCurrentDataset;
-	}
-
-	public void setInCurrentDataset(boolean b) {
-		inCurrentDataset = b;
-	}
-	
-	
-	public void setDatasetsActive(boolean b) {
-		List d = getDatasets();
-		Iterator i = d.iterator();
-		while (i.hasNext()) {
-			CDataset ds = (CDataset) i.next();
-			ds.setInCurrentProject(b);
-		}
-	}
 
 }

@@ -60,7 +60,6 @@ public class CDataset extends RemoteDataset implements Comparable{
 	
 	Vector images = new Vector();
 	
-	private boolean inCurrentProject = false;
 	
 	static {
 		RemoteObjectCache.addClass("OME::Dataset",CDataset.class);
@@ -98,22 +97,6 @@ public class CDataset extends RemoteDataset implements Comparable{
 		return images;
 	}
 
-	public boolean isInCurrentProject() {
-		return inCurrentProject;
-	}
-
-	public void setInCurrentProject(boolean b) {
-		inCurrentProject = b;
-	}
-	
-	public void setProjectsActive(boolean b) {
-		List p = getProjects();
-		Iterator i = p.iterator();
-		while (i.hasNext()) {
-			CProject ps = (CProject) i.next();
-			ps.setInCurrentDataset(b);
-		}
-	}
 	
 	public int compareTo(Object o) {
 		if (o instanceof CDataset) {
