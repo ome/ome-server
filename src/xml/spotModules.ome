@@ -215,6 +215,31 @@
              Description="In microns/second"/>
   </SemanticType>
 
+  <SemanticType
+     Name="FindSpotsInputs" AppliesTo="G">
+    <Element Name="TimeStart"
+             DBLocation="FIND_SPOTS_INPUTS.TIME_START"
+             DataType="integer"/>
+    <Element Name="TimeStop"
+             DBLocation="FIND_SPOTS_INPUTS.TIME_STOP"
+             DataType="integer"/>
+    <Element Name="Channel"
+             DBLocation="FIND_SPOTS_INPUTS.CHANNEL"
+             DataType="integer"/>
+    <Element Name="MinimumSpotVolume"
+             DBLocation="FIND_SPOTS_INPUTS.MIN_VOLUME"
+             DataType="float"/>
+    <Element Name="IntensityWeight"
+             DBLocation="FIND_SPOTS_INPUTS.IWEIGHT"
+             DataType="float"/>
+    <Element Name="ThresholdType"
+             DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_TYPE"
+             DataType="string"/>
+    <Element Name="ThresholdValue"
+             DBLocation="FIND_SPOTS_INPUTS.THRESHOLD_VALUE"
+             DataType="float"/>
+  </SemanticType>
+
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary
@@ -232,9 +257,12 @@
      NewFeatureName="SPOT">
 
     <Declaration>
+      <FormalInput Name="Parameters"
+                   SemanticTypeName="FindSpotsInputs" Count="!"/>
       <FormalInput Name="Pixels" SemanticTypeName="Pixels" Count="!"/>
       <FormalInput Name="Stack means" SemanticTypeName="StackMean" Count="+"/>
-      <FormalInput Name="Stack geomeans" SemanticTypeName="StackGeometricMean" Count="+"/>
+      <FormalInput Name="Stack geomeans" SemanticTypeName="StackGeometricMean"
+                   Count="+"/>
       <FormalInput Name="Stack sigmas" SemanticTypeName="StackSigma" Count="+"/>
       <FormalInput Name="Stack minima" SemanticTypeName="StackMinimum" Count="+"/>
       <FormalInput Name="Stack maxima" SemanticTypeName="StackMaximum" Count="+"/>
@@ -261,7 +289,7 @@
     <Declaration>
       <FormalInput Name="Location" SemanticTypeName="Location" Count="!"/>
       <FormalInput Name="Timepoint" SemanticTypeName="Timepoint" Count="!"/>
-      <FormalInput Name="Dimensions" SemanticTypeName="Dimensions" Count="!"/>
+      <FormalInput Name="Dimensions" SemanticTypeName="Dimensions" Count="?"/>
       <FormalOutput Name="Trajectory" SemanticTypeName="Trajectory"
                     Count="?" IBelongTo="[Feature]"/>
       <FormalOutput Name="Entries" SemanticTypeName="TrajectoryEntry"
