@@ -133,9 +133,16 @@ sub getGroups {
     my $self = shift;
     my $fref = shift;
     my @outlist;
-	
+    my %DICOMs;
+	my ($filename,$file);
+
+	# ignore any non-dicom files.
+	while ( ($filename,$file) = each %$fref ) {
+		$DICOMs{$filename} = $file if $self->isDICOM($file);
+	}
+
     # Group files with recognized patterns together
-    my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
+    my ($groups, $infoHash) = $self->{super}->__getRegexGroups(\%DICOMs);
 
 	# process grouped DICOM images first
 	my ($name,$group);
@@ -145,7 +152,7 @@ sub getGroups {
     	my $maxZ = $infoHash->{$name}->{maxZ};
 
 		for (my $z = 0; $z < $maxZ; $z++) {
-			my $file = $group->[$z][0][0]->{File};
+			$file = $group->[$z][0][0]->{File};
 			die "Uh, file is not defined at (z,c,t)=($z,0,0)!\n"
 				unless ( defined($file) );
 			
@@ -156,18 +163,13 @@ sub getGroups {
 			# $cString = $group->[$z][$c][$t]->{C};
 			# $tString = $group->[$z][$c][$t]->{T};
 			# Note that undef strings are converted to ''.
-
-			$file->open('r');
-			$file->setCurrentPosition(128,0);
-			my $buf = $file->readData(4);
-			$file->close();
-			
-			next unless ($buf eq 'DICM');  
       	
 			push (@groupList, $file);
 			
 			# delete the file from the hash, so it's not processed by other importers
-			delete $fref->{ $file->getFilename() };
+    		$filename = $file->getFilename();
+			delete $fref->{ $filename };
+			delete $DICOMs{ $filename };
 		}
     	push (@outlist, {
     		Files => \@groupList,
@@ -176,18 +178,13 @@ sub getGroups {
     		if ( scalar(@groupList) > 0 );
     }
     
-    foreach my $file ( values %$fref ) {    			
-        $file->open('r');
-        $file->setCurrentPosition(128,0);
-        my $buf = $file->readData(4);
-        $file->close();
-        
-      	next unless ($buf eq 'DICM');  
-    	my $filename = $file->getFilename();
+    foreach my $file ( values %DICOMs ) {    			
+    	$filename = $file->getFilename();
     	my $basename = $self->__nameOnly($filename);
       	
         # it's in the DICOM format, so remove from input list, put on output list
 		delete $fref->{ $filename };
+		delete $DICOMs{ $filename };
     	push (@outlist, {
     		Files => [$file],
     		BaseName => $basename
@@ -198,6 +195,16 @@ sub getGroups {
     return \@outlist;
 }
 
+
+sub isDICOM {
+    my ($self, $file) = @_;
+	$file->open('r');
+	$file->setCurrentPosition(128,0);
+	my $buf = $file->readData(4);
+	$file->close();
+    
+    return ( $buf eq 'DICM') ;
+}
 
 
 =head2 importGroup

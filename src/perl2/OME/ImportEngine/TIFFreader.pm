@@ -177,11 +177,17 @@ sub getGroups {
     my $fref = shift;
     my @outlist;
     my $xref;
-	my $file;
+	my ($filename,$file);
+	my %TIFFs;
+	
+	# ignore any non-tiff files.
+	while ( ($filename,$file) = each %$fref ) {
+		$TIFFs{$filename} = $file if defined(verifyTiff($file));
+	}
 
     # Group files with recognized patterns together
     # Sort them by channels, z's, then timepoints
-    my ($groups, $infoHash) = $self->__getRegexGroups($fref);
+    my ($groups, $infoHash) = $self->__getRegexGroups(\%TIFFs);
 
 	my ($name,$group);
     while ( ($name,$group) = each %$groups ) {
@@ -214,9 +220,6 @@ sub getGroups {
     				# $cString = $group->[$z][$c][$t]->{C};
     				# $tString = $group->[$z][$c][$t]->{T};
 					# Note that undef strings are converted to ''.
-
-    				# skip this image unless it's a tiff
-    				next unless ( defined(verifyTiff($file)) );
     				
     				push (@groupList, $file);
     				$xref->{ $file }->{ 'Image.SizeZ' } = $maxZ;
@@ -229,8 +232,10 @@ sub getGroups {
 					# hash is keyed off of filenames. [Bug #328]
 					#
 					# -Chris <callan@blackcat.ca>
-					logdbg "debug",  "deleting ".$file->getFilename()." in group $name\n";
-					delete $fref->{ $file->getFilename() };
+    				$filename = $file->getFilename();
+					logdbg "debug",  "deleting $filename in group $name";
+					delete $fref->{ $filename };
+					delete $TIFFs{ $filename };
     			}
     		}
     	}
@@ -242,11 +247,9 @@ sub getGroups {
     }
     
     # Now look at the rest of the files in the list to see if you have any other tiffs.
-    foreach $file ( values %$fref ) {    	
-    	# skip this image unless it's a tiff
-    	next unless (defined(verifyTiff($file)));
+    foreach $file ( values %TIFFs ) {    	
     	
-    	my $filename = $file->getFilename();
+    	$filename = $file->getFilename();
     	my $basename = $self->__nameOnly($filename);
     	
     	$xref->{ $file }->{ 'Image.SizeZ' } = 1;
@@ -256,8 +259,9 @@ sub getGroups {
     		Files => [$file],
     		BaseName => $basename
     	});
-		logdbg "debug",  "deleting ".$file->getFilename()." in singleton group $basename\n";
-		delete $fref->{ $file->getFilename() };
+		logdbg "debug",  "deleting $filename in singleton group $basename";
+		delete $fref->{ $filename };
+		delete $TIFFs{ $filename };
     }
     
 #     foreach my $element ( @outlist )
@@ -330,9 +334,9 @@ sub importGroup {
     $params->oname($filename);
     $params->endian($tag0->{__Endian});
     
-	$xref->{ $file }->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
-	$xref->{ $file }->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
-	$xref->{ $file }->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];
+	my $sizeX = $xref->{ $file }->{'Image.SizeX'} = $tag0->{TAGS->{ImageWidth}}->[0];
+	my $sizeY = $xref->{ $file }->{'Image.SizeY'} = $tag0->{TAGS->{ImageLength}}->[0];
+	my $bpp = $xref->{ $file }->{'Data.BitsPerPixel'} = $tag0->{TAGS->{BitsPerSample}}->[0];
 	$params->byte_size( $self->__bitsPerPixel2bytesPerPixel($xref->{ $file}->{'Data.BitsPerPixel'}));
 	
 	# for rgb tiffs, each single image gives three channels
@@ -395,18 +399,21 @@ sub importGroup {
     			for (my $t = 0; $t < $maxT; $t++) {
     				eval {
 						$file = shift( @$groupList );
-						logdbg "debug",  "shifted ".$file->getFilename()."\n";
+						logdbg "debug",  "shifted ".$file->getFilename();
 						$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
 					};
 					
 					die "convertPlaneFromTIFF failed: $@\n" if $@;
 					doSliceCallback($callback);
+					$xref->{ $file }->{'Image.SizeX'} = $sizeX;
+					$xref->{ $file }->{'Image.SizeY'} = $sizeY;
+					$xref->{ $file }->{'Data.BitsPerPixel'} = $bpp;
 					$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-								  0, $xref->{ $file }->{'Image.SizeX'}-1,
-								  0, $xref->{ $file }->{'Image.SizeY'}-1,
-								  0, $xref->{ $file }->{'Image.SizeZ'}-1,
-								  0, $xref->{ $file }->{'Image.NumWaves'}-1,
-								  0, $xref->{ $file }->{'Image.NumTimes'}-1,
+								  0, $sizeX-1,
+								  0, $sizeY-1,
+								  $z, $z,
+								  $c, $c,
+								  $t, $t,
 								  "TIFF");
 				}
 			}
