@@ -229,7 +229,12 @@ sub dispatch {
                                                             $sessionKey);
 
     print "  (",join(",",@result),")\n";
-    return @result;
+
+    if ($context eq 'list') {
+        return \@result;
+    } else {
+        return @result;
+    }
 }
 
 
