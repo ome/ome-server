@@ -105,14 +105,20 @@ Statistics.prototype.buildSVG = function() {
 		'<text x="180" y="7em" text-anchor="end"> </text>'
 	));
 	this.labels.geomean = this.root.lastChild;
+	//this.root.appendChild( this.wavePopupList.textToSVG(
+	//	'<text x="20" y="8em">sigma: </text>'
+	//));
+	//this.root.appendChild( this.wavePopupList.textToSVG(
+	//	'<text x="180" y="8em" text-anchor="end"> </text>'
+	//));
+	//this.labels.sigma = this.root.lastChild;
 	this.root.appendChild( this.wavePopupList.textToSVG(
-		'<text x="20" y="8em">sigma: </text>'
+		'<text x="20" y="8em">geosigma: </text>'
 	));
 	this.root.appendChild( this.wavePopupList.textToSVG(
 		'<text x="180" y="8em" text-anchor="end"> </text>'
 	));
-	this.labels.sigma = this.root.lastChild;
-	
+	this.labels.geosigma = this.root.lastChild;
 	this.wavePopupList.realize( this.root );
 
 	return this.root;
@@ -143,7 +149,8 @@ Statistics.prototype.updateStats = function(t) {
 	this.labels.max.firstChild.data = this.Stats[wavenum][t]['max'];
 	this.labels.mean.firstChild.data = this.Stats[wavenum][t]['mean'];
 	this.labels.geomean.firstChild.data = this.Stats[wavenum][t]['geomean'];
-	this.labels.sigma.firstChild.data = this.Stats[wavenum][t]['sigma'];
+	//this.labels.sigma.firstChild.data = this.Stats[wavenum][t]['sigma'];
+	this.labels.geosigma.firstChild.data = this.Stats[wavenum][t]['geosigma'];
 }
 
 /*****

@@ -38,7 +38,7 @@ OMEimage.VERSION = 0.5;
 			Wavelengths is an array of hashes. Hash keys must contain:
 				WaveNum, Emmission, and Fluor
 			Stats is a 2d array of hashes. The array is indexed by [wavenum][t].
-				Hash keys must contain geomean and sigma.
+				Hash keys must contain geomean and geosigma  ( sigma).
 			Dims is a 6 member array representing dimensions of the 5d image. Members are:
 				X,Y,Z,W,T,bpp
 				bpp is bits per pixel
@@ -213,7 +213,9 @@ OMEimage.prototype.updatePic = function(theZ, theT) {
 			if(cWBS[i*3+1]>this.Stats[wavenum][theT]['max'])
 				cWBS[i*3+1] = Math.floor( this.Stats[wavenum][theT]['max'] );
 			// calculate whiteLevel
-			var whiteLevel = this.Stats[wavenum][theT]['geomean'] + this.WBS[i*3+2] * this.Stats[wavenum][theT]['sigma'];
+			//var whiteLevel = this.Stats[wavenum][theT]['geomean'] + this.WBS[i*3+2] * this.Stats[wavenum][theT]['sigma'];
+			var whiteLevel = this.Stats[wavenum][theT]['geomean'] + this.WBS[i*3+2] * this.Stats[wavenum][theT]['geosigma'];
+			
 			var recalculate = false;
 			// is it within bounds?
 			if(whiteLevel<this.Stats[wavenum][theT]['min']) {
@@ -269,10 +271,13 @@ OMEimage.prototype.makeWBSnative = function(WBS,theT) {
 		var wavenum = WBS[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		// set black level
-		WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		//WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		WBS[i*3+1] = (WBS[i*3+1] + this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["geosigma"];
 		WBS[i*3+1] = Math.round(WBS[i*3+1]);
 		if(WBS[i*3+2] == 0) WBS[i*3+2] = 0.00001;
-		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
+		//WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['sigma'] * WBS[i*3+2] );
+		WBS[i*3+2] = 255/( this.Stats[wavenum][theT]['geosigma'] * WBS[i*3+2] );
+
 		WBS[i*3+2] = Math.round(WBS[i*3+2]*100000)/100000;
 	}
 	return WBS;
@@ -298,9 +303,11 @@ OMEimage.prototype.makeWBWnative = function(WBW,theT) {
 		var wavenum = WBW[i*3];
 		if(wavenum<0 || wavenum>=this.Dims['W'] || wavenum != Math.round(wavenum) ) return null;
 		// set black level
-		WBW[i*3+1] = (WBW[i*3+1] - this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		//WBW[i*3+1] = (WBW[i*3+1] - this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["sigma"];
+		WBW[i*3+1] = (WBW[i*3+1] - this.Stats[wavenum][theT]['geomean'] )/ this.Stats[wavenum][theT]["geosigma"];
 		if(WBW[i*3+2] == 0) WBW[i*3+2] = 0.00001;
-		WBW[i*3+2] = (WBW[i*3+2] - this.Stats[wavenum][theT]['geomean']) / this.Stats[wavenum][theT]['sigma'];
+		//WBW[i*3+2] = (WBW[i*3+2] - this.Stats[wavenum][theT]['geomean']) / this.Stats[wavenum][theT]['sigma'];
+		WBW[i*3+2] = (WBW[i*3+2] - this.Stats[wavenum][theT]['geomean']) / this.Stats[wavenum][theT]['geosigma'];
 		WBW[i*3+2] = Math.round(WBW[i*3+2]*100000)/100000;
 	}
 	return WBW;
@@ -511,12 +518,14 @@ OMEimage.prototype.getConvertedWBS4OME_JPEG = function(theT) {
 	for(var i=0;i<4;i++) {
 		var wavenum = this.WBS[i*3];
 		cWBS.push( wavenum );
-		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		//B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["geosigma"] * this.WBS[i*3+1];
 		B = Math.round( B );
 		cWBS.push( B );
 		if(this.WBS[i*3+2] == 0)
 			this.WBS[i*3+2] = 0.00001;
-		S = 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] );
+		//S = 255/ ( this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2] );
+		S = 255/ ( this.Stats[wavenum][theT]["geosigma"] * this.WBS[i*3+2] );
 		S = Math.round( S*100000 ) / 100000;
 		cWBS.push( S );		
 	}
@@ -548,12 +557,15 @@ OMEimage.prototype.getAbsoluteWBWfromWBS = function(theT) {
 	for(var i=0;i<4;i++) {
 		var wavenum = this.WBS[i*3];
 		cWBW.push( wavenum );
-		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		//B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+1];
+		B = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["geosigma"] * this.WBS[i*3+1];
 		B = Math.round( B );
 		cWBW.push( B );
 		if(this.WBS[i*3+2] == 0)
 			this.WBS[i*3+2] = 0.00001;
-		W = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2];
+		//W = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["sigma"] * this.WBS[i*3+2];
+		W = this.Stats[wavenum][theT]["geomean"] + this.Stats[wavenum][theT]["geosigma"] * this.WBS[i*3+2];
+
 		W = Math.round( W );
 		cWBW.push( W );		
 	}

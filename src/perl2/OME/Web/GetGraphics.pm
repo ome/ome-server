@@ -328,7 +328,8 @@ sub SVGgetDataJS {
 		$factory->findAttributes( "StackGeometricMean", $image ) );
 	my @sigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackSigma", $image ) );
-	
+	my @geosigma  = grep( $_->module_execution()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackGeometricSigma", $image ) );
 	my $sh; # stats hash
 	foreach( @mins ) {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{min} = $_->Minimum(); }
@@ -340,6 +341,11 @@ sub SVGgetDataJS {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
 	foreach( @sigma ) {
 		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	foreach( @geosigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geosigma} = $_->GeometricSigma(); }
+
+
+
 	die "Could not find Stack Statistics for image (id=$ImageID).\n"
 		unless defined $sh;
 	my @ar1; # array 1
@@ -1045,7 +1051,8 @@ $SVG .= <<'ENDSVG';
 			var range = max-min;
 			var geomean = scale.Stats[wavenum][theT]['geomean'];
 			var sigma = scale.Stats[wavenum][theT]['sigma'];
-			
+			var geosigma = scale.Stats[wavenum][theT]['geosigma'];
+
 			// correct val, crunch numbers
 			if(val >= scale.whiteSlider.getValue())
 				val = scale.whiteSlider.getValue() - 0.00001;
@@ -1053,14 +1060,16 @@ $SVG .= <<'ENDSVG';
 			val = (cBlackLevel-min)/range * scale.scaleWidth;
 
 			// update backend
-			var nBlackLevel = (cBlackLevel - geomean)/sigma;
+			//var nBlackLevel = (cBlackLevel - geomean)/sigma;
+			var nBlackLevel = (cBlackLevel - geomean)/geosigma;
+
 			nBlackLevel = Math.round(nBlackLevel * 10) / 10;
 			scale.BS[wavenum]['B'] = nBlackLevel;
 			scale.updateWBS();
 
 			// update display
 			scale.blackSlider.setValue(val);
-			scale.blackLabel.firstChild.data = "geomean + SD * " + nBlackLevel;
+			scale.blackLabel.firstChild.data = "geomean + geoSD * " + nBlackLevel;
 			scale.blackBar.setAttribute("width", Math.round(val) );
 		}
 		function updateWhiteLevel(val) {
@@ -1075,7 +1084,8 @@ $SVG .= <<'ENDSVG';
 			var range = max-min;
 			var geomean = scale.Stats[wavenum][theT]['geomean'];
 			var sigma = scale.Stats[wavenum][theT]['sigma'];
-			
+			var geosigma = scale.Stats[wavenum][theT]['geosigma'];
+
 			// correct val, crunch numbers
 			if(val <= scale.blackSlider.getValue())
 				val = scale.blackSlider.getValue() + 0.00001;
@@ -1085,14 +1095,16 @@ $SVG .= <<'ENDSVG';
 			val = (cWhiteLevel-min)/range * scale.scaleWidth;
 
 			// update backend
-			var nScale = (cWhiteLevel - geomean)/sigma;
+			//var nScale = (cWhiteLevel - geomean)/sigma;
+			var nScale = (cWhiteLevel - geomean)/geosigma;
+
 			nScale = Math.round(nScale*10)/10;
 			scale.BS[wavenum]['S'] = nScale;
 			scale.updateWBS();
 
 			// update display
 			scale.whiteSlider.setValue(val);
-			scale.whiteLabel.firstChild.data = "geomean + SD * " + nScale;
+			scale.whiteLabel.firstChild.data = "geomean + geoSD * " + nScale;
 			scale.whiteBar.setAttribute("width", scale.scaleWidth - Math.round(val) );
 			scale.whiteBar.setAttribute("x", Math.round(val) );
 		}

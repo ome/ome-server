@@ -145,7 +145,8 @@ Scale.prototype.updateScale = function(t) {
 	var min = this.Stats[wavenum][this.theT]['min'];
 	var max = this.Stats[wavenum][this.theT]['max'];
 	var range = max-min;
-	var sigma = this.Stats[wavenum][this.theT]['sigma'];
+	//var sigma = this.Stats[wavenum][this.theT]['sigma'];
+	var geosigma = this.Stats[wavenum][this.theT]['geosigma'];
 	this.geomeanX = (this.Stats[wavenum][this.theT]['geomean'] - min) / range * this.scaleWidth;
 
 	// move geomeanTick
@@ -253,9 +254,11 @@ Scale.prototype.init = function(image, updateBlack, updateWhite, waveChange) {
 }
 
 Scale.prototype.getCWhiteLevel = function(w, t) {
-	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['S'];
+	//return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['S'];
+	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['geosigma'] * this.BS[w]['S'];
 }
 
 Scale.prototype.getCBlackLevel = function(w, t) {
-	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['B'];
+	//return this.Stats[w][t]['geomean'] + this.Stats[w][t]['sigma'] * this.BS[w]['B'];
+	return this.Stats[w][t]['geomean'] + this.Stats[w][t]['geosigma'] * this.BS[w]['B'];
 }
