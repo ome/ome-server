@@ -48,6 +48,7 @@ our $VERSION = $OME::VERSION;
 use OME::Session;
 use OME::Image;
 use OME::ModuleExecution;
+use Log::Agent;
 
 use OME::File;
 use OME::Image::Pixels;
