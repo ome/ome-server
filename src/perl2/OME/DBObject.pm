@@ -79,6 +79,10 @@ __PACKAGE__->mk_classdata('__classDefined');
 # Whether this class is cached
 __PACKAGE__->mk_classdata('Caching');
 
+# Interim fix added by IGG to avoid errors in things that try to use the cache.
+__PACKAGE__->mk_classdata('__cache'); 
+__PACKAGE__->__cache({}); 
+
 __PACKAGE__->Caching(0);
 __PACKAGE__->__classDefined(0);
 
