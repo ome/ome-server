@@ -122,7 +122,7 @@ use POSIX;
 
 __PACKAGE__->mk_ro_accessors(qw(Factory DBH UserState ApacheSession SessionKey Configuration));
 
-our $__session;
+our $__soleInstance = undef;
 
 # transparant interface to UserState
 sub experimenter_id { return shift->{UserState}->experimenter_id(@_); }
@@ -140,55 +140,62 @@ sub started { return shift->{UserState}->started(@_); }
 sub storeObject { return shift->{UserState}->storeObject(@_); }
 sub writeObject { return shift->{UserState}->writeObject(@_); }
 
-
-sub new {
-	our $__session;
+sub _newInstance {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $userState = shift
     	or die "Session cannot be initialized without a user state";
+
     die "User State parameter is not of class OME::UserState"
-    	unless ( ref($userState) eq "OME::UserState") ;
+    	unless (ref($userState) eq "OME::UserState") ;
     
-    # use a passed-in factory if we got one
-    my $factory = shift;
-
-	# Same user wants a session. Give them the previously defined one if possible.
-	return $__session 
-		if ( defined $__session and $__session->UserState()->id() eq $userState->id() );
-
-	# A different user has logged in. Clean the old session up, salvaging reuseable resources
-	# in the process.
-	return $__session->_salvageSession( $userState ) 
-		if ( defined $__session and $__session->UserState()->id() ne $userState->id() );
+		#carp "New instance.";
 
     my $self = $class->SUPER::new();
     
     $self->{UserState} = $userState;
     
-    if ($factory) {
-    	$factory->swapSessions($self);
-    } else {
-    	$factory = OME::Factory->new($self);
-    }
-    $self->{Factory} = $factory;
+	#if ($factory) {
+	#	$factory->swapSessions($self);
+	#} else {
+	#	$factory = OME::Factory->new($self);
+	#}
+    $self->{Factory} = OME::Factory->new();
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
     
-    $__session = $self;
+    $__soleInstance = $self;
     
     return $self;
+}
 
+sub instance {
+	my $self = shift;
+	my $userState = shift;
+
+	# Recycle the singleton if possible.
+	if ((defined $__soleInstance and defined $userState) and
+		($__soleInstance->UserState()->id() eq $userState->id())) {
+		#carp "Total recycle.";
+			return $__soleInstance;
+		}
+
+	# If we've got a different user, salvage the reusable resources
+	if ((defined $__soleInstance and defined $userState) and
+		($__soleInstance->UserState()->id() ne $userState->id())) {
+		#carp "Partial recycle.";
+			return $__soleInstance->_salvageSession( $userState );
+		}
+
+	$self->_newInstance($userState) unless $__soleInstance;
+
+	#carp "Returning singleton.";
+	return $__soleInstance;
 }
 
 sub _salvageSession {
 	my $self = shift;
-	$self->{UserState}->{__session} = undef;
 
 	$self->{UserState} = shift;
-    $self->{Factory}->swapSessions( $self );
-    
-    # This make safe process could be made more efficient by setting the
-    # {__session} field of every DBObject under $self->{Configuration}.
     $self->{Configuration} = OME::Configuration->new( $self->{Factory} );
 
 	OME::DBObject->clearAllCaches();
@@ -198,15 +205,11 @@ sub _salvageSession {
 
 sub closeSession {
     my ($self) = @_;
-    # class variable __session
-	our $__session;
 
     # When we log out, break any circular links between the Session
     # and other objects, to allow them all to get garbage-collected.
     # Also, make call to factory to shutdown and free db handles.
-	$self->{Factory}->closeFactory();
-	$self->{UserState}->{__session} = undef;
-	$__session = undef;
+	#$self->{Factory}->closeFactory();
 }
 
 
