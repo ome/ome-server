@@ -165,7 +165,8 @@ sub exportFile {
 	if( $executeInsertBinData ) {
 		my $tmpFile = $session->getTemporaryFilename( 'InsertFiles', 'ome' )
 			or die "Could not get a Temporary File\n";
-		$doc->toFile( $tmpFile );
+		$doc->toFile( $tmpFile )
+			or die "Could not write to tmp file '$tmpFile'\n";
 		my $cmd = $session->Configuration()->bin_dir()."/insertBinData $tmpFile > $file";
 		die "When exporting, problems executing '$cmd'"
 			unless system( "$cmd" ) == 0;
