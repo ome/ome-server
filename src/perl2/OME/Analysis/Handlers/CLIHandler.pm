@@ -800,7 +800,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			delete $outputs{ $foName } if exists $outputs{ $foName };
 
 			# get repository & activate it
-			OME::Tasks::PixelsManager->activateRepository( OME::Tasks::PixelsManager->findRepository() );
+			$session->findRepository();
 			# upload file
 			my $file = OME::Image::Server::File->upload( $path );
 			# request new pixels from omeis
