@@ -103,6 +103,8 @@ sub new {
 	if (not scalar @vars) {
 		my ($name,$value);
 		while (($name,$value) = each %$params) {
+			die "OME::Configuration->new():  Attempt to store a reference as a configuration variable! $name has a reference to ".ref($value)."\n"
+				if ref ($value);
 			$self->{$name} = $value if $factory->newObject('OME::Configuration::Variable', {
 				configuration_id => 1,
 				name => $name,
@@ -128,8 +130,8 @@ an L<C<OME::Module>|OME::Module> object.  The ID of this object is stored in imp
 
 sub import_module {
 	my $self = shift;
-	$self->changeObjRef ('import_module_id','OME::Module',shift) if scalar @_;
-	return ( $self->Factory()->loadObject ('OME::Module',$self->import_module_id()) );
+	$self->{import_module} = $self->__changeObjRef ('import_module_id','OME::Module',shift) if scalar @_;
+	return ( $self->{import_module} );
 }
 
 
@@ -142,16 +144,18 @@ an L<C<OME::AnalysisChain>|OME::AnalysisChain> object.  The ID of this object is
 
 sub import_chain {
 	my $self = shift;
-	$self->changeObjRef ('import_chain_id','OME::AnalysisChain',shift) if scalar @_;
-	return ( $self->Factory()->loadObject ('OME::AnalysisChain',$self->import_chain_id()) );
+	$self->{import_chain} = $self->__changeObjRef ('import_chain_id','OME::AnalysisChain',shift) if scalar @_;
+	return ( $self->{import_chain} );
 }
 
 
-sub changeObjRef {
+sub __changeObjRef {
 	my ($self,$IDvariable,$objectType,$object) = @_;
-	die "In OME::Configuration->changeObjRef, expected parameter of type '$objectType', but got '".
+	die "In OME::Configuration->__changeObjRef, expected parameter of type '$objectType', but got '".
 		ref($object)."'\n" unless ref($object) eq $objectType;
-	my $factory = $self->Factory();
+	die "In OME::Configuration->__changeObjRef, object '".ref($object)."' is not an OME::DBObject!\n"
+		unless UNIVERSAL::isa($object,"OME::DBObject");
+	my $factory = $object->Session()->Factory() or die "In OME::Configuration->__changeObjRef, object '".ref($object)."' has no Factory!\n";
 	my $IDobject = $factory->findObject('OME::Configuration::Variable',
 		configuration_id => 1,name => $IDvariable);
 	if ($IDobject and $IDobject->value() ne $object->id()) {
