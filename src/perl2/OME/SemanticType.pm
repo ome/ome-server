@@ -498,6 +498,7 @@ sub load {
 sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
+sub attribute_type { return shift->_attribute_type(); }
 
 sub _getTarget {
     my ($self) = @_;
