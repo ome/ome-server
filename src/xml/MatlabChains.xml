@@ -42,15 +42,11 @@
     <Nodes>
 	  <Node NodeID = "Files" ProgramName = "Original files"/>
 	  <Node NodeID = "Import" ProgramName = "Image import"/>
-      <Node NodeID="Import" ProgramName="Importer"/>
-      <Node NodeID="Plane" ProgramName="Plane statistics (Matlab)"/>
+      <Node NodeID = "Plane" ProgramName="Plane statistics (Matlab)"/>
     </Nodes>
     <Links>
-      <Link FromNodeID="Files" FromOutputName="Files"
-            ToNodeID="Importer" ToInputName="Files"/>
-      <Link
-         FromNodeID="Import" FromOutputName="Pixels"
-         ToNodeID="Plane" ToInputName="Pixels"/>
+      <Link FromNodeID="Files"  FromOutputName="Files"  ToNodeID="Import" ToInputName="Files"/>
+      <Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Plane"  ToInputName="Pixels"/>
     </Links>
   </AnalysisChain>
 </AnalysisChains>
