@@ -692,26 +692,19 @@ sub newAttributesInOneRow {
         my $attribute = $factory->loadAttribute($semantic_type,$id);
 
         # Add the SEMANTIC_TYPE_OUTPUT entry
-
-        #if (defined $module) {
-        #    my $formal_output = $factory->
-        #      findObject("OME::Module::FormalOutput",
-        #                 module_id => $module->id(),
-        #                 semantic_type_id => $semantic_type->id());
-
-            # Only create the entry if the attribute is for an untyped
-            # output.
-        #    if (!defined $formal_output) {
-        #        my $data_hash =
-        #          {
-        #           module_execution_id => $module_execution->id(),
-        #           semantic_type_id    => $semantic_type->id(),
-        #          };
-        #        $factory->
-        #          maybeNewObject("OME::ModuleExecution::SemanticTypeOutput",
-        #                         $data_hash);
-        #    }
-        #}
+		#     if there is a mex defined and
+		#        there is neither a module defined for this mex nor 
+		#                         a formal output of this type
+#		$factory->maybeNewObject("OME::ModuleExecution::SemanticTypeOutput", {
+#			module_execution_id => $module_execution,
+#			semantic_type_id    => $semantic_type,
+#		}) if (defined $module_execution and
+#              ( not $module_execution->module() or
+#                not $factory->findObject("OME::Module::FormalOutput",
+#		                module_id        => $module_execution->module,
+#		                semantic_type_id => $semantic_type 
+#		            )
+#		      ) );
 
         push @attributes, $attribute;
     }
