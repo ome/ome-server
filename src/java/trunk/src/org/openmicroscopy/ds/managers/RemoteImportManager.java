@@ -46,6 +46,7 @@ import org.openmicroscopy.ds.AbstractService;
 import org.openmicroscopy.ds.FieldsSpecification;
 import org.openmicroscopy.ds.Criteria;
 import org.openmicroscopy.ds.RemoteServerErrorException;
+import org.openmicroscopy.ds.dto.Dataset;
 import org.openmicroscopy.ds.dto.ActualInput;
 import org.openmicroscopy.ds.dto.ModuleExecution;
 import org.openmicroscopy.ds.dto.Image;
@@ -91,6 +92,30 @@ public class RemoteImportManager
 
         Object result = caller.dispatch("startImport",
                                         new Object[] { fileIDs });
+
+        try
+        {
+            Integer iresult = PrimitiveConverters.convertToInteger(result);
+            return iresult.intValue();
+        } catch (NumberFormatException e) {
+            throw new RemoteServerErrorException("Did not get an Integer back from the server");
+        }
+    }
+
+    public int startRemoteImport(Dataset dataset, List fileIDs)
+    {
+        if (fileIDs == null)
+            throw new IllegalArgumentException("List of file ID's cannot be null");
+
+        for (int i = 0; i < fileIDs.size(); i++)
+            if (!(fileIDs.get(i) instanceof Long))
+                throw new IllegalArgumentException("Each file ID must be a Long");
+
+        Object result = caller.dispatch("startImport",
+                                        new Object[] {
+                                            new Integer(dataset.getID()),
+                                            fileIDs
+                                        });
 
         try
         {
