@@ -1,4 +1,4 @@
-# OME/Tasks/HierarchyExport.pm
+# OME/Tasks/LSID.pm
 # This module is used for exporting a list of objects to an XML hierarchy governed by the OME-CA schema.
 
 # Copyright (C) 2002 Open Microscopy Environment
