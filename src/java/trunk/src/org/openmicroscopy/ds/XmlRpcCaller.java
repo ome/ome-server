@@ -155,8 +155,12 @@ public class XmlRpcCaller
     protected Object encodeObject(Object object)
     {
         if (object == null)
+        {
             return NULL_REFERENCE;
-        else if (object instanceof List) {
+        } else if (object instanceof Long ||
+                   object instanceof Short) {
+            return object.toString();
+        } else if (object instanceof List) {
             List list = new Vector();
             Iterator it = ((List) object).iterator();
             while (it.hasNext())
