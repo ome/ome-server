@@ -520,6 +520,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 				}
 			}
 			#
+			# END 'Write to STDIN of program'
 			#
 			#################################################################
 			# OK, now that we have the inputs, we actually run the module.
@@ -533,6 +534,8 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			# Forward the error text to our STDERR if there was any.
 			print STDERR "module exited normally, but gave the following error output\n".$errorStream if length $errorStream > 0;
 
+		#
+		# END 'Actually execute'
 		#
 		#####################################################################
 			
@@ -649,7 +652,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 					my $formalOutputName = $elements[0];
 					my $semanticElementName = $elements[1];
 					$outputs{ $formalOutputName }->{$semanticElementName} = 
-					${ $planeIndexes->{ $planeID }->{ $index } };
+						${ $planeIndexes->{ $planeID }->{ $index } };
 					print STDERR "\tStored index $index, value ".
 						$outputs{ $formalOutputName }->{$semanticElementName}.
 						" to ".$formalOutputName.'.'.$semanticElementName."\n"
