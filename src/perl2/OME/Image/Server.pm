@@ -85,6 +85,7 @@ use HTTP::Request::Common;
 use LWP::UserAgent;
 
 our $SHOW_CALLS = 0;
+our $SHOW_READS = 0;
 
 =head1 CONSTANTS
 
@@ -219,7 +220,10 @@ sub __safeBacktick {
         local($/) = undef;  # slurp in the entire contents of the pipe
         my $result = <KID>;
         close KID;
-        return $result;
+
+        my $status = $? >> 8;
+
+        return ($result,$status);
     } else {
         # Child process
 
@@ -367,14 +371,11 @@ sub __callOMEIS {
             }
         }
 
-        my $result = __safeBacktick($server_path,@params);
+        my ($result,$status) = __safeBacktick($server_path,@params);
 
-        if ($result =~ /Status: 500 (.*?)\015?\012/) {
+        if ($status != 0) {
             # There was a problem reported as an HTTP error
-            Carp::confess $1;
-        } else {
-            # Remove the HTTP header from the result
-            $result =~ s/^.*?\015?\012\015?\012//s;
+            Carp::confess "Error code $status calling image server";
         }
 
         unlink $stdin_filename if $delete_file;
@@ -988,6 +989,9 @@ sub readFile {
     my $proto = shift;
     my ($fileID,$offset,$length) = @_;
 
+    print STDERR "Read omeis $fileID $offset $length\n"
+      if $SHOW_READS;
+
     if ($length <= MAXIMUM_READ_TO_USE_CACHE) {
         # Check and see if we have a cache which contains the requested
         # data.  If not, load in an appropriate cache.
@@ -1019,11 +1023,17 @@ sub readFile {
             my $real_size = $real_end-$real_offset;
             no integer;
 
+            print STDERR "Cached read omeis $fileID $real_offset $real_size\n"
+              if $SHOW_READS;
+
             my $data = $proto->__callOMEIS(Method => 'ReadFile',
                                            FileID => $fileID,
                                            Offset => $real_offset,
                                            Length => $real_size);
             die "Error reading file" unless defined $data;
+
+            print STDERR "  Got ",length($data)," bytes\n"
+              if $SHOW_READS;
 
             $cache_filled = 1;
             $cache_data = $data;
@@ -1044,6 +1054,8 @@ sub readFile {
                                          Offset => $offset,
                                          Length => $length);
         die "Error reading file" unless defined $result;
+        print STDERR "  Got ",length($result)," bytes\n"
+          if $SHOW_READS;
         return $result;
     }
 }
@@ -1137,6 +1149,47 @@ sub convertPlane {
                   FileID   => $fileID,
                   Offset   => $offset);
     $params{BigEndian} = $bigEndian if defined $bigEndian;
+    my $result = $proto->__callOMEIS(%params);
+    die "Error converting pixels" unless defined $result;
+    chomp $result;
+    return $result;
+}
+
+=head2 convertPlaneFromTIFF
+
+	$pixels->convertPlaneFromTIFF($pixelsID,$z,$c,$t,$fileID);
+
+Copies pixels from an original file into a new pixels file.  The
+original file should have been previously uploaded via the uploadFile
+method.  The pixels file should have been previously created via the
+newPixels method.
+
+This method copies a single XY plane of pixels.  The plane is
+specified by its Z, C and T coordinates, which have 0-based indices.
+The uploaded file should be in the TIFF format, and should contain
+exactly one plane of pixels.  This plane should have the same
+dimensions and bytes per pixel as an XY plane in the pixels file.
+Currently, the image server only supports uploaded TIFF's with a
+single sample per pixel.
+
+If the specified pixel file isn't in write-only mode on the image
+server, an error will be thrown.
+
+The number of pixels successfully written by the image server will be
+returned.  This value can be used as an additional error check by
+client code.
+
+=cut
+
+sub convertPlaneFromTIFF {
+    my $proto = shift;
+    my ($pixelsID,$theZ,$theC,$theT,$fileID) = @_;
+    my %params = (Method   => 'ConvertTIFF',
+                  PixelsID => $pixelsID,
+                  theZ     => $theZ,
+                  theC     => $theC,
+                  theT     => $theT,
+                  FileID   => $fileID);
     my $result = $proto->__callOMEIS(%params);
     die "Error converting pixels" unless defined $result;
     chomp $result;
