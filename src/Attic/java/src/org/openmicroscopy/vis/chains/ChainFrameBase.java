@@ -79,7 +79,7 @@ public abstract class ChainFrameBase extends JFrame {
 
 		contentPane = getContentPane();
 		
-		canvas = createCanvas(connection);
+		canvas = createCanvas();
 		
 		setBounds(getInitialBounds());
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -96,10 +96,9 @@ public abstract class ChainFrameBase extends JFrame {
 	/**
 	 * Build the piccolo canvas that is placed in this frame
 	 * 
-	 * @param connection The {@link Connection} to the database
 	 * @return a piccolo canvas of the appropriate subclass of {@link PCanvas}
 	 */
-	public abstract PCanvas createCanvas(Connection connection);
+	public abstract PCanvas createCanvas();
 	
 	/**
 	 * @return the initial bounds of the frame

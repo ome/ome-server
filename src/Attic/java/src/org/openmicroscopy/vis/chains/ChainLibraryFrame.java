@@ -67,7 +67,7 @@ public class ChainLibraryFrame extends ChainFrameBase {
 	 * The canvas for this frame is an instance of {@link PChainLibraryCanvas}
 	 * @return a PChainLibraryCanvas
 	 */
-	public PCanvas createCanvas(Connection connection) {
+	public PCanvas createCanvas() {
 		return new PChainLibraryCanvas(connection);
 	}
 	

@@ -116,7 +116,7 @@ public class ModulePaletteFrame extends ChainFrameBase implements
 	 * The canvas for this frame is an instance of {@link PPaletteCanvas}
 	 * @return a PPaletteCanvas
 	 */
-	public PCanvas createCanvas(Connection connection) {
+	public PCanvas createCanvas() {
 		return new PPaletteCanvas(this);
 	}
 
