@@ -44,7 +44,7 @@
     </Nodes>
     <Links>
       <Link FromNodeID="Files"  FromOutputName="Files"  ToNodeID="Import" ToInputName="Files"/>
-      <Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Test"  ToInputName="Pixels"/>
+      <Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Test"   ToInputName="Pixels"/>
     </Links>
   </AnalysisChain>
 </AnalysisChains>
