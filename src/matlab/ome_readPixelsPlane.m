@@ -62,11 +62,11 @@ if (t < 0 || t >= st)
 end
 
 if (c < 0 || c >= sc)
-  error('T coordinate out of range');
+  error('C coordinate out of range');
 end
 
 if (z < 0 || z >= sz)
-  error('T coordinate out of range');
+  error('Z coordinate out of range');
 end
 
 floc = ((t*sc + c)*sz + z)*sy*sx*bbp;
