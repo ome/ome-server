@@ -732,7 +732,9 @@ sub getColumnType {
     my $alias = shift;
 
     if ($alias eq 'id') {
-        return "normal";
+        return "normal"
+        	if( scalar( keys %{ $class->__primaryKeys() } ) > 0 );
+        return undef;
     } elsif (defined $class->__columns()->{$alias}) {
         return defined $class->__columns()->{$alias}->[2]?
           "has-one":
@@ -744,6 +746,23 @@ sub getColumnType {
     } else {
         return undef;
     }
+}
+
+=head2 getFormalName
+
+	my $formal_name = $class->getFormalName();
+
+Returns the formal name of the class. This is the class name for
+non-semantic types, and @Semantic_Type_Name for semantic types.
+
+=cut
+
+sub getFormalName {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+	return '@'.$1 if( $class =~ m/^OME::SemanticType::__(.+)$/ );
+	return $class;
 }
 
 =head2 hasMany
@@ -800,38 +819,22 @@ sub hasMany {
           if defined $class->getColumnType($alias);
 
         # Create an accessor/mutator
-        my ($accessor, $counter);
-        
-        if (__isClassName($foreign_key_class)) {
-			$accessor = sub {
-				my $self = shift;
-				my $factory = $self->Session()->Factory();
-				return $factory->findObjects($foreign_key_class,
-											 $foreign_key_alias => $self->{__id});
-			};
-			$counter = sub {
-				my $self = shift;
-				my $factory = $self->Session()->Factory();
-				return $factory->countObjects($foreign_key_class,
-											  $foreign_key_alias => $self->{__id});
-			};
-        } else {
-			# Remove the leading @
-			my $st_name = substr($foreign_key_class,1);
-
-			$accessor = sub {
-				my $self = shift;
-				my $factory = $self->Session()->Factory();
-				return $factory->findAttributes($st_name,
-											 $foreign_key_alias => $self->{__id});
-			};
-			$counter = sub {
-				my $self = shift;
-				my $factory = $self->Session()->Factory();
-				return $factory->countAttributes($st_name,
-											  $foreign_key_alias => $self->{__id});
-			};
-		}
+		my $accessor = sub {
+			my $self = shift;
+			my %params = @_;
+			my $factory = $self->Session()->Factory();
+			return $factory->findObjects($foreign_key_class,
+										 $foreign_key_alias => $self->{__id},
+										 %params);
+		};
+		my $counter = sub {
+			my $self = shift;
+			my %params = @_;
+			my $factory = $self->Session()->Factory();
+			return $factory->countObjects($foreign_key_class,
+										  $foreign_key_alias => $self->{__id},
+										  %params);
+		};
 
         $has_manys->{$alias} = [ $foreign_key_class, $foreign_key_alias ];
 
@@ -907,12 +910,14 @@ sub manyToMany {
             return unless defined wantarray;
 
             my $self = shift;
+            my %params = @_;
             my $factory = $self->Session()->Factory();
 
             if (wantarray) {
                 my @links = $factory->
                   findObjects($map_class,
-                              $map_alias => $self->{__id});
+                              $map_alias => $self->{__id},
+                              %params);
 
                 foreach my $link (@links) {
                     $link = $link->$map_linker_alias();
@@ -922,7 +927,8 @@ sub manyToMany {
             } else {
                 my $links = $factory->
                   findObjects($map_class,
-                              $map_alias => $self->{__id});
+                              $map_alias => $self->{__id},
+                              %params);
 
                 my $iterator = OME::Factory::LinkIterator->
                   new($links,$map_linker_alias);
@@ -933,9 +939,11 @@ sub manyToMany {
 
         my $counter = sub {
             my $self = shift;
+            my %params = @_;
             my $factory = $self->Session()->Factory();
             return $factory->countObjects($map_class,
-                                          $map_alias => $self->{__id});
+                                          $map_alias => $self->{__id},
+                                          %params);
         };
 
 		eval "use $map_class";
