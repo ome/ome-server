@@ -48,6 +48,7 @@ the actual calculations.
 use strict;
 our $VERSION = '1.0';
 
+use Log::Agent;
 use OME::DataTable;
 use OME::AttributeType;
 use Benchmark qw(timediff timesum timestr);
@@ -100,7 +101,7 @@ sub new {
 }
 
 sub __debug {
-    #print STDERR @_;
+    logdbg "info", @_;
 }
 
 =head2 Session and Factory

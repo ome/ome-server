@@ -23,6 +23,7 @@ package OME::DataTable;
 use strict;
 our $VERSION = '1.0';
 
+use Log::Agent;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
@@ -88,7 +89,10 @@ sub requireDataTablePackage {
     my $self = shift;
     my $pkg = $self->getDataTablePackage();
     return $pkg if exists $self->_dataTablePackages()->{$pkg};
-    #print STDERR "**** Loading data table package $pkg\n";
+    logdbg "debug", "Loading data table package $pkg";
+
+    logcroak "Malformed class name $pkg"
+      unless $pkg =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
 
     my $def = "package $pkg;\n";
     $def .= q{

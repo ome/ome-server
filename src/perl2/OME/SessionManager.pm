@@ -24,6 +24,7 @@ our $VERSION = '1.00';
 
 use strict;
 
+use Log::Agent;
 use Ima::DBI;
 use Class::Accessor;
 use Class::Data::Inheritable;
@@ -144,14 +145,14 @@ sub TTYlogin {
 sub createWithPassword {
     my $self = shift;
     my ($username, $password) = @_;
-print STDERR "createWithPassword: username=".$username."\n";
+    logdbg "debug", "createWithPassword: username=".$username;
     my $session = $self->getOMESession ($username, $password);
     return undef unless $session;
     $session->{ApacheSession} = $self->newApacheSession ($username, $password);
     $session->{SessionKey} = $session->{ApacheSession}->{SessionKey};
-print STDERR "createWithPassword: {SessionKey}=".$session->{SessionKey}."\n";
-print STDERR "createWithPassword: SessionKey()=".$session->SessionKey()."\n";
-print STDERR "createWithPassword: session{username}=".$session->{ApacheSession}->{username}."\n";
+    logdbg "debug", "createWithPassword: {SessionKey}=".$session->{SessionKey};
+    logdbg "debug", "createWithPassword: SessionKey()=".$session->SessionKey();
+    logdbg "debug", "createWithPassword: session{username}=".$session->{ApacheSession}->{username};
     return $session;
 }
 
@@ -164,15 +165,15 @@ sub createWithKey {
     my $key = shift;
 
     my $apacheSession = $self->getApacheSession($key);
-print STDERR "createWithKey: username=".$apacheSession->{username}."\n";
-print STDERR "createWithKey: key=".$apacheSession->{SessionKey}."\n";
+    logdbg "debug", "createWithKey: username=".$apacheSession->{username};
+    logdbg "debug", "createWithKey: key=".$apacheSession->{SessionKey};
     my ($username, $password) = ($apacheSession->{username},$apacheSession->{password});
     my $session = $self->getOMESession ($username,$password);
     return undef unless $session;
     $session->{ApacheSession} = $apacheSession;
     $session->{SessionKey} = $apacheSession->{SessionKey};
-print STDERR "createWithKey: {SessionKey}=".$session->{SessionKey}."\n";
-print STDERR "createWithKey: SessionKey()=".$session->SessionKey()."\n";
+    logdbg "debug", "createWithKey: {SessionKey}=".$session->{SessionKey};
+    logdbg "debug", "createWithKey: SessionKey()=".$session->SessionKey();
     return $session;
 }
 
@@ -224,10 +225,10 @@ sub getOMESession {
     require OME::Factory;
     require OME::DBObject;
     my $session;
-print STDERR "getOMESession: looking for session, experimenter_id=$experimenterID.\n";
+    logdbg "debug", "getOMESession: looking for session, experimenter_id=$experimenterID";
     my @sessions = OME::Session->search ('experimenter_id' => $experimenterID);
     $session = $sessions[0] if defined $sessions[0];
-print STDERR "getOMESession: found ".scalar(@sessions)." session(s).\n";
+    logdbg "debug", "getOMESession: found ".scalar(@sessions)." session(s)";
 
 # FIXME:  This should probably be a remote host.
     my $host = `hostname`;
@@ -240,9 +241,10 @@ print STDERR "getOMESession: found ".scalar(@sessions)." session(s).\n";
             last_access     => 'now',
             host            => $host
         });
-print STDERR "getOMESession: created new session.\n";
+        logdbg "debug", "getOMESession: created new session";
     }
-    die ref($self)."->getOMESession:  Could not create session object\n" unless defined $session;
+    logdie ref($self)."->getOMESession:  Could not create session object"
+      unless defined $session;
 
     $session->last_access('now');
     $session->host($host);
@@ -251,10 +253,10 @@ print STDERR "getOMESession: created new session.\n";
     $session->{Factory} = OME::Factory->new();
     $session->{Manager} = $self;
 
-print STDERR "getOMESession: updating session.\n";
+    logdbg "debug", "getOMESession: updating session";
     $session->writeObject();
     $session->dbi_commit();
-print STDERR "getOMESession: returning session.\n";
+    logdbg "debug", "getOMESession: returning session";
     return $session;
 }
 
@@ -263,12 +265,12 @@ print STDERR "getOMESession: returning session.\n";
 # logout
 # ------
 sub logout () {
-my $self = shift;
-my $session = shift;
-return undef unless defined $session;
-print STDERR ref($self)."->logout: logging out.\n";
-	$self->deleteApacheSession ($session->{ApacheSession});
-	delete $session->{ApacheSession};
+    my $self = shift;
+    my $session = shift;
+    return undef unless defined $session;
+    logdbg "debug", ref($self)."->logout: logging out";
+    $self->deleteApacheSession ($session->{ApacheSession});
+    delete $session->{ApacheSession};
 }
 
 
@@ -277,15 +279,15 @@ print STDERR ref($self)."->logout: logging out.\n";
 # ----------------
 
 sub newApacheSession {
-my $self = shift;
-my ($userName,$password) = @_;
-my $apacheSession = $self->getApacheSession();
+    my $self = shift;
+    my ($userName,$password) = @_;
+    my $apacheSession = $self->getApacheSession();
 
 
     $apacheSession->{username} = $userName;
     $apacheSession->{password} = $password;
-print STDERR "newApacheSession: username=".$apacheSession->{username}."\n";
-print STDERR "newApacheSession: key=".$apacheSession->{SessionKey}."\n";
+    logdbg "debug", "newApacheSession: username=".$apacheSession->{username};
+    logdbg "debug", "newApacheSession: key=".$apacheSession->{SessionKey};
 
     return $apacheSession;
 }
@@ -296,12 +298,13 @@ print STDERR "newApacheSession: key=".$apacheSession->{SessionKey}."\n";
 # ----------------
 
 sub getApacheSession {
-my $self = shift;
-my $sessionKey = shift;
-print STDERR "getApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined')."\n";
-my %tiedApacheSession;
-my $apacheSession;
-my ($key,$value);
+    my $self = shift;
+    my $sessionKey = shift;
+    logdbg "debug", "getApacheSession: sessionKey=".
+        (defined $sessionKey ? $sessionKey : 'undefined');
+    my %tiedApacheSession;
+    my $apacheSession;
+    my ($key,$value);
 
     eval {
         tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
@@ -321,8 +324,8 @@ my ($key,$value);
     
     $self->refreshApacheSession ($apacheSession);
 
-print STDERR "getApacheSession: username=".$apacheSession->{username}."\n";
-print STDERR "getApacheSession: key=".$apacheSession->{SessionKey}."\n";
+    logdbg "debug", "getApacheSession: username=".$apacheSession->{username};
+    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey};
     return $apacheSession;
 }
 
@@ -348,7 +351,7 @@ my $self = shift;
 my $apacheSession = shift;
 my $sessionKey = $apacheSession->{SessionKey};
 my %tiedApacheSession;
-print STDERR ref($self)."->deleteApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined')."\n";
+logdbg "debug", ref($self)."->deleteApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
 
     eval {
         tie %tiedApacheSession, 'Apache::Session::File', $sessionKey, {
@@ -373,7 +376,7 @@ return undef unless defined $session;
 my $apacheSessionRef = $session->{ApacheSession};
 my $sessionKey = $apacheSessionRef->{SessionKey};
 my %tiedApacheSession;
-print STDERR "storeApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined')."\n";
+logdbg "debug", "storeApacheSession: sessionKey=".(defined $sessionKey ? $sessionKey : 'undefined');
 my ($key,$value);
 
     eval {

@@ -70,12 +70,14 @@ sub loadObject {
 
     #my $classCache = $self->{_cache}->{$class};
     #if (exists $classCache->{$id}) {
-    #    print STDERR "loading cache $class $id\n" if $self->{debug};
+    #    logdbg "debug", "loading cache $class $id" if $self->{debug};
     #    return $classCache->{$id};
     #} else {
-    #    print STDERR "loading  new  $class $id\n" if $self->{debug};
+    #    logdbg "debug", "loading  new  $class $id" if $self->{debug};
     #}
 
+    logcroak "Malformed class name $class"
+      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
     my $object = $class->retrieve($id) or return undef;
 
@@ -124,6 +126,8 @@ sub findObjects {
 sub newObject {
     my ($self, $class, $data) = @_;
 
+    logcroak "Malformed class name $class"
+      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
     eval "require $class";
     my $object = $class->create($data) or return undef;
     return $object;

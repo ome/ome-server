@@ -48,6 +48,7 @@ appropriate metadata into the OME database.
 use strict;
 our $VERSION = '1.0';
 
+use Log::Agent;
 use OME::Factory;
 use OME::DBObject;
 use OME::Dataset;
@@ -588,7 +589,7 @@ sub findModuleHandler {
         my ($message,$group) = @_;
         $group = defined $group? $group: "Default";
 
-        print STDERR "$message" if $self->Flag("Debug$group");
+        logtrc "notice", "$message" if $self->Flag("Debug$group");
     }
 
     # Some helpful database routines
@@ -665,6 +666,8 @@ sub findModuleHandler {
 
         __debug("    Loading module $location via handler $module_type\n");
         my $handler = findModuleHandler($module_type);
+        logcroak "Malformed class name $handler"
+          unless $handler =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
         eval "require $handler";
         my $module = $handler->new($location,$session,$program,$curr_node);
         $node_modules{$curr_nodeID} = $module;

@@ -76,6 +76,7 @@ all cached objects to be stored in a single cache.
 use strict;
 our $VERSION = '1.0';
 
+use Log::Agent;
 use Ima::DBI;
 use Class::Data::Inheritable;
 use Class::Accessor;
@@ -165,12 +166,12 @@ sub retrieve {
         if (exists $cache->{$class}->{$id}) {
             # Found it
 
-            #print STDERR "--- Retrieve: retrieving from cache $class.$id\n";
+            logdbg "debug", "Retrieving from cache $class.$id";
             return $cache->{$class}->{$id};
         }
 
         # Object not found, so delegate
-        #print STDERR "--- Retrieve: loading object $class.$id\n";
+        logdbg "debug", "Loading object $class.$id";
         my $object = $class->SUPER::retrieve($id);
 
         # Storing the object here turns out to be unnecessary, as
@@ -199,12 +200,12 @@ sub construct {
         if (exists $cache->{$class}->{$id}) {
             # Found it
 
-            #print STDERR "--- Construct: retrieving from cache $class.$id\n";
+            logdbg "debug", "Retrieving from cache $class.$id\n";
             return $cache->{$class}->{$id};
         }
 
         # Object not found, so delegate
-        #print STDERR "--- Construct: creating object $class.$id\n";
+        logdbg "debug", "Creating object $class.$id\n";
         my $object = $proto->SUPER::construct($data);
 
         # Store the object in the cache
@@ -227,8 +228,7 @@ sub columns {
 
     if (exists $ENV{OME_CLASS_DBI_DEBUG} &&
         $ENV{OME_CLASS_DBI_DEBUG} eq '1') {
-        print STDERR "*** ${class}->columns being called\n";
-        print STDERR "    Parameters: ".join(' ',@_)."\n";
+        logtrc "debug", "${class}->columns being called (".join(',',@_).")";
     }
 
     $class->SUPER::columns(@_);
@@ -239,15 +239,14 @@ sub _set_columns {
 
     if (exists $ENV{OME_CLASS_DBI_DEBUG} &&
         $ENV{OME_CLASS_DBI_DEBUG} eq '1') {
-        print STDERR "*** ${class}->_set_columns being called\n";
-        print STDERR "    Parameters: ".join(' ',@_)."\n";
+        logtrc "debug", "${class}->_set_columns being called (".join(',',@_).")";
     }
 
     $class->SUPER::_set_columns(@_);
 }
 
 sub delete {
-    print STDERR "*** Class::DBI::delete disabled\n";
+    logcarp "Class::DBI::delete disabled";
     return;
 }
 

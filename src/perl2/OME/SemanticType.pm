@@ -50,6 +50,7 @@ OME::DataTable create data classes for each attribute table.
 use strict;
 our $VERSION = '1.0';
 
+use Log::Agent;
 use OME::DBObject;
 use base qw(OME::DBObject);
 
@@ -83,7 +84,10 @@ sub requireAttributeTypePackage {
     my $self = shift;
     my $pkg = $self->getAttributeTypePackage();
     return $pkg if exists $self->_attributeTypePackages()->{$pkg};
-    #print STDERR "**** Loading data table package $pkg\n";
+    logdbg "debug", "Loading data table package $pkg";
+
+    logcroak "Malformed class name $pkg"
+      unless $pkg =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
 
     my $def = "package $pkg;\n";
     $def .= q{
@@ -140,7 +144,7 @@ sub newAttribute {
 
 
 sub __debug {
-    #print STDERR @_;
+    logdbg "debug", @_;
 }
 
 
