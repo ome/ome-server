@@ -211,10 +211,9 @@ my @modules = (
 	#name => 'Ima::DBI',
 	#repository_file => "$REPOSITORY/Ima-DBI-0.27.tar.gz"
 	#},{
-	# XXX DEPRECATED
-	#name => 'Exporter::Lite',
-	#repository_file => "$REPOSITORY/Exporter-Lite-0.01.tar.gz"
-	#},{
+	name => 'Exporter::Lite',
+	repository_file => "$REPOSITORY/Exporter-Lite-0.01.tar.gz"
+	},{
 	name => 'UNIVERSAL::exports',
 	repository_file => "$REPOSITORY/UNIVERSAL-exports-0.03.tar.gz"
 	},{
