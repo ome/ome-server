@@ -184,7 +184,7 @@ sub print_form {
 	
 	my %h=(
 	1 =>{name =>'addNewDataset', text=> 'New dataset named: '},
-	2 =>{name => 'addExistDataset', text => 'Add imported images to existing dataset '},
+	2 =>{name => 'addExistDataset', text => 'Add imported images to an unlock existing dataset '},
 	);
 	my $dropDowntable= $htmlFormat->dropDownTable("addDataset",\%datasetHash);
 	my $radioButton= $htmlFormat->radioButton(\%h,$defaultRadio,"DoDatasetType");

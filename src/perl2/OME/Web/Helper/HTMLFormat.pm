@@ -503,15 +503,6 @@ sub formCreate{
 }
 
 
-##################
-sub formFindSpots{
-	my $self=shift;
-	my ($submitName,$submitValue)=@_;
-	my $html="";
-	my $rows="";
-	return $html;
-
-}
 #############
 # Parameters
 #	No
@@ -608,9 +599,8 @@ sub formImport{
 	$rows.=addRow(\%b);
 	$html.=$submit."<BLOCKQUOTE>";
 	$html.=writeTable($rows,\%c);
-	if ($dropDownTable ne ""){
-		$html.=$rad[1]."<br>".$dropDownTable;
-	}
+	$html.=$rad[1]."<br>".$dropDownTable;
+	
 	$html.="</BLOCKQUOTE>";
 	return $html;
 
