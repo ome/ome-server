@@ -5,7 +5,7 @@ use XML::LibXML;
 use Log::Agent;
 
 if( ! $ARGV[0] ) {
-	print "Usage is:\n\t perl ExportSession.pl [--file outputFile] [ [All] | [ [User] [Group] [Project] [Dataset] [Images] [Features]] ]\n";
+	print "Usage is:\n\t perl ExportSession.pl [--file outputFile] [--exportSTDs] [ [All] | [ [User] [Group] [Project] [Dataset] [Images] [Features]] ]\n";
 	exit -1;
 }
 
@@ -22,11 +22,15 @@ my $OMEExporter = OME::Tasks::OMEExport->new( session => $session);
 my $file;
 my @objects;
 my $factory = $session->Factory();
+my $ExportSTDs;
 
 for (my $i=0; $i < @ARGV; $i++) {
 	if ($ARGV[$i] eq '--file') {
 		$file = $ARGV[$i+1];
 		$i++;
+	} elsif ($ARGV[$i] eq '--exportSTDs') {
+		logdbg "debug", 'Will be exporting STDs';
+		$ExportSTDs = 1;
 	} elsif ($ARGV[$i] eq 'User' or $ARGV[$i] eq 'All') {
 		logdbg "debug", 'Adding User';
 		push (@objects, $session->User());
@@ -56,7 +60,7 @@ for (my $i=0; $i < @ARGV; $i++) {
 }
 
 logdbg "debug", 'Building DOM';
-$OMEExporter->buildDOM (\@objects, ResolveAllRefs => 1);
+$OMEExporter->buildDOM (\@objects, ResolveAllRefs => 1, ExportSTDs => $ExportSTDs);
 
 if (defined $file) {
 	logdbg "debug", "Exporting to $file";
