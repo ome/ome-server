@@ -63,7 +63,8 @@ public class Blackguard
     {
         super();
 
-        is = ImageServer.getDefaultImageServer();
+        // No connection information needed yet
+        is = ImageServer.getDefaultImageServer("");
 
         bcf = new BlackguardControlFrame(this);
         bcf.pack();

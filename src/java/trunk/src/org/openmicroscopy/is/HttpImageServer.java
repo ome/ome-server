@@ -77,6 +77,12 @@ public class HttpImageServer
      */
     private String  url;
 
+    /** 
+     * The session key to use for authentication with the image
+     * server.
+     */
+    private String  sessionKey;
+
     /**
      * The HTTP client object used to connect to the image server.
      */
@@ -86,10 +92,11 @@ public class HttpImageServer
      * <b>Non-public method:</b> Creates a new instance connected to
      * an image server at the specified URL.
      */
-    HttpImageServer(String url)
+    HttpImageServer(String url, String sessionKey)
     {
         super();
         setURL(url);
+        this.sessionKey = sessionKey;
     }
 
     /**

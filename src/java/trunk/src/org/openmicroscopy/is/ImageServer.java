@@ -82,22 +82,24 @@ public abstract class ImageServer
      * this property is not set, the default URL is
      * <code>http://localhost/cgi-bin/omeis</code>.</p>
      */
-    public static ImageServer getDefaultImageServer()
+    public static ImageServer getDefaultImageServer(String sessionKey)
     {
         String uri = System.
             getProperty("org.openmicroscopy.is.url",
                         "http://localhost/cgi-bin/omeis");
 
-        return getHTTPImageServer(uri);
+        return getHTTPImageServer(uri,sessionKey);
     }
 
     /**
      * <p>Returns a image server class which connects via HTTP to the
-     * specified location.</p>
+     * specified location, and which authenticates with the given
+     * session key.</p>
      */
-    public static ImageServer getHTTPImageServer(String location)
+    public static ImageServer getHTTPImageServer(String location,
+                                                 String sessionKey)
     {
-        return new HttpImageServer(location);
+        return new HttpImageServer(location,sessionKey);
     }
 
     /**
