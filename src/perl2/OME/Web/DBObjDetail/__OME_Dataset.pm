@@ -60,6 +60,7 @@ use OME;
 our $VERSION = $OME::VERSION;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::CategoryManager;
+use OME::Web::DBObjDetail::__Category;
 
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
@@ -102,44 +103,75 @@ sub getPageBody {
 		);
 	}
 
-	# Use selected CG (if there is one) to group images.
+	# Use selected CategoryGroup (if there is one) to group images.
 	my $cg_id = $q->param( 'group_images_by_cg' );
 	if( $cg_id && $cg_id ne '' ) {
 		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
 			or die "Couldn't load CategoryGroup ID=$cg_id";
-		$tmpl_data{ selected_category_group } = $self->Renderer()->render( $cg, 'ref' );
-		my %classified_images;
-		foreach my $category ( sort( { $a->Name cmp $b->Name } $cg->CategoryList() ) ) {
-			my @images = grep( 
-				(exists $image_ids{ $_->id } ),
-				OME::Tasks::CategoryManager->getImagesInCategory( $category )
+		my %image_classifications;
+		foreach my $image ( $dataset->images() ) {
+			my $classification = OME::Tasks::CategoryManager->
+				getImageClassification( $image, $cg );
+			# Watch out for multiple classifications
+			if( ref( $classification ) eq 'ARRAY' ) {
+				$html .= "<font color='red'>Image ".$self->Renderer()->render( $image, 'ref' ).
+					" has more than one classification under CategoryGroup ".
+					$self->Renderer()->render( $cg, 'ref' ).
+					". This display can only handle one classification per image.</font>";
+				# Flag for "can't display classification"
+				%image_classifications = ();
+				last;
+			# This image hasn't been classified
+			} elsif( not defined $classification ) {
+				push( @{ $image_classifications{0} }, $image );
+			} else {
+				push( @{ $image_classifications{ $classification->Category->id } }, $image );
+			}
+		}
+		# look for "can't display classification" flag
+		if( %image_classifications ) {
+			# If 'selected_category_group' isn't set, the template will
+			# revert to a big list of images. So only set it if we can
+			# handle this category group.
+			$tmpl_data{ selected_category_group } = $self->Renderer()->render( $cg, 'ref' );
+			my @category_list = sort( { $a->Name cmp $b->Name } $cg->CategoryList() );
+			$tmpl_data{ available_categories } = $q->popup_menu(
+				-name     => 'category_to_classify_with',
+				'-values' => [ map( $_->id, @category_list) ],
+				-labels   => { map { $_->id => $_->Name } @category_list }
+			) if @category_list;
+			foreach my $category ( @category_list ) {
+				my @sorted_images = sort( 
+					{ $a->name cmp $b->name }
+					@{ $image_classifications{ $category->id } || [] }
+				);
+				push( @{ $tmpl_data{ CategoryList } }, {
+					CategoryRef => $self->Renderer()->render( $category, 'ref' ),
+					images      => $self->Renderer()->renderArray( 
+						\@sorted_images, 'bare_ref_mass', { type => 'OME::Image' } 
+					),
+				} );
+			}
+			my @unclassified_images = sort( 
+				{ $a->name cmp $b->name }
+				@{ $image_classifications{ 0 } || [] }
 			);
-			$classified_images{ $_->id() } = undef
-				foreach @images;
 			push( @{ $tmpl_data{ CategoryList } }, {
-				CategoryRef => $self->Renderer()->render( $category, 'ref' ),
-				images      => $self->Renderer()->renderArray( \@images, 'bare_ref_mass', { type => 'OME::Image' } ),
+				CategoryRef => 'Unclassified',
+				images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
 			} );
 		}
-		my @unclassified_images = grep( 
-			( not exists $classified_images{ $_->id() } ),
-			$dataset->images()
-		);
-		push( @{ $tmpl_data{ CategoryList } }, {
-			CategoryRef => 'Unclassified',
-			images      => $self->Renderer()->renderArray( \@unclassified_images, 'bare_ref_mass', { type => 'OME::Image' } ),
-		} );
 	}
 	
 	
 	$tmpl->param( %tmpl_data );
 	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
 	$html .= $q->startform( { -name => $self->{ form_name } } ).
-	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
-	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
-	           $q->hidden({-name => 'action', -default => ''}).
-	           $tmpl->output().
-	           $q->endform();
+	         $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
+	         $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
+	         $q->hidden({-name => 'action', -default => ''}).
+	         $tmpl->output().
+	         $q->endform();
 
 	return ('HTML', $html);
 }
@@ -149,6 +181,8 @@ sub _takeAction {
 	my $self = shift;
 	my $dataset = $self->_loadObject();
 	my $q = $self->CGI();
+	my $message;
+	my $factory = $self->Session()->Factory();
 
 	# make this dataset the "most recent"
 	$self->Session()->dataset( $dataset );
@@ -168,7 +202,38 @@ sub _takeAction {
 	if( $image_ids ) {
 		OME::Tasks::DatasetManager->addImages( [ split( m',', $image_ids ) ] );
 	}
-	return;
+	
+	# allow image declassification
+	my $image_id_to_declassify = $q->param( 'declassifyImage' );
+	if( $image_id_to_declassify && $image_id_to_declassify ne '' ) {
+		my $image = $factory->loadObject( 'OME::Image', $image_id_to_declassify )
+			or die "Couldn't load image (id=$image_id_to_declassify)";
+		my $cg_id = $q->param( 'group_images_by_cg' );
+		die "No category group selected."
+			unless ( $cg_id && $cg_id ne '' );
+		my $cg = $factory->loadObject( '@CategoryGroup', $cg_id )
+			or die "Couldn't load CategoryGroup ID=$cg_id";
+		my $classification = OME::Tasks::CategoryManager->
+			getImageClassification( $image, $cg );
+		unless( ref( $classification ) eq 'ARRAY' ) {
+			OME::Tasks::CategoryManager->
+				declassifyImage( $image, $classification->Category() );
+			$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' )."<br>";
+		} else {
+			$message .= "Image ".$self->Renderer()->render( $image, 'ref' )." has ".
+			scalar( @$classification )." classifications in this CategoryGroup. This page isn't capable of dealing with that.<br>";
+		}
+	}
+	
+	# allow image classification
+	my $image_id_to_classify = $q->param( 'classifyImage' );
+	if( $image_id_to_classify && $image_id_to_classify ne '') {
+		my $category_id = $q->param( 'category_to_classify_with' );
+		$message .= $self->CategoryUtil()->
+			classify( $image_id_to_classify, $category_id );
+	}
+	
+	return $message;
 }
 
 
