@@ -95,6 +95,7 @@ sub new {
     my $class = ref($proto) || $proto;
    	my ($name,$nsteps) = @_;
 
+	$class->ping();
 	$task = $class->taskFactory()->newObject("OME::Task", {
 		name        => $name,
 		process_id  => $$,
@@ -112,6 +113,33 @@ sub new {
 
 }
 
+
+
+=head2 ping (tasks => \@tasks)
+
+Pings the list of tasks (kill 0), and calls died() on each task who's state is
+'IN PROGRESS' that doesn't respond.  If the tasks parameter isn't provided,
+pings all tasks.
+
+=cut
+
+sub ping {
+	my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my %param = @_;
+    my $tasks;
+    
+    $tasks = $param{tasks} if exists $param{tasks};
+    $tasks = [$class->taskFactory()->findObjects('OME::Task')] unless $tasks;
+
+	foreach my $task (@$tasks) {
+		next unless $task->state() eq 'IN PROGRESS';
+		$task->died ('Task died for unknown reasons')
+			unless kill (0, $task->process_id()) > 0
+	}
+
+}
+
 =head2 list (ID => $taskID, state => $state, session => $session)
 
 Return a list of L<OME::Task|OME::Task> objects with the specified optional criteria.
@@ -125,6 +153,7 @@ sub list {
     my $class = ref($proto) || $proto;
     my %criteria = @_;
 
+	$class->ping();
     $criteria{session_id} = OME::Session->instance()->ID()
     	unless exists $criteria{session_id}
     	or  exists $criteria{session};
