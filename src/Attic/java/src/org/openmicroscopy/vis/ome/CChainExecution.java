@@ -41,8 +41,17 @@
 
 import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChainExecution;
+import org.openmicroscopy.Chain;
+import org.openmicroscopy.ModuleExecution;
 import org.openmicroscopy.remote.RemoteSession;
-
+import org.openmicroscopy.Module;
+import org.openmicroscopy.Module.FormalOutput;
+import org.openmicroscopy.SemanticType;
+import org.openmicroscopy.Factory;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.HashMap;
 
 
 /** 
@@ -68,4 +77,39 @@ public class CChainExecution extends RemoteChainExecution  {
 	public CChainExecution(RemoteSession session,String reference) {
 		super(session,reference);
 	}	
+	
+	public List getResults(Module mod,FormalOutput output) {
+		List nodes = getNodes();
+		Iterator iter = nodes.iterator();
+		Node node;
+		Chain.Node chainNode;
+		Module execModule;
+		ModuleExecution moduleExecution;
+		
+		System.err.println("finding results for "+mod.getName());
+		while (iter.hasNext()) {
+			node = (Node) iter.next();
+			chainNode = node.getChainNode();
+			execModule = chainNode.getModule();
+			System.err.println("found results for "+execModule.getName());
+			
+			if (execModule == mod) {
+				System.err.println("got a match!");
+				// ok, now we're in the right module for this execution.
+				moduleExecution = node.getModuleExecution();
+				SemanticType type = output.getSemanticType();
+				return getResults(moduleExecution,type);
+			}
+		}
+		return (List) null;
+	}
+	
+	public List getResults(ModuleExecution modEx,SemanticType type) {
+		ArrayList result = new ArrayList();
+		
+		Factory  factory= getSession().getFactory();
+		HashMap hash = new HashMap();
+		hash.put("module_execution",modEx);
+		return factory.findAttributes(type.getName(),hash);
+	}
  }
