@@ -52,8 +52,8 @@ import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
 
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.ome.CChainExecution;
-import org.openmicroscopy.vis.ome.CProject;
+import org.openmicroscopy.ChainExecution;
+import org.openmicroscopy.Project;
 import javax.swing.event.EventListenerList;
 import java.util.Collection;
 
@@ -72,8 +72,8 @@ public class SelectionState {
 	private CDataset currentDataset = null;
 	private Collection 	activeDatasets = null;
 	private CChain	currentChain = null;
-	private CChainExecution currentExecution = null;
-	private CProject currentProject = null;
+	private ChainExecution currentExecution = null;
+	private Project currentProject = null;
 	private Collection activeProjects = null;
 	
 	// listener lists
@@ -87,11 +87,11 @@ public class SelectionState {
 	}
 	
 	// executions
-	public CChainExecution getCurrentExecution() {
+	public ChainExecution getCurrentExecution() {
 		return currentExecution;
 	}
 	
-	public  void setCurrentExecution(CChainExecution exec) {
+	public  void setCurrentExecution(ChainExecution exec) {
 		currentExecution = exec;
 		fireExecutionSelectionEvent();
 	}
@@ -121,7 +121,7 @@ public class SelectionState {
 	
 	// PROJECT
 	
-	public void setProjectSelections(Collection active,CProject current) {
+	public void setProjectSelections(Collection active,Project current) {
 		activeProjects = active;
 		currentProject  = current;
 		fireProjectSelectionEvent();			
@@ -131,7 +131,7 @@ public class SelectionState {
 		return activeProjects;
 	}
 	
-	public CProject getCurrentProject() {
+	public Project getCurrentProject() {
 		return currentProject;
 	}
 	
