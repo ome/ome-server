@@ -4,16 +4,17 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		OME_Image_XY_stats OME_Image_XY_sums OME_Image_XYZ_fastStats \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
 		cgrayce2 extractBinData insertBinData
-DB_INCLUDES = -I/usr/include/pgsql
+DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql -I/usr/local/include -I/sw/include
 DB_LIBS = -lpq
 MATH_LIBS = -lm
-LIBS = $(DB_LIBS) $(MATH_LIBS) -L. -lOME
+LIBPATHS = -L. -L/usr/local/lib -L/sw/lib
+LIBS = $(DB_LIBS) $(MATH_LIBS)  $(LIBPATHS) -lOME 
 DEFINES = -DDEBUG
 COMPILER_FLAGS = -g -Wall -Wpointer-arith -Wstrict-prototypes -O3
 MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
-CFLAGS = $(DEFINES) $(DB_INCLUDES) $(COMPILER_FLAGS)
+CFLAGS = $(DEFINES) $(LIBPATHS) $(DB_INCLUDES) $(COMPILER_FLAGS)
 XML2_CFLAGS = `xml2-config --cflags`
 XML2_LIBS = `xml2-config --libs`
 CC = gcc
