@@ -162,6 +162,7 @@ sub TTYlogin {
     my $homeDir = $ENV{"HOME"} || ".";
     my $loginFile = "$homeDir/.omelogin";
 
+    my $manager = OME::SessionManager->new();
     my $session;
 
     my $loginFound = open LOGINFILE, "< $loginFile";
@@ -169,7 +170,7 @@ sub TTYlogin {
     if ($loginFound) {
         my $key = <LOGINFILE>;
         chomp($key);
-        $session = OME::SessionManager->createSession($key);
+        $session = $manager->createSession($key);
         close LOGINFILE;
 
         if (!defined $session) {
