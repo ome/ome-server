@@ -68,7 +68,7 @@ dispatch (char **param)
 	OID ID=0;
 	size_t offset=0, file_offset=0;
 	unsigned long long scan_off;
-	unsigned char isLocalFile;
+	unsigned char isLocalFile=0;
 	char *dims;
 	int isSigned,isFloat;
 	int numInts,numX,numY,numZ,numC,numT,numB;
@@ -120,9 +120,9 @@ char **cgivars=param;
 			return (-1);
 	}
 
-    if ((theParam = get_param(param,"IsLocalFile")))
-        sscanf(theParam,"%hhu",&isLocalFile);
-    else
+    if ((theParam = get_lc_param(param,"IsLocalFile"))) {
+    	if ( !strcmp (theParam,"true") || !strcmp (theParam,"1") ) isLocalFile = 1;
+    } else
         isLocalFile = 0;
 
 
