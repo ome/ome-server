@@ -1573,6 +1573,8 @@ sub findModuleHandler {
         my $total_time = timediff($end_time,$start_time);
 
         __debug("Timing - Total: ".timestr($total_time),'Timing');
+        
+        return $analysis_chain_execution;
 
     }
 }
