@@ -48,7 +48,7 @@ Util.createTextSVG = function( text_data, attr_list ) {
 };
 
 Util.isArray = function(Array_IN) {
-	return(typeof(Array_IN) == 'Object' && Array_IN.constructor == Array);
+	return(typeof(Array_IN) == 'object' && Array_IN.constructor == Array);
 };
 
 Util.isFunction = function(Function_IN) {
