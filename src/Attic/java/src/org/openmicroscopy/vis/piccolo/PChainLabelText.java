@@ -89,11 +89,12 @@ public class PChainLabelText extends PRemoteObjectLabelText {
 		return SelectionEvent.SET_SELECTED_CHAIN;
 	}
 	
+	/* used to be called when this is clicked on. now questionable */
 	public  void doSelection() {
 		SelectionState selectionState = SelectionState.getState();
 		System.err.println("dataset ..+ is being selected.."+chain.getName());
 		CDataset dataset = getDataset();
-		selectionState.setSelected(chain,dataset);
+		//selectionState.setSelected(chain,dataset);
 	}
 	
 	private CDataset getDataset() {
