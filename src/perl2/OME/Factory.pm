@@ -169,7 +169,7 @@ passed in the $analysis parameter, not the $dataHash.
 Since attribute type packages are created dynamically, attribute types
 are not referred to by class name, like objects are.  The
 $attributeType parameter should be either an instance of
-OME::AttributeType (which I<is> an OME::DBObject, and can be obtaining
+OME::AttributeType (which I<is> an OME::DBObject, and can be obtained
 via any of the *Object methods), or the name of an attribute type.
 Note that:
 
