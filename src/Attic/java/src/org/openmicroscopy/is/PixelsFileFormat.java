@@ -93,6 +93,7 @@ public class PixelsFileFormat
      */
     public PixelsFileFormat()
     {
+        super();
         sizeX = 0;
         sizeY = 0;
         sizeZ = 0;
@@ -129,6 +130,7 @@ public class PixelsFileFormat
                             boolean isSigned,
                             boolean isFloat)
     {
+        super();
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.sizeZ = sizeZ;
@@ -137,6 +139,21 @@ public class PixelsFileFormat
         this.bytesPerPixel = bytesPerPixel;
         this.isSigned = isSigned;
         this.isFloat = isFloat;
+    }
+
+    /**
+     * Returns a {@link String} representation of this object.
+     */
+    public String toString()
+    {
+        String result =
+            "("+sizeX+","+sizeY+","+sizeZ+","+sizeC+","+sizeT+") ";
+
+        result += isSigned? "signed ": "unsigned ";
+        result += isFloat? "float ": "int ";
+        result += Integer.toString(bytesPerPixel*8);
+
+        return result;
     }
 
     /**
