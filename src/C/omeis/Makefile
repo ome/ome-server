@@ -1,6 +1,6 @@
 CC     = gcc
-CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99
-LIBS   = -lm -lssl
+CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 -pedantic
+LIBS   = -lm -lssl -lcrypto
 OBJS   = digest.o
 ifndef OME_ROOT
 OME_ROOT=/OME

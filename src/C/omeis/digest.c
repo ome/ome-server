@@ -60,8 +60,7 @@ get_md (int fd, unsigned char * md_value)
 	
 	if (!md) return (-1);  /* Failure in namelookup */
 	
-	EVP_MD_CTX_init(&mdctx);
-	EVP_DigestInit_ex(&mdctx, md, NULL);
+	EVP_DigestInit(&mdctx, md);
 
 	do {
 		rlen = read(fd, buf, MD_BUFSIZE);
@@ -71,7 +70,6 @@ get_md (int fd, unsigned char * md_value)
 	if (rlen < 0) return (-2);  /* Error reading from fd */
 
 	EVP_DigestFinal(&mdctx, md_value, &md_len);
-	EVP_MD_CTX_cleanup(&mdctx);
 
 	return (1);  /* Success */
 }
