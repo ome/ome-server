@@ -124,11 +124,11 @@ IMPORT_IMAGES=`su -l $OME_ADMIN -c "psql -qtc 'select count(name) from images' $
 IMPORT_IMAGES=${IMPORT_IMAGES:='0'}
 if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	then echo "`date` Smoke Test Failed. Imported $IMPORT_IMAGES images, expected $EXPECT_IMAGES " >> $LOG_FILE ;
-	echo "Tasks table:" ;
-	echo "------------" ;
+	echo "Tasks table:"  >> $LOG_FILE ;
+	echo "------------" >> $LOG_FILE ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
-	echo "Images table:" ;
-	echo "------------" ;
+	echo "Images table:" >> $LOG_FILE ;
+	echo "------------" >> $LOG_FILE ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from images' -d $TEST_DB" >> $LOG_FILE ;
 	# Kill all the PIDs listed in the tasks table
 	PID=`su -l $OME_ADMIN -c "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
