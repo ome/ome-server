@@ -269,7 +269,7 @@ sub getOMESession {
 
 		my $diffMinutes;
 
-		if( $timeStamp =~ m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)-\d+$/ ) {
+		if( $timeStamp =~ m/(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+).+$/ ) {
 			my ($year, $month, $day, $hr, $min, $sec) = ($1, $2, $3, $4, $5, $6);
 			if( $year != $cyear or $month != $cmonth or $day != $cday ) {
 				$diffMinutes = $maxMin + 1; # if the date doesn't match up, the session is over limit
