@@ -57,7 +57,7 @@ use OME::Tasks::NotificationManager;
 #********* GLOBALS AND DEFINES
 #*********
 
-$VERSION = $OME::VERSION;
+$VERSION = $OME::VERSION_STRING;
 
 my $PM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Project';
 my $DM_CREATE     = 'serve.pl?Page=OME::Web::DBObjCreate&Type=OME::Dataset';
