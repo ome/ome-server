@@ -330,7 +330,9 @@ public class XmlRpcCaller
 
                 vparams.addElement(username);
                 vparams.addElement(password);
-                sessionKey = invoke("createSession").toString();
+                Object result = invoke("createSession");
+
+                sessionKey = (result == null)? null: result.toString();
 
                 if (sessionKey == null || sessionKey.equals(""))
                     throw new RemoteAuthenticationException("Could not log in");
