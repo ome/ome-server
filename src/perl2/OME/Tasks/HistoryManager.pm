@@ -81,7 +81,6 @@ use OME::SetDB;
 use OME::DBObject;
 use OME::ModuleExecution;
 use OME::AnalysisChainExecution::NodeExecution;
-OME::DBObject->Caching(0);
 use Carp;
 
 use OME;
