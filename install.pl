@@ -34,40 +34,159 @@
 use warnings;
 use strict;
 use Getopt::Long;
-require OME::Install::PreInstallTask;
 use lib qw(src/perl2);
 use Carp;
+use Storable;
+
+# OME Modules
+require OME::Install::PreInstallTask;
+require OME::Install::Environment;
 
 #*********
 #********* GLOBALS AND DEFINES
 #*********
 
-# Tasks
-my @tasks = (
-    "OME::Install::CoreSystemTask",
-    "OME::Install::LibraryTask",
-    "OME::Install::PerlModuleTask",
-    "OME::Install::CoreDatabaseTablesTask",
-    "OME::Install::ApacheConfigTask"
+# Main task queue
+my @tasks = qw(
+    OME::Install::CoreSystemTask
+    OME::Install::LibraryTask
+    OME::Install::PerlModuleTask
+    OME::Install::CoreDatabaseTablesTask
+    OME::Install::ApacheConfigTask
 );
 
-# Main task queues
-my (@tasks_todo, @tasks_done);
+# Task stack
+my @tasks_done = ();
+
+#*********
+#********* LOCAL SUBROUTINES
+#*********
+
+sub run_tasks {
+    # PreInstall
+    OME::Install::PreInstallTask::execute();
+
+    # Run each task and fill our done stack
+    while (my $task = shift @tasks) {
+	eval "require $task";
+	croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+	$task .= "::execute()";
+	eval $task;
+	croak "Errors executing task: $@\n" if $@;  # Ditto as above
+	push (@tasks_done, $task);
+    }
+
+    return 1;
+}
+
+sub restore_env {
+    my $env_file = shift;
+
+    ($env_file and -e $env_file) or usage ("Error: Unable to locate Environment file \"$env_file\".\n\n");
+
+    # Restore our singleton from disk
+    OME::Install::Environment::restore_from ($env_file);
+
+    return 1;
+}
+
+sub usage {
+    my $error = shift;
+    my $usage = "";
+
+    $usage = $error if $error; 
+    $usage .= <<USAGE;
+OME install script. Bootstraps the environment and database as well as 
+being able to run upgrades and sanity checks on a current installation.
+
+Usage:
+  $0 [options]
+
+Options:
+  -f, --env-file		Location of the stored environment overrides
+				the default of "/OME/conf/environment.store"
+  -c, --perl-check		Just run a Perl module check using the
+				stored environment
+  -l, --lib-check		Just run a library check using the stored
+				environment
+  -i, --install			Default execution
+  -a, --check-all		Run all our sanity checks
+  -h, --help			This message
+
+Report bugs to <ome-devel\@mit.edu>.
+USAGE
+
+    print STDERR $usage;
+    exit (1) if $error;
+    exit (0);
+}
 
 #*********
 #********* START OF CODE
 #*********
 
-# PreInstall
-OME::Install::PreInstallTask::execute();
+# Number of checks to run
+my $checks_to_run;
 
-# Run our tasks
-foreach my $task (@tasks) {
-    eval "use $task";
+# Command line defaults
+my $env_file = '/OME/conf/environment.store';
+
+# Command line options
+my ($perl_check, $lib_check, $check_all, $usage, $install);
+
+# Parse our command line options
+GetOptions ("f|env-file=s" => \$env_file,	# Environment file
+            "c|perl-check" => \$perl_check, 	# Just run the perl module task
+	    "l|lib-check" => \$lib_check,	# Just run the library task
+	    "a|check-all" => \$check_all,	# Set $perl_check, $lib_check
+	    "i|install" => \$install,		# Default (unused at the moment)
+	    "h|help" => \$usage,		# Display help
+	    );
+
+usage () if $usage;
+if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
+
+if ($lib_check) {
+    restore_env ($env_file);
+
+    # Initialize our environment and set the LIB_CHECK flag
+    my $environment = initialize OME::Install::Environment;
+    $environment->flag ("LIB_CHECK");
+
+    eval "require OME::Install::LibraryTask";
     croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
-    $task .= "::execute()";
-    eval $task;
-    croak "Errors executing task: $@\n" if $@;  # Ditto as above
+
+    OME::Install::LibraryTask::execute ();
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+
+    --$checks_to_run;
+
+    exit (0) if $checks_to_run < 1;
 }
+
+if ($perl_check) {
+    restore_env ($env_file);
+
+    # Initialize our environment and set the PERL_CHECK flag
+    my $environment = initialize OME::Install::Environment;
+    $environment->flag ("PERL_CHECK");
+
+    eval "require OME::Install::PerlModuleTask";
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+
+    OME::Install::PerlModuleTask::execute ();
+    croak "Errors loading module: $@\n" if $@;  # Really only for debugging purposes
+
+    --$checks_to_run;
+
+    exit (0) if $checks_to_run < 1;
+}
+
+run_tasks ();
+
+# Store environment
+my $environment = initialize OME::Install::Environment;
+my $conf_dir = $environment->base_dir () . "/conf";
+$environment->store_to ("$conf_dir/environment.store");
 
 exit (0);
