@@ -130,8 +130,7 @@ __PACKAGE__->addColumn(inserted => 'inserted',
                         SQLType => 'timestamp',
                         NotNull => 1,
                        });
-# pixels_id is part of a hack added by josiah <siah@nih.gov> on 6/9/03
-# it references the default set of pixels. 
+# pixels_id references the default set of pixels. 
 __PACKAGE__->addColumn(pixels_id => 'pixels_id',{SQLType => 'integer'});
 __PACKAGE__->addColumn(default_pixels => 'pixels_id','@Pixels');
 
@@ -237,13 +236,13 @@ sub GetPix {
     }
 }
 
-=head2 default_pixels
+=head2 DefaultPixels
 
 # accessor
-$image->default_pixels();
+$image->DefaultPixels();
 
 # mutator
-$image->default_pixels( $pixels_ID );
+$image->DefaultPixels( $pixels_ID );
 
 This is an accessor/mutator for the default pixels attribute
 associated with this image.  Default pixels should NEVER be used for
