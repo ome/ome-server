@@ -36,16 +36,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
 #include "method.h"
 
 unsigned int
 get_method_by_name(char * m_name)
 {
 	/* Sanity check (FATAL) */
-	if (m_name == NULL) {
-		fprintf(stderr, "FATAL: NULL m_name to get_method_by_name().\n");
-		return(-255);
-	}
+	assert(m_name != NULL);
 
 	/* Pixels comparisions */
 	if (strcmp(m_name, "Pixels") == 0) return M_PIXELS;

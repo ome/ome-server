@@ -39,6 +39,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <assert.h>
+
 #include "digest.h"
 
 int
@@ -79,10 +81,8 @@ get_md_from_fd (int fd, unsigned char * md_value)
 	unsigned int md_len;
 
 	/* Sanity check (FATAL) */
-	if (fd < 0 || md_value == NULL) {
-		fprintf(stderr, "FATAL: NULL fd or md_vale to get_md_from_fd().\n");
-		return(-255);
-	}
+	assert(fd > 0);
+	assert(md_value != NULL);
 
 	OpenSSL_add_all_digests();
 
@@ -111,9 +111,12 @@ get_md_from_fd (int fd, unsigned char * md_value)
 }
 
 void 
-print_md (unsigned char *md_value)
+print_md (unsigned char * md_value)
 {
 	int i;
+
+	/* Sanity check (FATAL) */
+	assert(md_value != NULL);
 
 	for (i = 0; i < OME_DIGEST_LENGTH; i++)
 		printf("%02x", md_value[i]);
