@@ -704,14 +704,33 @@
 				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "@Zoom" mode = "Attribute2OptionalAttribute"/>
+			<xsl:attribute name = "Display">
+				<xsl:choose>
+					<xsl:when test="@DisplayRGB = 'true' or @DisplayRGB = '1'">
+						<xsl:text>RGB</xsl:text>
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:text>Grey</xsl:text>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:attribute>
 			<xsl:apply-templates select = "../CA:DisplayChannel [@ID=$RedChannelID]" mode="MakeDisplayChannel">
 				<xsl:with-param name="Name">RedChannel</xsl:with-param>
+				<xsl:with-param name="isOn">
+					<xsl:value-of select="@RedChannelOn"/>
+				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "../CA:DisplayChannel [@ID=$GreenChannelID]" mode="MakeDisplayChannel">
 				<xsl:with-param name="Name">GreenChannel</xsl:with-param>
+				<xsl:with-param name="isOn">
+					<xsl:value-of select="@GreenChannelOn"/>
+				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "../CA:DisplayChannel [@ID=$BlueChannelID]" mode="MakeDisplayChannel">
 				<xsl:with-param name="Name">BlueChannel</xsl:with-param>
+				<xsl:with-param name="isOn">
+					<xsl:value-of select="@BlueChannelOn"/>
+				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "../CA:DisplayChannel [@ID=$GreyChannelID]" mode="MakeDisplayChannel">
 				<xsl:with-param name="Name">GreyChannel</xsl:with-param>
@@ -750,8 +769,21 @@
 	<xsl:template match = "CA:DisplayChannel" mode="MakeDisplayChannel">
 		<xsl:variable name = "ID" select = "@ID"/>
 		<xsl:param name = "Name"/>
+		<xsl:param name = "isOn">true</xsl:param>
 		<xsl:element name = "{$Name}">
 			<xsl:apply-templates select = "@* [name() != 'ID']"/>
+			<xsl:if test="$Name != 'GreyChannel'">
+				<xsl:attribute name = "isOn">
+					<xsl:choose>
+						<xsl:when test="$isOn = 'true' or $isOn = '1'">
+							<xsl:text>true</xsl:text>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:text>false</xsl:text>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:attribute>
+			</xsl:if>
 		</xsl:element>
 	</xsl:template>
 	<xsl:template match = "CA:DisplayChannel/@*">
