@@ -424,8 +424,8 @@ sub getApacheSession {
 
     untie %tiedApacheSession;
     
-    logdbg "debug", "getApacheSession: username=".$apacheSession->{username};
-    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey};
+    logdbg "debug", "getApacheSession: username=".$apacheSession->{username} || "";
+    logdbg "debug", "getApacheSession: key=".$apacheSession->{SessionKey} || "";
     return $apacheSession;
 }
 
