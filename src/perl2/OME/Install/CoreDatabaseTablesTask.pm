@@ -132,9 +132,9 @@ our @core_classes =
 sub create_superuser {
     my ($username, $logfile) = @_;
     my $pg_uid = getpwnam ("postgres") or croak "Unable to retrieve PostgreSQL user UID";
+    my $createuser = "createuser";
     my $output;
     my $retval;
-    my $createuser = "createuser";
 
     # Make sure we're not croaking on a silly logfile print
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
@@ -271,16 +271,36 @@ sub load_schema {
 }
 
 sub create_experimenter {
+    my $first_name = "";
+    my $last_name = "";
+    my $username;
+    my $e_mail;
+    my $data_dir = "";
+
     print_header "Initial user creation";
     
     my $factory = OME::Factory->new();
     my $dbh = $factory->obtainDBH();
 
-    my $first_name = question ("First name: ");
-    my $last_name = question ("Last name: ");
-    my $username = confirm_default ("Username", lc (substr ($first_name, 0, 1).$last_name));  
-    my $e_mail = confirm_default ("E-mail address", $username.'@'.hostname ());
-    my $data_dir = question ("Default data directory: ");
+    while (1) {
+	$first_name = confirm_default ("First name", $first_name);
+	$last_name = confirm_default ("Last name", $last_name);
+	$username = confirm_default ("Username", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
+	$e_mail = confirm_default ("E-mail address", ($e_mail or $username.'@'.hostname ()));
+	$data_dir = confirm_default ("Default data directory", $data_dir);
+
+	print "\n";  # Spacing
+
+	print "First name: $first_name\n";
+	print "Last name: $last_name\n";
+	print "Username: $username\n";
+	print "E-mail address: $e_mail\n";
+	print "Default data directory: $data_dir\n";
+	
+	print "\n";  # Spacing
+
+	y_or_n ("Are these values correct ?") and last or next;
+    }
     
     if (not -d $data_dir) {
 	my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
@@ -291,6 +311,8 @@ sub create_experimenter {
     }
 
     my ($password, $hashed_password) = get_password ("Password: ", 6);
+
+    print "\n";  # Spacing
 
     my $experimenter = $factory->
 	newObject('OME::SemanticType::BootstrapExperimenter',
@@ -326,7 +348,7 @@ sub init_configuration {
 
     # The MAC address local to the system (the first one)
     # This is portable since it's using OME::Install::Util, if you're having trouble with this
-    # configuration variable take a look there (src/perl2/OME/Install/Util.pm).
+    # configuration variable take a look at src/perl2/OME/Install/Util.pm.
     my $mac = get_mac ();
 
     my $configuration = OME::Configuration->new ($factory,
@@ -354,8 +376,8 @@ sub load_xml_core {
     my $omeImport = OME::Tasks::OMEImport->
 	new(
 	    session => $session,
-	    #debug => $ENV{OME_IMPORT_DEBUG},
-	    debug => 1,
+	    # XXX: Debugging off.
+	    #debug => 1
 	);
 
     # get list of files
