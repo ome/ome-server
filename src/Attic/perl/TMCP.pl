@@ -22,15 +22,13 @@
 use OMEpl;
 use strict;
 
-use vars qw ($OME $programName $java $javaClassPath);
-
-$programName = "TMCP";
-$java = "/usr/java/jdk1.3/bin/java";
-$javaClassPath = "/OME/java/classes";
-
+use vars qw ($OME $programName $executable);
 $OME = new OMEpl;
 
-$OME->StartAnalysis();
+$programName = "TMCP";
+$executable = $OME->binPath().'ome_tmcp';
+
+
 
 
 
@@ -42,6 +40,7 @@ if ($OME->gotBrowser) {
 	Do_Analysis();
 }
 
+# Only if we make it here, do we commit our work to the database.
 $OME->Finish();
 undef $OME;
 
@@ -67,14 +66,14 @@ my ($row,@tableRows);
 	push (@tableRows,$cgi->td($row));
 
 
-	$row = "Distance cutoff (in pixels): ".$cgi->textfield(-name=>'Cutoff',
-								-size=>4,
-								-maxlength=>4);
-	push (@tableRows,$cgi->td($row));
-
-	$row = $cgi->checkbox(-name => 'Flag',
-		       -label => 'Set distances above cutoff to cutoff value');
-	push (@tableRows,$cgi->td($row));
+#	$row = "Distance cutoff (in pixels): ".$cgi->textfield(-name=>'Cutoff',
+#								-size=>4,
+#								-maxlength=>4);
+#	push (@tableRows,$cgi->td($row));
+#
+#	$row = $cgi->checkbox(-name => 'Flag',
+#		       -label => 'Set distances above cutoff to cutoff value');
+#	push (@tableRows,$cgi->td($row));
 
 
 	print $cgi->startform;
@@ -90,74 +89,87 @@ my ($row,@tableRows);
 }
 
 
-use Math::BigFloat;
-
 sub Do_Analysis {
+$OME->StartAnalysis();
 	
 my $images = $OME->GetSelectedDatasetObjects();
 my $image;
-my $iWeight = shift;
 my $analysisID;
 my $features;
 my %attributes = (
 	'TMCP'        => ['TMCP','TMCP']
 	);
 my %datasets;
-my $dataset;
+my $numDatasets = 0;
 my $datasetArray;
 my $key;
 my $TMCP;
-my ($refWave,$trackWave,$cutoff,$flag);
 my $cgi = $OME->cgi;
+my ($refWave,$trackWave,$cutoff,$flag);
+my ($datasetID,$refWaveID,$trackWaveID,$tiff0,$tiff1);
+my ($binName,$binPath);
+my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a name for a temporary file $!\n";
 
+# In OME, wave numbers are zero-referenced, while users usualy prefer one-referenced
 	$refWave = $cgi->param ('RefWave') - 1;
 	$trackWave = $cgi->param ('TrackWave') - 1;
-	$cutoff = $cgi->param ('Cutoff');
-	if (defined $cutoff and $cutoff) {
-		if ($cgi->param ('Flag') eq 'on') {
-			$flag = 'keep';
-		} else {
-			$flag = 'drop';
-		}
-	} else {
-		undef $cutoff;
-	}
+#	$cutoff = $cgi->param ('Cutoff');
+#	if (defined $cutoff and $cutoff) {
+#		if ($cgi->param ('Flag') eq 'on') {
+#			$flag = 'keep';
+#		} else {
+#			$flag = 'drop';
+#		}
+#	} else {
+#		undef $cutoff;
+#	}
 
 	
-# The current incarnation of TMCP.java expects to get a file path as an argument.  This file
-# is supposed to have a set of two or three tab-separated file paths per line.
-# We will ask OME for a temporary filename, open it, and write the paths to the image sets in there, 
-# then pass the path to the temporary file to TMCP.java, wait for the results, and erase the temporary
-# file.
-	my $tempFileName = $OME->GetTempName ('TMCP','in') or die "Couldn't get a name for a temporary file $!\n";
-	my $tempFileNameErr = $OME->GetTempName ('TMCP','err') or die "Couldn't get a name for a temporary file $!\n";
-	open (TMCP_IN,"> $tempFileName") or die "Could not open temporary file '$tempFileName' for writing $!\n";
-
+#Usage: ./ome_tmcp [options] test_imagefile ref_imagefile
+#Options:
+#   -t <threshold_value> Set threshold value in test image (default=0)
+#   -v <n>               Set verbosity to n (1=all,2=fatal,3=none,0=debug)
+#Return TMCP correlation.
+#
+#
+# The dataset selection may contain TIFF files that are part of the same raster -
+# i.e. two or more TIFF files that are different wavelengths of the same image.
+# We reduce our list of selected datasets to a list of rasters.
+# The two or more selected TIFF files in the same raster will have different IDs, but the same RasterID.
+# We construct a hash with the keys being the RasterIDs, and the values being an ordered array
+# of dataset objects making up the raster (as returned by the GetWavelengthDatasets method).
+# The array of objects returned by the GetWavelengthDatasets method is ordered by wave number (the Wave field).
 	foreach $image (@$images)
 	{
-#	print STDERR "TMCP:  Dataset=$image->{Name}.\n";
-		$key = $image->{BaseName}.$image->{ChemPlate}.
-			$image->{Well}.$image->{Sample};
+		$key = $image->{RasterID};
 		if (not exists $datasets{$key}) {
-#	print STDERR "TMCP:  Dataset Group $key - raster ID = ".$image->{RasterID}."\n";
-			$datasets{$key} = $image->GetWavelengthDatasets;
+			$datasets{$key} = $image->GetWavelengthDatasets();
+			$numDatasets++;
 		}
 	}
 
+#
+# The number of datasets selected doesn't reflect the number of analyses we're going to perform,
+# so update the session info so that the right number is displayed in the status.
+# Update session info
+	my $session = $OME->Session;
+	my $analysis = $session->{Analyses}->{$$};
+	$analysis->{NumSelectedDatasets} = $numDatasets;
+	$OME->Session($session);
 
-	my $numDatasets=0;
-	my @orderedDatasets;
-
+#
+# Run through our hash of RasterIDs
 	while ( ($key,$datasetArray) = each %datasets) {
-#	print STDERR "TMCP:  Dataset Group $key\n";
-		if (defined $datasetArray->[1]) {
-			my ($binName,$binPath) = $OME->DBIhandle->selectrow_array (
-				'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$refWave]->ID);
-			my $tiff0 = $binPath.$binName;
-			my $weight = $OME->DBIhandle->selectrow_array (
-				'SELECT threshold FROM threshold,analyses WHERE threshold.analysis_id=analyses.analysis_id '.
-				' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID);
-#			my $features1 = $OME->GetFeatures ({
+	# Skip this round if we don't have a second wave
+		next unless defined $datasetArray->[1];
+	# Get the latest binary image for this dataset
+		($binName,$binPath) = $OME->DBIhandle->selectrow_array (
+			'SELECT name,path FROM binary_image WHERE dataset_id_in = '.$datasetArray->[$refWave]->ID.'ORDER BY analysis_id DESC LIMIT 1');
+		$tiff1 = $binPath.$binName;
+#			$weight = $OME->DBIhandle->selectrow_array (
+#				'SELECT threshold FROM threshold,analyses WHERE threshold.analysis_id=analyses.analysis_id '.
+#				' AND analyses.status = \'ACTIVE\' AND analyses.dataset_id = '.$datasetArray->[$trackWave]->ID);
+#			$features1 = $OME->GetFeatures ({
 #					DatasetID     => $datasetArray->[$refWave]->ID,
 #					BinName       => undef,
 #					BinPath       => undef,
@@ -165,95 +177,50 @@ my $cgi = $OME->cgi;
 #						BinName      => ['BINARY_IMAGE', 'NAME'],
 #						BinPath      => ['BINARY_IMAGE', 'PATH'],
 #					});
-#			my $features2 = $OME->GetFeatures ({
+#			$features2 = $OME->GetFeatures ({
 #					DatasetID     => $datasetArray->[$trackWave]->ID,
 #					Threshold     => undef
 #					},{
 #						Threshold    => ['THRESHOLD', 'THRESHOLD']
 #					});
 #
-#			my $tiff0 = $features1->[0]->{BinPath}.$features1->[0]->{BinName};
-#			my $weight = $features2->[0]->{Threshold};
-			my $tiff1 = $datasetArray->[$trackWave]->{Path}.$datasetArray->[$trackWave]->{Name};
-			
-			$weight = 0 unless defined $weight;
+#			$tiff0 = $features1->[0]->{BinPath}.$features1->[0]->{BinName};
+#			$weight = $features2->[0]->{Threshold};
+#			$weight = 0 unless defined $weight;
+		my $tiff0 = $datasetArray->[$trackWave]->{Path}.$datasetArray->[$trackWave]->{Name};
 
-			print TMCP_IN $tiff0,"\t",$tiff1,"\t",$weight,"\n";
-			$numDatasets++;
-			push (@orderedDatasets,$datasetArray);
-		} else {
-			$datasets{$key} = undef;
-		}
-	}
-	close TMCP_IN;
-
-	my $command;
-	if (defined $cutoff) {
-		$command = "$java -cp $javaClassPath $programName $tempFileName $cutoff $flag 2> $tempFileNameErr |";
-	} else {
-		$command = "$java -cp $javaClassPath $programName $tempFileName 2> $tempFileNameErr |";
-	}
-	open (STDOUT_PIPE,$command);	
-	print STDERR "TMCP:  Calling Command\n$command\n";
-
-	my @TMCPs;
-	my $numTMCPs = 0;
-	while (<STDOUT_PIPE>) {
-		chomp;
-		my @words = split (/\s+/);
-		my $TMCP_in = $words[$#words];
-		if (uc ($TMCP_in) eq 'NAN') {
-			push (@TMCPs,undef);
-			$numTMCPs++;
-		} else {
-			$TMCP = Math::BigFloat->new($TMCP_in);
-		print STDERR "TMCP:  $_\nTMCP[$numTMCPs]:$TMCP\n";
-			if (defined $TMCP and $TMCP) {
-				push (@TMCPs,"$TMCP");
-				$numTMCPs++;
-			}
-		}
-	}
-	close STDOUT_PIPE;
-
-	die "Number of TMCPs ($numTMCPs) returned by TMCP is not the same as number of datasets entered ($numDatasets)!\n"
-		unless $numTMCPs = $numDatasets;
-
-
-	my $datasetNum=0;
-	foreach (@TMCPs) {
-		$TMCP = $_;
-#		if (defined $TMCP and $TMCP) {
-			my $datasetID = $orderedDatasets[$datasetNum]->[0]->{ID};
-			my $refWaveID = $orderedDatasets[$datasetNum]->[$refWave]->{ID};
-			my $trackWaveID = $orderedDatasets[$datasetNum]->[$trackWave]->{ID};
-print STDERR "TMCP: Calling RegisterAnalysis for DatasetID=$datasetID.\n";
+	# Execute the TMCP program, capturing its output in $TMCP, and sending stderr to $tempFileNameErr
+		$TMCP = `$executable $tiff0 $tiff1 2> $tempFileNameErr`;
+	# Trim leading and trailing whitespace, set $TMCP to undef if not like a C float.
+		$TMCP =~ s/^\s+//;$TMCP =~ s/\s+$//;$TMCP = undef unless ($TMCP =~ /^([+-]?)(?=\d|\.\d)\d*(\.\d*)?([Ee]([+-]?\d+))?$/);
+		if (defined $TMCP and $TMCP) {
+			$datasetID = $datasetArray->[0]->ID;
+			$refWaveID = $datasetArray->[$refWave]->ID;
+			$trackWaveID = $datasetArray->[$trackWave]->ID;
 			$analysisID = $OME->RegisterAnalysis(
 				datasetID     => $datasetID,
 				programName   => $programName,
 				REF_WAVE => $refWaveID,
-				TRACK_WAVE => $trackWaveID,
-				CUTOFF => $cutoff,
-				FLAG => $flag
-				);
-			my $features = [{TMCP => $TMCP}];
+				TRACK_WAVE => $trackWaveID
+#				CUTOFF => $cutoff,
+#				FLAG => $flag
+			);
+			$features = [{TMCP => $TMCP}];
 		
 #		print STDERR "TMCP:  Calling Add_Feature_Attributes.\n";
 			$OME->WriteFeatures ($analysisID, $features, \%attributes);
 			$OME->PurgeDataset($datasetID);
 			$OME->FinishAnalysis();
-#		}
-		$datasetNum++;
+		}
+	# Report the error.  Getting a bogus CCCP is fatal!
+		else {
+			die "$programName returned '$TMCP' - was expecting a number.\n$programName ERROR:".`cat $tempFileNameErr`."\n";
+		}
 	}
 	
 	
 
-	unlink ($tempFileName);
 	unlink ($tempFileNameErr);
 
 
 }
-
-
-
-
