@@ -43,6 +43,7 @@ import org.openmicroscopy.remote.RemoteObjectCache;
 import org.openmicroscopy.remote.RemoteChain;
 import org.openmicroscopy.remote.RemoteSession;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.List;
@@ -74,7 +75,6 @@ import java.util.List;
 		System.err.println("nodes initialized");
 		layerNodes();
 		System.err.println("nodes layered");
-		dumpLayers();
 		makeProper();
 		System.err.println("GRAPHS HAVE BEEN MADE PROPER");
 		dumpLayers();
@@ -187,7 +187,7 @@ import java.util.List;
 	}
 	
 	private void makeProperNode(CNode node,int i) {
-		Vector newLinks = new Vector();
+		HashSet newLinks = new HashSet();
 		Iterator iter = node.succLinkIterator();
 		CLayoutLink link;
 		
@@ -203,7 +203,7 @@ import java.util.List;
 	}
 	
 	private void makeProperLink(CNode node,CLayoutLink link,int i,
-		Vector newLinks) {
+		HashSet newLinks) {
 		// we know node is at i.
 		
 		CNode to = (CNode) link.getToNode();
@@ -225,6 +225,8 @@ import java.util.List;
 			
 			// make node point to new node
 			CLayoutLink newOutLink = new CLayoutLink(node,dummy);
+			
+			dummy.addPredLink(newOutLink);
 			
 			// add new link to links.
 			newLinks.add(newOutLink);
