@@ -55,6 +55,7 @@
 #include "method.h"
 #include "composite.h"
 #include "xmlBinaryResolution.h"
+#include "xmlBinaryInsertion.h"
 #include "xmlIsOME.h"
 
 #ifndef OMEIS_ROOT
@@ -126,6 +127,7 @@ char **cgivars=param;
 			 m_val != M_READFILE      &&
 			 m_val != M_UPLOADFILE    &&
 			 m_val != M_IMPORTOMEFILE &&
+			 m_val != M_EXPORTOMEFILE &&
 			 m_val != M_ISOMEXML      &&
 			 m_val != M_DELETEFILE    &&
 			 m_val != M_GETLOCALPATH) {
@@ -564,6 +566,42 @@ char **cgivars=param;
 			parse_xml_file( file_path );
 
 			break;
+		case M_EXPORTOMEFILE:
+			uploadSize = 0;
+			if ( (theParam = get_param (param,"UploadSize")) ) {
+				sscanf (theParam,"%llu",&scan_length);
+				uploadSize = (unsigned long)scan_length;
+			} else {
+				HTTP_DoError (method,"UploadSize must be specified!");
+				return (-1);
+			}
+			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) == 0) {
+				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			HTTP_ResultType ("text/plain");
+			strcpy (file_path,"Files/");
+			if (! getRepPath (ID,file_path,0)) {
+				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
+					(unsigned long long)ID);
+				return (-1);
+			}
+	
+			xmlInsertBinaryData( file_path );
+
+
+			if ( !(theFile = GetFileRep (ID,0,0)) ) {
+				HTTP_DoError (method,"Could not open FileID=%llu!",
+					(unsigned long long)ID);
+				return (-1);
+			}
+			DeleteFile (theFile);
+			freeFileRep (theFile);
+
+			break;			
+	
 		case M_ISOMEXML:
 			if ( (theParam = get_param (param,"FileID")) ) {
 				sscanf (theParam,"%llu",&scan_ID);
