@@ -8,6 +8,12 @@
 *       http://www.mecxpert.de/svg/slider.html
 *
 *         external file dependencies: widget.js
+
+original file:
+	http://kevlindev.com/gui/widgets/slider/Slider.js
+
+seriously hacked by Josiah Johnston <siah@nih.gov>
+
 *****/
 
 var svgns = "http://www.w3.org/2000/svg";
@@ -50,9 +56,9 @@ Slider.prototype.thumbText =
 *	Slider Constructor
 *
 *****/
-function Slider(x, y, size, direction, callback, bodyText, thumbText) {
+function Slider(x, y, size, direction, callback, bodyText, thumbText, value) {
     if ( arguments.length > 0 ) {
-        this.init(x, y, size, direction, callback, bodyText, thumbText);
+        this.init(x, y, size, direction, callback, bodyText, thumbText, value);
     }
 }
 
@@ -62,14 +68,19 @@ function Slider(x, y, size, direction, callback, bodyText, thumbText) {
 *   init
 *
 *****/
-Slider.prototype.init = function(x, y, size, direction, callback, bodyText, thumbText) {
+Slider.prototype.init = function(x, y, size, direction, callback, bodyText, thumbText, value) {
     // call superclass method
     Slider.superclass.init.call(this, x, y);
 
-    // init properties
+	// record initialization params...
 	this.size      = size;
 	this.direction = direction;
-	this.callback  = callback;
+	if( !callback || isFunction(callback) ) {
+		this.callback = callback;
+	} else {
+		this.callback = callback['method'];
+		this.callback_obj = callback['obj'];
+	}
 	this.min       = 0;
 	this.max       = size;
 	this.value     = 0;
@@ -77,6 +88,7 @@ Slider.prototype.init = function(x, y, size, direction, callback, bodyText, thum
 
     if ( bodyText  != null ) this.bodyText  = bodyText;
     if ( thumbText != null ) this.thumbText = thumbText;
+    if ( value     != null ) this.value     = value;
 };
 
 
@@ -98,8 +110,11 @@ Slider.prototype.buildSVG = function() {
     this.nodes.thumb = slider.lastChild;
     this.nodes.root  = slider;
     this.nodes.parent.appendChild(slider);
-};
 
+	var range     = this.max - this.min;
+	var position  = ( this.value - this.min ) / range * this.size;
+	this.nodes.thumb.setAttributeNS(null, "transform", "translate(" + position + ", 0)");
+};
 
 /*****
 *
@@ -178,9 +193,16 @@ Slider.prototype.setValue = function(value, call_callback) {
 	this.value = value;
 	this.nodes.thumb.setAttributeNS(null, "transform", "translate(" + position + ", 0)");
 
-	if (call_callback && this.callback) this.callback(value);
+	if (call_callback ) this.issueCallback(value)
 };
 
+Slider.prototype.issueCallback = function(value) {
+	if( this.callback_obj && this.callback) { 
+		eval( "this.callback_obj."+this.callback+"(value)"); 
+	} else { 
+		if( this.callback) { this.callback(value); } 
+	}
+}
 
 /*****
 *
@@ -193,7 +215,7 @@ Slider.prototype.setPosition = function(position, call_callback) {
 
 	this.nodes.thumb.setAttributeNS(null, "transform", "translate(" + position + ", 0)");
 	this.value = value;
-	if (call_callback && this.callback) this.callback(value);
+	if (call_callback ) this.issueCallback(value)
 };
 
 /*****
