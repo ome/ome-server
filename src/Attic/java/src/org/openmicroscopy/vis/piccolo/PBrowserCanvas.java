@@ -222,14 +222,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}	
 		displayDatasets();
 	}
-	
-	public void setSelectedDataset(CDataset d) {
-		SelectionState selectionState = SelectionState.getState();
-		selectionState.removeSelectionEventListener(this);
-		selectionState.setSelectedDataset(d);
-		selectionState.addSelectionEventListener(this);
-	}
-	
+		
 	public void clearExecutionList() {
 		if (executionList != null) {
 			if (executionList.getParent() == layer)
