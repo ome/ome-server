@@ -57,11 +57,67 @@ use OME;
 #*********
 
 $VERSION = $OME::VERSION;
-use base qw(OME::Web::Table);
+use base qw(OME::Web);
 
 #*********
 #********* PRIVATE METHODS
 #*********
+sub __getOptionsTable {
+	my ($self, $options, $span) = @_;
+	my $q = $self->CGI();
+
+	unless ($span) {
+		carp "WARNING: Span not specified in __getOptionsTable(), using default of 1.";
+		$span = 1;
+	}
+
+	# Build our buttons
+    my $option_buttons;
+
+	my $i = 0;
+
+    foreach (@$options) {
+		my $a_options = {};
+		my $a_data;
+
+		if (ref($_) eq 'ARRAY') {
+			# We have a name/value pair
+			$a_data = $_->[0];
+			$a_options->{'href'} = $_->[1];
+		} else {
+			# We just have a name
+			$a_data = $_;
+			$a_options->{'href'} = '#';
+			$a_options->{'onClick'} = "document.forms['datatable'].action.value='$_'; document.forms['datatable'].submit(); return false";
+		}
+		
+		$a_options->{'class'} = 'ome_widget';
+			
+		# Only prepend a pipe ("|") after the first option
+		$option_buttons .= ' | ' if $i > 0;
+		$option_buttons .= $q->a($a_options, $a_data);
+
+		++$i;
+    }
+
+	# Build our table and return it
+	if ($option_buttons) {
+    	return $q->table( {-cellspacing => 0, -cellpadding => 3, -width => '100%'},
+			$q->Tr(
+				$q->td( {
+						-colspan => $span,
+						-align => 'right',
+						-bgcolor => '#EFEFEF',
+						-class => 'ome_menu_td',
+					},
+					$option_buttons,
+				)
+			)
+		);
+	}
+
+	return;
+}
 
 sub __humanize {
 	my ($self, $size) = @_;
