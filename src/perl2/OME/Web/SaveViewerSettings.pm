@@ -1,7 +1,7 @@
 # OME/Web/SaveViewerSettings.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
-# Author:  Douglas Creager <dcreager@alum.mit.edu>
+# Author:  Josiah Johnston <siah@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
 #    modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::DisplaySettings;
 use OME::ViewerPreferences;
 use base qw{ OME::Web };
 
@@ -83,42 +82,126 @@ sub SaveDisplaySettings {
 	my $session = $self->Session();
 	my $factory = $session->Factory();
 
-	my $displaySettings = $factory->findObject( 'OME::DisplaySettings', image_id => $imageID );
-	if( $displaySettings ) {
-		$displaySettings->WBS( @$WBS );
-		$displaySettings->RGBon( @$RGBon );
-		$displaySettings->theT($theT);
-		$displaySettings->theZ($theZ);
-		$displaySettings->isRGB( $isRGB );
+	my $image = $self->Session()->Factory()->loadObject("OME::Image",$imageID)
+		or die "Could not retreive Image from ImageID=$imageID\n";
+
+	# get Dimensions from image and make them readable
+	my $pixels = $image->DefaultPixels()
+		or die "Could not a primary set of Pixels for this image\n";
+
+	###########################################################################
+	# get statistics for $pixels
+	#
+	my $stackStats = $factory->findObject( "OME::Program", program_name => 'Stack statistics' )
+		or die "Stack statistics must be installed for this viewer to work!\n";
+	my $pixelsFI = $factory->findObject( "OME::Program::FormalInput", 
+		program_id => $stackStats->id(),
+		name       => 'Pixels' )
+		or die "Cannot find 'Pixels' formal input for Program 'Stack Statistics'.\n";
+	my $actualInput = $factory->findObject( "OME::Analysis::ActualInput",
+		formal_input_id   => $pixelsFI->id(),
+		input_analysis_id => $pixels->analysis()->id() )
+		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
+	my $stackStatsAnalysisID = $actualInput->analysis()->id();
+	my @gmeans = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackGeometricMean", $image ) );
+	my @sigma  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
+		$factory->findAttributes( "StackSigma", $image ) );
+	my $sh; # stats hash
+	foreach( @gmeans ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{geomean} = $_->GeometricMean(); }
+	foreach( @sigma ) {
+		$sh->[ $_->TheC() ][ $_->TheT() ]->{sigma} = $_->Sigma(); }
+	#
+	###########################################################################
+
+	my $displayOptions = [$factory->findAttributes( 'DisplayOptions', $imageID )];
+	my ( $redChannel, $greenChannel, $blueChannel, $greyChannel );
+
+	if( $displayOptions ) {
+		die "More than one DisplayOptions attribute found for this image. That is invalid.\n"
+			if( scalar( @$displayOptions ) > 1 );
+		$displayOptions = $displayOptions->[0];
+		$redChannel = $displayOptions->RedChannel();
+		$redChannel->ChannelNumber  ( $WBS->[0] );
+		$redChannel->BlackLevel     ( $WBS->[1] );
+		$redChannel->WhiteLevel     ( $WBS->[2] );
+		$greenChannel = $displayOptions->GreenChannel();
+		$greenChannel->ChannelNumber( $WBS->[3] );
+		$greenChannel->BlackLevel   ( $WBS->[4] );
+		$greenChannel->WhiteLevel   ( $WBS->[5] );
+		$blueChannel = $displayOptions->BlueChannel();
+		$blueChannel->ChannelNumber ( $WBS->[6] );
+		$blueChannel->BlackLevel    ( $WBS->[7] );
+		$blueChannel->WhiteLevel    ( $WBS->[8] );
+		$greyChannel = $displayOptions->GreyChannel();
+		$greyChannel->ChannelNumber ( $WBS->[9] );
+		$greyChannel->BlackLevel    ( $WBS->[10] );
+		$greyChannel->WhiteLevel    ( $WBS->[11] );
+		$displayOptions->RedChannelOn( $RGBon->[0] );
+		$displayOptions->GreenChannelOn( $RGBon->[1] );
+		$displayOptions->BlueChannelOn( $RGBon->[2] );
+		$displayOptions->TStart($theT);
+		$displayOptions->TStop($theT);
+		$displayOptions->ZStart($theZ);
+		$displayOptions->ZStop($theZ);
+		$displayOptions->DisplayRGB( $isRGB );
 	} else {
 		my $data = {
-			image_id          => $imageID,
-			red_wavenum       => $WBS->[0] ,
-			red_black_level   => $WBS->[1] ,
-			red_scale         => $WBS->[2] ,
-			green_wavenum     => $WBS->[3] ,
-			green_black_level => $WBS->[4] ,
-			green_scale       => $WBS->[5] ,
-			blue_wavenum      => $WBS->[6] ,
-			blue_black_level  => $WBS->[7] ,
-			blue_scale        => $WBS->[8] ,
-			grey_wavenum      => $WBS->[9] ,
-			grey_black_level  => $WBS->[10],
-			grey_scale        => $WBS->[11],
-			the_z             => $theZ,
-			the_t             => $theT,
-			is_rgb            => $isRGB,
-			display_red       => $RGBon->[0],
-			display_green     => $RGBon->[1],
-			display_blue      => $RGBon->[2]
+			ChannelNumber => $WBS->[0],
+			BlackLevel    => $WBS->[1],
+			WhiteLevel    => $WBS->[2]
 		};
-		$displaySettings = $factory->newObject( 'OME::DisplaySettings', $data )
-			or die "Could not create new DisplaySettings object";
+		$redChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
+			or die "Could not create new DisplayChannel attribute\n";
+		$data = {
+			ChannelNumber => $WBS->[3],
+			BlackLevel    => $WBS->[4],
+			WhiteLevel    => $WBS->[5]
+		};
+		$greenChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
+			or die "Could not create new DisplayChannel attribute\n";
+		$data = {
+			ChannelNumber => $WBS->[6],
+			BlackLevel    => $WBS->[7],
+			WhiteLevel    => $WBS->[8]
+		};
+		$blueChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
+			or die "Could not create new DisplayChannel attribute\n";
+		$data = {
+			ChannelNumber => $WBS->[9],
+			BlackLevel    => $WBS->[10],
+			WhiteLevel    => $WBS->[11]
+		};
+		$greyChannel = $factory->newAttribute( 'DisplayChannel', $image, undef, $data )
+			or die "Could not create new DisplayChannel attribute\n";
+		$data = {
+			image_id       => $imageID,
+			RedChannel     => $redChannel->id(),
+			GreenChannel   => $greenChannel->id(),
+			BlueChannel    => $blueChannel->id(),
+			GreyChannel    => $greyChannel->id(),
+			RedChannelOn   => $RGBon->[0],
+			GreenChannelOn => $RGBon->[1],
+			BlueChannelOn  => $RGBon->[2],
+			TStart         => $theT,
+			TStop          => $theT,
+			ZStart         => $theZ,
+			ZStop          => $theZ,
+			DisplayRGB     => $isRGB
+		};
+		$displayOptions = $factory->newAttribute( 'DisplayOptions', $image, undef, $data )
+			or die "Could not create new DisplayOptions attribute\n";			
 	}
 	
-	$displaySettings->writeObject()
-		or die "Could not write displaySettings";
-	return $displaySettings;
+	$displayOptions->storeObject();
+	$redChannel->storeObject();
+	$greenChannel->storeObject();
+	$blueChannel->storeObject();
+	$greyChannel->storeObject();
+	$session->commitTransaction();
+
+	return $displayOptions;
 }
 
 1;
