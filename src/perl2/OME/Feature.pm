@@ -42,7 +42,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('features');
 __PACKAGE__->sequence('feature_seq');
 __PACKAGE__->columns(Primary => qw(feature_id));
-__PACKAGE__->columns(Essential => qw(parent_feature_id image_id tag));
+__PACKAGE__->columns(Essential => qw(parent_feature_id image_id tag name));
 __PACKAGE__->hasa('OME::Image' => qw(image_id));
 __PACKAGE__->hasa('OME::Feature' => qw(parent_feature_id));
 

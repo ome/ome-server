@@ -32,10 +32,10 @@ use fields qw(_options _inputHandle _outputHandle _errorHandle
 	      _inputFile _outputFile _errorFile _cmdLine);
 
 sub new {
-    my ($proto,$location,$factory,$program) = @_;
+    my ($proto,$location,$session,$program,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$factory,$program);
+    my $self = $class->SUPER::new($location,$session,$program,$node);
 
     $self->{_options} = "0 gmean4.5s 10 -db -tt -th -c 0 -i 0 -m 0 -g 0 -ms 0 -gs 0 -mc -v -sa -per -ff";
 
@@ -53,7 +53,7 @@ sub precalculateImage {
     my $cmdLine = "$location $path $options";
 
     my ($input, $output, $error, $pid);
-    my $session = $self->{_factory}->Session();
+    my $session = $self->Session();
     my $inputFile  = $session->getTemporaryFilename("findSpots","stdin");
     my $outputFile = $session->getTemporaryFilename("findSpots","stdout");
     my $errorFile  = $session->getTemporaryFilename("findSpots","stderr");
@@ -122,7 +122,6 @@ sub precalculateImage {
 
 sub calculateFeature {
     my ($self) = @_;
-    my $factory = $self->{_factory};
 
     my $output = $self->{_outputHandle};
 
@@ -139,7 +138,7 @@ sub calculateFeature {
 
     my $wavelength_rex = qr/^([cimg])\[([ 0-9]+)\]([XYZ])?$/;
 
-    my $spotCount = 0;
+    my $spotCount = 1;
     while (my $line = <$output>) {
 	chomp $line;
 	my @data;
@@ -149,10 +148,10 @@ sub calculateFeature {
 	    push @data, $datum;
 	}
 
-	my $feature = $self->newFeature('SPOT');
+	my $feature = $self->newFeature('SPOT','Spot '+$spotCount++);
 	my $featureID = $feature->id();
-        print STDERR "newSpot$featureID ";
-        
+        print STDERR "ns$featureID ";
+
         my $timepointData = {feature_id => $featureID};
         my $thresholdData = {feature_id => $featureID};
         my $locationData  = {feature_id => $featureID};

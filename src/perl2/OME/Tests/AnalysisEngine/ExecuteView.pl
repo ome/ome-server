@@ -25,6 +25,11 @@ use OME::Dataset;
 use OME::Tasks::AnalysisEngine;
 use Term::ReadKey;
 
+no strict 'refs';
+undef &Class::DBI::min;
+undef &Class::DBI::max;
+use strict 'refs';
+
 print "\nOME Test Case - Execute view\n";
 print "----------------------------\n";
 

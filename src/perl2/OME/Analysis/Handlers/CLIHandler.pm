@@ -30,10 +30,10 @@ use base qw(OME::Analysis::Handler);
 use fields qw(_outputHandle);
 
 sub new {
-    my ($proto,$location,$factory,$program) = @_;
+    my ($proto,$location,$session,$program,$node) = @_;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$factory,$program);
+    my $self = $class->SUPER::new($location,$session,$program,$node);
 
     bless $self,$class;
     return $self;
@@ -44,7 +44,7 @@ sub precalculateImage {
     my ($self) = @_;
 
     my $image = $self->getCurrentImage();
-    
+
     my $dims = $image->Dimensions();
 
     my $dimString = "Dims=".$dims->size_x().",".$dims->size_y().
@@ -70,7 +70,7 @@ sub postcalculateImage {
     my $output = $self->{_outputHandle};
     my $program = $self->{_program};
     my $image = $self->getCurrentImage();
-    my $factory = $self->{_factory};
+    my $factory = $self->Factory();
 
     my $headerString = <$output>;
     chomp $headerString;
@@ -121,7 +121,7 @@ sub postcalculateImage {
 
     while (my $input = <$output>) {
         my $attribute_data = {};
-        
+
         chomp $input;
         my @data = split("\t",$input);
         my $count = 0;

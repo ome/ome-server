@@ -1,3 +1,4 @@
+
 # OME/AnalysisView.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
@@ -29,10 +30,12 @@ use base qw(OME::DBObject);
 __PACKAGE__->table('analysis_views');
 __PACKAGE__->sequence('analysis_view_seq');
 __PACKAGE__->columns(Primary => qw(analysis_view_id));
-__PACKAGE__->columns(Essential => qw(owner name));
+__PACKAGE__->columns(Essential => qw(owner name locked));
 __PACKAGE__->hasa('OME::Experimenter' => qw(owner));
 __PACKAGE__->has_many('nodes',
                       'OME::AnalysisView::Node' => qw(analysis_view_id));
+__PACKAGE__->has_many('paths',
+                      'OME::AnalysisPath' => qw(analysis_view_id));
 
 
 
@@ -52,7 +55,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('analysis_view_nodes');
 __PACKAGE__->sequence('analysis_view_nodes_seq');
 __PACKAGE__->columns(Primary => qw(analysis_view_node_id));
-__PACKAGE__->columns(Essential => qw(analysis_view_id program_id));
+__PACKAGE__->columns(Essential => qw(analysis_view_id program_id iterator_tag));
 __PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->has_many('input_links',

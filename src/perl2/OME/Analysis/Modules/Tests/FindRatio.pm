@@ -1,4 +1,4 @@
-# OME/Program/Definition.pm
+# OME/Analysis/FindRatio.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -17,45 +17,33 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+package OME::Analysis::FindRatio;
 
-package OME::Program::Definition;
+use OME::Analysis::Handler;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
+use base qw(OME::Analysis::Handler);
 
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $analysis = shift;
-    
-    my $self = {
-	_analysis => $analysis
-    };
-
-    bless $self,$class;
-}
-
-
-sub Analysis { my $self = shift; return $self->{_analysis}; }
-sub Factory { my $self = shift; return $self->{_analysis}->Factory(); }
-
-
-sub startAnalysis {
-    my ($self,$dataset) = @_;
-
-    return 1;
-}
-
-
-sub analyzeOneImage {
-    my ($self, $image, $parameters) = @_;
-
-    return {};
-}
-
-
-sub finishAnalysis {
+sub calculateFeature {
     my ($self) = @_;
+
+    my $numerator_features = $self->getFeatureInputs('Golgi bounds');
+    my $denominator_features = $self->getFeatureInputs('Mito bounds');
+
+    my $numerator = scalar(@$numerator_features);
+    my $denominator = scalar(@$denominator_features);
+
+    no integer;
+    my $ratio = ($denominator == 0)? 0: $numerator/$denominator;
+    use integer;
+
+    my $ratio_attribute = $self->
+      newAttribute("Golgi-mito ratio",
+                   {
+                    feature_id => $self->getCurrentFeature(),
+                    ratio      => $ratio
+                   });
 }

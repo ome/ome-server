@@ -23,20 +23,21 @@ package OME::Analysis::Handler;
 use strict;
 our $VERSION = '1.0';
 
-use fields qw(_location _factory
+use fields qw(_location _session _node
               _program _formal_inputs _formal_outputs _actual_outputs
               _current_dataset _current_image _current_feature
               _dataset_inputs _image_inputs _feature_inputs
               _dataset_outputs _image_outputs _feature_outputs);
 
 sub new {
-    my ($proto,$location,$factory,$program) = @_;
+    my ($proto,$location,$session,$program,$node) = @_;
     my $class = ref($proto) || $proto;
 
     my $self = {};
     $self->{_location} = $location;
-    $self->{_factory} = $factory;
+    $self->{_session} = $session;
     $self->{_program} = $program;
+    $self->{_node} = $node;
 
     my $inputs = {};
     foreach my $formal_input ($program->inputs()) {
@@ -52,6 +53,16 @@ sub new {
 
     bless $self, $class;
     return $self;
+}
+
+sub Session {
+    my ($self) = @_;
+    return $self->{_session};
+}
+
+sub Factory {
+    my ($self) = @_;
+    return $self->{_session}->Factory();
 }
 
 sub getCurrentDataset {
@@ -95,14 +106,25 @@ sub getFeatureInputs {
 }
 
 sub newFeature {
-    my ($self,$tag) = @_;
+    my ($self,$tag,$name) = @_;
 
-    my $data = {
-        image => $self->{_current_image},
-        tag   => $tag
-        };
+    my $parent_feature = undef;
 
-    my $feature = $self->{_factory}->newObject("OME::Feature",$data);
+    if (defined $self->{_node}->iterator_tag()) {
+        # This should be undefined if the iterator tag is
+        # undefined, but for now, I'll be sure.
+        $parent_feature = $self->{_current_feature};
+    }
+
+    my $data =
+      {
+       image          => $self->{_current_image},
+       tag            => $tag,
+       name           => $name,
+       parent_feature => $parent_feature
+      };
+
+    my $feature = $self->Factory()->newObject("OME::Feature",$data);
 }
 
 sub newAttribute {
@@ -113,7 +135,7 @@ sub newAttribute {
     my $granularity = $datatype->attribute_type();
 
     my $featureID;
-    
+
     $data->{actual_output_id} = $self->{_actual_outputs}->{$output_name};
     if ($granularity eq 'D') {
         $data->{dataset_id} = $self->{_current_dataset};
@@ -121,17 +143,16 @@ sub newAttribute {
         $data->{image_id} = $self->{_current_image};
     } elsif ($granularity eq 'F') {
         $featureID = $data->{feature_id};
-        #$data->{feature_id} = $self->{_current_feature};
     }
-    
-    my $attribute = $self->{_factory}->newAttribute($table_name,$data);
+
+    my $attribute = $self->Factory()->newAttribute($table_name,$data);
 
     if ($granularity eq 'D') {
         push @{$self->{_dataset_outputs}->{$output_name}}, $attribute;
     } elsif ($granularity eq 'I') {
         push @{$self->{_image_outputs}->{$output_name}}, $attribute;
     } elsif ($granularity eq 'F') {
-        push @{$self->{_feature_outputs}->{$output_name}->{$featureID}}, $attribute;
+        push @{$self->{_feature_outputs}->{$output_name}}, $attribute;
     }
 
     return $attribute;

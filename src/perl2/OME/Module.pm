@@ -30,7 +30,8 @@ __PACKAGE__->table('programs');
 __PACKAGE__->sequence('program_seq');
 __PACKAGE__->columns(Primary => qw(program_id));
 __PACKAGE__->columns(Essential => qw(program_name description category));
-__PACKAGE__->columns(Definition => qw(module_type location));
+__PACKAGE__->columns(Definition => qw(module_type location
+                                      default_iterator features_created));
 __PACKAGE__->has_many('inputs','OME::Program::FormalInput' => qw(program_id));
 __PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
 __PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
@@ -46,15 +47,17 @@ sub findByName {
 sub findInputByName {
     my ($self, $name) = @_;
     my $program_id = $self->id();
-    return OME::Program::FormalInput->findByProgramAndName($program_id,
-							   $name);
+    return OME::Program::FormalInput->
+      findByProgramAndName($program_id,
+                           $name);
 }
 
 sub findOutputByName {
     my ($self, $name) = @_;
     my $program_id = $self->id();
-    return OME::Program::FormalOutput->findByProgramAndName($program_id,
-							    $name);
+    return OME::Program::FormalOutput->
+      findByProgramAndName($program_id,
+                           $name);
 }
 
 

@@ -20,6 +20,31 @@
 
 package OME::Tasks::AnalysisEngine;
 
+=head1 NAME
+
+OME::Tasks::AnalysisEngine - OME analysis subsystem
+
+=head1 SYNOPSIS
+
+	use OME::Tasks::AnalysisEngine;
+	my $engine = new OME::Tasks::AnalysisEngine();
+
+	# login to OME, load/create an analysis view and dataset
+	$engine->executeAnalysisView($session,$view,$free_inputs,$dataset);
+
+	# Voila, you're done.
+
+=head1 DESCRIPTION
+
+OME::Tasks::AnalysisEngine is implements the execution algorithm of
+the OME analysis subsystem.  Given an analysis chain, which is a
+directed acylic graph of analysis nodes, and a dataset, which is a
+collection of OME images, the engine will execute each node in the
+chain against the dataset, recording the results and all of the
+appropriate metadata into the OME database.
+
+=cut
+
 use strict;
 our $VERSION = '1.0';
 
@@ -46,6 +71,28 @@ __PACKAGE__->set_db('Main',
                   OME::DBConnection->DBPassword(), 
                   { RaiseError => 1 });
 
+=head1 SQL Statements
+
+Very little internal state is maintained during the execution
+algorithm, for two reasons.  First, all of this information is
+recorded in the database as part of module execution, so recording
+internal state would cause unnecessary duplication.  Second, in the
+case of large datasets (on the order of 10,000 images), the internal
+state would become an incredible memory overhead, and cause the
+algorithm to be horribly slow, if it worked at all.
+
+The following SQL statements are used throughout the execution
+algorithm to retrieve the information that would otherwise have been
+stored internally in Perl variables.
+
+=head2 sql_get_root_nodes
+
+	$sth = $self->sql_get_root_node();
+	$sth->execute($viewID);
+
+Returns the node ID's of all of the root nodes in an analysis view.
+
+=cut
 
 __PACKAGE__->set_sql('get_root_nodes',<<'SQL;','Main');
 SELECT avn.analysis_view_node_id
@@ -57,17 +104,45 @@ SELECT avn.analysis_view_node_id
          WHERE avl.to_node = avn.analysis_view_node_id)
 SQL;
 
+=head2 sql_get_predecessors
+
+	$sth = $self->sql_get_predecessors();
+	$sth->execute($nodeID>);
+
+Returns the node ID's of all of the predecessors of a node.
+
+=cut
+
 __PACKAGE__->set_sql('get_predecessors',<<'SQL;','Main');
 SELECT DISTINCT avl.from_node
   FROM analysis_view_links avl
  WHERE avl.to_node = ?
 SQL;
 
+=head2 sql_get_successors
+
+	$sth = $self->sql_get_successors();
+	$sth->execute($nodeID>);
+
+Returns the node ID's of all of the successors of a node.
+
+=cut
+
 __PACKAGE__->set_sql('get_successors',<<'SQL;','Main');
 SELECT DISTINCT avl.to_node
   FROM analysis_view_links avl
  WHERE avl.from_node = ?
 SQL;
+
+=head2 sql_get_input_attributes
+
+	$sth = $self->sql_get_input_attributes($attribute_table_name);
+	$sth->execute($analysisID,$formal_outputID);
+
+Returns the ID's of the attributes created as outputs from a specific
+formal output of an analysis.
+
+=cut
 
 __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
   SELECT attr.attribute_id
@@ -78,6 +153,18 @@ __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
 ORDER BY attr.attribute_id
 SQL;
 
+=head2 sql_get_input_image_attributes
+
+	$sth = $self->sql_get_input_image_attributes($attribute_table_name);
+	$sth->execute($analysisID,$formal_outputID,$imageID);
+
+Returns the ID's of the attributes created as outputs from a specific
+formal output of an analysis.  Assumes that the attribute type has
+image-level granularity, and limits the attributes returned to those
+keyed to a specific image.
+
+=cut
+
 __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
   SELECT attr.attribute_id
     FROM actual_outputs ao, %s attr
@@ -87,6 +174,19 @@ __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
      AND attr.actual_output_id = ao.actual_output_id
 ORDER BY attr.attribute_id
 SQL;
+
+=head2 sql_get_input_feature_attributes
+
+	$sth = $self->sql_get_input_feature_attributes($attribute_table_name);
+	$sth->execute($analysisID,$formal_outputID,$imageID);
+
+Returns the ID's of the attributes created as outputs from a specific
+formal output of an analysis.  Assumes that the attribute type has
+feature-level granularity, and limits the attributes returned to those
+keyed to a specific image.  (Does not take into account which features
+each attribute belongs to.)
+
+=cut
 
 __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
   SELECT attr.attribute_id
@@ -99,12 +199,100 @@ __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
 ORDER BY attr.attribute_id
 SQL;
 
+=head2 sql_get_input_feature_attributes_by_feature
+
+	$sth = $self->sql_get_input_feature_attributes_by_feature($attribute_table_name,$feature_IDs);
+	$sth->execute($analysisID,$formal_outputID);
+
+Returns the ID's of the attributes created as outputs from a specific
+formal output of an analysis.  Assumes that the attribute type has
+feature-level granularity, and limits the attributes returned to those
+keyed to a specific image.  (Does not take into account which features
+each attribute belongs to.)
+
+=cut
+
+__PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
+  SELECT attr.attribute_id
+    FROM actual_outputs ao, features f, %s attr
+   WHERE ao.analysis_id = ?
+     AND ao.formal_output_id = ?
+     AND f.feature_id in %s
+     AND attr.feature_id = f.feature_id
+     AND attr.actual_output_id = ao.actual_output_id
+ORDER BY attr.attribute_id
+SQL;
+
+=head2 sql_get_input_feature_tags
+
+	$sth = $self->sql_get_input_feature_tags($attribute_table_name);
+	$sth->execute($analysisID,$formal_outputID,$imageID);
+
+Returns the feature tags of the attributes created as outputs from a
+specific formal output of an analysis.  Assumes that the attribute
+type has feature-level granularity, and limits the attributes returned
+to those keyed to a specific image.
+
+=cut
+
+__PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
+  SELECT DISTINCT f.tag
+    FROM actual_outputs ao, features f, %s attr
+   WHERE ao.analysis_id = ?
+     AND ao.formal_output_id = ?
+     AND f.image_id = ?
+     AND attr.feature_id = f.feature_id
+     AND attr.actual_output_id = ao.actual_output_id
+SQL;
+
+=head2 sql_get_input_features
+
+	$sth = $self->sql_get_input_features($attribute_table_name);
+	$sth->execute($analysisID,$formal_outputID,$imageID);
+
+Returns the feature ID's and tags of the attributes created as outputs
+from a specific formal output of an analysis.  Assumes that the
+attribute type has feature-level granularity, and limits the
+attributes returned to those keyed to a specific image.
+
+=cut
+
+__PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
+  SELECT DISTINCT f.feature_id, f.tag
+    FROM actual_outputs ao, features f, %s attr
+   WHERE ao.analysis_id = ?
+     AND ao.formal_output_id = ?
+     AND f.image_id = ?
+     AND attr.feature_id = f.feature_id
+     AND attr.actual_output_id = ao.actual_output_id
+SQL;
+
+=head2 sql_get_input_link
+
+	$sth = $self->sql_get_input_link();
+	$sth->execute($nodeID,$formal_inputID);
+
+Returns the data link providing input to a formal input of an analysis
+node.
+
+=cut
+
 __PACKAGE__->set_sql('get_input_link',<<'SQL;','Main');
 SELECT avl.analysis_view_link_id
   FROM analysis_view_links avl
  WHERE avl.to_node = ?
    AND avl.to_input = ?
 SQL;
+
+=head2 sql_get_actual_output_from_input
+
+	$sth = $self->sql_get_actual_output_from_input();
+	$sth->execute($analysisID,$formal_inputID);
+
+Returns the actual output providing input to a formal input of an
+analysis node.
+
+=cut
 
 __PACKAGE__->set_sql('get_actual_output_from_input',<<'SQL;','Main');
 SELECT ai.actual_output_id
@@ -113,12 +301,31 @@ SELECT ai.actual_output_id
    AND ai.formal_input_id = ?
 SQL;
 
+=head2 sql_get_actual_output
+
+	$sth = $self->sql_get_actual_output();
+	$sth->execute($analysisID,$formal_outputID);
+
+Returns the actual output created for one of the formal outputs of an
+analysis run.
+
+=cut
+
 __PACKAGE__->set_sql('get_actual_output',<<'SQL;','Main');
 SELECT ao.actual_output_id
   FROM actual_outputs ao
  WHERE ao.analysis_id = ?
    AND ao.formal_output_id = ?
 SQL;
+
+=head2 sql_get_formal_inputs_by_node
+
+	$sth = $self->sql_get_formal_inputs_by_node();
+	$sth->execute($nodeID,$granularity);
+
+Returns all of the formal inputs of a given granularity for a node.
+
+=cut
 
 __PACKAGE__->set_sql('get_formal_inputs_by_node',<<'SQL;','Main');
   SELECT fi.formal_input_id
@@ -131,6 +338,15 @@ __PACKAGE__->set_sql('get_formal_inputs_by_node',<<'SQL;','Main');
 ORDER BY fi.formal_input_id
 SQL;
 
+=head2 sql_get_formal_outputs_by_node
+
+	$sth = $self->sql_get_formal_outputs_by_node();
+	$sth->execute($nodeID,$granularity);
+
+Returns all of the formal outputs of a given granularity for a node.
+
+=cut
+
 __PACKAGE__->set_sql('get_formal_outputs_by_node',<<'SQL;','Main');
   SELECT fo.formal_output_id
     FROM analysis_view_nodes avn,
@@ -142,6 +358,16 @@ __PACKAGE__->set_sql('get_formal_outputs_by_node',<<'SQL;','Main');
 ORDER BY fo.formal_output_id
 SQL;
 
+=head2 sql_get_formal_inputs_by_analysis
+
+	$sth = $self->sql_get_formal_inputs_by_analysis();
+	$sth->execute($analysisID,$granularity);
+
+Returns all of the formal inputs of a given granularity for a node
+execution.
+
+=cut
+
 __PACKAGE__->set_sql('get_formal_inputs_by_analysis',<<'SQL;','Main');
   SELECT fi.formal_input_id
     FROM analyses a,
@@ -152,6 +378,15 @@ __PACKAGE__->set_sql('get_formal_inputs_by_analysis',<<'SQL;','Main');
      AND fi.datatype_id = dt.datatype_id
 ORDER BY fi.formal_input_id
 SQL;
+
+=head2 sql_get_input_links_by_node
+
+	$sth = $self->sql_get_input_links_by_node();
+	$sth->execute($nodeID,$granularity);
+
+Returns all of the data links of a given granularity for a node.
+
+=cut
 
 __PACKAGE__->set_sql('get_input_links_by_node',<<'SQL;','Main');
   SELECT avl.analysis_view_link_id
@@ -188,10 +423,10 @@ sub findModuleHandler {
 
     # The instance of this class.
     my $self;
-    
+
     # The user's database session.
     my $session;
-    
+
     # The database factory used to create new database objects and to
     # find existing ones.
     my $factory;
@@ -213,7 +448,7 @@ sub findModuleHandler {
 
     # The instantiated program modules for each analyis node.
     my %node_modules;
-    
+
     # The current state of each node.
     use constant INPUT_STATE    => 1;
     use constant FINISHED_STATE => 2;
@@ -236,7 +471,7 @@ sub findModuleHandler {
     # $perdataset_analyses{$nodeID} = $analysis
     # $perimage_analyses{$nodeID}->{$imageID} = $analysis
     my (%perdataset_analysis,%perimage_analysis);
-    
+
     # The outputs generated by each node
     # $dataset_outputs{$nodeID}->
     #   {$formal_outputID} = $attribute
@@ -262,6 +497,7 @@ sub findModuleHandler {
     my (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs);
     my (@curr_dataset_outputs,@curr_image_outputs,@curr_feature_outputs);
     my ($curr_image,$curr_imageID);
+    my ($curr_feature,$curr_featureID);
 
     # The list of data paths found.
     my @data_paths;
@@ -311,7 +547,8 @@ sub findModuleHandler {
         my ($class,$sth) = @_;
         my (@results,$row);
 
-        push @results, $factory->loadObject($class,$row->[0]) while ($row = $sth->fetch());
+        push @results, $factory->loadObject($class,$row->[0])
+          while ($row = $sth->fetch());
         return \@results;
     }
 
@@ -332,21 +569,21 @@ sub findModuleHandler {
         my $location = $program->location();
 
         $nodes{$curr_nodeID} = $curr_node;
-        
+
         print STDERR "  ".$program->program_name()."\n";
-        
+
         print STDERR "    Loading module $location via handler $module_type\n";
         my $handler = findModuleHandler($module_type);
         eval "require $handler";
-        my $module = $handler->new($location,$factory,$program);
+        my $module = $handler->new($location,$session,$program,$curr_node);
         $node_modules{$curr_nodeID} = $module;
-        
+
         #print STDERR "    Sorting input links by granularity\n";
-        
+
         #$input_links{$curr_nodeID}->{D} = [];
         #$input_links{$curr_nodeID}->{I} = [];
         #$input_links{$curr_nodeID}->{F} = [];
-        
+
         # this pushes only linked inputs
         #my @inputs = $curr_node->input_links();
         #foreach my $input (@inputs) {
@@ -357,7 +594,7 @@ sub findModuleHandler {
         #    push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
         #    print "      $attribute_type ".$input->to_input()->name()."\n";
         #}
-        
+
         # where this pushes them all
         #my @inputs = $program->inputs();
         #foreach my $input (@inputs) {
@@ -367,13 +604,13 @@ sub findModuleHandler {
         #        attribute_type();
         #    push @{$input_links{$curr_nodeID}->{$attribute_type}}, $input;
         #}
-        
+
         #print STDERR "    Sorting outputs by granularity\n";
 
         #$output_links{$curr_nodeID}->{D} = [];
         #$output_links{$curr_nodeID}->{I} = [];
         #$output_links{$curr_nodeID}->{F} = [];
-        
+
         # ditto above
         #my @outputs = $curr_node->output_links();
         #foreach my $output (@outputs) {
@@ -383,7 +620,7 @@ sub findModuleHandler {
         #        attribute_type();
         #    push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
         #}
-        
+
         #my @outputs = $program->outputs();
         #foreach my $output (@outputs) {
         #    my $attribute_type = $output->
@@ -393,7 +630,7 @@ sub findModuleHandler {
         #    push @{$output_links{$curr_nodeID}->{$attribute_type}}, $output;
         #    print "      $attribute_type ".$output->name()."\n";
         #}
-        
+
         $node_states{$curr_nodeID} = INPUT_STATE;
     }
 
@@ -439,7 +676,7 @@ sub findModuleHandler {
                     push @new_paths,$data_path;
                 } elsif ($num_successors == 1) {
                     print STDERR "    Extending ".
-                        join(':',@$data_path)." with ".
+                      join(':',@$data_path)." with ".
                         $successors->[0]."\n";
                     push @$data_path, $successors->[0];
                     push @new_paths,$data_path;
@@ -449,7 +686,7 @@ sub findModuleHandler {
                         # make a copy
                         my $new_path = [@$data_path];
                         print STDERR "    Extending ".
-                            join(':',@$new_path)." with ".
+                          join(':',@$new_path)." with ".
                             $successor."\n";
                         push @$new_path, $successor;
                         push @new_paths, $new_path;
@@ -462,22 +699,41 @@ sub findModuleHandler {
         }
 
         foreach my $data_path_list (@data_paths) {
-            my $data_path = $factory->newObject("OME::AnalysisPath",{
-                path_length => scalar(@$data_path_list)
-            });
+            my $data_path = $factory->
+              newObject("OME::AnalysisPath",
+                        {
+                         path_length   => scalar(@$data_path_list),
+                         analysis_view => $analysis_view
+                        });
             my $data_pathID = $data_path->id();
 
             my $order = 0;
             foreach my $nodeID (@$data_path_list) {
-                my $path_entry = {
-                    path               => $data_path,
-                    path_order         => $order,
-                    analysis_view_node => $nodeID
-                    };
-                my $db_path_entry = $factory->newObject("OME::AnalysisPath::Map",
-                                                        $path_entry);
+                my $path_entry =
+                  {
+                   path               => $data_path,
+                   path_order         => $order,
+                   analysis_view_node => $nodeID
+                  };
+                my $db_path_entry = $factory->
+                  newObject("OME::AnalysisPath::Map",
+                            $path_entry);
                 push @{$data_paths{$nodeID}}, $db_path_entry;
                 $order++;
+            }
+        }
+    }
+
+    sub __loadDataPaths {
+        print STDERR "  Loading data paths\n";
+
+        my @db_paths = $analysis_view->paths();
+        foreach my $db_path (@db_paths) {
+            my @db_path_entries = $db_path->path_nodes();
+            foreach my $db_path_entry (@db_path_entries) {
+                push
+                  @{$data_paths{$db_path_entry->analysis_view_node()->id()}},
+                  $db_path_entry;
             }
         }
     }
@@ -498,38 +754,36 @@ sub findModuleHandler {
 
     # Creates ACTUAL_INPUT entries in the database for a node's input
     # link and a list of attributes.
-    sub __createActualInputs {
+    sub __createActualInputs_old {
         my ($input_link) = @_;
-        
+
         my $t0 = new Benchmark;
         my $sth;
-        
+
         my $formal_input = $input_link->to_input();
         my $formal_output = $input_link->from_output();
         my $pred_node = $input_link->from_node();
         my $pred_analysis = __getAnalysis($pred_node->id());
 
-        print STDERR "* link ".$input_link->id()."\n";
-        print STDERR "* pred ".$pred_node->id()."\n";
-        print STDERR "* pa   ".$pred_analysis->id()."\n";
-        print STDERR "* fo   ".$formal_output->id()."\n";
         $sth = $self->sql_get_actual_output();
         $sth->execute($pred_analysis->id(),$formal_output->id());
         my $actual_output = __fetchobj("OME::Analysis::ActualOutput",$sth);
 
         die "There should be an actual output here" if !defined $actual_output;
-        
-        my $actual_input_data = {
-            analysis      => __getAnalysis($curr_nodeID),
-            formal_input  => $formal_input,
-            actual_output => $actual_output
-            };
-        my $actual_input = $factory->newObject("OME::Analysis::ActualInput",
-                                               $actual_input_data);
-        
+
+        my $actual_input_data = 
+          {
+           analysis      => __getAnalysis($curr_nodeID),
+           formal_input  => $formal_input,
+           actual_output => $actual_output
+          };
+        my $actual_input = $factory->
+          newObject("OME::Analysis::ActualInput",
+                    $actual_input_data);
+
         my $t1 = new Benchmark;
         my $td = timediff($t1,$t0);
-        
+
         $inputs_time = timesum($inputs_time,$td);
     }
 
@@ -539,7 +793,7 @@ sub findModuleHandler {
         my ($formal_output,$attribute_list) = @_;
 
         my $t0 = new Benchmark;
-        
+
         #my $actual_output_data = {
         #    analysis      => __getAnalysis($curr_nodeID),
         #    formal_output => $formal_output
@@ -573,7 +827,7 @@ sub findModuleHandler {
                 last TEST_PRED;
             }
         }
-        
+
         return $ready;
     }
 
@@ -594,7 +848,7 @@ sub findModuleHandler {
             $sth->finish();
             return;
         }
-        
+
         $sth = $self->sql_get_formal_outputs_by_node();
         $sth->execute($curr_nodeID,'D');
         if ($sth->fetch()) {
@@ -602,7 +856,7 @@ sub findModuleHandler {
             $sth->finish();
             return;
         }
-        
+
         foreach my $predID (@curr_predecessorIDs) {
             if ($dependence{$predID} eq 'D') {
                 $dependence{$curr_nodeID} = 'D';
@@ -642,7 +896,7 @@ sub findModuleHandler {
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'D');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
 
@@ -654,11 +908,12 @@ sub findModuleHandler {
                 $paramString .= ") ";
                 next;
             }
-            
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
-                                                    $formal_inputID);
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
 
@@ -676,7 +931,7 @@ sub findModuleHandler {
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'I');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
 
@@ -688,13 +943,14 @@ sub findModuleHandler {
                 $paramString .= ") ";
                 next;
             } else {
-                print STDERR "** $input_link\n";
+                #print STDERR "** $input_link\n";
             }
-            
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
-                                                    $formal_inputID);
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
 
@@ -708,18 +964,18 @@ sub findModuleHandler {
                               $formal_output->id(),
                               $curr_imageID);
             }
-            
+
             while (my $row = $sth->fetch) {
                 $paramString .= $row->[0]." ";
-            }                
+            }
             $paramString .= ") ";
         }
-        
+
         $paramString .= "f ";
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'F');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
 
@@ -731,11 +987,11 @@ sub findModuleHandler {
                 $paramString .= ") ";
                 next;
             }
-            
+
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             my $formal_output = $input_link->from_output();
             my $pred_node = $input_link->from_node();
 
@@ -749,10 +1005,10 @@ sub findModuleHandler {
                               $formal_output->id(),
                               $curr_imageID);
             }
-                
+
             while (my $row = $sth->fetch) {
                 $paramString .= $row->[0]." ";
-            }                
+            }
             $paramString .= ") ";
         }
 
@@ -777,7 +1033,7 @@ sub findModuleHandler {
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'D');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
@@ -789,11 +1045,12 @@ sub findModuleHandler {
                 $past_paramString .= ") ";
                 next;
             }
-            
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
-                                                    $formal_inputID);
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             $sth = $self->sql_get_input_attributes($attr_table);
             $sth->execute($actual_output->analysis()->id(),
                           $actual_output->formal_output()->id());
@@ -803,12 +1060,12 @@ sub findModuleHandler {
             }
             $past_paramString .= ") ";
         }
-        
+
         $past_paramString .= "i ";
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'I');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
@@ -820,11 +1077,12 @@ sub findModuleHandler {
                 $past_paramString .= ") ";
                 next;
             }
-            
-            my $formal_input = $factory->loadObject("OME::Program::FormalInput",
-                                                    $formal_inputID);
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             if ($dependence{$curr_nodeID} eq 'D') {
                 $sth = $self->sql_get_input_attributes($attr_table);
                 $sth->execute($actual_output->analysis()->id(),
@@ -835,18 +1093,18 @@ sub findModuleHandler {
                               $actual_output->formal_output()->id(),
                               $curr_imageID);
             }
-            
+
             while (my $row = $sth->fetch) {
                 $past_paramString .= $row->[0]." ";
-            }                
+            }
             $past_paramString .= ") ";
         }
-        
+
         $past_paramString .= "f ";
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'F');
         my $formal_inputIDs = __fetchall($sth);
-        
+
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
 
@@ -858,11 +1116,11 @@ sub findModuleHandler {
                 $past_paramString .= ") ";
                 next;
             }
-            
+
             my $formal_input = $factory->loadObject("OME::Program::FormalInput",
                                                     $formal_inputID);
             my $attr_table = $formal_input->datatype()->table_name();
-            
+
             if ($dependence{$curr_nodeID} eq 'D') {
                 $sth = $self->sql_get_input_attributes($attr_table);
                 $sth->execute($actual_output->analysis()->id(),
@@ -873,13 +1131,13 @@ sub findModuleHandler {
                               $actual_output->formal_output()->id(),
                               $curr_imageID);
             }
-                
+
             while (my $row = $sth->fetch) {
                 $past_paramString .= $row->[0]." ";
-            }                
+            }
             $past_paramString .= ") ";
         }
-        
+
         return $past_paramString;
     }
 
@@ -892,6 +1150,9 @@ sub findModuleHandler {
     sub __copyPastResults {
         my ($matched_analysis) = @_;
 
+        # None of this is necessary anymore, since we don't maintain
+        # the outputs as internal state.
+
         #my @all_outputs = $matched_analysis->outputs();
         #my %actuals;
         #foreach my $actual_output (@all_outputs) {
@@ -902,28 +1163,28 @@ sub findModuleHandler {
         #    #print STDERR "        ".$formal_output->name()." ".$attribute->id()."\n";
         #    push @{$actuals{$actual_output->formal_output()->id()}}, $attribute;
         #}
-        
+
         #foreach my $formal_output (@curr_dataset_outputs) {
         #    #my $formal_output = $output->formal_output();
         #    my $attribute_list = $actuals{$formal_output->id()};
-        #    
+        #
         #    $dataset_outputs{$curr_nodeID}->{$formal_output->id()} = $attribute_list;
         #}
-        
+
         #foreach my $formal_output (@curr_image_outputs) {
         #    #my $formal_output = $output->formal_output();
         #    my $attribute_list = $actuals{$formal_output->id()};
-        #    
+        #
         #    foreach my $attribute (@$attribute_list) {
         #        my $image = $attribute->image();
         #        push @{$image_outputs{$curr_nodeID}->{$formal_output->id()}->{$image->id()}}, $attribute;
         #    }
         #}
-        
+
         #foreach my $formal_output (@curr_feature_outputs) {
         #    #my $formal_output = $output->formal_output();
         #    my $attribute_list = $actuals{$formal_output->id()};
-        #    
+        #
         #    foreach my $attribute (@$attribute_list) {
         #        my $feature = $attribute->feature();
         #        my $image = $feature->image();
@@ -934,23 +1195,64 @@ sub findModuleHandler {
 
     sub __createAnalysis {
         my ($data) = @_;
-        my $analysis = $factory->newObject("OME::Analysis",$data);
+        my $analysis = $factory->
+          newObject("OME::Analysis",
+                    $data);
         __addAnalysisToPaths($analysis);
 
         return $analysis;
+    }
+
+    sub __createActualInputs {
+        my ($analysis) = @_;
+
+        my %actual_inputs;
+
+        print STDERR "**** actual inputs\n";
+
+        foreach my $input_link (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs) {
+            my $formal_input = $input_link->to_input();
+            my $attr_table = $formal_input->datatype()->table_name();
+
+            print STDERR "****   ".$formal_input->name()."\n";
+            
+            my $formal_output = $input_link->from_output();
+            my $pred_node = $input_link->from_node();
+
+            print STDERR "****   ".$pred_node->id()."\n";
+
+            my $sth = $self->sql_get_actual_output();
+            $sth->execute(__getAnalysis($pred_node->id())->id(),
+                          $formal_output->id());
+            my $actual_outputID = __fetchone($sth);
+
+            print STDERR "****     $actual_outputID\n";
+
+            my $actual_input = $factory->
+              newObject("OME::Analysis::ActualInput",
+                        {
+                         analysis         => $analysis,
+                         formal_input_id  => $formal_input->id(),
+                         actual_output_id => $actual_outputID
+                        });
+
+            print STDERR "****     ".$actual_input->id()."\n";
+        }
     }
 
     sub __createActualOutputs {
         my ($analysis) = @_;
 
         my %actual_outputs;
-        
+
         my $formal_outputs = $analysis->program()->outputs();
         while (my $formal_output = $formal_outputs->next()) {
-            my $actual_output = $factory->newObject("OME::Analysis::ActualOutput",{
-                analysis      => $analysis,
-                formal_output => $formal_output
-                });
+            my $actual_output = $factory->
+              newObject("OME::Analysis::ActualOutput",
+                        {
+                         analysis      => $analysis,
+                         formal_output => $formal_output
+                        });
             $actual_outputs{$formal_output->name()} = $actual_output;
         }
 
@@ -960,11 +1262,13 @@ sub findModuleHandler {
     sub __addAnalysisToPaths {
         my ($analysis) = @_;
         foreach my $db_data_path_entry (@{$data_paths{$curr_nodeID}}) {
-            my $node_execution = $factory->newObject("OME::AnalysisExecution::NodeExecution",{
-                analysis_execution => $analysis_execution,
-                analysis_view_node => $curr_nodeID,
-                analysis           => $analysis,
-            });
+            my $node_execution = $factory->
+              newObject("OME::AnalysisExecution::NodeExecution",
+                        {
+                         analysis_execution => $analysis_execution,
+                         analysis_view_node => $curr_nodeID,
+                         analysis           => $analysis,
+                        });
         }
     }
 
@@ -987,11 +1291,11 @@ sub findModuleHandler {
         my $paramString = __calculateCurrentInputTag();
         my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
         print STDERR "$space  Param $paramString\n";
-        
+
         my $match = 0;
         my $matched_analysis;
         my @past_analyses = OME::Analysis->
-            search(program_id => $curr_node->program()->id());
+          search(program_id => $curr_node->program()->id());
         my $this_analysis = __getAnalysis($curr_nodeID);
         my $this_analysisID;
         $this_analysisID = $this_analysis->id() if (defined $this_analysis);
@@ -1003,14 +1307,14 @@ sub findModuleHandler {
                                 $past_analysis->id() eq $this_analysisID);
             my $past_paramString = __calculatePastInputTag($past_analysis);
             print STDERR "$space    Found $past_paramString\n";
-            
+
             if ($past_paramString eq $paramString) {
                 $match = 1;
                 $matched_analysis = $past_analysis;
                 last FIND_MATCH;
             }
         }
-        
+
         if ($match) {
             print STDERR "$space    Found reusable analysis\n";
             __copyPastResults($matched_analysis);
@@ -1021,11 +1325,419 @@ sub findModuleHandler {
         return $match;
     }
 
+    # $hierarchy_children{$tag} = [ tags ]
+    # $hierarchy_parent{$tag} = [ parent tag ]
+    # @hierarchy_roots = [ tags who have no parent features ]
+
+    my (%hierarchy_children,%hierarchy_parent,%hierarchy_roots);
+
+    sub __printHierarchy {
+        my ($prefix) = @_;
+
+        my %tags_found;
+
+        my $print_tag;
+        $print_tag = sub {
+            my ($prefix,$tag) = @_;
+
+            if (exists $tags_found{$tag}) {
+                print STDERR "${prefix}ERROR!  '$tag' found twice!\n";
+                die "$tag found twice in feature hierarchy";
+            }
+
+            print STDERR "${prefix}'${tag}'\n";
+            $tags_found{$tag} = 1;
+
+            foreach (keys %{$hierarchy_children{$tag}}) {
+                &$print_tag("$prefix  ",$_) if defined $_;
+            }
+        };
+
+        print STDERR "$prefix<Image>\n";
+        &$print_tag("$prefix  ",$_) foreach keys %hierarchy_roots;
+    }
+
+    sub __calculateHierarchy {
+        %hierarchy_children = ();
+        %hierarchy_parent = ();
+        %hierarchy_roots = ();
+
+        my %nodes_to_examine;
+        my %nodes_examined;
+
+        $nodes_to_examine{$curr_nodeID} = 1;
+
+        # For every node left to examine:
+        #   Find its tags' parents, mark this in the hierarchy.
+        #   Add its predecessor nodes to the list of nodes to examine.
+        my $continue = 1;
+        while ($continue) {
+            $continue = 0;
+            foreach my $this_nodeID (keys %nodes_to_examine) {
+                next if (exists $nodes_examined{$this_nodeID});
+
+                #print STDERR "        Found node $this_nodeID\n";
+
+                # Find the tags used as input by this node.
+                my $this_node = $nodes{$this_nodeID};
+
+                my %this_tags;
+
+                my $sth = $self->sql_get_input_links_by_node();
+                $sth->execute($this_nodeID,'F');
+                foreach my $input_link (@{__fetchobjs("OME::AnalysisView::Link",$sth)}) {
+                    my $formal_input = $input_link->to_input();
+                    my $attr_table = $formal_input->datatype()->table_name();
+
+                    my $formal_output = $input_link->from_output();
+                    my $pred_node = $input_link->from_node();
+                    my $pred_nodeID = $pred_node->id();
+                    my $pred_iterator = $pred_node->iterator_tag();
+
+                    $sth = $self->sql_get_input_feature_tags($attr_table);
+                    $sth->execute(__getAnalysis($pred_node->id())->id(),
+                                  $formal_output->id(),
+                                  $curr_imageID);
+                    my $tags = __fetchall($sth);
+
+                    foreach my $tag (@$tags) {
+                        # Each of the tags that were found must either
+                        # a) match the iterator tag of the predecessor
+                        # node, or b) must be a child of the
+                        # predecessor iterator.
+
+                        #print STDERR "          Found tag $tag\n";
+
+                        if (!defined $pred_iterator) {
+                            #print STDERR "            $tag is a child of <Image>\n";
+                            $hierarchy_parent{$tag} = undef;
+                            $hierarchy_roots{$tag} = 1;
+                        } elsif ($tag eq $pred_iterator) {
+                            #print STDERR "            $tag is propagating\n";
+                            # No more parents can be determined at
+                            # this point.
+                        } else {
+                            #print STDERR "            $tag is a parent of $pred_iterator\n";
+                            $hierarchy_parent{$tag} = $pred_iterator;
+                            $hierarchy_children{$pred_iterator}->{$tag} = 1;
+                        }
+                    }
+
+                    $nodes_to_examine{$pred_nodeID} = 1;
+                }
+
+
+                $continue = 1;
+                $nodes_examined{$this_nodeID} = 1;
+            }
+        }
+    }
+
+    my %sqls_defined;
+
+    sub __buildIteratorSQL {
+        my ($iterator,$tag) = @_;
+
+        # Tries to build an SQL statement that finds the iterator
+        # features that correspond to a given tag feature.
+
+        #print STDERR "Building SQL for iterator $iterator and tag $tag\n";
+
+
+        # Quickly handle the trivial case.
+
+        if ($iterator eq $tag) {
+            my $filter_method = "iterator_features_0";
+
+            if (!$sqls_defined{$filter_method}) {
+                # Yes, this is a silly query.  But we need some query here.
+                my $sql = "SELECT FEATURE_ID FROM FEATURES WHERE FEATURE_ID %s";
+
+                __PACKAGE__->set_sql($filter_method,$sql,'Main');
+                $sqls_defined{$filter_method} = 1;
+
+                #print STDERR "$sql\n";
+            }
+
+            return "sql_${filter_method}";
+        }
+
+        # Search up the tree.
+        my @path = ($tag);
+
+        while ($path[0] ne $iterator) {
+            my $parent = $hierarchy_parent{$path[0]};
+            if (defined $parent) {
+                unshift @path, $parent;
+            } else {
+                last;
+            }
+        }
+
+        my $forwards = 1;
+
+        # Did we find one?
+        if ($path[0] ne $iterator) {
+            # No, so, search down the tree.  Or in other words, search up
+            # the tree from the opposite end.
+
+            @path = ($iterator);
+
+            while ($path[0] ne $tag) {
+                my $parent = $hierarchy_parent{$path[0]};
+                if (defined $parent) {
+                    unshift @path, $parent;
+                } else {
+                    last;
+                }
+            }
+
+            $forwards = 0;
+
+            # Did we find one?
+            if ($path[0] ne $tag) {
+                die "No path in the feature hierarchy between $tag and $iterator";
+            }
+        }
+
+        my $num_levels = scalar(@path);
+        my $filter_method = "iterator_features_${num_levels}_${forwards}";
+
+        if (!$sqls_defined{$filter_method}) {
+            my @tables = ();
+            my @joins = ();
+            foreach (0..$num_levels-1) {
+                push @tables, "FEATURES F".$_;
+                push @joins, "F".$_.".FEATURE_ID = F".($_ + 1).".PARENT_FEATURE_ID"
+                  if $_ < $num_levels-1;
+            }
+
+            my $select_table = $forwards? 'F0': 'F'.($num_levels-1);
+            my $filter_table = $forwards? 'F'.($num_levels-1): 'F0';
+            push @joins, "${filter_table}.FEATURE_ID %s";
+
+            my $sql =
+              "SELECT ${select_table}.FEATURE_ID FROM ".
+                join(", ",@tables)." WHERE ".
+                  join(" AND ",@joins);
+
+            #print STDERR "$sql\n";
+
+            __PACKAGE__->set_sql($filter_method,$sql,'Main');
+            $sqls_defined{$filter_method} = 1;
+        }
+
+        return "sql_${filter_method}";
+    }
+
+    sub __findIteratorFeatures {
+        # keyed by tag
+        my %input_features;
+
+        foreach my $input_link (@curr_feature_inputs) {
+            my $formal_input = $input_link->to_input();
+            my $attr_table = $formal_input->datatype()->table_name();
+
+            my $formal_output = $input_link->from_output();
+            my $pred_node = $input_link->from_node();
+
+            my $sth = $self->sql_get_input_features($attr_table);
+            $sth->execute(__getAnalysis($pred_node->id())->id(),
+                          $formal_output->id(),
+                          $curr_imageID);
+
+            while (my $row = $sth->fetch) {
+                my ($featureID,$tag) = @$row;
+                push @{$input_features{$tag}}, $featureID;
+            }
+        }
+
+        my $iterator = $curr_node->iterator_tag();
+        my %iterator_features;
+
+        foreach my $tag (keys %input_features) {
+            my $features = $input_features{$tag};
+
+            if (scalar(@$features) > 0) {
+                # Build up the SQL statement to find the iterator tags.
+                my $sql = __buildIteratorSQL($iterator,$tag);
+
+                my $sth = $self->$sql("in (".join(",",@$features).")");
+                $sth->execute();
+                my $features = __fetchall($sth);
+
+                foreach (@$features) {
+                    #print STDERR "$_ !\n";
+                    $iterator_features{$_} = 1;
+                }
+            }
+        }
+
+        my @feature_IDs = keys %iterator_features;
+        #print STDERR join(',',@feature_IDs)."\n";
+        return \@feature_IDs;
+    }
+
+    sub __findFeatureAttributes {
+        my ($input_link) = @_;
+
+        my $iterator = $curr_node->iterator_tag();
+
+        # the curr_feature is the iterator feature
+        my $formal_input = $input_link->to_input();
+        my $attr_table = $formal_input->datatype()->table_name();
+
+        my $formal_output = $input_link->from_output();
+        my $pred_node = $input_link->from_node();
+
+        my $sth = $self->sql_get_input_feature_tags($attr_table);
+        $sth->execute(__getAnalysis($pred_node->id())->id(),
+                      $formal_output->id(),
+                      $curr_imageID);
+        my $tags = __fetchall($sth);
+
+        my %input_features;
+
+        foreach my $tag (@$tags) {
+            #print STDERR "$tag!!!!!\n";
+            my $sql = __buildIteratorSQL($tag,$iterator);
+            #print STDERR "  $sql\n";
+            my $snippet = "= $curr_featureID";
+            #print STDERR "  '$snippet'\n";
+            $sth = $self->$sql($snippet);
+
+            #print "****** '$curr_featureID'\n";
+            $sth->execute();
+
+            $input_features{$_} = 1 foreach @{__fetchall($sth)};
+        }
+
+        my @feature_IDs = keys %input_features;
+        my $feature_IDs = join(",",keys %input_features);
+        #print STDERR " $feature_IDs\n";
+
+        my %attributes;
+
+        $sth = $self->
+          sql_get_input_feature_attributes_by_feature($attr_table,
+                                                      "($feature_IDs)");
+        $sth->execute(__getAnalysis($pred_node->id())->id(),
+                     $formal_output->id());
+
+        return __fetchall($sth);
+    }
+
+    sub __processAllFeatures {
+        my %feature_hash;
+
+        print STDERR "      Feature inputs\n";
+
+        foreach my $input_link (@curr_feature_inputs) {
+            my $formal_input = $input_link->to_input();
+            my $attr_table = $formal_input->datatype()->table_name();
+                        
+            my $formal_output = $input_link->from_output();
+            my $pred_node = $input_link->from_node();
+
+            my $sth = $self->sql_get_input_feature_attributes($attr_table);
+            $sth->execute(__getAnalysis($pred_node->id())->id(),
+                          $formal_output->id(),
+                          $curr_imageID);
+                    
+            my @attribute_list;
+            while (my $row = $sth->fetch()) {
+                my $attribute = $factory->loadAttribute($attr_table,$row->[0]);
+                push @attribute_list, $attribute;
+            }
+
+            print STDERR "        ".$formal_input->name()." (".
+              scalar(@attribute_list).")\n";
+
+            #__createActualInputs($input_link);
+
+            $feature_hash{$formal_input->name()} = \@attribute_list;
+        }
+
+        $curr_module->featureInputs(\%feature_hash);
+
+        print STDERR "      Calculate feature\n";
+        $curr_module->calculateFeature();
+
+        # Collect and process the feature outputs
+
+        my $feature_attributes = $curr_module->collectFeatureOutputs();
+
+        print STDERR "      Feature outputs\n";
+        foreach my $formal_output (@curr_feature_outputs) {
+            my $attribute_list = $feature_attributes->{$formal_output->name()};
+            if (ref($attribute_list) ne 'ARRAY') {
+                $attribute_list = [$attribute_list];
+            }
+            print STDERR "        ".$formal_output->name()." (".
+              scalar(@$attribute_list).")\n";
+            #__createActualOutputs($formal_output,$big_list);
+        }
+
+    }
+
+    sub __processOneFeature {
+        my %feature_hash;
+
+        $curr_module->startFeature($curr_feature);
+        #print STDERR "One $curr_featureID\n";
+
+        print STDERR "          Feature inputs\n";
+
+        foreach my $input_link (@curr_feature_inputs) {
+            my $formal_input = $input_link->to_input();
+            #print STDERR "  Link ".$input_link." ".$formal_input->name()."\n";
+            my $attr_table = $formal_input->datatype()->table_name();
+            my @attributes = @{__findFeatureAttributes($input_link)};
+
+            # Turn the attribute ID's into attribute objects.
+            foreach (@attributes) {
+                #print " -- $_ \n";
+                $_ = $factory->loadAttribute($attr_table,$_);
+                #print " -- $_ \n";
+            }
+
+            print STDERR "            ".$formal_input->name()." (".
+              scalar(@attributes).")\n";
+
+            $feature_hash{$formal_input->name()} = \@attributes;
+        }
+
+        $curr_module->featureInputs(\%feature_hash);
+
+        print STDERR "          Calculate feature\n";
+        $curr_module->calculateFeature();
+
+        # Collect and process the feature outputs
+
+        my $feature_attributes = $curr_module->collectFeatureOutputs();
+
+        print STDERR "          Feature outputs\n";
+        foreach my $formal_output (@curr_feature_outputs) {
+            my $attribute_list = 
+              $feature_attributes->{$formal_output->name()};
+            if (ref($attribute_list) ne 'ARRAY') {
+                $attribute_list = [$attribute_list];
+            }
+            print STDERR "            ".$formal_output->name().
+              " (".scalar(@$attribute_list).")\n";
+        }
+
+        $curr_module->finishFeature();
+    }
+
+    # Builds the feature hierarchy for a given node.  This changes
+    # from node to node.
+
     # The main body of the analysis engine.  Its purpose is to execute
     # a prebuilt analysis chain against a dataset, reusing results if
     # possible.
     sub executeAnalysisView {
-        ($self, $session, $analysis_view,$input_parameters, $dataset) = @_;
+        ($self, $session, $analysis_view, $input_parameters, $dataset) = @_;
         $factory = $session->Factory();
 
         $start_time = new Benchmark;
@@ -1035,13 +1747,38 @@ sub findModuleHandler {
 
         print STDERR "Setup\n";
 
+        print STDERR "  Locking the dataset\n";
+        $dataset->locked('true');
+        $dataset->commit();
+
+        # Build the data paths.  Since data paths are now associated
+        # with analysis views, we only need to calculate them once.
+        # Since the view is only locked when it is executed, we assume
+        # that an unlocked view has not had paths calculated, whereas
+        # a locked one has.
+        if (!$analysis_view->locked()) {
+            print STDERR "  Chain has not been locked yet\n";
+
+            __buildDataPaths();
+
+            print STDERR "  Locking the chain\n";
+            $analysis_view->locked('true');
+            $analysis_view->commit();
+        } else {
+            print STDERR "  Chain has already been locked\n";
+
+            __loadDataPaths();
+        }
+
         print STDERR "  Creating ANALYSIS_EXECUTION table entry\n";
 
-        $analysis_execution = $factory->newObject("OME::AnalysisExecution",{
-            analysis_view => $analysis_view,
-            dataset       => $dataset,
-            experimenter  => $session->User()
-            });
+        $analysis_execution = $factory->
+          newObject("OME::AnalysisExecution",
+                    {
+                     analysis_view => $analysis_view,
+                     dataset       => $dataset,
+                     experimenter  => $session->User()
+                    });
 
         # initialize all of the nodes
         foreach my $node (@nodes) {
@@ -1050,16 +1787,13 @@ sub findModuleHandler {
             __initializeNode();
         }
 
-        # Build the data paths.
-        __buildDataPaths();
-
         $continue = 1;
         $round = 0;
 
         my $sth;
 
         $analysis_execution->dbi_commit();
-        
+
         while ($continue) {
             $continue = 0;
             $round++;
@@ -1074,17 +1808,19 @@ sub findModuleHandler {
 
                 # Go ahead and skip if we've completed this module.
                 if ($node_states{$curr_nodeID} > INPUT_STATE) {
-                    print STDERR "  ".$curr_node->program()->program_name()." already completed\n";
+                    print STDERR "  ".$curr_node->program()->
+                      program_name()." already completed\n";
                     next ANALYSIS_LOOP;
                 }
 
                 $sth = $self->sql_get_predecessors();
                 $sth->execute($curr_nodeID);
                 @curr_predecessorIDs = @{__fetchall($sth)};
-                
+
 
                 if (!__testModulePredecessors()) {
-                    print STDERR "  Skipping ".$curr_node->program()->program_name()."\n";
+                    print STDERR "  Skipping ".$curr_node->program()->
+                      program_name()."\n";
                     next ANALYSIS_LOOP;
                 }
 
@@ -1094,27 +1830,33 @@ sub findModuleHandler {
 
                 $sth = $self->sql_get_input_links_by_node();
                 $sth->execute($curr_nodeID,'D');
-                @curr_dataset_inputs = @{__fetchobjs("OME::AnalysisView::Link",$sth)};
-                
+                @curr_dataset_inputs = 
+                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+
                 $sth = $self->sql_get_input_links_by_node();
                 $sth->execute($curr_nodeID,'I');
-                @curr_image_inputs = @{__fetchobjs("OME::AnalysisView::Link",$sth)};
-                
+                @curr_image_inputs = 
+                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+
                 $sth = $self->sql_get_input_links_by_node();
                 $sth->execute($curr_nodeID,'F');
-                @curr_feature_inputs = @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+                @curr_feature_inputs = 
+                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'D');
-                @curr_dataset_outputs = @{__fetchobjs("OME::Program::FormalOutput",$sth)};
-                
+                @curr_dataset_outputs =
+                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'I');
-                @curr_image_outputs = @{__fetchobjs("OME::Program::FormalOutput",$sth)};
-                
+                @curr_image_outputs =
+                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'F');
-                @curr_feature_outputs = @{__fetchobjs("OME::Program::FormalOutput",$sth)};
+                @curr_feature_outputs =
+                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
 
                 $last_node = $curr_node;
 
@@ -1129,20 +1871,23 @@ sub findModuleHandler {
                     }
                 }
 
-                print STDERR "  Executing ".$curr_node->program()->program_name()." (".$dependence{$curr_nodeID}.")\n";
+                print STDERR "  Executing ".$curr_node->program()->
+                  program_name()." (".$dependence{$curr_nodeID}.")\n";
 
                 # Execute away.
                 if ($dependence{$curr_nodeID} eq 'D') {
                     print STDERR "    Creating ANALYSIS entry";
-                    my $analysis = __createAnalysis({
-                        program    => $curr_node->program(),
-                        dependence => $dependence{$curr_nodeID},
-                        dataset    => $dataset,
-                        timestamp  => 'now',
-                        status     => 'RUNNING'
-                        });
+                    my $analysis = 
+                      __createAnalysis({
+                                        program    => $curr_node->program(),
+                                        dependence => $dependence{$curr_nodeID},
+                                        dataset    => $dataset,
+                                        timestamp  => 'now',
+                                        status     => 'RUNNING'
+                                       });
                     __assignAnalysis($analysis,0);
                     print STDERR " (".$analysis->id().")\n";
+                    __createActualInputs($analysis);
                     my $actual_outputs = __createActualOutputs($analysis);
                     $curr_module->startAnalysis($actual_outputs);
                 }
@@ -1151,27 +1896,33 @@ sub findModuleHandler {
                 $curr_module->startDataset($dataset);
 
                 # Collect and present the dataset inputs
+
+                print STDERR "    Dataset inputs\n";
+
                 my %dataset_hash;
                 foreach my $input_link (@curr_dataset_inputs) {
                     my $formal_input = $input_link->to_input();
                     my $attr_table = $formal_input->datatype()->table_name();
-                    
+
                     my $formal_output = $input_link->from_output();
                     my $pred_node = $input_link->from_node();
-                    
+
                     $sth = $self->sql_get_input_attributes($attr_table);
                     $sth->execute(__getAnalysis($pred_node->id())->id(),
                                   $formal_output->id());
 
 
-                    print STDERR "      Instantiating dataset inputs\n";
-
                     my @attribute_list;
                     while (my $row = $sth->fetch()) {
-                        push @attribute_list, $factory->loadAttribute($attr_table,$row->[0]);
+                        push @attribute_list, $factory->
+                          loadAttribute($attr_table,
+                                        $row->[0]);
                     }
 
-                    __createActualInputs($input_link);
+                    print STDERR "      ".$formal_input->name()." (".
+                      scalar(@attribute_list).")\n";
+
+                    #__createActualInputs($input_link);
 
                     $dataset_hash{$formal_input->name()} = \@attribute_list;
                 }
@@ -1194,31 +1945,35 @@ sub findModuleHandler {
                             next IMAGE_LOOP;
                         } elsif (!defined __getAnalysis($curr_nodeID)) {
                             print STDERR "      Creating ANALYSIS entry";
-                            my $analysis = __createAnalysis({
-                                program    => $curr_node->program(),
-                                dependence => $dependence{$curr_nodeID},
-                                dataset    => $dataset,
-                                timestamp  => 'now',
-                                status     => 'RUNNING'
-                                });
+                            my $analysis =
+                              __createAnalysis({
+                                                program    => $curr_node->program(),
+                                                dependence => $dependence{$curr_nodeID},
+                                                dataset    => $dataset,
+                                                timestamp  => 'now',
+                                                status     => 'RUNNING'
+                                               });
                             __assignAnalysis($analysis,0);
                             print STDERR " (".$analysis->id().")\n";
+                            __createActualInputs($analysis);
                             my $actual_outputs = __createActualOutputs($analysis);
                             $curr_module->startAnalysis($actual_outputs);
                         } else {
                             __assignAnalysis(__getAnalysis($curr_nodeID),0);
                         }
                     }
-                    
+
                     print STDERR "    startImage\n";
                     $curr_module->startImage($curr_image);
 
                     my %image_hash;
 
+                    print STDERR "    Image inputs\n";
+
                     foreach my $input_link (@curr_image_inputs) {
                         my $formal_input = $input_link->to_input();
                         my $attr_table = $formal_input->datatype()->table_name();
-                        
+
                         my $formal_output = $input_link->from_output();
                         my $pred_node = $input_link->from_node();
 
@@ -1226,15 +1981,16 @@ sub findModuleHandler {
                         $sth->execute(__getAnalysis($pred_node->id())->id(),
                                       $formal_output->id(),
                                       $curr_imageID);
-                    
-                        print STDERR "        Instantiating image inputs\n";
 
                         my @attribute_list;
                         while (my $row = $sth->fetch()) {
-                            push @attribute_list, $factory->loadAttribute($attr_table,$row->[0]);
+                            push @attribute_list, $factory->
+                              loadAttribute($attr_table,
+                                            $row->[0]);
                         }
 
-                        __createActualInputs($input_link);
+                        print STDERR "      ".$formal_input->name()." (".
+                          scalar(@attribute_list).")\n";
 
                         $image_hash{$formal_input->name()} = \@attribute_list;
                     }
@@ -1244,62 +2000,37 @@ sub findModuleHandler {
                     print STDERR "    Precalculate image\n";
                     $curr_module->precalculateImage();
 
+                    print STDERR "      Calculating feature hierarchy\n";
+                    __calculateHierarchy();
+                    __printHierarchy("        ");
+
                     # Collect and present the feature inputs.
 
                     #print STDERR "    startFeature ".$feature->id()."\n";
                     #$curr_module->startFeature($feature);
 
-                    my %feature_hash;
+                    if (defined $curr_node->iterator_tag()) {
+                        # We have a feature iterator, so we should
+                        # present the feature inputs grouped by
+                        # iterator feature.
 
-                    foreach my $input_link (@curr_feature_inputs) {
-                        my $formal_input = $input_link->to_input();
-                        my $attr_table = $formal_input->datatype()->table_name();
-                        
-                        my $formal_output = $input_link->from_output();
-                        my $pred_node = $input_link->from_node();
+                        print STDERR "      Iterating over ".$curr_node->iterator_tag()." tag\n";
 
-                        $sth = $self->sql_get_input_feature_attributes($attr_table);
-                        $sth->execute(__getAnalysis($pred_node->id())->id(),
-                                      $formal_output->id(),
-                                      $curr_imageID);
-                    
-                        print STDERR "        Instantiating feature inputs\n";
+                        my $iterator_features = __findIteratorFeatures();
+                        #print STDERR "      ".scalar(@$iterator_features)."\n";
 
-                        my %attribute_hash;
-                        while (my $row = $sth->fetch()) {
-                            my $attribute = $factory->loadAttribute($attr_table,$row->[0]);
-                            push @{$attribute_hash{$attribute->feature()->id()}},$attribute;
+                        foreach my $cf (@$iterator_features) {
+                            $curr_featureID = $cf;
+                            print STDERR "        Feature $curr_featureID\n";
+                            $curr_feature = $factory->
+                              loadObject("OME::Feature",$curr_featureID);
+                            __processOneFeature();
                         }
+                    } else {
+                        # No iterator feature; present all of the
+                        # feature inputs for the image at once.
 
-                        __createActualInputs($input_link);
-
-                        $feature_hash{$formal_input->name()} = \%attribute_hash;
-                    }
-
-                    $curr_module->featureInputs(\%feature_hash);
-
-                    print STDERR "    Calculate feature\n";
-                    $curr_module->calculateFeature();
-
-                    # Collect and process the feature outputs
-
-                    my $feature_attributes = $curr_module->collectFeatureOutputs();
-
-                    print STDERR "    Feature outputs\n";
-                    foreach my $formal_output (@curr_feature_outputs) {
-                        my $attribute_hash = $feature_attributes->{$formal_output->name()};
-                        my $big_list;
-                        my $count = 0;
-                        foreach my $feature_id (keys %$attribute_hash) {
-                            my $attribute_list = $attribute_hash->{$feature_id};
-                            if (ref($attribute_list) ne 'ARRAY') {
-                                $attribute_list = [$attribute_list];
-                            }
-                            push @{$big_list}, @{$attribute_list};
-                            $count += scalar(@$attribute_list);
-                        }
-                        print STDERR "        ".$formal_output->name()." ($count)\n";
-                        #__createActualOutputs($formal_output,$big_list);
+                        __processAllFeatures();
                     }
 
                     # Collect and process the image outputs
@@ -1310,29 +2041,16 @@ sub findModuleHandler {
 
                     print STDERR "    Image outputs\n";
                     foreach my $formal_output (@curr_image_outputs) {
-                        print STDERR "      $formal_output\n";
-                        print STDERR "      Actual output ".$formal_output->name()."\n";
-                        my ($t0,$t1,$td);
-                        $t0 = new Benchmark;
                         my $attribute_list = $image_attributes->{$formal_output->name()};
-                        $t1 = new Benchmark;
-                        $td = timediff($t1,$t0);
-                        print STDERR "        Retrieve attribute list ".timestr($td)."\n";
                         if (ref($attribute_list) ne 'ARRAY') {
                             $attribute_list = [$attribute_list];
                         }
-                        $t0 = new Benchmark;
-                        $td = timediff($t0,$t1);
-                        print STDERR "        Coerce attribute list   ".timestr($td)."\n";
-                        print STDERR "        ".$formal_output->name()." (".scalar(@$attribute_list).")\n";
-                        #__createActualOutputs($formal_output,$attribute_list);
-                        $t1 = new Benchmark;
-                        $td = timediff($t1,$t0);
-                        print STDERR "        Create actuals          ".timestr($td)."\n";
+                        print STDERR "      ".$formal_output->name().
+                          " (".scalar(@$attribute_list).")\n";
                     }
 
                     $curr_module->finishImage($curr_image);
-                }                # foreach $curr_image
+                }               # foreach $curr_image
 
                 # Collect and process the dataset outputs
                 print STDERR "    Postcalculate dataset\n";
@@ -1343,12 +2061,13 @@ sub findModuleHandler {
                 print STDERR "    Dataset outputs\n";
                 foreach my $output (@curr_dataset_outputs) {
                     my $formal_output = $output->from_output();
-                    my $attribute_list = $dataset_attributes->{$formal_output->name()};
+                    my $attribute_list =
+                      $dataset_attributes->{$formal_output->name()};
                     if (ref($attribute_list) ne 'ARRAY') {
                         $attribute_list = [$attribute_list];
                     }
-                    print STDERR "      ".$formal_output->name()." (".scalar(@$attribute_list).")\n";
-                    #__createActualOutputs($formal_output,$attribute_list);
+                    print STDERR "      ".$formal_output->name().
+                      " (".scalar(@$attribute_list).")\n";
                 }
 
                 $curr_module->finishDataset($dataset);
@@ -1361,43 +2080,35 @@ sub findModuleHandler {
                 print STDERR "    Marking state\n";
                 $node_states{$curr_nodeID} = FINISHED_STATE;
                 $continue = 1;
-            }                        # ANALYSIS_LOOP - foreach $curr_node
-        }                        # while ($continue)
+            }                   # ANALYSIS_LOOP - foreach $curr_node
+        }                       # while ($continue)
 
         $last_node->dbi_commit();
 
         $end_time = new Benchmark;
-        
+
         my $total_time = timediff($end_time,$start_time);
-        
+
         print STDERR "\nTiming:\n";
         print STDERR "  Total:          ".timestr($total_time)."\n";
         print STDERR "  ACTUAL_INPUTS:  ".timestr($inputs_time)."\n";
         print STDERR "  ACTUAL_OUTPUTS: ".timestr($outputs_time)."\n";
-        
+
     }
 }
 
 1;
 
 __END__
-    
-    =head1 NAME
-    
-    OME::Tasks::AnalysisEngine - OME analysis subsystem
 
-        =head1 SYNOPSIS
+=head1 AUTHOR
 
-        =head1 DESCRIPTION
+Douglas Creager <dcreager@alum.mit.edu>,
+Open Microscopy Environment, MIT
 
-        =head1 AUTHOR
+=head1 SEE ALSO
 
-        Douglas Creager <dcreager@alum.mit.edu>
+L<OME>, http://www.openmicroscopy.org/
 
-        Open Microscopy Environment, MIT 
+=cut
 
-        =head1 SEE ALSO
-
-        L<OME>, http://www.openmicroscopy.org/
-
-        =cut

@@ -26,11 +26,15 @@ our $VERSION = '1.0';
 use OME::DBObject;
 use base qw(OME::DBObject);
 
+__PACKAGE__->AccessorNames({
+    analysis_view_id => 'analysis_view'
+    });
+
 __PACKAGE__->table('analysis_paths');
 __PACKAGE__->sequence('analysis_path_seq');
 __PACKAGE__->columns(Primary => qw(path_id));
-__PACKAGE__->columns(Essential => qw(path_length));
-
+__PACKAGE__->columns(Essential => qw(path_length analysis_view_id));
+__PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
 __PACKAGE__->has_many('path_nodes', 'OME::AnalysisPath::Map' => qw(path_id));
 
 
