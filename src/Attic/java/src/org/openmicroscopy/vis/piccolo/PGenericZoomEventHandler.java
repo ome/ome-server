@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import org.openmicroscopy.vis.ome.CModule;
 import edu.umd.cs.piccolo.event.PBasicInputEventHandler;
+import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCanvas;
@@ -92,6 +93,9 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 	
 	public PGenericZoomEventHandler(PBufferedObject canvas) {
 		super();
+		PInputEventFilter filter = new PInputEventFilter();
+		filter.acceptEverything();
+		setEventFilter(filter);
 		this.canvas = canvas;		
 	}
 	
@@ -225,20 +229,26 @@ public class PGenericZoomEventHandler extends  PBasicInputEventHandler {
 			super.mouseExited(e);
 	}
 	
+	
+	
 	/***
 	 * Zoom out to the parent of the current node when we get a popup
 	 */
 	protected void handlePopup(PInputEvent e) {
+	//	System.err.println("got a popup in generic handler...");
 		postPopup = true;
 		PNode node = e.getPickedNode();
 		PNode p = node.getParent();
+	//	System.err.println("node is "+p);
 		if (p instanceof PBufferedNode) {
+	//		System.err.println("zooming to parent.");
 			PBufferedNode bn=(PBufferedNode) p;
 			PBounds b = bn.getBufferedBounds();
 			PCamera camera = ((PCanvas) canvas).getCamera();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);		
 		} else if (p instanceof PCamera || p == ((PCanvas) canvas).getLayer() ||
 					node instanceof PCamera || node == ((PCanvas) canvas).getLayer()) {
+	//		System.err.println("zooming to camera leavel");
 			PBounds b = canvas.getBufferedBounds();
 			PCamera camera = ((PCanvas) canvas).getCamera();
 			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
