@@ -127,7 +127,7 @@ echo "command line and options:" >> $LOG_FILE
 echo "$0 $*" >> $LOG_FILE
 echo "------------------------------------------------------------" >> $LOG_FILE
 T_START=`date +%s`
-su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*tif*"  >> $LOG_FILE 2>&1
+su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
 T_STOP=`date +%s`
 #
 # Get images
