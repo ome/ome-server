@@ -37,12 +37,7 @@ push (@extra_paths,glob ("/Applications/matlab*/bin"));
 push (@extra_paths,glob ("/Applications/Matlab*/bin"));
 my $matlab_path = which ('matlab',\@extra_paths);
 
-if (scalar(@ARGV) eq 0 and not $matlab_path) {
-	print "\n\nWhere is Matlab installed?\n";
-	print ">> ";
-	$matlab_path = <STDIN>;
-	chomp($matlab_path);
-} elsif (scalar(@ARGV) eq 1) {
+if (scalar(@ARGV) eq 1) {
 	$matlab_path = shift(@ARGV);
 }
 
