@@ -95,7 +95,8 @@ sub exportFile {
 
 # these hacks were added by josiah <siah@nih.gov>
 # this is a debugging tool. actual output of the file is delegated to OME::Tasks::InsertFile->exportFile
-#$CA_doc->toFile($filename.'.fucked', 1); 
+#$CA_doc->toFile($filename.'.postXSLT', 1);
+#$doc->toFile($filename.'.preXSLT', 1);
 # end debugging tool
 
 #	REMOVE THIS HACK WHEN $stylesheet->transform($doc); PRODUCES SOMETHING USEFUL 
