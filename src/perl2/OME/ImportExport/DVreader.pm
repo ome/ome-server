@@ -38,6 +38,7 @@ use strict;
 use Carp;
 use OME::Image::Pix;
 use OME::ImportEngine::AbstractFormat;
+use OME::ImportExport::Params;
 use OME::ImportExport::FileUtils;
 use OME::ImportExport::Repacker::Repacker;
 use base qw(OME::ImportEngine::AbstractFormat);
@@ -155,6 +156,8 @@ my %xml_wavelength_entries = (wave1  => 'EmWave',
 			       wave5  => 'EmWave'
 			       );
 
+my %params;
+
 sub new {
 
     my $invoker = shift;
@@ -167,6 +170,8 @@ sub new {
 
     bless $self, $class;
     $self->{super} = $self->SUPER::new($session, $module_execution);
+    my %paramHash;
+    $self->{params} = new OME::ImportExport::Params(\%paramHash);
     return $self;
 
     };
@@ -244,7 +249,7 @@ sub importGroup {
     $params->oname($self->__nameOnly($fn));
     $params->endian(getEndian());
 
-    my $image = $self->newImage($session, $params);
+    my $image = $self->newImage($session, ($self->{super})->__nameOnly($fn));
     $self->{image} = $image;
 
     # Softworx records many pieces of metadata in the file header and
@@ -270,7 +275,7 @@ sub importGroup {
     # pack together info on input file
     my @finfo;
     $self->{in_files} = { path => $fn,
-			  file_sha1 => $sha1,
+			  file_sha1 => ($self->getSHA1($fn)),
 			  bigendian => ($params->{endian} eq "big") ? 't':'f',
 			  image_id => $image->id(),
 			  x_start => 0,
@@ -718,7 +723,7 @@ sub GetDVID {
 # Get %params hash reference
 sub getParams {
     my $self = shift;
-    return ($self->{super})->Params();
+    return $self->{params};
 }
 
 
