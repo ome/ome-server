@@ -65,7 +65,7 @@ su - $OME_ADMIN -c "dropdb $DB_NAME" > /dev/null 2>&1
 cp -f /etc/ome-install.store /etc/ome-install.store-bak
 # FIXME: this line should go away once the matlab installer works:
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{matlab_conf}->{INSTALL}=0;Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
-ome admin data connection -d $TEST_DB
+ome admin data connection -d $TEST_DB > /dev/null 2>&1
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{admin_user}='$OME_ADMIN';Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{ome_user}->{OMEName}='$OME_ADMIN';Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 #
