@@ -96,7 +96,7 @@ sub install {
     }
 
     # Download
-    download_module ($module, $LOGFILE)
+    download_package ($module, $LOGFILE)
 	or croak "Unable to download \"$module->{name}\".";
 
     # Extract
