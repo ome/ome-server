@@ -74,7 +74,6 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	
 	public PThumbnail(CImage image) {
 		super();
-		//setChildrenPickable(false);
 		this.image=image;
 		imageData = image.getImageData();
 		if (imageData != null) {
@@ -82,7 +81,6 @@ public class PThumbnail extends PNode implements PBufferedNode {
 			addChild(imageNode);
 		}
 		else {
-//			System.err.println("thumbnail for image "+image.getID()+", data not ready");
 			label = new PText(image.getName());
 			label.setFont(PConstants.THUMBNAIL_NAME_FONT);
 			addChild(label);
@@ -99,11 +97,13 @@ public class PThumbnail extends PNode implements PBufferedNode {
 	public PBounds getGlobalFullBounds() {
 		PBounds b  = super.getGlobalFullBounds();
 		
-		if (label != null) {
+		//if (label != null) {
+		if (imageNode == null) {
 			return new PBounds(b.getX(),b.getY(),50,50);
 		}
-		else 
-			return b;
+		else {	
+			return imageNode.getGlobalFullBounds();
+		}
 	}
 	
 	protected boolean pick(PPickPath pickPath) {
