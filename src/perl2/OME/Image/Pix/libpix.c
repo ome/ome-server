@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <tiffio.h>
+
 #include "./libpix.h"
 
 
@@ -195,6 +197,7 @@ char *theBuf;
 		free (theBuf);
 		return (NULL);
 	}
+	
 	nIn = fread (theBuf,bp,nPix,fp);
 	if (nIn < nPix) {
 		fprintf (stderr,"Pix->GetPlane:  Error at (%d,%d,%d,%d,%d) in file %s.  Tried to read %d pixels, got %d\n",
@@ -207,6 +210,144 @@ char *theBuf;
 	fclose (fp);
 	return (theBuf);
 }  
+
+
+size_t Plane2TIFF (Pix *pPix, int theZ, int theW, int theT, char *path)
+{
+size_t nPix;
+char *theBuf;
+
+	theBuf = GetPlane (pPix,theZ,theW,theT);
+	if (theBuf == NULL) {
+		fprintf (stderr,"Pix->Plane2TIFF:  Could not read repository file\n");
+		return (NULL);
+	}
+	
+	nPix = Buff2Tiff (theBuf, path, pPix->dx, pPix->dy, pPix->bp*8);
+	free (theBuf);
+	return (nPix);
+}
+
+
+
+size_t Plane2TIFF8 (Pix *pPix, int theZ, int theW, int theT, char *path, double scale, double offset)
+{
+size_t nPix;
+char *theBuf;
+char *scaledBuf;
+
+	theBuf = GetPlane (pPix,theZ,theW,theT);
+	if (theBuf == NULL) {
+		fprintf (stderr,"Pix->Plane2TIFF8:  Could not read repository file\n");
+		return (NULL);
+	}
+
+	if (pPix->bp != 1) {
+		scaledBuf = ScaleBuf8 (theBuf,pPix->bp,pPix->dx*pPix->dy,scale,offset);
+		free (theBuf);
+		if (!scaledBuf) {
+			fprintf (stderr,"Pix->Plane2TIFF8:  Could not scale buffer\n");
+			return (NULL);
+		}
+		theBuf = scaledBuf;
+	}
+	nPix = Buff2Tiff (theBuf, path, pPix->dx, pPix->dy, 8);
+	free (theBuf);
+	return (nPix);
+}
+
+
+char *ScaleBuf8 (char *theBuf, int bp, size_t nPix, float scale, int offset)
+{
+unsigned char *scaledBuf,*buf;
+int thePix;
+
+	scaledBuf = malloc (nPix);
+	if (!scaledBuf) {
+		fprintf (stderr,"Pix->ScaleBuf8:  Could not allocate memory for scaled buffer\n");
+		return (NULL);
+	}
+
+	buf = scaledBuf;
+	if (bp == 2) {
+		unsigned short *shortPtr = (unsigned short *)buf;
+		for (; nPix > 0; nPix--) {
+			thePix = *shortPtr++ - offset;
+			if (thePix < 0) thePix = 0;
+			thePix *= scale;
+			if (thePix > 255) thePix=255;
+			*buf++ = thePix;
+		}
+	}
+	
+	return (scaledBuf);
+}
+
+
+size_t Buff2Tiff (char *buf, char *path, size_t dx, size_t dy, size_t bpp)
+{
+size_t nPix;
+TIFF* tiff;
+uint32 row,nrow;
+uint32 rowsperstrip = (uint32)-1;
+tsize_t scanline;
+tstrip_t strip;
+int err;
+char TiffVers[255];
+
+	tiff = TIFFOpen(path,"w");
+	if (!tiff ) {
+		fprintf (stderr,"Pix->Buff2Tiff:  Could not open '%s' for writing\n",path);
+		return NULL;
+	}
+	
+	TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+	TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, bpp);
+	TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, 1);
+/*
+* FIXME:
+* Apparently, this doesn't work until libtiff version 3.5.7 - Happily not returning an error here if LZW is unavailable,
+* but crapping out when you call TIFFWriteEncodedStrip with LZW compression.  It does send text to stderr at this point
+* if there's no LZW, but doesn't reutrn an error????!!!!  Peeeuuuuwww.
+* Once again the rest of us suffer due to Unisys mouth-breaters.
+	if (! TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW) )
+*/
+		TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+	TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+	
+
+	TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, dx);
+	TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, dy);
+	rowsperstrip = TIFFDefaultStripSize(tiff,0);
+	rowsperstrip = rowsperstrip > dy ? dy : rowsperstrip;
+	TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
+
+	scanline = TIFFScanlineSize(tiff);
+
+	for (row = 0; row < dy; row += rowsperstrip)
+	{
+		nrow = (row+rowsperstrip > dy ?
+			dy-row : rowsperstrip);
+		strip = TIFFComputeStrip(tiff, row, 0);
+		err = TIFFWriteEncodedStrip(tiff, strip, buf, nrow*scanline);
+		if (err < 0) {
+			fprintf (stderr,"Pix->Buff2Tiff:  Error writing tiff file libtiff error: %d strip: %d scanline: %d rowsperstrip: %d (device full?)\n",err,strip,scanline,rowsperstrip);
+			TIFFClose (tiff);
+			unlink (path);
+			return (NULL);
+		}
+		buf += (nrow * scanline);
+	}
+	
+
+	TIFFClose (tiff);
+	return (dx*dy);
+
+	
+	
+}
+
+
 
 
 

@@ -152,6 +152,24 @@ SetPlane (pPix,thePix,theZ,theW,theT)
 	int theT
 
 size_t
+Plane2TIFF (pPix,theZ,theW,theT,path)
+	OME::Image::Pix pPix
+	int theZ
+	int theW
+	int theT
+	char *path
+
+size_t
+Plane2TIFF8 (pPix,theZ,theW,theT,path,scale,offset)
+	OME::Image::Pix pPix
+	int theZ
+	int theW
+	int theT
+	char *path
+	double scale
+	double offset
+
+size_t
 SetStack (pPix,thePix,theW,theT)
 	OME::Image::Pix pPix
 	char *thePix

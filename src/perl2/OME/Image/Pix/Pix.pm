@@ -46,7 +46,7 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   my $pixels = $pix->GetPixels () || die "Could not allocate buffer\n";
 
   # Get an XY plane of pixels by specifying theZ, theW, and theT
-  my $plane = $pix->GetPlane (4,1,1) || die "Could not allocate buffer\n";
+  my $plane = $pix->GetPlane ($theZ,$theW,$theT) || die "Could not allocate buffer\n";
 
   # The returned scalar can be unpacked into an array.  This is probably never a good idea:
   my @pixArray = unpack ("S*",$plane);
@@ -57,7 +57,7 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   vec ($plane, $sizeX * $x + $y, 16) = 3;
 
   # Get an XYZ stack of pixels by specifying theW, and theT
-  my $stack = $pix->GetStack (3,4) || die "Could not allocate buffer\n";
+  my $stack = $pix->GetStack ($theW,$theT) || die "Could not allocate buffer\n";
 
   # Get a 5D ROI:
   my $ROI = $pix->GetROI ($x0,$y0,$z0,$w0,$t0,$x1,$y1,$z1,$w1,$t1) || die "Could not allocate buffer\n";
@@ -68,13 +68,21 @@ OME::Image::Pix - A Perl interface to the OME libpix library
   my $nPixOut = $pix->SetPixels ($pixels);
 
   # Set an XY plane of pixels by specifying theZ, theW, and theT
-  my $nPixOut = $pix->SetPlane ($plane,4,1,2);
+  my $nPixOut = $pix->SetPlane ($plane,$theZ,$theW,$theT);
 
   # Set an XYZ stack of pixels by specifying theW, and theT
-  my $nPixOut = $pix->SetStack ($stack,0,4);
+  my $nPixOut = $pix->SetStack ($stack,$theW,$theT);
 
   # Set a 5D ROI:
   my $nPixOut = $pix->SetROI ($ROI,$x0,$y0,$z0,$w0,$t0,$x1,$y1,$z1,$w1,$t1);
+
+  # Convert a plane of pixels to a TIFF file (8 or 16 bits per pixel)
+  my $nPixOut = $pix->Plane2TIFF ($theZ,$theW,$theT,'testTIFF16.tiff');
+
+  # Convert a plane of pixels to an 8 bit per pixel TIFF file
+  # $pix8 = ($pix16 - $offset) * $scale;
+  # if $pix8 is outside of the range 0-255, it is clipped.
+  my $nPixOut = $pix->Plane2TIFF8 ($theZ,$theW,$theT,'testTIFF8.tiff',$scale,$offset);
 
 
 =head1 DESCRIPTION

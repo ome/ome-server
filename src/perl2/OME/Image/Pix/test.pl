@@ -6,8 +6,13 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..23\n"; }
-END {print "not ok 1\n" unless $loaded; unlink ('pixTest16');unlink('pixTestROI');unlink('pixTestROI2');}
+BEGIN { $| = 1; print "1..25\n"; }
+END {print "not ok 1\n" unless $loaded;
+	unlink ('pixTest16');
+	unlink('pixTestROI');
+	unlink('pixTestROI2');
+	unlink('testTIFF16.tiff');
+	unlink('testTIFF8.tiff');}
 use OME::Image::Pix;
 $loaded = 1;
 print "ok 1\n";
@@ -136,25 +141,33 @@ die "not ok 17:  new() Failed to return undef with no path spec." if $pixROI;
 print "ok 17\n";
 
 my $pix16 = $pix->GetPlane (10,10,10);
-die "not ok 18:  GetPlane Failed to return undef with bogus plane spec." if $pixROI;
+die "not ok 18:  GetPlane Failed to return undef with bogus plane spec." if $pix16;
 print "ok 18\n";
 
 my $nOut = $pix->SetPlane ($pix16Plane,10,10,10);
-die "not ok 19:  SetPlane Failed to return 0 with bogus plane spec." if $pixROI;
+die "not ok 19:  SetPlane Failed to return 0 with bogus plane spec." if $nOut;
 print "ok 19\n";
 
 my $pix16 = $pix->GetStack (10,10);
-die "not ok 20:  GetStack Failed to return undef with bogus stack spec." if $pixROI;
+die "not ok 20:  GetStack Failed to return undef with bogus stack spec." if $pix16;
 print "ok 20\n";
 
 my $nOut = $pix->SetStack ($pix16Stack,10,10);
-die "not ok 21:  SetStack Failed to return 0 with bogus plane spec." if $pixROI;
+die "not ok 21:  SetStack Failed to return 0 with bogus plane spec." if $nOut;
 print "ok 21\n";
 
 my $pix16 = $pix->GetROI (0,0,0,4,0,5,10,5,5,1);
-die "not ok 22:  GetROI Failed to return 0 with bogus plane spec." if $pixROI;
+die "not ok 22:  GetROI Failed to return 0 with bogus plane spec." if $pix16;
 print "ok 22\n";
 
 my $nOut = $pix->SetROI ($pix16ROI,0,0,10,4,0,5,5,5,5,1);
-die "not ok 23:  SetROI Failed to return 0 with bogus plane spec." if $pixROI;
+die "not ok 23:  SetROI Failed to return 0 with bogus plane spec." if $nOut;
 print "ok 23\n";
+
+my $nOut = $pix->Plane2TIFF (2,2,2,'testTIFF16.tiff');
+die "not ok 24:  Plane2TIFF did not write the correct number of pixels." if $nOut != 5*5;
+print "ok 24\n";
+
+my $nOut = $pix->Plane2TIFF8 (4,4,4,'testTIFF8.tiff',256/3125,0);
+die "not ok 25:  Plane2TIFF did not write the correct number of pixels." if $nOut != 5*5;
+print "ok 25\n";

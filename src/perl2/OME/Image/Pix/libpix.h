@@ -46,5 +46,10 @@ size_t SetROI (Pix *pPix, char *thePix,
 	int x1, int y1, int z1, int w1, int t1
 );
 
+size_t Plane2TIFF (Pix *pPix, int theZ, int theW, int theT, char *path);
+size_t Plane2TIFF8 (Pix *pPix, int theZ, int theW, int theT, char *path, double scale, double offset);
+
 /* PRIVATE methods */
 FILE *GetPixFileUpdate (Pix *pPix);
+size_t Buff2Tiff (char *buf, char *path, size_t dx, size_t dy, size_t bpp);
+char *ScaleBuf8 (char *theBuf, int bp, size_t nPix, float scale, int offset);
