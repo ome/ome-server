@@ -198,6 +198,9 @@ sub importFiles {
                  owner_id => $session->User()->id(),
                 });
 
+    # Have the manager officially start the import process, and create
+    # the MEX (module execution record) that represents the act of
+    # importation, which creates the OME file.
     OME::Tasks::ImportManager->startImport();
     my $files_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
     $session->commitTransaction();
@@ -278,7 +281,7 @@ sub importFiles {
                 $sha1 = $format->getSHA1($group);
             };
             if ($@) {
-                logwarn "Error calculating SHA-1: $format_class $group";
+                logwarn "Error $@ calculating SHA-1: $format_class $group";
                 next GROUP;
             }
 
@@ -297,7 +300,7 @@ sub importFiles {
                     }
                 }
             } else {
-                # TODO: Should this be an error is getSHA1 returns undef?
+                # TODO: Should this be an error if getSHA1 returns undef?
             }
 
             # This hasn't been imported yet, so slurp it in.
@@ -307,7 +310,7 @@ sub importFiles {
             };
 
             if ($@) {
-                logwarn "Error importing image: $format_class $group\n$@";
+                logwarn "Error $@ importing image: $format_class $group";
                 $session->rollbackTransaction();
                 next GROUP;
             }
