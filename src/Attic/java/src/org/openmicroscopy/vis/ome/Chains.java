@@ -43,7 +43,6 @@
  import java.util.List;
  import java.util.Iterator;
  import java.util.Collection;
- import org.openmicroscopy.Chain;
  import org.openmicroscopy.Factory;
 /** 
  * <p>A class to handle the chains in the OME database
@@ -59,35 +58,31 @@ public class Chains {
 	
 	public Chains(ConnectionWorker worker,Factory factory) {
 		
-		Chain c;
+		CChain c;
 		Integer id;
 		
 		List  cs= factory.findObjects("OME::AnalysisChain",null);
 		Iterator iter = cs.iterator();
 		
 		while (iter.hasNext()) {
-			c = (Chain) iter.next();
+			c = (CChain) iter.next();
 			worker.setStatusLabel("Chain.."+c.getName());
-			populateChain(c);
 			id = new Integer(c.getID());
 			chains.put(id,c);
 		}
 	}
 	
-	private void populateChain(Chain c) {
-
+	public void layout() {
+		CChain c;
 		
-		List nodes = c.getNodes();
-		/*Iterator iter = nodes.iterator();
+		Iterator iter = chains.values().iterator();
 		while (iter.hasNext()) {
-			Object obj = iter.next();
-			//System.err.println("trying to get a node from a chain.."+obj.getClass().getName());
-			CNode n = (CNode) obj;
-			cInfo.addNode(n);
-		} */
+			c = (CChain) iter.next();
+			c.layout();
+		}
 	}
 	
-	public void addChain(Chain c) {
+	public void addChain(CChain c) {
 		Integer id = new Integer(c.getID());
 		chains.put(id,c);
 	}
@@ -97,7 +92,7 @@ public class Chains {
 		return values.iterator();
 	}
 	
-	public Chain getChain(int i) {
-		return (Chain) chains.get(new Integer(i));
+	public CChain getChain(int i) {
+		return (CChain) chains.get(new Integer(i));
 	}
 }
