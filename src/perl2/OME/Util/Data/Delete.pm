@@ -121,11 +121,6 @@ sub DeleteMEX {
 	my $command_name = $self->commandName($commands);
 	my ($noop,$delete,$keep_files,$keep_pixels);
 
-	undef %DELETED_ATTRS;
-	undef %DELETED_MEXES;
-	undef %ACS_DELETED_NODES;
-	undef %DELETED_PIXELS;
-	undef %DELETED_ORIGINAL_FILES;
 	$RECURSION_LEVEL=0;
 
 	# Parse our command line options
@@ -184,6 +179,21 @@ my $mex_id;
 	$mex_id = $mex->id();
 
 	return if exists $DELETED_MEXES{$mex_id};
+
+	# If this is the entry point, then clear out our globals
+	if ($RECURSION_LEVEL == 0) {
+		undef %DELETED_ATTRS;
+		undef %DELETED_MEXES;
+		undef %ACS_DELETED_NODES;
+		undef %DELETED_PIXELS;
+		undef %DELETED_ORIGINAL_FILES;
+	}
+
+
+	# This prevents infinite recursion.  When we actually delete the MEX, this
+	# will be set to 1.
+	$DELETED_MEXES{$mex_id} = 0;
+
 	$RECURSION_LEVEL++;
 	my $recurs_indent='';
 	for (my $i=1; $i < $RECURSION_LEVEL;$i++) { $recurs_indent .= '  '; }
@@ -418,7 +428,8 @@ my @ref_attrs;
 # This deletes an attribute.
 # It collects any vMEXes, references, and any MEXes for the references,
 # And deletes all of those as well.
-# It maintains a list of deleted attributes that require special handling (things stored in omeis)
+# It calls delete_attribute_object to do the actual deletion
+# Any special handling of attributes is done by delete_attribute_object.
 sub delete_attribute {
 my $self = shift;
 my $attr = shift;
@@ -438,11 +449,23 @@ my $delete = shift;
 	my $vMEXes = OME::Tasks::ModuleExecutionManager->getMEXesForAttribute($attr);
 	foreach my $vMex (@$vMEXes) {
 		next unless $vMex;
-		$self->delete_mex ($vMex,$delete) unless $vMex->id() == $mex_id;
+		$self->delete_mex ($vMex,$delete) unless $vMex->id() == $mex_id;		
 	}
 	
+	# Once we're back, we delete the vMEXes for this attribute.
+    my @virtual_mex_maps = $FACTORY->
+		findObjects('OME::ModuleExecution::VirtualMEXMap',
+			{ attribute => $attr }
+		);
+    foreach my $map (@virtual_mex_maps) {
+    	print "      VirtualMEXMap to MEX ID=",$map->module_execution_id(),"\n";
+        $map->deleteObject() if $delete;
+    }
+
+
 	# These attributes may be referred to by references.
 	my $refs = $self->get_references_to ($attr);
+	
 	foreach my $ref_attr (@$refs) {
 		next if exists $DELETED_ATTRS{$ref_attr->id()};
 
@@ -451,22 +474,88 @@ my $delete = shift;
 			next unless $ref_MEX;
 			$self->delete_mex ($ref_MEX,$delete) unless $ref_MEX->id() == $mex_id;
 		}
-		print $recurs_indent,"      Reference Attribute ",$ref_attr->id()," (",$ref_attr->semantic_type()->name(),")\n";
-		$ref_attr->deleteObject() if $delete;
-		$DELETED_ATTRS{$ref_attr->id()} = 1;
+		$self->delete_attribute_object ($ref_attr,$delete,$recurs_indent."      Reference from ");
 	}
+	$self->delete_attribute_object ($attr,$delete,$recurs_indent."      ");
+}
+
+# This sub does any special handling for deleting attribute objects
+sub delete_attribute_object {
+	my $self = shift;
+	my $attr = shift;
+	my $delete = shift;
+	my $message = shift;
+	$message = '' unless defined $message;
+
+	my $do_del=1;
+	my $do_register=1;
+	#
+	# Special handling of specific kinds of attributes
+	#
+	my $ST_name = $attr->semantic_type()->name();
+	my $attr_id = $attr->id();
 	
-	if ($attr->semantic_type()->name() eq 'Pixels') {
-		$DELETED_PIXELS {$attr->id()}->{Repository}    = $attr->Repository();
-		$DELETED_PIXELS {$attr->id()}->{ImageServerID} = $attr->ImageServerID();
-	} elsif ($attr->semantic_type()->name() eq 'OriginalFile') {
-		$DELETED_ORIGINAL_FILES {$attr->id()}->{Repository}   = $attr->Repository();
-		$DELETED_ORIGINAL_FILES {$attr->id()}->{FileID}       = $attr->FileID();
+	# Things stored in omeis are stored for possible later deletion from omeis
+	if ($ST_name eq 'Pixels') {
+		$DELETED_PIXELS {$attr_id}->{Repository}    = $attr->Repository();
+		$DELETED_PIXELS {$attr_id}->{ImageServerID} = $attr->ImageServerID();
+	} elsif ($ST_name eq 'OriginalFile') {
+		$DELETED_ORIGINAL_FILES {$attr_id}->{Repository}   = $attr->Repository();
+		$DELETED_ORIGINAL_FILES {$attr_id}->{FileID}       = $attr->FileID();
 	}
 
-	print $recurs_indent,"    Attribute = ",$attr->id(),"\n";
-	$DELETED_ATTRS{$attr->id()} = 1;
-	$attr->deleteObject() if $delete;
+	# We are not deleting experimenters (for now), but we will set their MEX to NULL
+	elsif ($ST_name eq 'Experimenter') {
+		my $experimenterName = $attr->FirstName().' '.$attr->LastName();
+		print $message,"Experimenter ID=$attr_id '$experimenterName' ",
+			"Not Deleted - Setting MEX=NULL\n";
+		if ($delete) {
+			$attr->module_execution_id (undef);
+			$attr->storeObject();
+		}
+		$do_del = 0;
+	}
+
+	# Since we are not deleting experimenters (for now), we're also not deleting Groups
+	elsif ($ST_name eq 'Group') {
+		my $groupName = defined $attr->Name() ? $attr->Name() : 'UNDEFINED';
+		print $message,"Group ID=$attr_id '$groupName' ",
+			"Not Deleted - Setting MEX=NULL\n";
+		if ($delete) {
+			$attr->module_execution_id (undef);
+			$attr->storeObject();
+		}
+		$do_del = 0;
+	}
+
+	# Since we are not deleting experimenters (for now), we're also not deleting ExperimenterGroups
+	elsif ($ST_name eq 'ExperimenterGroup') {
+		my $groupName = defined $attr->Group() ? $attr->Group()->Name() : 'UNDEFINED';
+		my $experimenterName;
+		if (defined $attr->Experimenter()) {
+			$experimenterName = $attr->Experimenter()->FirstName().' '.$attr->Experimenter()->LastName();
+		} else {
+			$experimenterName = 'UNDEFINED';
+		}
+		print $message,"ExperimenterGroup ID=$attr_id, '$experimenterName' -> '$groupName' ",
+			"Not Deleted - Setting MEX=NULL\n";
+		if ($delete) {
+			$attr->module_execution_id (undef);
+			$attr->storeObject();
+		}
+		$do_del = 0;
+	}
+
+	if ($do_del) {
+		print $message,"Attribute $attr_id (",$attr->semantic_type()->name(),")\n";
+		$attr->deleteObject() if $delete;
+		# FIXME:  Should delete LSIDs.
+	}
+	
+	if ($do_register) {
+		$DELETED_ATTRS{$attr_id} = 1;
+	}
+	
 }
 
 
