@@ -108,8 +108,9 @@ sub getPageBody {
         my $node  = $cmanager->getNode($chain,'Find spots');
         my $input = $cmanager->getFormalInput($chain,$node,'Parameters');
         my $user_inputs = { $input->id() => $mex };
+        my $chain_execution;
         eval {
-            OME::Analysis::Engine->
+            $chain_execution = OME::Analysis::Engine->
                 executeChain($chain,$session->dataset(),$user_inputs);
         };
 
@@ -119,6 +120,12 @@ sub getPageBody {
 
 		} else {
             $body.="Done!";
+            return ( 'REDIRECT', 
+            	$self->pageURL( 'OME::Web::DBObjDetail', {
+            		Type => 'OME::AnalysisChainExecution',
+            		ID   => $chain_execution->id()
+            	} )
+            );
         }
 	
 	}else{
