@@ -92,6 +92,7 @@ sub new {
 	$self->{ _translate_from_matlab } = {
 		PixelsArray => 'MatlabArray_to_Pixels',
 		Scalar		=> 'MatlabScalar_to_Attr',
+		Vector		=> 'MatlabVector_to_Attrs',
 		Struct		=> 'MatlabStruct_to_Attr'
 	};
 
@@ -218,7 +219,8 @@ sub Pixels_to_MatlabArray {
 	my $session = OME::Session->instance();
 	
 	# Gather the actual input. It may be a Pixels or it may inherit from Pixels
-	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
+	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) )
+		or die "Could not find FormalInput referenced by ".$xmlInstr->toString();
 	my @input_attr_list = $self->getCurrentInputAttributes( $formal_input );
 	die "The OME-Matlab interface does not support Formal inputs of arity greater than 1 at this time.\n"
 		if ( scalar @input_attr_list > 1);
@@ -481,6 +483,63 @@ sub MatlabArray_to_Pixels {
 		) or die "Could not find ST named ".$parent_element->data_column()->reference_type()." when trying to construct Pixels Parental outputs.";
 	}
 	
+}
+
+=head2 MatlabVector_to_Attrs
+
+Operates on vector matlab outputs. Uses <Vector> in conjuction with
+<VectorDecoding> and <Templates>. Use this for making a record block.
+
+=cut
+
+sub MatlabVector_to_Attrs {
+	my ( $self, $xmlInstr ) = @_;
+
+	# Retrieve value from matlab
+	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
+	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
+		or die "Couldn't retrieve $matlab_var_name";
+	$matlab_output->makePersistent();
+	my $values = $matlab_output->convertToList();
+
+	# get Vector Decoding
+	my $vectorDecodeID = $xmlInstr->getAttribute( 'DecodeWith' )
+		or die "DecodeWith attribute not specified in ".$xmlInstr->toString();
+	my @decoding_elements = $self->{ execution_instructions }->findnodes( 
+		'MLI:VectorDecoder[@ID="'.$vectorDecodeID.'"]/MLI:Element' );
+
+	# decode the Vector
+	my @vectorData;
+	foreach my $element ( @decoding_elements ) {
+		# gather formal output & SE
+		my $output_location = $element->getAttribute( 'OutputLocation' );
+		my ( $formal_output_name, $SE_name ) = split( /\./, $output_location )
+			or die "output_location '$output_location' could not be parsed.";
+		my $formal_output = $self->getFormalOutput( $formal_output_name )
+			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
+	
+		# Make a data hash
+		my $template_id = $xmlInstr->getAttribute( 'UseTemplate' );
+		my $data_hash;
+		if( $template_id ) {
+			my $ST_name;
+			($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
+			die "Template Semantic Type ($ST_name) differs from ST registered for formal output ($formal_output). Error processing Output Instruction '".$xmlInstr->toString()."'"
+				if $formal_output->semantic_type()->name() ne $ST_name;
+		}
+		# See: "Hackaround for XS variable hidden uniqueness." in MatlabScalar_to_Attr()
+		my $index = $element->getAttribute( 'Index' )
+			or die "Index attribute not specified in ".$element->toString();
+		my $value = $values->[ $index - 1 ];
+		$data_hash->{ $SE_name } = "$value";
+	
+		logdbg "debug", "MatlabVector_to_Attrs: Adding an output to the list. Formal output: ".
+			$formal_output->name()." using data:\n\t".join( ', ', map( $_.' => '.$data_hash->{$_}, keys %$data_hash ) );
+		push ( @vectorData, $formal_output, $data_hash );
+	}
+	
+	# Actually make the outputs
+	$self->newAttributes( @vectorData ); 
 }
 
 =head2 MatlabScalar_to_Attr
