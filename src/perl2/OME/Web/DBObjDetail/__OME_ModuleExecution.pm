@@ -50,12 +50,10 @@ OME::Web::DBObjDetail::__OME_ModuleExecution - Show details of a ModuleExecution
 #*********
 
 use strict;
-use vars qw($VERSION);
-use CGI;
+use OME;
+our $VERSION = $OME::VERSION;
 use Log::Agent;
 
-use OME;
-use OME::Web::DBObjRender;
 use OME::Web::DBObjTable;
 use OME::Tasks::ModuleExecutionManager;
 
