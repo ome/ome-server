@@ -21,12 +21,12 @@
 package OME::Web::Home;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
-use OME::Web;
 use OME::DBObject;
-@ISA = ("OME::Web");
+use OME::Web::Validation;
+use base qw{ OME::Web };
 
 sub getPageTitle {
     return "Open Microscopy Environment";
@@ -47,27 +47,12 @@ my $home = '/html/noOp.html';
 		<script language="JavaScript" src="/JavaScript/UseWithJoust.js"></script>
 		</HEAD>
 ENDHTML
-
-	# Force project creation if a project isn't defined for the session.
-# FIXME: User should have option to select project if possible. 
-#	Q: When is possible? When group user belongs to has projects? This is permissions issue.
-	if( not defined $self->Session->project() ) {
+	# Do we need to direct the user to do anything?
+	if( OME::Web::Validation->isRedirectNecessary() ) {
 		$HTML .= <<ENDHTML;
 		<frameset cols="100%" rows="70,*">
 			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
-			<frame name="text" src="serve.pl?Page=OME::Web::MakeNewProject" scrolling="auto" marginwidth="5" marginheight="5">
-		</frameset>
-		</HTML>
-ENDHTML
-	}
-	# Force Import images if a dataset isn't defined for the session.
-# FIXME: User should have option to select dataset if possible. 
-#	Q: When is possible? When group user belongs to has datasets? This is permissions issue.
-	elsif( not defined $self->Session()->dataset() ) {
-		$HTML .= <<ENDHTML;
-		<frameset cols="100%" rows="70,*">
-			<frame name="title" src="serve.pl?Page=OME::Web::TitleBar" scrolling="no" noresize marginwidth="0" marginheight="0">
-			<frame name="text" src="/JavaScript/DirTree/index.htm" scrolling="auto" marginwidth="5" marginheight="5">
+			<frame name="text" src="serve.pl?Page=OME::Web::Validation" scrolling="auto" marginwidth="5" marginheight="5">
 		</frameset>
 		</HTML>
 ENDHTML
