@@ -31,7 +31,7 @@ use IO::File;
 
 use OME::Image::Pix;
 
-use fields qw(_fileOpen _fileHandle);
+use fields qw(_fileOpen _fileHandle Pix _attributes);
 
 __PACKAGE__->AccessorNames({
     instrument_id   => 'instrument',
@@ -59,6 +59,7 @@ sub _init {
     $self->{_fileOpen} = 0;
     $self->{_fileHandle} = undef;
     $self->{Pix} = undef;
+    $self->{_attributes} = undef;
     return $self;
 }
 
@@ -77,12 +78,15 @@ sub Pix {
 
 sub ImageAttributes {
     my $self = shift;
+    return ($self->{_attributes}) if defined $self->{_attributes};
+    
     my @attributes = $self->Factory()->findObjects("OME::Image::Attributes",
                                                    "image_id",
                                                    $self->id());
     
     die "Image has multiple attribute entries" if (scalar(@attributes) > 1);
-    return $attributes[0];
+    $self->{_attributes} = $attributes[0];
+    return $self->{_attributes};
 }
 
 sub getFullPath {
