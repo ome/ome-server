@@ -148,7 +148,6 @@ sub new {
 		unless exists $params{ImageID} and defined $params{ImageID} and $params{ImageID};
 
 	$self->{ImageID} = $params{ImageID};
-	$self->{Image} = $params{Image};
 	$self->{Session} = $params{Session};
 
 	if (exists $params{theZ} and defined $params{theZ}) {
@@ -160,16 +159,11 @@ sub new {
 	} else {
 		$self->{theT} = 0;
 	}
-	
-	if (defined $self->{Image}) {
-		my $image = $self->{Image};
-                my $attributes = $image->ImageAttributes();
-		$self->{Dims} = [
-                                 $attributes->size_x(),$attributes->size_y(),$attributes->size_z(),
-                                 $attributes->num_waves(),$attributes->num_times(),
-                                 $attributes->bits_per_pixel()/8
-                                 ];
-	}
+
+	die ref($self)."->new:  Image dimensions not specified\n" unless
+		exists $params{Dims} and defined $params{Dims} and ref($params{Dims}) eq 'ARRAY'
+		and scalar(@{$params{Dims}}) == 6;
+	$self->{Dims} = $params{Dims};
 
 	return $self;
 }

@@ -35,6 +35,18 @@ use OME::Graphics::GD::Vectors;
 use OME::Graphics::GD::Centroids;
 use Benchmark;
 
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $self  = $class->SUPER::new(@_);
+
+#    $self->{RequireLogin} = 0;
+
+    return $self;
+}
+
+
+
 sub createOMEPage {
 	my $self  = shift;
 	my $cgi   = $self->CGI();
@@ -193,15 +205,27 @@ sub getJSgraphics {
 
     # Don't bother with the image if we're just draing the layer controls.
     $image = $self->Factory()->loadObject("OME::Image",$ImageID);
-    $attributes = $image->ImageAttributes();
+    die "Could not retreive Image from ImageID=$ImageID\n"
+    	unless defined $image;
+    print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
+#    my $attributes = $image->ImageAttributes();
+	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
+	my $SQL = <<ENDSQL;
+	SELECT size_x,size_y,size_z,num_waves,num_times,bits_per_pixel FROM attributes_image_xyzwt WHERE image_id=?;
+ENDSQL
 
+	my $DBH = $self->Session()->DBH();
+	my $sth = $DBH->prepare ($SQL);
+	$sth->execute($ImageID);
+	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = $sth->fetchrow_array;
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
-    my $theZ = $cgi->url_param('theZ') || ( defined $attributes ? $attributes->size_z() / 2 : undef );
+    my $theZ = $cgi->url_param('theZ') || ( defined $sizeZ ? $sizeZ / 2 : 0 );
     my $theT = $cgi->url_param('theT') || 0;
 
     my $JSgraphics = new OME::Graphics::JavaScript (
-                                                    theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID, Image=>$image);
+                                                    theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID,
+                                                    Dims=>[$sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp]);
 
 # Add the layers
     foreach $layerSpec (@$Layers) {

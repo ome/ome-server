@@ -123,9 +123,10 @@ my $isRGB = $self->{isRGB} ? 'true' : 'false';
 
 # At this juncture, the layer must have been added to the parent, otherwise, we're missing a lot of vital info we need to
 # instantiate the JS instance (like the Image and ImageID for instance).
-	die "JSinstance was called, but this layer has no Parent!\n" unless exists $self->{Parent} and defined $self->{Parent};
+	die ref($self)."JSinstance was called, but this layer has no Parent!\n" unless exists $self->{Parent} and defined $self->{Parent};
 
-	my $image = $self->{Parent}->{Image} || die "JSinstance called without a defined Image object in Parent\n";
+	my $image = $self->{Parent}->{Session}->Factory()->loadObject("OME::Image",$self->{Parent}->{ImageID})
+		|| die "JSinstance called without a defined Image object in Parent\n";
 
 	$self->{Path} = $image->getFullPath();
 	$self->{JS_Dims} = join (',', @{$self->{Parent}->{Dims}});
@@ -239,6 +240,7 @@ sub Stats {
 
 #xyz_image_info: image_id | wavenumber | timepoint | min | max | mean | geomean | sigma
 	$self->{JS_Stats} ="";
+	$DBH->trace(2);
 	$sth = $DBH->prepare ("SELECT wavenumber,timepoint,min,max,mean,geomean,sigma FROM xyz_image_info WHERE image_id=?");
 	$sth->execute($self->{Parent}->{ImageID});
 	while ( @rowArray = $sth->fetchrow_array) {
@@ -246,7 +248,9 @@ sub Stats {
 			min => $rowArray[2],max => $rowArray[3],mean => $rowArray[4],geomean => $rowArray[5],sigma => $rowArray[6]};
 		$stats_js[$rowArray[0]][$rowArray[1]] = '{min:'.$rowArray[2].',max:'.$rowArray[3].
 			',mean:'.$rowArray[4].',geomean:'.$rowArray[5].',sigma:'.$rowArray[6].'}';
+		print STDERR $stats_js[$rowArray[0]][$rowArray[1]]."\n";
 	}
+	$DBH->trace(0);
 
 # Convert to JavaScript
 #	[[{min:123,max:456,...},{min:123,max:123,...},...],...]
