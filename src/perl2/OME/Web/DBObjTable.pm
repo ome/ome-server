@@ -790,25 +790,18 @@ sub __parseParams {
 		%searchParams = __get_CGI_search_params( $q, $type );
 	}
 
+	# load type
+	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
+
 	# PAGING: prepare offset & limit
 	$searchParams{ __limit } = ( $options->{ Length } or $self->{ _default_Length } );
 	if( $searchParams{ __limit } > 0 ) {
-		$searchParams{ __offset } = ( $q->param( "PageNum_$type" ) ? $q->param( "PageNum_$type" ) : 0 );
-		$searchParams{ __offset } += 1
-			if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageForward_$type" );
-		$searchParams{ __offset } -= 1
-			if( $q->param( 'action' ) and $q->param( 'action' ) eq "PageBack_$type" );
-		$q->param( -name => "PageNum_$type", -value => $searchParams{ __offset } );
+		$searchParams{ __offset } = ( $q->param( "PageNum_$formal_name" ) ? $q->param( "PageNum_$formal_name" ) : 0 );
 		$searchParams{ __offset } *= $searchParams{ __limit };
 	} else {
 		delete $searchParams{ __limit };
 		delete $searchParams{ __offset };
 	}
-
-	# load type
-	my ($package_name, $common_name, $formal_name, $ST) = $self->_loadTypeAndGetInfo( $type );
-
-	# collect SortOn
 	my $orderBy = ( $package_name->getColumnType( 'id' ) ? 'id' : undef );
 	if( $q->param( 'action' ) and $q->param( 'action' ) =~ m/^OrderBy_$formal_name/ ) {
 		($orderBy = $q->param( 'action' ) ) =~ s/^OrderBy_$formal_name//;
@@ -849,7 +842,14 @@ sub __parseParams {
 		if( $object_count and $numPages > 1) {
 			$pagingText .= $q->a( {
 					-href => "#",
-					-onClick => "document.forms['$form_name'].action.value='PageBack_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=0; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					}, 
+					'<<'
+				)." "
+				if $currentPage > 1;
+			$pagingText .= $q->a( {
+					-href => "#",
+					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=($currentPage-2); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
 					}, 
 					'<'
 				)." "
@@ -857,9 +857,16 @@ sub __parseParams {
 			$pagingText  .= sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= "\n".$q->a( {
 					-href => "#",
-					-onClick => "document.forms['$form_name'].action.value='PageForward_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=$currentPage; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
 					}, 
 					'>'
+				)." "
+				if $currentPage < $numPages;
+			$pagingText .= "\n".$q->a( {
+					-href => "#",
+					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=($numPages-1); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					}, 
+					'>>'
 				)
 				if $currentPage < $numPages;
 		}
