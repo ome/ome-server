@@ -163,6 +163,12 @@ sub taskFactory {
 	}
 }
 
+sub forget {
+    if (defined $__soleFactory) {
+        $__soleFactory->forget();
+        $__soleFactory = undef;
+    }
+}
 
 
 =head1 AUTHOR

@@ -480,6 +480,11 @@ sub __checkClass {
       unless $class =~ /^\w+(\:\:\w+)*$/;
 }
 
+sub forget {
+    my ($self) = @_;
+    $self->{__ourDBH} = undef;;
+}
+
 sub obtainDBH {
     my ($self) = @_;
     return $self->{__ourDBH};
