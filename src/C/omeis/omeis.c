@@ -253,7 +253,6 @@ char **cgivars=param;
 			freePixelsRep (thePixels); 
 
 			break;
-
 		case M_FINISHPIXELS:
 			force = 0;
 			result = 0;
@@ -349,7 +348,6 @@ char **cgivars=param;
 
 			freePixelsRep (thePixels);
 			break;
-			
 		case M_GETSTACKSTATS:
 			if (!ID) return (-1);
 		
@@ -477,7 +475,10 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			ExpungeFile (theFile);
+			if ( !ExpungeFile (theFile)) {
+				OMEIS_ReportError (method, "FileID", fileID, "ExpungeFile failed.");
+				return (-1);
+			}
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",(unsigned long long)theFile->ID);
@@ -516,9 +517,6 @@ char **cgivars=param;
 				return (-1);			
 			}
 			theFile->size_rep = fStat.st_size;
-
-			
-
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"Name=%s\nLength=%lu\nSHA1=",theFile->file_info.name,(unsigned long)theFile->size_rep);
@@ -685,7 +683,11 @@ char **cgivars=param;
 				OMEIS_ReportError (method, "FileID", ID, "GetFileRep failed.");
 				return (-1);
 			}
-			ExpungeFile (theFile);
+			if ( !ExpungeFile (theFile)) {
+				OMEIS_ReportError (method, "FileID", fileID, "ExpungeFile failed.");
+				return (-1);
+			}
+			
 			freeFileRep (theFile);
 
 			break;			
