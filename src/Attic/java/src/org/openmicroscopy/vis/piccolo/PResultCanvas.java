@@ -50,8 +50,6 @@ import org.openmicroscopy.vis.chains.ResultFrame;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.ome.CDataset;
-import org.openmicroscopy.vis.ome.CImage;
 import org.openmicroscopy.vis.dnd.ChainFlavor;
 import java.awt.dnd.DropTargetListener;
 import java.awt.dnd.DropTargetDragEvent;
@@ -61,9 +59,6 @@ import java.awt.dnd.DropTarget;
 import java.awt.dnd.DnDConstants;
 import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Vector;
 
 /** 
  * A {@link PCanvas} for viewing chain results
@@ -118,7 +113,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	/**
 	 * The event handler for this canvas
 	 */
-	private PChainEventHandler handler;
+	private PResultEventHandler handler;
 	
 	/**
 	 * DataTransfer bookkeeping
@@ -162,7 +157,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		 removeInputEventListener(getPanEventHandler());
 		 
 		//	install custom event handler
-		 addInputEventListener(new PResultEventHandler(this)); 
+		handler = new PResultEventHandler(this);
+		 addInputEventListener(handler); 
 			
 		// set up link layer
 		linkLayer = new PLinkLayer();
@@ -180,49 +176,12 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 			// setup tool tips.
 		camera.addInputEventListener(new PChainToolTipHandler(camera));
 		
-		drawImages();
-		
-		
 	}
 	
 	public void setFrame(ResultFrame frame) {
 		this.frame = frame;
 	}
-	
-	
-	private void drawImages() {
-		double x = 0;
-		double y = 0;
-		System.err.println("drawing iamges...");
-		CDataset curDataset = connection.getDataset();
-		List images = curDataset.getCachedImages();
-		Iterator iter = images.iterator();	
-		float maxHeight = 0;
-		Vector nodes = new Vector();
 		
-		//draw them
-		while (iter.hasNext()) {
-			CImage image = (CImage) iter.next();
-			System.err.println("drawing image "+image.getID());
-			PThumbnail thumb = new PThumbnail(image);
-			imageLayer.addChild(thumb);
-			float height  = (float) thumb.getGlobalFullBounds().getHeight();
-			if (height > maxHeight) 
-				maxHeight = height;
-			nodes.add(thumb);
-		}
-		
-		// space them
-		maxHeight += VGAP;
-		iter = nodes.iterator();
-		while (iter.hasNext()) {
-			PThumbnail thumb = (PThumbnail) iter.next();
-			thumb.setOffset(x,y);
-			y+= maxHeight;
-		}
-	}
-		
-	
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
@@ -261,14 +220,18 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 					getTransferData(ChainFlavor.chainFlavor); 
 				e.getDropTargetContext().dropComplete(true);
 				int id = i.intValue(); 
-				Point2D loc = e.getLocation();
 				CChain chain = connection.getChain(id); 
-				createDroppedChain(chain,loc);
-				addInputEventListener(handler);
-				getCamera().animateViewToCenterBounds(getBufferedBounds(),
-					true,PConstants.ANIMATION_DELAY);
-				frame.updateExecutionChoices(chain);
-				hasChain = true;		
+				if (chain.hasExecutionsInCurrentDataset()) {
+					Point2D loc = e.getLocation();
+					createDroppedChain(chain,loc);
+					addInputEventListener(handler);
+					getCamera().animateViewToCenterBounds(getBufferedBounds(),
+						true,PConstants.ANIMATION_DELAY);
+					frame.updateExecutionChoices(chain);
+					hasChain = true;
+				}
+				else
+					clearDrop(e);		
 			} 
 		}
 		catch(Exception exc ) {
