@@ -647,16 +647,18 @@ function update() {
 </script>
 </head>
 <body onload="init(); update();">
+<table width="100%">
 <form onsubmit="return false;">
-<table width="100%"><tr><td align="left">
+<tr><td align="left">
 	<input type="button" name="prev" value="<" onclick="previousImage()">
 	<input type="text" name="num" size="5" onchange="changeImage(parseInt(this.value))" maxlength="5">
 	<input type="button" name="next" value=">" onclick="nextImage()">
 </td><td align="right">
 	Image Path: <input type="text" name="ImageInfo" size="40" disabled>
-</td></tr></table>
 </form>
+</td></tr><tr><td colspan='2'>
 Displaying dataset "$datasetName". It contains $numImages images.
+</td></tr></table>
 </html>
 ENDHTML
 
