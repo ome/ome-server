@@ -14,6 +14,8 @@ MAKEFILES = cgrayce
 OME_LIB = libOME.a
 
 CFLAGS = $(DEFINES) $(DB_INCLUDES) $(COMPILER_FLAGS)
+XML2_CFLAGS = `xml2-config --cflags`
+XML2_LIBS = `xml2-config --libs`
 CC = gcc
 
 all: $(TARGETS)
@@ -36,40 +38,40 @@ trackSpotsDB :  BSUtils.o trackSpotsDB.o
 	$(CC) $(CFLAGS) -o trackSpotsDB trackSpotsDB.o $(LIBS)
 
 findSpotsDB : findSpotsDB.o
-	$(CC) $(DEFINES) $(CFLAGS) findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
+	$(CC) $(CFLAGS) findSpotsDB.o -o findSpotsDB ${MATH_LIBS} 
 
 findSpotsOME : findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o
-	$(CC) $(DEFINES) $(CFLAGS) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
+	$(CC) $(CFLAGS) findSpotsOME.o readTiffData.o BSUtils.o iolib/argarray.o iolib/failio.o -o findSpotsOME ${MATH_LIBS} -ltiff
 
 #makemesh: makemesh.o iolib/argarray.o iolib/failio.o iolib/repository.o
 #	$(CC) $(DEFINES) $+ -o $@
 
 BinarizeGlobal : BinarizeGlobal.o readTiffData.o BSUtils.o
-	$(CC) $(DEFINES) $(CFLAGS) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
+	$(CC) $(CFLAGS) BinarizeGlobal.o readTiffData.o BSUtils.o -o BinarizeGlobal ${MATH_LIBS} -ltiff
 
 SoftWorxSlice : SoftWorxSlice.o BSUtils.o
-	$(CC) $(DEFINES) $(CFLAGS) SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
+	$(CC) $(CFLAGS) SoftWorxSlice.o BSUtils.o -o SoftWorxSlice ${MATH_LIBS}
 
 DumpSoftWorxHeader : DumpSoftWorxHeader.o BSUtils.o
-	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
+	$(CC) $(CFLAGS) DumpSoftWorxHeader.o BSUtils.o -o DumpSoftWorxHeader ${MATH_LIBS}
 
 DumpSoftWorxExHeader : DumpSoftWorxExHeader.o BSUtils.o
-	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
+	$(CC) $(CFLAGS) DumpSoftWorxExHeader.o BSUtils.o -o DumpSoftWorxExHeader ${MATH_LIBS}
 
 DumpSoftWorxStats : DumpSoftWorxStats.o BSUtils.o
-	$(CC) $(DEFINES) $(CFLAGS) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
+	$(CC) $(CFLAGS) DumpSoftWorxStats.o BSUtils.o -o DumpSoftWorxStats ${MATH_LIBS}
 
 DumpTIFFheader : DumpTIFFheader.o
-	$(CC) $(DEFINES) $(CFLAGS) DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
+	$(CC) $(CFLAGS) DumpTIFFheader.o -o DumpTIFFheader ${MATH_LIBS} -ltiff
 
 DumpTIFFstats : DumpTIFFstats.o readTiffData.o
-	$(CC) $(DEFINES) $(CFLAGS) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
+	$(CC) $(CFLAGS) DumpTIFFstats.o readTiffData.o -o DumpTIFFstats ${MATH_LIBS} -ltiff
 
 OME_Image_XYZ_stats : OME_Image_XYZ_stats.o
-	$(CC) $(DEFINES) $(CFLAGS) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
+	$(CC) $(CFLAGS) OME_Image_XYZ_stats.o -o OME_Image_XYZ_stats ${MATH_LIBS}
 
 OME_Image_XY_stats : OME_Image_XY_stats.o
-	$(CC) $(DEFINES) $(CFLAGS) OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
+	$(CC) $(CFLAGS) OME_Image_XY_stats.o -o OME_Image_XY_stats ${MATH_LIBS}
 
 #DumpTIFF : DumpTIFF.o
 #	$(CC) $(DEFINES) DumpTIFF.o -o DumpTIFF ${MATH_LIBS} -ltiff
@@ -100,10 +102,10 @@ cgrayce2:
 # I think they could be cleaned up, but I don't know how and don't have time now.
 # If anyone sees this, feel free to clean them up and erase this message.
 extractBinData: extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) ${DEFINES} $(CFLAGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ -lz -lbz2 -ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o extractBinData
 
 insertBinData: insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c base64.h ../perl2/OME/Image/Pix/libpix.h b64z_lib.h
-	$(CC) ${DEFINES} $(CFALGS) `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
+	$(CC) $(CFLAGS) $(XML2_CFLAGS) $(XML2_LIBS) -I/sw/include/ -L/sw/lib/ -lbz2 -lz -ltiff insertBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c b64z_lib.c -o insertBinData
 
 OMEdb.o : OMEdb.h
 OME_DV.o : OMEdb.h
