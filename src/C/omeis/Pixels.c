@@ -666,7 +666,7 @@ fprintf (stderr,"verified ");
 fprintf (stderr,"deleting %s",path_rep);
 				unlink (path_rep);
 			} else {
-fprintf (stderr,"not recoverable");
+fprintf (stderr,"not recoverable: %s",myPixels->error_str);
 				freePixelsRep (myPixels);
 			}
 fprintf (stderr,"\n");
