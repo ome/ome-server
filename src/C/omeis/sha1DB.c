@@ -36,6 +36,10 @@
   
   Don't mind the noise with the parameters - this is just to avoid unused parameter warnings.
 */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif  /* HAVE_CONFIG_H */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <limits.h>

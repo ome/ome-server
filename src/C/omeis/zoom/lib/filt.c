@@ -10,6 +10,10 @@
  *
  * Documentation:
  *  To use these routines,
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif  /* HAVE_CONFIG_H */
+
  *	#include <filt.h>
  *  Then call filt_find to select the desired filter, e.g.
  *	Filt *f;

@@ -6,6 +6,10 @@
  * note: DEFAULT_FILE must be set in Makefile
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif  /* HAVE_CONFIG_H */
+
 #include <math.h>
 
 #include <simple.h>
