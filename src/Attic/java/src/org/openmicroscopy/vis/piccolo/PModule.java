@@ -487,16 +487,7 @@ public class PModule extends PPath implements PBufferedNode {
 	 */
 	public void setModulesHighlighted(boolean v) {
 		
-		PModule m;
-		
-		
-		ArrayList widgets = module.getModuleWidgets();
-		
-		
-		for  (int i = 0; i < widgets.size(); i++) {
-			m = (PModule) widgets.get(i);
-			m.setHighlighted(v);
-		}
+		module.setModulesHighlighted(v);
 	}
 	
 	/***
