@@ -35,6 +35,7 @@
  */
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h> 
 #include <ctype.h> 
@@ -1838,18 +1839,29 @@ int GetArchive (PixelsRep myPixels, char *format) {
 }
 */
 
-void HTTP_DoError (char *method,char *errMsg) {
+void HTTP_DoError (char *method, char *template, ...) {
+va_list ap;
 /*
 403 Forbidden Authorization failure
 500 Server Error 
 */
 	if (getenv("REQUEST_METHOD")) {
-		fprintf (stdout,"Status: 500 %s\r\n",errMsg);
+		fprintf (stdout,"Status: 500 %s\r\n","Server Error");
 		fprintf (stdout,"Content-Type: text/plain\r\n\r\n");
-		fprintf (stdout,"Error calling %s: %s\n", method, errMsg);
-		fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
+		fprintf (stdout,"Error calling %s: ", method);
+		fprintf (stderr,"Error calling %s: ", method);
+		va_start (ap, template);
+		vfprintf (stdout, template, ap);
+		vfprintf (stderr, template, ap);
+		va_end (ap);
+		fprintf (stdout,"\n");
+		fprintf (stderr,"\n");
 	} else {
-		fprintf (stderr,"Error calling %s: %s\n", method, errMsg);
+		fprintf (stderr,"Error calling %s: ", method);
+		va_start (ap, template);
+		vfprintf (stderr, template, ap);
+		va_end (ap);
+		fprintf (stderr,"\n");
 	}
 }
 
@@ -1872,7 +1884,6 @@ dispatch (char **param)
 	OID ID=0;
 	off_t offset=0;
 	off_t file_offset=0;
-	char error_str[256];
 	unsigned char isLocalFile;
 	char *dims;
 	int isSigned,isFloat;
@@ -1905,7 +1916,6 @@ char **cgivars=param;
 	char *method;
 	unsigned int m_val;
 
-	error_str[0]=0;
 
 	if (! (method = get_param (param,"Method")) ) {
 		HTTP_DoError (method,"Method parameter missing");
@@ -2043,9 +2053,8 @@ char **cgivars=param;
 			freePixelsRep (thePixels);
 		
 			if ( result < 0) {
-				if (errno) sprintf (error_str,"Result=%d, Message=%s",result,strerror( errno ) );
-				else sprintf (error_str,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
-				HTTP_DoError (method, error_str);
+				if (errno) HTTP_DoError (method,"Result=%d, Message=%s",result,strerror( errno ) );
+				else HTTP_DoError (method,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
 				return (-1);
 			} else {
 				HTTP_ResultType ("text/plain");
@@ -2161,8 +2170,7 @@ char **cgivars=param;
 			} else if (fileID) {
 				strcpy (file_path,"Files/");
 				if (! getRepPath (fileID,file_path,0)) {
-					sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-					HTTP_DoError (method,error_str);
+					HTTP_DoError (method,"Could not get repository path for FileID=%llu",fileID);
 					return (-1);
 				}		
 			} else strcpy (file_path,"");
@@ -2180,15 +2188,13 @@ char **cgivars=param;
 			}
 
 			if ( !(theFile = GetFileRep (fileID)) ) {
-				sprintf (error_str,"Could not open FileID=%llu!",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
-				sprintf (error_str,"Could not get info for FileID=%llu!",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not get info for FileID=%llu!",fileID);
 				return (-1);
 			}
 
@@ -2210,15 +2216,13 @@ char **cgivars=param;
 			}
 
 			if ( !(theFile = GetFileRep (fileID)) ) {
-				sprintf (error_str,"Could not open FileID=%llu!",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
-				sprintf (error_str,"Could not get info for FileID=%llu!",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not get info for FileID=%llu!",fileID);
 				return (-1);
 			}
 
@@ -2251,20 +2255,17 @@ char **cgivars=param;
 
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
-				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not get repository path for FileID=%llu",fileID);
 				return (-1);
 			}
 
 			if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
-				sprintf (error_str,"Could not open FileID=%llu",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not open FileID=%llu",fileID);
 				return (-1);
 			}
 			if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
 				close (fd);
-				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lld, length=%lu",fileID,offset,length);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not mmap FileID=%llu, offset=%lld, length=%lu",fileID,offset,length);
 				return (-1);
 			}
 		
@@ -2284,8 +2285,7 @@ char **cgivars=param;
 	
 			strcpy (file_path,"Files/");
 			if (! getRepPath (fileID,file_path,0)) {
-				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-				HTTP_DoError (method,error_str);
+				HTTP_DoError (method,"Could not get repository path for FileID=%llu",fileID);
 				return (-1);
 			}
 	
@@ -2383,21 +2383,18 @@ char **cgivars=param;
 			case M_GETTHUMB:
 				strcpy (file_path,"Pixels/");
 				if (! getRepPath (ID,file_path,0)) {
-					sprintf (error_str,"Could not get repository path for PixelsID=%llu",ID);
-					HTTP_DoError (method,error_str);
+					HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",ID);
 					return (-1);
 				}
 				strcat (file_path,".thumb");
 
 				if ( stat (file_path,&fStat) != 0 ) {
-					sprintf (error_str,"Could not get information for thumbnail at %s",file_path);
-					HTTP_DoError (method,error_str);
+					HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
 					return (-1);
 				}
 
 				if ( !(file=fopen(file_path, "r")) ) {
-					sprintf (error_str,"Could not get information for thumbnail at %s",file_path);
-					HTTP_DoError (method,error_str);
+					HTTP_DoError (method,"Could not get information for thumbnail at %s",file_path);
 					return (-1);
 				}
 
@@ -2489,8 +2486,7 @@ char **cgivars=param;
 		} else rorw = 'r';
 
 		if ( !(ROI = get_param (param,"ROI")) ) {
-			sprintf (error_str,"ROI Parameter required for the %s method",method);
-			HTTP_DoError (method,error_str);
+			HTTP_DoError (method,"ROI Parameter required for the %s method",method);
 			return (-1);
 		}
 

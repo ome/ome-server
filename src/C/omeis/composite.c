@@ -47,7 +47,6 @@ int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param);
 
 int DoComposite (PixelsRep *myPixels, int theZ, int theT, char **param) {
 char *theParam;
-char error_str[256];
 char setThumb=0;
 char defaultFormat[] = "JPEG", *theFormat = defaultFormat;
 levelBasisType levelBasis=FIXED_BASIS;
@@ -59,7 +58,6 @@ CompositeSpec theComposite;
 
 	memset(&theComposite, 0, sizeof(CompositeSpec));
 
-	error_str[0]=0;
 	if (! myPixels) return (-1);
 	if (theZ < 0 || theT < 0) return (-1);
 	if (theZ >= myPixels->head->dz ) return (-1);
@@ -176,7 +174,7 @@ int DoCompositeJPEG (CompositeSpec *myComposite, char setThumb, char **param) {
 
 int DoCompositeZoom (CompositeSpec *myComposite, char setThumb, char **param) {
 Pic *ome_pic, *out_pic;
-char out_name[256], mime_type[256], error[512];
+char out_name[256], mime_type[256];
 char *xfiltname = FILTER_DEFAULT, *yfiltname = 0;
 char *xwindowname = 0, *ywindowname = 0;
 int  square=1, intscale=0;
@@ -188,6 +186,7 @@ Filt *xfilt, *yfilt, xf, yf;
 Continuous coordinates aren't implemented
 Mapping m;
 */
+	param = NULL;
 
     ome_win.x0 = out_win.x0 = PIC_UNDEFINED;
     ome_win.x1 = out_win.x1 = PIC_UNDEFINED;
@@ -196,8 +195,7 @@ Mapping m;
 	strcat (out_name,".");
 
 	if ( !(ome_pic = pic_open_dev ("omeis",(char *)myComposite, "r")) ) {
-		sprintf (error,"Could not open input Pic (%s)",myComposite->thePixels->path_rep);
-		HTTP_DoError ("DoCompositeZoom",error);
+		HTTP_DoError ("DoCompositeZoom","Could not open input Pic (%s)",myComposite->thePixels->path_rep);
 		return (-1);
 	}
 
@@ -205,15 +203,14 @@ Mapping m;
 		strcat (out_name,"thumb");
 		strcpy (myComposite->format,"jpeg");
 		if ( !(out_pic = pic_open_dev ("jpeg", out_name, "w")) ) {
-			sprintf (error,"Could not open output Pic for thumbnail (%s)",out_name);
-			HTTP_DoError ("DoCompositeZoom",error);
+			HTTP_DoError ("DoCompositeZoom","Could not open output Pic for thumbnail (%s)",out_name);
 			return (-1);
 		}
 	} else {
 		strcat (out_name,myComposite->format);
 		if ( !(out_pic = pic_open_stream (myComposite->format, stdout, out_name, "w")) ) {
-			sprintf (error,"Could not open output Pic for streaming (%s format)",myComposite->format);
-			HTTP_DoError ("DoCompositeZoom",error);
+			HTTP_DoError ("DoCompositeZoom",
+				"Could not open output Pic for streaming (%s format)",myComposite->format);
 			return (-1);
 		}
 	}

@@ -229,7 +229,7 @@ char *get_lc_param (char **cgivars, char *param);
 
 off_t GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT);
 
-void HTTP_DoError (char *method,char *errMsg);
+void HTTP_DoError (char *method, char *template, ...);
 
 void HTTP_ResultType (char *mimeType);
 
