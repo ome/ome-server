@@ -71,9 +71,11 @@ sub new {
 	my $class = ref($proto) || $proto;
 	my $self  = $class->SUPER::new(@_);
 	
+	# _default_limit sets the number of results per page
 	$self->{ _default_limit } = 27;
 	
-	$self->{ _types } = [
+	# _published_search_types gets translated to the 'Look for:' drop-down list
+	$self->{ _published_search_types } = [
 		{ formal_name => 'OME::Project', common_name => 'Projects' },
 		{ formal_name => 'OME::Dataset', common_name => 'Datasets' },
 		{ formal_name => 'OME::Image', common_name => 'Images' },
@@ -82,10 +84,23 @@ sub new {
 		{ formal_name => 'OME::AnalysisChain', common_name => 'Analysis Chains' },
 		{ formal_name => 'OME::AnalysisChainExecution', common_name => 'Analysis Chain Executions' },
 	];
-	$self->{ _modes } = [
+
+	# _display_modes lists formats the results can be displayed in. 
+	#	mode maps to a template name. 
+	#	mode_title is presented to the user.
+	$self->{ _display_modes } = [
 		{ mode => 'tiled_list', mode_title => 'Summaries' },
 		{ mode => 'tiled_ref_list', mode_title => 'Names' },
 	];
+	
+	# _controller_registry is experimental.
+	$self->{ _controller_registry } = {
+		add_images => {
+			label      => 'Add Images to Current Dataset',
+			controller => 'OME::Tasks::DatasetManager',
+			method     => 'addImages'
+		}
+	};
 	
 	return $self;
 }
@@ -102,10 +117,6 @@ sub getMenuText {
     }
 	return $menuText;
 }
-
-#sub getMenuBuilder { return undef }  # No menu
-
-#sub getHeaderBuilder { return undef }  # No header
 
 sub getPageTitle {
 	return "OME Search";
@@ -124,19 +135,19 @@ sub getPageBody {
 
 	# load Types to search on	
 	my $type = $q->param( 'Type' );
-	my $types_data = $self->{ _types };
+	my $types_data = $self->{ _published_search_types };
 	foreach( @$types_data ) {
 		$_->{ selected } = 'selected'
 			if $_->{formal_name} eq $type;
 	}
-	# load Modes to show results with
-	my $display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
-	my $modes_data = $self->{ _modes };
-	foreach( @$modes_data ) {
+	# set up display modes
+	my $current_display_mode = ( $q->param( 'Mode' ) || 'tiled_list' );
+	my $display_modes_data = $self->{ _display_modes };
+	foreach( @$display_modes_data ) {
 		$_->{ checked } = 'checked'
-			if $_->{mode} eq $display_mode;
+			if $_->{mode} eq $current_display_mode;
 	}
-	my %tmpl_data = ( types_loop => $types_data, modes_loop => $modes_data,  );
+	my %tmpl_data = ( types_loop => $types_data, modes_loop => $display_modes_data,  );
 	
 	my $html = $q->startform();
 	
@@ -144,11 +155,15 @@ sub getPageBody {
 	# Also search if search fields are ready.
 	if( $type ) {
 		my $render = $self->Renderer();
-		my $search_names;
-		
+		# search_type is the type that the posted search parameters are
+		# meant for. It will be different than Type if the user just
+		# switched what type she is looking for.
  		my $search_type = $q->param( 'search_type' );
+ 		# search_names stores the names of the search fields. any or
+ 		# all of these may posted as a cgi parameter
 		my @cgi_search_names = $q->param( 'search_names' );
-		# clear stale params
+
+		# clear stale search parameters
 		unless( $search_type eq $type || !$search_type ) {
 			$q->delete( $_ ) foreach( @cgi_search_names );
 		}
@@ -164,27 +179,29 @@ sub getPageBody {
 		# search mode
 		} else {
 			my @fields = $render->getFields( $type, 'summary' );
-			my $form_fields;
-			($form_fields, $search_names) = $render->getSearchFields( $type, \@fields );
+			my ($form_fields, $search_paths) = $render->getSearchFields( $type, \@fields );
 			my %field_titles = $render->getFieldTitles( $type, \@fields );
- 			$q->param( 'search_names', values %$search_names);
+ 			$q->param( 'search_names', values %$search_paths);
 			
-			# add search fields.
-			my $order = $self->_get_order( $search_names->{ $fields[0] }, $search_names );
+			# add search fields & sort buttons to template data
+			my $order = $self->__sort_field( $search_paths, $search_paths->{ $fields[0] });
 			foreach my $field( @fields ) {
+				# a button for ascending sort
 				my $sort_up = "<a href='javascript: document.forms[0].elements[\"__order\"].value = \"".
-					$search_names->{ $field }.
+					$search_paths->{ $field }.
 					"\"; document.forms[0].submit();' title='Sort results by ".
 					$field_titles{ $field }." in increasing order'".
-					( $order && $order eq $search_names->{ $field } ?
+					( $order && $order eq $search_paths->{ $field } ?
 						" class = 'ome_active_sort_arrow'" : ''
 					).'>';
+				# a button for descending sort
 				my $sort_down = "<a href='javascript: ".
 						"document.forms[0].elements[\"__order\"].value = ".
-						"\"!".$search_names->{ $field }."\";".
+						"\"!".$search_paths->{ $field }."\";".
 						"document.forms[0].submit();' title='Sort results by ".
 					$field_titles{ $field }." in increasing order'".
-					( $order && substr( $order, 1 ) eq $search_names->{ $field } ?
+					# $order is prefixed by a ! for descending sort. that explains substr().
+					( $order && substr( $order, 1 ) eq $search_paths->{ $field } ?
 						" class = 'ome_active_sort_arrow'" : ''
 					).'>';
 	
@@ -197,12 +214,10 @@ sub getPageBody {
 			}
 		}
 		
-		# SEARCH & RENDER 		
+		# SEARCH & RENDER
 		my ($objects, $paging_text ) = $self->search();
-		my $rendering = $render->renderArray( $objects, $display_mode, 
+		$tmpl_data{ results } = $render->renderArray( $objects, $current_display_mode, 
 			{ _pager_text => $paging_text, type => $type } );
-		# render & print results
-		$tmpl_data{ results } = $rendering;
 
 		# Reset fields if the search type was just switched.
  		unless( !$search_type || $type eq $search_type ) {
@@ -278,7 +293,7 @@ sub search {
 	# PAGING: prepare limit, offset, and order_by
 	$searchParams{ __limit } = $self->{ _default_limit };
 	my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit } );
-	$searchParams{ __order } = $self->_get_order();
+	$searchParams{ __order } = $self->__sort_field();
 	# only use the offset parameter if we're ordering by the same thing as last time
 	if( $q->param( 'last_order_by') && 
 	    $q->param( 'last_order_by') eq $searchParams{ __order } &&
@@ -370,32 +385,45 @@ sub search {
 		}
 	}
 	
-# 	$self->{pagingText}    = $pagingText;
-# 	$self->{common_name}   = $common_name;
-# 	$self->{formal_name}   = $formal_name;
-# 	$self->{ST}            = $ST;
-# 	$self->{search_params} = \%searchParams;
-	
 	return ( \@objects, $pagingText );
 }
 
-sub _get_order {
-	my ($self, $first_search_name, $search_names ) = @_;
+=head2 __sort_field
+
+	# get the field to sort by. set a default if there isn't a cgi param
+	my $order = $self->__sort_field( $search_paths, $default );
+	# retrieve the order from a cgi parameter
+	$searchParams{ __order } = $self->__sort_field();
+
+	This method determines what search path the results should be ordered by.
+	As a side affect, it stores the search path as a cgi parameter.
+	The search path is returned.
+
+	$default will be used if no cgi __order parameter is found, and
+	there is no 'Name' or 'name' field in $search_paths
+	$search_paths is a hash that is keyed by available search field
+	names. It's values are search paths for each of those fields. see
+	OME::Web::DBObjRender->getSearchFields()
+
+=cut
+
+sub __sort_field {
+	my ($self, $search_paths, $default ) = @_;
 	my $q = $self->CGI();
 
 	if( $q->param( '__order' ) && $q->param( '__order' ) ne '' ) {
 		return $q->param( '__order' );
 	}
 	
-	if( exists $search_names->{ 'name' } ) {
-		$q->param( '__order', 'name' );
-		return 'name';
-	} elsif( exists $search_names->{ 'Name' } ) {
-		$q->param( '__order', 'Name' );
-		return 'Name';
+	if( exists $search_paths->{ 'name' } ) {
+		$q->param( '__order', $search_paths->{ 'name' } );
+		return $search_paths->{ 'name' };
+	} elsif( exists $search_paths->{ 'Name' } ) {
+		$q->param( '__order', $search_paths->{ 'Name' } );
+		return $search_paths->{ 'Name' };
 	} else {
-		$q->param( '__order', $first_search_name );
-		return $first_search_name;
+		$q->param( '__order', $default );
+		return $default;
 	}
 }
 
