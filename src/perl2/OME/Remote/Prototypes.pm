@@ -316,6 +316,13 @@ addPrototype("OME::Factory","findObjectLike",['$','*'],['OME::DBObject']);
 addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::DBObject','*']);
 addPrototype("OME::Factory","findObjectsLike",['$','*'],['OME::Factory::Iterator'],
              publishedName => "iterateObjectsLike");
+addPrototype("OME::Factory","findAttributes",
+             ['$','OME::DBObject'],['OME::AttributeType::Superclass','*']);
+addPrototype("OME::Factory","newAttribute",
+             ['$','OME::DBObject','OME::Analysis','%'],
+             ['OME::AttributeType::Superclass']);
+addPrototype("OME::Factory","loadAttribute",
+             ['$','$'],['OME::AttributeType::Superclass']);
 
 addPrototype("OME::Factory::Iterator","first",[],['OME::DBObject']);
 addPrototype("OME::Factory::Iterator","next",[],['OME::DBObject']);
