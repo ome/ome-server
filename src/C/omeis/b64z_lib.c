@@ -47,6 +47,7 @@
 #include <bzlib.h>
 #include "b64z_lib.h"
 #include "base64.h"
+#include "string.h"
 
 #define SIZEOF_BUF 1032 /* needs to be multiple of 3 && 4 */
 #define BLOCK_SIZE_100K 9
@@ -65,7 +66,7 @@
 *	b64z_mem_error - die with memory allocation error
 *
 */
-void b64z_mem_error() {
+void b64z_mem_error (void) {
 #ifndef NO_VERBIAGE
 	fprintf( stderr, "Error! something in b64z_lib could not allocate memory!\n" );
 #endif
@@ -505,6 +506,10 @@ int b64z_decode( b64z_stream *strm ) {
 			*****************************************************************/
 
 
+				default:
+#ifndef NO_VERBIAGE
+					fprintf ( stderr, "Error! unable to discern the compression type!");
+#endif
 			} // switch 
 		} // while
 		strm->state->buf_begin = begin;
@@ -762,7 +767,9 @@ int b64z_encode( b64z_stream *strm, int action ) {
 	unsigned int size, len;
 	// rC is return Code - it stores the return value of various functions
 	int rC;
+	/* Unused variables
 	int compStreamEnd;
+	*/
 	
 	bz_stream *bzstr;
 	z_stream *zstr;
@@ -911,6 +918,10 @@ int b64z_encode( b64z_stream *strm, int action ) {
 			*
 			*****************************************************************/
 		
+#ifndef NO_VERBIAGE
+			  default:
+				fprintf (stderr, "Error! Unable to discern the compression type!");
+#endif
 
 			} // switch( compression )
 			} // if
