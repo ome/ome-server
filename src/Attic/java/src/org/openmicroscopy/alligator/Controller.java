@@ -57,6 +57,7 @@ import org.openmicroscopy.simple.*;
 import org.openmicroscopy.remote.RemoteBindings;
 import org.openmicroscopy.remote.RemoteException;
 import org.openmicroscopy.analysis.ui.ModuleTreeModel;
+import org.openmicroscopy.util.LoginDialog;
 
 public class Controller
 {

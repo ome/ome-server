@@ -76,15 +76,16 @@
     <mkdir dir="${jar}"/>
 
     <delete file="${jar}/ome.jar"/>
-    <delete file="${jar}/org-openmicroscopy.jar"/>
-    <delete file="${jar}/org-openmicroscopy-alligator.jar"/>
-    <delete file="${jar}/org-openmicroscopy-analysis.jar"/>
-    <delete file="${jar}/org-openmicroscopy-analysis-ui.jar"/>
-    <delete file="${jar}/org-openmicroscopy-applet.jar"/>
-    <delete file="${jar}/org-openmicroscopy-remote.jar"/>
-    <delete file="${jar}/org-openmicroscopy-simple.jar"/>
-    <delete file="${jar}/org-openmicroscopy-soap.jar"/>
-    <delete file="${jar}/org-openmicroscopy-vis-chains.jar"/>
+    <delete file="${jar}/org.openmicroscopy.jar"/>
+    <delete file="${jar}/org.openmicroscopy.alligator.jar"/>
+    <delete file="${jar}/org.openmicroscopy.analysis.jar"/>
+    <delete file="${jar}/org.openmicroscopy.analysis-ui.jar"/>
+    <delete file="${jar}/org.openmicroscopy.applet.jar"/>
+    <delete file="${jar}/org.openmicroscopy.remote.jar"/>
+    <delete file="${jar}/org.openmicroscopy.simple.jar"/>
+    <delete file="${jar}/org.openmicroscopy.soap.jar"/>
+    <delete file="${jar}/org.openmicroscopy.util.jar"/>
+    <delete file="${jar}/org.openmicroscopy.vis-chains.jar"/>
 
     <copy todir="${jar}">
       <fileset dir="${lib}"/>
@@ -95,40 +96,50 @@
       <fileset dir="build" includes="org/openmicroscopy/**/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy.jar">
+    <jar destfile="${jar}/org.openmicroscopy.jar">
       <fileset dir="build" includes="org/openmicroscopy/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-alligator.jar"
+    <jar destfile="${jar}/org.openmicroscopy.alligator.jar"
 	 manifest="${src}/org/openmicroscopy/alligator/alligator.manifest">
       <fileset dir="build" includes="org/openmicroscopy/alligator/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-analysis.jar">
+    <jar destfile="${jar}/org.openmicroscopy.analysis.jar"
+	 manifest="${src}/org/openmicroscopy/analysis/analysis.manifest">
       <fileset dir="build" includes="org/openmicroscopy/analysis/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-analysis-ui.jar">
+    <jar destfile="${jar}/org.openmicroscopy.analysis.ui.jar"
+	 manifest="${src}/org/openmicroscopy/analysis/ui/ui.manifest">
       <fileset dir="build" includes="org/openmicroscopy/analysis/ui/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-applet.jar">
+    <jar destfile="${jar}/org.openmicroscopy.applet.jar"
+	 manifest="${src}/org/openmicroscopy/applet/applet.manifest">
       <fileset dir="build" includes="org/openmicroscopy/applet/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-remote.jar">
+    <jar destfile="${jar}/org.openmicroscopy.remote.jar"
+	 manifest="${src}/org/openmicroscopy/remote/remote.manifest">
       <fileset dir="build" includes="org/openmicroscopy/remote/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-simple.jar">
+    <jar destfile="${jar}/org.openmicroscopy.simple.jar"
+	 manifest="${src}/org/openmicroscopy/simple/simple.manifest">
       <fileset dir="build" includes="org/openmicroscopy/simple/*.class"/>
     </jar>
 
-    <jar destfile="${jar}/org-openmicroscopy-soap.jar">
+<!--    <jar destfile="${jar}/org.openmicroscopy.soap.jar">
       <fileset dir="build" includes="org/openmicroscopy/soap/*.class"/>
     </jar>
+-->
 
-    <jar destfile="${jar}/org-openmicroscopy-vis-chains.jar"
+    <jar destfile="${jar}/org.openmicroscopy.util.jar">
+      <fileset dir="build" includes="org/openmicroscopy/util/*.class"/>
+    </jar>
+
+    <jar destfile="${jar}/org.openmicroscopy.vis.chains.jar"
       manifest ="${src}/org/openmicroscopy/vis/chains/chains.manifest">
       <fileset dir="build" includes="org/openmicroscopy/vis/**/*.class"/>
     </jar>

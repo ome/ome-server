@@ -46,6 +46,7 @@ import org.openmicroscopy.SemanticType;
 import javax.swing.event.EventListenerList;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Vector;
 
 /** 
  * Nodes for displaying module inputs and outputs. Currently, all
@@ -76,6 +77,8 @@ public abstract class ModuleParameter extends PText implements
 	
 	protected FormalParameter param;
 	protected ChainCanvas canvas=null;
+	protected ModuleNode node;
+	private  Vector linkedTo = new Vector(); 
 	
 	// We assume a model that has Modules in a box, with inputs on
 	// the left and outputs on the right. Thus, for inputs, the locator
@@ -97,10 +100,12 @@ public abstract class ModuleParameter extends PText implements
 		this.param = param;
 	}
 	
-	public ModuleParameter(ModuleNode node,FormalParameter param,ChainCanvas canvas) {
+	public ModuleParameter(ModuleNode node,FormalParameter param,
+			ChainCanvas canvas) {
 		super(param.getParameterName());
 		this.canvas = canvas;
 		this.param = param;
+		this.node = node;
 		node.addNodeEventListener(this);
 	}
 	
@@ -187,4 +192,20 @@ public abstract class ModuleParameter extends PText implements
 			}
 		}
 	}
+
+	public ModuleNode getModuleNode() {
+		return node;
+	}
+	
+	public void setLinkedTo(ModuleParameter param) {
+		linkedTo.add(param);
+	}
+	
+	public void clearLinkedTo(ModuleParameter param) {
+		linkedTo.remove(param);
+	}
+	
+	public boolean isLinkedTo(ModuleParameter param) {
+		return (linkedTo.indexOf(param)!=-1);
+ 	}
 }

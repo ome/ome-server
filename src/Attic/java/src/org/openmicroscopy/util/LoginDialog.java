@@ -40,7 +40,7 @@
 
 
 
-package org.openmicroscopy.alligator;
+package org.openmicroscopy.util;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -57,18 +57,18 @@ public class LoginDialog
     GridBagLayout gridBagLayout2 = new GridBagLayout();
     BorderLayout borderLayout1 = new BorderLayout();
     JLabel jURLLabel = new JLabel();
-    JTextField jURLField = new JTextField();
+    public JTextField jURLField = new JTextField();
     JLabel jUsernameLabel = new JLabel();
-    JTextField jUsernameField = new JTextField();
+    public JTextField jUsernameField = new JTextField();
     JLabel jPasswordLabel = new JLabel();
-    JPasswordField jPasswordField = new JPasswordField();
+    public JPasswordField jPasswordField = new JPasswordField();
     JPanel jPanel1 = new JPanel();
     FlowLayout flowLayout1 = new FlowLayout();
     JButton jOKButton = new JButton();
     JButton jCancelButton = new JButton();
     Border border1;
 
-    boolean  okay;
+    public  boolean  okay;
 
     public LoginDialog(Frame owner)
     {

@@ -44,7 +44,7 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ApplicationController;
-import org.openmicroscopy.alligator.LoginDialog;
+import org.openmicroscopy.util.LoginDialog;
 
 /** 
  * <p>Control and top-level management for the Chain-building application.<p>
