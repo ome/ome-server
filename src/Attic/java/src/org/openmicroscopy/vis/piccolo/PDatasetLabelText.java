@@ -84,7 +84,7 @@ public class PDatasetLabelText extends PRemoteObjectLabelText {
 	} 
 	
 	public int getEventMask() {
-		return SelectionEvent.SET_ACTIVE_DATASETS |
+		return	SelectionEvent.SET_SELECTED_PROJECT | 
 			SelectionEvent.SET_SELECTED_DATASET;
 	}
 	
