@@ -231,6 +231,7 @@ sub processDOM {
 # added by josiah Friday 13, June, 2003
 			if( $CA->tagName() eq 'Pixels' ) {
 				my $newPath = $imgAttr->id().'-'.$object->name().'.ori';
+				$newPath =~ s/[^a-zA-Z0-9]/_/g;
 				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
 				system( $cmd ) eq 0 or die "Could not rename a repository file!\ncommand was '$cmd'\n";
 				$imgAttr->Path( $newPath );					
@@ -483,7 +484,6 @@ sub getObjectTypeInfo ($$) {
 		$objectData = {
 			name            => $node->getAttribute( 'Name' ),
 			description     => $node->getAttribute( 'Description' ),
-# might need to do type conversion on CreationDate
 			created         => $node->getAttribute( 'CreationDate' ),
 			inserted        => 'NOW',
 			experimenter_id => $node->getAttribute( 'Experimenter' ),
