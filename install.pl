@@ -85,13 +85,24 @@ sub run_tasks {
 
 sub restore_env {
     my $env_file = shift;
-
-    ($env_file and -e $env_file) or usage ("Unable to locate Environment file \"$env_file\".");
+    
+    my @search_paths = (
+    	$env_file,
+    	'/etc/ome-install.store',
+    	'/OME/conf/environment.store',
+    );
+    foreach (@search_paths) {
+	    if (-e $_) {
+			$env_file = $_;
+	    	last;
+	    }
+    }
 
     # Restore our singleton from disk
-    OME::Install::Environment::restore_from ($env_file);
+    OME::Install::Environment::restore_from ($env_file) if $env_file;
 
-    return 1;
+    return 1 if $env_file;
+    return 0;
 }
 
 sub usage {
@@ -139,7 +150,7 @@ chdir ($FindBin::Bin);
 my $checks_to_run = 0;
 
 # Default env file location
-my $env_file = ('/OME/conf/environment.store');
+my $env_file = ('/etc/ome-install.store');
 
 # Command line options
 my ($update, $perl_check, $lib_check, $check_all, $usage, $install, $answer_y);
@@ -184,11 +195,10 @@ usage () if $usage;
 if ($check_all) { $perl_check = 1; $lib_check = 1; $checks_to_run = 2; }
 
 # Answer Y flag implies update flag
-$update = 1 if $answer_y;
-
+$update = 1 if restore_env ($env_file);
 # These need a restored environment
-if ($perl_check or $update) {
-	restore_env ($env_file)
+if ( ($perl_check or $answer_y) and not $update ) {
+	die "Unable to restore the installation environemnt from file";
 }
 
 if ($update) {
@@ -241,12 +251,11 @@ eval "require Storable;";
 
 unless ($@) {
 	my $environment = initialize OME::Install::Environment;
-	my $conf_dir = $environment->base_dir () . "/conf";
 	# Don't save these flags:
 	$environment->unset_flag ('LIB_CHECK');
 	$environment->unset_flag ('PERL_CHECK');
 	$environment->unset_flag ('ANSWER_Y');
-	$environment->store_to ("$conf_dir/environment.store");
+	$environment->store_to ("/etc/ome-install.store");
 } else {
 	carp "Unable to load the Storable module, continuing without a stored OME::Install::Environment!";
 }
