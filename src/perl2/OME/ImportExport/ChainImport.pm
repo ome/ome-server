@@ -157,7 +157,7 @@ sub processDOM {
               findObject("OME::Module::FormalInput",
                          module_id => $toNode->{module}->id(),
                          name       => $toInputName);
-            die "Cannot find input \"$toInputName\""
+            die "Cannot find input \"$toInputName\" for link\"".$link->toString()."\""
               unless defined $input;
 
             my $hash = {
