@@ -1,4 +1,4 @@
-# OME/Analysis/FeatureHierarchy.pm
+# OME/Analysis/Engine/FeatureHierarchy.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -34,7 +34,7 @@
 #
 #-------------------------------------------------------------------------------
 
-package OME::Analysis::FeatureHierarchy;
+package OME::Analysis::Engine::FeatureHierarchy;
 
 use strict;
 use OME;
@@ -44,8 +44,8 @@ use Carp;
 
 =head1 NAME
 
-OME::Analysis::FeatureHierarchy - calculates hierarchy of features
-based on an execution of an analysis chain
+OME::Analysis::Engine::FeatureHierarchy - calculates hierarchy of
+features based on an execution of an analysis chain
 
 =cut
 
