@@ -280,6 +280,7 @@ sub formatImage {
 	    for ($theZ = 0; $theZ < $zs; $theZ++) {
 		my $plane_size = 0;
 		$offset = $w_offset + $theZ * $z_jump;
+		$offset += ($rows-1)*$row_size;
 		my @xy;
 		my $num_rows = 0;
 		my $plane_rows = "";
@@ -295,7 +296,7 @@ sub formatImage {
 		    substr($plane_rows, length($plane_rows), 0, $ibuf);
 		    $num_rows++;
 		    $plane_size += $row_size/$bps;
-		    $offset += $row_size;
+		    $offset -= $row_size;
 		}
 		last
 		    unless $status eq "";
