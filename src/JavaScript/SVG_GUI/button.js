@@ -59,6 +59,8 @@ button.prototype.offText =
 '<circle cy="5" r="5" fill="black" stroke="white" stroke-width="1"/>';
 button.prototype.highlightText = 
 '<circle cy="5" r="5" fill="cyan" opacity="0"/>';
+button.prototype.mouseTrapText = 
+'<rect x="$x" y="$y" width="$width" height="$height" opacity="0"/>';
 button.prototype.onSwitchText = 
 '<set attributeName="opacity" to="0.3" begin="indefinite"/>';
 button.prototype.offSwitchText = 
@@ -104,8 +106,7 @@ button.prototype.fadeOutText =
 
 *****/
 function button(x, y, callback, onText, offText, highlightText) {
-	if(arguments.length >= 3)
-		this.init(x, y, callback, onText, offText, highlightText);
+	this.init(x, y, callback, onText, offText, highlightText);
 }
 
 /*****
@@ -175,6 +176,16 @@ button.prototype.getState = function() {
 
 *****/
 button.prototype.init = function(x, y, callback, onText, offText, highlightText) {
+	var isOn = true;
+	if( x.constructor !== Number ) {
+		y = x['y'];
+		callback = x['callback'];
+		onText = x['onText']; 
+		offText = x['offText']; 
+		highlightText = x['highlightText']; 
+		isOn = x['isOn']; 
+		x = x['x'];
+	}
 
 	// call superclass initialization
 	button.superclass.init.call(this, x, y);
@@ -186,7 +197,11 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 		this.callback = callback['method'];
 		this.callback_obj = callback['obj'];
 	}
-	this.isOn = true;
+	if( isOn ) {
+		this.isOn = true;
+	} else {
+		this.isOn = false;
+	}
 
 	// override default appearances
 	if(onText != null)
@@ -199,7 +214,7 @@ button.prototype.init = function(x, y, callback, onText, offText, highlightText)
 
 	if(highlightText != null)
 		this.highlightText = highlightText;
-	else if( onText!=null )
+	else if( onText !=null )
 		this.highlightText = null;
 }
 
@@ -235,7 +250,9 @@ button.prototype.buildSVG = function() {
 			this.offAnimOn = this.nodes.off.lastChild;
 			this.nodes.off.appendChild( this.textToSVG(this.fadeOutText) );
 			this.offAnimOff = this.nodes.off.lastChild;
-			this.nodes.off.setAttribute("opacity", 0);
+			if( this.isOn ) {
+				this.nodes.off.setAttribute("opacity", 0);
+			}
 		}
 	}
 
@@ -254,6 +271,9 @@ button.prototype.buildSVG = function() {
 			this.onAnimOn = this.nodes.on.lastChild;
 			this.nodes.on.appendChild( this.textToSVG(this.fadeOutText) );
 			this.onAnimOff = this.nodes.on.lastChild;
+			if( this.isOn !== true ) {
+				this.nodes.on.setAttribute("opacity", 0);
+			}
 		}
 	}
 
@@ -267,9 +287,23 @@ button.prototype.buildSVG = function() {
 		this.nodes.highlight.appendChild( this.textToSVG(this.offSwitchText) );
 		this.highlightAnimOff = this.nodes.highlight.lastChild;
 		this.nodes.highlight.setAttribute("opacity",0);
+		this.nodes.mouseTrap = this.nodes.highlight;
 	}
-	else
+	else {
 		this.HIGHLIGHT_OFF = true;
+		// magic to install a mousecatcher that will notice the clicks
+		var bbox = this.nodes.root.getBBox();
+		this.width = Math.round( bbox.width );
+		this.height = Math.round( bbox.height );
+		var o_y = this.y;
+		var o_x = this.x;
+		this.y = Math.round( bbox.y );
+		this.x = Math.round( bbox.x );
+		root.appendChild( this.textToSVG(this.mouseTrapText) );
+		this.nodes.mouseTrap = root.lastChild;
+		this.y = o_y;
+		this.x = o_x;
+	}
 	
 }
 
@@ -282,15 +316,10 @@ button.prototype.buildSVG = function() {
 *****/
 button.prototype.addEventListeners = function() {
 	if(this.highlightText) {
-		this.nodes.highlight.addEventListener("click", this, false );
 		this.nodes.highlight.addEventListener("mouseover", this, false);
 		this.nodes.highlight.addEventListener("mouseout", this, false);
 	}
-	else {
-		this.nodes.on.addEventListener("click", this, false);
-		if(this.offText)
-			this.nodes.off.addEventListener("click", this, false);
-	}
+	this.nodes.mouseTrap.addEventListener("click", this, false);
 }
 
 /************   Event handlers   ************/
