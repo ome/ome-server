@@ -1,4 +1,4 @@
-# OME/module_execution/NoopHandler.pm
+# OME/Analysis/Handlers/NoopHandler.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -35,18 +35,19 @@
 #-------------------------------------------------------------------------------
 
 
-package OME::Analysis::NoopHandler;
+package OME::Analysis::Handlers::NoopHandler;
 
 =head1 NAME
 
-OME::Analysis::NoopHandler - analysis handler for unexecute placeholder modules
+OME::Analysis::Handlers::NoopHandler - analysis handler for unexecute
+placeholder modules
 
 =head1 SYNOPSIS
 
 This class is instantiated automatically by the analyis engine
 (specifically, by OME::Analysis::AnalysisEngine).  To use it, set the
 ModuleType attribute of a module's XML description to
-C<OME::Analysis::NoopHandler>.
+C<OME::Analysis::Handlers::NoopHandler>.
 
 =head1 DESCRIPTION
 
@@ -84,11 +85,10 @@ use base qw(OME::Analysis::Handler);
 # needs to execute.
 
 sub new {
-    my ($proto,$location,$session,$chain_execution,$module,$node) = @_;
+    my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = $class->SUPER::new($location,$session,
-                                  $chain_execution,$module,$node);
+    my $self = $class->SUPER::new(@_);
 
     bless $self,$class;
     return $self;
