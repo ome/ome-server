@@ -195,5 +195,5 @@ function openPopUpImage (id) {
 function openPopUpPixels (pixels_id) {
 	window.open(GetGraphicsPage + '&PixelsID=' + pixels_id,
 		'_blank',
-		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 500, HEIGHT = 500');
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = no, RESIZABLE = yes, WIDTH = 600, HEIGHT = 500');
 }
