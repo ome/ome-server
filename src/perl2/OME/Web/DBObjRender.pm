@@ -626,7 +626,8 @@ sub getFields {
 		if( $tmpl_path ) {
 			my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 			# only keep columns that exist in the template
-			@cols = grep( $tmpl->query( name => $_ ), @cols );
+			my $field_requests = $self->_parse_tmpl_fields( [ $tmpl->param() ] );
+			@cols = grep( exists $field_requests->{ $_ }, @cols );
 		}
 	}
 	
