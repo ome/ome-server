@@ -301,14 +301,12 @@ sub restore {
 	# need to move omeDB_backup up to /tmp since postgress might not have
 	# access permissions in current directory
 	euid (0);
-	copy("omeDB_backup","/tmp/omeDB_backup") or croak "ERROR: Could not copy omeDB_backup to /tmp";
+	move("omeDB_backup","/tmp/omeDB_backup") or croak "ERROR: Could not copy omeDB_backup to /tmp";
 	
 	euid (scalar(getpwnam $postgress_user));
 	system ($prog_path{'createuser'}." --adduser --createdb  ome");
 	system ($prog_path{'createdb'}." ome");
 	system ($prog_path{'pg_restore'}." -d ome /tmp/omeDB_backup");
-	euid (0);
-	unlink ("omeDB_backup");
 }
 
 sub restore_help {
