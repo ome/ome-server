@@ -39,22 +39,22 @@ package OME::ModuleExecution;
 
 =head1 NAME
 
-OME::ModuleExecution - execution of an module_execution module
+OME::ModuleExecution - execution of an analysis module
 
-OME::ModuleExecution::ActualInput - how an input to an module_execution module was
-satisfied
+OME::ModuleExecution::ActualInput - how an input to an analysis module
+was satisfied
 
 =head1 DESCRIPTION
 
-The C<module_execution> class represents an execution of an OME module_execution
+The C<module_execution> class represents an execution of an OME analysis
 module against a dataset of images.  Each actual execution of a module
 is represented by exactly one C<module_execution>.  If the results of a module
-execution are reused during the future execution of an module_execution chain,
+execution are reused during the future execution of an analysis chain,
 no new C<module_execution> is created (although a new
 C<AnalysisExecution::NodeExecution> is created).
 
-C<Analyses> have a notion of <i>dependence</i> which help the module_execution
-engine determine when module_execution results are eligible for reuse.  Each
+C<Analyses> have a notion of <i>dependence</i> which help the analysis
+engine determine when analysis results are eligible for reuse.  Each
 C<module_execution> has a dependence of Global, Dataset, or Image.
 
 An dependence of Image signifies that the results produced by an
@@ -74,7 +74,7 @@ between image- and dataset-dependence has no meaning.
 
 =head2 C<OME::ModuleExecution::ActualInput>
 
-The C<ActualInput> class specifies where the values for an module_execution
+The C<ActualInput> class specifies where the values for an analysis
 module's inputs came from.  Each of the module's formal inputs has a
 single C<ActualInput> for each execution of the module.
 
@@ -103,6 +103,12 @@ __PACKAGE__->addColumn(module => 'module_id','OME::Module',
                         Indexed => 1,
                         ForeignKey => 'modules',
                        });
+__PACKAGE__->addColumn(virtual_mex => 'virtual_mex',
+                       {
+                        SQLType => 'boolean',
+                        NotNull => 1,
+                        Default => 'f',
+                       });
 __PACKAGE__->addColumn(dependence => 'dependence',
                        {
                         SQLType => 'char(1)',
@@ -113,10 +119,22 @@ __PACKAGE__->addColumn(dataset_id => 'dataset_id');
 __PACKAGE__->addColumn(dataset => 'dataset_id','OME::Dataset',
                        {
                         SQLType => 'integer',
-                        NotNull => 1,
                         Indexed => 1,
                         ForeignKey => 'datasets',
                        });
+__PACKAGE__->addColumn(image_id => 'image_id');
+__PACKAGE__->addColumn(image => 'image_id','OME::Image',
+                       {
+                        SQLType => 'integer',
+                        Indexed => 1,
+                        ForeignKey => 'images',
+                       });
+__PACKAGE__->addColumn(iterator_tag => 'iterator_tag',
+                       {SQLType => 'varchar(128)'});
+__PACKAGE__->addColumn(new_feature_tag => 'new_feature_tag',
+                       {SQLType => 'varchar(128)'});
+__PACKAGE__->addColumn(input_tag => 'input_tag',
+                       {SQLType => 'text'});
 __PACKAGE__->addColumn(timestamp => 'timestamp',
                        {
                         SQLType => 'timestamp',
@@ -146,14 +164,23 @@ those defined by L<OME::DBObject>.
 	my $module = $module_execution->module();
 	$module_execution->module($module);
 
-Returns or sets the module_execution module that was executed.
+Returns or sets the analysis module that was executed.
 
 =head2 dataset
 
 	my $dataset = $module_execution->dataset();
 	$module_execution->dataset($dataset);
 
-Returns or sets the dataset that was analyzed.
+Returns or sets the dataset that was analyzed.  This column should
+only be defined if the dependence of the module is 'D'.
+
+=head2 image
+
+	my $image = $module_execution->image();
+	$module_execution->image($image);
+
+Returns or sets the image that was analyzed.  This column should only
+be defined if the dependence of the module is 'I'.
 
 =head2 dependence
 
@@ -308,6 +335,33 @@ __PACKAGE__->addColumn(semantic_type => 'semantic_type_id',
                         ForeignKey => 'module_executions',
                        });
 
+
+package OME::ModuleExecution::VirtualMEXMap;
+
+use strict;
+use OME;
+our $VERSION = $OME::VERSION;
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->newClass();
+__PACKAGE__->setDefaultTable('virtual_mex_map');
+__PACKAGE__->addColumn(module_execution_id => 'module_execution_id');
+__PACKAGE__->addColumn(module_execution => 'module_execution_id',
+                       'OME::ModuleExecution',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                        ForeignKey => 'module_executions',
+                       });
+__PACKAGE__->addColumn(['attribute_id','attribute'] => 'attribute_id',
+                       {
+                        SQLType => 'integer',
+                        NotNull => 1,
+                        Indexed => 1,
+                       });
 
 1;
 
