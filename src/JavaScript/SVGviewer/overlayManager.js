@@ -32,6 +32,11 @@ var svgns = "http://www.w3.org/2000/svg";
 	
 *****/
 OverlayManager.VERSION = 0.2;
+OverlayManager.prototype.toolboxApperance = {
+	x: 170,
+	y: 170
+};
+
 
 /********************************************************************************************
                                        Public Functions 
@@ -50,11 +55,9 @@ function OverlayManager(sketchSpace) {
 OverlayManager.prototype.buildToolBox = function( controlLayer ) {
 	var displayContent = this.buildDisplay();
 	var bbox = displayContent.getBBox();
-	var width = bbox.width + 2 * toolBox.prototype.padding;
-	var height = bbox.height + 2 * toolBox.prototype.padding;
-	this.toolBox = new toolBox(
-		255, 250, width, height
-	);
+	this.toolboxApperance[ 'width' ] = bbox.width + 2 * toolBox.prototype.padding;
+	this.toolboxApperance[ 'height' ] = bbox.height + 2 * toolBox.prototype.padding;
+	this.toolBox = new toolBox( this.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
 	this.toolBox.setLabel(10,12,"Overlay Manager");
 	this.toolBox.getLabel().setAttribute( "text-anchor", "start");

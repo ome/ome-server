@@ -58,8 +58,8 @@ function Statistics(stats, waveLabels) {
 *****/
 Statistics.VERSION = 0.2;
 Statistics.toolboxApperance = {
-	x: 260,
-	y: 150,
+	x: 130,
+	y: 130,
 	width: 165,
 	height: 55
 };

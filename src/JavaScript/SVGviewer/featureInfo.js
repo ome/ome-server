@@ -30,6 +30,11 @@
 
 var svgns = "http://www.w3.org/2000/svg";
 
+FeatureInfo.prototype.toolboxApperance = {
+	x: 150,
+	y: 150
+};
+
 /********************************************************************************************
                                  Public Functions 
 ********************************************************************************************/
@@ -46,11 +51,9 @@ function FeatureInfo(featureData) {
 FeatureInfo.prototype.buildToolBox = function( controlLayer ) {
 	this.buildDisplay();
 	var bbox = this.displayContent.getBBox();
-	var width = bbox.width + 2 * toolBox.padding;
-	var height = bbox.height + 2 * toolBox.padding;
-	this.toolBox = new toolBox(
-		155, 265, width, height
-	);
+	this.toolboxApperance[ 'width' ] = bbox.width + 2 * toolBox.padding;
+	this.toolboxApperance[ 'height' ] = bbox.height + 2 * toolBox.padding;
+	this.toolBox = new toolBox( this.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
 	this.toolBox.setLabel(90,12,"Feature Information");
 	this.toolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");

@@ -30,7 +30,7 @@
 var svgns = "http://www.w3.org/2000/svg";
 
 XYPlaneControls.prototype.toolboxApperance = {
-	x: 250,
+	x: 30,
 	y: 30, 
 	width: 200, 
 	height: 150,

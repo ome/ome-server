@@ -36,18 +36,37 @@ var svgns = "http://www.w3.org/2000/svg";
 Scale.VERSION = 0.2;
 Scale.scaleWidth = 180;
 Scale.defaultChannel = 0;
-Scale.displayChannelBGs = { 
-	Red:   skinLibrary['redGUIboxBG'],
-	Blue:  skinLibrary['blueGUIboxBG'],
-	Green: skinLibrary['greenGUIboxBG'],
-	Grey:  skinLibrary['greyGUIboxBG']
+Scale.toolboxApperance = {
+	Red: {
+		x: 50,
+		y: 50, 
+		menuBarText: skinLibrary["redMenubar"],
+		hideControlText: skinLibrary["XhideControl"],
+		GUIboxText: skinLibrary["redGUIboxBG"],
+	},
+	Green: {
+		x: 70,
+		y: 70, 
+		menuBarText: skinLibrary["greenMenubar"],
+		hideControlText: skinLibrary["XhideControl"],
+		GUIboxText: skinLibrary["greenGUIboxBG"],
+	},
+	Blue: {
+		x: 90,
+		y: 90, 
+		menuBarText: skinLibrary["blueMenubar"],
+		hideControlText: skinLibrary["XhideControl"],
+		GUIboxText: skinLibrary["blueGUIboxBG"],
+	},
+	Grey: {
+		x: 110,
+		y: 110, 
+		menuBarText: skinLibrary["greyMenubar"],
+		hideControlText: skinLibrary["XhideControl"],
+		GUIboxText: skinLibrary["greyGUIboxBG"],
+	}	
 };
-Scale.displayMenubars = { 
-	Red:   skinLibrary['redMenubar'],
-	Blue:  skinLibrary['blueMenubar'],
-	Green: skinLibrary['greenMenubar'],
-	Grey:  skinLibrary['greyMenubar']
-};
+
 Scale.CBWmap = { 
 	Red: 0,
 	Green: 3,
@@ -79,7 +98,7 @@ Scale.CBWmap = {
 
 function Scale(displayChannelLabel, toolboxLayer) {
 	if(Scale.initialized &&
-	   Scale.displayChannelBGs[displayChannelLabel] ) {
+	   Scale.toolboxApperance[displayChannelLabel] ) {
 		this.init(displayChannelLabel, toolboxLayer);
 		Scale.displayChannels[ displayChannelLabel ] = this;
 	} else {
@@ -300,14 +319,11 @@ Scale.prototype.buildToolBox = function( ) {
 	}
 	var displayContent = this.buildDisplay();
 	var bbox = displayContent.getBBox();
-	var width = bbox.width + 2 * toolBox.prototype.padding;
-	var height = bbox.height + 2 * toolBox.prototype.padding;
-	this.toolBox = new toolBox(
-		255, 250, width, height, 
-		Scale.displayMenubars[this.displayChannelLabel],  // menu bar skin
-		skinLibrary["XhideControl"],                      // hide control skin
-		Scale.displayChannelBGs[this.displayChannelLabel] // background skin
-	);
+	var toolboxAppearance = Scale.toolboxApperance[ this.displayChannelLabel ];
+	toolboxAppearance[ 'width' ]  = bbox.width + 2 * toolBox.prototype.padding;
+	toolboxAppearance[ 'height' ] = bbox.height + 2 * toolBox.prototype.padding;
+
+	this.toolBox = new toolBox( toolboxAppearance );
 	this.logicalChannelPopupList = new popupList(
 		90, 0, Scale.popupListChannelLabels, 
 		{ method: 'setLogicalChannel', obj: this },

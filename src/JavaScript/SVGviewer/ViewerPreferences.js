@@ -37,8 +37,8 @@ var svgns = "http://www.w3.org/2000/svg";
 ViewerPreferences.VERSION = .2;
 ViewerPreferences.ScaleSliderWidth = 50;
 ViewerPreferences.toolboxApperance = {
-	x: 250,
-	y: 250,
+	x: 190,
+	y: 190,
 	width: 165,
 	height: 55
 };
