@@ -152,9 +152,7 @@ sub __getGenericBody {
 
 	*relation_accessor = $o_type . '::' . $accessor;  # Typeglob voodoo
 
-	print STDERR "*DEBUG*\n";
 	my @relations = relation_accessor($object);
-	print STDERR "*DEBUG*\n";
 	my @relation_ids = map ($_->id(), @relations);  # Foreach magick
 
 	my @non_relations;
@@ -171,21 +169,28 @@ sub __getGenericBody {
 	# Generic table generator
 	my $t_generator = new OME::Web::Table;
 
-	$body .= $t_generator->getTable( {
-			select_column => 1,
-			select_name => 'rem_selected',
-			options_row => ['Remove'],
-			parent_form => 1,
-		}, @relations);
 
-	$body .= $q->p();
+	if (@relations) {
+		$body .= $q->p({class => 'ome_title', align => 'center'}, 'Current Contents');
 
-	$body .= $t_generator->getTable( {
-			select_column => 1,
-			select_name => 'add_selected',
-			options_row => ['Add'],
-			parent_form => 1,
-		}, @non_relations);
+		$body .= $t_generator->getTable( {
+				select_column => 1,
+				select_name => 'rem_selected',
+				options_row => ['Remove'],
+				parent_form => 1,
+			}, @relations);
+	}
+
+	if (@non_relations) {
+		$body .= $q->p({class => 'ome_title', align => 'center'}, 'Possible Contents');
+
+		$body .= $t_generator->getTable( {
+				select_column => 1,
+				select_name => 'add_selected',
+				options_row => ['Add'],
+				parent_form => 1,
+			}, @non_relations);
+	}
 
 	return $body;
 }
