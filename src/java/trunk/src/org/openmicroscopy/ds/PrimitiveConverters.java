@@ -38,6 +38,23 @@ package org.openmicroscopy.ds;
 
 public class PrimitiveConverters
 {
+    public static Short convertToShort(Object o)
+        throws NumberFormatException
+    {
+        if (o == null)
+            return null;
+        else if (o instanceof Short)
+            return (Short) o;
+        else if (o instanceof Number)
+            return new Short(((Number) o).shortValue());
+        else if (o instanceof String)
+            return Short.valueOf((String) o);
+        else
+            throw new NumberFormatException("Expected an int, got a "+
+                                            o.getClass());
+
+    }
+
     public static Integer convertToInteger(Object o)
         throws NumberFormatException
     {
