@@ -30,7 +30,7 @@ means = repmat(struct('TheZ',{},'TheC',{},'TheT',{},'Mean',{}),outsize);
 sigmas = repmat(struct('TheZ',{},'TheC',{},'TheT',{},'Sigma',{}),outsize);
 geomeans = repmat(struct('TheZ',{},'TheC',{},'TheT',{},'GeometricMean',{}),outsize);
 centroids = repmat(struct('TheZ',{},'TheC',{},'TheT',{}, ...
-                          'CentroidX',{},'CentroidY',{}),outsize);
+                          'X',{},'Y',{}),outsize);
 
 for t = 0:st-1
   for c = 0:sc-1
@@ -74,8 +74,8 @@ for t = 0:st-1
       centroids(nextstat).TheZ = z;
       centroids(nextstat).TheC = c;
       centroids(nextstat).TheT = t;
-      centroids(nextstat).CentroidX = sumx/sumi;
-      centroids(nextstat).CentroidY = sumy/sumi;
+      centroids(nextstat).X = sumx/sumi;
+      centroids(nextstat).Y = sumy/sumi;
       nextstat = nextstat + 1;
       toc
     end
