@@ -296,6 +296,14 @@ my @modules = (
 	repository_file => "$REPOSITORY/XML-SAX-0.12.tar.gz",
 	# XML::SAX v0.12 doesn't report a $VERSION
 	# However, XML::SAX::ParserFactory loads OK and reports properly
+	get_module_version => sub {
+	    my $version;
+	    my $eval = 'use XML::SAX::ParserFactory; $version = $XML::SAX::ParserFactory::VERSION;';
+
+	    eval($eval);
+
+	    return $version ? $version : undef;
+	},	
 	configure_module => sub {
 	    # Since XML::Sax has an interactive configure script we need to
 	    # implement a custom configure_module () subroutine that allows
