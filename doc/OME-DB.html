@@ -107,8 +107,11 @@
     <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
   </head>
   <body>
-<p><br><br>Dumped on 2003-3-4.</p><a name="index"><h1>Index of database - ome</h1><ul><li><a name="group_public">public</a></li><ul><li><a href="#table_actual_inputs">actual_inputs</a></li><li><a href="#table_analyses">analyses</a></li><li><a href="#table_analysis_executions">analysis_executions</a></li><li><a href="#table_analysis_node_executions">analysis_node_executions</a></li><li><a href="#table_analysis_path_map">analysis_path_map</a></li><li><a href="#table_analysis_paths">analysis_paths</a></li><li><a href="#table_analysis_view_links">analysis_view_links</a></li><li><a href="#table_analysis_view_nodes">analysis_view_nodes</a></li><li><a href="#table_analysis_views">analysis_views</a></li><li><a href="#table_attribute_columns">attribute_columns</a></li><li><a href="#table_attribute_types">attribute_types</a></li><li><a href="#table_binary_image">binary_image</a></li><li><a href="#table_bintest">bintest</a></li><li><a href="#table_clusters">clusters</a></li><li><a href="#table_configuration">configuration</a></li><li><a href="#table_data_columns">data_columns</a></li><li><a href="#table_data_tables">data_tables</a></li><li><a href="#table_datasets">datasets</a></li><li><a href="#table_delta">delta</a></li><li><a href="#table_distance_to_spindle_axis">distance_to_spindle_axis</a></li><li><a href="#table_envelope">envelope</a></li><li><a href="#table_experimenters">experimenters</a></li><li><a href="#table_expired_files">expired_files</a></li><li><a href="#table_features">features</a></li><li><a href="#table_formal_inputs">formal_inputs</a></li><li><a href="#table_formal_outputs">formal_outputs</a></li><li><a href="#table_groups">groups</a></li><li><a href="#table_image_dataset_map">image_dataset_map</a></li><li><a href="#table_image_dimensions">image_dimensions</a></li><li><a href="#table_image_display_settings">image_display_settings</a></li><li><a href="#table_image_files_xyzwt">image_files_xyzwt</a></li><li><a href="#table_image_screen_info">image_screen_info</a></li><li><a href="#table_image_stage_info">image_stage_info</a></li><li><a href="#table_image_types">image_types</a></li><li><a href="#table_image_wavelengths">image_wavelengths</a></li><li><a href="#table_images">images</a></li><li><a href="#table_instruments">instruments</a></li><li><a href="#table_lookup_table_entries">lookup_table_entries</a></li><li><a href="#table_lookup_tables">lookup_tables</a></li><li><a href="#table_nearest_neighbor">nearest_neighbor</a></li><li><a href="#table_ome_sessions">ome_sessions</a></li><li><a href="#table_ome_sessions_images">ome_sessions_images</a></li><li><a href="#table_plates">plates</a></li><li><a href="#table_programs">programs</a></li><li><a href="#table_project_dataset_map">project_dataset_map</a></li><li><a href="#table_projects">projects</a></li><li><a href="#table_repositories">repositories</a></li><li><a href="#table_screen_plate_map">screen_plate_map</a></li><li><a href="#table_screens">screens</a></li><li><a href="#table_view_templates">view_templates</a></li><li><a href="#table_xy_softworx_info">xy_softworx_info</a></li><li><a href="#function_oid( bigint )">oid( bigint )</a></li></ul></ul><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_actual_inputs">actual_inputs</a></h2><p>This table stores the actual inputs that were used by a specific analysis by linking the data type declaration (FORMAL_INPUT_ID) and the ANALYSIS_ID to an ACTUAL_INPUT_ID.  
-ACTUAL_INPUTS are linked to ACTUAL_OUTPUTS through the ANALYSIS_ID.</p><table width="100%" cellspacing="0" cellpadding="3">
+<p><br><br>Dumped on 2003-3-4.</p><a name="index"><h1>Index of database - ome</h1><ul><li><a name="group_public">public</a></li><ul><li><a href="#table_actual_inputs">actual_inputs</a></li><li><a href="#table_analyses">analyses</a></li><li><a href="#table_analysis_executions">analysis_executions</a></li><li><a href="#table_analysis_node_executions">analysis_node_executions</a></li><li><a href="#table_analysis_path_map">analysis_path_map</a></li><li><a href="#table_analysis_paths">analysis_paths</a></li><li><a href="#table_analysis_view_links">analysis_view_links</a></li><li><a href="#table_analysis_view_nodes">analysis_view_nodes</a></li><li><a href="#table_analysis_views">analysis_views</a></li><li><a href="#table_attribute_columns">attribute_columns</a></li><li><a href="#table_attribute_types">attribute_types</a></li><li><a href="#table_binary_image">binary_image</a></li><li><a href="#table_bintest">bintest</a></li><li><a href="#table_clusters">clusters</a></li><li><a href="#table_configuration">configuration</a></li><li><a href="#table_data_columns">data_columns</a></li><li><a href="#table_data_tables">data_tables</a></li><li><a href="#table_datasets">datasets</a></li><li><a href="#table_delta">delta</a></li><li><a href="#table_distance_to_spindle_axis">distance_to_spindle_axis</a></li><li><a href="#table_envelope">envelope</a></li><li><a href="#table_experimenters">experimenters</a></li><li><a href="#table_expired_files">expired_files</a></li><li><a href="#table_features">features</a></li><li><a href="#table_formal_inputs">formal_inputs</a></li><li><a href="#table_formal_outputs">formal_outputs</a></li><li><a href="#table_groups">groups</a></li><li><a href="#table_image_dataset_map">image_dataset_map</a></li><li><a href="#table_image_dimensions">image_dimensions</a></li><li><a href="#table_image_display_settings">image_display_settings</a></li><li><a href="#table_image_files_xyzwt">image_files_xyzwt</a></li><li><a href="#table_image_screen_info">image_screen_info</a></li><li><a href="#table_image_stage_info">image_stage_info</a></li><li><a href="#table_image_types">image_types</a></li><li><a href="#table_image_wavelengths">image_wavelengths</a></li><li><a href="#table_images">images</a></li><li><a href="#table_instruments">instruments</a></li><li><a href="#table_lookup_table_entries">lookup_table_entries</a></li><li><a href="#table_lookup_tables">lookup_tables</a></li><li><a href="#table_nearest_neighbor">nearest_neighbor</a></li><li><a href="#table_ome_sessions">ome_sessions</a></li><li><a href="#table_ome_sessions_images">ome_sessions_images</a></li><li><a href="#table_plates">plates</a></li><li><a href="#table_programs">programs</a></li><li><a href="#table_project_dataset_map">project_dataset_map</a></li><li><a href="#table_projects">projects</a></li><li><a href="#table_repositories">repositories</a></li><li><a href="#table_screen_plate_map">screen_plate_map</a></li><li><a href="#table_screens">screens</a></li><li><a href="#table_view_templates">view_templates</a></li><li><a href="#table_xy_image_info">xy_image_info</a></li><li><a href="#table_xy_softworx_info">xy_softworx_info</a></li><li><a href="#table_xyz_image_info">xyz_image_info</a></li><li><a href="#function_oid( bigint )">oid( bigint )</a></li></ul></ul><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_actual_inputs">actual_inputs</a></h2><p>This table stores the actual inputs that were used by a specific 
+analysis by linking the data type declaration (FORMAL_INPUT_ID) and 
+the ANALYSIS_ID to an INPUT_ANALYSIS_ID.  All of the outputs of the 
+INPUT_ANALYSIS, of the same type as the specified FORMAL_INPUT, are 
+considered to be inputs of the specified ANALYSIS.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.actual_inputs Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -122,7 +125,8 @@ ACTUAL_INPUTS are linked to ACTUAL_OUTPUTS through the ANALYSIS_ID.</p><table wi
                   </td><td>formal_input_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td><a href="#table_analyses">public -> analyses</a>
                   </td><td>input_analysis_id</td>
-                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analyses">analyses</a></h2><p>This table defines a &quot;run&quot; of a particular program by a particular experimenter.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analyses">analyses</a></h2><p>This table defines a &quot;run&quot; of a particular program against a
+particular dataset.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analyses Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -133,8 +137,9 @@ ACTUAL_INPUTS are linked to ACTUAL_OUTPUTS through the ANALYSIS_ID.</p><table wi
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td><a href="#table_programs">public -> programs</a>
                   </td><td>program_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>dependence</td>
-                  <td>character(1)</td><td><i>NOT NULL</i><br><br>This column specifies the highest level of hierarchy that an analysis is dependent on.  DEPENDENCE can contain a single character, 
-D or I corresponding to Dataset and Image</td></tr><tr class="tr1"><td><a href="#table_datasets">public -> datasets</a>
+                  <td>character(1)</td><td><i>NOT NULL</i><br><br>This column specifies the highest level of the dataset-image-feature
+hierarchy that an analysis is dependent on.  DEPENDENCE can contain a
+single character, D or I corresponding to Dataset and Image.</td></tr><tr class="tr1"><td><a href="#table_datasets">public -> datasets</a>
                   </td><td>dataset_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>timestamp</td>
                   <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr><tr class="tr1"><td></td><td>status</td>
@@ -144,8 +149,10 @@ D or I corresponding to Dataset and Image</td></tr><tr class="tr1"><td><a href="
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>analyses_dependence</td>
-                      <td>CHECK (dependence = &apos;D&apos;::bpchar) OR (dependence = &apos;I&apos;::bpchar)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li><li><a href="#table_binary_image">public.binary_image</a></li><li><a href="#table_clusters">public.clusters</a></li><li><a href="#table_delta">public.delta</a></li><li><a href="#table_distance_to_spindle_axis">public.distance_to_spindle_axis</a></li><li><a href="#table_envelope">public.envelope</a></li><li><a href="#table_image_dimensions">public.image_dimensions</a></li><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_image_stage_info">public.image_stage_info</a></li><li><a href="#table_image_wavelengths">public.image_wavelengths</a></li><li><a href="#table_nearest_neighbor">public.nearest_neighbor</a></li><li><a href="#table_xy_softworx_info">public.xy_softworx_info</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_executions">analysis_executions</a></h2><p>There is exactly one row in this table for each time an analysis chain is executed against a dataset.  
-This information cannot necessarily be reconstructed from the actual inputs and outputs and attributes, since there could be attribute reuse involved.</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>CHECK (dependence = &apos;D&apos;::bpchar) OR (dependence = &apos;I&apos;::bpchar)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li><li><a href="#table_binary_image">public.binary_image</a></li><li><a href="#table_clusters">public.clusters</a></li><li><a href="#table_delta">public.delta</a></li><li><a href="#table_distance_to_spindle_axis">public.distance_to_spindle_axis</a></li><li><a href="#table_envelope">public.envelope</a></li><li><a href="#table_image_dimensions">public.image_dimensions</a></li><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_image_stage_info">public.image_stage_info</a></li><li><a href="#table_image_wavelengths">public.image_wavelengths</a></li><li><a href="#table_nearest_neighbor">public.nearest_neighbor</a></li><li><a href="#table_xy_image_info">public.xy_image_info</a></li><li><a href="#table_xy_softworx_info">public.xy_softworx_info</a></li><li><a href="#table_xyz_image_info">public.xyz_image_info</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_executions">analysis_executions</a></h2><p>There is exactly one row in this table for each time an analysis
+chain is executed against a dataset.  This information cannot
+necessarily be reconstructed from the actual inputs and outputs and
+attributes, since there could be attribute reuse involved.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_executions Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -160,7 +167,9 @@ This information cannot necessarily be reconstructed from the actual inputs and 
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td><a href="#table_experimenters">public -> experimenters</a>
                   </td><td>experimenter_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>timestamp</td>
-                  <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_node_executions">analysis_node_executions</a></h2><p>This table maps rows in the ANALYSES table to the nodes which executed them.  Every time a node is executed in a chain, a row is created in this table, even if data reuse is used.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_node_executions">analysis_node_executions</a></h2><p>This table maps rows in the ANALYSES table to the nodes which
+executed them.  Every time a node is executed in a chain, a row is
+created in this table, even if data reuse occurs.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_node_executions Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -174,10 +183,13 @@ This information cannot necessarily be reconstructed from the actual inputs and 
                   </td><td>analysis_view_node_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td><a href="#table_analyses">public -> analyses</a>
                   </td><td>analysis_id</td>
-                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_path_map">analysis_path_map</a></h2><p>This table links a path through a directed graph of analyses to specific analyses.  Paths traverse the directed graph of analyses 
-from the root node to a specific leaf node.  There is exactly one unique path between each root node and each leaf node.  
-Due to branching and merging in this analysis graph, analyses may belong to more than one path.  
-A given path is composed of many analyses.  This table specifies the many-to-many relationship between paths and analyses.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_path_map">analysis_path_map</a></h2><p>This table links a path through a directed graph of analyses to 
+specific analyses.  Paths traverse the directed graph of analyses from 
+the root node to a specific leaf node.  There is exactly one unique 
+path between each root node and each leaf node.  Due to branching and 
+merging in this analysis graph, analyses may belong to more than one 
+path.  A given path is composed of many analyses.  This table 
+specifies the many-to-many relationship between paths and analyses.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_path_map Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -206,7 +218,11 @@ A given path is composed of many analyses.  This table specifies the many-to-man
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>path_length</td>
                   <td>integer</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td><a href="#table_analysis_views">public -> analysis_views</a>
                   </td><td>analysis_view_id</td>
-                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_path_map">public.analysis_path_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_view_links">analysis_view_links</a></h2><p>This table defines the path between nodes in the analysis_view graph  (a directed graph of analysis modules liked via their formal inputs/outputs)</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_path_map">public.analysis_path_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_view_links">analysis_view_links</a></h2><p>Defines the edges in an analysis chain.  Links are only allowed 
+between modules if they connect outputs and inputs of the same type:  
+i.e., the ATTRIBUTE_TYPE_ID&apos;s of the FROM_OUTPUT and TO_INPUT must 
+match.  Further, FROM_NODE and TO_NODE must be members of the same 
+ANALYSIS_VIEW.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_view_links Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -224,7 +240,8 @@ A given path is composed of many analyses.  This table specifies the many-to-man
                   </td><td>to_node</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td><a href="#table_formal_inputs">public -> formal_inputs</a>
                   </td><td>to_input</td>
-                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_view_nodes">analysis_view_nodes</a></h2><p>An Analysis_view_node is a node within the analysis_view graph which is a directed graph of analysis modules liked via their formal inputs/outputs</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td><i>NOT NULL</i></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_view_nodes">analysis_view_nodes</a></h2><p>A single node within an analysis chain.  Multiple nodes in a single 
+chain can refer to the same PROGRAM.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_view_nodes Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -236,9 +253,15 @@ A given path is composed of many analyses.  This table specifies the many-to-man
                   </td><td>analysis_view_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td><a href="#table_programs">public -> programs</a>
                   </td><td>program_id</td>
-                  <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>iterator_tag</td>
-                  <td>character varying(128)</td><td></td></tr><tr class="tr0"><td></td><td>new_feature_tag</td>
-                  <td>character varying(128)</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li><li><a href="#table_analysis_path_map">public.analysis_path_map</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_views">analysis_views</a></h2><p>An Analysis_view is a particular directed graph of analysis modules liked via their formal inputs/outputs.  It represents an execution plan for a chain of modules.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td><i>NOT NULL</i><br><br>The analysis module which is run at this stage of the analysis 
+chain.</td></tr><tr class="tr1"><td></td><td>iterator_tag</td>
+                  <td>character varying(128)</td><td>Overrides the value defined in PROGRAMS.DEFAULT_ITERATOR_TAG.  See 
+the FEATURES table for more information.</td></tr><tr class="tr0"><td></td><td>new_feature_tag</td>
+                  <td>character varying(128)</td><td>Overrides the value defined in PROGRAMS.NEW_FEATURE_TAG.  See the 
+FEATURES table for more information.</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_node_executions">public.analysis_node_executions</a></li><li><a href="#table_analysis_path_map">public.analysis_path_map</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_analysis_views">analysis_views</a></h2><p>An &quot;analysis chain&quot; (or equivalently, &quot;analysis view&quot;) is a directed 
+graph of analysis modules liked via their formal inputs/outputs.  It 
+represents an execution plan for a chain of modules.  Multiple 
+instances of a given analysis module can exist in a single chain.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.analysis_views Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -250,10 +273,12 @@ A given path is composed of many analyses.  This table specifies the many-to-man
                   </td><td>owner</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>name</td>
                   <td>character varying(64)</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>locked</td>
-                  <td>boolean</td><td><i>NOT NULL default &apos;f&apos;::bool</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_executions">public.analysis_executions</a></li><li><a href="#table_analysis_paths">public.analysis_paths</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li><li><a href="#table_analysis_view_nodes">public.analysis_view_nodes</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_attribute_columns">attribute_columns</a></h2><p>Attribute columns are the atomic types which constitute semantic types in OME.  
-A semantic type shares a common ATTRIBUTE_TYPE_ID which refers to a row in the ATTRIBUTE_TYPES tables.  
-A semantic type has one row in this table for each column (atomic type) it consists of.  
-The atomic types are specified by a DATA_COLUMN_ID refering to the DATA_COLUMNS table</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>boolean</td><td><i>NOT NULL default &apos;f&apos;::bool</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_executions">public.analysis_executions</a></li><li><a href="#table_analysis_paths">public.analysis_paths</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li><li><a href="#table_analysis_view_nodes">public.analysis_view_nodes</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_attribute_columns">attribute_columns</a></h2><p>Attribute columns are the atomic types which constitute semantic 
+types in OME.  A semantic type shares a common ATTRIBUTE_TYPE_ID which 
+refers to a row in the ATTRIBUTE_TYPES tables.  A semantic type has 
+one row in this table for each column (atomic type) it consists of.  
+The atomic types are specified by a DATA_COLUMN_ID refering to the 
+DATA_COLUMNS table</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.attribute_columns Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -273,9 +298,12 @@ The atomic types are specified by a DATA_COLUMN_ID refering to the DATA_COLUMNS 
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>attribute_col_attribute_typ_key</td>
-                      <td>UNIQUE (attribute_type_id, name)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_attribute_types">attribute_types</a></h2><p>This table stores the semantic types known to OME.  A semantic type is composed of one or more columns in a given table.  
-Future versions may allow attribute types to span tables.  Entries in ATTRIBUTE_COLUMNS that share an ATTRIBUTE_TYPE_ID constitute a semantic type.  
-There is one row in this table for each semantic type known to OME.</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>UNIQUE (attribute_type_id, name)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_attribute_types">attribute_types</a></h2><p>This table stores the semantic types known to OME.  A semantic type 
+is composed of one or more columns in a given table.  Future versions 
+may allow attribute types to span tables.  Entries in 
+ATTRIBUTE_COLUMNS that share an ATTRIBUTE_TYPE_ID constitute a 
+semantic type.  There is one row in this table for each semantic type 
+known to OME.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.attribute_types Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -285,8 +313,11 @@ There is one row in this table for each semantic type known to OME.</p><table wi
                 </tr><tr class="tr0"><td></td><td>attribute_type_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>name</td>
                   <td>character varying(64)</td><td><i>NOT NULL UNIQUE </i></td></tr><tr class="tr0"><td></td><td>granularity</td>
-                  <td>character(1)</td><td><i>NOT NULL</i><br><br>This column describes the granularity of the semantic type, wether it applies to a Dataset, Image or Feature.  
-This column must contain a single character, D I or F.</td></tr><tr class="tr1"><td></td><td>description</td>
+                  <td>character(1)</td><td><i>NOT NULL</i><br><br>This column describes the granularity of the semantic type, wether it 
+applies to a Dataset, Image or Feature.  This column must contain a 
+single character, &quot;D&quot;, &quot;I&quot;, or &quot;F&quot;, and it must match the granularity 
+specified in the DATA_TABLES that this types ATTRIBUTE_COLUMNS refer 
+to.</td></tr><tr class="tr1"><td></td><td>description</td>
                   <td>text</td><td></td></tr></table><p>&nbsp;</p><table width="100%" cellspacing="0" cellpadding="3">
                     <caption>public.attribute_types Constraints</caption>
                     <tr>
@@ -332,7 +363,9 @@ This column must contain a single character, D I or F.</td></tr><tr class="tr1">
                   <td>oid</td><td></td></tr><tr class="tr0"><td><a href="#table_features">public -> features</a>
                   </td><td>feature_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>cluster_id</td>
-                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_configuration">configuration</a></h2><p>This table holds this OME instance&apos;s configuration parameters. It will normally be filled in by script or installer queries at OME install time.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_configuration">configuration</a></h2><p>This table holds this OME instance&apos;s configuration parameters. It 
+will normally be filled in by script or installer queries at OME 
+install time.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.configuration Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -346,7 +379,11 @@ This column must contain a single character, D I or F.</td></tr><tr class="tr1">
                   <td>character varying(256)</td><td></td></tr><tr class="tr0"><td></td><td>ome_root</td>
                   <td>character varying(256)</td><td></td></tr><tr class="tr1"><td><a href="#table_image_display_settings">public -> image_display_settings</a>
                   </td><td>display_settings</td>
-                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_data_columns">data_columns</a></h2><p>This table stores the names of columns within attribute tables.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_data_columns">data_columns</a></h2><p>This table stores the names of the columns in each data table.  Each 
+data table is required to declare three implicit columns, which are 
+_not_ entered into the DATA_COLUMNS table.  They are ATTRIBUTE_ID; 
+ANALYIS_ID; and one of DATASET_ID, IMAGE_ID, and FEATURE_ID, depending 
+on the table&apos;s granularity.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.data_columns Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -364,7 +401,8 @@ This column must contain a single character, D I or F.</td></tr><tr class="tr1">
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>data_columns_data_table_id_key</td>
-                      <td>UNIQUE (data_table_id, column_name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_attribute_columns">public.attribute_columns</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_data_tables">data_tables</a></h2><p>This table stores the names of attribute tables.</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>UNIQUE (data_table_id, column_name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_attribute_columns">public.attribute_columns</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_data_tables">data_tables</a></h2><p>Each database table used to stored analysis results has an entry in 
+the DATA_TABLES table.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.data_tables Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -373,7 +411,9 @@ This column must contain a single character, D I or F.</td></tr><tr class="tr1">
                 <th>Description</th>
                 </tr><tr class="tr0"><td></td><td>data_table_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>granularity</td>
-                  <td>character(1)</td><td><i>NOT NULL</i><br><br>The kind of attribute table being refered to is represented by a single character - D, I or F corresponding to Dataset, Image or Feature</td></tr><tr class="tr0"><td></td><td>table_name</td>
+                  <td>character(1)</td><td><i>NOT NULL</i><br><br>The kind of attribute table being refered to is represented by a 
+single character - D, I or F corresponding to Dataset, Image or 
+Feature</td></tr><tr class="tr0"><td></td><td>table_name</td>
                   <td>character varying(64)</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>description</td>
                   <td>text</td><td></td></tr></table><p>&nbsp;</p><table width="100%" cellspacing="0" cellpadding="3">
                     <caption>public.data_tables Constraints</caption>
@@ -381,9 +421,11 @@ This column must contain a single character, D I or F.</td></tr><tr class="tr1">
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>data_tables_granularity</td>
-                      <td>CHECK ((granularity = &apos;D&apos;::bpchar) OR (granularity = &apos;I&apos;::bpchar)) OR (granularity = &apos;F&apos;::bpchar)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_data_columns">public.data_columns</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_datasets">datasets</a></h2><p>Datasets are groups of images representing a &apos;computational unit&apos;.  Once an analysis is performed on a Dataset, 
-the LOCKED flag is set and the list of images that compose a dataset may no longer be changed.  
-Images may belong to one or more Datasets.  This many-to-many relationship is specified by the IMAGE_DATASET_MAP table</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>CHECK ((granularity = &apos;D&apos;::bpchar) OR (granularity = &apos;I&apos;::bpchar)) OR (granularity = &apos;F&apos;::bpchar)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_data_columns">public.data_columns</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_datasets">datasets</a></h2><p>Datasets are groups of images representing a &quot;computational unit&quot;.  
+Once an analysis is performed on a Dataset, the LOCKED flag is set and 
+the list of images that compose a dataset may no longer be changed.  
+Images may belong to one or more Datasets.  This many-to-many 
+relationship is specified by the IMAGE_DATASET_MAP table</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.datasets Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -446,8 +488,8 @@ Images may belong to one or more Datasets.  This many-to-many relationship is sp
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>x</td>
                   <td>smallint</td><td></td></tr><tr class="tr0"><td></td><td>y</td>
                   <td>smallint</td><td></td></tr><tr class="tr1"><td></td><td>z</td>
-                  <td>smallint</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_experimenters">experimenters</a></h2><p>The experimenters table defines the people who perform imaging experiments.  
-Each experimenter may belong to one Group</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>smallint</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_experimenters">experimenters</a></h2><p>The experimenters table defines the people who perform imaging 
+experiments.  Each experimenter may belong to one Group</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.experimenters Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -463,7 +505,8 @@ Each experimenter may belong to one Group</p><table width="100%" cellspacing="0"
                   <td>character varying(64)</td><td></td></tr><tr class="tr0"><td><a href="#table_groups">public -> groups</a>
                   </td><td>group_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>data_dir</td>
-                  <td>character varying(256)</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_executions">public.analysis_executions</a></li><li><a href="#table_analysis_views">public.analysis_views</a></li><li><a href="#table_datasets">public.datasets</a></li><li><a href="#table_groups">public.groups</a></li><li><a href="#table_groups">public.groups</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_ome_sessions">public.ome_sessions</a></li><li><a href="#table_projects">public.projects</a></li><li><a href="#table_view_templates">public.view_templates</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_expired_files">expired_files</a></h2><p>This table keeps track of any auxiliary file used by OME that is no longer needed, but is not yet deleted from the file system.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(256)</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_executions">public.analysis_executions</a></li><li><a href="#table_analysis_views">public.analysis_views</a></li><li><a href="#table_datasets">public.datasets</a></li><li><a href="#table_groups">public.groups</a></li><li><a href="#table_groups">public.groups</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_ome_sessions">public.ome_sessions</a></li><li><a href="#table_projects">public.projects</a></li><li><a href="#table_view_templates">public.view_templates</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_expired_files">expired_files</a></h2><p>This table keeps track of any auxiliary file used by OME that is no 
+longer needed, but is not yet deleted from the file system.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.expired_files Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -471,13 +514,21 @@ Each experimenter may belong to one Group</p><table width="100%" cellspacing="0"
                 <th>Type</th>
                 <th>Description</th>
                 </tr><tr class="tr0"><td></td><td>fullpath</td>
-                  <td>character varying(255)</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_features">features</a></h2><p>The FEATURES table is used for ALL image features reguardless of algorithm.  
-Image features are understood to be objects of interest within the image - blobs, cells, nuclei, etc.  
-The properties of a feature are that it has a variable list of attributes.  
-The kinds of attributes in this list and their values define everything known about the feature.  
-Feature attribute tables contain a column named FEATURE_ID that refers to the FEATURE_ID column of this table.  
-The FEATURES table itself is technically an image attribute table because it contains an image_id.  
-Algorithms that define features (segmentation algorithms) write rows into this table - one row per feature.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(255)</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_features">features</a></h2><p>The FEATURES table is used for ALL image features reguardless of 
+algorithm.  Image features are understood to be objects of interest 
+within the image - blobs, cells, nuclei, etc.  The properties of a 
+feature are that it has a variable list of attributes.  The kinds of 
+attributes in this list and their values define everything known about 
+the feature.  Feature attribute tables contain a column named 
+FEATURE_ID that refers to the FEATURE_ID column of this table.  
+Algorithms that define features (segmentation algorithms) write rows 
+into this table - one row per feature. 
+
+Further, features are given tags and arranged hierarchically within an 
+image.  Modules can then request to iterate over features at an 
+arbitrary point in the hierarchy by specifying a feature tag.  This 
+hierarchy is created automatically; new features from a module are 
+considered to be children of the iterated feature for that module.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.features Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -490,11 +541,14 @@ Algorithms that define features (segmentation algorithms) write rows into this t
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td><a href="#table_features">public -> features</a>
                   </td><td>parent_feature_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>tag</td>
-                  <td>character varying(128)</td><td>This column is a semantic tag assigned to the feature e.g. &quot;Cell&quot;, &quot;Nucleus&quot;, etc.</td></tr><tr class="tr0"><td></td><td>name</td>
-                  <td>character varying(128)</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_binary_image">public.binary_image</a></li><li><a href="#table_clusters">public.clusters</a></li><li><a href="#table_delta">public.delta</a></li><li><a href="#table_distance_to_spindle_axis">public.distance_to_spindle_axis</a></li><li><a href="#table_envelope">public.envelope</a></li><li><a href="#table_features">public.features</a></li><li><a href="#table_nearest_neighbor">public.nearest_neighbor</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_formal_inputs">formal_inputs</a></h2><p>The FORMAL_INPUTS table declares the semantic types used as inputs by a analysis modules.  
-Each input maps to exactly one entry in the ATTRIBUTE_TYPES table.  
-a table of values may be specified by refering to 
-an entry in LOOKUP_TABLES.  This table has a many-to-one relationship with the PROGRAMS table:  A PROGRAM has zero or more FORMAL_INPUTS</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(128)</td><td>This column is a semantic tag assigned to the feature, e.g., &quot;CELL&quot;, 
+&quot;NUCLEUS&quot;, &quot;CHROMOSOME&quot;.</td></tr><tr class="tr0"><td></td><td>name</td>
+                  <td>character varying(128)</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_binary_image">public.binary_image</a></li><li><a href="#table_clusters">public.clusters</a></li><li><a href="#table_delta">public.delta</a></li><li><a href="#table_distance_to_spindle_axis">public.distance_to_spindle_axis</a></li><li><a href="#table_envelope">public.envelope</a></li><li><a href="#table_features">public.features</a></li><li><a href="#table_nearest_neighbor">public.nearest_neighbor</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_formal_inputs">formal_inputs</a></h2><p>The FORMAL_INPUTS table declares the semantic types used as inputs by 
+an analysis module.  Each input maps to exactly one entry in the 
+ATTRIBUTE_TYPES table.  A table of possible user input values may be 
+specified by referring to an entry in LOOKUP_TABLES.  FORMAL_INPUTS 
+has a many-to-one relationship with the PROGRAMS table:  A PROGRAM has 
+zero or more FORMAL_INPUTS</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.formal_inputs Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -516,9 +570,11 @@ an entry in LOOKUP_TABLES.  This table has a many-to-one relationship with the P
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>formal_inputs_program_id_key</td>
-                      <td>UNIQUE (program_id, name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_formal_outputs">formal_outputs</a></h2><p>The FORMAL_OUTPUTS table declares the semantic types used as outputs by a analysis modules.  
-Each output maps to exactly one entry in the ATTRIBUTE_TYPES table.  
-This table has a many-to-one relationship with the PROGRAMS table:  A PROGRAM has one or more FORMAL_OUTPUTS</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>UNIQUE (program_id, name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_actual_inputs">public.actual_inputs</a></li><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_formal_outputs">formal_outputs</a></h2><p>The FORMAL_OUTPUTS table declares the semantic types generated as 
+outputs from a analysis modules.  Each output maps to exactly one 
+entry in the ATTRIBUTE_TYPES table.  FORMAL_OUTPUTS has a many-to-one 
+relationship with the PROGRAMS table: A PROGRAM has one or more 
+FORMAL_OUTPUTS</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.formal_outputs Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -539,8 +595,9 @@ This table has a many-to-one relationship with the PROGRAMS table:  A PROGRAM ha
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>formal_outputs_program_id_key</td>
-                      <td>UNIQUE (program_id, name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_groups">groups</a></h2><p>The groups table defines groups of experimenters.  This is can be a lab or project group.  
-It is not meant to represent an institution or a company</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>UNIQUE (program_id, name)</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analysis_view_links">public.analysis_view_links</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_groups">groups</a></h2><p>The groups table defines groups of experimenters.  This is can be a 
+lab or project group.  It is not meant to represent an institution or 
+a company</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.groups Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -553,7 +610,8 @@ It is not meant to represent an institution or a company</p><table width="100%" 
                   </td><td>leader</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td><a href="#table_experimenters">public -> experimenters</a>
                   </td><td>contact</td>
-                  <td>oid</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_datasets">public.datasets</a></li><li><a href="#table_experimenters">public.experimenters</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_projects">public.projects</a></li><li><a href="#table_view_templates">public.view_templates</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_dataset_map">image_dataset_map</a></h2><p>This table represents the many-to-many relationship between Images and Datasets</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_datasets">public.datasets</a></li><li><a href="#table_experimenters">public.experimenters</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_projects">public.projects</a></li><li><a href="#table_view_templates">public.view_templates</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_dataset_map">image_dataset_map</a></h2><p>This table represents the many-to-many relationship between Images 
+and Datasets</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_dataset_map Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -570,7 +628,9 @@ It is not meant to represent an institution or a company</p><table width="100%" 
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>image_dataset_map_pkey</td>
-                      <td>PRIMARY KEY (image_id, dataset_id)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_dimensions">image_dimensions</a></h2><p>This table describes the extents of each dimension of a 5-D image - both in number of pixels and in the physical size of the pixels in microns.</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>PRIMARY KEY (image_id, dataset_id)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_dimensions">image_dimensions</a></h2><p>This table describes the extents of each dimension of a 5-D image - 
+both in number of pixels and in the physical size of the pixels in 
+microns.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_dimensions Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -592,10 +652,13 @@ It is not meant to represent an institution or a company</p><table width="100%" 
                   <td>real</td><td></td></tr><tr class="tr0"><td></td><td>pixel_size_y</td>
                   <td>real</td><td></td></tr><tr class="tr1"><td></td><td>pixel_size_z</td>
                   <td>real</td><td></td></tr><tr class="tr0"><td></td><td>wave_increment</td>
-                  <td>real</td><td>This column is used when the wave dimension is contiguous rather than discrete (e.g. FTIR imaging).  
-This value is the number of nm (nano-meters) between wavelengths.</td></tr><tr class="tr1"><td></td><td>time_increment</td>
-                  <td>real</td><td>This column is used when the time dimension is contiguous rather than discrete (e.g. a video stream).  
-This value is the number of seconds between timepoints.</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_display_settings">image_display_settings</a></h2><p>This table will eventually contain various &quot;hints&quot; to a graphical image viewer.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>real</td><td>This column is used when the wave dimension is contiguous rather than 
+discrete (e.g. FTIR imaging).  This value is the number of nm 
+(nano-meters) between wavelengths.</td></tr><tr class="tr1"><td></td><td>time_increment</td>
+                  <td>real</td><td>This column is used when the time dimension is contiguous rather than 
+discrete (e.g. a video stream).  This value is the number of seconds 
+between timepoints.</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_display_settings">image_display_settings</a></h2><p>This table will eventually contain various &quot;hints&quot; to a graphical 
+image viewer.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_display_settings Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -604,8 +667,9 @@ This value is the number of seconds between timepoints.</td></tr></table><p><a h
                 <th>Description</th>
                 </tr><tr class="tr0"><td></td><td>image_display_settings_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>url</td>
-                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_configuration">public.configuration</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_ome_sessions">public.ome_sessions</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_files_xyzwt">image_files_xyzwt</a></h2><p>Entries in this table store locations of the non-OME image files used to constitute an OME image.  
-Using this table, it is possible to assemble an aritrary number of images into a single 5-D OME Image</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_configuration">public.configuration</a></li><li><a href="#table_images">public.images</a></li><li><a href="#table_ome_sessions">public.ome_sessions</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_files_xyzwt">image_files_xyzwt</a></h2><p>Entries in this table store locations of the non-OME image files used 
+to constitute an OME image.  Using this table, it is possible to 
+assemble an aritrary number of images into a single 5-D OME Image</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_files_xyzwt Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -629,7 +693,8 @@ Using this table, it is possible to assemble an aritrary number of images into a
                   <td>smallint</td><td></td></tr><tr class="tr1"><td></td><td>w_stop</td>
                   <td>smallint</td><td></td></tr><tr class="tr0"><td></td><td>t_start</td>
                   <td>smallint</td><td></td></tr><tr class="tr1"><td></td><td>t_stop</td>
-                  <td>smallint</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_screen_info">image_screen_info</a></h2><p>This table stores additional information for images that are part of a high-throughput screen.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>smallint</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_screen_info">image_screen_info</a></h2><p>This table stores additional information for images that are part of 
+a high-throughput screen.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_screen_info Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -646,7 +711,8 @@ Using this table, it is possible to assemble an aritrary number of images into a
                   <td>oid</td><td></td></tr><tr class="tr0"><td></td><td>well</td>
                   <td>character varying(8)</td><td>The well address (e.g. A12) on a microtiter plate.</td></tr><tr class="tr1"><td></td><td>sample</td>
                   <td>integer</td><td>The sample number within a well on a microtiter plate.</td></tr><tr class="tr0"><td></td><td>extern_sample_id</td>
-                  <td>character varying(40)</td><td>A link to an external database with additional information about this sample (image).</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_stage_info">image_stage_info</a></h2><p>This table stores stage position and label information about an image.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(40)</td><td>A link to an external database with additional information about this 
+sample (image).</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_stage_info">image_stage_info</a></h2><p>This table stores stage position and label information about an image.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_stage_info Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -662,7 +728,8 @@ Using this table, it is possible to assemble an aritrary number of images into a
                   <td>text</td><td></td></tr><tr class="tr0"><td></td><td>stage_x</td>
                   <td>double precision</td><td></td></tr><tr class="tr1"><td></td><td>stage_y</td>
                   <td>double precision</td><td></td></tr><tr class="tr0"><td></td><td>stage_z</td>
-                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_types">image_types</a></h2><p>This table allows OME to keep track of the formats of the non-OME image files, and the various programs used to import them into OME</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_image_types">image_types</a></h2><p>This table allows OME to keep track of the formats of the non-OME 
+image files, and the various programs used to import them into OME</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.image_types Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -687,12 +754,16 @@ Using this table, it is possible to assemble an aritrary number of images into a
                   <td>oid</td><td></td></tr><tr class="tr0"><td><a href="#table_images">public -> images</a>
                   </td><td>image_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>wavenumber</td>
-                  <td>integer</td><td>The order of the wave as it stored in the 5-D image  - starting at zero.</td></tr><tr class="tr0"><td></td><td>ex_wavelength</td>
+                  <td>integer</td><td>The order of the wave as it stored in the 5-D image - starting at 
+zero.</td></tr><tr class="tr0"><td></td><td>ex_wavelength</td>
                   <td>integer</td><td>In nm.</td></tr><tr class="tr1"><td></td><td>em_wavelength</td>
                   <td>integer</td><td>In nm.</td></tr><tr class="tr0"><td></td><td>nd_filter</td>
-                  <td>double precision</td><td>A percentage between 0.0 and 1.0.  A value of 1.0 does not transmit visible light.</td></tr><tr class="tr1"><td></td><td>fluor</td>
-                  <td>character varying(32)</td><td>The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not GFP-p53 or FITC-goat-anti-rabbit</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_images">images</a></h2><p>The Images table contains information common to all images, including both the local ID and the globally unique ID, 
-and several references to other tables with additional image information.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>double precision</td><td>A percentage between 0.0 and 1.0.  A value of 1.0 does not transmit 
+visible light.</td></tr><tr class="tr1"><td></td><td>fluor</td>
+                  <td>character varying(32)</td><td>The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not 
+GFP-p53 or FITC-goat-anti-rabbit</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_images">images</a></h2><p>The Images table contains information common to all images, including 
+both the local ID and the globally unique ID, and several references 
+to other tables with additional image information.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.images Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -720,9 +791,9 @@ and several references to other tables with additional image information.</p><ta
                   <td>oid</td><td></td></tr><tr class="tr1"><td><a href="#table_repositories">public -> repositories</a>
                   </td><td>repository_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>path</td>
-                  <td>character varying(256)</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_features">public.features</a></li><li><a href="#table_image_dataset_map">public.image_dataset_map</a></li><li><a href="#table_image_dimensions">public.image_dimensions</a></li><li><a href="#table_image_files_xyzwt">public.image_files_xyzwt</a></li><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_image_stage_info">public.image_stage_info</a></li><li><a href="#table_image_wavelengths">public.image_wavelengths</a></li><li><a href="#table_ome_sessions_images">public.ome_sessions_images</a></li><li><a href="#table_xy_softworx_info">public.xy_softworx_info</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_instruments">instruments</a></h2><p>The instruments table describes the microscope and mainly
- acts as a nexus for the many-to-one relationships of the components that constitute it -
- i.e. Objectives, Filters, etc.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(256)</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_features">public.features</a></li><li><a href="#table_image_dataset_map">public.image_dataset_map</a></li><li><a href="#table_image_dimensions">public.image_dimensions</a></li><li><a href="#table_image_files_xyzwt">public.image_files_xyzwt</a></li><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_image_stage_info">public.image_stage_info</a></li><li><a href="#table_image_wavelengths">public.image_wavelengths</a></li><li><a href="#table_ome_sessions_images">public.ome_sessions_images</a></li><li><a href="#table_xy_image_info">public.xy_image_info</a></li><li><a href="#table_xy_softworx_info">public.xy_softworx_info</a></li><li><a href="#table_xyz_image_info">public.xyz_image_info</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_instruments">instruments</a></h2><p>The instruments table describes the microscope and mainly acts as a 
+nexus for the many-to-one relationships of the components that 
+constitute it - i.e. Objectives, Filters, etc.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.instruments Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -732,8 +803,9 @@ and several references to other tables with additional image information.</p><ta
                 </tr><tr class="tr0"><td></td><td>instrument_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>name</td>
                   <td>character varying(30)</td><td></td></tr><tr class="tr0"><td></td><td>description</td>
-                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_images">public.images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_lookup_table_entries">lookup_table_entries</a></h2><p>This table and LOOKUP_TABLES make up a mechanism to restrict certain program inputs to a list of values.  
-This table identifies the values in a list, and LOOKUP_TABLES identifies the various value lists.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_images">public.images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_lookup_table_entries">lookup_table_entries</a></h2><p>This table and LOOKUP_TABLES make up a mechanism to restrict certain 
+program inputs to a list of values.  This table identifies the values 
+in a list, and LOOKUP_TABLES identifies the various value lists.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.lookup_table_entries Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -745,8 +817,9 @@ This table identifies the values in a list, and LOOKUP_TABLES identifies the var
                   </td><td>lookup_table_id</td>
                   <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>value</td>
                   <td>character varying(256)</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>label</td>
-                  <td>character varying(256)</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_lookup_tables">lookup_tables</a></h2><p>This table and LOOKUP_TABLE_ENTRIES make up a mechanism to restrict certain program inputs to a list of values.  
-This table identifies the list, and LOOKUP_TABLE_ENTRIES identifies the values for that list.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(256)</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_lookup_tables">lookup_tables</a></h2><p>This table and LOOKUP_TABLE_ENTRIES make up a mechanism to restrict 
+certain program inputs to a list of values.  This table identifies the 
+list, and LOOKUP_TABLE_ENTRIES identifies the values for that list.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.lookup_tables Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -773,9 +846,10 @@ This table identifies the list, and LOOKUP_TABLE_ENTRIES identifies the values f
                   <td>double precision</td><td></td></tr><tr class="tr1"><td></td><td>delta_y</td>
                   <td>double precision</td><td></td></tr><tr class="tr0"><td></td><td>delta_z</td>
                   <td>double precision</td><td></td></tr><tr class="tr1"><td></td><td>distance</td>
-                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_ome_sessions">ome_sessions</a></h2><p>This table is used to store various information about the user&apos;s session.  This session never expires, though the session_key 
-may have a very short lifetime (minutes).  When a new session_key is generated for a session, the appropriate row is updated with 
-the new value.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_ome_sessions">ome_sessions</a></h2><p>This table is used to store various information about the user&apos;s 
+session.  This session never expires, though the session_key may have 
+a very short lifetime (minutes).  When a new session_key is generated 
+for a session, the appropriate row is updated with the new value.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.ome_sessions Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -800,7 +874,9 @@ the new value.</p><table width="100%" cellspacing="0" cellpadding="3">
                   </td><td>display_settings</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td></td><td>last_access</td>
                   <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr><tr class="tr0"><td></td><td>started</td>
-                  <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_ome_sessions_images">public.ome_sessions_images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_ome_sessions_images">ome_sessions_images</a></h2><p>Multiple Images, Projects, and/or Datasets may be associated with a session.  This table lists the Images associated with a particular Session.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>timestamp with time zone</td><td><i>default (&apos;now&apos;::text)::timestamp(6) with time zone</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_ome_sessions_images">public.ome_sessions_images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_ome_sessions_images">ome_sessions_images</a></h2><p>Multiple Images, Projects, and/or Datasets may be associated with a 
+session.  This table lists the Images associated with a particular 
+Session.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.ome_sessions_images Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -811,8 +887,9 @@ the new value.</p><table width="100%" cellspacing="0" cellpadding="3">
                   </td><td>image_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td><a href="#table_ome_sessions">public -> ome_sessions</a>
                   </td><td>session_id</td>
-                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_plates">plates</a></h2><p>This table stores information about the plates that make up a high-throughput screen.  
-Plates may belong to more than one screen, and have a many-to-many relationship to screens.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_plates">plates</a></h2><p>This table stores information about the plates that make up a 
+high-throughput screen.  Plates may belong to more than one screen, 
+and have a many-to-many relationship to screens.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.plates Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -822,11 +899,9 @@ Plates may belong to more than one screen, and have a many-to-many relationship 
                 </tr><tr class="tr0"><td></td><td>plate_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>name</td>
                   <td>character varying(255)</td><td></td></tr><tr class="tr0"><td></td><td>extern_plate_id</td>
-                  <td>character varying(40)</td><td>A reference to an external database containing plate information</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_screen_plate_map">public.screen_plate_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_programs">programs</a></h2><p>This table specifies an analysis program registered with OME.  The CATEGORY column is used to group programs by category 
-to organize things for the user.  The MODULE_TYPE and LOCATION column specify what the implementation of the program is - i.e. 
-Perl and OME::Programs::MyModule or Java and org.ome.programs.MyModule or CLI and /usr/local/bin/MyProgram.  
-EXECUTION_INSTRUCTIONS are an XML fragment from the XML OME Module specification that describes how to execute the module.  
-There is only one entry in this table for each program known to OME as opposed to the ANALYSES table, which has one entry per program run.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(40)</td><td>A reference to an external database containing plate information</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_image_screen_info">public.image_screen_info</a></li><li><a href="#table_screen_plate_map">public.screen_plate_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_programs">programs</a></h2><p>This table specifies an analysis program registered with OME.  There 
+is only one entry in this table for each program known to OME, unlike 
+the ANALYSES table, which has one entry per program run.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.programs Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -837,13 +912,31 @@ There is only one entry in this table for each program known to OME as opposed t
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>program_name</td>
                   <td>character varying(64)</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>description</td>
                   <td>text</td><td></td></tr><tr class="tr1"><td></td><td>location</td>
-                  <td>character varying(128)</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>module_type</td>
-                  <td>character varying(128)</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>category</td>
-                  <td>character varying(32)</td><td><i>NOT NULL</i></td></tr><tr class="tr0"><td></td><td>default_iterator</td>
-                  <td>character varying(128)</td><td></td></tr><tr class="tr1"><td></td><td>new_feature_tag</td>
-                  <td>character varying(128)</td><td></td></tr><tr class="tr0"><td></td><td>visual_design</td>
+                  <td>character varying(128)</td><td><i>NOT NULL</i><br><br>The physical location of the module.  This has different meanings for 
+different analysis handlers.  For instance, the 
+OME::Analysis::CLIHandler module type expects this field to be the 
+filename of a command-line executable.  OME::Analysis::PerlHandler 
+expects this to be the name of a Perl class.</td></tr><tr class="tr0"><td></td><td>module_type</td>
+                  <td>character varying(128)</td><td><i>NOT NULL</i><br><br>Specifies the analysis handler used to execute this module.  Separate 
+analysis handlers are written for each &quot;class&quot; of module, e.g., 
+interal Perl script, external command-line program, external SOAP 
+service.  This field should refer to a Perl class, visible to OME, 
+implementing the OME::Analysis::Handler interface.</td></tr><tr class="tr1"><td></td><td>category</td>
+                  <td>character varying(32)</td><td><i>NOT NULL</i><br><br>Groups programs by category to organize things for the user.</td></tr><tr class="tr0"><td></td><td>default_iterator</td>
+                  <td>character varying(128)</td><td>If this module takes in feature-granular inputs, this column 
+specifies which features in the feature hierarchy are presented as 
+inputs to the module.  It can be overridden at chain-design-time via 
+the ANALYSIS_VIEW_NODES.ITERATOR_TAG column.  For more information, 
+see the FEATURES table.</td></tr><tr class="tr1"><td></td><td>new_feature_tag</td>
+                  <td>character varying(128)</td><td>If new features are created by this module, they will be given a tag 
+specified by this column.  They will be children of the features 
+specified by DEFAULT_ITERATOR.  For more information, see the FEATURES 
+table.</td></tr><tr class="tr0"><td></td><td>visual_design</td>
                   <td>text</td><td></td></tr><tr class="tr1"><td></td><td>execution_instructions</td>
-                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analyses">public.analyses</a></li><li><a href="#table_analysis_view_nodes">public.analysis_view_nodes</a></li><li><a href="#table_formal_inputs">public.formal_inputs</a></li><li><a href="#table_formal_outputs">public.formal_outputs</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_project_dataset_map">project_dataset_map</a></h2><p>This table specifies the many-to-many relationship between Datasets and Projects.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>text</td><td>An XML fragment from the XML OME Module specification that describes 
+how to execute the module.  It is used to pass handler-specific 
+parameters to the module&apos;s analysis handler.</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_analyses">public.analyses</a></li><li><a href="#table_analysis_view_nodes">public.analysis_view_nodes</a></li><li><a href="#table_formal_inputs">public.formal_inputs</a></li><li><a href="#table_formal_outputs">public.formal_outputs</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_project_dataset_map">project_dataset_map</a></h2><p>This table specifies the many-to-many relationship between Datasets 
+and Projects.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.project_dataset_map Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -860,8 +953,10 @@ There is only one entry in this table for each program known to OME as opposed t
                     <th>Name</th>
                     <th>Constraint</th>
                     </tr><tr class="tr0"><td>project_dataset_map_pkey</td>
-                      <td>PRIMARY KEY (project_id, dataset_id)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_projects">projects</a></h2><p>A Project is simply a group of Datasets to be used as an organizational aid to the user.  
-Datasets may belong to one or more Projects.  This many-to-many relationship is specified by the PROJECT_DATASET_MAP table.</p><table width="100%" cellspacing="0" cellpadding="3">
+                      <td>PRIMARY KEY (project_id, dataset_id)</td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_projects">projects</a></h2><p>A Project is simply a group of Datasets to be used as an 
+organizational aid to the user.  Datasets may belong to one or more 
+Projects.  This many-to-many relationship is specified by the 
+PROJECT_DATASET_MAP table.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.projects Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -876,8 +971,9 @@ Datasets may belong to one or more Projects.  This many-to-many relationship is 
                   </td><td>group_id</td>
                   <td>oid</td><td></td></tr><tr class="tr0"><td></td><td>view</td>
                   <td>character varying(64)</td><td></td></tr><tr class="tr1"><td></td><td>description</td>
-                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_ome_sessions">public.ome_sessions</a></li><li><a href="#table_project_dataset_map">public.project_dataset_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_repositories">repositories</a></h2><p>OME Image pixels are stored in repository format - a 5-D pixel dump in XYZWT order.  
-The Repositories table maintains directory paths to one or more repositories</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>text</td><td></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_ome_sessions">public.ome_sessions</a></li><li><a href="#table_project_dataset_map">public.project_dataset_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_repositories">repositories</a></h2><p>OME Image pixels are stored in repository format - a 5-D pixel dump 
+in XYZWT order.  The Repositories table maintains directory paths to 
+one or more repositories</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.repositories Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -887,7 +983,8 @@ The Repositories table maintains directory paths to one or more repositories</p>
                 </tr><tr class="tr0"><td></td><td>"path"</td>
                   <td></td><td><i>UNIQUE </i></td></tr><tr class="tr1"><td></td><td>repository_id</td>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr0"><td></td><td>path</td>
-                  <td>character varying(256)</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_images">public.images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_screen_plate_map">screen_plate_map</a></h2><p>This table specifies the many-to-many relationshiop between screens and plates.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(256)</td><td><i>NOT NULL</i></td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_images">public.images</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_screen_plate_map">screen_plate_map</a></h2><p>This table specifies the many-to-many relationshiop between screens 
+and plates.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.screen_plate_map Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -915,9 +1012,11 @@ The Repositories table maintains directory paths to one or more repositories</p>
                   <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td></td><td>name</td>
                   <td>character varying(255)</td><td></td></tr><tr class="tr0"><td></td><td>description</td>
                   <td>text</td><td></td></tr><tr class="tr1"><td></td><td>extern_screen_id</td>
-                  <td>character varying(40)</td><td>A reference to an external database containing screen information</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_screen_plate_map">public.screen_plate_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_view_templates">view_templates</a></h2><p>This table is used to store SQL templates for generating views.  The SQL is stored in the template column and may include 
-variables in the form $(VariableName) that will be substituted by the apropriate value when the view is created. 
-Commonly used variables include $(ExperimenterID), $(ImageID), $(ProjectID), $(DatasetID), etc.</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>character varying(40)</td><td>A reference to an external database containing screen information</td></tr></table><p>Tables referencing this one via Foreign Key Constraints:</p><ul><li><a href="#table_screen_plate_map">public.screen_plate_map</a></li></ul><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_view_templates">view_templates</a></h2><p>This table is used to store SQL templates for generating views.  The 
+SQL is stored in the template column and may include variables in the 
+form $(VariableName) that will be substituted by the apropriate value 
+when the view is created.  Commonly used variables include 
+$(ExperimenterID), $(ImageID), $(ProjectID), $(DatasetID), etc.</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.view_templates Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -932,7 +1031,30 @@ Commonly used variables include $(ExperimenterID), $(ImageID), $(ProjectID), $(D
                   </td><td>owner_id</td>
                   <td>oid</td><td></td></tr><tr class="tr1"><td><a href="#table_groups">public -> groups</a>
                   </td><td>group_id</td>
-                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_xy_softworx_info">xy_softworx_info</a></h2><p>This table stores SoftWorx (API) specific information about each plane in the 5-D image</p><table width="100%" cellspacing="0" cellpadding="3">
+                  <td>oid</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_xy_image_info">xy_image_info</a></h2><table width="100%" cellspacing="0" cellpadding="3">
+                <caption>public.xy_image_info Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr><tr class="tr0"><td></td><td>attribute_id</td>
+                  <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td><a href="#table_analyses">public -> analyses</a>
+                  </td><td>analysis_id</td>
+                  <td>oid</td><td></td></tr><tr class="tr0"><td><a href="#table_images">public -> images</a>
+                  </td><td>image_id</td>
+                  <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>the_z</td>
+                  <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>the_w</td>
+                  <td>integer</td><td></td></tr><tr class="tr1"><td></td><td>the_t</td>
+                  <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>min</td>
+                  <td>integer</td><td></td></tr><tr class="tr1"><td></td><td>max</td>
+                  <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>mean</td>
+                  <td>real</td><td></td></tr><tr class="tr1"><td></td><td>geomean</td>
+                  <td>real</td><td></td></tr><tr class="tr0"><td></td><td>sigma</td>
+                  <td>real</td><td></td></tr><tr class="tr1"><td></td><td>centroid_x</td>
+                  <td>real</td><td></td></tr><tr class="tr0"><td></td><td>centroid_y</td>
+                  <td>real</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_xy_softworx_info">xy_softworx_info</a></h2><p>This table stores SoftWorx (API) specific information about each 
+plane in the 5-D image</p><table width="100%" cellspacing="0" cellpadding="3">
                 <caption>public.xy_softworx_info Structure</caption>
                 <tr>
                 <th>F-Key</th>
@@ -949,4 +1071,26 @@ Commonly used variables include $(ExperimenterID), $(ImageID), $(ProjectID), $(D
                   <td>integer</td><td></td></tr><tr class="tr1"><td></td><td>zsection</td>
                   <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>photosensor_reading</td>
                   <td>double precision</td><td></td></tr><tr class="tr1"><td></td><td>inten_scaling</td>
-                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Function: <a href="#group_public">public</a>.<a name="function_oid( bigint )">oid( bigint )</a></h2><pre>NO COMMENT</pre><p class="w3ref"><a href="http://validator.w3.org/check/referer">W3C HTML 4.01 Strict</a></p></body></html>
+                  <td>double precision</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Table: <a href="#group_public">public</a>.<a name="table_xyz_image_info">xyz_image_info</a></h2><table width="100%" cellspacing="0" cellpadding="3">
+                <caption>public.xyz_image_info Structure</caption>
+                <tr>
+                <th>F-Key</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Description</th>
+                </tr><tr class="tr0"><td></td><td>attribute_id</td>
+                  <td>serial oid</td><td><i>NOT NULL PRIMARY KEY </i></td></tr><tr class="tr1"><td><a href="#table_analyses">public -> analyses</a>
+                  </td><td>analysis_id</td>
+                  <td>oid</td><td></td></tr><tr class="tr0"><td><a href="#table_images">public -> images</a>
+                  </td><td>image_id</td>
+                  <td>oid</td><td><i>NOT NULL</i></td></tr><tr class="tr1"><td></td><td>the_w</td>
+                  <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>the_t</td>
+                  <td>integer</td><td></td></tr><tr class="tr1"><td></td><td>min</td>
+                  <td>integer</td><td></td></tr><tr class="tr0"><td></td><td>max</td>
+                  <td>integer</td><td></td></tr><tr class="tr1"><td></td><td>mean</td>
+                  <td>real</td><td></td></tr><tr class="tr0"><td></td><td>geomean</td>
+                  <td>real</td><td></td></tr><tr class="tr1"><td></td><td>sigma</td>
+                  <td>real</td><td></td></tr><tr class="tr0"><td></td><td>centroid_x</td>
+                  <td>real</td><td></td></tr><tr class="tr1"><td></td><td>centroid_y</td>
+                  <td>real</td><td></td></tr><tr class="tr0"><td></td><td>centroid_z</td>
+                  <td>real</td><td></td></tr></table><p><a href="#index">Index</a> - <a href="#group_public">Schema public</a></p><hr><h2>Function: <a href="#group_public">public</a>.<a name="function_oid( bigint )">oid( bigint )</a></h2><pre>NO COMMENT</pre><p class="w3ref"><a href="http://validator.w3.org/check/referer">W3C HTML 4.01 Strict</a></p></body></html>
