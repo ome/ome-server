@@ -75,6 +75,7 @@ public class PParamLink extends  PLink {
 	
 	public PParamLink(PFormalInput in,PFormalOutput out) {
 		super();
+		System.err.println("link between parameters");
 		this.start = in;
 		this.end = out;
 		start.addNodeEventListener(this);
@@ -106,11 +107,13 @@ public class PParamLink extends  PLink {
 
 	private void setStartPoint() {
 		getEndPointCoords(start);
+		//System.err.println("start of pparamlink is "+point.getX()+","+point.getY());
 		setStartCoords((float)point.getX(),(float) point.getY());
 	}
 	
 	private void setEndPoint() {
 		getEndPointCoords(end);
+		//System.err.println("end of pparamlink is "+point.getX()+","+point.getY());
 		setEndCoords((float) point.getX(),(float) point.getY());
 	}
 		
@@ -124,26 +127,26 @@ public class PParamLink extends  PLink {
 	
 	protected void setLine() {
 		double theta;
+		Point2D first;
+		Point2D second;
 		super.setLine();
 		
 		if ( start instanceof PFormalInput) {
 			// in this case, we started at the input and drew back to output
 			// arrow should go from point 1-point 0
-			Point2D first = (Point2D) points.get(1);
-			Point2D second = (Point2D) points.get(0);
-			theta = getAngle((float) first.getX(),(float)first.getY(),
-						(float)second.getX(),(float)second.getY());
-	
-			drawLinkEnd((float) second.getX(),(float)second.getY(),theta);
+		//	System.err.println("went from end to start");
+			first = (Point2D) points.get(1);
+			second = (Point2D) points.get(0);	
 		}
 		else {
 			int n = points.size();
-			Point2D first = (Point2D) points.get(n-2);
-			Point2D second = (Point2D) points.get(n-1);
-			theta = getAngle((float) first.getX(),(float)first.getY(),
-					(float)second.getX(),(float)second.getY());
-			drawLinkEnd((float) second.getX(),(float)second.getY(),theta); 
+			first = (Point2D) points.get(n-2);
+			second = (Point2D) points.get(n-1);
 		}
+		theta = getAngle((float) first.getX(),(float)first.getY(),
+							(float)second.getX(),(float)second.getY());
+		//System.err.println("ending link at "+second.getX()+","+second.getY());
+		drawLinkEnd((float) second.getX(),(float)second.getY(),theta);
 	}
 
 
