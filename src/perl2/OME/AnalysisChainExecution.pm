@@ -1,4 +1,4 @@
-# OME/AnalysisExecution.pm
+# OME/AnalysisChainExecution.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -22,20 +22,20 @@ package OME::AnalysisChainExecution;
 
 =head1 NAME
 
-OME::AnalysisExecution - execution of an module_execution chain
+OME::AnalysisChainExecution - execution of an module_execution chain
 
-OME::AnalysisExecution::NodeExecution - execution of one node in an
+OME::AnalysisChainExecution::NodeExecution - execution of one node in an
 analysis chain
 
 =head1 DESCRIPTION
 
-The C<AnalysisExecution> class represents an execution of an OME
+The C<AnalysisChainExecution> class represents an execution of an OME
 analysis chain against a dataset of images.  The
-C<AnalysisExecution::NodeExecution> class represents an execution of
+C<AnalysisChainExecution::NodeExecution> class represents an execution of
 each node in the chain.  Each actual execution of the chain is
-represented by exactly one C<AnalysisExecution>, and each execution of
+represented by exactly one C<AnalysisChainExecution>, and each execution of
 a node is represented by exactly one
-C<AnalysisExecution::NodeExecution>, even if the results of a module
+C<AnalysisChainExecution::NodeExecution>, even if the results of a module
 execution are reused.
 
 =cut
@@ -59,12 +59,12 @@ __PACKAGE__->columns(Essential => qw(analysis_chain_id dataset_id
 __PACKAGE__->hasa('OME::AnalysisChain' => qw(analysis_chain_id));
 __PACKAGE__->hasa('OME::Dataset' => qw(dataset_id));
 __PACKAGE__->has_many('node_executions',
-                      'OME::AnalysisExecution::NodeExecution' =>
+                      'OME::AnalysisChainExecution::NodeExecution' =>
                       qw(analysis_chain_execution_id));
 
-=head1 METHODS (C<AnalysisExecution>)
+=head1 METHODS (C<AnalysisChainExecution>)
 
-The following methods are available to C<AnalysisExecution> in
+The following methods are available to C<AnalysisChainExecution> in
 addition to those defined by L<OME::DBObject>.
 
 =head2 analysis_chain
@@ -72,7 +72,7 @@ addition to those defined by L<OME::DBObject>.
 	my $analysis_chain = $execution->analysis_chain();
 	$execution->analysis_chain($analysis_chain);
 
-Returns or sets the module_execution chain which was executed.
+Returns or sets the analysis chain which was executed.
 
 =head2 dataset
 
@@ -102,7 +102,8 @@ Returns or sets when the execution occurred.
 	my $node_iterator = $execution->node_executions();
 
 Returns or iterates, depending on context, a list of all of the
-C<AnalysisExecution::NodeExecutions> associated with this module_execution.
+C<AnalysisChainExecution::NodeExecutions> associated with this chain
+execution.
 
 =cut
 
@@ -145,10 +146,10 @@ __PACKAGE__->hasa('OME::AnalysisChainExecution' => qw(analysis_chain_execution_i
 __PACKAGE__->hasa('OME::AnalysisChain::Node' => qw(analysis_chain_node_id));
 __PACKAGE__->hasa('OME::ModuleExecution' => qw(module_execution_id));
 
-=head1 METHODS (C<AnalysisExecution::NodeExecution>)
+=head1 METHODS (C<AnalysisChainExecution::NodeExecution>)
 
 The following methods are available to
-C<AnalysisExecution::NodeExecution> in addition to those defined by
+C<AnalysisChainExecution::NodeExecution> in addition to those defined by
 L<OME::DBObject>.
 
 =head2 analysis_chain_execution
@@ -156,15 +157,15 @@ L<OME::DBObject>.
 	my $analysis_chain_execution = $node_execution->analysis_chain_execution();
 	$node_execution->analysis_chain_execution($analysis_chain_execution);
 
-Returns or sets the module_execution execution that this node execution
-belongs to.
+Returns or sets the chain execution that this node execution belongs
+to.
 
 =head2 analysis_chain_node
 
 	my $analysis_chain_node = $node_execution->analysis_chain_node();
 	$node_execution->analysis_chain_node($analysis_chain_node);
 
-Returns or sets the module_execution chain node that was executed.
+Returns or sets the analysis chain node that was executed.
 
 =head2 module_execution
 

@@ -29,7 +29,9 @@ OME::Dataset - a collection of images
 The C<Dataset> class represents OME datasets, which are a collection
 of images.  Datasets and images form a many-to-many map, as do
 datasets and projects.  A user's session usually has a single dataset
-selected as the "active dataset".
+selected as the "active dataset".  Datasets also form the unit of
+analysis for the OME analysis engine; analysis chains are
+batch-execute against all of the images in a dataset.
 
 =cut
 
@@ -73,7 +75,7 @@ Returns or sets the description of this dataset.
 
 Returns or sets whether this dataset is locked.  A dataset must be
 locked once it is analyzed; nothing is allowed to add or remove images
-from a locked dataset.  (It's other properties, such and name and
+from a locked dataset.  (Its other properties, such and name and
 description, however, can still be modified.)
 
 =head2 owner

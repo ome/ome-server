@@ -33,12 +33,19 @@ OME::Feature - subsets of an image
 
 =head1 DESCRIPTION
 
-The C<Feature> class represents OME features, which are subdivisions
-of an image.  The features of an image form a tree, with the image
+The C<Feature> class represents OME features, which are analytic
+subdivisions of an image.  Often, features will correspond to actual
+pixel regions within an image, specified by a coordinate bounds or
+image mask.  However, this does not have to be the case; features can
+be entirely logical divisions in an image.  In a practical sense, they
+are just used to group attributes which, together, refer to the same
+portion of an image, but not to the image a whole.
+
+The features of an image form a tree, with the image
 itself at the root.  (Features right below the image in the tree will
 have C<undef> for their parent feature link.)  Features also have a
-tag, which allow similar kinds of features (cells, nuclei, etc.) to be
-grouped for analysis.
+tag, which allows similar kinds of features (cells, nuclei, etc.) to
+be grouped for analysis.
 
 =cut
 

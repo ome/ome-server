@@ -315,6 +315,7 @@ addPrototype("OME::Session","project",['OME::Project'],['OME::Project']);
 addPrototype("OME::Session","dataset",['OME::Dataset'],['OME::Dataset']);
 
 addPrototype("OME::Factory","newObject",['$','%'],['OME::DBObject']);
+addPrototype("OME::Factory","maybeNewObject",['$','%'],['OME::DBObject']);
 addPrototype("OME::Factory","loadObject",['$','$'],['OME::DBObject']);
 addPrototype("OME::Factory","objectExists",['$','*'],['$']);
 addPrototype("OME::Factory","findObject",['$','*'],['OME::DBObject']);

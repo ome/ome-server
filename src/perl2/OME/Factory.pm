@@ -63,11 +63,11 @@ L<OME::DBObject|OME::DBObject> module for more details.
 Several of the OME::Factory methods make a distinction between
 "objects" and "attributes".  In this convention, an "object" is
 defined by an OME::DBObject subclass included in the OME source tree.
-All of the core OME database tables (EXPERIMENTERS, PROJECTS,
-DATASETS, IMAGES, etc.) are "objects", and have predefined
-OME::DBObject subclasses (OME::Project, OME::Dataset, OME::Image, etc.).
-Methods such as newObject and loadObject operate on these core tables, 
-and identify the specific OME::DBObject subclass by name.
+All of the core OME database tables (PROJECTS, DATASETS, IMAGES, etc.)
+are "objects", and have predefined OME::DBObject subclasses
+(OME::Project, OME::Dataset, OME::Image, etc.).  Methods such as
+newObject and loadObject operate on these core tables, and identify
+the specific OME::DBObject subclass by name.
 
 Attribute tables, however, cannot have predefined OME::DBObject
 subclasses, since the semantic types available in OME can vary from
@@ -122,13 +122,14 @@ OME::Analysis::AnalysisEngine.
 Creates a new object with initial values specified by $dataHash.  The
 keys of $dataHash should be columns in the corresponding database
 table.  (By convention, foreign key fields should be referred to
-without any "_id" suffix.)  The values of $dataHash should be the
-initial values for the respective columns.  The $dataHash should not
-contain a value for the primary key if the underlying table has a
-corresponding sequence; Class::DBI will fill in the primary key.  Note
-that this method creates a row in the database corresponding to the
-new object, so any columns defined to be NOT NULL I<must> be specified
-in $dataHash, or DBI will throw an error.
+without any "_id" suffix if they are being specified by reference;
+with the suffix if they are being specified by ID number.)  The values
+of $dataHash should be the initial values for the respective columns.
+The $dataHash should not contain a value for the primary key if the
+underlying table has a corresponding sequence; Class::DBI will fill in
+the primary key.  Note that this method creates a row in the database
+corresponding to the new object, so any columns defined to be NOT NULL
+I<must> be specified in $dataHash, or DBI will throw an error.
 
 =head2 maybeNewObject
 
@@ -223,7 +224,7 @@ error will be thrown and no new attributes will be created.
 	my $object = $factory->loadObject($className,$id);
 
 Returns a DBObject instance corresponding to the row in $className's
-table with $id for its primary key.  Returns B<undef> if there is now
+table with $id for its primary key.  Returns B<undef> if there is no
 row with that primary key.
 
 =head2 loadAttribute
@@ -306,7 +307,7 @@ operator for comparison, rather than the = operator.
 	my @attributes = $factory->findAttributes($semanticType,$target);
 	# Do something with the attributes all at once
 
-Finds the attribute of a given type referring to a given target.  As
+Finds the attributes of a given type referring to a given target.  As
 in the case of newAttribute, $semanticType can be either an semantic
 type name or an instance of OME::SemanticType.  The target must be an
 OME::Dataset, OME::Image, or OME::Feature object, depending on the
