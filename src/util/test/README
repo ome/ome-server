@@ -1,0 +1,73 @@
+These scripts perform tests of the OME system
+The scripts use the Expect perl module to exercise parts of OME
+acessible by the command line. 
+
+ome-smoke-test.sh
+  Example:
+    sudo ./ome-smoke-test.sh igg ~igg/OME/OME ~igg/OME/OME-WEBSITE/TestImages 3\
+    "--to=igg@helix.nih.gov" "/Users/igg/OME/OME/src/util/misc/SMTPclient.pl \
+    --stdin --from=igg@nih.gov --host=helix.nih.gov --subject="
+
+  This script uses the install.pl and import.pl scripts to install a fresh DB
+  and import a directory full of images into it.  It relies on an existing
+  install environment in /etc/ome-install.store.  The following changes will be
+  made for testing purposes:
+    $e->{DB_conf}->{Name}=$TEST_DB
+    $e->{admin_user}=$OME_ADMIN
+    $e->{ome_user}->{OMEName}=$OME_ADMIN
+  This script requires the following parameters to run:
+  OME_ADMIN SOURCE_DIR IMAGE_DIR EXPECT_IMAGES [MAIL_TO] [MAIL_PROGRAM]
+  OME_ADMIN:
+    This is a unix user, postgres user and ome experimenter, commonly known as
+    the ome admin user.  This username will be used (with "su -") to run the ome
+    import command, postgres commands (dropdb, etc), and cvs update on the
+    SOURCE_DIR and IMAGE_DIR directories.
+    The install environment will be modified to set this username for
+    the admin user and the username (OMEName) of the ome experimenter.
+  SOURCE_DIR:
+    A cvs update will be run in this directory, then the install.pl inside it.
+  IMAGE_DIR:
+    A cvs update will be run in this directory, and the files inside it sent to
+    "ome import"
+  EXPECT_IMAGES:
+    The number of images in the $IMAGE_DIR
+  MAIL_TO and MAIL_PROGRAM
+    If MAIL_TO is set, email will be sent with the following command using a pipe
+    or input redirection:
+      $MAIL_PROGRAM"some subject" $MAIL_TO
+    For UNIX mail (default)
+      MAIL_PROGRAM="mail -s"
+      MAIL_TO="someuser@somehost.com"
+    For SMTPclient (in src/util/misc)
+      MAIL_PROGRAM="$SOURCE_DIR/src/util/misc/SMTPclient.pl --stdin --from=igg@nih.gov --host=helix.nih.gov --subject="
+      MAIL_TO='--to=ome-nitpick@lists.openmicroscopy.org.uk'
+    For no mail, do not specify either parameter
+
+
+install.pl
+  Performs an install of a fresh DB.  It uses settings already present in
+  /etc/ome-install.store and uses Expect to set the password for the initial user
+  The initial experimenter should already be set in /etc/ome-install.env.
+  This will will *not* be set to the OME_ADMIN parameter to ome-smoke-test.sh.
+  The user and password are sent as parameters, but currently only the
+  password is used.
+
+import.pl
+  Import files provided as the arguments using the 'ome import' command.  Logs in
+  to the DB using the supplied user and password arguments
+
+Required perl modules:
+  Expect
+  IO::Tty
+
+These scripts also send mail in one of three ways - regular unix mail, or using
+a script to drive Mail.app in OS X or as an SMTP client using the supplied script
+SMPTPclient.pl.  SMTPclient.pl allows you to specify authentication parameters
+in order to send mail by talking to an SMTP server directly.
+
+SMTPclient.pl requires the following perl modules:
+  Net::SSLeay      Net_SSLeay.pm-1.25
+  IO::Socket::SSL  IO-Socket-SSL-0.96
+  Digest           Digest-1.08
+  Digest::SHA1     Digest-SHA1-2.10
+  Digest::HMAC     Digest-HMAC-1.01
