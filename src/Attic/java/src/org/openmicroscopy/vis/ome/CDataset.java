@@ -80,7 +80,7 @@ public class CDataset extends RemoteDataset implements Comparable{
 	
 	
 	
-	public  synchronized void loadImages(Connection connection) {
+	public  void loadImages(Connection connection) {
 		//System.err.println("Dataset "+getID()+", loading images");
 		if (images.size() > 0)  {
 			//System.err.println("images already loaded...");
@@ -100,7 +100,7 @@ public class CDataset extends RemoteDataset implements Comparable{
 		projectHash = new HashSet(projects);
 	}
 	
-	public synchronized Collection getCachedImages(Connection connection) {
+	public Collection getCachedImages(Connection connection) {
 		if (images.size() == 0)
 			loadImages(connection);
 		return images;
@@ -132,7 +132,10 @@ public class CDataset extends RemoteDataset implements Comparable{
 	
 	
 	public boolean hasProject(CProject p) {
-		return projectHash.contains(p);
+		if (projectHash == null)
+			return false;
+		else
+			return projectHash.contains(p);
 	}
 	
 	/**
