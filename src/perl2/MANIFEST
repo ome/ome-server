@@ -1,7 +1,6 @@
 LICENSE
 LogService.pl
 MANIFEST
-MANIFEST.SKIP
 Makefile.PL
 OME-LS.conf
 OME.pm
