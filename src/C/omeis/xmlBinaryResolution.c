@@ -40,48 +40,14 @@
 
 	xmlBinaryResolution.c
 	
-	Originally written: May 16, 2003
-	
-****
-
-	Intent: The intent of this program is to extract the contents of <BinData>
-	from an xml document following the OME schema AND replace the 
-	<BinData>...</BinData> element with an <External .../> element.
-
-	Usage: Execute the program with no parameters to see the usage message.
+	Intent: Resolve binary data, both embedded and referenced, from an ome file.
 
 	Libraries: This program uses libxml2's SAX library. SAX is a stream based
 	xml parser, so memory usage DOES NOT inflate when file size inflates. 
 	YOU MUST INSTALL libxml2 BEFORE THIS WILL COMPILE.
-	Memory usage on initial tests was the same for a 100 Meg and a 1 Gig file.
+	It also uses zlib and bzip2 compression libraries.
 
-	Behavior: The modified xml document will be spewed to stdout. <BinData>s 
-	under <Pixels> will be coalated into a repository style pixel dump and put
-	in the pixels directory. All other <BinData>s will be spewed to the scratch
-	directory. The extracted BinData contents will be spewed to 
-	separate files (1 per BinData) in that directory. See Usage for more 
-	information about the directory. The path to the extracted file will be
-	specified in the href attribute of the <External> element that replaces the
-	<BinData> element. The <External> tag will look like this:
-		<External xmlns="BinNS" href="path/to/local/file" SHA1=""/>
-	Notice it is missing the SHA1 attribute. That will distiguish these 
-	converted BinData elements from normal <External> elements. The path 
-	specified in href will be an absolute path iff this program is passed
-	an absolute path to a scratch space. I highly recommend using an absolute
-	path. The namespace, "BinNS" is a #defined constant. Look in the define 
-	section below to see what it will evaluate to.
-	If the Compression attribute is not specified in <BinData>, it is assumed 
-	to use no compression.
-
-	Compilation notes: Use the xml2-config utility to find the location of the
-	libxml2 libraries. The flags --libs and --cflags cause xml2-config to 
-	produce the proper flags to pass to the compiler. The one line compilation
-	command is:
-
-		gcc `xml2-config --libs --cflags` -I/sw/include/ -L/sw/lib/ -lz -lbz2 \
-		-ltiff extractBinData.c base64.c ../perl2/OME/Image/Pix/libpix.c \
-		b64z_lib.c -o extractBinData
-
+	Behavior: 
 
 ******************************************************************************/
 
@@ -92,7 +58,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "xmlBinaryResolution.h"
+#include "fopen.h"
 
 /******************************************************************************
 *
@@ -125,12 +93,13 @@ static void xmlBinaryResolutionEndElement(ParserState *state, const xmlChar *nam
 static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch, int len);
 static void BinDataWarning( ParserState *state, const char *msg );
 static void BinDataError( ParserState *state, const char *msg );
-static void BinDataFatalError( ParserState *state, const char *msg );
+static void BinDataFatalError( ParserState *state, const char *msg ) ;
 
 /* Utility functions: */
 void print_element(const xmlChar *name, const xmlChar **attrs);
 int increment_plane_indexes( int* a, int* b, int* c, int aMax, int bMax, int cMax );
-void mem_error( char*msg );
+
+
 
 /******************************************************************************
 *
@@ -178,6 +147,10 @@ int parse_xml_file(const char *filename) {
 		(warningSAXFunc)BinDataWarning, /* warning */
 		(errorSAXFunc)BinDataError, /* error */
 		(fatalErrorSAXFunc)BinDataFatalError, /* fatalError */
+		0, /* getParameterEntitySAXFunc */
+		0, /* cdataBlockSAXFunc */
+		0, /* externalSubsetSAXFunc */
+		0, /* initialized */
 	};
 
 	if (xmlSAXUserParseFile(&xmlBinaryResolutionSAXParser, &my_state, filename) < 0) {
@@ -212,11 +185,6 @@ int increment_plane_indexes( int* a, int* b, int* c, int aMax, int bMax, int cMa
 	return 0;
 }
 
-void mem_error( char*msg ) { 
-	fprintf( stderr, "Error! unable to allocate memory for xmlBinaryResolution.c\n%s", msg );
-	exit(-1);
-}
-
 /******************************************************************************
 *
 *	SAX callback functions
@@ -229,7 +197,7 @@ static void xmlBinaryResolutionStartDocument(ParserState *state) {
 	state->nOutputFiles            = 0;
 	state->elementInfo             = NULL;
 	state->binDataInfo             = (BinDataInfo *) malloc( sizeof( BinDataInfo ) );
-	if( !( state->binDataInfo ) ) mem_error( "" );
+	assert( state->binDataInfo != NULL);
 
 	state->binDataInfo->BinDataOut    = NULL;
 	state->binDataInfo->strm = NULL;
@@ -242,7 +210,7 @@ static void xmlBinaryResolutionEndDocument( ParserState *state ) {
 
 
 static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *name, const xmlChar **attrs) {
-	char *localName, *binDataOutPath;
+	char *localName;
 	StructElementInfo* elementInfo;
 	int i, pipeThisElementThrough;
 	
@@ -293,7 +261,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 			for( i=0; attrs[i] != NULL; i+=2) {
 				if( strcmp( attrs[i], CompressionAttr ) == 0 ) {
 					state->binDataInfo->compression = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1) );
-					if( !(state->binDataInfo->compression) ) mem_error("");
+					assert( state->binDataInfo->compression != NULL);
 					strcpy( state->binDataInfo->compression, attrs[i+1] );
 					break;
 				}
@@ -366,7 +334,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 		*/
 		/* data extraction */
 		state->pixelInfo = (PixelInfo *) malloc( sizeof( PixelInfo ) );
-		if( !(state->pixelInfo) ) mem_error("");
+		assert( state->pixelInfo != NULL);
 		if(attrs == NULL) {
 			fprintf( stderr, "Error! Pixels element has no attributes!\n" );
 			exit(-1);
@@ -391,11 +359,11 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 				state->pixelInfo->T = atoi( attrs[i+1] );
 			} else if( strcmp( attrs[i], "DimensionOrder" ) == 0 ) {
 				state->pixelInfo->dimOrder = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
-				if( !(state->pixelInfo->dimOrder) ) mem_error("");
+				assert( state->pixelInfo->dimOrder != NULL);
 				strcpy( state->pixelInfo->dimOrder, attrs[i+1] );
 			} else if( strcmp( attrs[i], "PixelType" ) == 0 ) {
 				state->pixelInfo->pixelType = (char *) malloc( sizeof(char) * ( strlen(attrs[i+1]) + 1 ) );
-				if( !(state->pixelInfo->pixelType) ) mem_error("");
+				assert( state->pixelInfo->pixelType != NULL);
 				strcpy( state->pixelInfo->pixelType, attrs[i+1] );
 			} else if( strcmp( attrs[i], "BigEndian" ) == 0 ) {
 				if( strcmp( attrs[i+1], "true" ) == 0 || strcmp( attrs[i+1], "1" ) == 0 )
@@ -464,7 +432,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 
 		state->pixelInfo->planeSize = state->pixelInfo->X * state->pixelInfo->Y * (int) state->pixelInfo->bpp;
 		state->pixelInfo->binDataBuf = (unsigned char *) malloc( state->pixelInfo->planeSize + 2);
-		if( !(state->pixelInfo->binDataBuf) ) mem_error("");
+		assert( state->pixelInfo->binDataBuf != NULL);
 		/*
 		* END "Initialization for <BinData> processing."
 		*
@@ -534,7 +502,7 @@ static void xmlBinaryResolutionStartElement(ParserState *state, const xmlChar *n
 	if(	pipeThisElementThrough == 1 ) {
 		/* Stack maintence. Necessary for closing tags properly. */
 		elementInfo             = (StructElementInfo *) malloc( sizeof(StructElementInfo) );
-		if( !(elementInfo) ) mem_error("");
+		assert( elementInfo != NULL);
 		elementInfo->hasContent = 0;
 		elementInfo->prev       = state->elementInfo;
 		elementInfo->tagOpen    = 1;
@@ -772,7 +740,7 @@ static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch,
 	 	state->binDataInfo->strm->avail_in  = len;
 
 		buf = (unsigned char *) malloc( SIZEOF_FILE_OUT_BUF );
-		if( !buf ) mem_error("");
+		assert( buf != NULL);
 		
 	 	state->binDataInfo->strm->next_out  = buf;
 	 	state->binDataInfo->strm->avail_out = SIZEOF_FILE_OUT_BUF;
@@ -827,14 +795,15 @@ static void xmlBinaryResolutionCharacters(ParserState *state, const xmlChar *ch,
 *
 ******************************************************************************/
 static void BinDataWarning( ParserState *state, const char *msg ) {
-	fprintf( stderr, "The SAX parser reports this warning message:\n%s", msg );
+	fprintf( stderr, "The SAX parser reports this warning message:\n%s\nParser is in state: %i\n", msg, state->state );
 }
 static void BinDataError( ParserState *state, const char *msg ) {
-	fprintf( stderr, "Terminating program. The SAX parser reports this error message:\n%s", msg );
-	exit(-1);
+	fprintf( stderr, "Terminating program. The SAX parser reports this error message:\n%s\nParser is in state: %i\n", msg, state->state );
+	assert( 0 );
 }
 static void BinDataFatalError( ParserState *state, const char *msg ) {
-	fprintf( stderr, "Terminating program. The SAX parser reports this *FATAL* error message:\n%s", msg );
-	exit(-1);
+	fprintf( stderr, "Terminating program. The SAX parser reports this *FATAL* error message:\n%s\nParser is in state: %i\n", msg, state->state );
+	assert( 0 );
+	return;
 }
 
