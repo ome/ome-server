@@ -129,12 +129,18 @@ sub renderSingle {
 			"OME::ModuleExecution::ActualInput", 
 			module_execution => $import_mex
 		);
-		my $original_file = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
+		my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 			$ai->input_module_execution,
 			$ai->formal_input()->semantic_type
-		)->[0];
-		my $originalFile_url = $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-		$record->{ 'name' } = $q->a( { -href => $originalFile_url }, $obj->name() );
+		);
+		my $img_name = $obj->name();
+		$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
+			if( scalar( @$original_files ) > 1);
+		my $original_file = $original_files->[0];
+		if( $original_file ) { 
+			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
+			$record->{ 'name' } = $q->a( { -href => $originalFile_url }, $obj->name() );
+		}
 	}
 	
 	return %$record if wantarray;
