@@ -74,10 +74,13 @@ import java.util.List;
 		System.err.println("nodes initialized");
 		layerNodes();
 		System.err.println("nodes layered");
+		dumpLayers();
 		makeProper();
 		System.err.println("GRAPHS HAVE BEEN MADE PROPER");
-		reduceCrossings();
 		dumpLayers();
+		reduceCrossings();
+		System.err.println("CROSSINGS REDUCED");
+		dumpLayers(); 
 	}
 	
 	
@@ -88,6 +91,8 @@ import java.util.List;
 		Iterator iter = nodes.iterator();
 		while (iter.hasNext()) {
 			CNode node = (CNode) iter.next();
+			System.err.println("building link lists for "+node);
+			System.err.println(" ..."+node.getModule().getName());
 			node.buildLinkLists();
 		}
 	}
@@ -123,6 +128,7 @@ import java.util.List;
 				
 				System.err.println("finding successors for "+
 					node.getModule().getName());	
+				System.err.println("...."+node);
 				Collection succs = node.getSuccessors();	
 						
 					
@@ -140,7 +146,6 @@ import java.util.List;
 				if (ok == true) {
 					//no unassigned successors, so assign this node to
 					// the current layer
-					// Note.out(this, "layer "+currentLayer+" has node "+c);
 					layer.addElement(node);
 					node.setLayer(currentLayer);
 					numAssigned++;
@@ -326,6 +331,35 @@ import java.util.List;
 			node.setPosInLayer(pos);
 			pos +=1.0;
 		}
+	}
+	
+	public int getLayerCount() {
+		return layers.size();
+	}
+	
+	private Vector getLayer(int i) {
+		if (i < layers.size())
+			return (Vector) layers.elementAt(i);
+		else
+			return (Vector) null;
+	}
+
+	public int getLayerSize(int i) {
+		Vector v = getLayer(i);
+		if (v != null) {
+			return v.size();
+		}
+		else 
+			return -1;
+	}
+	
+	public CNode getLayerNode(int i, int j) {
+		CNode node = null;
+		Vector v = getLayer(i);
+		if (v != null) {
+			node = (CNode) v.elementAt(j);
+		}
+		return node;
 	}
 	
 	// stub code...
