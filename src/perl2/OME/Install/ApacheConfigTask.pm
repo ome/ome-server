@@ -222,6 +222,8 @@ sub getApacheInfo {
 	my ($mod_loaded,$mod_added,$mod_loaded_off,$mod_added_off);
 	my @include_paths;
 
+	$omeConf = $apache_info->{'ome_conf'};
+
 	my @search_items = (
 		# XXX Example
 		#{
@@ -230,55 +232,64 @@ sub getApacheInfo {
 		#},
 		{
 			# The apache server's "ServerRoot" (root for config files)
-			search_elem => \$apache_info->{ServerRoot},
-			regex       => '^\s*ServerRoot\s+["]*([^"|\n]+)["]*',
+			search_elem => \$apache_info->{'ServerRoot'},
+			regex       => qr/^\s*ServerRoot\s+["]*([^"|\n]+)["]*/,
 		},
 		{
 			# Conf file has an ome conf
-			search_elem => \$apache_info->{hasOMEinc},
-			regex       => '\s*Include $omeConf',
+			search_elem => \$apache_info->{'hasOMEinc'},
+			regex       => qr/\s*Include $omeConf/,
 		},
 		{
 			# Conf file has mod_perl loaded
 			search_elem => \$mod_loaded,
-			regex       => '^\s*LoadModule\s+perl_module',
+			regex       => qr/^\s*LoadModule\s+perl_module/,
 		},
 		{
 			# Conf file has mod_perl added
 			search_elem => \$mod_added,
-			regex       => '^\s*AddModule\s+mod_perl.c',
+			regex       => qr/^\s*AddModule\s+mod_perl.c/,
 		},
 		{
 			# Conf file has mod_perl loader commented out (off)
 			search_elem => \$mod_loaded_off,
-			regex       => '#\s*LoadModule\s+perl_module',
+			regex       => qr/#\s*LoadModule\s+perl_module/,
 		},
 		{
 			# Conf file has mod_perl add commented out (off)
 			search_elem => \$mod_added_off,
-			regex       => '#\s*AddModule\s+mod_perl.c',
+			regex       => qr/#\s*AddModule\s+mod_perl.c/,
 		},
 		{
 			# Document root
-			search_elem => \$apache_info->{DocumentRoot},
-			regex       => '^\s*DocumentRoot\s+["]*([^"|\n]+)["]*',
+			search_elem => \$apache_info->{'DocumentRoot'},
+			regex       => qr/^\s*DocumentRoot\s+["]*([^"|\n]+)["]*/,
 		},
 		{
 			# cgi-bin script alias location
-			search_elem => \$apache_info->{cgi_bin},
-			regex       => '^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"|\n]+)["]*',
+			search_elem => \$apache_info->{'cgi_bin'},
+			regex       => qr/^\s*ScriptAlias\s+\/cgi-bin\/\s+["]*([^"|\n]+)["]*/,
 		},
 	);
 
+	my $include_set = new IncludeSet;
+
+	# Nested anonymous subroutine for searching conf files
 	my $search_func = sub {
 		local (*FILE) = shift;
 
 		while (<FILE>) {
+			# Check each of our search_item regex's
 			foreach my $search_item (@search_items) {
-				if ($_ =~ /$search_item->{'regex'}/) {
+				if ($_ =~ $search_item->{'regex'}) {
 					# Set variable with regex data or flag to 1
 					${$search_item->{'search_elem'}} = $1 || 1;
 				}
+			}
+
+			# Add to our include_set if we don't have it already
+			if ($_ =~ /^\s*Include\s(.*)/ and $1 ne $omeConf) {
+				$include_set->add($1) unless $include_set->contains($1);
 			}
 		}
 	};
@@ -288,34 +299,41 @@ sub getApacheInfo {
 	print STDERR  "Apache configuration file ($httpdConf) does not exist\n" unless -e $httpdConf;
 	print STDERR  "Apache configuration file ($httpdConf) is not readable\n" unless -r $httpdConf;
 #	confirm_path ('Apache configuration file', $httpdConf);
-	$apache_info->{conf} = $httpdConf;
+	$apache_info->{'conf'} = $httpdConf;
 	croak "Could not find $httpdConf\n" unless -e $httpdConf;
 	croak "Could not read $httpdConf\n" unless -r $httpdConf;
 
-	$apache_info->{conf_bak} = $httpdConf.'.bak.ome';
-	$omeConf = $apache_info->{ome_conf};
+	$apache_info->{'conf_bak'} = $httpdConf.'.bak.ome';
+	$omeConf = $apache_info->{'ome_conf'};
 
 	# Open the root apache conf file
 	open(FILE, "< $httpdConf")
 		or croak "Couldn't open root config '$httpdConf' for reading: $!\n";
 
-	# Search for includes that aren't the ome conf
-	while (<FILE>) {
-		if ($_ =~ /^\s*Include\s(.*)/ and $1 ne $omeConf) {
-			push (@include_paths, $1)
-		}
-	}
-
-	# Reposition file cursor
-	seek (FILE, 0, 0);
-	
 	# Parse the root apache conf file
 	&$search_func(*FILE);
 
 	close(FILE);
 	
 	# Parse each of the files included from the root apache conf file
-	foreach my $path (@include_paths) {
+	while (1) {
+		my $path;
+		my $i = 0;
+
+		# Find a path we haven't searched yet
+		for (my $i = 0; $i < $include_set->get_size(); $i++) {
+			my $element = $include_set->get_element_by_index($i);
+
+			if (not $include_set->examined($element)) {
+				$path = $element;
+				$include_set->set_examined($element);
+
+				last;
+			}
+		}
+
+		last if not defined $path;
+
 		if (not File::Spec->file_name_is_absolute($path)) {
 			# Non-absolute path must be off the ServerRoot
 			$path = File::Spec->catdir($apache_info->{'ServerRoot'}, $path);
@@ -330,10 +348,11 @@ sub getApacheInfo {
 				carp "**** Warning: Couldn't open include '$file' for reading: $!";
 			}
 		}
+
 	}
 
-	$apache_info->{mod_perl_loaded} = 1 if ($mod_loaded and $mod_added);
-	$apache_info->{mod_perl_off} = 1 if ($mod_loaded_off or $mod_added_off);
+	$apache_info->{'mod_perl_loaded'} = 1 if ($mod_loaded and $mod_added);
+	$apache_info->{'mod_perl_off'} = 1 if ($mod_loaded_off or $mod_added_off);
 
 	return $apache_info;
 }
@@ -563,6 +582,128 @@ sub execute {
 sub rollback {
     print "Rollback";
     return;
+}
+
+
+1;
+
+# Blessed array reference to ease containership matching
+#
+# $include_set = [ [ELEMENT, EXAMINED_FLAG], ... ]
+#
+# Example:
+#
+#     $include_set = [ ["/foo/bar.conf", 0], ["/bar/foo.conf", 1] ... ]
+#
+package IncludeSet;
+
+use constant ELEMENT       => 0;
+use constant EXAMINED_FLAG => 1;
+
+sub __find_offset {
+	my ($self, $element) = @_;
+
+	# Sanity
+	return unless defined $element;
+	
+	for (my $i = 0; $i < scalar(@$self); $i++) {
+		if ($self->[$i]->[ELEMENT] eq $element) {
+			return $i;
+		}
+	}
+}
+
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+
+	my $self = [];
+	
+	return bless($self,$class);
+}
+
+sub add {
+	my ($self, $element) = @_;
+
+	# Sanity
+	return unless defined $element;
+
+	push (@$self, [$element, 0]) and return 1;
+}
+
+sub remove {
+	my ($self, $element) = @_;
+
+	# Sanity
+	return unless defined $element;
+
+	my $offset = $self->__find_offset($element)
+		or return 0;
+
+	splice(@$self, $offset, 1) and return 1;
+}
+
+sub get_element_by_name {
+	my ($self, $element) = @_;
+
+	# Sanity
+	return unless defined $element;
+
+	foreach (@$self) {
+		if ($_->[ELEMENT] eq $element) {
+			return $_->[ELEMENT]
+		}
+	}
+}
+	
+sub get_element_by_index {
+	my ($self, $index) = @_;
+
+	# Sanity
+	return unless defined $index or $index > @$self;
+
+	return $self->[$index]->[ELEMENT];
+}
+
+sub get_size {
+	my $self = shift;
+
+	return scalar(@$self);
+}
+
+sub set_examined {
+	my ($self, $element) = @_;
+	
+	# Sanity
+	return unless defined $element;
+
+	my $offset = $self->__find_offset($element);
+
+	$self->[$offset]->[EXAMINED_FLAG] = 1;
+}
+
+sub examined {
+	my ($self, $element) = @_;
+
+	# Sanity
+	return unless defined $element;
+
+	my $offset = $self->__find_offset($element);
+
+	return $self->[$offset]->[EXAMINED_FLAG] ? 1 : 0;
+}
+
+sub contains {
+	my ($self, $test_item) = @_;
+
+	# Sanity
+	return unless defined $test_item;
+
+	foreach (@$self) {
+		return 1 if ($_ eq $test_item);
+	}
+
+	return 0;
 }
 
 
