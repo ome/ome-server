@@ -2,6 +2,64 @@
 
 <AnalysisModuleLibrary xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
 
+<SemanticTypeDefinitions>
+
+<DataTypes>
+
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="RATIO"
+        Description="">
+      <Column
+          ColumnName="RATIO"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+</DataTypes>
+
+  <SemanticType
+      Name="Bounds"
+      Description="Bounds of a feature">
+    <SemanticElement
+        Name="X" TableName="BOUNDS" ColumnName="X"
+        Description=""/>
+    <SemanticElement
+        Name="Y" TableName="BOUNDS" ColumnName="Y"
+        Description=""/>
+    <SemanticElement
+        Name="WIDTH" TableName="BOUNDS" ColumnName="WIDTH"
+        Description=""/>
+    <SemanticElement
+        Name="HEIGHT" TableName="BOUNDS" ColumnName="HEIGHT"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Ratio"
+      Description="Ratio">
+    <SemanticElement
+        Name="RATIO" TableName="RATIO" ColumnName="RATIO"
+        Description=""/>
+  </SemanticType>
+
+</SemanticTypeDefinitions>
+
 <AnalysisModule
     Category="Testing" ModuleName="Find cells"
     ModuleType="OME::Analysis::FindBounds"
@@ -10,38 +68,21 @@
     NewFeatureName="CELL">
 
   <Declaration>
-    <Table
-        Granularity="F" TableName="BOUNDS"
-        Description="">
-      <Column
-          ColumnID="boundsX" ColumnName="X"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsY" ColumnName="Y"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsWidth" ColumnName="WIDTH"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsHeight" ColumnName="HEIGHT"
-          SQL_DataType="integer" Description=""/>
-    </Table>
-
     <FormalOutput
-        Name="Output bounds" AttributeTypeName="Bounds"
+        Name="Output bounds" SemanticTypeName="Bounds"
         Description="" IBelongTo="[Feature]">
       <FormalOutputColumn
           Name="X" FormalOutputColumnID="CellBounds.X"
-          ColumnID="boundsX" Description=""/>
+          Description=""/>
       <FormalOutputColumn
           Name="Y" FormalOutputColumnID="CellBounds.Y"
-          ColumnID="boundsY" Description=""/>
+          Description=""/>
       <FormalOutputColumn
           Name="WIDTH" FormalOutputColumnID="CellWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
+          Description=""/>
       <FormalOutputColumn
           Name="HEIGHT" FormalOutputColumnID="CellHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
+          Description=""/>
     </FormalOutput>
 
   </Declaration>
@@ -56,56 +97,13 @@
     NewFeatureName="MITOCHONDRIA">
 
   <Declaration>
-    <Table
-        Granularity="F" TableName="BOUNDS"
-        Description="">
-      <Column
-          ColumnID="boundsX" ColumnName="X"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsY" ColumnName="Y"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsWidth" ColumnName="WIDTH"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsHeight" ColumnName="HEIGHT"
-          SQL_DataType="integer" Description=""/>
-    </Table>
-
     <FormalInput
-        Name="Input bounds" AttributeTypeName="Bounds"
-        Description="">
-      <FormalInputColumn
-          Name="X" FormalInputColumnID="CellBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalInputColumn
-          Name="Y" FormalInputColumnID="CellBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalInputColumn
-          Name="WIDTH" FormalInputColumnID="CellWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalInputColumn
-          Name="HEIGHT" FormalInputColumnID="CellHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalInput>
+        Name="Input bounds" SemanticTypeName="Bounds"
+        Description=""/>
 
     <FormalOutput
-        Name="Output bounds" AttributeTypeName="Bounds"
-        Description="" IBelongTo="[Feature]">
-      <FormalOutputColumn
-          Name="X" FormalOutputColumnID="MitoBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalOutputColumn
-          Name="Y" FormalOutputColumnID="MitoBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalOutputColumn
-          Name="WIDTH" FormalOutputColumnID="MitoWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalOutputColumn
-          Name="HEIGHT" FormalOutputColumnID="MitoHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalOutput>
+        Name="Output bounds" SemanticTypeName="Bounds"
+        Description="" IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -119,56 +117,13 @@
     NewFeatureName="GOLGI">
 
   <Declaration>
-    <Table
-        Granularity="F" TableName="BOUNDS"
-        Description="">
-      <Column
-          ColumnID="boundsX" ColumnName="X"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsY" ColumnName="Y"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsWidth" ColumnName="WIDTH"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsHeight" ColumnName="HEIGHT"
-          SQL_DataType="integer" Description=""/>
-    </Table>
-
     <FormalInput
-        Name="Input bounds" AttributeTypeName="Bounds"
-        Description="">
-      <FormalInputColumn
-          Name="X" FormalInputColumnID="CellBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalInputColumn
-          Name="Y" FormalInputColumnID="CellBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalInputColumn
-          Name="WIDTH" FormalInputColumnID="CellWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalInputColumn
-          Name="HEIGHT" FormalInputColumnID="CellHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalInput>
+        Name="Input bounds" SemanticTypeName="Bounds"
+        Description="" />
 
     <FormalOutput
-        Name="Output bounds" AttributeTypeName="Bounds"
-        Description="" IBelongTo="[Feature]">
-      <FormalOutputColumn
-          Name="X" FormalOutputColumnID="GolgiBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalOutputColumn
-          Name="Y" FormalOutputColumnID="GolgiBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalOutputColumn
-          Name="WIDTH" FormalOutputColumnID="GolgiWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalOutputColumn
-          Name="HEIGHT" FormalOutputColumnID="GolgiHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalOutput>
+        Name="Output bounds" SemanticTypeName="Bounds"
+        Description="" IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -181,72 +136,17 @@
     FeatureIterator="CELL">
 
   <Declaration>
-    <Table
-        Granularity="F" TableName="BOUNDS"
-        Description="">
-      <Column
-          ColumnID="boundsX" ColumnName="X"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsY" ColumnName="Y"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsWidth" ColumnName="WIDTH"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnID="boundsHeight" ColumnName="HEIGHT"
-          SQL_DataType="integer" Description=""/>
-    </Table>
-
-    <Table
-        Granularity="F" TableName="RATIO"
-        Description="">
-      <Column
-          ColumnID="ratio" ColumnName="RATIO"
-          SQL_DataType="float" Description=""/>
-    </Table>
+    <FormalInput
+        Name="Mito bounds" SemanticTypeName="Bounds"
+        Description="" />
 
     <FormalInput
-        Name="Mito bounds" AttributeTypeName="Bounds"
-        Description="">
-      <FormalInputColumn
-          Name="X" FormalInputColumnID="MitoBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalInputColumn
-          Name="Y" FormalInputColumnID="MitoBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalInputColumn
-          Name="WIDTH" FormalInputColumnID="MitoWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalInputColumn
-          Name="HEIGHT" FormalInputColumnID="MitoHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalInput>
-
-    <FormalInput
-        Name="Golgi bounds" AttributeTypeName="Bounds"
-        Description="">
-      <FormalInputColumn
-          Name="X" FormalInputColumnID="GolgiBounds.X"
-          ColumnID="boundsX" Description=""/>
-      <FormalInputColumn
-          Name="Y" FormalInputColumnID="GolgiBounds.Y"
-          ColumnID="boundsY" Description=""/>
-      <FormalInputColumn
-          Name="WIDTH" FormalInputColumnID="GolgiWidth.Width"
-          ColumnID="boundsWidth" Description=""/>
-      <FormalInputColumn
-          Name="HEIGHT" FormalInputColumnID="GolgiHeight.Height"
-          ColumnID="boundsHeight" Description=""/>
-    </FormalInput>
+        Name="Golgi bounds" SemanticTypeName="Bounds"
+        Description="" />
 
     <FormalOutput
-        Name="Golgi-mito ratio" AttributeTypeName="Ratio"
-        Description="" IBelongTo="[Iterator]">
-      <FormalOutputColumn
-          Name="RATIO" FormalOutputColumnID="Ratio.Ratio"
-          ColumnID="ratio" Description=""/>
-    </FormalOutput>
+        Name="Golgi-mito ratio" SemanticTypeName="Ratio"
+        Description="" IBelongTo="[Iterator]" />
 
   </Declaration>
 </AnalysisModule>
