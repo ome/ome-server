@@ -13,6 +13,7 @@
 		<ProjectRef ProjectID = "123.456.1.123.123"/>
 	</Dataset>
 	<Image ID = "123.456.3.123.123" Name = "P1W1S1" Description = "" Type = "OME">
+		<DatasetRef DatasetID = "123.456.2.123.123"/>
 		<CustomAttributes>
 			<Dimensions SizeX = "512" SizeY = "512" SizeZ = "1" SizeC = "1" SizeT = "1" BitsPerPixel = "int16" PixelSizeX = "0.2" PixelSizeY = "0.2" PixelSizeZ = "0.2" PixelSizeC = "" PixelSizeT = ""/>
 		</CustomAttributes>
