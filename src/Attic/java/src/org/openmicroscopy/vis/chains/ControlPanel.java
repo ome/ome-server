@@ -6,7 +6,7 @@
  *  Copyright (C) 2003 Open Microscopy Environment
  *      Massachusetts Institute of Technology,
  *      National Institutes of Health,
- *      University of Dundee
+ *      University of Dundee¶
  *
  *
  *
@@ -191,7 +191,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		datasetScroll.setMinimumSize(new Dimension(100,200));
 		datasetScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
 		datasetPanel.add(datasetScroll);
-		//datasetList.addListSelectionListener(this);
+		
 		
 		
 		topPanel.add(datasetPanel);
@@ -204,7 +204,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		browserLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		imagePanel.add(browserLabel);
 		imagePanel.add(Box.createRigidArea(new Dimension(0,3)));
-		browser = new PBrowserCanvas(connection);
+		browser = new PBrowserCanvas(connection,selectionState);
 		browser.setPreferredSize(new Dimension(400,400));
 		imagePanel.add(browser);
 		topPanel.add(imagePanel);
@@ -355,59 +355,19 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public void mouseReleased(MouseEvent e) {
 	}
 	
-	/*// we're going to set the datasets to be those that are
-	// associated with the current chain.
-	public void chainSelectionChanged(ChainSelectionEvent e) {
-		
-		CChain chain = e.getChain();
-		System.err.println("changing to chain.."+chain.getName());
-				
-		if (e.getStatus() == ChainSelectionEvent.SELECTED) {
-			//change active datasets
-			reentrant = true;
-			datasetList.clearSelection();
-			if (projList !=null)
-				projList.clearSelection();
-			curDataset = null;
-			if (projList != null)
-				projList.clearSelection();
-			reentrant = false;
-			activeProjects =null;
-			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
-			System.err.println("active datasets"+activeDatasets.size());
-			if (activeDatasets.size() ==1) {
-				Object objs[] = activeDatasets.toArray();
-				curDataset = (CDataset) objs[0];
-			//	updateDatasetChoice(curDataset); 
-			}
-			else { 
-				//				 multiple active.
-				
-				fireEvents();	
-				datasetList.repaint();
-				if (projList != null)
-					projList.repaint();
-			}
-		}
-		datasetList.repaint();
-		if (projList != null)
-			projList.repaint();
-	}
 	
-	public void executionSelectionChanged(ExecutionSelectionEvent e) {
-		ChainExecution exec = e.getSelectedExecution();
-		System.err.println("control panel has new selected execution...");
-		System.err.println("exec. is "+exec.getID());
-		System.err.println("dataset is "+exec.getDataset().getName());
-	//updateDatasetChoice(exec.getDataset());
-	}*/
 	
 	
 	
 	public void selectionChanged(SelectionEvent e) {
 
+		
 		System.err.println("selection changed...");
 		selectionState.removeSelectionEventListener(this);
+		datasetList.removeListSelectionListener(this);
+		projList.removeListSelectionListener(this);
+		datasetList.removeMouseListener(this);
+		projList.removeMouseListener(this);
 		int pos = datasets.indexOf(selectionState.getSelectedDataset());
 		System.err.println("dataset pos is "+pos);
 		if (pos >=0)
@@ -422,6 +382,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			projList.clearSelection();
 		projList.repaint();
 		datasetList.repaint();
+		datasetList.addListSelectionListener(this);
+		projList.addListSelectionListener(this);
+		datasetList.addMouseListener(this);
+		projList.addMouseListener(this);
+		
 		selectionState.addSelectionEventListener(this);
 	}
 }
@@ -484,7 +449,7 @@ class DatasetRenderer  extends JLabel implements ListCellRenderer {
 			setFont(plainFont);
 			if (value instanceof CDataset) {
 				CDataset d = (CDataset) value;
-				setText(d.getName());
+				setText(d.getLabel());
 				if (state !=null) {
 					Collection active = state.getActiveDatasets();
 					if (active != null && active.contains(d))
