@@ -793,12 +793,12 @@ off_t off0, off1;
 	dt = head->dt;
 	bp = head->bp;
 
-	sizeX = x1-x0;
+	sizeX = x1-x0+1;
 	x=x0;
-	for (t=t0;t < t1; t++) {
-		for (w=w0;w < w1; w++) {
-			for (z=z0;z < z1; z++) {
-				for (y=y0;y < y1; y++) {
+	for (t=t0;t <= t1; t++) {
+		for (w=w0;w <= w1; w++) {
+			for (z=z0;z <= z1; z++) {
+				for (y=y0;y <= y1; y++) {
 					nIO = DoPixelIO (myPixels,(((((t*dc) + w)*dz + z)*dy + y)*dx + x)*bp, sizeX, rorw);
 					nIO_t += nIO;
 					if (nIO < sizeX) return (nIO_t);
