@@ -1,4 +1,4 @@
-# OME/AttributeType.pm
+# OME/SemanticType.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
@@ -71,7 +71,7 @@ __PACKAGE__->sequence('semantic_type_seq');
 __PACKAGE__->columns(Primary => qw(semantic_type_id));
 __PACKAGE__->columns(Essential => qw(name granularity description));
 __PACKAGE__->has_many('semantic_elements',
-                      'OME::SemanticType::Column' => qw(semantic_type_id),
+                      'OME::SemanticType::Element' => qw(semantic_type_id),
                       {sort => 'semantic_element_id'});
 
 #__PACKAGE__->add_trigger(after_create => \&requireAttributeTypePackage);
@@ -494,15 +494,15 @@ sub newAttributes {
 }
 
 
-package OME::SemanticType::Column;
+package OME::SemanticType::Element;
 
 =head1 NAME
 
-OME::SemanticType::Column
+OME::SemanticType::Element
 
 =head1 DESCRIPTION
 
-This C<AttributeType.Column> interface represents one element of a
+This C<SemanticType.Element> interface represents one element of a
 semantic type.  The storage type of the element can be accessed via
 the element's data column:
 
@@ -578,7 +578,7 @@ use base qw(Class::Data::Inheritable);
 
 __PACKAGE__->mk_classdata('_attribute_type');
 
-use fields qw(_data_table_rows _target _analysis _id _session);
+use fields qw(_data_table_rows _target _module_execution _id _session);
 
 =head1 NAME
 
@@ -630,7 +630,7 @@ sub new {
         $module_execution = $row->module_execution();
         last if defined $module_execution;
     }
-    $self->{_analysis} = $module_execution;
+    $self->{_module_execution} = $module_execution;
 
     bless $self, $class;
     return $self;
@@ -733,7 +733,7 @@ sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
 sub semantic_type { return shift->_attribute_type(); }
-sub module_execution { return shift->{_analysis}; }
+sub module_execution { return shift->{_module_execution}; }
 
 =head2 dataset, image, feature
 
@@ -789,7 +789,7 @@ sub _getField {
     my $semantic_type = $self->_attribute_type();
 
     my $semantic_element = $factory->
-      findObject("OME::SemanticType::Column",
+      findObject("OME::SemanticType::Element",
                  semantic_type_id => $semantic_type->id(),
                  name              => $field_name);
     return undef unless defined $semantic_element;
@@ -815,7 +815,7 @@ sub _setField {
     my $semantic_type = $self->_attribute_type();
 
     my $semantic_element = $factory->
-      findObject("OME::SemanticType::Column",
+      findObject("OME::SemanticType::Element",
                  semantic_type_id => $semantic_type->id(),
                  name              => $field_name);
     return undef unless defined $semantic_element;
