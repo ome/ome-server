@@ -103,13 +103,13 @@ public class PPaletteEventHandler extends  PPanEventHandler {
 				PBounds b = cBox.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
 				// animate
-				camera.animateViewToCenterBounds(b,true,500);
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true); 
 			}
 			else if (node instanceof PCamera) {
 				PBounds b = canvas.getBufferedBounds();
 				PCamera camera = canvas.getCamera();
-				camera.animateViewToCenterBounds(b,true,500);
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
 				e.setHandled(true);
 			}
 			else
