@@ -25,13 +25,12 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <p>The <code>ModuleExecution</code> interface represents an execution of
- * an OME analysis module against a dataset of images.  Each actual
- * execution of a module is represented by exactly one
- * <code>ModuleExecution</code>.  If the results of a module execution are
- * reused during the future execution of an analysis chain, no new
- * <code>ModuleExecution</code> is created (although a new {@link
- * ChainExecution} is created).</p>
+ * <p>Represents an execution of an OME analysis module against a
+ * dataset of images.  Each actual execution of a module is
+ * represented by exactly one <code>ModuleExecution</code>.  If the
+ * results of a module execution are reused during the future
+ * execution of an analysis chain, no new <code>ModuleExecution</code>
+ * is created (although a new {@link ChainExecution} is created).</p>
  *
  * <p><code>Analyses</code> have a notion of <i>dependence</i> which
  * help the analysis engine determine when analysis results are
@@ -152,10 +151,9 @@ public interface ModuleExecution
     public Iterator iterateInputs();
 
     /**
-     * <p>The <code>ActualInput</code> class specifies where the
-     * values for an analysis module's inputs came from.  Each of the
-     * module's formal inputs has a single <code>ActualInput</code>
-     * for each execution of the module.</p>
+     * <p>Specifies where the values for an analysis module's inputs
+     * came from.  Each of the module's formal inputs has a single
+     * <code>ActualInput</code> for each execution of the module.</p>
      *
      * <p>The module's input is specified by the <code>ModuleExecution</code>
      * that "feeds" it.  All of the attributes of the formal input's

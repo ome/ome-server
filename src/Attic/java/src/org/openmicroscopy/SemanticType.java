@@ -25,12 +25,11 @@ import java.util.List;
 import java.util.Iterator;
 
 /**
- * <p>The <code>SemanticType</code> interface describes the semantic
- * types known to OME.  A semantic type is similar to a record or
- * class in standard programming languages, in that is has a list of
- * columns (or <i>semantic elements</i>) which contain the actual data
- * of the attribute.  These elements are represented by instance of
- * {@link SemanticType.Element}.</p>
+ * <p>Represents the semantic types known to OME.  A semantic type is
+ * similar to a record or class in standard programming languages, in
+ * that is has a list of columns (or <i>semantic elements</i>) which
+ * contain the actual data of the attribute.  These elements are
+ * represented by instance of {@link SemanticType.Element}.</p>
  *
  * <p>Semantic types also define, indirectly, where in the OME
  * database their data is stored.  This information is represented by
@@ -102,9 +101,9 @@ public interface SemanticType
     public Iterator iterateElements();
 
     /**
-     * <p>This <code>SemanticType.Element</code> interface represents
-     * one element of a semantic type.  The storage type of the
-     * element can be accessed via the element's data column:</p>
+     * <p>Represents one element of a semantic type.  The storage type
+     * of the element can be accessed via the element's data
+     * column:</p>
      *
      * <pre>
      *    DataTable.Column dataColumn = semanticElement.getDataColumn();
