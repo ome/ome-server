@@ -48,7 +48,7 @@ print "\nOME Test Case - Image Import\n";
 print "----------------------------\n";
 
 if ((scalar(@ARGV) == 0) || (($ARGV[0] =~ m/^-*/) && (scalar(@ARGV) == 1))) {
-    print "Usage:  ImportTest dataset_name [file list]\n\n";
+    print "Usage:  ImportTest dataset_name -d [file list]\n\n\t-d allows duplicates. It is optional.\n";
     exit -1;
 }
 
@@ -68,6 +68,11 @@ my $data;
 my $project;
 my $project_id;
 my @projects;
+my $options = {};
+if( $ARGV[0] eq '-d' ) {
+	$options->{ AllowDuplicates } = 1;
+	shift;
+}
 
 # See if this project already defined. If not, create it.
 
@@ -107,10 +112,6 @@ die "Project undefined\n" unless defined $project;
 # or is the name of a new dataset.
 # Either way, we must associate the dataset with the current project.
 
-my $switch;
-if (($ARGV[0]) =~ m/^-/) {
-    $switch = shift;  # if 1st arg in ARGV starts w/ a "-" it's a switch
-}
 my $datasetName = shift; # from @ARGV
 my $datasetIter = $factory->
   findObjects("OME::Dataset",
@@ -123,6 +124,8 @@ $dataset = $project->newDataset ($datasetName) unless defined $dataset;
 # die if we still don't have a dataset object.
 die "Dataset undefined\n" unless defined $dataset;
 
+print "files are @ARGV\n";
+
 $session->project($project);
 $session->dataset($dataset);
 $session->storeObject();
@@ -130,7 +133,7 @@ $session->commitTransaction();
 	print "- Importing files into $age project '$projectName'... \n";
 my $t0 = new Benchmark;
 	my $datasetManager = new OME::Tasks::DatasetManager;
-	my $images = OME::Tasks::ImageTasks::importFiles(@ARGV);
+	my $images = OME::Tasks::ImageTasks::importFiles($options, @ARGV);
 	my @image_ids = map($_->id(), @$images);
 	$datasetManager->addImages( \@image_ids, $dataset->id());
 my $t1 = new Benchmark;
