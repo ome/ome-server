@@ -69,7 +69,7 @@ import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DragGestureEvent;
-
+import java.util.TreeSet;
 
 
 
@@ -364,7 +364,11 @@ public class PPaletteCanvas extends PCanvas implements DragGestureListener,
 	
 		float height = 0;
 		float width = 0;
-		Iterator iter = node.getChildrenIterator();
+		
+		List children = node.getChildrenReference();
+		TreeSet childrenTree = new TreeSet(children);
+		Iterator iter = childrenTree.iterator();
+		// as opposed to Iterator iter = node.getChildrenIterator();
 		
 		float y =TOP;
 		Vector curStrip = new Vector();
