@@ -877,6 +877,34 @@ public class PixelsFactory
 
     /**
      * <p>Transfers the specified file to the image server, returning
+     * an image server ID.  This method does not create an
+     * OriginalFile attribute for the uploaded file.  For this, call
+     * the {@link #uploadFile(Repository,ModuleExecution,File)}
+     * method.</p>
+     *
+     * @param repository the repository to upload to
+     * @param file the file to upload
+     * @return the image server ID of the file
+     * @throws ImageServerException if there was an error contacting
+     * the image server or uploading the file
+     * @throws FileNotFoundException if the specified file cannot be
+     * read
+     */
+    public long uploadFile(Repository repository,
+                           File file)
+        throws ImageServerException, FileNotFoundException
+    {
+        if (repository == null)
+            throw new IllegalArgumentException("Repository cannot be null");
+
+        ImageServer is = activateRepository(repository);
+        long fileID = is.uploadFile(file);
+
+        return fileID;
+    }
+
+    /**
+     * <p>Transfers the specified file to the image server, returning
      * an {@link OriginalFile} attribute.  This object can then be
      * used in calls to the <code>convert*</code> methods, allowing a
      * new pixels file to be created from the contents of the original
