@@ -46,7 +46,7 @@ image format importers
 
 	use OME::ImportEngine::AbstractFormat;
 	my $format = OME::ImportEngine::AbstractFormat->
-	                 new($module_execution);
+	                 new();
 	my $groups = $format->getGroups($filenames);
 	my $sha1 = $format->getSHA1($group);
 	my $image = $format->importGroup($group);
