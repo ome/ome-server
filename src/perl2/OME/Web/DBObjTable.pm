@@ -155,7 +155,7 @@ sub getTable {
 	my @fieldNames = OME::Web::DBObjRender->getFieldNames( $formal_name );
 	@fieldNames = grep( (not exists $options->{excludeFields}->{$_}), @fieldNames )
 		if exists $options->{excludeFields};
-	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames );
+	my %labels     = OME::Web::DBObjRender->getFieldLabels( $formal_name, \@fieldNames, 'txt' );
 	my %searches   = OME::Web::DBObjRender->getSearchFields( $formal_name, \@fieldNames );
 	my @records    = OME::Web::DBObjRender->render( $objects, 'html', \@fieldNames );
 	
