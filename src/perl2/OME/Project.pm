@@ -21,7 +21,7 @@
 package OME::Project;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -195,7 +195,7 @@ sub newDataset {
 package OME::Project::DatasetMap;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use OME::Dataset;

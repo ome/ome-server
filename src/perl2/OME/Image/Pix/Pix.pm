@@ -21,7 +21,7 @@ our %EXPORT_TAGS = ();
 our @EXPORT_OK = ();
 
 our @EXPORT = ();
-our $VERSION = '1.00';
+our $VERSION = 2.000_000;
 
 bootstrap OME::Image::Pix $VERSION;
 

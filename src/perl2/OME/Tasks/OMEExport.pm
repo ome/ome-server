@@ -21,7 +21,7 @@
 package OME::Tasks::OMEExport;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 our $NAMESPACE = 'http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd';
 our $SCHEMA_LOCATION = $NAMESPACE;
 our $XSI_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance';

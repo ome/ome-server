@@ -43,7 +43,7 @@ use OME::Image;
 use OME::ImportExport::TIFFwriter;
 use OME::ImportExport::FileUtils;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 
 my %export_writers = ('TIFF' => 'TIFFwriter');

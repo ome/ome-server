@@ -28,7 +28,7 @@ use Exporter;
 use vars qw (@ISA $VERSION);
 @ISA=qw(Exporter);
 
-$VERSION   = '1.00';
+$VERSION = 2.000_000;
 
 #------------------------------------------------------------------------------
 # Create a new instance of a text object.

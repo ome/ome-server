@@ -3,7 +3,7 @@ use Graphics::Vectors;
 use strict;
 use Image::Magick;
 use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 @ISA = ("Graphics::Vectors");
 
 # new

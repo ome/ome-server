@@ -48,7 +48,7 @@ OME::DataTable create data classes for each attribute table.
 =cut
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use Carp;
 use Log::Agent;
@@ -136,7 +136,7 @@ sub requireAttributeTypePackage {
     my $def = "package $pkg;\n";
     $def .= q{
 	use strict;
-	our $VERSION = '1.0';
+	our $VERSION = 2.000_000;
 
 	use OME::SemanticType;
 	use base qw(OME::SemanticType::Superclass);
@@ -512,7 +512,7 @@ the element's data column:
 =cut
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use OME::Factory;
@@ -570,7 +570,7 @@ Returns or sets the data column associated with this semantic element.
 package OME::SemanticType::Superclass;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use Class::Data::Inheritable;
 

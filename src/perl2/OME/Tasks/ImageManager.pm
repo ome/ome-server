@@ -20,7 +20,7 @@
 
 package OME::Tasks::ImageManager;
 
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 =head 1 NAME
 

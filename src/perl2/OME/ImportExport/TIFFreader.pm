@@ -42,7 +42,7 @@ use OME::ImportExport::Import_reader;
 use OME::ImportExport::STKreader;
 use OME::ImportExport::PixWrapper;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 
 

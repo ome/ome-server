@@ -40,7 +40,7 @@ It corresponds to one of the nodes in the analysis chain.
 =cut
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -90,7 +90,7 @@ in this data path.
 package OME::AnalysisPath::Map;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

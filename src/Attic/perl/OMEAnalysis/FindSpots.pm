@@ -21,7 +21,7 @@
 package OMEAnalysis::FindSpots;
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.20';
+$VERSION = 2.000_000;
 
 use OMEpl;
 use OMEhtml;

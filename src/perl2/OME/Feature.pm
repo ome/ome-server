@@ -43,7 +43,7 @@ grouped for analysis.
 =cut
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use OME::Image;

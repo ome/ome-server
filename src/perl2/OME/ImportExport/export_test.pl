@@ -28,7 +28,7 @@ use OME::ImportExport::Exporter;
 use OME::ImportExport::TIFFwriter;
 use Carp;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 my @image_list;
 my $export_type = "TIFF";

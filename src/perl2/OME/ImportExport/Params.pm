@@ -51,7 +51,7 @@ use Config;
 use strict;
 use Carp;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 
 sub new {

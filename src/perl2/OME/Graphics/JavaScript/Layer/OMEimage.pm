@@ -3,7 +3,7 @@ use strict;
 use OME::Session;
 use OME::Graphics::JavaScript::Layer;
 use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 @ISA = ("OME::Graphics::JavaScript::Layer");
 
 my $JStype = 'OMEimage';

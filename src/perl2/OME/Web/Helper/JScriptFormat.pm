@@ -50,7 +50,7 @@ The OME::Web::Helper::JScriptFormat provides a list of methods to write javascri
 
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 sub new{
 	my $class=shift;

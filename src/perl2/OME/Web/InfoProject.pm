@@ -22,7 +22,7 @@ package OME::Web::InfoProject;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 use CGI;
 use OME::Tasks::ProjectManager;
 use OME::Web::Helper::HTMLFormat;

@@ -23,7 +23,7 @@ package OME::Web::Viewer;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 use base qw{ OME::Web };
 sub getPageTitle {

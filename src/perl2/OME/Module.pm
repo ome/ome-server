@@ -21,7 +21,7 @@
 package OME::Module;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -42,7 +42,7 @@ __PACKAGE__->has_many('analyses','OME::ModuleExecution' => qw(module_id));
 package OME::Module::FormalInput;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -73,7 +73,7 @@ __PACKAGE__->make_filter('__module_name' => 'module_id = ? and name = ?');
 package OME::Module::FormalOutput;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

@@ -1,7 +1,7 @@
 package OME::Graphics::JavaScript::Layer;
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 @ISA = ("");
 
 my $JStype = 'Layer';

@@ -21,7 +21,7 @@
 package OME::LookupTable;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -37,7 +37,7 @@ __PACKAGE__->has_many('entries','OME::LookupTable::Entry' => qw(lookup_table_id)
 package OME::LookupTable::Entry;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

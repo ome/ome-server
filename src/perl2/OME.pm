@@ -19,7 +19,7 @@
 
 package OME;
 use strict;
-our $VERSION = '2.0';
+our $VERSION = 2.000_000;
 
 ########################################### main pod documentation begin ##
 # Below is the stub of documentation for your module. You better edit it!

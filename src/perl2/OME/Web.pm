@@ -22,7 +22,7 @@ package OME::Web;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 use CGI;
 use OME::SessionManager;
 use Apache::Session::File;

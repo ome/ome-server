@@ -53,7 +53,7 @@ use OME::Tasks::AnalysisEngine;
 use OME::Image;
 use OME::Dataset;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 sub new {
     my @image_buf;

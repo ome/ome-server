@@ -21,7 +21,7 @@
 package OME::Image;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -219,7 +219,7 @@ sub GetPixelArray {
 package OME::Image::Wavelengths;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -245,7 +245,7 @@ sub fluor { shift->logical_channel()->fluor(@_); }
 package OME::Image::LogicalChannel;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -268,7 +268,7 @@ __PACKAGE__->columns(Essential => qw(image_id
 package OME::Image::ImageFilesXYZWT;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);
@@ -287,7 +287,7 @@ __PACKAGE__->columns(Essential => qw(image_id file_sha1 bigendian
 package OME::Image::DatasetMap;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use OME::DBObject;
 use base qw(OME::DBObject);

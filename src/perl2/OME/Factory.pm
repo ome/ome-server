@@ -19,7 +19,7 @@
 
 
 package OME::Factory;
-our $VERSION = '1.00';
+our $VERSION = 2.000_000;
 
 =head1 NAME
 
@@ -731,7 +731,7 @@ L<OME::SemanticType|OME::SemanticType>
 
 package OME::Factory::Iterator;
 
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use Class::DBI::Iterator;
 

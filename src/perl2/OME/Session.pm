@@ -47,7 +47,7 @@ To come.
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = 2.000_000;
 
 use strict;
 

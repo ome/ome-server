@@ -28,7 +28,7 @@ use strict;
 use File::Temp qw(tempfile);
 use OME::Image::Pix;
 use vars qw($VERSION);
-$VERSION = '1.0';
+$VERSION = 2.000_000;
 
 sub new {
     my $invoker = shift;

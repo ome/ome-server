@@ -22,7 +22,7 @@ package OME::Analysis::FindRatio;
 use OME::Analysis::Handler;
 
 use strict;
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 use base qw(OME::Analysis::Handler);
 

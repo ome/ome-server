@@ -164,7 +164,7 @@ Switch dataset
 use strict;
 use OME::SetDB;
 
-our $VERSION = '1.0';
+our $VERSION = 2.000_000;
 
 sub new{
 	my $class=shift;
