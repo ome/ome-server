@@ -1367,7 +1367,8 @@ sub findModuleHandler {
     sub __checkPastResults {
         # Allow the user to skip analysis reuse.  This should really
         # only be used for testing.
-        return 0 if (!$self->Flag('ReuseResults'));
+        return 0 if (!$self->Flag('ReuseResults')
+                     && $curr_node->program()->program_name() ne "Importer");
 
         my $paramString = __calculateCurrentInputTag();
         my $space = ($dependence{$curr_nodeID} eq 'I')? '  ': '';
@@ -1761,29 +1762,14 @@ sub findModuleHandler {
         __debug("      Calculate feature");
         $curr_module->calculateFeature();
 
-        # Collect and process the feature outputs
-
-        my $feature_attributes = $curr_module->collectFeatureOutputs();
-
-        __debug("      Feature outputs");
-        foreach my $formal_output (@curr_feature_outputs) {
-            my $attribute_list = $feature_attributes->{$formal_output->name()};
-            if (ref($attribute_list) ne 'ARRAY') {
-                $attribute_list = [$attribute_list];
-            }
-            __debug("        ".$formal_output->name()." (".
-              scalar(@$attribute_list).")");
-            #__createActualOutputs($formal_output,$big_list);
-        }
-
         $curr_module->finishFeature();
     }
 
     sub __processOneFeature {
-        __debug("        startFeature ".$curr_featureID);
+        #__debug("        startFeature ".$curr_featureID);
         $curr_module->startFeature($curr_feature);
 
-        __debug("          Feature inputs");
+        #__debug("          Feature inputs");
         my %feature_hash;
 
         foreach my $input_link (@curr_feature_inputs) {
@@ -1796,21 +1782,16 @@ sub findModuleHandler {
             $_ = $factory->loadAttribute($attr_type_name,$_)
                 foreach (@attributes);
 
-            __debug("            ".$formal_input->name()." (".
-              scalar(@attributes).")");
+            #__debug("            ".$formal_input->name()." (".
+            #  scalar(@attributes).")");
 
             $feature_hash{$formal_input->name()} = \@attributes;
         }
 
         $curr_module->featureInputs(\%feature_hash);
 
-        __debug("          Calculate feature");
+        #__debug("          Calculate feature");
         $curr_module->calculateFeature();
-
-        # Collect and process the feature outputs
-
-        __debug("          Feature outputs");
-        my $feature_attributes = $curr_module->collectFeatureOutputs();
 
         $curr_module->finishFeature();
     }
@@ -2138,8 +2119,8 @@ sub findModuleHandler {
                     __debug("    Postcalculate image");
                     $curr_module->postcalculateImage();
 
-                    __debug("    Image outputs");
-                    my $image_attributes = $curr_module->collectImageOutputs();
+                    __debug("    Checking feature outputs");
+                    $curr_module->collectFeatureOutputs();
 
                     $curr_module->finishImage($curr_image);
                 }               # foreach $curr_image
@@ -2148,8 +2129,8 @@ sub findModuleHandler {
                 __debug("    Postcalculate dataset");
                 $curr_module->postcalculateDataset();
 
-                __debug("    Dataset outputs");
-                my $dataset_attributes = $curr_module->collectDatasetOutputs();
+                __debug("    Checking image outputs");
+                $curr_module->collectImageOutputs();
 
                 $curr_module->finishDataset($dataset);
 
@@ -2157,8 +2138,14 @@ sub findModuleHandler {
                 __debug("    Postcalculate global");
                 $curr_module->postcalculateGlobal();
 
-                __debug("    Global outputs");
-                my $global_attributes = $curr_module->collectGlobalOutputs();
+                __debug("    Checking dataset outputs");
+                $curr_module->collectDatasetOutputs();
+
+                __debug("    Checking global outputs");
+                $curr_module->collectGlobalOutputs();
+
+                __debug("    Finishing analysis");
+                $curr_module->finishAnalysis();
 
                 # Mark this node as finished, and flag that we need
                 # another fixed point iteration.
@@ -2171,7 +2158,7 @@ sub findModuleHandler {
 
                 $analysis_execution->dbi_commit();
 
-                __debug("    Marking state");
+                __debug("    Marking FSM state");
                 $node_states{$curr_nodeID} = FINISHED_STATE;
                 $continue = 1;
             }                   # ANALYSIS_LOOP - foreach $curr_node
