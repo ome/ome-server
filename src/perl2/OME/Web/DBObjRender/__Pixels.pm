@@ -59,35 +59,42 @@ use OME::Session;
 use OME::Tasks::PixelsManager;
 use base qw(OME::Web::DBObjRender);
 
-# Class data - override default behavior
-__PACKAGE__->_fieldNames( [
-	'id',
-	'SizeX',
-	'SizeY',
-	'SizeZ',
-	'SizeC',
-	'SizeT',
-	'image',
-	'module_execution'
-] ) ;
-__PACKAGE__->_allFieldNames( [
-	@{__PACKAGE__->_fieldNames() },
-	'PixelType',
-	'BitsPerPixel',
-	'FileSHA1',
-	'ImageServerID',
-	'Repository'
-] ) ;
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _summaryFields } = [
+		'id',
+		'SizeX',
+		'SizeY',
+		'SizeZ',
+		'SizeC',
+		'SizeT',
+		'image',
+		'module_execution'
+	];
+	$self->{ _allFields } = [
+		@{ $self->{ _summaryFields } },
+		'PixelType',
+		'BitsPerPixel',
+		'FileSHA1',
+		'ImageServerID',
+		'Repository'
+	];
+	
+	return $self;
+}
 
 
-=head2 getRefToObject
+=head2 getRef
 
 html format returns a thumbnail linking to the image viewer and a link
 to the Pixels attribute.
 
 =cut
 
-sub getRefToObject {
+sub getRef {
 	my ($proto,$obj,$format) = @_;
 	
 	for( $format ) {
