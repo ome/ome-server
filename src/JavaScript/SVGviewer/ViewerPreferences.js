@@ -53,15 +53,15 @@ ViewerPreferences.toolboxApperance = {
 	ViewerPreferences
 		constructor
 *****/
-function ViewerPreferences( SavePrefsCGI_URL ) {
-	this.init( SavePrefsCGI_URL );
+function ViewerPreferences( SavePrefsCGI_URL, image ) {
+	this.init( SavePrefsCGI_URL, image );
 }
 
 ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 	var displayContent = this.buildDisplay();
 	this.toolBox = new toolBox( ViewerPreferences.toolboxApperance );
 	this.toolBox.closeOnMinimize( true );
-	this.toolBox.setLabel(10,12,"Viewer Preferences");
+	this.toolBox.setLabel(10,12,"Resize toolboxes");
 	this.toolBox.getLabel().setAttribute( "text-anchor", "start");
 	this.toolBox.realize( controlLayer );
 	this.displayPane = this.toolBox.getGUIbox();
@@ -79,11 +79,11 @@ ViewerPreferences.prototype.buildToolBox = function( controlLayer ) {
 	// set up GUI
 	this.toolBoxSizeSlider = new Slider(
 		90,0,ViewerPreferences.ScaleSliderWidth,0,
-		{ obj: this, method: 'resizeToolboxes' }
+		{ obj: this, method: 'applyScale' }
 	);
 	this.toolBoxSizeSlider.setLabel(-95,3,"Resize toolbox:");
 	this.toolBoxSizeSlider.realize( this.displayContent );
-	this.toolBoxSizeSlider.setMinmax(1,2);
+	this.toolBoxSizeSlider.setMinmax(1,2,false);
 
 	this.saveChangesButton = new button(
 		30, 20, 
@@ -116,12 +116,13 @@ ViewerPreferences.prototype.setWindowControllers = function(windowControllers) {
                             Private Functions
 ********************************************************************************************/
 
-ViewerPreferences.prototype.init = function(SavePrefsCGI_URL) {
-	this.initialized         = true;
-	this.SavePrefsCGI_URL  = SavePrefsCGI_URL;
+ViewerPreferences.prototype.init = function(SavePrefsCGI_URL, image) {
+	this.initialized      = true;
+	this.SavePrefsCGI_URL = SavePrefsCGI_URL;
+	this.image            = image;
 };
 
-ViewerPreferences.prototype.resizeToolboxes = function( scale, applyToAll ) {
+ViewerPreferences.prototype.applyScale = function( scale, applyToAll ) {
 	this.scale = scale;
 	this.toolBoxSizeSlider.setValue(scale);
 	for( i in this.windowControllers ) {
@@ -129,6 +130,7 @@ ViewerPreferences.prototype.resizeToolboxes = function( scale, applyToAll ) {
 			this.windowControllers[i].toolBox.setScale( this.scale );
 		}
 	}
+	this.image.moveImageLayer( 0, this.windowControllers['xyPlaneControls'].toolBox.getActualHeight() );
 };
 
 
