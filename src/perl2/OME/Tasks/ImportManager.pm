@@ -116,7 +116,7 @@ them commit any database transactions.
 
 =head2 startImport
 
-	OME::Tasks::ImportManager->startImport();
+	OME::Tasks::ImportManager->startImport($dont_force);
 
 Initializes the ImportManager, and creates a MEX of the Original Files
 module.  This MEX can be obtained via the getOriginalFilesMEX method.
@@ -130,6 +130,9 @@ finishImport is called, an error will be thrown.
 sub startImport {
     my $proto = shift;
     my $class = ref($proto) || $proto;
+    my $dont_force = shift;
+
+    return 0 if $dont_force && defined $self;
 
     die "Cannot have two active imports per process!"
       if defined $self;
@@ -170,7 +173,7 @@ sub startImport {
             };
     bless $self, $class;
 
-    return;
+    return 1;
 }
 
 =head2 finishImport
