@@ -85,6 +85,7 @@ public class PDataset extends PGenericBox {
 		super();
 		this.dataset = dataset;
 		this.connection = connection;
+		dataset.setNode(this);
 		calcArea();
 	}
 
