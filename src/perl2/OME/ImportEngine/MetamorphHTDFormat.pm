@@ -390,7 +390,9 @@ sub importGroup {
     my $image = $self->__newImage($image_name);
 
     # Touch the HTD file
-    $self->__touchOriginalFile($group->{htd_file},"MetaMorph HTD");
+    my $htd_mex = $self->
+      __touchOriginalFile($group->{htd_file},"MetaMorph HTD");
+    OME::Tasks::ImportManager->markImageFiles($image,$htd_mex);
 
     # We can't create the pixels attribute until we know the dimensions.
     my $pixels_created = 0;
@@ -412,7 +414,9 @@ sub importGroup {
         my $filename = $file->getFilename();
 
         # Touch the TIFF file
-        $self->__touchOriginalFile($file,"MetaMorph TIFF");
+        my $tiff_mex = $self->
+          __touchOriginalFile($file,"MetaMorph TIFF");
+        OME::Tasks::ImportManager->markImageFiles($image,$tiff_mex);
 
         $theC++;
         #print STDERR "  Wavelength $theC - $filename\n";

@@ -212,8 +212,11 @@ sub __storeInputFileInfo {
     my $inarr = shift;
 
     foreach my $file_info (@$inarr) {
-        $self->{super}->__touchOriginalFile($file_info->{file},
-                                            $file_info->{format});
+        my $file_attr = $self->{super}->
+          __touchOriginalFile($file_info->{file},
+                              $file_info->{format});
+        OME::Tasks::ImportManager->
+            markImageFiles($file_info->{image_id},$file_attr);
     }
 
 }
