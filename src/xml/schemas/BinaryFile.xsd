@@ -24,7 +24,7 @@
 	<element name = "External">
 		<annotation>
 			<documentation>Describes a file location.  Can optionally specify a portion of a file using Offset and a ReadLength.
-If Offset and ReadLength are specified, Compression may not be specified..
+If Offset and ReadLength are specified in conjuction with Compression, then they point into the uncompressed file.
 			</documentation>
 		</annotation>
 		<complexType>
@@ -40,7 +40,7 @@ If Offset and ReadLength are specified, Compression may not be specified..
 			</attribute>
 			<attribute name = "Compression" default = "none">
 				<annotation>
-					<documentation>Specifies the compression scheme used to encode the data. May NOT be used in conjuction with Offset and ReadLength.</documentation>
+					<documentation>Specifies the compression scheme used to encode the data.</documentation>
 				</annotation>
 				<simpleType>
 					<restriction base = "string">
@@ -52,12 +52,12 @@ If Offset and ReadLength are specified, Compression may not be specified..
 			</attribute>
 			<attribute name = "Offset" type = "positiveInteger">
 				<annotation>
-					<documentation>May NOT be used in conjuction with Compression.</documentation>
+					<documentation>In bytes.</documentation>
 				</annotation>
 			</attribute>
 			<attribute name = "ReadLength" type = "positiveInteger">
 				<annotation>
-					<documentation>May NOT be used in conjuction with Compression.</documentation>
+					<documentation>In bytes.</documentation>
 				</annotation>
 			</attribute>
 		</complexType>
