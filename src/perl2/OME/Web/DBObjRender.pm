@@ -91,7 +91,7 @@ references to arrays and hashes.
 	# get field labels { field_name => field_label, ... }
 	my %fieldLabels = OME::Web::RenderData->getFieldLabels( "OME::Image" );
 
-	# get search fields keyed by field names (html only) { field_name => search_field, ... }
+	# get search form elements keyed by field names (html only) { field_name => search_field, ... }
 	my %searchFields = OME::Web::RenderData->getSearchFields( "OME::Image" );
 
 	# get an html reference to this object "<a href=...>"
@@ -122,13 +122,15 @@ call.
 Useful for constructing an object summary.
 =cut
 sub getFieldNames {
-	my ($proto,$type) = @_;
+	my ($proto,$type, $doNotSpecialize) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldNames( $type )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
+		    not $doNotSpecialize);
 
 	$type = $proto->_getProto( $type );
+	
 	# We don't need no *_id aliases or target
 	my @fieldNames = ('id', sort( grep( (!/_id$/ and !/^target$/), $type->getColumns()) ) );
 	return @fieldNames if wantarray;
@@ -147,12 +149,19 @@ e.g. For OME::Image, this will include all time stamps but will exclude id acces
 Useful for a detailed object representation.
 =cut
 sub getAllFieldNames { 
-	my ( $proto, $type ) = @_;
+	my ( $proto, $type, $doNotSpecialize ) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getAllFieldNames( $type )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
-	return $proto->getFieldNames( $type );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
+		    not $doNotSpecialize);
+
+	$type = $proto->_getProto( $type );
+	my @fieldNames = $type->getColumns( );
+	push @fieldNames, 'semantic_type' if $proto->_typeIsST( $type );
+	@fieldNames = ('id', sort( grep( (!/_id$/ and !/^target$/), @fieldNames) ) );
+	return @fieldNames if wantarray;
+	return \@fieldNames;
 }
 
 =head2 getFieldTypes
@@ -166,11 +175,12 @@ returns a hash { field_name => field_type }
 field_type is the reference type the field will return. it is equivalent to ref( $instance_of_type->$field_name )
 =cut
 sub getFieldTypes {
-	my ($proto,$type,$fieldNames) = @_;
+	my ($proto,$type,$fieldNames,$doNotSpecialize) = @_;
 
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldTypes( $type,$fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
+		    not $doNotSpecialize);
 
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 	$type = $proto->_getProto( $type );
@@ -192,11 +202,12 @@ Default is the list returned by getFieldNames.
 returns a hash { field_name => field_Label }
 =cut
 sub getFieldLabels {
-	my ($proto,$type,$fieldNames) = @_;
+	my ($proto,$type,$fieldNames, $doNotSpecialize) = @_;
 	
 	my $specializedRenderer;
 	return $specializedRenderer->getFieldLabels( $type,$fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
+		    not $doNotSpecialize);
 	
 	$fieldNames = $proto->getFieldNames( $type ) unless $fieldNames;
 	$type = $proto->_getProto( $type );
@@ -230,10 +241,16 @@ This relies on renderSingle for actual rendering, so subclasses do not
 need to implement this.
 =cut
 sub render {
-	my ($proto,$objects,$format,$fieldnames) = @_;
-	return $proto->renderSingle( $objects, $format,$fieldnames )
+	my ($proto,$objects,$format,$fieldnames, $doNotSpecialize) = @_;
+
+	return $proto->renderSingle( $objects, $format,$fieldnames, $doNotSpecialize )
 		unless ref( $objects ) eq 'ARRAY';
-	my @records = map( $proto->renderSingle( $_, $format ), @$objects );
+
+	my @records;
+	foreach ( @$objects ) {
+		my $record = $proto->renderSingle( $_, $format, $fieldnames, $doNotSpecialize );
+		push( @records, $record );
+	}
 	return @records if wantarray;
 	return \@records;
 }
@@ -248,18 +265,29 @@ Default is the list returned by getFieldNames.
 same as render, but works with an individual instance instead of arrays.
 =cut
 sub renderSingle {
-	my ($proto,$obj,$format,$fieldNames) = @_;
+	my ($proto,$obj,$format,$fieldNames, $doNotSpecialize) = @_;
 
 	my $specializedRenderer;
 	return $specializedRenderer->renderSingle( $obj, $format, $fieldNames )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+		    not $doNotSpecialize);
 
+	my $q = new CGI;
 	$fieldNames = $proto->getFieldNames( $obj ) unless $fieldNames;
+	my $type = $proto->_getType( $obj );
+	my $id   = $obj->id();
 	my %record;
 	foreach my $field( @$fieldNames ) {
-		$record{ $field } = $obj->$field;
-		$record{ $field } = OME::Web::RenderData->getRefToObject( $record{ $field }, $format )
-			if( ref( $record{ $field } ) );
+		if( $field eq 'id') {
+			$record{ $field } = $q->a( 
+				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id" },
+				$id
+			);
+		} else {
+			$record{ $field } = $obj->$field;
+			$record{ $field } = OME::Web::RenderData->getRefToObject( $record{ $field }, $format )
+				if( ref( $record{ $field } ) );
+		}
 	}
 	
 	return %record if wantarray;
@@ -279,11 +307,13 @@ For 'html' format, it will be an '<a href=...' that links to a
 detailed display of the object.
 =cut
 sub getRefToObject {
-	my ($proto,$obj,$format) = @_;
+	my ($proto,$obj,$format, $doNotSpecialize) = @_;
 	my $specializedRenderer;
 	return $specializedRenderer->getRefToObject( $obj, $format )
-		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) );
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $obj ) and
+		    not $doNotSpecialize);
 	
+	my $q = new CGI;
 	for( $format ) {
 		if( /^txt$/ ) {
 			return $obj->id();
@@ -292,9 +322,43 @@ sub getRefToObject {
 		if( /^html$/ ) {
 			my $type = $proto->_getType( $obj );
 			my $id   = $obj->id();
-			return "<a href='serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id'>$id</a>";
+			return  $q->a( 
+				{ href => "serve.pl?Page=OME::Web::ObjectDetail&Type=$type&ID=$id" },
+				$id
+			);
 		}
 	}
+}
+
+=head2 getSearchFields
+
+	# get html form elements keyed by field names 
+	my %searchFields = OME::Web::RenderData->getSearchFields( $type, @fieldNames );
+
+$type can be a DBObject name ("OME::Image"), an Attribute name
+("@Pixels"), or an instance of either
+$fieldNames is optional. It is used to populate the returned hash.
+Default is the list returned by getFieldNames.
+
+returns a hash { field_name => search_field, ... }
+=cut
+sub getSearchFields {
+	my ($proto,$type, $fieldNames, $doNotSpecialize) = @_;
+	
+	my $specializedRenderer;
+	return $specializedRenderer->getSearchFields( $type, $fieldNames )
+		if( $specializedRenderer = $proto->_getSpecializedRenderer( $type ) and
+		    not $doNotSpecialize);
+
+	$type = $proto->_getProto( $type );
+
+	my %searchFields;
+	my $q = new CGI;
+	$searchFields{ $_ } = $q->textfield( -name => $type."_".$_ , -size => '5' )
+		foreach ( @$fieldNames );
+
+	return %searchFields if wantarray;
+	return \%searchFields;
 }
 
 =head2 _getSpecializedRenderer
@@ -343,8 +407,10 @@ sub _getProto {
 	# get prototype from instance
 	if( ref($type) ) {
 		$type = ref( $type ) ;
-		return $type if $type =~ /^OME::SemanticType::/;
 	}
+	
+	# Don't try to load proto if type is a ST.
+	return $type if $type =~ /^OME::SemanticType::__/;
 	
 	# get DBObject from attribute & ensure it is loaded.
 	if( $type =~ /^@/ ) {
@@ -387,6 +453,13 @@ sub _getType {
 
 	# it's a DBObject proto
 	return $type;
+}
+
+sub _typeIsST {
+	my ($proto, $type) = @_;
+	$type = $proto->_getProto( $type );
+	return 1 if $type =~ /OME::SemanticType::__/;
+	return 0;
 }
 
 =head1 Author
