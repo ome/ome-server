@@ -25,13 +25,17 @@ The 'host' part needs to be changed to the FQDN of your back-end unless you
 will only run localhost workers.
 
 * Finally, if you will be using remote workers, you will need to configure
-pg_hba.conf which lives on the back-end in pgsql/data/ (the postgres 'home') to allow the remote workers to connect to your DB.  Usually a trusted authentication from specified IPs is sufficient:
+pg_hba.conf which lives on the back-end in pgsql/data/ (the postgres 'home') to
+allow the remote workers to connect to your DB.  Usually a trusted
+authentication from specified IPs is sufficient:
 
 host       ome         127.0.0.1     255.255.255.255    trust
 replace 127.0.0.1 with the IP address of your worker.
 
 * And lastly, the OME::Analysis::Engine::SimpleWorkerExecutor is selected as
-the executor by setting the OME_DISTRIBUTED environment variable.  If that's not convenient, you can change how this is done in:
+the executor by setting the OME_DISTRIBUTED environment variable.  If that's
+not convenient, you can change how this is done in:
 OME/Analysis/Engine/Executor.pm
 
-As this gets incorporated into the system more, these steps will gradually disappear.
+As this gets incorporated into the system more, these steps will gradually
+disappear.
