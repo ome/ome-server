@@ -93,18 +93,19 @@ clean :
 	$(MAKE) -C cgrayce clean
 
 install:
-	install -d ../bin
-	install -d ../bin/findSpots
-	install -c findSpotsOME ../bin/findSpots/findSpotsOME
-	install -c findSpotsOME ../bin/findSpots/findSpots
-	install -d ../bin/BinarizeGlobal
-	install -c BinarizeGlobal ../bin/BinarizeGlobal/BinarizeGlobal
-	install -c DumpTIFFheader ../bin/DumpTIFFheader
-	install -c DumpTIFFstats ../bin/DumpTIFFstats
-	install -c SoftWorxSlice ../bin/SoftWorxSlice
-	install -c DumpSoftWorxHeader ../bin/DumpSoftWorxHeader
-	install -c DumpSoftWorxExHeader ../bin/DumpSoftWorxExHeader
-	install -c DumpSoftWorxStats ../bin/DumpSoftWorxStats
+	install -d /OME
+	install -d /OME/bin
+	install -d /OME/bin/findSpots
+	install -c findSpotsOME /OME/bin/findSpots/findSpotsOME
+	install -c findSpotsOME /OME/bin/findSpots/findSpots
+	install -d /OME/bin/BinarizeGlobal
+	install -c BinarizeGlobal /OME/bin/BinarizeGlobal/BinarizeGlobal
+	install -c DumpTIFFheader /OME/bin/DumpTIFFheader
+	install -c DumpTIFFstats /OME/bin/DumpTIFFstats
+	install -c SoftWorxSlice /OME/bin/SoftWorxSlice
+	install -c DumpSoftWorxHeader /OME/bin/DumpSoftWorxHeader
+	install -c DumpSoftWorxExHeader /OME/bin/DumpSoftWorxExHeader
+	install -c DumpSoftWorxStats /OME/bin/DumpSoftWorxStats
 	install -c DumpDV /usr/local/bin/DumpDV
 	install -c SetDVwave /usr/local/bin/SetDVwave
 	$(MAKE) -C cgrayce install

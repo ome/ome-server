@@ -97,7 +97,7 @@ tarfile:
 	/bin/rm -R $(NAME)
 
 install:
-	install -d ../../bin
-	install -c ome_cccp ../../bin/ome_cccp
-	install -c ome_tmcp ../../bin/ome_tmcp
+	install -d /OME/bin
+	install -c ome_cccp /OME/bin/ome_cccp
+	install -c ome_tmcp /OME/bin/ome_tmcp
 
