@@ -170,6 +170,7 @@ sub startImport {
              global_import  => undef,
              dataset_import => {},
              image_import   => {},
+             image_files    => {},
             };
     bless $self, $class;
 
@@ -190,6 +191,29 @@ caller to commit any database transactions.
 sub finishImport {
     my $class = shift;
     die "No active import!" unless defined $self;
+
+    # Go through all of the images which were created, and create the
+    # links between the original files and import modules.
+
+    foreach my $image_id (keys %{$self->{image_files}}) {
+        my $files = $self->{image_files}->{$image_id};
+        my $import_mex = $self->{image_import}->{$image_id};
+
+        if (defined $files) {
+            # Possibly create a virtual MEX for these files.
+            my $files_mex = OME::Tasks::ModuleExecutionManager->
+              createVirtualMEX($files);
+
+            # Link it to the Original Files MEX
+            OME::Tasks::ModuleExecutionManager->
+                addActualInput($files_mex,$import_mex,'Files');
+        } else {
+            # Link it to the Original Files MEX
+            OME::Tasks::ModuleExecutionManager->
+                addActualInput($self->{original_files},$import_mex,'Files');
+        }
+
+    }
 
     $self = undef;
 }
@@ -328,7 +352,7 @@ sub getImageImportMEX {
     die "No active import!" unless defined $self;
     return undef unless $self->{valid_modules};
 
-    my ($image) = @_;
+    my ($image,$files) = @_;
     my $image_id = ref($image)? $image->id(): $image;
 
     # Don't create a image import MEX until it's needed
@@ -343,10 +367,6 @@ sub getImageImportMEX {
         my $image_import = OME::Tasks::ModuleExecutionManager->
           createMEX($image_import_module,'I',$image);
 
-        # Link it to the Original Files MEX
-        OME::Tasks::ModuleExecutionManager->
-            addActualInput($self->{original_files},$image_import,'Files');
-
         # Create a universal execution for this module, so that the
         # analysis engine never tries to execute it.
         OME::Tasks::ModuleExecutionManager->
@@ -354,11 +374,36 @@ sub getImageImportMEX {
 
         # And save it
         $self->{image_import}->{$image_id} = $image_import;
+
+        # If there were original files specified now, go ahead and mark
+        # them.
+
+        if (defined $files) {
+            $self->{image_files}->{$image_id} = $files;
+        }
     }
 
     return $self->{image_import}->{$image_id};
 }
 
+sub markImageFiles {
+    my $class = shift;
+    die "No active import!" unless defined $self;
+    return undef unless $self->{valid_modules};
+
+    my ($image,$files) = @_;
+    my $image_id = ref($image)? $image->id(): $image;
+
+    if (ref($files) eq 'ARRAY') {
+        push @{$self->{image_files}->{$image_id}}, @$files;
+    } elsif (UNIVERSAL::isa($files,'OME::SemanticType::Superclass')) {
+        push @{$self->{image_files}->{$image_id}}, $files;
+    } else {
+        die "Invalid files parameter";
+    }
+
+    return;
+}
 
 1;
 
