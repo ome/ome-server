@@ -294,50 +294,54 @@ sub importGroup {
     $xref->{'Image.NumTimes'} = 1;
     $xref->{'Image.NumWaves'} = 1;
 
-
-    my @custom_tags = (MD_FILETAG, MD_SCALEPIXEL, MD_COLORTABLE, MD_LABNAME, MD_SAMPLEINFO, MD_PREPDATE, MD_PREPTIME, MD_FILEUNITS);
-    foreach my $tg (@custom_tags) {
-        my $t_arr = $tags->{$tg};
-	if (!defined $t_arr) {
-	    next;
-	}
-	my $t_hash = $$t_arr[0];
-	my $status = readTag ($self, $t_hash->{tag_id}, $t_hash->{tag_type},
-			      $t_hash->{value_count}, $t_hash->{value_offset},
-			      $t_hash->{current_offset});
-    }
-
-    my $image = ($self->{super})->__newImage($file->getFilename());
-    $self->{image} = $image;
-
-
-    # pack together & store info on input file
     my @finfo;
-    $self->__storeOneFileInfo(\@finfo, $file, $params, $image,
-			      0, $xref->{'Image.SizeX'}-1,
-			      0, $xref->{'Image.SizeY'}-1,
-			      0, 0,
-			      0, 0,
-			      0, 0,
-			      "Molecular Dynamics GEL");
+    my $image;
+  PROCESS:
+    {
+	my @custom_tags = (MD_FILETAG, MD_SCALEPIXEL, MD_COLORTABLE, MD_LABNAME, MD_SAMPLEINFO, MD_PREPDATE, MD_PREPTIME, MD_FILEUNITS);
+	foreach my $tg (@custom_tags) {
+	    my $t_arr = $tags->{$tg};
+	    if (!defined $t_arr) {
+		next;
+	    }
+	    my $t_hash = $$t_arr[0];
+	    my $status = readTag ($self, $t_hash->{tag_id}, $t_hash->{tag_type},
+				  $t_hash->{value_count}, $t_hash->{value_offset},
+				  $t_hash->{current_offset});
+	    last PROCESS
+		unless ($status eq "");
+	}
 
-    # Re-enable this line when system can handle 4 byte data
-    #$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
-    $self->{inflation} = 1;
-    my $inflation = 1;
-    my ($pixels, $pix) = 
-	($self->{super})->__createRepositoryFile($image, 
-						 $xref->{'Image.SizeX'},
-						 $xref->{'Image.SizeY'},
-						 $xref->{'Image.SizeZ'},
-						 $xref->{'Image.NumWaves'},
-						 $xref->{'Image.NumTimes'},
-						 $self->{inflation} * $xref->{'Data.BitsPerPixel'});
-    $self->{pix} = $pix;
-    $self->{pixels} = $pixels;
-    my $interpretation = $tags->{TAGS->{PhotometricInterpretation}}->[0];
-    $status = readWritePixels($self, $params, $interpretation, $pix);
+        $image = ($self->{super})->__newImage($file->getFilename());
+	$self->{image} = $image;
 
+
+	# pack together & store info on input file
+	$self->__storeOneFileInfo(\@finfo, $file, $params, $image,
+				  0, $xref->{'Image.SizeX'}-1,
+				  0, $xref->{'Image.SizeY'}-1,
+				  0, 0,
+				  0, 0,
+				  0, 0,
+				  "Molecular Dynamics GEL");
+
+	# Re-enable this line when system can handle 4 byte data
+	#$self->{inflation} = ($pixel_format == SQUARE_ROOT) ? 2 : 1;
+	$self->{inflation} = 1;
+	my $inflation = 1;
+	my ($pixels, $pix) = 
+	    ($self->{super})->__createRepositoryFile($image, 
+						     $xref->{'Image.SizeX'},
+						     $xref->{'Image.SizeY'},
+						     $xref->{'Image.SizeZ'},
+						     $xref->{'Image.NumWaves'},
+						     $xref->{'Image.NumTimes'},
+						     $self->{inflation} * $xref->{'Data.BitsPerPixel'});
+	$self->{pix} = $pix;
+	$self->{pixels} = $pixels;
+	my $interpretation = $tags->{TAGS->{PhotometricInterpretation}}->[0];
+	$status = readWritePixels($self, $params, $interpretation, $pix);
+    }
     $file->close();
 
     if ($status eq "") {
@@ -345,8 +349,7 @@ sub importGroup {
 	# Store info about each input channel (wavelength).
 	storeChannelInfo($self, $session);
     } else {
-	logwarn "status: $status";
-	return;
+	die "$status";
     }
 
     my @instrInfo;
@@ -469,8 +472,7 @@ sub  scalepixel {
     my @vals;
     eval { @vals = OME::ImportEngine::TIFFUtils::getTagValue($fih, $type, $cnt, $offset, $endian) };
     if ($@) {
-	logwarn "GELreader error calling getTagValue: $@";
-	return $@;
+	return "GELreader error calling getTagValue: $@";
     }
     $pixel_scale = pop(@vals);
     $status = "Failed to extract pixel scale"
