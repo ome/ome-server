@@ -2,9 +2,15 @@
 <AnalysisChains xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
 	<AnalysisChain Name = "Image import analyses" Locked = "false">
 		<Nodes>
+			<Node NodeID = "Import" ProgramName = "Importer"/>
 			<Node NodeID = "Stack" ProgramName = "Stack statistics"/>
 			<Node NodeID = "Plane" ProgramName = "Plane statistics"/>
 		</Nodes>
-		<Links/>
+		<Links>
+			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Stack" ToInputName="Pixels"/>
+			<Link FromNodeID="Import" FromOutputName="Dimensions" ToNodeID="Stack" ToInputName="Dimensions"/>
+			<Link FromNodeID="Import" FromOutputName="Pixels" ToNodeID="Plane" ToInputName="Pixels"/>
+			<Link FromNodeID="Import" FromOutputName="Dimensions" ToNodeID="Plane" ToInputName="Dimensions"/>
+		</Links>
 	</AnalysisChain>
 </AnalysisChains>

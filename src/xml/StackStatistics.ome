@@ -57,6 +57,126 @@
       <Element Name="Y" DBLocation="STACK_STATISTICS.CENTROID_Y" DataType="float"/>
       <Element Name="Z" DBLocation="STACK_STATISTICS.CENTROID_Z" DataType="float"/>
     </SemanticType>
+
+
+		<SemanticType
+			Name= "Dimensions"
+			AppliesTo = "I"
+			Description = "Describes the physical size of each dimension of the pixels in an image in microns">
+
+		<!-- These 6 elements are here temporarily until we make the code changes to move them to the Pixels ST. -->
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_X"
+				DataType = "integer"
+				Description="Number of pixels on the X axis."/>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_Y"
+				DataType = "integer"
+				Description="Number of pixels on the Y axis."/>
+			<Element
+				Name= "SizeZ"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_Z"
+				DataType = "integer"
+				Description="Number of pixels on the Z axis."/>
+			<Element
+				Name= "SizeC"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_C"
+				DataType = "integer"
+				Description="Number of channel components in all logical channels."/>
+			<Element
+				Name= "SizeT"
+				DBLocation = "IMAGE_DIMENSIONS.SIZE_T"
+				DataType = "integer"
+				Description="Number of time points"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_DIMENSIONS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+		<!-- The rest of these elements will be left in Dimensions, which will then mean 'Physical Pixel Dimmensions'. -->
+
+			<Element
+				Name= "PixelSizeX"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_X"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeY"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Y"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeZ"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_Z"
+				DataType = "float"
+				Description="in microns"/>
+			<Element
+				Name= "PixelSizeC"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_C"
+				DataType = "float"
+				Description="in nanometers"/>
+			<Element
+				Name= "PixelSizeT"
+				DBLocation = "IMAGE_DIMENSIONS.PIXEL_SIZE_T"
+				DataType = "float"
+				Description="in seconds"/>
+		</SemanticType>
+
+		<SemanticType
+			Name= "Pixels"
+			AppliesTo = "I"
+			Description = "Storage location and data type of the image pixels, including the extent of each dimension in the 5-D array.">
+		<!-- This is commented out for now and moved back into the Image STD until the code catches up with this new setup.
+		
+			<Element
+				Name= "SizeX"
+				DBLocation = "IMAGE_PIXELS.SIZE_X"
+				DataType = "integer"
+				Description="Number of pixels on the X axis."/>
+			<Element
+				Name= "SizeY"
+				DBLocation = "IMAGE_PIXELS.SIZE_Y"
+				DataType = "integer"
+				Description="Number of pixels on the Y axis."/>
+			<Element
+				Name= "SizeZ"
+				DBLocation = "IMAGE_PIXELS.SIZE_Z"
+				DataType = "integer"
+				Description="Number of pixels on the Z axis."/>
+			<Element
+				Name= "SizeC"
+				DBLocation = "IMAGE_PIXELS.SIZE_C"
+				DataType = "integer"
+				Description="Number of channel components in all logical channels."/>
+			<Element
+				Name= "SizeT"
+				DBLocation = "IMAGE_PIXELS.SIZE_T"
+				DataType = "integer"
+				Description="Number of time points"/>
+			<Element
+				Name= "BitsPerPixel"
+				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
+				DataType = "integer"/>
+		 -->
+			<Element
+				Name= "PixelType"
+				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
+				DataType = "string"/>
+			<Element
+				Name= "FileSHA1"
+				DBLocation = "IMAGE_PIXELS.FILE_SHA1"
+				DataType = "string"/>
+			<Element
+				Name= "Repository"
+				DBLocation = "IMAGE_PIXELS.REPOSITORY"
+				DataType = "reference"
+				RefersTo = "Repository"/>
+			<Element
+				Name= "Path"
+				DBLocation = "IMAGE_PIXELS.PATH"
+				DataType = "string"/>
+		</SemanticType>
 </STD:SemanticTypeDefinitions>
 
 <AML:AnalysisModuleLibrary
@@ -71,6 +191,8 @@
 	ModuleType = "OME::Analysis::CLIHandler" ProgramID = "/OME/bin/OME_Image_XYZ_stats" 
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>
+		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = ""/>
+		<FormalInput Name = "Dimensions" SemanticTypeName = "Pixels" Description = ""/>
 		<FormalOutput Name = "Stack minimum"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack"/>
 		<FormalOutput Name = "Stack maximum"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack"/>
 		<FormalOutput Name = "Stack mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack"/>
