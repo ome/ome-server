@@ -56,25 +56,13 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 Delete Image from database
 
 
-=head2 listMatching ($ref,$used)
-
+=head2 listMatching ($ref,$used,$datasetID)
+datasetID (optional) if not defined dataset=current dataset
 ref=ref array  list group_id (optional)
 
 Images in Research group
 if used defined, images in Research group not already used by project
 
-
-=head2 listGroup (deprecated)
-
-Check images associated to a given Research group
-Return: ref array with image objects
-
-=head2 listNotUsed (deprecated)
-
-
-Compare images in the current dataset and ones available in the Research group
-return list of images not used.
-Return: ref array with image object
 
 =head2 load ($imageID)
 
@@ -108,11 +96,11 @@ Remove image from datasets
 
 use strict;
 use OME::SetDB;
-
+use OME::Tasks::Thumbnails;
 sub new{
 	my $class=shift;
 	my $self={};
-	$self->{session}=shift;
+	$self->{session}=shift;	
 	bless($self,$class);
    	return $self;
 
@@ -128,7 +116,7 @@ sub delete{
 	my $session=$self->{session};
 	my ($id)=@_;
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());
-	my $result=deleteInMap($id,$db);
+	my $result=deleteInMap($session,$id,$db);
 	my $rep=deleteImage($id,$db) if defined $result;
 	$db->Off();
 	return $rep;
@@ -140,25 +128,31 @@ sub delete{
 # Parameters:
 #	ref=ref array  list group_id (optional)
 #	used = if defined check images used and the ones in Research group
+#	datasetID (optional)
 # Return: ref array of image objects
 
 sub listMatching{
 	my $self=shift;
 	my $session=$self->{session};
-	my ($ref,$used)=@_;
+	my ($ref,$used,$datasetID)=@_;
 	my $result;
 	my @gpImages=();
 	if (defined $ref){
 		foreach (@$ref){
-		push(@gpImages,$session->Factory()->findObjects("OME::Image", 'group_id' =>$_));
-
+		  push(@gpImages,$session->Factory()->findObjects("OME::Image", 'group_id' =>$_));
 		}
 	}else{
   	  @gpImages = $session->Factory()->findObjects("OME::Image");
 	}
-
+	
 	if (defined $used){
-	   my @usedImages=$session->dataset()->images();
+		my $dataset;
+		if (defined $datasetID){
+			$dataset=$session->Factory()->loadObject("OME::Dataset",$datasetID);
+		}else{
+			$dataset=$session->dataset();
+		}
+	   my @usedImages=$dataset->images();
 	   $result=notUsedImages(\@gpImages,\@usedImages);
 	}else{
 	   $result=\@gpImages;
@@ -168,8 +162,35 @@ sub listMatching{
 
 
 
-#############
+#################
+# Parameters
+#	userID
+#	projectID 
+# Return list of image object
+sub listImages{
+	my $self=shift;
+	my ($userID,$projectID)=@_;
+	my $session=$self->{session};
+	my @listImages=();
+	my @projects=();
+	if (defined $userID){
+		@projects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $userID);
+	}elsif (defined $projectID){
+		@projects=$session->Factory()->findObjects("OME::Project",'project_id'=> $projectID);
+	}
+	foreach my $p (@projects){
+		my @datasets=$p->datasets();
+		foreach my $d (@datasets){
+			push(@listImages,$d->images()); 
+	   	}
+	}
+	
+	my $out=checkDuplicate(\@listImages);
+	return $out;
 
+}
+
+#############
 # Parameters: 
 #	imageid = image_id 
 # Return:  image object
@@ -221,9 +242,46 @@ sub remove{
 }
 
 
+
+
+####################
+# Parameters: 
+#	ref = ref list of image_id
+sub createThumbnail{
+	my $self=shift;
+	my ($ref)=@_;
+	my $session=$self->{session};
+	my $factory=$session->Factory();
+	my $generator= new OME::Tasks::Thumbnails($session);
+	my %listThumbnails=();
+	foreach my $id (@$ref){
+	   my $image=$factory->loadObject("OME::Image",$id);
+	   my $out=$generator->generateOMEimage($image);
+	   my $thumbnail=$generator->generateOMEthumbnail($out);
+	   $listThumbnails{$id}={'name'=>$image->name(), 'thumbnail'=>$thumbnail};
+	}
+	return \%listThumbnails;
+
+}
+
 ####################
 # PRIVATE METHODS  #
 ####################
+
+sub checkDuplicate{
+	my ($ref)=@_;
+	  my %seen=();
+  	my $object;
+  	my @a=();
+  	foreach $object (@$ref){
+	  my $id=$object->image_id();
+    	 push(@a,$object) unless $seen{$id}++;
+   	}
+  	return \@a;
+}
+
+
+
 
 sub deleteImage{
 	my ($id,$db)=@_;
@@ -236,16 +294,21 @@ sub deleteImage{
 }
 
 sub deleteInMap{
-	my ($id,$db)=@_;
-	# MUST FIND OTHER SOLUTION
-	my @tables=qw(image_dataset_map image_dimensions stack_statistics plane_statistics image_files_xyzwt image_info image_pixels image_plates imaging_environments logical_channels channel_components);
-
-
-	# my @tables=qw(image_dataset_map image_dimensions image_files_xyzwt image_screen_info image_stage_info image_wavelengths xy_image_info xy_softworx_info xyz_image_info features ome_sessions_images);
+	my ($session,$id,$db)=@_;
+	my @tables=();
+	#existing
+	@tables=qw(image_dataset_map image_files_xyzwt ome_sessions_images);	#last one just in case!
+	# dynamic
+      my @tablesDynamic=$session->Factory()->findObjects("OME::DataTable",'granularity'=>'I');
+  	my @dynamic=();
+  	foreach (@tablesDynamic){
+  	 push(@dynamic,lc($_->table_name()));
+  	}
+  	push(@tables,@dynamic);
  	foreach (@tables){
 		my ($condition,$result);
      		$condition="image_id=".$id;
-     		$result=do_delete($_,$condition,$db); 
+     		$result=do_delete($_,$condition,$db);
      		return undef unless (defined $result);
 	}
 	return 1;
@@ -260,7 +323,6 @@ sub notMyProject{
 		}
  	}else{
 		@groupProjects=$session->Factory()->findObjects("OME::Project");
-
 	}
 	my @myProjects=$session->Factory()->findObjects("OME::Project",'owner_id'=> $session->User()->id());
 	my $result=notUsed(\@groupProjects,\@myProjects);
@@ -272,7 +334,7 @@ sub notUsed{
  	my %in_b=();
  	my @only_a=();
  	foreach (@$refb){
-   	 $in_b{$_->project_id()}=1;
+   	   $in_b{$_->project_id()}=1;
  	}
  	foreach (@$refa){
    	 push(@only_a,$_) unless exists $in_b{$_->project_id()};
@@ -312,9 +374,11 @@ sub usedDatasetImage{
 	my %userImages=();
 	if (defined $result){
 	  foreach (@$result){
-	    foreach my $obj ($_->datasets()){
+	    my @datasets=$_->datasets();
+	    foreach my $obj (@datasets){
 		$gpDatasets{$obj->dataset_id()}=$obj unless (exists $gpDatasets{$obj->dataset_id()});
-		foreach my $i ($obj->images()){
+		my @images=$obj->images();
+		foreach my $i (@images){
 		  $gpImages{$i->image_id()}=$i->name() unless (exists $gpImages{$i->image_id()});
 		}
 	    }
@@ -322,7 +386,8 @@ sub usedDatasetImage{
 	}
 	
 	foreach (@$projects){
-	  foreach my $dataset ($_->datasets()){
+	  my @datasets=$_->datasets();
+	  foreach my $dataset (@datasets){
 		my %datasetInfo=();
        	my %remove=();
 		$datasetInfo{$dataset->dataset_id()}=$dataset;
@@ -331,7 +396,8 @@ sub usedDatasetImage{
 	 	}else{
 	   		$remove{$dataset->dataset_id()}=1 ;
        	}
-		foreach my $i ($dataset->images()){
+		my @images=$dataset->images();
+		foreach my $i (@images){
 			if (exists($userImages{$i->image_id()})){
 	  		  my $list=$userImages{$i->image_id()}->{list};
             	  my %fusion=();

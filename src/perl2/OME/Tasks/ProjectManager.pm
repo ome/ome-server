@@ -59,8 +59,15 @@ OME::SessionManager yields an L<OME::Session|OME::Session> object.
 projectID = optional if not defined, add dataset to current project
 Add an existing dataset to a project.
 
-=head2 change ($description,$name)
 
+=head2 addToProject($datasetID,$projectID)
+
+Add dataset_project_map
+extension of addDataset of OME::Project
+
+=head2 change ($description,$name,$projectID)
+
+projectId (optional) if not defined modify current project
 Modify name/description of a project.
 
 =head2 create ($ref)
@@ -118,7 +125,7 @@ sub new{
 ###############################
 # Parameters:
 # 	datasetID = dataset_id to add
-#	projectID = if not defined, add current project
+#	projectID = if not defined, add to current project
 
 sub add{
 	my $self=shift;
@@ -128,30 +135,57 @@ sub add{
 	if (defined $projectID){
 	    $project=$session->Factory()->loadObject("OME::Project",$projectID);
 	}else{
-		$project=$session->project();
-
+	    $project=$session->project();
 	}
-	my $dataset=$project->addDatasetID($datasetID);
+	my $dataset=$self->addToProject($datasetID,$project->project_id());
 	$session->dataset($dataset);
 	$project->writeObject();
 	$session->writeObject();
-
 	return $dataset;
 
 }
 
 
 
+#################
+# Parameters
+#	datasetId
+#	projectID
+sub addToProject{
+	my $self=shift;
+	my ($datasetID,$projectID)=@_;
+	my $factory=$self->{session}->Factory();
+	my $dataset	=$factory->loadObject("OME::Dataset",$datasetID);
+	my $map = $factory->findObject("OME::Project::DatasetMap",
+		  'dataset_id' => $datasetID,
+		  'project_id' => $projectID
+	);
+	if (not defined $map) {
+		$map=$factory->newObject("OME::Project::DatasetMap",{
+			project_id => $projectID,
+			dataset_id => $datasetID
+			} );
+	}
+	return $dataset;
+}
+
+
 ###############################
 # Paramaters:
 #	description = project's description 
 #	name		= project's name
+#	projectID	= projectId (optional)
 
 sub change{
  	my $self=shift;
 	my $session=$self->{session};
-	my ($description,$name)=@_;
-	my $project=$session->project();
+	my ($description,$name,$projectID)=@_;
+	my $project;
+	if (defined $projectID){
+		$project=$session->Factory()->loadObject("OME::Project",$projectID);
+	}else{
+		$project=$session->project();
+	}
 	$project->name($name) if defined $name;
 	$project->description($description) if defined $description;
 	$project->writeObject();
@@ -171,9 +205,7 @@ sub create{
 	my $existingDataset=$session->dataset();
 	my $project = $session->Factory()->newObject("OME::Project", $ref);
 	$project->writeObject();
-
 	$session->project($project);
-
 	if (defined $existingDataset){
 		 $session->dissociateObject('dataset');
 	}
@@ -196,7 +228,8 @@ sub delete{
 	my $currentProject=$session->project();
 	my $deleteProject=$session->Factory()->loadObject("OME::Project",$id);
 	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
-      my @datasets=$deleteProject->datasets();
+	 
+	my @datasets=$deleteProject->datasets();
 	my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  	
 	if (scalar(@datasets)>0){
 	  $result=deleteProjectDatasetMap($deleteProject,\@datasets,$db);
@@ -232,7 +265,7 @@ sub exist{
 
 ###############
 # Parameters: 
-#	userID Optional
+#	userID (Optional)
 #	$ref=ref array  list group_id (optional)
 # Return: ref array of project objects owned by a given user.
 
@@ -257,28 +290,6 @@ sub listMatching{
 	return \@projects;
 }
 
-#sub list{
-#	my $self=shift;
-#	my $session=$self->{session};
-#	my @projects=$session->Factory()->findObjects("OME::Project",'owner_id'=>$session->User()->id() );
-#	return \@projects;
-
-#}
-
-##############
-# Parameters:
-# 	usergpID = user's group_id
-# Return : ref array of project objects in a given research group.
-
-#sub listGroup{
-#	my $self=shift;
-#	my $session=$self->{session};
-#	my ($usergpID)=@_;
-#	#my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$session->User()->Group()->id());
-#	my @projects=$session->Factory()->findObjects("OME::Project",'group_id'=>$usergpID);
-#	return \@projects;
-
-#}
 
 ############
 # Parameters:
