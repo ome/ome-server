@@ -28,11 +28,11 @@ use Log::Agent;
 use XML::LibXML;
 use XML::LibXSLT;
 
-use OME::Tasks::SemanticTypeImport;
+use OME::ImportExport::SemanticTypeImport;
 use OME::Tasks::ProgramImport;
 use OME::Tasks::ChainImport;
-use OME::Tasks::HierarchyImport;
-use OME::Tasks::ResolveFiles;
+use OME::ImportExport::HierarchyImport;
+use OME::ImportExport::ResolveFiles;
 
 sub new {
     my ($proto, %params) = @_;
@@ -80,8 +80,8 @@ sub importFile {
 	my $xyzwt = $session->Factory->findObject("OME::Image::ImageFilesXYZWT",file_sha1 => $sha1);
 	return if defined $xyzwt;
 
-    my $resolve = OME::Tasks::ResolveFiles->new( session => $session, parser => $parser )
-    	or die "Could not instantiate OME::Tasks::ResolveFiles\n";
+    my $resolve = OME::ImportExport::ResolveFiles->new( session => $session, parser => $parser )
+    	or die "Could not instantiate OME::ImportExport::ResolveFiles\n";
     my $doc = $resolve->importFile( $filename );
  	
  	# Apply Stylesheet
@@ -119,7 +119,7 @@ sub processDOM {
 
     # Parse the semantic types
 
-    my $typeImporter = OME::Tasks::SemanticTypeImport->
+    my $typeImporter = OME::ImportExport::SemanticTypeImport->
       new(session => $self->{session},
           _parser => $self->{_parser},
           debug => $self->{debug});
@@ -157,7 +157,7 @@ sub processDOM {
 
     # Parse the hierarchy and custom attributes
 
-    my $hierarchyImporter = OME::Tasks::HierarchyImport->
+    my $hierarchyImporter = OME::ImportExport::HierarchyImport->
       new(session         => $self->{session},
           _parser         => $self->{_parser},
           semanticTypes   => $semanticTypes,
