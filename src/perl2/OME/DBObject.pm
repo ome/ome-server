@@ -1955,6 +1955,8 @@ sub __newInstance {
 
     $self->__fillInstance($i,$columns_wanted,$sth_vals);
 
+    # Don't store this object in the cache if there were specific
+    # columns requested.
     $self->__storeCachedObject()
       unless $columns_specified;
 
