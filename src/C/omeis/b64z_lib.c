@@ -49,7 +49,10 @@
 #include "base64.h"
 #include "string.h"
 
-#define SIZEOF_BUF 1032 /* needs to be multiple of 3 && 4 */
+/* Needs to be a multiple of 12 (3 && 4)
+ * In general the system is IO bound, causing a larger buffer
+ * not to affect performance. */
+#define SIZEOF_BUF 20736
 #define BLOCK_SIZE_100K 9
 
 
