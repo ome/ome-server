@@ -71,10 +71,19 @@
 	<element name = "Input">
 		<complexType>
 			<choice>
-				<element name = "PixelsInput">
+				<element name = "PixelsArray">
 					<complexType>
 						<attribute name = "FormalInput" use = "required" type = "string"/>
-						<attribute name = "ID" use = "required" type = "ID"/>
+						<attribute name = "ID" type = "ID"/>
+					</complexType>
+				</element>
+				<element name = "PixelsSlice">
+					<annotation>
+						<documentation>Present a Pixels numeric Array to the Function. The FormalInput should be a PixelsSlice ST or something that has implementn psuedo polymorphism of the PixelsSlice ST.</documentation>
+					</annotation>
+					<complexType>
+						<attribute name = "FormalInput" use = "required" type = "string"/>
+						<attribute name = "ID" type = "ID"/>
 					</complexType>
 				</element>
 				<element name = "Scalar">
@@ -88,16 +97,25 @@
 	<element name = "Output">
 		<complexType>
 			<choice>
-				<element name = "PixelsOutput">
+				<element name = "PixelsArray">
 					<complexType>
 						<attribute name = "FormalOutput" use = "required" type = "string"/>
-						<attribute name = "ID" use = "required" type = "ID"/>
+						<attribute name = "ID" type = "ID"/>
 					</complexType>
 				</element>
 				<element name = "Scalar">
 					<complexType>
 						<attribute name = "OutputLocation" use = "required" type = "string"/>
 						<attribute name = "UseTemplate" type = "string"/>
+					</complexType>
+				</element>
+				<element name = "Struct">
+					<annotation>
+						<documentation>Struct outputs are expected to have the same structure and field names as the STs of their formal outputs. We do not anticipate this to be a widely used feature.</documentation>
+					</annotation>
+					<complexType>
+						<attribute name = "FormalOutput" use = "required" type = "string"/>
+						<attribute name = "ID" type = "ID"/>
 					</complexType>
 				</element>
 			</choice>
