@@ -11,14 +11,15 @@ ifdef OSTYPE
 endif
 
 IM_CFLAGS = -Izoom/include
-IM_LIBS = -Lzoom/lib/ -lzoom -lpic -ltiff -ljpeg -lpng 
+IM_LIBS = -Lzoom/lib/ -lzoom -lpic -ltiff -ljpeg -lpng
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
 CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-noreturn -Wundef -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_LIB) $(IM_LIBS)
 INCS   = $(FINK_INCLUDE) 
-OBJS   = digest.o method.o composite.o xmlBinaryResolution.o ../base64.o ../b64z_lib.o
+OBJS   = digest.o method.o composite.o cgi.o repository.o Pixels.o File.o \
+		xmlBinaryResolution.o ../base64.o ../b64z_lib.o
 
 ifndef OME_ROOT
 OME_ROOT=/OME
@@ -38,7 +39,7 @@ all: make_zoom omeis
 make_zoom:
 	$(MAKE) -C zoom install
 
-omeis: omeis.o $(OBJS)
+omeis: omeis.o zoom/lib/libzoom.a zoom/lib/libpic.a $(OBJS)
 	$(CC) $(OBJS) $(LIBS) -o omeis omeis.o
 
 omeis.o: omeis.c omeis.h
@@ -53,8 +54,23 @@ method.o: method.c method.h
 composite.o: composite.c composite.h
 	$(CC) $(CFLAGS) $(IM_CFLAGS) -c composite.c
 
+cgi.o: cgi.c cgi.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) -c cgi.c
+
+repository.o: repository.c repository.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) -c repository.c
+
+Pixels.o: Pixels.c Pixels.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) -c Pixels.c
+
+File.o: File.c File.h
+	$(CC) $(CFLAGS) $(IM_CFLAGS) -c File.c
+
 xmlBinaryResolution.o: xmlBinaryResolution.c
 	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(INCS) $(XML2_CFLAGS)
+
+zoom/lib/libzoom.a: make_zoom
+zoom/lib/libpic.a: make_zoom
 
 clean:
 	/bin/rm -f *.o *~ core omeis

@@ -38,6 +38,8 @@
 #define OMEIS_MAGICK_H
 
 #include "omeis.h"
+#include "cgi.h"
+#include "Pixels.h"
 
 typedef struct {
 	PixelsRep *thePixels;

@@ -42,7 +42,7 @@
 #include <bzlib.h>
 #include "../base64.h"
 #include "../b64z_lib.h"
-#include "omeis.h"
+#include "Pixels.h"
 
 /* This is a stack to keep track of
 / whether an element has content or is empty AND

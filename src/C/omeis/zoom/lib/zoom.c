@@ -248,7 +248,8 @@ void zoom_continuous (Pic *apic, Window_box *awin, Pic *bpic, Window_box *bwin,
 	Mapping *m, Filt *xfilt, Filt *yfilt)
 {
     int xy;
-    Window_box a, b, bc, t;
+    Window_box a, b, bc;
+    Window t;
     Filtpar ax, ay;
 
     /* we consider 3 channel and 4 channel to be the same */
@@ -303,7 +304,7 @@ void zoom_continuous (Pic *apic, Window_box *awin, Pic *bpic, Window_box *bwin,
 	fprintf(stderr,"\n");
 	window_box_intersect(&b, &bc, &b);
     }
-    pic_set_window(bpic, &b);
+    pic_set_box(bpic, b.x0, b.y0, b.x1-b.x0+1, b.y1-b.y0+1);
 
     /* compute offsets for MAP (these will be .5 if zoom() routine was called)*/
     m->ux = b.x0-m->sx*(a.x0-.5)-m->tx;
@@ -668,11 +669,13 @@ Filtpar *ax, *ay;	/* extra x and y filter parameters */
     /* do source and dest windows overlap? */
     overlap = apic==bpic && window_box_overlap(a, b);
 
+#ifndef SHUSHHH
     fprintf(stderr,"-yx -map %g %g %g %g\n", m->sx, m->sy, m->tx, m->ty);
     fprintf(stderr,"X: filt=%s supp=%g  scale=%g scaledsupp=%g wid=%d\n",
 	xfilt->name, xfilt->supp, ax->scale, ax->supp, ax->wid);
     fprintf(stderr,"Y: filt=%s supp=%g  scale=%g scaledsupp=%g wid=%d\n",
 	yfilt->name, yfilt->supp, ay->scale, ay->supp, ay->wid);
+#endif
 
     /*
      * prepare a weighttab (a sampled filter for source pixels) for

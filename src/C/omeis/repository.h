@@ -34,8 +34,48 @@
  *------------------------------------------------------------------------------
  */
 
-#ifndef omeis_h
-#define omeis_h
+#ifndef repository_h
+#define repository_h
+
+#include <sys/types.h>
+#include "digest.h"
 
 
-#endif /* omeis_h */
+/* -------- */
+/* Typedefs */
+/* -------- */
+
+/* OID */
+typedef u_int64_t OID;
+
+
+
+/* ------------------- */
+/* External Prototypes */
+/* ------------------- */
+
+OID
+nextID (char *idFile);
+
+char *
+getRepPath (OID theID, char *path, char makePath);
+
+int
+lockRepFile (int fd, char lock, size_t from, size_t length);
+
+int
+newRepFile (OID theID, char *path, size_t size, char *suffix);
+
+FILE *
+openInputFile(char *filename, unsigned char isLocalFile);
+
+void
+closeInputFile(FILE *infile, unsigned char isLocalFile);
+
+void
+byteSwap (unsigned char * theBuf, size_t length, char bp);
+
+int
+bigEndian (void);
+
+#endif /* repository_h */

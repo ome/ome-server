@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
-#include "omeis.h"
 #include <pic.h>
 #include <filt.h>
 #include <zoom.h>

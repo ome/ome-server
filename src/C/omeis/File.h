@@ -34,8 +34,61 @@
  *------------------------------------------------------------------------------
  */
 
-#ifndef omeis_h
-#define omeis_h
+#ifndef File_h
+#define File_h
 
 
-#endif /* omeis_h */
+/* -------- */
+/* Typedefs */
+/* -------- */
+
+typedef struct {
+	char sha1[OME_DIGEST_LENGTH];
+	char name[256];
+} FileInfo;
+
+typedef struct {
+	OID ID;
+	char path_ID[256];
+	char path_rep[256];
+	char path_info[256];
+	int  fd_rep;
+	int  fd_info;
+	size_t size_rep;
+	size_t size_info;
+	char is_mmapped;
+	FileInfo file_info;
+	void *file_buf;
+} FileRep;
+
+
+/* ------------------- */
+/* External Prototypes */
+/* ------------------- */
+
+FileRep *
+newFileRep (OID ID);
+
+FileRep *
+GetFileRep (OID ID);
+
+int
+DeleteFile (FileRep *myFile);
+
+FileRep *
+NewFile (char *filename, size_t size);
+
+int
+FinishFile (FileRep *myFile);
+
+int
+GetFileInfo (FileRep *myFile);
+
+OID
+UploadFile (char *filename, size_t size, unsigned char isLocalFile);
+
+void
+freeFileRep (FileRep *myFile);
+
+
+#endif /* File_h */

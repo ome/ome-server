@@ -155,13 +155,13 @@ size_t offset;
 unsigned char *chBuf = (unsigned char *)buf;
 
 		offset = GetOffset (thePixels, x0, y, theZ, theChR->channel, theT);
-		ScalePixels (thePixels, offset, nx, chBuf, 3, theChR );
+		ScalePixels (thePixels, offset, nx, chBuf,   4, theChR );
 
 		offset = GetOffset (thePixels, x0, y, theZ, theChG->channel, theT);
-		ScalePixels (thePixels, offset, nx, chBuf+1, 3, theChG );
+		ScalePixels (thePixels, offset, nx, chBuf+1, 4, theChG );
 
 		offset = GetOffset (thePixels, x0, y, theZ, theChB->channel, theT);
-		ScalePixels (thePixels, offset, nx, chBuf+2, 3, theChB );
+		ScalePixels (thePixels, offset, nx, chBuf+2, 4, theChB );
 }
 
 

@@ -129,8 +129,7 @@ static filt_init()
  * filt_find: return ptr to filter descriptor given filter name
  */
 
-Filt *filt_find(name)
-char *name;
+Filt *filt_find(char *name)
 {
     int i;
 
@@ -165,7 +164,7 @@ Filt *f;
  * filt_catalog: print a filter catalog to stdout
  */
 
-void filt_catalog()
+void filt_catalog(void)
 {
     int i;
     Filt *f;
@@ -179,8 +178,7 @@ void filt_catalog()
  * filt_print: print info about a filter to stdout
  */
 
-void filt_print(f)
-Filt *f;
+void filt_print(Filt *f)
 {
     fprintf(stderr,"%-9s\t%4.2f%s",
 	f->name, f->supp, f->windowme ? " (windowed by default)" : "");
@@ -201,9 +199,7 @@ Filt *f;
  * note: allocates memory that is (probably) never freed
  */
 
-Filt *filt_window(f, windowname)
-Filt *f;
-char *windowname;
+Filt *filt_window(Filt *f, char *windowname)
 {
     Filt *w, *wf;
     window_data *d;
@@ -215,7 +211,7 @@ char *windowname;
     ALLOC(wf->name, char, 50);
     sprintf(wf->name, "%s*%s", f->name, w->name);
     wf->func = window_func;
-    wf->initproc = 0;
+    wf->initproc = NULL;
     if (f->printproc || w->printproc) wf->printproc = window_print;
     else wf->printproc = 0;
     ALLOC(d, window_data, 1);
@@ -225,9 +221,7 @@ char *windowname;
     return wf;
 }
 
-static double window_func(x, d)
-double x;
-char *d;
+static double window_func (double x, char *d)
 {
     register window_data *w;
 
@@ -255,18 +249,18 @@ char *d;
 
 /* all filters centered on 0 */
 
-double filt_box(x, d)		/* box, pulse, Fourier window, */
-double x;			/* 1st order (constant) b-spline */
-char *d;
+/* box, pulse, Fourier window, */
+/* 1st order (constant) b-spline */
+double filt_box (double x, char *d)
 {
     if (x<-.5) return 0.;
     if (x<.5) return 1.;
     return 0.;
 }
 
-double filt_triangle(x, d)	/* triangle, Bartlett window, */
-double x;			/* 2nd order (linear) b-spline */
-char *d;
+/* triangle, Bartlett window, */
+/* 2nd order (linear) b-spline */
+double filt_triangle (double x, char *d)
 {
     if (x<-1.) return 0.;
     if (x<0.) return 1.+x;
@@ -274,9 +268,8 @@ char *d;
     return 0.;
 }
 
-double filt_quadratic(x, d)	/* 3rd order (quadratic) b-spline */
-double x;
-char *d;
+/* 3rd order (quadratic) b-spline */
+double filt_quadratic (double x, char *d)
 {
     double t;
 
@@ -287,9 +280,8 @@ char *d;
     return 0.;
 }
 
-double filt_cubic(x, d)		/* 4th order (cubic) b-spline */
-double x;
-char *d;
+/* 4th order (cubic) b-spline */
+double filt_cubic (double x, char *d)
 {
     double t;
 
@@ -301,9 +293,8 @@ char *d;
     return 0.;
 }
 
-double filt_catrom(x, d)	/* Catmull-Rom spline, Overhauser spline */
-double x;
-char *d;
+/* Catmull-Rom spline, Overhauser spline */
+double filt_catrom (double x, char *d)
 {
     if (x<-2.) return 0.;
     if (x<-1.) return .5*(4.+x*(8.+x*(5.+x)));
@@ -313,23 +304,20 @@ char *d;
     return 0.;
 }
 
-double filt_gaussian(x, d)	/* Gaussian (infinite) */
-double x;
-char *d;
+/* Gaussian (infinite) */
+double filt_gaussian (double x, char *d)
 {
     return exp(-2.*x*x)*sqrt(2./PI);
 }
 
-double filt_sinc(x, d)		/* Sinc, perfect lowpass filter (infinite) */
-double x;
-char *d;
+/* Sinc, perfect lowpass filter (infinite) */
+double filt_sinc (double x, char *d)
 {
     return x==0. ? 1. : sin(PI*x)/(PI*x);
 }
 
-double filt_bessel(x, d)	/* Bessel (for circularly symm. 2-d filt, inf)*/
-double x;
-char *d;
+/* Bessel (for circularly symm. 2-d filt, inf)*/
+double filt_bessel (double x, char *d)
 {
     /*
      * See Pratt "Digital Image Processing" p. 97 for Bessel functions
@@ -340,10 +328,8 @@ char *d;
 }
 
 /*-------------------- parameterized filters --------------------*/
-
-double filt_mitchell(x, d)	/* Mitchell & Netravali's two-param cubic */
-double x;
-char *d;
+/* Mitchell & Netravali's two-param cubic */
+double filt_mitchell (double x, char *d)
 {
     register mitchell_data *m;
 
@@ -388,32 +374,24 @@ char *d;
 
 /*-------------------- window functions --------------------*/
 
-double filt_hanning(x, d)	/* Hanning window */
-double x;
-char *d;
+double filt_hanning (double x, char *d)	/* Hanning window */
 {
     return .5+.5*cos(PI*x);
 }
 
-double filt_hamming(x, d)	/* Hamming window */
-double x;
-char *d;
+double filt_hamming (double x, char *d)	/* Hamming window */
 {
     return .54+.46*cos(PI*x);
 }
 
-double filt_blackman(x, d)	/* Blackman window */
-double x;
-char *d;
+double filt_blackman (double x, char *d)	/* Blackman window */
 {
     return .42+.50*cos(PI*x)+.08*cos(2.*PI*x);
 }
 
 /*-------------------- parameterized windows --------------------*/
 
-double filt_kaiser(x, d)	/* parameterized Kaiser window */
-double x;
-char *d;
+double filt_kaiser (double x, char *d)	/* parameterized Kaiser window */
 {
     /* from Oppenheim & Schafer, Hamming */
     kaiser_data *k;
@@ -442,8 +420,7 @@ char *d;
     fprintf(stderr,"kaiser: a=%g i0a=%g\n", k->a, k->i0a);
 }
 
-double bessel_i0(x)
-double x;
+double bessel_i0 (double x)
 {
     /*
      * modified zeroth order Bessel function of the first kind.
@@ -464,9 +441,7 @@ double x;
 
 /*--------------- filters for non-unit spaced samples ---------------*/
 
-double filt_normal(x, d)	/* normal distribution (infinite) */
-double x;
-char *d;
+double filt_normal (double x, char *d)	/* normal distribution (infinite) */
 {
     /*
      * normal distribution: has unit area, but it's not for unit spaced samples

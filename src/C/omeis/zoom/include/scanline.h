@@ -24,7 +24,7 @@
  * for 1-byte rgb we use Pixel1_rgba, not Pixel1_rgb, since some compilers
  * (e.g. mips) don't pad 3-byte structures to 4 bytes as most compilers do
  */
-typedef Pixel1_rgb Scanline_rgb1;
+typedef Pixel1_rgba Scanline_rgb1;
 typedef Pixel2_rgb Scanline_rgb2;
 typedef Pixel4_rgb  Scanline_rgb4;
 

@@ -34,8 +34,28 @@
  *------------------------------------------------------------------------------
  */
 
-#ifndef omeis_h
-#define omeis_h
+#ifndef cgi_h
+#define cgi_h
 
+/* ------------------- */
+/* External Prototypes */
+/* ------------------- */
+char **
+getcgivars(void);
 
-#endif /* omeis_h */
+char **
+getCLIvars(int argc, char **argv);
+
+char *
+get_param (char **cgivars, char *param);
+
+char *
+get_lc_param (char **cgivars, char *param);
+
+void
+HTTP_DoError (char *method, char *template, ...);
+
+void
+HTTP_ResultType (char *mimeType);
+
+#endif /* cgi_h */
