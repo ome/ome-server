@@ -58,6 +58,8 @@ use XML::LibXML;
 
 use OME::LSID;
 use OME::Analysis::AnalysisEngine;
+use OME::Tasks::DatasetManager;
+use OME::Tasks::ProjectManager;
 
 =head1 METHODS
 
@@ -144,6 +146,8 @@ sub processDOM {
 	my $session = $self->{session};
 	my $factory = $self->{factory};
 	my $lsid = $self->{_lsidResolver};
+	my $datasetManager = new OME::Tasks::DatasetManager($session);
+	my $projectManager = new OME::Tasks::ProjectManager($session);
 	
 	# Turn on row guessing if its off - make the factory figure out how to put attributes together into DB rows.
 	my $oldRowGuessing = OME::SemanticType->GuessRows();
@@ -198,9 +202,7 @@ sub processDOM {
 			}
 			logdie ref ($self) . "->processDOM: Could not resolve Project ID '$refID'"
 				unless defined $refObjectID;
-			$self->addObject ($factory->maybeNewObject('OME::Project::DatasetMap',
-				{dataset_id => $objectID, project_id => $refObjectID}
-			));
+			$projectManager->addToProject ($objectID, $refObjectID);
 		}
 		
 		# Import Dataset CAs
@@ -232,9 +234,7 @@ sub processDOM {
 			}
 			logdie ref ($self) . "->processDOM: Could not resolve Dataset ID '$refID'"
 				unless defined $refObjectID;
-			$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
-				{image_id => $objectID, dataset_id => $refObjectID}
-			));
+			$datasetManager->addImages ([$objectID], $refObjectID);
 		}
 
 		# These get imported into an import dataset
@@ -407,7 +407,7 @@ sub importObject ($$$$) {
 # This is because we have no way of merging attributes from different module executions.
 	$theObject = undef if $module_execution;
 # Images get re-imported even though they have no module_execution.
-#	$theObject = undef if $node->nodeName() eq 'Image';
+	$theObject = undef if $node->nodeName() eq 'Image';
 
 	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
