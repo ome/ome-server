@@ -15,10 +15,9 @@ src/xml/OME/Analysis/Segmentation 76..
 src/xml/OME/Analysis/Statistics   77..
 src/xml/OME/Analysis/Transforms   78..
 
-Below is the order the files should be imported into OME
+Below is the order the modules should be imported into OME
 cut below this line and put it into a tmp file called "sushi_mushi"
 [lappy-toppy:OME/src/xml] tmacur1% bash < sushi_mushi
-to import everything 
 -----
 ome import OME/Analysis/Core/PixelIndicies.ome
 ome import OME/Analysis/Core/PixelSlices.ome
@@ -36,3 +35,7 @@ ome import OME/Analysis/Statistics/EdgeStatistics.ome
 ome import OME/Analysis/Statistics/FeatureStatistics.ome
 ome import OME/Analysis/Statistics/HaralickFeatures.ome
 ome import OME/Analysis/Statistics/ZernikeMoments.ome
+---
+
+If you want the Signture Chain also import
+/OME/Analysis/Classifier/SignatureChain.ome
