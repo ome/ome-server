@@ -74,43 +74,48 @@ public class ThumbnailAgent {
   
   	private File cacheDirFile;
   
+  	private boolean webConnection=false;
+  	
 	public ThumbnailAgent(String host, String username, String password) {
 
 		this.host = host;
 		this.username = username;
 		this.password = password;
-	}
   
-	public void initialize() throws Exception {
-		URL     webUI = new URL("http://"+host+
-					"/perl2/serve.pl?Page=OME::Web::Login");
-
-		URLConnection   conn = webUI.openConnection();  //set up connection
-
-		conn.setDoOutput(true);  //allow to send data
-    
-		//build POST request to do login
-		PrintWriter     loginRequest = new PrintWriter(conn.getOutputStream());
-
-		loginRequest.println("username="+URLEncoder.encode(username, "US-ASCII")+
-							"&password="+URLEncoder.encode(password, "US-ASCII")+
-							"&execute=1");
-		loginRequest.close();
-    
-		//extract session key from response
-		String  s = conn.getHeaderField("Set-Cookie");
-		s = s.trim();
-		sessionKey = s.substring(0, s.indexOf(';'));  //"SESSION_KEY=blahblah"
-		System.err.println(" session key is "+sessionKey);
-		
+  		try {
+	  		URL     webUI = new URL("http://"+host+
+						"/perl2/serve.pl?Page=OME::Web::Login");
+	
+			URLConnection   conn = webUI.openConnection();  //set up connection
+	
+			conn.setDoOutput(true);  //allow to send data
+	    
+			//build POST request to do login
+			PrintWriter     loginRequest = new PrintWriter(conn.getOutputStream());
+	
+			loginRequest.println("username="+URLEncoder.encode(username, "US-ASCII")+
+								"&password="+URLEncoder.encode(password, "US-ASCII")+
+								"&execute=1");
+			loginRequest.close();
+	    
+			//extract session key from response
+			String  s = conn.getHeaderField("Set-Cookie");
+			s = s.trim();
+			sessionKey = s.substring(0, s.indexOf(';'));  //"SESSION_KEY=blahblah"
+			//System.err.println(" session key is "+sessionKey);
+			webConnection = true;
+			//System.err.println("web connection for thumbnail ok");
+  		} catch (Exception e) {
+  			webConnection = false;
+  			System.err.println("failed to get web connection");
+  		}
 		// create cache if it doesn't exist.
 		String dir = System.getProperty("user.dir");
 		String cacheDir = new String(dir+CACHE_DIR+host+IMAGE_DIR);
-		System.err.println("cache dir is "+cacheDir);
+		//System.err.println("cache dir is "+cacheDir);
 		// make it if it doesn't exist
 		cacheDirFile = new File(cacheDir); 
 		cacheDirFile.mkdirs();
-		
 	}
   
 	public BufferedImage getThumbnail(int id) throws Exception {
@@ -119,29 +124,40 @@ public class ThumbnailAgent {
 		// get file name
 		String imageFileName = new String("thumb-"+id+".jpg");
 		File imageFile = new File(cacheDirFile,imageFileName);
-		BufferedImage bufImage;
+		BufferedImage bufImage=null;
 		
-		if (!imageFile.exists()) { 
-			// if it doesn't exist, grab it.
-			System.err.println("getting image from network");
-			URLConnection   conn = thumbURL.openConnection();
-			//set session key (HTTP header)
-			conn.setRequestProperty("Cookie", sessionKey); 
+		if (imageFile.exists()) {
+			try {
+				bufImage = ImageIO.read(imageFile);
+			} catch(Exception e) {
+				bufImage = null;
+			}
+			if (bufImage != null)
+				return bufImage;
+		}
+		// didn't get it from cache
+		if (webConnection == true) {
+			try {	 
+				// if it doesn't exist, grab it.
+			//	System.err.println("getting image from network");
+				URLConnection   conn = thumbURL.openConnection();
+				//set session key (HTTP header)
+				conn.setRequestProperty("Cookie", sessionKey); 
 
-			//send request and get response stream
-			BufferedInputStream     
-				response = new BufferedInputStream(conn.getInputStream()); 
+				//send request and get response stream
+				BufferedInputStream     
+					response = new BufferedInputStream(conn.getInputStream()); 
     
 		
-			bufImage = ImageIO.read(response);
-			response.close();
+				bufImage = ImageIO.read(response);
+				response.close();
 			
-			// write it
-			ImageIO.write(bufImage,"jpg",imageFile);
-		}
-		else { // get it from cache.
-			System.err.println("getting cached image");
-			bufImage = ImageIO.read(imageFile);
+				// write it
+				ImageIO.write(bufImage,"jpg",imageFile);
+			}
+			catch (Exception e) {
+				bufImage = null;
+			}
 		}
 		return bufImage;
 	}
