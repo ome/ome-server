@@ -13,13 +13,13 @@
       <ImageInstrument Instrument="urn:lsid:foo.bar.com:Instrument:123456" Objective="urn:lsid:foo.bar.com:Objective:123456"/>
       <ImagingEnvironment Temperature=".1" AirPressure=".1" Humidity=".2" CO2Percent=".3"/>
       <Thumbnail href="http://ome.nia.gov/GetThumbnail?ID=urn:lsid:foo.bar.com:Image:123456" MIMEtype="image/jpeg"/>
-      <LogicalChannel ID="id41059" Name="Channel 1" SamplesPerPixel="" LightAttenuation="" LightWavelength="" DetectorOffset="" IlluminationType="" PinholeSize="" PhotometricInterpretation="" Mode="" ContrastMethod="" AuxLightAttenuation="" AuxTechnique="Photobleaching" AuxLightWavelength="" ExcitationWavelength="490" EmissionWavelength="528" Fluor="GFP" NDFilter="0.0" LightSource="urn:lsid:foo.bar.com:LightSource:123456" AuxLightSource="urn:lsid:foo.bar.com:LightSource:123789" OTF="urn:lsid:foo.bar.com:OTF:123456" Detector="urn:lsid:foo.bar.com:Detector:123456" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
-      <ChannelComponent Index="1" ColorDomain="RGB" LogicalChannel="id41059"/>
-      <DisplayOptions ID="id41119" Zoom="1.0" ColorMap="" ZStart="5" ZStop="10" TStart="1" TStop="3" RedChannel="id41127" GreenChannel="id41141" BlueChannel="id41155"/>
-      <DisplayChannel ID="id41127" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
-      <DisplayChannel ID="id41141" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
-      <DisplayChannel ID="id41155" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
-      <DisplayROI X0="0" Y0="0" Z0="0" X1="512" Y1="512" Z1="0" T0="0" T1="0" DisplayOptions="id41119"/>
+      <LogicalChannel ID="id41054" Name="Channel 1" SamplesPerPixel="" LightAttenuation="" LightWavelength="" DetectorOffset="" IlluminationType="" PinholeSize="" PhotometricInterpretation="" Mode="" ContrastMethod="" AuxLightAttenuation="" AuxTechnique="Photobleaching" AuxLightWavelength="" ExcitationWavelength="490" EmissionWavelength="528" Fluor="GFP" NDFilter="0.0" LightSource="urn:lsid:foo.bar.com:LightSource:123456" AuxLightSource="urn:lsid:foo.bar.com:LightSource:123789" OTF="urn:lsid:foo.bar.com:OTF:123456" Detector="urn:lsid:foo.bar.com:Detector:123456" Filter="urn:lsid:foo.bar.com:Filter:123456"/>
+      <ChannelComponent Index="1" LogicalChannel="id41054"/>
+      <DisplayOptions ID="id41111" Zoom="1.0" ColorMap="" ZStart="5" ZStop="10" TStart="1" TStop="3" RedChannel="id41119" GreenChannel="id41133" BlueChannel="id41148"/>
+      <DisplayChannel ID="id41119" ChannelNumber="1" BlackLevel="100" WhiteLevel="2019" Gamma="1.0"/>
+      <DisplayChannel ID="id41133" ChannelNumber="2" BlackLevel="120" WhiteLevel="2020" Gamma="1.0"/>
+      <DisplayChannel ID="id41148" ChannelNumber="3" BlackLevel="130" WhiteLevel="2021" Gamma="1.0"/>
+      <DisplayROI X0="0" Y0="0" Z0="0" X1="512" Y1="512" Z1="0" T0="0" T1="0" DisplayOptions="id41111"/>
       <StageLabel Name="Zulu" X="123" Y="456" Z="789"/>
       <ImagePlate Well="A03" Sample="1" Plate="urn:lsid:foo.bar.com:Plate:123456"/>
     </CustomAttributes>
