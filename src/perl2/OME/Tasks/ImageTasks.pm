@@ -53,6 +53,9 @@ use IO::File;
 use Carp;
 use Log::Agent;
 
+use OME::Task;
+use OME::Tasks::NotificationManager;
+
 # addImagesToDataset(dataset, images)
 # -----------------------------------
 # Adds the given images to a dataset.  The images parameter can be
