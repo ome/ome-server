@@ -104,14 +104,6 @@ sub getPageBody {
 		$body .= "Dataset <b>".$session->dataset()->name()."</b> successfully added to this project and set to current dataset.<br>";
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		
-	} elsif( $cgi->param('Switch')) {
-		$projectManager->switch($cgi->param('newProject'));
-		$self->Session()->project()
-			or die ref ($self) . " cannot find session via self->Session()->project()";
-		
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		$body .= "<b>Successfully switched project.</b>";
-
 	} 
 	
 	# print form
@@ -133,16 +125,9 @@ sub print_form {
 	my $userID     = $project->owner_id();
 	my $user       = $factory->loadAttribute("Experimenter",$userID);	
 
-	my $projectManager = $self->{projectManager};
-	my $ref            = $projectManager->listMatching($session->User()->id());
-
-	my %projectList    = map { $_->id() => $_->name()} grep( $_->id ne $project->id, @$ref );
-
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= $htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project")
-		if( scalar keys %projectList > 0 );
 	$text .= "<center><h2>Project ".$project->name()." Properties</h2></center>";
 	$text .= $htmlFormat->formChange("project",$project,$user);
 	$text .= "<center><h2>Datasets</h2></center>";
