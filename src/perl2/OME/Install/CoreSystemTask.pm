@@ -224,6 +224,10 @@ sub execute {
     
     # Back to UID 0 we go
     $EUID = 0;
+
+    print "\n";  # Spacing
+
+    return;
 }
 
 sub rollback {
