@@ -167,8 +167,8 @@
       FieldID="INSTRUMENT.SERIAL_NUMBER"/>
 
     <SemanticElement
-      Name="Orientation"
-      FieldID="INSTRUMENT.ORIENTATION"/>
+      Name="Type"
+      FieldID="INSTRUMENT.TYPE"/>
 
 </SemanticType>
 
@@ -203,12 +203,36 @@
       FieldID="LASER.TYPE"/>
 
     <SemanticElement
+      Name="Medium"
+      FieldID="LASER.MEDIUM"/>
+
+    <SemanticElement
+      Name="Wavelength"
+      FieldID="LASER.WAVELENGTH"/>
+
+    <SemanticElement
+      Name="FrequencyDoubled"
+      FieldID="LASER.FREQ_DBLD"/>
+
+    <SemanticElement
+      Name="Tunable"
+      FieldID="LASER.TUNABLE"/>
+
+    <SemanticElement
+      Name="Pulse"
+      FieldID="LASER.PULSE"/>
+
+    <SemanticElement
       Name="Power"
       FieldID="LASER.POWER"/>
 
     <SemanticElement
       Name="LightSource"
       FieldID="LASER.LIGHT_SOURCE"/>
+
+    <SemanticElement
+      Name="Pump"
+      FieldID="LASER.PUMP"/>
 
 </SemanticType>
 
@@ -642,8 +666,12 @@
       FieldID="LOGICAL_CHANNEL.LIGHT_SOURCE"/>
 
     <SemanticElement
-      Name="LightPower"
-      FieldID="LOGICAL_CHANNEL.LIGHT_POWER"/>
+      Name="LightAttenuation"
+      FieldID="LOGICAL_CHANNEL.LIGHT_ATTENUATION"/>
+
+    <SemanticElement
+      Name="LightWavelength"
+      FieldID="LOGICAL_CHANNEL.LIGHT_WAVELENGTH"/>
 
     <SemanticElement
       Name="OTF"
@@ -652,6 +680,14 @@
     <SemanticElement
       Name="Detector"
       FieldID="LOGICAL_CHANNEL.DETECTOR"/>
+
+    <SemanticElement
+      Name="DetectorOffset"
+      FieldID="LOGICAL_CHANNEL.DETECTOR_OFFSET"/>
+
+    <SemanticElement
+      Name="DetectorGain"
+      FieldID="LOGICAL_CHANNEL.DETECTOR_GAIN"/>
 
     <SemanticElement
       Name="IlluminationType"
@@ -678,8 +714,8 @@
       FieldID="LOGICAL_CHANNEL.AUX_LIGHT_SOURCE"/>
 
     <SemanticElement
-      Name="AuxLightPower"
-      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_POWER"/>
+      Name="AuxLightAttenuation"
+      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_ATTENUATION"/>
 
     <SemanticElement
       Name="AuxTechnique"
@@ -1035,7 +1071,7 @@
       DataType="string"/>
 
     <Field
-      FieldID="INSTRUMENT.ORIENTATION"
+      FieldID="INSTRUMENT.TYPE"
       Name="ORIENTATION"
       DataType="string"/>
 
@@ -1078,6 +1114,31 @@
       DataType="string"/>
 
     <Field
+      FieldID="LASER.MEDIUM"
+      Name="MEDIUM"
+      DataType="string"/>
+
+    <Field
+      FieldID="LASER.WAVELENGTH"
+      Name="WAVELENGTH"
+      DataType="integer"/>
+
+    <Field
+      FieldID="LASER.FREQ_DBLD"
+      Name="FREQ_DBLD"
+      DataType="boolean"/>
+
+    <Field
+      FieldID="LASER.TUNABLE"
+      Name="TUNABLE"
+      DataType="boolean"/>
+
+    <Field
+      FieldID="LASER.PULSE"
+      Name="PULSE"
+      DataType="string"/>
+
+    <Field
       FieldID="LASER.POWER"
       Name="POWER"
       DataType="float"/>
@@ -1085,6 +1146,12 @@
     <Field
       FieldID="LASER.LIGHT_SOURCE"
       Name="LIGHT_SOURCE"
+      DataType="reference"
+      ReferenceType="LightSource"/>
+
+    <Field
+      FieldID="LASER.PUMP"
+      Name="PUMP"
       DataType="reference"
       ReferenceType="LightSource"/>
 
@@ -1597,9 +1664,14 @@
       ReferenceType="LightSource"/>
 
     <Field
-      FieldID="LOGICAL_CHANNEL.LIGHT_POWER"
-      Name="LIGHT_POWER"
+      FieldID="LOGICAL_CHANNEL.LIGHT_ATTENUATION"
+      Name="LIGHT_ATTENUATION"
       DataType="float"/>
+
+    <Field
+      FieldID="LOGICAL_CHANNEL.LIGHT_WAVELENGTH"
+      Name="LIGHT_WAVELENGTH"
+      DataType="integer"/>
 
     <Field
       FieldID="LOGICAL_CHANNEL.OTF"
@@ -1612,6 +1684,16 @@
       Name="DETECTOR"
       DataType="reference"
       ReferenceType="Detector"/>
+
+    <Field
+      FieldID="LOGICAL_CHANNEL.DETECTOR_OFFSET"
+      Name="DETECTOR_OFFSET"
+      DataType="float"/>
+
+    <Field
+      FieldID="LOGICAL_CHANNEL.DETECTOR_GAIN"
+      Name="DETECTOR_GAIN"
+      DataType="float"/>
 
     <Field
       FieldID="LOGICAL_CHANNEL.ILLUMINATION_TYPE"
