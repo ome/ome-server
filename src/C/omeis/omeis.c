@@ -1398,7 +1398,6 @@ dispatch (char **param)
 	OID ID=0;
 	int theZ=-1,theC=-1,theT=-1;
 	off_t offset=0;
-    unsigned long scannedOffset=0;
 	char error_str[256];
 	unsigned char isLocalFile;
 	unsigned char file_md[OME_DIGEST_LENGTH];
@@ -1742,7 +1741,6 @@ char **cgivars=param;
 			break;
 		case M_READFILE:
 			offset = 0;
-            scannedOffset = 0;
 			length = 0;
 			
 			if ( (theParam = get_param (param,"FileID")) )
@@ -1754,8 +1752,7 @@ char **cgivars=param;
 
 			if ( (theParam = get_param (param,"Offset")) )
             {
-				sscanf (theParam,"%lu", &scannedOffset);
-                offset = scannedOffset;
+				sscanf (theParam,"%lld",&offset);
             }
 			if ( (theParam = get_param (param,"Length")) )
 				sscanf (theParam,"%lu",&length);
@@ -1774,7 +1771,7 @@ char **cgivars=param;
 			}
 			if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
 				close (fd);
-				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,scannedOffset,length);
+				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lld, length=%lu",fileID,offset,length);
 				HTTP_DoError (method,error_str);
 				return (-1);
 			}
