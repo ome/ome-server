@@ -290,6 +290,80 @@ sub removeNode {
     return;
 }
 
+=head2 getNode
+
+	my $node = $manager->getNode($chain,$program_name);
+
+Returns the node representing the module of the given name in the
+specified analysis chain.
+
+=cut
+
+sub getNode {
+    my ($self,$chain,$program_name) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+
+    die "getNode needs a chain!"
+      unless
+        defined $chain
+        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+
+    die "getNode needs a program name!"
+      unless
+        defined $program_name
+        && !ref($program_name);
+
+    # Man, we should have a better method for searching for things...
+    my @nodes = $chain->nodes();
+
+    foreach my $node (@nodes) {
+        my $program = $node->program();
+        return $node if $program->program_name() eq $program_name;
+    }
+
+    return undef;
+}
+
+=head2 getFormalInput
+
+	my $input = $manager->getFormalInput($chain,$node,$input_name);
+
+Returns the formal input of the specified name in the node of the
+specified analysis chain.
+
+=cut
+
+sub getFormalInput {
+    my ($self,$chain,$node,$input_name) = @_;
+    my $session = $self->Session();
+    my $factory = $session->Factory();
+
+    die "getFormalInput needs a chain!"
+      unless
+        defined $chain
+        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+
+    die "getFormalInput needs a node!"
+      unless
+        defined $node
+        && UNIVERSAL::isa($chain,"OME::AnalysisView");
+
+    die "getFormalInput needs an input name!"
+      unless
+        defined $input_name
+        && !ref($input_name);
+
+    die "getFormalInput: node does not belong to chain!"
+      unless
+        $node->analysis_view()->id() ne $chain->id();
+
+    my $program = $node->program();
+    return $factory->
+      findObject('OME::Program::FormalInput',
+                 program_id => $program->id(),
+                 name       => $input_name);
+}
 
 =head2 addLink
 
