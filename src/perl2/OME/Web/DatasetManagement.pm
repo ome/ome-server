@@ -66,14 +66,6 @@ sub getPageBody {
 		$datasetManager->change($cgi->param('description'),$cgi->param('name'));
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		$body .= "Save successful<br>";
-	} elsif( $cgi->param('Switch')) {
-		$datasetManager->switch($cgi->param('newDataset'));
-		$self->Session()->dataset()
-			or die ref ($self) . " cannot find dataset via self->Session()->dataset()";
-		
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		$body .= "<b>Successfully switched dataset.</b>";
-
 	} 
 	
 	# print form
@@ -96,15 +88,10 @@ sub print_form {
 	my $user       = $factory->loadAttribute("Experimenter",$userID);	
 
 	my $datasetManager = $self->{datasetManager};
-	my $ref            = $datasetManager->listMatching(undef, [$session->User()->Group()->id()]);
-
-	my %datasetList    = map { $_->id() => $_->name()} grep( $_->id ne $dataset->id, @$ref );
 
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= $htmlFormat->dropDownTable("newDataset",\%datasetList,"Switch","Switch Dataset")
-		if( scalar keys %datasetList > 0 );
 	$text .= "<center><h2>Dataset ".$dataset->name()." properties</h2></center>";
 	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
 	$text .= "<center><h2>Images</h2></center>";
