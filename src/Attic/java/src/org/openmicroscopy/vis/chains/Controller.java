@@ -304,16 +304,18 @@ public class Controller  implements LoginResponder {
 	public void completeWindows() {
 		
 		//1 thread
-		initThreads++;
+		//1 thread for datasets, 1 for control panel, and 
+		// one for module palette
+		// initialize the count at the start so I don't have a problem 
+		// if one finishes before the next one gets  to start.
+		initThreads = 3;
 		connection.initDatasets(this);
 		controlPanel  = new ControlPanel(this,connection);
 		controlPanel.setLoggedIn(connection.getUserName());
 		controlPanel.setEnabled(true);
 		// 2 threads
-		initThreads++;
 		moduleFrame = new ModulePaletteFrame(this,connection);
 		// 3 threads
-		initThreads++;
 		connection.layoutChains();
 
 		
