@@ -42,6 +42,8 @@
 
 package org.openmicroscopy;
 
+import org.openmicroscopy.managers.ChainManager;
+
 public interface Session
     extends OMEObject
 {
@@ -58,4 +60,5 @@ public interface Session
     public Dataset getDataset();
     public void setDataset(Dataset dataset);
 
+    public ChainManager getChainManager();
 }
