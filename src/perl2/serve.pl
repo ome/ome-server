@@ -82,14 +82,12 @@ if ($pageClass) {
 		exit(1);
 	};
 
-# XXX This is Marinoh testing code *only* this should not be merged back into HEAD
-#	eval {
-#		if (not $pageClass->isa("OME::Web")) {
-#			carp "Package $pageClass does not inherit from OME::Web.";
-#			print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
-#			      "Package $pageClass does not inherit from OME::Web.";
-#		} else {
-# XXX Uncomment this block before merging back into HEAD
+	eval {
+		if (not $pageClass->isa("OME::Web")) {
+			carp "Package $pageClass does not inherit from OME::Web.";
+			print $CGI->header(-type => 'text/html', -status => "500 Internal Error"),
+			      "Package $pageClass does not inherit from OME::Web.";
+		} else {
 			$page = $pageClass->new(CGI => $CGI);
 			if (!$page) {
 				carp "Error calling package constructor $pageClass->new().";
@@ -98,8 +96,8 @@ if ($pageClass) {
 			} else {
 				$page->serve();
 			}
-#		}
-#	};
+		}
+	};
 	
 	if ($@) {
 		carp "Error serving $pageClass: ", $@ || "no error message available.";
