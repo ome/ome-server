@@ -50,10 +50,13 @@ sub getPageBody {
 
 	}elsif (exists $revArgs{Remove}){
 		my @group=$cgi->param('List');
-		$body.=remove_dataset($revArgs{Remove},\@group,$session);   
-		$body .=$self->retrieve_result();
+		my ($a,$b)=remove_dataset(\@group,$session); 
+		 
+		$body.=$a;
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
+		if (!defined $b){
+		  $body .=$self->retrieve_result();
+		}
 	}elsif (exists $revArgs{Delete}){
 	   my $deletedataset=$session->Factory()->loadObject("OME::Dataset",$revArgs{Delete})
          or die "Unable to load dataset ( ID = ".$revArgs{Delete}." ). Action cancelled<br>";
@@ -61,15 +64,6 @@ sub getPageBody {
 	   $body.=delete_process($deletedataset,$session);
 	   $body .= $self->retrieve_result();
 	   $body .= "<script>top.title.location.href = top.title.location.href;</script>";
-
-	}elsif(exists $revArgs{Lock}){
-		lock_unlock_dataset($revArgs{Lock},"t");
-		$body.=$self->retrieve_result();
-
-      }elsif(exists $revArgs{Unlock}){
-		lock_unlock_dataset($revArgs{Unlock},"f");
-		$body.=$self->retrieve_result();
-
 	
 	}else{
 	  $body.=$self->retrieve_result();
@@ -83,12 +77,13 @@ sub getPageBody {
 #------------------
 
 sub remove_dataset{
-  my ($removedataset,$ref,$session)=@_;
+  my ($ref,$session)=@_;
   my $table="project_dataset_map";
   my $project=$session->project();
   my $dataset=$session->dataset();
   my $text="";
-  return "<b>Please select at least one project</b>" if scalar(@$ref)==0;
+  my $bool=undef;
+  return ("<b>Please select at least one project</b>",1) if scalar(@$ref)==0;
 		
   my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
    or die "Unable to connect <br>";
@@ -96,15 +91,18 @@ sub remove_dataset{
   my @control=();
   foreach (@$ref){
      my ($condition,$result);
-     $condition="dataset_id=".$removedataset." AND project_id=".$_;
+     my ($datasetID,$projectID)=split('-',$_);
+     $condition="dataset_id=".$datasetID." AND project_id=".$projectID;
      $result=do_request($table,$condition,$db);
-     return "Cannot delete one entry in project_dataset_map." if (!defined $result);
-     if ($project->project_id()==$_ and $dataset->dataset_id()==$removedataset){
+     return ("Cannot delete one entry in project_dataset_map.",1) if (!defined $result);
+    # if ($project->project_id()==$_ and $dataset->dataset_id()==$datasetID){
+	if ($dataset->dataset_id()==$datasetID){
 	 # current project
 	 my @datasetused=$project->datasets();
 	 if (scalar(@datasetused)==0){
 	   $session->dissociateObject('dataset');
 	   $session->writeObject();
+	   $bool=1;
 	   $text .="No dataset defined for your current project.Please define a dataset."; #if not refresh
 	 }else{
 	   $session->dataset($datasetused[0]);
@@ -113,25 +111,8 @@ sub remove_dataset{
      }
    }
    $db->Off();
-   return $text;
+   return ($text,$bool);
 
-}
-
-
-
-
-sub lock_unlock_dataset{
- my ($id,$bool)=@_;
- my ($table,$condition,$result);
- my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
-   or die "Unable to connect <br>";
-
- $table="datasets";
- $condition="dataset_id=".$id;
- my %h=(locked =>"'".$bool."'");
- $result=do_lock_unlock($table,\%h,$condition,$db);
- $db->Off();
- return $result;
 }
 
 
@@ -223,11 +204,13 @@ sub retrieve_result{
  }
 
   my %DatasetList=();
+  my $count=0;
   foreach my $project (@userProjects){
     my %ProjectInfo=();
     $ProjectInfo{$project->project_id()}=$project->name();
     my @datasetsused=$project->datasets();
     foreach my $data (@datasetsused){
+	$count++;
 	my $datasetid=$data->dataset_id();
 	# num images in datasets
 	my @Image=$data->images();
@@ -249,8 +232,13 @@ sub retrieve_result{
 	}
     }
   }
-
- $text.=format_output(\%DatasetList,$cgi);
+ # check if 
+ 
+ if ($count==0){
+   $text.="<b><br>No dataset Used.</b>";
+ }else{
+   $text.=format_output(\%DatasetList,$cgi);
+ }
  return $text;
 
 
@@ -296,37 +284,22 @@ sub format_currentdataset{
 sub format_dataset {
   my ($dataset,$num,$userID,$cgi,$bool)=@_;
   my $summary="";
-  my ($lock,$unlock)=undef;
-
-  # change status iff own dataset
-  if ($userID==$dataset->owner()->ID){
-      $unlock.=$cgi->submit (-name=>$dataset->dataset_id(),-value=>'Unlock');
-      $lock.=$cgi->submit (-name=>$dataset->dataset_id(),-value=>'Lock');
-   
-  }
   $summary .= "<NOBR><B>Name:</B> ".$dataset->name()."</NOBR><BR>" ;
   $summary .= "<NOBR><B>ID:</B> ".$dataset->dataset_id()."</NOBR><BR>" ;
   $summary .= "<B>Description:</B> ".$dataset->description()."<BR>" ;
-  if (defined $lock){
-    $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?$unlock:$lock)."</NOBR><br>";
-  }else{
-    $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?'YES':'NO')."</NOBR><br>";
-  }
-
+  $summary .= "<NOBR><B>Locked:</B> ".($dataset->locked()?'YES':'NO')."</NOBR><br>";
   $summary .= "<NOBR><B>Owner:</B> ".$dataset->owner()->firstname()." ".$dataset->owner()->lastname()."</NOBR><BR>";
   $summary .="<NOBR><B>E-mail:</B><a href='mailto:".$dataset->owner()->email()."'>".$dataset->owner()->email()."</a></NOBR><BR>";
   $summary .="<NOBR><B>Nb Images in dataset:</B> ".$num."</NOBR><BR>";
   $summary.="<br>";
   my $viewer=create_button($dataset->dataset_id());
   my ($removebutton,$deletebutton);
-  $removebutton=$cgi->submit (-name=>$dataset->dataset_id(),-value=>'Remove');
   $deletebutton=$cgi->submit (-name=>$dataset->dataset_id(),-value=>'Delete')
     if ($userID==$dataset->owner()->ID and !defined $bool);
  
   $summary.=$cgi->table( { -border=>1 },
 			  $cgi->Tr( { -valign=>'middle' },
 				$cgi->td({ -align=>'left' },$cgi->submit (-name=>$dataset->dataset_id(),-value=>'Select')),
-				$cgi->td({ -align=>'left' },$removebutton),
 				$cgi->td({ -align=>'left' },$deletebutton),
 				$cgi->td({ -align=>'left' },$viewer),
 			  )
@@ -345,7 +318,7 @@ sub format_output {
   #creation de la check_box
   foreach (keys %h){
 	my $checkbox="";
-	$checkbox.=format_checkbox($h{$_}->{List},$cgi);
+	$checkbox.=format_checkbox($_,$h{$_}->{List},$cgi);
    	$rows.=$cgi->Tr( { -valign=>'middle' },
 			$cgi->td({ -align=>'left' },$h{$_}->{text}),
 			$cgi->td({ -align=>'left' },$checkbox),
@@ -353,7 +326,6 @@ sub format_output {
 
 
   }
-  #$text.="<b>Delete button not activated</b><br>";
   $text.=format_popup();
   $text.=$cgi->h3("List of dataset(s) used:");
   $text.=$cgi->startform;
@@ -363,7 +335,7 @@ sub format_output {
 				$cgi->td({ -align=>'left' },'<B>Projects related</B>'),
 			  ),
 			 $rows) ;
-
+  $text.="<br><br><center>".$cgi->submit (-name=>'Remove',-value=>'Remove')."</center>";
   $text.=$cgi->endform;
   
   return $text;
@@ -372,7 +344,7 @@ sub format_output {
 
 
 sub format_checkbox{
-  my ($ref,$cgi)=@_;
+  my ($datasetID,$ref,$cgi)=@_;
   my $text="";
   my %h=();
   %h=%$ref;
@@ -380,7 +352,8 @@ sub format_checkbox{
  # Cannot Use cgi->checkbox
   foreach (keys %h){
 	my $val;
-        $val="<input type=\"checkbox\" name=\"List\" value=\"$_\"/>".$h{$_};
+	my $pair=$datasetID."-".$_;
+      $val="<input type=\"checkbox\" name=\"List\" value=\"$pair\"/>".$h{$_};
       
 	push(@list,$val);
   }
@@ -440,17 +413,6 @@ sub do_request{
 
 }
 
-sub do_lock_unlock{
-  my ($table,$ref,$condition,$db)=@_;
-  my $result=undef;
- if (defined $db){
-       $result=$db->UpdateRecord($table,$ref,$condition);
- 
- }
- return $result;
-
-
-}
 
 
 1;

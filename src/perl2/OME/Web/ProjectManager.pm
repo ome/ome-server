@@ -141,9 +141,9 @@ sub delete_process{
 		$session->project($newproject);
 		#$session->writeObject(); 
 		if (scalar(@newdataset)==0){
-		  $session->dataset($newdataset[0]);
-            }else{
 		  $session->dissociateObject('dataset');
+            }else{
+		   $session->dataset($newdataset[0]);
 		}
 		$session->writeObject(); 
 
@@ -173,9 +173,9 @@ sub delete_process{
 		$session->project($newproject);
 		#$session->writeObject(); 
 		if (scalar(@newdataset)==0){
-		  $session->dataset($newdataset[0]);
+		   $session->dissociateObject('dataset');  
             }else{
-		  $session->dissociateObject('dataset');
+		  $session->dataset($newdataset[0]);
 		}
 		$session->writeObject(); 
 

@@ -46,14 +46,13 @@ sub getPageBody {
 
 	if (exists $revArgs{Remove}){
 	   my @groupdatasets=$cgi->param('List');
-	   $body.=remove_image($revArgs{Remove},\@groupdatasets);
+	   $body.=remove_image(\@groupdatasets);
 	}elsif(exists $revArgs{Delete}){
          $body.=delete_image_process($revArgs{Delete});
 		  
 	}      
-	$body.=$self->print_list(); 
-      
-     return ('HTML',$body);
+	$body.=$self->print_list();  
+      return ('HTML',$body);
 }
 
 
@@ -61,7 +60,7 @@ sub getPageBody {
 
 
 
-#----------------------------
+#---------------------------
 # PRIVATE METHODS
 #---------------------------
 
@@ -108,7 +107,7 @@ sub delete_image{
 
 
 sub remove_image{
-  my ($image,$refarray)=@_;
+  my ($refarray)=@_;
   my $table="image_dataset_map";
   my $text="";
   return "Please select at least one dataset" if scalar(@$refarray)==0;
@@ -117,7 +116,8 @@ sub remove_image{
 
   foreach (@$refarray){
      my ($condition,$result);
-     $condition="image_id=".$image." AND dataset_id=".$_;
+     my ($imageID,$datasetID)=split("-",$_);
+     $condition="image_id=".$imageID." AND dataset_id=".$datasetID;
      $result=do_request($table,$condition,$db); 
      return ('HTML',"Cannot delete one entry in image_dataset_map.") if (!defined $result);
      
@@ -169,10 +169,10 @@ sub print_list{
        my @images=$dataset->images();
 	 my %datasetInfo=();
        my %Remove=();
-       $datasetInfo{$dataset->dataset_id()}=$dataset->name();
-	 if (exists $gpDatasetList{$dataset->dataset_id()}){
+       $datasetInfo{$dataset->dataset_id()}=$dataset;
+	 if (exists $gpDatasetList{$dataset->dataset_id()} || $dataset->locked()){
          $Remove{$dataset->dataset_id()}=undef ;
-       }else{
+	 }else{
 	   $Remove{$dataset->dataset_id()}=1 ;
        }
 
@@ -208,7 +208,9 @@ sub print_list{
     }
   }
   # format here:
+  my $count=0;
   foreach (keys %userImageList){
+	$count++;
 	my $a=$userImageList{$_}->{remove};
 	my $boolremove=undef;
       foreach my $r (keys %$a){
@@ -216,12 +218,17 @@ sub print_list{
 	   $boolremove=1;
 	 }
       }
-	my $formatimage=format_image($_,$userImageList{$_}->{name},$userImageList{$_}->{owner},$ownerid,$cgi,$userImageList{$_}->{booldel},$boolremove);
-	$userImageList{$_}->{image}=$formatimage;
+      my $b=$userImageList{$_}->{list};
+	#my $formatimage=format_image($_,$userImageList{$_}->{name},$userImageList{$_}->{owner},$ownerid,$cgi,$userImageList{$_}->{booldel},$boolremove);
+	my $formatimage=format_image($_,$userImageList{$_}->{name},$userImageList{$_}->{owner},$ownerid,$cgi,$userImageList{$_}->{booldel});
+   $userImageList{$_}->{image}=$formatimage;
 
   }
-  $text.=format_output(\%userImageList,$cgi);
-
+  if ($count==0){
+   $text.="<br><b>no images to display.</b>";
+  }else{
+   $text.=format_output(\%userImageList,$cgi);
+  }
 
 }
 
@@ -232,10 +239,15 @@ sub format_output{
    
    my $summary="";
    my $rows="";
+   my $bool=undef;
    foreach (keys %userImageList){
 	my $checkbox="";
-	$checkbox.=format_checkbox($userImageList{$_}->{list},$userImageList{$_}->{remove},$cgi);
-
+      
+	my ($a,$b)=format_checkbox($_,$userImageList{$_}->{list},$userImageList{$_}->{remove},$cgi);
+	$checkbox.=$a;
+	if (defined $b){
+	 $bool=1;
+	}
 	$rows.=$cgi->Tr( { -valign=>'middle' },
 		 $cgi->td({ -align=>'left' },$userImageList{$_}->{image}),
 		 $cgi->td({ -align=>'left' },$checkbox)
@@ -252,17 +264,19 @@ sub format_output{
 
 			),
 			 $rows) ;
+   if (defined $bool){
+   $summary.="<br><br><center>".$cgi->submit (-name=>'Remove',-value=>'Remove')."</center>";
+   }
    $summary.=$cgi->endform;
-  return $summary;
+   return $summary;
 }
 
 
 sub format_image{
-  my ($id,$name,$ownImage,$ownerid,$cgi,$booldel,$boolrem)=@_;
+  my ($id,$name,$ownImage,$ownerid,$cgi,$booldel)=@_;
   my $summary="";
-  my ($buttonView,$buttonDelete,$buttonRemove);
+  my ($buttonView,$buttonDelete);
   $buttonView=create_button($id);
-  $buttonRemove=$cgi->submit (-name=>$id,-value=>'Remove') if (defined $boolrem);
   $buttonDelete=$cgi->submit (-name=>$id,-value=>'Delete')
     if ($ownerid==$ownImage and defined $booldel);
  
@@ -272,7 +286,6 @@ sub format_image{
   $summary.=$cgi->table( { -border=>1 },
 			  $cgi->Tr( { -valign=>'middle' },
 				$cgi->td({ -align=>'left' },$buttonView),
-				$cgi->td({ -align=>'left' },$buttonRemove),
 				$cgi->td({ -align=>'left' },$buttonDelete),
 
 			  )
@@ -282,23 +295,26 @@ sub format_image{
 }
 
 sub format_checkbox{
-  my ($ref,$refrem,$cgi)=@_;
+  my ($datasetID,$ref,$refrem,$cgi)=@_;
   my $text="";
   my @list=();
   # Cannot Use cgi->checkbox
+  my $bool=undef;
   foreach (keys %$ref){
 	my $val;
+	my $pair=$datasetID."-".$_;
       if (defined ${$refrem}{$_}){
-	   $val="<input type=\"checkbox\" name=\"List\" value=\"$_\"/>".${$ref}{$_};
+	   $bool=1;
+	   $val="<input type=\"checkbox\" name=\"List\" value=\"$pair\"/>".${$ref}{$_}->name();
       }else{
-        $val=${$ref}{$_};
+        $val=${$ref}{$_}->name();
       }
 	push(@list,$val);
   }
    $text.=join("<br>",@list);
 
 
- return $text;
+ return ($text,$bool);
 }
 
 

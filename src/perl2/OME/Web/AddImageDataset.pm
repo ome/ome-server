@@ -220,21 +220,12 @@ sub format_selected_dataset{
  my $button="";
  my $word;
  my $bool=undef;
- if ($data->locked()){
-   $word="YES";
-   $summary.=$cgi->startform;
-   $button.=$cgi->submit (-name=>$data->dataset_id(),-value=>'Unlock');
- }else{
-   $bool=1;
-   $word="NO";  
-   
-   }
  my @images=$data->images();
  $summary .= $cgi->h3('The selected dataset is:') ;
  $summary .= "<p><NOBR><B>Name:</B> ".$data->name()."</NOBR><BR>" ;
  $summary .= "<NOBR><B>ID:</B> ".$data->dataset_id()."</NOBR><BR>" ;
  $summary .= "<B>Description:</B> ".$data->description()."<BR>" ;
- $summary .= "<NOBR><B>Locked:</B> ".$word."</NOBR><br>";                  
+ $summary .= "<NOBR><B>Locked:</B> ".($data->locked()?'YES':'NO')."</NOBR><br>";                  
  $summary .= "<NOBR><B>Owner:</B> ".$data->owner()->firstname()." ".$data->owner()->lastname()."</NOBR><BR>";
  $summary.="<NOBR><B>E-mail:</B><a href='mailto:".$data->owner()->email()."'>".$data->owner()->email()."</a></NOBR><BR>";
  $summary .="<NOBR><B>Nb Images in dataset:</B> ".scalar(@images)."</NOBR><br>" ;
@@ -249,10 +240,12 @@ sub format_selected_dataset{
   $summary.=format_popup();
   $summary.="<b>Images' name:</b><br> ".join("<br>",@list);
  }
- if ($button){
-  $summary.="</p><b>You must unlock your dataset.</b>&nbsp;&nbsp;".$button."<br>";
-  $summary.=$cgi->endform;
+ if ($data->locked()){
+  $summary.="</p><b>The selected dataset is locked. You cannot add images.</b>";
+  #$summary.=$cgi->endform;
 
+ }else{
+   $bool=1;
  }
  return ($summary,$bool) ;
 
@@ -272,7 +265,8 @@ sub format_list_images{
  my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->group()->group_id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
  my @datasetsImages=$dataset->images();
  my $rep=not_used_images(\@groupImages,\@datasetsImages);	
- if (defined $rep) {  
+ if (scalar(@$rep)>0){
+   
    $checkbox.=print_checkbox($cgi,$rep);
    #format output
    $text.=$cgi->h3("Select images in the list below");
