@@ -249,7 +249,6 @@ sub finishPixels {
 
 	$pixels_attr->ImageServerID ($pixels_data->finishPixels());
 	$pixels_attr->FileSHA1( $pixels_data->getSHA1() );
-	$proto->saveThumb( $pixels_attr );
 	$pixels_attr->storeObject();
 }
 
@@ -353,12 +352,21 @@ sub getDisplayOptions {
 	);
 	
 	# set display channels
-	my (%displayChannelData, $channelIndex);
+	my (%displayChannelData, $channelIndex, @channelOrder);
 	my $statsHash = $pixels_data->getStackStatistics();
+
+	# set up red shift channel ordering
+	my @channelComponents = $factory->findAttributes( "PixelChannelComponent", {
+		Pixels => $pixels_attr } )
+		or die "Cannot find PixelChannelComponent's for pixels (id=".$pixels_attr->id().")\n";
+	@channelComponents = sort 
+		{ $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
+		@channelComponents;
+	@channelOrder = map( $_->Index(), @channelComponents );
 
 	# Red Channel
 	$displayData{RedChannelOn} = 1;
-	$channelIndex = 0;
+	$channelIndex = $channelOrder[0];
 	$displayChannelData{ ChannelNumber } = $channelIndex;
 	$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
 	$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
@@ -375,7 +383,7 @@ sub getDisplayOptions {
 	# Green Channel
 	if( $pixels_attr->SizeC > 1 ) {
 		$displayData{GreenChannelOn} = 1;
-		$channelIndex = 1;
+		$channelIndex = $channelOrder[1];
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
 		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
@@ -390,7 +398,7 @@ sub getDisplayOptions {
 	# Blue Channel
 	if( $pixels_attr->SizeC > 2 ) {
 		$displayData{BlueChannelOn} = 1;
-		$channelIndex = 2;
+		$channelIndex = $channelOrder[2];
 		$displayChannelData{ ChannelNumber } = $channelIndex;
 		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
 		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
