@@ -103,7 +103,7 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 	public void actionPerformed(ActionEvent e) {
 		
 		if (cachedEvent != null) {
-			super.mouseClicked(cachedEvent);
+			doMouseClicked(cachedEvent);
 		}
 		cachedEvent = null;
 		timer.stop();
@@ -147,6 +147,18 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		}
 		selectionState.setCurrentChain(selectedChain);
 	} 
+	
+	private void doMouseClicked(PInputEvent e) {
+		PNode node  = e.getPickedNode();
+		if (!(node instanceof PDatasetLabelText)) {
+			super.mouseClicked(e);
+			return;
+		}
+		
+		// on a label.
+		PDatasetLabelText label = (PDatasetLabelText) node;
+		label.doSelection();
+	}
 	
 	/**
 	 * When the user presses the mouse on a {@link PChainBox}, tell the
