@@ -103,10 +103,10 @@ sub print_form {
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= "<center><h2>Properties</h2></center>";
-	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
 	$text .= $htmlFormat->dropDownTable("newDataset",\%datasetList,"Switch","Switch Dataset")
 		if( scalar keys %datasetList > 0 );
+	$text .= "<center><h2>Dataset ".$dataset->name()." properties</h2></center>";
+	$text .= $htmlFormat->formChange("dataset",$session->dataset(),$user);
 	$text .= "<center><h2>Images</h2></center>";
 	$text .= $self->makeImageListings();
 	$text .= $cgi->endform;
