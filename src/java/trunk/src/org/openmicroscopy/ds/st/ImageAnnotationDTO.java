@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
+ * Created by dcreager via omejava on Tue Jul  6 12:40:26 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -53,35 +53,40 @@ public class ImageAnnotationDTO
     public String getDTOTypeName() { return "@ImageAnnotation"; }
     public Class getDTOType() { return ImageAnnotation.class; }
 
-    public Integer getTheZ()
-    { return getIntegerElement("TheZ"); }
-    public void setTheZ(Integer value)
-    { setElement("TheZ",value); }
-
-    public Integer getTheT()
-    { return getIntegerElement("TheT"); }
-    public void setTheT(Integer value)
-    { setElement("TheT",value); }
-
-    public Integer getTheC()
-    { return getIntegerElement("TheC"); }
-    public void setTheC(Integer value)
-    { setElement("TheC",value); }
-
-    public Long getTimestamp()
-    { return getLongElement("Timestamp"); }
-    public void setTimestamp(Long value)
-    { setElement("Timestamp",value); }
+    public Experimenter getExperimenter()
+    { return (Experimenter) getObjectElement("Experimenter"); }
+    public void setExperimenter(Experimenter value)
+    { setElement("Experimenter",value); }
 
     public String getContent()
     { return getStringElement("Content"); }
     public void setContent(String value)
     { setElement("Content",value); }
 
-    public Experimenter getExperimenter()
-    { return (Experimenter) getObjectElement("Experimenter"); }
-    public void setExperimenter(Experimenter value)
-    { setElement("Experimenter",value); }
+    public Long getTimestamp()
+    { return getLongElement("Timestamp"); }
+    public void setTimestamp(Long value)
+    { setElement("Timestamp",value); }
+
+    public Integer getTheC()
+    { return getIntegerElement("TheC"); }
+    public void setTheC(Integer value)
+    { setElement("TheC",value); }
+
+    public Integer getTheT()
+    { return getIntegerElement("TheT"); }
+    public void setTheT(Integer value)
+    { setElement("TheT",value); }
+
+    public Integer getTheZ()
+    { return getIntegerElement("TheZ"); }
+    public void setTheZ(Integer value)
+    { setElement("TheZ",value); }
+
+    public Boolean isValid()
+    { return getBooleanElement("Valid"); }
+    public void setValid(Boolean value)
+    { setElement("Valid",value); }
 
     public void setMap(Map elements)
     {

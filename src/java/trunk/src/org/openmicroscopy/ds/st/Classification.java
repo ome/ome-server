@@ -30,7 +30,7 @@
 /*------------------------------------------------------------------------------
  *
  * THIS IS AUTOMATICALLY GENERATED CODE.  DO NOT MODIFY.
- * Created by dcreager via omejava on Tue Mar 16 15:54:10 2004
+ * Created by dcreager via omejava on Tue Jul  6 12:40:26 2004
  *
  *------------------------------------------------------------------------------
  */
@@ -46,12 +46,16 @@ import java.util.Map;
 public interface Classification
     extends DataInterface, Attribute
 {
+    /** Criteria field name: <code>Category</code> */
+    public Category getCategory();
+    public void setCategory(Category value);
+
     /** Criteria field name: <code>Confidence</code> */
     public Float getConfidence();
     public void setConfidence(Float value);
 
-    /** Criteria field name: <code>Category</code> */
-    public Category getCategory();
-    public void setCategory(Category value);
+    /** Criteria field name: <code>Valid</code> */
+    public Boolean isValid();
+    public void setValid(Boolean value);
 
 }
