@@ -172,18 +172,6 @@ sub __printForm {
 	my $q          = $self->CGI();
 	my $user       = $self->Session()->User();
 	my $project    = $self->{__project};
-	my $htmlFormat = new OME::Web::Helper::HTMLFormat;
-
-	my $header_rows = $q->Tr({-bgcolor => '#FFFFFF'},
-		$q->td({-colspan => 2},
-			$q->span( {
-					-align => 'left',
-					-class => 'ome_info',
-					-style => 'font-size: 10px;',
-				}, "Items marked with a * are required unless otherwise specified"
-			),
-		)
-	);
 
 	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
 		$q->td( [
@@ -208,7 +196,7 @@ sub __printForm {
 			]
 		),
 		$q->td( [
-			$q->span("Object ID"),
+			$q->span("ID"),
 			$q->span($project->id()),
 			]
 		),
@@ -227,16 +215,25 @@ sub __printForm {
 		]
 	);
 
-	my $footer = $q->Tr({-bgcolor => '#E0E0E0'},
-		$q->td({-colspan => 2, -align => 'right'},
+	my $footer = $q->Tr( [
+		$q->td({-colspan => 2, -bgcolor => '#FFFFFF'},
+			$q->span( {
+					-align => 'left',
+					-class => 'ome_info',
+					-style => 'font-size: 10px;',
+				}, "Items marked with a * are required unless otherwise specified"
+			),
+		),
+		$q->td({-colspan => 2, -align => 'right', -bgcolor => '#E0E0E0'},
 			$q->a( {
 					-href => "#",
 					-onClick => "document.forms['metadata'].save.value='1'; document.forms['metadata'].submit();",
 					-class => 'ome_widget'
 				},
-				"Save Metadata"
+				"Save Changes"
 			)
 		)
+		]
 	);
 
 	my $border_table = $q->table( {
@@ -245,7 +242,6 @@ sub __printForm {
 			-cellspacing => 1,
 			-cellpadding => 3,
 		},
-		$header_rows,
 		$metadata,
 		$footer,
 	);	
