@@ -75,9 +75,9 @@ sub _renderData {
 			my $request_string = $request->{ 'request_string' };
 			my @images = OME::Tasks::CategoryManager->getImagesInCategory( $obj );
 			my $cut_off;
-			if( $request->{ limit_count } ) {
-				$cut_off = scalar( @images ) - $request->{ limit_count };
-				@images = splice( @images, 0, $request->{ limit_count } )
+			if( $request->{ paging_limit } ) {
+				$cut_off = scalar( @images ) - $request->{ paging_limit };
+				@images = splice( @images, 0, $request->{ paging_limit } )
 					if( $cut_off > 0 );
 			}
 			my $render_mode = ( $request->{ render } or 'ref_list' );
