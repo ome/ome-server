@@ -45,7 +45,7 @@ import org.openmicroscopy.Chain.Node;
 public class NodeInfo {
 	
 	private Node node;
-	private int maxDepth = 0;
+	private int layer = -1;
 	
 	public NodeInfo(Node node) {
 		this.node = node;
@@ -55,11 +55,15 @@ public class NodeInfo {
 		return node;
 	}
 	
-	public void setDepth(int d) {
-		maxDepth = d;
+	public void setLayer(int layer) {
+		this.layer = layer;
 	}
 	
-	public int maxDepth() {
-		return maxDepth;
+	public int getLayer() {
+		return layer;
+	}
+	
+	public boolean hasLayer() {
+		return (!(layer == -1));
 	}
 }
