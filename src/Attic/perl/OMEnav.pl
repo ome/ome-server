@@ -42,7 +42,8 @@ my $OMEclusterURL = $OMEbaseURL."OMEcluster.pl";
 my $OMEmanSpotsURL = $OMEbaseURL."manualSpots.pl";
 my $BinarizeGlobalURL = $OMEbaseURL."BinarizeGlobal.pl";
 my $OMECCCPURL = $OMEbaseURL."CCCP.pl";
-my $OMETMCPURL = $OMEbaseURL."TMCP.pl";
+my $OMETMCPURL1 = $OMEbaseURL."TMCP-java.pl";
+my $OMETMCPURL2 = $OMEbaseURL."TMCP.pl";
 my $ClickySpotsURL = $OMEbaseURL."LA_clickySpots_OME.pl";
 
 
@@ -65,7 +66,8 @@ print <<EOF
 <A href="$OMEmanSpotsURL" target="MainFrame">Run manSPBSpots</A><br>
 <A href="$BinarizeGlobalURL" target="MainFrame">Global Thresholding</A><br>
 <A href="$OMECCCPURL" target="MainFrame">Run CCCP</A><br>
-<A href="$OMETMCPURL" target="MainFrame">Run TMCP</A><br>
+<A href="$OMETMCPURL1" target="MainFrame">Run TMCP (Java)</A><br>
+<A href="$OMETMCPURL2" target="MainFrame">Run TMCP (C)</A><br>
 <A href="$ClickySpotsURL" target="MainFrame">Run ClickySpots</A><br>
 EOF
 ;
