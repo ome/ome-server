@@ -503,8 +503,9 @@ sub store_wavelength_info {
                    });
 
     my $component = $session->Factory()->
-      newAttribute("ChannelComponent",$image,$self->{analysis},
+      newAttribute("PixelChannelComponent",$image,$self->{analysis},
                    {
+                    Pixels         => $self->{pixelsAttr}->id(),
                     Index          => $wave->{'WavelengthInfo.WaveNumber'},
                     LogicalChannel => $logical->id(),
                    });
