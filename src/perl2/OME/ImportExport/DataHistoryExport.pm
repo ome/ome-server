@@ -64,6 +64,8 @@ OME::ImportExport::DataHistoryExport - Export module executions to describe how 
 This class is responsible for exporting the information necessary to reconstruct how data was introduced to the 
 system or derived. The xml produced is tied to the data history schema (http://www.openmicroscopy.org/XMLschemas/DataHistory/IR3/DataHistory.xsd).
 
+Currently virtual MEX's are NOT exported. See FIXME note in exportHistory method.
+
 =head1 METHODS
 
 =head2 new
@@ -252,14 +254,15 @@ sub HistoryElement {
 # Export the History for an OME::SemanticType::Superclass object.
 sub exportHistory {
 	my ($self, $attr) = @_;
+	return unless $attr;
 
 	my $factory = $self->{session}->Factory();
 	my $LSIDresolver  = $self->{_LSIDresolver};
 
-	my $exportedMEXs = $self->{_exportedMEXs};
-	my $DOM = $self->doc();
+	my $exportedMEXs   = $self->{_exportedMEXs};
+	my $DOM            = $self->doc();
 	my $historyElement = $self->HistoryElement();
-	my $MEX = $attr->module_execution();
+	my $MEX            = $attr->module_execution();
 	my @MEXs2export;
 
 	if( not defined $MEX) {
@@ -283,11 +286,12 @@ sub exportHistory {
 		
 		# thisMEX is the mex currently being exported.
 		my $thisMEX = pop( @MEXs2export );
-		next if exists $exportedMEXs->{$thisMEX};
+		next if exists $exportedMEXs->{ $thisMEX->id() };
+# FIXME: Export virtual mex's
 		next unless $thisMEX->module;
 		
 		# add upstream MEXs to export list.
-		push( @MEXs2export, grep { not exists $exportedMEXs->{$_} } map( $_->input_module_execution() , $thisMEX->inputs() ) );
+		push( @MEXs2export, grep { not exists $exportedMEXs->{ $_->id() } } map( $_->input_module_execution() , $thisMEX->inputs() ) );
 	
 		# <ModuleExecution>
 		my $mexXML = $DOM->createElement( 'ModuleExecution' );
@@ -299,14 +303,14 @@ sub exportHistory {
 	
 		# <ExecutionHistory>
 		my $executionHistoryXML = $DOM->createElement( 'ExecutionHistory' );
-		#this ties object attributes to xml attributes
+		# Maps object accessor names (hash values) to xml attribute names (keys)
 		my %executionHistoryCodes = ( 
-			'RunTime' => 'total_time', 
-			'Timestamp' => 'timestamp', 
-			'Status' => 'status',
-			'ErrorMessage' => 'error_message',
+			'RunTime'             => 'total_time', 
+			'Timestamp'           => 'timestamp', 
+			'Status'              => 'status',
+			'ErrorMessage'        => 'error_message',
 			'AttributeCreateTime' => 'attribute_create_time',
-			'AttributeSortTime' => 'attribute_sort_time'
+			'AttributeSortTime'   => 'attribute_sort_time'
 		);
 		foreach( keys %executionHistoryCodes ) {
 			my $method = $executionHistoryCodes{$_};
@@ -341,7 +345,7 @@ sub exportHistory {
 			$mexXML->appendChild( $outputXML );
 		}
 		
-		$exportedMEXs->{$thisMEX} = undef;
+		$exportedMEXs->{ $thisMEX->id() } = undef;
 	}
 	
 	$self->{_exportedMEXs} = $exportedMEXs;
