@@ -232,7 +232,7 @@ sub execute {
 
 			print "\n";  # Spacing
 
-			y_or_n ("Are these values correct ?") and last;
+			y_or_n ("Are these values correct ?",'y') and last;
 		}
 		
 		$confirm_all = 0;

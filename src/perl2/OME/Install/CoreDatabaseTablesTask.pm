@@ -70,11 +70,14 @@ our $LOGFILE;
 # Installation home
 our $INSTALL_HOME;
 
+# the installation environment
+our $ENVIRONMENT;
+
 # Our basedirs and user which we grab from the environment
-our ($OME_BASE_DIR, $OME_TMP_DIR, $OME_USER, $OME_UID);
+our ($OME_BASE_DIR, $OME_TMP_DIR,  $OME_USER, $OME_UID);
 
 # Our Apache user & Postgres admin we'll grab from the environment
-our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $ADMIN_UID);
+our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
 
 # Default import formats
 our $IMPORT_FORMATS = join (' ',qw/
@@ -383,19 +386,28 @@ sub load_schema {
 
 sub create_experimenter {
     my $manager = shift;
-    my ($first_name, $last_name, $username, $personal_info, $data_dir, $e_mail) = ("", "", "", undef, "", undef);
-
-	if ($ADMIN_UID) {
-		($username, $personal_info, $data_dir) = (getpwuid($ADMIN_UID))[0,6,7];
-    
-		if ($personal_info) {
-			my $full_name = (split (',',$personal_info,2))[0];
-			($first_name,$last_name) = split (' ',$full_name,2);
-		} else {
-			($first_name,$last_name) = ('','');
-		}
+	my $personal_info;
 	
-		$e_mail = $username.'@'.hostname();
+	if (not defined $OME_EXPER, or not $OME_EXPER) {
+		if ($ADMIN_UID) {
+			($OME_EXPER->{OMEName}, $personal_info, $OME_EXPER->{DataDirectory}) = (getpwuid($ADMIN_UID))[0,6,7];
+		
+			if ($personal_info) {
+				my $full_name = (split (',',$personal_info,2))[0];
+				($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = split (' ',$full_name,2);
+			} else {
+				($OME_EXPER->{FirstName},$OME_EXPER->{LastName}) = ('','');
+			}
+			$OME_EXPER->{Email} = $OME_EXPER->{OMEName}.'@'.hostname();
+			$OME_EXPER->{OMEName} = lc ( substr ($OME_EXPER->{FirstName}, 0, 1).$OME_EXPER->{LastName} )
+				unless $OME_EXPER->{OMEName};
+		} else {
+			$OME_EXPER->{FirstName} = '';
+			$OME_EXPER->{LastName}  = '';
+			$OME_EXPER->{OMEName}  = '';
+			$OME_EXPER->{Email}    = '';
+			$OME_EXPER->{DataDirectory}  = '';
+		}
 	}
 
     print_header "Initial user creation";
@@ -404,12 +416,12 @@ sub create_experimenter {
 	my $confirm_all;
 
     while (1) {
-		if ($ADMIN_UID or $confirm_all) {
-			print "            First name: ", BOLD, $first_name, RESET, "\n";
-			print "             Last name: ", BOLD, $last_name , RESET, "\n";
-			print "              Username: ", BOLD, $username  , RESET, "\n";
-			print "        E-mail address: ", BOLD, $e_mail    , RESET, "\n";
-			print "Default data directory: ", BOLD, $data_dir  , RESET, "\n";
+		if ($OME_EXPER or $confirm_all) {
+			print "            First name: ", BOLD, $OME_EXPER->{FirstName}    , RESET, "\n";
+			print "             Last name: ", BOLD, $OME_EXPER->{LastName}     , RESET, "\n";
+			print "              Username: ", BOLD, $OME_EXPER->{OMEName}      , RESET, "\n";
+			print "        E-mail address: ", BOLD, $OME_EXPER->{Email}        , RESET, "\n";
+			print "Default data directory: ", BOLD, $OME_EXPER->{DataDirectory}, RESET, "\n";
 	
 			print "\n";  # Spacing
 
@@ -418,26 +430,28 @@ sub create_experimenter {
 
 		$confirm_all = 0;
 
-		$first_name = confirm_default ("            First name", $first_name);
-		$last_name  = confirm_default ("             Last name", $last_name);
-		$username   = confirm_default ("              Username", ($username or lc (substr ($first_name, 0, 1).$last_name)));  
-		$e_mail     = confirm_default ("        E-mail address", ($e_mail or $username.'@'.hostname ()));
-		$data_dir   = confirm_default ("Default data directory", $data_dir);
+		$OME_EXPER->{FirstName}     = confirm_default ("            First name", $OME_EXPER->{FirstName});
+		$OME_EXPER->{LastName}      = confirm_default ("             Last name", $OME_EXPER->{LastName});
+		$OME_EXPER->{OMEName}       = confirm_default ("              Username", $OME_EXPER->{OMEName});
+		$OME_EXPER->{Email}         = confirm_default ("        E-mail address", $OME_EXPER->{Email});
+		$OME_EXPER->{DataDirectory} = confirm_default ("Default data directory", $OME_EXPER->{DataDirectory});
 
 		print "\n";  # Spacing
 
 		$confirm_all = 1;
     }
     
-    if (not -d $data_dir) {
-		my $y_or_n = confirm_default ("Directory \"$data_dir\" does not exist. Do you want to create it ?", "no");
+    if (not -d $OME_EXPER->{DataDirectory}) {
+		my $y_or_n = confirm_default ('Directory "'.$OME_EXPER->{DataDirectory}.
+			'" does not exist. Do you want to create it ?', "no");
 
 		if ((lc ($y_or_n) eq 'y') or (lc ($y_or_n) eq 'yes')) {
-			mkpath ($data_dir, 0, 0755);  # Internal croak
+			mkpath ($OME_EXPER->{DataDirectory}, 0, 0755);  # Internal croak
 		}
     }
 
-    my ($password, $hashed_password) = get_password ("Password: ", 6);
+	my $password;
+    ($password, $OME_EXPER->{Password}) = get_password ("Password: ", 6);
 
     print "\n";  # Spacing
 
@@ -446,19 +460,13 @@ sub create_experimenter {
     my $factory = OME::Factory->new();
     
     my $experimenter = $factory->
-	newObject('OME::SemanticType::BootstrapExperimenter',
-            {
-             OMEName       => $username,
-             FirstName     => $first_name,
-             LastName      => $last_name,
-             Email         => $e_mail,
-             Password      => $hashed_password,
-             DataDirectory => $data_dir,
-            });
+	newObject('OME::SemanticType::BootstrapExperimenter', $OME_EXPER);
 
     $factory->commitTransaction();
 	$factory->closeFactory();
-    my $session = $manager->createSession($username, $password);
+    my $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
+
+	$ENVIRONMENT->ome_exper($OME_EXPER);
 
     print "Called commitTransaction.  returning\n";
     return ($session);
@@ -468,8 +476,11 @@ sub init_configuration {
 	my $factory = OME::Factory->new();
 
     print_header "Initializing configuration";
+    
+    my $lsid_def = $ENVIRONMENT->lsid ();
+    $lsid_def = hostname() unless $lsid_def; 
 
-    my $lsid_authority = confirm_default ("LSID Authority", hostname ());
+    my $lsid_authority = confirm_default ("LSID Authority", $lsid_def);
 
     # The DB instance uniquely identifies this specific DB instance on this machine
     # Can only make one per second - sorry.
@@ -496,6 +507,7 @@ sub init_configuration {
              ome_root         => $OME_BASE_DIR
             });
 
+	$ENVIRONMENT->lsid ($lsid_authority);
     $factory->commitTransaction();
     $factory->closeFactory();
     return 1;
@@ -536,7 +548,11 @@ sub make_repository {
 	my $hostname = hostname();
 
 	# FIXME Make this a little more verbose, probably needs some explanation.
-	my $repository_url = confirm_default ("What is the URL to the OMEIS CGI ?", "http://$hostname/cgi-bin/omeis");
+	my $repository_def = $ENVIRONMENT->omeis_url();
+	$repository_def = "http://$hostname/cgi-bin/omeis" if $ENVIRONMENT->apache_conf->{OMEIS} and not $repository_def;
+	my $repository_url = confirm_default ("What is the URL of the OME Image server (omeis) ?", $repository_def);
+	$ENVIRONMENT->omeis_url($repository_url);
+	
     my $repository = $factory->
 	newObject('OME::SemanticType::BootstrapRepository',
 	        {
@@ -695,22 +711,23 @@ sub execute {
     print_header "Database Bootstrap";
 
     # Our OME::Install::Environment
-    my $environment = initialize OME::Install::Environment;
+   $ENVIRONMENT = initialize OME::Install::Environment;
 
     # Populate globals
-    $OME_BASE_DIR = $environment->base_dir()
+    $OME_BASE_DIR = $ENVIRONMENT->base_dir()
 	or croak "Unable to retrieve OME_BASE_DIR!";
-    $OME_TMP_DIR = $environment->tmp_dir()
+    $OME_TMP_DIR = $ENVIRONMENT->tmp_dir()
 	or croak "Unable to retrieve OME_TMP_DIR!";
-    $OME_USER = $environment->user()
+    $OME_USER = $ENVIRONMENT->user()
 	or croak "Unable to retrieve OME_USER!";
     $OME_UID = getpwnam ($OME_USER)
 	or croak "Unable to retrive OME_USER UID!";
-    $APACHE_USER = $environment->apache_user()
+    $APACHE_USER = $ENVIRONMENT->apache_user()
 	or croak "Unable to retrieve APACHE_USER!";
-    $POSTGRES_USER = $environment->postgres_user()
+    $POSTGRES_USER = $ENVIRONMENT->postgres_user()
 	or croak "Unable to retrieve POSTGRES_USER!";
-    $ADMIN_USER = $environment->admin_user();
+    $ADMIN_USER = $ENVIRONMENT->admin_user();
+    $OME_EXPER = $ENVIRONMENT->ome_exper();
 
 	if ($ADMIN_USER) {
     	$ADMIN_UID = getpwnam ($ADMIN_USER);
@@ -774,7 +791,7 @@ sub execute {
 
     if (defined $db_db_version) {
         print "Found existing database version $db_db_version.";
-	    $environment->set_flag ("UPDATE");
+	    $ENVIRONMENT->set_flag ("UPDATE");
         if ($db_db_version ne $DB_VERSION) {
             print "  Updating to $DB_VERSION.\n";
             $retval = update_database($db_db_version);

@@ -218,4 +218,53 @@ sub admin_user {
     return;
 }
 
+sub ome_exper {
+    my ($self, $user) = @_;
+
+    if($user) {
+	$self->{ome_user} = $user;
+    } else {
+	return $self->{ome_user} unless not exists $self->{ome_user};
+    }
+
+    return;
+}
+
+sub omeis_url {
+    my ($self, $url) = @_;
+
+    if($url) {
+	$self->{omeis_url} = $url;
+    } else {
+	return $self->{omeis_url} unless not exists $self->{omeis_url};
+    }
+
+    return;
+}
+
+sub lsid {
+    my ($self, $url) = @_;
+
+    if($url) {
+	$self->{lsid} = $url;
+    } else {
+	return $self->{lsid} unless not exists $self->{lsid};
+    }
+
+    return;
+}
+
+sub apache_conf {
+    my ($self, $apache_conf) = @_;
+
+    if($apache_conf) {
+	$self->{apache_conf} = $apache_conf;
+    } else {
+	return $self->{apache_conf} unless not exists $self->{apache_conf};
+    }
+
+    return;
+}
+
+
 1;

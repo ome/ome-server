@@ -51,12 +51,28 @@ use base qw(OME::Install::InstallationTask);
 #********* GLOBALS AND DEFINES
 #*********
 
-# Our basedir which we grab from the environment
+# Things we grab from the environment
 our $OME_BASE_DIR;
 our $APACHE_USER;
 our $APACHE_UID;
 our $OME_GROUP;
 our $OME_GID;
+
+our $APACHE;
+our $APACHE_CONF_DEF = {
+	DO_CONF  => 1,
+	DEV_CONF => 0,
+	OMEIS    => 1,
+	OMEDS    => 1,
+	WEB      => undef,
+	HUP      => 1,
+};
+
+# Globals
+our $APACHE_WEB_INCLUDE;
+our $APACHE_OMEIS_INCLUDE;
+our $APACHE_OMEDS_INCLUDE;
+
 
 #*********
 #********* LOCAL SUBROUTINES
@@ -125,12 +141,14 @@ sub httpd_restart {
 sub fix_ome_conf {
 	my $OME_CONF_DIR = shift;
 	my $OME_DIST_BASE = getcwd;
+	my @lines;
+	my $file;
 
-    my @files = glob ("$OME_CONF_DIR/httpd.ome*.conf $OME_CONF_DIR/httpd2.ome*.conf");
+    my @files = glob ("$OME_CONF_DIR/httpd.*.conf $OME_CONF_DIR/httpd2.*.conf");
 
-	foreach my $file (@files) {	
+	foreach $file (@files) {	
 		open(FILE, "<", $file) or croak "Can't open $file for reading: $!";
-		my @lines = <FILE>;
+		@lines = <FILE>;
 		close (FILE);
 		my $config = join ('',@lines); 
 		$config =~ s/%OME_DIST_BASE/$OME_DIST_BASE/mg;
@@ -140,6 +158,17 @@ sub fix_ome_conf {
 		print FILE $config;
 		close (FILE);
 	}
+	
+	# Add the include directives for installed components.
+	$file = "$OME_CONF_DIR/httpd.ome.conf";
+	open (FILE, "<",$file) or croak "Can't open $file for reading: $!";
+	@lines = <FILE>;
+	close (FILE);
+	push (@lines,"$APACHE_WEB_INCLUDE\n");
+	push (@lines,"$APACHE_OMEIS_INCLUDE\n");
+	push (@lines,"$APACHE_OMEDS_INCLUDE\n");
+	open (FILE, ">",$file) or croak "Can't open $file for writing: $!";
+	print FILE $_ foreach (@lines);
 
 	return (1);
 }
@@ -195,7 +224,7 @@ sub getApacheInfo {
 
 	print STDERR  "Apache configuration file ($httpdConf) does not exist\n" unless -e $httpdConf;
 	print STDERR  "Apache configuration file ($httpdConf) is not readable\n" unless -r $httpdConf;
-	confirm_path ('Apache configuration file', $httpdConf);
+#	confirm_path ('Apache configuration file', $httpdConf);
 	$apache_info->{conf} = $httpdConf;
 	croak "Could not find $httpdConf\n" unless -e $httpdConf;
 	croak "Could not read $httpdConf\n" unless -r $httpdConf;
@@ -243,57 +272,135 @@ sub execute {
     $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
 	$OME_GROUP    = $environment->group() or croak "OME group is not set!\n";
 	$OME_GID      = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
+	# Things the user can set
+	$APACHE       = defined $environment->apache_conf()  ? $environment->apache_conf()  : $APACHE_CONF_DEF;
+
 	# The configuration directory
 	my $OME_CONF_DIR = $OME_BASE_DIR . '/conf';
+	my $ome_conf = "$OME_CONF_DIR/httpd.ome.conf";
+	my $is_dev = '';
+	my $httpd_vers = 'httpd';
 
-	fix_ome_conf("$OME_CONF_DIR");
-	return unless y_or_n('Configure Apache server?');
-
+	my $apache_info;
+	
 	print "\n";  # Spacing
     
     print_header ("Apache Setup");
-
-    #********
-    #******** Gather information about the Apache executable and its configuration file (httpd.conf)
-    #********
-
-    # Set a proper umask
-    print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
-    umask (0002);
-
-
-	my $apache_info = getApacheBin();
-
-    #********
-    #******** Fix paths in conf/httpd.ome.*.conf
-    #********
-
-	my $ome_conf;
-	if ($apache_info->{version} == 2) {
-		$ome_conf = $OME_CONF_DIR . '/httpd2.ome.dev.conf';
-		$ome_conf = $OME_BASE_DIR.'/conf/httpd2.ome.conf'
-			unless y_or_n("Use OME Apache-2.x configuration for developers?");
-	} else {
-		$ome_conf = $OME_CONF_DIR . '/httpd.ome.dev.conf';
-		$ome_conf = $OME_BASE_DIR.'/conf/httpd.ome.conf'
-			unless y_or_n("Use OME Apache-1.x configuration for developers?");
+	
+	#********
+	#******** Get info from Apache's httpd.conf
+	#********
+	if ($APACHE->{DO_CONF}) {
+		$apache_info = getApacheBin();
+		$apache_info->{ome_conf} = $ome_conf;
+		getApacheInfo($apache_info);
+		$httpd_vers = 'httpd2' if $apache_info->{version} == 2;
+		$APACHE->{WEB} = $apache_info->{DocumentRoot} unless defined $APACHE->{WEB} and not $APACHE->{WEB};
 	}
 
-	croak "Could not read OME Apache configuration file ($ome_conf)\n" unless -r $ome_conf;
-	$apache_info->{ome_conf} = $ome_conf;
+	# Confirm all flag
+	my $confirm_all;
 
-    
-    #********
-    #******** Get info from Apache's httpd.conf
-    #********
-	getApacheInfo($apache_info) or croak "Could not get any Apache info\n";
+    while (1) {
+		if ($environment->get_flag("UPDATE") or $confirm_all) {
+			print "\n";  # Spacing
+
+			# Ask user to confirm his/her original entries
+	
+			print "       Configure Apache?: ", BOLD, $APACHE->{DO_CONF}  ?'yes':'no', RESET, "\n";
+			print " Developer configuration: ", BOLD, $APACHE->{DEV_CONF} ?'yes':'no', RESET, "\n";
+			print "         Server restart?: ", BOLD, $APACHE->{HUP}      ?'yes':'no', RESET, "\n";
+			print BOLD,"Install OME servers:\n",RESET;
+			print "          Images (omeis): ", BOLD, $APACHE->{OMEIS}    ?'yes':'no', RESET, "\n";
+			print "            Data (omeds): ", BOLD, $APACHE->{OMEDS}    ?'yes':'no', RESET, "\n";
+			print "                     Web: ", BOLD, $APACHE->{WEB}      ?'yes':'no', RESET, "\n";
+
+			print "\n";  # Spacing
+
+			y_or_n ("Are these values correct ?",'y') and last;
+		}
+
+		$confirm_all = 0;
+		print "\n";  # Spacing
+
+		if (! y_or_n('Configure Apache server?','y') ) {
+			$APACHE->{DO_CONF}  = 0;
+			last;
+		}
+		$APACHE->{DO_CONF}  = 1;
+
+
+		#********
+		#******** Set the apache conf file we'll be using
+		#********
+	
+		if ($apache_info->{version} == 2) {
+			if (y_or_n("Use OME Apache-2.x configuration for developers?")) {
+				$APACHE->{DEV_CONF} = 1;
+			} else {
+				$APACHE->{DEV_CONF} = 0;
+			}
+			$httpd_vers = 'httpd2';
+		} else {
+			if (y_or_n("Use OME Apache-2.x configuration for developers?")) {
+				$APACHE->{DEV_CONF} = 1;
+			} else {
+				$APACHE->{DEV_CONF} = 0;
+			}
+			$httpd_vers = 'httpd';
+		}
+			
+		croak "Could not read OME Apache configuration file ($ome_conf)\n" unless -r $ome_conf;
+		getApacheInfo($apache_info) or croak "Could not get any Apache info\n";
+
+		#********
+		#******** Install omeis?
+		#********
+		if (y_or_n("Install image server (omeis) ?",'y')) {
+			$apache_info->{cgi_bin}
+				or croak "Apache httpd.conf does not have a cgi-bin directory";
+			$APACHE->{OMEIS} = 1;
+		} else {
+			$APACHE->{OMEIS} = 0;
+		}
+
+		#********
+		#******** Install omeds?
+		#********
+		if (y_or_n("Install data server (omeds) ?",'y')) {
+			$APACHE->{OMEDS} = 1;
+		} else {
+			$APACHE->{OMEDS} = 0;
+		}
+
+		#********
+		#******** Install web?
+		#********
+		if (y_or_n("Install web server ?",'y')) {
+			my $docRoot = $APACHE->{WEB};
+			$docRoot = $apache_info->{DocumentRoot} unless $docRoot;
+			$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+			while (! -e $APACHE->{WEB}) {
+				$APACHE->{WEB} = confirm_path ('Copy index.html to :', $docRoot);
+			}
+		} else {
+			$APACHE->{WEB} = '';
+		}
+
+	print "\n";  # Spacing
+	$confirm_all = 1;
+	}
+
+	$environment->apache_conf($APACHE);
+	return unless $APACHE->{DO_CONF};
+
 	my $httpdConf = $apache_info->{conf} or croak "Could not find httpd.conf\n";
 
-    
-    #********
-    #******** Attempt to fix httpd.conf
-    #********
-    my $apacheBak = $apache_info->{conf_bak};
+
+	#********
+	#******** Attempt to fix httpd.conf
+	#********
+	my $apacheBak = $apache_info->{conf_bak};
 	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
 	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf.  " if $apache_info->{mod_perl_off};
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
@@ -307,42 +414,68 @@ sub execute {
 			}
 		}
 	}
-    
-    #********
-    #******** Copy things to cgi-bin
-    #********
-    my $cgiBin = $apache_info->{cgi_bin};
-	croak "Apache httpd.conf does not have a cgi-bin directory" if not $cgiBin;
-	my $OME_JPEG = 'src/C/OME_JPEG';
-	copy ($OME_JPEG,$cgiBin) or croak "Could not copy $OME_JPEG to $cgiBin:\n$!\n";
-	chmod (0755,"$cgiBin/OME_JPEG") or croak "Could not chmod $cgiBin/OME_JPEG:\n$!\n";
-	chown ($APACHE_UID,$OME_GID,"$cgiBin/OME_JPEG") or croak "Could not chown $cgiBin/OME_JPEG:\n$!\n";
-    
-	my $OMEIS = 'src/C/omeis/omeis';
-	copy ($OMEIS,$cgiBin) or croak "Could not copy $OMEIS to $cgiBin:\n$!\n";
-	chmod (0755,"$cgiBin/omeis") or croak "Could not chmod $cgiBin/omeis:\n$!\n";
-	chown ($APACHE_UID,$OME_GID,"$cgiBin/omeis") or croak "Could not chown $cgiBin/omeis:\n$!\n";
-    
-    
-    #********
-    #******** Copy index.html?
-    #********
-    my $docRoot = $apache_info->{DocumentRoot};
-    print STDERR  "Copy OME's index.html to DocumentRoot directory ";
-	if ( y_or_n ("($docRoot) ?") ) {
-	    my ($fromIndex,$toIndex) = (getcwd.'/src/html/index.html',$docRoot.'/index.html');
-		copy ($fromIndex,$toIndex) or croak "Could not copy \"$fromIndex\" to \"$toIndex\":\n$!\n";
+
+	
+	$is_dev = '-dev' if $APACHE->{DEV_CONF};
+
+	my ($source,$dest);
+	#********
+	#******** Install omeis in cgi-bin
+	#********
+	if ($APACHE->{OMEIS}) {
+		$source = 'src/C/omeis/omeis';
+		$dest = $apache_info->{cgi_bin}.'/omeis';
+		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
+		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+		$APACHE_OMEIS_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.omeis$is_dev.conf";
+	} else {
+		$APACHE_OMEIS_INCLUDE = '';
+	}
+
+	#********
+	#******** Install omeds by including the omeds httpd conf in ome's httpd conf
+	#********
+	if ($APACHE->{OMEDS}) {
+		$APACHE_OMEDS_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.omeds$is_dev.conf";
+	} else {
+		$APACHE_OMEDS_INCLUDE = '';
+	}
+
+	#********
+	#******** Install web by copying serve.pl and index.html
+	#********
+	if (length($APACHE->{WEB})) {
+		$source = 'src/perl2/serve.pl';
+		$dest = $OME_BASE_DIR.'/perl2/serve.pl';
+		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
+		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+
+		$source = 'src/html/index.html';
+		$dest = $APACHE->{WEB}.'/index.html';
+		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
+		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+		$APACHE_WEB_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.web$is_dev.conf";
+	} else {
+		$APACHE_WEB_INCLUDE = '';
 	}
 	
-    
-    #********
-    #******** Restart Apache?
-    #********
-	if ( y_or_n("Restart Apache ?") ) {
-		httpd_restart ($apache_info);
-	}
 	
-	print "\n";  # Spacing
+	#********
+	#******** Fix variables in conf/httpd.ome.*.conf
+	#********
+	fix_ome_conf("$OME_CONF_DIR");	
+	
+	#********
+	#******** Restart
+	#********
+	httpd_restart ($apache_info) if $APACHE->{HUP};
+	
+	# Set a proper umask
+	print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
+	umask (0002);
 
     return;
 }

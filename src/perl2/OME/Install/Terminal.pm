@@ -87,7 +87,7 @@ sub confirm {
 sub confirm_path {
     my ($text, $default) = @_; 
 
-    print "$text ", BOLD, "[$default]", RESET, ": ";
+    print "$text [", BOLD, $default, RESET, "]: ";
     my $input = ReadLine 0;
     chomp $input;
     ($input = $default) unless $input;
@@ -172,12 +172,21 @@ sub get_password {
 
 sub y_or_n {
     my $text = shift;
+    my $def_yorn = shift;
+    my $y_or_n;
 
-    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
-    my $y_or_n = ReadLine 0;
-    chomp $y_or_n;
-
-    if (lc($y_or_n) eq "y") { return 1 };
-
-    return 0;
+    $def_yorn = 'n' unless defined $def_yorn;
+	if ($def_yorn eq 'n') {
+   	    print wrap("", "", $text), " [y/", BOLD, "n", RESET, "]: ";
+        $y_or_n = ReadLine 0;
+        chomp $y_or_n;
+        if (lc($y_or_n) eq "y") { return 1 };
+        return 0;
+   	} else {
+   	    print wrap("", "", $text), " [", BOLD, "y", RESET, "/n]: ";
+        $y_or_n = ReadLine 0;
+        chomp $y_or_n;
+        if (lc($y_or_n) eq "n") { return 0 };
+        return 1;
+   	}
 }
