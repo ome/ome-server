@@ -316,6 +316,7 @@ sub dissociateObject {
     return unless defined $primary and $primary;
 
 	my $nullObject = $objType->construct({$primary => undef});
+	return unless defined $nullObject and $nullObject;
 
 	$self->$field ($nullObject);
 }
