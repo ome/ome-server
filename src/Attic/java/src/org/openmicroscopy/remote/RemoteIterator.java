@@ -21,7 +21,7 @@
 
 package org.openmicroscopy.remote;
 
-import org.openmicroscopy.*;
+//import org.openmicroscopy.*;
 import java.util.Iterator;
 
 public class RemoteIterator

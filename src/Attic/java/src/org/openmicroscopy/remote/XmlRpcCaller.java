@@ -24,7 +24,7 @@ package org.openmicroscopy.remote;
 import java.net.URL;
 import java.util.*;
 import org.apache.xmlrpc.XmlRpc;
-import org.apache.xmlrpc.XmlRpcClient;
+//import org.apache.xmlrpc.XmlRpcClient;
 import org.apache.xmlrpc.XmlRpcClientLite;
 import org.openmicroscopy.Session;
 

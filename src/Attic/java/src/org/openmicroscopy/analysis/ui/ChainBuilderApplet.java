@@ -22,12 +22,12 @@
 package org.openmicroscopy.analysis.ui;
 
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
 import javax.swing.*;
 
 import org.openmicroscopy.*;
-import org.openmicroscopy.analysis.*;
-import org.openmicroscopy.simple.*;
+//import org.openmicroscopy.analysis.*;
+//import org.openmicroscopy.simple.*;
 import org.openmicroscopy.applet.*;
 
 public class ChainBuilderApplet

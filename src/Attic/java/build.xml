@@ -2,6 +2,7 @@
   <property name="src" value="src"/>
   <property name="jnisrc" value="jnisrc"/>
   <property name="build" value="build"/>
+  <property name="lib"  value="lib"/>
   <property name="docs" value="docs"/>
   <property name="apidocs" value="docs/api"/>
   <property name="privapidocs" value="docs/privapi"/>
@@ -23,7 +24,9 @@
 
   <target name="compile" depends="init">
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}" deprecation="Yes"/>
+    <javac srcdir="${src}"
+	   classpath="${lib}/piccolo.jar;${lib}/piccolox.jar" 
+	   destdir="${build}" deprecation="Yes"/>
   </target>
 
   <target name="apidocs">
@@ -81,6 +84,12 @@
     <delete file="${jar}/org-openmicroscopy-remote.jar"/>
     <delete file="${jar}/org-openmicroscopy-simple.jar"/>
     <delete file="${jar}/org-openmicroscopy-soap.jar"/>
+    <delete file="${jar}/org-openmicroscopy-vis-chains.jar"/>
+
+    <copy todir="${jar}">
+      <fileset dir="${lib}"/>
+    </copy>
+			
 
     <jar destfile="${jar}/ome.jar">
       <fileset dir="build" includes="org/openmicroscopy/**/*.class"/>
@@ -117,6 +126,12 @@
     <jar destfile="${jar}/org-openmicroscopy-soap.jar">
       <fileset dir="build" includes="org/openmicroscopy/soap/*.class"/>
     </jar>
+
+    <jar destfile="${jar}/org-openmicroscopy-vis-chains.jar"
+      manifest ="${src}/org/openmicroscopy/vis/chains/chains.manifest">
+      <fileset dir="build" includes="org/openmicroscopy/vis/chains/*.class"/>
+    </jar>
+
   </target>
 
   <target name="clean">

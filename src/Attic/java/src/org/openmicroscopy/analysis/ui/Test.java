@@ -24,14 +24,14 @@ package org.openmicroscopy.analysis.ui;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.*;
+//import java.net.*;
 import javax.swing.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import org.openmicroscopy.*;
-import org.openmicroscopy.analysis.*;
+//import org.openmicroscopy.analysis.*;
 import org.openmicroscopy.remote.RemoteBindings;
 
 public class Test

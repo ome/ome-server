@@ -1,8 +1,8 @@
 /*
- * org.openmicroscopy.soap.SoapExperimenter
+ * org.openmicroscopy.vis.chains.Controller
  *
- * Copyright (C) 2002 Open Microscopy Environment, MIT
- * Author:  Douglas Creager <dcreager@alum.mit.edu>
+ * Copyright (C) 2003 Open Microscopy Environment, MIT
+ * Author:  Harry Hochheiser <hsh@nih.gov>
  *
  *    This library is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
@@ -19,30 +19,34 @@
  *    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-package org.openmicroscopy.soap;
+package org.openmicroscopy.vis.chains;
 
-//import org.apache.axis.client.Call;
-//import org.apache.axis.client.Service;
-//import javax.xml.namespace.QName;
+/** 
+ * <p>Control and top-level management for the Chain-building application.<p>
+ * 
+ * @author Harry Hochheiser
+ * @version 0.1
+ * @since OME2.0
+ */
 
-public interface SoapExperimenter
-{
-    
-    public int getID();
+public class Controller {
+	
+	private CmdTable cmd;
 
-    public String getOMEName();
-    public void setOMEName(String name);
+	public Controller() {
+		cmd = new CmdTable(this);
+	}
 
-    public String getFirstName();
-    public void setFirstName(String name);
-
-    public String getLastName();
-    public void setLastName(String name);
-
-    public String getEmail();
-    public void setEmail(String name);
-
-    public String getDataDir();
-    public void setDataDir(String name);
-
+	public CmdTable getCmdTable() {
+			return cmd;	
+	}
+	
+	public void doLogin() {
+		System.err.println("login...");
+	}
+	
+	public void doLogout() {
+		System.err.println("logout");
+	}
 }
+

@@ -21,9 +21,9 @@
 
 package org.openmicroscopy.soap;
 
-import org.apache.axis.client.Call;
+//import org.apache.axis.client.Call;
 import org.apache.axis.client.Service;
-import javax.xml.namespace.QName;
+//import javax.xml.namespace.QName;
 import java.net.URL;
 
 public class SoapObject

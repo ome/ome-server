@@ -23,7 +23,7 @@ package org.openmicroscopy.remote;
 
 import org.openmicroscopy.*;
 
-import java.net.URL;
+//import java.net.URL;
 import java.io.*;
 import java.util.*;
 

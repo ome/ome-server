@@ -1,0 +1,2 @@
+Main-Class: org.openmicroscopy.vis.chains.Chains
+Class-Path: piccolox.jar
