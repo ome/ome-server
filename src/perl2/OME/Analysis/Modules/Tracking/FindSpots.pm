@@ -48,6 +48,7 @@ use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(_options _inputHandle _outputHandle _errorHandle
               _inputFile _outputFile _errorFile _cmdLine);
 
+use OME::Tasks::PixelsManager;
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
