@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.util.PNodeFilter;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.Chain.Node;
 import org.openmicroscopy.managers.ChainManager;
@@ -69,6 +70,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Collection;
 
 /** 
  * A {@link PCanvas} for building chains
@@ -186,7 +188,7 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	 * or a module if a module was dropped. Reinstate the event handler
 	 */
 	public void drop(DropTargetDropEvent e) {
-		System.err.println("getting a drop...");
+	//	System.err.println("getting a drop...");
 		try {
 			Transferable transferable =  e.getTransferable();
 			if (transferable.isDataFlavorSupported(ModuleFlavor.moduleFlavor)) { 
@@ -263,13 +265,14 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	 * @param location
 	 */
 	public void createDroppedChain(CChain chain,Point2D location) {
-		getCamera().localToView(location);
+		getCamera().localToGlobal(location);
 		float x = (float) location.getX();
 		float y = (float) location.getY();
-		PChain p = new PChain(connection,chain,layer,linkLayer,x,y);
+		PChain p = new PChain(connection,chain,false);
+		layer.addChild(p);
+		p.setOffset(x,y);
 		PBounds b = layer.getFullBounds();
-		b.add(linkLayer.getFullBounds());
-		PBounds newb = new PBounds(b.getX()-PConstants.BORDER,
+		PBounds newb = new PBounds(b.getX()-PConstants.BORDER,	
 			b.getY()-PConstants.BORDER,
 			b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER);
@@ -306,14 +309,10 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	 */
 	public void updateSaveStatus() {
 		boolean res  = false;
-		Iterator  iter = layer.getChildrenIterator();
-		while (iter.hasNext()) {
-			Object obj = iter.next();
-			if(obj instanceof PModule) { 
-				res = true;
-				break;
-			}
-		}
+		
+		Collection modules = findModules();
+		if (modules.size() > 0)
+			res = true;
 		setSaveEnabled(res);
 	}	
 	
@@ -347,6 +346,18 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		libraryCanvas.scaleToSize();
 	}
 	
+	private Collection findModules() {
+		PNodeFilter filter = new PNodeFilter() {
+			public boolean accept(PNode node) {
+				return (node instanceof PModule);
+			}
+			public boolean acceptChildrenOf(PNode node) {
+				return  true;
+			}
+		};
+		return  layer.getAllNodes(filter,null);
+		
+	}
 	/**
 	 * Add the modules currently on the canvas to the chain being created.
 	 * @param manager
@@ -357,8 +368,10 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		PModule mod;
 		CNode chainNode;
 				
-		// iterate over layer, adding a node for each PModule
-		Iterator iter = layer.getChildrenIterator();
+		
+		Collection modNodes = findModules();
+		
+		Iterator iter = modNodes.iterator();
 		while (iter.hasNext()) {
 			
 			node = (PNode) iter.next();
@@ -380,7 +393,18 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 		PNode node;
 		PParamLink link;
 
-		Iterator iter = linkLayer.linkIterator();
+		PNodeFilter filter = new PNodeFilter() {
+			public boolean accept(PNode node) {
+				return (node instanceof PParamLink);
+			}
+			public boolean acceptChildrenOf(PNode node) {
+				return  true;
+			}
+		};
+		Collection linkNodes = layer.getAllNodes(filter,null);
+		// plus add in whatever is in linkLayer;
+		linkNodes.addAll(linkLayer.links());
+		Iterator iter = linkNodes.iterator();
 		while (iter.hasNext()) {
 			node = (PNode) iter.next();
 			if (node instanceof PParamLink) {
