@@ -43,6 +43,7 @@
 package org.openmicroscopy.remote;
 
 import org.openmicroscopy.*;
+import org.openmicroscopy.remote.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -51,7 +52,10 @@ public class RemoteDataset
     extends RemoteOMEObject
     implements Dataset
 {
-    static { RemoteObjectCache.addClass("OME::Dataset",RemoteDataset.class); }
+    static {
+	RemoteObjectCache.addClass("OME::Dataset",RemoteDataset.class);
+	RemoteObjectCache.addClass("OME::Image::DatasetMap",DatasetLink.class);
+    }
 
     public RemoteDataset() { super(); }
     public RemoteDataset(RemoteSession session, String reference)
@@ -141,5 +145,31 @@ public class RemoteDataset
                     return link.getImage();
                 }
             };
+    }
+
+    public void addImage(Image im) {
+	caller.dispatch(this,"addImage",im);
+	return;
+    }
+
+    public void importImages(String inFiles) {
+	caller.dispatch(this,"importImages",
+			inFiles);
+	
+    }
+
+
+    static class DatasetLink
+        extends RemoteOMEObject
+    {
+        public DatasetLink() { super(); }
+        public DatasetLink(RemoteSession session, String reference)
+        { super(session,reference); }
+
+        Image getImage()
+        { return (Image) getRemoteElement("OME::Image","image"); }
+
+        Dataset getDataset()
+        { return (Dataset) getRemoteElement("OME::Dataset","dataset"); }
     }
 }
