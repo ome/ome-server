@@ -113,6 +113,7 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
+		_objsNotToStore => undef,
 		_nullAnalysisSTs=> {
 			'Thumbnail'      => undef,
 			'DisplayChannel' => undef,
@@ -317,10 +318,6 @@ sub processDOM {
 	
 	# Turn row gessing back to what it was before.
 	OME::SemanticType->GuessRows($oldRowGuessing);
-
-	# Commit everything we've got so far.
-	logdbg "debug", ref ($self)."->processDOM: Committing DBObjects";
-	$self->commitObjects ();
 	
 	return { $self->{_importedObjects}, $importDataset } ;
 }
@@ -387,13 +384,20 @@ sub dataset () {
 }
 
 
-sub commitObjects () {
+sub storeObjects () {
 	my $self = shift;
 	
-	logdbg "debug", ref ($self)."->commitObjects: committing ".scalar (@{ $self->{_DBObjects} })." objects.";
-    $_->storeObject() foreach @{ $self->{_DBObjects} };
+	logdbg "debug", ref ($self)."->storeObjects: storing ".scalar (@{ $self->{_DBObjects} })." objects.";
+    (not exists $self->{_objsNotToStore}->{$_->id()} and $_->storeObject() )
+    	foreach @{ $self->{_DBObjects} };
     $self->{_DBObjects} = [];
 }
+
+sub doNotStoreTheseObjects() {
+	my ($self, @objs) = @_;
+	$self->{_objsNotToStore} = { map{ $_->id() => undef } @objs};
+}
+
 
 sub addObject ($$) {
 	my ($self,$object,$LSID) = @_;
@@ -424,7 +428,8 @@ sub importObject ($$$$) {
 	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
 	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
 
-# FIXED? (siah): I believe data dependency support satisfies this. no?
+# (siah): This doesn't make sense. I think the code has changed around it and it no longer
+#         fits. IGG?
 # FIXME (IGG):  Only allow previously seen objects to be resolved if there is
 # no module_execution associated with the object.
 # This is because we have no way of merging attributes from different module executions.
@@ -436,7 +441,7 @@ sub importObject ($$$$) {
 		$docIDs->{$LSID} = $theObject->id();
 		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
 		return $theObject;
-	}
+	} 
 
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 
@@ -509,12 +514,21 @@ sub importObject ($$$$) {
 		delete $docRefs->{$LSID};
 	}
 
-	$lsid->setLSID ($theObject, $LSID) if $lsid->checkLSID($LSID);
-    $self->addObject ($theObject, $LSID);
+	
+	if( $lsid->checkLSID($LSID) ) {
+		$lsid->setLSID ($theObject, $LSID);
+	} else {
+		# Not a proper LSID: store this obj. Later, verify this object should be imported
+		$self->{_malformedLSIDs}->{$LSID}->{object} = $theObject;
+	}
+	# store refs to malformed LSIDs
+	while ( ($objField,$theRef) = each %$refCols ) {
+		$self->{_malformedLSIDs}->{$theRef}->{refs}->{$theObject} = $objField
+			if ( not defined $lsid->checkLSID($theRef) );
+	}
+	$self->addObject ($theObject, $LSID);
 	return ($theObject);
 }
-
-
 
 
 sub getObjectTypeInfo ($$) {
