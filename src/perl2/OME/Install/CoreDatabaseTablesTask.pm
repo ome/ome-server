@@ -610,7 +610,6 @@ sub load_xml_core {
     foreach my $filename (@core_xml) {
 		print "  \\__ $filename ";
 		eval {
-#			OME::Tasks::ImageTasks::importFiles(($filename));
 			$omeImport->importFile($filename,
 				NoDuplicates           => 1,
 				IgnoreAlterTableErrors => 1);
