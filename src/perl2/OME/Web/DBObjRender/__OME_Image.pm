@@ -43,17 +43,32 @@ use OME;
 use OME::Session;
 use base qw(OME::Web::RenderData);
 
-sub getFieldNames {
-	return ('default_pixels', 'name', 'description', 'owner', 'group');
-}
+# Class data
+my %_fieldLabels = (
+	'id'             => "ID",
+	'name'           => "Name", 
+	'default_pixels' => "Default Pixels", 
+	'description'    => "Description", 
+	'owner'          => "Owner",
+	'group'          => "Group",
+	'created'        => "Created",
+	'inserted'       => "Inserted",
+	'image_guid'     => "GUID"
+);
+my @_fieldNames = ('id', 'default_pixels', 'name', 'description', 'owner', 'group', 'created');
+my @_allFieldNames = (@_fieldNames, 'inserted', 'image_guid');
+
+
+sub getFieldNames { return @_fieldNames if wantarray; return \@_fieldNames; }
+
+sub getAllFieldNames { return @_allFieldNames if wantarray; return \@_allFieldNames; }
 
 sub getFieldLabels {
-	return (
-		'name'           => "Name", 
-		'default_pixels' => "Default Pixels", 
-		'description'    => "Description", 
-		'owner'          => "Owner",
-		'group'          => "Group");
+	my ($proto,$type,$fieldNames) = @_;
+	$fieldNames = $proto->getFieldNames() unless $fieldNames;
+	my %fieldLabels = map{ $_ => $_fieldLabels{$_} } @$fieldNames;
+	return %fieldLabels if wantarray;
+	return \%fieldLabels;
 }
 
 1;
