@@ -117,6 +117,7 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 */
 	public void updateToolTip(PInputEvent event) {
 		PNode n  = setToolTipNode(event);
+
 		setToolTip(n);
 			
 		Point2D p = event.getCanvasPosition();
@@ -144,6 +145,7 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 	 * @param s
 	 */
 	public void setToolTip(PNode n) {
+	
 		if (n == tip)
 			return;
 			
@@ -162,8 +164,10 @@ public abstract class PToolTipHandler extends PBasicInputEventHandler {
 			if (displayed == false)
 				camera.addChild(tooltip);
 			tooltip.addChild(n);
+			n.moveToFront();
 			displayed = true;
-			PBounds newBounds = new PBounds(0,0,n.getWidth(),n.getHeight());
+			PBounds newBounds = new PBounds(0,0,n.getWidth()*n.getScale(),
+				n.getHeight()*n.getScale());
 			tooltip.setPathTo(newBounds);
 		}	
 	}
