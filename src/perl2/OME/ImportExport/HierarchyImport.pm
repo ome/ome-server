@@ -76,9 +76,9 @@ use Log::Agent;
 use XML::LibXML;
 
 use OME::Tasks::LSIDManager;
-use OME::Analysis::AnalysisEngine;
 use OME::Tasks::DatasetManager;
 use OME::Tasks::ProjectManager;
+use OME::Tasks::ImportManager;
 
 =head1 METHODS
 
@@ -173,6 +173,7 @@ sub processDOM {
 	my $oldRowGuessing = OME::SemanticType->GuessRows();
 	OME::SemanticType->GuessRows(1);
 
+    OME::Tasks::ImportManager->startImport();
 	
 	###########################################################################
 	# These hashes store the IDs we've found so far in the document
@@ -239,7 +240,7 @@ sub processDOM {
 
 	# process images
 	logdbg "debug", ref ($self)."->processDOM: Processing Images";
-	my ($importDataset,$importAnalysis);
+	my ($importDataset);
 	foreach my $node ( @{ $root->getChildrenByTagName('Image') } ) {
 	
 		$object = $self->importObject ($node,undef,undef,undef);
@@ -268,16 +269,13 @@ sub processDOM {
 			{image_id => $objectID, dataset_id => $importDataset->id()}
 		));
 
-		# We need an module_execution for these.  This will return the one stored in the object or make a new one.
-		$importAnalysis = $self->module_execution();
-
 		# Import Image CAs
 		$CAnode = $node->getChildrenByTagName('CustomAttributes')->[0];
 		@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
 		# Display Options has a default reference to the default Pixels, but may be imported before default pixels are determined.
 		my $display_options = undef;
 		foreach $CA ( @CAs ) {
-			my $imgAttr = $self->importObject ($CA,'I',$objectID,$importAnalysis);
+			my $imgAttr = $self->importObject ($CA,'I',$objectID,undef);
 # This is a hack to rename the pixels repository file to the standard naming convention
 # added by josiah Friday 13, June, 2003
 # Modified by IGG 06/27/03 to also assign the proper repository ID to the pixels.
@@ -313,8 +311,10 @@ sub processDOM {
 		$display_options->Pixels($image->DefaultPixels())
 			if defined $display_options and not defined $display_options->Pixels();
 		# Import Features
-		$self->importFeatures ($imageID, undef, $importAnalysis, $node);
+		$self->importFeatures ($imageID, undef, $node);
 	}
+
+    OME::Tasks::ImportManager->finishImport();
 	
 	# Turn row gessing back to what it was before.
 	OME::SemanticType->GuessRows($oldRowGuessing);
@@ -324,7 +324,7 @@ sub processDOM {
 
 
 sub importFeatures ($$$) {
-my ($self, $imageID, $parentFeature, $importAnalysis, $node) = @_;
+my ($self, $imageID, $parentFeature, $node) = @_;
 
 		logdbg "debug", ref ($self)."->importFeatures: Processing Features";
 
@@ -337,32 +337,11 @@ my ($self, $imageID, $parentFeature, $importAnalysis, $node) = @_;
 			my $CAnode = $feature->getChildrenByTagName('CustomAttributes')->[0];
 			my @CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
 			foreach my $CA ( @CAs ) {
-				$self->importObject ($CA,'F',$objectID,$importAnalysis);
+				$self->importObject ($CA,'F',$objectID,undef);
 			}
-			$self->importFeatures ($imageID, $object, $importAnalysis, $feature);
+			$self->importFeatures ($imageID, $object, $feature);
 		}
 }
-
-sub module_execution () {
-	my $self = shift;
-
-	return $self->{_module_execution} if exists $self->{_module_execution} and defined $self->{_module_execution};
-	my $session = $self->{session};
-
-    my $module_execution = $self->{factory}->
-		newObject("OME::ModuleExecution", {
-			dependence => 'I',
-			dataset_id => $self->dataset()->id(),
-			timestamp  => 'now',
-			status     => 'FINISHED',
-			module_id => $session->Configuration()->import_module_id(),
-		});
-
-    $self->{_module_execution} = $module_execution;
-    $self->addObject ($module_execution);
-    return ($module_execution);
-}
-
 
 sub dataset () {
 	my $self = shift;
@@ -425,7 +404,15 @@ sub importObject ($$$$) {
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
 	$parentDBID = undef if $granularity eq 'G';
-	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
+    if ($granularity eq 'G') {
+        $module_execution = OME::Tasks::ImportManager->getGlobalImportMEX();
+    } elsif ($granularity eq 'D') {
+        $module_execution = OME::Tasks::ImportManager->
+          getDatasetImportMEX($parentDBID);
+    } elsif ($granularity eq 'I') {
+        $module_execution = OME::Tasks::ImportManager->
+          getImageImportMEX($parentDBID);
+    }
 	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
 
 # (siah): This doesn't make sense. I think the code has changed around it and it no longer
