@@ -403,7 +403,7 @@ addPrototype("OME::Image","all_features",[],['OME::Factory::Iterator'],
 addPrototype("OME::Image","DefaultPixels",[],['OME::SemanticType::Superclass'],
              publishedName => 'getDefaultPixels' );
 addPrototype("OME::Image","GetPix",
-             ['OME::SemanticType::Superclass','OME::SemanticType::Superclass'],
+             ['OME::SemanticType::Superclass'],
              ['OME::Image::Pix']);
 
 addPrototype("OME::Image::Pix","GetPixels",[],['$$']);
