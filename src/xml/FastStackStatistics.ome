@@ -130,12 +130,12 @@
 		<FormalInput Name = "PlaneSum_Xi" SemanticTypeName = "PlaneSum_Xi" Description = "" Count="+"/>
 		<FormalInput Name = "PlaneSum_Yi" SemanticTypeName = "PlaneSum_Yi" Description = "" Count="+"/>
 		<FormalInput Name = "PlaneSum_Zi" SemanticTypeName = "PlaneSum_Zi" Description = "" Count="+"/>
-		<FormalOutput Name = "Stack minima"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Stack maxima"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Stack means"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Stack geomeans"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Stack sigmas"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack" Count="+"/>
-		<FormalOutput Name = "Stack centroids" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack" Count="+"/>
+		<FormalOutput Name = "Minima"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Maxima"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Geomean"   SemanticTypeName = "StackGeometricMean"   Description = "Geometric mean of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Sigma"     SemanticTypeName = "StackSigma"     Description = "Standard deviation of pixel intensities in an XYZ stack" Count="+"/>
+		<FormalOutput Name = "Centroids" SemanticTypeName = "StackCentroid" Description = "x, in pixels, of center of intensity for the stack" Count="+"/>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" 
 		xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
@@ -145,83 +145,83 @@
 				<RawText> Dims=</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeX"/>
+				<Input Location = "Pixels.SizeX"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeY"/>
+				<Input Location = "Pixels.SizeY"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeZ"/>
+				<Input Location = "Pixels.SizeZ"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeC"/>
+				<Input Location = "Pixels.SizeC"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "SizeT"/>
+				<Input Location = "Pixels.SizeT"/>
 			</InputSubString>
 			<InputSubString>
 				<RawText>,</RawText>
 			</InputSubString>
 			<InputSubString>
-				<Input AML:FormalInputName = "Pixels" SemanticElementName = "BitsPerPixel" DivideBy = "8"/>
+				<Input Location = "Pixels.BitsPerPixel" DivideBy = "8"/>
 			</InputSubString>
 		</CommandLine>
 		<STDIN>
 			<InputRecord>
 				<Index>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneMaximum" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_i" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_i2" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_log_i" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_Xi" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_Yi" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneSum_Zi" SemanticElementName = "TheT"/>
+					<Input Location = "PlaneMinimum.TheT"/>
+					<Input Location = "PlaneMaximum.TheT"/>
+					<Input Location = "PlaneSum_i.TheT"/>
+					<Input Location = "PlaneSum_i2.TheT"/>
+					<Input Location = "PlaneSum_log_i.TheT"/>
+					<Input Location = "PlaneSum_Xi.TheT"/>
+					<Input Location = "PlaneSum_Yi.TheT"/>
+					<Input Location = "PlaneSum_Zi.TheT"/>
 				</Index>
 				<Index>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneMaximum" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_i" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_i2" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_log_i" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_Xi" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_Yi" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneSum_Zi" SemanticElementName = "TheC"/>
+					<Input Location = "PlaneMinimum.TheC"/>
+					<Input Location = "PlaneMaximum.TheC"/>
+					<Input Location = "PlaneSum_i.TheC"/>
+					<Input Location = "PlaneSum_i2.TheC"/>
+					<Input Location = "PlaneSum_log_i.TheC"/>
+					<Input Location = "PlaneSum_Xi.TheC"/>
+					<Input Location = "PlaneSum_Yi.TheC"/>
+					<Input Location = "PlaneSum_Zi.TheC"/>
 				</Index>
 				<Index>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneMaximum" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_i" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_i2" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_log_i" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_Xi" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_Yi" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneSum_Zi" SemanticElementName = "TheZ"/>
+					<Input Location = "PlaneMinimum.TheZ"/>
+					<Input Location = "PlaneMaximum.TheZ"/>
+					<Input Location = "PlaneSum_i.TheZ"/>
+					<Input Location = "PlaneSum_i2.TheZ"/>
+					<Input Location = "PlaneSum_log_i.TheZ"/>
+					<Input Location = "PlaneSum_Xi.TheZ"/>
+					<Input Location = "PlaneSum_Yi.TheZ"/>
+					<Input Location = "PlaneSum_Zi.TheZ"/>
 				</Index>
 				<DelimitedRecord FieldDelimiter = ",">
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheZ"/>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheC"/>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "TheT"/>
-					<Input AML:FormalInputName = "PlaneMinimum" SemanticElementName = "Minimum"/>
-					<Input AML:FormalInputName = "PlaneMaximum" SemanticElementName = "Maximum"/>
-					<Input AML:FormalInputName = "PlaneSum_i" SemanticElementName = "Sum_i"/>
-					<Input AML:FormalInputName = "PlaneSum_i2" SemanticElementName = "Sum_i2"/>
-					<Input AML:FormalInputName = "PlaneSum_log_i" SemanticElementName = "Sum_log_i"/>
-					<Input AML:FormalInputName = "PlaneSum_Xi" SemanticElementName = "Sum_Xi"/>
-					<Input AML:FormalInputName = "PlaneSum_Yi" SemanticElementName = "Sum_Yi"/>
-					<Input AML:FormalInputName = "PlaneSum_Zi" SemanticElementName = "Sum_Zi"/>
+					<Input Location = "PlaneMinimum.TheZ"/>
+					<Input Location = "PlaneMinimum.TheC"/>
+					<Input Location = "PlaneMinimum.TheT"/>
+					<Input Location = "PlaneMinimum.Minimum"/>
+					<Input Location = "PlaneMaximum.Maximum"/>
+					<Input Location = "PlaneSum_i.Sum_i"/>
+					<Input Location = "PlaneSum_i2.Sum_i2"/>
+					<Input Location = "PlaneSum_log_i.Sum_log_i"/>
+					<Input Location = "PlaneSum_Xi.Sum_Xi"/>
+					<Input Location = "PlaneSum_Yi.Sum_Yi"/>
+					<Input Location = "PlaneSum_Zi.Sum_Zi"/>
 				</DelimitedRecord>
 			</InputRecord>
 		</STDIN>
@@ -233,44 +233,44 @@
 			<OutputRecord>
 				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack minima"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack maxima"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack means"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack geomeans"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack sigmas"/>
-					<OutputTo SemanticElementName = "TheC" FormalOutputName = "Stack centroids"/>
+					<OutputTo Location = "Minima.TheC"/>
+					<OutputTo Location = "Maxima.TheC"/>
+					<OutputTo Location = "Mean.TheC"/>
+					<OutputTo Location = "Geomean.TheC"/>
+					<OutputTo Location = "Sigma.TheC"/>
+					<OutputTo Location = "Centroids.TheC"/>
 				</Output>
 				<Output AccessBy = "2">
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack minima"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack maxima"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack means"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack geomeans"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack sigmas"/>
-					<OutputTo SemanticElementName = "TheT" FormalOutputName = "Stack centroids"/>
+					<OutputTo Location = "Minima.TheT"/>
+					<OutputTo Location = "Maxima.TheT"/>
+					<OutputTo Location = "Mean.TheT"/>
+					<OutputTo Location = "Geomean.TheT"/>
+					<OutputTo Location = "Sigma.TheT"/>
+					<OutputTo Location = "Centroids.TheT"/>
 				</Output>
 				<Output AccessBy = "3">
-					<OutputTo SemanticElementName = "Minimum"       FormalOutputName = "Stack minima"/>
+					<OutputTo Location = "Minima.Minimum"/>
 				</Output>
 				<Output AccessBy = "4">
-					<OutputTo SemanticElementName = "Maximum"       FormalOutputName = "Stack maxima"/>
+					<OutputTo Location = "Maxima.Maximum"/>
 				</Output>
 				<Output AccessBy = "5">
-					<OutputTo SemanticElementName = "Mean"      FormalOutputName = "Stack means"/>
+					<OutputTo Location = "Mean.Mean"/>
 				</Output>
 				<Output AccessBy = "6">
-					<OutputTo SemanticElementName = "GeometricMean"   FormalOutputName = "Stack geomeans"/>
+					<OutputTo Location = "Geomean.GeometricMean"/>
 				</Output>
 				<Output AccessBy = "7">
-					<OutputTo SemanticElementName = "Sigma"     FormalOutputName = "Stack sigmas"/>
+					<OutputTo Location = "Sigma.Sigma"/>
 				</Output>
 				<Output AccessBy = "8">
-					<OutputTo SemanticElementName = "X" FormalOutputName = "Stack centroids"/>
+					<OutputTo Location = "Centroids.X"/>
 				</Output>
 				<Output AccessBy = "9">
-					<OutputTo SemanticElementName = "Y" FormalOutputName = "Stack centroids"/>
+					<OutputTo Location = "Centroids.Y"/>
 				</Output>
 				<Output AccessBy = "10">
-					<OutputTo SemanticElementName = "Z" FormalOutputName = "Stack centroids"/>
+					<OutputTo Location = "Centroids.Z"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
