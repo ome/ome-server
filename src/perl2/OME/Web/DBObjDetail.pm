@@ -187,7 +187,7 @@ sub _getDBObjDetail {
 	my $obj_table;
 
 	my @fieldNames = OME::Web::DBObjRender->getAllFieldNames( $object );
-	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames );
+	my %labels  = OME::Web::DBObjRender->getFieldLabels( $object, \@fieldNames, 'html' );
 	my %record  = OME::Web::DBObjRender->renderSingle( $object, 'html', \@fieldNames );
 
 	%record = %{ $self->_overrideRecord( \%record ) };
