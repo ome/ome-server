@@ -1126,8 +1126,8 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				DBLocation = "IMAGE_PIXELS.PATH"
 				DataType = "string"/>
             <Element
-               Name="PixelsID"
-               DBLocation="IMAGE_PIXELS.PIXELS_ID"
+               Name="ImageServerID"
+               DBLocation="IMAGE_PIXELS.IMAGE_SERVER_ID"
                DataType="integer"/>
 		</SemanticType>
 

@@ -93,7 +93,7 @@ sub startImage {
     # the database.
 
     my $stats = OME::Image::Server->
-      getPlaneStatistics($pixels_attr->PixelsID());
+      getPlaneStatistics($pixels_attr->ImageServerID());
 
     foreach my $z (keys %$stats) {
         foreach my $c (keys %{$stats->{$z}}) {

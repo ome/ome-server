@@ -93,7 +93,7 @@ sub startImage {
     # the database.
 
     my $stats = OME::Image::Server->
-      getStackStatistics($pixels_attr->PixelsID());
+      getStackStatistics($pixels_attr->ImageServerID());
 
     foreach my $c (keys %$stats) {
         foreach my $t (keys %{$stats->{$c}}) {

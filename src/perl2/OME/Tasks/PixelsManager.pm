@@ -250,17 +250,17 @@ sub localCreatePixels {
     my $attr = $factory->
       newAttribute('Pixels',$image,$mex,
                    {
-                    SizeX        => $xx,
-                    SizeY        => $yy,
-                    SizeZ        => $zz,
-                    SizeC        => $cc,
-                    SizeT        => $tt,
-                    BitsPerPixel => $bbp*8,
-                    PixelType    => $PIXEL_TYPES{$bbp}{$signed}{$float},
-                    FileSHA1     => undef,
-                    Repository   => $repository,
-                    Path         => $filename,
-                    PixelsID     => undef,
+                    SizeX          => $xx,
+                    SizeY          => $yy,
+                    SizeZ          => $zz,
+                    SizeC          => $cc,
+                    SizeT          => $tt,
+                    BitsPerPixel   => $bbp*8,
+                    PixelType      => $PIXEL_TYPES{$bbp}{$signed}{$float},
+                    FileSHA1       => undef,
+                    Repository     => $repository,
+                    Path           => $filename,
+                    ImageServerID  => undef,
                    });
 
     return ($pixels,$attr);
@@ -334,17 +334,17 @@ sub serverCreatePixels {
     my $attr = $factory->
       newAttribute('Pixels',$image,$mex,
                    {
-                    SizeX        => $xx,
-                    SizeY        => $yy,
-                    SizeZ        => $zz,
-                    SizeC        => $cc,
-                    SizeT        => $tt,
-                    BitsPerPixel => $bbp*8,
-                    PixelType    => $PIXEL_TYPES{$bbp}{$signed}{$float},
-                    FileSHA1     => undef,
-                    Repository   => $repository,
-                    Path         => undef,
-                    PixelsID     => $pixels->getPixelsID(),
+                    SizeX          => $xx,
+                    SizeY          => $yy,
+                    SizeZ          => $zz,
+                    SizeC          => $cc,
+                    SizeT          => $tt,
+                    BitsPerPixel   => $bbp*8,
+                    PixelType      => $PIXEL_TYPES{$bbp}{$signed}{$float},
+                    FileSHA1       => undef,
+                    Repository     => $repository,
+                    Path           => undef,
+                    ImageServerID  => $pixels->getPixelsID(),
                    });
     return ($pixels,$attr);
 }
@@ -355,7 +355,7 @@ sub serverLoadPixels {
 
     my $repository = $attr->Repository();
     $proto->activateRepository($repository);
-    return OME::Image::Server::Pixels->open($attr->PixelsID());
+    return OME::Image::Server::Pixels->open($attr->ImageServerID());
 }
 
 1;
