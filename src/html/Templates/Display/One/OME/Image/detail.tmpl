@@ -39,7 +39,7 @@
 						<TMPL_UNLESS NAME=current_annotation_author>
 							Your
 						</TMPL_UNLESS>
-						Current Annotation
+						Current Textual Annotation
 <!-- current_annotation_author will only be given if the user didn't make the annotation -->
 						<TMPL_IF NAME=current_annotation_author>
 							written by <TMPL_VAR NAME=current_annotation_author>
@@ -51,6 +51,11 @@
 </TMPL_UNLESS>
 						 <a href="serve.pl?Page=OME::Web::Search&Type=@ImageAnnotation&Image=<TMPL_VAR Name='id'>" class="ome_widget">View all <TMPL_VAR NAME=annotation_count> Annotations</a>]<br>
 						<textarea name="annotation" rows="5" cols="60"><TMPL_VAR NAME='current_annotation'></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td colspan='2'>
+						<a href="javascript: annotateImage( <TMPL_VAR Name='id'>, document.forms[0].annotateWithST.value);">Create</a> a custom annotation of <TMPL_VAR NAME='annotationSTs'>
 					</td>
 				</tr>
 			</table>
