@@ -351,41 +351,91 @@ $mxUINT64_CLASS = __mxUINT64_CLASS();
 $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 
 package OME::Matlab::Array;
-require Exporter;
 
-our @EXPORT = qw(printArray
-		scalar
-		makePersistent
-		);
-our @ISA = qw(Exporter);
-
-
+use Log::Agent;
 
 sub print {
-    my $array = shift;
-    print "  Perl: $array\n";
-    print "    Class:  ",$array->class_name(),"\n";
-    print "    Order:  ",$array->order(),"\n";
-    print "    Dims:   ",join('x',@{$array->dimensions()}),"\n";
-    if ($array->is_numeric() || $array->is_logical()) {
-        print "    Values: (",join(',',@{$array->getAll()}),")\n";
+    my $self = shift;
+    print "  Perl: $self\n";
+    print "    Class:  ",$self->class_name(),"\n";
+    print "    Order:  ",$self->order(),"\n";
+    print "    Dims:   ",join('x',@{$self->dimensions()}),"\n";
+    if ($self->is_numeric() || $self->is_logical()) {
+        print "    Values: (",join(',',@{$self->getAll()}),")\n";
 	}
-	if ($array->is_char()){
-		print "    Value: '",$array->getString(),"'\n";
+	if ($self->is_char()){
+		print "    Value: '",$self->getString(),"'\n";
 	}
 }
 
-# returns the first value of the array
-sub scalar {
-	my $array = shift;
+=head2 getScalar
+
+	my $string = $array->getScalar();
+
+Attempts to retrieve a scalar value from the array.
+goes kaput if the array doesn't look like a scalar
+
+=cut
+
+sub getScalar {
+	my $self = shift;
 	
-	if ($array->is_numeric() || $array->is_logical()) {
-		return $array->getAll()->[0];
+	if ($self->is_numeric() || $self->is_logical()) {
+		die "Cannot treat as a scalar. It is not 1x1."
+			if( grep( $_ != 1, @{$self->dimensions()}) );
+		return $self->getAll()->[0];
+	} elsif ($self->is_char()){
+		return $self->getString();
+	} else {
+		die ref( $self)." is of unknown class (".$self->class_name.")";
 	}
-	if ($array->is_char()){
-		return $array->getString();
+}
+
+
+# FIXME: add functions canConvertToScalar, canConvertToList, and convertToList
+
+=head2 canConvertToListOfHashes
+
+	my $array_of_hashes = $array->convertToListOfHashes()
+		if( $array->canConvertToListOfHashes() );
+
+Returns 1 if convertToListOfHashes can be safely called on $array.
+Otherwise returns undef.
+
+=cut
+
+sub canConvertToListOfHashes { return 1 if shift->class_name() eq 'struct'; }
+
+=head2 convertToListOfHashes
+
+	my $array_of_hashes = $array->convertToListOfHashes();
+
+Converts an Array of class struct into a perl array of hashes.
+
+=cut
+
+sub convertToListOfHashes {
+	my $self = shift;
+# is this necessary?
+$self->makePersistent();
+
+	die "Array must be of class struct to convert to array of hashes. Array is of class ".$self->class_name().".\n\n"
+		unless $self->class_name() eq 'struct';
+	
+	my @array_of_hashes;
+	foreach my $outputListIndex( 0..($self->n()-1) ) {
+		my %data_hash;
+		# Loop through fields of the structure
+		foreach my $field_index( 0..($self->getNumFields() - 1) ) {
+			my $field_name = $self->getFieldName( $field_index );
+			my $field_value = $self->getField($outputListIndex,$field_index)
+				or die "Could not retrieve field ( $field_name, index $field_index ) on index $field_index";
+			$data_hash{ $field_name } = $field_value->getScalar();
+		}
+		push @array_of_hashes, \%data_hash;
 	}
-	return undef;
+	
+	return \@array_of_hashes;
 }
 
 sub makePersistent {
