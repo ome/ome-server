@@ -1377,13 +1377,18 @@ int FinishPixels (PixelsRep *myPixels, char force) {
 	/* Make sure all the stats are up to date */
 	if (!FinishStats (myPixels,force)) return (-3);
 
+	/* Get the SHA1 message digest */
+	if (get_md_from_fd (myPixels->fd_rep, myPixels->head->sha1) < 0) {
+		fprintf(stderr, "Unable to retrieve SHA1.");
+		return(-4);
+	}
 
 	myPixels->head->isFinished = 1;
 
 	if (myPixels->is_mmapped) {
-		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (-4);
+		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (-5);
 
-		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-5);
+		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (-6);
 	}
 
 	return (0);
@@ -1847,39 +1852,32 @@ char **cgivars=param;
 			fprintf(stdout,"Finished=%hhu\nSigned=%hhu\nFloat=%hhu\n",
 					head->isFinished,head->isSigned,head->isFloat);
 
+			fprintf(stdout,"SHA1=");
+			print_md(head->sha1);
+			fprintf(stdout,"\n");
+
 			freePixelsRep (thePixels); 
 
 			break;
 		case M_PIXELSSHA1:
         	if (!ID) return (-1);
 
-        	if (! (thePixels = GetPixelsRep(ID,'r',1))) {
-				if (errno) HTTP_DoError(method,strerror(errno));
-				else HTTP_DoError(method,"Access control error - check log for details");
-				
+			if (! (thePixels = GetPixelsRep (ID,'i',1)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 
-        	HTTP_ResultType("text/plain");
+			head = thePixels->head;
 
-			/* Get the SHA1 message digest */
-			if (get_md_from_file(thePixels->path_rep, file_md) < 0) {
-				fprintf(stderr, "Unable to retrieve SHA1.");
-        		freePixelsRep(thePixels);
+			HTTP_ResultType ("text/plain");
+			print_md(head->sha1);
+			fprintf(stdout,"\n");
 
-				return(-1);
-			}
-
-			/* Free */
-        	freePixelsRep(thePixels);
-
-			/* Print our lovely and useful SHA1. */
-			print_md(file_md);  /* Convenience provided by digest.c */
-			printf("\n");
-	
-			return (0);
+			freePixelsRep (thePixels); 
 
 			break;
+
 		case M_FINISHPIXELS:
 			force = 0;
 			result = 0;
