@@ -69,7 +69,7 @@ public class Modules {
 	
 	private ArrayList rootCategories = new ArrayList();
 		
-	public Modules(Factory factory) {
+	public Modules(ConnectionWorker worker,Factory factory) {
 		Module mod;
 		Integer id;
 		ModuleInfo info;
@@ -85,6 +85,7 @@ public class Modules {
 			populateModule(mod);
 			id = new Integer(mod.getID());
 			info = new ModuleInfo(mod);
+			worker.setStatusLabel("Module.."+mod.getName());
 			byId.put(id,info);
 			byModule.put(mod,info);
 			cat = mod.getCategory();
@@ -99,6 +100,7 @@ public class Modules {
 		while (iter.hasNext()) {
 			cat = (ModuleCategory) iter.next();
 			System.err.println("category .."+cat.getName());
+			worker.setStatusLabel("Category... "+cat.getName());
 			if (cat.getParentCategory() == null) {
 				System.err.println("adding root category "+cat.getName());
 				rootCategories.add(cat);

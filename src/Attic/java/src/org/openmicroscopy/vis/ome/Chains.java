@@ -58,7 +58,7 @@ public class Chains {
 	
 	private HashMap chains = new HashMap();
 	
-	public Chains(Factory factory) {
+	public Chains(ConnectionWorker worker,Factory factory) {
 		
 		Chain c;
 		Integer id;
@@ -70,6 +70,7 @@ public class Chains {
 		while (iter.hasNext()) {
 			c = (Chain) iter.next();
 			System.err.println("Chain: "+c.getName());
+			worker.setStatusLabel("Chain.."+c.getName());
 			cInfo  = new ChainInfo(c);
 			populateChain(cInfo);
 			id = new Integer(c.getID());
