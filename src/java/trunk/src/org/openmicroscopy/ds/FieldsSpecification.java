@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * <p>Defines fields specifications for use with the {@link
@@ -96,6 +97,15 @@ public class FieldsSpecification
     }
 
     /**
+     * Adds a {@link FieldsSpecification} of fields which will be
+     * accessible in the returned objects.
+     */
+    public void addWantedFields(FieldsSpecification fields)
+    {
+        addWantedFields(".",fields);
+    }
+
+    /**
      * Adds a field which will be accessible in an object in the
      * specified has-many field.
      */
@@ -143,4 +153,75 @@ public class FieldsSpecification
         }
     }
 
+    /**
+     * Adds a {@link FieldsSpecification} of fields which will be
+     * accessible in the returned objects.
+     */
+    public void addWantedFields(String baseHasMany,
+                                FieldsSpecification fields)
+    {
+        // Normalize the base strings so that the concatenation inside
+        // of the while loop works properly.
+
+        if (baseHasMany.equals("."))
+            baseHasMany = "";
+        else if (!baseHasMany.endsWith("."))
+            baseHasMany += ".";
+
+        Iterator it = fields.fieldsWanted.entrySet().iterator();
+
+        while (it.hasNext())
+        {
+            Map.Entry entry = (Map.Entry) it.next();
+
+            // Concatenate the base hasMany with the local hasMany.
+            // The normalization above will ensure that the result is
+            // one of the following:
+            //
+            //    1. "."
+            //    2. [base]..
+            //    3. [base].[local] (with no extra periods)
+            //
+            // Case 2 requires one extra step of modification, to
+            // remove the extra periods.  Cases 1 and 3 require no
+            // extra modification.
+
+            String localHasMany = (String) entry.getKey();
+            String hasMany = baseHasMany+localHasMany;
+            if (hasMany.endsWith(".."))
+                hasMany = hasMany.substring(0,hasMany.length()-2);
+
+            List list = (List) entry.getValue();
+            List myList = (List) fieldsWanted.get(hasMany);
+            if (myList == null)
+            {
+                myList = new ArrayList(list.size());
+                fieldsWanted.put(hasMany,myList);
+            }
+            myList.addAll(list);
+        }
+    }
+
+    public void printSpecification()
+    {
+        Iterator it = fieldsWanted.entrySet().iterator();
+
+        System.err.println();
+        while (it.hasNext())
+        {
+            Map.Entry entry = (Map.Entry) it.next();
+
+            String hasMany = (String) entry.getKey();
+            List list = (List) entry.getValue();
+            Iterator lit = list.iterator();
+
+            while (lit.hasNext())
+            {
+                String field = (String) lit.next();
+                String fullField =
+                    hasMany.equals(".")? field: hasMany+"."+field;
+                System.err.println(fullField);
+            }
+        }
+    }
 }
