@@ -1223,6 +1223,7 @@ FILE *infile;
     }
 
 	/* release the lock created by newRepFile */
+    msync(sh_mmap, size, MS_SYNC);
 	lockRepFile (fd,'u',0,0);
 	munmap (sh_mmap, size);
 	close (fd);
@@ -1336,6 +1337,7 @@ dispatch (char **param)
 	OID ID=0;
 	int theZ=-1,theC=-1,theT=-1;
 	off_t offset;
+    unsigned long scannedOffset;
 	char error_str[256];
 	unsigned char isLocalFile;
 	unsigned char file_md[OME_DIGEST_LENGTH];
@@ -1670,6 +1672,7 @@ char **cgivars=param;
 			break;
 		case M_READFILE:
 			offset = 0;
+            scannedOffset = 0;
 			length = 0;
 			
 			if ( (theParam = get_param (param,"FileID")) )
@@ -1680,7 +1683,10 @@ char **cgivars=param;
 			}
 
 			if ( (theParam = get_param (param,"Offset")) )
-				sscanf (theParam,"%lu", (unsigned long int *) &offset);
+            {
+				sscanf (theParam,"%lu", &scannedOffset);
+                offset = scannedOffset;
+            }
 			if ( (theParam = get_param (param,"Length")) )
 				sscanf (theParam,"%lu",&length);
 
@@ -1698,7 +1704,7 @@ char **cgivars=param;
 			}
 			if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
 				close (fd);
-				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,offset,length);
+				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,scannedOffset,length);
 				HTTP_DoError (method,error_str);
 				return (-1);
 			}
