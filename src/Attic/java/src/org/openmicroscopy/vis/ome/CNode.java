@@ -45,7 +45,6 @@
  import org.openmicroscopy.remote.RemoteSession;
 
  import java.util.Collection;
- import java.util.Vector;
  import java.util.HashSet;
  import java.util.Iterator;
 
@@ -58,8 +57,10 @@
 	private int layer = -1;
 	private double posInLayer = 0.0;
 	
-	protected Vector succLinks = new Vector();
-	protected Vector predLinks = new Vector();
+	protected HashSet succLinks = new HashSet();
+	protected HashSet predLinks = new HashSet();
+	protected HashSet succs  = new HashSet();
+	protected HashSet preds = new HashSet();
 	
  	public CNode() {
  		super(); 
@@ -107,21 +108,17 @@
 		while (iter.hasNext()) {
 			Link link = (Link)iter.next();
 			CNode node = (CNode) link.getToNode();
-			//	add a layout link?
-			CLayoutLink layoutLink = new CLayoutLink(link);
-			succLinks.add(layoutLink);
+			if (!succs.contains(node)) {
+				//	add a layout link?
+				succs.add(node);
+				CLayoutLink layoutLink = new CLayoutLink(link);
+				succLinks.add(layoutLink);
+				node.addPredLink(layoutLink);
+			}
 		}
 	}
 	
 	public Collection getSuccessors() {
-		
-		HashSet succs = new HashSet();
-		Iterator iter = succLinks.iterator();
-		while (iter.hasNext()) {
-			CLayoutLink link = (CLayoutLink) iter.next();
-			CNode node = (CNode) link.getToNode();
-			succs.add(node);
-		}
 		return succs;
 	}
 	
@@ -130,31 +127,33 @@
 		Iterator iter = inputs.iterator();
 		while (iter.hasNext()) {
 			Link link = (Link) iter.next();
-			CLayoutLink layoutLink = new CLayoutLink(link);
-			predLinks.add(layoutLink);
-		
+			CNode node = (CNode) link.getFromNode();
+			if (!preds.contains(node)) {
+				preds.add(node);
+				CLayoutLink layoutLink = new CLayoutLink(link);
+				predLinks.add(layoutLink);
+				node.addSuccLink(layoutLink);
+			}
 		}
 	}
 	
 	public  Collection getPredecessors() {
-		HashSet preds = new HashSet();
-		Iterator iter = predLinks.iterator();
-		while (iter.hasNext()) {
-			CLayoutLink link = (CLayoutLink) iter.next();
-			CNode node = (CNode) link.getToNode();
-			preds.add(node);
-		}
 		return preds;
 	}
 	
 	public void removeSuccLink(CLayoutLink link) {
 		if (succLinks != null) {
 			succLinks.remove(link);
+			succs.remove(link.getToNode());
 		}
 	}
 	
 	public void addSuccLink(CLayoutLink link) {
-		succLinks.add(link);
+		CNode node = (CNode) link.getToNode();
+		if (!succs.contains(node)) {
+			succLinks.add(link);
+			succs.add(node);
+		}
 	}
 	
 	public Iterator succLinkIterator() {
@@ -163,7 +162,7 @@
 	
 	
 	
-	public void setSuccLinks(Vector links) {
+	public void setSuccLinks(HashSet links) {
 		succLinks = links;
 	}
 	
@@ -172,11 +171,16 @@
 	public void removePredLink(CLayoutLink link) {
 		if (predLinks != null) {
 			predLinks.remove(link);
+			preds.remove(link.getFromNode());
 		}
 	}
 	
 	public void addPredLink(CLayoutLink link) {
-		predLinks.add(link);
+		CNode node = (CNode) link.getFromNode();
+		if (!preds.contains(node)) {
+			predLinks.add(link);
+			preds.add(node);
+		}
 	}
 	
 	public Iterator predLinkIterator() {
