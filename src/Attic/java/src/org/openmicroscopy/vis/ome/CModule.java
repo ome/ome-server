@@ -102,7 +102,9 @@ public class CModule extends RemoteModule {
 	}
 	
 	/**
-	 * Set modules to be highlighted
+	 * Set modules to be highlighted. Note that this might be better and 
+	 * more generally handled by a selecion listener model.
+	 * 
 	 * @param v true if highlighted, else false
 	 */
 	public void setModulesHighlighted(boolean v) {
