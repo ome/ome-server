@@ -413,13 +413,13 @@ sub importObject ($$$$) {
 		if (exists $docIDs->{$theRef}) {
 			$objectData->{$objField} = $docIDs->{$theRef};
 		#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
-				$objectData->{$objField}." in document.";
+		#		$objectData->{$objField}." in document.";
 		} else {
 			$refObject = $lsid->getLocalObject ($theRef);
 			if ($refObject) {
 				$objectData->{$objField} = $refObject->id();
 			#	logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
-					$objectData->{$objField}." in DB.";
+			#		$objectData->{$objField}." in DB.";
 			} else {
 				$objectData->{$objField} = undef;
 				$unresolvedRefs{$objField} = $theRef;
@@ -433,11 +433,11 @@ sub importObject ($$$$) {
 	# Make the object.
 	if ($isAttribute) {
 	#	logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.\n\t".
-			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
+	#		join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newAttribute($objectType,$parentDBID,$module_execution,$objectData);
 	} else {
 	#	logdbg "debug", ref ($self)."->importObject:   Calling newObject.".
-			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
+	#		join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newObject($objectType,$objectData);
 	}
 
