@@ -49,7 +49,11 @@
 /* OID */
 typedef u_int64_t OID;
 
-
+/* -------- */
+/* Defines */
+/* -------- */
+/*  This is the standard size of an IO buffer */
+#define OMEIS_IO_BUF_SIZE 8192
 
 /* ------------------- */
 /* External Prototypes */
@@ -57,6 +61,9 @@ typedef u_int64_t OID;
 
 OID
 nextID (char *idFile);
+
+OID
+lastID (char *idFile);
 
 char *
 getRepPath (OID theID, char *path, char makePath);
@@ -66,6 +73,9 @@ lockRepFile (int fd, char lock, size_t from, size_t length);
 
 int
 newRepFile (OID theID, char *path, size_t size, char *suffix);
+
+int
+openRepFile (const char *filename, int flags);
 
 FILE *
 openInputFile(char *filename, unsigned char isLocalFile);

@@ -86,7 +86,7 @@ void HTTP_ResultType (char *mimeType) {
  CGI/CLI handling section below
  Most of this was cribbed from a web page, whose URL is now lost.
 **********************************/
-
+/*
 static
 int inList(char **cgivars, char *str)
 {
@@ -103,7 +103,7 @@ int inList(char **cgivars, char *str)
 	
 	return( returnVal );
 }
-
+*/
 
 char *get_param (char **cgivars, char *param)
 {

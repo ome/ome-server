@@ -44,9 +44,21 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <zlib.h>
+#include <bzlib.h>
 
 
 #include "repository.h"
+
+/*
+  Private prototypes
+*/
+static int
+inflateBZfile (const char *OUTfilename);
+
+static int
+inflateGZfile (const char *OUTfilename);
+
 
 /*
   This function will get a new unique ID by examining the contents of the
@@ -113,6 +125,40 @@ OID nextID (char *idFile)
 
 
 /*
+  This function will retreive the last ID in the passed-in counter file. 
+*/
+OID lastID (char *idFile)
+{
+	struct flock fl;
+	int fd;
+	OID pixID = 0;
+	fl.l_start = 0;
+	fl.l_len = 0;
+	fl.l_pid = 0;
+	fl.l_type = F_RDLCK;
+	fl.l_whence = SEEK_SET;
+
+	if ((fd = open(idFile, O_CREAT|O_RDWR, 0600)) < 0) {
+		return (0);
+	}
+
+	if (fcntl(fd, F_SETLKW, &fl) == -1) {
+		close(fd);
+		return (0);
+	}
+
+	if ((read(fd, &pixID, sizeof (OID)) < 0) || pixID == 0xFFFFFFFFFFFFFFFFULL) {
+		return (0);
+	}
+
+	fl.l_type = F_UNLCK;  /* set to unlock same region */
+	fcntl(fd, F_SETLK, &fl);
+	close(fd);
+	return (pixID);
+}
+
+
+/*
   char *getRepPath (OID theID, char *path, char makePath)
   Get repository path from an ID.
   Optionally create the path (but not the file).
@@ -160,7 +206,7 @@ char *getRepPath (OID theID, char *path, char makePath) {
 					return (NULL);
 	}
 
-	sprintf (pixIDstr,"%llu",theID);
+	sprintf (pixIDstr,"%llu",(unsigned long long)theID);
 
 	strcat (path,pixIDstr);
 	
@@ -237,6 +283,184 @@ int newRepFile (OID theID, char *path, size_t size, char *suffix) {
    
 	return (fd);
 }
+
+/*
+  int openRepFile (const char *filename, int flags)
+  same declaration and behavior the system's open() call - except for lack of a
+  mode parameter.
+  The difference is that this open call will also look for compressed versions of the
+  specified file, inflate them, open them and return an fd for the inflated file.
+  If the inflated file is already there, it will just open it and return the fd.
+  
+  This allows one to run a cron job to compress files that haven't been accessed in a while:
+*/
+// find . -regex '.*/[0123456789]*' -atime +30 -exec bzip2 -9 '{}' \;
+//
+//  N.B.:  As of this writing bzip2 and gzip are supported.
+
+
+int openRepFile (const char *filename, int flags) {
+int myFD;
+
+	if ( (myFD = open (filename, flags, 0600)) < 0) {
+		if (inflateBZfile (filename) == 0) {
+			return ( open (filename, flags, 0600) );
+		} else if (inflateGZfile (filename) == 0) {
+			return ( open (filename, flags, 0600) );
+		} else {
+			return (-1);
+		}
+	} else {
+		return (myFD);
+	}
+}
+
+/*
+  This inflates the file with the given filename with a '.bz2' extension,
+  saving the inflated file in the given filename
+  Pulled directly from the bzip2 documentation.
+*/
+static int
+inflateBZfile (const char *OUTfilename) {
+	FILE    *fBZ;
+	BZFILE  *bz;
+	int     fd_out;
+	int     nBuf;
+	char    buf[OMEIS_IO_BUF_SIZE];
+	char    BZfilename[256];
+	int     bzerror;
+	
+	strncpy (BZfilename,OUTfilename,255);
+	if (strlen (BZfilename) + 4 > 255) return (-1);
+	strcat (BZfilename,".bz2");
+
+	fBZ = fopen ( BZfilename, "r" );
+	if (!fBZ) return (-2);
+	if ((fd_out = open ( OUTfilename, O_CREAT|O_EXCL|O_RDWR, 0600 )) < 0) {
+		fclose (fBZ);
+	/*
+	  open() could have failed because another process is inflating this file,
+	  and the O_EXCL won't let us open it again.
+	  if we can do a read-only open and get a read lock, then we assume the file
+	  has been inflated by someone else.
+	  Then we just wait for a read lock, and return success.
+	*/
+		if ((fd_out = open ( OUTfilename, O_RDONLY, 0600 )) >= 0) {
+			lockRepFile (fd_out,'r', 0, 0);
+			lockRepFile (fd_out,'u', 0, 0);
+			close (fd_out);
+			return (0);
+		} else {
+	/* We really couldn't open the file for some reason */
+			return (-3);
+		}
+	}
+	
+	lockRepFile (fd_out,'w', 0, 0);
+	bz = BZ2_bzReadOpen ( &bzerror, fBZ, 0, 0, NULL, 0 );
+	if (bzerror != BZ_OK) {
+		BZ2_bzReadClose ( &bzerror, bz );
+		fclose (fBZ);
+		lockRepFile (fd_out,'u', 0, 0);
+		close (fd_out);
+		unlink (OUTfilename);
+		return (-4);
+	}
+	
+	bzerror = BZ_OK;
+	while (bzerror == BZ_OK) {
+		nBuf = BZ2_bzRead ( &bzerror, bz, buf, OMEIS_IO_BUF_SIZE );
+		if (bzerror == BZ_OK || BZ_STREAM_END) {
+			if (write (fd_out, buf, nBuf) != nBuf) {
+				BZ2_bzReadClose ( &bzerror, bz );
+				fclose (fBZ);
+				lockRepFile (fd_out,'u', 0, 0);
+				close (fd_out);
+				unlink (OUTfilename);
+				return (-5);
+			}
+		}
+	}
+	if (bzerror != BZ_STREAM_END) {
+		BZ2_bzReadClose ( &bzerror, bz );
+		fclose (fBZ);
+		lockRepFile (fd_out,'u', 0, 0);
+		close (fd_out);
+		unlink (OUTfilename);
+		return (-6);
+	}
+
+	BZ2_bzReadClose ( &bzerror, bz );
+	fclose (fBZ);
+	lockRepFile (fd_out,'u', 0, 0);
+	close (fd_out);
+	return (0);
+}
+
+/*
+  This inflates the file with the given filename with a '.gz' extension,
+  saving the inflated file in the given filename
+*/
+static int
+inflateGZfile (const char *OUTfilename) {
+	gzFile  *gz;
+	int     fd_out;
+	int     nBuf;
+	char    buf[OMEIS_IO_BUF_SIZE];
+	char    GZfilename[256];
+	
+	strncpy (GZfilename,OUTfilename,255);
+	if (strlen (GZfilename) + 3 > 255) return (-1);
+	strcat (GZfilename,".gz");	
+
+	gz = gzopen (GZfilename, "r");
+	if (!gz) return (-2);
+	if ((fd_out = open ( OUTfilename, O_CREAT|O_EXCL|O_RDWR, 0600 )) < 0) {
+		gzclose (gz);
+	/*
+	  open() could have failed because another process is inflating this file,
+	  and the O_EXCL won't let us open it again.
+	  if we can do a read-only open and get a read lock, then we assume the file
+	  has been inflated by someone else.
+	  Then we just wait for a read lock, and return success.
+	*/
+		if ((fd_out = open ( OUTfilename, O_RDONLY, 0600 )) >= 0) {
+			lockRepFile (fd_out,'r', 0, 0);
+			lockRepFile (fd_out,'u', 0, 0);
+			close (fd_out);
+			return (0);
+		} else {
+	/* We really couldn't open the file for some reason */
+			return (-3);
+		}
+	}	
+
+	lockRepFile (fd_out,'w', 0, 0);
+	while ( (nBuf = gzread (gz, buf, OMEIS_IO_BUF_SIZE)) > 0) {
+		if (nBuf <= 0) break;
+		if (write (fd_out, buf, nBuf) != nBuf) {
+			gzclose (gz);
+			lockRepFile (fd_out,'u', 0, 0);
+			close (fd_out);
+			unlink (OUTfilename);
+			return (-4);
+		}
+	}
+
+	lockRepFile (fd_out,'u', 0, 0);
+	close (fd_out);
+
+	if (!gzeof (gz)) {
+		gzclose (gz);
+		unlink (OUTfilename);
+		return (-5);
+	}
+	
+	gzclose (gz);
+	return (0);
+}
+
+
 
 
 /*

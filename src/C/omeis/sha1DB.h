@@ -37,13 +37,15 @@
 #ifndef sha1DB_h
 #define sha1DB_h
 
-/*
- This is commented out until we work out issues with db.h
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif  /* HAVE_CONFIG_H */
+
+#ifdef BDB_COMPAT
+#include <db_185.h>
+#else
 #include <db.h>
-Once they're worked out, remove:
-typedef void DB.
-*/
-typedef void DB;
+#endif
 
 #include "digest.h"
 #include "repository.h"

@@ -48,7 +48,7 @@
 /* ----------- */
 
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
-#define OME_IS_PIXL_VER 1  /* Version 1 */
+#define OME_IS_PIXL_VER 2  /* Version 2 */
 
 /* -------- */
 /* Typedefs */
@@ -62,34 +62,34 @@ typedef int32_t ome_dim;
 
 typedef struct
 {
-	char stats_OK;
+	u_int8_t stats_OK;
 	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
 	float min, max, mean, geomean, sigma, geosigma;
 	float centroid_x, centroid_y;
-	char reserved[7]; /* reserved buffer (64 bytes total) */
+	u_int8_t reserved[7]; /* reserved buffer (64 bytes total) */
 } planeInfo;
 
 
 typedef struct
 {
-	char stats_OK;
+	u_int8_t stats_OK;
 	float sum_i, sum_i2, sum_log_i, sum_xi, sum_yi, sum_zi;
 	float min, max, mean, geomean, sigma, geosigma;
 	float centroid_x, centroid_y, centroid_z;
-	char reserved[67]; /* reserved buffer (128 bytes total) */
+	u_int8_t reserved[67]; /* reserved buffer (128 bytes total) */
 } stackInfo;
 
 
 typedef struct {
-	unsigned long mySig;
-	unsigned char vers;
-	unsigned char isFinished;     /* file is read only */
+	u_int32_t mySig;
+	u_int8_t vers;
+	u_int8_t isFinished;     /* file is read only */
 	ome_dim dx,dy,dz,dc,dt;       /* Pixel dimension extents */
-	unsigned char bp;             /* bytes per pixel */
-	unsigned char isSigned;       /* signed integers or not */
-	unsigned char isFloat;        /* floating point or not */
-	unsigned char sha1[OME_DIGEST_LENGTH]; /* SHA1 digest */
-	char reserved[11];            /* buffer assuming OME_DIGEST_LENGTH=20 */
+	u_int8_t bp;             /* bytes per pixel */
+	u_int8_t isSigned;       /* signed integers or not */
+	u_int8_t isFloat;        /* floating point or not */
+	u_int8_t sha1[OME_DIGEST_LENGTH]; /* SHA1 digest */
+	u_int8_t reserved[15];   /* buffer to 64 (60?)assuming OME_DIGEST_LENGTH=20 */
 } pixHeader;
 
 typedef struct
@@ -107,7 +107,7 @@ typedef struct
 	FILE *IO_stream;   /* One of these two should be set for reading/writing */
 	void *IO_buf;
 	unsigned long IO_buf_off; /* This keeps track of where we're writing in IO_buf */
-	unsigned char swap_buf [4096];
+	unsigned char swap_buf [OMEIS_IO_BUF_SIZE];
 	char doSwap;
 	size_t num_pixels;
 	size_t num_write;  /* number of pixels written */
@@ -122,22 +122,26 @@ typedef struct
 
 typedef struct {
 	ome_coord theZ, theC, theT;
+	u_int32_t dir_index;
+	u_int64_t pad2;
 } tiffConvertSpec;
 
 typedef struct {
-	unsigned long file_offset;
-	unsigned long pix_offset;
-	unsigned long nPix;
+	u_int64_t file_offset;
+	u_int64_t pix_offset;
+	u_int64_t nPix;
 } fileConvertSpec;
 
 typedef struct {
 	OID FileID;
-	char isBigEndian;
-	char isTIFF;
+	u_int8_t isBigEndian;
+	u_int8_t isTIFF;
+	u_int8_t pad1[6];  /* 64-bit aligned for the next part. */
 	union {
 		tiffConvertSpec tiff;
 		fileConvertSpec file;
 	} spec;
+	u_int8_t reserved[24]; /* reserved buffer (64 bytes total) */
 } convertFileRec;
 
 typedef enum {
@@ -181,11 +185,22 @@ NewPixels (ome_dim dx,
 		   char isSigned,
 		   char isFloat);
 
+PixelsRep *newPixelsRep (OID ID);
+
 void
 freePixelsRep (PixelsRep *myPixels);
 
 PixelsRep *
 GetPixelsRep (OID ID, char rorw, char isBigEndian);
+
+void
+PurgePixels (OID myID);
+
+int
+isConvertVerified (PixelsRep *myPixels);
+
+int
+recoverPixels (PixelsRep *myPixels, int open_flags, int mmap_flags, char verify);
 
 void
 ScalePixels (
@@ -212,8 +227,8 @@ DoPixelIO (PixelsRep *myPixels, size_t offset, size_t nPix, char rorw);
 
 size_t
 DoROI (PixelsRep *myPixels,
-	ome_coord x0, ome_coord y0, ome_coord z0, ome_coord w0, ome_coord t0,
-	ome_coord x1, ome_coord y1, ome_coord z1, ome_coord w1, ome_coord t1,
+	ome_coord X0, ome_coord Y0, ome_coord Z0, ome_coord W0, ome_coord T0,
+	ome_coord X1, ome_coord Y1, ome_coord Z1, ome_coord W1, ome_coord T1,
 	char rorw);
 
 
@@ -223,7 +238,9 @@ ConvertTIFF (
 	OID fileID,
 	ome_coord theZ,
 	ome_coord theC,
-	ome_coord theT);
+	ome_coord theT,
+	unsigned long tiffDir,
+	char writeRec);
 
 size_t
 ConvertFile (
@@ -231,7 +248,8 @@ ConvertFile (
 	OID fileID,
 	size_t file_offset,
 	size_t pix_offset,
-	size_t nPix);
+	size_t nPix,
+	char writeRec);
 
 
 

@@ -118,7 +118,7 @@ struct stat fStat;
 		return (NULL);
 	}
 
-	if ( (myFile->fd_rep = open (myFile->path_rep, O_RDONLY, 0600)) < 0) {
+	if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
 		freeFileRep (myFile);
 		return (NULL);
 	}
@@ -127,7 +127,7 @@ struct stat fStat;
 	lockRepFile (myFile->fd_rep, 'r', offset, length);
 
 	if (fstat (myFile->fd_rep, &fStat) < 0) {
-		fprintf (stderr,"Could not get size of FileID=%llu",myFile->ID);
+		fprintf (stderr,"Could not get size of FileID=%llu",(unsigned long long)myFile->ID);
 		freeFileRep (myFile);
 		return (NULL);			
 	}
@@ -144,8 +144,8 @@ struct stat fStat;
 
     myFile->size_buf = myFile->size_rep;
 
-	if ( (myFile->file_buf = (char *)mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
-		fprintf (stderr,"Could not mmap FileID=%llu",myFile->ID);
+	if ( (myFile->file_buf = mmap (NULL, myFile->size_rep, PROT_READ, MAP_SHARED, myFile->fd_rep, 0LL)) == (void *) -1 ) {
+		fprintf (stderr,"Could not mmap FileID=%llu",(unsigned long long)myFile->ID);
 		freeFileRep (myFile);
 		return (NULL);			
 	}
@@ -208,7 +208,8 @@ char error[256];
 	myFile->size_info = sizeof (FileInfo);
 	myFile->fd_info = newRepFile (myFile->ID, myFile->path_info, myFile->size_info, "info");
 	if (myFile->fd_info < 0) {
-		sprintf (error,"Couldn't open repository info file for FileID %llu (%s).",myFile->ID,myFile->path_info);
+		sprintf (error,"Couldn't open repository info file for FileID %llu (%s).",
+			(unsigned long long)myFile->ID,myFile->path_info);
 		perror (error);
 		freeFileRep (myFile);
 		return (NULL);
@@ -218,7 +219,8 @@ char error[256];
 
 	myFile->fd_rep = newRepFile (myFile->ID, myFile->path_rep, size, NULL);
 	if (myFile->fd_rep < 0) {
-		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",myFile->ID,myFile->path_rep);
+		sprintf (error,"Couldn't open repository file for FileID %llu (%s).",
+			(unsigned long long)myFile->ID,myFile->path_rep);
 		perror (error);
 		DeleteFile (myFile);
 		freeFileRep (myFile);
@@ -227,7 +229,8 @@ char error[256];
 
 	if ( (myFile->file_buf = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, myFile->fd_rep, 0LL)) == (char *) -1 ) {
 		DeleteFile (myFile);
-		fprintf (stderr,"Couldn't mmap File %s (ID=%llu)\n",myFile->path_rep,myFile->ID);
+		fprintf (stderr,"Couldn't mmap File %s (ID=%llu)\n",myFile->path_rep,
+			(unsigned long long)myFile->ID);
 		freeFileRep (myFile);
 		return (NULL);
 	}
@@ -357,7 +360,7 @@ FILE *infile;
         nIO = fread (myFile->file_buf,1,size,infile);
         if (nIO != size) {
             fprintf (stderr,"Couldn't finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
-                     filename,ID,(unsigned long)nIO,(unsigned long)size);
+                     filename,(unsigned long long)ID,(unsigned long)nIO,(unsigned long)size);
             DeleteFile (myFile);
 			freeFileRep (myFile);
 	        }

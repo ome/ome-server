@@ -30,12 +30,6 @@
  *------------------------------------------------------------------------------
  */
 
-/*
-  This is some place-holder code for a B-Tree implementation to do reverse lookups
-  SHA1 -> File/PixelsID
-  
-  Don't mind the noise with the parameters - this is just to avoid unused parameter warnings.
-*/
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif  /* HAVE_CONFIG_H */
@@ -52,27 +46,72 @@
 
 
 DB *sha1DB_open (const char *file) {
-char foo = *file;
-	return (1);
+DB *myDB;
+int fd;
+struct flock fl;
+
+	fl.l_start = 0;
+	fl.l_len = 0;
+	fl.l_pid = 0;
+	fl.l_type = F_WRLCK;
+	fl.l_whence = SEEK_SET;
+	
+	myDB = dbopen (file,O_CREAT|O_RDWR, 0600, DB_BTREE, NULL);
+	if (!myDB) return (NULL);
+	fd = (myDB->fd) (myDB);
+
+	/* Block until we get a write-lock */
+	fcntl(fd, F_SETLKW, &fl);
+	return (myDB);
 }
 
 int sha1DB_close (DB *myDB) {
-	myDB = 0;
-	return (0);
+int err;
+int fd;
+struct flock fl;
+
+	fl.l_start = 0;
+	fl.l_len = 0;
+	fl.l_pid = 0;
+	fl.l_type = F_UNLCK;
+	fl.l_whence = SEEK_SET;
+	if (!myDB) return (-1);
+	fd = (myDB->fd) (myDB);
+
+	/* release the write-lock */
+	fcntl(fd, F_SETLKW, &fl);
+	err = (myDB->close)(myDB);
+	return (err);
 }
 
 OID sha1DB_get (DB *myDB, unsigned char *md_value) {
-char foo = *md_value;
-	return (0);
+DBT key, value;
+OID theOID=0;
+
+	memset(&key, 0, sizeof(key));
+	memset(&value, 0, sizeof(value));
+	key.size = OME_DIGEST_LENGTH;
+	key.data = (void *)md_value;
+	if ( ((myDB->get)(myDB, &key, &value, 0)) == 0)
+		theOID = *((OID *)(value.data));
+	else
+		theOID = 0;
+
+	return (theOID);
 }
 
 
 int sha1DB_put (DB *myDB, unsigned char *md_value, OID theOID) {
-char foo = *md_value;
-char OID = 0;
-	myDB = 0;
+DBT key, value;
 
-	return (0);
+	memset(&key, 0, sizeof(key));
+	memset(&value, 0, sizeof(value));
+	key.size = OME_DIGEST_LENGTH;
+	key.data = (void *)md_value;
+	value.size = sizeof (OID);
+	value.data = (void *) &theOID;
+
+	return ((myDB->put)(myDB, &key, &value, R_NOOVERWRITE));
 }
 
 

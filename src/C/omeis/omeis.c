@@ -71,7 +71,7 @@ dispatch (char **param)
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0,resultID;
 	size_t offset=0, file_offset=0;
-	unsigned long long scan_off;
+	unsigned long long scan_off, scan_length, scan_ID;
 	unsigned char isLocalFile=0;
 	char *dims;
 	int isSigned,isFloat;
@@ -87,12 +87,13 @@ dispatch (char **param)
 	FILE *file;
 	char file_path[MAXPATHLEN];
 	char buf[4096];
+	unsigned long tiffDir=0;
 	
 	/* Co-ordinates */
 	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
 
-    /* Dimensions */
-    ome_dim sizeX = -1, sizeY = -1;
+	/* Dimensions */
+	ome_dim sizeX = -1, sizeY = -1;
 
 /*
 char **cgivars=param;
@@ -115,9 +116,10 @@ char **cgivars=param;
 	/* END (method operations) */
 
 	/* ID requirements */
-	if ( (theParam = get_param (param,"PixelsID")) )
-		sscanf (theParam,"%llu",&ID);
-	else if (m_val != M_NEWPIXELS     &&
+	if ( (theParam = get_param (param,"PixelsID")) ) {
+		sscanf (theParam,"%llu",&scan_ID);
+		ID = (OID) scan_ID;
+	} else if (m_val != M_NEWPIXELS     &&
 			 m_val != M_FILEINFO      &&
 			 m_val != M_FILESHA1      &&
 			 m_val != M_READFILE      &&
@@ -129,10 +131,10 @@ char **cgivars=param;
 			return (-1);
 	}
 
-    if ((theParam = get_lc_param(param,"IsLocalFile"))) {
-    	if ( !strcmp (theParam,"true") || !strcmp (theParam,"1") ) isLocalFile = 1;
-    } else
-        isLocalFile = 0;
+	if ((theParam = get_lc_param(param,"IsLocalFile"))) {
+		if ( !strcmp (theParam,"true") || !strcmp (theParam,"1") ) isLocalFile = 1;
+	} else
+		isLocalFile = 0;
 
 
 	if ( (theParam = get_param (param,"theZ")) )
@@ -192,7 +194,7 @@ char **cgivars=param;
 			}
 
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%llu\n",thePixels->ID);
+			fprintf (stdout,"%llu\n",(unsigned long long)thePixels->ID);
 			freePixelsRep (thePixels);
 
 			break;
@@ -254,17 +256,19 @@ char **cgivars=param;
 			}
 	
 			resultID = FinishPixels (thePixels,force);
-			freePixelsRep (thePixels);
 		
 			if ( resultID == 0) {
-				if (errno) HTTP_DoError (method,"Message=%s",result,strerror( errno ) );
-				else HTTP_DoError (method,"Message=%s",result,"Access control error - check error log for details" );
+				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
 				return (-1);
 			} else {
 				HTTP_ResultType ("text/plain");
-				fprintf (stdout,"%llu\n",resultID);
+				fprintf (stdout,"%llu\n",(unsigned long long)resultID);
 			}
 
+			freePixelsRep (thePixels);
 			break;
 		case M_GETPLANESTATS:
 			if (!ID) return (-1);
@@ -276,8 +280,10 @@ char **cgivars=param;
 			}
 
 			if (! (planeInfoP = thePixels->planeInfos) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 
@@ -313,8 +319,10 @@ char **cgivars=param;
 			}
 
 			if (! (stackInfoP = thePixels->stackInfos) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
 				return (-1);
 			}
 
@@ -341,9 +349,10 @@ char **cgivars=param;
 			break;
 		case M_UPLOADFILE:
 			uploadSize = 0;
-			if ( (theParam = get_param (param,"UploadSize")) )
-				sscanf (theParam,"%lu",&uploadSize);
-			else {
+			if ( (theParam = get_param (param,"UploadSize")) ) {
+				sscanf (theParam,"%llu",&scan_length);
+				uploadSize = (unsigned long)scan_length;
+			} else {
 				HTTP_DoError (method,"UploadSize must be specified!");
 				return (-1);
 			}
@@ -353,16 +362,18 @@ char **cgivars=param;
 				return (-1);
 			} else {
 				HTTP_ResultType ("text/plain");
-				fprintf (stdout,"%llu\n",ID);
+				fprintf (stdout,"%llu\n",(unsigned long long)ID);
 			}
 
 			break;
 		case M_GETLOCALPATH:
 			fileID = 0;
 
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			}
+			
 			if (ID) {
 				if (! (thePixels = GetPixelsRep (ID,'i',bigEndian())) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
@@ -374,7 +385,8 @@ char **cgivars=param;
 			} else if (fileID) {
 				strcpy (file_path,"Files/");
 				if (! getRepPath (fileID,file_path,0)) {
-					HTTP_DoError (method,"Could not get repository path for FileID=%llu",fileID);
+					HTTP_DoError (method,"Could not get repository path for FileID=%llu",
+						(unsigned long long)fileID);
 					return (-1);
 				}		
 			} else strcpy (file_path,"");
@@ -384,41 +396,46 @@ char **cgivars=param;
 
 			break;
 		case M_DELETEFILE:
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not open FileID=%llu!",
+					(unsigned long long)fileID);
 				return (-1);
 			}
 
 			DeleteFile (theFile);
 
 			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%llu\n",theFile->ID);
+			fprintf (stdout,"%llu\n",(unsigned long long)theFile->ID);
 			freeFileRep (theFile);
 
 			break;
 		case M_FILEINFO:
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not open FileID=%llu!",
+					(unsigned long long)fileID);
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
-				HTTP_DoError (method,"Could not get info for FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not get info for FileID=%llu!",
+					(unsigned long long)fileID);
 				return (-1);
 			}
 
@@ -432,21 +449,23 @@ char **cgivars=param;
 
 			break;
 		case M_FILESHA1:
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
 
 			if ( !(theFile = newFileRep (fileID)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not open FileID=%llu!",(unsigned long long)fileID);
 				return (-1);
 			}
 			
 			if (GetFileInfo (theFile) < 0) {
 				freeFileRep (theFile);
-				HTTP_DoError (method,"Could not get info for FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not get info for FileID=%llu!",
+					(unsigned long long)fileID);
 				return (-1);
 			}
 
@@ -463,29 +482,32 @@ char **cgivars=param;
 			offset = 0;
 			length = 0;
 			
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
 
-			if ( (theParam = get_param (param,"Offset")) )
-            {
-				sscanf (theParam,"%llu",&scan_off);
-				offset = (size_t)scan_off;
-            } else {
-                HTTP_DoError (method,"Offset must be specified!");
-                return (-1);
-            }
-
-			if ( (theParam = get_param (param,"Length")) )
-				sscanf (theParam,"%lu",&length);
-
 			if ( !(theFile = GetFileRep (fileID,offset,length)) ) {
-				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				HTTP_DoError (method,"Could not open FileID=%llu!",
+					(unsigned long long)fileID);
 				return (-1);
 			}
+
+			if ( (theParam = get_param (param,"Offset")) ) {
+				sscanf (theParam,"%llu",&scan_off);
+				offset = (size_t)scan_off;
+			}
+
+			if ( (theParam = get_param (param,"Length")) ) {
+				sscanf (theParam,"%llu",&scan_length);
+				length = (size_t)scan_length;
+			} else {
+				length = (size_t)theFile->size_rep - offset;
+			}
+
 
 			HTTP_ResultType ("application/octet-stream");
 			fwrite (theFile->file_buf+offset,length,1,stdout);
@@ -493,9 +515,10 @@ char **cgivars=param;
 
 			break;
 		case M_IMPORTOMEFILE:
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
@@ -516,9 +539,10 @@ char **cgivars=param;
 		case M_CONVERTPLANE:
 		case M_CONVERTTIFF:
 		case M_CONVERTROWS:
-			if ( (theParam = get_param (param,"FileID")) )
-				sscanf (theParam,"%llu",&fileID);
-			else {
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
 				HTTP_DoError (method,"FileID must be specified!");
 				return (-1);
 			}
@@ -528,9 +552,14 @@ char **cgivars=param;
 				file_offset = (size_t)scan_off;
 			}
 		
+			tiffDir=0;
+			if ( (theParam = get_param (param,"TIFFDirIndex")) ) {
+				sscanf (theParam,"%lu",&tiffDir);
+			}
+		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 			head = thePixels->head;
@@ -545,6 +574,7 @@ char **cgivars=param;
 				}
 				nPix = head->dx*head->dy*head->dz;
 				if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
+					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
 					return (-1);
 				}
@@ -557,6 +587,7 @@ char **cgivars=param;
 				}
 				nPix = head->dx*head->dy;
 				if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
 					return (-1);
 				}
@@ -574,11 +605,13 @@ char **cgivars=param;
 
 				nPix = nRows*head->dy;
 				if (!CheckCoords (thePixels, 0, theY, theZ, theC, theT)){
+					freePixelsRep (thePixels);
 					HTTP_DoError (method,"Parameters theY, theZ, theC, theT (%d,%d,%d,%d) must be in range (%d,%d,%d,%d).",
 						theY,theZ,theC,theT,head->dy-1,head->dz-1,head->dc-1,head->dt-1);
 					return (-1);
 				}
 				if (theY+nRows-1 >= head->dy) {
+					freePixelsRep (thePixels);
 					HTTP_DoError (method,"theY + nRows (%d + %d = %d) must be less than dY (%d).",
 						theY,nRows,theY+nRows,head->dy);
 					return (-1);
@@ -587,13 +620,13 @@ char **cgivars=param;
 			}
 
 			if (m_val == M_CONVERTTIFF)
-				nIO = ConvertTIFF (thePixels, fileID, theZ, theC, theT);
+				nIO = ConvertTIFF (thePixels, fileID, theZ, theC, theT, tiffDir, 1);
 			else
-				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix);
-			if (nIO < nPix) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				nIO = ConvertFile (thePixels, fileID, file_offset, offset, nPix, 1);
+			if (nIO != nPix) {
+				if (strlen (thePixels->error_str)) HTTP_DoError (method,thePixels->error_str);
+				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
 				return (-1);
 			} else {
@@ -611,7 +644,7 @@ char **cgivars=param;
 			}
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				else HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
 			}
 			
@@ -619,17 +652,18 @@ char **cgivars=param;
 		break;
 		
 		case M_GETTHUMB:
-            if ( (theParam = get_param (param,"Size")) ) {
-                sscanf (theParam,"%d,%d",&sizeX,&sizeY);
-                if (sizeX <= 0 || sizeY <= 0) {
-                    HTTP_DoError (method,"Thumbnail size cannot be zero or negative for PixelsID=%llu",ID);
-                    return (-1);
-                }
-            }
+			if ( (theParam = get_param (param,"Size")) ) {
+				sscanf (theParam,"%d,%d",&sizeX,&sizeY);
+				if (sizeX <= 0 || sizeY <= 0) {
+					HTTP_DoError (method,"Thumbnail size cannot be zero or negative for PixelsID=%llu",ID);
+					return (-1);
+				}
+			}
 	
 			strcpy (file_path,"Pixels/");
 			if (! getRepPath (ID,file_path,0)) {
-				HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",ID);
+				HTTP_DoError (method,"Could not get repository path for PixelsID=%llu",
+					(unsigned long long)ID);
 				return (-1);
 			}
 			strcat (file_path,".thumb");
@@ -644,7 +678,7 @@ char **cgivars=param;
 				return (-1);
 			}
 
-            DoThumb(ID,file,sizeX,sizeY);
+			DoThumb(ID,file,sizeX,sizeY);
 
 			fclose(file); 
 
@@ -661,15 +695,15 @@ char **cgivars=param;
 
 
 		if (strstr (method,"Set")) {
-            rorw = 'w';
-            if (!(filename = get_param(param,"Pixels"))) {
-                HTTP_DoError(method,"No pixels filename specified");
-            }
+			rorw = 'w';
+			if (!(filename = get_param(param,"Pixels"))) {
+				HTTP_DoError(method,"No pixels filename specified");
+			}
 		} else rorw = 'r';
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
+			else HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
 		}
 
@@ -685,6 +719,7 @@ char **cgivars=param;
 			}
 			nPix = head->dx*head->dy*head->dz;
 			if (!CheckCoords (thePixels, 0, 0, 0, theC, theT)){
+				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theC, theT (%d,%d) must be in range (%d,%d).",theC,theT,head->dc-1,head->dt-1);
 				return (-1);
 			}
@@ -697,6 +732,7 @@ char **cgivars=param;
 			}
 			nPix = head->dx*head->dy;
 			if (!CheckCoords (thePixels, 0, 0, theZ, theC, theT)){
+				freePixelsRep (thePixels);
 				HTTP_DoError (method,"Parameters theZ, theC, theT (%d,%d,%d) must be in range (%d,%d,%d).",theZ,theC,theT,head->dz-1,head->dc-1,head->dt-1);
 				return (-1);
 			}
@@ -717,7 +753,7 @@ char **cgivars=param;
 		*/
 		nIO = DoPixelIO (thePixels, offset, nPix, rorw);
 		if (rorw == 'w') {
-            closeInputFile(thePixels->IO_stream,isLocalFile);
+			closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%ld\n", (long) nIO);
 		}
@@ -728,14 +764,14 @@ char **cgivars=param;
 	else if (m_val == M_SETROI || m_val == M_GETROI) {
 		char *ROI;
 		int x0,y0,z0,c0,t0,x1,y1,z1,c1,t1;
-        char *filename=NULL;
+		char *filename=NULL;
 
 		if (!ID) return (-1);
 		if (m_val == M_SETROI) {
-            rorw = 'w';
-            if (!(filename = get_param(param,"Pixels"))) {
-                HTTP_DoError(method,"No pixels filename specified");
-            }
+			rorw = 'w';
+			if (!(filename = get_param(param,"Pixels"))) {
+				HTTP_DoError(method,"No pixels filename specified");
+			}
 		} else rorw = 'r';
 
 		if ( !(ROI = get_param (param,"ROI")) ) {
@@ -751,7 +787,7 @@ char **cgivars=param;
 
 		if (! (thePixels = GetPixelsRep (ID,rorw,iam_BigEndian)) ) {
 			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
+			else HTTP_DoError (method,"Access control error - check error log for details" );
 			return (-1);
 		}
 
@@ -763,7 +799,7 @@ char **cgivars=param;
 		}
 		nIO = DoROI (thePixels,x0,y0,z0,c0,t0,x1,y1,z1,c1,t1, rorw);
 		if (rorw == 'w') {
-            closeInputFile(thePixels->IO_stream,isLocalFile);
+			closeInputFile(thePixels->IO_stream,isLocalFile);
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%ld\n", (long) nIO);
 		}
@@ -786,9 +822,8 @@ char isCGI=0;
 char **in_params;
 
 	if (chdir (OMEIS_ROOT)) {
-		char error[256];
-		sprintf (error,"Could not change working directory to %s",OMEIS_ROOT);
-		perror (error);
+		HTTP_DoError ("Initialization","Could not change working directory to %s: %s",
+			OMEIS_ROOT,strerror (errno));
 		exit (-1);
 	}
 	in_params = getCLIvars(argc,argv) ;

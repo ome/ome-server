@@ -567,7 +567,7 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 /*		if ( (state->BinFileInfo.sh_mmap = (unsigned char *)mmap (NULL, state->BinFileInfo.size, PROT_READ|PROT_WRITE , MAP_SHARED, state->BinFileInfo.fd, 0)) <= 0 ) {
 			close (state->BinFileInfo.fd);
 			DeleteFile (state->BinFileInfo.ID);
-			fprintf (stderr,"Couldn't mmap file %s (ID=%llu)\n",state->BinFileInfo.name,state->BinFileInfo.ID);
+			fprintf (stderr,"Couldn't mmap file %s (ID=%llu)\n",state->BinFileInfo.name,(unsigned long long)state->BinFileInfo.ID);
 			return (-1);
 		}
 */		
@@ -598,7 +598,7 @@ static void OME_StartElement(ParserState *state, const xmlChar *name, const xmlC
 		
 		/* print BinFile's FileID */
 		if( strcmp( BinFileLocal, localName ) == 0 ) {
-			fprintf( stdout, "ID = \"%llu\" ", state->BinFileInfo.FileID );
+			fprintf( stdout, "ID = \"%llu\" ", (unsigned long long)state->BinFileInfo.FileID );
 		}
 	}
 	/*
@@ -776,7 +776,7 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 		}
 
 		/* set ImageServerID */
-		fprintf( stdout, " ImageServerID = \"%llu\" ", ImageServerID );
+		fprintf( stdout, " ImageServerID = \"%llu\" ", (unsigned long long)ImageServerID );
 
 	 	/* cleanup */
 	 	freePixelsRep (state->pixelInfo->pixWriter);

@@ -56,8 +56,9 @@
 #include "Pixels.h"
 #include "File.h"
 
-
-void DeletePixels (PixelsRep *myPixels);
+/* Private prototypes */
+static void
+DeletePixels (PixelsRep *myPixels);
 
 
 
@@ -70,8 +71,8 @@ void freePixelsRep (PixelsRep *myPixels) {
 		if (myPixels->stackInfos) free (myPixels->stackInfos);
 		if (myPixels->head) free (myPixels->head);
 	} else {
-		munmap (myPixels->head, myPixels->size_info);
-		munmap (myPixels->pixels, myPixels->size_rep);
+		if (myPixels->head) munmap (myPixels->head, myPixels->size_info);
+		if (myPixels->pixels) munmap (myPixels->pixels, myPixels->size_rep);
 	}
 
 	if (myPixels->fd_info >=0 ) close (myPixels->fd_info);
@@ -86,7 +87,6 @@ void freePixelsRep (PixelsRep *myPixels) {
   memory.  If an ID is passed in, it will set the paths to the dependent files,
   but not open anything.
 */
-static
 PixelsRep *newPixelsRep (OID ID)
 {
 PixelsRep *myPixels;
@@ -129,89 +129,365 @@ char *sha1DBfile="Pixels/sha1DB.idx";
 */
 static
 int openPixelsFile (PixelsRep *myPixels, char rorw) {
-char *mmap_info=NULL,*mmap_rep=NULL;
+void *mmap_info=NULL,*mmap_rep=NULL;
 pixHeader *head;
 struct stat fStat;
+int open_flags=0, mmap_flags=0;
+int ret;
 	
 	if (rorw == 'r' || rorw == 'i') {
-		if (myPixels->fd_rep < 0)
-			if ( (myPixels->fd_rep = open (myPixels->path_rep, O_RDONLY, 0600)) < 0)
-				return (-1);
-		if (myPixels->fd_info < 0)
-			if ( (myPixels->fd_info = open (myPixels->path_info, O_RDONLY, 0600)) < 0)
+		open_flags = O_RDONLY;
+		mmap_flags = PROT_READ;
+	} else if (rorw == 'w' || rorw == 'n') {
+		open_flags = O_RDWR;
+		mmap_flags = PROT_READ|PROT_WRITE;
+	}
+
+	/* open the info file (header) */
+	if (myPixels->fd_info < 0)
+		if ( (myPixels->fd_info = open (myPixels->path_info, open_flags, 0600)) < 0)
 				return (-2);
-		if (!myPixels->size_info) {
-			fstat (myPixels->fd_info , &fStat );
-			myPixels->size_info = fStat.st_size;
+
+	if (rorw != 'n') {
+	/* wait until we can get a read lock on the header */
+		lockRepFile (myPixels->fd_info,'r',0LL,sizeof (pixHeader));
+	} else {
+	/*
+	  If the Pixels file needs recovering, we're going to hang all subsequent requests
+	  until we've recovered it.  We do this by putting a write-lock on the header
+	  if the pixels file doesn't exist.
+	*/
+		if (myPixels->fd_rep < 0) {
+			if ( (myPixels->fd_rep = open (myPixels->path_rep, open_flags, 0600)) < 0) {
+				lockRepFile (myPixels->fd_info,'w',0LL,sizeof (pixHeader));
+			}
 		}
-		if ((mmap_info = (char *) mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0LL)) == (char *) -1)
-			return (-3);
-		if (!myPixels->size_rep) {
-			fstat (myPixels->fd_rep , &fStat );
-			myPixels->size_rep = fStat.st_size;
-		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0LL)) == (char *) -1)
+	}
+
+	/* get the size of the header. */
+	if (!myPixels->size_info) {
+		if (fstat (myPixels->fd_info , &fStat) != 0)
+			return (-8);
+		myPixels->size_info = fStat.st_size;
+	}
+
+	/* mmap the header */
+	if ((mmap_info = mmap (NULL, myPixels->size_info, mmap_flags, MAP_SHARED, myPixels->fd_info, 0LL)) == (void *) -1)
+		return (-3);
+	myPixels->head = head = (pixHeader *) mmap_info;
+	myPixels->is_mmapped = 1;
+				
+	if (!head->isFinished && rorw == 'r') {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Attempt to read a write-only file\n");
 			return (-4);
 	}
 
-	if (rorw == 'w' || rorw == 'n') {
-		if (myPixels->fd_rep < 0)
-			if ( (myPixels->fd_rep = open (myPixels->path_rep, O_RDWR, 0600)) < 0)
-				return (-5);
-		if (myPixels->fd_info < 0)
-			if ( (myPixels->fd_info = open (myPixels->path_info, O_RDWR, 0600)) < 0)
-				return (-6);
-		if (!myPixels->size_info) {
-			fstat (myPixels->fd_info , &fStat );
-			myPixels->size_info = fStat.st_size;
-		}
-		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0LL)) == (char *) -1 )
-			return (-7);
-		if (!myPixels->size_rep) {
-			if (fstat (myPixels->fd_rep , &fStat) != 0)
-				return (-8);
-			myPixels->size_rep = fStat.st_size;
-		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0LL)) == (char *) -1 )
-			return (-9);
+	if (head->isFinished && rorw == 'w') {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Attempt to write to a read-only file\n");
+			return (-5);
 	}
 
-	myPixels->head = head = (pixHeader *) mmap_info;
-	myPixels->pixels = (void *) mmap_rep;
-	myPixels->is_mmapped = 1;
-				
+	/* if its a new file, set the signature and version */
 	if (rorw == 'n') {
 		head->mySig = OME_IS_PIXL_SIG;
 		head->vers  = OME_IS_PIXL_VER;
+		if (!myPixels->size_rep) {
+			if (stat (myPixels->path_rep , &fStat) != 0)
+				return (-8);
+			myPixels->size_rep = fStat.st_size;
+		}
 	} else {
-		/* wait until we can get a read lock on the header */
-		lockRepFile (myPixels->fd_rep,'r',0LL,sizeof (pixHeader));
-	}
-
+	/* check the signature and version if they're in the file */
 	if (head->mySig != OME_IS_PIXL_SIG ||
 		head->vers  != OME_IS_PIXL_VER) {
-			fprintf (stderr,"Incompatible file type\n");
+				sprintf (myPixels->error_str+strlen(myPixels->error_str),
+					"Incompatible file type\n");
 			return (-10);
 	}
-	
-	if (!head->isFinished && rorw == 'r') {
-			fprintf (stderr,"Attempt to read a write-only file\n");
-			return (-11);
-	}
-
-	if (head->isFinished && rorw == 'w') {
-			fprintf (stderr,"Attempt to write to a read-only file\n");
-			return (-12);
-	}
-
-/*
-  If this is a new pixels file, we don't know the dx, dy, dz, dc, dt at this point
-*/
-	if (rorw != 'n') {
+		myPixels->size_rep = head->dx * head->dy * head->dz * head->dc * head->dt * head->bp;
 		myPixels->planeInfos = (planeInfo *) ( mmap_info + sizeof(pixHeader));
 		myPixels->stackInfos = (stackInfo *) ( mmap_info + (sizeof (planeInfo) * head->dz * head->dc * head->dt)  + sizeof(pixHeader) );
 	}
 
+	
+	
+	/* open and mmap the repository file unless we're just getting info */
+	if (rorw != 'i') {
+		if (myPixels->fd_rep < 0) {
+			if ( (myPixels->fd_rep = openRepFile (myPixels->path_rep, open_flags)) < 0) {
+				/* If we ran recoverPixels successfully, we're done.
+				   N.B.: recoverPixels() will mmap the recovered Pixels file, so
+				   if any of the mmap logic changes below, it should be reflected
+				   in recoverPixels()
+				*/
+				if (rorw == 'r') {
+					ret = recoverPixels (myPixels, open_flags, mmap_flags, 0);
+					/*  Release the write lock we issued when we couldn't find the file before */
+					lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+					return (ret);
+				}
+			}
+			
+			if (myPixels->fd_rep < 0) {
+			/* Very bad juju:  The pixels file is just plain gone. That's why we're returning -11:  Way worse than -10 */
+				return (-11);
+			}
+		}
+		if ( (mmap_rep = mmap (NULL, myPixels->size_rep, mmap_flags, MAP_SHARED, myPixels->fd_rep, 0LL)) == (void *) -1)
+			return (-4);
+		myPixels->pixels = mmap_rep;
+	} else {
+	/* just getting info, so no rep file for you. */
+		myPixels->pixels = mmap_rep = NULL;
+	}
+
+	lockRepFile (myPixels->fd_info,'u',0LL,sizeof (pixHeader));
+	return (1);
+}
+
+
+int
+isConvertVerified (PixelsRep *myPixels) {
+char convPath[256];
+FILE *convFP;
+convertFileRec convRec, conv0Rec;
+int isVerified=0;
+size_t nRec=0, nIO=0;
+
+	strncpy (convPath,myPixels->path_rep,255);
+	if (strlen (convPath) + 8 > 255) return (-101);
+	strcat (convPath,".convert");
+
+	memset(&conv0Rec, 0, sizeof(convertFileRec));
+
+	if ( !(convFP = fopen (convPath,"r")) ) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Could not open %s: %s\n",convPath,strerror( errno ));
+		return (0);
+	}
+	while (!feof (convFP)) {
+		nIO = fread ((void *)(&convRec), sizeof (convertFileRec) , 1, convFP);
+		if (feof (convFP)) break;
+		if (nIO != 1 ) {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Error reading convert record from %s: %s\n",
+				convPath,strerror( errno ));
+			break;
+		}
+		nRec++;
+	}
+
+	if (!feof (convFP)) {
+	/* An error occurred */
+		fclose (convFP);
+		return (0);
+	}
+
+	if ( feof (convFP) && nRec > 1 && !memcmp (&convRec,&conv0Rec,sizeof(convertFileRec)) )
+		isVerified = 1;
+
+	fclose (convFP);
+
+	return (isVerified);
+
+}
+
+/*
+  This function attempts to recover a Pixels file from a set of Convert commands
+  stored in a ".convert" file.
+  The recovery is taken to a point where myPixels->fd_rep is set to a file opened
+  and mmapped with the given flags.
+  myPixels must have the header opened and read or mmapped in myPixels->header.
+  if the verify parameter is true, then the convert commands from a ".convert" file are
+  replayed into a ".verify" Pixels file, and a sha1 is calculated from the file.
+  If the sha1 digest matches the one in the header, a convertFileRec of all 0's is appended to the file.
+  Return conditions:
+    If verify is true, then a result of 1 means the sha1s were identical.
+    A result of < 1 means that they weren't for a variety of reasons.  The intended meaning is:
+    "Check to see if these pixels are recoverable from their convert file"
+    A return of 0 in this case means the file couldn't be opened.  Usually because there is no ".convert" file.
+
+    If verify is false, then this will return 1 if the recovery was successfull, and < 1 if it wasn't.
+    The intended meaning is "recover the pixels or else..."
+    A 0 will never be returned if verify is false.
+    Regardless of wether verify is true or false, if the ".convert" file wasn't previously verified,
+    it will be after this call.
+    The ".convert" file won't actually be erased unless there were no errors durring reading or verification,
+    yet it failed to generate identical sha1s.
+*/
+int recoverPixels (PixelsRep *myPixels, int open_flags, int mmap_flags, char verify) {
+char convPath[256], oldRepPath[256], verRepPath[256];
+FILE *convFP;
+convertFileRec convRec, conv0Rec;
+size_t nIO=0, nPixPlane=0;
+void *mmap_rep=NULL;
+char *path_root="Pixels/";
+char *verifySuff="verify",*doVerify=NULL, isVerified=0;
+u_int8_t sha1[OME_DIGEST_LENGTH];
+
+
+	strncpy (convPath,myPixels->path_rep,255);
+	strncpy (oldRepPath,myPixels->path_rep,255);
+	if (strlen (convPath) + 8 > 255) return (-100);
+	strcat (convPath,".convert");
+	
+	memset(&conv0Rec, 0, sizeof(convertFileRec));
+	
+	if (verify) {
+		doVerify = verifySuff;
+		sprintf (verRepPath,"%s.%s",myPixels->path_rep,verifySuff);
+		unlink (verRepPath);
+	}
+
+	if ( !(convFP = fopen (convPath,"r")) ) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Could not open %s: %s\n",convPath,strerror( errno ));
+		if (verify) return (0);
+		else return (-101);
+	}
+
+	strcpy (myPixels->path_rep,path_root);
+	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, myPixels->size_rep, doVerify);
+	if (myPixels->fd_rep < 0) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Could not make new repository file %s: %s\n",myPixels->path_rep,strerror( errno ));
+		fclose (convFP);
+		return (-102);
+	}
+
+	if ( (mmap_rep = mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE, MAP_SHARED, myPixels->fd_rep, 0LL)) == (void *) -1) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Could not mmap new repository file %s: %s\n",myPixels->path_rep,strerror( errno ));
+		fclose (convFP);
+		close (myPixels->fd_rep);
+		myPixels->fd_rep = -1;
+		return (-103);
+	}
+	myPixels->pixels = mmap_rep;
+
+
+	nPixPlane = myPixels->head->dx * myPixels->head->dy;
+	while (!feof (convFP)) {
+		nIO = fread ((void *)(&convRec), sizeof (convertFileRec) , 1, convFP);
+		if (feof (convFP)) break;
+		if (nIO != 1 ) {
+			sprintf (myPixels->error_str+strlen(myPixels->error_str),
+				"Error reading convert record from %s: %s\n",
+				convPath,strerror( errno ));
+			break;
+		}
+		if (convRec.isTIFF && convRec.FileID) {
+			nIO = ConvertTIFF (myPixels, convRec.FileID,
+				convRec.spec.tiff.theZ, convRec.spec.tiff.theC, convRec.spec.tiff.theT, convRec.spec.tiff.dir_index, 0);
+			if (nIO != nPixPlane) {
+				sprintf (myPixels->error_str+strlen(myPixels->error_str),
+					"Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.\n",
+					myPixels->path_rep, strerror( errno ), (unsigned long long)nPixPlane, (unsigned long long)nIO);
+				break;
+			}
+		} else if (convRec.FileID) {
+			if ( (convRec.isBigEndian && !bigEndian()) || (!convRec.isBigEndian && bigEndian()) )
+				myPixels->doSwap = 1;
+			nIO = ConvertFile (myPixels, convRec.FileID,
+				(size_t)convRec.spec.file.file_offset, (size_t)convRec.spec.file.pix_offset, (size_t)convRec.spec.file.nPix, 0);
+			if (nIO != (size_t)convRec.spec.file.nPix) {
+				sprintf (myPixels->error_str+strlen(myPixels->error_str),
+					"Error recovering %s: %s. Expected to read %llu pixels, but got only %llu.\n",
+					myPixels->path_rep, strerror( errno ), (unsigned long long)convRec.spec.file.nPix, (unsigned long long)nIO);
+				break;
+			}
+		}
+	}
+
+	if (!feof (convFP)) {
+	/* An error occurred */
+		fclose (convFP);
+		munmap (mmap_rep, myPixels->size_rep);
+		myPixels->pixels = NULL;
+		close (myPixels->fd_rep);
+		myPixels->fd_rep = -1;
+		unlink (myPixels->path_rep);
+		strncpy (myPixels->path_rep,oldRepPath,255);
+		return (-104);
+	}
+	
+	if ( feof (convFP) && !memcmp (&convRec,&conv0Rec,sizeof(convertFileRec)) )
+		isVerified = 1;
+
+	if (!isVerified) {
+	/* Calculate the SHA1 for the file we generated, and compare to the one in the header */
+		if (get_md_from_buffer (myPixels->pixels, (size_t)myPixels->size_rep, (unsigned char *)sha1) < 0) {
+			sprintf(myPixels->error_str+strlen(myPixels->error_str), "Unable to retrieve SHA1 for Pixels file during verification.\n");
+			fclose (convFP);
+			munmap (mmap_rep, myPixels->size_rep);
+			myPixels->pixels = NULL;
+			close (myPixels->fd_rep);
+			myPixels->fd_rep = -1;
+			unlink (myPixels->path_rep);
+			strncpy (myPixels->path_rep,oldRepPath,255);
+			return(-107);
+		}
+		if (memcmp (sha1, myPixels->head->sha1, OME_DIGEST_LENGTH)) {
+			fclose (convFP);
+			unlink (convPath);
+			munmap (mmap_rep, myPixels->size_rep);
+			myPixels->pixels = NULL;
+			close (myPixels->fd_rep);
+			myPixels->fd_rep = -1;
+			unlink (myPixels->path_rep);
+			sprintf(myPixels->error_str+strlen(myPixels->error_str), "Verification failed - %s file deleted.\n",convPath);
+			strncpy (myPixels->path_rep,oldRepPath,255);
+			return (-108);
+		} else {
+		/* Mark the convert file as verified */
+		/* since we opened it read-only above, we have to reopen it "a" now */
+			if ( !(convFP = freopen (convPath,"a", convFP)) ) {
+				sprintf (myPixels->error_str+strlen(myPixels->error_str),
+					"Could not open %s for writing (marking as verified): %s\n",convPath,strerror( errno ));
+			} else {
+				fwrite ((void *)&conv0Rec, sizeof (convertFileRec), 1, convFP);
+				fclose (convFP);
+			/* This hasn't been verified before, but it is now, so make it read-only. */
+				chmod (convPath,0400);
+			}
+		}
+	} else
+		fclose (convFP);
+
+/* Clean up the new Pixels file */
+	munmap (mmap_rep, myPixels->size_rep);
+	myPixels->pixels = NULL;
+	close (myPixels->fd_rep);
+	myPixels->fd_rep = -1;
+
+
+	if (doVerify) {
+	/* Delete the Pixels file we just made */
+		unlink (myPixels->path_rep);
+		strncpy (myPixels->path_rep,oldRepPath,255);
+	} else {
+	/* Set the file to read-only */
+		strncpy (myPixels->path_rep,oldRepPath,255);
+		fchmod (myPixels->fd_rep,0400);	
+		if ( (myPixels->fd_rep = openRepFile (myPixels->path_rep, open_flags)) < 0 ) {
+			unlink (myPixels->path_rep);
+			sprintf(myPixels->error_str+strlen(myPixels->error_str),
+				"Couldn't open reconstituted Pixels file - %s deleted.\n",myPixels->path_rep);
+			return (-109);
+		}	
+	/* mmap it the way it was requested */
+		if ( (mmap_rep = mmap (NULL, myPixels->size_rep, mmap_flags, MAP_SHARED, myPixels->fd_rep, 0LL)) == (void *) -1) {
+			close (myPixels->fd_rep);
+			unlink (myPixels->path_rep);
+			sprintf(myPixels->error_str+strlen(myPixels->error_str),
+				"Couldn't mmap reconstituted Pixels file - %s deleted.\n",myPixels->path_rep);
+			return (-110);
+		}
+		myPixels->pixels = mmap_rep;
+	}		
+	
 	return (1);
 }
 
@@ -253,7 +529,7 @@ int result;
 	}
 	myPixels->ID = nextID(myPixels->path_ID);
 	if (myPixels->ID <= 0 && errno) {
-		perror ("Couldn't get next Pixels ID");
+		fprintf (stderr,"Couldn't get next Pixels ID: %s",strerror (errno));
 		freePixelsRep (myPixels);
 		return (NULL);
 	} else if (myPixels->ID <= 0){
@@ -268,7 +544,7 @@ int result;
 	myPixels->size_info = size;
 	myPixels->fd_info = newRepFile (myPixels->ID, myPixels->path_info, size, "info");
 	if (myPixels->fd_info < 0) {
-		sprintf (error,"Couldn't open repository info file for PixelsID %llu (%s).",myPixels->ID,myPixels->path_info);
+		sprintf (error,"Couldn't open repository info file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_info);
 		perror (error);
 		freePixelsRep (myPixels);
 		return (NULL);
@@ -280,7 +556,7 @@ int result;
 
 	myPixels->fd_rep = newRepFile (myPixels->ID, myPixels->path_rep, size, NULL);
 	if (myPixels->fd_rep < 0) {
-		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",myPixels->ID,myPixels->path_rep);
+		sprintf (error,"Couldn't open repository file for PixelsID %llu (%s).",(unsigned long long)myPixels->ID,myPixels->path_rep);
 		perror (error);
 		freePixelsRep (myPixels);
 		return (NULL);
@@ -338,7 +614,7 @@ int result;
 
 
 	if ( (result = openPixelsFile (myPixels,rorw)) < 0) {
-		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n",ID,result);
+		fprintf (stderr,"Could not open pixels file (ID=%llu). Result=%d\n",(unsigned long long)ID,result);
 		freePixelsRep (myPixels);
 		return (NULL);
 	}
@@ -352,6 +628,76 @@ int result;
 	if ( isBigEndian != bigEndian() && head->bp > 1) myPixels->doSwap = 1;
 
 	return (myPixels);
+}
+
+/*
+  If myID is 0, walk the entire repository verifying that pixels recovered with the convert commands
+  match sha1s with the sha1s in the header.
+  If the ".convert" file isn't verified (a convert record of all zeros at the end), then the file
+  is recovered into a ".verify" file and its sha1 digest is computed.  If the sha1s match, the ".convert"
+  file is marked as verified, and the original Pixels file is deleted.
+  If the sha1s don't match, the ".convert" file is deleted.
+  After calling this, there will be either a verified ".convert" file or a Pixels file, but not both.
+*/
+
+void
+PurgePixels (OID myID) {
+OID theID;
+PixelsRep *myPixels;
+char iamBigEndian, path_rep[256];
+
+
+	iamBigEndian = bigEndian();
+
+	if (myID != 0) {
+		myPixels = GetPixelsRep (myID, 'i', iamBigEndian);
+		if (myPixels) {
+fprintf (stderr,"Pixels ID %20llu: ",myID);
+			if (!isConvertVerified(myPixels)) {
+fprintf (stderr,"Not verified - recovering...");
+				recoverPixels (myPixels, 0, 0, 1);
+fprintf (stderr,"done ");
+			}
+			if (isConvertVerified(myPixels)) {
+fprintf (stderr,"verified ");
+				strncpy (path_rep,myPixels->path_rep,255);
+				freePixelsRep (myPixels);
+fprintf (stderr,"deleting %s",path_rep);
+				unlink (path_rep);
+			} else {
+fprintf (stderr,"not recoverable");
+				freePixelsRep (myPixels);
+			}
+fprintf (stderr,"\n");
+		}
+	} else {
+		myPixels = newPixelsRep (0LL);
+		theID = lastID (myPixels->path_ID);
+		freePixelsRep (myPixels);
+		while (theID) {
+			myPixels = GetPixelsRep (theID, 'i', iamBigEndian);
+			if (myPixels) {
+fprintf (stderr,"Pixels ID %20llu: ",theID);
+				if (!isConvertVerified(myPixels)) {
+fprintf (stderr,"Not verified - recovering...");
+					recoverPixels (myPixels, 0, 0, 1);
+fprintf (stderr,"done ");
+				}
+				if (isConvertVerified(myPixels)) {
+fprintf (stderr,"verified ");
+					strncpy (path_rep,myPixels->path_rep,255);
+					freePixelsRep (myPixels);
+fprintf (stderr,"deleting %s",path_rep);
+					unlink (path_rep);
+				} else {
+fprintf (stderr,"not recoverable");
+					freePixelsRep (myPixels);
+				}
+fprintf (stderr,"\n");
+			}
+			theID--;
+		}
+	}
 }
 
 int
@@ -372,7 +718,8 @@ CheckCoords (PixelsRep * myPixels,
         theZ >= head->dz || theZ < 0 ||
         theC >= head->dc || theC < 0 ||
         theT >= head->dt || theT < 0 ) {
-		fprintf (stderr,"Pix->CheckCoords:  Coordinates out of range.\n");
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Pix->CheckCoords:  Coordinates out of range.\n");
 		return (0);
 	}
 	return (1);
@@ -418,7 +765,7 @@ unsigned long written=0;
 	nBytes = nPix*bp;
 	file_off = offset;
 	swap_buf = myPixels->swap_buf;
-	chunk_size = 4096 / bp;
+	chunk_size = OMEIS_IO_BUF_SIZE / bp;
 	pix_P = pixels + offset;
 
 	if (lockRepFile (myPixels->fd_rep,rorw,file_off,nBytes) < 0) return (0);
@@ -711,8 +1058,8 @@ size_t nPix, nIO=0;
 
 
 size_t DoROI (PixelsRep *myPixels,
-	ome_coord x0, ome_coord y0, ome_coord z0, ome_coord w0, ome_coord t0,
-	ome_coord x1, ome_coord y1, ome_coord z1, ome_coord w1, ome_coord t1, char rorw
+	ome_coord X0, ome_coord Y0, ome_coord Z0, ome_coord W0, ome_coord T0,
+	ome_coord X1, ome_coord Y1, ome_coord Z1, ome_coord W1, ome_coord T1, char rorw
 )
 {
 pixHeader *head;
@@ -725,10 +1072,10 @@ size_t off0, off1;
 	if (!myPixels) return (0);
 	if (! (pix = (char *)myPixels->pixels) ) return (0);
 	if (! (head = myPixels->head) ) return (0);
-	if ( ! CheckCoords (myPixels, x0, y0, z0, w0, t0) ) return (0);
-	off0 = GetOffset (myPixels, x0, y0, z0, w0, t0);
-	if ( !CheckCoords (myPixels, x1, y1, z1, w1, t1) ) return (0);
-	off1 = GetOffset (myPixels, x1, y1, z1, w1, t1);
+	if ( ! CheckCoords (myPixels, X0, Y0, Z0, W0, T0) ) return (0);
+	off0 = GetOffset (myPixels, X0, Y0, Z0, W0, T0);
+	if ( !CheckCoords (myPixels, X1, Y1, Z1, W1, T1) ) return (0);
+	off1 = GetOffset (myPixels, X1, Y1, Z1, W1, T1);
 	if (off0 >= off1) return (0);
 	dx = head->dx;
 	dy = head->dy;
@@ -737,12 +1084,12 @@ size_t off0, off1;
 	dt = head->dt;
 	bp = head->bp;
 
-	sizeX = x1-x0+1;
-	x=x0;
-	for (t=t0;t <= t1; t++) {
-		for (w=w0;w <= w1; w++) {
-			for (z=z0;z <= z1; z++) {
-				for (y=y0;y <= y1; y++) {
+	sizeX = X1-X0+1;
+	x=X0;
+	for (t=T0;t <= T1; t++) {
+		for (w=W0;w <= W1; w++) {
+			for (z=Z0;z <= Z1; z++) {
+				for (y=Y0;y <= Y1; y++) {
 					nIO = DoPixelIO (myPixels,(((((t*dc) + w)*dz + z)*dy + y)*dx + x)*bp, sizeX, rorw);
 					nIO_t += nIO;
 					if (nIO < sizeX) return (nIO_t);
@@ -775,7 +1122,8 @@ size_t file_off,plane_offset;
 	file_off  = ((char *)myPixels->planeInfos - (char *)myPixels->head) + (plane_offset*nBytes);
 
 	if (lockRepFile (myPixels->fd_info,rorw,file_off,nBytes) < 0) {
-		fprintf (stderr,"Could't get file lock\n");
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"Could't get file lock\n");
 		return (0);
 	}
 	if (rorw == 'w')
@@ -955,6 +1303,8 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 		}
 	}
 	
+	memset (&myPlaneInfo, 0, sizeof(planeInfo));
+	
 	myPlaneInfo.sum_xi    = sum_xi;
 	myPlaneInfo.sum_yi    = sum_yi;
 	myPlaneInfo.sum_zi    = sum_zi;
@@ -1027,6 +1377,8 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 	}
 	nPix = head->dx*head->dy*dz;
 
+	memset (&myStackInfo, 0, sizeof(stackInfo));
+
 	myStackInfo.sum_xi    = sum_xi;
 	myStackInfo.sum_yi    = sum_yi;
 	myStackInfo.sum_zi    = sum_zi;
@@ -1097,7 +1449,7 @@ int FinishStats (PixelsRep *myPixels, char force) {
 	return (1);
 }
 
-
+static
 void DeletePixels (PixelsRep *myPixels) {
 	if (!myPixels->is_mmapped) {
 		if (myPixels->planeInfos) free (myPixels->planeInfos);
@@ -1140,17 +1492,24 @@ OID existOID;
 	lockRepFile (myPixels->fd_rep,'w',0LL,0LL);
 	
 	/* Make sure all the stats are up to date */
-	if (!FinishStats (myPixels,force)) return (0);
+	if (!FinishStats (myPixels,force)) {
+		sprintf(myPixels->error_str+strlen(myPixels->error_str),
+			"Unable to finish stats.\n");
+		return (0);
+	}
 
 	/* Get the SHA1 message digest */
 	if (get_md_from_buffer (myPixels->pixels, myPixels->size_rep, myPixels->head->sha1) < 0) {
-		fprintf(stderr, "Unable to retrieve SHA1.");
+		sprintf(myPixels->error_str+strlen(myPixels->error_str),
+			"Unable to retrieve SHA1.\n");
 		return(0);
 	}
 
 	/* Open the DB file if necessary */
 	if (! myPixels->DB)
 		if (! (myPixels->DB = sha1DB_open (myPixels->path_DB)) ) {
+			sprintf(myPixels->error_str+strlen(myPixels->error_str),
+				"Unable to open sha1DB.\n");
 			return(0);
 		}
 
@@ -1166,9 +1525,17 @@ OID existOID;
 	myPixels->head->isFinished = 1;
 
 	if (myPixels->is_mmapped) {
-		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) return (0);
+		if (msync (myPixels->head , myPixels->size_info , MS_SYNC) != 0) {
+			sprintf(myPixels->error_str+strlen(myPixels->error_str),
+				"Unable to msync header.\n");
+			return (0);
+		}
 
-		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) return (0);
+		if (msync (myPixels->pixels , myPixels->size_rep , MS_SYNC) != 0) {
+			sprintf(myPixels->error_str+strlen(myPixels->error_str),
+				"Unable to msync pixels.\n");
+			return (0);
+		}
 	}
 	
 
@@ -1176,6 +1543,8 @@ OID existOID;
 	if ( sha1DB_put (myPixels->DB, myPixels->head->sha1, myPixels->ID) ) {
 		sha1DB_close (myPixels->DB);
 		myPixels->DB = NULL;
+		sprintf(myPixels->error_str+strlen(myPixels->error_str),
+			"Unable to put sha1 into sha1DB.\n");
 		return (0);
 	}
 
@@ -1190,54 +1559,73 @@ OID existOID;
 }
 
 
-size_t ConvertFile (PixelsRep *myPixels, OID fileID, size_t file_offset, size_t pix_offset, size_t nPix) {
+size_t ConvertFile (PixelsRep *myPixels, OID fileID, size_t file_offset, size_t pix_offset, size_t nPix, char writeRec) {
 pixHeader *head;
 FileRep *myFile;
 unsigned long nIO;
-convertFileRec convFileRec;
+convertFileRec convRec;
 FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
 char isBigEndian=1,bp;
 
 	if (!fileID || !myPixels) return (0);
 	if (! (head = myPixels->head) ) {
-		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Pixels header is not set.",myPixels->ID);
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertFile(PixelsID=%llu). Pixels header is not set.\n",(unsigned long long)myPixels->ID);
 		return (0);
 	}
 	bp = head->bp;
 
 	if ( !(myFile = GetFileRep (fileID, file_offset, nPix*bp)) ) {
-		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Could not acess file ID=%llu",myPixels->ID,fileID);
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertFile(PixelsID=%llu). Could not acess file ID=%llu\n",(unsigned long long)myPixels->ID,fileID);
 		return (0);
 	}
 
 	if ( myFile->size_rep < file_offset + (nPix*bp)) {
-		sprintf (myPixels->error_str,"ConvertFile(PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)",
-			myPixels->ID,(unsigned long long)fileID, (unsigned long)(myFile->size_rep), (unsigned long)file_offset,
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertFile(PixelsID=%llu). Attempt to read past end of file ID=%llu.  File size=%lu,  Offset=%lu, # pixels=%lu (%lu bytes)\n",
+			(unsigned long long)myPixels->ID,(unsigned long long)fileID, (unsigned long)(myFile->size_rep), (unsigned long)file_offset,
 			(unsigned long)nPix, (unsigned long)(nPix*bp));
+		freeFileRep (myFile);
+		return (0);
+	}
+
+	if ( pix_offset + (nPix*bp) > myPixels->size_rep) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertFile(PixelsID=%llu). Attempt to write past end of pixels.  Pixels size=%lu,  Pix offset=%lu, # pixels=%lu (%lu bytes)\n",
+			(unsigned long long)myPixels->ID, (unsigned long)(myPixels->size_rep), (unsigned long)pix_offset,
+			(unsigned long)nPix, (unsigned long)(nPix*bp));
+		freeFileRep (myFile);
 		return (0);
 	}
 
 	myPixels->IO_buf = myFile->file_buf+file_offset;
+	myPixels->IO_buf_off = 0;
 	nIO = DoPixelIO (myPixels, pix_offset, nPix, 'w');
 	if (nIO != nPix) {
-		sprintf (myPixels->error_str,"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)",
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertFile(). Number of pixels converted (%lu) does not match number in request (%lu)\n",
 			nIO, (unsigned long)nPix);
 		freeFileRep (myFile);
 		return (nIO);
 	}
 
-	if ( (myPixels->doSwap && bigEndian()) || (!myPixels->doSwap && !bigEndian()) ) isBigEndian = 0;
-	convFileRec.FileID      = fileID;
-	convFileRec.isBigEndian = isBigEndian;
-	convFileRec.spec.file.file_offset = file_offset;
-	convFileRec.spec.file.pix_offset  = pix_offset;
-	convFileRec.spec.file.nPix        = nPix;
 
-	sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
-	if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
-		fwrite (&convFileRec , sizeof (convertFileRec) , 1 , convFileInfo );
-		fclose (convFileInfo);
+	if (writeRec) {
+		memset(&convRec, 0, sizeof(convertFileRec));
+	if ( (myPixels->doSwap && bigEndian()) || (!myPixels->doSwap && !bigEndian()) ) isBigEndian = 0;
+		convRec.FileID                = (u_int8_t)  fileID;
+		convRec.isBigEndian           = (u_int8_t)  isBigEndian;
+		convRec.spec.file.file_offset = (u_int64_t) file_offset;
+		convRec.spec.file.pix_offset  = (u_int64_t) pix_offset;
+		convRec.spec.file.nPix        = (u_int64_t) nPix;
+	
+		sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
+		if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
+			fwrite (&convRec , sizeof (convertFileRec) , 1 , convFileInfo );
+			fclose (convFileInfo);
+		}
 	}
 
 	freeFileRep (myFile);
@@ -1245,14 +1633,22 @@ char isBigEndian=1,bp;
 }
 
 
-size_t ConvertTIFF (PixelsRep *myPixels, OID fileID, ome_coord theZ, ome_coord theC, ome_coord theT) {
+size_t ConvertTIFF (
+	PixelsRep *myPixels,
+	OID fileID,
+	ome_coord theZ,
+	ome_coord theC,
+	ome_coord theT,
+	unsigned long tiffDir,
+	char writeRec) {
+
 pixHeader *head;
 FileRep *myFile;
 char file_path[MAXPATHLEN],bp;
 unsigned long nIO=0, nOut;
 size_t pix_offset;
 size_t nPix;
-convertFileRec convFileRec;
+convertFileRec convRec;
 FILE *convFileInfo;
 char convFileInfoPth[MAXPATHLEN];
 TIFF *tiff = NULL;
@@ -1268,28 +1664,53 @@ tsize_t stripSize;
 	if (!fileID || !myPixels) return (0);
 	
 	if (! (myFile = newFileRep (fileID))) {
-		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Could not acess file ID=%llu",myPixels->ID,fileID);
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Could not acess file ID=%llu: %s\n",
+				(unsigned long long)myPixels->ID,fileID, strerror (errno));
 		return (0);
 	}
 
 	if (! (head = myPixels->head) ) {
-		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Pixels header is not set.",myPixels->ID);
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Pixels header is not set.\n",
+				(unsigned long long)myPixels->ID);
+		freeFileRep (myFile);
 		return (0);
 	}
 
 	bp = head->bp;
 
 	if (!CheckCoords (myPixels, 0, 0, theZ, theC, theT)){
-		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)",
-			myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Coordinates theZ=%d, theC=%d, theT=%d are out of range (%d,%d,%d)\n",
+			(unsigned long long)myPixels->ID, theZ, theC, theT, head->dz, head->dc, head->dt);
+		freeFileRep (myFile);
+		return (0);
+	}
+	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
+	
+	if ( (myFile->fd_rep = openRepFile (myFile->path_rep, O_RDONLY)) < 0) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu.\n",(unsigned long long)myPixels->ID,fileID);
+		freeFileRep (myFile);
 		return (0);
 	}
 
-	pix_offset = GetOffset (myPixels, 0, 0, theZ, theC, theT);
-	
-    if (! (tiff = TIFFOpen(myFile->path_rep, "r")) ) {
-		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.",myPixels->ID,
+	/* Wait for a read lock */
+	lockRepFile (myFile->fd_rep, 'r', 0LL, 0LL);	
+    if (! (tiff = TIFFFdOpen(myFile->fd_rep, myFile->path_rep, "r")) ) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Couldn't open File ID=%llu as a TIFF file.\n",(unsigned long long)myPixels->ID,
 			fileID);
+		freeFileRep (myFile);
+    	return (0);
+    }
+
+    if (TIFFSetDirectory(tiff, (tdir_t)tiffDir) != 1) {
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu). Couldn't set TIFF directory to %lu.\n",(unsigned long long)myPixels->ID,tiffDir);
+		TIFFClose(tiff);
+		freeFileRep (myFile);
     	return (0);
     }
     
@@ -1306,7 +1727,8 @@ tsize_t stripSize;
 			int nc=0;
 			
 			TIFFClose(tiff);
-			nc += sprintf (myPixels->error_str+nc,"ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.\n",myPixels->ID,fileID);
+			freeFileRep (myFile);
+			nc += sprintf (myPixels->error_str+nc,"ConvertTIFF (PixelsID=%llu). TIFF (ID=%llu) <-> Pixels mismatch.\n",(unsigned long long)myPixels->ID,(unsigned long long)fileID);
 			nc += sprintf (myPixels->error_str+nc,"\tWidth x Height:    Pixels (%d,%d) TIFF (%u,%u)\n",(int)head->dx,(int)head->dy,(unsigned)width,(unsigned)height);
 			nc += sprintf (myPixels->error_str+nc,"\tSamples per pixel: Pixels (%d) TIFF (%d)\n",(int)1,(int)chans);
 			nc += sprintf (myPixels->error_str+nc,"\tBytes per sample:  Pixels (%d) TIFF (%d)\n",(int)head->bp,(int)bpp);
@@ -1315,15 +1737,12 @@ tsize_t stripSize;
 	}
 
 	if (! (buf = _TIFFmalloc(TIFFStripSize(tiff))) ) {
-		sprintf (myPixels->error_str,"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.",myPixels->ID,TIFFStripSize(tiff));
+		sprintf (myPixels->error_str+strlen(myPixels->error_str),
+			"ConvertTIFF (PixelsID=%llu):  Couldn't allocate %lu bytes for TIFF strip buffer.\n",(unsigned long long)myPixels->ID,TIFFStripSize(tiff));
+		TIFFClose(tiff);
+		freeFileRep (myFile);
 		return (0);
 	}
-
-	convFileRec.FileID         = fileID;
-	convFileRec.isTIFF         = 1;
-	convFileRec.spec.tiff.theZ = theZ;
-	convFileRec.spec.tiff.theC = theC;
-	convFileRec.spec.tiff.theT = theT;
 
 	myPixels->IO_buf = buf;
 	myPixels->IO_buf_off = 0;
@@ -1340,10 +1759,20 @@ tsize_t stripSize;
 	
 	freeFileRep (myFile);
 
-	sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
-	if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
-		fwrite (&convFileRec , sizeof (convertFileRec) , 1 , convFileInfo );
-		fclose (convFileInfo);
+	if (writeRec) {
+		memset(&convRec, 0, sizeof(convertFileRec));
+		convRec.FileID              = (u_int8_t)  fileID;
+		convRec.isTIFF              = (u_int8_t)  1;
+		convRec.spec.tiff.theZ      = (ome_coord) theZ;
+		convRec.spec.tiff.theC      = (ome_coord) theC;
+		convRec.spec.tiff.theT      = (ome_coord) theT;
+		convRec.spec.tiff.dir_index = (u_int32_t) tiffDir;
+	
+		sprintf (convFileInfoPth,"%s.convert",myPixels->path_rep);
+		if ( (convFileInfo = fopen (convFileInfoPth,"a")) ) {
+			fwrite (&convRec , sizeof (convertFileRec) , 1 , convFileInfo );
+			fclose (convFileInfo);
+		}
 	}
 
 	return (nIO);
