@@ -190,6 +190,55 @@ newDoubleScalar(package,value)
                 RETVAL
 
 OME::Matlab::Array
+newNumericScalar(package,value,classID=mxDOUBLE_CLASS)
+        const char *package = NO_INIT;
+        double value
+        mxClassID classID
+        INIT:
+        mxComplexity complexity= mxREAL;
+        mxArray * pArray;
+        void* pr;
+        CODE:
+                pArray = mxCreateNumericMatrix(1,1,classID, complexity);
+                pr = mxGetData(pArray);
+                switch (classID)
+                {
+                    case mxINT8_CLASS:
+                        ((signed char *) pr)[0] = (signed char) value;
+                        break;
+                    case mxUINT8_CLASS:
+                        ((unsigned char *) pr)[0] = (unsigned char) value;
+                        break;
+                    case mxINT16_CLASS:
+                        ((signed short int *) pr)[0] = (signed short int) value;
+                        break;
+                    case mxUINT16_CLASS:
+                        ((unsigned short int *) pr)[0] = (unsigned short int) value;
+                        break;
+                    case mxINT32_CLASS:
+                        ((signed int *) pr)[0] = (signed int) value;
+                        break;
+                    case mxUINT32_CLASS:
+                        ((unsigned int *) pr)[0] = (unsigned int) value;
+                        break;
+                    case mxINT64_CLASS:
+ 						((long long int *) pr)[0] = (long long int) value;
+                    	break;
+                    case mxSINGLE_CLASS:
+                        ((float *) pr)[0] = (float) value;
+                        break;
+                    case mxDOUBLE_CLASS:
+                        ((double *) pr)[0] = (double) value;
+                        break;
+                    default:
+                        croak("cannot call newNumericScalar on a non-numeric/non-logical array");
+                        break;
+                }
+                RETVAL = pArray;
+         OUTPUT:
+                RETVAL
+
+OME::Matlab::Array
 newLogicalScalar(package,value)
         const char *package = NO_INIT;
         mxLogical value
@@ -584,6 +633,9 @@ get(pArray,...)
                     case mxUINT32_CLASS:
                         RETVAL = ((unsigned int *) pr)[index];
                         break;
+                    case mxINT64_CLASS:
+                    	RETVAL = ((long long int *) pr)[index];
+                    	break;
                     case mxSINGLE_CLASS:
                         RETVAL = ((float *) pr)[index];
                         break;
@@ -653,6 +705,9 @@ set(pArray,...)
                     case mxUINT32_CLASS:
                         ((unsigned int *) pr)[index] = (unsigned int) value;
                         break;
+                    case mxINT64_CLASS:
+ 						((long long int *) pr)[index] = (long long int) value;
+                    	break;
                     case mxSINGLE_CLASS:
                         ((float *) pr)[index] = (float) value;
                         break;
@@ -705,6 +760,9 @@ getAll(pArray)
                         case mxUINT32_CLASS:
                             av_push(values,newSViv(*((unsigned int *) pr)++));
                             break;
+                        case mxINT64_CLASS:
+                        	av_push(values,newSViv(*((long long int *) pr)++));
+                        	break;
                         case mxSINGLE_CLASS:
                             av_push(values,newSVnv(*((float *) pr)++));
                             break;
@@ -874,6 +932,24 @@ setAll(pArray,valueref)
                             if (aval != NULL)
                             {
                                 *pr = (unsigned int) SvIV(*aval);
+                            }
+                            pr++;
+                        }
+
+                        break;
+                    }
+                    case mxINT64_CLASS:
+                    {
+                        long long int * pr;
+                        SV** aval;
+
+                        pr = (long long *) mxGetData(pArray);
+                        for (i = 0; i < n; i++)
+                        {
+                            aval = av_fetch(values,i,0);
+                            if (aval != NULL)
+                            {
+                                *pr = (long long int) SvIV(*aval);
                             }
                             pr++;
                         }
