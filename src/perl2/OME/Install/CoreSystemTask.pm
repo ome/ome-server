@@ -410,9 +410,9 @@ sub execute {
 	    	unless (-d $child) {
 				print "  \\_ Creating directory ", BOLD, "\"$child\"", RESET, ".\n";
 				mkdir $child or croak "Unable to create directory \"$child\": $!";
-				fix_ownership($OME_USER, $child)
-					or croak "Failure setting permissions on \"$child\" $!";
 	    	}
+			fix_ownership($OME_USER, $child)
+				or croak "Failure setting permissions on \"$child\" $!";
 		}
     }
 
