@@ -124,14 +124,12 @@ public class PProjectSelectionCanvas extends PCanvas
 		int width = getWidth();
 		System.err.println("width is" +width);
 		Rectangle bounds = getBounds();
-		setBounds(new Rectangle((int)bounds.getX(),
-				   (int)bounds.getY(),width,(int)bounds.getHeight()));
 		Iterator iter = layer.getChildrenIterator();
 		Vector rows = new Vector();
 		Vector row = new Vector();
 		Vector widths = new Vector();
-		int rowWidth  =0;
 		PBounds b;
+		double rowWidth;
 		
 		while (iter.hasNext()) {
 			Object obj = iter.next();
@@ -140,10 +138,9 @@ public class PProjectSelectionCanvas extends PCanvas
 				double labelWidth = pl.getScaledMaxWidth();
 				System.err.println("adding label...");
 				if (x+labelWidth > width) {
-					System.err.println("new row. width is "+rowWidth);
+					System.err.println("new row. width is "+x);
 					rows.add(row);
-					widths.add(new Integer((int)x));
-					rowWidth = 0;
+					widths.add(new Double(x));
 					x =0;
 					row = new Vector();
 				}
@@ -153,21 +150,20 @@ public class PProjectSelectionCanvas extends PCanvas
 			}
 		}
 		rows.add(row);
-		widths.add(new Integer((int)x));
+		widths.add(new Double(x));
 		double rowHeight  = 0;
-		double maxScale=0;
 		double spacing = 0;
 		Iterator iter2;
 		System.err.println("---- laying things out...");
 		for (int i = 0; i < rows.size(); i++) {
 			row = (Vector) rows.elementAt(i);
-			Integer rowW = (Integer) widths.elementAt(i);
-			rowWidth = 	rowW.intValue();
+			Double rowW = (Double) widths.elementAt(i);
+			rowWidth = 	rowW.doubleValue();
 			iter = row.iterator();
 			//  calculate space between items.
 			// leftover is width - rowWidth
 			System.err.println("row "+i+", width is "+rowWidth);
-			int remainder = width-rowWidth;
+			double remainder = width-rowWidth;
 			System.err.println("remainder..... "+remainder);
 			// divide that by n-1 
 			if (row.size() >1)
@@ -186,7 +182,7 @@ public class PProjectSelectionCanvas extends PCanvas
 				b = pl.getGlobalFullBounds();
 				x += pl.getScaledMaxWidth()+spacing;
 				if (pl.getScaledMaxHeight() > rowHeight) 
-					rowHeight=(int) pl.getScaledMaxHeight();
+					rowHeight= pl.getScaledMaxHeight();
 			}
 			y+= rowHeight;
 		}
@@ -269,6 +265,9 @@ public class PProjectSelectionCanvas extends PCanvas
 				if (pLabel.getProject() == proj)
 					pLabel.setRollover(true);
 				else if (p.sharesDatasetsWith(state.getSelectedProject()))
+					pLabel.setActive();
+				else if (state.getSelectedDataset() != null &&
+					p.hasDataset(state.getSelectedDataset()))
 					pLabel.setActive();
 				else if (state.getSelectedProject() == null)
 					pLabel.setNormal();
