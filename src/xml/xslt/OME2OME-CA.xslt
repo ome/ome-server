@@ -2,7 +2,7 @@
 <xsl:transform
 	xmlns:xsl = "http://www.w3.org/1999/XSL/Transform" version = "1.0"
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd"
+	xmlns:OME = "http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd"
 	xmlns:STD = "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
 	xmlns:Bin = "http://www.openmicroscopy.org/XMLschemas/BinaryFile/RC1/BinaryFile.xsd"
 	xmlns = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
@@ -10,11 +10,8 @@
 		<xsl:element name = "OME" namespace = "http://www.openmicroscopy.org/XMLschemas/CA/RC1/CA.xsd">
 			<xsl:attribute name = "xsi:schemaLocation">
 				<xsl:value-of select = "@xsi:schemaLocation"/>
-			</xsl:attribute>
-			<!-- Copy DocumentGroup in the original document -->
-			
+			</xsl:attribute>			
 			<!-- Need to copy STD and AML also -->
-			<xsl:apply-templates select = "OME:DocumentGroup"/>
 			<!-- Deal with the hierarchy -->
 			<xsl:apply-templates select = "OME:Project"/>
 			<xsl:apply-templates select = "OME:Dataset"/>
@@ -36,67 +33,51 @@
 		</xsl:element>
 	</xsl:template>
 
-	<!-- DocumentGroup -->
-	<xsl:template match = "OME:DocumentGroup">
-		<xsl:element name = "DocumentGroup">
-			<xsl:apply-templates select = "OME:Include"/>
-		</xsl:element>
-	</xsl:template>
-	<xsl:template match = "OME:DocumentGroup/OME:Include">
-		<xsl:element name = "Include">
-			<xsl:attribute name = "DocumentID">
-				<xsl:value-of select = "@DocumentID"/>
-			</xsl:attribute>
-			<xsl:attribute name = "href">
-				<xsl:value-of select = "@href"/>
-			</xsl:attribute>
-			<xsl:attribute name = "SHA1">
-				<xsl:value-of select = "@SHA1"/>
-			</xsl:attribute>
-		</xsl:element>
-	</xsl:template>
-
 	<!-- Project -->
 	<xsl:template match = "OME:Project">
 		<xsl:element name = "Project">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ProjectID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Description">
-				<xsl:value-of select = "OME:Description"/>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
+			<xsl:attribute name = "Experimenter">
+				<xsl:value-of select = "OME:ExperimenterRef/@ID"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:ExperimenterRef" mode = "MakeRefs"/>
-			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
+			<xsl:attribute name = "Group">
+				<xsl:value-of select = "OME:GroupRef/@ID"/>
+			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
 	<!-- Dataset -->
 	<xsl:template match = "OME:Dataset">
 		<xsl:element name = "Dataset">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@DatasetID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Description">
-				<xsl:value-of select = "OME:Description"/>
-			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "Locked">
 				<xsl:value-of select = "@Locked"/>
 			</xsl:attribute>
-			<xsl:apply-templates select = "OME:ExperimenterRef" mode = "MakeRefs"/>
-			<xsl:apply-templates select = "OME:GroupRef" mode = "MakeRefs"/>
-			<xsl:apply-templates select = "OME:ProjectRef" mode = "MakeRefs"/>
+			<xsl:attribute name = "Experimenter">
+				<xsl:value-of select = "OME:ExperimenterRef/@ID"/>
+			</xsl:attribute>
+			<xsl:attribute name = "Group">
+				<xsl:value-of select = "OME:GroupRef/@ID"/>
+			</xsl:attribute>
+			<xsl:apply-templates select = "OME:ProjectRef" mode = "CopyRefs"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- Image and the required Dimensions Image attribute -->
 	<xsl:template match = "OME:Image">
 		<xsl:element name = "Image">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ImageID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
@@ -104,12 +85,11 @@
 			<xsl:attribute name = "CreationDate">
 				<xsl:value-of select = "OME:CreationDate"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Description">
-				<xsl:value-of select = "OME:Description"/>
-			</xsl:attribute>
-			<xsl:apply-templates select = "OME:DatasetRef" mode = "MakeRefs"/>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
+			<xsl:apply-templates select = "OME:DatasetRef" mode = "CopyRefs"/>
 			<xsl:element name = "CustomAttributes">
-				<xsl:element name = "Dimensions">
+				<!--
+				<xsl:element name = "Pixels">
 					<xsl:attribute name = "SizeX">
 						<xsl:value-of select = "@SizeX"/>
 					</xsl:attribute>
@@ -132,6 +112,9 @@
 							</xsl:with-param>
 						</xsl:call-template>
 					</xsl:attribute>
+				</xsl:element>
+				-->
+				<xsl:element name = "Dimensions">
 					<xsl:attribute name = "PixelSizeX">
 						<xsl:value-of select = "@PixelSizeX"/>
 					</xsl:attribute>
@@ -152,13 +135,16 @@
 				<xsl:apply-templates select = "OME:GroupRef"/>
 				<xsl:apply-templates select = "OME:DatasetRef"/>
 				<xsl:apply-templates select = "OME:InstrumentRef"/>
+				<xsl:apply-templates select = "OME:ObjectiveRef"/>
 				<xsl:apply-templates select = "OME:ImagingEnvironment"/>
 				<xsl:apply-templates select = "OME:Thumbnail"/>
 				<xsl:apply-templates select = "OME:ChannelInfo"/>
 				<xsl:apply-templates select = "OME:DisplayOptions"/>
 				<xsl:apply-templates select = "OME:StageLabel"/>
 				<xsl:apply-templates select = "OME:PlateRef"/>
+				<!--
 				<xsl:apply-templates select = "OME:Pixels"/>
+				-->
 				<xsl:copy-of select = "OME:Feature"/>
 				<xsl:copy-of select = "OME:CustomAttributes"/>
 			</xsl:element>
@@ -182,11 +168,7 @@
 	<xsl:template match = "OME:Image/OME:InstrumentRef">
 		<xsl:element name = "ImageInstrument">
 			<xsl:apply-templates select = "." mode = "MakeRefs"/>
-			<xsl:apply-templates select = "." mode = "MakeRefs">
-				<xsl:with-param name = "Name">
-					<xsl:text>Objective</xsl:text>
-				</xsl:with-param>
-			</xsl:apply-templates>
+			<xsl:apply-templates select = "../OME:ObjectiveRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
 	<!-- ImagingEnvironment -->
@@ -203,13 +185,12 @@
 			<xsl:attribute name = "Index">
 				<xsl:value-of select = "@Index"/>
 			</xsl:attribute>
+			<!--xsl:apply-templates select = "@ColorDomain" mode = "OptionalAttribute"/-->
 			<xsl:attribute name = "ColorDomain">
 				<xsl:value-of select = "@ColorDomain"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "." mode = "MakeRefs">
-				<xsl:with-param name = "Name">
-					<xsl:text>LogicalChannel</xsl:text>
-				</xsl:with-param>
+				<xsl:with-param name = "Name">LogicalChannel</xsl:with-param>
 				<xsl:with-param name = "ID">
 					<xsl:value-of select = "generate-id(..)"/>
 				</xsl:with-param>
@@ -281,9 +262,6 @@
 			<xsl:apply-templates select = "OME:AuxLightSourceRef" mode = "MakeRefs">
 				<xsl:with-param name = "Name">
 					<xsl:text>AuxLightSource</xsl:text>
-				</xsl:with-param>
-				<xsl:with-param name = "ReferenceTo">
-					<xsl:text>LightSourceID</xsl:text>
 				</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "OME:OTFRef" mode = "MakeRefs"/>
@@ -446,7 +424,7 @@
 	<!--xsl:template match = "OME:Pixels">
 		<xsl:element name = "Pixels">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@PixelsID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Method">
 				<xsl:value-of select = "OME:DerivedFrom/@Method"/>
@@ -464,9 +442,6 @@
 				<xsl:with-param name = "Name">
 					<xsl:text>DerivedFrom</xsl:text>
 				</xsl:with-param>
-				<xsl:with-param name = "ReferenceTo">
-					<xsl:text>PixelsID</xsl:text>
-				</xsl:with-param>
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template-->
@@ -481,7 +456,7 @@
 	<xsl:template match = "OME:Experimenter">
 		<xsl:element name = "Experimenter">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ExperimenterID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "FirstName">
 				<xsl:value-of select = "OME:FirstName"/>
@@ -492,12 +467,8 @@
 			<xsl:attribute name = "Email">
 				<xsl:value-of select = "OME:Email"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Institution">
-				<xsl:value-of select = "OME:Institution"/>
-			</xsl:attribute>
-			<xsl:attribute name = "OMEName">
-				<xsl:value-of select = "OME:OMEName"/>
-			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Institution" mode = "OptionalAttribute"/>
+			<xsl:apply-templates select = "OME:OMEName" mode = "OptionalAttribute"/>
 		</xsl:element>
 		<xsl:apply-templates select = "OME:GroupRef" mode = "MakeMapRefs"/>
 	</xsl:template>
@@ -505,26 +476,16 @@
 	<xsl:template match = "OME:Group">
 		<xsl:element name = "Group">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@GroupID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "OME:Leader" mode = "MakeRefs">
-				<xsl:with-param name = "Name">
-					<xsl:text>Leader</xsl:text>
-				</xsl:with-param>
-				<xsl:with-param name = "ReferenceTo">
-					<xsl:text>ExperimenterID</xsl:text>
-				</xsl:with-param>
+				<xsl:with-param name = "Name">Leader</xsl:with-param>
 			</xsl:apply-templates>
 			<xsl:apply-templates select = "OME:Contact" mode = "MakeRefs">
-				<xsl:with-param name = "Name">
-					<xsl:text>Contact</xsl:text>
-				</xsl:with-param>
-				<xsl:with-param name = "ReferenceTo">
-					<xsl:text>ExperimenterID</xsl:text>
-				</xsl:with-param>
+				<xsl:with-param name = "Name">Contact</xsl:with-param>
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
@@ -532,14 +493,12 @@
 	<xsl:template match = "OME:Experiment">
 		<xsl:element name = "Experiment">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ExperimentID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Type">
 				<xsl:value-of select = "@Type"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Description">
-				<xsl:value-of select = "OME:Description"/>
-			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:ExperimenterRef" mode = "MakeRefs"/>
 		</xsl:element>
 	</xsl:template>
@@ -547,7 +506,7 @@
 	<xsl:template match = "OME:Instrument">
 		<xsl:element name = "Instrument">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@InstrumentID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
 				<xsl:value-of select = "OME:Microscope/@Manufacturer"/>
@@ -572,7 +531,7 @@
 	<xsl:template match = "OME:Instrument/OME:LightSource">
 		<xsl:element name = "LightSource">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@LightSourceID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
 				<xsl:value-of select = "@Manufacturer"/>
@@ -618,9 +577,6 @@
 				<xsl:with-param name = "Name">
 					<xsl:text>Pump</xsl:text>
 				</xsl:with-param>
-				<xsl:with-param name = "ReferenceTo">
-					<xsl:text>LightSourceID</xsl:text>
-				</xsl:with-param>
 			</xsl:apply-templates>
 		</xsl:element>
 	</xsl:template>
@@ -652,7 +608,7 @@
 	<xsl:template match = "OME:Instrument/OME:Detector">
 		<xsl:element name = "Detector">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@DetectorID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
 				<xsl:value-of select = "@Manufacturer"/>
@@ -682,7 +638,7 @@
 	<xsl:template match = "OME:Instrument/OME:Objective">
 		<xsl:element name = "Objective">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ObjectiveID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Manufacturer">
 				<xsl:value-of select = "@Manufacturer"/>
@@ -706,7 +662,7 @@
 	<xsl:template match = "OME:Instrument/OME:Filter">
 		<xsl:element name = "Filter">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@FilterID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "." mode = "MakeParentRef"/>
 		</xsl:element>
@@ -785,7 +741,7 @@
 	<xsl:template match = "OME:Instrument/OME:OTF">
 		<xsl:element name = "OpticalTransferFunction">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@OTFID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "SizeX">
 				<xsl:value-of select = "@SizeX"/>
@@ -808,14 +764,12 @@
 	<xsl:template match = "OME:Screen">
 		<xsl:element name = "Screen">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@ScreenID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
 			</xsl:attribute>
-			<xsl:attribute name = "Description">
-				<xsl:value-of select = "OME:Description"/>
-			</xsl:attribute>
+			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:attribute name = "ExternalReference">
 				<xsl:value-of select = "@ExternRef"/>
 			</xsl:attribute>
@@ -825,7 +779,7 @@
 	<xsl:template match = "OME:Plate">
 		<xsl:element name = "Plate">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "@PlateID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
 			<xsl:attribute name = "Name">
 				<xsl:value-of select = "@Name"/>
@@ -890,23 +844,19 @@
 		<!--
 		By default, $Name is composed of the element name minus its last three letters
 		(i.e. ExperimenterRef element will set $Name to 'Experimenter'.
-		By default, $ReferenceTo is composed of the $Name  with 'ID' tacked on to the end.
 		-->
 		<xsl:param name = "Name" select = "substring(name(),1,string-length(name())-3)"/>
-		<xsl:param name = "ReferenceTo" select = "concat($Name,'ID')"/>
-		<xsl:param name = "ID" select = "@*[name() = $ReferenceTo]"/>
-		<xsl:element name = "Ref">
-			<xsl:attribute name = "Name">
-				<xsl:value-of select = "$Name"/>
-			</xsl:attribute>
+		<xsl:param name = "ID" select = "@ID"/>
+		<xsl:attribute name = "{$Name}">
+			<xsl:value-of select = "$ID"/>
+		</xsl:attribute>
+	</xsl:template>
+	<!-- A utility template to copy elements and their attributes -->
+	<xsl:template match = "*" mode = "CopyRefs">
+		<xsl:element name = "{name()}">
 			<xsl:attribute name = "ID">
-				<xsl:value-of select = "$ID"/>
+				<xsl:value-of select = "@ID"/>
 			</xsl:attribute>
-			<xsl:if test = "@DocumentID">
-				<xsl:attribute name = "DocID">
-					<xsl:value-of select = "@DocumentID"/>
-				</xsl:attribute>
-			</xsl:if>
 		</xsl:element>
 	</xsl:template>
 	<!--
@@ -931,32 +881,28 @@
 		<xsl:param name = "Ref1" select = "$ParentName"/>
 		<xsl:param name = "Ref2" select = "$ReferenceName"/>
 		<xsl:param name = "MapName" select = "concat($ParentName,$ReferenceName)"/>
-		<xsl:param name = "ID1" select = "../@*[name() = concat($Ref1,'ID')]"/>
-		<xsl:param name = "ID2" select = "@*[name() = concat($Ref2,'ID')]"/>
+		<xsl:param name = "ID1" select = "../@ID"/>
+		<xsl:param name = "ID2" select = "@ID"/>
 		<xsl:element name = "{$MapName}">
-			<xsl:element name = "Ref">
-				<xsl:attribute name = "Name">
-					<xsl:value-of select = "$Ref1"/>
-				</xsl:attribute>
-				<xsl:attribute name = "ID">
-					<xsl:value-of select = "$ID1"/>
-				</xsl:attribute>
-			</xsl:element>
-			<xsl:element name = "Ref">
-				<xsl:attribute name = "Name">
-					<xsl:value-of select = "$Ref2"/>
-				</xsl:attribute>
-				<xsl:attribute name = "ID">
-					<xsl:value-of select = "$ID2"/>
-				</xsl:attribute>
-				<xsl:if test = "@DocumentID">
-					<xsl:attribute name = "DocID">
-						<xsl:value-of select = "@DocumentID"/>
-					</xsl:attribute>
-				</xsl:if>
-			</xsl:element>
+			<xsl:attribute name = "{$Ref1}">
+				<xsl:value-of select = "$ID1"/>
+			</xsl:attribute>
+			<xsl:attribute name = "{$Ref2}">
+				<xsl:value-of select = "$ID2"/>
+			</xsl:attribute>
 		</xsl:element>
 	</xsl:template>
+
+	<xsl:template match = "*" mode = "OptionalAttribute">
+		<xsl:param name = "Name" select = "name(.)"/>
+		<xsl:param name = "Value" select = "."/>
+		<xsl:if test = "string-length($Value) > 0">
+			<xsl:attribute name = "{$Name}">
+				<xsl:value-of select = "$Value"/>
+			</xsl:attribute>
+		</xsl:if>
+	</xsl:template>
+
 	<!-- Convert PixelTypes to BitsPerPixel -->
 	<xsl:template name = "PixelType2BitsPerPixel">
 		<xsl:param name = "PixelType" select = "string()"/>
