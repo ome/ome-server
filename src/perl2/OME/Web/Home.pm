@@ -104,21 +104,26 @@ sub __getQuickViewImageData {
 
 		# Content
 		if ($d_icount == 0) {
-			$i_content .= 'No images in this dataset. Click <i>\'Import Files\'</i> below to import some.';
+			$i_content .= $q->span({class => 'ome_quiet'}, 'No images in this dataset. Click <i>\'Import Files\'</i> below to import some.');
 		} else {
+			$i_content .= $q->span({class => 'ome_quiet'}, 'Click upper left quadrant of a thumbnail for image info; click elsewhere to open image viewer.');
+			$i_content .= '<br>';
 			foreach ($d->images()) {
-				$i_content .= $q->a( {
-						href => 'javascript:openPopUpImage(' . $_->id() . ');',
-						alt => 'N/A',
-					}, $q->img({src => OME::Tasks::ImageManager->getThumbURL($_), border => 1}));
+				my $img_id = $_->id();
+				my $img_nm = $_->name();
+				$i_content .= $q->img({src => OME::Tasks::ImageManager->getThumbURL($_), border => 1, usemap => "#ImgMap$img_id"});
+				$i_content .= '<map name="ImgMap'.$img_id.'">';
+				$i_content .= '<area shape="rect" coords="0,0,25,25" Title="Info for '.$img_nm.'" href="serve.pl?Page=OME::Web::DBObjDetail&ID='.$img_id.'&Type=OME::Image">';
+				$i_content .= '<area shape="rect" coords="0,0,50,50" Title="View '.$img_nm.'" href="javascript:openPopUpImage('.$img_id.');">';
+				$i_content .= '</map>';
 				$i_content .= '&nbsp';  # Spacing
 				++$i;	
-				last if ($i == MAX_PREVIEW_THUMBS);
+				$i_content .= $q->a({href => $self->getObjDetailURL( $d ), class => 'ome_quiet'}, "...") and last if ($i == MAX_PREVIEW_THUMBS);
 			}
 		}
 	} else {
 		$i_header .= $q->span({style => 'font-weight: bold;'}, 'No Dataset');
-		$i_content .= 'No dataset is available for preview. Click <i>\'New Dataset\'</i> below to create one.';
+		$i_content .= $q->span({class => 'ome_quiet'}, 'No dataset is available for preview. Click <i>\'New Dataset\'</i> below to create one.');
 	}
 	
 	return ($i_header, $i_content);
@@ -170,7 +175,7 @@ sub __getQuickViewProjectData {
 		}
 	} else {
 		$p_header .= $q->span({style => 'font-weight: bold;'}, 'No Projects');
-		$p_content .= 'The database currently contains no projects. Click <i>\'New Project\'</i> below to create one.';
+		$p_content .= $q->span({class => 'ome_quiet'}, 'The database currently contains no projects. Click <i>\'New Project\'</i> below to create one.');
 	}
 
 	return ($p_header, $p_content);
@@ -220,7 +225,7 @@ sub __getQuickViewDatasetData {
 		}
 	} else {
 		$d_header .= $q->span({style => 'font-weight: bold;'}, 'No Project');
-		$d_content .= 'No project is available for preview. Click <i>\'New Project\'</i> below to create one.';
+		$d_content .= $q->span({class => 'ome_quiet'}, 'No project is available for preview. Click <i>\'New Project\'</i> below to create one.');
 	}
 
 	return ($d_header, $d_content);

@@ -1,1 +1,5 @@
-<a href='javascript: openImage(<TMPL_VAR NAME=id>);' title='View <TMPL_VAR NAME=name>'><img src='<TMPL_VAR NAME=thumb_url>'></a>
+<img src="<TMPL_VAR NAME=thumb_url>" Usemap="#Image<TMPL_VARNAME=id>">
+<map name="Image<TMPL_VARNAME=id>">
+	<area shape="rect" coords="0,0,25,25" Title="Info for <TMPL_VARNAME=name>" href="<TMPL_VARNAME=/obj_detail_url>">
+	<area shape="rect" coords="0,0,50,50" Title="View <TMPL_VARNAME=name>" href="javascript:openImage(<TMPL_VARNAME=id>);">
+</map>

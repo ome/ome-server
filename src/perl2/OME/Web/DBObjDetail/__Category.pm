@@ -62,6 +62,50 @@ use OME::Tasks::CategoryManager;
 use Log::Agent;
 use base qw(OME::Web::DBObjDetail);
 
+sub getPageBody {
+	my $self = shift;
+	my $html = ( $self->_takeAction( ) || '' );
+
+	my $q = $self->CGI();
+	my $obj = $self->_loadObject();
+	my $mode = 'detail';
+	
+	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
+	
+	#
+	# basically do $self->Renderer()->render($obj, $mode) with a twist by filling
+	# extra template variable
+	#
+	
+	# load a template
+	my ($tmpl, %tmpl_data);
+	my $tmpl_path = $self->Renderer()->_findTemplate( $obj, $mode );
+	$tmpl_path = $self->Session()->Configuration()->template_dir().'/generic_'.$mode.'.tmpl'
+		unless $tmpl_path;
+	die "Could not find a specialized or generic template to match Object $obj with mode $mode"
+		unless -e $tmpl_path;
+	$tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
+
+	# get data for it	
+	%tmpl_data = $self->Renderer()->_populate_object_in_template( $obj, $tmpl, undef);
+
+	# fill template variable if category contains atleast one image
+	my @imgs_in_category = OME::Tasks::CategoryManager->getImagesInCategory($obj);
+	$tmpl_data{'imgs_in_category'} = scalar @imgs_in_category if ( scalar @imgs_in_category > 0);
+
+	# populate template
+	$tmpl->param( %tmpl_data );
+	
+	$html .= $q->startform( { -name => $self->{ form_name } } ).
+	           $q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
+	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
+	           $q->hidden({-name => 'action', -default => ''}).
+	           $tmpl->output().
+	           $q->endform();
+	return ('HTML', $html);
+}
+
+
 sub _takeAction {
 	my $self = shift;
 	my $obj = $self->_loadObject();
@@ -84,7 +128,7 @@ sub _takeAction {
 		my $image = $factory->loadObject( 'OME::Image', $image_id_to_declassify )
 			or die "Couldn't load image (id=$image_id_to_declassify)";
 		OME::Tasks::CategoryManager->declassifyImage( $image, $obj );
-		$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' )."<br>";
+		$message .= "Declassified image ".$self->Renderer()->render( $image, 'ref' ).".<br>";
 	}
 	
 	my $image_ids = $q->param( 'images_to_categorize' );
