@@ -120,6 +120,7 @@ public class ConnectionWorker extends SwingWorker {
 			Class.forName("org.openmicroscopy.vis.ome.CLink");
 			Class.forName("org.openmicroscopy.vis.ome.CChainExecution");
 			Class.forName("org.openmicroscopy.vis.ome.CDataset");
+			Class.forName("org.openmicroscopy.vis.ome.CProject");
 			Class.forName("org.openmicroscopy.vis.ome.CImage");
 		}
 		catch (ClassNotFoundException e) {
