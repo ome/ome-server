@@ -67,6 +67,7 @@ use Time::HiRes qw(gettimeofday tv_interval);
 sub execute {
     my ($self,$dependence,$target) = @_;
 	my $mex = $self->getModuleExecution();
+	my $dataset = $target; # target should always be a dataset
 	
 	# open connection to matlab
 	my $matlab_engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm")
@@ -77,12 +78,13 @@ sub execute {
 	logdbg "debug", "Matlab src dir is $matlab_src_dir\n".
 	$engine->eval("addpath(genpath('$matlab_src_dir'));");
 
-# IMPLEMENT & TEST ME
 	# Compile Signature matrix and place into matlab for input
 	my $start_time = [gettimeofday()];
-# FIXME: implement compile_signature_matrix & figure out params
-	my $signature_matrix = OME::Util::Classifier->compile_signature_matrix( @params );
-	$signature_matrix->makePersistent();
+	my @images = $dataset->images( );
+	@images = sort {$a->id <=> $b->id} @images;
+	my $actual_inputs_list = $self->getActualInputs( 'SignatureVectors' );
+    my @input_mexes = map { $_->input_module_execution() } @$actual_inputs;
+	my $signature_matrix = OME::Util::Classifier->compile_signature_matrix( \@input_mexes, \@images );
 	$matlab_engine->eval("global signature_matrix");
 	$matlab_engine->putVariable( "signature_matrix", $signature_matrix);
 	$mex->attribute_db_time(tv_interval($start_time));
