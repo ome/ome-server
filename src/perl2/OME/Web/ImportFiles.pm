@@ -164,7 +164,12 @@ sub __getDatasetForm {
 	my @user_datasets = $d_manager->getUserDatasets();
 	my @user_dataset_names;
 
-	foreach (@user_datasets) { push (@user_dataset_names, $_->name()); }
+	foreach (@user_datasets) {
+		my $d_name = $_->name();
+		push (@user_dataset_names, $d_name)
+			unless ($d_name eq 'Dummy import dataset' or
+			        $d_name eq 'ImportSet');
+	}
 
 	my $metadata = $q->Tr({-bgcolor => '#FFFFFF'}, [
 		# ROW

@@ -271,7 +271,9 @@ sub __makeDatasetListings {
 	foreach my $dataset ($factory->findObjects("OME::Dataset")) {
 		my $add_this_id = 1;
 
-		unless ($dataset->name() eq 'Dummy import dataset') {  # Dummy import datasets... joy.  
+		unless ($dataset->name() eq 'Dummy import dataset' or
+		        $dataset->name() eq 'ImportSet'
+			) {  # Dummy import datasets... joy.  
 			foreach my $id_in_project (@$in_project) {
 				if ($dataset->id() == $id_in_project) { $add_this_id = 0 }
 			}
