@@ -241,6 +241,14 @@ sub processDOM {
 		}
 	}
 
+	# set default thumbnail for all imported pixels
+	foreach my $image ( $importDataset->images() ) {
+		foreach my $pixels ($image->pixels() ) {
+			OME::Tasks::PixelsManager->saveThumb( $pixels );
+		}
+	}
+
+
 	# commit changes made to database structure by $typeImporter if we made it
 	# this far
     $self->{session}->commitTransaction();
