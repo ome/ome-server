@@ -1467,7 +1467,7 @@ int i;
 		}
 
 		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
-		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
+		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		sCharP = thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1520,7 +1520,7 @@ int i;
 		}
 
 		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
-		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
+		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		sShrtP = (short *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1573,7 +1573,7 @@ int i;
 		}
 
 		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
-		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
+		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		sLongP = (long *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1626,7 +1626,7 @@ int i;
 		}
 
 		/* FIXME:  When min = 0, logOffset should be something other than 1.0, I think. */
-		logOffset = min > 0 ? 0 : -min > 0 ? -min : 1.0;
+		logOffset = min > 0 ? 0 : -min > 0 ? -min + 1.0 : 1.0;
 
 		floatP = (float *) thePix;
 		/* Second pass: sum_log_i, plane histogram */
@@ -1680,7 +1680,7 @@ ome_coord z;
 stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 size_t plane_offset,stack_offset;
-register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0,nPix;
+register float geomean=0.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_log_i=0.0,sum_xi=0.0,sum_yi=0.0,sum_zi=0.0,nPix;
 int i;
 
 	if (!myPixels) return (0);
@@ -1704,9 +1704,10 @@ int i;
 		sum_i     += planeInfoP->sum_i;
 		sum_i2    += planeInfoP->sum_i2;
 		sum_log_i += planeInfoP->sum_log_i;
+		geomean   += planeInfoP->geomean;
 		if (planeInfoP->min < min) min = planeInfoP->min;
 		if (planeInfoP->max > max) max = planeInfoP->max;
-		
+
 		/* sum the plane histogram vectors to get the stack vector */
 		for (i = 0; i<NUM_BINS; i++)
 			myStackInfo.hist[i] += planeInfoP->hist[i];
@@ -1724,7 +1725,9 @@ int i;
 	myStackInfo.max       = max;
 
 	myStackInfo.mean = sum_i / nPix;
-	myStackInfo.geomean = exp ( sum_log_i / nPix ) - logOffset;
+	
+	/* Yup, readem and weep.  Its an arithmetic average of geomeans */
+	myStackInfo.geomean /= dz;
 
 	/* sigma using the amean (classical) */
 	myStackInfo.sigma = (float) sqrt (fabs (
