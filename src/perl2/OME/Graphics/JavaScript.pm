@@ -180,18 +180,11 @@ OME::Graphics::JavaScript::Layer::*->{JSdefs}
 
 OME::Graphics::JavaScript::Layer->{name}
 
-=head1 Functions
-
-L<"Externaly referenced">, L<"Intended to be internally referenced">
-
-=head2 Externally referenced
-
-
-=over 4
+=head1 Externally referenced functions
 
 X<new()>
 
-=item new()
+=head2 new()
 
 =over 4
 
@@ -265,7 +258,7 @@ sub new {
 
 X<AddLayer()>
 
-=item AddLayer()
+=head2 AddLayer()
 
 =over 4
 
@@ -314,7 +307,7 @@ my $i;
 
 X<JavaScript()>
 
-=item JavaScript()
+=head2 JavaScript()
 
 =over 4
 
@@ -355,7 +348,7 @@ my $JS;
 
 X<JSobjectDefs()>
 
-=item JSobjectDefs()
+=head2 JSobjectDefs()
 
 =over 4
 
@@ -406,7 +399,7 @@ my $JSdefs = $JSobject;
 
 X<Form()>
 
-=item Form()
+=head2 Form()
 
 =over 4
 
@@ -459,7 +452,7 @@ ENDFORM
 
 X<JSinstance()>
 
-=item JSinstance()
+=head2 JSinstance()
 
 =over 4
 
@@ -510,7 +503,7 @@ my $instance;
 
 X<JSref()>
 
-=item JSref()
+=head2 JSref()
 
 =over 4
 
@@ -540,13 +533,13 @@ sub JSref {
 
 =pod
 
-=head2 Intended to be internally referenced
+=head1 Internally referenced functions
 
 L<"JSlayersInstances">, L<"HTMLlayersDIVs">, L<"DrawLayers">
 
 X<JSlayersInstances()>
 
-=item JSlayersInstances()
+=head2 JSlayersInstances()
 
 =over 4
 
@@ -585,7 +578,7 @@ my $JS;
 
 X<HTMLlayersDIVs()>
 
-=item HTMLlayersDIVs()
+=head2 HTMLlayersDIVs()
 
 =over 4
 
@@ -624,7 +617,7 @@ my $HTML;
 
 X<DrawLayers()>
 
-=item DrawLayers()
+=head2 DrawLayers()
 
 =over 4
 
