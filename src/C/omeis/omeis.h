@@ -221,6 +221,8 @@ ScalePixels (
 
 void fixChannelSpec (PixelsRep *myPixels, channelSpecType *chSpec);
 
+int GetFileInfo (FileRep *myFile);
+
 char *get_param (char **cgivars, char *param);
 
 char *get_lc_param (char **cgivars, char *param);

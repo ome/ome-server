@@ -57,7 +57,7 @@ Pix *NewPix      (char* path,
 		fprintf (stderr,"Pix->NewPix:  File path not set.\n");
 		return (NULL);
 	}
-	
+
 	if ( ! (bp == 1 || bp == 2 || bp == 4) )
 	{
 		fprintf (stderr,"Pix->NewPix:  Bytes per pixel must be 1,2, or 4.  Got %d\n",bp);

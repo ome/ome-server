@@ -86,6 +86,7 @@ get_method_by_name(char * m_name)
 	if (strcmp(m_name, "ConvertTIFF") == 0) return M_CONVERTTIFF;
 	if (strcmp(m_name, "ConvertRows") == 0) return M_CONVERTROWS;
 	if (strcmp(m_name, "Composite") == 0) return M_COMPOSITE;
+	if (strcmp(m_name, "GetThumb") == 0) return M_GETTHUMB;
 
 	fprintf(stderr, "Unknown method '%s'.\n", m_name);
 	return 0;  /* Unknown method */

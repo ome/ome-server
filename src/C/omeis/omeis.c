@@ -1673,13 +1673,14 @@ size_t nIO;
 FILE *infile;
 
 	if (  !(myFile = NewFile(filename, size )) ) return 0;
+	ID = myFile->ID;
 
     infile = openInputFile(filename,isLocalFile);
 
     if (infile) {
         nIO = fread (myFile->file_buf,1,size,infile);
         if (nIO != size) {
-            fprintf (stderr,"Could finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
+            fprintf (stderr,"Couldn't finish writing uploaded file %s (ID=%llu).  Wrote %lu, expected %lu\n",
                      filename,ID,(unsigned long)nIO,(unsigned long)size);
             DeleteFile (myFile);
 			freeFileRep (myFile);
@@ -1687,7 +1688,6 @@ FILE *infile;
     }
 
 	FinishFile (myFile);
-	ID = myFile->ID;
 	freeFileRep (myFile);
 	return (ID);
 }
@@ -1738,7 +1738,7 @@ size_t ConvertTIFF (PixelsRep *myPixels, OID fileID, ome_coord theZ, ome_coord t
 pixHeader *head;
 FileRep *myFile;
 char file_path[MAXPATHLEN],bp;
-unsigned long nIO, nOut;
+unsigned long nIO=0, nOut;
 off_t pix_offset;
 size_t nPix;
 convertFileRec convFileRec;
@@ -1780,7 +1780,8 @@ tsize_t stripSize;
 	TIFFGetField(tiff, TIFFTAG_PLANARCONFIG, &pc);
 
 	bpp /= 8;
-	if (width != head->dx || height != head->dy || chans > 1 || bpp != head->bp ||
+
+	if (width != (uint32)(head->dx) || height != (uint32)(head->dy) || chans > 1 || bpp != (uint16)(head->bp) ||
 		pc != PLANARCONFIG_CONTIG ) {
 			TIFFClose(tiff);
 			fprintf (stderr,"ConvertTIFF:  TIFF <-> Pixels mismatch.\n");
@@ -1831,11 +1832,11 @@ tsize_t stripSize;
   GetArchive (PixelsRep myPixels)
   Collects all the files that were used to generate the Pixels (if any)
   makes a tar/gz or zip archive of them in a file with the same filepath as the pixels, with a .tgz extension.
-*/
 static
 int GetArchive (PixelsRep myPixels, char *format) {
 	return (0);
 }
+*/
 
 void HTTP_DoError (char *method,char *errMsg) {
 /*
@@ -1873,7 +1874,6 @@ dispatch (char **param)
 	off_t file_offset=0;
 	char error_str[256];
 	unsigned char isLocalFile;
-	unsigned char file_md[OME_DIGEST_LENGTH];
 	char *dims;
 	int isSigned,isFloat;
 	int numInts,numX,numY,numZ,numC,numT,numB;
@@ -1885,9 +1885,9 @@ dispatch (char **param)
 	unsigned long length;
 	OID fileID;
 	struct stat fStat;
-	FILE *fInfo;
+	FILE *file;
 	char file_path[MAXPATHLEN];
-	char file_name[MAXNAMELEN];
+	char buf[4096];
 	int fd;
 	char *sh_mmap;
 	
@@ -2056,7 +2056,7 @@ char **cgivars=param;
 		case M_GETPLANESTATS:
 			if (!ID) return (-1);
 		
-			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -2093,7 +2093,7 @@ char **cgivars=param;
 		case M_GETSTACKSTATS:
 			if (!ID) return (-1);
 		
-			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
+			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				return (-1);
@@ -2151,7 +2151,7 @@ char **cgivars=param;
 				sscanf (theParam,"%llu",&fileID);
 
 			if (ID) {
-				if (! (thePixels = GetPixelsRep (ID,'i',iam_BigEndian)) ) {
+				if (! (thePixels = GetPixelsRep (ID,'i',bigEndian())) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
@@ -2371,13 +2371,41 @@ char **cgivars=param;
 					HTTP_DoError (method,"Parameters theZ, and theT must be specified for the composite method." );
 					return (-1);
 				}
-				if (! (thePixels = GetPixelsRep (ID,'r',bigEndian)) ) {
+				if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
 					if (errno) HTTP_DoError (method,strerror( errno ) );
 					else  HTTP_DoError (method,"Access control error - check error log for details" );
 					return (-1);
 				}
 				
 				DoComposite (thePixels, theZ, theT, param);
+			break;
+			
+			case M_GETTHUMB:
+				strcpy (file_path,"Pixels/");
+				if (! getRepPath (ID,file_path,0)) {
+					sprintf (error_str,"Could not get repository path for PixelsID=%llu",ID);
+					HTTP_DoError (method,error_str);
+					return (-1);
+				}
+				strcat (file_path,".thumb");
+
+				if ( stat (file_path,&fStat) != 0 ) {
+					sprintf (error_str,"Could not get information for thumbnail at %s",file_path);
+					HTTP_DoError (method,error_str);
+					return (-1);
+				}
+
+				if ( !(file=fopen(file_path, "r")) ) {
+					sprintf (error_str,"Could not get information for thumbnail at %s",file_path);
+					HTTP_DoError (method,error_str);
+					return (-1);
+				}
+
+				HTTP_ResultType ("image/jpeg");
+				while ((nIO = fread(buf,1,sizeof(buf),file)) > 0)
+					if ( fwrite(buf,nIO,1,stdout ) != 1) break;
+				fclose(file); 
+
 			break;
 	} /* END case (method) */
 
@@ -2460,10 +2488,12 @@ char **cgivars=param;
             }
 		} else rorw = 'r';
 
-		if (m_val == M_SETROI || m_val == M_GETROI) {
-			HTTP_DoError (method,"ROI Parameter missing");
+		if ( !(ROI = get_param (param,"ROI")) ) {
+			sprintf (error_str,"ROI Parameter required for the %s method",method);
+			HTTP_DoError (method,error_str);
 			return (-1);
 		}
+
 		numInts = sscanf (ROI,"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",&x0,&y0,&z0,&c0,&t0,&x1,&y1,&z1,&c1,&t1);
 		if (numInts < 10) {
 			HTTP_DoError (method,"ROI improperly formed.  Expected x0,y0,z0,c0,t0,x1,y1,z1,c1,t1");
@@ -2497,7 +2527,8 @@ char **cgivars=param;
 }
 
 static
-void usage (int argc,char **argv) {
+void usage (void) {
+
 	fprintf (stderr,"Bad usage.  Missing parameters.\n");
 }
 
@@ -2515,7 +2546,7 @@ char **in_params;
 	if( !in_params ) {
 		in_params = getcgivars() ;
 		if( !in_params ) {
-			usage(argc,argv) ;
+			usage() ;
 			exit (-1) ;
 		} else	isCGI = 1 ;
 	} else	isCGI = 0 ;

@@ -704,7 +704,6 @@ sub install_module {
     $logfile = *STDERR unless ref ($logfile) eq 'GLOB';
 
     chdir ($path) or croak "Unable to chdir into \"$path\". $!";
-
     my @output = `make install 2>&1`;
 
     if ($? == 0) {

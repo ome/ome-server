@@ -81,4 +81,5 @@ get_method_by_name(char * m_name);
 #define M_CONVERTTIFF   55
 #define M_CONVERTROWS   56
 #define M_COMPOSITE     57
+#define M_GETTHUMB      58
 
