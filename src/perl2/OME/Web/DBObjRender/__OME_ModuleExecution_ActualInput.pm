@@ -104,7 +104,7 @@ sub getRelationAccessors {
 	push( @$names,          $name);
 	push( @$call_as_scalar, 1);
 
-	my $iterator = OME::Web::DBObjRender::Iterator->new( 
+	my $iterator = OME::Web::DBObjRender::RelationIterator->new( 
 		$objects, $methods, $params, $return_types, $names, $call_as_scalar );
 	return $iterator;
 }
