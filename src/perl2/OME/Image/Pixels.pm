@@ -274,6 +274,18 @@ sub convertPlane {
     $self->setPlane($buf,$z,$c,$t,$bigEndian);
 }
 
+=head2 convertPlaneFromTIFF
+
+	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t);
+
+Fills in a plane in the pixels file from another file, which is
+assumed to be in the TIFF format.  The TIFF is assumed to contain
+exactly one plane of pixels.
+
+=cut
+
+sub convertPlaneFromTIFF { abstract }
+
 =head2 convertRows
 
 	$pixels->convertRows($file,$offset,$y,$numRows,$z,$c,$t,$bigEndian);

@@ -456,6 +456,25 @@ defaults to network order (big-endian).
 
 # inherit sub convertPlane
 
+=head2 convertPlaneFromTIFF
+
+	$pixels->convertPlaneFromTIFF($tiffFile,$z,$c,$t);
+
+Fills in a plane in the pixels file from another file, which is
+assumed to be in the TIFF format.  The TIFF is assumed to contain
+exactly one plane of pixels.
+
+=cut
+
+sub convertPlaneFromTIFF {
+    my ($self,$tiffFile,$z,$c,$t) = @_;
+    die "Pixels are read-only" if $self->[FINISHED];
+    die "Only OME::LocalFile TIFF's are currently supported"
+      unless UNIVERSAL::isa($tiffFile,"OME::LocalFile");
+    my $pix = $self->[PIX];
+    $pix->TIFF2Plane($tiffFile->getFilename(),$z,$c,$t);
+}
+
 =head2 convertRows
 
 	$pixels->convertRows($file,$offset,$y,$numRows,$z,$c,$t,$bigEndian);
