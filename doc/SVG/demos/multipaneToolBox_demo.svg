@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+    "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd" [
+    <!ATTLIST svg
+              xmlns:a3 CDATA #IMPLIED
+              a3:scriptImplementation CDATA #IMPLIED>
+    <!ATTLIST script
+              a3:scriptImplementation CDATA #IMPLIED>
+]>
+<svg xml:space="preserve" onload="init(evt)"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:a3="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+     a3:scriptImplementation="Adobe">
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/widget.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/toolBox.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/multipaneToolBox.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/popupList.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"
+            xlink:href="../../../src/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
+    <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
+		var multiToolBox;
+		var layerPopupList
+		var azap = new AntiZoomAndPan();
+
+		function init(e) {
+			if ( window.svgDocument == null )
+				svgDocument = e.ownerDocument;
+
+            var controls  = svgDocument.getElementById("controls");
+
+			multiToolBox = new multipaneToolBox(
+				160, 30, 180, 150, null, null, "<g/>"
+			);
+			multiToolBox.setLabel(90,12," ");
+			multiToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+			multiToolBox.realize(controls);
+			multiToolBox.updateLabel(true);
+
+			var layerNames = new Array("Info", "Foo")
+			for(i in layerNames )
+				multiToolBox.addLayerText(
+					svgDocument.getElementById( "text"+layerNames[i] ).firstChild.data,
+					layerNames[i]
+				);
+
+			multiToolBox.addLayerText(
+				svgDocument.getElementById( "textBar" ).firstChild.data,
+				"Bar" 
+			);
+			
+			multiToolBox.addLayer( null, "Blank" );
+		
+			var layerIndex = multiToolBox.getLayerIndexes();
+			
+			layerPopupList = new popupList(
+				0, 0, layerIndex, updateLayer );
+			layerPopupList.realize( multiToolBox.getMenuBar() );
+			setTimeout( "layerPopupList.setSelection(0)", 0);
+			
+            azap.appendNode(controls);
+        }
+		function updateLayer(item) {
+			var itemList = layerPopupList.getItemList();
+			multiToolBox.changeLayer( itemList[item] );
+		}		
+    ]]></script>
+	<defs>
+		<text id="textInfo"><![CDATA[
+			<g>
+				<rect width="200" height="50" fill="none" stroke="black"	stroke-width="2"/>
+				<rect width="200" height="50" fill="ghostwhite" opacity="0.5"/>
+				<text y="1em">Information:</text>
+				<text id="zLabel" x="30" y="2em">z-value is ?</text>
+				<text id="tLabel" x="30" y="3em">t-value is ?</text>
+			</g>
+		]]></text>
+		<text id="textFoo"><![CDATA[
+			<g>
+				<rect width="270" height="15" fill="magenta" opacity="0.5"/>
+				<text x="5" y="1em">This is Pane Foo. It is very long and very narrow.</text>
+			</g>
+		]]></text>
+		<text id="textBar"><![CDATA[
+			<g>
+				<rect width="100" height="20" fill="forestgreen" opacity="0.5"/>
+				<text x="5" y="12">This is Pane Bar</text>
+			</g>
+		]]></text>
+	</defs>
+    <g id="controls">
+    </g>
+</svg>
