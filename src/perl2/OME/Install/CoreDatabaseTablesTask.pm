@@ -506,8 +506,7 @@ PRINT
     my $session = $manager->createSession($OME_EXPER->{OMEName}, $password);
 
     $ENVIRONMENT->ome_exper($OME_EXPER);
-
-    print "Called commitTransaction.  returning\n";
+    
     return ($session);
 }
 
