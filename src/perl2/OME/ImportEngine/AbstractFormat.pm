@@ -47,7 +47,6 @@ our $VERSION = 2.000_000;
 
 use fields qw(_session _module_execution);
 use File::Basename;
-use OME::ImportExport::Params;
 
 =head1 CONTRACT
 
@@ -80,8 +79,6 @@ sub new {
     $self->{_session} = $session;
     $self->{_module_execution} = $module_execution;
     my %paramHash;
-    $self->{_params} = new OME::ImportExport::Params(\%paramHash);
-    #$self->{_params} = new OME::ImportExport::Params();
 
     bless $self, $class;
     return $self;
@@ -214,18 +211,6 @@ C<new> method calls its superclass C<new> method.
 sub Session { return shift->{_session}; }
 
 
-=head2 Params
-
-    my $params = $this->Params();
-
-Returns the Params object created for this image. This object holds various
-parameters created, discovered , or calculated for this image.
-
-=cut
-
-sub Params { return shift->{_params}; }
-
-
 =head2 newImage(initialAttributes)
 
 Calls the session's Factory to create a new image object. Those attributes
@@ -234,7 +219,7 @@ that are known before the import are recorded in the new image.
 =cut
 
 sub newImage {
-    my ($self, $session, $params) = @_;
+    my ($self, $session, $fn) = @_;
 
     my $config = $session->Factory()->loadObject("OME::Configuration", 1);
     my $guid = $config->mac_address;
@@ -244,7 +229,7 @@ sub newImage {
     my $group_id = defined $user_group? $user_group->id(): undef;
 
 
-    my $recordData = {'name' => $params->oname(),
+    my $recordData = {'name' => $fn,
 		      'image_guid' => $guid,
 		      'description' => "",
 		      'experimenter_id' => $experimenter_id,
