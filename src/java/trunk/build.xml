@@ -12,6 +12,9 @@
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
+    <copy todir="${build}">
+       <fileset dir="${src}" excludes="**/*.java"/>
+    </copy>
 
   </target>
 
