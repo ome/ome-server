@@ -37,6 +37,7 @@ use Getopt::Long;
 use lib qw(src/perl2);
 use Carp;
 use English;
+use Text::Wrap;
 
 # OME Modules
 require OME::Install::PreInstallTask;
@@ -47,8 +48,8 @@ require OME::Install::PreInstallTask;
 
 # Main task queue
 my @tasks = qw(
-    OME::Install::CoreSystemTask
     OME::Install::LibraryTask
+    OME::Install::CoreSystemTask
     OME::Install::PerlModuleTask
     OME::Install::CoreDatabaseTablesTask
     OME::Install::ApacheConfigTask
@@ -62,17 +63,24 @@ my @tasks_done = ();
 #*********
 
 sub run_tasks {
+	print wrap("", "", "\nThe OME installation system requires the Storable and Term::ReadKey modules (both included in Perl versions 5.8.0 and higher). The system will now check for the existance of those packages and install them if needed. \n\nWould you like to continue ? [y/n]: ");
+	my $y_or_n = <STDIN>;
+	chomp $y_or_n;
+	exit (0) unless (lc($y_or_n) eq 'y');
+
+	print "\n";  # Spacing
+
     # PreInstall
     OME::Install::PreInstallTask::execute();
 
     # Run each task and fill our done stack
     while (my $task = shift @tasks) {
-	eval "require $task";
-	croak "\n\nErrors loading module: $@\n" if $@;  # Really only for debugging purposes
-	$task .= "::execute()";
-	eval $task;
-	croak "\n\nErrors executing task: $@\n" if $@;  # Ditto as above
-	push (@tasks_done, $task);
+		eval "require $task";
+		croak "\n\nErrors loading module: $@\n" if $@;  # Really only for debugging purposes
+		$task .= "::execute()";
+		eval $task;
+		croak "\n\nErrors executing task: $@\n" if $@;  # Ditto as above
+		push (@tasks_done, $task);
     }
 
     return 1;
@@ -82,7 +90,7 @@ sub restore_env {
     my $env_file = shift;
 	require OME::Install::Environment;
 
-    ($env_file and -e $env_file) or usage ("Error: Unable to locate Environment file \"$env_file\".\n\n");
+    ($env_file and -e $env_file) or usage ("Unable to locate Environment file \"$env_file\".");
 
     # Restore our singleton from disk
     OME::Install::Environment::restore_from ($env_file);
@@ -94,7 +102,7 @@ sub usage {
     my $error = shift;
     my $usage = "";
 
-    $usage = $error if $error; 
+    $usage = "**** ERROR: $error\n\n" if $error; 
     $usage .= <<USAGE;
 OME install script. Bootstraps the environment and database as well as 
 being able to run upgrades and sanity checks on a current installation.
@@ -144,10 +152,7 @@ GetOptions ("f|env-file=s" => \$env_file,   # Environment file
 		);
 
 # Root check
-unless ($EUID == 0) {
-	print STDERR "You must be root (UID 0) in order to install OME.\n";
-	exit(1);
-}
+usage ("You must be root (UID 0) in order to install OME.") unless $EUID == 0;
 
 usage () if $usage;
 
