@@ -54,6 +54,10 @@
 **       mapkit.c. It can dynamically grow from initialize size of 1024. This is
 **       expected to improve performance drastically for larger images and images
 **       with higher quantisations.
+**
+** Sep 20 04 - T. Macura : ++ precision, all floats replaced with doubles
+**
+**
 */
 
 #include <math.h>
@@ -68,50 +72,49 @@
 #define SIGN(x,y) ((y)<0 ? -fabs(x) : fabs(x))
 #define SWAP(a,b) {y=(a);(a)=(b);(b)=y;}
 
-float f1_asm (float **P, int Ng);
-float f2_contrast (float **P, int Ng);
-float f3_corr (float **P, int Ng);
-float f4_var (float **P, int Ng);
-float f5_idm (float **P, int Ng);
-float f6_savg (float **P, int Ng);
-float f7_svar (float **P, int Ng, float S);
-float f8_sentropy (float **P, int Ng);
-float f9_entropy (float **P, int Ng);
-float f10_dvar (float **P, int Ng);
-float f11_dentropy (float **P, int Ng);
-float f12_icorr (float **P, int Ng);
-float f13_icorr (float **P, int Ng);
-float f14_maxcorr (float **P, int Ng);
+double f1_asm (double **P, int Ng);
+double f2_contrast (double **P, int Ng);
+double f3_corr (double **P, int Ng);
+double f4_var (double **P, int Ng);
+double f5_idm (double **P, int Ng);
+double f6_savg (double **P, int Ng);
+double f7_svar (double **P, int Ng, double S);
+double f8_sentropy (double **P, int Ng);
+double f9_entropy (double **P, int Ng);
+double f10_dvar (double **P, int Ng);
+double f11_dentropy (double **P, int Ng);
+double f12_icorr (double **P, int Ng);
+double f13_icorr (double **P, int Ng);
+double f14_maxcorr (double **P, int Ng);
 
 /* support functions to compute f14_maxcorr */
 void mkbalanced (), reduction (), simplesrt ();
 int hessenberg ();
 
-float *allocate_vector (int nl, int nh);
-float **allocate_matrix (int nrl, int nrh, int ncl, int nch);
+double *allocate_vector (int nl, int nh);
+double **allocate_matrix (int nrl, int nrh, int ncl, int nch);
 
-float** CoOcMat_Angle_0   (int distance, unsigned char **grays,
+double** CoOcMat_Angle_0   (int distance, unsigned char **grays,
 						   int rows, int cols, map_ii* tone);
-float** CoOcMat_Angle_45  (int distance, unsigned char **grays,
+double** CoOcMat_Angle_45  (int distance, unsigned char **grays,
 						   int rows, int cols, map_ii* tone);
-float** CoOcMat_Angle_90  (int distance, unsigned char **grays,
+double** CoOcMat_Angle_90  (int distance, unsigned char **grays,
 						   int rows, int cols, map_ii* tone);
-float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_135 (int distance, unsigned char **grays,
 						   int rows, int cols, map_ii* tone);
-#define MAPKIT_DEBUG;
-
+						   
 TEXTURE * Extract_Texture_Features(int distance, int angle, 
 		 		register unsigned char **grays, int rows, int cols, int max_val)  
 {
 	map_ii tone; /* hash DataStructure from mapkit.c/h key=int value=int */
 	map_ii_element* tone_array;
 	int row, col;
-	float **P_matrix;
+	double **P_matrix;
 	TEXTURE *Texture;
 	int i;
 	mapkit_size_t tones = 1024;
 	Texture = (TEXTURE *) calloc(1,sizeof(TEXTURE));
-	if(!Texture) {
+	if (!Texture) {
 		printf("\nERROR in TEXTURE structure allocate\n");
 		exit(1);
 	}
@@ -169,7 +172,7 @@ TEXTURE * Extract_Texture_Features(int distance, int angle,
 } 
 
 /* Compute gray-tone spatial dependence matrix */
-float** CoOcMat_Angle_0 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_0 (int distance, unsigned char **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
@@ -178,7 +181,7 @@ float** CoOcMat_Angle_0 (int distance, unsigned char **grays,
 	int count=0; /* normalizing factor */
 	int tones = tone->used;
 	
-	float** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tones, 0, tones);
 	
 	/* zero out matrix */
 	for (itone = 0; itone < tones; ++itone)
@@ -209,7 +212,7 @@ float** CoOcMat_Angle_0 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-float** CoOcMat_Angle_90 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_90 (int distance, unsigned char **grays,
 						 int rows, int cols, map_ii*tone)
 {
 	int d = distance;
@@ -218,7 +221,7 @@ float** CoOcMat_Angle_90 (int distance, unsigned char **grays,
 	int count=0; /* normalizing factor */
 	int tones = tone->used;
 	
-	float** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tones, 0, tones);
 	
 	/* zero out matrix */
 	for (itone = 0; itone < tones; ++itone)
@@ -249,7 +252,7 @@ float** CoOcMat_Angle_90 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-float** CoOcMat_Angle_45 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_45 (int distance, unsigned char **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
@@ -258,7 +261,7 @@ float** CoOcMat_Angle_45 (int distance, unsigned char **grays,
 	int count=0; /* normalizing factor */
 	int tones = tone->used;
 	
-	float** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tones, 0, tones);
 	
 	/* zero out matrix */
 	for (itone = 0; itone < tones; ++itone)
@@ -289,7 +292,7 @@ float** CoOcMat_Angle_45 (int distance, unsigned char **grays,
 	return matrix;
 }
 
-float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
+double** CoOcMat_Angle_135 (int distance, unsigned char **grays,
 						 int rows, int cols, map_ii* tone)
 {
 	int d = distance;
@@ -298,7 +301,7 @@ float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
 	int count=0; /* normalizing factor */
 	int tones = tone->used;
 	
-	float** matrix = allocate_matrix (0, tones, 0, tones);
+	double** matrix = allocate_matrix (0, tones, 0, tones);
 	
 	/* zero out matrix */
 	for (itone = 0; itone < tones; ++itone)
@@ -344,9 +347,9 @@ float** CoOcMat_Angle_135 (int distance, unsigned char **grays,
 * gray-tone transitions. Hence the P matrix for such an image will have
 * fewer entries of large magnitude.
 */
-float f1_asm (float **P, int Ng) {
+double f1_asm (double **P, int Ng) {
 	int i, j;
-	float sum = 0;
+	double sum = 0;
 	
 	for (i = 0; i < Ng; ++i)
 		for (j = 0; j < Ng; ++j)
@@ -361,9 +364,9 @@ float f1_asm (float **P, int Ng) {
 * measure of the contrast or the amount of local variations present in an
 * image.
 */
-float f2_contrast (float **P, int Ng) {
+double f2_contrast (double **P, int Ng) {
 	int i, j, n;
-	float sum = 0, bigsum = 0;
+	double sum = 0, bigsum = 0;
 	
 	for (n = 0; n < Ng; ++n) {
 		for (i = 0; i < Ng; ++i)
@@ -383,10 +386,10 @@ float f2_contrast (float **P, int Ng) {
 * This correlation feature is a measure of gray-tone linear-dependencies
 * in the image.
 */
-float f3_corr (float **P, int Ng) {
+double f3_corr (double **P, int Ng) {
 	int i, j;
-	float sum_sqrx = 0, sum_sqry = 0, tmp, *px;
-	float meanx =0 , meany = 0 , stddevx, stddevy;
+	double sum_sqrx = 0, sum_sqry = 0, tmp, *px;
+	double meanx =0 , meany = 0 , stddevx, stddevy;
 	
 	px = allocate_vector (0, Ng);
 	for (i = 0; i < Ng; ++i)
@@ -427,9 +430,9 @@ float f3_corr (float **P, int Ng) {
 }
 
 /* Sum of Squares: Variance */
-float f4_var (float **P, int Ng) {
+double f4_var (double **P, int Ng) {
 	int i, j;
-	float mean = 0, var = 0;
+	double mean = 0, var = 0;
 	
 	/*- Corrected by James Darrell McCauley, 16 Aug 1991
 	*  calculates the mean intensity level instead of the mean of
@@ -448,9 +451,9 @@ float f4_var (float **P, int Ng) {
 }
 
 /* Inverse Difference Moment */
-float f5_idm (float **P, int Ng) {
+double f5_idm (double **P, int Ng) {
 	int i, j;
-	float idm = 0;
+	double idm = 0;
 	
 	for (i = 0; i < Ng; ++i)
 		for (j = 0; j < Ng; ++j)
@@ -460,10 +463,10 @@ float f5_idm (float **P, int Ng) {
 }
 
 /* Sum Average */
-float f6_savg (float **P, int Ng) {
+double f6_savg (double **P, int Ng) {
 	int i, j;
-	float savg = 0;
-	float *Pxpy = allocate_vector (0, 2*Ng);
+	double savg = 0;
+	double *Pxpy = allocate_vector (0, 2*Ng);
 
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
@@ -484,10 +487,10 @@ float f6_savg (float **P, int Ng) {
 }
 
 /* Sum Variance */
-float f7_svar (float **P, int Ng, float S) {
+double f7_svar (double **P, int Ng, double S) {
 	int i, j;
-	float var = 0;
-	float *Pxpy = allocate_vector (0, 2*Ng);
+	double var = 0;
+	double *Pxpy = allocate_vector (0, 2*Ng);
 
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
@@ -508,10 +511,10 @@ float f7_svar (float **P, int Ng, float S) {
 }
 
 /* Sum Entropy */
-float f8_sentropy (float **P, int Ng) {
+double f8_sentropy (double **P, int Ng) {
 	int i, j;
-	float sentropy = 0;
-	float *Pxpy = allocate_vector (0, 2*Ng);
+	double sentropy = 0;
+	double *Pxpy = allocate_vector (0, 2*Ng);
 
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
@@ -529,9 +532,9 @@ float f8_sentropy (float **P, int Ng) {
 }
 
 /* Entropy */
-float f9_entropy (float **P, int Ng) {
+double f9_entropy (double **P, int Ng) {
 	int i, j;
-	float entropy = 0;
+	double entropy = 0;
 	
 	for (i = 0; i < Ng; ++i)
 		for (j = 0; j < Ng; ++j)
@@ -542,10 +545,10 @@ float f9_entropy (float **P, int Ng) {
 }
 
 /* Difference Variance */
-float f10_dvar (float **P, int Ng) {
+double f10_dvar (double **P, int Ng) {
 	int i, j;
-	float sum = 0, sum_sqr = 0, var = 0;
-	float *Pxpy = allocate_vector (0, 2*Ng);
+	double sum = 0, sum_sqr = 0, var = 0;
+	double *Pxpy = allocate_vector (0, 2*Ng);
 
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
@@ -572,10 +575,10 @@ float f10_dvar (float **P, int Ng) {
 }
 
 /* Difference Entropy */
-float f11_dentropy (float **P, int Ng) {
+double f11_dentropy (double **P, int Ng) {
 	int i, j;
-	float sum = 0;
-	float *Pxpy = allocate_vector (0, 2*Ng);
+	double sum = 0;
+	double *Pxpy = allocate_vector (0, 2*Ng);
 
 	for (i = 0; i <= 2 * Ng; ++i)
 		Pxpy[i] = 0;
@@ -593,10 +596,10 @@ float f11_dentropy (float **P, int Ng) {
 }
 
 /* Information Measures of Correlation */
-float f12_icorr (float **P, int Ng) {
+double f12_icorr (double **P, int Ng) {
 	int i, j;
-	float *px, *py;
-	float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
+	double *px, *py;
+	double hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
 	
 	px = allocate_vector (0, Ng);
 	py = allocate_vector (0, Ng);
@@ -632,10 +635,10 @@ float f12_icorr (float **P, int Ng) {
 }
 
 /* Information Measures of Correlation */
-float f13_icorr (float **P, int Ng) {
+double f13_icorr (double **P, int Ng) {
 	int i, j;
-	float *px, *py;
-	float hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
+	double *px, *py;
+	double hx = 0, hy = 0, hxy = 0, hxy1 = 0, hxy2 = 0;
 	
 	px = allocate_vector (0, Ng);
 	py = allocate_vector (0, Ng);
@@ -672,11 +675,11 @@ float f13_icorr (float **P, int Ng) {
 }
 
 /* Returns the Maximal Correlation Coefficient */
-float f14_maxcorr (float **P, int Ng) {
+double f14_maxcorr (double **P, int Ng) {
 	int i, j, k;
-	float *px, *py, **Q;
-	float *x, *iy, tmp;
-	float f;
+	double *px, *py, **Q;
+	double *x, *iy, tmp;
+	double f;
 	
 	px = allocate_vector (0, Ng);
 	py = allocate_vector (0, Ng);
@@ -739,30 +742,30 @@ float f14_maxcorr (float **P, int Ng) {
 	return f;
 }
 
-float *allocate_vector (int nl, int nh) {
-	float *v;
+double *allocate_vector (int nl, int nh) {
+	double *v;
 	
-	v = (float *) calloc (1, (unsigned) (nh - nl + 1) * sizeof (float));
+	v = (double *) calloc (1, (unsigned) (nh - nl + 1) * sizeof (double));
 	if (!v)
 		fprintf (stderr, "memory allocation failure (allocate_vector) "), exit (1);
 	
 	return v - nl;
 }
 
-/* Allocates a float matrix with range [nrl..nrh][ncl..nch] */
-float **allocate_matrix (int nrl, int nrh, int ncl, int nch) {
+/* Allocates a double matrix with range [nrl..nrh][ncl..nch] */
+double **allocate_matrix (int nrl, int nrh, int ncl, int nch) {
 	int i;
-	float **m;
+	double **m;
 	
 	/* allocate pointers to rows */
-	m = (float **) malloc ((unsigned) (nrh - nrl + 1) * sizeof (float *));
+	m = (double **) malloc ((unsigned) (nrh - nrl + 1) * sizeof (double *));
 	if (!m)
 		fprintf (stderr, "memory allocation failure (allocate_matrix 1) "), exit (1);
 	m -= ncl;
 	
 	/* allocate rows and set pointers to them */
 	for (i = nrl; i <= nrh; i++) {
-		m[i] = (float *) malloc ((unsigned) (nch - ncl + 1) * sizeof (float));
+		m[i] = (double *) malloc ((unsigned) (nch - ncl + 1) * sizeof (double));
 		if (!m[i])
 			fprintf (stderr, "memory allocation failure (allocate_matrix 2) "), exit (2);
 		m[i] -= ncl;
@@ -773,12 +776,12 @@ float **allocate_matrix (int nrl, int nrh, int ncl, int nch) {
 }
 
 void results (Tp, c, a)
-  float *Tp;
+  double *Tp;
   char *c;
-  float *a;
+  double *a;
 {
   int i;
-  float max, min;
+  double max, min;
   max = a[0];
   min = a[0];
   for (i = 0; i < 4; ++i, *Tp++)
@@ -799,10 +802,10 @@ void results (Tp, c, a)
 
 void simplesrt (n, arr)
   int n;
-  float arr[];
+  double arr[];
 {
   int i, j;
-  float a;
+  double a;
 
   for (j = 2; j <= n; j++)
   {
@@ -818,11 +821,11 @@ void simplesrt (n, arr)
 }
 
 void mkbalanced (a, n)
-  float **a;
+  double **a;
   int n;
 {
   int last, j, i;
-  float s, r, g, f, c, sqrdx;
+  double s, r, g, f, c, sqrdx;
 
   sqrdx = RADIX * RADIX;
   last = 0;
@@ -870,11 +873,11 @@ void mkbalanced (a, n)
 
 
 void reduction (a, n)
-  float **a;
+  double **a;
   int n;
 {
   int m, j, i;
-  float y, x;
+  double y, x;
 
   for (m = 2; m < n; m++)
   {
@@ -915,12 +918,12 @@ void reduction (a, n)
 }
 
 int hessenberg (a, n, wr, wi)
-  float **a, wr[], wi[];
+  double **a, wr[], wi[];
   int n;
 
 {
   int nn, m, l, k, j, its, i, mmin;
-  float z, y, x, w, v, u, t, s, r=0.0, q=0.0, p=0.0, anorm;
+  double z, y, x, w, v, u, t, s, r=0.0, q=0.0, p=0.0, anorm;
 
   anorm = fabs (a[1][1]);
   for (i = 2; i <= n; i++)
@@ -938,7 +941,7 @@ int hessenberg (a, n, wr, wi)
 	s = fabs (a[l - 1][l - 1]) + fabs (a[l][l]);
 	if (s == 0.0)
 	  s = anorm;
-	if ((float) (fabs (a[l][l - 1]) + s) == s)
+	if ((double) (fabs (a[l][l - 1]) + s) == s)
 	  break;
       }
       x = a[nn][nn];
@@ -1005,7 +1008,7 @@ int hessenberg (a, n, wr, wi)
 	    u = fabs (a[m][m - 1]) * (fabs (q) + fabs (r));
 	    v = fabs (p) * (fabs (a[m - 1][m - 1]) + 
 			    fabs (z) + fabs (a[m + 1][m + 1]));
-	    if ((float) (u + v) == v)
+	    if ((double) (u + v) == v)
 	      break;
 	  }
 	  for (i = m + 2; i <= nn; i++)
