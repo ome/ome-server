@@ -158,7 +158,7 @@ public abstract class PFormalParameter extends PNode implements
 		//float y = (float) point.getY()+CIRC_BUFFER;
 		//float x = (float) point.getX()-CIRC_HALF_SIZE;
 		float x = getLinkTargetX();
-		float y = (float) b.getY()+PLinkTarget.CIRC_BUFFER;
+		float y = (float) b.getY()+PLinkTarget.LINK_TARGET_BUFFER;
 		circle.setOffset(x,y);
 	}
 	
