@@ -10,7 +10,7 @@ if (scalar(@ARGV) < 1 ) {
 my $session = OME::SessionManager->TTYlogin();
 my $programImport = OME::Tasks::ProgramImport->new( 
 	session => $session,
-	debug   => 2
+	debug   => 3
 );
 
 my $totalPrograms=0;
