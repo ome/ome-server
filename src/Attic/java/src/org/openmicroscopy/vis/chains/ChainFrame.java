@@ -70,6 +70,7 @@ public class ChainFrame extends ChainFrameBase {
 	public ChainFrame(Controller controller,Connection connection,int i,
 		PChainLibraryCanvas libraryCanvas) {
 		super(controller,connection,new String("OME Chain: "+i));
+		layoutFrame();
 		show();
 		PChainCanvas chainCanvas = (PChainCanvas) canvas;
 		chainCanvas.setFrame(this);

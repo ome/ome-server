@@ -79,10 +79,8 @@ public abstract class ChainFrameBase extends JFrame {
 		this.connection =  connection;
 
 		contentPane = getContentPane();
-		// create a chain canvas and add it to this frame.
+		
 		canvas = createCanvas(connection);
-		layoutFrame();
-		//contentPane.add(canvas);
 		
 		setBounds(getInitialBounds());
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
