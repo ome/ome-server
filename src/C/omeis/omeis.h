@@ -39,11 +39,27 @@
 
 #include <sys/types.h>
 
-/* typedef unsigned long long OID; */
-typedef u_int64_t OID;
+
+/* ----------- */
+/* Definitions */
+/* ----------- */
+
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
 #define OME_IS_PIXL_VER 1  /* Version 1 */
 #define MAXNAMELEN 256  /* There isn't really a portable way to retrieve this */
+
+/* -------- */
+/* Typedefs */
+/* -------- */
+
+/* OID */
+typedef u_int64_t OID;
+
+/* OME Coordinate */
+typedef int32_t ome_coord;
+
+/* OME Dimension */
+typedef int32_t ome_dim;
 
 typedef struct
 {
@@ -69,7 +85,7 @@ typedef struct {
 	unsigned long mySig;
 	unsigned char vers;
 	unsigned char isFinished;     /* file is read only */
-	unsigned long dx,dy,dz,dc,dt; /* Pixel dimension extents */
+	ome_dim dx,dy,dz,dc,dt;       /* Pixel dimension extents */
 	unsigned char bp;             /* bytes per pixel */
 	unsigned char isSigned;       /* signed integers or not */
 	unsigned char isFloat;        /* floating point or not */
@@ -150,12 +166,12 @@ int
 bigEndian (void);
 
 PixelsRep *
-NewPixels (unsigned long dx,
-		   unsigned long dy,
-		   unsigned long dz,
-		   unsigned long dc,
-		   unsigned long dt,
-		   unsigned char bp, /* bp is bytes per pixel */
+NewPixels (ome_dim dx,
+		   ome_dim dy,
+		   ome_dim dz,
+		   ome_dim dc,
+		   ome_dim dt,
+		   ome_dim bp, /* bp is bytes per pixel */
 		   char isSigned,
 		   char isFloat);
 

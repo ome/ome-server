@@ -438,12 +438,12 @@ struct stat fStat;
 * 
 */
 PixelsRep *NewPixels (
-	unsigned long dx,
-	unsigned long dy,
-	unsigned long dz,
-	unsigned long dc,
-	unsigned long dt,
-	unsigned char bp, /* bp is bytes per pixel */
+	ome_dim dx,
+	ome_dim dy,
+	ome_dim dz,
+	ome_dim dc,
+	ome_dim dt,
+	ome_dim bp, /* bp is bytes per pixel */
 	char isSigned,
 	char isFloat
 )
@@ -557,11 +557,11 @@ int result;
 
 static int
 CheckCoords (PixelsRep * myPixels,
-		     unsigned long theX,
-			 unsigned long theY,
-			 unsigned long theZ,
-			 unsigned long theC,
-			 unsigned long theT)
+             ome_coord theX,
+             ome_coord theY,
+             ome_coord theZ,
+             ome_coord theC,
+             ome_coord theT)
 {
 	pixHeader *head;
 
@@ -569,17 +569,17 @@ CheckCoords (PixelsRep * myPixels,
 	if (! (head = myPixels->head) ) return (0);
 
 	if (theX >= head->dx || theX < 0 ||
-		theY >= head->dy || theY < 0 ||
-		theZ >= head->dz || theZ < 0 ||
-		theC >= head->dc || theC < 0 ||
-		theT >= head->dt || theT < 0 ) {
+        theY >= head->dy || theY < 0 ||
+        theZ >= head->dz || theZ < 0 ||
+        theC >= head->dc || theC < 0 ||
+        theT >= head->dt || theT < 0 ) {
 		fprintf (stderr,"Pix->CheckCoords:  Coordinates out of range.\n");
 		return (0);
 	}
 	return (1);
 }
 
-off_t GetOffset (PixelsRep *myPixels, int theX, int theY, int theZ, int theC, int theT) {
+off_t GetOffset (PixelsRep *myPixels, ome_coord theX, ome_coord theY, ome_coord theZ, ome_coord theC, ome_coord theT) {
 pixHeader *head;
 
 	if (!myPixels) return (-1);
@@ -954,7 +954,7 @@ float scale;
 
 
 /* This is a high level interface to set a pixel plane from a memory buffer. */
-size_t setPixelPlane (PixelsRep *thePixels, void *buf , int theZ, int theC, int theT ) {
+size_t setPixelPlane (PixelsRep *thePixels, void *buf , ome_coord theZ, ome_coord theC, ome_coord theT ) {
 off_t offset=0;
 size_t nPix, nIO=0;
 
@@ -973,20 +973,20 @@ size_t nPix, nIO=0;
 
 static
 size_t DoROI (PixelsRep *myPixels,
-	int x0, int y0, int z0, int w0, int t0,
-	int x1, int y1, int z1, int w1, int t1, char rorw
+	ome_coord x0, ome_coord y0, ome_coord z0, ome_coord w0, ome_coord t0,
+	ome_coord x1, ome_coord y1, ome_coord z1, ome_coord w1, ome_coord t1, char rorw
 )
 {
 pixHeader *head;
-int dx,dy,dz,dc,dt,bp;
-int x,y,z,w,t;
+ome_dim dx,dy,dz,dc,dt,bp;
+ome_coord x,y,z,w,t;
 size_t sizeX, nIO_t=0, nIO=0;
 char *pix;
 off_t off0, off1;
 
 	if (!myPixels) return (0);
 	if (! (pix = (char *)myPixels->pixels) ) return (0);
-	if (! (head = myPixels->head) ) return (-1);
+	if (! (head = myPixels->head) ) return (0);
 	if ( (off0 = GetOffset (myPixels, x0, y0, z0, w0, t0)) < 0) return (0);
 	if ( (off1 = GetOffset (myPixels, x1, y1, z1, w1, t1)) < 0) return (0);
 	if (off0 >= off1) return (0);
@@ -1021,7 +1021,7 @@ off_t off0, off1;
 */
 
 static
-int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, unsigned long z, unsigned long c, unsigned long t, char rorw) {
+int DoPlaneInfoIO (PixelsRep *myPixels, planeInfo *theInfo, ome_coord z, ome_coord c, ome_coord t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (planeInfo);
 off_t file_off,plane_offset;
@@ -1048,7 +1048,7 @@ off_t file_off,plane_offset;
 }
 
 static
-int DoStackInfoIO (PixelsRep *myPixels, stackInfo *theInfo, unsigned long c, unsigned long t, char rorw) {
+int DoStackInfoIO (PixelsRep *myPixels, stackInfo *theInfo, ome_coord c, ome_coord t, char rorw) {
 pixHeader *head;
 size_t nBytes = sizeof (stackInfo);
 off_t file_off,stack_offset;
@@ -1079,10 +1079,11 @@ off_t file_off,stack_offset;
 */
 
 static
-int DoPlaneStats (PixelsRep *myPixels, unsigned long z, unsigned long c, unsigned long t) {
+int DoPlaneStats (PixelsRep *myPixels, ome_coord z, ome_coord c, ome_coord t) {
 planeInfo myPlaneInfo;
 pixHeader *head;
-unsigned long  x,y,dx,dy,nPix;
+ome_dim dx, dy, nPix;
+ome_coord x, y;
 off_t pix_off;
 char *thePix;
 unsigned char  *uCharP;
@@ -1250,10 +1251,11 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
   DoPlaneStats if it isn't.
 */
 static
-int DoStackStats (PixelsRep *myPixels, unsigned long c, unsigned long t) {
+int DoStackStats (PixelsRep *myPixels, ome_coord c, ome_coord t) {
 stackInfo myStackInfo;
 pixHeader *head;
-unsigned long z, dz;
+ome_dim dz;
+ome_coord z;
 stackInfo *stackInfoP;
 planeInfo *planeInfoP;
 off_t plane_offset,stack_offset;
@@ -1325,10 +1327,11 @@ register float logOffset=1.0,min=FLT_MAX,max=FLT_MIN,sum_i=0.0,sum_i2=0.0,sum_lo
 
 static
 int FinishStats (PixelsRep *myPixels, char force) {
-unsigned long z, dz, c, dc, t, dt;
-pixHeader *head;
-stackInfo *stackInfoP;
-planeInfo *planeInfoP;
+	ome_dim  dc, dz, dt;
+	ome_coord z, c, t;
+	pixHeader *head;
+	stackInfo *stackInfoP;
+	planeInfo *planeInfoP;
 
 
 	if (!myPixels) return (0);
@@ -1486,6 +1489,7 @@ char *sh_mmap;
 FILE *infile;
 
 	if (  (fd = NewFile( &ID, filename, size )) == -1 ) return 0;
+	if ( size > UINT_MAX ) return 0;  /* Bad mojo for mmap */
 
 	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0LL)) == (char *) -1 ) {
 		close (fd);
@@ -1614,7 +1618,6 @@ dispatch (char **param)
 	size_t nPix=0, nIO=0;
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0;
-	int theZ=-1,theC=-1,theT=-1;
 	off_t offset=0;
 	char error_str[256];
 	unsigned char isLocalFile;
@@ -1635,9 +1638,9 @@ dispatch (char **param)
 	char file_name[MAXNAMELEN];
 	int fd;
 	char *sh_mmap;
-	unsigned long file_off;
-
-
+	
+	/* Co-ordinates */
+	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
 
 /*
 char **cgivars=param;
@@ -1678,6 +1681,7 @@ char **cgivars=param;
     else
         isLocalFile = 0;
 
+
 	if ( (theParam = get_param (param,"theZ")) )
 		sscanf (theParam,"%d",&theZ);
 
@@ -1686,6 +1690,9 @@ char **cgivars=param;
 
 	if ( (theParam = get_param (param,"theT")) )
 		sscanf (theParam,"%d",&theT);
+	
+	if ( (theParam = get_param (param,"theY")) )
+		sscanf (theParam,"%d",&theZ);
 
 	if ( (theParam = get_param (param,"BigEndian")) ) {
 		if (!strcmp (theParam,"0") || !strcmp (theParam,"False") || !strcmp (theParam,"false") ) iam_BigEndian=0;
@@ -1735,7 +1742,7 @@ char **cgivars=param;
 			head = thePixels->head;
 
 			HTTP_ResultType ("text/plain");
-			fprintf(stdout,"Dims=%lu,%lu,%lu,%lu,%lu,%hhu\n",
+			fprintf(stdout,"Dims=%d,%d,%d,%d,%d,%hhu\n",
 					head->dx,head->dy,head->dz,head->dc,head->dt,head->bp);
 			fprintf(stdout,"Finished=%hhu\nSigned=%hhu\nFloat=%hhu\n",
 					head->isFinished,head->isSigned,head->isFloat);
@@ -2063,8 +2070,6 @@ char **cgivars=param;
 		case M_CONVERTPLANE:
 		case M_CONVERTTIFF:
 		case M_CONVERTROWS:
-			file_off = 0;
-
 			if ( (theParam = get_param (param,"FileID")) )
 				sscanf (theParam,"%llu",&fileID);
 			else {
@@ -2073,7 +2078,7 @@ char **cgivars=param;
 			}
 
 			if ( (theParam = get_param (param,"Offset")) )
-				sscanf (theParam,"%lu",&file_off);
+				sscanf (theParam,"%lu",offset);
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
@@ -2101,10 +2106,8 @@ char **cgivars=param;
 				nPix = head->dx*head->dy;
 				offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
 			} else if (m_val == M_CONVERTROWS) {
-				long theY = -1, nRows=1;
+				long nRows=1;
 
-				if ( (theParam = get_param (param,"theY")) )
-					sscanf (theParam,"%ld",&theY);
 				if ( (theParam = get_param (param,"nRows")) )
 					sscanf (theParam,"%ld",&nRows);
 				if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
@@ -2118,7 +2121,7 @@ char **cgivars=param;
 			}
 
 
-			if ( (nIO = ConvertFile (thePixels, fileID, file_off, offset, nPix) ) < nPix) {
+			if ( (nIO = ConvertFile (thePixels, fileID, offset, offset, nPix) ) < nPix) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
 				else  HTTP_DoError (method,"Access control error - check error log for details" );
 				freePixelsRep (thePixels);
@@ -2218,14 +2221,14 @@ char **cgivars=param;
         char *filename=NULL;
 
 		if (!ID) return (-1);
-		if (m_val = M_SETROI) {
+		if (m_val == M_SETROI) {
             rorw = 'w';
             if (!(filename = get_param(param,"Pixels"))) {
                 HTTP_DoError(method,"No pixels filename specified");
             }
 		} else rorw = 'r';
 
-		if (m_val = M_SETROI || m_val == M_GETROI) {
+		if (m_val == M_SETROI || m_val == M_GETROI) {
 			HTTP_DoError (method,"ROI Parameter missing");
 			return (-1);
 		}
