@@ -58,6 +58,14 @@ public class RemoteTest
         Session  session = bindings.getSession();
         Factory  factory = bindings.getFactory();
 
+        Project project = (Project) factory.loadObject("OME::Project",1);
+        System.out.println(project);
+        System.out.println(project.getDescription());
+
+        Attribute owner = project.getOwner();
+        System.out.println(owner);
+        System.out.println(owner.getStringElement("FirstName"));
+
         {
             List  typeList = factory.findObjects("OME::AttributeType",null);
             Iterator i = typeList.iterator();
