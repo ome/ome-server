@@ -55,7 +55,7 @@ import java.awt.Color;
  */
 public class PCategoryBox extends PPath implements PBufferedNode {
 	
-	private static final Color CATEGORY_COLOR= new Color(204,204,255,100);
+	protected static final Color CATEGORY_COLOR= new Color(204,204,255,100);
 	
 	private PText label = null;
 	public PCategoryBox() {
