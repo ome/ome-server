@@ -19,12 +19,48 @@
 
 package OME::Tasks::ProgramImport;
 
+
+
+
+
+
+
+
+
+
+
+
+# WARNING!!! The name of this class will soon change to OME::ImportExport::ModuleImport 
+# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 use XML::LibXML;
 use strict;
 
 =head1 NAME
 
 OME::Tasks::ProgramImport - Import an Analysis Module XML specification.
+
+WARNING!!! The name of this class will soon change to OME::ImportExport::ModuleImport 
+warning added by josiah <siah@nih.gov> Friday, June 27, 2003
 
 =head1 SYNOPSIS
 
