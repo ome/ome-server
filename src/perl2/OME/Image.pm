@@ -151,7 +151,6 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    attribute_id => 'attribute',
     image_id     => 'image'
 });
 
@@ -163,6 +162,7 @@ __PACKAGE__->columns(Essential => qw(image_id size_x size_y size_z
 				     bits_per_pixel));
 __PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
 				  wave_increment time_increment)); 
+__PACKAGE__->hasa('OME::Image' => qw(image_id));
 
 
 
