@@ -49,25 +49,10 @@ features based on an execution of an analysis chain
 
 =cut
 
-sub findModuleExecution {
-    my ($self,$node) = @_;
-
-    my $factory = $self->{_session}->Factory();
-    my $chain_execution = $self->{chain_execution};
-
-    my $node_execution = $factory->
-      findObject("OME::AnalysisChainExecution::NodeExecution",
-                 {
-                  analysis_chain_execution => $chain_execution,
-                  analysis_chain_node      => $node,
-                 });
-    my $module_execution = $node_execution->module_execution();
-    return $module_execution;
-}
-
 sub new {
-    my ($proto,$session,$chain_execution,$node,$image) = @_;
+    my ($proto,$mex,$image) = @_;
     my $class = ref($proto) || $proto;
+    my $session = OME::Session->instance();
     my $factory = $session->Factory();
 
     my %hierarchy_children = ();
@@ -75,68 +60,62 @@ sub new {
     my %hierarchy_roots = ();
 
     my $self = {
-                roots           => \%hierarchy_roots,
-                parents         => \%hierarchy_parent,
-                children        => \%hierarchy_children,
-                chain_execution => $chain_execution,
-                node            => $node,
-                image           => $image,
-                _session        => $session,
+                roots     => \%hierarchy_roots,
+                parents   => \%hierarchy_parent,
+                children  => \%hierarchy_children,
+                mex       => $mex,
+                image     => $image,
                };
     bless $self, $class;
 
-    my %nodes_to_examine;
-    my %nodes_examined;
+    my %mexes_to_examine;
+    my %mexes_examined;
 
-    $nodes_to_examine{$node->id()} = $node;
+    $mexes_to_examine{$mex->id()} = $mex;
 
     # For every node left to examine:
     #   Find its tags' parents, mark this in the hierarchy.
-    #   Add its predecessor nodes to the list of nodes to examine.
+    #   Add its predecessor mexes to the list of mexes to examine.
     my $continue = 1;
     while ($continue) {
         $continue = 0;
-        foreach my $this_nodeID (keys %nodes_to_examine) {
-            next if (exists $nodes_examined{$this_nodeID});
-            my $this_node = $nodes_to_examine{$this_nodeID};
+        foreach my $this_mexID (keys %mexes_to_examine) {
+            next if (exists $mexes_examined{$this_mexID});
+            my $this_mex = $mexes_to_examine{$this_mexID};
 
             my %this_tags;
 
-            my @input_links = $factory->
-              findObjects("OME::AnalysisChain::Link",
+            my @actual_inputs = $factory->
+              findObjects("OME::ModuleExecution::ActualInput",
                           {
-                           to_node                     => $this_nodeID,
-                           'to_input.semantic_type.granularity' => 'F',
+                           module_execution => $this_mex,
+                           'formal_input.semantic_type.granularity' => 'F',
                           });
 
-            foreach my $input_link (@input_links) {
-                my $formal_input = $input_link->to_input();
+            foreach my $actual_input (@actual_inputs) {
+                my $formal_input = $actual_input->formal_input();
                 my $semantic_type = $formal_input->semantic_type();
 
                 my %tags;
-                my $formal_output = $input_link->from_output();
-                my $pred_node = $input_link->from_node();
-                my $pred_nodeID = $pred_node->id();
-                my $pred_iterator = $pred_node->iterator_tag();
-                my $pred_execution = $self->findModuleExecution($pred_node);
+                my $pred_mex = $actual_input->input_module_execution();
+                my $pred_mexID = $pred_mex->id();
+                my $pred_iterator = $pred_mex->iterator_tag() || '[Image]';
 
-                # This could be done better
+                # This could be done better, maybe with a DISTINCT query
                 my $attributes = $factory->
                   findAttributes($semantic_type,
                                  {
-                                  module_execution => $pred_execution,
+                                  module_execution => $pred_mex,
                                   'target.image'   => $image,
                                  });
                 while (my $attribute = $attributes->next()) {
                     $tags{$attribute->target()->tag()} = 1;
                 }
 
-                $pred_iterator = '[Image]' unless (defined $pred_iterator);
-
                 foreach my $tag (keys %tags) {
                     # Each of the tags that were found must either
                     # a) match the iterator tag of the predecessor
-                    # node, or b) must be a child of the
+                    # mex, or b) must be a child of the
                     # predecessor iterator.
 
                     #__debug("          Found tag $tag");
@@ -156,12 +135,12 @@ sub new {
                     }
                 }
 
-                $nodes_to_examine{$pred_nodeID} = 1;
+                $mexes_to_examine{$pred_mexID} = 1;
             }
 
 
             $continue = 1;
-            $nodes_examined{$this_nodeID} = 1;
+            $mexes_examined{$this_mexID} = 1;
         }
     }
 
@@ -204,7 +183,7 @@ sub findIteratorFeaturesForTag {
 
     #__debug("Building SQL for iterator $iterator and tag $tag");
 
-    my $factory = $self->{_session}->Factory();
+    my $factory = OME::Session->instance()->Factory();
 
     # Quickly handle the trivial case.
 
@@ -275,9 +254,8 @@ sub findIteratorFeaturesForTag {
 
 sub findIteratorFeatures {
     my ($self,$iterator_tag) = @_;
-    my $factory = $self->{_session}->Factory();
-    my $chain_execution = $self->{chain_execution};
-    my $node = $self->{node};
+    my $factory = OME::Session->instance()->Factory();
+    my $mex = $self->{mex};
     my $image = $self->{image};
 
     # keyed by tag
@@ -286,23 +264,21 @@ sub findIteratorFeatures {
     # Find the features of the attributes created by a predecessor
     # node's module execution.
 
-    my @input_links = $factory->
-      findObjects("OME::AnalysisChain::Link",
+    my @actual_inputs = $factory->
+      findObjects("OME::ModuleExecution::ActualInput",
                   {
-                   to_node                     => $node,
-                   'to_input.semantic_type.granularity' => 'F',
+                   module_execution => $mex,
+                   'formal_input.semantic_type.granularity' => 'F',
                   });
 
-    foreach my $input_link (@input_links) {
-        my $formal_input = $input_link->to_input();
-        my $formal_output = $input_link->from_output();
-        my $pred_node = $input_link->from_node();
-        my $pred_execution = $self->findModuleExecution($pred_node);
+    foreach my $actual_input (@actual_inputs) {
+        my $formal_input = $actual_input->formal_input();
+        my $pred_mex = $actual_input->input_module_execution();
 
         my $attributes = $factory->
           findAttributes($formal_input->semantic_type(),
                          {
-                          module_execution => $pred_execution,
+                          module_execution => $pred_mex,
                           'target.image'   => $image,
                          });
         while (my $attribute = $attributes->next()) {
@@ -311,7 +287,7 @@ sub findIteratorFeatures {
         }
     }
 
-    my $iterator = $node->iterator_tag();
+    my $iterator = $mex->iterator_tag();
     my %iterator_features;
 
     foreach my $tag (keys %input_features) {
