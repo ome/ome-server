@@ -79,7 +79,7 @@ sub getPageBody {
 			$body="";
 			$body.="<b>This name is already used. Please enter a new name for your dataset.</b>";
 			$body.=print_form($session,$htmlFormat,$cgi);
-	   		return ('HTML',$body) unless (defined $ref);
+	   		return ('HTML',$body) unless (not defined $ref);
 
 	      }
 		$body="";

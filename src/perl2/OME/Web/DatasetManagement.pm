@@ -77,17 +77,23 @@ sub getPageBody {
 	my $action = $cgi->param('action') || '';
 	
 	# determine action
-	if($cgi->param('save')) {
+	if ($action eq 'save') {
 		if ($cgi->param('name')) {
 			my $new_name = $cgi->param('name');
 			my $new_description = $cgi->param('description') || '';
 
 			if (($new_name ne $dataset->name()) and (not $d_manager->nameExists($new_name))) {
 				$d_manager->change($new_description, $new_name, $dataset->id());
+				$body .= $cgi->p({-class => 'ome_info'}, 
+					'Save of new dataset metadata successful.');
+			} elsif (($new_name eq $dataset->name()) and ($new_description ne $dataset->description())) {
+				$d_manager->change($new_description, $new_name, $dataset->id());
+				$body .= $cgi->p({-class => 'ome_info'}, 
+					'Save of new dataset metadata successful.');
+			} else {
+				$body .= $cgi->p({class => 'ome_error'},
+					"ERROR: Name already in use.");
 			}
-			
-			$body .= $cgi->p({-class => 'ome_info'}, 
-				'Save of new dataset metadata successful.');
 		
 			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		} else {
@@ -289,27 +295,9 @@ sub __makeImageListings {
 			 );
 
 
-	return $q->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
+	return $q->p({-class => 'ome_title', -align => 'center'}, "Images") .
 	       $html;
 }
 
-#sub makeImageListings{
-#	my $self = shift;
-#
-#	my $session    = $self->Session();
-#	my $htmlFormat = $self->{htmlFormat};
-#	my @images     = $session->dataset()->images();
-#
-#	my $text;
-#
-#	if( scalar @images > 0 ) {
-#		$text .= "<h3>The current dataset contains the image".(scalar @images == 1 ? '' : 's')." listed below.</h3>";
-#		$text .= $htmlFormat->imageInDataset(\@images,1);
-#	} else {
-#		$text .= '<h3>The current dataset contains no images.</h3>';
-#	}
-#
-#	return $text;
-#}
 
 1;
