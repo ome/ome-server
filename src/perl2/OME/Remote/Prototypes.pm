@@ -299,6 +299,11 @@ addPrototype("OME::AttributeType::Superclass","writeObject",[],[]);
 addPrototype("OME::AttributeType::Superclass","Session",[],['OME::Session']);
 addPrototype("OME::AttributeType::Superclass","attribute_type",
              [],["OME::AttributeType"]);
+addPrototype("OME::AttributeType::Superclass","analysis",
+             [],["OME::Analysis"]);
+addPrototype("OME::AttributeType::Superclass","_getTarget",
+             [],["OME::Analysis"],
+             publishedName => "target");
 
 addPrototype("OME::Session","User",[],['OME::AttributeType::Superclass']);
 addPrototype("OME::Session","Factory",[],['OME::Factory']);
