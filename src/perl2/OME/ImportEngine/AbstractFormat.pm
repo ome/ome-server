@@ -229,16 +229,19 @@ C<new> method calls its superclass C<new> method.
 sub Session { return shift->{_session}; }
 
 
-=head2 newImage(initialAttributes)
+=head2 __newImage
+
+	my $image = $self->__newImage($image_name);
 
 Calls the session's Factory to create a new image object. Those attributes
 that are known before the import are recorded in the new image.
 
 =cut
 
-sub newImage {
-    my ($self, $session, $fn) = @_;
+sub __newImage {
+    my ($self, $fn) = @_;
 
+    my $session = $self->Session();
     my $guid = $session->Configuration()->mac_address();
 
     my $experimenter_id = $session->User()->id();
@@ -323,7 +326,9 @@ sub __removeFilenames {
 }
 
 
-=head2 __nameOnly(full_file_name)
+=head2 __nameOnly
+
+	my $basename = $self->__nameOnly($full_pathname);
 
 Takes in a fully qualified file name, and returns just the base filename.
 No path components and no extension will be returned.
