@@ -107,7 +107,7 @@ extern char *mapkit_error_msg[5];
 /* sizes, signed to accomodate MAPKIT_KEYNOTFOUND */
 #define mapkit_size_t long
 /* hash values, must be unsigned (for index, decrement) */
-#define mapkit_hash_t long
+#define mapkit_hash_t unsigned long
 
 /* find the lowest number in mapkit_primes greater than n */
 extern mapkit_size_t mapkit_nextprime(const mapkit_size_t n);
