@@ -55,6 +55,7 @@ if ($pageClass) {
 	if ($@) {
 		print $CGI->header(-type => 'text/html');
 		print "<pre>Error serving $pageClass:\n$@</pre>";
+		print STDERR "Error serving $pageClass:\n$@\n";
 	}
 } else {
 	print STDERR "Class not specified\n";
