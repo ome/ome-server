@@ -37,13 +37,35 @@
 <OME xmlns="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:AML="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" xmlns:STD="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">      
 	<SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 		 
-		 <SemanticType Name="SignatureVector" AppliesTo="I">
-			<Description>blah. blah. blah.</Description>
-			<Element 
-				Name="Parent" 
-				DBLocation="SIGNATURE_VECTOR.PARENT"  
-				DataType="reference"
-				RefersTo="PixelsSlice"/>
+		<SemanticType Name="SignatureVectorEntry" AppliesTo="I">
+		  <Description>A single image signature. A signature describes
+		  something about the image. i.e. number of blobs, whether the
+		  texture is rough or smooth, etc.</Description>
+		  <Element Name="Value"  DBLocation="SIGNATURE.VALUE" DataType="double"/>
+		  <Element Name="Legend"  DBLocation="SIGNATURE.LEGEND" DataType="reference" RefersTo="SignatureVectorLegend"/>
+		</SemanticType>
+		
+		<SemanticType Name="SignatureVectorLegend" AppliesTo="D">
+		  <Description>Describes the data derivation of a position in a
+		  signature vector. I (Josiah) have been thinking about this having
+		  global granularity. This isn't feasible ATM because modules that
+		  accept non global inputs are not allowed to produce global
+		  outputs.</Description>
+		  <Element Name="VectorPosition"  DBLocation="SIGNATURE_LEGEND.VECTOR_POSITION" DataType="integer">
+			<Description>Will be in the range of 1 to N, where N is the
+			number of vector positions.</Description>
+		  </Element>
+		  <Element Name="FormalInput"  DBLocation="SIGNATURE_LEGEND.FORMAL_INPUT_NAME" DataType="string">
+			<Description>The name of the formal input assigned to this
+			vector position. The function of this is to describe the data
+			history. The data history can be accurately derived because
+			the chain will have been locked by the time this is
+			produced.</Description>
+		  </Element>
+		  <Element Name="SemanticElement"  DBLocation="SIGNATURE_LEGEND.SEMANTIC_ELEMENT_NAME" DataType="string">
+			<Description>The name of the semantic element of the formal
+			input assigned to this vector position.</Description>
+		  </Element>
 		</SemanticType>
 	</SemanticTypeDefinitions>
 
@@ -51,8 +73,8 @@
 		<AnalysisModule
 		   ModuleName="Signature Stitcher"
 		   Category="Classifier"
-		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="FeatureStatistics"
+		   ModuleType="OME::Analysis::Modules::Classification::SignatureStitcher"
+		   ProgramID=""
 		   ID="urn:lsid:openmicroscopy.org:Module:7200">
 		  <Description>
 		   This module computes statistics about the contiguous regions of the image 
@@ -118,7 +140,8 @@
 			<FormalInput Name="Direction Homogeneity"    SemanticTypeName="EdgeDirecHomo"     Count="!"/>
 			<FormalInput Name="Diff Direction Histogram" SemanticTypeName="EdgeDiffDirecHist" Count="!"/>
 			
-			<FormalOutput Name="Signature Vector" SemanticTypeName="SignatureVector" Count="!"/>
+			<FormalOutput Name = "SignatureVector" SemanticTypeName = "SignatureVectorEntry"  Count="+"/>
+			<FormalOutput Name = "VectorLegend"    SemanticTypeName = "SignatureVectorLegend" Count="+"/>
 		  </Declaration>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
