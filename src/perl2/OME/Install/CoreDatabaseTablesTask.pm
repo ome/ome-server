@@ -379,7 +379,7 @@ sub create_database {
 
 	$createlang = $retval;
 
-    my @CMD_OUT = `su - $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
+    @CMD_OUT = `su - $POSTGRES_USER -c "$createlang plpgsql ome" 2>&1`;
     if ($? != 0) {
     	die "Errors: \n",join ('',@CMD_OUT),"\n" unless join ('',@CMD_OUT) =~ /already installed/;
     }
