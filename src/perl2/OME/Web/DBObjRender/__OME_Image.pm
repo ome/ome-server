@@ -132,10 +132,10 @@ sub renderSingle {
 		my $original_files = OME::Tasks::ModuleExecutionManager->getAttributesForMEX(
 			$ai->input_module_execution,
 			$ai->formal_input()->semantic_type
-		);
+		) if $ai;
 		my $img_name = $obj->name();
 		$original_files = [ grep( $_->Path() =~ m/^$img_name/, @$original_files ) ]
-			if( scalar( @$original_files ) > 1);
+			if( $original_files and scalar( @$original_files ) > 1);
 		my $original_file = $original_files->[0];
 		if( $original_file and $original_file->Repository() ) { 
 			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
