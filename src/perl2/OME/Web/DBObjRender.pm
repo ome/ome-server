@@ -45,26 +45,34 @@ OME::Web::DBObjRender - Render DBObjects for display
 
 =head1 DESCRIPTION
 
-DBObjRender will render DBObjects (and attributes) for display in HTML,
-TXT, (and perhaps someday) SVG. It's default rendering can be overridden by
-writing templates and subclasses.
+DBObjRender will render things from the database for display. It can
+render a single object or a group of objects. It provides paging
+mechanisms for rendering groups of objects. It has generic mechanisms to
+render anything by examining the object definition. These generic
+renderings can be easily overridden by writing html templates and/or
+subclassing this class.
+
+It also has methods for asking other questions about an object such as 
+	What fields provide a summary description of this object? A full description?
+	What are the html form fields to use on search pages?
+In addition to providing rendering, I set this class up to handle any
+object services that are specific to the web interface need to be
+overriden occasionally.
+
+=head1 Using Rendering Services
+
+=head2 Synopsis
+
+	# get a renderer. $self is an instance of an OME::Web subclass
+	my $renderService = $self->Renderer();
+	# render a list of objects
+	$html .= $renderService->renderArray( \@objects, $mode, \%options );
+	# render a single object
+	$html .= $renderService->render( $object, $mode, \%options );
 
 Important!! Subclasses should not be accessed directly. All Rendering
 should go through DBObjRendering. Specialization is completely
 transparent.
-
-Subclasses must follow the naming convention implemented in _getSpecializedRenderer.
-
-All methods work with Object Prototypes, SemanticTypes, attributes, and dbobject instances.
-If using with a Semantic Type, prefix the ST name with '@' (i.e. '@Pixels').
-
-=head1 Synopsis
-
-	use OME::Web::DBObjRender;
-
-# FIXME: add examples
-
-=head1 Published Methods
 
 =cut
 
@@ -82,6 +90,7 @@ use HTML::Template;
 
 use base qw(OME::Web);
 
+# set up class constants
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
@@ -110,8 +119,6 @@ By default, the name returned will be a maximum of 23 characters long. This is e
 truncation and concatenation of '...'. This length may be overridden by specifying a
 'max_text_length' option. A 0 or undefined value results in no truncation. A
 'max_text_length' of 3 or less will result in irregular behavior.
-
-Subclasses are expected to implement 'max_text_length'. 
 
 =cut
 
@@ -144,66 +151,68 @@ For 'txt' format, it will be an id number.
 For 'html' format, it will be an '<a href=...' that links to a
 detailed display of the object.
 
-subclasses should not override this. instead their method should be named _getRef
-
 =cut
 
 sub getRef {
 	my ($self, $obj, $format, $options) = @_;
 
+	return '' unless $obj;
+
 	my $specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	return $specializedRenderer->_getRef( $obj, $format )
+	return $specializedRenderer->_getRef( $obj, $format, $options )
 		if( $specializedRenderer and $specializedRenderer->can('_getRef') );
 	
 	my $q = $self->CGI();
-	for( $format ) {
-		if( /^html$/ ) {
-			my ($package_name, $common_name, $formal_name, $ST) =
-				OME::Web->_loadTypeAndGetInfo( $obj );
-			my $id = $obj->id();
-			my $name = $self->getName( $obj, $options );
-			return  $q->a( 
-				{ 
-					href => "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id",
-					title => "Detailed info about this $common_name",
-					class => 'ome_detail'
-				},
-				$name
-			);
-		}
-		return $self->getName( $obj, $options );
+	if( $format eq 'html' ) {
+		my ($package_name, $common_name, $formal_name, $ST) =
+			OME::Web->_loadTypeAndGetInfo( $obj );
+		my $id = $obj->id();
+		my $name = $self->getName( $obj, $options );
+		return  $q->a( 
+			{ 
+				href => $self->getObjDetailURL( $obj ),
+				title => "Detailed info about this $common_name",
+				class => 'ome_detail'
+			},
+			$name
+		);
 	}
+	return $obj->id();
 }
 
 
 =head2 render
 
-	my $obj_summary = OME::Web::DBObjRender->render( $object, $mode, $options );
+	my $obj_summary = OME::Web::DBObjRender->render( $object, $mode, \$options );
 
 $object is an instance of a DBObject or an Attribute.
-$mode is 'summary' or 'detail'
+$mode is 'summary', 'detail', or 'ref'
+$options is a grab bag that gets added to and removed from as development progresses.
+nothing in it is terribly stable.
 
-returns an html rendering of the object. 
+$obj_summary is an html rendering of the object. 
 
-This method looks for templates (read up on HTML::Template) in the html/Templates
-directory that match the object and mode. If no template is found, then 
-generic templates are used instead.
+This method looks for templates (read up on HTML::Template) in the
+OME/src/html/Templates directory that match the object and mode. If no
+template is found, then generic templates are used instead.
 
-The naming convention for templates is:
-	for an 'OME::Image' DBObject and 'summary' mode, OME_Image_summary.tmpl
-	for a 'Pixels' Attribute in 'detail' mode, Pixels_detail.tmpl
-
-If a specialized template is found, the parameter list is extracted, and renderData() is
-called to populate it. Variables not defined by DBObject methods (or STD elements) may be
-populated by the _renderData() method of specialized subclasses. See 'thumb_url' in
-OME_Image_summary.tmpl and OME::Web::DBObjRender::__OME_Image::_renderData() for an example of
+If a specialized template is found, the parameter list is extracted, and
+renderData() is called to populate it. Variables not defined by DBObject
+methods (or STD elements) may be populated by the _renderData() method
+of specialized subclasses. See 'thumb_url' in OME_Image_summary.tmpl and
+OME::Web::DBObjRender::__OME_Image::_renderData() for an example of
 this.
+
+See also the section below on writing templates for specialized rendering.
 
 =cut
 
 sub render {
 	my ($self, $obj, $mode, $options) = @_;
 	my ($tmpl, %tmpl_data);
+
+	# HACK to render references
+	return $self->getRef( $obj, 'html' ) if $mode eq 'ref';
 
 	# look for custom template
 	my $tmpl_path = $self->_findTemplate( $obj, $mode );
@@ -266,13 +275,11 @@ sub render {
 
 =head2 renderArray
 
-		$rendered_objects = $self->renderArray( 
-			\@objects, 
-			$render_mode, 
-			{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
-			  type           => $obj->getAccessorReferenceType( $method )->getFormalName()
-			}
-		);
+	$rendered_objects = $self->renderArray( 
+		\@objects, 
+		$render_mode, 
+		{ type => $object_type }
+	);
 
 This function uses templates to render a group of objects. It will
 attach paging controls if the object list is too long.
@@ -293,8 +300,12 @@ ref_mass - Mushes all the references together without formatting.
 These templates can be found under OME/src/html/Templates/generic_* 
 
 %options holds optional parameters
+	type is used to look for specialized templates. It's the formal name
+	of the objects to be rendered. This is needed to find the specialized
+	template.
 	_more_info_url is a URL to a search page of these objects.
-	type is used to look for specialized templates. It's the formal name of the objects to be rendered.
+
+
 
 =cut
 
@@ -302,7 +313,7 @@ sub renderArray {
 	my ($self, $objs, $mode, $options) = @_;
 	$options = {} unless $options; # don't have to do undef error checks this way
 	
-	# deal with method calling style
+	# [ $obj, $method ] calling style - load the objects and paging text.
 	if( ref( $objs ) eq 'ARRAY' && scalar( @$objs ) eq 2 && !ref($objs->[1]) ) {
 		my ($obj, $method) = @$objs;
 		my ( @relation_objects, $pager_text );
@@ -337,6 +348,7 @@ sub renderArray {
 	my $tmpl = HTML::Template->new( filename => $tmpl_path, case_sensitive => 1 );
 	my %tmpl_data;
 
+	# put together data for template
 	if( $objs && scalar( @$objs ) > 0 ) {
 		my ($package_name, $common_name, $formal_name, $ST) =
 			$self->_loadTypeAndGetInfo( $objs->[0] );
@@ -545,17 +557,6 @@ sub renderData {
 			)
 				if( $options->{ draw_checkboxes } );
 					
-		# populate has many aliases
-		} elsif( $request =~ m/^(.+)!(.+)$/ ) {
-			my ($method, $render_mode) = ($1, $2);
-			$record{ $request } = $self->renderArray( 
-				[$obj, $method], 
-				$render_mode, 
-				{ _more_info_url => $self->getSearchAccessorURL( $obj, $method ),
-				  type => $obj->getAccessorReferenceType( $method )->getFormalName()
-				}
-			);
-
 		# populate mode render requests
 		} elsif( $request =~ m/^!(.+)$/ ) {
 			my $render_mode = $1;
@@ -573,22 +574,43 @@ sub renderData {
 				$obj->$request
 			);
 		
-		# populate all other requests
+		# populate field requests
 		} else {
-			$record{ $request } = $obj->$request;
-			if( ref( $record{ $request } ) ) {
-				$record{ $request } = $self->getRef( $record{ $request }, $format, $options );
-			} else {
-				my $type = $obj->getColumnSQLType( $request );
-				if( $type ) {
-					my %booleanConvert = ( 0 => 'False', 1 => 'True' );
-					$record{ $request } =~ s/^([^:]+(:\d+){2}).*$/$1/
-						if $type eq 'timestamp';
-					$record{ $request } = $booleanConvert{ $record{ $request } }
-						if $type eq 'boolean';
-					$record{ $request } = $self->_trim( $record{ $request }, $options )
-						if( $type =~ m/^varchar|text/ ); 
-				}
+			# field!command
+			my ($field, $command) = split( /!/, $request );
+			my $type = $obj->getColumnType( $field );
+			
+			# data fields
+			if( $type eq 'normal' ) {
+				my $SQLtype = $obj->getColumnSQLType( $field );
+				$record{ $request } = $obj->$field;
+				my %booleanConvert = ( 0 => 'False', 1 => 'True' );
+				$record{ $request } =~ s/^([^:]+(:\d+){2}).*$/$1/
+					if $SQLtype eq 'timestamp';
+				$record{ $request } = $booleanConvert{ $record{ $request } }
+					if $SQLtype eq 'boolean';
+				$record{ $request } = $self->_trim( $record{ $request }, $options )
+					if( $SQLtype =~ m/^varchar|text/ ); 
+			}
+			
+			# reference field
+			if( $type eq 'has-one' ) {
+				# ref if no field specified in command
+				my $render_mode = ( $command || 'ref' );
+				$record{ $request } = $self->render( $obj->$field(), $render_mode, $options );
+			}
+
+			# *many reference accessor
+			if( $type eq "has-many" || $type eq 'many-to-many' ) {
+				# ref_list if no field specified in command
+				my $render_mode = ( $command || 'ref_list' );
+				$record{ $request } = $self->renderArray( 
+					[$obj, $field], 
+					$render_mode, 
+					{ _more_info_url => $self->getSearchAccessorURL( $obj, $field ),
+					  type => $obj->getAccessorReferenceType( $field )->getFormalName()
+					}
+				);
 			}
 		}
 	}
@@ -714,13 +736,13 @@ sub getFieldTitles {
 
 =head2 getRelations
 
-	my $relations = OME::Web::DBObjRender->getRelations( $object );
+	my $relations = OME::Web::DBObjRender->getRelations( $type );
 
-$object is an instance of a DBObject or an Attribute.
+$type is an instance of a DBObject or an Attribute.
 $relations is an array reference. It is formatted like so:
 	[ $title, $method, $relation_type ]
 
-This method gets an object's has many relations.
+This method returns a description of an object's has many relations.
 
 =cut
 
@@ -802,7 +824,7 @@ sub getSearchFields {
 =head2 getRefSearchField
 
 	# get an html form element that will allow searches to $to_type
-	my $searchField = OME::Web::DBObjRender->getRefSearchField( $from_type, $to_type, $accessor_to_type );
+	my ( $searchField, $search_path ) = OME::Web::DBObjRender->getRefSearchField( $from_type, $to_type, $accessor_to_type );
 
 the types may be a DBObject name ("OME::Image"), an Attribute name
 ("@Pixels"), or an instance of either
@@ -810,7 +832,8 @@ $from_type is the type you are searching from
 $accessor_to_type is an accessor of $from_type that returns an instance of $to_type
 $to_type is the type the accessor returns
 
-returns a form input
+returns a form input and a search path for that input. The search path
+for a module_execution's module field is module.name
 
 =cut
 
@@ -866,7 +889,7 @@ sub _getSpecializedRenderer {
 	($specializedPackage =~ s/::/_/g or $specializedPackage =~ s/@//);
 	$specializedPackage = "OME::Web::DBObjRender::__".$specializedPackage;
 
-	return undef if( ref( $self ) eq $specializedPackage );
+	return $self if( ref( $self ) eq $specializedPackage );
 	# return cached renderer
 	return $self->{ $specializedPackage } if $self->{ $specializedPackage };
 
@@ -928,6 +951,14 @@ sub _findTemplate {
 	return undef;
 }
 
+=head2 _findTemplate
+
+	my $lsidManager = $self->_getLSIDmanager();
+
+returns an lsid manager from cache or makes a new one and puts it in cache.
+
+=cut
+
 sub _getLSIDmanager {
 	my $self=shift;
 	return $self->{ _LSIDmanager } if $self->{ _LSIDmanager };
@@ -937,17 +968,63 @@ sub _getLSIDmanager {
 
 =head1 Specialized Rendering
 
-To provide specialized rendering for a given type, write a subclass and
-implement one or more of the methods below.
+There are two mechanisms for adding specialized rendering. Those are
+subclasses and templates. 
+Templates are used for specifing what parts of an object get displayed
+and how to display them.
+Subclasses are used to implement necessary logic for display.
 
 =head2 Naming
 
-These subclasses should be named according to the type they are
-overriding. A specialized renderer for OME::Image is named
-OME::Web::DBObjRender::__OME_Image. @Pixels renderer is named
-OME::Web::DBObjRender::__Pixels
+The naming convention for templates is:
+	for an 'OME::Image' DBObject and 'summary' mode, OME_Image_summary.tmpl
+	for a 'Pixels' Attribute in 'detail' mode, Pixels_detail.tmpl
 
-=head1 Specialized Renderer Methods 
+The naming convention for subclasses is:
+	OME::Image's rendering class is OME::Web::DBObjRender::__OME_Image
+	@Pixels' renderering class is OME::Web::DBObjRender::__Pixels
+
+=head1 Writing Templates
+
+Basically, you write chunks of html peppered with tags that look like
+	<!-- TMPL_VAR NAME='field_name' -->
+that get replaced with the field in question. Look at
+OME_Image_detail.tmpl and OME_Image_summary.tmpl for simple examples.
+See OME_Image_ref_mass.tmpl, generic_list.tmpl, or
+generic_tiled_list.tmpl for examples of rendering lists of objects.
+
+field_name can be any of the object's fields from its DBObject
+definition, a field populated by the _renderData method of the
+specialized subclass, or a magic field.
+
+Magic fields for individual objects
+	_id: will be populated solely with the id, regardless of format or mode
+	_name: returns a name for the object, even if there isn't a name field.
+		currently populated with whatever is returned by getName( $object, $options )
+		allows a maximum length to be specified a la: _name!MaxLength:23
+	_common_name: the commonly used name of this object type
+	_ref: a reference to the object
+	_checkbox: a form checkbox named 'selected_objects' and valued with the objects' LSID
+	!mode: render the object in the mode given. evaluates to a render() call.
+	has_many_ref!mode: render the objects given by has_many_ref in the specified mode.
+		evaluates to a renderArray() call.
+
+Magic fields for lists of objects (templates picked up by renderArray().)
+	_more_info_url: shows a url to more detailed version of the list
+	_pager_text: text to control paging after a big list of objevts is
+		split into several pages of display
+	_formal_name: formal name of the object type (i.e. OME::Image, @Pixels)
+	_common_name: common name of the object type (i.e. Image, Pixels)
+	_tile_loop: used to make a multi column table with one object rendered per cell. see generic_tiled_list.tmpl
+	_obj_loop: used to loop across objects.
+
+Either of the loop Magic fields can contain specific fields or render mode requests.
+
+See also HTML::Template at http://html-template.sourceforge.net
+
+=head1 Subclass Methods 
+
+Subclasses should implement one or more of these
 
 =head2 _getName
 
@@ -956,11 +1033,20 @@ OME::Web::DBObjRender::__Pixels
 Overrides getName()
 
 Subclasses are expected to implement $options->{ 'max_text_length' }.
-Names longer than that value should be trimmed.
+Names returned should not be longer than that value.
+
+=head2 _getRef
+
+	my $object_ref = $specializedRenderer->_getRef( $object, $options );
+
+Overrides getName()
+
+Subclasses are expected to implement $options->{ 'max_text_length' }.
+Names returned should not be longer than that value.
 
 =head2 _renderData
 
-	%partial_record = $specializedRenderer->_renderData( $obj, $format, $field_names, $options );
+	%partial_record = $specializedRenderer->_renderData( $obj, $format, \@field_names, \%options );
 
 Implement this to do custom rendering of certain fields or to implement
 fields not implemented in DBObject. Examples of this are:
@@ -976,6 +1062,54 @@ Subclasses need only populate fields they are overriding.
 
 Implement this to do custom rendering of search fields. Subclasses need
 only populate fields they are overriding.
+
+=head2 _getRefSearchField
+
+	my ( $form_input, $search_path ) = $specializedRenderer->_getRefSearchField( 
+		$from_type, $to_type, $accessor_to_type, $default )
+	
+	overrides getRefSearchField()
+
+=head1 Roadmap/2do list
+
+=over 4
+
+=item *
+
+Depricate getRef($obj) in favor of render( $obj, 'ref' ). Implement a
+_ref magic field in renderData() that does the same thing. Subclasses
+would override self references with _renderData() instead of _getRef()
+
+=item *
+
+move the guts of getName() into renderData(). Force subclasses to
+implement that in _renderData(). This simplifies the structure of
+subclasses even more. Retain getName( $obj, $options ) as a conveint
+shortcut to renderData( $obj, 'txt', [ '_name' ], $options )
+
+=item *
+
+Support !MaxLength for all field requests in renderData()
+
+=item *
+
+Implement context dependent rendering of types. i.e. module executions under image a la:
+
+	<TMPL_LOOP NAME='module_executions'>
+		<TMPL_VAR NAME='_name!Ref'>
+	</TMPL_LOOP>
+
+Requires changes to render to detect when variables are loops and deal with them appropriately.
+Alternately, use <TMPL_VAR NAME='module_executions!name_ref_list'> and make another template.
+
+=item *
+
+Make a table mode for renderArray(). Code will needed to be added. This
+would allow simple tables to be phased out of DBObjTable. DBObjTable is
+fairly complicated and was designed against an earlier version of
+DBObjRender. I get nervous about people using it. I guess as long as it
+works, there's no need to switch. I just don't want to expend effort to
+support or develop another rendering model.
 
 =head1 Author
 
