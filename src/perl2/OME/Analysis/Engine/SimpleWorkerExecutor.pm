@@ -53,19 +53,26 @@ use Carp;
 use LWP::UserAgent;
 use HTTP::Response;
 use Log::Agent;
-
+use Sys::Hostname;
 
 use OME::Session;
 use OME::Analysis::Engine::Worker;
 use OME::Tasks::NotificationManager;
 
 use constant SERVER_BUSY     => 503;
-use constant DATA_SOURCE     => 'dbi:Pg:dbname=ome;host=localhost';
+our $DATA_SOURCE;
 
 
 sub new {
 	my $proto = shift;
 	my $class = ref($proto) || $proto;
+	
+	unless ($DATA_SOURCE) {
+		$DATA_SOURCE = OME::DBConnection->DataSource();
+		$DATA_SOURCE .= ';host='.hostname()
+			unless $DATA_SOURCE =~ /;host=\S+/
+			and not $DATA_SOURCE =~ /;host=localhost/;
+	}
 
 	my $self = {
 		instance_id => undef,
@@ -91,7 +98,7 @@ sub new {
 	$self->{UA} = LWP::UserAgent->new ();
 
 	# Get our DataSource + SessionKey
-	$self->{DataSource}	  = DATA_SOURCE;
+	$self->{DataSource}	  = $DATA_SOURCE;
 	$self->{SessionKey}	  = OME::Session->instance()->SessionKey();
 
 	logdbg "debug", "SimpleWorkerExecutor->new: Registering listeners";
