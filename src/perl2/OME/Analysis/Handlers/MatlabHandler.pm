@@ -201,7 +201,7 @@ sub __openEngine {
         $self->{__engine} = $engine;
         $self->{__engineOpen} = 1;
 
-        $engine->eval(q[addpath('/Users/tmacur1/Desktop/OME-Hacking/OME/src/matlab');]);
+        $engine->eval(q[addpath(genpath('/Users/tmacur1/Desktop/OME-Hacking/OME/src/matlab'));]);
     }
 }
 
