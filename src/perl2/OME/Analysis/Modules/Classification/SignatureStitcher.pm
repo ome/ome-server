@@ -87,7 +87,7 @@ sub execute {
 		
 		# Collect the actual inputs for all the images
 		my @input_attr_list = $self->getInputAttributes( $formal_input )
-		  or die "Couldn't get inputs!";
+		  or die "Couldn't get inputs for formal input '".$formal_input->name."', (id=".$formal_input->id.")!";
 		
 		# Every semantic element gets an entry in the vector
 		foreach my $se ( $formal_input->semantic_type->semantic_elements() ) {
