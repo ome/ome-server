@@ -1,7 +1,30 @@
-Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.1
+Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.2
 -----------------------------------------
+Ilya Goldberg <igg@nih.gov>
+15 August 2003
+
+* There are two methods of installing OME on OSX.  The first is short and simple.  Its disadvantage is that you will use the version of Perl that came with your system (5.6.x instead of 5.8.x).  The advantage is that you will have much less code to compile, and none of it by hand.
+
+* The longer version of the installation instructions which uses more modern software follows this blurb.
+
+Before you begin:
+___________________________________
+* Install the developer tools.  These are usualy in /Applications/Installers/
+* Install the X Window system from Apple (http://www.apple.com/macosx/x11/download/).  Don't forget the 'SDK'.  You will need to install a total of two X11-related packages.
+* Install fink.  You can jump directly to the installation instructions here:  http://fink.sourceforge.net/doc/bundled/install.php.  Note that even though this may look scary, it isn't.  Things will generally work out pretty well if you just choose the defaults to all the questions.  After you install fink, issue the following command:
+fink install gd
+This will download and install several additional packages.
+* Install PostgreSQL.  Download this:  http://openmicroscopy.org/packages/OSX/Postgres-7.2.2-OSX-bin.tar.gz
+Uncompress it, install pgsql-7.2.2-jaguar.pkg and pgsql-startupitem-1.2.pkg, and follow the rest of the instructions in Postgres-Install.pdf
+* Now, follow the rest of the instruction in the SBDD.
+
+___________________________________
+Mac OS X 10.2 (Jaguar) INSTALL NOTES v0.2 - With updated Perl, etc.
+___________________________________
 Jeff Mellen <jeffm@mit.edu>
 27 July 2003
+Updated by Ilya Goldberg <igg@nih.gov>
+15 August 2003
 
 * Bottom line: Installing OME on Mac OS X is tough because of a few factors, (1) lack of binaries available for certain programs, (2) preloaded versions of software that Apple provides, (3) the dichotomy between a Darwin-flavored installation and UNIX-based installation, and (4) libxml.  So although Mac OS X is a more user-friendly OS, it is not a more OME-friendly OS.  But it eventually works.
 
@@ -139,17 +162,6 @@ So, if you have the normal OS X installation, you will now have *two* versions o
 __________________________________________
 required libraries (non-Fink)
 
-I encountered problems with the libxml2 version that the OME perlCheck.pl script tried to download.  The Perl LibXML modules require a libxml of 2.5.5 or higher.  Both Fink, darwin, and the OME repository have 2.5.4.  My solution was to download from source:
-
-% curl -O ftp://ftp.gnome.org/pub/GNOME/sources/libxml2/2.5/libxml2-2.5.8.tar.gz
-% tar xvzf libxml2-2.5.8.tar.gz
-% cd libxml2-2.5.8
-% ./configure
-% make
-% sudo make install
-
-libxml2 support should be good now, although you may need to move the libxml libraries from /usr/local/lib to lib, and the libxml2 includes from /usr/local/include to /usr/include.  More on that later.
-
 The perlCheck.pl script also doesn't seem to put zlib where it should (/usr/lib).  So let's download from source *again*.
 
 % curl -O http://aleron.dl.sourceforge.net/sourceforge/libpng/zlib-1.1.4.gz
@@ -180,21 +192,7 @@ $ENV[POSTGRES_LIB} = "$libDir -lssl"...
 AFTER:
 $ENV{POSTGRES_LIB} = "$libDir -lkrb5 -lssl"...
 
-GD is dependent on libgd 1.8.4, which is only downloadable through Fink.  GD, in turn, is dependent on several other libraries.  So I kept the files for GD inside /sw, and didn't move them into /usr/lib.  If you choose to do this, you should probably install the GD-1.33 package manually (perlCheck will choke on GD when it is installed).  Here's how to manually install any missing Perl module:
-
-% curl -O http://openmicroscopy.org/packages/perl/GD-1.33.tar.gz
-          (the name of the module is listed at the top of perlCheck.pl)
-
-% tar xvzf GD-1.33.tar.gz
-% cd GD-1.33
-
-OK, in Makefile.PL, prepend "-I/sw/include -I/sw/include/gd" to the list of include files (my @INC), and add "-L/sw/lib and -L/sw/lib/gd" just before "-L/usr/local/lib" in the list of included libraries (my @LIBPATH).  Then, in the GD-1.33 folder:
-
-% perl Makefile.PL
-% make
-% sudo make install
-
-You may want to do this in the correct order-- that is, wait for perlCheck.pl to have a problem with GD, install GD-1.33, and then resume the perlCheck script.  The installation of OME should follow the SBDD instructions after this point.
+The installation of OME should follow the SBDD instructions after this point.
 
 ---------------------------------------
 Fun With Deployment
