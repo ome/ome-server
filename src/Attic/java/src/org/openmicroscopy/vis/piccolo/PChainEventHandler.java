@@ -47,12 +47,15 @@ import edu.umd.cs.piccolo.event.PPanEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventFilter;
 import edu.umd.cs.piccolo.PNode;
+import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Point2D;
 import java.awt.event.KeyEvent;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.Collection;
+import java.awt.event.MouseEvent;
 
 
 
@@ -79,6 +82,8 @@ public class PChainEventHandler extends  PPanEventHandler {
 	private static final int NOT_LINKING=1;
 	private static final int LINKING_PARAMS=2;
 	private static final int LINKING_MODULES=3;
+	
+	private static final double SCALE_FACTOR=1.2;
 	private int linkState = NOT_LINKING;
 	
 	// Store the last module parameter that we were in.
@@ -106,9 +111,16 @@ public class PChainEventHandler extends  PPanEventHandler {
 	
 	private boolean moduleLinksStartedAsInputs = false;
 	
+	protected int allButtonMask = MouseEvent.BUTTON1_MASK |
+					MouseEvent.BUTTON2_MASK | MouseEvent.BUTTON3_MASK;
+	
+	private PChainCanvas canvas;
+	
+	
 	public PChainEventHandler(PChainCanvas canvas,PLinkLayer linkLayer) {
 		super();
 		setAutopan(false);
+		this.canvas = canvas;
 		this.linkLayer = linkLayer;
 		PInputEventFilter filter =getEventFilter();
 		filter.setAcceptsKeyPressed(true);
@@ -231,6 +243,38 @@ public class PChainEventHandler extends  PPanEventHandler {
 		}
 
 	}
+	
+	public void mouseClicked(PInputEvent e) {
+		PNode node = e.getPickedNode();
+		int mask = e.getModifiers() & allButtonMask;
+		PCamera camera = canvas.getCamera();
+		if (! (node instanceof PCamera))
+			return;
+		
+		if (e.isShiftDown()) {
+			System.err.println("animating to center");
+			PBounds b = canvas.getBufferedBounds();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+			//animateToCenter(camera);
+			e.setHandled(true);
+		}
+		else { 
+			double scaleFactor  = PConstants.SCALE_FACTOR;	
+			if (mask == MouseEvent.BUTTON1_MASK) {
+				System.err.println("zooming in");
+			}
+			else {
+				scaleFactor = 1/scaleFactor;
+				System.err.println("zooming out ");
+			}
+			double curScale = camera.getScale();
+			curScale *= scaleFactor;
+			Point2D pos = e.getPosition();
+			camera.scaleViewAboutPoint(curScale,pos.getX(),pos.getY());
+			e.setHandled(true);
+		}  
+	}
+
 	
 	public void mousePressed(PInputEvent e) {
 		PNode node = e.getPickedNode();
