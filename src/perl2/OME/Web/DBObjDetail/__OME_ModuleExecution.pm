@@ -149,21 +149,21 @@ sub getPageBody {
 		my @tables;
 		
 		#if we are displaying only a single formal output we don't need a join
-		if (scalar(@{$clumped_list{$clump}}) == 1 ) {
-			my $fo = $clumped_list{$clump}->[0];
-			my $attributes = OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type);
-			@tables = $tableMaker->getTable( 
-				{
-					excludeFields    => { module_execution => undef },
-					embedded_in_form => $self->{ form_name },
-					title            => $fo->name(),
-				},
-				$self->_STformalName( $fo->semantic_type() ),
-				$attributes
-			);
-		
-		# display a merged table only on the formal outputs stored in the same database table
-		} else {
+# 		if (scalar(@{$clumped_list{$clump}}) == 1 ) {
+# 			my $fo = $clumped_list{$clump}->[0];
+# 			my $attributes = OME::Tasks::ModuleExecutionManager->getAttributesForMEX($mex, $fo->semantic_type);
+# 			@tables = $tableMaker->getTable( 
+# 				{
+# 					excludeFields    => { module_execution => undef },
+# 					embedded_in_form => $self->{ form_name },
+# 					title            => $fo->name(),
+# 				},
+# 				$self->_STformalName( $fo->semantic_type() ),
+# 				$attributes
+# 			);
+# 		
+# 		# display a merged table only on the formal outputs stored in the same database table
+# 		} else {
 			my @table_data;
 			foreach my $fo ( @{$clumped_list{$clump}} ) {
 				next unless $fo->semantic_type;
@@ -182,10 +182,10 @@ sub getPageBody {
 				},
 				\@table_data
 			);
-		}
+#		}
 		
 		$html .= join( '<br>', @tables );
-	}
+ 	}
 	
 	# Untyped Outputs Tables
 	$html .= $q->h1( 'Untyped Outputs' );
