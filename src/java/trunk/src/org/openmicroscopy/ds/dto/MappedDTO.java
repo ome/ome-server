@@ -44,6 +44,7 @@ package org.openmicroscopy.ds.dto;
 
 import org.openmicroscopy.ds.DataException;
 import org.openmicroscopy.ds.DataFactory;
+import org.openmicroscopy.ds.PrimitiveConverters;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
