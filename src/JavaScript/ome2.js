@@ -52,6 +52,7 @@
  DetailPage       = '/perl2/serve.pl?Page=OME::Web::DBObjDetail';
  RelationshipPage = '/perl2/serve.pl?Page=OME::Web::ManageRelationships&Popup=1';
  CreationPage     = '/perl2/serve.pl?Page=OME::Web::DBObjCreate&Popup=1';
+ STdocPage        = '/perl2/serve.pl?Page=OME::Web::STdoc&Popup=1';
  SearchPage       = '/perl2/serve.pl?Page=OME::Web::Search&Popup=1';
 
 /*
@@ -96,6 +97,42 @@ function creationPopup( type, return_to_field ) {
 		CreationPage + '&Locked_Type=' + type + '&return_to=' + return_to_field,
 		'_create_'+type+'_for_'+return_to_field,
 		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 1000, HEIGHT = 600'
+	);
+}
+
+// annotateImage()
+function annotateImage( image_id, semantic_type ) {
+	window.open(
+		CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&image=' + image_id,
+		'annotateImage',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300'
+	);
+}
+
+// annotateDataset()
+function annotateDataset( dataset_id, semantic_type ) {
+	window.open(
+		CreationPage + '&Locked_Type=' + semantic_type + '&refresh_when_done=1' + '&dataset=' + dataset_id,
+		'annotateDataset',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 300'
+	);
+}
+
+// STdocPopup()
+function STdocPopup( ST_name ) {
+	window.open(
+		STdocPage + '&ST_name=' + ST_name,
+		'_doc',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250'
+	);
+}
+
+// SEdocPopup()
+function SEdocPopup( SE_id ) {
+	window.open(
+		STdocPage + '&SE_id=' + SE_id,
+		'_doc',
+		'TOOLBAR = no, LOCATION = no, STATUS = no, MENUBAR = no, SCROLLBARS = yes, RESIZABLE = yes, WIDTH = 600, HEIGHT = 250'
 	);
 }
 
