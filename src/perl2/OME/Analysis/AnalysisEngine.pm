@@ -1,4 +1,4 @@
-# OME/Tasks/AnalysisEngine.pm
+# OME/Analysis/AnalysisEngine.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -625,6 +625,10 @@ sub findModuleHandler {
     # image.
     sub __getAnalysis {
         my ($nodeID) = @_;
+
+		# Dependence is calculated before analysis hashes are filled out.
+		# This line prevents error msg: Use of uninitialized value in string eq at OME/Analysis/AnalysisEngine.pm line 629.
+		return undef if not exists $dependence{$nodeID};
 
         if ($dependence{$nodeID} eq 'G') {
             return $global_analysis{$nodeID};
