@@ -78,7 +78,8 @@ sub execute {
 	
 	# Figure out what's been passed in this time.
 	my @formal_inputs = $factory->findObjects('OME::Module::FormalInput', { module => $module });
-	
+	@formal_inputs = sort { $a->name cmp $b->name } @formal_inputs;
+
 	# Make some entries for each input
 	my $signature_vector_size = 0;
 	foreach my $formal_input ( @formal_inputs ) {
@@ -90,7 +91,9 @@ sub execute {
 		  or die "Couldn't get inputs for formal input '".$formal_input->name."', (id=".$formal_input->id.")!";
 		
 		# Every semantic element gets an entry in the vector
-		foreach my $se ( $formal_input->semantic_type->semantic_elements() ) {
+		my @SEs = $formal_input->semantic_type->semantic_elements();
+		@SEs = sort { $a->name cmp $b->name } @SEs;
+		foreach my $se ( @SEs ) {
 			$signature_vector_size++;
 			my $se_name = $se->name();
 			
