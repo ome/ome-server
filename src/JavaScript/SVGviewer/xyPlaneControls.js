@@ -1,6 +1,6 @@
 /*****
 *
-*	imageControls.js
+*	XYPlaneControls.js
 
 	Copyright (C) 2003 Open Microscopy Environment
 		Massachusetts Institute of Technology,
@@ -29,69 +29,99 @@
 
 svgns = "http://www.w3.org/2000/svg";
 
-/*****
-
-	ImageControls(...)
-
-*****/
-
-
-function ImageControls(  ) {
-
-	this.init(  );
-}
-
-ImageControls.prototype.init = function(  ) {
-
-
-}
-
+XYPlaneControls.prototype.toolboxParams = {
+	x: 250,
+	y: 30, 
+	width: 200, 
+	height: 150,
+	menuBarText: skinLibrary["menuBar"],
+	hideControlText: skinLibrary["hideControl"],
+	GUIboxText: skinLibrary["GUIbox"],
+	noclip: 'noclip'
+};
 
 /*****
-
-buildControls( ... )
-
-parameters:
-	actions - associative array (AKA hash) of functions or 'method name'/object pairs
-		to tie controls into
-	supplimentaryControls - control window names to give access to in a pop-up list
-	channelLabels - labels of the channels in the image
-
+	XYPlaneControls
+		actions - associative array (AKA hash) of functions or 'method name'/object pairs
+			to tie controls into
+		supplimentaryControls - control window names to give access to in a pop-up list
+		channelLabels - labels of the channels in the image
 *****/
-ImageControls.prototype.buildControls = function( actions, supplimentaryControls, channelLabels ) {
+function XYPlaneControls( actions, supplimentaryControls, channelLabels, image ) {
+	this.init( actions, supplimentaryControls, channelLabels, image );
+}
 
-	this.controlsRoot = svgDocument.createElementNS( svgns, "g" );
+XYPlaneControls.prototype.init = function( actions, supplimentaryControls, channelLabels, image ) {
+	this.actions = actions;
+	this.supplimentaryControls = supplimentaryControls;
+	this.channelLabels = channelLabels;
+	this.image = image;
+
+	this.actions['OnOffR']     = { obj: this.image, method: 'setRedOn' };
+	this.actions['OnOffG']     = { obj: this.image, method: 'setGreenOn' };
+	this.actions['OnOffB']     = { obj: this.image, method: 'setBlueOn' };
+	this.actions['Save']       = { obj: this.image, method: 'saveState' };
+	this.actions['preload']    = { obj: this.image, method: 'prefetchImages' };
+	this.actions['switchRGB_BW']    = { obj: this.image, method: 'setDisplayRGB_BW' };
+};
+
+
+XYPlaneControls.prototype.buildToolBox = function( toolboxLayer ) {
+	var displayContent = this.buildDisplay();
+	var bbox = displayContent.getBBox();
+//	this.toolboxParams['width'] = bbox.width + 2 * toolBox.prototype.padding;
+//	this.toolboxParams['height'] = bbox.height + 2 * toolBox.prototype.padding;
+	this.toolBox = new toolBox( this.toolboxParams );
+	this.toolBox.setLabel(100,12,"XY Plane Controls");
+	this.toolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
+	this.toolBox.realize( toolboxLayer );
+	this.displayPane = this.toolBox.getGUIbox();
+	this.displayPane.appendChild( displayContent );
+	
+};
+
+XYPlaneControls.prototype.setWindowControllers = function( windowControllers ) {
+	this.windowControllers = windowControllers;
+};
+
+XYPlaneControls.prototype.buildDisplay = function(  ) {
+
+	this.displayContent = Util.createElementSVG( "g" );
 
 	// Z section controls
 	this.zSlider = new Slider(
 		30, 120, 100, -90,
-		actions['zSlider'],
+		this.actions['zSlider'],
 		skinLibrary["zSliderBody"],
-		skinLibrary["zSliderThumb"]
+		skinLibrary["zSliderThumb"],
+		theZ
 	);
 	this.zSlider.setLabel(0,-102,"");
 	this.zSlider.getLabel().setAttribute( "fill", "white" );
 	this.zSlider.getLabel().setAttribute( "text-anchor", "middle" );
+	this.zSlider.realize(this.displayContent);
+	this.zSlider.setMinmax( 0, (this.image.getDimZ() - 1) );
+
 	this.zUpButton = new button(
 		15, 106, 
-		actions['zUp'],
+		{ obj: this, method: 'zUp' },
 		skinLibrary["triangleUpWhite"]
 	);
 	this.zDownButton = new button(
 		15, 110,
-		actions['zDown'],
+		{ obj: this, method: 'zDown' },
 		skinLibrary["triangleDownWhite"]
 	);
 	this.zAnimUpButton = new button(
 		15, 86, 
-		actions['zAnimUp'],
+		{ obj: this, method: 'zAnimUp' },
 		skinLibrary["triangleUpRed"],
 		null,
 		skinLibrary["triangleUpWhite"]
 	);
 	this.zAnimDownButton = new button(
 		15, 90, 
-		actions['zAnimDown'],
+		{ obj: this, method: 'zAnimDown' },
 		skinLibrary["triangleDownRed"],
 		null,
 		skinLibrary["triangleDownWhite"]
@@ -100,30 +130,36 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	// Timepoint controls
 	this.tSlider = new Slider(
 		60, 30, 100, 0,
-		actions['tSlider']
+		this.actions['tSlider'],
+		null,
+		null,
+		theT
 	);
 	this.tSlider.setLabel(60,-13,"");
 	this.tSlider.getLabel().setAttribute( "fill", "white" );
+	this.tSlider.realize(this.displayContent);
+	this.tSlider.setMinmax( 0, (this.image.getDimT() - 1) );
+
 	this.tUpButton = new button(
 		182, 25,
-		actions['tUp'],
+		{ obj: this, method: 'tUp' },
 		skinLibrary["triangleRightWhite"]
 	);
 	this.tDownButton = new button(
 		178, 25,
-		actions['tDown'],
+		{ obj: this, method: 'tDown' },
 		skinLibrary["triangleLeftWhite"]
 	);
 	this.tAnimUpButton = new button(
 		182, 35, 
-		actions['tAnimUp'],
+		{ obj: this, method: 'tAnimUp' },
 		skinLibrary["triangleRightRed"],
 		null,
 		skinLibrary["triangleRightWhite"]
 	);
 	this.tAnimDownButton = new button(
 		178, 35, 
-		actions['tAnimDown'],
+		{ obj: this, method: 'tAnimDown' },
 		skinLibrary["triangleLeftRed"],
 		null,
 		skinLibrary["triangleLeftWhite"]
@@ -131,8 +167,8 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 
 	// wavelength to channel popupLists
 	this.redPopupList = new popupList(
-		-50, 0, channelLabels, 
-		actions['setRedLogicalChannel'],
+		-50, 0, this.channelLabels, 
+		this.actions['setRedLogicalChannel'],
 		1,
 		skinLibrary["redAnchorText"],
 		skinLibrary["redItemBackgroundText"],
@@ -140,8 +176,8 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	);
 
 	this.greenPopupList = new popupList(
-		0, 0, channelLabels, 
-		actions['setGreenLogicalChannel'],
+		0, 0, this.channelLabels, 
+		this.actions['setGreenLogicalChannel'],
 		0,
 		skinLibrary["greenAnchorText"],
 		skinLibrary["greenItemBackgroundText"],
@@ -149,8 +185,8 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	);
 
 	this.bluePopupList = new popupList(
-		50, 0, channelLabels, 
-		actions['setBlueLogicalChannel'],
+		50, 0, this.channelLabels, 
+		this.actions['setBlueLogicalChannel'],
 		0,
 		skinLibrary["blueAnchorText"],
 		skinLibrary["blueItemBackgroundText"],
@@ -158,27 +194,27 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	);
 	
 	this.greyPopupList = new popupList(
-		0, 0, channelLabels, actions['setGreyLogicalChannel']
+		0, 0, this.channelLabels, this.actions['setGreyLogicalChannel']
 	);
 	
 	// set up channel on/off buttons
 	this.redButton = new button( 
 		Math.round(this.redPopupList.x + this.redPopupList.width/2), -13, 
-		actions['OnOffR'],
+		this.actions['OnOffR'],
 		skinLibrary["redButtonOn"],
 		skinLibrary["redButtonOff"],
 		skinLibrary["blankButtonRadius5Highlight"]
 	);
 	this.greenButton = new button( 
 		Math.round(this.greenPopupList.x + this.greenPopupList.width/2), -13, 
-		actions['OnOffG'],
+		this.actions['OnOffG'],
 		skinLibrary["greenButtonOn"],
 		skinLibrary["greenButtonOff"],
 		skinLibrary["blankButtonRadius5Highlight"]
 	);
 	this.blueButton = new button(
 		Math.round(this.bluePopupList.x + this.bluePopupList.width/2), -13,
-		actions['OnOffB'],
+		this.actions['OnOffB'],
 		skinLibrary["blueButtonOn"],
 		skinLibrary["blueButtonOff"],
 		skinLibrary["blankButtonRadius5Highlight"]
@@ -186,28 +222,28 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 
 	this.redScaleButton = new button(
 		Math.round(this.redPopupList.x + this.redPopupList.width/2), 25,
-		actions['showRedScale'],
+		this.actions['showRedScale'],
 		'<text fill="maroon" text-anchor="middle">Scale</text>',
 		null,
 		'<text fill="black" text-anchor="middle">Scale</text>'
 	);
 	this.greenScaleButton = new button(
 		Math.round(this.greenPopupList.x + this.greenPopupList.width/2), 25,
-		actions['showGreenScale'],
+		this.actions['showGreenScale'],
 		'<text fill="darkgreen" text-anchor="middle">Scale</text>',
 		null,
 		'<text fill="black" text-anchor="middle">Scale</text>'
 	);
 	this.blueScaleButton = new button(
 		Math.round(this.bluePopupList.x + this.bluePopupList.width/2), 25,
-		actions['showBlueScale'],
+		this.actions['showBlueScale'],
 		'<text fill="midnightblue" text-anchor="middle">Scale</text>',
 		null,
 		'<text fill="black" text-anchor="middle">Scale</text>'
 	);
 	this.greyScaleButton = new button(
 		Math.round(this.greyPopupList.x + this.greyPopupList.width/2), 25,
-		actions['showGreyScale'],
+		this.actions['showGreyScale'],
 		'<text fill="black" text-anchor="middle">Scale</text>',
 		null,
 		'<text fill="white" text-anchor="middle">Scale</text>'
@@ -217,36 +253,34 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	// save button
 	this.saveButton = new button(
 		85, 130, 
-		actions['Save'],
+		this.actions['Save'],
 		'<text fill="black" text-anchor="end">Save</text>',
 		null,
 		'<text fill="white" text-anchor="end">Save</text>'
 	);
 	this.loadButton = new button(
 		85, 140, 
-		actions['preload'],
+		this.actions['preload'],
 		'<text fill="black" text-anchor="end">Prefetch</text>',
 		null,
 		'<text fill="white" text-anchor="end">Prefetch</text>'
 	);
 	
 
-	// set up RGB to grayscale button
+	// RGB to grayscale button
 	this.RGB_BWbutton = new button(
 		105, 115, 
-		actions['RGB2BW'],
+		{ obj: this, method: 'switchRGB_BW' },
 		skinLibrary["RGB_BWButtonOn"],
 		skinLibrary["RGB_BWButtonOff"],
 		skinLibrary["blankButtonRadius13Highlight"]
 	);
 	
-	// buttons to access panes
-	
-// Rest of these buttons should live somewhere else.
+	// popup list to access panes
 	this.panePopupList = new popupList(
 		125, 125,
-		supplimentaryControls,
-		actions['openWindow'],
+		this.supplimentaryControls,
+		{ obj: this, method: 'openWindow' },
 		null,
 		skinLibrary["transparentBox"],
 		null, 
@@ -255,29 +289,27 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	);
 
 	// Z & T controls
-	this.zSlider.realize(this.controlsRoot);
-	this.tSlider.realize(this.controlsRoot);
-	this.tUpButton.realize(this.controlsRoot);
-	this.tDownButton.realize(this.controlsRoot);
-	this.zUpButton.realize(this.controlsRoot);
-	this.zDownButton.realize(this.controlsRoot);
-	this.tAnimUpButton.realize(this.controlsRoot);
-	this.tAnimDownButton.realize(this.controlsRoot);
-	this.zAnimUpButton.realize(this.controlsRoot);
-	this.zAnimDownButton.realize(this.controlsRoot);
+	this.tUpButton.realize(this.displayContent);
+	this.tDownButton.realize(this.displayContent);
+	this.zUpButton.realize(this.displayContent);
+	this.zDownButton.realize(this.displayContent);
+	this.tAnimUpButton.realize(this.displayContent);
+	this.tAnimDownButton.realize(this.displayContent);
+	this.zAnimUpButton.realize(this.displayContent);
+	this.zAnimDownButton.realize(this.displayContent);
 
-	this.loadButton.realize(this.controlsRoot);
+	this.loadButton.realize(this.displayContent);
 
 	// RGB & BW switcheroo
-	this.RGB_BWbutton.realize(this.controlsRoot);
+	this.RGB_BWbutton.realize(this.displayContent);
 	
 	// Save button
-	this.saveButton.realize(this.controlsRoot);
+	this.saveButton.realize(this.displayContent);
 
 	// RGB channel controls
 	this.RGBpopupListBox = svgDocument.createElementNS( svgns, "g" );
 	this.RGBpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
-	this.controlsRoot.appendChild( this.RGBpopupListBox );
+	this.displayContent.appendChild( this.RGBpopupListBox );
 	this.redButton.realize( this.RGBpopupListBox );
 	this.greenButton.realize( this.RGBpopupListBox );
 	this.blueButton.realize( this.RGBpopupListBox );
@@ -292,13 +324,92 @@ ImageControls.prototype.buildControls = function( actions, supplimentaryControls
 	this.BWpopupListBox = svgDocument.createElementNS( svgns, "g" );
 	this.BWpopupListBox.setAttribute( "transform", "translate( 95, 70 )" );
 	this.BWpopupListBox.setAttribute( "display", "none" );
-	this.controlsRoot.appendChild( this.BWpopupListBox );
+	this.displayContent.appendChild( this.BWpopupListBox );
 	this.greyPopupList.realize( this.BWpopupListBox );
 	this.greyScaleButton.realize( this.BWpopupListBox );
 	
-	this.panePopupList.realize( this.controlsRoot );
+	this.panePopupList.realize( this.displayContent );
 
-	return this.controlsRoot;
+	return this.displayContent;
 
 };
 
+XYPlaneControls.prototype.exec_action = function ( action, value ) {
+	if( this.actions[action] ) {
+		if( Util.isFunction( this.actions[action]) ) { 
+			this.actions[action](value); 
+		} else { 
+			eval( "this.actions[action]['obj']."+this.actions[action]['method']+"(value)"); 
+		}
+	}
+};
+
+
+/************
+	Callback functions for GUI components
+************/
+
+XYPlaneControls.prototype.zUp = function () {
+	setTheZ( theZ < this.image.getDimZ() - 1 ? theZ + 1 : theZ );
+};
+XYPlaneControls.prototype.zDown = function() {
+	setTheZ( theZ> 0 ? theZ - 1 : theZ );
+};
+XYPlaneControls.prototype.zAnimUp = function() {
+	var Z = this.image.getDimZ();
+	if(Z > 1) {
+		for(var i=theZ;i<Z;++i) {
+			setTimeout("setTheZ(" + i + ")", (i-theZ)*100);
+		}
+	}
+};
+XYPlaneControls.prototype.zAnimDown = function() {
+	var Z = this.image.getDimZ();
+	if(Z > 1) {
+		for(var i=theZ;i>=0;--i) {
+			setTimeout("setTheZ(" + i + ")", (theZ-i)*100);
+		}
+	}
+};
+
+
+XYPlaneControls.prototype.tUp = function() {
+	setTheT( theT < this.image.getDimT() - 1 ? theT+1 : theT );
+};
+XYPlaneControls.prototype.tDown = function() {
+	setTheT( theT > 0 ? theT - 1 : theT );
+};
+XYPlaneControls.prototype.tAnimUp = function() {
+	var T = this.image.getDimT();
+	if(T>1) {
+		for(var i=theT;i<T;++i) {
+			setTimeout("setTheT(" + i + ")", (i-theT)*100);
+		}
+	}
+};
+XYPlaneControls.prototype.tAnimDown = function() {
+	if(this.image.getDimT() > 1) {
+		for(var i=theT;i>=0;--i) {
+			setTimeout("setTheT(" + i + ")", (theT-i)*100);
+		}
+	}
+};
+
+
+XYPlaneControls.prototype.openWindow = function( windowName ) {
+	this.windowControllers[ this.supplimentaryControls[ windowName ] ].toolBox.unhide();
+};
+
+
+XYPlaneControls.prototype.switchRGB_BW = function( val ) {
+	//	decide which way to flip
+	if(val) {	// val == true means mode = RGB
+		this.BWpopupListBox.setAttribute( "display", "none" );
+		this.RGBpopupListBox.setAttribute( "display", "inline" );
+	}
+	else {	// mode = BW
+		this.BWpopupListBox.setAttribute( "display", "inline" );
+		this.RGBpopupListBox.setAttribute( "display", "none" );
+	}
+	this.exec_action( 'switchRGB_BW', val );
+};
