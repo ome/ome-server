@@ -231,7 +231,6 @@ sub new {
         # Assign the variables read from the DB into the $self hash.
         do {
             $self->{$var->name()} = $var->value();
-            print STDERR "Configuration ".$var->name().' = '.$var->value()."\n";
         } while ($var = $vars->next());
 
         # Instantiate any foreign key variables we found.
