@@ -119,26 +119,8 @@ sub getPageBody {
 			$body .= $cgi->p({-class => 'ome_info'},
 				'Save of new project metadata successful.');
 		}
-	} elsif ($action eq 'Remove') {
-		# Action
-		$p_manager->removeDatasets( {
-				$project->id() => \@selected
-			}
-		);
-		
-		# Data
-		$body = $cgi->p({-class => 'ome_info'},
-			"Removed dataset(s) @selected from the project.");
-	} elsif (defined $cgi->param('Add')) {
-		# Action
-		my @datasets = $factory->findObjects("OME::Dataset", name => $selected[0]);
-		$p_manager->addToProject($datasets[0]->id(), $project->id());
-		
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'},
-			"Added dataset $selected[0] to the project.");
-	} 
-	
+	}
+
 	# print form
 	$body .= $self->__printForm();
 	
@@ -258,12 +240,7 @@ sub __makeDatasetListings {
 	foreach ($project->datasets()) { push (@$in_project, $_->id()) }
 	
 	# Gen our "Datasets in Project" table
-	my $html = $t_generator->getTable( {
-			options_row => ['Remove'],
-			select_column => 1,
-		},
-		$project->datasets()
-	);
+	my $html = $t_generator->getTable({},$project->datasets());
 
 	my @additional_datasets;
 
@@ -285,34 +262,20 @@ sub __makeDatasetListings {
 	# Add a null to the beginning
 	unshift(@additional_datasets, 'None');
 
-	# Add dataset table
-	$html .= $q->p .
-	         $q->table( {
-					 -class => 'ome_table',
-					 -align => 'center',
-					 -cellspacing => 1,
-					 -cellpadding => 4
-				 },
-				 $q->Tr(
-					 $q->startform(),
-					 $q->td(
-						 {-class => 'ome_action_td'},
-						 '&nbsp',
-						 $q->span("Add dataset: "),
-						 $q->popup_menu( {
-								 -name => 'selected',
-								 -values => [@additional_datasets],
-								 -default => $additional_datasets[0]
-							 }
-						 ),
-						 '&nbsp',
-						 $q->submit({-name => 'Add', -value => 'Add'}),
-						 '&nbsp'
-					 ),
-					 $q->endform()
-				 )
-			 );
-
+	# Relationship button
+	$html .=
+		$q->p() . 
+		$q->table( {
+				-class => 'ome_table',
+				-align => 'center',
+				-cellspacing => 1,
+				-cellpadding => 4,
+			},
+			$q->Tr($q->td({style => 'background-color: #D1D7DC'}, $q->a( {
+				class => 'ome_widget',
+				href => "javascript:openRelationships('OME::Project', 'OME::Dataset', " . $project->id() . ");"
+			}, 'Add/Remove Datasets'))),
+		);
 
 	return $q->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
 	       $html;

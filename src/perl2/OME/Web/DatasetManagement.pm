@@ -118,32 +118,6 @@ sub getPageBody {
 			# Data
 			$body .= $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
 		}
-	} elsif ($cgi->param('Add')) {
-		if ($dataset->locked()) {
-			# Data
-			$body .= $cgi->p({class => 'ome_error'},
-				"ERROR: Images cannot be added to a locked dataset.");
-		} else {
-			# Action
-			my $image = $factory->findObject("OME::Image", name => $selected[0]);
-			$d_manager->addImages([$image->id()]);
-			$body .= $cgi->p({-class => 'ome_info'},
-				"Added image ", $image->name(), " to the dataset.");
-		}
-	} elsif ($action eq 'Remove') {
-		# Action
-		my $to_remove = {};
-		foreach (@selected) { $to_remove->{$_} = [$dataset->id()] }
-
-		# Make sure we're not operating on a locked dataset
-		if ($dataset->locked()) {
-			$body .= $cgi->p({class => 'ome_error'},
-				"WARNING: Images not being removed from locked dataset.");
-		} else {
-			$i_manager->remove($to_remove);
-			$body .= $cgi->p({-class => 'ome_info'},
-				"Removed image(s) @selected from dataset ", $dataset->name(), ".");
-		}
 	}
 	
 	# print form
@@ -219,7 +193,7 @@ sub __printForm {
 			),
 			$q->td({-align => 'right'},
 				$q->a( {
-						-href => '/JavaScript/DirTree/index.htm',
+						-href => $self->pageURL('OME::Web::ImportFiles'),
 						-class => 'ome_widget',
 					}, "Import Images" 
 				),
@@ -263,12 +237,7 @@ sub __makeImageListings {
 	foreach ($dataset->images()) { push (@$in_project, $_->id()) }
 
 	# Gen our "Images in Project" table
-	my $html = $t_generator->getTable( {
-			options_row => ["Remove"],
-			select_column => 1,
-		},
-		$dataset->images()
-	);
+	my $html = $t_generator->getTable({}, $dataset->images());
 
 	my @additional_images;
 
@@ -286,33 +255,20 @@ sub __makeImageListings {
 	# Add a null to the beginning
 	unshift(@additional_images, 'None');
 
-	# Add dataset table
-	$html .= $q->p .
-	         $q->table( {
-					 -class => 'ome_table',
-					 -align => 'center',
-					 -cellspacing => 1,
-					 -cellpadding => 4
-				 },
-				 $q->Tr(
-					 $q->startform(),
-					 $q->td(
-						 {-class => 'ome_action_td'},
-						 '&nbsp',
-						 $q->span("Add images: "),
-						 $q->popup_menu( {
-								 -name => 'selected',
-								 -values => [@additional_images],
-								 -default => $additional_images[0]
-							 }
-						 ),
-						 '&nbsp',
-						 $q->submit({-name => 'Add', -value => 'Add'}),
-						 '&nbsp'
-					 ),
-					 $q->endform()
-				 )
-			 );
+	# Relationship button
+	$html .=
+		$q->p() . 
+		$q->table( {
+				-class => 'ome_table',
+				-align => 'center',
+				-cellspacing => 1,
+				-cellpadding => 4,
+			},
+			$q->Tr($q->td({style => 'background-color: #D1D7DC'}, $q->a( {
+				class => 'ome_widget',
+				href => "javascript:openRelationships('OME::Dataset', 'OME::Image', " . $dataset->id() . ");"
+			}, 'Add/Remove Images'))),
+		);
 
 
 	return $q->p({-class => 'ome_title', -align => 'center'}, "Images") .
