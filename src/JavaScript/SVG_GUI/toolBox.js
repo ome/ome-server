@@ -31,7 +31,9 @@ toolBox.superclass = Widget.prototype;
 toolBox.VERSION = 1.0;
 
 toolBox.prototype.menuBarText = 
-'<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>';
+'<g>' +
+'	<rect width="{$width}" height="15" fill="blue" opacity="0.3"/>' +
+'</g>';
 
 toolBox.prototype.hideControlText = 
 '<g>' +
@@ -85,7 +87,7 @@ toolBox.prototype.GUIboxHideDelay = 1;
 *		fashion	as hideControl's.
 *		GUIbox may have elements placed inside it. So you should use a g as
 *		the root node.
-*		No elements are placed inside menuBar. It is a background and mouseListener.
+*		The same goes with menuBar. 'Cept it WILL have elements placed in it.
 *
 *****/
 function toolBox(x,y,width,height,menuBarText,hideControlText,GUIboxText) {
@@ -106,7 +108,6 @@ toolBox.prototype.init = function( x, y, width, height, menuBarText,
 	// init properties
 	this.height = height;
 	this.width = width;
-	this.activeMove = false;
 	this.hidden = false;
 	
 	// allow user defined custimization of apperance
@@ -126,6 +127,8 @@ toolBox.prototype.buildSVG = function() {
 	var transform = translate;
 	var box = svgDocument.createElementNS(svgns, "g");
 	box.setAttribute("transform", transform);
+	this.nodes.root = box;
+	this.nodes.parent.appendChild(box);
 	
 	// Add toolBox components and keep track of them.
 	var GUIboxContainer = svgDocument.createElementNS(svgns, "g");
@@ -141,12 +144,12 @@ toolBox.prototype.buildSVG = function() {
 
 	box.appendChild( this.textToSVG(this.menuBarText) );
 	this.nodes.menuBar = box.lastChild;
+	var menuHeight = this.nodes.menuBar.getBBox().height;
 	
-	box.appendChild( this.textToSVG(this.hideControlText) );
-	this.nodes.hideControl = box.lastChild;
+	// create hideControl, move into position, & append to menuBar
+	this.nodes.menuBar.appendChild( this.textToSVG(this.hideControlText) );
+	this.nodes.hideControl = this.nodes.menuBar.lastChild;
 
-	this.nodes.root = box;
-	this.nodes.parent.appendChild(box);
 	// draw the label on top of everything else
 	if(this.nodes.label) {
 		this.nodes.label.getParentNode().removeChild( this.nodes.label );
@@ -183,12 +186,9 @@ toolBox.prototype.buildSVG = function() {
 	this.GUIboxHideDelay = this.GUIboxAnimate2.getAttributeNS( null, "dur" );
 	
 	// Move hideControl and GUIbox to proper position
-	var menuHeight = this.nodes.menuBar.getBBox().height;
 	var hideY = Math.round( menuHeight/2 );
 	var hideX = this.width - hideY;
-	translate = "translate(" + hideX + "," + hideY +")";
-	transform = translate;
-	this.nodes.hideControl.setAttributeNS(null, "transform", transform );
+	this.nodes.hideControl.setAttribute("transform", "translate(" + hideX + "," + hideY +")" );
 
 	GUIboxContainer.setAttributeNS(null, "transform", "translate(0,"+ menuHeight +")");
 }
@@ -291,7 +291,6 @@ toolBox.prototype.move = function(e) {
 toolBox.prototype.addEventListeners = function() {
 	this.nodes.menuBar.addEventListener("mousedown", this, false);
 	this.nodes.menuBar.addEventListener("mouseup", this, false);
-	svgDocument.documentElement.addEventListener("mousemove", this, false);
 	this.nodes.hideControl.addEventListener("click", this, false);
 }
 
@@ -304,9 +303,8 @@ toolBox.prototype.addEventListeners = function() {
 *
 *****/
 toolBox.prototype.mousedown = function(e) {
-	this.activeMove=true;
-	this.localPoint = this.getUserCoordinate(this.nodes.root, e.clientX,
-		e.clientY);
+	svgDocument.documentElement.addEventListener("mousemove", this, false);
+	this.localPoint = this.getUserCoordinate(this.nodes.root, e.clientX, e.clientY);
 }
 
 /*****
@@ -315,7 +313,7 @@ toolBox.prototype.mousedown = function(e) {
 *
 *****/
 toolBox.prototype.mouseup = function(e) {
-	this.activeMove=false;
+	svgDocument.documentElement.removeEventListener("mousemove", this, false);
 }
 
 /*****
@@ -324,8 +322,7 @@ toolBox.prototype.mouseup = function(e) {
 *
 *****/
 toolBox.prototype.mousemove = function(e) {
-	if(this.activeMove) 
-		this.move(e);
+	this.move(e);
 }
 
 /*****
