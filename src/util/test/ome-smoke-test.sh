@@ -35,6 +35,10 @@ MAIL_PROGRAM=${MAIL_PROGRAM:="mail -s"}
 #
 # Internal variables
 ####################
+# Set our PATH to the OME_ADMIN's path
+OLD_PATH=$PATH
+PATH=`su -l $OME_ADMIN -c 'echo $PATH'`
+export PATH
 # OME_PASS is the password for the ome experimenter created by the install script
 OME_PASS=abc123
 SCRIPT_DIR=$SOURCE_DIR/src/util/test
@@ -46,8 +50,8 @@ DB_BACKUP=$TEMP_DIR/smoke-test-db-backup.tar.bz2
 #
 # update from CVS
 #
-su - $OME_ADMIN -c "cd $SOURCE_DIR ; cvs up -dP" > /dev/null 2>&1
-su - $OME_ADMIN -c "cd $IMAGE_DIR ; cvs up -dP" > /dev/null 2>&1
+su -l $OME_ADMIN -c "cd $SOURCE_DIR ; cvs up -dP" > /dev/null 2>&1
+su -l $OME_ADMIN -c "cd $IMAGE_DIR ; cvs up -dP" > /dev/null 2>&1
 #
 # restart apache gracefully
 #
@@ -58,14 +62,16 @@ su - $OME_ADMIN -c "cd $IMAGE_DIR ; cvs up -dP" > /dev/null 2>&1
 cd $SOURCE_DIR/src/perl2/
 rm -f $DB_BACKUP > /dev/null 2>&1
 ome admin data backup -q -a $DB_BACKUP > /dev/null 2>&1
-su - $OME_ADMIN -c "dropdb $DB_NAME" > /dev/null 2>&1
+su -l $OME_ADMIN -c "dropdb $DB_NAME" > /dev/null 2>&1
 #
 # Set up the test environment
 #
 cp -f /etc/ome-install.store /etc/ome-install.store-bak
-ome admin data connection -d $TEST_DB > /dev/null 2>&1
-perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{admin_user}='$OME_ADMIN';Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
-perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{ome_user}->{OMEName}='$OME_ADMIN';Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
+# FIXME: this line should go away once the matlab installer works:
+perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{matlab_conf}->{INSTALL}=0;Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
+perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{DB_conf}->{Name}="'$TEST_DB'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
+perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{admin_user}="'$OME_ADMIN'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
+perl -MStorable -e '$e=Storable::retrieve("/etc/ome-install.store");$e->{ome_user}->{OMEName}="'$OME_ADMIN'";Storable::store($e,"/etc/ome-install.store")' > /dev/null 2>&1
 #
 # Install
 #
@@ -78,13 +84,15 @@ touch $TEMP_DIR/smoke-test-install-start
 perl $SCRIPT_DIR/install.pl $OME_ADMIN $OME_PASS >> $LOG_FILE 2>&1
 if (! test /etc/ome-install.store -nt $TEMP_DIR/smoke-test-install-start ) ;
 	then mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
-	su - $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
+	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	echo "Smoke Test Failed. Import failed" >> $LOG_FILE ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
+	PATH=$OLD_PATH
+	export PATH
 	exit -1 ;
 fi;
 #
@@ -94,28 +102,30 @@ echo "Import log for $HOST on `date`" > $LOG_FILE
 echo "command line and options:" >> $LOG_FILE
 echo "$0 $*" >> $LOG_FILE
 echo "------------------------------------------------------------" >> $LOG_FILE
-su - $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
+su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
 #
 # Get images
 #
-IMPORT_IMAGES=`su - $OME_ADMIN -c "psql -qtc 'select count(name) from images' $TEST_DB"` 2> /dev/null
+IMPORT_IMAGES=`su -l $OME_ADMIN -c "psql -qtc 'select count(name) from images' $TEST_DB"` 2> /dev/null
 IMPORT_IMAGES=${IMPORT_IMAGES:='0'}
 if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	then mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
-	su - $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
+	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	echo "`date` Smoke Test Failed. Imported $IMPORT_IMAGES images, expected $EXPECT_IMAGES " >> $LOG_FILE ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
 	fi;
+	PATH=$OLD_PATH
+	export PATH
 	exit -1 ;
 fi;
 #
 # Restore DB
 #
 mv /etc/ome-install.store-bak /etc/ome-install.store
-su - $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1
+su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1
 ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1
 /usr/sbin/apachectl graceful  > /dev/null 2>&1
 echo "`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images" >> $LOG_FILE
@@ -123,3 +133,6 @@ if test "$MAIL_TO" ;
 	then echo "`date` Smoke Test passed on $HOST. Installed and imported $IMPORT_IMAGES images" | \
 		$MAIL_PROGRAM"`date` OME Smoke Test Successful" $MAIL_TO ;
 fi;
+PATH=$OLD_PATH
+export PATH
+
