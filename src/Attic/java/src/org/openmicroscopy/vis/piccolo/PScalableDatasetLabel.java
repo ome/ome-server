@@ -104,7 +104,7 @@ public class PScalableDatasetLabel extends PText implements PBrowserNodeWithTool
 		addChild(shortLabel);
 	}
 	
-	private PNode getFullToolTip() {
+	public PNode getFullToolTip() {
 		PPath p = new PPath();
 		String name = dataset.getName();
 		String shortName;
