@@ -410,6 +410,7 @@ addPrototype("OME::Project","owner",
 addPrototype("OME::Project","dataset_links",[],['OME::Project::DatasetMap','*']);
 addPrototype("OME::Project","dataset_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_dataset_links");
+addPrototype("OME::Project","addDataset", ['OME::Dataset'], ['OME::Dataset']);
 
 addPrototype("OME::Project::DatasetMap","project",
              ['OME::Project'],['OME::Project']);
@@ -429,6 +430,8 @@ addPrototype("OME::Dataset","project_links",[],['OME::Factory::Iterator'],
 addPrototype("OME::Dataset","image_links",[],['OME::Image::DatasetMap','*']);
 addPrototype("OME::Dataset","image_links",[],['OME::Factory::Iterator'],
              publishedName => "iterate_image_links");
+addPrototype("OME::Dataset","addImage", ['OME::Image'], ['OME::Image']);
+addPrototype("OME::Dataset","importImages",['$'],['$']);
 
 addPrototype("OME::Image","name",['$'],['$']);
 addPrototype("OME::Image","description",['$'],['$']);
@@ -831,7 +834,7 @@ sub findPrototype {
     my @classesToCheck = ($class);
     my $prototypeFound;
 
-    #print STDERR "*** $class ";
+    #print STDERR "*** $class\n ";
     while (my $nextClass = shift(@classesToCheck)) {
         if (exists $prototypes{$nextClass}->{$method}) {
             $prototypeFound = $prototypes{$nextClass}->{$method};
