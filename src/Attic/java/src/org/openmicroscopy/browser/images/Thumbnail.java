@@ -38,7 +38,6 @@
  */
 package org.openmicroscopy.browser.images;
 
-import java.awt.image.BufferedImage;
 import java.util.Set;
 
 import org.openmicroscopy.browser.datamodel.ThumbnailDataModel;
@@ -63,19 +62,9 @@ public class Thumbnail extends PImage implements MEHChangeListener
   protected ThumbnailDataModel model;
   
   /**
-   * The current image inside (actually, PImage has one... maybe eliminate)
-   */
-  protected BufferedImage viewImage;
-  
-  /**
    * The current render method.
    */
   protected RenderMethod renderMethod;
-  
-  /**
-   * The ID of the thumbnail.
-   */
-  protected int ID;
   
   /**
    * Defines the set of paint methods in a self-organizing list
@@ -119,6 +108,50 @@ public class Thumbnail extends PImage implements MEHChangeListener
   public void eventListenerChanged(int changeType)
   {
     // TODO: rework event handler
+  }
+  
+  /**
+   * Returns the current render method for this thumbnail.
+   * @return The current render method.
+   */
+  public RenderMethod getRenderMethod()
+  {
+    return renderMethod;
+  }
+  
+  /**
+   * Sets the current render method for this thumbnail.
+   * @param method
+   */
+  public void setRenderMethod(RenderMethod method)
+  {
+    if(method != null)
+    {
+      this.renderMethod = method;
+    }
+  }
+  
+  /**
+   * Gets the underlying model for the thumbnail.
+   * 
+   * @return This thumbnail's underlying model.
+   */
+  public ThumbnailDataModel getModel()
+  {
+    return model;
+  }
+  
+  /**
+   * Sets the underlying model for the thumbnail.
+   * 
+   * @param model This thumbnail's new data model.
+   */
+  public void setModel(ThumbnailDataModel model)
+  {
+    if(model == null)
+    {
+      this.model = model;
+    }
   }
 
 }

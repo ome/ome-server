@@ -41,12 +41,22 @@ package org.openmicroscopy.browser.images;
 import java.awt.Graphics;
 
 /**
+ * Specifies how an overlay gets painted on a thumbnail.  Uses the thumbnail
+ * to check the underlying model.
+ * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
- * @version
- * @since
+ * @version 2.2
+ * @since 2.2
  */
 public interface PaintMethod
 {
+  /**
+   * Determine if a thumbnail meets the criteria for additional graphics, and
+   * if so, paint an appropriate overlay atop the thumbnail.
+   * 
+   * @param g The canvas to draw to.
+   * @param t The thumbnail to draw.
+   */
   public void paint(Graphics g, Thumbnail t);
 }
