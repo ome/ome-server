@@ -59,6 +59,9 @@ OME::Session - a user's login session with OME
 	# a mistake halfway through
 	$session->rollbackTransaction();
 
+	# Return the singleton session during runtime
+	OME::Session->instance();
+
 =head1 DESCRIPTION
 
 All interaction with OME is done in the context of a session object.
@@ -66,7 +69,7 @@ This object is created by L<C<OME::SessionManager>|OME::SessionManager>
 depending on the method by which OME is used - Web browser (L<C<OME::Web>|OME::Web>), L<C<OME::Remote>|OME::Remote> client or command-line tool.
 The session object maintains the user's state regardless of the client used for access.
 A user's session never expires.  A session key (a string token) is exchanged between the client and the server
-to refer to a session object.  This token is short lived, and must be periodically refreshed.
+to refer to a session object.  This object is a singleton, there will only ever be *one* session for a given process, fork or thread.  The session token is short lived, and must be periodically refreshed.
 
 =head1 METHODS
 
@@ -98,12 +101,13 @@ Returns the session's L<C<OME::Dataset>|OME::Dataset> object.
 
 Returns the session's L<C<OME::Project>|OME::Project> object.
 
-=head2 closeSession
+=head2 instance
 
-	$session->closeSession();
+Returns the singleton session object.
 
-This does cleanup. Specifically, it breaks any circular dependencies when logging out.
-This method should not be called directly, rather use L<C<OME::SessionManager>|OME::SessionManager>C<-E<gt>logout()>.
+=head2 deleteInstance
+
+Explicitly deletes the singleton instance from the process. This should only be used when a true recycle of the Session object (either Configuration or UserState is updated) is needed. You will occur a STDERR warning when using this method.
 
 =cut
 
@@ -140,7 +144,7 @@ sub started { return shift->{UserState}->started(@_); }
 sub storeObject { return shift->{UserState}->storeObject(@_); }
 sub writeObject { return shift->{UserState}->writeObject(@_); }
 
-sub _newInstance {
+sub __newInstance {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $userState = shift
@@ -168,16 +172,16 @@ sub instance {
 
 	# Recycle the singleton resources if possible.
 	if ($__soleInstance and $userState and $__soleInstance->UserState()) {
-		return $__soleInstance->_salvageSession( $userState );
+		return $__soleInstance->__salvageSession( $userState );
 	}
 
-	$self->_newInstance($userState) unless $__soleInstance;
+	$self->__newInstance($userState) unless $__soleInstance;
 
 	#carp "Returning singleton.";
 	return $__soleInstance;
 }
 
-sub _salvageSession {
+sub __salvageSession {
 	my $self = shift;
 
 	$self->{UserState} = shift;
@@ -189,15 +193,14 @@ sub _salvageSession {
 	return $self;
 }
 
-sub closeSession {
-    my ($self) = @_;
+sub deleteInstance {
+	my $self = shift;
 
-    # When we log out, break any circular links between the Session
-    # and other objects, to allow them all to get garbage-collected.
-    # Also, make call to factory to shutdown and free db handles.
-	#$self->{Factory}->closeFactory();
+	carp "WARNING: Explicit deletion of OME::Session";
+	$__soleInstance = undef;
+
+	return 1;
 }
-
 
 # Accessors
 # ---------
