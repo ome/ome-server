@@ -84,10 +84,12 @@ use OME;
 $VERSION = $OME::VERSION;
 use CGI;
 use Carp;
+use Carp 'cluck';
 use OME::SessionManager;
 use Apache::Session::File;
 use OME::Web::DefaultHeaderBuilder;
 use OME::Web::DefaultMenuBuilder;
+use OME::Web::DBObjRender;
 
 use base qw(Class::Data::Inheritable);
 
@@ -153,6 +155,16 @@ sub DBH { my $self = shift; return $self->Session()->DBH(); }
 sub Manager { my $self = shift; return $self->{manager}; }
 sub ApacheSession { my $self = shift; return $self->Session()->{ApacheSession}; }
 sub User { my $self = shift; return $self->Session()->User(); }
+sub Renderer { 
+	my $self = shift; 
+	return $self->{renderer} if $self->{renderer};
+	return ( $self->{renderer} = OME::Web::DBObjRender->new( CGI => $self->CGI() ) );
+}
+sub Tablemaker { 
+	my $self = shift; 
+	return $self->{ table_maker } if $self->{ table_maker };
+	return ( $self->{ table_maker } = OME::Web::DBObjTable->new( CGI => $self->CGI() ) );
+}
 
 # Because we no longer need any sort of Session reference store this is just a macro now
 sub Session { OME::Session->instance() };
@@ -808,6 +820,22 @@ sub _loadTypeAndGetInfo {
 	}
 	
 	return ($package_name, $common_name, $formal_name, $ST);	
+}
+
+=head2 getObjDetailURL
+
+	my $url_to_obj_detail = $self->getObjDetailURL( $obj );
+
+$obj should be a DBObject instance. Attributes are fine.
+
+returns a url to a detailed view of the object
+
+=cut
+
+sub getObjDetailURL {
+	my ($proto, $obj) = @_;
+	( my $formal_name = ref( $obj ) ) =~ s/^OME::SemanticType::__/@/;
+	return "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=".$obj->id();
 }
 
 1;
