@@ -53,11 +53,8 @@ Provides a list of Images associated with this Category
 
 use strict;
 use OME;
+use OME::Tasks::CategoryManager;
 our $VERSION = $OME::VERSION;
-
-use OME::Tasks::ImageManager;
-use OME::Tasks::ModuleExecutionManager;
-use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
 =head2 _renderData
@@ -76,14 +73,7 @@ sub _renderData {
 	if( exists $field_requests->{ 'Images' } ) {
 		foreach my $request ( @{ $field_requests->{ 'Images' } } ) {
 			my $request_string = $request->{ 'request_string' };
-			my @classifications = $obj->ClassificationList( );
-# for some unknown reason, using 
-#	Valid    => [ "is not", 0 ]
-# as a filtering parameter consistently fails with the message
-# "DBD::Pg::st execute failed: ERROR:  parser: parse error at or near "'" at /Users/josiah/OME/cvs/OME/src/perl2//OME/Factory.pm line 1069."
-# so i'll just filter the list with grep
-			@classifications = grep( ( ( not defined $_->Valid ) || $_->Valid ne 0 ), @classifications );
-			my @images = map( $_->image, @classifications );
+			my @images = OME::Tasks::CategoryManager->getImagesInCategory( $obj );
 			my $render_mode = ( $request->{ render } or 'ref_list' );
 			$record{ $request_string } = $self->Renderer()->renderArray( 
 				\@images, 
