@@ -82,7 +82,7 @@ The Worker's status.  Can be 'IDLE', 'BUSY', 'OFF-LINE'.  Note that workers that
 cannot be placed on-line directly by a remote host.  These workers are ignored for executing
 tasks until something external places them back on-line.
 
-=head2 process_id ()
+=head2 PID ()
 
 When a worker's status is 'BUSY', this is the worker's process ID on the host that its running on.
 
