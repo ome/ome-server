@@ -33,6 +33,42 @@
 # Written by:    Ilya Goldberg <igg@nih.gov>
 #
 #-------------------------------------------------------------------------------
+=head1 NAME
+
+L<C<OME::Configuration>|OME::Configuration> - an OME image
+
+=head1 SYNOPSIS
+
+	# This is how the configuration variables are originally written to the DB
+	use OME::Configuration;
+	my $conf = new OME::Configuration ($factory,{var1 => 123, var2 => 'foo'});
+	# Normally, the Configuration object is retreived from the OME::Session object
+	my $conf = $session->Configuration();
+	my $var1 = $conf->var1();
+
+=head1 DESCRIPTION
+
+The Configuration object is used to get configuration variables established when
+OME was installed.  In normal use, the variables are read only, and the Configuration
+object is retreived from the L<C<OME::Session>|OME::Session> object.
+
+The constructor is called from an installation script and passes a configuration hash
+along with an L<C<OME::Factory>|OME::Factory> object to the constructor:
+
+	my $conf = new OME::Configuration ($factory,{var1 => 123, var2 => 'foo'});
+
+If there are already configuration variables in the DB, the hash will be ignored,
+and an L<C<OME::Configuration::Variable>|OME::Configuration::Variable> object will be loaded for each variable.
+If the DB does not contain configuration variables, a new L<C<OME::DBObject>|OME::DBObject> of type
+L<C<OME::Configuration::Variable>|OME::Configuration::Variable> will be made for each key-value pair in the hash,
+and written to the DB.  The names of the L<C<OME::Configuration::Variable>|OME::Configuration::Variable> objects will be made available as
+methods of Configuration, returning the value of the variable when called.  From the example above, $conf->var1()
+will return 123.
+The two mutator methods are described below.
+
+=head1 METHODS
+
+=cut
 
 
 package OME::Configuration;
@@ -82,11 +118,27 @@ sub new {
 	return $self;
 }
 
+=head2 import_module
+
+accessor/mutator for the import_module configuration variable.  This methods sets/gets
+an L<C<OME::Module>|OME::Module> object.  The ID of this object is stored in import_module_id().
+
+=cut
+
 sub import_module {
 	my $self = shift;
 	$self->changeObjRef ('import_module_id','OME::Module',shift) if scalar @_;
 	return ( $self->Factory()->loadObject ('OME::Module',$self->import_module_id()) );
 }
+
+
+=head2 import_chain
+
+accessor/mutator for the import_chain configuration variable.  This methods sets/gets
+an L<C<OME::AnalysisChain>|OME::AnalysisChain> object.  The ID of this object is stored in import_chain_id().
+
+=cut
+
 sub import_chain {
 	my $self = shift;
 	$self->changeObjRef ('import_chain_id','OME::AnalysisChain',shift) if scalar @_;
@@ -121,3 +173,9 @@ sub changeObjRef {
 	return ( undef );
 }
 1;
+
+=head1 AUTHOR
+
+Ilya Goldberg <igg@nih.gov>, Open Microscopy Environment
+
+=cut
