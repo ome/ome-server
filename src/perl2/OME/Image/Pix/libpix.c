@@ -851,7 +851,7 @@ void byteSwap16 (char *theBuf, size_t length)
 Josiah Johnston <siah@nih.gov>
 * Returns true if the machine executing this code is bigEndian.
 */
-int bigEndian()
+int bigEndian(void)
 {
     static int init = 1;
     static int endian_value;
