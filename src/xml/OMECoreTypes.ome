@@ -12,9 +12,7 @@
     http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-<STD:SemanticTypeDefinitions 
-  xmlns=
-    "http://openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
+  <SemanticTypeDefinitions xmlns="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd" xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 <!-- TODO: (DC-04/14/2003)
        - Lookup tables (from XML spec)
 -->
@@ -982,5 +980,5 @@
 				DataType = "string"/>
 		</SemanticType>
 
-	</STD:SemanticTypeDefinitions>
+	</SemanticTypeDefinitions>
 </OME>
