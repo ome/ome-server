@@ -43,9 +43,6 @@ our $VERSION = $OME::VERSION;
 use base qw(OME::Util::Commands);
 
 use Carp;
-use Term::ReadKey;
-use File::Find;
-use File::Spec::Functions qw(rel2abs);
 use Getopt::Long;
 
 use OME::SessionManager;
@@ -67,23 +64,17 @@ Usage:
     $script $command_name [<options>] [<list of files>]
 
 This utility imports files into OME database and runs the import analysis 
-chain against them. The list of files can include directories. All files in 
-the specified directory are imported.
+chain against them.
 
 The files can be proprietary format image files or OME XML files that define 
-OME objects. 
-
+OME objects.
 
 Options:
       
-  -d  Use this to specify the dataset name. If you are importing images, you 
-      must specify a dataset. If you are importing OME Semantic Type 
-      Definitions, Analysis Modules, or Chains this parameter is unnecessary.
-      
-  -i  With this flag, this utility runs in interactive mode prompting you to 
-      enter file/directory names. Enter EOF (control D) to signal you don't 
-      want to enter more path names. Hint: you might want to run $script $command_name
-      in interactive mode and redirect the path/names from a file. 
+  -d  Use this to specify the dataset name or ID. Imported images must be associated with a dataset.
+      If you don't own an unlocked Dataset with the specified name, a new one will be created for you.
+      If you are importing OME Semantic Type Definitions, Analysis Modules, or Chains this parameter is unnecessary.
+      If you import images, but don't specify a dataset, a new dataset will be created for you, usually called 'Import Dummy Dataset'
       
   -r  Reimports images which are already in the database.  This should
       only be used for testing purposes. This flag is ignored for OME
@@ -92,13 +83,13 @@ Options:
   -h  Print this help message.
   
 USAGE
+    CORE::exit(1);
 }
 
 sub handleCommand {
 	my ($self,$help,$commands) = @_;
 	if ($help) {
 		$self->import_help($commands);
-	    CORE::exit(1);
 	} else {
 		$self->import($commands);
 	}
@@ -109,49 +100,14 @@ sub import {
 	my $reuse;
 	my $help;
 	my $datasetName;
-	my $interactiveMode;
 	
 	GetOptions('reimport|r!' => \$reuse,
                'help|h' => \$help,
-               'i' => \$interactiveMode,
-               'd=i' => \$datasetName);
-               
-    if (not defined $datasetName) {
-    	import_help($self,$commands);
-    	print STDERR "\n *** dataset not specified\n";
-	    CORE::exit(1);
-    }
+               'd=s' => \$datasetName);
+    my @file_names = @ARGV;
     
-    # create the list of files
-    my @file_names;
+    # preliminary idiot traps
     
-    # first get all the files from user
-    if ($interactiveMode) {
-    	while (1) {
-			print "Enter file/dir name: " if -t STDIN;
-			my $input = ReadLine 0;
-			last if not defined $input;
-
-			chomp $input;
-
-			# skip lines that begin with a hash sign.
-			if ($input !~ m/^\#+.*/) {
-				$input = rel2abs ("$input");
-				push (@ARGV, $input);
-			}
-		}
-    }
-
-	# get all the files from files/directories specified in @ARGV
-    foreach (@ARGV) {
-		if (-d $_) {
-    		find sub{ push @file_names, $File::Find::name if -e and not -d;}, $_;
-    	} elsif (-e $_) {
-    		push @file_names, $_;
-    	} else {
-    		print STDERR "WARNING: $_ does not exist. Not Imported.\n";
-    	}
-    }
     
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
@@ -163,53 +119,51 @@ sub import {
 	# The dataset name on the command line either matches an existing
 	# unlocked dataset owned by the current user, or is the name of a new
 	# dataset.
-	# Either way, we must associate the dataset with the current project.
+	# if the argument is numeric, it must match an exsting dataset ID.
 	
 	my $dataset;
 	
-	if ($datasetName =~ /^:([0-9]+)$/) {
-		my $datasetID = $1;
-		$dataset = $factory->loadObject("OME::Dataset",$datasetID);
-	} else {
-		my $dataset_data = {
-							name   => $datasetName,
-							owner  => $session->User(),
-							locked => 'false'
-						   };
-		$dataset = $factory->findObject( "OME::Dataset", $dataset_data);
-		$dataset = $factory->newObject( "OME::Dataset", $dataset_data )
-		  unless $dataset;
+	if (defined $datasetName) {
+
+		if ($datasetName =~ /^([0-9]+)$/) {
+			my $datasetID = $1;
+			$dataset = $factory->loadObject("OME::Dataset",$datasetID);
+			die "Specified Dataset ID $datasetName doesn't exist!" unless $dataset;
+			die "Specified Dataset ID $datasetName is locked!" unless not $dataset->locked();
+		} else {
+			my $dataset_data = {
+								name   => $datasetName,
+								owner  => $session->User(),
+								locked => 'false'
+							   };
+			$dataset = $factory->findObject( "OME::Dataset", $dataset_data);
+			
+			if (not defined $dataset) {
+				$dataset = $factory->newObject( "OME::Dataset", $dataset_data );
+				# If there is a project in this session, then associate this new dataset with it
+				my $project = $session->project();
+				if (defined $project) {
+					# Assign the dataset to the project
+					print '- Adding Dataset "',$dataset->name(),'" to Project "',$project->name(),'"...',"\n";
+					my $projectManager = new OME::Tasks::ProjectManager;
+					$projectManager->addDatasets([ $dataset->id() ], $project->id());
+				}
+			}
+				
+		}
+		
+		$session->dataset( $dataset );
+		
+
+		$session->storeObject();
+		$session->commitTransaction();
 	}
-	
-	$session->dataset( $dataset );
-	$session->storeObject();
-	
-	# Now Get a project
-	my $project = $session->project();
-	if (not defined $project) {
-		print "- Creating a new project...\n";
-		$project = $factory->newObject("OME::Project", {
-			name => 'Test Project',
-			description => 'This project was auto generated by a test script',
-			owner => $session->User(),
-			group => $session->User()->Group()
-		}) or die "Couldn't make a project";
-	}
-	
-	# Assign the dataset to the project
-	my $projectManager = new OME::Tasks::ProjectManager;
-	$projectManager->addDatasets([ $dataset->id() ], $project->id());
-	
-	$session->commitTransaction();
 	
 	my %opts;
 	$opts{AllowDuplicates} = 1 if $reuse;
 	
 	print "Importing files\n";
-
-	# don't use forkedimportFiles so users can always control c
-	my $task = OME::Tasks::ImageTasks::forkedImportFiles
-	  ($dataset, \@file_names, \%opts);
+	my $task = OME::Tasks::ImageTasks::forkedImportFiles ($dataset, \@file_names, \%opts);
 	
 	my $lastStep = -1;
 	my $status = $task->state();
