@@ -63,7 +63,7 @@ my $new = sub {
 # using the Storable module.
 #
 sub restore_from {
-    my $env_file = shift;
+    my ($self, $env_file) = @_;
     
     eval "require Storable;";
     croak "Called OME::Install::Environment->restore_from(), but Storable could not be loaded."
