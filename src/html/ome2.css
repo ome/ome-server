@@ -87,9 +87,9 @@ a.ome_main_menu_link_active:hover { text-decoration: none; color : #FF0000; }  /
 	font-weight: bold;
 }
 
-.ome_widget:visited { text-decoration: none; color: #353535 }
+a.ome_widget:visited { text-decoration: none; color: #353535 }
 
-.ome_widget:hover { text-decoration: none; color: #006699; }
+a.ome_widget:hover { text-decoration: none; color: #006699; }
 
 input.ome_widget {
 	font-size: 10px;
