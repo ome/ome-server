@@ -69,7 +69,7 @@ use strict;
 use OME::ImportExport::Import_reader;
 use Carp;
 use File::Basename;
-use OME::Analysis::AnalysisEngine;
+use OME::Analysis::Engine;
 use OME::Image;
 use OME::Dataset;
 use vars qw($VERSION);
@@ -567,9 +567,9 @@ sub store_xyz_info {
         return "";
     }
 
-    my $engine = OME::Analysis::AnalysisEngine->new();
     eval {
-        $engine->executeAnalysisView($session,$view,{},$self->{dummy_dataset});
+        OME::Analysis::Engine->
+            executeChain($view,$self->{dummy_dataset},{});
     };
     return $@? $@ : "";
 }
