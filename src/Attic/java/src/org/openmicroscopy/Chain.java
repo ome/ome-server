@@ -150,16 +150,52 @@ public interface Chain
      * analysis chain.
      */
     public Iterator iteratePaths();
-    
+
+    /**
+     * <p>The <code>Chain.Node</code> interface represents the modules
+     * in an analysis chain.  The data dependency links between the
+     * nodes are specified by the {@link Chain.Link} interface.</p>
+     *
+     * @author Douglas Creager
+     * @version 2.0
+     * @since OME2.0
+     * @see Chain.Link
+     */
+
     public interface Node
         extends OMEObject
     {
+        /**
+         * Returns the analysis chain that this node belongs to.
+         * @return the analysis chain that this node belongs to. 
+         */
         public Chain getChain();
 
+        /**
+         * Returns the module that this node represents.
+         * @return the module that this node represents.
+         */
         public Module getModule(); 
+
+        /**
+         * Sets the module that this node represents.
+         * @param module the module that this node represents.
+         */
         public void setModule(Module module);
 
+        /**
+         * Returns the iterator tag for this node.  The iterator tag
+         * specifies the grouping that the analysis engine will
+         * perform when collecting feature inputs and presenting them
+         * to the module.
+         * @return the iterator tag for this node.
+         */
         public String getIteratorTag();
+
+        /**
+         * Sets the iterator tag for this node.
+         * @param iteratorTag the iterator tag for this node.
+         */
         public void setIteratorTag(String iteratorTag);
 
         public String getNewFeatureTag();
@@ -172,6 +208,16 @@ public interface Chain
         public Iterator iterateOutputLinks();
     }
 
+    /**
+     * <p>The <code>Chain.Link</code> interface represents the data
+     * dependency links between nodes in an analysis chain.  The nodes
+     * themselves are specified by the {@link Chain.Node} interface.
+     *
+     * @author Douglas Creager
+     * @version 2.0
+     * @since OME2.0
+     * @see Chain.Node
+     */
 
     public interface Link
         extends OMEObject
