@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PCamera;
+import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.event.MouseEvent;
 
 /** 
@@ -96,24 +97,27 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 				CDataset c = dn.getDataset();
 				SelectionState.getState().setRolloverDataset(c);
 			}
-			else 
-				super.mouseEntered(e);
+			else  {// entering anything else means setting selected datset is null
+				SelectionState.getState().setRolloverDataset(null);	 
+			}
 		}
 	}
 	
 	public void mouseExited(PInputEvent e) {
+	
 		PNode n = e.getPickedNode();
+		System.err.println("browser canvas exited..."+n);
 		if (n instanceof PThumbnail) {
+			System.err.println("exited thumbnail");
 			PThumbnail pt = (PThumbnail) n;
 			pt.setHighlighted(false);
 			e.setHandled(true);
 		}
 		else if (n instanceof PSelectableText) {
+			System.err.println("exited selectable text");
 			((PSelectableText)n).setHighlighted(false);
 			e.setHandled(true);
 		} 
-		else if (n instanceof PDataset)
-			SelectionState.getState().setRolloverDataset(null);
 	}	
 	
 	public void mouseReleased(PInputEvent e) {
@@ -135,22 +139,28 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 			SelectionState selectionState = SelectionState.getState();	
 			selectionState.setSelectedDataset(null);
 		}
-		super.handlePopup(e);
+		else if (node instanceof PThumbnail) {
+			PBufferedNode bn = ((PThumbnail) node).getBufferedParentNode();
+			PBounds b = bn.getBufferedBounds();
+			PCamera camera = ((PCanvas) canvas).getCamera();
+			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+		}
+		else
+			super.handlePopup(e);
 	}
 	public void mouseClicked(PInputEvent e) {
 		// left button.
+		
 		if (postPopup == true ) {
 			postPopup = false;
 			e.setHandled(true);
 			return; 
 		}
 		PNode node = e.getPickedNode();
+		System.err.println("...clicked on browsercnavas.."+node);
 		SelectionState selectionState = SelectionState.getState();
 		if ((e.getModifiers() & MouseEvent.BUTTON1_MASK) 
 			== MouseEvent.BUTTON1_MASK) {
-			
-			
-		
 			if (node instanceof PDataset) { 
 				//System.err.println("zooming in on dataset");
 				PDataset d = (PDataset) node;
@@ -177,8 +187,10 @@ public class PBrowserEventHandler extends  PGenericZoomEventHandler {
 		  		selectionState.setSelectedDataset(null);
 		  		e.setHandled(true);
 		  	}
-		  	else 
-		  		super.mouseClicked(e);
+		  	else {
+		  		handlePopup(e);
+		  		e.setHandled(true);
+		  	}
 		}
 		else 
 			e.setHandled(true);
