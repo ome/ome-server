@@ -39,6 +39,7 @@ package org.openmicroscopy.vis.piccolo;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.SelectionEvent;
 import org.openmicroscopy.vis.chains.events.SelectionEventListener;
+import org.openmicroscopy.vis.chains.ControlPanel;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CProject;
 import edu.umd.cs.piccolo.PCanvas;
@@ -54,10 +55,12 @@ import java.awt.Rectangle;
 import java.awt.Paint;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Vector;
 import java.util.HashSet;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+
 
 
 /** 
@@ -74,17 +77,22 @@ public class PProjectSelectionCanvas extends PCanvas
 	private static final int HEIGHT=50;
 	private static final int MAXHEIGHT=150;
 	private static final int MAXWIDTH=1000;
-	private static final double HGAP=3;
-	private static final double VGAP=20;
+	private static final double HGAP=20;  
+	private static final double VGAP=10;
+	private static final double VSEP=3;
 	
 	
 	private PLayer layer;
 	
 	
-	private int width;
+	private ControlPanel panel;
 	
-	public PProjectSelectionCanvas(Collection projects) {
+	private int lastHeight; // last window height
+	
+	
+	public PProjectSelectionCanvas(ControlPanel panel,Collection projects) {
 		super();
+		this.panel = panel;
 		layer = getLayer();
 		setMinimumSize(new Dimension(0,HEIGHT));
 		setPreferredSize(new Dimension(0,HEIGHT));
@@ -108,43 +116,96 @@ public class PProjectSelectionCanvas extends PCanvas
 	}
 		
 	public void layoutLabels() {
-		width = getWidth();
+		////System.err.println("----Start of call to layoutLabels()");
+		double x=0;
+		double y =VSEP;
+		ProjectLabel pl;
+
+		int width = getWidth();
+		//System.err.println("width is" +width);
 		Rectangle bounds = getBounds();
 		setBounds(new Rectangle((int)bounds.getX(),
 				   (int)bounds.getY(),width,(int)bounds.getHeight()));
 		Iterator iter = layer.getChildrenIterator();
-		double x=0;
-		double y =0;
-		double rowHeight  = 0;
-			
+		Vector rows = new Vector();
+		Vector row = new Vector();
+		Vector widths = new Vector();
+		int rowWidth  =0;
+		PBounds b;
+		
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
-				ProjectLabel pl = (ProjectLabel) obj;
-				PBounds b = pl.getGlobalFullBounds();
-				double mywidth = b.getWidth();
-				
-				if (x+mywidth+HGAP > width-2*HGAP) {
-					y +=rowHeight+HGAP;
+				pl = (ProjectLabel) obj;
+				double labelWidth = pl.getScaledMaxWidth();
+				//System.err.println("adding label...");
+				if (x+labelWidth > width) {
+					//System.err.println("new row. width is "+rowWidth);
+					rows.add(row);
+					widths.add(new Integer((int)x));
+					rowWidth = 0;
 					x =0;
-					rowHeight = 0;
+					row = new Vector();
 				}
-				if (b.getHeight() > rowHeight) 
-					rowHeight= b.getHeight();
-				pl.setOffset(x,y);
-				x += mywidth+HGAP;
-				//x += columnWidt h+HGAP;
-			}	
+				row.add(pl);
+				//System.err.println("row added was "+pl.getProject().getName());
+				x += labelWidth;
+			}
 		}
-		PBounds layerBounds = layer.getGlobalFullBounds();
-		setMinimumSize(new Dimension(0,(int)(layerBounds.getHeight()+VGAP)));
+		rows.add(row);
+		widths.add(new Integer(rowWidth));
+		double rowHeight  = 0;
+		double maxScale=0;
+		double spacing = 0;
+		Iterator iter2;
+		//System.err.println("---- laying things out...");
+		for (int i = 0; i < rows.size(); i++) {
+			row = (Vector) rows.elementAt(i);
+			Integer rowW = (Integer) widths.elementAt(i);
+			rowWidth = 	rowW.intValue();
+			iter = row.iterator();
+			//  calculate space between items.
+			// leftover is width - rowWidth
+			//System.err.println("row "+i+", width is "+rowWidth);
+			int remainder = width-rowWidth;
+			//System.err.println("remainder..... "+remainder);
+			// divide that by n-1 
+			if (row.size() >1)
+				spacing = remainder/(row.size()+1);
+			else 
+				spacing = 0;
+			//System.err.println("spacing..."+spacing);
+			x = 0;
+			rowHeight = 0;
+			while (iter.hasNext()) {
+				pl = (ProjectLabel) iter.next();
+				// place this
+				//System.err.println("placing "+pl.getProject().getName()+" at "+x);
+				//System.err.println("width of pl is "+pl.getScaledMaxWidth());
+				pl.setOffset(x,y);
+				b = pl.getGlobalFullBounds();
+				//x += b.getWidth()+spacing;
+				x += pl.getScaledMaxWidth()+spacing;
+				if (pl.getScaledMaxHeight() > rowHeight) 
+					rowHeight=(int) pl.getScaledMaxHeight();
+			}
+			y+= rowHeight;
+		}
+		
+		int height  = (int) (y+VSEP);
+		if (height > lastHeight) {
+			Dimension d= new Dimension(width,height);
+			setMinimumSize(d);
+			setPreferredSize(d);
+			panel.setDividerLocation(height);
+			lastHeight = height;
+		}
 	}
 	
 	
 	
 	public void selectionChanged(SelectionEvent e) {
 		SelectionState state = e.getSelectionState();
-		
 	 	if ((e.getMask() & SelectionEvent.SET_SELECTED_PROJECT) ==
 	 		SelectionEvent.SET_SELECTED_PROJECT) {
 				setSelectedProject();
@@ -152,9 +213,7 @@ public class PProjectSelectionCanvas extends PCanvas
 		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_DATASET)
 				== SelectionEvent.SET_ROLLOVER_DATASET) {
 			CDataset rolled = state.getRolloverDataset();
-				
-		
-			Collection projects = null;
+
 			setRollover(rolled);
 		}
 		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_PROJECT)
@@ -172,23 +231,24 @@ public class PProjectSelectionCanvas extends PCanvas
 	
 	public void setRollover(CDataset rolled) {
 		Iterator iter = layer.getChildrenIterator();
-		ProjectLabel pLabel;
+		ProjectLabel pLabel=null;
 		SelectionState state = SelectionState.getState();
 		
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
-				System.err.println("project selection.");
-				if (rolled != null)
-					System.err.println(" rolled over dataset .."+rolled.getName());
+				//System.err.println("project rollover dataset. checking"+obj);
+				//if (rolled != null)
+				//	System.err.println(" rolled over dataset .."+rolled.getName());
 				pLabel = (ProjectLabel) obj;
+				//System.err.println("plabel is" +pLabel);
 				CProject p = pLabel.getProject();
-				System.err.println("project is ..."+p.getName());
-				System.err.println("is it active? "+state.isActiveProject(p));
-				System.err.println("is label active..."+pLabel.isActive());
+				//System.err.println("project is ..."+p.getName());
+				//System.err.println("is it active? "+state.isActiveProject(p));
+				//System.err.println("is label active..."+pLabel.isActive());
 				if (rolled != null && rolled.hasProject(p)) 
 					pLabel.setRollover(true);
-				else if (state.isActiveProject(p) || pLabel.isActive())
+				else if (p.sharesDatasetsWith(state.getSelectedProject()))
 					pLabel.setActive();
 				else if (state.getSelectedProject() == null) 
 					pLabel.setNormal();
@@ -209,9 +269,10 @@ public class PProjectSelectionCanvas extends PCanvas
 		Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
 				pLabel = (ProjectLabel) obj;
+				CProject p = pLabel.getProject();
 				if (pLabel.getProject() == proj)
 					pLabel.setRollover(true);
-				else  if (state.isActiveProject(pLabel.getProject()))
+				else if (p.sharesDatasetsWith(state.getSelectedProject()))
 					pLabel.setActive();
 				else if (state.getSelectedProject() == null)
 					pLabel.setNormal();
@@ -236,7 +297,8 @@ public class PProjectSelectionCanvas extends PCanvas
 				proj = pLabel.getProject();
 				if (proj== selected)
 					pLabel.setSelected();
-				else if (state.isActiveProject(proj))
+				else if (state.getSelectedDataset() != null 
+					&& state.getSelectedDataset().hasProject(proj))
 					pLabel.setActive();
 				else if (selected == null)
 					pLabel.setNormal();
@@ -260,12 +322,12 @@ public class PProjectSelectionCanvas extends PCanvas
 
 class ProjectLabel extends PText  {
 	
-	public static final double NORMAL_SCALE=1.0;
-	public static final double ACTIVE_SCALE=1.25;	
-    public static final double ROLLOVER_SCALE=1.75;
-	public static final double SELECTED_SCALE=2.5;
+	public static final double NORMAL_SCALE=1;
+	public static final double ACTIVE_SCALE=1;	
+    public static final double ROLLOVER_SCALE=1.25;
+	public static final double SELECTED_SCALE=1.5;
 	public static final double SCALE_MULTIPLIER=2;
-	public static final double UNSELECTED_SCALE=.75;
+	public static final double UNSELECTED_SCALE=1;
 	public CProject project;
 	
 	private double previousScale =NORMAL_SCALE;
@@ -283,6 +345,17 @@ class ProjectLabel extends PText  {
 		
 	}
 	
+	public double getScaledMaxWidth() {
+		PBounds b = getGlobalFullBounds();
+		return b.getWidth()*SELECTED_SCALE/getScale();
+	}
+
+	public double getScaledMaxHeight() {
+		PBounds b = getGlobalFullBounds();
+		return b.getHeight()*SELECTED_SCALE/getScale();
+	}
+	
+	
 	public CProject getProject() {
 		return project;
 	}
@@ -291,7 +364,7 @@ class ProjectLabel extends PText  {
 		if (project == SelectionState.getState().getSelectedProject())
 			return;
 		active = false;
-		System.err.println("setting... "+project.getName()+" to be unselected");
+		//System.err.println("setting... "+project.getName()+" to be unselected");
 		setScale(UNSELECTED_SCALE);
 		setPaint(PConstants.DEFAULT_COLOR);	
 	}
@@ -313,7 +386,7 @@ class ProjectLabel extends PText  {
 	}
 	
 	public void setSelected() {
-		System.err.println("setting something to be selected.");
+		//System.err.println("setting something to be selected.");
 		active = false;
 		setScale(SELECTED_SCALE);
 		setPaint(PConstants.PROJECT_SELECTED_COLOR);
@@ -355,12 +428,17 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 	public void mouseEntered(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
-			SelectionState.getState().setRolloverProject(pl.getProject());
+			CProject p = pl.getProject();
+			System.err.println("entered.."+p.getName());
+			if (p.hasDatasets())
+				SelectionState.getState().setRolloverProject(p);
 		}
 	}
 	
 	public void mouseExited(PInputEvent e) {
 		if (e.getPickedNode() instanceof ProjectLabel) {
+			ProjectLabel p = (ProjectLabel) e.getPickedNode();
+			System.err.println("exited..."+p.getProject().getName());
 			SelectionState.getState().setRolloverProject(null);
 		}
 	}
@@ -392,8 +470,9 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 			//System.errprintln("mouse clicked in project selection. seting project");
 			//System.errprintln("event handled is "+e.isHandled());
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
-			System.err.println("clicking on ..."+pl.getProject().getName());
-			SelectionState.getState().setSelectedProject(pl.getProject());
+			//System.err.println("clicking on ..."+pl.getProject().getName());
+			if (pl.getProject().hasDatasets())
+				SelectionState.getState().setSelectedProject(pl.getProject());
 		}
 	}
 	
