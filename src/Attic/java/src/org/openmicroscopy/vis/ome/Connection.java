@@ -63,7 +63,7 @@ import javax.swing.JWindow;
 import javax.swing.JLabel;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 
 
 
@@ -135,6 +135,16 @@ public class Connection {
 		this.userName = userName;
 		this.passWord = passWord;
 		this.host = getHost(URL);
+		//buildStatusWindow();	
+		worker = 
+			new ConnectionWorker(controller,this,URL,userName,passWord);
+		
+		worker.start();
+	}
+	
+	
+	public void createThumbnailAgent() {
+		
 		thumbnails = new ThumbnailAgent(host,userName,passWord);
 		try {
 			thumbnails.initialize();
@@ -142,11 +152,7 @@ public class Connection {
 			e.printStackTrace();
 			thumbnails = null;
 		}
-		//buildStatusWindow();	
-		worker = 
-			new ConnectionWorker(controller,this,URL,userName,passWord);
-		
-		worker.start();
+
 	}
 		
 	/**
@@ -192,6 +198,12 @@ public class Connection {
 		Attribute user = session.getUser();
 		return new String(user.getStringElement("FirstName")+" " +
 			user.getStringElement("LastName"));
+	}
+	
+	public String getOwnerName(CChain chain) {
+		Attribute owner = chain.getOwner();
+		return new String(owner.getStringElement("FirstName")+" " +
+			owner.getStringElement("LastName"));
 	}
 	
 	/**
@@ -318,11 +330,7 @@ public class Connection {
 		session.commitTransaction();
 	}
 	
-	/**
-	 * 
-	 * @return a {@link ChainManager} for the given session
-	 */
-	public ChainManager getChainManager() {
+    public ChainManager getChainManager() {
 		return session.getChainManager();
 	}
 	
@@ -401,7 +409,6 @@ public class Connection {
 	
 	public void getThumbnail(CImage i) {
 		
-		Image image=null;
 		int id = i.getID();
 		try {
 			if (thumbnails != null) {
@@ -419,7 +426,7 @@ public class Connection {
 	
 	public void getThumbnail(final CImage i,final int id) {
 		final SwingWorker worker = new SwingWorker() {
-			Image image = null;
+			BufferedImage image = null;
 			public Object construct() {
 				try {
 					image = thumbnails.getThumbnail(id);
