@@ -480,7 +480,12 @@ sub importGroup {
             last FILENAME;
         }
         close TIFF;
-        $pix->TIFF2Plane ($filename,0,$theC,0);
+        my $nPix = $pix->TIFF2Plane ($filename,0,$theC,0);
+        if ($nPix != $sizeX*$sizeY) {
+            print STDERR "Problems writing TIFF to repository file\n";
+            $image_invalid = 1;
+            last FILENAME;
+        }
     }
 
     if ($image_invalid && $pixels_created) {
