@@ -91,28 +91,38 @@ public class SelectionState {
 	// CHAIN
 	
 	public void setSelectedChain(CChain newChain) {
-		currentChain = newChain;
-		if (newChain == null)
-			return; // this should not happen
-		activeDatasets = newChain.getDatasetsWithExecutions();
-		activeProjects = null;
-		if (currentDataset!= null) {
-			if (!activeDatasets.contains(currentDataset))
-				currentDataset = null;
+		
+		if (currentChain == newChain) {
+			currentDataset = null; // was "return"
 		}
-		if (currentDataset == null)  { // current dataset is null
+			
+		currentChain = newChain;
+		if (currentChain == null) {
+			activeDatasets =null;
+			currentDataset = null;
+			activeProjects = null;
 			currentProject = null;
-		} else { //current dataset is not null..
-			if (currentProject != null &&
-					!currentProject.getDatasets().contains(currentDataset)) {
+		}
+		else {
+			activeDatasets = newChain.getDatasetsWithExecutions();
+			activeProjects = null;
+			if (currentDataset!= null) {
+				if (!activeDatasets.contains(currentDataset))
+					currentDataset = null;
+			}
+			if (currentDataset == null)  { // current dataset is null
 				currentProject = null;
+			} else { //current dataset is not null..
+				if (currentProject != null &&
+						!currentProject.getDatasets().contains(currentDataset)) {
+					currentProject = null;
+				}
 			}
 		}
-		
 		fireSelectionEvent();	
 	}
 	
-	public CChain getCurrentChain() {
+	public CChain getSelectedChain() {
 		return currentChain;
 	}
 	
@@ -145,7 +155,6 @@ public class SelectionState {
 	// DATASETS
 	
 	public void setSelectedDataset(CDataset current) {
-		System.err.println("setting dataset to "+current);
 		currentDataset = current;
 		if (currentDataset != null) {
 			activeProjects = currentDataset.getProjects();
@@ -157,15 +166,11 @@ public class SelectionState {
 	    	
 	    }
     	if (currentProject!=null) {
-    		System.err.println("current project is not null..");
     		if (currentDataset != null && 
     				!currentProject.getDatasets().contains(currentDataset)) {
     			currentProject =null;
-    			System.err.println("current project doesn't contain dataset");
-    			System.err.println("setting to null...");
     		}
     		else {
-    			System.err.println("setting active datasets");
     			activeDatasets = currentProject.getDatasets();
     		}
     	} 	else {
