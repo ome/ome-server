@@ -101,10 +101,6 @@ sub getMenuText {
 	return "$common_name Detail";
 }
 
-#sub getMenuBuilder { return undef }  # No menu
-
-#sub getHeaderBuilder { return undef }  # No header
-
 =head2 getPageTitle
 
 Return the common name of the object type followed by that object's DBObjRender label
@@ -126,21 +122,21 @@ sub getPageTitle {
 
 =head2 getPageBody
 
-calls _takeAction()
-prints results of getObjDetail(), _getManyRelations( $object ), and
-getFooter(). All this stuff gets embedded in a form.
+calls _takeAction() to allow subclasses to respond to form actions
+also composites the html by calling doLayout() with the results of getObjDetail(),
+getListsOfRelations(), getTablesOfRelations(), and getFooter(). All of this gets
+embedded in a form.
 
-If the formatting is acceptable, consider overriding the methods
-getPageBody uses instead of getPageBody. It could save you some work and
-reduces the possibility of bugs creeping in.
+Strongly consider overriding the methods getPageBody uses instead of getPageBody. It
+could save you some work and reduces the possibility of bugs creeping in.
 
 Any subclass that overrides this method is expected to insert the
 following lines inside a form in whatever they spit out. (If whatever
 they spit out has forms)
-
 	$q->hidden({-name => 'Type', -default => $q->param( 'Type' ) }).
 	$q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	$q->hidden({-name => 'action', -default => ''});
+This ensures the object in question can be displayed after a form is submitted.
 
 Overridable
 
@@ -164,8 +160,9 @@ sub getPageBody {
 	           $q->hidden({-name => 'ID', -default => $q->param( 'ID' ) }).
 	           $q->hidden({-name => 'action', -default => ''});
 	my $objDetail = $self->getObjDetail( $object );
-	my %relations = $self->_getManyRelations( $object );
-	$html .= $self->doLayout($objDetail, \%relations);
+	my %relationLists  = $self->getListsOfRelations( $object );
+	my %relationTables = $self->getTablesOfRelations( $object );
+	$html .= $self->doLayout($objDetail, \%relationLists, \%relationTables);
 	$html .= $self->getFooter();
 	$html .= $q->endform();
 	return ('HTML', $html);
@@ -173,18 +170,18 @@ sub getPageBody {
 
 =head2 doLayout
 
-	$html .= $self->doLayout($objDetail, \@relations);
+	$html = $self->doLayout($objDetail, \%relationLists, \%relationTables );
 
 Lays out the display. Overridable.
 
 =cut
 
 sub doLayout {
-	my ($self,$objDetail, $relations) = @_;
+	my ($self,$objDetail, $relationLists, $relationTables) = @_;
 	my $q = $self->CGI();
 	
 	my (@col1, @col2, @col3, @col4);
-	my @relation_list = ( $relations ? map( $relations->{$_}, sort( keys %$relations ) ): () );
+	my @relation_list = ( $relationLists ? map( $relationLists->{$_}, sort( keys %$relationLists ) ): () );
 	push( @col3, splice( @relation_list, 0, 2 ) );
 	push( @col4, splice( @relation_list, 0, 2 ) );
 
@@ -209,6 +206,10 @@ sub doLayout {
 			join( '', @col2 ),
 		] ) )
 	);
+	
+	$html .= ( $relationTables ? 
+		join( '', map( $relationTables->{$_}, sort( keys %$relationTables ) ) ) :
+		'' );
 	
 	return $html;
 }
@@ -344,68 +345,68 @@ sub _overrideRecord {
 }
 
 
-=head2 _getManyRelations
+=head2 getListsOfRelations
 
-	my %relations = $self->_getManyRelations( $object );
+	my %relationLists = $self->getListsOfRelations( $object );
 
-returns an array of html entities, each describing a has-many or
-many-to-many relationship the given object has.
+returns a hash of html tables, each describing a list of has-many or
+many-to-many relationships the given object has. The hash is keyed by the
+name of the relationship.
 
-Unless overridden, uses OME::Web::DBObjRender->getRelationAccessors to
-get data and OME::Web::DBObjTable->getList to make lists.
-
-Overridable
+Do Not Override this method.
+Override OME::Web::DBObjRender->getRelationAccessors() instead.
 
 =cut
 
-sub _getManyRelations {
+sub getListsOfRelations {
 	my ($self, $object) = @_;
-
-	my $specializedDetail;
-	return $specializedDetail->_getManyRelations( )
-		if( $specializedDetail = $self->__specialize( ) and
-		    ref( $self ) eq __PACKAGE__ );
-
 	my $q = $self->CGI();
-	
 	my %relations;
-
-	# print tables for has many relations
 	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	if( $iter->first() ) { do {
-		if( $iter->getDBObjType_ID_and_Accessor() ) {
-			my ( $from_type, $from_id, $from_accessor) = $iter->getDBObjType_ID_and_Accessor();
-			$relations{ $iter->name() } = $q->p( 
-				$tableMaker->getList( 
-					{
-						title            => $iter->title(), 
-						embedded_in_form => $self->{ form_name },
-						Length           => 5,
-						width            => '100%'
-					}, 
-					$iter->return_type(), 
-					{ accessor => [ $from_type, $from_id, $from_accessor ] }
-				)
-			);
-		} else {
-			$relations{ $iter->name() } = $q->p( 
-				$tableMaker->getList( 
-					{
-						title            => $iter->title(), 
-						embedded_in_form => $self->{ form_name },
-						Length           => 5,
-						width            => '100%'
-					}, 
-					$iter->return_type(), 
-					$iter->getList()
-				)
-			);
-		}
+		my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
+		$options->{ Length }           = 5;
+		$options->{ embedded_in_form } = $self->{ form_name };
+		$options->{ URLtoMoreInfo }    = '#'.$iter->name();
+		$relations{ $iter->name() } = $q->p( 
+			$tableMaker->getList(  $options, $type, $renderInstrs ) );
 	} while( $iter->next() ); }
 	
 	return %relations;
 }
+
+
+=head2 getTablesOfRelations
+
+	my %relationTables = $self->getTablesOfRelations( $object );
+
+returns a hash of html tables, each describing a list of has-many or
+many-to-many relationships the given object has. The hash is keyed by the
+name of the relationship.
+
+Do Not Override this method.
+Override OME::Web::DBObjRender->getRelationAccessors() instead.
+
+=cut
+
+sub getTablesOfRelations {
+	my ($self, $object) = @_;
+	my $q = $self->CGI();
+	my %relations;
+	my $iter = OME::Web::DBObjRender->getRelationAccessors( $object ); 
+	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
+	if( $iter->first() ) { do {
+		my ( $options, $type, $renderInstrs ) = $iter->getRenderParams();
+		$options->{ embedded_in_form } = $self->{ form_name };
+		$options->{ anchor }           = $iter->name();
+		$relations{ $iter->name() } = $q->p( 
+			$tableMaker->getTable(  $options, $type, $renderInstrs ) );
+	} while( $iter->next() ); }
+	
+	return %relations;
+}
+
 
 =head2 _loadObject
 
