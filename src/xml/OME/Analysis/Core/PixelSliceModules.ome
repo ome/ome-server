@@ -213,7 +213,7 @@
            Count="*">
         <FormalOutput
            Name="Timepoint Slices"
-           SemanticTypeName="PixelsSlice"
+           SemanticTypeName="PixelsTimeSlice"
            Count="*">
         </FormalOutput>
       </Declaration>
@@ -244,7 +244,7 @@
            Count="*">
         <FormalOutput
            Name="Stack Slices"
-           SemanticTypeName="PixelsSlice"
+           SemanticTypeName="PixelsStackSlice"
            Count="*">
         </FormalOutput>
       </Declaration>
@@ -275,7 +275,7 @@
            Count="*">
         <FormalOutput
            Name="Plane Slices"
-           SemanticTypeName="PixelsSlice"
+           SemanticTypeName="PixelsPlaneSlice"
            Count="*">
         </FormalOutput>
       </Declaration>
