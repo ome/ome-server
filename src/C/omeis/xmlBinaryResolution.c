@@ -619,6 +619,7 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 	*/
 	StructElementInfo *elementInfo;
 	size_t nPix;
+	int result;
 
 	switch( state->state ) {
 	
@@ -765,10 +766,14 @@ static void OME_EndElement(ParserState *state, const xmlChar *name) {
 		fprintf( stdout,  "\"" );
 		
 		/* close pixelsRep object & clean it up */
-		FinishPixels( state->pixelInfo->pixWriter, 0 );
+		if ( (result = FinishPixels( state->pixelInfo->pixWriter, 0 )) < 0 ) {
+			fprintf(stderr, "Error calling FinishPixels: result = %d\n",result);
+			if (errno) fprintf (stderr,"%s\n",strerror( errno ) );
+			assert(0);
+		}
 
 	 	/* cleanup */
-		free( state->pixelInfo->pixWriter );
+	 	freePixelsRep (state->pixelInfo->pixWriter);
 		free( state->pixelInfo->binDataBuf );
 		free( state->pixelInfo->dimOrder );
 		free( state->pixelInfo->pixelType );
@@ -810,7 +815,7 @@ static void OME_Characters(ParserState *state, const xmlChar *ch, int len) {
 	if( state->elementInfo != NULL && state->state != IN_PIXELS && state->state != IN_BINDATA_UNDER_PIXELS) {
 		state->elementInfo->hasContent = 1;
 		if( state->elementInfo->tagOpen == 1 ) {
-			fprintf( stdout, ">",state->state );
+			fprintf( stdout, ">" );
 			state->elementInfo->tagOpen = 0;
 		}
 	}
