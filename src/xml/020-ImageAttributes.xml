@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnalysisModuleLibrary
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:noNamespaceSchemaLocation=
+  "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
+<SemanticTypeDefinitions>
+
+<DataTypes>
+
+  <!-- IMAGE_DIMENSIONS table -->
+
+  <Table 
+      Granularity="I" TableName="IMAGE_DIMENSIONS"
+      Description="Describes the extents of each dimension of a 5D image - both in number of pixels and in the physical size of the pixels in microns.">
+    <Column
+        ColumnName="SIZE_X" SQL_DataType="integer"
+        Description="Size (in pixels) of the X dimension"/>
+    <Column
+        ColumnName="SIZE_Y" SQL_DataType="integer"
+        Description="Size (in pixels) of the Y dimension"/>
+    <Column
+        ColumnName="SIZE_Z" SQL_DataType="integer"
+        Description="Size (in pixels) of the Z dimension"/>
+    <Column
+        ColumnName="NUM_WAVES" SQL_DataType="integer"
+        Description="Size (in pixels) of the W dimension"/>
+    <Column
+        ColumnName="NUM_TIMES" SQL_DataType="integer"
+        Description="Size (in pixels) of the T dimension"/>
+    <Column
+        ColumnName="BITS_PER_PIXEL" SQL_DataType="integer"
+        Description="Size (in bits) of each pixel"/>
+
+    <Column
+        ColumnName="PIXEL_SIZE_X" SQL_DataType="float"
+        Description="Size (in microns) of each pixel in the X dimension"/>
+    <Column
+        ColumnName="PIXEL_SIZE_Y" SQL_DataType="float"
+        Description="Size (in microns) of each pixel in the Y dimension"/>
+    <Column
+        ColumnName="PIXEL_SIZE_Z" SQL_DataType="float"
+        Description="Size (in microns) of each pixel in the Z dimension"/>
+    <Column
+        ColumnName="WAVE_INCREMENT" SQL_DataType="float"
+        Description="Size (in nanometers) of each pixel in the W dimension"/>
+    <Column
+        ColumnName="TIME_INCREMENT" SQL_DataType="float"
+        Description="Size (in seconds) of each pixel in the T dimension"/>
+  </Table>
+
+
+  <!-- IMAGE_WAVELENGTHS table -->
+
+  <Table 
+      Granularity="I" TableName="IMAGE_WAVELENGTHS"
+      Description="Describes each wavelength in the image">
+    <Column
+        ColumnName="WAVENUMBER" SQL_DataType="integer"
+        Description="The pixel coordinate of this wavelength"/>
+    <Column
+        ColumnName="EX_WAVELENGTH" SQL_DataType="integer"
+        Description="In nanometers"/>
+    <Column
+        ColumnName="EM_WAVELENGTH" SQL_DataType="integer"
+        Description="In nanometers"/>
+    <Column
+        ColumnName="ND_FILTER" SQL_DataType="float"
+        Description="Percentage fraction between 0.0 and 1.0.  A value of 1.0 is opaque."/>
+    <Column
+        ColumnName="FLUOR" SQL_DataType="string"
+        Description="The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not GFP-p53 or FITC-goat-anti-rabbit"/>
+  </Table>
+
+
+  <!-- DISPLAY_SETTINGS table -->
+
+  <Table 
+      Granularity="I" TableName="DISPLAY_SETTINGS"
+      Description="Viewer settings">
+    <Column
+        ColumnName="RED_WAVENUM" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="RED_BLACK_LEVEL" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="RED_SCALE" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="DISPLAY_RED" SQL_DataType="boolean"
+        Description=""/>
+
+    <Column
+        ColumnName="GREEN_WAVENUM" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="GREEN_BLACK_LEVEL" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="GREEN_SCALE" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="DISPLAY_GREEN" SQL_DataType="boolean"
+        Description=""/>
+
+    <Column
+        ColumnName="BLUE_WAVENUM" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="BLUE_BLACK_LEVEL" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="BLUE_SCALE" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="DISPLAY_BLUE" SQL_DataType="boolean"
+        Description=""/>
+
+    <Column
+        ColumnName="GREY_WAVENUM" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="GREY_BLACK_LEVEL" SQL_DataType="float"
+        Description=""/>
+    <Column
+        ColumnName="GREY_SCALE" SQL_DataType="float"
+        Description=""/>
+
+    <Column
+        ColumnName="THE_Z" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="THE_T" SQL_DataType="integer"
+        Description=""/>
+    <Column
+        ColumnName="IS_RGB" SQL_DataType="boolean"
+        Description=""/>
+  </Table>
+
+</DataTypes>
+
+  <!-- IMAGE_DIMENSIONS semantic types -->
+
+  <SemanticType
+      Name="Image dimensions"
+      Description="Pixel dimensions of the image">
+    <SemanticElement
+        Name="X" TableName="IMAGE_DIMENSIONS" ColumnName="SIZE_X"
+        Description="Size (in pixels) of the X dimension"/>
+    <SemanticElement
+        Name="Y" TableName="IMAGE_DIMENSIONS" ColumnName="SIZE_Y"
+        Description="Size (in pixels) of the Y dimension"/>
+    <SemanticElement
+        Name="Z" TableName="IMAGE_DIMENSIONS" ColumnName="SIZE_Z"
+        Description="Size (in pixels) of the Z dimension"/>
+    <SemanticElement
+        Name="W" TableName="IMAGE_DIMENSIONS" ColumnName="NUM_WAVES"
+        Description="Size (in pixels) of the W dimension"/>
+    <SemanticElement
+        Name="T" TableName="IMAGE_DIMENSIONS" ColumnName="NUM_TIMES"
+        Description="Size (in pixels) of the T dimension"/>
+    <SemanticElement
+        Name="BPP" TableName="IMAGE_DIMENSIONS" ColumnName="BITS_PER_PIXEL"
+        Description="Size (in bits) of each pixel"/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Image physical sizes"
+      Description="Physical pixel sizes of the image">
+    <SemanticElement
+        Name="X" TableName="IMAGE_DIMENSIONS" ColumnName="PIXEL_SIZE_X"
+        Description="Size (in microns) of each pixel in the X dimension"/>
+    <SemanticElement
+        Name="Y" TableName="IMAGE_DIMENSIONS" ColumnName="PIXEL_SIZE_Y"
+        Description="Size (in microns) of each pixel in the Y dimension"/>
+    <SemanticElement
+        Name="Z" TableName="IMAGE_DIMENSIONS" ColumnName="PIXEL_SIZE_Z"
+        Description="Size (in microns) of each pixel in the Z dimension"/>
+    <SemanticElement
+        Name="W" TableName="IMAGE_DIMENSIONS" ColumnName="WAVE_INCREMENT"
+        Description="Size (in nanometers) of each pixel in the W dimension"/>
+    <SemanticElement
+        Name="T" TableName="IMAGE_DIMENSIONS" ColumnName="TIME_INCREMENT"
+        Description="Size (in seconds) of each pixel in the T dimension"/>
+  </SemanticType>
+
+
+  <!-- IMAGE_WAVELENGTHS semantic types -->
+
+  <SemanticType
+      Name="Wavelength"
+      Description="Describes each wavelength in the image">
+    <SemanticElement
+        Name="W" TableName="IMAGE_WAVELENGTHS" ColumnName="WAVENUMBER"
+        Description="The pixel coordinate of this wavelength"/>
+    <SemanticElement
+        Name="EX_WAVELENGTH"
+        TableName="IMAGE_WAVELENGTHS" ColumnName="EX_WAVELENGTH"
+        Description="In nanometers"/>
+    <SemanticElement
+        Name="EM_WAVELENGTH"
+        TableName="IMAGE_WAVELENGTHS" ColumnName="EM_WAVELENGTH"
+        Description="In nanometers"/>
+    <SemanticElement
+        Name="ND_FILTER" TableName="IMAGE_WAVELENGTHS" ColumnName="ND_FILTER"
+        Description="Percentage fraction between 0.0 and 1.0.  A value of 1.0 is opaque."/>
+    <SemanticElement
+        Name="FLUOR" TableName="IMAGE_WAVELENGTHS" ColumnName="FLUOR"
+        Description="The fluorescent compound - i.e. GFP, eGFP, DAPI, FITC, etc., not GFP-p53 or FITC-goat-anti-rabbit"/>
+  </SemanticType>
+
+
+  <!-- DISPLAY_SETTINGS semantic types -->
+
+  <SemanticType
+      Name="Josiah Red"
+      Description="Viewer settings">
+    <SemanticElement
+        Name="THE_W"
+        TableName="DISPLAY_SETTINGS" ColumnName="RED_WAVENUM"
+        Description=""/>
+    <SemanticElement
+        Name="BLACK_LEVEL"
+        TableName="DISPLAY_SETTINGS" ColumnName="RED_BLACK_LEVEL"
+        Description=""/>
+    <SemanticElement
+        Name="SCALE"
+        TableName="DISPLAY_SETTINGS" ColumnName="RED_SCALE"
+        Description=""/>
+    <SemanticElement
+        Name="DISPLAY"
+        TableName="DISPLAY_SETTINGS" ColumnName="DISPLAY_RED"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Josiah Green"
+      Description="Viewer settings">
+    <SemanticElement
+        Name="THE_W"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREEN_WAVENUM"
+        Description=""/>
+    <SemanticElement
+        Name="BLACK_LEVEL"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREEN_BLACK_LEVEL"
+        Description=""/>
+    <SemanticElement
+        Name="SCALE"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREEN_SCALE"
+        Description=""/>
+    <SemanticElement
+        Name="DISPLAY"
+        TableName="DISPLAY_SETTINGS" ColumnName="DISPLAY_GREEN"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Josiah Blue"
+      Description="Viewer settings">
+    <SemanticElement
+        Name="THE_W"
+        TableName="DISPLAY_SETTINGS" ColumnName="BLUE_WAVENUM"
+        Description=""/>
+    <SemanticElement
+        Name="BLACK_LEVEL"
+        TableName="DISPLAY_SETTINGS" ColumnName="BLUE_BLACK_LEVEL"
+        Description=""/>
+    <SemanticElement
+        Name="SCALE"
+        TableName="DISPLAY_SETTINGS" ColumnName="BLUE_SCALE"
+        Description=""/>
+    <SemanticElement
+        Name="DISPLAY"
+        TableName="DISPLAY_SETTINGS" ColumnName="DISPLAY_BLUE"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Josiah Grey"
+      Description="Viewer settings">
+    <SemanticElement
+        Name="THE_W"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREY_WAVENUM"
+        Description=""/>
+    <SemanticElement
+        Name="BLACK_LEVEL"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREY_BLACK_LEVEL"
+        Description=""/>
+    <SemanticElement
+        Name="SCALE"
+        TableName="DISPLAY_SETTINGS" ColumnName="GREY_SCALE"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Josiah General"
+      Description="Viewer settings">
+    <SemanticElement
+        Name="THE_Z"
+        TableName="DISPLAY_SETTINGS" ColumnName="THE_Z"
+        Description=""/>
+    <SemanticElement
+        Name="THE_T"
+        TableName="DISPLAY_SETTINGS" ColumnName="THE_T"
+        Description=""/>
+    <SemanticElement
+        Name="IS_RGB"
+        TableName="DISPLAY_SETTINGS" ColumnName="IS_RGB"
+        Description=""/>
+  </SemanticType>
+
+</SemanticTypeDefinitions>
+
+</AnalysisModuleLibrary>

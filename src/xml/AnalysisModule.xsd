@@ -129,6 +129,7 @@ Tied to DB. DATA_TABLES.ATTRIBUTE_TYPE
 				</xsd:annotation>
 				<xsd:simpleType>
 					<xsd:restriction base = "xsd:string">
+						<xsd:enumeration value = "G"/>
 						<xsd:enumeration value = "D"/>
 						<xsd:enumeration value = "I"/>
 						<xsd:enumeration value = "F"/>
