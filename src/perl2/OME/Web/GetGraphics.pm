@@ -323,7 +323,7 @@ my $SaveDisplayCGI_URL = $JSinfo->{ SaveDisplayCGI_URL };
 my $theZ               = $JSinfo->{ theZ };
 my $theT               = $JSinfo->{ theT };
 my $isRGB              = $JSinfo->{ isRGB };
-my $WBS                = $JSinfo->{ WBS };
+my $CBW                = $JSinfo->{ CBW };	# known to the svg viewer as WBW - when the svg viewer was developed, ChannelNumber was called Wavenumber. the svg hasn't been updated to reflect this change in nomenclature.
 my $RGBon              = $JSinfo->{ RGBon };
 my $toolBoxScale       = $JSinfo->{ toolBoxScale };
 
@@ -417,7 +417,7 @@ $SVG .= <<ENDSVG;
 				svgDocument = e.ownerDocument;
 		// initialize back end
 			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr", 
-				SaveDisplayCGI_URL, $WBS, $RGBon, $isRGB, DatasetID);
+				SaveDisplayCGI_URL, $CBW, $RGBon, $isRGB, DatasetID);
 			image.realize( svgDocument.getElementById("image") );
 
 			// setup fluors used in this image
@@ -984,9 +984,8 @@ sub SVGgetDataJS {
 
 	$JSinfo->{ ImagedID } = $ImageID;
 
-	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID);
-	die "Could not retreive Image from ImageID=$ImageID\n"
-		unless defined $image;
+	my $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID)
+		or die "Could not retreive Image from ImageID=$ImageID\n";
 
 	# get Dimensions from image and make them readable
 	my $pixels = $image->DefaultPixels()
@@ -1033,7 +1032,7 @@ sub SVGgetDataJS {
 		or die "Stack Statistics has not been run on the Pixels to be displayed.\n";
 	my $stackStatsAnalysisID = $actualInput->analysis()->id();
 
-	# 2do: update this method call when method accepts search parameters
+	# FIXME: update this method call when method accepts search parameters
 	my @mins   = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
 		$factory->findAttributes( "StackMinimum", $image ) );
 	my @maxes  = grep( $_->analysis()->id() eq $stackStatsAnalysisID, 
@@ -1072,7 +1071,7 @@ sub SVGgetDataJS {
 	###########################################################################
 
 	# get display settings
-	my $displaySettings   = $factory->findObject( 'OME::DisplaySettings', image_id => $image->id() );
+	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', $image )]->[0];
 	my $viewerPreferences = $factory->findObject( 'OME::ViewerPreferences', experimenter_id => $session->User()->id() );
 	
 	# compile info
@@ -1083,23 +1082,41 @@ sub SVGgetDataJS {
 	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
 	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
 	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
-	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
+	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || sprintf "%d",$dims->[2] / 2;
 	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
 	$JSinfo->{ isRGB }              = 'null';
-	$JSinfo->{ WBS }                = 'null';
+	$JSinfo->{ CBW }                = 'null'; # ChannelNumber, BlackLevel, WhiteLevel
 	$JSinfo->{ RGBon }              = 'null';
 	$JSinfo->{ toolBoxScale }       = 1;
 
 	#	Set Defaults
-	if( defined $displaySettings ) {
-		$JSinfo->{ theZ }      = $displaySettings->theZ()
+	if( defined $displayOptions ) {
+		$JSinfo->{ theZ }      = sprintf( "%d", ( $displayOptions->ZStart() + $displayOptions->ZStop() ) / 2 )
 			if( not defined $cgi->url_param('theZ') );
-		$JSinfo->{ theT }      = $displaySettings->theT()
+		$JSinfo->{ theT }      = sprintf( "%d", ( $displayOptions->TStart() + $displayOptions->TStop() ) / 2 )
 			if( not defined $cgi->url_param('theT') );
-		$JSinfo->{ isRGB }     = $displaySettings->isRGB();
-		$JSinfo->{ WBS }       = '[' . join(',', @{ $displaySettings->WBS() }) . ']';
-		$JSinfo->{ RGBon }     = '[' . join(',', @{ $displaySettings->RGBon() } ) . ']';
+		$JSinfo->{ isRGB }     = $displayOptions->DisplayRGB();
+		
+		my @CBW;
+		@CBW = (
+			$displayOptions->RedChannel()->ChannelNumber(),
+			$displayOptions->RedChannel()->BlackLevel(),
+			$displayOptions->RedChannel()->WhiteLevel(),
+			$displayOptions->BlueChannel()->ChannelNumber(),
+			$displayOptions->BlueChannel()->BlackLevel(),
+			$displayOptions->BlueChannel()->WhiteLevel(),
+			$displayOptions->GreenChannel()->ChannelNumber(),
+			$displayOptions->GreenChannel()->BlackLevel(),
+			$displayOptions->GreenChannel()->WhiteLevel(),
+			$displayOptions->GreyChannel()->ChannelNumber(),
+			$displayOptions->GreyChannel()->BlackLevel(),
+			$displayOptions->GreyChannel()->WhiteLevel(),
+		) if $displayOptions;
+		$JSinfo->{ CBW } = '[' . join( ',', @CBW ) . ']'
+			if( @CBW );
+		$JSinfo->{ RGBon } = '[' . $displayOptions->RedChannelOn() . ',' . $displayOptions->GreenChannelOn() . ',' . $displayOptions->BlueChannelOn() . ']';
 	}
+
 	if( defined $viewerPreferences ) {
 		$JSinfo->{ toolBoxScale } = $viewerPreferences->toolbox_scale();
 	}
