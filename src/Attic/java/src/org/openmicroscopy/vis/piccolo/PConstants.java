@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.piccolo;
 
 import java.awt.Font;
 import java.awt.Color;
+import java.awt.BasicStroke;
 
 /** 
  *
@@ -79,9 +80,16 @@ public class PConstants {
 	/**
 	 * The {@link Font} used for the name of a Formal Parameter 
 	 */
-	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
+	public static final Font THUMBNAIL_NAME_FONT = 
+		new Font("Helvetica",Font.BOLD,6);
 	
+	public static final Font THUMBNAIL_LABEL_FONT = 
+		new Font("Helvetica",Font.BOLD,8);
+	public static final Font TOOLTIP_FONT = new Font("Helvetica",Font.BOLD,12);
+	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);	
 	public static final Font LABEL_FONT  = new Font("Helvetica",Font.BOLD,18);
+	public static final Font LARGE_NAME_FONT = 
+		new Font("Helvtical",Font.BOLD,24);
 	/**
 	 * Scaling multipliers for events that scale a canvas gradually - as 
 	 * opposed to events that scale to a particular node. 
@@ -106,6 +114,25 @@ public class PConstants {
 	 */
 	public static final Color SELECTED_HIGHLIGHT_COLOR = new Color(51,204,255);
 	
+	
+	/** 
+	 * Color for category boxes.
+	 */
+    public static final Color CATEGORY_COLOR= new Color(204,204,255,100);
+	
+    /**
+     * defaults text color
+     */
+    
+    public static final Color DEFAULT_COLOR = Color.BLACK;
+    public static final Color DEFAULT_TEXT_COLOR = DEFAULT_COLOR;
+    public static final Color DEFAULT_FILL = Color.LIGHT_GRAY;
+    
+    /**
+     * link highlight
+     */
+    
+    public static final Color LINK_HIGHLIGHT_COLOR=Color.WHITE;
 	/** 
 	 * Positional offsets for a category name in a {@link PCategoryBox} in a 
 	 * {@link PPaletteCanvas}
@@ -119,9 +146,20 @@ public class PConstants {
 	 */
 	public static final float LINK_BULB_SIZE=8;
 	public static final float LINK_BULB_RADIUS = LINK_BULB_SIZE/2;
+	public static final float LINK_TARGET_SIZE=10;
+	public static final float LINK_TARGET_HALF_SIZE=LINK_TARGET_SIZE/2;
+	public static final float  LINK_TARGET_BUFFER=3;
 	
+	public static final BasicStroke LINK_STROKE=
+		new BasicStroke(1,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND);
+	
+ 	
 	public static final double FIELD_LABEL_SCALE=4;
 	
 	public static final double ITEM_LABEL_SCALE=3;
+	
+	
+	public static final float STROKE_WIDTH=4.0f;
+	public static final BasicStroke BORDER_STROKE = new BasicStroke(STROKE_WIDTH);
 	
 }
