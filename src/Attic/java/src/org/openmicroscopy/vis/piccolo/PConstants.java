@@ -60,7 +60,9 @@ public class PConstants {
 	 * For a buffered node, we want to get its bounds with some empty space
 	 * on each side.  this value gives the amount of buffer space.
 	 */
-	public static final int BORDER=80;	
+	public static final int BORDER=80;
+	
+	public static final int SMALL_BORDER=20;	
 	
 	
 	/**
