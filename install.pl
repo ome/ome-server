@@ -134,15 +134,6 @@ USAGE
 #********* START OF CODE
 #*********
 
-use Log::Agent;
-if ($ENV{OME_DEBUG}) {	
-	logconfig(
-		-prefix      => "$0",
-		-level    => 'debug'
-	);
-	print STDERR "Debugging on\n";
-}
-
 # Number of checks to run
 my $checks_to_run = 0;
 
