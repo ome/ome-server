@@ -14,7 +14,8 @@ use Apache;
 # with a name prefixed with OME::Web::) which overrides the following
 # methods:
 #
-#    NotSureYet
+#    getPageTitle
+#    getPageBody
 
 
 my $loginPage = 'OME::Web::Login';
@@ -253,8 +254,8 @@ sub createOMEPage {
     $bodyCell = $CGI->table({cellspacing => 8, cellpadding => 0, border => 0, width => '100%'},
 			    $CGI->Tr($CGI->td($body)));
     $bodyCell = $CGI->td({width => '100%',
-			     align => 'LEFT'},
-			    $bodyCell);
+			  align => 'LEFT'},
+			 $bodyCell);
 
     $left = $self->getSidebar();
 
@@ -281,6 +282,8 @@ sub createOMEPage {
 
 # getPageTitle()
 # --------------
+# This should be overriden in descendant classes to return the title
+# of the page.
 
 sub getPageTitle {
     return undef;
@@ -288,6 +291,23 @@ sub getPageTitle {
 
 # getPageBody()
 # -------------
+# This should be overridden in descendant classes to return the body
+# of the page.  It should be returned as a tuple in the following
+# form:
+
+#
+#   ('ERROR',<error message>)
+#      - something unexpectedly bad happened
+#
+#   ('HTML',<page body>)
+#      - everything worked well, returns an HTML fragment for the body
+#        of the page
+#
+#   ('REDIRECT',<URL>)
+#      - everything worked well, but instead of a page body, the user
+#        should be redirected (usually in the case of processing form
+#        input)
+
 
 sub getPageBody {
     return ('ERROR',undef);
