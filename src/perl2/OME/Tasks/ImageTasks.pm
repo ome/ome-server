@@ -102,7 +102,7 @@ sub removeWeirdCharacters {
 # the given project.
 
 sub importFiles {
-	my ($session,$dataset,$filenames) = @_;
+	my ($session,$dataset,$filenames, $switch) = @_;
 	my $importer;
 	my $fn_groups;
 	my $status = "Failed import";
@@ -120,7 +120,7 @@ sub importFiles {
 	unless scalar @$fn_groups > 0;
 
 	foreach $image_group_ref (@$fn_groups) {
-		$importer->import_image($dataset, $image_group_ref);
+		$importer->import_image($dataset, $image_group_ref, $switch);
 		if ($importer->{did_import}) {
 			$session->DBH()->commit();
 		}
