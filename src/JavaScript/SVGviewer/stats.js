@@ -89,7 +89,7 @@ Statistics.prototype.buildDisplay = function() {
 	this.displayContent = svgDocument.createElementNS(svgns, "g");
 
 	// set up GUI
-	this.wavePopupList = new popupList(
+	this.logicalChannelPopupList = new popupList(
 		70, 0, this.waveLabels, 
 		{ obj: this, method: 'updateStats'},
 		null,
@@ -97,18 +97,18 @@ Statistics.prototype.buildDisplay = function() {
 		skinLibrary["popupListBackgroundLightskyblue"],
 		skinLibrary["popupListHighlightAquamarine"]
 	);
-	this.wavePopupList.setLabel(-2, 12, "Channel: ");
-	this.wavePopupList.getLabel().setAttribute("text-anchor", "end");
-	this.wavePopupList.realize( this.displayContent );
+	this.logicalChannelPopupList.setLabel(-2, 12, "Channel: ");
+	this.logicalChannelPopupList.getLabel().setAttribute("text-anchor", "end");
+	this.logicalChannelPopupList.realize( this.displayContent );
 	
 	// build displays
 	this.labels = new Array();
 	this.fields = new Array();
-	this.displayContent.appendChild( this.wavePopupList.textToSVG(
+	this.displayContent.appendChild( this.logicalChannelPopupList.textToSVG(
 		'<text x="0" y="2em" dominant-baseline="hanging">theT: </text>'
 	));
 	this.labels['theT'] = this.displayContent.lastChild;
-	this.displayContent.appendChild( this.wavePopupList.textToSVG(
+	this.displayContent.appendChild( this.logicalChannelPopupList.textToSVG(
 		'<text x="160" y="2em" text-anchor="end" dominant-baseline="hanging">.</text>'
 	));
 	this.fields['theT'] = this.displayContent.lastChild;
@@ -160,7 +160,7 @@ Statistics.prototype.updateStats = function(t) {
 	if(t == null) return;
 	
 	// update fields
-	var c = this.wavePopupList.getSelection();
+	var c = this.logicalChannelPopupList.getSelection();
 	this.fields['theT'].firstChild.data = t;
 	for( statType in this.stats[c][t] ) {
 		this.fields[statType].firstChild.data = this.stats[c][t][statType];
@@ -179,8 +179,8 @@ Statistics.prototype.updateStats = function(t) {
 	
 *****/
 Statistics.prototype.changeWavenumber = function(theW) {
-	v = this.wavePopupList.getItemList();
-	this.wavePopupList.setSelectionByValue( v[theW], true);
+	v = this.logicalChannelPopupList.getItemList();
+	this.logicalChannelPopupList.setSelectionByValue( v[theW], true);
 }
 
 /********************************************************************************************/
