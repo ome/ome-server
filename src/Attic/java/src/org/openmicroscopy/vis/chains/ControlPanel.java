@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.vis.chains.Toolbar
+ * org.openmicroscopy.vis.chains.ControlPanel
  *
  *------------------------------------------------------------------------------
  *
@@ -67,6 +67,7 @@ import javax.swing.JScrollPane;
 import javax.swing.Box;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.MouseListener;
@@ -116,7 +117,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private CDataset curDataset=null;
 		
 	
-	private SelectionState selectionState;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
@@ -127,7 +127,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		Container content = getContentPane();
 		content.setLayout(new BoxLayout(content,BoxLayout.Y_AXIS));
 		
-		selectionState = new SelectionState();
 		
 		JToolBar toolBar = buildToolBar();
 		
@@ -158,7 +157,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			projList.setVisibleRowCount(-1);
 			projList.setLayoutOrientation(JList.VERTICAL);
 			
-			projList.setCellRenderer(new ProjectRenderer(selectionState));
+			projList.setCellRenderer(new ProjectRenderer());
 			projList.addListSelectionListener(this);
 			projList.addMouseListener(this);
 			JScrollPane projScroller = new JScrollPane(projList);
@@ -186,7 +185,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		datasetList.setLayoutOrientation(JList.VERTICAL);
 		datasetList.addListSelectionListener(this);
 		datasetList.addMouseListener(this);
-		datasetList.setCellRenderer(new DatasetRenderer(selectionState));
+		datasetList.setCellRenderer(new DatasetRenderer());
 		JScrollPane datasetScroll = new JScrollPane(datasetList);
 		datasetScroll.setMinimumSize(new Dimension(100,200));
 		datasetScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -204,7 +203,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		browserLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		imagePanel.add(browserLabel);
 		imagePanel.add(Box.createRigidArea(new Dimension(0,3)));
-		browser = new PBrowserCanvas(connection,selectionState);
+		browser = new PBrowserCanvas(connection);
 		browser.setPreferredSize(new Dimension(400,400));
 		imagePanel.add(browser);
 		topPanel.add(imagePanel);
@@ -216,6 +215,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		setResizable(false);
 
 		browser.displayAllDatasets();	
+		SelectionState selectionState = SelectionState.getState();
 
 		selectionState.addSelectionEventListener(this);		
 		selectionState.addSelectionEventListener(browser);
@@ -304,17 +304,14 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		System.err.println("selected item is "+item);
 		System.err.println("selected index is "+list.getSelectedIndex());
 		
-
+		SelectionState selectionState = SelectionState.getState();
 		if (list == projList)
 			selectionState.setSelectedProject((Project) item);
 		else 
 			selectionState.setSelectedDataset((CDataset) item);
 	} 	
 
-	public SelectionState getSelectionState() {
-		return selectionState;
-	}
-		
+
 	
 	// mouse listener so we can handle double-click to deselect from list. 
 	// this isn't terribly efficient, as the current dataset will get deselected 
@@ -329,8 +326,10 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	}
 	
 	private void doDatasetDoubleClick(MouseEvent e) {
+		
 		int index =datasetList.locationToIndex(e.getPoint());
 		if (index == datasetList.getSelectedIndex()) {
+			SelectionState selectionState = SelectionState.getState();
 			selectionState.setSelectedDataset(null);
 		}
 	}
@@ -338,6 +337,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	private void doProjectDoubleClick(MouseEvent e) {
 		int index = projList.locationToIndex(e.getPoint());	
 		if (index == projList.getSelectedIndex()) {
+			SelectionState selectionState = SelectionState.getState();
 			selectionState.setSelectedProject(null);
 		}
 	}
@@ -361,7 +361,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void selectionChanged(SelectionEvent e) {
 
-		
+		SelectionState selectionState = SelectionState.getState();
 		System.err.println("selection changed...");
 		selectionState.removeSelectionEventListener(this);
 		datasetList.removeListSelectionListener(this);
@@ -395,11 +395,10 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	
 	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
-	private SelectionState state;
 	
-	public ProjectRenderer(SelectionState state) {
+	
+	public ProjectRenderer() {
 		setOpaque(true);
-		this.state = state;
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setVerticalAlignment(SwingConstants.CENTER);
 	}
@@ -408,7 +407,8 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
 			Project p = (Project) value;
-			
+	
+			SelectionState state = SelectionState.getState();
 			setFont(plainFont);
 			if (state != null) {
 				Collection active = state.getActiveProjects();
@@ -428,44 +428,69 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	}
 }
 
-class DatasetRenderer  extends JLabel implements ListCellRenderer {
+class DatasetRenderer  extends JPanel implements ListCellRenderer {
 	
+	private static final int WIDTH=20;
 	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
-	private SelectionState state;	
+	private JLabel idLabel = new JLabel();
+	private JLabel nameLabel = new JLabel();
 	
-	public DatasetRenderer(SelectionState state) {
+	public DatasetRenderer() {
+		super();
 		setOpaque(true);
-		this.state = state;
-		setHorizontalAlignment(SwingConstants.LEFT);
-		setVerticalAlignment(SwingConstants.CENTER);
-		
+		idLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		idLabel.setVerticalAlignment(SwingConstants.CENTER);
+		nameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		nameLabel.setVerticalAlignment(SwingConstants.CENTER);
+		idLabel.setMaximumSize(new Dimension(WIDTH,
+				idLabel.getHeight()));
+		idLabel.setPreferredSize(new Dimension(WIDTH,
+				idLabel.getHeight()));
+		setLayout(new BorderLayout());
+		add(idLabel,BorderLayout.WEST);
+		// what in the middle
+		add(nameLabel,BorderLayout.EAST);
 	}
 	
 	public Component getListCellRendererComponent(JList list,
 			Object value,int index,boolean isSelected,
 				boolean cellHasFocus) {
 					
-			setFont(plainFont);
+			idLabel.setFont(plainFont);
+			nameLabel.setFont(plainFont);
 			if (value instanceof CDataset) {
 				CDataset d = (CDataset) value;
-				setText(d.getLabel());
+				idLabel.setText(Integer.toString(d.getID())+". ");
+				nameLabel.setText(d.getName());
+				SelectionState state = SelectionState.getState();
 				if (state !=null) {
 					Collection active = state.getActiveDatasets();
-					if (active != null && active.contains(d))
-						setFont(activeFont);
+					if (active != null && active.contains(d)) {
+						idLabel.setFont(activeFont);
+						nameLabel.setFont(activeFont);
+					}
 				}
 			}
-			else 
-				setText("None");
+			else {
+				idLabel.setText("");
+				nameLabel.setText("None");
+			}
 			if (isSelected) {
 				//System.err.println("in selected dataset");
 				setBackground(list.getSelectionBackground());
-				setForeground(list.getSelectionForeground());
-				setFont(activeFont);
+				idLabel.setBackground(list.getBackground());
+				idLabel.setForeground(list.getForeground());
+				nameLabel.setBackground(list.getBackground());
+				nameLabel.setForeground(list.getForeground());
+				idLabel.setFont(activeFont);
+				nameLabel.setFont(activeFont);
 			} else {
 				setBackground(list.getBackground());
-				setForeground(list.getForeground());
+				idLabel.setBackground(list.getBackground());
+				idLabel.setForeground(list.getForeground());
+				nameLabel.setBackground(list.getBackground());
+				nameLabel.setForeground(list.getForeground());
 			}
 						 
 			return this;
