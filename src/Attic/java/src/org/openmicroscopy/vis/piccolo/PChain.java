@@ -86,17 +86,10 @@ public class PChain {
 		
 		top =y;
 		System.err.println("building chain for "+chain.getName());
-		/*Collection chainNodes = chain.getNodes();
-		Iterator iter = chainNodes.iterator();	
-		while (iter.hasNext()) {
-			//NodeInfo ni = (NodeInfo) iter.next();
-			//drawNode(connection,ni.getNode(),layer,y);
-			CNode node = (CNode) iter.next();
-			drawNode(connection,node,layer,y);		
-		} */
 		
 		drawNodes(connection,layer);
 		drawLinks(linkLayer);
+	
 		
 	}
 	
@@ -112,6 +105,7 @@ public class PChain {
 	
 	public void drawLayer(Connection connection,PLayer layer,int layerNumber) {
 		
+		System.err.println("layer # "+layerNumber);
 		layerWidth = 0;
 		int layerSize = chain.getLayerSize(layerNumber);
 		y = top;
@@ -143,9 +137,11 @@ public class PChain {
 		
 		if (node instanceof CLayoutNode)  {
 			drawLayoutNode();
+			return;
 		}
 		System.err.println("drawing node "+node);
 		CModule mod = (CModule) node.getModule();
+		System.err.println("module is "+mod.getName());
 
 		PModule mNode = new PModule(connection,mod,x,y);
 		mod.addModuleWidget(mNode);
