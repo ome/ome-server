@@ -71,6 +71,7 @@ get_method_by_name(char * m_name);
 #define M_FILESHA1      41 
 #define M_UPLOADFILE    42
 #define M_READFILE      43
+#define M_DELETEFILE    44
 
 	/* OTHER/UTILITY METHODS */
 #define M_GETLOCALPATH  50

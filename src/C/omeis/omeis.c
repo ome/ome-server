@@ -116,6 +116,7 @@ char **cgivars=param;
 			 m_val != M_READFILE      &&
 			 m_val != M_UPLOADFILE    &&
 			 m_val != M_IMPORTOMEFILE &&
+			 m_val != M_DELETEFILE &&
 			 m_val != M_GETLOCALPATH) {
 			HTTP_DoError (method,"PixelsID Parameter missing");
 			return (-1);
@@ -373,6 +374,26 @@ char **cgivars=param;
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%s\n",file_path);
+
+			break;
+		case M_DELETEFILE:
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+
+			if ( !(theFile = GetFileRep (fileID,0,0)) ) {
+				HTTP_DoError (method,"Could not open FileID=%llu!",fileID);
+				return (-1);
+			}
+
+			DeleteFile (theFile);
+
+			HTTP_ResultType ("text/plain");
+			fprintf (stdout,"%llu\n",theFile->ID);
+			freeFileRep (theFile);
 
 			break;
 		case M_FILEINFO:

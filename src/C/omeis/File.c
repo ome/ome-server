@@ -151,6 +151,7 @@ struct stat fStat;
 
 
 int DeleteFile (FileRep *myFile) {
+	if (myFile->is_mmapped) munmap (myFile->file_buf, myFile->size_rep);
 	if (myFile->fd_info >=0 ) close (myFile->fd_info);
 	if (myFile->fd_rep >=0 ) close (myFile->fd_rep);
 	if (myFile->path_rep)
@@ -159,6 +160,8 @@ int DeleteFile (FileRep *myFile) {
 		unlink (myFile->path_info);
 	myFile->fd_info = -1;
 	myFile->fd_rep = -1;
+	myFile->is_mmapped = 0;
+	myFile->file_buf = NULL;
 	return (0);
 }
 
