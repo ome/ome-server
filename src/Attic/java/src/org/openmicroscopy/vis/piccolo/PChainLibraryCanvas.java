@@ -216,23 +216,45 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	public  void drawChain(CChain chain) {
 		
 		
-		// draw the chain name
-		PText name = new PText(chain.getName());
+		float height = 0;
+		
+		
+ 		PText name = new PText(chain.getName());
 		name.setFont(nameFont);
 		name.setPickable(false);
-		layer.addChild(name);
-		name.setOffset(x+HGAP,y);
+		 
+		 
 		name.setScale(2);
+		height += name.getHeight()+VGAP;
+		 
 		
-		// setup the chain widget
-		PChain p = new PChain(connection,chain,layer,linkLayer,x+HGAP*2,y);
+		// add another label.
+		PText owner = new PText(connection.getUserName());
+		owner.setFont(nameFont);
+		owner.setPickable(false);
+		height += owner.getHeight();
+		
+		// create the chain box.
+		PChainBox box = decorateChain(chain,x,y);
+			
+
+		//	setup the chain widget
+		PChain p = new PChain(connection,chain,box,linkLayer,x+HGAP*2,y+height);
+		 
+		height += p.getHeight()+VGAP;
  		
- 		//draw a box around it.
- 		decorateChain(chain.getID(),x,y,p.getHeight()+VGAP,p.getWidth());
- 		
+					
+		box.setExtent(p.getWidth(),height);
+ 		 
+		box.addChild(name);
+		name.setOffset(x+HGAP,y);
+		
+		box.addChild(owner);
+		owner.setOffset(x+HGAP,y+name.getHeight()+VGAP);
+		
  		// set the row height if this is taller than others in the row.
-		if (p.getHeight()+VGAP>rowHeight)
-			rowHeight = p.getHeight()+VGAP;
+		if (height+VGAP>rowHeight)
+			rowHeight = height+VGAP;
 		
 		//advance the horizontal position
 		x+= p.getWidth()+HGAP;
@@ -247,10 +269,11 @@ public class PChainLibraryCanvas extends PCanvas implements DragGestureListener 
 	 * @param height
 	 * @param width
 	 */
-	private void decorateChain(int id,float left,float top,float height,float width) {
-		PChainBox box = new PChainBox(id,left,top,width,height);
+	private PChainBox decorateChain(CChain chain,float left,float top) {
+		PChainBox box = new PChainBox(chain,left,top);
 		layer.addChild(box);
 		box.moveToBack();
+		return box;
 	}
 	
 	
