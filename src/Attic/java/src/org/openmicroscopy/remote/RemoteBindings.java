@@ -117,6 +117,7 @@ public class RemoteBindings
             Class.forName("org.openmicroscopy.remote.RemoteOMEObject");
             Class.forName("org.openmicroscopy.remote.RemoteProject");
             Class.forName("org.openmicroscopy.remote.RemoteSession");
+            Class.forName("org.openmicroscopy.remote.managers.RemoteChainManager");
             classesLoaded = true;
         }
     }
