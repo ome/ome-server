@@ -26,11 +26,13 @@ our $VERSION = '1.0';
 use Carp;
 use Log::Agent;
 use XML::LibXML;
+use XML::LibXSLT;
 
 use OME::Tasks::SemanticTypeImport;
 use OME::Tasks::ProgramImport;
 use OME::Tasks::ChainImport;
 use OME::Tasks::HierarchyImport;
+use OME::Tasks::ResolveFiles;
 
 sub new {
     my ($proto, %params) = @_;
@@ -62,17 +64,32 @@ sub new {
 
 sub importFile {
     my ($self, $filename, %flags) = @_;
-    my $doc = $self->{_parser}->parse_file($filename)
-      or die "Cannot parse file $filename";
-    return $self->processDOM($doc->getDocumentElement(),%flags);
+    my $session = $self->{session};
+    my $parser  = $self->{_parser};
+    
+    my $resolve = OME::Tasks::ResolveFiles->new( session => $session, parser => $parser )
+    	or die "Could not instantiate OME::Tasks::ResolveFiles\n";
+    my $doc = $resolve->importFile( $filename );
+ 	
+ 	# Apply Stylesheet
+ 	my $xslt = XML::LibXSLT->new();
+ 	my $style_doc_path = $session->Configuration()->xml_dir() . "/OME2OME-CA.xslt";
+ 	my $style_doc = $parser->parse_file( $style_doc_path );
+	my $stylesheet = $xslt->parse_stylesheet($style_doc);
+	my $CA_doc = $stylesheet->transform($doc);
+
+    return $self->processDOM($CA_doc->getDocumentElement(),%flags);
 }
 
-sub importXML {
-    my ($self, $xml, %flags) = @_;
-    my $doc = $self->{_parser}->parse_string($xml)
-      or die "Cannot parse XML string";
-    return $self->processDOM($doc->getDocumentElement(),%flags);
-}
+# importXML commented out by josiah 6/10/03
+# preprocessing of the xml document must have a file as input (so far)
+# preprocessing must be performed, so this function will not work for now
+#sub importXML {
+#    my ($self, $xml, %flags) = @_;
+#    my $doc = $self->{_parser}->parse_string($xml)
+#      or die "Cannot parse XML string";
+#    return $self->processDOM($doc->getDocumentElement(),%flags);
+#}
 
 
 sub processDOM {
