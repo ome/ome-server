@@ -16,6 +16,8 @@ Contents
    * Dependencies
    * Building and deploying OME
    * License
+   * Copyright
+	
    
 
 
@@ -71,19 +73,21 @@ Building and deploying OME
 
 License
 
-    OME is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published 
-    by the Free Software Foundation; either version 2 of the License, 
-    or (at your option) any later version.
+    OME is distributed with the GNU Lesser General Public License (LGPL). You
+    should be aware that any code submitted to the OME project will also fall
+    under this license. If you have issues relating to licensing, want to sub
+    license parts of the OME source code, or wish to discuss the licensing
+    scheme please contact the OME core developers (ome-devel@mit.edu).
 
-    OME is distributed in the hope that it will be useful, but WITHOUT 
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-    FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License 
-    for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with OME; if not, write to the Free Software Foundation, Inc., 
-    59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+
+Copyright
+
+    The OME source code, specification, documentation and database schema are,
+    in their entirety Copyright (C) 2003 Open Microscopy Environment. As with
+    the OME license, any questions related to the copyright, copyright holders
+    or copyright scheme should be directed to the OME core developers
+    (ome-devel@mit.edu).
 
 
