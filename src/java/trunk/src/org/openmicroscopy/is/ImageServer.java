@@ -67,14 +67,21 @@ import java.io.FileNotFoundException;
  * </ol>
  *
  * @author Douglas Creager (dcreager@alum.mit.edu)
+ * <b>Internal version:</b> $Revision$ $Date$
  * @version 2.2
  * @since OME2.2
- *
- * <p>CVS info: $Id$</p>
  */
 
 public abstract class ImageServer
 {
+    /**
+     * <p>Returns a default OME image server class.  The default image
+     * server class uses HTTP as the connection transport, and
+     * connects to the URL specified by the
+     * <code>org.openmicroscopy.is.url</code> system property.  If
+     * this property is not set, the default URL is
+     * <code>http://localhost/cgi-bin/omeis</code>.</p>
+     */
     public static ImageServer getDefaultImageServer()
     {
         String uri = System.
@@ -84,11 +91,20 @@ public abstract class ImageServer
         return getHTTPImageServer(uri);
     }
 
+    /**
+     * <p>Returns a image server class which connects via HTTP to the
+     * specified location.</p>
+     */
     public static ImageServer getHTTPImageServer(String location)
     {
         return new HttpImageServer(location);
     }
 
+    /**
+     * A standard no-argument constructor.  This class cannot be
+     * instantiated directly, so this constructor should only be
+     * called from subclasses.
+     */
     protected ImageServer()
     {
         super();
