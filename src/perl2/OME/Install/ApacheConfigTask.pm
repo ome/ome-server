@@ -235,9 +235,6 @@ sub getApacheInfo {
 #*********
 
 sub execute {
-	return unless y_or_n('Configure Apache server?');
-
-	print "\n";  # Spacing
   
 	# Our OME::Install::Environment
     my $environment = initialize OME::Install::Environment;
@@ -246,9 +243,13 @@ sub execute {
     $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
 	$OME_GROUP    = $environment->group() or croak "OME group is not set!\n";
 	$OME_GID      = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
-
 	# The configuration directory
 	my $OME_CONF_DIR = $OME_BASE_DIR . '/conf';
+
+	fix_ome_conf("$OME_CONF_DIR");
+	return unless y_or_n('Configure Apache server?');
+
+	print "\n";  # Spacing
     
     print_header ("Apache Setup");
 
@@ -267,7 +268,6 @@ sub execute {
     #******** Fix paths in conf/httpd.ome.*.conf
     #********
 
-	fix_ome_conf("$OME_CONF_DIR");
 	my $ome_conf;
 	if ($apache_info->{version} == 2) {
 		$ome_conf = $OME_CONF_DIR . '/httpd2.ome.dev.conf';
