@@ -1985,14 +1985,14 @@ char **cgivars=param;
         char *filename=NULL;
 
 		if (!ID) return (-1);
-		if (!strcmp (method,"SetROI")) {
+		if (m_val = M_SETROI) {
             rorw = 'w';
             if (!(filename = get_param(param,"Pixels"))) {
                 HTTP_DoError(method,"No pixels filename specified");
             }
 		} else rorw = 'r';
 
-		if (! (ROI = get_param (param,"ROI")) ) {
+		if (m_val = M_SETROI || m_val == M_GETROI) {
 			HTTP_DoError (method,"ROI Parameter missing");
 			return (-1);
 		}
