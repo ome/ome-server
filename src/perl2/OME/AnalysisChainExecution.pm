@@ -44,6 +44,11 @@ __PACKAGE__->has_many('node_executions',
                       'OME::AnalysisExecution::NodeExecution' =>
                       qw(analysis_execution_id));
 
+sub experimenter {
+    my $self = shift;
+    return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                      $self->experimenter_id());
+}
 
 
 package OME::AnalysisExecution::NodeExecution;
