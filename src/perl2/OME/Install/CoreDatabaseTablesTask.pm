@@ -116,6 +116,7 @@ our @core_classes =
    ['OME::ModuleExecution',                     'OME::ModuleExecution'],
    ['OME::ModuleExecution',                     'OME::ModuleExecution::ActualInput'],
    ['OME::ModuleExecution',                     'OME::ModuleExecution::SemanticTypeOutput'],
+   ['OME::ModuleExecution',                     'OME::ModuleExecution::VirtualMEXMap'],
    ['OME::AnalysisChainExecution',              'OME::AnalysisChainExecution'],
    ['OME::AnalysisChainExecution',              'OME::AnalysisChainExecution::NodeExecution'],
    # Make sure this next one is last
@@ -605,10 +606,28 @@ sub execute {
 
     my $factory = $session->Factory ();
 
-    # Grab our import module and assign it to the configuration object
-    my $importModule = $factory->
-	findObject("OME::Module",name => 'Importer');
-    $configuration->import_module($importModule);
+    # Grab our annotation and import modules and assign them to the
+    # configuration object
+
+    my $annotationModule = $factory->
+      findObject("OME::Module",name => 'Annotation');
+    $configuration->annotation_module($annotationModule);
+
+    my $originalFilesModule = $factory->
+      findObject("OME::Module",name => 'Original files');
+    $configuration->original_files_module($originalFilesModule);
+
+    my $globalImportModule = $factory->
+      findObject("OME::Module",name => 'Global import');
+    $configuration->global_import_module($globalImportModule);
+
+    my $datasetImportModule = $factory->
+      findObject("OME::Module",name => 'Dataset import');
+    $configuration->dataset_import_module($datasetImportModule);
+
+    my $imageImportModule = $factory->
+      findObject("OME::Module",name => 'Image import');
+    $configuration->image_import_module($imageImportModule);
 
     # Grab our import chain and assign it to the configuration object
     my $importChain = $factory->
