@@ -38,6 +38,8 @@
  */
  
 package org.openmicroscopy.vis.ome;
+//import org.openmicroscopy.Attribute;
+import org.openmicroscopy.remote.RemoteException;
 import org.openmicroscopy.remote.RemoteImage;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
@@ -45,6 +47,7 @@ import org.openmicroscopy.vis.piccolo.PThumbnail;
 import java.awt.image.BufferedImage;
 import java.util.Vector;
 import java.util.Iterator;
+//import java.util.List;
 
  
 /** 
@@ -77,20 +80,16 @@ public class CImage extends RemoteImage {
 	
 	
 	public void loadImageData(Connection connection) {
-		int id = getID();
-		//System.err.println("getting image data for image "+id);
-		//imageData = connection.getThumbnail(id);
 		if (imageData == null && loading  == false) {
-		//	System.err.println("retrieving..image "+id);
 			connection.getThumbnail(this);
 			loading = true;
-		}	
+		}
 	}
 	
 	public void setImageData(BufferedImage i) {
 		//System.err.println("getting image data for image "+getID());
 		imageData = i;
-		if (thumbnails.size() >0) { 
+		if (thumbnails.size() >0 && imageData != null) { 
 			PThumbnail thumbnail;
 			Iterator iter = thumbnails.iterator();
 			while (iter.hasNext()) {
@@ -98,6 +97,7 @@ public class CImage extends RemoteImage {
 				thumbnail.notifyImageComplete();
 			}
 		}
+		
 	}
 	
 	public void addThumbnail(PThumbnail thumb) {
@@ -138,4 +138,15 @@ public class CImage extends RemoteImage {
 		}
 		reentrant = false;
 	}
+	
+	public String getName() {
+		String s = null;
+		try {
+			s = super.getName();
+		}
+		catch(RemoteException e) {
+		}
+		return s;
+	}
+	
 }
