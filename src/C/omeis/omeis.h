@@ -38,6 +38,7 @@
 typedef u_int64_t OID;
 #define OME_IS_PIXL_SIG 0x5049584C /* PIXL in ASCII */
 #define OME_IS_PIXL_VER 1  /* Version 1 */
+#define MAXNAMELEN 256  /* There isn't really a portable way to retrieve this */
 
 typedef struct
 {

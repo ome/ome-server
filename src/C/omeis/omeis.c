@@ -1335,11 +1335,27 @@ dispatch (char **param)
 	char *theParam,rorw='r',bigEndian=1;
 	OID ID=0;
 	int theZ=-1,theC=-1,theT=-1;
-	off_t offset=0;
+	off_t offset;
 	char error_str[256];
 	unsigned char isLocalFile;
 	unsigned char file_md[OME_DIGEST_LENGTH];
-	int fd, retval;
+	char *dims;
+	int isSigned,isFloat;
+	int numInts,numX,numY,numZ,numC,numT,numB;
+	int force,result;
+	unsigned long z,dz,c,dc,t,dt;
+	planeInfo *planeInfoP;
+	unsigned long uploadSize;
+	unsigned long length;
+	OID fileID;
+	struct stat fStat;
+	FILE *fInfo;
+	char file_path[MAXPATHLEN];
+	char file_name[MAXNAMELEN];
+	int fd;
+	char *sh_mmap;
+	unsigned long file_off;
+
 
 	error_str[0]=0;
 
@@ -1372,7 +1388,7 @@ char **cgivars=param;
 			 m_val == M_GETPIXELS    ||
 			 m_val == M_PIXELS       ||
 			 m_val == M_READFILE     ||
-			 m_val == M_GETLOCALPATH ||) {
+			 m_val == M_GETLOCALPATH) {
 			HTTP_DoError (method,"pixelsID Parameter missing");
 			return (-1);
 	}
@@ -1395,95 +1411,379 @@ char **cgivars=param;
 		if (!strcmp (theParam,"0") || !strcmp (theParam,"False") || !strcmp (theParam,"false") ) bigEndian=0;
 	}
 
-
-	if (! strcmp (method,"NewPixels") ) {
-		char *dims;
-		int isSigned=0,isFloat=0;
-		int numInts,numX,numY,numZ,numC,numT,numB;
+	/* ---------------------- */
+	/* SIMPLE METHOD DISPATCH */
+	switch (m_val) {
+		case M_NEWPIXELS:
+			isSigned = 0;
+			isFloat = 0;
 		
-		if (! (dims = get_param (param,"Dims")) ) {
-			HTTP_DoError (method,"Dims Parameter missing");
-			return (-1);
-		}
-		numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numC,&numT,&numB);
-		if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numC < 1 || numT < 1 || numB < 1) {
-			HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB");
-			return (-1);
-		}
+			if (! (dims = get_param (param,"Dims")) ) {
+				HTTP_DoError (method,"Dims Parameter missing");
+				return (-1);
+			}
+			numInts = sscanf (dims,"%d,%d,%d,%d,%d,%d",&numX,&numY,&numZ,&numC,&numT,&numB);
+			if (numInts < 6 || numX < 1 || numY < 1 || numZ < 1 || numC < 1 || numT < 1 || numB < 1) {
+				HTTP_DoError (method,"Dims improperly formed.  Expecting numX,numY,numZ,numC,numT,numB");
+				return (-1);
+			}
 
-		if ( (theParam = get_param (param,"IsSigned")) )
-			sscanf (theParam,"%d",&isSigned);
-		if ( (theParam = get_param (param,"IsFloat")) )
-			sscanf (theParam,"%d",&isFloat);
+			if ( (theParam = get_param (param,"IsSigned")) )
+				sscanf (theParam,"%d",&isSigned);
+			if ( (theParam = get_param (param,"IsFloat")) )
+				sscanf (theParam,"%d",&isFloat);
 
-		if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
-			HTTP_DoError (method,strerror( errno ) );
-			return (-1);
-		}
+			if (! (thePixels = NewPixels (numX,numY,numZ,numC,numT,numB,isSigned,isFloat)) ) {
+				HTTP_DoError (method,strerror( errno ) );
+				return (-1);
+			}
 
-		HTTP_ResultType ("text/plain");
-		fprintf (stdout,"%llu\n",thePixels->ID);
-		freePixelsRep (thePixels);
-	}
+			HTTP_ResultType ("text/plain");
+			fprintf (stdout,"%llu\n",thePixels->ID);
+			freePixelsRep (thePixels);
 
-    else if (!strcmp(method,"PixelsInfo")) {
-        if (!ID) return (-1);
+			break;
+		case M_PIXELSINFO:
+        	if (!ID) return (-1);
 
-		if (! (thePixels = GetPixels (ID,'r',1)) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (-1);
-		}
+			if (! (thePixels = GetPixels (ID,'r',1)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
 
-		head = thePixels->head;
+			head = thePixels->head;
 
-		HTTP_ResultType ("text/plain");
-		fprintf(stdout,"Dims=%lu,%lu,%lu,%lu,%lu,%hhu\n",
-                head->dx,head->dy,head->dz,head->dc,head->dt,head->bp);
-        fprintf(stdout,"Finished=%hhu\nSigned=%hhu\nFloat=%hhu\n",
-                head->isFinished,head->isSigned,head->isFloat);
+			HTTP_ResultType ("text/plain");
+			fprintf(stdout,"Dims=%lu,%lu,%lu,%lu,%lu,%hhu\n",
+					head->dx,head->dy,head->dz,head->dc,head->dt,head->bp);
+			fprintf(stdout,"Finished=%hhu\nSigned=%hhu\nFloat=%hhu\n",
+					head->isFinished,head->isSigned,head->isFloat);
 
-		freePixelsRep (thePixels);
-    }
+			freePixelsRep (thePixels); 
 
-    else if (!strcmp(method,"PixelsSHA1")) {
-        if (!ID) return (-1);
+			break;
+		case M_PIXELSSHA1:
+        	if (!ID) return (-1);
 
-        if (! (thePixels = GetPixels(ID,'r',1))) {
-            if (errno) HTTP_DoError(method,strerror(errno));
-            else HTTP_DoError(method,"Access control error - check log for details");
-            return (-1);
-        }
+        	if (! (thePixels = GetPixels(ID,'r',1))) {
+				if (errno) HTTP_DoError(method,strerror(errno));
+				else HTTP_DoError(method,"Access control error - check log for details");
+				
+				return (-1);
+			}
 
-        HTTP_ResultType("text/plain");
+        	HTTP_ResultType("text/plain");
 
-		/* First get a filehandle of the Pixels in the repository */
-		if ((fd = open(thePixels->path_rep, O_RDONLY)) == -1) {
-			perror(thePixels->path_rep);
+			/* Get the SHA1 message digest */
+			if (get_md_from_file(thePixels->path_rep, file_md) < 0) {
+				fprintf(stderr, "Unable to retrieve SHA1.");
+        		freePixelsRep(thePixels);
+
+				return(-1);
+			}
+
+			/* Free */
         	freePixelsRep(thePixels);
-			return (-1);
-		}
 
-		/* Get the SHA1 message digest */
-		if ((retval = get_md (fd, file_md)) < 0) {
-			fprintf(stderr, "Problem retrieving SHA1 return code: %d\n", retval);
-			close(fd);
-        	freePixelsRep(thePixels);
-			return (-1);
-		}
-
-		/* Free and close */
-        freePixelsRep(thePixels);
-		close(fd);
-
-		/* Print our lovely and useful SHA1. */
-		print_md(file_md);  /* Convenience provided by digest.c */
-		printf("\n");
+			/* Print our lovely and useful SHA1. */
+			print_md(file_md);  /* Convenience provided by digest.c */
+			printf("\n");
 	
-		return (0);
-    }
+			return (0);
 
-	else if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
+			break;
+		case M_FINISHPIXELS:
+			force = 0;
+			result = 0;
+
+			if (!ID) return (-1);
+			if ( (theParam = get_param (param,"Force")) )
+				sscanf (theParam,"%d",&force);
+
+			if ( (result = FinishPixels (ID,force)) < 0) {
+				if (errno) sprintf (error_str,"Result=%d, Message=%s",result,strerror( errno ) );
+				else sprintf (error_str,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
+				HTTP_DoError (method, error_str);
+				return (-1);
+			} else {
+				HTTP_ResultType ("text/plain");
+				fprintf (stdout,"%llu\n",ID);
+			}
+
+			break;
+		case M_GETPLANESTATS:
+			if (!ID) return (-1);
+		
+			if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			if (! (planeInfoP = thePixels->planeInfos) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+
+			head = thePixels->head;
+
+			dz = head->dz;
+			dc = head->dc;
+			dt = head->dt;
+			HTTP_ResultType ("text/plain");
+
+			for (t = 0; t < dt; t++)
+				for (c = 0; c < dc; c++)
+					for (z = 0; z < dz; z++) {
+						fprintf (stdout,"%lu\t%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+							 c,t,z,planeInfoP->min,planeInfoP->max,planeInfoP->mean,planeInfoP->geomean,planeInfoP->sigma,
+							 planeInfoP->centroid_x, planeInfoP->centroid_y,
+							 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
+							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi,planeInfoP->geosigma
+						);
+						planeInfoP++;
+					}
+
+			freePixelsRep (thePixels);
+
+			break;
+		case M_UPLOADFILE:
+			uploadSize = 0;
+			if ( (theParam = get_param (param,"UploadSize")) )
+				sscanf (theParam,"%lu",&uploadSize);
+			else {
+				HTTP_DoError (method,"UploadSize must be specified!");
+				return (-1);
+			}
+			if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) <= 0) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			} else {
+				HTTP_ResultType ("text/plain");
+				fprintf (stdout,"%llu\n",ID);
+			}
+
+			break;
+		case M_GETLOCALPATH:
+			fileID = 0;
+
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+
+			if (ID) {
+				if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
+					if (errno) HTTP_DoError (method,strerror( errno ) );
+					else  HTTP_DoError (method,"Access control error - check error log for details" );
+					return (-1);
+				}
+				strcpy (file_path,thePixels->path_rep);
+				freePixelsRep (thePixels);
+			} else if (fileID) {
+				strcpy (file_path,"Files/");
+				if (! getRepPath (fileID,file_path,0)) {
+					sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+					HTTP_DoError (method,error_str);
+					return (-1);
+				}		
+			} else strcpy (file_path,"");
+
+			HTTP_ResultType ("text/plain");
+			fprintf (stdout,"%s\n",file_path);
+
+			break;
+		case M_FILEINFO:
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+		
+			if (stat (file_path, &fStat) < 0) {
+				sprintf (error_str,"Could not get information for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);			
+			}
+		
+			strcat (file_path,".name");
+			strcpy (file_name,"");
+			if ( (fInfo = fopen (file_path,"r")) ) {
+				nIO = fread (file_name,1,255,fInfo);
+				fclose (fInfo);
+				if (nIO) file_name[nIO]=0;
+			}
+
+
+			HTTP_ResultType ("text/plain");
+			fprintf (stdout,"Name=%s\nLength=%lu\n",file_name,(unsigned long)fStat.st_size);
+
+			break;
+		case M_FILESHA1:
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+			
+			if (stat (file_path, &fStat) < 0) {
+				sprintf (error_str,"Could not get information for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);			
+			}
+		
+			strcat (file_path,".name");
+			strcpy (file_name,"");
+			if ( (fInfo = fopen (file_path,"r")) ) {
+				nIO = fread (file_name,1,255,fInfo);
+				fclose (fInfo);
+				if (nIO) file_name[nIO]=0;
+			}
+		
+			HTTP_ResultType ("text/plain");
+
+			/* Get the SHA1 message digest */
+			if (get_md_from_file(file_name, file_md) < 0) {
+				fprintf(stderr, "Unable to retrieve SHA1.");
+				return(-1);
+			}
+
+			/* Print our lovely and useful SHA1. */
+			print_md(file_md);  /* Convenience provided by digest.c */
+			printf("\n");
+
+			break;
+		case M_READFILE:
+			offset = 0;
+			length = 0;
+			
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+
+			if ( (theParam = get_param (param,"Offset")) )
+				sscanf (theParam,"%lu", (unsigned long int *) &offset);
+			if ( (theParam = get_param (param,"Length")) )
+				sscanf (theParam,"%lu",&length);
+
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+
+			if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
+				sprintf (error_str,"Could not open FileID=%llu",fileID);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+			if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
+				close (fd);
+				sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,offset,length);
+				HTTP_DoError (method,error_str);
+				return (-1);
+			}
+		
+			HTTP_ResultType ("application/octet-stream");
+			fwrite (sh_mmap,length,1,stdout);
+			munmap (sh_mmap, length);
+			close (fd);
+
+			break;
+		case M_CONVERT:
+			file_off = 0;
+
+			if ( (theParam = get_param (param,"FileID")) )
+				sscanf (theParam,"%llu",&fileID);
+			else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+
+			if ( (theParam = get_param (param,"Offset")) )
+				sscanf (theParam,"%lu",&file_off);
+		
+			if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				return (-1);
+			}
+			head = thePixels->head;
+			nPix = head->dx*head->dy*head->dz*head->dc*head->dt;
+			offset = 0;
+
+			if (strstr (method,"Stack")) {
+				if (theC < 0 || theT < 0) {
+					freePixelsRep (thePixels);
+					HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
+					return (-1);
+				}
+				nPix = head->dx*head->dy*head->dz;
+				offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
+			} else if (strstr (method,"Plane") || strstr (method,"TIFF")) {
+				if (theZ < 0 || theC < 0 || theT < 0) {
+					freePixelsRep (thePixels);
+					HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
+					return (-1);
+				}
+				nPix = head->dx*head->dy;
+				offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
+			} else if (strstr (method,"Rows")) {
+				long theY = -1, nRows=1;
+
+				if ( (theParam = get_param (param,"theY")) )
+					sscanf (theParam,"%ld",&theY);
+				if ( (theParam = get_param (param,"nRows")) )
+					sscanf (theParam,"%ld",&nRows);
+				if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
+					freePixelsRep (thePixels);
+					HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
+					return (-1);
+				}
+
+				nPix = nRows*head->dy;
+				offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
+			}
+
+
+			if ( (nIO = ConvertFile (thePixels, fileID, file_off, offset, nPix) ) < nPix) {
+				if (errno) HTTP_DoError (method,strerror( errno ) );
+				else  HTTP_DoError (method,"Access control error - check error log for details" );
+				freePixelsRep (thePixels);
+				return (-1);
+			} else {
+				freePixelsRep (thePixels);
+				HTTP_ResultType ("text/plain");
+				fprintf (stdout,"%ld\n", (long) nIO);
+			}
+
+			break;
+	} /* END case (method) */
+
+	/* ----------------------- */
+	/* COMPLEX METHOD DISPATCH */
+	if (!strcmp (method,"SetPixels") || !strcmp (method,"GetPixels") ||
 		! strcmp (method,"SetPlane") || !strcmp (method,"GetPlane") ||
 		! strcmp (method,"SetStack") || !strcmp (method,"GetStack")) {
         char *filename = NULL;
@@ -1591,321 +1891,8 @@ char **cgivars=param;
 		freePixelsRep (thePixels);
 	}
 
-	else if (! strcmp (method,"FinishPixels") ) {
-		int force=0, result=0;
-
-		if (!ID) return (-1);
-		if ( (theParam = get_param (param,"Force")) )
-			sscanf (theParam,"%d",&force);
-
-		if ( (result = FinishPixels (ID,force)) < 0) {
-			if (errno) sprintf (error_str,"Result=%d, Message=%s",result,strerror( errno ) );
-			else sprintf (error_str,"Result=%d, Message=%s",result,"Access control error - check error log for details" );
-			HTTP_DoError (method, error_str);
-			return (-1);
-		} else {
-			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%llu\n",ID);
-		}
-	}
-
-	else if (! strcmp (method,"GetPlaneStats") ) {
-		unsigned long z,dz,c,dc,t,dt;
-		planeInfo *planeInfoP;
-
-		if (!ID) return (-1);
-		
-		if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (-1);
-		}
-
-		if (! (planeInfoP = thePixels->planeInfos) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (-1);
-		}
-
-		head = thePixels->head;
-
-		dz = head->dz;
-		dc = head->dc;
-		dt = head->dt;
-		HTTP_ResultType ("text/plain");
-
-		for (t = 0; t < dt; t++)
-			for (c = 0; c < dc; c++)
-				for (z = 0; z < dz; z++) {
-					fprintf (stdout,"%lu\t%lu\t%lu\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
-						 c,t,z,planeInfoP->min,planeInfoP->max,planeInfoP->mean,planeInfoP->geomean,planeInfoP->sigma,
-						 planeInfoP->centroid_x, planeInfoP->centroid_y,
-						 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
-						 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi,planeInfoP->geosigma
-					);
-					planeInfoP++;
-				}
-
-		freePixelsRep (thePixels);
-	}
-
-	else if (! strcmp (method,"UploadFile") ) {
-		unsigned long uploadSize=0;
-		if ( (theParam = get_param (param,"UploadSize")) )
-			sscanf (theParam,"%lu",&uploadSize);
-		else {
-			HTTP_DoError (method,"UploadSize must be specified!");
-			return (-1);
-		}
-		if ( (ID = UploadFile (get_param (param,"File"),uploadSize,isLocalFile) ) <= 0) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (-1);
-		} else {
-			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%llu\n",ID);
-		}
-	}
-
-	else if (! strcmp (method,"GetLocalPath") ) {
-		OID fileID=0;
-		char file_path[MAXPATHLEN];
-
-		if ( (theParam = get_param (param,"FileID")) )
-			sscanf (theParam,"%llu",&fileID);
-
-		if (ID) {
-			if (! (thePixels = GetPixels (ID,'r',bigEndian)) ) {
-				if (errno) HTTP_DoError (method,strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
-				return (-1);
-			}
-			strcpy (file_path,thePixels->path_rep);
-			freePixelsRep (thePixels);
-		} else if (fileID) {
-			strcpy (file_path,"Files/");
-			if (! getRepPath (fileID,file_path,0)) {
-				sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-				HTTP_DoError (method,error_str);
-				return (-1);
-			}		
-		} else strcpy (file_path,"");
-
-		HTTP_ResultType ("text/plain");
-		fprintf (stdout,"%s\n",file_path);
-	}
-
-	else if (! strcmp (method,"FileInfo") ) {
-		OID fileID;
-		char file_path[MAXPATHLEN];
-		char file_name[MAXNAMELEN];
-		FILE *fInfo;
-		struct stat fStat;
-
-		if ( (theParam = get_param (param,"FileID")) )
-			sscanf (theParam,"%llu",&fileID);
-		else {
-			HTTP_DoError (method,"FileID must be specified!");
-			return (-1);
-		}
-
-		strcpy (file_path,"Files/");
-		if (! getRepPath (fileID,file_path,0)) {
-			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);
-		}
-		
-		if (stat (file_path, &fStat) < 0) {
-			sprintf (error_str,"Could not get information for FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);			
-		}
-		
-		strcat (file_path,".name");
-		strcpy (file_name,"");
-		if ( (fInfo = fopen (file_path,"r")) ) {
-			nIO = fread (file_name,1,255,fInfo);
-			fclose (fInfo);
-			if (nIO) file_name[nIO]=0;
-		}
-
-
-		HTTP_ResultType ("text/plain");
-		fprintf (stdout,"Name=%s\nLength=%lu\n",file_name,(unsigned long)fStat.st_size);
-	}
-
-	else if (! strcmp (method,"FileSHA1") ) {
-		OID fileID;
-		char file_path[MAXPATHLEN];
-		char file_name[MAXNAMELEN];
-		FILE *fInfo;
-		struct stat fStat;
-
-		if ( (theParam = get_param (param,"FileID")) )
-			sscanf (theParam,"%llu",&fileID);
-		else {
-			HTTP_DoError (method,"FileID must be specified!");
-			return (-1);
-		}
-
-		strcpy (file_path,"Files/");
-		if (! getRepPath (fileID,file_path,0)) {
-			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);
-		}
-		
-		if (stat (file_path, &fStat) < 0) {
-			sprintf (error_str,"Could not get information for FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);			
-		}
-		
-		strcat (file_path,".name");
-		strcpy (file_name,"");
-		if ( (fInfo = fopen (file_path,"r")) ) {
-			nIO = fread (file_name,1,255,fInfo);
-			fclose (fInfo);
-			if (nIO) file_name[nIO]=0;
-		}
-		
-		HTTP_ResultType ("text/plain");
-
-		/* First get a filehandle of the file */
-		if ((fd = open(file_name, O_RDONLY)) == -1) {
-			perror(file_name);
-			return (-1);
-		}
-
-		/* Get the SHA1 message digest */
-		if ((retval = get_md (fd, file_md)) < 0) {
-			fprintf(stderr, "Problem retrieving SHA1 return code: %d\n", retval);
-			close(fd);
-			return (-1);
-		}
-
-		/* Close */
-		close(fd);
-
-		/* Print our lovely and useful SHA1. */
-		print_md(file_md);  /* Convenience provided by digest.c */
-		printf("\n");
-	}
-
-	else if (! strcmp (method,"ReadFile") ) {
-		unsigned long offset=0,length=0;
-		OID fileID;
-		char file_path[MAXPATHLEN];
-		int fd;
-		char *sh_mmap;
-
-		if ( (theParam = get_param (param,"FileID")) )
-			sscanf (theParam,"%llu",&fileID);
-		else {
-			HTTP_DoError (method,"FileID must be specified!");
-			return (-1);
-		}
-
-		if ( (theParam = get_param (param,"Offset")) )
-			sscanf (theParam,"%lu",&offset);
-		if ( (theParam = get_param (param,"Length")) )
-			sscanf (theParam,"%lu",&length);
-
-		strcpy (file_path,"Files/");
-		if (! getRepPath (fileID,file_path,0)) {
-			sprintf (error_str,"Could not get repository path for FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);
-		}
-
-		if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
-			sprintf (error_str,"Could not open FileID=%llu",fileID);
-			HTTP_DoError (method,error_str);
-			return (-1);
-		}
-		if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
-			close (fd);
-			sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,offset,length);
-			HTTP_DoError (method,error_str);
-			return (-1);
-		}
-		
-		HTTP_ResultType ("application/octet-stream");
-		fwrite (sh_mmap,length,1,stdout);
-		munmap (sh_mmap, length);
-		close (fd);
-	}
-
-	else if ( strstr (method,"Convert") ) {
-		OID fileID;
-		unsigned long file_off=0;
-
-		if ( (theParam = get_param (param,"FileID")) )
-			sscanf (theParam,"%llu",&fileID);
-		else {
-			HTTP_DoError (method,"FileID must be specified!");
-			return (-1);
-		}
-
-		if ( (theParam = get_param (param,"Offset")) )
-			sscanf (theParam,"%lu",&file_off);
-		
-		if (! (thePixels = GetPixels (ID,'w',bigEndian)) ) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			return (-1);
-		}
-		head = thePixels->head;
-		nPix = head->dx*head->dy*head->dz*head->dc*head->dt;
-		offset = 0;
-
-		if (strstr (method,"Stack")) {
-			if (theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
-				HTTP_DoError (method,"Parameters theC and theT must be specified to do operations on stacks." );
-				return (-1);
-			}
-			nPix = head->dx*head->dy*head->dz;
-			offset = GetOffset (thePixels, 0, 0, 0, theC, theT);
-		} else if (strstr (method,"Plane") || strstr (method,"TIFF")) {
-			if (theZ < 0 || theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
-				HTTP_DoError (method,"Parameters theZ, theC and theT must be specified to do operations on planes." );
-				return (-1);
-			}
-			nPix = head->dx*head->dy;
-			offset = GetOffset (thePixels, 0, 0, theZ, theC, theT);
-		} else if (strstr (method,"Rows")) {
-			long theY = -1, nRows=1;
-
-			if ( (theParam = get_param (param,"theY")) )
-				sscanf (theParam,"%ld",&theY);
-			if ( (theParam = get_param (param,"nRows")) )
-				sscanf (theParam,"%ld",&nRows);
-			if (theY < 0 ||theZ < 0 || theC < 0 || theT < 0) {
-				freePixelsRep (thePixels);
-				HTTP_DoError (method,"Parameters theY, theZ, theC and theT must be specified to do operations on rows." );
-				return (-1);
-			}
-
-			nPix = nRows*head->dy;
-			offset = GetOffset (thePixels, 0, theY, theZ, theC, theT);
-		}
-
-
-		if ( (nIO = ConvertFile (thePixels, fileID, file_off, offset, nPix) ) < nPix) {
-			if (errno) HTTP_DoError (method,strerror( errno ) );
-			else  HTTP_DoError (method,"Access control error - check error log for details" );
-			freePixelsRep (thePixels);
-			return (-1);
-		} else {
-			freePixelsRep (thePixels);
-			HTTP_ResultType ("text/plain");
-			fprintf (stdout,"%ld\n", (long) nIO);
-		}
-	}
-
+	
+	
 	return (1);
 }
 
