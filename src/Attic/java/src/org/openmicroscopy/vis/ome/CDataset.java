@@ -41,7 +41,7 @@ package org.openmicroscopy.vis.ome;
 import org.openmicroscopy.remote.RemoteDataset;
 import org.openmicroscopy.remote.RemoteSession;
 import org.openmicroscopy.remote.RemoteObjectCache;
-import java.util.List;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 import java.lang.Comparable;
@@ -81,7 +81,7 @@ public class CDataset extends RemoteDataset implements Comparable{
 			//System.err.println("images already loaded...");
 			return;
 		}
-		List i = getImages();
+		Collection i = getImages();
 		Iterator iter = i.iterator();
 		while (iter.hasNext()) {
 			CImage image = (CImage) iter.next();
@@ -91,10 +91,14 @@ public class CDataset extends RemoteDataset implements Comparable{
 		}
 	}
 	
-	public List getCachedImages(Connection connection) {
+	public Collection getCachedImages(Connection connection) {
 		if (images.size() == 0)
 			loadImages(connection);
 		return images;
+	}
+	
+	public Collection getChains(Connection connection) {
+		return connection.getChains(this);
 	}
 
 	
@@ -112,4 +116,8 @@ public class CDataset extends RemoteDataset implements Comparable{
 			imageCount = getImages().size();
 		return imageCount;
 	}	
+	
+	public String getLabel() {
+		return new String(getID()+". "+getName());
+	}
 }
