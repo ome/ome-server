@@ -99,44 +99,28 @@ sub startImage {
     foreach my $z (keys %$hist) {
         foreach my $c (keys %{$hist->{$z}}) {
             foreach my $t (keys %{$hist->{$z}{$c}}) {
-            	my ($lowBound,$uppBound,@histBins) = @{%$hist->{$z}{$c}{$t}}; 
-            	$self->newAttributes('PlaneHistNumBins',
-            				{
-            				 TheZ => $z,
-                             TheC => $c,
-                             TheT => $t,
-            				 NumBins => 128
-							},
-							'PlaneHistLowBound',
-            				{
-            				 TheZ => $z,
-                             TheC => $c,
-                             TheT => $t,
-            				 LowBound => $lowBound
-							},
-							'PlaneHistUppBound',
-            				{
-            				 TheZ => $z,
-                             TheC => $c,
-                             TheT => $t,
-            				 UppBound => $uppBound
-							});
-							
-         		my $iter = 0;							
-            	foreach my $i (@histBins) {
-    	            $self->newAttributes('PlaneHistBins',
-                                     {
-                                      TheZ => $z,
-                                      TheC => $c,
-                                      TheT => $t,
-                                      BinIndex => $iter,
-                                      BinCount => $i
-                                     });
-             	   $iter++;
-				}
-            }
-        }
-    }
+            	my ($lowBound,$uppBound,@histBins) = @{%$hist->{$z}{$c}{$t}};
+            	
+            	# convert list of histogram bins into a space delimited string
+            	my $hist_str;
+            	foreach my $i (@histBins){
+            		$hist_str.="$i ";
+            	}
+            		
+            	$self->newAttributes('PlaneHistogram',
+           		{
+            		 TheZ => $z,
+                         TheC => $c,
+                         TheT => $t,
+          		 NumBins => 128,
+            		 LowBound => $lowBound,
+          		 UppBound => $uppBound,
+          		 Bins => $hist_str
+			});
+	   }
+       }
+   }
+    
 }
 
 
