@@ -283,7 +283,7 @@ sub processDOM {
 					or die "A repository was not assigned for Pixels ID: '".$CA->getAttribute('ID')."'!\n";
 				# Assign the pixels to the proper repository
 				$imgAttr->Repository ($repository);
-                                my $normalized_name = $object->name();
+				my $normalized_name = $object->name();
 				$normalized_name =~ s/[^a-zA-Z0-9]/_/g;
 				my $newPath = $imgAttr->id().'-'.$normalized_name.'.ori';
 				my $cmd = 'mv '.$object->getFullPath($imgAttr).' '.$imgAttr->Repository()->Path().'/'.$newPath;
@@ -588,7 +588,12 @@ sub getObjectTypeInfo ($$) {
 		my ($attrCol,$attrColName);
 		foreach $attrCol (@attrColumns) {
 			$attrColName = $attrCol->name();
+			# Find the value of the semantic element $attrCol.
+			# The first place to look is in an attribute
 			$objectData->{$attrColName} = $node->getAttribute($attrColName);
+			# The second place to look is in a subNode
+			$objectData->{$attrColName} = $node->getElementsByLocalName( $attrColName )->[0]->firstChild()->data()
+				unless defined $objectData->{$attrColName} or $node->getElementsByLocalName( $attrColName )->size() <= 0;
 			my $sql_type = $attrCol->data_column()->sql_type();
 			if ($sql_type eq 'reference') {
 				$refCols->{$attrColName} = $objectData->{$attrColName};
