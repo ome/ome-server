@@ -65,7 +65,7 @@ dispatch (char **param)
 	pixHeader *head;
 	size_t nPix=0, nIO=0;
 	char *theParam,rorw='r',iam_BigEndian=1;
-	OID ID=0;
+	OID ID=0,resultID;
 	size_t offset=0, file_offset=0;
 	unsigned long long scan_off;
 	unsigned char isLocalFile=0;
@@ -235,7 +235,6 @@ char **cgivars=param;
 		case M_FINISHPIXELS:
 			force = 0;
 			result = 0;
-			OID resultID;
 
 			if (!ID) return (-1);
 			if ( (theParam = get_param (param,"Force")) )
