@@ -243,9 +243,6 @@ public class PProjectSelectionCanvas extends PCanvas
 				pLabel = (ProjectLabel) obj;
 				//System.err.println("plabel is" +pLabel);
 				CProject p = pLabel.getProject();
-				//System.err.println("project is ..."+p.getName());
-				//System.err.println("is it active? "+state.isActiveProject(p));
-				//System.err.println("is label active..."+pLabel.isActive());
 				if (rolled != null && rolled.hasProject(p)) 
 					pLabel.setRollover(true);
 				else if (p.sharesDatasetsWith(state.getSelectedProject()))
@@ -334,7 +331,7 @@ class ProjectLabel extends PText  {
 	private Paint previousPaint;
 	PProjectSelectionCanvas canvas;
 	
-	private boolean active = false;
+	
 	
 	ProjectLabel(CProject project,PProjectSelectionCanvas canvas) {
 		super();
@@ -363,7 +360,6 @@ class ProjectLabel extends PText  {
 	public void setUnselected() {
 		if (project == SelectionState.getState().getSelectedProject())
 			return;
-		active = false;
 		//System.err.println("setting... "+project.getName()+" to be unselected");
 		setScale(UNSELECTED_SCALE);
 		setPaint(PConstants.DEFAULT_COLOR);	
@@ -380,14 +376,12 @@ class ProjectLabel extends PText  {
 	public void setActive() {
 		if (project == SelectionState.getState().getSelectedProject())
 					return;
-		active = true;
 		setScale(ACTIVE_SCALE);
 		setPaint(PConstants.PROJECT_ACTIVE_COLOR);
 	}
 	
 	public void setSelected() {
 		//System.err.println("setting something to be selected.");
-		active = false;
 		setScale(SELECTED_SCALE);
 		setPaint(PConstants.PROJECT_SELECTED_COLOR);
 		// zoom layer.
@@ -408,9 +402,7 @@ class ProjectLabel extends PText  {
 		}
 	}
 	
-	public boolean isActive() {
-		return active;
-	}
+	
 }
 
 class ProjectLabelEventHandler extends PBasicInputEventHandler implements 
