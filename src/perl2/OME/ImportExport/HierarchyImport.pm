@@ -291,12 +291,12 @@ sub importObject ($$$$) {
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
-#	$theObject = $lsid->getLocalObject ($LSID);
-#	if (defined $theObject) {
-#		$docIDs->{$LSID} = $theObject->id();
-#		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
-#		return $theObject;
-#	}
+	$theObject = $lsid->getLocalObject ($LSID);
+	if (defined $theObject) {
+		$docIDs->{$LSID} = $theObject->id();
+		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+		return $theObject;
+	}
 
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 	$parentDBID = undef if $granularity eq 'G';
