@@ -62,14 +62,12 @@ public class PDataset extends PGenericBox {
 	private CDataset dataset;
 	private Connection connection;
 	
-	private static float VGAP=10;
+	private static float VGAP=5;
 	private static float HGAP=5;
 	private static float FUDGE=5;
 
 	private double x=HGAP;
 	private double y=VGAP;
-	private float maxHeight = 0;
-	private float maxWidth=0;
 	private PText nameLabel;
 	private PText chainLabel;
 	private PChainLabels chainLabels;
@@ -94,30 +92,21 @@ public class PDataset extends PGenericBox {
 		x=HGAP;
 		y=VGAP;
 		//	draw label
-		//System.err.println("laying out dataset "+dataset.getName());
 		 nameLabel = new PText(dataset.getLabel());
 		  
 		 addChild(nameLabel);
-		 PBounds b = nameLabel.getBounds();//nameLabel.getGlobalFullBounds();
+		 PBounds b = nameLabel.getBounds();
 		 area += b.getWidth()*b.getHeight();
-		 //System.err.println(" label area is "+area);
 		 int sz = dataset.getImageCount();
 
-		if (sz > 20) {
-			//System.err.println("too many ..images..");
-			displayDatasetSizeText(sz);
-			return;
-		}
 		
 		Collection images = dataset.getCachedImages(connection);
 		Iterator iter = images.iterator();
-		maxHeight = 0;
-		maxWidth = 0;
+		double maxHeight = 0;
 		//Vector nodes = new Vector();
 		
 		nameLabel.setOffset(x,y);
 		y+= nameLabel.getHeight()+VGAP;
-		//System.err.println("after name label y is "+y);
 		float imHeight=0;
 		float imWidth =0;
 		//draw them
@@ -132,7 +121,6 @@ public class PDataset extends PGenericBox {
 				maxHeight = imHeight;
 		}
 		
-		//	System.err.println("laying out images. width is "+maxWidth);
 	
 		// space them
 		maxHeight += VGAP;
@@ -143,10 +131,7 @@ public class PDataset extends PGenericBox {
 			if (obj instanceof PThumbnail) {
 				PThumbnail p = (PThumbnail) obj;
 			    b = p.getGlobalFullBounds();
-				//System.err.println("max height is "+maxHeight);
-				//System.err.println("width is "+b.getWidth());
 				double imagearea = (b.getWidth()+HGAP)*maxHeight;
-				//System.err.println("image area is "+imagearea);
 				area += imagearea;
 			}
 		}
@@ -161,24 +146,26 @@ public class PDataset extends PGenericBox {
 			addChild(chainLabel);
 			b = chainLabel.getGlobalFullBounds();
 			double clarea =(b.getWidth()+HGAP)*(b.getHeight()+VGAP);
-			//System.err.println("chain label area is "+clarea);
 			area += clarea;
 			
 			chainLabels = new PChainLabels(chains);
 			addChild(chainLabels);
-			//System.err.println("chain labels area is "+chainLabels.getArea());
 			area += chainLabels.getArea();
 		}
 			
 	}
+	
 	public void layoutImages() {
 		x=HGAP;
 		y=VGAP+ nameLabel.getHeight()+VGAP;
 		Iterator iter;
 		double maxWidth = 0;
+		double maxHeight = 0;
 	
+		PBounds b;
+		
+		// tweak width to make label fit.
 		iter = getChildrenIterator();
-		//System.err.println("laying out images. width is "+width);
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (!(obj instanceof PThumbnail))
@@ -186,27 +173,27 @@ public class PDataset extends PGenericBox {
 			
 			PThumbnail thumb = (PThumbnail) obj;
 		
-			//System.err.println("placing thumbnail at "+x+","+y);
-			double thumbWidth = thumb.getGlobalFullBounds().getWidth()+HGAP;
-			//System.err.println("x is "+x+", thumbwidth "+thumbWidth);
-			//System.err.println("y is "+y+", max height is "+maxHeight);
+			b =  thumb.getGlobalFullBounds();
+			double thumbWidth = b.getWidth()+HGAP;
 			if (x+thumbWidth  < width) {
 				thumb.setOffset(x,y);
 			}
-			else { 
-				y += maxHeight;
+			else {
+				y += maxHeight+VGAP;
 				x = HGAP;
 				thumb.setOffset(x,y);
+				maxHeight = 0;
 			}
+			if (thumb.getGlobalFullBounds().getHeight() > maxHeight) 
+				maxHeight = (float)thumb.getGlobalFullBounds().getHeight();
 		 	x+= thumbWidth;
-		 	if (x > maxWidth) 
+		 	if (x > maxWidth) {
 		 		maxWidth =  x;
+		 	}
 		}	
-		// roll back y if we were just about to start a new row
-		if (x== HGAP)
-			y-=maxHeight;
+	
 		
-		y +=maxHeight; // move y ahead. to next row.
+		y +=maxHeight+VGAP; // move y ahead. to next row.
 		x=HGAP;
 		// adjust width
 		// insert chains, if any.
@@ -232,8 +219,8 @@ public class PDataset extends PGenericBox {
 		
 		float height =(float)y-VGAP;
 		
-		//System.err.println("width of dataset is "+width);
-		//System.err.println("height is "+height);
+		if (maxWidth < nameLabel.getWidth()+2*HGAP)
+			maxWidth = nameLabel.getWidth()+2*HGAP;
 		setExtent(maxWidth+PConstants.SMALL_BORDER,
 			height+PConstants.SMALL_BORDER);
 	}
