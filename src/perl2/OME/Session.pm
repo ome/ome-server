@@ -92,10 +92,6 @@ sub closeSession {
     $self->{Manager} = undef;
 }
 
-DESTROY {
-    print STDERR "OME::Session->DESTROY\n";
-}
-
 
 # Accessors
 # ---------
