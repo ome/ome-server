@@ -176,7 +176,7 @@ sub getTable {
 
 		if ($options->{select_column}) {
 			$checkbox = $q->td({-align => 'center'},
-				$q->checkbox(-name => 'selected', -value => $id, -label => '')
+				$q->checkbox(-name => $options->{select_name} || 'selected', -value => $id, -label => '')
 			);
 		}
 
