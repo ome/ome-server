@@ -653,6 +653,8 @@ L<OME::AttributeType|OME::AttributeType>
 
 package OME::Factory::Iterator;
 
+our $VERSION = '1.0';
+
 use Class::DBI::Iterator;
 
 use fields qw(_iterator _session);
