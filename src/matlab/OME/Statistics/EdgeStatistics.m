@@ -49,7 +49,7 @@ NUM_BINS = 8;
 NUM_BINS_HALF = 4;
 
 % Calculate number of image pixels that are edge pixels
-EdgeArea = sum(sum(im2bw(GradientMag)));
+EdgeArea = sum(sum(im2bw( uint8(GradientMag) )));
 
 % Calculate statistics about the edge strength
 MagVec = GradientMag(1:1:end); % unravel the matrix into array
