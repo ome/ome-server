@@ -25,6 +25,8 @@ use OME::Dataset;
 use OME::Tasks::AnalysisEngine;
 use Term::ReadKey;
 
+# I really hate those "method clash" warnings, especially since these
+# methods are now deprecated.
 no strict 'refs';
 undef &Class::DBI::min;
 undef &Class::DBI::max;

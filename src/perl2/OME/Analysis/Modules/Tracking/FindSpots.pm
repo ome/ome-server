@@ -148,14 +148,18 @@ sub calculateFeature {
 	    push @data, $datum;
 	}
 
-	my $feature = $self->newFeature('SPOT','Spot '+$spotCount++);
+	my $feature = $self->newFeature('Spot '+$spotCount++);
 	my $featureID = $feature->id();
         print STDERR "ns$featureID ";
 
-        my $timepointData = {feature_id => $featureID};
-        my $thresholdData = {feature_id => $featureID};
-        my $locationData  = {feature_id => $featureID};
-        my $extentData    = {feature_id => $featureID};
+        #my $timepointData = {feature_id => $featureID};
+        #my $thresholdData = {feature_id => $featureID};
+        #my $locationData  = {feature_id => $featureID};
+        #my $extentData    = {feature_id => $featureID};
+        my $timepointData = {};
+        my $thresholdData = {};
+        my $locationData  = {};
+        my $extentData    = {};
 	my %signalData;
 
 	my $i = 0;
@@ -188,7 +192,7 @@ sub calculateFeature {
 		my $signalData;
 		if (!exists $signalData{$wavelength}) {
 		    $signalData = {
-			feature_id => $featureID,
+			#feature_id => $featureID,
 			wavelength => $wavelength
 			};
                     $signalData{$wavelength} = $signalData;

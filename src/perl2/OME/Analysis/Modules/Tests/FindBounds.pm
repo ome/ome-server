@@ -32,13 +32,14 @@ sub createBounds {
     my $xw = $w/2;
     my $yh = $h/2;
 
-    # As a hack until per module configs are available, we'll
-    # use the location as the tag for the new features.
+    # As a hack until per module configs are available, we'll use the
+    # location as the tag for the new features.  --- Aha!  No longer!
+    # Modules can now specify the new feature tags.
 
     my ($feature,$output_bounds);
     my $location = $self->{_location};
 
-    $feature = $self->newFeature($location,lc($location)." 1");
+    $feature = $self->newFeature(lc($location)." 1");
     $output_bounds = $self->
       newAttribute("Output bounds",
                    {
@@ -49,7 +50,7 @@ sub createBounds {
                     feature_id => $feature->id()
                    });
 
-    $feature = $self->newFeature($location,lc($location)." 2");
+    $feature = $self->newFeature(lc($location)." 2");
     $output_bounds = $self->
       newAttribute("Output bounds",
                    {
@@ -60,7 +61,7 @@ sub createBounds {
                     feature_id => $feature->id()
                    });
 
-    $feature = $self->newFeature($location,lc($location)." 3");
+    $feature = $self->newFeature(lc($location)." 3");
     $output_bounds = $self->
       newAttribute("Output bounds",
                    {
@@ -71,7 +72,7 @@ sub createBounds {
                     feature_id => $feature->id()
                    });
 
-    $feature = $self->newFeature($location,lc($location)." 4");
+    $feature = $self->newFeature(lc($location)." 4");
     $output_bounds = $self->
       newAttribute("Output bounds",
                    {

@@ -102,7 +102,7 @@ my $calcXyInfo = $factory->
              module_type      => 'OME::Analysis::CLIHandler',
              location         => '/OME/bin/OME_Image_XY_stats',
              default_iterator => undef,
-             features_created => 'false'
+             new_feature_tag  => undef
             });
 print "  ".$calcXyInfo->program_name()." (".$calcXyInfo->id().")\n";
 
@@ -127,7 +127,7 @@ my $calcXyzInfo = $factory->
              module_type      => 'OME::Analysis::CLIHandler',
              location         => '/OME/bin/OME_Image_XYZ_stats',
              default_iterator => undef,
-             features_created => 'false'
+             new_feature_tag  => undef
             });
 print "  ".$calcXyzInfo->program_name()." (".$calcXyzInfo->id().")\n";
 
@@ -151,7 +151,7 @@ my $findSpots = $factory->
              module_type      => 'OME::Analysis::FindSpotsHandler',
              location         => '/OME/bin/findSpotsOME',
              default_iterator => undef,
-             features_created => 'true'
+             new_feature_tag  => 'SPOT'
             });
 print "  ".$findSpots->program_name()." (".$findSpots->id().")\n";
 
@@ -170,7 +170,8 @@ $output = $factory->
             {
              program  => $findSpots,
              name     => 'Timepoint',
-             datatype => $timepoint
+             datatype => $timepoint,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -179,7 +180,8 @@ $output = $factory->
             {
              program  => $findSpots,
              name     => 'Threshold',
-             datatype => $threshold
+             datatype => $threshold,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -188,7 +190,8 @@ $output = $factory->
             {
              program  => $findSpots,
              name     => 'Location',
-             datatype => $location
+             datatype => $location,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -197,7 +200,8 @@ $output = $factory->
             {
              program  => $findSpots,
              name     => 'Extent',
-             datatype => $extent
+             datatype => $extent,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -206,7 +210,8 @@ $output = $factory->
             {
              program  => $findSpots,
              name     => 'Signals',
-             datatype => $signal
+             datatype => $signal,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -218,9 +223,9 @@ my $findCells = $factory->
              description      => 'Find cells',
              category         => 'Testing',
              module_type      => 'OME::Analysis::FindBounds',
-             location         => 'CELL',
+             location         => '',
              default_iterator => undef,
-             features_created => 'true'
+             new_feature_tag  => 'CELL'
             });
 print "  ".$findCells->program_name()." (".$findCells->id().")\n";
 
@@ -229,7 +234,8 @@ $output = $factory->
             {
              program  => $findCells,
              name     => 'Output bounds',
-             datatype => $bounds
+             datatype => $bounds,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -241,9 +247,9 @@ my $findGolgi = $factory->
              description      => 'Find golgi',
              category         => 'Testing',
              module_type      => 'OME::Analysis::FindBounds',
-             location         => 'GOLGI',
+             location         => '',
              default_iterator => 'CELL',
-             features_created => 'true'
+             new_feature_tag  => 'GOLGI'
             });
 print "  ".$findGolgi->program_name()." (".$findGolgi->id().")\n";
 
@@ -261,7 +267,8 @@ $output = $factory->
             {
              program  => $findGolgi,
              name     => 'Output bounds',
-             datatype => $bounds
+             datatype => $bounds,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -273,9 +280,9 @@ my $findMito = $factory->
              description      => 'Find mito',
              category         => 'Testing',
              module_type      => 'OME::Analysis::FindBounds',
-             location         => 'MITOCHONDRIA',
+             location         => '',
              default_iterator => 'CELL',
-             features_created => 'true'
+             new_feature_tag  => 'MITOCHONDRIA'
             });
 print "  ".$findMito->program_name()." (".$findMito->id().")\n";
 
@@ -293,7 +300,8 @@ $output = $factory->
             {
              program  => $findMito,
              name     => 'Output bounds',
-             datatype => $bounds
+             datatype => $bounds,
+             feature_tag => '[Feature]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 
@@ -307,7 +315,7 @@ my $findRatio = $factory->
              module_type      => 'OME::Analysis::FindRatio',
              location         => '',
              default_iterator => 'CELL',
-             features_created => 'true'
+             new_feature_tag  => undef
             });
 print "  ".$findRatio->program_name()." (".$findRatio->id().")\n";
 
@@ -334,7 +342,8 @@ $output = $factory->
             {
              program  => $findRatio,
              name     => 'Golgi-mito ratio',
-             datatype => $ratio
+             datatype => $ratio,
+             feature_tag => '[Iterator]'
             });
 print "    ".$output->name()." (".$output->id().")\n";
 

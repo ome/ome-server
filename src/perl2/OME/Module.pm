@@ -31,7 +31,7 @@ __PACKAGE__->sequence('program_seq');
 __PACKAGE__->columns(Primary => qw(program_id));
 __PACKAGE__->columns(Essential => qw(program_name description category));
 __PACKAGE__->columns(Definition => qw(module_type location
-                                      default_iterator features_created));
+                                      default_iterator new_feature_tag));
 __PACKAGE__->has_many('inputs','OME::Program::FormalInput' => qw(program_id));
 __PACKAGE__->has_many('outputs','OME::Program::FormalOutput' => qw(program_id));
 __PACKAGE__->has_many('analyses','OME::Analysis' => qw(program_id));
@@ -121,7 +121,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('formal_outputs');
 __PACKAGE__->sequence('formal_output_seq');
 __PACKAGE__->columns(Primary => qw(formal_output_id));
-__PACKAGE__->columns(Essential => qw(program_id name datatype_id));
+__PACKAGE__->columns(Essential => qw(program_id name datatype_id feature_tag));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::DataType' => qw(datatype_id));
 

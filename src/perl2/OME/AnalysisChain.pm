@@ -55,7 +55,8 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('analysis_view_nodes');
 __PACKAGE__->sequence('analysis_view_nodes_seq');
 __PACKAGE__->columns(Primary => qw(analysis_view_node_id));
-__PACKAGE__->columns(Essential => qw(analysis_view_id program_id iterator_tag));
+__PACKAGE__->columns(Essential => qw(analysis_view_id program_id
+                                     iterator_tag new_feature_tag));
 __PACKAGE__->hasa('OME::AnalysisView' => qw(analysis_view_id));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->has_many('input_links',

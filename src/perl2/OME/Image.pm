@@ -30,6 +30,7 @@ use OME::Repository;
 use IO::File;
 
 use OME::Image::Pix;
+use OME::Feature;
 
 use fields qw(_fileOpen _fileHandle Pix _dimensions);
 
@@ -52,13 +53,18 @@ __PACKAGE__->hasa('OME::Group' => qw(group_id));
 __PACKAGE__->has_many('dataset_links','OME::Image::DatasetMap' => qw(image_id));
 __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
-__PACKAGE__->has_many('features','OME::Feature' => qw(image_id));
-	
+__PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
+
+
+sub features {
+    my ($self) = @_;
+    return OME::Feature->__image_roots(image_id => $self->id());
+}
 
 sub _init {
     my $class = shift;
     my $self = $class->SUPER::_init();
-   
+
     $self->{_fileOpen} = 0;
     $self->{_fileHandle} = undef;
     $self->{Pix} = undef;

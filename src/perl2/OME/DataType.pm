@@ -33,7 +33,8 @@ __PACKAGE__->table('datatypes');
 __PACKAGE__->sequence('datatype_seq');
 __PACKAGE__->columns(Primary => qw(datatype_id));
 __PACKAGE__->columns(Essential => qw(table_name description attribute_type));
-__PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id));
+__PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id),
+                     {sort => 'datatype_column_id'});
 
 # These triggers should ensure that the appropriate OME::Attribute
 # subclass definition is evaluated when a data type is loaded from the
@@ -41,6 +42,13 @@ __PACKAGE__->has_many('db_columns','OME::DataType::Column' => qw(datatype_id));
 __PACKAGE__->add_trigger(after_create => \&requireAttributePackage);
 __PACKAGE__->add_trigger(select => \&requireAttributePackage);
 
+
+__PACKAGE__->set_sql('get_attributes',<<'SQL;','Main');
+  SELECT attr.attribute_id
+    FROM %s attr
+   WHERE %s = ?
+ORDER BY attr.attribute_id
+SQL;
 
 sub findByTable {
     my ($class, $table_name) = @_;
@@ -54,6 +62,18 @@ sub findColumnByName {
     my $type_id = $self->id();
     return OME::DataType::Column->findByTypeAndColumn($type_id,
 						      $column_name);
+}
+
+sub findAttributesByTarget {
+    my ($self, $targetID) = @_;
+    my $granularity = $self->attribute_type();
+    my $attr_table = $self->table_name();
+
+    my %columns = ('D' => 'dataset_id','I' => 'image_id','F' => 'feature_id');
+    my $sth = $self->sql_get_attributes($attr_table,$columns{$granularity});
+    $sth->execute($targetID);
+
+    return $sth;
 }
 
 sub getAttributePackage {
@@ -72,7 +92,7 @@ sub requireAttributePackage {
     $def .= q{
 	use strict;
 	our $VERSION = '1.0';
-	
+
 	use OME::Attribute;
 	use base qw(OME::Attribute);
     };
@@ -102,7 +122,7 @@ sub requireAttributePackage {
 	$pkg->hasa('OME::Feature' => qw(feature_id));
     }
 
-    $pkg->columns(Essential => @column_defs);    
+    $pkg->columns(Essential => @column_defs);
 
     # Make accessors for actual output, dataset, image, and feature.
     no strict 'refs';
@@ -152,7 +172,7 @@ sub findByTypeAndColumn {
     return $columns[0]; 
 }
 
-    
+
 
 1;
 

@@ -27,7 +27,8 @@ use fields qw(_location _session _node
               _program _formal_inputs _formal_outputs _actual_outputs
               _current_dataset _current_image _current_feature
               _dataset_inputs _image_inputs _feature_inputs
-              _dataset_outputs _image_outputs _feature_outputs);
+              _dataset_outputs _image_outputs _feature_outputs
+              _last_new_feature);
 
 sub new {
     my ($proto,$location,$session,$program,$node) = @_;
@@ -106,7 +107,11 @@ sub getFeatureInputs {
 }
 
 sub newFeature {
-    my ($self,$tag,$name) = @_;
+    my ($self,$name) = @_;
+
+    my $new_feature_tag = $self->{_node}->new_feature_tag();
+    die "This module says it won't create features!"
+      unless (defined $new_feature_tag);
 
     my $parent_feature = undef;
 
@@ -119,12 +124,14 @@ sub newFeature {
     my $data =
       {
        image          => $self->{_current_image},
-       tag            => $tag,
+       tag            => $new_feature_tag,
        name           => $name,
        parent_feature => $parent_feature
       };
 
     my $feature = $self->Factory()->newObject("OME::Feature",$data);
+    $self->{_last_new_feature} = $feature;
+    return $feature;
 }
 
 sub newAttribute {
@@ -134,15 +141,33 @@ sub newAttribute {
     my $table_name = $datatype->table_name();
     my $granularity = $datatype->attribute_type();
 
-    my $featureID;
-
     $data->{actual_output_id} = $self->{_actual_outputs}->{$output_name};
     if ($granularity eq 'D') {
         $data->{dataset_id} = $self->{_current_dataset};
     } elsif ($granularity eq 'I') {
         $data->{image_id} = $self->{_current_image};
     } elsif ($granularity eq 'F') {
-        $featureID = $data->{feature_id};
+        my $feature_tag = $formal_output->feature_tag();
+        die "Cannot create an untagged feature!"
+          unless (defined $feature_tag);
+
+        my $feature;
+
+        if ($feature_tag eq '[Iterator]') {
+            $feature = $self->{_current_feature};
+        } elsif ($feature_tag eq '[Feature]') {
+            $feature = $self->{_last_new_feature};
+        } elsif ($feature_tag eq '[Parent]') {
+            my $last_new = $self->{_last_new_feature};
+            $feature = $last_new->parent_feature() if (defined $last_new);
+        } else {
+            die "Invalid feature tag for new feature attribute: $feature_tag\n";
+        }
+
+        die "Desired feature ($feature_tag) does not exist"
+          unless defined $feature;
+
+        $data->{feature_id} = $feature->id();
     }
 
     my $attribute = $self->Factory()->newAttribute($table_name,$data);

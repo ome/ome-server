@@ -100,7 +100,8 @@ $node1 = $factory->
             {
              analysis_view => $view,
              program       => $calcXyzInfo,
-             iterator_tag  => undef
+             iterator_tag  => undef,
+             new_feature_tag => undef
             });
 print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
@@ -109,7 +110,8 @@ $node1 = $factory->
             {
              analysis_view => $view,
              program       => $calcXyInfo,
-             iterator_tag  => undef
+             iterator_tag  => undef,
+             new_feature_tag => undef
             });
 print "    Node 2 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
@@ -131,7 +133,8 @@ $node1 = $factory->
             {
              analysis_view => $view,
              program       => $calcXyzInfo,
-             iterator_tag  => undef
+             iterator_tag  => undef,
+             new_feature_tag => undef
             });
 print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
@@ -140,7 +143,8 @@ $node2 = $factory->
             {
              analysis_view => $view,
              program       => $findSpots,
-             iterator_tag  => undef
+             iterator_tag  => undef,
+             new_feature_tag => 'SPOT'
             });
 print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
 
@@ -173,7 +177,8 @@ $node1 = $factory->
             {
              analysis_view => $view,
              program       => $findCells,
-             iterator_tag  => undef
+             iterator_tag  => undef,
+             new_feature_tag => 'CELL'
             });
 print "    Node 1 ".$node1->program()->program_name()." (".$node1->id().")\n";
 
@@ -182,7 +187,8 @@ $node2 = $factory->
             {
              analysis_view => $view,
              program       => $findGolgi,
-             iterator_tag  => 'CELL'
+             iterator_tag  => 'CELL',
+             new_feature_tag => 'GOLGI'
             });
 print "    Node 2 ".$node2->program()->program_name()." (".$node2->id().")\n";
 
@@ -191,7 +197,8 @@ $node3 = $factory->
             {
              analysis_view => $view,
              program       => $findMito,
-             iterator_tag  => 'CELL'
+             iterator_tag  => 'CELL',
+             new_feature_tag => 'MITOCHONDRIA'
             });
 print "    Node 3 ".$node3->program()->program_name()." (".$node3->id().")\n";
 
@@ -200,7 +207,8 @@ $node4 = $factory->
             {
              analysis_view => $view,
              program       => $findRatio,
-             iterator_tag  => 'CELL'
+             iterator_tag  => 'CELL',
+             new_feature_tag => undef
             });
 print "    Node 4 ".$node4->program()->program_name()." (".$node4->id().")\n";
 

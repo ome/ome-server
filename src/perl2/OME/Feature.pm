@@ -45,6 +45,10 @@ __PACKAGE__->columns(Primary => qw(feature_id));
 __PACKAGE__->columns(Essential => qw(parent_feature_id image_id tag name));
 __PACKAGE__->hasa('OME::Image' => qw(image_id));
 __PACKAGE__->hasa('OME::Feature' => qw(parent_feature_id));
+__PACKAGE__->has_many('children','OME::Feature' => qw(parent_feature_id),
+                     {sort => 'feature_id'});
+
+__PACKAGE__->make_filter('__image_roots' => 'image_id = ? and parent_feature_id is null order by tag, feature_id');
 
 
 
