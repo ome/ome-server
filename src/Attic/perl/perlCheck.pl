@@ -7,14 +7,14 @@ my $libDir = $Config{installprivlib};
 
 
 my $moduleRepository = 'http://ome1-sorger.mit.edu/packages/perl';
-my $badTestsFatal = 0;
+my $DEFAULT_badTestsFatal = 1;
 
 $ENV{PATH} .= ':/usr/local/bin';
 
 # Add module specs here:
 my @modules = ({
 	Name => 'DBI',
-	repositoryFile => 'DBI-1.19.tar.gz',
+	repositoryFile => 'DBI-1.30.tar.gz',
 	checkVersion => \&DBI_VersionOK
 	},{
 	Name => 'Digest::MD5',
@@ -42,6 +42,61 @@ my @modules = ({
 	repositoryFile => 'DBD-Pg-0.95.tar.gz',
 	checkVersion => \&DBD_Pg_VersionOK,
 	installModule => \&DBD_Pg_Install
+	},{
+	Name => 'Sort::Array',
+	repositoryFile => 'Sort-Array-0.26.tar.gz',
+	},{
+	Name => 'Test::Harness',
+	repositoryFile => 'Test-Harness-2.26.tar.gz',
+	checkVersion => \&Test_HarnessOK,
+	},{
+	Name => 'Test::Simple',
+	repositoryFile => 'Test-Simple-0.47.tar.gz',
+	},{
+	Name => 'Term::ReadKey',
+	repositoryFile => 'TermReadKey-2.21.tar.gz',
+	},{
+	Name => 'Carp::Assert',
+	repositoryFile => 'Carp-Assert-0.17.tar.gz',
+	},{
+	Name => 'Class::Accessor',
+	repositoryFile => 'Class-Accessor-0.17.tar.gz',
+	},{
+	Name => 'Class::Data::Inheritable',
+	repositoryFile => 'Class-Data-Inheritable-0.02.tar.gz',
+	},{
+	Name => 'IO::Scalar',
+	repositoryFile => 'IO-stringy-2.108.tar.gz',
+	},{
+	Name => 'Class::Trigger',
+	repositoryFile => 'Class-Trigger-0.05.tar.gz',
+	},{
+	Name => 'File::Temp',
+	repositoryFile => 'File-Temp-0.12.tar.gz',
+	},{
+	Name => 'Text::CSV_XS',
+	repositoryFile => 'Text-CSV_XS-0.23.tar.gz',
+	},{
+	Name => 'SQL::Statement',
+	repositoryFile => 'SQL-Statement-1.004.tar.gz',
+	},{
+	Name => 'DBD::CSV',
+	repositoryFile => 'DBD-CSV-0.2002.tar.gz',
+	},{
+	Name => 'Class::Fields',
+	repositoryFile => 'Class-Fields-0.14.tar.gz',
+	},{
+	Name => 'Class::WhiteHole',
+	repositoryFile => 'Class-WhiteHole-0.03.tar.gz',
+	},{
+	Name => 'Ima::DBI',
+	repositoryFile => 'Ima-DBI-0.27.tar.gz',
+	},{
+	Name => 'Class::DBI',
+	repositoryFile => 'Class-DBI-0.89.tar.gz',
+	},{
+	Name => 'GD',
+	repositoryFile => 'GD-1.33.tar.gz',
 	},{
 	Name => 'Image::Magick',
 	repositoryFile => 'ImageMagick-5.3.6-OSX.tar.gz',
@@ -89,17 +144,23 @@ foreach (@OMEmodules) {
 #  Version checks:
 sub DBI_VersionOK {
 my $version = shift;
-	return (1) if $version ge 1.15 and $version le 1.19;
+	return (1) if $version == 1.30;
 	return (0);
 }
 
 sub DBD_Pg_VersionOK {
 my $version = shift;
-	return (1) if $version eq 0.95;
-	return (1) if $version eq 1.01;
+	return (1) if $version == 0.95;
+	return (1) if $version == 1.01;
 	return (0);
 }
 
+
+sub Test_HarnessOK {
+my $version = shift;
+	return (1) if $version > 2.03;
+	return (0);
+}
 
 ############################
 # Special installation subs:
@@ -132,6 +193,9 @@ my $error;
 
 sub ImageMagickInstall {
 my $module = shift;
+my $badTestsFatal;
+$badTestsFatal = $module->{badTestsFatal} if exists $module->{badTestsFatal};
+$badTestsFatal = $DEFAULT_badTestsFatal unless defined $badTestsFatal;
 my $installTarBall = $module->{repositoryFile};
 my $installDir;
 	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
@@ -257,6 +321,9 @@ my $installDir;
 sub InstallModule {
 my $module = shift;
 my $installTarBall = $module->{repositoryFile};
+my $badTestsFatal;
+$badTestsFatal = $module->{badTestsFatal} if exists $module->{badTestsFatal};
+$badTestsFatal = $DEFAULT_badTestsFatal unless defined $badTestsFatal;
 my $installDir;
 	if ($installTarBall =~ /(.*)\.tar\.gz/) {$installDir = $1};
 my $error;
@@ -264,9 +331,9 @@ my $error;
 	print "\nInstalling $installDir\n";
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
 
-	die "Couldn't execute perl script 'Makefile.PL'.\n" if system ('perl Makefile.PL');
-	die "Compilation errors - script aborted.\n" if system ('make');
-	die "Test errors - script aborted.\n" if system ('make test') and $badTestsFatal;
-	die "Install errors - script aborted.\n" if system ('make install');
+	die "Couldn't execute perl script 'Makefile.PL'.\n" if system ('perl Makefile.PL') != 0;
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	die "Test errors - script aborted.\n" if system ('make test') != 0 and $badTestsFatal;
+	die "Install errors - script aborted.\n" if system ('make install') != 0;
 	chdir '..';
 }
