@@ -378,7 +378,7 @@ sub store_image_attributes {
 		   'num_waves' => $href->{'Image.NumWaves'},
 		   'num_times' => $href->{'Image.NumTimes'},
 		   'bits_per_pixel' => $href->{'Image.BitsPerPixel'}};
-    my $attributes = $session->Factory()->newObject("OME::Image::Attributes", $recordData);
+    my $attributes = $session->Factory()->newObject("OME::Image::Dimensions", $recordData);
 
     if (!defined $attributes) {
 	$status = "Can\'t create new image attribute table";
