@@ -57,36 +57,63 @@ use OME;
 use OME::Session;
 use base qw(OME::Web::DBObjRender);
 
-# Class data
-__PACKAGE__->_fieldLabels( {
-	'id'             => "ID",
-});
-__PACKAGE__->_fieldNames( [
-	'id',
-	'module',
-	'timestamp',
-	'image',
-	'dataset',
-	'status',
-] ) ;
-__PACKAGE__->_allFieldNames( [
-	@{__PACKAGE__->_fieldNames() },
-	'dependence',
-	'virtual_mex',
-	'total_time',
-	'error_message',
-	'iterator_tag',
-	'new_feature_tag',
-] ) ;
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _summaryFields } = [
+		'module',
+		'timestamp',
+		'image',
+		'dataset',
+		'status',
+	];
+	$self->{ _allFields } = [
+		@{ $self->{ _summaryFields } },
+		'dependence',
+		'virtual_mex',
+		'total_time',
+		'error_message',
+		'iterator_tag',
+		'new_feature_tag',
+	];
+	
+	return $self;
+}
 
-=head2 getObjectLabel
+=head2 _renderData
 
-returns module name & formatted timestamp
+in summary mode and html format, module will link to a detailed view of the module execution
 
 =cut
 
-sub getObjectLabel {
-	my ($proto,$obj) = @_;
+sub _renderData {
+	my ( $self, $obj, $field_names, $format, $mode, $options ) = @_;
+	# override module field to link to MEX detail
+	if( grep( m/^module$/, @$field_names ) && $mode eq 'summary' && $format eq 'html' && $obj->module()) {
+		my $q = $self->CGI();
+		my $module_name = $obj->module()->name();
+		return ( module => $q->a( 
+			{ 
+				href  => $self->getObjDetailURL( $obj ),
+				title => "More information about this Module Execution",
+				class => 'ome_detail'
+			},
+			$module_name
+		) );
+	}
+	return ();
+}
+
+=head2 getName
+
+returns module name (truncated to 14 characters) & abbr. (19 char max) timestamp 
+
+=cut
+
+sub getName {
+	my ($proto, $obj, $options) = @_;
 
 	if( $obj->module() ) {
 		$obj->timestamp() =~ m/(\d+)\-(\d+)\-(\d+) (\d+)\:(\d+)\:(\d+)\..*$/
@@ -107,45 +134,13 @@ sub getObjectLabel {
 			11 => 'Nov',
 			12 => 'Dec'
 		);
-		return $obj->module()->name()." ($yr ".$month_abbr{ $mo }." $dy $hr:$min:$sec)";
+		my $name = $obj->module()->name();
+		$name =~ s/^(.{11})....*$/$1\.\.\./;
+		return $name." ($yr ".$month_abbr{ $mo }." $dy $hr:$min)";
 	}
 
 	return $obj->id();
 }
-
-#=head2 renderSingle
-#
-#Module links to MEX
-#
-#=cut
-#
-#sub renderSingle {
-#	my ($proto,$obj,$format,$fieldnames) = @_;
-#	
-#	my $factory = $obj->Session()->Factory();
-#	my $q       = new CGI;
-#	my @filtered_field_names = grep( !m/^module$/, @$fieldnames);
-#	my $record  = $proto->SUPER::renderSingle($obj,$format,\@filtered_field_names);
-#
-#	# override module field to link to MEX detail
-#	if( scalar( @filtered_field_names ) ne scalar( @$fieldnames ) and $obj->module()) {
-#		my $module_name = $obj->module()->name();
-#		my $detail_url = "serve.pl?Page=OME::Web::DBObjDetail&Type=OME::ModuleExecution&ID=".$obj->id();
-#		$record->{ 'module' } = $q->a( 
-#			{ 
-#				href  => $detail_url,
-#				title => "More information about this Module Execution",
-#				class => 'ome_detail'
-#			},
-#			$module_name
-#		) if( $format eq 'html' );
-#		$record->{ 'module' } = $module_name
-#			if( $format eq 'txt' );
-#	}
-#	
-#	return %$record if wantarray;
-#	return $record;
-#}
 
 =head1 Author
 
