@@ -1,4 +1,4 @@
-# OME/Tasks/OMEXMLImportExport.pm
+# OME/Tasks/AEFacade.pm
 
 # Copyright (C) 2002 Open Microscopy Environment, MIT
 # Author:  JM Burel <jburel@dundee.ac.uk>
@@ -72,7 +72,7 @@ sub executeView{
 	my $cmanager = OME::Tasks::ChainManager->new($session);
 	my $view=$self->{session}->Factory()->findObject("OME::AnalysisChain",
 							name=>$nameView);
-	print STDERR "view===".$view->analysis_chain_id()."\n";
+	print STDERR "chain===".$view->analysis_chain_id()."\n";
 	my $node=$cmanager->getNode($view,$nameFunction);
 print STDERR "nodeID===".$node->analysis_chain()->id()."\n";
 
