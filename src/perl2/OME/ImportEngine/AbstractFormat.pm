@@ -364,8 +364,12 @@ No path components and no extension will be returned.
 sub __nameOnly {
     shift;
     my $basenm = basename($_[0]);
-    # remove filetype extension from filename (assumes '.' delimiter)
-    $basenm =~ s/\..+?$//;
+    # remove filetype extension from filename.
+	# Assume that the last field (delimited by .) is the 
+	# filetype extension. So $basenm of tiff.any.tiff is tiff.any 
+	$basenm =~ m/(^.*\.)/;
+	$basenm = $1;
+	chop($basenm); #chop the trailing . 
     return $basenm;
 }
 
