@@ -45,6 +45,7 @@ package org.openmicroscopy.remote;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.*;
 
 
 /**
@@ -111,11 +112,12 @@ import java.util.HashMap;
  */
 
 public class RemoteObjectCache
+    implements RemoteConstants
 {
-    /**
-     * The object reference which represents a null value.
-     */
-    public static final String  NULL_REFERENCE = ">>OBJ:NULL";
+    public static boolean TRACE_CACHE = false;
+
+    private File  traceFilename;
+    private PrintWriter  traceFile;
 
     /**
      * The session that this cache belongs to.
@@ -137,6 +139,63 @@ public class RemoteObjectCache
     {
         this.session = session;
         this.objectCache = new HashMap();
+
+        if (TRACE_CACHE)
+        {
+            try
+            {
+                traceFilename = File.createTempFile("cache-",".txt");
+                traceFile = new PrintWriter(
+                    new BufferedWriter(new FileWriter(traceFilename)),
+                    true);
+                System.err.println("Using trace file "+traceFilename);
+            } catch (IOException e) {
+                System.err.println("Could not create trace file!");
+            }
+            traceFile.println("Time\tReference\tClass\tCalling class\tCalling method\tLine");
+        }
+
+    }
+
+    public void closeTrace()
+    {
+        if (traceFile != null)
+        {
+            traceFile.close();
+            traceFile = null;
+        }
+    }
+
+    private void printTrace(String reference, String clazz)
+    {
+        if (traceFile != null)
+        {
+            StackTraceElement[] stackTrace = null;
+            try
+            {
+                throw new Exception();
+            } catch (Exception e) {
+                stackTrace = e.getStackTrace();
+            }
+
+            int i = 3;
+            if (i >= stackTrace.length) i = stackTrace.length;
+
+            if (stackTrace[i].getMethodName().equals("main")) i--;
+
+            int pos = clazz.lastIndexOf('.');
+            if (pos >= 0) clazz = clazz.substring(pos+1);
+
+            String callClazz = stackTrace[i].getClassName();
+            pos = callClazz.lastIndexOf('.');
+            if (pos >= 0) callClazz = callClazz.substring(pos+1);
+
+            traceFile.println(System.currentTimeMillis()+"\t"+
+                              reference+"\t"+clazz+"\t"+
+                              callClazz+"\t"+
+                              stackTrace[i].getMethodName()+"\t"+
+                              stackTrace[i].getLineNumber());
+        }
     }
 
     /**
@@ -190,7 +249,11 @@ public class RemoteObjectCache
         if ((reference != null) && (!reference.equals("")))
         {
             if (reference.equals(NULL_REFERENCE))
+            {
+                if (TRACE_CACHE)
+                    printTrace("Null","null");
                 return null;
+            }
 
             RemoteObject  newObj;
             WeakReference objRef;
@@ -205,7 +268,11 @@ public class RemoteObjectCache
                 // ...and the object it points to is still valid,
                 // return that object.
                 if (newObj != null)
+                {
+                    if (TRACE_CACHE)
+                        printTrace(reference,newObj.getClass().getName());
                     return newObj;
+                }
             }
 
             // If we are here, then either there was no reference in
@@ -226,8 +293,12 @@ public class RemoteObjectCache
             newObj.setRemoteSession(session);
             objectCache.put(reference,new WeakReference(newObj));
 
+            if (TRACE_CACHE)
+                printTrace(reference,newObj.getClass().getName());
             return newObj;
         } else {
+            if (TRACE_CACHE)
+                printTrace("Null","null");
             return null;
         }        
     }
