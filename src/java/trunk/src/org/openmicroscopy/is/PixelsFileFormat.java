@@ -88,8 +88,6 @@ public class PixelsFileFormat
      * Creates a new, empty <code>PixelsFileFormat</code> object.  It
      * will not be very useful until its fields are filled in with the
      * <code>set*</code> methods.
-     *
-     * @return a new, empty <code>PixelsFileFormat</code> object
      */
     public PixelsFileFormat()
     {
@@ -119,7 +117,6 @@ public class PixelsFileFormat
      * not
      * @param isFloat whether the value of each pixel is a float or an
      * integer
-     * @return a new <code>PixelsFileFormat</code> object
      */
     public PixelsFileFormat(int sizeX,
                             int sizeY,

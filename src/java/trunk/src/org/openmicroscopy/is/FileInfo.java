@@ -58,8 +58,6 @@ public class FileInfo
      * Creates a new, empty <code>PixelsFileFormat</code> object.  It
      * will not be very useful until its fields are filled in with the
      * <code>set*</code> methods.
-     *
-     * @return a new, empty <code>PixelsFileFormat</code> object
      */
     public FileInfo()
     {
@@ -74,7 +72,6 @@ public class FileInfo
      *
      * @param originalName the original filename of the uploaded file
      * @param length the length of the file in bytes
-     * @return a new <code>PixelsFileFormat</code> object
      */
     public FileInfo(String originalName, long length)
     {

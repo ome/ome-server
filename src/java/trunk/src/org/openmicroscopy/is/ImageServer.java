@@ -242,7 +242,7 @@ public abstract class ImageServer
      * file
      * @param bigEndian whether the returns pixels should be in
      * big-endian order
-     * @result an array of pixels for the specified file
+     * @return an array of pixels for the specified file
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * readable
@@ -255,7 +255,7 @@ public abstract class ImageServer
      * <p>This method returns a pixel array of the specified stack.
      * The stack is specified by its C and T coordinates, which have
      * 0-based indices.  While this method is less likely to be a
-     * memory hog as the {@link getPixels} method, it is still
+     * memory hog as the {@link #getPixels} method, it is still
      * possible for large images with few timepoints to cause
      * problems.  As usual when dealing with large images, care must
      * be taken to use your computational resources appropriately.</p>
@@ -270,7 +270,7 @@ public abstract class ImageServer
      * @param theT the T parameter of the desired stack
      * @param bigEndian whether the returns pixels should be in
      * big-endian order
-     * @result an array of pixels for the specified stack
+     * @return an array of pixels for the specified stack
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * readable
@@ -298,7 +298,7 @@ public abstract class ImageServer
      * @param theT the T parameter of the desired plane
      * @param bigEndian whether the returns pixels should be in
      * big-endian order
-     * @result an array of pixels for the specified plane
+     * @return an array of pixels for the specified plane
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * readable
@@ -325,7 +325,7 @@ public abstract class ImageServer
      * file
      * @param bigEndian whether the returns pixels should be in
      * big-endian order
-     * @result an array of pixels for the specified region
+     * @return an array of pixels for the specified region
      * @throws ImageServerException if there was an error contacting
      * the image server or if the pixels ID does not exist or is not
      * readable
@@ -619,10 +619,10 @@ public abstract class ImageServer
     /**
      * Reads a portion of an uploaded file, without using any caching.
      * This is usually not the method you should use to read from an
-     * image server file; the {@link readFile} method implements a
+     * image server file; the {@link #readFile} method implements a
      * limited form of caching and can be much more efficient.
      *
-     * @see readFile
+     * @see #readFile
      * @param fileID the ID of the previously uploaded file
      * @param offset the offset into the file to start reading from
      * @param length the number of bytes to read from the file
@@ -637,14 +637,14 @@ public abstract class ImageServer
 
     /**
      * The largest file read request that will still cause the {@link
-     * readData} method to use the cache.
-     * @see readData
+     * #readFile} method to use the cache.
+     * @see #readFile
      */
     public static int MAXIMUM_READ_TO_USE_CACHE = 2048;
 
     /**
-     * The size of the cache used by the {@link readData} method.
-     * @see readData
+     * The size of the cache used by the {@link #readFile} method.
+     * @see #readFile
      */
     public static int CACHE_SIZE = 4096;
 
@@ -663,9 +663,9 @@ public abstract class ImageServer
      *
      * <p>The caching is only used if the <code>length</code>
      * parameter is less than the value of the {@link
-     * MAXIMUM_READ_TO_USE_CACHE} field.  If it is, the actual
+     * #MAXIMUM_READ_TO_USE_CACHE} field.  If it is, the actual
      * <code>ReadFile</code> call sent to the image server will read a
-     * full block of {@link CACHE_SIZE} bytes, centered around the
+     * full block of {@link #CACHE_SIZE} bytes, centered around the
      * region requested.  Subsequent calls which request data fully
      * enclosed within the full region will return that data without
      * generating another image server call.  If the data requested by
@@ -750,8 +750,8 @@ public abstract class ImageServer
     /**
      * <p>Copies pixels from an original file into a new pixels file.
      * The original file should have been previously uploaded via the
-     * {@link uploadFile} method.  The pixels file should have been
-     * previously created via the {@link newPixels} method.  The
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
      * server will start reading the pixels from the specified offset,
      * which should be expressed as bytes from the beginning of the
      * file.</p>
@@ -789,8 +789,8 @@ public abstract class ImageServer
     /**
      * <p>Copies pixels from an original file into a new pixels file.
      * The original file should have been previously uploaded via the
-     * {@link uploadFile} method.  The pixels file should have been
-     * previously created via the {@link newPixels} method.  The
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
      * server will start reading the pixels from the specified offset,
      * which should be expressed as bytes from the beginning of the
      * file.</p>
@@ -829,8 +829,8 @@ public abstract class ImageServer
     /**
      * <p>Copies pixels from an original file into a new pixels file.
      * The original file should have been previously uploaded via the
-     * {@link uploadFile} method.  The pixels file should have been
-     * previously created via the {@link newPixels} method.  The
+     * {@link #uploadFile} method.  The pixels file should have been
+     * previously created via the {@link #newPixels} method.  The
      * server will start reading the pixels from the specified offset,
      * which should be expressed as bytes from the beginning of the
      * file.</p>
