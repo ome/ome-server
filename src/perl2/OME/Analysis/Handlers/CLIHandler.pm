@@ -45,6 +45,7 @@ use IPC::Run;
 use Log::Agent;
 
 use OME::Analysis::Handlers::DefaultLoopHandler;
+use OME::Tasks::PixelsManager;
 use XML::LibXML;
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 
@@ -938,6 +939,8 @@ sub resolveSubString {
 			or die "SubstituteWith attribute not specified in PixelsInput element!\n";
 		my $pixels = resolveLocation( $location, $inputs );
 		
+#		OME::Tasks::PixelsManager->activateRepository( $pixels->Repository() );
+#		return OME::Tasks::PixelsManager
 		return $pixels->image()->getFullPath( $pixels )
 			if $substituteWith eq 'path';
 		# FIXME: add support for barfing pixel file contents
@@ -990,8 +993,7 @@ sub resolveSubString {
 			my $repository  = resolveLocation($tmpFile->getAttribute( "Repository" ), $inputs);
 			die "Could not find an input for FormalInputName ".$tmpFile->getAttribute( "Repository" )."\n"
 				if( not defined $repository );
-			$tmpFileRelativePath = $session->getTemporaryFilenameRepository( 
-				repository => $repository,
+			$tmpFileRelativePath = $session->getTemporaryFilename( 
 				progName   => 'CLIHandler',
 				extension  => 'ori' );
 			$tmpFilePath = $repository->Path() . $tmpFileRelativePath;
