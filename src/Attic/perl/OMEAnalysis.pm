@@ -1,7 +1,22 @@
-# OMEAnalysis.pm
-# Analysis wrapper object for OME analyses
-# Douglas Creager <dcreager@alum.mit.edu>
-# 22 March 2002
+# OMEAnalysis.pm:  Ancestor object for OME analyses
+# Author:  Douglas Creager <dcreager@alum.mit.edu>
+# Copyright 2002 Douglas Creager.
+# This file is part of OME.
+# 
+#     OME is free software; you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation; either version 2 of the License, or
+#     (at your option) any later version.
+# 
+#     OME is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with OME; if not, write to the Free Software
+#     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# 
 
 package OMEAnalysis;
 use strict;
@@ -12,7 +27,9 @@ use OMEpl;
 
 
 # new()
-# returns a new instance of this object
+# ----
+# Returns a new instance of this object.
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;    # allow to be invoked as a class or instance method
@@ -26,17 +43,12 @@ sub new {
     return $self;
 }
 
-# DESTROY()
-sub DESTROY {
-    my $self = shift;
-    my $OME  = $self->{OME};
-
-    #OME->Finish();
-}
 
 # ExecuteCGI()
-# called from a CGI script, performs the analysis completely
-# by retrieving parameters from the HTML results
+# ------------
+# Automates the steps performed when executing this analysis from a
+# CGI script.
+
 sub ExecuteCGI {
     my $self = shift;
     my $OME  = $self->{OME};
@@ -50,17 +62,22 @@ sub ExecuteCGI {
     print $OME->cgi->end_html;
 }
 
-# Initialize()
-sub Initialize {
-}
 
 # OutputHTMLForm()
-# displays an appropriate HTML form to retrieve analysis parameters
+# ----------------
+# Outputs an appropriate HTML form to retrieve analysis parameters
+# from the user.
+
 sub OutputHTMLForm() {
 }
 
+
 # GetParamsHTML()
-# returns parameter hash
+# ---------------
+# Returns a parameter hash suitable for StartAnalysis with values
+# filled in the from the CGI input.  Only the parameters specified in
+# the htmlVars instance variable are copied into the parameter hash.
+
 sub GetHTMLParams {
     my $self = shift;
     my $CGI  = $self->{OME}->cgi();
@@ -78,6 +95,11 @@ sub GetHTMLParams {
 }
 
 # GetSelectedDatasets([wavelength])
+# ---------------------------------
+# Retrieves the selected datasets from the OME system.  If a
+# wavelength is specified, the only the datasets matching the
+# specified wavelength are returned.
+
 sub GetSelectedDatasets {
     my $self         = shift;
     my @result;
@@ -93,7 +115,11 @@ sub GetSelectedDatasets {
     return \@result;
 }
 
-# StartAnalysis(Input parameters)
+# StartAnalysis(Parameter hash)
+# -----------------------------
+# Performs any setup necessary for the analysis.  This method is
+# called once, before any datasets are analyzed.
+
 sub StartAnalysis {
     my $self = shift;
     my $OME  = $self->{OME};
@@ -101,15 +127,28 @@ sub StartAnalysis {
     $OME->StartAnalysis();
 }
 
+
 # Execute(Dataset object)
+# -----------------------
+# Performs the analysis on a single dataset.  This method will be
+# called once for each dataset selected by the user.
+
 sub Execute {
 }
 
 # FinishAnalysis()
+# ----------------
+# Performs any cleanup after analyzing all of the datasets.
+
 sub FinishAnalysis {
 }
 
 # PerformAnalysis(Input parameters)
+# ---------------------------------
+# Performs the entire analysis process, including setup and cleanup.
+# Performs the analysis on the datasets selected by the user in the
+# OME interface.
+
 sub PerformAnalysis {
     my $self   = shift;
     my $params = shift;
@@ -128,42 +167,26 @@ sub PerformAnalysis {
 }
 
 
-
-# Convert a table with column headings to a list of OME Feature object
-# that will be written to the database.
-
-# The features we construct have the column headings as the
-# datamembers.  These are column headings expected to have an exact
-# match.  The column heading is the hash key.  The values are array
-# references where element 0 is the table name and element 1 is the
-# column name.  Element 2 is the type specifier.  This should be
-# optional in the future, as the rest of the elements can be
-# determined from the datatbase by OME.
-
-
-
-# These are column headings that are matched using a regular
-# expression.  Column headings that don't match a heading specified
-# above are searched against these REs.  In this case, digits within
-# brackets designate a wavelength.  The actual wavelength will be
-# pushed onto the end of each of these arrays at run-time.  'ONE2MANY'
-# tells the database writer that this is an entry in a table that has
-# a many to one relationship to the feature.  The array element
-# immediately following that is the name of the discriminator -
-# i.e. the column name that will discriminate between the many entries
-# for this feature.  The element following the discriminator name is
-# expected to be the value of the discriminator for that instance.  It
-# will be specified at run-time.  Note on these REs: The brackets must
-# be escaped cause we're matching an actual bracket.  There can be one
-# or more digits between the brackets.  There are parentheses around
-# these because we are going to capture this number, and use it as the
-# discriminator value.  Which we will push on to the end of these
-# arays.  At run-time.
-
-
-    
-
 # ProcessOutput(AnalysisID, Filename, ColumnKey, ColumnKeyRE)
+# -----------------------------------------------------------
+# Processes the tab-delimited output of an external analysis program.
+# The first line of output should be column headings.  One feature
+# will be added to the dataset for each subsequent line of output.
+# Allowed columns are specified by the ColumnKey and ColumnKeyRE
+# hashes.
+#
+# The ColumnKey hash defines columns whose headings are expected to
+# have an exact match.  The column heading is the hash key.  The
+# values are table column definitions which will be used by the
+# OMEpl::WriteFeatures method.
+#
+# The ColumnKeyRE hash defines columns whose headings should match the
+# given regular expression.  Column headings that don't match a
+# heading specified above are searched against these REs.  The first
+# parenthesis group in the RE will be pushed onto the end of each of
+# these arrays at runtime to create an appropriate table column
+# definition.  This allows the regular expression to determine the
+# discriminator value of a one-to-many feature relationship.
 
 sub ProcessOutput
 {
