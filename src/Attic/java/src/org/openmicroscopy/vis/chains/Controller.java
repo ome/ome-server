@@ -330,7 +330,6 @@ public class Controller  implements LoginResponder {
 		if (initThreads == 0) { 
 			if (moduleFrame != null)
 				moduleFrame.completeInitialization();
-			System.err.println("dataset browser layed out.");
 			controlPanel.completeInitialization(connection.getUserName());
 			closeStatusWindow();
 		}

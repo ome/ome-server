@@ -81,7 +81,6 @@ public class CDataset extends RemoteDataset implements Comparable{
 	
 	
 	public  void loadImages(Connection connection) {
-		//System.err.println("Dataset "+getID()+", loading images");
 		if (images.size() > 0)  {
 			//System.err.println("images already loaded...");
 			return;
