@@ -27,26 +27,30 @@
 	
 *****/
 
-svgns = "http://www.w3.org/2000/svg";
+/*global svgDocument */
 
-function createElementSVG( name, attr_list ) {
-	var new_element = svgDocument.createElementNS(svgns, name);
-	for( attr in attr_list ) {
+var Util = new Object();
+
+Util.svgns = "http://www.w3.org/2000/svg";
+
+Util.createElementSVG = function( name, attr_list ) {
+	var new_element = svgDocument.createElementNS(Util.svgns, name);
+	for( var attr in attr_list ) {
 		new_element.setAttribute( attr, attr_list[attr] );
 	}
 	return new_element;
-}
+};
 
-function createTextSVG( text_data, attr_list ) {
-	var text_element = createElementSVG( 'text', attr_list );
+Util.createTextSVG = function( text_data, attr_list ) {
+	var text_element = Util.createElementSVG( 'text', attr_list );
 	text_element.appendChild( svgDocument.createTextNode( text_data ) );
 	return text_element;
-}
+};
 
-function isArray(Array_IN) {
-	return(typeof(Array_IN) == 'Object' && Array_IN.constructor == Array)
-}
+Util.isArray = function(Array_IN) {
+	return(typeof(Array_IN) == 'Object' && Array_IN.constructor == Array);
+};
 
-function isFunction(Function_IN) {
+Util.isFunction = function(Function_IN) {
 	return(typeof(Function_IN) == 'function' );
-}
+};
