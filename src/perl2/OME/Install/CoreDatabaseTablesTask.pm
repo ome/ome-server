@@ -146,6 +146,7 @@ our @core_classes =
    'OME::ModuleExecution',
    'OME::ModuleExecution::ActualInput',
    'OME::ModuleExecution::SemanticTypeOutput',
+   'OME::ModuleExecution::ParentalOutput',
    'OME::ModuleExecution::VirtualMEXMap',
    'OME::AnalysisChainExecution',
    'OME::AnalysisChainExecution::NodeExecution',
