@@ -335,8 +335,8 @@ addPrototype("OME::Session","commitTransaction",[],[]);
 addPrototype("OME::Session","rollbackTransaction",[],[]);
 addPrototype("OME::Session","User",[],['OME::SemanticType::Superclass']);
 addPrototype("OME::Session","Factory",[],['OME::Factory']);
-addPrototype("OME::Session","project",['OME::Project'],['OME::Project']);
-addPrototype("OME::Session","dataset",['OME::Dataset'],['OME::Dataset']);
+addPrototype("OME::Session","project",['OME::Project'],[]);
+addPrototype("OME::Session","dataset",['OME::Dataset'],[]);
 
 addPrototype("OME::Factory","newObject",['$','%'],['OME::DBObject']);
 addPrototype("OME::Factory","maybeNewObject",['$','%'],['OME::DBObject']);
