@@ -420,7 +420,7 @@ sub formChange{
 		$components = "datasets";
 		$componentCount = scalar $object->datasets();
 	}
-	$text .=buttonInput("text","name",$name,32);
+	$text .=buttonInput("text","name",$name);
 	$textarea .=buttonArea("description",3,32,$description);
 
 	my %a=(
