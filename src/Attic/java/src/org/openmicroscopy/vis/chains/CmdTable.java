@@ -59,27 +59,33 @@ public class CmdTable {
 	protected Controller controller;
 	
 	public CmdTable(Controller c) {
-			this.controller = c;
+		this.controller = c;
 			
-			actionMap = new Hashtable();
+		actionMap = new Hashtable();
 			
-			actionMap.put("login",new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-						controller.doLogin();
-				}
-			}); 
+		actionMap.put("login",new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.doLogin();
+			}
+		}); 
 			
 		actionMap.put("logout",new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-								controller.doLogout();
-						}
-					});
+			public void actionPerformed(ActionEvent e) {
+				controller.doLogout();
+			}
+		});
 					
 		actionMap.put("quit",new ActionListener() {
-						public void actionPerformed(ActionEvent e) {
-								controller.quit();
-						}
-					});
+			public void actionPerformed(ActionEvent e) {
+				controller.quit();
+			}
+		});
+					
+		actionMap.put("new chain",new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				controller.newChain();
+			}
+		}); 
 	}	
 	
 	public ActionListener lookupActionListener(String key) {
