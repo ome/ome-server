@@ -136,7 +136,7 @@ sub getTable {
 					splice (@dataset_relations, $c, 1);
 				}
 			}
-			$relations = $self->__getRelationTD(@dataset_relations);
+			$relations = $self->__getRelationTD($image, @dataset_relations);
 		}
 
 		$table_data .= $q->Tr({-class => 'ome_td'},

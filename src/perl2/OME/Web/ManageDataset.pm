@@ -60,10 +60,16 @@ sub getPageBody {
 
 	my $body .= $cgi->p({-class => 'ome_title'}, 'My Datasets');
 
+	# Dataset objects that were selected
 	my @selected = $cgi->param('selected');
+
+	# The action that was "clicked"
+	my $action = $cgi->param('action') || '';
+
+	# The project relations that were selected
 	my @rel_selected = $cgi->param('rel_selected');
 
-	if ($cgi->param('Switch To')){
+	if ($action eq 'Switch To'){
 		# Warning
 		if (scalar(@selected) > 1) {
 			$body .= $cgi->p({class => 'ome_error'}, 
@@ -78,7 +84,7 @@ sub getPageBody {
 		
 		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}elsif ($cgi->param('Remove')){
+	} elsif ($action eq 'Remove'){
 		# Action
 		my $to_remove = {};
 
@@ -92,15 +98,6 @@ sub getPageBody {
 		# Data
 		$body .= $cgi->p({-class => 'ome_info'}, "Removed relation(s) @rel_selected [DatasetID, ProjectID].");
 
-		# Refresh top frame
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}elsif ($cgi->param('Delete')){
-		# Action
-		foreach (@selected) { $datasetManager->delete($_) }
-		
-		# Data
-		$body .= $cgi->p({-class => 'ome_info'}, "Deleted dataset(s) @selected.");
-		
 		# Refresh top frame
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 	}
@@ -123,7 +120,7 @@ sub displayDatasets {
 	
 	# Gen our "Datasets in Project" table
 	my $html = $t_generator->getTable( {
-			options_row => ["Switch To", "Remove", "Delete"],
+			options_row => ["Switch To", "Remove"],
 			relations => 1,
 			select_column => 1,
 		},

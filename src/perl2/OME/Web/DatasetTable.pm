@@ -122,7 +122,7 @@ sub getTable {
 		# Get our relationship checkboxes
 		if ($options->{relations}) {
 			my @project_relations = $dataset->projects();
-			$relations = $self->__getRelationTD(@project_relations);
+			$relations = $self->__getRelationTD($dataset, @project_relations);
 		}
 		
 		unless ($name eq 'Dummy import dataset') {  # XXX Man I hate this...

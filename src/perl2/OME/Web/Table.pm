@@ -164,16 +164,16 @@ sub __filterObjects {
 }
 
 sub __getRelationTD {
-	my ($self, @objects) = @_;
+	my ($self, $object, @relations) = @_;
 	my $q = $self->CGI();
 	my $relation_boxes;
 
 	# Gen relationship checkboxes
-	foreach my $object (@objects) {
+	foreach my $relation (@relations) {
 		$relation_boxes .= $q->checkbox(
 			-name => 'rel_selected',
-			-value => $object->id . "," . $object->id(),
-			-label => $object->name()
+			-value => $object->id . "," . $relation->id(),
+			-label => $relation->name()
 		);
 		$relation_boxes .= $q->br();
 	}
