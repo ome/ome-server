@@ -143,6 +143,11 @@ sub startImport {
     my $original_files = OME::Tasks::ModuleExecutionManager->
       createMEX($original_files_module,'G',undef);
 
+    # Create a universal execution for this module, so that the analysis
+    # engine never tries to execute it.
+    OME::Tasks::ModuleExecutionManager->
+        createNEX($original_files,undef,undef);
+
     $self = {
              original_files => $original_files,
              global_import  => undef,
@@ -168,6 +173,8 @@ caller to commit any database transactions.
 sub finishImport {
     my $class = shift;
     die "No active import!" unless defined $self;
+
+    #
 
     $self = undef;
 }
@@ -219,6 +226,11 @@ sub getGlobalImportMEX {
         OME::Tasks::ModuleExecutionManager->
             addActualInput($self->{original_files},$global_import,'Files');
 
+        # Create a universal execution for this module, so that the
+        # analysis engine never tries to execute it.
+        OME::Tasks::ModuleExecutionManager->
+            createNEX($global_import,undef,undef);
+
         # And save it
         $self->{global_import} = $global_import;
     }
@@ -247,11 +259,12 @@ sub getDatasetImportMEX {
     die "No active import!" unless defined $self;
 
     my ($dataset) = @_;
+    my $dataset_id = ref($dataset)? $dataset->id(): $dataset;
 
     # Don't create a dataset import MEX until it's needed
     # NOTE: These are keyed in the instance hash by dataset ID.
 
-    unless (defined $self->{dataset_import}->{$dataset->id()}) {
+    unless (defined $self->{dataset_import}->{$dataset_id}) {
         # Find the Dataset Import module
         my $config = OME::Session->instance()->Configuration();
         my $dataset_import_module = $config->dataset_import_module();
@@ -264,11 +277,16 @@ sub getDatasetImportMEX {
         OME::Tasks::ModuleExecutionManager->
             addActualInput($self->{original_files},$dataset_import,'Files');
 
+        # Create a universal execution for this module, so that the
+        # analysis engine never tries to execute it.
+        OME::Tasks::ModuleExecutionManager->
+            createNEX($dataset_import,undef,undef);
+
         # And save it
-        $self->{dataset_import}->{$dataset->id()} = $dataset_import;
+        $self->{dataset_import}->{$dataset_id} = $dataset_import;
     }
 
-    return $self->{dataset_import}->{$dataset->id()};
+    return $self->{dataset_import}->{$dataset_id};
 }
 
 =head2 getImageImportMEX
@@ -292,28 +310,34 @@ sub getImageImportMEX {
     die "No active import!" unless defined $self;
 
     my ($image) = @_;
+    my $image_id = ref($image)? $image->id(): $image;
 
     # Don't create a image import MEX until it's needed
     # NOTE: These are keyed in the instance hash by image ID.
 
-    unless (defined $self->{image_import}->{$image->id()}) {
+    unless (defined $self->{image_import}->{$image_id}) {
         # Find the Image Import module
         my $config = OME::Session->instance()->Configuration();
         my $image_import_module = $config->image_import_module();
 
         # Create the MEX
         my $image_import = OME::Tasks::ModuleExecutionManager->
-          createMEX($image_import_module,'D',$image);
+          createMEX($image_import_module,'I',$image);
 
         # Link it to the Original Files MEX
         OME::Tasks::ModuleExecutionManager->
             addActualInput($self->{original_files},$image_import,'Files');
 
+        # Create a universal execution for this module, so that the
+        # analysis engine never tries to execute it.
+        OME::Tasks::ModuleExecutionManager->
+            createNEX($image_import,undef,undef);
+
         # And save it
-        $self->{image_import}->{$image->id()} = $image_import;
+        $self->{image_import}->{$image_id} = $image_import;
     }
 
-    return $self->{image_import}->{$image->id()};
+    return $self->{image_import}->{$image_id};
 }
 
 
