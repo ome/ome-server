@@ -57,7 +57,7 @@ use UNIVERSAL::require;
 use OME::Database::Delegate;
 
 use base qw(Class::Data::Inheritable);
-use fields qw(__session __id __fields __changeFields);
+use fields qw(__id __fields __changeFields);
 
 # The columns known about each class.
 # __columns()->{$alias} = [$table,$column,$optional_fkey_class,$sql_options]
@@ -327,7 +327,7 @@ sub addColumn {
                     return $datum if ref($datum);
                     # This should load the object from the cache if
                     # it's already been retrieved from the DB.
-                    return $self->{__session}->Factory()->
+                    return $self->Session()->Factory()->
                       loadObject($foreign_key_class,$datum);
                 }
             };
@@ -422,7 +422,7 @@ sub hasMany {
         # Create an accessor/mutator
         my $accessor = sub {
             my $self = shift;
-            my $factory = $self->{__session}->Factory();
+            my $factory = $self->Session()->Factory();
             return $factory->findObjects($foreign_key_class,
                                          $foreign_key_alias => $self->{__id});
         };
@@ -846,7 +846,7 @@ sub __createNewInstance {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($session,$dbh,$data_hash) = @_;
+    my ($dbh,$data_hash) = @_;
     my ($sqls,$key_val) = $class->__makeInsertSQLs($dbh,$data_hash);
 
     # FIXME: How do we want to handle atomicity?  Currently, if any of
@@ -883,7 +883,6 @@ sub __createNewInstance {
     }
 
     my $self = {
-                __session => $session,,
                 __fields  => \%fields,
                 __id      => $key_val,
                 __changedFields => {},
@@ -934,7 +933,7 @@ sub __newInstance {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($session,$sth,$id_available,$columns_wanted) = @_;
+    my ($sth,$id_available,$columns_wanted) = @_;
     my $sth_vals;
 
     # We need to advance the statement cursor even if the object is
@@ -959,7 +958,6 @@ sub __newInstance {
     my %fields;
 
     my $self = {
-                __session => $session,
                 __fields  => \%fields,
                 __id      => $id,
                 __changedFields => {},
@@ -977,7 +975,7 @@ sub __newInstance {
 sub refresh {
     my ($self) = @_;
     my $id = $self->{__id};
-    my $factory = $self->{__session}->Factory();
+    my $factory = $self->Session()->Factory();
 
     my $columns_wanted = [keys %{$self->__columns()}];
 
@@ -1003,7 +1001,7 @@ sub __newByID {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my ($session,$dbh,$id,$columns_wanted) = @_;
+    my ($dbh,$id,$columns_wanted) = @_;
 
     # Try to load the object from the cache first.
     my $cached_object = $class->__getCachedObject($id);
@@ -1025,19 +1023,21 @@ sub __newByID {
     };
     confess $@ if $@;
 
-    return $class->__newInstance($session,$sth,$id_available,$columns_wanted);
+    return $class->__newInstance($sth,$id_available,$columns_wanted);
 }
 
-sub Session { return shift->{__session}; }
+sub Session { return OME::Session->instance() }
 sub id { return shift->{__id}; }
 sub ID { return shift->{__id}; }
 
 sub storeObject {
     my $self = shift;
+	carp "Storing object.";
 
     if (%{$self->{__changedFields}}) {
-        my $session = $self->{__session};
+        my $session = $self->Session();
         my $factory = $session->Factory();
+		$factory or confess ("Failure to retrieve factory.");
         my $dbh = $factory->obtainDBH();
         eval {
             $self->__writeToDatabase($dbh);
@@ -1054,7 +1054,7 @@ sub writeObject {
     carp "**** writeObject is deprecated!";
     my $self = shift;
     $self->storeObject();
-    $self->{__session}->commitTransaction();
+    $self->Session()->commitTransaction();
 }
 
 
