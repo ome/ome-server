@@ -278,7 +278,8 @@ END_HTML
 	}
 	
 	my $tmpl_dir = $self->Session()->Configuration()->template_dir();
-	my $tmpl = HTML::Template->new( filename => 'Search.tmpl', path => $tmpl_dir );
+	my $tmpl = HTML::Template->new( filename => 'Search.tmpl', path => $tmpl_dir,
+                                    case_sensitive => 1 );
 	$tmpl->param( %tmpl_data );
 
 	$html .= 
@@ -403,7 +404,8 @@ sub getSearchCriteria {
 		$self->_loadTypeAndGetInfo( $type );
 
 	my $tmpl_path = $self->_findTemplate( $type );
-	my $tmpl = HTML::Template->new( filename => $tmpl_path );
+	my $tmpl = HTML::Template->new( filename => $tmpl_path,
+	                                case_sensitive => 1 );
 
 	# accessor stuff. 
 	if( $q->param( 'accessor_id' ) && $q->param( 'accessor_id' ) ne '' ) {
@@ -443,7 +445,8 @@ sub getSearchCriteria {
 	
 	# Render search fields
 	my $search_field_tmpl = HTML::Template->new( 
-		filename => $self->Session()->Configuration()->template_dir().'/search_field.tmpl'
+		filename => $self->Session()->Configuration()->template_dir().'/search_field.tmpl',
+		case_sensitive => 1
 	);
 	foreach my $field( @search_fields ) {
 		# a button for ascending sort
