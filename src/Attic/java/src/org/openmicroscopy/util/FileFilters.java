@@ -1,5 +1,5 @@
 /*
- * org.openmicroscopy.helper.ImageServerHelper
+ * org.openmicroscopy.util.FileFilters
  *
  *------------------------------------------------------------------------------
  *
