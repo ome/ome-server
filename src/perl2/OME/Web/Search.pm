@@ -83,6 +83,7 @@ sub new {
 		'OME::Module', 
 		'OME::AnalysisChain', 
 		'OME::AnalysisChainExecution',
+		'@CategoryGroup'
 	];
 
 	# _display_modes lists formats the results can be displayed in. 
