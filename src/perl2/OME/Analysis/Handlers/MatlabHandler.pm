@@ -46,7 +46,10 @@ interfacing with Matlab routines
 
 =head1 DESCRIPTION
 
-Boo.
+This is a generalized wrapper that allows Matlab functions to be executed from
+the OME analysis system.
+This package implements the execution instructions specified by
+L<http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd>
 
 =cut
 
@@ -64,73 +67,7 @@ use OME::Analysis::Handler;
 use base qw(OME::Analysis::Handlers::DefaultLoopHandler);
 use fields qw(__engine __engineOpen);
 
-sub getCurrentImage { return shift->{_current_image}; }
-sub getCurrentFeature { return shift->{_current_feature}; }
-
-# These are high level functions to navigate the xml doc.
-# Hopefully they will serve to isolate xml syntax
-sub _functionInputs { return shift->{ execution_instructions }->findnodes( "MLI:FunctionInputs/MLI:Input/*" ); }
-sub _functionOutputs { return shift->{ execution_instructions }->findnodes( "MLI:FunctionOutputs/MLI:Output/*" ); }
-sub _getTemplate { 
-	my ( $self, $template_id ) = @_;
-	my @matches = $self->{ execution_instructions }->findnodes( 'MLI:Templates/*[@ID="'.$template_id.'"]' );
-	die "Multiple templates with template_id '$template_id' found" if scalar( @matches ) > 1;
-	die "No template with template_id '$template_id' found" if scalar( @matches ) eq 0;
-	return $matches[0];
-}
-
-# my ($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
-sub _getTemplateData {
-	my ( $self, $template_id ) = @_;
-	my $template = $self->_getTemplate( $template_id )
-		or return (undef, undef);
-
-	my $factory	= $self->Factory();
-	my $ST = $factory->findObject( "OME::SemanticType", name => $template->tagName() )
-		or die "Template is not a known semantic type. '".$template->toString()."'";
-	my $data_hash;
-	foreach my $SE ( $ST->semantic_elements() ) {
-		my $SE_name = $SE->name();
-		# Find the value of the semantic element $attrCol.
-		# The first place to look is in an attribute
-		$data_hash->{$SE_name} = $template->getAttribute($SE_name);
-		# The second place to look is in a subNode
-		if (not defined $data_hash->{$SE_name} and $template->getElementsByLocalName( $SE_name )->size() > 0) {
-			$data_hash->{$SE_name} = $template->getElementsByLocalName( $SE_name )->[0]->firstChild()->data()
-		}
-		my $sql_type = $SE->data_column()->sql_type();
-		if ($sql_type eq 'reference') {
-# FIXME: deal with references
-		} elsif ($sql_type eq 'boolean') {
-			if (defined $data_hash->{$SE_name}) {
-				$data_hash->{$SE_name} = $data_hash->{$SE_name} eq 'true' ? '1' : '0';
-			} else {
-				$data_hash->{$SE_name} = undef;
-			}
-		} elsif ($sql_type eq 'timestamp') {
-			$data_hash->{$SE_name} = XML2ODBC_timestamp ($data_hash->{$SE_name});
-		}
-	}
-	return( $template->tagName(), $data_hash );
-}
-
-
-# For testing purposes -- make an instance that does not call it's
-# superclass constructor.  Beware: this instance will not be a valid
-# analysis module, though it will allow you to call all of the Matlab-
-# related helper functions and test them.
-
-sub newtest {
-	my ($proto) = @_;
-	my $class = ref($proto) || $proto;
-
-	my $self = {};
-	$self->{__engine} = undef;
-	$self->{__engineOpen} = 0;
-
-	bless $self,$class;
-	return $self;
-}
+my $supported_NS = 'http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd';
 
 sub new {
 	my $proto = shift;
@@ -140,24 +77,23 @@ sub new {
 
 	$self->{__engine} = undef;
 	$self->{__engineOpen} = 0;
+	$self->{__inputVariableNames} = {};
+	$self->{__outputVariableNames} = {};
 	
-	# FIXME: describe interfaces to these functions once things have stabalized
-
 	# List of functions in this package make matlab global variables from input execution instructions
-	# Keyed by Tag name of elements under 'FunctionInputs'
+	# Keyed by Tag name of elements under <Input>
 	$self->{ _translate_to_matlab } = {
-		PixelsInput => 'Pixels_to_MatlabArray',
+		PixelsArray => 'Pixels_to_MatlabArray',
 		PixelsSlice => 'PixelsSlice_to_MatlabArray',
-#		Scalar => 'Attr_to_MatlabScalar',
-#		Struct => 'Attr_to_MatlabStruct'
+		Scalar      => 'Attr_to_MatlabScalar',
 	};
 	
 	# List of package functions to make ome attributes from output execution instructions
-	# Keyed by Tag name of elements under 'FunctionOutputs'
+	# Keyed by Tag name of elements under <Output>
 	$self->{ _translate_from_matlab } = {
-		PixelsOutput => 'MatlabArray_to_Pixels',
-		Scalar       => 'MatlabScalar_to_Attr',
-		Struct       => 'MatlabStruct_to_Attr'
+		PixelsArray => 'MatlabArray_to_Pixels',
+		Scalar      => 'MatlabScalar_to_Attr',
+		Struct      => 'MatlabStruct_to_Attr'
 	};
 
 	# Mapping from Pixel Types to matlab class bindings
@@ -191,7 +127,7 @@ sub startAnalysis {
 	my $tree   = $parser->parse_string( $self->getModule()->execution_instructions() );
 	my $root   = $tree->getDocumentElement();
 	# This Allows xpath queries on the MLI NS. i.e. $root->findnodes( "MLI:Inputs/*" )
-	$root->setAttribute( "xmlns:MLI", "http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd" );
+	$root->setAttribute( "xmlns:MLI", $supported_NS );
 	
 	$self->{ execution_instructions } = $root;
 }
@@ -208,68 +144,6 @@ sub startImage {
 sub finishAnalysis {
 	my ($self) = @_;
 	$self->__closeEngine();
-}
-
-sub __openEngine {
-	my ($self) = @_;
-
-	if (!$self->{__engineOpen}) {
-		my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
-		die "Cannot open a connection to Matlab!" unless $engine;
-		$self->{__engine} = $engine;
-		$self->{__engineOpen} = 1;
-		my $session = OME::Session->instance();
-		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
-		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
-		print STDERR "matlab src dir is $matlab_src_dir\n";
-		$engine->eval("addpath(genpath('$matlab_src_dir'));");
-	}
-}
-
-sub __closeEngine {
-	my ($self) = @_;
-
-	if ($self->{__engineOpen}) {
-		$self->{__engine}->close();
-		$self->{__engine} = undef;
-		$self->{__engineOpen} = 0;
-	}
-}
-
-sub placeInputs {
-	my ($self) = @_;
-
-	my @input_list = $self->_functionInputs();
-	foreach my $input( @input_list ) {
-		die "In Execution instructions of module ".$self->getModule()->name().", can't handle input: ".$input->tagName()."\n'".$input->toString()."'"
-			unless( exists $self->{ _translate_to_matlab }->{ $input->tagName() } );
-		my $translation_function = $self->{ _translate_to_matlab }->{ $input->tagName() };
-		$self->$translation_function( $input );
-	}
-}
-
-sub getOutputs {
-	my ($self) = @_;
-
-	my @output_list = $self->_functionOutputs();
-	foreach my $output( @output_list ) {
-		die "In Execution instructions of module ".$self->getModule()->name().", can't handle output:\n".$output->toString()
-			unless( exists $self->{ _translate_from_matlab }->{ $output->tagName() } );
-		my $translation_function = $self->{ _translate_from_matlab }->{ $output->tagName() };
-		$self->$translation_function( $output );
-	}
-
-}
-
-# return matlab variable name for an input
-sub _inputVarName {
-	my ($self, $input_instruction ) = @_;
-	return 'ome_input_'.$input_instruction->getAttribute( 'ID' );
-}
-# return matlab variable name for an output
-sub _outputVarName {
-	my ($self, $output_instruction ) = @_;
-	return 'ome_output_'.$output_instruction->getAttribute( 'ID' );
 }
 
 sub __execute {
@@ -298,83 +172,46 @@ sub __execute {
 	logdbg "debug", "***** Output from Matlab:\n $outBuffer\n";
 }
 
-# There are constraints on execution granularity that are not specified in the MLI schema.
-# This function applies those constraints.
-sub __checkExecutionGranularity {
-	my $self = shift;
-	my $factory = $self->Factory();
-	
-	my $granularity = $self->{ execution_instructions }->getAttribute( "ExecutionGranularity" );
-	my %granularity_name_list = (
-		F => 'Feature',
-		I => 'Image',
-		D => 'Dataset',
-		G => 'Global'
-	);
-	my $granularity_name = $granularity_name_list{ $granularity };
-	
-	die "Cannot Execute with $granularity_name Granularity without either $granularity_name inputs or outputs"
-		unless( 
-			$factory->countObjects('OME::Module::FormalInput', {
-				module => $self->getModule(),
-				'semantic_type.granularity' => $granularity,
-			}) ||
-			$factory->countObjects('OME::Module::FormalOutput', {
-				module => $self->getModule(),
-				'semantic_type.granularity' => $granularity,
-			})
-		);
-	# FIXME: It's illegal to have execution granularity finer than the coursest output granularity. Check for this.
-	
-	return $granularity;
+=head1 Input processing
+
+This group of functions collectively converts OME attributes to Matlab inputs.
+They operate on an XML input instruction. Their interface is:
+	$self->$translation_function( $XML_input_instruction );
+They are registered in new() under the hash: 
+	$self->{ _translate_from_matlab }
+They are responsible for collecting their inputs from the DB and translating 
+them to matlab global variables whose name are given by:
+	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+placeInputs() coordinates all this output processing activity.
+
+=head2 placeInputs
+
+Grabs xml instructions for function inputs, then uses the registry of
+Input processing functions to divy up the work of getting those inputs into
+Matlab.
+
+=cut
+
+sub placeInputs {
+	my ($self) = @_;
+
+	my @input_list = $self->_functionInputs();
+	foreach my $input( @input_list ) {
+		die "In Execution instructions of module ".$self->getModule()->name().", can't handle input: ".$input->tagName()."\n'".$input->toString()."'"
+			unless( exists $self->{ _translate_to_matlab }->{ $input->tagName() } );
+		my $translation_function = $self->{ _translate_to_matlab }->{ $input->tagName() };
+		$self->$translation_function( $input );
+	}
 }
 
-# FIXME: Test this function
-# Translate a matlab 5d array into a Pixels attribute & image server object.
-# the guts of this were written by Tomasz
-sub MatlabArray_to_Pixels {
-	my ( $self, $xmlInstr ) = @_;
-	my $session = OME::Session->instance();
+=head2 Pixels_to_MatlabArray
 
-	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $filename = $session->getTemporaryFilename("pixels","raw");
-	
-	# figure out the array's dimensions
-	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name)");
-	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
-		($self->{__engine}->getVariable('sizeX')->getScalar(),
-		 $self->{__engine}->getVariable('sizeY')->getScalar(),
-		 $self->{__engine}->getVariable('sizeZ')->getScalar(),
-		 $self->{__engine}->getVariable('sizeC')->getScalar(),
-		 $self->{__engine}->getVariable('sizeT')->getScalar());
-	
-	# figure out the pixel depth based on array data-type	 
-	$self->{__engine}->eval("str = class($matlab_var_name)");
-	my $type = $self->{__engine}->getVariable('str')->getScalar();
-	die "Pixels of Matlab class $type are not supported at this time"
-		unless exists $self->{ _matlab_class_to_pixel_type }->{ $type };
-	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{ $type };
-	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name))");
-	my ($pixels_data, $pixels_attr) = OME::Tasks::PixelsManager->createPixels(
-		$self->getCurrentImage(), 
-		$self->getModuleExecution(),{
-			SizeX		 => $sizeX,
-			SizeY		 => $sizeY,
-			SizeZ		 => $sizeZ,
-			SizeC		 => $sizeC,
-			SizeT		 => $sizeT,
-			PixelType	 => $pixelType
-		} );
+Translate a Pixels input into a matlab 5d array.
+Uses <PixelsArray>
+The guts of this were written by Tomasz
 
-	my $pixelsWritten = $pixels_data->setPixelsFile($filename,1);
-	my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
-	OME::Tasks::PixelsManager->saveThumb($pixels_attr);
-	
-	$session->finishTemporaryFile($filename);
-}
+=cut
 
-# Translate a Pixels input into a matlab 5d array.
-# the guts of this were written by Tomasz
 sub Pixels_to_MatlabArray {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
@@ -427,8 +264,14 @@ sub Pixels_to_MatlabArray {
 	$session->finishTemporaryFile($filename);
 }
 
-# Translate a PixelsSlice Input into a Matlab 5D array.
-# the guts of this were written by Tomasz
+=head2 PixelsSlice_to_MatlabArray
+
+Translate a PixelsSlice input into a matlab 5d array.
+Uses <PixelsSlice>
+The guts of this were written by Tomasz
+
+=cut
+
 sub PixelsSlice_to_MatlabArray {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
@@ -444,17 +287,8 @@ sub PixelsSlice_to_MatlabArray {
 	}
 	my $pixels_slice = $pixels_slice_attr_list[0];
 	
-	# is this a bona fide PixelsSlice or a PixelsSlice sub-class such as
-	# PixelsPlaneSlice
-	my $element = OME::Session->instance()->Factory()->
-	  findObject('OME::SemanticType::Element',
-				 {
-				  semantic_type => $pixels_slice->semantic_type(),
-				  name          => 'Parent',
-				 });
- 	
-	if (defined $element) {
-		# convert the sub-class into the super-class
+	# Go up the line of decent until a PixelsSlice is reached
+	while( $pixels_slice->semantic_type()->name() ne 'PixelsSlice' ) {
 		$pixels_slice = $pixels_slice->Parent();
 	}
         
@@ -507,20 +341,131 @@ sub PixelsSlice_to_MatlabArray {
 	$session->finishTemporaryFile($filename);
 }
 
+=head2 Attr_to_MatlabScalar
+
+Translate an input attribute into a matlab scalar
+Uses <Scalar>
+
+=cut
+
+sub Attr_to_MatlabScalar {
+	my ( $self, $xmlInstr ) = @_;
+
+	# get input value
+ 	my $input_location = $xmlInstr->getAttribute( 'InputLocation' );
+ 	my ( $formal_input_name, $SEforScalar ) = split( /\./, $input_location )
+ 		or die "input_location '$input_location' could not be parsed.";
+	my $input_attr = $self->getCurrentInputAttributes( $formal_input_name );
+	die scalar( @$input_attr )." attributes found for input '$formal_input_name'. ".
+		'Cannot use scalar for input that has count other than 1. Error when processing \''.$xmlInstr->toString()."'"
+		unless scalar( @$input_attr ) eq 1;
+	my $value = $input_attr->[0]->$SEforScalar();
+
+	# Place value into matlab
+	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+	my $array = OME::Matlab::Array->newDoubleScalar($value);
+ 	$array->makePersistent();
+	$self->{__engine}->eval("global $matlab_var_name");
+	$self->{__engine}->putVariable($matlab_var_name,$array);
+}
+
+=head1 Output processing
+
+This group of functions collectively converts Matlab outputs into OME attributes.
+They operate on an XML output instruction. Their interface is:
+	$self->$translation_function( $XML_output_instruction );
+They are registered in new() under the hash: 
+	$self->{ _translate_from_matlab }
+They extract the global matlab variable whose name is given by:
+	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
+and store the results into the DB.
+getOutputs() coordinates all this output processing activity.
+
+=head2 getOutputs
+
+Grabs xml instructions for function outputs, then uses the registry of
+Output processing functions to divy up the work of getting those outputs from
+Matlab into OME.
+
+=cut
+
+sub getOutputs {
+	my ($self) = @_;
+
+	my @output_list = $self->_functionOutputs();
+	foreach my $output( @output_list ) {
+		die "In Execution instructions of module ".$self->getModule()->name().", can't handle output:\n".$output->toString()
+			unless( exists $self->{ _translate_from_matlab }->{ $output->tagName() } );
+		my $translation_function = $self->{ _translate_from_matlab }->{ $output->tagName() };
+		$self->$translation_function( $output );
+	}
+
+}
+
+=head2 MatlabArray_to_Pixels
+
+Translate a matlab 5d array into a Pixels attribute & image server object.
+Uses <PixelsArray>
+The guts of this were written by Tomasz
+
+=cut
+
+sub MatlabArray_to_Pixels {
+	my ( $self, $xmlInstr ) = @_;
+	my $session = OME::Session->instance();
+
+	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
+	my $filename = $session->getTemporaryFilename("pixels","raw");
+	
+	# figure out the array's dimensions
+	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name)");
+	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
+		($self->{__engine}->getVariable('sizeX')->getScalar(),
+		 $self->{__engine}->getVariable('sizeY')->getScalar(),
+		 $self->{__engine}->getVariable('sizeZ')->getScalar(),
+		 $self->{__engine}->getVariable('sizeC')->getScalar(),
+		 $self->{__engine}->getVariable('sizeT')->getScalar());
+	
+	# figure out the pixel depth based on array data-type	 
+	$self->{__engine}->eval("str = class($matlab_var_name)");
+	my $type = $self->{__engine}->getVariable('str')->getScalar();
+	die "Pixels of Matlab class $type are not supported at this time"
+		unless exists $self->{ _matlab_class_to_pixel_type }->{ $type };
+	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{ $type };
+	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name))");
+	my ($pixels_data, $pixels_attr) = OME::Tasks::PixelsManager->createPixels(
+		$self->getCurrentImage(), 
+		$self->getModuleExecution(),{
+			SizeX		 => $sizeX,
+			SizeY		 => $sizeY,
+			SizeZ		 => $sizeZ,
+			SizeC		 => $sizeC,
+			SizeT		 => $sizeT,
+			PixelType	 => $pixelType
+		} );
+
+	my $pixelsWritten = $pixels_data->setPixelsFile($filename,1);
+	my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
+	OME::Tasks::PixelsManager->saveThumb($pixels_attr);
+	
+	$session->finishTemporaryFile($filename);
+}
+
+=head2 MatlabScalar_to_Attr
+
+Operates on scalar matlab outputs. Uses <Scalar> in conjuction with <Templates>
+
+=cut
+
 sub MatlabScalar_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 
 	# gather formal output & SE
  	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
- 	my ($formal_output, $SEforScalar);
- 	if( $output_location =~ m/^(\w+)\.(\w+)$/ ) {
- 		$SEforScalar = $2;
- 		my $formal_output_name = $1;
- 		$formal_output = $self->getFormalOutput( $1 )
- 			or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
- 	} else {
- 		die "output_location '$output_location' could not be parsed.";
- 	}
+ 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
+ 		or die "output_location '$output_location' could not be parsed.";
+ 	my $formal_output = $self->getFormalOutput( $formal_output_name )
+		or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 
 	# Retrieve value from matlab
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
@@ -538,14 +483,38 @@ sub MatlabScalar_to_Attr {
 		die "Template Semantic Type ($ST_name) differs from ST registered for formal output ($formal_output). Error processing Output Instruction '".$xmlInstr->toString()."'"
 			if $formal_output->semantic_type()->name() ne $ST_name;
 	}
-	$data_hash->{ $SEforScalar } = $value;
+	# Hackaround for XS variable hidden uniqueness.
+	# Similar to IGG's Black Magic encountered in SemanticTypeImport
+	# with sql_type. Namely, DB Driver problems with passing a scalar
+	# that ends up being an SQL reserved keyword. In both cases, the 
+	# problematic scalar started life in a C library. This black magic 
+	# is necessary for NaN data coming from matlab handler, but not for
+	# NaN  data coming from perl code.
+	# $value = 'NAN' if uc( $value ) eq 'NAN'; was solving this problem
+	# This leads me to conclude that the underlying data objects differ and 
+	# this difference is hidden in the high level view that perl provides. 
+	# A generalized solution is to place the value in quotes. This forces perl
+	# to cast it into a string and reinterpret that as a scalar. This strips 
+	# any and all XS uniqueness from variables.
+	#   -Josiah
+	$data_hash->{ $SEforScalar } = "$value";
+
+	logdbg "debug", "MatlabScalar_to_Attr: Trying to make a new attribute for formal output ".
+		$formal_output->name()." using data:\n\t".join( ', ', map( $_.' => '.$data_hash->{$_}, keys %$data_hash ) );
 
 	# Actually make the output
 	$self->newAttributes( $formal_output, $data_hash );	
 }
 
-# FIXME: add <Struct> to the schema
-# Outputs that are Structures: Map directly to OME attrs
+=head2 MatlabStruct_to_Attr
+
+	$self->MatlabStruct_to_Attr( $xmlInstr );
+
+	given a <Struct> output instruction, will convert a matlab output to an 
+	attribute. Uses 
+
+=cut
+
 sub MatlabStruct_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 
@@ -564,112 +533,82 @@ sub MatlabStruct_to_Attr {
 
 }
 
-# FIXME: Develop an XML tag for this & implement the function. The majority of the code already exists.
-# Note: This is not pressing.
-sub Attr_to_MatlabStruct {
-	my ( $self, $xmlInstr ) = @_;
-	
-# OLD code for making Matlab structure array from list of attributes
-# 	my @elements = $semantic_type->semantic_elements();
-# 	my @names = ('id', map( $_->name(), @elements ) );
-# 	$struct = OME::Matlab::Array->
-# 		newStructMatrix(1,$num_attributes,\@names);
-# 	$struct->makePersistent();
-# 	die "Could not create struct" unless $struct;
-#   
-# 	foreach my $attribute (@$attribute_list) {
-# 		$self->__createAttribute($struct,$attr_idx,$variable_name,
-# 								 $attribute,\@elements);
-# 	} continue {
-# 		$attr_idx++;
-# 	};
-# 	logdbg "debug", "**** Done Creating Matlab struct\n";
-# 
-# 	my $matlab_name = "ome_${variable_name}";
-# 	logdbg "debug", "putting $matlab_name\n\n";
-# 	$self->{__engine}->eval("global $matlab_name");
-# 	$self->{__engine}->putVariable($matlab_name,$struct);
+=head1 XML navigation
 
-# MORE OLD code for translating OME Attrs into Matlab structures
-# sub __createAttribute {
-# 	my ($self,$struct,$attr_idx,$attr_name,$attribute,$elements) = @_;
-# 
-# 	# Add the primary key ID to the attribute struct
-# 	my $array = OME::Matlab::Array->newDoubleScalar($attribute->id());
-# 	$array->makePersistent();
-# 	$struct->setField($attr_idx,0,$array);
-# 
-# 	my $references = $self->{__references};
-# 
-# 	my $elem_idx = 1;
-# 	foreach my $element (@$elements) {
-# 		my $name = $element->name();
-# 		logdbg "debug", "$name = ";
-# 
-# 		my $value = $attribute->$name();
-# 		my $sql_type = $element->data_column()->sql_type();
-# 
-# 		my $array;
-# 		if (defined $value) {
-# 			if ($sql_type eq 'string') {
-# 				logdbg "debug", "New string $value\n";
-# 				$array = OME::Matlab::Array->newStringScalar($value);
-# 				$array->makePersistent();
-# 			} elsif ($sql_type eq 'boolean') {
-# 				logdbg "debug", "New logical $value\n";
-# 				$array = OME::Matlab::Array->newLogicalScalar($value);
-# 				$array->makePersistent();
-# 			} elsif ($sql_type eq 'reference') {
-# 				my $reference_name = "${attr_name}.${name}";
-# 				if (exists $references->{$reference_name}) {
-# 					logdbg "debug", "New reference ",$value->id(),"\n";
-# 					$array = $self->
-# 					  __createReferenceAttribute($reference_name,$value);
-# 				} else {
-# 					logdbg "debug", "New unneeded reference ",$value->id(),"\n";
-# 					$array = OME::Matlab::Array->newDoubleScalar($value->id());
-# 					$array->makePersistent();
-# 				}
-# 			} else {
-# 				logdbg "debug", "New double $value\n";
-# 				$array = OME::Matlab::Array->newDoubleScalar($value);
-# 				$array->makePersistent();
-# 			}
-# 			logdbg "debug", "[$sql_type] '$value'\n";
-# 		} else {
-# 			logdbg "debug", "[Undefined]\n";
-# 		}
-# 
-# 		$struct->setField($attr_idx,$elem_idx,$array)
-# 		  if defined $array;
-# 	} continue {
-# 		$elem_idx++;
-# 	};
-# }
-# 
-# sub __createReferenceAttribute {
-# 	my ($self,$name,$attribute) = @_;
-# 
-# 	my $semantic_type = $attribute->semantic_type();
-# 	my @elements = $semantic_type->semantic_elements();
-# 	my @names = ('id');
-# 	push @names, $_->name() foreach @elements;
-# 
-# 	my $struct = OME::Matlab::Array->
-# 	  newStructMatrix(1,1,\@names);
-# 	die "Could not create struct"
-# 	  unless $struct;
-# 
-# 	# Matlab will free this itself, so we need to make sure that the
-# 	# DESTROY method does not try to also free the memory.	This is
-# 	# true of the arrays we create in the next loop, too.
-# 	$struct->makePersistent();
-# 
-# 	$self->__createAttribute($struct,0,$name,$attribute,\@elements);
-# 
-# 	return $struct;
-# }
+These are high level functions to navigate the xml doc.
+Hopefully they will serve to isolate xml syntax
+
+=head2 _functionInputs
+
+	my @input_list = $self->_functionInputs();
+
+	get a list of XML instructions for function inputs.
+
+=cut
+
+sub _functionInputs { return shift->{ execution_instructions }->findnodes( "MLI:FunctionInputs/MLI:Input/*" ); }
+
+=head2 _functionOutputs
+
+	my @output_list = $self->_functionOutputs();
+
+	get a list of XML instructions for function outputs.
+
+=cut
+
+sub _functionOutputs { return shift->{ execution_instructions }->findnodes( "MLI:FunctionOutputs/MLI:Output/*" ); }
+
+=head2 _getTemplateData
+
+	my ($ST_name, $data_hash) = $self->_getTemplateData( $template_id );
+	
+	given a template id, retrieves the ST & data for it.
+
+=cut
+
+sub _getTemplateData {
+	my ( $self, $template_id ) = @_;
+	my @matches = $self->{ execution_instructions }->findnodes( 'MLI:Templates/*[@ID="'.$template_id.'"]' );
+	die "Multiple templates with template_id '$template_id' found" if scalar( @matches ) > 1;
+	die "No template with template_id '$template_id' found" if scalar( @matches ) eq 0;
+	my $template = $matches[0];
+
+	my $factory	= $self->Factory();
+	my $ST = $factory->findObject( "OME::SemanticType", name => $template->tagName() )
+		or die "Template is not a known semantic type. '".$template->toString()."'";
+	my $data_hash;
+	foreach my $SE ( $ST->semantic_elements() ) {
+		my $SE_name = $SE->name();
+		# Find the value of the semantic element $attrCol.
+		# The first place to look is in an attribute
+		$data_hash->{$SE_name} = $template->getAttribute($SE_name);
+		# The second place to look is in a subNode
+		if (not defined $data_hash->{$SE_name} and $template->getElementsByLocalName( $SE_name )->size() > 0) {
+			$data_hash->{$SE_name} = $template->getElementsByLocalName( $SE_name )->[0]->firstChild()->data()
+		}
+		my $sql_type = $SE->data_column()->sql_type();
+		if ($sql_type eq 'reference') {
+# FIXME: deal with references
+		} elsif ($sql_type eq 'boolean') {
+			if (defined $data_hash->{$SE_name}) {
+				$data_hash->{$SE_name} = $data_hash->{$SE_name} eq 'true' ? '1' : '0';
+			} else {
+				$data_hash->{$SE_name} = undef;
+			}
+		} elsif ($sql_type eq 'timestamp') {
+			$data_hash->{$SE_name} = XML2ODBC_timestamp ($data_hash->{$SE_name});
+		}
+	}
+	return( $template->tagName(), $data_hash );
 }
+
+=head1 Internal utility functions
+
+=head2 XML2ODBC_timestamp
+
+	nabbed from OME::ImportExport::HierarchyImport in order to support templates
+
+=cut
 
 sub XML2ODBC_timestamp () {
 	my $value = shift;
@@ -687,5 +626,135 @@ sub XML2ODBC_timestamp () {
 	return $date.' '.$time.$timezone if $date and $time;
 	return undef;
 }
+
+=head2 _inputVarName
+
+	my $matlab_variable_name = $self->_inputVarName( $xmlInputInstruction );
+	
+	returns a name unique to each instruction presented. Used to coordinate
+	activity across functions.
+
+=cut
+
+sub _inputVarName {
+	my ($self, $xml_instruction ) = @_;
+	return $self->{ __inputVariableNames }->{ $xml_instruction->toString() }
+		if exists $self->{ __inputVariableNames }->{ $xml_instruction->toString() };
+	my $name = 'ome_input_'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
+	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
+		if( $xml_instruction->getAttribute( 'ID' ) );
+	$self->{ __inputVariableNames }->{ $xml_instruction->toString() } = $name;
+	return $name;
+}
+
+=head2 _outputVarName
+
+	my $matlab_variable_name = $self->_outputVarName( $xmlInputInstruction );
+	
+	returns a name unique to each instruction presented. Used to coordinate
+	activity across functions.
+
+=cut
+
+sub _outputVarName {
+	my ($self, $xml_instruction ) = @_;
+	return $self->{ __outputVariableNames }->{ $xml_instruction->toString() }
+		if exists $self->{ __outputVariableNames }->{ $xml_instruction->toString() };
+	my $name = 'ome_output_'.scalar( keys( %{ $self->{ __outputVariableNames } } ) );
+	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
+		if( $xml_instruction->getAttribute( 'ID' ) );
+	$self->{ __outputVariableNames }->{ $xml_instruction->toString() } = $name;
+	return $name;
+}
+
+=head2 __openEngine
+
+Starts up the Matlab interface (OME::Matlab::Engine)
+
+=cut
+
+sub __openEngine {
+	my ($self) = @_;
+
+	if (!$self->{__engineOpen}) {
+		my $engine = OME::Matlab::Engine->open("matlab -nodisplay -nojvm");
+		die "Cannot open a connection to Matlab!" unless $engine;
+		$self->{__engine} = $engine;
+		$self->{__engineOpen} = 1;
+		my $session = OME::Session->instance();
+		my $conf = $session->Configuration() or croak "couldn't retrieve Configuration variables";
+		my $matlab_src_dir = $conf->matlab_src_dir or croak "couldn't retrieve matlab src dir from configuration";
+		print STDERR "matlab src dir is $matlab_src_dir\n";
+		$engine->eval("addpath(genpath('$matlab_src_dir'));");
+	}
+}
+
+=head2 __closeEngine
+
+Shuts down the Matlab interface (OME::Matlab::Engine)
+
+=cut
+
+sub __closeEngine {
+	my ($self) = @_;
+
+	if ($self->{__engineOpen}) {
+		$self->{__engine}->close();
+		$self->{__engine} = undef;
+		$self->{__engineOpen} = 0;
+	}
+}
+
+=head2 __checkExecutionGranularity
+
+There are constraints on execution granularity that are not specified in
+the MLI schema. This function applies those constraints.
+
+=cut
+
+sub __checkExecutionGranularity {
+	my $self = shift;
+	my $factory = $self->Factory();
+	
+	my $granularity = $self->{ execution_instructions }->getAttribute( "ExecutionGranularity" )
+		or die "ExecutionGranularity not specified in <ExecutionInstructions>";
+	my %granularity_name_list = (
+		F => 'Feature',
+		I => 'Image',
+		D => 'Dataset',
+		G => 'Global'
+	);
+	my $granularity_name = $granularity_name_list{ $granularity };
+	
+	die "Cannot Execute with $granularity_name Granularity without either $granularity_name inputs or outputs"
+		unless( 
+			$factory->countObjects('OME::Module::FormalInput', {
+				module => $self->getModule(),
+				'semantic_type.granularity' => $granularity,
+			}) ||
+			$factory->countObjects('OME::Module::FormalOutput', {
+				module => $self->getModule(),
+				'semantic_type.granularity' => $granularity,
+			})
+		);
+	# FIXME: It's illegal to have execution granularity finer than the coursest output granularity. Check for this.
+	
+	return $granularity;
+}
+
+=pod
+
+=head1 AUTHOR
+
+Josiah Johnston (siah@nih.gov)
+based on code written by Douglas Creager (dcreager@alum.mit.edu)
+
+=head1 SEE ALSO
+
+L<OME::Matlab>, L<OME::Matlab::Engine>, 
+L<http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd|specification of XML instructions>
+
+=cut
+
 
 1;
