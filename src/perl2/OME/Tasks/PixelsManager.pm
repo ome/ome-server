@@ -284,7 +284,6 @@ Usage:
 =cut
 sub saveThumb {
     my ($proto, $pixels_attr, $display_options) = @_;
-    my $session = OME::Session->instance();
     my $image = $pixels_attr->image();
     my $pixels_data = $proto->loadPixels( $pixels_attr );
 
@@ -372,8 +371,8 @@ sub getDisplayOptions {
 	$displayData{RedChannelOn} = 1;
 	$channelIndex = $channelOrder[0];
 	$displayChannelData{ ChannelNumber } = $channelIndex;
-	$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
-	$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+	( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+		__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 	$displayChannelData{ Gamma } = 1.0;
 	my $displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	$displayData{ RedChannel } = $displayChannel;
@@ -389,8 +388,8 @@ sub getDisplayOptions {
 		$displayData{GreenChannelOn} = 1;
 		$channelIndex = $channelOrder[1];
 		$displayChannelData{ ChannelNumber } = $channelIndex;
-		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
-		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
@@ -404,8 +403,8 @@ sub getDisplayOptions {
 		$displayData{BlueChannelOn} = 1;
 		$channelIndex = $channelOrder[2];
 		$displayChannelData{ ChannelNumber } = $channelIndex;
-		$displayChannelData{ BlackLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
-		$displayChannelData{ WhiteLevel } = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+		( $displayChannelData{ BlackLevel }, $displayChannelData{ WhiteLevel } ) = 
+			__defaultBlackWhiteLevels( $statsHash, $channelIndex, $theT );
 		$displayChannelData{ Gamma } = 1.0;
 		$displayChannel = $factory->newAttribute( "DisplayChannel", $image, undef, \%displayChannelData );
 	} else {
@@ -414,7 +413,8 @@ sub getDisplayOptions {
 	$displayData{ BlueChannel } = $displayChannel;
 
 	# Make DisplayOptions
-	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData )  or die "Couldn't make a new DisplayOptions";
+	$displayOptions = $factory->newAttribute( "DisplayOptions", $image, undef, \%displayData )
+		or die "Couldn't make a new DisplayOptions";
 	return $displayOptions;
 }
 
@@ -513,6 +513,19 @@ sub __populatePixelInfo {
 			}	
 		}	
 	}	
+}
+
+sub __defaultBlackWhiteLevels {
+	my ( $statsHash, $channelIndex, $theT ) = @_;
+	my ( $blackLevel, $whiteLevel );
+	
+	$blackLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} );
+	$blackLevel = $statsHash->{ $channelIndex }{ $theT }->{Minimum}
+		if $blackLevel < $statsHash->{ $channelIndex }{ $theT }->{Minimum};
+	$whiteLevel = int( 0.5 + $statsHash->{ $channelIndex }{ $theT }->{Geomean} + 4*$statsHash->{ $channelIndex }{ $theT }->{Geosigma} );
+	$whiteLevel = $statsHash->{ $channelIndex }{ $theT }->{Maximum}
+		if $whiteLevel > $statsHash->{ $channelIndex }{ $theT }->{Maximum};
+	return ( $blackLevel, $whiteLevel );
 }
 
 1;
