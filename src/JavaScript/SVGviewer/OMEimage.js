@@ -490,10 +490,8 @@ OMEimage.prototype.init = function( imageID, imageName, pixelsID, Stats, Dims,  
 
 	// make SVGimages array. It is indexable by [z][t]
 	this.SVGimages = new Array(this.Dims['Z']);
-	this.imageURLs = new Array(this.Dims['Z']);
 	for(var i=0;i<this.SVGimages.length;i++) {
 		this.SVGimages[i] = new Array(this.Dims['T']);
-		this.imageURLs[i] = new Array(this.Dims['T']);
 	}
 
 	this.registerListener( 'theT', this, 'updatePlane' );
@@ -547,9 +545,6 @@ OMEimage.prototype.buildSVG = function() {
 
 OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	var imageURL = this.getCompositeURL( theZ, theT ) + '&Format=JPEG';
-	//imageURLs is used to load high quality image. that means TIFF format
-	this.imageURLs[theZ][theT] = this.getCompositeURL( theZ, theT ) + '&Format=TIFF&Save=' + this.imageName;
-
 	this.SVGimages[theZ][theT] = Util.createElementSVG( 'image', {
 		width: this.Dims['X'],
 		height: this.Dims['Y'],
@@ -557,7 +552,6 @@ OMEimage.prototype.loadPlane = function(theZ, theT, invisible) {
 	});
 	this.SVGimages[theZ][theT].setAttributeNS(xlinkns, "href", imageURL);
 	this.SVGimageContainer.appendChild(this.SVGimages[theZ][theT]);
-	return this.imageURLs[theZ][theT];
 };
 
 OMEimage.prototype.getCompositeURL = function( theZ, theT ) {
@@ -587,11 +581,7 @@ OMEimage.prototype.getCompositeURL = function( theZ, theT ) {
 
 
 OMEimage.prototype.getImageURL = function() {
-	if( this.imageURLs[ this.theZ() ][ this.theT() ] ) {
-		return this.imageURLs[ this.theZ() ][ this.theT() ];
-	} else {
-		return '';
-	}
+	return this.getCompositeURL( this.theZ(), this.theT() ) + '&Format=TIFF&Save=' + this.imageName;
 }
 
 /*****
