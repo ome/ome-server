@@ -80,7 +80,8 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	protected ArrayList points  = new ArrayList();
 	protected PPath arrow;
-
+	
+	
 	protected int pointCount = 0;	
 	// nodes used for selection indicators
 	protected PPath select1;
@@ -107,7 +108,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		float left = -12;
 		float top = -5;
 		arrow.lineTo(left,top);
-		arrow.lineTo(left+4,0);
+		arrow.lineTo(left-4,0);
 		float bottom = 5;
 		arrow.lineTo(left,bottom);
 		arrow.closePath();
@@ -156,16 +157,25 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 			arctan = (double) (ye-ys)/(xe-xs);
 			angle = Math.atan(arctan);
 			if (xe < xs)
-				angle += Math.PI;
+				 angle += Math.PI;	
+		}
+		// shouldn't have to do this, but there's a bug on Mac OS X java.
+		if (angle > 0.8) {
+			if (angle <0.85) 
+				angle = 0.7;
+			else if (angle < 0.9)
+				angle = 1.0;
 		}
 		return angle;
 	}
 	
 	protected void drawLinkEnd(float x,float y,double theta) {
-	//	System.err.println("setting arrow to be at "+x+","+y+", theta="+theta);
+		//System.err.println("setting arrow to be at "+x+","+y+", theta="+theta);
+		Point2D pt = globalToLocal(new Point2D.Float(x,y));
 		arrow.setRotation(theta);
-		arrow.setOffset(x,y);  
+		arrow.setOffset(pt.getX(),pt.getY());
 		invalidateFullBounds(); 
+		
 		repaint();
 	}
 	
