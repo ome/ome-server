@@ -251,36 +251,27 @@ OMEimage.prototype.prefetchImages = function() {
 	}
 }
 
-
-/*****
-	setRGBon(RGBon)
-		turns RGB channels on and off
-*****/
-OMEimage.prototype.setRGBon = function(RGBon) {	
+OMEimage.prototype.setRedOn = function(val) {
 	if(!this.initialized) return;
-	var changeFlag = 0;
-	for(i in this.RGBon)
-		if(this.RGBon[i] != RGBon[i]) {
-			changeFlag=1;
-			break;
-		}
-
-	if(changeFlag) {
-		this.RGBon = RGBon;
-		this.wipe();
-	}
+	this.RGBon[0] = (val ? 1 : 0);
+	this.wipe();
 }
+OMEimage.prototype.setGreenOn = function(val) {
+	if(!this.initialized) return;
+	this.RGBon[1] = (val ? 1 : 0);
+	this.wipe();
+}
+OMEimage.prototype.setBlueOn = function(val) {
+	if(!this.initialized) return;
+	this.RGBon[2] = (val ? 1 : 0);
+	this.wipe();
+}
+OMEimage.prototype.isRedOn = function() { return this.RGBon[0]; }
+OMEimage.prototype.isGreenOn = function() { return this.RGBon[1]; }
+OMEimage.prototype.isBlueOn = function() { return this.RGBon[2]; }
+
 
 /************************** Get Functions ***********************************/
-
-/*****
-	getRGBon()
-		returns on/off states of the RGB channels	
-*****/
-OMEimage.prototype.getRGBon = function() {
-	// return a COPY
-	return this.RGBon.join().split(',');
-}
 
 
 /*****
@@ -350,6 +341,7 @@ OMEimage.prototype.isInColor = function() {
 *****/
 OMEimage.prototype.init = function( imageID, Stats, Dims,  CGI_URL, CGI_optionStr,
 	SaveDisplayCGI_URL, default_CBW, default_RGBon, default_isRGB ) {
+	this.initialized        = true;
 	// set variables
 	this.imageID            = imageID;
 	this.Stats              = Stats;
