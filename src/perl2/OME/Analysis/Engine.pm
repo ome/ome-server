@@ -57,7 +57,8 @@ use OME::Analysis::Engine::DataPaths;
 use OME::Tasks::ModuleExecutionManager;
 use OME::Tasks::ChainManager;
 
-sub __debug { print STDERR @_,"\n"; }
+our $DEBUG = 1;
+sub __debug { print STDERR @_ if $DEBUG; }
 
 =head2 checkInputs
 
@@ -335,7 +336,7 @@ sub getPredecessorMEX {
     my $factory = OME::Session->instance()->Factory();
 
     if (defined $self->{user_inputs}->{$to_input->id()}) {
-        print STDERR "  getPredecessorMEX(",$to_input->name(),")\n";
+        __debug "  getPredecessorMEX(",$to_input->name(),")\n";
 
         my $granularity = $to_input->semantic_type()->granularity();
         my $to_dependence = ($granularity eq 'F')? 'I': $granularity;
@@ -343,11 +344,11 @@ sub getPredecessorMEX {
         my $input_mexes = $self->{user_inputs}->{$to_input->id()};
         my @target_mexes;
         foreach my $input_mex (@$input_mexes) {
-            print STDERR "    Checking MEX ",$input_mex->id(),"\n";
-            print STDERR "      $to_dependence ",$input_mex->dependence(),"\n";
+            __debug "    Checking MEX ",$input_mex->id(),"\n";
+            __debug "      $to_dependence ",$input_mex->dependence(),"\n";
             next unless ($input_mex->dependence() eq $to_dependence);
 
-            print STDERR "      **GOOD!\n"
+            __debug "      **GOOD!\n"
               if ($to_dependence eq 'G')
               || ($to_dependence eq 'D' &&
                   $input_mex->dataset()->id() == $to_target->id())
@@ -383,10 +384,10 @@ sub getPredecessorMEX {
 
     my $target_column;
 
-    print STDERR "  getPredecessorMEX(",$link->id(),")\n";
+    __debug "  getPredecessorMEX(",$link->id(),")\n";
 
-    print STDERR "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name(),"\n";
-    print STDERR "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name(),"\n";
+    __debug "    from $from_dependence ",$from_node->id()," ",$from_node->module()->name(),"\n";
+    __debug "    to $to_dependence ",$to_node->id()," ",$to_node->module()->name(),"\n";
 
     if ($from_dependence eq 'G') {
         push @from_targets, undef;
