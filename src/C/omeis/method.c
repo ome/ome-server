@@ -34,26 +34,54 @@
  *------------------------------------------------------------------------------
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "method.h"
 
 unsigned int
 get_method_by_name(char * m_name)
 {
+	/* Sanity check (FATAL) */
+	if (m_name == NULL) {
+		fprintf(stderr, "FATAL: NULL m_name to get_method_by_name().\n");
+		return(-255);
+	}
+
+	/* Pixels comparisions */
+	if (strcmp(m_name, "Pixels") == 0) return M_PIXELS;
 	if (strcmp(m_name, "NewPixels") == 0) return M_NEWPIXELS;
-	if (strcmp(m_name, "FileSHA1") == 0) return M_FILESHA1;
 	if (strcmp(m_name, "PixelsInfo") == 0) return M_PIXELSINFO;
 	if (strcmp(m_name, "PixelsSHA1") == 0) return M_PIXELSSHA1;
 	if (strcmp(m_name, "SetPixels") == 0) return M_SETPIXELS;
 	if (strcmp(m_name, "GetPixels") == 0) return M_GETPIXELS;
+	if (strcmp(m_name, "FinishPixels") == 0) return M_FINISHPIXELS;
+
+	/* Plane comparisions */
+	if (strcmp(m_name, "Plane") == 0) return M_PLANE;
 	if (strcmp(m_name, "SetPlane") == 0) return M_SETPLANE;
 	if (strcmp(m_name, "GetPlane") == 0) return M_GETPLANE;
+	if (strcmp(m_name, "GetPlaneStats") == 0) return M_GETPLANESTATS;
 	
-	if (strcmp(m_name, "ReadFile") == 0) return M_READFILE;
-	if (strcmp(m_name, "GetLocalPath") == 0) return M_GETLOCALPATH;
-	if (strcmp(m_name, "UploadFile") == 0) return M_UPLOADFILE;
-	if (strcmp(m_name, "FileInfo") == 0) return M_FILEINFO;
+	/* Stack comparisions */
+	if (strcmp(m_name, "Stack") == 0) return M_STACK;
+	if (strcmp(m_name, "SetStack") == 0) return M_SETSTACK;
+	if (strcmp(m_name, "GetStack") == 0) return M_GETSTACK;
 
-	return 0;
+	/* ROI comparisions */
+	if (strcmp(m_name, "SetROI") == 0) return M_SETROI;
+	if (strcmp(m_name, "GetROI") == 0) return M_GETROI;
+
+	/* File comparisions */
+	if (strcmp(m_name, "FileSHA1") == 0) return M_FILESHA1;
+	if (strcmp(m_name, "FileInfo") == 0) return M_FILEINFO;
+	if (strcmp(m_name, "ReadFile") == 0) return M_READFILE;
+	if (strcmp(m_name, "UploadFile") == 0) return M_UPLOADFILE;
+
+	/* Utility/other comparisons */
+	if (strcmp(m_name, "GetLocalPath") == 0) return M_GETLOCALPATH;
+	if (strcmp(m_name, "Convert") == 0) return M_CONVERT;
+
+	fprintf(stderr, "Unknown method '%s'.\n", m_name);
+	return 0;  /* Unknown method */
 }
 
