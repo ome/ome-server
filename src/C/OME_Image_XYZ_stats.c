@@ -138,8 +138,10 @@ void Get_Image_Stats (char *path, char *dims)
 			Zero_Accumulators (&theStats);
 			for (theZ=0; theZ < numZ; theZ++) {
 /*				fseek (imgFile, ( ((theT*numW) + theW)*numZ + theZ)*numX*numY*numB, SEEK_SET);*/
+				theY = 0;
 				fread( fileBuf, numB, numSamples, imgFile);
 				Load_Accumulators (&theStats, fileBuf, numB, numSamples, numX, theY, theZ);
+				
 			}
 			Dump_Stats (&theStats, theW, theT);
 			fflush (stdout);
