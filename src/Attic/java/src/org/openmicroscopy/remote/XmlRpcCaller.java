@@ -45,16 +45,17 @@ package org.openmicroscopy.remote;
 import java.net.URL;
 import java.util.*;
 import java.io.*;
-import org.apache.xmlrpc.XmlRpc;
-import org.apache.xmlrpc.XmlRpcClientLite;
+import org.apache.xmlrpc.*;
 import org.openmicroscopy.Session;
 
 public class XmlRpcCaller
     implements RemoteCaller
 {
+    public static final String NULL_REFERENCE = ">>OBJ:NULL";
     public static boolean TRACE_CALLS = false;
+    public static boolean USE_LITE_CLIENT = false;
 
-    private XmlRpcClientLite  xmlrpc;
+    private XmlRpcClient  xmlrpc;
     private Vector        vparams = new Vector();
     private String        sessionReference = null;
     private Session       session = null;
@@ -66,12 +67,20 @@ public class XmlRpcCaller
     {
         try
         {
-            xmlrpc = new XmlRpcClientLite(url);
+            xmlrpc = createClient(url);
             XmlRpc.setKeepAlive(false);
         } catch (Exception e) {
             xmlrpc = null;
             System.err.println(e);
         }
+    }
+
+    protected XmlRpcClient createClient(URL url)
+    {
+        if (USE_LITE_CLIENT)
+            return new XmlRpcClientLite(url);
+        else
+            return new XmlRpcClient(url);
     }
 
     public void login(String username, String password)
@@ -133,6 +142,14 @@ public class XmlRpcCaller
         return session;
     }
 
+    protected void addParameter(Object object)
+    {
+        synchronized(this)
+        {
+            vparams.add(encodeObject(object));
+        }
+    }
+
     private Object invoke(String method)
     {
         synchronized(this)
@@ -172,11 +189,11 @@ public class XmlRpcCaller
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
 
-            vparams.addElement(sessionReference);
+            addParameter(sessionReference);
             if (params != null)
             {
                 for (int i = 0; i < params.length; i++)
-                    vparams.addElement(params[i]);
+                    addParameter(params[i]);
             }
             return invoke(method);
         }
@@ -200,28 +217,13 @@ public class XmlRpcCaller
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
 
-            vparams.addElement(sessionReference);
-            if (target instanceof RemoteObject)
-                vparams.addElement(((RemoteObject) target).getReference());
-            else
-                vparams.addElement(target.toString());
-            vparams.addElement(method);
+            addParameter(sessionReference);
+            addParameter(target);
+            addParameter(method);
             if (params != null)
             {
                 for (int i = 0; i < params.length; i++)
-                {
-                    if (params[i] == null)
-                        vparams.addElement(">>OBJ:NULL");
-                    else if (params[i] instanceof RemoteObject)
-                        vparams.addElement(((RemoteObject) params[i]).
-                                           getReference());
-                    else if (params[i] instanceof List)
-                        vparams.addElement(new Vector((List) params[i]));
-                    else if (params[i] instanceof Map)
-                        vparams.addElement(new Hashtable((Map) params[i]));
-                    else
-                        vparams.addElement(params[i]);
-                }
+                    addParameter(params[i]);
             }
             return invoke("dispatch");
         }
@@ -234,8 +236,8 @@ public class XmlRpcCaller
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
 
-            vparams.addElement(sessionReference);
-            vparams.addElement(target.toString());
+            addParameter(sessionReference);
+            addParameter(target.toString());
             invoke("freeObject");
         }
     }
@@ -247,9 +249,37 @@ public class XmlRpcCaller
             if (sessionReference == null)
                 throw new IllegalArgumentException("Have not logged in");
 
-            vparams.addElement(sessionReference);
-            vparams.addElement(targetReference);
+            addParameter(sessionReference);
+            addParameter(targetReference);
             invoke("freeObject");
         }
     }
+
+    protected Object encodeObject(Object object)
+    {
+        if (object == null)
+            return NULL_REFERENCE;
+        else if (object instanceof RemoteObject)
+            return ((RemoteObject) object).getReference();
+        else if (object instanceof List) {
+            List list = new Vector();
+            Iterator it = ((List) object).iterator();
+            while (it.hasNext())
+                list.add(encodeObject(it.next()));
+            return list;
+        } else if (object instanceof Map) {
+            Map map = new Hashtable();
+            Iterator it = ((Map) object).keySet().iterator();
+            while (it.hasNext())
+            {
+                Object key = it.next();
+                Object value = ((Map) object).get(key);
+                map.put(encodeObject(key),encodeObject(value));
+            }
+            return map;
+        } else {
+            return object;
+        }
+    }
+
 }
