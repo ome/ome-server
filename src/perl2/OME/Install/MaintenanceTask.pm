@@ -42,6 +42,7 @@ use Term::ReadKey;
 use Text::Wrap;
 
 use File::Basename;
+use File::Copy;
 use OME::Install::Util;
 use OME::Install::Terminal;
 use OME::Install::Environment;
@@ -64,6 +65,7 @@ our $LOGFILE;
 # Default tasks
 our $MAINT_CONF_DEF = {
 	do_it       => 1,
+	omeadmin    => 1,
 	t_vacuum    => '00:00', # midnight.  undef to not do it.
 	t_compress  => '00:00',
 	t_purge     => '00:00',
@@ -202,11 +204,6 @@ sub fix_cron_scripts {
 		while ( ($key,$val) = each (%$subs) ) {
 			$config =~ s/%$key%/$val/mg;
 		}
-		$config =~ s/%PIX_COMP%/$pix_comp/mg;
-		$config =~ s/%FILE_COMP%/$file_comp/mg;
-		$config =~ s/%PIX_PURGE%/$pix_purge/mg;
-		$config =~ s/%OME_BIN%/$ome_bin/mg;
-		$config =~ s/%OMEIS_BASE%/$OMEIS_BASE_DIR/mg;
 		$file =~ s/$script_dir/$install_dir/;
 		print $LOGFILE "Writing $file\n";
 		open(FILE, "> $file") or
@@ -293,6 +290,7 @@ BLURB
 			# Ask user to confirm original entries
 	
 			print BOLD,"Maintenance tasks:\n",RESET;
+			print "     Install the OME admin utility?: ", BOLD, $MAINT_CONF->{omeadmin}     ? 'yes':'no', RESET, "\n";
 			print "Install periodic maintenance tasks?: ", BOLD, $MAINT_CONF->{do_it}     ? 'yes':'no', RESET, "\n";
 			print "           Database vacuum/analyze?: ", $MAINT_CONF->{t_vacuum}  ? "Daily at ".BOLD.$MAINT_CONF->{t_vacuum}.RESET  :BOLD.'no'.RESET,"\n";
 			print "              Compress OMEIS Files?: ", ($MAINT_CONF->{file_comp} and $MAINT_CONF->{t_compress}) ? "Daily at ".BOLD.$MAINT_CONF->{t_compress}.RESET:BOLD.'no'.RESET,"\n";
@@ -310,10 +308,15 @@ BLURB
 		}
 
 		$confirm_all = 0;
-
+		if (y_or_n ('Install the OME admin utility (omeadmin)?','y') ){
+			$MAINT_CONF->{omeadmin} = 1;
+		} else {
+			$MAINT_CONF->{omeadmin} = 0;
+		}
+		
 		if (! y_or_n('Configure Maintenance tasks?','y') ) {
-			$MAINT_CONF->{do_it}  = 0;
-			last;
+			$MAINT_CONF->{do_it} = 0;
+			redo;
 		}
 		$MAINT_CONF->{do_it} = 1;
 
@@ -322,7 +325,6 @@ BLURB
 			$MAINT_CONF->{t_vacuum}  = undef;
 		} else {
 			$MAINT_CONF->{t_vacuum} = $MAINT_CONF_DEF->{t_vacuum} unless $MAINT_CONF->{t_vacuum};
-			print "BAH! $MAINT_CONF_DEF->{t_vacuum} reset !\n" unless $MAINT_CONF_DEF->{t_vacuum};
 			$MAINT_CONF->{t_vacuum} = confirm_default ('Time at which to run database vacuum/analyze script (24 hr clock):',$MAINT_CONF->{t_vacuum});
 			($hour,$minute) = ($1,$2) if $MAINT_CONF->{t_vacuum} =~ /(\d+):(\d+)/;
 			$hour   = '00' unless defined $hour and $hour > 0 and $hour < 24;
@@ -379,6 +381,7 @@ BLURB
 
 	# Write what we got to our log
 	print $LOGFILE "Maintenance tasks:\n";
+	print $LOGFILE "     Install the OME admin utility?: ", $MAINT_CONF->{omeadmin}  ? 'yes':'no', "\n";
 	print $LOGFILE "Install periodic maintenance tasks?: ", $MAINT_CONF->{do_it}     ? 'yes':'no', "\n";
 	print $LOGFILE "           Database vacuum/analyze?: ", $MAINT_CONF->{t_vacuum}  ? "Daily at ".$MAINT_CONF->{t_vacuum}  :'no',"\n";
 	print $LOGFILE "              Compress OMEIS Files?: ", ($MAINT_CONF->{file_comp} and $MAINT_CONF->{t_compress}) ? "Daily at ".$MAINT_CONF->{t_compress}:'no',"\n";
@@ -394,6 +397,20 @@ BLURB
 	# Regardless of wether or not we install any crontabs, we're still going to copy the scripts
 	fix_cron_scripts();
 
+	#
+	# Install omeadmin, if appropriate
+	#
+	if ($MAINT_CONF->{omeadmin} == 1) {
+		copy(getcwd()."/src/util/omeadmin", "$OME_BASE_DIR/bin/omeadmin") or
+			print $LOGFILE "Could not copy src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin: $!\n" and
+			croak "Could not copy src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin: $!";
+		print $LOGFILE "copied src/util/omeadmin to $OME_BASE_DIR/bin/omeadmin\n";
+		chmod(0755,"$OME_BASE_DIR/bin/omeadmin") or
+			print $LOGFILE "Could not chmod $OME_BASE_DIR/bin/omeadmin: $!\n" and
+			croak "Could not chmod $OME_BASE_DIR/bin/omeadmin: $!";
+		print $LOGFILE "chmod 0755 $OME_BASE_DIR/bin/omeadmin\n";
+	}
+	
 	# Return unless we're actually going to do something.
 	unless ($MAINT_CONF->{do_it}) {
 		print $LOGFILE "Not setting up Maintenance tasks\n";
@@ -404,7 +421,6 @@ BLURB
 		return;
 	}
 	
-
 	#
 	# Do the $POSTGRES_USER thing.
 	#
@@ -412,7 +428,7 @@ BLURB
 		print "Writing crontab for $POSTGRES_USER ";
 		my @scripts;
 		push (@scripts,[$MAINT_CONF->{t_vacuum},"$OME_BASE_DIR/crontab/vacuumdb"]);
-		my $crontab = get_crontab ($APACHE_USER,@scripts);
+		my $crontab = get_crontab ($POSTGRES_USER,@scripts);
 		if ( can_write_crontab ($POSTGRES_USER) ){
 			set_crontab ($POSTGRES_USER,$crontab);
 			print $LOGFILE "Set crontab for $POSTGRES_USER to:\n$crontab\n";
