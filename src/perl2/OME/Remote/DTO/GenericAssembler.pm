@@ -39,7 +39,7 @@ package OME::Remote::DTO::GenericAssembler;
 use OME;
 our $VERSION = $OME::VERSION;
 
-our $SHOW_ASSEMBLY = 0;
+our $SHOW_ASSEMBLY = 1;
 
 use OME::Remote::DTO;
 use UNIVERSAL::require;
@@ -160,7 +160,7 @@ sub __getDefaultFieldsWanted {
 sub __genericDTO {
     my ($prefix,$object,$fields_wanted) = @_;
 
-    print STDERR "$prefix $object\n" if $SHOW_ASSEMBLY;
+    print STDERR "Object: $prefix $object\n" if $SHOW_ASSEMBLY;
 
     my $columns = $fields_wanted->{$prefix};
     die "Fields not specified for '$prefix' element"
@@ -170,22 +170,18 @@ sub __genericDTO {
     return $dto unless defined $dto;
 
     foreach my $column (keys %$dto) {
-        print STDERR "  '$column' '",ref($dto->{$column}),"'\n"
+        print STDERR "Column:  '$column' '",ref($dto->{$column}),"'\n"
           if $SHOW_ASSEMBLY;
 
-        my $type = $object->getColumnType($column);
-        next unless defined $type;
+        my $methodArity = $object->getArity($column);
+        next unless defined $methodArity;
 
-        if ($type eq 'pseudo-column') {
-            my @pseudo = $object->getPseudoColumnType($column);
-            $type = $pseudo[0];
-        }
 
         # If this is an attribute reference, load the appropriate
         # ST class
         $object->__activateSTColumn($column);
 
-        if ($type eq 'has-one') {
+        if ($methodArity eq 'has-one') {
             my $ref_object = $dto->{$column};
             my $next_prefix = "${prefix}.${column}";
             $fields_wanted->{$next_prefix} =
@@ -193,7 +189,7 @@ sub __genericDTO {
               unless defined $fields_wanted->{$next_prefix};
             $dto->{$column} = __genericDTO($next_prefix,
                                            $ref_object,$fields_wanted);
-        } elsif ($type =~ m/(has-many|many-to-many)/o ) {
+        } elsif ($methodArity =~ m/(has-many|many-to-many)/o) {
             my $next_prefix = "${prefix}.${column}";
             $fields_wanted->{$next_prefix} =
               __getDefaultFieldsWanted($ref_object)

@@ -156,17 +156,20 @@ sub __makeHash ($$$) {
 			$method = "count_".$method;
 			$dto->{ $dto_name } = $object->$method();
 		# die unless the method is defined
-		} elsif( not defined $object->getColumnType($method_request) ) {
-			confess "Cannot find a column or relation by the name of $method_request in $object";
-		# request returns a list of objects
-		} elsif( $object->getColumnType($method_request) =~ /(has-many|many-to-many)/o ) {
+		} else {
+		    my $methodArity = $object->getArity($method_request);
+		    confess "Cannot find a column or relation by the
+    name of $method_request in $object"   unless (defined $methodArity);		    
+		    if ($methodArity =~ m/(has-many|many-to-many)/o) {
 			my @results = $object->$method_request();
 			$dto->{ $dto_name } = \@results;
+		    }
 		# request returns a scalar or a single object
-		} else {
+		    else {
 			$dto->{ $dto_name } = $object->$method_request();
+		    }
 		}
-	}
+	    }
 
     return $dto;
 }

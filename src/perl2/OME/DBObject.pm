@@ -847,7 +847,7 @@ sub getColumnType {
         return "many-to-many";
     } elsif (exists $class->__pseudo_columns()->{$alias}) {
         return "pseudo-column";
-    } else {
+    } Else {
         return undef;
     }
 }
@@ -894,6 +894,22 @@ sub getPseudoColumnType {
     return @{$pseudos->{$alias}};
 }
 
+
+sub getArity {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    my $alias = shift;
+    my $type = $class->getColumnType($alias);
+    if ($type eq 'pseudo-column' ) {
+	my @pseudos =  $class->getPseudoColumnType($alias);
+	$type = $pseudos[0];
+    }
+    $type = $class->getPseudoColumnType($alias)->[0]
+	if $type eq 'pseudo-column';	
+    return $type;
+}
+    
 =head2 getFormalName
 
 	my $formal_name = $class->getFormalName();
