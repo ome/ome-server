@@ -218,16 +218,22 @@ sub execute {
 	$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
     }
 
-    # Add the apache user to the OME group if needed
+    # Add the apache and OME user to the OME group if needed
     my $member_string = (getgrgid($OME_GID))[3];
     my @members = split (/,/, $member_string) if $member_string or undef;
-    my $need_to_add = 1;
+    my $need_to_add_apache = 1;
+    my $need_to_add_user = 1;
 
     if (@members) {
-	foreach my $member (@members) { $need_to_add = 0 if $member eq $APACHE_USER };
+	    foreach my $member (@members) {
+		    $need_to_add_apache = 0 if $member eq $APACHE_USER
+		    $need_to_add_user = 0 if $member eq $OME_USER
+	    };
     }
     add_user_to_group ($APACHE_USER, $OME_GROUP) or croak "Failure adding \"$APACHE_USER\" to \"$OME_GROUP\""
-	if $need_to_add;
+	if $need_to_add_apache;
+    add_user_to_group ($OME_USER, $OME_GROUP) or croak "Failure adding \"$OME_USER\" to \"$OME_GROUP\""
+	if $need_to_add_user;
     
     #********
     #******** Build our core directory structure
