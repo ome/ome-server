@@ -494,78 +494,33 @@ sub getDisplayOptions{
 	my $session=$self->__Session();
 	my $factory=$session->Factory();
 	my ($theZ,$theT,$isRGB,@cbw,@rgbOn);
-	my $displayOptions    = [$factory->findAttributes( 'DisplayOptions', {
-		image => $image,
-		Pixels => $pixels } )]->[0];
+	my $displayOptions    = OME::Tasks::PixelsManager->getDisplayOptions( $pixels );
 	my %h =();
-	if (defined $displayOptions){
-		$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
-		$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
-		$isRGB= $displayOptions->DisplayRGB();
-		@cbw=(
-			$displayOptions->RedChannel()->ChannelNumber(),
-			$displayOptions->RedChannel()->BlackLevel(),
-			$displayOptions->RedChannel()->WhiteLevel(),
-			$displayOptions->GreenChannel()->ChannelNumber(),
-			$displayOptions->GreenChannel()->BlackLevel(),
-			$displayOptions->GreenChannel()->WhiteLevel(),
-			$displayOptions->BlueChannel()->ChannelNumber(),
-			$displayOptions->BlueChannel()->BlackLevel(),
-			$displayOptions->BlueChannel()->WhiteLevel(),
-			$displayOptions->GreyChannel()->ChannelNumber(),
-			$displayOptions->GreyChannel()->BlackLevel(),
-			$displayOptions->GreyChannel()->WhiteLevel(),
-			);
-		push (@rgbOn,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
-		%h=(
-			'theZ' => $theZ,
-			'theT' => $theT,
-			'isRGB' => $isRGB,
-			'CBW' => \@cbw,
-			'RGBon' =>\@rgbOn
-			);
-	}else{
-		my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT,$bpp,$path) = $self->getImageDim($image);
-		my $statsHash = $self->getImageStats($image)
-			or die "Could not find Stack Statistics for image (id=".$image->id.").\n";
-		$theZ  = sprintf( "%d", $sizeZ / 2 );
-		$theT  = 0;
-		$isRGB = 1;
-		# set image channel for red display channel
-		$cbw[0] = 0; $rgbOn[0] = 1;
-		# set image channel for green display channel
-		if( $sizeC > 1 ) { $cbw[3] = 1 ; $rgbOn[1] = 1;}
-		else             { $cbw[3] = 0 ; $rgbOn[1] = 0;}
-		# set image channel for blue display channel
-		if( $sizeC > 2 ) { $cbw[6] = 2 ; $rgbOn[2] = 1;}
-		else             { $cbw[6] = 0 ; $rgbOn[2] = 0;}
-		# set image channel for greyscale display channel
-		$cbw[9] = 0;
-		# Set black and white levels for all display channels.
-		foreach my $counter (0..3) {
-			my $channelIndex = $cbw[ $counter*3 ];
-			my %channelMax;
-			unless( exists $channelMax{$channelIndex} ){
-				foreach my $statRecord( @{$statsHash->[$channelIndex]} ) {
-					$channelMax{$channelIndex} = $statRecord->{max}
-						if not exists $channelMax{$channelIndex} or $channelMax{$channelIndex} < $statRecord->{max};
-				}
-			}
-			# set black level to geomean of this section
-			$cbw[ $counter*3 + 1] = $statsHash->[ $channelIndex ][ $theT ]->{geomean};
-			# set white level to geomean + 4 geosigmas  of this section
-			$cbw[ $counter*3 + 2] = $statsHash->[ $channelIndex ][ $theT ]->{geomean} + 4*$statsHash->[ $channelIndex ][ $theT ]->{geosigma};
-			$cbw[ $counter*3 + 2] = $channelMax{$channelIndex}
-			if $cbw[ $counter*3 + 2] > $channelMax{$channelIndex};
-		}
-		%h=(
-			theZ  => $theZ,
-			theT  => $theT,
-			isRGB => $isRGB,
-			CBW   => \@cbw,
-			RGBon =>\@rgbOn
-			);
-	}
+	$theZ=($displayOptions->ZStart() + $displayOptions->ZStop() ) / 2;
+	$theT=($displayOptions->TStart() + $displayOptions->TStop() ) / 2;
+	$isRGB= $displayOptions->DisplayRGB();
+	@cbw=(
+		$displayOptions->RedChannel()->ChannelNumber(),
+		$displayOptions->RedChannel()->BlackLevel(),
+		$displayOptions->RedChannel()->WhiteLevel(),
+		$displayOptions->GreenChannel()->ChannelNumber(),
+		$displayOptions->GreenChannel()->BlackLevel(),
+		$displayOptions->GreenChannel()->WhiteLevel(),
+		$displayOptions->BlueChannel()->ChannelNumber(),
+		$displayOptions->BlueChannel()->BlackLevel(),
+		$displayOptions->BlueChannel()->WhiteLevel(),
+		$displayOptions->GreyChannel()->ChannelNumber(),
+		$displayOptions->GreyChannel()->BlackLevel(),
+		$displayOptions->GreyChannel()->WhiteLevel(),
+		);
+	push (@rgbOn,$displayOptions->RedChannelOn(),$displayOptions->GreenChannelOn(),$displayOptions->BlueChannelOn());	
+	%h=(
+		'theZ' => $theZ,
+		'theT' => $theT,
+		'isRGB' => $isRGB,
+		'CBW' => \@cbw,
+		'RGBon' =>\@rgbOn
+		);
 	return \%h;
 
 
