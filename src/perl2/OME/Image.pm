@@ -233,13 +233,15 @@ use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
     attribute_id => 'attribute',
-    image_id     => 'image'
+    image_id     => 'image',
+    the_w        => 'theW',
+    the_t        => 'theT'
     });
 
 __PACKAGE__->table('xyz_image_info');
 __PACKAGE__->sequence('attribute_seq');
 __PACKAGE__->columns(Primary => qw(attribute_id));
-__PACKAGE__->columns(Essential => qw(image_id wavenumber timepoint deltatime
+__PACKAGE__->columns(Essential => qw(image_id the_w the_t 
 				     min max mean geomean sigma 
 				     centroid_x centroid_y centroid_z));
 
