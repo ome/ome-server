@@ -1,4 +1,4 @@
-# OME/Util/UserAdmin.pm
+c# OME/Util/UserAdmin.pm
 
 #-------------------------------------------------------------------------------
 #
@@ -174,7 +174,7 @@ sub backup {
 	
 	# clean up any residual files
 	unlink("OMEMaint");
-	unlink("/tmp/omeDB_backup");
+	unlink("omeDB_backup");
 }
 
 sub backup_help {
