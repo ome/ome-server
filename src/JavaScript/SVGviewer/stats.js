@@ -126,7 +126,7 @@ Statistics.prototype.buildSVG = function() {
 	purpose:
 		update stats based on info particular to W & T
 
-	untested
+	tested
 	
 *****/
 
@@ -144,6 +144,22 @@ Statistics.prototype.updateStats = function(t) {
 	this.labels.mean.firstChild.data = this.Stats[wavenum][t]['mean'];
 	this.labels.geomean.firstChild.data = this.Stats[wavenum][t]['geomean'];
 	this.labels.sigma.firstChild.data = this.Stats[wavenum][t]['sigma'];
+}
+
+/*****
+	
+	changeWavenumber
+		theW = wavenumber
+	
+	purpose:
+		change selected wavelength
+	
+	untested
+	
+*****/
+Statistics.prototype.changeWavenumber = function(theW) {
+	v = this.wavePopupList.getItemList();
+	this.wavePopupList.setSelectionByValue( v[theW], true);
 }
 
 /********************************************************************************************/
