@@ -32,9 +32,9 @@ public class RemoteChain
 {
     static
     { 
-        RemoteObject.addClass("OME::AnalysisView",RemoteChain.class);
-        RemoteObject.addClass("OME::AnalysisView::Node",RemoteChain.Node.class);
-        RemoteObject.addClass("OME::AnalysisView::Link",RemoteChain.Link.class);
+        RemoteObject.addClass("OME::AnalysisChain",RemoteChain.class);
+        RemoteObject.addClass("OME::AnalysisChain::Node",RemoteChain.Node.class);
+        RemoteObject.addClass("OME::AnalysisChain::Link",RemoteChain.Link.class);
     }
 
 
