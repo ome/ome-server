@@ -1727,7 +1727,7 @@ int i;
 	myStackInfo.mean = sum_i / nPix;
 	
 	/* Yup, readem and weep.  Its an arithmetic average of geomeans */
-	myStackInfo.geomean /= dz;
+	myStackInfo.geomean = geomean / dz;
 
 	/* sigma using the amean (classical) */
 	myStackInfo.sigma = (float) sqrt (fabs (
