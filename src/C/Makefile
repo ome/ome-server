@@ -1,7 +1,7 @@
 OBJECTS = OMEdb.o OME_DV.o rel2abs.o BSUtils.o
 TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		SoftWorxSlice DumpSoftWorxHeader DumpSoftWorxExHeader \
-		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats \
+		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_JPEG \
 		cgrayce2
 DB_INCLUDES = -I/usr/include/pgsql
 DB_LIBS = -lpq
@@ -75,6 +75,9 @@ DumpDV: DumpDV.o  BSUtils.o
 
 SetDVwave: SetDVwave.o  BSUtils.o
 	gcc  -o SetDVwave SetDVwave.o  BSUtils.o
+
+OME_JPEG: OME_JPEG.c
+	gcc -o OME_JPEG -O2 OME_JPEG.c -ljpeg
 
 $(OME_LIB): $(OBJECTS)
 	ar cr $@ $(OBJECTS)
