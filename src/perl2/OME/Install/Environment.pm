@@ -175,55 +175,6 @@ sub getMAC {
     return &$getMAC();
 }
 
-# Recursively copies all files and directories contained in a given origin
-# directory to the specified destination directory.
-#
-# $env->copyTree($from, $to [, $filter]);
-#
-# $from     Directory to copy contents from. It must be a valid path either
-#           absolute or relative to the working directory.
-# $to       Directory to copy contents to. It must be a valid path either
-#           absolute or relative to the working directory.
-# $filter   Optional coderef to filter out the contents of the $from directory.
-#           If specified, it is evaluated for each element of $from (locally
-#           setting $_ to each element) in order to select the elements for
-#           which the expression evaluated to true.
-#
-# Example:
-#
-#   $env->copyTree("../C", "/OME/C", sub{ ! /CVS$/i });
-#
-# The above will copy (recursively) the contents of the C directory (contained
-# in the parent directory of the working directory) into /OME/C with the
-# exception of CVS directories.
-#
-sub copyTree {
-    my $self = shift;
-    my ($from,$to,$filter) = @_;
-    $from = File::Spec->rel2abs($from);  # does clean up as well
-    $to = File::Spec->rel2abs($to);
-    my $paths = $self->scanDir($from,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
-    my @entries = keys(%$paths);  # just names, no path
-    # the above grabs all files and dirs except . and ..
-    # portability issue: what are the equivalents of . and .. on OS other than
-    # Unix and Win?
-    if( ref($filter) eq "CODE" ) {  # filter out unwanted files and dirs
-        @entries = grep {local $_=$_; &$filter} @entries;
-    }
-    my $x;
-    foreach my $item (@entries) {  # if @entries is empty, we return
-        $x = $paths->{$item};  # abs path of current entry
-        if( -f $x ) {
-            copy($x, $to) or die("Couldn't copy file $x. $!.\n");
-        } elsif ( -d $x ) {
-            $x = File::Spec->catdir($to,$item);  # portable path
-            mkdir($x) or die("Couldn't make directory $x. $!.\n");
-            copyTree(File::Spec->catdir($from,$item),
-                File::Spec->catdir($to,$item),$filter);
-        }
-    }
-}
-
 # Returns a hash ref whose keys are the names of the entries in the specified
 # directory and whose values are their absolute paths.
 #
@@ -264,6 +215,113 @@ sub scanDir {
     }
     closedir(DIR);
     return \%contents;
+}
+
+# Recursively copies all files and directories contained in a given origin
+# directory to the specified destination directory.
+#
+# $env->copyTree($from, $to [, $filter]);
+#
+# $from     Directory to copy contents from. It must be a valid path either
+#           absolute or relative to the working directory.
+# $to       Directory to copy contents to. It must be a valid path either
+#           absolute or relative to the working directory.
+# $filter   Optional coderef to filter out the contents of the $from directory.
+#           If specified, it is evaluated for each element of $from (locally
+#           setting $_ to each element) in order to select the elements for
+#           which the expression evaluated to true.
+# DIES      If a dir can't be opened for reading or a new dir can't be made or
+#           a file can't be copied.
+#
+# Example:
+#
+#   $env->copyTree("../C", "/OME/C", sub{ ! /CVS$/i });
+#
+# The above will copy (recursively) the contents of the C directory (contained
+# in the parent directory of the working directory) into /OME/C with the
+# exception of CVS directories.
+#
+sub copyTree {
+    my $self = shift;
+    my ($from,$to,$filter) = @_;
+    $from = File::Spec->rel2abs($from);  # does clean up as well
+    $to = File::Spec->rel2abs($to);
+    my $paths = $self->scanDir($from,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
+    my @entries = keys(%$paths);  # just names, no path
+    # the above grabs all files and dirs except . and ..
+    # portability issue: what are the equivalents of . and .. on OS other than
+    # Unix and Win?
+    if( ref($filter) eq "CODE" ) {  # filter out unwanted files and dirs
+        @entries = grep {local $_=$_; &$filter} @entries;
+    }
+    my $x;
+    foreach my $item (@entries) {  # if @entries is empty, we return
+        $x = $paths->{$item};  # abs path of current entry
+        if( -f $x ) {
+            copy($x, $to) or die("Couldn't copy file $x. $!.\n");
+        } elsif ( -d $x ) {
+            $x = File::Spec->catdir($to,$item);  # portable path
+            mkdir($x) or die("Couldn't make directory $x. $!.\n");
+            $self->copyTree(File::Spec->catdir($from,$item),
+                File::Spec->catdir($to,$item),$filter);
+        }
+    }
+    return;
+}
+
+# Recursively deletes all files and directories contained in a given base
+# directory - this is never deleted though. If a filter is specified, then only
+# the matching items are deleted. Moreover, directories are removed only if
+# their name matches the pattern and every contained element matches as well or
+# the directory is empty.
+#
+# my $deleted = $env->deleteTree($base [, $filter]);
+#
+# $base     Directory containing the items to delete. It must be a valid path
+#           either absolute or relative to the working directory.
+# $filter   Optional coderef to filter out the contents of the $base directory.
+#           If specified, it is evaluated for each element of $base (locally
+#           setting $_ to each element) in order to select the elements for
+#           which the expression evaluated to true.
+# RETURNS   True only if the whole content of $base has been deleted.
+# DIES      If a dir can't be opened for reading or a dir can't be removed
+#           or a file can't be unlinked.
+#
+# Example:
+#
+#   $env->deleteTree("/OME", sub{ ! /^.userAddedSpecialInfo$/ });
+#
+# The above will get rid (recursively) of everything in the OME directory with
+# the exception of files or directories named .userAddedSpecialInfo. Notice
+# that if a subdirectory X contains a file named .userAddedSpecialInfo, then
+# X won't be deleted.
+#
+sub deleteTree {
+    my $self = shift;
+    my ($base,$filter) = @_;
+    $base = File::Spec->rel2abs($base);  # does clean up as well
+    my $paths = $self->scanDir($base,sub{ ! /^\.{1,2}$/ }); #filter . and .. out
+    # the above grabs all files and dirs except . and ..
+    # portability issue: what are the equivalents of . and .. on OS other than
+    # Unix and Win?
+    my @to_delete = keys(%$paths);  # just names, no path
+    my ($total_entries,$deleted) = (scalar(@to_delete),0);
+    if( ref($filter) eq "CODE" ) {  # filter out files and dirs we don't delete
+        @to_delete = grep {local $_=$_; &$filter} @to_delete;
+    }
+    foreach my $item (@to_delete) {  # if @to_delete is empty, block is skipped
+        $item = $paths->{$item};  # abs path of current entry
+        if( -f $item ) {
+            unlink($item) or die("Couldn't delete file $item. $!.\n");
+            $deleted++;
+        } elsif ( -d $item ) {
+            if($self->deleteTree($item,$filter)) {  # dir is empty
+                rmdir($item) or die("Couldn't remove directory $item. $!.\n");
+                $deleted++;
+            } # if not empty, $filter didn't grab all contents in a leaf
+        }
+    }
+    return  $total_entries==$deleted ? 1 : 0 ;
 }
 
 
