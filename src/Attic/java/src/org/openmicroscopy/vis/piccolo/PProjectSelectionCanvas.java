@@ -54,6 +54,7 @@ import java.awt.Rectangle;
 import java.awt.Paint;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.HashSet;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -73,9 +74,8 @@ public class PProjectSelectionCanvas extends PCanvas
 	private static final int HEIGHT=50;
 	private static final int MAXHEIGHT=150;
 	private static final int MAXWIDTH=1000;
-	private static final double HGAP=5;
+	private static final double HGAP=3;
 	
-	private static final double INITIAL_SCALE=.7;
 	
 	private PLayer layer;
 	
@@ -103,12 +103,12 @@ public class PProjectSelectionCanvas extends PCanvas
             // build node
 			layer.addChild(pl);
 			//position
-			PBounds b = pl.getGlobalFullBounds();
-			if (b.getWidth()*ProjectLabel.SELECTED_SCALE > columnWidth) 
-				columnWidth = (int) (b.getWidth()*ProjectLabel.SELECTED_SCALE);
-			
-			if (b.getHeight() > rowHeight) 
-				rowHeight = (int) b.getHeight();
+			PBounds b = pl.getGlobalFullBounds();		
+			if (b.getHeight()* ProjectLabel.SCALE_MULTIPLIER > rowHeight) 
+				rowHeight = (int) (b.getHeight() *ProjectLabel.SCALE_MULTIPLIER);
+			double myWidth = b.getWidth()*ProjectLabel.SCALE_MULTIPLIER;
+			if (myWidth > columnWidth)
+				columnWidth = (int)myWidth;
 		}
 	}
 	
@@ -128,16 +128,16 @@ public class PProjectSelectionCanvas extends PCanvas
 				//System.errprintln("component width is "+width);
 				PBounds b = pl.getGlobalFullBounds();
 				double mywidth = pl.getGlobalFullBounds().getWidth()*
-					ProjectLabel.SELECTED_SCALE;
-				//f (x+columnWidth+HGAP > width) {
-				if (x+mywidth+HGAP > width) {
+					ProjectLabel.SCALE_MULTIPLIER;
+				//if (x+columnWidth+HGAP > width) {
+				if (x+mywidth+HGAP > width-2*HGAP) {
 		
 					y +=rowHeight+HGAP;
 					x =0;
 				}
 				pl.setOffset(x,y);
-	//			x+=columnWidth+HGAP;
 				x += mywidth+HGAP;
+				//x += columnWidth+HGAP;
 			}	
 		}
 		//scaleToFit(0);
@@ -145,18 +145,13 @@ public class PProjectSelectionCanvas extends PCanvas
 	
 	public PBounds getBufferedBounds() {
 		PBounds b = layer.getFullBounds();
-		return new PBounds(b.getX()-PConstants.SMALL_BORDER,
-			b.getY()-PConstants.SMALL_BORDER,
-			b.getWidth()+2*PConstants.SMALL_BORDER,
-			b.getHeight()+2*PConstants.SMALL_BORDER); 
+		return new PBounds(b.getX()-HGAP,b.getY()-HGAP,
+			b.getWidth()+2*HGAP,b.getHeight()+2*HGAP);
 	}
 	
 	private void scaleToFit(int delay) {
-		//PBounds b = //layer.getFullBounds();
 		PBounds b = getBufferedBounds();
-		//System.errprintln("bounds are "+b);
 		getCamera().animateViewToCenterBounds(b,true,delay);
-		//getCamera().setViewScale(INITIAL_SCALE);
 	}
 	
 	public void selectionChanged(SelectionEvent e) {
@@ -164,8 +159,8 @@ public class PProjectSelectionCanvas extends PCanvas
 		
 	 	if ((e.getMask() & SelectionEvent.SET_SELECTED_PROJECT) ==
 	 		SelectionEvent.SET_SELECTED_PROJECT) {
-	 		if (state.getSelectedProject() == null) 
-				scaleToFit(PConstants.ANIMATION_DELAY); 
+	 	//	if (state.getSelectedProject() == null) 
+				//scaleToFit(PConstants.ANIMATION_DELAY); 
 				setSelectedProject();
 	 	}
 		else if ((e.getMask() & SelectionEvent.SET_ROLLOVER_DATASET)
@@ -197,14 +192,22 @@ public class PProjectSelectionCanvas extends PCanvas
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
+				System.err.println("project selection.");
+				if (rolled != null)
+					System.err.println(" rolled over dataset .."+rolled.getName());
 				pLabel = (ProjectLabel) obj;
-				if (rolled != null && 
-					rolled.hasProject(pLabel.getProject())) 
+				CProject p = pLabel.getProject();
+				System.err.println("project is ..."+p.getName());
+				System.err.println("is it active? "+state.isActiveProject(p));
+				System.err.println("is label active..."+pLabel.isActive());
+				if (rolled != null && rolled.hasProject(p)) 
 					pLabel.setRollover(true);
-				else if (state.isActiveProject(pLabel.getProject()))
+				else if (state.isActiveProject(p) || pLabel.isActive())
 					pLabel.setActive();
-				else
+				else if (state.getSelectedProject() == null) 
 					pLabel.setNormal();
+				else 
+					pLabel.setUnselected();
 			}
 		}
 	}
@@ -214,6 +217,7 @@ public class PProjectSelectionCanvas extends PCanvas
 		ProjectLabel pLabel;
 		SelectionState state = SelectionState.getState();
 		
+		
 		while (iter.hasNext()) {
 		Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
@@ -222,8 +226,10 @@ public class PProjectSelectionCanvas extends PCanvas
 					pLabel.setRollover(true);
 				else  if (state.isActiveProject(pLabel.getProject()))
 					pLabel.setActive();
-				else
+				else if (state.getSelectedProject() == null)
 					pLabel.setNormal();
+				else 
+					pLabel.setUnselected();
 			}
 		}
  	}
@@ -233,17 +239,30 @@ public class PProjectSelectionCanvas extends PCanvas
 		CProject selected = state.getSelectedProject();
 		Iterator iter = layer.getChildrenIterator();
 		ProjectLabel pLabel;
+		CProject proj;
 				
 		while (iter.hasNext()) {
 			Object obj = iter.next();
 			if (obj instanceof ProjectLabel) {
 				pLabel = (ProjectLabel) obj;
-				if (pLabel.getProject() == selected)
+				proj = pLabel.getProject();
+				if (proj== selected)
 					pLabel.setSelected();
-				else if (state.isActiveProject(pLabel.getProject()))
+				else if (state.isActiveProject(proj))
 					pLabel.setActive();
-				else
+				else if (selected == null)
 					pLabel.setNormal();
+				else {// if was a selected and i'm not selected
+					// then, i want to see if they share any datasets.
+					// if they do, set Active. else set unselected
+					HashSet selDatasets = selected.getDatasetSet();
+					HashSet projDatasets = proj.getDatasetSet();
+					selDatasets.retainAll(projDatasets);
+					if (selDatasets.size() > 0)
+						pLabel.setActive();
+					else
+						pLabel.setUnselected();
+				}
 			}
 		}
 	} 
@@ -254,27 +273,40 @@ class ProjectLabel extends PText  {
 	
 	public static final double NORMAL_SCALE=1.0;
 	public static final double ACTIVE_SCALE=1.25;	
-    public static final double ROLLOVER_SCALE=1.25;
-	public static final double SELECTED_SCALE=1.5;
+    public static final double ROLLOVER_SCALE=1.75;
+	public static final double SELECTED_SCALE=2.5;
+	public static final double SCALE_MULTIPLIER=2;
+	public static final double UNSELECTED_SCALE=.75;
 	public CProject project;
 	
 	private double previousScale =NORMAL_SCALE;
 	private Paint previousPaint;
 	PProjectSelectionCanvas canvas;
 	
+	private boolean active = false;
 	
 	ProjectLabel(CProject project,PProjectSelectionCanvas canvas) {
 		super();
 		this.project = project;
 		this.canvas = canvas;
 		setText(project.getName());
-		setFont(PConstants.TOOLTIP_FONT);
+		setFont(PConstants.THUMBNAIL_LABEL_FONT);
 		
 	}
 	
 	public CProject getProject() {
 		return project;
 	}
+	
+	public void setUnselected() {
+		if (project == SelectionState.getState().getSelectedProject())
+			return;
+		active = false;
+		System.err.println("setting... "+project.getName()+" to be unselected");
+		setScale(UNSELECTED_SCALE);
+		setPaint(PConstants.DEFAULT_COLOR);	
+	}
+	
 	
 	public void setNormal() {
 		if (project == SelectionState.getState().getSelectedProject())
@@ -286,23 +318,25 @@ class ProjectLabel extends PText  {
 	public void setActive() {
 		if (project == SelectionState.getState().getSelectedProject())
 					return;
+		active = true;
 		setScale(ACTIVE_SCALE);
 		setPaint(PConstants.PROJECT_ACTIVE_COLOR);
 	}
 	
 	public void setSelected() {
+		System.err.println("setting something to be selected.");
+		active = false;
 		setScale(SELECTED_SCALE);
 		setPaint(PConstants.PROJECT_SELECTED_COLOR);
 		// zoom layer.
-		PLayer layer = (PLayer) getParent();
-		layer.getCamera(0).animateViewToCenterBounds(getGlobalFullBounds(),true,
-			PConstants.ANIMATION_DELAY);
+		//PLayer layer = (PLayer) getParent();
+		//layer.getCamera(0).animateViewToCenterBounds(getGlobalFullBounds(),true,
+		//	PConstants.ANIMATION_DELAY);
 	}
 	
 	public void setRollover(boolean v) {
 		if (project == SelectionState.getState().getSelectedProject())
 			return;
-			
 		if (v == true) {
 			setScale(ROLLOVER_SCALE);
 			setPaint(PConstants.PROJECT_ROLLOVER_COLOR);
@@ -310,6 +344,10 @@ class ProjectLabel extends PText  {
 		else  {
 			setNormal();
 		}
+	}
+	
+	public boolean isActive() {
+		return active;
 	}
 }
 
@@ -365,6 +403,7 @@ class ProjectLabelEventHandler extends PBasicInputEventHandler implements
 			//System.errprintln("mouse clicked in project selection. seting project");
 			//System.errprintln("event handled is "+e.isHandled());
 			ProjectLabel pl = (ProjectLabel) e.getPickedNode();
+			System.err.println("clicking on ..."+pl.getProject().getName());
 			SelectionState.getState().setSelectedProject(pl.getProject());
 		}
 	}
