@@ -101,11 +101,10 @@ public class ThumbnailAgent {
 			//extract session key from response
 			String  s = conn.getHeaderField("Set-Cookie");
 			s = s.trim();
-			sessionKey = s.substring(0, s.indexOf(';'));  //"SESSION_KEY=blahblah"
-			//System.err.println(" session key is "+sessionKey);
+	//		"SESSION_KEY=blahblah"
+			sessionKey = s.substring(0, s.indexOf(';'));  
 			webConnection = true;
-			//System.err.println("web connection for thumbnail ok");
-  		} catch (Exception e) {
+		} catch (Exception e) {
   			webConnection = false;
   			System.err.println("failed to get web connection");
   			e.printStackTrace();
