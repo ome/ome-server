@@ -61,6 +61,14 @@ __PACKAGE__->addColumn(['attribute_id','attribute'] => 'attribute_id',
                         Indexed => 1,
                        });
 
+__PACKAGE__->addDeleteKey('attribute_id');
+__PACKAGE__->addDeleteKey('module_execution_id');
+
+# Our current caching implements breaks when there is not a single
+# primary key column for the table.  As this is the case for this
+# table, turn off caching (just for this class).
+
+__PACKAGE__->Caching(0);
 
 1;
 
