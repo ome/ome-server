@@ -191,11 +191,20 @@ sub importFile() {
 				system( "mv $href ". $repository->Path().$sha1 ) eq 0
 					or die "Could not move pixel file to repository.\n";
 
-				$href = $repository->Path().$sha1;
+				$href = $sha1;
 				$pixelsXML->setAttribute( "Path", $href );
 				$pixelsXML->setAttribute( "FileSHA1", $sha1 );
-				$pixelsXML->setAttribute( "SizeC", $pixelsXML->getAttribute( "NumChannels" ) );
-				$pixelsXML->setAttribute( "SizeT", $pixelsXML->getAttribute( "NumTimes" ) );
+
+				$pixelsXML->setAttribute( "SizeX", $imageXML->getAttribute( "SizeX" ) )
+					unless $pixelsXML->getAttribute( "SizeX" );
+				$pixelsXML->setAttribute( "SizeY", $imageXML->getAttribute( "SizeY" ) )
+					unless $pixelsXML->getAttribute( "SizeY" );
+				$pixelsXML->setAttribute( "SizeZ", $imageXML->getAttribute( "SizeZ" ) )
+					unless $pixelsXML->getAttribute( "SizeZ" );
+				$pixelsXML->setAttribute( "SizeC", $imageXML->getAttribute( "NumChannels" ) )
+					unless $pixelsXML->getAttribute( "SizeC" );
+				$pixelsXML->setAttribute( "SizeT", $imageXML->getAttribute( "NumTimes" ) )
+					unless $pixelsXML->getAttribute( "SizeT" );
 
 				die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
 					unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
@@ -235,7 +244,7 @@ sub importFile() {
 	foreach (@newdirs) {
 		die "Couldn't remove directory $_: $!\n" unless rmdir ($_);
 	}
-		
+$doc->toFile( 'foo' );		
 	return $doc;
 }
 #
