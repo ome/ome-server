@@ -18,8 +18,8 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-use OME::Session;
 use OME::SessionManager;
+use OME::Session;
 use OME::Tasks::ImageTasks;
 use Term::ReadKey;
 
