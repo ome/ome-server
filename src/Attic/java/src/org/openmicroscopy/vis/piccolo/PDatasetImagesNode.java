@@ -76,6 +76,8 @@ public class PDatasetImagesNode extends PNode  {
 	
 	private PBrowserEventHandler handler;
 	
+	private int maxLevel;
+	
 	public PDatasetImagesNode() {
 		super();	
 		addChild(imagesNode);
@@ -113,6 +115,8 @@ public class PDatasetImagesNode extends PNode  {
 		}
 	}
 	
+	
+	
 	public void setScale(double scale) {
 		super.setScale(scale);
 	}
@@ -149,7 +153,7 @@ public class PDatasetImagesNode extends PNode  {
 		System.err.println("calling highlight thumbnail..."+thumb);
 		System.err.println(" v is "+v+", level "+level);
 		int count = imagesNode.getChildrenCount();		
-		int radius = (int) Math.floor(getRadius(level));
+		int radius = getRadius(level);
 		int size = radius*radius;
 		
 		System.err.println("count is "+count+", radius is "+radius);
@@ -164,23 +168,26 @@ public class PDatasetImagesNode extends PNode  {
 		}
 	}
 	
-	public double getRadius(int level) {
+	public int getRadius(int level) {
 		int count = imagesNode.getChildrenCount();
 		// find the number of items on each side
 		double side = Math.sqrt(count);
 		double denom = Math.pow(2,level+2);
-		return side/denom;
+		return (int) Math.floor(side/denom);
 	}
 	
 	private void doHighlightThumbnail(PThumbnail thumb,int radius) {
 		// get index
-		
+		PBounds b  = getHaloBounds(thumb,radius);
+		zoomHalo.setPathTo(b);
+	}
+	
+	
+	private PBounds getHaloBounds(PThumbnail thumb,int radius) {
 		int index = imagesNode.indexOfChild(thumb);
 		PBounds b = getHighlight(index,radius);
-		System.err.println("global bounds are "+b);
 		globalToLocal(b);
-		System.err.println("local bounds are "+b);
-		zoomHalo.setPathTo(b);
+		return b;
 	}
 	
 	private int getRowSize(int i) {
@@ -262,22 +269,22 @@ public class PDatasetImagesNode extends PNode  {
 		 System.err.println("radius is..."+getRadius(level));
 		 double newRadius = getRadius(level+1);
 		 System.err.println("next radius is "+newRadius);
-		 if (newRadius <1 && getRadius(level) >1) {
+		 if (getRadius(level) <1) { // didn't work when I also checked if next is >1
 		 	handler.animateToBufferedNode(thumb);
 		 }
 		 else {
-	     	calcZoomHalo(thumb,level);
+	     	calcZoomInHalo(thumb,level);
 		 	handler.animateToNode(zoomHalo);
 		 }
 	     // zoomIn
 	     
 	     System.err.println("new radius is "+newRadius);
 	     int newLevel = level;
-	     if (newRadius >=1)
+	     if (newRadius >=0) // was 1
 	     	newLevel++;
 	     System.err.println("new level is "+newLevel);
 	     return newLevel;	
-	   }
+	 }
 	
 	public int zoomOutOfHalo(PThumbnail thumb, int level) {
 		if (level == 0)
@@ -290,15 +297,11 @@ public class PDatasetImagesNode extends PNode  {
 			// zoom to this.
 			handler.animateToBufferedNode(b);
 		}
-		else if (getRadius(level) <= 1) {
-			// innermost, go out by one
-			calcZoomHalo(thumb,level-1);
-			handler.animateToNode(zoomHalo);
-			
-		} else {
-			// go down by two
+		else {
+			System.err.println("normal up two..");
+			// go up by two
 			int upperLevel = level-2;
-			calcZoomHalo(thumb,upperLevel);
+			calcZoomOutHalo(thumb,upperLevel);
 			
 			//and zoom in by one. net effect - zoom out oune
 			handler.animateToNode(zoomHalo);
@@ -306,13 +309,20 @@ public class PDatasetImagesNode extends PNode  {
 		level--;
 		if (level < 0)
 			level = 0;
-		calcZoomHalo(thumb,level);
 		return level;		
 	}
 	
-	public void calcZoomHalo(PThumbnail thumb, int level) {
-		int radius = (int) Math.floor(getRadius(level));
-		doHighlightThumbnail(thumb,radius);		
+	// when zooming out, I don't want a highlight unless radius > 1
+	public void calcZoomOutHalo(PThumbnail thumb, int level) {
+		int radius = getRadius(level);
+		System.err.println("radius is "+radius);
+		if (radius > 1)
+			doHighlightThumbnail(thumb,radius);
+	}
+	
+	public void calcZoomInHalo(PThumbnail thumb,int level) {
+		int radius = getRadius(level);
+		doHighlightThumbnail(thumb,radius);
 	}
 	
 }
