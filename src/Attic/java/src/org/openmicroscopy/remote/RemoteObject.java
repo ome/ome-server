@@ -67,12 +67,12 @@ public class RemoteObject
     /**
      * The delegate used to make remote procedure calls.
      */
- 	  protected static RemoteCaller caller = null;
+    protected static RemoteCaller caller = null;
 
     /**
      * The {@link Session} that created this object.
      */
-    protected static RemoteSession session = null;
+    protected RemoteSession session = null;
 	
     /**
      * Sets the delegate used to make remote procedure calls.
@@ -105,7 +105,7 @@ public class RemoteObject
     public RemoteObject(RemoteSession session, String reference)
     {
         this.reference = reference;
-        RemoteObject.session = session;
+        this.session = session;
     }
 
     /**
@@ -145,8 +145,8 @@ public class RemoteObject
      * Class#newInstance}).
      * @param reference this object's session
      */
-    public static void setRemoteSession(RemoteSession session)
-    { RemoteObject.session = session; }
+    public void setRemoteSession(RemoteSession session)
+    { this.session = session; }
 
     /**
      * Returns this object's remote reference.

@@ -210,8 +210,7 @@ public class RemoteObjectCache
             }
 
             newObj.setReference(reference);
-            //newObj.setRemoteSession(session);
-            RemoteObject.setRemoteSession(session);
+            newObj.setRemoteSession(session);
             objectCache.put(reference,new WeakReference(newObj));
 
             return newObj;
