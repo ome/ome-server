@@ -30,6 +30,7 @@ sub new {
 		_parser         => $params{_parser},
 		_docIDs         => {},
 		_docRefs		=> {},
+		_DBObjects      => [],
 	};
 	
 	if (!defined $self->{_parser}) {
@@ -78,7 +79,7 @@ sub processDOM {
 
 	my $docIDs = $self->{_docIDs};
 	my $docRefs = $self->{_docRefs};
-	my ($node,$refNode,$object,$objectID,$refObject,$refID);
+	my ($node,$refNode,$object,$objectID,$refObject,$refObjectID,$refID);
 
 
 	# process global custom attributes
@@ -107,15 +108,16 @@ sub processDOM {
 		foreach $refNode ( @{ $node->getChildrenByTagName('ProjectRef') } ) {
 			$refID = $refNode->getAttribute('ID');
 			if (exists $docIDs->{$refID}) {
-				$refObject = $docIDs->{$refID};
+				$refObjectID = $docIDs->{$refID};
 			} else {
 				$refObject = $lsid->getLocalObject ($refID);
+				$refObjectID = $refObject ? $refObject->id() : undef
 			}
 			logdie ref ($self) . "->processDOM: Could not resolve Project ID '$refID'"
-				unless defined $refObject;
-			$factory->maybeNewObject('OME::Project::DatasetMap',
-				{dataset_id => $objectID, project_id => $refObject->id()}
-			);
+				unless defined $refObjectID;
+			$self->addObject ($factory->maybeNewObject('OME::Project::DatasetMap',
+				{dataset_id => $objectID, project_id => $refObjectID}
+			));
 		}
 		
 		# Import Dataset CAs
@@ -142,19 +144,20 @@ sub processDOM {
 				$refObject = $docIDs->{$refID};
 			} else {
 				$refObject = $lsid->getLocalObject ($refID);
+				$refObjectID = $refObject ? $refObject->id() : undef
 			}
 			logdie ref ($self) . "->processDOM: Could not resolve Dataset ID '$refID'"
-				unless defined $refObject;
-			$factory->maybeNewObject('OME::Image::DatasetMap',
-				{image_id => $objectID, dataset_id => $refObject->id()}
-			);
+				unless defined $refObjectID;
+			$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
+				{image_id => $objectID, dataset_id => $refObjectID}
+			));
 		}
 
 		# These get imported into an import dataset
 		$importDataset = $self->dataset();
-		$factory->maybeNewObject('OME::Image::DatasetMap',
+		$self->addObject ($factory->maybeNewObject('OME::Image::DatasetMap',
 			{image_id => $objectID, dataset_id => $importDataset->id()}
-		);
+		));
 
 		# We need an analysis for these.  This will return the one stored in the object or make a new one.
 		$importAnalysis = $self->analysis();
@@ -169,35 +172,7 @@ sub processDOM {
 		my $image = $object;
 		my $imageID = $image->id();
 		# Import Features
-		# This does a breadth-first traversal of the features sub-tree - non-recursively.
-		logdbg "debug", ref ($self)."->processDOM: Processing Features";
-		my $feature = $node->getChildrenByTagName('Feature' )->[0];
-		my ($parentFeature, $firstFeature);
-		$firstFeature = $feature;
-		while ($feature) {
-			$object = $self->importObject ($feature,undef,$imageID,undef);
-			$object->image($image);
-			$object->parent_feature($parentFeature) if defined $parentFeature;
-
-			$objectID = $object->id();
-
-			# Import Feature CAs
-			$CAnode = $feature->getChildrenByTagName('CustomAttributes')->[0];
-			@CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
-			foreach $CA ( @CAs ) {
-				$self->importObject ($CA,'I',$objectID,$importAnalysis);
-			}
-			# Go to the sibling.
-			$feature = $feature->nextSibling ();
-			while ($feature and not $feature->nodeName() eq 'Feature') {$feature = $feature->nextSibling ();}
-			# If we're got all the siblings, set ourselves as the parent,
-			# and go down a level from this level's first feature
-			if (not defined $feature) {
-				$parentFeature = $feature;
-				$feature = $firstFeature->getChildrenByTagName('Feature' )->[0];
-				$firstFeature = $feature;
-			}
-		}
+		$self->importFeatures ($imageID, undef, $importAnalysis, $node);
 	}
 	
 	# Commit everything we've got so far.
@@ -219,6 +194,27 @@ sub processDOM {
 #	
 #	logcarp "$@" if $@;
 	return;
+}
+
+
+sub importFeatures ($$$) {
+my ($self, $imageID, $parentFeature, $importAnalysis, $node) = @_;
+
+		logdbg "debug", ref ($self)."->importFeatures: Processing Features";
+
+		foreach my $feature (@{$node->getChildrenByTagName('Feature' )}) {
+			my $object = $self->importObject ($feature,undef,$imageID,$parentFeature);
+			$object->parent_feature ($parentFeature) if defined $parentFeature;
+			my $objectID = $object->id();
+
+			# Import Feature CAs
+			my $CAnode = $feature->getChildrenByTagName('CustomAttributes')->[0];
+			my @CAs = $CAnode ? grep{ $_->nodeType eq 1 } $CAnode->childNodes() : () ;
+			foreach my $CA ( @CAs ) {
+				$self->importObject ($CA,'F',$objectID,$importAnalysis);
+			}
+			$self->importFeatures ($imageID, $object, $importAnalysis, $feature);
+		}
 }
 
 sub analysis () {
@@ -267,6 +263,7 @@ sub dataset () {
 sub commitObjects () {
 	my $self = shift;
 	
+	logdbg "debug", ref ($self)."->commitObjects: committing ".scalar (@{ $self->{_DBObjects} })." objects.";
     $_->writeObject() foreach @{ $self->{_DBObjects} };
     $self->{_DBObjects} = [];
 
@@ -274,8 +271,10 @@ sub commitObjects () {
 }
 
 sub addObject ($) {
-	my ($self,$object) = shift;
+	my ($self,$object) = @_;
 	push (@{ $self->{_DBObjects} }, $object) if defined $object;
+	logdbg "debug", ref ($self)."->addObject: added object #".scalar (@{ $self->{_DBObjects} })." '".ref($object).
+		"' for later commit.";
 }
 
 
@@ -286,18 +285,20 @@ sub importObject ($$$$) {
 	my $docIDs     = $self->{_docIDs};
 	my $docRefs    = $self->{_docRefs};
 
-	logdbg "debug", ref ($self)."->importObject:  Importing node ".$node->nodeName ()." type ".$node->nodeType ();
+	logdbg "debug", ref ($self)."->importObject: Importing node ".$node->nodeName ()." type ".$node->nodeType ();
 	
+	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
-	my $theObject = $lsid->getLocalObject ($LSID);
-	if (defined $theObject) {
-		$docIDs->{$LSID} = $theObject->id();
-		logdbg "debug", ref ($self)."->importObject:  Object ID '$LSID' exists in DB!";
-		return $theObject;
-	}
+	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
+#	$theObject = $lsid->getLocalObject ($LSID);
+#	if (defined $theObject) {
+#		$docIDs->{$LSID} = $theObject->id();
+#		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
+#		return $theObject;
+#	}
 
-	logdbg "debug", ref ($self)."->importObject:  Building new Object ID.";
+	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
 	$parentDBID = undef if $granularity eq 'G';
 	$analysis = undef if $granularity eq 'G' or $granularity eq 'D';
 
@@ -309,31 +310,41 @@ sub importObject ($$$$) {
 		if exists $docIDs->{$LSID};
 	$docIDs->{$LSID} = undef;
 
-	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node);
+	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node,$parentDBID);
+	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
 
 	# Process references in this object.
 	# If the reference was to an object already read from the document, resolve it.
 	# If not, check if its already in the DB
 	# If not, store the object for later resolution in a local hash.
 	my %unresolvedRefs;
-	my $theObject;
 	my ($objField,$theRef);
 	while ( ($objField,$theRef) = each %$refCols ) {
 		if (exists $docIDs->{$theRef}) {
 			$objectData->{$objField} = $docIDs->{$theRef};
+			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+				$objectData->{$objField}." in document.";
 		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
 			$objectData->{$objField} = $theObject->id();
+			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+				$objectData->{$objField}." in DB.";
 		} else {
 			$objectData->{$objField} = undef;
-			$unresolvedRefs{$objField} = $theRef
+			$unresolvedRefs{$objField} = $theRef;
+			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef NOT resolved.";
 		}
 	}
+	
 	$theObject = undef;
 
 	# Make the object.
 	if ($isAttribute) {
+		logdbg "debug", ref ($self)."->importObject:   Calling newAttribute.".
+			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newAttribute($objectType,$parentDBID,$analysis,$objectData);
 	} else {
+		logdbg "debug", ref ($self)."->importObject:   Calling newObject.".
+			join( "\n\t", map { $_."=>".$objectData->{$_} } keys %$objectData );
 		$theObject = $factory->newObject($objectType,$objectData);
 	}
 
@@ -362,8 +373,8 @@ sub importObject ($$$$) {
 
 
 
-sub getObjectTypeInfo ($) {
-	my ($self,$node) = @_;
+sub getObjectTypeInfo ($$) {
+	my ($self,$node,$parentID) = @_;
 	return undef unless defined $node;
 
 	my ($objectType,$isAttribute,$objectData,$refCols) = ('',0,{},{});
@@ -401,18 +412,25 @@ sub getObjectTypeInfo ($) {
 	} elsif ($objectType eq 'Image') {
 		$objectType = 'OME::Image';
 		$objectData = {
-			name        => $node->getAttribute( 'Name' ),
-			description => $node->getAttribute( 'Description' ),
+			name            => $node->getAttribute( 'Name' ),
+			description     => $node->getAttribute( 'Description' ),
 # might need to do type conversion on CreationDate
-			created     => $node->getAttribute( 'CreationDate' )
+			created         => $node->getAttribute( 'CreationDate' ),
+			inserted        => 'NOW',
+			experimenter_id => $node->getAttribute( 'Experimenter' ),
+			group_id        => $node->getAttribute( 'Group' )
 		};
-		$refCols = {};
+		$refCols = {
+			experimenter_id => $objectData->{experimenter_id},
+			group_id        => $objectData->{group_id}
+			};
 
 	} elsif ($objectType eq 'Feature') {
 		$objectType = 'OME::Feature';
 		$objectData = {
 			name        => $node->getAttribute( 'Name' ),
-			description => $node->getAttribute( 'Tag' ),
+			tag         => $node->getAttribute( 'Tag' ),
+			image_id    => $parentID
 		};
 		$refCols = {};
 
@@ -425,10 +443,19 @@ sub getObjectTypeInfo ($) {
 		my ($attrCol,$attrColName);
 		foreach $attrCol (@attrColumns) {
 			$attrColName = $attrCol->name();
-			$objectData->{$attrColName} => $node->getAttribute($attrColName);
+			$objectData->{$attrColName} = $node->getAttribute($attrColName);
 			if ($attrCol->data_column()->sql_type() eq 'reference') {
 				$refCols->{$attrColName} = $objectData->{$attrColName};
 			}
+			logdbg "debug", ref ($self)."->getObjectTypeInfo:   $attrColName = ".$objectData->{$attrColName};
+		}
+		my $granularity =  $attrType->granularity();
+		if ($granularity eq 'D') {
+			$objectData->{dataset_id} = $parentID;
+		} elsif ($granularity eq 'I') {
+			$objectData->{image_id} = $parentID;
+		} elsif ($granularity eq 'F') {
+			$objectData->{feature_id} = $parentID;
 		}
 		$isAttribute = 1;
 	}
@@ -441,7 +468,7 @@ sub getObjectTypeInfo ($) {
 
 =head1 AUTHOR
 
-Josiah Johnston (siah@nih.gov)
+Josiah Johnston (siah@nih.gov), Ilya G. Goldberg (igg@nih.gov)
 
 =cut
 
