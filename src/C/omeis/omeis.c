@@ -83,7 +83,6 @@ dispatch (char **param)
 	unsigned long z,dz,c,dc,t,dt;
 	planeInfo *planeInfoP;
 	stackInfo *stackInfoP;
-	
 	unsigned long uploadSize;
 	unsigned long length;
 	OID fileID;
@@ -91,7 +90,6 @@ dispatch (char **param)
 	FILE *file;
 	char file_path[MAXPATHLEN],file_path2[MAXPATHLEN];
 	unsigned long tiffDir=0;
-	int i;
 	
 	/* Co-ordinates */
 	ome_coord theC = -1, theT = -1, theZ = -1, theY = -1;
@@ -117,12 +115,6 @@ char **cgivars=param;
 	}
 	
 	m_val = get_method_by_name(method);
-	/* Trap for inputed method name strings that don't correspond to implemented methods */
-	if (m_val == 0){
-			HTTP_DoError (method,"Method %s doesnt' exist", method);
-			return (-1);
-	}
-	
 	/* END (method operations) */
 
 	/* ID requirements */
@@ -282,7 +274,7 @@ char **cgivars=param;
 
 			freePixelsRep (thePixels);
 			break;
-		case M_GETPLANESSTATS:
+		case M_GETPLANESTATS:
 			if (!ID) return (-1);
 		
 			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
@@ -315,49 +307,12 @@ char **cgivars=param;
 							 planeInfoP->sum_i, planeInfoP->sum_i2, planeInfoP->sum_log_i,
 							 planeInfoP->sum_xi, planeInfoP->sum_yi, planeInfoP->sum_zi
 						);
-	
 						planeInfoP++;
 					}
 
 			freePixelsRep (thePixels);
 
 			break;
-		case M_GETPLANESHIST:
-			if (!ID) return (-1);
-		
-			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
-				return (-1);
-			}
-
-			if (! (planeInfoP = thePixels->planeInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
-				freePixelsRep (thePixels);
-				return (-1);
-			}
-
-			head = thePixels->head;
-
-			dz = head->dz;
-			dc = head->dc;
-			dt = head->dt;
-			HTTP_ResultType ("text/plain");
-			for (t = 0; t < dt; t++)
-				for (c = 0; c < dc; c++)
-					for (z = 0; z < dz; z++) {
-						fprintf(stdout,"%lu\t%lu\t%lu\t", c,t,z);
-						for (i = 0; i < NUM_BINS; i++)
-							fprintf(stdout,"%lu\t", planeInfoP->hist[i]);
-						fprintf(stdout,"\n");
-						planeInfoP++;
-					}
-
-			freePixelsRep (thePixels);
-			break;
-			
 		case M_GETSTACKSTATS:
 			if (!ID) return (-1);
 		
@@ -390,42 +345,6 @@ char **cgivars=param;
 						 stackInfoP->sum_i, stackInfoP->sum_i2, stackInfoP->sum_log_i,
 						 stackInfoP->sum_xi, stackInfoP->sum_yi, stackInfoP->sum_zi
 					);
-					stackInfoP++;
-				}
-
-			freePixelsRep (thePixels);
-
-			break;
-		case M_GETSTACKHIST:
-		if (!ID) return (-1);
-		
-			if (! (thePixels = GetPixelsRep (ID,'r',bigEndian())) ) {
-				if (errno) HTTP_DoError (method, "%s", strerror( errno ) );
-				else  HTTP_DoError (method,"Access control error - check error log for details" );
-				return (-1);
-			}
-
-			if (! (stackInfoP = thePixels->stackInfos) ) {
-				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
-				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
-				else HTTP_DoError (method,"Access control error - check error log for details" );
-				freePixelsRep (thePixels);
-				return (-1);
-			}
-
-			head = thePixels->head;
-
-			dz = head->dz;
-			dc = head->dc;
-			dt = head->dt;
-			HTTP_ResultType ("text/plain");
-			
-			for (t = 0; t < dt; t++)
-				for (c = 0; c < dc; c++) {
-					fprintf(stdout,"%lu\t%lu\t", c,t);
-					for (i = 0; i < NUM_BINS; i++)
-						fprintf(stdout,"%lu\t", stackInfoP->hist[i]);
-					fprintf(stdout,"\n");
 					stackInfoP++;
 				}
 
@@ -817,7 +736,6 @@ char **cgivars=param;
 				nIO = ConvertTIFF (thePixels, theFile, theZ, theC, theT, tiffDir, 1);
 			else
 				nIO = ConvertFile (thePixels, theFile, file_offset, offset, nPix, 1);
-				
 			if (nIO != nPix) {
 				if (strlen (thePixels->error_str)) HTTP_DoError (method, "%s", thePixels->error_str);
 				else if (errno) HTTP_DoError (method,"Error: %s",strerror( errno ) );
@@ -826,20 +744,6 @@ char **cgivars=param;
 				freeFileRep   (theFile);
 				return (-1);
 			} else {
-			
-				/* compute the Pixel's statistics as appropriate */
-				switch (m_val) {
-					case M_CONVERT:
-						FinishStats (thePixels, 0);
-						break;
-					case M_CONVERTSTACK:
-						DoStackStats (thePixels, theC, theT);
-						break;
-					case M_CONVERTPLANE:
-					case M_CONVERTTIFF:
-						DoPlaneStats (thePixels, theZ, theC, theT);
-						break; 
-				}
 				freePixelsRep (thePixels);
 				freeFileRep   (theFile);
 				HTTP_ResultType ("text/plain");
