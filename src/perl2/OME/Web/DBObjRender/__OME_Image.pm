@@ -55,41 +55,55 @@ use strict;
 use OME;
 our $VERSION = $OME::VERSION;
 
+use HTML::Template;
 use OME::Tasks::ImageManager;
 use OME::Tasks::ModuleExecutionManager;
+use Carp 'cluck';
 use base qw(OME::Web::DBObjRender);
 
-# Class data
-__PACKAGE__->_fieldLabels( {
-	'default_pixels' => "Preview", 
-	'image_guid'     => "GUID",
-	'original_file'  => "Original File"
-});
-__PACKAGE__->_fieldNames( [
-	'id',
-	'default_pixels',
-	'name',
-	'description',
-	'owner',
-	'group',
-	'created',
-	'module_executions'
-] ) ;
-__PACKAGE__->_allFieldNames( [
-	@{__PACKAGE__->_fieldNames() },
-	'original_file',
-	'inserted',
-	'image_guid',
-] ) ;
+sub new {
+	my $proto = shift;
+	my $class = ref($proto) || $proto;
+	my $self  = $class->SUPER::new(@_);
+	
+	$self->{ _fieldTitles } = {
+		'default_pixels' => "Preview", 
+		'image_guid'     => "GUID",
+		'original_file'  => "Original File"
+	};
+	$self->{ _summaryFields } = [
+		'id',
+		'default_pixels',
+		'name',
+		'description',
+		'owner',
+		'group',
+		'created',
+	];
+	$self->{ _allFields } = [
+		'id',
+		'default_pixels',
+		'name',
+		'description',
+		'owner',
+		'group',
+		'created',
+		'original_file',
+		'inserted',
+		'image_guid',
+	];
+	
+	return $self;
+}
 
-=head2 getRefToObject
+=head2 getRef
 
 html format returns a thumbnail linking to the image viewer and the image name
 linking to the Image object.
 
 =cut
 
-sub getRefToObject {
+sub getRef {
 	my ($proto,$obj,$format) = @_;
 	
 	for( $format ) {
@@ -109,70 +123,25 @@ sub getRefToObject {
 	}
 }
 
-=head2 getObjSummary
+=head2 _renderData
 
-returns a summary description of an image. Includes name, thumbnail, owner, group, and the first 89 characters of the description.
-
-=cut
-
-sub getObjSummary {
-	my ($proto,$obj) = @_;
-	
-	my $q = new CGI();
-	my ($package_name, $common_name, $formal_name, $ST) =
-		OME::Web->_loadTypeAndGetInfo( $obj );
-	my $id   = $obj->id();
-	my $name = $obj->name();
-	my $thumbURL = OME::Tasks::ImageManager->getThumbURL($id); 
-	my $detailURL = "serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id";
-	( my $creation_date = $obj->created() ) =~ s/\..*$//;
-	( my $description = $obj->description ) =~ s/^(.{89}).*$/$1\.\.\./s;
-	return $q->table( 
-		$q->Tr( $q->td( { colspan => 2 }, 
-			$q->a( { href => $detailURL, class => 'ome_summary_title', title => 'Detailed information about this image' }, 
-				$obj->name() 
-			)
-		) ),
-		$q->Tr( 
-			$q->td( { width => 50 },
-				$q->a( {href => "javascript: openPopUpImage($id);",  title => 'View this image'}, 
-					$q->img( { src => $thumbURL } )
-				)
-			),
-			$q->td( { align => 'left' },
-				OME::Web::DBObjRender->getRefToObject( $obj->owner(), 'html' ),
-				$q->br(),
-				OME::Web::DBObjRender->getRefToObject( $obj->group(), 'html' ),
-				$q->br(),
-				$creation_date
-			)
-		),
-		$q->Tr( $q->td( { colspan => 2 }, $description ) )
-	);
-}
-
-=head2 renderSingle
-
-adds link to original file
+populates thumb_url, original_file, and module_executions
 
 =cut
 
-sub renderSingle {
-	my ($proto,$obj,$format,$fieldnames) = @_;
+sub _renderData {
+	my ($proto, $obj, $field_names, $format, $mode, $options) = @_;
 	
 	my $factory = $obj->Session()->Factory();
 	my $q       = new CGI;
-	my @filtered_field_names = grep( !m/^original_file|module_executions$/, @$fieldnames);
-	my $record  = $proto->SUPER::renderSingle($obj,$format,\@filtered_field_names);
+	my %record;
 
-	# don't let description take up the whole screen
-	$record->{ description } =~ s/^(.{89}).*$/$1\.\.\./s
-		if exists $record->{ description };
-
-	# render special fields
-	my %field_name_lookup = map{ $_ => undef } @$fieldnames;
+	# thumbnail url
+	if( grep( /thumb_url/, @$field_names ) ) {
+		$record{ 'thumb_url' } = OME::Tasks::ImageManager->getThumbURL( $obj );
+	}
 	# original file
-	if( exists $field_name_lookup{ original_file } ) {
+	if( grep( /original_file/, @$field_names ) ) {
 		my $import_mex = $factory->findObject( "OME::ModuleExecution", 
 			'module.name' => 'Image import', 
 			image => $obj, 
@@ -191,32 +160,15 @@ sub renderSingle {
 		my $original_file = $original_files->[0];
 		if( $original_file and $original_file->Repository() ) { 
 			my $originalFile_url =  $original_file->Repository()->ImageServerURL().'?Method=ReadFile&FileID='.$original_file->FileID();
-			$record->{ 'original_file' } = $q->a( { -href => $originalFile_url, title => 'Download original file' }, $original_file->Path() )
+			my $path = $proto->_trim( $original_file->Path(), $options );
+			$record{ 'original_file' } = $q->a( { -href => $originalFile_url, title => 'Download original file' }, $path )
 				if( $format eq 'html' );
-			$record->{ 'original_file' } = $original_file->Path()
+			$record{ 'original_file' } = $path
 				if( $format eq 'txt' );
 		}
 	}
-	# module executions
-	if( exists $field_name_lookup{ module_executions } ) {
-		my @mexs = $obj->module_executions();
-		my %mex_labels = map{ $_->id() => OME::Web::DBObjRender->getObjectLabel( $_ ) } @mexs;
-		my $mex_order = [ '', map( $_->id, sort( { $a->timestamp cmp $b->timestamp } @mexs )  )];
-		$mex_labels{''} = scalar( @mexs).' Module Executions';
-		my $url_stub = 'serve.pl?Page=OME::Web::DBObjDetail&Type=OME::ModuleExecution&ID=';
-
-		$record->{ module_executions } = $q->popup_menu( 
-			-name	=> '',
-			'-values' => $mex_order,
-			-labels	 =>  \%mex_labels,
-			-onchange => "javascript: if( this.value != '' ) { document.location='$url_stub'+this.value; }"
-		) if( $format eq 'html' );
-		$record->{ module_executions } = join( ',', map( $mex_labels{ id }, splice( @$mex_order, 1 ) ) )
-			if( $format eq 'txt' );
-	}
 	
-	return %$record if wantarray;
-	return $record;
+	return %record;
 }
 
 =head1 Author
