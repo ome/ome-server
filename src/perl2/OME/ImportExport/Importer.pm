@@ -108,7 +108,7 @@ sub import_image {
 
     $self->{did_import} = 0;
 
-    if ($switch !~ /^--dupl/) {
+    if ((!$switch) || ($switch !~ /^--dupl/)) {
 	my $sha1 = getSha1($image_file);
 	my $session = $self->{session};
 	my $factory = $session->Factory();
