@@ -571,7 +571,7 @@ sub DrawDatasetControl {
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
 		push (@ImageIDs, $imageMap->image()->image_id());
-		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->getFullPath();
+		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->getFullPath( $imageMap->image()->DefaultPixels() );
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
@@ -1422,14 +1422,14 @@ sub SVGgetDataJS {
 		unless defined $image;
 
 	# get Dimensions from image and make them readable
-	my $d = $image->Dimensions()
-		or die "Could not retrieve image->Dimensions";
-	my $dims = [ $d->size_x(),
-	             $d->size_y(),
-	             $d->size_z(),
-	             $d->num_waves(),
-	             $d->num_times(),
-	             $d->bits_per_pixel()/8
+	my $pixels = $image->DefaultPixels()
+		or die "Could not a primary set of Pixels for this image\n";
+	my $dims = [ $pixels->SizeX,
+	             $pixels->SizeY,
+	             $pixels->SizeZ,
+	             $pixels->SizeC,
+	             $pixels->SizeT,
+	             $pixels->BitsPerPixel/8
 	            ];
 	
 	# get wavelengths from image and make them JavaScript readable
@@ -1482,7 +1482,7 @@ sub SVGgetDataJS {
 	$JSinfo->{ pDims }              = $dims;
 	$JSinfo->{ Dims }               = '['.join (',', @$dims).']';
 	$JSinfo->{ CGI_URL }            = '/cgi-bin/OME_JPEG';
-	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath();
+	$JSinfo->{ CGI_optionStr }      = '&Path='.$image->getFullPath( $pixels );
 	$JSinfo->{ SaveDisplayCGI_URL } = '/perl2/serve.pl?Page=OME::Web::SaveViewerSettings';
 	$JSinfo->{ theZ }               = $cgi->url_param('theZ') || ( defined $dims ? sprintf "%d",$dims->[2] / 2 : 0 );
 	$JSinfo->{ theT }               = $cgi->url_param('theT') || 0;
@@ -1738,12 +1738,19 @@ sub getJSgraphics {
     $image = $self->Session()->Factory()->loadObject("OME::Image",$ImageID);
     die "Could not retreive Image from ImageID=$ImageID\n"
     	unless defined $image;
-    print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath()."\n";
-    my $dimensions = $image->Dimensions();
+	my $pixels = $image->DefaultPixels();
+    print STDERR ref($self)."->getJSgraphics:  ImageID=".$image->image_id()." Name=".$image->name." Path=".$image->getFullPath( $pixels )."\n";
 	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
-        $dimensions->num_waves(),$dimensions->num_times(),
-        $dimensions->bits_per_pixel());
+	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
+            $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel());
+# commented out by josiah 6/9/03. it uses depricated methods. the html viewer doesn't work at the moment & i didn't want to delete this before i debugged it
+#    my $dimensions = $image->Dimensions();
+#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->{size_x},$dimensions->{size_y},$dimensions->{size_z},
+#        $dimensions->{num_waves},$dimensions->{num_times},
+#        $dimensions->{bits_per_pixel});
+#	($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp) = ($dimensions->size_x(),$dimensions->size_y(),$dimensions->size_z(),
+#        $dimensions->num_waves(),$dimensions->num_times(),
+#        $dimensions->bits_per_pixel());
 
 	$bpp /= 8;
 
