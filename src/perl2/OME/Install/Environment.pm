@@ -34,8 +34,8 @@ my $UNKNOWN = 0;
 my $LINUX = 1;
 my $DARWIN = 2;
 my $HPUX = 3;
-my $SUN = 4;
-my $FREE_BSD = 5;
+my $SOLARIS = 4;
+my $FREEBSD = 5;
 my $WINDOWS = 6;
 # ... and so on
 
@@ -104,8 +104,8 @@ my @os_specific = ();
 };
 
 # Sun-specific stuff.
-@os_specific[$SUN] = { family => "SUN", name => "UNKNOWN" };
-@os_specific[$SUN] = { getMAC =>
+@os_specific[$SOLARIS] = { family => "SUN", name => "UNKNOWN" };
+@os_specific[$SOLARIS] = { getMAC =>
     sub {
         my $macAddr = `ifconfig -a`;  # need to su, & then run ifconfig -a & use
         $macAddr =~ s/.*ether: ([^ \t]+)$/$1/; # the colon separated string after 'ether'
@@ -115,8 +115,8 @@ my @os_specific = ();
 };
 
 # FreeBSD-specific stuff.
-@os_specific[$FREE_BSD] = { family => "FreeBSD", name => "UNKNOWN" };
-@os_specific[$FREE_BSD] = { getMAC =>
+@os_specific[$FREEBSD] = { family => "FreeBSD", name => "UNKNOWN" };
+@os_specific[$FREEBSD] = { getMAC =>
     sub {
         my $macAddr = `dmefg`;
         chomp($macAddr);
@@ -124,29 +124,14 @@ my @os_specific = ();
     }
 };
 
-# Windows-specific stuff.
-@os_specific[$WINDOWS] = { family => "Windows", name => "UNKNOWN" };
-@os_specific[$WINDOWS] = { getMAC =>
-    sub {
-        my $macAddr = `ipconfig \all`;
-        $macAddr =~ s/^.*([0-9A-F][0-9A-F]-[0-9A-F][0-9A-F]-[0-9A-F][0-9A-F]-[0-9A-F][0-9A-F]-[0-9A-F][0-9A-F]-[0-9A-F][0-9A-F]).*$/$1/;
-        chomp($macAddr);
-        return $macAddr;
-    }
-};
-
-
-
-
 
 # Private constructor.
 my $new = sub {
     my $self = {};
-    bless($self,"OME::Install::Environment");
-    return $self;
+    return bless($self);
 };
 
-# Class  method to return the singleton instance that deals with the platform
+# Class method to return the singleton instance that deals with the platform
 # we're running on.
 #
 # my $env = OME::Install::Environment->getInstance();
@@ -155,29 +140,24 @@ sub getInstance {
     my $class = shift;
     if( !$soleInstance ) { # first time we're called
         $platform = $UNKNOWN;
-        my $os_name = `uname -s`;   # assumes POSIX compliant uname cmnd
-        if ($os_name =~ /Linux/) {
-            $platform = $LINUX;
-        } elsif ($os_name =~ /Darwin/) {
-            $platform = $DARWIN;
-        } elsif ($os_name =~ /HPUX/) {
-            $platform = $HPUX;
-        } elsif ($os_name =~ /(Solaris)|(SunOS)|(sunos)/) {
-            $platform = $SUN;
-        } elsif ($os_name =~ /FreeBSD/) {
-            $platform = $FREE_BSD;
-        } elsif ($os_name =~ /MS-DOS/) {    # good luck running on NT
-            $platform = $WINDOWS;
-        }
-        @os_specific[$platform]->{name} = $os_name;
-        #Checking for the existance of a Debian/RedHat system
-        # FIXME: We really should have something here for OS X, and the BSD's
-        #           ... and the others?
+
+        if 	($^O eq "linux") 	{ $platform = $LINUX }
+	elsif 	($^O eq "darwin") 	{ $platform = $DARWIN }
+	elsif 	($^O eq "hpux") 	{ $platform = $HPUX }
+	elsif 	($^O eq "sunos") 	{ $platform = $SUN }
+	elsif 	($^O eq "freebsd") 	{ $platform = $DARWIN }
+
+        @os_specific[$platform]->{name} = $^O;
+
+        # Distribution detection
         if (-e "/etc/debian_version") {
             @os_specific[$platform]->{distribution} = "DEBIAN";
         } elsif (-e "/etc/redhat-release") {
             @os_specific[$platform]->{distribution} = "REDHAT";
-        }
+        } elsif (-e "/etc/SuSE-release") {
+	    @os_specific[$platform]->{distribution} = "SUSE";		
+	}
+
         # Create the singleton
         $soleInstance = &$new();
     }
