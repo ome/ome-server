@@ -121,7 +121,7 @@ public class PConstants {
     public static final Color CATEGORY_COLOR= new Color(204,204,255,100);
 	
     /**
-     * defaults text color
+     * default colors
      */
     
     public static final Color DEFAULT_COLOR = Color.BLACK;
@@ -133,6 +133,27 @@ public class PConstants {
      */
     
     public static final Color LINK_HIGHLIGHT_COLOR=Color.WHITE;
+    
+    /**
+     * colors for generic box
+     * 
+     */
+    
+    public static final Color HIGHLIGHT_COLOR_OUTER = new Color(47,140,215);
+    public static final Color HIGHLIGHT_COLOR_MIDDLE = new Color(89,163,223);
+    public static final Color HIGHLIGHT_COLOR_INNER = new Color(130,186,231);
+    
+    public static final Color PROJECT_SELECTED_COLOR = HIGHLIGHT_COLOR_OUTER;
+    public static final Color PROJECT_ACTIVE_COLOR = HIGHLIGHT_COLOR_MIDDLE;
+    public static final Color PROJECT_ROLLOVER_COLOR = HIGHLIGHT_COLOR_MIDDLE;
+    
+    /**
+     * Border colors
+     *
+     */
+    public static final Color BORDER_OUTER = new Color(191,191,191);
+	public static final Color BORDER_MIDDLE = new Color(212,212,212);
+	public static final Color BORDER_INNER =  new Color(233,233,233);
 	/** 
 	 * Positional offsets for a category name in a {@link PCategoryBox} in a 
 	 * {@link PPaletteCanvas}

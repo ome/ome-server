@@ -59,10 +59,18 @@ import java.awt.Color;
 public class PGenericBox extends PNode implements PBufferedNode {
 	
 	private static final Color BORDER_COLORS[] = {
-			new Color(191,191,191),
-			new Color(212,212,212),
-			new Color(233,233,233),
+			PConstants.BORDER_OUTER,
+			PConstants.BORDER_MIDDLE,
+			PConstants.BORDER_INNER,
 	};
+	
+	private static final Color HIGHLIGHT_COLORS[] = {
+			PConstants.HIGHLIGHT_COLOR_OUTER,
+			PConstants.HIGHLIGHT_COLOR_MIDDLE,
+			PConstants.HIGHLIGHT_COLOR_INNER,
+	};
+	
+	private Color colors[]=BORDER_COLORS;
 
 	private double area = 0.0;
 	private PText label = null;
@@ -150,7 +158,7 @@ public class PGenericBox extends PNode implements PBufferedNode {
 		
 		g.setStroke(PConstants.BORDER_STROKE);
 		for (int i = 0; i < rects.length;  i++) {
-			g.setPaint(BORDER_COLORS[i]);
+			g.setPaint(colors[i]);
 			g.draw(rects[i]);
 		}
 		
@@ -200,5 +208,14 @@ public class PGenericBox extends PNode implements PBufferedNode {
 	
 	public void setPaint(Paint aPaint) {
 		paint = aPaint;
+	}
+	
+	
+	public void setHighlighted(boolean v) {
+		if (v == true) 
+			colors = HIGHLIGHT_COLORS;
+		else
+			colors = BORDER_COLORS;
+		repaint();
 	}
 } 
