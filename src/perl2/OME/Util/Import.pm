@@ -235,8 +235,8 @@ sub import {
 		print "	 $step/",$task->n_steps(),": [",
 		  $task->state(),"] ",
 		  $task->message(),"\n";
-		  
-		print "Successfully Imported:\n";
+		 
+		print "Successfully Imported:\n" if (scalar @$images);
 		foreach my $image (@$images) {
 			 print $image->id(),": ",$image->name(),"\n";
 		}
