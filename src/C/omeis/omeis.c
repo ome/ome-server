@@ -66,6 +66,7 @@ dispatch (char **param)
 	char *theParam,rorw='r',iam_BigEndian=1;
 	OID ID=0;
 	size_t offset=0, file_offset=0;
+	unsigned long long scan_off;
 	unsigned char isLocalFile;
 	char *dims;
 	int isSigned,isFloat;
@@ -441,7 +442,8 @@ char **cgivars=param;
 
 			if ( (theParam = get_param (param,"Offset")) )
             {
-				sscanf (theParam,"%lu",&offset);
+				sscanf (theParam,"%llu",&scan_off);
+				offset = (size_t)scan_off;
             }
 
 			if ( !(theFile = GetFileRep (fileID)) ) {
@@ -490,8 +492,10 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			if ( (theParam = get_param (param,"Offset")) )
-				sscanf (theParam,"%lu",&file_offset);
+			if ( (theParam = get_param (param,"Offset")) ) {
+				sscanf (theParam,"%llu",&scan_off);
+				file_offset = (size_t)scan_off;
+			}
 		
 			if (! (thePixels = GetPixelsRep (ID,'w',iam_BigEndian)) ) {
 				if (errno) HTTP_DoError (method,strerror( errno ) );
