@@ -118,11 +118,11 @@ sub getPageBody {
 		)
 	);
 
-	# Big Table
+	# Details of execution & I/O overview
 	$html .= $q->table( {-cellpadding => 10 },
 		$q->Tr(
 			$q->td(  { -width => '50%', -valign => 'top', -align => 'center'}, 
-				$self->getObjDetail( $mex )
+				$self->Renderer()->render( $mex, 'detail' )
 			),
 			$q->td(  { -width => '50%', -valign => 'top', -align => 'center'}, 
 				$ioTable
