@@ -45,7 +45,7 @@ package org.openmicroscopy.remote;
 import org.openmicroscopy.*;
 
 public class RemoteAttribute
-    extends RemoteObject
+    extends RemoteOMEObject
     implements Attribute
 {
     static
@@ -57,18 +57,6 @@ public class RemoteAttribute
     public RemoteAttribute() { super(); }
     public RemoteAttribute(RemoteSession session, String reference)
     { super(session,reference); }
-
-
-    public int getID()
-    { return ((Integer) caller.dispatch(this,"id")).intValue(); }
-
-    public void writeObject() 
-    { caller.dispatch(this,"writeObject"); }
-
-    public Session getSession()
-    { return (Session)
-            getRemoteElement("OME::Session",
-                             "Session"); }
 
     public SemanticType getSemanticType()
     { return (SemanticType)

@@ -67,26 +67,8 @@ package org.openmicroscopy;
  */
 
 public interface Attribute
+    extends OMEObject
 {
-    /**
-     * Returns the primary key ID of this attribute.
-     * @return the primary key ID of this attribute.
-     */
-    public int getID();
-
-    /**
-     * Saves this object's state to the OME database and commits any
-     * active database transaction.
-     */
-    public void writeObject();
-
-    /**
-     * Returns the OME session that generated this object.
-     * @return the OME session that generated this object.
-     * @see Session
-     */
-    public Session getSession();
-
     /**
      * Returns the semantic type of this attribute.
      * @return the semantic type of this attribute.
