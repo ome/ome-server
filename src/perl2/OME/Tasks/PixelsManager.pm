@@ -222,7 +222,7 @@ Creates Object representations of the pixels data (see
 OME::Image::Pixels) and the pixels attribute (see
 OME::SemanticTypes::Superclass and Pixels Semantic Type Definition).
 
-OME::Tasks::PixelsManager->finishPixels( $pixels_attr ) will need to be
+OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr) will need to be
 called after the data has been written.
 
 =cut
