@@ -114,7 +114,7 @@ popupList.prototype.setSelection = function(i, noAnimate, noCallback) {
 	this.selection = i;
 	this.update(noAnimate);
 	
-	if( !noCallback ) { this.issueCallback(this.getSelection()); }
+	if( noCallback !== true ) { this.issueCallback(this.getSelection()); }
 }
 
 
@@ -142,6 +142,23 @@ popupList.prototype.setSelectionByValue = function(val, noCallback) {
 	} else {
 		return false;
 	}
+};
+
+/*****
+	setSelectionByExternalIndex(e_i)
+		
+	notes:
+		because this function is only called externally, it will not cause update to animate.
+		update should only animate when opening or closing a popupList, not when the value is
+		externally changed.
+*****/
+popupList.prototype.setSelectionByExternalIndex = function(e_i, noCallback) {
+	for(var index in this.listIndex) {
+		if(this.listIndex[index] == e_i) {
+			break;
+		}
+	}
+	this.setSelection(index, true, noCallback);
 };
 
 
@@ -464,6 +481,13 @@ popupList.prototype.addEventListeners = function() {
 }
 
 /************   Event handlers   ************/
+
+/* FIXME:
+	opening this should force this and all ancestors to be be drawn on top. Alternately, it could trigger a bubbling 'focus' event.
+	opening this should register a document wide eventListener for clicks. any click not on the pop up menu should close the pop-up menu without selecting anything AND unregister the global eventListener
+	
+
+*/
 
 /*****
 *
