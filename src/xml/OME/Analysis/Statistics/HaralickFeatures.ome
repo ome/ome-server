@@ -187,7 +187,7 @@
 		   ModuleName="Haralick Features"
 		   Category="Signatures"
 		   ModuleType="OME::Analysis::Handlers::MatlabHandler"
-		   ProgramID="haralick_wrapper"
+		   ProgramID="mb_texture"
 		   ID="urn:lsid:openmicroscopy.org:Module:93">
 		  <Description>
 			The gray-level co-occurrence matrix is the two dimensional matrix of joint probabilities P_{d,r}(i,j) 
@@ -236,26 +236,30 @@
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
             xsi:schemaLocation="http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd http://www.openmicroscopy.org/XMLschemas/MLI/IR2/MLI.xsd">
 			<FunctionInputs>
-			  <Input><PixelsArray FormalInput="Pixels" ID="Input_Pixels"/></Input>
-			  <Input><Scalar InputLocation="Texture Distance.Distance" ID="_TextureDistance"/></Input>
-			  <Input><Scalar InputLocation="Texture Direction.Direction_Value" ID="_TextureDirection"/></Input>
+			  <Input><PixelsArray FormalInput="Pixels Plane Slice"/></Input>
+			  <Input><Scalar InputLocation="Texture Distance.Distance"/></Input>
+			  <Input><Scalar InputLocation="Texture Direction.Direction_Value"/></Input>
 			</FunctionInputs>
 			<FunctionOutputs>
-			  <Output><Scalar OutputLocation="Angular Second Moment.ASM" ID="_ASM"/></Output>
-			  <Output><Scalar OutputLocation="Contrast.Contrast" ID="_Contrast"/></Output>
-			  <Output><Scalar OutputLocation="Correlation.Correlation" ID="_Correlation"/></Output>
-			  <Output><Scalar OutputLocation="Variance.Variance" ID="_Variance"/></Output>
-			  <Output><Scalar OutputLocation="Inverse Difference Moment.IDM" ID="_IDM"/></Output>
-			  <Output><Scalar OutputLocation="Sum Average.SumAvg" ID="_SA"/></Output>
-			  <Output><Scalar OutputLocation="Sum Variance.SumVar" ID="_SV"/></Output>
-			  <Output><Scalar OutputLocation="Sum Entropy.SumEntropy" ID="_SE"/></Output>
-			  <Output><Scalar OutputLocation="Entropy.Entropy" ID="_Entropy"/></Output>
-			  <Output><Scalar OutputLocation="Difference Entropy.DiffEntropy" ID="_DE"/></Output>
-			  <Output><Scalar OutputLocation="Difference Variance.DiffVar" ID="_DV"/></Output>
-			  <Output><Scalar OutputLocation="First Measure of Correlation.MeasCorr1" ID="_FMC"/></Output>
-			  <Output><Scalar OutputLocation="Second Measure of Correlation.MeasCorr2" ID="_SMC"/></Output>
-			  <Output><Scalar OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef" ID="_MCC"/></Output>
+			  <Output><Vector DecodeWith="Haralick Output Vector"/></Output>
 			</FunctionOutputs>
+			
+			<VectorDecoder ID="Haralick Output Vector">
+				<Element Index="1"  OutputLocation="Angular Second Moment.ASM"/>
+				<Element Index="2"  OutputLocation="Contrast.Contrast"/>
+				<Element Index="3"  OutputLocation="Correlation.Correlation"/>
+				<Element Index="4"  OutputLocation="Variance.Variance"/>
+				<Element Index="5"  OutputLocation="Inverse Difference Moment.IDM"/>
+				<Element Index="6"  OutputLocation="Sum Average.SumAvg"/>
+				<Element Index="7"  OutputLocation="Sum Variance.SumVar"/>
+				<Element Index="8"  OutputLocation="Sum Entropy.SumEntropy"/>
+				<Element Index="9"  OutputLocation="Entropy.Entropy"/>
+				<Element Index="10" OutputLocation="Difference Entropy.DiffEntropy"/>
+				<Element Index="11" OutputLocation="Difference Variance.DiffVar"/>
+				<Element Index="12" OutputLocation="First Measure of Correlation.MeasCorr1"/>
+				<Element Index="13" OutputLocation="Second Measure of Correlation.MeasCorr2"/>
+				<Element Index="14" OutputLocation="Maximal Correlation Coefficient.MaxCorrCoef"/>
+			</VectorDecoder>
 		  </ExecutionInstructions>
 		</AnalysisModule>
 	</AML:AnalysisModuleLibrary>
