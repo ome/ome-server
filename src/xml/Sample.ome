@@ -76,7 +76,7 @@
 			<OTFRef ID = "urn:lsid:foo.bar.com:OTF:123456"/>
 			<DetectorRef ID = "urn:lsid:foo.bar.com:Detector:123456"/>
 			<FilterRef ID = "urn:lsid:foo.bar.com:Filter:123456"/>
-			<ChannelComponent Pixels="urn:lsid:foo.bar.com:Pixels:123456" Index = "1" ColorDomain="foo"/>
+			<ChannelComponent Pixels="urn:lsid:foo.bar.com:Pixels:123456" Index = "0" ColorDomain="foo"/>
 		</ChannelInfo>
 		<DisplayOptions ID = "urn:lsid:foo.bar.com:DisplayOptions:123456" Zoom = "1.0">
 			<RedChannel ChannelNumber = "1" BlackLevel = "100" WhiteLevel = "2019" Gamma = "1.0"/>
