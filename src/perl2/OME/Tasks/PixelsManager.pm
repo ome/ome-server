@@ -315,6 +315,23 @@ sub saveThumb {
 	$pixels_data->setThumb( $display_options );
 }
 
+
+=head2 getThumbURL
+
+	# retrieve the URL for the thumbnail of the specified pixels attribute
+	my $thumbnailURL = OME::Tasks::PixelsManager->getThumbURL($pixels);
+
+=cut
+sub getThumbURL{
+	my $self=shift;
+	my $session=$self->__Session();
+	my $pixels = shift;
+	my $rep = $pixels->Repository();
+	return undef if($rep->IsLocal());
+	return $rep->ImageServerURL()."?Method=GetThumb&PixelsID=".$pixels->ImageServerID();
+}
+
+
 =head2 getDisplayOptions
 
 Usage: 
