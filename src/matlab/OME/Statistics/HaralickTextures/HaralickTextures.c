@@ -30,6 +30,7 @@ extern TEXTURE * Extract_Texture_Features();
 
 void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 {
+	mxArray*    img;
 	u_int8_t*   p_img;               /*The image from Matlab*/
 	u_int8_t**  p_gray;              /*Image converted for texture calcs*/
 	int         mrows;               /*Image height*/
@@ -44,7 +45,7 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 	
 	float*      output ;             /*Features to return*/
 	int         distance, angle;     /*Parameters for texture calculations*/
-	
+
 	if (nrhs != 3)
 		mexErrMsgTxt("\n mb_texture (im, distance, angle),\n\n"
 		 "This function returns the 14 image texture statistics described by R. Haralick.\n"
@@ -59,10 +60,12 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt("mb_texture requires the first input to be numeric\n") ;
 	
 	if (!mxIsUint8(prhs[0]))
-		mexErrMsgTxt("mb_texture requires a single unsigned 8-bit int array.\n") ;
+		mexCallMATLAB(1, &img, 1, prhs, "uint8");
+	else
+		img = prhs[0];
 	
-	mrows = mxGetM(prhs[0]) ;
-	ncols = mxGetN(prhs[0]) ;
+	mrows = mxGetM(img) ;
+	ncols = mxGetN(img) ;
 	
 	if (!(mrows > 1) || !(ncols > 1))
 		mexErrMsgTxt("mb_texture requires an input image, not a scalar.\n") ;
@@ -74,9 +77,9 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[])
 		mexErrMsgTxt("The third argument (angle) should be numeric and not complex.");
 
 
-	p_img = (u_int8_t*)mxGetData(prhs[0]) ;
-	distance = (double)mxGetScalar(prhs[1]) ;
-	angle = (double)mxGetScalar(prhs[2]) ;
+	p_img = (u_int8_t*) mxGetData(img) ;
+	distance = (double) mxGetScalar(prhs[1]) ;
+	angle = (double) mxGetScalar(prhs[2]) ;
 	
 	imgsize[col] = ncols ;
 	imgsize[row] = mrows ;
