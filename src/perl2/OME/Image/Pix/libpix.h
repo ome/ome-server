@@ -85,5 +85,5 @@ FILE *GetPixFile (Pix *pPix);
 size_t Buff2Tiff (char *buf, char *path, size_t dx, size_t dy, size_t bpp);
 char *ScaleBuf8 (char *theBuf, int bp, size_t nPix, float scale, int offset);
 size_t WriteRepFile (Pix *pPix, char *thePix, size_t offset, size_t nPix);
-int bigEndian();
+int bigEndian(void);
 
