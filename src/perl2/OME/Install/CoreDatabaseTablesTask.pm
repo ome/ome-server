@@ -58,6 +58,12 @@ use OME::Tasks::SemanticTypeManager;
 use OME::ImportExport::ChainImport;
 use OME::Tasks::OMEImport;
 
+# Packages that should have been installed by now
+use HTTP::Request::Common;
+use LWP::UserAgent;
+
+
+
 #*********
 #********* GLOBALS AND DEFINES
 #*********
@@ -73,7 +79,7 @@ our $INSTALL_HOME;
 our $ENVIRONMENT;
 
 # Our basedirs and user which we grab from the environment
-our ($OME_BASE_DIR, $OME_TMP_DIR,  $OME_USER, $OME_UID);
+our ($OME_BASE_DIR, $OME_TMP_DIR,  $OME_USER, $OME_UID, $OME_GROUP);
 
 # Our Apache user & Postgres admin we'll grab from the environment
 our ($APACHE_USER, $POSTGRES_USER, $ADMIN_USER, $OME_EXPER, $ADMIN_UID);
@@ -464,6 +470,23 @@ sub create_experimenter {
         	if y_or_n ('Directory "'.$OME_EXPER->{DataDirectory}.
             	'" does not exist. Do you want to create it ?', 'y');
     }
+    
+    if (not check_permissions ($OME_EXPER->{DataDirectory},$APACHE_USER,'rx')) {
+    	print <<PRINT;
+The directory $OME_EXPER->{DataDirectory} cannot be accessed by the Apache user "$APACHE_USER".
+This directory and its contents should either be owned by the OME group "$OME_GROUP" or,
+This directory and its contents need to be world-readable.
+The recommended course of action is to change group ownership to "$OME_GROUP".
+PRINT
+        if (y_or_n ("OK to change group ownership of $OME_EXPER->{DataDirectory} to \"$OME_GROUP\"", 'n')) {
+        	fix_ownership ({group => $OME_GROUP},[$OME_EXPER->{DataDirectory}]);
+        	print <<PRINT;
+Directory ownership successfullt fixed.
+You will still need to make sure that the files in this directory are either owned by the OME group "$OME_GROUP" or,
+That the files are group-readable.
+PRINT
+        }
+    }
 
     my $password;
     ($password, $OME_EXPER->{Password}) = get_password ("Password: ", 6);
@@ -673,6 +696,74 @@ sub make_repository {
     return $repository;
 }
 
+sub check_repository {
+    my $session = shift;
+    my $factory = $session->Factory();
+
+	print $LOGFILE "Checking repository\n" and
+	print "Checking OMEIS repository ";
+    my $repository = $factory->
+    findObject('OME::SemanticType::BootstrapRepository',
+            {
+             IsLocal        => 0,
+            });
+	print $LOGFILE "Could not find remote repository object\n" and
+		croak "Could not find remote repository object (looking for omeis URL)"
+	unless $repository;
+	my $repository_url = $repository->ImageServerURL();
+	print $LOGFILE "Repository URL: $repository_url\n";
+	if (not $repository_url eq $ENVIRONMENT->omeis_url()) {
+		print $LOGFILE "   Doesn't match ".$ENVIRONMENT->omeis_url()." from stored environment\n";
+	} else {
+		print $LOGFILE "   Matches ".$ENVIRONMENT->omeis_url()." from stored environment\n";
+	}
+ 	$ENVIRONMENT->omeis_url($repository_url);
+ 	
+
+	print $LOGFILE "Getting an LWP user agent\n";
+	my $user_agent = LWP::UserAgent->new();
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not get a LWP user agent\n" and
+		croak "Could not get a LWP user agent"
+	unless $user_agent;
+
+
+	# Get a request
+	my $url = $repository_url;
+	print $LOGFILE "Generating request for $url\n";
+	my $request = HTTP::Request->new(GET => $url);
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not generate a request for $url.\n" and
+		croak "Could not generate a request for $url\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $request;
+
+	# Get a response
+	print $LOGFILE "Getting response from $url\n";
+	my $response = $user_agent->request($request);
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "OMEIS could not be reached.\n".
+			"Did not get a response from $url.\n" and
+		croak "OMEIS could not be reached.  Did not get a response from $url.\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $response;
+
+	# Check the response for 'Method parameter missing'
+	print $LOGFILE "Parsing response from $url\n";
+	my $content = $response->content();
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "OMEIS could not be reached.\n".
+			"Incorrect response from OMEIS at $url:\n$content\n" and
+		croak "OMEIS could not be reached.\n".
+			"Incorrect response from OMEIS at $url:\n$content\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $content =~ /Method parameter missing/m;
+
+	print BOLD, "[SUCCESS]", RESET, ".\n"
+		and print $LOGFILE "Repository is configured correctly\n";
+
+}
+
 sub load_xml_core {
     my ($session, $logfile) = @_;
     my @core_xml;
@@ -829,6 +920,8 @@ sub execute {
     or croak "Unable to retrieve OME_USER!";
     $OME_UID = getpwnam ($OME_USER)
     or croak "Unable to retrive OME_USER UID!";
+    $OME_GROUP = $ENVIRONMENT->group()
+    or croak "Unable to retrive OME_GROUP";
     $APACHE_USER = $ENVIRONMENT->apache_user()
     or croak "Unable to retrieve APACHE_USER!";
     $POSTGRES_USER = $ENVIRONMENT->postgres_user()
@@ -931,9 +1024,10 @@ sub execute {
         	$session = $manager->TTYlogin() or croak "Unable to create an initial experimenter.";
        	}
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
+        check_repository ($session);
         print_header "Finalizing Database";
-        # Back to UID 0
-        $EUID = 0;
+        # Set the UID to whoever owns the install directory
+        $EUID = (stat ('.'))[4];
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
@@ -946,15 +1040,19 @@ sub execute {
         $manager = OME::SessionManager->new() or croak "Unable to make a new SessionManager.";
         $session = create_experimenter ($manager) or croak "Unable to create an initial experimenter.";
         $configuration = $session->Configuration or croak "Unable to initialize the configuration object.";
+        check_repository ($session);
         print_header "Finalizing Database";
         make_repository( $session );
-        # Back to UID 0
-        $EUID = 0;
+        # Set the UID to whoever owns the install directory
+        $EUID = (stat ('.'))[4];
         load_xml_core ($session, $LOGFILE) or croak "Unable to load Core XML, see $LOGFILE_NAME for details.";
         commit_experimenter ($session) or croak "Unable to load commit experimenter.";
         load_analysis_core ($session, $LOGFILE)
         or croak "Unable to load analysis core, see $LOGFILE_NAME details.";
     }
+
+    # Drop our UID to the OME_USER
+    $EUID = $OME_UID;
 
     #*********
     #********* Finalize the DB
@@ -1015,6 +1113,9 @@ sub execute {
 
 
     close ($LOGFILE);
+    
+    # Back to UID 0
+    $EUID = 0;
 
     return 1;
 }

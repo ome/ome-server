@@ -42,6 +42,10 @@ use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 use Cwd;
 
+# Packages that should have been installed by now
+use HTTP::Request::Common;
+use LWP::UserAgent;
+
 use OME::Install::Terminal;
 use OME::Install::Environment;
 use OME::Install::Util;
@@ -65,7 +69,7 @@ our $APACHE_CONF_DEF = {
 	DEV_CONF => 0,
 	OMEIS    => 1,
 	OMEDS    => 1,
-	WEB      => undef,
+	WEB      => undef, # This gets set to DocumentRoot if its undef and DO_CONF is true.
 	CGI_BIN  => undef,
 	HUP      => 1,
 };
@@ -74,6 +78,11 @@ our $APACHE_CONF_DEF = {
 our $APACHE_WEB_INCLUDE;
 our $APACHE_OMEIS_INCLUDE;
 our $APACHE_OMEDS_INCLUDE;
+
+# Global logfile filehandle and name
+our $LOGFILE_NAME = "ApacheConfigTask.log";
+our $LOGFILE;
+our $OME_TMP_DIR;
 
 
 #*********
@@ -88,18 +97,29 @@ sub fix_httpd_conf {
 	my $httpdConfBak = $apache_info->{conf_bak};
 
 	if (not -e $httpdConf) {
-		print STDERR "Cannot fix httpd.conf:  httpd.conf ($httpdConf) does not exist.\n";
+		print STDERR "Cannot fix httpd.conf:  httpd.conf ($httpdConf) does not exist.\n" and
+			print $LOGFILE "Cannot fix httpd.conf:  httpd.conf ($httpdConf) does not exist.\n";
 		return undef;
 	}
 
 	if (not -e $omeConf) {
-		print STDERR  "Cannot fix httpd.conf:  ome.conf ($omeConf) does not exist.\n";
+		print STDERR  "Cannot fix httpd.conf:  ome.conf ($omeConf) does not exist.\n" and
+			print $LOGFILE "Cannot fix httpd.conf:  ome.conf ($omeConf) does not exist.\n";
 		return undef;
 	}
 
-	copy ($httpdConf,$httpdConfBak) or croak "Couldn't make a copy of $httpdConf: $!\n";
-	open(FILEIN, "< $httpdConf") or croak "can't open $httpdConf for reading: $!\n";
-	open(FILEOUT, "> $httpdConf~") or croak "can't open $httpdConf~ for writing: $!\n";
+	copy ($httpdConf,$httpdConfBak) or
+		print $LOGFILE "Couldn't make a copy of $httpdConf: $!\n" and
+		croak "Couldn't make a copy of $httpdConf: $!\n";
+
+	open(FILEIN, "< $httpdConf") or
+		print $LOGFILE "can't open $httpdConf for reading: $!\n" and
+		croak "can't open $httpdConf for reading: $!\n";
+
+	open(FILEOUT, "> $httpdConf~") or
+		print $LOGFILE "can't open $httpdConf~ for writing: $!\n" and
+		croak "can't open $httpdConf~ for writing: $!\n";
+
 	while (<FILEIN>) {
 		s/#\s*LoadModule\s+perl_module/LoadModule perl_module/;
 		s/#\s*AddModule\s+mod_perl\.c/AddModule mod_perl.c/;
@@ -109,8 +129,12 @@ sub fix_httpd_conf {
 	print FILEOUT "Include $omeConf\n";
 	close(FILEIN);
 	close(FILEOUT);
-	move ("$httpdConf~",$httpdConf) or croak "Couldn't write $httpdConf: $!\n";
+	move ("$httpdConf~",$httpdConf) or
+		print $LOGFILE "Couldn't write $httpdConf: $!\n" and
+		croak "Couldn't write $httpdConf: $!\n";
 	$apache_info->{hasOMEinc} = 1;
+	
+	return 1;
 }
 
 sub httpd_conf_OK {
@@ -119,7 +143,8 @@ sub httpd_conf_OK {
 	my $httpdConf = $apache_info->{conf};
 	my $httpdConfBak = $apache_info->{conf_bak};
 	my $apachectlBin = $apache_info->{apachectl};
-	
+
+	print $LOGFILE "Executing $apachectlBin configtest 2>&1\n";
 	my @result = `$apachectlBin configtest 2>&1 `;
 	my $error = 1;
 	foreach (@result) {
@@ -128,16 +153,180 @@ sub httpd_conf_OK {
 	return (1) if not $error;
 	
 	# Revert
-	print STDERR "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n";
+	print STDERR "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n" and
+		print $LOGFILE "Apache reports that configuration file has errors:\n".join ("\n",@result)."\n";
+	print STDERR "Reverting to backup configuration\n" and
+		print $LOGFILE "Reverting to backup configuration in $httpdConfBak\n";
 	copy ($httpdConfBak,$httpdConf)
-		or croak "Could not copy $httpdConfBak to $httpdConf\n*** Apache configuration could not be restored !!! ***\n";
+		or print $LOGFILE "Could not copy $httpdConfBak to $httpdConf\n*** Apache configuration could not be restored !!! ***\n" and
+		croak "Could not copy $httpdConfBak to $httpdConf\n*** Apache configuration could not be restored !!! ***\n";
 	return (0);
 }
 
 sub httpd_restart {
 	my $apache_info = shift;
 	my $apachectlBin = $apache_info->{apachectl};
+	print $LOGFILE "Executing $apachectlBin restart\n" and
 	print `$apachectlBin restart`;
+}
+
+# Test our apache config
+sub httpd_test {
+	my $error;
+
+	print "Testing Apache configuration \n";
+
+	print $LOGFILE "Getting an LWP user agent\n";
+	my $user_agent = LWP::UserAgent->new();
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not get a LWP user agent\n" and
+		croak "Could not get a LWP user agent"
+	unless $user_agent;
+
+	
+	# Test mod_perl.  Here we will make a little script that we'll put next to serve.pl
+	# The script will just spit out the environment variables as seen by an apache cgi.
+	# Then we'll search the output for tell-tale signs of mod_perl.
+	print "  \\__ mod_perl ";
+
+	my $script = mod_perl_script();
+	my $script_path = $OME_BASE_DIR.'/perl2/mod_perl_test.pl';
+	print $LOGFILE "Generated mod_perl test script:\n$script\n";
+	$script_path = 'src/perl2/mod_perl_test.pl' if $APACHE->{DEV_CONF};
+	print $LOGFILE "Writing script to $script_path\n";
+
+	# Write the test script into the proper place
+	open(FILE, ">", $script_path) or 
+		print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Can't open $script_path for writing: $!\n" and
+		croak "Can't open $script_path for writing: $!";
+		
+	print FILE $script;
+	close (FILE);
+	chmod (0755,$script_path) or
+		print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not chmod $script_path: $!\n" and
+		croak "Could not chmod $script_path: $!";
+	
+	# Run the test script as a cgi
+	my $url = 'http://localhost/perl2/mod_perl_test.pl';
+	print $LOGFILE "Making an HTTP::Request object for $url\n";
+	my $request = HTTP::Request->new(GET => $url);
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Could not generate a GET request for $url\n" and
+		croak "Could not generate a request for $url"
+	unless $request;
+
+	print $LOGFILE "Getting response from $url\n";
+	my $response = $user_agent->request($request);
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.  Did not get a response from $url.\n" and
+		croak "Apache/mod_perl is not properly configured.\n".
+			"Did not get a response from $url.\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $response;
+
+	my $content = $response->content();
+	print $LOGFILE "Checking response from $url\n";
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.  Got an error response from $url:\n".
+			"$content\n" and
+		croak "Apache/mod_perl is not properly configured.  Got an error response from $url:\n".
+			"$content\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	if $response->is_error();
+
+	print $LOGFILE "Parsing response from $url\n";
+	# Check for MOD_PERL
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.\n".
+			"MOD_PERL environment variable is missing in CGI test.\n".
+			"CGI test: $url\n" and
+		croak "Apache/mod_perl is not properly configured.\n".
+			"MOD_PERL environment variable is missing in CGI test.\n".
+			"CGI test: $url\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $content =~ /^MOD_PERL\s*=\s*(.*$)/m;
+
+	# Check that MOD_PERL is set to something containing mod_perl
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.\n".
+			"MOD_PERL is \"$1\" in CGI test.  Expecting something with mod_perl.\n".
+			"CGI test: $url\n" and
+		croak "Apache/mod_perl is not properly configured.\n".
+			"MOD_PERL is \"$1\" in CGI test.  Expecting something with mod_perl.\n".
+			"CGI test: $url\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $content =~ /^MOD_PERL\s*=\s*mod_perl.*$/m;
+	
+	# Check for GATEWAY_INTERFACE
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.\n".
+			"GATEWAY_INTERFACE environment variable is missing in CGI test.\n".
+			"CGI test: $url\n" and
+		croak "Apache/mod_perl is not properly configured.\n".
+			"GATEWAY_INTERFACE environment variable is missing in CGI test.\n".
+			"CGI test: $url\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $content =~ /^GATEWAY_INTERFACE\s*=\s*(.*$)/m;
+
+	# Check that GATEWAY_INTERFACE contains CGI-Perl
+	print BOLD, "[FAILURE]", RESET, ".\n" and
+		print $LOGFILE "Apache/mod_perl is not properly configured.\n".
+			"GATEWAY_INTERFACE is \"$1\" in CGI test instead of \"CGI-Perl/1.1\".\n".
+			"CGI test: $url\n" and
+		croak "Apache/mod_perl is not properly configured.\n".
+			"GATEWAY_INTERFACE is \"$1\" in CGI test instead of \"CGI-Perl/1.1\".\n".
+			"CGI test: $url\n".
+			"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+	unless $content =~ /^GATEWAY_INTERFACE\s*=\s*CGI-Perl.*$/m;
+
+    print BOLD, "[SUCCESS]", RESET, ".\n"
+        and print $LOGFILE "mod_perl is configured correctly\n";
+
+	# Ditch our test script
+	unlink ($script_path);
+
+	# Test omeis if we installed it
+	if ($APACHE->{OMEIS}) {
+		print "  \\__ omeis " and
+			print $LOGFILE "Testing omeis installation\n";
+
+		# Get a request
+		$url = "http://localhost/cgi-bin/omeis";
+		print $LOGFILE "Generating request for $url\n";
+		$request = HTTP::Request->new(GET => $url);
+		print BOLD, "[FAILURE]", RESET, ".\n" and
+			print $LOGFILE "Could not generate a request for $url.\n" and
+			croak "Could not generate a request for $url\n".
+				"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+		unless $request;
+
+		# Get a response
+		print $LOGFILE "Getting response from $url\n";
+		$response = $user_agent->request($request);
+		print BOLD, "[FAILURE]", RESET, ".\n" and
+			print $LOGFILE "OMEIS instalation failed.\n".
+				"Did not get a response from $url.\n" and
+			croak "OMEIS instalation failed.  Did not get a response from $url.\n".
+				"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+		unless $response;
+
+		# Check the response for 'Method parameter missing'
+		print $LOGFILE "Parsing response from $url\n";
+		$content = $response->content();
+		print BOLD, "[FAILURE]", RESET, ".\n" and
+			print $LOGFILE "OMEIS installation failed.\n".
+				"Incorrect response from OMEIS at $url:\n$content\n" and
+			croak "OMEIS installation failed.\n".
+				"Incorrect response from OMEIS at $url:\n$content\n".
+				"See $OME_TMP_DIR/install/$LOGFILE_NAME for more details."
+		unless $content =~ /Method parameter missing/m;
+
+		print BOLD, "[SUCCESS]", RESET, ".\n"
+			and print $LOGFILE "OMEIS is configured correctly\n";
+
+	}
 }
 
 sub fix_ome_conf {
@@ -147,30 +336,47 @@ sub fix_ome_conf {
 	my $file;
 
     my @files = glob ("$OME_CONF_DIR/httpd.*.conf $OME_CONF_DIR/httpd2.*.conf");
+	
+	print $LOGFILE "Replacing %OME_DIST_BASE with $OME_DIST_BASE\n";
+	print $LOGFILE "Replacing %OME_INSTALL_BASE with $OME_BASE_DIR\n";
 
-	foreach $file (@files) {	
-		open(FILE, "<", $file) or croak "Can't open $file for reading: $!";
+	foreach $file (@files) {
+		print $LOGFILE "Reading $file\n";
+		open(FILE, "<", $file) or
+			print $LOGFILE "Can't open $file for reading: $!\n" and
+			croak "Can't open $file for reading: $!";
 		@lines = <FILE>;
 		close (FILE);
 		my $config = join ('',@lines); 
 		$config =~ s/%OME_DIST_BASE/$OME_DIST_BASE/mg;
 		$config =~ s/%OME_INSTALL_BASE/$OME_BASE_DIR/mg;
 		$file =~ s/$OME_DIST_BASE/$OME_BASE_DIR/;
-		open(FILE, "> $file") or croak "Can't open $file for writing: $!";
+		print $LOGFILE "Writing $file\n";
+		open(FILE, "> $file") or
+			print $LOGFILE "Can't open $file for writing: $!" and
+			croak "Can't open $file for writing: $!";
 		print FILE $config;
 		close (FILE);
 	}
 	
 	# Add the include directives for installed components.
 	$file = "$OME_CONF_DIR/httpd.ome.conf";
-	open (FILE, "<",$file) or croak "Can't open $file for reading: $!";
+	print $LOGFILE "Reading $file\n";
+	open (FILE, "<",$file) or
+		print $LOGFILE "Can't open $file for reading: $!" and
+		croak "Can't open $file for reading: $!";
 	@lines = <FILE>;
 	close (FILE);
 	push (@lines,"$APACHE_WEB_INCLUDE\n");
 	push (@lines,"$APACHE_OMEIS_INCLUDE\n");
 	push (@lines,"$APACHE_OMEDS_INCLUDE\n");
-	open (FILE, ">",$file) or croak "Can't open $file for writing: $!";
+
+	print $LOGFILE "Writing $file\n";
+	open (FILE, ">",$file) or
+		print $LOGFILE "Can't open $file for writing: $!" and
+		croak "Can't open $file for writing: $!";
 	print FILE $_ foreach (@lines);
+	close (FILE);
 
 	return (1);
 }
@@ -372,6 +578,7 @@ sub execute {
     $APACHE_UID   = getpwnam ($APACHE_USER) or croak "Unable to retrive APACHE_USER UID!";
 	$OME_GROUP    = $environment->group() or croak "OME group is not set!\n";
 	$OME_GID      = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
+    $OME_TMP_DIR  = $environment->tmp_dir() or croak "Unable to retrieve OME_TMP_DIR!";
 	# Things the user can set
 	$APACHE       = defined $environment->apache_conf()  ? $environment->apache_conf()  : $APACHE_CONF_DEF;
 
@@ -386,7 +593,15 @@ sub execute {
 	print "\n";  # Spacing
     
     print_header ("Apache Setup");
-	
+    
+    print "(All verbose information logged in $OME_TMP_DIR/install/$LOGFILE_NAME)\n\n";
+
+    # Get our logfile and open it for writing
+    open ($LOGFILE, ">", "$OME_TMP_DIR/install/$LOGFILE_NAME")
+    or croak "Unable to open logfile \"$OME_TMP_DIR/install/$LOGFILE_NAME\" $!";
+    
+    print $LOGFILE "Apache setup\n";
+
 	#********
 	#******** Get info from Apache's httpd.conf
 	#********
@@ -500,25 +715,68 @@ sub execute {
 	}
 
 	$environment->apache_conf($APACHE);
-	return unless $APACHE->{DO_CONF};
+
+	# Put what we have in the log file
+	print $LOGFILE "Apache configuration:\n";
+	print $LOGFILE "       Configure Apache?: ", $APACHE->{DO_CONF}  ?'yes':'no', "\n";
+	print $LOGFILE " Developer configuration: ", $APACHE->{DEV_CONF} ?'yes':'no', "\n";
+	print $LOGFILE "         Server restart?: ", $APACHE->{HUP}      ?'yes':'no', "\n";
+	print $LOGFILE "Install OME servers:\n";
+	print $LOGFILE "          Images (omeis): ", $APACHE->{OMEIS}    ?'yes':'no', "\n";
+	print $LOGFILE "            Data (omeds): ", $APACHE->{OMEDS}    ?'yes':'no', "\n";
+	print $LOGFILE "                     Web: ", $APACHE->{WEB}      ?'yes':'no', "\n";
+	print $LOGFILE "Apache directories:\n";
+	print $LOGFILE "           DocumentRoot: ", $APACHE->{WEB}, "\n";
+	print $LOGFILE "                cgi-bin: ", $APACHE->{CGI_BIN}, "\n";
+
+	
+	# Return unless we're configuring apache
+	if (not $APACHE->{DO_CONF}) {
+		print $LOGFILE "Not setting up Apache\n";
+		# Set a proper umask
+		print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
+		umask (0002);
+		close ($LOGFILE);
+		return;
+	}
+
+	print $LOGFILE "Configuring Apache\n";
 
 	my $httpdConf = $apache_info->{conf} or croak "Could not find httpd.conf\n";
+	print $LOGFILE "httpd.conf is $httpdConf\n";
 
 
 	#********
 	#******** Attempt to fix httpd.conf
 	#********
 	my $apacheBak = $apache_info->{conf_bak};
-	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" if not $apache_info->{hasOMEinc};
-	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf.  " if $apache_info->{mod_perl_off};
+	print STDERR  "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n" 
+		and print $LOGFILE "Apache httpd.conf does not have an Include directive for \"$ome_conf\"\n"
+	if not $apache_info->{hasOMEinc};
+
+	print STDERR  "Apache's mod_perl seems to be turned off in httpd.conf.\n"
+		and print $LOGFILE "Apache's mod_perl seems to be turned off in httpd.conf.\n"
+	if $apache_info->{mod_perl_off};
+
 	if (not $apache_info->{hasOMEinc} or $apache_info->{mod_perl_off}) {
 		if (not -w $httpdConf) {
-			print "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
+			print $LOGFILE "Can't write to $httpdConf\n"
+			and croak "  You do not have write permissions for \"$httpdConf\".\nApache is not properly configured.";
 		} else {
 			if ( y_or_n("fix \"$httpdConf\" ?") ) {
-				print "fixing httpd.conf. The current version will be saved in ".$apache_info->{conf_bak}."\n";
-				fix_httpd_conf ($apache_info);
-				httpd_conf_OK ($apache_info);
+				print "fixing httpd.conf. The current version will be saved in ".$apache_info->{conf_bak}."\n"
+					and print $LOGFILE "Fixing $httpdConf.  Backup version in ".$apache_info->{conf_bak}."\n";
+				fix_httpd_conf ($apache_info) or 
+					print $LOGFILE "Could not fix httpd.conf.  Apache is not configured properly.\n" and
+					croak "Could not fix httpd.conf.  Apache is not configured properly.";
+
+				print $LOGFILE "Wrote new httpd.conf\nChecking httpd.conf for errors\n";
+				httpd_conf_OK ($apache_info) or 
+					print $LOGFILE "Apache is not configured properly.\n" and
+					croak "Apache is not configured properly.";
+
+				print $LOGFILE "httpd.conf fixed successfully\n" and
+					print "httpd.conf fixed successfully\n";
 			}
 		}
 	}
@@ -531,22 +789,37 @@ sub execute {
 	#******** Install omeis in cgi-bin
 	#********
 	if ($APACHE->{OMEIS}) {
+		print $LOGFILE "Installing OMEIS\n";
 		$source = 'src/C/omeis/omeis';
 		$dest = $APACHE->{CGI_BIN}.'/omeis';
-		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
-		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
-		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+		print $LOGFILE "Copying $source to $dest\n";
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chmod 0755 $dest\n";
+		chmod (0755,$dest) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
+		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or
+			print $LOGFILE "Could not chown $dest:\n$!\n" and
+			croak "Could not chown $dest:\n$!\n";
 		$APACHE_OMEIS_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.omeis$is_dev.conf";
+		print $LOGFILE "Set APACHE_OMEIS_INCLUDE to $APACHE_OMEIS_INCLUDE\n";
 	} else {
 		$APACHE_OMEIS_INCLUDE = '';
+		print $LOGFILE "Not installing OMEIS\n";
 	}
 
 	#********
 	#******** Install omeds by including the omeds httpd conf in ome's httpd conf
 	#********
 	if ($APACHE->{OMEDS}) {
+		print $LOGFILE "Installing OMEDS\n";
 		$APACHE_OMEDS_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.omeds$is_dev.conf";
+		print $LOGFILE "Set APACHE_OMEDS_INCLUDE to $APACHE_OMEDS_INCLUDE\n";
 	} else {
+		print $LOGFILE "Not installing OMEDS\n";
 		$APACHE_OMEDS_INCLUDE = '';
 	}
 
@@ -554,19 +827,41 @@ sub execute {
 	#******** Install web by copying serve.pl and index.html
 	#********
 	if (length($APACHE->{WEB})) {
+		print $LOGFILE "Installing WEB\n";
 		$source = 'src/perl2/serve.pl';
 		$dest = $OME_BASE_DIR.'/perl2/serve.pl';
-		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
-		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
-		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+		print $LOGFILE "Copying $source to $dest\n";
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chmod 0755 $dest\n";
+		chmod (0755,$dest) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
+		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or
+			print $LOGFILE "Could not chown $dest:\n$!\n" and
+			croak "Could not chown $dest:\n$!\n";
 
 		$source = 'src/html/index.html';
 		$dest = $APACHE->{WEB}.'/index.html';
-		copy ($source,$dest) or croak "Could not copy $source to $dest:\n$!\n";
-		chmod (0755,$dest) or croak "Could not chmod $dest:\n$!\n";
-		chown ($APACHE_UID,$OME_GID,$dest) or croak "Could not chown $dest:\n$!\n";
+		print $LOGFILE "Copying $source to $dest\n";
+		copy ($source,$dest) or
+			print $LOGFILE "Could not copy $source to $dest:\n$!\n" and
+			croak "Could not copy $source to $dest:\n$!\n";
+		print $LOGFILE "chmod 0755 $dest\n";
+		chmod (0755,$dest) or
+			print $LOGFILE "Could not chmod $dest:\n$!\n" and
+			croak "Could not chmod $dest:\n$!\n";
+		print $LOGFILE "chown $dest to uid: $APACHE_UID gid: $OME_GID\n";
+		chown ($APACHE_UID,$OME_GID,$dest) or 
+			print $LOGFILE "Could not chown $dest:\n$!\n" and
+			croak "Could not chown $dest:\n$!\n";
+
 		$APACHE_WEB_INCLUDE = "Include $OME_CONF_DIR/$httpd_vers.web$is_dev.conf";
+		print $LOGFILE "Set APACHE_WEB_INCLUDE to $APACHE_WEB_INCLUDE\n";
 	} else {
+		print $LOGFILE "Not installing WEB\n";
 		$APACHE_WEB_INCLUDE = '';
 	}
 	
@@ -574,23 +869,55 @@ sub execute {
 	#********
 	#******** Fix variables in conf/httpd.ome.*.conf
 	#********
+	print $LOGFILE "Fixing variables in conf/httpd.ome.*.conf\n";
 	fix_ome_conf("$OME_CONF_DIR");	
 	
 	#********
 	#******** Restart
 	#********
-	httpd_restart ($apache_info) if $APACHE->{HUP};
+	if ($APACHE->{HUP}) {
+		print $LOGFILE "Restarting Apache\n";
+		httpd_restart ($apache_info) ;
+	} else {
+		print $LOGFILE "Not restarting Apache\n";
+	}
+	
+	#********
+	#******** Test
+	#********
+	httpd_test ();
 	
 	# Set a proper umask
 	print "Dropping umask to ", BOLD, "\"0002\"", RESET, ".\n";
 	umask (0002);
 
+	print $LOGFILE "Apache configuration finished.\n";
+	close ($LOGFILE);
     return;
 }
 
 sub rollback {
     print "Rollback";
     return;
+}
+
+
+sub mod_perl_script {
+	return <<'SCRIPT_END';
+#!/usr/bin/perl -w
+use strict;
+print "HTTP/1.1 200 OK\r\n";
+print "Content-Type: text/plain\r\n\r\n";
+
+my ($key,$value);
+while ( ($key, $value) = each %ENV)
+{
+        print "$key = $value\n";
+}
+
+
+1;
+SCRIPT_END
 }
 
 
