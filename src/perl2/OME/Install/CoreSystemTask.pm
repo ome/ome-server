@@ -99,6 +99,35 @@ sub fix_ownership {
     return 1;
 }
 
+sub get_apache_user {
+    my $username = "";
+
+    # Grab our Apache user from the password file
+    open (PW_FILE, "<", "/etc/passwd") or croak "Couldn't open /etc/passwd. $!";
+    while (<PW_FILE>) {
+	chomp;
+	$username = (split ":")[0];
+	if ($username =~ /httpd|apache|www-data|www/) {
+	    last;
+	}
+    }
+
+    close (PW_FILE);
+
+    # It's possible we've got multiple instances of these users in the password
+    # file so lets confirm things or in the circumstance that the user is of a
+    # different name, ask for it.
+    while (1) {
+	confirm_default ("What is the Unix username that Apache runs under ?", $username);
+	getpwnam ($username)
+	    or (print "User \"$username\" does not exist, try again.\n" and next);
+
+	last;
+    }
+
+    return $username;
+}
+
 #*********
 #********* START OF CODE
 #*********
@@ -132,28 +161,43 @@ sub execute {
     # Confirm and/or update our user information
     $OME_USER = confirm_default ("The user which OME should be run under", $OME_USER);
 
-    # Make sure the rest of the installation knows what the user is 
+    # Get and/or update our apache user information
+    my $APACHE_USER = get_apache_user ();
+
+    # Make sure the rest of the installation knows who the apache and ome users are
     $environment->user($OME_USER);
+    $environment->apache_user($APACHE_USER);
 
     print "\nBuilding the core system\n";
 
     #********
-    #******** Set up our Unix user/group
+    #******** Set up our Unix users/groups
     #********
 
     # Group creation if needed
     if (not $OME_GID = getgrnam($OME_GROUP)) {
 	print "  \\_ Adding group ", BOLD, "\"$OME_GROUP\"", RESET, ".\n", ;
-	add_group($OME_GROUP);
-	$OME_GID = getgrnam($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
+	add_group ($OME_GROUP) or croak "Failure creating group \"$OME_GROUP\"";
+	$OME_GID = getgrnam($OME_GROUP) or croak "Failure retrieving GID for \"$OME_GROUP\"";
     }
 
     # User creation if needed
     if (not $OME_UID = getpwnam($OME_USER)) {
 	print "  \\_ Adding user ", BOLD, "\"$OME_USER\"", RESET, ".\n", ;
-	add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP);
-	$OME_UID = getpwnam($OME_USER) or croak "Failure creating user \"$OME_USER\"";
+	add_user ($OME_USER, $$OME_BASE_DIR, $OME_GROUP) or croak "Failure creating user \"$OME_GROUP\"";
+	$OME_UID = getpwnam($OME_USER) or croak "Failure retrieving UID for \"$OME_USER\"";
     }
+
+    # Add the apache user to the OME group if needed
+    my $member_string = (getgrgid($OME_GID))[3];
+    my @members = split (/,/, $member_string) if $member_string or undef;
+    my $need_to_add = 1;
+
+    if (@members) {
+	foreach my $member (@members) { $need_to_add = 0 if $member eq $APACHE_USER };
+    }
+    add_user_to_group ($APACHE_USER, $OME_GROUP) or croak "Failure adding \"$APACHE_USER\" to \"$OME_GROUP\""
+	if $need_to_add;
     
     #********
     #******** Build our core directory structure
