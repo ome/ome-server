@@ -111,6 +111,10 @@
     <SemanticElement
       Name="ExternalReference"
       FieldID="PLATE.EXTERNAL_REFERENCE"/>
+    
+    <SemanticElement
+      Name="Screen"
+      FieldID="PLATE.SCREEN"/>
 
 </SemanticType>
 
@@ -720,7 +724,11 @@
     <SemanticElement
       Name="AuxTechnique"
       FieldID="LOGICAL_CHANNEL.AUX_TECHNIQUE"/>
-
+      
+    <SemanticElement
+      Name="AuxLightWavelength"
+      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_WAVELENGTH"/>
+      
     <SemanticElement
       Name="ExcitationWavelength"
       FieldID="LOGICAL_CHANNEL.EX_WAVE"/>
@@ -1009,6 +1017,12 @@
       FieldID="PLATE.EXTERNAL_REFERENCE"
       Name="EXTERNAL_REFERENCE"
       DataType="string"/>
+      
+    <Field
+      FieldID="PLATE.SCREEN"
+      Name="SCREEN"
+      DataType="reference"
+      ReferenceType="Screen"/>
 
 </Record>
 
@@ -1681,7 +1695,7 @@
       FieldID="LOGICAL_CHANNEL.OTF"
       Name="OTF"
       DataType="reference"
-      ReferenceType="OTF"/>
+      ReferenceType="OpticalTransferFunction"/>
 
     <Field
       FieldID="LOGICAL_CHANNEL.DETECTOR"
@@ -1744,6 +1758,11 @@
       FieldID="LOGICAL_CHANNEL.AUX_TECHNIQUE"
       Name="AUX_TECHNIQUE"
       DataType="string"/>
+
+    <Field
+      FieldID="LOGICAL_CHANNEL.AUX_LIGHT_WAVELENGTH"
+      Name="AUX_LIGHT_WAVELENGTH"
+      DataType="integer"/>
 
     <Field
       FieldID="LOGICAL_CHANNEL.EX_WAVE"
