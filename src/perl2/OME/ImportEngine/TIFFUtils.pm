@@ -1,6 +1,10 @@
 # OME/ImportEngine/TIFFUtils.pm
-
+#
 # Copyright (C) 2003 Open Microscopy Environment
+#    Massachusetts Institute of Technology
+#    National Institute of Health
+#    University of Dundee
+#
 # Author:  Douglas Creager <dcreager@alum.mit.edu>
 #
 #    This library is free software; you can redistribute it and/or
@@ -18,6 +22,18 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+=head1 NAME
+
+ OME::ImportEngine::TIFFUtils - contains helper routines for TIFF tag access
+
+
+=head1 SYNOPSIS
+
+  use OME::ImportEngine::TIFFUtils 
+
+=cut
+
+
 
 package OME::ImportEngine::TIFFUtils;
 
@@ -27,8 +43,7 @@ our $VERSION = 2.000_000;
 use Exporter;
 use base qw(Exporter);
 
-our @EXPORT = qw(readTiffIFD TAGS LITTLE_ENDIAN BIG_ENDIAN);
-our @EXPORTS_OK = qw(readTiffIFD TAGS LITTLE_ENDIAN BIG_ENDIAN);
+our @EXPORT = qw(readTiffIFD getStrips TAGS LITTLE_ENDIAN BIG_ENDIAN);
 
 use constant BIG_ENDIAN => 0;
 use constant LITTLE_ENDIAN => 1;
@@ -44,6 +59,13 @@ use constant TAG_LONG => 4;
 use constant TAG_RATIONAL => 5;
 use constant TAG_SIZES => [0,1,0,2,4,8];
 use constant TAG_FORMATS => [['_','_'],['c','c'],['_','_'],_x,_X,_XX];
+
+=head2 constant TAGS
+
+This set of contants associates meaningful names to standard TIFF
+tag values.
+
+=cut
 
 use constant TAGS =>
   {
@@ -96,7 +118,7 @@ use constant TAGS =>
    'WhitePoint' => 318,
    'PrimaryChroma' => 319,
    'ColorMap' => 320,
-   'Halftine Hints' => 321,
+   'Halftone Hints' => 321,
    'TileWidth' => 322,
    'TileLength' => 323,
    'TileOffsets' => 324,
@@ -124,14 +146,34 @@ use constant TAGS =>
    'YCbCrSubSampling' => 530,
    'YCbCrPositioning' => 531,
    'Copyright' => 33432,
-   'UIC1' => 33628,
-   'UIC2' => 33629,
-   'UIC3' => 33630,
-   'UIC4' => 33631,
   };
+
+use constant MAX_TIFF_TAG => 33342;
 
 # Derived from Import_read->checkTIFF, TIFFreader->readTiffIFD, and
 # TIFFreader->readTiffTag
+#
+# Reads a file that may be a TIFF file. It will return either 'undef'
+# if the file is not any sort of TIFF file (or a broken TIFF file), or
+# a reference to an IFD hash.
+
+=head2 readTiffIFD
+
+This routine first examines the file at the passed file handle to
+determine if it is or is not a TIFF file. If it isn't, the routine
+immediately returns I<undef>.
+
+If the file is TIFF, the routine walks the file collecing tags and 
+thier values. Any tag whose key lives in the constants hash TAGS 
+will have its id and value recorded in a return hash. Any tag whose key does
+not have an entry in TAGS will have its id, type, count, and offset
+recorded in the return hash. This latter action allows TIFF variant format
+importers to access possible custom tags.
+
+When this routine has exhausted all the tags in the passed file, it returns
+the return tag hash it has been accumulating.
+
+=cut
 
 sub readTiffIFD (*) {
     my ($fh) = shift;
@@ -178,6 +220,7 @@ sub readTiffIFD (*) {
 
         while ($tag_count) {
             # Read the tag
+	    my $tell = tell($fh);
             read($fh,$buf,12) or return undef;
 
             my ($tag_id,$tag_type,$value_count,$value_offset) =
@@ -185,51 +228,59 @@ sub readTiffIFD (*) {
 
             my @value;
 
-            return undef
-              if ($tag_type != TAG_BYTE &&
-                  $tag_type != TAG_ASCII &&
-                  $tag_type != TAG_SHORT &&
-                  $tag_type != TAG_LONG &&
-                  $tag_type != TAG_RATIONAL);
+	    # if tag is > max TIFF tag, the file may
+	    # still be a TIFF variant
+	    if ($tag_id > MAX_TIFF_TAG) {
+		push @{$ifd{$tag_id}}, {'tag_id' => $tag_id,
+					'tag_type' => $tag_type,
+					'value_count' => $value_count,
+					'value_offset' => $value_offset};
+	    }
+	    else {
+		return undef
+		    if ($tag_type != TAG_BYTE &&
+			$tag_type != TAG_ASCII &&
+			$tag_type != TAG_SHORT &&
+			$tag_type != TAG_LONG &&
+			$tag_type != TAG_RATIONAL);
 
-            #print STDERR "  Tag - $tag_id $tag_type $value_count $value_offset\n";
 
-            if ($tag_type == TAG_ASCII) {
-                # If this is an ASCII string, read $value_count bytes
-                # from the offset directly into the value.
 
-                my $tell = tell($fh);
-                seek($fh,$value_offset,0) or return undef;
-                read($fh,$buf,$value_count) or return undef;
-                seek($fh,$tell,0) or return undef;
+		if ($tag_type == TAG_ASCII) {
+		    # If this is an ASCII string, read $value_count bytes
+		    # from the offset directly into the value.
+		    
+		    $tell = tell($fh);
+		    seek($fh,$value_offset,0) or return undef;
+		    read($fh,$buf,$value_count) or return undef;
+		    seek($fh,$tell,0) or return undef;
 
-                push @{$ifd{$tag_id}}, $buf;
-            } elsif ($value_count == 1 && $tag_type != TAG_RATIONAL) {
-                # If this is a simple type, with only a single value,
-                # that value is stored directly in the offset field.
-
-                push @{$ifd{$tag_id}}, $value_offset;
-            } else {
-                # Otherwise read a list of values
-                my $tell = tell($fh);
-                seek($fh,$value_offset,0) or return undef;
-
-                while ($value_count) {
-                    read($fh,$buf,TAG_SIZES->[$tag_type]) or return undef;
-                    my ($val1,$val2) =
-                      unpack(TAG_FORMATS->[$tag_type]->[$endian],$buf);
-                    my $value =
-                      ($tag_type == TAG_RATIONAL)? $val1/$val2: $val1;
-
-                    push @{$ifd{$tag_id}}, $value;
-                    $value_count--;
-                }
-
-                seek($fh,$tell,0);
-            }
-
-            push @{$ifd{$tag_id}}, @value;
-
+		    push @{$ifd{$tag_id}}, $buf;
+		} elsif ($value_count == 1 && $tag_type != TAG_RATIONAL) {
+		    # If this is a simple type, with only a single value,
+		    # that value is stored directly in the offset field.
+		    push @{$ifd{$tag_id}}, $value_offset;
+		} else {
+		    # Otherwise read a list of values
+		    my $tell = tell($fh);
+		    seek($fh,$value_offset,0) or return undef;
+		    
+		    while ($value_count) {
+			read($fh,$buf,TAG_SIZES->[$tag_type]) or return undef;
+			my ($val1,$val2) =
+			    unpack(TAG_FORMATS->[$tag_type]->[$endian],$buf);
+			my $value =
+			    ($tag_type == TAG_RATIONAL)? $val1/$val2: $val1;
+			
+			push @{$ifd{$tag_id}}, $value;
+			$value_count--;
+		    }
+		    
+		    seek($fh,$tell,0);
+		}
+		
+		#push @{$ifd{$tag_id}}, @value;
+	    }
             $tag_count--;
         }
 
@@ -240,5 +291,37 @@ sub readTiffIFD (*) {
 
     return \%ifd;
 }
+
+=head2 getStrips
+
+This helper routine returns an array of TIFF strip offsets and TIFF 
+strip counts to its caller. A strip offset records the offset of the
+begining of the strip from the begining of the file. A strip count
+records the length of the associated strip. The two arrays should be
+used in tandem - the strip at array offset I<n> in the offset array
+has the length recorded at array offset I<n> in the counts array.
+
+=cut
+
+# Return image strip offsets and bytecounts arrays
+sub getStrips {
+    my $tags = shift;
+    my ($offs_arr, $counts_arr);
+
+    $offs_arr = $tags->{TAGS->{'StripOffsets'}};     # offsets to start of each TIFF image strip
+    $counts_arr = $tags->{TAGS->{StripByteCounts}};  # how long the strip is
+    return($offs_arr, $counts_arr);
+} 
+
+
+=head1 AUTHOR
+
+Douglas Creager (dcreager@alum.mit.edu)
+
+=head1 SEE ALSO
+
+L<OME::ImportEngine::AbstractFormat|OME::ImportEngine::AbstractFormat>
+
+=cut
 
 1;
