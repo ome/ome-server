@@ -166,6 +166,30 @@ sub __newInstance {
     return $self;
 }
 
+sub bootstrapInstance {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+
+    die "There's already an active session" if defined $__soleInstance;
+
+    my $self = $class->SUPER::new();
+    $self->{Factory} = OME::Factory->new();
+    $__soleInstance = $self;
+
+    return $self;
+}
+
+sub finishBootstrap {
+    my $self = shift;
+    die "This is not a bootstrap session" if exists $self->{UserState};
+    die "There is no active session" unless defined $__soleInstance;
+    die "How are there two session instances?" unless $self eq $__soleInstance;
+    $__soleInstance->{Factory}->closeFactory();
+    $__soleInstance->{Factory} = undef;
+    $__soleInstance = undef;
+    return;
+}
+
 sub instance {
 	my $self = shift;
 	my $userState = shift;
