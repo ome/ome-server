@@ -43,7 +43,7 @@ __PACKAGE__->AccessorNames({
 __PACKAGE__->table('images');
 __PACKAGE__->sequence('image_seq');
 __PACKAGE__->columns(Primary => qw(image_id));
-__PACKAGE__->columns(Essential => qw(image_guid name path image_type));
+__PACKAGE__->columns(Essential => qw(image_guid file_sha1 name path image_type));
 __PACKAGE__->columns(Others => qw(created inserted description));
 __PACKAGE__->hasa(OME::Instrument => qw(instrument_id));
 __PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
@@ -91,18 +91,17 @@ sub ImageAttributes {
 
 sub getFullPath {
     my $self = shift;
-    my $repository = $self->repository();
-    my $rpath = $repository->path();
     my $path = $self->path();
+    my $name = $self->name();
 
-    return ($rpath . $path);
+    return ($path . $name);
 }
 
 sub openFile {
     my $self = shift;
 
     return if ($self->{fileOpen});
-	my $fullpath = $self->getFullPath();
+    my $fullpath = $self->getFullPath();
 
     my $handle = new IO::File;
     open $handle, $fullpath or die "Cannot open image file!";
@@ -160,7 +159,52 @@ __PACKAGE__->columns(Primary => qw(attribute_id));
 __PACKAGE__->columns(Essential => qw(size_x size_y size_z 
 				     num_waves num_times 
 				     bits_per_pixel));
+__PACKAGE__->columns(Others => qw(pixel_size_x pixel_size_y pixel_size_z
+				  wave_increment time_increment)); 
 __PACKAGE__->hasa(OME::Image => qw(image_id));
+
+
+
+package OME::Image::WavelengthInfo;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    attribute_id => 'attribute',
+    image_id     => 'image'
+});
+
+__PACKAGE__->table('image_wavelengths');
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(image_id wavenumber 
+				     ex_wavelength em_wavelength 
+				     nd_filter fluor));
+
+
+package OME::Image::XYZImageInfo;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    attribute_id => 'attribute',
+    image_id     => 'image'
+    });
+
+__PACKAGE__->table('xyz_image_info');
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(image_id wavenumber timepoint deltatime
+				     min max mean geomean sigma 
+				     centroid_x centroid_y centroid_z));
 
 
 package OME::Image::DatasetMap;
@@ -180,6 +224,7 @@ __PACKAGE__->table('image_dataset_map');
 __PACKAGE__->columns(Essential => qw(image_id dataset_id));
 __PACKAGE__->hasa(OME::Image => qw(image_id));
 __PACKAGE__->hasa(OME::Dataset => qw(dataset_id));
+
 
 
 1;
