@@ -385,13 +385,11 @@ use Carp qw(cluck croak);
 
 use UNIVERSAL::require;
 
-use fields qw(__session __handlesAvailable __allHandles);
+use fields qw(__handlesAvailable __allHandles);
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-
-    my ($session) = @_;
 
     my $delegate = OME::Database::Delegate->getDefaultDelegate()
 			or croak "Could not get default DB delegate";
@@ -403,9 +401,7 @@ sub new {
     die "Cannot create database handle"
       unless defined $dbh;
 
-    my $self = {
-                __session          => $session,
-                __ourDBH           => $dbh,
+    my $self = {__ourDBH           => $dbh,
                 __handlesAvailable => {},
                 __allHandles       => {},
                };
@@ -414,21 +410,16 @@ sub new {
 }
 
 sub DESTROY {
-    my $self = shift;
+	my $self = shift;
     $self->closeFactory();
 }
 
 sub closeFactory {
     my $self = shift;
     $self->__disconnectAll();
-	$self->{__session} = undef;
 }
 
-# do what is necessary to switch sessions.
-# for reuse of Factories between sessions.m
-sub swapSessions { my $self = shift; return $self->{__session} = shift; }
-
-sub Session { my $self = shift; return $self->{__session}; }
+sub Session { return OME::Session->instance() }
 
 sub __checkClass {
     my $class = shift;
@@ -522,8 +513,7 @@ sub loadObject {
 
     my $object;
     eval {
-        $object = $class->__newByID($self->{__session},
-                                    $self->{__ourDBH},
+        $object = $class->__newByID($self->{__ourDBH},
                                     $id,
                                     $columns_wanted);
     };
@@ -551,8 +541,7 @@ sub loadAttribute {
 
     my $attribute;
     eval {
-        $attribute = $pkg->__newByID($self->{__session},
-                                     $self->{__ourDBH},
+        $attribute = $pkg->__newByID($self->{__ourDBH},
                                      $id,
                                      $columns_wanted);
     };
@@ -598,8 +587,6 @@ sub findObjects {
         $criteria = {@criteria};
     }
 
-    my $session = $self->{__session};
-
     __checkClass($class);
     $class->require();
 
@@ -615,7 +602,7 @@ sub findObjects {
             $sth->execute(@$values);
 
             push @result, $_
-              while $_ = $class->__newInstance($session,$sth,
+              while $_ = $class->__newInstance($sth,
                                                $ids_available,$columns_wanted);
         };
         die $@ if $@;
@@ -623,7 +610,7 @@ sub findObjects {
     } else {
         # looking for a scalar
         my $iterator = OME::Factory::Iterator->
-          new($session,$class,$sth,
+          new($class,$sth,
               $values,$ids_available,$columns_wanted);
         return $iterator;
     }
@@ -684,7 +671,7 @@ sub newObject {
 
     my $object;
     eval {
-        $object = $class->__createNewInstance($self->{__session},$self->{__ourDBH},$data);
+        $object = $class->__createNewInstance($self->{__ourDBH},$data);
     };
     $self->{__ourDBH}->commit();
     die $@ if $@;
@@ -763,7 +750,7 @@ use strict;
 
 use Carp;
 
-use fields qw(__session __sth __values
+use fields qw(__sth __values
               __class __ids __columns __open __executed);
 
 sub new {
@@ -771,9 +758,8 @@ sub new {
     my $proto = shift;
     my $pclass = ref($proto) || $proto;
 
-    my ($session,$class,$sth,$values,$ids,$columns) = @_;
+    my ($class,$sth,$values,$ids,$columns) = @_;
     my $self = {
-                __session  => $session,
                 __class    => $class,
                 __sth      => $sth,
                 __values   => $values,
@@ -827,8 +813,7 @@ sub next {
     $self->__execute() unless $self->{__executed};
 
     return $self->{__class}->
-      __newInstance($self->{__session},
-                    $self->{__sth},
+      __newInstance($self->{__sth},
                     $self->{__ids},
                     $self->{__columns});
 }
