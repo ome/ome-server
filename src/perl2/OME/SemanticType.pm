@@ -770,7 +770,7 @@ sub getDataHash {
     my %return_hash;
 
     my $attribute_type = $self->_attribute_type();
-    my @columns = $attribute_type->attribute_type_columns();
+    my @columns = $attribute_type->attribute_columns();
 
     foreach my $column (@columns) {
         my $column_name = $column->name();
