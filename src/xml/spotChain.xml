@@ -44,13 +44,17 @@
      Name="Find and track spots" Locked="false">
 
     <Nodes>
-      <Node NodeID="Importer" ProgramName="Importer"/>
+	  <Node NodeID = "Files" ProgramName = "Original files"/>
+	  <Node NodeID = "Importer" ProgramName = "Image import"/>
       <Node NodeID="Stack" ProgramName="Stack statistics"/>
       <Node NodeID="Find" ProgramName="Find spots"/>
       <Node NodeID="Track" ProgramName="Track spots"/>
     </Nodes>
 
     <Links>
+      <Link FromNodeID="Files" FromOutputName="Files"
+            ToNodeID="Importer" ToInputName="Files"/>
+
       <Link FromNodeID="Importer" FromOutputName="Pixels"
             ToNodeID="Stack" ToInputName="Pixels"/>
 

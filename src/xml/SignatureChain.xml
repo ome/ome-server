@@ -40,12 +40,15 @@
 <AnalysisChains xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
 	<AnalysisChain Name = "Area Statistics" Locked = "false">
 		<Nodes>
-			<Node NodeID = "Import" ProgramName = "Importer"/>
+	        <Node NodeID = "Files" ProgramName = "Original files"/>
+	        <Node NodeID = "Import" ProgramName = "Image import"/>
 			<Node NodeID = "maxIntensity" ProgramName = "Maximum Intensity Projection"/>
 			<Node NodeID = "AreaStats" ProgramName = "Area Statistics"/>
 			<Node NodeID = "Zernike" ProgramName = "Zernike Coefficients Order 3x2"/>
 		</Nodes>
 		<Links>
+            <Link FromNodeID="Files" FromOutputName="Files"
+                  ToNodeID="Import" ToInputName="Files"/>
 			<Link FromNodeID="Import" FromOutputName="Other metadata" ToNodeID="maxIntensity" ToInputName="ChannelIndex"/>
 			<Link FromNodeID="maxIntensity" FromOutputName="PixelsPlane" ToNodeID="AreaStats" ToInputName="PixelsPlane"/>
 			<Link FromNodeID="maxIntensity" FromOutputName="PixelsPlane" ToNodeID="Zernike" ToInputName="PixelsPlane"/>
