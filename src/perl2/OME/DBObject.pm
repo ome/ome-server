@@ -1032,7 +1032,6 @@ sub ID { return shift->{__id}; }
 
 sub storeObject {
     my $self = shift;
-	carp "Storing object.";
 
     if (%{$self->{__changedFields}}) {
         my $session = $self->Session();

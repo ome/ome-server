@@ -326,7 +326,6 @@ sub getOMESession {
 	  #$OME::Session::__soleInstance = undef;
 
     my $session = OME::Session->instance($userState);
-	carp $session->Factory();
     
     logdbg "debug", "getOMESession: updating userState";
     $userState->storeObject();
