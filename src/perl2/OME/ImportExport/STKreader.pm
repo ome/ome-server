@@ -279,9 +279,10 @@ sub formatImage {
 	$val = @$xref->[0]->[$plane_num]->[1];  #    left by TIFFreader
 	$xyhref->{'XYinfo.'.$key} = $val;  # copy
 	$xyhref->{'XYinfo.Stagepos.Z'} = $self->{uic2}->{$plane_num}[1];
-	$xyhref->{'XYinfo.Zsection'} = $znum++;
-	$xyhref->{'XYinfo.WaveNumber'} = $wnum;
-	$xyhref->{'XYinfo.TimePoint'} = $tnum;
+	# IGG 10/06/02:  OME dimensions begin at 0.
+	$xyhref->{'XYinfo.Zsection'} = ($znum++) - 1;
+	$xyhref->{'XYinfo.WaveNumber'} = $wnum - 1;
+	$xyhref->{'XYinfo.TimePoint'} = $tnum - 1;
 	push @$xy_aref, $xyhref;
 
 	# and now make the WavelengthInfo elements
@@ -292,7 +293,8 @@ sub formatImage {
 	$val = @$wref->[0]->[$plane_num]->[1];  #    left by TIFFreader
 	$whref->{'WavelengthInfo.'.$key} = $val;  # copy
 	$whref->{'WavelengthInfo.EmWave'} = $self->{uic3}->{$plane_num};
-	$whref->{'WavelengthInfo.WaveNumber'} = $wnum;
+	# IGG 10/06/02:  OME dimensions begin at 0.
+	$whref->{'WavelengthInfo.WaveNumber'} = $wnum - 1;
 	push @$w_aref, $whref;
 
 	if ($znum > $maxZ) {

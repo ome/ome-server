@@ -351,7 +351,8 @@ sub readUIHdr {
 	my $whref = {};
 	$xel = $xml_wavelength_entries{$k};
 	$whref->{'WavelengthInfo.'.$xel} = $self->{$k};
-	$whref->{'WavelengthInfo.WaveNumber'} = $i;
+	# IGG 10/06/02:  The wavenumbers start at 0 in OME.
+	$whref->{'WavelengthInfo.WaveNumber'} = $i-1;
 	#print "WavelengthInfo."."$xel = ". $whref->{'WavelengthInfo.'.$xel}."\n";
 	push @$w_aref, $whref;
 	$i++;
