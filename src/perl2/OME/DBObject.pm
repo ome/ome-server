@@ -91,6 +91,9 @@ __PACKAGE__->mk_classdata('Caching');
 __PACKAGE__->mk_classdata('__cache'); 
 __PACKAGE__->__cache({}); 
 
+# List of classes that have requested separate caches
+our @__nonGlobalCaches;
+
 __PACKAGE__->Caching(1);
 __PACKAGE__->__classDefined(0);
 
@@ -122,6 +125,13 @@ sub useSeparateCache {
     # Create a separate cache for this class.
     # (Class::Data::Inheritable does most of the work.)
     $class->__cache({});
+    my $class_name = ref( $class ) || $class;
+    OME::DBObject->__addNonGlobalCache( $class_name );
+}
+
+sub __addNonGlobalCache {
+	shift;
+	push @__nonGlobalCaches, shift;
 }
 
 =head2 clearCache
@@ -143,6 +153,22 @@ sub clearCache {
     %$cache = ();
 }
 
+
+=head2 clearAllCaches
+
+	$class->clearAllCaches();
+
+Causes all DBObject caches for to be emptied, including classes that are using separare caches.
+
+=cut
+
+
+sub clearAllCaches {
+	my $self = shift;
+	$self->clearCache();
+	$_->clearCache() foreach @__nonGlobalCaches;
+	
+}
 
 sub newClass {
     my $proto = shift;
