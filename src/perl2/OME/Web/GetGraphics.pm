@@ -1324,16 +1324,19 @@ sub SVGgetDataJS {
 		unless defined $image;
 
 	# get Dimensions from image and make them readable
-	my $dims = [ $image->Dimensions()->size_x(),
-	             $image->Dimensions()->size_y(),
-	             $image->Dimensions()->size_z(),
-	             $image->Dimensions()->num_waves(),
-	             $image->Dimensions()->num_times(),
-	             $image->Dimensions()->bits_per_pixel()/8
+	my $d = $image->Dimensions()
+		or die "Could not retrieve image->Dimensions";
+	my $dims = [ $d->size_x(),
+	             $d->size_y(),
+	             $d->size_z(),
+	             $d->num_waves(),
+	             $d->num_times(),
+	             $d->bits_per_pixel()/8
 	            ];
 	
 	# get wavelengths from image and make them JavaScript readable
-	my @w = $image->wavelengths;
+	my @w = $image->wavelengths
+		or die "Could not retrieve image->wavelengths";
 	my @wavelengths;
 	
 # get this from DB eventually
@@ -1363,7 +1366,7 @@ sub SVGgetDataJS {
 		if( scalar(@s) == 0 );
 	my ($stats, @JS_Stats_Waves, $JSstats);
 	foreach (@s) {
-		$stats->[$_->wavenumber()][$_->timepoint()] = 
+		$stats->[$_->theW()][$_->theT()] = 
 			"{ min:".$_->min().", max:".$_->max().", mean:".$_->mean().", geomean:".$_->geomean().",sigma:".$_->sigma()."}";
 	}
 	for (my $i=0;$i<scalar (@$stats);$i++) {
