@@ -56,6 +56,18 @@ __PACKAGE__->has_many('wavelengths','OME::Image::Wavelengths' => qw(image_id));
 __PACKAGE__->has_many('XYZ_info','OME::Image::XYZInfo' => qw(image_id));
 __PACKAGE__->has_many('all_features','OME::Feature' => qw(image_id));
 
+sub experimenter {
+    my $self = shift;
+    return $self->Session()->Factory()->loadAttribute("Experimenter",
+                                                      $self->experimenter_id());
+}
+
+sub group {
+    my $self = shift;
+    return $self->Session()->Factory()->loadAttribute("Group",
+                                                      $self->group_id());
+}
+
 
 sub features {
     my ($self) = @_;
