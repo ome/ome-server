@@ -79,7 +79,6 @@ public abstract class PFormalParameter extends PNode implements
 	PNodeEventListener, Comparable {
 	
 	public static final Color NORMAL_COLOR = Color.black;
-	public static final Color HIGHLIGHT_COLOR = PModule.HIGHLIGHT_COLOR;
 
 	
 	public static final int TYPE_NODE_VERTICAL_OFFSET=12;
@@ -123,6 +122,7 @@ public abstract class PFormalParameter extends PNode implements
 		addChild(labelNode);
 		
 		textNode = new PText(param.getParameterName());
+		textNode.setFont(PConstants.NAME_FONT);
 		labelNode.addChild(textNode);
 		
 		
@@ -132,6 +132,7 @@ public abstract class PFormalParameter extends PNode implements
 			typeNode = new PText(type.getName());
 			labelNode.addChild(typeNode);
 			typeNode.setScale(TYPE_NODE_DEFAULT_SCALE);
+			typeNode.setFont(PConstants.NAME_FONT);
 		}						
 		node.addNodeEventListener(this);
 		
@@ -188,8 +189,8 @@ public abstract class PFormalParameter extends PNode implements
 	public void setLinkable(boolean v) {
 		linkable = v;
 		if (v == true) {
-			typeNode.setPaint(HIGHLIGHT_COLOR);
-			textNode.setPaint(HIGHLIGHT_COLOR);
+			typeNode.setPaint(PConstants.HIGHLIGHT_COLOR);
+			textNode.setPaint(PConstants.HIGHLIGHT_COLOR);
 		}
 		else {
 			typeNode.setPaint(NORMAL_COLOR);
@@ -287,7 +288,7 @@ public abstract class PFormalParameter extends PNode implements
  		super.paint(aPaintContext);
  		if (isLinkStart) {
  			Graphics2D g = aPaintContext.getGraphics();
-			g.setPaint(HIGHLIGHT_COLOR);
+			g.setPaint(PConstants.HIGHLIGHT_COLOR);
 			g.draw(textNode.getBounds());
  		}
  	}
