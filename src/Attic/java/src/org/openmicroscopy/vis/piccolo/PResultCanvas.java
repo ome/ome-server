@@ -49,9 +49,9 @@ import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.chains.ResultFrame;
 import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.Connection;
-import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.CChain;
 import org.openmicroscopy.vis.dnd.ChainFlavor;
+import org.openmicroscopy.ChainExecution;
 import java.awt.dnd.DropTargetListener;
 import java.awt.dnd.DropTargetDragEvent;
 import java.awt.dnd.DropTargetEvent;
@@ -131,7 +131,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	 */
 	private PChainLibraryCanvas libraryCanvas;
 	
-	private CChainExecution exec;
+	private ChainExecution exec;
 	
 	private boolean hasChain = false;
 	
@@ -283,7 +283,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		this.selectionState = selectionState;
 	}
 	
-	public void setExecution(CChainExecution exec) {
+	public void setExecution(ChainExecution exec) {
 		this.exec=exec;
 		System.err.println("setting execution to "+exec);
 		gainedFocus();
@@ -295,7 +295,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 			selectionState.setCurrentExecution(exec);
 	}
 	
-	public CChainExecution getChainExecution() {
+	public ChainExecution getChainExecution() {
 		return exec;
 	}
  }

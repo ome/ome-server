@@ -54,7 +54,7 @@ import org.openmicroscopy.Module;
 import org.openmicroscopy.Attribute;
 import org.openmicroscopy.SemanticType;
 import org.openmicroscopy.Module.FormalOutput;
-import org.openmicroscopy.vis.ome.CChainExecution;
+import org.openmicroscopy.ChainExecution;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Iterator;
@@ -162,12 +162,12 @@ public class PResultEventHandler extends  PPanEventHandler {
 				outputNode.getParameter();
 			Module mod = modNode.getModule();
 			System.err.println("Module name is "+mod.getName());
-			CChainExecution exec = canvas.getChainExecution();
-			if (exec != null) {
+			ChainExecution exec = canvas.getChainExecution();
+			/*if (exec != null) {
 				List results = exec.getResults(mod,output);
 				if (results.size() > 0)
 					dumpOutputs(results);
-			}
+			}*/
 			e.setHandled(true);
 		}
 		super.mousePressed(e);
