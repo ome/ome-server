@@ -42,6 +42,7 @@ package OME::Web::ImportFiles;
 #********* INCLUDES
 #*********
 use strict;
+use warnings;
 use vars qw($VERSION);
 use CGI;
 use Carp;
