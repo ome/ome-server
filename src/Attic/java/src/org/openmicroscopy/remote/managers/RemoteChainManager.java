@@ -93,7 +93,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"createChain",
                                    new Object[] { name, description });
-        return (Chain) o;
+        return (Chain) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain",(String) o);
     }
 
     /**
@@ -110,7 +111,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"createChain",
                                    new Object[] { name, description, owner });
-        return (Chain) o;
+        return (Chain) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain",(String) o);
     }
 
     /**
@@ -124,7 +126,8 @@ public class RemoteChainManager
     public Chain cloneChain(Chain chain)
     {
         Object o = caller.dispatch(this,"cloneChain",chain);
-        return (Chain) o;
+        return (Chain) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain",(String) o);
     }
 
     /**
@@ -140,7 +143,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"cloneChain",
                                    new Object[] { chain, owner });
-        return (Chain) o;
+        return (Chain) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain",(String) o);
     }
 
     /**
@@ -154,7 +158,8 @@ public class RemoteChainManager
     public Module findModule(String name)
     {
         Object o = caller.dispatch(this,"findModule",name);
-        return (Module) o;
+        return (Module) getRemoteSession().getObjectCache().
+            getObject("OME::Module",(String) o);
     }
 
     /**
@@ -170,7 +175,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"addNode",
                                    new Object[] { chain, module });
-        return (Chain.Node) o;
+        return (Chain.Node) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Node",(String) o);
     }
 
     /**
@@ -191,7 +197,8 @@ public class RemoteChainManager
         Object o = caller.dispatch(this,"addNode",
                                    new Object[] { chain, module,
                                                   iteratorTag});
-        return (Chain.Node) o;
+        return (Chain.Node) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Node",(String) o);
     }
 
     /**
@@ -214,7 +221,8 @@ public class RemoteChainManager
                                    new Object[] { chain, module,
                                                   iteratorTag,
                                                   newFeatureTag});
-        return (Chain.Node) o;
+        return (Chain.Node) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Node",(String) o);
     }
 
     /**
@@ -246,7 +254,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"getNode",
                                    new Object[] { chain, name });
-        return (Chain.Node) o;
+        return (Chain.Node) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Node",(String) o);
     }
 
     /**
@@ -265,7 +274,8 @@ public class RemoteChainManager
     {
         Object o = caller.dispatch(this,"getFormalInput",
                                    new Object[] { chain, node, name });
-        return (Module.FormalInput) o;
+        return (Module.FormalInput) getRemoteSession().getObjectCache().
+            getObject("OME::Module::FormalInput",(String) o);
     }
 
     /**
@@ -295,7 +305,8 @@ public class RemoteChainManager
                                    new Object[] { chain,
                                                   fromNode, fromOutput,
                                                   toNode, toInput });
-        return (Chain.Link) o;
+        return (Chain.Link) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Link",(String) o);
     }
 
     /**
@@ -331,7 +342,8 @@ public class RemoteChainManager
                                    new Object[] { chain,
                                                   fromNode, fromOutput,
                                                   toNode, toInput });
-        return (Chain.Link) o;
+        return (Chain.Link) getRemoteSession().getObjectCache().
+            getObject("OME::AnalysisChain::Link",(String) o);
     }
 
     /**
