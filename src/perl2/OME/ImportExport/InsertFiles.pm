@@ -88,7 +88,11 @@ sub new {
 #
 # exportFile
 # parameters:
-#	$doc - the DOM to write out
+#	$file - path to output file
+# 	$doc  - the DOM to write out
+# optional parameters
+#	$compression - the compression to use to compress the pixels
+# 	$BigEndian   - 'true' | 'false' - specifies where the pixels should be inserted as bigEndian or not
 #
 sub exportFile {
 	# parameters
@@ -122,11 +126,10 @@ sub exportFile {
 		foreach my $pixelsXML( $caXML->getElementsByTagNameNS( $OMENS, "Pixels" ) ) {
 
 			# set up new <Bin:External>
-#			my $repository  = $LSIDresolver->getObject( $pixelsXML->getAttribute( "Repository" ) )
-#				or die "Could not resolve repository! (LSID = '".$pixelsXML->getAttribute( "Repository" )."')\n";
-#			my $href = $repository->Path().'/'.$pixelsXML->getAttribute("Path");
-my $href = '/OME/repository/'.$pixelsXML->getAttribute("Path");
-			$href =~ s/\/\//\//g; # strip out double //
+			my $repository  = $LSIDresolver->getObject( $pixelsXML->getAttribute( "Repository" ) )
+				or die "Could not resolve repository! (LSID = '".$pixelsXML->getAttribute( "Repository" )."')\n";
+			my $href = $repository->Path().'/'.$pixelsXML->getAttribute("Path");
+			$href =~ s/\/\//\//g; # strip out double slashes ('//')
 			my $externalXML = $doc->createElementNS( $BinNS, "External" );
 			$externalXML->setAttribute( "href", $href );
 			$externalXML->setAttribute( "Compression", $compression ) if $compression;
