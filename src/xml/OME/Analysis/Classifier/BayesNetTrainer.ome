@@ -60,7 +60,7 @@
 			</Description>
 			<Element
 				Name="Legend"
-				DBLocation="SIGNATURE.LEGEND"
+				DBLocation="SIGNATURES_USED.LEGEND"
 				DataType="reference"
 				RefersTo="SignatureVectorLegend"/>
 		</SemanticType>
