@@ -44,7 +44,10 @@ package org.openmicroscopy.vis.chains;
 
 import java.awt.Rectangle;
 import javax.swing.JFrame;
+import javax.swing.WindowConstants;
 import java.awt.Container;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.piccolo.PChainCanvas;
 
@@ -59,7 +62,7 @@ import org.openmicroscopy.vis.piccolo.PChainCanvas;
 
 public class CanvasFrame extends JFrame {
 	
-	private Controller controller;
+	private final Controller controller;
 	private Container contentPane;
 	private PChainCanvas canvas;
 	
@@ -68,10 +71,11 @@ public class CanvasFrame extends JFrame {
 	
 	private ModulePaletteFrame paletteFrame;
 	
-	public CanvasFrame(Connection connection) {
-		super("OME Chains");
+	public CanvasFrame(Controller controller,Connection connection,int i) {
+		super("OME Chains: "+i);
 		setResizable(true);
 		
+		this.controller = controller;
 		
 		contentPane = getContentPane();
 		// create a chain canvas and add it to this frame.
@@ -80,9 +84,17 @@ public class CanvasFrame extends JFrame {
 		
 		setBounds(new Rectangle(710,10,700,700));
 		show();		
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent e) {
+				CanvasFrame c = (CanvasFrame) e.getWindow();
+				Controller control = c.getController();
+				control.disposeChainCanvas(c);
+			}
+		});
 	}
 
-	public void logout() {
-		canvas.logout();	
+	public Controller getController() {
+			return controller;
 	}
 }
