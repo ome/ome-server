@@ -15,14 +15,6 @@ foreach my $mod_st (('CategoryGroup','Category')) {
 	foreach my $SE (@SEs) {
 		my $table = $SE->data_column()->data_table();
 		my $tName = uc ($table->table_name());
-	# Rename the table
-		if (exists $rename_tables->{$tName}) {
-			$dbh->do ("ALTER TABLE $tName RENAME TO ".$rename_tables->{$tName})
-					or die "Could not rename table $tName to ".$rename_tables->{$tName};
-			$table->table_name($rename_tables->{$tName});
-			$table->storeObject();
-			delete $rename_tables->{$tName};
-		}
 
 	# Change granularity
 		if ($ST->granularity() eq 'D') {
@@ -40,6 +32,7 @@ foreach my $mod_st (('CategoryGroup','Category')) {
 		}
 	}
 	
+	
 # Get all attributes of this ST
 	my $attrs = $factory->findAttributes($ST);
 	while (my $attr = $attrs->next()) {
@@ -51,13 +44,17 @@ foreach my $mod_st (('CategoryGroup','Category')) {
 			$mex->storeObject();
 		}
 	}
-	
+
 	
 }
 
-# for each mex: Set the dataset_id column for each mex to null
-#               Set the dependence to G
-# rename the data tables (category->categories, category_group->category_groups)
-# rename DB tables
-
+# Rename the tables
+while ( my ($oldName,$newName) = each %$rename_tables) {
+	$dbh->do ("ALTER TABLE $oldName RENAME TO $newName")
+			or die "Could not rename table $oldName to $newName";
+	my $table = $factory->findObject("OME::DataTable", table_name => $oldName);
+	$table->table_name($newName);
+	$table->storeObject();
+}
+OME::DBObject->clearAllCaches();
 1;
