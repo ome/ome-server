@@ -46,15 +46,6 @@ my $home = '/html/noOp.html';
 <TITLE>OME UI</TITLE>
 <META NAME="ROBOTS" CONTENT="NOINDEX">
 <script language="JavaScript" src="/JavaScript/UseWithJoust.js"></script>
-<script language="JavaScript">
-<!--
-// Break out of any frames.  Prolly should go right into UseWithJoust.js
-	if (top.location != location) {
-		top.location.href = document.location.href ;
-	}
-//-->
-</script>
-
 </HEAD>
 ENDHTML
 
