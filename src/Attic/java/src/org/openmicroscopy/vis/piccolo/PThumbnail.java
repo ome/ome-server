@@ -60,7 +60,8 @@ import java.awt.Image;
  * @since OME2.0
  */
 
-public class PThumbnail extends PNode implements PBufferedNode {
+public class PThumbnail extends PNode implements PBufferedNode, 
+	PBrowserNodeWithToolTip {
 
 	private final static String DEFAULT_LABEL="No Thumbnail";
 	
@@ -177,7 +178,7 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		return path;
 	}
 	
-	public PNode getFullTooltip() {
+	public PNode getFullToolTip() {
 		if (imageNode == null)
 			return null;
 		PNode n = new PNode();
@@ -188,15 +189,17 @@ public class PThumbnail extends PNode implements PBufferedNode {
 		PText text  = new PText(image.getName());
 		text.setFont(PConstants.TOOLTIP_FONT);
 		p.addChild(text);
-		p.setBounds(p.getUnionOfChildrenBounds(null));
+		n.addChild(p);
+		p.moveToBack();
+		p.setPathTo(text.getBounds());
 		p.setPaint(PToolTipHandler.FILL_COLOR);
 		p.setStrokePaint(PToolTipHandler.BORDER_COLOR);
-		n.addChild(p);
+		p.setBounds(p.getUnionOfChildrenBounds(null));
 		p.setOffset(0.0,imNode.getHeight());
 		return n;
 	}
 	
-	public PNode getTextToolTip() {
+	public PNode getShortToolTip() {
 		PText text  = new PText(image.getName());
 		text.setFont(PConstants.TOOLTIP_FONT);
 		return text;
