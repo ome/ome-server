@@ -598,7 +598,8 @@ sub commit_experimenter {
     # FIXME: Yes there's a trailing slash, yes it needs to be there and no
     # I don't know why the importer doesn't detect its existance or abscence.
                {
-                Path => $OME_BASE_DIR."/repository/"
+                Path => $OME_BASE_DIR."/repository/",
+                IsLocal => 1,
                });
 
 	$repository->storeObject;
