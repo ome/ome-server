@@ -122,7 +122,7 @@ maxIntensity: maxIntensity.c ../perl2/OME/Image/Pix/libpix.c ../perl2/OME/Image/
 	$(CC) $(CFLAGS) $(LIBPATHS) -o maxIntensity maxIntensity.c ../perl2/OME/Image/Pix/libpix.c -ltiff -lm
 
 omeis2:
-	$(MAKE) -C omeis
+	$(MAKE) OME_ROOT='$(OME_ROOT)' -C omeis
 
 
 OMEdb.o : OMEdb.h
