@@ -73,7 +73,7 @@ if (test "$DROPPED") ;
 	if test "$MAIL_TO" ;
 		then $MAIL_PROGRAM"`date` Could not drop DB" $MAIL_TO < $LOG_FILE ;
 	fi;
-	PATH=$OLD_PATHA ;
+	PATH=$OLD_PATH ;
 	export PATH ;
 	exit -1 ;
 fi;
