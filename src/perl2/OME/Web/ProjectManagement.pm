@@ -59,37 +59,42 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $session = $self->Session();
 	my $factory = $session->Factory();
-	$self->{htmlFormat} = new OME::Web::Helper::HTMLFormat;
 
 	my $project = $self->Session()->project()
 		or die "Project is not defined for the session.\n";
-	my $projectManager = new OME::Tasks::ProjectManager($session);
-	my $datasetManager = new OME::Tasks::DatasetManager($session);
+	my $projectManager = new OME::Tasks::ProjectManager;
+	my $datasetManager = new OME::Tasks::DatasetManager;
 
-	my $body = "";
+	my $body = $cgi->p({-class => 'ome_title', -align => 'center'}, $project->name() . " Properties");
 	
-	my %revArgs = map { $cgi->param($_) => $_ } $cgi->param();
-
 	# Dataset objects that were selected
 	my @selected = $cgi->param('selected');
 
 	# determine action
 	if( $cgi->param('save')) {
-		my $projectname = $cgi->param('name');
-		return ('HTML',"<center><b>Please enter a name for your project.</b></center>".$self->print_form()) unless $projectname;
-		if ($project->name() ne $cgi->param('name')) {
-			my $ref=$projectManager->exist($cgi->param('name'));
-			return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless (defined $ref);
-		}
+		my $new_name = $cgi->param('name');
+		my $new_description = $cgi->param('description');
 
-		my $reloadTitleBar = ($project->name() eq $cgi->param('name') ? undef : 1);
-		# change stuff.
-		$projectManager->change($cgi->param('description'),$cgi->param('name') );
-		$body .= "Save successful<br>";
+		# Error or Action
+		if (not $new_name) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'}, 'ERROR: Name is a required field.');
+		} elsif (($project->name() ne $new_name) and (not $projectManager->exist($new_name))) {
+			# Error
+			$body .= $cgi->p({-class => 'ome_error'},
+				'ERROR: This name is already used, please choose another.'
+			);
+		} else { 
+			# Action
+			$projectManager->change($new_description, $new_name);
+
+			# Data
+			$body = $cgi->p({-class => 'ome_info'}, 'Save of new project metadata successful.');
+		}
 		
-		# javascript to reload titlebar
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
-		if $reloadTitleBar;
+		# Refresh top frame
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+
 		# this will add a script to reload OME::Home if it's necessary
 		$body .= OME::Web::Validation->ReloadHomeScript();
 	} elsif ($cgi->param('Remove')) {
@@ -165,14 +170,12 @@ sub print_form {
 	my $session    = $self->Session();
 	my $project    = $session->project();
 	my $factory    = $session->Factory();
-	my $htmlFormat = $self->{htmlFormat};
-	my $userID     = $project->owner_id();
-	my $user       = $factory->loadAttribute("Experimenter",$userID);	
+	my $htmlFormat = new OME::Web::Helper::HTMLFormat;
+	my $user       = $factory->loadAttribute("Experimenter",$session->User()->id());
 
 	my $text = '';
 
 	$text .= $cgi->startform;
-	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, $project->name() . " Properties");
 	$text .= $htmlFormat->formChange("project",$project,$user);
 	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets");
 	$text .= $self->makeDatasetListings($project);
