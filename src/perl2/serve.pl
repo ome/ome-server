@@ -4,6 +4,23 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
+use Log::Agent;                    # another more complex example
+require Log::Agent::Driver::File;  # logging made to file
+logconfig(
+	-driver    => Log::Agent::Driver::File->make(
+		-prefix      => 'serve.pl',
+		-showpid     => 1,
+# Until Log::Agent is used for all loging, we will be looking at multiple places for output
+# for now, everything is going to STDERR
+#		-channels    => {
+#			 'error'  => '/OME/Logs/OME.err',
+#			 'output' => '/OME/Logs/OME.out',
+#			 'debug'  => '/OME/Logs/OME.dbg',
+#		}
+	),
+# for now, debug output is on.
+	-level    => 'debug'
+);
 
 
 my $CGI = CGI->new();
