@@ -28,7 +28,7 @@ use OME::DBObject;
 use base qw{ OME::Web };
 
 sub getPageTitle {
-	return "Title Bar";
+	return "Open Microscopy Environment - Title Bar";
 }
 
 sub getPageBody {
@@ -40,13 +40,10 @@ sub getPageBody {
 		or die "User not defined for this session";
 	my $firstName   = $experimenter->firstname();
 	my $lastName    = $experimenter->lastname();
-	my $dataset   = $session->dataset()
-		or die "dataset not defined for this session";
-	my $project   = $session->project()
-		or die "project not defined for this session";
+	my $dataset   = $session->dataset();
+	my $project   = $session->project();
 	my $datasetID;
 	$datasetID = $dataset->ID() if defined $dataset;
-# these Names are stubs.
 	my ($projectName,$datasetName) = ('*** UNDEFINED ***','*** UNDEFINED ***');
 	$projectName = $project->name() if defined $project;
 	$datasetName = $dataset->name() if defined $dataset;
