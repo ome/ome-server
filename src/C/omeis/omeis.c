@@ -55,6 +55,7 @@
 #include "method.h"
 #include "composite.h"
 #include "xmlBinaryResolution.h"
+#include "xmlIsOME.h"
 
 #ifndef OMEIS_ROOT
 #define OMEIS_ROOT "."
@@ -86,7 +87,7 @@ dispatch (char **param)
 	OID fileID;
 	struct stat fStat;
 	FILE *file;
-	char file_path[MAXPATHLEN];
+	char file_path[MAXPATHLEN],file_path2[MAXPATHLEN];
 	unsigned long tiffDir=0;
 	
 	/* Co-ordinates */
@@ -119,13 +120,14 @@ char **cgivars=param;
 	if ( (theParam = get_param (param,"PixelsID")) ) {
 		sscanf (theParam,"%llu",&scan_ID);
 		ID = (OID) scan_ID;
-	} else if (m_val != M_NEWPIXELS     &&
+	} else if (m_val != M_NEWPIXELS   &&
 			 m_val != M_FILEINFO      &&
 			 m_val != M_FILESHA1      &&
 			 m_val != M_READFILE      &&
 			 m_val != M_UPLOADFILE    &&
 			 m_val != M_IMPORTOMEFILE &&
-			 m_val != M_DELETEFILE &&
+			 m_val != M_ISOMEXML      &&
+			 m_val != M_DELETEFILE    &&
 			 m_val != M_GETLOCALPATH) {
 			HTTP_DoError (method,"%s", "PixelsID Parameter missing");
 			return (-1);
@@ -540,15 +542,61 @@ char **cgivars=param;
 				return (-1);
 			}
 	
-		/* This is just to make sure the file is inflated first */
-			if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
-				HTTP_DoError (method,"Could not open FileID=%llu: %s",
-					(unsigned long long)fileID, strerror (errno));
-				return (-1);
+			/*
+			  libxml2 can directly read gzip files, but not bzip2.
+			  Inflate if bzip2, otherwise parse .gz directly.
+			*/
+			if ( stat (file_path,&fStat) != 0 ) {
+				strcpy (file_path2,file_path);
+				strcat (file_path2,".gz");
+				if ( stat (file_path2,&fStat) != 0 ) {
+					if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
+						HTTP_DoError (method,"Could not open FileID=%llu: %s",
+							(unsigned long long)fileID, strerror (errno));
+						return (-1);
+					}
+					close (fd);
+				} else {
+					strcpy (file_path,file_path2);
+				}
 			}
-			close (fd);
 			HTTP_ResultType ("text/xml");
 			parse_xml_file( file_path );
+
+			break;
+		case M_ISOMEXML:
+			if ( (theParam = get_param (param,"FileID")) ) {
+				sscanf (theParam,"%llu",&scan_ID);
+				fileID = (OID)scan_ID;
+			} else {
+				HTTP_DoError (method,"FileID must be specified!");
+				return (-1);
+			}
+	
+			strcpy (file_path,"Files/");
+			if (! getRepPath (fileID,file_path,0)) {
+				HTTP_DoError (method,"Could not get repository path for FileID=%llu",
+					(unsigned long long)fileID);
+				return (-1);
+			}
+
+			if ( stat (file_path,&fStat) != 0 ) {
+				strcpy (file_path2,file_path);
+				strcat (file_path2,".gz");
+				if ( stat (file_path2,&fStat) != 0 ) {
+					if ( (fd = openRepFile (file_path, O_RDONLY)) < 0) {
+						HTTP_DoError (method,"Could not open FileID=%llu: %s",
+							(unsigned long long)fileID, strerror (errno));
+						return (-1);
+					}
+					close (fd);
+				} else {
+					strcpy (file_path,file_path2);
+				}
+			}
+			HTTP_ResultType ("text/plain");
+			result = check_xml_file( file_path );
+			fprintf (stdout,"%d\n",result);
 
 			break;
 		case M_CONVERT:
