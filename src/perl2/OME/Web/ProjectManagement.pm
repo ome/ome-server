@@ -171,15 +171,14 @@ sub print_form {
 	my $project    = $session->project();
 	my $factory    = $session->Factory();
 	my $htmlFormat = new OME::Web::Helper::HTMLFormat;
+
 	my $user       = $factory->loadAttribute("Experimenter",$session->User()->id());
 
-	my $text = '';
-
-	$text .= $cgi->startform;
-	$text .= $htmlFormat->formChange("project",$project,$user);
-	$text .= $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets");
-	$text .= $self->makeDatasetListings($project);
-	$text .= $cgi->endform;
+	my $text = $cgi->startform .
+	           $htmlFormat->formChange("project",$project,$user) .
+			   $cgi->p({-class => 'ome_title', -align => 'center'}, "Datasets") .
+			   $text .= $self->makeDatasetListings($project) .
+			   $cgi->endform;
 	
 	return $text;
 }
