@@ -122,29 +122,38 @@ sub requireDataTablePackage {
     #$pkg->hasa('OME::Analysis::ActualOutput' => qw(actual_output_id));
     $pkg->hasa('OME::Analysis' => qw(analysis_id));
 
+    no strict 'refs';
+    *{$pkg."::analysis"} = \&{$pkg."::analysis_id"};
+    use strict 'refs';
+
+    # Make accessors for actual output, dataset, image, and feature.
+
     my $type = $self->granularity();
     my $accessors = {};
     if ($type eq 'D') {
 	$pkg->hasa('OME::Dataset' => qw(dataset_id));
+
+        no strict 'refs';
+        *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
+        use strict 'refs';
     } elsif ($type eq 'I') {
 	$pkg->hasa('OME::Image' => qw(image_id));
+
+        no strict 'refs';
+        *{$pkg."::image"}   = \&{$pkg."::image_id"};
+        use strict 'refs';
     } elsif ($type eq 'F') {
 	$pkg->hasa('OME::Feature' => qw(feature_id));
+
+        no strict 'refs';
+        *{$pkg."::feature"} = \&{$pkg."::feature_id"};
+        use strict 'refs';
+    } elsif ($type eq 'G') {
+        # No target column
     }
 
     $pkg->columns(Essential => @column_defs);
 
-    # Make accessors for actual output, dataset, image, and feature.
-    no strict 'refs';
-    *{$pkg."::analysis"} = \&{$pkg."::analysis_id"};
-    if ($type eq 'D') {
-        *{$pkg."::dataset"} = \&{$pkg."::dataset_id"};
-    } elsif ($type eq 'I') {
-        *{$pkg."::image"}   = \&{$pkg."::image_id"};
-    } elsif ($type eq 'F') {
-        *{$pkg."::feature"} = \&{$pkg."::feature_id"};
-    }
-    use strict 'refs';
 
     $self->_dataTablePackages()->{$pkg} = 1;
 

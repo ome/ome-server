@@ -1,0 +1,17 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<AnalysisChains xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisChain.xsd">
+	<AnalysisChain Name = "Feature test chain">
+		<Nodes>
+			<Node NodeID = "Cells" ProgramName = "Find cells"/>
+			<Node NodeID = "Mito" ProgramName = "Find mito"/>
+			<Node NodeID = "Golgi" ProgramName = "Find golgi"/>
+			<Node NodeID = "Ratio" ProgramName = "Find ratio"/>
+		</Nodes>
+		<Links>
+			<Link FromNodeID = "Cells" FromOutputName = "Output bounds" ToNodeID = "Mito" ToInputName = "Input bounds"/>
+			<Link FromNodeID = "Cells" FromOutputName = "Output bounds" ToNodeID = "Golgi" ToInputName = "Input bounds"/>
+			<Link FromNodeID = "Mito" FromOutputName = "Output bounds" ToNodeID = "Ratio" ToInputName = "Mito bounds"/>
+			<Link FromNodeID = "Golgi" FromOutputName = "Output bounds" ToNodeID = "Ratio" ToInputName = "Golgi bounds"/>
+		</Links>
+	</AnalysisChain>
+</AnalysisChains>

@@ -84,7 +84,7 @@ __PACKAGE__->table('formal_inputs');
 __PACKAGE__->sequence('formal_input_seq');
 __PACKAGE__->columns(Primary => qw(formal_input_id));
 __PACKAGE__->columns(Essential => qw(program_id name attribute_type_id
-                                     optional list));
+                                     optional list user_defined));
 __PACKAGE__->columns(Other => qw(lookup_table_id description));
 __PACKAGE__->hasa('OME::Program' => qw(program_id));
 __PACKAGE__->hasa('OME::LookupTable' => qw(lookup_table_id));

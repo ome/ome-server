@@ -616,7 +616,10 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		if( $count ) {
 			$optional = ( $count eq '*' || $count eq '?' ? 't' : 'f' );
 			$list     = ( $count eq '*' || $count eq '+' ? 't' : 'f' );
-		}
+		} else {
+                    $optional = 'f';
+                    $list = 't';
+                }
 		my $data = {
 			name               => $formalInputXML->getAttribute( 'Name' ),
 			description        => $formalInputXML->getAttribute( 'Description' ),
@@ -671,7 +674,10 @@ foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 		if( $count ) {
 			$optional = ( $count eq '*' || $count eq '?' ? 't' : 'f' );
 			$list     = ( $count eq '*' || $count eq '+' ? 't' : 'f' );
-		}
+		} else {
+                    $optional = 'f';
+                    $list = 't';
+                }
 		my $data = {
 			name               => $formalOutputXML->getAttribute( 'Name' ),
 			description        => $formalOutputXML->getAttribute( 'Description' ),

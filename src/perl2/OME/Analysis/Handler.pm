@@ -56,8 +56,9 @@ use Benchmark qw(timediff timesum timestr);
 use fields qw(_location _session _node
               _program _formal_inputs _formal_outputs _analysis
               _current_dataset _current_image _current_feature
-              _dataset_inputs _image_inputs _feature_inputs
-              _dataset_outputs _image_outputs _feature_outputs
+              _global_inputs _dataset_inputs _image_inputs _feature_inputs
+              _global_outputs _dataset_outputs _image_outputs _feature_outputs
+              _global_outputs_allowed
               _last_new_feature);
 
 =head1 METHODS
@@ -84,15 +85,21 @@ sub new {
     $self->{_program} = $program;
     $self->{_node} = $node;
 
+    my $globalOutputsAllowed = 1;
+
     my $inputs = {};
     foreach my $formal_input ($program->inputs()) {
         $inputs->{$formal_input->name()} = $formal_input;
+        if ($formal_input->attribute_type()->granularity() ne 'G') {
+            $globalOutputsAllowed = 0;
+        }
     }
     $self->{_formal_inputs} = $inputs;
+    $self->{_global_outputs_allowed} = $globalOutputsAllowed;
 
     my $outputs = {};
-    foreach my $formal_input ($program->outputs()) {
-        $outputs->{$formal_input->name()} = $formal_input;
+    foreach my $formal_output ($program->outputs()) {
+        $outputs->{$formal_output->name()} = $formal_output;
     }
     $self->{_formal_outputs} = $outputs;
 
@@ -102,6 +109,7 @@ sub new {
 
 sub __debug {
     #logdbg "info", @_;
+    #print STDERR @_,"\n";
 }
 
 =head2 Session and Factory
@@ -197,6 +205,15 @@ can be accessed (but not changed) via methods of the same name as the
 column in question.
 
 =cut
+
+sub getGlobalInputs {
+    my ($self,$input_name) = @_;
+    if (exists $self->{_global_inputs}->{$input_name}) {
+        return $self->{_global_inputs}->{$input_name}
+    } else {
+        die "$input_name does not exist, or it is not a global input";
+    }
+}
 
 sub getDatasetInputs {
     my ($self,$input_name) = @_;
@@ -350,7 +367,10 @@ sub newAttributes {
 
         __debug("  $formal_output_name");
 
-        if ($granularity eq 'D') {
+        if ($granularity eq 'G') {
+            die "This module is not allowed to create global attributes"
+              unless $self->{_global_outputs_allowed};
+        } elsif ($granularity eq 'D') {
             $data_hash->{dataset_id} = $self->{_current_dataset};
         } elsif ($granularity eq 'I') {
             $data_hash->{image_id} = $self->{_current_image};
@@ -403,8 +423,10 @@ sub newAttributes {
         # these lists, so subclasses using this method will
         # automatically fulfill that part of the contract.
 
+        #print STDERR "--- $formal_output_name $granularity\n";
+
         if ($granularity eq 'G') {
-            die "Global attributes not allowed in analysis modules!";
+            push @{$self->{_global_outputs}->{$formal_output_name}}, $attribute;
         } elsif ($granularity eq 'D') {
             push @{$self->{_dataset_outputs}->{$formal_output_name}}, $attribute;
         } elsif ($granularity eq 'I') {
@@ -426,6 +448,31 @@ sub newAttributes {
     return $attributes;
 }
 
+
+# Checks a hash of inputs to make sure that they match the cardinality
+# constraints specified by the appropriate formal input.
+
+sub __checkParameters {
+    my ($self, $params, $inputOrOutput, $granularity) = @_;
+
+    foreach my $param_name (keys %{$self->{$inputOrOutput}}) {
+        my $param = $self->{$inputOrOutput}->{$param_name};
+        my $attribute_type = $param->attribute_type();
+        next if $attribute_type->granularity() ne $granularity;
+        my $optional = $param->optional();
+        my $list = $param->list();
+        my $values = $params->{$param_name};
+        my $cardinality = (defined $values)? scalar(@$values): 0;
+
+        #print STDERR "*** $param_name - opt $optional list $list - $cardinality\n";
+
+        die "$param_name is not optional"
+          if (($cardinality == 0) && (!$optional));
+
+        die "$param_name cannot be a list"
+          if (($cardinality > 1) && (!$list));
+    }
+}
 
 =head2 Module interface methods
 
@@ -464,6 +511,16 @@ sub startAnalysis {
     $self->{_analysis} = $analysis;
 }
 
+sub globalInputs {
+    my ($self,$inputHash) = @_;
+    $self->__checkParameters($inputHash,'_formal_inputs','G');
+    $self->{_global_inputs} = $inputHash;
+}
+
+sub precalculateGlobal {
+    my ($self) = @_;
+}
+
 sub startDataset {
     my ($self,$dataset) = @_;
     $self->{_current_dataset} = $dataset;
@@ -472,11 +529,12 @@ sub startDataset {
 
 sub datasetInputs {
     my ($self,$inputHash) = @_;
+    $self->__checkParameters($inputHash,'_formal_inputs','D');
     $self->{_dataset_inputs} = $inputHash;
 }
 
 
-sub precalculateDataset() {
+sub precalculateDataset {
     my ($self) = @_;
 }
 
@@ -489,10 +547,11 @@ sub startImage {
 
 sub imageInputs {
     my ($self,$inputHash) = @_;
+    $self->__checkParameters($inputHash,'_formal_inputs','I');
     $self->{_image_inputs} = $inputHash;
 }
 
-sub precalculateImage() {
+sub precalculateImage {
     my ($self) = @_;
 }
 
@@ -505,6 +564,7 @@ sub startFeature {
 
 sub featureInputs {
     my ($self,$inputHash) = @_;
+    $self->__checkParameters($inputHash,'_formal_inputs','F');
     $self->{_feature_inputs} = $inputHash;
 }
 
@@ -516,7 +576,9 @@ sub calculateFeature {
 
 sub collectFeatureOutputs {
     my ($self) = @_;
-    return $self->{_feature_outputs};
+    my $hash = $self->{_feature_outputs};
+    $self->__checkParameters($hash,'_formal_outputs','F');
+    return $hash;
 }
 
 
@@ -528,14 +590,16 @@ sub finishFeature {
 }
 
 
-sub postcalculateImage() {
+sub postcalculateImage {
     my ($self) = @_;
 }
 
 
 sub collectImageOutputs {
     my ($self) = @_;
-    return $self->{_image_outputs};
+    my $hash = $self->{_image_outputs};
+    $self->__checkParameters($hash,'_formal_outputs','I');
+    return $hash;
 }
 
 
@@ -554,7 +618,9 @@ sub postcalculateDataset {
 
 sub collectDatasetOutputs {
     my ($self) = @_;
-    return $self->{_dataset_outputs};
+    my $hash = $self->{_dataset_outputs};
+    $self->__checkParameters($hash,'_formal_outputs','D');
+    return $hash;
 }
 
 
@@ -567,6 +633,19 @@ sub finishDataset {
     #print STDERR "newAttributes:\n".timestr($self->{_timing})."\n"
     #    if exists $self->{_timing};
 }
+
+
+sub postcalculateGlobal {
+    my ($self) = @_;
+}
+
+sub collectGlobalOutputs {
+    my ($self) = @_;
+    my $hash = $self->{_global_outputs};
+    $self->__checkParameters($hash,'_formal_outputs','G');
+    return $hash;
+}
+
 
 
 =head1 AUTHOR

@@ -2,64 +2,6 @@
 
 <AnalysisModuleLibrary xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
 
-<SemanticTypeDefinitions>
-
-<DataTypes>
-
-    <Table
-        Granularity="F" TableName="BOUNDS"
-        Description="">
-      <Column
-          ColumnName="X"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnName="Y"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnName="WIDTH"
-          SQL_DataType="integer" Description=""/>
-      <Column
-          ColumnName="HEIGHT"
-          SQL_DataType="integer" Description=""/>
-    </Table>
-
-    <Table
-        Granularity="F" TableName="RATIO"
-        Description="">
-      <Column
-          ColumnName="RATIO"
-          SQL_DataType="float" Description=""/>
-    </Table>
-
-</DataTypes>
-
-  <SemanticType
-      Name="Bounds"
-      Description="Bounds of a feature">
-    <SemanticElement
-        Name="X" TableName="BOUNDS" ColumnName="X"
-        Description=""/>
-    <SemanticElement
-        Name="Y" TableName="BOUNDS" ColumnName="Y"
-        Description=""/>
-    <SemanticElement
-        Name="WIDTH" TableName="BOUNDS" ColumnName="WIDTH"
-        Description=""/>
-    <SemanticElement
-        Name="HEIGHT" TableName="BOUNDS" ColumnName="HEIGHT"
-        Description=""/>
-  </SemanticType>
-
-  <SemanticType
-      Name="Ratio"
-      Description="Ratio">
-    <SemanticElement
-        Name="RATIO" TableName="RATIO" ColumnName="RATIO"
-        Description=""/>
-  </SemanticType>
-
-</SemanticTypeDefinitions>
-
 <AnalysisModule
     Category="Testing" ModuleName="Find cells"
     ModuleType="OME::Analysis::FindBounds"
@@ -70,20 +12,7 @@
   <Declaration>
     <FormalOutput
         Name="Output bounds" SemanticTypeName="Bounds"
-        Description="" IBelongTo="[Feature]">
-      <FormalOutputColumn
-          Name="X" FormalOutputColumnID="CellBounds.X"
-          Description=""/>
-      <FormalOutputColumn
-          Name="Y" FormalOutputColumnID="CellBounds.Y"
-          Description=""/>
-      <FormalOutputColumn
-          Name="WIDTH" FormalOutputColumnID="CellWidth.Width"
-          Description=""/>
-      <FormalOutputColumn
-          Name="HEIGHT" FormalOutputColumnID="CellHeight.Height"
-          Description=""/>
-    </FormalOutput>
+        Description="" IBelongTo="[Feature]" />
 
   </Declaration>
 </AnalysisModule>
@@ -150,5 +79,63 @@
 
   </Declaration>
 </AnalysisModule>
+
+<SemanticTypeDefinitions>
+
+<DataTypes>
+
+    <Table
+        Granularity="F" TableName="BOUNDS"
+        Description="">
+      <Column
+          ColumnName="X"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="Y"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="WIDTH"
+          SQL_DataType="integer" Description=""/>
+      <Column
+          ColumnName="HEIGHT"
+          SQL_DataType="integer" Description=""/>
+    </Table>
+
+    <Table
+        Granularity="F" TableName="RATIO"
+        Description="">
+      <Column
+          ColumnName="RATIO"
+          SQL_DataType="float" Description=""/>
+    </Table>
+
+</DataTypes>
+
+  <SemanticType
+      Name="Bounds"
+      Description="Bounds of a feature">
+    <SemanticElement
+        Name="X" TableName="BOUNDS" ColumnName="X"
+        Description=""/>
+    <SemanticElement
+        Name="Y" TableName="BOUNDS" ColumnName="Y"
+        Description=""/>
+    <SemanticElement
+        Name="WIDTH" TableName="BOUNDS" ColumnName="WIDTH"
+        Description=""/>
+    <SemanticElement
+        Name="HEIGHT" TableName="BOUNDS" ColumnName="HEIGHT"
+        Description=""/>
+  </SemanticType>
+
+  <SemanticType
+      Name="Ratio"
+      Description="Ratio">
+    <SemanticElement
+        Name="RATIO" TableName="RATIO" ColumnName="RATIO"
+        Description=""/>
+  </SemanticType>
+
+</SemanticTypeDefinitions>
 
 </AnalysisModuleLibrary>

@@ -123,6 +123,8 @@ sub requireAttributeTypePackage {
         *{$pkg."::image"}   = \&{$pkg."::_getTarget"};
     } elsif ($type eq 'F') {
         *{$pkg."::feature"} = \&{$pkg."::_getTarget"};
+    } elsif ($type eq 'G') {
+        # No global column
     }
     use strict 'refs';
 
@@ -146,6 +148,7 @@ sub newAttribute {
 
 sub __debug {
     #logdbg "debug", @_;
+    #print STDERR @_, "\n";
 }
 
 
@@ -175,9 +178,14 @@ sub newAttributes {
       );
 
     my ($attribute_type, $data_hash, $factory);
+    my ($i, $length);
 
-    while (($attribute_type = shift(@attribute_info)) &&
-           ($data_hash = shift(@attribute_info))) {
+    $length = scalar(@attribute_info);
+
+    for ($i = 0; $i < $length; $i += 2) {
+        $attribute_type = $attribute_info[$i];
+        $data_hash = $attribute_info[$i+1];
+
         $factory = $attribute_type->Session()->Factory()
           if !defined $factory;
         my @attribute_columns = $attribute_type->attribute_columns();
@@ -289,8 +297,12 @@ sub newAttributes {
 
     my @attributes;
 
-    while (($attribute_type = shift(@attribute_info)) &&
-           ($data_hash = shift(@attribute_info))) {
+    __debug("Creating attributes");
+
+    for ($i = 0; $i < $length; $i += 2) {
+        $attribute_type = $attribute_info[$i];
+        $data_hash = $attribute_info[$i+1];
+
         my $attribute_tables = $attribute_tables{$attribute_type->id()};
         my $rows = {};
         my $target;

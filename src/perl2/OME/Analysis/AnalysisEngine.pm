@@ -141,21 +141,12 @@ SQL;
 =head2 sql_get_input_attributes
 
 	$sth = $self->sql_get_input_attributes($attribute_table_name);
-	$sth->execute($analysisID,$formal_outputID);
+	$sth->execute($analysisID);
 
 Returns the ID's of the attributes created as outputs from a specific
-formal output of an analysis.
+analysis.
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
-#   SELECT attr.attribute_id
-#     FROM actual_outputs ao, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND attr.actual_output_id = ao.actual_output_id
-# ORDER BY attr.attribute_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
@@ -167,24 +158,14 @@ SQL;
 =head2 sql_get_input_image_attributes
 
 	$sth = $self->sql_get_input_image_attributes($attribute_table_name);
-	$sth->execute($analysisID,$formal_outputID,$imageID);
+	$sth->execute($analysisID,$imageID);
 
 Returns the ID's of the attributes created as outputs from a specific
-formal output of an analysis.  Assumes that the attribute type has
-image-level granularity, and limits the attributes returned to those
-keyed to a specific image.
+analysis.  Assumes that the attribute type has image-level
+granularity, and limits the attributes returned to those keyed to a
+specific image.
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
-#   SELECT attr.attribute_id
-#     FROM actual_outputs ao, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND attr.image_id = ?
-#      AND attr.actual_output_id = ao.actual_output_id
-# ORDER BY attr.attribute_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_image_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
@@ -197,26 +178,15 @@ SQL;
 =head2 sql_get_input_feature_attributes
 
 	$sth = $self->sql_get_input_feature_attributes($attribute_table_name);
-	$sth->execute($analysisID,$formal_outputID,$imageID);
+	$sth->execute($analysisID,$imageID);
 
 Returns the ID's of the attributes created as outputs from a specific
-formal output of an analysis.  Assumes that the attribute type has
-feature-level granularity, and limits the attributes returned to those
-keyed to a specific image.  (Does not take into account which features
-each attribute belongs to.)
+analysis.  Assumes that the attribute type has feature-level
+granularity, and limits the attributes returned to those keyed to a
+specific image.  (Does not take into account which features each
+attribute belongs to.)
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
-#   SELECT attr.attribute_id
-#     FROM actual_outputs ao, features f, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND f.image_id = ?
-#      AND attr.feature_id = f.feature_id
-#      AND attr.actual_output_id = ao.actual_output_id
-# ORDER BY attr.attribute_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_feature_attributes',<<'SQL;','Main');
   SELECT dt.attribute_id
@@ -230,26 +200,15 @@ SQL;
 =head2 sql_get_input_feature_attributes_by_feature
 
 	$sth = $self->sql_get_input_feature_attributes_by_feature($attribute_table_name,$feature_IDs);
-	$sth->execute($analysisID,$formal_outputID);
+	$sth->execute($analysisID);
 
 Returns the ID's of the attributes created as outputs from a specific
-formal output of an analysis.  Assumes that the attribute type has
-feature-level granularity, and limits the attributes returned to those
-keyed to a specific image.  (Does not take into account which features
-each attribute belongs to.)
+analysis.  Assumes that the attribute type has feature-level
+granularity, and limits the attributes returned to those keyed to a
+specific image.  (Does not take into account which features each
+attribute belongs to.)
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
-#   SELECT attr.attribute_id
-#     FROM actual_outputs ao, features f, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND f.feature_id in %s
-#      AND attr.feature_id = f.feature_id
-#      AND attr.actual_output_id = ao.actual_output_id
-# ORDER BY attr.attribute_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_feature_attributes_by_feature',<<'SQL;','Main');
   SELECT dt.attribute_id
@@ -262,24 +221,14 @@ SQL;
 =head2 sql_get_input_feature_tags
 
 	$sth = $self->sql_get_input_feature_tags($attribute_table_name);
-	$sth->execute($analysisID,$formal_outputID,$imageID);
+	$sth->execute($analysisID,$imageID);
 
 Returns the feature tags of the attributes created as outputs from a
-specific formal output of an analysis.  Assumes that the attribute
-type has feature-level granularity, and limits the attributes returned
-to those keyed to a specific image.
+specific analysis.  Assumes that the attribute type has feature-level
+granularity, and limits the attributes returned to those keyed to a
+specific image.
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
-#   SELECT DISTINCT f.tag
-#     FROM actual_outputs ao, features f, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND f.image_id = ?
-#      AND attr.feature_id = f.feature_id
-#      AND attr.actual_output_id = ao.actual_output_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_feature_tags',<<'SQL;','Main');
   SELECT DISTINCT f.tag
@@ -292,24 +241,14 @@ SQL;
 =head2 sql_get_input_features
 
 	$sth = $self->sql_get_input_features($attribute_table_name);
-	$sth->execute($analysisID,$formal_outputID,$imageID);
+	$sth->execute($analysisID,$imageID);
 
 Returns the feature ID's and tags of the attributes created as outputs
-from a specific formal output of an analysis.  Assumes that the
-attribute type has feature-level granularity, and limits the
-attributes returned to those keyed to a specific image.
+from a specific analysis.  Assumes that the attribute type has
+feature-level granularity, and limits the attributes returned to those
+keyed to a specific image.
 
 =cut
-
-# __PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
-#   SELECT DISTINCT f.feature_id, f.tag
-#     FROM actual_outputs ao, features f, %s attr
-#    WHERE ao.analysis_id = ?
-#      AND ao.formal_output_id = ?
-#      AND f.image_id = ?
-#      AND attr.feature_id = f.feature_id
-#      AND attr.actual_output_id = ao.actual_output_id
-# SQL;
 
 __PACKAGE__->set_sql('get_input_features',<<'SQL;','Main');
   SELECT DISTINCT f.feature_id, f.tag
@@ -341,17 +280,10 @@ SQL;
 	$sth = $self->sql_get_actual_output_from_input();
 	$sth->execute($analysisID,$formal_inputID);
 
-Returns the actual output providing input to a formal input of an
-analysis node.
+Returns the analysis providing input to a formal input of an analysis
+node.
 
 =cut
-
-# __PACKAGE__->set_sql('get_actual_output_from_input',<<'SQL;','Main');
-# SELECT ai.actual_output_id
-#   FROM actual_inputs ai
-#  WHERE ai.analysis_id = ?
-#    AND ai.formal_input_id = ?
-# SQL;
 
 __PACKAGE__->set_sql('get_analysis_from_input',<<'SQL;','Main');
   SELECT ai.input_analysis_id
@@ -359,23 +291,6 @@ __PACKAGE__->set_sql('get_analysis_from_input',<<'SQL;','Main');
    WHERE ai.analysis_id = ?
      AND ai.formal_input_id = ?
 SQL;
-
-=head2 sql_get_actual_output
-
-	$sth = $self->sql_get_actual_output();
-	$sth->execute($analysisID,$formal_outputID);
-
-Returns the actual output created for one of the formal outputs of an
-analysis run.
-
-=cut
-
-# __PACKAGE__->set_sql('get_actual_output',<<'SQL;','Main');
-# SELECT ao.actual_output_id
-#   FROM actual_outputs ao
-#  WHERE ao.analysis_id = ?
-#    AND ao.formal_output_id = ?
-# SQL;
 
 =head2 sql_get_formal_inputs_by_node
 
@@ -392,6 +307,27 @@ __PACKAGE__->set_sql('get_formal_inputs_by_node',<<'SQL;','Main');
          formal_inputs fi, attribute_types at
    WHERE avn.analysis_view_node_id = ?
      AND at.granularity = ?
+     AND avn.program_id = fi.program_id
+     AND fi.attribute_type_id = at.attribute_type_id
+ORDER BY fi.formal_input_id
+SQL;
+
+=head2 sql_get_formal_inputs_by_not_node
+
+	$sth = $self->sql_get_formal_inputs_by_not_node();
+	$sth->execute($nodeID,$granularity);
+
+Returns all of the formal inputs not of a given granularity for a
+node.
+
+=cut
+
+__PACKAGE__->set_sql('get_formal_inputs_by_not_node',<<'SQL;','Main');
+  SELECT fi.formal_input_id
+    FROM analysis_view_nodes avn,
+         formal_inputs fi, attribute_types at
+   WHERE avn.analysis_view_node_id = ?
+     AND at.granularity != ?
      AND avn.program_id = fi.program_id
      AND fi.attribute_type_id = at.attribute_type_id
 ORDER BY fi.formal_input_id
@@ -542,9 +478,10 @@ sub findModuleHandler {
     my %dependence;
 
     # The ANALYSES for each node.
-    # $perdataset_analyses{$nodeID} = $analysis
-    # $perimage_analyses{$nodeID}->{$imageID} = $analysis
-    my (%perdataset_analysis,%perimage_analysis);
+    # $global_analysis($nodeID} = $analysis
+    # $perdataset_analysis{$nodeID} = $analysis
+    # $perimage_analysis{$nodeID}->{$imageID} = $analysis
+    my (%global_analysis, %perdataset_analysis,%perimage_analysis);
 
     # The outputs generated by each node
     # $dataset_outputs{$nodeID}->
@@ -568,8 +505,10 @@ sub findModuleHandler {
     # They refer to the module currently being examined/executed.
     my ($curr_node,$curr_nodeID,@curr_predecessorIDs);
     my ($curr_module,$curr_inputs,$curr_outputs);
-    my (@curr_dataset_inputs,@curr_image_inputs,@curr_feature_inputs);
-    my (@curr_dataset_outputs,@curr_image_outputs,@curr_feature_outputs);
+    my (@curr_global_inputs,@curr_dataset_inputs,
+        @curr_image_inputs,@curr_feature_inputs);
+    my (@curr_global_outputs,@curr_dataset_outputs,
+        @curr_image_outputs,@curr_feature_outputs);
     my ($curr_image,$curr_imageID);
     my ($curr_feature,$curr_featureID);
 
@@ -813,15 +752,33 @@ sub findModuleHandler {
         return $ready;
     }
 
-    # Determines whether the current node is a per-dataset or
-    # per-image module.  If a module takes in any dataset inputs, or
-    # outputs any dataset outputs, or if any of its immediate
-    # predecessors nodes are per-dataset, then it as per-dataset.
-    # Otherwise, it is per-image.  This notion of dataset-dependency
-    # comes in to play later when determine whether or not a module's
-    # results can be reused.
+    # Determines whether the current node is a global, per-dataset or
+    # per-image module.  If a module outputs any global attributes
+    # (which is only allowed if all of its inputs are global
+    # attributes), then the module is global.  If a module takes in
+    # any dataset inputs, or outputs any dataset outputs, or if any of
+    # its immediate predecessors nodes are per-dataset, then it as
+    # per-dataset.  Otherwise, it is per-image.  This notion of
+    # dataset-dependency comes in to play later when determine whether
+    # or not a module's results can be reused.
     sub __determineDependence {
         my $sth;
+
+        $sth = $self->sql_get_formal_outputs_by_node();
+        $sth->execute($curr_nodeID,'G');
+        if ($sth->fetch()) {
+            $dependence{$curr_nodeID} = 'G';
+            $sth->finish();
+
+            $sth = $self->sql_get_formal_inputs_by_not_node();
+            $sth->execute($curr_nodeID,'G');
+            if ($sth->fetch()) {
+                $sth->finish();
+                die "Node $curr_nodeID illegally generates global outputs";
+            }
+
+            return;
+        }
 
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'D');
@@ -884,16 +841,55 @@ sub findModuleHandler {
     sub __calculateCurrentInputTag {
         my ($paramString,$sth);
 
-        if ($dependence{$curr_nodeID} eq 'D') {
+        if ($dependence{$curr_nodeID} eq 'G') {
+            $paramString = "G ";
+        } elsif ($dependence{$curr_nodeID} eq 'D') {
             $paramString = "D ".$dataset->id()." ";
         } else {
             $paramString = "I ".$curr_imageID." ";
         }
 
+        $paramString .= "g ";
+        $sth = $self->sql_get_formal_inputs_by_node();
+        $sth->execute($curr_nodeID,'G');
+        my $formal_inputIDs = __fetchall($sth);
+
+        foreach my $formal_inputID (@$formal_inputIDs) {
+            $paramString .= $formal_inputID."(";
+
+            $sth = $self->sql_get_input_link();
+            $sth->execute($curr_nodeID,$formal_inputID);
+            my $input_link = __fetchobj("OME::AnalysisView::Link",$sth);
+
+            if (!defined $input_link) {
+                $paramString .= ") ";
+                next;
+            }
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
+
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                my $pred_node = $input_link->from_node();
+
+                $sth = $self->sql_get_input_attributes($table_name);
+                $sth->execute(__getAnalysis($pred_node->id())->id());
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
+            }
+
+            $paramString .= "$_ "
+                foreach sort keys %attributes;
+            $paramString .= ") ";
+        }
+
         $paramString .= "d ";
         $sth = $self->sql_get_formal_inputs_by_node();
         $sth->execute($curr_nodeID,'D');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $paramString .= $formal_inputID."(";
@@ -1025,16 +1021,53 @@ sub findModuleHandler {
         my $past_analysisID = $past_analysis->id();
         my ($past_paramString,$sth);
 
-        if ($past_analysis->dependence() eq 'D') {
+        if ($past_analysis->dependence() eq 'G') {
+            $past_paramString = "G ";
+        } elsif ($past_analysis->dependence() eq 'D') {
             $past_paramString = "D ".$past_analysis->dataset()->id()." ";
         } else {
             $past_paramString = "I ".$curr_imageID." ";
         }
 
+        $past_paramString .= "g ";
+        $sth = $self->sql_get_formal_inputs_by_analysis();
+        $sth->execute($past_analysisID,'G');
+        my $formal_inputIDs = __fetchall($sth);
+
+        foreach my $formal_inputID (@$formal_inputIDs) {
+            $past_paramString .= $formal_inputID."(";
+
+            $sth = $self->sql_get_analysis_from_input();
+            $sth->execute($past_analysisID,$formal_inputID);
+            my $input_analysis = __fetchobj("OME::Analysis",$sth);
+
+            if (!defined $input_analysis) {
+                $past_paramString .= ") ";
+                next;
+            }
+
+            my $formal_input = $factory->
+              loadObject("OME::Program::FormalInput",
+                         $formal_inputID);
+
+            my %attributes;
+            foreach my $table_name (__getDataTables($formal_input)) {
+                $sth = $self->sql_get_input_attributes($table_name);
+                $sth->execute($input_analysis->id());
+
+                $attributes{$_} = $_
+                    foreach @{__fetchall($sth)};
+            }
+
+            $past_paramString .= "$_ "
+                foreach sort keys %attributes;
+            $past_paramString .= ") ";
+        }
+
         $past_paramString .= "d ";
         $sth = $self->sql_get_formal_inputs_by_analysis();
         $sth->execute($past_analysisID,'D');
-        my $formal_inputIDs = __fetchall($sth);
+        $formal_inputIDs = __fetchall($sth);
 
         foreach my $formal_inputID (@$formal_inputIDs) {
             $past_paramString .= $formal_inputID."(";
@@ -1192,25 +1225,6 @@ sub findModuleHandler {
         }
     }
 
-    sub __createActualOutputs {
-        my ($analysis) = @_;
-
-        my %actual_outputs;
-
-#         my $formal_outputs = $analysis->program()->outputs();
-#         while (my $formal_output = $formal_outputs->next()) {
-#             my $actual_output = $factory->
-#               newObject("OME::Analysis::ActualOutput",
-#                         {
-#                          analysis      => $analysis,
-#                          formal_output => $formal_output
-#                         });
-#             $actual_outputs{$formal_output->name()} = $actual_output;
-#         }
-
-        return \%actual_outputs;
-    }
-
     sub __addAnalysisToPaths {
         my ($analysis) = @_;
         foreach my $db_data_path_entry (@{$data_paths{$curr_nodeID}}) {
@@ -1229,7 +1243,9 @@ sub findModuleHandler {
     sub __assignAnalysis {
         my ($analysis,$reused) = @_;
 
-        if ($dependence{$curr_nodeID} eq 'D') {
+        if ($dependence{$curr_nodeID} eq 'G') {
+            $global_analysis{$curr_nodeID} = $analysis;
+        } elsif ($dependence{$curr_nodeID} eq 'D') {
             $perdataset_analysis{$curr_nodeID} = $analysis;
         } else {
             $perimage_analysis{$curr_nodeID}->{$curr_imageID} = $analysis;
@@ -1245,7 +1261,7 @@ sub findModuleHandler {
         return 0 if (!$self->Flag('ReuseResults'));
 
         my $paramString = __calculateCurrentInputTag();
-        my $space = ($dependence{$curr_nodeID} eq 'D')? '': '  ';
+        my $space = ($dependence{$curr_nodeID} eq 'I')? '  ': '';
         __debug("$space  Param $paramString");
 
         my $match = 0;
@@ -1683,18 +1699,8 @@ sub findModuleHandler {
 
         # Collect and process the feature outputs
 
-        my $feature_attributes = $curr_module->collectFeatureOutputs();
-
         __debug("          Feature outputs");
-        #foreach my $formal_output (@curr_feature_outputs) {
-        #    my $attribute_list = 
-        #      $feature_attributes->{$formal_output->name()};
-        #    if (ref($attribute_list) ne 'ARRAY') {
-        #        $attribute_list = [$attribute_list];
-        #    }
-        #    __debug("            ".$formal_output->name().
-        #      " (".scalar(@$attribute_list).")");
-        #}
+        my $feature_attributes = $curr_module->collectFeatureOutputs();
 
         $curr_module->finishFeature();
     }
@@ -1830,6 +1836,11 @@ sub findModuleHandler {
                 my $debug = 1;
 
                 $sth = $self->sql_get_input_links_by_node();
+                $sth->execute($curr_nodeID,'G');
+                @curr_global_inputs = 
+                  @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+
+                $sth = $self->sql_get_input_links_by_node();
                 $sth->execute($curr_nodeID,'D');
                 @curr_dataset_inputs = 
                   @{__fetchobjs("OME::AnalysisView::Link",$sth)};
@@ -1843,6 +1854,11 @@ sub findModuleHandler {
                 $sth->execute($curr_nodeID,'F');
                 @curr_feature_inputs = 
                   @{__fetchobjs("OME::AnalysisView::Link",$sth)};
+
+                $sth = $self->sql_get_formal_outputs_by_node();
+                $sth->execute($curr_nodeID,'G');
+                @curr_global_outputs =
+                  @{__fetchobjs("OME::Program::FormalOutput",$sth)};
 
                 $sth = $self->sql_get_formal_outputs_by_node();
                 $sth->execute($curr_nodeID,'D');
@@ -1863,7 +1879,7 @@ sub findModuleHandler {
 
                 __determineDependence();
 
-                if ($dependence{$curr_nodeID} eq 'D') {
+                if ($dependence{$curr_nodeID} ne 'I') {
                     if (__checkPastResults()) {
                         __debug("    Marking state");
                         $node_states{$curr_nodeID} = FINISHED_STATE;
@@ -1878,7 +1894,7 @@ sub findModuleHandler {
                   program_name()." (".$dependence{$curr_nodeID}.")");
 
                 # Execute away.
-                if ($dependence{$curr_nodeID} eq 'D') {
+                if ($dependence{$curr_nodeID} ne 'I') {
                     __debug("    Creating ANALYSIS entry");
                     $new_analysis = 
                       __createAnalysis({
@@ -1891,9 +1907,23 @@ sub findModuleHandler {
                     __assignAnalysis($new_analysis,0);
                     #__debug(" (".$new_analysis->id().")");
                     __createActualInputs($new_analysis);
-                    my $actual_outputs = __createActualOutputs($new_analysis);
+                    #my $actual_outputs = __createActualOutputs($new_analysis);
                     $curr_module->startAnalysis($new_analysis);
                 }
+
+                # Collect and present the global inputs
+
+                __debug("    Global inputs");
+                my %global_hash;
+                foreach my $input (@curr_global_inputs) {
+                    $global_hash{$input->to_input()->name()} =
+                        __findInputAttributes($input,
+                                              "      ",
+                                              "sql_get_input_attributes");
+                }
+
+                __debug("    Precalculate global");
+                $curr_module->precalculateGlobal();
 
                 __debug("    startDataset");
                 $curr_module->startDataset($dataset);
@@ -1937,7 +1967,7 @@ sub findModuleHandler {
                             __assignAnalysis($new_analysis,0);
                             #__debug(" (".$new_analysis->id().")");
                             __createActualInputs($new_analysis);
-                            my $actual_outputs = __createActualOutputs($new_analysis);
+                            #my $actual_outputs = __createActualOutputs($new_analysis);
                             $curr_module->startAnalysis($new_analysis);
                         } else {
                             __assignAnalysis($new_analysis,0);
@@ -1993,17 +2023,8 @@ sub findModuleHandler {
                     __debug("    Postcalculate image");
                     $curr_module->postcalculateImage();
 
-                    my $image_attributes = $curr_module->collectImageOutputs();
-
                     __debug("    Image outputs");
-                    #foreach my $formal_output (@curr_image_outputs) {
-                    #    my $attribute_list = $image_attributes->{$formal_output->name()};
-                    #    if (ref($attribute_list) ne 'ARRAY') {
-                    #        $attribute_list = [$attribute_list];
-                    #    }
-                    #    __debug("      ".$formal_output->name().
-                    #      " (".scalar(@$attribute_list).")");
-                    #}
+                    my $image_attributes = $curr_module->collectImageOutputs();
 
                     $curr_module->finishImage($curr_image);
                 }               # foreach $curr_image
@@ -2012,21 +2033,17 @@ sub findModuleHandler {
                 __debug("    Postcalculate dataset");
                 $curr_module->postcalculateDataset();
 
+                __debug("    Dataset outputs");
                 my $dataset_attributes = $curr_module->collectDatasetOutputs();
 
-                __debug("    Dataset outputs");
-                #foreach my $output (@curr_dataset_outputs) {
-                #    my $formal_output = $output->from_output();
-                #    my $attribute_list =
-                #      $dataset_attributes->{$formal_output->name()};
-                #    if (ref($attribute_list) ne 'ARRAY') {
-                #        $attribute_list = [$attribute_list];
-                #    }
-                #    __debug("      ".$formal_output->name().
-                #      " (".scalar(@$attribute_list).")");
-                #}
-
                 $curr_module->finishDataset($dataset);
+
+                # Collect and process the global outputs
+                __debug("    Postcalculate global");
+                $curr_module->postcalculateGlobal();
+
+                __debug("    Global outputs");
+                my $global_attributes = $curr_module->collectGlobalOutputs();
 
                 # Mark this node as finished, and flag that we need
                 # another fixed point iteration.

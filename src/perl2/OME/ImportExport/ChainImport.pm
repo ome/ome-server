@@ -123,8 +123,8 @@ sub __importTree {
 
             my $output = $factory->
               findObject("OME::Program::FormalOutput",
-                         program => $fromNode->{program},
-                         name    => $fromOutputName);
+                         program_id => $fromNode->{program}->id(),
+                         name       => $fromOutputName);
             die "Cannot find output \"$fromOutputName\""
               unless defined $output;
 
@@ -134,8 +134,8 @@ sub __importTree {
 
             my $input = $factory->
               findObject("OME::Program::FormalInput",
-                         program => $toNode->{program},
-                         name    => $toInputName);
+                         program_id => $toNode->{program}->id(),
+                         name       => $toInputName);
             die "Cannot find input \"$toInputName\""
               unless defined $input;
 
@@ -153,7 +153,7 @@ sub __importTree {
                     {
                      owner  => $session->User(),
                      name   => $chain->getAttribute('Name'),
-                     locked => $chain->getAttribute('Locked'),
+                     locked => $chain->getAttribute('Locked') || 'f',
                     });
 
         foreach my $nodeID (keys %nodes) {
