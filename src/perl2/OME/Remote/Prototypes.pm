@@ -783,9 +783,12 @@ sub __verifyOneValue {
         # Function expects a hash reference
         return 0 if  $ref ne "HASH";
 
+        print "   Checking hash\n";
+
         # Check the values of the hash -- if any is an object, use this
         # method recursively to turn it into an object reference.
-        foreach my $value (values %$ref) {
+        foreach my $value (values %$param) {
+            print "   $value =>";
             if (ref($value) eq 'ARRAY') {
                 # Possibly handle recursive data structures in the future
             } elsif (ref($value) eq 'HASH') {
@@ -795,32 +798,28 @@ sub __verifyOneValue {
                                             $subroutine,@subInputs);
                 return 0 unless $good;
             }
+            print " $value\n";
         }
 
         return 1;
     }
 
-    if (!defined $param) {
-        # Null values trivially match any object class.
-        return 1;
-    } else {
-        # Call the helper subroutine.
-        return 0 unless defined $subroutine;
-        my ($good,$object,$replacement) = $subroutine->($param,@subInputs);
+    # Call the helper subroutine.
+    return 0 unless defined $subroutine;
+    my ($good,$object,$replacement) = $subroutine->($param,@subInputs);
 
-        # If the subroutine flags an error (by returing 0), then
-        # the parameter doesn't match.
-        return 0 unless $good;
+    # If the subroutine flags an error (by returing 0), then
+    # the parameter doesn't match.
+    return 0 unless $good;
 
-        # Check the inheritance of the object.
-        $good = (!defined $object) || UNIVERSAL::isa($object,$type);
-        #print STDERR "  vone $good\n";
+    # Check the inheritance of the object.
+    $good = (!defined $object) || UNIVERSAL::isa($object,$type);
+    #print STDERR "  vone $good\n";
 
-        # Replace the object in the parameter list, if necessary.
-        $_[1] = $replacement if defined $replacement && $good;
+    # Replace the object in the parameter list, if necessary.
+    $_[1] = $replacement if defined $replacement && $good;
 
-        return $good;
-    }
+    return $good;
 }
 
 # Verifies a list of parameters against a prototype.
