@@ -17,6 +17,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# JM change 11-03
 
 package OME::Web::ProjectSwitch;
 
@@ -35,38 +36,71 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $body = "";
+	my $formatproject;
+	my @datasets=();
 	my $session = $self->Session();
-
 	# figure out what to do: switch & print form or just print?
 	if( $cgi->param('Switch')) {
-
-		# load new project
 		my $newProject = $session->Factory()->loadObject("OME::Project", $cgi->param('newProject') )
-			or die "Unable to load project (id: ".$cgi->param('newProject')."\n";
+		or die "Unable to load project (id: ".$cgi->param('newProject').")\n";
 		
-# FIXME: validate permissions
+		# FIXME: validate permissions
 		
+
 		# switch current project to new project
 		$session->project($newProject);
 		$session->writeObject();
 		
-		# print sucess message
-		$body .= "Switch sucessful. ";
-		$body .= "<p>At this point, session's dataset should be set to undef and you should be directed to validation for this to be dealt with. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
-		$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
-		$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
-		
+		#my $formatdataset="";
+		my $projectnew=$session->project();
+		@datasets=$projectnew->datasets();
+		if (scalar(@datasets)==0){
+		  $session->dissociateObject('dataset');
+		  $session->writeObject();
+
+		  $body.="No Dataset associated to this project. Please define a dataset.";
+		  $body .= OME::Web::Validation->ReloadHomeScript();
+		  $body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		 return('HTML',$body);
+		}	
+		$session->dataset($datasets[0]);
+		$session->writeObject();
+
+
+		$formatproject=format_project($projectnew,$cgi);
+		my $formatdataset=format_dataset($datasets[0]->name(),\@datasets,$cgi);		
 		# update titlebar
+		$body.=$formatproject;
+		$body.=$formatdataset;
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-		
+
 		# this will add a script to reload OME::Home if it's necessary
-		$body .= OME::Web::Validation->ReloadHomeScript();
+		# $body .= OME::Web::Validation->ReloadHomeScript();
 
 	}
+	elsif( $cgi->param('execute')) {
+
+		#$body="";
+     		my $newdataset= $session->Factory()->loadObject("OME::Dataset", $cgi->param('newdataset'))
+			or die "Unable to load dataset (id: ".$cgi->param('newdataset').")\n";
+
+		$session->dataset($newdataset);
+		$session->writeObject();
+		my $name=$session->dataset()->name();
+		$formatproject=format_project($session->project(),$cgi);
+		@datasets=$session->project()->datasets();
+		my $formatdata=format_dataset($name,\@datasets,$cgi);
+		$body.=$formatproject;
+		$body.=$formatdata;
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+		# this will add a script to reload OME::Home if it's necessary
+		# $body .= OME::Web::Validation->ReloadHomeScript();
+
+      }else{
 	# print form
 	$body .= $self->print_form();
-
-    return ('HTML',$body);
+	}
+      return ('HTML',$body);
 }
 
 sub print_form {
@@ -74,17 +108,18 @@ sub print_form {
 	my $cgi = $self->CGI();
 	my $project = $self->Session()->project();
 	# find all projects involving user's group
-	my @projects = OME::Project->search( group_id => $self->Session()->User()->group()->group_id() );
-	my %projectList = map { $_->project_id() => $_->name()} @projects
+	#my @projects = OME::Project->search( group_id => $self->Session()->User()->group()->group_id() );
+	# Only project owned
+      my @projects = OME::Project->search( owner_id => $self->Session()->User()->experimenter_id );
+
+
+      my %projectList = map { $_->project_id() => $_->name()} @projects
 		if (scalar @projects) > 0;
 	my $text = '';
-	
-	$text .= $cgi->startform;
-	$text .= "Current project is ".$project->name()."<BR>"
-		if(defined $project);
+	$text .= format_project($project,$cgi) if(defined $project);
 
-	$text .= 
-		$cgi->table(
+	$text .= $cgi->startform;
+	$text .= $cgi->table(
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->popup_menu (
@@ -99,5 +134,60 @@ sub print_form {
 	$text .= $cgi->endform;
 	return $text;
 }
+
+
+
+#--------------------
+# PRIVATE METHODS
+#------------------
+
+
+sub format_project{
+ my ($project,$cgi)=@_;
+ my $summary="";
+ $summary .= $cgi->h3('Your current project is:') ;
+ $summary .= "<P><NOBR><B>Name:</B> ".$project->name()."</NOBR><BR>" ;
+ $summary .= "<NOBR><B>ID:</B> ".$project->project_id()."</NOBR><BR>" ;
+ $summary .= "<B>Description:</B> ".$project->description()."<BR></P>" ;
+ return $summary ;
+
+
+
+
+}
+
+sub format_dataset{
+ my ($dataname,$ref,$cgi)=@_;
+ my @datasets=();
+ my $summary="";
+ @datasets=@$ref;
+ if (scalar(@datasets)>1){
+	# display a list
+
+	my %datasetList= map {$_->dataset_id() => $_->name()} @datasets;
+	$summary.="<P>Your current dataset is: <B>".$dataname."</B></P>";
+	$summary.="<p> If you want to switch, please choose a dataset in the list below.</p>";
+	$summary.=$cgi->startform;
+	$summary.=$cgi->table(
+			$cgi->Tr( { -valign=>'MIDDLE' },
+				$cgi->td( { -align=>'LEFT' },
+					$cgi->popup_menu (
+						-name => 'newdataset',
+						-values => [keys %datasetList],
+						-labels => \%datasetList)
+					 ),
+			$cgi->td( { -align=>'LEFT' },
+					$cgi->submit (-name=>'execute',-value=>'Switch') ) ),
+		);
+	$summary .= $cgi->endform;
+		
+ }else{
+ 	$summary.="<P>Your current dataset is: <B>".$dataname."</B></P>";
+ }
+ return $summary;
+}
+
+
+
 
 1;

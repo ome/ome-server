@@ -26,6 +26,8 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
 use OME::DBObject;
+use OME::Dataset;		#jm
+
 use base qw{ OME::Web };
 
 use OME::Tasks::ImageTasks;
@@ -71,20 +73,36 @@ sub getPageBody {
 			# in the project. In this case, 'addNewDataset' is implicitly chosen
 			if (not defined $radioSelect or $radioSelect eq 'addNewDataset') {
 				$reloadTitleBar = 1;
+
+				# Add control if No name, name already exists ???
+				# Added JM 13-03
+				my $datasetname=$cgi->param('newDataset');
+				return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
+         			my @namedatasets=OME::Dataset->search(name=>$datasetname);
+	   			return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
+				#
 				$dataset = $project->newDataset($cgi->param('newDataset'), $cgi->param('description') );
 				die ref($self)."->import:  Could not create dataset '".$cgi->param('newDataset')."'\n" unless defined $dataset;
+				
+				# comments? not here 
 				$session->dataset($dataset);
 			} elsif ($radioSelect eq 'addExistDataset') {
-# is this the Right Way to do this operation?
+				# is this the Right Way to do this operation?
 				$dataset = $project->addDatasetID ($cgi->param('addDataset'));
 				die ref($self)."->import:  Could not load dataset '".$cgi->param('addDataset')."'\n" unless defined $dataset;
 			}
 
 			my $errorMessage = '';
 			if ($dataset) {
-				$dataset->writeObject();
-			    $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
-				die $errorMessage if $errorMessage;
+				$dataset->writeObject(); #OK
+				# FILTER 
+				# must be here
+				# At this point need a filter: control file to import into current dataset
+
+			      $errorMessage = OME::Tasks::ImageTasks::importFiles($self->Session(), $dataset, \@paths);
+				#die $errorMessage if $errorMessage;
+				# At this point Delete entry in table dataset+ map if errormessage
+		
 				$dataset->writeObject();
 				$project->writeObject();
 				$session->dataset($dataset);
@@ -93,20 +111,21 @@ sub getPageBody {
 				$errorMessage = "No Dataset to import into.\n";
 			}
 			# Import messed up. Display error message & let them try again.
-			if ($errorMessage) {
+			if ($errorMessage) {  # Error message when no dataset defined
 				$body .= $cgi->h3($errorMessage);
 				$body .= $self->print_form($selections[0]);
 				$body .= $cgi->h4 ('Selected Files and Folders:');
 				$body .= join ("<BR>",@selections);
 			} else {
-			# import successful. Reload titlebar & display success message.
+				# import successful. Reload titlebar & display success message.
 				# javascript to reload titlebar
 				$body .= "<script>top.title.location.href = top.title.location.href;</script>"
 					if defined $reloadTitleBar;
 				# javascript to reload titlebar
 				$body .= "<script>top.location.href = top.location.href;</script>"
 					if defined $reloadPage;
-				$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov,a_falconi_jobs@hotmail.com">email</a> the developers w/ your comments.`;
+				
+				$body .= q`Import successful. This should display more info. But that's not implemented. What would you like to see? <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov">email</a> the developers w/ your comments.`;
 			}
 		}
 		# If we have a selection, but import button wasn't clicked, print the form:
@@ -116,7 +135,7 @@ sub getPageBody {
 			$body .= join ("<BR>",@selections);
 		}
 	
-	# If we gots no selection, just print a handy hint.
+	# If we got no selection, just print a handy hint.
 	} else {
 		$body .=  $cgi->h4 ('Select Files and Folders in the menu tree on the left.');
 	}
@@ -184,5 +203,16 @@ sub print_form {
 	$text .= $cgi->endform."\n";
 	return $text;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 1;

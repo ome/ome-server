@@ -63,12 +63,13 @@ What it returns: 1 or undef
 sub isRedirectNecessary {
 	my $self = shift;
 	my $doNotSetFlag = shift;
-	my $session = $self->Session();
+	my $session = $self->Session()
+		or die ref ($self) . " cannot find session via self->Session()";
 	$self->ReloadHome( undef )
 		unless $doNotSetFlag;
 
 	# put all tests necessary for redirection here.
-	if( (not defined $session) || (not defined $session->project()) || (not defined $session->dataset()) ) {
+	if( (not defined $session->project()) || (not defined $session->dataset()) ) {
 		$self->ReloadHome( 1 )
 			unless $doNotSetFlag;
 		return 1;
@@ -135,16 +136,19 @@ sub projectNotDefined {
 	die ref ($self)."->projectNotDefined() has been called inappropriately. There is a project defined for this session."
 		if( defined $session->project() );
 	
-	my @projects = OME::Project->search( group_id => $user->group()->group_id());
-	
+	#my @projects = OME::Project->search( group_id => $user->group()->group_id());
+	my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
+
 	# Is this a first time login? How do I check for that? For the time being, I'm going to say if neither a project nor dataset is defined, it is a first time login. Since this function won't be called if a project
 	if( not defined $session->dataset() ) {
 		$text .= "<p>You have started a new session. There are a few things you need to do to set up the session. This will lead you through all necessary steps.</p>";
 	}
 	
 	$text .= "<p>There is not a project defined for your session. <li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::MakeNewProject'},'here')." to create a new project. ";
+	#$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
+	#	if( (scalar @projects) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
-		if( (scalar @projects) > 0 );
+		if( (scalar @ownprojects) > 0 );
 	$text .= "</p>";
 	$text .= $self->printLogout();
 	
@@ -186,7 +190,9 @@ sub datasetNotDefined {
 	my @images   = OME::Image->search( group_id => $user->group()->group_id());
 	
 	$text .= "<p>There is not a dataset defined for your session. <li>Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to create a new dataset by importing images. ";
-	$text .= "<li>Click ".$cgi->a({href=>qq{javascript: alert('This is not implemented yet.')}},'here')." to make a dataset from existing images. "
+	#$text .= "<li>Click ".$cgi->a({href=>qq{javascript: alert('This is not implemented yet.')}},'here')." to make a dataset from existing images. "
+	#	if( (scalar @images) > 0 );
+      $text .= "<li>Click ".$cgi->a({href=>"/perl2/serve.pl?Page=OME::Web::ProjectDatasetImage"},'here')." to make a dataset from existing images. "
 		if( (scalar @images) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>"/perl2/serve.pl?Page=OME::Web::ProjectDataset"},'here')." to choose an existing dataset."
 		if( (scalar @datasets) > 0 );
@@ -204,7 +210,10 @@ What it does: return a link to logout
 
 =cut
 sub printLogout {
-	return qq{Click <a href="/perl2/serve.pl?Page=OME::Web::Logout">here</a> to logout.};
+	#return qq{Click <a href="/perl2/serve.pl?Page=OME::Web::Logout">here</a> to logout.};
+	#JM 03-03-03
+	return qq{Click <a href="#" onClick="top.location.href='/perl2/serve.pl?Page=OME::Web::Logout'"> here</a> to logout.};
+
 }
 
 1;

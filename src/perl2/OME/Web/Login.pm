@@ -17,6 +17,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# JM 13-03
 
 package OME::Web::Login;
 
@@ -46,54 +47,58 @@ sub getPageBody {
     my $body = "";
 
     if ($cgi->param('execute')) {
-    # results submitted, try to log in
+       # results submitted, try to log in
 
-    my $session = $self->Manager()->createSession($cgi->param('username'),
+       my $session = $self->Manager()->createSession($cgi->param('username'),
                               $cgi->param('password'));
-    if (defined $session) {
-    	$self->Session($session);
-        $self->setSessionCookie();
-        return ('REDIRECT',$self->pageURL('OME::Web::Home'));
+      if (defined $session) {
+       	$self->Session($session);
+            $self->setSessionCookie();
+            return ('REDIRECT',$self->pageURL('OME::Web::Home'));
+       } else {
+          $body .= $cgi->h3("Invalid login");
+          $body .= $cgi->p("The username and password you entered don't match an experimenter in the system.  Please try again.");
+          $body .=format_form($cgi);
+      }
     } else {
-        $body .= $cgi->h3("Invalid login");
-        $body .= $cgi->p("The username and password you entered doesn't match an experimenter in the system.  Please try again.");
-        $body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
-        $body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
-        $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-                  $cgi->td($cgi->b("Username"),
-                       $cgi->textfield(-name => 'username',
-                               -size => 25)));
-        $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-                  $cgi->td($cgi->b("Password"),
-                   $cgi->password_field(-name => 'password',
-                            -size => 25)));
-        $body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
-                  $cgi->td({-colspan => 2},
-                       $cgi->submit({-name  => 'execute',
-                             -value => 'OK'})));
-        $body .= $cgi->end_table;
-    }
-    } else {
-    $body .= $cgi->h3("Login");
-    $body .= $cgi->p("Please enter your username and password.");
-    $body .= $cgi->start_form("POST","serve.pl?Page=OME::Web::Login");
-    $body .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
-    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-              $cgi->td($cgi->b("Username"),
-                   $cgi->textfield(-name => 'username',
-                           -size => 25)));
-    $body .= $cgi->Tr({-align => 'left', -valign => 'middle'},
-              $cgi->td($cgi->b("Password"),
-                   $cgi->password_field(-name => 'password',
-                            -size => 25)));
-    $body .= $cgi->Tr({-align => 'center', -valign => 'middle'},
-              $cgi->td({-colspan => 2},
-                   $cgi->submit({-name  => 'execute',
-                         -value => 'OK'})));
-    $body .= $cgi->end_table;
+      $body .= $cgi->h3("Login");
+      $body .= $cgi->p("Please enter your username and password.");
+      $body .= $cgi->p("eldritch test Jean-marie.");
+      $body .=format_form($cgi);
     }
 
     return ('HTML',$body);
 }
+
+
+
+#----------------
+# PRIVATE METHODS
+#----------------
+
+sub format_form{
+ my ($cgi)=@_;
+ my $text="";
+ $text .= $cgi->startform;
+ $text .= $cgi->start_table({-border => 0, -cellspacing => 4, -cellpadding => 0});
+ $text .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+             $cgi->td($cgi->b("Username"),
+             $cgi->textfield(-name => 'username', -size => 25)));
+ $text .= $cgi->Tr({-align => 'left', -valign => 'middle'},
+                  $cgi->td($cgi->b("Password"),
+			 $cgi->password_field(-name => 'password',-size => 25)));
+ $text .= $cgi->Tr({-align => 'center', -valign => 'middle'},
+                  $cgi->td({-colspan => 2},
+                       $cgi->submit({-name  => 'execute',
+                             -value => 'OK'})));
+ $text .= $cgi->end_table;
+ $text .=$cgi->endform;
+
+
+
+
+ return $text;
+}
+
 
 1;

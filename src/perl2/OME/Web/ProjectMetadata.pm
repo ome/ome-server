@@ -17,7 +17,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
+# JM 12-03-03
 package OME::Web::ProjectMetadata;
 
 use strict;
@@ -44,6 +44,14 @@ sub getPageBody {
 	# figure out what to do: save & print info or just print?
 	if( $cgi->param('Save')) {
 # FIXME: Some validation is needed here
+	my $projectname=cleaning($cgi->param('name'));
+	return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
+	if ($project->name() ne $cgi->param('name')){
+         my @nameprojects=OME::Project->search(name=>$projectname);
+	   return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless scalar(@nameprojects)==0;
+      }
+
+		
 		my $reloadTitleBar = ($project->name() eq $cgi->param('name') ? undef : 1);
 		# change stuff.
 		$project->name( $cgi->param('name') );
@@ -106,5 +114,20 @@ sub print_form {
 	$text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
 	return $text;
 }
+
+#-----------------
+# PRIVATE METHODS
+#------------------
+
+
+sub cleaning{
+		  my ($string)=@_;
+		 chomp($string);
+ $string=~ s/^\s*(.*\S)\s*/$1/;
+ return $string;
+
+}
+
+
 
 1;

@@ -47,7 +47,7 @@ sub getPageBody {
 	my $body = "";
 	my $session = $self->Session();
 	my $project = $session->project();
-	
+	my $currentdataset=$session->dataset();
 	# This is not meant to take the place of OME::Web::Validation->isRedirectNecessary
 	# It is explicit variable validity verification. Validation may eventually have other checks as well. This only needs these checks.
 	if( not defined $project ) {
@@ -60,44 +60,65 @@ sub getPageBody {
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
 
-# FIXME: Some validation is needed for these.
+	# FIXME: Some validation is needed for these.
 	# Àdo we need to remove a dataset?
 	if( exists $revArgs{Remove} ) {
 		my $dataset = $session->Factory()->loadObject("OME::Dataset",$revArgs{Remove});
 		if( not defined $dataset ) {
 			die "Could not load dataset ( ID = '".$revArgs{Remove}."' ). It has not been removed.<br>";
+		}else {
+			# OTHER SOLUTION SOON
+			#return ('HTML',"<b>You cannot remove the current dataset</b>") if $dataset->dataset_id()==$currentdataset->dataset_id();
+			
+			my $result=remove_dataset($revArgs{Remove},$project->project_id());
+			return ('HTML',"Cannot remove dataset.") if (!defined $result);
+			my @datasets=$project->datasets();	
+			if ($dataset->dataset_id()==$currentdataset->dataset_id()){
+			   if (scalar(@datasets)==0){
+				 $session->dissociateObject('dataset');
+		 	  	 $session->writeObject();
+			  	 $body .="No dataset defined for your current project.Please define a dataset."; #if not refresh
+			 	 $body .= OME::Web::Validation->ReloadHomeScript();
+			   }else{
+				$session->dataset($datasets[0]);
+			      $session->writeObject();
+		         }
+			      $body .= "<script>top.title.location.href = top.title.location.href;</script>";
+
+			}
+			$body.=$self->print_form();
+		
 		}
-		else {
-			my $name = $dataset->name();
-			# call a function in project to remove this dataset. don't forget to error check for session's dataset & save everything
-	
-			# this will add a script to reload OME::Home if it's necessary
-			$body .= OME::Web::Validation->ReloadHomeScript();
-#			$body .= "Dataset '$name' has been deleted.<br>";
-			$body .= "I haven't implemented this feature yet.<br>";
-		}
+		
 	}
 	# Àdo we need to switch to another dataset?
-	if( exists $revArgs{Select} ) {
+	elsif ( exists $revArgs{Select} ) {
+	#if( exists $revArgs{Select} ) {
 		my $dataset = $session->Factory()->loadObject("OME::Dataset",$revArgs{Select})
 			or die "Unable to load dataset ( ID = ".$revArgs{Select}." ). Action cancelled<br>";
 		if( $project->doesDatasetBelong( $dataset ) ) {
-		# does this dataset belong to the current project?
-			$session->dataset($dataset);
-			$session->writeObject();
+			if ($dataset->dataset_id()==$currentdataset->dataset_id()){
+			   $body.="Your current dataset is already: <b>".$currentdataset->name()."</b><br>";
+			   $body.=$self->print_form();
+			}else{
+			  $session->dataset($dataset);
+			  $session->writeObject();
 	
-			# this will add a script to reload OME::Home if it's necessary
-			$body .= OME::Web::Validation->ReloadHomeScript();
-			$body .= "Operation successful. Current dataset is: ".$session->dataset()->name()."<br>";
+			  # this will add a script to reload OME::Home if it's necessary
+			  $body .= OME::Web::Validation->ReloadHomeScript();
+			  $body .= "Operation successful. Current dataset is: <b>".$session->dataset()->name()."</b><br>";
+			  # update titlebar
+			  $body .= "<script>top.title.location.href = top.title.location.href;</script>";
+			}
 
-			# update titlebar
-			$body .= "<script>top.title.location.href = top.title.location.href;</script>";
 		} else {
 			die "Dataset '".$dataset->name."' does not belong to the current project.<br>";
 		}
 	}
 	# Àdo we need to add a dataset to the project?
-	if( defined $cgi->param('addDataset') ) {
+      elsif( defined $cgi->param('addDataset') ) {
+
+	#if( defined $cgi->param('addDataset') ) {
 		my $dataset = $project->addDatasetID( $cgi->param('addDatasetID') )
 			or die ref $self." died when trying to add dataset (".$cgi->param('addDatasetID');
 		$session->dataset($dataset);
@@ -106,17 +127,23 @@ sub getPageBody {
 		
 		$body .= "Dataset '".$dataset->name()."' successfully added to this project and set to current dataset.<br>";
 		# this will add a script to reload OME::Home if it's necessary
-		$body .= OME::Web::Validation->ReloadHomeScript();
+		#$body .= OME::Web::Validation->ReloadHomeScript();
+		$body .= $self->print_form();
 
 		# update titlebar
 		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
-	}
+	}else{
 
 	# display datasets that user owns 
 	$body .= $self->print_form();
-
+	}
     return ('HTML',$body);
 }
+
+
+#---------------
+# PRIVATE METHODS
+#---------------
 
 sub print_form {
 	my $self = shift;
@@ -127,8 +154,21 @@ sub print_form {
 		or die ref ($self)."->print_form() say: There is no user defined for this session.";
 	my @groupDatasets = $session->Factory()->findObjects("OME::Dataset", 'group_id' =>  $user->group()->id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
 	my %datasetList;
-	foreach (@groupDatasets) {
+	my %Listgeneral=();
+	# remove empty datasets 
+	my @notEmptyDatasets=();
+  	foreach (@groupDatasets){
+		my @images=$_->images();
+     		 if (scalar(@images)>0){
+		  push(@notEmptyDatasets,$_);
+		}
+  	}
+
+
+	
+	foreach (@notEmptyDatasets) {
 	print STDERR "\n".$project->doesDatasetBelong($_)." ".$_->ID();
+		$Listgeneral{$_->ID()}=$_->name();
 		if (not $project->doesDatasetBelong($_)) {
 			$datasetList{$_->ID()} = $_->name();
 		}
@@ -137,11 +177,46 @@ sub print_form {
 	my $cgi = $self->CGI();
 	my $text = '';
 	my ($tableRows);
+	if (scalar @projectDatasets >0){
+		$text .=format_own_Dataset($cgi,$project->name(),\@projectDatasets,\%datasetList);
+     }else{
+		$text .=format_Datasets($cgi,$project->name(),\%Listgeneral);
+
+     }
+		
 	
-	$text .= "Project '".$project->name()."' contains ".(scalar @projectDatasets > 0 ? "these" : "no")." datasets.<br><br>";
-	
-	foreach (@projectDatasets) {
-		$tableRows .= 
+
+}
+
+#----------
+
+sub remove_dataset{
+  my ($datasetID,$projectID)=@_;
+  my ($condition,$result,$table);
+  $table="project_dataset_map";
+  $condition="dataset_id=".$datasetID." AND project_id=".$projectID;
+  $result=do_request($table,$condition);
+  return $result;
+
+
+}
+
+
+
+
+#---------
+
+sub format_own_Dataset{
+	my ($cgi,$name,$refarray,$refhash)=@_;
+	my $text="";
+	my $tableRows="";
+	my @control=();
+	foreach (keys %$refhash){
+	  push(@control,$_);
+	}
+	$text .= "The current Project <b>".$name."</b> contains these datasets.<br><br>";
+	foreach (@$refarray) {
+		  $tableRows .= 
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
 					$_->name() ),
@@ -153,39 +228,82 @@ sub print_form {
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->submit( { -name  => $_->dataset_id() ,
 					                -value => 'Select' } ) ) );
-	}
-	
+		}
 	$text .= $cgi->startform;
-	$text .=
-		$cgi->table( { -border=>1 },
+	$text .= $cgi->table( { -border=>1 },
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'CENTER' },
 					'<b>Name</b>' ),
 				$cgi->td( { -align=>'CENTER' },
 					'<b>Locked/Unlocked</b>' ),
 				$cgi->td( { -align=>'CENTER' },
-					'<b>Remove</b>' ),
+					'<b>Remove from current project</b>' ),
 				$cgi->td( { -align=>'CENTER' },
 					'<b>Make this the current dataset</b>' ) ),
-			$tableRows )
-		if(scalar @projectDatasets > 0 );
-	
-	$text .= "<br>".
-		$cgi->popup_menu (
-			-name => 'addDatasetID',
-			-values => [keys %datasetList],
-			-labels => \%datasetList
-		).$cgi->submit (
-			-name=>'addDataset',
-			-value=>'add Dataset to this project')
-		if (scalar keys %datasetList) > 0;
+			$tableRows );
+	if (scalar(@control)>0){
+	 $text.=$cgi->h3("If you want to add an existing dataset to the current project,
+			Please choose one in the list below.");
+	 $text .= $cgi->table(
+			$cgi->Tr( { -valign=>'MIDDLE' },
+				$cgi->td( { -align=>'LEFT' },
+					$cgi->popup_menu (
+						-name => 'addDatasetID',
+						-values => [keys %$refhash],
+						-labels => $refhash)
+					  ),
+				$cgi->td( { -align=>'LEFT' },
+					$cgi->submit (-name=>'addDataset',-value=>'add Dataset to this project') ) ),
+		);
 
 
+      }
 	$text .= $cgi->endform;
 	$text .= '<br>What else would you like to do with these? Think about it. <a href="mailto:igg@nih.gov,bshughes@mit.edu,dcreager@mit.edu,siah@nih.gov,a_falconi_jobs@hotmail.com">email</a> the developers.';
 	
 	return $text;
 
 }
+#-------
+
+
+sub format_Datasets{
+  my ($cgi,$name,$ref)=@_;
+  my $text="";
+  $text.="The current project <b>".$name."</b> doesn't contain a dataset. <br><br>";
+  $text.="Please choose an existing dataset in the list below.";
+  $text .= $cgi->startform;
+  $text .= $cgi->table(
+			$cgi->Tr( { -valign=>'MIDDLE' },
+				$cgi->td( { -align=>'LEFT' },
+					$cgi->popup_menu (
+						-name => 'addDatasetID',
+						-values => [keys %$ref],
+						-labels => $ref)
+					  ),
+				$cgi->td( { -align=>'LEFT' },
+					$cgi->submit (-name=>'addDataset',-value=>'add Dataset to this project') ) ),
+		);
+			
+	$text .= $cgi->endform;
+ 	return $text;
+
+
+}
+
+#----------------
+sub do_request{
+ my ($table,$condition)=@_;
+ my $result;
+ my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
+ if (defined $db){
+       $result=$db->DeleteRecord($table,$condition);
+ 
+ }
+ return $result;
+
+}
+
+
 
 1;

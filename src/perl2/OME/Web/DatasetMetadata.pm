@@ -17,6 +17,7 @@
 #    License along with this library; if not, write to the Free Software
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# JM 12-03-03
 
 package OME::Web::DatasetMetadata;
 
@@ -36,12 +37,31 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
+		my $project=$session->project();
+      my @listdataset=$project->datasets();
+      if (scalar(@listdataset)==0){
+		$body.=$cgi->h3("No current dataset. Please define a dataset");
+		 return ('HTML',$body);
+
+      }
+
 	my $dataset = $session->dataset()
 		or die "Dataset not defined for the session.";
 
 	# figure out what to do: save & print info or just print?
 	if( $cgi->param('Save')) {
 # FIXME: Some validation is needed here
+		my $datasetname=cleaning($cgi->param('name'));
+		return ('HTML',"<b>Please enter a name for your dataset.</b>") unless $datasetname;
+		if ($dataset->name() ne $cgi->param('name')){
+         		my @namedatasets=OME::Dataset->search(name=>$datasetname);
+	   		return ('HTML',"<b>This name is already used. Please enter a new name for your dataset.</b>") unless scalar(@namedatasets)==0;
+     		 }
+
+
+
+
+		
 		my $reloadTitleBar = ($dataset->name() eq $cgi->param('name') ? undef : 1);
 		# change stuff.
 		$dataset->name( $cgi->param('name') );
@@ -78,7 +98,7 @@ sub print_stuff {
 					$dataset->dataset_id() ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
-					'Name:' ),
+					'*Name:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textfield(-name=>'name', -size=>32, -default=>$dataset->name()) ) ),
 			$cgi->Tr( { -valign=>'MIDDLE' },
@@ -104,7 +124,26 @@ sub print_stuff {
 		);
 			
 	$text .= $cgi->endform."\n";
+	$text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
+
 	return $text;
 }
+#-----------------
+# PRIVATE METHODS
+#------------------
+
+
+sub cleaning{
+		  my ($string)=@_;
+		 chomp($string);
+ $string=~ s/^\s*(.*\S)\s*/$1/;
+ return $string;
+
+}
+
+
+
+
+
 
 1;

@@ -39,14 +39,22 @@ sub getPageBody {
 	my $cgi = $self->CGI();
 	my $body = "";
 	my $session = $self->Session();
+	my $ExistingDataset;
+      $ExistingDataset=$session->dataset();
+
 
 	# figure out what to do: create a project or print an input form
 	if( $cgi->param('CreateProject')) {
 	# try to make a project, print status message, include some mechanism
 	# 	to redirect to import images if this is a first time login
 
-		my $user = $session->User()
-			or die "User is not defined for this session";
+		my $user = $session->User() or die "User is not defined for this session";
+		my $projectname=cleaning($cgi->param('name'));
+		return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
+	
+		# $projectname exists??
+		my @nameprojects=OME::Project->search(name=>$projectname);
+		return ('HTML',"<b>This name is already used. Please enter a new name for your project.</b>") unless scalar(@nameprojects)==0;
 		my $data = {name => $cgi->param('name'),
 			description => $cgi->param('description'),
 			owner_id => $user->ID(),
@@ -56,34 +64,36 @@ sub getPageBody {
 		$project->writeObject();
 		$session->project($project);
 		$session->writeObject();
+		if (defined $ExistingDataset){
+		 $session->dissociateObject('dataset');
+		 $session->writeObject();
+
+		}
+		$body.="<B>YOU DID IT!</B>";
+
+		#$body .= "<p>At this point, session's dataset should be set to undef and you should be directed to validation for this to be dealt with. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
+		#$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
+		#$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
 		
-		$body .= "<p>At this point, session's dataset should be set to undef and you should be directed to validation for this to be dealt with. The second part is easy. Setting session's dataset is harder. Using \$session->dataset( undef ) to do this results in a fatal error. Message is:<br><pre>";
-		$body .= "'' is not an object of type 'OME::Dataset' at /Users/josiah/OME/src/perl2//OME/Web/MakeNewProject.pm line 58";
-		$body .= "</pre><br>I tried using 1 instead of undef and it gave the message <pre>'1' is not an object...</pre> This demonstrates that the DBI has_a method includes type checking. We need to find a way around this. Anyone got ideas?</p>";
 
 		# this will add a script to reload OME::Home. User will be automatically directed to define a dataset.
 		$body .= OME::Web::Validation->ReloadHomeScript();
 		# javascript to reload titlebar
-		$body .= "<script>top.title.location.href = top.title.location.href;</script>"
+		$body .= "<script>top.title.location.href = top.title.location.href;</script>";
+	
 	} else {
-	# print an input form
-		$body .= $self->print_form();
+		# print an input form
+		$body .= print_form($cgi);
 	}
 
     return ('HTML',$body);
 }
 
 sub print_form {
-	my $self = shift;
-	my $cgi = $self->CGI();
-	
-	my $text = '';
-
-	$text .= $cgi->startform;
-	$text .= "<CENTER>".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."</CENTER>\n";
-
-	$text .= 
-		$cgi->table(
+ my ($cgi) = @_;
+ my $textProjectfields="";
+ my $text="";
+ $textProjectfields.=$cgi->table(
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
 					'*Name:' ),
@@ -94,10 +104,27 @@ sub print_form {
 					'Description:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3) ) ) );
-					
-	$text .= $cgi->endform;
-	$text .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
+
+ $text.= $cgi->startform;
+ $text.=$textProjectfields;
+ $text.= "<CENTER>".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."</CENTER>\n";
+ $text .= $cgi->endform;
+ $text .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
+
 	return $text;
+
 }
+
+
+sub cleaning{
+ my ($string)=@_;
+ chomp($string);
+ $string=~ s/^\s*(.*\S)\s*/$1/;
+ return $string;
+
+}
+
+
+
 
 1;
