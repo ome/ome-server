@@ -143,7 +143,8 @@ sub getName {
 			my $len = $options->{max_text_length} - 23;
 			$name =~ s/^(.{$len})....*$/$1\.\.\./;
 		}
-		return $name." ($yr ".$month_abbr{ $mo }." $dy $hr:$min)";
+		my $short_year = substr( $yr, 2 );
+		return $name." ".$month_abbr{ $mo }." $dy, $short_year $hr:$min";
 	}
 
 	return $obj->id();
