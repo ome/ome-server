@@ -210,7 +210,7 @@ char pix_vers_str[256], file_vers_str[256];
 	} else {
 		if (!beSilent) fprintf(stdout, "Updating Files 1 to %llu\n", (unsigned long long)theFileID);
 		for (theID=1; theID <= theFileID; theID++) {
-			if (!beSilent) fprintf(stdout, "\r%25llu", (unsigned long long)theFileID);
+			if (!beSilent) fprintf(stdout, "\r%25llu", (unsigned long long)theID);
 			fflush (stdout);
 			if ( (myFile = GetFileRep (theID,'i',1)) ){
 				freeFileRep (myFile);
