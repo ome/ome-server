@@ -56,7 +56,7 @@ http://openmicroscopy.org/
 
 =head1 COPYRIGHT
 
-This module is free software licensed under the...
+This program is free software licensed under the...
 
 	The GNU Lesser General Public License (LGPL)
 	Version 2.1, February 1999
