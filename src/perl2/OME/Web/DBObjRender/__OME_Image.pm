@@ -63,7 +63,6 @@ use base qw(OME::Web::DBObjRender);
 =head2 _renderData
 
 makes virtual fields thumb_url and original_file
-original file doesn't make sense for images with multiple source files
 
 =cut
 
