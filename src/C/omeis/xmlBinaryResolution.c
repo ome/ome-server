@@ -62,6 +62,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
 #include "xmlBinaryResolution.h"
 #include "../base64.h"
 #include "../b64z_lib.h"
