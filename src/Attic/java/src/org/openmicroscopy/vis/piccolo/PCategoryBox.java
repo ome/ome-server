@@ -40,11 +40,12 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.nodes.PPath;
+import edu.umd.cs.piccolo.util.PBounds;
 import java.awt.geom.Rectangle2D;
 import java.awt.Color;
 
 
-public class PCategoryBox extends PPath {
+public class PCategoryBox extends PPath implements PBufferedNode {
 	
 	private static final Color CATEGORY_COLOR= new Color(255,255,0,100);
 	
@@ -52,5 +53,13 @@ public class PCategoryBox extends PPath {
 		super(new Rectangle2D.Float(x,y,w,h));
 		setStrokePaint(null);
 		setPaint(CATEGORY_COLOR);
+	}
+	
+	public PBounds getBufferedBounds() {
+		PBounds b = getFullBoundsReference();
+		return new PBounds(b.getX()-PConstants.BORDER,
+			b.getY()-PConstants.BORDER,
+			b.getWidth()+2*PConstants.BORDER,
+			b.getHeight()+2*PConstants.BORDER);
 	}
 } 
