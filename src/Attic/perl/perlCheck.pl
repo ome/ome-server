@@ -60,7 +60,7 @@ my $version = shift;
 	return ($version = 0.95);
 }
 
-# Should have to modify below here when specifying new modules
+# Should not have to modify below here when specifying new modules
 sub CheckModule {
 my $module = $_;
 my $moduleName = $module->{Name};
