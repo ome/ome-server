@@ -23,10 +23,10 @@ sub getPageBody {
 
     my $factory = $self->Factory();
     my $project = $factory->loadObject("OME::Project",1);
-    $body .= $cgi->p($project->Field("id"));
-    $body .= $cgi->p($project->Field("name"));
-    $body .= $cgi->p($project->Field("description"));
-    $body .= $cgi->p($project->Field("owner")->Field("firstName"));
+    $body .= $cgi->p($project->id());
+    $body .= $cgi->p($project->name());
+    $body .= $cgi->p($project->description());
+    $body .= $cgi->p($project->owner()->firstname());
     my $dataset = $factory->loadObject("OME::Dataset",1);
     my $image = $factory->loadObject("OME::Image",1);
 
@@ -47,9 +47,10 @@ sub getPageBody {
     $body .= "</table>";
 
     my $table = $factory->loadObject("OME::LookupTable",1);
-    $body .= $cgi->p($table->Field("name"));
-    foreach my $entry (@{$table->Field("entries")}) {
-	$body .= $cgi->p("..." . $entry->Field("label"));
+    $body .= $cgi->p($table->name());
+    my $entries = $table->entries();
+    while (my $entry = $entries->next()) {
+	$body .= $cgi->p("..." . $entry->label());
     }
     
     return ('HTML',$body);

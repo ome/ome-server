@@ -1,10 +1,30 @@
 # OME::Session
 
 package OME::Session;
+our $VERSION = '1.00';
+
 use strict;
-use vars qw($VERSION);
-$VERSION = '1.00';
+
+use Ima::DBI;
+use Class::Accessor;
 use OME::Factory;
+use OME::SessionManager;
+
+use base qw(Ima::DBI Class::Accessor);
+
+use fields qw(Manager Username UserID User Factory);
+__PACKAGE__->mk_ro_accessors(qw(Manager Username UserID User Factory));
+__PACKAGE__->set_db('Main',
+                  OME::SessionManager->DataSource(),
+                  OME::SessionManager->DBUser(),
+                  OME::SessionManager->DBPassword());
+
+__PACKAGE__->set_sql('find_user',<<"SQL",'Main');
+      select experimenter_id, password
+        from experimenters
+       where ome_name = ?
+SQL
+
 
 
 # createWithPassword
@@ -15,25 +35,22 @@ sub createWithPassword {
     my $class = ref($proto) || $proto;
     my ($manager,$username,$password) = @_;
 
-    my $sql = "
-      select experimenter_id, password
-        from experimenters
-       where ome_name = ?";
-    my ($experimenterID,$dbpass) = $manager->DBH()->selectrow_array($sql,
-								    {},
-								    $username);
+    my $self = $class->SUPER::new();
+
+    my $sth = $self->sql_find_user();
+    return undef unless $sth->execute($username);
+
+    my $results = $sth->fetch();
+    my ($experimenterID,$dbpass) = @$results;
+    
     return undef unless defined $dbpass;
     return undef if (crypt($password,$dbpass) ne $dbpass);
 
-    my $self = {
-	manager  => $manager,
-	username => $username,
-	userID   => $experimenterID,
-	user     => undef
-    };
-    bless $self,$class;
-
-    $self->{factory} = OME::Factory->new($self);
+    $self->{Manager} = $manager;
+    $self->{Username} = $username;
+    $self->{UserID} = $experimenterID;
+    $self->{User} = undef;
+    $self->{Factory} = OME::Factory->new($self);
 
     return $self;
 }
@@ -42,17 +59,18 @@ sub createWithPassword {
 # Accessors
 # ---------
 
-sub Manager { my $self = shift; return $self->{manager}; }
-sub Username { my $self = shift; return $self->{username}; }
-sub Factory { my $self = shift; return $self->{factory}; }
-sub DBH { my $self = shift; return $self->{manager}->DBH(); }
+sub DBH { my $self = shift; return $self->db_Main(); }
 
 sub User {
     my $self = shift;
-    if (!defined $self->{user}) {
-	$self->{user} = $self->{factory}->loadObject("OME::Experimenter",$self->{userID});
+    my $value = $self->{User};
+    
+    if (!defined $value) {
+        $value = $self->Factory()->loadObject("OME::Experimenter",$self->UserID());
+        $self->{User} = $value;
     }
-    return $self->{user};
+    
+    return $value;
 }
 
 

@@ -3,9 +3,23 @@
 #
 
 package OME::Factory;
+our $VERSION = '1.00';
+
 use strict;
-use vars qw($VERSION);
-$VERSION = '1.00';
+use Ima::DBI;
+use Class::Accessor;
+use OME::SessionManager;
+
+use base qw(Ima::DBI Class::Accessor);
+
+use fields qw(Session Debug _cache);
+__PACKAGE__->mk_ro_accessors(qw(Session));
+__PACKAGE__->mk_accessors(qw(Debug));
+__PACKAGE__->set_db('Main',
+                  OME::SessionManager->DataSource(),
+                  OME::SessionManager->DBUser(),
+                  OME::SessionManager->DBPassword());
+
 
 
 # new
@@ -16,22 +30,19 @@ sub new {
     my $class = ref($proto) || $proto;
     my $session = shift;
 
-    my $self = {
-	session => $session,
-	cache   => {},
-        debug   => 1
-	};
+    my $self = $class->SUPER::new();
+    $self->{Session} = $session;
+    $self->{_cache} = {};
+    $self->{Debug} = 1;
 
-    bless $self, $class;
+    return $self;
 }
 
 
 # Accessors
 # ---------
 
-sub Session { my $self = shift; return $self->{session}; }
-sub DBH { my $self = shift; return $self->{session}->DBH(); }
-sub Debug { my $self = shift; return $self->{debug} = shift if @_; return $self->{debug}; }
+sub DBH { my $self = shift; return $self->db_Main(); }
 
 
 # loadObject
@@ -42,7 +53,7 @@ sub loadObject {
 
     return undef unless defined $id;
 
-    my $classCache = $self->{cache}->{$class};
+    my $classCache = $self->{_cache}->{$class};
     if (exists $classCache->{$id}) {
 	print STDERR "loading cache $class $id\n" if $self->{debug};
 	return $classCache->{$id};
@@ -51,14 +62,23 @@ sub loadObject {
     }
 
     eval "require $class";
-    my $object = $class->new($self);
-    $object->ID($id);
+    my $object = $class->retrieve($id) or return undef;
 
-    if ($object->readObject()) {
-	$self->{cache}->{$class}->{$id} = $object;
-	return $object;
-    }
-    return undef;
+    $self->{_cache}->{$class}->{$id} = $object;
+    return $object;
+}
+
+
+# findObject
+# ----------
+
+sub findObject {
+    my ($self, $class, $key, $value) = @_;
+
+    return undef unless (defined $key) && (defined $value);
+
+    eval "require $class";
+    return $class->search($key,$value);
 }
 
 
@@ -66,12 +86,11 @@ sub loadObject {
 # ---------
 
 sub newObject {
-    my ($self, $class) = @_;
+    my ($self, $class, $data) = @_;
 
     eval "require $class";
-    my $object = $class->new($self);
-    return $object if $object->createObject();
-    return undef;
+    my $object = $class->create($data) or return undef;
+    return $object;
 }
 
 1;

@@ -1,16 +1,29 @@
 # OME::SessionManager
 
 package OME::SessionManager;
+our $VERSION = '1.00';
+
 use strict;
-use vars qw($VERSION);
-use DBI;
+
+use Ima::DBI;
+use Class::Accessor;
+use Class::Data::Inheritable;
 use OME::Session;
-$VERSION = '1.00';
 
+use base qw(Ima::DBI Class::Accessor Class::Data::Inheritable);
 
-my $datasource = "dbi:Pg:dbname=ome";
-my $dbuser = undef;
-my $dbpass = undef;
+__PACKAGE__->mk_classdata('DataSource');
+__PACKAGE__->mk_classdata('DBUser');
+__PACKAGE__->mk_classdata('DBPassword');
+
+__PACKAGE__->DataSource("dbi:Pg:dbname=ome");
+__PACKAGE__->DBUser(undef);
+__PACKAGE__->DBPassword(undef);
+
+__PACKAGE__->set_db('Main',
+                  OME::SessionManager->DataSource(),
+                  OME::SessionManager->DBUser(),
+                  OME::SessionManager->DBPassword());
 
 # new
 # ---
@@ -19,13 +32,8 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
 
-    my $self = {};
-    $self->{dbh} = DBI->connect($datasource,$dbuser,$dbpass);
-    $self->{dbh}->{AutoCommit} = 0;
-    $self->{datasource} = $datasource;
-    $self->{dbuser} = $dbuser;
-    $self->{dbpass} = $dbpass;
-    bless $self, $class;
+    my $self = $class->SUPER::new();
+    
     return $self;
 }
 
@@ -46,7 +54,7 @@ sub createSession {
 # Accessors
 # ---------
 
-sub DBH { my $self = shift; return $self->{dbh}; }
+sub DBH { my $self = shift; return $self->db_Main(); }
 
 
 # failedAuthentication()

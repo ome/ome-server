@@ -21,40 +21,27 @@
 package OME::Analysis;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorNames({
+    program_id => 'program',
+    experimenter_id => 'experimenter',
+    dataset_id => 'dataset'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('analyses');
+__PACKAGE__->sequence('analysis_seq');
+__PACKAGE__->columns(Primary => qw(analysis_id));
+__PACKAGE__->columns(Timing => qw(run_start_time run_end_time));
+__PACKAGE__->hasa(OME::Program => qw(program_id));
+__PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
+__PACKAGE__->hasa(OME::Dataset => qw(dataset_id));
+__PACKAGE__->has_many('inputs',OME::Analysis::ActualInput => qw(analysis_id));
+__PACKAGE__->has_many('outputs',OME::Analysis::ActualOutput => qw(analysis_id));
 
-    $self->{_fields} = {
-	id           => ['ANALYSES','ANALYSIS_ID',
-			 {sequence => 'ANALYSIS_SEQ'}],
-	program      => ['ANALYSES','PROGRAM_ID',
-			 {reference => 'OME::Program'}],
-	experimenter => ['ANALYSES','EXPERIMENTER_ID',
-			 {reference => 'OME::Experimenter'}],
-	dataset      => ['ANALYSES','DATASET_ID',
-			 {reference => 'OME::Dataset'}],
-	startTime    => ['ANALYSES','RUN_START_TIME'],
-	endTime      => ['ANALYSES','RUN_END_TIME'],
-	inputs       => ['ACTUAL_INPUTS','ACTUAL_INPUT_ID',
-			 {map       => 'ANALYSIS_ID',
-			  reference => 'OME::Analysis::ActualInput'}],
-	outputs      => ['ACTUAL_OUTPUTS','ACTUAL_OUTPUT_ID',
-			 {map       => 'ANALYSIS_ID',
-			  reference => 'OME::Analysis::ActualOutput'}]
-    };
-
-    return $self;
-}
 
 #    { $FormalInput => { attribute => $Attribute } }
 # or { $FormalInput => { analysis  => $Analysis,
@@ -63,9 +50,9 @@ sub new {
 sub performAnalysis {
     my $self = shift;
     my $params = shift;
-    my $program = $self->Field("program");
-    my $dataset = $self->Field("dataset");
-    my $images = $dataset->Field("images");
+    my $program = $self->program();
+    my $dataset = $self->dataset();
+    my $images = $dataset->images();
     my $factory = $self->Factory();
 
     # This is going to be wicked inefficient in space.  For each of
@@ -74,10 +61,10 @@ sub performAnalysis {
     # reading each of the input analyses' outputs into a bunch of
     # hashes.
 
-    my $formalInputs = $program->Field("inputs");
-    my $formalOutputs = $program->Field("outputs");
-    
-    foreach my $formalInput (@$formalInputs) {
+    my $formalInputs = $program->inputs();
+    my $formalOutputs = $program->outputs();
+
+    while (my $formalInput = $formalInputs->next()) {
 	my $param = $params->{$formalInput};
 
 	die "One of the inputs is not specified!"
@@ -87,11 +74,11 @@ sub performAnalysis {
 	    # pull in all of the appropriate outputs.
 	    my $analysis = $param->{analysis};
 	    my $formalOutput = $param->{output};
-	    my $actualOutputs = $analysis->Field("outputs");
+	    my $actualOutputs = $analyis->outputs();
 	    my $outputsByImage = {};
 
-	    foreach my $output (@$actualOutputs) {
-		my $image = $output->Field("image");
+	    while (my $output = $actualOutputs->next()) {
+		my $image = $output->image();
 		$outputsByImage->{$image} = $output;
 	    }
 
@@ -107,7 +94,7 @@ sub performAnalysis {
     # the inputs for this iteration, and delegate to the calculation
     # class to perform the analysis.
 
-    my $class = $program->Field("location");
+    my $class = $program->location();
     eval "require $class";
     my $delegate = $class->new($self);
 
@@ -129,10 +116,12 @@ sub performAnalysis {
 		$attribute = $param->{attribute};
 	    }
 
-	    my $actualInput = $factory->createObject("OME::Analysis::ActualInput");
-	    $actualInput->Field("analysis",$self);
-	    $actualInput->Field("formalInput",$formalInput);
-	    $actualInput->Field("image",$image);
+            my $inputData = {
+                analysis => $self,
+                formalInput => $formalInput,
+                image => $image
+                };
+	    my $actualInput = $factory->createObject("OME::Analysis::ActualInput",$inputData);
 	    $actualInput->Attribute($attribute);
 
 	    push @actualInputs, $actualInput;
@@ -142,14 +131,16 @@ sub performAnalysis {
 	# This should return a hash in the form {$FormalOutput => $Attribute}
 	my $result = $delegate->analyzeOneImage($image,$imageParams);
 
-	foreach my $formalOutput (@$formalOutputs) {
+        while (my $formalOutput = $formalOutputs->next()) {
 	    if (exists $result->{$formalOutput}) {
 		my $attribute = $result->{$formalOutput};
 
-		my $actualOutput = $factory->createObject("OME::Analysis::ActualOutput");
-		$actualOutput->Field("analysis",$self);
-		$actualOutput->Field("formalOutput",$formalOutput);
-		$actualOutput->Field("image",$image);
+                my $outputData = {
+                    analysis => $self,
+                    formalOutput => $formalOutput,
+                    image => $image
+                    };
+		my $actualOutput = $factory->createObject("OME::Analysis::ActualOutput",$outputData);
 		$actualOutput->Attribute($attribute);
 
 		push @actualOutputs, $actualOutput;
@@ -161,20 +152,20 @@ sub performAnalysis {
     $delegate->finishAnalysis();
 
     # Make sure the new analysis's fields are properly assigned.
-    $self->Field("inputs",\@actualInputs);
-    $self->Field("outputs",\@actualOutputs);
+    $self->inputs(\@actualInputs);
+    $self->outputs(\@actualOutputs);
 
     # Make sure everything gets committed to the database.
-    $self->writeObject();
+    $self->commit();
     foreach my $input (@actualInputs) {
-	$input->writeObject();
-	$input->Attribute()->writeObject();
+	$input->commit();
+	$input->Attribute()->commit();
     }
     foreach my $output (@actualOutputs) {
-	$output->writeObject();
-	$output->Attribute()->writeObject();
+	$output->commit();
+	$output->Attribute()->commit();
     }
-    $self->DBH()->commit();
+    $self->dbi_commit();
 }
 
 
@@ -182,36 +173,24 @@ sub performAnalysis {
 package OME::Analysis::ActualInput;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
 use OME::Program;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorNames({
+    analysis_id     => 'analysis',
+    formal_input_id => 'formal_input'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('actual_inputs');
+__PACKAGE__->sequence('actual_input_seq');
+__PACKAGE__->columns(Primary => qw(actual_input_id));
+__PACKAGE__->columns(Essential => qw(attribute_id));
+__PACKAGE__->hasa(OME::Analysis => qw(analysis_id));
+__PACKAGE__->hasa(OME::Program::FormalInput => qw(formal_input_id));
 
-    $self->{_fields} = {
-	id          => ['ACTUAL_INPUTS','ACTUAL_INPUT_ID',
-			{sequence => 'ACTUAL_INPUT_SEQ'}],
-	analysis    => ['ACTUAL_INPUTS','ANALYSIS_ID',
-			{reference => 'OME::Analysis'}],
-	formalInput => ['ACTUAL_INPUTS','FORMAL_INPUT_ID',
-			{reference => 'OME::Program::FormalInput'}],
-	image       => ['ACTUAL_INPUTS','IMAGE_ID',
-			{reference => 'OME::Image'}],
-	attributeID => ['ACTUAL_INPUTS','ATTRIBUTE_ID']
-    };
-
-    $self->{attribute} = undef;
-
-    return $self;
-}
 
 
 sub Attribute {
@@ -248,11 +227,23 @@ sub Attribute {
 package OME::Analysis::ActualInput;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
 use OME::Program;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    analysis_id      => 'analysis',
+    formal_output_id => 'formal_output'
+    });
+
+__PACKAGE__->table('actual_outputs');
+__PACKAGE__->sequence('actual_output_seq');
+__PACKAGE__->columns(Primary => qw(actual_output_id));
+__PACKAGE__->columns(Essential => qw(attribute_id));
+__PACKAGE__->hasa(OME::Analysis => qw(analysis_id));
+__PACKAGE__->hasa(OME::Program::FormalOutput => qw(formal_output_id));
 
 # new
 # ---
@@ -280,8 +271,8 @@ sub new {
 
 sub Attribute {
     my $self = shift;
-    my $formalOutput = $self->Field("formalOutput");
-    my $dataType = $formalOutput->Field("dataType");
+    my $formalOutput = $self->formal_output();
+    my $dataType = $formalOutput->column_type();
 
     if (@_) {
        	# We are setting the attribute; make sure it is of the

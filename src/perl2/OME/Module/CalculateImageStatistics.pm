@@ -51,11 +51,13 @@ sub startAnalysis {
 sub analyzeOneImage {
     my ($self,$image,$imageParams) = @_;
 
-    my $sizeX = $image->Field("sizeX");
-    my $sizeY = $image->Field("sizeY");
-    my $sizeZ = $image->Field("sizeZ");
-    my $sizeW = $image->Field("sizeW");
-    my $sizeT = $image->Field("sizeT");
+    my $attributes = $image->ImageAttributes();
+
+    my $sizeX = $attributes->size_x();
+    my $sizeY = $attributes->size_y();
+    my $sizeZ = $attributes->size_z();
+    my $sizeW = $attributes->num_waves();
+    my $sizeT = $attributes->num_times();
 
     my $pixels = $image->GetPixelArray(0,$sizeX-1,
 				       0,$sizeY-1,

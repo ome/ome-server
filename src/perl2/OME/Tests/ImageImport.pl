@@ -55,14 +55,19 @@ if (!defined $session) {
 
 print "Great, you're in.\n\n";
 
-print "- Creating a new project...";
-my $project = $session->Factory()->newObject("OME::Project");
-$project->Field("name","ImportTest project");
-$project->Field("owner",$session->User());
-$project->Field("description","This project was created by the ImportTest test case.");
+print STDERR $session->DBH()->{AutoCommit}? "Autocommit\n": "Manual commit\n";
 
-$project->writeObject();
-$session->DBH()->commit();
+print "- Creating a new project...";
+
+my $data = {
+    name => 'ImportTest project',
+    owner => $session->User(),
+    description => 'This project was created by the ImportTest test case.'
+};
+my $project = $session->Factory()->newObject("OME::Project",$data);
+
+$project->commit();
+#$session->DBH()->commit();
 
 print "done.\n";
 

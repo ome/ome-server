@@ -1,36 +1,19 @@
 package OME::Program;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
-
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
-
-    $self->{_fields} = {
-	id          => ['PROGRAMS','PROGRAM_ID',
-			{sequence => 'PROGRAM_SEQ'}],
-	name        => ['PROGRAMS','PROGRAM_NAME'],
-	description => ['PROGRAMS','DESCRIPTION'],
-	category    => ['PROGRAMS','CATEGORY'],
-	location    => ['PROGRAMS','LOCATION'],
-	inputs      => ['FORMAL_INPUTS','FORMAL_INPUT_ID',
-			{map       => 'PROGRAM_ID',
-			 reference => 'OME::Program::FormalInput'}],
-	outputs     => ['FORMAL_OUTPUTS','FORMAL_OUTPUT_ID',
-			{map       => 'PROGRAM_ID',
-			 reference => 'OME::Program::FormalOutput'}]
-    };
-
-    return $self;
-}
+__PACKAGE__->table('programs');
+__PACKAGE__->sequence('program_seq');
+__PACKAGE__->columns(Primary => qw(program_id));
+__PACKAGE__->columns(Essential => qw(program_name description category));
+__PACKAGE__->columns(Definition => qw(module_type location));
+__PACKAGE__->has_many('inputs',OME::Program::FormalInput => qw(program_id));
+__PACKAGE__->has_many('outputs',OME::Program::FormalOutput => qw(program_id));
+__PACKAGE__->has_many('analyses',OME::Analysis => qw(program_id));
 
 
 # performAnalysis(parameters,dataset)
@@ -48,10 +31,12 @@ sub performAnalysis {
     my ($self, $params, $dataset) = @_;
     my $factory = $self->Factory();
 
-    my $analysis = $factory->newObject("OME::Analysis");
-    $analysis->Field("program",$self);
-    $analysis->Field("experimenter",$self->Session()->User());
-    $analysis->Field("dataset",$dataset);
+    my $analysisData = {
+        program      => $self,
+        experimenter => $self->Session()->User(),
+        dataset      => $dataset
+        };
+    my $analysis = $factory->newObject("OME::Analysis",$analysisData);
 
     # We've set up everything we can, now delegate to
     # the Analysis object to perform the actual processing.
@@ -64,63 +49,43 @@ sub performAnalysis {
 package OME::Program::FormalInput;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+use $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorName({
+    program_id      => 'program',
+    lookup_table_id => 'lookup_table'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
-
-    $self->{_fields} = {
-	id          => ['FORMAL_INPUTS','FORMAL_INPUT_ID',
-			{sequence => 'FORMAL_INPUT_SEQ'}],
-	program     => ['FORMAL_INPUTS','PROGRAM_ID',
-			{reference => 'OME::Program'}],
-	name        => ['FORMAL_INPUTS','NAME'],
-        columnType  => ['FORMAL_INPUTS','COLUMN_TYPE',
-			{reference => 'OME::DataType::Column'}],
-	lookupTable => ['FORMAL_INPUTS','LOOKUP_TABLE_ID',
-			{reference => 'OME::LookupTable'}]
-    };
-
-    return $self;
-}
+__PACKAGE__->table('formal_inputs');
+__PACKAGE__->sequence('formal_input_seq');
+__PACKAGE__->columns(Primary => qw(formal_input_id));
+__PACKAGE__->columns(Essential => qw(program_id name column_type));
+__PACKAGE__->hasa(OME::Program => qw(program_id));
+__PACKAGE__->hasa(OME::LookupTable => qw(lookup_table_id));
+                     
 
 
 package OME::Program::FormalOutput;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+use $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorName({
+    program_id      => 'program'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
-
-    $self->{_fields} = {
-	id          => ['FORMAL_OUTPUTS','FORMAL_OUTPUT_ID',
-			{sequence => 'FORMAL_OUTPUT_SEQ'}],
-	program     => ['FORMAL_OUTPUTS','PROGRAM_ID',
-			{reference => 'OME::Program'}],
-	name        => ['FORMAL_OUTPUTS','NAME'],
-	columnType  => ['FORMAL_OUTPUTS','COLUMN_TYPE',
-			{reference => 'OME::DataType::Column'}]
-    };
-
-    return $self;
-}
+__PACKAGE__->table('formal_outputs');
+__PACKAGE__->sequence('formal_output_seq');
+__PACKAGE__->columns(Primary => qw(formal_output_id));
+__PACKAGE__->columns(Essential => qw(program_id name column_type));
+__PACKAGE__->hasa(OME::Program => qw(program_id));
+                     
 
 
 1;

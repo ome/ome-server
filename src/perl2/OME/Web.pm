@@ -210,8 +210,8 @@ sub getSidebar {
     
     if (defined $session) {
 	my $user = $self->User();
-	my $firstName = $user->Field("firstName");
-	my $lastName = $user->Field("lastName");
+	my $firstName = $user->firstname();
+	my $lastName = $user->lastname();
 	$loginMessage = "<hr>$firstName $lastName";
 	my $url = $self->pageURL('OME::Web::Logout');
 	$loginMessage .= "<br><small><a href=\"$url\">LOGOUT</a></small>";

@@ -1,60 +1,37 @@
 package OME::LookupTable;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->table('lookup_tables');
+__PACKAGE__->sequence('lookup_table_seq');
+__PACKAGE__->columns(Primary => qw(lookup_table_id));
+__PACKAGE__->columns(Essential => qw(name description));
+__PACKAGE__->has_many('entries',OME::LookupTable::Entry => qw(lookup_table_id));
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
-
-    $self->{_fields} = {
-	id          => ['LOOKUP_TABLES','LOOKUP_TABLE_ID',
-			{sequence => 'LOOKUP_TABLE_SEQ'}],
-	name        => ['LOOKUP_TABLES','NAME'],
-	description => ['LOOKUP_TABLES','DESCRIPTION'],
-	entries     => ['LOOKUP_TABLE_ENTRIES','LOOKUP_TABLE_ENTRY_ID',
-			{map       => 'LOOKUP_TABLE_ID',
-			 reference => 'OME::LookupTable::Entry',
-			 order     => 'LABEL'}]
-    };
-
-    return $self;
-}
 
 
 package OME::LookupTable::Entry;
 
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+use strict;
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->AccessorNames({
+    lookup_table_id => 'lookup_table'
+    });
 
-    $self->{_fields} = {
-	id    => ['LOOKUP_TABLE_ENTRIES','LOOKUP_TABLE_ENTRY_ID',
-		  {sequence => 'LOOKUP_TABLE_ENTRY_SEQ'}],
-	table => ['LOOKUP_TABLE_ENTRIES','LOOKUP_TABLE_ID',
-		  {reference => 'OME::LookupTable'}],
-	value => ['LOOKUP_TABLE_ENTRIES','VALUE'],
-	label => ['LOOKUP_TABLE_ENTRIES','LABEL']
-    };
+__PACKAGE__->table('lookup_table_entries');
+__PACKAGE__->sequence('lookup_table_entry_seq');
+__PACKAGE__->columns(Primary => qw(lookup_table_entry_id));
+__PACKAGE__->columns(Essential => qw(value label lookup_table_id));
 
-    return $self;
-}
 
 
 1;

@@ -157,63 +157,64 @@ my $JSgraphics = $self->getJSgraphics() ;
 # The popup call has a DrawLayersControls URL parameter.
 # FIXME?  Maybe we should have the JS objects make their own form elements on the client without bothering the server?
 sub getJSgraphics {
-my $self = shift;
-my $cgi   = $self->CGI();
+    my $self = shift;
+    my $cgi   = $self->CGI();
 
-	my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
-	$self->{ImageID} = $ImageID;
-	my $image;
+    my $ImageID = $cgi->url_param('ImageID') || die "ImageID not supplied to GetGraphics.pm";
+    $self->{ImageID} = $ImageID;
+    my $image;
 
-	my $layer;
+    my $layer;
 
 # This to come from the DB eventually.
-	my $Layers = [
-		{
-			JStype   => 'OMEimage',
-			LayerCGI => '../cgi-bin/OME_JPEG',
-			SQL      => undef,
-			Options  => 'name=Image234&allZ=0&allT=0&isRGB=1'
-		},{
-			JStype   => 'Vectors',
-			LayerCGI => 'serve.pl',
-			SQL      => undef,
-			Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=green&name=Vectors2&allZ=1&allT=0'
-		},{
-			JStype   => 'Centroids',
-			LayerCGI => 'serve.pl',
-			SQL      => undef,
-			Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Centroids&color=blue&name=Centroids11&allZ=1&allT=0'
-		},{
-			JStype   => 'Vectors',
-			LayerCGI => 'serve.pl',
-			SQL      => undef,
-			Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=blue&name=Vectors1&allZ=1&allT=0'
-		}];
-		my $layerSpec;
+    my $Layers = [
+                  {
+                      JStype   => 'OMEimage',
+                      LayerCGI => '../cgi-bin/OME_JPEG',
+                      SQL      => undef,
+                      Options  => 'name=Image234&allZ=0&allT=0&isRGB=1'
+                      },{
+                          JStype   => 'Vectors',
+                          LayerCGI => 'serve.pl',
+                          SQL      => undef,
+                          Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=green&name=Vectors2&allZ=1&allT=0'
+                          },{
+                              JStype   => 'Centroids',
+                              LayerCGI => 'serve.pl',
+                              SQL      => undef,
+                              Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Centroids&color=blue&name=Centroids11&allZ=1&allT=0'
+                              },{
+                                  JStype   => 'Vectors',
+                                  LayerCGI => 'serve.pl',
+                                  SQL      => undef,
+                                  Options  => 'Page=OME::Web::GetGraphics&layerType=OME::Graphics::GD::Vectors&color=blue&name=Vectors1&allZ=1&allT=0'
+                                  }];
+    my $layerSpec;
 
     # Don't bother with the image if we're just draing the layer controls.
     $image = $self->Factory()->loadObject("OME::Image",$ImageID);
+    $attributes = $image->ImageAttributes();
 
 
 # Set theZ and theT to defaults unless they are in the CGI url_param.
-	my $theZ = $cgi->url_param('theZ') || ( defined $image ? $image->Field('sizeZ') / 2 : undef );
-	my $theT = $cgi->url_param('theT') || 0;
+    my $theZ = $cgi->url_param('theZ') || ( defined $attributes ? $attributes->size_z() / 2 : undef );
+    my $theT = $cgi->url_param('theT') || 0;
 
-	my $JSgraphics = new OME::Graphics::JavaScript (
-		theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID, Image=>$image);
-	
+    my $JSgraphics = new OME::Graphics::JavaScript (
+                                                    theZ=>$theZ,theT=>$theT,Session=>$self->Session(),ImageID=>$ImageID, Image=>$image);
+
 # Add the layers
-	foreach $layerSpec (@$Layers) {
+    foreach $layerSpec (@$Layers) {
 
-		$layer = eval 'new OME::Graphics::JavaScript::Layer::'.$layerSpec->{JStype}.'(%$layerSpec)';
-	    if ($@ || !defined $layer) {
-			print STDERR "Error loading package - $@\n";
-			die "Error loading package - $@\n";
-		} else {
-			$JSgraphics->AddLayer ($layer);
-		}
-	}
+        $layer = eval 'new OME::Graphics::JavaScript::Layer::'.$layerSpec->{JStype}.'(%$layerSpec)';
+        if ($@ || !defined $layer) {
+            print STDERR "Error loading package - $@\n";
+            die "Error loading package - $@\n";
+        } else {
+            $JSgraphics->AddLayer ($layer);
+        }
+    }
 
-	return $JSgraphics;
+    return $JSgraphics;
 
 }

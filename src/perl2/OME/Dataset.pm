@@ -1,33 +1,26 @@
 package OME::Dataset;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
-use CGI;
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorNames({
+    project_id => 'project',
+    owner_id   => 'owner',
+    group_id   => 'group'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('datasets');
+__PACKAGE__->sequence('dataset_seq');
+__PACKAGE__->columns(Primary => qw(dataset_id));
+__PACKAGE__->columns(Essential => qw(name description locked));
+__PACKAGE__->has_many('images',OME::Image => qw(dataset_id));
+__PACKAGE__->hasa(OME::Project => qw(project_id));
+__PACKAGE__->hasa(OME::Experimenter => qw(owner_id));
+__PACKAGE__->hasa(OME::Group => qw(group_id));
 
-    $self->{_fields} = {
-	id          => ['DATASETS','DATASET_ID',
-			{sequence => 'DATASET_SEQ'}],
-	name        => ['DATASETS','NAME'],
-	description => ['DATASETS','DESCRIPTION'],
-	locked      => ['DATASETS','LOCKED'],
-	images      => ['DATASET_IMAGE_MAP','IMAGE_ID',
-			{map       => 'DATASET_ID',
-			 reference => 'OME::Image'}]
-    };
-
-    return $self;
-}
 
 1;
 

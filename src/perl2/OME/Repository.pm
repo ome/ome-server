@@ -1,26 +1,16 @@
 package OME::Repository;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('repositories');
+__PACKAGE__->sequence('repository_seq');
+__PACKAGE__->columns(Primary => qw(repository_id));
+__PACKAGE__->columns(Essential => qw(path));
 
-    $self->{_fields} = {
-	id   => ['REPOSITORIES','REPOSITORY_ID',
-		 {sequence => 'REPOSITORY_SEQ'}],
-	path => ['REPOSITORIES','PATH']
-    };
-
-    return $self;
-}
 
 1;

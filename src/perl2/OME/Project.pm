@@ -1,33 +1,24 @@
 package OME::Project;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
+__PACKAGE__->AccessorNames({
+    owner_id => 'owner',
+    group_id => 'group'
+    });
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('projects');
+__PACKAGE__->sequence('project_seq');
+__PACKAGE__->columns(Primary => qw(project_id));
+__PACKAGE__->columns(Essential => qw(name description));
+__PACKAGE__->has_many('datasets',OME::Dataset => qw(project_id));
+__PACKAGE__->hasa(OME::Experimenter => qw(owner_id));
+__PACKAGE__->hasa(OME::Group => qw(group_id));
 
-    $self->{_fields} = {
-	id          => ['PROJECTS','PROJECT_ID',
-			{sequence => 'PROJECT_SEQ'}],
-	name        => ['PROJECTS','NAME'],
-	owner       => ['PROJECTS','OWNER_ID',
-			{reference => 'OME::Experimenter'}],
-	description => ['PROJECTS','DESCRIPTION'],
-	datasets    => ['PROJECT_DATASET_MAP','DATASET_ID',
-			{map       => 'PROJECT_ID',
-			 reference => 'OME::Dataset'}],
-    };
-
-    return $self;
-}
 
 1;
 

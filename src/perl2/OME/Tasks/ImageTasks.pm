@@ -76,34 +76,50 @@ sub importFiles {
         
         # determine which repository the new image should be placed in
         my $repository = findRepository($session,$aref);
-        my $image = $session->Factory->newObject("OME::Image");
-        my $imageID = $image->ID();
-        print STDERR "Created new image #" . $imageID . "\n";
-        my $name = $href->{'Image.Name'};
-        $name = "Image" . $imageID unless $name;
-        $image->Field("name",$name);
-        $image->Field("description",$href->{'Image.Description'});
-        $image->Field("experimenter",$session->User());
         #my $created = $href->{'Image.CreationDate'};
         #$created = "now" unless $created;
         my $created = "now";   # until we figure out the date formatting issue
-        $image->Field("created",$created);
-        $image->Field("inserted","now");
-        $image->Field("repository",$repository);
-        $image->Field("sizeX",$href->{'Image.SizeX'});
-        $image->Field("sizeY",$href->{'Image.SizeY'});
-        $image->Field("sizeZ",$href->{'Image.SizeZ'});
-        $image->Field("sizeW",$href->{'Image.NumWaves'});
-        $image->Field("sizeT",$href->{'Image.NumTimes'});
-        $image->Field("bitsPerPixel",16);
 
+        my $imageData = {
+            name => 'n/a',
+            description => $href->{'Image.Description'},
+            experimenter => $session->User(),
+            created => $created,
+            inserted => 'now',
+            repository => $repository,
+            path => 'n/a'
+            };
+
+        my $image = $session->Factory->newObject("OME::Image",$imageData);
+
+        my $attributeData = {
+            size_x => $href->{'Image.SizeX'},
+            size_y => $href->{'Image.SizeY'},
+            size_z => $href->{'Image.SizeZ'},
+            num_waves => $href->{'Image.NumWaves'},
+            num_times => $href->{'Image.NumTimes'},
+            bits_per_pixel => 16,
+            image => $image
+            };
+
+        my $attributes = $session->Factory->newObject("OME::Image::Attributes",$attributeData);
+
+        my $imageID = $image->id();
+        print STDERR "Created new image #" . $imageID . "\n";
+        my $name = $href->{'Image.Name'};
+        $name = "Image" . $imageID unless $name;
         my $path = $imageID.".orf";
-        $image->Field("path",$path);
 
+        $image->name($name);
+        $image->path($path);
+
+        $image->commit();
+        $image->dbi_commit();
+            
         my $handle = new IO::File;
-        my $realpath = ">".$repository->Field("path").$path;
-        print STDERR "$realpath\n";
-        print STDERR "$repository\n";
+        my $realpath = ">".$image->getFullPath();
+        #print STDERR "$realpath\n";
+        #print STDERR "$repository\n";
         open $handle, $realpath or die "Error creating repository file";
 
         # Assume array ref is 4-dimensional, 5th (ie, X) dimension
@@ -125,8 +141,6 @@ sub importFiles {
         close $handle;
 
         print STDERR "\n";
-
-        $image->writeObject();
 
 	# IGG 10/06/02:  Put in a direct INSERT to deal with WavelengthInfo - until we get our API stabilized.
 	# The DB needs to be consistent with regards to image_wavelengths, xy_image_info, and xyz_image_info.
@@ -183,7 +197,7 @@ sub importFiles {
     $sth = $session->DBH()->prepare (
         'INSERT INTO xyz_image_info (image_id,wavenumber,timepoint,min,max,mean,geomean,sigma,centroid_x,centroid_y,centroid_z) VALUES (?,?,?,?,?,?,?,?,?,?,?)');
     my $Dims = join (',',($href->{'Image.SizeX'},$href->{'Image.SizeY'},$href->{'Image.SizeZ'},
-        $href->{'Image.NumWaves'},$href->{'Image.NumTimes'},$image->Field("bitsPerPixel")/8)
+        $href->{'Image.NumWaves'},$href->{'Image.NumTimes'},$attributes->bits_per_pixel()/8)
     );
     my $cmd = '/OME/bin/OME_Image_XYZ_stats Path='.$image->getFullPath().' Dims='.$Dims.' |';
     

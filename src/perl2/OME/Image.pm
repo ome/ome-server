@@ -1,56 +1,60 @@
 package OME::Image;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
-use CGI;
+our $VERSION = '1.0';
+
 use OME::DBObject;
+use base qw(OME::DBObject);
+
 use OME::Repository;
 use IO::File;
-@ISA = ("OME::DBObject");
 
-# new
-# ---
+use fields qw(_fileOpen _fileHandle);
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->AccessorNames({
+    instrument_id   => 'instrument',
+    experimenter_id => 'experimenter',
+    repository_id   => 'repository',
+    group_id        => 'group'
+});
 
-    $self->{_fields} = {
-	id           => ['IMAGES','IMAGE_ID',
-			 {sequence => 'IMAGE_SEQ'}],
-	guid         => ['IMAGES','IMAGE_GUID'],
-	name         => ['IMAGES','NAME'],
-	description  => ['IMAGES','DESCRIPTION'],
-	instrument   => ['IMAGES','INSTRUMENT_ID',
-			 {reference => 'OME::Instrument'}],
-	experimenter => ['IMAGES','EXPERIMENTER_ID',
-			 {reference => 'OME::Experimenter'}],
-	created      => ['IMAGES','CREATED'],
-	inserted     => ['IMAGES','INSERTED'],
-	repository   => ['IMAGES','REPOSITORY_ID',
-			 {reference => 'OME::Repository'}],
-	path         => ['IMAGES','PATH'],
-	sizeX        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_X'],
-	sizeY        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_Y'],
-	sizeZ        => ['ATTRIBUTES_IMAGE_XYZWT','SIZE_Z'],
-	sizeW        => ['ATTRIBUTES_IMAGE_XYZWT','NUM_WAVES'],
-	sizeT        => ['ATTRIBUTES_IMAGE_XYZWT','NUM_TIMES'],
-	bitsPerPixel => ['ATTRIBUTES_IMAGE_XYZWT','BITS_PER_PIXEL']
-    };
+__PACKAGE__->table('images');
+__PACKAGE__->sequence('image_seq');
+__PACKAGE__->columns(Primary => qw(image_id));
+__PACKAGE__->columns(Essential => qw(image_guid name path image_type));
+__PACKAGE__->columns(Others => qw(created inserted description));
+__PACKAGE__->hasa(OME::Instrument => qw(instrument_id));
+__PACKAGE__->hasa(OME::Experimenter => qw(experimenter_id));
+__PACKAGE__->hasa(OME::Repository => qw(repository_id));
+__PACKAGE__->hasa(OME::Group => qw(group_id));
+__PACKAGE__->has_many('datasets',OME::Image::DatasetMap => qw(image_id));
 
-    $self->{fileOpen} = 0;
-    $self->{fileHandle} = undef;
 
+sub _init {
+    my $class = shift;
+    my $self = $class->SUPER::_init();
+   
+    $self->{_fileOpen} = 0;
+    $self->{_fileHandle} = undef;
     return $self;
+}
+
+
+sub ImageAttributes {
+    my $self = shift;
+    my @attributes = $self->Factory()->findObject("OME::Image::Attributes",
+                                                  "image_id",
+                                                  $self->id());
+    
+    die "Image has multiple attribute entries" if (scalar(@attributes) > 1);
+    return $attributes[0];
 }
 
 sub getFullPath {
     my $self = shift;
-    my $repository = $self->Field("repository");
-    my $rpath = $repository->Field("path");
-    my $path = $self->Field("path");
+    my $repository = $self->repository();
+    my $rpath = $repository->path();
+    my $path = $self->path();
 
     return ($rpath . $path);
 }
@@ -64,17 +68,17 @@ sub openFile {
     my $handle = new IO::File;
     open $handle, $fullpath or die "Cannot open image file!";
 
-    $self->{fileOpen} = 1;
-    $self->{fileHandle} = $handle;
+    $self->{_fileOpen} = 1;
+    $self->{_fileHandle} = $handle;
 }
 
 sub closeFile {
     my $self = shift;
 
-    return unless ($self->{fileOpen});
-    close $self->{fileHandle};
-    $self->{fileOpen} = 0;
-    $self->{fileHandle} = undef;
+    return unless ($self->{_fileOpen});
+    close $self->{_fileHandle};
+    $self->{_fileOpen} = 0;
+    $self->{_fileHandle} = undef;
 }
 
 
@@ -83,11 +87,13 @@ sub closeFile {
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
 
-    my $sX = $self->Field("sizeX");
-    my $sY = $self->Field("sizeY");
-    my $sZ = $self->Field("sizeZ");
-    my $sW = $self->Field("sizeW");
-    my $sT = $self->Field("sizeT");
+    my $attributes = $self->ImageAttributes();
+    
+    my $sX = $attributes->size_x();
+    my $sY = $attributes->size_y();
+    my $sZ = $attributes->size_z();
+    my $sW = $attributes->num_waves();
+    my $sT = $attributes->num_times();
 
     # make sure x1 < x2, etc
     my $x1 = ($xx1 < $xx2)? $xx1: $xx2;
@@ -116,12 +122,12 @@ sub GetPixels {
 
     my $closeFileLater = 0;
 
-    if (!$self->{fileOpen}) {
+    if (!$self->{_fileOpen}) {
         $self->openFile();
         $closeFileLater = 1;
     }
 
-    my $handle = $self->{fileHandle};
+    my $handle = $self->{_fileHandle};
 
     my $oX = 2;
     my $oY = $oX*$sX;
@@ -169,6 +175,35 @@ sub GetPixelArray {
 
     return \@result;
 }
+
+
+package OME::Image::Attributes;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(OME::DBObject);
+
+__PACKAGE__->AccessorNames({
+    image_id     => 'image'
+});
+
+__PACKAGE__->table('attributes_image_xyzwt');
+__PACKAGE__->sequence('attribute_seq');
+__PACKAGE__->columns(Primary => qw(attribute_id));
+__PACKAGE__->columns(Essential => qw(size_x size_y size_z num_waves num_times bits_per_pixel));
+__PACKAGE__->hasa(OME::Image => qw(image_id));
+
+
+package OME::Image::DatasetMap;
+
+use strict;
+our $VERSION = '1.0';
+
+use OME::DBObject;
+use base qw(
+
 
 1;
 

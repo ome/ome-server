@@ -1,27 +1,16 @@
 package OME::Instrument;
 
 use strict;
-use vars qw($VERSION @ISA);
-$VERSION = '1.0';
+our $VERSION = '1.0';
+
 use OME::DBObject;
-@ISA = ("OME::DBObject");
+use base qw(OME::DBObject);
 
-# new
-# ---
 
-sub new {
-    my $proto = shift;
-    my $class = ref($proto) || $proto;
-    my $self = $class->SUPER::new(@_);
+__PACKAGE__->table('instruments');
+__PACKAGE__->sequence('instrument_seq');
+__PACKAGE__->columns(Primary => qw(instrument_id));
+__PACKAGE__->columns(Essential => qw(name description));
 
-    $self->{_fields} = {
-	id          => ['INSTRUMENTS','INSTRUMENT_ID',
-			{sequence => 'INSTRUMENT_SEQ'}],
-	name        => ['INSTRUMENTS','NAME'],
-	description => ['INSTRUMENTS','DESCRIPTION']
-    };
-
-    return $self;
-}
 
 1;

@@ -163,10 +163,12 @@ sub new {
 	
 	if (defined $self->{Image}) {
 		my $image = $self->{Image};
+                my $attributes = $image->ImageAttributes();
 		$self->{Dims} = [
-				$image->Field("sizeX"),$image->Field("sizeY"),$image->Field("sizeZ"),
-				$image->Field("sizeW"),$image->Field("sizeT"),$image->Field("bitsPerPixel")/8
-			];
+                                 $attributes->size_x(),$attributes->size_y(),$attributes->size_z(),
+                                 $attributes->num_waves(),$attributes->num_times(),
+                                 $attributes->bits_per_pixel()/8
+                                 ];
 	}
 
 	return $self;

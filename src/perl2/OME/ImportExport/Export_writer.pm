@@ -107,18 +107,19 @@ sub accessImage {
     my $status = "Failed to load image id $id";
 
     $image = $session->Factory()->loadObject("OME::Image", $id);
+    $attributes = $image->ImageAttributes();
     return $status
-	unless defined $image;
+	unless defined $image && defined $attributes;
 
     $status = "";
-    $href->{Name}  = $image->Field("name");
-    $href->{BitsPerSample}   = $image->Field("bitsPerPixel");
-    $href->{SizeX} = $image->Field("sizeX");
-    $href->{SizeY} = $image->Field("sizeY");
-    $href->{SizeZ} = $image->Field("sizeZ");
-    $href->{DateTime} = $image->Field("created");
-    $href->{NumWaves} = $image->Field("sizeW");
-    $href->{NumTimes} = $image->Field("sizeT");
+    $href->{Name}  = $image->name();
+    $href->{BitsPerSample}   = $attributes->bits_per_pixel();
+    $href->{SizeX} = $attributes->size_x();
+    $href->{SizeY} = $attributes->size_y();
+    $href->{SizeZ} = $attributes->size_z();
+    $href->{DateTime} = $image->created();
+    $href->{NumWaves} = $attributes->num_waves();
+    $href->{NumTimes} = $attributes->num_times();
 
 
     return $status;
