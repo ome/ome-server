@@ -42,16 +42,22 @@
 
 package org.openmicroscopy.vis.chains;
 
+import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.Connection;
-
+import org.openmicroscopy.vis.ome.CChain;
 import javax.swing.Box;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
+import javax.swing.JList;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.SwingConstants;
+import javax.swing.ListCellRenderer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.awt.Component;
+import java.util.List;
 
 /** 
  * Toolbar for a {@link ChainFrame}. This toolbar contains a "save" button
@@ -71,13 +77,15 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 	
 	protected JComboBox execList;
 	
+	protected ResultFrame frame;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
 	 */
-	public ResultToolBar(CmdTable cmd,Connection connection) {
+	public ResultToolBar(ResultFrame frame,CmdTable cmd,Connection connection) {
 		super();
 		this.cmd=cmd;
+		this.frame = frame;
 		this.connection = connection;
 		
 		Dimension dim = new Dimension(5,0);
@@ -105,18 +113,57 @@ public class ResultToolBar extends JToolBar implements ActionListener{
 		execList.addActionListener(this);
 		execList.setEditable(false);
 		execList.setMaximumSize(execList.getMinimumSize());
+		execList.setRenderer(new ExecutionsRenderer());
 		add(execList);
 		add(Box.createRigidArea(dim));	
 	}
 	
 	
 	public void actionPerformed(ActionEvent e) {
+		CChainExecution exec = (CChainExecution) execList.getSelectedItem();
+		frame.setExecution(exec);
 	}
 	
-	public void updateExecutionChoice(Object item) {
+	public void updateExecutionChoices(CChain chain) {
+		List execs = connection.getDatasetExecutions(chain);
+		Object[] a = new Object[0];
+		a = execs.toArray(a);
+		DefaultComboBoxModel model = new DefaultComboBoxModel(a);
+		execList.setModel(model);
+		// set initial
+		CChainExecution exec = (CChainExecution) a[0];
+		frame.setExecution(exec);
 	}
 }
 
-
+class ExecutionsRenderer  extends JLabel implements ListCellRenderer {
+	
+	public ExecutionsRenderer() {
+		setOpaque(true);
+		setHorizontalAlignment(SwingConstants.LEFT);
+		setVerticalAlignment(SwingConstants.CENTER);
+	}
+	
+	public Component getListCellRendererComponent(JList list,
+			Object value,int index,boolean isSelected,
+				boolean cellHasFocus) {
+			if (value instanceof CChainExecution) {
+				CChainExecution  exec = (CChainExecution) value;
+				//setText(Integer.toString(exec.getID()));
+				setText(exec.getID()+") "+exec.getTimestamp());
+			}
+			else 
+				setText("None");
+			if (isSelected) {
+				setBackground(list.getSelectionBackground());
+				setForeground(list.getSelectionForeground());
+			} else {
+				setBackground(list.getBackground());
+				setForeground(list.getForeground());
+			}
+			 
+			return this;
+	}
+}
 
 
