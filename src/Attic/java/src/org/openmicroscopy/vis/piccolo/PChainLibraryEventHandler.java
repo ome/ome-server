@@ -154,20 +154,20 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		}
 		
 		PNode node  = e.getPickedNode();
-		if (node instanceof PDatasetLabelText) {
+		/*if (node instanceof PDatasetLabelText) {
 			// on a label.
 			PDatasetLabelText label = (PDatasetLabelText) node;
 			label.doSelection();
 
 			e.setHandled(true);
-		}
-		else if (node instanceof PExecutionText) {
+		} next if  was "else if "*/
+		if (node instanceof PExecutionText) {
 			System.err.println("clicked on execution text!");
 			e.setHandled(true);
 		}
 		else if (node instanceof PChainBox) {
 			SelectionState selectionState = SelectionState.getState();
-			System.err.println("calling super.mouseclicked..");
+			System.err.println("selecting a chain");
 		
 			PChainBox cb = (PChainBox) node;
 			selectionState.setSelectedChain(cb.getChain());
@@ -228,9 +228,16 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 			}
 			e.setHandled(true);
 		}
-		else  {
+		else {
 			canvas.clearExecutionList();
-			super.mouseEntered(e);
+			 if (node instanceof PChainBox) {
+				SelectionState selectionState = SelectionState.getState();
+				PChainBox p = (PChainBox)node;
+				selectionState.setRolloverChain(p.getChain());
+			 	e.setHandled(true);
+			 }
+			 else
+				super.mouseEntered(e); 
 		}
 	}
 	
@@ -239,6 +246,9 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		if (node instanceof PSelectableText) {
 			((PSelectableText) node).setHighlighted(false);
 			e.setHandled(true);
+		} else if (node instanceof PChainBox) {
+			SelectionState selectionState = SelectionState.getState();
+			selectionState.setRolloverChain(null);
 		}
 	}
 	
@@ -246,20 +256,25 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		PNode node = e.getPickedNode();
 		
 		System.err.println("chain library popup on "+node);
-		if (!(node instanceof PModule)) {
+		if (node instanceof PModule) {
+			PModule m = (PModule) node;
+			PBufferedNode bn= m.getEnclosingBufferedNode();
+			if (bn  != null) {
+				PBounds b = bn.getBufferedBounds();
+				PCamera camera = canvas.getCamera();
+				camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
+			}
+			e.setHandled(true);
+		}
+		else if (node instanceof PChainBox) {
+			System.err.println("clearing chain box..");
+			SelectionState selectionState = SelectionState.getState();
+			selectionState.setSelectedChain(null);		
+			e.setHandled(true);	
+		}
+		else {
 			super.handlePopup(e);
-			return;
 		}
-		
-		PModule m = (PModule) node;
-		
-		PBufferedNode bn= m.getEnclosingBufferedNode();
-		if (bn  != null) {
-			PBounds b = bn.getBufferedBounds();
-			PCamera camera = canvas.getCamera();
-			camera.animateViewToCenterBounds(b,true,PConstants.ANIMATION_DELAY);
-		}
-		e.setHandled(true);
 	}
 	
  }
