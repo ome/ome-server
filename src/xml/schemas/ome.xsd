@@ -220,10 +220,11 @@
 		<xs:annotation>
 			<xs:documentation>
 				There must be one per channel in the Image, even for a single-plane image.  In OME, Channels (e.g. 'FITC', 'Texas Red', etc) are specified as Logical Channels,
-				And information about how each of them was acquired is stored in the various optional *Ref elements.  Each Logical Channel may be composed of one or more
+				And information about how each of them was acquired is stored in the various optional *Ref elements.  Each Logical Channel is composed of one or more
 				ChannelComponents.  For example, an entire spectrum in an FTIR experiment may be stored in a single Logical Channel with each discrete wavenumber of the spectrum
 				constituting a ChannelComponent of the FTIR Logical Channel.  An RGB image where the Red, Green and Blue components do not reflect discrete probes but are
 				instead the output of a color camera would be treated similarly - one Logical channel with three ChannelComponents in this case.
+				The total number of ChannelComponents for a set of pixels must equal SizeC.
 				The AuxLightSourceRef element is a reference to a LightSource specified in the Instrument element which was used for a technique other than illumination for
 				the purpose of imaging.  For example, a laser used for photobleaching.
 				The SamplesPerPixel attribute is the number of channel components in the logical channel.
@@ -252,6 +253,7 @@
 				<xs:element ref = "FilterRef" minOccurs = "0"/>
 				<xs:element ref = "ChannelComponent" maxOccurs = "unbounded"/>
 			</xs:sequence>
+			<xs:attribute name = "ID" use = "required" type = "LogicalChannelID"/>
 			<xs:attribute name = "Name" use = "required" type = "xs:string"/>
 			<xs:attribute name = "SamplesPerPixel" type = "xs:integer"/>
 			<xs:attribute name = "IlluminationType">
@@ -941,6 +943,11 @@
 			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:Screen)(:\S+)"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name = "LogicalChannelID">
+		<xs:restriction base = "LSID">
+			<xs:pattern value = "(urn:lsid:)?(\S+\.\S+)+(:LogicalChannel)(:\S+)"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name = "PixelTypes">
 		<xs:restriction base = "xs:string">
 			<xs:enumeration value = "bit"/>
@@ -1235,6 +1242,7 @@
 			</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
+			<xs:attribute name = "Pixels" use = "required" type = "PixelsID"/>
 			<xs:attribute name = "ColorDomain" type = "xs:string">
 				<xs:annotation>
 					<xs:documentation>
