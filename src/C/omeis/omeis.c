@@ -324,13 +324,13 @@ struct stat fStat;
 			fstat (myPixels->fd_info , &fStat );
 			myPixels->size_info = fStat.st_size;
 		}
-		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0)) <= 0 )
+		if ((mmap_info = (char *) mmap (NULL, myPixels->size_info, PROT_READ, MAP_SHARED, myPixels->fd_info, 0)) == (char *) -1)
 			return (-3);
 		if (!myPixels->size_rep) {
 			fstat (myPixels->fd_rep , &fStat );
 			myPixels->size_rep = fStat.st_size;
 		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0)) <= 0 )
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ, MAP_SHARED, myPixels->fd_rep, 0)) == (char *) -1)
 			return (-4);
 	}
 
@@ -345,14 +345,14 @@ struct stat fStat;
 			fstat (myPixels->fd_info , &fStat );
 			myPixels->size_info = fStat.st_size;
 		}
-		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0)) <= 0 )
+		if ( (mmap_info = (char *)mmap (NULL, myPixels->size_info, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_info, 0)) == (char *) -1 )
 			return (-7);
 		if (!myPixels->size_rep) {
 			if (fstat (myPixels->fd_rep , &fStat) != 0)
 				return (-8);
 			myPixels->size_rep = fStat.st_size;
 		}
-		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0)) <= 0 )
+		if ( (mmap_rep = (char *)mmap (NULL, myPixels->size_rep, PROT_READ|PROT_WRITE , MAP_SHARED, myPixels->fd_rep, 0)) == (char *) -1 )
 			return (-9);
 	}
 
@@ -550,10 +550,10 @@ pixHeader *head;
 
 
 
-void byteSwap (char *theBuf, size_t length, char bp)
+void byteSwap (unsigned char *theBuf, size_t length, char bp)
 {
 char  tmp;
-char *maxBuf = theBuf+(length*bp);
+unsigned char *maxBuf = theBuf+(length*bp);
 	
 	switch (bp) {
 		case 2:
@@ -607,7 +607,7 @@ pixHeader *head;
 unsigned char bp;
 off_t file_off;
 char *IO_buf;
-char *swap_buf;
+unsigned char *swap_buf;
 unsigned long chunk_size;
 unsigned long written=0;
 
@@ -844,7 +844,7 @@ register float theVal,logOffset=1.0,min=FLT_MAX,max=0.0,sum_i=0.0,sum_i2=0.0,sum
 	thePix = ((char *)myPixels->pixels) + pix_off;
 
 	if (head->bp == 1 && head->isSigned) {
-		sCharP = (unsigned char *) thePix;
+		sCharP = thePix;
 		for (x=0;x<dx;x++) {
 			for (y=0;y<dy;y++) {
 				theVal = (float) *sCharP++;
@@ -1189,7 +1189,7 @@ FILE *infile;
 		return (-1);
 	}
 
-	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) <= 0 ) {
+	if ( (sh_mmap = (char *)mmap (NULL, size, PROT_READ|PROT_WRITE , MAP_SHARED, fd, 0)) == (char *) -1 ) {
 		close (fd);
 		unlink (path);
 		fprintf (stderr,"Couldn't mmap uploaded file %s (Path=%s, ID=%llu)\n",filename,path,ID);
@@ -1253,7 +1253,7 @@ char isBigEndian=1;
 	if ( (fd = open (file_path, O_RDONLY, 0600)) < 0) {
 		return (-1);
 	}
-	if ( (sh_mmap = (char *)mmap (NULL, nPix*bp, PROT_READ, MAP_SHARED, fd, file_offset)) <= 0 ) {
+	if ( (sh_mmap = (char *)mmap (NULL, nPix*bp, PROT_READ, MAP_SHARED, fd, file_offset)) == (char *) 0 ) {
 		close (fd);
 		return (-1);
 	}
@@ -1767,7 +1767,7 @@ char **cgivars=param;
 			HTTP_DoError (method,error_str);
 			return (-1);
 		}
-		if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) <= 0 ) {
+		if ( (sh_mmap = (char *)mmap (NULL, length, PROT_READ, MAP_SHARED, fd, offset)) == (char *) -1 ) {
 			close (fd);
 			sprintf (error_str,"Could not mmap FileID=%llu, offset=%lu, length=%lu",fileID,offset,length);
 			HTTP_DoError (method,error_str);
