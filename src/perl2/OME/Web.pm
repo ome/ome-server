@@ -86,7 +86,6 @@ use CGI;
 use Carp;
 use Carp 'cluck';
 use OME::SessionManager;
-use Apache::Session::File;
 use OME::Web::DefaultHeaderBuilder;
 use OME::Web::DefaultMenuBuilder;
 use OME::Web::DBObjRender;
