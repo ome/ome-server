@@ -424,8 +424,9 @@ sub DBH { my $self = shift; return $self->db_Main(); }
 sub Session { my $self = shift; return $self->{_session}; }
 
 sub __checkClass {
+    my $class = shift;
     logcroak "Malformed class name $class"
-      unless shift =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
+      unless $class =~ /^[A-Za-z0-9_]+(\:\:[A-Za-z0-9_]+)*$/;
 }
 
 # loadObject
