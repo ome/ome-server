@@ -310,7 +310,7 @@ sub importGroup {
     $params->oname($base);
     $params->endian(getEndian($file));
 
-    my $image = ($self->{super})->__newImage($base);
+    my $image = ($self->{super})->__newImage($filename);
     $self->{image} = $image;
     if (!defined($image)) {
 	$file->close();

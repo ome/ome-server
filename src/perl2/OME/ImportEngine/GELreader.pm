@@ -316,7 +316,7 @@ sub importGroup {
 		unless ($status eq "");
 	}
 
-        $image = ($self->{super})->__newImage($base);
+        $image = ($self->{super})->__newImage($filename);
 	$self->{image} = $image;
 
 
