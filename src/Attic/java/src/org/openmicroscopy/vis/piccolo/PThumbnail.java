@@ -42,11 +42,15 @@
 package org.openmicroscopy.vis.piccolo;
 
 import edu.umd.cs.piccolo.util.PBounds;
+import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.nodes.PImage;
+import edu.umd.cs.piccolo.nodes.PText;
 import org.openmicroscopy.vis.ome.CImage;
+import java.awt.Image;
+import java.awt.Font;
 
 /** 
- * A {@link PImage} for displaying a thumbnail of an OME IMAGe
+ * A node for displaying a thumbnail of an OME IMAGe
  *
  * 
  * @author Harry Hochheiser
@@ -54,12 +58,30 @@ import org.openmicroscopy.vis.ome.CImage;
  * @since OME2.0
  */
 
-public class PThumbnail extends PImage implements PBufferedNode {
+public class PThumbnail extends PNode implements PBufferedNode {
 
+	private final static String DEFAULT_LABEL="Thumbnail Unavailable";
+	private final static Font LABEL_FONT = new Font("HELVETICA",Font.BOLD,18);
 	private CImage image;	
+	private PImage imageNode=null;
+	private Image imageData;
+	private PText label=null;
+	
 	
 	public PThumbnail(CImage image) {
-		super(image.getImageData(),false);
+		super();
+		this.image=image;
+		imageData = image.getImageData();
+		if (imageData != null) {
+			imageNode = new PBufferedImage(image.getImageData());
+			addChild(imageNode);
+		}
+		else {
+			label = new PText(DEFAULT_LABEL);
+			label.setFont(LABEL_FONT);
+			addChild(label);
+			image.setThumbnail(this);
+		}
 	}
 	/**
 	 * @return
@@ -74,5 +96,14 @@ public class PThumbnail extends PImage implements PBufferedNode {
 				b.getY()-PConstants.BORDER,
 				b.getWidth()+2*PConstants.BORDER,
 				b.getHeight()+2*PConstants.BORDER);
+	}
+	
+	// note that this only gets called when the imageData was initially null,
+	// so we know that we don't have to check if label is null, etc.
+	public void notifyImageComplete() {
+		removeChild(label);
+		imageData = image.getImageData();
+		imageNode = new PBufferedImage(image.getImageData());
+		addChild(imageNode);
 	}
 }
