@@ -92,7 +92,11 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
-		_nullAnalysisSTs=> {'Thumbnail' => undef, 'DisplayChannel'=> undef, 'DisplayOptions'=> undef, 'DisplayROI'=> undef, 
+		_nullAnalysisSTs=> {
+			'Thumbnail'      => undef,
+			'DisplayChannel' => undef,
+			'DisplayOptions' => undef,
+			'DisplayROI'     => undef, 
 			},
 			
 	};
@@ -393,19 +397,25 @@ sub importObject ($$$$) {
 	my $LSID = $node->getAttribute('ID');
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
+	$parentDBID = undef if $granularity eq 'G';
+	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
+	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$node->nodeName()};
+
 #
 # FIXME (IGG):  Only allow previously seen objects to be resolved if there is
 # no module_execution associated with the object.
 # This is because we have no way of merging attributes from different module executions.
-	if (defined $theObject and not defined $module_execution) {
+	$theObject = undef if $module_execution;
+# Images get re-imported even though they have no module_execution.
+#	$theObject = undef if $node->nodeName() eq 'Image';
+
+	if (defined $theObject) {
 		$docIDs->{$LSID} = $theObject->id();
 		logdbg "debug", ref ($self)."->importObject: Object ID '$LSID' exists in DB!";
 		return $theObject;
 	}
 
 	logdbg "debug", ref ($self)."->importObject:   Building new Object $LSID.";
-	$parentDBID = undef if $granularity eq 'G';
-	$module_execution = undef if $granularity eq 'G' or $granularity eq 'D';
 
 	my $session	   = $self->{session};
 	my $factory	   = $self->{factory};
@@ -417,27 +427,31 @@ sub importObject ($$$$) {
 
 	my ($objectType,$isAttribute,$objectData,$refCols) = $self->getObjectTypeInfo($node,$parentDBID);
 	logdbg "debug", ref ($self)."->importObject:   Got info - object type $objectType.";
-	$module_execution = undef if exists $self->{_nullAnalysisSTs}->{$objectType};
 
 	# Process references in this object.
 	# If the reference was to an object already read from the document, resolve it.
 	# If not, check if its already in the DB
 	# If not, store the object for later resolution in a local hash.
 	my %unresolvedRefs;
-	my ($objField,$theRef);
+	my ($objField,$theRef,$refObject);
 	while ( ($objField,$theRef) = each %$refCols ) {
 		if (exists $docIDs->{$theRef}) {
 			$objectData->{$objField} = $docIDs->{$theRef};
 			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
 				$objectData->{$objField}." in document.";
-		} elsif ($theObject = $lsid->getLocalObject ($theRef)) {
-			$objectData->{$objField} = $theObject->id();
-			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
-				$objectData->{$objField}." in DB.";
 		} else {
-			$objectData->{$objField} = undef;
-			$unresolvedRefs{$objField} = $theRef;
-			logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef NOT resolved.";
+			$refObject = $lsid->getLocalObject ($theRef);
+			# FIXME (IGG): references to pixels within Image objects do not get resolved because they will be re-made each time.
+			$refObject = undef if $objField eq 'pixels_id' and $objectType eq 'OME::Image';
+			if ($refObject) {
+				$objectData->{$objField} = $refObject->id();
+				logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
+					$objectData->{$objField}." in DB.";
+			} else {
+				$objectData->{$objField} = undef;
+				$unresolvedRefs{$objField} = $theRef;
+				logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef NOT resolved.";
+			}
 		}
 	}
 	
