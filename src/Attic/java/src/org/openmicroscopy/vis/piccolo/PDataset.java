@@ -84,29 +84,25 @@ public class PDataset extends PGenericBox {
 		this.dataset = dataset;
 		this.connection = connection;
 		dataset.setNode(this);
-		calcArea();
+		addImages();
 	}
 
-	private void calcArea() {
-		removeAllChildren();
+	private void addImages() {
 		x=HGAP;
 		y=VGAP;
 		//	draw label
-		 nameLabel = new PText(dataset.getLabel());
+		nameLabel = new PText(dataset.getLabel());
 		  
-		 addChild(nameLabel);
-		 PBounds b = nameLabel.getBounds();
-		 area += b.getWidth()*b.getHeight();
-		 int sz = dataset.getImageCount();
-
+		addChild(nameLabel);
+		nameLabel.setOffset(x,y);
+		y+= nameLabel.getHeight()+VGAP;
+		
 		
 		Collection images = dataset.getCachedImages(connection);
 		Iterator iter = images.iterator();
 		double maxHeight = 0;
 		//Vector nodes = new Vector();
 		
-		nameLabel.setOffset(x,y);
-		y+= nameLabel.getHeight()+VGAP;
 		float imHeight=0;
 		float imWidth =0;
 		//draw them
@@ -114,46 +110,8 @@ public class PDataset extends PGenericBox {
 			CImage image = (CImage) iter.next();
 			PThumbnail thumb = new PThumbnail(image);
 			addChild(thumb);
-			imHeight  = (float) thumb.getGlobalFullBounds().getHeight();
-			imWidth = (float) thumb.getGlobalFullBounds().getWidth();
-		
-			if (imHeight > maxHeight)
-				maxHeight = imHeight;
-		}
-		
-	
-		// space them
-		maxHeight += VGAP;
-		
-		iter = getChildrenIterator();
-		while (iter.hasNext()) {
-			Object obj = iter.next();
-			if (obj instanceof PThumbnail) {
-				PThumbnail p = (PThumbnail) obj;
-			    b = p.getGlobalFullBounds();
-				double imagearea = (b.getWidth()+HGAP)*maxHeight;
-				area += imagearea;
-			}
-		}
-		
-		Collection chains = dataset.getChains(connection);
-		
-		if (chains.size() > 0) {
-			chainLabel =new PText("Executions: ");
-			chainLabel.setFont(PConstants.LABEL_FONT);
-			chainLabel.setPickable(false);
-			chainLabel.setScale(LABEL_SCALE);
-			addChild(chainLabel);
-			b = chainLabel.getGlobalFullBounds();
-			double clarea =(b.getWidth()+HGAP)*(b.getHeight()+VGAP);
-			area += clarea;
-			
-			chainLabels = new PChainLabels(chains);
-			addChild(chainLabels);
-			area += chainLabels.getArea();
-		}
-			
-	}
+		}				
+	} 
 	
 	public void layoutImages() {
 		x=HGAP;
@@ -201,6 +159,15 @@ public class PDataset extends PGenericBox {
 		
 		double fullWidth=0;
 		if (chains.size() > 0) {
+			chainLabel =new PText("Executions: ");
+			chainLabel.setFont(PConstants.LABEL_FONT);
+			chainLabel.setPickable(false);
+			chainLabel.setScale(LABEL_SCALE);
+			addChild(chainLabel);
+	
+			chainLabels = new PChainLabels(chains);
+			addChild(chainLabels);
+	
 			chainLabel.setOffset(x+HGAP,y);
 			PBounds clbounds = chainLabel.getGlobalFullBounds();
 			
@@ -226,7 +193,11 @@ public class PDataset extends PGenericBox {
 	}
 	
 	public double getContentsArea() {
-		return area;
+		int count = dataset.getImageCount();
+		if (count == 0) 
+			return 0;
+		else 
+			return Math.log(dataset.getImageCount()+1);
 	}
 	
 	private void displayDatasetSizeText(int size) {
