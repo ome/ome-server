@@ -102,7 +102,6 @@ sub exportFile {
 		
 	my $session = $self->{session};
 	my $parser  = $self->{_parser};
-	my $insert = OME::ImportExport::InsertFiles->new( session => $session, parser => $parser );
 
  	# Apply Stylesheet
  	my $xslt = XML::LibXSLT->new();
@@ -189,7 +188,6 @@ sub buildDOM {
 #	$chainExporter->buildDOM($objects,%flags);
 
 	# Export semantic type definitions only if ExportSTDs is set
-$flags{ExportHistory} = 0;
 	if ($flags{ExportHistory}) {
 		logdbg "debug", ref ($self).'->buildDOM:  Getting a Data History Exporter';
 		my $historyExporter = $self->historyExporter();
