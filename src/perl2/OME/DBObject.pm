@@ -296,6 +296,30 @@ sub writeObject {
     $self->dbi_commit();
 }
 
+=head2 dissociateObject
+
+	$dbObject->disassociateObject('objectField');
+
+This instance method disassociates an associated object (from a 'has a' relationship).  
+The parameter passed is the field name that is used to acess the associated object.
+
+=cut
+
+
+sub dissociateObject {
+    my $self = shift;
+    my $field = shift;
+    my $object = $self->$field();
+    my $objType = ref ($object);
+    return unless defined $objType and $objType;
+    my $primary = $objType->primary_column();
+    return unless defined $primary and $primary;
+
+	my $nullObject = $objType->construct({$primary => undef});
+
+	$self->$field ($nullObject);
+}
+
 
 =head1 AUTHOR
 
