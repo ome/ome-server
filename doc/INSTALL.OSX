@@ -5,6 +5,8 @@ Ilya Goldberg (igg@nih.gov)
 April, 2004.
 
 OS X 10.3 is a much more complete and modern system than 10.2.  Although OME will work on 10.2, 10.3 is reccomended.  The installation instructions are essentially the same.
+N.B.:  The OME installation on OS X makes limited use of fink.  Our intention is to eliminate this dependency on fink as soon as it practical.
+It is *NOT* recommended to use fink for anything other than what is specified in this document.  This is especially true for the postgres installation!
 
 * Install the Developer tools that came with 10.3
 * Fix the broken mod_perl that came with the system:
@@ -25,6 +27,12 @@ tar -zxvf libxslt-1.0.32.tar.gz ; cd libxslt-1.0.32.tar.gz
 ./configure
 make ; sudo make install
 
+* Install expat:
+curl -O http://openmicroscopy.org/packages/source/expat-1.95.7.tar.gz
+tar -zxvf expat-1.95.7.tar.gz ; cd expat-1.95.7
+./configure
+make ; sudo make install
+
 * Install libtiff:
 curl -O http://openmicroscopy.org/packages/source/tiff-v3.5.7-OSX-LZW.tar.gz
 tar -zxvf tiff-v3.5.7-OSX-LZW.tar.gz ; cd tiff-v3.5.7-OSX-LZW
@@ -33,7 +41,7 @@ make ; sudo make install
 
 * Download and Install fink (http://fink.sourceforge.net/)
 * Use fink to install gd:
-sudo apt-get install libpng
+sudo apt-get install libpng     *** libpng-1.2.6rc4-config works ***
 sudo apt-get install libjpeg
 sudo apt-get install freetype
 sudo apt-get install gd
