@@ -138,14 +138,23 @@ sub getGroups {
     my ($groups, $infoHash) = $self->{super}->__getRegexGroups($fref);
 
 	# process grouped DICOM images first
-    foreach my $name (keys (%$groups)) {
+	my ($name,$group);
+    while ( ($name,$group) = each %$groups ) {
     	next unless defined($name);
     	my @groupList;
     	my $maxZ = $infoHash->{$name}->{maxZ};
 
 		for (my $z = 0; $z <= $maxZ; $z++) {
-			my $file = $groups->{$name}[$z][0][0];
-			next unless ( defined($file) );
+			$file = $group->[$z][$c][$t]->{File};
+			die "Uh, file is not defined at (z,c,t)=($z,$c,$t)!\n"
+				unless ( defined($file) );
+			
+			# The other keys of this hash give access to the actual
+			# sub-patterns matched by the RE:
+			# $zString = $group->[$z][$c][$t]->{Z};
+			# $cString = $group->[$z][$c][$t]->{C};
+			# $tString = $group->[$z][$c][$t]->{T};
+			# Note that undef strings are converted to ''.
 
 			$file->open('r');
 			$file->setCurrentPosition(128,0);
@@ -157,28 +166,31 @@ sub getGroups {
 			push (@groupList, $file);
 			
 			# delete the file from the hash, so it's not processed by other importers
-			delete $fref->{ $file };
+			delete $fref->{ $file->getFilename() };
 		}
-		push (@groupList, $name); # last elment of list is just a name
-    	push (@outlist, \@groupList);
+    	push (@outlist, {
+    		Files => \@groupList,
+    		BaseName => $name
+    	})
+    		if ( scalar(@groupList) > 0 );
     }
     
-    foreach my $key (keys %$fref) {
-    	my $file = $fref->{$key};
-		my @groupList;
-		
+    foreach my $file ( values %$fref ) {    			
         $file->open('r');
         $file->setCurrentPosition(128,0);
         my $buf = $file->readData(4);
         $file->close();
         
       	next unless ($buf eq 'DICM');  
+    	my $filename = $file->getFilename();
+    	my $basename = $self->__nameOnly($filename);
       	
         # it's in the DICOM format, so remove from input list, put on output list
-        delete $fref->{$key};
-        push (@groupList, $file);
-        push (@groupList, $file->getFilename());
-    	push (@outlist, \@groupList);
+		delete $fref->{ $filename };
+    	push (@outlist, {
+    		Files => [$file],
+    		BaseName => $basename
+    	});
     }
     
     $self->{groups} = \@outlist;
@@ -208,16 +220,17 @@ database transactions.
 =cut
 
 sub importGroup {
-    my ($self, $groupList, $callback) = @_;
+    my ($self, $group, $callback) = @_;
     
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
-	my $file = $$groupList[0];
+    my $groupList = $group->{Files};
+    
+    my $file = $groupList->[0];
 	my $params = $self->{params};
 
     # use the file group's basename as the filename for the group
-	my $filename = $$groupList[scalar @$groupList-1];
-    ($self->{super})->__nameOnly($filename);
+	my $basename = $group->{BaseName};
     
 	# open file and read DICOM tags
 	my $dicom_tags = OME::ImportEngine::DICOM->new(); 
@@ -262,7 +275,7 @@ sub importGroup {
     $xref->{'Image.ImageType'} = "DICOM";
     $xref->{'Image.SizeX'} = $dicom_tags->value('Columns');
     $xref->{'Image.SizeY'} = $dicom_tags->value('Rows');
-	$xref->{'Image.SizeZ'} = scalar @$groupList - 1; # remember, last groupList is base filename
+	$xref->{'Image.SizeZ'} = scalar @$groupList;
 	$xref->{'Image.NumWaves'} = 1;
 	$xref->{'Image.NumTimes'} = $dicom_tags->value('NumberOfFrames') or 
 			$xref->{'Image.NumTimes'} = 1;
@@ -276,7 +289,7 @@ sub importGroup {
     $params->row_size($xref->{'Image.SizeX'} * ($params->byte_size));
 
     					 
-    my $image = ($self->{super})->__newImage($filename);
+    my $image = ($self->{super})->__newImage($basename);
     $self->{image} = $image;
     
     # pack together & store info the input file
@@ -306,7 +319,7 @@ sub importGroup {
     my ($i,$t,$z);
 	my ($sizeX, $sizeY, $sizeT, $isSigned, $new_transfer_syntax);
 	for ($z = 0; $z < $xref->{'Image.SizeZ'}; $z++) {
-		$file = $$groupList[$z];
+		$file = shift( @$groupList );
 		
 		# read DICOM tags of new file
 		$dicom_tags->fill($file,$debug) unless $z == 0;

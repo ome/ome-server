@@ -249,6 +249,7 @@ sub __storeDisplayOptions {
 							{ Pixels => $pixels_attr } ); 
 	
 	if( @channelComponents ) { 
+			no warnings "uninitialized";
 			@channelComponents = sort { $b->LogicalChannel()->EmissionWavelength() <=> $a->LogicalChannel()->EmissionWavelength() } 
 			@channelComponents;
 			@channelOrder = map( $_->Index(), @channelComponents ); 

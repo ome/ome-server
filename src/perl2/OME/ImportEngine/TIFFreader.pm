@@ -86,6 +86,7 @@ package OME::ImportEngine::TIFFreader;
 use Class::Struct;
 use strict;
 use File::Basename;
+use Log::Agent;
 use OME::ImportEngine::Params;
 use OME::ImportEngine::ImportCommon;
 use OME::ImportEngine::TIFFUtils;
@@ -176,29 +177,44 @@ sub getGroups {
     my $fref = shift;
     my @outlist;
     my $xref;
-    
+	my $file;
+
     # Group files with recognized patterns together
     # Sort them by channels, z's, then timepoints
     my ($groups, $infoHash) = $self->__getRegexGroups($fref);
 
-    foreach my $name ( keys (%$groups) ) {
+	my ($name,$group);
+    while ( ($name,$group) = each %$groups ) {
     	next unless defined($name);
-    	my @groupList;
     	my $maxZ = $infoHash->{ $name }->{ maxZ };
 		my $maxT = $infoHash->{ $name }->{ maxT };
 		my $maxC = $infoHash->{ $name }->{ maxC };
+		my @groupList;
 	
 		# XXX: The semantics here are strange, previously this was "<=" but the
 		# attribute names start with "max." I'm not sure *exactly* what was
 		# intended but "<" seems to be correct. [Bug #328]
 		#
 		# -Chris <callan@blackcat.ca>
-		for (my $t = 0; $t < $maxT; $t++) {
-    		for (my $z = 0; $z < $maxZ; $z++) {
-    			for (my $c = 0; $c < $maxC; $c++) {
-    				my $file = $groups->{ $name }[$z][$t][$c];
-    				next unless ( defined($file) );
+		#
+		# XXX: This was strange because of a lack of sorting - the string literal
+		# from the RE match was used as an array index resulting in "_w1" going
+		# into c index 1 instead of 0.
+		# -Ilya <igg@nih.gov>
+		for (my $z = 0; $z < $maxZ; $z++) {
+    		for (my $c = 0; $c < $maxC; $c++) {
+    			for (my $t = 0; $t < $maxT; $t++) {
+    				$file = $group->[$z][$c][$t]->{File};
+    				die "Uh, file is not defined at (z,c,t)=($z,$c,$t)!\n"
+    					unless ( defined($file) );
     				
+					# The other keys of this hash give access to the actual
+					# sub-patterns matched by the RE:
+    				# $zString = $group->[$z][$c][$t]->{Z};
+    				# $cString = $group->[$z][$c][$t]->{C};
+    				# $tString = $group->[$z][$c][$t]->{T};
+					# Note that undef strings are converted to ''.
+
     				# skip this image unless it's a tiff
     				next unless ( defined(verifyTiff($file)) );
     				
@@ -213,31 +229,35 @@ sub getGroups {
 					# hash is keyed off of filenames. [Bug #328]
 					#
 					# -Chris <callan@blackcat.ca>
+					logdbg "debug",  "deleting ".$file->getFilename()." in group $name\n";
 					delete $fref->{ $file->getFilename() };
     			}
     		}
     	}
-    	push (@groupList, $name);
-    	push (@outlist, \@groupList) if ( scalar(@groupList) > 0 );
+    	push (@outlist, {
+    		Files => \@groupList,
+    		BaseName => $name
+    	})
+    		if ( scalar(@groupList) > 0 );
     }
     
     # Now look at the rest of the files in the list to see if you have any other tiffs.
-    foreach my $file ( values %$fref ) {
-    	my @groupList;
-    	
+    foreach $file ( values %$fref ) {    	
     	# skip this image unless it's a tiff
     	next unless (defined(verifyTiff($file)));
     	
     	my $filename = $file->getFilename();
     	my $basename = $self->__nameOnly($filename);
     	
-    	push (@groupList, $file);
-    	push (@groupList, $basename);
     	$xref->{ $file }->{ 'Image.SizeZ' } = 1;
     	$xref->{ $file }->{ 'Image.NumTimes' } = 1;
     	$xref->{ $file }->{ 'Image.NumWaves' } = 1;
-    	push (@outlist, \@groupList);
-    	delete $fref->{ $file };
+    	push (@outlist, {
+    		Files => [$file],
+    		BaseName => $basename
+    	});
+		logdbg "debug",  "deleting ".$file->getFilename()." in singleton group $basename\n";
+		delete $fref->{ $file->getFilename() };
     }
     
 #     foreach my $element ( @outlist )
@@ -289,12 +309,14 @@ database transactions.
 =cut
   
 sub importGroup {
-    my ($self, $groupList, $callback) = @_;
+    my ($self, $group, $callback) = @_;
 
     my $session = $self->Session();
     my $factory = $session->Factory();
     
-    my $file = $$groupList[0];
+    my $groupList = $group->{Files};
+    
+    my $file = $groupList->[0];
 	$file->open('r');
 	my $tag0 =  readTiffIFD($file, 0);
 	$file->close();
@@ -317,8 +339,8 @@ sub importGroup {
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}){
 		$xref->{ $file }->{'Image.NumWaves'} = 3;
 	}
-	
-	my $basename = pop @$groupList;
+
+	my $basename = $group->{BaseName};
 	my $image = $self->__newImage($basename);
 	$self->{image} = $image;
 
@@ -348,7 +370,7 @@ sub importGroup {
 	
 	# Do a check for RGB.  If it's RGB, each file has 3 channels.
 	if ($tag0->{TAGS->{PhotometricInterpretation}}->[0] == PHOTOMETRIC->{RGB}) {
-		foreach my $file (@$groupList) {
+		foreach $file (@$groupList) {
 			eval
 			{
 				$pix->convertPlaneFromTIFF($file, 0, 0, 0);
@@ -367,12 +389,12 @@ sub importGroup {
 	# This isn't RGB, so import it normally.  The files are processed in this way because
 	# of the sorting done in the getGroups method.
 	} else {
-		for (my $t = 0; $t < $maxT; $t++) {
-			for (my $z = 0; $z < $maxZ; $z++) {
-    			for (my $c = 0; $c < $maxC; $c++) {
-    				eval
-    				{
-						my $file = shift( @$groupList );
+		for (my $z = 0; $z < $maxZ; $z++) {
+			for (my $c = 0; $c < $maxC; $c++) {
+    			for (my $t = 0; $t < $maxT; $t++) {
+    				eval {
+						$file = shift( @$groupList );
+						logdbg "debug",  "shifted ".$file->getFilename()."\n";
 						$pix->convertPlaneFromTIFF($file, $z, $c, $t);						
 					};
 					
@@ -413,8 +435,8 @@ sub getSHA1 {
     my $self = shift;
     my $grp = shift;
 
-    my $fn = $grp->[0];
-    my $sha1 = $fn->getSHA1();
+    my $file = $grp->{Files}->[0];
+    my $sha1 = $file->getSHA1();
 
     return $sha1;
 }

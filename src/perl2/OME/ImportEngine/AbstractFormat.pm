@@ -68,6 +68,7 @@ use OME::Tasks::PixelsManager;
 
 use fields qw(_session _module_execution);
 use File::Basename;
+use Log::Agent;
 
 =head1 CONTRACT
 
@@ -296,127 +297,128 @@ sub __getRegexGroups {
     # store results in @groups
     # an entry in @groups should look something like:
     # 	$group_entry[$filePatternNumber][$z][$t][$c] = $file;
-    foreach my $filenamePattern ( @filenamePatternList )
+	my $filenamePattern;
+	my %regexes;
+    foreach $filenamePattern ( @filenamePatternList )
     {
     	# this naively assumes that the regular expression we get is safe :(
-    	# see ImportExport/ModuleImport.pm for some regexp validity/safety checking
+    	# see ImportExport/ModuleImport.pm for some regex validity/safety checking
     	# Do validity checking of the regular expression.
-    	my $regexp = $filenamePattern->RegEx();
-    	eval { "" =~ /$regexp/; };
-		die "Invalid regular expression pattern: $regexp\n" if $@;
-		
-		# TODO: Put safety checks here
-		#
-		#
-		#
+    	my $regex = $filenamePattern->RegEx();
+    	eval { "" =~ /$regex/; };
+		die "Invalid regular expression pattern: $regex\n" if $@;
     	
     	# There has to be a name in the file or you won't be able to group.
     	# Die if there isn't a name!
-		die "No name in filePattern!" unless $filenamePattern->BaseName() and $filenamePattern->BaseName() > 0;
-		
-		# Each file represents at least one Z, T, and C.
-		$maxZ = 1;
-    	$maxT = 1;
-    	$maxC = 1;
-    	# Arrays of the Z's, T's, and C's already taken from this batch of files.
-    	# Each element is unique (there aren't 2 elements that have the same value).
-    	# This provides a way to count how many z's, t's and c's there are in this group.
-    	my (@z_list, @t_list, @c_list);
+    	my $base = $filenamePattern->BaseName();
+		die "No name in filePattern!" unless $base and $base > 0;
 
-		foreach my $file ( values %file_list_copy )
-		{
-			my $filename = $file->getFilename();
-			if( $filename =~ m/$regexp/ )
-			{	
-				my $name = "";
-				my $z = 0;
-				my $t = 0;
-				my $c = 0;
-				eval ('$name = $'.$filenamePattern->BaseName());
-				die "When grouping files, Name capture failed with error: $@\n" if $@;
-			
-				if ( defined($filenamePattern->TheZ()) && $filenamePattern->TheZ() > 0 )
-				{
-					# Grab the Z from the file based on the regular expression
-					eval ('$z = $'.$filenamePattern->TheZ());
-					die "When grouping files, Z capture failed with error: $@\n" if $@;
-					
-					# Now search the list of z's for a match to the current z.  If
-					# there's a match, don't push the new z onto the array.
-					# Reset $maxZ to the number of elements in the list.
-					my $dupFound = 0;
-					foreach my $zAlreadyThere (@z_list)
-					{
-						if ($z == $zAlreadyThere)
-						{
-							$dupFound = 1;
-							last;
-						}
-					}
-					push (@z_list, $z) if ($dupFound == 0);
-					$maxZ = scalar(@z_list);
-				}
-				if ( defined($filenamePattern->TheT()) && $filenamePattern->TheT() > 0 )
-				{
-					# Grab the T from the file based on the regular expression
-					eval ('$t = $'.$filenamePattern->TheT());					
-					die "When grouping files, T capture failed with error: $@\n" if $@;
-					
-					# Now search the list of t's for a match to the current t.  If
-					# there's a match, don't push the new t onto the array.
-					# Reset $maxT to the number of elements in the list.
-					my $dupFound = 0;
-					foreach my $tAlreadyThere (@t_list)
-					{
-						if ($t == $tAlreadyThere)
-						{
-							$dupFound = 1;
-							last;
-						}
-					}
-					push (@t_list, $t) if ($dupFound == 0);
-					$maxT = scalar(@t_list);
-				}
-				if ( defined($filenamePattern->TheC()) && $filenamePattern->TheC() > 0 )
-				{
-					# Grab the C from the file based on the regular expression
-					eval ('$c = $'.$filenamePattern->TheC());			
-					die "When grouping files, C capture failed with error: $@\n" if $@;
-					
-					# Now search the list of c's for a match to the current c.  If
-					# there's a match, don't push the new c onto the array.
-					# Reset $maxC to the number of elements in the list.
-					my $dupFound = 0;
-					foreach my $cAlreadyThere (@c_list)
-					{
-						if ($c == $cAlreadyThere)
-						{
-							$dupFound = 1;
-							last;
-						}
-					}
-					push (@c_list, $c) if ($dupFound == 0);
-					$maxC = scalar(@c_list);					
-				}
-				
-				# Add the file to %groups
-				$groups{ $name }[$z][$t][$c] = $file;
-
-				# Add the maxZ, C, and T to the infoHash, specified by the basename of the image
-				$infoHash->{ $name }->{ maxZ } = $maxZ;
-				$infoHash->{ $name }->{ maxC } = $maxC;
-				$infoHash->{ $name }->{ maxT } = $maxT;
-
-				# Remove $file from %file_list_copy to prevent it from being picked up by other filenamePatterns
-				delete $file_list_copy{ $file };
-			} # end outer if
+		$regexes{$regex} = {
+			Base => $base,
+			RE   => qr/$regex/,
+			Z    => $filenamePattern->TheZ(),
+			C    => $filenamePattern->TheC(),
+			T    => $filenamePattern->TheT(),
 		}
-		
-		
 	}
-	#$infoHash->{ numPatterns } = $numFilenamePatterns;
 	
-	# TODO: Check to make sure the files are in series.
+	# $patterns{$regex}->{$basename}->{Z}->{$z}
+	# $patterns{$regex}->{$basename}->{C}->{$c}
+	# $patterns{$regex}->{$basename}->{T}->{$t}
+	# Then we'll sort the Z C T lexically to get
+	# $groups{ $basename }[$z][$t][$c] = $file;
+	my %patterns;
+	my ($regex,$name);
+	my ($Z,$C,$T);
+
+	
+	my $file;
+
+	foreach $file ( values %file_list_copy )
+	{
+		my $filename = $file->getFilename();
+		my $parts;
+		while ( ($regex,$parts) = each %regexes ) {
+			logdbg "debug",  "Checking $filename for $regex\n";
+			if( $filename =~ $parts->{RE}) {
+				eval ('$name = $'.$parts->{Base});
+				die "When grouping files, Name capture failed with error: $@\n" if $@;
+				logdbg "debug",  "\t got name $name\n";
+				next unless $name;
+
+				($Z,$C,$T) = (undef,undef,undef);
+				if ( $parts->{Z} ) {
+					# Grab the Z from the file based on the regular expression
+					eval ('$Z = $'.$parts->{Z});
+					die "When grouping files, Z capture failed with error: $@\n" if $@;
+					logdbg "debug",  "\t got Z $Z\n";
+				}
+				if ( $parts->{C} ) {
+					# Grab the C from the file based on the regular expression
+					eval ('$C = $'.$parts->{C});
+					die "When grouping files, C capture failed with error: $@\n" if $@;
+					logdbg "debug",  "\t got C $C\n";
+				}
+				if ( $parts->{T} ) {
+					# Grab the T from the file based on the regular expression
+					eval ('$T = $'.$parts->{T});
+					die "When grouping files, T capture failed with error: $@\n" if $@;
+					logdbg "debug",  "\t got T $T\n";
+				}
+
+				$Z = '' unless defined $Z;
+				$C = '' unless defined $C;
+				$T = '' unless defined $T;
+				$patterns{$regex}->{$name}->{Z}->{$Z} = 1;
+				$patterns{$regex}->{$name}->{C}->{$C} = 1;
+				$patterns{$regex}->{$name}->{T}->{$T} = 1;
+				die "$filename matches more than one pattern.  ".
+					"Previous pattern: Name ($name), Z ($Z), C ($C), T ($T)\n"
+					 if exists $patterns{$regex}->{$name}->{File}->{$Z.':-:'.$C.':-:'.$T};
+				$patterns{$regex}->{$name}->{File}->{$Z.':-:'.$C.':-:'.$T} = $file;
+				
+			}
+		} # end going through the regexes
+	} # end going through the files
+	
+	my $pattern;
+	my @Zs;
+	my @Cs;
+	my @Ts;
+	my ($z,$c,$t);
+	foreach $regex (values %patterns) {
+		while ( ($name,$pattern) = each %$regex) {
+			@Zs = sort keys %{$pattern->{Z}};
+			@Cs = sort keys %{$pattern->{C}};
+			@Ts = sort keys %{$pattern->{T}};
+			$infoHash->{ $name }->{ maxZ } = scalar (@Zs);
+			$infoHash->{ $name }->{ maxC } = scalar (@Cs);
+			$infoHash->{ $name }->{ maxT } = scalar (@Ts);
+			logdbg "debug",  "Group name $name Zs: @Zs Cs: @Cs Ts: @Ts\n";
+
+			($z,$c,$t) = (0,0,0);
+			foreach $Z (@Zs) {
+				$c=0;
+				foreach $C (@Cs) {
+					$t=0;
+					foreach $T (@Ts) {
+						$groups{ $name }->[$z][$c][$t] = {
+							File => $pattern->{File}->{$Z.':-:'.$C.':-:'.$T},
+							Z    => $Z,
+							C    => $C,
+							T    => $T,
+						};
+						logdbg "debug",  "\tFile ".
+							$pattern->{File}->{$Z.':-:'.$C.':-:'.$T}->getFilename().
+							", pattern $name (Z,C,T)=($Z,$C,$T) at z[$z],c[$c],t[$t]\n";
+						$t++;
+					}
+					$c++;
+				}
+				$z++
+			}
+		}
+	}
 	
     return (\%groups, $infoHash);
 }
@@ -502,7 +504,7 @@ sub __touchOriginalFile {
     my $factory = $session->Factory();
     my $file_mex = OME::Tasks::ImportManager->getOriginalFilesMEX();
 
-    print STDERR "Touch '$format' $file\n";
+    logdbg "debug",  "Touch '$format' $file\n";
 
     return OME::Tasks::PixelsManager->
       createOriginalFileAttribute($file,$format,$file_mex);
