@@ -91,6 +91,9 @@
 			<xsl:attribute name = "Group">
 				<xsl:value-of select = "OME:GroupRef/@ID"/>
 			</xsl:attribute>
+			<xsl:attribute name = "DefaultPixels">
+				<xsl:value-of select = "OME:CustomAttributes/OME:Pixels [1] /@ID"/>
+			</xsl:attribute>
 			<xsl:apply-templates select = "OME:Description" mode = "OptionalAttribute"/>
 			<xsl:apply-templates select = "OME:DatasetRef" mode = "CopyRefs"/>
 			<xsl:element name = "CustomAttributes">
