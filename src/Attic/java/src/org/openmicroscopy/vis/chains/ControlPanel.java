@@ -306,12 +306,12 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	
 	
-	public void valueChanged(ListSelectionEvent e) {
+	public synchronized void valueChanged(ListSelectionEvent e) {
 		
 	/*	System.err.println("got an event with value changed..");
 		System.err.println("reentrant is "+ reentrant);
 		System.err.println("value adjusting is "+e.getValueIsAdjusting());*/ 
-		if ( e.getValueIsAdjusting() == true) // or reentrant == true 
+		if ( e.getValueIsAdjusting() == true || reentrant == true) // or reentrant == true 
 			return;
 		Object obj = e.getSource();
 		//System.err.println("value changed source is "+obj);
@@ -408,6 +408,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void selectionChanged(SelectionEvent e) {
 
+		reentrant = true;
 		SelectionState selectionState = SelectionState.getState();
 		selectionState.removeSelectionEventListener(this);
 		datasetList.removeListSelectionListener(this);
@@ -432,6 +433,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		projList.addMouseListener(this);
 		
 		selectionState.addSelectionEventListener(this);
+		reentrant = false;
+	}
+	
+	public int getEventMask() {
+		return SelectionEvent.SET_PROJECT;
 	}
 }
 
