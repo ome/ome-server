@@ -482,7 +482,9 @@
 				<xsl:value-of select = "OME:Email"/>
 			</xsl:attribute>
 			<xsl:apply-templates select = "OME:Institution" mode = "OptionalAttribute"/>
-			<xsl:apply-templates select = "OME:OMEName" mode = "OptionalAttribute"/>
+			<xsl:attribute name = "Group">
+				<xsl:value-of select = "OME:GroupRef/@ID [1]"/>
+			</xsl:attribute>
 		</xsl:element>
 		<xsl:apply-templates select = "OME:GroupRef" mode = "MakeMapRefs"/>
 	</xsl:template>
