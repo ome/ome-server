@@ -107,24 +107,14 @@ sub __detaintPaths {
 		# Settle the trailing "/" if it exists
 		$_ = File::Spec->canonpath($_);
 
-		my @dirs;
-
-		# If it's a file, cleanse it of it's fileness we only care about dirs
-		if (-f $_) {
-			my ($vol, $dir, $file_name) = File::Spec->splitpath($_);
-			# De-taint of file being specified
-			$_ = $dir;
-			@dirs = File::Spec->splitdir($dir);
-		} else {
-			@dirs = File::Spec->splitdir($_);
-		}
+		my @parts = File::Spec->splitdir($_);
 		
 		# First checkpoint (evil characters/sequences in the path)
 		if ($_ =~ /\.\.\/|\||\\|\;|\:/) {
 			push (@bad_paths, $_);
 			next;
 		# Second checkpoint (path obviously not below the home dir)
-		} elsif (scalar(@dirs) < $home_path_len) {
+		} elsif (scalar(@parts) < $home_path_len) {
 			push (@bad_paths, $_);
 			next;
 		# Third checkpoint (path is not a child of homedir)
@@ -327,6 +317,21 @@ sub __getQueueBody {
 
 	my $body = $q->p({class => 'ome_title', align => 'center'}, 'Import Images');
 
+	# Rebuild importq
+	if ($action eq 'add') {
+		@importq = $self->__processQueue(\@importq, \@add_selected, undef);
+
+		foreach (@add_selected) {
+			$body .= $q->p({-class => 'ome_info'}, "Added: '$_' to the import queue.\n");
+		}
+	} elsif ($action eq 'remove') {
+		@importq = $self->__processQueue(\@importq, undef, \@q_selected);
+
+		foreach (@q_selected) {
+			$body .= $q->p({-class => 'ome_info'}, "Removed: '$_' from the import queue.\n");
+		}
+	}
+
 	# If we're running using the FTP style de-taint our paths
 	if ($STYLE == FTP_STYLE) {
 		my ($good_paths, $bad_paths);
@@ -360,21 +365,6 @@ sub __getQueueBody {
 		}
 
 		@importq = @$good_paths;
-	}
-
-	# Rebuild importq
-	if ($action eq 'add') {
-		@importq = $self->__processQueue(\@importq, \@add_selected, undef);
-
-		foreach (@add_selected) {
-			$body .= $q->p({-class => 'ome_info'}, "Added: '$_' to the import queue.\n");
-		}
-	} elsif ($action eq 'remove') {
-		@importq = $self->__processQueue(\@importq, undef, \@q_selected);
-
-		foreach (@q_selected) {
-			$body .= $q->p({-class => 'ome_info'}, "Removed: '$_' from the import queue.\n");
-		}
 	}
 
 	# Table generator
