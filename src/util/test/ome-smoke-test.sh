@@ -129,6 +129,7 @@ echo "------------------------------------------------------------" >> $LOG_FILE
 T_START=`date +%s`
 su -l $OME_ADMIN -c "perl $SCRIPT_DIR/import.pl $OME_ADMIN $OME_PASS $IMAGE_DIR/*"  >> $LOG_FILE 2>&1
 T_STOP=`date +%s`
+DO_ERROR=0
 #
 # Get images
 #
@@ -136,7 +137,25 @@ IMPORT_IMAGES=`su -l $OME_ADMIN -c "psql -qtc 'select count(name) from images' $
 IMPORT_IMAGES=${IMPORT_IMAGES:='0'}
 if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	then echo "`date` Smoke Test Failed. Imported $IMPORT_IMAGES images, expected $EXPECT_IMAGES " >> $LOG_FILE ;
-	echo "Tasks table:"  >> $LOG_FILE ;
+	DO_ERROR=1;
+fi;
+# Get any unfinished tasks
+STATES=`su -l $OME_ADMIN -c "psql -qtc 'select state from tasks' $TEST_DB"` 2> /dev/null
+UNFINISHED=0
+for STATE in $STATES ;
+	do if test $STATE != 'FINISHED' ;
+		then UNFINISHED=1 ;
+	fi ;
+done
+if test $UNFINISHED -gt 0 ;
+	then echo "`date` Smoke Test Failed. Unfinished tasks " >> $LOG_FILE ;
+	DO_ERROR=1;
+fi;
+
+
+# Report error (unfinished tasks or unexpected number of images)
+if test $DO_ERROR -gt 0 ;
+	then echo "Tasks table:"  >> $LOG_FILE ;
 	echo "------------" >> $LOG_FILE ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from tasks' -d $TEST_DB" >> $LOG_FILE ;
 	echo "Images table:" >> $LOG_FILE ;
@@ -144,13 +163,13 @@ if test $IMPORT_IMAGES -ne $EXPECT_IMAGES ;
 	su -l $OME_ADMIN -c "psql -qc 'select * from images' -d $TEST_DB" >> $LOG_FILE ;
 	# Kill all the PIDs listed in the tasks table
 	PID=`su -l $OME_ADMIN -c "psql -qtc 'select process_id from tasks' $TEST_DB"` 2> /dev/null ;
-	kill $PID ;
+	kill -9 $PID ;
 	/usr/sbin/apachectl graceful  > /dev/null 2>&1 ;
 	mv -f /etc/ome-install.store-bak /etc/ome-install.store ;
 	ome admin data restore -a $DB_BACKUP  > /dev/null 2>&1 ;
 	su -l $OME_ADMIN -c "dropdb $TEST_DB" > /dev/null 2>&1 ;
 	if test "$MAIL_TO" ;
-		then $MAIL_PROGRAM"`date` OME Install failed" $MAIL_TO < $LOG_FILE ;
+		then $MAIL_PROGRAM"`date` OME import failed" $MAIL_TO < $LOG_FILE ;
 	fi;
 	PATH=$OLD_PATH ;
 	export PATH ;
