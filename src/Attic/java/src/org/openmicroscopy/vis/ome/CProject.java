@@ -81,5 +81,7 @@ public class CProject extends RemoteProject {
 		return datasetHash.contains(d);
 	}
 	
-	
+	public HashSet getDatasetSet() {
+		return new HashSet(datasetHash);
+	}
 }
