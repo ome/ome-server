@@ -1,7 +1,7 @@
 # OME/Tasks/HierarchyExport.pm
 # This module is used for exporting a list of objects to an XML hierarchy governed by the OME-CA schema.
 
-# Copyright (C) 2002 Open Microscopy Environment
+# Copyright (C) 2003 Open Microscopy Environment
 # Author:  Ilya G. Goldberg <igg@nih.gov>
 #
 #    This library is free software; you can redistribute it and/or
@@ -187,41 +187,7 @@ sub buildDOM {
 				my ($feature, $featureID);
 				$feature = $object->feature();
 				$featureID = $feature->id();
-				if (not exists $Features->{$featureID}) {
-					$target = $feature;
-					$targetID = $featureID;
-					$Features->{$targetID}->{node} = $self->Feature2doc($target);
-					$Features->{$targetID}->{object} = $target;
-
-					# Features can contain other features, so we have to back all the way out of this CA's parent
-					# until the feature's parent is undefined, building parent features all the way.
-					my $parent = $target->parent_feature();
-					my $parentID;
-					while ($parent) {
-						$parentID = $parent->id();
-						$targetID = $target->id();
-						if (not exists $Features->{$parentID}) {
-							logdbg "debug", ref ($self)."->buildDOM:  Making new Parent feature $parentID.";
-							$Features->{$parentID}->{node} = $self->Feature2doc($parent);
-							$Features->{$parentID}->{object} = $parent;
-						}
-						logdbg "debug", ref ($self)."->buildDOM:  Adding Parent feature $parentID.";
-						$Features->{$parentID}->{node}->appendChild ($Features->{$targetID}->{node});
-						$target = $parent;
-						$parent = $parent->parent_feature();
-					}
-					
-					# The ultimate parent of a feature is an Image, so we have to make that too.
-					my $image = $feature->image();
-					my $imageID = $image->id();
-					$targetID = $target->id();
-					if (not exists $Images->{$imageID}) {
-						$Images->{$imageID}->{node} = $self->Image2doc ($image);
-						$Images->{$imageID}->{object} = $image;
-					}
-					# Add the top-most feature to the image.
-					$Images->{$imageID}->{features}->{$targetID} = $Features->{$targetID};
-				}
+				$self->Feature2doc($feature) or logdie ref ($self)."->buildDOM:  Couldn't create a Feature element.";
 				if (not exists $Features->{$featureID}->{CAs}) {
 					$Features->{$featureID}->{CAs}->{node} = $self->newCAnode ($Features->{$featureID}->{node});
 				}
@@ -368,6 +334,13 @@ sub doc {
 sub Project2doc {
 my ($self, $project) = @_;
 
+	return undef unless defined $project;
+	my $Projects = $self->{_Projects};
+	my $projectID = $project->id();
+	if (exists $Projects->{$projectID}) {
+		return $Projects->{$projectID}->{node};
+	}
+
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Project');
@@ -379,6 +352,9 @@ my ($self, $project) = @_;
 	$element->setAttribute( 'Group' , $lsid->getLSID ($project->group()) );
 	logdbg "debug", ref ($self)."->Project2doc:  Adding Project element.";
 	
+	$Projects->{$projectID}->{node} = $element;
+	$Projects->{$projectID}->{object} = $project;
+
 	return $element;
 	
 }
@@ -389,6 +365,13 @@ my ($self, $project) = @_;
 # Returns: Dataset element
 sub Dataset2doc {
 my ($self, $dataset) = @_;
+
+	return undef unless defined $dataset;
+	my $Datasets = $self->{_Datasets};
+	my $datasetID = $dataset->id();
+	if (exists $Datasets->{$datasetID}) {
+		return $Datasets->{$datasetID}->{node};
+	}
 
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
@@ -407,7 +390,10 @@ my ($self, $dataset) = @_;
 # N.B.:  This element has optional multiple Project elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Project', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Dataset2doc:  Adding Dataset element.";
-	
+
+	$Datasets->{$datasetID}->{node} = $element;
+	$Datasets->{$datasetID}->{object} = $dataset;
+
 	return $element;
 }
 
@@ -418,11 +404,17 @@ my ($self, $dataset) = @_;
 sub Image2doc {
 my ($self, $image) = @_;
 
+	return undef unless defined $image;
+	my $Images = $self->{_Images};
+	my $imageID = $image->id();
+	if (exists $Images->{$imageID}) {
+		return $Images->{$imageID}->{node};
+	}
+
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Image');
-#  <Image ID="123.456.3.123.123" Name="P1W1S1" CreationDate="1988-04-07T18:39:09" Description="This is an Image">
-#    <Ref Name="Dataset" ID="123.456.2.123.123"/>
+
 	$element->setAttribute( 'ID' , $lsid->getLSID ($image) );
 	$element->setAttribute( 'Name' , $image->name() );
 	$element->setAttribute( 'CreationDate' , $image->created() );
@@ -432,6 +424,11 @@ my ($self, $image) = @_;
 # N.B.:  This element has optional multiple Dataset elements as 'Ref' child elements.
 # These children should be added by calling $self->addRefNode ($object, 'Dataset', $parent) with this node as $parent
 	logdbg "debug", ref ($self)."->Image2doc:  Adding Image element.";
+
+	$Images->{$imageID}->{node} = $element;
+	$Images->{$imageID}->{object} = $image;
+
+
 	return $element;
 
 }
@@ -440,18 +437,46 @@ my ($self, $image) = @_;
 # Feature2doc
 # Parameters: Feature object
 # Returns: Feature element
-sub Feature2doc {
+sub Feature2doc ($) {
 my ($self, $feature) = @_;
+
+	return undef unless defined $feature;
+
+	my $Features = $self->{_Features};
+	my $featureID = $feature->id();
+	if (exists $Features->{$featureID}) {
+		return $Features->{$featureID}->{node};
+	}
 
 	my $DOM = $self->doc();
 	my $lsid = $self->lsidResolver();
 	my $element = $DOM->createElement('Feature');
+	my $Images = $self->{_Images};
+
 	$element->setAttribute( 'ID' , $lsid->getLSID ($feature) );
 	$element->setAttribute( 'Name' , $feature->name() );
 	$element->setAttribute( 'Tag' , $feature->tag() );
 	logdbg "debug", ref ($self)."->Feature2doc:  Adding Feature element.";
+
+	$Features->{$featureID}->{node} = $element;
+	$Features->{$featureID}->{object} = $feature;
+	
+	if ( $feature->parent_feature() ) {
+		my $parent = $self->Feature2doc ($feature->parent_feature());
+		$parent->appendChild ($element);
+	} else {
+		# The ultimate parent of a feature is an Image, so we have to make that too.
+		my $image = $feature->image();
+		my $imageID = $image->id();
+		if (not exists $Images->{$imageID}) {
+			$Images->{$imageID}->{node} = $self->Image2doc ($image);
+			$Images->{$imageID}->{object} = $image;
+		}
+		# Add the top-most feature to the image.
+		$Images->{$imageID}->{features}->{$featureID} = $Features->{$featureID};
+	}
+
 	return $element;
-# N.B.:  This element has optional multiple 'Feature' child elements.
 }
 
 # newCAnode
