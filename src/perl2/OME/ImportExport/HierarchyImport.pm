@@ -308,8 +308,8 @@ sub processDOM {
 		my $image = $object;
 		my $imageID = $image->id();
 		
-		$display_options->Pixels($image->DefaultPixels())
-			if defined $display_options and not defined $display_options->Pixels();
+		( $display_options->Pixels($image->DefaultPixels()) and $display_options->storeObject() )
+			if (defined $display_options and not defined $display_options->Pixels());
 		# Import Features
 		$self->importFeatures ($imageID, undef, $node);
 	}
@@ -318,8 +318,8 @@ sub processDOM {
 	
 	# Turn row gessing back to what it was before.
 	OME::SemanticType->GuessRows($oldRowGuessing);
-	
-	return { $self->{_importedObjects}, $importDataset } ;
+
+	return ( $self->{_importedObjects}, $importDataset ) ;
 }
 
 
@@ -417,11 +417,8 @@ sub importObject ($$$$) {
 	my $theObject;
 	my $lsid = $self->{_lsidResolver};
 	my $LSID = $node->getAttribute('ID');
-# FIXME: Prevent multiple imports of objects w/ ill formed LSIDs
-# check for validly formed LSID, if it is validly formed look for it
-# locally. if it ain't, do a search on it's data and try to pull up a
-# local object. if neither of those work, go ahead and import
-	logdie ref ($self) . "->importObject: Attempt to import an attribute without an ID.\n".$node->toString()
+ 
+	logdie ref ($self) . "->importObject: Attempt to import something without an ID.\n".$node->toString()
 		unless $LSID;
 	logdbg "debug", ref ($self)."->importObject: Trying to resolve '$LSID' locally";
 	$theObject = $lsid->getLocalObject ($LSID);
@@ -513,20 +510,20 @@ sub importObject ($$$$) {
 			$objField = $_->{Field};
 			$_->{Object}->$objField ($objID);
 		}
-		delete $docRefs->{$LSID};
+ 		delete $docRefs->{$LSID};
 	}
 
 	
 	if( $lsid->checkLSID($LSID) ) {
 		$lsid->setLSID ($theObject, $LSID);
 	} else {
-		# Not a proper LSID: store this obj. Later, verify this object should be imported
+		# Not a proper LSID: store this obj. Later, verify if this object should be imported
 		$self->{_malformedLSIDs}->{$LSID}->{object} = $theObject;
 	}
-	# store refs to malformed LSIDs
+	# If this object has a ref to a malformed LSIDs, record it. (Index on the malformed LSID)
 	while ( ($objField,$theRef) = each %$refCols ) {
-		$self->{_malformedLSIDs}->{$theRef}->{refs}->{$theObject} = $objField
-			if ( not defined $lsid->checkLSID($theRef) );
+		push (@{ $self->{_malformedLSIDs}->{$theRef}->{refsToObject} }, {Object=>$theObject, Field=>$objField})
+			unless defined $lsid->checkLSID($theRef);
 	}
 	$self->addObject ($theObject, $LSID);
 	return ($theObject);

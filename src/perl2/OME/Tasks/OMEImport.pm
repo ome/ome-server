@@ -199,7 +199,6 @@ sub processDOM {
     my ($importedObjects, $importDataset ) = $hierarchyImporter->processDOM($root);
 
     # Parse the data History
-
     my $historyImporter = OME::ImportExport::DataHistoryImport->
       new(session         => $self->{session},
           _parser         => $self->{_parser},
@@ -242,7 +241,7 @@ sub detectAndMarkDuplicateObjects {
 	logdbg "debug", ref ($self)."->detectDuplicateObjects: Looking for objects in the DB identical to imported objects with malformed LSIDs";
 
 	foreach my $entry ( values %{ $hierarchyImporter->{_malformedLSIDs} } ) {
-		my ( $object, $refs2Obj ) = ($entry->{object}, $entry->{refs} );
+		my ( $object, $refs2Obj ) = ($entry->{object}, $entry->{refsToObject} );
 		if( UNIVERSAL::isa($object,"OME::SemanticType::Superclass") ){
 			logdbg "debug", ref ($self)."->detectDuplicateObjects: examining $object";
 			my $criteria = $object->getDataHash();
@@ -260,8 +259,10 @@ sub detectAndMarkDuplicateObjects {
 				my $new_referent = $matches[0];
 				logdbg "debug", ref ($self)."->detectDuplicateObjects: found matching object ($new_referent, ".$new_referent->id.")";
 				# We found an existing attr that matches. Change references to the duplicate obj to the existing db object.
-				while( my ($obj, $field) = each %$refs2Obj ) {
+				foreach (@{ $refs2Obj }) {
+					my ($obj, $field) = ( $_->{Object}, $_->{Field} );
 					$obj->$field( $new_referent );
+					$obj->storeObject()
 				}
 			}
 			push(@dupObjs, $object);
