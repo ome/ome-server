@@ -41,10 +41,10 @@ sub getPageBody {
 	my $cgi     = $self->CGI();
 	my $session = $self->Session();
 
-	my $datasetManager      = new OME::Tasks::DatasetManager($session);
+	my $datasetManager      = OME::Tasks::DatasetManager->new($session);
 	$self->{datasetManager} = $datasetManager;
-	$self->{htmlFormat}     = new OME::Web::Helper::HTMLFormat;
-	my $jscriptFormat=new OME::Web::Helper::JScriptFormat;
+	$self->{htmlFormat}     = OME::Web::Helper::HTMLFormat->new();
+	my $jscriptFormat       = OME::Web::Helper::JScriptFormat->new();
 
 	my $body;
 	$body .= $jscriptFormat->popUpImage();    	     
