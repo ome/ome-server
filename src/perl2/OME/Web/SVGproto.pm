@@ -528,11 +528,17 @@ my $CGI_optionStr  = '&Path='.$Path;
 			xlink:href="/JavaScript/SVG_GUI/button.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVG_GUI/AntiZoomAndPan.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVG_GUI/skinLibrary.js" />
 	<!--            Backend classes         -->
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/OMEimage.js" />
 	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
 			xlink:href="/JavaScript/SVGviewer/scale.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/overlay.js" />
+	<script type="text/ecmascript" a3:scriptImplementation="Adobe"
+			xlink:href="/JavaScript/SVGviewer/stats.js" />
     <script type="text/ecmascript" a3:scriptImplementation="Adobe"><![CDATA[
 ENDSVG
 
@@ -545,11 +551,14 @@ $SVG .= <<ENDSVG;
 		var scalePopupList, panePopupList;
 		var RGBpopupListBox, BWpopupListBox;
 		var redButton, blueButton, greenButton, RGB_BWbutton;
+		var infoButton;
 		var azap = new AntiZoomAndPan();
 
 	// backend components
 		var image;
 		var scale;
+		var stats;
+		var overlay;
 		
 	// constants & references
 		// Z and T are dims of z and t
@@ -565,10 +574,10 @@ $SVG .= <<ENDSVG;
 		var theZ = Math.floor(Z/2), theT=0;
 
 
-        function init(e) {
-            if ( window.svgDocument == null )
-                svgDocument = e.ownerDocument;
-
+		function init(e) {
+			if ( window.svgDocument == null )
+				svgDocument = e.ownerDocument;
+				
 		// initialize back end
 			image = new OMEimage($ImageID,$Wavelengths,$Stats,$Dims,"$CGI_URL","$CGI_optionStr");
 			image.realize( svgDocument.getElementById("image") );
@@ -581,27 +590,25 @@ $SVG .= <<ENDSVG;
 		// initialize frontend
 			controlToolBox = new toolBox(
 				50, 30, 200, 150,
-				svgDocument.getElementById("menuBar").firstChild.data,
-				svgDocument.getElementById("hideControl").firstChild.data,
-				svgDocument.getElementById("GUIbox").firstChild.data
+				skinLibrary["menuBar"],
+				skinLibrary["hideControl"],
+				skinLibrary["GUIbox"]
 			);
-			controlToolBox.setLabel(90,12,"Controls")
+			controlToolBox.setLabel(90,12,"Primary Controls")
 			controlToolBox.getLabel().setAttributeNS(null, "text-anchor", "middle");
 			
 			multiToolBox = new multipaneToolBox(
 				55, 265, 200, 100,
-				svgDocument.getElementById("menuBar").firstChild.data,
-				svgDocument.getElementById("hideControl").firstChild.data,
-				'<g>' +
-				'	<rect width="{\$width}" height="1000" fill="lightslategray" opacity="0.5"/>' +
-				'</g>'
+				skinLibrary["menuBar17"],
+				skinLibrary["XhideControl"],
+				skinLibrary["tallGUIbox"]
 			);
 			
 			zSlider = new Slider(
 				30, 120, 100, -90,
 				updateTheZ,
-				svgDocument.getElementById("zSliderBody").firstChild.data,
-				svgDocument.getElementById("zSliderThumb").firstChild.data
+				skinLibrary["zSliderBody"],
+				skinLibrary["zSliderThumb"]
 			);
 			zSlider.setLabel(0,-102,"");
 			zSlider.getLabel().setAttribute( "fill", "white" );
@@ -617,23 +624,23 @@ $SVG .= <<ENDSVG;
 			// wavelength to channel popupLists
 			redPopupList = new popupList(
 				-50, 0, fluors, updateRedWavelength, 1,
-				svgDocument.getElementById("redAnchorText").firstChild.data,
-				svgDocument.getElementById("redItemBackgroundText").firstChild.data,
-				svgDocument.getElementById("redItemHighlightText").firstChild.data
+				skinLibrary["redAnchorText"],
+				skinLibrary["redItemBackgroundText"],
+				skinLibrary["redItemHighlightText"]
 			);
 
 			greenPopupList = new popupList(
 				0, 0, fluors, updateGreenWavelength, 0,
-				svgDocument.getElementById("greenAnchorText").firstChild.data,
-				svgDocument.getElementById("greenItemBackgroundText").firstChild.data,
-				svgDocument.getElementById("greenItemHighlightText").firstChild.data
+				skinLibrary["greenAnchorText"],
+				skinLibrary["greenItemBackgroundText"],
+				skinLibrary["greenItemHighlightText"]
 			);
 
 			bluePopupList = new popupList(
 				50, 0, fluors, updateBlueWavelength, 0,
-				svgDocument.getElementById("blueAnchorText").firstChild.data,
-				svgDocument.getElementById("blueItemBackgroundText").firstChild.data,
-				svgDocument.getElementById("blueItemHighlightText").firstChild.data
+				skinLibrary["blueAnchorText"],
+				skinLibrary["blueItemBackgroundText"],
+				skinLibrary["blueItemHighlightText"]
 			);
 			
 			bwPopupList = new popupList(
@@ -643,47 +650,67 @@ $SVG .= <<ENDSVG;
 			// set up channel on/off buttons
 			redButton = new button( 
 				Math.round(redPopupList.x + redPopupList.width/2), -13, turnRedOnOff,
-				svgDocument.getElementById("redButtonOn").firstChild.data,
-				svgDocument.getElementById("redButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonRadius5Highlight").firstChild.data
+				skinLibrary["redButtonOn"],
+				skinLibrary["redButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
 			);
 			greenButton = new button( 
 				Math.round(greenPopupList.x + greenPopupList.width/2), -13, turnGreenOnOff,
-				svgDocument.getElementById("greenButtonOn").firstChild.data,
-				svgDocument.getElementById("greenButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonRadius5Highlight").firstChild.data
+				skinLibrary["greenButtonOn"],
+				skinLibrary["greenButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
 			);
 			blueButton = new button(
 				Math.round(bluePopupList.x + bluePopupList.width/2), -13, turnBlueOnOff,
-				svgDocument.getElementById("blueButtonOn").firstChild.data,
-				svgDocument.getElementById("blueButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonRadius5Highlight").firstChild.data
+				skinLibrary["blueButtonOn"],
+				skinLibrary["blueButtonOff"],
+				skinLibrary["blankButtonRadius5Highlight"]
 			);
 			
 			// set up RGB to grayscale button
 			RGB_BWbutton = new button(
 				110, 115, switchRGB_BW,
-				svgDocument.getElementById("RGB_BWButtonOn").firstChild.data,
-				svgDocument.getElementById("RGB_BWButtonOff").firstChild.data,
-				svgDocument.getElementById("blankButtonRadius13Highlight").firstChild.data
+				skinLibrary["RGB_BWButtonOn"],
+				skinLibrary["RGB_BWButtonOff"],
+				skinLibrary["blankButtonRadius13Highlight"]
 			);
+			
+			statsButton = new button(
+				190, 120, showStats,
+				'<text fill="black" text-anchor="end">Stats</text>',
+				null,
+				'<text fill="white" text-anchor="end">Stats</text>'
+			);
+			scaleButton = new button(
+				190, 130, showScale,
+				'<text fill="black" text-anchor="end">Scale</text>',
+				null,
+				'<text fill="white" text-anchor="end">Scale</text>'
+			);
+			overlayButton = new button(
+				190, 140, showOverlay,
+				'<text fill="black" text-anchor="end">Overlay</text>',
+				null,
+				'<text fill="white" text-anchor="end">Overlay</text>'
+			);
+				
 			
 			// z & t increment buttons
 			tUpButton = new button(
 				182, 30, tUp,
-				svgDocument.getElementById("triangleRight").firstChild.data
+				skinLibrary["triangleRight"]
 			)
 			tDownButton = new button(
 				178, 30, tDown,
-				svgDocument.getElementById("triangleLeft").firstChild.data
+				skinLibrary["triangleLeft"]
 			)
 			zUpButton = new button(
 				15, 106, zUp,
-				svgDocument.getElementById("triangleUp").firstChild.data
+				skinLibrary["triangleUp"]
 			)
 			zDownButton = new button(
 				15, 110, zDown,
-				svgDocument.getElementById("triangleDown").firstChild.data
+				skinLibrary["triangleDown"]
 			)
 				
 		// realize the GUI elements in the appropriate containers
@@ -719,19 +746,32 @@ $SVG .= <<ENDSVG;
 			controlToolBox.getGUIbox().appendChild( BWpopupListBox );
 			bwPopupList.realize( BWpopupListBox );
 			
+			statsButton.realize( controlToolBox.getGUIbox() );
+			scaleButton.realize( controlToolBox.getGUIbox() );
+			overlayButton.realize( controlToolBox.getGUIbox() );
+			
 			// toolbox to house all other interfaces
 			multiToolBox.realize(controls);
-			//	These panes to come from DB eventually
+			
+			// set up panes
+// These panes to come from DB eventually?
+			stats = new Statistics( Stats, fluors, updateStatsWave );
+			multiToolBox.addPane( stats.buildSVG(), "Stats" );
 			scale = new Scale(image, updateBlackLevel, updateWhiteLevel, scaleWaveChange);
-			multiToolBox.addPane( scale.buildSVG(), "Scale");
-			multiToolBox.addPaneText(
-				svgDocument.getElementById("info").firstChild.data, "Info" );
-			multiToolBox.addPane( null, "Other");
-			// set up multiToolBox pane control popupList
-			panePopupList = new popupList(
-				0, 0, multiToolBox.getPaneIndexes(), updatePane );
-			panePopupList.realize( multiToolBox.getMenuBar() );
 			scale.updateScale(theT);
+			multiToolBox.addPane( scale.buildSVG(), "Scale");
+			overlay = new Overlay();
+			multiToolBox.addPane( overlay.buildSVG(), "Overlay");
+
+			// finish setup & make controller
+			multiToolBox.closeOnMinimize(true);
+			panePopupList = new popupList(
+				0, 0, multiToolBox.getPaneIndexes(), updatePane, 0,
+				skinLibrary["popupListAnchorUpperLeftRoundedLightslategray"],
+				skinLibrary["popupListBackgroundLightskyblue"],
+				skinLibrary["popupListHighlightAquamarine"]
+			);
+			panePopupList.realize( multiToolBox.getMenuBar() );
 
 
             azap.appendNode(controls); 
@@ -741,8 +781,8 @@ $SVG .= <<ENDSVG;
 			setTimeout( "greenPopupList.setSelection(1)", 0 );
 			setTimeout( "bluePopupList.setSelection(1)", 0 );
 			setTimeout( "bwPopupList.setSelection(0)", 0 );
-			setTimeout( "panePopupList.setSelection(0)", 0 );
 			var RGBon = image.getRGBon(); 
+			setTimeout( "multiToolBox.hide()", 0);
 			setTimeout( "redButton.setState(" + (RGBon[0]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "greenButton.setState(" + (RGBon[1]==1 ? "true" : "false") + ")", 0 );
 			setTimeout( "blueButton.setState(" + (RGBon[2]==1 ? "true" : "false") + ")", 0 );
@@ -751,9 +791,9 @@ $SVG .= <<ENDSVG;
 			tSlider.setValue(theT/T*100,true);
 
 //			image.setPreload(1);
-		}
-	
 
+		}
+		
 ENDSVG
 
 # more static stuff
@@ -789,6 +829,7 @@ $SVG .= <<'ENDSVG';
 			
 			image.updatePic(theZ,theT);
 			scale.updateScale(theT);
+			stats.updateStats(theT);
 		}
 		function tUp() {
 			var data = (theT< T-1 ? theT+1 : theT)
@@ -849,6 +890,18 @@ $SVG .= <<'ENDSVG';
 			image.setDisplayRGB_BW(val);
 		}
 		
+		function showOverlay() {
+			panePopupList.setSelectionByValue("Overlay");
+		}
+
+		// Stats stuff
+		function showStats() {
+			panePopupList.setSelectionByValue("Stats");
+		}
+		function updateStatsWave(wavenum) {
+			stats.updateStats(theT);
+		}
+
 		// Scale stuff
 		function updateBlackLevel(val) {
 			// has scale been initialized?
@@ -916,175 +969,11 @@ $SVG .= <<'ENDSVG';
 		function scaleWaveChange(val) {
 			scale.updateScale(theT);
 		}
+		function showScale() {
+			panePopupList.setSelectionByValue("Scale");
+		}
 		
     ]]></script>
-	<defs>
-		<text id="menuBar"><![CDATA[
-			<g>
-				<g opacity="0.8">
-					<rect width="{$width}" height="15" fill="lawngreen" rx="10" ry="5"/>
-					<rect y="5" width="{$width}" height="10" fill="lawngreen"/>
-				</g>
-			</g>
-		]]></text>
-		<text id="hideControl"><![CDATA[
-			<g>
-				<ellipse rx="5" ry="5" fill="ghostwhite" stroke="forestgreen" stroke-width="1">
-					<animate id="anim1" attributeName="ry" from="5" to="2" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
-					<animate id="anim2" attributeName="ry" from="2" to="5" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
-				</ellipse>
-			</g>
-		]]></text>
-		<text id="GUIbox"><![CDATA[
-			<g style="font-size:10;">
-				<linearGradient id="GUIboxBackground" x1="0" y1="0" x2="0" y2="100%">
-					<stop offset="5%" stop-color="green" />
-					<stop offset="95%" stop-color="palegreen" />
-				</linearGradient>
-				<rect width="{$width}" height="{$height}" fill="url(#GUIboxBackground)" opacity="0.7"/>
-				<rect width="{$width}" height="{$height}" fill="none" stroke="black" stroke-width="3" opacity="1"/>
-
-				<animateTransform attributeName="transform" type="rotate" from="0" to="-90" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
-				<animateTransform attributeName="transform" type="rotate" from="-90" to="0" dur="0.3s" fill="freeze" repeatCount="0" restart="whenNotActive" begin="indefinite"/>
-				<set attributeName="display" to="inline" begin="indefinite"/>
-				<set attributeName="display" to="none" begin="indefinite"/>
-			</g>
-		]]></text>
-		<text id="zSliderBody"><![CDATA[
-			<g stroke="rgb(80,80,80)" transform="rotate(90)">
-				<g id="xyPlane" transform="scale(.6) skewX(-45)">
-					<polyline points=
-						"-27,0 -25,-3 -30,0 -25,3 -27,0 27,0 25,3 30,0 25,-3 27,0"/>
-					<text x="17" y="10" style="font-size:10;">x</text>
-					<polyline points=
-						"0,-27 -3,-25 0,-30 3,-25 0,-27 0,27 3,25 0,30 -3,25 0,27"/>
-					<text x="5" y="-17" style="font-size:10;">y</text>
-				</g>
-				<g id="zAxis">
-					<polyline points="0,0 0,-100 -4,-92 0,-95 4,-92 0,-100"/>
-					<rect x="-7" y="-100" width="14" height="100" opacity="0"/>
-					<text x="-9" y="-82" style="font-size:12;" fill="black" stroke="none">z</text>
-				</g>
-			</g>
-		]]></text>
-		<text id="zSliderThumb"><![CDATA[
-			<g>
-				<rect x="-1" y="-7" width="2" height="14" fill="black"/>
-				<rect x="-3" y="-7" width="6" height="14" fill="red" opacity="0">
-					<set attributeName="opacity" to="0.4" begin="mouseover"
-						end="mouseout"/>
-				</rect>
-			</g>
-		]]></text>
-		<text id="redAnchorText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,70,70)"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="redItemBackgroundText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="0" fill="rgb(255,70,70)"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-				<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-				<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-			</rect>
-		]]></text>
-		<text id="redItemHighlightText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="rgb(255,130,130)"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="greenAnchorText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="mediumseagreen"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="greenItemBackgroundText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="0" fill="mediumseagreen"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-				<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-				<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-			</rect>
-		]]></text>
-		<text id="greenItemHighlightText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="lime"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="blueAnchorText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="cornflowerblue"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="blueItemBackgroundText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="0" fill="cornflowerblue"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}">
-				<animate attributeName="height" from="0" to="{$height}" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-				<animate attributeName="height" from="{$height}" to="0" dur="0.1s"
-					fill="freeze" begin="indefinite"/>
-			</rect>
-		]]></text>
-		<text id="blueItemHighlightText"><![CDATA[
-			<rect x="-2" width="{$width + 4}" height="{$height}" fill="aqua"
-				rx="{Math.round($height/2)}" ry="{Math.round($height/2)}"/>
-		]]></text>
-		<text id="redButtonOn"><![CDATA[
-			<circle cy="5" r="5" fill="pink" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="redButtonOff"><![CDATA[
-			<circle cy="5" r="5" fill="darkred"/>
-		]]></text>
-		<text id="greenButtonOn"><![CDATA[
-			<circle cy="5" r="5" fill="lightgreen" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="greenButtonOff"><![CDATA[
-			<circle cy="5" r="5" fill="darkgreen"/>
-		]]></text>
-		<text id="blueButtonOn"><![CDATA[
-			<circle cy="5" r="5" fill="lightblue" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="blueButtonOff"><![CDATA[
-			<circle cy="5" r="5" fill="darkblue"/>
-		]]></text>
-		<text id="RGB_BWButtonOn"><![CDATA[
-			<g>
-				<circle cy="13" r="13" fill="white" stroke="black" stroke-width="1"/>
-				<text fill="black" text-anchor="middle" dominant-baseline="middle" 
-					y="17">B/W</text>
-			</g>
-		]]></text>
-		<text id="RGB_BWButtonOff"><![CDATA[
-			<g>
-				<circle cy="13" r="13" fill="white" stroke="black" stroke-width="1"/>
-				<text fill="black" text-anchor="middle" dominant-baseline="middle" 
-					y="17">RGB</text>
-			</g>
-		]]></text>
-		<text id="blankButtonRadius13Highlight"><![CDATA[
-			<circle cy="13" r="13" fill="white" stroke="none" opacity="0"/>
-		]]></text>
-		<text id="blankButtonRadius5Highlight"><![CDATA[
-			<circle cy="5" r="5" fill="white" stroke="none" opacity="0"/>
-		]]></text>
-		<text id="info"><![CDATA[
-			<g>
-				<text y="1em">Information:</text>
-				<text id="info1" x="30" y="2em"> </text>
-				<text id="info2" x="30" y="3em"> </text>
-			</g>
-		]]></text>
-		<text id="triangleRight"><![CDATA[
-			<path d="M 0,4 l 6,-4 l -6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="triangleLeft"><![CDATA[
-			<path d="M 0,4 l -6,-4 l 6,-4 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="triangleDown"><![CDATA[
-			<path d="M 4,0 l -4,6 l -4,-6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>
-		]]></text>
-		<text id="triangleUp"><![CDATA[
-			<path d="M 4,0 l -4,-6 l -4,6 Z" fill="ghostwhite" stroke="black" stroke-width="1"/>
-		]]></text>
-	</defs>
 	<g id="image">
 	</g>
 	<g id="overlays">
