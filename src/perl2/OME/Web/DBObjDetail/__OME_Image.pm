@@ -72,14 +72,14 @@ sub _takeAction {
 	}
 
 	if( $q->param( 'action' ) eq 'SaveAnnotation' ) {
-		OME::Tasks::ImageManager->writeImageAnnotation(
+		OME::Tasks::ImageManager->writeAnnotation(
 			$image, { Content => $q->param( 'annotation' ) }
 		);
 		$self->Session()->commitTransaction();
 	}
 
 	if( $q->param( 'action' ) eq 'DeleteAnnotation' ) {
-		OME::Tasks::ImageManager->deleteCurrentImageAnnotation( $image );
+		OME::Tasks::ImageManager->deleteCurrentAnnotation( $image );
 		$self->Session()->commitTransaction();
 	}
 

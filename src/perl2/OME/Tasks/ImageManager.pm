@@ -151,19 +151,19 @@ sub new{
 
 }
 
-=head2 deleteCurrentImageAnnotation
+=head2 deleteCurrentAnnotation
 
-	OME::Tasks::ImageManager->deleteCurrentImageAnnotation( $image );
+	OME::Tasks::ImageManager->deleteCurrentAnnotation( $image );
 
-This tries to get an annotation from getCurrentImageAnnotation()
+This tries to get an annotation from getCurrentAnnotationgetCurrentAnnotation()
 If it gets one that belongs to the current user, it will mark it invalid.
 
 =cut
 
-sub deleteCurrentImageAnnotation {
+sub deleteCurrentAnnotation {
 	my ($class, $image) = @_;
 	my $session = OME::Session->instance();
-	my $annotation = $class->getCurrentImageAnnotation( $image );
+	my $annotation = $class->getCurrentAnnotation( $image );
 	if( ( defined $annotation ) &&
 	    ( defined $annotation->module_execution() ) && 
 	    ( $annotation->module_execution()->experimenter->id eq
@@ -173,10 +173,10 @@ sub deleteCurrentImageAnnotation {
 	}
 }
 
-=head2 getCurrentImageAnnotation
+=head2 getCurrentAnnotation
 
 	my $imageAnnotation = OME::Tasks::ImageManager->
-	    getCurrentImageAnnotation( $image );
+	    getCurrentAnnotation( $image );
 
 This will look for the most recent ImageAnnotation created by 
 the current user that is marked Valid.
@@ -187,7 +187,7 @@ If no Valid ImageAnnotations are found, an undef will be returned.
 
 =cut
 
-sub getCurrentImageAnnotation {
+sub getCurrentAnnotation {
 	my ($class, $image) = @_;
 	my $session = OME::Session->instance();
     my $factory = $session->Factory();
@@ -220,10 +220,10 @@ sub getCurrentImageAnnotation {
 	return $imageAnnotation;
 }
 
-=head2 writeImageAnnotation
+=head2 writeAnnotation
 
 	my $imageAnnotation = OME::Tasks::ImageManager->
-	    writeImageAnnotation( $image, $data_hash );
+	    writeAnnotation( $image, $data_hash );
 
 This will write a new ImageAnnotation attribute. The data_hash should
 follow the format for factory NewObject calls. e.g.
@@ -239,7 +239,7 @@ Note, this method does NOT commit the db transaction.
 
 =cut
 
-sub writeImageAnnotation {
+sub writeAnnotation {
 	my ($class, $image, $data_hash) = @_;
 	my $session = OME::Session->instance();
     my $factory = $session->Factory();
@@ -254,7 +254,7 @@ sub writeImageAnnotation {
 		unless ref( $image ) eq 'OME::Image';
 	
 	my $lastImageAnnotation = $class->
-		getCurrentImageAnnotation( $image );
+		getCurrentAnnotation( $image );
 	
 	# Don't allow a write unless the contents have changed.
 	if( ( defined $lastImageAnnotation ) &&
@@ -270,8 +270,9 @@ sub writeImageAnnotation {
 	    );
 
 	# Mark the last one as invalid if this user is overwriting their own annotation.
-	if( $lastImageAnnotation->module_execution->experimenter->id eq
-		$session->User->id ) {
+	if( ( defined $lastImageAnnotation ) &&
+	    ( $lastImageAnnotation->module_execution->experimenter->id eq
+		  $session->User->id ) ) {
 		$lastImageAnnotation->Valid( 0 );
 		$lastImageAnnotation->storeObject();
 	}
