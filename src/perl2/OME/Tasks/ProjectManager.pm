@@ -179,16 +179,11 @@ Returns a project object.
 =head2 removeDatasets ($hash_ref)
 
 	$projectManager->removeDatasets({
-		$project1 => [1, 5, 10, 9],
-		$project2 => [$dataset1, $dataset2],
+		$project1->id() => [1, 5, 10, 9],
+		$project2->id() => [$dataset1, $dataset2],
 	});
 
-	$projectManager->removeDatasets({
-		1 => [2, 7],
-		5 => [$dataset5, $dataset9],
-	})
-
-Project removal method which accepts a hash reference keyed by either project object or project ID and containing a value comprised of an array reference of dataset objects or dataset ID's.
+Project removal method which accepts a hash reference keyed by project ID and containing an array reference of dataset objects or dataset ID's.
 
 Returns 1 on success and undef on failure, this is an *all or nothing method* (either every remove is successful or the entire task fails)
 
