@@ -86,7 +86,7 @@ sub makeDTOList {
     return \@dto_list;
 }
 
-sub __genericDTO ($$$) {
+sub __genericDTO {
     my ($prefix,$object,$fields_wanted) = @_;
 
     print STDERR "$prefix $object\n" if $SHOW_ASSEMBLY;
@@ -95,6 +95,7 @@ sub __genericDTO ($$$) {
     die "Fields not specified for '$prefix' element"
       unless (defined $columns) && (ref($columns) eq 'ARRAY');
     my $dto = __makeHash($object,undef,$columns);
+    return $dto unless defined $dto;
 
     foreach my $column (@$columns) {
         print STDERR "  $column ",ref($dto->{$column}),"\n"
