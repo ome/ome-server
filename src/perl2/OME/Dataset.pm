@@ -49,7 +49,8 @@ sub owner {
         my $attribute = shift;
         die "Owner must be an Experimenter"
           unless $attribute->attribute_type()->name() eq "Experimenter";
-        return $self->owner_id($attribute->id());
+        $self->owner_id($attribute->id());
+        return undef;
     } else {
         return $self->Session()->Factory()->loadAttribute("Experimenter",
                                                           $self->owner_id());

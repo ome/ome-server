@@ -62,7 +62,8 @@ sub experimenter {
         my $attribute = shift;
         die "Owner must be an Experimenter"
           unless $attribute->attribute_type()->name() eq "Experimenter";
-        return $self->experimenter_id($attribute->id());
+        $self->experimenter_id($attribute->id());
+        return undef;
     } else {
         return $self->Session()->Factory()->loadAttribute("Experimenter",
                                                           $self->experimenter_id());
@@ -75,7 +76,8 @@ sub group {
         my $attribute = shift;
         die "Group must be a Group"
           unless $attribute->attribute_type()->name() eq "Group";
-        return $self->group_id($attribute->id());
+        $self->group_id($attribute->id());
+        return undef;
     } else {
         return $self->Session()->Factory()->loadAttribute("Group",
                                                           $self->group_id());
