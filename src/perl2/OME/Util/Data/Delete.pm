@@ -49,6 +49,7 @@ use Getopt::Long;
 use OME::SessionManager;
 use OME::Session;
 use OME::Tasks::ModuleExecutionManager;
+use OME::Image::Server;
 
 our $FACTORY;
 our $IMAGE_IMPORT_MODULE_ID;
@@ -57,11 +58,11 @@ our @DATASET_STs;
 our %DELETED_ATTRS;
 our $RECURSION_LEVEL;
 our %DELETED_MEXES;  # We shouldn't have circular dependencies here, but just in case.
-# Analysis chain execution ids with deleted nodes (keys are ACE ids, values are hash of node ids)
+# Analysis chain execution ids with deleted nodes (keys are ACE ids, values are hash of node ids and 'ACE' => ACE)
 our %ACS_DELETED_NODES;
-# Deleted omeis Pixels.  Keys are DB PixelIDs, values are Pixels attributes.
+# Deleted omeis Pixels.  Keys are DB PixelIDs, values are 'Repository' and 'ImageServerID'.
 our %DELETED_PIXELS;
-# Deleted omeis Files.  Keys are DB OriginalFile IDs, values are OriginalFile attributes.
+# Deleted omeis Files.  Keys are DB OriginalFile IDs, values are 'Repository' and 'FileID'.
 our %DELETED_ORIGINAL_FILES;
 
 sub getCommands {
@@ -106,8 +107,10 @@ And once its gone, its gone.  You can only get it back from a backup.
 You do have a backup, right?
 
 Options:
-  -n, --noop       Don't actually delete anything, just report what would be deleted.
-  -d, --delete     Actually delete the MEX.  Nothing will happen unless -n or -d is specified.  
+  -n, --noop        Don't actually delete anything, just report what would be deleted.
+  -d, --delete      Actually delete the MEX.  Nothing will happen unless -n or -d is specified.  
+  -f, --keep-files  Keep orphaned OMEIS Files.  
+  -p, --keep-pixels Keep orphaned OMEIS Pixels.  
 CMDS
 }
 
@@ -116,22 +119,27 @@ sub DeleteMEX {
 	my ($self,$commands) = @_;
 	my $script = $self->scriptName();
 	my $command_name = $self->commandName($commands);
-	my $noop;
-	my $delete;
-	my $help;
+	my ($noop,$delete,$keep_files,$keep_pixels);
 
 	undef %DELETED_ATTRS;
 	undef %DELETED_MEXES;
 	undef %ACS_DELETED_NODES;
+	undef %DELETED_PIXELS;
+	undef %DELETED_ORIGINAL_FILES;
 	$RECURSION_LEVEL=0;
 
 	# Parse our command line options
 	GetOptions('noop|n!' => \$noop,
-		   'delete|d' => \$delete);
+		   'delete|d' => \$delete,
+		   'keep-files|f' => \$keep_files,
+		   'keep-pixels|p' => \$keep_pixels,
+		   );
 
 	if (scalar(@ARGV) <= 0) {
 		$self->MEX_help();
 	}
+	$keep_files  = 1 if $noop;
+	$keep_pixels = 1 if $noop;
 	
 	my $manager = OME::SessionManager->new();
 	my $session = $manager->TTYlogin();
@@ -158,6 +166,10 @@ sub DeleteMEX {
 	$self->delete_mex ($delMEX,$delete);
 
 	$session->commitTransaction() if $delete;
+	
+	# We can't combine a DB transaction with an OMEIS transaction,
+	# So we do this only if the DB transaction succeeds
+	$self->cleanup_omeis($keep_files,$keep_pixels);
 	
 	undef $FACTORY;
 }
@@ -205,8 +217,11 @@ my $mex_id;
 		my $attributes = OME::Tasks::ModuleExecutionManager->
 			getAttributesForMEX($mex,$ST);
 
-		# Delete all attributes - this will delete any vMexes, any references, and the mexes that generated the references.
-		foreach my $attr (@$attributes) { $self->delete_attribute ($attr,$mex,$delete) ;}
+		# Delete all attributes - this will delete any vMexes,
+		# any references, and the mexes that generated the references.
+		foreach my $attr (@$attributes) {
+			$self->delete_attribute ($attr,$mex,$delete);
+		}
 	}
 	
 	# Delete any untyped outputs - these are OME::ModuleExecution::SemanticTypeOutput
@@ -224,8 +239,11 @@ my $mex_id;
 
 	foreach my $nodex (@node_executions) {
 		print $recurs_indent,"  Node execution ",$nodex->id(),"\n";
-		$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{$nodex->id()} = 1;
-		$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{'ACE'} = $nodex->analysis_chain_execution();
+		if ($nodex->analysis_chain_execution_id()) {
+			$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{$nodex->id()} = 1;
+			$ACS_DELETED_NODES {$nodex->analysis_chain_execution_id()}->{'ACE'} = 
+				$nodex->analysis_chain_execution();
+		}
 		$nodex->deleteObject() if $delete;
 	}
 	
@@ -266,10 +284,13 @@ my $mex_id;
 		foreach my $attr (@$image_attrs) { $self->delete_attribute ($attr,$mex,$delete) ;}
 
 		# Since we're at it, we have to delete the image from the OME::Image::DatasetMap
-		my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",{ image_id => $mex->image()->id()});
+		my @dataset_links = $FACTORY->findObjects("OME::Image::DatasetMap",
+			{ image_id => $mex->image()->id()}
+		);
 		my @datasets;
 		foreach my $dataset_link (@dataset_links) {
-			print $recurs_indent,"    Dataset Link to ",$dataset_link->dataset()->name(),", ID=",$dataset_link->dataset()->id(),"\n";
+			print $recurs_indent,"    Dataset Link to ",$dataset_link->dataset()->name(),
+				", ID=",$dataset_link->dataset()->id(),"\n";
 			push (@datasets,$dataset_link->dataset());
 			$dataset_link->deleteObject() if $delete;
 		}
@@ -289,7 +310,8 @@ my $mex_id;
 			}
 			
 			# Since there are no dataset mexes for this dataset, unlock it.
-			print $recurs_indent,"    Unlocking Dataset ",$dataset->name(),", ID=",$dataset->id(),"\n";
+			print $recurs_indent,"    Unlocking Dataset ",
+				$dataset->name(),", ID=",$dataset->id(),"\n";
 			$dataset->locked(0);
 		}
 		
@@ -303,10 +325,12 @@ my $mex_id;
 	$RECURSION_LEVEL--;
 	
 	# Perform cleanup tasks on orphaned objects
-	# Note that nothing in here should directly or indirectly call delete_mex(), or delete_attribute()
+	# Note that nothing in here should directly or indirectly call
+	# delete_mex(), or delete_attribute()
 	if ($RECURSION_LEVEL == 0) {
 	
-		# Clean up AnalysisChainExecution objects consisting only of deleted OME::AnalysisChainExecution::NodeExecution
+		# Clean up AnalysisChainExecution objects consisting only of
+		# deleted OME::AnalysisChainExecution::NodeExecution
 		my ($ACE_ID,$del_nodes);
 		while ( ($ACE_ID,$del_nodes) = each (%ACS_DELETED_NODES) ) {
 			my @ACE_nodes = $FACTORY->
@@ -324,68 +348,13 @@ my $mex_id;
 			}
 
 			if ($del_ACE) {
-				print $recurs_indent,"Analysis Chain Execution ",$del_ACE->id(),", ",$del_ACE->analysis_chain()->name()," (Chain ID=",$del_ACE->analysis_chain()->id(),")\n";
+				print $recurs_indent,"Analysis Chain Execution ",
+					$del_ACE->id(),", ",$del_ACE->analysis_chain()->name(),
+					" (Chain ID=",$del_ACE->analysis_chain()->id(),")\n";
 				$del_ACE->deleteObject() if $delete;
 			}
 			
 		}
-		
-		# Delete omeis objects that are no longer being refered to
-		# This may possibly need a flag
-		my $omeis_del;
-		my %omeis_ids;
-		foreach my $pixels_spec (values %DELETED_PIXELS) {
-			# Get all the Pixels that have the same repository and image_server_id
-			my @db_pixelses = $FACTORY->
-				findAttributes('Pixels',
-					{
-					ImageServerID => $pixels_spec->{ImageServerID},
-					Repository    => $pixels_spec->{RepositoryID},
-					});
-
-			$omeis_del = 1;
-			foreach my $db_pixels (@db_pixelses) {
-				if (not exists $DELETED_PIXELS {$db_pixels->id()}) {
-					$omeis_del = 0;
-					last;
-				}
-			}
-
-			if ($omeis_del) {
-				my $omeis_ids_key = $pixels_spec->{RepositoryID}.':'.$pixels_spec->{ImageServerID};
-				if (not exists $omeis_ids{$omeis_ids_key}) {
-					print "Deleting OMEIS Pixels $omeis_ids_key\n";
-				}
-				$omeis_ids{$omeis_ids_key} = 1;
-			}
-		} # DELETED_PIXELS
-
-		%omeis_ids = ();
-		foreach my $file_spec (values %DELETED_ORIGINAL_FILES) {
-			# Get all the Files that have the same repository and image_server_id
-			my @db_files = $FACTORY->
-				findAttributes('OriginalFile',
-					{
-					FileID => $file_spec->{FileID},
-					Repository    => $file_spec->{RepositoryID},
-					});
-
-			$omeis_del = 1;
-			foreach my $db_file (@db_files) {
-				if (not exists $DELETED_ORIGINAL_FILES {$db_file->id()}) {
-					$omeis_del = 0;
-					last;
-				}
-			}
-
-			if ($omeis_del) {
-				my $omeis_ids_key = $file_spec->{RepositoryID}.':'.$file_spec->{FileID};
-				if (not exists $omeis_ids{$omeis_ids_key}) {
-					print "Deleting OMEIS File $omeis_ids_key\n";
-				}
-				$omeis_ids{$omeis_ids_key} = 1;
-			}
-		} # DELETED_ORIGINAL_FILES
 	} # Cleanup (RECURSION_LEVEL == 0)
 } # delete_mex()
 
@@ -395,7 +364,8 @@ my $self = shift;
 my $image = shift;
 my @image_attrs;
 
-	@IMAGE_STs = $FACTORY->findObjects("OME::SemanticType",granularity => 'I') unless defined @IMAGE_STs;
+	@IMAGE_STs = $FACTORY->findObjects("OME::SemanticType",granularity => 'I')
+		unless defined @IMAGE_STs;
 	
 	foreach my $ST (@IMAGE_STs) {
 		my @objects = $FACTORY->findAttributes($ST,{image_id => $image->id()});
@@ -487,18 +457,94 @@ my $delete = shift;
 	}
 	
 	if ($attr->semantic_type()->name() eq 'Pixels') {
-		$DELETED_PIXELS {$attr->id()}->{RepositoryID} = $attr->Repository()->id();
+		$DELETED_PIXELS {$attr->id()}->{Repository}    = $attr->Repository();
 		$DELETED_PIXELS {$attr->id()}->{ImageServerID} = $attr->ImageServerID();
-		$DELETED_PIXELS {$attr->id()}->{RefCount} = 1;
 	} elsif ($attr->semantic_type()->name() eq 'OriginalFile') {
-		$DELETED_ORIGINAL_FILES {$attr->id()}->{RepositoryID} = $attr->Repository()->id();
-		$DELETED_ORIGINAL_FILES {$attr->id()}->{FileID} = $attr->FileID();
-		$DELETED_ORIGINAL_FILES {$attr->id()}->{RefCount} = 1;
+		$DELETED_ORIGINAL_FILES {$attr->id()}->{Repository}   = $attr->Repository();
+		$DELETED_ORIGINAL_FILES {$attr->id()}->{FileID}       = $attr->FileID();
 	}
 
 	print $recurs_indent,"    Attribute = ",$attr->id(),"\n";
 	$DELETED_ATTRS{$attr->id()} = 1;
 	$attr->deleteObject() if $delete;
+}
+
+
+# Delete omeis objects that are no longer being refered to
+sub cleanup_omeis {
+my $self = shift;
+my $keep_files = shift;
+my $keep_pixels = shift;
+	
+	
+	# Delete orphaned OMEIS Pixels
+	my $omeis_del;
+	my %omeis_ids;
+	foreach my $pixels_spec (values %DELETED_PIXELS) {
+		# Get all the Pixels that have the same repository and image_server_id
+		my @db_pixelses = $FACTORY->
+			findAttributes('Pixels',
+				{
+				ImageServerID => $pixels_spec->{ImageServerID},
+				Repository    => $pixels_spec->{Repository},
+				});
+
+		$omeis_del = 1;
+		foreach my $db_pixels (@db_pixelses) {
+			if (not exists $DELETED_PIXELS {$db_pixels->id()}) {
+				$omeis_del = 0;
+				last;
+			}
+		}
+
+		if ($omeis_del) {
+			my $omeis_ids_key = $pixels_spec->{Repository}->id().':'.$pixels_spec->{ImageServerID};
+			if (not exists $omeis_ids{$omeis_ids_key}) {
+				print "Deleting OMEIS Pixels $omeis_ids_key\n";
+				if ($pixels_spec->{Repository}->IsLocal()) {
+					OME::Image::Server->useLocalServer($pixels_spec->{Repository}->Path());
+				} else {
+					OME::Image::Server->useRemoteServer($pixels_spec->{Repository}->ImageServerURL());
+				}
+				OME::Image::Server->deletePixels($pixels_spec->{ImageServerID}) unless $keep_pixels;
+			}
+			$omeis_ids{$omeis_ids_key} = 1;
+		}
+	} # DELETED_PIXELS
+
+	# Delete orphaned OMEIS Files
+	%omeis_ids = ();
+	foreach my $file_spec (values %DELETED_ORIGINAL_FILES) {
+		# Get all the Files that have the same repository and image_server_id
+		my @db_files = $FACTORY->
+			findAttributes('OriginalFile',
+				{
+				FileID => $file_spec->{FileID},
+				Repository    => $file_spec->{Repository},
+				});
+
+		$omeis_del = 1;
+		foreach my $db_file (@db_files) {
+			if (not exists $DELETED_ORIGINAL_FILES {$db_file->id()}) {
+				$omeis_del = 0;
+				last;
+			}
+		}
+
+		if ($omeis_del) {
+			my $omeis_ids_key = $file_spec->{Repository}->id().':'.$file_spec->{FileID};
+			if (not exists $omeis_ids{$omeis_ids_key}) {
+				print "Deleting OMEIS File $omeis_ids_key\n";
+				if ($file_spec->{Repository}->IsLocal()) {
+					OME::Image::Server->useLocalServer($file_spec->{Repository}->Path());
+				} else {
+					OME::Image::Server->useRemoteServer($file_spec->{Repository}->ImageServerURL());
+				}
+				OME::Image::Server->deleteFile($file_spec->{FileID}) unless $keep_files;
+			}
+			$omeis_ids{$omeis_ids_key} = 1;
+		}
+	} # DELETED_ORIGINAL_FILES
 }
 
 
