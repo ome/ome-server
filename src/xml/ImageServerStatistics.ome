@@ -185,7 +185,7 @@
                        http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
   <AnalysisModule
-     ModuleName="Plane statistics and sums (image server)" 
+     ModuleName="Plane statistics (image server)" 
 	 ModuleType="OME::Analysis::Modules::Statistics::PlaneStatistics"
      ProgramID="" 
 	 ID="urn:lsid:openmicroscopy.org:Module:32">
@@ -214,7 +214,7 @@
   </AnalysisModule>
 
   <AnalysisModule
-     ModuleName="Stack statistics and sums (image server)" 
+     ModuleName="Stack statistics (image server)" 
 	 ModuleType="OME::Analysis::Modules::Statistics::StackStatistics"
      ProgramID="" 
 	 ID="urn:lsid:openmicroscopy.org:Module:33">

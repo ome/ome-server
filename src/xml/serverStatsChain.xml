@@ -41,9 +41,9 @@
 	  <Node NodeID="Files" ProgramName="Original files"/>
 	  <Node NodeID="Import" ProgramName="Image import"/>
 	  <Node NodeID="PlaneStats"
-            ProgramName="Plane statistics and sums (image server)"/>
+            ProgramName="Plane statistics (image server)"/>
 	  <Node NodeID="StackStats"
-            ProgramName="Stack statistics and sums (image server)"/>
+            ProgramName="Stack statistics (image server)"/>
 	</Nodes>
 	<Links>
       <Link
