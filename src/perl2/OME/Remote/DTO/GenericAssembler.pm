@@ -144,6 +144,16 @@ sub makeDTOList {
     return \@dto_list;
 }
 
+sub __getDefaultFieldsWanted {
+    my ($object) = @_;
+
+    if (UNIVERSAL::isa($object,"OME::SemanticType")) {
+        return ['id','name','granularity'];
+    } else {
+        return ['id'];
+    }
+}
+
 sub __genericDTO {
     my ($prefix,$object,$fields_wanted) = @_;
 
@@ -175,13 +185,15 @@ sub __genericDTO {
         if ($type eq 'has-one') {
             my $ref_object = $dto->{$column};
             my $next_prefix = "${prefix}.${column}";
-            $fields_wanted->{$next_prefix} = ['id']
+            $fields_wanted->{$next_prefix} =
+              __getDefaultFieldsWanted($ref_object)
               unless defined $fields_wanted->{$next_prefix};
             $dto->{$column} = __genericDTO($next_prefix,
                                            $ref_object,$fields_wanted);
         } elsif ($type =~ m/(has-many|many-to-many)/o ) {
             my $next_prefix = "${prefix}.${column}";
-            $fields_wanted->{$next_prefix} = ['id']
+            $fields_wanted->{$next_prefix} =
+              __getDefaultFieldsWanted($ref_object)
               unless defined $fields_wanted->{$next_prefix};
             foreach my $ref_object (@{$dto->{$column}}) {
                 $ref_object = __genericDTO($next_prefix,
@@ -201,7 +213,8 @@ sub __genericDTO {
     if (UNIVERSAL::isa($object,"OME::SemanticType::Superclass")) {
         my $st_prefix = "${prefix}.semantic_type";
         my $st = $object->semantic_type();
-        $fields_wanted->{$st_prefix} = ['id','name','granularity']
+        $fields_wanted->{$st_prefix} =
+          __getDefaultFieldsWanted($st)
           unless defined $fields_wanted->{$st_prefix};
         $dto->{semantic_type} = __genericDTO($st_prefix,$st,$fields_wanted);
     }
@@ -280,6 +293,8 @@ sub __updateDTO {
         if (UNIVERSAL::isa($data_class,"OME::SemanticType::Superclass")) {
             my $type = $data_class->semantic_type();
             $object = $factory->loadAttribute($type,$id);
+            delete $serialized->{semantic_type};
+            delete $serialized->{semantic_type_id};
         } else {
             $object = $factory->loadObject($class_name,$id);
         }
