@@ -96,15 +96,24 @@ Returns or sets the description of this analysis chain.
 
 =head2 nodes
 
+	my @nodes = $chain->nodes();
+	my $node_iterator = $chain->nodes();
+
 Returns or iterates, depending on context, the nodes in the analysis
 chain.
 
 =head2 links
 
+	my @links = $chain->links();
+	my $link_iterator = $chain->links();
+
 Returns or iterates, depending on context, the links in the analysis
 chain.
 
 =head2 paths
+
+	my @paths = $chain->paths();
+	my $path_iterator = $chain->paths();
 
 Returns or iterates, depending on context, the data paths in the
 analysis chain.
@@ -159,27 +168,45 @@ addition to those defined by L<OME::DBObject>.
 
 =head2 analysis_view
 
+	my $analysis_view = $node->analysis_view();
+	$node->analysis_view($analysis_view);
+
 Returns or sets the analysis chain that this node belongs to.
 
 =head2 program
+
+	my $program = $node->program();
+	$node->program($program);
 
 Returns or sets the analysis module that this node represents.
 
 =head2 iterator_tag
 
+	my $iterator_tag = $node->iterator_tag();
+	$node->iterator_tag($iterator_tag);
+
 Returns or sets the iterator tag for this node.
 
 =head2 new_feature_tag
+
+	my $new_feature_tag = $node->new_feature_tag();
+	$node->new_feature_tag($new_feature_tag);
 
 Returns or sets the tag that any new features created by this module
 will have.
 
 =head2 input_links
 
+	my @input_links = $node->input_links();
+	my $input_link_iterator = $node->input_links();
+
 Returns or iterates, depending on context, the links that provide
 input to this node.
 
 =head2 output_links
+
+	my @output_links = $node->output_links();
+	my $output_link_iterator = $node->output_links();
 
 Returns or iterates, depending on context, the links that this node
 provides output for.
@@ -217,21 +244,36 @@ addition to those defined by L<OME::DBObject>.
 
 =head2 analysis_view
 
+	my $analysis_view = $link->analysis_view();
+	$link->analysis_view($analysis_view);
+
 Returns the analysis chain that this link belongs to.
 
 =head2 from_node
+
+	my $from_node = $link->from_node();
+	$link->from_node($from_node);
 
 Returns the node that this link receives data from.
 
 =head2 from_output
 
+	my $from_output = $link->from_output();
+	$link->from_output($from_output);
+
 Returns the formal output that this link receives data from.
 
 =head2 to_node
 
+	my $to_node = $link->to_node();
+	$link->to_node($to_node);
+
 Returns the node that this link sends data to.
 
 =head2 to_input
+
+	my $to_input = $link->to_input();
+	$link->to_input($to_input);
 
 Returns the formal input that this link sends data to.
 
