@@ -66,6 +66,46 @@ BEGIN {
     $SOAP::Constants::FAULT_MUST_UNDERSTAND = 502;
 }
 
+sub XMLRPC::Serializer::encode_scalar {
+  my $self = shift;
+  return ['value', {}, [['string',{},'*([-NULL-])*']]] unless defined $_[0];
+  return $self->SOAP::Serializer::encode_scalar(@_);
+}
+
+sub XMLRPC::Deserializer::decode_value {
+  my $self = shift;
+  my $ref = shift;
+  my($name, $attrs, $children, $value) = @$ref;
+
+  if ($name eq 'string' && $value eq '*([-NULL-])*') {
+      return undef;
+  } elsif ($name eq 'value') {
+    $children ? scalar(($self->decode_object($children->[0]))[1]) : $value;
+  } elsif ($name eq 'array') {
+    return [map {scalar(($self->decode_object($_))[1])} @{o_child($children->[0]) || []}];
+  } elsif ($name eq 'struct') { 
+    return {map {
+      my %hash = map {o_qname($_) => $_} @{o_child($_) || []};
+                         # v----- scalar is required here, because 5.005 evaluates 'undef' in list context as empty array
+      (o_chars($hash{name}) => scalar(($self->decode_object($hash{value}))[1]));
+    } @{$children || []}};
+  } elsif ($name eq 'base64') {
+    require MIME::Base64; 
+    MIME::Base64::decode_base64($value);
+  } elsif ($name =~ /^(?:int|i4|boolean|string|double|dateTime\.iso8601|methodName)$/) {
+    return $value;
+  } elsif ($name =~ /^(?:params)$/) {
+    return [map {scalar(($self->decode_object($_))[1])} @{$children || []}];
+  } elsif ($name =~ /^(?:methodResponse|methodCall)$/) {
+    return +{map {$self->decode_object($_)} @{$children || []}};
+  } elsif ($name =~ /^(?:param|fault)$/) {
+    return scalar(($self->decode_object($children->[0]))[1]);
+  } else {
+    die "wrong element '$name'\n";
+  }
+}
+
+
 our $SHOW_CALLS = 0;
 our $SHOW_RESULTS = 0;
 our $SHOW_CACHING = 0;
