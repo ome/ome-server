@@ -123,7 +123,8 @@ sub printImages {
 	my $t_generator = new OME::Web::ImageTable;
 	my $cgi = $self->CGI();;
 	my $factory = $self->Session()->Factory();
-	my $d_name = $self->Session()->dataset()->name();
+	my $d_name;
+	$d_name = $self->Session()->dataset()->name() if $self->Session()->dataset();
 
 	# Gen our images table
 	my $html = $t_generator->getTable( {
