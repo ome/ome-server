@@ -82,10 +82,10 @@ sub confirm_path {
 
     # Rip trailing slash
     if ($input =~ /^(.*)\/$/) { $input = $1 }
-    
+
     # log the question and the user's selected choice
     my $environment = initialize OME::Install::Environment;
-    if ($environment->tmp_dir()) {
+    if ($environment->tmp_dir() and -d $environment->tmp_dir()) {
    		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
    		`touch $logfileName`;
  	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
@@ -101,11 +101,11 @@ sub confirm_default {
     print "$text ", BOLD, "[$default]", RESET, ": ";
     my $input = ReadLine 0;
     chomp $input;
-    ($input = $default) unless $input;
-    
+    ($input = $default) unless length $input;
+
     # log the question and the user's selected choice
     my $environment = initialize OME::Install::Environment;
-    if ($environment->tmp_dir()) {
+    if ($environment->tmp_dir() and -d $environment->tmp_dir()) {
    		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
    		`touch $logfileName`;
  	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
@@ -207,7 +207,7 @@ sub y_or_n {
 	}
         
    	# log the question and the user's selected choice
-    if ($environment->tmp_dir()) {
+    if ($environment->tmp_dir() and -d $environment->tmp_dir()) {
    		my $logfileName = $environment->tmp_dir()."/install/"."UserSelectedOptions.log";
    		`touch $logfileName`;
  	   	open  (FILEOUT, ">> $logfileName") or croak "can't open $logfileName for appending: $!\n";
