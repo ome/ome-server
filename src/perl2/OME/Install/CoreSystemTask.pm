@@ -254,6 +254,7 @@ sub execute {
 
 		# Make sure the rest of the installation knows who the apache and ome users are
 		$environment->user($OME_USER);
+		$environment->group($OME_GROUP);
 		$environment->apache_user($APACHE_USER);
 		$environment->postgres_user($POSTGRES_USER);
 		$environment->admin_user($ADMIN_USER);
