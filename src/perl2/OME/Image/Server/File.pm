@@ -82,8 +82,7 @@ sub new {
     my $class = ref($proto) || $proto;
     my ($fileID) = @_;
 
-    my ($filename,$length) = OME::Image::Server->getFileInfo($fileID);
-    my $self = [$fileID,$filename,$length,0];
+    my $self = [$fileID,undef,undef,0];
     bless $self,$class;
     return $self;
 }
@@ -129,7 +128,7 @@ sub open {
     my ($self,$mode) = @_;
     die "Cannot open on OME::Image::Server::File for writing"
       if exists $self->WRITE_MODES()->{$mode};
-    return;
+    return 1;
 }
 
 =head2 getFileID
@@ -151,7 +150,21 @@ informational and display purposes only.
 
 =cut
 
-sub getFilename { shift->[FILENAME] }
+sub __loadInfo {
+    my $self = shift;
+    return if defined $self->[FILENAME];
+    my ($filename,$length) = OME::Image::Server->
+      getFileInfo($self->[FILE_ID]);
+    $self->[FILENAME] = $filename;
+    $self->[LENGTH] = $length;
+    return;
+}
+
+sub getFilename {
+    my $self = shift;
+    $self->__loadInfo();
+    return $self->[FILENAME];
+}
 
 =head2 getBaseFilename
 
@@ -215,7 +228,11 @@ Returns the length of the file in bytes.
 
 =cut
 
-sub getLength { shift->[LENGTH] }
+sub getLength {
+    my $self = shift;
+    $self->__loadInfo();
+    return $self->[LENGTH];
+}
 
 =head2 getCurrentPosition
 
@@ -247,6 +264,7 @@ if this operation is not supported.
 sub setCurrentPosition {
     my ($self,$newpos,$whence) = @_;
     my $curpos = $self->[CURSOR];
+    $self->__loadInfo();
     my $length = $self->[LENGTH];
     if (!defined $whence || $whence == 0) {
         # $newpos is good
