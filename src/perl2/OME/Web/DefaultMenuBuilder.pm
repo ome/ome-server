@@ -263,7 +263,8 @@ sub __processElement {
 
 		# Get link text
 		my $text;
-		$web_class->require();
+		$web_class->require()
+			or die "Could not load package $web_class";
 
 		if( $menu_element->{'text'} ) {
 			$text = $menu_element->{'text'};
