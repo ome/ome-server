@@ -178,6 +178,7 @@ recognized %options are:
 	width            => 'table_width'
 	actions          => [ action_button_name, ... ]
 	excludefields    => { field_name => undef, ... }
+	noTxtDownload    => 1|0                          # 1 disables 'Download [table] as txt' link
 
 a Length of 0 or less is considered to be 'no limit'. an undef Length is
 assumed to be the default Length of 10.
@@ -212,6 +213,7 @@ sub getTable {
 					-name    => ($options->{ select_name } or 'Selected_'.$formal_name), 
 					-value   => $record->{_id}, 
 					-checked => '',
+					-label => ''
 				} )
 			)
 			if( $options->{ select_column } );
@@ -235,6 +237,17 @@ sub getTable {
 	}
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
+	
+	my @downloadAsTxt = ( $options->{ noTxtDownload } ? () : 
+		( $q->a( { -href => 
+			$self->pageURL('OME::Web::DBObjTable', { 
+				%{ $self->{__params} },
+				Format => 'txt',
+			} ),
+			-title => 'Download this table as tab delimited text' }, 
+			"Download as txt" 
+		) )
+	);
 	
 	# column headers
 	my @columnHeaders;
@@ -281,13 +294,9 @@ sub getTable {
 				# table descriptor
 				$q->td( { -class => 'ome_td', -colspan => scalar( @columnHeaders ), -align => 'right' }, 
 					$q->span( { -class => 'ome_widget' }, join( " | ", (
-						$q->a( { -href => 
-							$self->pageURL('OME::Web::DBObjTable', { 
-								%{ $self->{__params} },
-								Format => 'txt',
-							} ) }, "Download as txt" ),
+						@downloadAsTxt,
 						( $allowPaging ? $pagingText : ()), 
-						( $allowSearch ? $self->__getActionButton( 'Search', $form_name ) : () )
+						map( $self->__getActionButton( $_, $form_name ), @{ $options->{ actions } } )
 					) ) )
 				), 
 				# Column headers
@@ -577,7 +586,7 @@ sub getList {
 	
 	# build table
 	my $html;
-	my @object_refs = OME::Web::DBObjRender->getRefsToObject( $objects, 'html'  );
+	my @object_summaries = map( OME::Web::DBObjRender->getObjSummary( $_ ), @$objects );
 	# allow paging ?
 	my $allowPaging = ( $pagingText ? 1 : 0 );
 	
@@ -598,8 +607,8 @@ sub getList {
 				), 
 				# Table data
 				map( 
-					$q->td( { -class => 'ome_td', -align => 'right' }, $_ ),
-					@object_refs
+					$q->td( { -class => 'ome_td', -align => 'left' }, $_ ),
+					@object_summaries
 				),
 			]
 			)
@@ -846,34 +855,34 @@ sub __parseParams {
 		my $numPages = POSIX::ceil( $object_count / $searchParams{ __limit });
 		if( $object_count and $numPages > 1) {
 			$pagingText .= $q->a( {
-					-href => "#",
-					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=0; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-title => "First Page",
+					-href => "javascript: document.forms['$form_name'].elements['PageNum_$formal_name'].value=0; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit();",
 					}, 
 					'<<'
 				)." "
-				if $currentPage > 1;
+				if ( $currentPage > 1 and $numPages > 2 );
 			$pagingText .= $q->a( {
-					-href => "#",
-					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=($currentPage-2); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-title => "Previous Page",
+					-href => "javascript: document.forms['$form_name'].elements['PageNum_$formal_name'].value=($currentPage-2); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit();",
 					}, 
 					'<'
 				)." "
 				if $currentPage > 1;
 			$pagingText  .= sprintf( "%u of %u ", $currentPage, $numPages);
 			$pagingText .= "\n".$q->a( {
-					-href => "#",
-					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=$currentPage; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-title => "Next Page",
+					-href  => "javascript: document.forms['$form_name'].elements['PageNum_$formal_name'].value=$currentPage; document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit();",
 					}, 
 					'>'
 				)." "
 				if $currentPage < $numPages;
 			$pagingText .= "\n".$q->a( {
-					-href => "#",
-					-onClick => "document.forms['$form_name'].elements['PageNum_$formal_name'].value=($numPages-1); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit(); return false",
+					-title => "Last Page",
+					-href  => "javascript: document.forms['$form_name'].elements['PageNum_$formal_name'].value=($numPages-1); document.forms['$form_name'].action.value='TurnPage_$formal_name'; document.forms['$form_name'].submit();",
 					}, 
 					'>>'
 				)
-				if $currentPage < $numPages;
+				if( $currentPage < $numPages and $numPages > 2 );
 		}
 	}
 	
@@ -895,8 +904,8 @@ sub __getActionButton {
 	return 
 		$q->a( 
 			{
-				-href => "#",
-				-onClick => "document.forms['$form_name'].action.value='$action'; document.forms['$form_name'].submit(); return false",
+				-title => $action,
+				-href  => "javascript: document.forms['$form_name'].action.value='$action'; document.forms['$form_name'].submit();",
 				-class => 'ome_widget'
 			}, 
 			$action 
