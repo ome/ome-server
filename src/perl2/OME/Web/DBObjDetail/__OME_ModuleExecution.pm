@@ -134,6 +134,8 @@ sub getPageBody {
 	my $tableMaker = OME::Web::DBObjTable->new( CGI => $q );
 	$html .= $q->h1( 'Outputs' );
 	
+	@formal_outputs = grep( defined $_->semantic_type(), @formal_outputs );
+	
 	# figure out which formal_outputs should be joined based on being in the same database table 
 	my $fo_table_name;
 	my %clumped_list;

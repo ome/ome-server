@@ -2144,7 +2144,7 @@ char doSwap;
 			
 			/* write the red, green, and blue parts of the pixel into different channels*/
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 2, write_buf_rgb); 
+			extractRGBChannels(read_buf, nPix, 0, write_buf_rgb); 
 			nOut = DoPixelIO (myPixels, red_offset   + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
@@ -2152,7 +2152,7 @@ char doSwap;
 			nOut = DoPixelIO (myPixels, green_offset + pix_offset, nPix, 'w');
 			
 			myPixels->IO_buf_off = 0;
-			extractRGBChannels(read_buf, nPix, 0, write_buf_rgb);
+			extractRGBChannels(read_buf, nPix, 2, write_buf_rgb);
 			nOut = DoPixelIO (myPixels, blue_offset  + pix_offset, nPix, 'w');
 			
 			pix_offset += nPix*write_bytespp;
