@@ -509,6 +509,17 @@ sub load {
     return $class->new($session,$target,$id,$rows);
 }
 
+sub verifyType {
+    my ($self, $type_name) = @_;
+    die "Object is not an attribute"
+      unless UNIVERSAL::isa($self,__PACKAGE__);
+    my $type = $self->_attribute_type();
+    my $real_name = $type->name();
+    die "Attribute is of the wrong type: Expected $type_name, got $real_name"
+      unless $type_name eq $real_name;
+    return 1;
+}
+
 sub id { return shift->{_id}; }
 sub ID { return shift->{_id}; }
 sub Session { return shift->{_session}; }
@@ -569,6 +580,12 @@ sub _setField {
     } else {
         $data_row->$column_name($value);
     }
+}
+
+sub commit {
+    my ($self) = @_;
+    my $rows = $self->{_data_table_rows};
+    $_->commit() foreach (values %$rows);
 }
 
 sub writeObject {
