@@ -564,11 +564,11 @@ my ($self, $object, $parent) = @_;
 	my $lsid = $self->lsidResolver();
 	my $objectID = $lsid->getLSID ($object);
 	my $semantic_type = $object->semantic_type();
-	my $attribute_name = $semantic_type->name();
+	my $semantic_type_name = $semantic_type->name();
 	my $semantic_elements = $semantic_type->semantic_elements();
-	my $element = $DOM->createElement($attribute_name);
+	my $element = $DOM->createElement($semantic_type_name);
 	$element->setAttribute( 'ID' , $objectID );
-	logdbg "debug", ref ($self)."->Attribute2doc:  Exporting Attribute '$attribute_name'";
+	logdbg "debug", ref ($self)."->Attribute2doc:  Exporting Attribute '$semantic_type_name'";
 	my ($ref,$refID);
 	while (my $semantic_element = $semantic_elements->next()) {
 		my $SEName = $semantic_element->name();
