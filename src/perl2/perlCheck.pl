@@ -146,6 +146,12 @@ my @modules = ({
 	repositoryFile => 'Class-DBI-0.90.tar.gz',
 	checkVersion => \&Class_DBI_VersionOK,
 	},{
+	Name => 'tiff',
+	getVersion => \&tiffGetVersion,
+	checkVersion => \&tiff_VersionOK,
+	repositoryFile => '../source/tiff-v3.5.7-OSX-LZW.tar.gz',
+	installModule => \&tiffInstall,
+	},{
 	Name => 'GD',
 	repositoryFile => 'GD-1.33.tar.gz',
 	},{
@@ -175,8 +181,14 @@ my @modules = ({
 	Name => 'libxml2',
 	getVersion => \&libXMLgetVersion,
 	checkVersion => \&libXML_VersionOK,
-	repositoryFile => '../source/libxml2-2.4.30.tar.gz',
+	repositoryFile => '../source/libxml2-2.5.7.tar.gz',
 	installModule => \&LibXMLInstall,
+	},{
+	Name => 'libxslt',
+	getVersion => \&libXSLTgetVersion,
+	checkVersion => \&libXSLT_VersionOK,
+	repositoryFile => '../source/libxslt-1.0.30.tar.gz',
+	installModule => \&LibXSLTInstall,
 	},{
 	Name => 'XML::LibXML::Common',
 	repositoryFile => 'XML-LibXML-Common-0.12.tar.gz'
@@ -281,8 +293,15 @@ my $version = shift;
 
 sub libXML_VersionOK {
 my $version = shift;
-# XML::LibXML requires 2.4.20
-	return (1) if $version ge '2.4.20';
+# XML::LibXML requires 2.5.7
+	return (1) if $version ge '2.5.7';
+	return (0);
+}
+
+sub libXSLT_VersionOK {
+my $version = shift;
+# XML::LibXSLT requires 1.0.30
+	return (1) if $version ge '1.0.30';
 	return (0);
 }
 
@@ -298,6 +317,11 @@ my $version = shift;
 	return (0);
 }
 
+sub tiff_VersionOK {
+my $version = shift;
+	return (1) if $version ge '3.5.7';
+	return (0);
+}
 
 
 ############################
@@ -404,6 +428,30 @@ my $error;
 	
 }
 
+
+sub LibXSLTInstall {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $installDir = $module->{installDir};
+my $error;
+
+
+	print "\nInstalling $installDir\n";
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Couldn't execute configure script.\n" if system ('./configure') != 0;
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
+	
+	
+	my $libXSLTVersion = libXSLTgetVersion($module);
+
+	die "Installation error:  libxslt seems to have installed OK, but 'xslt-config' looks funny ('$libXSLTVersion')\n" 
+		unless libXSLT_VersionOK ($libXSLTVersion);
+	chdir '..';
+	
+}
+
 sub bzlibInstall {
 my $module = shift;
 my $installTarBall = $module->{repositoryFile};
@@ -431,6 +479,24 @@ my $error;
 	print "\nInstalling $installDir\n";
 	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
 
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
+
+	chdir '..';
+	
+}
+
+sub tiffInstall {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $installDir = $module->{installDir};
+my $error;
+
+
+	print "\nInstalling $installDir\n";
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Couldn't execute configure script.\n" if system ('./configure') != 0;
 	die "Compilation errors - script aborted.\n" if system ('make') != 0;
 	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
 
@@ -469,6 +535,17 @@ my $libXMLVersion = `xml2-config --version`;
 	
 }
 
+# get the version of libxslt
+sub libXSLTgetVersion {
+my $module = shift;
+my $libXSLTVersion = `xslt-config --version`;
+
+	chomp ($libXSLTVersion);
+	
+	return ($libXSLTVersion);
+	
+}
+
 # returns ' ' if it can find an installation, else returns 0
 sub zlibGetVersion {
 my $module = shift;
@@ -478,7 +555,8 @@ my $location;
 		open( IN, "ls $_/include/zlib.h 2>&1 1>/dev/null |" );
 		my $err = <IN>;
 		close( IN );
-		$location = $_ if( !$err );
+		$location = $_;
+		last if( !$err );
 	}
 	open( IN, "< $location/include/zlib.h" ) or
 		die "Could not open $location/include/zlib.h for version check";
@@ -501,7 +579,8 @@ my $location;
 		open( IN, "ls $_/include/bzlib.h 2>&1 1>/dev/null |" );
 		my $err = <IN>;
 		close( IN );
-		$location = $_ if( !$err );
+		$location = $_;
+		last if( !$err );
 	}
 	open( IN, "< $location/include/bzlib.h" ) or
 		die "Could not open $location/include/bzlib.h for version check";
@@ -515,6 +594,29 @@ my $location;
 	return 0;
 }
 
+# returns ' ' if it can find an installation, else returns 0
+sub tiffGetVersion {
+my $module = shift;
+my $location;
+
+	foreach( ("/usr/local","/usr","/sw") ) {
+		open( IN, "ls $_/include/tiffvers.h 2>&1 1>/dev/null |" );
+		my $err = <IN>;
+		close( IN );
+		$location = $_;
+		last if( !$err );
+	}
+	open( IN, "< $location/include/tiffvers.h" ) or
+		die "Could not open $location/include/tiffvers.h for version check";
+	while(<IN>) {
+		chomp;
+		if( m/LIBTIFF[\s\W]+Version[\s\W]+([0-9\.]+)/ ) {
+			close(IN);
+			return $1;
+		}
+	}
+	return 0;
+}
 
 ##################################################################
 # Should not have to modify below here when specifying new modules
