@@ -95,13 +95,14 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	
 	private TreeSet datasets;
 	private HashMap datasetWidgets = new HashMap();
-	private SelectionState selectionState;
-		
-	public PBrowserCanvas(Connection c,
-				SelectionState selectionState) {
+	
+	private Collection allDatasets;
+	
+	private PExecutionList executionList;
+	
+	public PBrowserCanvas(Connection c) {
 		super();
 		this.connection  = c;
-		this.selectionState = selectionState;
 		layer = getLayer();
 		
 		
@@ -125,6 +126,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 	//	getCamera().setViewScale(INIT_SCALE);
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
 	
+		allDatasets = connection.getDatasetsForUser();
 	}
 	
 	
@@ -141,7 +143,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		}
 		else {
 			//System.err.println("creating new widget");
-			node = new PDataset(d,connection,selectionState);
+			node = new PDataset(d,connection);
 			datasetWidgets.put(d,node);
 		}
 		layer.addChild(node);
@@ -208,6 +210,7 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 		CDataset selected = state.getSelectedDataset();
 		
 		if (selected != null) {
+			System.err.println("browser canvas. selected.. "+selected.getName());
 			datasets = new TreeSet();
 			datasets.add(selected);
 		}
@@ -215,14 +218,35 @@ public class PBrowserCanvas extends PCanvas implements PBufferedObject,
 			if (selections != null && selections.size() > 0)
 				datasets = new TreeSet(selections);
 			else
-				datasets = new TreeSet(connection.getDatasetsForUser());
+				datasets = new TreeSet(allDatasets);
 		}	
 		displayDatasets();
 	}
 	
 	public void setSelectedDataset(CDataset d) {
+		SelectionState selectionState = SelectionState.getState();
 		selectionState.removeSelectionEventListener(this);
 		selectionState.setSelectedDataset(d);
 		selectionState.addSelectionEventListener(this);
+	}
+	
+	public void clearExecutionList() {
+		if (executionList != null) {
+			if (executionList.getParent() == layer)
+				layer.removeChild(executionList);
+			executionList = null;
+		}
+	}
+	
+	public void showExecutionList(PChainLabelText cl) {
+		clearExecutionList();
+
+		executionList = cl.getExecutionList();
+		
+		
+		layer.addChild(executionList);
+		
+		PBounds b = cl.getGlobalFullBounds();
+		executionList.setOffset(b.getX(),b.getY()+b.getHeight());
 	}
  }
