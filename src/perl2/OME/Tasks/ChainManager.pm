@@ -132,7 +132,7 @@ unlocked, even if the old chain was locked.
 =cut
 
 sub cloneChain {
-    my ($self,$old_chain,$owner) = @_;
+    my ($self,$old_chain,$owner,$returnNodeMapping) = @_;
     my $session = $self->Session();
     my $factory = $session->Factory();
 
@@ -181,6 +181,7 @@ sub cloneChain {
                     });
     }
 
+	return ($new_chain, \%new_nodes) if $returnNodeMapping;
     return $new_chain;
 }
 
