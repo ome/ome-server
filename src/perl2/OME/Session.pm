@@ -147,6 +147,7 @@ use base qw(Class::Accessor);
 use POSIX;
 use File::Path;
 use File::Spec;
+use Log::Agent;
 
 #use Benchmark::Timer;
 
@@ -510,12 +511,12 @@ sub finishTemporaryFile {
     die "Need a filename"
       unless defined $filename;
 
-    print "*** $filename\n";
+	logdbg "debug", "*** $filename\n";
 
     if (-f $filename) {
-        print "Found\n";
+		logdbg "debug", "Found\n";
         eval { unlink $filename; };
-        print "Sweet '$@' '$!'\n";
+		logdbg "debug", "Sweet '$@' '$!'\n";
         warn "Error removing temp file/directory $filename: $@" if $@;
         warn "Error removing temp file/directory $filename: $!" if $!;
     } elsif (-d $filename) {
