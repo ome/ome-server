@@ -567,17 +567,6 @@
 		</SemanticType>
 
 		<SemanticType
-			Name= "ImageExperimenter"
-			AppliesTo = "I"
-			Description = "This specifies the Experimenter an Image belongs to">
-			<Element
-				Name= "Experimenter"
-				DBLocation = "IMAGE_INFO.EXPERIMENTER"
-				DataType = "reference"
-				RefersTo = "Experimenter"/>
-		</SemanticType>
-
-		<SemanticType
 			Name= "ImageGroup"
 			AppliesTo = "I"
 			Description = "This specifies the Group that the Image belongs to (these are Groups of Experimenters)">
