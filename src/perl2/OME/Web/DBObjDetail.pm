@@ -54,11 +54,12 @@ Displays detailed information on any DBObject or attribute.
 #*********
 
 use strict;
-use vars qw($VERSION);
+use OME;
+our $VERSION = $OME::VERSION;
+
 use CGI;
 use Log::Agent;
 
-use OME;
 use OME::Web::DBObjRender;
 use OME::Web::DBObjTable;
 
@@ -123,8 +124,9 @@ sub getPageBody {
 		if( $specializedDetail = $self->__specialize( ) and
 		    ref( $self ) eq __PACKAGE__ );
 
-	my $q = $self->CGI();
+	$self->_takeAction( );
 
+	my $q = $self->CGI();
 	my $object = $self->_loadObject();
 	( $self->{ form_name } = $q->param( 'Type' ).$q->param( 'ID' ) ) =~ s/[:@]/_/g;
 	my $html = $q->startform( { -name => $self->{ form_name } } ).
@@ -160,14 +162,18 @@ sub getPageBody {
 		] ) )
 	);
 
-	$html .= $q->endform();
+	$html .= $self->getFooter();
 
-	$self->_takeAction( );
+	$html .= $q->endform();
 
 	return ('HTML', $html);
 }
 
 sub _takeAction { 
+# virtual method
+}
+
+sub getFooter { 
 # virtual method
 }
 
