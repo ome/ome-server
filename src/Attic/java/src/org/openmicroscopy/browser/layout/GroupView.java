@@ -41,6 +41,8 @@ package org.openmicroscopy.browser.layout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 
 import org.openmicroscopy.browser.UIConstants;
 
@@ -49,8 +51,8 @@ import org.openmicroscopy.browser.UIConstants;
  * 
  * @author Jeff Mellen, <a href="mailto:jeffm@alum.mit.edu">jeffm@alum.mit.edu</a>
  * <b>Internal version:</b> $Revision$ $Date$
- * @version
- * @since
+ * @version 2.2
+ * @since 2.2
  */
 public class GroupView
 { 
@@ -167,4 +169,134 @@ public class GroupView
       // TODO: interpolate based on layout method
     }
   }
+  
+  /**
+   * Returns the backing group model.
+   * @return The backing group model.
+   */
+  public GroupModel getModel()
+  {
+    return this.model;
+  }
+  
+  /**
+   * Returns the current layout method.
+   * @return The layout method.
+   */
+  public LayoutMethod getLayoutMethod()
+  {
+    return this.layoutMethod;
+  }
+  
+  /**
+   * Sets the layout method to the specified value, unless null.
+   * @param method The method to use to layout this group's thumbnails.
+   */
+  public void setLayoutMethod(LayoutMethod method)
+  {
+    if(method != null)
+    {
+      this.layoutMethod = method;
+    }
+  }
+  
+  /**
+   * Gets the (relative) shape of the area.
+   * @return The bounds of the area.
+   */
+  public Shape getBounds()
+  {
+    // create a copy.
+    AffineTransform dummyTransform = new AffineTransform();
+    return dummyTransform.createTransformedShape(bounds);
+  }
+  
+  /**
+   * Sets the (relative) shape of the area to the specified shape.  Will do
+   * nothing if the shape is null or is an instance of a line.
+   */
+  public void setBounds(Shape s)
+  {
+    if(s == null || s instanceof Line2D)
+    {
+      return;
+    }
+    AffineTransform dummyTransform = new AffineTransform();
+    bounds = dummyTransform.createTransformedShape(s);
+    
+    // do recalculation of layout here?
+  }
+  
+  
+  /**
+   * Returns the background color.
+   * 
+   * @return The background color.
+   */
+  public Color getBackgroundColor()
+  {
+    return backgroundColor;
+  }
+
+  /**
+   * Returns the foreground color.
+   * 
+   * @return The foreground color.
+   */
+  public Color getForegroundColor()
+  {
+    return foregroundColor;
+  }
+
+  /**
+   * Returns the font of the group name.
+   * 
+   * @return The group name font.
+   */
+  public Font getNameFont()
+  {
+    return nameFont;
+  }
+
+  /**
+   * Sets the background color to the specified value.
+   * 
+   * @param color The color value to change the background to (does nothing
+   *              if null)
+   */
+  public void setBackgroundColor(Color color)
+  {
+    if(color != null)
+    {
+      backgroundColor = color;
+    }
+  }
+
+  /**
+   * Sets the text/foreground color to the specified value.
+   * 
+   * @param color The color value to change the foreground to (does nothing
+   *              if null)
+   */
+  public void setForegroundColor(Color color)
+  {
+    if(color != null)
+    {
+      foregroundColor = color;
+    } 
+  }
+
+  /**
+   * Sets the font to the specified value.
+   * 
+   * @param font The font to display the group name, unless null.
+   */
+  public void setNameFont(Font font)
+  {
+    if(font != null)
+    {
+      nameFont = font;
+    }
+  }
+
 }
