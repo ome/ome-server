@@ -61,41 +61,68 @@ import java.awt.geom.Rectangle2D;
  *
  * 
  * @author Harry Hochheiser
- * @version 0.1
- * @since OME2.0
+ * @version 2.1
+ * @since OME2.1
  */
 
 public abstract class PLink extends  PPath implements PNodeEventListener {
 	
+	/**
+	 * The stroke to be used for drawing links
+	 */
 	public static final BasicStroke LINK_STROKE=
 		new BasicStroke(1,BasicStroke.CAP_ROUND,BasicStroke.JOIN_ROUND);
 
+	/**
+	 * an instance of {@link Point2D} for convenience
+	 */
 	Point2D point = new Point2D.Float();
 	
-	protected static final int HIGHLIGHT_SIZE=8;
-	protected static final int HIGHLIGHT_RADIUS=HIGHLIGHT_SIZE/2;
 	
+	/**
+	 * Default and higlight colors
+	 */
 	public static final Color DEFAULT_COLOR=Color.black;
 	public static final Color HIGHLIGHT_COLOR=Color.WHITE;
 	
-	// degree for splines.
-	private static final int DEGREE = 3;	
+	/**
+	 * 
+	 *  degree for splines.
+	 **/
+	private static final int DEGREE = 3;
+	
+	/** 
+	 * The list of points in the link
+	 */	
 	protected ArrayList points  = new ArrayList();
+	
+	/**
+	 * The circle at the end of a link
+	 */
 	protected PPath bulb;
 	
+	/**
+	 * The array containing the points in the link. This is an array version of
+	 * points
+	 */
 	protected Point2D pts[];
 	
 	
+	/** 
+	 * the number of points in the link.
+	 */
 	protected int pointCount = 0;	
-	// nodes used for selection indicators
-	protected PPath select1;
-	protected PPath select2;
-
-    // the link layer that we're part of.
+	
+	
+    /**
+     * The {@link PLinkLayer} that is the parent of this link.
+     * 
+     */
 	protected PLinkLayer  linkLayer = null;
 	
 	private PNode targets = new PNode();
 		
+	
 	public PLink() {		
 		super();
 		setStroke(LINK_STROKE);
@@ -106,7 +133,10 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		setPickable(true);
 	}
 		
-	
+	/**
+	 * Add a circle to the end of the link.
+	 *
+	 */
 	protected void buildBulb() {
 	
 		bulb = PPath.createEllipse(0,0,PConstants.LINK_BULB_SIZE,
@@ -115,7 +145,17 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		addChild(bulb);
 	}
 	
-	
+	/**
+	 * Set the starting coordinates of this link. Note that the starting and
+	 * ending coordinates are defined in terms of the order in which the points 
+	 * were added to the link - the starting coordinate was the first added, 
+	 * and the ending coordinate is the last. The type of parameter at either
+	 * end is irrelevant as far as definitions of starting and ending 
+	 * coordinates are concerned
+	 *
+	 * @param x
+	 * @param y
+	 */	
 	public void setStartCoords(float x,float y) {
 
 		setPoint(0,new Point2D.Float(x,y));
@@ -123,11 +163,22 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 			pointCount =1;
 	}
 
+	/***
+	 * Add an intermediate point. This is used when the user makes a click 
+	 * during the process of creating a link but not on a formal parameter. 
+	 * The new point replaces the last point and is duplicated, so that the next
+	 * point will overwrite the second copy, but not the first.
+	 */
 	public void setIntermediatePoint(float x,float y) {
 		setPoint(pointCount++,new Point2D.Float(x,y)); 
 		setEndCoords(x,y);
 	}
 	
+	/**
+	 * Changes the last point in the link 
+	 * @param x
+	 * @param y
+	 */
 	public void setEndCoords(float x,float y) {
 		//System.err.println("adding link end point "+x+","+y);
 		setPoint(pointCount,new Point2D.Float(x,y));
@@ -136,6 +187,11 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	protected abstract void setLine();
 	
+	/**
+	 * SEt the point at a specific index.
+	 * @param index
+	 * @param pt
+	 */
 	public void setPoint(int index,Point2D pt) {
 		//System.err.println("setting point # "+index+", # of points is "+points.size());
 		if (points.size() <= index) {
@@ -146,6 +202,13 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		updateBounds();
 	}
 	
+	/**
+	 * Set the point at index i. This is used when adjusting the links during 
+	 * the process of laying out a chain.
+	 * @param i
+	 * @param x
+	 * @param y
+	 */
 	public void insertIntermediatePoint(int i,float x,float y) {
 		Point2D pt =  new Point2D.Double(x,y);
 		points.add(i,pt);
@@ -153,6 +216,10 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		updateBounds();
 	}
 	
+	/**
+	 * To paint the link, get its shape and draw it.
+	 * 
+	 */
 	public void paint(PPaintContext aPaintContext) {
 		Graphics2D g = aPaintContext.getGraphics();
 		
@@ -164,6 +231,12 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 			g.draw(p);
 	}
 	
+	/**
+	 * If there are two points in the link, it is a straight line.
+	 * 3 points leads to a QuadraticCurve2D. More points leads to a bezier.
+	 * 
+	 * @return
+	 */
 	private Shape getLinkShape() {
 		Shape s=null;
 		Line2D line  = new Line2D.Double();
@@ -181,10 +254,6 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		}
 		
 		else if (size > 3){
-			//the b-spline is not as nice (not as pretty) but the general
-			// b-spline doesn't work at the end
-		//	s = drawBSpline(pts);
-			//s = drawGeneralBSpline(pts);
 			s= drawBezier(pts);	
 		}
 		return s;
@@ -196,7 +265,8 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	 *  This implementation is a bit of a hack, most likely due to my lack of 
 	 *  complete understanding of how these things are implemented. The lineTo
 	 *  at the end is particularly ugly, as it introduces a bend that should
-	 *  not be there. This should probably be replaced by a better implementation
+	 *  not be there. This should probably be replaced by a better 
+	 *  implementation. Currently, it is not in use.
 	 *  (10/29/03 hsh)
 	 *  
 	 * @param pts
@@ -309,7 +379,13 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		return sum;
 	}
 	
+	
 	private boolean first = true;
+	/**
+	 * A B-spline version of the line. Also not currently used.
+	 * @param pts
+	 * @return
+	 */
 	protected GeneralPath drawBSpline(Point2D[] pts) {
 		int m = 50, n = pts.length;
 		
@@ -325,22 +401,7 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	}
 	
-	protected GeneralPath drawBezier(Point2D[] pts) {
-			int m = 50, n = pts.length;
-		int i;
-		first = true;		
-		GeneralPath p = new GeneralPath();
-		n = pts.length;
-		
-		for (i=0; i<n-3; i+=3) {
-			
-		    getBezierPoints(p,pts[i],pts[i+1],pts[i+2],pts[i+3]);	 
-		}	
-		if (i != n-1) // if we didn't end exactly with right number of points
-			p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
-		return p;	
 	
-	}
 	private void getSplinePoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,
 		Point2D p3) {
 
@@ -371,35 +432,42 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		}	
 	}
 	
-
-	private void getBezierPoints(GeneralPath p,Point2D p0,Point2D p1,Point2D p2,
-		Point2D p3) {
-
-		float p0x,p0y,p1x,p1y,p2x,p2y,p3x,p3y;
-		float x,y;
-									
-		p0x=(float)p0.getX();
-		p0y= (float) p0.getY();
-		p1x= (float) (3*p1.getX()-3*p0.getX());
-		p1y= (float) (3*p1.getY()-3*p0.getY());
+	/**
+	 * 
+	 * Draw a bezier curve between the points. doesn't do very well with
+	 * the boundaries between each four-point section. I should look up how
+	 * to do that.
+	 * @param pts
+	 * @return A Bezier curve for the following points
+	 */
+	protected GeneralPath drawBezier(Point2D[] pts) {
+		int m = 50, n = pts.length;
+		int i;
+		first = true;		
+		GeneralPath p = new GeneralPath();
+		n = pts.length;
 		
-		p2x = (float)(3*p0.getX()-6*p1.getX()+3*p2.getX());
-		p2y = (float)(3*p0.getY()-6*p1.getY()+3*p2.getY());
+		p.moveTo((float) pts[0].getX(),(float) pts[0].getY());
+		for (i=0; i<n-3; i+=3) {
+			p.curveTo((float)pts[i+1].getX(),(float)pts[i+1].getY(),
+				(float)pts[i+2].getX(),(float)pts[i+2].getY(),
+				(float) pts[i+3].getX(),(float)pts[i+3].getY());
+		}
 		
-		p3x = (float)(3*p1.getX()-p0.getX()-3*p2.getX()+p3.getX());
-		p3y = (float)(3*p1.getY()-p0.getY()-3*p2.getY()+p3.getY());
-				
-		for (float t=0; t<=1; t+=0.02) {  
-			x = ((p3x*t+p2x)*t+p1x)*t+p0x;
-			y = ((p3y*t+p2y)*t+p1y)*t+p0y;
-			if (first == true) {
-				p.moveTo(x,y);
-				first = false;
-			}
-			else
-				p.lineTo(x,y);
-		}	
+		if (i == n-2)
+			p.lineTo((float)pts[n-1].getX(),(float)pts[n-1].getY());
+		else if (i == n-3) 
+			p.quadTo((float) pts[n-2].getX(),(float) pts[n-2].getY(),
+				(float) pts[n-1].getX(),
+				(float) pts[n-1].getY());
+		return p;	
 	}
+	
+		
+	/**
+	 * Set the bounds based on the shape of the link.
+	 *
+	 */
 	protected void updateBounds() {
 		Shape s = getLinkShape();
 		if (s != null) {
@@ -424,6 +492,11 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	}
 		
  	
+ 	/**
+ 	 * Draw the bulb at the end of the link
+ 	 * @param x
+ 	 * @param y
+ 	 */
 	protected void drawLinkEnd(float x,float y) {
 		bulb.setOffset(x-PConstants.LINK_BULB_RADIUS,
 			y-PConstants.LINK_BULB_RADIUS);
@@ -432,7 +505,9 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 		repaint(); 
 	}
 	
-	
+	/**
+	 * Called when the formal parameters for this link change
+	 */
 	public abstract void nodeChanged(PNodeEvent e); 
 	
 	public void remove() {
@@ -443,6 +518,11 @@ public abstract class PLink extends  PPath implements PNodeEventListener {
 	
 	public abstract PLinkTarget getEndLinkTarget();
 
+ 	/**
+ 	 * Set the link to be selected, adding {@link PLinkSelectionTarget}s as
+ 	 * necessary
+ 	 * @param v
+ 	 */
 	public void setSelected(boolean v) {
 		//System.err.println(" setting a link to be selected..");
 		PLinkTarget startTarget = getStartLinkTarget();
