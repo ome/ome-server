@@ -85,9 +85,9 @@ sub __getQuickViewFooter {
 	my $q = $self->CGI();
 
 	my @footer_elements = (
-		['New Project', $self->pageURL('OME::Web::MakeNewProject')],
-		['New Dataset', $self->pageURL('OME::Web::MakeNewDataset')],
-		['Import Files', $self->pageURL('OME::Web::ImportFiles')],
+		['New Project', $self->pageURL('OME::Web::DBObjCreate', { Type => 'OME::Project' } )],
+		['New Dataset', $self->pageURL('OME::Web::DBObjCreate', { Type => 'OME::Dataset' } )],
+		['Import Images', $self->pageURL('OME::Web::ImportImages')],
 	);
 
 	my ($footer_data, $prev);
