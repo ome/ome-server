@@ -147,6 +147,7 @@ use base qw(Class::Accessor);
 use File::Path;
 use File::Spec;
 use Log::Agent;
+use OME::Image::Server;
 
 #use Benchmark::Timer;
 
@@ -314,7 +315,8 @@ sub instance {
         die "Could not create session"
           unless defined $__soleInstance;
     } else {
-        die "Trying to retrieve a session instance when none exists"
+		my ($package, $filename, $line) = caller;
+        die "$package at line $line trying to retrieve a session instance when none exists"
           unless defined $__soleInstance;
     }
 
