@@ -18,6 +18,13 @@ $SIG{PIPE} = 'IGNORE';
 
 print "Using dispatch objects\n  ",join("\n  ",@dispatchObjects),"\n";
 
+$OME::Remote::Dispatcher::SHOW_CALLS = $ENV{OME_SHOW_CALLS}
+  if exists $ENV{OME_SHOW_CALLS};
+$OME::Remote::Dispatcher::SHOW_RESULTS = $ENV{OME_SHOW_RESULTS}
+  if exists $ENV{OME_SHOW_RESULTS};
+$OME::Remote::Dispatcher::SHOW_CACHING = $ENV{OME_SHOW_CACHING}
+  if exists $ENV{OME_SHOW_CACHING};
+
 my $port = $ARGV[0] || 8002;
 
 my ($transportClass, $style, $daemon);
