@@ -258,6 +258,19 @@ sub setCurrentPosition {
     $fh->seek($pos,$whence);
 }
 
+=head2 eof
+
+		$file->eof();
+		
+Returns 1 if the file cursor is at end or past the end of the file. 
+Returns 0 otherwise.
+
+=cut
+
+sub eof {
+	return (eof(shift->[HANDLE]));
+}
+
 =head2 readData
 
 	my $data = $file->readData($length);

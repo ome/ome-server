@@ -247,6 +247,23 @@ if this operation is not supported.
 
 sub getCurrentPosition { shift->[CURSOR] }
 
+=head2 eof
+
+		$file->eof();
+		
+Returns 1 if the file cursor is at end or past the end of the file. 
+Returns 0 otherwise.
+
+=cut
+
+sub eof {
+	my $self = shift;
+	$self->__loadInfo(); # does nothing if info is already loaded
+	
+	return 1 if ($self->[CURSOR] >= $self->[LENGTH]);
+	return 0;
+}
+
 =head2 setCurrentPosition
 
 	$file->setCurrentPosition($position,[$whence]);
