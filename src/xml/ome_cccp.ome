@@ -1,4 +1,6 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
+<!-- This file does not conform to schema specifications. This wrapper is currently broken.
+	Check the latest version of the code if you want a working version of this. -->
 <AnalysisModuleLibrary
 	xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" 
 	xsi:noNamespaceSchemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/IR3/AnalysisModule.xsd">
