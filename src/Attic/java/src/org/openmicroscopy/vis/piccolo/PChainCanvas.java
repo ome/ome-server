@@ -186,15 +186,16 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 	 * or a module if a module was dropped. Reinstate the event handler
 	 */
 	public void drop(DropTargetDropEvent e) {
+		System.err.println("getting a drop...");
 		try {
 			Transferable transferable =  e.getTransferable();
 			if (transferable.isDataFlavorSupported(ModuleFlavor.moduleFlavor)) { 
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				String i = (String)transferable.getTransferData(
-						ModuleFlavor.moduleFlavor);
+						ModuleFlavor.moduleFlavor); 
 				e.getDropTargetContext().dropComplete(true);
 				int id = Integer.parseInt(i);
-				CModule mod = connection.getModule(id);
+				CModule mod = connection.getModule(id); 
 				Point2D loc = e.getLocation();
 				createDroppedModule(mod,loc);
 				addInputEventListener(handler);
@@ -203,11 +204,11 @@ public class PChainCanvas extends PCanvas implements DropTargetListener {
 					isDataFlavorSupported(ChainFlavor.chainFlavor)) {
 				e.acceptDrop(DnDConstants.ACTION_MOVE);
 				Integer i = (Integer)transferable.
-					getTransferData(ChainFlavor.chainFlavor);
+					getTransferData(ChainFlavor.chainFlavor); 
 				e.getDropTargetContext().dropComplete(true);
-				int id = i.intValue();
+				int id = i.intValue(); 
 				Point2D loc = e.getLocation();
-				CChain chain = connection.getChain(id);
+				CChain chain = connection.getChain(id); 
 				createDroppedChain(chain,loc);
 				addInputEventListener(handler);			
 			} 
