@@ -514,10 +514,11 @@ sub renderData {
 	}
 	
 	# specialized rendering
-	$specializedRenderer = $self->_getSpecializedRenderer( $obj );
-	%record = $specializedRenderer->_renderData( $obj, $field_requests, $options )
-		if $specializedRenderer and $specializedRenderer->can('_renderData');
-
+	unless ($options->{text}) {
+		$specializedRenderer = $self->_getSpecializedRenderer( $obj );
+		%record = $specializedRenderer->_renderData( $obj, $field_requests, $options )
+			if $specializedRenderer and $specializedRenderer->can('_renderData');
+	}
 	# default rendering
 	my $q = $self->CGI();
 	my ($package_name, $common_name, $formal_name, $ST) =
@@ -593,25 +594,27 @@ $obj->$field if exists $request->{ inferred_relation };
 						if $SQLtype eq 'boolean';
 					$record{ $request_string } = $self->_trim( $record{ $request_string }, $request )
 						if( $SQLtype =~ m/^varchar|text/ ); 
-				}
-				
-				# reference field
-				if( $type eq 'has-one' ) {
-					my $render_mode = ( $request->{ render } or 'ref' );
-					$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
-				}
-	
-				# *many reference accessor
-				if( $type eq "has-many" || $type eq 'many-to-many' ) {
-					# ref_list if no field specified in command
-					my $render_mode = ( $request->{ render } or 'ref_list' );
-					$record{ $request_string } = $self->renderArray( 
-						[$obj, $field], 
-						$render_mode, 
-						{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
-						  type => $obj->getAccessorReferenceType( $field )->getFormalName()
-						}
-					);
+				} elsif ($options->{text}) {
+					$record{ $request_string } = $obj->$field() ? $obj->$field()->id() : '<NULL>';
+				} else {
+					# reference field
+					if( $type eq 'has-one' ) {
+						my $render_mode = ( $request->{ render } or 'ref' );
+						$record{ $request_string } = $self->render( $obj->$field(), $render_mode, $request );
+					}
+		
+					# *many reference accessor
+					if( $type eq "has-many" || $type eq 'many-to-many' ) {
+						# ref_list if no field specified in command
+						my $render_mode = ( $request->{ render } or 'ref_list' );
+						$record{ $request_string } = $self->renderArray( 
+							[$obj, $field], 
+							$render_mode, 
+							{ more_info_url => $self->getSearchAccessorURL( $obj, $field ),
+							  type => $obj->getAccessorReferenceType( $field )->getFormalName()
+							}
+						);
+					}
 				}
 			}
 		}
