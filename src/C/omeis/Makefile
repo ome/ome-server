@@ -10,10 +10,13 @@ endif
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
-CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99
-$(XML2_CFLAGS) LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS)
-$(FINK_INCLUDE) $(FINK_LIB) OBJS   = digest.o method.o xmlBinaryResolution.o
-../base64.c ../b64z_lib.c ifndef OME_ROOT OME_ROOT=/OME endif
+CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 $(XML2_CFLAGS)
+LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
+OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
+
+ifndef OME_ROOT
+OME_ROOT=/OME
+endif
 
 ifdef OME_ROOT
 DEFINES=-DOMEIS_ROOT=\"$(OME_ROOT)/OMEIS\"
