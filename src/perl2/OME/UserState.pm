@@ -80,7 +80,8 @@ __PACKAGE__->addColumn(experimenter_id => 'experimenter_id',
                         ForeignKey => 'experimenters',
                         NotNull => 1
                        });
-__PACKAGE__->addColumn(experimenter => 'experimenter_id','@Experimenter');
+__PACKAGE__->addColumn(['experimenter','User'] => 'experimenter_id',
+                       '@Experimenter');
 __PACKAGE__->addColumn(host => 'host',{SQLType => 'varchar(256)'});
 __PACKAGE__->addColumn(project_id => 'project_id');
 __PACKAGE__->addColumn(project => 'project_id','OME::Project',
