@@ -109,6 +109,23 @@ $mxFUNCTION_CLASS = __mxFUNCTION_CLASS();
 
 # Preloaded methods go here.
 
+package OME::Matlab::Array;
+
+sub makePersistent {
+    my ($self,$persistent) = shift;
+    $persistent = 1 unless defined $persistent;
+    bless $self,
+      $persistent?
+        "OME::Matlab::PersistentArray":
+        "OME::Matlab::Array";
+}
+
+package OME::Matlab::PersistentArray;
+
+use base qw(OME::Matlab::Array);
+
+sub DESTROY {}
+
 1;
 
 __END__
