@@ -49,20 +49,16 @@ import edu.umd.cs.piccolo.util.PBounds;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.ChainInfo;
 import org.openmicroscopy.vis.ome.Chains;
-import org.openmicroscopy.vis.ome.Modules;
-import org.openmicroscopy.vis.ome.ModuleInfo;
-import org.openmicroscopy.vis.ome.NodeInfo;
 import org.openmicroscopy.Chain;
-import org.openmicroscopy.Chain.Node;
-import org.openmicroscopy.Chain.Link;
-import org.openmicroscopy.Module;
-import org.openmicroscopy.Module.FormalInput;
-import org.openmicroscopy.Module.FormalOutput;
+import org.openmicroscopy.vis.dnd.ChainSelection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Collection;
 import java.awt.Font;
+import java.awt.dnd.DragSourceAdapter;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
 
 
 
@@ -75,7 +71,7 @@ import java.awt.Font;
  * @since OME2.0
  */
 
-public class PChainLibraryCanvas extends PCanvas  {
+public class PChainLibraryCanvas extends PCanvas implements DragGestureListener {
 	
 	private static float VGAP=20f;
 	private static float HGAP=10f;
@@ -92,18 +88,35 @@ public class PChainLibraryCanvas extends PCanvas  {
 	private float chainHeight= 0;
 	private float chainWidth = 0;
 	
-	private Modules modules;
-	
-	private HashMap nodes;
 	
 	
+	private int selectedChainID;
+	private boolean chainSelected;
+	
+	private DragSourceAdapter dragListener;
+	private DragSource dragSource;
+
 	public PChainLibraryCanvas(Connection c) {
 		super();
 		this.connection  = c;
 		layer = getLayer();
 		linkLayer = new PLinkLayer();
 		getCamera().addLayer(linkLayer);
+		
+		removeInputEventListener(getZoomEventHandler());
+		removeInputEventListener(getPanEventHandler());
+		addInputEventListener(new PChainLibraryEventHandler(this)); 
+		linkLayer.setPickable(false);
 		linkLayer.moveToFront();
+		
+		dragListener = new DragSourceAdapter() {
+				public void dragExit(DragSourceEvent dse) {
+				}
+			};
+		dragSource = new DragSource();
+		dragSource.createDefaultDragGestureRecognizer(this,
+			DnDConstants.ACTION_MOVE,this);
+
 		populate();		
 		
 	}
@@ -112,9 +125,7 @@ public class PChainLibraryCanvas extends PCanvas  {
 
 	
 		ChainInfo info;
-		
-		modules = connection.getModules();
-		// get the chains.
+
 		Chains chains = connection.getChains();
 		
 		Iterator iter = chains.iterator();
@@ -132,82 +143,33 @@ public class PChainLibraryCanvas extends PCanvas  {
 		chainHeight = 0;
 		chainWidth = 0;
 		Chain chain = info.getChain();
-		nodes = new HashMap();
+		
 		
 		PText name = new PText(chain.getName());
 		name.setFont(nameFont);
+		name.setPickable(false);
 		layer.addChild(name);
 		name.setOffset(x,y);
 		name.setScale(2);
+		float top=y;
 		chainHeight += name.getBounds().getHeight()+VGAP;
 		y += VGAP+name.getBounds().getHeight();
 		
-		//note here that we iterate over the nodeInfo objects. of 
-		// the chain info, not the nodes of the underlying chains
-		Collection nodes = info.getNodes();
-		Iterator iter = nodes.iterator();
-		while (iter.hasNext()) {
-			NodeInfo ni = (NodeInfo) iter.next();
-			drawNode(ni.getNode());
-		}
-
-		// however, we can 		
-		List links = chain.getLinks();
-		iter = links.iterator();
-		while (iter.hasNext()) {
-			Link link = (Link) iter.next();
-			drawLink(link);
-		}
+		PChain p = new PChain(connection,info,layer,linkLayer,y);
 		
- 		y += chainHeight+VGAP;
+ 		y += p.getHeight()+VGAP;
+ 		decorateChain(chain.getID(),top,y,p.getWidth());
 		x= HGAP;
+		y += VGAP;
 	}
 	
-	private void drawNode(Node node) {
-		Module mod  = node.getModule();
-		ModuleInfo modInfo = modules.getModuleInfo(mod);
-		PModule mNode = new PModule(connection,modInfo,x,y);
-		modInfo.addModuleWidget(mNode);
-		float w = (float) mNode.getBounds().getWidth();
-		x += w+HGAP;
-		layer.addChild(mNode);
-		float nodeHeight = (float) mNode.getBounds().getHeight();
-		if (nodeHeight > chainHeight)
-			chainHeight = nodeHeight;
-		nodes.put(node,mNode);
+	public void decorateChain(int id,float top,float bottom,float width) {
+		float height = bottom-top;
+		PChainBox box = new PChainBox(id,HGAP,top,width,height);
+		layer.addChild(box);
+		box.moveToBack();
 	}
 	
-	public void drawLink(Link link) {
-		Node from = link.getFromNode();
-		Node to = link.getToNode();
-		
-		PModule fromPMod = (PModule) nodes.get(from);
-		PModule toPMod = (PModule) nodes.get(to);
-		if (fromPMod == null || toPMod ==null) 
-			return;
-			
-	//	System.err.println("getting both ends of link");
-		
-		FormalInput input = link.getToInput();
-		FormalOutput output = link.getFromOutput();
-	/*	System.err.println("from module "+fromPMod.getModuleInfo().getModule().getName());
-		System.err.println("to module " +toPMod.getModuleInfo().getModule().getName());
-		
-		System.err.println("input id is "+input.getID());
-		System.err.println("output id is "+output.getID()); */
-		
-		PFormalInput inputPNode = toPMod.getFormalInputNode(input);
-		PFormalOutput outputPNode = fromPMod.getFormalOutputNode(output);
-		
-		
-		if (inputPNode != null && outputPNode != null) {
-			PParamLink newLinkNode = new PParamLink(inputPNode,outputPNode);
-			linkLayer.addChild(newLinkNode);
-			linkLayer.completeLink(newLinkNode);
-		}
-		/* else
-			System.err.println("failed to find input or output node for link"); */ 
-	}
 	
 	public void scaleToSize() {
 		getCamera().animateViewToCenterBounds(getBufferedBounds(),true,0);
@@ -217,5 +179,33 @@ public class PChainLibraryCanvas extends PCanvas  {
 		PBounds b = layer.getFullBounds();
 		return new PBounds(b.getX(),b.getY(),b.getWidth()+2*PConstants.BORDER,
 			b.getHeight()+2*PConstants.BORDER); 
+	}
+	
+	public void setSelectedChainID(int id) {
+		selectedChainID=id;
+		System.err.println("selected chain "+id);
+		chainSelected = true;
+	}
+	
+	public int getSelectedChainID() {
+		return selectedChainID;
+	}
+	
+	public void clearChainSelected() {
+		System.err.println("clear chain selection");
+		chainSelected = false;
+	}
+	
+	public boolean isChainSelected() { 
+		return chainSelected;
+	}
+	
+	public void dragGestureRecognized(DragGestureEvent event) {
+		if (chainSelected == true) {
+			Integer id = new Integer(selectedChainID);
+			ChainSelection c = new ChainSelection(id);
+			System.err.println("dragging..."+id);
+			dragSource.startDrag(event,DragSource.DefaultMoveDrop,c,dragListener);
+		}
 	}
 }
