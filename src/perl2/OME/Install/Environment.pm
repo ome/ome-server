@@ -86,7 +86,9 @@ sub restore_from {
 sub initialize {
     unless ($sole_instance) { # first time we're called
         # Try to reload it from a file
-        restore_from();
+        eval {
+            restore_from();
+        };
         # Create the singleton
         $sole_instance = &$new() unless $sole_instance;
         
