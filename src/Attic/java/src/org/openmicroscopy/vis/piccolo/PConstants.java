@@ -85,6 +85,8 @@ public class PConstants {
 	
 	public static final Font THUMBNAIL_LABEL_FONT = 
 		new Font("Helvetica",Font.BOLD,8);
+	public static final Font PROJECT_LABEL_FONT = 
+			new Font("Helvetica",Font.BOLD,10);
 	public static final Font TOOLTIP_FONT = new Font("Helvetica",Font.BOLD,12);
 	public static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);	
 	public static final Font LABEL_FONT  = new Font("Helvetica",Font.BOLD,18);
