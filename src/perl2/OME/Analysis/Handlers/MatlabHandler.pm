@@ -101,6 +101,7 @@ sub new {
 		uint8  => $mxUINT8_CLASS,
 		uint16 => $mxUINT16_CLASS,
 		uint32 => $mxUINT32_CLASS,
+		float  => $mxSINGLE_CLASS,
 	};
 	
 	# Mapping from matlab classes to pixel types. Also limits the supported matlab classes.
@@ -448,37 +449,34 @@ sub MatlabArray_to_Pixels {
 	while( $current_ST->name() ne 'Pixels' ) {
 		# Make a new attribute
 		my $new_attr;
+		my @factory_params = ( $current_ST, $self->getCurrentImage(), $self->getModuleExecution() );			
 		if( $current_ST->name() eq 'PixelsSlice' ) {
-			$new_attr = $factory->newAttribute( 
-				'PixelsSlice', 
-				$self->getCurrentImage(),
-				$self->getModuleExecution(),
-				{
-					StartX => 0,
-					StartY => 0,
-					StartZ => 0,
-					StartC => 0,
-					StartT => 0,
-					EndX   => $pixels_attr->SizeX(),
-					EndY   => $pixels_attr->SizeY(),
-					EndZ   => $pixels_attr->SizeZ(),
-					EndC   => $pixels_attr->SizeC(),
-					EndT   => $pixels_attr->SizeT(),
-					Parent => $pixels_attr
-				},
-				( $last_attribute ? 1 : undef ) );
+			push( @factory_params, {
+				StartX => 0,
+				StartY => 0,
+				StartZ => 0,
+				StartC => 0,
+				StartT => 0,
+				EndX   => $pixels_attr->SizeX() - 1,
+				EndY   => $pixels_attr->SizeY() - 1,
+				EndZ   => $pixels_attr->SizeZ() - 1,
+				EndC   => $pixels_attr->SizeC() - 1,
+				EndT   => $pixels_attr->SizeT() - 1,
+				Parent => $pixels_attr
+			} );
 		} else {
-			$new_attr = $factory->newAttribute( 
-				$current_ST, 
-				$self->getCurrentImage(),
-				$self->getModuleExecution(),
-				{ },
-				( $last_attribute ? 1 : undef )
-			);
+			# All the other Pixels derivatives only have a Parent SE, and we haven't
+			# made the parent yet. Thus, the data hash is empty.
+			push( @factory_params, { } );
 		}
 		
+		# if last attribute is defined, then we're making a parent attribute
+		if( $last_attribute ) {	$new_attr = $factory->newParentAttribute( @factory_params ); } 
+		# otherwise, we're making the function output.
+		else { $new_attr = $factory->newAttribute( @factory_params ); } 
+		
 		# Now that we have made a new attribute, use it to satisfy the Parent
-		# field on the last attribute.
+		# field of the last attribute.
 		if( $last_attribute ) {
 			$last_attribute->Parent( $new_attr );
 			$last_attribute->storeObject();
