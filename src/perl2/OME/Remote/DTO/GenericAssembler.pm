@@ -51,6 +51,7 @@ our @EXPORT_OK = qw(%DATA_CLASSES);
 
 our %DATA_CLASSES =
   (
+   Task              => 'OME::Task',
    Project           => 'OME::Project',
    Dataset           => 'OME::Dataset',
    Image             => 'OME::Image',
