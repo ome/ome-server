@@ -1328,6 +1328,10 @@ sub deleteObject {
         $self->__deleteFromDatabase($dbh);
     };
     die $@ if $@;
+    
+    OME::Tasks::LSIDManager->require();
+	OME::Tasks::LSIDManager->new()->deleteLSID($self);
+
 
     return;
 }
