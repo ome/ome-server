@@ -44,6 +44,7 @@ package org.openmicroscopy.vis.chains;
 
 import org.openmicroscopy.vis.piccolo.PPaletteCanvas;
 import org.openmicroscopy.vis.ome.Connection;
+//import edu.umd.cs.piccolo.util.PBounds;
 import javax.swing.JFrame;
 import javax.swing.BoxLayout;
 import java.awt.Rectangle;
@@ -92,7 +93,7 @@ public class ModulePaletteFrame extends JFrame {
 		canvas = new PPaletteCanvas();
 		getContentPane().add(canvas);
 		setBounds(new Rectangle(10,10,WIDTH,HEIGHT));	
-		canvas.setBounds(10,10,WIDTH,HEIGHT);
+		//canvas.setBounds(10,10,WIDTH,HEIGHT);
 		setIconImage(controller.getIcon()); 
 		show();	
 	}
@@ -114,6 +115,17 @@ public class ModulePaletteFrame extends JFrame {
 		if (v == true) {
 			canvas.setConnection(connection);
 			toolBar.setLoggedIn(connection.getUserName());
+
+			/*
+			 * 
+			 * This doesn't quite work. How can I find out how much space the 
+			 * node/layer takes and resize accordingly?
+			 PBounds b = canvas.getBufferedBounds();
+			double canvasRatio = b.getWidth()/b.getHeight();
+			int mywidth = (int) (canvasRatio*HEIGHT);
+
+			setSize(mywidth,HEIGHT+toolBar.getHeight());
+			invalidate(); */
 			canvas.scaleToSize();
 		}
 		else {
