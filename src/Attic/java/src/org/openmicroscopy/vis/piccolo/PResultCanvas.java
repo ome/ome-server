@@ -47,6 +47,7 @@ import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.util.PBounds;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import org.openmicroscopy.vis.chains.ResultFrame;
+import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CChainExecution;
 import org.openmicroscopy.vis.ome.CChain;
@@ -136,6 +137,8 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 	
 	private static float VGAP=10;
 	
+	private SelectionState selectionState;
+	
 	public PResultCanvas(Connection c) {
 		super();
 		this.connection  = c;
@@ -222,7 +225,7 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 				int id = i.intValue(); 
 				CChain chain = connection.getChain(id); 
 				System.err.println("dropped "+chain.getName()+" on result canvas");
-				if (chain.hasEligibleExecutions() == true) {
+				if (chain.hasExecutionsInSelectedDatasets(selectionState) == true) {
 					System.err.println("creating dropped chains");
 					Point2D loc = e.getLocation();
 					createDroppedChain(chain,loc);
@@ -276,9 +279,20 @@ public class PResultCanvas extends PCanvas implements DropTargetListener {
 		this.libraryCanvas = libraryCanvas;
 	}
 	
+	public void setSelectionState(SelectionState selectionState) {
+		this.selectionState = selectionState;
+	}
+	
 	public void setExecution(CChainExecution exec) {
 		this.exec=exec;
 		System.err.println("setting execution to "+exec);
+		gainedFocus();
+		
+	}
+	
+	public void gainedFocus() {
+		if (exec != null && selectionState != null) 
+			selectionState.setCurrentExecution(exec);
 	}
 	
 	public CChainExecution getChainExecution() {
