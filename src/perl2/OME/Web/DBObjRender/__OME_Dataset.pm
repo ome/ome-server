@@ -68,6 +68,7 @@ makes virtual fields
 	current_annotation_author: A ref to the author of the current annotation 
 		iff it was not written by the user
 	annotation_count: The total number of annotations about this dataset
+	count_images: The number of images in this dataset.
 
 =cut
 
@@ -77,6 +78,13 @@ sub _renderData {
 	my $factory = $session->Factory();
 	my %record;
 
+	# count_images:
+	if( exists $field_requests->{ 'count_images' } ) {
+		foreach my $request ( @{ $field_requests->{ 'count_images' } } ) {
+			my $request_string = $request->{ 'request_string' };
+			$record{ $request_string } = $obj->count_images();
+		}
+	}
 	# current_annotation:
 	if( exists $field_requests->{ 'current_annotation' } ) {
 		foreach my $request ( @{ $field_requests->{ 'current_annotation' } } ) {
