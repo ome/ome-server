@@ -274,8 +274,41 @@ sub writeOneSemanticElement ($$) {
 JAVA
 }
 
+sub writeOneHasManyType ($$$) {
+    my ($fh,$hasmany_type_name,$element_hash) = @_;
+    my @element_names = sort keys %$element_hash;
+
+    # Attempt to make the pluralization look somewhat correct
+    $hasmany_type_name =~ s/y$/ie/;
+    $hasmany_type_name =~ s/s$//;
+
+    if (scalar(@element_names) == 1) {
+        # If there's only one element in the has-many type which points
+        # to this type, then we can give the accessor a simple name
+        # (get[TypeName]s).
+
+        print $fh <<"JAVA";
+    public List get${hasmany_type_name}s();
+
+JAVA
+    } else {
+        # Otherwise, we have to give the List accessors more complicated
+        # names, so that the different has-many elements can be
+        # distinguished. (get[TypeName]sBy[ElementName])
+
+        foreach my $element_name (@element_names) {
+            print $fh <<"JAVA";
+    public List get${hasmany_type_name}sBy${element_name}();
+JAVA
+        }
+
+        print $fh "\n";
+    }
+}
+
 sub writeOneSemanticType ($) {
     my ($type) = @_;
+    my $factory = OME::Session->instance()->Factory();
 
     # Generate the package, class, and file names for the type interface
     my $type_name = $type->name();
@@ -303,18 +336,46 @@ sub writeOneSemanticType ($) {
     writePreamble($fh,$type_fqclassname);
     print $fh "package org.openmicroscopy.st;\n\n";
 
-    # Look for reference elements, and if there are any, output import
-    # clauses to include their semantic type interfaces.
+    # Look for reference elements, and if there are any, add them to the
+    # list of ST's to import.
 
-    my $any_reftypes = 0;
+    my %import_types;
 
     foreach my $element ($type->semantic_elements()) {
         next if $element->data_column()->sql_type() ne 'reference';
-        $any_reftypes = 1;
         my $reftype = $element->data_column()->reference_type();
-        print $fh "import org.openmicroscopy.st.${reftype};\n";
+        $import_types{$reftype} = undef;
     }
-    print $fh "\n" if $any_reftypes;
+
+    # Import any types which have reference elements to this type.
+    # Also, sort these has-many elements by the semantic type which
+    # contains them.
+
+    my @hasmany_elements = $factory->
+      findObjects('OME::SemanticType::Element',
+                  {
+                   'data_column.sql_type'       => 'reference',
+                   'data_column.reference_type' => $type_name,
+                  });
+    my %hasmany_types;
+
+    foreach my $element (@hasmany_elements) {
+        my $hasmany_type = $element->semantic_type();
+        my $hasmany_type_name = $hasmany_type->name();
+        $import_types{$hasmany_type_name} = undef;
+        $hasmany_types{$hasmany_type_name}->{$element->name()} = $element;
+    }
+
+    # Add import clauses for any types that are used by this interface
+
+    if (scalar(keys %import_types) > 0) {
+        foreach my $type (sort keys %import_types) {
+            print $fh "import org.openmicroscopy.st.${type};\n";
+        }
+        print $fh "\n";
+    }
+
+    # Output the interface specification
 
     print $fh <<"JAVA";
 public interface ${type_classname}
@@ -322,14 +383,27 @@ public interface ${type_classname}
 {
 JAVA
 
+    # Output an accessor and mutator for each semantic element
+
     foreach my $element ($type->semantic_elements()) {
         writeOneSemanticElement($fh,$element);
     }
+
+    # Output a List accessor for each has-many element
+
+    foreach my $hasmany_type_name (sort keys %hasmany_types) {
+        writeOneHasManyType($fh,$hasmany_type_name,
+                            $hasmany_types{$hasmany_type_name});
+    }
+
+    # Output the interface's closing brace
 
     print $fh <<"JAVA";
 }
 JAVA
     $fh->close();
+
+    # Output the entire LSID interface (it's very simple)
 
     $fh = openHandle($lsid_dir,$lsid_filename);
     writePreamble($fh,$lsid_fqclassname);
