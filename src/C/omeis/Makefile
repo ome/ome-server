@@ -3,14 +3,16 @@ XML2_CFLAGS = `xml2-config --cflags`
 XML2_LIBS = `xml2-config --libs`
 
 # Don't put this cruft in if we don't need it
-ifeq (,$(findstring(darwin,$(OSTYPE))))
-FINK_INCLUDE = -I/sw/include/
-FINK_LIB = -L/sw/lib/ 
+ifdef $(OSTYPE)
+	ifeq (,$(findstring(darwin,$(OSTYPE))))
+	FINK_INCLUDE = -I/sw/include/
+	FINK_LIB = -L/sw/lib/ 
+	endif
 endif
 
 # The CPP (C-Pre-Processor) in Apple's GCC 1175 is broken, upgrade to the
 # August 2003 GCC for -pedantic
-CFLAGS = -g -Winline -Wall -Wpointer-arith -Wstrict-prototypes -O3 -std=c99 $(XML2_CFLAGS)
+CFLAGS = -O3 -g -W -Wall -Wshadow -Wmissing-prototypes -Wstrict-prototypes -Wchar-subscripts -Wformat -Wformat=2 -Wmissing-format-attribute -Wmissing-noreturn -Wundef -Wendif-labels -std=c99
 LIBS   = -lm -lssl -lcrypto -lz -lbz2 $(XML2_LIBS) $(FINK_INCLUDE) $(FINK_LIB)
 OBJS   = digest.o method.o xmlBinaryResolution.o ../base64.c ../b64z_lib.c
 
@@ -30,7 +32,7 @@ DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 all: omeis
 
 omeis: omeis.c omeis.h $(OBJS)
-	$(CC) $(CFLAGS) $(LIBS) $(DEFINES) -o omeis omeis.c $(OBJS)
+	$(CC) $(CFLAGS) $(LIBS) $(XML2_CFLAGS) $(DEFINES) -o omeis omeis.c $(OBJS)
 
 digest.o: digest.c digest.h
 	$(CC) $(CFLAGS) -c digest.c
@@ -45,7 +47,7 @@ method.o: method.c method.h
 #	$(CC) $(CFLAGS) -c ../b64z_lib.c -o ../b64z_lib.o
 
 xmlBinaryResolution.o: xmlBinaryResolution.c
-	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(FINK_INCLUDE)
+	$(CC) $(CFLAGS) -c xmlBinaryResolution.c $(FINK_INCLUDE) $(XML2_CFLAGS) 
 
 clean:
 	/bin/rm -f *.o *~ core omeis
