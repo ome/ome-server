@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <simple.h>
 #include <pic.h>
 #include <png.h>

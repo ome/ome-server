@@ -5,6 +5,7 @@
 
 /* $Header$ */
 
+#include <stdlib.h>
 #include <stdio.h>
 
 /* better than standard assert.h: doesn't gag on 'if (p) assert(q); else r;' */

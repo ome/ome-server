@@ -5,7 +5,8 @@ TARGETS = DumpDV SetDVwave findSpotsOME BinarizeGlobal \
 		DumpSoftWorxStats DumpTIFFheader DumpTIFFstats OME_Image_XYZ_stats OME_JPEG \
 		extractBinData insertBinData maxIntensity cgrayce2 omeis2
 DB_INCLUDES = -I/usr/include/pgsql -I/usr/local/include/pgsql
-INCS    = -I/usr/local/include -I/sw/include $(DB_INCLUDES)
+FINK_INCLUDE = -I/sw/include/
+INCS    = -I/usr/local/include $(FINK_INCLUDE) $(DB_INCLUDES)
 DB_LIBS = -lpq
 COMPRESSION_LIBS = -lz -lbz2
 IMAGE_LIBS = -ltiff
@@ -106,7 +107,7 @@ SetDVwave: SetDVwave.o  BSUtils.o
 	$(CC) $(CFLAGS) -o SetDVwave SetDVwave.o BSUtils.o
 
 OME_JPEG: OME_JPEG.c
-	$(CC) $(CFLAGS) -o OME_JPEG OME_JPEG.c -ljpeg
+	$(CC) $(CFLAGS) $(FINK_INCLUDE) -o OME_JPEG OME_JPEG.c -ljpeg
 
 $(OME_LIB): $(OBJECTS)
 	ar cr $@ $(OBJECTS)
@@ -142,7 +143,8 @@ b64z_lib.o: b64z_lib.c b64z_lib.h
 .PHONY : clean
 clean :
 	rm -f *.o
-	rm -f $(TARGETS)	
+	rm -f $(TARGETS)
+	rm -f iolib/*.o
 	$(MAKE) -C cgrayce clean
 	$(MAKE) -C omeis clean
 

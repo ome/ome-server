@@ -1,8 +1,10 @@
+export DEFINES
+export FINK_INCLUDE
 install:
 	-mkdir include lib bin
-	cd libsys; make DEFINES='$(DEFINES)' install
-	cd libpic; make DEFINES='$(DEFINES)' install
-	cd zoom; make DEFINES='$(DEFINES)' install
+	cd libsys; make install
+	cd libpic; make install
+	cd zoom; make install
 
 clean:
 	-rm -fr include lib bin

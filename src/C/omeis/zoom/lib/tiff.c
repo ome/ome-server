@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <errno.h>
 #include <simple.h>
 #include <pic.h>
@@ -13,13 +14,13 @@ struct tagPicTiff {
   int width;
   int height;
   int num_channels;
-  int row_stride;
+  tsize_t row_stride;
   int rows_per_strip;
   unsigned char *row;
   void *tiffBuf;
   char buf_mode;
-  size_t buf_size;
-  size_t buf_off;
+  tsize_t buf_size;
+  toff_t buf_off;
   TIFF *tiff;
 };
 typedef struct tagPicTiff PicTiff;
@@ -70,7 +71,8 @@ pictiff_open(const char *filename, const char *mode)
     try = TIFFOpen(filename, mode);
   
   if (try) {
-    ALLOC(tiff, PicTiff, 1);
+    tiff = (PicTiff *) malloc (sizeof(PicTiff));
+    if (!tiff) return (NULL);
     memset(tiff, 0, sizeof(PicTiff));
     tiff->tiff = try;
     strncpy (tiff->name,filename,255);
@@ -115,10 +117,10 @@ pictiff_open_stream (FILE *stream, const char *filename,  const char *mode)
 	else if (mode[0] == 'w') buf_mode = 'w';
 	else if (mode[0] == 'a') buf_mode = 'a';
 	else return (NULL);
-	
-	ALLOC(tiff, PicTiff, 1);
+	tiff = (PicTiff *) malloc (sizeof(PicTiff));
+	if (!tiff) return (NULL);
 	memset(tiff, 0, sizeof(PicTiff));
-	tiff->tiffBuf = (void *) malloc(0);
+	tiff->tiffBuf = malloc(0);
 	tiff->buf_size = 0;
 	tiff->buf_off = 0;
 	tiff->buf_mode = buf_mode;
@@ -486,6 +488,7 @@ static toff_t mfs_lseek (thandle_t h, toff_t offset, int whence)
 	toff_t ret;
 	toff_t test_off;
 
+
 	if (! tiff->tiffBuf)	/* Not open */
 	{
 		ret = -1;
@@ -526,7 +529,6 @@ static toff_t mfs_lseek (thandle_t h, toff_t offset, int whence)
 
 			case SEEK_END:
 				test_off = tiff->buf_size + offset;
-
 				if (test_off < 0)
 				{
 					ret = -1;
@@ -612,7 +614,6 @@ static tsize_t mfs_write (thandle_t h, tdata_t buf, tsize_t size)
 {
 	PicTiff *tiff = (PicTiff *) h;
 	tsize_t ret;
-
 	if (!tiff->tiffBuf || ! tiff->buf_mode == 'r')
 	{
 		/* Either the file is not open or it is opened for reading only */
@@ -629,7 +630,7 @@ static tsize_t mfs_write (thandle_t h, tdata_t buf, tsize_t size)
 			extend_mem_file (h, tiff->buf_off + size);
 		}
 
-		memcpy ((void *)(tiff->tiffBuf + tiff->buf_off), (void *)buf, size);
+		memcpy (tiff->tiffBuf + tiff->buf_off, (void *)buf, (size_t)size);
 		tiff->buf_off = tiff->buf_off + size;
 
 		ret = size;
@@ -643,7 +644,7 @@ static tsize_t mfs_write (thandle_t h, tdata_t buf, tsize_t size)
 
 		extend_mem_file (h, tiff->buf_off + size);
 
-		memcpy ((void *)(tiff->tiffBuf + tiff->buf_off), (void *)buf, size);
+		memcpy (tiff->tiffBuf + tiff->buf_off, (void *)buf, (size_t)size);
 		tiff->buf_off = tiff->buf_off + size;
 
 		ret = size;
@@ -791,11 +792,10 @@ static int extend_mem_file (thandle_t h, tsize_t size)
 	void *new_mem;
 	int ret;
 
-	if ((new_mem = (void *)realloc (tiff->tiffBuf, size)) == (void *) NULL)
+	if ((new_mem = (void *)realloc (tiff->tiffBuf, (size_t)size)) == NULL) {
 		ret = -1;
-	else
-	{
-		tiff->tiffBuf = (char *) new_mem;
+	} else {
+		tiff->tiffBuf = new_mem;
 		tiff->buf_size = size;
 		ret = 0;
 	}
