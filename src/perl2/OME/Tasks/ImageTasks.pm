@@ -210,7 +210,7 @@ sub forkedImportFiles {
 
         eval {
             POSIX::setsid() or die "Can't start a new session. $!";
-
+			$task->setPID ($$);
             $task->step();
             $task->setMessage('Starting import');
 
