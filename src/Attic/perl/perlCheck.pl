@@ -350,7 +350,7 @@ my $error;
 	my $testStatus = system ('make test');
 	die "Test errors - script aborted.\n" if $testStatus != 0 and $badTestsFatal;
 	if ($testStatus != 0 and not $badTestsFatal) {
-		print "\n**** Test Errors - attempt install anyway? [NO]";
+		print "\n**** Test Errors - attempt install anyway? [NO] ";
 		my $yorn = <STDIN>;
 		chomp $yorn;
 		$yorn = uc ($yorn);
