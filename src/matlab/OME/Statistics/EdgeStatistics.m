@@ -48,8 +48,8 @@ function [EdgeArea, MagMean, MagMedian, MagVar, MagHist, ...
 NUM_BINS = 8;
 NUM_BINS_HALF = 4;
 
-GradientMag = Gradient(:,:,1);
-GradientDirec = Gradient(:,:,1);
+GradientMag   = Gradient(:,:,1);
+GradientDirec = Gradient(:,:,2);
 
 % Calculate number of image pixels that are edge pixels
 EdgeArea = sum(sum(im2bw( uint8(GradientMag) )));
