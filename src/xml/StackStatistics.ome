@@ -192,7 +192,7 @@
 	Description = "Calculate pixel statistics for each XYZ Stack. Produced from XML specification.">
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = ""/>
-		<FormalInput Name = "Dimensions" SemanticTypeName = "Pixels" Description = ""/>
+		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = ""/>
 		<FormalOutput Name = "Stack minimum"   SemanticTypeName = "StackMinimum"       Description = "Minimum pixel intensity in an XYZ stack"/>
 		<FormalOutput Name = "Stack maximum"   SemanticTypeName = "StackMaximum"       Description = "Maximum pixel intensity in an XYZ stack"/>
 		<FormalOutput Name = "Stack mean"      SemanticTypeName = "StackMean"      Description = "Mean of pixel intensities in an XYZ stack"/>

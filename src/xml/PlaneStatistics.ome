@@ -197,7 +197,7 @@
 	Description = "Calculate pixel statistics for each XY plane. Produced from XML specification.">
 	<Declaration>
 		<FormalInput Name = "Pixels" SemanticTypeName = "Pixels" Description = ""/>
-		<FormalInput Name = "Dimensions" SemanticTypeName = "Pixels" Description = ""/>
+		<FormalInput Name = "Dimensions" SemanticTypeName = "Dimensions" Description = ""/>
 		<FormalOutput Name = "Plane minimum" SemanticTypeName = "PlaneMinimum" Description = ""/>
 		<FormalOutput Name = "Plane maximum" SemanticTypeName = "PlaneMaximum" Description = ""/>
 		<FormalOutput Name = "Plane mean" SemanticTypeName = "PlaneMean" Description = ""/>
