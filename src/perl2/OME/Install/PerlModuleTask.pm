@@ -131,8 +131,8 @@ my @modules = (
 	#repository_file => "$REPOSITORY/Tie-IxHash-1.21.tar.gz"
 	#},{
 	name => 'DBD::Pg',
-	repository_file => "$REPOSITORY/DBD-Pg-1.21.tar.gz",
-	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'eq 1.21', 'ne 1.22'],
+	repository_file => "$REPOSITORY/DBD-Pg-1.22.tar.gz",
+	valid_versions => ['eq 0.95', 'eq 1.01', 'eq 1.20', 'ne 1.21', 'eq 1.22'],
 	pre_install => sub {
 	    which ("pg_config") or croak "Unable to execute pg_config, are PostgreSQL and its development packages installed ?";
 
