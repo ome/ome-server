@@ -416,13 +416,18 @@ sub editGroup {
     my $name = "";
     my $leader_input = "";
     my $contact_input = "";
+    my $addUser_input = '';
+    my $deleteUser_input = '';
     my $result;
 
     $result = GetOptions('help|h' => \$help,
-                         'id|i=i' => \$group_id,
+                         'group|g=s' => \$group_id,
                          'name|n=s' => \$name,
                          'leader|l=s' => \$leader_input,
-                         'contact|c=s' => \$contact_input);
+                         'contact|c=s' => \$contact_input,
+                         'addUser|a=s' => \$addUser_input,
+                         'deleteUser|d=s' => \$deleteUser_input,
+                         );
 
     exit(1) unless $result;
 
@@ -432,14 +437,19 @@ sub editGroup {
     }
 
     if ($group_id eq '') {
-        print "You must specify a group to edit with the -i option.\n";
+        print "You must specify a group to edit with the -g option.\n";
         exit 1;
     }
 
     my $session = $self->getSession();
     my $factory = $session->Factory();
 
-    my $group = $factory->loadAttribute('Group',$group_id);
+	my $group;
+	if ($group_id =~ /^[0-9]+$/) {
+        $group = $factory->loadAttribute('Group',$group_id);
+    } else {
+        $group = $factory->findAttribute('Group',{Name => $group_id});
+    }
 
     if (!defined $group) {
         print "Group #${group_id} does not exist.\n";
@@ -451,18 +461,7 @@ sub editGroup {
     my $leader;
 
     if ($leader_input ne '') {
-        if ($leader_input =~ /^[0-9]+$/) {
-            # Leader was specified by ID
-            $leader = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         $leader_input);
-        } else {
-            $leader = $factory->
-              findObject('OME::SemanticType::BootstrapExperimenter',
-                         {
-                          OMEName => $leader_input });
-        }
-
+        $leader = $self->__getExperimenter ($leader_input);
         if (!defined $leader) {
             print "Could not find the specified leader ($leader_input).\n";
             exit 1;
@@ -474,21 +473,54 @@ sub editGroup {
     my $contact;
 
     if ($contact_input ne '') {
-        if ($contact_input =~ /^[0-9]+$/) {
-            # Contact was specified by ID
-            $contact = $factory->
-              loadObject('OME::SemanticType::BootstrapExperimenter',
-                         $contact_input);
-        } else {
-            $contact = $factory->
-              findObject('OME::SemanticType::BootstrapExperimenter',
-                         {
-                          OMEName => $contact_input });
-        }
+        $contact = $self->__getExperimenter ($contact_input);
 
         if (!defined $contact) {
             print "Could not find the specified contact ($contact_input).\n";
             exit 1;
+        }
+    }
+
+    # Verify that the specified new user exists.
+
+    my $addUser;
+
+    if ($addUser_input ne '') {
+        $addUser = $self->__getExperimenter ($addUser_input);
+
+        die "Could not find the specified user ($addUser_input).\n" unless $addUser;
+        
+        my $data = {Experimenter => $addUser, Group => $group};
+        my $object = $factory->findObject(
+            'OME::SemanticType::BootstrapExperimenterGroup',$data);
+        if ($object) {
+            print STDERR "Experimenter $addUser_input is already a member of Group $group_id\n";
+        } else {
+            $factory->newObject(
+            'OME::SemanticType::BootstrapExperimenterGroup',$data);
+        }
+    }
+
+    # Verify that the specified deleted user exists and is part of this group.
+
+    my $deleteUser;
+
+    if ($deleteUser_input ne '') {
+        $deleteUser = $self->__getExperimenter ($deleteUser_input);
+
+        if (!defined $deleteUser) {
+            print "Could not find the specified user ($deleteUser_input).\n";
+            exit 1;
+        }
+        
+        my $data = {Experimenter => $deleteUser, Group => $group};
+        my $object = $factory->findObject(
+            'OME::SemanticType::BootstrapExperimenterGroup',$data);
+        unless ($object) {
+            print STDERR "Experimenter $deleteUser_input is not a member of Group $group_id\n";
+            exit 1;
+        } else {
+            $object->deleteObject();
         }
     }
 
@@ -517,6 +549,29 @@ sub editGroup {
 
 }
 
+sub __getExperimenter {
+    my $self = shift;
+    my $exp_in = shift;
+    my $object;
+    my $session = $self->getSession();
+    my $factory = $session->Factory();
+
+    if ($exp_in =~ /^[0-9]+$/) {
+        # Experimenter was specified by ID
+        $object = $factory->
+          loadObject('OME::SemanticType::BootstrapExperimenter',
+                     $exp_in);
+    } else {
+        $object = $factory->
+          findObject('OME::SemanticType::BootstrapExperimenter',
+                     {
+                      OMEName => $exp_in });
+    }
+    
+    return $object;
+
+}
+
 sub editGroup_help {
     my ($self,$commands) = @_;
     my $script = $self->scriptName();
@@ -534,10 +589,9 @@ if there is any database error or inconsistency in the data, none of
 the other (possibly valid) changes are saved.
 
 Options:
-    -i, --id <group ID>
-        Specify the group to edit by its database ID.  The <group ID>
-        parameter must be a positive integer, and can be found via the
-        "groups list" command.
+    -g, --group  (<group ID> | <group name>)
+        Specify the group to edit by its database ID or name.  If the parameter
+        is an integer, it will be assumed to be a group ID.
 
 Edit options:
     -n, --name <name>
@@ -550,6 +604,12 @@ Edit options:
     -c, --contact (<user ID> | <username>)
         Change the group's contact.  The contact is specified as
         either an integer user ID, or as a username.
+
+    -a, --addUser (<user ID> | <username>)
+        Add the specified user to the group.
+
+    -d, --deleteUser (<user ID> | <username>)
+        Delete the specified user from the group.
 CMDS
 }
 
