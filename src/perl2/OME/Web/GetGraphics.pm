@@ -213,7 +213,6 @@ sub BuildSVGviewer {
 	my $SVG;
 	
 	my $JSinfo = $self->_getJSData();
-	print STDERR ref($self)."->BuildSVGviewer reporting jsinfo.\n\t".join( "\n\t", map( $_.' => '.$JSinfo->{$_}, keys %$JSinfo ))."\n\n";
 	my $DatasetID		   = $cgi->url_param('DatasetID') || 'null';
 	my $ImageID			   = $JSinfo->{ ImageID };
 	my $Stats			   = $JSinfo->{ Stats };
