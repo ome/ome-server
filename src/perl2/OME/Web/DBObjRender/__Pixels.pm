@@ -52,12 +52,11 @@ Provides custom behavior for rendering Pixels ST
 =cut
 
 use strict;
-use vars qw($VERSION);
 use OME;
-use OME::Web;
-use OME::Session;
+our $VERSION = $OME::VERSION;
 use OME::Tasks::PixelsManager;
 use base qw(OME::Web::DBObjRender);
+use Carp qw(cluck);
 
 sub new {
 	my $proto = shift;
@@ -87,29 +86,29 @@ sub new {
 }
 
 
-=head2 getRef
+=head2 _getRef
 
 html format returns a thumbnail linking to the image viewer and a link
 to the Pixels attribute.
 
 =cut
 
-sub getRef {
-	my ($proto,$obj,$format) = @_;
-	
+sub _getRef {
+	my ($self,$obj,$format) = @_;
+
 	for( $format ) {
 		if( /^txt$/ ) {
 			return $obj->id();
 		}
 		if( /^html$/ ) {
 			my ($package_name, $common_name, $formal_name, $ST) =
-				OME::Web->_loadTypeAndGetInfo( $obj );
+				$self->_loadTypeAndGetInfo( $obj );
 			my $id   = $obj->id();
 			my $source_module; $source_module = $obj->module_execution()->module()->name()
 				if $obj->module_execution() and $obj->module_execution()->module();
 			my $thumbURL = OME::Tasks::PixelsManager->getThumbURL($id); 
-			my $ref = "<a href='javascript: openPopUpPixels($id); return false' title='View this image'><img src='$thumbURL'></a><br>".
-			          "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute' class='ome_detail'>Pixels info</a>";
+			my $ref = "<a href='serve.pl?Page=OME::Web::DBObjDetail&Type=$formal_name&ID=$id' title='Detailed Information about this Pixels attribute' class='ome_detail'>Pixels info</a>".
+			          "<a href='javascript: openPopUpPixels($id); return false' title='View this image'><img src='$thumbURL'></a><br>";
 			return $ref;
 		}
 	}
@@ -122,7 +121,7 @@ No search field to Pixels
 =cut
 
 sub getRefSearchField {
-	my ($proto, $from_type, $to_type, $accessor_to_type, $default) = @_;
+	my ($self, $from_type, $to_type, $accessor_to_type, $default) = @_;
 	
 	return undef;
 }
