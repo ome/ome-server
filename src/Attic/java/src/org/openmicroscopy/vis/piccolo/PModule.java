@@ -94,14 +94,15 @@ public class PModule extends PPath implements PBufferedNode {
 	private static final float NAME_SPACING=15.0f;
 	public static final float PARAMETER_SPACING=3.0f;
 	private static final float HORIZONTAL_GAP =50.0f;
+	private static final float NAME_MAG=1;
+	private static final float ZOOM_MAG=2;
 	
 	
 	private static final Color DEFAULT_COLOR=Color.black;
 	private static final Color DEFAULT_FILL = Color.lightGray;
-	public static final Color HIGHLIGHT_COLOR=Color.magenta;
 	
 	private static final BasicStroke DEFAULT_STROKE= new BasicStroke(3.0f); 
-	private static final Font NAME_FONT = new Font("Helvetica",Font.PLAIN,14);
+	private static final Font NAME_FONT = new Font("Helvetica",Font.BOLD,14);
  
 	private ModuleInfo info;
 	
@@ -148,12 +149,14 @@ public class PModule extends PPath implements PBufferedNode {
 		name = new PText(module.getName());
 		name.setFont(NAME_FONT);
 		name.setPickable(false);
+		name.setScale(NAME_MAG);
 		addChild(name);
 		
 		name.setOffset(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET);
 		
+		PBounds nameBounds = name.getGlobalFullBounds();
 		// calculate starting height for parameters.
-		height = NAME_LABEL_OFFSET+((float) name.getBounds().getHeight());
+		height = NAME_LABEL_OFFSET+((float) nameBounds.getHeight());
 	
 		linkTargets = new PNode();
 		addChild(linkTargets);	
@@ -163,7 +166,7 @@ public class PModule extends PPath implements PBufferedNode {
 		linkTargets.addChild(inputLinkTarget);
 		inputLinkTarget.setOffset(-PLinkTarget.LINK_TARGET_HALF_SIZE,height);
 				
-		nameWidth = (float) name.getBounds().getWidth();
+		nameWidth = (float) nameBounds.getWidth();
 		
 		// do the individual parameter labels.
 		addParameterLabels(module,connection);  
@@ -194,9 +197,9 @@ public class PModule extends PPath implements PBufferedNode {
 		zoomName.setFont(NAME_FONT);
 		zoomName.setPickable(false);
 		zoomName.setConstrainWidthToTextWidth(false);
-		zoomName.setScale(2);
-		double zwidth = (width-2*NAME_LABEL_OFFSET)/2;
-		double zheight = (height-2*NAME_LABEL_OFFSET)/2;
+		zoomName.setScale(ZOOM_MAG);
+		double zwidth = (width-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
+		double zheight = (height-2*NAME_LABEL_OFFSET)/ZOOM_MAG;
 		zoomName.setBounds(new PBounds(NAME_LABEL_OFFSET,NAME_LABEL_OFFSET,
 			 zwidth,zheight));
 		addChild(zoomName);
@@ -335,7 +338,7 @@ public class PModule extends PPath implements PBufferedNode {
 	public void paint(PPaintContext aPaintContext) {
 		double s = aPaintContext.getScale();
 	
-		if (s < PConstants.SCALE_THRESHOLD) {
+		if (s <= PConstants.SCALE_THRESHOLD) {
 			labelNodes.setVisible(false);
 			labelNodes.setPickable(false);
 			name.setVisible(false);
@@ -354,7 +357,7 @@ public class PModule extends PPath implements PBufferedNode {
 	
 	public void setHighlighted(boolean v) {
 		if (v == true)
-			setStrokePaint(HIGHLIGHT_COLOR);
+			setStrokePaint(PConstants.HIGHLIGHT_COLOR);
 		else
 			setStrokePaint(DEFAULT_COLOR);
 		repaint();
