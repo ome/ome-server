@@ -353,8 +353,7 @@ pic_jpeg_procs = {
   jpeg_read_pixel,
   jpeg_read_pixel_rgba,
   jpeg_read_row,
-  jpeg_read_row_rgba,
-  jpeg_next_pic
+  jpeg_read_row_rgba
 };
 
 Pic pic_jpeg =

@@ -390,8 +390,7 @@ pic_picpng_procs = {
   picpng_read_pixel,
   picpng_read_pixel_rgba,
   picpng_read_row,
-  picpng_read_row_rgba,
-  picpng_next_pic
+  picpng_read_row_rgba
 };
 
 /*------------------------------------------------------------*/
