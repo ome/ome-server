@@ -352,9 +352,8 @@ sub readSingleFilePixels
 	my $bigEndian = $endian eq "big";
 	my $status = '';
 	
-	$params -> byte_size($pixelType / 8);
-	$params -> pixel_size($pixelType);
-	$zJump = $sizeX * $sizeY;
+	my $byteSize = $params -> byte_size($pixelType / 8);
+	$zJump = $sizeX * $sizeY * $byteSize;
 	
 	# Start at begining of image data
 	$offset = BIORAD_HEADER_LENGTH;
