@@ -10,39 +10,44 @@
   xmlns:STD=
     "http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd"
   xsi:schemaLocation = "
-    http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
-      http://www.openmicroscopy.org/XMLschemas/OME/RC6/ome.xsd
+    http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
+      http://www.openmicroscopy.org/XMLschemas/OME/FC/ome.xsd
     http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
       http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd
     http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd
       http://www.openmicroscopy.org/XMLschemas/STD/RC2/STD.xsd">
 
-<AML:AnalysisModuleLibrary>
+<AML:AnalysisModuleLibrary
+  xmlns=
+    "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd">
 
 <AnalysisModule
   ModuleName="Importer"
-  Description="Placeholder module which represents the act of importing an image into OME."
   ModuleType="OME::Analysis::NoopHandler"
   ProgramID="">
+	<Description>Placeholder module which represents the act of importing an image into OME.</Description>
 
     <Declaration>
 
         <FormalOutput
           Name="Pixels"
-          Description="The original image pixels"
-          STD:SemanticTypeName="Pixels"
-          Count="!"/>
+          SemanticTypeName="Pixels"
+          Count="!">
+          <Description>The original image pixels</Description>
+        </FormalOutput>
 
         <FormalOutput
           Name="Dimensions"
-          Description="The dimensions of the Pixels output"
-          STD:SemanticTypeName="Dimensions"
-          Count="!"/>
+          SemanticTypeName="Dimensions"
+          Count="!">
+          <Description>The dimensions of the Pixels output</Description>
+        </FormalOutput>
 
         <FormalOutput
           Name="Other metadata"
-          Description="Any other piece of metadata found by the importer"
-          Count="*"/>
+          Count="*">
+          <Description>Any other piece of metadata found by the importer</Description>
+        </FormalOutput>
 
     </Declaration>
 
