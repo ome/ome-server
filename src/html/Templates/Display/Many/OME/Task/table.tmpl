@@ -1,7 +1,7 @@
 <table class="ome_table" border="0" cellspacing="1" cellpadding="4" width>
 	<caption>Tasks</caption>
 	<tr>
-		<td align="right" class="ome_td" colspan="8">
+		<td align="right" class="ome_td" colspan="10">
 			<a class="ome_widget" title="Update" href="javascript: document.forms[0].action.value='Update'; document.forms[0].submit();">Update</a> | 
 			<a class="ome_widget" title="Clear Selected" href="javascript: document.forms[0].action.value='Clear Selected'; document.forms[0].submit();">Clear Selected</a> | 
 			<a class="ome_widget" title="Clear All" href="javascript: document.forms[0].action.value='Clear All'; document.forms[0].submit();">Clear All</a>
@@ -15,6 +15,8 @@
 		<td class="ome_td">Error</td>
 		<td class="ome_td">Last step</td>
 		<td class="ome_td">N steps</td>
+		<td class="ome_td">Start time</td>
+		<td class="ome_td">Elapsed time</td>
 		<td class="ome_td">PID</td>
 	</tr>
 	<TMPL_LOOP NAME=/obj_loop>
@@ -28,6 +30,8 @@
 		<td class="ome_td"><TMPL_VAR NAME=error></td>
 		<td class="ome_td"><TMPL_VAR NAME=last_step></td>
 		<td class="ome_td"><TMPL_VAR NAME=n_steps></td>
+		<td class="ome_td"><TMPL_VAR NAME=t_start></td>
+		<td class="ome_td"><TMPL_VAR NAME=t_elapsed></td>
 		<td class="ome_td"><TMPL_VAR NAME=process_id></td>
 	</tr>
 	</TMPL_LOOP>
