@@ -119,10 +119,10 @@ our $SHOW_CACHING = 0;
 sub createSession {
     my ($proto, $username, $password) = @_;
 
-    print STDERR "createSession $username\n";
+    print STDERR "$$ createSession $username\n";
 
     my $session = OME::SessionManager->createSession($username,$password);
-    die "Cannot create session"
+    die "INVALID LOGIN"
       unless defined $session;
 
     my $result = $session->{SessionKey};
@@ -136,9 +136,11 @@ sub createSession {
 sub closeSession {
     my ($proto, $sessionKey) = @_;
 
-    print STDERR "closeSession $sessionKey\n";
+    print STDERR "$$ closeSession $sessionKey\n";
 
     my $session = OME::SessionManager->createSession($sessionKey);
+    return 0 unless defined $session;
+
     OME::SessionManager->deleteApacheSession($session->{ApacheSession});
 
     $session->deleteInstance(1);
@@ -150,9 +152,10 @@ sub closeSession {
 
 sub dispatch {
     my ($proto,$sessionKey,$method,@params) = @_;
-    print STDERR "dispatch $sessionKey $method @params\n";
+    print STDERR "$$ dispatch $sessionKey $method @params\n";
 
     my $session = OME::SessionManager->createSession($sessionKey);
+    die "STALE SESSION" unless defined $session;
 
     my @result;
     my $executed = 0;
