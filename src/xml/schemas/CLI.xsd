@@ -8,22 +8,6 @@
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd" schemaLocation = "http://www.openmicroscopy.org/XMLschemas/AnalysisModule/RC1/AnalysisModule.xsd"/>
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
-	<group name = "inputRecordModel">
-		<choice>
-			<element ref = "CLI:Input"/>
-			<element ref = "CLI:XYPlane"/>
-			<element ref = "CLI:RawImageFile"/>
-			<element ref = "CLI:RawImageFilePath"/>
-			<element ref = "CLI:sizeT"/>
-			<element ref = "CLI:sizeW"/>
-			<element ref = "CLI:sizeX"/>
-			<element ref = "CLI:sizeY"/>
-			<element ref = "CLI:sizeZ"/>
-			<element ref = "CLI:BitsPerPixel"/>
-			<element ref = "CLI:BytesPerPixel"/>
-			<element ref = "CLI:RawText"/>
-		</choice>
-	</group>
 	<attributeGroup name = "InputLocation">
 		<attribute ref = "AML:FormalInputName"/>
 		<attribute name = "SemanticElementName" use = "required">
@@ -53,8 +37,6 @@
 	<element name = "ExecutionInstructions">
 		<annotation>
 			<documentation>Tied to DB. Table PROGRAMS Column EXECUTION
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -66,8 +48,6 @@
 			<attribute name = "ExecutionPoint" use = "required">
 				<annotation>
 					<documentation>Assigns a execution point for the analysis.
-					
-					
 					</documentation>
 				</annotation>
 				<simpleType>
@@ -90,8 +70,6 @@ Example:
 when you use the program, you type: /OME/bin/OME_Image_XYZ_stats Path=[path to repository file] Dims=[X],[Y],[Z],[W],[T],[BytesPerPix]
 XML specification of the command line parameters is:
 &lt;CommandLine>Path=&lt;RawImageFilePath/> Dims=&lt;sizeX/>,&lt;sizeY/>,&lt;sizeZ/>,&lt;sizeW/>,&lt;sizeT/>,&lt;BPP/>&lt;/CommandLine>
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -111,8 +89,6 @@ XML specification of the command line parameters is:
 	<element name = "STDIN">
 		<annotation>
 			<documentation>This specifies what and how to write to STDIN.
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -124,8 +100,6 @@ XML specification of the command line parameters is:
 	<element name = "STDOUT">
 		<annotation>
 			<documentation>This specifies what and how to read STDOUT.
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -209,9 +183,7 @@ XML specification of the command line parameters is:
 			<attribute name = "BPP">
 				<annotation>
 					<documentation>Specifies bits per pixel (BPP) the module is expecting. If the program can deal with either 8 or 16 bit images, leave this out or specify 16. Both of these result in the BPP of the image being used. That is, if the image is 8 bits, the module will get an 8 bits per pixel. If the image is 16 bits, the module will get 16 bits per pixel.
-
 Currently, only native image pixels are supported.
-					
 					</documentation>
 				</annotation>
 				<simpleType>
@@ -226,9 +198,7 @@ Currently, only native image pixels are supported.
 					<documentation>Specifies the expected format of the plane.
 RAW corrosponds to OME repository format of pixel dump.
 TIFF corrosponds to TIFF files.
-
 Currently only TIFF is supported.
-					
 					</documentation>
 				</annotation>
 				<simpleType>
@@ -254,58 +224,26 @@ Currently only TIFF is supported.
 					</restriction>
 				</simpleType>
 			</attribute>
+			<attribute name = "Pixels" use = "required" type = "string">
+				<annotation>
+					<documentation>References a formal input of semantic type 'Pixels'</documentation>
+				</annotation>
+			</attribute>
 		</complexType>
-	</element>
-	<element name = "sizeX">
-		<annotation>
-			<documentation>Used with variable substitution. This is substituted for the X dimension of the image. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
-	</element>
-	<element name = "sizeY">
-		<annotation>
-			<documentation>Used with variable substitution. This is substituted for the Y dimension of the image. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
-	</element>
-	<element name = "sizeZ">
-		<annotation>
-			<documentation>Used with variable substitution. This is substituted for the Z dimension of the image. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
-	</element>
-	<element name = "sizeT">
-		<annotation>
-			<documentation>Used with variable substitution. This is substituted for the T dimension of the image. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
-	</element>
-	<element name = "sizeW">
-		<annotation>
-			<documentation>Used with variable substitution. This is substituted for the W dimension of the image. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
 	</element>
 	<element name = "RawImageFilePath">
 		<annotation>
 			<documentation>Used with variable substitution. This will be substituted with the path and file of the raw pixel dump image file.
 e.g. /OME/repository/1-tinyTest.ori
-			
-			
 			</documentation>
 		</annotation>
-		<complexType/>
-	</element>
-	<element name = "RawImageFile">
-		<annotation>
-			<documentation>Used with variable substitution. This will be substituted with the binary contents of the repository file.
-
-Not yet supported.
-			
-			
-			</documentation>
-		</annotation>
-		<complexType/>
+		<complexType>
+			<attribute name = "Pixels" use = "required" type = "string">
+				<annotation>
+					<documentation>References a formal input of semantic type 'Pixels'</documentation>
+				</annotation>
+			</attribute>
+		</complexType>
 	</element>
 	<element name = "InputRecord">
 		<annotation>
@@ -318,8 +256,6 @@ Not yet supported.
 			<attribute name = "RepeatCount" type = "positiveInteger">
 				<annotation>
 					<documentation>RepeatCount specifies how many times to write a record. If it is not specified, writing will continue until it runs out of things to write.
-					
-					
 					</documentation>
 				</annotation>
 			</attribute>
@@ -346,8 +282,6 @@ Not yet supported.
 				<annotation>
 					<documentation>RepeatCount specifies how many times to read a record. If it is not specified, reading will continue until it reaches the end of the output stream.
 If used in conjuction with TerminateAt, reading will stop after RepeatCount or TerminateAt, whichever comes first.
-					
-					
 					</documentation>
 				</annotation>
 			</attribute>
@@ -355,29 +289,15 @@ If used in conjuction with TerminateAt, reading will stop after RepeatCount or T
 				<annotation>
 					<documentation>TerminateAt specifies a regular expression. When a match to this is found, reading will stop.
 If used in conjuction with RepeatCount, reading will stop after RepeatCount or TerminateAt, whichever comes first.
-					
-					
 					</documentation>
 				</annotation>
 			</attribute>
 		</complexType>
 	</element>
-	<element name = "BitsPerPixel">
-		<annotation>
-			<documentation>Used for variable substitution. This is substituted for bits per pixel.  Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
-	</element>
 	<element name = "pat" type = "string">
 		<annotation>
 			<documentation>Contains a regular expression. Checked for compilation when the module is imported.</documentation>
 		</annotation>
-	</element>
-	<element name = "BytesPerPixel">
-		<annotation>
-			<documentation>Used for variable substitution. This is substituted for bytes per pixel. Used in the context of per image processing.</documentation>
-		</annotation>
-		<complexType/>
 	</element>
 	<element name = "Match">
 		<annotation>
@@ -424,10 +344,7 @@ If used in conjuction with RepeatCount, reading will stop after RepeatCount or T
 	<element name = "End">
 		<annotation>
 			<documentation>Specifies an end point of iteration.
-
 Not currently supported.
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -437,10 +354,7 @@ Not currently supported.
 	<element name = "Start">
 		<annotation>
 			<documentation>Specifies a starting point of iteration. 
-
 Not currently supported.
-			
-			
 			</documentation>
 		</annotation>
 		<complexType>
@@ -461,15 +375,7 @@ Not currently supported.
 			<choice>
 				<element ref = "CLI:Input"/>
 				<element ref = "CLI:XYPlane"/>
-				<element ref = "CLI:RawImageFile"/>
 				<element ref = "CLI:RawImageFilePath"/>
-				<element ref = "CLI:sizeT"/>
-				<element ref = "CLI:sizeW"/>
-				<element ref = "CLI:sizeX"/>
-				<element ref = "CLI:sizeY"/>
-				<element ref = "CLI:sizeZ"/>
-				<element ref = "CLI:BitsPerPixel"/>
-				<element ref = "CLI:BytesPerPixel"/>
 				<element ref = "CLI:RawText"/>
 			</choice>
 		</complexType>
