@@ -235,7 +235,8 @@ public class Controller implements ApplicationController {
 	public void newChain() {
 		System.err.println("new chain");
 		ChainFrame canvasFrame = 
-			new ChainFrame(this,connection,chainCanvasCount++);
+			new ChainFrame(this,connection,chainCanvasCount++,
+				library.getCanvas());
 		canvasFrames.add(canvasFrame);
 	}
 	
