@@ -145,7 +145,7 @@ sub DrawDatasetControl {
     while (my $imageMap = $imageMaps->next()) {
 		$numImages++;
 		push (@ImageIDs, $imageMap->image()->image_id());
-		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->getFullPath( $imageMap->image()->DefaultPixels() );
+		$ImagePaths{ $imageMap->image()->image_id() } = $imageMap->image()->name();#getFullPath( $imageMap->image()->DefaultPixels() );
 	}	
 	$JSimageIDs = '['.join(',',@ImageIDs).']';
 	$JS_SetImagePathArray = join( "\n", map( "imagePaths[$_] = '".$ImagePaths{$_}."';", keys %ImagePaths) );
@@ -235,7 +235,7 @@ function update() {
 	<input type="text" name="num" size="5" onchange="changeImage(parseInt(this.value))" maxlength="5">
 	<input type="button" name="next" value=">" onclick="nextImage()">
 </td><td align="right">
-	Image Path: <input type="text" name="ImageInfo" size="40" disabled>
+	Image Name: <input type="text" name="ImageInfo" size="40" disabled>
 </form>
 </td></tr><tr><td colspan='2'>
 Displaying dataset "$datasetName". It contains $numImages images.
