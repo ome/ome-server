@@ -26,22 +26,17 @@ package OME::Install::FileSystemTask;
 
 use strict;
 use warnings;
-#require Exporter;
-use vars qw($VERSION);
 use Carp;
 use Term::ANSIColor qw(:constants);
 use Term::ReadKey;
 
+use OME::Install::Terminal;
 use OME::Install::InstallationTask;
-require OME::Install::Environment;
+use OME::Install::Environment;
 
 #*********
 #********* GLOBALS AND DEFINES
 #*********
-
-#$VERSION = 2.000_000;
-#our @ISA = qw(Exporter);
-#our @EXPORT = qw(blarg);
 
 # Default core directory locations
 my @core_dirs = (
@@ -74,36 +69,7 @@ foreach my $child (@children) {
 #********* LOCAL SUBROUTINES
 #*********
 
-sub print_header {
-    my $header_text = shift;
-    my $strlen = length($header_text) + 2;
-
-    print BOLD;
-    print "-" x $strlen, "\n";
-    print " $header_text\n";
-    print "-" x $strlen, "\n\n";
-    print RESET;
-}
-
-sub confirm_default {
-    my ($text, $default) = @_; 
-
-    while (1) {
-	print "$text ", BOLD, "[$default]", RESET, ": ";
-	my $input = ReadLine 0;
-	chomp $input;
-	($input = $default) unless $input;
-	# Rip trailing slash
-	if ($input =~ /^(.*)\/$/) { $input = $1 }
-
-	print "Using \"$input\", are you sure ? ", BOLD, "[y/n]", RESET, ": ";
-	my $y_or_n = ReadLine 0;
-	chomp $y_or_n;
-
-	if (lc($y_or_n) eq "y") { return $input };
-    }
-}
-
+# NIL
 
 #*********
 #********* START OF CODE
