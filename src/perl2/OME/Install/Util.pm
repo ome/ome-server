@@ -190,11 +190,16 @@ my %os_specific = (
 	    } else { return 0 }
 
 	    (system ("nicl / -create /users/$user uid $uid") == 0) or return 0;
+	    sleep(1);
 	    (system ("nicl / -create /users/$user gid $gid") == 0) or return 0;
+	    sleep(1);
 	    # XXX: OS X prefers /dev/null for its null shells
 	    (system ("nicl / -create /users/$user shell /dev/null") == 0) or return 0;
+	    sleep(1);
 	    (system ("nicl / -create /users/$user home $homedir") == 0) or return 0;
+	    sleep(1);
 	    (system ("nicl / -create /users/$user realname \"OME User\"") == 0) or return 0;
+	    sleep(1);
 	    (system ("nicl / -create /users/$user passwd \'\*\'") == 0) or return 0;
 
 	    return 1;
@@ -212,6 +217,7 @@ my %os_specific = (
 	    } else { return 0 }
 
 	    (system ("nicl / -create /groups/$group gid $gid") == 0) or return 0;
+	    sleep(1);
 	    (system ("nicl / -create /groups/$group passwd \'\*\'") == 0) or return 0;
 
 	    return 1;
