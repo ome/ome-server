@@ -49,7 +49,7 @@ require Exporter;
 
 # Exporter details
 our @ISA = qw(Exporter);
-our @EXPORT = qw(add_user add_group delete_tree copy_tree);
+our @EXPORT = qw(add_user add_group delete_tree copy_tree get_module_version);
 
 # Distribution detection
 #        if (-e "/etc/debian_version") {
@@ -375,15 +375,22 @@ sub delete_tree {
 }
 
 
-# Checks a Perl module's existance
+# Gets a Perl module's $VERSION
 #
-# RETURNS	Undef if the module isn't installed
-# 		1 if the module is installed and it is one of the versions
-#		  supplied 
-# 		0 if the module is installed and it isn't one of the version
-#		  supplied
-sub check_module {
-    my ($module, @versions) = @_;
+# RETURNS	The module version as a scalar if the module is found and a
+#		version is returned.
+# 		Undef if the module is not installed or returns no $VERSION.
+sub get_module_version {
+    my $module = shift;
+    my $version;
+    my $eval = "use $module;".'$version = $'.$module.'::VERSION;';
+
+    eval($eval);
+
+    # Populate the errors back to the caller
+    #$! = $@ if $@;
+
+    return $version ? $version : undef;
 }
 
 1;
