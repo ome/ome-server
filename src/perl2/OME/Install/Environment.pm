@@ -307,4 +307,16 @@ sub matlab_conf{
 
     return;
 }
+
+sub worker_conf{
+    my ($self, $conf) = @_;
+
+    if($conf) {
+		$self->{worker_conf} = $conf;
+    } else {
+		return $self->{worker_conf} unless not exists $self->{worker_conf};
+    }
+
+    return;
+}
 1;
