@@ -115,7 +115,7 @@ sub smooth {
     my $numZ = $pixels->SizeZ();
     my $numY = $pixels->SizeY();
     my $numX = $pixels->SizeX();
-    my $pixSz = $pixels->BitsPerPixel()/8;
+	my ($pixSz) = OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() );
 
     for (my $t = 0; $t < $numT; $t++) {
 	for (my $c = 0; $c < $numC; $c++) {
@@ -158,7 +158,7 @@ sub fill {
     my $numZ = $pixels->SizeZ();
     my $numY = $pixels->SizeY();
     my $numX = $pixels->SizeX();
-    my $pixSz = $pixels->BitsPerPixel()/8;
+	my ($pixSz) = OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() );
 
     for (my $t = 0; $t < $numT; $t++) {
 	for (my $c = 0; $c < $numC; $c++) {

@@ -147,7 +147,6 @@ sub importFile() {
 			die "When importing <Pixels>, Pixel type '".$pixelsXML->getAttribute("PixelType")."' was not recognized!\n"
 				unless exists $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
 			my $pixelSize = $pixelTypeConversion{ $pixelsXML->getAttribute("PixelType") };
-			$pixelsXML->setAttribute( "BitsPerPixel", $pixelSize );
 			
 			$pixelsXML->setAttribute( "Repository", $LSIDresolver->getLSID( $repository ) );
 

@@ -288,7 +288,6 @@ print "**** Done special action for SE Pixels\n";
 										SizeZ        => $sizeZ,
 										SizeC        => $sizeC,
 										SizeT        => $sizeT,
-										BitsPerPixel => $bbp*8,
 										PixelType    => $type
 									  } );
 														

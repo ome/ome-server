@@ -1105,10 +1105,6 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				<Description>Number of time points</Description>
 			</Element>
 			<Element
-				Name= "BitsPerPixel"
-				DBLocation = "IMAGE_PIXELS.BITS_PER_PIXEL"
-				DataType = "integer"/>
-			<Element
 				Name= "PixelType"
 				DBLocation = "IMAGE_PIXELS.PIXEL_TYPE"
 				DataType = "string"/>
@@ -1121,10 +1117,6 @@ for a given laser type (for example, 'Nd-YAG').</Description>
 				DBLocation = "IMAGE_PIXELS.REPOSITORY"
 				DataType = "reference"
 				RefersTo = "Repository"/>
-			<Element
-				Name= "Path"
-				DBLocation = "IMAGE_PIXELS.PATH"
-				DataType = "string"/>
             <Element
                Name="ImageServerID"
                DBLocation="IMAGE_PIXELS.IMAGE_SERVER_ID"

@@ -192,7 +192,7 @@ sub getPixelType {
 
 Usage
 	my ($bytesPerPixel, $isSigned, $isFloat) = 
-		OME::Tasks::PixelsManager->getPixelTypeInfo( $data_hash->{PixelType} );
+		OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() );
 
 =cut
 
@@ -214,7 +214,6 @@ Usage:
         SizeZ        => $sizeZ,
         SizeC        => $sizeC,
         SizeT        => $sizeT,
-        BitsPerPixel => $bitsPerPixel,
         PixelType    => $pixelType
       } );
 

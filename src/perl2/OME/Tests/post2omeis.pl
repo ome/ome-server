@@ -46,15 +46,19 @@ if( $ARGV[0] =~ m/-p|--postImage/ ) {
 sub postPixels {
 	my $pixels = shift;
 	my $fileID = OME::Image::Server->uploadFile( $pixels->image->getFullPath( $pixels ) );
+	my ($bytesPerPixel, $isSigned, $isFloat) = 
+		OME::Tasks::PixelsManager->getPixelTypeInfo( $pixels->PixelType() );
 	my $pixelsID = OME::Image::Server->newPixels( 
 		$pixels->SizeX(),
 		$pixels->SizeY(),
 		$pixels->SizeZ(),
 		$pixels->SizeC(),
 		$pixels->SizeT(),
-		$pixels->BitsPerPixel() / 8,
-		0, 0 );
-	my $stackSize = $pixels->SizeX() * $pixels->SizeY() * $pixels->SizeZ() * $pixels->BitsPerPixel() / 8;
+		$bytesPerPixel,
+		$isSigned,
+		$isFloat
+	 );
+	my $stackSize = $pixels->SizeX() * $pixels->SizeY() * $pixels->SizeZ() * $bytesPerPixel;
 	for( my $t = 0; $t < $pixels->SizeT(); $t++ ) {
 		for( my $c = 0; $c < $pixels->SizeC(); $c++ ) {
 			my $offset = ( $t * $pixels->SizeC() + $c ) * $stackSize;

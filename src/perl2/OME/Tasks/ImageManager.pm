@@ -381,30 +381,6 @@ sub remove{
 
 
 
-
-####################
-# Parameters:
-#	image = image object
-
-sub getImageDim{
-	my ($self,$image,$pixels)=@_ ;
-	$pixels = $image->DefaultPixels()
-		unless $pixels;
-	my $path=$image->getFullPath($pixels);
-
-	my ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp);
-	$sizeX = $pixels->SizeX;
-	$sizeY = $pixels->SizeY;
-	$sizeZ = $pixels->SizeZ;	
-	$numW  = $pixels->SizeC;
-	$numT  = $pixels->SizeT,
-  	$bpp   = $pixels->BitsPerPixel;	
-	$bpp /= 8;
-	return ($sizeX,$sizeY,$sizeZ,$numW,$numT,$bpp,$path);
-}
-
-
-
 sub getImageStatsMEX {
     my ($self,$pixels) = @_;
 	my $session = OME::Session->instance();

@@ -217,9 +217,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			 'y'   => $Pixels->SizeY(),
 			 'z'   => $Pixels->SizeZ(),
 			 'w'   => $Pixels->SizeC(),
-			 't'   => $Pixels->SizeT(),
-			 'BytesPerPixel' => $Pixels->BitsPerPixel()/8,
-			 'BitsPerPixel' => $Pixels->BitsPerPixel(),
+			 't'   => $Pixels->SizeT()
 			 )
 	if defined $Pixels;
 	
@@ -756,7 +754,7 @@ my %dims = ( 'x'   => $Pixels->SizeX(),
 			my $foName = $pixelOutput->getAttribute( "FormalOutput" );
 
 			# semantic element names
-			my %pixelSEs = map{ $_ => undef} ( 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType', 'BitsPerPixel' );
+			my %pixelSEs = map{ $_ => undef} ( 'SizeX', 'SizeY', 'SizeZ', 'SizeC', 'SizeT', 'PixelType' );
 
 			# collect data for semantic elements
 			foreach (keys %pixelSEs) {

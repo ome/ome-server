@@ -48,11 +48,6 @@ OME::Image - an OME image
 	# Load an image
 	my $image = $factory->loadObject( OME::Image, $imageID );
 	
-	# Load an OME::Image::Pix object
-	# acquire a Pixels attribute
-	my $pix = $image->GetPix( $pixels );
-	
-	
 =head1 DESCRIPTION
 
 To come.
@@ -185,55 +180,10 @@ returns all datasets that the image belongs to
 
 =cut
 
-# datasets method defined by previous manyToMany call
-
-=head2 GetPix
-
-$image->GetPix($pixelAttribute);
-
-loads and returns the OME::Image::Pix object associated with this pixels
-
-=cut
-
-# Old prototype (DEPRICATED):
-# my $pix = $image->GetPix();
-# New prototype:
-# my $pix = OME::Image->GetPix($pixelAttribute);
-#
-# (Both work) The new prototype allows you to create a Pix object from
-# any pixel attribute.  The old prototype uses the default Pixels associated 
-# with $image, and creates a Pix object from that. The old prototype is
-# depricated. Calls to it should be replaced (minimally) with 
-# my $pix = $image->GetPix( $image->DefaultPixels() );
-# Any code that relies on the image having only one pixels element should get
-# a careful inspection of its logic.
-
+# This should be depricated completely
 sub GetPix {
     my $self = shift;
-
-    if (@_) {
-        my ($pixelAttr) = @_;
-        $pixelAttr->verifyType("Pixels");
-        my $repositoryAttr = $pixelAttr->Repository();
-        my $pix = OME::Image::Pix->
-          new($repositoryAttr->Path().$pixelAttr->Path(),
-              $pixelAttr->SizeX(),
-              $pixelAttr->SizeY(),
-              $pixelAttr->SizeZ(),
-              $pixelAttr->SizeC(),
-              $pixelAttr->SizeT(),
-              $pixelAttr->BitsPerPixel()/8)
-            || die ref($self)."->GetPix  Could not instantiate OME::Image::Pix object";
-        return $pix;
-    } else {
-        my $pixels = $self->DefaultPixels();
-        my $pix = new OME::Image::Pix (
-            $self->getFullPath(),
-            $pixels->SizeX(),$pixels->SizeY(),$pixels->SizeZ(),
-            $pixels->SizeC(),$pixels->SizeT(),$pixels->BitsPerPixel()/8
-        ) || die ref($self)."->GetPix:  Could not instantiate OME::Image::Pix object\n";
-        return ($pix);
-    }
+    die ref($self) . "->GetPix() has been depricated. Change your code to use OME::Image::Server::Pixels->open()";
 }
 
 =head2 DefaultPixels
@@ -270,17 +220,10 @@ sub DefaultPixels {
 	}
 }
 
-
-=head2 getFullPath
-
-$image->getFullPath( $pixels );
-
-Returns the full path to the repository file of the Pixels attribute passed as a parameter
-
-=cut
-
+# Depricate this!
 sub getFullPath {
     my $self = shift;
+    die ref($self)."->getFullPath() has been heavily depricated. Pixels live on the image server now. ";
     my $pixels = shift or
     	die ref( $self )."->getFullPath() needs a Pixels attribute as a parameter. Received an undef instead.\n";
     
@@ -295,8 +238,7 @@ sub getFullPath {
 #return '/OME/OMEIS/' . OME::Image::Server->get_IS_PixelsPath( $pixels->imageServerID() );
 }
 
-# for now, a very simple implementation
-# WARNING: USES DEPRICATED LOGIC!
+# DEPRICATE this!
 sub GetPixels {
     my ($self,$xx1,$xx2,$yy1,$yy2,$zz1,$zz2,$ww1,$ww2,$tt1,$tt2) = @_;
  

@@ -76,7 +76,6 @@ sub new {
 	$self->{ _allFields } = [
 		@{ $self->{ _summaryFields } },
 		'PixelType',
-		'BitsPerPixel',
 		'FileSHA1',
 		'ImageServerID',
 		'Repository'

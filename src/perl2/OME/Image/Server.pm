@@ -49,10 +49,6 @@ OME::Image::Server - interface into the OME Image Server
 	# Load an image
 	my $image = $factory->loadObject( OME::Image, $imageID );
 
-	# Load an OME::Image::Pix object
-	# acquire a Pixels attribute
-	my $pix = $image->GetPix( $pixels );
-
 =head1 DESCRIPTION
 
 This class provides a Perl interface into the OME image server.
