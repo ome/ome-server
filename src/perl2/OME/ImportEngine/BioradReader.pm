@@ -222,9 +222,7 @@ sub importGroup
 		$file -> open('r');
 		my $filename = $file->getFilename();
 		my $basename = $xref -> { 'Basename' };
-		#print "Basename is: $basename\n";
-		$basename = ($self -> {super}) -> __nameOnly( $basename );
-		
+
 		$params->fref($file);
   		$params->oname($basename);
   		
@@ -268,12 +266,12 @@ sub importGroup
 			) or die "Couldn't make Dimensions attribute";
    
     		$self->__storeOneFileInfo( \@finfo, $file, $params, $image,
-			0, $sizeX-1,
-		   	0, $sizeY-1,
-		   	0, $sizeZ-1,
-		   	0, $sizeC-1,
-	   	   	0, $sizeT-1,
-       		"Bio-Rad PIC");
+				0, $sizeX-1,
+				0, $sizeY-1,
+				0, $sizeZ-1,
+				0, $sizeC-1,
+				0, $sizeT-1,
+				"Bio-Rad PIC");
           		
        		my ($pixels, $pix) = ($self -> {super}) -> __createRepositoryFile(
     			$image, $sizeX, $sizeY, $sizeZ, $sizeC, $sizeT, $pixelType, 0, 0);
@@ -288,6 +286,7 @@ sub importGroup
 				die $status;
     		}
     		
+			$self -> {image} = $image;
     		$self -> __storeInputFileInfo( $session, \@finfo );
 			$self -> __storeDisplayOptions ($session);
     		return $image;
@@ -334,6 +333,7 @@ sub importGroup
 				($self -> {super}) -> __destroyRepositoryFile($pixels, $pix);
 				die $status;
     		}
+			$self -> {image} = $image;
     		$self -> __storeInputFileInfo( $session, \@finfo );
 			$self -> __storeDisplayOptions ($session);
     		return $image;
