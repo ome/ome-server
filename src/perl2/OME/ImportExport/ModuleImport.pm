@@ -5,12 +5,23 @@ use strict;
 
 =head1 NAME
 
-OME::Tasks::ProgramImport - Process an Analysis Module XML specification.
+OME::Tasks::ProgramImport - Import an Analysis Module XML specification.
 
 =head1 SYNOPSIS
 
 	use OME::Tasks::ProgramImport;
-	OME::Tasks::ProgramImport->importXMLFile( $filePath );
+	use OME::SessionManager;
+	
+	my $session       = OME::SessionManager->TTYlogin();
+	my $programImport = OME::Tasks::ProgramImport->new( 
+		session => $session,
+		debug   => 0
+	);
+	# debug => 0 means report only fatal errors
+	# debug => 1 means give a description of what is happening
+	# debug => 2 means give an extremely detailed description of what is happening
+
+	my $newPrograms   = $programImport->importXMLFile( $filePath );
 
 =head1 DESCRIPTION
 
@@ -21,81 +32,104 @@ install the module onto the local system
 register the module with the database
 add any custom tables & columns (to the DB) that the module requires
 
+=head1 IMPROVEMENTS/2do
+
+Attribute Type processing, currently performed 2 places in the processDOM function, should be moved to a separate function. 
+
+Make a example xml file that demonstrates all functionality
+
 =cut
 
+sub new {
+	my $proto  = shift;
+	my $class  = ref($proto) || $proto;
+	my %params = @_;
+	my $debug = $params{debug};
+	
+	print STDERR $proto . "->new called with parameters:\n\t" . join( "\n\t", map { $_."=>".$params{$_} } keys %params ) ."\n" 
+		if $debug > 1;
+	
+	my @requiredParams = ('session');
+	
+	foreach (@requiredParams) {
+		die ref ($class) . "->new called without required parameter '$_'"
+			unless exists $params{$_}
+	}
 
-#####################################################
-#
-#   !!!!!!!!!!------ HACK ALERT -----!!!!!!!!	
-#
-# Problem is creating tables & columns. Checking for
-# existence of tables & columns with the db handle I'm writing with
-# causes some sort of sticky condition (probably
-# an Error condition) that prevents me from creating tables or inserting columns.
-# The only way I've found out of that is call a rollback. But that screws up the
-# transaction I'm working on.
-# Making another database handle to query for table existence is the only solution
-# I can think of. The way I've done this is most definately a hack.
-#
-# This is ok because the test won't be necessary in the future.
-# Eventually, every table a module can use as an input or output
-# will be registered with DataTypes if it exists. That might be
-# the case at this point for all I know. But it hasn't been discussed,
-# so I'm taking precautions.
+	my $self = {
+		session => $params{session},
+		debug   => $params{debug}
+	};
+	
+	bless($self,$class);
+	print STDERR ref ($self) . "->new returning successfully\n" 
+		if $debug > 1;
+	return $self;
+}
 
-require DBI;
-require OME::DBConnection;
-my $dbhQ = DBI->connect( OME::DBConnection->DataSource(),
-                OME::DBConnection->DBUser(),
-               OME::DBConnection->DBPassword() );
-
-#
-#####################################################
 
 =pod
-
 =head2 importXMLFile
 
 Input Parameters:
-	session - an active OME::Session object
 	filePath - path to xml file to import
 
 Description:
+	Import a module from its descriptiong in an xml file
 
 =cut
 
-######################################################
+###############################################################################
 #
 # parameter(s) are:
 #	$session - an OME::Session object
 #	$filePath
 #
 sub importXMLFile {
-	my $self     = shift;
-	my $session  = shift;
-	my $filePath = shift;
+	my $self       = shift;
+	my $filePath   = shift;
 
-	my $parser = XML::LibXML->new();
+	my $debug      = $self->{debug};
+	my $session    = $self->{session};
+
+	print STDERR ref ($self) . "->importXMLFile called with parameters:\n\t[filePath=] $filePath\n"
+		if $debug > 0;
+	my $parser     = XML::LibXML->new();
+#	print STDERR ref ($self) . "->importXMLFile about to validate file\n"
+#		if $debug > 1;
 	#Validate file against Schema
 	{
 	# insert code here
 	};
+#	print STDERR ref ($self) . "->importXMLFile has validated file\n"
+#		if $debug > 1;
 
 	#Parse
-	my $tree = $parser->parse_file( $filePath );
+	print STDERR ref ($self) . "->importXMLFile about to parse file\n"
+		if $debug > 1;
+	my $tree = $parser->parse_file( $filePath )
+		or die ref($self) . " Could not parse file ($filePath)";
+	print STDERR ref ($self) . "->importXMLFile parsed file\n"
+		if $debug > 1;
 
 	#process tree
-	my $newPrograms = processDOM( $session, $tree->getDocumentElement() );
+	print STDERR ref ($self) . "->importXMLFile about to process DOM\n"
+		if $debug > 1;
+	my $newPrograms = $self->processDOM( $tree->getDocumentElement() );
+	print STDERR ref ($self) . "->importXMLFile processed DOM\n"
+		if $debug > 1;
 
 	#return a list of imported programs (OME::Programs objects)
+	print STDERR ref ($self) . "->importXMLFile returning\n" 
+		if $debug > 0;
 	return $newPrograms;
 }
 #
 #
-######################################################
+###############################################################################
 
 
-######################################################
+###############################################################################
 #
 # Process DOM tree
 # parameters:
@@ -105,421 +139,734 @@ sub importXMLFile {
 #	list of imported programs
 #
 sub processDOM {
-	my $session = shift;
+	my $self    = shift;
 	my $root    = shift;
+
+	my $debug   = $self->{debug};
+	my $session = $self->{session};
 	my $factory = $session->Factory();
+
 	my @commitOnSuccessfulImport;
-	my $newPrograms;
+	my @newPrograms;
+	print STDERR ref ($self) . "->processDOM called to process " . scalar(@{$root->getElementsByTagName( "AnalysisModule" )} ) . " modules\n"
+		if $debug > 0;
 
-my @modules = $root->getElementsByTagName( "AnalysisModule" );
-foreach my $module (@modules) {
+foreach my $moduleXML ($root->getElementsByTagName( "AnalysisModule" )) {
 
-	##################################################
+	###########################################################################
 	#
 	# make OME::Programs object
 	#
 # À use find_or_create instead ?
+	print STDERR ref ($self) . "->processDOM about to create an OME::Program object\n"
+		if $debug > 1;
 	my @programs = $factory->findObjects( "OME::Program", 
-		'program_name', $module->getAttribute( 'ModuleName' ) );
-	die "\nCannot add module ". $module->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
+		'program_name', $moduleXML->getAttribute( 'ModuleName' ) );
+	die "\nCannot add module ". $moduleXML->getAttribute( 'ModuleName' ) . ". A module of the same name already exists.\n"
 		unless scalar (@programs) eq 0;
 	my $data = {
-		program_name     => $module->getAttribute( 'ModuleName' ),
-		description      => $module->getAttribute( 'Description' ),
-		category         => $module->getAttribute( 'Category' ),
-		module_type      => $module->getAttribute( 'ModuleType' ),
-		# this location biz is a temporary hack
-		location         => $module->getAttribute( 'ProgramID' ),
-		default_iterator => $module->getAttribute( 'FeatureIterator' ),
-		new_feature_tag  => $module->getAttribute( 'NewFeatureName' ),
-		#visual_design => $module->getAttribute( 'VisualDesign' )
+		program_name     => $moduleXML->getAttribute( 'ModuleName' ),
+		description      => $moduleXML->getAttribute( 'Description' ),
+		category         => $moduleXML->getAttribute( 'Category' ),
+		module_type      => $moduleXML->getAttribute( 'ModuleType' ),
+		# location using ProgramID attribute is a temporary hack
+		location         => $moduleXML->getAttribute( 'ProgramID' ),
+		default_iterator => $moduleXML->getAttribute( 'FeatureIterator' ),
+		new_feature_tag  => $moduleXML->getAttribute( 'NewFeatureName' ),
+		#visual_design => $moduleXML->getAttribute( 'VisualDesign' )
 		# visual design is not implemented in the api. I think it is depricated.
 	};
-	my $program = $factory->newObject("OME::Program",$data)
+	print STDERR "Program parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+		if $debug > 1;
+	my $newProgram = $factory->newObject("OME::Program",$data)
 		or die "Could not create OME::Program object\n";
-	push(@commitOnSuccessfulImport, $program);
+	push(@commitOnSuccessfulImport, $newProgram);
+	print STDERR ref ($self) . "->processDOM created an OME::Program object\n"
+		if $debug > 1;
 	#
 	#
-	##################################################
+	###########################################################################
 	
-	##################################################
+	###########################################################################
 	#
-	# process TableDefinitions. Maybe make new tables.
+	# Process Table and Column elements. Make new tables and columns as needed.
 	#
-	my %table_xmlID_object;
+	# this hash is keyed by xml id, valued by DBobjects
+	my %column_xmlID_object;
 	{
-		foreach my $table ( $module->getElementsByTagName( "TableDefinition" ) ) {
-			my @tables = $factory->findObjects( "OME::DataType", 'table_name' => $table->getAttribute( 'TableName' ) );
+		print STDERR ref ($self) . "->processDOM is about to process tables and columns\n"
+			if $debug > 1;
+		#######################################################################
+		#
+		# Process Table
+		#
+		foreach my $tableXML ( $moduleXML->getElementsByTagName( "Table" ) ) {
+			print STDERR ref ($self) . "->processDOM looking for table ".$tableXML->getAttribute( 'TableName' )."\n"
+				if $debug > 1;
+			my @tables = $factory->findObjects( "OME::DataTable", 'table_name' => $tableXML->getAttribute( 'TableName' ) );
 			
 			my $newTable;
-			if( scalar(@tables) == 0 ) {
+			if( scalar(@tables) == 0 ) { # the table doesn't exist. create it.
+				print STDERR ref ($self) . "->processDOM table not found. creating it.\n"
+					if $debug > 1;
 				my $data = {
-					table_name     => $table->getAttribute( 'TableName' ),
-					description    => $table->getAttribute( 'Description' ),
-					attribute_type => $table->getAttribute( 'AttributeType' )
+					table_name  => $tableXML->getAttribute( 'TableName' ),
+					description => $tableXML->getAttribute( 'Description' ),
+					granularity => $tableXML->getAttribute( 'Granularity' )
 				};
-				$newTable = $factory->newObject( "OME::DataType", $data )
-					or die "Could not create OME::DataType\n";
-				push(@commitOnSuccessfulImport, $newTable);
+				print STDERR ref ($self) . "->processDOM OME::DataTable DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+					if $debug > 1;
+				$newTable = $factory->newObject( "OME::DataTable", $data )
+					or die ref ($self) . " could not create OME::DataTable. name = " . $tableXML->getAttribute( 'TableName' );
+				print STDERR ref ($self) . "->processDOM created OME::DataTable DBObject\n"
+					if $debug > 1;
 
-				#####################################
+				##############################################################
 				#
 				# Make the table in the database. 
 				# Should this functionality be moved to OME::Datatype 
 				# so making a new entry there will cause a new table
 				# to be created?
 				#
-# In the future, the following test will not be necessary because every table a module
-# can access will have a corrosponding entry in the Datatypes table. We have
-# just checked for an entry and found none. For now, this rule may not be universally true.
-# Thus the test.
-				my $dbh = $session->DBH();
-				my $sth = $dbhQ->prepare( "SELECT * from ".$table->getAttribute( 'TableName' )." limit 1;" );
-				$sth->{RaiseError} = 0;
-				my $tableExists = $sth->execute();
-				if( not defined $tableExists ) { 
-					my $statement = "
-						CREATE TABLE ".$table->getAttribute( 'TableName' )." (
-							ATTRIBUTE_ID	OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,";
-					if( $newTable->attribute_type() eq 'I' ) {
-						$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
-					} elsif ( $newTable->attribute_type() eq 'D' ) {
-						$statement .= "DATATSET_ID   OID NOT NULL REFERENCES DATASETS DEFERRABLE INITIALLY DEFERRED";
-					} elsif ( $newTable->attribute_type() eq 'F' ) {
-						$statement .= "FEATURE_ID    OID NOT NULL REFERENCES FEATURES DEFERRABLE INITIALLY DEFERRED";
-					}
-					$statement .= ")";
-					my $sth = $dbh->prepare( $statement )
-						or die "Table create statement failed when making table ".$table->getAttribute( 'TableName' )."\n";
-					$sth->execute()
-						or die "Unable to create table ".$table->getAttribute( 'TableName' )."\n";
+				my $statement = "
+					CREATE TABLE ".$newTable->table_name()." (
+						ATTRIBUTE_ID	 OID DEFAULT NEXTVAL('ATTRIBUTE_SEQ') PRIMARY KEY,
+						ACTUAL_OUTPUT_ID OID REFERENCES ACTUAL_OUTPUTS DEFERRABLE INITIALLY DEFERRED,";
+# I believe ACTUAL_OUTPUT_ID will not stick around much longer. After analysisEngine no longer needs it, it should be removed.
+				if( $newTable->granularity() eq 'I' ) {
+					$statement .= "IMAGE_ID      OID NOT NULL REFERENCES IMAGES DEFERRABLE INITIALLY DEFERRED";
+				} elsif ( $newTable->granularity() eq 'D' ) {
+					$statement .= "DATATSET_ID   OID NOT NULL REFERENCES DATASETS DEFERRABLE INITIALLY DEFERRED";
+				} elsif ( $newTable->granularity() eq 'F' ) {
+					$statement .= "FEATURE_ID    OID NOT NULL REFERENCES FEATURES DEFERRABLE INITIALLY DEFERRED";
 				}
+				$statement .= ")";
+				print STDERR ref ($self) . "->processDOM about to create table in DB using statement\n".$statement."\n"
+					if $debug > 1;
+				my $dbh = $session->DBH();
+				my $sth = $dbh->prepare( $statement )
+					or die "Table create statement failed when making table ".$newTable->table_name()."\n";
+				$sth->execute()
+					or die "Unable to create table ".$newTable->table_name()."\n";
+				print STDERR ref ($self) . "->processDOM created table in DB\n".$statement."\n"
+					if $debug > 1;
 				#
 				#
-				#####################################
+				##############################################################
 
+				push(@commitOnSuccessfulImport, $newTable);
 			} else {
+				print STDERR ref ($self) . "->processDOM found table. using existing table.\n"
+					if $debug > 1;
 				$newTable = $tables[0];
 			}
 
-			$table_xmlID_object{ $table->getAttribute( 'TableID' ) } =
-				$newTable;
-		}
-	}
-	#
-	#
-	##################################################
-	
-	##################################################
-	#
-	# process formalInputs 
-	#
-	my %formalInput_xmlID_dbID;
-	{
-		foreach my $formalInput ( $module->getElementsByTagName( "FormalInput" ) ) {
+			#
+			#
+			###################################################################
+
+
+
+			##############################################################
+			#
+			# Process columns in this table
+			#
+			print STDERR ref ($self) . "->processDOM is processing columns\n"
+				if $debug > 1;
+			foreach my $columnXML($tableXML->getElementsByTagName( "Column" ) ){
+				my %dataTypeConversion = (
+				#	XMLType  => SQL_Type
+					integer  => 'integer',
+					double   => 'double precision',
+					float    => 'real',
+					boolean  => 'boolean',
+					string   => 'text',
+					dateTime => 'timestamp'
+					);
+				
 			
-			##########################################
-			#
-			# make OME::DataTypeColumn object from DBLocation element
-			#
-			my $dbLocation = $formalInput->getElementsByTagName( "DBLocation" )->[0];
-			my $DataTypeColumn = makeDataTypeColumn($session, $dbLocation, { %table_xmlID_object});
-			push(@commitOnSuccessfulImport, $DataTypeColumn);
-			#
-			##########################################
-			
-			##########################################
-			#
-			# make OME::LookupTable & OME::LookupTable::Entry objects
-			#
-			my $lookupTable;
-			my @lookupTables = $formalInput->getElementsByTagName( "LookupTable" );
-			# lookupTables may or may not exist. Either way is fine.
-			if( scalar( @lookupTables ) == 1 ) {
-
-				#####################################
-				#
-				# make OME::LookupTable object
-				#
-				my $lookupTableXML = $lookupTables[0];
-				my $data = {
-					name        => $lookupTableXML->getAttribute( 'Name' ),
-					description => $lookupTableXML->getAttribute( 'Description' )
-				};
-				$lookupTable = $factory->newObject( "OME::LookupTable", $data )
-					or die "Could not make OME::LookupTable object\n";
-				push(@commitOnSuccessfulImport, $lookupTable);
-				#
-				#####################################
-
-				#####################################
-				#
-				# make OME::LookupTable::Entry objects
-				#
-				my @entries = $lookupTable->getElementsByTagName( "LookupTableEntry" );
-				foreach my $entry (@entries) {
-					my $data = {
-						value           => $entry->getAttribute( 'Value' ),
-						label           => $entry->getAttribute( 'Label' ),
-						lookup_table_id => $lookupTable->ID()
-					};
-					my $lookupEntry = $factory->newObject( "OME::LookupTable::Entry", $data )
-						or die "Could not make OME::LookupTable::Entry object\n";
-					push(@commitOnSuccessfulImport, $lookupEntry);
-				}
-				#
-				######################################
-			}
-			#
-			#
-			##########################################
-
-			##########################################
-			#
-			# make OME::FormalInput object
-			#
-			my $data = {
-				name               => $formalInput->getAttribute( 'Name' ),
-				description        => $formalInput->getAttribute( 'Description' ),
-				program_id         => $program,
-				datatype_id => $DataTypeColumn->datatype->id(),
-				lookup_table_id    => $lookupTable,
-				#user_defined => $formalInput->getAttribute( 'UserDefined' )
-				# this exists in the schema, and only in the schema.
-				# we need to add it to other places or remove from schema.
-			};
-			my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
-				or die "Could not make OME::Program::FormalInput object\n";
-			push(@commitOnSuccessfulImport, $newFormalInput);
-			#
-			#
-			##########################################
-			
-			# add dbID to reference list.
-			$formalInput_xmlID_dbID{ $formalInput->getAttribute( "FormalInputID" ) }
-				= $newFormalInput->ID();
-		}
-	}
-	#
-	#
-	##################################################
-	
-
-	##################################################
-	#
-	# process formalOutputs
-	#
-	my %formalOutput_xmlID_dbID;
-	{
-		foreach my $formalOutput ( $module->getElementsByTagName( "FormalOutput" ) ) {
-
-			##########################################
-			#
-			# make OME::DataTypeColumn object from DBLocation element
-			#
-			my $dbLocation = $formalOutput->getElementsByTagName( "DBLocation" )->[0];
-			my $DataTypeColumn = makeDataTypeColumn($session, $dbLocation, { %table_xmlID_object});
-			push(@commitOnSuccessfulImport, $DataTypeColumn);
-			#
-			##########################################
-
-			##########################################
-			#
-			# make OME::FormalOutput object
-			#
-			my $data = {
-				name               => $formalOutput->getAttribute( 'Name' ),
-				description        => $formalOutput->getAttribute( 'Description' ),
-				program_id         => $program,
-				datatype_id        => $DataTypeColumn->datatype->id(),
-				feature_tag        => $formalOutput->getAttribute( 'IBelongTo' )
-			};
-			my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
-				or die "Could not make OME::Program::FormalOutput object\n";
-			push(@commitOnSuccessfulImport, $newFormalOutput);
-			#
-			##########################################
-
-			# add dbID to reference list.
-			$formalOutput_xmlID_dbID{ $formalOutput->getAttribute( "FormalOutputID"	) } = 
-				$newFormalOutput->ID();
-		}
-	}
-	#
-	#
-	##################################################
-	
-	
-	##################################################
-	#
-	# process executionInstructions 
-	#
-	my @executionInstructions = 
-		$module->getElementsByTagName( "ExecutionInstructions" );
-	
-	# XML schema & DBdesign currently allow at most one execution point per module
-	if(scalar(@executionInstructions) == 1) {
-		my $executionInstruction = $executionInstructions[0];
-
-		##############################################
-		#
-		# replace FormalInputID's with ID's from DB
-		#
-		my @inputs = (
-			$executionInstruction->getElementsByTagName( "Input" ),
-			$executionInstruction->getElementsByTagName( "theZ" ),
-			$executionInstruction->getElementsByTagName( "theT" ),
-			$executionInstruction->getElementsByTagName( "theW" ) );
-		foreach my $inputType (@inputs) {
-			foreach my $input (@$inputType) {
-				$input->setAttribute( "FormalInputID",
-									  $formalInput_xmlID_dbID {
-										  $input->getAttribute( "FormalInputID" )});
-			}
-		}
-		#
-		##############################################
-	
-		##############################################
-		#
-		# replace FormalOutputID's with ID's from DB
-		#
-		my @outputs = $executionInstruction->getElementsByTagName( "Output" );
-		foreach my $output (@outputs) {
-			$output->setAttribute( "FormalOutputID",
-								  $formalOutput_xmlID_dbID {
-									  $output->getAttribute( "FormalOutputID" )});
-		}
-		#
-		##############################################
-		
-		##############################################
-		#
-		# check regular expressions for validity
-		#
-		my @pats =  $executionInstruction->getElementsByTagName( "pat" );
-		foreach (@pats) {
-			my $pat = $_->getFirstChild->getData();
-			eval { "" =~ /$pat/; };
-			die "Invalid regular expression pattern: $pat in program ".$program->getAttribute( "ModuleName" )
-				if $@;
-		}
-		#
-		##############################################
-		
-		# save executionInstructions to DB
-		$program->execution_instructions( $executionInstruction->toString() );
-	}
-	#
-	#
-	##################################################
-
-	##################################################
-	# commit this module. It's been successfully imported
-	#
-	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
-		$DBObjectInstance->writeObject;
-	} # commits all DBObjects
-	$session->DBH()->commit(); # new tables & columns written w/ this handle
-	#
-	##################################################
-	
-	push(@$newPrograms, $program)
-
-} # END foreach my $module( @modules )
-	
-	return $newPrograms;
-	
-} # END sub processDOM
-#
-#
-######################################################
-
-
-
-######################################################
-#
-# make DataType Column
-# parameter(s):
-#	$session - an OME::Session object
-#	$dbLocation - XML element, DOM model
-#	$table_xmlID_object - a hash of Datatype objects keyed by xml ID's
-#
-sub makeDataTypeColumn {
-	my ($session, $dbLocation, $table_xmlID_object) = @_;
-	my $factory = $session->Factory();
-	my %dataTypeConversion = (
-#       XMLType  => SQL_Type
-		integer  => 'integer',
-		double   => 'double precision',
-		float    => 'real',
-		boolean  => 'boolean',
-		string   => 'text',
-		dateTime => 'timestamp'
-		);
-	
-	die "TableID entry not found for dbLocation.column_name= ".$dbLocation->getAttribute( 'ColumnName' ).", TableID= ".$dbLocation->getAttribute( 'TableID' )."\n"
-		unless exists $table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) };
-
 # change this to a factory search after factory can take multi way searches
 # add column_sql to the search after it is represented int the database
-	require OME::DataType;
-	my @cols = OME::DataType::Column->search( 
-		datatype_id => $table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->id(),
-		column_name => $dbLocation->getAttribute( 'ColumnName' )
-	);
-	
-	my $DataTypeColumn;
-	if( scalar(@cols) == 0 ) {
-		my $data     = {
-			datatype_id    => $table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->id(),
-			column_name    => $dbLocation->getAttribute( 'ColumnName' ),
-			description    => $dbLocation->getAttribute( 'Description' ),
-			reference_type => $dbLocation->getAttribute( 'ReferenceType' ),
-			#column_sql     => $dbLocation->getAttribute( 'Column_SQL' )
+				print STDERR ref ($self) . "->processDOM is searching OME::DataTable::Column with\n\tdata_table_id=".$newTable->id()."\n\tcolumn_name=". $columnXML->getAttribute( 'ColumnName' )."\n"
+					if $debug > 1;
+				require OME::DataTable;
+				my @cols = OME::DataTable::Column->search( 
+					data_table_id => $newTable->id(),
+					column_name   => $columnXML->getAttribute( 'ColumnName' )
+				);
+				
+				my $newColumn;
+				if( scalar(@cols) == 0 ) {
+					print STDERR ref ($self) . "->processDOM could not find matching column. creating it\n"
+						if $debug > 1;
+					my $data     = {
+						data_table_id  => $newTable,
+						column_name    => $columnXML->getAttribute( 'ColumnName' ),
+						description    => $columnXML->getAttribute( 'Description' ),
+						#column_sql     => $columnXML->getAttribute( 'Column_SQL' )
 # Do we need to store column_sql in the database?
 # What if two modules declare a column in the same table with the same name, but the
 # columns have different types? We need to check for that and die if it happens.
 # How can we check it if it isn't stored?
-		};
-		$DataTypeColumn = $factory->newObject( "OME::DataType::Column", $data )
-			or die "Could not make OME::DataType::Column object\n";
+					};
+					print STDERR ref ($self) . "->processDOM OME::DataTable::Column DBObject parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+						if $debug > 1;
+					$newColumn = $factory->newObject( "OME::DataTable::Column", $data )
+						or die "Could not create OME::DataType::Column object\n";
+					print STDERR ref ($self) . "->processDOM created OME::DataTable::Column DBObject\n"
+						if $debug > 1;
+			
+					#####################################################################
+					#
+					# Create the column in the database. 
+					# Should this functionality be moved to OME::DataTable::Column 
+					# so making a new entry there will cause a new column
+					# to be created?
+					#
+					my $statement =
+						"ALTER TABLE ".$newTable->table_name().
+						"	ADD ".$newColumn->column_name()." ".$dataTypeConversion{$columnXML->getAttribute( 'SQL_DataType' )};
+					my $dbh = $session->DBH();
+					my $sth = $dbh->prepare( $statement );
+					print STDERR ref ($self) . "->processDOM about to create column in DB using statement\n$statement\n"
+						if $debug > 1;
+					$sth->execute()
+						or die "Unable to create column ".$newColumn->column_name()." in table ".$newTable->table_name();
+					print STDERR ref ($self) . "->processDOM created column in db\n"
+						if $debug > 1;
+					#
+					#
+					#####################################################################
+			
+					push(@commitOnSuccessfulImport, $newColumn);
+				} else {
+					print STDERR ref ($self) . "->processDOM found column. using existing column.\n"
+						if $debug > 1;
+					$newColumn = $cols[0];
+				}
+				$column_xmlID_object{ $columnXML->getAttribute('ColumnID')} =
+					$newColumn;
+			}
+			#
+			# END 'Process columns in this table'
+			#
+			##############################################################
+			print STDERR ref ($self) . "->processDOM finished processing columns in that table\n"
+				if $debug > 1;
+		}
+		print STDERR ref ($self) . "->processDOM finished processing tables\n"
+			if $debug > 1;
+	}
+	#
+	#
+	##########################################################################
+	
+	
+	##########################################################################
+	#
+	# process formalInputs 
+	#
+	my %formalInputColumn_xmlID_dbObject;
+	# this hash is keyed by xml id, valued by DBobjects
 
-		#####################################
+	print STDERR ref ($self) . "->processDOM about to process formal inputs\n"
+		if $debug > 1;
+	foreach my $formalInputXML ( $moduleXML->getElementsByTagName( "FormalInput" ) ) {
+		print STDERR ref ($self) . "->processDOM is processing formal input, ".$formalInputXML->getAttribute('Name')."\n"
+			if $debug > 1;
+		# look for existing AttributeType
+		print STDERR ref ($self) . "->processDOM is looking for an OME::AttributeType object\n\t[name=]".$formalInputXML->getAttribute( 'AttributeTypeName' )."\n"
+			if $debug > 1;
+		my $existingAttrType = $factory->findObject( 
+			"OME::AttributeType",
+			name => $formalInputXML->getAttribute( 'AttributeTypeName' )
+		);
+		
+		my $newAttrType;
+		#######################################################################
 		#
-		# Make the column in the database. 
-		# Should this functionality be moved to OME::Datatype::Column 
-		# so making a new entry there will cause a new column
-		# to be created?
+		# if AttributeType doesn't exist, create it
 		#
-# In the future, the following test will not be necessary because every column a module
-# can access will have a corrosponding entry in the Datatype_column table. We have
-# just looked for an entry and found none. For now, this rule may not be universally true.
-# Thus the test.
-		my $dbh = $session->DBH();
-		my $sth = $dbhQ->prepare( "SELECT ".$DataTypeColumn->column_name()." from ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name()." limit 1;" );
-		$sth->{RaiseError} = 0;
-		my $err = $sth->execute();
-		if( not defined $err ) { 
-			my $sth = $dbh->prepare( 
-				"ALTER TABLE ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name().
-				"	ADD ".$DataTypeColumn->column_name()." ".$dataTypeConversion{$dbLocation->getAttribute( 'SQL_DataType' )}
-			);
-			$sth->execute()
-				or die "Unable to create column ".$DataTypeColumn->column_name()." in table ".$table_xmlID_object->{ $dbLocation->getAttribute( 'TableID' ) }->table_name();
+		if( not defined $existingAttrType ) {
+			print STDERR ref ($self) . "->processDOM couldn't find it. creating it.\n"
+				if $debug > 1;
+			my $data = {
+				name        => $formalInputXML->getAttribute('AttributeTypeName'),
+				granularity => 'F',
+				description => $formalInputXML->getAttribute( 'Description')
+			};
+			# Granularity is really set below
+			print STDERR ref ($self) . "->processDOM is about to make a new OME::AttributeType. (granularity will be reset below) parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+				if $debug > 1;
+			$newAttrType = $factory->newObject("OME::AttributeType",$data)
+				or die ref ($self) . " could not create new object of type OME::AttributeType with parameters:\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n";
+			print STDERR ref ($self) . "->processDOM made a new OME::AttributeType object\n"
+				if $debug > 1;
+
+
+			###################################################################
+			#
+			# make OME::AttributeType::Column objects
+			#
+			my $granularity;
+			my $table;
+			print STDERR ref ($self) . "->processDOM is about to process attribute columns in this attribute\n"
+				if $debug > 1;
+			foreach my $attrColumnXML ($formalInputXML->getElementsByTagName( "FormalInputColumn") ) {
+				print STDERR ref ($self) . "->processDOM is processing attribute column,\n\tname=".$attrColumnXML->getAttribute('Name')."\n"
+					if $debug > 1;
+				#check ColumnID
+				die ref ($self) . " could not find entry for column '".$attrColumnXML->getAttribute('ColumnID')."'\n"
+					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
+			
+				#check granularity
+				my $attrColumnGranularity =
+					$column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->data_table->granularity();
+				$granularity = $attrColumnGranularity
+					if (not defined $granularity);
+				die ref ($self) . " Formal Input (name=".$formalInputXML->getAttribute('Name').") has columns of multiple granularities. Died on column (Name=".$attrColumnXML->getAttribute('name').", ColumnID=".$attrColumnXML->getAttribute('ColumnID').") with granularity '$attrColumnGranularity'"
+					unless $granularity eq $attrColumnGranularity;
+					
+				#check table
+				my $attrColumnTable =
+					$column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->data_table;
+				$table = $attrColumnTable
+					if (not defined $table);
+				die ref ($self) . " Formal Input (name=".$formalInputXML->getAttribute('Name').") has columns in multiple tables. Died on column (Name=".$attrColumnXML->getAttribute('name').", ColumnID=".$attrColumnXML->getAttribute('ColumnID').") in table '".$attrColumnTable->table_name()."'"
+					unless $table->id() eq $attrColumnTable->id();
+				
+				#create object
+				my $newAttrColumn = $factory->newObject( "OME::AttributeType::Column", {
+					attribute_type => $newAttrType,
+					name           => $attrColumnXML->getAttribute('Name'),
+					data_column    => $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') },
+					description    => $attrColumnXML->getAttribute('Description')
+				})
+					or die ref ($self) . " could not create new OME::AttributeType::Column object, name = ". $attrColumnXML->getAttribute('Name');
+				
+				$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } =
+					$newAttrColumn;
+				push(@commitOnSuccessfulImport, $newAttrColumn);
+				print STDERR ref ($self) . "->processDOM finished processing attribute column\n"
+					if $debug > 1;
+			}
+			#
+			#
+			###################################################################
+
+			$newAttrType->granularity( $granularity );
+			push(@commitOnSuccessfulImport, $newAttrType);
+		}
+		#
+		# END "if AttributeType doesn't exist, create it"
+		#
+		#######################################################################
+
+
+		#######################################################################
+		#
+		# AttributeType exists, verify that the attribute columns are identical
+		#	also, populate formalInputColumn_xmlID_dbObject hash
+		#
+		else { 
+			print STDERR ref ($self) . "->processDOM found a matching OME::AttributeType object. inspecting it to see if it matches.\n"
+				if $debug > 1;
+			my @attrColumns = $existingAttrType->attribute_columns();
+			die ref ($self) . " While processing formal input (name=".$formalInputXML->getAttribute('Name')."), found existing AttributeType with same AttributeTypeName (".$formalInputXML->getAttribute('AttributeTypeName').") but differing number of columns. Existing AttributeType has ".scalar(@attrColumns)." columns, new AttributeType of same name has ".scalar(@$formalInputXML->getElementsByTagName( "FormalInputColumn") )."columns."
+				unless( scalar(@attrColumns) eq scalar(@ {$formalInputXML->getElementsByTagName( "FormalInputColumn")}) );
+			foreach my $attrColumnXML ($formalInputXML->getElementsByTagName( "FormalInputColumn") ) {
+				#check ColumnID
+				die ref ($self) . " While processing formal input (name=".$formalInputXML->getAttribute('Name')."), could not find entry for columnID '".$attrColumnXML->getAttribute('ColumnID')."'\n"
+					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
+
+				#find OME::AttributeType::Column matched by OME::DataTable::Column
+				map {
+					$formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) } = $_
+						if $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->id() eq $_->data_column()->id();
+				} @attrColumns;
+				
+				die ref ($self) . " While processing FormalInput (name=".$formalInputXML->getAttribute('Name')."), found existing AttributeType of same AttributeTypeName (".$formalInputXML->getAttribute('AttributeTypeName')."). Could not find matching column in existing AttributeType for new column (Name=".$attrColumnXML->getAttribute('Name').",ColumnID=".$attrColumnXML->getAttribute('ColumnID').")."
+					unless exists $formalInputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalInputColumnID' ) };
+			}
+			$newAttrType = $existingAttrType;
+			print STDERR ref ($self) . "->processDOM determined the Attribute types match. using existing attribute type.\n"
+				if $debug > 1;
+		}
+		#
+		# END "AttributeType exists, verify that the attribute columns are identical"
+		#
+		#######################################################################
+
+
+		#######################################################################
+		#
+		# make OME::LookupTable & OME::LookupTable::Entry objects
+		#
+		#
+		my $newLookupTable;
+		my @lookupTables = $formalInputXML->getElementsByTagName( "LookupTable" );
+		# lookupTables may or may not exist. Either way is fine.
+		if( scalar( @lookupTables ) == 1 ) {
+
+			###################################################################
+			#
+			# make OME::LookupTable object
+			#
+			my $lookupTableXML = $lookupTables[0];
+			my $data = {
+				name        => $lookupTableXML->getAttribute( 'Name' ),
+				description => $lookupTableXML->getAttribute( 'Description' )
+			};
+			$newLookupTable = $factory->newObject( "OME::LookupTable", $data )
+				or die "Could not create OME::LookupTable object\n";
+			push(@commitOnSuccessfulImport, $newLookupTable);
+			#
+			###################################################################
+
+			###################################################################
+			#
+			# make OME::LookupTable::Entry objects
+			#
+			my @entries = $lookupTableXML->getElementsByTagName( "LookupTableEntry" );
+			foreach my $entry (@entries) {
+				my $data = {
+					value           => $entry->getAttribute( 'Value' ),
+					label           => $entry->getAttribute( 'Label' ),
+					lookup_table_id => $newLookupTable->ID()
+				};
+				my $lookupEntry = $factory->newObject( "OME::LookupTable::Entry", $data )
+					or die "Could not create OME::LookupTable::Entry object\n";
+				push(@commitOnSuccessfulImport, $lookupEntry);
+			}
+			#
+			###################################################################
 		}
 		#
 		#
-		#####################################
+		#######################################################################
 
-	} else {
-		$DataTypeColumn = $cols[0];
+		#######################################################################
+		#
+		# make OME::FormalInput object
+		#
+		my $data = {
+			name               => $formalInputXML->getAttribute( 'Name' ),
+			description        => $formalInputXML->getAttribute( 'Description' ),
+			program_id         => $newProgram,
+			attribute_type_id  => $newAttrType,
+			lookup_table_id    => $newLookupTable,
+			#user_defined => $formalInputXML->getAttribute( 'UserDefined' )
+			# this exists in the schema, and only in the schema.
+			# we need to add it to other places or remove from schema.
+		};
+		my $newFormalInput = $factory->newObject( "OME::Program::FormalInput", $data )
+			or die ref ($self) . " could not create OME::Program::FormalInput object (name=".$formalInputXML->getAttribute( 'Name' ).")\n";
+		push(@commitOnSuccessfulImport, $newFormalInput);
+		#
+		#
+		#######################################################################
+		print STDERR ref ($self) . "->processDOM finished processing formal input, ".$newFormalInput->name()."\n"
+			if $debug > 1;
 	}
-	return $DataTypeColumn;
-}
+	print STDERR ref ($self) . "->processDOM finished processing formal inputs\n"
+		if $debug > 1;
+	#
+	#
+	###########################################################################
+	
+
+	###########################################################################
+	#
+	# process formalOutputs
+	#
+	print STDERR ref ($self) . "->processDOM about to process formal outputs\n"
+		if $debug > 1;
+	my %formalOutputColumn_xmlID_dbObject;
+	foreach my $formalOutputXML ( $moduleXML->getElementsByTagName( "FormalOutput" ) ) {
+
+		print STDERR ref ($self) . "->processDOM is processing formal input, ".$formalOutputXML->getAttribute('Name')."\n"
+			if $debug > 1;
+		# look for existing AttributeType
+		print STDERR ref ($self) . "->processDOM is looking for an OME::AttributeType object\n\t[name=]".$formalOutputXML->getAttribute( 'AttributeTypeName' )."\n"
+			if $debug > 1;
+		my $existingAttrType = $factory->findObject( 
+			"OME::AttributeType",
+			name => $formalOutputXML->getAttribute( 'AttributeTypeName' )
+		);
+		
+		my $newAttrType;
+		#######################################################################
+		#
+		# if AttributeType doesn't exist, create it
+		#
+		if( not defined $existingAttrType ) {
+			print STDERR ref ($self) . "->processDOM couldn't find it. creating it.\n"
+				if $debug > 1;
+			my $data = {
+				name        => $formalOutputXML->getAttribute('AttributeTypeName'),
+				granularity => 'F',
+				description => $formalOutputXML->getAttribute( 'Description')
+			};
+			# Granularity is set below
+			print STDERR ref ($self) . "->processDOM is about to make a new OME::AttributeType. (granularity will be reset below) parameters are\n\t".join( "\n\t", map { $_."=>".$data->{$_} } keys %$data )."\n"
+				if $debug > 1;
+			$newAttrType = $factory->newObject("OME::AttributeType",$data)
+				or die ref ($self) . " could not create new object of type OME::AttributeType with parameters:\n	name => ".
+					$formalOutputXML->getAttribute('AttributeTypeName');
+			print STDERR ref ($self) . "->processDOM made a new OME::AttributeType object\n"
+				if $debug > 1;
+
+
+			###################################################################
+			#
+			# make OME::AttributeType::Column objects
+			#
+			my $granularity;
+			my $table;
+			print STDERR ref ($self) . "->processDOM is about to process attribute columns in this attribute\n"
+				if $debug > 1;
+			foreach my $attrColumnXML ($formalOutputXML->getElementsByTagName( "FormalOutputColumn") ) {
+				print STDERR ref ($self) . "->processDOM is processing attribute column,\n\tname=".$attrColumnXML->getAttribute('Name')."\n"
+					if $debug > 1;
+				#check ColumnID
+				die ref ($self) . " could not find entry for column '".$attrColumnXML->getAttribute('ColumnID')."'\n"
+					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
+			
+				#check granularity
+				my $attrColumnGranularity =
+					$column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->data_table->granularity();
+				$granularity = $attrColumnGranularity
+					if (not defined $granularity);
+				die ref ($self) . " Formal Output (name=".$formalOutputXML->getAttribute('Name').") has columns of multiple granularities. Died on column (Name=".$attrColumnXML->getAttribute('name').", ColumnID=".$attrColumnXML->getAttribute('ColumnID').") with granularity '$attrColumnGranularity'"
+					unless $granularity eq $attrColumnGranularity;
+					
+				#check table
+				my $attrColumnTable =
+					$column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->data_table;
+				$table = $attrColumnTable
+					if (not defined $table);
+				die ref ($self) . " Formal Output (name=".$formalOutputXML->getAttribute('Name').") has columns in multiple tables. Died on column (Name=".$attrColumnXML->getAttribute('name').", ColumnID=".$attrColumnXML->getAttribute('ColumnID').") in table '".$attrColumnTable->table_name()."'"
+					unless $table->id() eq $attrColumnTable->id();
+				
+				#create object
+				my $newAttrColumn = $factory->newObject( "OME::AttributeType::Column", {
+					attribute_type => $newAttrType,
+					name           => $attrColumnXML->getAttribute('Name'),
+					data_column    => $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') },
+					description    => $attrColumnXML->getAttribute('Description')
+				})
+					or die ref ($self) . " could not create new OME::AttributeType::Column object, name = ". $attrColumnXML->getAttribute('Name');
+				
+				$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } =
+					$newAttrColumn;
+				print STDERR ref ($self) . "->processDOM added entry to formalOutputColumn_xmlID_dbObject.\n\t".$attrColumnXML->getAttribute( 'FormalOutputColumnID' )."=>".$newAttrColumn."\n"
+					if $debug > 1;
+				push(@commitOnSuccessfulImport, $newAttrColumn);
+				print STDERR ref ($self) . "->processDOM finished processing attribute column\n"
+					if $debug > 1;
+			}
+			print STDERR ref ($self) . "->processDOM finished processing attribute columns in this attribute\n"
+				if $debug > 1;
+			#
+			#
+			###################################################################
+
+			$newAttrType->granularity( $granularity );
+			push(@commitOnSuccessfulImport, $newAttrType);
+		}
+		#
+		# END "if AttributeType doesn't exist, create it"
+		#
+		#######################################################################
+
+
+		#######################################################################
+		#
+		# AttributeType exists, verify that the attribute columns are identical
+		#	also, populate formalOutputColumn_xmlID_dbObject hash
+		#
+		else { 
+			my @attrColumns = $existingAttrType->attribute_columns();
+			die ref ($self) . " While processing formal output (name=".$formalOutputXML->getAttribute('Name')."), found existing AttributeType with same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName').") but differing number of columns. Existing AttributeType has ".scalar(@attrColumns)." columns, new AttributeType of same name has ".scalar(@$formalOutputXML->getElementsByTagName( "FormalOutputColumn") )."columns."
+				unless( scalar(@attrColumns) eq scalar(@{$formalOutputXML->getElementsByTagName( "FormalOutputColumn")}) );
+			foreach my $attrColumnXML ($formalOutputXML->getElementsByTagName( "FormalOutputColumn") ) {
+				#check ColumnID
+				die ref ($self) . " While processing formal output (name=".$formalOutputXML->getAttribute('Name')."), could not find entry for columnID '".$attrColumnXML->getAttribute('ColumnID')."'\n"
+					unless exists $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') };
+
+				#find OME::AttributeType::Column matched by OME::DataTable::Column
+				map {
+					$formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) } = $_
+						if $column_xmlID_object{ $attrColumnXML->getAttribute('ColumnID') }->id() eq $_->data_column()->id();
+				} @attrColumns;
+				
+				die ref ($self) . " While processing FormalOutput (name=".$formalOutputXML->getAttribute('Name')."), found existing AttributeType of same AttributeTypeName (".$formalOutputXML->getAttribute('AttributeTypeName')."). Could not find matching column in existing AttributeType for new column (Name=".$attrColumnXML->getAttribute('Name').",ColumnID=".$attrColumnXML->getAttribute('ColumnID').")."
+					unless exists $formalOutputColumn_xmlID_dbObject{ $attrColumnXML->getAttribute( 'FormalOutputColumnID' ) };
+			}
+			$newAttrType = $existingAttrType;
+		}
+		#
+		# END "AttributeType exists, verify that the attribute columns are identical"
+		#
+		#######################################################################
+
+		###################################################################
+		#
+		# make OME::FormalOutput object
+		#
+		my $data = {
+			name               => $formalOutputXML->getAttribute( 'Name' ),
+			description        => $formalOutputXML->getAttribute( 'Description' ),
+			program_id         => $newProgram,
+			attribute_type_id  => $newAttrType,
+			feature_tag        => $formalOutputXML->getAttribute( 'IBelongTo' )
+		};
+		my $newFormalOutput = $factory->newObject( "OME::Program::FormalOutput", $data )
+			or die "Could not create OME::Program::FormalOutput object\n";
+		push(@commitOnSuccessfulImport, $newFormalOutput);
+		#
+		###################################################################
+	}
+	print STDERR ref ($self) . "->processDOM finished processing formal outputs\n"
+		if $debug > 1;
+	#
+	#
+	###########################################################################
+	
+	
+	###########################################################################
+	#
+	# process executionInstructions 
+	#
+	print STDERR ref ($self) . "->processDOM about to process ExecutionInstructions\n"
+		if $debug > 1;
+	my @executionInstructions = 
+		$moduleXML->getElementsByTagName( "ExecutionInstructions" );
+	
+	# XML schema & DBdesign currently allow at most one execution point per module
+	if(scalar(@executionInstructions) == 1) {
+		my $executionInstructionXML = $executionInstructions[0];
+
+		#######################################################################
+		#
+		# replace FormalInputID's with ID's from DB
+		#
+		print STDERR ref ($self) . "->processDOM replacing FormalInputID's w/ ID's from DB\n"
+			if $debug > 1;
+		my @inputTypes = ( "Input", "UseValue", "End", "Start" );
+		my @inputs;
+		map {
+			push(@inputs, $executionInstructionXML->getElementsByTagName( $_ ));
+		} @inputTypes;
+
+		foreach my $input (@inputs) {
+			$input->setAttribute( "FormalInputColumnID",
+								  $formalInputColumn_xmlID_dbObject {
+									  $input->getAttribute( "FormalInputColumnID" )}->id());
+		}
+		#
+		#######################################################################
+	
+		#######################################################################
+		#
+		# replace FormalOutputID's with ID's from DB
+		#
+		print STDERR ref ($self) . "->processDOM replacing FormalOutputID's w/ ID's from DB\n"
+			if $debug > 1;
+		my @outputTypes = ( "OutputTo", "AutoIterate", "IterateRange" );
+		my @outputs;
+		map {
+			push(@outputs, $executionInstructionXML->getElementsByTagName( $_ ));
+		} @outputTypes;
+
+		foreach my $output (@outputs) {
+			die ref ($self) . "->processDOM could not find formal output column referenced in executionInstructions as '".$output->getAttribute( "FormalOutputColumnID" )."'\n"
+				unless exists $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )};
+			print STDERR ref ($self) . "->processDOM replacing FormalOutputID\n".$output->getAttribute( "FormalOutputColumnID" )."->"
+				if $debug > 1;
+			print STDERR $formalOutputColumn_xmlID_dbObject { $output->getAttribute( "FormalOutputColumnID" )}->id()."\n"
+				if $debug > 1;
+			$output->setAttribute( "FormalOutputColumnID",
+				$formalOutputColumn_xmlID_dbObject {
+					  $output->getAttribute( "FormalOutputColumnID" )}->id());
+		}
+		#
+		#######################################################################
+
+		#######################################################################
+		#
+		# normalize XYPlaneID's
+		#
+		print STDERR ref ($self) . "->processDOM normalizing XYPlaneID's\n"
+			if $debug > 1;
+		my $currentID = 0;
+		my %idMap;
+		# first run: normalize XYPlaneID's in XYPlane's
+		foreach my $plane($executionInstructionXML->getElementsByTagName( "XYPlane" ) ) {
+			$currentID++;
+			die ref ($self) . " Two planes found with same ID (".$plane->getAttribute('XYPlaneID').")"
+				if ( defined defined $plane->getAttribute('XYPlaneID') ) and ( exists $idMap{ $plane->getAttribute('XYPlaneID') } );
+			$idMap{ $plane->getAttribute('XYPlaneID') } = $currentID
+				if defined $plane->getAttribute('XYPlaneID');
+			$plane->setAttribute('XYPlaneID', $currentID);
+		}
+		# second run: clean up references to XYPlanes
+		foreach my $match($executionInstructionXML->getElementsByTagName( "Match" ) ) {
+			die ref ($self) . " 'Match' element's reference plane not found. XYPlaneID=".$match->getAttribute('XYPlaneID')
+				unless exists $idMap{ $match->getAttribute('XYPlaneID') };
+			$match->setAttribute('XYPlaneID',
+				$idMap{ $match->getAttribute('XYPlaneID') } );
+		}
+		#
+		#######################################################################
+		
+		#######################################################################
+		#
+		# check regular expressions for validity
+		#
+		print STDERR ref ($self) . "->processDOM checking regular expression patterns for validity\n"
+			if $debug > 1;
+		my @pats =  $executionInstructionXML->getElementsByTagName( "pat" );
+		foreach (@pats) {
+			my $pat = $_->getFirstChild->getData();
+			eval { "" =~ /$pat/; };
+			die "Invalid regular expression pattern: $pat in program ".$newProgram->program_name()
+				if $@;
+		}
+		#
+		#######################################################################
+		
+		# save executionInstructions
+		$newProgram->execution_instructions( $executionInstructionXML->toString() );
+		print STDERR ref ($self) . "->processDOM finished processing ExecutionInstructions\n"
+			if $debug > 1;
+	}
+	#
+	#
+	###########################################################################
+
+	###########################################################################
+	# commit this module. It's been successfully imported
+	#
+	while( my $DBObjectInstance = pop (@commitOnSuccessfulImport) ){
+		$DBObjectInstance->writeObject;
+	}                             # commits all DBObjects
+	$session->DBH()->commit();    # new tables & columns written w/ this handle
+	#
+	###########################################################################
+	
+	push(@newPrograms, $newProgram)
+
+} # END foreach my $moduleXML( @modules )
+	
+	print STDERR ref ($self) . "->processDOM returning \n"
+		if $debug > 0;
+	return \@newPrograms;
+	
+} # END sub processDOM
 #
 #
-######################################################
+###############################################################################
 
 
 =pod
@@ -531,6 +878,7 @@ Josiah Johnston (siah@nih.gov)
 =head1 SEE ALSO
 
 OME/src/xml/AnalysisModule.xsd - XML specification documents should conform to.
+OME/src/xml/CLIExecutionInstructions.xsd - XML specification documents should conform to.
 
 =cut
 
