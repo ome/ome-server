@@ -668,7 +668,7 @@ float f13_icorr (float **P, int Ng) {
 
 	free(px);
 	free(py);
-	return (sqrt (abs (1 - exp (-2.0 * (hxy2 - hxy)))));
+	return (sqrt (fabs (1 - exp (-2.0 * (hxy2 - hxy)))));
 }
 
 /* Returns the Maximal Correlation Coefficient */
