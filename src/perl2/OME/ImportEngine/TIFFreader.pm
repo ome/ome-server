@@ -283,8 +283,7 @@ database transactions.
 =cut
 
 sub importGroup {
-    my $self = shift;
-    my $grp  = shift;
+    my ($self, $grp, $callback) = @_;
 
     my $session = ($self->{super})->Session();
     my $factory = $session->Factory();
@@ -339,7 +338,7 @@ sub importGroup {
         $params->fref($file);
         $tags =  readTiffIFD($file)
           unless ($c == 0);     # 1st file's tags already read
-        $status = readWritePixels($self, $tags, $c);
+        $status = readWritePixels($self, $tags, $c, $callback);
 	if ($status ne "") {
 	    $file->close();
 	    last;
@@ -379,6 +378,8 @@ sub readWritePixels {
     my $self = shift;
     my $tags = shift;
     my $theC = shift;
+    my $callback =shift;
+
     my $theY = 0;
     my $buf;
     my $params  = $self->{params};
@@ -389,6 +390,7 @@ sub readWritePixels {
 
     $self->{pix}->convertPlaneFromTIFF($fih,0,$theC,0);
     $self->{pix}->finishPixels();
+    doSliceCallback($callback);
 
     return $status;
 

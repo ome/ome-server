@@ -293,7 +293,7 @@ database transactions.
 
 
 sub importGroup {
-    my ($self,$file) = @_;
+    my ($self,$file, $callback) = @_;
 
     my $sha1 = $file->getSHA1();
 
@@ -335,8 +335,8 @@ sub importGroup {
                              $xref->{'Image.NumWaves'},
                              $xref->{'Image.NumTimes'},
                              $xref->{'Data.BitsPerPixel'});
-	$self->{pixels} = $pixels;
-	$status = readPixels($self, $params, $pix);
+    $self->{pixels} = $pixels;
+    $status = readPixels($self, $params, $pix, $callback);
     if ($status ne '') {
 	$file->close();
 	die $status ;
@@ -438,6 +438,7 @@ sub readPixels {
     my $self = shift;     # Ourselves
     my $params = shift;
     my $pix  = shift;
+    my $callback = shift;
 
     my $file    = $params->fref;
     my $endian = $params->endian;
@@ -494,6 +495,7 @@ sub readPixels {
                                        $big_endian);
                 };
                 return $@ if $@;
+		doSliceCallback($callback);
             }
         }
     }

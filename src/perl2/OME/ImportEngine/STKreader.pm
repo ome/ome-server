@@ -279,8 +279,7 @@ database transactions.
 # just one file.
 
 sub importGroup {
-    my $self = shift;
-    my $file = shift;
+    my ($self, $file, $callback) = @_;
     my $status;
 
     my $sha1 = $file->getSHA1();
@@ -348,7 +347,7 @@ sub importGroup {
 						 $xref->{'Image.NumTimes'},
 						 $xref->{'Data.BitsPerPixel'});
     $self->{pixels} = $pixels;
-    $status = readWritePixels($self, $params, $pix);
+    $status = readWritePixels($self, $params, $pix, $callback);
 
     $file->close();
 
@@ -408,6 +407,8 @@ sub readWritePixels {
     my $self = shift;
     my $params =shift;
     my $pix = shift;
+    my $callback = shift;
+
     my $fih            = $params->fref;
     my $endian         = $params->endian;
     my $xml_hash       = $params->xml_hash;
@@ -475,7 +476,8 @@ sub readWritePixels {
 	for ($c = 0; $c < $maxC; $c++) {
 	    for ($z = 0; $z < $maxZ; $z++) {
 		my $offset = $start_offset + ($planes{$i}) * $plane_size;
-        $pix->convertPlane($fih,$offset,$z,$c,$t,$endian);
+		$pix->convertPlane($fih,$offset,$z,$c,$t,$endian);
+		doSliceCallback($callback);
 	    }
 	}
     }
