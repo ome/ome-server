@@ -942,15 +942,6 @@ sub storeObject {
     return;
 }
 
-# DEPRECATED!  NEVER EVER EVER CALL THIS
-
-sub writeObject {
-    carp "**** writeObject is deprecated!";
-    my $self = shift;
-    $self->storeObject();
-    $self->Session()->commitTransaction();
-}
-
 =head2 deleteObject
 
 	$instance->deleteObject();

@@ -319,7 +319,6 @@ require OME::SemanticType;
 require OME::Factory;
 
 addPrototype("OME::DBObject","id",['$'],['$']);
-addPrototype("OME::DBObject","writeObject",[],[]);
 addPrototype("OME::DBObject","storeObject",[],[]);
 addPrototype("OME::DBObject","Session",[],['OME::Session']);
 addPrototype("OME::DBObject","populate",[],['%']);
