@@ -168,6 +168,11 @@ public class RemoteObjectCache
     public static Class getClass(String className)
     { return (Class) classes.get(className); }
 
+    public void clearCache()
+    {
+        objectCache.clear();
+    }
+
     /**
      * Returns a {@link RemoteObject} for the given Perl class and
      * reference.  It determines which Java class to instantiate by
