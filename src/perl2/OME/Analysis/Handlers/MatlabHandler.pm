@@ -84,16 +84,15 @@ sub new {
 	# Keyed by Tag name of elements under <Input>
 	$self->{ _translate_to_matlab } = {
 		PixelsArray => 'Pixels_to_MatlabArray',
-		PixelsSlice => 'PixelsSlice_to_MatlabArray',
-		Scalar      => 'Attr_to_MatlabScalar',
+		Scalar		=> 'Attr_to_MatlabScalar',
 	};
 	
 	# List of package functions to make ome attributes from output execution instructions
 	# Keyed by Tag name of elements under <Output>
 	$self->{ _translate_from_matlab } = {
 		PixelsArray => 'MatlabArray_to_Pixels',
-		Scalar      => 'MatlabScalar_to_Attr',
-		Struct      => 'MatlabStruct_to_Attr'
+		Scalar		=> 'MatlabScalar_to_Attr',
+		Struct		=> 'MatlabStruct_to_Attr'
 	};
 
 	# Mapping from Pixel Types to matlab class bindings
@@ -108,6 +107,7 @@ sub new {
 		uint8  => 'uint8',
 		uint16 => 'uint16',
 		uint32 => 'uint32',
+		single => 'float'
 	};
 	
 	bless $self,$class;
@@ -133,10 +133,10 @@ sub startAnalysis {
 }
 
 sub startImage {
-    my ($self,$image) = @_;
-    $self->SUPER::startImage($image);
+	my ($self,$image) = @_;
+	$self->SUPER::startImage($image);
 
-    $self->placeInputs();
+	$self->placeInputs();
 	$self->__execute() if $self->__checkExecutionGranularity( ) eq 'I';
 	$self->getOutputs();
 }
@@ -207,7 +207,8 @@ sub placeInputs {
 =head2 Pixels_to_MatlabArray
 
 Translate a Pixels input into a matlab 5d array.
-Uses <PixelsArray>
+Also handles PixelsSlice & other psuedo subclasses of Pixels.
+Implements <PixelsArray>
 The guts of this were written by Tomasz
 
 =cut
@@ -216,128 +217,84 @@ sub Pixels_to_MatlabArray {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
 	
-	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
+	# Gather the actual input. It may be a Pixels or it may inherit from Pixels
 	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
-	my @pixel_attr_list = $self->getCurrentInputAttributes( $formal_input );
-		
-	if ( scalar @pixel_attr_list > 1) {
-		print STDERR "The OME-Matlab interface does not support Formal inputs".
-		             " of arity greater than 1 at this time.\n";
-		return;
-	}
-	my $pixels = $pixel_attr_list[0];
+	my @input_attr_list = $self->getCurrentInputAttributes( $formal_input );
+	die "The OME-Matlab interface does not support Formal inputs of arity greater than 1 at this time.\n"
+		if ( scalar @input_attr_list > 1);
+	my $input = $input_attr_list[0];
+
+	# Traverse the line of ascent (if one exists)
+	# Get $pixels, dimensions for matlab array, and possibly a Slice's ROI.
+	my $pixels;
+	my (@ROI, @ML_Array_Dims);
+	do {
+		# Record ROI & Array Dimensions if PixelsSlice is encountered
+		if( $input->semantic_type()->name() eq 'PixelsSlice' ) {
+			@ROI = (
+				$input->StartX(), $input->EndX(),
+				$input->StartY(), $input->EndY(),
+				$input->StartZ(), $input->EndZ(),
+				$input->StartC(), $input->EndC(),
+				$input->StartT(), $input->EndT()
+			);
+			@ML_Array_Dims = (
+				$input->EndX - $input->StartX + 1,
+				$input->EndY - $input->StartY + 1,
+				$input->EndZ - $input->StartZ + 1,
+				$input->EndC - $input->StartC + 1,
+				$input->EndT - $input->StartT + 1
+			);
+		} elsif( $input->semantic_type()->name() eq 'Pixels' ) {
+			$pixels = $input;
+			# Set array dimensions unless a PixelsSlice in the line of ascent 
+			# already set them.
+			@ML_Array_Dims = (
+				$pixels->SizeX,
+				$pixels->SizeY,
+				$pixels->SizeZ,
+				$pixels->SizeC,
+				$pixels->SizeT,
+			) unless @ML_Array_Dims;
+		}
+	} while( $input->can( 'Parent' ) && not defined $pixels);
+	die "input ".$input_attr_list[0]." does not inherit from Pixels."
+		unless $pixels;
 	
+	# Ensure PixelType is supported.
 	my $pixelType = $pixels->PixelType();
 	die "The OME-Matlab interface does not support $pixelType at this time."
 		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
 	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-		
-	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
-		$class,
-		$mxREAL,
-		$pixels->SizeX(),
-		$pixels->SizeY(),
-		$pixels->SizeZ(),
-		$pixels->SizeC(),
-		$pixels->SizeT()
-	) or die "Could not make an array in matlab for Pixels";
-	$matlab_pixels->makePersistent();
-  
-	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement 
-	#    the functionality below, but without loading the whole pixels
-	#    array into RAM
 
-	#  prepare for the incoming pixels
+	# Get the Pixels data into a local file.
+	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement the 
+	#	 functionality below without loading the whole pixels array into RAM
+	#    and taking endianess into consideration
 	my $filename = $session->getTemporaryFilename("pixels","raw");
 	open my $pix, ">", $filename or die "Could not open local pixels file";
-	# FIXME: take endianess into consideration
-	my $buf = OME::Image::Server->getPixels($pixels->ImageServerID());
+	my $buf = ( @ROI ?
+		OME::Image::Server->getROI($pixels->ImageServerID(), @ROI ) : 
+		OME::Image::Server->getPixels($pixels->ImageServerID())
+	);
 	print $pix $buf;
 	close $pix;
-	
-	$self->{__engine}->eval("global $matlab_var_name");
-	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
-	
-	# magic one-liner. One liner means no variables are left in matlab's workplace
-	# this one-liner fills an array based on OMEIS's output which went to a temp file
-	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
-	$session->finishTemporaryFile($filename);
-}
-
-=head2 PixelsSlice_to_MatlabArray
-
-Translate a PixelsSlice input into a matlab 5d array.
-Uses <PixelsSlice>
-The guts of this were written by Tomasz
-
-=cut
-
-sub PixelsSlice_to_MatlabArray {
-	my ( $self, $xmlInstr ) = @_;
-	my $session = OME::Session->instance();
-	
+  	
+	# Get that file into Matlab.
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
-	my $formal_input = $self->getFormalInput( $xmlInstr->getAttribute( 'FormalInput' ) );
-	my @pixels_slice_attr_list = $self->getCurrentInputAttributes( $formal_input );
-
-	if ( scalar @pixels_slice_attr_list > 1) {
-		print STDERR "The OME-Matlab interface does not support Formal inputs".
-		             " of arity greater than 1 at this time.\n";
-		return;
-	}
-	my $pixels_slice = $pixels_slice_attr_list[0];
-	
-	# Go up the line of decent until a PixelsSlice is reached
-	while( $pixels_slice->semantic_type()->name() ne 'PixelsSlice' ) {
-		$pixels_slice = $pixels_slice->Parent();
-	}
-        
-	# get the dimensions of the pixels slice
-	my ($x0, $x1, $y0, $y1, $z0, $z1, $c0, $c1, $t0, $t1) =
-		($pixels_slice->StartX(), $pixels_slice->EndX(),
-		 $pixels_slice->StartY(), $pixels_slice->EndY(),
-		 $pixels_slice->StartZ(), $pixels_slice->EndZ(),
-		 $pixels_slice->StartC(), $pixels_slice->EndC(),
-		 $pixels_slice->StartT(), $pixels_slice->EndT());
-				
-	my $pixels = $pixels_slice->Pixels();
-	my $pixelType = $pixels->PixelType();
-	
-	die "The OME-Matlab interface does not support $pixelType at this time."
-		unless exists $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-	my $class = $self->{ _pixel_type_to_matlab_class }->{ $pixelType };
-		
 	my $matlab_pixels = OME::Matlab::Array->newNumericArray(
 		$class,
 		$mxREAL,
-		$x1-$x0+1,
-		$y1-$y0+1,
-		$z1-$z0+1,
-		$c1-$c0+1,
-		$t1-$t0+1
+		@ML_Array_Dims
 	) or die "Could not make an array in matlab for Pixels";
 	$matlab_pixels->makePersistent();
-  
-	# FIXME: PixelsManager->getLocalFile( $pixels ) should implement 
-	#    the functionality below, but without loading the whole pixels
-	#    array into RAM
-
-	#  prepare for the incoming pixels
-	my $filename = $session->getTemporaryFilename("pixels","raw");
-	open my $pix, ">", $filename or die "Could not open local pixels file";
-	
-	# FIXME: take endianess into consideration
-	my $buf = OME::Image::Server->getROI($pixels->ImageServerID(), 
-		$x0,$y0,$z0,$c0,$t0,$x1,$y1,$z1,$c1,$t1, );
-	print $pix $buf;
-	close $pix;
-	
 	$self->{__engine}->eval("global $matlab_var_name");
 	$self->{__engine}->putVariable($matlab_var_name,$matlab_pixels);
-	
 	# magic one-liner. One liner means no variables are left in matlab's workplace
-	# this one-liner fills an array based on OMEIS's output which went to a temp file
+	# this one-liner fills an array from the temp file
 	$self->{__engine}->eval("[$matlab_var_name, nPix] = fread(fopen('$filename', 'r'), size($matlab_var_name),'$pixelType');");
+
+	# Cleanup
 	$session->finishTemporaryFile($filename);
 }
 
@@ -352,9 +309,9 @@ sub Attr_to_MatlabScalar {
 	my ( $self, $xmlInstr ) = @_;
 
 	# get input value
- 	my $input_location = $xmlInstr->getAttribute( 'InputLocation' );
- 	my ( $formal_input_name, $SEforScalar ) = split( /\./, $input_location )
- 		or die "input_location '$input_location' could not be parsed.";
+	my $input_location = $xmlInstr->getAttribute( 'InputLocation' );
+	my ( $formal_input_name, $SEforScalar ) = split( /\./, $input_location )
+		or die "input_location '$input_location' could not be parsed.";
 	my $input_attr = $self->getCurrentInputAttributes( $formal_input_name );
 	die scalar( @$input_attr )." attributes found for input '$formal_input_name'. ".
 		'Cannot use scalar for input that has count other than 1. Error when processing \''.$xmlInstr->toString()."'"
@@ -364,7 +321,7 @@ sub Attr_to_MatlabScalar {
 	# Place value into matlab
 	my $matlab_var_name = $self->_inputVarName( $xmlInstr );
 	my $array = OME::Matlab::Array->newDoubleScalar($value);
- 	$array->makePersistent();
+	$array->makePersistent();
 	$self->{__engine}->eval("global $matlab_var_name");
 	$self->{__engine}->putVariable($matlab_var_name,$array);
 }
@@ -413,11 +370,12 @@ The guts of this were written by Tomasz
 sub MatlabArray_to_Pixels {
 	my ( $self, $xmlInstr ) = @_;
 	my $session = OME::Session->instance();
-
+	my $factory = $session->Factory();
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
-	my $filename = $session->getTemporaryFilename("pixels","raw");
+	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
+		or die "Could not find formal output referenced from ".$xmlInstr->toString();
 	
-	# figure out the array's dimensions
+	# Get array's dimensions.
 	$self->{__engine}->eval("[sizeX,sizeY,sizeZ,sizeC,sizeT] = size($matlab_var_name)");
 	my ($sizeX,$sizeY,$sizeZ,$sizeC,$sizeT) = 
 		($self->{__engine}->getVariable('sizeX')->getScalar(),
@@ -426,29 +384,103 @@ sub MatlabArray_to_Pixels {
 		 $self->{__engine}->getVariable('sizeC')->getScalar(),
 		 $self->{__engine}->getVariable('sizeT')->getScalar());
 	
-	# figure out the pixel depth based on array data-type	 
+	# Get pixel type
 	$self->{__engine}->eval("str = class($matlab_var_name)");
 	my $type = $self->{__engine}->getVariable('str')->getScalar();
 	die "Pixels of Matlab class $type are not supported at this time"
 		unless exists $self->{ _matlab_class_to_pixel_type }->{ $type };
 	my $pixelType = $self->{ _matlab_class_to_pixel_type }->{ $type };
-	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name))");
+	
+	# Make Pixels
 	my ($pixels_data, $pixels_attr) = OME::Tasks::PixelsManager->createPixels(
 		$self->getCurrentImage(), 
-		$self->getModuleExecution(),{
+		$self->getModuleExecution(),
+		{
 			SizeX		 => $sizeX,
 			SizeY		 => $sizeY,
 			SizeZ		 => $sizeZ,
 			SizeC		 => $sizeC,
 			SizeT		 => $sizeT,
 			PixelType	 => $pixelType
-		} );
-
+		},
+		( $formal_output->semantic_type->name ne 'Pixels' ? 1 : undef )
+	);
+	
+	# Shovel data into image server via tmp file
+	my $filename = $session->getTemporaryFilename("pixels","raw");
+	$self->{__engine}->eval("fwrite(fopen('$filename','w'),$matlab_var_name, class($matlab_var_name))");
 	my $pixelsWritten = $pixels_data->setPixelsFile($filename,1);
+	$session->finishTemporaryFile($filename);
+
+	# Finalize Pixels
 	my $pixelsID = OME::Tasks::PixelsManager->finishPixels($pixels_data, $pixels_attr);
 	OME::Tasks::PixelsManager->saveThumb($pixels_attr);
 	
-	$session->finishTemporaryFile($filename);
+	# Deal with subclassing. This code has both hardcoded and implicit 
+	# dependencies on the structure of STs that subclass Pixels. It assumes that
+	# PixelsSlice is the only subclass of Pixels that has additional data fields,
+	# and that every other ST that inherits (directy or indirectly) will only
+	# have a Parent field. If a PixelsSlice is part of the inheritence chain,
+	# its limits will be set the extent of the image.
+	my $current_ST = $formal_output->semantic_type();
+	my $last_attribute;
+	# traverse the inheritence path from the bottom up.
+	# Create an attribute for each step along the way, set the Parent element
+	# on the subsequent iteration.
+	while( $current_ST->name() ne 'Pixels' ) {
+		# Make a new attribute
+		my $new_attr;
+		if( $current_ST->name() eq 'PixelsSlice' ) {
+			$new_attr = $factory->newAttribute( 
+				'PixelsSlice', 
+				$self->getCurrentImage(),
+				$self->getModuleExecution(),
+				{
+					StartX => 0,
+					StartY => 0,
+					StartZ => 0,
+					StartC => 0,
+					StartT => 0,
+					EndX   => $pixels_attr->SizeX(),
+					EndY   => $pixels_attr->SizeY(),
+					EndZ   => $pixels_attr->SizeZ(),
+					EndC   => $pixels_attr->SizeC(),
+					EndT   => $pixels_attr->SizeT(),
+					Parent => $pixels_attr
+				},
+				( $last_attribute ? 1 : undef ) );
+		} else {
+			$new_attr = $factory->newAttribute( 
+				$current_ST, 
+				$self->getCurrentImage(),
+				$self->getModuleExecution(),
+				{ },
+				( $last_attribute ? 1 : undef )
+			);
+		}
+		
+		# Now that we have made a new attribute, use it to satisfy the Parent
+		# field on the last attribute.
+		if( $last_attribute ) {
+			$last_attribute->Parent( $new_attr );
+			$last_attribute->storeObject();
+		}
+		# Update for next loop iteration
+		$last_attribute = $new_attr; 
+		
+		# Take the next step up the ancestry chain
+		my $parent_element = $factory->findObject( 
+			'OME::SemanticType::Element', 
+			{
+				semantic_type => $current_ST,
+				name          => 'Parent'
+			} ) or die "Could not find a parent for ST ".$current_ST->name()." when trying to construct Pixels Parental outputs.";
+		$current_ST = $factory->findObject(
+			'OME::SemanticType',
+			{ name => $parent_element->data_column()->reference_type() }
+		) or die "Could not find ST named ".$parent_element->data_column()->reference_type()." when trying to construct Pixels Parental outputs.";
+	}
+	
 }
 
 =head2 MatlabScalar_to_Attr
@@ -461,17 +493,17 @@ sub MatlabScalar_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 
 	# gather formal output & SE
- 	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
- 	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
- 		or die "output_location '$output_location' could not be parsed.";
- 	my $formal_output = $self->getFormalOutput( $formal_output_name )
+	my $output_location = $xmlInstr->getAttribute( 'OutputLocation' );
+	my ( $formal_output_name, $SEforScalar ) = split( /\./, $output_location )
+		or die "output_location '$output_location' could not be parsed.";
+	my $formal_output = $self->getFormalOutput( $formal_output_name )
 		or die "Could not find formal output '$formal_output_name' (from output location '$output_location').";
 
 	# Retrieve value from matlab
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
- 	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
- 		or die "Couldn't retrieve $matlab_var_name";
- 	$matlab_output->makePersistent();
+	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
+		or die "Couldn't retrieve $matlab_var_name";
+	$matlab_output->makePersistent();
 	my $value = $matlab_output->getScalar();
 
 	# Make a data hash
@@ -496,14 +528,14 @@ sub MatlabScalar_to_Attr {
 	# A generalized solution is to place the value in quotes. This forces perl
 	# to cast it into a string and reinterpret that as a scalar. This strips 
 	# any and all XS uniqueness from variables.
-	#   -Josiah
+	#	-Josiah
 	$data_hash->{ $SEforScalar } = "$value";
 
 	logdbg "debug", "MatlabScalar_to_Attr: Trying to make a new attribute for formal output ".
 		$formal_output->name()." using data:\n\t".join( ', ', map( $_.' => '.$data_hash->{$_}, keys %$data_hash ) );
 
 	# Actually make the output
-	$self->newAttributes( $formal_output, $data_hash );	
+	$self->newAttributes( $formal_output, $data_hash ); 
 }
 
 =head2 MatlabStruct_to_Attr
@@ -518,13 +550,13 @@ sub MatlabScalar_to_Attr {
 sub MatlabStruct_to_Attr {
 	my ( $self, $xmlInstr ) = @_;
 
- 	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
- 		or die "Formal output could not be found. Error processing output: ".$xmlInstr->toString();
+	my $formal_output = $self->getFormalOutput( $xmlInstr->getAttribute( 'FormalOutput' ) )
+		or die "Formal output could not be found. Error processing output: ".$xmlInstr->toString();
 
 	my $matlab_var_name = $self->_outputVarName( $xmlInstr );
- 	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
- 		or die "Couldn't retrieve $matlab_var_name";
- 	$matlab_output->makePersistent();
+	my $matlab_output = $self->{__engine}->getVariable( $matlab_var_name )
+		or die "Couldn't retrieve $matlab_var_name";
+	$matlab_output->makePersistent();
 
 	# Loop through outputs in the list
 	foreach my $data_hash( @{ $matlab_output->convertToListOfHashes() } ) {
@@ -573,7 +605,7 @@ sub _getTemplateData {
 	die "No template with template_id '$template_id' found" if scalar( @matches ) eq 0;
 	my $template = $matches[0];
 
-	my $factory	= $self->Factory();
+	my $factory = $self->Factory();
 	my $ST = $factory->findObject( "OME::SemanticType", name => $template->tagName() )
 		or die "Template is not a known semantic type. '".$template->toString()."'";
 	my $data_hash;
@@ -640,7 +672,7 @@ sub _inputVarName {
 	my ($self, $xml_instruction ) = @_;
 	return $self->{ __inputVariableNames }->{ $xml_instruction->toString() }
 		if exists $self->{ __inputVariableNames }->{ $xml_instruction->toString() };
-	my $name = 'ome_input_'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
+	my $name = 'ome_input'.scalar( keys( %{ $self->{ __inputVariableNames } } ) );
 	$name .= '_'.$xml_instruction->getAttribute( 'ID' )
 		if( $xml_instruction->getAttribute( 'ID' ) );
 	$self->{ __inputVariableNames }->{ $xml_instruction->toString() } = $name;
