@@ -104,6 +104,7 @@ __PACKAGE__->addColumn(object_id => 'object_id',
                         SQLType => 'integer',
                         NotNull => 1,
                        });
+__PACKAGE__->addDeleteKey('lsid');
 
 # Our current caching implements breaks when there is not a single
 # primary key column for the table.  As this is the case for this
