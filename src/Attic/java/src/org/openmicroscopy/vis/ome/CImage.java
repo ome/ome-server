@@ -79,7 +79,7 @@ public class CImage extends RemoteImage {
 	}
 	
 	
-	public void loadImageData(Connection connection) {
+	public synchronized void loadImageData(Connection connection) {
 		if (imageData == null && loading  == false) {
 			connection.getThumbnail(this);
 			loading = true;
