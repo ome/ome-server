@@ -414,7 +414,7 @@ char **cgivars=param;
 				return (-1);
 			}
 
-			DeleteFile (theFile);
+			ExpungeFile (theFile);
 
 			HTTP_ResultType ("text/plain");
 			fprintf (stdout,"%llu\n",(unsigned long long)theFile->ID);
@@ -597,7 +597,7 @@ char **cgivars=param;
 					(unsigned long long)ID);
 				return (-1);
 			}
-			DeleteFile (theFile);
+			ExpungeFile (theFile);
 			freeFileRep (theFile);
 
 			break;			
