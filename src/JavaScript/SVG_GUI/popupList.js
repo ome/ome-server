@@ -1,7 +1,27 @@
 /*****
 
 popupList.js
-	external files dependencies: widget.js
+
+	Copyright (C) 2002 Open Microscopy Environment
+	Author: Josiah Johnston <siah@nih.gov>
+	
+	This library is free software; you can redistribute it and/or
+	modify it under the terms of the GNU Lesser General Public
+	License as published by the Free Software Foundation; either
+	version 2.1 of the License, or (at your option) any later version.
+	
+	This library is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+	Lesser General Public License for more details.
+	
+	You should have received a copy of the GNU Lesser General Public
+	License along with this library; if not, write to the Free Software
+	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+	
+	Written by: Josiah Johnston <siah@nih.gov>
+	
 
 Known bugs:
 	#1. Calling setSelection shortly after popupList is realized will not update
@@ -58,22 +78,26 @@ popupList.prototype.transformText =
 *       anchorText = svg tags to overwrite default background of minimized popupList
 *       itemBackgroundText = svg tags to overwrite default background of list elements
 *       itemHighlightText = svg tags to overwrite default highlight of list elements
+*		textStyle = array holding attribute name, value pairs to apply to menu text
 *
 *****/
 function popupList(x, y, itemList, callback, selection, anchorText, 
-	itemBackgroundText, itemHighlightText) {
+	itemBackgroundText, itemHighlightText, textStyle) {
 	if(arguments.length >= 3)
 		this.init(x, y, itemList, callback, selection, anchorText,
-			itemBackgroundText, itemHighlightText);
+			itemBackgroundText, itemHighlightText, textStyle);
 }
 
 
 /*****
-*
-*	setSelection(i, noAnimate)
-*
+
+	setSelection
+		i = new selection
+		noAnimate = boolean. determines whether change will be animated
+		noCallback = boolean. determines whether a callback will be issued
+
 *****/
-popupList.prototype.setSelection = function(i, noAnimate) {
+popupList.prototype.setSelection = function(i, noAnimate, noCallback) {
 	if(i<0)
 		i=0;
 	if(i>=this.size)
@@ -83,21 +107,30 @@ popupList.prototype.setSelection = function(i, noAnimate) {
 
 	this.selection = i;
 	this.update(noAnimate);
-	if( this.callback )
-		this.callback( this.getSelection() );
+	
+	if( !noCallback ) { this.issueCallback(this.getSelection()); }
+}
+
+
+popupList.prototype.issueCallback = function(value) {
+	if( this.callback_obj && this.callback) { 
+		eval( "this.callback_obj."+this.callback+"(value)"); 
+	} else { 
+		if( this.callback) { this.callback(value); } 
+	}
 }
 
 /*****
-*
-*	setSelectionByValue(val)
+
+	setSelectionByValue(val)
 		
-		notes:
-			because this function is only called externally, it will not cause update to animate.
-			update should only animate when opening or closing a popupList, not when the value is
-			externally changed.
-*
+	notes:
+		because this function is only called externally, it will not cause update to animate.
+		update should only animate when opening or closing a popupList, not when the value is
+		externally changed.
+
 *****/
-popupList.prototype.setSelectionByValue = function(val) {
+popupList.prototype.setSelectionByValue = function(val, noCallback) {
 	// search through itemList for val
 	for(var i in this.itemList)
 		if(this.itemList[i] == val) {
@@ -105,7 +138,7 @@ popupList.prototype.setSelectionByValue = function(val) {
 			for(var j in this.listIndex)
 				if(this.listIndex[j] == i)
 					break;
-			this.setSelection(j, true);
+			this.setSelection(j, true, noCallback);
 			break;
 		}
 	if(this.itemList[i] == val)
@@ -114,11 +147,7 @@ popupList.prototype.setSelectionByValue = function(val) {
 		return false;
 }
 
-/*****
-*
-*	getItemList()
-*
-*****/
+
 popupList.prototype.getItemList = function() {
 	// return a COPY
 	var itemList = new Array();
@@ -127,14 +156,11 @@ popupList.prototype.getItemList = function() {
 	return itemList;
 }
 
-/*****
-*
-*	getSelection()
-*
-*****/
+
 popupList.prototype.getSelection = function() {
 	return this.listIndex[this.selection];
 }
+
 
 popupList.prototype.getSelectionName = function() {
 	return this.itemList[ this.getSelection() ];
@@ -203,13 +229,18 @@ popupList.prototype.update = function(noAnimate) {
 *
 *****/
 popupList.prototype.init = function(x, y, itemList, callback, selection,
-	anchorText, itemBackgroundText, itemHighlightText) {
+	anchorText, itemBackgroundText, itemHighlightText, textStyle) {
 
 	// call superclass initialization
 	popupList.superclass.init.call(this, x, y);
 
-	// set variables
-	this.callback = callback;
+	// record initialization params...
+	if( !callback || isFunction(callback) ) {
+		this.callback = callback;
+	} else {
+		this.callback = callback['method'];
+		this.callback_obj = callback['obj'];
+	}
 	this.active = false;
 	this.padding = 3;
 	this.itemList = itemList;
@@ -222,13 +253,23 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	this.itemText = new Array();
 	var width = 0; 
 	var height = 0;
+	var align = 'center';
 	this.size = 0;
 	for(i in itemList) {
 		this.size++;
 		var text = svgDocument.createElementNS( svgns, "text");
 		text.appendChild( svgDocument.createTextNode(itemList[i]) );
-		text.setAttributeNS(null, "y", "1em");
-		text.setAttributeNS(null, "text-anchor", "middle");
+		for( j = 0; textStyle != null && j< textStyle.length; j+=2) {
+			text.setAttribute( textStyle[j], textStyle[j+1]	);
+			if( textStyle[j] == 'text-anchor' && textStyle[j+1] == 'end' )
+				align = 'right';
+			if( textStyle[j] == 'text-anchor' && textStyle[j+1] == 'start' )
+				align = 'left';
+		}
+		if( !text.getAttribute("dominant-baseline") )
+			text.setAttribute( "dominant-baseline", "hanging");
+		if( !text.getAttribute("text-anchor") )
+			text.setAttribute( "text-anchor", "middle");
 		// add set text style
 		this.itemText.push(text);
 		this.listIndex.push(i);
@@ -238,8 +279,15 @@ popupList.prototype.init = function(x, y, itemList, callback, selection,
 	}
 	this.width = Math.round(width + 2*this.padding);
 	this.height = Math.round(height + 2*this.padding);
-	for(i in this.itemText)
-		this.itemText[i].setAttributeNS(null, "x", Math.round(this.width/2) );
+	for(i in this.itemText) {
+		if( align == 'center' )
+			this.itemText[i].setAttribute( "x", Math.round(this.width/2) );
+		else if ( align == 'right' )
+			this.itemText[i].setAttribute( "x", width );
+		else if ( align == 'left' )
+			this.itemText[i].setAttribute( "x", this.padding );
+		this.itemText[i].setAttribute( "y", Math.round(this.padding/2) );
+	}
 		
 	// set selection
 	if(selection == null) selection = 0;
