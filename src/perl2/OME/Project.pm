@@ -27,7 +27,7 @@ use OME::DBObject;
 use base qw(OME::DBObject);
 
 __PACKAGE__->AccessorNames({
-    owner_id => 'owner',
+  #  owner_id => 'owner',
     group_id => 'group'
     });
 
@@ -55,22 +55,16 @@ my $self = shift;
 my $dataset = shift;
 
 	return undef unless defined $dataset;
-# 	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
-# 	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
-# 	if (not defined $pdMap) {
-# 		$pdMap = OME::Project::DatasetMap->create ( {
-# 			project_id => $self->ID(),
-# 			dataset_id => $dataset->ID()
-# 		} )
-# 			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
+	my $pdMapIter = OME::Project::DatasetMap->search( dataset_id => $dataset->ID(), project_id => $self->ID() );
+	my $pdMap = $pdMapIter->next() if defined $pdMapIter;
+	if (not defined $pdMap) {
+		$pdMap = OME::Project::DatasetMap->create ( {
+			project_id => $self->ID(),
+			dataset_id => $dataset->ID()
+		} )
+			or die ref($self)."->addDataset:  Could not create a new Project::DatasetMap entry.\n";
 
-# 	}
-    my $data = {
-                project_id => $self->id(),
-                dataset_id => $dataset->id(),
-               };
-    $self->Session()->Factory()->
-      maybeNewObject("OME::Project::DatasetMap",$data);
+	}
 
 	return $dataset;
 }
@@ -128,7 +122,7 @@ sub newDataset {
     my $datasetDescription = shift if @_ > 0;
 
     my $factory = $self->Session()->Factory();
-    my $owner = $factory->loadAttribute("Experimenter",$self->owner());
+    my $owner = $factory->loadAttribute("Experimenter",$self->owner_id());
     my $group = $owner->Group();
 
 	my $dataset = OME::Dataset->create ( {
