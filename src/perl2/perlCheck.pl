@@ -122,6 +122,18 @@ my @modules = ({
 	repositoryFile => 'XML-SAX-0.12.tar.gz',
 	getVersion => \&XML_SAX_getVersion
 	},{
+	Name => 'bzlib',
+	getVersion => \&bzlibGetVersion,
+	checkVersion => \&bzlib_VersionOK,
+	repositoryFile => '../source/bzip2-1.0.2.tar.gz',
+	installModule => \&bzlibInstall,
+	},{
+	Name => 'zlib',
+	getVersion => \&zlibGetVersion,
+	checkVersion => \&zlib_VersionOK,
+	repositoryFile => '../source/zlib-1.1.4.tar.gz',
+	installModule => \&zlibInstall,
+	},{
 	Name => 'libxml2',
 	getVersion => \&libXMLgetVersion,
 	checkVersion => \&libXML_VersionOK,
@@ -231,6 +243,18 @@ my $version = shift;
 	return (0);
 }
 
+sub zlib_VersionOK {
+my $version = shift;
+	return (1) if $version ge '1.1.4';
+	return (0);
+}
+
+sub bzlib_VersionOK {
+my $version = shift;
+	return (1) if $version ge '1.0';
+	return (0);
+}
+
 
 
 ############################
@@ -325,6 +349,39 @@ my $error;
 	
 }
 
+sub bzlibInstall {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $installDir = $module->{installDir};
+my $error;
+
+
+	print "\nInstalling $installDir\n";
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
+
+	chdir '..';
+	
+}
+
+sub zlibInstall {
+my $module = shift;
+my $installTarBall = $module->{repositoryFile};
+my $installDir = $module->{installDir};
+my $error;
+
+
+	print "\nInstalling $installDir\n";
+	chdir $installDir or die "Couldn't change working directory to $installDir.\n";
+
+	die "Compilation errors - script aborted.\n" if system ('make') != 0;
+	die "Install errors - script aborted.\n" if system ($installCommand) != 0;
+
+	chdir '..';
+	
+}
 
 
 ##################################################################
@@ -357,6 +414,51 @@ my $libXMLVersion = `xml2-config --version`;
 	
 }
 
+# returns ' ' if it can find an installation, else returns 0
+sub zlibGetVersion {
+my $module = shift;
+my $location;
+
+	foreach( ("/usr/local","/usr","/sw") ) {
+		open( IN, "ls $_/include/zlib.h 2>&1 1>/dev/null |" );
+		my $err = <IN>;
+		close( IN );
+		$location = $_ if( !$err );
+	}
+	open( IN, "< $location/include/zlib.h" ) or
+		die "Could not open $location/include/zlib.h for version check";
+	while(<IN>) {
+		chomp;
+		if( m/version ([0-9\.]+)/ ) {
+			close(IN);
+			return $1;
+		}
+	}
+	return 0;
+}
+
+# returns ' ' if it can find an installation, else returns 0
+sub bzlibGetVersion {
+my $module = shift;
+my $location;
+
+	foreach( ("/usr/local","/usr","/sw") ) {
+		open( IN, "ls $_/include/bzlib.h 2>&1 1>/dev/null |" );
+		my $err = <IN>;
+		close( IN );
+		$location = $_ if( !$err );
+	}
+	open( IN, "< $location/include/bzlib.h" ) or
+		die "Could not open $location/include/bzlib.h for version check";
+	while(<IN>) {
+		chomp;
+		if( m/bzip2\/libbzip2 version ([0-9\.]+)/ ) {
+			close(IN);
+			return $1;
+		}
+	}
+	return 0;
+}
 
 
 ##################################################################
