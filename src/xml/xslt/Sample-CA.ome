@@ -87,10 +87,10 @@
 		</Objective>
 		<Filter ID = "123.456.743.123.123">
 			<Ref Name = "Instrument" ID = "123.456.74.123.123"/>
-			<FilterSet Manufacturer = "Omega" Model = "SuperGFP" LotNumber = "123LJKHG123">
-				<Ref Name = "Filter" ID = "123.456.743.123.123"/>
-			</FilterSet>
 		</Filter>
+		<FilterSet Manufacturer = "Omega" Model = "SuperGFP" LotNumber = "123LJKHG123">
+			<Ref Name = "Filter" ID = "123.456.743.123.123"/>
+		</FilterSet>
 		<OpticalTransferFunction ID = "123.456.745.123.123" SizeX = "512" SizeY = "512" PixelType = "int8" OpticalAxisAverage = "true">
 			<Ref Name = "Instrument" ID = "123.456.74.123.123"/>
 			<Ref Name = "Objective" ID = "123.456.741.123.123" DocID = "123.456.70.123.123"/>
