@@ -46,10 +46,12 @@ import org.openmicroscopy.vis.ome.Connection;
 import org.openmicroscopy.vis.ome.CDataset;
 import org.openmicroscopy.vis.ome.CProject;
 import org.openmicroscopy.vis.ome.CChain;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEvent;
-import org.openmicroscopy.vis.chains.events.DatasetSelectionEventListener;
+import org.openmicroscopy.vis.ome.CChainExecution;
+import org.openmicroscopy.vis.chains.SelectionState;
 import org.openmicroscopy.vis.chains.events.ChainSelectionEvent;
 import org.openmicroscopy.vis.chains.events.ChainSelectionEventListener;
+import org.openmicroscopy.vis.chains.events.ExecutionSelectionEvent;
+import org.openmicroscopy.vis.chains.events.ExecutionSelectionEventListener;
 import org.openmicroscopy.vis.piccolo.PBrowserCanvas;
 import java.util.List;
 import java.util.Vector;
@@ -67,15 +69,14 @@ import javax.swing.JScrollPane;
 import javax.swing.Box;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.event.EventListenerList;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.Font;
-import java.util.Iterator;
 import java.util.HashSet;
+import java.util.Collection;
 
 
 /** 
@@ -85,7 +86,8 @@ import java.util.HashSet;
  * @since OME2.1
  */
 public class ControlPanel extends JFrame implements ListSelectionListener, 
-	MouseListener, ChainSelectionEventListener {
+	MouseListener, ChainSelectionEventListener, 
+		ExecutionSelectionEventListener {
 	
 	protected JLabel statusLabel;
 	protected JPanel panel;
@@ -98,8 +100,6 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	protected final JList datasetList;
 	
 	
-	protected CProject curProject;
-	protected CDataset curDataset=null;
 	
 	private Controller controller;
 	
@@ -110,13 +110,19 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	boolean reentrant = false;
 	
-	private EventListenerList datasetListeners  =
-		new EventListenerList();
+	/// in theory, we don't need to keep state around of 
+	// current project and current dataset.
+	// as it's all in the SelectionState.
+	// In practice, it makes the coding a bit easier.
+	// This does present a risk of inconsistency, but it seems to work ok.
+	
+	private CProject curProject;
+	private CDataset curDataset=null;
 		
 	private HashSet activeDatasets = new HashSet();
 	private HashSet activeProjects = new HashSet();
 	
-		
+	private SelectionState selectionState;
 	/**
 	 * 
 	 * @param cmd The hash table linking strings to actions
@@ -126,6 +132,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		this.controller = controller;
 		Container content = getContentPane();
 		content.setLayout(new BoxLayout(content,BoxLayout.Y_AXIS));
+		
+		selectionState = new SelectionState();
 		
 		JToolBar toolBar = buildToolBar();
 		
@@ -154,7 +162,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		projList.setVisibleRowCount(-1);
 		projList.setLayoutOrientation(JList.VERTICAL);
 		
-		projList.setCellRenderer(new ProjectRenderer(this));
+		projList.setCellRenderer(new ProjectRenderer(selectionState));
 		projList.addListSelectionListener(this);
 		projList.addMouseListener(this);
 		JScrollPane projScroller = new JScrollPane(projList);
@@ -181,7 +189,7 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		datasetList.setLayoutOrientation(JList.VERTICAL);
 		datasetList.addListSelectionListener(this);
 		datasetList.addMouseListener(this);
-		datasetList.setCellRenderer(new DatasetRenderer(this));
+		datasetList.setCellRenderer(new DatasetRenderer(selectionState));
 		JScrollPane datasetScroll = new JScrollPane(datasetList);
 		datasetScroll.setMinimumSize(new Dimension(100,200));
 		datasetScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -207,10 +215,18 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		pack();
 		show();
 	
+		
 		setResizable(false);
-		addDatasetSelectionEventListener(browser);
-		fireEvents();
+
+		browser.displayAllDatasets();	
+	
+		selectionState.addChainSelectionEventListener(this);
+		selectionState.addDatasetSelectionEventListener(browser);
+		selectionState.addExecutionSelectionEventListener(this);
+		//selectionState.setDatasetSelections(datasets,null);
 	}
+
+
 	
 	private JToolBar buildToolBar() {
 		JToolBar tool = new JToolBar();
@@ -258,20 +274,17 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 		statusLabel.setText(s);
 	}
 	
-	/*public void setViewResultsEnabled(boolean v) {
-		viewResultsButton.setEnabled(v);
-	} */
+	
 		
-	public void getProjects(Connection connection) {
+	private void getProjects(Connection connection) {
 		
 		List p  = connection.getProjectsForUser();
 		curProject =(CProject) p.get(0);
 		projects = new Vector(p);
 	}
 	
-	public void getDatasets(Connection connection) {
+	private void getDatasets(Connection connection) {
 		List d = connection.getDatasetsForUser();
-		//curDataset = (CDataset) d.get(0);
 		datasets = new Vector(d);
 	}
 	
@@ -279,10 +292,8 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	
 	public void valueChanged(ListSelectionEvent e) {
 		
-		//System.err.println("value changed, event "+e);
 		if (reentrant == true) 
 			return;
-		//System.err.println("value changed is being processed");
 		if (e.getValueIsAdjusting() == true) 
 			return;
 		Object obj = e.getSource();
@@ -299,14 +310,14 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	} 
 		
 	public void  updateProjectChoice(Object item) {
-		//System.err.println("in update project choice");
 		activeDatasets = new HashSet();
 		activeProjects = new HashSet();
 		
 		curProject = (CProject) item;
-		
-		setCurProjectDatasetsActive();
+
+			
 		if (curProject != null) {
+			activeDatasets.addAll(curProject.getDatasets());	
 			activeProjects.add(curProject);
 		}
 			
@@ -319,90 +330,51 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			datasetList.clearSelection();
 			curDataset = null;
 		}
-		if (curDataset == null)
-			//setViewResultsEnabled(false);
 		reentrant =false;
+		fireEvents();
 		datasetList.repaint();
 		projList.repaint();
 
-		fireEvents();
+	
 	}
 	
 	public void updateDatasetChoice(Object item) {
-		//System.err.println("in update dataset choice");
 		activeDatasets = new HashSet();
 		activeProjects = new HashSet();
 		int pos = -1;
 
 			
 		curDataset = null;
-	//	//setViewResultsEnabled(false);
 		if (item != null)  {
-			//setCurDataset((CDataset) item);
 			curDataset = (CDataset) item;
 			activeDatasets.add(curDataset);
-			//setViewResultsEnabled(true);
-			setCurDatasetProjectsActive();
+			activeProjects.addAll(curDataset.getProjects());
 			pos = datasets.indexOf(curDataset);
 		}
 		
 		
 		reentrant =true;
 		datasetList.setSelectedIndex(pos);
-		//if (curProject != null && curProject.isActive()==false) {
 		if (curProject != null &&
 			 !curDataset.getProjects().contains(curProject)) {
 			projList.clearSelection();
 			curProject = null;
 		}
 		if (curProject != null)
-			setCurProjectDatasetsActive();
+			activeDatasets.addAll(curProject.getDatasets());
 		reentrant =false;
-		
+	
+		fireEvents();	
 		datasetList.repaint();
 		projList.repaint();
-		fireEvents();
+	
 	}
 	
-	public HashSet getActiveDatasets() {
-		return activeDatasets;
+
+	public SelectionState getSelectionState() {
+		return selectionState;
 	}
-	
-	public HashSet getActiveProjects() {
-		return activeProjects;
-	}
-	
-	public CProject getSelectedProject() {
-		return curProject;
-	}
-	
-	public CDataset getSelectedDataset() {
-		return curDataset;
-	}
-	
-	private void setCurProjectDatasetsActive() {
-		if (curProject == null) 
-			return;
-		List d = curProject.getDatasets();
-		Iterator i = d.iterator();
-		while (i.hasNext()) {
-			CDataset ds = (CDataset) i.next();
-			activeDatasets.add(ds);
-		}
-	}
-	
-	private void setCurDatasetProjectsActive() {
-		if (curDataset == null)
-			return;
-		List p = curDataset.getProjects();
-		Iterator iter = p.iterator();
-		while (iter.hasNext()) {
-			CProject proj = (CProject) iter.next();
-			activeProjects.add(proj);
-		}
 		
-	}
-	
 	
 	// mouse listener so we can handle double-click to deselect from list. 
 	// this isn't terribly efficient, as the current dataset will get deselected 
@@ -454,33 +426,11 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 	public void mouseReleased(MouseEvent e) {
 	}
 	
-	public void addDatasetSelectionEventListener(DatasetSelectionEventListener
-		listener) {
-			datasetListeners.add(DatasetSelectionEventListener.class,
-				listener);
-	}
-	
-	public void removeDatasetSelectionEventListener(DatasetSelectionEventListener
-		listener) {
-			datasetListeners.remove(DatasetSelectionEventListener.class,
-				listener);
-	}
-	
-	public void fireDatasetSelectionEvent(DatasetSelectionEvent e) {
-		Object[] listeners=datasetListeners.getListenerList();
-		for (int i = listeners.length-2; i >=0; i-=2) {
-			if (listeners[i] == DatasetSelectionEventListener.class) {
-				((DatasetSelectionEventListener) listeners[i+1]).
-					datasetSelectionChanged(e);
-			}
-		}
-	}
+
 		
 	private void fireEvents() {
-		DatasetSelectionEvent e =
-			 new DatasetSelectionEvent(activeDatasets,curDataset);
-		//////System.err.println("firing events. curDataset is "+curDataset);
-		fireDatasetSelectionEvent(e);	
+		selectionState.setDatasetSelections(activeDatasets,curDataset);
+		selectionState.setProjectSelections(activeProjects,curProject);
 	}
 	
 	// we're going to set the datasets to be those that are
@@ -496,20 +446,25 @@ public class ControlPanel extends JFrame implements ListSelectionListener,
 			projList.clearSelection();
 			curDataset = null;
 			projList.clearSelection();
+			reentrant = false;
 			activeProjects =null;
 			activeDatasets=new HashSet(chain.getDatasetsWithExecutions());
 			if (activeDatasets.size() ==1) {
 				Object objs[] = activeDatasets.toArray();
 				curDataset = (CDataset) objs[0]; 
-				int pos = datasets.indexOf(curDataset);
-				datasetList.setSelectedIndex(pos);
 			}
-			reentrant = false;
-			
-			fireEvents();
+			updateDatasetChoice(curDataset);
 		}
 		datasetList.repaint();
 		projList.repaint();
+	}
+	
+	public void executionSelectionChanged(ExecutionSelectionEvent e) {
+		CChainExecution exec = e.getSelectedExecution();
+		System.err.println("control panel has new selected execution...");
+		System.err.println("exec. is "+exec.getID());
+		System.err.println("dataset is "+exec.getDataset().getName());
+		updateDatasetChoice(exec.getDataset());
 	}
 	
 }
@@ -518,11 +473,11 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 	
 	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
-	private ControlPanel panel;
+	private SelectionState state;
 	
-	public ProjectRenderer(ControlPanel panel) {
+	public ProjectRenderer(SelectionState state) {
 		setOpaque(true);
-		this.panel = panel;
+		this.state = state;
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setVerticalAlignment(SwingConstants.CENTER);
 	}
@@ -533,8 +488,8 @@ class ProjectRenderer  extends JLabel implements ListCellRenderer {
 			CProject p = (CProject) value;
 			
 			setFont(plainFont);
-			if (panel != null) {
-				HashSet active = panel.getActiveProjects();
+			if (state != null) {
+				Collection active = state.getActiveProjects();
 				if (active != null && active.contains(p))
 					setFont(activeFont);
 			}
@@ -555,11 +510,11 @@ class DatasetRenderer  extends JLabel implements ListCellRenderer {
 	
 	private Font plainFont = new Font(null,Font.PLAIN,12);
 	private Font activeFont = new Font(null,Font.BOLD,12);
-	private ControlPanel panel;	
+	private SelectionState state;	
 	
-	public DatasetRenderer(ControlPanel panel) {
+	public DatasetRenderer(SelectionState state) {
 		setOpaque(true);
-		this.panel = panel;
+		this.state = state;
 		setHorizontalAlignment(SwingConstants.LEFT);
 		setVerticalAlignment(SwingConstants.CENTER);
 		
@@ -573,8 +528,8 @@ class DatasetRenderer  extends JLabel implements ListCellRenderer {
 			if (value instanceof CDataset) {
 				CDataset d = (CDataset) value;
 				setText(d.getName());
-				if (panel !=null) {
-					HashSet active = panel.getActiveDatasets();
+				if (state !=null) {
+					Collection active = state.getActiveDatasets();
 					if (active != null && active.contains(d))
 						setFont(activeFont);
 				}
