@@ -158,9 +158,32 @@ sub checkInputs {
                     $self->{user_inputs}->{$inputID} = $user_input;
                 }
 
-                foreach my $input_mex (@$user_input) {
-                    die "User inputs must be MEXes"
-                      unless UNIVERSAL::isa($input_mex,'OME::ModuleExecution');
+				die "User inputs must be MEXes"
+					if( grep( (not UNIVERSAL::isa($_,'OME::ModuleExecution') ), @$user_input ) );
+				# Dataset check
+				if( scalar( @$user_input ) <= 1 ) {
+					# this should be a die. However, since the AE still doesn't allow global
+					# outputs based on non-global inputs, I'm making the classifier dataset granularity.
+					# This means a dataset attribute will have to be passed out of one dataset and into another.
+					logdbg "debug", "WARNING! A user entered input for formal input '".$formal_input->name.
+						"' (id=$inputID) was make for a different dataset then is currently being executed against.\n".
+						"Input mex id=".$user_input->[0]->id.". Current dataset id=".$self->{dataset}->id
+						if( $user_input->[0]->dependence eq 'D' && 
+						    $user_input->[0]->dataset_id ne $self->{dataset}->id);
+				# multiple mexes are given for a single input means the mexes should be image dependent
+				} else {
+					die "Only one mex may be given for an input unless the mexes given are per image."
+						if( grep( ( $_->dependence ne 'I' ), @$user_input ) );
+					my %image_ids = map{ $_->image_id => undef } @$user_input;
+					die "Multiple MEXes given for a single image in user inputs."
+						if( scalar( keys %image_ids ) < scalar( @$user_input ) );
+					die "Some images given in the list of user input for ".$formal_input->name." do not belong to the dataset being executed against."
+						if( scalar( @$user_input ) > $factory->
+							countObjects( 'OME::Image::DatasetMap', {
+								dataset_id => $self->{dataset}->id,
+								image_id   => [ 'IN', [ keys %image_ids ] ]
+							} )
+						);
                 }
             } else {
                 # Non-specified user inputs are now allowed.  They are
@@ -315,15 +338,16 @@ sub calculateDependences {
 
 	my $mex = $self->getPredecessorMEX($node,$formal_input,$target);
 
-Returns the MEX that should be used to satisfy the given formal input
-of the given node for the given target.  This target should match the
-dependence of the node.  The method first checks to see if there is a
-universal execution for that works; if it doesn't, it then looks for a
-node execution in the current chain execution that works.  If the link
-is between an image-dependent MEX and a dataset-dependent MEX, then
-there will be more than one MEX which satisfies (one per image in the
-dataset).  In this case, the method will return an array of MEX's.
-Otherwise, it will return a single MEX object.
+Returns the MEX that should be used to satisfy the given formal input of
+the given node for the given target.  This target should match the
+dependence of the node.  The method first looks for a match in user
+inputs. Then it checks to see if there is a universal execution for that
+works; if it doesn't, it then looks for a node execution in the current
+chain execution that works.  If the link is between an image-dependent
+MEX and a dataset-dependent MEX, then there will be more than one MEX
+which satisfies (one per image in the dataset).  In this case, the
+method will return an array of MEX's. Otherwise, it will return a single
+MEX object.
 
 =cut
 
@@ -332,35 +356,25 @@ sub getPredecessorMEX {
     my ($to_node,$to_input,$to_target) = @_;
     my $factory = OME::Session->instance()->Factory();
 
+	# There should be exactly one input mex unless they are coming in as image-dependent
+	# In that case, they should be merged if they are going into a dataset-dependent node
+	# Or, if going into an image-dependent node, filtered to the current target (which will be an image)
+	# checkInputs should have already verified mex counts and checked target validities
     if (defined $self->{user_inputs}->{$to_input->id()}) {
-        logdbg "debug", "  getPredecessorMEX(".$to_input->name().")";
-
-        my $granularity = $to_input->semantic_type()->granularity();
-        my $to_dependence = ($granularity eq 'F')? 'I': $granularity;
-
+        logdbg "debug", "  getPredecessorMEX(".$to_input->name().") from user inputs";
         my $input_mexes = $self->{user_inputs}->{$to_input->id()};
-        my @target_mexes;
-        foreach my $input_mex (@$input_mexes) {
-            logdbg "debug", "    Checking MEX ".$input_mex->id();
-            logdbg "debug", "      $to_dependence ".$input_mex->dependence();
-            next unless ($input_mex->dependence() eq $to_dependence);
+		return $input_mexes->[0]
+			if scalar( @$input_mexes ) eq 1;
+		return []
+			if scalar( @$input_mexes ) eq 0;
 
-            logdbg "debug", "      **GOOD!"
-              if ($to_dependence eq 'G')
-              || ($to_dependence eq 'D' &&
-                  $input_mex->dataset()->id() == $to_target->id())
-              || ($to_dependence eq 'I' &&
-                  $input_mex->image()->id() == $to_target->id());
-
-            push @target_mexes, $input_mex
-              if ($to_dependence eq 'G')
-              || ($to_dependence eq 'D' &&
-                  $input_mex->dataset()->id() == $to_target->id())
-              || ($to_dependence eq 'I' &&
-                  $input_mex->image()->id() == $to_target->id());
-        }
-
-        return \@target_mexes;
+        my $to_dependence = $self->{dependences}->{$to_node->id()};
+        return $input_mexes
+        	unless $to_dependence eq 'I';
+        my @filtered_input_mexes = grep( 
+        	( $_->image->id eq $to_target->id() ), 
+        	@$input_mexes );
+        return \@filtered_input_mexes;
     }
 
     my $link = $factory->
@@ -507,7 +521,7 @@ sub executeNodeWithTarget {
     my $session = OME::Session->instance();
     my $factory = $session->Factory();
     
-    logdbg ("debug", "  executeNodeWithTarget(",$node->module->name(),",$target_id)");
+    logdbg ("debug", "  executeNodeWithTarget(".$node->module->name().",$target_id)");
 
     # First see if there is a universal execution for this node.  If
     # there is, then we have nothing to do for this node.
@@ -528,7 +542,6 @@ sub executeNodeWithTarget {
     my @inputs = $node->module()->inputs();
     foreach my $formal_input (@inputs) {
         my $input_mex = $self->getPredecessorMEX($node,$formal_input,$target);
-        my @input_mexes;
 
         die "Couldn't find an input MEX!"
           unless defined $input_mex;
@@ -606,7 +619,7 @@ sub isNodeReady {
     my ($node,$target) = @_;
     my $target_id = (defined $target)? $target->id(): 0;
 
-    logdbg ("debug", "  isNodeReady(",$node->module->name(),",$target_id)");
+    logdbg ("debug", "  isNodeReady(".$node->module->name().",$target_id)");
 
   INPUT:
     foreach my $formal_input ($node->module()->inputs()) {
