@@ -964,6 +964,8 @@ sub findAttribute {
     return $objects? $objects->next(): undef;
 }
 
+sub newParentAttribute { return shift->newAttribute( @_, 1 ); }
+
 sub newAttribute {
     my ($self, $semantic_type, $target, $module_execution, $data, $isParentalOutput) = @_;
 

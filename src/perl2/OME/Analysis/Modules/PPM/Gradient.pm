@@ -60,7 +60,7 @@ sub startImage {
     $self->SUPER::startImage($image);
 
     my $session = OME::Session->instance();
-    my $factory = OME::Session->instance();
+    my $factory = $session->Factory();
     my $mex     = $self->getModuleExecution();
 
     my @gradients  = $self->getCurrentInputAttributes("Gradient");
@@ -70,9 +70,9 @@ sub startImage {
     	
     	# PixelsSlice points to the zeroth Channel
 		my $parent = $factory->
-		  newAttribute('PixelsSlice',undef,$mex,
+		  newParentAttribute('PixelsSlice',$slice->image(),$mex,
 					   {
-						Pixels => $slice->Pixels(),
+						Parent => $slice->Parent(),
 						StartX => $slice->StartX(),
 						EndX   => $slice->EndX(),
 						StartY => $slice->StartY(),
