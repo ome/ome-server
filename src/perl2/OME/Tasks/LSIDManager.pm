@@ -41,7 +41,8 @@ use strict;
 use Carp;
 use Log::Agent;
 
-our $AUTHORITY = 'foo.bar.com';
+our $AUTHORITY;
+our $DB_INSTANCE;
 
 sub new {
 	my ($proto, %params) = @_;
@@ -56,6 +57,13 @@ sub new {
 	logdie "I need a session"
 	  unless exists $self->{session} &&
 			 UNIVERSAL::isa($self->{session},'OME::Session');
+
+	if (not defined $AUTHORITY or not defined $DB_INSTANCE) {
+    	my $config = $self->{session}->Factory()->loadObject("OME::Configuration", 1) or
+    		logdie $class.'->new():  Could not get OME::Configuration';
+    	$AUTHORITY = $config->lsid_authority();
+    	$DB_INSTANCE = $config->db_instance();
+    }
 
 	return bless $self, $class;
 }
@@ -78,7 +86,7 @@ my ($self,$object) = @_;
 		}
 	return undef unless defined $type;
 	
-	return "urn:lsid:$AUTHORITY:$type:".$object->id();
+	return "urn:lsid:$AUTHORITY:$type:".$object->id().":$DB_INSTANCE";
 }
 
 sub getObject ($) {
@@ -88,7 +96,7 @@ my ($self,$lsid) = @_;
 
 sub checkLSID ($) {
 my ($self,$lsid) = @_;
-	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
 	return undef unless defined $authority;
 	return undef unless defined $urn and $urn eq 'urn';
 	return undef unless defined $urnType and $urnType eq 'lsid';
@@ -100,21 +108,22 @@ sub getLocalObject () {
 	my $self = shift;
 	my $lsid = $self->checkLSID (shift) || return undef;
 
-	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
 	
 # FIXME:  This should return a locally stored object even if its got a different authority.
 	return undef unless defined $authority and $authority eq $AUTHORITY;
+	return undef unless defined $dbInstance and $dbInstance eq $DB_INSTANCE;
 
 	if ($namespace eq 'Project') {
-		return $self->Session()->Factory()->loadObject('OME::Project', $localID);
+		return $self->{session}->Factory()->loadObject('OME::Project', $localID);
 	} elsif ($namespace eq 'Dataset') {
-		return $self->Session()->Factory()->loadObject('OME::Dataset', $localID);
+		return $self->{session}->Factory()->loadObject('OME::Dataset', $localID);
 	} elsif ($namespace eq 'Image') {
-		return $self->Session()->Factory()->loadObject('OME::Image', $localID);
+		return $self->{session}->Factory()->loadObject('OME::Image', $localID);
 	} elsif ($namespace eq 'Feature') {
-		return $self->Session()->Factory()->loadObject('OME::Feature', $localID);
+		return $self->{session}->Factory()->loadObject('OME::Feature', $localID);
 	} else {
-		return $self->Session()->Factory()->loadAttribute($namespace, $localID);
+		return $self->{session}->Factory()->loadAttribute($namespace, $localID);
 	}
 }
 
@@ -124,7 +133,9 @@ my ($self,$lsid) = @_;
 	my $self = shift;
 	my $lsid = checkLSID (shift) || return undef;
 
-	my ($urn,$urnType,$authority,$namespace,$localID) = split (/:/,$lsid);
+	my ($urn,$urnType,$authority,$namespace,$localID,$dbInstance) = split (/:/,$lsid);
 
 	return undef;
 }
+
+1;
