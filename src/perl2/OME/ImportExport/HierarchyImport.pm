@@ -295,6 +295,9 @@ sub processDOM {
 					or die "Could not rename repository file ".$object->getFullPath($imgAttr).
 					" to ".$imgAttr->Repository()->Path().'/'.$newPath."\n$!\n";
 				$imgAttr->Path( $newPath );
+				# Assign pixels to image
+				$object->DefaultPixels( $imgAttr->id() ) 
+					unless $object->DefaultPixels();
 			}
 		}
 # end of hack
