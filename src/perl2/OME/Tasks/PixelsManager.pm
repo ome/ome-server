@@ -111,7 +111,7 @@ sub createOriginalFileAttribute {
 
         # Nope, create a new one.
 
-        return $factory->
+        $attr = $factory->
           newAttribute('OriginalFile',undef,$mex,
                        {
                         Repository => undef,
@@ -120,6 +120,9 @@ sub createOriginalFileAttribute {
                         SHA1       => $file->getSHA1(),
                         Format     => $format,
                        });
+        die "Could not create OriginalFile attribute"
+          unless defined $attr;
+        return $attr;
     } elsif (UNIVERSAL::isa($file,'OME::Image::Server::File')) {
         my $server_path = OME::Image::Server->getServerPath();
         $server_path = $server_path->as_string()
@@ -149,7 +152,7 @@ sub createOriginalFileAttribute {
 
         # Nope, create a new one.
 
-        return $factory->
+        $attr = $factory->
           newAttribute('OriginalFile',undef,$mex,
                        {
                         Repository => $repository,
@@ -158,6 +161,9 @@ sub createOriginalFileAttribute {
                         SHA1       => $file->getSHA1(),
                         Format     => $format,
                        });
+        die "Could not create OriginalFile attribute"
+          unless defined $attr;
+        return $attr;
     }
 }
 
