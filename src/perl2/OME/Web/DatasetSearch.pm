@@ -122,9 +122,13 @@ sub format_output{
   
 
 
-#
+
    foreach (@$ref){
 	my ($buttonSelect,$buttonInfo);
+	#Control for the time being.
+	if ($_->{name} eq "Dummy import dataset"){
+	  next;
+      }
 	$buttonInfo=create_button($_->{dataset_id});
       if (exists $datasetList{$_->{dataset_id}}){
          $buttonSelect=$cgi->submit (-name=>$_->{dataset_id},-value=>'Select');

@@ -91,8 +91,6 @@ sub ReloadHomeScript {
 	my $self = shift;
 	my $reloadHomeFlag = $self->ReloadHome();
 	return "<script>top.location.href = top.location.href;</script>"
-		if( not defined $self->Session() );
-	return "<script>top.location.href = top.location.href;</script>"
 		if( defined $reloadHomeFlag || $self->isRedirectNecessary(1));
 	return "";
 }
@@ -138,19 +136,23 @@ sub projectNotDefined {
 	die ref ($self)."->projectNotDefined() has been called inappropriately. There is a project defined for this session."
 		if( defined $session->project() );
 	
-	#my @projects = OME::Project->search( group_id => $user->group()->group_id());
+	my @projects = OME::Project->search( group_id => $user->group()->group_id());
 	my @ownprojects=OME::Project->search(owner_id =>$user->experimenter_id);
+      my $usergpid=$user->group()->group_id();
 
 	# Is this a first time login? How do I check for that? For the time being, I'm going to say if neither a project nor dataset is defined, it is a first time login. Since this function won't be called if a project
 	if( not defined $session->dataset() ) {
 		$text .= "<p>You have started a new session. There are a few things you need to do to set up the session. This will lead you through all necessary steps.</p>";
 	}
-	
+	$text .=$self->printPopUp();
 	$text .= "<p>There is not a project defined for your session. <li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::MakeNewProject'},'here')." to create a new project. ";
 	#$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
 	#	if( (scalar @projects) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>'serve.pl?Page=OME::Web::ProjectSwitch'},'here')." to choose an existing project."
 		if( (scalar @ownprojects) > 0 );
+	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpid)\"> here </a> to have a description of existing project(s)."
+		if( (scalar @projects) > 0);
+
 	$text .= "</p>";
 	$text .= $self->printLogout();
 	
@@ -187,10 +189,10 @@ sub datasetNotDefined {
 		$session->writeObject();
 		return $text;
 	}
-	
+	my $usergpid=$user->group()->group_id();
 	@datasets    = OME::Dataset->search( group_id => $user->group()->group_id());
 	my @images   = OME::Image->search( group_id => $user->group()->group_id());
-	
+	$text	.=$self->printPopUpdataset();
 	$text .= "<p>There is not a dataset defined for your session. <li>Click ".$cgi->a({href=>'/JavaScript/DirTree/index.htm'},'here')." to create a new dataset by importing images. ";
 	#$text .= "<li>Click ".$cgi->a({href=>qq{javascript: alert('This is not implemented yet.')}},'here')." to make a dataset from existing images. "
 	#	if( (scalar @images) > 0 );
@@ -198,7 +200,10 @@ sub datasetNotDefined {
 		if( (scalar @images) > 0 );
 	$text .= "<li>Click ".$cgi->a({href=>"/perl2/serve.pl?Page=OME::Web::ProjectDataset"},'here')." to choose an existing dataset."
 		if( (scalar @datasets) > 0 );
-	$text .= "</p>";
+	$text .= "<li>Click <a href=\"#\" onClick=\"return openPopUp($usergpid)\">  here </a> to view existing dataset(s)."
+		if( (scalar @datasets) > 0 );
+
+	$text .= "</p><br>";
 	$text .= $self->printLogout();
 	
 	return $text;
@@ -217,5 +222,79 @@ sub printLogout {
 	return qq{Click <a href="#" onClick="top.location.href='/perl2/serve.pl?Page=OME::Web::Logout'"> here</a> to logout.};
 
 }
+
+=pod
+
+=head2 printPopUp
+
+What it does: write javascript project
+
+=cut
+sub printPopUp {
+   my $self=shift;
+   my $text="";
+   $text.=<<ENDJS;
+   <script language="JavaScript">
+<!--
+var ID;
+var TYPE;
+function openPopUp(id) {
+	ID=id;
+	var file;
+	file='/perl2/serve.pl?Page=OME::Web::InfoProject&UsergpID='+ID;
+	Info=window.open(
+		file,
+		"InfoProject",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	Info.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+
+
+}
+
+=pod
+
+=head2 printPopUp
+
+What it does: write javascript project
+
+=cut
+sub printPopUpdataset {
+   my $self=shift;
+   my $text="";
+   $text.=<<ENDJS;
+   <script language="JavaScript">
+<!--
+var ID;
+var TYPE;
+function openPopUp(id) {
+	ID=id;
+	var file;
+	file='/perl2/serve.pl?Page=OME::Web::InfoDataset&UsergpID='+ID;
+	Info=window.open(
+		file,
+		"InfoProject",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	Info.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+
+
+}
+
+
+
+
 
 1;

@@ -93,18 +93,23 @@ sub print_form {
  my @groupImages = $session->Factory()->findObjects("OME::Image", 'group_id' =>  $user->group()->group_id() ) ; #OME::Dataset->search( group_id => $user->group()->id() );
 	
  if (scalar(@groupImages)>0){
-   
+   $text.=format_popup();
+   $text.=format_popupDataset();
    $textarea.=print_textarea($cgi);
    $checkbox.=print_checkbox($cgi,\@groupImages);
    #format output
    $text.=$cgi->h3("Create a new dataset from existing images");
    $text.=$cgi->startform;
-   $text .= "<CENTER>".$cgi->submit (-name=>'Create',-value=>'Create a new dataset')."</CENTER>";
+   $text.=create_button_dataset($user->group()->ID());
+   $text.="<br><br>";
    $text.=$textarea;
+   $text .= "<br><br><CENTER>".$cgi->submit (-name=>'Create',-value=>'Create a new dataset')."</CENTER>";
+   $text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
    $text.=$cgi->h3("Please select images in the list below.");
    $text.=$checkbox;
+ 
    $text.$cgi->endform;
-   $text .= '<br><font size="-1">An asterick (*) denotes a required field</font>';
+   
 
  }
 
@@ -153,20 +158,98 @@ sub print_checkbox{
    
  }
  %List= reverse %ReverseList;
+  
  
-foreach (keys %List){
-  push(@names,$_);
-}
- $text.=$cgi->checkbox_group(-name=>'ListImage',
-				     -values=>\@names,
-				     -linebreak=>'true',
-				     -default=>$names[0],
-				     -labels=>\%List);
+ my @list=();
+ foreach (keys %List){
+  my ($val,$button);
+  $button=create_button($_);
+  $val=$button."&nbsp;&nbsp;<input type=\"checkbox\" name=\"ListImage\" value=\"$_\"/>".$List{$_};
+  push(@list,$val);
+
+ }
+ $text.=join("<br>",@list);
+
+
+
+
 
  return $text;
 }
 
+sub format_popup{
+  my ($text)=@_;
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var ID;
+function OpenPopUp(id) {
+	
+      ID=id;
+	var OMEfile;
+	var ImageViewer;
+	OMEfile='/perl2/serve.pl?Page=OME::Web::GetGraphics&ImageID='+ID;
+	ImageViewer=window.open(
+		OMEfile,
+		"ImageViewer",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	ImageViewer.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
 
+return $text;
+}
+sub create_button{
+ my ($id)=@_;
+ my $text="";
+ $text.=<<END;
+	<input type=button
+	onclick="return OpenPopUp($id)"
+	value="View"
+	name="submit">
+END
+ return $text;
+}
+
+sub format_popupDataset{
+  my ($text)=@_;
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var ID;
+function OpenPopUpDataset(id) {
+	
+      ID=id;
+	var OMEfile;
+	var Dataset;
+	OMEfile='/perl2/serve.pl?Page=OME::Web::InfoDataset&UsergpID='+ID;
+	Dataset=window.open(
+		OMEfile,
+		"Dataset",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	Dataset.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+}
+sub create_button_dataset{
+ my ($id)=@_;
+ my $text="";
+ $text.=<<END;
+	<input type=button
+	onclick="return OpenPopUpDataset($id)"
+	value="Description existing dataset(s)"
+	name="submit">
+END
+ return $text;
+}
 
 
 

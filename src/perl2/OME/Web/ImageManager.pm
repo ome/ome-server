@@ -41,40 +41,18 @@ sub getPageBody {
 	my $self = shift;
 	my $cgi = $self->CGI();
 	my $body = "";
-
 	my @names = $cgi->param();
 	my %revArgs = map { $cgi->param($_) => $_ } @names;
 
 	if (exists $revArgs{Remove}){
-	   my $image=$revArgs{Remove};
 	   my @groupdatasets=$cgi->param('List');
-    	   my $table="image_dataset_map";
-	   if (scalar(@groupdatasets)>0){
-		   my @control=();
-		   foreach (@groupdatasets){
-			my $cd;
-			my ($condition,$result);
-			my %h=();
-    		      $condition="image_id=".$image." AND dataset_id=".$_;
-			$result=do_request($table,$condition);
-			if (defined $result){
-			  push(@control,$_);
-			}
-		   }  
-		   if (scalar(@control)==scalar(@groupdatasets)){
-			$body.=$cgi->h3("The image has been successfully removed from selected datasets");
-		   }else{
-			$body.=$cgi->h3("Cannot remove image in at least one dataset.");
-		   }
-		}else{
-		   $body.=$cgi->h3("Please select at least one dataset");
-		}
-
-
-
-	}else{
-       $body.=$self->print_list(); 
-      }
+	   $body.=remove_image($revArgs{Remove},\@groupdatasets);
+	}elsif(exists $revArgs{Delete}){
+         $body.=delete_image_process($revArgs{Delete});
+		  
+	}      
+	$body.=$self->print_list(); 
+      
      return ('HTML',$body);
 }
 
@@ -87,78 +65,180 @@ sub getPageBody {
 # PRIVATE METHODS
 #---------------------------
 
+sub delete_image_process{
+ my ($image)=@_;
+ my $text="";
+ my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
+		 or die "Unable to connect <br>";
+
+  # process MUST FIND BETTER SOLUTION
+  my @tables=qw(image_dataset_map image_dimensions image_files_xyzwt image_screen_info image_stage_info image_wavelengths xy_image_info xy_softworx_info xyz_image_info features ome_sessions_images);
+  my $answer=delete_image_in_all(\@tables,$image,$db);
+  return "cannot delete in table_image_map" if (!defined $answer); 
+  $text.=delete_image($image,$db);
+  $db->Off(); 
+  return $text;
+}
+
+
+sub delete_image_in_all{
+ my ($table,$image,$db)=@_;
+ foreach (@$table){
+     my ($condition,$result);
+     $condition="image_id=".$image;
+     $result=do_request($_,$condition,$db); 
+     return undef if (!defined $result);
+
+ }
+ return 1;
+
+}
+sub delete_image{
+ my ($image,$db)=@_;
+ my $text="";
+ my $table="images";
+ my ($condition,$result);
+ $condition="image_id=".$image;
+ $result=do_request($table,$condition,$db);
+ return "cannot delete image" if (!defined $result);
+ $text.="Image deleted";
+ return $text;
+}
+
+
+
+sub remove_image{
+  my ($image,$refarray)=@_;
+  my $table="image_dataset_map";
+  my $text="";
+  return "Please select at least one dataset" if scalar(@$refarray)==0;
+  my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
+		 or die "Unable to connect <br>";
+
+  foreach (@$refarray){
+     my ($condition,$result);
+     $condition="image_id=".$image." AND dataset_id=".$_;
+     $result=do_request($table,$condition,$db); 
+     return ('HTML',"Cannot delete one entry in image_dataset_map.") if (!defined $result);
+     
+  }
+   $db->Off(); 
+  $text.="<b>image removed<b>";
+  return $text;
+
+}
+
+
 sub print_list{
 
   my $self = shift;
   my $cgi = $self->CGI();
   my $session = $self->Session();
-  my $ownerid=$session->User()->experimenter_id;
+  my $user=$session->User();
+  my $ownerid=$user->experimenter_id;
   my @userProjects = OME::Project->search( owner_id => $ownerid );
-  my %ImageList=();
+  my @groupProjects=OME::Project->search( group_id => $user->group()->group_id());
   my $text="";
+
+  my $rep=not_owned_project(\@groupProjects,\@userProjects); 
+  my %gpDatasetList=();
+  my %gpImageList=();
+   
+  if (defined $rep){
+    foreach (@$rep){
+	my @datasets=$_->datasets();		
+	foreach my $d (@datasets){
+	   $gpDatasetList{$d->dataset_id()}=$d->name() unless (exists $gpDatasetList{$d->dataset_id()});
+	   my @images=$d->images();
+	   foreach my $i (@images){
+		$gpImageList{$i->image_id()}=$i->name() unless (exists $gpImageList{$i->image_id()});
+		
+	   }
+      }
+    }
+  }
+  
+  my %userImageList=();
+  
   if (scalar(@userProjects)==0){
 	return "You must define a project first.";
   }
- foreach (@userProjects){
+  foreach (@userProjects){
     my @datasets=$_->datasets();
-  
     foreach my $dataset (@datasets){
-	 my $datasetid=$dataset->dataset_id();
-       my  @listimages=();
-	 @listimages=$dataset->images();
+       my @images=$dataset->images();
 	 my %datasetInfo=();
-       $datasetInfo{$datasetid}=$dataset->name();
-       if (scalar(@listimages)>0){
-		 foreach my $image (@listimages){
-		    my $imageID=$image->image_id();
-		    if (exists($ImageList{$imageID})){
-			 my $list=$ImageList{$imageID}->{list};
-                   my %fusion=();
-			 %fusion=(%$list,%datasetInfo);
-			 $ImageList{$imageID}->{list}=\%fusion; 
-		    }else{
-			my $formatimage="";
-			$formatimage.=format_image($image,$cgi);
-			$ImageList{$imageID}->{list}=\%datasetInfo;
-			$ImageList{$imageID}->{image}=$formatimage;
+       my %Remove=();
+       $datasetInfo{$dataset->dataset_id()}=$dataset->name();
+	 if (exists $gpDatasetList{$dataset->dataset_id()}){
+         $Remove{$dataset->dataset_id()}=undef ;
+       }else{
+	   $Remove{$dataset->dataset_id()}=1 ;
+       }
 
-		    }
-		 }
-	    }#fin scalar	
-	  }#end dataset
- }
- $text.=format_popup("");
-  $text.=format_output(\%ImageList,$cgi);
+	 foreach my $i (@images){
+	    
+         if (exists($userImageList{$i->image_id()})){
+	  	my $list=$userImageList{$i->image_id()}->{list};
+            my %fusion=();
+		%fusion=(%$list,%datasetInfo);
+		$userImageList{$i->image_id()}->{list}=\%fusion; 
+		my $remove=$userImageList{$i->image_id()}->{remove};
+            my %mix=();
+		%mix=(%$remove,%Remove);
+		$userImageList{$i->image_id()}->{remove}=\%mix; 
 
-}
+            
+	   }else{
+		my $formatimage="";
+		my ($booldel)=1;
+		if (exists $gpImageList{$i->image_id()}){
+    		 $booldel=undef;
+            }
+		$userImageList{$i->image_id()}->{list}=\%datasetInfo;
+		$userImageList{$i->image_id()}->{image}=$formatimage;
+ 		$userImageList{$i->image_id()}->{remove}=\%Remove;
+		$userImageList{$i->image_id()}->{name}=$i->name();
+		$userImageList{$i->image_id()}->{owner}=$i->experimenter()->ID ;
+
+		$userImageList{$i->image_id()}->{booldel}=$booldel;
+
+	   }
+	 }
+    }
+  }
+  # format here:
+  foreach (keys %userImageList){
+	my $a=$userImageList{$_}->{remove};
+	my $boolremove=undef;
+      foreach my $r (keys %$a){
+	 if (defined ${$a}{$r}){
+	   $boolremove=1;
+	 }
+      }
+	my $formatimage=format_image($_,$userImageList{$_}->{name},$userImageList{$_}->{owner},$ownerid,$cgi,$userImageList{$_}->{booldel},$boolremove);
+	$userImageList{$_}->{image}=$formatimage;
+
+  }
+  $text.=format_output(\%userImageList,$cgi);
 
 
-sub format_image{
-  my ($image,$cgi)=@_;
-  my $summary="";
-  my ($id,$button);
-  $id=$image->image_id();
-  $button=create_button($id);
-  $summary .= "<NOBR><B>Name:</B> ".$image->name()."</NOBR><BR>" ;
-  $summary .= "<B>Image ID:</B> ".$id."<BR>" ;
-  $summary .=$button;
-  
-  return $summary;
 }
 
 sub format_output{
-   my ($ref,$cgi)=@_;
-   my %List=();
-   %List=%$ref;
+   my ($userImage,$cgi)=@_;
+   my %userImageList=();
+   %userImageList=%$userImage;
+   
    my $summary="";
    my $rows="";
-   foreach (keys %List){
-	my $formatdataset="";
-	$formatdataset.=format_dataset($List{$_}->{list},$cgi);
+   foreach (keys %userImageList){
+	my $checkbox="";
+	$checkbox.=format_checkbox($userImageList{$_}->{list},$userImageList{$_}->{remove},$cgi);
 
 	$rows.=$cgi->Tr( { -valign=>'middle' },
-		 $cgi->td({ -align=>'left' },$List{$_}->{image}),
-		 $cgi->td({ -align=>'left' },$formatdataset)
+		 $cgi->td({ -align=>'left' },$userImageList{$_}->{image}),
+		 $cgi->td({ -align=>'left' },$checkbox)
 			   );
 
 
@@ -173,11 +253,73 @@ sub format_output{
 			),
 			 $rows) ;
    $summary.=$cgi->endform;
+  return $summary;
+}
 
 
+sub format_image{
+  my ($id,$name,$ownImage,$ownerid,$cgi,$booldel,$boolrem)=@_;
+  my $summary="";
+  my ($buttonView,$buttonDelete,$buttonRemove);
+  $buttonView=create_button($id);
+  $buttonRemove=$cgi->submit (-name=>$id,-value=>'Remove') if (defined $boolrem);
+  $buttonDelete=$cgi->submit (-name=>$id,-value=>'Delete')
+    if ($ownerid==$ownImage and defined $booldel);
+ 
+  $summary .= "<NOBR><B>Name:</B> ".$name."</NOBR><BR>" ;
+  $summary .= "<B>Image ID:</B> ".$id."<BR>" ;
+  $summary.="<br>";
+  $summary.=$cgi->table( { -border=>1 },
+			  $cgi->Tr( { -valign=>'middle' },
+				$cgi->td({ -align=>'left' },$buttonView),
+				$cgi->td({ -align=>'left' },$buttonRemove),
+				$cgi->td({ -align=>'left' },$buttonDelete),
+
+			  )
+			     );
 
   return $summary;
 }
+
+sub format_checkbox{
+  my ($ref,$refrem,$cgi)=@_;
+  my $text="";
+  my @list=();
+  # Cannot Use cgi->checkbox
+  foreach (keys %$ref){
+	my $val;
+      if (defined ${$refrem}{$_}){
+	   $val="<input type=\"checkbox\" name=\"List\" value=\"$_\"/>".${$ref}{$_};
+      }else{
+        $val=${$ref}{$_};
+      }
+	push(@list,$val);
+  }
+   $text.=join("<br>",@list);
+
+
+ return $text;
+}
+
+
+
+sub not_owned_project{
+ # find others projects 
+ my ($refa,$refb)=@_;
+ my %in_b=();
+ my @only_a=();
+ foreach (@$refb){
+   $in_b{$_->project_id()}=1;
+ }
+ foreach (@$refa){
+   push(@only_a,$_) unless exists $in_b{$_->project_id()};
+
+ }
+ return scalar(@only_a)==0?undef:\@only_a;
+}
+
+
+
 
 
 sub format_popup{
@@ -221,30 +363,11 @@ END
 
 
 
-sub format_dataset{
-  my ($ref,$cgi)=@_;
-  my $text="";
-  my @end=();
-  foreach (keys %$ref){
-    my $data="";
-    $data.="<b>Name:</b> ".${$ref}{$_}."<br>";
-    $data.="<b>Id:</b> ".$_;
-    push(@end,$data);
-
-  }
- $text.="<P>";
- $text.=join("<br>",@end);
- $text.="</P>";
-
-   return $text;
-}
-
 
 
 sub do_request{
- my ($table,$condition)=@_;
+ my ($table,$condition,$db)=@_;
  my $result;
- my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
  if (defined $db){
        $result=$db->DeleteRecord($table,$condition);
  

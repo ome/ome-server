@@ -76,6 +76,8 @@ sub getprojectinfo{
   my ($project,$cgi)=@_;
   my $text="";
   my @datasetsused=$project->datasets();
+  $text.=format_popup_dataset();
+
   $text.=format_project($project,$cgi);
   $text.=format_datasetList(\@datasetsused,$cgi);
   $text.=close_button();
@@ -134,7 +136,8 @@ sub format_datasetList{
  $text.=$cgi->h3("List of dataset(s) used:"); 
  foreach (@$ref){
    my $data="";
-   $data.="<b>Name:</b> ".$_->name();
+   my $view=create_button_dataset($_->dataset_id());
+   $data.=$view."&nbsp;&nbsp;<b>Name:</b> ".$_->name();
    push(@list,$data);
  }
  $text.="<p>";
@@ -206,6 +209,29 @@ ENDJS
 return $text;
 }
 
+sub format_popup_dataset{
+  my ($text)=@_;
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var datasetid;
+function OpenPopUpDataset(id) {
+      datasetid=id;
+	var OMEfile;
+	OMEfile='/perl2/serve.pl?Page=OME::Web::GetGraphics&DatasetID='+datasetid;
+	datasetViewer=window.open(
+		OMEfile,
+		"datasetViewer",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	datasetViewer.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+}
 
 
 
@@ -221,6 +247,17 @@ END
  return $text;
 }
 
+sub create_button_dataset{
+ my ($id)=@_;
+ my $text="";
+ $text.=<<END;
+	<input type=button
+	onclick="return OpenPopUpDataset($id)"
+	value="View"
+	name="submit">
+END
+ return $text;
+}
 
 
 

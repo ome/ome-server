@@ -41,14 +41,14 @@ sub getPageBody {
 	my $session = $self->Session();
 	my $ExistingDataset;
       $ExistingDataset=$session->dataset();
-
+      my $user = $session->User() or die "User is not defined for this session";
 
 	# figure out what to do: create a project or print an input form
 	if( $cgi->param('CreateProject')) {
 	# try to make a project, print status message, include some mechanism
 	# 	to redirect to import images if this is a first time login
 
-		my $user = $session->User() or die "User is not defined for this session";
+		
 		my $projectname=cleaning($cgi->param('name'));
 		return ('HTML',"<b>Please enter a name for your project.</b>") unless $projectname;
 	
@@ -83,16 +83,18 @@ sub getPageBody {
 	
 	} else {
 		# print an input form
-		$body .= print_form($cgi);
+		$body .= print_form($cgi,$user->group()->ID());
 	}
 
     return ('HTML',$body);
 }
 
 sub print_form {
- my ($cgi) = @_;
+ my ($cgi,$usergpid) = @_;
  my $textProjectfields="";
  my $text="";
+ my $button=create_button($usergpid);
+
  $textProjectfields.=$cgi->table(
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
@@ -104,16 +106,66 @@ sub print_form {
 					'Description:' ),
 				$cgi->td( { -align=>'LEFT' },
 					$cgi->textarea(-name=>'description', -columns=>32, -rows=>3) ) ) );
-
+ 
+ $text.=format_popup();
  $text.= $cgi->startform;
  $text.=$textProjectfields;
- $text.= "<CENTER>".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."</CENTER>\n";
+ $text.= "<CENTER>".$cgi->submit (-name=>'CreateProject',-value=>'Create Project')."</CENTER><br><br>";
+ 
+ $text.=$button;
  $text .= $cgi->endform;
  $text .= "<br><font size=-1>An asterick (*) denotes a required field</font>";
 
 	return $text;
 
 }
+
+sub format_popup{
+  my ($text)=@_;
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var ID;
+function OpenPopUp(id) {
+      ID=id;
+	var OMEfile;
+	var DatasetViewer;
+	OMEfile='/perl2/serve.pl?Page=OME::Web::InfoProject&UsergpID='+ID;
+	DatasetViewer=window.open(
+		OMEfile,
+		"ImageViewer",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	DatasetViewer.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+}
+sub create_button{
+ my ($id)=@_;
+ my $text="";
+ $text.=<<END;
+	<input type=button
+	onclick="return OpenPopUp($id)"
+	value="Description existing project(s)"
+	name="submit">
+END
+ return $text;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 sub cleaning{

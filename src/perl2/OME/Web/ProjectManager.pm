@@ -72,19 +72,11 @@ sub getPageBody {
 		 $body .= "<script>top.title.location.href = top.title.location.href;</script>";
 
 	   }
-	}elsif (exists $revArgs{Delete}){
-		##
-		#$body.="not yet implemented";
-		
+	}elsif (exists $revArgs{Delete}){		
 		 my $deleteproject=$session->Factory()->loadObject("OME::Project",$revArgs{Delete})
         	 or die "Unable to load project ( ID = ".$revArgs{Delete}." ). Action cancelled<br>";
            
-		#Pb: time being : user cannot delete the current project!!
-		# before delete process must switch!
 		if ($deleteproject->project_id()==$currentproject->project_id()){
- 		  #$body.=$cgi->h3("You cannot delete the current project. Please swith to another project before");
-		 
-		  #return ('HTML',$body);
 		  $body.=delete_process($deleteproject,$session);
 		  $body .= OME::Web::Validation->ReloadHomeScript();
 		  $body .= "<script>top.title.location.href = top.title.location.href;</script>";
@@ -126,7 +118,10 @@ sub delete_process{
    my $text="";
    my @datasetused=$deleteproject->datasets();
    my @myProjects=OME::Project->search( owner_id => $session->User()->experimenter_id ) if (defined $session);
-	
+   
+   my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword())  
+   or die "Unable to connect <br>";
+
 
    if (scalar(@datasetused)==0){
 	# delete only entry in table:projects
@@ -154,12 +149,12 @@ sub delete_process{
 
          }
 	}
-	$text.=delete_project($deleteproject);
+	$text.=delete_project($deleteproject,$db);
    }else{
 	# delete in project_dataset_map
 	my $rep;
-	$rep=delete_datasets($deleteproject,\@datasetused);
-      return "Cannot delete on dataset." if (!defined $rep);
+	$rep=delete_datasets($deleteproject,\@datasetused,$db);
+      return "Cannot delete dataset." if (!defined $rep);
 	#$text.=$rep."<br>";
 	if (defined $session){
 	    if (scalar(@myProjects)==1){
@@ -188,19 +183,20 @@ sub delete_process{
 	    }
 	}
 
-      $text.=delete_project($deleteproject);   		  						
+      $text.=delete_project($deleteproject,$db);   		  						
    }
-  return $text;
+  $db->Off();
+   return $text;
 }
 
 
 sub delete_project{
- my ($deleteproject)=@_;
+ my ($deleteproject,$db)=@_;
  my $text="";
  my $tableProject="projects";
  my ($condition,$result);
  $condition="project_id=".$deleteproject->project_id();
- $result=do_request($tableProject,$condition);
+ $result=do_request($tableProject,$condition,$db);
  if (defined $result){
      $text.="The project <b>".$deleteproject->name()."</b> has been successfully deleted.";
  }else{
@@ -211,12 +207,12 @@ sub delete_project{
 }
 
 sub delete_datasets{
-  my ($deleteproject,$ref)=@_;
+  my ($deleteproject,$ref,$db)=@_;
   my $tableProjectMap="project_dataset_map";
   foreach (@$ref){
     my ($condition,$result);
     $condition="project_id=".$deleteproject->project_id()." AND dataset_id=".$_->dataset_id();
-    $result=do_request($tableProjectMap,$condition);
+    $result=do_request($tableProjectMap,$condition,$db);
     return undef if (!defined $result);
 	
   }
@@ -238,9 +234,10 @@ sub print_form {
 	my @projects=OME::Project->search( owner_id => $session->User()->experimenter_id );
 	
 	return ('HTML',"Please define a project firt.<br>") if scalar(@projects)==0;
-
+	$text .=format_popup();
 	$text .=$cgi->h3("You own these projects:");	
 	foreach (@projects) {
+		my $buttonInfo=create_button($_->{project_id});
 		$tableRows .= 
 			$cgi->Tr( { -valign=>'MIDDLE' },
 				$cgi->td( { -align=>'LEFT' },
@@ -252,6 +249,8 @@ sub print_form {
 					),
 				$cgi->td( { -align=>'CENTER' },
 					$cgi->submit (-name=>$_->project_id(),-value=>'Delete') 
+					),
+				$cgi->td( { -align=>'CENTER' },$buttonInfo
 					),
 
 				
@@ -268,6 +267,8 @@ sub print_form {
 					'<b>Select</b>' ),
 				$cgi->td( { -align=>'CENTER' },
 					'<b>Delete</b>' ),
+				$cgi->td( { -align=>'CENTER' },
+					'<b>Project Info</b>' ),
 
 					),
 			$tableRows );
@@ -321,14 +322,61 @@ sub format_dataset{
  }
  return $summary;
 }
+sub format_popup{
+  my ($text)=@_;
+ $text.=<<ENDJS;
+<script language="JavaScript">
+<!--
+var ID;
+function OpenPopUp(id) {
+      ID=id;
+	var OMEfile;
+	OMEfile='/perl2/serve.pl?Page=OME::Web::GetInfo&ProjectID='+ID;
+	projectInfo=window.open(
+		OMEfile,
+		"ProjectInfo",
+		"toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,height=500");
+	projectInfo.focus();
+      return false;
+}
+-->
+</script>
+ENDJS
+
+return $text;
+}
+
+
+
+
+sub create_button{
+ my ($id)=@_;
+ my $text="";
+ $text.=<<END;
+	<input type=button
+	onclick="return OpenPopUp($id)"
+	value="Info"
+	name="submit">
+END
+ return $text;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 sub do_request{
- my ($table,$condition)=@_;
+ my ($table,$condition,$db)=@_;
  my $result;
- my $db=new OME::SetDB(OME::DBConnection->DataSource(),OME::DBConnection->DBUser(),OME::DBConnection->DBPassword());  
  if (defined $db){
-       $result=$db->DeleteRecord($table,$condition);
+      $result=$db->DeleteRecord($table,$condition);
  
  }
  return $result;
