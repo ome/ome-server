@@ -76,7 +76,7 @@ public abstract class ChainFrameBase extends JFrame {
 		
 		this.controller = controller;
 		this.connection =  connection;
-		
+
 		contentPane = getContentPane();
 		// create a chain canvas and add it to this frame.
 		canvas = createCanvas(connection);
