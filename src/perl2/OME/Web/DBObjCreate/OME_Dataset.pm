@@ -78,6 +78,19 @@ sub _create {
 		} ) if $session->project();
  	$session->commitTransaction();
  	
+	if( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) ) {
+		my $return_to = ( $q->param( 'return_to' ) || $q->url_param( 'return_to' ) );
+		my $id = $dataset->id;
+		my $html = <<END_HTML;
+<script language="Javascript" type="text/javascript">
+	window.opener.document.forms[0].$return_to.value = $id;
+	window.opener.document.forms[0].submit();
+	window.close();
+</script>
+END_HTML
+		return( 'HTML', $html );
+	}
+
 	return( 'REDIRECT', $self->getObjDetailURL( $dataset ) );
 }
 
