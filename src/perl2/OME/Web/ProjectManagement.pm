@@ -135,14 +135,16 @@ sub print_form {
 
 	my $projectManager = $self->{projectManager};
 	my $ref            = $projectManager->listMatching($session->User()->id());
-	my %projectList    = map { $_->project_id() => $_->name()} @$ref;
+
+	my %projectList    = map { $_->id() => $_->name()} grep( $_->id ne $project->id, @$ref );
 
 	my $text = '';
 
 	$text .= $cgi->startform;
 	$text .= "<center><h2>Properties</h2></center>";
 	$text .= $htmlFormat->formChange("project",$project,$user);
-	$text .= $htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project");			
+	$text .= $htmlFormat->dropDownTable("newProject",\%projectList,"Switch","Switch Project")
+		if( scalar keys %projectList > 0 );
 	$text .= "<center><h2>Datasets</h2></center>";
 	$text .= $self->formatList();
 	$text .= $cgi->endform;
