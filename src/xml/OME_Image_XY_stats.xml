@@ -13,6 +13,8 @@
 			<Column ColumnID = "Mean" ColumnName = "MEAN" SQL_DataType = "float" Description = "Arithmetic Mean"/>
 			<Column ColumnID = "Geomean" ColumnName = "GEOMEAN" SQL_DataType = "float" Description = "Geometric Mean"/>
 			<Column ColumnID = "Sigma" ColumnName = "SIGMA" SQL_DataType = "float" Description = "Standard Deviation"/>
+			<Column ColumnID = "Centroid_X" ColumnName = "CENTROID_X" SQL_DataType = "float" Description = "X cooridinate of plane centroid calculated by intensity"/>
+			<Column ColumnID = "Centroid_Y" ColumnName = "CENTROID_Y" SQL_DataType = "float" Description = "Y cooridinate of plane centroid calculated by intensity"/>
 		</Table>
 		<!-- Notice that these FormalOutputs are missing FormalOutputID. There is no need to reference FormalOutputs inside the XML doc with the current setup. Id's are used for internal referencing. -->
 		<FormalOutput Name = "XYPlaneMin" Description = "Minimum pixel intensity in an XY plane">
@@ -44,6 +46,18 @@
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
 			<FormalOutputColumn FormalOutputColumnID = "XYPlaneSigma.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneCentroid_X" Description = "x, in pixels, of center of intensity for the plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.Centroid_X" ColumnID = "Centroid_X" Description = "x, in pixels, of center of intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_X.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
+		</FormalOutput>
+		<FormalOutput Name = "XYPlaneCentroid_Y" Description = "y, in pixels, of center of intensity for the plane">
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.Centroid_Y" ColumnID = "Centroid_Y" Description = "y, in pixels, of center of intensity"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theZ"  ColumnID = "theZ" Description = "Z coordinate describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theW" ColumnID = "theW" Description = "Wavenumber describing the XY Plane"/>
+			<FormalOutputColumn FormalOutputColumnID = "XYPlaneCentroid_Y.theT" ColumnID = "theT" Description = "Timepoint describing the XY Plane"/>
 		</FormalOutput>
 	</Declaration>
 	<ExecutionInstructions ExecutionPoint = "precalculateImage" MakesNewFeature = "false" xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation = "file:///Users/josiah/OME/SourceForge/OME/src/xml/CLIExecutionInstructions.xsd">
@@ -97,7 +111,7 @@
 			</OutputRecord>
 			<!-- That eats a line. The first line of the output is column headers -->
 			<OutputRecord>
-				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
+				<pat>^(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\t(\d+\.?\d*|\.\d+)\n</pat>
 				<Output AccessBy = "1">
 					<OutputTo FormalOutputColumnID = "XYPlaneMin.theW"/>
 					<OutputTo FormalOutputColumnID = "XYPlaneMax.theW"/>
@@ -133,6 +147,12 @@
 				</Output>
 				<Output AccessBy = "8">
 					<OutputTo FormalOutputColumnID = "XYPlaneSigma.Sigma"/>
+				</Output>
+				<Output AccessBy = "9">
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_X.Centroid_X"/>
+				</Output>
+				<Output AccessBy = "10">
+					<OutputTo FormalOutputColumnID = "XYPlaneCentroid_Y.Centroid_Y"/>
 				</Output>
 			</OutputRecord>
 			<!-- That reads a line of output & repeats until it has reached the end of the stream. -->
