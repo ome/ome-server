@@ -1,0 +1,184 @@
+# OME/Tasks/ChainImport.pm
+
+# Copyright (C) 2002 Open Microscopy Environment, MIT
+# Author:  Douglas Creager <dcreager@alum.mit.edu>
+#
+#    This library is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 2.1 of the License, or (at your option) any later version.
+#
+#    This library is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this library; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+package OME::Tasks::ChainImport;
+
+use strict;
+our $VERSION = '1.0';
+
+use Carp;
+use Log::Agent;
+use XML::LibXML;
+
+
+sub new {
+    my ($proto, %params) = @_;
+    my $class = ref($proto) || $proto;
+
+    my @fieldsILike = qw(session);
+
+    my $self;
+
+    @$self{@fieldsILike} = @params{@fieldsILike};
+
+    die "I need a session"
+      unless exists $self->{session} &&
+             UNIVERSAL::isa($self->{session},'OME::Session');
+
+    my $parser = XML::LibXML->new();
+    die "Cannot create XML parser"
+      unless defined $parser;
+
+    $parser->validation(exists $params{ValidateXML}?
+                        $params{ValidateXML}: 0);
+    $self->{_parser} = $parser;
+
+    return bless $self, $class;
+}
+
+
+sub importFile {
+    my ($self, $filename, %flags) = @_;
+    my $doc = $self->{_parser}->parse_file($filename)
+      or die "Cannot parse file $filename";
+    return $self->__importTree($doc,%flags);
+}
+
+sub importXML {
+    my ($self, $xml, %flags) = @_;
+    my $doc = $self->{_parser}->parse_string($xml)
+      or die "Cannot parse XML string";
+    return $self->__importTree($doc,%flags);
+}
+
+
+sub __importTree {
+    my ($self, $doc, %flags) = @_;
+    my $session = $self->{session};
+    my $factory = $session->Factory();
+    my $root = $doc->getDocumentElement();
+    my $chains = $root->getElementsByTagName('AnalysisChain');
+
+    my @chains;
+
+    foreach my $chain (@$chains) {
+        my (%nodes, @links);
+
+        if ($flags{NoDuplicates}) {
+            my $chainName = $chain->getAttribute('Name');
+            my $oldChain = $factory->
+              findObject("OME::AnalysisView",
+                         name => $chainName);
+            die "Chain \"$chainName\" already exists"
+              if defined $oldChain;
+        }
+
+        my $nodesTag = $chain->getElementsByTagName('Nodes')->[0];
+        my $linksTag = $chain->getElementsByTagName('Links')->[0];
+
+        foreach my $node ($nodesTag->getElementsByTagName('Node')) {
+            my $nodeID = $node->getAttribute('NodeID');
+            my $programName = $node->getAttribute('ProgramName');
+            my $program = $factory->
+              findObject('OME::Program',
+                         program_name => $programName);
+            die "Cannot find program named \"$programName\""
+              unless defined $program;
+
+            my $hash = {
+                        program         => $program,
+                        iterator_tag    => $node->getAttribute('IteratorTag'),
+                        new_feature_tag => $node->getAttribute('NewFeatureTag'),
+                       };
+
+            $nodes{$nodeID} = $hash;
+        }
+
+        foreach my $link ($linksTag->getElementsByTagName('Link')) {
+            my $fromNodeID = $link->getAttribute('FromNodeID');
+            my $fromOutputName = $link->getAttribute('FromOutputName');
+            my $toNodeID = $link->getAttribute('ToNodeID');
+            my $toInputName = $link->getAttribute('ToInputName');
+
+            my $fromNode = $nodes{$fromNodeID};
+            die "Cannot find node \"$fromNodeID\""
+              unless defined $fromNode;
+
+            my $output = $factory->
+              findObject("OME::Program::FormalOutput",
+                         program => $fromNode->{program},
+                         name    => $fromOutputName);
+            die "Cannot find output \"$fromOutputName\""
+              unless defined $output;
+
+            my $toNode = $nodes{$toNodeID};
+            die "Cannot find node \"$toNodeID\""
+              unless defined $toNode;
+
+            my $input = $factory->
+              findObject("OME::Program::FormalInput",
+                         program => $toNode->{program},
+                         name    => $toInputName);
+            die "Cannot find input \"$toInputName\""
+              unless defined $input;
+
+            my $hash = {
+                        from_node   => $fromNodeID,
+                        from_output => $output,
+                        to_node     => $toNodeID,
+                        to_input    => $input,
+                       };
+            push @links, $hash;
+        }
+
+        my $chainObject = $factory->
+          newObject("OME::AnalysisView",
+                    {
+                     owner  => $session->User(),
+                     name   => $chain->getAttribute('Name'),
+                     locked => $chain->getAttribute('Locked'),
+                    });
+
+        foreach my $nodeID (keys %nodes) {
+            my $node = $nodes{$nodeID};
+            $node->{analysis_view} = $chainObject;
+            my $nodeObject = $factory->
+              newObject("OME::AnalysisView::Node",$node);
+            $nodes{$nodeID} = $nodeObject;
+        }
+
+        foreach my $link (@links) {
+            $link->{from_node} = $nodes{$link->{from_node}};
+            $link->{to_node} = $nodes{$link->{to_node}};
+            $link->{analysis_view} = $chainObject;
+            my $linkObject = $factory->
+              newObject("OME::AnalysisView::Link",$link);
+        }
+
+        $chainObject->writeObject();
+
+        push @chains, $chainObject;
+    }
+
+    return \@chains;
+}
+
+
+1;
