@@ -47,33 +47,57 @@ skinLibrary["redGUIboxBG"] =
 '<g>' +
 '	<linearGradient id="redLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
 '		<stop offset="5%" stop-color="red" />' +
-'		<stop offset="95%" stop-color="white" />' + 
+'		<stop offset="95%" stop-color="indianred" />' + 
 '	</linearGradient>' +
 '	<rect width="{$width}" height="{$height}" fill="url(#redLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["redMenubar"] =
+'<g>' +
+'	<g opacity="0.8">' +
+'		<rect width="{$width}" height="15" fill="palevioletred"/>' +
+'	</g>' +
 '</g>';
 skinLibrary["blueGUIboxBG"] =
 '<g>' +
 '	<linearGradient id="blueLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
 '		<stop offset="5%" stop-color="blue" />' +
-'		<stop offset="95%" stop-color="white" />' + 
+'		<stop offset="95%" stop-color="lightsteelblue" />' + 
 '	</linearGradient>' +
 '	<rect width="{$width}" height="{$height}" fill="url(#blueLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["blueMenubar"] =
+'<g>' +
+'	<g opacity="0.8">' +
+'		<rect width="{$width}" height="15" fill="slateblue"/>' +
+'	</g>' +
 '</g>';
 skinLibrary["greenGUIboxBG"] =
 '<g>' +
 '	<linearGradient id="greenLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
 '		<stop offset="5%" stop-color="green" />' +
-'		<stop offset="95%" stop-color="white" />' + 
+'		<stop offset="95%" stop-color="palegreen" />' + 
 '	</linearGradient>' +
 '	<rect width="{$width}" height="{$height}" fill="url(#greenLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["greenMenubar"] =
+'<g>' +
+'	<g opacity="0.8">' +
+'		<rect width="{$width}" height="15" fill="seagreen"/>' +
+'	</g>' +
 '</g>';
 skinLibrary["greyGUIboxBG"] =
 '<g>' +
 '	<linearGradient id="greyLinearGradient" x1="0" y1="0" x2="0" y2="100%">' +
-'		<stop offset="5%" stop-color="grey" />' +
-'		<stop offset="95%" stop-color="white" />' + 
+'		<stop offset="5%" stop-color="dimgrey" />' +
+'		<stop offset="95%" stop-color="lightgrey" />' + 
 '	</linearGradient>' +
 '	<rect width="{$width}" height="{$height}" fill="url(#greyLinearGradient)" opacity="0.7"/>' +
+'</g>';
+skinLibrary["greyMenubar"] =
+'<g>' +
+'	<g opacity="0.8">' +
+'		<rect width="{$width}" height="15" fill="lightgrey"/>' +
+'	</g>' +
 '</g>';
 
 skinLibrary["GUIbox"] =
