@@ -113,7 +113,6 @@ sub new {
 		_docIDs         => {},
 		_docRefs		=> {},
 		_DBObjects      => [],
-		_objsNotToStore => undef,
 		_nullAnalysisSTs=> {
 			'Thumbnail'      => undef,
 			'DisplayChannel' => undef,
@@ -380,14 +379,9 @@ sub storeObjects () {
 	my $self = shift;
 	
 	logdbg "debug", ref ($self)."->storeObjects: storing ".scalar (@{ $self->{_DBObjects} })." objects.";
-    (not exists $self->{_objsNotToStore}->{$_->id()} and $_->storeObject() )
+    $_->storeObject()
     	foreach @{ $self->{_DBObjects} };
     $self->{_DBObjects} = [];
-}
-
-sub doNotStoreTheseObjects() {
-	my ($self, @objs) = @_;
-	$self->{_objsNotToStore} = { map{ $_->id() => undef } @objs};
 }
 
 
@@ -463,8 +457,6 @@ sub importObject ($$$$) {
 				$objectData->{$objField}." in document.";
 		} else {
 			$refObject = $lsid->getLocalObject ($theRef);
-			# FIXME (IGG): references to pixels within Image objects do not get resolved because they will be re-made each time.
-			$refObject = undef if $objField eq 'pixels_id' and $objectType eq 'OME::Image';
 			if ($refObject) {
 				$objectData->{$objField} = $refObject->id();
 				logdbg "debug", ref ($self)."->importObject:     Field $objField -> $theRef resolved to ".
