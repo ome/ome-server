@@ -83,10 +83,13 @@ public class CChainExecution extends RemoteChainExecution  {
 		Iterator iter = nodes.iterator();
 		Node node;
 		Chain.Node chainNode;
-		Module execModule;
 		ModuleExecution moduleExecution;
-		
+		Module execModule;
+				
 		System.err.println("finding results for "+mod.getName());
+		
+		ArrayList results = new ArrayList();
+
 		while (iter.hasNext()) {
 			node = (Node) iter.next();
 			chainNode = node.getChainNode();
@@ -96,13 +99,21 @@ public class CChainExecution extends RemoteChainExecution  {
 			if (execModule == mod) {
 				System.err.println("got a match!");
 				// ok, now we're in the right module for this execution.
+				// do i need to 
+				// Iterate over the outputs of this module to find the right one
 				moduleExecution = node.getModuleExecution();
-				SemanticType type = output.getSemanticType();
-				return getResults(moduleExecution,type);
+				System.err.println("found module execution.."+moduleExecution.getID());
+				if (moduleExecution.getStatus().compareTo("ERROR") ==0) 
+					System.err.println("Execution error...");
+				else {
+					SemanticType type = output.getSemanticType();
+					results.addAll(getResults(moduleExecution,type));
+				}
 			}
 		}
-		return (List) null;
+		return results;
 	}
+	
 	
 	public List getResults(ModuleExecution modEx,SemanticType type) {
 		ArrayList result = new ArrayList();
