@@ -135,17 +135,15 @@ public class PChainLibraryEventHandler extends  PGenericZoomEventHandler
 		PNode n = e.getPickedNode();
 		if (n instanceof PChainBox) { 
 			PChainBox cb = (PChainBox) n;
-			cb.setSelected(true);
 			selectedChain=cb.getChain();
-			// this will cause dataset selection to change,
-			// which should cause other chains to be cleared.
 		}
 		else if (n instanceof PModule) {
 			PChainBox cb = (PChainBox) n.getParent();
-			cb.setSelected(true);
 			selectedChain = cb.getChain(); 
 		}
-		selectionState.setCurrentChain(selectedChain);
+		if (selectedChain != null)
+			System.err.println("double click selected chain..."+selectedChain.getName());
+		selectionState.setSelectedChain(selectedChain);
 	} 
 	
 	private void doMouseClicked(PInputEvent e) {
