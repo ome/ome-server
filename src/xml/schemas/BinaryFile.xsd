@@ -6,38 +6,40 @@
 	 version = "RC1"
 	 elementFormDefault = "qualified">
 	<import namespace = "http://www.w3.org/XML/1998/namespace"/>
+	<element name = "External">
+		<annotation>
+			<documentation>Describes a file location.</documentation>
+		</annotation>
+		<complexType>
+			<attribute name = "Compression">
+				<annotation>
+					<documentation>Only necessary if file is compressed.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base = "string">
+						<enumeration value = "gzip"/>
+						<enumeration value = "bzip2"/>
+					</restriction>
+				</simpleType>
+			</attribute>
+			<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
+			<attribute name = "Offset" type = "integer"/>
+			<attribute name = "href" use = "required" type = "anyURI">
+				<annotation>
+					<documentation>file location</documentation>
+				</annotation>
+			</attribute>
+		</complexType>
+	</element>
+	<element name = "BinData" type = "base64Binary"/>
 	<element name = "BinaryFile">
 		<annotation>
 			<documentation>Describes a binary file.</documentation>
 		</annotation>
 		<complexType>
 			<sequence>
-				<element name = "External">
-					<annotation>
-						<documentation>Describes a file location.</documentation>
-					</annotation>
-					<complexType>
-						<attribute name = "Compression">
-							<annotation>
-								<documentation>Only necessary if file is compressed.</documentation>
-							</annotation>
-							<simpleType>
-								<restriction base = "string">
-									<enumeration value = "gzip"/>
-									<enumeration value = "bzip2"/>
-								</restriction>
-							</simpleType>
-						</attribute>
-						<attribute name = "SHA1" use = "required" type = "Bin:Hex40"/>
-						<attribute name = "Offset" type = "integer"/>
-						<attribute name = "href" use = "required" type = "anyURI">
-							<annotation>
-								<documentation>file location</documentation>
-							</annotation>
-						</attribute>
-					</complexType>
-				</element>
-				<element name = "BinData" type = "base64Binary"/>
+				<element ref = "Bin:External"/>
+				<element ref = "Bin:BinData"/>
 			</sequence>
 			<attribute name = "FileName">
 				<simpleType>
