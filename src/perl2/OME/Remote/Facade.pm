@@ -53,7 +53,8 @@ OME::Remote::Facade - implementation of the Remote Framework interface
 =cut
 
 BEGIN {
-    @FACADES = qw(OME::Remote::Facades::ProjectFacade
+    @FACADES = qw(OME::Remote::Facades::GenericFacade
+                  OME::Remote::Facades::ProjectFacade
                   OME::Remote::Facades::ImportFacade);
     foreach my $facade (@FACADES) { $facade->require() }
 
@@ -66,18 +67,22 @@ BEGIN {
     $SOAP::Constants::FAULT_MUST_UNDERSTAND = 502;
 }
 
-sub XMLRPC::Serializer::encode_scalar {
+package XMLRPC::Serializer;
+
+sub encode_scalar {
   my $self = shift;
   return ['value', {}, [['string',{},'*([-NULL-])*']]] unless defined $_[0];
   return $self->SOAP::Serializer::encode_scalar(@_);
 }
 
-sub XMLRPC::Deserializer::decode_value {
+package XMLRPC::Deserializer;
+
+sub decode_value {
   my $self = shift;
   my $ref = shift;
   my($name, $attrs, $children, $value) = @$ref;
 
-  if ($name eq 'string' && $value eq '*([-NULL-])*') {
+  if ($value eq '*([-NULL-])*') {
       return undef;
   } elsif ($name eq 'value') {
     $children ? scalar(($self->decode_object($children->[0]))[1]) : $value;
@@ -105,6 +110,7 @@ sub XMLRPC::Deserializer::decode_value {
   }
 }
 
+package OME::Remote::Facade;
 
 our $SHOW_CALLS = 0;
 our $SHOW_RESULTS = 0;
