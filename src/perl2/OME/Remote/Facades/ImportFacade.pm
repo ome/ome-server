@@ -56,7 +56,9 @@ methods pertaining to image-import methods
 =cut
 
 sub startImport {
-    my ($proto,$fileIDs) = @_;
+    my $proto = shift;
+    my $fileIDs = pop;
+    my $datasetID = pop;
 
     die "startImport expects an array of file ID's"
       unless ref($fileIDs) eq 'ARRAY';
@@ -65,18 +67,29 @@ sub startImport {
     # can return the Import DTO (which contains information about the
     # global import MEX among other things).
 
-    my $importer = OME::ImportEngine::ImportEngine->new();
-    my $dataset = OME::Session->instance()->factory->
-      newObject("OME::Dataset",
-                {
-                 name => "ImportFacade Dummy Dataset",
-                 description => "Images imported by OME::Remote::Facades::ImportFacade",
-                 locked => 0,
-                 owner_id => OME::Session->instance()->experimenter_id(),
-                });
+    my $importer = OME::ImportEngine::ImportEngine->new(AllowDuplicates => 1);
+    my $factory = OME::Session->instance()->Factory();
+    my $dataset;
+
+    if (defined $datasetID) {
+        $dataset = $factory->loadObject("OME::Dataset",$datasetID);
+        die "Dataset #${datasetID} does not exist"
+          unless defined $dataset;
+    } else {
+        $dataset = $factory->
+          newObject("OME::Dataset",
+                    {
+                     name => "ImportFacade Dummy Dataset",
+                     description => "Images imported by Remote Importer",
+                     locked => 0,
+                     owner_id => $session->experimenter_id(),
+                    });
+        die "Cannot create import dataset"
+          unless defined $dataset;
+    }
+
     my $files_mex = $importer->startImport($dataset);
     my $session_key = OME::Session->instance()->SessionKey();
-
 
     # Fork off the child process
 
