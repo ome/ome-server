@@ -43,8 +43,6 @@ foreach my $mod_st (('CategoryGroup','Category')) {
 # Get all attributes of this ST
 	my $attrs = $factory->findAttributes($ST);
 	while (my $attr = $attrs->next()) {
-my $ST = $attr->semantic_type();
-print STDERR "granularity of ".$ST->name()." is ".$ST->granularity()."\n";
 	# set the MEX dependence to 'G'
 		my $mex = $attr->module_execution();
 		if ($mex and $mex->dependence () eq 'D') {
