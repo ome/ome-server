@@ -149,7 +149,7 @@ called on it, then the global cache will be emptied.
 sub clearCache {
     my ($class) = @_;
     my $cache = $class->__cache();
-    %$class = ();
+    %$cache = ();
 }
 
 

@@ -41,6 +41,8 @@ my $manager = OME::SessionManager->new();
 my $session = $manager->TTYlogin();
 my $factory = $session->Factory();
 
+OME::DBObject->Caching(1) if ($ENV{'OME_CACHE'});
+
 my $projectName = "ImportTest2 project";
 my $projectDesc = "This project was created by the ImportTest test case.";
 my $projectUser = $session->User();

@@ -59,7 +59,7 @@ my $engine = OME::Tasks::AnalysisEngine->new();
 foreach my $flag_string (@ARGV) {
     my ($flag,$value) = split(/=/,$flag_string,2);
     if ($flag eq "Cached") {
-        OME::DBObject->Cached($value);
+        OME::DBObject->Caching($value);
     } else {
         $engine->Flag($flag,$value);
     }

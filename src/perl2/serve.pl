@@ -4,6 +4,7 @@ use strict;
 use vars qw($VERSION);
 $VERSION = '1.0';
 use CGI;
+use OME::DBObject;
 use Log::Agent;                    # another more complex example
 require Log::Agent::Driver::File;  # logging made to file
 logconfig(
@@ -22,6 +23,10 @@ logconfig(
 	-level    => 'debug'
 );
 
+
+# DBObject caching
+OME::DBObject->Caching(1);
+OME::DBObject->clearCache();
 
 my $CGI = CGI->new();
 my $pageClass = $CGI->url_param("Page");
