@@ -26,9 +26,11 @@ use strict;
 our %prototypes =
   (
    'OME::Session' => {
-   		      User    => [['$'],['$']],
+   		      User    => [[],['OME::AttributeType::Superclass']],
                       id      => [['$'],['$']],
                       Factory => [[],['OME::Factory']],
+                      project => [['OME::Project'],['OME::Project']],
+                      dataset => [['OME::Dataset'],['OME::Dataset']],
                      },
    'OME::Factory' => {
                       newObject     => [['$','%'],['OME::DBObject']],
