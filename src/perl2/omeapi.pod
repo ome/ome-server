@@ -30,7 +30,12 @@ class.
 =head2 Session management and the factory
 
 All OME tasks must be performed in the context of a "session".  This
-requires a valid OME user to be logged in.  Currently, there is no
+requires a valid OME user to be logged in.  The session saves user state,
+so the user will be returned to the same state next time they log in.
+A session is essentially permanent.  Clients receive a short-lived session key which is assigned
+once the user logs in.  In a web browser client, the session key is stored in a cookie.
+The key is used to 'unlock' the user's credentials on the server
+and reconnect a user with their session.  Currently, there is no
 security model in the OME API, so all tasks can be performed by all
 users.  Part of the design criteria for the OME API is to provide a
 place to add a security model in the future, and to prevent this
